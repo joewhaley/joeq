@@ -25,14 +25,14 @@ int main(int argc, char** argv)
   }
 
   p = (int*)mmap(0, 52, PROT_READ, MAP_SHARED, fd, 0);
-  if (p == MAP_FAILED) {
+  if ((void*)p == MAP_FAILED) {
     printf("Cannot map file %s offset 0.\n", argv[1]);
     return 1;
   }
   e_phoff = *(p+7);
   e_phnum = *(unsigned short *)(p+11);
   printf("Program header table at offset %d, %d entries.\n", e_phoff, e_phnum);
-  munmap(p, 52);
+  munmap((void*)p, 52);
 
   start = e_phoff / page_size * page_size;
   length = (e_phoff + 32*e_phnum - start + page_size - 1) / page_size * page_size;
@@ -52,7 +52,7 @@ int main(int argc, char** argv)
     }
     q += 8;
   }
-  munmap(p, 32*e_phnum);
+  munmap((void*)p, 32*e_phnum);
   close(fd);
   return 0;
 }
