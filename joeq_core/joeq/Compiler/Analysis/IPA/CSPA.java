@@ -345,6 +345,9 @@ public class CSPA {
     public void buildVarHeapCorrespondence() {
         BDDPairing V2cH2ctoV1cH1c = bdd.makePair();
         V2cH2ctoV1cH1c.set(new BDDDomain[] {V2c, H2c}, new BDDDomain[] {V1c, H1c});
+        BDDPairing V2ctoV1c = bdd.makePair(V2c, V1c);
+        BDDPairing H2ctoH1c = bdd.makePair(H2c, H1c);
+        
         V1H1correspondence = new HashMap();
         for (Iterator i = cg.getRoots().iterator(); i.hasNext(); ) {
             jq_Method root = (jq_Method) i.next();
@@ -388,29 +391,50 @@ public class CSPA {
                     System.out.println("H1c: "+r2_caller+" to "+r2_edge);
                 }
                 BDD cm1;
-                cm1 = buildContextMap(V1c,
-                                      PathNumbering.toBigInt(r1_caller.low),
-                                      PathNumbering.toBigInt(r1_caller.high),
-                                      V2c,
-                                      PathNumbering.toBigInt(r1_edge.low),
-                                      PathNumbering.toBigInt(r1_edge.high));
-                callerRelation = callerRelation.relprod(cm1, V1c.set());
-                cm1.free();
-                cm1 = buildContextMap(H1c,
-                                      PathNumbering.toBigInt(r2_caller.low),
-                                      PathNumbering.toBigInt(r2_caller.high),
-                                      H2c,
-                                      PathNumbering.toBigInt(r2_edge.low),
-                                      PathNumbering.toBigInt(r2_edge.high));
-                BDD tmpRel = callerRelation.relprod(cm1, H1c.set());
-                callerRelation.free();
-                tmpRel.replaceWith(V2cH2ctoV1cH1c);
-                if (TRACE_CONTEXTMAP)
-                    System.out.println("Relation: "+tmpRel.toStringWithDomains());
-                calleeRelation.orWith(tmpRel);
+                BDD tmpRel;
+                boolean r1_same = r1_caller.equals(r1_edge);
+                boolean r2_same = r2_caller.equals(r2_edge);
+                if (!r1_same) {
+                    cm1 = buildContextMap(V1c,
+                                          PathNumbering.toBigInt(r1_caller.low),
+                                          PathNumbering.toBigInt(r1_caller.high),
+                                          V2c,
+                                          PathNumbering.toBigInt(r1_edge.low),
+                                          PathNumbering.toBigInt(r1_edge.high));
+                    tmpRel = callerRelation.relprod(cm1, V1c.set());
+                    cm1.free();
+                } else {
+                    tmpRel = callerRelation.id();
+                }
+                BDD tmpRel2;
+                if (!r2_same) {
+                    cm1 = buildContextMap(H1c,
+                                          PathNumbering.toBigInt(r2_caller.low),
+                                          PathNumbering.toBigInt(r2_caller.high),
+                                          H2c,
+                                          PathNumbering.toBigInt(r2_edge.low),
+                                          PathNumbering.toBigInt(r2_edge.high));
+                    tmpRel2 = tmpRel.relprod(cm1, H1c.set());
+                    tmpRel.free();
+                    cm1.free();
+                } else {
+                    tmpRel2 = tmpRel;
+                }
+                if (!r1_same) {
+                    if (!r2_same) {
+                        tmpRel2.replaceWith(V2cH2ctoV1cH1c);
+                    } else {
+                        tmpRel2.replaceWith(V2ctoV1c);
+                    }
+                } else if (!r2_same) {
+                    tmpRel2.replaceWith(H2ctoH1c);
+                }
+                if (TRACE_CONTEXTMAP && TRACE_BDD)
+                    System.out.println("Relation: "+tmpRel2.toStringWithDomains());
+                calleeRelation.orWith(tmpRel2);
             }
             V1H1correspondence.put(callee, calleeRelation);
-            if (TRACE_CONTEXTMAP)
+            if (TRACE_CONTEXTMAP && TRACE_BDD)
                 System.out.println("Relation for "+callee+":\n"+calleeRelation.toStringWithDomains());
         }
     }
@@ -845,7 +869,8 @@ public class CSPA {
         CLASSBITS = (int) (Math.log(classes.size()+64)/log2 + 2.0);
         VARCONTEXTBITS = paths.bitLength();
         VARCONTEXTBITS = Math.min(60, VARCONTEXTBITS);
-        System.out.println("Var bits="+VARBITS+" Heap bits="+HEAPBITS+" Class bits="+CLASSBITS+" Field bits="+FIELDBITS+" Var context bits="+VARCONTEXTBITS);
+        System.out.println("Var bits="+VARBITS+" Heap bits="+HEAPBITS+" Class bits="+CLASSBITS+" Field bits="+FIELDBITS);
+        System.out.println("Var context bits="+VARCONTEXTBITS);
         return pn;
     }
 
@@ -855,7 +880,8 @@ public class CSPA {
         /* (non-Javadoc)
          * @see Util.Graphs.PathNumbering.Selector#isImportant(Util.Graphs.SCComponent, Util.Graphs.SCComponent)
          */
-        public boolean isImportant(SCComponent scc1, SCComponent scc2) {
+        public boolean isImportant(SCComponent scc1, SCComponent scc2, BigInteger num) {
+            if (num.bitLength() > HEAPCONTEXTBITS) return false;
             Set s = scc2.nodeSet();
             Iterator i = s.iterator();
             Object o = i.next();
@@ -872,7 +898,7 @@ public class CSPA {
         Map initialCounts = new ThreadRootMap(thread_runs);
         BigInteger paths = (BigInteger) pn.countPaths(cg.getRoots(), cg.getCallSiteNavigator(), initialCounts);
         HEAPCONTEXTBITS = paths.bitLength();
-        HEAPCONTEXTBITS = Math.min(20, HEAPCONTEXTBITS);
+        HEAPCONTEXTBITS = Math.min(10, HEAPCONTEXTBITS);
         System.out.println("Heap context bits="+HEAPCONTEXTBITS);
         return pn;
     }
@@ -1507,7 +1533,8 @@ public class CSPA {
             }
         } else {
             if (sizeD1.compareTo(sizeD2) != -1) { // >=
-                r = d1.buildAdd(d2, startD2.subtract(startD1).longValue());
+                int bits = endD2.bitLength();
+                r = d1.buildAdd(d2, bits, startD2.subtract(startD1).longValue());
                 if (TRACE_SIZES) {
                     System.out.print("add = ");
                     report(r, d1.set().and(d2.set()));
@@ -1520,7 +1547,8 @@ public class CSPA {
                     }
                 }
             } else {
-                r = d1.buildAdd(d2, startD2.subtract(startD1).longValue());
+                int bits = endD1.bitLength();
+                r = d1.buildAdd(d2, bits, startD2.subtract(startD1).longValue());
                 if (TRACE_SIZES) {
                     System.out.print("add = ");
                     report(r, d1.set().and(d2.set()));
@@ -1534,7 +1562,7 @@ public class CSPA {
                 }
             }
         }
-        if (TRACE_CALLGRAPH) {
+        if (TRACE_CALLGRAPH && TRACE_BDD) {
             System.out.println("Result: "+r.toStringWithDomains());
         }
         return r;
