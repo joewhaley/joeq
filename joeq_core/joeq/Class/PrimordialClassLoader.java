@@ -82,6 +82,7 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
         InputStream getResourceAsStream(String name) {
             if (TRACE) out.println("Getting resource for "+name+" in zip file "+zf.getName());
             if (entries == null) initializeEntryMap();
+            if (name.charAt(0) == '/') name = name.substring(1);
             ZipEntry ze = (ZipEntry) entries.get(name);
             try { // look for name in zipfile, return null if something goes wrong.
                 return (ze==null)?null:zf.getInputStream(ze);
