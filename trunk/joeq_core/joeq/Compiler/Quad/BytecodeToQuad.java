@@ -24,6 +24,7 @@ import Compil3r.Quad.Operator.Putstatic;
 import Compil3r.Quad.Operator.Getfield;
 import Compil3r.Quad.Operator.Putfield;
 import Compil3r.Quad.Operator.NullCheck;
+import Compil3r.Quad.Operator.ZeroCheck;
 import Compil3r.Quad.Operator.BoundsCheck;
 import Compil3r.Quad.Operator.StoreCheck;
 import Compil3r.Quad.Operator.Invoke;
@@ -172,7 +173,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
     private boolean endBasicBlock;
     
     /**
-     * @param  bc_bb  */    
+     * @param  bc_bb  */
     public void traverseBB(Compil3r.BytecodeAnalysis.BasicBlock bc_bb) {
         if (start_states[bc_bb.id] == null) {
             // unreachable block!
@@ -187,7 +188,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         this.bc_bb = bc_bb;
         this.uncond_branch = false;
         this.current_state.overwriteWith(start_states[bc_bb.id]);
-	this.current_state.dumpState();
+	if (TRACE) this.current_state.dumpState();
         this.endBasicBlock = false;
         for (i_end=bc_bb.getStart()-1; ; ) {
             i_start = i_end+1;
@@ -529,9 +530,13 @@ public class BytecodeToQuad extends BytecodeVisitor {
         current_state.push(op1);
         current_state.push(op2);
     }
-    private void BINOPhelper(Binary operator, jq_Type tr, jq_Type t1, jq_Type t2) {
+    private void BINOPhelper(Binary operator, jq_Type tr, jq_Type t1, jq_Type t2, boolean zero_check) {
         Operand op2 = current_state.pop(t2);
         Operand op1 = current_state.pop(t1);
+        if (zero_check && performZeroCheck(op2)) {
+            if (TRACE) System.out.println("Zero check triggered on "+op2);
+            return;
+        }
         RegisterOperand r = getStackRegister(tr);
         Quad q = Binary.create(operator, r, op1, op2);
         appendQuad(q);
@@ -539,35 +544,35 @@ public class BytecodeToQuad extends BytecodeVisitor {
     }
     public void visitIBINOP(byte op) {
         super.visitIBINOP(op);
-        Binary operator=null;
+        Binary operator=null; boolean zero_check = false;
         switch (op) {
             case BINOP_ADD: operator = Binary.ADD_I.INSTANCE; break;
             case BINOP_SUB: operator = Binary.SUB_I.INSTANCE; break;
             case BINOP_MUL: operator = Binary.MUL_I.INSTANCE; break;
-            case BINOP_DIV: operator = Binary.DIV_I.INSTANCE; break;
-            case BINOP_REM: operator = Binary.REM_I.INSTANCE; break;
+            case BINOP_DIV: operator = Binary.DIV_I.INSTANCE; zero_check = true; break;
+            case BINOP_REM: operator = Binary.REM_I.INSTANCE; zero_check = true; break;
             case BINOP_AND: operator = Binary.AND_I.INSTANCE; break;
             case BINOP_OR: operator = Binary.OR_I.INSTANCE; break;
             case BINOP_XOR: operator = Binary.XOR_I.INSTANCE; break;
             default: jq.UNREACHABLE(); break;
         }
-        BINOPhelper(operator, jq_Primitive.INT, jq_Primitive.INT, jq_Primitive.INT);
+        BINOPhelper(operator, jq_Primitive.INT, jq_Primitive.INT, jq_Primitive.INT, zero_check);
     }
     public void visitLBINOP(byte op) {
         super.visitLBINOP(op);
-        Binary operator=null;
+        Binary operator=null; boolean zero_check = false;
         switch (op) {
             case BINOP_ADD: operator = Binary.ADD_L.INSTANCE; break;
             case BINOP_SUB: operator = Binary.SUB_L.INSTANCE; break;
             case BINOP_MUL: operator = Binary.MUL_L.INSTANCE; break;
-            case BINOP_DIV: operator = Binary.DIV_L.INSTANCE; break;
-            case BINOP_REM: operator = Binary.REM_L.INSTANCE; break;
+            case BINOP_DIV: operator = Binary.DIV_L.INSTANCE; zero_check = true; break;
+            case BINOP_REM: operator = Binary.REM_L.INSTANCE; zero_check = true; break;
             case BINOP_AND: operator = Binary.AND_L.INSTANCE; break;
             case BINOP_OR: operator = Binary.OR_L.INSTANCE; break;
             case BINOP_XOR: operator = Binary.XOR_L.INSTANCE; break;
             default: jq.UNREACHABLE(); break;
         }
-        BINOPhelper(operator, jq_Primitive.LONG, jq_Primitive.LONG, jq_Primitive.LONG);
+        BINOPhelper(operator, jq_Primitive.LONG, jq_Primitive.LONG, jq_Primitive.LONG, zero_check);
     }
     public void visitFBINOP(byte op) {
         super.visitFBINOP(op);
@@ -580,7 +585,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
             case BINOP_REM: operator = Binary.REM_F.INSTANCE; break;
             default: jq.UNREACHABLE(); break;
         }
-        BINOPhelper(operator, jq_Primitive.FLOAT, jq_Primitive.FLOAT, jq_Primitive.FLOAT);
+        BINOPhelper(operator, jq_Primitive.FLOAT, jq_Primitive.FLOAT, jq_Primitive.FLOAT, false);
     }
     public void visitDBINOP(byte op) {
         super.visitDBINOP(op);
@@ -593,7 +598,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
             case BINOP_REM: operator = Binary.REM_D.INSTANCE; break;
             default: jq.UNREACHABLE(); break;
         }
-        BINOPhelper(operator, jq_Primitive.DOUBLE, jq_Primitive.DOUBLE, jq_Primitive.DOUBLE);
+        BINOPhelper(operator, jq_Primitive.DOUBLE, jq_Primitive.DOUBLE, jq_Primitive.DOUBLE, false);
     }
     public void UNOPhelper(Unary operator, jq_Type tr, jq_Type t1) {
         Operand op1 = current_state.pop(t1);
@@ -647,7 +652,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
             case SHIFT_URIGHT: operator = Binary.USHR_I.INSTANCE; break;
             default: jq.UNREACHABLE(); break;
         }
-        BINOPhelper(operator, jq_Primitive.INT, jq_Primitive.INT, jq_Primitive.INT);
+        BINOPhelper(operator, jq_Primitive.INT, jq_Primitive.INT, jq_Primitive.INT, false);
     }
     public void visitLSHIFT(byte op) {
         super.visitLSHIFT(op);
@@ -658,7 +663,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
             case SHIFT_URIGHT: operator = Binary.USHR_L.INSTANCE; break;
             default: jq.UNREACHABLE(); break;
         }
-        BINOPhelper(operator, jq_Primitive.LONG, jq_Primitive.LONG, jq_Primitive.INT);
+        BINOPhelper(operator, jq_Primitive.LONG, jq_Primitive.LONG, jq_Primitive.INT, false);
     }
     public void visitIINC(int i, int v) {
         super.visitIINC(i, v);
@@ -731,15 +736,15 @@ public class BytecodeToQuad extends BytecodeVisitor {
     }
     public void visitLCMP2() {
         super.visitLCMP2();
-        BINOPhelper(Binary.CMP_L.INSTANCE, jq_Primitive.INT, jq_Primitive.LONG, jq_Primitive.LONG);
+        BINOPhelper(Binary.CMP_L.INSTANCE, jq_Primitive.INT, jq_Primitive.LONG, jq_Primitive.LONG, false);
     }
     public void visitFCMP2(byte op) {
         super.visitFCMP2(op);
-        BINOPhelper(Binary.CMP_F.INSTANCE, jq_Primitive.INT, jq_Primitive.FLOAT, jq_Primitive.FLOAT);
+        BINOPhelper(Binary.CMP_F.INSTANCE, jq_Primitive.INT, jq_Primitive.FLOAT, jq_Primitive.FLOAT, false);
     }
     public void visitDCMP2(byte op) {
         super.visitDCMP2(op);
-        BINOPhelper(Binary.CMP_D.INSTANCE, jq_Primitive.INT, jq_Primitive.DOUBLE, jq_Primitive.DOUBLE);
+        BINOPhelper(Binary.CMP_D.INSTANCE, jq_Primitive.INT, jq_Primitive.DOUBLE, jq_Primitive.DOUBLE, false);
     }
     public void visitIF(byte op, int target) {
         super.visitIF(op, target);
@@ -1473,7 +1478,51 @@ public class BytecodeToQuad extends BytecodeVisitor {
         mergeStateWithObjArrayStoreExHandler(false);
         return false;
     }
-   
+
+    boolean performZeroCheck(Operand op) {
+        if (op instanceof IConstOperand) {
+            int val = ((IConstOperand)op).getValue();
+            if (val != 0) {
+                setCurrentGuard(new UnnecessaryGuardOperand());
+                return false;
+            } else {
+                Quad q = ZeroCheck.create(ZeroCheck.ZERO_CHECK.INSTANCE, null, op);
+		if (false) {
+		    endBasicBlock = true;
+		    mergeStateWithArithExHandler(true);
+		    return true;
+		} else {
+		    mergeStateWithArithExHandler(false);
+		    return false;
+		}
+            }
+        }
+        RegisterOperand rop = (RegisterOperand)op;
+	if (hasGuard(rop)) {
+            Operand guard = getGuard(rop);
+            setCurrentGuard(guard);
+            return false;
+	}
+        RegisterOperand guard = makeGuardReg();
+        Quad q = ZeroCheck.create(ZeroCheck.ZERO_CHECK.INSTANCE, guard, rop.copy());
+        appendQuad(q);
+        mergeStateWithArithExHandler(false);
+	setCurrentGuard(guard);
+	setGuard(rop, guard);
+        
+        jq_Type type = rop.getType();
+        int number = getLocalNumber(rop.getRegister(), type);
+        if (rf.isLocal(rop, number, type)) {
+            Operand op2 = current_state.getLocal_I(number);
+            if (op2 instanceof RegisterOperand) {
+                setGuard((RegisterOperand)op2, guard);
+            }
+            current_state.setLocal(number, op2);
+            replaceLocalsOnStack(number, type);
+        }
+	return false;
+    }
+    
     static jq_Type getTypeOf(Operand op) {
         if (op instanceof IConstOperand) return jq_Primitive.INT;
         if (op instanceof FConstOperand) return jq_Primitive.FLOAT;
@@ -1518,6 +1567,9 @@ public class BytecodeToQuad extends BytecodeVisitor {
     }
     
     void mergeStateWithNullPtrExHandler(boolean cfgEdgeToExit) {
+        // TODO.
+    }
+    void mergeStateWithArithExHandler(boolean cfgEdgeToExit) {
         // TODO.
     }
     void mergeStateWithArrayBoundsExHandler(boolean cfgEdgeToExit) {

@@ -22,11 +22,13 @@ import Compil3r.Quad.Operand.ParamListOperand;
 import Compil3r.Quad.Operand.IntValueTableOperand;
 import Compil3r.Quad.Operand.BasicBlockTableOperand;
 
-public interface Operator {
+public class Operator {
 
-    public void accept(Quad q, QuadVisitor qv) ;
+    public void accept(Quad q, QuadVisitor qv) {
+        qv.visitQuad(q);
+    }
     
-    public static abstract class Move implements Operator {
+    public static abstract class Move extends Operator {
         
         public static Quad create(Move operator, RegisterOperand dst, Operand src) {
             return new Quad(operator, dst, src);
@@ -44,6 +46,7 @@ public interface Operator {
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitMove(q);
+            super.accept(q, qv);
         }
         
         public static class MOVE_I extends Move {
@@ -73,7 +76,7 @@ public interface Operator {
         }
     }
     
-    public static abstract class Binary implements Operator {
+    public static abstract class Binary extends Operator {
         
         public static Quad create(Binary operator, RegisterOperand dst, Operand src1, Operand src2) {
             return new Quad(operator, dst, src1, src2);
@@ -84,6 +87,7 @@ public interface Operator {
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitBinary(q);
+            super.accept(q, qv);
         }
         
         public static class ADD_I extends Binary {
@@ -263,7 +267,7 @@ public interface Operator {
         }
     }
 
-    public static abstract class Unary implements Operator {
+    public static abstract class Unary extends Operator {
         
         public static Quad create(Unary operator, RegisterOperand dst, Operand src1) {
             return new Quad(operator, dst, src1);
@@ -273,6 +277,7 @@ public interface Operator {
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitUnary(q);
+            super.accept(q, qv);
         }
         
         public static class NEG_I extends Unary {
@@ -402,7 +407,7 @@ public interface Operator {
         }
     }
 
-    public static abstract class ALoad implements Operator {
+    public static abstract class ALoad extends Operator {
         
         public static Quad create(ALoad operator, RegisterOperand dst, Operand base, Operand ind, Operand guard) {
             return new Quad(operator, dst, base, ind, guard);
@@ -414,6 +419,7 @@ public interface Operator {
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitALoad(q);
+            super.accept(q, qv);
         }
         
         public static class ALOAD_I extends ALoad {
@@ -458,7 +464,7 @@ public interface Operator {
         }
     }
     
-    public static abstract class AStore implements Operator {
+    public static abstract class AStore extends Operator {
         
         public static Quad create(AStore operator, Operand val, Operand base, Operand ind, Operand guard) {
             return new Quad(operator, val, base, ind, guard);
@@ -470,6 +476,7 @@ public interface Operator {
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitAStore(q);
+            super.accept(q, qv);
         }
         
         public static class ASTORE_I extends AStore {
@@ -514,7 +521,7 @@ public interface Operator {
         }
     }
 
-    public static abstract class IntIfCmp implements Operator {
+    public static abstract class IntIfCmp extends Operator {
         public static Quad create(IntIfCmp operator, Operand op0, Operand op1, ConditionOperand cond, TargetOperand target) {
             return new Quad(operator, op0, op1, cond, target);
         }
@@ -525,6 +532,9 @@ public interface Operator {
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitIntIfCmp(q);
+            qv.visitCondBranch(q);
+            qv.visitBranch(q);
+            super.accept(q, qv);
         }
         
         public static class IFCMP_I extends IntIfCmp {
@@ -539,7 +549,7 @@ public interface Operator {
         }
     }
     
-    public static abstract class Goto implements Operator {
+    public static abstract class Goto extends Operator {
         public static Quad create(Goto operator, TargetOperand target) {
             return new Quad(operator, target);
         }
@@ -547,6 +557,8 @@ public interface Operator {
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitGoto(q);
+            qv.visitBranch(q);
+            super.accept(q, qv);
         }
         
         public static class GOTO extends Goto {
@@ -556,7 +568,7 @@ public interface Operator {
         }
     }
     
-    public static abstract class Jsr implements Operator {
+    public static abstract class Jsr extends Operator {
         public static Quad create(Jsr operator, RegisterOperand loc, TargetOperand target) {
             return new Quad(operator, loc, target);
         }
@@ -565,6 +577,8 @@ public interface Operator {
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitJsr(q);
+            qv.visitBranch(q);
+            super.accept(q, qv);
         }
         
         public static class JSR extends Jsr {
@@ -574,7 +588,7 @@ public interface Operator {
         }
     }
     
-    public static abstract class Ret implements Operator {
+    public static abstract class Ret extends Operator {
         public static Quad create(Ret operator, RegisterOperand loc) {
             return new Quad(operator, loc);
         }
@@ -582,6 +596,8 @@ public interface Operator {
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitRet(q);
+            qv.visitBranch(q);
+            super.accept(q, qv);
         }
         
         public static class RET extends Ret {
@@ -591,7 +607,7 @@ public interface Operator {
         }
     }
     
-    public static abstract class TableSwitch implements Operator {
+    public static abstract class TableSwitch extends Operator {
         public static Quad create(TableSwitch operator, Operand val, IConstOperand low, TargetOperand def, int length) {
             return new Quad(operator, val, low, def, new BasicBlockTableOperand(new BasicBlock[length]));
         }
@@ -606,6 +622,9 @@ public interface Operator {
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitTableSwitch(q);
+            qv.visitCondBranch(q);
+            qv.visitBranch(q);
+            super.accept(q, qv);
         }
         
         public static class TABLESWITCH extends TableSwitch {
@@ -615,7 +634,7 @@ public interface Operator {
         }
     }
     
-    public static abstract class LookupSwitch implements Operator {
+    public static abstract class LookupSwitch extends Operator {
         public static Quad create(LookupSwitch operator, Operand val, TargetOperand def, int length) {
             return new Quad(operator, val, def, new IntValueTableOperand(new int[length]), new BasicBlockTableOperand(new BasicBlock[length]));
         }
@@ -634,6 +653,9 @@ public interface Operator {
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitLookupSwitch(q);
+            qv.visitCondBranch(q);
+            qv.visitBranch(q);
+            super.accept(q, qv);
         }
         
         public static class LOOKUPSWITCH extends LookupSwitch {
@@ -643,7 +665,7 @@ public interface Operator {
         }
     }
     
-    public static abstract class Return implements Operator {
+    public static abstract class Return extends Operator {
         public static Quad create(Return operator, Operand val) {
             return new Quad(operator, val);
         }
@@ -654,6 +676,7 @@ public interface Operator {
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitReturn(q);
+            super.accept(q, qv);
         }
         
         public static class RETURN_V extends Return {
@@ -693,7 +716,7 @@ public interface Operator {
         }
     }
 
-    public static abstract class Getstatic implements Operator {
+    public static abstract class Getstatic extends Operator {
         public static Quad create(Getstatic operator, RegisterOperand dst, FieldOperand field) {
             return new Quad(operator, dst, field);
         }
@@ -702,6 +725,9 @@ public interface Operator {
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitGetstatic(q);
+            qv.visitStaticField(q);
+            qv.visitLoad(q);
+            super.accept(q, qv);
         }
         
         public static class GETSTATIC_I extends Getstatic {
@@ -732,31 +758,51 @@ public interface Operator {
         public static class GETSTATIC_I_DYNLINK extends Getstatic {
             public static final GETSTATIC_I_DYNLINK INSTANCE = new GETSTATIC_I_DYNLINK();
             private GETSTATIC_I_DYNLINK() { }
+            public void accept(Quad q, QuadVisitor qv) {
+                qv.visitExceptionThrower(q);
+                super.accept(q, qv);
+            }
             public String toString() { return "GETSTATIC_I%"; }
         }
         public static class GETSTATIC_F_DYNLINK extends Getstatic {
             public static final GETSTATIC_F_DYNLINK INSTANCE = new GETSTATIC_F_DYNLINK();
             private GETSTATIC_F_DYNLINK() { }
+            public void accept(Quad q, QuadVisitor qv) {
+                qv.visitExceptionThrower(q);
+                super.accept(q, qv);
+            }
             public String toString() { return "GETSTATIC_F%"; }
         }
         public static class GETSTATIC_L_DYNLINK extends Getstatic {
             public static final GETSTATIC_L_DYNLINK INSTANCE = new GETSTATIC_L_DYNLINK();
             private GETSTATIC_L_DYNLINK() { }
+            public void accept(Quad q, QuadVisitor qv) {
+                qv.visitExceptionThrower(q);
+                super.accept(q, qv);
+            }
             public String toString() { return "GETSTATIC_L%"; }
         }
         public static class GETSTATIC_D_DYNLINK extends Getstatic {
             public static final GETSTATIC_D_DYNLINK INSTANCE = new GETSTATIC_D_DYNLINK();
             private GETSTATIC_D_DYNLINK() { }
+            public void accept(Quad q, QuadVisitor qv) {
+                qv.visitExceptionThrower(q);
+                super.accept(q, qv);
+            }
             public String toString() { return "GETSTATIC_D%"; }
         }
         public static class GETSTATIC_A_DYNLINK extends Getstatic {
             public static final GETSTATIC_A_DYNLINK INSTANCE = new GETSTATIC_A_DYNLINK();
             private GETSTATIC_A_DYNLINK() { }
+            public void accept(Quad q, QuadVisitor qv) {
+                qv.visitExceptionThrower(q);
+                super.accept(q, qv);
+            }
             public String toString() { return "GETSTATIC_A%"; }
         }
     }
     
-    public static abstract class Putstatic implements Operator {
+    public static abstract class Putstatic extends Operator {
         public static Quad create(Putstatic operator, Operand src, FieldOperand field) {
             return new Quad(operator, src, field);
         }
@@ -765,6 +811,9 @@ public interface Operator {
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitPutstatic(q);
+            qv.visitStaticField(q);
+            qv.visitStore(q);
+            super.accept(q, qv);
         }
         
         public static class PUTSTATIC_I extends Putstatic {
@@ -795,31 +844,51 @@ public interface Operator {
         public static class PUTSTATIC_I_DYNLINK extends Putstatic {
             public static final PUTSTATIC_I_DYNLINK INSTANCE = new PUTSTATIC_I_DYNLINK();
             private PUTSTATIC_I_DYNLINK() { }
+            public void accept(Quad q, QuadVisitor qv) {
+                qv.visitExceptionThrower(q);
+                super.accept(q, qv);
+            }
             public String toString() { return "PUTSTATIC_I%"; }
         }
         public static class PUTSTATIC_F_DYNLINK extends Putstatic {
             public static final PUTSTATIC_F_DYNLINK INSTANCE = new PUTSTATIC_F_DYNLINK();
             private PUTSTATIC_F_DYNLINK() { }
+            public void accept(Quad q, QuadVisitor qv) {
+                qv.visitExceptionThrower(q);
+                super.accept(q, qv);
+            }
             public String toString() { return "PUTSTATIC_F%"; }
         }
         public static class PUTSTATIC_L_DYNLINK extends Putstatic {
             public static final PUTSTATIC_L_DYNLINK INSTANCE = new PUTSTATIC_L_DYNLINK();
             private PUTSTATIC_L_DYNLINK() { }
+            public void accept(Quad q, QuadVisitor qv) {
+                qv.visitExceptionThrower(q);
+                super.accept(q, qv);
+            }
             public String toString() { return "PUTSTATIC_L%"; }
         }
         public static class PUTSTATIC_D_DYNLINK extends Putstatic {
             public static final PUTSTATIC_D_DYNLINK INSTANCE = new PUTSTATIC_D_DYNLINK();
             private PUTSTATIC_D_DYNLINK() { }
+            public void accept(Quad q, QuadVisitor qv) {
+                qv.visitExceptionThrower(q);
+                super.accept(q, qv);
+            }
             public String toString() { return "PUTSTATIC_D%"; }
         }
         public static class PUTSTATIC_A_DYNLINK extends Putstatic {
             public static final PUTSTATIC_A_DYNLINK INSTANCE = new PUTSTATIC_A_DYNLINK();
             private PUTSTATIC_A_DYNLINK() { }
+            public void accept(Quad q, QuadVisitor qv) {
+                qv.visitExceptionThrower(q);
+                super.accept(q, qv);
+            }
             public String toString() { return "PUTSTATIC_A%"; }
         }
     }
 
-    public static abstract class Getfield implements Operator {
+    public static abstract class Getfield extends Operator {
         public static Quad create(Getfield operator, RegisterOperand dst, Operand base, FieldOperand field, Operand guard) {
             return new Quad(operator, dst, base, field, guard);
         }
@@ -830,6 +899,9 @@ public interface Operator {
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitGetfield(q);
+            qv.visitInstanceField(q);
+            qv.visitLoad(q);
+            super.accept(q, qv);
         }
         
         public static class GETFIELD_I extends Getfield {
@@ -880,51 +952,87 @@ public interface Operator {
         public static class GETFIELD_I_DYNLINK extends Getfield {
             public static final GETFIELD_I_DYNLINK INSTANCE = new GETFIELD_I_DYNLINK();
             private GETFIELD_I_DYNLINK() { }
+            public void accept(Quad q, QuadVisitor qv) {
+                qv.visitExceptionThrower(q);
+                super.accept(q, qv);
+            }
             public String toString() { return "GETFIELD_I%"; }
         }
         public static class GETFIELD_F_DYNLINK extends Getfield {
             public static final GETFIELD_F_DYNLINK INSTANCE = new GETFIELD_F_DYNLINK();
             private GETFIELD_F_DYNLINK() { }
+            public void accept(Quad q, QuadVisitor qv) {
+                qv.visitExceptionThrower(q);
+                super.accept(q, qv);
+            }
             public String toString() { return "GETFIELD_F%"; }
         }
         public static class GETFIELD_L_DYNLINK extends Getfield {
             public static final GETFIELD_L_DYNLINK INSTANCE = new GETFIELD_L_DYNLINK();
             private GETFIELD_L_DYNLINK() { }
+            public void accept(Quad q, QuadVisitor qv) {
+                qv.visitExceptionThrower(q);
+                super.accept(q, qv);
+            }
             public String toString() { return "GETFIELD_L%"; }
         }
         public static class GETFIELD_D_DYNLINK extends Getfield {
             public static final GETFIELD_D_DYNLINK INSTANCE = new GETFIELD_D_DYNLINK();
             private GETFIELD_D_DYNLINK() { }
+            public void accept(Quad q, QuadVisitor qv) {
+                qv.visitExceptionThrower(q);
+                super.accept(q, qv);
+            }
             public String toString() { return "GETFIELD_D%"; }
         }
         public static class GETFIELD_A_DYNLINK extends Getfield {
             public static final GETFIELD_A_DYNLINK INSTANCE = new GETFIELD_A_DYNLINK();
             private GETFIELD_A_DYNLINK() { }
+            public void accept(Quad q, QuadVisitor qv) {
+                qv.visitExceptionThrower(q);
+                super.accept(q, qv);
+            }
             public String toString() { return "GETFIELD_A%"; }
         }
         public static class GETFIELD_B_DYNLINK extends Getfield {
             public static final GETFIELD_B_DYNLINK INSTANCE = new GETFIELD_B_DYNLINK();
             private GETFIELD_B_DYNLINK() { }
+            public void accept(Quad q, QuadVisitor qv) {
+                qv.visitExceptionThrower(q);
+                super.accept(q, qv);
+            }
             public String toString() { return "GETFIELD_B%"; }
         }
         public static class GETFIELD_C_DYNLINK extends Getfield {
             public static final GETFIELD_C_DYNLINK INSTANCE = new GETFIELD_C_DYNLINK();
             private GETFIELD_C_DYNLINK() { }
+            public void accept(Quad q, QuadVisitor qv) {
+                qv.visitExceptionThrower(q);
+                super.accept(q, qv);
+            }
             public String toString() { return "GETFIELD_C%"; }
         }
         public static class GETFIELD_S_DYNLINK extends Getfield {
             public static final GETFIELD_S_DYNLINK INSTANCE = new GETFIELD_S_DYNLINK();
             private GETFIELD_S_DYNLINK() { }
+            public void accept(Quad q, QuadVisitor qv) {
+                qv.visitExceptionThrower(q);
+                super.accept(q, qv);
+            }
             public String toString() { return "GETFIELD_S%"; }
         }
         public static class GETFIELD_Z_DYNLINK extends Getfield {
             public static final GETFIELD_Z_DYNLINK INSTANCE = new GETFIELD_Z_DYNLINK();
             private GETFIELD_Z_DYNLINK() { }
+            public void accept(Quad q, QuadVisitor qv) {
+                qv.visitExceptionThrower(q);
+                super.accept(q, qv);
+            }
             public String toString() { return "GETFIELD_Z%"; }
         }
     }
     
-    public static abstract class Putfield implements Operator {
+    public static abstract class Putfield extends Operator {
         public static Quad create(Putfield operator, Operand base, Operand src, FieldOperand field, Operand guard) {
             return new Quad(operator, base, field, src, guard);
         }
@@ -935,6 +1043,9 @@ public interface Operator {
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitPutfield(q);
+            qv.visitInstanceField(q);
+            qv.visitStore(q);
+            super.accept(q, qv);
         }
         
         public static class PUTFIELD_I extends Putfield {
@@ -985,51 +1096,87 @@ public interface Operator {
         public static class PUTFIELD_I_DYNLINK extends Putfield {
             public static final PUTFIELD_I_DYNLINK INSTANCE = new PUTFIELD_I_DYNLINK();
             private PUTFIELD_I_DYNLINK() { }
+            public void accept(Quad q, QuadVisitor qv) {
+                qv.visitExceptionThrower(q);
+                super.accept(q, qv);
+            }
             public String toString() { return "PUTFIELD_I%"; }
         }
         public static class PUTFIELD_F_DYNLINK extends Putfield {
             public static final PUTFIELD_F_DYNLINK INSTANCE = new PUTFIELD_F_DYNLINK();
             private PUTFIELD_F_DYNLINK() { }
+            public void accept(Quad q, QuadVisitor qv) {
+                qv.visitExceptionThrower(q);
+                super.accept(q, qv);
+            }
             public String toString() { return "PUTFIELD_F%"; }
         }
         public static class PUTFIELD_L_DYNLINK extends Putfield {
             public static final PUTFIELD_L_DYNLINK INSTANCE = new PUTFIELD_L_DYNLINK();
             private PUTFIELD_L_DYNLINK() { }
+            public void accept(Quad q, QuadVisitor qv) {
+                qv.visitExceptionThrower(q);
+                super.accept(q, qv);
+            }
             public String toString() { return "PUTFIELD_L%"; }
         }
         public static class PUTFIELD_D_DYNLINK extends Putfield {
             public static final PUTFIELD_D_DYNLINK INSTANCE = new PUTFIELD_D_DYNLINK();
             private PUTFIELD_D_DYNLINK() { }
+            public void accept(Quad q, QuadVisitor qv) {
+                qv.visitExceptionThrower(q);
+                super.accept(q, qv);
+            }
             public String toString() { return "PUTFIELD_D%"; }
         }
         public static class PUTFIELD_A_DYNLINK extends Putfield {
             public static final PUTFIELD_A_DYNLINK INSTANCE = new PUTFIELD_A_DYNLINK();
             private PUTFIELD_A_DYNLINK() { }
+            public void accept(Quad q, QuadVisitor qv) {
+                qv.visitExceptionThrower(q);
+                super.accept(q, qv);
+            }
             public String toString() { return "PUTFIELD_A%"; }
         }
         public static class PUTFIELD_B_DYNLINK extends Putfield {
             public static final PUTFIELD_B_DYNLINK INSTANCE = new PUTFIELD_B_DYNLINK();
             private PUTFIELD_B_DYNLINK() { }
+            public void accept(Quad q, QuadVisitor qv) {
+                qv.visitExceptionThrower(q);
+                super.accept(q, qv);
+            }
             public String toString() { return "PUTFIELD_B%"; }
         }
         public static class PUTFIELD_C_DYNLINK extends Putfield {
             public static final PUTFIELD_C_DYNLINK INSTANCE = new PUTFIELD_C_DYNLINK();
             private PUTFIELD_C_DYNLINK() { }
+            public void accept(Quad q, QuadVisitor qv) {
+                qv.visitExceptionThrower(q);
+                super.accept(q, qv);
+            }
             public String toString() { return "PUTFIELD_C%"; }
         }
         public static class PUTFIELD_S_DYNLINK extends Putfield {
             public static final PUTFIELD_S_DYNLINK INSTANCE = new PUTFIELD_S_DYNLINK();
             private PUTFIELD_S_DYNLINK() { }
+            public void accept(Quad q, QuadVisitor qv) {
+                qv.visitExceptionThrower(q);
+                super.accept(q, qv);
+            }
             public String toString() { return "PUTFIELD_S%"; }
         }
         public static class PUTFIELD_Z_DYNLINK extends Putfield {
             public static final PUTFIELD_Z_DYNLINK INSTANCE = new PUTFIELD_Z_DYNLINK();
             private PUTFIELD_Z_DYNLINK() { }
+            public void accept(Quad q, QuadVisitor qv) {
+                qv.visitExceptionThrower(q);
+                super.accept(q, qv);
+            }
             public String toString() { return "PUTFIELD_Z%"; }
         }
     }
 
-    public static abstract class NullCheck implements Operator {
+    public static abstract class NullCheck extends Operator {
         public static Quad create(NullCheck operator, Operand dst, Operand src) {
             return new Quad(operator, dst, src);
         }
@@ -1038,6 +1185,9 @@ public interface Operator {
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitNullCheck(q);
+            qv.visitCheck(q);
+            qv.visitExceptionThrower(q);
+            super.accept(q, qv);
         }
         
         public static class NULL_CHECK extends NullCheck {
@@ -1046,8 +1196,29 @@ public interface Operator {
             public String toString() { return "NULL_CHECK"; }
         }
     }
+
+    public static abstract class ZeroCheck extends Operator {
+        public static Quad create(ZeroCheck operator, Operand dst, Operand src) {
+            return new Quad(operator, dst, src);
+        }
+        public static Operand getDest(Quad q) { return q.getOp1(); }
+        public static Operand getSrc(Quad q) { return q.getOp2(); }
+        
+        public void accept(Quad q, QuadVisitor qv) {
+            qv.visitZeroCheck(q);
+            qv.visitCheck(q);
+            qv.visitExceptionThrower(q);
+            super.accept(q, qv);
+        }
+        
+        public static class ZERO_CHECK extends ZeroCheck {
+            public static final ZERO_CHECK INSTANCE = new ZERO_CHECK();
+            private ZERO_CHECK() { }
+            public String toString() { return "ZERO_CHECK"; }
+        }
+    }
     
-    public static abstract class BoundsCheck implements Operator {
+    public static abstract class BoundsCheck extends Operator {
         public static Quad create(BoundsCheck operator, Operand ref, Operand idx, Operand guard) {
             return new Quad(operator, ref, idx, guard);
         }
@@ -1057,6 +1228,9 @@ public interface Operator {
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitBoundsCheck(q);
+            qv.visitCheck(q);
+            qv.visitExceptionThrower(q);
+            super.accept(q, qv);
         }
         
         public static class BOUNDS_CHECK extends BoundsCheck {
@@ -1066,7 +1240,7 @@ public interface Operator {
         }
     }
     
-    public static abstract class StoreCheck implements Operator {
+    public static abstract class StoreCheck extends Operator {
         public static Quad create(StoreCheck operator, Operand ref, Operand elem, Operand guard) {
             return new Quad(operator, ref, elem, guard);
         }
@@ -1076,6 +1250,10 @@ public interface Operator {
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitStoreCheck(q);
+            qv.visitTypeCheck(q);
+            qv.visitCheck(q);
+            qv.visitExceptionThrower(q);
+            super.accept(q, qv);
         }
         
         public static class ASTORE_CHECK extends StoreCheck {
@@ -1085,7 +1263,7 @@ public interface Operator {
         }
     }
     
-    public static abstract class Invoke implements Operator {
+    public static abstract class Invoke extends Operator {
         public static Quad create(Invoke operator, RegisterOperand res, MethodOperand m, int length) {
             return new Quad(operator, res, m, new ParamListOperand(new RegisterOperand[length]));
         }
@@ -1099,6 +1277,8 @@ public interface Operator {
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitInvoke(q);
+            qv.visitExceptionThrower(q);
+            super.accept(q, qv);
         }
         
         public static class INVOKEVIRTUAL_V extends Invoke {
@@ -1283,7 +1463,7 @@ public interface Operator {
         }
     }
     
-    public static abstract class New implements Operator {
+    public static abstract class New extends Operator {
         public static Quad create(New operator, RegisterOperand res, TypeOperand type) {
             return new Quad(operator, res, type);
         }
@@ -1292,6 +1472,8 @@ public interface Operator {
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitNew(q);
+            qv.visitAllocation(q);
+            super.accept(q, qv);
         }
         
         public static class NEW extends New {
@@ -1301,7 +1483,7 @@ public interface Operator {
         }
     }
     
-    public static abstract class NewArray implements Operator {
+    public static abstract class NewArray extends Operator {
         public static Quad create(NewArray operator, RegisterOperand res, Operand size, TypeOperand type) {
             return new Quad(operator, res, size, type);
         }
@@ -1311,6 +1493,9 @@ public interface Operator {
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitNewArray(q);
+            qv.visitAllocation(q);
+            qv.visitExceptionThrower(q);
+            super.accept(q, qv);
         }
         
         public static class NEWARRAY extends NewArray {
@@ -1320,7 +1505,7 @@ public interface Operator {
         }
     }
     
-    public static abstract class CheckCast implements Operator {
+    public static abstract class CheckCast extends Operator {
         public static Quad create(CheckCast operator, RegisterOperand res, Operand val, TypeOperand type) {
             return new Quad(operator, res, val, type);
         }
@@ -1330,6 +1515,10 @@ public interface Operator {
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitCheckCast(q);
+            qv.visitTypeCheck(q);
+            qv.visitCheck(q);
+            qv.visitExceptionThrower(q);
+            super.accept(q, qv);
         }
         
         public static class CHECKCAST extends CheckCast {
@@ -1339,7 +1528,7 @@ public interface Operator {
         }
     }
     
-    public static abstract class InstanceOf implements Operator {
+    public static abstract class InstanceOf extends Operator {
         public static Quad create(InstanceOf operator, RegisterOperand res, Operand val, TypeOperand type) {
             return new Quad(operator, res, val, type);
         }
@@ -1349,6 +1538,9 @@ public interface Operator {
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitInstanceOf(q);
+            qv.visitTypeCheck(q);
+            qv.visitExceptionThrower(q);
+            super.accept(q, qv);
         }
         
         public static class INSTANCEOF extends InstanceOf {
@@ -1358,7 +1550,7 @@ public interface Operator {
         }
     }
     
-    public abstract static class ALength implements Operator {
+    public abstract static class ALength extends Operator {
         public static Quad create(ALength operator, RegisterOperand res, Operand val) {
             return new Quad(operator, res, val);
         }
@@ -1367,6 +1559,7 @@ public interface Operator {
 
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitALength(q);
+            super.accept(q, qv);
         }
         
         public static class ARRAYLENGTH extends ALength {
@@ -1376,7 +1569,7 @@ public interface Operator {
         }
     }
     
-    public static abstract class Monitor implements Operator {
+    public static abstract class Monitor extends Operator {
         public static Quad create(Monitor operator, Operand val) {
             return new Quad(operator, null, val);
         }
@@ -1384,6 +1577,8 @@ public interface Operator {
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitMonitor(q);
+            qv.visitExceptionThrower(q);
+            super.accept(q, qv);
         }
         
         public static class MONITORENTER extends Monitor {
@@ -1398,8 +1593,7 @@ public interface Operator {
         }
     }
     
-    public static abstract class MemLoad implements Operator {
-        
+    public static abstract class MemLoad extends Operator {
         public static Quad create(MemLoad operator, RegisterOperand dst, Operand addr) {
             return new Quad(operator, dst, addr);
         }
@@ -1408,6 +1602,8 @@ public interface Operator {
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitMemLoad(q);
+            qv.visitLoad(q);
+            super.accept(q, qv);
         }
         
         public static class PEEK_1 extends MemLoad {
@@ -1427,8 +1623,7 @@ public interface Operator {
         }
     }
 
-    public static abstract class MemStore implements Operator {
-        
+    public static abstract class MemStore extends Operator {
         public static Quad create(MemStore operator, Operand addr, Operand val) {
             return new Quad(operator, null, addr, val);
         }
@@ -1437,6 +1632,8 @@ public interface Operator {
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitMemStore(q);
+            qv.visitStore(q);
+            super.accept(q, qv);
         }
         
         public static class POKE_1 extends MemStore {
@@ -1456,7 +1653,7 @@ public interface Operator {
         }
     }
     
-    public static abstract class Special implements Operator {
+    public static abstract class Special extends Operator {
         
         public static Quad create(GET_THREAD_BLOCK operator, RegisterOperand res) {
             return new Quad(operator, res);
@@ -1480,6 +1677,7 @@ public interface Operator {
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitSpecial(q);
+            super.accept(q, qv);
         }
         
         public static class GET_THREAD_BLOCK extends Special {

@@ -90,6 +90,11 @@ public interface QuadVisitor {
     public void visitTableSwitch(Quad obj);
     /** A unary operation instruction. */
     public void visitUnary(Quad obj);
+    /** A divide-by-zero check instruction. */
+    public void visitZeroCheck(Quad obj);
+    
+    /** Any quad. */
+    public void visitQuad(Quad obj);
     
     public abstract class EmptyVisitor implements QuadVisitor {
         /** A potentially excepting instruction.. */
@@ -171,12 +176,22 @@ public interface QuadVisitor {
         public void visitTableSwitch(Quad obj) {}
         /** A unary operation instruction. */
         public void visitUnary(Quad obj) {}
+        /** A divide-by-zero check instruction. */
+        public void visitZeroCheck(Quad obj) {}
+        
+        /** Any quad. */
+        public void visitQuad(Quad obj) {}
     }
     
     public class AllQuadVisitor implements BasicBlockVisitor {
         final QuadVisitor qv;
+        boolean trace;
         public AllQuadVisitor(QuadVisitor qv) { this.qv = qv; }
-        public void visitBasicBlock(BasicBlock bb) { bb.visitQuads(qv); }
+        public AllQuadVisitor(QuadVisitor qv, boolean trace) { this.qv = qv; this.trace = trace; }
+        public void visitBasicBlock(BasicBlock bb) {
+            if (trace) System.out.println(bb.toString());
+            bb.visitQuads(qv);
+        }
     }
     
 }
