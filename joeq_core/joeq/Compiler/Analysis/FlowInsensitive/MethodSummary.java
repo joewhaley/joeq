@@ -226,7 +226,7 @@ public class MethodSummary {
         protected final Map sync_ops;
         
         /** Factory for nodes. */
-        protected final HashMap quadsToNodes;
+        protected final HashMap nodeCache;
         
         BuildMethodSummary(BuildMethodSummary that) {
             this.method = that.method;
@@ -245,7 +245,7 @@ public class MethodSummary {
             this.s = that.s;
             this.change = that.change;
             this.sync_ops = that.sync_ops;
-            this.quadsToNodes = that.quadsToNodes;
+            this.nodeCache = that.nodeCache;
         }
         
         /** Returns the summary. Call this after iteration has completed. */
@@ -300,7 +300,7 @@ public class MethodSummary {
             this.callToRVN = new HashMap();
             this.callToTEN = new HashMap();
             this.passedAsParameter = NodeSet.FACTORY.makeSet();
-            this.quadsToNodes = new HashMap();
+            this.nodeCache = new HashMap();
             this.s = this.start_states[0] = new State(this.nRegisters);
             jq_Type[] params = this.method.getParamTypes();
             this.param_nodes = new ParamNode[params.length];
@@ -578,12 +578,12 @@ public class MethodSummary {
                 } else {
                     Object key;
                     if (MERGE_LOCAL_CONSTANTS) key = aop.getValue();
-                    else key = op.getQuad();
-                    n = (Node) quadsToNodes.get(key);
+                    else key = op;
+                    n = (Node) nodeCache.get(key);
                     if (n == null) {
                         if (MERGE_LOCAL_CONSTANTS) n = new ConcreteObjectNode(aop.getValue());
                         else n = new ConcreteTypeNode(aop.getType());
-                        quadsToNodes.put(key, n);
+                        nodeCache.put(key, n);
                     }
                 }
             } else {
@@ -720,9 +720,9 @@ public class MethodSummary {
                     // todo: get the real type.
                     jq_Reference type = PrimordialClassLoader.getJavaLangObject().getArrayTypeForElementType();
                     Object key = obj;
-                    ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(key);
+                    ConcreteTypeNode n = (ConcreteTypeNode)nodeCache.get(key);
                     if (n == null)
-                        quadsToNodes.put(key, n = new ConcreteTypeNode(type, new QuadProgramLocation(method, obj)));
+                        nodeCache.put(key, n = new ConcreteTypeNode(type, new QuadProgramLocation(method, obj)));
                     setRegister(dest_r, n);
                 }
                 return;
@@ -820,11 +820,11 @@ public class MethodSummary {
                     if (la.isInLoop(method, bb)) {
                         System.out.println("Found thread creation in loop: "+obj);
                         Object key = obj;
-                        Pair p = (Pair) quadsToNodes.get(key);
+                        Pair p = (Pair) nodeCache.get(key);
                         if (p == null) {
                             p = new Pair(new ConcreteTypeNode(type, new QuadProgramLocation(method, obj)),
                                          new ConcreteTypeNode(type, new QuadProgramLocation(method, obj)));
-                            quadsToNodes.put(key, p);
+                            nodeCache.put(key, p);
                         }
                         setRegister(dest_r, p);
                         return;
@@ -832,9 +832,9 @@ public class MethodSummary {
                 }
             }
             Object key = obj;
-            ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(key);
+            ConcreteTypeNode n = (ConcreteTypeNode)nodeCache.get(key);
             if (n == null)
-                quadsToNodes.put(key, n = new ConcreteTypeNode(type, new QuadProgramLocation(method, obj)));
+                nodeCache.put(key, n = new ConcreteTypeNode(type, new QuadProgramLocation(method, obj)));
             setRegister(dest_r, n);
         }
         /** Visit an array allocation instruction. */
@@ -843,9 +843,9 @@ public class MethodSummary {
             Register dest_r = NewArray.getDest(obj).getRegister();
             jq_Reference type = (jq_Reference)NewArray.getType(obj).getType();
             Object key = obj;
-            ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(key);
+            ConcreteTypeNode n = (ConcreteTypeNode)nodeCache.get(key);
             if (n == null)
-                quadsToNodes.put(key, n = new ConcreteTypeNode(type, new QuadProgramLocation(method, obj)));
+                nodeCache.put(key, n = new ConcreteTypeNode(type, new QuadProgramLocation(method, obj)));
             setRegister(dest_r, n);
         }
         /** Visit a put instance field instruction. */
@@ -934,10 +934,10 @@ public class MethodSummary {
                 if (TRACE_INTRA) out.println("Visiting: "+obj);
                 Register dest_r = ((RegisterOperand)Special.getOp1(obj)).getRegister();
                 jq_Reference type = Scheduler.jq_Thread._class;
-                ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(obj);
+                ConcreteTypeNode n = (ConcreteTypeNode)nodeCache.get(obj);
                 Object key = obj;
                 if (n == null)
-                    quadsToNodes.put(key, n = new ConcreteTypeNode(type, new QuadProgramLocation(method, obj)));
+                    nodeCache.put(key, n = new ConcreteTypeNode(type, new QuadProgramLocation(method, obj)));
                 n.setEscapes();
                 setRegister(dest_r, n);
             } else if (obj.getOperator() == Special.SET_THREAD_BLOCK.INSTANCE) {
