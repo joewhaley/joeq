@@ -95,6 +95,22 @@ public class FillableInputStream extends InputStream implements DataOutput {
         return res;
     }
 
+    /* (non-Javadoc)
+     * @see java.io.InputStream#read(byte[], int, int)
+     */
+    public synchronized int read(byte[] b, int off, int len) throws IOException {
+        while (start == end) {
+            try {
+                wait();
+            } catch (InterruptedException x) { }
+        }
+        int a = Math.min(len, (start < end ? end : buffer.length) - start);
+        System.arraycopy(buffer, start, b, off, a);
+        start += a;
+        if (start == buffer.length) start = 0;
+        return a;
+    }
+    
     private int nextEnd(int count) {
         int newEnd = end + count;
         if (newEnd >= buffer.length) newEnd -= buffer.length;
