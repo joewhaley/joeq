@@ -12,7 +12,7 @@ import joeq.Compiler.Analysis.IPSSA.SSAValue;
 
 /**
  * Implements a trace of SSADefinitions.
- * @author Vladimir Livshits
+ * @author V.Benjamin Livshits
  * @version $Id$
  * */
 public class ReachabilityTrace implements Cloneable {

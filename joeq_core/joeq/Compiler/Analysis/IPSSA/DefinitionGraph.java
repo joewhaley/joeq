@@ -22,7 +22,7 @@ import joeq.Compiler.Analysis.IPSSA.ContextSet;
  * 
  * Provides a dot printer.
  * 
- *  @author Vladimir Livshits
+ *  @author V.Benjamin Livshits
  */
 public abstract class DefinitionGraph {
     private HashSet _nodes;

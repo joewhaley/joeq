@@ -12,7 +12,7 @@ import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.RegisterFactory;
 
 /**
- * @author Vladimir Livshits
+ * @author V.Benjamin Livshits
  * @see Compiler.Analysis.IPSSA.SSADefinition
  * @see Compiler.Analysis.IPSSA.SSABinding
  * @version $Id$

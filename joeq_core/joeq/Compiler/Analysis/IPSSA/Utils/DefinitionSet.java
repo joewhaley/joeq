@@ -10,7 +10,7 @@ import java.util.HashSet;
 import joeq.Compiler.Analysis.IPSSA.SSAIterator;
 
 /**
- * @author Vladimir Livshits
+ * @author V.Benjamin Livshits
  * @version $Id$
  * 
  * Strongly typed definition set.

@@ -54,7 +54,7 @@ import joeq.Util.Templates.ListIterator;
  * A subclass is SSABuilder, which is responsible for intraprocedural IPSSA
  * construction.
  * 
- * @author Vladimir Livshits
+ * @author V.Benjamin Livshits
  * @see IPSSABuilder.SSABuilder
  * @version $Id$
  * */
@@ -83,7 +83,7 @@ public class IPSSABuilder implements Runnable {
             if(resdir != null) {
                 args = new String[1];
                 args[0] = resdir;
-                System.err.println("Reading pointer analysis results from directory " + resdir);
+                System.out.println("Reading pointer analysis results from directory " + resdir);
             }
             _ptr = PAResults.loadResults(args, null);
         } catch (IOException e) {
@@ -961,8 +961,11 @@ public class IPSSABuilder implements Runnable {
             parseParams(args);
             _name = name;
             _builder = builder;
+            //
+            initialize();
         }
-        public void initialize() {};
+        protected void initialize() {}
+        
         protected void setBuilder(IPSSABuilder builder) {            
             _builder = builder;            
         }

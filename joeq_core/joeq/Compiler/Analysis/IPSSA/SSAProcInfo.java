@@ -23,7 +23,7 @@ import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.QuadIterator;
 
 /**
- * @author Vladimir Livshits
+ * @author V.Benjamin Livshits
  * @see SSAProcInfo.Query
  * @version $Id$
  * */

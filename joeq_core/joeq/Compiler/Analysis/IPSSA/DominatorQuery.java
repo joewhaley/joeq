@@ -13,7 +13,7 @@ import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.Quad;
 
  /**
- * @author Vladimir Livshits
+ * @author V.Benjamin Livshits
  */
 public interface DominatorQuery {
     /** The result is null for the top node of the CFG. */
