@@ -3,7 +3,7 @@ SUPPORT_LIBS = Support/javabdd_0.5.jar
 JDK14SUPPORT_LIB = Support/java14.jar
 
 ifeq (${OS},Windows_NT)
-CLASSPATH_SEP = ;
+CLASSPATH_SEP = \;
 BUILD_CLASSPATH = ".;$(subst $(space),;,$(SUPPORT_LIBS))"
 JOEQ_DIR = $(shell cygpath -ma .)
 else
