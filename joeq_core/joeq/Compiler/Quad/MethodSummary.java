@@ -21,6 +21,8 @@ import java.util.HashSet;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Iterator;
+import Util.LinkedHashSet;
+import Util.LinkedHashMap;
 import Compil3r.BytecodeAnalysis.BytecodeVisitor;
 import Compil3r.BytecodeAnalysis.CallTargets;
 import Compil3r.Quad.BytecodeToQuad.jq_ReturnAddressType;
@@ -96,11 +98,11 @@ public class MethodSummary {
         /** The start states of the iteration. */
         protected final State[] start_states;
         /** The set of returned and thrown nodes. */
-        protected final HashSet returned, thrown;
+        protected final LinkedHashSet returned, thrown;
         /** The set of method calls made. */
-        protected final HashSet methodCalls;
+        protected final LinkedHashSet methodCalls;
         /** The set of nodes that were ever passed as a parameter. */
-        protected final HashSet passedAsParameter;
+        protected final LinkedHashSet passedAsParameter;
         /** The current basic block. */
         protected BasicBlock bb;
         /** The current state. */
@@ -116,7 +118,7 @@ public class MethodSummary {
             MethodSummary s = new MethodSummary(method, param_nodes, my_global, methodCalls, returned, thrown, passedAsParameter);
             // merge global nodes.
             if ((my_global.accessPathEdges != null) || (my_global.addedEdges != null)) {
-                HashSet set = new HashSet(); set.add(GlobalNode.GLOBAL);
+                Set set = Collections.singleton(GlobalNode.GLOBAL);
                 my_global.replaceBy(set);
                 /*
                 for (Iterator i=my_global.accessPathEdges.entrySet().iterator(); i.hasNext(); ) {
@@ -126,7 +128,7 @@ public class MethodSummary {
                     if (o instanceof FieldNode)
                         GlobalNode.GLOBAL.addAccessPathEdge(f, (FieldNode)o);
                     else
-                        GlobalNode.GLOBAL.addAccessPathEdges(f, (HashSet)o);
+                        GlobalNode.GLOBAL.addAccessPathEdges(f, (LinkedHashSet)o);
                 }
                  */
             }
@@ -145,7 +147,7 @@ public class MethodSummary {
         protected void setRegister(Register r, Object n) {
             int i = r.getNumber();
             if (r.isTemp()) i += nLocals;
-            if (n instanceof HashSet) n = ((HashSet)n).clone();
+            if (n instanceof LinkedHashSet) n = ((LinkedHashSet)n).clone();
             else jq.assert(n instanceof Node);
             s.registers[i] = n;
         }
@@ -163,8 +165,8 @@ public class MethodSummary {
             this.nRegisters = this.nLocals + rf.getStackSize(PrimordialClassLoader.getJavaLangObject());
             this.method = cfg.getMethod();
             this.start_states = new State[cfg.getNumberOfBasicBlocks()];
-            this.methodCalls = new HashSet();
-            this.passedAsParameter = new HashSet();
+            this.methodCalls = new LinkedHashSet();
+            this.passedAsParameter = new LinkedHashSet();
             this.quadsToNodes = new HashMap();
             this.s = this.start_states[0] = new State(this.nRegisters);
             jq_Type[] params = this.method.getParamTypes();
@@ -175,7 +177,7 @@ public class MethodSummary {
                 } else if (params[i].getReferenceSize() == 8) ++j;
             }
             this.my_global = new GlobalNode();
-            this.returned = new HashSet(); this.thrown = new HashSet();
+            this.returned = new LinkedHashSet(); this.thrown = new LinkedHashSet();
             
             if (TRACE_INTRA) out.println("Building summary for "+this.method);
             
@@ -198,7 +200,7 @@ public class MethodSummary {
                         ExceptionHandler eh = (ExceptionHandler)i.next();
                         CaughtExceptionNode n = new CaughtExceptionNode(eh);
                         if (i.hasNext()) {
-                            HashSet set = new HashSet(); set.add(n);
+                            LinkedHashSet set = new LinkedHashSet(); set.add(n);
                             while (i.hasNext()) {
                                 eh = (ExceptionHandler)i.next();
                                 n = new CaughtExceptionNode(eh);
@@ -268,7 +270,7 @@ public class MethodSummary {
         
         /** Abstractly perform a heap load operation on the given base and field
          *  with the given field node, putting the result in the given set. */
-        protected void heapLoad(HashSet result, Node base, jq_Field f, FieldNode fn) {
+        protected void heapLoad(LinkedHashSet result, Node base, jq_Field f, FieldNode fn) {
             //base.addAccessPathEdge(f, fn);
             result.add(fn);
             if (INSIDE_EDGES)
@@ -277,8 +279,8 @@ public class MethodSummary {
         /** Abstractly perform a heap load operation corresponding to quad 'obj'
          *  with the given destination register, bases and field.  The destination
          *  register in the current state is changed to the result. */
-        protected void heapLoad(Quad obj, Register dest_r, HashSet base_s, jq_Field f) {
-            HashSet result = new HashSet();
+        protected void heapLoad(Quad obj, Register dest_r, LinkedHashSet base_s, jq_Field f) {
+            LinkedHashSet result = new LinkedHashSet();
             for (Iterator i=base_s.iterator(); i.hasNext(); ) {
                 Node base = (Node)i.next();
                 FieldNode fn = FieldNode.get(base, f, obj);
@@ -291,7 +293,7 @@ public class MethodSummary {
          *  register in the current state is changed to the result. */
         protected void heapLoad(Quad obj, Register dest_r, Node base_n, jq_Field f) {
             FieldNode fn = FieldNode.get(base_n, f, obj);
-            HashSet result = new HashSet();
+            LinkedHashSet result = new LinkedHashSet();
             heapLoad(result, base_n, f, fn);
             setRegister(dest_r, result);
         }
@@ -300,8 +302,8 @@ public class MethodSummary {
          *  destination register in the current state is changed to the result. */
         protected void heapLoad(Quad obj, Register dest_r, Register base_r, jq_Field f) {
             Object o = getRegister(base_r);
-            if (o instanceof HashSet) {
-                heapLoad(obj, dest_r, (HashSet)o, f);
+            if (o instanceof LinkedHashSet) {
+                heapLoad(obj, dest_r, (LinkedHashSet)o, f);
             } else {
                 heapLoad(obj, dest_r, (Node)o, f);
             }
@@ -314,15 +316,15 @@ public class MethodSummary {
         }
         /** Abstractly perform a heap store operation of the given source nodes on
          *  the given base node and field. */
-        protected void heapStore(Node base, HashSet src, jq_Field f) {
-            base.addEdges(f, (HashSet)src.clone());
+        protected void heapStore(Node base, LinkedHashSet src, jq_Field f) {
+            base.addEdges(f, (LinkedHashSet)src.clone());
         }
         /** Abstractly perform a heap store operation of the given source node on
          *  the nodes in the given register in the current state and the given field. */
         protected void heapStore(Register base_r, Node src_n, jq_Field f) {
             Object base = getRegister(base_r);
-            if (base instanceof HashSet) {
-                for (Iterator i = ((HashSet)base).iterator(); i.hasNext(); ) {
+            if (base instanceof LinkedHashSet) {
+                for (Iterator i = ((LinkedHashSet)base).iterator(); i.hasNext(); ) {
                     heapStore((Node)i.next(), src_n, f);
                 }
             } else {
@@ -336,7 +338,7 @@ public class MethodSummary {
             if (src instanceof Node) {
                 heapStore(base, (Node)src, f);
             } else {
-                heapStore(base, (HashSet)src, f);
+                heapStore(base, (LinkedHashSet)src, f);
             }
         }
         /** Abstractly perform a heap store operation of the nodes in the given register
@@ -348,9 +350,9 @@ public class MethodSummary {
                 heapStore(base_r, (Node)src, f);
                 return;
             }
-            HashSet src_h = (HashSet)src;
-            if (base instanceof HashSet) {
-                for (Iterator i = ((HashSet)base).iterator(); i.hasNext(); ) {
+            LinkedHashSet src_h = (LinkedHashSet)src;
+            if (base instanceof LinkedHashSet) {
+                for (Iterator i = ((LinkedHashSet)base).iterator(); i.hasNext(); ) {
                     heapStore((Node)i.next(), src_h, f);
                 }
             } else {
@@ -363,8 +365,8 @@ public class MethodSummary {
         void passParameter(Register r, MethodCall m, int p) {
             Object v = getRegister(r);
             if (TRACE_INTRA) out.println("Passing "+r+" to "+m+" param "+p+": "+v);
-            if (v instanceof HashSet) {
-                for (Iterator i = ((HashSet)v).iterator(); i.hasNext(); ) {
+            if (v instanceof LinkedHashSet) {
+                for (Iterator i = ((LinkedHashSet)v).iterator(); i.hasNext(); ) {
                     Node n = (Node)i.next();
                     n.recordPassedParameter(m, p);
                     passedAsParameter.add(n);
@@ -571,15 +573,15 @@ public class MethodSummary {
             }
         }
         
-        static void addToSet(HashSet s, Object o) {
-            if (o instanceof HashSet) s.addAll((HashSet)o);
+        static void addToSet(LinkedHashSet s, Object o) {
+            if (o instanceof LinkedHashSet) s.addAll((LinkedHashSet)o);
             else if (o != null) s.add(o);
         }
         
         /** Visit a return/throw instruction. */
         public void visitReturn(Quad obj) {
             Operand src = Return.getSrc(obj);
-            HashSet r;
+            LinkedHashSet r;
             if (obj.getOperator() == Return.RETURN_A.INSTANCE) r = returned;
             else if (obj.getOperator() == Return.THROW_A.INSTANCE) r = thrown;
             else return;
@@ -708,7 +710,7 @@ public class MethodSummary {
         public CallTargets getCallTargets(java.util.Set nodes) {
             byte type = getType();
             boolean exact = true;
-            HashSet types = new HashSet();
+            LinkedHashSet types = new LinkedHashSet();
             for (Iterator i=nodes.iterator(); i.hasNext(); ) {
                 Node n = (Node)i.next();
                 if (!(n instanceof ConcreteTypeNode)) exact = false;
@@ -745,13 +747,13 @@ public class MethodSummary {
     public abstract static class Node implements Cloneable {
         /** Map from fields to sets of predecessors on that field. 
          *  This only includes inside edges; outside edge predecessors are in FieldNode. */
-        HashMap predecessors;
+        LinkedHashMap predecessors;
         /** Set of passed parameters for this node. */
-        HashSet passedParameters;
+        LinkedHashSet passedParameters;
         /** Map from fields to sets of inside edges from this node on that field. */
-        HashMap addedEdges;
+        LinkedHashMap addedEdges;
         /** Map from fields to sets of outside edges from this node on that field. */
-        HashMap accessPathEdges;
+        LinkedHashMap accessPathEdges;
         
         protected Node() {}
         protected Node(Node n) {
@@ -765,7 +767,7 @@ public class MethodSummary {
          *  edges to and from this node are replaced by sets of edges to and from
          *  the nodes in the set.  The passed parameter set of this node is also
          *  added to every node in the given set. */
-        public void replaceBy(HashSet set) {
+        public void replaceBy(Set set) {
             jq.assert(!set.contains(this));
             if (this.predecessors != null) {
                 for (Iterator i=this.predecessors.entrySet().iterator(); i.hasNext(); ) {
@@ -788,7 +790,7 @@ public class MethodSummary {
                             that.addEdge(f, (Node)j.next());
                         }
                     } else {
-                        for (Iterator k=((HashSet)o).iterator(); k.hasNext(); ) {
+                        for (Iterator k=((LinkedHashSet)o).iterator(); k.hasNext(); ) {
                             Node that = (Node)k.next();
                             k.remove();
                             if (that == this) {
@@ -822,7 +824,7 @@ public class MethodSummary {
                             node2.addEdge(f, that);
                         }
                     } else {
-                        for (Iterator k=((HashSet)o).iterator(); k.hasNext(); ) {
+                        for (Iterator k=((LinkedHashSet)o).iterator(); k.hasNext(); ) {
                             Node that = (Node)k.next();
                             k.remove();
                             jq.assert(that != this); // cyclic edges handled above.
@@ -850,7 +852,7 @@ public class MethodSummary {
                             node2.addAccessPathEdge(f, that);
                         }
                     } else {
-                        for (Iterator k=((HashSet)o).iterator(); k.hasNext(); ) {
+                        for (Iterator k=((LinkedHashSet)o).iterator(); k.hasNext(); ) {
                             FieldNode that = (FieldNode)k.next();
                             k.remove();
                             jq.assert(that != this); // cyclic edges handled above.
@@ -874,7 +876,7 @@ public class MethodSummary {
         }
         
         /** Helper function to update map m given an update map um. */
-        static void updateMap(HashMap um, Iterator i, HashMap m) {
+        static void updateMap(HashMap um, Iterator i, LinkedHashMap m) {
             while (i.hasNext()) {
                 java.util.Map.Entry e = (java.util.Map.Entry)i.next();
                 jq_Field f = (jq_Field)e.getKey();
@@ -882,7 +884,7 @@ public class MethodSummary {
                 if (o instanceof Node) {
                     m.put(f, um.get(o));
                 } else {
-                    for (Iterator j=((HashSet)o).iterator(); j.hasNext(); ) {
+                    for (Iterator j=((LinkedHashSet)o).iterator(); j.hasNext(); ) {
                         m.put(f, um.get(j.next()));
                     }
                 }
@@ -893,23 +895,23 @@ public class MethodSummary {
          *  Also clones the passed parameter set.
          */
         public void update(HashMap um) {
-            HashMap m = this.predecessors;
+            LinkedHashMap m = this.predecessors;
             if (m != null) {
-                this.predecessors = new HashMap();
+                this.predecessors = new LinkedHashMap();
                 updateMap(um, m.entrySet().iterator(), this.predecessors);
             }
             m = this.addedEdges;
             if (m != null) {
-                this.addedEdges = new HashMap();
+                this.addedEdges = new LinkedHashMap();
                 updateMap(um, m.entrySet().iterator(), this.addedEdges);
             }
             m = this.accessPathEdges;
             if (m != null) {
-                this.accessPathEdges = new HashMap();
+                this.accessPathEdges = new LinkedHashMap();
                 updateMap(um, m.entrySet().iterator(), this.accessPathEdges);
             }
             if (this.passedParameters != null) {
-                this.passedParameters = (HashSet)this.passedParameters.clone();
+                this.passedParameters = (LinkedHashSet)this.passedParameters.clone();
             }
         }
         
@@ -954,22 +956,22 @@ public class MethodSummary {
         public boolean removePredecessor(jq_Field m, Node n) {
             if (predecessors == null) return false;
             Object o = predecessors.get(m);
-            if (o instanceof HashSet) return ((HashSet)o).remove(n);
+            if (o instanceof LinkedHashSet) return ((LinkedHashSet)o).remove(n);
             else if (o == n) { predecessors.remove(m); return true; }
             else return false;
         }
         /** Add the given predecessor node on the given field to the predecessor set.
          *  Returns true if that predecessor didn't already exist, false otherwise. */
         public boolean addPredecessor(jq_Field m, Node n) {
-            if (predecessors == null) predecessors = new HashMap();
+            if (predecessors == null) predecessors = new LinkedHashMap();
             Object o = predecessors.get(m);
             if (o == null) {
                 predecessors.put(m, n);
                 return true;
             }
-            if (o instanceof HashSet) return ((HashSet)o).add(n);
+            if (o instanceof LinkedHashSet) return ((LinkedHashSet)o).add(n);
             if (o == n) return false;
-            HashSet s = new HashSet(); s.add(o); s.add(n);
+            LinkedHashSet s = new LinkedHashSet(); s.add(o); s.add(n);
             predecessors.put(m, s);
             return true;
         }
@@ -977,20 +979,20 @@ public class MethodSummary {
         /** Record the given passed parameter in the set for this node.
          *  Returns true if that passed parameter didn't already exist, false otherwise. */
         public boolean recordPassedParameter(PassedParameter cm) {
-            if (passedParameters == null) passedParameters = new HashSet();
+            if (passedParameters == null) passedParameters = new LinkedHashSet();
             return passedParameters.add(cm);
         }
         /** Record the passed parameter of the given method call and argument number in
          *  the set for this node.
          *  Returns true if that passed parameter didn't already exist, false otherwise. */
         public boolean recordPassedParameter(MethodCall m, int paramNum) {
-            if (passedParameters == null) passedParameters = new HashSet();
+            if (passedParameters == null) passedParameters = new LinkedHashSet();
             PassedParameter cm = new PassedParameter(m, paramNum);
             return passedParameters.add(cm);
         }
         private boolean _removeEdge(jq_Field m, Node n) {
             Object o = addedEdges.get(m);
-            if (o instanceof HashSet) return ((HashSet)o).remove(n);
+            if (o instanceof LinkedHashSet) return ((LinkedHashSet)o).remove(n);
             else if (o == n) { addedEdges.remove(m); return true; }
             else return false;
         }
@@ -1007,15 +1009,15 @@ public class MethodSummary {
          *  Returns true if that edge didn't already exist, false otherwise. */
         public boolean addEdge(jq_Field m, Node n) {
             n.addPredecessor(m, this);
-            if (addedEdges == null) addedEdges = new HashMap();
+            if (addedEdges == null) addedEdges = new LinkedHashMap();
             Object o = addedEdges.get(m);
             if (o == null) {
                 addedEdges.put(m, n);
                 return true;
             }
-            if (o instanceof HashSet) return ((HashSet)o).add(n);
+            if (o instanceof LinkedHashSet) return ((LinkedHashSet)o).add(n);
             if (o == n) return false;
-            HashSet s = new HashSet(); s.add(o); s.add(n);
+            LinkedHashSet s = new LinkedHashSet(); s.add(o); s.add(n);
             addedEdges.put(m, s);
             return true;
         }
@@ -1023,25 +1025,25 @@ public class MethodSummary {
          *  The given set is consumed.
          *  Also adds predecessor links from the successor nodes to this node.
          *  Returns true if the inside edge set changed, false otherwise. */
-        public boolean addEdges(jq_Field m, HashSet s) {
+        public boolean addEdges(jq_Field m, LinkedHashSet s) {
             for (Iterator i=s.iterator(); i.hasNext(); ) {
                 Node n = (Node)i.next();
                 n.addPredecessor(m, this);
             }
-            if (addedEdges == null) addedEdges = new HashMap();
+            if (addedEdges == null) addedEdges = new LinkedHashMap();
             Object o = addedEdges.get(m);
             if (o == null) {
                 addedEdges.put(m, s);
                 return true;
             }
-            if (o instanceof HashSet) return ((HashSet)o).addAll(s);
+            if (o instanceof LinkedHashSet) return ((LinkedHashSet)o).addAll(s);
             addedEdges.put(m, s); return s.add(o); 
         }
         /** Add the given successor node on the given field to the inside edge set
          *  of all of the given set of nodes.
          *  Also adds predecessor links from the successor node to the given nodes.
          *  Returns true if anything was changed, false otherwise. */
-        public static boolean addEdges(HashSet s, jq_Field f, Node n) {
+        public static boolean addEdges(LinkedHashSet s, jq_Field f, Node n) {
             boolean b = false;
             for (Iterator i=s.iterator(); i.hasNext(); ) {
                 Node a = (Node)i.next();
@@ -1052,7 +1054,7 @@ public class MethodSummary {
         
         private boolean _removeAccessPathEdge(jq_Field m, FieldNode n) {
             Object o = accessPathEdges.get(m);
-            if (o instanceof HashSet) return ((HashSet)o).remove(n);
+            if (o instanceof LinkedHashSet) return ((LinkedHashSet)o).remove(n);
             else if (o == n) { accessPathEdges.remove(m); return true; }
             else return false;
         }
@@ -1068,17 +1070,17 @@ public class MethodSummary {
          *  Also adds a predecessor link from the successor node to this node.
          *  Returns true if that edge didn't already exist, false otherwise. */
         public boolean addAccessPathEdge(jq_Field m, FieldNode n) {
-            if (n.field_predecessors == null) n.field_predecessors = new HashSet();
+            if (n.field_predecessors == null) n.field_predecessors = new LinkedHashSet();
             n.field_predecessors.add(this);
-            if (accessPathEdges == null) accessPathEdges = new HashMap();
+            if (accessPathEdges == null) accessPathEdges = new LinkedHashMap();
             Object o = accessPathEdges.get(m);
             if (o == null) {
                 accessPathEdges.put(m, n);
                 return true;
             }
-            if (o instanceof HashSet) return ((HashSet)o).add(n);
+            if (o instanceof LinkedHashSet) return ((LinkedHashSet)o).add(n);
             if (o == n) return false;
-            HashSet s = new HashSet(); s.add(o); s.add(n);
+            LinkedHashSet s = new LinkedHashSet(); s.add(o); s.add(n);
             accessPathEdges.put(m, s);
             return true;
         }
@@ -1086,30 +1088,30 @@ public class MethodSummary {
          *  The given set is consumed.
          *  Also adds predecessor links from the successor nodes to this node.
          *  Returns true if the inside edge set changed, false otherwise. */
-        public boolean addAccessPathEdges(jq_Field m, HashSet s) {
+        public boolean addAccessPathEdges(jq_Field m, LinkedHashSet s) {
             for (Iterator i=s.iterator(); i.hasNext(); ) {
                 FieldNode n = (FieldNode)i.next();
-                if (n.field_predecessors == null) n.field_predecessors = new HashSet();
+                if (n.field_predecessors == null) n.field_predecessors = new LinkedHashSet();
                 n.field_predecessors.add(this);
             }
-            if (accessPathEdges == null) accessPathEdges = new HashMap();
+            if (accessPathEdges == null) accessPathEdges = new LinkedHashMap();
             Object o = accessPathEdges.get(m);
             if (o == null) {
                 accessPathEdges.put(m, s);
                 return true;
             }
-            if (o instanceof HashSet) return ((HashSet)o).addAll(s);
+            if (o instanceof LinkedHashSet) return ((LinkedHashSet)o).addAll(s);
             accessPathEdges.put(m, s); return s.add(o); 
         }
         
         /** Add the nodes that are targets of inside edges on the given field
          *  to the given result set. */
-        public void getEdges(jq_Field m, HashSet result) {
+        public void getEdges(jq_Field m, LinkedHashSet result) {
             if (addedEdges == null) return;
             Object o = addedEdges.get(m);
             if (o == null) return;
-            if (o instanceof HashSet) {
-                result.addAll((HashSet)o);
+            if (o instanceof LinkedHashSet) {
+                result.addAll((LinkedHashSet)o);
             } else {
                 result.add(o);
             }
@@ -1130,12 +1132,12 @@ public class MethodSummary {
         
         /** Add the nodes that are targets of outside edges on the given field
          *  to the given result set. */
-        public void getAccessPathEdges(jq_Field m, HashSet result) {
+        public void getAccessPathEdges(jq_Field m, LinkedHashSet result) {
             if (accessPathEdges == null) return;
             Object o = accessPathEdges.get(m);
             if (o == null) return;
-            if (o instanceof HashSet) {
-                result.addAll((HashSet)o);
+            if (o instanceof LinkedHashSet) {
+                result.addAll((LinkedHashSet)o);
             } else {
                 result.add(o);
             }
@@ -1172,7 +1174,7 @@ public class MethodSummary {
                     if (o instanceof Node)
                         sb.append(((Node)o).toString_short());
                     else {
-                        for (Iterator j=((HashSet)o).iterator(); j.hasNext(); ) {
+                        for (Iterator j=((LinkedHashSet)o).iterator(); j.hasNext(); ) {
                            sb.append(((Node)j.next()).toString_short());
                            if (j.hasNext()) sb.append(", ");
                         }
@@ -1339,8 +1341,8 @@ public class MethodSummary {
         
         public Node copy() { return new ReturnValueNode(this); }
         
-        public String toString_long() { return jq.hex(this)+": "+toString_short()+super.toString_long(); }
-        public String toString_short() { return "Return value of "+m; }
+        public String toString_long() { return toString_short()+super.toString_long(); }
+        public String toString_short() { return jq.hex(this)+": "+"Return value of "+m; }
     }
     
     /*
@@ -1383,8 +1385,8 @@ public class MethodSummary {
         
         public Node copy() { return new ThrownExceptionNode(this); }
         
-        public String toString_long() { return jq.hex(this)+": "+toString_short()+super.toString_long(); }
-        public String toString_short() { return "Thrown exception of "+m; }
+        public String toString_long() { return toString_short()+super.toString_long(); }
+        public String toString_short() { return jq.hex(this)+": "+"Thrown exception of "+m; }
     }
     
     /** A ParamNode represents an incoming parameter.
@@ -1421,7 +1423,7 @@ public class MethodSummary {
      */
     public static final class FieldNode extends OutsideNode {
         final jq_Field f; final HashSet quads;
-        HashSet field_predecessors;
+        LinkedHashSet field_predecessors;
         
         private static FieldNode findPredecessor(FieldNode base, Quad obj) {
             if (TRACE_INTRA) out.println("Checking "+base+" for predecessor "+obj.getID());
@@ -1453,27 +1455,27 @@ public class MethodSummary {
         
         public static FieldNode get(Node base, jq_Field f, Quad obj) {
             if (TRACE_INTRA) out.println("Getting field node for "+base+(f==null?"[]":("."+f.getName()))+" quad "+obj.getID());
-            HashSet s = null;
+            LinkedHashSet s = null;
             if (base.accessPathEdges != null) {
                 Object o = base.accessPathEdges.get(f);
                 if (o instanceof FieldNode) {
                     if (TRACE_INTRA) out.println("Field node for "+base+" already exists, reusing: "+o);
                     return (FieldNode)o;
                 } else if (o != null) {
-                    s = (HashSet)o;
+                    s = (LinkedHashSet)o;
                     if (!s.isEmpty()) {
                         if (TRACE_INTRA) out.println("Field node for "+base+" already exists, reusing: "+o);
                         return (FieldNode)s.iterator().next();
                     }
                 }
             } else {
-                base.accessPathEdges = new HashMap();
+                base.accessPathEdges = new LinkedHashMap();
             }
             FieldNode fn;
             if (base instanceof FieldNode) fn = findPredecessor((FieldNode)base, obj);
             else fn = null;
             if (fn == null) fn = new FieldNode(f, obj);
-            if (fn.field_predecessors == null) fn.field_predecessors = new HashSet();
+            if (fn.field_predecessors == null) fn.field_predecessors = new LinkedHashSet();
             fn.field_predecessors.add(base);
             if (s != null) {
                 jq.assert(base.accessPathEdges.get(f) == s);
@@ -1494,7 +1496,7 @@ public class MethodSummary {
          *  In essence, all of the given nodes are replaced by a new, returned node.
          *  The given field nodes must be on the given field.
          */
-        public static FieldNode unify(jq_Field f, HashSet s) {
+        public static FieldNode unify(jq_Field f, LinkedHashSet s) {
             if (TRACE_INTRA) out.println("Unifying the set of field nodes: "+s);
             FieldNode dis = new FieldNode(f);
             // go through once to add all quads, so that the hash code will be stable.
@@ -1506,14 +1508,14 @@ public class MethodSummary {
             // once again to do the replacement.
             for (Iterator i=s.iterator(); i.hasNext(); ) {
                 FieldNode dat = (FieldNode)i.next();
-                HashSet s2 = new HashSet(); s2.add(dis);
+                Set s2 = Collections.singleton(dis);
                 dat.replaceBy(s2);
             }
             if (TRACE_INTRA) out.println("Resulting field node: "+dis);
             return dis;
         }
         
-        public void replaceBy(HashSet set) {
+        public void replaceBy(Set set) {
             jq.assert(!set.contains(this));
             if (this.field_predecessors != null) {
                 for (Iterator i=this.field_predecessors.iterator(); i.hasNext(); ) {
@@ -1538,9 +1540,9 @@ public class MethodSummary {
         
         public void update(HashMap um) {
             super.update(um);
-            HashSet m = this.field_predecessors;
+            LinkedHashSet m = this.field_predecessors;
             if (m != null) {
-                this.field_predecessors = new HashSet();
+                this.field_predecessors = new LinkedHashSet();
                 for (Iterator j=m.iterator(); j.hasNext(); ) {
                     this.field_predecessors.add(um.get(j.next()));
                 }
@@ -1611,11 +1613,13 @@ public class MethodSummary {
             State that = new State(this.registers.length);
             for (int i=0; i<this.registers.length; ++i) {
                 Object a = this.registers[i];
+                if (a == null) continue;
                 if (a instanceof Node)
                     //that.registers[i] = ((Node)a).copy();
                     that.registers[i] = a;
-                else if (a instanceof HashSet)
-                    that.registers[i] = ((HashSet)a).clone();
+                else {
+                    that.registers[i] = ((LinkedHashSet)a).clone();
+                }
             }
             return that;
         }
@@ -1632,15 +1636,15 @@ public class MethodSummary {
             if (b == null) return false;
             Object a = this.registers[i];
             if (b.equals(a)) return false;
-            HashSet q;
-            if (!(a instanceof HashSet)) {
-                this.registers[i] = q = new HashSet();
+            LinkedHashSet q;
+            if (!(a instanceof LinkedHashSet)) {
+                this.registers[i] = q = new LinkedHashSet();
                 if (a != null) q.add(a);
             } else {
-                q = (HashSet)a;
+                q = (LinkedHashSet)a;
             }
-            if (b instanceof HashSet) {
-                if (q.addAll((HashSet)b)) {
+            if (b instanceof LinkedHashSet) {
+                if (q.addAll((LinkedHashSet)b)) {
                     if (TRACE_INTRA) out.println("change in register "+i+" from adding set");
                     return true;
                 }
@@ -1676,11 +1680,11 @@ public class MethodSummary {
         boolean _last;
         
         /** The set of (wrapped) successor AccessPath objects. */
-        HashSet succ;
+        LinkedHashSet succ;
 
         /** Adds the set of (wrapped) AccessPath objects that are reachable from this
          *  AccessPath object to the given set. */
-        private void reachable(HashSet s) {
+        private void reachable(LinkedHashSet s) {
             for (Iterator i = this.succ.iterator(); i.hasNext(); ) {
                 IdentityHashCodeWrapper ap = (IdentityHashCodeWrapper)i.next();
                 if (!s.contains(ap)) {
@@ -1692,7 +1696,7 @@ public class MethodSummary {
         /** Return an iteration of the AccessPath objects that are reachable from
          *  this AccessPath. */
         public Iterator reachable() {
-            HashSet s = new HashSet();
+            LinkedHashSet s = new LinkedHashSet();
             s.add(IdentityHashCodeWrapper.create(this));
             this.reachable(s);
             return new FilterIterator(s.iterator(), filter);
@@ -1739,7 +1743,7 @@ public class MethodSummary {
         }
         
         /** Helper function for findLast(), below. */
-        private void findLast(HashSet s, HashSet last) {
+        private void findLast(HashSet s, LinkedHashSet last) {
             for (Iterator i = this.succ.iterator(); i.hasNext(); ) {
                 IdentityHashCodeWrapper ap = (IdentityHashCodeWrapper)i.next();
                 if (!s.contains(ap)) {
@@ -1754,7 +1758,7 @@ public class MethodSummary {
         /** Return an iteration of the AccessPath nodes that correspond to end states. */
         public Iterator findLast() {
             HashSet visited = new HashSet();
-            HashSet last = new HashSet();
+            LinkedHashSet last = new LinkedHashSet();
             IdentityHashCodeWrapper ap = IdentityHashCodeWrapper.create(this);
             visited.add(ap);
             if (this._last) last.add(ap);
@@ -1846,7 +1850,7 @@ public class MethodSummary {
         /** Private constructor.  Use the create() methods above. */
         private AccessPath(jq_Field f, Node n, boolean last) {
             this._field = f; this._n = n; this._last = last;
-            this.succ = new HashSet();
+            this.succ = new LinkedHashSet();
         }
         /** Private constructor.  Use the create() methods above. */
         private AccessPath(jq_Field f, Node n) {
@@ -1920,21 +1924,21 @@ public class MethodSummary {
     /** The parameter nodes. */
     final ParamNode[] params;
     /** All nodes in the summary graph. */
-    final HashMap nodes;
+    final LinkedHashMap nodes;
     /** All method calls that this method makes. */
-    final HashSet calls;
+    final LinkedHashSet calls;
     /** The returned nodes. */
-    final HashSet returned;
+    final LinkedHashSet returned;
     /** The thrown nodes. */
-    final HashSet thrown;
+    final LinkedHashSet thrown;
 
-    MethodSummary(jq_Method method, ParamNode[] param_nodes, GlobalNode my_global, HashSet methodCalls, HashSet returned, HashSet thrown, HashSet passedAsParameters) {
+    MethodSummary(jq_Method method, ParamNode[] param_nodes, GlobalNode my_global, LinkedHashSet methodCalls, LinkedHashSet returned, LinkedHashSet thrown, LinkedHashSet passedAsParameters) {
         this.method = method;
         this.params = param_nodes;
         this.calls = methodCalls;
         this.returned = returned;
         this.thrown = thrown;
-        this.nodes = new HashMap();
+        this.nodes = new LinkedHashMap();
         // build useful node set
         HashSet visited = new HashSet();
         for (int i=0; i<params.length; ++i) {
@@ -1957,7 +1961,7 @@ public class MethodSummary {
                 if (o instanceof Node) {
                     addIfUseful(visited, (Node)o);
                 } else {
-                    for (Iterator j=((HashSet)o).iterator(); j.hasNext(); ) {
+                    for (Iterator j=((LinkedHashSet)o).iterator(); j.hasNext(); ) {
                         addIfUseful(visited, (Node)j.next());
                     }
                 }
@@ -1970,7 +1974,7 @@ public class MethodSummary {
                 if (o instanceof Node) {
                     addAsUseful(visited, (Node)o);
                 } else {
-                    for (Iterator j=((HashSet)o).iterator(); j.hasNext(); ) {
+                    for (Iterator j=((LinkedHashSet)o).iterator(); j.hasNext(); ) {
                         addAsUseful(visited, (Node)j.next());
                     }
                 }
@@ -1990,7 +1994,7 @@ public class MethodSummary {
 
     public static final boolean UNIFY_ACCESS_PATHS = false;
     
-    private MethodSummary(jq_Method method, ParamNode[] params, HashSet methodCalls, HashSet returned, HashSet thrown, HashMap nodes) {
+    private MethodSummary(jq_Method method, ParamNode[] params, LinkedHashSet methodCalls, LinkedHashSet returned, LinkedHashSet thrown, LinkedHashMap nodes) {
         this.method = method;
         this.params = params;
         this.calls = methodCalls;
@@ -2000,10 +2004,10 @@ public class MethodSummary {
     }
 
     public ParamNode getParamNode(int i) { return params[i]; }
-    public HashSet getCalls() { return calls; }
+    public LinkedHashSet getCalls() { return calls; }
 
     /** Add all nodes that are passed as the given passed parameter to the given result set. */
-    public void getNodesThatCall(PassedParameter pp, HashSet result) {
+    public void getNodesThatCall(PassedParameter pp, LinkedHashSet result) {
         for (Iterator i = this.nodeIterator(); i.hasNext(); ) {
             Node n = (Node)i.next();
             if ((n.passedParameters != null) && n.passedParameters.contains(pp))
@@ -2052,12 +2056,12 @@ public class MethodSummary {
             Node b = (Node)m.get(a);
             b.update(m);
         }
-        HashSet calls = (HashSet)this.calls.clone();
-        HashSet returned = new HashSet();
+        LinkedHashSet calls = (LinkedHashSet)this.calls.clone();
+        LinkedHashSet returned = new LinkedHashSet();
         for (Iterator i=this.returned.iterator(); i.hasNext(); ) {
             returned.add(m.get(i.next()));
         }
-        HashSet thrown = new HashSet();
+        LinkedHashSet thrown = new LinkedHashSet();
         for (Iterator i=this.thrown.iterator(); i.hasNext(); ) {
             thrown.add(m.get(i.next()));
         }
@@ -2066,7 +2070,7 @@ public class MethodSummary {
             if (this.params[i] == null) continue;
             params[i] = (ParamNode)m.get(this.params[i]);
         }
-        HashMap nodes = new HashMap();
+        LinkedHashMap nodes = new LinkedHashMap();
         for (Iterator i=m.entrySet().iterator(); i.hasNext(); ) {
             java.util.Map.Entry e = (java.util.Map.Entry)i.next();
             nodes.put(e.getValue(), e.getValue());
@@ -2102,9 +2106,12 @@ public class MethodSummary {
                         if (roots.contains(n2)) continue;
                         worklist.add(n2); roots.add(n2);
                     } else {
-                        HashSet s = (HashSet)o;
-                        s = (HashSet)s.clone();
-                        s.removeAll(roots);
+                        LinkedHashSet s = (LinkedHashSet)o;
+                        s = (LinkedHashSet)s.clone();
+                        for (Iterator j=s.iterator(); j.hasNext(); ) {
+                            Object p = j.next();
+                            if (roots.contains(p)) j.remove();
+                        }
                         if (!s.isEmpty()) {
                             worklist.addAll(s); roots.addAll(s);
                         }
@@ -2124,8 +2131,8 @@ public class MethodSummary {
                 jq_Field f = (jq_Field)e.getKey();
                 Object o = e.getValue();
                 FieldNode n2;
-                if (o instanceof HashSet) {
-                    HashSet s = (HashSet)((HashSet)o).clone();
+                if (o instanceof LinkedHashSet) {
+                    LinkedHashSet s = (LinkedHashSet)((LinkedHashSet)o).clone();
                     if (s.size() == 0) {
                         i.remove();
                         continue;
@@ -2165,14 +2172,14 @@ public class MethodSummary {
             ParamNode pn = callee.params[i];
             if (pn == null) continue;
             PassedParameter pp = new PassedParameter(mc, i);
-            HashSet s = new HashSet();
+            LinkedHashSet s = new LinkedHashSet();
             caller.getNodesThatCall(pp, s);
             callee_to_caller.put(pn, s);
         }
         for (int ii=0; ii<callee.params.length; ++ii) {
             ParamNode pn = callee.params[ii];
             if (pn == null) continue;
-            HashSet s = (HashSet)callee_to_caller.get(pn);
+            LinkedHashSet s = (LinkedHashSet)callee_to_caller.get(pn);
             pn.replaceBy(s);
             if (callee.returned.contains(pn)) {
                 callee.returned.remove(pn); callee.returned.addAll(s);
@@ -2259,7 +2266,7 @@ public class MethodSummary {
                 if (o instanceof Node) {
                     addAsUseful(visited, (Node)o);
                 } else {
-                    for (Iterator j=((HashSet)o).iterator(); j.hasNext(); ) {
+                    for (Iterator j=((LinkedHashSet)o).iterator(); j.hasNext(); ) {
                         addAsUseful(visited, (Node)j.next());
                     }
                 }
@@ -2277,7 +2284,7 @@ public class MethodSummary {
                         i.remove();
                     }
                 } else {
-                    for (Iterator j=((HashSet)o).iterator(); j.hasNext(); ) {
+                    for (Iterator j=((LinkedHashSet)o).iterator(); j.hasNext(); ) {
                         if (addIfUseful(visited, (Node)j.next())) {
                             useful = true;
                         } else {
@@ -2305,7 +2312,7 @@ public class MethodSummary {
                 if (o instanceof Node) {
                     addAsUseful(visited, (Node)o);
                 } else {
-                    for (Iterator j=((HashSet)o).iterator(); j.hasNext(); ) {
+                    for (Iterator j=((LinkedHashSet)o).iterator(); j.hasNext(); ) {
                         addAsUseful(visited, (Node)j.next());
                     }
                 }
@@ -2321,7 +2328,7 @@ public class MethodSummary {
                         i.remove();
                     }
                 } else {
-                    for (Iterator j=((HashSet)o).iterator(); j.hasNext(); ) {
+                    for (Iterator j=((LinkedHashSet)o).iterator(); j.hasNext(); ) {
                         Node j_n = (Node)j.next();
                         if (!addIfUseful(visited, j_n)) {
                             j.remove();
