@@ -17,7 +17,10 @@ jikes:	bootclasspath source_list
 jikes-pedantic:	bootclasspath source_list
 	jikes -target $(CLASSFILE_VERSION) -bootclasspath @bootclasspath +P @.source_list
 
-javac:	source_list
+javac:	source_list _javac
+# _javac: Assumes prior existence of the .source_list file.
+# Useful on cygwin, because cygwin takes a long time to build the .source_list file.
+_javac:	
 	javac -target $(CLASSFILE_VERSION) @.source_list
 
 
