@@ -1,68 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project>
-    <pomVersion>3</pomVersion>
-    <artifactId>jwutil</artifactId>
-    <name>jwutil</name>
-    <groupId>jwutil</groupId>
-    <currentVersion>1.0</currentVersion>
-    <organization>
-        <name>SUIF Compiler Group</name>
-        <url>http://suif.stanford.edu</url>
-        <logo>http://suif.stanford.edu/suif-logo.gif</logo>
-    </organization>
-    <inceptionYear>2004</inceptionYear>
-    <package>jwutil</package>
-    <description>A collection of useful Java classes I have collected or developed over the years.  I have found them useful for multiple projects, so I have consolidated them into a single library.</description>
-    <shortDescription>Collection of useful utility classes for Java</shortDescription>
-    <url>http://joeq.sourceforge.net/jwutil/</url>
-    <issueTrackingUrl>http://sourceforge.net/tracker/?group_id=19634</issueTrackingUrl>
-    <siteAddress>joeq.sourceforge.net</siteAddress>
-    <siteDirectory>/home/groups/j/jo/joeq/htdocs/jwutil</siteDirectory>
-    <distributionDirectory>/home/groups/b/bd/bddbddb/</distributionDirectory>
-    <repository>
-        <connection>scm:cvs:pserver:anonymous@cvs.sourceforge.net:/cvsroot/joeq:jwutil</connection>
-        <developerConnection>scm:cvs:ext:joewhaley@cvs.sourceforge.net:/cvsroot/joeq:jwutil</developerConnection>
-        <url>http://cvs.sourceforge.net/viewcvs.py/joeq/jwutil/</url>
-    </repository>
-    <developers>
-        <developer>
-            <name>John Whaley</name>
-            <id>joewhaley</id>
-            <email>joewhaley@users.sourceforge.net</email>
-            <organization>SUIF Compiler Group</organization>
-            <roles>
-                <role>Project Manager</role>
-            </roles>
-            <url>http://www.stanford.edu/~jwhaley</url>
-            <timezone>-8</timezone>
-        </developer>
-    </developers>
-    <dependencies>
-        <dependency>
-            <groupId>jw</groupId>
-            <artifactId>java14</artifactId>
-            <jar>main/src/jar/java14.jar</jar>
-            <type>jar</type>
-            <properties/>
-        </dependency>
-    </dependencies>
-    <build>
-        <nagEmailAddress>joewhaley@users.sourceforge.net</nagEmailAddress>
-        <sourceDirectory>main/src/java</sourceDirectory>
-        <unitTestSourceDirectory>main/test/java</unitTestSourceDirectory>
-    </build>
-    <reports>
-        <report>maven-developer-activity-plugin</report>
-        <report>maven-changelog-plugin</report>
-        <report>maven-checkstyle-plugin</report>
-        <report>maven-file-activity-plugin</report>
-        <report>maven-findbugs-plugin</report>
-        <report>maven-javadoc-plugin</report>
-        <report>maven-jdepend-plugin</report>
-        <report>maven-jxr-plugin</report>
-        <report>maven-license-plugin</report>
-        <report>maven-linkcheck-plugin</report>
-        <report>maven-pmd-plugin</report>
-        <report>maven-simian-plugin</report>
-    </reports>
-    <properties/>
+  <pomVersion>3</pomVersion>
+  <artifactId>jwutil</artifactId>
+  <name>jwutil</name>
+  <groupId>jwutil</groupId>
+  <currentVersion>1.0</currentVersion>
+  <organization>
+    <name>SUIF Compiler Group</name>
+    <url>http://suif.stanford.edu</url>
+    <logo>http://suif.stanford.edu/suif-logo.gif</logo>
+  </organization>
+  <inceptionYear>2004</inceptionYear>
+  <package>jwutil</package>
+  <description>A collection of useful Java classes I have collected or developed over the years.  I have found them useful for multiple projects, so I have consolidated them into a single library.</description>
+  <shortDescription>Collection of useful utility classes for Java</shortDescription>
+  <url>http://joeq.sourceforge.net/jwutil/</url>
+  <issueTrackingUrl>http://sourceforge.net/tracker/?group_id=19634</issueTrackingUrl>
+  <siteAddress>joeq.sourceforge.net</siteAddress>
+  <siteDirectory>/home/groups/j/jo/joeq/htdocs/jwutil</siteDirectory>
+  <distributionDirectory>/home/groups/b/bd/bddbddb/</distributionDirectory>
+  <repository>
+    <connection>scm:cvs:pserver:anonymous@cvs.sourceforge.net:/cvsroot/joeq:jwutil</connection>
+    <developerConnection>scm:cvs:ext:joewhaley@cvs.sourceforge.net:/cvsroot/joeq:jwutil</developerConnection>
+    <url>http://cvs.sourceforge.net/viewcvs.py/joeq/jwutil/</url>
+  </repository>
+  <developers>
+    <developer>
+      <name>John Whaley</name>
+      <id>joewhaley</id>
+      <email>joewhaley@users.sourceforge.net</email>
+      <organization>SUIF Compiler Group</organization>
+      <url>http://www.stanford.edu/~jwhaley</url>
+      <timezone>-8</timezone>
+    </developer>
+  </developers>
+  <dependencies>
+    <dependency>
+      <groupId>jw</groupId>
+      <artifactId>java14</artifactId>
+      <jar>main/src/jar/java14.jar</jar>
+      <type>jar</type>
+    </dependency>
+  </dependencies>
+  <build>
+    <nagEmailAddress>joewhaley@users.sourceforge.net</nagEmailAddress>
+    <sourceDirectory>main/src/java</sourceDirectory>
+    <unitTestSourceDirectory>main/test/java</unitTestSourceDirectory>
+    <unitTest>
+      <includes>
+        <include>*.java</include>
+      </includes>
+      <resources>
+        <resource>
+          <directory>main/test/resources</directory>
+          <filtering>false</filtering>
+        </resource>
+      </resources>
+    </unitTest>
+    <resources>
+      <resource>
+        <directory>main/src/resources</directory>
+        <filtering>false</filtering>
+      </resource>
+    </resources>
+  </build>
+  <reports>
+    <report>maven-developer-activity-plugin</report>
+    <report>maven-changelog-plugin</report>
+    <report>maven-checkstyle-plugin</report>
+    <report>maven-file-activity-plugin</report>
+    <report>maven-findbugs-plugin</report>
+    <report>maven-javadoc-plugin</report>
+    <report>maven-jdepend-plugin</report>
+    <report>maven-jxr-plugin</report>
+    <report>maven-license-plugin</report>
+    <report>maven-linkcheck-plugin</report>
+    <report>maven-pmd-plugin</report>
+    <report>maven-simian-plugin</report>
+  </reports>
 </project>
+
