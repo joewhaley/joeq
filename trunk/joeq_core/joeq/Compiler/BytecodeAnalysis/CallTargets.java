@@ -8,7 +8,7 @@
 package Compil3r.BytecodeAnalysis;
 
 import java.util.AbstractSet;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.Stack;
@@ -41,9 +41,6 @@ public abstract class CallTargets extends AbstractSet {
                                          boolean exact,
                                          boolean loadClasses)
     {
-        //boolean TRACE = false;
-        //if (method.getName().toString().startsWith("add1")) TRACE = true;
-        
         if (type == BytecodeVisitor.INVOKE_STATIC) return getStaticTargets((jq_StaticMethod)method);
         jq_InstanceMethod imethod = (jq_InstanceMethod)method;
         if (type == BytecodeVisitor.INVOKE_SPECIAL) return getSpecialTargets(callingClass, imethod, loadClasses);
@@ -54,7 +51,7 @@ public abstract class CallTargets extends AbstractSet {
         if (!exact) {
             // temporary hack, until we rewrite the code below to take into account
             // non-exact sets.
-            Set c = new HashSet();
+            Set c = new LinkedHashSet();
             Iterator i = possibleReceiverTypes.iterator();
             boolean complete = true;
             while (i.hasNext()) {
@@ -65,8 +62,16 @@ public abstract class CallTargets extends AbstractSet {
             return new MultipleCallTargets(c, complete);
         }
         
-        Set c = new LinearSet();
+        //Set c = new LinearSet();
+        LinkedHashSet c = new LinkedHashSet();
         boolean complete = true;
+        // HACK: some broken class files have invokevirtual on interface methods.
+        if (type == BytecodeVisitor.INVOKE_VIRTUAL &&
+            imethod.getDeclaringClass().isLoaded() &&
+            imethod.getDeclaringClass().isInterface()) {
+            type = BytecodeVisitor.INVOKE_INTERFACE;
+        }
+
         if ((type == BytecodeVisitor.INVOKE_VIRTUAL) && imethod.getDeclaringClass().isPrepared()) {
             // fast search using vtable
             if (VerifyAssertions)
@@ -181,9 +186,6 @@ public abstract class CallTargets extends AbstractSet {
                                          boolean exact,
                                          boolean loadClasses)
     {
-        //boolean TRACE = false;
-        //if (method.getName().toString().startsWith("add1")) TRACE = true;
-        
         if (type == BytecodeVisitor.INVOKE_STATIC) return getStaticTargets((jq_StaticMethod)method);
         jq_InstanceMethod imethod = (jq_InstanceMethod)method;
         if (type == BytecodeVisitor.INVOKE_SPECIAL) return getSpecialTargets(callingClass, imethod, loadClasses);
@@ -228,17 +230,25 @@ public abstract class CallTargets extends AbstractSet {
         }
 
         // TEMPORARY HACK: sometimes casts from interface types are
-        // lost in the type analysis, leading to virtual calls on interfaces
+        // lost in the type analysis, leading to virtual calls on interfaces.
         if (loadClasses) {
             rclass.load();
             if (rclass.isInterface() && type == BytecodeVisitor.INVOKE_VIRTUAL) {
-                if (VerifyAssertions)
-                    jq.Assert(!imethod.getDeclaringClass().isInterface(), imethod.toString());
-                receiverType = rclass = imethod.getDeclaringClass();
+                if (!imethod.getDeclaringClass().isInterface())
+                    receiverType = rclass = imethod.getDeclaringClass();
             }
         }
 
-        Set c = new LinearSet();
+        // TEMPORARY HACK: some class files are messed up and use
+        // invokevirtual instead of invokeinterface.
+        if (type == BytecodeVisitor.INVOKE_VIRTUAL &&
+            imethod.getDeclaringClass().isLoaded() &&
+            imethod.getDeclaringClass().isInterface()) {
+            type = BytecodeVisitor.INVOKE_INTERFACE;
+        }
+
+        //Set c = new LinearSet();
+        LinkedHashSet c = new LinkedHashSet();
         boolean complete = true;
         if (type == BytecodeVisitor.INVOKE_VIRTUAL) {
             if (imethod.getDeclaringClass().isPrepared()) {
@@ -416,7 +426,7 @@ public abstract class CallTargets extends AbstractSet {
         }
         return res;
     }
-
+    
     static byte declaresInterface(jq_Class klass, Set interfaces, boolean loadClasses) {
         if (VerifyAssertions)
             jq.Assert(klass.isLoaded());
@@ -507,7 +517,7 @@ public abstract class CallTargets extends AbstractSet {
             }
         }
         
-        Set c = new HashSet(); // use a HashSet because it is going to be large
+        LinkedHashSet c = new LinkedHashSet(); // use a HashSet because it is going to be large
         while (!implementers.empty()) {
             rclass = (jq_Class)implementers.pop();
             if (loadClasses) rclass.load();
@@ -526,13 +536,13 @@ public abstract class CallTargets extends AbstractSet {
         }
         return new MultipleCallTargets(c, false);
     }
-
+    
     public static SingleCallTarget getStaticTargets(jq_StaticMethod method)
     {
         // static method. the declaring class might not have been loaded.
         return new SingleCallTarget(method, true);
     }
-
+    
     public static CallTargets getSpecialTargets(jq_Class callingClass,
                                                 jq_InstanceMethod method,
                                                 boolean loadClasses)
@@ -573,7 +583,8 @@ public abstract class CallTargets extends AbstractSet {
         public boolean isComplete() { return complete; }
         public CallTargets union(CallTargets s) {
             if (s == NoCallTarget.INSTANCE) return this;
-            Set result = new LinearSet();
+            //Set result = new LinearSet();
+            LinkedHashSet result = new LinkedHashSet();
             boolean is_complete = this.complete;
             result.add(this.method);
             if (!s.isComplete()) is_complete = false;

@@ -22,6 +22,7 @@ public class SelectiveCloning {
     public static AndersenPointerAnalysis pa;
     
     public static boolean TRACE = false;
+    public static boolean PRINT_INLINE = false;
     public static PrintStream out = System.out;
     
     public static boolean FIND_ALL = true;
@@ -143,7 +144,7 @@ outer:
                     MethodSummary ms = MethodSummary.getSummary(caller_cfg);
                     CallSite cs = new CallSite(ms, mc2);
                     jq_Method targetMethod = ((ParamNode) n).m;
-                    if (TRACE) out.println("Inlining call graph edge "+cs+" to "+targetMethod);
+                    if (TRACE || PRINT_INLINE) out.println("Inlining call graph edge "+cs+" to "+targetMethod);
                     InlineSet targetMethods = (InlineSet) toInline.get(cs);
                     if (targetMethods == null) {
                         targetMethods = new InlineSet(new LinkedHashSet(), false);
@@ -188,7 +189,7 @@ outer:
                             MethodSummary ms = MethodSummary.getSummary(caller_cfg);
                             CallSite cs = new CallSite(ms, mc2);
                             jq_Method targetMethod = ((ParamNode) n).m;
-                            if (TRACE) out.println("Inlining call graph edge "+cs+" to "+targetMethod);
+                            if (TRACE || PRINT_INLINE) out.println("Inlining call graph edge "+cs+" to "+targetMethod);
                             InlineSet targetMethods = (InlineSet) toInline.get(cs);
                             if (targetMethods == null) {
                                 targetMethods = new InlineSet(new LinkedHashSet(), false);

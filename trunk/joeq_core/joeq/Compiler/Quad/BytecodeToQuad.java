@@ -1500,6 +1500,8 @@ public class BytecodeToQuad extends BytecodeVisitor {
                     oper = Invoke.INVOKEVIRTUAL_I.INSTANCE;
                     try { f = (jq_InstanceMethod)resolve(f); } catch (Error e) { }
                 }
+                //f.getDeclaringClass().load();
+                //jq.Assert(!f.getDeclaringClass().isInterface());
                 break;
             case INVOKE_STATIC:
                 instance_call = false;
