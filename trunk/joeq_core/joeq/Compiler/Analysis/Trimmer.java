@@ -153,6 +153,9 @@ public class Trimmer {
             if (!necessaryTypes.contains(t)) {
                 necessaryTypes.add(t);
                 jq_Class c2 = (jq_Class)t;
+                // add all supertypes as necessary, as well
+                for (jq_Class c3 = c2.getSuperclass(); c3 != null; c3 = c3.getSuperclass())
+                    addToNecessaryTypes(c3);
                 if (AddAllClassMethods) {
                     if (TRACE) out.println("Adding methods of new class "+t);
                     for(Iterator it = new ArrayIterator(c2.getDeclaredStaticMethods());
