@@ -33,7 +33,7 @@ public class ControlFlowGraphNavigator implements Navigator {
     public ControlFlowGraphNavigator(ControlFlowGraph cfg) {
         this.cfg = cfg;
     }
-    private ControlFlowGraphNavigator() {}
+    protected ControlFlowGraphNavigator() {}
     
     /** Singleton object for a control flow graph navigator that
      * does not take into account exception edges.
