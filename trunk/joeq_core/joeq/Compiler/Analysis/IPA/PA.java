@@ -1987,7 +1987,8 @@ public class PA {
                     c.prepare();
                     Assert._assert(c != null);
                 }else{
-                    System.err.println("Can't case " + clazz + " to jq_Class");                    
+                    System.err.println("Can't case " + clazz + " to jq_Class");      
+                    continue;
                 }
             } catch(NoClassDefFoundError e) {
                 if(missingClasses.get(stringConst) == null){
