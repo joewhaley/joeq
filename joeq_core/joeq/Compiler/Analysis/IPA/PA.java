@@ -160,7 +160,7 @@ public class PA {
     
     int V_BITS=18, I_BITS=16, H_BITS=15, Z_BITS=5, F_BITS=13, T_BITS=12, N_BITS=13, M_BITS=14;
     int VC_BITS=0, HC_BITS=0;
-    int MAX_VC_BITS = Integer.parseInt(System.getProperty("pa.maxvc", "48"));
+    int MAX_VC_BITS = Integer.parseInt(System.getProperty("pa.maxvc", "61"));
     int MAX_HC_BITS = Integer.parseInt(System.getProperty("pa.maxhc", "0"));
     
     IndexMap/*Node*/ Vmap;
