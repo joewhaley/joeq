@@ -2222,12 +2222,13 @@ public class PA {
             BDD target = targets.satOne(Mset, false);
             int M_i = target.scanVar(M).intValue();
             jq_Method method = (jq_Method) Mmap.get(M_i);
-            if(method == null){
+            if(method != null){
+                if (TRACE) out.println("New target method: "+method);
+                visitMethod(method);
+            } else {
                 System.err.println("NULL method in handleNewTargets");
                 continue;
             }
-            if (TRACE) out.println("New target method: "+method);
-            visitMethod(method);
             targets.applyWith(target, BDDFactory.diff);
         }
         return true;
