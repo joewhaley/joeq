@@ -3,20 +3,6 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Analysis.IPA;
 
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.TreeSet;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -31,6 +17,20 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.TreeSet;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
@@ -48,6 +48,7 @@ import joeq.Class.jq_Reference;
 import joeq.Class.jq_Type;
 import joeq.Class.jq_Reference.jq_NullType;
 import joeq.Compiler.Analysis.BDD.BuildBDDIR;
+import joeq.Compiler.Analysis.FlowInsensitive.BogusSummaryProvider;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.ConcreteObjectNode;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.ConcreteTypeNode;
@@ -150,6 +151,7 @@ public class PA {
     int ADD_ROOT_PLACEHOLDERS = Integer.parseInt(System.getProperty("pa.addrootplaceholders", "0"));
     boolean FULL_CHA = !System.getProperty("pa.fullcha", "no").equals("no");
     static boolean ADD_INSTANCE_METHODS = !System.getProperty("pa.addinstancemethods", "no").equals("no");
+    static boolean USE_BOGUS_SUMMARIES = !System.getProperty("pa.usebogussummaries", "no").equals("no");
     int MAX_PARAMS = Integer.parseInt(System.getProperty("pa.maxparams", "4"));
     
     int bddnodes = Integer.parseInt(System.getProperty("bddnodes", "2500000"));
@@ -1077,6 +1079,16 @@ public class PA {
     int last_N = 0;
     int last_F = 0;
     
+    private static BogusSummaryProvider bogusSummaryProvider = null;
+
+    static BogusSummaryProvider getBogusSummaryProvider() {
+        if(bogusSummaryProvider == null) {
+            bogusSummaryProvider = new BogusSummaryProvider();
+        }
+        
+        return bogusSummaryProvider;
+    }
+    
     public void buildTypes() {
         // build up 'vT'
         int Vsize = Vmap.size();
@@ -1242,6 +1254,15 @@ public class PA {
                 if ((m == javaLangObject_clone && t != object_class) || n == javaLangObject_fakeclone) {
                     m = fakeCloneIfNeeded(t);                                   // for t.clone()
                     addToCHA(T_bdd, Nmap.get(javaLangObject_fakeclone), m);     // for super.clone()
+                }
+                if(USE_BOGUS_SUMMARIES) {
+	                jq_Method replacement = getBogusSummaryProvider().getReplacementMethod(m);
+	                if(replacement != null) {
+						System.out.println("Replacing a summary of " + m + 
+						    				" with one for "+ replacement);
+						addToCHA(T_bdd, Nmap.get(replacement), replacement);     // for replacement methods
+						return;
+	                }
                 }
                 if (m == null) continue;
                 addToCHA(T_bdd, N_i, m);
@@ -3469,6 +3490,7 @@ public class PA {
         for (Iterator i = cg.getAllCallSites().iterator(); i.hasNext(); ) {
             ProgramLocation mc = (ProgramLocation) i.next();
             mc = LoadedCallGraph.mapCall(mc);
+
             int I_i = Imap.get(mc);
             for (Iterator j = cg.getTargetMethods(mc).iterator(); j.hasNext(); ) {
                 jq_Method callee = (jq_Method) j.next();
@@ -3478,6 +3500,8 @@ public class PA {
                     Pair p = new Pair(mc, callee);
                     Range r_edge = vCnumbering.getEdge(p);
                     Range r_caller = vCnumbering.getRange(mc.getMethod());
+                    Assert._assert(r_edge != null, "No edge for " + p);
+                    Assert._assert(r_caller != null, "No range for " + mc.getMethod());
                     context = buildContextMap(V2c[0],
                                               PathNumbering.toBigInt(r_caller.low),
                                               PathNumbering.toBigInt(r_caller.high),
