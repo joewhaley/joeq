@@ -152,6 +152,7 @@ public class PA {
     boolean INCLUDE_ALL_UNKNOWN_TYPES = !System.getProperty("pa.allunknowntypes", "no").equals("no");
     boolean ADD_SUPERTYPES = !System.getProperty("pa.addsupertypes", "no").equals("no");
     int ADD_ROOT_PLACEHOLDERS = Integer.parseInt(System.getProperty("pa.addrootplaceholders", "0"));
+    int PUBLIC_PLACEHOLDERS = Integer.parseInt(System.getProperty("pa.publicplaceholders", "0"));
     boolean FULL_CHA = !System.getProperty("pa.fullcha", "no").equals("no");
     static boolean ADD_INSTANCE_METHODS = !System.getProperty("pa.addinstancemethods", "no").equals("no");
     boolean USE_BOGUS_SUMMARIES = !System.getProperty("pa.usebogussummaries", "no").equals("no");
@@ -2909,6 +2910,18 @@ public class PA {
             visitMethod(m);
         }
         
+        // Add placeholder objects for public methods.
+        if (PUBLIC_PLACEHOLDERS > 0) {
+            Iterator i;
+            if (cg != null) i = cg.getAllMethods().iterator();
+            else i = rootMethods.iterator();
+            while (i.hasNext()) {
+                jq_Method m = (jq_Method) i.next();
+                if (!m.isPublic()) continue;
+                addPlaceholdersForParams(m, PUBLIC_PLACEHOLDERS);
+            }
+        }
+        
         // Calculate the relations for any other methods we know about.
         handleNewTargets();
         
@@ -3017,8 +3030,11 @@ public class PA {
             c.prepare();
         
             rootMethods = Arrays.asList(c.getDeclaredStaticMethods());
-            if (ADD_INSTANCE_METHODS)
-                rootMethods.addAll(Arrays.asList(c.getDeclaredInstanceMethods()));
+            if (ADD_INSTANCE_METHODS) {
+                jq_InstanceMethod[] ms = c.getDeclaredInstanceMethods();
+                rootMethods = new ArrayList(rootMethods);
+                rootMethods.addAll(Arrays.asList(ms));
+            }
         }
 
         if (args.length > 1) {

@@ -33,6 +33,7 @@ import joeq.Class.jq_Method;
 import joeq.Class.jq_Reference;
 import joeq.Class.jq_StaticField;
 import joeq.Class.jq_Type;
+import joeq.Class.jq_Reference.jq_NullType;
 import joeq.Compiler.Analysis.IPA.LoopAnalysis;
 import joeq.Compiler.Analysis.IPA.PA;
 import joeq.Compiler.Analysis.IPA.ProgramLocation;
@@ -2731,6 +2732,114 @@ public class MethodSummary {
         }
     }
     
+    /** A PlaceholderNode is used to signify an object that is out-of-scope.
+     */
+    public static final class PlaceholderNode extends OutsideNode implements HeapObject {
+        public static final boolean ADD_DUMMY_EDGES = false;
+        
+        static final HashMap FACTORY = new HashMap();
+        public static PlaceholderNode get(jq_Method m, int k) {
+            jq_Reference type = (jq_Reference) m.getParamTypes()[k];
+            return get(m, ""+k, type);
+        }
+        public static PlaceholderNode get(jq_StaticField f) {
+            jq_Reference type = (jq_Reference) f.getType();
+            return get(f, "field", type);
+        }
+        public static PlaceholderNode get(jq_Method m, String s) {
+            jq_Reference type;
+            if (s.equals("return")) type = (jq_Reference) m.getReturnType();
+            else if (s.equals("throw")) type = PrimordialClassLoader.getJavaLangThrowable();
+            else type = (jq_Reference) m.getParamTypes()[Integer.parseInt(s)];
+            return get(m, s, type);
+        }
+        public static PlaceholderNode get(jq_Member m, String s, jq_Reference type) {
+            Object key = new Pair(m, s);
+            PlaceholderNode n = (PlaceholderNode)FACTORY.get(key);
+            if (n == null) {
+                FACTORY.put(key, n = new PlaceholderNode(m, s, type));
+            }
+            return n;
+        }
+        
+        public static Collection getAll() {
+            return FACTORY.values();
+        }
+        
+        final jq_Member member;
+        final String s;
+        final jq_Reference type;
+        
+        private PlaceholderNode(jq_Member m, String s, jq_Reference type) {
+            this.member = m;
+            this.s = s;
+            this.type = type;
+            this.setEscapes();
+        }
+        
+        /** Update all predecessor and successor nodes with the given update map.
+         *  Also clones the passed parameter set.
+         */
+        public void update(HashMap um) {
+            if (false) {
+                if (TRACE_INTRA) out.println("Updating edges for node "+this.toString_long());
+                Map m = this.predecessors;
+                if (m != null) {
+                    this.predecessors = new LinkedHashMap();
+                    updateMap_unknown(um, m.entrySet().iterator(), this.predecessors);
+                }
+                m = this.addedEdges;
+                if (m != null) {
+                    this.addedEdges = new LinkedHashMap();
+                    updateMap_unknown(um, m.entrySet().iterator(), this.addedEdges);
+                }
+                m = this.accessPathEdges;
+                if (m != null) {
+                    this.accessPathEdges = new LinkedHashMap();
+                    updateMap_unknown(um, m.entrySet().iterator(), this.accessPathEdges);
+                }
+                if (this.passedParameters != null) {
+                    Set pp = SortedArraySet.FACTORY.makeSet(HashCodeComparator.INSTANCE);
+                    pp.addAll(this.passedParameters); 
+                    this.passedParameters = pp;
+                }
+                addGlobalEdges(this);
+            }
+        }
+        
+        public ProgramLocation getLocation() { return null; }
+        
+        public jq_Method getDefiningMethod() { return null; }
+        
+        public jq_Reference getDeclaredType() { return type; }
+        
+        public final Node copy() { return this; }
+        
+        public String toString_long() { return Integer.toHexString(this.hashCode())+": "+toString_short()+super.toString_long(); }
+        public String toString_short() { return "Placeholder: "+member+" "+s+" type "+type; }
+
+        public void write(Textualizer t) throws IOException {
+            member.write(t);
+            t.writeString(s);
+            super.write(t);
+        }
+        public static PlaceholderNode read(StringTokenizer st) {
+            jq_Member m = (jq_Member) jq_Member.read(st);
+            String s = st.nextToken();
+            //n.readEdges(map, st);
+            jq_Reference type;
+            if (m instanceof jq_Method) {
+                jq_Method m2 = (jq_Method) m;
+                if (s.equals("return")) type = (jq_Reference) m2.getReturnType();
+                else if (s.equals("throw")) type = PrimordialClassLoader.getJavaLangThrowable();
+                else type = (jq_Reference) m2.getParamTypes()[Integer.parseInt(s)];
+            } else {
+                type = (jq_Reference) ((jq_Field) m).getType();
+            }
+            return new PlaceholderNode(m, s, type);
+        }
+    }
+    
     /** An outside node is some node that can be mapped to other nodes.
      *  This is just a marker for some of the other node classes below.
      */
@@ -5351,5 +5460,15 @@ outer:
                 }
             }
         }
+    }
+    
+    public static boolean isNullConstant(Node node) {
+        if (node instanceof ConcreteTypeNode || node instanceof ConcreteObjectNode) {
+            jq_Reference type = node.getDeclaredType();
+            if (type == null || type == jq_NullType.NULL_TYPE) {
+                return true;
+            }
+        }
+        return false;
     }
 }
