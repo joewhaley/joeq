@@ -90,7 +90,7 @@ public abstract class Bootstrapper implements ObjectLayout {
         nullStaticFields.add(ClassLib.sun13.java.lang.System._err);
         nullStaticFields.add(ClassLib.sun13.java.lang.System._props);
         nullStaticFields.add(Reflection._obj_trav);
-        nullStaticFields.add(CodeAllocator._DEFAULT);
+        nullStaticFields.add(DefaultCodeAllocator._default_allocator);
         nullStaticFields.add(ClassLib.sun13.java.lang.ClassLoader._loadedLibraryNames);
         nullStaticFields.add(ClassLib.sun13.java.lang.ClassLoader._systemNativeLibraries);
         nullStaticFields.add(ClassLib.sun13.java.lang.ClassLoader._nativeLibraryContext);
@@ -101,7 +101,7 @@ public abstract class Bootstrapper implements ObjectLayout {
 
         // install bootstrap code allocator
         BootstrapCodeAllocator bca = new BootstrapCodeAllocator();
-        CodeAllocator.DEFAULT = bca;
+        DefaultCodeAllocator.default_allocator = bca;
         bca.init();
         
         // install object mapper
@@ -127,6 +127,9 @@ public abstract class Bootstrapper implements ObjectLayout {
         }
         if (rootm == null)
             err("root method not found: "+rootMethodClassName+"."+rootMethodName);
+        
+        // initialize list of methods to invoke on startup
+        jq.on_vm_startup = new LinkedList();
         
         Set classset;
         Set memberset;
@@ -207,9 +210,6 @@ public abstract class Bootstrapper implements ObjectLayout {
         // initialize the set of boot types
         jq.boot_types = classset;
         
-        // initialize list of methods to invoke on startup
-        jq.on_vm_startup = new LinkedList();
-        
         // enable allocations
         objmap.enableAllocations();
 
@@ -279,6 +279,9 @@ public abstract class Bootstrapper implements ObjectLayout {
         // initialize some classes that are used to write the bootimage and that
         // include Utf8 references, because those Utf8 references will get added to our table
         Object xxx = Assembler.x86.ExternalReference._heap_from;
+        
+        // get the set of compiled methods, because it is used during bootstrapping.
+        CodeAllocator.getCompiledMethods();
         
         System.out.println("number of classes seen = "+PrimordialClassLoader.loader.getAllTypes().size());
         System.out.println("number of classes in image = "+jq.boot_types.size());
