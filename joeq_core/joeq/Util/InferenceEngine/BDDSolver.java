@@ -78,7 +78,7 @@ public class BDDSolver extends Solver {
                 StringTokenizer st = new StringTokenizer(s);
                 String fieldDomain = st.nextToken();
                 FieldDomain fd = (FieldDomain) nameToFieldDomain.get(fieldDomain);
-                BDDDomain d = allocateBDDDomain(fd);
+                allocateBDDDomain(fd);
             }
         } catch (IOException x) {
         }

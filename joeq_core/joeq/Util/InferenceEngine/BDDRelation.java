@@ -53,7 +53,7 @@ public class BDDRelation extends Relation {
                 // use the given domain.
                 if (!option.startsWith(fd.name))
                     throw new IllegalArgumentException("Field "+name+" has domain "+fd+", but tried to assign "+option);
-                int index = Integer.parseInt(option.substring(fd.name.length()));
+                //int index = Integer.parseInt(option.substring(fd.name.length()));
                 for (Iterator j = doms.iterator(); j.hasNext(); ) {
                     BDDDomain dom = (BDDDomain) j.next();
                     if (dom.getName().equals(option)) {

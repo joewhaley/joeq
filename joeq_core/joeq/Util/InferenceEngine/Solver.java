@@ -235,7 +235,7 @@ public abstract class Solver {
             }
             MyStringTokenizer st = new MyStringTokenizer(s);
             if (st.hasMoreTokens()) {
-                String name = st.nextToken();
+                st.nextToken(); // name
                 if (st.hasMoreTokens()) {
                     String num = st.nextToken();
                     boolean isNumber;
