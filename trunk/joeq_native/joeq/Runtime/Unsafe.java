@@ -46,6 +46,10 @@ public abstract class Unsafe {
     public static final jq_Reference getTypeOf(Object o) { return remapper_object.getTypeOf(o); }
     
     public static final native void pushArg(int arg);
+    public static final native float popFP32();
+    public static final native double popFP64();
+    public static final native void pushFP32(float v);
+    public static final native void pushFP64(double v);
     public static final native long invoke(int address) throws Throwable;
     public static final native int alloca(int size);
     public static final native int EAX();
@@ -53,7 +57,7 @@ public abstract class Unsafe {
     public static final native int EBP();
     public static final native jq_Thread getThreadBlock();
     public static final native void setThreadBlock(jq_Thread t);
-    public static final native void switchRegisterState(int ip, int fp, int sp);
+    public static final native void switchRegisterState(int ip, int fp, int sp, int eax);
     public static final boolean cas4(int address, int before, int after) {
         if (peek(address) == before) { remapper_object.poke4(address, after); return true; }
         return false;
@@ -79,6 +83,10 @@ public abstract class Unsafe {
     public static final jq_StaticMethod _poke4;
     public static final jq_StaticMethod _getTypeOf;
     public static final jq_StaticMethod _pushArg;
+    public static final jq_StaticMethod _popFP32;
+    public static final jq_StaticMethod _popFP64;
+    public static final jq_StaticMethod _pushFP32;
+    public static final jq_StaticMethod _pushFP64;
     public static final jq_StaticMethod _invoke;
     public static final jq_StaticMethod _alloca;
     public static final jq_StaticMethod _EAX;
@@ -103,13 +111,17 @@ public abstract class Unsafe {
         _poke4 = _class.getOrCreateStaticMethod("poke4", "(II)V");
         _getTypeOf = _class.getOrCreateStaticMethod("getTypeOf", "(Ljava/lang/Object;)LClazz/jq_Reference;");
         _pushArg = _class.getOrCreateStaticMethod("pushArg", "(I)V");
+        _popFP32 = _class.getOrCreateStaticMethod("popFP32", "()F");
+        _popFP64 = _class.getOrCreateStaticMethod("popFP64", "()D");
+        _pushFP32 = _class.getOrCreateStaticMethod("pushFP32", "(F)V");
+        _pushFP64 = _class.getOrCreateStaticMethod("pushFP64", "(D)V");
         _invoke = _class.getOrCreateStaticMethod("invoke", "(I)J");
         _alloca = _class.getOrCreateStaticMethod("alloca", "(I)I");
         _EAX = _class.getOrCreateStaticMethod("EAX", "()I");
         _EBP = _class.getOrCreateStaticMethod("EBP", "()I");
         _getThreadBlock = _class.getOrCreateStaticMethod("getThreadBlock", "()LScheduler/jq_Thread;");
         _setThreadBlock = _class.getOrCreateStaticMethod("setThreadBlock", "(LScheduler/jq_Thread;)V");
-        _switchRegisterState = _class.getOrCreateStaticMethod("switchRegisterState", "(III)V");
+        _switchRegisterState = _class.getOrCreateStaticMethod("switchRegisterState", "(IIII)V");
         _cas4 = _class.getOrCreateStaticMethod("cas4", "(III)Z");
         _floatToIntBits = _class.getOrCreateStaticMethod("floatToIntBits", "(F)I");
         _intBitsToFloat = _class.getOrCreateStaticMethod("intBitsToFloat", "(I)F");
