@@ -64,6 +64,8 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
     BDD allQuads;
     BDD currentQuad;
     
+    Object theDummyObject;
+    
     int totalQuads;
     
     boolean ZERO_FIELDS = !System.getProperty("zerofields", "yes").equals("no");
@@ -87,16 +89,17 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
             int index = varOrderDesc.indexOf("_srcs");
             varOrderDesc = varOrderDesc.substring(0, index) + "_src2_src1" + varOrderDesc.substring(index);
         }
+        theDummyObject = new Object();
         methodMap = new IndexMap("method");
-        methodMap.get(new Object());
+        methodMap.get(theDummyObject);
         loadOpMap();
         quadMap = new IndexMap("quad");
-        quadMap.get(new Object());
+        quadMap.get(theDummyObject);
         //regMap = new IndexMap("reg");
         memberMap = new IndexMap("member");
-        memberMap.get(new Object());
+        memberMap.get(theDummyObject);
         constantMap = new IndexMap("constant");
-        constantMap.get(new Object());
+        constantMap.get(theDummyObject);
         bdd = BDDFactory.init(1000000, 50000);
         method = makeDomain("method", methodBits);
         quad = makeDomain("quad", quadBits);
@@ -433,7 +436,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         }
         dumpRelation(dos, "entries", methodEntries);
         dumpRelation(dos, "nullconstant", nullConstant);
-        dumpRelation(dos, "nonnullconstant", nonNullConstants);
+        dumpRelation(dos, "nonnullconstants", nonNullConstants);
         dos.close();
     }
     
@@ -536,7 +539,8 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
             else if (!(c instanceof Integer) &&
                      !(c instanceof Float) &&
                      !(c instanceof Long) &&
-                     !(c instanceof Double)) {
+                     !(c instanceof Double) &&
+                     c != theDummyObject) {
                 nonNullConstants.orWith(constant.ithVar(i));                    
             }
         }
