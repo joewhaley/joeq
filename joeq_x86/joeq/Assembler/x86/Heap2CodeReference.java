@@ -21,18 +21,21 @@ import java.io.IOException;
 
 public class Heap2CodeReference extends Reloc {
 
-    int/*CodeAddress*/ from_heaploc;
-    int/*HeapAddress*/ to_codeloc;
+    int/*HeapAddress*/ from_heaploc;
+    int/*CodeAddress*/ to_codeloc;
     
     public Heap2CodeReference(int from_heaploc, int to_codeloc) {
         this.from_heaploc = from_heaploc; this.to_codeloc = to_codeloc;
     }
 
+    public int/*HeapAddress*/ getFrom() { return from_heaploc; }
+    public int/*CodeAddress*/ getTo() { return to_codeloc; }
+    
     public void patch() {
         DefaultCodeAllocator.patchAbsolute(from_heaploc, to_codeloc);
     }
     
-    public void dump(OutputStream out) throws IOException {
+    public void dumpCOFF(OutputStream out) throws IOException {
         LittleEndianOutputStream.write_s32(out, from_heaploc);      // r_vaddr
         LittleEndianOutputStream.write_s32(out, 0);                 // r_symndx
         LittleEndianOutputStream.write_u16(out, Reloc.RELOC_ADDR32);// r_type

@@ -33,7 +33,7 @@ public class ExternalReference extends Reloc {
 
     public void setSymbolIndex(int ndx) { jq.assert(ndx != 0); this.symbol_ndx = ndx; }
     
-    public void dump(OutputStream out) throws IOException {
+    public void dumpCOFF(OutputStream out) throws IOException {
         jq.assert(symbol_ndx != 0);
         LittleEndianOutputStream.write_s32(out, heap_from);         // r_vaddr
         LittleEndianOutputStream.write_s32(out, symbol_ndx);        // r_symndx

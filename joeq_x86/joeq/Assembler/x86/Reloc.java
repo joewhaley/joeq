@@ -17,5 +17,5 @@ public abstract class Reloc {
     public static final char RELOC_ADDR32 = (char)0x0006;
     public static final char RELOC_REL32  = (char)0x0014;
     
-    public abstract void dump(OutputStream out) throws IOException;
+    public abstract void dumpCOFF(OutputStream out) throws IOException;
 }
