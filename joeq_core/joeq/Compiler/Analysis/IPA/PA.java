@@ -1669,45 +1669,50 @@ public class PA {
     
     ToString TS = new ToString();
     
+    // XXX should we use an interface here for long location printing?
+    public String longForm(Object o) {
+	if (o == null || !LONG_LOCATIONS)
+	    return "";
+
+	// Node is a ProgramLocation
+	if (o instanceof ProgramLocation) {
+	    return " in "+((ProgramLocation)o).toStringLong();
+	} else {
+	    try {
+		Class c = o.getClass();
+		try {
+		    // Node has getLocation() 
+		    Method m = c.getMethod("getLocation", new Class[] {});
+		    ProgramLocation pl = (ProgramLocation)m.invoke(o, null);
+		    if (pl == null)
+			throw new NoSuchMethodException();
+		    return " in "+pl.toStringLong();
+		} catch (NoSuchMethodException _1) {
+		    try {
+			// Node has at least a getMethod() 
+			Method m = c.getMethod("getMethod", new Class[] {});
+			return " " + m.invoke(o, null);
+		    } catch (NoSuchMethodException _2) {
+			try {
+			    // or getDefiningMethod() 
+			    Method m = c.getMethod("getDefiningMethod", new Class[] {});
+			    return " " + m.invoke(o, null);
+			} catch (NoSuchMethodException _3) {
+			}
+		    }
+		}
+	    } catch (InvocationTargetException _) {
+	    } catch (IllegalAccessException _) { 
+	    }
+	}
+	return "";
+    }
+
     String findInMap(IndexMap map, int j) {
         String jp = "("+j+")";
         if (j < map.size()) {
             Object o = map.get(j);
-	    jp += o;
-	    // XXX should we use an interface here for long location printing?
-            if (o != null && LONG_LOCATIONS) {
-                // Node is a ProgramLocation
-        	if (o instanceof ProgramLocation) {
-        	    jp += " in "+((ProgramLocation)o).toStringLong();
-        	} else {
-        	    try {
-        		Class c = o.getClass();
-        		try {
-                            // Node has getLocation() 
-        		    Method m = c.getMethod("getLocation", new Class[] {});
-        		    ProgramLocation pl = (ProgramLocation)m.invoke(o, null);
-                            if (pl == null)
-                                throw new NoSuchMethodException();
-                            jp += " in "+pl.toStringLong();
-        		} catch (NoSuchMethodException _1) {
-        		    try {
-        			// Node has at least a getMethod() 
-        			Method m = c.getMethod("getMethod", new Class[] {});
-        			jp += " " + m.invoke(o, null);
-        		    } catch (NoSuchMethodException _2) {
-        			try {
-        			    // or getDefiningMethod() 
-                                    Method m = c.getMethod("getDefiningMethod", new Class[] {});
-                                    jp += " " + m.invoke(o, null);
-                                } catch (NoSuchMethodException _3) {
-                                }
-                            }
-			}
-                    } catch (InvocationTargetException _) {
-                    } catch (IllegalAccessException _) { 
-                    }
-		}
-            }
+	    jp += o + longForm(o);
 	    return jp;
         } else {
             return jp+"<index not in map>";
