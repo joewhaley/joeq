@@ -58,15 +58,23 @@ public class jq_InterrupterThread extends Thread {
                 regs.ContextFlags = jq_RegisterState.CONTEXT_CONTROL |
                                     jq_RegisterState.CONTEXT_INTEGER |
                                     jq_RegisterState.CONTEXT_FLOATING_POINT;
-                other_nt.getContext(regs);
-                if (TRACE) SystemInterface.debugmsg(other_nt+" : "+javaThread+" ip="+jq.hex8(regs.Eip)+" sp="+jq.hex8(regs.Esp)+" cc="+CodeAllocator.getCodeContaining(regs.Eip));
-		// simulate a call to threadSwitch method
-		Unsafe.poke4(regs.Esp -= 4, Unsafe.addressOf(other_nt));
-		Unsafe.poke4(regs.Esp -= 4, regs.Eip);
-		regs.Eip = jq_NativeThread._threadSwitch.getDefaultCompiledVersion().getEntrypoint();
-		regs.ContextFlags = jq_RegisterState.CONTEXT_CONTROL;
-		other_nt.setContext(regs);
-		if (TRACE) SystemInterface.debugmsg(other_nt+" : simulating a call to threadSwitch");
+                boolean b = other_nt.getContext(regs);
+                if (!b) {
+                    if (TRACE) SystemInterface.debugmsg("Failed to get thread context for "+other_nt);
+                } else {
+                    if (TRACE) SystemInterface.debugmsg(other_nt+" : "+javaThread+" ip="+jq.hex8(regs.Eip)+" sp="+jq.hex8(regs.Esp)+" cc="+CodeAllocator.getCodeContaining(regs.Eip));
+                    // simulate a call to threadSwitch method
+                    Unsafe.poke4(regs.Esp -= 4, Unsafe.addressOf(other_nt));
+                    Unsafe.poke4(regs.Esp -= 4, regs.Eip);
+                    regs.Eip = jq_NativeThread._threadSwitch.getDefaultCompiledVersion().getEntrypoint();
+                    regs.ContextFlags = jq_RegisterState.CONTEXT_CONTROL;
+                    b = other_nt.setContext(regs);
+                    if (!b) {
+                        if (TRACE) SystemInterface.debugmsg("Failed to set thread context for "+other_nt);
+                    } else {
+                        if (TRACE) SystemInterface.debugmsg(other_nt+" : simulating a call to threadSwitch");
+                    }
+                }
             } else {
                 // the current Java thread does not have thread switching enabled.
                 //if (TRACE) SystemInterface.debugmsg(other_nt+" : "+javaThread+" Thread switch not enabled");
