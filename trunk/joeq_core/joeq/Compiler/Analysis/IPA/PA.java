@@ -156,7 +156,7 @@ public class PA {
     static boolean USE_BOGUS_SUMMARIES = !System.getProperty("pa.usebogussummaries", "no").equals("no");
     static boolean USE_REFLECTION_PROVIDER = !System.getProperty("pa.usereflectionprovider", "no").equals("no");
     static boolean TRACE_BOGUS = !System.getProperty("pa.tracebogus", "no").equals("no");
-    static boolean TRACE_REFLECTION = !System.getProperty("pa.tracereflection", "no").equals("no");
+    public static boolean TRACE_REFLECTION = !System.getProperty("pa.tracereflection", "no").equals("no");
     int MAX_PARAMS = Integer.parseInt(System.getProperty("pa.maxparams", "4"));
     
     int bddnodes = Integer.parseInt(System.getProperty("bddnodes", "2500000"));
