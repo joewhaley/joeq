@@ -34,6 +34,11 @@ public abstract class Reflection {
 
     public static ObjectTraverser obj_trav;
     
+    public static final jq_Reference getTypeOf(Object o) {
+        if (!jq.Bootstrapping) return Unsafe.getTypeOf(o);
+        return (jq_Reference)getJQType(o.getClass());
+    }
+    
     // Map between our jq_Type objects and JDK Class objects
     public static final jq_Type getJQType(Class c) {
         if (!jq.Bootstrapping) return (jq_Type)getfield_A(c, ClassLib.sun13.java.lang.Class._jq_type);
