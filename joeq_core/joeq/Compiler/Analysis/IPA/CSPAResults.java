@@ -2534,6 +2534,9 @@ public class CSPAResults implements PointerAnalysisResults {
                 } else if (command.equals("syncedvars")) {
                     TypedBDD bdd = new TypedBDD(getSyncedVars(), V1);
                     results.add(bdd);
+                } else if (command.equals("unnecessarysyncs")) {
+                    TypedBDD bdd = new TypedBDD(getUnnecessarySyncs(), V1);
+                    results.add(bdd);
                 } else if (command.equals("thread")) {
                     int k = Integer.parseInt(st.nextToken());
                     jq_Method run = null;
@@ -2728,6 +2731,15 @@ public class CSPAResults implements PointerAnalysisResults {
             System.out.print("\t\t");
             System.out.println(histogram_pointer[i]);
         }
+    }
+    
+    public BDD getUnnecessarySyncs() {
+        BDD syncs = getSyncedVars(); // V1
+        BDD syncObjs = syncs.and(vP); // V1xH1
+        BDD local = getThreadLocalObjects(); // H1
+        BDD u = syncObjs.applyAll(local, BDDFactory.imp, H1set);
+        u.andWith(syncs);
+        return u;
     }
     
     public BDD getSyncedVars() {
