@@ -27,6 +27,7 @@ public abstract class Solver {
     
     boolean NOISY = true;
     boolean TRACE = System.getProperty("tracesolve") != null;
+    boolean TRACE_FULL = System.getProperty("fulltracesolve") != null;
     PrintStream out = System.out;
     
     abstract InferenceRule createInferenceRule(List/*<RuleTerm>*/ top, RuleTerm bottom);
