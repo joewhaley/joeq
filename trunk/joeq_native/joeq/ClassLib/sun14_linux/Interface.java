@@ -77,6 +77,11 @@ public final class Interface extends ClassLib.ClassLibInterface {
     
     public void initializeDefaults() {
         jq_NativeThread.USE_INTERRUPTER_THREAD = true;
+        
+	// access the ISO-8859-1 character encoding, as it is used during bootstrapping
+        try {
+            "".getBytes("ISO-8859-1");
+        } catch (java.io.UnsupportedEncodingException x) { }
     }
     
     public java.lang.Class createNewClass(Clazz.jq_Type f) {
