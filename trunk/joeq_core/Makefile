@@ -17,7 +17,8 @@ ALLDIRS := $(shell find $(MODULES) -type d | grep -v CVS)
 ALLJAVA := $(foreach d, $(ALLDIRS), $(wildcard $(d)/*.java))
 ALLPKGS := $(sort $(foreach j, $(shell echo $(ALLJAVA) | sed 's/\.\.\/[^\/]*\///g'), $(patsubst %/,%,$(dir $(j)))))
 ALLPKGNAMES := $(subst /,.,$(ALLPKGS))
-ALLCLASS := $(foreach d, $(ALLDIRS), $(wildcard $(d)/*.class))
+# Note: doesn't catch newly-created class files.
+ALLCLASS = $(foreach d, $(ALLDIRS), $(wildcard $(d)/*.class))
 
 BOOTSTRAP_CLASSPATH = .$(CLASSPATH_SEP)$(JOEQ_DIR)$(CLASSPATH_SEP)$(BUILD_CLASSPATH)
 
