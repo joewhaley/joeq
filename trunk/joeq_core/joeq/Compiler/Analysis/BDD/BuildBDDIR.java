@@ -302,7 +302,9 @@ public class BuildBDDIR implements ControlFlowGraphVisitor {
         Map map = CodeCache.getBCMap(m);            
         Integer j = (Integer) map.get(q);
         if (j == null) {
-            Assert.UNREACHABLE("Error: no mapping for quad "+q);
+            //Assert.UNREACHABLE("Error: no mapping for quad "+q);
+            // some, like PHI nodes may not have a mapping
+            return;
         }
         int bcIndex = j.intValue();
         ProgramLocation quadLoc = new ProgramLocation.BCProgramLocation(m, bcIndex);
