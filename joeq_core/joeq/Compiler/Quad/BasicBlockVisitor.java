@@ -50,14 +50,13 @@ public interface BasicBlockVisitor {
         /** Convert the given method to quad format and visit each of its basic blocks
          * with the basic block visitor specified in the constructor.
          * Skips native and abstract methods.
-         * @see  BytecodeToQuad
+         * @see  Compil3r.Quad.CodeCache
          * @param m  method to visit
          */
         public void visitMethod(jq_Method m) {
             if (m.isNative() || m.isAbstract()) return;
             if (trace) System.out.println(m.toString());
-            BytecodeToQuad b2q = new BytecodeToQuad(m);
-            ControlFlowGraph cfg = b2q.convert();
+            ControlFlowGraph cfg = Compil3r.Quad.CodeCache.getCode(m);
             cfg.visitBasicBlocks(bbv);
         }
     }
