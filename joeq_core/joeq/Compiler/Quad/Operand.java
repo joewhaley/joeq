@@ -67,11 +67,15 @@ public interface Operand {
         public String toString() { return register+" "+((type==null)?"<g>":type.shortName()); }
     }
     
-    interface Const4Operand extends Operand {
+    interface ConstOperand extends Operand {
+        Object getWrapped();
+    }
+    
+    interface Const4Operand extends ConstOperand {
         int getBits();
     }
     
-    interface Const8Operand extends Operand {
+    interface Const8Operand extends ConstOperand {
         long getBits();
     }
     
@@ -98,6 +102,9 @@ public interface Operand {
         public boolean isSimilar(Operand that) { return that instanceof AConstOperand && ((AConstOperand)that).getValue() == this.getValue(); }
         public int getBits() {
             return HeapAddress.addressOf(value).to32BitValue();
+        }
+        public Object getWrapped() {
+            return value;
         }
     }
     
@@ -126,6 +133,9 @@ public interface Operand {
                    this.getValue().difference(that.getValue()) == 0;
         }
         public int getBits() { return value==null?0:value.to32BitValue(); }
+        public Object getWrapped() {
+            return new Integer(getBits());
+        }
     }
     
     class IConstOperand implements Const4Operand {
@@ -143,6 +153,9 @@ public interface Operand {
         public Operand copy() { return new IConstOperand(value); }
         public boolean isSimilar(Operand that) { return that instanceof IConstOperand && ((IConstOperand)that).getValue() == this.getValue(); }
         public int getBits() { return value; }
+        public Object getWrapped() {
+            return new Integer(value);
+        }
     }
     
     class FConstOperand implements Const4Operand {
@@ -160,6 +173,9 @@ public interface Operand {
         public Operand copy() { return new FConstOperand(value); }
         public boolean isSimilar(Operand that) { return that instanceof FConstOperand && ((FConstOperand)that).getValue() == this.getValue(); }
         public int getBits() { return Float.floatToRawIntBits(value); }
+        public Object getWrapped() {
+            return new Float(value);
+        }
     }
 
     class LConstOperand implements Const8Operand {
@@ -177,6 +193,9 @@ public interface Operand {
         public Operand copy() { return new LConstOperand(value); }
         public boolean isSimilar(Operand that) { return that instanceof LConstOperand && ((LConstOperand)that).getValue() == this.getValue(); }
         public long getBits() { return value; }
+        public Object getWrapped() {
+            return new Long(value);
+        }
     }
 
     class DConstOperand implements Const8Operand {
@@ -194,6 +213,9 @@ public interface Operand {
         public Operand copy() { return new DConstOperand(value); }
         public boolean isSimilar(Operand that) { return that instanceof DConstOperand && ((DConstOperand)that).getValue() == this.getValue(); }
         public long getBits() { return Double.doubleToRawLongBits(value); }
+        public Object getWrapped() {
+            return new Double(value);
+        }
     }
 
     class UnnecessaryGuardOperand implements Operand {
