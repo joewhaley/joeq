@@ -40,7 +40,11 @@ public abstract class Bootstrapper implements ObjectLayout {
         boolean TrimAllTypes = false;
 	boolean DUMP_COFF = false;
 
+	// set bootstrapping flag first - lots of code depends on this flag.
         jq.Bootstrapping = true;
+        // initialize list of methods to invoke on joeq startup
+        jq.on_vm_startup = new LinkedList();
+        
         ClassLibInterface.i.useJoeqClasslib(true);
         
 	if (ClassLibInterface.i.getClass().toString().indexOf("win32") != -1) {
@@ -136,9 +140,6 @@ public abstract class Bootstrapper implements ObjectLayout {
         }
         if (rootm == null)
             err("root method not found: "+rootMethodClassName+"."+rootMethodName);
-        
-        // initialize list of methods to invoke on startup
-        jq.on_vm_startup = new LinkedList();
         
         Set classset = new HashSet();
         Set memberset;

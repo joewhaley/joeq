@@ -316,7 +316,7 @@ public class Trimmer {
                 Object[] v = (Object[])o;
                 if (TRACE) out.println("Visiting array of "+length+" elements");
                 for (int k=0; k<length; ++k) {
-                    Object o2 = v[k];
+                    Object o2 = obj_trav.mapValue(v[k]);
                     addObject(o2);
                 }
             }

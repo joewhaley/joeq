@@ -14,6 +14,7 @@ import Clazz.*;
 import Run_Time.Unsafe;
 import Run_Time.Reflection;
 import Allocator.DefaultCodeAllocator;
+import jq;
 
 public final class Interface extends ClassLib.ClassLibInterface {
 
@@ -50,6 +51,16 @@ public final class Interface extends ClassLib.ClassLibInterface {
         nullStaticFields.add(launcher_class.getOrCreateStaticField("launcher", "Lsun/misc/Launcher;"));
         //jq_Class urlclassloader_class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/net/URLClassLoader;");
         //nullStaticFields.add(urlclassloader_class.getOrCreateStaticField("extLoader", "Ljava/net/URLClassLoader;"));
+        jq_Class zipfile_class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/util/zip/ZipFile;");
+        nullStaticFields.add(zipfile_class.getOrCreateStaticField("inflaters", "Ljava/util/Vector;"));
+
+	// we need to reinitialize the inflaters array on startup.
+	Object[] args = { } ;
+	jq_Method init_inflaters = zipfile_class.getOrCreateStaticMethod("init_inflaters", "()V");
+	Bootstrap.MethodInvocation mi = new Bootstrap.MethodInvocation(init_inflaters, args);
+	jq.on_vm_startup.add(mi);
+	System.out.println("Added call to reinitialize java.util.zip.ZipFile.inflaters field on joeq startup: "+mi);
+
         return nullStaticFields;
     }
     
@@ -102,6 +113,10 @@ public final class Interface extends ClassLib.ClassLibInterface {
     
     public void init_zipfile(java.util.zip.ZipFile o, java.lang.String name) throws java.io.IOException {
         ClassLib.ibm13_linux.java.util.zip.ZipFile.__init__(o, name);
+    }
+    
+    public void init_inflater(java.util.zip.Inflater o, boolean nowrap) {
+        ClassLib.ibm13_linux.java.util.zip.Inflater.__init__(o, nowrap);
     }
     
     public void initializeSystemClass() throws java.lang.Throwable {

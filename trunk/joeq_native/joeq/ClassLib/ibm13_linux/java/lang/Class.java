@@ -49,6 +49,12 @@ public class Class {
         }
         return k;
     }
+    private static java.lang.Class forName1(jq_Class clazz, java.lang.String name)
+        throws ClassNotFoundException
+    {
+	java.lang.ClassLoader loader = clazz.getClassLoader();
+	return forName0(clazz, name, true, loader);
+    }
 
     private static java.lang.Object newInstance0(java.lang.Class dis)
         throws InstantiationException, IllegalAccessException
@@ -74,6 +80,13 @@ public class Class {
             throw new ExceptionInInitializerError(x);
         }
         return o;
+    }
+
+    private static java.lang.Object newInstance2(java.lang.Class dis, java.lang.Class ccls)
+        throws InstantiationException, IllegalAccessException
+    {
+	// what is special about ccls?
+	return newInstance0(dis);
     }
 
     public static boolean isInstance(java.lang.Class dis, java.lang.Object obj) {
