@@ -93,6 +93,7 @@ public class PA {
     boolean TRACE_OBJECT = !System.getProperty("pa.traceobject", "no").equals("no");
     boolean TRACE_CONTEXT = !System.getProperty("pa.tracecontext", "no").equals("no");
     PrintStream out = System.out;
+    static boolean USE_JOEQ_CLASSLIBS = !System.getProperty("pa.usejoeqclasslibs", "no").equals("no");
 
     boolean INCREMENTAL1 = !System.getProperty("pa.inc1", "yes").equals("no"); // incremental points-to
     boolean INCREMENTAL2 = !System.getProperty("pa.inc2", "yes").equals("no"); // incremental parameter binding
@@ -1670,6 +1671,10 @@ public class PA {
     }
 
     public static void main(String[] args) throws IOException {
+        if (USE_JOEQ_CLASSLIBS) {
+            System.setProperty("joeq.classlibinterface", "ClassLib.pa.Interface");
+            ClassLib.ClassLibInterface.useJoeqClasslib(true);
+        }
         HostedVM.initialize();
         CodeCache.AlwaysMap = true;
         
