@@ -22,30 +22,19 @@ import jwutil.reflect.Reflect;
  * @version $Id$
  */
 public class GenRelations {
-    
     public static URL getFileURL(String filename) throws IOException {
-        return getFileURL(null, filename);
-    }
-    public static URL getFileURL(String dirname, String filename) throws IOException {
-        String sep = System.getProperty("file.separator");
-        String name;
-        if (dirname == null) name = filename;
-        else if (dirname.endsWith(sep)) name = dirname+filename;
-        else name = dirname+sep+filename;
-        File f = new File(name);
+        File f = new File(filename);
         if (f.exists()) return f.toURL();
         else return null;
     }
-    
+
     public static ClassLoader addBDDLibraryToClasspath(String[] args) throws IOException {
         System.out.println("BDD library is not in classpath!  Adding it.");
         String sep = System.getProperty("file.separator");
         URL url;
-        url = getFileURL("joeq"+sep+"Support", "javabdd.jar");
-        if (url == null)
-            url = getFileURL("joeq"+sep+"Support", "javabdd_0.6.jar");
-        if (url == null)
-            url = getFileURL("javabdd.jar");
+        url = getFileURL("joeq" + sep + "Support" + sep + "javabdd.jar");
+        if (url == null) url = getFileURL("joeq" + sep + "Support" + sep + "javabdd_0.6.jar");
+        if (url == null) url = getFileURL("javabdd.jar");
         if (url == null) {
             System.err.println("Cannot find JavaBDD library!");
             System.exit(-1);
@@ -94,11 +83,9 @@ public class GenRelations {
             printUsage();
             return;
         }
-        
         boolean CS = false;
         boolean FLY = false;
         boolean SSA = false;
-        
         int i;
         for (i = 0; i < args.length; ++i) {
             if (args[i].equalsIgnoreCase("addpass")) {
@@ -145,7 +132,6 @@ public class GenRelations {
             System.arraycopy(args, i, args2, 0, args2.length);
             args = args2;
         }
-        
         System.setProperty("pa.skipsolve", "yes");
         System.setProperty("pa.dumpinitial", "yes");
         System.setProperty("pa.dumpresults", "no");
@@ -164,16 +150,19 @@ public class GenRelations {
                 if (!dumppath.endsWith(sep)) dumppath += sep;
             }
             if (System.getProperty("pa.callgraph") == null) {
-                System.setProperty("pa.callgraph", dumppath+"callgraph");
+                System.setProperty("pa.callgraph", dumppath + "callgraph");
             }
+            File f = new File(dumppath);
+            if (!f.exists()) f.mkdirs();
         }
-        
         PA.main(args);
     }
-    
+
     public static void printUsage() {
-        System.out.println("Usage: java "+GenRelations.class.getName()+" <options> <class> (<method>)");
-        System.out.println("Usage: java "+GenRelations.class.getName()+" <options> @<classlist>");
+        System.out.println("Usage: java " + GenRelations.class.getName()
+            + " <options> <class> (<method>)");
+        System.out.println("Usage: java " + GenRelations.class.getName()
+            + " <options> @<classlist>");
         System.out.println("Valid options:");
         System.out.println(" -cs     context-sensitive");
         System.out.println(" -fly    on-the-fly call graph");
@@ -183,5 +172,4 @@ public class GenRelations {
         System.out.println(" -Dpa.icallgraph    location to load initial call graph, blank to force callgraph regeneration");
         System.out.println(" -Dpa.dumpdotgraph  dump the call graph in dot graph format");
     }
-    
 }
