@@ -4313,7 +4313,7 @@ public class PA {
                     dos.write("T\n");
                 else if (d == F)
                     dos.write("F\n");
-                else if (d == I)
+                else if (d == I || d == I2)
                     dos.write("I\n");
                 else if (d == Z)
                     dos.write("Z\n");
