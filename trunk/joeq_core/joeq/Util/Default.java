@@ -124,9 +124,9 @@ public abstract class Default  {
 	}
     }
     /** A serializable comparator. */
-    private static interface SerializableComparator
+    private interface SerializableComparator
 	extends Comparator, java.io.Serializable { /* only declare */ }
     /** A serializable map. */
-    private static interface SerializableMap
+    private interface SerializableMap
 	extends Map, java.io.Serializable { /* only declare */ }
 }
