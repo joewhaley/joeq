@@ -1,0 +1,101 @@
+/*
+ * ControlDependence.java
+ *
+ * Created on January 30, 2002, 8:16 PM
+ */
+
+package Compil3r.Quad;
+import Clazz.*;
+import Util.Templates.List;
+import Util.Templates.ListIterator;
+import java.util.Iterator;
+import Compil3r.Quad.Operand.ConditionOperand;
+import Compil3r.Quad.Operand.IConstOperand;
+import Compil3r.Quad.Operand.AConstOperand;
+import Compil3r.Quad.Operand.FieldOperand;
+import Compil3r.Quad.Operator.Getfield;
+import Compil3r.Quad.Operator.IntIfCmp;
+import Compil3r.Quad.Operator.Return;
+
+/**
+ *
+ * @author  Administrator
+ * @version 
+ */
+public class ControlDependence extends jq_MethodVisitor.EmptyVisitor {
+
+    public void visitMethod(jq_Method m) {
+        ControlFlowGraph cfg = Compil3r.Quad.CodeCache.getCode(m);
+        Dominators dom = new Dominators(false);
+        dom.visitMethod(m);
+        Dominators.DominatorNode root = dom.computeTree();
+        
+        // find blocks that end in a throw statement.
+        ListIterator.BasicBlock li = cfg.exit().getPredecessors().basicBlockIterator();
+        while (li.hasNext()) {
+            BasicBlock bb = li.nextBasicBlock();
+            Quad q = bb.getLastQuad();
+            if (q.getOperator() == Return.THROW_A.INSTANCE) {
+                System.out.println("Found throw statement in "+bb+"! "+q);
+                // find control dependence
+                Dominators.DominatorNode dn = getDomNode(root, bb);
+                findControlDependence(dn, root);
+            }
+        }
+    }
+
+    static Dominators.DominatorNode getDomNode(Dominators.DominatorNode p, BasicBlock bb) {
+        if (p.getBasicBlock() == bb) return p;
+        Iterator i = p.getChildren().iterator();
+        while (i.hasNext()) {
+            Dominators.DominatorNode x = getDomNode((Dominators.DominatorNode)i.next(), bb);
+            if (x != null) return x;
+        }
+        return null;
+    }
+
+    static void findControlDependence(Dominators.DominatorNode p, Dominators.DominatorNode root) {
+        Iterator i = p.getChildren().iterator();
+        if (!i.hasNext()) {
+            System.out.println("Reached leaf node: "+p);
+            List.BasicBlock preds = p.getBasicBlock().getPredecessors();
+            System.out.println("Predecessors: "+preds);
+            ListIterator.BasicBlock li = preds.basicBlockIterator();
+            while (li.hasNext()) {
+                BasicBlock pred = li.nextBasicBlock();
+                Quad q = pred.getLastQuad();
+                System.out.println("last quad of "+pred+" is "+q);
+                if (pred.size() < 2) break;
+                Quad q2 = pred.getQuad(pred.size()-2);
+                System.out.println("next-to-last quad is "+q2);
+                if (q.getOperator() instanceof IntIfCmp) {
+                    Operand src1 = IntIfCmp.getSrc1(q);
+                    Operand src2 = IntIfCmp.getSrc2(q);
+                    ConditionOperand cond = IntIfCmp.getCond(q);
+                    if ((q.getOperator() == IntIfCmp.IFCMP_A.INSTANCE) &&
+                       (src2 instanceof AConstOperand) &&
+                       ((AConstOperand)src2).getValue() == null) {
+                        if (q2.getOperator() instanceof Getfield) {
+                            FieldOperand fo = Getfield.getField(q2);
+                            System.out.println(cond+" comparison between field "+fo+" and const null");
+                            findControlDependence(getDomNode(root, pred), root);
+                        }
+                    } else if ((q.getOperator() == IntIfCmp.IFCMP_I.INSTANCE) &&
+                             (src2 instanceof IConstOperand)) {
+                        if (q2.getOperator() instanceof Getfield) {
+                            FieldOperand fo = Getfield.getField(q2);
+                            System.out.println(cond+" comparison between field "+fo+" and const "+((IConstOperand)src2).getValue());
+                            findControlDependence(getDomNode(root, pred), root);
+                        }
+                    }
+                } 
+            }
+        } else {
+            while (i.hasNext()) {
+                Dominators.DominatorNode x = (Dominators.DominatorNode)i.next();
+                findControlDependence(x, root);
+            }
+        }
+    }
+    
+}
