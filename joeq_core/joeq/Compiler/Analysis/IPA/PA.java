@@ -1985,6 +1985,7 @@ public class PA {
                 jq_Type clazz = jq_Type.parseType(stringConst);
                 if(clazz instanceof jq_Class){
                     c = (jq_Class) clazz;
+                    c.load();
                     c.prepare();
                     Assert._assert(c != null);
                 }else{

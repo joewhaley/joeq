@@ -157,6 +157,8 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
     }
     
     public void visitMethod(jq_Method m) {
+        Assert._assert(m != null);
+        Assert._assert(m.getDeclaringClass() != null);
         if (PA.VerifyAssertions)
             Assert._assert(!pa.newMethodSummaries.containsKey(m));
         pa.newMethodSummaries.put(m, this);
