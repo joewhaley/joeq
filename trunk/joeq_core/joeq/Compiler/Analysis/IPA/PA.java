@@ -76,6 +76,7 @@ import joeq.Util.Graphs.Navigator;
 import joeq.Util.Graphs.PathNumbering;
 import joeq.Util.Graphs.RootPathNumbering;
 import joeq.Util.Graphs.SCCPathNumbering;
+import joeq.Util.Graphs.SCCTopSortedGraph;
 import joeq.Util.Graphs.SCComponent;
 import joeq.Util.Graphs.Traversals;
 import joeq.Util.Graphs.PathNumbering.Range;
@@ -136,6 +137,7 @@ public class PA {
     boolean CONTEXT_SENSITIVE = !System.getProperty("pa.cs", "no").equals("no");
     boolean CS_CALLGRAPH = !System.getProperty("pa.cscg", "no").equals("no");
     boolean DISCOVER_CALL_GRAPH = !System.getProperty("pa.discover", "no").equals("no");
+    boolean PRINT_CALL_GRAPH_SCCS = !System.getProperty("pa.printsccs", "no").equals("no");
     boolean AUTODISCOVER_CALL_GRAPH = !System.getProperty("pa.autodiscover", "yes").equals("no");
     boolean DUMP_DOTGRAPH = !System.getProperty("pa.dumpdotgraph", "no").equals("no");
     boolean FILTER_NULL = !System.getProperty("pa.filternull", "yes").equals("no");
@@ -2088,6 +2090,22 @@ public class PA {
         System.out.print("Counting size of call graph...");
         long time = System.currentTimeMillis();
         vCnumbering = countCallGraph(cg, ocg, updateBits);
+        if(PRINT_CALL_GRAPH_SCCS){
+	        SCCPathNumbering sccNumbering = (SCCPathNumbering) vCnumbering;
+	        SCCTopSortedGraph sccGraph = sccNumbering.getSCCGraph();
+	        for(Iterator iter = sccGraph.list().iterator(); iter.hasNext(); ){
+	        	SCComponent component = (SCComponent) iter.next();
+	        	
+	        	if(component.size() < 2) continue;
+	        		
+	        	System.out.print(component.getId() + "\t: ");
+	        	for(int i = 0; i < component.entries().length; i++){
+	        		Object entry = component.entries()[i];
+	        		System.out.print(entry.toString() + " ");
+	        	}
+	        	System.out.println("");
+	        }
+        }
         if (OBJECT_SENSITIVE) {
             oCnumbering = new SCCPathNumbering(objectPathSelector);
             BigInteger paths = (BigInteger) oCnumbering.countPaths(ocg);
