@@ -327,13 +327,17 @@ public class BDDSolver extends Solver {
                     }
                 }
             }
+            if (TRACE) out.println("Last element in SCC: "+last);
             Object last_next;
             List possible = new LinkedList(depNav.next(last));
+            if (TRACE) out.println("Successors of last element: "+possible);
             if (possible.size() == 1) last_next = possible.iterator().next();
             else if (possible.contains(entry)) last_next = entry;
             else {
-                possible.retainAll(Arrays.asList(entries));
                 last_next = possible.iterator().next();
+                possible.retainAll(Arrays.asList(entries));
+                if (!possible.isEmpty())
+                    last_next = possible.iterator().next();
             }
             if (TRACE) out.println("Removing backedge "+last+" -> "+last_next);
             depNav.removeEdge(last, last_next);
