@@ -31,11 +31,13 @@ public class Utf8 implements jq_ClassFileConstants {
     }
 
     public static Utf8 get(byte[] b) {
-        return table[getID(b)];
+        int id = getID(b);
+        return table[id];
     }
     
     public static Utf8 get(byte[] b, int startIndex, int endIndex) {
-        return table[getID(b, startIndex, endIndex)];
+        int id = getID(b, startIndex, endIndex);
+        return table[id];
     }
     
     public static int getID(byte[] b) {
