@@ -419,6 +419,8 @@ public final class SCComponent implements Comparable, Serializable {
                 if (i > 0)
                     buffer.append(", ");
                 buffer.append(nodes_array[i]);
+                buffer.append(":");
+                buffer.append(nodes_array[i].getClass().toString());
             }
         }
         buffer.append("}");
