@@ -1,14 +1,12 @@
 #!/bin/bash
 
 ### echo Directory is $1
-ls -al
 shift
 
 for arg in "$@"
 do
  if [ ".java" == .${arg##*.} ]
  then
-  echo Checking $arg
   if [ -e $arg ]
    if grep -l "	" $arg
    then
