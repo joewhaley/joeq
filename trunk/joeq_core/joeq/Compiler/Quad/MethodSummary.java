@@ -48,6 +48,7 @@ import Compil3r.Quad.Operator.Special;
 import Compil3r.Quad.Operator.Unary;
 import Compil3r.Quad.RegisterFactory.Register;
 import Main.jq;
+import Util.CollectionTestWrapper;
 import Util.Default;
 import Util.FilterIterator;
 import Util.HashCodeComparator;
@@ -134,7 +135,7 @@ public class MethodSummary {
         /** The set of returned and thrown nodes. */
         protected final Set returned, thrown;
         /** The set of method calls made. */
-        protected final SortedArraySet methodCalls;
+        protected final Set methodCalls;
         /** Map from a method call to its ReturnValueNode. */
         protected final HashMap callToRVN;
         /** Map from a method call to its ThrownExceptionNode. */
@@ -195,7 +196,7 @@ public class MethodSummary {
             this.nRegisters = this.nLocals + rf.getStackSize(PrimordialClassLoader.getJavaLangObject());
             this.method = cfg.getMethod();
             this.start_states = new State[cfg.getNumberOfBasicBlocks()];
-            this.methodCalls = new SortedArraySet(HashCodeComparator.INSTANCE);
+            this.methodCalls = SortedArraySet.FACTORY.makeSet(HashCodeComparator.INSTANCE);
             this.callToRVN = new HashMap();
             this.callToTEN = new HashMap();
             this.passedAsParameter = NodeSet.FACTORY.makeSet();
@@ -848,7 +849,7 @@ public class MethodSummary {
          *  This only includes inside edges; outside edge predecessors are in FieldNode. */
         protected Map predecessors;
         /** Set of passed parameters for this node. */
-        protected SortedArraySet passedParameters;
+        protected Set passedParameters;
         /** Map from fields to sets of inside edges from this node on that field. */
         protected Map addedEdges;
         /** Map from fields to sets of outside edges from this node on that field. */
@@ -965,8 +966,11 @@ public class MethodSummary {
                         Node that = (Node)o;
                         if (that == this) continue; // cyclic edges handled above.
                         Object q = (TRACK_REASONS && edgesToReasons != null) ? edgesToReasons.get(Edge.get(this, that, f)) : null;
-                        if (removeSelf)
-                            that.removePredecessor(f, this);
+                        if (removeSelf) {
+                            boolean b = that.removePredecessor(f, this);
+                            if (TRACE_INTRA) out.println("Removed "+this+" from predecessor set of "+that+"."+f);
+                            jq.Assert(b);
+                        }
                         for (Iterator j=set.iterator(); j.hasNext(); ) {
                             Node node2 = (Node)j.next();
                             node2.addEdge(f, that, q);
@@ -978,8 +982,11 @@ public class MethodSummary {
                                 k.remove();
                             if (that == this) continue; // cyclic edges handled above.
                             Object q = (TRACK_REASONS && edgesToReasons != null) ? edgesToReasons.get(Edge.get(this, that, f)) : null;
-                            if (removeSelf)
-                                that.removePredecessor(f, this);
+                            if (removeSelf) {
+                                boolean b = that.removePredecessor(f, this);
+                                if (TRACE_INTRA) out.println("Removed "+this+" from predecessor set of "+that+"."+f);
+                                jq.Assert(b);
+                            }
                             for (Iterator j=set.iterator(); j.hasNext(); ) {
                                 Node node2 = (Node)j.next();
                                 node2.addEdge(f, that, q);
@@ -1161,7 +1168,7 @@ public class MethodSummary {
                 updateMap(um, m.entrySet().iterator(), this.accessPathEdges);
             }
             if (this.passedParameters != null) {
-                this.passedParameters = (SortedArraySet)this.passedParameters.clone();
+                this.passedParameters = SortedArraySet.FACTORY.makeSet(this.passedParameters);
             }
             addGlobalEdges(this);
         }
@@ -1256,14 +1263,14 @@ public class MethodSummary {
         /** Record the given passed parameter in the set for this node.
          *  Returns true if that passed parameter didn't already exist, false otherwise. */
         public boolean recordPassedParameter(PassedParameter cm) {
-            if (passedParameters == null) passedParameters = new SortedArraySet(HashCodeComparator.INSTANCE);
+            if (passedParameters == null) passedParameters = SortedArraySet.FACTORY.makeSet(HashCodeComparator.INSTANCE);
             return passedParameters.add(cm);
         }
         /** Record the passed parameter of the given method call and argument number in
          *  the set for this node.
          *  Returns true if that passed parameter didn't already exist, false otherwise. */
         public boolean recordPassedParameter(ProgramLocation m, int paramNum) {
-            if (passedParameters == null) passedParameters = new SortedArraySet(HashCodeComparator.INSTANCE);
+            if (passedParameters == null) passedParameters = SortedArraySet.FACTORY.makeSet(HashCodeComparator.INSTANCE);
             PassedParameter cm = new PassedParameter(m, paramNum);
             return passedParameters.add(cm);
         }
@@ -1695,7 +1702,7 @@ public class MethodSummary {
                     updateMap_unknown(um, m.entrySet().iterator(), this.accessPathEdges);
                 }
                 if (this.passedParameters != null) {
-                    this.passedParameters = (SortedArraySet) this.passedParameters.clone();
+                    this.passedParameters = SortedArraySet.FACTORY.makeSet(this.passedParameters);
                 }
                 addGlobalEdges(this);
             }
@@ -1829,7 +1836,7 @@ public class MethodSummary {
      *  Two nodes are equal if the fields match and they are from the same quad.
      */
     public static final class FieldNode extends OutsideNode {
-        final jq_Field f; final SortedArraySet quads;
+        final jq_Field f; final Set quads;
         Set field_predecessors;
         
         private static FieldNode findPredecessor(FieldNode base, Quad obj) {
@@ -1899,11 +1906,11 @@ public class MethodSummary {
             return fn;
         }
         
-        private FieldNode(jq_Field f, Quad q) { this.f = f; this.quads = new SortedArraySet(HashCodeComparator.INSTANCE); this.quads.add(q); }
-        private FieldNode(jq_Field f) { this.f = f; this.quads = new SortedArraySet(HashCodeComparator.INSTANCE); }
+        private FieldNode(jq_Field f, Quad q) { this.f = f; this.quads = SortedArraySet.FACTORY.makeSet(HashCodeComparator.INSTANCE); this.quads.add(q); }
+        private FieldNode(jq_Field f) { this.f = f; this.quads = SortedArraySet.FACTORY.makeSet(HashCodeComparator.INSTANCE); }
         private FieldNode(FieldNode that) {
             this.f = that.f;
-            this.quads = (SortedArraySet) that.quads.clone();
+            this.quads = SortedArraySet.FACTORY.makeSet(that.quads);
             this.field_predecessors = that.field_predecessors;
         }
 
@@ -2126,8 +2133,6 @@ public class MethodSummary {
     
     public static final class NodeSet implements Set, Cloneable {
     
-        public static final boolean CHECK = false;
-    
         private Node elementData[];
         private int size;
         
@@ -2184,18 +2189,15 @@ public class MethodSummary {
         
         public boolean add(Object arg0) { return this.add((Node)arg0); }
         public boolean add(Node arg0) {
-            boolean compare = CHECK ? new LinkedHashSet(this).add(arg0) : false;
             int i = whereDoesItGo(arg0);
             int s = this.size;
             if (i != s && elementData[i].equals(arg0)) {
-                if (CHECK) jq.Assert(compare == false);
                 return false;
             }
             ensureCapacity(s+1);
             System.arraycopy(this.elementData, i, this.elementData, i + 1, s - i);
             elementData[i] = arg0;
             this.size++;
-            if (CHECK) jq.Assert(compare == true);
             return true;
         }
         
@@ -2215,29 +2217,23 @@ public class MethodSummary {
         public static final boolean REDUCE_ALLOCATIONS = false;
     
         public boolean addAll(java.util.Collection that) {
-            boolean compare = CHECK ? new LinkedHashSet(this).addAll(that) : false;
             if (that instanceof NodeSet) {
                 boolean result = addAll((NodeSet) that);
-                if (CHECK) jq.Assert(result == compare);
                 return result;
             } else {
                 boolean change = false;
                 for (Iterator i=that.iterator(); i.hasNext(); )
                     if (this.add((Node)i.next())) change = true;
-                if (CHECK) jq.Assert(change == compare);
                 return change;
             }
         }
     
         public boolean addAll(NodeSet that) {
-            boolean compare = CHECK ? new LinkedHashSet(this).addAll(that) : false;
             if (this == that) {
-                if (CHECK) jq.Assert(compare == false);
                 return false;
             }
             int s2 = that.size();
             if (s2 == 0) {
-                if (CHECK) jq.Assert(compare == false);
                 return false;
             }
             int s1 = this.size;
@@ -2261,7 +2257,6 @@ public class MethodSummary {
                     if (size2 > 0)
                         System.arraycopy(e1, i1, new_e1, new_i1, size2);
                     this.size = new_i1 + size2;
-                    if (CHECK) jq.Assert(compare == change);
                     return change;
                 }
                 Node o2 = e2[i2++];
@@ -2271,7 +2266,6 @@ public class MethodSummary {
                         int size2 = s2-i2;
                         System.arraycopy(e2, i2, new_e1, new_i1, size2);
                         this.size = new_i1 + size2;
-                        if (CHECK) jq.Assert(compare == true);
                         return true;
                     }
                     Node o1 = e1[i1];
@@ -2296,25 +2290,20 @@ public class MethodSummary {
         }
         public boolean contains(Object arg0) { return contains((Node)arg0); }
         public boolean contains(Node arg0) {
-            boolean compare = CHECK ? new LinkedHashSet(this).contains(arg0) : false;
             boolean result = this.indexOf(arg0) != -1;
-            if (CHECK) jq.Assert(compare == result);
             return result;
         }
         public boolean remove(Object arg0) { return remove((Node)arg0); }
         public boolean remove(Node arg0) {
-            boolean compare = CHECK ? new LinkedHashSet(this).remove(arg0) : false;
             int i = whereDoesItGo(arg0);
             Object oldValue = elementData[i];
             if (i == size || arg0 != oldValue) {
-                if (CHECK) jq.Assert(compare == false);
                 return false;
             }
             int numMoved = this.size - i - 1;
             if (numMoved > 0)
                 System.arraycopy(elementData, i+1, elementData, i, numMoved);
             elementData[--this.size] = null; // for gc
-            if (CHECK) jq.Assert(compare == true);
             return true;
         }
         public Object clone() {
@@ -2324,16 +2313,13 @@ public class MethodSummary {
                 s.elementData = new Node[initialCapacity];
                 s.size = this.size;
                 System.arraycopy(this.elementData, 0, s.elementData, 0, this.size);
-                if (CHECK) jq.Assert(s.equals(this));
                 return s;
             } catch (CloneNotSupportedException _) { return null; }
         }
         
         public boolean equals(Object o) {
-            boolean compare = CHECK ? new LinkedHashSet(this).equals(o) : false;
             if (o instanceof NodeSet) {
                 boolean result = equals((NodeSet)o);
-                if (CHECK) jq.Assert(compare == result);
                 return result;
             } else if (o instanceof Collection) {
                 Collection that = (Collection) o;
@@ -2341,26 +2327,21 @@ public class MethodSummary {
                 for (Iterator i=that.iterator(); i.hasNext(); ) {
                     if (!this.contains(i.next())) return false;
                 }
-                if (CHECK) jq.Assert(compare == true);
                 return true;
             } else {
                 return false;
             }
         }
         public boolean equals(NodeSet that) {
-            boolean compare = CHECK ? new LinkedHashSet(this).equals(that) : false;
             if (this.size != that.size) {
-                if (CHECK) jq.Assert(compare == false);
                 return false;
             }
             Node[] e1 = this.elementData; Node[] e2 = that.elementData;
             for (int i=0; i<this.size; ++i) {
                 if (e1[i] != e2[i]) {
-                    if (CHECK) jq.Assert(compare == false);
                     return false;
                 }
             }
-            if (CHECK) jq.Assert(compare == true);
             return true;
         }
         
@@ -2395,15 +2376,12 @@ public class MethodSummary {
             }
         }
         public boolean containsAll(NodeSet that) {
-            boolean compare = CHECK ? new LinkedHashSet(this).containsAll(that) : false;
             if (this == that) {
-                if (CHECK) jq.Assert(compare == true);
                 return true;
             }
             int s1 = this.size;
             int s2 = that.size;
             if (s2 > s1) {
-                if (CHECK) jq.Assert(compare == false);
                 return false;
             }
             Node[] e1 = this.elementData, e2 = that.elementData;
@@ -2413,12 +2391,10 @@ public class MethodSummary {
                     Node o1 = e1[i1++];
                     if (o1 == o2) break;
                     if (o1.id > o2.id) {
-                        if (CHECK) jq.Assert(compare == false);
                         return false;
                     }
                 }
             }
-            if (CHECK) jq.Assert(compare == true);
             return true;
         }
         public boolean isEmpty() { return this.size == 0; }
@@ -2435,9 +2411,9 @@ public class MethodSummary {
                     return i < n;
                 }
                 public void remove() {
-                    int numMoved = s - i - 1;
+                    int numMoved = s - i;
                     if (numMoved > 0)
-                        System.arraycopy(e, i+1, e, i, numMoved);
+                        System.arraycopy(e, i, e, i-1, numMoved);
                     elementData[--size] = null; // for gc
                     --i; --n;
                 }
@@ -2541,10 +2517,16 @@ outer:
             return this.toArray();
         }
     
+        public static final boolean TEST = false;
+        public static final boolean PROFILE = false;
+    
         public static final SetFactory FACTORY = new SetFactory() {
             public final Set makeSet(Collection c) {
+                if (TEST)
+                    return new CollectionTestWrapper(new LinkedHashSet(c), new NodeSet(c));
+                if (PROFILE)
+                    return new InstrumentedSetWrapper(new NodeSet(c));
                 return new NodeSet(c);
-                //return new InstrumentedSetWrapper(new NodeSet(c));
             }
         };
     
@@ -2565,7 +2547,7 @@ outer:
         boolean _last;
         
         /** The set of (wrapped) successor AccessPath objects. */
-        SortedArraySet succ;
+        Set succ;
 
         /** Adds the set of (wrapped) AccessPath objects that are reachable from this
          *  AccessPath object to the given set. */
@@ -2581,7 +2563,7 @@ outer:
         /** Return an iteration of the AccessPath objects that are reachable from
          *  this AccessPath. */
         public Iterator reachable() {
-            Set s = new SortedArraySet(HashCodeComparator.INSTANCE);
+            Set s = SortedArraySet.FACTORY.makeSet(HashCodeComparator.INSTANCE);
             s.add(IdentityHashCodeWrapper.create(this));
             this.reachable(s);
             return new FilterIterator(s.iterator(), filter);
@@ -2643,7 +2625,7 @@ outer:
         /** Return an iteration of the AccessPath nodes that correspond to end states. */
         public Iterator findLast() {
             HashSet visited = new HashSet();
-            Set last = new SortedArraySet(HashCodeComparator.INSTANCE);
+            Set last = SortedArraySet.FACTORY.makeSet(HashCodeComparator.INSTANCE);
             IdentityHashCodeWrapper ap = IdentityHashCodeWrapper.create(this);
             visited.add(ap);
             if (this._last) last.add(ap);
@@ -2735,7 +2717,7 @@ outer:
         /** Private constructor.  Use the create() methods above. */
         private AccessPath(jq_Field f, Node n, boolean last) {
             this._field = f; this._n = n; this._last = last;
-            this.succ = new SortedArraySet(HashCodeComparator.INSTANCE);
+            this.succ = SortedArraySet.FACTORY.makeSet(HashCodeComparator.INSTANCE);
         }
         /** Private constructor.  Use the create() methods above. */
         private AccessPath(jq_Field f, Node n) {
@@ -2815,7 +2797,7 @@ outer:
     /** The thrown nodes. */
     final Set thrown;
     /** The method calls that this method makes. */
-    final SortedArraySet calls;
+    final Set calls;
     /** Map from a method call that this method makes, and its ReturnValueNode. */
     final HashMap callToRVN;
     /** Map from a method call that this method makes, and its ThrownExceptionNode. */
@@ -2824,7 +2806,7 @@ outer:
     public static final boolean USE_PARAMETER_MAP = false;
     final Map passedParamToNodes;
 
-    private MethodSummary(jq_Method method, ParamNode[] param_nodes, GlobalNode my_global, SortedArraySet methodCalls, HashMap callToRVN, HashMap callToTEN, Set returned, Set thrown, Set passedAsParameters) {
+    private MethodSummary(jq_Method method, ParamNode[] param_nodes, GlobalNode my_global, Set methodCalls, HashMap callToRVN, HashMap callToTEN, Set returned, Set thrown, Set passedAsParameters) {
         this.method = method;
         this.params = param_nodes;
         this.calls = methodCalls;
@@ -2937,7 +2919,7 @@ outer:
 
     public static final boolean UNIFY_ACCESS_PATHS = false;
     
-    private MethodSummary(jq_Method method, ParamNode[] params, SortedArraySet methodCalls, HashMap callToRVN, HashMap callToTEN, Map passedParamToNodes, Set returned, Set thrown, Map nodes) {
+    private MethodSummary(jq_Method method, ParamNode[] params, Set methodCalls, HashMap callToRVN, HashMap callToTEN, Map passedParamToNodes, Set returned, Set thrown, Map nodes) {
         this.method = method;
         this.params = params;
         this.calls = methodCalls;
@@ -3022,7 +3004,7 @@ outer:
             Node b = (Node)m.get(a);
             b.update(m);
         }
-        SortedArraySet calls = (SortedArraySet)this.calls.clone();
+        Set calls = SortedArraySet.FACTORY.makeSet(this.calls);
         Set returned = NodeSet.FACTORY.makeSet();
         for (Iterator i=this.returned.iterator(); i.hasNext(); ) {
             Node a = (Node)i.next();

@@ -101,8 +101,8 @@ public class ProgramLocation {
 
     public CallTargets getCallTargets(java.util.Set nodes) {
         if (!(q.getOperator() instanceof Invoke)) return null;
-        Set exact_types = new SortedArraySet(HashCodeComparator.INSTANCE);
-        Set notexact_types = new SortedArraySet(HashCodeComparator.INSTANCE);
+        Set exact_types = SortedArraySet.FACTORY.makeSet(HashCodeComparator.INSTANCE);
+        Set notexact_types = SortedArraySet.FACTORY.makeSet(HashCodeComparator.INSTANCE);
         for (Iterator i=nodes.iterator(); i.hasNext(); ) {
             Node n = (Node)i.next();
             Set s = (n instanceof ConcreteTypeNode)?exact_types:notexact_types;

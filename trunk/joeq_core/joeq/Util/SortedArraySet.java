@@ -5,10 +5,13 @@ import java.util.AbstractList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.RandomAccess;
+import java.util.Set;
 import java.util.SortedSet;
+import java.util.TreeSet;
 
 /**
  * @author John Whaley
@@ -41,7 +44,7 @@ public class SortedArraySet
      * @exception IllegalArgumentException if the specified initial capacity
      *            is negative
      */
-    public SortedArraySet(int initialCapacity) {
+    private SortedArraySet(int initialCapacity) {
         super();
         if (initialCapacity < 0)
             throw new IllegalArgumentException("Illegal Capacity: "+initialCapacity);
@@ -53,20 +56,20 @@ public class SortedArraySet
     /**
      * Constructs an empty set with an initial capacity of ten.
      */
-    public SortedArraySet() {
+    private SortedArraySet() {
         this(10);
     }
 
-    public SortedArraySet(Collection c) {
+    private SortedArraySet(Collection c) {
         this((int) Math.min((c.size()*110L)/100, Integer.MAX_VALUE));
         this.addAll(c);
     }
     
-    public SortedArraySet(Comparator comparator) {
+    private SortedArraySet(Comparator comparator) {
         this(10, comparator);
     }
 
-    public SortedArraySet(int initialCapacity, Comparator comparator) {
+    private SortedArraySet(int initialCapacity, Comparator comparator) {
         super();
         this.elementData = new Object[initialCapacity];
         this.size = 0;
@@ -589,6 +592,40 @@ public class SortedArraySet
         return this.indexOf(arg0);
     }
 
+    public boolean equals(Object arg0) {
+        if (arg0 instanceof SortedSet)
+            return equals((SortedSet)arg0);
+        if (arg0 instanceof Collection)
+            return equals((Collection)arg0);
+        return false;
+    }
+
+    public boolean equals(SortedSet that) {
+        if (this.size != that.size()) return false;
+        Object[] e = this.elementData;
+        int k = 0;
+        for (Iterator i=that.iterator(); i.hasNext(); ) {
+            if (!e[k++].equals(i.next())) return false;
+        }
+        return true;
+    }
+
+    public boolean equals(Collection that) {
+        if (this.size != that.size()) return false;
+        for (Iterator i=that.iterator(); i.hasNext(); ) {
+            if (!this.contains(i.next())) return false;
+        }
+        return true;
+    }
+    
+    public int hashCode() {
+        int hash = 0;
+        for (int i=0; i<this.size; ++i) {
+            hash += this.elementData[i].hashCode();
+        }
+        return hash;
+    }
+
     /**
      * @see java.util.AbstractList#removeRange(int, int)
      */
@@ -641,6 +678,36 @@ public class SortedArraySet
             System.arraycopy(this.elementData, 0, s.elementData, 0, this.size);
             return s;
         } catch (CloneNotSupportedException _) { return null; }
+    }
+
+    public static final SortedArraySetFactory FACTORY = new SortedArraySetFactory();
+    public static class SortedArraySetFactory extends SetFactory {
+        private SortedArraySetFactory() {}
+        
+        public static final boolean TEST = false;
+        public static final boolean PROFILE = false;
+        
+        public Set makeSet(Comparator c) {
+            if (TEST)
+                return new CollectionTestWrapper(new TreeSet(c), new SortedArraySet(c));
+            if (PROFILE)
+                return new InstrumentedSetWrapper(new SortedArraySet(c));
+            return new SortedArraySet(c);
+        }
+        public Set makeSet(int capacity) {
+            if (TEST)
+                return new CollectionTestWrapper(new LinkedHashSet(capacity), new SortedArraySet(capacity));
+            if (PROFILE)
+                return new InstrumentedSetWrapper(new SortedArraySet(capacity));
+            return new SortedArraySet(capacity);
+        }
+        public Set makeSet(Collection c) {
+            if (TEST)
+                return new CollectionTestWrapper(new LinkedHashSet(c), new SortedArraySet(c));
+            if (PROFILE)
+                return new InstrumentedSetWrapper(new SortedArraySet(c));
+            return new SortedArraySet(c);
+        }
     }
 
 }

@@ -1,6 +1,8 @@
 package Util;
 
+import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -18,9 +20,42 @@ public class HashCodeComparator implements Comparator {
     
     public static final HashCodeComparator INSTANCE = new HashCodeComparator();
 
-    public HashCodeComparator() { }
+    public static final boolean TRACE = false;
+    public static final boolean TEST = false;
 
-    private final List duplicate_hashcode_objects = new LinkedList();
+    private List duplicate_hashcode_objects;
+    private final ReferenceQueue queue;
+    private volatile Thread cleanupThread;
+    
+    public HashCodeComparator() {
+        if (USE_WEAK_REFERENCES) {
+            queue = new ReferenceQueue();
+            Runnable cleanUp = new Runnable() {
+                public void run() {
+                    Thread thisThread = Thread.currentThread();
+                    WeakReference wr;
+                    while (thisThread == cleanupThread) {
+                        try {
+                            wr = (WeakReference)queue.remove();
+                            duplicate_hashcode_objects.remove(wr);
+                            wr = null;
+                        } catch (InterruptedException e) { }
+                    }
+                }
+            };
+            cleanupThread = new Thread(cleanUp);
+            cleanupThread.setDaemon(true);
+            cleanupThread.start();
+        } else {
+            queue = null;
+        }
+    }
+
+    public void finalize() {
+        Thread t = this.cleanupThread;
+        this.cleanupThread = null;
+        t.interrupt();
+    }
 
     /**
      * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
@@ -38,37 +73,48 @@ public class HashCodeComparator implements Comparator {
             a = arg0.hashCode();
             b = arg1.hashCode();
         }
+        if (TEST) {
+            a %= 6835; b %= 6835;
+        }
         if (a > b) return 1;
         if (a < b) return -1;
-        if (USE_IDENTITY_HASHCODE) {
-            arg0 = IdentityHashCodeWrapper.create(arg0);
-            arg1 = IdentityHashCodeWrapper.create(arg1);
-        }
+        if (duplicate_hashcode_objects == null)
+            duplicate_hashcode_objects = Collections.synchronizedList(new LinkedList());
         int i1 = indexOf(arg0);
-        if (i1 == -1) {
-            i1 = duplicate_hashcode_objects.size();
-            if (USE_WEAK_REFERENCES) arg0 = new WeakReference(arg0);
-            duplicate_hashcode_objects.add(arg0);
-        }
         int i2 = indexOf(arg1);
-        if (i1 < i2) return -1;
-        if (i2 == -1) {
-            i2 = duplicate_hashcode_objects.size();
-            if (USE_WEAK_REFERENCES) arg1 = new WeakReference(arg1);
-            duplicate_hashcode_objects.add(arg1);
+        if (i1 == -1) {
+            if (i2 == -1) {
+                i1 = duplicate_hashcode_objects.size();
+                if (TRACE) System.out.println("Hash code conflict: "+Strings.hex8(a)+" "+arg0+" vs. "+arg1+", allocating ("+i1+")");
+                if (USE_WEAK_REFERENCES) arg0 = new WeakReference(arg0, queue);
+                duplicate_hashcode_objects.add(arg0);
+                return -1;
+            } else {
+                return 1;
+            }
+        } else if (i1 < i2 || i2 == -1) {
+            return -1;
+        } else {
+            jq.Assert(i1 > i2);
+            return 1;
         }
-        if (i1 > i2) return 1;
-        jq.Assert(i1 != i2);
-        return -1;
     }
 
     private int indexOf(Object o) {
-        if (!USE_WEAK_REFERENCES)
+        if (!USE_WEAK_REFERENCES) {
+            if (USE_IDENTITY_HASHCODE) o = IdentityHashCodeWrapper.create(o);
             return duplicate_hashcode_objects.indexOf(o);
+        }
         int index = 0;
-        for (Iterator i=duplicate_hashcode_objects.iterator(); i.hasNext(); ++index) {
-            WeakReference r = (WeakReference) i.next();
-            if (o.equals(r.get())) return index;
+        synchronized (duplicate_hashcode_objects) {
+            for (Iterator i=duplicate_hashcode_objects.iterator(); i.hasNext(); ++index) {
+                WeakReference r = (WeakReference) i.next();
+                if (USE_IDENTITY_HASHCODE) {
+                    if (o == r.get()) return index;
+                } else {
+                    if (o.equals(r.get())) return index;
+                }
+            }
         }
         return -1;
     }

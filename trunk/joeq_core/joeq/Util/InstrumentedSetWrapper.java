@@ -1,11 +1,15 @@
 package Util;
 
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
@@ -23,36 +27,71 @@ public class InstrumentedSetWrapper implements Set {
     private final Set wrappedSet;
     private final InstrumentationResults results;
 
-    private static class GlobalStats extends Thread {
+    private abstract static class GlobalStats {
         
         private static final Map m = new HashMap();
         private static final ReferenceQueue q = new ReferenceQueue();
         private static final Map results = new HashMap();
         
-        public static void register(InstrumentedSetWrapper i) {
-            Object o = m.put(new WeakReference(i, q), i.results);
-            jq.Assert(o == null);
+        private static volatile Thread cleanupThread;
+        static {
+            Runnable cleanUp = new Runnable() {
+                public void run() {
+                    Thread thisThread = Thread.currentThread();
+                    WeakReference wr;
+                    while (thisThread == cleanupThread) {
+                        try {
+                            wr = (WeakReference)q.remove();
+                            synchronized (m) {
+                                InstrumentationResults i = (InstrumentationResults) m.get(wr);
+                                if (i != null) {
+                                    m.remove(wr);
+                                    finish(i);
+                                }
+                            }
+                            wr = null;
+                        } catch (InterruptedException e) { }
+                    }
+                }
+            };
+            cleanupThread = new Thread(cleanUp);
+            cleanupThread.setDaemon(true);
+            cleanupThread.start();
         }
-        
-        public static final GlobalStats INSTANCE = new GlobalStats();
+
+        public static void register(InstrumentedSetWrapper i) {
+            synchronized (m) {
+                Object o = m.put(new WeakReference(i, q), i.results);
+                jq.Assert(o == null);
+            }
+        }
         
         static {
             Runtime.getRuntime().addShutdownHook(new Thread() {
                 public void run() {
-                    INSTANCE.interrupt();
-                    while (INSTANCE.isAlive()) Thread.yield();
-                    for (Iterator it=m.values().iterator(); it.hasNext(); ) {
-                        try {
+                    Thread t = cleanupThread;
+                    cleanupThread = null;
+                    t.interrupt();
+                    synchronized (m) {
+                        for (Iterator it=m.values().iterator(); it.hasNext(); ) {
                             InstrumentationResults i = (InstrumentationResults) it.next();
-                            finish(i);
                             it.remove();
-                        } catch (ConcurrentModificationException x) {
-                            it = m.values().iterator();
+                            finish(i);
                         }
                     }
-                    for (Iterator it=results.values().iterator(); it.hasNext(); ) {
-                        InstrumentationResults i = (InstrumentationResults) it.next();
-                        System.out.println(i.dump());
+                    FileWriter out = null;
+                    try {
+                        out = new FileWriter("set_profile_data");
+                        for (Iterator it=results.values().iterator(); it.hasNext(); ) {
+                            InstrumentationResults i = (InstrumentationResults) it.next();
+                            out.write(i.dump());
+                            out.write(Strings.lineSep);
+                        }
+                    } catch (IOException _) { }
+                    finally {
+                        try {
+                            if (out != null) out.close();
+                        } catch (IOException x) { }
                     }
                 }
             });
@@ -64,18 +103,6 @@ public class InstrumentedSetWrapper implements Set {
             if (i2 == null) results.put(i.identifier, i2 = i);
             else i2.mergeResults(i);
             //System.out.println("Results = "+i2.dump());
-        }
-        
-        public void run() {
-            try {
-                for (;;) {
-                    Reference r = q.remove();
-                    InstrumentationResults i = (InstrumentationResults)m.get(r);
-                    finish(i);
-                }
-            } catch (InterruptedException _) {
-                System.err.println("Thread interrupted (?)");
-            }
         }
     }
 

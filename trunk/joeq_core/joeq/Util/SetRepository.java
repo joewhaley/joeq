@@ -30,17 +30,6 @@ public class SetRepository extends SetFactory {
     public static final boolean TRACE = false;
     public static final PrintStream out = System.out;
 
-    public static class SortedArraySetFactory extends SetFactory {
-        private SortedArraySetFactory() { }
-        public static final SortedArraySetFactory INSTANCE = new SortedArraySetFactory();
-        
-        /** Generates a new mutable <code>Set</code>, using the elements
-            of <code>c</code> as a template for its initial contents. 
-        */ 
-        public final Set makeSet(Collection c) {
-            return new SortedArraySet(c);
-        }
-    }
     public static class LinkedHashSetFactory extends SetFactory {
         private LinkedHashSetFactory() { }
         public static final LinkedHashSetFactory INSTANCE = new LinkedHashSetFactory();
