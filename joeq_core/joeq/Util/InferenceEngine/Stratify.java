@@ -1,3 +1,6 @@
+//Stratify.java, created May 3, 2004 7:07:16 PM 2004 by jwhaley
+//Copyright (C) 2004 John Whaley <jwhaley@alum.mit.edu>
+//Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Util.InferenceEngine;
 
 import java.util.Arrays;
@@ -18,7 +21,7 @@ import joeq.Util.Graphs.SCCTopSortedGraph;
 import joeq.Util.Graphs.SCComponent;
 
 /**
- * Stratum
+ * Stratify
  * 
  * @author jwhaley
  * @version $Id$
@@ -52,6 +55,7 @@ public class Stratify {
         
         if (TRACE) out.println("Necessary: "+necessary);
         
+        // Print out a warning message if something is unused.
         Set unnecessary = new HashSet(solver.nameToRelation.values());
         unnecessary.addAll(solver.rules);
         unnecessary.removeAll(necessary);
@@ -65,6 +69,7 @@ public class Stratify {
         // Ignore all edges to/from unnecessary stuff.
         depNav.retainAll(necessary);
         
+        // Calculate the set of necessary relations.
         Set allRelations = new HashSet();
         for (Iterator i = necessary.iterator(); i.hasNext(); ) {
             Object o = i.next();
@@ -75,15 +80,15 @@ public class Stratify {
             // Discover current stratum.
             if (TRACE) out.println("Discovering Stratum #"+i+"...");
             Set stratumSccs = discoverStratum(depNav, allRelations, inputs);
-            
-            if (TRACE) out.println("Stratum #"+i+": "+stratumSccs);
+            Set stratumNodes = getStratumNodes(stratumSccs);
+            if (TRACE) out.println("Stratum #"+i+": "+stratumNodes);
             
             // Make a navigator for this stratum.
-            Set stratumNodes = getStratumNodes(stratumSccs);
             InferenceRule.DependenceNavigator depNav2 = new InferenceRule.DependenceNavigator(depNav);
             depNav2.retainAll(stratumNodes);
             
-            // Break current stratum into SCCs.
+            // Break current stratum into SCCs and sort them.
+            // We can't use the SCCs in stratumSccs because they have links to later strata.
             SCComponent first = breakIntoSCCs(stratumNodes, depNav2);
             firstSCCs.add(first);
             
@@ -352,7 +357,7 @@ public class Stratify {
         Iterator i = firstSCCs.iterator();
         for (int a = 1; i.hasNext(); ++a) {
             SCComponent first = (SCComponent) i.next();
-            if (TRACE) out.println("Solving stratum #"+a+"...");
+            if (solver.NOISY) out.println("Solving stratum #"+a+"...");
             for (;;) {
                 iterate(first, false);
                 if (!again) break;
