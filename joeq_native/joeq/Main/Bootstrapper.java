@@ -30,12 +30,15 @@ public abstract class Bootstrapper implements ObjectLayout {
     
     public static void main(String[] args) throws IOException {
         
-        String imageName = "jq.img";
-        int startAddress = 0x00890000;
+        String imageName = "jq.obj";
+        //int startAddress = 0x00890000;
         String rootMethodClassName = "jq";
         String rootMethodName = "boot";
+        String classList = null;
         boolean TrimAllTypes = false;
 
+        jq.Bootstrapping = true;
+        
         String classpath = System.getProperty("java.class.path")+
                            System.getProperty("path.separator")+
                            System.getProperty("sun.boot.class.path");
@@ -58,39 +61,47 @@ public abstract class Bootstrapper implements ObjectLayout {
                 classpath = args[++i];
                 ++i; continue;
             }
+            if (args[i].equals("-cl") || args[i].equals("-classlist")) { // class path
+                classList = args[++i];
+                ++i; continue;
+            }
             if (args[i].equals("-t")) { // trim all types
                 TrimAllTypes = true;
                 ++i; continue;
             }
+            /*
             if (args[i].equals("-s")) { // start address
                 startAddress = Integer.parseInt(args[++i], 16);
                 ++i; continue;
             }
+             */
             err("unknown command line argument: "+args[i]);
         }
         
-        jq.Bootstrapping = true;
-        
-        PrimordialClassLoader.loader.initClasspath(classpath);
+        PrimordialClassLoader.loader.addToClasspath(classpath);
         
         Set nullStaticFields = new HashSet();
         nullStaticFields.add(Unsafe._remapper_object);
-        nullStaticFields.add(x86ReferenceCompiler._call_patches);
-        jq_Class jls = PrimordialClassLoader.loader.getJavaLangSystem();
-        jq_StaticField _sf = jls.getOrCreateStaticField("in", "Ljava/io/InputStream;");
-        nullStaticFields.add(_sf);
-        _sf = jls.getOrCreateStaticField("out", "Ljava/io/PrintStream;");
-        nullStaticFields.add(_sf);
-        _sf = jls.getOrCreateStaticField("err", "Ljava/io/PrintStream;");
-        nullStaticFields.add(_sf);
-        _sf = jls.getOrCreateStaticField("props", "Ljava/util/Properties;");
-        nullStaticFields.add(_sf);
+        nullStaticFields.add(ClassLib.sun13.java.lang.System._in);
+        nullStaticFields.add(ClassLib.sun13.java.lang.System._out);
+        nullStaticFields.add(ClassLib.sun13.java.lang.System._err);
+        nullStaticFields.add(ClassLib.sun13.java.lang.System._props);
+        nullStaticFields.add(Reflection._obj_trav);
+        nullStaticFields.add(CodeAllocator._DEFAULT);
+        nullStaticFields.add(ClassLib.sun13.java.lang.ClassLoader._loadedLibraryNames);
+        nullStaticFields.add(ClassLib.sun13.java.lang.ClassLoader._systemNativeLibraries);
+        nullStaticFields.add(ClassLib.sun13.java.lang.ClassLoader._nativeLibraryContext);
         System.out.println("Null static fields: "+nullStaticFields);
 
+        // install bootstrap code allocator
+        BootstrapCodeAllocator bca = new BootstrapCodeAllocator();
+        CodeAllocator.DEFAULT = bca;
+        bca.init();
+        
         // install object mapper
         ObjectTraverser obj_trav = new ObjectTraverser(nullStaticFields);
         Reflection.obj_trav = obj_trav;
-        Unsafe.installRemapper(objmap = new BootImage(startAddress, obj_trav));
+        Unsafe.installRemapper(objmap = new BootImage(obj_trav, bca));
         
         jq_Class c;
         c = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("L"+rootMethodClassName+";");
@@ -110,35 +121,67 @@ public abstract class Bootstrapper implements ObjectLayout {
             err("root method not found: "+rootMethodClassName+"."+rootMethodName);
         
         Set classset;
+        Set memberset;
         
-        // traverse the code and data starting at the root set to find all necessary
-        // classes and members.
-        Trimmer trim = new Trimmer(rootm, obj_trav, !TrimAllTypes);
-        trim.go();
-
-        System.out.println("Number of instantiated types: "+trim.getInstantiatedTypes().size());
-        System.out.println("Instantiated types: "+trim.getInstantiatedTypes());
-
-        System.out.println("Number of necessary members: "+trim.getNecessaryMembers().size());
-        System.out.println("Necessary members: "+trim.getNecessaryMembers());
-
-        // find all used classes.
-        classset = trim.getNecessaryTypes();
-
-        System.out.println("Number of necessary classes: "+classset.size());
-        System.out.println("Necessary classes: "+classset);
-
-        if (TrimAllTypes) {
-            // Trim all the types.
-            Iterator it = classset.iterator();
-            while (it.hasNext()) {
-                jq_Type t = (jq_Type)it.next();
-                System.out.println("Trimming type: "+t.getName());
-                jq.assert(t.isPrepared());
+        if (classList != null) {
+            DataInputStream dis = new DataInputStream(new FileInputStream(classList));
+            classset = new HashSet();
+            memberset = new HashSet();
+            for (;;) {
+                String classname = dis.readLine();
+                if (classname == null) break;
+                if (classname.charAt(0) == '#') continue;
+                jq_Type t = (jq_Type)PrimordialClassLoader.loader.getOrCreateBSType(classname);
+                t.load(); t.verify(); t.prepare();
+                classset.add(t);
                 if (t.isClassType()) {
-                    ((jq_Class)t).trim(trim);
+                    jq_Class cl = (jq_Class)t;
+                    jq_Method[] ms = cl.getDeclaredStaticMethods();
+                    for (int k=0; k<ms.length; ++k) {
+                        memberset.add(ms[k]);
+                    }
+                    ms = cl.getDeclaredInstanceMethods();
+                    for (int k=0; k<ms.length; ++k) {
+                        memberset.add(ms[k]);
+                    }
+                    ms = cl.getVirtualMethods();
+                    for (int k=0; k<ms.length; ++k) {
+                        memberset.add(ms[k]);
+                    }
                 }
             }
+        } else {
+            // traverse the code and data starting at the root set to find all necessary
+            // classes and members.
+            Trimmer trim = new Trimmer(rootm, obj_trav, !TrimAllTypes);
+            trim.go();
+
+            System.out.println("Number of instantiated types: "+trim.getInstantiatedTypes().size());
+            System.out.println("Instantiated types: "+trim.getInstantiatedTypes());
+
+            System.out.println("Number of necessary members: "+trim.getNecessaryMembers().size());
+            System.out.println("Necessary members: "+trim.getNecessaryMembers());
+
+            // find all used classes.
+            classset = trim.getNecessaryTypes();
+
+            System.out.println("Number of necessary classes: "+classset.size());
+            System.out.println("Necessary classes: "+classset);
+
+            if (TrimAllTypes) {
+                // Trim all the types.
+                Iterator it = classset.iterator();
+                while (it.hasNext()) {
+                    jq_Type t = (jq_Type)it.next();
+                    System.out.println("Trimming type: "+t.getName());
+                    jq.assert(t.isPrepared());
+                    if (t.isClassType()) {
+                        ((jq_Class)t).trim(trim);
+                    }
+                }
+            }
+            
+            memberset = trim.getNecessaryMembers();
         }
         
         // initialize the set of boot types
@@ -166,10 +209,13 @@ public abstract class Bootstrapper implements ObjectLayout {
             // initialize static field values, too.
             if (t.isClassType()) {
                 jq_Class k = (jq_Class)t;
+                jq.assert((k.getSuperclass() == null) || classset.contains(k.getSuperclass()),
+                          k.getSuperclass()+" is not in class set");
                 jq_StaticField[] sfs = k.getDeclaredStaticFields();
                 for (int j=0; j<sfs.length; ++j) {
                     jq_StaticField sf = sfs[j];
                     objmap.initStaticField(sf);
+                    objmap.addStaticFieldReloc(sf);
                 }
             }
         }
@@ -178,8 +224,7 @@ public abstract class Bootstrapper implements ObjectLayout {
         jq_class.setStaticData(jq_class.getOrCreateStaticField("Bootstrapping","Z"), 0);
 
         // compile versions of all necessary methods.
-        x86ReferenceCompiler.initCallPatches();
-        it = trim.getNecessaryMembers().iterator();
+        it = memberset.iterator();
         while (it.hasNext()) {
             jq_Member m = (jq_Member)it.next();
             if (m instanceof jq_Method) {
@@ -206,14 +251,19 @@ public abstract class Bootstrapper implements ObjectLayout {
         objmap.disableAllocations();
         
         // store entrypoint/trap handler addresses
-        SystemInterface.entry = rootm.getDefaultCompiledVersion().getEntrypoint();
-        SystemInterface.trap_handler = ExceptionDeliverer._trap_handler.getDefaultCompiledVersion().getEntrypoint();
+        SystemInterface.entry_0 = rootm.getDefaultCompiledVersion().getEntrypoint();
+        SystemInterface.trap_handler_8 = ExceptionDeliverer._trap_handler.getDefaultCompiledVersion().getEntrypoint();
         objmap.initStaticField(SystemInterface._entry);
         objmap.initStaticField(SystemInterface._trap_handler);
         
+        // update code min/max addresses
+        // don't use initStaticField because it (re-)adds relocs
+        objmap.initStaticField(CodeAllocator._lowAddress);
+        objmap.initStaticField(CodeAllocator._highAddress);
+        
         // dump it!
         FileOutputStream fos = new FileOutputStream(imageName);
-        objmap.dump(fos);
+        objmap.dumpCOFF(fos);
         
         it = classset.iterator();
         while (it.hasNext()) {
