@@ -3,9 +3,10 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package zip;
 
-import java.io.*;
-import java.util.*;
-
+import java.util.Enumeration;
+import java.io.BufferedInputStream;
+import java.io.DataInput;
+import java.io.DataInputStream;
 import joeq.Debugger.OnlineDebugger;
 
 /**
@@ -24,7 +25,7 @@ public class ZipTest {
             java.util.zip.ZipEntry ze = (java.util.zip.ZipEntry) e.nextElement();
             String name = ze.getName();
             if (name.endsWith(".class")) {
-                DataInput i = new DataInputStream(f.getInputStream(ze));
+                DataInput i = new DataInputStream(new BufferedInputStream(f.getInputStream(ze)));
                 int val = i.readInt();
                 if (val != 0xcafebabe) {
                     System.out.println(ze+" = "+Integer.toHexString(val));
