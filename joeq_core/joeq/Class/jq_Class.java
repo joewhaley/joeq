@@ -40,13 +40,15 @@ import UTF.UTFDataFormatError;
 import UTF.Utf8;
 import Util.Strings;
 
+import Compil3r.Quad.AndersenInterface.AndersenClass;
+import Compil3r.Quad.AndersenInterface.AndersenClassInitializer;
 // friend jq_ClassLoader;
 
 /**
  * @author  John Whaley
  * @version $Id$
  */
-public final class jq_Class extends jq_Reference implements jq_ClassFileConstants {
+public final class jq_Class extends jq_Reference implements jq_ClassFileConstants, AndersenClass {
     
     public static /*final*/ boolean TRACE = false;
     public static /*final*/ boolean WARN_STALE_CLASS_FILES = false;
@@ -360,6 +362,9 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
     public final jq_ClassInitializer getClassInitializer() {
         chkState(STATE_LOADING3);
         return (jq_ClassInitializer)getDeclaredStaticMethod(new jq_NameAndDesc(Utf8.get("<clinit>"), Utf8.get("()V")));
+    }
+    public final AndersenClassInitializer and_getClassInitializer() {
+        return getClassInitializer();
     }
     public final jq_ConstantPool getCP() {
         chkState(STATE_LOADING2);

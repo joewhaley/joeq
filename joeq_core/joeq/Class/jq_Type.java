@@ -13,11 +13,13 @@ import Main.jq;
 import Run_Time.Reflection;
 import UTF.Utf8;
 
+import Compil3r.Quad.AndersenInterface.AndersenType;
+
 /*
  * @author  John Whaley
  * @version $Id$
  */
-public abstract class jq_Type {
+public abstract class jq_Type implements AndersenType {
     
     protected final Utf8 desc;
     private /*final*/ Class class_object;  // pointer to our associated java.lang.Class object

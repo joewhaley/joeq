@@ -12,12 +12,13 @@ package Clazz;
 import Bootstrap.PrimordialClassLoader;
 import Main.jq;
 import UTF.Utf8;
+import Compil3r.Quad.AndersenInterface.AndersenClassInitializer;
 
 /**
  * @author  John Whaley
  * @version $Id$
  */
-public final class jq_ClassInitializer extends jq_StaticMethod {
+public final class jq_ClassInitializer extends jq_StaticMethod implements AndersenClassInitializer {
 
     // clazz, nd are inherited
     
