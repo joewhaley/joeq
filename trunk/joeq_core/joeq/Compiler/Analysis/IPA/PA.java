@@ -2922,6 +2922,18 @@ public class PA {
         }
         if (ADD_SUPERTYPES) {
             for (int i = 0; i < classes.size(); ++i) {
+                jq_Reference t1 = (jq_Reference) classes.get(i);
+                if (t1 == null || t1 instanceof jq_NullType) continue;
+                t1.prepare();
+                jq_Reference t2 = t1.getDirectPrimarySupertype();
+                if (t2 != null) {
+                    t2.prepare();
+                    classes.get(t2);
+                }
+                jq_Class[] c = t1.getInterfaces();
+                for (int j = 0; j < c.length; ++j) {
+                    classes.get(c[j]);
+                }
             }
         }
         System.out.println();
