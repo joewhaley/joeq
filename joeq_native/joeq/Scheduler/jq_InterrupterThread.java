@@ -1,0 +1,84 @@
+/*
+ * jq_InterrupterThread.java
+ *
+ * Created on April 3, 2001, 8:07 PM
+ *
+ * @author  John Whaley
+ * @version 
+ */
+
+package Scheduler;
+
+import Allocator.CodeAllocator;
+import Bootstrap.PrimordialClassLoader;
+import Clazz.jq_Class;
+import Clazz.jq_InstanceMethod;
+import Run_Time.Reflection;
+import Run_Time.SystemInterface;
+import Run_Time.Unsafe;
+import jq;
+
+public class jq_InterrupterThread extends Thread {
+
+    public static /*final*/ boolean TRACE = false;
+    
+    jq_InterrupterThread(jq_NativeThread other_nt) {
+        this.other_nt = other_nt;
+        if (TRACE) SystemInterface.debugmsg("Initialized timer interrupt for native thread "+other_nt);
+        myself = (jq_Thread)Reflection.getfield_A(this, ClassLib.sun13.java.lang.Thread._jq_thread);
+        this.tid = SystemInterface.create_thread(_run.getDefaultCompiledVersion().getEntrypoint(), Unsafe.addressOf(this));
+        jq_NativeThread my_nt = new jq_NativeThread(myself);
+        my_nt.getCodeAllocator().init();
+        my_nt.getHeapAllocator().init();
+        // start it up
+        SystemInterface.resume_thread(this.tid);
+    }
+    
+    private int/*CPointer*/ tid;
+    private jq_NativeThread other_nt;
+    private jq_Thread myself; // for convenience, so we don't have to call Reflection.getfield_A
+    
+    public static final int QUANTA = 50;
+    
+    public void run() {
+        Unsafe.setThreadBlock(this.myself);
+	for (;;) {
+            SystemInterface.sleep(QUANTA);
+            other_nt.suspend();
+            jq_Thread javaThread = other_nt.getCurrentJavaThread();
+            if (TRACE) SystemInterface.debugmsg("TICK! "+other_nt+" Java Thread = "+javaThread);
+            if (javaThread.isThreadSwitchEnabled()) {
+                javaThread.disableThreadSwitch();
+                jq_RegisterState regs = javaThread.getRegisterState();
+                regs.ContextFlags = jq_RegisterState.CONTEXT_CONTROL |
+                                    jq_RegisterState.CONTEXT_INTEGER |
+                                    jq_RegisterState.CONTEXT_FLOATING_POINT;
+                other_nt.getContext(regs);
+                if (TRACE) SystemInterface.debugmsg(other_nt+" : "+javaThread+" ip="+jq.hex8(regs.Eip)+" cc="+CodeAllocator.getCodeContaining(regs.Eip));
+                // kludge: don't thread switch in the kernel, because it does funky stuff with the stack.
+                if (regs.Eip < 0x70000000) {
+                    // simulate a call to threadSwitch method
+                    Unsafe.poke4(regs.Esp -= 4, Unsafe.addressOf(other_nt));
+                    Unsafe.poke4(regs.Esp -= 4, regs.Eip);
+                    regs.Eip = jq_NativeThread._threadSwitch.getDefaultCompiledVersion().getEntrypoint();
+                    regs.ContextFlags = jq_RegisterState.CONTEXT_CONTROL;
+                    other_nt.setContext(regs);
+                } else {
+                    // the current Java thread does not have thread switching enabled.
+                    if (TRACE) SystemInterface.debugmsg(other_nt+" : "+javaThread+" is in kernel");
+                }
+            } else {
+                // the current Java thread does not have thread switching enabled.
+                if (TRACE) SystemInterface.debugmsg(other_nt+" : "+javaThread+" Thread switch not enabled");
+            }
+            other_nt.resume();
+	}
+    }
+
+    public static final jq_Class _class;
+    public static final jq_InstanceMethod _run;
+    static {
+        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LScheduler/jq_InterrupterThread;");
+        _run = _class.getOrCreateInstanceMethod("run", "()V");
+    }
+}
