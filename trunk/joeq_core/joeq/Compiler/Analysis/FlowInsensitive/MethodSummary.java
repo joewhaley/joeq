@@ -1327,6 +1327,11 @@ public class MethodSummary {
         /** Return the declared type of this node. */
         public abstract jq_Reference getDeclaredType();
         
+        /** Return the method that this node is defined in, null if it
+         * doesn't come from a method.
+         */
+        public abstract jq_Method getDefiningMethod();
+        
         /** Return a shallow copy of this node. */
         public abstract Node copy();
         
@@ -1771,6 +1776,11 @@ public class MethodSummary {
         
         public ProgramLocation getLocation() { return q; }
         
+        public jq_Method getDefiningMethod() {
+            if (q == null) return null;
+            return q.getMethod();
+        }
+        
         public jq_Reference getDeclaredType() { return type; }
         
         public String toString_long() {
@@ -1911,6 +1921,8 @@ public class MethodSummary {
             super(that);
             this.object = that.object;
         }
+        
+        public jq_Method getDefiningMethod() { return null; }
         
         public jq_Reference getDeclaredType() {
             if (object == null) return null;
@@ -2110,6 +2122,8 @@ public class MethodSummary {
             }
         }
         
+        public jq_Method getDefiningMethod() { return null; }
+        
         public jq_Reference getDeclaredType() { return type; }
         
         public final Node copy() { return this; }
@@ -2148,6 +2162,7 @@ public class MethodSummary {
             super(that);
         }
         public jq_Reference getDeclaredType() { Assert.UNREACHABLE(); return null; }
+        public jq_Method getDefiningMethod() { return null; }
         public final Node copy() {
             Assert._assert(this != GLOBAL);
             return new GlobalNode(this);
@@ -2191,6 +2206,9 @@ public class MethodSummary {
         public ReturnedNode(ProgramLocation m) { this.m = m; }
         public ReturnedNode(ReturnedNode that) {
             super(that); this.m = that.m;
+        }
+        public jq_Method getDefiningMethod() {
+            return m.getMethod();
         }
         public final ProgramLocation getMethodCall() { return m; }
     }
@@ -2282,6 +2300,7 @@ public class MethodSummary {
             this.m = that.m; this.n = that.n; this.declaredType = that.declaredType;
         }
         public jq_Reference getDeclaredType() { return declaredType; }
+        public jq_Method getDefiningMethod() { return m; }
         
         public jq_Method getMethod() { return m; }
         public int getIndex() { return n; }
@@ -2495,6 +2514,10 @@ public class MethodSummary {
         }
         
         public jq_Field getField() { return f; }
+        
+        public jq_Method getDefiningMethod() {
+            return ((ProgramLocation) locs.iterator().next()).getMethod();
+        }
         
         public Set getLocations() { return locs; }
         
