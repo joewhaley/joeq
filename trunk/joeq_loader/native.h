@@ -35,7 +35,7 @@ extern "C" int __stdcall fs_closedir(DIR *dir);
 extern "C" int __stdcall fs_getdcwd(const int i, char* buf, const int buflen);
 extern "C" int __stdcall fs_fullpath(char* buf, const char* s, const int buflen);
 extern "C" int __stdcall fs_getfileattributes(const char* s);
-extern "C" char* __stdcall fs_gettruename(const char* s);
+extern "C" char* __stdcall fs_gettruename(char* s);
 extern "C" int __stdcall fs_access(const char* s, int mode);
 extern "C" __int64 __stdcall fs_getfiletime(const char* s);
 extern "C" __int64 __stdcall fs_stat_size(const char* s);
