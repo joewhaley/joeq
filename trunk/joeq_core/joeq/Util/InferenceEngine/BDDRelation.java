@@ -35,6 +35,7 @@ public class BDDRelation extends Relation {
         this.solver = solver;
         this.relation = solver.bdd.zero();
         this.domains = new LinkedList();
+        System.out.println("Constructing BDDRelation "+name+" with "+fieldDomains.size()+" domains "+fieldNames.size()+" names.");
         for (int i = 0; i < fieldDomains.size(); ++i) {
             FieldDomain fd = (FieldDomain) fieldDomains.get(i);
             Collection doms = solver.getBDDDomains(fd);
@@ -83,12 +84,14 @@ public class BDDRelation extends Relation {
         try {
             load(name+".bdd");
             if (solver.NOISY) solver.out.println("Loaded BDD from file: "+name+".bdd");
+            if (solver.TRACE) solver.out.println("Domains of loaded relation:"+activeDomains());
         } catch (IOException x) {
         }
         
         try {
             loadTuples(name+".tuples");
             if (solver.NOISY) solver.out.println("Loaded tuples from file: "+name+".tuples");
+            if (solver.TRACE) solver.out.println("Domains of loaded relation:"+activeDomains());
         } catch (IOException x) {
         }
     }
@@ -118,10 +121,10 @@ public class BDDRelation extends Relation {
                 } else {
                     long l = Long.parseLong(v);
                     b.andWith(d.ithVar(l));
-                    if (solver.TRACE) solver.out.print(fieldNames.get(i)+": "+l+", ");
+                    if (solver.TRACE_FULL) solver.out.print(fieldNames.get(i)+": "+l+", ");
                 }
             }
-            if (solver.TRACE) solver.out.println();
+            if (solver.TRACE_FULL) solver.out.println();
             relation.orWith(b);
         }
     }
@@ -211,4 +214,14 @@ public class BDDRelation extends Relation {
         return result;
     }
     
+    public String activeDomains() {
+        int[] a = relation.support().scanSetDomains();
+        if (a == null) return "(none)";
+        StringBuffer sb = new StringBuffer();
+        for (int i = 0; i < a.length; ++i) {
+            sb.append(solver.bdd.getDomain(a[i]));
+            if (i < a.length-1) sb.append(',');
+        }
+        return sb.toString();
+    }
 }

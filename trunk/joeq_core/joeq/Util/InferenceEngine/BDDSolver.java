@@ -40,7 +40,7 @@ public class BDDSolver extends Solver {
     MultiMap fielddomainsToBDDdomains;
     
     public BDDSolver() {
-        bdd = BDDFactory.init(1000000, 10000);
+        bdd = BDDFactory.init(1000000, 100000);
         fielddomainsToBDDdomains = new GenericMultiMap();
         bdd.setMaxIncrease(500000);
     }
