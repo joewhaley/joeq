@@ -458,7 +458,7 @@ public final class BitString implements Cloneable, java.io.Serializable {
      * @param set the bit set to copy the bits from
      */
     public void copyBits(BitString set) {
-        System.arraycopy(bits, 0, set.bits, 0, set.bits.length);
+        System.arraycopy(set.bits, 0, bits, 0, bits.length);
     }
 
     /**
