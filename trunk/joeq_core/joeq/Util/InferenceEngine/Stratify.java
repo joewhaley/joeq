@@ -39,7 +39,7 @@ public class Stratify {
         this.out = solver.out;
     }
     
-    public void stratify(List rules, Collection inputs, Collection outputs) {
+    public void stratify(List rules, Set inputs, Set outputs) {
         
         firstSCCs = new LinkedList();
         innerSCCs = new GenericMultiMap();
@@ -83,8 +83,7 @@ public class Stratify {
             
             // Any relations that have been totally computed are inputs to the
             // next stratum.
-            again = inputs.addAll(findNewInputs(depNav2, stratumNodes));
-            
+            boolean again = inputs.addAll(findNewInputs(depNav2, stratumNodes));
             if (!again) break;
             
             // Remove edges for this stratum from navigator.
@@ -320,12 +319,12 @@ public class Stratify {
     
     public void solve() {
         
-        Collection inputs = new LinkedList();
+        Set inputs = new HashSet();
         inputs.addAll(solver.relationsToLoad);
         inputs.addAll(solver.relationsToLoadTuples);
         inputs.addAll(solver.equivalenceRelations.values());
         inputs.addAll(solver.notequivalenceRelations.values());
-        Collection outputs = new LinkedList();
+        Set outputs = new HashSet();
         outputs.addAll(solver.relationsToDump);
         outputs.addAll(solver.relationsToDumpTuples);
         outputs.addAll(solver.relationsToDumpNegated);
