@@ -7,10 +7,10 @@ import java.util.List;
 import Allocator.ObjectLayoutMethods;
 import Clazz.jq_Array;
 import Clazz.jq_Class;
-import Main.jq;
-import Run_Time.Debug;
 import Memory.HeapAddress;
+import Run_Time.Debug;
 import Run_Time.SystemInterface;
+import Util.Assert;
 
 /**
  * This is a reference to an abstract memory "heap".
@@ -69,7 +69,7 @@ public abstract class Heap {
     public static void boot() {
         BootHeap.init();
         //mallocHeap.init();
-        jq.Assert(BootHeap.INSTANCE.refInHeap(HeapAddress.addressOf(BootHeap.INSTANCE)));
+        Assert._assert(BootHeap.INSTANCE.refInHeap(HeapAddress.addressOf(BootHeap.INSTANCE)));
     }
 
     /**
@@ -160,8 +160,8 @@ public abstract class Heap {
      */
     public void zero() {
         // verify page alignment.
-        jq.Assert(start.difference(start.align(HeapAddress.pageAlign())) == 0);
-        jq.Assert(end.difference(end.align(HeapAddress.pageAlign())) == 0);
+        Assert._assert(start.difference(start.align(HeapAddress.pageAlign())) == 0);
+        Assert._assert(end.difference(end.align(HeapAddress.pageAlign())) == 0);
         int size = getSize();
         SystemInterface.mem_set(start, size, (byte)0);
     }
@@ -274,7 +274,7 @@ public abstract class Heap {
      * @return the reference for the allocated object
      */
     public final Object allocateObject(jq_Class type) {
-        jq.Assert(type.isClsInitialized());
+        Assert._assert(type.isClsInitialized());
         int size = type.getInstanceSize();
         Object tib = type.getVTable();
         return allocateObject(size, tib);
@@ -291,7 +291,7 @@ public abstract class Heap {
      * @return the reference for the allocated array object 
      */
     public final Object allocateArray(jq_Array type, int numElements) {
-        jq.Assert(type.isClsInitialized());
+        Assert._assert(type.isClsInitialized());
         int size = type.getInstanceSize(numElements);
         Object tib = type.getVTable();
         return allocateArray(numElements, size, tib);

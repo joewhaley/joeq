@@ -14,7 +14,7 @@ import Clazz.jq_Method;
 import Clazz.jq_Primitive;
 import Clazz.jq_Type;
 import Compil3r.Quad.Operand.RegisterOperand;
-import Main.jq;
+import Util.Assert;
 import Util.Strings;
 
 /**
@@ -72,7 +72,7 @@ public class RegisterFactory {
         if (t == jq_Primitive.FLOAT) return (Register)stack_F.get(i);
         if (t == jq_Primitive.LONG) return (Register)stack_L.get(i);
         if (t == jq_Primitive.DOUBLE) return (Register)stack_D.get(i);
-        jq.UNREACHABLE();
+        Assert.UNREACHABLE();
         return null;
     }
     
@@ -102,7 +102,7 @@ public class RegisterFactory {
                 stack_D.add(i, new Register(stack_D.size(), true));
             return (Register)stack_D.get(i);
         }
-        jq.UNREACHABLE();
+        Assert.UNREACHABLE();
         return null;
     }
     
@@ -112,7 +112,7 @@ public class RegisterFactory {
         if (t == jq_Primitive.FLOAT) return (Register)local_F.get(i);
         if (t == jq_Primitive.LONG) return (Register)local_L.get(i);
         if (t == jq_Primitive.DOUBLE) return (Register)local_D.get(i);
-        jq.UNREACHABLE();
+        Assert.UNREACHABLE();
         return null;
     }
     
@@ -151,7 +151,7 @@ public class RegisterFactory {
             stack_D.add(i, new Register(i, true));
             return (Register)stack_D.get(i);
         }
-        jq.UNREACHABLE();
+        Assert.UNREACHABLE();
         return null;
     }
 
@@ -161,7 +161,7 @@ public class RegisterFactory {
         if (t == jq_Primitive.FLOAT) return local_F.size();
         if (t == jq_Primitive.LONG) return local_L.size();
         if (t == jq_Primitive.DOUBLE) return local_D.size();
-        jq.UNREACHABLE();
+        Assert.UNREACHABLE();
         return 0;
     }
     public int getStackSize(jq_Type t) {
@@ -170,7 +170,7 @@ public class RegisterFactory {
         if (t == jq_Primitive.FLOAT) return stack_F.size();
         if (t == jq_Primitive.LONG) return stack_L.size();
         if (t == jq_Primitive.DOUBLE) return stack_D.size();
-        jq.UNREACHABLE();
+        Assert.UNREACHABLE();
         return 0;
     }
 
@@ -187,7 +187,7 @@ public class RegisterFactory {
     }
 
     static void fillRegisters(ArrayList list, int offset, int n, boolean t) {
-        jq.Assert(list.size() == 0);
+        Assert._assert(list.size() == 0);
         for (int i=0; i<n; ++i) {
             list.add(i, new Register(offset+i, t));
         }

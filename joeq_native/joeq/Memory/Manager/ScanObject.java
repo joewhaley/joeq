@@ -8,8 +8,8 @@ import Clazz.jq_Array;
 import Clazz.jq_Class;
 import Clazz.jq_Reference;
 import Clazz.jq_Type;
-import Run_Time.Debug;
 import Memory.HeapAddress;
+import Run_Time.Debug;
 
 /**
  * @author John Whaley

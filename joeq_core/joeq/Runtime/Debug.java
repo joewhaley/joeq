@@ -1,8 +1,8 @@
 package Run_Time;
 
-import Main.jq;
 import Memory.Address;
 import UTF.Utf8;
+import Util.Assert;
 
 /**
  * @author  John Whaley
@@ -42,7 +42,7 @@ public abstract class Debug {
             i <<= 4;
         }
         buffer[++bufferIndex] = (byte)0;
-        jq.Assert(bufferIndex == 10);
+        Assert._assert(bufferIndex == 10);
     }
 
     public static void write(String s) {

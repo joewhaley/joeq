@@ -1,5 +1,8 @@
 package Main;
 
+import java.util.Iterator;
+import java.util.LinkedList;
+
 import Clazz.jq_Class;
 import Clazz.jq_Method;
 import Clazz.jq_MethodVisitor;
@@ -11,8 +14,6 @@ import Compil3r.Quad.ControlFlowGraph;
 import Compil3r.Quad.ControlFlowGraphVisitor;
 import Compil3r.Quad.Quad;
 import Compil3r.Quad.QuadVisitor;
-
-import java.util.*;
 
 public class Helper {
     static {

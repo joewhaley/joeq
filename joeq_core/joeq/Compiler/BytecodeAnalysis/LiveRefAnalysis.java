@@ -18,12 +18,12 @@ import Clazz.jq_Method;
 import Clazz.jq_Primitive;
 import Clazz.jq_StaticField;
 import Clazz.jq_Type;
-import Main.jq;
 import Run_Time.TypeCheck;
+import Util.Assert;
 import Util.BitString;
-import Util.LinearSet;
 import Util.Strings;
 import Util.BitString.BitStringIterator;
+import Util.Collections.LinearSet;
 
 public class LiveRefAnalysis {
 
@@ -81,7 +81,7 @@ public class LiveRefAnalysis {
             fpv.go_again = false;
             Compil3r.BytecodeAnalysis.ControlFlowGraph.RPOBasicBlockIterator rpo = bc_cfg.reversePostOrderIterator();
             BasicBlock first_bb = rpo.nextBB();
-            jq.Assert(first_bb == bc_cfg.getEntry());
+            Assert._assert(first_bb == bc_cfg.getEntry());
             // initialize start states
             while (rpo.hasNext()) {
                 if (ALWAYS_TRACE)
@@ -414,7 +414,7 @@ public class LiveRefAnalysis {
             return super.merge(that);
         }
         public boolean merge(ExactState that) {
-            jq.Assert(this.stackDepth == that.stackDepth);
+            Assert._assert(this.stackDepth == that.stackDepth);
             boolean change = false;
             for (int i=0; i<this.stackDepth; ++i) {
                 if (this.stack[i] == null) continue;
@@ -451,7 +451,7 @@ public class LiveRefAnalysis {
             return change;
         }
         public boolean mergeWithHandler(ExactState that) {
-            jq.Assert(this.stackDepth == 1);
+            Assert._assert(this.stackDepth == 1);
             boolean change = false;
             for (int i=0; i<this.locals.length; ++i) {
                 if (this.locals[i] == null) continue;
@@ -654,7 +654,7 @@ public class LiveRefAnalysis {
         */
 
         public boolean merge(ExactState that) {
-            jq.Assert(this.stackDepth == that.stackDepth);
+            Assert._assert(this.stackDepth == that.stackDepth);
             boolean change = false;
             for (int i=0; i<this.stackDepth; ++i) {
                 if (this.stack[i] == null) continue;
@@ -680,7 +680,7 @@ public class LiveRefAnalysis {
         }
         // this == after JSR call, that == before JSR call, jsr_state == end of JSR body
         public boolean mergeJSR(ExactState that, ExactJSRState jsr_state) {
-            jq.Assert(this.stackDepth == jsr_state.stackDepth);
+            Assert._assert(this.stackDepth == jsr_state.stackDepth);
             boolean change = false;
             for (int i=0; i<this.stackDepth; ++i) {
                 if (this.stack[i] == null) continue;
@@ -711,7 +711,7 @@ public class LiveRefAnalysis {
             return change;
         }
         public boolean mergeWithHandler(ExactState that) {
-            jq.Assert(this.stackDepth == 1);
+            Assert._assert(this.stackDepth == 1);
             boolean change = false;
             for (int i=0; i<this.locals.length; ++i) {
                 if (this.locals[i] == null) {
@@ -735,12 +735,12 @@ public class LiveRefAnalysis {
         void push_D() { stack[stackDepth++] = SystemType.DOUBLE; stack[stackDepth++] = HalfOfNumber.INSTANCE; }
         void push_R() { stack[stackDepth++] = DerivedRef.INSTANCE; }
         void push_RetAddr(int target) { stack[stackDepth++] = new Retaddr(target); }
-        void pop_I() { --stackDepth; jq.Assert(stack[stackDepth].equals(SystemType.INT)); }
-        void pop_F() { --stackDepth; jq.Assert(stack[stackDepth].equals(SystemType.FLOAT)); }
-        void pop_L() { stackDepth-=2; jq.Assert(stack[stackDepth].equals(SystemType.LONG)); jq.Assert(stack[stackDepth+1] == HalfOfNumber.INSTANCE); }
-        void pop_D() { stackDepth-=2; jq.Assert(stack[stackDepth].equals(SystemType.DOUBLE)); jq.Assert(stack[stackDepth+1] == HalfOfNumber.INSTANCE); }
-        void pop_A() { --stackDepth; jq.Assert(stack[stackDepth].isReferenceType()); }
-        void pop_R() { --stackDepth; jq.Assert(stack[stackDepth] == DerivedRef.INSTANCE); }
+        void pop_I() { --stackDepth; Assert._assert(stack[stackDepth].equals(SystemType.INT)); }
+        void pop_F() { --stackDepth; Assert._assert(stack[stackDepth].equals(SystemType.FLOAT)); }
+        void pop_L() { stackDepth-=2; Assert._assert(stack[stackDepth].equals(SystemType.LONG)); Assert._assert(stack[stackDepth+1] == HalfOfNumber.INSTANCE); }
+        void pop_D() { stackDepth-=2; Assert._assert(stack[stackDepth].equals(SystemType.DOUBLE)); Assert._assert(stack[stackDepth+1] == HalfOfNumber.INSTANCE); }
+        void pop_A() { --stackDepth; Assert._assert(stack[stackDepth].isReferenceType()); }
+        void pop_R() { --stackDepth; Assert._assert(stack[stackDepth] == DerivedRef.INSTANCE); }
         Type pop() { return stack[--stackDepth]; }
         void push(Type t) {
             stack[stackDepth++] = t;
@@ -753,7 +753,7 @@ public class LiveRefAnalysis {
             else if (t == jq_Primitive.FLOAT) pop_F();
             else if (t == jq_Primitive.LONG) pop_L();
             else if (t == jq_Primitive.DOUBLE) pop_D();
-            else jq.UNREACHABLE();
+            else Assert.UNREACHABLE();
         }
         public int getStackDepth() { return stackDepth; }
         public Type getStack(int i) { return stack[i]; }
@@ -961,7 +961,7 @@ public class LiveRefAnalysis {
                 return true;
             } else {
                 if (jsr) {
-                    jq.Assert(start_states[bb2.id] instanceof ExactJSRState);
+                    Assert._assert(start_states[bb2.id] instanceof ExactJSRState);
                     return ((ExactJSRState)start_states[bb2.id]).mergeBeforeJSR(current_state);
                 } else {
                     return start_states[bb2.id].merge(current_state);
@@ -970,7 +970,7 @@ public class LiveRefAnalysis {
         }
         
         private boolean mergeJSRStateWith(BasicBlock before, BasicBlock after) {
-            jq.Assert(current_state instanceof ExactJSRState);
+            Assert._assert(current_state instanceof ExactJSRState);
             if (end_states[before.id] == null) {
                 System.err.println("Warning! Successor of JSR block has not yet been visited.");
                 return false;
@@ -1121,7 +1121,7 @@ public class LiveRefAnalysis {
             current_state.pop_I();
             Type t2 = current_state.pop();
             if (t instanceof DerivedRef)
-                jq.Assert(t2.getElementType() instanceof DerivedRef);
+                Assert._assert(t2.getElementType() instanceof DerivedRef);
             mergeWithExceptionHandlers();
         }
         public void visitBASTORE() {

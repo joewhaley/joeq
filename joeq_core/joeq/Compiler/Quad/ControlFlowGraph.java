@@ -18,9 +18,9 @@ import Compil3r.Quad.Operand.ParamListOperand;
 import Compil3r.Quad.Operand.RegisterOperand;
 import Compil3r.Quad.Operand.TargetOperand;
 import Compil3r.Quad.RegisterFactory.Register;
-import Main.jq;
-import Util.FilterIterator;
+import Util.Assert;
 import Util.Strings;
+import Util.Collections.FilterIterator;
 import Util.Templates.List;
 import Util.Templates.ListIterator;
 import Util.Templates.ListWrapper;
@@ -309,7 +309,7 @@ public class ControlFlowGraph {
                     r = RegisterFactory.makeGuardReg().getRegister();
                     map.put(rop.getRegister(), r);
                 } else {
-                    jq.UNREACHABLE(rop.toString());
+                    Assert.UNREACHABLE(rop.toString());
                 }
             } else {
                 rop.setRegister(r);
@@ -361,12 +361,12 @@ public class ControlFlowGraph {
     static void addRegistersToMap(HashMap map, RegisterFactory from,
                                   RegisterFactory to, jq_Type type) {
         int n = from.getLocalSize(type);
-        jq.Assert(n == to.getLocalSize(type));
+        Assert._assert(n == to.getLocalSize(type));
         for (int i=0; i<n; ++i) {
             map.put(from.getLocal(i, type), to.getLocal(i, type));
         }
         n = from.getStackSize(type);
-        jq.Assert(n == to.getStackSize(type));
+        Assert._assert(n == to.getStackSize(type));
         for (int i=0; i<n; ++i) {
             map.put(from.getStack(i, type), to.getStack(i, type));
         }

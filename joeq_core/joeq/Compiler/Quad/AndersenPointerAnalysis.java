@@ -45,14 +45,14 @@ import Compil3r.Quad.MethodSummary.ThrownExceptionNode;
 import Compil3r.Quad.MethodSummary.UnknownTypeNode;
 import Compil3r.Quad.SSAReader.SSAMethod;
 import Compil3r.Quad.SelectiveCloning.AccessPath;
-import Main.jq;
-import Util.Default;
-import Util.HashCodeComparator;
-import Util.LinearSet;
-import Util.SetFactory;
-import Util.SetRepository;
-import Util.SortedArraySet;
+import Util.Assert;
 import Util.Strings;
+import Util.Collections.HashCodeComparator;
+import Util.Collections.LinearSet;
+import Util.Collections.Pair;
+import Util.Collections.SetFactory;
+import Util.Collections.SetRepository;
+import Util.Collections.SortedArraySet;
 
 /**
  *
@@ -379,7 +379,7 @@ public class AndersenPointerAnalysis {
         fd.load();
         ConcreteTypeNode fd_n1 = new ConcreteTypeNode(fd);
         jq_Initializer fd_init = (jq_Initializer)fd.getOrCreateInstanceMethod("<init>", "(I)V");
-        jq.Assert(fd_init.isLoaded());
+        Assert._assert(fd_init.isLoaded());
         ProgramLocation mc_fd_init = new ProgramLocation.QuadProgramLocation(fd_init, null);
         fd_n1.recordPassedParameter(mc_fd_init, 0);
         
@@ -387,7 +387,7 @@ public class AndersenPointerAnalysis {
         fis.load();
         ConcreteTypeNode fis_n = new ConcreteTypeNode(fis);
         jq_Initializer fis_init = (jq_Initializer)fis.getOrCreateInstanceMethod("<init>", "(Ljava/io/FileDescriptor;)V");
-        jq.Assert(fis_init.isLoaded());
+        Assert._assert(fis_init.isLoaded());
         ProgramLocation mc_fis_init = new ProgramLocation.QuadProgramLocation(fis_init, null);
         fis_n.recordPassedParameter(mc_fis_init, 0);
         fd_n1.recordPassedParameter(mc_fis_init, 1);
@@ -395,7 +395,7 @@ public class AndersenPointerAnalysis {
         bis.load();
         ConcreteTypeNode bis_n = new ConcreteTypeNode(bis);
         jq_Initializer bis_init = (jq_Initializer)bis.getOrCreateInstanceMethod("<init>", "(Ljava/io/InputStream;)V");
-        jq.Assert(bis_init.isLoaded());
+        Assert._assert(bis_init.isLoaded());
         ProgramLocation mc_bis_init = new ProgramLocation.QuadProgramLocation(bis_init, null);
         bis_n.recordPassedParameter(mc_bis_init, 0);
         fis_n.recordPassedParameter(mc_bis_init, 1);
@@ -403,7 +403,7 @@ public class AndersenPointerAnalysis {
         jq_Class jls = Bootstrap.PrimordialClassLoader.getJavaLangSystem();
         jls.load();
         jq_StaticField si = jls.getOrCreateStaticField("in", "Ljava/io/InputStream;");
-        jq.Assert(si.isLoaded());
+        Assert._assert(si.isLoaded());
         GlobalNode.GLOBAL.addEdge(si, bis_n, null);
         
         MethodSummary fd_init_summary = getMethodSummary(fd_init);
@@ -426,7 +426,7 @@ public class AndersenPointerAnalysis {
         fos.load();
         ConcreteTypeNode fos_n1 = new ConcreteTypeNode(fos);
         jq_Initializer fos_init = (jq_Initializer)fos.getOrCreateInstanceMethod("<init>", "(Ljava/io/FileDescriptor;)V");
-        jq.Assert(fos_init.isLoaded());
+        Assert._assert(fos_init.isLoaded());
         ProgramLocation mc_fos_init = new ProgramLocation.QuadProgramLocation(fos_init, null);
         fos_n1.recordPassedParameter(mc_fos_init, 0);
         fd_n2.recordPassedParameter(mc_fos_init, 1);
@@ -434,7 +434,7 @@ public class AndersenPointerAnalysis {
         bos.load();
         ConcreteTypeNode bos_n1 = new ConcreteTypeNode(bos);
         jq_Initializer bos_init = (jq_Initializer)bos.getOrCreateInstanceMethod("<init>", "(Ljava/io/OutputStream;I)V");
-        jq.Assert(bos_init.isLoaded());
+        Assert._assert(bos_init.isLoaded());
         ProgramLocation mc_bos_init = new ProgramLocation.QuadProgramLocation(bos_init, null);
         bos_n1.recordPassedParameter(mc_bos_init, 0);
         fos_n1.recordPassedParameter(mc_bos_init, 1);
@@ -443,13 +443,13 @@ public class AndersenPointerAnalysis {
         ps.load();
         ConcreteTypeNode ps_n1 = new ConcreteTypeNode(ps);
         jq_Initializer ps_init = (jq_Initializer)ps.getOrCreateInstanceMethod("<init>", "(Ljava/io/OutputStream;Z)V");
-        jq.Assert(ps_init.isLoaded());
+        Assert._assert(ps_init.isLoaded());
         ProgramLocation mc_ps_init = new ProgramLocation.QuadProgramLocation(ps_init, null);
         ps_n1.recordPassedParameter(mc_ps_init, 0);
         bos_n1.recordPassedParameter(mc_ps_init, 1);
         
         jq_StaticField so = jls.getOrCreateStaticField("out", "Ljava/io/PrintStream;");
-        jq.Assert(so.isLoaded());
+        Assert._assert(so.isLoaded());
         GlobalNode.GLOBAL.addEdge(so, ps_n1, null);
         
         ConcreteTypeNode fd_n3 = new ConcreteTypeNode(fd);
@@ -465,7 +465,7 @@ public class AndersenPointerAnalysis {
         bos_n2.recordPassedParameter(mc_ps_init, 1);
         
         so = jls.getOrCreateStaticField("err", "Ljava/io/PrintStream;");
-        jq.Assert(so.isLoaded());
+        Assert._assert(so.isLoaded());
         GlobalNode.GLOBAL.addEdge(so, ps_n2, null);
         
         on = fd_init_summary.getParamNode(0);
@@ -496,13 +496,13 @@ public class AndersenPointerAnalysis {
         jq_Class nt = (jq_Class)Bootstrap.PrimordialClassLoader.loader.getOrCreateBSType("LScheduler/jq_NativeThread;");
         nt.load();
         ConcreteTypeNode nt_n1 = new ConcreteTypeNode(nt);
-        jq.Assert(Scheduler.jq_NativeThread._nativeThreadEntry.isLoaded());
+        Assert._assert(Scheduler.jq_NativeThread._nativeThreadEntry.isLoaded());
         ProgramLocation mc_nte = new ProgramLocation.QuadProgramLocation(Scheduler.jq_NativeThread._nativeThreadEntry, null);
         nt_n1.recordPassedParameter(mc_nte, 0);
         MethodSummary nte_summary = getMethodSummary(Scheduler.jq_NativeThread._nativeThreadEntry);
         on = nte_summary.getParamNode(0);
         addInclusionEdge(on, nt_n1, null);
-        jq.Assert(Scheduler.jq_NativeThread._threadSwitch.isLoaded());
+        Assert._assert(Scheduler.jq_NativeThread._threadSwitch.isLoaded());
         ProgramLocation mc_ts = new ProgramLocation.QuadProgramLocation(Scheduler.jq_NativeThread._threadSwitch, null);
         nt_n1.recordPassedParameter(mc_ts, 0);
         MethodSummary ts_summary = getMethodSummary(Scheduler.jq_NativeThread._threadSwitch);
@@ -671,7 +671,7 @@ public class AndersenPointerAnalysis {
             ProgramLocation mc = cs.m;
             Set s_orig = (Set)original.get(mc);
             int y = s_orig.size();
-            Object key = Default.pair(new Integer(y),new Integer(x));
+            Object key = new Pair(new Integer(y),new Integer(x));
             HashSet k = (HashSet) table.get(key);
             if (k == null) table.put(key, k = new HashSet());
             k.add(mc);
@@ -945,7 +945,7 @@ public class AndersenPointerAnalysis {
             CallTargets ct = mc.getCallTargets();
             if (TRACE) out.println("Possible targets ignoring type information: "+ct);
             Set definite_targets = SortedArraySet.FACTORY.makeSet(HashCodeComparator.INSTANCE);
-            //jq.Assert(!callSiteToTargets.containsKey(cs));
+            //Assert._assert(!callSiteToTargets.containsKey(cs));
             callSiteToTargets.put(cs, definite_targets);
             if (ct.size() == 1 && ct.isComplete()) {
                 // call can be statically resolved to a single target.
@@ -1121,7 +1121,7 @@ public class AndersenPointerAnalysis {
     }
     
     boolean addInclusionEdges(OutsideNode n, Set s, Object mc) {
-        if (VerifyAssertions) jq.Assert(n.skip == null);
+        if (VerifyAssertions) Assert._assert(n.skip == null);
         Set s2 = (Set)nodeToInclusionEdges.get(n);
         if (s2 == null) {
             s = inclusionEdgeSetFactory.makeSet(s);
@@ -1148,7 +1148,7 @@ public class AndersenPointerAnalysis {
             if (TRACK_REASONS) {
                 for (Iterator i=s.iterator(); i.hasNext(); ) {
                     Object o = i.next();
-                    edgesToReasons.put(Default.pair(n, o), mc);
+                    edgesToReasons.put(new Pair(n, o), mc);
                 }
             }
             return true;
@@ -1181,7 +1181,7 @@ public class AndersenPointerAnalysis {
                         }
                     }
                     if (TRACK_REASONS) {
-                        edgesToReasons.put(Default.pair(n, o), mc);
+                        edgesToReasons.put(new Pair(n, o), mc);
                     }
                 }
             }
@@ -1190,7 +1190,7 @@ public class AndersenPointerAnalysis {
     }
     
     void addInclusionEdge(OutsideNode n, Node s, Object mc) {
-        if (VerifyAssertions) jq.Assert(n.skip == null);
+        if (VerifyAssertions) Assert._assert(n.skip == null);
         if (s instanceof OutsideNode) {
             OutsideNode on = (OutsideNode)s;
             while (on.skip != null) {
@@ -1220,7 +1220,7 @@ public class AndersenPointerAnalysis {
                 }
             }
             if (TRACK_REASONS) {
-                edgesToReasons.put(Default.pair(n, s), mc);
+                edgesToReasons.put(new Pair(n, s), mc);
             }
         } else if (s2.add(s)) {
             if (INCLUSION_BACK_EDGES)
@@ -1240,7 +1240,7 @@ public class AndersenPointerAnalysis {
                 }
             }
             if (TRACK_REASONS) {
-                edgesToReasons.put(Default.pair(n, s), mc);
+                edgesToReasons.put(new Pair(n, s), mc);
             }
         }
     }
@@ -1422,14 +1422,14 @@ public class AndersenPointerAnalysis {
             Path p2 = p;
             if (TRACE_CYCLES) out.println("cycle detected! node="+from+" path="+p);
             Set s = (Set)nodeToInclusionEdges.get(from);
-            if (VerifyAssertions) jq.Assert(s != null);
+            if (VerifyAssertions) Assert._assert(s != null);
             OutsideNode last = from;
             for (;; p = p.cdr()) {
                 OutsideNode n = p.car();
                 if (TRACK_CHANGES) markCollapsedNode(n);
                 if (n == from) break;
                 if (TRACE) out.println("next in path: "+n+", merging into: "+from);
-                if (VerifyAssertions) jq.Assert(n.skip == null);
+                if (VerifyAssertions) Assert._assert(n.skip == null);
                 n.skip = from;
                 Set s2 = (Set)nodeToInclusionEdges.get(n);
                 //s2.remove(last);
@@ -1524,14 +1524,14 @@ public class AndersenPointerAnalysis {
                         if (TRACE) out.println("Nodes were merged into "+from);
                         if (TRACE) out.println("redoing iteration on "+s);
                         if (TRACK_CHANGES) brand_new = true; // we have new children, so always union them.
-                        if (VerifyAssertions) jq.Assert(nodeToInclusionEdges.get(from) == s);
+                        if (VerifyAssertions) Assert._assert(nodeToInclusionEdges.get(from) == s);
                         break;
                     } else {
                         if (TRACK_CHANGES) {
                             boolean b = removeUnpropagatedEdge(from, (OutsideNode)to);
                             if (!brand_new && !b && !this.temp_change) {
                                 if (TRACE) out.println("No change in cache of target "+to+", skipping union operation");
-                                if (VerifyAssertions) jq.Assert(result.containsAll(s2), from+" result "+result+" should contain all of "+to+" result "+s2);
+                                if (VerifyAssertions) Assert._assert(result.containsAll(s2), from+" result "+result+" should contain all of "+to+" result "+s2);
                                 continue;
                             }
                         }
@@ -1575,7 +1575,7 @@ public class AndersenPointerAnalysis {
     }
     
     void recordUnpropagatedEdge(OutsideNode from, OutsideNode to) {
-        unpropagatedEdges.add(Default.pair(from, to));
+        unpropagatedEdges.add(new Pair(from, to));
     }
     boolean removeUnpropagatedEdge(OutsideNode from, OutsideNode to) {
         if (unpropagatedEdges.remove(getPair(from, to))) return true;
@@ -1591,8 +1591,8 @@ public class AndersenPointerAnalysis {
         else s.clear();
     }
     
-    final Default.PairList my_pair_list = new Default.PairList(null, null);
-    public Default.PairList getPair(Object left, Object right) {
+    final Pair my_pair_list = new Pair(null, null);
+    public Pair getPair(Object left, Object right) {
         my_pair_list.left = left; my_pair_list.right = right; return my_pair_list;
     }
     

@@ -7,10 +7,10 @@
 
 package Clazz;
 
+import java.util.Arrays;
 import java.util.Iterator;
 
-import Util.AppendIterator;
-import Util.ArrayIterator;
+import Util.Collections.AppendIterator;
 
 /*
  * @author  John Whaley
@@ -34,8 +34,8 @@ public interface jq_FieldVisitor {
         public DeclaredFieldVisitor(jq_FieldVisitor mv, boolean trace) { this.mv = mv; this.trace = trace; }
         public void visitClass(jq_Class k) {
             if (trace) System.out.println(k.toString());
-            Iterator it = new AppendIterator(new ArrayIterator(k.getDeclaredStaticFields()),
-                                                new ArrayIterator(k.getDeclaredInstanceFields()));
+            Iterator it = new AppendIterator(Arrays.asList(k.getDeclaredStaticFields()).iterator(),
+                                            Arrays.asList(k.getDeclaredInstanceFields()).iterator());
             while (it.hasNext()) {
                 jq_Field m = (jq_Field)it.next();
                 m.accept(mv);

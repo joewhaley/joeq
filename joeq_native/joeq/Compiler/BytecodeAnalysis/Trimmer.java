@@ -28,13 +28,13 @@ import Clazz.jq_StaticField;
 import Clazz.jq_Type;
 import Clazz.jq_TypeVisitor;
 import Compil3r.Reference.x86.x86ReferenceLinker;
-import Main.jq;
 import Run_Time.ExceptionDeliverer;
 import Run_Time.MathSupport;
 import Run_Time.Monitor;
 import Run_Time.Reflection;
 import Run_Time.TypeCheck;
 import Run_Time.Unsafe;
+import Util.Assert;
 import Util.Strings;
 
 /**
@@ -96,12 +96,12 @@ public class Trimmer {
                     addToNecessaryTypes(c3);
                 if (AddAllClassMethods) {
                     if (TRACE) out.println("Adding methods of new class "+t);
-                    for(Iterator it = new ArrayIterator(c2.getDeclaredStaticMethods());
+                    for(Iterator it = Arrays.asList(c2.getDeclaredStaticMethods()).iterator();
                         it.hasNext(); ) {
                         jq_StaticMethod m = (jq_StaticMethod)it.next();
                         addToWorklist(m);
                     }
-                    for(Iterator it = new ArrayIterator(c2.getDeclaredInstanceMethods());
+                    for(Iterator it = Arrays.asList(c2.getDeclaredInstanceMethods()).iterator();
                         it.hasNext(); ) {
                         jq_InstanceMethod m = (jq_InstanceMethod)it.next();
                         addToWorklist(m);
@@ -109,13 +109,13 @@ public class Trimmer {
                 }
                 if (AddAllClassFields) {
                     if (TRACE) out.println("Adding fields of new class "+t);
-                    for(Iterator it = new ArrayIterator(c2.getDeclaredStaticFields());
+                    for(Iterator it = Arrays.asList(c2.getDeclaredStaticFields()).iterator();
                         it.hasNext(); ) {
                         jq_StaticField f = (jq_StaticField)it.next();
                         addToNecessarySet(f);
                         if (f.getType().isReferenceType()) addStaticFieldValue(f);
                     }
-                    for(Iterator it = new ArrayIterator(c2.getDeclaredInstanceFields());
+                    for(Iterator it = Arrays.asList(c2.getDeclaredInstanceFields()).iterator();
                         it.hasNext(); ) {
                         jq_InstanceField f = (jq_InstanceField)it.next();
                         addToNecessarySet(f);
@@ -577,7 +577,7 @@ public class Trimmer {
 
     public void addNecessaryInterfaceMethodImplementations(jq_Class c, jq_Class inter) {
         inter.prepare();
-        jq.Assert(inter.isInterface());
+        Assert._assert(inter.isInterface());
         jq_InstanceMethod[] ms = inter.getVirtualMethods();
         for (int i=0; i<ms.length; ++i) {
             jq_InstanceMethod m = ms[i];

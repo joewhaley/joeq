@@ -7,9 +7,9 @@
 
 package ClassLib.Common.java.io;
 
-import Main.jq;
 import Memory.HeapAddress;
 import Run_Time.SystemInterface;
+import Util.Assert;
 
 /*
  * @author  John Whaley
@@ -108,7 +108,7 @@ public abstract class RandomAccessFile {
         return endpos;
     }
     public void setLength(long newLength) throws java.io.IOException {
-        jq.TODO();
+        Assert.TODO();
     }
     public void close() throws java.io.IOException {
         int fdnum = this.fd.fd;

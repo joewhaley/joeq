@@ -7,6 +7,7 @@
 
 package Interpreter;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -33,8 +34,9 @@ import Run_Time.SystemInterface;
 import Run_Time.TypeCheck;
 import Run_Time.Unsafe;
 import UTF.Utf8;
-import Util.ArrayIterator;
-import Util.FilterIterator;
+import Util.Assert;
+import Util.Convert;
+import Util.Collections.FilterIterator;
 
 /*
  * @author  John Whaley
@@ -152,7 +154,7 @@ public class DirectInterpreter extends BytecodeInterpreter {
             return null;
         } else {
             System.err.println(f.toString());
-            jq.UNREACHABLE();
+            Assert.UNREACHABLE();
             return null;
         }
     }
@@ -184,7 +186,7 @@ public class DirectInterpreter extends BytecodeInterpreter {
                     push_D(Reflection.unwrapToDouble(incomingArgs[j]));
                     ++j;
                 } else {
-                    jq.UNREACHABLE();
+                    Assert.UNREACHABLE();
                 }
             }
         }
@@ -219,7 +221,7 @@ public class DirectInterpreter extends BytecodeInterpreter {
         }
         public long pop_L() {
             int lo=pop_I(); int hi=pop_I();
-            return jq.twoIntsToLong(lo, hi); // lo, hi
+            return Convert.twoIntsToLong(lo, hi); // lo, hi
         }
         public float pop_F() {
             return Float.intBitsToFloat(pop_I());
@@ -268,7 +270,7 @@ public class DirectInterpreter extends BytecodeInterpreter {
         }
         public long getLocal_L(int i) {
             int lo=getLocal_I(i+1); int hi=getLocal_I(i); // lo, hi
-            return jq.twoIntsToLong(lo, hi);
+            return Convert.twoIntsToLong(lo, hi);
         }
         public float getLocal_F(int i) {
             return Float.intBitsToFloat(getLocal_I(i));
@@ -302,7 +304,7 @@ public class DirectInterpreter extends BytecodeInterpreter {
             return loResult;
         }
         public long getReturnVal_L() {
-            return jq.twoIntsToLong(loResult, hiResult);
+            return Convert.twoIntsToLong(loResult, hiResult);
         }
         public float getReturnVal_F() {
             return Float.intBitsToFloat(loResult);
@@ -376,14 +378,14 @@ public class DirectInterpreter extends BytecodeInterpreter {
         String rootMethodClassName = s.substring(0, dotloc);
         String rootMethodName = s.substring(dotloc+1);
         
-        jq.Assert(jq.RunningNative);
+        Assert._assert(jq.RunningNative);
         
         jq_Class c = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("L"+rootMethodClassName.replace('.','/')+";");
         c.cls_initialize();
 
         jq_StaticMethod rootm = null;
         Utf8 rootm_name = Utf8.get(rootMethodName);
-        for(Iterator it = new ArrayIterator(c.getDeclaredStaticMethods());
+        for(Iterator it = Arrays.asList(c.getDeclaredStaticMethods()).iterator();
             it.hasNext(); ) {
             jq_StaticMethod m = (jq_StaticMethod)it.next();
             if (m.getName() == rootm_name) {
@@ -392,7 +394,7 @@ public class DirectInterpreter extends BytecodeInterpreter {
             }
         }
         if (rootm == null)
-            jq.UNREACHABLE("root method not found: "+rootMethodClassName+"."+rootMethodName);
+            Assert.UNREACHABLE("root method not found: "+rootMethodClassName+"."+rootMethodName);
         Object[] args = new Object[rootm.getParamWords()];
         jq_Type[] paramTypes = rootm.getParamTypes();
         for (int i=0, j=0; i<paramTypes.length; ++i) {

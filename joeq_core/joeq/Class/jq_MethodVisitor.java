@@ -7,11 +7,11 @@
 
 package Clazz;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Set;
 
-import Util.AppendIterator;
-import Util.ArrayIterator;
+import Util.Collections.AppendIterator;
 
 /*
  * @author  John Whaley
@@ -40,8 +40,8 @@ public interface jq_MethodVisitor {
         public DeclaredMethodVisitor(jq_MethodVisitor mv, Set methodNames, boolean trace) { this.mv = mv; this.methodNames = methodNames; this.trace = trace; }
         public void visitClass(jq_Class k) {
             if (trace) System.out.println(k.toString());
-            Iterator it = new AppendIterator(new ArrayIterator(k.getDeclaredStaticMethods()),
-                                                new ArrayIterator(k.getDeclaredInstanceMethods()));
+            Iterator it = new AppendIterator(Arrays.asList(k.getDeclaredStaticMethods()).iterator(),
+                                             Arrays.asList(k.getDeclaredInstanceMethods()).iterator());
             while (it.hasNext()) {
                 jq_Method m = (jq_Method)it.next();
                 if (methodNames != null && !methodNames.contains(m.getName().toString()))

@@ -6,10 +6,8 @@ import Allocator.ObjectLayoutMethods;
 import Clazz.jq_Array;
 import Clazz.jq_Class;
 import Clazz.jq_Reference;
-import Main.jq;
 import Memory.Address;
 import Memory.CodeAddress;
-import Run_Time.Debug;
 import Memory.HeapAddress;
 import Memory.StackAddress;
 import Memory.Heap.BootHeap;
@@ -18,10 +16,12 @@ import Memory.Heap.ImmortalHeap;
 import Memory.Heap.LargeHeap;
 import Memory.Heap.MallocHeap;
 import Memory.Heap.SegregatedListHeap;
+import Run_Time.Debug;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
 import Scheduler.jq_NativeThread;
 import Scheduler.jq_RegisterState;
+import Util.Assert;
 
 /**
  * MarkAndSweep collector, adapted from Jikes RVM version
@@ -176,7 +176,7 @@ public class MarkAndSweep implements GCConstants {
                     "-X:lh=nnn");
             gc1("GC triggered by large object request of ", size);
         } else {
-            jq.UNREACHABLE("unexpected heap");
+            Assert.UNREACHABLE("unexpected heap");
         }
     }
 
@@ -316,7 +316,7 @@ public class MarkAndSweep implements GCConstants {
     } // end of collect
 
     static HeapAddress gc_getMatureSpace(int size) {
-        jq.UNREACHABLE();
+        Assert.UNREACHABLE();
         return null;
     }
 
@@ -415,7 +415,7 @@ public class MarkAndSweep implements GCConstants {
             return largeHeap.isLive(ref);
         } else {
             Debug.write("gc_isLive: ref not in any known heap: ", ref);
-            jq.UNREACHABLE();
+            Assert.UNREACHABLE();
             return false;
         }
     }
@@ -502,7 +502,7 @@ public class MarkAndSweep implements GCConstants {
             return ref;
 
         Debug.write("processPtrValue: ref not in any known heap: ", ref);
-        jq.UNREACHABLE();
+        Assert.UNREACHABLE();
         return null;
     } // processPtrValue
 

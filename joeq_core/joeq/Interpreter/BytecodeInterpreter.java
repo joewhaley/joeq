@@ -19,11 +19,11 @@ import Clazz.jq_StaticField;
 import Clazz.jq_TryCatchBC;
 import Clazz.jq_Type;
 import Compil3r.BytecodeAnalysis.BytecodeVisitor;
-import Main.jq;
 import Memory.Address;
 import Memory.HeapAddress;
 import Run_Time.Reflection;
 import Run_Time.Unsafe;
+import Util.Assert;
 
 /*
  * @author  John Whaley
@@ -46,8 +46,8 @@ public abstract class BytecodeInterpreter {
     public Object invokeMethod(jq_Method m, State callee) throws Throwable {
         //Run_Time.SystemInterface.debugwriteln("Invoking method "+m);
         jq_Class k = m.getDeclaringClass();
-        jq.Assert(k.isClsInitialized());
-        jq.Assert(m.getBytecode() != null);
+        Assert._assert(k.isClsInitialized());
+        Assert._assert(m.getBytecode() != null);
         jq_Type[] paramTypes = m.getParamTypes();
         Object[] params = new Object[paramTypes.length];
         for (int i=paramTypes.length-1; i>=0; --i) {
@@ -449,7 +449,7 @@ public abstract class BytecodeInterpreter {
             try {
                 if (array.getClass() == Class.forName("[Z")) val = ((boolean[])array)[index]?1:0;
                 else val = ((byte[])array)[index];
-            } catch (ClassNotFoundException x) { jq.UNREACHABLE(); return; }
+            } catch (ClassNotFoundException x) { Assert.UNREACHABLE(); return; }
             state.push_I(val);
         }
         public void visitCALOAD() {
@@ -507,7 +507,7 @@ public abstract class BytecodeInterpreter {
             try {
                 if (array.getClass() == Class.forName("[Z")) ((boolean[])array)[index] = val!=0;
                 else ((byte[])array)[index] = (byte)val;
-            } catch (ClassNotFoundException x) { jq.UNREACHABLE(); }
+            } catch (ClassNotFoundException x) { Assert.UNREACHABLE(); }
         }
         public void visitCASTORE() {
             super.visitCASTORE();
@@ -626,7 +626,7 @@ public abstract class BytecodeInterpreter {
                     state.push_I(v2^v1);
                     break;
                 default:
-                    jq.UNREACHABLE();
+                    Assert.UNREACHABLE();
             }
         }
         public void visitLBINOP(byte op) {
@@ -659,7 +659,7 @@ public abstract class BytecodeInterpreter {
                     state.push_L(v2^v1);
                     break;
                 default:
-                    jq.UNREACHABLE();
+                    Assert.UNREACHABLE();
             }
         }
         public void visitFBINOP(byte op) {
@@ -683,7 +683,7 @@ public abstract class BytecodeInterpreter {
                     state.push_F(v2%v1);
                     break;
                 default:
-                    jq.UNREACHABLE();
+                    Assert.UNREACHABLE();
             }
         }
         public void visitDBINOP(byte op) {
@@ -707,27 +707,27 @@ public abstract class BytecodeInterpreter {
                     state.push_D(v2%v1);
                     break;
                 default:
-                    jq.UNREACHABLE();
+                    Assert.UNREACHABLE();
             }
         }
         public void visitIUNOP(byte op) {
             super.visitIUNOP(op);
-            jq.Assert(op == UNOP_NEG);
+            Assert._assert(op == UNOP_NEG);
             state.push_I(-state.pop_I());
         }
         public void visitLUNOP(byte op) {
             super.visitLUNOP(op);
-            jq.Assert(op == UNOP_NEG);
+            Assert._assert(op == UNOP_NEG);
             state.push_L(-state.pop_L());
         }
         public void visitFUNOP(byte op) {
             super.visitFUNOP(op);
-            jq.Assert(op == UNOP_NEG);
+            Assert._assert(op == UNOP_NEG);
             state.push_F(-state.pop_F());
         }
         public void visitDUNOP(byte op) {
             super.visitDUNOP(op);
-            jq.Assert(op == UNOP_NEG);
+            Assert._assert(op == UNOP_NEG);
             state.push_D(-state.pop_D());
         }
         public void visitISHIFT(byte op) {
@@ -745,7 +745,7 @@ public abstract class BytecodeInterpreter {
                     state.push_I(v2 >>> v1);
                     break;
                 default:
-                    jq.UNREACHABLE();
+                    Assert.UNREACHABLE();
             }
         }
         public void visitLSHIFT(byte op) {
@@ -763,7 +763,7 @@ public abstract class BytecodeInterpreter {
                     state.push_L(v2 >>> v1);
                     break;
                 default:
-                    jq.UNREACHABLE();
+                    Assert.UNREACHABLE();
             }
         }
         public void visitIINC(int i, int v) {
@@ -868,7 +868,7 @@ public abstract class BytecodeInterpreter {
                 case CMP_GE: if (v>=0) branchTo(target); break;
                 case CMP_LE: if (v<=0) branchTo(target); break;
                 case CMP_GT: if (v>0) branchTo(target); break;
-                default: jq.UNREACHABLE();
+                default: Assert.UNREACHABLE();
             }
         }
         public void visitIFREF(byte op, int target) {
@@ -877,7 +877,7 @@ public abstract class BytecodeInterpreter {
             switch(op) {
                 case CMP_EQ: if (v==null) branchTo(target); break;
                 case CMP_NE: if (v!=null) branchTo(target); break;
-                default: jq.UNREACHABLE();
+                default: Assert.UNREACHABLE();
             }
         }
         public void visitIFCMP(byte op, int target) {
@@ -891,7 +891,7 @@ public abstract class BytecodeInterpreter {
                 case CMP_GE: if (v2>=v1) branchTo(target); break;
                 case CMP_LE: if (v2<=v1) branchTo(target); break;
                 case CMP_GT: if (v2>v1) branchTo(target); break;
-                default: jq.UNREACHABLE();
+                default: Assert.UNREACHABLE();
             }
         }
         public void visitIFREFCMP(byte op, int target) {
@@ -901,7 +901,7 @@ public abstract class BytecodeInterpreter {
             switch(op) {
                 case CMP_EQ: if (v2==v1) branchTo(target); break;
                 case CMP_NE: if (v2!=v1) branchTo(target); break;
-                default: jq.UNREACHABLE();
+                default: Assert.UNREACHABLE();
             }
         }
         public void visitGOTO(int target) {
@@ -1195,7 +1195,7 @@ public abstract class BytecodeInterpreter {
                         throw new IncompatibleClassChangeError();
                     if (t.isArrayType()) t = PrimordialClassLoader.getJavaLangObject();
                 } else {
-                    jq.Assert(op == INVOKE_VIRTUAL);
+                    Assert._assert(op == INVOKE_VIRTUAL);
                 }
                 jq_Method f2 = f;
                 f = t.getVirtualMethod(f.getNameAndDesc());

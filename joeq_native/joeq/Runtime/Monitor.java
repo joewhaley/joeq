@@ -13,9 +13,9 @@ import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
 import Clazz.jq_InstanceField;
 import Clazz.jq_StaticMethod;
-import Main.jq;
 import Memory.HeapAddress;
 import Scheduler.jq_Thread;
+import Util.Assert;
 import Util.Strings;
 
 /*
@@ -78,7 +78,7 @@ public class Monitor {
                 m.entry_count = entrycount;
                 newlockword = HeapAddress.addressOf(m).to32BitValue() | ObjectLayout.LOCK_EXPANDED | status_flags;
                 // we own the lock, so a simple write is sufficient.
-                jq.Assert(HeapAddress.addressOf(k).offset(ObjectLayout.STATUS_WORD_OFFSET).peek4() == oldlockword);
+                Assert._assert(HeapAddress.addressOf(k).offset(ObjectLayout.STATUS_WORD_OFFSET).peek4() == oldlockword);
                 HeapAddress.addressOf(k).offset(ObjectLayout.STATUS_WORD_OFFSET).poke4(newlockword);
             } else {
                 // thin lock owned by another thread.
@@ -149,18 +149,18 @@ public class Monitor {
      *  Uses a spin-loop to wait until the object is unlocked or inflated.
      */
     public static void installInflatedLock(Object k, Monitor m) {
-        jq.Assert(m.monitor_owner == Unsafe.getThreadBlock());
-        jq.Assert(m.entry_count >= 1);
+        Assert._assert(m.monitor_owner == Unsafe.getThreadBlock());
+        Assert._assert(m.entry_count >= 1);
         for (;;) {
             HeapAddress status_address = (HeapAddress) HeapAddress.addressOf(k).offset(ObjectLayout.STATUS_WORD_OFFSET);
             int oldlockword = status_address.peek4();
             if (oldlockword < 0) {
                 // inflated by another thread!  free our inflated lock and use that one.
-                jq.Assert(m.entry_count == 1);
+                Assert._assert(m.entry_count == 1);
                 m.free();
                 Monitor m2 = getMonitor(oldlockword);
                 if (TRACE) SystemInterface.debugwriteln("Inflated by another thread! lockword="+Strings.hex8(oldlockword)+" lock="+m2);
-                jq.Assert(m != m2);
+                Assert._assert(m != m2);
                 m2.lock(Unsafe.getThreadBlock());
                 return;
             }
@@ -168,7 +168,7 @@ public class Monitor {
             HeapAddress m_addr = HeapAddress.addressOf(m);
             if ((m_addr.to32BitValue() & ObjectLayout.STATUS_FLAGS_MASK) != 0 ||
                 (m_addr.to32BitValue() & ObjectLayout.LOCK_EXPANDED) != 0) {
-                jq.UNREACHABLE("Monitor object has address "+m_addr.stringRep());
+                Assert.UNREACHABLE("Monitor object has address "+m_addr.stringRep());
             }
             int newlockword = m_addr.to32BitValue() | ObjectLayout.LOCK_EXPANDED | status_flags;
             status_address.atomicCas4(status_flags, newlockword);
@@ -190,8 +190,8 @@ public class Monitor {
         jq_Thread m_t = this.monitor_owner;
         if (m_t == t) {
             // we own the lock.
-            jq.Assert(this.atomic_count >= 0);
-            jq.Assert(this.entry_count > 0);
+            Assert._assert(this.atomic_count >= 0);
+            Assert._assert(this.entry_count > 0);
             ++this.entry_count;
             if (TRACE) SystemInterface.debugwriteln("We ("+t+") own lock "+this+", incrementing entry count: "+this.entry_count);
             return;
@@ -209,9 +209,9 @@ public class Monitor {
         } else {
             if (TRACE) SystemInterface.debugwriteln(this+" is unlocked, we ("+t+") obtain it.");
         }
-        jq.Assert(this.monitor_owner == null);
-        jq.Assert(this.entry_count == 0);
-        jq.Assert(this.atomic_count >= 0);
+        Assert._assert(this.monitor_owner == null);
+        Assert._assert(this.entry_count == 0);
+        Assert._assert(this.atomic_count >= 0);
         if (TRACE) SystemInterface.debugwriteln("We ("+t+") obtained lock "+this);
         this.monitor_owner = t;
         this.entry_count = 1;

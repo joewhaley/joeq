@@ -16,6 +16,7 @@ import Clazz.jq_Type;
 import Main.jq;
 import Run_Time.Reflection;
 import UTF.Utf8;
+import Util.Assert;
 
 /*
  * @author  John Whaley
@@ -33,7 +34,7 @@ public class Constructor extends AccessibleObject {
     private int slot;
     
     private Constructor() {
-        jq.UNREACHABLE();
+        Assert.UNREACHABLE();
         this.jq_init = null;
     }
     
@@ -93,7 +94,7 @@ public class Constructor extends AccessibleObject {
     
     public static void initNewConstructor(Constructor o, jq_Initializer jq_init) {
         if (!jq.RunningNative) return;
-        jq.Assert(jq_init == o.jq_init);
+        Assert._assert(jq_init == o.jq_init);
         java.lang.Class clazz = jq_init.getDeclaringClass().getJavaLangClassObject();
         o.clazz = clazz;
         jq_Type[] paramTypes = jq_init.getParamTypes();

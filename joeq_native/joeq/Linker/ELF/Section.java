@@ -18,9 +18,9 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import Main.jq;
-import Util.AppendIterator;
+import Util.Assert;
 import Util.Strings;
+import Util.Collections.AppendIterator;
 
 /**
  * Defines a section in an ELF file.
@@ -116,56 +116,56 @@ public abstract class Section implements ELFConstants {
         public Section parseHeader() throws IOException {
             switch (type) {
             case SHT_NULL: {
-                jq.Assert(this.flags == 0);
-                jq.Assert(this.addr == 0);
-                jq.Assert(this.offset == 0);
-                jq.Assert(this.size == 0);
-                jq.Assert(this.link == SHN_UNDEF);
-                jq.Assert(this.info == 0);
-                jq.Assert(this.addralign == 0);
-                jq.Assert(this.entsize == 0);
+                Assert._assert(this.flags == 0);
+                Assert._assert(this.addr == 0);
+                Assert._assert(this.offset == 0);
+                Assert._assert(this.size == 0);
+                Assert._assert(this.link == SHN_UNDEF);
+                Assert._assert(this.info == 0);
+                Assert._assert(this.addralign == 0);
+                Assert._assert(this.entsize == 0);
                 return NullSection.INSTANCE;
             }
             case SHT_PROGBITS: {
-                jq.Assert(this.link == SHN_UNDEF);
-                jq.Assert(this.info == 0);
-                jq.Assert(this.entsize == 0);
+                Assert._assert(this.link == SHN_UNDEF);
+                Assert._assert(this.info == 0);
+                Assert._assert(this.entsize == 0);
                 return ProgBitsSectionImpl.empty(this.flags, this.addr, this.addralign);
             }
             case SHT_SYMTAB: {
-                jq.Assert(this.addralign == 4);
-                jq.Assert(this.entsize == SymbolTableEntry.getEntrySize());
+                Assert._assert(this.addralign == 4);
+                Assert._assert(this.entsize == SymbolTableEntry.getEntrySize());
                 return SymTabSection.empty(this.flags, this.addr);
             }
             case SHT_STRTAB: {
-                jq.Assert(this.link == SHN_UNDEF);
-                jq.Assert(this.info == 0);
-                jq.Assert(this.addralign == 1);
-                jq.Assert(this.entsize == 0);
+                Assert._assert(this.link == SHN_UNDEF);
+                Assert._assert(this.info == 0);
+                Assert._assert(this.addralign == 1);
+                Assert._assert(this.entsize == 0);
                 return StrTabSection.empty(this.flags, this.addr);
             }
             case SHT_RELA:
             case SHT_HASH:
             case SHT_DYNAMIC:
             case SHT_DYNSYM: {
-                jq.TODO(); return null;
+                Assert.TODO(); return null;
             }
             case SHT_NOTE: {
-                jq.Assert(this.link == SHN_UNDEF);
-                jq.Assert(this.info == 0);
-                jq.Assert(this.addralign == 1);
-                jq.Assert(this.entsize == 0);
+                Assert._assert(this.link == SHN_UNDEF);
+                Assert._assert(this.info == 0);
+                Assert._assert(this.addralign == 1);
+                Assert._assert(this.entsize == 0);
                 return NoteSection.empty(this.flags, this.addr);
             }
             case SHT_NOBITS: {
-                jq.Assert(this.link == SHN_UNDEF);
-                jq.Assert(this.info == 0);
-                jq.Assert(this.entsize == 0);
+                Assert._assert(this.link == SHN_UNDEF);
+                Assert._assert(this.info == 0);
+                Assert._assert(this.entsize == 0);
                 return NoBitsSection.empty(this.flags, this.addr, this.size, this.addralign);
             }
             case SHT_REL:
-                jq.Assert(this.addralign == 4);
-                jq.Assert(this.entsize == RelocEntry.getEntrySize());
+                Assert._assert(this.addralign == 4);
+                Assert._assert(this.entsize == RelocEntry.getEntrySize());
                 return RelSection.empty(this.flags, this.addr);
             case SHT_SHLIB:
             default:
@@ -179,28 +179,28 @@ public abstract class Section implements ELFConstants {
     public abstract static class FakeSection extends Section {
         
         FakeSection(String name, int index) { super(name, 0, 0); this.index = index; }
-        public int getEntSize() { jq.UNREACHABLE(); return 0; }
-        public int getInfo() { jq.UNREACHABLE(); return 0; }
-        public int getAddrAlign() { jq.UNREACHABLE(); return 0; }
-        public int getLink() { jq.UNREACHABLE(); return 0; }
-        public int getSize() { jq.UNREACHABLE(); return 0; }
-        public int getType() { jq.UNREACHABLE(); return 0; }
-        public int getFlags() { jq.UNREACHABLE(); return 0; }
-        public int getAddr() { jq.UNREACHABLE(); return 0; }
+        public int getEntSize() { Assert.UNREACHABLE(); return 0; }
+        public int getInfo() { Assert.UNREACHABLE(); return 0; }
+        public int getAddrAlign() { Assert.UNREACHABLE(); return 0; }
+        public int getLink() { Assert.UNREACHABLE(); return 0; }
+        public int getSize() { Assert.UNREACHABLE(); return 0; }
+        public int getType() { Assert.UNREACHABLE(); return 0; }
+        public int getFlags() { Assert.UNREACHABLE(); return 0; }
+        public int getAddr() { Assert.UNREACHABLE(); return 0; }
         public int getIndex() { return index; }
-        public void setName(String name) { jq.UNREACHABLE(); }
-        public void setAddr(int addr) { jq.UNREACHABLE(); }
-        public void setWrite() { jq.UNREACHABLE(); }
-        public void clearWrite() { jq.UNREACHABLE(); }
-        public void setAlloc() { jq.UNREACHABLE(); }
-        public void clearAlloc() { jq.UNREACHABLE(); }
-        public void setExecInstr() { jq.UNREACHABLE(); }
-        public void clearExecInstr() { jq.UNREACHABLE(); }
+        public void setName(String name) { Assert.UNREACHABLE(); }
+        public void setAddr(int addr) { Assert.UNREACHABLE(); }
+        public void setWrite() { Assert.UNREACHABLE(); }
+        public void clearWrite() { Assert.UNREACHABLE(); }
+        public void setAlloc() { Assert.UNREACHABLE(); }
+        public void clearAlloc() { Assert.UNREACHABLE(); }
+        public void setExecInstr() { Assert.UNREACHABLE(); }
+        public void clearExecInstr() { Assert.UNREACHABLE(); }
         public void writeData(ELF file) throws IOException {
-            jq.UNREACHABLE();
+            Assert.UNREACHABLE();
         }
         public void load(UnloadedSection s, ELF file) throws IOException {
-            jq.UNREACHABLE();
+            Assert.UNREACHABLE();
         }
         
     }
@@ -220,13 +220,13 @@ public abstract class Section implements ELFConstants {
         public int getInfo() { return 0; }
         public int getAddrAlign() { return 0; }
         public int getEntSize() { return 0; }
-        public void setIndex(int index) { jq.Assert(index == 0); }
-        public void setName(String name) { jq.Assert(name.equals("")); }
-        public void setAddr(int addr) { jq.Assert(addr == 0); }
-        public void setOffset(int offset) { jq.Assert(offset == 0); }
-        public void setWrite() { jq.UNREACHABLE(); }
-        public void setAlloc() { jq.UNREACHABLE(); }
-        public void setExecInstr() { jq.UNREACHABLE(); }
+        public void setIndex(int index) { Assert._assert(index == 0); }
+        public void setName(String name) { Assert._assert(name.equals("")); }
+        public void setAddr(int addr) { Assert._assert(addr == 0); }
+        public void setOffset(int offset) { Assert._assert(offset == 0); }
+        public void setWrite() { Assert.UNREACHABLE(); }
+        public void setAlloc() { Assert.UNREACHABLE(); }
+        public void setExecInstr() { Assert.UNREACHABLE(); }
         public void writeData(ELF file) throws IOException { }
         public void load(UnloadedSection s, ELF file) throws IOException { }
     }
@@ -452,7 +452,7 @@ public abstract class Section implements ELFConstants {
                 Set set = (Set)e.getValue();
                 for (Iterator j=set.iterator(); j.hasNext(); ) {
                     String s1 = (String)j.next();
-                    jq.Assert(s1.length() == in);
+                    Assert._assert(s1.length() == in);
                     int index2;
                     for (Iterator k=string_set.iterator(); ; ) {
                         if (!k.hasNext()) {
@@ -496,7 +496,7 @@ public abstract class Section implements ELFConstants {
                     try {
                         byte[] b = s.getBytes(DEFAULT_ENCODING);
                         System.arraycopy(b, 0, table, index, b.length);
-                    } catch (UnsupportedEncodingException x) { jq.UNREACHABLE(); }
+                    } catch (UnsupportedEncodingException x) { Assert.UNREACHABLE(); }
                 }
             }
         }
@@ -523,7 +523,7 @@ public abstract class Section implements ELFConstants {
                 Map.Entry e = (Map.Entry)i.next();
                 String s = (String)e.getKey();
                 if (s.length() == 0) {
-                    jq.Assert(((Integer)e.getValue()).intValue() == 0);
+                    Assert._assert(((Integer)e.getValue()).intValue() == 0);
                     continue;
                 }
                 //System.out.println("Writing "+s.length()+" bytes for \""+s+"\" to table index "+index);
@@ -534,21 +534,21 @@ public abstract class Section implements ELFConstants {
                 } else {
                     try {
                         byte[] b = s.getBytes(DEFAULT_ENCODING);
-                        jq.Assert(b.length == s.length(), s);
+                        Assert._assert(b.length == s.length(), s);
                         System.arraycopy(b, 0, table, index, b.length);
-                    } catch (UnsupportedEncodingException x) { jq.UNREACHABLE(); }
+                    } catch (UnsupportedEncodingException x) { Assert.UNREACHABLE(); }
                 }
-                jq.Assert(((Integer)e.getValue()).intValue() == index, s);
+                Assert._assert(((Integer)e.getValue()).intValue() == index, s);
                 index += s.length() + 1;
             }
-            jq.Assert(size == 0 || size == index);
+            Assert._assert(size == 0 || size == index);
         }
         
         public int getStringIndex(String s) {
             Integer i = (Integer)string_map.get(s);
             if (i == null)
                 return 0;
-            jq.Assert(getString(i.intValue()).equals(s), s);
+            Assert._assert(getString(i.intValue()).equals(s), s);
             return i.intValue();
         }
         public String getString(int i) {
@@ -559,7 +559,7 @@ public abstract class Section implements ELFConstants {
             }
             try {
                 return new String(table, i, n, DEFAULT_ENCODING);
-            } catch (UnsupportedEncodingException x) { jq.UNREACHABLE(); return null; }
+            } catch (UnsupportedEncodingException x) { Assert.UNREACHABLE(); return null; }
         }
         public int getSize() { return table.length; }
         public int getAddrAlign() { return 1; }
@@ -706,7 +706,7 @@ public abstract class Section implements ELFConstants {
                 try {
                     byte[] b = notename.getBytes(DEFAULT_ENCODING);
                     System.arraycopy(b, 0, notename_b, 0, b.length);
-                } catch (UnsupportedEncodingException x) { jq.UNREACHABLE(); }
+                } catch (UnsupportedEncodingException x) { Assert.UNREACHABLE(); }
             }
             file.write_bytes(notename_b);
             file.write_bytes(notedesc);
@@ -730,7 +730,7 @@ public abstract class Section implements ELFConstants {
             file.read_bytes(notename_b);
             try {
                 this.notename = new String(notename_b, DEFAULT_ENCODING);
-            } catch (UnsupportedEncodingException x) { jq.UNREACHABLE(); }
+            } catch (UnsupportedEncodingException x) { Assert.UNREACHABLE(); }
             this.notedesc = new byte[dlength];
             file.read_bytes(notedesc);
             if (this.getSize() != s.size) throw new IOException();

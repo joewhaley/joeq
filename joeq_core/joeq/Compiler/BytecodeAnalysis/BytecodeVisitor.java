@@ -20,7 +20,7 @@ import Clazz.jq_Primitive;
 import Clazz.jq_StaticField;
 import Clazz.jq_StaticMethod;
 import Clazz.jq_Type;
-import Main.jq;
+import Util.Assert;
 import Util.Strings;
 
 /*
@@ -41,7 +41,7 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
         this.clazz = method.getDeclaringClass();
         this.method = method;
         this.bcs = method.getBytecode();
-        jq.Assert(this.bcs != null, "Method "+this.method+" has no bytecode!");
+        Assert._assert(this.bcs != null, "Method "+this.method+" has no bytecode!");
     }
 
     public void forwardTraversal() throws VerifyError {
@@ -109,7 +109,7 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
                     tag = CONSTANT_ResolvedIMethodRef;
                 else if (m instanceof jq_StaticMethod)
                     tag = CONSTANT_ResolvedSMethodRef;
-                else jq.UNREACHABLE();
+                else Assert.UNREACHABLE();
                 updateMemberReference(m2, tag);
             }
             return m2;
@@ -125,8 +125,8 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
         switch (i_size) {
             case 1:
                 // ldc
-                jq.Assert(op == 0x12);
-                jq.Assert(index <= 127);
+                Assert._assert(op == 0x12);
+                Assert._assert(index <= 127);
                 bcs[i_end] = (byte)index;
                 break;
             case 2:
@@ -136,7 +136,7 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
                 // invokevirtual, invokespecial, invokestatic
                 // new, anewarray
                 // checkcast, instanceof
-                jq.Assert(op == 0x13 || op == 0x14 ||
+                Assert._assert(op == 0x13 || op == 0x14 ||
                           op == 0xb2 || op == 0xb3 ||
                           op == 0xb4 || op == 0xb5 ||
                           op == 0xb6 || op == 0xb7 || op == 0xb8 ||
@@ -147,18 +147,18 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
                 break;
             case 3:
                 // multianewarray
-                jq.Assert(op == 0xc5);
+                Assert._assert(op == 0xc5);
                 bcs[i_end-2] = (byte)(index >> 8);
                 bcs[i_end-1] = (byte)index;
                 break;
             case 4:
                 // invokeinterface
-                jq.Assert(op == 0xb9);
+                Assert._assert(op == 0xb9);
                 bcs[i_end-3] = (byte)(index >> 8);
                 bcs[i_end-2] = (byte)index;
                 break;
             default:
-                jq.UNREACHABLE(Strings.hex(op));
+                Assert.UNREACHABLE(Strings.hex(op));
                 return;
         }
     }
@@ -170,7 +170,7 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
         switch (i_size) {
             case 1:
                 // ldc
-                jq.Assert(op == 0x12);
+                Assert._assert(op == 0x12);
                 --i_end; index = getUnsignedByte();
                 break;
             case 2:
@@ -180,7 +180,7 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
                 // invokevirtual, invokespecial, invokestatic
                 // new, anewarray
                 // checkcast, instanceof
-                jq.Assert(op == 0x13 || op == 0x14 ||
+                Assert._assert(op == 0x13 || op == 0x14 ||
                           op == 0xb2 || op == 0xb3 ||
                           op == 0xb4 || op == 0xb5 ||
                           op == 0xb6 || op == 0xb7 || op == 0xb8 ||
@@ -190,16 +190,16 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
                 break;
             case 3:
                 // multianewarray
-                jq.Assert(op == 0xc5);
+                Assert._assert(op == 0xc5);
                 i_end-=3; index = getUnsignedWord(); getUnsignedByte();
                 break;
             case 4:
                 // invokeinterface
-                jq.Assert(op == 0xb9);
+                Assert._assert(op == 0xb9);
                 i_end-=4; index = getUnsignedWord(); getUnsignedByte(); getSignedByte();
                 break;
             default:
-                jq.UNREACHABLE(Strings.hex(op));
+                Assert.UNREACHABLE(Strings.hex(op));
                 return;
         }
         clazz.getCP().set(index, m, tag);
@@ -971,7 +971,7 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
                 else if (t == jq_Primitive.SHORT)
                     this.visitSGETSTATIC(f);
                 else
-                    jq.UNREACHABLE();
+                    Assert.UNREACHABLE();
                 break;
             }
             case 0xb3: /* --- putstatic --- */ {
@@ -998,7 +998,7 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
                 else if (t == jq_Primitive.SHORT)
                     this.visitSPUTSTATIC(f);
                 else
-                    jq.UNREACHABLE();
+                    Assert.UNREACHABLE();
                 break;
             }
             case 0xb4: /* --- getfield --- */ {
@@ -1025,7 +1025,7 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
                 else if (t == jq_Primitive.BOOLEAN)
                     this.visitZGETFIELD(f);
                 else
-                    jq.UNREACHABLE();
+                    Assert.UNREACHABLE();
                 break;
             }
             case 0xb5: /* --- putfield --- */ {
@@ -1052,7 +1052,7 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
                 else if (t == jq_Primitive.BOOLEAN)
                     this.visitZPUTFIELD(f);
                 else
-                    jq.UNREACHABLE();
+                    Assert.UNREACHABLE();
                 break;
             }
             case 0xb6: /* --- invokevirtual --- */ {
@@ -1559,7 +1559,7 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
         if (TRACE) out.println(this+": "+i_start+" TABLESWITCH("+low+".."+high+",def:"+default_target+")");
     }
     public void visitLOOKUPSWITCH(int default_target, int[] values, int[] targets) {
-        jq.Assert(values.length == targets.length);
+        Assert._assert(values.length == targets.length);
         if (TRACE) out.println(this+": "+i_start+" LOOKUPSWITCH("+values.length+" entries,def:"+default_target+")");
     }
     public void visitIRETURN() {

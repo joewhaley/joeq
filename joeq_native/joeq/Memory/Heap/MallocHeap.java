@@ -3,11 +3,11 @@ package Memory.Heap;
 import Allocator.ObjectLayout;
 import Clazz.jq_Array;
 import Clazz.jq_Class;
-import Main.jq;
-import Run_Time.Debug;
 import Memory.HeapAddress;
+import Run_Time.Debug;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
+import Util.Assert;
 
 /**
  * @author John Whaley
@@ -98,7 +98,7 @@ public class MallocHeap extends Heap {
         HeapAddress region = (HeapAddress) SystemInterface.syscalloc(size);
         if (region.isNull()) {
             Debug.writeln("Panic!  Cannot allocate ", size, "bytes.");
-            jq.UNREACHABLE();
+            Assert.UNREACHABLE();
         }
         HeapAddress regionEnd = (HeapAddress) region.offset(size);
 

@@ -11,7 +11,7 @@ import java.io.RandomAccessFile;
 import java.util.Enumeration;
 import java.util.Hashtable;
 
-import Main.jq;
+import Util.Assert;
 
 /**
  * @author  John Whaley
@@ -48,7 +48,7 @@ public abstract class ZipFile implements ZipConstants {
     public ZipFile(java.io.File file, int mode) throws java.io.IOException {
         this(file.getPath());
         // delete mode not yet supported.
-        jq.Assert(mode == java.util.zip.ZipFile.OPEN_READ);
+        Assert._assert(mode == java.util.zip.ZipFile.OPEN_READ);
     }
     public java.util.zip.ZipEntry getEntry(String name) {
         if (TRACE) System.out.println(this+": getting entry "+name);
@@ -352,6 +352,6 @@ public abstract class ZipFile implements ZipConstants {
     
     // native method that is not used by this implementation.
     private static void freeEntry(long a, long b) {
-        jq.UNREACHABLE();
+        Assert.UNREACHABLE();
     }
 }

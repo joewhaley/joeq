@@ -13,9 +13,10 @@ import Allocator.DefaultCodeAllocator;
 import Allocator.CodeAllocator.x86CodeBuffer;
 import Main.jq;
 import Memory.CodeAddress;
-import Util.LightRelation;
-import Util.Relation;
+import Util.Assert;
 import Util.Strings;
+import Util.Collections.LightRelation;
+import Util.Collections.Relation;
 
 // Referenced classes of package Assembler.x86:
 //            x86Constants, x86CodeBuffer, x86
@@ -34,16 +35,16 @@ public class x86Assembler implements x86Constants {
         void patchTo(x86CodeBuffer mc, int target) {
             if (patchSize == 4) {
                 int v = mc.get4_endian(patchLocation - 4);
-                jq.Assert(v == 0x44444444 || v == 0x55555555 || v == 0x66666666 || v == 0x77777777, "Location: "+Strings.hex(patchLocation-4)+" value: "+Strings.hex8(v));
+                Assert._assert(v == 0x44444444 || v == 0x55555555 || v == 0x66666666 || v == 0x77777777, "Location: "+Strings.hex(patchLocation-4)+" value: "+Strings.hex8(v));
                 mc.put4_endian(patchLocation - 4, target - patchLocation);
             } else if (patchSize == 1) {
                 byte v = mc.get1(patchLocation - 1);
-                jq.Assert(v == 0);
-                jq.Assert(target - patchLocation <= 127);
-                jq.Assert(target - patchLocation >= -128);
+                Assert._assert(v == 0);
+                Assert._assert(target - patchLocation <= 127);
+                Assert._assert(target - patchLocation >= -128);
                 mc.put1(patchLocation - 1, (byte)(target - patchLocation));
             } else
-                jq.TODO();
+                Assert.TODO();
         }
         
         public String toString() {
@@ -71,13 +72,13 @@ public class x86Assembler implements x86Constants {
 
     // backward branches
     public void recordBranchTarget(Object target) {
-        jq.Assert(ip == mc.getCurrentOffset());
+        Assert._assert(ip == mc.getCurrentOffset());
         branchtargetmap.put(target, new Integer(ip));
     }
     public int getBranchTarget(Object target) {
         Integer i = (Integer)branchtargetmap.get(target);
         if (i == null) {
-            jq.UNREACHABLE("Invalid branch target: "+target+" offset "+getCurrentOffset());
+            Assert.UNREACHABLE("Invalid branch target: "+target+" offset "+getCurrentOffset());
         }
         return i.intValue();
     }
@@ -113,7 +114,7 @@ public class x86Assembler implements x86Constants {
         dynPatchSize = size;
     }
     public void endDynamicPatch() {
-        jq.Assert(ip <= dynPatchStart + dynPatchSize);
+        Assert._assert(ip <= dynPatchStart + dynPatchSize);
         while (ip < dynPatchStart + dynPatchSize) 
             emit1(x86.NOP);
         dynPatchSize = 0;
@@ -233,8 +234,8 @@ public class x86Assembler implements x86Constants {
             ip += x.emit2_DISP32(mc, off, base);
     }
     public void emit2_Mem(x86 x, int base, int ind, int scale, int off) {
-        jq.Assert(ind != ESP);
-        jq.Assert(base != ESP);
+        Assert._assert(ind != ESP);
+        Assert._assert(base != ESP);
         if (off == 0)
             ip += x.emit2_SIB_EA(mc, base, ind, scale);
         else if (fits_signed(off, 8))
@@ -387,7 +388,7 @@ public class x86Assembler implements x86Constants {
 
     // conditional jumps
     public void emitCJUMP_Back(x86 x, Object target) {
-        jq.Assert(x.length == 1);
+        Assert._assert(x.length == 1);
         int offset = getBranchTarget(target) - ip - 2;
         if (offset >= -128) {
             if (TRACE) System.out.println("Short cjump back from offset "+Strings.hex(ip+2)+" to "+target+" offset "+getBranchTarget(target)+" (relative offset "+Strings.shex(offset)+")");
@@ -398,23 +399,23 @@ public class x86Assembler implements x86Constants {
         }
     }
     public void emitCJUMP_Short(x86 x, byte offset) {
-        jq.Assert(x.length == 1);
+        Assert._assert(x.length == 1);
         ip += x.emitCJump_Short(mc, offset);
     }
     public void emitCJUMP_Forw_Short(x86 x, Object target) {
-        jq.Assert(x.length == 1);
+        Assert._assert(x.length == 1);
         ip += x.emitCJump_Short(mc, (byte)0);
         recordForwardBranch(1, target);
     }
     public void emitCJUMP_Forw(x86 x, Object target) {
-        jq.Assert(x.length == 1);
+        Assert._assert(x.length == 1);
         ip += x.emitCJump_Near(mc, 0x66666666);
         recordForwardBranch(4, target);
     }
 
     // unconditional jumps
     public void emitJUMP_Back(x86 x, Object target) {
-        jq.Assert(x.length == 1);
+        Assert._assert(x.length == 1);
         int offset = getBranchTarget(target) - ip - 2;
         if(offset >= -128) {
             if (TRACE) System.out.println("Short jump back from offset "+Strings.hex(ip+2)+" to "+target+" offset "+getBranchTarget(target)+" (relative offset "+Strings.shex(offset)+")");
@@ -425,32 +426,32 @@ public class x86Assembler implements x86Constants {
         }
     }
     public void emitJUMP_Short(x86 x, byte offset) {
-        jq.Assert(x.length == 1);
+        Assert._assert(x.length == 1);
         ip += x.emitJump_Short(mc, offset);
     }
     public void emitJUMP_Forw_Short(x86 x, Object target) {
-        jq.Assert(x.length == 1);
+        Assert._assert(x.length == 1);
         ip += x.emitJump_Short(mc, (byte)0);
         recordForwardBranch(1, target);
     }
     public void emitJUMP_Forw(x86 x, Object target) {
-        jq.Assert(x.length == 1);
+        Assert._assert(x.length == 1);
         ip += x.emitJump_Near(mc, 0x55555555);
         recordForwardBranch(4, target);
     }
 
     // relative calls
     public void emitCALL_rel32(x86 x, int address) {
-        jq.Assert(x.length == 1);
+        Assert._assert(x.length == 1);
         ip += x.emitCall_Near(mc, address);
     }
     public void emitCALL_Back(x86 x, Object target) {
-        jq.Assert(x.length == 1);
+        Assert._assert(x.length == 1);
         int offset = getBranchTarget(target) - ip - 5;
         ip += x.emitCall_Near(mc, offset);
     }
     public void emitCALL_Forw(x86 x, Object target) {
-        jq.Assert(x.length == 1);
+        Assert._assert(x.length == 1);
         ip += x.emitCall_Near(mc, 0x44444444);
         recordForwardBranch(4, target);
     }

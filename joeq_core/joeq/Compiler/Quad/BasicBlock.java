@@ -7,9 +7,9 @@
 
 package Compil3r.Quad;
 import Compil3r.Quad.Operator.Ret;
-import Main.jq;
-import Util.BackwardIterator;
+import Util.Assert;
 import Util.Strings;
+import Util.Collections.BackwardIterator;
 import Util.Templates.List;
 import Util.Templates.ListIterator;
 import Util.Templates.ListWrapper;
@@ -184,14 +184,14 @@ public class BasicBlock {
      * @param index  the index to add the quad
      * @param q  quad to add */
     public void addQuad(int index, Quad q) {
-        jq.Assert(instructions != null, "Cannot add instructions to entry/exit basic block");
+        Assert._assert(instructions != null, "Cannot add instructions to entry/exit basic block");
         instructions.add(index, q);
     }
     /** Append a quad to the end of this basic block.
      * Cannot add quads to the entry or exit basic blocks.
      * @param q  quad to add */
     public void appendQuad(Quad q) {
-        jq.Assert(instructions != null, "Cannot add instructions to entry/exit basic block");
+        Assert._assert(instructions != null, "Cannot add instructions to entry/exit basic block");
         instructions.add(q);
     }
     
@@ -199,39 +199,39 @@ public class BasicBlock {
      * Cannot add predecessors to the entry basic block.
      * @param b  basic block to add as a predecessor */
     public void addPredecessor(BasicBlock b) {
-        jq.Assert(predecessors != null, "Cannot add predecessor to entry basic block");
+        Assert._assert(predecessors != null, "Cannot add predecessor to entry basic block");
         predecessors.add(b);
     }
     /** Add a successor basic block to this basic block.
      * Cannot add successors to the exit basic block.
      * @param b  basic block to add as a successor */
     public void addSuccessor(BasicBlock b) {
-        jq.Assert(successors != null, "Cannot add successor to exit basic block");
+        Assert._assert(successors != null, "Cannot add successor to exit basic block");
         successors.add(b);
     }
     
     public boolean removePredecessor(BasicBlock bb) {
-        jq.Assert(predecessors != null, "Cannot remove predecessor from entry basic block");
+        Assert._assert(predecessors != null, "Cannot remove predecessor from entry basic block");
         return predecessors.remove(bb);
     }
     public void removePredecessor(int i) {
-        jq.Assert(predecessors != null, "Cannot remove predecessor from entry basic block");
+        Assert._assert(predecessors != null, "Cannot remove predecessor from entry basic block");
         predecessors.remove(i);
     }
     public boolean removeSuccessor(BasicBlock bb) {
-        jq.Assert(successors != null, "Cannot remove successor from exit basic block");
+        Assert._assert(successors != null, "Cannot remove successor from exit basic block");
         return successors.remove(bb);
     }
     public void removeSuccessor(int i) {
-        jq.Assert(successors != null, "Cannot remove successor from exit basic block");
+        Assert._assert(successors != null, "Cannot remove successor from exit basic block");
         successors.remove(i);
     }
     public void removeAllPredecessors() {
-        jq.Assert(predecessors != null, "Cannot remove predecessors from entry basic block");
+        Assert._assert(predecessors != null, "Cannot remove predecessors from entry basic block");
         predecessors.clear();
     }
     public void removeAllSuccessors() {
-        jq.Assert(successors != null, "Cannot remove successors from exit basic block");
+        Assert._assert(successors != null, "Cannot remove successors from exit basic block");
         successors.clear();
     }
         
@@ -277,7 +277,7 @@ public class BasicBlock {
     
     void addExceptionHandler_first(ExceptionHandlerList eh) {
         eh.getHandler().addHandledBasicBlock(this);
-        jq.Assert(eh.parent == null);
+        Assert._assert(eh.parent == null);
         eh.parent = this.exception_handler_list;
         this.exception_handler_list = eh;
     }
@@ -349,11 +349,11 @@ public class BasicBlock {
      * @return  the name of this basic block. */
     public String toString() {
         if (isEntry()) {
-            jq.Assert(getID() == 0);
+            Assert._assert(getID() == 0);
             return "BB0 (ENTRY)";
         }
         if (isExit()) {
-            jq.Assert(getID() == 1);
+            Assert._assert(getID() == 1);
             return "BB1 (EXIT)";
         }
         return "BB"+getID();

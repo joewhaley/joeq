@@ -10,6 +10,7 @@ import Memory.HeapAddress;
 import Memory.StackAddress;
 import Run_Time.SystemInterface.ExternalLink;
 import Run_Time.SystemInterface.Library;
+import Util.Assert;
 
 /**
  * @author John Whaley
@@ -52,7 +53,7 @@ public class HighResolutionTimer {
             }
             long v = b.peek8();
             return v;
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
         return 0L;
     }
 
@@ -69,7 +70,7 @@ public class HighResolutionTimer {
             }
             long v = b.peek8();
             return v;
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
         return 0L;
     }
     
@@ -87,7 +88,7 @@ public class HighResolutionTimer {
             }
             long v = b.peek8();
             return v;
-        } catch (Throwable t) { jq.UNREACHABLE(); }
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
         return 0L;
     }
     

@@ -20,6 +20,8 @@ import Main.jq;
 import Memory.Address;
 import Memory.HeapAddress;
 import UTF.Utf8;
+import Util.Assert;
+import Util.Convert;
 
 /*
  * @author  John Whaley
@@ -63,7 +65,7 @@ public final class jq_StaticField extends jq_Field {
         byte[] a = getAttribute("ConstantValue");
         if (a != null) {
             if (a.length != 2) throw new ClassFormatError();
-            char cpidx = jq.twoBytesToChar(a, 0);
+            char cpidx = Convert.twoBytesToChar(a, 0);
             jq_Class clazz = getDeclaringClass();
             switch (clazz.getCPtag(cpidx)) {
                 case CONSTANT_Long:
@@ -113,14 +115,14 @@ public final class jq_StaticField extends jq_Field {
     
     public void dumpAttributes(DataOutput out, jq_ConstantPool.ConstantPoolRebuilder cpr) throws IOException {
         if (constantValue != null) {
-            byte[] b = new byte[2]; jq.charToTwoBytes(cpr.get(constantValue), b, 0);
+            byte[] b = new byte[2]; Convert.charToTwoBytes(cpr.get(constantValue), b, 0);
             attributes.put(Utf8.get("ConstantValue"), b);
         }
         super.dumpAttributes(out, cpr);
     }
 
     public final void sf_initialize(int[] static_data, int offset) {
-        jq.Assert(state == STATE_PREPARED);
+        Assert._assert(state == STATE_PREPARED);
         state = STATE_SFINITIALIZED;
         if (!jq.DontCompile)
             this.address = (HeapAddress)HeapAddress.addressOf(static_data).offset(offset);
@@ -163,11 +165,11 @@ public final class jq_StaticField extends jq_Field {
     }
 
     public final void prepare() {
-        jq.Assert(state == STATE_LOADED);
+        Assert._assert(state == STATE_LOADED);
         state = STATE_PREPARED;
     }
     public final void unprepare() {
-        jq.Assert(state == STATE_PREPARED);
+        Assert._assert(state == STATE_PREPARED);
         state = STATE_LOADED;
     }
     

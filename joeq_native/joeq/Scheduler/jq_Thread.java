@@ -23,6 +23,7 @@ import Memory.StackAddress;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
 import UTF.Utf8;
+import Util.Assert;
 import Util.AtomicCounter;
 
 /*
@@ -52,8 +53,8 @@ public class jq_Thread {
         this.thread_object = t;
         this.registers = new jq_RegisterState();
         this.thread_id = thread_id_factory.increment() << ObjectLayout.THREAD_ID_SHIFT;
-        jq.Assert(this.thread_id > 0);
-        jq.Assert(this.thread_id < ObjectLayout.THREAD_ID_MASK);
+        Assert._assert(this.thread_id > 0);
+        Assert._assert(this.thread_id < ObjectLayout.THREAD_ID_MASK);
         this.isDead = true; // threads start as dead.
     }
 
@@ -113,7 +114,7 @@ public class jq_Thread {
     public void yield() {
         if (this != Unsafe.getThreadBlock()) {
             SystemInterface.debugwriteln("Yield called on " + this + " from thread " + Unsafe.getThreadBlock());
-            jq.UNREACHABLE();
+            Assert.UNREACHABLE();
         }
         // act like we received a timer tick
         this.disableThreadSwitch();
@@ -129,7 +130,7 @@ public class jq_Thread {
         this.getNativeThread().threadSwitch();
     }
     public void yieldTo(jq_Thread t) {
-        jq.Assert(this == Unsafe.getThreadBlock());
+        Assert._assert(this == Unsafe.getThreadBlock());
         // if that thread is in the thread queue for the current native
         // thread, we can yield to him easily.
         this.disableThreadSwitch();
@@ -175,7 +176,7 @@ public class jq_Thread {
         jq_Thread t = Unsafe.getThreadBlock();
         t.isDead = true;
         jq_NativeThread.endCurrentJavaThread();
-        jq.UNREACHABLE();
+        Assert.UNREACHABLE();
     }
 
     public static final jq_Class _class;

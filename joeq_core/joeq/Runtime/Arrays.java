@@ -6,10 +6,10 @@ import Clazz.jq_Class;
 import Clazz.jq_ClassFileConstants;
 import Clazz.jq_StaticMethod;
 import Clazz.jq_Type;
-import Main.jq;
 import Memory.CodeAddress;
 import Memory.HeapAddress;
 import Memory.StackAddress;
+import Util.Assert;
 
 public class Arrays implements jq_ClassFileConstants {
     /**
@@ -64,7 +64,7 @@ public class Arrays implements jq_ClassFileConstants {
         a.chkState(STATE_CLSINITIALIZED);
         int length = dims[ind];
         Object o = a.newInstance(length);
-        jq.Assert(length >= 0);
+        Assert._assert(length >= 0);
         if (ind == dims.length-1)
             return o;
         Object[] o2 = (Object[])o;

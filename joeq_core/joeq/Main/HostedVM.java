@@ -8,6 +8,7 @@ import Memory.CodeAddress;
 import Memory.HeapAddress;
 import Memory.StackAddress;
 import Run_Time.Reflection;
+import Util.Assert;
 
 public abstract class HostedVM {
     public static void initialize() {
@@ -55,17 +56,17 @@ public abstract class HostedVM {
             }
 
             public StackAddress alloca(int a) {
-                jq.UNREACHABLE();
+                Assert.UNREACHABLE();
                 return null;
             }
 
             public StackAddress getBasePointer() {
-                jq.UNREACHABLE();
+                Assert.UNREACHABLE();
                 return null;
             }
 
             public StackAddress getStackPointer() {
-                jq.UNREACHABLE();
+                Assert.UNREACHABLE();
                 return null;
             }
         };

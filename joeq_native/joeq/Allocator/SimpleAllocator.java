@@ -11,10 +11,10 @@ import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
 import Clazz.jq_InstanceMethod;
 import GC.GCBits;
-import Main.jq;
 import Memory.Address;
 import Memory.HeapAddress;
 import Run_Time.SystemInterface;
+import Util.Assert;
 
 /*
  * @author  John Whaley
@@ -137,7 +137,7 @@ public class SimpleAllocator extends HeapAllocator {
         heapCurrent = (HeapAddress) heapCurrent.offset(size);
         if (heapEnd.difference(heapCurrent) < 0) {
             // not enough space (rare path)
-            jq.Assert(size < BLOCK_SIZE - 2 * HeapAddress.size());
+            Assert._assert(size < BLOCK_SIZE - 2 * HeapAddress.size());
             heapCurrent = (HeapAddress) heapCurrent.offset(-size);
             // consult FreeMemManager for free mem in previous blocks
             addr = fmm.getFreeMem(size + ObjectLayout.OBJ_HEADER_SIZE);
@@ -205,7 +205,7 @@ public class SimpleAllocator extends HeapAllocator {
                 // TODO: gc ?!?
                 return addr.asObject();
             } else {
-                jq.Assert(size < BLOCK_SIZE - 2 * HeapAddress.size());
+                Assert._assert(size < BLOCK_SIZE - 2 * HeapAddress.size());
                 // consult FreeMemManager for free mem in previous blocks
                 addr = fmm.getFreeMem(size + ObjectLayout.OBJ_HEADER_SIZE);
                 if (addr != null) {

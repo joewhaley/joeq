@@ -14,6 +14,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import org.sf.javabdd.BDD;
+import org.sf.javabdd.BDDDomain;
+import org.sf.javabdd.BDDFactory;
+import org.sf.javabdd.BDDPairing;
+import org.sf.javabdd.BuDDyFactory;
+
 import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
 import Clazz.jq_ClassInitializer;
@@ -37,16 +43,10 @@ import Compil3r.Quad.MethodSummary.ReturnValueNode;
 import Compil3r.Quad.MethodSummary.ThrownExceptionNode;
 import Compil3r.Quad.MethodSummary.UnknownTypeNode;
 import Main.HostedVM;
-import Main.jq;
 import Run_Time.TypeCheck;
-import Util.HashCodeComparator;
-import Util.SortedArraySet;
-
-import org.sf.javabdd.BDD;
-import org.sf.javabdd.BDDDomain;
-import org.sf.javabdd.BDDFactory;
-import org.sf.javabdd.BDDPairing;
-import org.sf.javabdd.BuDDyFactory;
+import Util.Assert;
+import Util.Collections.HashCodeComparator;
+import Util.Collections.SortedArraySet;
 
 /**
  * @author John Whaley
@@ -193,7 +193,7 @@ public class BDDPointerAnalysis {
             else if (s.equals("H1")) d = H1;
             else if (s.equals("H2")) d = H2;
             else {
-                jq.UNREACHABLE("bad domain: "+s);
+                Assert.UNREACHABLE("bad domain: "+s);
                 return;
             }
             doms[a] = d;
@@ -208,7 +208,7 @@ public class BDDPointerAnalysis {
             } else if (s.equals("x")) {
                 a++;
             } else {
-                jq.UNREACHABLE("bad token: "+s);
+                Assert.UNREACHABLE("bad token: "+s);
                 return;
             }
         }
@@ -482,7 +482,7 @@ public class BDDPointerAnalysis {
                     s = type.substring(0, i);
                     type = type.substring(i+1);
                 } else {
-                    jq.Assert(j == d.length-1);
+                    Assert._assert(j == d.length-1);
                     s = type;
                 }
                 names[j] = s;
@@ -667,7 +667,7 @@ public class BDDPointerAnalysis {
         for (Iterator i=ms.getCalls().iterator(); i.hasNext(); ) {
             ProgramLocation mc = (ProgramLocation) i.next();
             CallSite cs = new CallSite(ms, mc);
-            jq.Assert(!callSiteToTargets.containsKey(cs));
+            Assert._assert(!callSiteToTargets.containsKey(cs));
             if (mc.isSingleTarget()) {
                 jq_Method target = (jq_Method) mc.getTargetMethod();
                 addClassInit(target.getDeclaringClass());

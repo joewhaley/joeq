@@ -2,9 +2,9 @@ package Clazz;
 
 import java.util.Iterator;
 
-import Main.jq;
 import Memory.CodeAddress;
 import Memory.StackAddress;
+import Util.Assert;
 
 abstract class NullDelegates {
     static class Field implements jq_Field.Delegate {
@@ -42,7 +42,7 @@ abstract class NullDelegates {
 
     static class Array implements jq_Array.Delegate {
 	public final Object newInstance(jq_Array a, int length, Object vtable) {
-	    jq.UNREACHABLE("Can't create new arrays!");
+	    Assert.UNREACHABLE("Can't create new arrays!");
 	    return null;
 	}
     }

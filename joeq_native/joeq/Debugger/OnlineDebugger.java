@@ -30,6 +30,7 @@ import Run_Time.Reflection;
 import Run_Time.StackCodeWalker;
 import Run_Time.SystemInterface;
 import Scheduler.jq_NativeThread;
+import Util.Assert;
 import Util.Strings;
 
 /**
@@ -171,7 +172,7 @@ uphere:
             for (int j = 0; j < size; ++j) {
                 commands[j] = st.nextToken();
             }
-            jq.Assert(!st.hasMoreTokens());
+            Assert._assert(!st.hasMoreTokens());
             int index2 = TraceFlags.setTraceFlag(commands, 0);
             if (0 != index2) {
                 continue;

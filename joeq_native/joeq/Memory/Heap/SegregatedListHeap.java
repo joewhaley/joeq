@@ -3,15 +3,15 @@ package Memory.Heap;
 import Allocator.HeapAllocator;
 import Allocator.ObjectLayoutMethods;
 import Clazz.jq_Array;
-import Main.jq;
 import Memory.Address;
-import Run_Time.Debug;
 import Memory.HeapAddress;
 import Memory.Manager.CollectorThread;
 import Memory.Manager.GCConstants;
+import Run_Time.Debug;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
 import Scheduler.jq_NativeThread;
+import Util.Assert;
 
 /**
  * @author John Whaley
@@ -104,7 +104,7 @@ public class SegregatedListHeap extends Heap implements GCConstants {
         start = mallocHeap.allocateZeroedMemory(k * GC_BLOCKSIZE);
         if (start.isNull()) {
             Debug.writeln("Panic!  Cannot allocate ", k * GC_BLOCKSIZE, "bytes.");
-            jq.UNREACHABLE();
+            Assert.UNREACHABLE();
         }
         end = (HeapAddress) start.offset(k * GC_BLOCKSIZE);
         
@@ -449,7 +449,7 @@ public class SegregatedListHeap extends Heap implements GCConstants {
         int count = 0;
         if (blocks[the_size.current_block] != the_block) {
             //VM_Scheduler.trace("do_check", "BlockControls don't match");
-            jq.UNREACHABLE("BlockControl Inconsistency");
+            Assert.UNREACHABLE("BlockControl Inconsistency");
         }
         /*
         if (the_size.next_slot.isNull())
@@ -460,7 +460,7 @@ public class SegregatedListHeap extends Heap implements GCConstants {
             if ((temp.difference(the_block.baseAddr) < 0)
                 || (temp.difference(the_block.baseAddr.offset(GC_BLOCKSIZE)) > 0)) {
                 //VM_Scheduler.trace("do_check: TILT:", "invalid slot ptr", temp);
-                jq.UNREACHABLE("Bad freelist");
+                Assert.UNREACHABLE("Bad freelist");
             }
             count++;
             temp = (HeapAddress) temp.peek();
@@ -468,7 +468,7 @@ public class SegregatedListHeap extends Heap implements GCConstants {
 
         if (count > the_block.mark.length) {
             //VM_Scheduler.trace("do_check: TILT:", "too many slots in block");
-            jq.UNREACHABLE("too many slots");
+            Assert.UNREACHABLE("too many slots");
         }
     }
 
@@ -625,7 +625,7 @@ public class SegregatedListHeap extends Heap implements GCConstants {
         int offset = ptr.difference(base);
         HeapAddress endofslot = (HeapAddress) ptr.offset(the_block.slotsize);
         if (offset % the_block.slotsize != 0)
-            jq.UNREACHABLE("Ptr not to beginning of slot");
+            Assert.UNREACHABLE("Ptr not to beginning of slot");
         HeapAddress bound = (HeapAddress) base.offset(GC_BLOCKSIZE);
         return ptr.difference(base) >= 0 && endofslot.difference(bound) <= 0;
     }

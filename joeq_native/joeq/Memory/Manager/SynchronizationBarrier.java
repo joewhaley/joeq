@@ -1,11 +1,11 @@
 package Memory.Manager;
 
-import Main.jq;
 import Run_Time.Debug;
 import Run_Time.HighResolutionTimer;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
 import Scheduler.jq_NativeThread;
+import Util.Assert;
 
 /**
  * @author John Whaley
@@ -91,7 +91,7 @@ public class SynchronizationBarrier {
     double rendezvousRecord(double start, double end) {
         int myProcessorId = Unsafe.getThreadBlock().getNativeThread().getIndex();
         int which = rendezvousCount[myProcessorId]++;
-        jq.Assert(which < rendezvousIn[0].length);
+        Assert._assert(which < rendezvousIn[0].length);
         rendezvousIn[myProcessorId][which] =
             (int) ((start - rendezvousStartTime) * 1000000);
         rendezvousOut[myProcessorId][which] =

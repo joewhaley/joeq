@@ -20,6 +20,7 @@ import Main.jq;
 import Run_Time.Reflection;
 import Run_Time.TypeCheck;
 import UTF.Utf8;
+import Util.Assert;
 
 /*
  * @author  John Whaley
@@ -121,7 +122,7 @@ public class Field extends AccessibleObject {
             if (t == jq_Primitive.SHORT) return new Short(Reflection.getfield_S(obj, f));
             if (t == jq_Primitive.CHAR) return new Character(Reflection.getfield_C(obj, f));
         }
-        jq.UNREACHABLE();
+        Assert.UNREACHABLE();
         return null;
     }
 
@@ -143,7 +144,7 @@ public class Field extends AccessibleObject {
             jq_InstanceField f = (jq_InstanceField)jq_f;
             if (t == jq_Primitive.BOOLEAN) return Reflection.getfield_Z(obj, f);
         }
-        jq.UNREACHABLE();
+        Assert.UNREACHABLE();
         return false;
     }
     
@@ -165,7 +166,7 @@ public class Field extends AccessibleObject {
             jq_InstanceField f = (jq_InstanceField)jq_f;
             if (t == jq_Primitive.BYTE) return Reflection.getfield_B(obj, f);
         }
-        jq.UNREACHABLE();
+        Assert.UNREACHABLE();
         return (byte)0;
     }
     
@@ -187,7 +188,7 @@ public class Field extends AccessibleObject {
             jq_InstanceField f = (jq_InstanceField)jq_f;
             if (t == jq_Primitive.CHAR) return Reflection.getfield_C(obj, f);
         }
-        jq.UNREACHABLE();
+        Assert.UNREACHABLE();
         return (char)0;
     }
     
@@ -212,7 +213,7 @@ public class Field extends AccessibleObject {
             if (t == jq_Primitive.SHORT) return Reflection.getfield_S(obj, f);
             if (t == jq_Primitive.BYTE) return (short)Reflection.getfield_B(obj, f);
         }
-        jq.UNREACHABLE();
+        Assert.UNREACHABLE();
         return (short)0;
     }
     
@@ -243,7 +244,7 @@ public class Field extends AccessibleObject {
             if (t == jq_Primitive.SHORT) return (int)Reflection.getfield_S(obj, f);
             if (t == jq_Primitive.CHAR) return (int)Reflection.getfield_C(obj, f);
         }
-        jq.UNREACHABLE();
+        Assert.UNREACHABLE();
         return 0;
     }
     
@@ -277,7 +278,7 @@ public class Field extends AccessibleObject {
             if (t == jq_Primitive.CHAR) return (long)Reflection.getfield_C(obj, f);
             if (t == jq_Primitive.INT) return (long)Reflection.getfield_I(obj, f);
         }
-        jq.UNREACHABLE();
+        Assert.UNREACHABLE();
         return 0L;
     }
     
@@ -314,7 +315,7 @@ public class Field extends AccessibleObject {
             if (t == jq_Primitive.INT) return (float)Reflection.getfield_I(obj, f);
             if (t == jq_Primitive.LONG) return (float)Reflection.getfield_L(obj, f);
         }
-        jq.UNREACHABLE();
+        Assert.UNREACHABLE();
         return 0F;
     }
     
@@ -354,7 +355,7 @@ public class Field extends AccessibleObject {
             if (t == jq_Primitive.LONG) return (double)Reflection.getfield_L(obj, f);
             if (t == jq_Primitive.FLOAT) return (double)Reflection.getfield_L(obj, f);
         }
-        jq.UNREACHABLE();
+        Assert.UNREACHABLE();
         return 0F;
     }
     
@@ -402,7 +403,7 @@ public class Field extends AccessibleObject {
                 char val = Reflection.unwrapToChar(value);
                 Reflection.putstatic_C(sf, val);
             }
-            else jq.UNREACHABLE();
+            else Assert.UNREACHABLE();
         } else {
             jq_Reference obj_t = jq_Reference.getTypeOf(obj);
             if (!TypeCheck.isAssignable(obj_t, jq_f.getDeclaringClass())) {
@@ -448,7 +449,7 @@ public class Field extends AccessibleObject {
                 char val = Reflection.unwrapToChar(value);
                 Reflection.putfield_C(obj, f, val);
             }
-            else jq.UNREACHABLE();
+            else Assert.UNREACHABLE();
         }
     }
     
@@ -465,7 +466,7 @@ public class Field extends AccessibleObject {
             if (t == jq_Primitive.BOOLEAN) {
                 Reflection.putstatic_Z(sf, val);
             }
-            else jq.UNREACHABLE();
+            else Assert.UNREACHABLE();
         } else {
             jq_Reference obj_t = jq_Reference.getTypeOf(obj);
             if (!TypeCheck.isAssignable(obj_t, jq_f.getDeclaringClass())) {
@@ -479,7 +480,7 @@ public class Field extends AccessibleObject {
             if (t == jq_Primitive.BOOLEAN) {
                 Reflection.putfield_Z(obj, f, val);
             }
-            else jq.UNREACHABLE();
+            else Assert.UNREACHABLE();
         }
     }
     
@@ -511,7 +512,7 @@ public class Field extends AccessibleObject {
             else if (t == jq_Primitive.DOUBLE) {
                 Reflection.putstatic_D(sf, (double)val);
             }
-            else jq.UNREACHABLE();
+            else Assert.UNREACHABLE();
         } else {
             jq_Reference obj_t = jq_Reference.getTypeOf(obj);
             if (!TypeCheck.isAssignable(obj_t, jq_f.getDeclaringClass())) {
@@ -540,7 +541,7 @@ public class Field extends AccessibleObject {
             else if (t == jq_Primitive.DOUBLE) {
                 Reflection.putfield_D(obj, f, (double)val);
             }
-            else jq.UNREACHABLE();
+            else Assert.UNREACHABLE();
         }
     }
     
@@ -569,7 +570,7 @@ public class Field extends AccessibleObject {
             else if (t == jq_Primitive.DOUBLE) {
                 Reflection.putstatic_D(sf, (double)val);
             }
-            else jq.UNREACHABLE();
+            else Assert.UNREACHABLE();
         } else {
             jq_Reference obj_t = jq_Reference.getTypeOf(obj);
             if (!TypeCheck.isAssignable(obj_t, jq_f.getDeclaringClass())) {
@@ -595,7 +596,7 @@ public class Field extends AccessibleObject {
             else if (t == jq_Primitive.DOUBLE) {
                 Reflection.putfield_D(obj, f, (double)val);
             }
-            else jq.UNREACHABLE();
+            else Assert.UNREACHABLE();
         }
     }
     
@@ -624,7 +625,7 @@ public class Field extends AccessibleObject {
             else if (t == jq_Primitive.DOUBLE) {
                 Reflection.putstatic_D(sf, (double)val);
             }
-            else jq.UNREACHABLE();
+            else Assert.UNREACHABLE();
         } else {
             jq_Reference obj_t = jq_Reference.getTypeOf(obj);
             if (!TypeCheck.isAssignable(obj_t, jq_f.getDeclaringClass())) {
@@ -650,7 +651,7 @@ public class Field extends AccessibleObject {
             else if (t == jq_Primitive.DOUBLE) {
                 Reflection.putfield_D(obj, f, (double)val);
             }
-            else jq.UNREACHABLE();
+            else Assert.UNREACHABLE();
         }
     }
     
@@ -676,7 +677,7 @@ public class Field extends AccessibleObject {
             else if (t == jq_Primitive.DOUBLE) {
                 Reflection.putstatic_D(sf, (double)val);
             }
-            else jq.UNREACHABLE();
+            else Assert.UNREACHABLE();
         } else {
             jq_Reference obj_t = jq_Reference.getTypeOf(obj);
             if (!TypeCheck.isAssignable(obj_t, jq_f.getDeclaringClass())) {
@@ -699,7 +700,7 @@ public class Field extends AccessibleObject {
             else if (t == jq_Primitive.DOUBLE) {
                 Reflection.putfield_D(obj, f, (double)val);
             }
-            else jq.UNREACHABLE();
+            else Assert.UNREACHABLE();
         }
     }
     
@@ -719,7 +720,7 @@ public class Field extends AccessibleObject {
             else if (t == jq_Primitive.DOUBLE) {
                 Reflection.putstatic_D(sf, (double)val);
             }
-            else jq.UNREACHABLE();
+            else Assert.UNREACHABLE();
         } else {
             jq_Reference obj_t = jq_Reference.getTypeOf(obj);
             if (!TypeCheck.isAssignable(obj_t, jq_f.getDeclaringClass())) {
@@ -736,7 +737,7 @@ public class Field extends AccessibleObject {
             else if (t == jq_Primitive.DOUBLE) {
                 Reflection.putfield_D(obj, f, (double)val);
             }
-            else jq.UNREACHABLE();
+            else Assert.UNREACHABLE();
         }
     }
     
@@ -759,7 +760,7 @@ public class Field extends AccessibleObject {
             else if (t == jq_Primitive.DOUBLE) {
                 Reflection.putstatic_D(sf, (double)val);
             }
-            else jq.UNREACHABLE();
+            else Assert.UNREACHABLE();
         } else {
             jq_Reference obj_t = jq_Reference.getTypeOf(obj);
             if (!TypeCheck.isAssignable(obj_t, jq_f.getDeclaringClass())) {
@@ -779,7 +780,7 @@ public class Field extends AccessibleObject {
             else if (t == jq_Primitive.DOUBLE) {
                 Reflection.putfield_D(obj, f, (double)val);
             }
-            else jq.UNREACHABLE();
+            else Assert.UNREACHABLE();
         }
     }
     
@@ -796,7 +797,7 @@ public class Field extends AccessibleObject {
             if (t == jq_Primitive.DOUBLE) {
                 Reflection.putstatic_D(sf, val);
             }
-            else jq.UNREACHABLE();
+            else Assert.UNREACHABLE();
         } else {
             jq_Reference obj_t = jq_Reference.getTypeOf(obj);
             if (!TypeCheck.isAssignable(obj_t, jq_f.getDeclaringClass())) {
@@ -810,7 +811,7 @@ public class Field extends AccessibleObject {
             if (t == jq_Primitive.DOUBLE) {
                 Reflection.putfield_D(obj, f, val);
             }
-            else jq.UNREACHABLE();
+            else Assert.UNREACHABLE();
         }
     }
     
@@ -826,10 +827,10 @@ public class Field extends AccessibleObject {
         java.lang.String name = jq_field.getName().toString();
         o.name = name;
         java.lang.Class clazz = jq_field.getDeclaringClass().getJavaLangClassObject();
-        jq.Assert(clazz != null);
+        Assert._assert(clazz != null);
         o.clazz = clazz;
         java.lang.Class type = Reflection.getJDKType(jq_field.getType());
-        jq.Assert(type != null);
+        Assert._assert(type != null);
         o.type = type;
         int modifiers = jq_field.getAccessFlags();
         o.modifiers = modifiers;

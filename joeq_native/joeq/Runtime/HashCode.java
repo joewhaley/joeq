@@ -11,8 +11,8 @@ import Allocator.ObjectLayout;
 import Clazz.jq_Array;
 import Clazz.jq_Class;
 import Clazz.jq_Reference;
-import Main.jq;
 import Memory.HeapAddress;
+import Util.Assert;
 
 /*
  * @author  John Whaley
@@ -29,7 +29,7 @@ public abstract class HashCode {
                 jq_Class k = (jq_Class) t;
                 return a.offset(k.getInstanceSize() - ObjectLayout.OBJ_HEADER_SIZE).peek4();
             }
-            jq.Assert(t.isArrayType());
+            Assert._assert(t.isArrayType());
             jq_Array k = (jq_Array) t;
             int arraylength = a.offset(ObjectLayout.ARRAY_LENGTH_OFFSET).peek4();
             return a.offset(k.getInstanceSize(arraylength) - ObjectLayout.ARRAY_HEADER_SIZE).peek4();

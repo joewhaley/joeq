@@ -15,10 +15,10 @@ import Clazz.jq_Method;
 import Clazz.jq_Reference;
 import Clazz.jq_StaticMethod;
 import Debugger.OnlineDebugger;
-import Main.jq;
 import Memory.CodeAddress;
 import Memory.StackAddress;
 import UTF.Utf8;
+import Util.Assert;
 import Util.Strings;
 
 /*
@@ -33,7 +33,7 @@ public abstract class ExceptionDeliverer {
         CodeAddress ip = (CodeAddress) StackAddress.getBasePointer().offset(StackAddress.size()).peek();
         StackAddress fp = (StackAddress) StackAddress.getBasePointer().peek();
         ExceptionDeliverer.deliverToCurrentThread(k, ip, fp);
-        jq.UNREACHABLE();
+        Assert.UNREACHABLE();
     }
     
     public static void trap_handler(int code) {
@@ -50,7 +50,7 @@ public abstract class ExceptionDeliverer {
         if (pass) {
             SystemInterface.debugwriteln(">>> Passing on exception code "+code);
             trap_handler(code);
-            jq.UNREACHABLE();
+            Assert.UNREACHABLE();
         }
     }
     
@@ -68,7 +68,7 @@ public abstract class ExceptionDeliverer {
                 System.out.println("Exception in thread \""+Unsafe.getThreadBlock()+"\" "+x);
                 x.printStackTrace(System.out);
                 SystemInterface.die(-1);
-                jq.UNREACHABLE();
+                Assert.UNREACHABLE();
                 return;
             } else {
                 CodeAddress address = cc.findCatchBlock(ip, x_type);
@@ -82,7 +82,7 @@ public abstract class ExceptionDeliverer {
                     // go to this catch block!
                     if (TRACE) SystemInterface.debugwriteln("Jumping to catch block at "+address.stringRep());
                     cc.deliverException(address, fp, x);
-                    jq.UNREACHABLE();
+                    Assert.UNREACHABLE();
                     return;
                 }
                 if (cc.getMethod() != null && cc.getMethod().isSynchronized()) {

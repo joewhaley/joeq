@@ -23,10 +23,10 @@ import Clazz.jq_Reference;
 import Clazz.jq_StaticField;
 import Clazz.jq_StaticMethod;
 import Clazz.jq_Type;
-import Main.jq;
 import Run_Time.Reflection;
 import Run_Time.TypeCheck;
 import UTF.Utf8;
+import Util.Assert;
 
 /*
  * @author  John Whaley
@@ -53,7 +53,7 @@ public class Class {
         Class k = loader.loadClass(name);
         if (initialize) {
             jq_Type t = k.jq_type;
-            jq.Assert(t.isLoaded());
+            Assert._assert(t.isLoaded());
             t.cls_initialize();
         }
         return k;
@@ -219,7 +219,7 @@ public class Class {
             }
             return fs;
         } else {
-            jq.Assert(which == java.lang.reflect.Member.PUBLIC);
+            Assert._assert(which == java.lang.reflect.Member.PUBLIC);
             c.prepare();
             int size = 0;
             jq_StaticField[] sfs = c.getStaticFields();
@@ -240,7 +240,7 @@ public class Class {
                 if (ifs[j].isPublic())
                     fs[++current] = (java.lang.reflect.Field)ifs[j].getJavaLangReflectMemberObject();
             }
-            jq.Assert(current+1 == fs.length);
+            Assert._assert(current+1 == fs.length);
             return fs;
         }
     }
@@ -269,10 +269,10 @@ public class Class {
                 if (ifs[j] instanceof jq_Initializer) continue;
                 fs[++k] = (java.lang.reflect.Method)ifs[j].getJavaLangReflectMemberObject();
             }
-            jq.Assert(k == fs.length-1);
+            Assert._assert(k == fs.length-1);
             return fs;
         } else {
-            jq.Assert(which == java.lang.reflect.Member.PUBLIC);
+            Assert._assert(which == java.lang.reflect.Member.PUBLIC);
             c.prepare();
             int size = 0;
             jq_StaticMethod[] sfs = c.getStaticMethods();
@@ -297,7 +297,7 @@ public class Class {
                 if (ifs[j].isPublic())
                     fs[++k] = (java.lang.reflect.Method)ifs[j].getJavaLangReflectMemberObject();
             }
-            jq.Assert(k == fs.length-1);
+            Assert._assert(k == fs.length-1);
             return fs;
         }
     }
@@ -323,7 +323,7 @@ public class Class {
                 fs[++k] = (java.lang.reflect.Constructor)ifs[j].getJavaLangReflectMemberObject();
             }
         }
-        jq.Assert(k == fs.length-1);
+        Assert._assert(k == fs.length-1);
         return fs;
     }
     private java.lang.reflect.Field getField0(java.lang.String name, int which)
@@ -339,7 +339,7 @@ public class Class {
         if (which == java.lang.reflect.Member.DECLARED) {
             sms = c.getDeclaredStaticFields();
         } else {
-            jq.Assert(which == java.lang.reflect.Member.PUBLIC);
+            Assert._assert(which == java.lang.reflect.Member.PUBLIC);
             sms = c.getStaticFields();
         }
         for (int i=0; i<sms.length; ++i) {
@@ -352,7 +352,7 @@ public class Class {
         if (which == java.lang.reflect.Member.DECLARED) {
             sms = c.getDeclaredInstanceFields();
         } else {
-            jq.Assert(which == java.lang.reflect.Member.PUBLIC);
+            Assert._assert(which == java.lang.reflect.Member.PUBLIC);
             c.prepare();
             sms = c.getInstanceFields();
         }
@@ -387,7 +387,7 @@ public class Class {
         if (which == java.lang.reflect.Member.DECLARED) {
             sms = c.getDeclaredStaticMethods();
         } else {
-            jq.Assert(which == java.lang.reflect.Member.PUBLIC);
+            Assert._assert(which == java.lang.reflect.Member.PUBLIC);
             sms = c.getStaticMethods();
         }
         for (int i=0; i<sms.length; ++i) {
@@ -401,7 +401,7 @@ public class Class {
         if (which == java.lang.reflect.Member.DECLARED) {
             sms = c.getDeclaredInstanceMethods();
         } else {
-            jq.Assert(which == java.lang.reflect.Member.PUBLIC);
+            Assert._assert(which == java.lang.reflect.Member.PUBLIC);
             c.prepare();
             sms = c.getVirtualMethods();
         }

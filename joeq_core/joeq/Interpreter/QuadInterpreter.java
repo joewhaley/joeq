@@ -32,10 +32,10 @@ import Compil3r.Quad.Quad;
 import Compil3r.Quad.RegisterFactory;
 import Compil3r.Quad.Operand.ParamListOperand;
 import Compil3r.Quad.RegisterFactory.Register;
-import Main.jq;
 import Memory.Address;
 import Run_Time.Reflection;
-import Util.FilterIterator.Filter;
+import Util.Assert;
+import Util.Collections.FilterIterator.Filter;
 import Util.Templates.ListIterator;
 
 /**
@@ -117,15 +117,15 @@ public class QuadInterpreter extends Compil3r.Quad.QuadVisitor.EmptyVisitor {
                     Constructor co = (Constructor)Reflection.getJDKMember(f);
                     co.setAccessible(true);
                     UninitializedReference u = (UninitializedReference)getReg_A(plo.get(0).getRegister());
-                    jq.Assert(u.k == f.getDeclaringClass(), u.k+" != "+f.getDeclaringClass());
+                    Assert._assert(u.k == f.getDeclaringClass(), u.k+" != "+f.getDeclaringClass());
                     Object inited = co.newInstance(param);
                     replaceUninitializedReferences(inited, u);
                 } catch (InstantiationException x) {
-                    jq.UNREACHABLE();
+                    Assert.UNREACHABLE();
                 } catch (IllegalAccessException x) {
-                    jq.UNREACHABLE();
+                    Assert.UNREACHABLE();
                 } catch (IllegalArgumentException x) {
-                    jq.UNREACHABLE();
+                    Assert.UNREACHABLE();
                 } catch (InvocationTargetException x) {
                     handleException(x.getTargetException());
                 }
@@ -137,9 +137,9 @@ public class QuadInterpreter extends Compil3r.Quad.QuadVisitor.EmptyVisitor {
             Object result = m.invoke(getReg(plo.get(0).getRegister()), param);
             s.setReturnValue(result);
         } catch (IllegalAccessException x) {
-            jq.UNREACHABLE();
+            Assert.UNREACHABLE();
         } catch (IllegalArgumentException x) {
-            jq.UNREACHABLE();
+            Assert.UNREACHABLE();
         } catch (InvocationTargetException x) {
             s.setThrown(x.getTargetException());
         }
@@ -172,9 +172,9 @@ public class QuadInterpreter extends Compil3r.Quad.QuadVisitor.EmptyVisitor {
             Object result = m.invoke(null, param);
             s.setReturnValue(result);
         } catch (IllegalAccessException x) {
-            jq.UNREACHABLE();
+            Assert.UNREACHABLE();
         } catch (IllegalArgumentException x) {
-            jq.UNREACHABLE();
+            Assert.UNREACHABLE();
         } catch (InvocationTargetException x) {
             s.setThrown(x.getTargetException());
         }
@@ -324,7 +324,7 @@ public class QuadInterpreter extends Compil3r.Quad.QuadVisitor.EmptyVisitor {
     public long getReg_L(Register r) { return ((Long)registers.get(r)).longValue(); }
     public double getReg_D(Register r) { return ((Double)registers.get(r)).doubleValue(); }
     public Object getReg_A(Register r) { return registers.get(r); }
-    public Address getReg_P(Register r) { jq.TODO(); return null; }
+    public Address getReg_P(Register r) { Assert.TODO(); return null; }
     public Object getReg(Register r) { return registers.get(r); }
     
     public void putReg_I(Register r, int i) { registers.put(r, new Integer(i)); }
@@ -332,7 +332,7 @@ public class QuadInterpreter extends Compil3r.Quad.QuadVisitor.EmptyVisitor {
     public void putReg_L(Register r, long i) { registers.put(r, new Long(i)); }
     public void putReg_D(Register r, double i) { registers.put(r, new Double(i)); }
     public void putReg_A(Register r, Object i) { registers.put(r, i); }
-    public void putReg_P(Register r, Address i) { jq.TODO(); }
+    public void putReg_P(Register r, Address i) { Assert.TODO(); }
     public void putReg(Register r, Object i) { registers.put(r, i); }
     
     public void replaceUninitializedReferences(Object o, UninitializedReference u) {

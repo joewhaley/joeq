@@ -38,6 +38,8 @@ import Run_Time.Reflection;
 import Run_Time.TypeCheck;
 import UTF.UTFDataFormatError;
 import UTF.Utf8;
+import Util.Assert;
+import Util.Convert;
 import Util.Strings;
 
 // friend jq_ClassLoader;
@@ -257,7 +259,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         int length = this.getNumberOfStaticFields();
         jq_StaticField[] sfs = new jq_StaticField[length];
         int current = this.getStaticFields_helper(sfs, 0);
-        jq.Assert(current == sfs.length);
+        Assert._assert(current == sfs.length);
         return sfs;
     }
 
@@ -339,7 +341,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         int length = this.getNumberOfStaticMethods();
         jq_StaticMethod[] sfs = new jq_StaticMethod[length];
         int current = this.getStaticMethods_helper(sfs, 0);
-        jq.Assert(current == sfs.length);
+        Assert._assert(current == sfs.length);
         return sfs;
     }
 
@@ -433,7 +435,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         return createStaticField(nd);
     }
     jq_StaticField createStaticField(jq_NameAndDesc nd) {
-        jq.Assert(getDeclaredMember(nd) == null);
+        Assert._assert(getDeclaredMember(nd) == null);
         jq_StaticField f = jq_StaticField.newStaticField(this, nd);
         addDeclaredMember(nd, f);
         return f;
@@ -451,7 +453,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         return createInstanceField(nd);
     }
     jq_InstanceField createInstanceField(jq_NameAndDesc nd) {
-        jq.Assert(getDeclaredMember(nd) == null);
+        Assert._assert(getDeclaredMember(nd) == null);
         jq_InstanceField f = jq_InstanceField.newInstanceField(this, nd);
         addDeclaredMember(nd, f);
         return f;
@@ -469,7 +471,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         return createStaticMethod(nd);
     }
     jq_StaticMethod createStaticMethod(jq_NameAndDesc nd) {
-        jq.Assert(getDeclaredMember(nd) == null);
+        Assert._assert(getDeclaredMember(nd) == null);
         jq_StaticMethod f;
         if (nd.getName() == Utf8.get("<clinit>") &&
             nd.getDesc() == Utf8.get("()V")) {
@@ -493,7 +495,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         return createInstanceMethod(nd);
     }
     jq_InstanceMethod createInstanceMethod(jq_NameAndDesc nd) {
-        jq.Assert(getDeclaredMember(nd) == null);
+        Assert._assert(getDeclaredMember(nd) == null);
         jq_InstanceMethod f;
         if (nd.getName() == Utf8.get("<init>")) {
             f = jq_Initializer.newInitializer(this, nd);
@@ -524,7 +526,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         if (attrib == null) return null;
         if (attrib.length != 2)
             throw new ClassFormatError();
-        char cpi = jq.twoBytesToChar(attrib, 0);
+        char cpi = Convert.twoBytesToChar(attrib, 0);
         if (getCPtag(cpi) != CONSTANT_Utf8)
             throw new ClassFormatError("cp tag "+(int)cpi+" is "+(int)getCPtag(cpi));
         return getCPasUtf8(cpi);
@@ -539,7 +541,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
     }
     public final jq_Class[] getInnerClasses() {
         chkState(STATE_LOADING3);
-        jq.TODO();
+        Assert.TODO();
         return null;
     }
     public final jq_Class[] getSubClasses() {
@@ -619,18 +621,18 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
     }
     public final void setStaticData(jq_StaticField sf, int data) {
         chkState(STATE_SFINITIALIZED);
-        jq.Assert(sf.getDeclaringClass() == this);
-        jq.Assert(sf.getType().getReferenceSize() != 8);
+        Assert._assert(sf.getDeclaringClass() == this);
+        Assert._assert(sf.getType().getReferenceSize() != 8);
         int index = sf.getAddress().difference(HeapAddress.addressOf(static_data)) >> 2;
         if (index < 0 || index >= static_data.length) {
-            jq.UNREACHABLE("sf: "+sf+" index: "+index);
+            Assert.UNREACHABLE("sf: "+sf+" index: "+index);
         }
         static_data[index] = data;
     }
     public final void setStaticData(jq_StaticField sf, long data) {
         chkState(STATE_SFINITIALIZED);
-        jq.Assert(sf.getDeclaringClass() == this);
-        jq.Assert(sf.getType().getReferenceSize() == 8);
+        Assert._assert(sf.getDeclaringClass() == this);
+        Assert._assert(sf.getType().getReferenceSize() == 8);
         int index = sf.getAddress().difference(HeapAddress.addressOf(static_data)) >> 2;
         static_data[index  ] = (int)(data);
         static_data[index+1] = (int)(data >> 32);
@@ -643,15 +645,15 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
     }
     public final void setStaticData(jq_StaticField sf, Object data) {
         chkState(STATE_SFINITIALIZED);
-        jq.Assert(sf.getDeclaringClass() == this);
-        jq.Assert(sf.getType().getReferenceSize() != 8);
+        Assert._assert(sf.getDeclaringClass() == this);
+        Assert._assert(sf.getType().getReferenceSize() != 8);
         int index = sf.getAddress().difference(HeapAddress.addressOf(static_data)) >> 2;
         static_data[index] = HeapAddress.addressOf(data).to32BitValue();
     }
     public final void setStaticData(jq_StaticField sf, Address data) {
         chkState(STATE_SFINITIALIZED);
-        jq.Assert(sf.getDeclaringClass() == this);
-        jq.Assert(sf.getType().getReferenceSize() != 8);
+        Assert._assert(sf.getDeclaringClass() == this);
+        Assert._assert(sf.getType().getReferenceSize() != 8);
         int index = sf.getAddress().difference(HeapAddress.addressOf(static_data)) >> 2;
         static_data[index] = data.to32BitValue();
     }
@@ -704,7 +706,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
     }
     // ONLY TO BE CALLED BY ClassLoader!!!
     public static jq_Class newClass(ClassLoader classLoader, Utf8 desc) {
-        jq.Assert(desc.isDescriptor(TC_CLASS));
+        Assert._assert(desc.isDescriptor(TC_CLASS));
         return new jq_Class(classLoader, desc);
     }
 
@@ -719,7 +721,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
     public void load()
     throws ClassFormatError, UnsupportedClassVersionError, ClassCircularityError, NoClassDefFoundError {
         if (isLoaded()) return; // quick test
-        jq.Assert(class_loader == PrimordialClassLoader.loader);
+        Assert._assert(class_loader == PrimordialClassLoader.loader);
         DataInputStream in = null;
         try {
             in = ((PrimordialClassLoader)class_loader).getClassFileStream(desc);
@@ -1113,7 +1115,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                 if (thisDesc.startsWith("LREPLACE")) {
                     Utf8 oldDesc = Utf8.get("L" + thisDesc.substring( 8 , thisDesc.length() )); // remove the 'LREPLACE' in name and restore 'L'
                     Clazz.jq_Type old = PrimordialClassLoader.getOrCreateType(class_loader , oldDesc) ;
-                    jq.Assert(old instanceof jq_Class);
+                    Assert._assert(old instanceof jq_Class);
                     if (((jq_Class)old).getState() < STATE_LOADED) {
                         // old has not been loaded yet, since it was not in the image
                         if (TRACE_REPLACE_CLASS) Debug.writeln("REPLACING Class: " + old.getDesc() + ". This class was not in the original image: doing nothing!");
@@ -1172,7 +1174,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
 
                 Bytecodes.InstructionList il;
                 if (new_bc == null) {
-                    jq.UNREACHABLE("Method with empty bytecode !?");
+                    Assert.UNREACHABLE("Method with empty bytecode !?");
                 } else {
                     il = new Bytecodes.InstructionList(new_m);
 
@@ -1255,7 +1257,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
 
                 Bytecodes.InstructionList il;
                 if (new_bc == null) {
-                    jq.UNREACHABLE("Method with empty bytecode !?");
+                    Assert.UNREACHABLE("Method with empty bytecode !?");
                 } else {
                     // extract new instructions.
                     il = new Bytecodes.InstructionList(new_m);
@@ -1305,7 +1307,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
 
                         int index = (old_m_offset >> 2) - 1;
                         //old_m index in the array of virtualmethods.
-                        jq.Assert(old.virtual_methods[index] == old_m);
+                        Assert._assert(old.virtual_methods[index] == old_m);
                         old.virtual_methods[index] = new_m;
                         CodeAddress entryPoint =
                             new_m.getDefaultCompiledVersion().getEntrypoint();
@@ -1350,7 +1352,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
     
     public jq_StaticMethod generateStaticMethodStub(jq_NameAndDesc nd, jq_StaticMethod m, char access_flags, char classfield_idx, char method_idx) {
         jq_Type[] params = m.getParamTypes();
-        jq.Assert(params.length >= 1);
+        Assert._assert(params.length >= 1);
         int size = 3+((params.length-1)*2)+3+1;
         byte[] bc = new byte[size];
         bc[0] = (byte)0xb2; // getstatic
@@ -1395,7 +1397,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         if (stubm == null) stub = jq_StaticMethod.newStaticMethod(this, nd);
         else {
             // method that we are overwriting must be static.
-            jq.Assert(stubm.isStatic(), stubm.toString());
+            Assert._assert(stubm.isStatic(), stubm.toString());
             stub = (jq_StaticMethod)stubm;
         }
         //char access_flags = (char)(m.getAccessFlags() & ~ACC_NATIVE);
@@ -1407,7 +1409,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
     
     public jq_InstanceMethod generateInstanceMethodStub(jq_NameAndDesc nd, jq_StaticMethod m, char access_flags, char method_idx) {
         jq_Type[] params = m.getParamTypes();
-        jq.Assert(params.length >= 1);
+        Assert._assert(params.length >= 1);
         int size = 1+((params.length-1)*2)+3+1;
         byte[] bc = new byte[size];
         bc[0] = (byte)0x2a; // aload_0
@@ -1450,7 +1452,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         if (stubm == null) stub = jq_InstanceMethod.newInstanceMethod(this, nd);
         else {
             // method that we are overwriting must be instance.
-            jq.Assert(!stubm.isStatic(), stubm.toString());
+            Assert._assert(!stubm.isStatic(), stubm.toString());
             stub = (jq_InstanceMethod)stubm;
         }
         //char access_flags = (char)(m.getAccessFlags() & ~ACC_NATIVE);
@@ -1481,7 +1483,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                 continue;
             }
             this_f = getOrCreateInstanceField(nd);
-            jq.Assert(this_f.getState() == STATE_UNLOADED);
+            Assert._assert(this_f.getState() == STATE_UNLOADED);
             this_f.load(that_f);
             that_f.unload(); Object b = that.members.remove(that_f.getNameAndDesc());
             if (TRACE) Debug.writeln("Removed member "+that_f.getNameAndDesc()+" from member set of "+that+": "+b);
@@ -1517,7 +1519,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                 continue;
             }
             this_f = getOrCreateStaticField(nd);
-            jq.Assert(this_f.getState() == STATE_UNLOADED);
+            Assert._assert(this_f.getState() == STATE_UNLOADED);
             this_f.load(that_f);
             that_f.unload(); Object b = that.members.remove(that_f.getNameAndDesc());
             if (TRACE) Debug.writeln("Removed member "+that_f.getNameAndDesc()+" from member set of "+that+": "+b);
@@ -1548,7 +1550,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
             jq_InstanceMethod that_m = that.declared_instance_methods[i];
             jq_NameAndDesc nd = that_m.getNameAndDesc();
             //jq_NameAndDesc nd = merge_convertNameAndDesc(that_m.getNameAndDesc());
-            jq.Assert(ClassLib.ClassLibInterface.convertClassLibNameAndDesc(that, nd) == nd);
+            Assert._assert(ClassLib.ClassLibInterface.convertClassLibNameAndDesc(that, nd) == nd);
             jq_InstanceMethod this_m = this.getDeclaredInstanceMethod(nd);
             byte[] bc = that_m.getBytecode();
             if (bc == null) {
@@ -1596,7 +1598,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                 if (TRACE) Debug.writeln("Skipping replaced instance method object "+this_m+".");
                 continue;
             }
-            jq.Assert(this_m == this_m2);
+            Assert._assert(this_m == this_m2);
             byte[] bc = this_m.getBytecode();
             if (bc == null) {
                 if (TRACE) Debug.writeln("Skipping native/abstract instance method object "+this_m+".");
@@ -1624,7 +1626,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
             jq_StaticMethod this_m;
             if (that_m instanceof jq_ClassInitializer) {
                 if (TRACE) Debug.writeln("Creating special static method for "+that_m+" class initializer.");
-                jq.Assert(that_m.getBytecode() != null);
+                Assert._assert(that_m.getBytecode() != null);
                 Utf8 newname = Utf8.get("clinit_"+that.getJDKName());
                 jq_NameAndDesc nd = new jq_NameAndDesc(newname, that_m.getDesc());
                 this_m = getOrCreateStaticMethod(nd);
@@ -1662,7 +1664,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
             } else {
                 jq_NameAndDesc nd = that_m.getNameAndDesc();
                 //jq_NameAndDesc nd = merge_convertNameAndDesc(that_m.getNameAndDesc());
-                jq.Assert(ClassLib.ClassLibInterface.convertClassLibNameAndDesc(that, nd) == nd);
+                Assert._assert(ClassLib.ClassLibInterface.convertClassLibNameAndDesc(that, nd) == nd);
                 this_m = this.getDeclaredStaticMethod(nd);
                 byte[] bc = that_m.getBytecode();
                 if (bc == null) {
@@ -1702,7 +1704,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                 //if (TRACE) Debug.writeln("Skipping replaced static method object "+this_m+".");
                 continue;
             }
-            jq.Assert(this_m == this_m2);
+            Assert._assert(this_m == this_m2);
             byte[] bc = this_m.getBytecode();
             if (bc == null) {
                 //if (TRACE) Debug.writeln("Skipping native/abstract static method object "+this_m+".");
@@ -1772,7 +1774,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         Utf8 sf = getSourceFile();
         if (sf != null) {
             byte[] b = new byte[2];
-            jq.charToTwoBytes(cpr.get(sf), b, 0);
+            Convert.charToTwoBytes(cpr.get(sf), b, 0);
             attributes.put(Utf8.get("SourceFile"), b);
             if (TRACE) Debug.writeln("Reset SourceFile attribute to cp idx "+(int)cpr.get(sf)+".");
         }
@@ -1824,7 +1826,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         jq_ConstantPool.Adder cp_adder = const_pool.getAdder();
         
         // generate stubs for each of the methods in the other class.
-        jq.Assert(that.declared_instance_methods.length <= 1, that.toString()); // the only instance method should be the fake <init> method.
+        Assert._assert(that.declared_instance_methods.length <= 1, that.toString()); // the only instance method should be the fake <init> method.
         LinkedList toadd_instance = new LinkedList();
         LinkedList toadd_static = new LinkedList();
         char classfield_index = 0;
@@ -1832,7 +1834,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
             jq_StaticMethod sm = that.static_methods[i];
             if (sm.isClassInitializer()) continue;
             jq_Type[] that_param = sm.getParamTypes();
-            jq.Assert(that_param.length >= 1, sm.toString());
+            Assert._assert(that_param.length >= 1, sm.toString());
             Utf8 name_utf = sm.getName();
             if (name_utf == Utf8.get("__init__")) name_utf = Utf8.get("<init>");
             char method_idx = cp_adder.add(sm, CONSTANT_ResolvedSMethodRef);
@@ -1841,7 +1843,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                 char access_flags = sm.getAccessFlags();
                 if (classfield_index == 0) {
                     jq_StaticField that_sf = that.getDeclaredStaticField(new jq_NameAndDesc(Utf8.get("_class"), Utf8.get("LClazz/jq_Class;")));
-                    jq.Assert(that_sf != null);
+                    Assert._assert(that_sf != null);
                     classfield_index = cp_adder.add(that_sf, CONSTANT_ResolvedSFieldRef);
                 }
 uphere1:
@@ -1879,7 +1881,7 @@ uphere1:
             } else {
                 // overridden instance method
                 char access_flags = (char)(sm.getAccessFlags() & ~ACC_STATIC);
-                jq.Assert(that_param[0] == PrimordialClassLoader.getJavaLangObject() || that_param[0] == this, sm.toString());
+                Assert._assert(that_param[0] == PrimordialClassLoader.getJavaLangObject() || that_param[0] == this, sm.toString());
 uphere2:
                 for (int j=0; ; ++j) {
                     if (j>=declared_instance_methods.length) {
@@ -1946,7 +1948,7 @@ uphere2:
             for (int j=0; j<that.declared_instance_fields.length; ++j) {
                 jq_InstanceField that_f = that.declared_instance_fields[j];
                 jq_InstanceField this_f = getOrCreateInstanceField(that_f.getNameAndDesc());
-                jq.Assert(this_f.getState() == STATE_UNLOADED, "conflict in field names in merged class: "+this_f);
+                Assert._assert(this_f.getState() == STATE_UNLOADED, "conflict in field names in merged class: "+this_f);
                 this_f.load(that_f.getAccessFlags(), that_f.getAttributes());
                 if (TRACE) Debug.writeln("Adding instance field: "+this_f);
                 ifs[++i] = this_f;
@@ -2058,13 +2060,13 @@ uphere2:
                     reference_offsets[++k] = f.getOffset(); 
                 }
             }
-            jq.Assert(k+1 == this.reference_offsets.length);
+            Assert._assert(k+1 == this.reference_offsets.length);
 
             // lay out virtual method table
             int numOfNewVirtualMethods = 0;
             for (int i=0; i<declared_instance_methods.length; ++i) {
                 jq_InstanceMethod m = declared_instance_methods[i];
-                jq.Assert(m.getState() == STATE_LOADED);
+                Assert._assert(m.getState() == STATE_LOADED);
                 if (m.isInitializer()) {
                     // initializers cannot override or be overridden
                     continue;
@@ -2106,12 +2108,12 @@ uphere2:
                     continue;
                 }
                 if (m.isOverriding()) {
-                    jq.Assert(m.getState() == STATE_PREPARED);
+                    Assert._assert(m.getState() == STATE_PREPARED);
                     int entry = (m.getOffset() >> 2) - 1;
                     virtual_methods[entry] = m;
                     continue;
                 }
-                jq.Assert(m.getState() == STATE_LOADED);
+                Assert._assert(m.getState() == STATE_LOADED);
                 virtual_methods[++j] = m;
                 if (TRACE) Debug.writeln("Virtual method "+m+" is new, offset "+Strings.shex((j+1)*CodeAddress.size()));
                 m.prepare((j+1)*CodeAddress.size());
@@ -2148,7 +2150,7 @@ uphere2:
                     n += declared_interfaces[i].interfaces.length;
                 }
             }
-            jq.Assert (n == n_super_interfaces);
+            Assert._assert (n == n_super_interfaces);
             System.arraycopy(declared_interfaces, 0, this.interfaces, n_super_interfaces, declared_interfaces.length);
 
             // set up tables for fast type checking.
@@ -2156,7 +2158,7 @@ uphere2:
             if (!this.isInterface()) {
                 jq_Reference dps = this.getDirectPrimarySupertype();
                 if (dps != null) {
-                    jq.Assert(dps.isPrepared());
+                    Assert._assert(dps.isPrepared());
                     int num = dps.offset;
                     if (num < 2) num = DISPLAY_SIZE+1;
                     System.arraycopy(dps.display, 2, this.display, 2, num-1);
@@ -2349,8 +2351,8 @@ uphere2:
     
     public static String className(Utf8 desc) {
         String temp = desc.toString();
-        jq.Assert(temp.startsWith("L"), temp);
-        jq.Assert(temp.endsWith(";"), temp);
+        Assert._assert(temp.startsWith("L"), temp);
+        Assert._assert(temp.endsWith(";"), temp);
         return temp.substring(1, temp.length()-1).replace('/','.');
     }
 
@@ -2479,7 +2481,7 @@ uphere2:
             out.writeChar(cpr.get(declared_interfaces[i]));
         
         int nfields = static_fields.length + declared_instance_fields.length;
-        jq.Assert(nfields <= Character.MAX_VALUE);
+        Assert._assert(nfields <= Character.MAX_VALUE);
         out.writeChar(nfields);
         for(int i=0; i < static_fields.length; i++) {
             static_fields[i].dump(out, cpr);
@@ -2498,7 +2500,7 @@ uphere2:
         }
         
         int nattributes = attributes.size();
-        jq.Assert(nattributes <= Character.MAX_VALUE);
+        Assert._assert(nattributes <= Character.MAX_VALUE);
         out.writeChar(nattributes);
         for (Iterator i = attributes.entrySet().iterator(); i.hasNext(); ) {
             Map.Entry e = (Map.Entry)i.next();
@@ -2506,9 +2508,9 @@ uphere2:
             out.writeChar(cpr.get(name));
             byte[] value = (byte[])e.getValue();
             if (name == Utf8.get("SourceFile")) {
-                char oldIndex = jq.twoBytesToChar(value, 0);
+                char oldIndex = Convert.twoBytesToChar(value, 0);
                 Utf8 oldValue = (Utf8)const_pool.get(oldIndex);
-                jq.charToTwoBytes(cpr.get(oldValue), value, 0);
+                Convert.charToTwoBytes(cpr.get(oldValue), value, 0);
             } else if (name == Utf8.get("InnerClasses")) {
                 // TODO
             }

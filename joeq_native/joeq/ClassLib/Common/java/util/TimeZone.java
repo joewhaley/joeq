@@ -21,6 +21,7 @@ import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
 import Run_Time.SystemInterface.ExternalLink;
 import Run_Time.SystemInterface.Library;
+import Util.Assert;
 
 /*
  * @author  John Whaley
@@ -84,7 +85,7 @@ abstract class TimeZone {
                 hr_s = "-"+hr;
             }
         }
-        jq.Assert(min >= 0);
+        Assert._assert(min >= 0);
         if (min <= 9) {
             min_s = ":0"+min;
         } else {
@@ -213,7 +214,7 @@ abstract class TimeZone {
             int rc = (int) Unsafe.invoke(a);
             Unsafe.getThreadBlock().enableThreadSwitch();
             return rc;
-        } catch (Throwable x) { jq.UNREACHABLE(); }
+        } catch (Throwable x) { Assert.UNREACHABLE(); }
         return 0;
     }
     

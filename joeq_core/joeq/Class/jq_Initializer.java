@@ -10,8 +10,8 @@ package Clazz;
 //friend jq_ClassLoader;
 
 import Bootstrap.PrimordialClassLoader;
-import Main.jq;
 import UTF.Utf8;
+import Util.Assert;
 
 /*
  * @author  John Whaley
@@ -26,7 +26,7 @@ public final class jq_Initializer extends jq_InstanceMethod {
     }
     // ONLY TO BE CALLED BY jq_ClassLoader!!!
     static jq_Initializer newInitializer(jq_Class clazz, jq_NameAndDesc nd) {
-        jq.Assert(nd.getName() == Utf8.get("<init>"));
+        Assert._assert(nd.getName() == Utf8.get("<init>"));
         return new jq_Initializer(clazz, nd);
     }
     protected final void parseMethodSignature() {

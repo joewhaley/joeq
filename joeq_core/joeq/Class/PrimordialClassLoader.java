@@ -16,6 +16,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -35,12 +37,11 @@ import Clazz.jq_Primitive;
 import Clazz.jq_Type;
 import Main.jq;
 import UTF.Utf8;
-import Util.AppendIterator;
-import Util.ArrayIterator;
-import Util.Default;
-import Util.EnumerationIterator;
-import Util.FilterIterator;
-import Util.UnmodifiableIterator;
+import Util.Assert;
+import Util.Collections.AppendIterator;
+import Util.Collections.EnumerationIterator;
+import Util.Collections.FilterIterator;
+import Util.Collections.UnmodifiableIterator;
 
 /**
  * @author  John Whaley
@@ -156,8 +157,8 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
             else path_name = pathn;
             File f = new File(path, path_name);
             if (TRACE) out.println("Attempting to list "+path_name+" in path "+path);
-            if (!f.exists() || !f.isDirectory()) return Default.nullIterator;
-            Iterator result = new FilterIterator(new ArrayIterator(f.list()),
+            if (!f.exists() || !f.isDirectory()) return Collections.EMPTY_SET.iterator();
+            Iterator result = new FilterIterator(Arrays.asList(f.list()).iterator(),
                 new FilterIterator.Filter() {
                     public boolean isElement(Object o) {
                         return ((String)o).endsWith(".class");
@@ -165,7 +166,7 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
                     public Object map(Object o) { return pathn + ((String)o); }
                 });
             if (recursive) {
-                Iterator dirs = new FilterIterator(new ArrayIterator(f.list()),
+                Iterator dirs = new FilterIterator(Arrays.asList(f.list()).iterator(),
                     new FilterIterator.Filter() {
                         public boolean isElement(Object o) {
                             return new File((String)map(o)).isDirectory();
@@ -184,15 +185,15 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
         }
         Iterator listPackages(final String dir) {
             File f = new File(dir);
-            if (!f.exists() || !f.isDirectory()) return Default.nullIterator;
-            Iterator result = new FilterIterator(new ArrayIterator(f.list()),
+            if (!f.exists() || !f.isDirectory()) return Collections.EMPTY_SET.iterator();
+            Iterator result = new FilterIterator(Arrays.asList(f.list()).iterator(),
                 new FilterIterator.Filter() {
                     public boolean isElement(Object o) {
                         return new File((String)map(o)).isDirectory();
                     }
                     public Object map(Object o) { return dir + ((String)o); }
                 });
-            Iterator dirs = new FilterIterator(new ArrayIterator(f.list()),
+            Iterator dirs = new FilterIterator(Arrays.asList(f.list()).iterator(),
                 new FilterIterator.Filter() {
                     public boolean isElement(Object o) {
                         return new File((String)map(o)).isDirectory();
@@ -208,7 +209,7 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
 
     /** Vector of ClasspathElements corresponding to CLASSPATH entries. */
     public void addToClasspath(String s) {
-        jq.Assert(s.indexOf(pathsep) == -1);
+        Assert._assert(s.indexOf(pathsep) == -1);
         Set duplicates = new HashSet(); // don't add duplicates.
         duplicates.addAll(classpathList);
         for (Iterator it = classpaths(s); it.hasNext(); ) {
@@ -262,10 +263,10 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
         for (Iterator it = classpathList.iterator(); it.hasNext(); ) {
             ClasspathElement cpe = (ClasspathElement)it.next();
             Iterator lp = cpe.listPackage(pathname, recursive);
-            if (lp == Default.nullIterator) continue;
+            if (!lp.hasNext()) continue;
             result = result==null?lp:new AppendIterator(lp, result);
         }
-        if (result == null) return Default.nullIterator;
+        if (result == null) return Collections.EMPTY_SET.iterator();
         return result;
     }
     
@@ -274,10 +275,10 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
         for (Iterator it = classpathList.iterator(); it.hasNext(); ) {
             ClasspathElement cpe = (ClasspathElement)it.next();
             Iterator lp = cpe.listPackages();
-            if (lp == Default.nullIterator) continue;
+            if (!lp.hasNext()) continue;
             result = result==null?lp:new AppendIterator(lp, result);
         }
-        if (result == null) return Default.nullIterator;
+        if (result == null) return Collections.EMPTY_SET.iterator();
         return result;
     }
 
@@ -292,9 +293,9 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
     }
     
     public static String descriptorToResource(String desc) {
-        jq.Assert(desc.charAt(0)==TC_CLASS);
-        jq.Assert(desc.charAt(desc.length()-1)==TC_CLASSEND);
-        jq.Assert(desc.indexOf('.')==-1); // should have '/' separators.
+        Assert._assert(desc.charAt(0)==TC_CLASS);
+        Assert._assert(desc.charAt(desc.length()-1)==TC_CLASSEND);
+        Assert._assert(desc.indexOf('.')==-1); // should have '/' separators.
         return desc.substring(1, desc.length()-1) + ".class";
     }
     
@@ -302,7 +303,7 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
      * @param classname The class name to translate.
      */
     public static String classnameToResource(String classname) {
-        jq.Assert(classname.indexOf('/')==-1); // should have '.' separators.
+        Assert._assert(classname.indexOf('/')==-1); // should have '.' separators.
         // Swap all '.' for '/' & append ".class"
         return classname.replace('.', filesep.charAt(0)) + ".class";
     }
@@ -504,10 +505,10 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
                 else if (desc == jq_Array.SHORT_ARRAY.getDesc()) return jq_Array.SHORT_ARRAY;
                 else if (desc == jq_Array.BOOLEAN_ARRAY.getDesc()) return jq_Array.BOOLEAN_ARRAY;
                  */
-                else jq.UNREACHABLE("bad descriptor! "+desc);
+                else Assert.UNREACHABLE("bad descriptor! "+desc);
             }
             Object old = bs_desc2type.put(desc, t);
-            jq.Assert(old == null);
+            Assert._assert(old == null);
         }
         return t;
     }
@@ -520,8 +521,8 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
     {
         Utf8 oldDesc = Utf8.get("L"+cName.replace('.', '/')+";") ;
         jq_Type old = PrimordialClassLoader.getOrCreateType(this, oldDesc);
-        jq.Assert(old != null);
-        jq.Assert(oldDesc.isDescriptor(jq_ClassFileConstants.TC_CLASS));
+        Assert._assert(old != null);
+        Assert._assert(oldDesc.isDescriptor(jq_ClassFileConstants.TC_CLASS));
 
         // now load 'new' with a fake name
         Utf8 newDesc = Utf8.get("LREPLACE"+cName.replace('.', '/')+";") ;
@@ -549,7 +550,7 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
     public static final jq_Type getOrCreateType(ClassLoader cl, Utf8 desc) {
         if (jq.RunningNative)
             return ClassLibInterface.DEFAULT.getOrCreateType(cl, desc);
-        jq.Assert(cl == PrimordialClassLoader.loader);
+        Assert._assert(cl == PrimordialClassLoader.loader);
         return PrimordialClassLoader.loader.getOrCreateBSType(desc);
     }
     
@@ -558,7 +559,7 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
             ClassLibInterface.DEFAULT.unloadType(cl, t);
             return;
         }
-        jq.Assert(cl == PrimordialClassLoader.loader);
+        Assert._assert(cl == PrimordialClassLoader.loader);
         PrimordialClassLoader.loader.unloadBSType(t);
     }
 }

@@ -9,7 +9,7 @@ package Scheduler;
 
 import java.util.Iterator;
 
-import Main.jq;
+import Util.Assert;
 
 /*
  * @author  John Whaley
@@ -24,14 +24,14 @@ public class jq_ThreadQueue {
     }
     
     public void enqueue(jq_Thread t) {
-        jq.Assert(t.next == null);
+        Assert._assert(t.next == null);
         if (head == null) head = t;
         else tail.next = t;
         tail = t;
     }
     
     public void enqueueFront(jq_Thread t) {
-        jq.Assert(t.next == null);
+        Assert._assert(t.next == null);
         if (head == null) tail = t;
         else head.next = t;
         head = t;
@@ -54,14 +54,14 @@ public class jq_ThreadQueue {
             p = p.next;
         }
         if (q == null) {
-            jq.Assert(head == t2);
+            Assert._assert(head == t2);
             head = t2.next;
             if (head == null) tail = null;
             else t2.next = null;
         } else {
             q.next = p.next;
             if (p.next == null) {
-                jq.Assert(p == tail);
+                Assert._assert(p == tail);
                 tail = q;
             } else {
                 p.next = null;

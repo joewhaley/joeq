@@ -7,7 +7,7 @@
 package Linker.ELF;
 import java.io.IOException;
 
-import Main.jq;
+import Util.Assert;
 
 /**
  *
@@ -36,8 +36,8 @@ public class SymbolTableEntry implements ELFConstants {
     public final byte getOther() { return 0; }
     public final int getSHndx() { return section.getIndex(); }
 
-    public void setIndex(int index) { jq.Assert(index != 0); this.index = index; }
-    public int getIndex() { jq.Assert(this.index != 0); return this.index; }
+    public void setIndex(int index) { Assert._assert(index != 0); this.index = index; }
+    public int getIndex() { Assert._assert(this.index != 0); return this.index; }
     
     public void write(ELF file, Section.StrTabSection sts) throws IOException {
         file.write_word(sts.getStringIndex(getName()));
@@ -68,7 +68,7 @@ public class SymbolTableEntry implements ELFConstants {
     public static class EmptySymbolTableEntry extends SymbolTableEntry {
         private EmptySymbolTableEntry() { super("", 0, 0, STB_LOCAL, STT_NOTYPE, Section.NullSection.INSTANCE); }
         public final int getIndex() { return 0; }
-        public final void setIndex(int index) { jq.Assert(index == 0); }
+        public final void setIndex(int index) { Assert._assert(index == 0); }
         public static final EmptySymbolTableEntry INSTANCE = new EmptySymbolTableEntry();
     }
 

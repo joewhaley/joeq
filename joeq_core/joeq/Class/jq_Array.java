@@ -13,6 +13,7 @@ import Main.jq;
 import Memory.Address;
 import Memory.HeapAddress;
 import UTF.Utf8;
+import Util.Assert;
 
 /**
  * @author  John Whaley
@@ -95,8 +96,8 @@ public class jq_Array extends jq_Reference implements jq_ClassFileConstants {
     
     private jq_Array(Utf8 desc, ClassLoader class_loader, jq_Type element_type) {
         super(desc, class_loader);
-        jq.Assert(desc.isDescriptor(TC_ARRAY));
-        jq.Assert(element_type != null);
+        Assert._assert(desc.isDescriptor(TC_ARRAY));
+        Assert._assert(element_type != null);
         this.element_type = element_type;
     }
     // ONLY TO BE CALLED BY ClassLoader!!!

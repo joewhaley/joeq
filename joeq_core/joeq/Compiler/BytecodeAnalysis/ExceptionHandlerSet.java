@@ -7,7 +7,7 @@
 
 package Compil3r.BytecodeAnalysis;
 
-import Util.ListFactory;
+import Util.Collections.ListFactory;
 
 /*
  * @author  John Whaley

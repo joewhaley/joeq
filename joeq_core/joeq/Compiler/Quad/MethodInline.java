@@ -9,8 +9,8 @@ import Compil3r.Quad.Operator.Invoke;
 import Compil3r.Quad.Operator.Move;
 import Compil3r.Quad.Operator.Return;
 import Compil3r.Quad.RegisterFactory.Register;
-import Main.jq;
-import Util.FilterIterator.Filter;
+import Util.Assert;
+import Util.Collections.FilterIterator.Filter;
 import Util.Templates.ListIterator;
 
 public class MethodInline implements ControlFlowGraphVisitor {
@@ -72,7 +72,7 @@ public class MethodInline implements ControlFlowGraphVisitor {
         ControlFlowGraph callee = CodeCache.getCode(m);
 
         int invokeLocation = bb.getQuadIndex(q);
-        jq.Assert(invokeLocation != -1);
+        Assert._assert(invokeLocation != -1);
 
         if (TRACE) out.println("Code to inline:");
         if (TRACE) out.println(callee.fullDump());
@@ -97,8 +97,8 @@ public class MethodInline implements ControlFlowGraphVisitor {
             successor_bb.appendQuad(bb.removeQuad(invokeLocation+1));
         }
         Quad invokeQuad = bb.removeQuad(invokeLocation);
-        jq.Assert(invokeQuad == q);
-        jq.Assert(bb.size() == invokeLocation);
+        Assert._assert(invokeQuad == q);
+        Assert._assert(bb.size() == invokeLocation);
         if (TRACE) out.println("Result of splitting:");
         if (TRACE) out.println(bb.fullDump());
         if (TRACE) out.println(successor_bb.fullDump());
@@ -154,7 +154,7 @@ outer:
                 caller.exit().addPredecessor(pred_bb);
                 continue;
             }
-            jq.Assert(lq.getOperator() instanceof Return);
+            Assert._assert(lq.getOperator() instanceof Return);
             pred_bb.removeQuad(lq);
             if (dest_r != null) {
                 RegisterOperand ldest = new RegisterOperand(dest_r, callee.getMethod().getReturnType());

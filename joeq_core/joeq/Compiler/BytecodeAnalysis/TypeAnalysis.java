@@ -25,13 +25,13 @@ import Clazz.jq_Reference;
 import Clazz.jq_StaticField;
 import Clazz.jq_StaticMethod;
 import Clazz.jq_Type;
-import Main.jq;
 import Run_Time.Reflection;
 import Run_Time.TypeCheck;
 import UTF.Utf8;
-import Util.IdentityHashCodeWrapper;
-import Util.LinearSet;
+import Util.Assert;
 import Util.Strings;
+import Util.Collections.IdentityHashCodeWrapper;
+import Util.Collections.LinearSet;
 
 /**
  * @author  John Whaley
@@ -90,11 +90,11 @@ public class TypeAnalysis {
             if (TRACE_ITERATION) out_ta.println("Computing reverse post order");
             ControlFlowGraph.RPOBasicBlockIterator rpo = cfg.reversePostOrderIterator();
             BasicBlock first_bb = rpo.nextBB();
-            jq.Assert(first_bb == cfg.getEntry());
+            Assert._assert(first_bb == cfg.getEntry());
             change = false;
             while (rpo.hasNext()) {
                 BasicBlock bb = rpo.nextBB();
-                jq.Assert(bb.id != 0);
+                Assert._assert(bb.id != 0);
                 if (bb.id == 1) continue;
                 if (in_states[bb.id] == null) {
                     if (TRACE_ITERATION) out_ta.println("Can't find in set for "+bb);
@@ -122,10 +122,10 @@ public class TypeAnalysis {
                                 if (TRACE_ITERATION) out_ta.println("In set for "+bb2+" did not change");
                             }
                             if (bb2.id == 1) {
-                                jq.Assert(tav.currentStackDepth == 0);
+                                Assert._assert(tav.currentStackDepth == 0);
                                 bb2.startingStackDepth = 0;
                             } else {
-                                jq.Assert(bb2.startingStackDepth == tav.currentStackDepth,
+                                Assert._assert(bb2.startingStackDepth == tav.currentStackDepth,
                                           "Stack depth mismatch: "+bb2+"="+bb2.startingStackDepth+", "+tav+"="+tav.currentStackDepth);
                             }
                         } else {
@@ -144,7 +144,7 @@ public class TypeAnalysis {
         AnalysisSummary summary = tav.summary;
         summary.finish(in_states[1], in_states[0]);
         Object o = callStack.pop();
-        jq.Assert(o == m);
+        Assert._assert(o == m);
         if (TRACE_MAIN) out_ta.println("Finished "+m+" depth "+callStack.size());
         if (DUMP_SUMMARY) summary.dump(false);
         return summary;
@@ -412,7 +412,7 @@ public class TypeAnalysis {
                 }
             }
             Object o = stack.pop();
-            jq.Assert(o == this);
+            Assert._assert(o == this);
             return change;
         }
         
@@ -500,7 +500,7 @@ public class TypeAnalysis {
         public abstract ProgramLocation copy_deep(HashMap old_to_new);
         
         protected void copyInsideEdges_deep(ProgramLocation that, HashMap old_to_new) {
-            jq.Assert(that.inside_edges == null);
+            Assert._assert(that.inside_edges == null);
             if (this.inside_edges != null) {
                 that.inside_edges = new HashMap();
                 for (Iterator i=this.inside_edges.entrySet().iterator(); i.hasNext(); ) {
@@ -552,7 +552,7 @@ public class TypeAnalysis {
             if (this.methodSequences.union_deep(that.methodSequences)) result = true;
             if (this.unionInsideEdges_deep(that, old_to_new, stack)) result = true;
             Object o = stack.pop();
-            jq.Assert(o == this);
+            Assert._assert(o == this);
             return result;
         }
         
@@ -638,7 +638,7 @@ public class TypeAnalysis {
             return (SetOfLocations) outside_edges.get(d);
         }
         protected void copyOutsideEdges_deep(OutsideProgramLocation that, HashMap old_to_new) {
-            jq.Assert(that.outside_edges == null);
+            Assert._assert(that.outside_edges == null);
             if (this.outside_edges != null) {
                 that.outside_edges = new HashMap();
                 for (Iterator i=this.outside_edges.entrySet().iterator(); i.hasNext(); ) {
@@ -684,7 +684,7 @@ public class TypeAnalysis {
             stack.push(this);
             if (unionOutsideEdges_deep((OutsideProgramLocation)that, old_to_new, stack)) b = true;
             Object o = stack.pop();
-            jq.Assert(o == this);
+            Assert._assert(o == this);
             return b;
         }
         public final boolean isFromOutside() { return true; }
@@ -1636,12 +1636,12 @@ public class TypeAnalysis {
         public boolean union_deep(AnalysisState that) {
             if (this == that) return false;
             boolean change = false;
-            jq.Assert(this.parameters.length == that.parameters.length);
+            Assert._assert(this.parameters.length == that.parameters.length);
             HashMap old_to_new = new HashMap();
             Stack s = new Stack();
             for (int i=0; i<this.parameters.length; ++i) {
                 if (that.parameters[i] == null) continue;
-                jq.Assert(this.parameters[i] != null);
+                Assert._assert(this.parameters[i] != null);
                 if (this.parameters[i].union_deep(that.parameters[i], old_to_new, s)) change = true;
             }
             if (this.variables != null) {
@@ -1681,13 +1681,13 @@ public class TypeAnalysis {
         
         // netiher changes this nor that
         public AnalysisState merge_jsr(AnalysisState that) {
-            jq.Assert(this.parameters.length == that.parameters.length);
+            Assert._assert(this.parameters.length == that.parameters.length);
             AnalysisState dis = this.copy_deep();
             HashMap old_to_new = new HashMap();
             Stack s = new Stack();
             for (int i=0; i<dis.parameters.length; ++i) {
                 if (that.parameters[i] == null) continue;
-                jq.Assert(dis.parameters[i] != null);
+                Assert._assert(dis.parameters[i] != null);
                 dis.parameters[i].union_deep(that.parameters[i], old_to_new, s);
             }
             if (dis.variables != null) {
@@ -1797,7 +1797,7 @@ public class TypeAnalysis {
         
         void finish(AnalysisState last, AnalysisState ex_last) {
             if (last != null) {
-                jq.Assert(last.parameters != null);
+                Assert._assert(last.parameters != null);
                 this.params = last.parameters;
                 this.static_vars = last.static_variables;
             } else {
@@ -1805,7 +1805,7 @@ public class TypeAnalysis {
                 this.static_vars = null;
             }
             if (ex_last != null) {
-                jq.Assert(ex_last.parameters != null);
+                Assert._assert(ex_last.parameters != null);
                 this.params_ex = ex_last.parameters;
                 this.static_vars_ex = ex_last.static_variables;
             } else {
@@ -2018,7 +2018,7 @@ public class TypeAnalysis {
                 }
                 for (int i=0; i<that.params.length; ++i) {
                     if (that.params[i] == null) continue;
-                    jq.Assert(this.params[i] != null);
+                    Assert._assert(this.params[i] != null);
                     old_to_new.put(IdentityHashCodeWrapper.create(that.params[i]), this.params[i]);
                 }
             }
@@ -2038,7 +2038,7 @@ public class TypeAnalysis {
                 }
                 for (int i=0; i<that.params_ex.length; ++i) {
                     if (that.params_ex[i] == null) continue;
-                    jq.Assert(this.params_ex[i] != null);
+                    Assert._assert(this.params_ex[i] != null);
                     old_to_new.put(IdentityHashCodeWrapper.create(that.params_ex[i]), this.params_ex[i]);
                 }
             }
@@ -2046,26 +2046,26 @@ public class TypeAnalysis {
             
             // union params
             if (that.params != null) {
-                jq.Assert(this.params != null);
-                jq.Assert(this.params.length == that.params.length);
+                Assert._assert(this.params != null);
+                Assert._assert(this.params.length == that.params.length);
                 for (int i=0; i<this.params.length; ++i) {
                     if (this.params[i] == null) {
-                        jq.Assert(that.params[i] == null);
+                        Assert._assert(that.params[i] == null);
                         continue;
                     }
-                    jq.Assert(that.params[i] != null);
+                    Assert._assert(that.params[i] != null);
                     if (this.params[i].union_deep(that.params[i], old_to_new, stack)) change = true;
                 }
             }
             if (that.params_ex != null) {
-                jq.Assert(this.params_ex != null);
-                jq.Assert(this.params_ex.length == that.params_ex.length);
+                Assert._assert(this.params_ex != null);
+                Assert._assert(this.params_ex.length == that.params_ex.length);
                 for (int i=0; i<this.params_ex.length; ++i) {
                     if (this.params_ex[i] == null) {
-                        jq.Assert(that.params_ex[i] == null);
+                        Assert._assert(that.params_ex[i] == null);
                         continue;
                     }
-                    jq.Assert(that.params_ex[i] != null);
+                    Assert._assert(that.params_ex[i] != null);
                     if (this.params_ex[i].union_deep(that.params_ex[i], old_to_new, stack)) change = true;
                 }
             }
@@ -2143,7 +2143,7 @@ public class TypeAnalysis {
                     Map.Entry e = (Map.Entry)i.next();
                     jq_StaticField f = (jq_StaticField)e.getKey();
                     SetOfLocations t = (SetOfLocations)e.getValue();
-                    jq.Assert(t != null);
+                    Assert._assert(t != null);
                     that.static_vars.put(f, t.copy_deep(old_to_new));
                 }
             }
@@ -2153,7 +2153,7 @@ public class TypeAnalysis {
                     Map.Entry e = (Map.Entry)i.next();
                     jq_StaticField f = (jq_StaticField)e.getKey();
                     SetOfLocations t = (SetOfLocations)e.getValue();
-                    jq.Assert(t != null);
+                    Assert._assert(t != null);
                     that.static_vars_ex.put(f, t.copy_deep(old_to_new));
                 }
             }
@@ -2523,7 +2523,7 @@ public class TypeAnalysis {
                     if (do_it_again.contains(target)) {
                         if (TRACE) out.println("Performing interprocedural iteration on "+target);
                         // call into a recursive cycle that needs iteration
-                        jq.Assert(r != null);
+                        Assert._assert(r != null);
                         for (;;) {
                             AnalysisSummary q = TypeAnalysis.analyze(target, callStack, do_it_again);
                             if (r.equivalent(q)) {
@@ -2534,7 +2534,7 @@ public class TypeAnalysis {
                                 break;
                             } else {
                                 if (TRACE) out.println("Summaries are different! Continuing iteration of "+target);
-                                jq.Assert(do_it_again.contains(target));
+                                Assert._assert(do_it_again.contains(target));
                             }
                         }
                     }
@@ -2552,7 +2552,7 @@ public class TypeAnalysis {
                             continue;
                         }
                         r = analyze(target, callStack, do_it_again);
-                        jq.Assert(r != null);
+                        Assert._assert(r != null);
                         summaries.put(target, r);
                         if (TRACE) out.println("Cached result of analysis of method "+target+":");
                     }
@@ -2634,7 +2634,7 @@ public class TypeAnalysis {
                 currentState.variables[i] = null;
             }
             if (in_states[bb2.id] != null) {
-                jq.Assert(bb2.startingStackDepth == 1);
+                Assert._assert(bb2.startingStackDepth == 1);
                 if (in_states[bb2.id].union_deep(currentState)) {
                     if (TRACE) out.println("In set for exception handler "+bb2+" changed!");
                     this.change = true;
@@ -2712,7 +2712,7 @@ public class TypeAnalysis {
         }
         
         public SetOfLocations applySummary(AnalysisState state, jq_Method f, AnalysisSummary summary, boolean ex) {
-            jq.Assert(summary != null);
+            Assert._assert(summary != null);
             if (TRACE) {
                 out.println(" --------======> APPLYING "+(ex?"EXCEPTION":"")+" SUMMARY "+f+":");
                 summary.dump(ex);
@@ -2722,7 +2722,7 @@ public class TypeAnalysis {
             jq_Type[] paramTypes = f.getParamTypes();
             HashMap callee_to_caller_mmap = new HashMap();
             Stack callee_node_worklist = new Stack();
-            jq.Assert(summary.params != null);
+            Assert._assert(summary.params != null);
             ParamLocation[] summary_params;
             if (!ex) summary_params = summary.params;
             else summary_params = summary.params_ex;
@@ -2738,7 +2738,7 @@ public class TypeAnalysis {
                     ParamLocation p_callee = summary_params[i];
                     if (TRACE) out.println("Param "+i+" Callee outside node "+p_callee+" matches caller set "+t_caller);
                     addToMultimap(callee_to_caller_mmap, p_callee, t_caller);
-                    jq.Assert(!callee_node_worklist.contains(p_callee));
+                    Assert._assert(!callee_node_worklist.contains(p_callee));
                     callee_node_worklist.push(p_callee);
                 }
             }
@@ -2768,7 +2768,7 @@ public class TypeAnalysis {
                             addToMultimap(callee_to_caller_mmap, sfl, t_caller2);
                             if (callee_node_worklist.contains(sfl)) {
                                 out.println(method+" ERROR!! callee node worklist ("+callee_node_worklist+") already contains sf node: "+sfl);
-                                jq.UNREACHABLE();
+                                Assert.UNREACHABLE();
                             }
                             callee_node_worklist.push(sfl);
                         }
@@ -2783,7 +2783,7 @@ public class TypeAnalysis {
                 // Get the set of inside nodes that match this outside node
                 SetOfLocations inside_node_set = (SetOfLocations)callee_to_caller_mmap.get(outside_node);
                 if (TRACE) out.println("Visiting outside edges of node "+outside_node+", matches caller set "+inside_node_set);
-                jq.Assert(inside_node_set != null);
+                Assert._assert(inside_node_set != null);
                 //jq.Assert(inside_node_set.size() > 0);
                 // Iterate through the set of inside nodes, matching outside edges to inside edges
                 Iterator it = outside_node.getOutsideEdges().entrySet().iterator();
@@ -3017,7 +3017,7 @@ public class TypeAnalysis {
         }
         
         public void visitJSR(int target) {
-            jq.Assert(currentBB.getNumberOfSuccessors() == 1);
+            Assert._assert(currentBB.getNumberOfSuccessors() == 1);
             BasicBlock jsub_bb = currentBB.getSuccessor(0);
             SetOfLocations jsub = SetOfLocations.makeJSRSubroutine(jsub_bb);
             if (TRACE) out.println("Made JSR subroutine from "+currentBB+" to target "+jsub_bb);
@@ -3069,7 +3069,7 @@ public class TypeAnalysis {
         public ProgramLocation filterByType(jq_Type type) { return this; }
         public jq_Type getType() { return null; }
         boolean union_deep(ProgramLocation that, HashMap old_to_new, Stack stack) {
-            jq.Assert(((JSRSubroutine)that).jsub_bb == this.jsub_bb);
+            Assert._assert(((JSRSubroutine)that).jsub_bb == this.jsub_bb);
             return false;
         }
         public ProgramLocation copy_deep(HashMap old_to_new) {

@@ -2,8 +2,8 @@ package Memory.Heap;
 
 import Allocator.ObjectLayout;
 import Allocator.ObjectLayoutMethods;
-import Main.jq;
 import Memory.HeapAddress;
+import Util.Assert;
 
 /**
  * @author John Whaley
@@ -49,7 +49,7 @@ public class BootHeap extends Heap {
      */
     protected HeapAddress allocateZeroedMemory(int size) {
         // Can't allocate anything in the bootheap!
-        jq.UNREACHABLE("allocateZeroedMemory on BootHeap forbidden");
+        Assert.UNREACHABLE("allocateZeroedMemory on BootHeap forbidden");
         return null;
     }
 

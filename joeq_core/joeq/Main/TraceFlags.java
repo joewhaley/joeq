@@ -20,6 +20,7 @@ import Clazz.jq_Type;
 import Run_Time.Debug;
 import Run_Time.Reflection;
 import UTF.Utf8;
+import Util.Assert;
 
 /**
  * @author  John Whaley
@@ -211,7 +212,7 @@ public abstract class TraceFlags {
             args[m] = Double.valueOf(s_args[++j]);
         } else if (type.isArrayType()) {
             if (!s_args[++j].equals("{"))
-                jq.UNREACHABLE("array parameter doesn't start with {");
+                Assert.UNREACHABLE("array parameter doesn't start with {");
             int count = 0;
             while (!s_args[++j].equals("}")) ++count;
             jq_Type elementType = ((jq_Array) type).getElementType();
@@ -261,9 +262,9 @@ public abstract class TraceFlags {
                     array[k] = Double.parseDouble(s_args[j - count + k]);
                 args[m] = array;
             } else
-                jq.UNREACHABLE("Parsing of type " + type + " is not implemented");
+                Assert.UNREACHABLE("Parsing of type " + type + " is not implemented");
         } else
-            jq.UNREACHABLE("Parsing of type " + type + " is not implemented");
+            Assert.UNREACHABLE("Parsing of type " + type + " is not implemented");
         return j;
     }
 

@@ -9,7 +9,7 @@ package ClassLib.Common.java.util.zip;
 
 import java.io.UnsupportedEncodingException;
 
-import Main.jq;
+import Util.Assert;
 
 /**
  * @author  John Whaley
@@ -62,7 +62,7 @@ class ZipEntry implements ZipConstants {
         try {
             String s = new String(cenbuf, off, len, DEFAULT_ENCODING);
             this.name = s;
-        } catch (UnsupportedEncodingException x) { jq.UNREACHABLE(); }
+        } catch (UnsupportedEncodingException x) { Assert.UNREACHABLE(); }
         off += len;
         // Get extra field data
         len = ZipFile.get16(cenbuf, baseoff + CENEXT);
@@ -84,7 +84,7 @@ class ZipEntry implements ZipConstants {
             try {
                 String comment = new String(cenbuf, off, len, DEFAULT_ENCODING);
                 this.comment = comment;
-            } catch (UnsupportedEncodingException x) { jq.UNREACHABLE(); }
+            } catch (UnsupportedEncodingException x) { Assert.UNREACHABLE(); }
             off += len;
         }
         return off - st_off;

@@ -13,7 +13,7 @@ import Clazz.jq_InstanceField;
 import Clazz.jq_Method;
 import Clazz.jq_StaticField;
 import Clazz.jq_Type;
-import Main.jq;
+import Util.Assert;
 
 /**
  * @author  John Whaley
@@ -52,7 +52,7 @@ public class StackDepthVisitor extends BytecodeVisitor {
                     bb2.startingStackDepth = currentStackDepth;
                     w.push(bb2);
                 } else {
-                    jq.Assert(bb2.startingStackDepth == currentStackDepth);
+                    Assert._assert(bb2.startingStackDepth == currentStackDepth);
                 }
             }
             ExceptionHandlerIterator ei = bb.getExceptionHandlers();
@@ -63,7 +63,7 @@ public class StackDepthVisitor extends BytecodeVisitor {
                     bb2.startingStackDepth = 1;
                     w.push(bb2);
                 } else {
-                    jq.Assert(bb2.startingStackDepth == 1);
+                    Assert._assert(bb2.startingStackDepth == 1);
                 }
             }
         }

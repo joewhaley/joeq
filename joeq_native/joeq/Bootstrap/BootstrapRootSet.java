@@ -29,7 +29,6 @@ import Clazz.jq_StaticField;
 import Clazz.jq_StaticMethod;
 import Clazz.jq_Type;
 import Clazz.jq_TypeVisitor;
-import Main.jq;
 import Memory.CodeAddress;
 import Memory.HeapAddress;
 import Memory.StackAddress;
@@ -37,7 +36,8 @@ import Run_Time.ExceptionDeliverer;
 import Run_Time.Reflection;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
-import Util.IdentityHashCodeWrapper;
+import Util.Assert;
+import Util.Collections.IdentityHashCodeWrapper;
 
 /**
  *
@@ -112,7 +112,7 @@ public class BootstrapRootSet {
     }
     
     public boolean addInstantiatedType(jq_Type t) {
-        jq.Assert(t != null);
+        Assert._assert(t != null);
         addNecessaryType(t);
         boolean b = instantiatedTypes.add(t);
         if (b) {
@@ -368,7 +368,7 @@ public class BootstrapRootSet {
                 }
             }
         } else {
-            jq.Assert(jqType.isClassType());
+            Assert._assert(jqType.isClassType());
             jq_Class clazz = (jq_Class)jqType;
             jq_InstanceField[] fields = clazz.getInstanceFields();
             for (int k=0; k<fields.length; ++k) {
@@ -399,7 +399,7 @@ public class BootstrapRootSet {
                 Class objType = o.getClass();
                 jq_Reference jqType = (jq_Reference)Reflection.getJQType(objType);
                 if (jqType.isArrayType()) continue;
-                jq.Assert(jqType.isClassType());
+                Assert._assert(jqType.isClassType());
                 jq_Class clazz = (jq_Class)jqType;
                 jq_InstanceField[] fields = clazz.getInstanceFields();
                 for (int k=0; k<fields.length; ++k) {
@@ -427,7 +427,7 @@ public class BootstrapRootSet {
     public void addAllInterfaceMethodImplementations(jq_InstanceMethod i_m) {
         addNecessaryMethod(i_m);
         jq_Class interf = i_m.getDeclaringClass();
-        jq.Assert(interf.isInterface());
+        Assert._assert(interf.isInterface());
         Iterator i = necessaryTypes.iterator();
         while (i.hasNext()) {
             jq_Type t = (jq_Type)i.next();
@@ -467,7 +467,7 @@ public class BootstrapRootSet {
 
     // not thread safe.
     public void trimClass(jq_Class clazz) {
-        jq.Assert(clazz.isPrepared());
+        Assert._assert(clazz.isPrepared());
 
 	jq_Class super_class = clazz.getSuperclass();
         if (super_class != null)
@@ -486,7 +486,7 @@ public class BootstrapRootSet {
                     it.remove();
                 }
             } else {
-                jq.Assert(m instanceof jq_Method);
+                Assert._assert(m instanceof jq_Method);
                 if (!necessaryMethods.contains(m)) {
                     if (TRACE) out.println("Eliminating method: "+m);
                     it.remove();

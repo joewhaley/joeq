@@ -21,6 +21,7 @@ import Compil3r.Quad.AndersenInterface.AndersenMember;
 import Main.jq;
 import Run_Time.Reflection;
 import UTF.Utf8;
+import Util.Assert;
 
 /*
  * @author  John Whaley
@@ -30,7 +31,7 @@ public abstract class jq_Member implements jq_ClassFileConstants, AndersenMember
 
     protected final void chkState(int s) {
         if (getState() >= s) return;
-        jq.UNREACHABLE(this + " actual state: " + getState() + " expected state: " + s);
+        Assert.UNREACHABLE(this + " actual state: " + getState() + " expected state: " + s);
     }
 
     public final int getState() {
@@ -56,8 +57,8 @@ public abstract class jq_Member implements jq_ClassFileConstants, AndersenMember
     public static final boolean USE_MEMBER_OBJECT_FIELD = true;
 
     protected jq_Member(jq_Class clazz, jq_NameAndDesc nd) {
-        jq.Assert(clazz != null);
-        jq.Assert(nd != null);
+        Assert._assert(clazz != null);
+        Assert._assert(nd != null);
         this.clazz = clazz;
         this.nd = nd;
         initializeMemberObject();
@@ -140,7 +141,7 @@ public abstract class jq_Member implements jq_ClassFileConstants, AndersenMember
 
     public void dumpAttributes(DataOutput out, jq_ConstantPool.ConstantPoolRebuilder cpr) throws IOException {
         int nattributes = attributes.size();
-        jq.Assert(nattributes <= Character.MAX_VALUE);
+        Assert._assert(nattributes <= Character.MAX_VALUE);
         out.writeChar(nattributes);
         for (Iterator i = attributes.entrySet().iterator(); i.hasNext();) {
             Map.Entry e = (Map.Entry) i.next();

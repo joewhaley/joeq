@@ -13,6 +13,7 @@ import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
 import Main.jq;
 import Run_Time.Reflection;
+import Util.Assert;
 
 /*
  * @author  John Whaley
@@ -37,13 +38,13 @@ abstract class FileSystem {
             } catch (Error x) {
                 throw x;
             } catch (Throwable x) {
-                jq.UNREACHABLE();
+                Assert.UNREACHABLE();
                 o = null;
             }
             DEFAULT_FS = o;
         } else {
             Object o = null;
-            jq.UNREACHABLE();
+            Assert.UNREACHABLE();
             DEFAULT_FS = o;
         }
     }

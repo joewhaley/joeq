@@ -23,4 +23,6 @@ public class AtomicCounter {
     public synchronized void reset(int v) { current = v-1; }
     
     public int value() { return current+1; }
+    
+    public String toString() { return Integer.toString(value()); }
 }

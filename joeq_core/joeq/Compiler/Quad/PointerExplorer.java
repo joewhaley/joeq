@@ -32,9 +32,9 @@ import Compil3r.Quad.MethodSummary.CallSite;
 import Compil3r.Quad.MethodSummary.PassedParameter;
 import Compil3r.Quad.SelectiveCloning.Specialization;
 import Main.HostedVM;
-import Main.jq;
-import Util.Default;
-import Util.FilterIterator;
+import Util.Assert;
+import Util.Collections.FilterIterator;
+import Util.Collections.Pair;
 /**
  *
  * @author  John Whaley
@@ -218,7 +218,7 @@ uphere2:
     static void printAllInclusionEdges(HashSet visited, MethodSummary.Node pnode, MethodSummary.Node node, String indent, boolean all, AndersenField f, boolean verbose) throws IOException {
         if (verbose) System.out.print(indent+"Node: "+node);
         if (pnode != null) {
-            Object q = apa.edgesToReasons.get(Default.pair(pnode, node));
+            Object q = apa.edgesToReasons.get(new Pair(pnode, node));
             if (q != null)
                 if (verbose) System.out.print(" from "+q);
         }
@@ -485,7 +485,7 @@ uphere:
 uphere:
             for (Iterator i=s.iterator(); i.hasNext(); ) {
                 Specialization s2 = (Specialization) i.next();
-                jq.Assert(s2.target.getMethod() == m);
+                Assert._assert(s2.target.getMethod() == m);
                 Set s3 = (Set) to_clone.get(s2);
                 for (Iterator j=s3.iterator(); j.hasNext(); ) {
                     ProgramLocation mc = (ProgramLocation) j.next();
@@ -518,7 +518,7 @@ uphere:
             Set s2 = (Set) methodToSpecializations.get(target_m);
             if (s2 == null) methodToSpecializations.put(target_m, s2 = new LinkedHashSet());
             boolean change = s2.add(s);
-            jq.Assert(change, s.toString());
+            Assert._assert(change, s.toString());
         }
         System.out.println(methodToSpecializations.size()+" different methods are to be specialized");
         
@@ -555,7 +555,7 @@ uphere:
                 for (Iterator k=s2.iterator(); k.hasNext(); ) {
                     Specialization special = (Specialization) k.next();
                     MethodSummary ms = MethodSummary.getSummary(cfg).copy();
-                    jq.Assert(specialToMS.get(special) == null);
+                    Assert._assert(specialToMS.get(special) == null);
                     specialToMS.put(special, ms);
                 }
             }
@@ -578,7 +578,7 @@ uphere:
                         MethodSummary source_ms = (MethodSummary) specialToMS.get(s4);
                         CallSite cs = new CallSite(source_ms, mc);
                         ControlFlowGraph target_cfg = CodeCache.getCode((jq_Method)target_ms.getMethod());
-                        MethodSummary.clone_cache.put(Default.pair(target_cfg, cs), target_ms);
+                        MethodSummary.clone_cache.put(new Pair(target_cfg, cs), target_ms);
                         //System.out.println(source_m+" is also specialized, adding special edges to "+target_ms.getMethod());
                     }
                 }
@@ -586,7 +586,7 @@ uphere:
                 ControlFlowGraph source_cfg = CodeCache.getCode((jq_Method)source_m);
                 MethodSummary source_ms = MethodSummary.getSummary(source_cfg);
                 CallSite cs = new CallSite(source_ms, mc);
-                MethodSummary.clone_cache.put(Default.pair(target_cfg, cs), target_ms);
+                MethodSummary.clone_cache.put(new Pair(target_cfg, cs), target_ms);
             }
         }
         System.out.println("Specializing a total of "+totalCallSites+" call sites.");
