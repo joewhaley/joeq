@@ -260,7 +260,7 @@ public abstract class jq_Member implements jq_ClassFileConstants, Textualizable 
     
     public void write(Textualizer t) throws IOException {
         getDeclaringClass().write(t);
-        t.writeBytes(" "+getName()+" "+getDesc());
+        t.writeString(" "+getName()+" "+getDesc());
     }
     public void writeEdges(Textualizer t) throws IOException { }
     public void addEdge(String edgeName, Textualizable t) { }

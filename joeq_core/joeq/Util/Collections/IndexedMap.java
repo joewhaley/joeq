@@ -3,9 +3,9 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Util.Collections;
 
-import java.io.DataOutput;
-import java.io.IOException;
 import java.util.Iterator;
+import java.io.BufferedWriter;
+import java.io.IOException;
 
 /**
  * Interface for an indexed map.  An indexed map provides a mapping
@@ -21,7 +21,7 @@ public interface IndexedMap {
     boolean contains(Object o);
     Iterator iterator();
     int size();
-    void dump(final DataOutput out) throws IOException;
-    void dumpStrings(final DataOutput out) throws IOException;
+    void dump(final BufferedWriter out) throws IOException;
+    void dumpStrings(final BufferedWriter out) throws IOException;
     
 }

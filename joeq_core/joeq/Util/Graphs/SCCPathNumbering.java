@@ -6,10 +6,6 @@
  */
 package joeq.Util.Graphs;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-import java.math.BigInteger;
 import java.util.AbstractList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -22,16 +18,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
-import java.util.StringTokenizer;
 import java.util.TreeSet;
-
+import java.math.BigInteger;
 import joeq.Util.Assert;
 import joeq.Util.Strings;
 import joeq.Util.Collections.IndexMap;
 import joeq.Util.Collections.Pair;
 import joeq.Util.Collections.UnmodifiableIterator;
-import joeq.Util.IO.Textualizable;
-import joeq.Util.IO.Textualizer;
 
 /**
  * SCCPathNumbering
@@ -448,148 +441,6 @@ public class SCCPathNumbering extends PathNumbering {
     
     public SCCTopSortedGraph getSCCGraph() {
         return graph;
-    }
-    
-    public static SCCPathNumbering read(DataInput in) throws IOException {
-        HashMap idToSCC = new HashMap();
-        SCCPathNumbering p = new SCCPathNumbering();
-        String s;
-        StringTokenizer st;
-        s = in.readLine();
-        Textualizer t = new Textualizer.Map(in);
-        int nodeToScc_size = Integer.parseInt(s);
-        for (int i = 0; i < nodeToScc_size; ++i) {
-            s = in.readLine();
-            st = new StringTokenizer(s);
-            Textualizable t2 = t.readObject();
-            s = st.nextToken();
-            Assert._assert(s.equals("->"));
-            s = st.nextToken();
-            Assert._assert(s.startsWith("SCC"));
-            int id = Integer.parseInt(s.substring(3));
-            Integer key = new Integer(id);
-            SCComponent scc = (SCComponent) idToSCC.get(key);
-            if (scc == null) { idToSCC.put(key, scc = new SCComponent()); }
-            Object result = p.nodeToScc.put(t2, scc);
-            Assert._assert(result == null);
-        }
-        
-        s = in.readLine();
-        int sccNumbering_size = Integer.parseInt(s);
-        for (int i = 0; i < sccNumbering_size; ++i) {
-            s = in.readLine();
-            st = new StringTokenizer(s);
-            s = st.nextToken();
-            Assert._assert(s.startsWith("SCC"));
-            int id = Integer.parseInt(s.substring(3));
-            Integer key = new Integer(id);
-            SCComponent scc = (SCComponent) idToSCC.get(key);
-            Assert._assert(scc != null);
-            s = st.nextToken();
-            Assert._assert(s.equals("Range"));
-            Range r = Range.read(st);
-            Object result = p.sccNumbering.put(scc, r);
-            Assert._assert(result == null);
-        }
-        
-        s = in.readLine();
-        int sccEdges_size = Integer.parseInt(s);
-        for (int i = 0; i < sccEdges_size; ++i) {
-            s = in.readLine();
-            st = new StringTokenizer(s);
-            s = st.nextToken();
-            Assert._assert(s.startsWith("SCC"));
-            int id1 = Integer.parseInt(s.substring(3));
-            Integer key1 = new Integer(id1);
-            SCComponent scc1 = (SCComponent) idToSCC.get(key1);
-            Assert._assert(scc1 != null);
-            s = st.nextToken();
-            Assert._assert(s.startsWith("SCC"));
-            int id2 = Integer.parseInt(s.substring(3));
-            Integer key2 = new Integer(id2);
-            SCComponent scc2 = (SCComponent) idToSCC.get(key2);
-            Assert._assert(scc2 != null);
-            Pair p1 = new Pair(scc1, scc2);
-            s = st.nextToken();
-            int edges_size = Integer.parseInt(s);
-            HashSet set = new HashSet();
-            for (int j = 0; j < edges_size; ++j) {
-                Textualizable t1 = t.readObject();
-                Textualizable t2 = t.readObject();
-                Pair p2 = new Pair(t1, t2);
-                set.add(p2);
-            }
-            p.sccEdges.put(p1, set);
-        }
-        
-        s = in.readLine();
-        int edgeNumbering_size = Integer.parseInt(s);
-        for (int i = 0; i < edgeNumbering_size; ++i) {
-            s = in.readLine();
-            st = new StringTokenizer(s);
-            Textualizable t1 = t.readObject();
-            Textualizable t2 = t.readObject();
-            Pair p1 = new Pair(t1, t2);
-            Range r = Range.read(st);
-            p.edgeNumbering.put(p1, r);
-        }
-        return p;
-    }
-    
-    public void dump(DataOutput ou) throws IOException {
-        IndexMap sccs = new IndexMap("SCCs");
-        sccs.addAll(nodeToScc.values());
-        Textualizer t = new Textualizer.Map(ou, sccs);
-        t.writeBytes(nodeToScc.size()+"\n");
-        for (Iterator i = nodeToScc.entrySet().iterator(); i.hasNext(); ) {
-            Map.Entry e = (Map.Entry) i.next();
-            Textualizable o = (Textualizable) e.getKey();
-            o.write(t);
-            SCComponent scc = (SCComponent) e.getValue();
-            t.writeBytes(" -> SCC"+scc.getId()+"\n");
-        }
-        t.writeBytes(sccNumbering.size()+"\n");
-        for (Iterator i = sccNumbering.entrySet().iterator(); i.hasNext(); ) {
-            Map.Entry e = (Map.Entry) i.next();
-            SCComponent scc = (SCComponent) e.getKey();
-            Range r = (Range) e.getValue();
-            t.writeBytes("SCC"+scc.getId()+" Range ");
-            r.write(t);
-            t.writeBytes("\n");
-        }
-        t.writeBytes(sccEdges.size()+"\n");
-        for (Iterator i = sccEdges.entrySet().iterator(); i.hasNext(); ) {
-            Map.Entry e = (Map.Entry) i.next();
-            Pair p = (Pair) e.getKey();
-            SCComponent scc1 = (SCComponent) p.left;
-            SCComponent scc2 = (SCComponent) p.right;
-            Collection edges = (Collection) e.getValue();
-            t.writeBytes("SCC"+scc1.getId()+" SCC"+scc2.getId()+" "+edges.size());
-            for (Iterator j = edges.iterator(); j.hasNext(); ) {
-                Pair p2 = (Pair) j.next();
-                t.writeBytes(" ");
-                Textualizable t1 = (Textualizable) p2.left;
-                t1.write(t);
-                t.writeBytes(" ");
-                Textualizable t2 = (Textualizable) p2.right;
-                t2.write(t);
-            }
-            t.writeBytes("\n");
-        }
-        t.writeBytes(edgeNumbering.size()+"\n");
-        for (Iterator i = sccEdges.entrySet().iterator(); i.hasNext(); ) {
-            Map.Entry e = (Map.Entry) i.next();
-            Pair p = (Pair) e.getKey();
-            Textualizable t1 = (Textualizable) p.left;
-            t1.write(t);
-            t.writeBytes(" ");
-            Textualizable t2 = (Textualizable) p.right;
-            t2.write(t);
-            t.writeBytes(" ");
-            Range r = (Range) e.getValue();
-            r.write(t);
-            t.writeBytes("\n");
-        }
     }
     
 }

@@ -3,15 +3,14 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Util.Graphs;
 
-import java.io.DataOutput;
-import java.io.IOException;
-import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.StringTokenizer;
-
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.math.BigInteger;
 import joeq.Util.Collections.IndexMap;
 import joeq.Util.Collections.Pair;
 import joeq.Util.IO.Textualizable;
@@ -37,16 +36,16 @@ public abstract class PathNumbering {
         return getEdge(edge.left, edge.right);
     }
 
-    public void dotGraph(DataOutput out, Collection roots, Navigator navigator) throws IOException {
-        out.writeBytes("digraph \"PathNumbering\" {\n");
-        out.writeBytes("  concentrate=true; node[fontsize=7];\n");
+    public void dotGraph(BufferedWriter out, Collection roots, Navigator navigator) throws IOException {
+        out.write("digraph \"PathNumbering\" {\n");
+        out.write("  concentrate=true; node[fontsize=7];\n");
         LinkedList toVisit = new LinkedList();
         toVisit.addAll(roots);
         IndexMap m = new IndexMap("NodeMap");
         while (!toVisit.isEmpty()) {
             Object source = toVisit.removeFirst();
             int j = m.get(source);
-            out.writeBytes("  n"+j+" [label=\""+source+"\"];\n");
+            out.write("  n"+j+" [label=\""+source+"\"];\n");
             for (Iterator i = navigator.next(source).iterator(); i.hasNext(); ) {
                 Object target = i.next();
                 if (!m.contains(target)) {
@@ -54,10 +53,10 @@ public abstract class PathNumbering {
                 }
                 int k = m.get(target);
                 Range r = getEdge(source, target);
-                out.writeBytes("  n"+j+" -> n"+k+" [label=\""+r+"\"];\n");
+                out.write("  n"+j+" -> n"+k+" [label=\""+r+"\"];\n");
             }
         }
-        out.writeBytes("}\n");
+        out.write("}\n");
     }
     
     public static class Range implements Textualizable {
@@ -94,7 +93,7 @@ public abstract class PathNumbering {
             return low.hashCode() ^ high.hashCode();
         }
         public void write(Textualizer t) throws IOException {
-            t.writeBytes(low+" "+high);
+            t.writeString(low+" "+high);
         }
         public void writeEdges(Textualizer t) throws IOException { }
         public void addEdge(String s, Textualizable t) { }

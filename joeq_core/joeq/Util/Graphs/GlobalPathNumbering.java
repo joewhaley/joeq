@@ -48,7 +48,9 @@ public class GlobalPathNumbering extends PathNumbering {
             for (Iterator i = prev.iterator(); i.hasNext(); ) {
                 Object p = i.next();
                 BigInteger val2 = (BigInteger) nodeNumbering.get(p);
-                if (val2 == null) val2 = BigInteger.ZERO;
+                if (val2 == null) {
+                    nodeNumbering.put(p, val2 = BigInteger.ZERO);
+                }
                 BigInteger val3 = val.add(val2);
                 Object edge = new Pair(o, p);
                 Range range = new Range(val, val3.subtract(BigInteger.ONE));
@@ -66,6 +68,7 @@ public class GlobalPathNumbering extends PathNumbering {
      */
     public Range getRange(Object o) {
         BigInteger b = (BigInteger) nodeNumbering.get(o);
+        if (b == null) b = BigInteger.ZERO;
         return new Range(BigInteger.ZERO, b.subtract(BigInteger.ONE));
     }
 

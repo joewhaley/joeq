@@ -3,8 +3,6 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Util.Graphs;
 
-import java.io.IOException;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -14,12 +12,10 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-
+import java.io.Serializable;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.CallGraph;
 import joeq.Util.Assert;
-import joeq.Util.IO.Textualizable;
-import joeq.Util.IO.Textualizer;
 
 /**
  * <code>SCComponent</code> models a <i>Strongly connected component</i> of a graph.
@@ -38,7 +34,7 @@ import joeq.Util.IO.Textualizer;
  * @author  Alexandru SALCIANU <salcianu@alum.mit.edu>
  * @version $Id$
  */
-public final class SCComponent implements Comparable, Serializable, Textualizable {
+public final class SCComponent implements Comparable, Serializable {
 
     /** Default navigator through a component graph (a dag of strongly
         connected components).  */
@@ -506,45 +502,6 @@ public final class SCComponent implements Comparable, Serializable, Textualizabl
         } else {
             return id;
         }
-    }
-
-    public void write(Textualizer t) throws IOException {
-        t.writeBytes(id+" "+nodes_array.length);
-        for (int i = 0; i < nodes_array.length; ++i) {
-            t.writeBytes(" ");
-            Textualizable o = (Textualizable) nodes_array[i];
-            t.writeReference(o);
-        }
-        t.writeBytes(" "+next.length);
-        for (int i = 0; i < next.length; ++i) {
-            t.writeBytes(" ");
-            t.writeReference(next[i]);
-        }
-        t.writeBytes(" "+prev.length);
-        for (int i = 0; i < prev.length; ++i) {
-            t.writeBytes(" ");
-            t.writeReference(prev[i]);
-        }
-        t.writeBytes(" "+entries.length);
-        for (int i = 0; i < entries.length; ++i) {
-            t.writeBytes(" ");
-            t.writeReference((Textualizable) entries[i]);
-        }
-        t.writeBytes(" "+exits.length);
-        for (int i = 0; i < exits.length; ++i) {
-            t.writeBytes(" ");
-            t.writeReference((Textualizable) exits[i]);
-        }
-        t.writeBytes(" "+loop);
-    }
-    
-    public void writeEdges(Textualizer t) throws IOException {
-    }
-
-    /* (non-Javadoc)
-     * @see joeq.Util.IO.Textualizable#addEdge(java.lang.String, Util.IO.Textualizable)
-     */
-    public void addEdge(String edge, Textualizable t) {
     }
 
 }

@@ -1,14 +1,13 @@
 package joeq.Compiler.Analysis.IPA;
 
-import java.io.DataOutputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.PrintStream;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintStream;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_Reference;
@@ -241,7 +240,7 @@ public class ObjectCreationGraph extends QuadVisitor.EmptyVisitor
             }
         }
         
-        DataOutputStream out = new DataOutputStream(new FileOutputStream("creation_graph.dot"));
+        BufferedWriter out = new BufferedWriter(new FileWriter("creation_graph.dot"));
         n.dotGraph(out, g.getRoots(), g.getNavigator());
         out.close();
     }

@@ -2,17 +2,16 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Analysis.BDD;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import joeq.Class.jq_Field;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Analysis.IPA.ProgramLocation;
@@ -36,7 +35,6 @@ import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Compiler.Quad.SSA.EnterSSA;
 import joeq.Util.Assert;
 import joeq.Util.Collections.IndexMap;
-
 import org.sf.javabdd.BDD;
 import org.sf.javabdd.BDDDomain;
 import org.sf.javabdd.BDDFactory;
@@ -175,7 +173,7 @@ public class BuildBDDIR implements ControlFlowGraphVisitor {
     void loadOpMap() {
         String fileName = "op.map";
         try {
-            DataInputStream in = new DataInputStream(new FileInputStream(fileName));
+            BufferedReader in = new BufferedReader(new FileReader(fileName));
             opMap = IndexMap.loadStringMap("op", in);
             in.close();
         } catch (IOException x) {
@@ -472,59 +470,59 @@ public class BuildBDDIR implements ControlFlowGraphVisitor {
     }
     
     void dumpBDDConfig(String fileName) throws IOException {
-        DataOutputStream dos = null;
+        BufferedWriter dos = null;
         try {
-            dos = new DataOutputStream(new FileOutputStream(fileName));
+            dos = new BufferedWriter(new FileWriter(fileName));
             for (int i = 0; i < bdd.numberOfDomains(); ++i) {
                 BDDDomain d = bdd.getDomain(i);
-                dos.writeBytes(d.getName()+" "+d.size()+"\n");
+                dos.write(d.getName()+" "+d.size()+"\n");
             }
         } finally {
             if (dos != null) dos.close();
         }
     }
     
-    public void dumpFieldDomains(DataOutputStream dos) throws IOException {
-        dos.writeBytes("method "+(1L<<methodBits)+"\n");
-        dos.writeBytes("quad "+(1L<<quadBits)+"\n");
-        dos.writeBytes("op "+(1L<<opBits)+" op.map\n");
-        dos.writeBytes("reg "+(1L<<regBits)+"\n");
-        dos.writeBytes("constant "+(1L<<constantBits)+" constant.map\n");
-        dos.writeBytes("member "+(1L<<memberBits)+"\n");
-        dos.writeBytes("varargs "+(1L<<varargsBits)+"\n");
+    public void dumpFieldDomains(BufferedWriter dos) throws IOException {
+        dos.write("method "+(1L<<methodBits)+"\n");
+        dos.write("quad "+(1L<<quadBits)+"\n");
+        dos.write("op "+(1L<<opBits)+" op.map\n");
+        dos.write("reg "+(1L<<regBits)+"\n");
+        dos.write("constant "+(1L<<constantBits)+" constant.map\n");
+        dos.write("member "+(1L<<memberBits)+"\n");
+        dos.write("varargs "+(1L<<varargsBits)+"\n");
     }
     
     public void dumpFieldDomains(String fileName) throws IOException {
-        DataOutputStream dos = null;
+        BufferedWriter dos = null;
         try {
-            dos = new DataOutputStream(new FileOutputStream(fileName));
+            dos = new BufferedWriter(new FileWriter(fileName));
             dumpFieldDomains(dos);
         } finally {
             if (dos != null) dos.close();
         }
     }
     
-    void dumpRelation(DataOutputStream dos, String name, BDD relation) throws IOException {
+    void dumpRelation(BufferedWriter dos, String name, BDD relation) throws IOException {
         int[] a = relation.support().scanSetDomains();
-        dos.writeBytes(name+" ( ");
+        dos.write(name+" ( ");
         for (int i = 0; i < a.length; ++i) {
-            if (i > 0) dos.writeBytes(", ");
+            if (i > 0) dos.write(", ");
             BDDDomain d = bdd.getDomain(a[i]);
-            dos.writeBytes(d.toString()+" : ");
-            if (d == quad || d == fallthrough || d == target) dos.writeBytes("quad ");
-            else if (d == method) dos.writeBytes("method ");
-            else if (d == opc) dos.writeBytes("op ");
-            else if (d == dest || d == srcs || d == src1 || d == src2) dos.writeBytes("reg ");
-            else if (d == constant) dos.writeBytes("constant ");
-            else if (d == member) dos.writeBytes("member ");
-            else if (d == srcNum) dos.writeBytes("varargs ");
-            else dos.writeBytes("??? ");
+            dos.write(d.toString()+" : ");
+            if (d == quad || d == fallthrough || d == target) dos.write("quad ");
+            else if (d == method) dos.write("method ");
+            else if (d == opc) dos.write("op ");
+            else if (d == dest || d == srcs || d == src1 || d == src2) dos.write("reg ");
+            else if (d == constant) dos.write("constant ");
+            else if (d == member) dos.write("member ");
+            else if (d == srcNum) dos.write("varargs ");
+            else dos.write("??? ");
         }
-        dos.writeBytes(")\n");
+        dos.write(")\n");
     }
     
     void dumpRelations(String fileName) throws IOException {
-        DataOutputStream dos = new DataOutputStream(new FileOutputStream(fileName));
+        BufferedWriter dos = new BufferedWriter(new FileWriter(fileName));
         dumpRelation(dos, "m2q", methodToQuad);
         if (SSA) {
             dumpRelation(dos, "ssa", allQuads);
@@ -538,9 +536,9 @@ public class BuildBDDIR implements ControlFlowGraphVisitor {
     }
     
     void dumpMap(IndexMap map, String fileName) throws IOException {
-        DataOutputStream dos = null;
+        BufferedWriter dos = null;
         try {
-            dos = new DataOutputStream(new FileOutputStream(fileName));
+            dos = new BufferedWriter(new FileWriter(fileName));
             for (int i = 0; i < map.size(); ++i) {
                 Object o = map.get(i);
                 String s;
@@ -561,7 +559,7 @@ public class BuildBDDIR implements ControlFlowGraphVisitor {
                     }
                 }
                 s = new String(sb);
-                dos.writeBytes(s + "\n");
+                dos.write(s + "\n");
             }
         } finally {
             if (dos != null) dos.close();
@@ -569,9 +567,9 @@ public class BuildBDDIR implements ControlFlowGraphVisitor {
     }
     
     public static void dumpTuples(BDDFactory bdd, String fileName, BDD relation) throws IOException {
-        DataOutputStream dos = null;
+        BufferedWriter dos = null;
         try {
-            dos = new DataOutputStream(new FileOutputStream(fileName));
+            dos = new BufferedWriter(new FileWriter(fileName));
             if (relation.isZero()) {
                 return;
             }
@@ -581,14 +579,14 @@ public class BuildBDDIR implements ControlFlowGraphVisitor {
             rsup.free();
             BDD allDomains = bdd.one();
             System.out.print(fileName+" domains {");
-            dos.writeBytes("#");
+            dos.write("#");
             for (int i = 0; i < a.length; ++i) {
                 BDDDomain d = bdd.getDomain(a[i]);
                 System.out.print(" "+d.toString());
-                dos.writeBytes(" "+d.toString()+":"+d.varNum());
+                dos.write(" "+d.toString()+":"+d.varNum());
                 allDomains.andWith(d.set());
             }
-            dos.writeBytes("\n");
+            dos.write("\n");
             System.out.println(" } = "+relation.nodeCount()+" nodes");
             BDDDomain primaryDomain = bdd.getDomain(a[0]);
             int lines = 0;
@@ -608,7 +606,7 @@ public class BuildBDDIR implements ControlFlowGraphVisitor {
                         BDDDomain d = bdd.getDomain(j);
                         if (k >= a.length || a[k] != j) {
                             Assert._assert(v[j] == 0, "v["+j+"] is "+v[j]);
-                            //dos.writeBytes("* ");
+                            //dos.write("* ");
                             t.andWith(d.domain());
                             continue;
                         } else {
@@ -616,17 +614,17 @@ public class BuildBDDIR implements ControlFlowGraphVisitor {
                         }
                         if (l >= b.length || b[l] != j) {
                             Assert._assert(v[j] == 0, "v["+j+"] is "+v[j]);
-                            dos.writeBytes("* ");
+                            dos.write("* ");
                             t.andWith(d.domain());
                             continue;
                         } else {
                             ++l;
                         }
-                        dos.writeBytes(v[j]+" ");
+                        dos.write(v[j]+" ");
                         t.andWith(d.ithVar(v[j]));
                     }
                     q.applyWith(t, BDDFactory.diff);
-                    dos.writeBytes("\n");
+                    dos.write("\n");
                     ++lines;
                 }
                 q.free();
