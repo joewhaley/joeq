@@ -57,6 +57,7 @@ public class PAQuery {
             //TypedBDD pointsTo = (TypedBDD)params.relprod(r.vP, r.V1cH1cset);
             //System.out.println("pointsTo: \n" + paResults.toString(pointsTo, -1));
             int i = 0;
+            long contextSize = (long)contexts.satCount(r.V1c.set());
             for(Iterator contextIter = contexts.iterator(); contextIter.hasNext(); i++) {
                 TypedBDD context = (TypedBDD)contextIter.next();
                 
@@ -68,9 +69,10 @@ public class PAQuery {
                 t.free();
                 t = t2;
                 
-                /*TypedBDD */t = (TypedBDD)params.relprod(r.vP, r.V1.set());
+                //TypedBDD t = (TypedBDD)params.relprod(r.vP, r.V1.set());
                 TypedBDD pointsTo = (TypedBDD)context.relprod(t, r.V1c.set().andWith(r.H1c.set()));                
                 t.free();
+                
                 t = (TypedBDD)pointsTo.exist(r.Z.set());
                 //System.out.println(t.satCount() + ", " + pointsTo.satCount());
                 int pointsToSize = (int)pointsTo.satCount(r.H1.set().and(r.Zset));
@@ -78,14 +80,18 @@ public class PAQuery {
                 if(projSize < pointsToSize) {                
                     ProgramLocation loc = new ProgramLocation.BCProgramLocation(m, 0);
                     System.out.println("\tPotential aliasing in context #" + i + " calling " + m.toString() + " at " + 
-                    loc.getSourceFile() + ":" + loc.getLineNumber());
+                        loc.getSourceFile() + ":" + loc.getLineNumber());
+                    if(contextSize > 5) {
+                        System.out.println("\t\t(A total of " + contextSize + " contexts) \n");  
+                        break;
+                    }
                     /*": " + "pointsTo: \n" + pointsToSize + ": " + paResults.toString(pointsTo, -1)*/
                                                
                     //System.out.println("context #" + i + ": " + 
                     //    projSize + ": " + t.toStringWithDomains() + "\n");
                 }
                 t.free();
-            }      
+            }
         }
         
         public void run() {
