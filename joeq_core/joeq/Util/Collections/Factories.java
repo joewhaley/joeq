@@ -30,6 +30,7 @@ public final class Factories {
                 return new java.util.HashMap(map);
             }
     };
+    public static final MapFactory hashMapFactory() { return hashMapFactory; }
     
     /** A <code>SetFactory</code> that generates <code>HashSet</code>s. */
     public static final SetFactory hashSetFactory = new SerialSetFactory() {
@@ -40,16 +41,7 @@ public final class Factories {
                 return new java.util.HashSet(i);
             }
     };
-    
-    /** A <code>SetFactory</code> that generates <code>WorkSet</code>s. */
-    private static final SetFactory workSetFactory = new SerialSetFactory() {
-            public java.util.Set makeSet(java.util.Collection c) {
-                return new WorkSet(c);
-            }
-            public Set makeSet(int i) {
-                return new WorkSet(i);
-            }
-    };
+    public static final SetFactory hashSetFactory() { return hashSetFactory; }
     
     /** A <code>SetFactory</code> that generates
         <code>LinearSet</code>s backed by <code>ArrayList</code>s. */
@@ -82,6 +74,7 @@ public final class Factories {
                 return new java.util.LinkedList(c);
             }
     };
+    public static final ListFactory linkedListFactory() { return linkedListFactory; }
 
     /** Returns a <code>ListFactory</code> that generates
         <code>ArrayList</code>s. */
