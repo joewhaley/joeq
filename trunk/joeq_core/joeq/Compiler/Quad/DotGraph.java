@@ -7,7 +7,10 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Iterator;
 
 import Clazz.jq_Class;
@@ -176,6 +179,7 @@ public class DotGraph implements ControlFlowGraphVisitor {
      * Use the dot helper class to output this cfg as a Graph.
      */
     public void visitCFG (ControlFlowGraph cfg) {
+	final HashMap fedge2PEIList = new HashMap();
         try {
             String filename = createMethodName(cfg.getMethod());
 	    dot.openGraph(filename);
@@ -189,7 +193,7 @@ public class DotGraph implements ControlFlowGraphVisitor {
                     if (!bb.isExit()) {
                         ListIterator.Quad qit = bb.iterator();
                         StringBuffer l = new StringBuffer(" " + bb.toString() + "\\l");
-                        HashSet allExceptions = new HashSet();
+                        HashMap/*<jq_Class,List.Quad>*/ exceptions2PEIList = new HashMap();
                         while (qit.hasNext()) {
                             l.append(" ");
                             Quad quad = qit.nextQuad();
@@ -197,7 +201,11 @@ public class DotGraph implements ControlFlowGraphVisitor {
                             l.append("\\l");
                             ListIterator.jq_Class exceptions = quad.getThrownExceptions().classIterator();
                             while (exceptions.hasNext()) {
-                                allExceptions.add(exceptions.nextClass());
+				jq_Class exc = exceptions.nextClass();
+				ArrayList peis = (ArrayList)exceptions2PEIList.get(exc);
+				if (peis == null)
+				    exceptions2PEIList.put(exc, peis = new ArrayList());
+				peis.add(quad);
                             }
                         }
                         dot.userDefined("\t" + bb.toString() + " [shape=box,label=\"" + l + "\"];\n");
@@ -212,15 +220,23 @@ public class DotGraph implements ControlFlowGraphVisitor {
                             }
                         }
 
-                        Iterator eit = allExceptions.iterator();
+                        Iterator eit = exceptions2PEIList.entrySet().iterator();
                         while (eit.hasNext()) {
-                            jq_Class exc = (jq_Class)eit.next();
+                            Map.Entry e = (Map.Entry)eit.next();
+                            jq_Class exc = (jq_Class)e.getKey();
+                            List/*<Quad>*/ thisPeiList = (List)e.getValue();
                             ListIterator.ExceptionHandler mayCatch;
                             mayCatch = bb.getExceptionHandlers().mayCatch(exc).exceptionHandlerIterator();
                             while (mayCatch.hasNext()) {
                                 ExceptionHandler exceptionHandler = mayCatch.nextExceptionHandler();
                                 BasicBlock nextbb = exceptionHandler.getEntry();
-                                dot.addEdge(bb.toString(), nextbb.toString(), exceptionHandler.getExceptionType().toString());
+				FactoredEdge fe = new FactoredEdge(bb, nextbb, exceptionHandler.getExceptionType());	
+				List factoredPeiList = (List)fedge2PEIList.get(fe);
+				if (factoredPeiList == null) {
+				    fedge2PEIList.put(fe, factoredPeiList = new ArrayList());
+				}
+				factoredPeiList.addAll(thisPeiList);
+                                // dot.addEdge(bb.toString(), nextbb.toString(), peis + exceptionHandler.getExceptionType().toString());
                             }
                             // if (bb.getExceptionHandlers().mustCatch(exc) == null) { }
                         }
@@ -228,7 +244,44 @@ public class DotGraph implements ControlFlowGraphVisitor {
                 }
             });
         } finally {
+	    Iterator fedges = fedge2PEIList.entrySet().iterator();
+	    while (fedges.hasNext()) {
+		Map.Entry e = (Map.Entry)fedges.next();
+		FactoredEdge fe = (FactoredEdge)e.getKey();
+		List factoredPeiList = (List)e.getValue();
+
+		String peis = "[" + ((Quad)factoredPeiList.get(0)).getID();
+		for (int i = 1; i < factoredPeiList.size(); i++) {
+		    peis += ", " + ((Quad)factoredPeiList.get(i)).getID();
+		}
+		peis += "] ";
+		dot.addEdge(fe.from.toString(), fe.to.toString(), peis + fe.exception); 
+	    }
+
             dot.closeGraph();
         }
+    }
+
+    class FactoredEdge {
+	BasicBlock from, to;
+	jq_Class exception;
+
+	FactoredEdge(BasicBlock from, BasicBlock to, jq_Class exception) {
+	    this.from = from;
+	    this.to = to;
+	    this.exception = exception;
+	}
+
+	public boolean equals(Object that) {
+	    return equals((FactoredEdge)that);
+	}
+
+	public int hashCode() {
+	    return from.hashCode() ^ to.hashCode();
+	}
+
+	public boolean equals(FactoredEdge that) {
+	    return this.from.equals(that.from) && this.to.equals(that.to) && this.exception.equals(that.exception);
+	}
     }
 }
