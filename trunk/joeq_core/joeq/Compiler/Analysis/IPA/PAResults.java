@@ -5,10 +5,14 @@ package Compil3r.Analysis.IPA;
 
 import java.io.DataInput;
 import java.io.DataInputStream;
+import java.io.DataOutput;
+import java.io.DataOutputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -32,6 +36,7 @@ import Compil3r.Quad.LoadedCallGraph;
 import Main.HostedVM;
 import Util.Assert;
 import Util.Strings;
+import Util.Collections.HashWorklist;
 import Util.Graphs.PathNumbering.Path;
 
 /**
@@ -212,17 +217,27 @@ public class PAResults {
                     TypedBDD bdd1 = parseBDD(results, st.nextToken());
                     TypedBDD r = (TypedBDD) getReachableVars(bdd1);
                     results.add(r);
+                } else if (command.equals("usedef")) {
+                    TypedBDD bdd1 = parseBDD(results, st.nextToken());
+                    BDD r = calculateUseDef(bdd1);
+                    results.add(r);
                 } else if (command.equals("printusedef")) {
                     TypedBDD bdd1 = parseBDD(results, st.nextToken());
                     printUseDefChain(bdd1);
                     increaseCount = false;
-                } else if (command.equals("usedef")) {
+                } else if (command.equals("dumpusedef")) {
                     TypedBDD bdd1 = parseBDD(results, st.nextToken());
-                    BDD r = printUseDef(bdd1);
+                    DataOutput out = new DataOutputStream(new FileOutputStream("usedef.dot"));
+                    this.defUseGraph(bdd1, false, out);
+                    increaseCount = false;
+                } else if (command.equals("defuse")) {
+                    TypedBDD bdd1 = parseBDD(results, st.nextToken());
+                    BDD r = calculateDefUse(bdd1);
                     results.add(r);
-                } else if (command.equals("printdefuse")) {
+                } else if (command.equals("dumpdefuse")) {
                     TypedBDD bdd1 = parseBDD(results, st.nextToken());
-                    printDefUseChain(bdd1);
+                    DataOutput out = new DataOutputStream(new FileOutputStream("defuse.dot"));
+                    this.defUseGraph(bdd1, true, out);
                     increaseCount = false;
                 } else if (command.equals("help")) {
                     printHelp();
@@ -391,30 +406,101 @@ public class PAResults {
         return sb.toString();
     }
 
-    public BDD printUseDef(BDD vPrelation) {
-        vPrelation = vPrelation.id();
+    /***** COOL OPERATIONS BELOW *****/
+    
+    /** Given a set of uses (V1xV1c), calculate the set of definitions (V1xV1c) that
+     * reach that set of uses.  Only does one step at a time; you'll have to iterate
+     * to get the transitive closure.
+     */
+    public BDD calculateUseDef(BDD r_v1) {
         // A: v2=v1;
-        BDD b = r.A.relprod(vPrelation, r.V1set);
-        System.out.println("Arguments/Return Values = "+b.satCount(r.V2set));
+        BDD b = r.A.relprod(r_v1, r.V1set); // V2
+        b.replaceWith(r.V2toV1);
+        //System.out.println("Arguments/Return Values = "+b.satCount(r.V2set));
+        BDD r_v2 = r_v1.replace(r.V1toV2);
         // L: v2=v1.f;
-        vPrelation.replaceWith(r.V1toV2);
-        BDD c = r.L.relprod(vPrelation, r.V2set); // V1xF
-        vPrelation.free();
+        BDD c = r.L.relprod(r_v2, r.V2set); // V1xF
+        r_v2.free();
         BDD d = r.vP.relprod(c, r.V1set); // H1xF
         c.free();
         BDD e = r.hP.relprod(d, r.H1Fset); // H2
         d.free();
         e.replaceWith(r.H2toH1);
         BDD f = r.vP.relprod(e, r.H1set); // V1
-        System.out.println("Loads/Stores = "+f.satCount(r.V1set));
+        //System.out.println("Loads/Stores = "+f.satCount(r.V1set));
         e.free();
-        vPrelation = b;
-        vPrelation.replaceWith(r.V2toV1);
-        vPrelation.orWith(f);
-        System.out.println(vPrelation.toStringWithDomains(r.TS));
-        return vPrelation;
+        f.orWith(b);
+        return f;
     }
     
+    /** Given a set of definitions (V1xV1c), calculate the set of uses (V1xV1c) that
+     * reach that set of definitions.  Only does one step at a time; you'll have to
+     * iterate to get the transitive closure.
+     */
+    public BDD calculateDefUse(BDD r_v1) {
+        BDD r_v2 = r_v1.replace(r.V1toV2);
+        // A: v2=v1;
+        BDD b = r.A.relprod(r_v2, r.V2set);
+        System.out.println("Arguments/Return Values = "+b.satCount(r.V1set));
+        // S: v1.f=v2;
+        BDD c = r.S.relprod(r_v2, r.V2set); // V1xF
+        r_v2.free();
+        BDD d = r.vP.relprod(c, r.V1set); // H1xF
+        c.free();
+        BDD e = r.vP.relprod(d, r.H1set); // V1xF
+        d.free();
+        // L: v2=v1.f;
+        BDD f = r.L.relprod(e, r.V1Fset); // V2
+        f.replaceWith(r.V2toV1);
+        System.out.println("Loads/Stores = "+f.satCount(r.V1set));
+        f.orWith(b);
+        return f;
+    }
+
+    /** Output def-use or use-def graph in dot format.
+     */
+    public void defUseGraph(BDD vPrelation, boolean direction, DataOutput out) throws IOException {
+        out.writeBytes("digraph \");");
+        if (direction) out.writeBytes("DefUse");
+        else out.writeBytes("UseDef");
+        out.writeBytes("\" {\n");
+        HashWorklist w = new HashWorklist(true);
+        BDD c = vPrelation.id();
+        int k = -1;
+        Node n = null;
+        for (;;) {
+            while (!c.isZero()) {
+                int k2 = (int) c.scanVar(r.V1);
+                Node n2 = getVariableNode(k2);
+                if (w.add(n2)) {
+                    String name = n2.toString();
+                    out.writeBytes("n"+k2+" [label=\""+name+"\"];\n");
+                }
+                if (n != null) {
+                    if (direction) {
+                        out.writeBytes("n"+k+
+                                       " -> n"+k2+";\n");
+                    } else {
+                        out.writeBytes("n"+k2+
+                                       " -> n"+k+";\n");
+                    }
+                }
+                BDD q = r.V1.ithVar(k2);
+                q.andWith(r.V1c.domain());
+                c.applyWith(q, BDDFactory.diff);
+            }
+            if (w.isEmpty()) break;
+            n = (Node) w.pull();
+            k = getVariableIndex(n);
+            BDD b = r.V1.ithVar(k);
+            b.andWith(r.V1c.domain());
+            c = direction?calculateDefUse(b):calculateUseDef(b);
+        }
+        out.writeBytes("}\n");
+    }
+    
+    /** Prints out the chain of use-defs, starting from the given uses (V1xV1c).
+     */
     public void printUseDefChain(BDD vPrelation) {
         BDD visited = r.bdd.zero();
         vPrelation = vPrelation.id();
@@ -444,22 +530,9 @@ public class PAResults {
         }
     }
     
-    public void printDefUseChain(BDD vPrelation) {
-        BDD visited = r.bdd.zero();
-        vPrelation = vPrelation.id();
-        for (int k = 1; !vPrelation.isZero(); ++k) {
-            System.out.println("Step "+k+":");
-            System.out.println(vPrelation.toStringWithDomains(r.TS));
-            visited.orWith(vPrelation.id());
-            vPrelation.replaceWith(r.V1toV2);
-            // A: v2=v1;
-            BDD b = r.A.relprod(vPrelation, r.V2set);
-            vPrelation.free();
-            vPrelation = b;
-            vPrelation.applyWith(visited.id(), BDDFactory.diff);
-        }
-    }
-
+    /** Starting from a method with a context (MxV1c), calculate the set of
+     * transitively-reachable variables (V1xV1c).
+     */
     public BDD getReachableVars(BDD method_plus_context0) {
         System.out.println("Method = "+method_plus_context0.toStringWithDomains());
         BDD result = r.bdd.zero();
@@ -481,6 +554,8 @@ public class PAResults {
         return result;
     }
     
+    /** Return the set of thread-local objects (H1xH1c).
+     */
     public BDD getThreadLocalObjects() {
         jq_NameAndDesc main_nd = new jq_NameAndDesc("main", "([Ljava/lang/String;)V");
         jq_Method main = null;
