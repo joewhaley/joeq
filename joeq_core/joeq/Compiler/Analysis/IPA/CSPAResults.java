@@ -324,7 +324,7 @@ public class CSPAResults {
         
         BDD pointedTo = fieldPt.exist(H1andFDset);
         BDD filter = H1o.buildEquals(H2o);
-        filter.andWith(H1c.buildEquals(H2c));
+        //filter.andWith(H1c.buildEquals(H2c));
         fieldPt3.andWith(filter.not());
         filter.free();
         fieldPt3.andWith(pointedTo);
@@ -405,8 +405,116 @@ public class CSPAResults {
         System.out.println("Has aliased parameters: "+hasAlias);
     }
 
+    public TypedBDD getReachableObjects(int heap) {
+        BDDPairing H1H2toH2H3 = bdd.makePair();
+        H1H2toH2H3.set(new BDDDomain[] { H1c, H1o, H2c, H2o }, new BDDDomain[] { H2c, H2o, H3c, H3o } );
+        BDDPairing H3toH2 = bdd.makePair();
+        H3toH2.set(new BDDDomain[] { H3c, H3o }, new BDDDomain[] { H2c, H2o } );
+        BDDPairing H2toH1 = bdd.makePair();
+        H2toH1.set(new BDDDomain[] { H2c, H2o }, new BDDDomain[] { H1c, H1o } );
+        BDD H1set = H1c.set();
+        H1set.andWith(H1o.set());
+        BDD H2set = H2c.set();
+        H2set.andWith(H2o.set());
+        
+        BDD heapPt12 = fieldPt.exist(FD.set().and(H1c.set()).and(H2c.set()));
+        BDD heapPt23 = heapPt12.replace(H1H2toH2H3);
+        BDD oldReachable = heapPt12.and(H1o.ithVar(heap));
+        BDD reachable = oldReachable.id();
+        int count = 0;
+        for (;;) {
+            BDD newReachable = reachable.relprod(heapPt23, H2set);
+            newReachable.replaceWith(H3toH2);
+            reachable.orWith(newReachable);
+            boolean done = reachable.equals(oldReachable);
+            oldReachable.free();
+            if (done) break;
+            oldReachable = reachable.id();
+            ++count;
+        }
+        System.out.println("Depth: "+count);
+        BDD result = reachable.exist(H1set);
+        result.replaceWith(H2toH1);
+        return new TypedBDD(result, H1c, H1o);
+    }
+
     static final boolean FILTER_NULL = true;
 
+    public void dumpObjectConnectivityGraph(int heapnum, DataOutput out) throws IOException {
+        BDD context = H1c.set();
+        context.andWith(H2c.set());
+        BDD ci_fieldPt = fieldPt.exist(context);
+
+        TypedBDD reach = getReachableObjects(heapnum);
+        System.out.println(reach);
+        BDD reachable = reach.bdd;
+        reachable.orWith(H1o.ithVar(heapnum));
+
+        out.writeBytes("digraph \"ObjectConnectivity\" {\n");
+        BDD iter = reachable.id();
+        while (!iter.isZero()) {
+            BDD s = iter.satOne();
+            int[] val = s.scanAllVar();
+            int target_i = val[H1o.getIndex()];
+            s.andWith(H1o.ithVar(target_i));
+            HeapObject h = (HeapObject) getHeapNode(target_i);
+            jq_Type t = null;
+            if (h != null) {
+                t = h.getDeclaredType();
+                if (FILTER_NULL && t == null) {
+                    iter.applyWith(s, BDDFactory.diff);
+                    continue;
+                }
+            }
+            String name = null;
+            if (t != null) name = t.shortName();
+            int j = heapobjIndexMap.get(h);
+            out.writeBytes("n"+j+" [label=\""+name+"\"];\n");
+            iter.applyWith(s, BDDFactory.diff);
+        }
+        iter.free();
+        
+        iter = reachable.id();
+        while (!iter.isZero()) {
+            BDD s = iter.satOne();
+            int[] val = s.scanAllVar();
+            int target_i = val[H1o.getIndex()];
+            s.andWith(H1o.ithVar(target_i));
+            HeapObject h = (HeapObject) getHeapNode(target_i);
+            jq_Type t = null;
+            if (h != null) {
+                t = h.getDeclaredType();
+                if (FILTER_NULL && t == null) {
+                    iter.applyWith(s, BDDFactory.diff);
+                    continue;
+                }
+            }
+            BDD pt = ci_fieldPt.restrict(H1o.ithVar(target_i));
+            while (!pt.isZero()) {
+                BDD s2 = pt.satOne();
+                int[] val2 = s2.scanAllVar();
+                int target2_i = val2[H2o.getIndex()];
+                s2.andWith(H2o.ithVar(target2_i));
+                HeapObject target = (HeapObject) getHeapNode(target2_i);
+                if (FILTER_NULL && target != null && target.getDeclaredType() == null) {
+                    pt.applyWith(s2, BDDFactory.diff);
+                    continue;
+                }
+                int fn = val2[FD.getIndex()];
+                jq_Field f = getField(fn);
+                String fieldName = "[]";
+                if (f != null) fieldName = f.getName().toString();
+                out.writeBytes("n"+target_i+
+                               " -> n"+target2_i+
+                               " [label=\""+fieldName+"\"];\n");
+                pt.applyWith(s2, BDDFactory.diff);
+            }
+            iter.applyWith(s, BDDFactory.diff);
+        }
+        iter.free();
+        out.writeBytes("}\n");
+    }
+    
     public void dumpObjectConnectivityGraph(DataOutput out) throws IOException {
         BDD context = H1c.set();
         context.andWith(H2c.set());
@@ -437,15 +545,18 @@ public class CSPAResults {
             while (!pt.isZero()) {
                 BDD s = pt.satOne();
                 int[] val = s.scanAllVar();
-                HeapObject target = (HeapObject) getHeapNode(val[H2o.getIndex()]);
-                if (FILTER_NULL && h != null && h.getDeclaredType() == null)
+                int target_i = val[H2o.getIndex()];
+                HeapObject target = (HeapObject) getHeapNode(target_i);
+                s.andWith(H2o.ithVar(target_i));
+                if (FILTER_NULL && h != null && h.getDeclaredType() == null) {
                     continue;
+                }
                 int fn = val[FD.getIndex()];
                 jq_Field f = getField(fn);
                 String fieldName = "[]";
                 if (f != null) fieldName = f.getName().toString();
-                out.writeBytes("n"+val[H1o.getIndex()]+
-                               " -> n"+val[H2o.getIndex()]+
+                out.writeBytes("n"+j+
+                               " -> n"+target_i+
                                " [label=\""+fieldName+"\"];\n");
                 pt.applyWith(s, BDDFactory.diff);
             }
@@ -1596,7 +1707,18 @@ public class CSPAResults {
                 } else if (command.equals("findequiv")) {
                     TypedBDD bdd = findEquivalentObjects_fs();
                     results.add(bdd);
+                } else if (command.equals("reachableobjs")) {
+                    int heapNum = Integer.parseInt(st.nextToken());
+                    TypedBDD bdd = getReachableObjects(heapNum);
+                    results.add(bdd);
                 } else if (command.equals("dumpconnect")) {
+                    int heapNum = Integer.parseInt(st.nextToken());
+                    String filename = "connect.dot";
+                    if (st.hasMoreTokens()) filename = st.nextToken();
+                    DataOutputStream dos = new DataOutputStream(new FileOutputStream(filename));
+                    dumpObjectConnectivityGraph(heapNum, dos);
+                    increaseCount = false;
+                } else if (command.equals("dumpallconnect")) {
                     String filename = "connect.dot";
                     if (st.hasMoreTokens()) filename = st.nextToken();
                     DataOutputStream dos = new DataOutputStream(new FileOutputStream(filename));
