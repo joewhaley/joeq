@@ -152,7 +152,7 @@ public class BDDPointerAnalysis {
     void makeVarOrdering(int[] varorder) {
         
         boolean reverseLocal = true;
-        int ordering = FD_V1xV2_H1_H2;
+        int ordering = FD_H1_V2xV1_H2;
         
         int varnum = bdd.varNum();
         
@@ -340,8 +340,12 @@ public class BDDPointerAnalysis {
         aC = bdd.zero(); vC = bdd.zero(); cC = bdd.zero();
     }
 
+    public static boolean INCREMENTAL = true;
+
     public static void main(String[] args) {
         HostedVM.initialize();
+        
+        long time = System.currentTimeMillis();
         
         BDDPointerAnalysis dis = new BDDPointerAnalysis();
         dis.reset();
@@ -356,18 +360,27 @@ public class BDDPointerAnalysis {
             MethodSummary ms = MethodSummary.getSummary(cfg);
             dis.handleMethodSummary(ms);
         }
+        System.out.println("Setup: "+(System.currentTimeMillis()-time)/1000.+" seconds.");
         int iteration = 1;
         do {
+            long time2 = System.currentTimeMillis();
             System.out.println("Iteration "+iteration+" Methods: "+dis.visitedMethods.size()+" Call graph edges: "+dis.callGraphEdges.size());
             dis.change = false;
             dis.calculateTypeFilter();
-            dis.solveNonincremental();
+            if (INCREMENTAL) dis.solveIncremental();
+            else dis.solveNonincremental();
             dis.calculateVTables();
             dis.handleVirtualCalls();
             if (true) System.gc();
+            time2 = System.currentTimeMillis() - time2;
+            System.out.println(time2/1000.+" seconds.");
             ++iteration;
         } while (dis.change);
-        dis.dumpResults();
+        
+        time = System.currentTimeMillis() - time;
+        System.out.println("Total time: "+time/1000.+" seconds.");
+        
+        //dis.dumpResults();
     }
 
     boolean change;
@@ -655,7 +668,7 @@ public class BDDPointerAnalysis {
     public void bindParameters(MethodSummary caller, ProgramLocation mc, MethodSummary callee) {
         Object key = new CallSite(callee, mc);
         if (callGraphEdges.contains(key)) return;
-        if (!this.change) {
+        if (TRACE && !this.change) {
             System.out.println("Adding call graph edge "+caller.getMethod()+"->"+callee.getMethod());
         }
         callGraphEdges.add(key);

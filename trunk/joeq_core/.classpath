@@ -2,7 +2,6 @@
 <classpath>
     <classpathentry exported="true" kind="var" path="JRE_LIB" sourcepath="JRE_SRC"/>
     <classpathentry kind="src" path=""/>
-    <classpathentry exported="true" kind="src" path="/JavaBDD"/>
     <classpathentry exported="true" kind="lib" path="Support/java14.jar"/>
     <classpathentry exported="true" kind="lib" path="Support/javabdd_0.3.jar"/>
     <classpathentry kind="output" path=""/>

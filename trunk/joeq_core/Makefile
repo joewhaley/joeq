@@ -8,7 +8,7 @@ ALLPKGS = $(sort $(foreach j, $(ALLJAVA), $(patsubst %/,%,$(dir $(j)))))
 ALLPKGNAMES = $(subst /,.,$(ALLPKGS))
 ALLCLASS = $(foreach d, $(ALLDIRS), $(wildcard $(d)/*.class))
 ifeq (${OS},Windows_NT)
-BUILD_CLASSPATH = .;$(subst $(space),;,$(SUPPORT_LIBS))
+BUILD_CLASSPATH = ".;$(subst $(space),;,$(subst /,\,$(SUPPORT_LIBS)))"
 else
 BUILD_CLASSPATH = .:$(subst $(space),:,$(SUPPORT_LIBS))
 endif
