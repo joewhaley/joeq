@@ -11,6 +11,7 @@ import java.io.RandomAccessFile;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
+import java.nio.MyHeapByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
@@ -49,20 +50,20 @@ public class MyFileChannelImpl
             return new MyFileChannelImpl((RandomAccessFile) o);
         jq.UNREACHABLE(o.getClass().toString());
         return null;
-
+        
     }
 
     FileInputStream fis;
     FileOutputStream fos;
     RandomAccessFile raf;
     long currentPosition;
-
+    
     MyFileChannelImpl(RandomAccessFile o) throws IOException {
         this.raf = o;
         this.fis = new FileInputStream(o.getFD());
         this.fos = new FileOutputStream(o.getFD());
     }
-
+    
     MyFileChannelImpl(FileInputStream o) {
         this.fis = o;
     }
@@ -70,7 +71,7 @@ public class MyFileChannelImpl
     MyFileChannelImpl(FileOutputStream o) {
         this.fos = o;
     }
-
+    
     /**
      * @see java.nio.channels.ReadableByteChannel#read(ByteBuffer)
      */
