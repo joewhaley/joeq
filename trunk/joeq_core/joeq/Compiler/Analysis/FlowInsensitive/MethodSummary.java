@@ -893,8 +893,11 @@ public class MethodSummary {
                 Object foo = s.registers[r.getNumber()];
                 if (foo instanceof Collection)
                     set.addAll((Collection) foo);
-                else
+                else if (foo != null)
                     set.add(foo);
+                else {
+                    // foo is null because it is from a path we haven't seen yet.
+                }
             }
             s.registers[Phi.getDest(obj).getRegister().getNumber()] = set;
         }
