@@ -140,7 +140,7 @@ extern "C" int __stdcall fs_getfileattributes(const char* s)
 {
 	return GetFileAttributes(s);
 }
-extern "C" char* __stdcall fs_gettruename(const char* s)
+extern "C" char* __stdcall fs_gettruename(char* s)
 {
 	WIN32_FIND_DATA fd;
 	HANDLE h = FindFirstFile(s, &fd);
@@ -167,6 +167,45 @@ extern "C" __int64 __stdcall fs_stat_size(const char* s)
 	int res = _stati64(s, &buf);
 	if (res != 0) return 0;
 	return buf.st_size;
+}
+#else
+extern "C" int __stdcall fs_getdcwd(const int i, char* buf, const int buflen)
+{
+  // TODO.
+  return 0;
+}
+extern "C" int __stdcall fs_fullpath(char* buf, const char* s, const int buflen)
+{
+  // TODO.
+  return 0;
+}
+extern "C" int __stdcall fs_getfileattributes(const char* s)
+{
+  // TODO.
+  return 0;
+}
+extern "C" char* __stdcall fs_gettruename(char* s)
+{
+  // TODO.
+  return s;
+}
+extern "C" int __stdcall fs_access(const char* s, const int mode)
+{
+  return access(s, mode);
+}
+extern "C" __int64 __stdcall fs_getfiletime(const char* s)
+{
+  struct stat buf;
+  int res = stat(s, &buf);
+  if (res != 0) return 0;
+  return ((__int64)buf.st_mtime) * 1000L;
+}
+extern "C" __int64 __stdcall fs_stat_size(const char* s)
+{
+  struct stat buf;
+  int res = stat(s, &buf);
+  if (res != 0) return 0;
+  return buf.st_size;
 }
 #endif
 extern "C" int __stdcall fs_remove(const char* s)
@@ -254,6 +293,16 @@ extern "C" struct dirent * __stdcall fs_readdir(DIR *dir)
 extern "C" int __stdcall fs_closedir(DIR *dir)
 {
 	return closedir(dir);
+}
+extern "C" int __stdcall fs_setfiletime(const char* s, const __int64 time)
+{
+  // TODO.
+  return 0;
+}
+extern "C" int __stdcall fs_getlogicaldrives(void)
+{
+  // TODO
+  return 0;
 }
 #endif
 extern "C" int __stdcall fs_mkdir(const char* s)
@@ -409,5 +458,214 @@ extern "C" void __stdcall set_current_context(Thread* jthread, const CONTEXT* co
 		// return to eip
 		ret
 	}
+}
+#else
+extern "C" pthread_t __stdcall create_thread(void * (*start)(void *), void* arg)
+{
+  int code;
+  pthread_t p;
+  code = pthread_create(&p, 0, start, arg);
+  if (!code) {
+    // error occurred while creating the thread.
+  }
+  return p;
+}
+extern "C" int __stdcall resume_thread(const pthread_t handle)
+{
+  ptrace( PTRACE_CONT, handle, (caddr_t)1, SIGSTOP );
+  return 0;
+}
+extern "C" int __stdcall suspend_thread(const pthread_t handle)
+{
+  kill( handle, SIGSTOP );
+  return 0;
+}
+
+extern "C" void* __stdcall allocate_stack(const int size)
+{
+  // TODO
+  return calloc(size, 1);
+}
+
+static inline int get_debug_reg( int pid, int num, DWORD *data )
+{
+    int res = ptrace( PTRACE_PEEKUSER, pid, DR_OFFSET(num), 0 );
+    if ((res == -1) && errno)
+    {
+      // TODO
+        return -1;
+    }
+    *data = res;
+    return 0;
+}
+
+extern "C" void __stdcall get_thread_context(pthread_t pid, CONTEXT* context)
+{
+  int flags = context->ContextFlags;
+  if (flags & CONTEXT_FULL) {
+    struct kernel_user_regs_struct regs;
+    if (ptrace( PTRACE_GETREGS, pid, 0, &regs ) == -1) goto error;
+    if (flags & CONTEXT_INTEGER) {
+      context->Eax = regs.eax;
+      context->Ebx = regs.ebx;
+      context->Ecx = regs.ecx;
+      context->Edx = regs.edx;
+      context->Esi = regs.esi;
+      context->Edi = regs.edi;
+    }
+    if (flags & CONTEXT_CONTROL) {
+      context->Ebp    = regs.ebp;
+      context->Esp    = regs.esp;
+      context->Eip    = regs.eip;
+      context->SegCs  = regs.cs;
+      context->SegSs  = regs.ss;
+      context->EFlags = regs.eflags;
+    }
+    if (flags & CONTEXT_SEGMENTS) {
+      context->SegDs = regs.ds;
+      context->SegEs = regs.es;
+      context->SegFs = regs.fs;
+      context->SegGs = regs.gs;
+    }
+  }
+  if (flags & CONTEXT_DEBUG_REGISTERS) {
+    if (get_debug_reg( pid, 0, &context->Dr0 ) == -1) goto error;
+    if (get_debug_reg( pid, 1, &context->Dr1 ) == -1) goto error;
+    if (get_debug_reg( pid, 2, &context->Dr2 ) == -1) goto error;
+    if (get_debug_reg( pid, 3, &context->Dr3 ) == -1) goto error;
+    if (get_debug_reg( pid, 6, &context->Dr6 ) == -1) goto error;
+    if (get_debug_reg( pid, 7, &context->Dr7 ) == -1) goto error;
+  }
+  if (flags & CONTEXT_FLOATING_POINT) {
+    /* we can use context->FloatSave directly as it is using the */
+    /* correct structure (the same as fsave/frstor) */
+    if (ptrace( PTRACE_GETFPREGS, pid, 0, &context->FloatSave ) == -1) goto error;
+    context->FloatSave.Cr0NpxState = 0;  /* FIXME */
+  }
+  return;
+ error:
+  // TODO: error condition
+  return;
+}
+
+extern "C" void __stdcall set_thread_context(pthread_t pid, CONTEXT* context)
+{
+  int flags = context->ContextFlags;
+  if (flags & CONTEXT_FULL) {
+    struct kernel_user_regs_struct regs;
+    
+    /* need to preserve some registers (at a minimum orig_eax must always be preserved) */
+    if (ptrace( PTRACE_GETREGS, pid, 0, &regs ) == -1) goto error;
+    
+    if (flags & CONTEXT_INTEGER) {
+      regs.eax = context->Eax;
+      regs.ebx = context->Ebx;
+      regs.ecx = context->Ecx;
+      regs.edx = context->Edx;
+      regs.esi = context->Esi;
+      regs.edi = context->Edi;
+    }
+    if (flags & CONTEXT_CONTROL) {
+      regs.ebp = context->Ebp;
+      regs.esp = context->Esp;
+      regs.eip = context->Eip;
+      regs.cs  = context->SegCs;
+      regs.ss  = context->SegSs;
+      regs.eflags = context->EFlags;
+    }
+    if (flags & CONTEXT_SEGMENTS) {
+      regs.ds = context->SegDs;
+      regs.es = context->SegEs;
+      regs.fs = context->SegFs;
+      regs.gs = context->SegGs;
+    }
+    if (ptrace( PTRACE_SETREGS, pid, 0, &regs ) == -1) goto error;
+  }
+  if (flags & CONTEXT_DEBUG_REGISTERS) {
+    if (ptrace( PTRACE_POKEUSER, pid, DR_OFFSET(0), context->Dr0 ) == -1) goto error;
+    if (ptrace( PTRACE_POKEUSER, pid, DR_OFFSET(1), context->Dr1 ) == -1) goto error;
+    if (ptrace( PTRACE_POKEUSER, pid, DR_OFFSET(2), context->Dr2 ) == -1) goto error;
+    if (ptrace( PTRACE_POKEUSER, pid, DR_OFFSET(3), context->Dr3 ) == -1) goto error;
+    if (ptrace( PTRACE_POKEUSER, pid, DR_OFFSET(6), context->Dr6 ) == -1) goto error;
+    if (ptrace( PTRACE_POKEUSER, pid, DR_OFFSET(7), context->Dr7 ) == -1) goto error;
+  }
+  if (flags & CONTEXT_FLOATING_POINT) {
+    /* we can use context->FloatSave directly as it is using the */
+    /* correct structure (the same as fsave/frstor) */
+    if (ptrace( PTRACE_SETFPREGS, pid, 0, &context->FloatSave ) == -1) goto error;
+  }
+  return;
+ error:
+  // TODO: error
+  return;
+}
+
+extern "C" pthread_t __stdcall get_current_thread_handle(void)
+{
+  return pthread_self();
+}
+
+typedef struct _Thread {
+	CONTEXT registers;
+	int thread_switch_enabled;
+} Thread;
+
+typedef struct _NativeThread {
+	pthread_t thread_handle;
+	Thread* currentThread;
+} NativeThread;
+
+//CRITICAL_SECTION semaphore_init;
+//CRITICAL_SECTION* p_semaphore_init;
+
+void initSemaphoreLock(void)
+{
+  // TODO.
+}
+
+extern "C" int __stdcall init_semaphore(void)
+{
+  // TODO.
+  return 0;
+}
+
+extern "C" int __stdcall wait_for_single_object(int handle, int time)
+{
+  // TODO.
+  return 0;
+}
+
+extern "C" int __stdcall release_semaphore(int semaphore, int a)
+{
+  // TODO.
+  return 0;
+}
+
+extern "C" void __stdcall set_current_context(Thread* jthread, const CONTEXT* context)
+{
+  __asm ("
+		movl %%edx, %0
+		movl %%fs:20, %%edx
+		movl %%ecx, %1
+		movl %%esp, 196(%%ecx)
+		frstor 28(%%ecx)
+		pushl 184(%%ecx)
+		movl 196(%%ecx), %%esp
+		pushl 176(%%ecx)
+		pushl 172(%%ecx)
+		pushl 168(%%ecx)
+		pushl 164(%%ecx)
+		pushl 196(%%ecx)
+		pushl 180(%%ecx)
+		pushl 160(%%ecx)
+		pushl 156(%%ecx)
+		pushl 192(%%ecx)
+		decl 4(%%edx)
+		popf
+		popa
+		ret"
+                :
+	        :"r"(jthread), "r"(context)
+		);
 }
 #endif
