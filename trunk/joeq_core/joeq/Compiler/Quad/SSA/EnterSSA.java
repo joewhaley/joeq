@@ -70,10 +70,12 @@ public class EnterSSA implements ControlFlowGraphVisitor {
             BasicBlock bb = (BasicBlock) i.next();
             this.basic_blocks[bb.getID()] = bb;
         }
-        dominators = new Dominators(true);
+        this.dominators = new Dominators(true);
         dominators.visitMethod(ir.getMethod());
         DominatorNode n = dominators.computeTree();
         dominators.calculateDominanceFrontier(n);
+        this.link_registers = new HashMap();
+        this.register_uses = new GenericMultiMap();
         prepare();
         patchPEIgeneratedValues();
         computeSSA(ir);
@@ -348,9 +350,9 @@ public class EnterSSA implements ControlFlowGraphVisitor {
         rectifyPhiTypes();
     }
     
-    MultiMap register_uses = new GenericMultiMap();
+    MultiMap register_uses;
     
-    Map link_registers = new HashMap();
+    Map link_registers;
     
     /**
      * 
