@@ -1,4 +1,4 @@
-packages = Allocator Assembler Bootstrap ClassLib Clazz Compil3r Interpreter Linker Main Run_Time Scheduler Synchronization UTF Util jq.java
+packages = Allocator Assembler Bootstrap ClassLib Clazz Compil3r Interpreter Linker Main Run_Time Scheduler Synchronization UTF Util
 
 all:	jikes
 
@@ -12,10 +12,10 @@ javac:
 	find ${packages} -name "*.java" | xargs javac
 
 clean:
-	find ${packages} -name "*.class" | xargs rm -f jq*.class
+	find ${packages} -name "*.class" | xargs rm -f
 
 veryclean:
-	find ${packages} -name "*.class" | xargs rm -f jq*.class GetBootClassPath.class bootclasspath
+	find ${packages} -name "*.class" | xargs rm -f bootclasspath
 
 update:
 	( export CVS_RSH=ssh ; cvs update -Pd )
@@ -26,8 +26,8 @@ commit:
 bootstrap:
 	java -mx250M Main.Bootstrapper
 
-bootclasspath:	GetBootClassPath.class
-	java GetBootClassPath > bootclasspath
+bootclasspath:	Main/GetBootClassPath.class
+	java Main.GetBootClassPath > bootclasspath
 
-GetBootClassPath.class:	GetBootClassPath.java
-	javac GetBootClassPath.java
+Main/GetBootClassPath.class:	Main/GetBootClassPath.java
+	javac Main/GetBootClassPath.java
