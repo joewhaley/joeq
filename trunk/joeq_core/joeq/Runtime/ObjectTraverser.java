@@ -236,20 +236,32 @@ public class ObjectTraverser {
         }
         if (c == java.util.zip.ZipFile.class) {
             if (fieldName.equals("raf")) {
+                /*
                 Object[] o2 = (Object[])mapped_objects.get(o);
                 return o2[0];
+                 */
+                return null;
             }
             if (fieldName.equals("entries")) {
+                /*
                 Object[] o2 = (Object[])mapped_objects.get(o);
                 return o2[1];
+                 */
+                return null;
             }
             if (fieldName.equals("cenpos")) {
+                /*
                 Object[] o2 = (Object[])mapped_objects.get(o);
                 return o2[2];
+                 */
+                return null;
             }
             if (fieldName.equals("pos")) {
+                /*
                 Object[] o2 = (Object[])mapped_objects.get(o);
                 return o2[3];
+                 */
+                return null;
             }
         }
         if (c == java.util.zip.Inflater.class) {
@@ -315,21 +327,13 @@ public class ObjectTraverser {
         if (o instanceof java.util.zip.ZipFile) {
             Object o2 = mapped_objects.get(o);
             if (o2 != null) return o;
-            mapped_objects.put(o, o2 = new Object[4]);
+            mapped_objects.put(o, o);
             String name = ((java.util.zip.ZipFile)o).getName();
-            try {
-                // initialize the fields of the object
-                ClassLibInterface.i.init_zipfile((java.util.zip.ZipFile)o, name);
-            } catch (IOException x) {
-                x.printStackTrace();
-                jq.UNREACHABLE("cannot open zip file "+((java.util.zip.ZipFile)o).getName()+": "+x);
-            }
             
-            // we need to reopen the RandomAccessFile on VM startup
-            jq.assert(((Object[])o2)[0] != null);
-            Object[] args = { ((Object[])o2)[0], name, new Boolean(false) };
-            jq_Method raf_open = ClassLibInterface._class.getOrCreateStaticMethod("open_static", "(Ljava/io/RandomAccessFile;Ljava/lang/String;Z)V");
-            MethodInvocation mi = new MethodInvocation(raf_open, args);
+            // we need to reopen the ZipFile on VM startup
+            Object[] args = { o, name };
+            jq_Method zip_open = ClassLibInterface._class.getOrCreateStaticMethod("init_zipfile_static", "(Ljava/util/zip/ZipFile;Ljava/lang/String;)V");
+            MethodInvocation mi = new MethodInvocation(zip_open, args);
             jq.on_vm_startup.add(mi);
             System.out.println("Added call to reopen zip file "+name+" on joeq startup: "+mi);
             
@@ -444,28 +448,40 @@ public class ObjectTraverser {
             jq.UNREACHABLE();
         if (c == java.util.zip.ZipFile.class) {
             if (fieldName.equals("raf")) {
+                /*
                 jq.assert(v instanceof java.io.RandomAccessFile);
                 Object[] o2 = (Object[])mapped_objects.get(o);
                 o2[0] = v;
                 return true;
+                 */
+                jq.UNREACHABLE();
             }
             if (fieldName.equals("entries")) {
+                /*
                 jq.assert(v instanceof Hashtable);
                 Object[] o2 = (Object[])mapped_objects.get(o);
                 o2[1] = v;
                 return true;
+                 */
+                jq.UNREACHABLE();
             }
             if (fieldName.equals("cenpos")) {
+                /*
                 jq.assert(v instanceof Long);
                 Object[] o2 = (Object[])mapped_objects.get(o);
                 o2[2] = v;
                 return true;
+                 */
+                jq.UNREACHABLE();
             }
             if (fieldName.equals("pos")) {
+                /*
                 jq.assert(v instanceof Long);
                 Object[] o2 = (Object[])mapped_objects.get(o);
                 o2[3] = v;
                 return true;
+                 */
+                jq.UNREACHABLE();
             }
         }
         if (c == java.util.zip.Inflater.class) {
