@@ -247,7 +247,7 @@ public class BDDInferenceRule extends InferenceRule {
         if (solver.TRACE_FULL) solver.out.println("Relation "+r+" is now: "+r.relation.toStringWithDomains());
         boolean changed = !oldRelation.equals(r.relation);
         oldRelation.free();
-        if (solver.TRACE) solver.out.println("Relation changed: "+changed);
+        if (solver.TRACE) solver.out.println("Relation "+r+" changed: "+changed);
         totalTime += System.currentTimeMillis() - time;
         return changed;
     }
@@ -415,7 +415,7 @@ public class BDDInferenceRule extends InferenceRule {
         boolean changed = !oldRelation.equals(r.relation);
         oldRelation.free();
         oldRelationValues = allRelationValues;
-        if (solver.TRACE) solver.out.println("Relation changed: "+changed);
+        if (solver.TRACE) solver.out.println("Relation "+r+" changed: "+changed);
         totalTime += System.currentTimeMillis() - time;
         return changed;
     }
