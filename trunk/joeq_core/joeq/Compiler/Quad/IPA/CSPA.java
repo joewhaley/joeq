@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -19,6 +20,7 @@ import org.sf.javabdd.BDDFactory;
 import org.sf.javabdd.BDDPairing;
 import org.sf.javabdd.BuDDyFactory;
 
+import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
 import Clazz.jq_Field;
 import Clazz.jq_Method;
@@ -33,7 +35,8 @@ import Compil3r.Quad.MethodInline;
 import Compil3r.Quad.MethodSummary;
 import Compil3r.Quad.ProgramLocation;
 import Compil3r.Quad.RootedCHACallGraph;
-import Compil3r.Quad.AndersenInterface.AndersenType;
+import Compil3r.Quad.MethodSummary.CallSite;
+import Compil3r.Quad.MethodSummary.ConcreteObjectNode;
 import Compil3r.Quad.MethodSummary.ConcreteTypeNode;
 import Compil3r.Quad.MethodSummary.FieldNode;
 import Compil3r.Quad.MethodSummary.GlobalNode;
@@ -48,6 +51,7 @@ import Main.HostedVM;
 import Run_Time.TypeCheck;
 import Util.Assert;
 import Util.Strings;
+import Util.Collections.Pair;
 import Util.Collections.Triple;
 import Util.Graphs.Navigator;
 import Util.Graphs.Traversals;
@@ -58,11 +62,10 @@ import Util.Graphs.Traversals;
  * @author John Whaley
  * @version $Id$
  */
-public class CSPA extends Solver {
+public class CSPA {
 
     public static final boolean TRACE_ALL = false;
-
-    public static final boolean TRACE_WORKLIST  = false || TRACE_ALL;
+    
     public static final boolean TRACE_SUMMARIES = false || TRACE_ALL;
     public static final boolean TRACE_CALLEE    = false || TRACE_ALL;
     public static final boolean TRACE_OVERLAP   = false || TRACE_ALL;
@@ -76,6 +79,8 @@ public class CSPA extends Solver {
     
     public static final boolean USE_CHA     = true;
     public static final boolean DO_INLINING = true;
+
+    public static boolean LOADED_CALLGRAPH = false;
     
     public static void main(String[] args) {
         HostedVM.initialize();
@@ -97,6 +102,8 @@ public class CSPA extends Solver {
                 time = System.currentTimeMillis() - time;
                 System.out.println("done. ("+time/1000.+" seconds)");
                 //Compil3r.Quad.RootedCHACallGraph.test(cg);
+                roots = cg.getRoots();
+                LOADED_CALLGRAPH = true;
             } catch (java.io.IOException x) {
                 x.printStackTrace();
             }
@@ -164,12 +171,141 @@ public class CSPA extends Solver {
             System.out.println("done. ("+time/1000.+" seconds)");
             cg = ccg;
         }
+
+        long time;
         
+        RootedCHACallGraph.test(cg);
+        
+        // Allocate CSPA object.  Also initializes BDD package.
         CSPA dis = new CSPA(cg);
         dis.roots = roots;
         
-        dis.go();
+        // Add edges for existing globals.
+        dis.addGlobals();
         
+        System.out.print("Initial generation and counting paths...");
+        time = System.currentTimeMillis();
+        long paths = dis.countPaths();
+        time = System.currentTimeMillis() - time;
+        System.out.println("done. ("+time/1000.+" seconds)");
+        System.out.println(paths+" paths");
+        
+        System.out.print("Adding call graph edges...");
+        time = System.currentTimeMillis();
+        dis.goForIt();
+        time = System.currentTimeMillis() - time;
+        System.out.println("done. ("+time/1000.+" seconds)");
+        
+        System.out.print("Solving pointers...");
+        time = System.currentTimeMillis();
+        dis.solveIncremental();
+        time = System.currentTimeMillis() - time;
+        System.out.println("done. ("+time/1000.+" seconds)");
+    }
+    
+    public void addGlobals() {
+        GlobalNode.GLOBAL.addDefaultStatics();
+        addGlobalObjectAllocation(GlobalNode.GLOBAL, null);
+        addAllocType(null, PrimordialClassLoader.getJavaLangObject());
+        addVarType(GlobalNode.GLOBAL, PrimordialClassLoader.getJavaLangObject());
+        handleGlobalNode(GlobalNode.GLOBAL);
+        for (Iterator i=ConcreteObjectNode.getAll().iterator(); i.hasNext(); ) {
+            handleGlobalNode((ConcreteObjectNode) i.next());
+        }
+    }
+    
+    public void addGlobalObjectAllocation(Node dest, Node site) {
+        int dest_i = getVariableIndex(dest);
+        int site_i = getHeapobjIndex(site);
+        BDD dest_bdd = V1o.ithVar(dest_i);
+        dest_bdd.andWith(V1c.ithVar(0));
+        BDD site_bdd = H1o.ithVar(site_i);
+        site_bdd.andWith(H1c.ithVar(0));
+        dest_bdd.andWith(site_bdd);
+        g_pointsTo.orWith(dest_bdd);
+    }
+    
+    public void addGlobalLoad(Set dests, Node base, jq_Field f) {
+        int base_i = getVariableIndex(base);
+        int f_i = getFieldIndex(f);
+        BDD base_bdd = V1o.ithVar(base_i);
+        base_bdd.andWith(V1c.ithVar(0));
+        BDD f_bdd = FD.ithVar(f_i);
+        for (Iterator i=dests.iterator(); i.hasNext(); ) {
+            FieldNode dest = (FieldNode) i.next();
+            int dest_i = getVariableIndex(dest);
+            BDD dest_bdd = V2o.ithVar(dest_i);
+            dest_bdd.andWith(V2c.ithVar(0));
+            dest_bdd.andWith(f_bdd.id());
+            dest_bdd.andWith(base_bdd.id());
+            g_loads.orWith(dest_bdd);
+        }
+        base_bdd.free(); f_bdd.free();
+    }
+    
+    public void addGlobalStore(Node base, jq_Field f, Set srcs) {
+        int base_i = getVariableIndex(base);
+        int f_i = getFieldIndex(f);
+        BDD base_bdd = V2o.ithVar(base_i);
+        base_bdd.andWith(V2c.ithVar(0));
+        BDD f_bdd = FD.ithVar(f_i);
+        for (Iterator i=srcs.iterator(); i.hasNext(); ) {
+            Node src = (Node) i.next();
+            int src_i = getVariableIndex(src);
+            BDD src_bdd = V1o.ithVar(src_i);
+            src_bdd.andWith(V1c.ithVar(0));
+            src_bdd.andWith(f_bdd.id());
+            src_bdd.andWith(base_bdd.id());
+            g_stores.orWith(src_bdd);
+        }
+        base_bdd.free(); f_bdd.free();
+    }
+    
+    public void handleGlobalNode(Node n) {
+        
+        Iterator j;
+        j = n.getEdges().iterator();
+        while (j.hasNext()) {
+            Map.Entry e = (Map.Entry) j.next();
+            jq_Field f = (jq_Field) e.getKey();
+            Object o = e.getValue();
+            // n.f = o
+            if (o instanceof Set) {
+                addGlobalStore(n, f, (Set) o);
+            } else {
+                addGlobalStore(n, f, Collections.singleton(o));
+            }
+        }
+        j = n.getAccessPathEdges().iterator();
+        while (j.hasNext()) {
+            Map.Entry e = (Map.Entry)j.next();
+            jq_Field f = (jq_Field)e.getKey();
+            Object o = e.getValue();
+            // o = n.f
+            if (o instanceof Set) {
+                addGlobalLoad((Set) o, n, f);
+            } else {
+                addGlobalLoad(Collections.singleton(o), n, f);
+            }
+        }
+        if (n instanceof ConcreteTypeNode) {
+            ConcreteTypeNode ctn = (ConcreteTypeNode) n;
+            addGlobalObjectAllocation(ctn, ctn);
+            addAllocType(ctn, (jq_Reference) ctn.getDeclaredType());
+        } else if (n instanceof UnknownTypeNode) {
+            UnknownTypeNode utn = (UnknownTypeNode) n;
+            addGlobalObjectAllocation(utn, utn);
+            addAllocType(utn, (jq_Reference) utn.getDeclaredType());
+        }
+        if (n instanceof GlobalNode) {
+            BDD c = V1c.ithVar(0);
+            c.andWith(V2c.ithVar(0));
+            addEdge(c, GlobalNode.GLOBAL, Collections.singleton(n));
+            addEdge(c, n, Collections.singleton(GlobalNode.GLOBAL));
+            addVarType(n, PrimordialClassLoader.getJavaLangObject());
+        } else {
+            addVarType(n, (jq_Reference) n.getDeclaredType());
+        }
     }
     
     /**
@@ -180,9 +316,7 @@ public class CSPA extends Solver {
     public static final int DEFAULT_NODE_COUNT = 1000000;
 
     /**
-     * The absolute maximum number of variables that we will ever use
-     * in the BDD.  Smaller numbers will be more efficient, larger
-     * numbers will allow larger programs to be analyzed.
+     * The size of the BDD operator cache.
      */
     public static final int DEFAULT_CACHE_SIZE = 100000;
 
@@ -191,34 +325,41 @@ public class CSPA extends Solver {
      */
     private final BDDFactory bdd;
     
-    public static final int VARBITS = 20;
-    public static final int HEAPBITS = 14;
-    public static final int FIELDBITS = 13;
-    public static final int CLASSBITS = 13;
+    public static final int VARBITS = 15;
+    public static final int HEAPBITS = 12;
+    public static final int FIELDBITS = 10;
+    public static final int CLASSBITS = 10;
+    public static final int CONTEXTBITS = 50;
     
     // the size of domains, can be changed to reflect the size of inputs
-    int domainBits[] = {20, 20, 20, 13, 14, 14};
+    int domainBits[] = {VARBITS, CONTEXTBITS,
+                        VARBITS, CONTEXTBITS,
+                        FIELDBITS,
+                        HEAPBITS, CONTEXTBITS,
+                        HEAPBITS, CONTEXTBITS};
     // to be computed in sysInit function
-    int domainSpos[] = {0,  0,  0,  0,  0,  0}; 
+    int domainSpos[] = {0,  0,  0,  0,  0,  0,  0,  0,  0}; 
     
     // V1 V2 are domains for variables 
     // H1 H2 are domains for heap objects
     // FD is a domain for field signature
-    BDDDomain V1, V2, V3, FD, H1, H2;
+    BDDDomain V1o, V2o, H1o, H2o;
+    BDDDomain V1c, V2c, H1c, H2c;
+    BDDDomain FD;
     // T1 and T2 are used to compute typeFilter
     // T1 = V2, and T2 = V1
     BDDDomain T1, T2, T3, T4; 
 
     // domain pairs for bdd_replace
     BDDPairing V1ToV2;
-    BDDPairing V1ToV3;
     BDDPairing V2ToV1;
-    BDDPairing V2ToV3;
-    BDDPairing V3ToV1;
-    BDDPairing V3ToV2;
     BDDPairing H1ToH2;
     BDDPairing H2ToH1;
     BDDPairing T2ToT1;
+    
+    // domain sets
+    BDD V1set, V2set, V3set, FDset, H1set, H2set, T1set, T2set;
+    BDD H1andFDset;
 
     // global BDDs
     BDD aC; // H1 x T2
@@ -230,32 +371,41 @@ public class CSPA extends Solver {
         this(cg, DEFAULT_NODE_COUNT, DEFAULT_CACHE_SIZE);
     }
     
+    CallGraph cg;
+    Collection roots;
+    
     public CSPA(CallGraph cg, int nodeCount, int cacheSize) {
         this.cg = cg;
         
         bdd = BuDDyFactory.init(nodeCount, cacheSize);
         
         bdd.setCacheRatio(4);
-        bdd.setMaxIncrease(cacheSize);
+        bdd.setMaxIncrease(nodeCount/4);
         
-        int[] domains = new int[domainBits.length];
+        long[] domains = new long[domainBits.length];
         for (int i=0; i<domainBits.length; ++i) {
-            domains[i] = (1 << domainBits[i]);
+            domains[i] = (1L << domainBits[i]);
         }
         BDDDomain[] bdd_domains = bdd.extDomain(domains);
-        V1 = bdd_domains[0];
-        V2 = bdd_domains[1];
-        V3 = bdd_domains[2];
-        FD = bdd_domains[3];
-        H1 = bdd_domains[4];
-        H2 = bdd_domains[5];
-        T1 = V2;
-        T2 = V1;
-        T3 = H2;
-        T4 = V2;
+        V1o = bdd_domains[0];
+        V1c = bdd_domains[1];
+        V2o = bdd_domains[2];
+        V2c = bdd_domains[3];
+        FD = bdd_domains[4];
+        H1o = bdd_domains[5];
+        H1c = bdd_domains[6];
+        H2o = bdd_domains[7];
+        H2c = bdd_domains[8];
+        T1 = V2o;
+        T2 = V1o;
+        T3 = H2o;
+        T4 = V2o;
+        for (int i=0; i<domainBits.length; ++i) {
+            Assert._assert(bdd_domains[i].varNum() == domainBits[i]);
+        }
         
         boolean reverseLocal = System.getProperty("bddreverse", "true").equals("true");
-        String ordering = System.getProperty("bddordering", "V3_FD_H2_V2xV1_H1");
+        String ordering = System.getProperty("bddordering", "FD_H2cxH2o_V2cxV2oxV1cxV1o_H1cxH1o");
         
         int[] varorder = makeVarOrdering(reverseLocal, ordering);
         for (int i=0; i<varorder.length; ++i) {
@@ -264,15 +414,28 @@ public class CSPA extends Solver {
         bdd.setVarOrder(varorder);
         bdd.enableReorder();
         
-        V1ToV2 = bdd.makePair(V1, V2);
-        V1ToV3 = bdd.makePair(V1, V3);
-        V2ToV1 = bdd.makePair(V2, V1);
-        V2ToV3 = bdd.makePair(V2, V3);
-        V3ToV1 = bdd.makePair(V3, V1);
-        V3ToV2 = bdd.makePair(V3, V2);
-        H1ToH2 = bdd.makePair(H1, H2);
-        H2ToH1 = bdd.makePair(H2, H1);
+        V1ToV2 = bdd.makePair();
+        V1ToV2.set(new BDDDomain[] {V1o, V1c},
+                   new BDDDomain[] {V2o, V2c});
+        V2ToV1 = bdd.makePair();
+        V2ToV1.set(new BDDDomain[] {V2o, V2c},
+                   new BDDDomain[] {V1o, V1c});
+        H1ToH2 = bdd.makePair();
+        H1ToH2.set(new BDDDomain[] {H1o, H1c},
+                   new BDDDomain[] {H2o, H2c});
+        H2ToH1 = bdd.makePair();
+        H2ToH1.set(new BDDDomain[] {H2o, H2c},
+                   new BDDDomain[] {H1o, H1c});
         T2ToT1 = bdd.makePair(T2, T1);
+        
+        V1set = V1o.set(); V1set.andWith(V1c.set());
+        V2set = V2o.set(); V2set.andWith(V2c.set());
+        FDset = FD.set();
+        H1set = H1o.set(); H1set.andWith(H1c.set());
+        H2set = H2o.set(); H2set.andWith(H2c.set());
+        T1set = T1.set();
+        T2set = T2.set();
+        H1andFDset = H1set.and(FDset);
         
         reset();
     }
@@ -282,6 +445,10 @@ public class CSPA extends Solver {
         vC = bdd.zero();
         cC = bdd.zero();
         typeFilter = bdd.zero();
+        g_pointsTo = bdd.zero();
+        g_loads = bdd.zero();
+        g_stores = bdd.zero();
+        g_edgeSet = bdd.zero();
     }
 
     int[] makeVarOrdering(boolean reverseLocal, String ordering) {
@@ -315,12 +482,15 @@ public class CSPA extends Solver {
         for (int i=0; ; ++i) {
             String s = st.nextToken();
             BDDDomain d;
-            if (s.equals("V1")) d = V1;
-            else if (s.equals("V2")) d = V2;
-            else if (s.equals("V3")) d = V3;
+            if (s.equals("V1o")) d = V1o;
+            else if (s.equals("V1c")) d = V1c;
+            else if (s.equals("V2o")) d = V2o;
+            else if (s.equals("V2c")) d = V2c;
             else if (s.equals("FD")) d = FD;
-            else if (s.equals("H1")) d = H1;
-            else if (s.equals("H2")) d = H2;
+            else if (s.equals("H1o")) d = H1o;
+            else if (s.equals("H1c")) d = H1c;
+            else if (s.equals("H2o")) d = H2o;
+            else if (s.equals("H2c")) d = H2c;
             else {
                 Assert.UNREACHABLE("bad domain: "+s);
                 return null;
@@ -369,8 +539,9 @@ public class CSPA extends Solver {
             for (int i=0; i<numDomains; ++i) {
                 BDDDomain d = doms[domainIndex+i];
                 int di = d.getIndex();
-                if (bitNumber < domainBits[di])
+                if (bitNumber < domainBits[di]) {
                     varorder[bitIndex++] = domainSpos[di] + localOrders[di][bitNumber];
+                }
             }
         }
         return bitIndex;
@@ -396,13 +567,6 @@ public class CSPA extends Solver {
     }
     
     boolean change;
-
-    IndexMap getIndexMap(BDDDomain d) {
-        if (d == V1 || d == V2) return variableIndexMap;
-        if (d == FD) return fieldIndexMap;
-        if (d == H1 || d == H2) return heapobjIndexMap;
-        return null;
-    }
 
     HashSet visitedMethods = new HashSet();
 
@@ -459,7 +623,7 @@ public class CSPA extends Solver {
         addClassType(type);
         int site_i = getHeapobjIndex(site);
         int type_i = getTypeIndex(type);
-        BDD site_bdd = H1.ithVar(site_i);
+        BDD site_bdd = H1o.ithVar(site_i);
         BDD type_bdd = T2.ithVar(type_i);
         type_bdd.andWith(site_bdd);
         if (TRACE_TYPES) System.out.println("Adding alloc type: "+type_bdd.toStringWithDomains());
@@ -470,7 +634,7 @@ public class CSPA extends Solver {
         addClassType(type);
         int var_i = getVariableIndex(var);
         int type_i = getTypeIndex(type);
-        BDD var_bdd = V1.ithVar(var_i);
+        BDD var_bdd = V1o.ithVar(var_i);
         BDD type_bdd = T1.ithVar(type_i);
         type_bdd.andWith(var_bdd);
         if (TRACE_TYPES) System.out.println("Adding var type: "+type_bdd.toStringWithDomains());
@@ -486,7 +650,7 @@ public class CSPA extends Solver {
             jq_Type t1 = (jq_Type) typeIndexMap.get(i1);
             if (t1 == null) {
                 BDD type1_bdd = T1.ithVar(i1);
-                BDD type2_bdd = T2.set();
+                BDD type2_bdd = T2.domain();
                 type1_bdd.andWith(type2_bdd);
                 cC.orWith(type1_bdd);
                 continue;
@@ -496,7 +660,7 @@ public class CSPA extends Solver {
             for ( ; i2<n1; ++i2) {
                 jq_Type t2 = (jq_Type) typeIndexMap.get(i2);
                 if (t2 == null) {
-                    BDD type1_bdd = T1.set();
+                    BDD type1_bdd = T1.domain();
                     BDD type2_bdd = T2.ithVar(i2);
                     type1_bdd.andWith(type2_bdd);
                     cC.orWith(type1_bdd);
@@ -517,13 +681,11 @@ public class CSPA extends Solver {
     public void calculateTypeFilter() {
         calculateTypeHierarchy();
         
-        BDD T1set = T1.set();
-        BDD T2set = T2.set();
         // (T1 x T2) * (H1 x T2) => (T1 x H1)
         BDD assignableTypes = cC.relprod(aC, T2set);
         // (T1 x H1) * (V1 x T1) => (V1 x H1)
         typeFilter = assignableTypes.relprod(vC, T1set);
-        T1set.free(); T2set.free();
+        assignableTypes.free();
         //cC.free(); vC.free(); aC.free();
 
         if (false) typeFilter = bdd.one();
@@ -551,14 +713,273 @@ public class CSPA extends Solver {
         return variableIndexMap.get(new Triple(mc, callee, new Integer(p)));
     }
     
+    BDDMethodSummary getOrCreateBDDSummary(jq_Method m) {
+        if (m.getBytecode() == null) return null;
+        ControlFlowGraph cfg = CodeCache.getCode(m);
+        MethodSummary ms = MethodSummary.getSummary(cfg);
+        BDDMethodSummary bms = getBDDSummary(ms);
+        if (bms == null) {
+            bddSummaries.put(ms, bms = new BDDMethodSummary(ms));
+        }
+        return bms;
+    }
+    
     Map bddSummaries = new HashMap();
     BDDMethodSummary getBDDSummary(MethodSummary ms) {
         BDDMethodSummary result = (BDDMethodSummary) bddSummaries.get(ms);
         if (result == null) {
-            if (TRACE_WORKLIST) System.out.println(" Recursive cycle? No summary for "+ms.getMethod());
             return null;
         }
         return result;
+    }
+    
+    public Collection getTargetMethods(ProgramLocation callSite) {
+        if (LOADED_CALLGRAPH) {
+            jq_Method m = (jq_Method) callSite.getMethod();
+            Map map = CodeCache.getBCMap(m);
+            int bcIndex = ((Integer) map.get(((ProgramLocation.QuadProgramLocation) callSite).getQuad())).intValue();
+            callSite = new ProgramLocation.BCProgramLocation(m, bcIndex);
+        }
+        return cg.getTargetMethods(callSite);
+    }
+
+    BDD g_pointsTo;
+    BDD g_edgeSet;
+    BDD g_stores;
+    BDD g_loads;
+
+    public void bindCallEdges(MethodSummary caller) {
+        //System.out.println("Adding call graph edges for "+caller.getMethod());
+        for (Iterator i=caller.getCalls().iterator(); i.hasNext(); ) {
+            ProgramLocation mc = (ProgramLocation) i.next();
+            for (Iterator j=getTargetMethods(mc).iterator(); j.hasNext(); ) {
+                jq_Method target = (jq_Method) j.next();
+                if (target.getBytecode() == null) {
+                    bindParameters_native(caller, mc);
+                    continue;
+                }
+                ControlFlowGraph cfg = CodeCache.getCode(target);
+                MethodSummary callee = MethodSummary.getSummary(cfg);
+                bindParameters(caller, mc, callee);
+            }
+        }
+    }
+    
+    public void bindParameters_native(MethodSummary caller, ProgramLocation mc) {
+        // TODO.
+    }
+    
+    public void bindParameters(MethodSummary caller, ProgramLocation mc, MethodSummary callee) {
+        Object key = new CallSite(callee, mc);
+        if (callGraphEdges.contains(key)) return;
+        if (false) {
+            System.out.println("Adding call graph edge "+caller.getMethod()+"->"+callee.getMethod());
+        }
+        callGraphEdges.add(key);
+        BDDMethodSummary caller_s = this.getBDDSummary(caller);
+        //System.out.println("Caller "+caller.getMethod()+": "+caller_s.c_paths+"/"+caller_s.n_paths);
+        BDDMethodSummary callee_s = this.getBDDSummary(callee);
+        //System.out.println("Callee "+callee.getMethod()+": "+callee_s.c_paths+"/"+callee_s.n_paths);
+        long context_low;
+        long context_hi;
+        if (backEdges.contains(new Pair(caller.getMethod(), callee.getMethod()))) {
+            context_low = 0;
+            context_hi = 0;
+        } else {
+            context_low = callee_s.c_paths;
+            callee_s.c_paths += caller_s.n_paths;
+            context_hi = callee_s.c_paths - 1L;
+        }
+        //System.out.println("Context range "+context_low+"-"+context_hi);
+        if (callee_s.c_paths > callee_s.n_paths) {
+            System.out.println("Callee: "+callee.getMethod()+" c_paths="+callee_s.c_paths+" n_paths="+callee_s.n_paths);
+            Assert.UNREACHABLE();
+        }
+        BDD context_V1 = V1c.varRange(context_low, context_hi);
+        BDD context_V2 = V2c.varRange(context_low, context_hi);
+        BDD context_H1 = H1c.varRange(context_low, context_hi);
+        BDD t1 = callee_s.m_pointsTo.and(context_V1);
+        t1.andWith(context_H1);
+        g_pointsTo.orWith(t1);
+        t1 = callee_s.m_loads.and(context_V1);
+        t1.andWith(context_V2.id());
+        g_loads.orWith(t1);
+        t1 = callee_s.m_stores.and(context_V1);
+        t1.andWith(context_V2);
+        g_loads.orWith(t1);
+        
+        this.change = true;
+        BDD context_map = buildVarContextMap(0, context_low, caller_s.n_paths);
+        for (int i=0; i<mc.getNumParams(); ++i) {
+            if (i >= callee.getNumOfParams()) break;
+            ParamNode pn = callee.getParamNode(i);
+            if (pn == null) continue;
+            PassedParameter pp = new PassedParameter(mc, i);
+            Set s = caller.getNodesThatCall(pp);
+            addEdge(context_map, pn, s);
+        }
+        context_map.free();
+        ReturnValueNode rvn = caller.getRVN(mc);
+        if (rvn != null) {
+            Set s = callee.getReturned();
+            context_map = buildVarContextMap(context_low, 0, caller_s.n_paths);
+            addEdge(context_map, rvn, s);
+            context_map.free();
+        }
+        ThrownExceptionNode ten = caller.getTEN(mc);
+        if (ten != null) {
+            Set s = callee.getThrown();
+            context_map = buildVarContextMap(context_low, 0, caller_s.n_paths);
+            addEdge(context_map, ten, s);
+            context_map.free();
+        }
+    }
+
+    public BDD buildVarContextMap(long startV1, long startV2, long num) {
+        BDD r = V1c.buildAdd(V2c, startV2 - startV1);
+        r.andWith(V1c.varRange(startV1, startV1+num-1));
+        return r;
+    }
+
+    public void addEdge(BDD context_map, Node dest, Set srcs) {
+        int dest_i = getVariableIndex(dest);
+        BDD dest_bdd = V2o.ithVar(dest_i);
+        for (Iterator i=srcs.iterator(); i.hasNext(); ) {
+            Node src = (Node) i.next();
+            int src_i = getVariableIndex(src);
+            BDD src_bdd = V1o.ithVar(src_i);
+            src_bdd.andWith(context_map.id());
+            src_bdd.andWith(dest_bdd.id());
+            g_edgeSet.orWith(src_bdd);
+        }
+        dest_bdd.free();
+    }
+
+    public void solveIncremental() {
+
+        if (TRACE_MATCHING) System.out.println("Solving pointers...");
+
+        calculateTypeFilter();
+        
+        BDD oldPointsTo = bdd.zero();
+        BDD newPointsTo = g_pointsTo.id();
+
+        BDD fieldPt = bdd.zero();
+        BDD storePt = bdd.zero();
+        BDD loadAss = bdd.zero();
+
+        // start solving 
+        for (;;) {
+
+            // repeat rule (1) in the inner loop
+            for (;;) {
+                BDD newPt1 = g_edgeSet.relprod(newPointsTo, V1set);
+                newPointsTo.free();
+                BDD newPt2 = newPt1.replace(V2ToV1);
+                newPt1.free();
+                newPt2.applyWith(g_pointsTo.id(), BDDFactory.diff);
+                newPt2.andWith(typeFilter.id());
+                newPointsTo = newPt2;
+                if (newPointsTo.isZero()) break;
+                g_pointsTo.orWith(newPointsTo.id());
+            }
+            newPointsTo.free();
+            newPointsTo = g_pointsTo.apply(oldPointsTo, BDDFactory.diff);
+
+            // apply rule (2)
+            BDD tmpRel1 = g_stores.relprod(newPointsTo, V1set); // time-consuming!
+            // (V2xFD)xH1
+            BDD tmpRel2 = tmpRel1.replace(V2ToV1);
+            tmpRel1.free();
+            BDD tmpRel3 = tmpRel2.replace(H1ToH2);
+            tmpRel2.free();
+            // (V1xFD)xH2
+            tmpRel3.applyWith(storePt.id(), BDDFactory.diff);
+            BDD newStorePt = tmpRel3;
+            // cache storePt
+            storePt.orWith(newStorePt.id()); // (V1xFD)xH2
+
+            BDD newFieldPt = storePt.relprod(newPointsTo, V1set); // time-consuming!
+            // (H1xFD)xH2
+            newFieldPt.orWith(newStorePt.relprod(oldPointsTo, V1set));
+            newStorePt.free();
+            oldPointsTo.free();
+            // (H1xFD)xH2
+            newFieldPt.applyWith(fieldPt.id(), BDDFactory.diff);
+            // cache fieldPt
+            fieldPt.orWith(newFieldPt.id()); // (H1xFD)xH2
+
+            // apply rule (3)
+            BDD tmpRel4 = g_loads.relprod(newPointsTo, V1set); // time-consuming!
+            newPointsTo.free();
+            // (H1xFD)xV2
+            BDD newLoadAss = tmpRel4.apply(loadAss, BDDFactory.diff);
+            tmpRel4.free();
+            BDD newLoadPt = loadAss.relprod(newFieldPt, H1andFDset);
+            newFieldPt.free();
+            // V2xH2
+            newLoadPt.orWith(newLoadAss.relprod(fieldPt, H1andFDset));
+            // V2xH2
+            // cache loadAss
+            loadAss.orWith(newLoadAss);
+
+            // update oldPointsTo
+            oldPointsTo = g_pointsTo.id();
+
+            // convert new points-to relation to normal type
+            BDD tmpRel5 = newLoadPt.replace(V2ToV1);
+            newPointsTo = tmpRel5.replace(H2ToH1);
+            tmpRel5.free();
+            newPointsTo.applyWith(g_pointsTo.id(), BDDFactory.diff);
+
+            // apply typeFilter
+            newPointsTo.andWith(typeFilter.id());
+            if (newPointsTo.isZero()) break;
+            g_pointsTo.orWith(newPointsTo.id());
+        }
+        
+        newPointsTo.free();
+        fieldPt.free();
+        storePt.free();
+        loadAss.free();
+    }
+    
+    HashSet backEdges = new HashSet();
+    
+    public long countPaths() {
+        List list = Traversals.reversePostOrder(cg.getNavigator(), cg.getRoots());
+        long max = 0;
+        for (Iterator i=list.iterator(); i.hasNext(); ) {
+            jq_Method o = (jq_Method) i.next();
+            BDDMethodSummary ms = getOrCreateBDDSummary(o);
+            if (ms == null) {
+                continue;
+            }
+            long myPaths = 0;
+            for (Iterator j=cg.getCallers(o).iterator(); j.hasNext(); ) {
+                jq_Method p = (jq_Method) j.next();
+                BDDMethodSummary ms2 = getOrCreateBDDSummary(p);
+                Assert._assert(list.contains(p));
+                if (ms2 == null) {
+                    continue;
+                }
+                if (ms2.n_paths == 0) {
+                    System.out.println("Back edge: "+p+"->"+o);
+                    backEdges.add(new Pair(p, o));
+                    continue;
+                }
+                for (Iterator k=cg.getCallSites(p).iterator(); k.hasNext(); ) {
+                    ProgramLocation mc = (ProgramLocation) k.next();
+                    if (cg.getTargetMethods(mc).contains(o)) {
+                        myPaths += ms2.n_paths;
+                    }
+                }
+            }
+            if (myPaths == 0) myPaths = 1;
+            ms.n_paths = myPaths;
+            max = Math.max(max, ms.n_paths);
+        }
+        return max;
     }
     
     public class BDDMethodSummary {
@@ -566,46 +987,39 @@ public class CSPA extends Solver {
         /** The method summary that we correspond to. */
         MethodSummary ms;
         
-        BDD pointsTo;     // V1 x H1
-        BDD edgeSet;      // V1 x V2
-        BDD stores;       // V1 x (V2 x FD) 
-        BDD loads;        // (V1 x FD) x V2
-
-        /** Root set of locally-escaping nodes. (Parameter nodes, returned and thrown nodes.) */
-        BDD roots; // V1
+        /** The number of paths that reach this method. */
+        long n_paths;
+        long c_paths;
         
-        /** Set of all locally-escaping nodes. */
-        BDD nodes; // V1
+        /** BDD representing all of the paths that reach this method. */
+        BDD context; // V1c
+        
+        BDD m_pointsTo;     // V1 x H1
+        BDD m_stores;       // V1 x (V2 x FD) 
+        BDD m_loads;        // (V1 x FD) x V2
         
         BDDMethodSummary(MethodSummary ms) {
             this.ms = ms;
             reset();
             computeInitial();
+            //System.out.println(this);
+            //reportSize();
         }
         
         void reset() {
             // initialize relations to zero.
-            pointsTo = bdd.zero();
-            edgeSet = bdd.zero();
-            stores = bdd.zero();
-            loads = bdd.zero();
-            roots = bdd.zero();
-            nodes = bdd.zero();
+            m_pointsTo = bdd.zero();
+            m_stores = bdd.zero();
+            m_loads = bdd.zero();
         }
         
         void reportSize() {
             System.out.print("pointsTo = ");
-            report(pointsTo, new BDDDomain[] { V2, V3, FD, H2 });
-            System.out.print("edgeSet = ");
-            report(edgeSet, new BDDDomain[] { V3, FD, H1, H2 });
+            report(m_pointsTo, new BDDDomain[] { V1c, V2o, V2c, FD, H1c, H2o, H2c });
             System.out.print("stores = ");
-            report(stores, new BDDDomain[] { V3, H1, H2 });
+            report(m_stores, new BDDDomain[] { V1c, V2c, H1o, H1c, H2o, H2c });
             System.out.print("loads = ");
-            report(loads, new BDDDomain[] { V3, H1, H2 });
-            System.out.print("roots = ");
-            report(roots, new BDDDomain[] { V2, V3, FD, H1, H2 });
-            System.out.print("nodes = ");
-            report(nodes, new BDDDomain[] { V2, V3, FD, H1, H2 });
+            report(m_loads, new BDDDomain[] { V1c, V2c, H1o, H1c, H2o, H2c });
         }
 
         final void report(BDD bdd, BDDDomain[] d) {
@@ -619,16 +1033,15 @@ public class CSPA extends Solver {
         }
         
         void dispose() {
-            pointsTo.free();
-            edgeSet.free();
-            stores.free();
-            loads.free();
-            roots.free();
-            nodes.free();
+            m_pointsTo.free();
+            m_stores.free();
+            m_loads.free();
         }
         
         void computeInitial() {
-            long time = System.currentTimeMillis();
+            long time;
+            
+            time = System.currentTimeMillis();
             // add edges for all local stuff.
             for (Iterator i=ms.nodeIterator(); i.hasNext(); ) {
                 Node n = (Node) i.next();
@@ -637,25 +1050,9 @@ public class CSPA extends Solver {
             time = System.currentTimeMillis() - time;
             if (TRACE_TIMES || time > 400) System.out.println("Converting method to BDD sets: "+(time/1000.));
             
-            time = System.currentTimeMillis();
-            // match up edges for local stuff.
-            solveIncremental();
-            time = System.currentTimeMillis() - time;
-            if (TRACE_TIMES || time > 400) System.out.println("Matching local edges: "+(time/1000.));
-            
-            time = System.currentTimeMillis();
-            // calculate the set of things reachable from local stuff.
-            transitiveClosure(nodes);
-            time = System.currentTimeMillis() - time;
-            if (TRACE_TIMES || time > 400) System.out.println("Local transitive closure: "+(time/1000.));
         }
         
         public void handleNode(Node n) {
-            
-            if (n instanceof GlobalNode) {
-                // TODO.
-                return;
-            }
             
             Iterator j;
             j = n.getEdges().iterator();
@@ -692,55 +1089,50 @@ public class CSPA extends Solver {
                 addAllocType(utn, (jq_Reference) utn.getDeclaredType());
             }
             if (n instanceof ParamNode ||
-                n instanceof ReturnedNode ||
                 ms.getReturned().contains(n) ||
                 ms.getThrown().contains(n)) {
-                addLocalEscapeNode(n);
+                addUpwardEscapeNode(n);
             }
-            if (n.getPassedParameters() != null) {
-                addNode(n);
+            if (n instanceof ReturnedNode ||
+                n.getPassedParameters() != null) {
+                addDownwardEscapeNode(n);
             }
-            addVarType(n, (jq_Reference) n.getDeclaredType());
+            if (n instanceof GlobalNode) {
+                BDD c = V2c.domain();
+                c.andWith(V1c.domain());
+                addEdge(c, GlobalNode.GLOBAL, Collections.singleton(n));
+                c.free();
+                c = V1c.domain();
+                c.andWith(V2c.domain());
+                addEdge(c, n, Collections.singleton(GlobalNode.GLOBAL));
+                c.free();
+                addVarType(n, PrimordialClassLoader.getJavaLangObject());
+            } else {
+                addVarType(n, (jq_Reference) n.getDeclaredType());
+            }
         }
-
+        
         public void addObjectAllocation(Node dest, Node site) {
             int dest_i = getVariableIndex(dest);
             int site_i = getHeapobjIndex(site);
-            BDD dest_bdd = V1.ithVar(dest_i);
-            BDD site_bdd = H1.ithVar(site_i);
+            BDD dest_bdd = V1o.ithVar(dest_i);
+            BDD site_bdd = H1o.ithVar(site_i);
             dest_bdd.andWith(site_bdd);
-            pointsTo.orWith(dest_bdd);
+            m_pointsTo.orWith(dest_bdd);
         }
 
-        public void addEdge(Node dest, Node src) {
-            addEdge(dest, Collections.singleton(src));
-        }
-
-        public void addEdge(Node dest, Set srcs) {
-            int dest_i = getVariableIndex(dest);
-            BDD dest_bdd = V2.ithVar(dest_i);
-            for (Iterator i=srcs.iterator(); i.hasNext(); ) {
-                Node src = (Node) i.next();
-                int src_i = getVariableIndex(src);
-                BDD src_bdd = V1.ithVar(src_i);
-                src_bdd.andWith(dest_bdd.id());
-                edgeSet.orWith(src_bdd);
-            }
-            dest_bdd.free();
-        }
-        
         public void addLoad(Set dests, Node base, jq_Field f) {
             int base_i = getVariableIndex(base);
             int f_i = getFieldIndex(f);
-            BDD base_bdd = V1.ithVar(base_i);
+            BDD base_bdd = V1o.ithVar(base_i);
             BDD f_bdd = FD.ithVar(f_i);
             for (Iterator i=dests.iterator(); i.hasNext(); ) {
                 FieldNode dest = (FieldNode) i.next();
                 int dest_i = getVariableIndex(dest);
-                BDD dest_bdd = V2.ithVar(dest_i);
+                BDD dest_bdd = V2o.ithVar(dest_i);
                 dest_bdd.andWith(f_bdd.id());
                 dest_bdd.andWith(base_bdd.id());
-                loads.orWith(dest_bdd);
+                m_loads.orWith(dest_bdd);
             }
             base_bdd.free(); f_bdd.free();
         }
@@ -748,618 +1140,25 @@ public class CSPA extends Solver {
         public void addStore(Node base, jq_Field f, Set srcs) {
             int base_i = getVariableIndex(base);
             int f_i = getFieldIndex(f);
-            BDD base_bdd = V2.ithVar(base_i);
+            BDD base_bdd = V2o.ithVar(base_i);
             BDD f_bdd = FD.ithVar(f_i);
             for (Iterator i=srcs.iterator(); i.hasNext(); ) {
                 Node src = (Node) i.next();
                 int src_i = getVariableIndex(src);
-                BDD src_bdd = V1.ithVar(src_i);
+                BDD src_bdd = V1o.ithVar(src_i);
                 src_bdd.andWith(f_bdd.id());
                 src_bdd.andWith(base_bdd.id());
-                stores.orWith(src_bdd);
+                m_stores.orWith(src_bdd);
             }
             base_bdd.free(); f_bdd.free();
         }
         
-        public void addLocalEscapeNode(Node n) {
+        public void addUpwardEscapeNode(Node n) {
             int n_i = getVariableIndex(n);
-            BDD n_bdd = V1.ithVar(n_i);
-            roots.orWith(n_bdd.id());
-            nodes.orWith(n_bdd);
         }
         
-        public void addNode(Node n) {
+        public void addDownwardEscapeNode(Node n) {
             int n_i = getVariableIndex(n);
-            BDD n_bdd = V1.ithVar(n_i);
-            nodes.orWith(n_bdd);
-        }
-        
-        public void solveNonincremental() {
-            BDD oldPt1;
-
-            calculateTypeFilter();
-            
-            if (TRACE_MATCHING) {
-                System.out.println("Solving pointers for "+this.ms.getMethod());
-            }
-
-            // start solving 
-            do {
-                oldPt1 = pointsTo;
-                // repeat rule (1) in the inner loop
-                BDD oldPt2 = bdd.zero();
-                do {
-                    oldPt2 = pointsTo;
-                    /* --- rule (1) --- */
-                    // 
-                    //   l1 -> l2    o \in pt(l1)
-                    // --------------------------
-                    //          o \in pt(l2)
-
-                    // (V1 x V2) * (V1 x H1) => (V2 x H1)
-                    BDD newPt1 = edgeSet.relprod(pointsTo, V1.set());
-                    // (V2 x H1) => (V1 x H1)
-                    BDD newPt2 = newPt1.replace(V2ToV1);
-
-                    /* --- apply type filtering and merge into pointsTo relation --- */
-                    // (V1 x H1)
-                    BDD newPt3 = newPt2.and(typeFilter);
-                    if (TRACE_MATCHING) {
-                        System.out.println("Removed by type filter: "+newPt2.apply(newPt3, BDDFactory.diff).toStringWithDomains());
-                    }
-                    // (V1 x H1)
-                    pointsTo = pointsTo.or(newPt3);
-                
-                } while (!oldPt2.equals(pointsTo));
-
-                if (TRACE_MATCHING) {
-                    System.out.println("After transitive closure, points-to is "+pointsTo.toStringWithDomains());
-                }
-                
-                // propagate points-to set over field loads and stores
-                /* --- rule (2) --- */
-                //
-                //   o2 \in pt(l)   l -> q.f   o1 \in pt(q)
-                // -----------------------------------------
-                //                  o2 \in pt(o1.f) 
-                // (V1 x (V2 x FD)) * (V1 x H1) => ((V2 x FD) x H1)
-                BDD tmpRel1 = stores.relprod(pointsTo, V1.set());
-                // ((V2 x FD) x H1) => ((V1 x FD) x H2)
-                BDD tmpRel2 = tmpRel1.replace(V2ToV1).replace(H1ToH2);
-                // ((V1 x FD) x H2) * (V1 x H1) => ((H1 x FD) x H2)
-                BDD fieldPt = tmpRel2.relprod(pointsTo, V1.set());
-
-                /* --- rule (3) --- */
-                //
-                //   p.f -> l   o1 \in pt(p)   o2 \in pt(o1)
-                // -----------------------------------------
-                //                 o2 \in pt(l)
-                // ((V1 x FD) x V2) * (V1 x H1) => ((H1 x FD) x V2)
-                BDD tmpRel3 = loads.relprod(pointsTo, V1.set());
-                // ((H1 x FD) x V2) * ((H1 x FD) x H2) => (V2 x H2)
-                BDD newPt4 = tmpRel3.relprod(fieldPt, H1.set().and(FD.set()));
-                // (V2 x H2) => (V1 x H1)
-                BDD newPt5 = newPt4.replace(V2ToV1).replace(H2ToH1);
-
-                /* --- apply type filtering and merge into pointsTo relation --- */
-                BDD newPt6 = newPt5.and(typeFilter);
-                pointsTo = pointsTo.or(newPt6);
-
-                if (TRACE_MATCHING) {
-                    System.out.println("After matching loads/stores, points-to is now "+pointsTo.toStringWithDomains());
-                }
-            }
-            while (!oldPt1.equals(pointsTo));
-
-        }
-        
-        public void solveIncremental() {
-
-            calculateTypeFilter();
-            
-            BDD empty = bdd.zero();
-        
-            BDD oldPointsTo = bdd.zero();
-            BDD newPointsTo = pointsTo.id();
-            BDD V1set = V1.set();
-            BDD H1andFDset = H1.set();
-            H1andFDset.andWith(FD.set());
-
-            BDD fieldPt = bdd.zero();
-            BDD storePt = bdd.zero();
-            BDD loadAss = bdd.zero();
-
-            // start solving 
-            for (;;) {
-
-                // repeat rule (1) in the inner loop
-                for (;;) {
-                    BDD newPt1 = edgeSet.relprod(newPointsTo, V1set);
-                    newPointsTo.free();
-                    BDD newPt2 = newPt1.replace(V2ToV1);
-                    newPt1.free();
-                    newPt2.applyWith(pointsTo.id(), BDDFactory.diff);
-                    newPt2.andWith(typeFilter.id());
-                    newPointsTo = newPt2;
-                    if (newPointsTo.equals(empty)) break;
-                    pointsTo.orWith(newPointsTo.id());
-                }
-                newPointsTo.free();
-                newPointsTo = pointsTo.apply(oldPointsTo, BDDFactory.diff);
-
-                // apply rule (2)
-                BDD tmpRel1 = stores.relprod(newPointsTo, V1set); // time-consuming!
-                // (V2xFD)xH1
-                BDD tmpRel2 = tmpRel1.replace(V2ToV1);
-                tmpRel1.free();
-                BDD tmpRel3 = tmpRel2.replace(H1ToH2);
-                tmpRel2.free();
-                // (V1xFD)xH2
-                tmpRel3.applyWith(storePt.id(), BDDFactory.diff);
-                BDD newStorePt = tmpRel3;
-                // cache storePt
-                storePt.orWith(newStorePt.id()); // (V1xFD)xH2
-
-                BDD newFieldPt = storePt.relprod(newPointsTo, V1set); // time-consuming!
-                // (H1xFD)xH2
-                newFieldPt.orWith(newStorePt.relprod(oldPointsTo, V1set));
-                newStorePt.free();
-                oldPointsTo.free();
-                // (H1xFD)xH2
-                newFieldPt.applyWith(fieldPt.id(), BDDFactory.diff);
-                // cache fieldPt
-                fieldPt.orWith(newFieldPt.id()); // (H1xFD)xH2
-
-                // apply rule (3)
-                BDD tmpRel4 = loads.relprod(newPointsTo, V1set); // time-consuming!
-                newPointsTo.free();
-                // (H1xFD)xV2
-                BDD newLoadAss = tmpRel4.apply(loadAss, BDDFactory.diff);
-                tmpRel4.free();
-                BDD newLoadPt = loadAss.relprod(newFieldPt, H1andFDset);
-                newFieldPt.free();
-                // V2xH2
-                newLoadPt.orWith(newLoadAss.relprod(fieldPt, H1andFDset));
-                // V2xH2
-                // cache loadAss
-                loadAss.orWith(newLoadAss);
-
-                // update oldPointsTo
-                oldPointsTo = pointsTo.id();
-
-                // convert new points-to relation to normal type
-                BDD tmpRel5 = newLoadPt.replace(V2ToV1);
-                newPointsTo = tmpRel5.replace(H2ToH1);
-                tmpRel5.free();
-                newPointsTo.applyWith(pointsTo.id(), BDDFactory.diff);
-
-                // apply typeFilter
-                newPointsTo.andWith(typeFilter.id());
-                if (newPointsTo.equals(empty)) break;
-                pointsTo.orWith(newPointsTo.id());
-            }
-        
-            newPointsTo.free();
-            empty.free();
-            V1set.free(); H1andFDset.free();
-            fieldPt.free();
-            storePt.free();
-            loadAss.free();
-        }
-        
-        boolean simplify() {
-            if (TRACE_SIMPLIFY) {
-                System.out.println("Before simplification:");
-                this.reportSize();
-            }
-            
-            BDD V1set, V2set, FDset;
-            V1set = V1.set();
-            V2set = V2.set();
-            FDset = FD.set();
-            
-            BDD escape = roots.id();
-            boolean change2 = false;
-            
-            for (;;) {
-                // compute the set of nodes that escape locally.
-                BDD my_edgeSet;
-                for (;;) {
-                    // Transitive along load edges.
-                    // V1 x (V1xFD)xV2  =>  FDxV2
-                    BDD newNodes3 = escape.relprod(loads, V1set);
-                    // FDxV2  =>  V2
-                    BDD newNodes4 = newNodes3.exist(FDset);
-                    newNodes3.free();
-                    
-                    BDD escape2 = escape.replace(V1ToV2);
-                    escape2.orWith(newNodes4);
-                    
-                    // Transitive along store edges.
-                    // V2 x (V2xFD)xV1  =>  FDxV1
-                    BDD newNodes1 = escape2.relprod(stores, V2set);
-                    // FDxV1  =>  V1
-                    BDD newNodes2 = newNodes1.exist(FDset);
-                    newNodes1.free();
-                    
-                    newNodes2.replaceWith(V1ToV2);
-                    escape2.orWith(newNodes2);
-                    
-                    BDD escape1 = escape2.replace(V2ToV1);
-                    if (escape.equals(escape1)) {
-                        my_edgeSet = edgeSet.and(escape2);
-                        escape1.free(); escape2.free();
-                        break;
-                    }
-                    escape2.free();
-                    escape.orWith(escape1);
-                }
-                
-                
-                if (TRACE_SIMPLIFY) {
-                    System.out.println("Escaped nodes: "+escape.toStringWithDomains(ts));
-                    System.out.println("Edges that target escaped nodes: "+my_edgeSet.toStringWithDomains(ts));
-                }
-                my_edgeSet.replaceWith(V2ToV3);
-                
-                boolean change = false;
-                
-                // propagate loads and stores along inclusion edges to escaping nodes.
-                // (V1xV3) x (V1xFD)xV2  =>  (V3xFD)xV2
-                BDD newLoads23 = loads.relprod(my_edgeSet, V1set);
-                newLoads23.replaceWith(V2ToV1);
-                newLoads23.replaceWith(V3ToV2);
-                BDD oldLoads = loads.id();
-                loads.orWith(newLoads23);
-                if (!oldLoads.equals(loads)) {
-                    change = true;
-                }
-                oldLoads.free();
-                
-                // (V2xV3) x V1x(V2xFD)  =>  V1x(V3xFD)
-                my_edgeSet.replaceWith(V1ToV2);
-                BDD newStores13 = stores.relprod(my_edgeSet, V2set);
-                newStores13.replace(V3ToV2);
-                BDD oldStores = stores.id();
-                stores.orWith(newStores13);
-                if (!oldStores.equals(stores)) {
-                    change = true;
-                }
-                oldStores.free();
-                
-                if (!change) {
-                    break;
-                }
-                change2 = true;
-            }
-            
-            V1set.free();
-            V2set.free();
-            FDset.free();
-            nodes = escape.id();
-            
-            //pointsTo.andWith(escape.id());
-            //escape.andWith(escape.replace(V1ToV2));
-            //loads.andWith(escape.id());
-            //stores.andWith(escape.id());
-            //edgeSet.andWith(escape.id());
-            
-            if (TRACE_SIMPLIFY) {
-                System.out.println("After simplification: change="+change2);
-                this.reportSize();
-            }
-            
-            return change2;
-        }
-        
-        boolean transitiveClosure(BDD srcNodes) {
-            BDD V2set, FDset;
-            V2set = V2.set();
-            FDset = FD.set();
-            
-            // Keep track of whether there was a change.
-            boolean change = false;
-            
-            for (;;) {
-                BDD oldNodes = srcNodes.id();
-                BDD srcNodes2 = srcNodes.replace(V1ToV2);
-                {
-                    // Transitive along store edges.
-                    // V2 x (V2xFD)xV1  =>  FDxV1
-                    BDD newNodes = srcNodes2.relprod(stores, V2set);
-                    // FDxV1  =>  V1
-                    BDD newNodes2 = newNodes.exist(FDset);
-                    newNodes.free();
-                    srcNodes.orWith(newNodes2);
-                }
-                
-                {
-                    // Transitive along assignment edges.
-                    // V2 x V1xV2  =>  V1
-                    BDD newNodes = srcNodes2.relprod(edgeSet, V2set);
-                    srcNodes2.free();
-                    srcNodes.orWith(newNodes);
-                }
-                boolean done = oldNodes.equals(srcNodes);
-                oldNodes.free();
-                if (done) break;
-                change = true;
-            }
-            
-            V2set.free();
-            FDset.free();
-            return change;
-        }
-        
-        public static final boolean RENUMBER = false;
-        
-        boolean doCallees() {
-            BDD newEdges = bdd.zero();
-            BDD newLoads = bdd.zero();
-            BDD newStores = bdd.zero();
-            
-            // find all call sites.
-            for (Iterator i=ms.getCalls().iterator(); i.hasNext(); ) {
-                ProgramLocation mc = (ProgramLocation) i.next();
-                if (TRACE_CALLEE) System.out.println("Visiting call site "+mc);
-                
-                // build up an array of BDD's corresponding to each of the
-                // parameters passed into this method call.
-                BDD[] params = new BDD[mc.getNumParams()];
-                for (int j=0; j<mc.getNumParams(); j++) {
-                    jq_Type t = (jq_Type) mc.getParamType(j);
-                    if (!(t instanceof jq_Reference)) continue;
-                    PassedParameter pp = new PassedParameter(mc, j);
-                    Set s = ms.getNodesThatCall(pp);
-                    params[j] = bdd.zero();
-                    for (Iterator k=s.iterator(); k.hasNext(); ) {
-                        int m = getVariableIndex((Node) k.next());
-                        params[j].orWith(V1.ithVar(m));
-                    }
-                    if (TRACE_CALLEE) System.out.println("Params["+j+"]="+params[j].toStringWithDomains());
-                }
-                
-                // find all targets of this call.
-                Collection targets = cg.getTargetMethods(mc);
-                for (Iterator j=targets.iterator(); j.hasNext(); ) {
-                    jq_Method target = (jq_Method) j.next();
-                    if (TRACE_CALLEE) System.out.print("Target "+target);
-                    if (target.getBytecode() == null) {
-                        // TODO: calls to native methods.
-                        if (TRACE_CALLEE) System.out.println("... native method!");
-                        continue;
-                    }
-                    ControlFlowGraph cfg = CodeCache.getCode(target);
-                    MethodSummary ms_callee = MethodSummary.getSummary(cfg);
-                    BDDMethodSummary callee = getBDDSummary(ms_callee);
-                    if (callee == null) {
-                        if (TRACE_CALLEE) System.out.println("... no BDD summary yet!");
-                        continue;
-                    }
-                    
-                    // renumber if there is any overlap in node numbers.
-                    BDD renumbering13 = null;
-                    BDD renumbering23 = null;
-                    if (RENUMBER) {
-                        BDD overlap = nodes.and(callee.nodes);
-                        if (!overlap.equals(bdd.zero())) {
-                            if (TRACE_OVERLAP) System.out.println("... non-zero overlap! "+overlap.toStringWithDomains());
-                            long time = System.currentTimeMillis();
-                            BDD callee_used = callee.nodes.id();
-                            renumbering13 = bdd.zero();
-                            for (;;) {
-                                int p = callee_used.scanVar(V1);
-                                if (p < 0) break;
-                                BDD pth = V1.ithVar(p);
-                                int q;
-                                if (nodes.and(pth).equals(bdd.zero())) {
-                                    q = p;
-                                } else {
-                                    q = getNewVariableIndex(mc, target, p);
-                                    if (TRACE_OVERLAP) System.out.println("Variable "+p+" overlaps, new variable index "+q);
-                                    jq_Reference type = getVariableType(p);
-                                    BDD var_bdd = V1.ithVar(q);
-                                    BDD type_bdd = T1.ithVar(getTypeIndex(type));
-                                    type_bdd.andWith(var_bdd);
-                                    if (TRACE_TYPES) System.out.println("Adding var type: "+type_bdd.toStringWithDomains());
-                                    vC.orWith(type_bdd);
-                                }
-                                BDD qth = V3.ithVar(q);
-                                qth.andWith(pth.id());
-                                renumbering13.orWith(qth);
-                                callee_used.applyWith(pth, BDDFactory.diff);
-                            }
-                            renumbering23 = renumbering13.replace(V1ToV2);
-                            time = System.currentTimeMillis() - time;
-                            if (TRACE_TIMES || time > 400) System.out.println("Build renumbering: "+(time/1000.));
-                        } else {
-                            if (TRACE_CALLEE) System.out.println("...zero overlap!");
-                        }
-                        overlap.free();
-                    }
-                    long time = System.currentTimeMillis();
-                    BDD callee_loads = renumber(callee.loads, renumbering13, V1.set(), V3ToV1, renumbering23, V2.set(), V3ToV2);
-                    BDD callee_stores = renumber(callee.stores, renumbering13, V1.set(), V3ToV1, renumbering23, V2.set(), V3ToV2);
-                    BDD callee_edges = renumber(callee.edgeSet, renumbering13, V1.set(), V3ToV1, renumbering23, V2.set(), V3ToV2);
-                    BDD callee_nodes = renumber(callee.nodes, renumbering13, V1.set(), V3ToV1);
-                    time = System.currentTimeMillis() - time;
-                    if (TRACE_TIMES || time > 400) System.out.println("Renumbering: "+(time/1000.));
-                    
-                    if (TRACE_CALLEE) { 
-                        System.out.println("New loads: "+callee_loads.toStringWithDomains());
-                        System.out.println("New stores: "+callee_stores.toStringWithDomains());
-                        System.out.println("New edges: "+callee_edges.toStringWithDomains());
-                    }
-                    
-                    // incorporate callee operations into caller.
-                    newLoads.orWith(callee_loads);
-                    newStores.orWith(callee_stores);
-                    newEdges.orWith(callee_edges);
-                    nodes.orWith(callee_nodes);
-                    
-                    // add edges for parameters.
-                    for (int k=0; k<callee.ms.getNumOfParams(); ++k) {
-                        ParamNode pn = callee.ms.getParamNode(k);
-                        if (pn == null) continue;
-                        int pnIndex = getVariableIndex(pn);
-                        BDD tmp = V2.ithVar(pnIndex);
-                        BDD paramEdge = renumber(tmp, renumbering23, V2.set(), V3ToV2);
-                        tmp.free();
-                        paramEdge.andWith(params[k].id());
-                        if (TRACE_CALLEE) System.out.println("Param#"+k+" edges "+paramEdge.toStringWithDomains());
-                        newEdges.orWith(paramEdge);
-                    }
-                    
-                    // add edges for return value, if one exists.
-                    if (((jq_Method)callee.ms.getMethod()).getReturnType().isReferenceType() &&
-                        !callee.ms.getReturned().isEmpty()) {
-                        ReturnedNode rvn = (ReturnValueNode) ms.getRVN(mc);
-                        if (rvn != null) {
-                            BDD retVal = bdd.zero();
-                            for (Iterator k=callee.ms.getReturned().iterator(); k.hasNext(); ) {
-                                int nIndex = getVariableIndex((Node) k.next());
-                                BDD tmp = V1.ithVar(nIndex);
-                                retVal.orWith(renumber(tmp, renumbering13, V1.set(), V3ToV1));
-                                tmp.free();
-                            }
-                            int rIndex = getVariableIndex(rvn);
-                            retVal.andWith(V2.ithVar(rIndex));
-                            if (TRACE_CALLEE) System.out.println("Return value edges "+retVal.toStringWithDomains());
-                            newEdges.orWith(retVal);
-                        }
-                    }
-                    // add edges for thrown exception, if one exists.
-                    if (!callee.ms.getThrown().isEmpty()) {
-                        ReturnedNode rvn = (ThrownExceptionNode) ms.getTEN(mc);
-                        if (rvn != null) {
-                            BDD retVal = bdd.zero();
-                            for (Iterator k=callee.ms.getThrown().iterator(); k.hasNext(); ) {
-                                int nIndex = getVariableIndex((Node) k.next());
-                                BDD tmp = V1.ithVar(nIndex);
-                                retVal.orWith(renumber(tmp, renumbering13, V1.set(), V3ToV1));
-                                tmp.free();
-                            }
-                            int rIndex = getVariableIndex(rvn);
-                            retVal.andWith(V2.ithVar(rIndex));
-                            if (TRACE_CALLEE) System.out.println("Thrown exception edges "+retVal.toStringWithDomains());
-                            newEdges.orWith(retVal);
-                        }
-                    }
-                    
-                    if (renumbering13 != null) {
-                        renumbering13.free();
-                        renumbering23.free();
-                    }
-                }
-                for (int j=0; j<mc.getNumParams(); ++j) {
-                    if (params[j] != null)
-                        params[j].free();
-                }
-            }
-            
-            long time = System.currentTimeMillis();
-            BDD newerEdges = matchNewLoadsAndStores(newLoads, newStores);
-            time = System.currentTimeMillis() - time;
-            if (TRACE_TIMES || time > 400) System.out.println("Matching new loads and stores: "+(time/1000.));
-            
-            newEdges.orWith(newerEdges);
-            
-            time = System.currentTimeMillis();
-            boolean b2 = matchNewEdges(newEdges);
-            time = System.currentTimeMillis() - time;
-            if (TRACE_TIMES || time > 400) System.out.println("Matching new edges: "+(time/1000.));
-            
-            return b2;
-        }
-        
-        public void handleNativeCall(MethodSummary caller, ProgramLocation mc) {
-            // only handle return value for now.
-            AndersenType at = mc.getTargetMethod().and_getReturnType();
-            if (at instanceof jq_Reference) {
-                jq_Reference t = (jq_Reference) at;
-                ReturnedNode rvn = (ReturnedNode) caller.getRVN(mc);
-                if (rvn == null) return;
-                UnknownTypeNode utn = UnknownTypeNode.get((jq_Reference) t);
-                addObjectAllocation(utn, utn);
-                addAllocType(utn, (jq_Reference) t);
-                addVarType(utn, (jq_Reference) t);
-                addEdge(rvn, utn);
-            }
-        }
-        
-        BDD renumber(BDD src, BDD renumbering_ac, BDD Aset, BDDPairing CtoA) {
-            if (renumbering_ac == null) return src.id();
-            BDD t1;
-            t1 = src.relprod(renumbering_ac, Aset);
-            Aset.free();
-            t1.replaceWith(CtoA);
-            return t1;
-        }
-        
-        BDD renumber(BDD src, BDD renumbering_ac, BDD Aset, BDDPairing CtoA, BDD renumbering_bc, BDD Bset, BDDPairing CtoB) {
-            if (renumbering_ac == null) return src.id();
-            BDD t1, t2;
-            t1 = src.relprod(renumbering_ac, Aset);
-            Aset.free();
-            t1.replaceWith(CtoA);
-            t2 = t1.relprod(renumbering_bc, Bset);
-            t1.free(); Bset.free();
-            t2.replaceWith(CtoB);
-            return t2;
-        }
-        
-        void trim() {
-            // recalculate reachable nodes.
-            simplify();
-            
-            // trim the stuff that doesn't escape.
-            trim(nodes);
-        }
-        
-        void trim(BDD set) {
-            if (TRACE_TRIMMING) {
-                System.out.println("Trimming edges outside of the set "+set.toStringWithDomains());
-                this.reportSize();
-            }
-            
-            BDD h1 = H1.domain();
-            BDD v1xh1 = set.and(h1);
-            pointsTo.andWith(v1xh1);
-            
-            BDD v2_set = set.replace(V1ToV2);
-            BDD v1xv2 = set.and(v2_set);
-            edgeSet.andWith(v1xv2);
-
-            BDD v1xv2xfd = set.and(v2_set);
-            v1xv2xfd.andWith(FD.domain());
-            loads.andWith(v1xv2xfd.id());
-            stores.andWith(v1xv2xfd);
-            
-            h1.free();
-            v2_set.free();
-
-            if (TRACE_TRIMMING) {
-                System.out.println("After trimming:");
-                this.reportSize();
-            }
-        }
-        
-        BDD matchNewLoadsAndStores(BDD newLoads, BDD newStores) {
-            // TODO.
-            loads.orWith(newLoads);
-            stores.orWith(newStores);
-            return bdd.zero();
-        }
-        
-        boolean matchNewEdges(BDD newEdges) {
-            // TODO.
-            boolean b;
-            BDD oldEdges = edgeSet.id();
-            edgeSet.orWith(newEdges);
-            solveIncremental();
-            b = !oldEdges.equals(edgeSet);
-            oldEdges.free();
-            return b;
         }
         
         public String toString() {
@@ -1368,24 +1167,14 @@ public class CSPA extends Solver {
             sb.append(ms.getMethod());
             sb.append(':');
             sb.append(Strings.lineSep);
-            sb.append("Roots=");
-            sb.append(roots.toStringWithDomains());
-            sb.append(Strings.lineSep);
-            sb.append("Nodes=");
-            System.out.println("Nodes: "+nodes.toStringWithDomains());
-            sb.append(nodes.toStringWithDomains());
-            sb.append(Strings.lineSep);
             sb.append("Loads=");
-            sb.append(loads.toStringWithDomains());
+            sb.append(m_loads.toStringWithDomains());
             sb.append(Strings.lineSep);
             sb.append("Stores=");
-            sb.append(stores.toStringWithDomains());
-            sb.append(Strings.lineSep);
-            sb.append("Edges=");
-            sb.append(edgeSet.toStringWithDomains());
+            sb.append(m_stores.toStringWithDomains());
             sb.append(Strings.lineSep);
             sb.append("Points-to=");
-            sb.append(pointsTo.toStringWithDomains());
+            sb.append(m_pointsTo.toStringWithDomains());
             sb.append(Strings.lineSep);
             return sb.toString();
         }
@@ -1435,53 +1224,19 @@ public class CSPA extends Solver {
         
     }
 
-    public boolean visit(jq_Method m, boolean isLoop) {
-        if (TRACE) System.out.println("Visiting "+m);
-        if (m.getBytecode() == null) {
-            return false;
+    public void goForIt() {
+        List list = Traversals.reversePostOrder(cg.getNavigator(), cg.getRoots());
+        for (Iterator i=list.iterator(); i.hasNext(); ) {
+            jq_Method o = (jq_Method) i.next();
+            if (o.getBytecode() == null) {
+                continue;
+            }
+            ControlFlowGraph cfg = CodeCache.getCode(o);
+            MethodSummary ms = MethodSummary.getSummary(cfg);
+            bindCallEdges(ms);
         }
-        long time2 = System.currentTimeMillis();
-        ControlFlowGraph cfg = CodeCache.getCode(m);
-        MethodSummary ms = MethodSummary.getSummary(cfg);
-        /* Get the cached summary for this method. */
-        BDDMethodSummary s = (BDDMethodSummary) bddSummaries.get(ms);
-        boolean change = false;
-        if (s == null) {
-            /* Not yet visited, build a new summary. */
-            if (TRACE_WORKLIST) System.out.println("Building a new summary for "+m);
-            bddSummaries.put(ms, s = new BDDMethodSummary(ms));
-            if (TRACE_SUMMARIES) System.out.println(s.toString());
-            change = true;
-        } else {
-            if (TRACE_WORKLIST) System.out.println("Using existing summary for "+m);
-        }
-        if (s.doCallees()) {
-            change = true;
-        }
-        if (!isLoop) {
-            s.trim();
-        }
-        if (TRACE_SIZE) s.reportSize();
-        time2 = System.currentTimeMillis() - time2;
-        if (TRACE_TIMES || time2 > 1000) System.out.println("Total for "+m.getName()+"()="+(time2/1000.)+" seconds");
-        
-        return change;
     }
 
-    /* (non-Javadoc)
-     * @see Compil3r.Quad.IPA.Solver#dispose(Clazz.jq_Method)
-     */
-    public void dispose(jq_Method m) {
-        if (TRACE) System.out.println("Disposing "+m);
-        if (m.getBytecode() == null) {
-            return;
-        }
-        ControlFlowGraph cfg = CodeCache.getCode(m);
-        MethodSummary ms = MethodSummary.getSummary(cfg);
-        BDDMethodSummary s = (BDDMethodSummary) bddSummaries.get(ms);
-        s.dispose();
-    }
-    
     public final ToString ts = new ToString();
     public class ToString extends BDD.BDDToString {
         ToString() { super(); }

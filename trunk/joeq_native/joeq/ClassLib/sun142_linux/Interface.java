@@ -46,6 +46,15 @@ public final class Interface extends ClassLib.sun14_linux.Interface {
             k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/ObjectInputStream$GetFieldImpl;");
             k.load();
             
+            // 1.4.2 adds caches to UnixFileSystem, which we should not reflectively inspect.
+            k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/UnixFileSystem;");
+            nullInstanceFields.add(k.getOrCreateInstanceField("cache", "Ljava/io/ExpiringCache;"));
+            nullInstanceFields.add(k.getOrCreateInstanceField("javaHomePrefixCache", "Ljava/io/ExpiringCache;"));
+            
+            // reference these now, so that they are not added during bootimage write.
+            k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/ExpiringCache;");
+            k.load();
+            k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/ExpiringCache$Entry;");
         }
     }
 }

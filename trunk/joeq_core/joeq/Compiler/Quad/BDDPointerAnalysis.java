@@ -350,6 +350,13 @@ public class BDDPointerAnalysis {
         
         RootedCHACallGraph.test(cg);
         
+        System.out.println("Variables: "+dis.variableIndexMap.size());
+        System.out.println("Heap objects: "+dis.heapobjIndexMap.size());
+        System.out.println("Fields: "+dis.fieldIndexMap.size());
+        System.out.println("Types: "+dis.typeIndexMap.size());
+        System.out.println("Methods: "+dis.methodIndexMap.size());
+        System.out.println("Targets: "+dis.targetIndexMap.size());
+        
         try {
             java.io.FileWriter fw = new java.io.FileWriter("callgraph");
             java.io.PrintWriter pw = new java.io.PrintWriter(fw);
