@@ -3,12 +3,17 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Analysis.IPA;
 
+import java.io.DataInput;
+import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.lang.reflect.Field;
 import java.math.BigInteger;
 import java.util.AbstractMap;
 import java.util.Arrays;
@@ -25,6 +30,7 @@ import org.sf.javabdd.BDD;
 import org.sf.javabdd.BDDDomain;
 import org.sf.javabdd.BDDFactory;
 import org.sf.javabdd.BDDPairing;
+import org.sf.javabdd.TypedBDDFactory.TypedBDD;
 
 import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Array;
@@ -45,6 +51,7 @@ import Compil3r.Quad.CallGraph;
 import Compil3r.Quad.CodeCache;
 import Compil3r.Quad.LoadedCallGraph;
 import Main.HostedVM;
+import Util.Assert;
 import Util.Collections.IndexMap;
 import Util.Collections.Pair;
 import Util.Graphs.PathNumbering;
@@ -76,6 +83,7 @@ public class PA {
     boolean ADD_CLINIT = !System.getProperty("pa.clinit", "yes").equals("no");
     boolean ADD_THREADS = !System.getProperty("pa.threads", "yes").equals("no");
     boolean ADD_FINALIZERS = !System.getProperty("pa.finalizers", "yes").equals("no");
+    boolean IGNORE_EXCEPTIONS = !System.getProperty("pa.ignoreexceptions", "no").equals("no");
     boolean FILTER_VP = !System.getProperty("pa.vpfilter", "yes").equals("no");
     boolean FILTER_HP = !System.getProperty("pa.hpfilter", "no").equals("no");
     boolean CONTEXT_SENSITIVE = !System.getProperty("pa.cs", "no").equals("no");
@@ -143,7 +151,7 @@ public class PA {
     boolean reverseLocal = System.getProperty("bddreverse", "true").equals("true");
     
     BDDPairing V1toV2, V2toV1, H1toH2, H2toH1, V1H1toV2H2, V2H2toV1H1;
-    BDDPairing V1cV2ctoV2cV1c;
+    BDDPairing V1ctoV2c, V1cV2ctoV2cV1c;
     BDD V1set, V2set, H1set, H2set, T1set, T2set, Fset, Mset, Nset, Iset, Zset;
     BDD V1V2set, V1H1set, IMset, H1Fset, H2Fset, H1FH2set, T2Nset, MZset;
     BDD V1cV2cset;
@@ -160,7 +168,7 @@ public class PA {
         return new IndexMap(name, 1 << bits);
     }
     
-    public void initialize(String bddfactory) {
+    public void initializeBDD(String bddfactory) {
         if (bddfactory == null)
             bdd = BDDFactory.init(bddnodes, bddcache);
         else
@@ -187,14 +195,6 @@ public class PA {
         int[] ordering = bdd.makeVarOrdering(reverseLocal, varorder);
         bdd.setVarOrder(ordering);
         
-        Vmap = makeMap("Vars", V_BITS);
-        Imap = makeMap("Invokes", I_BITS);
-        Hmap = makeMap("Heaps", H_BITS);
-        Fmap = makeMap("Fields", F_BITS);
-        Tmap = makeMap("Types", T_BITS);
-        Nmap = makeMap("Names", N_BITS);
-        Mmap = makeMap("Methods", M_BITS);
-        
         if (CONTEXT_SENSITIVE) {
             V1toV2 = bdd.makePair();
             V1toV2.set(new BDDDomain[] {V1,V1c},
@@ -208,6 +208,7 @@ public class PA {
             V2H2toV1H1 = bdd.makePair();
             V2H2toV1H1.set(new BDDDomain[] {V2,H2,V2c,H2c},
                            new BDDDomain[] {V1,H1,V1c,H1c});
+            V1ctoV2c = bdd.makePair(V1c, V2c);
             V1cV2ctoV2cV1c = bdd.makePair();
             V1cV2ctoV2cV1c.set(new BDDDomain[] {V1c,V2c},
                                new BDDDomain[] {V2c,V1c});
@@ -299,6 +300,16 @@ public class PA {
             old3_t4 = bdd.zero();
             old3_hT = bdd.zero();
         }
+    }
+    
+    void initializeMaps() {
+        Vmap = makeMap("Vars", V_BITS);
+        Imap = makeMap("Invokes", I_BITS);
+        Hmap = makeMap("Heaps", H_BITS);
+        Fmap = makeMap("Fields", F_BITS);
+        Tmap = makeMap("Types", T_BITS);
+        Nmap = makeMap("Names", N_BITS);
+        Mmap = makeMap("Methods", M_BITS);
         if (ADD_THREADS) {
             PrimordialClassLoader.getJavaLangThread().prepare();
             PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/Runnable;").prepare();
@@ -617,7 +628,7 @@ public class PA {
                 addToIret(I_bdd, node);
             }
             node = ms.getTEN(mc);
-            if (node != null) {
+            if (!IGNORE_EXCEPTIONS && node != null) {
                 addToIthr(I_bdd, node);
             }
             I_bdd.free();
@@ -637,7 +648,7 @@ public class PA {
                 addToMret(M_bdd, V_i);
             }
             
-            if (ms.getThrown().contains(node)) {
+            if (!IGNORE_EXCEPTIONS && ms.getThrown().contains(node)) {
                 addToMthr(M_bdd, V_i);
             }
             
@@ -1334,12 +1345,12 @@ public class PA {
         }
     }
     
-    public void numberPaths(CallGraph cg) {
+    public void numberPaths(CallGraph cg, boolean updateBits) {
         System.out.print("Counting size of call graph...");
         long time = System.currentTimeMillis();
-        vCnumbering = countCallGraph(cg);
+        vCnumbering = countCallGraph(cg, updateBits);
         if (CONTEXT_SENSITIVE && MAX_HC_BITS > 1) {
-            hCnumbering = countHeapNumbering(cg);
+            hCnumbering = countHeapNumbering(cg, updateBits);
         }
         time = System.currentTimeMillis() - time;
         System.out.println("done. ("+time/1000.+" seconds)");
@@ -1373,10 +1384,11 @@ public class PA {
     }
     public void run(String bddfactory, CallGraph cg, Collection rootMethods) throws IOException {
         if (cg != null) {
-            numberPaths(cg);
+            numberPaths(cg, true);
         }
         
-        initialize(bddfactory);
+        initializeBDD(bddfactory);
+        initializeMaps();
         roots.addAll(rootMethods);
         
         if (cg != null) {
@@ -1507,6 +1519,10 @@ public class PA {
                 case 8: return ""+Tmap.get((int)j);
                 case 9: return Nmap.get((int)j).toString();
                 case 10: return Mmap.get((int)j).toString();
+                case 11: return Long.toString(j);
+                case 12: return Long.toString(j);
+                case 13: return Long.toString(j);
+                case 14: return Long.toString(j);
                 default: return "??";
             }
         }
@@ -1514,7 +1530,7 @@ public class PA {
    
     private void dumpCallGraphAsDot(CallGraph callgraph, String dotFileName) throws IOException {
 	DataOutputStream dos = new DataOutputStream(new FileOutputStream(dotFileName));
-	countCallGraph(callgraph).dotGraph(dos);
+	countCallGraph(callgraph, false).dotGraph(dos);
 	dos.close();
     }
 
@@ -1582,6 +1598,115 @@ public class PA {
         dos.close();
     }
 
+    public static PA loadResults(String bddfactory, String loaddir, String loadfilename) throws IOException {
+        PA pa = new PA();
+        DataInputStream di;
+        di = new DataInputStream(new FileInputStream(loaddir+loadfilename+".config"));
+        pa.loadConfig(di);
+        di.close();
+        System.out.print("Initializing...");
+        pa.initializeBDD(bddfactory);
+        System.out.println("done.");
+        
+        System.out.print("Loading results from "+loaddir+loadfilename+"...");
+        if (loaddir.length() == 0) loaddir = "."+System.getProperty("file.separator");
+        File dir = new File(loaddir);
+        final String prefix = loadfilename + ".";
+        File[] files = dir.listFiles(new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+                return name.startsWith(prefix);
+            }
+        });
+        for (int i = 0; i < files.length; ++i) {
+            File f = files[i];
+            if (f.isDirectory()) continue;
+            String name = f.getName().substring(prefix.length());
+            try {
+                Field field = PA.class.getDeclaredField(name);
+                if (field == null) continue;
+                if (field.getType() == org.sf.javabdd.BDD.class) {
+                    System.out.print(name+": ");
+                    BDD b = pa.bdd.load(f.getAbsolutePath());
+                    System.out.print(b.nodeCount()+" nodes, ");
+                    field.set(pa, b);
+                } else if (field.getType() == IndexMap.class) {
+                    System.out.print(name+": ");
+                    di = new DataInputStream(new FileInputStream(f));
+                    IndexMap m = IndexMap.load(name, di);
+                    di.close();
+                    System.out.print(m.size()+" entries, ");
+                    field.set(pa, m);
+                } else {
+                    System.out.println();
+                    System.out.println("Cannot load field: "+field);
+                }
+            } catch (NoSuchFieldException e) {
+            } catch (IllegalArgumentException e) {
+                Assert.UNREACHABLE();
+            } catch (IllegalAccessException e) {
+                Assert.UNREACHABLE();
+            }
+        }
+        System.out.println("done.");
+        
+        // Set types for loaded BDDs.
+        if (pa.A instanceof TypedBDD)
+            ((TypedBDD) pa.A).setDomains(pa.V1, pa.V1c, pa.V2, pa.V2c);
+        if (pa.vP instanceof TypedBDD)
+            ((TypedBDD) pa.vP).setDomains(pa.V1, pa.V1c, pa.H1, pa.H1c);
+        if (pa.S instanceof TypedBDD)
+            ((TypedBDD) pa.S).setDomains(pa.V1, pa.V1c, pa.F, pa.V2, pa.V2c);
+        if (pa.L instanceof TypedBDD)
+            ((TypedBDD) pa.L).setDomains(pa.V1, pa.V1c, pa.F, pa.V2, pa.V2c);
+        if (pa.vT instanceof TypedBDD)
+            ((TypedBDD) pa.vT).setDomains(pa.V1, pa.T1);
+        if (pa.hT instanceof TypedBDD)
+            ((TypedBDD) pa.hT).setDomains(pa.V1, pa.T1);
+        if (pa.aT instanceof TypedBDD)
+            ((TypedBDD) pa.aT).setDomains(pa.T1, pa.T2);
+        if (pa.cha instanceof TypedBDD)
+            ((TypedBDD) pa.cha).setDomains(pa.T2, pa.N, pa.M);
+        if (pa.actual instanceof TypedBDD)
+            ((TypedBDD) pa.actual).setDomains(pa.I, pa.Z, pa.V2);
+        if (pa.formal instanceof TypedBDD)
+            ((TypedBDD) pa.formal).setDomains(pa.M, pa.Z, pa.V1);
+        if (pa.Iret instanceof TypedBDD)
+            ((TypedBDD) pa.Iret).setDomains(pa.I, pa.V1);
+        if (pa.Mret instanceof TypedBDD)
+            ((TypedBDD) pa.Mret).setDomains(pa.M, pa.V2);
+        if (pa.Ithr instanceof TypedBDD)
+            ((TypedBDD) pa.Ithr).setDomains(pa.I, pa.V1);
+        if (pa.Mthr instanceof TypedBDD)
+            ((TypedBDD) pa.Mthr).setDomains(pa.M, pa.V2);
+        if (pa.mI instanceof TypedBDD)
+            ((TypedBDD) pa.mI).setDomains(pa.M, pa.I, pa.N);
+        if (pa.mV instanceof TypedBDD)
+            ((TypedBDD) pa.mV).setDomains(pa.M, pa.V1);
+        if (pa.sync instanceof TypedBDD)
+            ((TypedBDD) pa.sync).setDomains(pa.V1);
+        
+        if (pa.fT instanceof TypedBDD)
+            ((TypedBDD) pa.fT).setDomains(pa.F, pa.T2);
+        if (pa.fC instanceof TypedBDD)
+            ((TypedBDD) pa.fC).setDomains(pa.F, pa.T2);
+
+        if (pa.hP instanceof TypedBDD)
+            ((TypedBDD) pa.hP).setDomains(pa.H1, pa.H1c, pa.F, pa.H2, pa.H2c);
+        if (pa.IE instanceof TypedBDD)
+            ((TypedBDD) pa.IE).setDomains(pa.I, pa.M);
+        if (pa.vPfilter instanceof TypedBDD)
+            ((TypedBDD) pa.vPfilter).setDomains(pa.V1, pa.H1);
+        if (pa.hPfilter instanceof TypedBDD)
+            ((TypedBDD) pa.hPfilter).setDomains(pa.H1, pa.F, pa.H2);
+        if (pa.IEc instanceof TypedBDD)
+            ((TypedBDD) pa.IEc).setDomains(pa.V2c, pa.I, pa.V1c, pa.M);
+        
+        if (pa.visited instanceof TypedBDD)
+            ((TypedBDD) pa.visited).setDomains(pa.M);
+        
+        return pa;
+    }
+    
     private void dumpConfig(DataOutput out) throws IOException {
         out.writeBytes("V="+V_BITS+"\n");
         out.writeBytes("I="+I_BITS+"\n");
@@ -1595,6 +1720,49 @@ public class PA {
         out.writeBytes("HC="+HC_BITS+"\n");
         out.writeBytes("Order="+varorder+"\n");
         out.writeBytes("Reverse="+reverseLocal+"\n");
+    }
+    
+    private void loadConfig(DataInput in) throws IOException {
+        for (;;) {
+            String s = in.readLine();
+            if (s == null) break;
+            int index = s.indexOf('=');
+            if (index == -1) index = s.length();
+            String s1 = s.substring(0, index);
+            String s2 = index < s.length() ? s.substring(index+1) : null;
+            if (s1.equals("V")) {
+                V_BITS = Integer.parseInt(s2);
+            } else if (s1.equals("I")) {
+                I_BITS = Integer.parseInt(s2);
+            } else if (s1.equals("H")) {
+                H_BITS = Integer.parseInt(s2);
+            } else if (s1.equals("Z")) {
+                Z_BITS = Integer.parseInt(s2);
+            } else if (s1.equals("F")) {
+                F_BITS = Integer.parseInt(s2);
+            } else if (s1.equals("T")) {
+                T_BITS = Integer.parseInt(s2);
+            } else if (s1.equals("N")) {
+                N_BITS = Integer.parseInt(s2);
+            } else if (s1.equals("M")) {
+                M_BITS = Integer.parseInt(s2);
+            } else if (s1.equals("VC")) {
+                VC_BITS = Integer.parseInt(s2);
+            } else if (s1.equals("HC")) {
+                HC_BITS = Integer.parseInt(s2);
+            } else if (s1.equals("Order")) {
+                varorder = s2;
+            } else if (s1.equals("Reverse")) {
+                reverseLocal = s2.equals("true");
+            } else {
+                System.err.println("Unknown config option "+s);
+            }
+        }
+        if (VC_BITS > 1 || HC_BITS > 1) {
+            CONTEXT_SENSITIVE = true;
+            MAX_VC_BITS = VC_BITS;
+            MAX_HC_BITS = HC_BITS;
+        }
     }
     
     public static class ThreadRootMap extends AbstractMap {
@@ -1628,7 +1796,7 @@ public class PA {
         return 0;
     }
     
-    public PathNumbering countCallGraph(CallGraph cg) {
+    public PathNumbering countCallGraph(CallGraph cg, boolean updateBits) {
         jq_Class jlt = PrimordialClassLoader.getJavaLangThread();
         jlt.prepare();
         jq_Class jlr = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/Runnable;");
@@ -1676,20 +1844,22 @@ public class PA {
         Map initialCounts = new ThreadRootMap(thread_runs);
         BigInteger paths = (BigInteger) pn.countPaths(cg.getRoots(), cg.getCallSiteNavigator(), initialCounts);
         System.out.println("Vars="+vars+" Heaps="+heaps+" Classes="+classes.size()+" Fields="+fields.size()+" Paths="+paths);
-        V_BITS = BigInteger.valueOf(vars+256).bitLength();
-        I_BITS = BigInteger.valueOf(calls).bitLength();
-        H_BITS = BigInteger.valueOf(heaps+256).bitLength();
-        F_BITS = BigInteger.valueOf(fields.size()+64).bitLength();
-        T_BITS = BigInteger.valueOf(classes.size()+64).bitLength();
-        N_BITS = I_BITS;
-        M_BITS = BigInteger.valueOf(methods).bitLength() + 1;
-        if (CONTEXT_SENSITIVE) {
-            VC_BITS = paths.bitLength();
-            VC_BITS = Math.min(MAX_VC_BITS, VC_BITS);
+        if (updateBits) {
+            V_BITS = BigInteger.valueOf(vars+256).bitLength();
+            I_BITS = BigInteger.valueOf(calls).bitLength();
+            H_BITS = BigInteger.valueOf(heaps+256).bitLength();
+            F_BITS = BigInteger.valueOf(fields.size()+64).bitLength();
+            T_BITS = BigInteger.valueOf(classes.size()+64).bitLength();
+            N_BITS = I_BITS;
+            M_BITS = BigInteger.valueOf(methods).bitLength() + 1;
+            if (CONTEXT_SENSITIVE) {
+                VC_BITS = paths.bitLength();
+                VC_BITS = Math.min(MAX_VC_BITS, VC_BITS);
+            }
+            System.out.println(" V="+V_BITS+" I="+I_BITS+" H="+H_BITS+
+                               " F="+F_BITS+" T="+T_BITS+" N="+N_BITS+
+                               " M="+M_BITS+" VC="+VC_BITS);
         }
-        System.out.println(" V="+V_BITS+" I="+I_BITS+" H="+H_BITS+
-                           " F="+F_BITS+" T="+T_BITS+" N="+N_BITS+
-                           " M="+M_BITS+" VC="+VC_BITS);
         return pn;
     }
 
@@ -1755,12 +1925,13 @@ public class PA {
         }
     }
 
-    public PathNumbering countHeapNumbering(CallGraph cg) {
+    public PathNumbering countHeapNumbering(CallGraph cg, boolean updateBits) {
+        Assert._assert(CONTEXT_SENSITIVE);
         PathNumbering pn = new PathNumbering(heapPathSelector);
         Map initialCounts = new ThreadRootMap(thread_runs);
         BigInteger paths = (BigInteger) pn.countPaths(cg.getRoots(), cg.getCallSiteNavigator(), initialCounts);
         System.out.println("Number of paths for heap context sensitivity: "+paths);
-        if (CONTEXT_SENSITIVE) {
+        if (updateBits) {
             HC_BITS = paths.bitLength();
             System.out.println("Heap context bits="+HC_BITS);
         }
