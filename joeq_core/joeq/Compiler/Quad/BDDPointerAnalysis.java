@@ -28,7 +28,9 @@ import Compil3r.Quad.MethodSummary.PassedParameter;
 import Compil3r.Quad.MethodSummary.ReturnValueNode;
 import Compil3r.Quad.MethodSummary.ThrownExceptionNode;
 import Main.HostedVM;
+import Main.jq;
 import Run_Time.TypeCheck;
+import Util.Default;
 
 import org.sf.javabdd.BDD;
 import org.sf.javabdd.BDDDomain;
@@ -116,7 +118,10 @@ public class BDDPointerAnalysis {
         
         int varnum = bdd.varNum();
         int[] varorder = new int[varnum];
-        //makeVarOrdering(varorder);
+        makeVarOrdering(varorder);
+        for (int i=0; i<varorder.length; ++i) {
+            System.out.println("varorder["+i+"]="+varorder[i]);
+        }
         bdd.setVarOrder(varorder);
         bdd.enableReorder();
         
@@ -126,6 +131,195 @@ public class BDDPointerAnalysis {
         H2ToH1 = bdd.makePair(H2, H1);
     }
 
+    public static final int FD_V1_V2_H1_H2 = 0;
+    public static final int FD_V1xV2_H1_H2 = 1;
+    public static final int FD_V2_V1_H1_H2 = 2;
+    public static final int FD_V2xV1_H1_H2 = 3;
+    public static final int FDxV1xV2xH1xH2 = 4;
+    public static final int FD_H1_V1xV2_H2 = 5;
+    public static final int FD_H1_V2xV1_H2 = 6;
+    public static final int H1_V1xV2_FD_H2 = 7;
+    public static final int H1_V2xV1_FD_H2 = 8;
+    public static final int FD_V1xV2xH1_H2 = 9;
+
+    int[][] localOrders;
+
+    void makeVarOrdering(int[] varorder) {
+        
+        boolean reverseLocal = true;
+        int ordering = FD_V1xV2_H1_H2;
+        
+        int varnum = bdd.varNum();
+        
+        localOrders = new int[domainBits.length][];
+        localOrders[0] = new int[domainBits[0]];
+        localOrders[1] = localOrders[0];
+        localOrders[2] = new int[domainBits[2]];
+        localOrders[3] = new int[domainBits[3]];
+        localOrders[4] = localOrders[3];
+        
+        for (int i=0, pos=0; i<domainBits.length; ++i) {
+            domainSpos[i] = pos;
+            pos += domainBits[i];
+            for (int j=0; j<domainBits[i]; ++j) {
+                if (reverseLocal) {
+                    localOrders[i][j] = domainBits[i] - j - 1;
+                } else {
+                    localOrders[i][j] = j;
+                }
+            }
+        }
+        
+        BDDDomain[] doms = new BDDDomain[domainBits.length];
+        
+        if (ordering == FD_V1_V2_H1_H2) {
+            int idx = 0;
+            doms[0] = FD;
+            idx = fillInVarIndices(idx, varorder, 1, doms);
+            doms[0] = V1;
+            idx = fillInVarIndices(idx, varorder, 1, doms);
+            doms[0] = V2;
+            idx = fillInVarIndices(idx, varorder, 1, doms);
+            doms[0] = H1;
+            idx = fillInVarIndices(idx, varorder, 1, doms);
+            doms[0] = H2;
+            idx = fillInVarIndices(idx, varorder, 1, doms);
+        } else if (ordering == FD_V1xV2_H1_H2) {
+            int idx = 0;
+            doms[0] = FD;
+            idx = fillInVarIndices(idx, varorder, 1, doms);
+            doms[0] = V1; doms[1] = V2;
+            idx = fillInVarIndices(idx, varorder, 2, doms);
+            doms[0] = H1;
+            idx = fillInVarIndices(idx, varorder, 1, doms);
+            doms[0] = H2;
+            idx = fillInVarIndices(idx, varorder, 1, doms);
+        } else if (ordering == FD_V2_V1_H1_H2) {
+            int idx = 0;
+            doms[0] = FD;
+            idx = fillInVarIndices(idx, varorder, 1, doms);
+            doms[0] = V2;
+            idx = fillInVarIndices(idx, varorder, 1, doms);
+            doms[0] = V1;
+            idx = fillInVarIndices(idx, varorder, 1, doms);
+            doms[0] = H1;
+            idx = fillInVarIndices(idx, varorder, 1, doms);
+            doms[0] = H2;
+            idx = fillInVarIndices(idx, varorder, 1, doms);
+        } else if (ordering == FD_V2xV1_H1_H2) {
+            int idx = 0;
+            doms[0] = FD;
+            idx = fillInVarIndices(idx, varorder, 1, doms);
+            doms[0] = V2; doms[1] = V1;
+            idx = fillInVarIndices(idx, varorder, 2, doms);
+            doms[0] = H1;
+            idx = fillInVarIndices(idx, varorder, 1, doms);
+            doms[0] = H2;
+            idx = fillInVarIndices(idx, varorder, 1, doms);
+        } else if (ordering == FDxV1xV2xH1xH2) {
+            int idx = 0;
+            doms[0] = FD; doms[1] = V1; doms[2] = V2;
+            doms[3] = H1; doms[4] = H2;
+            idx = fillInVarIndices(idx, varorder, 5, doms);
+        } else if (ordering == FD_H1_V1xV2_H2) {
+            int idx = 0;
+            doms[0] = FD;
+            idx = fillInVarIndices(idx, varorder, 1, doms);
+            doms[0] = H1;
+            idx = fillInVarIndices(idx, varorder, 1, doms);
+            doms[0] = V1; doms[1] = V2;
+            idx = fillInVarIndices(idx, varorder, 2, doms);
+            doms[0] = H2;
+            idx = fillInVarIndices(idx, varorder, 1, doms);
+        } else if (ordering == FD_H1_V2xV1_H2) {
+            int idx = 0;
+            doms[0] = FD;
+            idx = fillInVarIndices(idx, varorder, 1, doms);
+            doms[0] = H1;
+            idx = fillInVarIndices(idx, varorder, 1, doms);
+            doms[0] = V2; doms[1] = V1;
+            idx = fillInVarIndices(idx, varorder, 2, doms);
+            doms[0] = H2;
+            idx = fillInVarIndices(idx, varorder, 1, doms);
+        } else if (ordering == H1_V1xV2_FD_H2) {
+            int idx = 0;
+            doms[0] = H1;
+            idx = fillInVarIndices(idx, varorder, 1, doms);
+            doms[0] = V1; doms[1] = V2;
+            idx = fillInVarIndices(idx, varorder, 2, doms);
+            doms[0] = FD;
+            idx = fillInVarIndices(idx, varorder, 1, doms);
+            doms[0] = H2;
+            idx = fillInVarIndices(idx, varorder, 1, doms);
+        } else if (ordering == H1_V2xV1_FD_H2) {
+            int idx = 0;
+            doms[0] = H1;
+            idx = fillInVarIndices(idx, varorder, 1, doms);
+            doms[0] = V2; doms[1] = V1;
+            idx = fillInVarIndices(idx, varorder, 2, doms);
+            doms[0] = FD;
+            idx = fillInVarIndices(idx, varorder, 1, doms);
+            doms[0] = H2;
+            idx = fillInVarIndices(idx, varorder, 1, doms);
+        } else if (ordering == FD_V1xV2xH1_H2) {
+            int idx = 0;
+            doms[0] = FD;
+            idx = fillInVarIndices(idx, varorder, 1, doms);
+            doms[0] = V1; doms[1] = V2; doms[2] = H1;
+            idx = fillInVarIndices(idx, varorder, 3, doms);
+            doms[0] = H2;
+            idx = fillInVarIndices(idx, varorder, 1, doms);
+        } else {
+            jq.UNREACHABLE("Ordering is not defined");
+        }
+
+        // according to the documentation of buddy, the default ordering is x1, y1, z1, x2, y2, z2, .....
+        // V1[0] -> default variable number
+        int[] outside2inside = new int[varnum];
+        doms[0] = V1; doms[1] = V2;
+        doms[2] = FD; doms[3] = H1; doms[4] = H2;
+        getVariableMap(outside2inside, doms, domainBits.length);
+        
+        remapping(varorder, outside2inside);
+    }
+    
+    int fillInVarIndices(int start, int[] varorder, int numdoms, BDDDomain[] doms) {
+        int totalvars = 0;
+        int[] bits = new int[numdoms];
+        for (int i = 0; i < numdoms; i++) {
+            totalvars += domainBits[doms[i].getIndex()];
+            bits[i] = 0;
+        }
+
+        for (int i = start, n = start + totalvars, j = 0; i < n; i++) {
+            int dji = doms[j].getIndex();
+            while (bits[j] >= domainBits[dji]) {
+                j = (j + 1) % numdoms;
+            }
+            varorder[i] = domainSpos[dji] + localOrders[dji][bits[j]++];
+            j = (j + 1) % numdoms;
+        }
+
+        return start + totalvars;
+    }
+
+    void getVariableMap(int[] map, BDDDomain[] doms, int domnum) {
+        int idx = 0;
+        for (int var = 0; var < domnum; var++) {
+            int[] vars = doms[var].vars();
+            for (int i = 0; i < vars.length; i++) {
+                map[idx++] = vars[i];
+            }
+        }
+    }
+    
+    /* remap according to a map */
+    void remapping(int[] varorder, int[] maps) {
+        for (int i = 0; i < varorder.length; i++) {
+            varorder[i] = maps[varorder[i]];
+        }
+    }
+    
     void reset() {
         // initialize relations to zero.
         pointsTo = bdd.zero();
@@ -157,13 +351,16 @@ public class BDDPointerAnalysis {
             MethodSummary ms = MethodSummary.getSummary(cfg);
             dis.handleMethodSummary(ms);
         }
+        int iteration = 1;
         do {
+            System.out.println("Iteration "+iteration+" Methods: "+dis.visitedMethods.size()+" Call graph edges: "+dis.callGraphEdges.size());
             dis.change = false;
             dis.calculateTypeFilter();
             dis.solveNonincremental();
             dis.calculateVTables();
             dis.handleVirtualCalls();
             if (true) System.gc();
+            ++iteration;
         } while (dis.change);
         dis.dumpResults();
     }
@@ -180,16 +377,20 @@ public class BDDPointerAnalysis {
     BDD cTypes;
 
     public void dumpResults() {
+        System.out.println(visitedMethods.size()+" methods");
+            
         // (V1xH1) * (H1xT1) => (V1xT1)
         //printSet("Points to", pointsTo);
         //BDD varTypes = pointsTo.relprod(cTypes, H1.set());
         //printSet("Var types", varTypes);
-        for (int i=0, n=variableIndexMap.size(); i<n; ++i) {
-            Node node = (Node) variableIndexMap.get(i);
-            System.out.print(i+": "+node.toString());
-            BDD var = V1.ithVar(i);
-            BDD p = pointsTo.restrict(var);
-            printSet(" can point to", p);
+        if (false) {
+            for (int i=0, n=variableIndexMap.size(); i<n; ++i) {
+                Node node = (Node) variableIndexMap.get(i);
+                System.out.print(i+": "+node.toString());
+                BDD var = V1.ithVar(i);
+                BDD p = pointsTo.restrict(var);
+                printSet(" can point to", p);
+            }
         }
     }
 
@@ -214,6 +415,7 @@ public class BDDPointerAnalysis {
     public void handleMethodSummary(MethodSummary ms) {
         if (visitedMethods.contains(ms)) return;
         visitedMethods.add(ms);
+        this.change = true;
         for (Iterator i=ms.nodeIterator(); i.hasNext(); ) {
             Node n = (Node) i.next();
             for (Iterator j=n.getEdges().iterator(); j.hasNext(); ) {
@@ -264,7 +466,6 @@ public class BDDPointerAnalysis {
                 handleMethodSummary(ms2);
                 bindParameters(ms, mc, ms2);
             } else {
-                change = true;
                 jq_InstanceMethod method = (jq_InstanceMethod) mc.getTargetMethod();
                 int methodIndex = getMethodIndex(method);
                 PassedParameter pp = new PassedParameter(mc, 0);
@@ -300,27 +501,43 @@ public class BDDPointerAnalysis {
         Iterator j=new LinkedList(virtualCallMethods).iterator();
         for (; i.hasNext(); ) {
             MethodSummary caller = (MethodSummary) h.next();
-            System.out.println("Caller: "+caller.getMethod());
+            if (false) {
+                System.out.println("Caller: "+caller.getMethod());
+            }
             ProgramLocation mc = (ProgramLocation) m.next();
-            System.out.println("Call: "+mc);
+            if (false) {
+                System.out.println("Call: "+mc);
+            }
             BDD receiverVars = (BDD) i.next();
-            printSet("receiverVars", receiverVars);
+            if (false) {
+                printSet("receiverVars", receiverVars);
+            }
             BDD receiverObjects = pointsTo.restrict(receiverVars);
-            printSet("receiverObjects", receiverObjects);
+            if (false) {
+                printSet("receiverObjects", receiverObjects);
+            }
             jq_InstanceMethod method = (jq_InstanceMethod) j.next();
             int methodIndex = getMethodIndex(method);
             BDD methodBDD = T3.ithVar(methodIndex);
-            printSet("Method "+method+" index "+methodIndex, methodBDD);
+            if (false) {
+                printSet("Method "+method+" index "+methodIndex, methodBDD);
+            }
             receiverObjects.andWith(methodBDD);
-            printSet("receiverObjects", receiverObjects);
+            if (false) {
+                printSet("receiverObjects", receiverObjects);
+            }
             // (H1 x T3) * (H1 x T3 x T2) 
             BDD targets = receiverObjects.relprod(vtable_bdd, H1.set().and(T3.set()));
-            printSet("targets", targets);
+            if (false) {
+                printSet("targets", targets);
+            }
             int[] t = targets.scanSetDomains();
             if (t != null) {
                 for (int k=0; k<t.length; ++k) {
                     jq_InstanceMethod target = getTarget(t[k]);
-                    System.out.println("Target "+k+": "+target);
+                    if (false) {
+                        System.out.println("Target "+k+": "+target);
+                    } 
                     if (target.getBytecode() == null) continue;
                     ControlFlowGraph cfg = CodeCache.getCode(target);
                     MethodSummary ms2 = MethodSummary.getSummary(cfg);
@@ -333,10 +550,16 @@ public class BDDPointerAnalysis {
         }
     }
     
+    HashSet callGraphEdges = new HashSet();
+    
     public void bindParameters(MethodSummary caller, ProgramLocation mc, MethodSummary callee) {
-        if (true) {
+        Object key = Default.pair(mc, callee);
+        if (callGraphEdges.contains(key)) return;
+        if (!this.change) {
             System.out.println("Adding call graph edge "+caller.getMethod()+"->"+callee.getMethod());
         }
+        callGraphEdges.add(key);
+        this.change = true;
         for (int i=0; i<mc.getNumParams(); ++i) {
             if (i >= callee.getNumOfParams()) break;
             ParamNode pn = callee.getParamNode(i);
@@ -699,7 +922,7 @@ public class BDDPointerAnalysis {
                     printSet("before type filter", newPt2);
                 }
                 BDD newPt3 = newPt2.and(typeFilter);
-                if (true) {
+                if (false) {
                     BDD temp = newPt2.apply(typeFilter, BDDFactory.diff);
                     printSet("removed by type filter", temp);
                     temp.free();
@@ -748,11 +971,11 @@ public class BDDPointerAnalysis {
             }
 
             /* --- apply type filtering and merge into pointsTo relation --- */
-            if (true) {
+            if (false) {
                 printSet("before type filter", newPt5);
             }
             BDD newPt6 = newPt5.and(typeFilter);
-            if (true) {
+            if (false) {
                 printSet("after type filter", newPt6);
             }
             pointsTo = pointsTo.or(newPt6);
@@ -863,7 +1086,7 @@ public class BDDPointerAnalysis {
             if (i == null) {
                 hash.put(o, i = new Integer(list.size()));
                 list.add(o);
-                if (true) System.out.println(this+"["+i+"] = "+o);
+                if (false) System.out.println(this+"["+i+"] = "+o);
             }
             return i.intValue();
         }
