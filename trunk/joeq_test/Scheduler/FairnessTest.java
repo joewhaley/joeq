@@ -51,8 +51,8 @@ public class FairnessTest {
             BusyThread prime = new BusyThread(-1); //make one thread to prime the CPU
             prime.start();
             BusyThread.start = true;
-            Thread.sleep(PRIME);
-            BusyThread.stop = true;
+            Thread.sleep(PRIME); 
+            BusyThread.stop = true;  
             prime.stop();
             BusyThread.start = false;
         }
@@ -85,7 +85,7 @@ public class FairnessTest {
         BusyThread.start = false; //make sure it's yielding
         BusyThread.stop = false;
         
-        BusyThread.start = true;  //start running
+        BusyThread.start = true;  //start counting; before that, threads are all waiting
         Thread.sleep(TIME);  //let it run for 20 sec
         BusyThread.stop = true;
         
@@ -106,7 +106,7 @@ public class FairnessTest {
         
         for (int i = min; i <= max; ++i) {
             double average = (double) total[i] / overall; //to give percentage of how much the priority got executed
-            System.out.println("Total for priority "+i+": "+s2(100.*average)+"%");
+            System.out.println("Total for priority "+i+": "+s2(100.*average)+"%");  //. double 
             System.out.print("Breakdown within priority: ");
             double stddev = 0.;
             double average2 = (double)total[i] / NUMBER; //average count each thread suppose to have in this priority
@@ -129,7 +129,7 @@ public class FairnessTest {
             jq_InterrupterThread it = jq_NativeThread.native_threads[i].it;
             if (it != null) {
                 System.err.println("Native thread #"+i+": ");
-                it.dumpStatistics();
+                it.dumpStatistics();  // show if ticks were enabled (success) or disabled (fail)
             }
         }
             
@@ -137,9 +137,9 @@ public class FairnessTest {
     /** print numbers with 2 decimal places */
     static String s2(double d) {
         String s = Double.toString(d);
-        int index = s.indexOf('.');
+        int index = s.indexOf('.');  //if 34.65, index=2  .3 then 0  -1.0 then 2
         if (index >= 0) {
-            s = s.substring(0, Math.min(s.length(), index+3));
+            s = s.substring(0, Math.min(s.length(), index+3));  // . counts as 1 char
         }
         return s;
     }

@@ -62,7 +62,7 @@ public class jq_InterrupterThread extends Thread {
 
     public void run() {
         this.pid = SystemInterface.init_thread();
-        Unsafe.setThreadBlock(this.myself);
+        Unsafe.setThreadBlock(this.myself); //  change pointer to thread currently executing
         // set to a high priority so we don't starve.
         SystemInterface.set_thread_priority(this.tid, SystemInterface.THREAD_PRIORITY_TIME_CRITICAL);
         for (;;) {

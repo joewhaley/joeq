@@ -277,9 +277,10 @@ public class jq_NativeThread implements jq_DontAlign {
      */
     public static void endCurrentJavaThread() {
         jq_Thread t = Unsafe.getThreadBlock();
-        if (TRACE) SystemInterface.debugwriteln("Ending Java thread " + t);
-        t.disableThreadSwitch();
+        if (true) Debug.writeln("Ending Java thread " + t);
+        Assert._assert(!t.isThreadSwitchEnabled());
         _num_of_java_threads.getAddress().atomicSub(1);
+        if (true) Debug.writeln("Number of Java threads now: " + num_of_java_threads);
         if (t.isDaemon())
             _num_of_daemon_threads.getAddress().atomicSub(1);
         jq_NativeThread nt = t.getNativeThread();
@@ -384,10 +385,10 @@ public class jq_NativeThread implements jq_DontAlign {
                 Debug.write("               : average ready queue length ");
                 Debug.write(i);
                 Debug.write(": ");
-                System.err.println((double)readyQueueLength[i] / readyQueueN);
+                System.out.println((double)readyQueueLength[i] / readyQueueN);
             }
             Debug.write("               : preempted thread length=");
-            System.err.println((double)preemptedThreadsLength / readyQueueN);
+            System.out.println((double)preemptedThreadsLength / readyQueueN);
         }
         if (it != null && jq_InterrupterThread.STATISTICS) {
             Debug.write("Native thread ");

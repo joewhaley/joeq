@@ -50,6 +50,10 @@ public class Interface extends joeq.ClassLib.sun14_win32.Interface {
             k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/ObjectInputStream$GetFieldImpl;");
             k.load();
             
+            // jdk1.4.2_05 caches name string.
+            k = (jq_Class) PrimordialClassLoader.getJavaLangClass();
+            nullInstanceFields.add(k.getOrCreateInstanceField("name", "Ljava/lang/String;"));
+            
             // 1.4.2 adds caches to Win32FileSystem, which we should not reflectively inspect.
             k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/Win32FileSystem;");
             nullInstanceFields.add(k.getOrCreateInstanceField("cache", "Ljava/io/ExpiringCache;"));
