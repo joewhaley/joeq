@@ -9,7 +9,7 @@
 
 package Assembler.x86;
 
-import Allocator.CodeAllocator;
+import Allocator.DefaultCodeAllocator;
 import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
 import Clazz.jq_InstanceField;
@@ -29,7 +29,7 @@ public class Heap2CodeReference extends Reloc {
     }
 
     public void patch() {
-        CodeAllocator.DEFAULT.patchAbsolute(from_heaploc, to_codeloc);
+        DefaultCodeAllocator.patchAbsolute(from_heaploc, to_codeloc);
     }
     
     public void dump(OutputStream out) throws IOException {
