@@ -39,7 +39,6 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
 
     boolean TRACE = false;
     boolean TRACE_RELATIONS = false;
-    static boolean USE_BOGUS_SUMMARIES = !System.getProperty("pa.usebogussummaries", "no").equals("no");
     PrintStream out = System.out;
     
     PA pa;
@@ -228,8 +227,8 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
             jq_Method target = mc.getTargetMethod();
 
             jq_Method replacement = null;
-            if(USE_BOGUS_SUMMARIES) {
-	            PA.getBogusSummaryProvider().getReplacementMethod(target);
+            if(PA.USE_BOGUS_SUMMARIES) {
+	            replacement = PA.getBogusSummaryProvider().getReplacementMethod(target);
 	            if(replacement != null) {
 					System.out.println("Replacing a call to " + m + 
 					    				" with a call to "+ replacement);					
