@@ -1963,7 +1963,12 @@ public class PA {
         for(Iterator iter = t9.iterator(H1set.and(I2set)); iter.hasNext();){
             BDD h = (BDD) iter.next();
             int h_i = h.scanVar(H1).intValue();
-            MethodSummary.ConcreteTypeNode n = (ConcreteTypeNode) Hmap.get(h_i);
+            Object node = Hmap.get(h_i);
+            if(!(node instanceof ConcreteTypeNode)) {
+                System.err.println("Can't cast " + node + " to ConcreteTypeNode");
+                continue;
+            }
+            MethodSummary.ConcreteTypeNode n = (ConcreteTypeNode) node;
             String stringConst = (String) MethodSummary.stringNodes2Values.get(n);
             if(stringConst == null){
                 if(missingConst.get(stringConst) == null){
