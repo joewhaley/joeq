@@ -443,6 +443,7 @@ public abstract class ProgramLocation implements Textualizable {
     
     public static ProgramLocation read(StringTokenizer st) {
         jq_Method m = (jq_Method) jq_Method.read(st);
+        if (m == null) return null;
         String s = st.nextToken();
         int id = Integer.parseInt(st.nextToken());
         if (s.equals("bc")) {
