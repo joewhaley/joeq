@@ -11,6 +11,15 @@ import Compil3r.Analysis.FlowInsensitive.MethodSummary;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.ParamNode;
 import Compil3r.Analysis.IPSSA.IPSSABuilder;
 
+/**
+ * A query on top of PAResults. Will probably need to move nested classes 
+ * to other places later.  
+ * @see PAQuery.ParamAliasFinder
+ * @see PAQuery.ConstParameterFinder
+ * 
+ * @author Vladimir Livshits
+ * @version $Id$
+ * */
 public class PAQuery {
     public static class ParamAliasFinder extends IPSSABuilder.Application {
         public ParamAliasFinder() {
@@ -31,22 +40,7 @@ public class PAQuery {
             
             PAResults paResults = getBuilder().getPAResults();
             PA r = paResults.getPAResults();
-            /*
-            TypedBDDFactory.TypedBDD bdd = (TypedBDD)r.bdd.zero();
-            for(int i = 0; i < ms.getNumOfParams(); i++) {
-                ParamNode paramNode = ms.getParamNode(i);
-                
-                System.out.println("\tParam #"+ i + ": " + 
-                    ( paramNode == null ? "<null>" : paramNode.toString_long() ) );
-                
-                int index = paResults.getVariableIndex(paramNode);
-                if(index == -1) continue;
-                BDD varBDD = r.V1.ithVar(index);
-                bdd.orWith(varBDD);
-            }
-            System.out.println("BDD: " + bdd.toStringWithDomains());
-            */
-            
+ 
             // get formal arguments for the method
             BDD methodBDD = r.M.ithVar(paResults.getMethodIndex(m));
             BDD params = r.formal.relprod(methodBDD, r.Mset);
@@ -90,10 +84,6 @@ public class PAQuery {
                         System.out.println("\t\t(A total of " + contextSize + " contexts) \n");  
                         break;
                     }
-                    /*": " + "pointsTo: \n" + pointsToSize + ": " + paResults.toString(pointsTo, -1)*/
-                                               
-                    //System.out.println("context #" + i + ": " + 
-                    //    projSize + ": " + t.toStringWithDomains() + "\n");
                 }
                 t.free();
             }

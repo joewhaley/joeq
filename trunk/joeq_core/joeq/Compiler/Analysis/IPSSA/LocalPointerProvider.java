@@ -15,12 +15,13 @@ import Compil3r.Quad.CallGraph;
 
 /**
  * This class returns pointer information in terms of ParametrizedLocation's.
+ * 
  * @see ParametrizedLocation
  * */
-class LocalPointerProvider implements PointerAnalysisResults {
+class LocalPointerResults implements PointerAnalysisResults {
     PAResults _paResults;
 
-    LocalPointerProvider(PAResults paResults){
+    LocalPointerResults(PAResults paResults){
         this._paResults = paResults;
     }
     /** 
@@ -34,25 +35,32 @@ class LocalPointerProvider implements PointerAnalysisResults {
             
         } else
         if(IPSSABuilder.isCall(loc.getQuad())) {
-            
+                       
         } 
         Assert._assert(false);
         return null;
     }
-
     public Set ref(QuadProgramLocation loc, BasicBlock block) {
+        if(IPSSABuilder.isStore(loc.getQuad())) {
+            // Need to map from the Quad to a Node that is being stored to
+            
+        } else
+        if(IPSSABuilder.isCall(loc.getQuad())) {
+                       
+        } 
+        Assert._assert(false);
         return null;
     }
-
     public Set getAliases(jq_Method method, SSALocation loc) {
+        // TODO
         return null;
     }
-
     public boolean hasAliases(jq_Method method, SSALocation loc, ContextSet contextSet) {
+        // TODO
         return false;
     }
-
     public boolean hasAliases(jq_Method method, SSALocation loc) {
+        // TODO
         return false;
     }
 
