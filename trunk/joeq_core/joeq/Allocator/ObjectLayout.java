@@ -7,10 +7,6 @@
 
 package Allocator;
 
-
-import Memory.HeapAddress;
-import Run_Time.Unsafe;
-
 /** This interface contains constants that define the joeq object layout.
  *  You can play with these constants to experiment with different object layouts.
  *
@@ -66,62 +62,5 @@ public abstract class ObjectLayout {
     /** Lock has been expanded.
      *  Masking out this value and the status flags mask gives the address of the expanded lock structure. */
     public static final int LOCK_EXPANDED     = 0x80000000;
-    
-    
-    /**** UTILITY FUNCTIONS ****/
-
-    public static Object initializeObject(HeapAddress addr, Object vtable, int size) {
-        addr = (HeapAddress) addr.offset(OBJ_HEADER_SIZE);
-        addr.offset(VTABLE_OFFSET).poke(HeapAddress.addressOf(vtable));
-        return addr.asObject();
-    }
-    
-    public static Object initializeArray(HeapAddress addr, Object vtable, int length, int size) {
-        addr = (HeapAddress) addr.offset(ARRAY_HEADER_SIZE);
-        addr.offset(ARRAY_LENGTH_OFFSET).poke4(length);
-        addr.offset(VTABLE_OFFSET).poke(HeapAddress.addressOf(vtable));
-        return addr.asObject();
-    }
-    
-    public static int getArrayLength(Object obj) {
-        HeapAddress addr = HeapAddress.addressOf(obj);
-        return addr.offset(ARRAY_LENGTH_OFFSET).peek4();
-    }
-    
-    public static void setArrayLength(Object obj, int newLength) {
-        HeapAddress addr = HeapAddress.addressOf(obj);
-        addr.offset(ARRAY_LENGTH_OFFSET).poke4(newLength);
-    }
-    
-    public static Object getVTable(Object obj) {
-        HeapAddress addr = HeapAddress.addressOf(obj);
-        return ((HeapAddress) addr.offset(VTABLE_OFFSET).peek()).asObject();
-    }
-    
-    public static boolean testAndMark(Object obj, int markValue) {
-        HeapAddress addr = (HeapAddress) HeapAddress.addressOf(obj).offset(STATUS_WORD_OFFSET);
-        for (;;) {
-            int oldValue = addr.peek4();
-            int newValue = (oldValue & ~GC_BIT) | markValue;
-            if (oldValue == newValue)
-                return false;
-            addr.atomicCas4(oldValue, newValue);
-            if (Unsafe.isEQ())
-                break;
-        }
-        return true;
-    }
-    
-    public static boolean testMarkBit(Object obj, int markValue) {
-        HeapAddress addr = (HeapAddress) HeapAddress.addressOf(obj).offset(STATUS_WORD_OFFSET);
-        int value = addr.peek4();
-        return (value & GC_BIT) == markValue;
-    }
-    
-    public static void writeMarkBit(Object obj, int markValue) {
-        HeapAddress addr = (HeapAddress) HeapAddress.addressOf(obj).offset(STATUS_WORD_OFFSET);
-        int oldValue = addr.peek4();
-        int newValue = (oldValue & ~GC_BIT) | markValue;
-        addr.poke4(newValue);
-    }
+   
 }

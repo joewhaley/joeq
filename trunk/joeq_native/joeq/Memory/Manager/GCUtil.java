@@ -1,6 +1,7 @@
 package Memory.Manager;
 
 import Allocator.ObjectLayout;
+import Allocator.ObjectLayoutMethods;
 import Clazz.jq_Array;
 import Clazz.jq_Class;
 import Clazz.jq_Primitive;
@@ -54,7 +55,7 @@ public class GCUtil {
         }
 
         // check if vtable is one of three possible values
-        Object vtable = ObjectLayout.getVTable(typeAddress.asObject());
+        Object vtable = ObjectLayoutMethods.getVTable(typeAddress.asObject());
         boolean valid = vtable == vtableForClassType ||
                         vtable == vtableForArrayType ||
                         vtable == vtableForPrimitiveType;
@@ -84,7 +85,7 @@ public class GCUtil {
             return false;
         }
 
-        Object tib = ObjectLayout.getVTable(ref);
+        Object tib = ObjectLayoutMethods.getVTable(ref);
         HeapAddress tibAddr = HeapAddress.addressOf(tib);
         if (!refInVM(tibAddr)) {
             Debug.write("validRef: vtable outside heap, ref = ");
@@ -127,7 +128,7 @@ public class GCUtil {
             return;
         }
         //ObjectLayout.dumpHeader(ref);
-        HeapAddress tib = HeapAddress.addressOf(ObjectLayout.getVTable(ref.asObject()));
+        HeapAddress tib = HeapAddress.addressOf(ObjectLayoutMethods.getVTable(ref.asObject()));
         if (!refInVM(tib)) {
             Debug.write(" (INVALID TIB: CLASS NOT ACCESSIBLE)\n");
             return;

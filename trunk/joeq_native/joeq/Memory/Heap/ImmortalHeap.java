@@ -1,6 +1,7 @@
 package Memory.Heap;
 
 import Allocator.ObjectLayout;
+import Allocator.ObjectLayoutMethods;
 import Clazz.jq_Array;
 import Main.jq;
 import Memory.Address;
@@ -57,7 +58,7 @@ public class ImmortalHeap extends Heap {
      */
     public boolean mark(HeapAddress ref) {
         Object obj = ref.asObject();
-        return ObjectLayout.testAndMark(obj, markValue);
+        return ObjectLayoutMethods.testAndMark(obj, markValue);
     }
 
     /**
@@ -65,7 +66,7 @@ public class ImmortalHeap extends Heap {
      */
     public boolean isLive(HeapAddress ref) {
         Object obj = ref.asObject();
-        return ObjectLayout.testMarkBit(obj, markValue);
+        return ObjectLayoutMethods.testMarkBit(obj, markValue);
     }
 
     /**
@@ -91,7 +92,7 @@ public class ImmortalHeap extends Heap {
         Object tib = type.getVTable();
         int offset = ObjectLayout.ARRAY_HEADER_SIZE;
         HeapAddress region = allocateZeroedMemory(size, alignment, offset);
-        Object newObj = ObjectLayout.initializeArray(region, tib, numElements, size);
+        Object newObj = ObjectLayoutMethods.initializeArray(region, tib, numElements, size);
         postAllocationProcessing(newObj);
         return newObj;
     }
@@ -157,7 +158,7 @@ public class ImmortalHeap extends Heap {
      * For example, setting the GC state bits in the object header.
      */
     protected void postAllocationProcessing(Object newObj) {
-        ObjectLayout.writeMarkBit(newObj, markValue);
+        ObjectLayoutMethods.writeMarkBit(newObj, markValue);
     }
 
 }

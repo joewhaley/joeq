@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import Allocator.ObjectLayout;
+import Allocator.ObjectLayoutMethods;
 import Clazz.jq_Array;
 import Clazz.jq_Class;
 import Main.jq;
@@ -312,7 +313,7 @@ public abstract class Heap {
     public final Object allocateObject(int size, Object vtable)
         throws OutOfMemoryError {
         HeapAddress region = allocateZeroedMemory(size);
-        Object newObj = ObjectLayout.initializeObject(region, vtable, size);
+        Object newObj = ObjectLayoutMethods.initializeObject(region, vtable, size);
         postAllocationProcessing(newObj);
         return newObj;
     }
@@ -334,7 +335,7 @@ public abstract class Heap {
         //       must preserve alignment of future allocations.
         size = HeapAddress.align(size, HeapAddress.logSize());
         HeapAddress region = allocateZeroedMemory(size);
-        Object newObj = ObjectLayout.initializeArray(region, vtable, numElements, size);
+        Object newObj = ObjectLayoutMethods.initializeArray(region, vtable, numElements, size);
         postAllocationProcessing(newObj);
         return newObj;
     }
