@@ -53,15 +53,20 @@ public abstract class Unsafe {
     public static final native long invoke(int address) throws Throwable;
     public static final native int alloca(int size);
     public static final native int EAX();
-    
+    public static final native int ESP();
     public static final native int EBP();
     public static final native jq_Thread getThreadBlock();
     public static final native void setThreadBlock(jq_Thread t);
-    public static final native void switchRegisterState(int ip, int fp, int sp, int eax);
-    public static final boolean cas4(int address, int before, int after) {
-        if (peek(address) == before) { remapper_object.poke4(address, after); return true; }
-        return false;
+    public static final native void longJump(int ip, int fp, int sp, int eax);
+    public static final native void atomicAdd(int address, int val);
+    public static final native void atomicSub(int address, int val);
+    public static final native void atomicAnd(int address, int val);
+    public static final int atomicCas4(int address, int before, int after) {
+        int val = peek(address);
+        if (val == before) { remapper_object.poke4(address, after); return after; }
+        return val;
     }
+    public static final native boolean isEQ();
 
     public static class Remapper {
         public native int addressOf(Object o);
@@ -91,10 +96,15 @@ public abstract class Unsafe {
     public static final jq_StaticMethod _alloca;
     public static final jq_StaticMethod _EAX;
     public static final jq_StaticMethod _EBP;
+    public static final jq_StaticMethod _ESP;
     public static final jq_StaticMethod _getThreadBlock;
     public static final jq_StaticMethod _setThreadBlock;
-    public static final jq_StaticMethod _switchRegisterState;
-    public static final jq_StaticMethod _cas4;
+    public static final jq_StaticMethod _longJump;
+    public static final jq_StaticMethod _atomicAdd;
+    public static final jq_StaticMethod _atomicSub;
+    public static final jq_StaticMethod _atomicAnd;
+    public static final jq_StaticMethod _atomicCas4;
+    public static final jq_StaticMethod _isEQ;
     public static final jq_StaticMethod _floatToIntBits;
     public static final jq_StaticMethod _intBitsToFloat;
     public static final jq_StaticMethod _doubleToLongBits;
@@ -119,10 +129,15 @@ public abstract class Unsafe {
         _alloca = _class.getOrCreateStaticMethod("alloca", "(I)I");
         _EAX = _class.getOrCreateStaticMethod("EAX", "()I");
         _EBP = _class.getOrCreateStaticMethod("EBP", "()I");
+        _ESP = _class.getOrCreateStaticMethod("ESP", "()I");
         _getThreadBlock = _class.getOrCreateStaticMethod("getThreadBlock", "()LScheduler/jq_Thread;");
         _setThreadBlock = _class.getOrCreateStaticMethod("setThreadBlock", "(LScheduler/jq_Thread;)V");
-        _switchRegisterState = _class.getOrCreateStaticMethod("switchRegisterState", "(IIII)V");
-        _cas4 = _class.getOrCreateStaticMethod("cas4", "(III)Z");
+        _longJump = _class.getOrCreateStaticMethod("longJump", "(IIII)V");
+        _atomicAdd = _class.getOrCreateStaticMethod("atomicAdd", "(II)V");
+        _atomicSub = _class.getOrCreateStaticMethod("atomicSub", "(II)V");
+        _atomicAnd = _class.getOrCreateStaticMethod("atomicAnd", "(II)V");
+        _atomicCas4 = _class.getOrCreateStaticMethod("atomicCas4", "(III)I");
+        _isEQ = _class.getOrCreateStaticMethod("isEQ", "()Z");
         _floatToIntBits = _class.getOrCreateStaticMethod("floatToIntBits", "(F)I");
         _intBitsToFloat = _class.getOrCreateStaticMethod("intBitsToFloat", "(I)F");
         _doubleToLongBits = _class.getOrCreateStaticMethod("doubleToLongBits", "(D)J");
