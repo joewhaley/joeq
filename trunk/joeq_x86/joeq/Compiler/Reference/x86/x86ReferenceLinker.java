@@ -196,7 +196,7 @@ public abstract class x86ReferenceLinker {
         jq_InstanceMethod m = t.getVirtualMethod(f.getNameAndDesc());
         if (m == null)
             throw new AbstractMethodError();
-        if (TRACE) SystemInterface.debugmsg("invokeinterface "+f+" on object type "+t+" resolved to "+m);
+        //if (TRACE) SystemInterface.debugmsg("invokeinterface "+f+" on object type "+t+" resolved to "+m);
         jq_Class k = m.getDeclaringClass();
         k.sf_initialize(); k.cls_initialize();
         for (int i=0; i<n_paramwords; ++i) {
@@ -237,7 +237,7 @@ public abstract class x86ReferenceLinker {
         _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LCompil3r/Reference/x86/x86ReferenceLinker;");
         _getstatic4 = _class.getOrCreateStaticMethod("getstatic4", "(LClazz/jq_StaticField;)V");
         _getstatic8 = _class.getOrCreateStaticMethod("getstatic8", "(LClazz/jq_StaticField;)V");
-        _putstatic4 = _class.getOrCreateStaticMethod("getstatic4", "(LClazz/jq_StaticField;)V");
+        _putstatic4 = _class.getOrCreateStaticMethod("putstatic4", "(LClazz/jq_StaticField;)V");
         _putstatic8 = _class.getOrCreateStaticMethod("putstatic8", "(LClazz/jq_StaticField;)V");
         _getfield1 = _class.getOrCreateStaticMethod("getfield1", "(LClazz/jq_InstanceField;)V");
         _sgetfield = _class.getOrCreateStaticMethod("sgetfield", "(LClazz/jq_InstanceField;)V");
