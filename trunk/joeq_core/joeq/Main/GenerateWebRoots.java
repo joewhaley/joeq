@@ -136,16 +136,23 @@ public class GenerateWebRoots {
 
         for(Iterator iter = listenerNames.iterator(); iter.hasNext();){
             String listener = (String) iter.next();
-            
-            out.println("\t\t// " + ++count + ". " + listener);
-            out.println("\t\ttry {");
-            out.println("\t\t\tServletContextListener listener = new " + listener + "();");
-            out.println("\t\t\tlistener.contextInitialized(null);");
-            out.println("\t\t\tlistener.contextDestroyed(null);");
-            out.println("\t\t} catch (Exception e) {");
-            out.println("\t\t\te.printStackTrace();");
-            out.println("\t\t}\n");
-        }        
+            try {
+                Class c = Class.forName(listener);
+                Class httpSessionListener = Class.forName("javax.servlet.http.HttpSessionListener");
+                if(c.isAssignableFrom(httpSessionListener)){
+                    out.println("\t\t// " + ++count + ". " + listener);
+                    out.println("\t\ttry {");
+                    out.println("\t\t\tHttpSessionListener listener = new " + listener + "();");
+                    out.println("\t\t\tlistener.contextInitialized(null);");
+                    out.println("\t\t\tlistener.contextDestroyed(null);");
+                    out.println("\t\t} catch (Exception e) {");
+                    out.println("\t\t\te.printStackTrace();");
+                    out.println("\t\t}\n");        
+                }
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
         out.println("    }\n\n");
     }
     
@@ -156,7 +163,7 @@ public class GenerateWebRoots {
         out.println("import javax.servlet.ServletRequest;");
         out.println("import javax.servlet.ServletResponse;");        
         out.println("import javax.servlet.http.HttpServlet;");
-        out.println("import javax.servlet.ServletContextListener");
+        out.println("import javax.servlet.ServletContextListener;");
         out.println("import javax.servlet.Filter;");
         out.println("import javax.servlet.FilterChain;");
         out.println("import javax.servlet.jsp.JspException;");
@@ -185,11 +192,11 @@ public class GenerateWebRoots {
             System.out.println ("** Parsing error" + ", line " + err.getLineNumber () + ", uri " + err.getSystemId ());
             System.out.println(" " + err.getMessage ());
             return null;
-        }catch (SAXException e) {
+        } catch (SAXException e) {
             Exception x = e.getException ();
             ((x == null) ? e : x).printStackTrace ();
             return null;
-        }catch (Throwable t) {
+        } catch (Throwable t) {
             t.printStackTrace ();
             return null;  
         }
