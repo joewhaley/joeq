@@ -1041,8 +1041,10 @@ public class PA {
                 jq_Reference t1 = (jq_Reference) Tmap.get(T_i);
                 if (t1 == null) continue;
                 jq_Reference t2 = t1.getDirectPrimarySupertype();
-                t2.prepare();
-                Tmap.get(t2);
+                if (t2 != null) {
+                    t2.prepare();
+                    Tmap.get(t2);
+                }
                 jq_Class[] c = t1.getInterfaces();
                 for (int i = 0; i < c.length; ++i) {
                     Tmap.get(c[i]);
@@ -2915,6 +2917,9 @@ public class PA {
                 classes.add(r);
             }
             calls += ms.getCalls().size();
+        }
+        if (ADD_SUPERTYPES) {
+            Set newTypes = new HashSet(classes);
         }
         System.out.println();
         System.out.println("Methods="+methods+" Bytecodes="+bcodes+" Call sites="+calls);
