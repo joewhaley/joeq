@@ -98,8 +98,9 @@ public abstract class ZipFile implements ZipConstants {
 	    throw new java.util.zip.ZipException("invalid compression method");
 	}
     }
-    public native java.util.zip.Inflater getInflater();
-    public native void releaseInflater(java.util.zip.Inflater inf);
+    private native java.util.zip.Inflater getInflater();
+    private native void releaseInflater(java.util.zip.Inflater inf);
+    void releaseInflater0(java.util.zip.Inflater inf) { releaseInflater(inf); }
     
     private static class ZipFileInputStream extends java.io.InputStream {
         private ZipFile zf;
