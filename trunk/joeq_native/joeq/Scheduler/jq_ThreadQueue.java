@@ -27,6 +27,13 @@ public class jq_ThreadQueue {
         tail = t;
     }
     
+    public void enqueueFront(jq_Thread t) {
+        jq.assert(t.next == null);
+        if (head == null) tail = t;
+        else head.next = t;
+	head = t;
+    }
+    
     public jq_Thread dequeue() {
         jq_Thread t = head;
         if (t == null) return null;
@@ -36,6 +43,30 @@ public class jq_ThreadQueue {
         return t;
     }
     
+    public boolean remove(jq_Thread t2) {
+        jq_Thread p = head, q = null;
+	while (p != t2) {
+	    if (p == null) return false;
+	    q = p;
+	    p = p.next;
+	}
+	if (q == null) {
+	    jq.assert(head == t2);
+	    head = t2.next;
+	    if (head == null) tail = null;
+	    else t2.next = null;
+	} else {
+	    q.next = p.next;
+	    if (p.next == null) {
+		jq.assert(p == tail);
+		tail = q;
+	    } else {
+		p.next = null;
+	    }
+	}
+	return true;
+    }
+
     public Iterator threads() {
         final jq_Thread start = head;
         return new Iterator() {

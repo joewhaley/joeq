@@ -104,6 +104,29 @@ public class jq_Thread implements ObjectLayout {
         // other registers don't matter.
         this.getNativeThread().threadSwitch();
     }
+    public void yieldTo(jq_Thread t) {
+	jq.assert(this == Unsafe.getThreadBlock());
+	// if that thread is in the thread queue for the current native
+	// thread, we can yield to him easily.
+        this.disableThreadSwitch();
+	// thread switching for this native thread is disabled, so
+	// Java threads cannot move from our local thread queue.
+	if (t.getNativeThread() != this.getNativeThread()) {
+	    // TODO: temporarily increase priority of t (?)
+	    return;
+	}
+
+        // act like we received a timer tick.
+        // store the register state to make it look like we received a timer tick.
+        int esp = Unsafe.ESP();
+        registers.Esp = esp - 12; // room for object pointer, arg, return address
+        registers.Ebp = Unsafe.EBP();
+        registers.ControlWord = 0x027f;
+        registers.StatusWord = 0x4000;
+        registers.TagWord = 0xffff;
+        // other registers don't matter.
+        this.getNativeThread().threadSwitch(t);
+    }
     public void setPriority(int newPriority) { }
     public void stop(Object o) { }
     public void suspend() { }
