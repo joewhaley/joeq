@@ -249,7 +249,7 @@ public class BDDInferenceRule extends InferenceRule {
             if (solver.TRACE) solver.out.print(" x " + rt.relation);
             BDD b = relationValues[j];
             if (find_best_order && !result.isOne()) {
-                String varOrder = System.getProperty("bddvarorder");
+                String varOrder = solver.VARORDER;
                 findBestDomainOrder(solver.bdd, null, varOrder, result, b, canNowQuantify);
             }
             if (!canNowQuantify.isOne()) {
@@ -467,7 +467,7 @@ public class BDDInferenceRule extends InferenceRule {
                     if (solver.TRACE) solver.out.print("'");
                 }
                 if (find_best_order && !results[i].isOne()) {
-                    String varOrder = System.getProperty("bddvarorder");
+                    String varOrder = solver.VARORDER;
                     findBestDomainOrder(solver.bdd, null, varOrder, results[i], b, canNowQuantify);
                 }
                 if (!canNowQuantify.isOne()) {

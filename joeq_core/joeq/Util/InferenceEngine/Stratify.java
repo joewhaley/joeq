@@ -95,12 +95,21 @@ public class Stratify {
             // Any relations that have been totally computed are inputs to the
             // next stratum.
             boolean again = inputs.addAll(findNewInputs(depNav2, stratumNodes));
-            if (!again) break;
             
             // Remove edges for this stratum from navigator.
             depNav.removeAll(stratumNodes);
+            
+            if (!again) break;
         }
         
+        if (!depNav.relationToDefiningRule.isEmpty() ||
+            !depNav.relationToUsingRule.isEmpty()) {
+            Set s = new HashSet();
+            s.addAll(depNav.relationToDefiningRule.keySet());
+            s.addAll(depNav.relationToUsingRule.keySet());
+            System.out.println("Warning: The following relations are necessary, but not present in any strata:");
+            System.out.println("    "+s);
+        }
     }
     
     static Set getStratumNodes(Set stratumSccs) {

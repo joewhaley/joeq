@@ -4,10 +4,12 @@
 package joeq.Compiler.Dataflow;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
@@ -20,6 +22,7 @@ import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Main.HostedVM;
 import joeq.Util.BitString;
+import joeq.Util.Collections.BitStringSet;
 import joeq.Util.Collections.Pair;
 import joeq.Util.Graphs.EdgeGraph;
 import joeq.Util.Graphs.Graph;
@@ -73,9 +76,11 @@ public class ReachingDefs extends Problem {
     }
     
     Quad[] quads;
+    Map regToDefs;
     Map transferFunctions;
     BitVectorFact emptySet;
     GenKillTransferFunction emptyTF;
+    Solver mySolver;
 
     static final boolean TRACE = false;
 
@@ -89,7 +94,7 @@ public class ReachingDefs extends Problem {
         
         if (TRACE) System.out.println("Bit vector size: "+bitVectorSize);
         
-        Map regToDefs = new HashMap();
+        regToDefs = new HashMap();
         transferFunctions = new HashMap();
         quads = new Quad[bitVectorSize];
         emptySet = new UnionBitVectorFact(bitVectorSize);
@@ -196,7 +201,7 @@ public class ReachingDefs extends Problem {
         Solver s1 = new IterativeSolver();
         Solver s2 = new SortedSetSolver(BBComparator.INSTANCE);
         Solver s3 = new PriorityQueueSolver();
-        for (Iterator i=set.iterator(); i.hasNext(); ) {
+        for (Iterator i = set.iterator(); i.hasNext(); ) {
             jq_Method m = (jq_Method) i.next();
             if (m.getBytecode() == null) continue;
             System.out.println("Method "+m);
@@ -211,9 +216,67 @@ public class ReachingDefs extends Problem {
         }
     }
     
+    public static ReachingDefs solve(ControlFlowGraph cfg) {
+        ReachingDefs p = new ReachingDefs();
+        Solver s1 = new IterativeSolver();
+        p.mySolver = s1;
+        solve(cfg, s1, p);
+        if (TRACE) {
+            System.out.println("Finished solving ReachingDefs.");
+            //Solver.dumpResults(cfg, s1);
+        }
+        return p;
+    }
+    
     private static void solve(ControlFlowGraph cfg, Solver s, Problem p) {
         s.initialize(p, new EdgeGraph(cfg));
         s.solve();
     }
 
+    public Set/*Quad*/ getReachingDefs(BasicBlock bb) {
+        BitVectorFact f = (BitVectorFact) mySolver.getDataflowValue(bb);
+        return new BitStringSet(f.fact, Arrays.asList(quads));
+    }
+    
+    public Set/*Quad*/ getReachingDefs(BasicBlock bb, Register r) {
+        BitString b = (BitString) regToDefs.get(r);
+        if (b == null) return Collections.EMPTY_SET;
+        BitVectorFact f = (BitVectorFact) mySolver.getDataflowValue(bb);
+        BitString result = (BitString) b.clone();
+        result.and(f.fact);
+        return new BitStringSet(result, Arrays.asList(quads));
+    }
+    
+    public Set/*Quad*/ getReachingDefs(BasicBlock bb, Quad q) {
+        BitVectorFact f = (BitVectorFact) mySolver.getDataflowValue(bb);
+        BitString result = (BitString) f.fact.clone();
+        withinBasicBlock(result, bb, q);
+        return new BitStringSet(result, Arrays.asList(quads));
+    }
+    
+    public Set/*Quad*/ getReachingDefs(BasicBlock bb, Quad q, Register r) {
+        BitString b = (BitString) regToDefs.get(r);
+        if (b == null) return Collections.EMPTY_SET;
+        BitVectorFact f = (BitVectorFact) mySolver.getDataflowValue(bb);
+        BitString result = (BitString) f.fact.clone();
+        withinBasicBlock(result, bb, q);
+        result.and(b);
+        return new BitStringSet(result, Arrays.asList(quads));
+    }
+    
+    void withinBasicBlock(BitString bs, BasicBlock bb, Quad q2) {
+        for (ListIterator.Quad j = bb.iterator(); ; ) {
+            Quad q = j.nextQuad();
+            if (q == q2) break;
+            if (q.getDefinedRegisters().isEmpty()) continue;
+            int a = q.getID();
+            for (ListIterator.RegisterOperand k = q.getDefinedRegisters().registerOperandIterator(); k.hasNext(); ) {
+                Register r = k.nextRegisterOperand().getRegister();
+                BitString kill = (BitString) regToDefs.get(r);
+                bs.minus(kill);
+            }
+            bs.set(a);
+        }
+    }
+    
 }

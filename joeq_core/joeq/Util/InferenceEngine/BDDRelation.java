@@ -52,13 +52,13 @@ public class BDDRelation extends Relation {
             if (option != null && option.length() > 0) {
                 // use the given domain.
                 if (!option.startsWith(fd.name))
-                    throw new IllegalArgumentException("Field "+name+" has domain "+fd+", but tried to assign "+option);
+                    throw new IllegalArgumentException("Field "+fieldNames.get(i)+" has domain "+fd+", but tried to assign "+option);
                 //int index = Integer.parseInt(option.substring(fd.name.length()));
                 for (Iterator j = doms.iterator(); j.hasNext(); ) {
                     BDDDomain dom = (BDDDomain) j.next();
                     if (dom.getName().equals(option)) {
                         if (domains.contains(dom)) {
-                            System.out.println("Cannot assign "+dom+" to field "+name+": "+dom+" is already assigned");
+                            System.out.println("Cannot assign "+dom+" to field "+fieldNames.get(i)+": "+dom+" is already assigned");
                             option = "";
                             break;
                         } else {
