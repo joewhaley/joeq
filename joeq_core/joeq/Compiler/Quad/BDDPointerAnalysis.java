@@ -3,6 +3,10 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Quad;
 
+import java.io.DataOutput;
+import java.io.DataOutputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -90,10 +94,16 @@ public class BDDPointerAnalysis {
      */
     private BDDFactory bdd;
 
+    public int VARBITS = 18;
+    public int FIELDBITS = 13;
+    public int HEAPBITS = 14;
+    
     // the size of domains, can be changed to reflect the size of inputs
-    int domainBits[] = {18, 18, 13, 14, 14};
+    int domainBits[] = {VARBITS, 1, VARBITS, 1,
+                        FIELDBITS,
+                        HEAPBITS, 1, HEAPBITS, 1};
     // to be computed in sysInit function
-    int domainSpos[] = {0, 0, 0, 0, 0}; 
+    int domainSpos[] = new int[domainBits.length]; 
     
     // V1 V2 are domains for variables 
     // H1 H2 are domains for heap objects
@@ -145,11 +155,14 @@ public class BDDPointerAnalysis {
             domains[i] = (1 << domainBits[i]);
         }
         BDDDomain[] bdd_domains = bdd.extDomain(domains);
+        for (int i=0; i<domainBits.length; ++i) {
+            Assert._assert(bdd_domains[i].varNum() == domainBits[i], "Domain "+i+" bits "+bdd_domains[i].varNum());
+        }
         V1 = bdd_domains[0];
-        V2 = bdd_domains[1];
-        FD = bdd_domains[2];
-        H1 = bdd_domains[3];
-        H2 = bdd_domains[4];
+        V2 = bdd_domains[2];
+        FD = bdd_domains[4];
+        H1 = bdd_domains[5];
+        H2 = bdd_domains[7];
         T1 = V2;
         T2 = V1;
         T3 = H2;
@@ -191,10 +204,14 @@ public class BDDPointerAnalysis {
         
         localOrders = new int[domainBits.length][];
         localOrders[0] = new int[domainBits[0]];
-        localOrders[1] = localOrders[0];
-        localOrders[2] = new int[domainBits[2]];
-        localOrders[3] = new int[domainBits[3]];
-        localOrders[4] = localOrders[3];
+        localOrders[1] = new int[domainBits[1]];
+        localOrders[2] = localOrders[0];
+        localOrders[3] = localOrders[1];
+        localOrders[4] = new int[domainBits[4]];
+        localOrders[5] = new int[domainBits[5]];
+        localOrders[6] = new int[domainBits[1]];
+        localOrders[7] = localOrders[5];
+        localOrders[8] = localOrders[6];
         
         for (int i=0, pos=0; i<domainBits.length; ++i) {
             domainSpos[i] = pos;
@@ -245,8 +262,8 @@ public class BDDPointerAnalysis {
         // according to the documentation of buddy, the default ordering is x1, y1, z1, x2, y2, z2, .....
         // V1[0] -> default variable number
         int[] outside2inside = new int[varnum];
-        doms[0] = V1; doms[1] = V2;
-        doms[2] = FD; doms[3] = H1; doms[4] = H2;
+        for (int i=0; i<doms.length; ++i)
+            doms[i] = bdd.getDomain(i);
         getVariableMap(outside2inside, doms, domainBits.length);
         
         remapping(varorder, outside2inside);
@@ -329,7 +346,7 @@ public class BDDPointerAnalysis {
     public static boolean INCREMENTAL_ITERATION = true;
     public static boolean FORCE_GC = false;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         HostedVM.initialize();
         
         CodeCache.AlwaysMap = true;
@@ -380,6 +397,7 @@ public class BDDPointerAnalysis {
         
         if (DUMP)
             dis.dumpResults(cg);
+        dis.dumpResults("pa");
             
     }
     
@@ -1424,4 +1442,55 @@ public class BDDPointerAnalysis {
         newPointsTo.free();
     }
 
+    /**
+     * @param dumpfilename
+     */
+    void dumpResults(String dumpfilename) throws IOException {
+        bdd.save(dumpfilename+".bdd", pointsTo);
+        
+        DataOutputStream dos;
+        dos = new DataOutputStream(new FileOutputStream(dumpfilename+".config"));
+        dumpConfig(dos);
+        dos.close();
+        dos = new DataOutputStream(new FileOutputStream(dumpfilename+".vars"));
+        dumpVarIndexMap(dos);
+        dos.close();
+        dos = new DataOutputStream(new FileOutputStream(dumpfilename+".heap"));
+        dumpHeapIndexMap(dos);
+        dos.close();
+    }
+
+    private void dumpConfig(DataOutput out) throws IOException {
+        int CLASSBITS = 1;
+        int CONTEXTBITS = 1;
+        out.writeBytes(VARBITS+" "+HEAPBITS+" "+FIELDBITS+" "+CLASSBITS+" "+CONTEXTBITS+"\n");
+        String ordering = "FD_H2cxH2o_V2cxV1cxV2oxV1o_H1cxH1o";
+        out.writeBytes(ordering+"\n");
+    }
+    
+    private void dumpVarIndexMap(DataOutput out) throws IOException {
+        int n = variableIndexMap.size();
+        out.writeBytes(n+"\n");
+        int j = 0;
+        while (j < variableIndexMap.size()) {
+            Node node = getVariable(j);
+            node.write(out);
+            out.writeByte('\n');
+            ++j;
+        }
+    }
+
+    private void dumpHeapIndexMap(DataOutput out) throws IOException {
+        int n = heapobjIndexMap.size();
+        out.writeBytes(n+"\n");
+        int j = 0;
+        while (j < heapobjIndexMap.size()) {
+            // UnknownTypeNode
+            Node node = getHeapobj(j);
+            if (node == null) out.writeBytes("null");
+            else node.write(out);
+            out.writeByte('\n');
+            ++j;
+        }
+    }
 }
