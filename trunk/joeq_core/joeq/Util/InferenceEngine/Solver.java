@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.StringTokenizer;
 
@@ -233,13 +234,16 @@ public abstract class Solver {
     RuleTerm parseRuleTerm(Map/*<String,Variable>*/ nameToVar, StringTokenizer st) {
         String openParen = st.nextToken();
         if (!openParen.equals("(")) throw new IllegalArgumentException("Expected '(', got '"+openParen+"'");
-        List/*<Variable>*/ vars = new LinkedList();
+        List/*<Object>*/ vars = new LinkedList();
         for (;;) {
             String varName = st.nextToken();
             char firstChar = varName.charAt(0);
-            Variable var;
+            Object var;
             if (firstChar >= '0' && firstChar <= '9') {
                 var = new Constant(Long.parseLong(varName));
+            } else if (firstChar == '"') {
+                String namedConstant = varName.substring(1, varName.length()-1);
+                var = namedConstant;
             } else if (!varName.equals("_")) {
                 var = (Variable) nameToVar.get(varName);
                 if (var == null) nameToVar.put(varName, var = new Variable(varName));
@@ -258,6 +262,17 @@ public abstract class Solver {
         Relation r = getRelation(relationName);
         if (r == null) throw new IllegalArgumentException("Unknown relation "+relationName);
         if (r.fieldDomains.size() != vars.size()) throw new IllegalArgumentException();
+        
+        int n = 0;
+        for (ListIterator li = vars.listIterator(); li.hasNext(); ++n) {
+            Object var = li.next();
+            if (var instanceof String) {
+                String namedConstant = (String) var;
+                FieldDomain fd = (FieldDomain) r.fieldDomains.get(n);
+                Variable constant = new Constant(fd.namedConstant(namedConstant));
+                li.set(constant);
+            }
+        }
         for (int i = 0; i < r.fieldDomains.size(); ++i) {
             Variable var = (Variable) vars.get(i);
             FieldDomain fd = (FieldDomain) r.fieldDomains.get(i);
