@@ -15,7 +15,7 @@ import net.sf.javabdd.BDD;
 public class SubtypeHelper {
     private PA pa;
     private Map/*<jq_Class, Collection<jq_Class>>*/ type2subtypeCache = new HashMap();
-    private boolean TRACE = false; 
+    private boolean TRACE = true; 
 
     public SubtypeHelper(PA pa){
         this.pa = pa;
@@ -56,6 +56,7 @@ public class SubtypeHelper {
             //System.out.println("\t" + iter.next());
             String packageName = (String) iter.next();
             HashSet loaded = new HashSet();
+            if(TRACE) System.out.println("Processing package " + packageName);
             
             for(Iterator classIter = PrimordialClassLoader.loader.listPackage(packageName, true); classIter.hasNext();){
                 String className = (String) classIter.next();
