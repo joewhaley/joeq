@@ -44,12 +44,10 @@ public abstract class Throwable {
                 declaringClass = m.getDeclaringClass().getJDKName();
                 methodName = m.getName().toString();
                 //int code_offset = ip.difference(cc.getStart());
-                if (m != null) {
-                    Utf8 fn = m.getDeclaringClass().getSourceFile();
-                    if (fn != null) fileName = fn.toString();
-                    int bc_index = cc.getBytecodeIndex(ip);
-                    lineNumber = m.getLineNumber(bc_index);
-                }
+                Utf8 fn = m.getDeclaringClass().getSourceFile();
+                if (fn != null) fileName = fn.toString();
+                int bc_index = cc.getBytecodeIndex(ip);
+                lineNumber = m.getLineNumber(bc_index);
             }
         }
         return new StackTraceElement(declaringClass, methodName, fileName, lineNumber);

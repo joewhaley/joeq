@@ -116,7 +116,7 @@ public class Method extends AccessibleObject {
         if (retType == jq_Primitive.LONG) return new Long(result);
         if (retType == jq_Primitive.FLOAT) return new Float(Float.intBitsToFloat((int)result));
         if (retType == jq_Primitive.DOUBLE) return new Double(Double.longBitsToDouble(result));
-        if (retType == jq_Primitive.BOOLEAN) return new Boolean((int)result!=0);
+        if (retType == jq_Primitive.BOOLEAN) return Boolean.valueOf((int)result!=0);
         if (retType == jq_Primitive.BYTE) return new Byte((byte)result);
         if (retType == jq_Primitive.SHORT) return new Short((short)result);
         if (retType == jq_Primitive.CHAR) return new Character((char)result);

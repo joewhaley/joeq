@@ -713,7 +713,7 @@ uphere:
         if (t == jq_Primitive.BYTE) return new Byte(getfield_B(o, f));
         if (t == jq_Primitive.CHAR) return new Character(getfield_C(o, f));
         if (t == jq_Primitive.SHORT) return new Short(getfield_S(o, f));
-        if (t == jq_Primitive.BOOLEAN) return new Boolean(getfield_Z(o, f));
+        if (t == jq_Primitive.BOOLEAN) return Boolean.valueOf(getfield_Z(o, f));
         Assert.UNREACHABLE();
         return null;
     }
@@ -801,7 +801,7 @@ uphere:
     public void putfield_Z(Object o, jq_InstanceField f, boolean v) {
         Assert._assert(f.getType() == jq_Primitive.BOOLEAN);
         if (!jq.RunningNative) {
-            Reflection.obj_trav.putInstanceFieldValue(o, f, new Boolean(v));
+            Reflection.obj_trav.putInstanceFieldValue(o, f, Boolean.valueOf(v));
             return;
         }
         Assert._assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
@@ -946,7 +946,7 @@ uphere:
     public void putstatic_Z(jq_StaticField f, boolean v) {
         Assert._assert(f.getType() == jq_Primitive.BOOLEAN);
         if (!jq.RunningNative) {
-            Reflection.obj_trav.putStaticFieldValue(f, new Boolean(v));
+            Reflection.obj_trav.putStaticFieldValue(f, Boolean.valueOf(v));
             return;
         }
         f.getDeclaringClass().setStaticData(f, v?1:0);

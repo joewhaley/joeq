@@ -550,31 +550,39 @@ public abstract class Bootstrapper {
     }
 
     public static void dumpClassSet(Set s) throws IOException {
-        DataOutputStream dos = new DataOutputStream(new FileOutputStream("classlist"));
-        SortedSet ss = new TreeSet();
-        for (Iterator i = s.iterator(); i.hasNext(); ) {
-            jq_Type t = (jq_Type) i.next();
-            ss.add(t.toString());
+        DataOutputStream dos = null;
+        try {
+            dos = new DataOutputStream(new FileOutputStream("classlist"));
+            SortedSet ss = new TreeSet();
+            for (Iterator i = s.iterator(); i.hasNext(); ) {
+                jq_Type t = (jq_Type) i.next();
+                ss.add(t.toString());
+            }
+            for (Iterator i = ss.iterator(); i.hasNext(); ) {
+                String t = (String) i.next();
+                dos.writeBytes(t + "\n");
+            }
+        } finally {
+            if (dos != null) dos.close();
         }
-        for (Iterator i = ss.iterator(); i.hasNext(); ) {
-            String t = (String) i.next();
-            dos.writeBytes(t + "\n");
-        }
-        dos.close();
     }
     
     public static void dumpMethodSet(Set s) throws IOException {
-        DataOutputStream dos = new DataOutputStream(new FileOutputStream("methodlist"));
-        SortedSet ss = new TreeSet();
-        for (Iterator i = s.iterator(); i.hasNext(); ) {
-            jq_Method t = (jq_Method) i.next();
-            ss.add(t.toString());
+        DataOutputStream dos = null;
+        try {
+            dos = new DataOutputStream(new FileOutputStream("methodlist"));
+            SortedSet ss = new TreeSet();
+            for (Iterator i = s.iterator(); i.hasNext(); ) {
+                jq_Method t = (jq_Method) i.next();
+                ss.add(t.toString());
+            }
+            for (Iterator i = ss.iterator(); i.hasNext(); ) {
+                String t = (String) i.next();
+                dos.writeBytes(t + "\n");
+            }
+        } finally {
+            if (dos != null) dos.close();
         }
-        for (Iterator i = ss.iterator(); i.hasNext(); ) {
-            String t = (String) i.next();
-            dos.writeBytes(t + "\n");
-        }
-        dos.close();
     }
     
     public static void err(String s) {
