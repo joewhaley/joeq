@@ -256,7 +256,12 @@ public class BytecodeToQuad extends BytecodeVisitor {
     private void saveStackIntoRegisters() {
         for (int i=0; i<current_state.getStackSize(); ++i) {
             Operand op = current_state.peekStack(i);
-	    if (op instanceof RegisterOperand) continue;
+	    if (op instanceof AbstractState.DummyOperand) continue;
+	    if (op instanceof RegisterOperand) {
+		RegisterOperand rop = (RegisterOperand)op;
+		if (!rf.isLocal(rop, rop.getRegister().getNumber(), rop.getType()))
+		    continue;
+	    }
 	    jq_Type type = getTypeOf(op);
 	    RegisterOperand t = getStackRegister(type, i);
 	    Quad q = Move.create(quad_cfg.getNewQuadID(), Move.getMoveOp(type), t, op);
@@ -1139,7 +1144,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         super.visitZPUTFIELD(f);
         PUTFIELDhelper(f, Putfield.PUTFIELD_Z_DYNLINK.INSTANCE, Putfield.PUTFIELD_Z.INSTANCE);
     }
-    private void UNSAFEhelper(jq_Method m) {
+    private void UNSAFEhelper(jq_Method m, Invoke oper) {
         Quad q;
         if (m == Unsafe._addressOf) {
             Operand op = current_state.pop_A();
@@ -1214,7 +1219,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
             endBasicBlock = true;
         } else {
             // TODO
-            INVOKEhelper(Invoke.INVOKESTATIC_V.INSTANCE, m, jq_Primitive.VOID, false);
+            INVOKEhelper(oper, m, m.getReturnType(), false);
             return;
         }
         appendQuad(q);
@@ -1250,7 +1255,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
     public void visitIINVOKE(byte op, jq_Method f) {
         super.visitIINVOKE(op, f);
         if (f.getDeclaringClass() == Unsafe._class) {
-            UNSAFEhelper(f);
+            UNSAFEhelper(f, Invoke.INVOKESTATIC_I.INSTANCE);
             return;
         }
         Invoke oper;
@@ -1291,7 +1296,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
     public void visitLINVOKE(byte op, jq_Method f) {
         super.visitLINVOKE(op, f);
         if (f.getDeclaringClass() == Unsafe._class) {
-            UNSAFEhelper(f);
+            UNSAFEhelper(f, Invoke.INVOKESTATIC_L.INSTANCE);
             return;
         }
         Invoke oper;
@@ -1332,7 +1337,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
     public void visitFINVOKE(byte op, jq_Method f) {
         super.visitFINVOKE(op, f);
         if (f.getDeclaringClass() == Unsafe._class) {
-            UNSAFEhelper(f);
+            UNSAFEhelper(f, Invoke.INVOKESTATIC_F.INSTANCE);
             return;
         }
         Invoke oper;
@@ -1373,7 +1378,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
     public void visitDINVOKE(byte op, jq_Method f) {
         super.visitDINVOKE(op, f);
         if (f.getDeclaringClass() == Unsafe._class) {
-            UNSAFEhelper(f);
+            UNSAFEhelper(f, Invoke.INVOKESTATIC_D.INSTANCE);
             return;
         }
         Invoke oper;
@@ -1414,7 +1419,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
     public void visitAINVOKE(byte op, jq_Method f) {
         super.visitAINVOKE(op, f);
         if (f.getDeclaringClass() == Unsafe._class) {
-            UNSAFEhelper(f);
+            UNSAFEhelper(f, Invoke.INVOKESTATIC_A.INSTANCE);
             return;
         }
         Invoke oper;
@@ -1455,7 +1460,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
     public void visitVINVOKE(byte op, jq_Method f) {
         super.visitVINVOKE(op, f);
         if (f.getDeclaringClass() == Unsafe._class) {
-            UNSAFEhelper(f);
+            UNSAFEhelper(f, Invoke.INVOKESTATIC_V.INSTANCE);
             return;
         }
         Invoke oper;
@@ -1556,11 +1561,29 @@ public class BytecodeToQuad extends BytecodeVisitor {
     }
     public void visitMULTINEWARRAY(jq_Type f, char dim) {
         super.visitMULTINEWARRAY(f, dim);
-        // todo: keep track of args!
-        for (int i=0; i<dim; ++i) current_state.pop_I();
-        current_state.push_I(new IConstOperand(dim));
-        current_state.push_A(new AConstOperand(f));
-        INVOKEhelper(Invoke.INVOKESTATIC_A.INSTANCE, Allocator.HeapAllocator._multinewarray, f, false);
+	RegisterOperand result = getStackRegister(f, dim-1);
+        Quad q = Invoke.create(quad_cfg.getNewQuadID(), Invoke.INVOKESTATIC_A.INSTANCE, result, new MethodOperand(Allocator.HeapAllocator._multinewarray), dim+2);
+	RegisterOperand rop = new RegisterOperand(rf.getNewStack(current_state.getStackSize(), jq_Primitive.INT), jq_Primitive.INT);
+	Quad q2 = Move.create(quad_cfg.getNewQuadID(), Move.MOVE_I.INSTANCE, rop, new IConstOperand(dim));
+	appendQuad(q2);
+	Invoke.setParam(q, 0, rop);
+	rop = new RegisterOperand(rf.getNewStack(current_state.getStackSize()+1, jq_Type._class), jq_Type._class);
+	q2 = Move.create(quad_cfg.getNewQuadID(), Move.MOVE_A.INSTANCE, rop, new AConstOperand(f));
+	appendQuad(q2);
+	Invoke.setParam(q, 1, rop);
+        for (int i=0; i<dim; ++i) {
+	    Operand op = current_state.pop_I();
+	    if (op instanceof RegisterOperand) rop = (RegisterOperand)op;
+            else {
+                rop = getStackRegister(jq_Primitive.INT);
+                q2 = Move.create(quad_cfg.getNewQuadID(), Move.MOVE_I.INSTANCE, rop, op);
+                appendQuad(q2);
+            }
+	    Invoke.setParam(q, i+2, rop);
+	}
+        appendQuad(q);
+	mergeStateWithAllExHandlers(false);
+        current_state.push(result, f);
     }
 
     public static final boolean ELIM_NULL_CHECKS = false;
