@@ -139,7 +139,8 @@ public class GenerateWebRoots {
             try {
                 Class c = Class.forName(listener);
                 Class httpSessionListener = Class.forName("javax.servlet.http.HttpSessionListener");
-                if(c.isAssignableFrom(httpSessionListener)){
+                Class servletContextListener = Class.forName("javax.servlet.ServletContextListener");
+                if(httpSessionListener.isAssignableFrom(c) || servletContextListener.isAssignableFrom(c)){
                     out.println("\t\t// " + ++count + ". " + listener);
                     out.println("\t\ttry {");
                     out.println("\t\t\tHttpSessionListener listener = new " + listener + "();");
@@ -153,7 +154,7 @@ public class GenerateWebRoots {
                 e.printStackTrace();
             }
         }
-        out.println("    }\n\n");
+        out.println("\t}\n\n");
     }
     
     private static void printPreamble() {
