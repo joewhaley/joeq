@@ -3182,7 +3182,7 @@ public class PA {
             saveReflectionStats();
         }
         if(FORNAME_STAT){
-            saveReflectionStats();
+            saveForNameStats();
         }
         //initializeForNameMapEntries();
 
@@ -3266,8 +3266,8 @@ public class PA {
                 BDD callees = IE.relprod(i, Iset);
                 if(!callees.isZero()){
                     w.println("[" + pos + "]\t" + mc.toStringLong() + ": " + 
-                        //(callees.satCount(Mset)==1 ? "UNRESOLVED":""));
-                        (unresolvedCalls.contains(mc) ? "UNRESOLVED":""));
+                        (callees.satCount(Mset)==1 ? "UNRESOLVED":""));
+                        //(unresolvedCalls.contains(mc) ? "UNRESOLVED":""));
                     for(Iterator iter2 = callees.iterator(Mset); iter2.hasNext();){
                         BDD callee = (BDD)iter2.next();
                         
