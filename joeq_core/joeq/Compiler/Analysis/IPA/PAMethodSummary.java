@@ -270,6 +270,12 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
                                         listOp.get(0).setType(replacement.getDeclaringClass());
                                     }
                                 }
+                            }else{
+                                System.err.println(
+                                    "Operand " + 
+                                    q.getAllOperands().getOperand(base) +
+                                  " of " + mc.toStringLong() +
+                                  " is not of the right type: " + q.getAllOperands().getOperand(base).getClass());                                
                             }
                         }
                     }
