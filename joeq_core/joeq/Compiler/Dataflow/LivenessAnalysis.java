@@ -96,28 +96,28 @@ public class LivenessAnalysis extends Problem {
     }
 
     /* (non-Javadoc)
-     * @see Compiler.Dataflow.Problem#direction()
+     * @see joeq.Compiler.Dataflow.Problem#direction()
      */
     public boolean direction() {
         return false;
     }
 
     /* (non-Javadoc)
-     * @see Compiler.Dataflow.Problem#boundary()
+     * @see joeq.Compiler.Dataflow.Problem#boundary()
      */
     public Fact boundary() {
         return emptySet;
     }
 
     /* (non-Javadoc)
-     * @see Compiler.Dataflow.Problem#interior()
+     * @see joeq.Compiler.Dataflow.Problem#interior()
      */
     public Fact interior() {
         return emptySet;
     }
 
     /* (non-Javadoc)
-     * @see Compiler.Dataflow.Problem#getTransferFunction(java.lang.Object)
+     * @see joeq.Compiler.Dataflow.Problem#getTransferFunction(java.lang.Object)
      */
     public TransferFunction getTransferFunction(Object e) {
         TransferFunction tf = (TransferFunction) transferFunctions.get(e);

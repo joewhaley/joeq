@@ -12,7 +12,7 @@ import joeq.Compiler.Quad.Quad;
  * This is a definition in the SSA sense, meaning it's unique. The meaning of the 
  * definition is affected by the underlying location.
  * 
- * @see Compiler.Analysis.IPSSA.SSALocation
+ * @see joeq.Compiler.Analysis.IPSSA.SSALocation
  * @version $Id$  
  * */
 public class SSADefinition {

@@ -2032,7 +2032,7 @@ public class CSPAResults {
         Set dom;
         
         /**
-         * @param vP
+         * @param bdd
          * @param domains
          */
         public TypedBDD(BDD bdd, BDDDomain[] domains) {

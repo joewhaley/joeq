@@ -1720,21 +1720,21 @@ public class PAResults implements PointerAnalysisResults {
     }
 
     /* (non-Javadoc)
-     * @see Compiler.Analysis.IPA.PointerAnalysisResults#getAliases(Class.jq_Method, Compiler.Analysis.IPA.SSALocation)
+     * @see joeq.Compiler.Analysis.IPA.PointerAnalysisResults#getAliases(joeq.Class.jq_Method, joeq.Compiler.Analysis.IPA.SSALocation)
      */
     public Set/*<ContextSet.ContextLocationPair>*/ getAliases(jq_Method method, SSALocation loc) {
         return Collections.EMPTY_SET;
     }
 
     /* (non-Javadoc)
-     * @see Compiler.Analysis.IPA.PointerAnalysisResults#hasAliases(Class.jq_Method, Compiler.Analysis.IPA.SSALocation, Compiler.Analysis.IPA.ContextSet)
+     * @see joeq.Compiler.Analysis.IPA.PointerAnalysisResults#hasAliases(joeq.Class.jq_Method, Compiler.Analysis.IPA.SSALocation, joeq.Compiler.Analysis.IPA.ContextSet)
      */
     public boolean hasAliases(jq_Method method, SSALocation loc, ContextSet contextSet) {
         return false;
     }
 
     /* (non-Javadoc)
-     * @see Compiler.Analysis.IPA.PointerAnalysisResults#hasAliases(Class.jq_Method, Compiler.Analysis.IPA.SSALocation)
+     * @see joeq.Compiler.Analysis.IPA.PointerAnalysisResults#hasAliases(joeq.Class.jq_Method, Compiler.Analysis.IPA.SSALocation)
      */
     public boolean hasAliases(jq_Method method, SSALocation loc) {
         return false;

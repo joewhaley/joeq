@@ -7,8 +7,6 @@ import java.io.FilterOutputStream;
 import java.io.IOException;
 
 /**
- * @author Godmar Back <gback@cs.utah.edu, @stanford.edu>
- *
  * ANSIColorStream provides ANSI-color streams.
  *
  * Comes in handy when outputting to a terminal, simply use
@@ -16,7 +14,8 @@ import java.io.IOException;
  *
  * Set ANSIColorStream.OFF to true to turn this off.
  *
- * @see ANSIColorStream#OFF
+ * @see joeq.Util.IO.ANSIColorStream#OFF
+ * @author Godmar Back <gback@cs.utah.edu, @stanford.edu>
  */
 public class ANSIColorStream extends PrintStream {
     public static boolean OFF = false;

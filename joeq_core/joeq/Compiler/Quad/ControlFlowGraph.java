@@ -425,14 +425,14 @@ public class ControlFlowGraph implements Graph {
     }
 
     /* (non-Javadoc)
-     * @see Util.Graphs.Graph#getRoots()
+     * @see joeq.Util.Graphs.Graph#getRoots()
      */
     public Collection getRoots() {
         return Collections.singleton(start_node);
     }
 
     /* (non-Javadoc)
-     * @see Util.Graphs.Graph#getNavigator()
+     * @see joeq.Util.Graphs.Graph#getNavigator()
      */
     public Navigator getNavigator() {
         return new ControlFlowGraphNavigator(this);

@@ -13,8 +13,8 @@ import joeq.Compiler.Quad.RegisterFactory;
 
 /**
  * @author V.Benjamin Livshits
- * @see Compiler.Analysis.IPSSA.SSADefinition
- * @see Compiler.Analysis.IPSSA.SSABinding
+ * @see joeq.Compiler.Analysis.IPSSA.SSADefinition
+ * @see joeq.Compiler.Analysis.IPSSA.SSABinding
  * @version $Id$
  */
 public interface SSALocation {

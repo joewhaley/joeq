@@ -13,7 +13,7 @@ import joeq.Util.Assert;
 
 /**
  * The RHS of a binding. Has multiple subclasses.
- * @see Compiler.Analysis.IPSSA.SSADefinition
+ * @see joeq.Compiler.Analysis.IPSSA.SSADefinition
  * @version $Id$
  * */
 public abstract class  SSAValue {

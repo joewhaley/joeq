@@ -18,12 +18,12 @@ public abstract class BitVectorFact implements Fact {
     }
 
     /* (non-Javadoc)
-     * @see Compiler.Dataflow.Fact#merge(Compiler.Dataflow.Fact)
+     * @see joeq.Compiler.Dataflow.Fact#merge(Compiler.Dataflow.Fact)
      */
     public abstract Fact merge(Fact that);
     
     /* (non-Javadoc)
-     * @see Compiler.Dataflow.Fact#equals(Compiler.Dataflow.Fact)
+     * @see joeq.Compiler.Dataflow.Fact#equals(Compiler.Dataflow.Fact)
      */
     public boolean equals(Fact that) {
         return this.fact.equals(((BitVectorFact) that).fact);

@@ -44,14 +44,14 @@ public class HashWorklist extends AbstractList implements Worklist, Set {
     }
 
     /* (non-Javadoc)
-     * @see Util.Collections.Worklist#push(java.lang.Object)
+     * @see joeq.Util.Collections.Worklist#push(java.lang.Object)
      */
     public void push(Object item) {
         add(item);
     }
 
     /* (non-Javadoc)
-     * @see Util.Collections.Worklist#pull()
+     * @see joeq.Util.Collections.Worklist#pull()
      */
     public Object pull() {
         Object o = list.remove(0);

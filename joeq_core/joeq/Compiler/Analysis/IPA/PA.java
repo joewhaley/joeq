@@ -2943,7 +2943,7 @@ public class PA {
         }
         
         /* (non-Javadoc)
-         * @see Util.Graphs.PathNumbering.Selector#isImportant(Util.Graphs.SCComponent, Util.Graphs.SCComponent)
+         * @see joeq.Util.Graphs.PathNumbering.Selector#isImportant(joeq.Util.Graphs.SCComponent, Util.Graphs.SCComponent)
          */
         public boolean isImportant(SCComponent scc1, SCComponent scc2, BigInteger num) {
             if (num.bitLength() > maxBits) return false;
@@ -3000,7 +3000,7 @@ public class PA {
         }
         
         /* (non-Javadoc)
-         * @see Util.Graphs.PathNumbering.Selector#isImportant(Util.Graphs.SCComponent, Util.Graphs.SCComponent)
+         * @see joeq.Util.Graphs.PathNumbering.Selector#isImportant(joeq.Util.Graphs.SCComponent, joeq.Util.Graphs.SCComponent)
          */
         public boolean isImportant(SCComponent scc1, SCComponent scc2, BigInteger num) {
             if (num.bitLength() > MAX_HC_BITS) return false;
@@ -3049,7 +3049,7 @@ public class PA {
         }
         
         /* (non-Javadoc)
-         * @see Util.Graphs.PathNumbering.Selector#isImportant(Util.Graphs.SCComponent, Util.Graphs.SCComponent)
+         * @see joeq.Util.Graphs.PathNumbering.Selector#isImportant(joeq.Util.Graphs.SCComponent, joeq.Util.Graphs.SCComponent)
          */
         public boolean isImportant(SCComponent scc1, SCComponent scc2, BigInteger num) {
             Set s = scc2.nodeSet();

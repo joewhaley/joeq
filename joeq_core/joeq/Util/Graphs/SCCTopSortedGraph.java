@@ -126,7 +126,7 @@ public class SCCTopSortedGraph implements Graph, Serializable {
     }
 
     /* (non-Javadoc)
-     * @see Util.Graphs.Graph#getRoots()
+     * @see joeq.Util.Graphs.Graph#getRoots()
      */
     public Collection getRoots() {
         // Assumes single root.
@@ -134,7 +134,7 @@ public class SCCTopSortedGraph implements Graph, Serializable {
     }
 
     /* (non-Javadoc)
-     * @see Util.Graphs.Graph#getNavigator()
+     * @see joeq.Util.Graphs.Graph#getNavigator()
      */
     public Navigator getNavigator() {
         return SCComponent.SCC_NAVIGATOR;

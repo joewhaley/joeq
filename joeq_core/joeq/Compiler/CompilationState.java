@@ -66,7 +66,7 @@ public abstract class CompilationState implements CompilationConstants {
     public static class StaticCompilation extends CompilationState {
 
         /* (non-Javadoc)
-         * @see Compiler.CompilationState#needsDynamicLink(Class.jq_Method, Class.jq_Member)
+         * @see joeq.Compiler.CompilationState#needsDynamicLink(Class.jq_Method, Class.jq_Member)
          */
         public boolean needsDynamicLink(jq_Method method, jq_Member member) {
             if (member.isPrepared()) return false;
@@ -75,7 +75,7 @@ public abstract class CompilationState implements CompilationConstants {
         }
 
         /* (non-Javadoc)
-         * @see Compiler.CompilationState#needsDynamicLink(Class.jq_Method, Class.jq_Type)
+         * @see joeq.Compiler.CompilationState#needsDynamicLink(Class.jq_Method, Class.jq_Type)
          */
         public boolean needsDynamicLink(jq_Method method, jq_Type type) {
             type.prepare();
@@ -83,7 +83,7 @@ public abstract class CompilationState implements CompilationConstants {
         }
 
         /* (non-Javadoc)
-         * @see Compiler.CompilationState#tryResolve(Class.jq_Member)
+         * @see joeq.Compiler.CompilationState#tryResolve(Class.jq_Member)
          */
         public jq_Member tryResolve(jq_Member m) {
             try {
@@ -93,14 +93,14 @@ public abstract class CompilationState implements CompilationConstants {
         }
 
         /* (non-Javadoc)
-         * @see Compiler.CompilationState#resolve(Class.jq_Member)
+         * @see joeq.Compiler.CompilationState#resolve(Class.jq_Member)
          */
         public jq_Member resolve(jq_Member m) {
             return m.resolve();
         }
 
         /* (non-Javadoc)
-         * @see Compiler.CompilationState#isSubtype(Class.jq_Type, Class.jq_Type)
+         * @see joeq.Compiler.CompilationState#isSubtype(Class.jq_Type, Class.jq_Type)
          */
         public byte isSubtype(jq_Type t1, jq_Type t2) {
             t1.prepare(); t2.prepare();
@@ -108,21 +108,21 @@ public abstract class CompilationState implements CompilationConstants {
         }
 
         /* (non-Javadoc)
-         * @see Compiler.CompilationState#findCommonSuperclass(Class.jq_Type, Class.jq_Type)
+         * @see joeq.Compiler.CompilationState#findCommonSuperclass(Class.jq_Type, Class.jq_Type)
          */
         public jq_Type findCommonSuperclass(jq_Type t1, jq_Type t2) {
             return TypeCheck.findCommonSuperclass(t1, t2, true);
         }
 
         /* (non-Javadoc)
-         * @see Compiler.CompilationState#declaresInterface(Class.jq_Class, java.util.Collection)
+         * @see joeq.Compiler.CompilationState#declaresInterface(Class.jq_Class, java.util.Collection)
          */
         public byte declaresInterface(jq_Class klass, Collection interfaces) {
             return TypeCheck.declaresInterface(klass, interfaces, true);
         }
 
         /* (non-Javadoc)
-         * @see Compiler.CompilationState#implementsInterface(Class.jq_Class, Class.jq_Class)
+         * @see joeq.Compiler.CompilationState#implementsInterface(Class.jq_Class, Class.jq_Class)
          */
         public byte implementsInterface(jq_Class klass, jq_Class inter) {
             klass.prepare();
@@ -131,7 +131,7 @@ public abstract class CompilationState implements CompilationConstants {
         }
 
         /* (non-Javadoc)
-         * @see Compiler.CompilationState#getOrCreateType(UTF.Utf8)
+         * @see joeq.Compiler.CompilationState#getOrCreateType(UTF.Utf8)
          */
         public jq_Type getOrCreateType(Utf8 desc) {
             return PrimordialClassLoader.loader.getOrCreateBSType(desc);
@@ -141,7 +141,7 @@ public abstract class CompilationState implements CompilationConstants {
         public static boolean ASSUME_CORRECT_EXCEPTIONS = true;
 
         /* (non-Javadoc)
-         * @see Compiler.CompilationState#getThrownExceptions(Quad)
+         * @see joeq.Compiler.CompilationState#getThrownExceptions(Quad)
          */
         public List.jq_Class getThrownExceptions(Quad q) {
             if (q.getOperator() == CheckCast.CHECKCAST.INSTANCE) {
@@ -198,7 +198,7 @@ public abstract class CompilationState implements CompilationConstants {
         }
 
         /* (non-Javadoc)
-         * @see Compiler.CompilationState#needsDynamicLink(Class.jq_Method, Class.jq_Member)
+         * @see joeq.Compiler.CompilationState#needsDynamicLink(Class.jq_Method, Class.jq_Member)
          */
         public boolean needsDynamicLink(jq_Method method, jq_Member member) {
             if (member.isPrepared()) return false;
@@ -207,7 +207,7 @@ public abstract class CompilationState implements CompilationConstants {
         }
 
         /* (non-Javadoc)
-         * @see Compiler.CompilationState#needsDynamicLink(Class.jq_Method, Class.jq_Type)
+         * @see joeq.Compiler.CompilationState#needsDynamicLink(Class.jq_Method, Class.jq_Type)
          */
         public boolean needsDynamicLink(jq_Method method, jq_Type type) {
             if (type.isPrepared()) return false;
@@ -216,7 +216,7 @@ public abstract class CompilationState implements CompilationConstants {
         }
 
         /* (non-Javadoc)
-         * @see Compiler.CompilationState#tryResolve(Class.jq_Member)
+         * @see joeq.Compiler.CompilationState#tryResolve(Class.jq_Member)
          */
         public jq_Member tryResolve(jq_Member m) {
             try {
@@ -226,42 +226,42 @@ public abstract class CompilationState implements CompilationConstants {
         }
 
         /* (non-Javadoc)
-         * @see Compiler.CompilationState#resolve(Class.jq_Member)
+         * @see joeq.Compiler.CompilationState#resolve(Class.jq_Member)
          */
         public jq_Member resolve(jq_Member m) {
             return m.resolve();
         }
 
         /* (non-Javadoc)
-         * @see Compiler.CompilationState#isSubtype(Class.jq_Type, Class.jq_Type)
+         * @see joeq.Compiler.CompilationState#isSubtype(Class.jq_Type, Class.jq_Type)
          */
         public byte isSubtype(jq_Type t1, jq_Type t2) {
             return TypeCheck.isAssignable_noload(t1, t2);
         }
 
         /* (non-Javadoc)
-         * @see Compiler.CompilationState#findCommonSuperclass(Class.jq_Type, Class.jq_Type)
+         * @see joeq.Compiler.CompilationState#findCommonSuperclass(Class.jq_Type, Class.jq_Type)
          */
         public jq_Type findCommonSuperclass(jq_Type t1, jq_Type t2) {
             return TypeCheck.findCommonSuperclass(t1, t2, false);
         }
 
         /* (non-Javadoc)
-         * @see Compiler.CompilationState#declaresInterface(Class.jq_Class, java.util.Collection)
+         * @see joeq.Compiler.CompilationState#declaresInterface(Class.jq_Class, java.util.Collection)
          */
         public byte declaresInterface(jq_Class klass, Collection interfaces) {
             return TypeCheck.declaresInterface(klass, interfaces, false);
         }
 
         /* (non-Javadoc)
-         * @see Compiler.CompilationState#implementsInterface(Class.jq_Class, Class.jq_Class)
+         * @see joeq.Compiler.CompilationState#implementsInterface(Class.jq_Class, Class.jq_Class)
          */
         public byte implementsInterface(jq_Class klass, jq_Class inter) {
             return TypeCheck.implementsInterface_noload(klass, inter);
         }
 
         /* (non-Javadoc)
-         * @see Compiler.CompilationState#getOrCreateType(UTF.Utf8)
+         * @see joeq.Compiler.CompilationState#getOrCreateType(UTF.Utf8)
          */
         public jq_Type getOrCreateType(Utf8 desc) {
             return PrimordialClassLoader.loader.getOrCreateBSType(desc);
@@ -272,7 +272,7 @@ public abstract class CompilationState implements CompilationConstants {
     public static class DynamicCompilation extends CompilationState {
 
         /* (non-Javadoc)
-         * @see Compiler.CompilationState#needsDynamicLink(Class.jq_Method, Class.jq_Member)
+         * @see joeq.Compiler.CompilationState#needsDynamicLink(Class.jq_Method, Class.jq_Member)
          */
         public boolean needsDynamicLink(jq_Method method, jq_Member member) {
             if (member.isStatic() &&
@@ -285,7 +285,7 @@ public abstract class CompilationState implements CompilationConstants {
         }
 
         /* (non-Javadoc)
-         * @see Compiler.CompilationState#needsDynamicLink(Class.jq_Method, Class.jq_Type)
+         * @see joeq.Compiler.CompilationState#needsDynamicLink(Class.jq_Method, Class.jq_Type)
          */
         public boolean needsDynamicLink(jq_Method method, jq_Type type) {
             return method.getDeclaringClass() != type &&
@@ -293,7 +293,7 @@ public abstract class CompilationState implements CompilationConstants {
         }
 
         /* (non-Javadoc)
-         * @see Compiler.CompilationState#tryResolve(Class.jq_Member)
+         * @see joeq.Compiler.CompilationState#tryResolve(Class.jq_Member)
          */
         public jq_Member tryResolve(jq_Member m) {
             if (m.getDeclaringClass().isPrepared()) {
@@ -305,7 +305,7 @@ public abstract class CompilationState implements CompilationConstants {
         }
 
         /* (non-Javadoc)
-         * @see Compiler.CompilationState#resolve(Class.jq_Member)
+         * @see joeq.Compiler.CompilationState#resolve(Class.jq_Member)
          */
         public jq_Member resolve(jq_Member m) {
             try {
@@ -315,35 +315,35 @@ public abstract class CompilationState implements CompilationConstants {
         }
 
         /* (non-Javadoc)
-         * @see Compiler.CompilationState#isSubtype(Class.jq_Type, Class.jq_Type)
+         * @see joeq.Compiler.CompilationState#isSubtype(Class.jq_Type, Class.jq_Type)
          */
         public byte isSubtype(jq_Type t1, jq_Type t2) {
             return TypeCheck.isAssignable_noload(t1, t2);
         }
 
         /* (non-Javadoc)
-         * @see Compiler.CompilationState#findCommonSuperclass(Class.jq_Type, Class.jq_Type)
+         * @see joeq.Compiler.CompilationState#findCommonSuperclass(Class.jq_Type, Class.jq_Type)
          */
         public jq_Type findCommonSuperclass(jq_Type t1, jq_Type t2) {
             return TypeCheck.findCommonSuperclass(t1, t2, false);
         }
 
         /* (non-Javadoc)
-         * @see Compiler.CompilationState#declaresInterface(Class.jq_Class, java.util.Collection)
+         * @see joeq.Compiler.CompilationState#declaresInterface(Class.jq_Class, java.util.Collection)
          */
         public byte declaresInterface(jq_Class klass, Collection interfaces) {
             return TypeCheck.declaresInterface(klass, interfaces, false);
         }
 
         /* (non-Javadoc)
-         * @see Compiler.CompilationState#implementsInterface(Class.jq_Class, Class.jq_Class)
+         * @see joeq.Compiler.CompilationState#implementsInterface(Class.jq_Class, Class.jq_Class)
          */
         public byte implementsInterface(jq_Class klass, jq_Class inter) {
             return TypeCheck.implementsInterface_noload(klass, inter);
         }
 
         /* (non-Javadoc)
-         * @see Compiler.CompilationState#getOrCreateType(UTF.Utf8)
+         * @see joeq.Compiler.CompilationState#getOrCreateType(UTF.Utf8)
          */
         public jq_Type getOrCreateType(Utf8 desc) {
             return PrimordialClassLoader.loader.getOrCreateBSType(desc);

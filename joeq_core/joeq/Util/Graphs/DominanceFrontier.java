@@ -102,7 +102,7 @@ public class DominanceFrontier {
      * a dominator is the union of the dominance frontiers of its children and those 
      * immediate children in the graph that it doesn't dominate, the first
      * have been calculated already and the last can be computed directly.
-     * @see Dominators
+     * @see joeq.Util.Graphs.Dominators
      */
     private void computeDominanceFrontier() {
         LinkedList wl = new LinkedList();

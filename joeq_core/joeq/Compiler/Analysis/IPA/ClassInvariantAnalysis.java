@@ -82,7 +82,7 @@ public class ClassInvariantAnalysis
         CallGraph cg;
 
         /**
-         * @see Util.Graphs.Navigator#next(java.lang.Object)
+         * @see joeq.Util.Graphs.Navigator#next(java.lang.Object)
          */
         public Collection next(Object node) {
             jq_Method caller = (jq_Method) node;
@@ -98,7 +98,7 @@ public class ClassInvariantAnalysis
         }
 
         /**
-         * @see Util.Graphs.Navigator#prev(java.lang.Object)
+         * @see joeq.Util.Graphs.Navigator#prev(java.lang.Object)
          */
         public Collection prev(Object node) {
             jq_Method callee = (jq_Method) node;
@@ -209,7 +209,7 @@ public class ClassInvariantAnalysis
     }
 
     /* (non-Javadoc)
-     * @see Class.jq_TypeVisitor#visitClass(Class.jq_Class)
+     * @see joeq.Class.jq_TypeVisitor#visitClass(joeq.Class.jq_Class)
      */
     public void visitClass(jq_Class c) {
         this.initialize(c);
@@ -221,17 +221,17 @@ public class ClassInvariantAnalysis
     }
 
     /* (non-Javadoc)
-     * @see Class.jq_TypeVisitor#visitArray(Class.jq_Array)
+     * @see joeq.Class.jq_TypeVisitor#visitArray(joeq.Class.jq_Array)
      */
     public void visitArray(jq_Array m) {}
 
     /* (non-Javadoc)
-     * @see Class.jq_TypeVisitor#visitPrimitive(Class.jq_Primitive)
+     * @see joeq.Class.jq_TypeVisitor#visitPrimitive(joeq.Class.jq_Primitive)
      */
     public void visitPrimitive(jq_Primitive m) {}
 
     /* (non-Javadoc)
-     * @see Class.jq_TypeVisitor#visitType(Class.jq_Type)
+     * @see joeq.Class.jq_TypeVisitor#visitType(joeq.Class.jq_Type)
      */
     public void visitType(jq_Type m) {}
 

@@ -6,9 +6,7 @@ package joeq.Compiler.Quad;
 import java.util.Iterator;
 import java.util.List;
 
-import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
-import joeq.Class.jq_Primitive;
 import joeq.Main.Helper;
 import joeq.Runtime.Reflection;
 

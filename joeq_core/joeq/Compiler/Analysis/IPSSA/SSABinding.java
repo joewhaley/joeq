@@ -5,8 +5,8 @@ import joeq.Compiler.Quad.Quad;
 /**
  * An SSABinding is an assignment of an SSAValue to to an SSADefinition.
  * @see SSADefinition
- * @see Compiler.Analysis.IPSSA.SSAValue
- * @see Compiler.Analysis.IPSSA.SSADefinition
+ * @see joeq.Compiler.Analysis.IPSSA.SSAValue
+ * @see joeq.Compiler.Analysis.IPSSA.SSADefinition
  * @version $Id$
  * */
 public class SSABinding {

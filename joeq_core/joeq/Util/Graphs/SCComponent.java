@@ -539,7 +539,7 @@ public final class SCComponent implements Comparable, Serializable, Textualizabl
     }
 
     /* (non-Javadoc)
-     * @see Util.IO.Textualizable#addEdge(java.lang.String, Util.IO.Textualizable)
+     * @see joeq.Util.IO.Textualizable#addEdge(java.lang.String, Util.IO.Textualizable)
      */
     public void addEdge(String edge, Textualizable t) {
     }

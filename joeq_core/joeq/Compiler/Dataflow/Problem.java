@@ -15,7 +15,7 @@ public abstract class Problem {
 
     /** Performs necessary initialization for this dataflow problem.
      * 
-     * @param cfg graph of locations that we will run over
+     * @param g graph of locations that we will run over
      */
     public void initialize(Graph g) {}
 

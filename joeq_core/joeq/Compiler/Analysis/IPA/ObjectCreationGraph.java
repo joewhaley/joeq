@@ -61,14 +61,14 @@ public class ObjectCreationGraph extends QuadVisitor.EmptyVisitor
     class Nav implements Navigator {
 
         /* (non-Javadoc)
-         * @see Util.Graphs.Navigator#next(java.lang.Object)
+         * @see joeq.Util.Graphs.Navigator#next(java.lang.Object)
          */
         public Collection next(Object node) {
             return succ.getValues(node);
         }
 
         /* (non-Javadoc)
-         * @see Util.Graphs.Navigator#prev(java.lang.Object)
+         * @see joeq.Util.Graphs.Navigator#prev(java.lang.Object)
          */
         public Collection prev(Object node) {
             return pred.getValues(node);
@@ -77,7 +77,7 @@ public class ObjectCreationGraph extends QuadVisitor.EmptyVisitor
     }
     
     /* (non-Javadoc)
-     * @see Util.Graphs.Graph#getRoots()
+     * @see joeq.Util.Graphs.Graph#getRoots()
      */
     public Collection getRoots() {
         HashSet set = new HashSet();
@@ -99,7 +99,7 @@ public class ObjectCreationGraph extends QuadVisitor.EmptyVisitor
     }
 
     /* (non-Javadoc)
-     * @see Util.Graphs.Graph#getNavigator()
+     * @see joeq.Util.Graphs.Graph#getNavigator()
      */
     public Navigator getNavigator() {
         return new Nav();
@@ -126,7 +126,7 @@ public class ObjectCreationGraph extends QuadVisitor.EmptyVisitor
     }
     
     /* (non-Javadoc)
-     * @see Compiler.Quad.ControlFlowGraphVisitor#visitCFG(Compiler.Quad.ControlFlowGraph)
+     * @see joeq.Compiler.Quad.ControlFlowGraphVisitor#visitCFG(joeq.Compiler.Quad.ControlFlowGraph)
      */
     public void visitCFG(ControlFlowGraph cfg) {
         currentMethod = cfg.getMethod();
@@ -135,14 +135,14 @@ public class ObjectCreationGraph extends QuadVisitor.EmptyVisitor
     
 
     /* (non-Javadoc)
-     * @see Compiler.Quad.BasicBlockVisitor#visitBasicBlock(Compiler.Quad.BasicBlock)
+     * @see joeq.Compiler.Quad.BasicBlockVisitor#visitBasicBlock(joeq.Compiler.Quad.BasicBlock)
      */
     public void visitBasicBlock(BasicBlock bb) {
         bb.visitQuads(this);
     }
     
     /* (non-Javadoc)
-     * @see Compiler.Quad.QuadVisitor#visitNew(Compiler.Quad.Quad)
+     * @see joeq.Compiler.Quad.QuadVisitor#visitNew(joeq.Compiler.Quad.Quad)
      */
     public void visitNew(Quad obj) {
         jq_Reference c1, c2;
@@ -157,7 +157,7 @@ public class ObjectCreationGraph extends QuadVisitor.EmptyVisitor
     }
     
     /* (non-Javadoc)
-     * @see Compiler.Quad.QuadVisitor#visitNew(Compiler.Quad.Quad)
+     * @see joeq.Compiler.Quad.QuadVisitor#visitNew(joeq.Compiler.Quad.Quad)
      */
     public void visitNewArray(Quad obj) {
         jq_Reference c1, c2;

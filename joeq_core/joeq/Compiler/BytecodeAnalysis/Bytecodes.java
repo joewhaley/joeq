@@ -101,7 +101,7 @@ public interface Bytecodes {
       * is not copied correctly (only basic types are). This also applies for
       * `Select' instructions with their multiple branch targets.
       *
-      * @see Bytecodes.BranchInstruction
+      * @see joeq.Compiler.BytecodeAnalysis.Bytecodes.BranchInstruction
       * @return (shallow) copy of an instruction
       */
      public Instruction copy() {
@@ -124,7 +124,7 @@ public interface Bytecodes {
      /**
       * Read needed data (e.g. index) from file.
       *
-      * @param klass class file that we are reading
+      * @param cp constant pool of class we are reading
       * @param bytes byte sequence to read from
       * @param wide "wide" instruction flag
       */
@@ -134,7 +134,8 @@ public interface Bytecodes {
       * Read an instruction from (byte code) input stream and return the
       * appropiate object.
       *
-      * @param file file to read from
+      * @param cp constant pool of class we are reading from
+      * @param bytes sequence of bytes to read
       * @return instruction object being read
       */
      public static final Instruction readInstruction(jq_ConstantPool cp, ByteSequence bytes) throws IOException {
@@ -567,7 +568,6 @@ public interface Bytecodes {
       *
       * @param ihs array of instruction handles, i.e. il.getInstructionHandles()
       * @param pos array of positions corresponding to ihs, i.e. il.getInstructionPositions()
-      * @param count length of arrays
       * @param target target position to search for
       * @return target position's instruction handle if available
       */
@@ -897,8 +897,8 @@ public interface Bytecodes {
       * Insert another list before Instruction handle ih contained in this list.
       * Consumes argument list, i.e., it becomes empty.
       *
-      * @param i  where to append the instruction list
-      * @param il Instruction list to insert
+      * @param ih where to append the instruction list
+      * @param il instruction list to insert
       * @return instruction handle of the first inserted instruction
       */
      public InstructionHandle insert(InstructionHandle ih, InstructionList il) {
@@ -2302,7 +2302,7 @@ public interface Bytecodes {
      CHECKCAST() {}
      
      /** Check whether object is of given type
-      * @param n index to class in constant pool
+      * @param f type to check
       */
      public CHECKCAST(jq_Type f) {
          super(jq_ClassFileConstants.jbc_CHECKCAST, f);
@@ -6421,7 +6421,6 @@ public interface Bytecodes {
      /**
       * This constructor also applies for values of type short, char, byte
       *
-      * @param cp Constant pool
       * @param value to be pushed
       */
      public PUSH(int value) {
@@ -6439,7 +6438,6 @@ public interface Bytecodes {
      }
      
      /**
-      * @param cp Constant pool
       * @param value to be pushed
       */
      public PUSH(boolean value) {
@@ -6447,7 +6445,6 @@ public interface Bytecodes {
      }
      
      /**
-      * @param cp Constant pool
       * @param value to be pushed
       */
      public PUSH(float value) {
@@ -6465,7 +6462,6 @@ public interface Bytecodes {
      }
      
      /**
-      * @param cp Constant pool
       * @param value to be pushed
       */
      public PUSH(long value) {
@@ -6481,7 +6477,6 @@ public interface Bytecodes {
      }
      
      /**
-      * @param cp Constant pool
       * @param value to be pushed
       */
      public PUSH(double value) {
@@ -6497,7 +6492,6 @@ public interface Bytecodes {
      }
      
      /**
-      * @param cp Constant pool
       * @param value to be pushed
       */
      public PUSH(jq_ConstantPool.ConstantPoolRebuilder cpr, String value) {
@@ -6510,7 +6504,6 @@ public interface Bytecodes {
      }
      
      /**
-      * @param cp Constant pool
       * @param value to be pushed
       */
      public PUSH(Number value) {
@@ -6527,7 +6520,6 @@ public interface Bytecodes {
      }
      
      /**
-      * @param cp Constant pool
       * @param value to be pushed
       */
      public PUSH(Character value) {
@@ -6535,7 +6527,6 @@ public interface Bytecodes {
      }
      
      /**
-      * @param cp Constant pool
       * @param value to be pushed
       */
      public PUSH(Boolean value) {
@@ -7266,8 +7257,8 @@ public interface Bytecodes {
       */
      BranchInstruction() {}
      
-     /** Common super constructor
-      * @param opcodee Instruction opcode
+     /** Common super constructor.
+      * @param opcode instruction opcode
       * @param target instruction to branch to
       */
      protected BranchInstruction(short opcode, InstructionHandle target) {
@@ -7368,7 +7359,7 @@ public interface Bytecodes {
       *
       * @param bytes input stream
       * @param wide wide prefix?
-      * @see Bytecodes.InstructionList
+      * @see joeq.Compiler.BytecodeAnalysis.Bytecodes.InstructionList
       */
      protected void initFromFile(jq_ConstantPool cp, ByteSequence bytes, boolean wide) throws IOException {
          length = 3;
@@ -7490,7 +7481,8 @@ public interface Bytecodes {
      CPInstruction() {}
      
      /**
-      * @param object referred to in constant pool
+      * @param opcode instruction opcode
+      * @param o referred to in constant pool
       */
      protected CPInstruction(short opcode, Object o) {
          super(opcode, (short)3);
@@ -7546,7 +7538,7 @@ public interface Bytecodes {
      
      /**
       * Set the index to constant pool.
-      * @param index in  constant pool.
+      * @param cpr constant pool rebuilder
       */
      public void setIndex(jq_ConstantPool.ConstantPoolRebuilder cpr) {
          this.index = cpr.get(o);
@@ -7583,7 +7575,8 @@ public interface Bytecodes {
      FieldInstruction() {}
      
      /**
-      * @param index to constant pool
+      * @param opcode instruction opcode
+      * @param f field
       */
      protected FieldInstruction(short opcode, jq_Field f) {
          super(opcode, f);
@@ -7631,7 +7624,8 @@ public interface Bytecodes {
      FieldOrMethod() {}
 
      /**
-      * @param index to constant pool
+      * @param opcode instruction opcode
+      * @param f field or method
       */
      protected FieldOrMethod(short opcode, jq_Member f) {
          super(opcode, f);
@@ -7695,7 +7689,8 @@ public interface Bytecodes {
      IfInstruction() {}
      
      /**
-      * @param instruction Target instruction to branch to
+      * @param opcode opcode of this instruction
+      * @param target target instruction to branch to
       */
      protected IfInstruction(short opcode, InstructionHandle target) {
          super(opcode, target);
@@ -7725,7 +7720,8 @@ public interface Bytecodes {
      InvokeInstruction() {}
      
      /**
-      * @param index to constant pool
+      * @param opcode instruction opcode
+      * @param f method
       */
      protected InvokeInstruction(short opcode, jq_Method f) {
          super(opcode, f);
