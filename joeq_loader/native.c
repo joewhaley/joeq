@@ -5,10 +5,8 @@
 
 #define ARRAY_LENGTH_OFFSET -12
 
-void __stdcall debugwmsg(const unsigned short* s)
+void __stdcall debugwwrite(const unsigned short* s, int length)
 {
-    int* length_loc = (int*)((DWORD_PTR)s + ARRAY_LENGTH_OFFSET);
-    int length = *length_loc;
 #if defined(_MSC_VER)
     unsigned short* temp = (unsigned short*)malloc((length+1)*sizeof(unsigned short));
     memcpy(temp, s, length*sizeof(unsigned short));
@@ -22,15 +20,30 @@ void __stdcall debugwmsg(const unsigned short* s)
         putchar((char)c);
         ++s;
     }
-    putchar('\n');
 #endif
     fflush(stdout);
 }
 
-void __stdcall debugmsg(const char* s)
+void __stdcall debugwwriteln(const unsigned short* s, int length)
 {
-    puts(s);
+    debugwwrite(s, length);
+    putchar('\n');
+}
+
+void __stdcall debugwrite(const char* s, int length)
+{
+    while (--length >= 0) {
+        char c = *s;
+        putchar((char)c);
+        ++s;
+    }
     fflush(stdout);
+}
+
+void __stdcall debugwriteln(const char* s, int length)
+{
+    debugwrite(s, length);
+    putchar('\n');
 }
 
 void* __stdcall syscalloc(const int size)
@@ -38,6 +51,31 @@ void* __stdcall syscalloc(const int size)
     void* p = calloc(1, size);
     //printf("Allocated %d bytes at 0x%08x\n", size, p);
     return p;
+}
+
+void __stdcall sysfree(void* p)
+{
+    free(p);
+}
+
+HINSTANCE __stdcall open_library(char* name)
+{
+    return LoadLibrary(name);
+}
+
+BOOL __stdcall close_library(HINSTANCE lib)
+{
+    return FreeLibrary(lib);
+}
+
+FARPROC __stdcall get_proc_address(HINSTANCE lib, char* name)
+{
+    return GetProcAddress(lib, name);
+}
+
+void __stdcall mem_set(void* p, const int size, const char c)
+{
+    memset(p, size, c);
 }
 
 void __stdcall die(const int code)
@@ -1109,4 +1147,18 @@ void __stdcall set_current_context(Thread* jthread, const CONTEXT* context)
         :"r"(jthread), "r"(context)
         );
 #endif
+}
+
+__int64 __stdcall query_performance_counter(void)
+{
+    LARGE_INTEGER result;
+    QueryPerformanceCounter(&result);
+    return result.QuadPart;
+}
+
+__int64 __stdcall query_performance_frequency(void)
+{
+    LARGE_INTEGER result;
+    QueryPerformanceFrequency(&result);
+    return result.QuadPart;
 }
