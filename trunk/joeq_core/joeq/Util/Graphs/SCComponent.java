@@ -19,8 +19,7 @@ import Compil3r.Quad.CallGraph;
 import Util.Assert;
 
 /**
- * <code>SCComponent</code> models a <i>Strongly connected component</i> \
- of a graph.
+ * <code>SCComponent</code> models a <i>Strongly connected component</i> of a graph.
  * The only way to split a graph into <code>SCComponent</code>s is though
  * <code>buildSCC</code>.
  * That method is quite flexible: all it needs is a root node (or a set of
@@ -485,9 +484,11 @@ public final class SCComponent implements Comparable, Serializable {
     public int hashCode() {
         if (DETERMINISTIC) {
             int h = 0;
-            for (int i = 0; i < nodes_array.length; ++i) {
-                Object o = nodes_array[i]; 
-                if (o != null) h ^= o.hashCode();
+            if (nodes_array != null) {
+                for (int i = 0; i < nodes_array.length; ++i) {
+                    Object o = nodes_array[i]; 
+                    if (o != null) h ^= o.hashCode();
+                }
             }
             return h;
         } else {
