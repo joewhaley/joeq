@@ -239,6 +239,9 @@ public class PAResults {
                     DataOutput out = new DataOutputStream(new FileOutputStream("defuse.dot"));
                     this.defUseGraph(bdd1, true, out);
                     increaseCount = false;
+                } else if (command.equals("stats")) {
+                    printStats();
+                    increaseCount = false;
                 } else if (command.equals("help")) {
                     printHelp();
                     increaseCount = false;
@@ -496,7 +499,7 @@ public class PAResults {
     /** Output def-use or use-def graph in dot format.
      */
     public void defUseGraph(BDD vPrelation, boolean direction, DataOutput out) throws IOException {
-        out.writeBytes("digraph \");");
+        out.writeBytes("digraph \"");
         if (direction) out.writeBytes("DefUse");
         else out.writeBytes("UseDef");
         out.writeBytes("\" {\n");
@@ -650,6 +653,73 @@ public class PAResults {
         System.out.println("All local objects: "+allObjects.satCount(r.H1set));
         
         return allObjects;
+    }
+    
+    /***** STATISTICS *****/
+    
+    public void printStats() {
+        System.out.println("Thread-local objects: "+countThreadLocalObjects());
+        {
+            long sum = 0L; int n = 0;
+            for (int i = 0; i < r.Vmap.size(); ++i) {
+                BDD b = r.V1.ithVar(i);
+                b.andWith(r.V1c.domain());
+                int result = countPointsTo(b);
+                sum += result;
+                ++n;
+            }
+            System.out.println("Points-to: "+sum+" / "+n+" = "+(double)sum/n);
+        }
+        {
+            long sum = 0L; int n = 0;
+            for (int i = 0; i < r.Vmap.size(); ++i) {
+                BDD b = r.V1.ithVar(i);
+                b.andWith(r.V1c.domain());
+                int result = countTransitiveReachingDefs(b);
+                sum += result;
+                ++n;
+            }
+            System.out.println("Reaching defs: "+sum+" / "+n+" = "+(double)sum/n);
+        }
+    }
+    
+    public int countPointsTo(BDD v) {
+        BDD p = r.vP.relprod(v, r.V1set);
+        double result = p.satCount(r.H1.set());
+        return (int) result;
+    }
+    
+    public int countTransitiveReachingDefs(BDD vPrelation) {
+        BDD visited = r.bdd.zero();
+        vPrelation = vPrelation.id();
+        for (int k = 1; !vPrelation.isZero(); ++k) {
+            visited.orWith(vPrelation.id());
+            // A: v2=v1;
+            BDD b = r.A.relprod(vPrelation, r.V1set);
+            // L: v2=v1.f;
+            vPrelation.replaceWith(r.V1toV2);
+            BDD c = r.L.relprod(vPrelation, r.V2set); // V1xF
+            vPrelation.free();
+            BDD d = r.vP.relprod(c, r.V1set); // H1xF
+            c.free();
+            BDD e = r.hP.relprod(d, r.H1Fset); // H2
+            d.free();
+            e.replaceWith(r.H2toH1);
+            BDD f = r.vP.relprod(e, r.H1set); // V1
+            e.free();
+            vPrelation = b;
+            vPrelation.replaceWith(r.V2toV1);
+            vPrelation.orWith(f);
+            vPrelation.applyWith(visited.id(), BDDFactory.diff);
+        }
+        double result = visited.satCount(r.V1.set());
+        return (int) result;
+    }
+    
+    public int countThreadLocalObjects() {
+        BDD b = getThreadLocalObjects();
+        double result = b.satCount(r.H1.set());
+        return (int) result;
     }
     
 }
