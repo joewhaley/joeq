@@ -2335,7 +2335,7 @@ public class MethodSummary {
             if (!Operand.Util.isNullConstant(op)) {
                 key = q.getContainingClass().findStringConstant((String)op.getValue());
                 Assert._assert(key != null);
-                jq_Method meth = q == null ? null : q.getMethod();      // one per constant, per method
+                jq_Method meth = q.getMethod(); // one per constant, per method
                 key = new Pair(key, meth);
             }
             ConcreteObjectNode n = get(key, op.getValue(), q);

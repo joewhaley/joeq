@@ -114,9 +114,10 @@ public class FindBestPermutation extends Thread {
     }
     
     public static void readBDDConfig(BDDFactory bdd) {
+        String fileName = System.getProperty("bddcfg", "bdd.cfg");
+        BufferedReader in = null;
         try {
-            String fileName = System.getProperty("bddcfg", "bdd.cfg");
-            BufferedReader in = new BufferedReader(new FileReader(fileName));
+            in = new BufferedReader(new FileReader(fileName));
             for (;;) {
                 String s = in.readLine();
                 if (s == null || s.equals("")) break;
@@ -127,6 +128,8 @@ public class FindBestPermutation extends Thread {
             }
             in.close();
         } catch (IOException x) {
+        } finally {
+            if (in != null) try { in.close(); } catch (IOException _) { }
         }
     }
     

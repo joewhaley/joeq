@@ -55,7 +55,7 @@ public class ReflectiveInterpreter extends BytecodeInterpreter {
                 else if (pc == Byte.TYPE) param[i-offset] = new Byte((byte)istate.pop_I());
                 else if (pc == Short.TYPE) param[i-offset] = new Short((short)istate.pop_I());
                 else if (pc == Character.TYPE) param[i-offset] = new Character((char)istate.pop_I());
-                else if (pc == Boolean.TYPE) param[i-offset] = new Boolean(istate.pop_I()!=0);
+                else if (pc == Boolean.TYPE) param[i-offset] = Boolean.valueOf(istate.pop_I()!=0);
                 else Assert.UNREACHABLE(pc.toString());
             } else {
                 param[i-offset] = istate.pop_A();

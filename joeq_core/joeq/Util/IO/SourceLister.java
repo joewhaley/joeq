@@ -75,8 +75,9 @@ public class SourceLister {
             File f = new File(possibleInputFile);
             if (f.exists()) {
                 StringBuffer res = new StringBuffer();
+                BufferedReader r = null;
                 try {
-                    BufferedReader r = new BufferedReader(new FileReader(possibleInputFile));
+                    r = new BufferedReader(new FileReader(possibleInputFile));
                     int l = 1;
                     if (withnumbers)
                         res.append("# " + pl.getSourceFile() + ":" + lno + "\n");
@@ -96,6 +97,8 @@ public class SourceLister {
                     }
                 } catch (IOException io) {
                     continue outer;
+                } finally {
+                    if (r != null) try { r.close(); } catch (IOException _) { }
                 }
                 return res.toString();
             }

@@ -5,6 +5,8 @@ package joeq.Util.Collections;
 
 import java.util.Collection;
 
+import java.io.Serializable;
+
 /** <code>CollectionFactory</code> is a <code>Collection</code>
     generator.  Subclasses should implement constructions of specific
     types of <code>Collection</code>s.  
@@ -19,7 +21,7 @@ import java.util.Collection;
  * @author  Felix S. Klock II <pnkfelix@mit.edu>
  * @version $Id$
  */
-public abstract class CollectionFactory {
+public abstract class CollectionFactory implements Serializable {
     
     /** Creates a <code>CollectionFactory</code>. */
     public CollectionFactory() {

@@ -779,7 +779,7 @@ public class AndersenPointerAnalysis {
             Object o = e.getValue();
             if (!IGNORE_CLINIT && !MethodSummary.IGNORE_STATIC_FIELDS) {
                 jq_Class c = f.getDeclaringClass();
-                if (TRACE) out.println("Visiting edge: "+o+" = "+c+((f==null)?"[]":("."+f.getName())));
+                if (TRACE) out.println("Visiting edge: "+o+" = "+c+"."+f.getName());
                 c.load();
                 jq_ClassInitializer clinit = c.getClassInitializer();
                 if (clinit != null) {

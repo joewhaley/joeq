@@ -6226,7 +6226,8 @@ public interface Bytecodes {
  }
  
  class NEWARRAY extends Instruction implements AllocationInstruction, ExceptionThrower, StackProducer {
-     private jq_Array type;
+     // todo: make this serializable.
+     private transient jq_Array type;
      
      /**
       * Empty constructor needed for the Class.newInstance() statement in

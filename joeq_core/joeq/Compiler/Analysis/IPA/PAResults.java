@@ -1474,10 +1474,15 @@ public class PAResults implements PointerAnalysisResults {
             System.out.println("Unused fields: "+unusedFields+" / "+r.Fmap.size()+" = "+(double)unusedFields/r.Fmap.size());
             System.out.println("Poly classes: "+polyClasses.size());
             
-            DataOutput out = new DataOutputStream(new FileOutputStream("polyclasses"));
-            for (Iterator i = polyClasses.iterator(); i.hasNext(); ) {
-                jq_Class c = (jq_Class) i.next();
-                out.writeBytes(c.getJDKName()+"\n");
+            DataOutputStream out = null;
+            try {
+                out = new DataOutputStream(new FileOutputStream("polyclasses"));
+                for (Iterator i = polyClasses.iterator(); i.hasNext(); ) {
+                    jq_Class c = (jq_Class) i.next();
+                    out.writeBytes(c.getJDKName()+"\n");
+                }
+            } finally {
+                if (out != null) out.close();
             }
         }
         
