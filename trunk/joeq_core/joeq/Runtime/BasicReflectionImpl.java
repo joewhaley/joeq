@@ -463,7 +463,7 @@ uphere:
     }
     public void putfield_Z(Object o, jq_InstanceField f, boolean v) {
         Assert._assert(f.getType() == jq_Primitive.BOOLEAN);
-            Reflection.obj_trav.putInstanceFieldValue(o, f, new Boolean(v));
+            Reflection.obj_trav.putInstanceFieldValue(o, f, Boolean.valueOf(v));
             return;
     }
     

@@ -67,7 +67,7 @@ public class BDDRelation extends Relation {
                         }
                     }
                 }
-                if (option != null && option.length() > 0) {
+                if (option.length() > 0) {
                     while (d == null) {
                         BDDDomain dom = solver.allocateBDDDomain(fd);
                         if (dom.getName().equals(option)) {
@@ -160,35 +160,40 @@ public class BDDRelation extends Relation {
     }
     
     public void loadTuples(String filename) throws IOException {
-        BufferedReader in = new BufferedReader(new FileReader(filename));
-        for (;;) {
-            String s = in.readLine();
-            if (s == null) break;
-            if (s.length() == 0) continue;
-            if (s.startsWith("#")) continue;
-            StringTokenizer st = new StringTokenizer(s);
-            BDD b = solver.bdd.one();
-            for (int i = 0; i < domains.size(); ++i) {
-                BDDDomain d = (BDDDomain) domains.get(i);
-                String v = st.nextToken();
-                if (v.equals("*")) {
-                    b.andWith(d.domain());
-                } else {
-                    int x = v.indexOf('-');
-                    if (x < 0) {
-                        long l = Long.parseLong(v);
-                        b.andWith(d.ithVar(l));
-                        if (solver.TRACE_FULL) solver.out.print(fieldNames.get(i)+": "+l+", ");
+        BufferedReader in = null;
+        try {
+            in = new BufferedReader(new FileReader(filename));
+            for (;;) {
+                String s = in.readLine();
+                if (s == null) break;
+                if (s.length() == 0) continue;
+                if (s.startsWith("#")) continue;
+                StringTokenizer st = new StringTokenizer(s);
+                BDD b = solver.bdd.one();
+                for (int i = 0; i < domains.size(); ++i) {
+                    BDDDomain d = (BDDDomain) domains.get(i);
+                    String v = st.nextToken();
+                    if (v.equals("*")) {
+                        b.andWith(d.domain());
                     } else {
-                        long l = Long.parseLong(v.substring(0, x));
-                        long m = Long.parseLong(v.substring(x+1));
-                        b.andWith(d.varRange(l, m));
-                        if (solver.TRACE_FULL) solver.out.print(fieldNames.get(i)+": "+l+"-"+m+", ");
+                        int x = v.indexOf('-');
+                        if (x < 0) {
+                            long l = Long.parseLong(v);
+                            b.andWith(d.ithVar(l));
+                            if (solver.TRACE_FULL) solver.out.print(fieldNames.get(i)+": "+l+", ");
+                        } else {
+                            long l = Long.parseLong(v.substring(0, x));
+                            long m = Long.parseLong(v.substring(x+1));
+                            b.andWith(d.varRange(l, m));
+                            if (solver.TRACE_FULL) solver.out.print(fieldNames.get(i)+": "+l+"-"+m+", ");
+                        }
                     }
                 }
+                if (solver.TRACE_FULL) solver.out.println();
+                relation.orWith(b);
             }
-            if (solver.TRACE_FULL) solver.out.println();
-            relation.orWith(b);
+        } finally {
+            if (in != null) in.close();
         }
         updateNegated();
     }
@@ -218,61 +223,64 @@ public class BDDRelation extends Relation {
     }
     
     public void saveTuples(String fileName, BDD relation) throws IOException {
-        DataOutputStream dos = new DataOutputStream(new FileOutputStream(fileName));
-        if (relation.isZero()) {
-            dos.close();
-            return;
-        }
-        BDD ss = relation.support();
-        int[] a = ss.scanSetDomains();
-        ss.free();
-        BDD allDomains = solver.bdd.one();
-        dos.writeBytes("#");
-        System.out.print(fileName+" domains {");
-        for (Iterator i = domains.iterator(); i.hasNext(); ) {
-            BDDDomain d = (BDDDomain) i.next();
-            System.out.print(" "+d.toString());
-            dos.writeBytes(" "+d.toString()+":"+d.varNum());
-        }
-        dos.writeBytes("\n");
-        System.out.println(" ) = "+relation.nodeCount()+" nodes, "+size()+" elements");
-        for (int i = 0; i < a.length; ++i) {
-            BDDDomain d = solver.bdd.getDomain(a[i]);
-            allDomains.andWith(d.set());
-        }
-        BDDDomain iterDomain = (BDDDomain) domains.get(0);
-        BDD foo = relation.exist(allDomains.exist(iterDomain.set()));
-        int lines = 0;
-        for (Iterator i = foo.iterator(iterDomain.set()); i.hasNext(); ) {
-            BDD q = (BDD) i.next();
-            q.andWith(relation.id());
-            while (!q.isZero()) {
-                BDD sat = q.satOne(allDomains, solver.bdd.zero());
-                BDD sup = q.support();
-                int[] b = sup.scanSetDomains();
-                sup.free();
-                long[] v = sat.scanAllVar();
-                sat.free();
-                BDD t = solver.bdd.one();
-                for (Iterator j = domains.iterator(); j.hasNext(); ) {
-                    BDDDomain d = (BDDDomain) j.next();
-                    int jj = d.getIndex();
-                    if (Arrays.binarySearch(b, jj) < 0) {
-                        dos.writeBytes("* ");
-                        t.andWith(d.domain());
-                    } else {
-                        dos.writeBytes(v[jj]+" ");
-                        t.andWith(d.ithVar(v[jj]));
-                    }
-                }
-                q.applyWith(t, BDDFactory.diff);
-                dos.writeBytes("\n");
-                ++lines;
+        DataOutputStream dos = null;
+        try {
+            dos = new DataOutputStream(new FileOutputStream(fileName));
+            if (relation.isZero()) {
+                return;
             }
-            q.free();
+            BDD ss = relation.support();
+            int[] a = ss.scanSetDomains();
+            ss.free();
+            BDD allDomains = solver.bdd.one();
+            dos.writeBytes("#");
+            System.out.print(fileName+" domains {");
+            for (Iterator i = domains.iterator(); i.hasNext(); ) {
+                BDDDomain d = (BDDDomain) i.next();
+                System.out.print(" "+d.toString());
+                dos.writeBytes(" "+d.toString()+":"+d.varNum());
+            }
+            dos.writeBytes("\n");
+            System.out.println(" ) = "+relation.nodeCount()+" nodes, "+size()+" elements");
+            for (int i = 0; i < a.length; ++i) {
+                BDDDomain d = solver.bdd.getDomain(a[i]);
+                allDomains.andWith(d.set());
+            }
+            BDDDomain iterDomain = (BDDDomain) domains.get(0);
+            BDD foo = relation.exist(allDomains.exist(iterDomain.set()));
+            int lines = 0;
+            for (Iterator i = foo.iterator(iterDomain.set()); i.hasNext(); ) {
+                BDD q = (BDD) i.next();
+                q.andWith(relation.id());
+                while (!q.isZero()) {
+                    BDD sat = q.satOne(allDomains, solver.bdd.zero());
+                    BDD sup = q.support();
+                    int[] b = sup.scanSetDomains();
+                    sup.free();
+                    long[] v = sat.scanAllVar();
+                    sat.free();
+                    BDD t = solver.bdd.one();
+                    for (Iterator j = domains.iterator(); j.hasNext(); ) {
+                        BDDDomain d = (BDDDomain) j.next();
+                        int jj = d.getIndex();
+                        if (Arrays.binarySearch(b, jj) < 0) {
+                            dos.writeBytes("* ");
+                            t.andWith(d.domain());
+                        } else {
+                            dos.writeBytes(v[jj]+" ");
+                            t.andWith(d.ithVar(v[jj]));
+                        }
+                    }
+                    q.applyWith(t, BDDFactory.diff);
+                    dos.writeBytes("\n");
+                    ++lines;
+                }
+                q.free();
+            }
+            System.out.println("Done writing "+lines+" lines.");
+        } finally {
+            if (dos != null) dos.close();
         }
-        dos.close();
-        System.out.println("Done writing "+lines+" lines.");
     }
     
     public String activeDomains(BDD relation) {

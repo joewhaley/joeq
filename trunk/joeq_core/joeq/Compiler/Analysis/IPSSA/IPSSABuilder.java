@@ -917,8 +917,9 @@ public class IPSSABuilder implements Runnable {
         */
         private void readConfig(){
             String filename = "app.config";
-            try {                
-                FileInputStream fi = new FileInputStream(filename);
+            FileInputStream fi = null;
+            try {
+                fi = new FileInputStream(filename);
                 BufferedReader r = new BufferedReader(new InputStreamReader(fi));
                 String line = r.readLine();
                 while(line != null){
@@ -941,7 +942,9 @@ public class IPSSABuilder implements Runnable {
             } catch (Exception e) {
                 e.printStackTrace();
                 return;
-            } 
+            } finally {
+                if (fi != null) try { fi.close(); } catch (IOException _) { }
+            }
         }
     }
     

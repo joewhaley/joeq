@@ -1255,55 +1255,51 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                 jq_NameAndDesc old_m_nd = old_m.getNameAndDesc();
 
                 Bytecodes.InstructionList il;
-                if (new_bc == null) {
-                    Assert.UNREACHABLE("Method with empty bytecode !?");
-                } else {
-                    if (TRACE) Debug.writeln("Extracting instructions of "+new_m);
-                    il = new Bytecodes.InstructionList(new_m);
+                if (TRACE) Debug.writeln("Extracting instructions of "+new_m);
+                il = new Bytecodes.InstructionList(new_m);
 
-                    // update constant pool references in instructions, and add them to our constant pool.
-                    if (TRACE_REPLACE_CLASS)
-                        Debug.writeln(
-                            "\tIn Replace: Rebuilding CP for static method "
-                                + new_m);
-                    old.rewriteMethodForReplace(cpa, il);
-                    cpa.finish();
-                    Bytecodes.CodeException[] ex_table = new_m.getExceptionTable(il);
-                    Bytecodes.LineNumber[] line_num = new_m.getLineNumberTable(il);
-                    // as a side-effect cpa will set OLD's cp to its new value.
-                    new_m.setCode(il, ex_table, line_num, cpa);
+                // update constant pool references in instructions, and add them to our constant pool.
+                if (TRACE_REPLACE_CLASS)
+                    Debug.writeln(
+                        "\tIn Replace: Rebuilding CP for static method "
+                            + new_m);
+                old.rewriteMethodForReplace(cpa, il);
+                cpa.finish();
+                Bytecodes.CodeException[] ex_table = new_m.getExceptionTable(il);
+                Bytecodes.LineNumber[] line_num = new_m.getLineNumberTable(il);
+                // as a side-effect cpa will set OLD's cp to its new value.
+                new_m.setCode(il, ex_table, line_num, cpa);
 
-                    old.remakeAttributes(cpa); // reset sourcefile
+                old.remakeAttributes(cpa); // reset sourcefile
 
-                    if (TRACE_REPLACE_CLASS)
-                        Debug.writeln(
-                            "\tIn Replace: Finished Rebuilding CP for static method "
-                                + new_m);
+                if (TRACE_REPLACE_CLASS)
+                    Debug.writeln(
+                        "\tIn Replace: Finished Rebuilding CP for static method "
+                            + new_m);
 
-                    // rename and rattach new_m to old
-                    new_m.setNameAndDesc(old_m_nd);
-                    old.addDeclaredMember(old_m_nd, new_m);
-                    new_m.setDeclaringClass(old);
+                // rename and rattach new_m to old
+                new_m.setNameAndDesc(old_m_nd);
+                old.addDeclaredMember(old_m_nd, new_m);
+                new_m.setDeclaringClass(old);
 
-                    //preparing new method
-                    new_m.prepare(); //state = prepared.
+                //preparing new method
+                new_m.prepare(); //state = prepared.
 
-                    //compile
-                    if (TRACE_REPLACE_CLASS)
-                        Debug.writeln(
-                            "\tIn REPLACE: Compiling stub for: " + new_m);
-                    new_m.compile();
+                //compile
+                if (TRACE_REPLACE_CLASS)
+                    Debug.writeln(
+                        "\tIn REPLACE: Compiling stub for: " + new_m);
+                new_m.compile();
 
-                    old.static_methods[i] = new_m;
-                    old_m.default_compiled_version.redirect(new_m.default_compiled_version);
-                    old_m.default_compiled_version =
-                        new_m.default_compiled_version;
+                old.static_methods[i] = new_m;
+                old_m.default_compiled_version.redirect(new_m.default_compiled_version);
+                old_m.default_compiled_version =
+                    new_m.default_compiled_version;
 
-                    if (TRACE_REPLACE_CLASS)
-                        Debug.writeln(
-                            Strings.lineSep+Strings.lineSep+"In Replace: DONE REPLACEMENT for STATIC method "
-                                + old_m);
-                }
+                if (TRACE_REPLACE_CLASS)
+                    Debug.writeln(
+                        Strings.lineSep+Strings.lineSep+"In Replace: DONE REPLACEMENT for STATIC method "
+                            + old_m);
             } else {
                 //TODO:
                 // user wants to remove a method from OLD
@@ -1341,79 +1337,75 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                 jq_NameAndDesc old_m_nd = old_m.getNameAndDesc();
 
                 Bytecodes.InstructionList il;
-                if (new_bc == null) {
-                    Assert.UNREACHABLE("Method with empty bytecode !?");
-                } else {
-                    // extract new instructions.
-                    if (TRACE) Debug.writeln("Extracting instructions of "+new_m);
-                    il = new Bytecodes.InstructionList(new_m);
+                // extract new instructions.
+                if (TRACE) Debug.writeln("Extracting instructions of "+new_m);
+                il = new Bytecodes.InstructionList(new_m);
 
-                    // update constant pool references in the instructions, and add them to our constant pool.
+                // update constant pool references in the instructions, and add them to our constant pool.
+                if (TRACE_REPLACE_CLASS)
+                    Debug.writeln(
+                        "\tIn Replace: Rebuilding CP for instance method "
+                            + new_m);
+                old.rewriteMethodForReplace(cpa, il);
+                //collect new entries for cp
+                cpa.finish(); //side-effect: commit new entries into cp.
+                Bytecodes.CodeException[] ex_table = new_m.getExceptionTable(il);
+                Bytecodes.LineNumber[] line_num = new_m.getLineNumberTable(il);
+                new_m.setCode(il, ex_table, line_num, cpa); // update ref. to new entries.
+
+                old.remakeAttributes(cpa); // reset sourcefile
+                //old.getSourceFile();
+
+                if (TRACE_REPLACE_CLASS)
+                    Debug.writeln(
+                        "\tIn Replace: Finished Rebuilding CP for instance method "
+                            + new_m);
+
+                //make new appear as old.
+                new_m.setNameAndDesc(old_m_nd);
+                old.addDeclaredMember(old_m_nd, new_m);
+                new_m.setDeclaringClass(old);
+
+                if (new_m.isInitializer() || new_m.isPrivate()) {
+                    new_m.prepare();
+                    //compile
                     if (TRACE_REPLACE_CLASS)
                         Debug.writeln(
-                            "\tIn Replace: Rebuilding CP for instance method "
-                                + new_m);
-                    old.rewriteMethodForReplace(cpa, il);
-                    //collect new entries for cp
-                    cpa.finish(); //side-effect: commit new entries into cp.
-                    Bytecodes.CodeException[] ex_table = new_m.getExceptionTable(il);
-                    Bytecodes.LineNumber[] line_num = new_m.getLineNumberTable(il);
-                    new_m.setCode(il, ex_table, line_num, cpa); // update ref. to new entries.
-
-                    old.remakeAttributes(cpa); // reset sourcefile
-                    //old.getSourceFile();
-
+                            "\tIn REPLACE: Compiling stub for: " + new_m);
+                    new_m.compile();
+                } else //ovverridable methods.
+                    {
+                    //prepare new_m to really become old_m.
+                    //get old_m position and  get new entrypoint in vtable
+                    int old_m_offset = old_m.getOffset();
+                    new_m.prepare(old_m_offset);
+                    //keep old_m offset and set state = prepared.
+                    //compile
                     if (TRACE_REPLACE_CLASS)
                         Debug.writeln(
-                            "\tIn Replace: Finished Rebuilding CP for instance method "
-                                + new_m);
+                            "\tIn REPLACE: Compiling stub for: " + new_m);
+                    new_m.compile();
 
-                    //make new appear as old.
-                    new_m.setNameAndDesc(old_m_nd);
-                    old.addDeclaredMember(old_m_nd, new_m);
-                    new_m.setDeclaringClass(old);
-
-                    if (new_m.isInitializer() || new_m.isPrivate()) {
-                        new_m.prepare();
-                        //compile
-                        if (TRACE_REPLACE_CLASS)
-                            Debug.writeln(
-                                "\tIn REPLACE: Compiling stub for: " + new_m);
-                        new_m.compile();
-                    } else //ovverridable methods.
-                        {
-                        //prepare new_m to really become old_m.
-                        //get old_m position and  get new entrypoint in vtable
-                        int old_m_offset = old_m.getOffset();
-                        new_m.prepare(old_m_offset);
-                        //keep old_m offset and set state = prepared.
-                        //compile
-                        if (TRACE_REPLACE_CLASS)
-                            Debug.writeln(
-                                "\tIn REPLACE: Compiling stub for: " + new_m);
-                        new_m.compile();
-
-                        int index = (old_m_offset >> 2) - 1;
-                        //old_m index in the array of virtualmethods.
-                        Assert._assert(old.virtual_methods[index] == old_m);
-                        old.virtual_methods[index] = new_m;
-                        CodeAddress entryPoint =
-                            new_m.getDefaultCompiledVersion().getEntrypoint();
-                        ((Address[]) old.vtable)[index + 1] = entryPoint;
-                        //+1 since vt[0] is this
-                    }
-
-                    old.declared_instance_methods[i] = new_m;
-
-                    old_m.default_compiled_version.redirect(new_m.default_compiled_version);
-                    old_m.default_compiled_version =
-                        new_m.default_compiled_version;
-
-                    if (TRACE_REPLACE_CLASS)
-                        Debug.writeln(
-                            Strings.lineSep+Strings.lineSep+"In Replace: DONE REPLACING instance method "
-                                + old_m);
+                    int index = (old_m_offset >> 2) - 1;
+                    //old_m index in the array of virtualmethods.
+                    Assert._assert(old.virtual_methods[index] == old_m);
+                    old.virtual_methods[index] = new_m;
+                    CodeAddress entryPoint =
+                        new_m.getDefaultCompiledVersion().getEntrypoint();
+                    ((Address[]) old.vtable)[index + 1] = entryPoint;
+                    //+1 since vt[0] is this
                 }
+
+                old.declared_instance_methods[i] = new_m;
+
+                old_m.default_compiled_version.redirect(new_m.default_compiled_version);
+                old_m.default_compiled_version =
+                    new_m.default_compiled_version;
+
+                if (TRACE_REPLACE_CLASS)
+                    Debug.writeln(
+                        Strings.lineSep+Strings.lineSep+"In Replace: DONE REPLACING instance method "
+                            + old_m);
             } else {
                 //TODO:
                 // user wants to remove a method from OLD
@@ -2571,6 +2563,7 @@ uphere2:
     }
     
     public void dump(DataOutput out) throws IOException {
+        chkState(STATE_LOADED);
         out.writeInt(0xcafebabe);
         out.writeChar(minor_version);
         out.writeChar(major_version);

@@ -56,7 +56,7 @@ public class HashCodeComparator implements Comparator {
         }
     }
 
-    public void finalize() {
+    protected void finalize() {
         Thread t = this.cleanupThread;
         this.cleanupThread = null;
         t.interrupt();

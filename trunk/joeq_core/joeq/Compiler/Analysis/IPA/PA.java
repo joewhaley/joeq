@@ -2284,15 +2284,20 @@ public class PA {
     }
    
     static Collection readClassesFromFile(String fname) throws IOException {
-        BufferedReader r = new BufferedReader(new FileReader(fname));
-        Collection rootMethods = new ArrayList();
-        String s = null;
-        while ((s = r.readLine()) != null) {
-            jq_Class c = (jq_Class) jq_Type.parseType(s);
-            c.prepare();
-            rootMethods.addAll(Arrays.asList(c.getDeclaredStaticMethods()));
+        BufferedReader r = null;
+        try {
+            r = new BufferedReader(new FileReader(fname));
+            Collection rootMethods = new ArrayList();
+            String s = null;
+            while ((s = r.readLine()) != null) {
+                jq_Class c = (jq_Class) jq_Type.parseType(s);
+                c.prepare();
+                rootMethods.addAll(Arrays.asList(c.getDeclaredStaticMethods()));
+            }
+            return rootMethods;
+        } finally {
+            if (r != null) r.close();
         }
-        return rootMethods;
     }
 
     public static void main(String[] args) throws IOException {
@@ -2363,22 +2368,26 @@ public class PA {
      * write a file that when executed by shell runs PAResults in proper environment.
      */
     static void writePAResultsBatchFile(String batchfilename) throws IOException {
-        PrintWriter w = new PrintWriter(new FileOutputStream(batchfilename));
-        Properties p = System.getProperties();
-        w.print(p.getProperty("java.home") + File.separatorChar + "bin" + File.separatorChar + "java");
-        w.print(" -Xmx512M");
-        w.print(" -classpath \"" + System.getProperty("java.class.path")+"\"");
-        w.print(" -Djava.library.path=\"" + System.getProperty("java.library.path")+"\"");
-        for (Iterator i = p.entrySet().iterator(); i.hasNext(); ) {
-            Map.Entry e = (Map.Entry)i.next();
-            String key = (String)e.getKey();
-            String val = (String)e.getValue();
-            if (key.startsWith("ms.") || key.startsWith("pa.")) {
-                w.print(" -D" + key + "=" + val);
+        PrintWriter w = null;
+        try {
+            w = new PrintWriter(new FileOutputStream(batchfilename));
+            Properties p = System.getProperties();
+            w.print(p.getProperty("java.home") + File.separatorChar + "bin" + File.separatorChar + "java");
+            w.print(" -Xmx512M");
+            w.print(" -classpath \"" + System.getProperty("java.class.path")+"\"");
+            w.print(" -Djava.library.path=\"" + System.getProperty("java.library.path")+"\"");
+            for (Iterator i = p.entrySet().iterator(); i.hasNext(); ) {
+                Map.Entry e = (Map.Entry)i.next();
+                String key = (String)e.getKey();
+                String val = (String)e.getValue();
+                if (key.startsWith("ms.") || key.startsWith("pa.")) {
+                    w.print(" -D" + key + "=" + val);
+                }
             }
+            w.println(" joeq.Compiler.Analysis.IPA.PAResults");
+        } finally {
+            if (w != null) w.close();
         }
-        w.println(" joeq.Compiler.Analysis.IPA.PAResults");
-        w.close();
     }
     
     public void printSizes() {
@@ -2476,9 +2485,13 @@ public class PA {
     private void dumpCallGraphAsDot(CallGraph cg, String dotFileName) throws IOException {
 	PathNumbering callgraph = countCallGraph(cg, null, false);
         if (callgraph != null) {
-            DataOutputStream dos = new DataOutputStream(new FileOutputStream(dotFileName));
-            callgraph.dotGraph(dos, cg.getRoots(), cg.getCallSiteNavigator());
-            dos.close();
+            DataOutputStream dos = null;
+            try {
+                dos = new DataOutputStream(new FileOutputStream(dotFileName));
+                callgraph.dotGraph(dos, cg.getRoots(), cg.getCallSiteNavigator());
+            } finally {
+                if (dos != null) dos.close();
+            }
         }
     }
 
@@ -2486,10 +2499,13 @@ public class PA {
         //CallGraph callgraph = CallGraph.makeCallGraph(roots, new PACallTargetMap());
         CallGraph callgraph = new CachedCallGraph(new PACallGraph(this));
         //CallGraph callgraph = callGraph;
-        DataOutputStream dos;
-        dos = new DataOutputStream(new FileOutputStream(callgraphFileName));
-        LoadedCallGraph.write(callgraph, dos);
-        dos.close();
+        DataOutputStream dos = null;
+        try {
+            dos = new DataOutputStream(new FileOutputStream(callgraphFileName));
+            LoadedCallGraph.write(callgraph, dos);
+        } finally {
+            if (dos != null) dos.close();
+        }
         
         if (DUMP_DOTGRAPH)
             dumpCallGraphAsDot(callgraph, callgraphFileName + ".dot");
@@ -2563,41 +2579,76 @@ public class PA {
         System.out.println("visited: "+(long) visited.satCount(Mset)+" relations, "+visited.nodeCount()+" nodes");
         bdd.save(dumpfilename+".visited", visited);
         
-        DataOutputStream dos = new DataOutputStream(new FileOutputStream(dumpfilename+".config"));
-        dumpConfig(dos);
-        dos.close();
+        DataOutputStream dos = null;
+        try {
+            dos = new DataOutputStream(new FileOutputStream(dumpfilename+".config"));
+            dumpConfig(dos);
+        } finally {
+            if (dos != null) dos.close();
+        }
         
         System.out.print("Dumping maps...");
-        dos = new DataOutputStream(new FileOutputStream(dumpfilename+".Vmap"));
-        Vmap.dump(dos);
-        dos.close();
-        dos = new DataOutputStream(new FileOutputStream(dumpfilename+".Imap"));
-        Imap.dump(dos);
-        dos.close();
-        dos = new DataOutputStream(new FileOutputStream(dumpfilename+".Hmap"));
-        Hmap.dump(dos);
-        dos.close();
-        dos = new DataOutputStream(new FileOutputStream(dumpfilename+".Fmap"));
-        Fmap.dump(dos);
-        dos.close();
-        dos = new DataOutputStream(new FileOutputStream(dumpfilename+".Tmap"));
-        Tmap.dump(dos);
-        dos.close();
-        dos = new DataOutputStream(new FileOutputStream(dumpfilename+".Nmap"));
-        Nmap.dump(dos);
-        dos.close();
-        dos = new DataOutputStream(new FileOutputStream(dumpfilename+".Mmap"));
-        Mmap.dump(dos);
-        dos.close();
+        dos = null;
+        try {
+            dos = new DataOutputStream(new FileOutputStream(dumpfilename+".Vmap"));
+            Vmap.dump(dos);
+        } finally {
+            if (dos != null) dos.close();
+        }
+        dos = null;
+        try {
+            dos = new DataOutputStream(new FileOutputStream(dumpfilename+".Imap"));
+            Imap.dump(dos);
+        } finally {
+            if (dos != null) dos.close();
+        }
+        dos = null;
+        try {
+            dos = new DataOutputStream(new FileOutputStream(dumpfilename+".Hmap"));
+            Hmap.dump(dos);
+        } finally {
+            if (dos != null) dos.close();
+        }
+        dos = null;
+        try {
+            dos = new DataOutputStream(new FileOutputStream(dumpfilename+".Fmap"));
+            Fmap.dump(dos);
+        } finally {
+            if (dos != null) dos.close();
+        }
+        dos = null;
+        try {
+            dos = new DataOutputStream(new FileOutputStream(dumpfilename+".Tmap"));
+            Tmap.dump(dos);
+        } finally {
+            if (dos != null) dos.close();
+        }
+        dos = null;
+        try {
+            dos = new DataOutputStream(new FileOutputStream(dumpfilename+".Nmap"));
+            Nmap.dump(dos);
+        } finally {
+            if (dos != null) dos.close();
+        }
+        dos = null;
+        try {
+            dos = new DataOutputStream(new FileOutputStream(dumpfilename+".Mmap"));
+            Mmap.dump(dos);
+        } finally {
+            if (dos != null) dos.close();
+        }
         System.out.println("done.");
     }
 
     public static PA loadResults(String bddfactory, String loaddir, String loadfilename) throws IOException {
         PA pa = new PA();
-        DataInputStream di;
-        di = new DataInputStream(new FileInputStream(loaddir+loadfilename+".config"));
-        pa.loadConfig(di);
-        di.close();
+        DataInputStream di = null;
+        try {
+            di = new DataInputStream(new FileInputStream(loaddir+loadfilename+".config"));
+            pa.loadConfig(di);
+        } finally {
+            if (di != null) di.close();
+        }
         System.out.print("Initializing...");
         pa.initializeBDD(bddfactory);
         System.out.println("done.");
@@ -2625,11 +2676,15 @@ public class PA {
                     field.set(pa, b);
                 } else if (field.getType() == IndexMap.class) {
                     System.out.print(name+": ");
-                    di = new DataInputStream(new FileInputStream(f));
-                    IndexMap m = IndexMap.load(name, di);
-                    di.close();
-                    System.out.print(m.size()+" entries, ");
-                    field.set(pa, m);
+                    di = null;
+                    try {
+                        di = new DataInputStream(new FileInputStream(f));
+                        IndexMap m = IndexMap.load(name, di);
+                        System.out.print(m.size()+" entries, ");
+                        field.set(pa, m);
+                    } finally {
+                        if (di != null) di.close();
+                    }
                 } else {
                     System.out.println();
                     System.out.println("Cannot load field: "+field);
@@ -2972,8 +3027,9 @@ public class PA {
         polyClasses = new HashSet();
         File f = new File("polyclasses");
         if (f.exists()) {
+            DataInputStream in = null;
             try {
-                DataInput in = new DataInputStream(new FileInputStream(f));
+                in = new DataInputStream(new FileInputStream(f));
                 for (;;) {
                     String s = in.readLine();
                     if (s == null) break;
@@ -2983,6 +3039,8 @@ public class PA {
                 e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
+            } finally {
+                if (in != null) try { in.close(); } catch (IOException _) {}
             }
         }
     }
@@ -3578,50 +3636,58 @@ public class PA {
             dumpPath += sep;
         System.out.println("Dumping to path "+dumpPath);
         
-        DataOutputStream dos = new DataOutputStream(new FileOutputStream(dumpPath+"bddinfo"));
-        for (int i = 0; i < bdd.numberOfDomains(); ++i) {
-            BDDDomain d = bdd.getDomain(i);
-            if (d == V1 || d == V2)
-                dos.writeBytes("V\n");
-            else if (d == H1 || d == H2)
-                dos.writeBytes("H\n");
-            else if (d == T1 || d == T2)
-                dos.writeBytes("T\n");
-            else if (d == F)
-                dos.writeBytes("F\n");
-            else if (d == I)
-                dos.writeBytes("I\n");
-            else if (d == Z)
-                dos.writeBytes("Z\n");
-            else if (d == N)
-                dos.writeBytes("N\n");
-            else if (d == M || d == M2)
-                dos.writeBytes("M\n");
-            else if (Arrays.asList(V1c).contains(d)
-                    || Arrays.asList(V2c).contains(d))
-                dos.writeBytes("VC\n");
-            else if (Arrays.asList(H1c).contains(d)
-                    || Arrays.asList(H2c).contains(d))
-                dos.writeBytes("HC\n");
-            else if (DUMP_SSA) {
-                dos.writeBytes(bddIRBuilder.getDomainName(d)+"\n");
-            } else
-                dos.writeBytes(d.toString() + "\n");
+        DataOutputStream dos = null;
+        try {
+            dos = new DataOutputStream(new FileOutputStream(dumpPath+"bddinfo"));
+            for (int i = 0; i < bdd.numberOfDomains(); ++i) {
+                BDDDomain d = bdd.getDomain(i);
+                if (d == V1 || d == V2)
+                    dos.writeBytes("V\n");
+                else if (d == H1 || d == H2)
+                    dos.writeBytes("H\n");
+                else if (d == T1 || d == T2)
+                    dos.writeBytes("T\n");
+                else if (d == F)
+                    dos.writeBytes("F\n");
+                else if (d == I)
+                    dos.writeBytes("I\n");
+                else if (d == Z)
+                    dos.writeBytes("Z\n");
+                else if (d == N)
+                    dos.writeBytes("N\n");
+                else if (d == M || d == M2)
+                    dos.writeBytes("M\n");
+                else if (Arrays.asList(V1c).contains(d)
+                        || Arrays.asList(V2c).contains(d))
+                    dos.writeBytes("VC\n");
+                else if (Arrays.asList(H1c).contains(d)
+                        || Arrays.asList(H2c).contains(d))
+                    dos.writeBytes("HC\n");
+                else if (DUMP_SSA) {
+                    dos.writeBytes(bddIRBuilder.getDomainName(d)+"\n");
+                } else
+                    dos.writeBytes(d.toString() + "\n");
+            }
+        } finally {
+            if (dos != null) dos.close();
         }
-        dos.close();
         
-        dos = new DataOutputStream(new FileOutputStream(dumpPath+"fielddomains.pa"));
-        dos.writeBytes("V "+(1L<<V_BITS)+" var.map\n");
-        dos.writeBytes("H "+(1L<<H_BITS)+" heap.map\n");
-        dos.writeBytes("T "+(1L<<T_BITS)+" type.map\n");
-        dos.writeBytes("F "+(1L<<F_BITS)+" field.map\n");
-        dos.writeBytes("I "+(1L<<I_BITS)+" invoke.map\n");
-        dos.writeBytes("Z "+(1L<<Z_BITS)+"\n");
-        dos.writeBytes("N "+(1L<<N_BITS)+" name.map\n");
-        dos.writeBytes("M "+(1L<<M_BITS)+" method.map\n");
-        dos.writeBytes("VC "+(1L<<VC_BITS)+"\n");
-        dos.writeBytes("HC "+(1L<<HC_BITS)+"\n");
-        dos.close();
+        dos = null;
+        try {
+            dos = new DataOutputStream(new FileOutputStream(dumpPath+"fielddomains.pa"));
+            dos.writeBytes("V "+(1L<<V_BITS)+" var.map\n");
+            dos.writeBytes("H "+(1L<<H_BITS)+" heap.map\n");
+            dos.writeBytes("T "+(1L<<T_BITS)+" type.map\n");
+            dos.writeBytes("F "+(1L<<F_BITS)+" field.map\n");
+            dos.writeBytes("I "+(1L<<I_BITS)+" invoke.map\n");
+            dos.writeBytes("Z "+(1L<<Z_BITS)+"\n");
+            dos.writeBytes("N "+(1L<<N_BITS)+" name.map\n");
+            dos.writeBytes("M "+(1L<<M_BITS)+" method.map\n");
+            dos.writeBytes("VC "+(1L<<VC_BITS)+"\n");
+            dos.writeBytes("HC "+(1L<<HC_BITS)+"\n");
+        } finally {
+            if (dos != null) dos.close();
+        }
         
         BDD mC = bdd.zero();
         for (Iterator i = visited.iterator(Mset); i.hasNext(); ) {
@@ -3679,27 +3745,62 @@ public class PA {
             bdd.save(dumpPath+"mIE.bdd", mIE);
         }
         
-        dos = new DataOutputStream(new FileOutputStream(dumpPath+"var.map"));
-        Vmap.dumpStrings(dos);
-        dos.close();
-        dos = new DataOutputStream(new FileOutputStream(dumpPath+"heap.map"));
-        Hmap.dumpStrings(dos);
-        dos.close();
-        dos = new DataOutputStream(new FileOutputStream(dumpPath+"type.map"));
-        Tmap.dumpStrings(dos);
-        dos.close();
-        dos = new DataOutputStream(new FileOutputStream(dumpPath+"field.map"));
-        Fmap.dumpStrings(dos);
-        dos.close();
-        dos = new DataOutputStream(new FileOutputStream(dumpPath+"invoke.map"));
-        Imap.dumpStrings(dos);
-        dos.close();
-        dos = new DataOutputStream(new FileOutputStream(dumpPath+"name.map"));
-        Nmap.dumpStrings(dos);
-        dos.close();
-        dos = new DataOutputStream(new FileOutputStream(dumpPath+"method.map"));
-        Mmap.dumpStrings(dos);
-        dos.close();
+        dos = null;
+        try {
+            dos = new DataOutputStream(new FileOutputStream(dumpPath+"var.map"));
+            Vmap.dumpStrings(dos);
+        } finally {
+            if (dos != null) dos.close();
+        }
+        
+        dos = null;
+        try {
+            dos = new DataOutputStream(new FileOutputStream(dumpPath+"heap.map"));
+            Hmap.dumpStrings(dos);
+        } finally {
+            if (dos != null) dos.close();
+        }
+        
+        dos = null;
+        try {
+            dos = new DataOutputStream(new FileOutputStream(dumpPath+"type.map"));
+            Tmap.dumpStrings(dos);
+        } finally {
+            if (dos != null) dos.close();
+        }
+        
+        dos = null;
+        try {
+            dos = new DataOutputStream(new FileOutputStream(dumpPath+"field.map"));
+            Fmap.dumpStrings(dos);
+        } finally {
+            if (dos != null) dos.close();
+        }
+        
+        dos = null;
+        try {
+            dos = new DataOutputStream(new FileOutputStream(dumpPath+"invoke.map"));
+            Imap.dumpStrings(dos);
+        } finally {
+            if (dos != null) dos.close();
+        }
+        
+        dos = null;
+        try {
+            dos = new DataOutputStream(new FileOutputStream(dumpPath+"name.map"));
+            Nmap.dumpStrings(dos);
+        } finally {
+            if (dos != null) dos.close();
+        }
+        
+        dos = null;
+        try {
+            dos = new DataOutputStream(new FileOutputStream(dumpPath+"method.map"));
+            Mmap.dumpStrings(dos);
+        } finally {
+            if (dos != null) dos.close();
+        }
+
     }
     
     class Dummy implements Textualizable {

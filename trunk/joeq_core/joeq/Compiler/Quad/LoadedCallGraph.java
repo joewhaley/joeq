@@ -229,7 +229,6 @@ public class LoadedCallGraph extends CallGraph {
                     System.err.println("Cannot find \""+methodName+"\" \""+methodDesc+"\" in "+targetClass);
                     continue;
                 }
-                Assert._assert(targetMethod != null);
                 add(m, bcIndex, targetMethod);
                 continue;
             }

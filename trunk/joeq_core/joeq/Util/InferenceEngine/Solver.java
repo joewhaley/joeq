@@ -354,9 +354,13 @@ public abstract class Solver {
         FieldDomain fd = new FieldDomain(name, size);
         if (st.hasMoreTokens()) {
             String mapName = nextToken(st);
-            DataInputStream dis = new DataInputStream(new FileInputStream(mapName));
-            fd.loadMap(dis);
-            dis.close();
+            DataInputStream dis = null;
+            try {
+                dis = new DataInputStream(new FileInputStream(mapName));
+                fd.loadMap(dis);
+            } finally {
+                if (dis != null) dis.close();
+            }
         }
         return fd;
     }

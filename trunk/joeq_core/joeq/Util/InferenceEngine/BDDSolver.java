@@ -69,8 +69,9 @@ public class BDDSolver extends Solver {
     }
     
     void loadBDDDomainInfo() {
+        BufferedReader in = null; 
         try {
-            BufferedReader in = new BufferedReader(new FileReader(bddDomainInfoFileName));
+            in = new BufferedReader(new FileReader(bddDomainInfoFileName));
             for (;;) {
                 String s = in.readLine();
                 if (s == null) break;
@@ -82,6 +83,8 @@ public class BDDSolver extends Solver {
                 allocateBDDDomain(fd);
             }
         } catch (IOException x) {
+        } finally {
+            if (in != null) try { in.close(); } catch (IOException _) { }
         }
     }
     
@@ -219,16 +222,21 @@ public class BDDSolver extends Solver {
     }
     
     void saveBDDDomainInfo() throws IOException {
-        DataOutputStream dos = new DataOutputStream(new FileOutputStream("r"+bddDomainInfoFileName));
-        for (int i = 0; i < bdd.numberOfDomains(); ++i) {
-            BDDDomain d = bdd.getDomain(i);
-            for (Iterator j = fielddomainsToBDDdomains.keySet().iterator(); j.hasNext(); ) {
-                FieldDomain fd = (FieldDomain) j.next();
-                if (fielddomainsToBDDdomains.getValues(fd).contains(d)) {
-                    dos.writeBytes(fd.toString()+"\n");
-                    break;
+        DataOutputStream dos = null;
+        try {
+            dos = new DataOutputStream(new FileOutputStream("r"+bddDomainInfoFileName));
+            for (int i = 0; i < bdd.numberOfDomains(); ++i) {
+                BDDDomain d = bdd.getDomain(i);
+                for (Iterator j = fielddomainsToBDDdomains.keySet().iterator(); j.hasNext(); ) {
+                    FieldDomain fd = (FieldDomain) j.next();
+                    if (fielddomainsToBDDdomains.getValues(fd).contains(d)) {
+                        dos.writeBytes(fd.toString()+"\n");
+                        break;
+                    }
                 }
             }
+        } finally {
+            if (dos != null) dos.close();
         }
     }
     

@@ -1208,11 +1208,13 @@ public class CSPAResults {
     /** Load points-to results from the given file name prefix.
      */
     public void load(String fn) throws IOException {
-        DataInputStream di;
-        
-        di = new DataInputStream(new FileInputStream(fn+".config"));
-        readConfig(di);
-        di.close();
+        DataInputStream di = null;
+        try {
+            di = new DataInputStream(new FileInputStream(fn+".config"));
+            readConfig(di);
+        } finally {
+            if (di != null) di.close();
+        }
         
         System.out.print("Initializing...");
         initialize();
@@ -1816,7 +1818,7 @@ public class CSPAResults {
                 ProgramLocation pl2 = ctn.getLocation();
                 Assert._assert(pl2.getMethod() == pl.getMethod());
                 Assert._assert(pl.getClass() == pl2.getClass());
-                if (pl2 != null && pl.equals(pl2)) {
+                if (pl.equals(pl2)) {
                     return getVariableIndex(o);
                 }
             }
@@ -1833,7 +1835,7 @@ public class CSPAResults {
                 ProgramLocation pl2 = ctn.getLocation();
                 Assert._assert(pl2.getMethod() == pl.getMethod());
                 Assert._assert(pl.getClass() == pl2.getClass());
-                if (pl2 != null && pl.equals(pl2)) {
+                if (pl.equals(pl2)) {
                     return getVariableIndex(o);
                 }
             }
@@ -1919,7 +1921,7 @@ public class CSPAResults {
                 ProgramLocation pl2 = ctn.getLocation();
                 Assert._assert(pl2.getMethod() == pl.getMethod());
                 Assert._assert(pl.getClass() == pl2.getClass());
-                if (pl2 != null && pl.equals(pl2)) {
+                if (pl.equals(pl2)) {
                     return getVariableIndex(o);
                 }
             }
@@ -1936,7 +1938,7 @@ public class CSPAResults {
                 ProgramLocation pl2 = ctn.getLocation();
                 Assert._assert(pl2.getMethod() == pl.getMethod());
                 Assert._assert(pl.getClass() == pl2.getClass());
-                if (pl2 != null && pl.equals(pl2)) {
+                if (pl.equals(pl2)) {
                     return getHeapIndex(o);
                 }
             }

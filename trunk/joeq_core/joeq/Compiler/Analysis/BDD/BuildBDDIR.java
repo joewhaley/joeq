@@ -454,24 +454,32 @@ public class BuildBDDIR implements ControlFlowGraphVisitor {
     }
     
     void dumpBDDConfig(String fileName) throws IOException {
-        DataOutputStream dos = new DataOutputStream(new FileOutputStream(fileName));
-        for (int i = 0; i < bdd.numberOfDomains(); ++i) {
-            BDDDomain d = bdd.getDomain(i);
-            dos.writeBytes(d.getName()+" "+d.size()+"\n");
+        DataOutputStream dos = null;
+        try {
+            dos = new DataOutputStream(new FileOutputStream(fileName));
+            for (int i = 0; i < bdd.numberOfDomains(); ++i) {
+                BDDDomain d = bdd.getDomain(i);
+                dos.writeBytes(d.getName()+" "+d.size()+"\n");
+            }
+        } finally {
+            if (dos != null) dos.close();
         }
-        dos.close();
     }
     
     void dumpFieldDomains(String fileName) throws IOException {
-        DataOutputStream dos = new DataOutputStream(new FileOutputStream(fileName));
-        dos.writeBytes("method "+(1L<<methodBits)+"\n");
-        dos.writeBytes("quad "+(1L<<quadBits)+"\n");
-        dos.writeBytes("op "+(1L<<opBits)+" op.map\n");
-        dos.writeBytes("reg "+(1L<<regBits)+"\n");
-        dos.writeBytes("constant "+(1L<<constantBits)+" constant.map\n");
-        dos.writeBytes("member "+(1L<<memberBits)+"\n");
-        dos.writeBytes("varargs "+(1L<<varargsBits)+"\n");
-        dos.close();
+        DataOutputStream dos = null;
+        try {
+            dos = new DataOutputStream(new FileOutputStream(fileName));
+            dos.writeBytes("method "+(1L<<methodBits)+"\n");
+            dos.writeBytes("quad "+(1L<<quadBits)+"\n");
+            dos.writeBytes("op "+(1L<<opBits)+" op.map\n");
+            dos.writeBytes("reg "+(1L<<regBits)+"\n");
+            dos.writeBytes("constant "+(1L<<constantBits)+" constant.map\n");
+            dos.writeBytes("member "+(1L<<memberBits)+"\n");
+            dos.writeBytes("varargs "+(1L<<varargsBits)+"\n");
+        } finally {
+            if (dos != null) dos.close();
+        }
     }
     
     void dumpRelation(DataOutputStream dos, String name, BDD relation) throws IOException {
@@ -508,96 +516,103 @@ public class BuildBDDIR implements ControlFlowGraphVisitor {
     }
     
     void dumpMap(IndexMap map, String fileName) throws IOException {
-        DataOutputStream dos = new DataOutputStream(new FileOutputStream(fileName));
-        for (int i = 0; i < map.size(); ++i) {
-            Object o = map.get(i);
-            String s;
-            if (o != null) {
-               s = o.toString();
-            }
-            else {
-               s = "(null)"; 
-            }
-            // suppress nonprintables in the output
-            StringBuffer sb = new StringBuffer(s);
-            for (int j=0; j<sb.length(); ++j) {
-                if (sb.charAt(j) < 32) {
-                    sb.setCharAt(j, ' ');
+        DataOutputStream dos = null;
+        try {
+            dos = new DataOutputStream(new FileOutputStream(fileName));
+            for (int i = 0; i < map.size(); ++i) {
+                Object o = map.get(i);
+                String s;
+                if (o != null) {
+                   s = o.toString();
                 }
-                else if (sb.charAt(j) > 127) {
-                    sb.setCharAt(j, ' ');
+                else {
+                   s = "(null)"; 
                 }
+                // suppress nonprintables in the output
+                StringBuffer sb = new StringBuffer(s);
+                for (int j=0; j<sb.length(); ++j) {
+                    if (sb.charAt(j) < 32) {
+                        sb.setCharAt(j, ' ');
+                    }
+                    else if (sb.charAt(j) > 127) {
+                        sb.setCharAt(j, ' ');
+                    }
+                }
+                s = new String(sb);
+                dos.writeBytes(s + "\n");
             }
-            s = new String(sb);
-            dos.writeBytes(s + "\n");
+        } finally {
+            if (dos != null) dos.close();
         }
-        dos.close();
     }
     
     public static void dumpTuples(BDDFactory bdd, String fileName, BDD relation) throws IOException {
-        DataOutputStream dos = new DataOutputStream(new FileOutputStream(fileName));
-        if (relation.isZero()) {
-            dos.close();
-            return;
-        }
-        Assert._assert(!relation.isOne());
-        BDD rsup = relation.support();
-        int[] a = rsup.scanSetDomains();
-        rsup.free();
-        BDD allDomains = bdd.one();
-        System.out.print(fileName+" domains {");
-        dos.writeBytes("#");
-        for (int i = 0; i < a.length; ++i) {
-            BDDDomain d = bdd.getDomain(a[i]);
-            System.out.print(" "+d.toString());
-            dos.writeBytes(" "+d.toString()+":"+d.varNum());
-            allDomains.andWith(d.set());
-        }
-        dos.writeBytes("\n");
-        System.out.println(" } = "+relation.nodeCount()+" nodes");
-        BDDDomain primaryDomain = bdd.getDomain(a[0]);
-        int lines = 0;
-        BDD foo = relation.exist(allDomains.exist(primaryDomain.set()));
-        for (Iterator i = foo.iterator(primaryDomain.set()); i.hasNext(); ) {
-            BDD q = (BDD) i.next();
-            q.andWith(relation.id());
-            while (!q.isZero()) {
-                BDD sat = q.satOne(allDomains, bdd.zero());
-                BDD sup = q.support();
-                int[] b = sup.scanSetDomains();
-                sup.free();
-                long[] v = sat.scanAllVar();
-                sat.free();
-                BDD t = bdd.one();
-                for (int j = 0, k = 0, l = 0; j < bdd.numberOfDomains(); ++j) {
-                    BDDDomain d = bdd.getDomain(j);
-                    if (k >= a.length || a[k] != j) {
-                        Assert._assert(v[j] == 0, "v["+j+"] is "+v[j]);
-                        //dos.writeBytes("* ");
-                        t.andWith(d.domain());
-                        continue;
-                    } else {
-                        ++k;
-                    }
-                    if (l >= b.length || b[l] != j) {
-                        Assert._assert(v[j] == 0, "v["+j+"] is "+v[j]);
-                        dos.writeBytes("* ");
-                        t.andWith(d.domain());
-                        continue;
-                    } else {
-                        ++l;
-                    }
-                    dos.writeBytes(v[j]+" ");
-                    t.andWith(d.ithVar(v[j]));
-                }
-                q.applyWith(t, BDDFactory.diff);
-                dos.writeBytes("\n");
-                ++lines;
+        DataOutputStream dos = null;
+        try {
+            dos = new DataOutputStream(new FileOutputStream(fileName));
+            if (relation.isZero()) {
+                return;
             }
-            q.free();
+            Assert._assert(!relation.isOne());
+            BDD rsup = relation.support();
+            int[] a = rsup.scanSetDomains();
+            rsup.free();
+            BDD allDomains = bdd.one();
+            System.out.print(fileName+" domains {");
+            dos.writeBytes("#");
+            for (int i = 0; i < a.length; ++i) {
+                BDDDomain d = bdd.getDomain(a[i]);
+                System.out.print(" "+d.toString());
+                dos.writeBytes(" "+d.toString()+":"+d.varNum());
+                allDomains.andWith(d.set());
+            }
+            dos.writeBytes("\n");
+            System.out.println(" } = "+relation.nodeCount()+" nodes");
+            BDDDomain primaryDomain = bdd.getDomain(a[0]);
+            int lines = 0;
+            BDD foo = relation.exist(allDomains.exist(primaryDomain.set()));
+            for (Iterator i = foo.iterator(primaryDomain.set()); i.hasNext(); ) {
+                BDD q = (BDD) i.next();
+                q.andWith(relation.id());
+                while (!q.isZero()) {
+                    BDD sat = q.satOne(allDomains, bdd.zero());
+                    BDD sup = q.support();
+                    int[] b = sup.scanSetDomains();
+                    sup.free();
+                    long[] v = sat.scanAllVar();
+                    sat.free();
+                    BDD t = bdd.one();
+                    for (int j = 0, k = 0, l = 0; j < bdd.numberOfDomains(); ++j) {
+                        BDDDomain d = bdd.getDomain(j);
+                        if (k >= a.length || a[k] != j) {
+                            Assert._assert(v[j] == 0, "v["+j+"] is "+v[j]);
+                            //dos.writeBytes("* ");
+                            t.andWith(d.domain());
+                            continue;
+                        } else {
+                            ++k;
+                        }
+                        if (l >= b.length || b[l] != j) {
+                            Assert._assert(v[j] == 0, "v["+j+"] is "+v[j]);
+                            dos.writeBytes("* ");
+                            t.andWith(d.domain());
+                            continue;
+                        } else {
+                            ++l;
+                        }
+                        dos.writeBytes(v[j]+" ");
+                        t.andWith(d.ithVar(v[j]));
+                    }
+                    q.applyWith(t, BDDFactory.diff);
+                    dos.writeBytes("\n");
+                    ++lines;
+                }
+                q.free();
+            }
+            System.out.println("Done printing "+lines+" lines.");
+        } finally {
+            if (dos != null) dos.close();
         }
-        dos.close();
-        System.out.println("Done printing "+lines+" lines.");
     }
     
     void print() {

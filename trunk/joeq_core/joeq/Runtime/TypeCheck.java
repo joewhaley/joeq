@@ -182,13 +182,14 @@ public abstract class TypeCheck implements jq_ClassFileConstants, CompilationCon
     public static byte implementsInterface_noload(jq_Class klass, jq_Class inter) {
         byte res = NO; jq_Class k = klass;
         if (!klass.isLoaded()) return MAYBE;
-        do {
+        for (;;) {
             if (k.getDeclaredInterface(inter.getDesc()) == inter) return YES;
             k = k.getSuperclass();
+            if (k == null) break;
             if (!k.isLoaded()) {
                 res = MAYBE; break;
             }
-        } while (k != null);
+        }
         jq_Class[] interfaces = klass.getDeclaredInterfaces();
         for (int i=0; i<interfaces.length; ++i) {
             jq_Class k2 = interfaces[i];
