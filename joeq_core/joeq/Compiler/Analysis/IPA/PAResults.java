@@ -458,6 +458,9 @@ public class PAResults implements PointerAnalysisResults {
                 } else if (command.equals("encapsulation")) {
                     BDD r = getEncapsulatedHeapObjects();
                     results.add(r);
+                } else if (command.equals("indistinguishable")) {
+                    BDD r = findIndistinguishablyTypedObjects();
+                    results.add(r);
                 } else if (command.equals("showargs")) {
                     TypedBDD bdd1 = parseBDD(results, st.nextToken());
                     TypedBDD r = showArguments(bdd1);
@@ -1177,12 +1180,15 @@ public class PAResults implements PointerAnalysisResults {
     }
     
     BDDDomain H3;
-    BDDPairing H1toH3;
+    BDDPairing H1toH3, H3toH1;
+    BDD H3set;
     
     public void initializeExtraDomains() {
         if (H3 == null) {
             H3 = r.makeDomain("H3", r.H_BITS);
             H1toH3 = r.bdd.makePair(r.H1, H3);
+            H3toH1 = r.bdd.makePair(H3, r.H1);
+            H3set = H3.set();
         }
     }
     
@@ -1264,7 +1270,93 @@ public class PAResults implements PointerAnalysisResults {
         t1.free();
         return (TypedBDD)t2;    // T2
     }
-
+    
+    // Two objects are indistinguishably typed if they are the same type and
+    // each of their fields points to objects that are indistinguishably typed.
+    public BDD findIndistinguishablyTypedObjects() {
+        initializeExtraDomains();
+        BDD t = r.hT.replace(H1toH3); // H3xT2
+        BDD sameType = t.relprod(r.hT, r.T2set); // H1xT2 x T2xH3 = H1xH3
+        BDD stringType = r.T2.ithVar(r.Tmap.get(PrimordialClassLoader.getJavaLangString()));
+        BDD strings = r.hT.restrict(stringType);
+        BDD same = r.H1.buildEquals(H3);
+        BDD relationsToCheck = sameType.id();
+        for (;;) {
+            // eliminate things that don't point to anything.
+            relationsToCheck.andWith(r.hP.exist(r.H2Fset));
+            // eliminate strings
+            relationsToCheck.andWith(strings.not());
+            // eliminate self-relations
+            relationsToCheck.andWith(same.not());
+            
+            BDD recheck = r.bdd.zero();
+            int outer = 0;
+            
+            while (!relationsToCheck.isZero()) {
+                System.out.print((long)relationsToCheck.satCount(r.H1set.and(H3set))+" relations remaining.        \r");
+                ++outer;
+                BDD h_a = relationsToCheck.satOne(r.H1set, r.bdd.zero());
+                BDD h1 = h_a.exist(H3set); h_a.free();
+                //System.out.println(h1.toStringWithDomains(r.TS));
+                BDD foo = relationsToCheck.restrict(h1); // H3
+                relationsToCheck.applyWith(h1.and(H3.domain()), BDDFactory.diff);
+                
+                foo.replaceWith(H3toH1); // H1
+                BDD a1 = r.hP.relprod(h1, r.H1set); // FxH2
+                BDD a3 = r.hP.and(foo); // H1xFxH2
+                
+                BDD ok = a3.relprod(a1, r.H2Fset); // H1
+                //System.out.println("Match exactly: "+ok.toStringWithDomains(r.TS));
+                foo.applyWith(ok, BDDFactory.diff);
+                
+                if (!foo.isZero()) {
+                    BDD sameType23 = sameType.replace(r.H1toH2);
+                    BDD r1 = a1.relprod(sameType23, r.H2set); // FxH3
+                    BDD r3 = a3.relprod(sameType23, r.H2set); // H1xFxH3
+    
+                    ok = r3.relprod(r1, r.Fset.and(H3set)); // H1
+                    //System.out.println("Match approx: "+ok.toStringWithDomains(r.TS));
+                    foo.applyWith(ok, BDDFactory.diff);
+                    
+                    if (!foo.isZero()) {
+                        //System.out.println("Do not match: "+foo.toStringWithDomains(r.TS));
+                        BDD n = foo.replace(H1toH3).and(h1);
+                        n.orWith(h1.replace(H1toH3).and(foo));
+                        sameType.applyWith(n.id(), BDDFactory.diff);
+                        relationsToCheck.applyWith(n.id(), BDDFactory.diff);
+                        
+                        recheck.orWith(h1.id());
+                        recheck.orWith(foo.id());
+                    }
+                }
+            }
+            //System.out.println("Outer: "+outer);
+            //System.out.println("Inner: "+inner);
+            System.out.println("Recheck: "+(long)recheck.satCount(r.H1set)+"                ");
+            if (recheck.isZero()) break;
+            recheck.replaceWith(r.H1toH2);
+            BDD checkRelations = recheck.relprod(r.hP, r.H2Fset); // H1
+            checkRelations.andWith(sameType.id());
+            relationsToCheck.orWith(checkRelations);
+        }
+        
+        
+        BDD iter = sameType.id();
+        int i = 0;
+        while (!iter.isZero()) {
+            ++i;
+            BDD foo = iter.satOne(r.H1set, r.bdd.zero()).exist(H3set);
+            BDD set = sameType.restrict(foo); // H3
+            set.replaceWith(H3toH1); // H1
+            System.out.println("Equivalence class "+i+": "+set.toStringWithDomains(r.TS));
+            iter.applyWith(set.andWith(H3.domain()), BDDFactory.diff);
+        }
+        int nObjects = (int) r.hT.exist(r.T2set).satCount(r.H1set);
+        int nTypes = (int) r.hT.exist(r.H1set).satCount(r.T2set);
+        System.out.println(nObjects+" objects (of "+nTypes+" different types) put into "+i+" equivalence classes.");
+        return sameType;
+    }
+    
     // I -> V1xV1cxH1xH1cxIxZ
     public TypedBDD showArguments(TypedBDD isites) {
         return (TypedBDD)r.actual.and(isites).replaceWith(r.bdd.makePair(r.V2, r.V1)).and(r.vP);
