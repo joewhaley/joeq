@@ -3,13 +3,11 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Main;
 
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.LinkedList;
-
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
@@ -22,7 +20,6 @@ import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.ControlFlowGraphVisitor;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.QuadVisitor;
-import joeq.Util.Collections.AppendIterator;
 
 /**
  * @author  Michael Martin <mcmartin@stanford.edu>
@@ -34,15 +31,16 @@ public class Helper {
     }
 
     public static jq_Type load(String classname) {
-    	try {
-    		jq_Type c = jq_Type.parseType(classname);
-    		c.load();
-    		c.prepare();
-    		return c;
-    	} catch (NoClassDefFoundError e) {
-    		System.err.println ("Could not find class "+classname+", skipping.");
-    	}
-    	return null;
+        try {
+            jq_Type c = jq_Type.parseType(classname);
+            c.load();
+            c.prepare();
+            return c;
+        } catch (NoClassDefFoundError e) {
+            System.err.println("Could not find class " + classname
+                + ", skipping.");
+        }
+        return null;
     }
 
     public static jq_Type[] loadPackage(String packagename) {
@@ -53,34 +51,26 @@ public class Helper {
         return loadPackages(packagename, true);
     }
 
-    public static jq_Type[] loadPackages(
-        String packagename,
-        boolean recursive) {
+    public static jq_Type[] loadPackages(String packagename, boolean recursive) {
         String canonicalPackageName = packagename.replace('.', '/');
-        if (!canonicalPackageName.equals("") && 
-            !canonicalPackageName.endsWith("/"))
-            canonicalPackageName += '/';
-        Iterator i =
-            joeq.Class.PrimordialClassLoader.loader.listPackage(
-                canonicalPackageName,
-                recursive);
+        if (!canonicalPackageName.equals("")
+            && !canonicalPackageName.endsWith("/")) canonicalPackageName += '/';
+        Iterator i = joeq.Class.PrimordialClassLoader.loader.listPackage(
+            canonicalPackageName, recursive);
         if (!i.hasNext()) {
-            System.err.println(
-                "Package " + canonicalPackageName + " not found.");
+            System.err.println("Package " + canonicalPackageName
+                + " not found.");
         }
         LinkedList ll = new LinkedList();
-
         while (i.hasNext()) {
             String c = (String) i.next();
             c = c.substring(0, c.length() - 6);
             jq_Type t = Helper.load(c);
-            if (t != null)
-            	ll.add(t);
+            if (t != null) ll.add(t);
         }
-
         return (jq_Class[]) ll.toArray(new jq_Class[0]);
     }
-    
+
     /**
      * Add paths contained in file fileName. 
      *  @param fileName -- name of the file with class paths
@@ -94,11 +84,10 @@ public class Helper {
                 if (s.length() == 0) continue;
                 if (s.startsWith("%")) continue;
                 if (s.startsWith("#")) continue;
-                
                 PrimordialClassLoader.loader.addToClasspath(s);
-            }            
+            }
             br.close();
-        }catch(IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
             System.exit(2);
         }
@@ -140,9 +129,7 @@ public class Helper {
         runPass(m, new QuadVisitor.AllQuadVisitor(qv));
     }
 
-    public static void runPass(
-        ControlFlowGraph c,
-        ControlFlowGraphVisitor cfgv) {
+    public static void runPass(ControlFlowGraph c, ControlFlowGraphVisitor cfgv) {
         cfgv.visitCFG(c);
     }
 
