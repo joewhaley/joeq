@@ -90,8 +90,8 @@ public class CSPA {
     public static final boolean TRACE_EDGES     = false || TRACE_ALL;
     public static final boolean TRACE_TIMES     = false || TRACE_ALL;
     public static final boolean TRACE_VARORDER  = false || TRACE_ALL;
-    public static final boolean TRACE_NUMBERING = false || TRACE_ALL;
     public static final boolean TRACE_RELATIONS = false || TRACE_ALL;
+    public static final boolean TRACE_BDD = false;
     
     public static final boolean USE_CHA     = false;
     public static final boolean DO_INLINING = false;
@@ -1063,6 +1063,9 @@ public class CSPA {
         BDD t1 = bms.m_pointsTo.id();
         t1.andWith(v1c.id());
         t1.andWith(h1c);
+        if (TRACE_BDD) {
+            System.out.println("Adding to g_pointsTo: "+t1.toStringWithDomains());
+        }
         g_pointsTo.orWith(t1);
 
         if (false) {
@@ -1078,9 +1081,15 @@ public class CSPA {
             v1c.andWith(v2c);
             t1 = bms.m_loads.id();
             t1.andWith(v1c.id());
+            if (TRACE_BDD) {
+                System.out.println("Adding to g_loads: "+t1.toStringWithDomains());
+            }
             g_loads.orWith(t1);
             t1 = bms.m_stores.id();
             t1.andWith(v1c);
+            if (TRACE_BDD) {
+                System.out.println("Adding to g_stores: "+t1.toStringWithDomains());
+            }
             g_stores.orWith(t1);
         }
         time = System.currentTimeMillis() - time;
@@ -1138,17 +1147,19 @@ public class CSPA {
         BDDMethodSummary caller_s = this.getBDDSummary(caller);
         BDDMethodSummary callee_s = this.getBDDSummary(callee);
         Pair p = new Pair(mapCall(mc), callee.getMethod());
-        Range r = pn.getEdge(p);
+        Range r_edge = pn.getEdge(p);
+        Range r_caller = pn.getRange(caller.getMethod());
         //if (backEdges.contains(p))
         //    System.out.println("Back edge: "+p+"="+r);
         if (TRACE_CALLGRAPH)
-            System.out.println("Context range "+r);
+            System.out.println("Caller context range "+r_caller+" matches callee context range "+r_edge);
+        Assert._assert(r_caller.low.intValue() == 0);
         BDD context_map;
         // for parameters: V1 in caller matches V2 in callee
-        context_map = buildVarContextMap(BigInteger.ZERO,
-                                         PathNumbering.toBigInt(pn.numberOfPathsTo(caller.getMethod())),
-                                         PathNumbering.toBigInt(r.low),
-                                         PathNumbering.toBigInt(r.high));
+        context_map = buildVarContextMap(PathNumbering.toBigInt(r_caller.low),
+                                         PathNumbering.toBigInt(r_caller.high),
+                                         PathNumbering.toBigInt(r_edge.low),
+                                         PathNumbering.toBigInt(r_edge.high));
         jq_Type[] paramTypes = mc.getParamTypes();
         for (int i=0; i<paramTypes.length; ++i) {
             if (i >= callee.getNumOfParams()) break;
@@ -1164,10 +1175,10 @@ public class CSPA {
         ThrownExceptionNode ten = caller.getTEN(mc);
         if (rvn == null && ten == null) return;
         // for returns: V1 in callee matches V2 in caller
-        context_map = buildVarContextMap(PathNumbering.toBigInt(r.low),
-                                         PathNumbering.toBigInt(r.high),
-                                         BigInteger.ZERO,
-                                         PathNumbering.toBigInt(pn.numberOfPathsTo(caller.getMethod())));
+        context_map = buildVarContextMap(PathNumbering.toBigInt(r_edge.low),
+                                         PathNumbering.toBigInt(r_edge.high),
+                                         PathNumbering.toBigInt(r_caller.low),
+                                         PathNumbering.toBigInt(r_caller.high));
         if (rvn != null) {
             Set s = callee.getReturned();
             if (TRACE_EDGES) System.out.println("Adding edges for "+rvn);
@@ -1219,6 +1230,9 @@ public class CSPA {
         BDD r;
         BigInteger sizeV1 = endV1.subtract(startV1);
         BigInteger sizeV2 = endV2.subtract(startV2);
+        if (TRACE_CALLGRAPH) {
+            System.out.println("Matching V1c("+startV1+","+endV1+") to V2c("+startV2+","+endV2+")");
+        }
         if (sizeV1.signum() == -1) {
             if (BREAK_RECURSION) {
                 r = bdd.zero();
@@ -1243,6 +1257,9 @@ public class CSPA {
                 if (MASK)
                     r.andWith(V2c.varRange(startV2.longValue(), endV2.longValue()));
             }
+        }
+        if (TRACE_CALLGRAPH) {
+            System.out.println("Result: "+r.toStringWithDomains());
         }
         return r;
     }
@@ -1275,7 +1292,9 @@ public class CSPA {
             src_bdd.andWith(context_map.id());
             src_bdd.andWith(dest_bdd.id());
             if (TRACE_EDGES) System.out.println("Dest="+dest_i+" Src="+src_i);
-            //if (TRACE_EDGES) System.out.println(" Adding edge: "+src_bdd.toStringWithDomains());
+            if (TRACE_BDD) {
+                System.out.println("Adding to g_edgeSet: "+src_bdd.toStringWithDomains());
+            }
             g_edgeSet.orWith(src_bdd);
         }
         dest_bdd.free();
