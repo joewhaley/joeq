@@ -348,6 +348,20 @@ public class CSPA {
             for ( ; j<=s.highVarIndex; ++j) {
                 Variable node = getVariable(j);
                 node.write(out);
+                if (s.ms.getReturned().contains(node)) {
+                    out.writeBytes(" returned");
+                }
+                if (s.ms.getThrown().contains(node)) {
+                    out.writeBytes(" thrown");
+                }
+                Set pps = ((Node) node).getPassedParameters();
+                if (pps != null) {
+                    for (Iterator k = pps.iterator(); k.hasNext(); ) {
+                        PassedParameter pp = (PassedParameter) k.next();
+                        out.writeBytes(" passed ");
+                        pp.write(out);
+                    }
+                }
                 out.writeByte('\n');
             }
         }
