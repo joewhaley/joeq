@@ -1,12 +1,12 @@
 # rules format:
 #(v1,_,v3) in r1, (v1,v3) in r2 / (v3,v1) in r3
-(v,tv) in vT, (tv,th) in aT, (h,th) in hT / (v,h) in vPfilter
 (v,h) in vP0 / (v,h) in vP
 (i,m) in IE0 / (i,m) in IE
-(v1,h1) in vP, (v1,f,v2) in L, (h1,f,h2) in hP, (v2,h2) in vPfilter / (v2,h2) in vP
+(v,tv) in vT, (tv,th) in aT, (h,th) in hT / (v,h) in vPfilter
+(v1,v2) in A, (v2,h) in vP, (v1,h) in vPfilter / (v1,h) in vP
 (v1,h1) in vP, (v1,f,v2) in S, (v2,h2) in vP / (h1,f,h2) in hP
+(v1,h1) in vP, (v1,f,v2) in L, (h1,f,h2) in hP, (v2,h2) in vPfilter / (v2,h2) in vP
 # (m1,i,n) in mI, (i,0,v) in actual, (v,h) in vP, (h,t) in hT, (t,n,m2) in cha / (i,m2) in IE
 (m,z,v1) in formal, (i,m) in IE, (i,z,v2) in actual / (v1,v2) in A
-(v1,v2) in A, (v2,h) in vP, (v1,h) in vPfilter / (v1,h) in vP
 (m,v1) in Mret, (i,m) in IE, (i,v2) in Iret / (v2,v1) in A
 (m,v1) in Mthr, (i,m) in IE, (i,v2) in Ithr / (v2,v1) in A
