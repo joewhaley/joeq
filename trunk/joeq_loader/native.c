@@ -91,9 +91,9 @@ void* __stdcall get_proc_address(void* lib, char* name)
 }
 #endif
 
-void __stdcall mem_set(void* p, const int size, const char c)
+void __stdcall mem_set(void* p, const char c, const int size)
 {
-    memset(p, size, c);
+    memset(p, c, size);
 }
 
 void __stdcall die(const int code)
