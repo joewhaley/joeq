@@ -55,13 +55,13 @@ public class GlobalPathNumbering extends PathNumbering {
             if (prev.size() == 0 && val == null) {
                 Assert.UNREACHABLE("Missing root! "+o);
             }
-            if (val == null) val = BigInteger.ONE;
+            if (val == null) val = BigInteger.ZERO;
             for (Iterator i = prev.iterator(); i.hasNext(); ) {
                 Object p = i.next();
                 BigInteger val2 = (BigInteger) nodeNumbering.get(p);
                 if (val2 == null) {
-                    System.out.println("Loop edge: "+p+" -> "+o);
-                    nodeNumbering.put(p, val2 = BigInteger.ONE);
+                    //System.out.println("Loop edge: "+p+" -> "+o+" current target num="+val);
+                    val2 = BigInteger.ONE;
                 }
                 BigInteger val3;
                 val3 = val.add(val2);
@@ -70,11 +70,11 @@ public class GlobalPathNumbering extends PathNumbering {
                     Range range = new Range(val, val);
                     edgeNumbering.put(edge, range);
                     val3 = val;
-                    //System.out.println("Putting Edge ("+edge+") = "+range);
+                    //System.out.println("Putting unimportant Edge ("+edge+") = "+range);
                 } else {
                     Range range = new Range(val, val3.subtract(BigInteger.ONE));
                     edgeNumbering.put(edge, range);
-                    //System.out.println("Putting Edge ("+edge+") = "+range);
+                    //System.out.println("Putting important Edge ("+edge+") = "+range);
                 }
                 val = val3;
             }
