@@ -48,13 +48,13 @@ import Util.Graphs.SCComponent;
  */
 public class FullyContextSensitiveBDD {
 
-    public static final boolean TRACE_ALL = true;
+    public static final boolean TRACE_ALL = false;
 
     public static final boolean TRACE_WORKLIST  = false || TRACE_ALL;
     public static final boolean TRACE_SUMMARIES = false || TRACE_ALL;
     public static final boolean TRACE_CALLEE    = false || TRACE_ALL;
     public static final boolean TRACE_OVERLAP   = false || TRACE_ALL;
-    public static final boolean TRACE_MATCHING  = true || TRACE_ALL;
+    public static final boolean TRACE_MATCHING  = false || TRACE_ALL;
     public static final boolean TRACE_TRIMMING  = false || TRACE_ALL;
     public static final boolean TRACE_TIMES     = false || TRACE_ALL;
 
@@ -178,7 +178,7 @@ public class FullyContextSensitiveBDD {
         V2toV3 = bdd.makePair(V2, V3);
         V2toV4 = bdd.makePair(V2, V4);
         V3toV2 = bdd.makePair(V3, V2);
-        V3toV2 = bdd.makePair(V3, V4);
+        V3toV4 = bdd.makePair(V3, V4);
         V4toV1 = bdd.makePair(V4, V1);
         V4toV2 = bdd.makePair(V4, V2);
         V4toV3 = bdd.makePair(V4, V3);
@@ -495,7 +495,6 @@ public class FullyContextSensitiveBDD {
                     newStores.orWith(callee_stores);
                     newEdges.orWith(callee_edges);
                     nodes.orWith(callee_nodes);
-                    System.out.println("Nodes is now: "+nodes.toStringWithDomains(bdd));
                     
                     // add edges for parameters.
                     for (int k=0; k<callee.ms.getNumOfParams(); ++k) {
@@ -586,12 +585,12 @@ public class FullyContextSensitiveBDD {
         BDD renumber(BDD src, BDD renumbering_ac, BDD Aset, BDDPairing CtoA, BDD renumbering_bc, BDD Bset, BDDPairing CtoB) {
             if (renumbering_ac == null) return src.id();
             BDD t1, t2;
-            t1 = src.relprod(renumbering_ac, Aset);
+            t1 = src.relprod(renumbering_ac, Aset); // 5%
             Aset.free();
-            t1.replaceWith(CtoA);
-            t2 = t1.relprod(renumbering_bc, Bset);
+            t1.replaceWith(CtoA); // 4%
+            t2 = t1.relprod(renumbering_bc, Bset); // 6%
             t1.free(); Bset.free();
-            t2.replaceWith(CtoB);
+            t2.replaceWith(CtoB); // 3%
             return t2;
         }
         
@@ -700,17 +699,13 @@ public class FullyContextSensitiveBDD {
             int n_i = getVariableIndex(n);
             BDD n_bdd = V2.ithVar(n_i);
             roots.orWith(n_bdd.id());
-            System.out.println("Adding node "+n_i);
             nodes.orWith(n_bdd);
-            System.out.println("Nodes is now: "+nodes.toStringWithDomains(bdd));
         }
         
         public void addNode(Node n) {
             int n_i = getVariableIndex(n);
             BDD n_bdd = V2.ithVar(n_i);
-            System.out.println("Adding node "+n_i);
             nodes.orWith(n_bdd);
-            System.out.println("Nodes is now: "+nodes.toStringWithDomains(bdd));
         }
         
         public void addEdge(Node n1, Node n2) {
@@ -806,9 +801,6 @@ public class FullyContextSensitiveBDD {
         
         boolean matchEdges2() {
             if (TRACE_MATCHING) System.out.println("Matching edges...");
-            
-            System.out.println("Edges: "+edges.toStringWithDomains(bdd));
-            System.out.println("Edges24: "+edges24.toStringWithDomains(bdd));
             
             BDD V2set, V4set, V2andFDset;
             V2set = V2.set();
@@ -961,11 +953,11 @@ public class FullyContextSensitiveBDD {
                 
                 BDD newEdges12 = newEdges.replace(V3toV2);
                 BDD newEdges23 = newEdges.replace(V1toV2);
-                BDD newEdges24 = newEdges23.replace(V3toV4);
+                BDD newEdges24 = newEdges23.replace(V3toV4); // 24%
                 
                 // match old edges against new edges.
-                BDD newerEdges = oldEdges12.relprod(newEdges23, V2set);
-                newerEdges.orWith(newEdges12.relprod(oldEdges23, V2set));
+                BDD newerEdges = oldEdges12.relprod(newEdges23, V2set); // 26%
+                newerEdges.orWith(newEdges12.relprod(oldEdges23, V2set)); // 6%
                 
                 // add new edges to edge set.
                 addedEdges24.orWith(newEdges24.id());
@@ -995,10 +987,10 @@ public class FullyContextSensitiveBDD {
             /*
             BDD newEdges24 = edges.id();
             newEdges24.applyWith(oldEdges13, BDDFactory.diff);
-            newEdges24.replaceWith(V1V3toV2V4); // 26%
+            newEdges24.replaceWith(V1V3toV2V4);
             */
             /*
-            BDD edges24 = edges.replace(V1V3toV2V4); // 16%
+            BDD edges24 = edges.replace(V1V3toV2V4);
             BDD newEdges24 = edges24.id();
             newEdges24.applyWith(oldEdges24, BDDFactory.diff);
             */
@@ -1225,30 +1217,21 @@ public class FullyContextSensitiveBDD {
                     newNodes2.replaceWith(V3toV2);
                     srcNodes.orWith(newNodes2);
                 }
-                System.out.println("SrcNodes after stores: "+srcNodes.toStringWithDomains(bdd));
                 
-                System.out.println("Edges: "+edges.toStringWithDomains(bdd));
                 {
                     // Transitive along assignment edges.
                     srcNodes.replaceWith(V2toV1);
-                    System.out.println("srcNodes as V1: "+srcNodes.toStringWithDomains(bdd));
                     // V1 x V1xV3  =>  V3
                     BDD newNodes = srcNodes.relprod(edges, V1set);
-                    System.out.println("newNodes: "+newNodes.toStringWithDomains(bdd));
                     srcNodes.replaceWith(V1toV2);
-                    System.out.println("srcNodes as V2: "+srcNodes.toStringWithDomains(bdd));
                     newNodes.replaceWith(V3toV2);
-                    System.out.println("newNodes as V2: "+newNodes.toStringWithDomains(bdd));
-                    System.out.println("or "+srcNodes.toStringWithDomains(bdd)+" "+newNodes.toStringWithDomains(bdd));
                     srcNodes.orWith(newNodes);
                 }
-                System.out.println("SrcNodes after assignments: "+srcNodes.toStringWithDomains(bdd));
                 boolean done = oldNodes.equals(srcNodes);
                 oldNodes.free();
                 if (done) break;
                 change = true;
             }
-            System.out.println("SrcNodes is now: "+srcNodes.toStringWithDomains(bdd));
             
             V1set.free();
             V2set.free();
