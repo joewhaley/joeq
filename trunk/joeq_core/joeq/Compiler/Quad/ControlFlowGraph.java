@@ -35,6 +35,9 @@ public class ControlFlowGraph {
     /* List of exception handlers for this control flow graph. */
     private final java.util.List/*<ExceptionHandler>*/ exception_handlers;
     
+    /* Register factory that we use on this control flow graph. */
+    private final RegisterFactory rf;
+    
     /* Current number of basic blocks, used to generate unique id's. */
     private int bb_counter;
     /* Current number of quads, used to generate unique id's. */
@@ -43,10 +46,11 @@ public class ControlFlowGraph {
     /** Creates a new ControlFlowGraph.
      * @param numOfExits  the expected number of branches to the exit node.
      * @param numOfExceptionHandlers  the expected number of exception handlers. */
-    public ControlFlowGraph(int numOfExits, int numOfExceptionHandlers) {
+    public ControlFlowGraph(int numOfExits, int numOfExceptionHandlers, RegisterFactory rf) {
         start_node = BasicBlock.createStartNode();
         end_node = BasicBlock.createEndNode(numOfExits);
         exception_handlers = new java.util.ArrayList(numOfExceptionHandlers);
+        this.rf = rf;
         bb_counter = 1; quad_counter = 0;
     }
 
@@ -56,6 +60,10 @@ public class ControlFlowGraph {
     /** Returns the exit node.
      * @return  the exit node. */
     public BasicBlock exit() { return end_node; }
+
+    /** Returns the register factory used by this control flow graph.
+     * @return  the register factory used by this control flow graph. */
+    public RegisterFactory getRegisterFactory() { return rf; }
 
     /** Create a new basic block in this control flow graph.  The new basic block
      * is given a new, unique id number.
