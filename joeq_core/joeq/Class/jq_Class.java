@@ -2446,8 +2446,12 @@ uphere2:
             cpr.addOther(f.getName());
             cpr.addOther(f.getDesc());
             cpr.addAttributeNames(f);
-            if (f.isConstant())
-                cpr.addOther(f.getConstantValue());
+            if (f.isConstant()) {
+                if (f.getConstantValue() instanceof String)
+                    cpr.addString((String) f.getConstantValue());
+                else
+                    cpr.addOther(f.getConstantValue());
+            }
         }
         for (int i=0; i < declared_instance_methods.length; ++i) {
             jq_InstanceMethod f = declared_instance_methods[i];

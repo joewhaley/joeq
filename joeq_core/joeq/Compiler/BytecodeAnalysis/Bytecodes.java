@@ -169,7 +169,9 @@ public interface Bytecodes {
                 obj.setOpcode(opcode);
                 obj.initFromFile(cp, bytes, wide); // Do further initializations, if any
                 // Byte code offset set in InstructionList
-            } catch(Exception e) { throw new BytecodeException(e.toString()); }
+            } catch(Exception e) {
+                throw new BytecodeException(e.toString());
+            }
             
             return obj;
         }
@@ -6485,7 +6487,7 @@ public interface Bytecodes {
             if(value == null)
                 instruction = InstructionConstants.ACONST_NULL;
             else { // If everything fails create a Constant pool entry
-                cpr.addOther(value);
+                cpr.addString(value);
                 instruction = new LDC(value);
             }
         }
