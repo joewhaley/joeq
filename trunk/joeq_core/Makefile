@@ -2,17 +2,17 @@ packages = Allocator Assembler Bootstrap ClassLib Clazz Compil3r Interpreter Lin
 
 all:	jikes
 
-jikes:
-	find ${packages} -name "*.java" | xargs jikes
+jikes:	bootclasspath
+	find ${packages} -name "*.java" | xargs jikes -bootclasspath @bootclasspath
 
-jikes-pedantic:
-	find ${packages} -name "*.java" | xargs jikes -P
+jikes-pedantic:	bootclasspath
+	find ${packages} -name "*.java" | xargs jikes -bootclasspath @bootclasspath -P
 
 javac:
 	find ${packages} -name "*.java" | xargs javac
 
 clean:
-	find ${packages} -name "*.class" | xargs rm
+	find ${packages} -name "*.class" | xargs rm -f jq*.class GetBootClassPath.class bootclasspath
 
 update:
 	( export CVS_RSH=ssh ; cvs update -P )
@@ -22,3 +22,9 @@ commit:
 
 bootstrap:
 	java -mx200M Main.Bootstrapper
+
+bootclasspath:	GetBootClassPath.class
+	java GetBootClassPath > bootclasspath
+
+GetBootClassPath.class:	GetBootClassPath.java
+	javac GetBootClassPath.java
