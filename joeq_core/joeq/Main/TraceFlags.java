@@ -45,7 +45,7 @@ public abstract class TraceFlags {
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceTrimmer")) {
-            Compil3r.Analysis.Trimmer.TRACE = true;
+            Compil3r.BytecodeAnalysis.Trimmer.TRACE = true;
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceCompiler")) {

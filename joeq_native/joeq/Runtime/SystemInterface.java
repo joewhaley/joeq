@@ -55,7 +55,7 @@ public abstract class SystemInterface {
     public static int/*CodeAddress*/ fs_setfiletime_12;
     public static int/*CodeAddress*/ fs_getlogicaldrives_0;
     public static int/*CodeAddress*/ yield_0;
-    public static int/*CodeAddress*/ sleep_4;
+    public static int/*CodeAddress*/ msleep_4;
     public static int/*CodeAddress*/ create_thread_8;
     public static int/*CodeAddress*/ resume_thread_4;
     public static int/*CodeAddress*/ suspend_thread_4;
@@ -374,10 +374,10 @@ public abstract class SystemInterface {
             Unsafe.invoke(yield_0);
         } catch (Throwable t) { jq.UNREACHABLE(); }
     }
-    public static void sleep(int ms) {
+    public static void msleep(int ms) {
         try {
             Unsafe.pushArg(ms);
-            Unsafe.invoke(sleep_4);
+            Unsafe.invoke(msleep_4);
         } catch (Throwable t) { jq.UNREACHABLE(); }
     }
     public static int/*CPointer*/ create_thread(int/*CodeAddress*/ start_address, int/*HeapAddress*/ param) {

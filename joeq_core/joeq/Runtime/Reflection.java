@@ -11,6 +11,7 @@ package Run_Time;
 
 import Bootstrap.PrimordialClassLoader;
 import Bootstrap.ObjectTraverser;
+import ClassLib.ClassLibInterface;
 import Clazz.jq_Type;
 import Clazz.jq_Class;
 import Clazz.jq_Primitive;
@@ -41,7 +42,7 @@ public abstract class Reflection {
     
     // Map between our jq_Type objects and JDK Class objects
     public static final jq_Type getJQType(Class c) {
-        if (!jq.Bootstrapping) return (jq_Type)getfield_A(c, ClassLib.sun13.java.lang.Class._jq_type);
+        if (!jq.Bootstrapping) return ClassLibInterface.i.getJQType(c);
         if (c.isPrimitive()) {
             if (c == Byte.TYPE) return jq_Primitive.BYTE;
             if (c == Character.TYPE) return jq_Primitive.CHAR;
@@ -94,7 +95,7 @@ public abstract class Reflection {
     
     // Map between our jq_Member objects and JDK Member objects
     public static final jq_Field getJQMember(Field f) {
-        if (!jq.Bootstrapping) return (jq_Field)getfield_A(f, ClassLib.sun13.java.lang.reflect.Field._jq_field);
+        if (!jq.Bootstrapping) return ClassLibInterface.i.getJQField(f);
         jq_Class c = (jq_Class)getJQType(f.getDeclaringClass());
         jq_NameAndDesc nd = new jq_NameAndDesc(Utf8.get(f.getName()), getJQType(f.getType()).getDesc());
         jq_Field m = (jq_Field)c.getDeclaredMember(nd);
@@ -104,7 +105,7 @@ public abstract class Reflection {
         return m;
     }
     public static final jq_Method getJQMember(Method f) {
-        if (!jq.Bootstrapping) return (jq_Method)getfield_A(f, ClassLib.sun13.java.lang.reflect.Method._jq_method);
+        if (!jq.Bootstrapping) return ClassLibInterface.i.getJQMethod(f);
         jq_Class c = (jq_Class)getJQType(f.getDeclaringClass());
         StringBuffer desc = new StringBuffer();
         desc.append('(');
@@ -122,7 +123,7 @@ public abstract class Reflection {
         return m;
     }
     public static final jq_Initializer getJQMember(Constructor f) {
-        if (!jq.Bootstrapping) return (jq_Initializer)getfield_A(f, ClassLib.sun13.java.lang.reflect.Constructor._jq_init);
+        if (!jq.Bootstrapping) return ClassLibInterface.i.getJQInitializer(f);
         jq_Class c = (jq_Class)getJQType(f.getDeclaringClass());
         StringBuffer desc = new StringBuffer();
         desc.append('(');

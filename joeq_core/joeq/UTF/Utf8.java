@@ -9,6 +9,8 @@
 
 package UTF;
 
+import java.io.DataOutput;
+import java.io.IOException;
 import jq;
 import Util.UnmodifiableIterator;
 import Clazz.jq_ClassFileConstants;
@@ -262,8 +264,13 @@ here:
         return true;
     }
     
+    public static boolean NO_NEW = false;
+
     // Helper function.
     private static int addToTable_helper(byte[] b, int hash, int[] chain, int index) {
+	if (NO_NEW) {
+	    jq.UNREACHABLE("Trying to add Utf8 "+fromUtf8(b));
+	}
         if (++size == table.length) growTable_helper();
         if (!checkUtf8(b)) {
             fromUtf8(b); // fromUtf8 has more informative error messages.
@@ -322,6 +329,12 @@ here:
         } else {
             return fromUtf8(data);
         }
+    }
+
+    public void dump(DataOutput out) throws IOException {
+	jq.assert(data.length <= Character.MAX_VALUE);
+	out.writeChar(data.length);
+	out.write(data);
     }
     
     //// Utf8 conversion routines

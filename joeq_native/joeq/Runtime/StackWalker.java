@@ -15,6 +15,7 @@ import Clazz.jq_Method;
 import Run_Time.Unsafe;
 import Run_Time.SystemInterface;
 import jq;
+import UTF.Utf8;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -68,7 +69,7 @@ public class StackWalker implements Iterator {
                 jq_Method m = cc.getMethod();
                 int code_offset = ip - cc.getEntrypoint();
                 if (m != null) {
-                    String sourcefile = m.getDeclaringClass().getSourceFile();
+                    Utf8 sourcefile = m.getDeclaringClass().getSourceFile();
                     int bc_index = cc.getBytecodeIndex(ip);
                     int line_num = m.getLineNumber(bc_index);
                     s = "\tat "+m+" ("+sourcefile+":"+line_num+" bc:"+bc_index+" off:"+jq.hex(code_offset)+")";
