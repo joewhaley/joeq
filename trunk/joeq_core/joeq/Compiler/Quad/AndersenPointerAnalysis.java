@@ -262,7 +262,7 @@ public class AndersenPointerAnalysis {
                     CallTargets ct = getCallTargets_CHA(cs.getLocation());
                     cha_rta_callSiteToTargets.put(cs, ct);
                 }
-                cg = new AndersenCallGraph(cha_rta_callSiteToTargets, INSTANCE.rootSet);
+                cg = CallGraph.makeCallGraph(INSTANCE.rootSet, cha_rta_callSiteToTargets);
                 if (FULL_DUMP)
                     System.out.println(cg);
                 System.out.println(cg.computeHistogram("call site", "target"));
@@ -362,7 +362,7 @@ public class AndersenPointerAnalysis {
                     CallTargets ct = getCallTargets_CHA(cs.getLocation());
                     cha_rta_callSiteToTargets.put(cs, ct);
                 }
-                cg = new AndersenCallGraph(cha_rta_callSiteToTargets, INSTANCE.rootSet);
+                cg = CallGraph.makeCallGraph(INSTANCE.rootSet, cha_rta_callSiteToTargets);
                 System.out.println(cg);
                 System.out.println(cg.computeHistogram("call site", "target"));
             }
@@ -1538,71 +1538,9 @@ public class AndersenPointerAnalysis {
         }
     }
     
-    public static class AndersenCallGraph extends CallGraph {
-
-        private final Map callSiteToTargets;
-        private final Set roots;
-        private Set allMethods;
-        
-        public AndersenCallGraph(Map m, Set s) {
-            callSiteToTargets = new HashMap();
-            roots = new HashSet();
-            for (Iterator i = s.iterator(); i.hasNext(); ) {
-                MethodSummary ms = (MethodSummary) i.next();
-                roots.add(ms.getMethod());
-            }
-            for (Iterator i = m.entrySet().iterator(); i.hasNext(); ) {
-                Map.Entry e = (Map.Entry) i.next();
-                CallSite cs = (CallSite) e.getKey();
-                Set callees = (Set) e.getValue();
-                Object old = callSiteToTargets.put(cs.getLocation(), callees);
-                if (old != null) callees.addAll((Set) old);
-            }
-        }
-
-        private Set calculateAllMethods() {
-            Set allMethods = new HashSet();
-            allMethods.addAll(roots);
-            for (Iterator i = callSiteToTargets.entrySet().iterator(); i.hasNext(); ) {
-                Map.Entry e = (Map.Entry) i.next();
-                Set callees = (Set) e.getValue();
-                allMethods.addAll(callees);
-            }
-            return allMethods;
-        }
-
-        /* (non-Javadoc)
-         * @see Compil3r.Quad.CallGraph#getTargetMethods(java.lang.Object, Compil3r.Quad.ProgramLocation)
-         */
-        public Collection getTargetMethods(Object context, ProgramLocation callSite) {
-            return (Collection) callSiteToTargets.get(callSite);
-        }
-
-        /* (non-Javadoc)
-         * @see Compil3r.Quad.CallGraph#setRoots(java.util.Collection)
-         */
-        public void setRoots(Collection roots) {
-            throw new UnsupportedOperationException();
-        }
-
-        /* (non-Javadoc)
-         * @see Compil3r.Quad.CallGraph#getRoots()
-         */
-        public Collection getRoots() {
-            return roots;
-        }
-
-        /* (non-Javadoc)
-         * @see Compil3r.Quad.CallGraph#getAllMethods()
-         */
-        public Collection getAllMethods() {
-            if (allMethods == null) allMethods = calculateAllMethods();
-            return allMethods;
-        }
-        
+    public CallGraph getCallGraph() {
+        return CallGraph.makeCallGraph(rootSet, callSiteToTargets);
     }
-    
-    public CallGraph getCallGraph() { return new AndersenCallGraph(callSiteToTargets, rootSet); }
     
     public static class AccessPath {
         jq_Field f;
