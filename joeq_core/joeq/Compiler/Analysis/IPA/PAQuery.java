@@ -4,6 +4,8 @@ import java.util.Iterator;
 import org.sf.javabdd.BDD;
 import org.sf.javabdd.TypedBDDFactory.TypedBDD;
 
+import Util.Assert;
+
 import Clazz.jq_Method;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary;
 import Compil3r.Analysis.IPSSA.IPSSABuilder;
@@ -19,9 +21,10 @@ public class PAQuery {
     
         protected void parseParams(String[] args) {}
         
-        void visitMethod(jq_Method m){
-            MethodSummary ms = MethodSummary.getSummary(m);
+        void visitMethod(jq_Method m){            
             if(getBuilder().skipMethod(m)) return;
+            
+            MethodSummary ms = MethodSummary.getSummary(m);
             if(ms == null) return;
             System.out.println("Processing method " + m + ":\t" + ms.getNumOfParams());
             
@@ -58,8 +61,14 @@ public class PAQuery {
                 
                 //System.out.println("context #" + i + ": " + context.toStringWithDomains());
                 
-                TypedBDD t = (TypedBDD)params.relprod(r.vP, r.V1.set());
-                TypedBDD pointsTo = (TypedBDD)context.relprod(t, r.V1c.set().andWith(r.H1c.set()));
+                Assert._assert(r.vPfilter != null);
+                TypedBDD t = (TypedBDD)r.vP.and(r.vPfilter.id());   // restrict by the type filter
+                TypedBDD t2 = (TypedBDD)params.relprod(t, r.V1.set());
+                t.free();
+                t = t2;
+                
+                /*TypedBDD */t = (TypedBDD)params.relprod(r.vP, r.V1.set());
+                TypedBDD pointsTo = (TypedBDD)context.relprod(t, r.V1c.set().andWith(r.H1c.set()));                
                 t.free();
                 t = (TypedBDD)pointsTo.exist(r.Z.set());
                 //System.out.println(t.satCount() + ", " + pointsTo.satCount());
