@@ -27,6 +27,7 @@ import org.sf.javabdd.BDDFactory;
 import org.sf.javabdd.BDDPairing;
 
 import Bootstrap.PrimordialClassLoader;
+import Clazz.jq_Array;
 import Clazz.jq_Class;
 import Clazz.jq_Field;
 import Clazz.jq_Method;
@@ -71,10 +72,11 @@ public class PA {
     boolean ADD_CLINIT = true;
     boolean ADD_THREADS = true;
     boolean ADD_FINALIZERS = true;
-    boolean FILTER_TYPE = true;
-    boolean INCREMENTAL1 = true;
-    boolean INCREMENTAL2 = true;
-    boolean INCREMENTAL3 = true;
+    boolean FILTER_VP = System.getProperty("pa.novpfilter") == null;
+    boolean FILTER_HP = System.getProperty("pa.nohpfilter") == null;
+    boolean INCREMENTAL1 = true; // incremental points-to
+    boolean INCREMENTAL2 = true; // incremental parameter binding
+    boolean INCREMENTAL3 = true; // incremental invocation binding
     boolean CONTEXT_SENSITIVE = System.getProperty("pa.cs") != null;
     boolean DISCOVER_CALL_GRAPH = System.getProperty("pa.discover") != null;
     boolean DUMP_DOTGRAPH = System.getProperty("pa.dumpdotgraph") != null;
@@ -122,10 +124,14 @@ public class PA {
     BDD mI;     // MxIxN, method invocations            (no context)
     BDD mV;     // MxV, method variables                (no context)
     BDD sync;   // V, synced locations                  (no context)
-    
+
+    BDD fT;     // FxT2, field types                    (no context)
+    BDD fC;     // FxT2, field containing types         (no context)
+
     BDD hP;     // H1xFxH2, heap points-to              (+context)
     BDD IE;     // IxM, invocation edges                (no context)
-    BDD filter; // V1xH1, type filter                   (no context)
+    BDD vPfilter; // V1xH1, type filter                 (no context)
+    BDD hPfilter; // H1xFxH2, type filter               (no context)
     BDD IEc;    // V2cxIxV1cxM, context-sensitive edges
     
     BDD visited; // M, visited methods
@@ -152,8 +158,11 @@ public class PA {
         return new IndexMap(name, 1 << bits);
     }
     
-    public void initialize() {
-        bdd = BDDFactory.init(bddnodes, bddcache);
+    public void initialize(String bddfactory) {
+        if (bddfactory == null)
+            bdd = BDDFactory.init(bddnodes, bddcache);
+        else
+            bdd = BDDFactory.init(bddfactory, bddnodes, bddcache);
         bdd.setMaxIncrease(bddnodes/4);
         
         V1 = makeDomain("V1", V_BITS);
@@ -200,6 +209,11 @@ public class PA {
             V1cV2ctoV2cV1c = bdd.makePair();
             V1cV2ctoV2cV1c.set(new BDDDomain[] {V1c,V2c},
                                new BDDDomain[] {V2c,V1c});
+            if (FILTER_HP) {
+                H1toH2 = bdd.makePair();
+                H1toH2.set(new BDDDomain[] {H1,H1c},
+                           new BDDDomain[] {H2,H2c});
+            }
         } else {
             V1toV2 = bdd.makePair(V1, V2);
             V2toV1 = bdd.makePair(V2, V1);
@@ -209,6 +223,9 @@ public class PA {
             V2H2toV1H1 = bdd.makePair();
             V2H2toV1H1.set(new BDDDomain[] {V2,H2},
                            new BDDDomain[] {V1,H1});
+            if (FILTER_HP) {
+                H1toH2 = bdd.makePair(H1, H2);
+            }
         }
         
         V1set = V1.set();
@@ -245,6 +262,10 @@ public class PA {
         vT = bdd.zero();
         hT = bdd.zero();
         aT = bdd.zero();
+        if (FILTER_HP) {
+            fT = bdd.zero();
+            fC = bdd.zero();
+        }
         cha = bdd.zero();
         actual = bdd.zero();
         formal = bdd.zero();
@@ -687,9 +708,15 @@ public class PA {
     }
     
     void addToHT(int H_i, jq_Reference type) {
-        BDD bdd1 = H1.ithVar(H_i);
         int T_i = Tmap.get(type);
-        bdd1.andWith(T2.ithVar(T_i));
+        BDD T_bdd = T2.ithVar(T_i);
+        addToHT(H_i, T_bdd);
+        T_bdd.free();
+    }
+    
+    void addToHT(int H_i, BDD T_bdd) {
+        BDD bdd1 = H1.ithVar(H_i);
+        bdd1.andWith(T_bdd.id());
         if (TRACE_RELATIONS) out.println("Adding to hT: "+bdd1.toStringWithDomains());
         hT.orWith(bdd1);
     }
@@ -699,6 +726,19 @@ public class PA {
         bdd1.andWith(T1_bdd.id());
         if (TRACE_RELATIONS) out.println("Adding to aT: "+bdd1.toStringWithDomains());
         aT.orWith(bdd1);
+    }
+    
+    void addToFC(BDD T2_bdd, int F_i) {
+        BDD bdd1 = F.ithVar(F_i);
+        bdd1.andWith(T2_bdd.id());
+        if (TRACE_RELATIONS) out.println("Adding to fC: "+bdd1.toStringWithDomains(TS));
+        fC.orWith(bdd1);
+    }
+    
+    void addToFT(BDD F_bdd, BDD T2_bdd) {
+        BDD bdd1 = F_bdd.and(T2_bdd);
+        if (TRACE_RELATIONS) out.println("Adding to fT: "+bdd1.toStringWithDomains(TS));
+        fT.orWith(bdd1);
     }
     
     void addToCHA(BDD T_bdd, int N_i, jq_Method m) {
@@ -714,6 +754,7 @@ public class PA {
     int last_H = 0;
     int last_T = 0;
     int last_N = 0;
+    int last_F = 0;
     
     public void buildTypes() {
         // build up 'vT'
@@ -740,7 +781,14 @@ public class PA {
                     addThreadRun(H_i, (jq_Class) type);
                 }
             }
-            addToHT(H_i, type);
+            if (false && n instanceof UnknownTypeNode) {
+                // conservatively say that it can be any type.
+                BDD Tdom = T2.domain();
+                addToHT(H_i, Tdom);
+                Tdom.free();
+            } else {
+                addToHT(H_i, type);
+            }
         }
         
         // build up 'aT'
@@ -754,16 +802,59 @@ public class PA {
                     addToAT(T1_bdd, T2_i);
                 }
             }
+            if (FILTER_HP) {
+                BDD T2_bdd = T2.ithVar(T1_i);
+                if (T1_i >= last_T && t1 == null) {
+                    BDD Fdom = F.domain();
+                    addToFT(Fdom, T2_bdd);
+                    Fdom.free();
+                }
+                int start2 = (T1_i < last_T)?last_F:0;
+                for (int F_i = start2; F_i < Fmap.size(); ++F_i) {
+                    jq_Field f = (jq_Field) Fmap.get(F_i);
+                    if (f != null) {
+                        f.getDeclaringClass().prepare();
+                        f.getType().prepare();
+                    }
+                    BDD F_bdd = F.ithVar(F_i);
+                    if ((t1 == null && f != null && f.isStatic()) ||
+                        (t1 != null && ((f == null && t1 instanceof jq_Array && ((jq_Array) t1).getElementType().isReferenceType()) ||
+                                        (f != null && t1.isSubtypeOf(f.getDeclaringClass()))))) {
+                        addToFC(T2_bdd, F_i);
+                    }
+                    if (f != null && t1 != null && t1.isSubtypeOf(f.getType())) {
+                        addToFT(F_bdd, T2_bdd);
+                    }
+                }
+                T2_bdd.free();
+            }
             T1_bdd.free();
         }
         
-        // make type filter
-        if (FILTER_TYPE) {
+        // make type filters
+        if (FILTER_VP) {
+            if (vPfilter != null) vPfilter.free();
             BDD t1 = vT.relprod(aT, T1set); // V1xT1 x T1xT2 = V1xT2
-            filter = t1.relprod(hT, T2set); // V1xT2 x H1xT2 = V1xH1
+            vPfilter = t1.relprod(hT, T2set); // V1xT2 x H1xT2 = V1xH1
             t1.free();
-        } else {
-            filter = bdd.one();
+        }
+
+        if (FILTER_HP) {
+            for (int F_i = last_F; F_i < Fmap.size(); ++F_i) {
+                jq_Field f = (jq_Field) Fmap.get(F_i);
+                if (f == null) {
+                    BDD F_bdd = F.ithVar(F_i);
+                    BDD T2dom = T2.domain();
+                    addToFT(F_bdd, T2dom);
+                    T2dom.free();
+                    F_bdd.free();
+                }
+            }
+            if (hPfilter != null) hPfilter.free();
+            BDD t1 = hT.relprod(fC, T2set); // H1xT2 x FxT2 = H1xF
+            hPfilter = hT.relprod(fT, T2set); // H1xT2 x FxT2 = H1xF
+            hPfilter.replaceWith(H1toH2); // H2xF
+            hPfilter.andWith(t1); // H1xFxH2
         }
         
         // build up 'cha'
@@ -791,6 +882,7 @@ public class PA {
         last_H = Hmap.size();
         last_T = Tmap.size();
         last_N = Nmap.size();
+        last_F = Fmap.size();
     }
     
     public void addClassInitializer(jq_Class c) {
@@ -850,7 +942,7 @@ public class PA {
                 BDD t1 = vP.replace(V1toV2); // V2xH1
                 BDD t2 = A.relprod(t1, V2set); // V1xV2 x V2xH1 = V1xH1
                 t1.free();
-                t2.andWith(filter.id());
+                if (FILTER_VP) t2.andWith(vPfilter.id());
                 vP.orWith(t2);
                 if (TRACE_SOLVER) out.println("Inner #"+inner+": vP "+old_vP.satCount(V1H1set)+" -> "+vP.satCount(V1H1set));
                 
@@ -864,6 +956,7 @@ public class PA {
             BDD t4 = vP.replace(V1H1toV2H2); // V2xH2
             BDD t5 = t3.relprod(t4, V2set); // H1xFxV2 x V2xH2 = H1xFxH2
             t3.free(); t4.free();
+            if (FILTER_HP) t5.andWith(hPfilter.id());
             hP.orWith(t5);
 
             if (TRACE_SOLVER) out.println("Outer #"+outer+": hP "+old_hP.satCount(H1FH2set)+" -> "+hP.satCount(H1FH2set));
@@ -878,7 +971,7 @@ public class PA {
             BDD t7 = t6.relprod(hP, H1Fset); // H1xFxV2 x H1xFxH2 = V2xH2
             t6.free();
             t7.replaceWith(V2H2toV1H1); // V1xH1
-            t7.andWith(filter.id());
+            if (FILTER_VP) t7.andWith(vPfilter.id());
             vP.orWith(t7);
         }
     }
@@ -898,7 +991,7 @@ public class PA {
             BDD t1 = vP.replace(V1toV2);
             BDD t2 = new_A.relprod(t1, V2set); // V1xV2 x V2xH1 = V1xH1
             new_A.free(); t1.free();
-            t2.andWith(filter.id());
+            if (FILTER_VP) t2.andWith(vPfilter.id());
             if (TRACE_SOLVER) out.print(" vP "+vP.satCount(V1H1set));
             vP.orWith(t2);
             if (TRACE_SOLVER) out.println(" --> "+vP.satCount(V1H1set));
@@ -915,6 +1008,7 @@ public class PA {
             BDD t4 = vP.replace(V1H1toV2H2); // V2xH2
             BDD t5 = t3.relprod(t4, V2set); // H1xFxV2 x V2xH2 = H1xFxH2
             t3.free(); t4.free();
+            if (FILTER_HP) t5.andWith(hPfilter.id());
             if (TRACE_SOLVER) out.print(" hP "+hP.satCount(H1FH2set));
             hP.orWith(t5);
             if (TRACE_SOLVER) out.println(" --> "+hP.satCount(H1FH2set));
@@ -930,7 +1024,7 @@ public class PA {
             BDD t7 = t6.relprod(hP, H1Fset); // H1xFxV2 x H1xFxH2 = V2xH2
             t6.free();
             t7.replaceWith(V2H2toV1H1); // V1xH1
-            t7.andWith(filter.id());
+            if (FILTER_VP) t7.andWith(vPfilter.id());
             if (TRACE_SOLVER) out.print(" vP "+vP.satCount(V1H1set));
             vP.orWith(t7);
             if (TRACE_SOLVER) out.println(" --> "+vP.satCount(V1H1set));
@@ -948,7 +1042,7 @@ public class PA {
                 new_vP_inner.free();
                 BDD t2 = A.relprod(t1, V2set); // V1xV2 x V2xH1 = V1xH1
                 t1.free();
-                t2.andWith(filter.id());
+                if (FILTER_VP) t2.andWith(vPfilter.id());
                 
                 BDD old_vP_inner = vP.id();
                 vP.orWith(t2);
@@ -971,6 +1065,7 @@ public class PA {
                 BDD t4 = vP.replace(V1H1toV2H2); // V2xH2
                 BDD t5 = t3.relprod(t4, V2set); // H1xFxV2 x V2xH2 = H1xFxH2
                 t3.free(); t4.free();
+                if (FILTER_HP) t5.andWith(hPfilter.id());
                 hP.orWith(t5);
             }
             {
@@ -979,6 +1074,7 @@ public class PA {
                 BDD t4 = new_vP.replace(V1H1toV2H2); // V2xH2
                 BDD t5 = t3.relprod(t4, V2set); // H1xFxV2 x V2xH2 = H1xFxH2
                 t3.free(); t4.free();
+                if (FILTER_HP) t5.andWith(hPfilter.id());
                 hP.orWith(t5);
             }
 
@@ -1000,7 +1096,7 @@ public class PA {
                 BDD t7 = t6.relprod(hP, H1Fset); // H1xFxV2 x H1xFxH2 = V2xH2
                 t6.free();
                 t7.replaceWith(V2H2toV1H1); // V1xH1
-                t7.andWith(filter.id());
+                if (FILTER_VP) t7.andWith(vPfilter.id());
                 vP.orWith(t7);
             }
             {
@@ -1009,7 +1105,7 @@ public class PA {
                 BDD t7 = t6.relprod(new_hP, H1Fset); // H1xFxV2 x H1xFxH2 = V2xH2
                 t6.free();
                 t7.replaceWith(V2H2toV1H1); // V1xH1
-                t7.andWith(filter.id());
+                if (FILTER_VP) t7.andWith(vPfilter.id());
                 vP.orWith(t7);
             }
             if (TRACE_SOLVER)
@@ -1260,11 +1356,14 @@ public class PA {
     }
     
     public void run(CallGraph cg, Collection rootMethods) throws IOException {
+        run(null, cg, rootMethods);
+    }
+    public void run(String bddfactory, CallGraph cg, Collection rootMethods) throws IOException {
         if (cg != null) {
             numberPaths(cg);
         }
         
-        initialize();
+        initialize(bddfactory);
         roots.addAll(rootMethods);
         
         if (cg != null) {
@@ -1346,7 +1445,7 @@ public class PA {
                     System.out.println("Discovering call graph first...");
                     dis.CONTEXT_SENSITIVE = false;
                     dis.DISCOVER_CALL_GRAPH = true;
-                    dis.run(cg, rootMethods);
+                    dis.run("java", cg, rootMethods);
                     System.out.println("Finished discovering call graph.");
                     dis = new PA();
                     cg = loadCallGraph(rootMethods);
@@ -1438,7 +1537,8 @@ public class PA {
         
         bdd.save(dumpfilename+".hP", hP);
         bdd.save(dumpfilename+".IE", IE);
-        bdd.save(dumpfilename+".filter", filter);
+        if (vPfilter != null) bdd.save(dumpfilename+".vPfilter", vPfilter);
+        if (hPfilter != null) bdd.save(dumpfilename+".hPfilter", hPfilter);
         if (IEc != null) bdd.save(dumpfilename+".IEc", IEc);
         bdd.save(dumpfilename+".visited", visited);
         
