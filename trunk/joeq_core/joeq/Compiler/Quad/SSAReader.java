@@ -18,6 +18,7 @@ import java.util.StringTokenizer;
 import UTF.Utf8;
 import Clazz.jq_NameAndDesc;
 import Main.jq;
+import Main.HostedVM;
 
 import Compil3r.Quad.AndersenPointerAnalysis;
 import Compil3r.BytecodeAnalysis.BytecodeVisitor;
@@ -684,7 +685,7 @@ public class SSAReader {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        jq.initializeForHostJVMExecution();
+        HostedVM.initialize();
         
         int index = 0; int index0 = -1;
         while (index != index0 && index < args.length) {

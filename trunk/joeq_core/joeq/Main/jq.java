@@ -6,31 +6,10 @@
  */
 package Main;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import Allocator.SimpleAllocator;
-import Bootstrap.MethodInvocation;
-import Bootstrap.PrimordialClassLoader;
-import ClassLib.ClassLibInterface;
-import Clazz.jq_Class;
-import Clazz.jq_NameAndDesc;
-import Clazz.jq_Primitive;
-import Clazz.jq_Reference;
-import Clazz.jq_StaticMethod;
-import Clazz.jq_Type;
-import Memory.CodeAddress;
-import Memory.HeapAddress;
-import Memory.StackAddress;
-import Run_Time.Reflection;
-import Run_Time.SystemInterface;
-import Run_Time.Unsafe;
-import Scheduler.jq_MainThread;
-import Scheduler.jq_NativeThread;
-import Scheduler.jq_Thread;
-import UTF.Utf8;
-import Util.Strings;
+import Run_Time.DebugInterface;
 
 /**
  *
@@ -360,206 +339,6 @@ import Util.Strings;
 
 public abstract class jq {
 
-    public static void boot() throws Throwable {
-        try {
-            // initialize the thread data structures, allocators, etc.
-            jq_NativeThread.initInitialNativeThread();
-
-            // init the ctrl-break handler thread.
-            jq_NativeThread.initBreakThread();
-
-            // init the garbage collector thread & set it as daemon
-            jq_NativeThread.initGCThread();
-
-            // call java.lang.System.initializeSystemClass()
-            ClassLibInterface.DEFAULT.initializeSystemClass();
-        } catch (Throwable x) {
-            SystemInterface.debugwriteln("Exception occurred during virtual machine initialization");
-            SystemInterface.debugwriteln("Exception: " + x);
-            if (System.err != null) x.printStackTrace(System.err);
-            return;
-        }
-        int numOfArgs = SystemInterface.main_argc();
-        String[] args = new String[numOfArgs];
-        for (int i = 0; i < numOfArgs; ++i) {
-            int len = SystemInterface.main_argv_length(i);
-            byte[] b = new byte[len];
-            SystemInterface.main_argv(i, b);
-            args[i] = new String(b);
-        }
-        String classpath = ".";
-        int i = 0;
-        for (; ;) {
-            if (i == args.length) {
-                printUsage();
-                return;
-            }
-            if (args[i].equals("-cp") || args[i].equals("-classpath")) { // class path
-                classpath = args[++i];
-                ++i;
-                continue;
-            }
-            if (args[i].equals("-nt") || args[i].equals("-native_threads")) { // number of native threads
-                NumOfNativeThreads = Integer.parseInt(args[++i]);
-                ++i;
-                continue;
-            }
-            if (args[i].startsWith("-mx")) { // max memory
-                String amt = args[i].substring(3);
-                int mult = 1;
-                if (amt.endsWith("m") || amt.endsWith("M")) {
-                    mult = 1048576;
-                    amt = amt.substring(0, amt.length()-1);
-                } else if (amt.endsWith("k") || amt.endsWith("K")) {
-                    mult = 1024;
-                    amt = amt.substring(0, amt.length()-1);
-                }
-                int size = mult * Integer.parseInt(amt);
-                //size = HeapAddress.align(size, 20);
-                SimpleAllocator.MAX_MEMORY = size;
-                ++i;
-                continue;
-            }
-            // todo: other command line switches to change VM behavior.
-            int j = TraceFlags.setTraceFlag(args, i);
-            if (i != j) {
-                i = j;
-                continue;
-            }
-            break;
-        }
-        if (on_vm_startup != null) {
-            Iterator it = on_vm_startup.iterator();
-            while (it.hasNext()) {
-                MethodInvocation mi = (MethodInvocation) it.next();
-                try {
-                    mi.invoke();
-                } catch (Throwable x) {
-                    SystemInterface.debugwriteln("Exception occurred while initializing the virtual machine");
-                    SystemInterface.debugwriteln(x.toString());
-                    x.printStackTrace(System.err);
-                    //return;
-                }
-            }
-        }
-        if (classpath != null) {
-            Iterator it = PrimordialClassLoader.classpaths(classpath);
-            while (it.hasNext()) {
-                String s = (String) it.next();
-                PrimordialClassLoader.loader.addToClasspath(s);
-            }
-        }
-
-        jq_Thread tb = Unsafe.getThreadBlock();
-        jq_NativeThread nt = tb.getNativeThread();
-        jq_NativeThread.initNativeThreads(nt, NumOfNativeThreads);
-
-        // Here we start method replacement of classes whose name were given as arguments to -replace on the cmd line.
-        if (Clazz.jq_Class.TRACE_REPLACE_CLASS) SystemInterface.debugwriteln(Strings.lineSep+"STARTING REPLACEMENT of classes: " + Clazz.jq_Class.classToReplace);
-        for (Iterator it = Clazz.jq_Class.classToReplace.iterator(); it.hasNext();) {
-            String newCName = (String) it.next();
-            PrimordialClassLoader.loader.replaceClass(newCName);
-        }
-        if (Clazz.jq_Class.TRACE_REPLACE_CLASS) SystemInterface.debugwriteln(Strings.lineSep+"DONE with Classes Replacement!");
-
-        String className = args[i];
-        jq_Class main_class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("L" + className.replace('.', '/') + ";");
-        main_class.load();
-        jq_StaticMethod main_method = main_class.getStaticMethod(new jq_NameAndDesc(Utf8.get("main"), Utf8.get("([Ljava/lang/String;)V")));
-        if (main_method == null) {
-            System.err.println("Class " + className + " does not contain a main method!");
-            return;
-        }
-        if (!main_method.isPublic()) {
-            System.err.println("Method " + main_method + " is not public!");
-            return;
-        }
-        main_class.cls_initialize();
-        String[] main_args = new String[args.length - i - 1];
-        System.arraycopy(args, i + 1, main_args, 0, main_args.length);
-
-        //jq_CompiledCode main_cc = main_method.getDefaultCompiledVersion();
-        //Reflection.invokestatic_V(main_method, main_args);
-        jq_MainThread mt = new jq_MainThread(main_method, main_args);
-        mt.start();
-        jq_NativeThread.startNativeThreads();
-        nt.nativeThreadEntry();
-        jq.UNREACHABLE();
-    }
-
-    public static void printUsage() {
-        System.out.println("Usage: joeq <classname> <parameters>");
-    }
-
-    public static void initializeForHostJVMExecution() {
-        if (jq.RunningNative) return;
-        
-        jq.DontCompile = true;
-        jq.boot_types = new java.util.HashSet();
-
-        CodeAddress.FACTORY = new CodeAddress.CodeAddressFactory() {
-            public int size() {
-                return 4;
-            }
-            public CodeAddress getNull() {
-                return null;
-            }
-        };
-        HeapAddress.FACTORY = new HeapAddress.HeapAddressFactory() {
-            public int size() {
-                return 4;
-            }
-            
-            public int logSize() {
-                return 2;
-            }
-            
-            public int pageAlign() {
-                return 12; // 2**12 = 4096
-            }
-
-            public HeapAddress getNull() {
-                return null;
-            }
-
-            public HeapAddress addressOf(Object o) {
-                return null;
-            }
-
-            public HeapAddress address32(int val) {
-                return null;
-            }
-        };
-        StackAddress.FACTORY = new StackAddress.StackAddressFactory() {
-            public int size() {
-                return 4;
-            }
-
-            public StackAddress alloca(int a) {
-                jq.UNREACHABLE();
-                return null;
-            }
-
-            public StackAddress getBasePointer() {
-                jq.UNREACHABLE();
-                return null;
-            }
-
-            public StackAddress getStackPointer() {
-                jq.UNREACHABLE();
-                return null;
-            }
-        };
-        String classpath = System.getProperty("sun.boot.class.path") + System.getProperty("path.separator") + System.getProperty("java.class.path");
-        for (Iterator it = PrimordialClassLoader.classpaths(classpath); it.hasNext();) {
-            String s = (String) it.next();
-            PrimordialClassLoader.loader.addToClasspath(s);
-        }
-
-        Reflection.obj_trav = ClassLibInterface.DEFAULT.getObjectTraverser();
-        Reflection.obj_trav.initialize();
-    }
-
     /**
      * Number of native threads in the system.
      * This can be set with the "-nt" option at startup.
@@ -588,21 +367,17 @@ public abstract class jq {
      */
     public static List on_vm_startup;
 
-    public static boolean isBootType(jq_Type t) {
-        return boot_types.contains(t);
-    }
-
     public static /*final*/ boolean SMP = true;
 
     public static void Assert(boolean b, String reason) {
         if (!b) {
-            SystemInterface.debugwriteln("Assertion Failure!");
-            SystemInterface.debugwriteln(reason);
+            DebugInterface.debugwriteln("Assertion Failure!");
+            DebugInterface.debugwriteln(reason);
             if (jq.RunningNative) {
-                Debug.OnlineDebugger.debuggerEntryPoint();
+                // Debug.OnlineDebugger.debuggerEntryPoint();
                 //new InternalError().printStackTrace();
             }
-            SystemInterface.die(-1);
+            DebugInterface.die(-1);
         }
     }
 
@@ -611,39 +386,39 @@ public abstract class jq {
     }
 
     public static void TODO(String s) {
-        SystemInterface.debugwriteln("TODO: " + s);
+        DebugInterface.debugwriteln("TODO: " + s);
         if (jq.RunningNative) {
-            Debug.OnlineDebugger.debuggerEntryPoint();
+            // Debug.OnlineDebugger.debuggerEntryPoint();
             //new InternalError().printStackTrace();
         }
-        SystemInterface.die(-1);
+        DebugInterface.die(-1);
     }
 
     public static void TODO() {
-        SystemInterface.debugwriteln("TODO");
+        DebugInterface.debugwriteln("TODO");
         if (jq.RunningNative) {
-            Debug.OnlineDebugger.debuggerEntryPoint();
+            // Debug.OnlineDebugger.debuggerEntryPoint();
             //new InternalError().printStackTrace();
         }
-        SystemInterface.die(-1);
+        DebugInterface.die(-1);
     }
 
     public static void UNREACHABLE(String s) {
-        SystemInterface.debugwriteln("UNREACHABLE: " + s);
+        DebugInterface.debugwriteln("UNREACHABLE: " + s);
         if (jq.RunningNative) {
-            Debug.OnlineDebugger.debuggerEntryPoint();
+            // Debug.OnlineDebugger.debuggerEntryPoint();
             //new InternalError().printStackTrace();
         }
-        SystemInterface.die(-1);
+        DebugInterface.die(-1);
     }
 
     public static void UNREACHABLE() {
-        SystemInterface.debugwriteln("BUG! unreachable code reached!");
+        DebugInterface.debugwriteln("BUG! unreachable code reached!");
         if (jq.RunningNative) {
-            Debug.OnlineDebugger.debuggerEntryPoint();
+            // Debug.OnlineDebugger.debuggerEntryPoint();
             //new InternalError().printStackTrace();
         }
-        SystemInterface.die(-1);
+        DebugInterface.die(-1);
     }
 
     //// converting bytes to other data types
@@ -710,27 +485,6 @@ public abstract class jq {
         b[index + 5] = (byte) (i >> 16);
         b[index + 6] = (byte) (i >> 8);
         b[index + 7] = (byte) (i);
-    }
-
-    //// useful functions for parsing class and method names
-    public static jq_Type parseType(String s) {
-        if (s.length() == 1) {
-            jq_Primitive t = (jq_Primitive) PrimordialClassLoader.loader.getBSType(s);
-            if (t != null) return t;
-            s = "L" + s + ";";
-        } else {
-            s = s.replace('.', '/');
-            int arrayDepth = 0;
-            while (s.endsWith("[]")) {
-                ++arrayDepth;
-                s = s.substring(0, s.length() - 2);
-            }
-            if (!s.startsWith("[") && !s.endsWith(";"))
-                s = "L" + s + ";";
-            while (--arrayDepth >= 0)
-                s = "[" + s;
-        }
-        return (jq_Reference) PrimordialClassLoader.loader.getOrCreateBSType(s);
     }
 
     //public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateType("LMain/jq;");

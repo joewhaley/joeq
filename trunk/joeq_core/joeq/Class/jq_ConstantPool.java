@@ -21,7 +21,7 @@ import Bootstrap.PrimordialClassLoader;
 import ClassLib.ClassLibInterface;
 import Compil3r.BytecodeAnalysis.Bytecodes;
 import Main.jq;
-import Run_Time.SystemInterface;
+import Run_Time.DebugInterface;
 import UTF.Utf8;
 
 /*
@@ -168,7 +168,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
                     jq_Member mem = clazz.getDeclaredMember(nd);
                     if (mem == null) {
                         // this constant pool entry refers to a member that doesn't exist in the named class.
-                        if (TRACE) SystemInterface.debugwriteln("No such member: "+clazz+"."+nd+", referenced by cp idx "+(int)i);
+                        if (TRACE) DebugInterface.debugwriteln("No such member: "+clazz+"."+nd+", referenced by cp idx "+(int)i);
                         if (false) {
                             // throw resolution exception early
                             String s = ("No such member: "+clazz+"."+nd+", referenced by cp idx "+(int)i);
@@ -185,18 +185,18 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
                         if (desc.isDescriptor(TC_PARAM)) {
                             if (mem.isStatic()) {
                                 constant_pool_tags[i] = CONSTANT_ResolvedSMethodRef;
-                                if (TRACE) SystemInterface.debugwriteln("Resolved static method "+mem+", cp idx "+(int)i);
+                                if (TRACE) DebugInterface.debugwriteln("Resolved static method "+mem+", cp idx "+(int)i);
                             } else {
                                 constant_pool_tags[i] = CONSTANT_ResolvedIMethodRef;
-                                if (TRACE) SystemInterface.debugwriteln("Resolved instance method "+mem+", cp idx "+(int)i);
+                                if (TRACE) DebugInterface.debugwriteln("Resolved instance method "+mem+", cp idx "+(int)i);
                             }
                         } else {
                             if (mem.isStatic()) {
                                 constant_pool_tags[i] = CONSTANT_ResolvedSFieldRef;
-                                if (TRACE) SystemInterface.debugwriteln("Resolved static field "+mem+", cp idx "+(int)i);
+                                if (TRACE) DebugInterface.debugwriteln("Resolved static field "+mem+", cp idx "+(int)i);
                             } else {
                                 constant_pool_tags[i] = CONSTANT_ResolvedIFieldRef;
-                                if (TRACE) SystemInterface.debugwriteln("Resolved instance field "+mem+", cp idx "+(int)i);
+                                if (TRACE) DebugInterface.debugwriteln("Resolved instance field "+mem+", cp idx "+(int)i);
                             }
                         }
                     }
@@ -223,7 +223,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
         }
         constant_pool[i] = PrimordialClassLoader.getOrCreateType(cl, classname);
         constant_pool_tags[i] = CONSTANT_ResolvedClass;
-        if (TRACE) SystemInterface.debugwriteln("Resolved class "+constant_pool[i]+", cp idx "+(int)i);
+        if (TRACE) DebugInterface.debugwriteln("Resolved class "+constant_pool[i]+", cp idx "+(int)i);
     }
 
     public final void set(char index, Object o, byte tag) {
@@ -280,7 +280,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
             return (jq_StaticField)constant_pool[index];
         if (constant_pool_tags[index] != CONSTANT_FieldRef)
             throw new VerifyError();
-        if (TRACE) SystemInterface.debugwriteln("Attempting to resolve static field "+constant_pool[index]+" cp idx "+(int)index);
+        if (TRACE) DebugInterface.debugwriteln("Attempting to resolve static field "+constant_pool[index]+" cp idx "+(int)index);
         jq_MemberReference n = (jq_MemberReference)constant_pool[index];
         jq_Class otherclazz = n.getReferencedClass();
         jq_NameAndDesc nd = n.getNameAndDesc();
@@ -301,7 +301,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
             if (m == null) {
                 constant_pool[index] = f = otherclazz.createStaticField(nd);
                 constant_pool_tags[index] = CONSTANT_ResolvedSFieldRef;
-                if (TRACE) SystemInterface.debugwriteln("Resolved static field "+f+", cp idx "+(int)index);
+                if (TRACE) DebugInterface.debugwriteln("Resolved static field "+f+", cp idx "+(int)index);
             } else if (!m.isStatic())
                 throw new VerifyError("field "+m+" referred to as both static and instance");
             else
@@ -314,7 +314,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
             return (jq_InstanceField)constant_pool[index];
         if (constant_pool_tags[index] != CONSTANT_FieldRef)
             throw new VerifyError();
-        if (TRACE) SystemInterface.debugwriteln("Attempting to resolve instance field "+constant_pool[index]+" cp idx "+(int)index);
+        if (TRACE) DebugInterface.debugwriteln("Attempting to resolve instance field "+constant_pool[index]+" cp idx "+(int)index);
         jq_MemberReference n = (jq_MemberReference)constant_pool[index];
         jq_Class otherclazz = n.getReferencedClass();
         jq_NameAndDesc nd = n.getNameAndDesc();
@@ -335,7 +335,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
             if (m == null) {
                 constant_pool[index] = f = otherclazz.createInstanceField(nd);
                 constant_pool_tags[index] = CONSTANT_ResolvedIFieldRef;
-                if (TRACE) SystemInterface.debugwriteln("Resolved instance field "+f+", cp idx "+(int)index);
+                if (TRACE) DebugInterface.debugwriteln("Resolved instance field "+f+", cp idx "+(int)index);
             } else if (m.isStatic())
                 throw new VerifyError("field "+m+" referred to as both static and instance");
             else
@@ -348,7 +348,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
             return (jq_StaticMethod)constant_pool[index];
         if (constant_pool_tags[index] != CONSTANT_MethodRef)
             throw new VerifyError();
-        if (TRACE) SystemInterface.debugwriteln("Attempting to resolve static method "+constant_pool[index]+" cp idx "+(int)index);
+        if (TRACE) DebugInterface.debugwriteln("Attempting to resolve static method "+constant_pool[index]+" cp idx "+(int)index);
         jq_MemberReference n = (jq_MemberReference)constant_pool[index];
         jq_Class otherclazz = n.getReferencedClass();
         jq_NameAndDesc nd = n.getNameAndDesc();
@@ -369,7 +369,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
             if (m == null) {
                 constant_pool[index] = f = otherclazz.createStaticMethod(nd);
                 constant_pool_tags[index] = CONSTANT_ResolvedSMethodRef;
-                if (TRACE) SystemInterface.debugwriteln("Resolved static method "+f+", cp idx "+(int)index);
+                if (TRACE) DebugInterface.debugwriteln("Resolved static method "+f+", cp idx "+(int)index);
             } else if (!m.isStatic())
                 throw new VerifyError("method "+m+" referred to as both static and instance");
             else
@@ -383,7 +383,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
         if (constant_pool_tags[index] != CONSTANT_MethodRef &&
             constant_pool_tags[index] != CONSTANT_InterfaceMethodRef)
             throw new VerifyError();
-        if (TRACE) SystemInterface.debugwriteln("Attempting to resolve instance method "+constant_pool[index]+" cp idx "+(int)index);
+        if (TRACE) DebugInterface.debugwriteln("Attempting to resolve instance method "+constant_pool[index]+" cp idx "+(int)index);
         jq_MemberReference n = (jq_MemberReference)constant_pool[index];
         jq_Class otherclazz = n.getReferencedClass();
         jq_NameAndDesc nd = n.getNameAndDesc();
@@ -404,7 +404,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
             if (m == null) {
                 constant_pool[index] = f = otherclazz.createInstanceMethod(nd);
                 constant_pool_tags[index] = CONSTANT_ResolvedIMethodRef;
-                if (TRACE) SystemInterface.debugwriteln("Resolved instance method "+f+", cp idx "+(int)index);
+                if (TRACE) DebugInterface.debugwriteln("Resolved instance method "+f+", cp idx "+(int)index);
             } else if (m.isStatic())
                 throw new VerifyError("method "+m+" referred to as both static and instance");
             else

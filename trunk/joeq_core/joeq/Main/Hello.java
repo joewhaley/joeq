@@ -21,7 +21,7 @@ public abstract class Hello {
     * @param args the command line arguments
     */
     public static void main (String args[]) throws Exception {
-        jq.initializeForHostJVMExecution();
+        HostedVM.initialize();
         
         for (int i=0; i<args.length; ++i) {
             printAllClassesInPackage(args[i]);

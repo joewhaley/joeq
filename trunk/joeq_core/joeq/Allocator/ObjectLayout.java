@@ -7,6 +7,7 @@
 
 package Allocator;
 
+
 import Memory.HeapAddress;
 import Run_Time.Unsafe;
 
@@ -68,6 +69,7 @@ public abstract class ObjectLayout {
     
     
     /**** UTILITY FUNCTIONS ****/
+
     public static Object initializeObject(HeapAddress addr, Object vtable, int size) {
         addr = (HeapAddress) addr.offset(OBJ_HEADER_SIZE);
         addr.offset(VTABLE_OFFSET).poke(HeapAddress.addressOf(vtable));
@@ -122,5 +124,4 @@ public abstract class ObjectLayout {
         int newValue = (oldValue & ~GC_BIT) | markValue;
         addr.poke4(newValue);
     }
-    
 }

@@ -281,6 +281,7 @@ public abstract class SystemInterface {
         _string_count = jls.getOrCreateInstanceField("count", "I");
     }
 
+    
     public static void debugwrite(String msg) {
         if (!jq.RunningNative) {
             System.err.println(msg);
@@ -346,7 +347,7 @@ public abstract class SystemInterface {
             Unsafe.getThreadBlock().enableThreadSwitch();
         } catch (Throwable t) { jq.UNREACHABLE(); }
     }
-    
+
     public static Address syscalloc(int size) {
         Unsafe.pushArg(size);
         try {
@@ -366,7 +367,7 @@ public abstract class SystemInterface {
             Unsafe.getThreadBlock().enableThreadSwitch();
         } catch (Throwable t) { jq.UNREACHABLE(); }
     }
-    
+
     public static void die(int code) {
         Unsafe.pushArg(code);
         try {

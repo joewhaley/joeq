@@ -153,7 +153,7 @@ public abstract class TraceFlags {
             String fieldName = fullName.substring(b);
             String className = fullName.substring(0, b - 1);
             try {
-                jq_Class c = (jq_Class) jq.parseType(className);
+                jq_Class c = (jq_Class) jq_Type.parseType(className);
                 c.cls_initialize();
                 jq_StaticField m = null;
                 Utf8 sf_name = Utf8.get(fieldName);

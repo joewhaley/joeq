@@ -29,6 +29,7 @@ import Clazz.jq_StaticField;
 import Clazz.jq_StaticMethod;
 import Clazz.jq_Type;
 import Main.jq;
+import Main.HostedVM;
 import Run_Time.Reflection;
 import Run_Time.Unsafe;
 import UTF.Utf8;
@@ -278,7 +279,7 @@ public class ReflectiveInterpreter extends BytecodeInterpreter {
         String rootMethodClassName = s.substring(0, dotloc);
         String rootMethodName = s.substring(dotloc+1);
         
-        jq.initializeForHostJVMExecution();
+	HostedVM.initialize();
         
         jq_Class c = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("L"+rootMethodClassName.replace('.','/')+";");
         c.cls_initialize();

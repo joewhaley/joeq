@@ -1,5 +1,9 @@
 package Clazz;
 
+import java.util.Iterator;
+
+import Allocator.DefaultHeapAllocator;
+import Assembler.x86.DirectBindCall;
 import Bootstrap.BootstrapCodeAddress;
 import Bootstrap.BootstrapHeapAddress;
 import Memory.CodeAddress;
@@ -10,6 +14,7 @@ import Compil3r.Reference.x86.x86ReferenceLinker;
 import ClassLib.ClassLibInterface;
 import Compil3r.Compil3rInterface;
 import Main.jq;
+import Run_Time.DebugInterface;
 
 class Delegates implements jq_ClassFileConstants {
     static class Field implements jq_Field.Delegate {
@@ -67,6 +72,29 @@ class Delegates implements jq_ClassFileConstants {
                     default_compiled_version.patchDirectBindCalls();
             }
 	    return default_compiled_version;
+	}
+    }
+    static class CompiledCode implements jq_CompiledCode.Delegate {
+	public void patchDirectBindCalls (Iterator i) {
+	    while (i.hasNext()) {
+		DirectBindCall r = (DirectBindCall) i.next();
+		r.patch();
+	    }
+	}
+	public void patchDirectBindCalls (Iterator i, jq_Method method, jq_CompiledCode cc) {
+            while (i.hasNext()) {
+                DirectBindCall r = (DirectBindCall) i.next();
+                if (r.getTarget() == method) {
+                    if (jq_CompiledCode.TRACE_REDIRECT) DebugInterface.debugwriteln("patching direct bind call in " + this + " at " + r.getSource().stringRep() + " to refer to " + cc);
+                    r.patchTo(cc);
+                }
+            }
+	}
+    }
+    static class Klass implements jq_Class.Delegate {
+	public final Object newInstance(jq_Class c, int instance_size, Object vtable) {
+	    c.load(); c.verify(); c.prepare(); c.sf_initialize(); c.compile(); c.cls_initialize();
+	    return DefaultHeapAllocator.allocateObject(instance_size, vtable);
 	}
     }
 }

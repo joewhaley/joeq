@@ -12,7 +12,6 @@ import Clazz.jq_Class;
 import Clazz.jq_StaticMethod;
 import Memory.Address;
 import Run_Time.Unsafe;
-import Scheduler.jq_Thread;
 
 /*
  * @author  John Whaley

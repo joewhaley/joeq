@@ -35,7 +35,7 @@ import Util.SingletonIterator;
 public abstract class DoTypeAnalysis {
     
     public static void main(String[] args) throws IOException {
-        jq.initializeForHostJVMExecution();
+	HostedVM.initialize();
         
         Compil3r.BytecodeAnalysis.TypeAnalysis.classesToAnalyze = new HashSet();
         Iterator i = null; String memberName = null;

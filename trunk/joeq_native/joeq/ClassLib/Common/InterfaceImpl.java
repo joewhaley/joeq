@@ -70,7 +70,7 @@ public class InterfaceImpl implements Interface {
             nullStaticFields.add(StackAddress._FACTORY);
             nullStaticFields.add(BootImage._DEFAULT);
             nullStaticFields.add(Reflection._obj_trav);
-            nullStaticFields.add(Reflection._declaredFieldsCache);
+	    Reflection.registerNullStaticFields(nullStaticFields);
             nullStaticFields.add(Allocator.DefaultCodeAllocator._default_allocator);
             jq_Class k = PrimordialClassLoader.getJavaLangSystem();
             nullStaticFields.add(k.getOrCreateStaticField("in", "Ljava/io/InputStream;"));

@@ -27,7 +27,6 @@ import Clazz.jq_Type;
 import Main.jq;
 import Run_Time.Reflection;
 import Run_Time.TypeCheck;
-import Scheduler.jq_Thread;
 
 /*
  * @author  John Whaley

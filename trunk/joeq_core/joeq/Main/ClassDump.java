@@ -17,8 +17,6 @@ import Clazz.jq_InstanceMethod;
 import Clazz.jq_StaticField;
 import Clazz.jq_StaticMethod;
 import Clazz.jq_Type;
-import Run_Time.Reflection;
-import Run_Time.Unsafe;
 import UTF.Utf8;
 import Util.ArrayIterator;
 
@@ -29,7 +27,7 @@ import Util.ArrayIterator;
 public abstract class ClassDump {
     
     public static void main(String[] args) {
-        jq.initializeForHostJVMExecution();
+	HostedVM.initialize();
         
         String classname;
         if (args.length > 0) classname = args[0];
