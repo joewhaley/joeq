@@ -45,7 +45,7 @@ public class ControlFlowGraph {
         jsr_info.put(exit, nfo);
     }
     public JSRInfo getJSRInfo(BasicBlock b) {
-    	return jsr_info != null ? (JSRInfo)jsr_info.get(b) : null;
+        return jsr_info != null ? (JSRInfo)jsr_info.get(b) : null;
     }
     
     public BasicBlock getBasicBlockByBytecodeIndex(int index) {

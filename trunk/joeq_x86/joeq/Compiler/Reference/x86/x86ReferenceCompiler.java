@@ -2481,8 +2481,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         super.visitNEWARRAY(f);
         // initialize type now, to avoid backpatch.
         if (jq.Bootstrapping) {
-	    if (!jq.boot_types.contains(f))
-		System.err.println("Error! Boot type set does not contain "+f+", but an instance is created inside of method "+method);
+            if (!jq.boot_types.contains(f))
+                System.err.println("Error! Boot type set does not contain "+f+", but an instance is created inside of method "+method);
             //jq.Assert(jq.boot_types.contains(f), f.toString());
         } else {
             f.load(); f.verify(); f.prepare(); f.sf_initialize(); f.cls_initialize();
@@ -2655,7 +2655,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         } else if (f.getName() == isNull) {
             asm.emitShort_Reg_Imm(x86.MOV_r_i32, ECX, 0);
             asm.emitShort_Reg(x86.POP_r, EAX);
-	    asm.emitARITH_Reg_Imm(x86.CMP_r_i32, EAX, 0);
+            asm.emitARITH_Reg_Imm(x86.CMP_r_i32, EAX, 0);
             asm.emitCJUMP_Short(x86.JNE, (byte)0);
             int cloc = asm.getCurrentOffset();
             asm.emitShort_Reg(x86.INC_r32, ECX);
@@ -2663,7 +2663,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             asm.emitShort_Reg(x86.PUSH_r, ECX);
         } else if (f.getName() == addressOf || f.getName() == address32 ||
                    f.getName() == asObject || f.getName() == asReferenceType ||
-		   f.getName() == to32BitValue) {
+                   f.getName() == to32BitValue) {
             asm.emit1(x86.NOP);
         } else if (f.getName() == stringRep) {
             jq_Class k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LMain/jq;");

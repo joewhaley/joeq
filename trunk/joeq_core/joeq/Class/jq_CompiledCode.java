@@ -95,8 +95,8 @@ public class jq_CompiledCode implements Comparable {
         CodeAddress newEntrypoint = that.getEntrypoint();
         if (TRACE_REDIRECT) SystemInterface.debugmsg("redirecting "+this+" to point to "+that);
         if (entrypoint.difference(start.offset(5)) >= 0) {
-	        if (TRACE_REDIRECT) SystemInterface.debugmsg("redirecting via trampoline");
-        	// both should start with "push EBP"
+            if (TRACE_REDIRECT) SystemInterface.debugmsg("redirecting via trampoline");
+            // both should start with "push EBP"
             jq.Assert(entrypoint.peek1() == newEntrypoint.peek1());
             // put target address (just after push EBP)
             entrypoint.offset(-4).poke4(newEntrypoint.difference(entrypoint)+1);
@@ -105,12 +105,12 @@ public class jq_CompiledCode implements Comparable {
             // put backward branch to jump instruction
             entrypoint.offset(1).poke2((short)0xF8EB); // JMP
         } else {
-	        if (TRACE_REDIRECT) SystemInterface.debugmsg("redirecting by rewriting targets");
-	        Iterator it = CodeAllocator.getCompiledMethods();
-	        while (it.hasNext()) {
-	        	jq_CompiledCode cc = (jq_CompiledCode)it.next();
-	        	cc.patchDirectBindCalls(this.method, that);
-	        }
+            if (TRACE_REDIRECT) SystemInterface.debugmsg("redirecting by rewriting targets");
+            Iterator it = CodeAllocator.getCompiledMethods();
+            while (it.hasNext()) {
+                jq_CompiledCode cc = (jq_CompiledCode)it.next();
+                cc.patchDirectBindCalls(this.method, that);
+            }
         }
     }
     
@@ -139,7 +139,7 @@ public class jq_CompiledCode implements Comparable {
                 DirectBindCall r = (DirectBindCall)i.next();
                 if (r.getTarget() == method) {
                     if (TRACE_REDIRECT) SystemInterface.debugmsg("patching direct bind call in "+this+" at "+r.getSource().stringRep()+" to refer to "+cc);
-	            r.patchTo(cc);
+                    r.patchTo(cc);
                 }
             }
         }

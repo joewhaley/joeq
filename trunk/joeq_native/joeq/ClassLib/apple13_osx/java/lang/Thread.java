@@ -26,7 +26,7 @@ public abstract class Thread {
         java.lang.Object o = this;
         jq_Thread t = new jq_Thread((java.lang.Thread)o);
         this.jq_thread = t;
-	java.lang.String name = "Thread-" + nextThreadNum();
+        java.lang.String name = "Thread-" + nextThreadNum();
         this.init(group, target, name, false);
         t.init();
     }

@@ -48,7 +48,7 @@ public abstract class TypeCheck implements jq_ClassFileConstants {
         if (value.isNull()) return;
         jq_Array a = (jq_Array)jq_Reference.getTypeOf(arrayref);
         jq_Type t2 = a.getElementType();
-	if (t2.isAddressType()) return;
+        if (t2.isAddressType()) return;
         Object v = value.asObject();
         jq_Type t = jq_Reference.getTypeOf(v);
         if (!isAssignable(t, t2))

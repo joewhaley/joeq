@@ -21,16 +21,7 @@ public abstract class Hello {
     * @param args the command line arguments
     */
     public static void main (String args[]) throws Exception {
-        jq.Bootstrapping = true;
-        
-        String classpath = System.getProperty("java.class.path")+
-                           System.getProperty("path.separator")+
-                           System.getProperty("sun.boot.class.path");
-        
-        for (Iterator it = PrimordialClassLoader.classpaths(classpath); it.hasNext(); ) {
-            String s = (String)it.next();
-            PrimordialClassLoader.loader.addToClasspath(s);
-        }
+        jq.initializeForHostJVMExecution();
         
         for (int i=0; i<args.length; ++i) {
             printAllClassesInPackage(args[i]);

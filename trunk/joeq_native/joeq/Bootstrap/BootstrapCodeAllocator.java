@@ -7,8 +7,8 @@
 
 package Bootstrap;
 
+import java.io.DataOutput;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Vector;
@@ -70,8 +70,8 @@ public class BootstrapCodeAllocator extends CodeAllocator {
         // align pointer first
         int entrypoint = size() + offset;
         if (alignment > 1) {
-        	entrypoint += alignment-1;
-	        entrypoint &= ~(alignment-1);
+            entrypoint += alignment-1;
+            entrypoint &= ~(alignment-1);
         }
         idx += (entrypoint-offset) - size();
         return new Bootstrapx86CodeBuffer(entrypoint-offset, estimatedSize);
@@ -88,7 +88,7 @@ public class BootstrapCodeAllocator extends CodeAllocator {
     public List getAllCodeRelocs() { return all_code_relocs; }
     public List getAllDataRelocs() { return all_data_relocs; }
 
-    public void dump(OutputStream out)
+    public void dump(DataOutput out)
     throws IOException {
         for (int i=0; i<bundle_idx; ++i) {
             byte[] bundle = (byte[]) bundles.elementAt(i);

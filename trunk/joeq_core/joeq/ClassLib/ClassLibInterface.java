@@ -191,11 +191,11 @@ public abstract class ClassLibInterface {
     
     public static void init_zipfile_static(java.util.zip.ZipFile zf, java.lang.String s)
     throws java.io.IOException {
-    	ClassLibInterface.DEFAULT.init_zipfile(zf, s);
+        ClassLibInterface.DEFAULT.init_zipfile(zf, s);
     }
     
     public static void init_inflater_static(java.util.zip.Inflater i, boolean nowrap)
     throws java.io.IOException {
-    	ClassLibInterface.DEFAULT.init_inflater(i, nowrap);
+        ClassLibInterface.DEFAULT.init_inflater(i, nowrap);
     }
 }

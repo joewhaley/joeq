@@ -451,16 +451,16 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
     }
     
     public static final jq_Type getOrCreateType(ClassLoader cl, Utf8 desc) {
-    	if (!jq.Bootstrapping) return ClassLibInterface.DEFAULT.getOrCreateType(cl, desc);
+        if (!jq.Bootstrapping) return ClassLibInterface.DEFAULT.getOrCreateType(cl, desc);
         jq.Assert(cl == PrimordialClassLoader.loader);
         return PrimordialClassLoader.loader.getOrCreateBSType(desc);
     }
     
     public static final void unloadType(ClassLoader cl, jq_Type t) {
-    	if (!jq.Bootstrapping) {
-    		ClassLibInterface.DEFAULT.unloadType(cl, t);
-    		return;
-    	}
+        if (!jq.Bootstrapping) {
+            ClassLibInterface.DEFAULT.unloadType(cl, t);
+            return;
+        }
         jq.Assert(cl == PrimordialClassLoader.loader);
         PrimordialClassLoader.loader.unloadBSType(t);
     }

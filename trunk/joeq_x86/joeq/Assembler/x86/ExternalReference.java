@@ -8,7 +8,7 @@
 package Assembler.x86;
 
 import java.io.IOException;
-import java.io.OutputStream;
+import java.io.DataOutput;
 
 import Main.jq;
 import Memory.HeapAddress;
@@ -32,11 +32,11 @@ public class ExternalReference extends Reloc {
 
     public void setSymbolIndex(int ndx) { jq.Assert(ndx != 0); this.symbol_ndx = ndx; }
     
-    public void dumpCOFF(OutputStream out) throws IOException {
+    public void dumpCOFF(DataOutput out) throws IOException {
         jq.Assert(symbol_ndx != 0);
-        LittleEndianOutputStream.write_s32(out, heap_from.to32BitValue()); // r_vaddr
-        LittleEndianOutputStream.write_s32(out, symbol_ndx);        // r_symndx
-        LittleEndianOutputStream.write_u16(out, Reloc.RELOC_ADDR32);// r_type
+        out.writeInt(heap_from.to32BitValue()); // r_vaddr
+        out.writeInt(symbol_ndx);               // r_symndx
+        out.writeChar(Reloc.RELOC_ADDR32);      // r_type
     }
     
     public HeapAddress getAddress() { return heap_from; }

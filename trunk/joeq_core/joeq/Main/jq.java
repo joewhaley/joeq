@@ -490,9 +490,9 @@ public abstract class jq {
             public StackAddress getBasePointer() { jq.UNREACHABLE(); return null; }
             public StackAddress getStackPointer() { jq.UNREACHABLE(); return null; }
         };
-        String classpath = System.getProperty("java.class.path")+
+        String classpath = System.getProperty("sun.boot.class.path")+
                            System.getProperty("path.separator")+
-                           System.getProperty("sun.boot.class.path");
+                           System.getProperty("java.class.path");
         for (Iterator it = PrimordialClassLoader.classpaths(classpath); it.hasNext(); ) {
             String s = (String)it.next();
             PrimordialClassLoader.loader.addToClasspath(s);

@@ -40,7 +40,7 @@ import Clazz.jq_StaticMethod;
 import Clazz.jq_Type;
 import Linker.ELF.ELF;
 import Linker.ELF.ELFConstants;
-import Linker.ELF.ELFOutputStream;
+import Linker.ELF.ELFOutput;
 import Linker.ELF.RelocEntry;
 import Linker.ELF.Section;
 import Linker.ELF.SymbolTableEntry;
@@ -53,6 +53,7 @@ import Run_Time.Reflection;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
 import Scheduler.jq_NativeThread;
+import Util.ExtendedDataOutput;
 import Util.IdentityHashCodeWrapper;
 
 /*
@@ -268,9 +269,9 @@ public class BootImage implements ObjectLayout, ELFConstants {
 
     public void find_reachable(int i) {
         for (; i<entries.size(); ++i) {
-	    if ((i % UPDATE_PERIOD) == 0) {
-		System.out.print("Completed: "+i+"/"+entries.size()+" objects, memory used: "+(Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory())+"\r");
-	    }
+            if ((i % UPDATE_PERIOD) == 0) {
+                out.print("Completed: "+i+"/"+entries.size()+" objects, memory used: "+(Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory())+"\r");
+            }
             Entry e = (Entry)entries.get(i);
             Object o = e.getObject();
             if (o == null) continue;
@@ -321,7 +322,7 @@ public class BootImage implements ObjectLayout, ELFConstants {
                 }
             }
         }
-	System.out.println("Completed: "+entries.size()+" objects, memory used: "+(Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory())+"                    ");
+        out.println("Completed: "+entries.size()+" objects, memory used: "+(Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory())+"                    ");
     }
 
     public int size() { return heapCurrent-startAddress; }
@@ -344,18 +345,18 @@ public class BootImage implements ObjectLayout, ELFConstants {
     public static final char F_LSYMS  = (char)0x0008;
     public static final char F_AR32WR = (char)0x0100;
     
-    public void dumpFILHDR(OutputStream out, int symptr, int nsyms)
+    public void dumpFILHDR(ExtendedDataOutput out, int symptr, int nsyms)
     throws IOException {
         // FILHDR
-        write_ushort(out, (char)0x014c);    // f_magic
-        write_ushort(out, (char)2);         // f_nscns
+        out.writeUShort((char)0x014c);  // f_magic
+        out.writeUShort((char)2);       // f_nscns
         long ms = System.currentTimeMillis();
         int s = (int)(ms/1000);
-        write_ulong(out, s);                // f_timdat
-        write_ulong(out, symptr);           // f_symptr
-        write_ulong(out, nsyms);            // f_nsyms
-        write_ushort(out, (char)0);         // f_opthdr
-        write_ushort(out, (char)(F_LNNO | F_LSYMS | F_AR32WR)); // f_flags
+        out.writeUInt(s);               // f_timdat
+        out.writeUInt(symptr);          // f_symptr
+        out.writeUInt(nsyms);           // f_nsyms
+        out.writeUShort((char)0);       // f_opthdr
+        out.writeUShort((char)(F_LNNO | F_LSYMS | F_AR32WR)); // f_flags
     }
     
     public static final int STYP_TEXT  = 0x00000020;
@@ -366,55 +367,55 @@ public class BootImage implements ObjectLayout, ELFConstants {
     public static final int STYP_READ  = 0x40000000;
     public static final int STYP_WRITE = 0x80000000;
     
-    public void dumpTEXTSCNHDR(OutputStream out, int size, int nreloc)
+    public void dumpTEXTSCNHDR(ExtendedDataOutput out, int size, int nreloc)
     throws IOException {
         // SCNHDR
         write_bytes(out, ".text", 8);       // s_name
-        write_ulong(out, 0);                // s_paddr
-        write_ulong(out, 0);                // s_vaddr
-        write_ulong(out, size);             // s_size
-        write_ulong(out, 20+40+40);         // s_scnptr
-        write_ulong(out, 20+40+40+size);    // s_relptr
-        write_ulong(out, 0);                // s_lnnoptr
+        out.writeUInt(0);                // s_paddr
+        out.writeUInt(0);                // s_vaddr
+        out.writeUInt(size);             // s_size
+        out.writeUInt(20+40+40);         // s_scnptr
+        out.writeUInt(20+40+40+size);    // s_relptr
+        out.writeUInt(0);                // s_lnnoptr
         if (nreloc > 65535)
-            write_ushort(out, (char)0xffff); // s_nreloc
+            out.writeUShort((char)0xffff); // s_nreloc
         else
-            write_ushort(out, (char)nreloc); // s_nreloc
-        write_ushort(out, (char)0);         // s_nlnno
+            out.writeUShort((char)nreloc); // s_nreloc
+        out.writeUShort((char)0);         // s_nlnno
         if (nreloc > 65535)
-            write_ulong(out, STYP_TEXT | STYP_READ | STYP_WRITE | STYP_RELOV); // s_flags
+            out.writeUInt(STYP_TEXT | STYP_READ | STYP_WRITE | STYP_RELOV); // s_flags
         else
-            write_ulong(out, STYP_TEXT | STYP_READ | STYP_WRITE); // s_flags
+            out.writeUInt(STYP_TEXT | STYP_READ | STYP_WRITE); // s_flags
     }
     
-    public void dumpDATASCNHDR(OutputStream out, int scnptr, int size, int nreloc)
+    public void dumpDATASCNHDR(ExtendedDataOutput out, int scnptr, int size, int nreloc)
     throws IOException {
         // SCNHDR
         write_bytes(out, ".data", 8);       // s_name
-        write_ulong(out, 0);                // s_paddr
-        write_ulong(out, 0);                // s_vaddr
-        write_ulong(out, size);             // s_size
-        write_ulong(out, scnptr);           // s_scnptr
-        write_ulong(out, scnptr+size);      // s_relptr
-        write_ulong(out, 0);                // s_lnnoptr
+        out.writeUInt(0);                // s_paddr
+        out.writeUInt(0);                // s_vaddr
+        out.writeUInt(size);             // s_size
+        out.writeUInt(scnptr);           // s_scnptr
+        out.writeUInt(scnptr+size);      // s_relptr
+        out.writeUInt(0);                // s_lnnoptr
         if (nreloc > 65535)
-            write_ushort(out, (char)0xffff); // s_nreloc
+            out.writeUShort((char)0xffff); // s_nreloc
         else
-            write_ushort(out, (char)nreloc); // s_nreloc
-        write_ushort(out, (char)0);         // s_nlnno
+            out.writeUShort((char)nreloc); // s_nreloc
+        out.writeUShort((char)0);         // s_nlnno
         if (nreloc > 65535)
-            write_ulong(out, STYP_DATA | STYP_READ | STYP_WRITE | STYP_RELOV); // s_flags
+            out.writeUInt(STYP_DATA | STYP_READ | STYP_WRITE | STYP_RELOV); // s_flags
         else
-            write_ulong(out, STYP_DATA | STYP_READ | STYP_WRITE); // s_flags
+            out.writeUInt(STYP_DATA | STYP_READ | STYP_WRITE); // s_flags
     }
     
     public static final char RELOC_ADDR32 = (char)0x0006;
     public static final char RELOC_REL32  = (char)0x0014;
     
-    public void dumpLINENO(OutputStream out, int addr, char lnno)
+    public void dumpLINENO(ExtendedDataOutput out, int addr, char lnno)
     throws IOException {
-        write_ulong(out, addr);     // l_symndx / l_paddr
-        write_ushort(out, lnno);    // l_lnno
+        out.writeUInt(addr);     // l_symndx / l_paddr
+        out.writeUShort(lnno);    // l_lnno
     }
     
     public static final short N_UNDEF = 0;
@@ -473,99 +474,99 @@ public class BootImage implements ObjectLayout, ELFConstants {
     public static final byte C_WEAKEXT = 105;
     public static final byte C_EFCN    = -1;
     
-    public void dumpSECTIONSYMENTs(OutputStream out)
+    public void dumpSECTIONSYMENTs(ExtendedDataOutput out)
     throws IOException {
         write_bytes(out, ".text", 8);
-        write_ulong(out, 0);
-        write_short(out, (short)1);
-        write_ushort(out, (char)0);
-        write_uchar(out, C_STAT);
-        write_uchar(out, 0);
+        out.writeUInt(0);
+        out.writeShort((short)1);
+        out.writeUShort((char)0);
+        out.writeUByte(C_STAT);
+        out.writeUByte(0);
         
         write_bytes(out, ".data", 8);
-        write_ulong(out, 0);
-        write_short(out, (short)2);
-        write_ushort(out, (char)0);
-        write_uchar(out, C_STAT);
-        write_uchar(out, 0);
+        out.writeUInt(0);
+        out.writeShort((short)2);
+        out.writeUShort((char)0);
+        out.writeUByte(C_STAT);
+        out.writeUByte(0);
     }
     
     public static boolean USE_MICROSOFT_STYLE_MUNGE = true;
     
     public static final int NUM_OF_EXTERNAL_SYMS = 6;
-    public void dumpEXTSYMENTs(OutputStream out, jq_StaticMethod rootm)
+    public void dumpEXTSYMENTs(ExtendedDataOutput out, jq_StaticMethod rootm)
     throws IOException {
-    	String s;
-    	if (USE_MICROSOFT_STYLE_MUNGE) s = "_entry@0";
-    	else s = "entry";
+        String s;
+        if (USE_MICROSOFT_STYLE_MUNGE) s = "_entry@0";
+        else s = "entry";
         write_bytes(out, s, 8);  // s_name
         CodeAddress addr = rootm.getDefaultCompiledVersion().getEntrypoint();
-        write_ulong(out, addr.to32BitValue());
-        write_short(out, (short)1);
-        write_ushort(out, (char)DT_FCN);
-        write_uchar(out, C_EXT);
-        write_uchar(out, 0);
+        out.writeUInt(addr.to32BitValue());
+        out.writeShort((short)1);
+        out.writeUShort((char)DT_FCN);
+        out.writeUByte(C_EXT);
+        out.writeUByte(0);
         
-        write_ulong(out, 0);    // e_zeroes
-    	if (USE_MICROSOFT_STYLE_MUNGE) s = "_trap_handler@8";
-    	else s = "trap_handler";
+        out.writeUInt(0);    // e_zeroes
+        if (USE_MICROSOFT_STYLE_MUNGE) s = "_trap_handler@8";
+        else s = "trap_handler";
         int idx = alloc_string(s);
-        write_ulong(out, idx);  // e_offset
+        out.writeUInt(idx);  // e_offset
         addr = ExceptionDeliverer._trap_handler.getDefaultCompiledVersion().getEntrypoint();
-        write_ulong(out, addr.to32BitValue());
-        write_short(out, (short)1);
-        write_ushort(out, (char)DT_FCN);
-        write_uchar(out, C_EXT);
-        write_uchar(out, 0);
+        out.writeUInt(addr.to32BitValue());
+        out.writeShort((short)1);
+        out.writeUShort((char)DT_FCN);
+        out.writeUByte(C_EXT);
+        out.writeUByte(0);
 
-        write_ulong(out, 0);    // e_zeroes
-    	if (USE_MICROSOFT_STYLE_MUNGE) s = "_threadSwitch@4";
-    	else s = "threadSwitch";
+        out.writeUInt(0);    // e_zeroes
+        if (USE_MICROSOFT_STYLE_MUNGE) s = "_threadSwitch@4";
+        else s = "threadSwitch";
         idx = alloc_string(s);
-        write_ulong(out, idx);  // e_offset
+        out.writeUInt(idx);  // e_offset
         addr = jq_NativeThread._threadSwitch.getDefaultCompiledVersion().getEntrypoint();
-        write_ulong(out, addr.to32BitValue());
-        write_short(out, (short)1);
-        write_ushort(out, (char)DT_FCN);
-        write_uchar(out, C_EXT);
-        write_uchar(out, 0);
+        out.writeUInt(addr.to32BitValue());
+        out.writeShort((short)1);
+        out.writeUShort((char)DT_FCN);
+        out.writeUByte(C_EXT);
+        out.writeUByte(0);
         
-        write_ulong(out, 0);    // e_zeroes
-    	if (USE_MICROSOFT_STYLE_MUNGE) s = "_ctrl_break_handler@0";
-    	else s = "ctrl_break_handler";
+        out.writeUInt(0);    // e_zeroes
+        if (USE_MICROSOFT_STYLE_MUNGE) s = "_ctrl_break_handler@0";
+        else s = "ctrl_break_handler";
         idx = alloc_string(s);
-        write_ulong(out, idx);  // e_offset
+        out.writeUInt(idx);  // e_offset
         addr = jq_NativeThread._ctrl_break_handler.getDefaultCompiledVersion().getEntrypoint();
-        write_ulong(out, addr.to32BitValue());
-        write_short(out, (short)1);
-        write_ushort(out, (char)DT_FCN);
-        write_uchar(out, C_EXT);
-        write_uchar(out, 0);
+        out.writeUInt(addr.to32BitValue());
+        out.writeShort((short)1);
+        out.writeUShort((char)DT_FCN);
+        out.writeUByte(C_EXT);
+        out.writeUByte(0);
 
-        write_ulong(out, 0);    // e_zeroes
-    	if (USE_MICROSOFT_STYLE_MUNGE) s = "_joeq_code_startaddress";
-    	else s = "joeq_code_startaddress";
+        out.writeUInt(0);    // e_zeroes
+        if (USE_MICROSOFT_STYLE_MUNGE) s = "_joeq_code_startaddress";
+        else s = "joeq_code_startaddress";
         idx = alloc_string(s);
-        write_ulong(out, idx);  // e_offset
-        write_ulong(out, 0);
-        write_short(out, (short)1);
-        write_ushort(out, (char)(DT_PTR | T_VOID));
-        write_uchar(out, C_EXT);
-        write_uchar(out, 0);
+        out.writeUInt(idx);  // e_offset
+        out.writeUInt(0);
+        out.writeShort((short)1);
+        out.writeUShort((char)(DT_PTR | T_VOID));
+        out.writeUByte(C_EXT);
+        out.writeUByte(0);
 
-        write_ulong(out, 0);    // e_zeroes
-    	if (USE_MICROSOFT_STYLE_MUNGE) s = "_joeq_data_startaddress";
-    	else s = "joeq_data_startaddress";
+        out.writeUInt(0);    // e_zeroes
+        if (USE_MICROSOFT_STYLE_MUNGE) s = "_joeq_data_startaddress";
+        else s = "joeq_data_startaddress";
         idx = alloc_string(s);
-        write_ulong(out, idx); // e_offset
-        write_ulong(out, 0); // e_value
-        write_short(out, (short)2); // e_scnum
-        write_ushort(out, (char)(DT_PTR | T_VOID)); // e_type
-        write_uchar(out, C_EXT); // e_sclass
-        write_uchar(out, 0); // e_numaux
+        out.writeUInt(idx); // e_offset
+        out.writeUInt(0); // e_value
+        out.writeShort((short)2); // e_scnum
+        out.writeUShort((char)(DT_PTR | T_VOID)); // e_type
+        out.writeUByte(C_EXT); // e_sclass
+        out.writeUByte(0); // e_numaux
     }
     
-    public void dumpEXTDEFSYMENTs(OutputStream out, List extrefs)
+    public void dumpEXTDEFSYMENTs(ExtendedDataOutput out, List extrefs)
     throws IOException {
         Iterator i = extrefs.iterator();
         int k = 2+NUM_OF_EXTERNAL_SYMS;
@@ -576,33 +577,33 @@ public class BootImage implements ObjectLayout, ELFConstants {
             if (name.length() <= 8) {
                 write_bytes(out, name, 8);  // s_name
             } else {
-                write_ulong(out, 0);    // e_zeroes
+                out.writeUInt(0);    // e_zeroes
                 int idx = alloc_string(name);
-                write_ulong(out, idx);  // e_offset
+                out.writeUInt(idx);  // e_offset
             }
-            write_ulong(out, 0);
-            write_short(out, (short)0);
-            write_ushort(out, (char)DT_FCN);
-            write_uchar(out, C_EXT);
-            write_uchar(out, 0);
+            out.writeUInt(0);
+            out.writeShort((short)0);
+            out.writeUShort((char)DT_FCN);
+            out.writeUByte(C_EXT);
+            out.writeUByte(0);
             ++k;
         }
     }
     
-    public void dumpSFIELDSYMENT(OutputStream out, jq_StaticField sf)
+    public void dumpSFIELDSYMENT(ExtendedDataOutput out, jq_StaticField sf)
     throws IOException {
         //String name = sf.getName().toString();
         String name = mungeMemberName(sf);
         if (name.length() <= 8) {
             write_bytes(out, name, 8);  // s_name
         } else {
-            write_ulong(out, 0);    // e_zeroes
+            out.writeUInt(0);    // e_zeroes
             int idx = alloc_string(name);
-            write_ulong(out, idx);  // e_offset
+            out.writeUInt(idx);  // e_offset
         }
         HeapAddress addr = sf.getAddress();
-        write_ulong(out, addr.to32BitValue()); // e_value
-        write_short(out, (short)2); // e_scnum
+        out.writeUInt(addr.to32BitValue()); // e_value
+        out.writeShort((short)2); // e_scnum
         jq_Type t = sf.getType();
         char type = (char)0;
         if (t.isArrayType()) {
@@ -611,7 +612,7 @@ public class BootImage implements ObjectLayout, ELFConstants {
         } else if (t.isReferenceType()) {
             type = DT_PTR;
         }
-	if (t.isPrimitiveType()) {
+        if (t.isPrimitiveType()) {
             if (t == jq_Primitive.INT) type |= T_LONG;
             else if (t == jq_Primitive.LONG) type |= T_LNGDBL;
             else if (t == jq_Primitive.FLOAT) type |= T_FLOAT;
@@ -622,35 +623,35 @@ public class BootImage implements ObjectLayout, ELFConstants {
             else if (t == jq_Primitive.CHAR) type |= T_USHORT;
             else jq.UNREACHABLE();
         } else {
-	    type |= T_STRUCT;
-	}
-        write_ushort(out, type);  // e_type
-        write_uchar(out, C_STAT); // e_sclass
-        write_uchar(out, 0);      // e_numaux
+            type |= T_STRUCT;
+        }
+        out.writeUShort(type);  // e_type
+        out.writeUByte(C_STAT); // e_sclass
+        out.writeUByte(0);      // e_numaux
     }
 
-    public void dumpIFIELDSYMENT(OutputStream out, jq_InstanceField f)
+    public void dumpIFIELDSYMENT(ExtendedDataOutput out, jq_InstanceField f)
     throws IOException {
         String name = f.getName().toString();
         if (name.length() <= 8) {
             write_bytes(out, name, 8);  // s_name
         } else {
-            write_ulong(out, 0);    // e_zeroes
+            out.writeUInt(0);    // e_zeroes
             int idx = alloc_string(name);
-            write_ulong(out, idx);  // e_offset
+            out.writeUInt(idx);  // e_offset
         }
         int off = f.getOffset();
-        write_ulong(out, off);      // e_value
-        write_short(out, (short)2); // e_scnum
+        out.writeUInt(off);      // e_value
+        out.writeShort((short)2); // e_scnum
         jq_Type t = f.getType();
         char type = (char)0;
         if (t.isArrayType()) {
             t = ((jq_Array)t).getElementType();
             type = DT_ARY;
         } else if (t.isReferenceType()) {
-            type = DT_PTR | T_STRUCT;
+            type = DT_PTR;
         }
-	if (t.isPrimitiveType()) {
+        if (t.isPrimitiveType()) {
             if (t == jq_Primitive.INT) type |= T_LONG;
             else if (t == jq_Primitive.LONG) type |= T_LNGDBL;
             else if (t == jq_Primitive.FLOAT) type |= T_FLOAT;
@@ -661,14 +662,14 @@ public class BootImage implements ObjectLayout, ELFConstants {
             else if (t == jq_Primitive.CHAR) type |= T_USHORT;
             else jq.UNREACHABLE();
         } else {
-	    type |= T_STRUCT;
-	}
-        write_ushort(out, type); // e_type
-        write_uchar(out, C_MOS); // e_sclass
-        write_uchar(out, 0);     // e_numaux
+            type |= T_STRUCT;
+        }
+        out.writeUShort(type); // e_type
+        out.writeUByte(C_MOS); // e_sclass
+        out.writeUByte(0);     // e_numaux
     }
     
-    public void dumpMETHODSYMENT(OutputStream out, jq_CompiledCode cc)
+    public void dumpMETHODSYMENT(ExtendedDataOutput out, jq_CompiledCode cc)
     throws IOException {
         jq_Method m = cc.getMethod();
         String name;
@@ -681,16 +682,16 @@ public class BootImage implements ObjectLayout, ELFConstants {
         if (name.length() <= 8) {
             write_bytes(out, name, 8);    // s_name
         } else {
-            write_ulong(out, 0);          // e_zeroes
+            out.writeUInt(0);          // e_zeroes
             int idx = alloc_string(name);
-            write_ulong(out, idx);        // e_offset
+            out.writeUInt(idx);        // e_offset
         }
         CodeAddress addr = cc.getEntrypoint();
-        write_ulong(out, addr.to32BitValue()); // e_value
-        write_short(out, (short)1);      // e_scnum
-        write_ushort(out, (char)DT_FCN); // e_type
-        write_uchar(out, C_EXT);         // e_sclass
-        write_uchar(out, 0);             // e_numaux
+        out.writeUInt(addr.to32BitValue()); // e_value
+        out.writeShort((short)1);      // e_scnum
+        out.writeUShort((char)DT_FCN); // e_type
+        out.writeUByte(C_EXT);         // e_sclass
+        out.writeUByte(0);             // e_numaux
     }
     
     public void addSystemInterfaceRelocs_COFF(List extref, List heap2code) {
@@ -766,7 +767,7 @@ public class BootImage implements ObjectLayout, ELFConstants {
         return total;
     }
     
-    public void dumpCOFF(OutputStream out, jq_StaticMethod rootm) throws IOException {
+    public void dumpCOFF(ExtendedDataOutput out, jq_StaticMethod rootm) throws IOException {
         
         // calculate sizes/offsets
         final int textsize = bca.size();
@@ -815,16 +816,16 @@ public class BootImage implements ObjectLayout, ELFConstants {
         
         // write text relocs
         if (ntextreloc > 65535) {
-            write_ulong(out, ntextreloc);
-            write_ulong(out, 0);
-            write_ushort(out, (char)0);
+            out.writeUInt(ntextreloc);
+            out.writeUInt(0);
+            out.writeUShort((char)0);
         }
         Iterator it = text_relocs.iterator();
         while (it.hasNext()) {
             Reloc r = (Reloc)it.next();
             r.dumpCOFF(out);
         }
-        out.flush();
+        //out.flush();
         
         // write data section
         try {
@@ -837,23 +838,23 @@ public class BootImage implements ObjectLayout, ELFConstants {
         }
         
         // write data relocs
-	int j=0;
+        int j=0;
         if (ndatareloc > 65535) {
-            write_ulong(out, ndatareloc);
-            write_ulong(out, 0);
-            write_ushort(out, (char)0);
-	    ++j;
+            out.writeUInt(ndatareloc);
+            out.writeUInt(0);
+            out.writeUShort((char)0);
+            ++j;
         }
         it = data_relocs.iterator();
         while (it.hasNext()) {
-	    if ((j % UPDATE_PERIOD) == 0) {
-		System.out.print("Completed: "+j+"/"+ndatareloc+" relocations\r");
-	    }
+            if ((j % UPDATE_PERIOD) == 0) {
+                this.out.print("Completed: "+j+"/"+ndatareloc+" relocations\r");
+            }
             Reloc r = (Reloc)it.next();
             r.dumpCOFF(out);
-	    ++j;
+            ++j;
         }
-	System.out.println("Completed: "+ndatareloc+" relocations                    \n");
+        this.out.println("Completed: "+ndatareloc+" relocations                    \n");
         jq.Assert(j == ndatareloc);
         
         // write line numbers
@@ -874,7 +875,7 @@ public class BootImage implements ObjectLayout, ELFConstants {
         // write string table
         dump_strings(out);
         
-        out.flush();
+        //out.flush();
     }
 
     private jq_StaticField searchStaticVariables(Object p) {
@@ -888,8 +889,8 @@ public class BootImage implements ObjectLayout, ELFConstants {
             for (int j=0; j<fs.length; ++j) {   
                 jq_StaticField f = fs[j];
                 if (f.getType().isReferenceType()) {
-	                Object val = Reflection.getstatic_A(f);
-	                if (val == p) return f;
+                    Object val = Reflection.getstatic_A(f);
+                    if (val == p) return f;
                 }
             }
         }
@@ -955,7 +956,7 @@ public class BootImage implements ObjectLayout, ELFConstants {
         return false;
     }
     
-    private void dumpHeap(OutputStream out)
+    private void dumpHeap(ExtendedDataOutput out)
     throws IOException {
         jq.Assert(ARRAY_LENGTH_OFFSET == -12);
         jq.Assert(STATUS_WORD_OFFSET == -8);
@@ -966,9 +967,9 @@ public class BootImage implements ObjectLayout, ELFConstants {
         int currentAddr=0;
         int j=0;
         while (i.hasNext()) {
-	    if ((j % UPDATE_PERIOD) == 0) {
-		System.out.print("Completed: "+j+"/"+entries.size()+" objects, "+currentAddr+"/"+heapCurrent+" bytes\r");
-	    }
+        if ((j % UPDATE_PERIOD) == 0) {
+        System.out.print("Completed: "+j+"/"+entries.size()+" objects, "+currentAddr+"/"+heapCurrent+" bytes\r");
+        }
             Entry e = (Entry)i.next();
             Object o = e.getObject();
             HeapAddress addr = e.getAddress();
@@ -990,12 +991,12 @@ public class BootImage implements ObjectLayout, ELFConstants {
             }
             if (jqType.isArrayType()) {
                 while (currentAddr+ARRAY_HEADER_SIZE < addr.to32BitValue()) {
-                    write_char(out, (byte)0); ++currentAddr;
+                    out.writeByte((byte)0); ++currentAddr;
                 }
                 int length = Array.getLength(o);
-                write_ulong(out, length);
-                write_ulong(out, 0);
-                write_ulong(out, vtable.to32BitValue());
+                out.writeUInt(length);
+                out.writeUInt(0);
+                out.writeUInt(vtable.to32BitValue());
                 currentAddr += 12;
                 jq.Assert(addr.to32BitValue() == currentAddr);
                 jq_Type elemType = ((jq_Array)jqType).getElementType();
@@ -1003,55 +1004,55 @@ public class BootImage implements ObjectLayout, ELFConstants {
                     if (elemType == jq_Primitive.INT) {
                         int[] v = (int[])o;
                         for (int k=0; k<length; ++k)
-                            write_ulong(out, v[k]);
+                            out.writeUInt(v[k]);
                         currentAddr += length << 2;
                     } else if (elemType == jq_Primitive.FLOAT) {
                         float[] v = (float[])o;
                         for (int k=0; k<length; ++k)
-                            write_ulong(out, Float.floatToRawIntBits(v[k]));
+                            out.writeUInt(Float.floatToRawIntBits(v[k]));
                         currentAddr += length << 2;
                     } else if (elemType == jq_Primitive.LONG) {
                         long[] v = (long[])o;
                         for (int k=0; k<length; ++k)
-                            write_ulonglong(out, v[k]);
+                            out.writeULong(v[k]);
                         currentAddr += length << 3;
                     } else if (elemType == jq_Primitive.DOUBLE) {
                         double[] v = (double[])o;
                         for (int k=0; k<length; ++k)
-                            write_ulonglong(out, Double.doubleToRawLongBits(v[k]));
+                            out.writeULong(Double.doubleToRawLongBits(v[k]));
                         currentAddr += length << 3;
                     } else if (elemType == jq_Primitive.BOOLEAN) {
                         boolean[] v = (boolean[])o;
                         for (int k=0; k<length; ++k)
-                            write_uchar(out, v[k]?1:0);
+                            out.writeUByte(v[k]?1:0);
                         currentAddr += length;
                     } else if (elemType == jq_Primitive.BYTE) {
                         byte[] v = (byte[])o;
                         for (int k=0; k<length; ++k)
-                            write_char(out, v[k]);
+                            out.writeByte(v[k]);
                         currentAddr += length;
                     } else if (elemType == jq_Primitive.SHORT) {
                         short[] v = (short[])o;
                         for (int k=0; k<length; ++k)
-                            write_short(out, v[k]);
+                            out.writeShort(v[k]);
                         currentAddr += length << 1;
                     } else if (elemType == jq_Primitive.CHAR) {
                         char[] v = (char[])o;
                         for (int k=0; k<length; ++k)
-                            write_ushort(out, v[k]);
+                            out.writeUShort(v[k]);
                         currentAddr += length << 1;
                     } else jq.UNREACHABLE();
                 } else if (elemType.isAddressType()) {
                     Address[] v = (Address[])o;
                     for (int k=0; k<length; ++k) {
-                        write_ulong(out, v[k]==null?0:v[k].to32BitValue());
+                        out.writeUInt(v[k]==null?0:v[k].to32BitValue());
                     }
                     currentAddr += length << 2;
                 } else {
                     Object[] v = (Object[])o;
                     for (int k=0; k<length; ++k) {
                         Object o2 = Reflection.arrayload_A(v, k);
-                        try { write_ulong(out, getAddressOf(o2).to32BitValue()); }
+                        try { out.writeUInt(getAddressOf(o2).to32BitValue()); }
                         catch (UnknownObjectException x) {
                             System.err.println("Object array element #"+k);
                             //x.appendMessage("Object array element #"+k+" in ");
@@ -1065,10 +1066,10 @@ public class BootImage implements ObjectLayout, ELFConstants {
                 jq.Assert(jqType.isClassType());
                 jq_Class clazz = (jq_Class)jqType;
                 while (currentAddr+OBJ_HEADER_SIZE < addr.to32BitValue()) {
-                    write_char(out, (byte)0); ++currentAddr;
+                    out.writeByte((byte)0); ++currentAddr;
                 }
-                write_ulong(out, 0);
-                write_ulong(out, vtable.to32BitValue());
+                out.writeUInt(0);
+                out.writeUInt(vtable.to32BitValue());
                 currentAddr += 8;
                 jq.Assert(addr.to32BitValue() == currentAddr);
                 jq_InstanceField[] fields = clazz.getInstanceFields();
@@ -1078,31 +1079,31 @@ public class BootImage implements ObjectLayout, ELFConstants {
                     int foffset = f.getOffset();
                     if (TRACE) this.out.println("Field "+f+" offset "+jq.shex(foffset)+": "+System.identityHashCode(Reflection.getfield(o, f)));
                     while (currentAddr != addr.offset(foffset).to32BitValue()) {
-                        write_char(out, (byte)0); ++currentAddr;
+                        out.writeByte((byte)0); ++currentAddr;
                     }
                     if (ftype.isPrimitiveType()) {
                         if (ftype == jq_Primitive.INT)
-                            write_ulong(out, Reflection.getfield_I(o, f));
+                            out.writeUInt(Reflection.getfield_I(o, f));
                         else if (ftype == jq_Primitive.FLOAT)
-                            write_ulong(out, Float.floatToRawIntBits(Reflection.getfield_F(o, f)));
+                            out.writeUInt(Float.floatToRawIntBits(Reflection.getfield_F(o, f)));
                         else if (ftype == jq_Primitive.LONG)
-                            write_ulonglong(out, Reflection.getfield_L(o, f));
+                            out.writeULong(Reflection.getfield_L(o, f));
                         else if (ftype == jq_Primitive.DOUBLE)
-                            write_ulonglong(out, Double.doubleToRawLongBits(Reflection.getfield_D(o, f)));
+                            out.writeULong(Double.doubleToRawLongBits(Reflection.getfield_D(o, f)));
                         else if (ftype == jq_Primitive.BOOLEAN)
-                            write_uchar(out, Reflection.getfield_Z(o, f)?1:0);
+                            out.writeUByte(Reflection.getfield_Z(o, f)?1:0);
                         else if (ftype == jq_Primitive.BYTE)
-                            write_char(out, Reflection.getfield_B(o, f));
+                            out.writeByte(Reflection.getfield_B(o, f));
                         else if (ftype == jq_Primitive.SHORT)
-                            write_short(out, Reflection.getfield_S(o, f));
+                            out.writeShort(Reflection.getfield_S(o, f));
                         else if (ftype == jq_Primitive.CHAR)
-                            write_ushort(out, Reflection.getfield_C(o, f));
+                            out.writeUShort(Reflection.getfield_C(o, f));
                         else jq.UNREACHABLE();
                     } else if (ftype.isAddressType()) {
                         Address a = Reflection.getfield_P(o, f);
-                        write_ulong(out, a==null?0:a.to32BitValue());
+                        out.writeUInt(a==null?0:a.to32BitValue());
                     } else {
-                        try { write_ulong(out, getAddressOf(Reflection.getfield_A(o, f)).to32BitValue()); }
+                        try { out.writeUInt(getAddressOf(Reflection.getfield_A(o, f)).to32BitValue()); }
                         catch (UnknownObjectException x) {
                             System.err.println("Instance field "+f);
                             //x.appendMessage("field "+f.getName()+" in ");
@@ -1116,55 +1117,12 @@ public class BootImage implements ObjectLayout, ELFConstants {
             ++j;
         }
         while (currentAddr < heapCurrent) {
-            write_char(out, (byte)0); ++currentAddr;
+            out.writeByte((byte)0); ++currentAddr;
         }
-	System.out.println("Completed: "+j+" objects, "+heapCurrent+" bytes                    ");
+        System.out.println("Completed: "+j+" objects, "+heapCurrent+" bytes                    ");
     }
     
-    public static void write_uchar(OutputStream out, int v)
-    throws IOException {
-        out.write((byte)v);
-    }
-    public static void write_char(OutputStream out, byte v)
-    throws IOException {
-        out.write((byte)v);
-    }
-    public static void write_ushort(OutputStream out, char v)
-    throws IOException {
-        out.write((byte)v);
-        out.write((byte)(v>>8));
-    }
-    public static void write_short(OutputStream out, short v)
-    throws IOException {
-        out.write((byte)v);
-        out.write((byte)(v>>8));
-    }
-    public static void write_ulong(OutputStream out, int v)
-    throws IOException {
-        out.write((byte)v);
-        out.write((byte)(v>>8));
-        out.write((byte)(v>>16));
-        out.write((byte)(v>>24));
-    }
-    public static void write_long(OutputStream out, int v)
-    throws IOException {
-        out.write((byte)v);
-        out.write((byte)(v>>8));
-        out.write((byte)(v>>16));
-        out.write((byte)(v>>24));
-    }
-    public static void write_ulonglong(OutputStream out, long v)
-    throws IOException {
-        out.write((byte)v);
-        out.write((byte)(v>>8));
-        out.write((byte)(v>>16));
-        out.write((byte)(v>>24));
-        out.write((byte)(v>>32));
-        out.write((byte)(v>>40));
-        out.write((byte)(v>>48));
-        out.write((byte)(v>>56));
-    }
-    public static void write_bytes(OutputStream out, String s, int len)
+    public static void write_bytes(ExtendedDataOutput out, String s, int len)
     throws IOException {
         jq.Assert(s.length() <= len);
         int i;
@@ -1198,10 +1156,10 @@ public class BootImage implements ObjectLayout, ELFConstants {
         return off;
     }
 
-    private void dump_strings(OutputStream out)
+    private void dump_strings(ExtendedDataOutput out)
     throws IOException {
         Iterator i = stringTable.iterator();
-        write_ulong(out, stringTableOffset);
+        out.writeUInt(stringTableOffset);
         while (i.hasNext()) {
             byte[] b = (byte[])i.next();
             out.write(b);
@@ -1209,7 +1167,7 @@ public class BootImage implements ObjectLayout, ELFConstants {
     }
 
     
-    public void dumpELF(OutputStream out, jq_StaticMethod rootm) throws IOException {
+    public void dumpELF(ExtendedDataOutput out, jq_StaticMethod rootm) throws IOException {
         Iterator i = bca.getAllCodeRelocs().iterator();
         while (i.hasNext()) {
             Object r = (Object)i.next();
@@ -1218,7 +1176,7 @@ public class BootImage implements ObjectLayout, ELFConstants {
         }
 
         final int datasize = heapCurrent;
-        ELFOutputStream f = new ELFOutputStream(ELFDATA2LSB, ET_REL, EM_386, 0, out);
+        ELFOutput f = new ELFOutput(ELFDATA2LSB, ET_REL, EM_386, 0, out);
         f.setLittleEndian();
         Section.NullSection empty = Section.NullSection.INSTANCE;
         Section.StrTabSection shstrtab = new Section.StrTabSection(".shstrtab", 0, 0);
@@ -1326,7 +1284,7 @@ public class BootImage implements ObjectLayout, ELFConstants {
         
         f.write();
         
-        out.flush();
+        //out.flush();
     }
 
     class TextSection extends Section.ProgBitsSection {
@@ -1336,7 +1294,7 @@ public class BootImage implements ObjectLayout, ELFConstants {
         public int getSize() { return bca.size(); }
         public int getAddrAlign() { return 64; }
         public void writeData(ELF file) throws IOException {
-            OutputStream out = ((ELFOutputStream)file).getOutputStream();
+            ExtendedDataOutput out = (ExtendedDataOutput) ((ELFOutput)file).getOutput();
             bca.dump(out);
         }
         public void load(Section.UnloadedSection s, ELF file) throws IOException {
@@ -1352,7 +1310,7 @@ public class BootImage implements ObjectLayout, ELFConstants {
         public int getAddrAlign() { return 64; }
         public void writeData(ELF file) throws IOException {
             try {
-                OutputStream out = ((ELFOutputStream)file).getOutputStream();
+                ExtendedDataOutput out = (ExtendedDataOutput) ((ELFOutput)file).getOutput();
                 dumpHeap(out);
             } catch (UnknownObjectException x) {
                 Object u = x.getObject();
