@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="main/src/java"/>
+	<classpathentry kind="src" path="main/test/java"/>
+	<classpathentry kind="src" path="main/src/resources"/>
+	<classpathentry kind="src" path="main/test/resources"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="main/src/jar/java14.jar"/>
+	<classpathentry kind="output" path="target/classes"/>
+</classpath>
