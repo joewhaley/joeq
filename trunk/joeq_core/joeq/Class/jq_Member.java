@@ -90,6 +90,15 @@ public abstract class jq_Member implements jq_ClassFileConstants, AndersenMember
             initializeMemberObject();
         return member_object;
     }
+    
+    public static final boolean DETERMINISTIC = true;
+    
+    public int hashCode() {
+        if (DETERMINISTIC)
+            return clazz.hashCode() ^ nd.hashCode();
+        else
+            return System.identityHashCode(this);
+    }
 
     /* attribute_info {
            u2 attribute_name_index;
