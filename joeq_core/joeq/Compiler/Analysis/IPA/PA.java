@@ -2613,6 +2613,13 @@ public class PA {
         return result;
     }
     
+    public static String getName(BDDDomain d) {
+        String s = d.getName();
+        if (s.endsWith("2")) return s.substring(0, s.length()-1)+"1";
+        if (s.endsWith("1")) return s.substring(0, s.length()-1)+"0";
+        return s+"0";
+    }
+    
     public static void bdd_save(String filename, BDD b) throws IOException {
         List ds = activeDomains(b);
         if (ds == null) {
@@ -2626,7 +2633,7 @@ public class PA {
             for (Iterator i = ds.iterator(); i.hasNext(); ) {
                 BDDDomain d = (BDDDomain) i.next();
                 out.write(' ');
-                out.write(d.getName());
+                out.write(getName(d));
                 out.write(':');
                 out.write(Integer.toString(d.varNum()));
             }
