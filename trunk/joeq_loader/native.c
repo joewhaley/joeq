@@ -556,9 +556,7 @@ void __stdcall timer_tick(LPVOID arg, DWORD lo, DWORD hi)
     }
 #else
     __asm__ __volatile__ (
-        "
-        movl %%fs:20, %0
-        "
+        "movl %%fs:20, %0"
         :"=r"(java_thread)
 	:
 	);
@@ -729,16 +727,14 @@ int __stdcall init_thread()
     int my_id;
     void* descr = calloc(1, 1024);
     __asm__ __volatile__ (
-        "
-        nop
-uphere:
-        movl %2, %%eax
-        movl %%eax, %%ebx
-        inc %%ebx
-        lock cmpxchgl %%ebx, %1
-        jne uphere
-        movl %%ebx, %0
-        "
+        "nop\n"\
+	"uphere:\n\t"\
+        "movl %2, %%eax\n\t"\
+        "movl %%eax, %%ebx\n\t"\
+        "inc %%ebx\n\t"\
+        "lock cmpxchgl %%ebx, %1\n\t"\
+        "jne uphere\n\t"\
+        "movl %%ebx, %0\n\t"
         :"=r"(my_id), "=m"(current_id)
         :"m"(current_id)
         :"%eax"
@@ -1089,27 +1085,26 @@ void __stdcall set_current_context(Thread* jthread, const CONTEXT* context)
     }
 #else
     __asm volatile (
-        "
-        movl %0, %%edx
-        movl %%edx, %%fs:20
-        movl %1, %%ecx
-        movl 196(%%ecx), %%esp
-        frstor 28(%%ecx)
-        pushl 184(%%ecx)
-        movl %%esp, 196(%%ecx)
-        pushl 176(%%ecx)
-        pushl 172(%%ecx)
-        pushl 168(%%ecx)
-        pushl 164(%%ecx)
-        pushl 196(%%ecx)
-        pushl 180(%%ecx)
-        pushl 160(%%ecx)
-        pushl 156(%%ecx)
-        pushl 192(%%ecx)
-        decl 4(%%edx)
-        popf
-        popa
-        ret"
+        "movl %0, %%edx\n\t"\
+        "movl %%edx, %%fs:20\n\t"\
+        "movl %1, %%ecx\n\t"\
+        "movl 196(%%ecx), %%esp\n\t"\
+        "frstor 28(%%ecx)\n\t"\
+        "pushl 184(%%ecx)\n\t"\
+        "movl %%esp, 196(%%ecx)\n\t"\
+        "pushl 176(%%ecx)\n\t"\
+        "pushl 172(%%ecx)\n\t"\
+        "pushl 168(%%ecx)\n\t"\
+        "pushl 164(%%ecx)\n\t"\
+        "pushl 196(%%ecx)\n\t"\
+        "pushl 180(%%ecx)\n\t"\
+        "pushl 160(%%ecx)\n\t"\
+        "pushl 156(%%ecx)\n\t"\
+        "pushl 192(%%ecx)\n\t"\
+        "decl 4(%%edx)\n\t"\
+        "popf\n\t"\
+        "popa\n\t"\
+        "ret\n\t"
         :
         :"r"(jthread), "r"(context)
         );
