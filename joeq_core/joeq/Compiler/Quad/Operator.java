@@ -51,44 +51,46 @@ public abstract class Operator {
         return noregisters;
     }
 
+    public abstract boolean hasSideEffects();
+    
     public abstract void interpret(Quad q, State s);
     
-    int getIntOpValue(Operand op, State s) {
+    static int getIntOpValue(Operand op, State s) {
 	if (op instanceof RegisterOperand)
 	    return ((Number)s.getReg(((RegisterOperand)op).getRegister())).intValue();
 	else
 	    return ((IConstOperand)op).getValue();
     }
     
-    float getFloatOpValue(Operand op, State s) {
+    static float getFloatOpValue(Operand op, State s) {
 	if (op instanceof RegisterOperand)
 	    return ((Float)s.getReg(((RegisterOperand)op).getRegister())).floatValue();
 	else
 	    return ((FConstOperand)op).getValue();
     }
     
-    long getLongOpValue(Operand op, State s) {
+    static long getLongOpValue(Operand op, State s) {
 	if (op instanceof RegisterOperand)
 	    return ((Long)s.getReg(((RegisterOperand)op).getRegister())).longValue();
 	else
 	    return ((LConstOperand)op).getValue();
     }
     
-    double getDoubleOpValue(Operand op, State s) {
+    static double getDoubleOpValue(Operand op, State s) {
 	if (op instanceof RegisterOperand)
 	    return ((Double)s.getReg(((RegisterOperand)op).getRegister())).doubleValue();
 	else
 	    return ((DConstOperand)op).getValue();
     }
     
-    Object getObjectOpValue(Operand op, State s) {
+    static Object getObjectOpValue(Operand op, State s) {
 	if (op instanceof RegisterOperand)
 	    return s.getReg(((RegisterOperand)op).getRegister());
 	else
 	    return ((AConstOperand)op).getValue();
     }
 
-    Object getWrappedOpValue(Operand op, State s) {
+    static Object getWrappedOpValue(Operand op, State s) {
 	if (op instanceof RegisterOperand)
 	    return s.getReg(((RegisterOperand)op).getRegister());
 	else if (op instanceof AConstOperand)
@@ -105,28 +107,28 @@ public abstract class Operator {
 	return null;
     }
 
-    public UnmodifiableList.RegisterOperand getReg1(Quad q) {
+    public static UnmodifiableList.RegisterOperand getReg1(Quad q) {
         return new UnmodifiableList.RegisterOperand((RegisterOperand)q.getOp1());
     }
-    public UnmodifiableList.RegisterOperand getReg1_check(Quad q) {
+    public static UnmodifiableList.RegisterOperand getReg1_check(Quad q) {
         if (q.getOp1() instanceof RegisterOperand)
             return new UnmodifiableList.RegisterOperand((RegisterOperand)q.getOp1());
         else
             return noregisters;
     }
-    public UnmodifiableList.RegisterOperand getReg2(Quad q) {
+    public static UnmodifiableList.RegisterOperand getReg2(Quad q) {
         if (q.getOp2() instanceof RegisterOperand)
             return new UnmodifiableList.RegisterOperand((RegisterOperand)q.getOp2());
         else
             return noregisters;
     }
-    public UnmodifiableList.RegisterOperand getReg3(Quad q) {
+    public static UnmodifiableList.RegisterOperand getReg3(Quad q) {
         if (q.getOp3() instanceof RegisterOperand)
             return new UnmodifiableList.RegisterOperand((RegisterOperand)q.getOp3());
         else
             return noregisters;
     }
-    protected UnmodifiableList.RegisterOperand getReg12(Quad q) {
+    protected static UnmodifiableList.RegisterOperand getReg12(Quad q) {
         if (q.getOp1() instanceof RegisterOperand) {
             if (q.getOp2() instanceof RegisterOperand)
                 return new UnmodifiableList.RegisterOperand((RegisterOperand)q.getOp1(), (RegisterOperand)q.getOp2());
@@ -139,7 +141,7 @@ public abstract class Operator {
                 return noregisters;
         }
     }
-    protected UnmodifiableList.RegisterOperand getReg23(Quad q) {
+    protected static UnmodifiableList.RegisterOperand getReg23(Quad q) {
         if (q.getOp2() instanceof RegisterOperand) {
             if (q.getOp3() instanceof RegisterOperand)
                 return new UnmodifiableList.RegisterOperand((RegisterOperand)q.getOp2(), (RegisterOperand)q.getOp3());
@@ -152,7 +154,7 @@ public abstract class Operator {
                 return noregisters;
         }
     }
-    protected UnmodifiableList.RegisterOperand getReg24(Quad q) {
+    protected static UnmodifiableList.RegisterOperand getReg24(Quad q) {
         if (q.getOp2() instanceof RegisterOperand) {
             if (q.getOp4() instanceof RegisterOperand)
                 return new UnmodifiableList.RegisterOperand((RegisterOperand)q.getOp2(), (RegisterOperand)q.getOp4());
@@ -165,7 +167,7 @@ public abstract class Operator {
                 return noregisters;
         }
     }
-    protected UnmodifiableList.RegisterOperand getReg124(Quad q) {
+    protected static UnmodifiableList.RegisterOperand getReg124(Quad q) {
         if (q.getOp1() instanceof RegisterOperand) {
             if (q.getOp2() instanceof RegisterOperand) {
                 if (q.getOp4() instanceof RegisterOperand)
@@ -180,7 +182,7 @@ public abstract class Operator {
             }
         } else return getReg24(q);
     }
-    protected UnmodifiableList.RegisterOperand getReg123(Quad q) {
+    protected static UnmodifiableList.RegisterOperand getReg123(Quad q) {
         if (q.getOp1() instanceof RegisterOperand) {
             if (q.getOp2() instanceof RegisterOperand) {
                 if (q.getOp3() instanceof RegisterOperand)
@@ -195,7 +197,7 @@ public abstract class Operator {
             }
         } else return getReg23(q);
     }
-    protected UnmodifiableList.RegisterOperand getReg234(Quad q) {
+    protected static UnmodifiableList.RegisterOperand getReg234(Quad q) {
         if (q.getOp2() instanceof RegisterOperand) {
             if (q.getOp3() instanceof RegisterOperand) {
                 if (q.getOp4() instanceof RegisterOperand)
@@ -222,7 +224,7 @@ public abstract class Operator {
             }
         }
     }
-    protected UnmodifiableList.RegisterOperand getReg1234(Quad q) {
+    protected static UnmodifiableList.RegisterOperand getReg1234(Quad q) {
         if (q.getOp1() instanceof RegisterOperand) {
             if (q.getOp2() instanceof RegisterOperand) {
                 if (q.getOp3() instanceof RegisterOperand) {
@@ -310,6 +312,7 @@ public abstract class Operator {
         public static Operand getSrc(Quad q) { return q.getOp2(); }
 	public static void setDest(Quad q, RegisterOperand o) { q.setOp1(o); }
 	public static void setSrc(Quad q, Operand o) { q.setOp2(o); }
+        public boolean hasSideEffects() { return false; }
         public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg2(q); }
         
@@ -371,6 +374,7 @@ public abstract class Operator {
 	public static void setDest(Quad q, RegisterOperand o) { q.setOp1(o); }
 	public static void setSrc1(Quad q, Operand o) { q.setOp2(o); }
 	public static void setSrc2(Quad q, Operand o) { q.setOp3(o); }
+        public boolean hasSideEffects() { return false; }
         public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg23(q); }
         
@@ -708,6 +712,7 @@ public abstract class Operator {
         public static Operand getSrc(Quad q) { return q.getOp2(); }
 	public static void setDest(Quad q, RegisterOperand o) { q.setOp1(o); }
 	public static void setSrc(Quad q, Operand o) { q.setOp2(o); }
+        public boolean hasSideEffects() { return false; }
         public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg2(q); }
         
@@ -931,6 +936,7 @@ public abstract class Operator {
 	public static void setBase(Quad q, Operand o) { q.setOp2(o); }
 	public static void setIndex(Quad q, Operand o) { q.setOp3(o); }
 	public static void setGuard(Quad q, Operand o) { q.setOp4(o); }
+        public boolean hasSideEffects() { return false; }
         public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg234(q); }
         
@@ -1039,6 +1045,7 @@ public abstract class Operator {
 	public static void setBase(Quad q, Operand o) { q.setOp2(o); }
 	public static void setIndex(Quad q, Operand o) { q.setOp3(o); }
 	public static void setGuard(Quad q, Operand o) { q.setOp4(o); }
+        public boolean hasSideEffects() { return true; }
         public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg1234(q); }
         
         public void accept(Quad q, QuadVisitor qv) {
@@ -1150,6 +1157,7 @@ public abstract class Operator {
 	public static void setSrc2(Quad q, Operand o) { q.setOp2(o); }
 	public static void setCond(Quad q, ConditionOperand o) { q.setOp3(o); }
 	public static void setTarget(Quad q, TargetOperand o) { q.setOp4(o); }
+        public boolean hasSideEffects() { return true; }
         public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg12(q); }
         
         public void accept(Quad q, QuadVisitor qv) {
@@ -1208,6 +1216,7 @@ public abstract class Operator {
         }
         public static TargetOperand getTarget(Quad q) { return (TargetOperand)q.getOp1(); }
 	public static void setTarget(Quad q, TargetOperand o) { q.setOp1(o); }
+        public boolean hasSideEffects() { return true; }
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitGoto(q);
@@ -1235,6 +1244,7 @@ public abstract class Operator {
 	public static void setDest(Quad q, RegisterOperand o) { q.setOp1(o); }
 	public static void setTarget(Quad q, TargetOperand o) { q.setOp2(o); }
 	public static void setSuccessor(Quad q, TargetOperand o) { q.setOp3(o); }
+        public boolean hasSideEffects() { return true; }
         public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         
         public void accept(Quad q, QuadVisitor qv) {
@@ -1261,6 +1271,7 @@ public abstract class Operator {
         }
         public static RegisterOperand getTarget(Quad q) { return (RegisterOperand)q.getOp1(); }
 	public static void setTarget(Quad q, RegisterOperand o) { q.setOp1(o); }
+        public boolean hasSideEffects() { return true; }
         public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg1(q); }
         
         public void accept(Quad q, QuadVisitor qv) {
@@ -1296,6 +1307,7 @@ public abstract class Operator {
 	public static void setLow(Quad q, IConstOperand o) { q.setOp2(o); }
 	public static void setDefault(Quad q, TargetOperand o) { q.setOp3(o); }
 	public static void setTargetTable(Quad q, BasicBlockTableOperand o) { q.setOp4(o); }
+        public boolean hasSideEffects() { return true; }
         public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg1_check(q); }
         
         public void accept(Quad q, QuadVisitor qv) {
@@ -1343,6 +1355,7 @@ public abstract class Operator {
 	public static void setDefault(Quad q, TargetOperand o) { q.setOp2(o); }
 	public static void setValueTable(Quad q, IntValueTableOperand o) { q.setOp3(o); }
 	public static void setTargetTable(Quad q, BasicBlockTableOperand o) { q.setOp4(o); }
+        public boolean hasSideEffects() { return true; }
         public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg1_check(q); }
         
         public void accept(Quad q, QuadVisitor qv) {
@@ -1380,6 +1393,7 @@ public abstract class Operator {
         }
         public static Operand getSrc(Quad q) { return q.getOp1(); }
 	public static void setSrc(Quad q, Operand o) { q.setOp1(o); }
+        public boolean hasSideEffects() { return true; }
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitReturn(q);
@@ -1450,6 +1464,7 @@ public abstract class Operator {
         public static FieldOperand getField(Quad q) { return (FieldOperand)q.getOp2(); }
 	public static void setDest(Quad q, RegisterOperand o) { q.setOp1(o); }
 	public static void setField(Quad q, FieldOperand o) { q.setOp2(o); }
+        public boolean hasSideEffects() { return false; }
         public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         
         public void accept(Quad q, QuadVisitor qv) {
@@ -1515,6 +1530,7 @@ public abstract class Operator {
             public UnmodifiableList.jq_Class getThrownExceptions() {
                 return resolutionexceptions;
             }
+            public boolean hasSideEffects() { return true; }
             public String toString() { return "GETSTATIC_I%"; }
 	    public void interpret(Quad q, State s) {
 		jq_Field f = getField(q).getField();
@@ -1543,6 +1559,7 @@ public abstract class Operator {
             public UnmodifiableList.jq_Class getThrownExceptions() {
                 return resolutionexceptions;
             }
+            public boolean hasSideEffects() { return true; }
             public String toString() { return "GETSTATIC_F%"; }
         }
         public static class GETSTATIC_L_DYNLINK extends Getstatic {
@@ -1555,6 +1572,7 @@ public abstract class Operator {
             public UnmodifiableList.jq_Class getThrownExceptions() {
                 return resolutionexceptions;
             }
+            public boolean hasSideEffects() { return true; }
             public String toString() { return "GETSTATIC_L%"; }
         }
         public static class GETSTATIC_D_DYNLINK extends Getstatic {
@@ -1567,6 +1585,7 @@ public abstract class Operator {
             public UnmodifiableList.jq_Class getThrownExceptions() {
                 return resolutionexceptions;
             }
+            public boolean hasSideEffects() { return true; }
             public String toString() { return "GETSTATIC_D%"; }
         }
         public static class GETSTATIC_A_DYNLINK extends Getstatic {
@@ -1579,6 +1598,7 @@ public abstract class Operator {
             public UnmodifiableList.jq_Class getThrownExceptions() {
                 return resolutionexceptions;
             }
+            public boolean hasSideEffects() { return true; }
             public String toString() { return "GETSTATIC_A%"; }
         }
     }
@@ -1592,6 +1612,7 @@ public abstract class Operator {
 	public static void setSrc(Quad q, Operand o) { q.setOp1(o); }
 	public static void setField(Quad q, FieldOperand o) { q.setOp2(o); }
         public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg1_check(q); }
+        public boolean hasSideEffects() { return true; }
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitPutstatic(q);
@@ -1741,6 +1762,7 @@ public abstract class Operator {
 	public static void setGuard(Quad q, Operand o) { q.setOp4(o); }
         public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg24(q); }
+        public boolean hasSideEffects() { return false; }
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitGetfield(q);
@@ -1820,6 +1842,7 @@ public abstract class Operator {
             public UnmodifiableList.jq_Class getThrownExceptions() {
                 return resolutionexceptions;
             }
+            public boolean hasSideEffects() { return true; }
             public String toString() { return "GETFIELD_I%"; }
         }
         public static class GETFIELD_F_DYNLINK extends Getfield {
@@ -1832,6 +1855,7 @@ public abstract class Operator {
             public UnmodifiableList.jq_Class getThrownExceptions() {
                 return resolutionexceptions;
             }
+            public boolean hasSideEffects() { return true; }
             public String toString() { return "GETFIELD_F%"; }
         }
         public static class GETFIELD_L_DYNLINK extends Getfield {
@@ -1844,6 +1868,7 @@ public abstract class Operator {
             public UnmodifiableList.jq_Class getThrownExceptions() {
                 return resolutionexceptions;
             }
+            public boolean hasSideEffects() { return true; }
             public String toString() { return "GETFIELD_L%"; }
         }
         public static class GETFIELD_D_DYNLINK extends Getfield {
@@ -1856,6 +1881,7 @@ public abstract class Operator {
             public UnmodifiableList.jq_Class getThrownExceptions() {
                 return resolutionexceptions;
             }
+            public boolean hasSideEffects() { return true; }
             public String toString() { return "GETFIELD_D%"; }
         }
         public static class GETFIELD_A_DYNLINK extends Getfield {
@@ -1868,6 +1894,7 @@ public abstract class Operator {
             public UnmodifiableList.jq_Class getThrownExceptions() {
                 return resolutionexceptions;
             }
+            public boolean hasSideEffects() { return true; }
             public String toString() { return "GETFIELD_A%"; }
         }
         public static class GETFIELD_B_DYNLINK extends Getfield {
@@ -1880,6 +1907,7 @@ public abstract class Operator {
             public UnmodifiableList.jq_Class getThrownExceptions() {
                 return resolutionexceptions;
             }
+            public boolean hasSideEffects() { return true; }
             public String toString() { return "GETFIELD_B%"; }
         }
         public static class GETFIELD_C_DYNLINK extends Getfield {
@@ -1892,6 +1920,7 @@ public abstract class Operator {
             public UnmodifiableList.jq_Class getThrownExceptions() {
                 return resolutionexceptions;
             }
+            public boolean hasSideEffects() { return true; }
             public String toString() { return "GETFIELD_C%"; }
 	    public void interpret(Quad q, State s) {
 		Object o = getObjectOpValue(getBase(q), s);
@@ -1909,6 +1938,7 @@ public abstract class Operator {
             public UnmodifiableList.jq_Class getThrownExceptions() {
                 return resolutionexceptions;
             }
+            public boolean hasSideEffects() { return true; }
             public String toString() { return "GETFIELD_S%"; }
         }
         public static class GETFIELD_Z_DYNLINK extends Getfield {
@@ -1921,6 +1951,7 @@ public abstract class Operator {
             public UnmodifiableList.jq_Class getThrownExceptions() {
                 return resolutionexceptions;
             }
+            public boolean hasSideEffects() { return true; }
             public String toString() { return "GETFIELD_Z%"; }
 	    public void interpret(Quad q, State s) {
 		Object o = getObjectOpValue(getBase(q), s);
@@ -1943,6 +1974,7 @@ public abstract class Operator {
 	public static void setSrc(Quad q, Operand o) { q.setOp3(o); }
 	public static void setGuard(Quad q, Operand o) { q.setOp4(o); }
         public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg1234(q); }
+        public boolean hasSideEffects() { return true; }
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitPutfield(q);
@@ -2171,6 +2203,7 @@ public abstract class Operator {
 	public static void setSrc(Quad q, Operand o) { q.setOp2(o); }
         public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1_check(q); }
         public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg2(q); }
+        public boolean hasSideEffects() { return true; }
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitNullCheck(q);
@@ -2204,6 +2237,7 @@ public abstract class Operator {
 	public static void setSrc(Quad q, Operand o) { q.setOp2(o); }
         public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1_check(q); }
         public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg2(q); }
+        public boolean hasSideEffects() { return true; }
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitZeroCheck(q);
@@ -2250,6 +2284,7 @@ public abstract class Operator {
 	public static void setGuard(Quad q, Operand o) { q.setOp3(o); }
         public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg3(q); }
         public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg123(q); }
+        public boolean hasSideEffects() { return true; }
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitBoundsCheck(q);
@@ -2288,6 +2323,7 @@ public abstract class Operator {
 	public static void setGuard(Quad q, Operand o) { q.setOp3(o); }
         public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg3(q); }
         public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg123(q); }
+        public boolean hasSideEffects() { return true; }
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitStoreCheck(q);
@@ -2347,6 +2383,7 @@ public abstract class Operator {
         public UnmodifiableList.jq_Class getThrownExceptions() {
             return anyexception;
         }
+        public boolean hasSideEffects() { return true; }
         
 	public void interpret_virtual(Quad q, State s) {
 	    ParamListOperand plo = getParamList(q);
@@ -2639,6 +2676,7 @@ public abstract class Operator {
 	public static void setDest(Quad q, RegisterOperand o) { q.setOp1(o); }
 	public static void setType(Quad q, TypeOperand o) { q.setOp2(o); }
         public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
+        public boolean hasSideEffects() { return true; }
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitNew(q);
@@ -2668,6 +2706,7 @@ public abstract class Operator {
 	public static void setType(Quad q, TypeOperand o) { q.setOp3(o); }
         public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg2(q); }
+        public boolean hasSideEffects() { return true; }
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitNewArray(q);
@@ -2704,6 +2743,7 @@ public abstract class Operator {
 	public static void setType(Quad q, TypeOperand o) { q.setOp3(o); }
         public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg2(q); }
+        public boolean hasSideEffects() { return true; }
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitCheckCast(q);
@@ -2748,6 +2788,7 @@ public abstract class Operator {
 	public static void setType(Quad q, TypeOperand o) { q.setOp3(o); }
         public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg2(q); }
+        public boolean hasSideEffects() { return true; }
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitInstanceOf(q);
@@ -2782,6 +2823,7 @@ public abstract class Operator {
 	public static void setSrc(Quad q, Operand o) { q.setOp2(o); }
         public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg2(q); }
+        public boolean hasSideEffects() { return false; }
 
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitALength(q);
@@ -2807,7 +2849,8 @@ public abstract class Operator {
         }
         public static Operand getSrc(Quad q) { return q.getOp2(); }
 	public static void setSrc(Quad q, Operand o) { q.setOp2(o); }
-        public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg1_check(q); }
+        public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg2(q); }
+        public boolean hasSideEffects() { return true; }
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitMonitor(q);
@@ -2846,6 +2889,7 @@ public abstract class Operator {
 	public static void setAddress(Quad q, Operand o) { q.setOp2(o); }
         public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg2(q); }
+        public boolean hasSideEffects() { return false; }
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitMemLoad(q);
@@ -2887,6 +2931,7 @@ public abstract class Operator {
         public static Operand getValue(Quad q) { return q.getOp2(); }
 	public static void setAddress(Quad q, Operand o) { q.setOp1(o); }
 	public static void setValue(Quad q, Operand o) { q.setOp2(o); }
+        public boolean hasSideEffects() { return true; }
         public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg12(q); }
         
         public void accept(Quad q, QuadVisitor qv) {
@@ -2949,6 +2994,7 @@ public abstract class Operator {
 	public static void setOp2(Quad q, Operand o) { q.setOp2(o); }
 	public static void setOp3(Quad q, Operand o) { q.setOp3(o); }
 	public static void setOp4(Quad q, Operand o) { q.setOp4(o); }
+        public boolean hasSideEffects() { return true; }
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitSpecial(q);
