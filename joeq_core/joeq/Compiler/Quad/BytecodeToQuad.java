@@ -68,7 +68,7 @@ import Main.jq;
  * code.
  *
  * @see  BytecodeVisitor
- * @see  BytecodeAnalysis.ControlFlowGraph
+ * @see  Compil3r.BytecodeAnalysis.ControlFlowGraph
  * @author  John Whaley
  * @version $Id$
  */

@@ -599,7 +599,7 @@ public abstract class Inflater {
    * uncompressed bytes returned by inflate(), or if needsDictionary()
    * returns true (and thus no output was yet produced) this is the
    * adler checksum of the expected dictionary.
-   * @returns the adler checksum.
+   * @return the adler checksum.
    */
   public int getAdler()
   {

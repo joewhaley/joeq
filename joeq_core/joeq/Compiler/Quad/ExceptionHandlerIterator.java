@@ -30,12 +30,12 @@ public class ExceptionHandlerIterator implements ListIterator.ExceptionHandler {
     /** Returns true if this iterator has a next element.
      * @return  true if this iterator has a next element. */
     public boolean hasNext() { return current != null; }
-    /** Returns the next element of this iterator.  Use nextEH to avoid the cast.
-     * @see  nextExceptionHandler
+    /** Returns the next element of this iterator.  Use nextExceptionHandler to avoid the cast.
+     * @see  #nextExceptionHandler
      * @return  the next element of this iterator. */
     public Object next() { return nextExceptionHandler(); }
     /** Returns the next element of this iterator, avoiding the cast.
-     * @see  next
+     * @see  #next
      * @return  the next element of this iterator. */
     public ExceptionHandler nextExceptionHandler() {
         if (current == null) throw new NoSuchElementException();
@@ -57,11 +57,11 @@ public class ExceptionHandlerIterator implements ListIterator.ExceptionHandler {
      * @return  true if this iterator has a previous element. */
     public boolean hasPrevious() { return root != current; }
     /** Returns the previous element of this iterator.  Use previousExceptionHandler to avoid the cast.
-     * @see  previousExceptionHandler
+     * @see  #previousExceptionHandler
      * @return  the previous element of this iterator. */
     public Object previous() { return previousExceptionHandler(); }
     /** Returns the previous element of this iterator, avoiding the cast.
-     * @see  next
+     * @see  #previous
      * @return  the previous element of this iterator. */
     public ExceptionHandler previousExceptionHandler() {
         if (root == current) throw new NoSuchElementException();
