@@ -3,11 +3,16 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Quad;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 
 import joeq.Class.jq_Method;
 import joeq.Class.jq_MethodVisitor;
 import joeq.Util.BitString;
+import joeq.Util.BitString.BitStringIterator;
+import joeq.Util.Graphs.Navigator;
+import joeq.Util.Graphs.Traversals;
 import joeq.Util.Templates.List;
 import joeq.Util.Templates.ListIterator;
 
@@ -120,8 +125,20 @@ public class Dominators extends jq_MethodVisitor.EmptyVisitor implements BasicBl
         //else change = false; 
     }
     
+    DominatorNode[] dominatorNodes;
+    
+    public DominatorNode getDominatorNode(BasicBlock bb) {
+        return dominatorNodes[bb.getID()];
+    }
+    
+    public BasicBlock getImmediateDominator(BasicBlock bb) {
+        DominatorNode n = getDominatorNode(bb);
+        return n.parent.getBasicBlock();
+    }
+    
     public DominatorNode computeTree() {
         // TODO: fix this. this algorithm sucks (n^4 or so)
+        dominatorNodes = new DominatorNode[dominators.length];
         ArrayList list = new ArrayList();
         list.add(new ArrayList());
         for (int depth = 1; ; ++depth) {
@@ -145,6 +162,7 @@ public class Dominators extends jq_MethodVisitor.EmptyVisitor implements BasicBl
                     DominatorNode n0 = new DominatorNode(bbs[i], parent);
                     if (parent != null)
                         parent.addChild(n0);
+                    dominatorNodes[i] = n0;
                     list2.add(n0);
                 }
             }
@@ -159,6 +177,7 @@ public class Dominators extends jq_MethodVisitor.EmptyVisitor implements BasicBl
         public final BasicBlock bb;
         public final DominatorNode parent;
         public final ArrayList children;
+        public BitString dominance_frontier;
         
         public DominatorNode(BasicBlock bb, DominatorNode parent) {
             this.bb = bb; this.parent = parent; this.children = new ArrayList();
@@ -180,6 +199,82 @@ public class Dominators extends jq_MethodVisitor.EmptyVisitor implements BasicBl
             }
             System.out.println("End of children of :"+toString());
         }
+    }
+    
+    public static final Navigator dom_nav = new Navigator() {
+
+        public Collection next(Object node) {
+            DominatorNode dn = (DominatorNode) node;
+            return dn.children;
+        }
+
+        public Collection prev(Object node) {
+            DominatorNode dn = (DominatorNode) node;
+            if (dn.parent == null) return Collections.EMPTY_LIST;
+            return Collections.singleton(dn.parent);
+        }
+        
+    };
+    
+    public void calculateDominanceFrontier(DominatorNode tree) {
+        // for each X in a bottom-up traversal of the dominator tree do
+        for (Iterator x = Traversals.postOrder(dom_nav, tree).iterator(); x.hasNext();) {
+            DominatorNode v = (DominatorNode) x.next();
+            BasicBlock X = v.getBasicBlock();
+            BitString DF = new BitString(dominatorNodes.length);
+            v.dominance_frontier = DF;
+            // for each Y in Succ(X) do
+            for (Iterator y = X.getSuccessors().iterator(); y.hasNext();) {
+                BasicBlock Y = (BasicBlock) y.next();
+                // skip EXIT node
+                if (Y.isExit())
+                    continue;
+                // if (idom(Y)!=X) then DF(X) <- DF(X) U Y
+                if (getImmediateDominator(Y) != X)
+                    DF.set(Y.getID());
+            }
+            //        for each Z in {idom(z) = X} do
+            for (Iterator z = getDominatorNode(X).getChildren().iterator(); z.hasNext();) {
+                DominatorNode zVertex = (DominatorNode) z.next();
+                BasicBlock Z = zVertex.getBasicBlock();
+                // for each Y in DF(Z) do
+                for (BitStringIterator y = zVertex.dominance_frontier
+                        .iterator(); y.hasNext();) {
+                    int I = y.nextIndex();
+                    BasicBlock Y = bbs[I];
+                    // if (idom(Y)!=X) then DF(X) <- DF(X) U Y
+                    if (getImmediateDominator(Y) != X)
+                        DF.set(Y.getID());
+                }
+            }
+        }
+    }
+    
+    public boolean dominates(int b, BitString b2) {
+        BitString b1 = (BitString) this.dominators[b].clone();
+        b1.minus(b2);
+        return b1.isZero();
+    }
+    
+    public BitString getDominanceFrontier(BitString bits) {
+        BitString result = new BitString(dominatorNodes.length);
+        for (BitStringIterator y = bits.iterator(); y.hasNext();) {
+            int I = y.nextIndex();
+            DominatorNode dn = dominatorNodes[I];
+            result.or(dn.dominance_frontier);
+        }
+        return result;
+    }
+    public BitString getIteratedDominanceFrontier(BitString S) {
+        BitString DFi = getDominanceFrontier(S);
+        for (;;) {
+            BitString DFiplus1 = getDominanceFrontier(DFi);
+            DFiplus1.or(DFi);
+            if (DFi.equals(DFiplus1))
+                break;
+            DFi = DFiplus1;
+        }
+        return DFi;
     }
     
     public static void main(String[] args) {
