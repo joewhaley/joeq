@@ -298,7 +298,7 @@ public class BDDInferenceRule extends InferenceRule {
         if (solver.TRACE_FULL) solver.out.println("Adding to "+bottom+": "+result.toStringWithDomains());
         BDD oldRelation = r.relation.id();
         r.relation.orWith(result);
-        if (solver.TRACE) solver.out.println("Relation "+r+" is now "+r.relation.nodeCount()+" nodes, "+r.size()+" elements.");
+        if (solver.TRACE) solver.out.println("Relation "+r+" is now "+r.relation.nodeCount()+" nodes, "+r.dsize()+" elements.");
         if (solver.TRACE_FULL) solver.out.println("Relation "+r+" is now: "+r.relation.toStringWithDomains());
         boolean changed = !oldRelation.equals(r.relation);
         oldRelation.free();
