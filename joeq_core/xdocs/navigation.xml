@@ -28,6 +28,8 @@
         <item name="Related work"
               href="/about/related_work.html"/>
       </item>
+      <item name="News"
+            href="/news.html" />
       <item name="API (Javadoc)"
             href="/apidocs/index.html" />
       <item name="Getting Started"
