@@ -1093,7 +1093,7 @@ public class CSPA {
         return getBDDSummary(ms);
     }
     
-    public ProgramLocation mapCall(ProgramLocation callSite) {
+    public static ProgramLocation mapCall(ProgramLocation callSite) {
         if (LOADED_CALLGRAPH && callSite instanceof ProgramLocation.QuadProgramLocation) {
             jq_Method m = (jq_Method) callSite.getMethod();
             Map map = CodeCache.getBCMap(m);
@@ -1441,18 +1441,22 @@ public class CSPA {
                     System.out.print("newPt1 = ");
                     report(newPt1, V2set.and(H1set));
                 }
+                if (TRACE_BDD) System.out.println(newPt1.toStringWithDomains());
                 BDD newPt2 = newPt1.replace(V2ToV1);
                 newPt1.free();
                 if (TRACE_SIZES) {
                     System.out.print("newPt2 = ");
                     report(newPt2, V1set.and(H1set));
                 }
+                if (TRACE_BDD) System.out.println(newPt2.toStringWithDomains());
                 newPt2.applyWith(g_pointsTo.id(), BDDFactory.diff);
                 if (TRACE_SIZES) {
                     System.out.print("newPt2 (really) = ");
                     report(newPt2, V1set.and(H1set));
                 }
+                if (TRACE_BDD) System.out.println(newPt2.toStringWithDomains());
                 newPt2.andWith(typeFilter.id());
+                if (TRACE_BDD) System.out.println(newPt2.toStringWithDomains());
                 newPointsTo = newPt2;
                 if (TRACE_SIZES) {
                     System.out.print("newPointsTo = ");
