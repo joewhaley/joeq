@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -117,12 +119,39 @@ public class GenerateWebRoots {
             out.println("\t\t\tHttpServletRequest request   = new MyHttpServletRequest();");
             out.println("\t\t\tHttpServletResponse response = new MyHttpServletResponse();" + "\n");
             out.println("\t\t\tHttpServlet servlet = new " + servlet + "();");
+            
+            if(hasMethod(servlet, "init", true)){
+                out.println("\t\t\tservlet.init();");    
+            }
+            
             out.println("\t\t\tservlet.service(request, response);");
             out.println("\t\t} catch (Exception e) {");
             out.println("\t\t\te.printStackTrace();");
             out.println("\t\t}\n");
         }        
         out.println("\t}\n\n");
+    }
+
+    static boolean hasMethod(String className, String methodName, boolean publicOnly) {
+        Class c;
+        try {
+            c = Class.forName(className);
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            return false;
+        }
+        Method[] methods = c.getDeclaredMethods();
+        for(int i = 0; i < methods.length; i++){
+            Method method = methods[i];
+            
+            if(method.getName().equals(methodName)){
+                if( publicOnly && (method.getModifiers() | Modifier.PUBLIC) != 0){
+                    return true;
+                }
+            }
+        }
+        
+        return false;
     }
 
     private static void printFilters(Collection filterNames) {
