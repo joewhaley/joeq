@@ -242,8 +242,8 @@ public abstract class jq_Member implements jq_ClassFileConstants, AndersenMember
         private java.util.regex.Pattern p;
         public FilterByName(java.util.regex.Pattern p) { this.p = p; }
         public FilterByName(String s) { this(java.util.regex.Pattern.compile(s)); }
-        public boolean isElement(Object o) {
-            jq_Member m = (jq_Member) o;
+        public boolean isElement(Object o2) {
+            jq_Member m = (jq_Member) o2;
             Object o = m.getName().toString();
             CharSequence cs;
             if (o instanceof CharSequence) cs = (CharSequence) o;
@@ -255,8 +255,8 @@ public abstract class jq_Member implements jq_ClassFileConstants, AndersenMember
         private java.util.regex.Pattern p;
         public FilterByShortClassName(java.util.regex.Pattern p) { this.p = p; }
         public FilterByShortClassName(String s) { this(java.util.regex.Pattern.compile(s)); }
-        public boolean isElement(Object o) {
-            jq_Member m = (jq_Member) o;
+        public boolean isElement(Object o2) {
+            jq_Member m = (jq_Member) o2;
             Object o = m.getDeclaringClass().shortName();
             CharSequence cs;
             if (o instanceof CharSequence) cs = (CharSequence) o;
