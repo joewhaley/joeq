@@ -2371,7 +2371,10 @@ public class PA {
             
             SubtypeHelper subtypeHelper = retrieveSubtypeHelper();
             Collection subtypes = subtypeHelper.getSubtypes((jq_Class) t);
-            Assert._assert(subtypes != null, "No subtypes for class " + t.getName());
+            if(subtypes == null){
+                System.err.println("No subtypes for class " + t.getName());
+                continue;
+            }
 
             for(Iterator typeIter = subtypes.iterator(); typeIter.hasNext();){
                 jq_Class c = (jq_Class) typeIter.next();    
