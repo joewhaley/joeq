@@ -30,6 +30,9 @@
       <id>joewhaley</id>
       <email>joewhaley@users.sourceforge.net</email>
       <organization>SUIF Compiler Group</organization>
+      <roles>
+        <role>Project Manager</role>
+      </roles>
       <url>http://www.stanford.edu/~jwhaley</url>
       <timezone>-8</timezone>
     </developer>
@@ -50,19 +53,7 @@
       <includes>
         <include>*.java</include>
       </includes>
-      <resources>
-        <resource>
-          <directory>main/test/resources</directory>
-          <filtering>false</filtering>
-        </resource>
-      </resources>
     </unitTest>
-    <resources>
-      <resource>
-        <directory>main/src/resources</directory>
-        <filtering>false</filtering>
-      </resource>
-    </resources>
   </build>
   <reports>
     <report>maven-developer-activity-plugin</report>
@@ -72,6 +63,7 @@
     <report>maven-findbugs-plugin</report>
     <report>maven-javadoc-plugin</report>
     <report>maven-jdepend-plugin</report>
+    <report>maven-junit-plugin</report>
     <report>maven-jxr-plugin</report>
     <report>maven-license-plugin</report>
     <report>maven-linkcheck-plugin</report>
