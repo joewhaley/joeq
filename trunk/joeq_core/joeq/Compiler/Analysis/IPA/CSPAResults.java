@@ -87,7 +87,7 @@ import Util.IO.ByteSequence;
  * @author John Whaley
  * @version $Id$
  */
-public class CSPAResults {
+public class CSPAResults implements PointerAnalysisResults {
 
     /** Call graph. */
     CallGraph cg;
@@ -598,7 +598,7 @@ public class CSPAResults {
         return mod;
     }
     
-    public TypedBDD findMod(jq_Method method) {
+    public TypedBDD findMod(Object method) {
         if (method == null) {
             return new TypedBDD(bdd.zero(), V1c, V1o, H1c, H1o, FD);
         }
@@ -618,8 +618,8 @@ public class CSPAResults {
             BDD d = stores.exist(V1set); // FD x V2c x V2o
             d.andWith(b);
             d.replaceWith(V2ToV1); // V1c x V1o x FD
-            BDD e = pointsTo.relprod(d, V1set); // H1c x H1o x FD
-            return new TypedBDD(e, H1c, H1o, FD);
+            BDD e = pointsTo.and(d); // V1c x V1o x H1c x H1o x FD
+            return new TypedBDD(e, V1c, V1o, H1c, H1o, FD);
         }
         
         BDD globalStores = stores.exist(V1set);
@@ -1016,7 +1016,7 @@ public class CSPAResults {
         return thrown.contains(n);
     }
     
-    public void escapeAnalysis() {
+    public TypedBDD escapeAnalysis() {
         
         BDD escapingLocations = bdd.zero();
         
@@ -1130,7 +1130,7 @@ public class CSPAResults {
         long capturedSize = 0L;
         long escapedSize = 0L;
         
-        for (Iterator i=heapobjIndexMap.iterator(); i.hasNext(); ) {
+        for (Iterator i = heapobjIndexMap.iterator(); i.hasNext(); ) {
             Node n = (Node) i.next();
             int ndex = getHeapIndex(n);
             if (n instanceof ConcreteTypeNode) {
@@ -1144,7 +1144,7 @@ public class CSPAResults {
                 else
                     continue;
                 BDD bdd = capturedHeap.and(H1o.ithVar(ndex));
-                if (capturedHeap.and(H1o.ithVar(ndex)).isZero()) {
+                if (bdd.isZero()) {
                     // not captured.
                     if (TRACE_ESCAPE) System.out.println("Escaped: "+n);
                     escapedSites ++;
@@ -1159,6 +1159,7 @@ public class CSPAResults {
         }
         System.out.println("Captured sites = "+capturedSites+", "+capturedSize+" bytes.");
         System.out.println("Escaped sites = "+escapedSites+", "+escapedSize+" bytes.");
+        return new TypedBDD(capturedHeap, H1o);
     }
 
     public static Set findThreadRuns(CallGraph cg) {
@@ -1388,12 +1389,23 @@ public class CSPAResults {
         return m;
     }
     
-    public static void main(String[] args) throws IOException {
-        CSPAResults r = runAnalysis(args, null);
-        r.interactive();
+    public static CSPAResults runAnalysis(String[] args, String addToClasspath) throws IOException {
+        String prefix;
+        if (args.length > 0) {
+            prefix = args[0];
+            String sep = System.getProperty("file.separator");
+            if (!prefix.endsWith(sep))
+                prefix += sep;
+        } else {
+            prefix = "";
+        }
+        String fileName = System.getProperty("bddresults", "cspa");
+        BDDFactory bdd = initialize(addToClasspath);
+        CSPAResults r = runAnalysis(bdd, prefix, fileName);
+        return r;
     }
     
-    public static CSPAResults runAnalysis(String[] args, String addToClasspath) throws IOException {
+    public static BDDFactory initialize(String addToClasspath) {
         // We use bytecode maps.
         CodeCache.AlwaysMap = true;
         HostedVM.initialize();
@@ -1401,21 +1413,19 @@ public class CSPAResults {
         if (addToClasspath != null)
             PrimordialClassLoader.loader.addToClasspath(addToClasspath);
         
-        String prefix = "";
-        String sep = System.getProperty("file.separator");
-        if (args.length > 0) {
-            prefix = args[0];
-            if (!prefix.endsWith(sep))
-                prefix += sep;
-        }
-        
         int nodeCount = 500000;
         int cacheSize = 50000;
         BDDFactory bdd = BDDFactory.init(nodeCount, cacheSize);
         bdd.setMaxIncrease(nodeCount/4);
+        return bdd;
+    }
+    
+    public static CSPAResults runAnalysis(BDDFactory bdd,
+                                          String prefix,
+                                          String fileName) throws IOException {
         CSPAResults r = new CSPAResults(bdd);
         r.loadCallGraph(prefix+"callgraph");
-        r.load(prefix+System.getProperty("bddresults", "cspa"));
+        r.load(prefix+fileName);
         return r;
     }
 
@@ -2307,10 +2317,64 @@ public class CSPAResults {
 
     public static void printHelp() {
         System.out.println("dumpconnect # <fn>:   dump heap connectivity graph for heap object # to file fn");
-        System.out.println("dumpallconnect <fn>:  dump entire geap connectivity graph to file fn");
+        System.out.println("dumpallconnect <fn>:  dump entire heap connectivity graph to file fn");
         System.out.println("escape:               run escape analysis");
         System.out.println("findequiv:            find equivalent objects");
         System.out.println("relprod b1 b2 bs:     relational product of b1 and b2 w.r.t. set bs");
+    }
+
+    /* (non-Javadoc)
+     * @see Compil3r.Analysis.IPA.PointerAnalysisResults#mod(Compil3r.Analysis.IPA.ProgramLocation)
+     */
+    public Set/*<SSALocation>*/ mod(ProgramLocation call) {
+        // a.f = b;  a->1;    ==>   return  1, .f
+        return null;
+    }
+
+    /* (non-Javadoc)
+     * @see Compil3r.Analysis.IPA.PointerAnalysisResults#ref(Compil3r.Analysis.IPA.ProgramLocation)
+     */
+    public Set/*<SSALocation>*/ ref(ProgramLocation call) {
+        // b = a.f;  a->1;    ==>   return  1, .f
+        return null;
+    }
+
+    public boolean isAliased(SSALocation a, SSALocation b) {
+        // (1, .f)   (1, .f)   ==>   true
+        // (1, .f)   (2, .f)   ==>   false
+        return a.equals(b);
+    }
+
+    /* (non-Javadoc)
+     * @see Compil3r.Analysis.IPA.PointerAnalysisResults#getAliases(Clazz.jq_Method, Compil3r.Analysis.IPA.SSALocation)
+     */
+    public Set/*<ContextSet.ContextLocationPair>*/ getAliases(jq_Method method, SSALocation loc) {
+        return Collections.EMPTY_SET;
+    }
+
+    /* (non-Javadoc)
+     * @see Compil3r.Analysis.IPA.PointerAnalysisResults#hasAliases(Clazz.jq_Method, Compil3r.Analysis.IPA.SSALocation, Compil3r.Analysis.IPA.ContextSet)
+     */
+    public boolean hasAliases(jq_Method method, SSALocation loc, ContextSet contextSet) {
+        return false;
+    }
+
+    /* (non-Javadoc)
+     * @see Compil3r.Analysis.IPA.PointerAnalysisResults#hasAliases(Clazz.jq_Method, Compil3r.Analysis.IPA.SSALocation)
+     */
+    public boolean hasAliases(jq_Method method, SSALocation loc) {
+        return false;
+    }
+
+    public static class HeapLocation implements SSALocation {
+        Node n;      // allocation site
+        jq_Field f;  // field
+        
+        HeapLocation(Node n, jq_Field f) {
+            
+        }
+        
+        
     }
 
 }
