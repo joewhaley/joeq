@@ -1070,6 +1070,7 @@ public class PAResults implements PointerAnalysisResults {
             //System.out.println("Iteration "+k);
             BDD vars = new_m.relprod(r.mV, r.Mset); // V1cxM x MxV1 = V1cxV1
             result.orWith(vars);
+            //System.out.println("Iteration "+k + "result: " + result.toStringWithDomains());
             BDD invokes = new_m.relprod(allInvokes, r.Mset); // V1cxM x MxI = V1cxI
             invokes.replaceWith(r.V1ctoV2c); // V2cxI
             BDD methods = invokes.relprod(IEcs, V2cIset); // V2cxI x V2cxIxV1cxM = V1cxM
@@ -1500,18 +1501,19 @@ public class PAResults implements PointerAnalysisResults {
     /**
      * Compute the set of results based on the BDD results.
      * */
-    public Set getCallTargets(ProgramLocation invoke) {
+    public Set getCallTargets(QuadProgramLocation invoke) {
         //Assert._assert(invoke.getOperator() instanceof Operator.Invoke);
-        invoke = LoadedCallGraph.mapCall(invoke);
-        if(invoke.isSingleTarget()) {
+        ProgramLocation loc = LoadedCallGraph.mapCall(invoke); invoke = null;
+        
+        if(loc.isSingleTarget()) {
             Set result = new LinearSet();
-            result.add(invoke.getTargetMethod());
-            //System.err.println("invoke: " + invoke);
+            result.add(loc.getTargetMethod());
+            //System.err.println("loc: " + loc);
             
             return result;
         }else 
-        if(!r.Imap.contains(invoke)){
-            System.err.println("No call information about " + invoke.toString());
+        if(!r.Imap.contains(loc)){
+            System.err.println("No call information about " + loc.toString());
             return new LinearSet();
         }
         
@@ -1542,7 +1544,7 @@ public class PAResults implements PointerAnalysisResults {
         // t7 is the result we need in I X M
         int oldSize = r.Imap.size();
 
-        int I_idx = r.Imap.get(invoke);
+        int I_idx = r.Imap.get(loc);
         //Assert._assert(r.Imap.size() == oldSize, "old size: " + oldSize + ", new size: " + r.Imap.size());
         BDD isite = r.I.ithVar(I_idx);
         
@@ -1551,7 +1553,7 @@ public class PAResults implements PointerAnalysisResults {
         
         System.err.println(((TypedBDD)t7).getDomainSet().toString() + ": " + t7.satCount());
         
-        //System.out.println("Target methods of " + invoke + " = " + toString((TypedBDD)t6, -1)); //t6.toStringWithDomains());        
+        //System.out.println("Target methods of " + loc + " = " + toString((TypedBDD)t6, -1)); //t6.toStringWithDomains());        
         
         return new PACallGraph.BDDSet(t7, r.M, r.Mmap);
     }
@@ -1562,15 +1564,15 @@ public class PAResults implements PointerAnalysisResults {
         return new HashSet(c);
     }
     
-    public Set mod(ProgramLocation invoke, BasicBlock bb) {
+    public Set mod(QuadProgramLocation invoke, BasicBlock bb) {
         if (invoke.isCall()) {
-            invoke = LoadedCallGraph.mapCall(invoke);
-            //Assert._assert(r.Imap.contains(invoke), "No information about " + invoke.toString());
-            if(!r.Imap.contains(invoke)){
-                //System.err.println("No mod information about " + invoke.toString() + "; Imap has " + r.Imap.size() + " elements \n");
+            ProgramLocation loc = LoadedCallGraph.mapCall(invoke);
+            //Assert._assert(r.Imap.contains(loc), "No information about " + loc.toString());
+            if(!r.Imap.contains(loc)){
+                //System.err.println("No mod information about " + loc.toString() + "; Imap has " + r.Imap.size() + " elements \n");
                 return null;
             }
-            int I_i = r.Imap.get(invoke);
+            int I_i = r.Imap.get(loc);
             BDD i   = r.I.ithVar(I_i);
             BDD m_c = r.IEcs.relprod(i, r.V2c.set().and(r.Iset));
             // get transitive mod set for this particular method call   
@@ -1588,11 +1590,11 @@ public class PAResults implements PointerAnalysisResults {
         }        
     }
     
-    public Set ref(ProgramLocation invoke, BasicBlock bb) {
+    public Set ref(QuadProgramLocation invoke, BasicBlock bb) {
         if (invoke.isCall()) {
-            invoke = LoadedCallGraph.mapCall(invoke);
-            //Assert._assert(r.Imap.contains(invoke), "No information about " + invoke.toString());
-            if(!r.Imap.contains(invoke)){
+            ProgramLocation loc = LoadedCallGraph.mapCall(invoke);
+            //Assert._assert(r.Imap.contains(loc), "No information about " + loc.toString());
+            if(!r.Imap.contains(loc)){
                 //System.err.println("No ref information about " + invoke.toString() + "; Imap has " + r.Imap.size() + " elements \n");
                 return null;
             }
