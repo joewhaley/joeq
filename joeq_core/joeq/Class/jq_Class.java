@@ -1568,8 +1568,8 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
             if (TRACE) Debug.writeln("Adding instance field: "+this_f);
             this.addDeclaredMember(nd, this_f);
             newInstanceFields.add(this_f);
-            cpr.addOther(this_f.getName());
-            cpr.addOther(this_f.getDesc());
+            cpr.addUtf8(this_f.getName());
+            cpr.addUtf8(this_f.getDesc());
             cpr.addAttributeNames(this_f);
         }
         if (newInstanceFields.size() > 0) {
@@ -1604,8 +1604,8 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
             if (TRACE) Debug.writeln("Adding static field: "+this_f);
             this.addDeclaredMember(nd, this_f);
             newStaticFields.add(this_f);
-            cpr.addOther(this_f.getName());
-            cpr.addOther(this_f.getDesc());
+            cpr.addUtf8(this_f.getName());
+            cpr.addUtf8(this_f.getDesc());
             cpr.addAttributeNames(this_f);
         }
         if (newStaticFields.size() > 0) {
@@ -1876,6 +1876,13 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                 Object o = x.getObject();
                 if (o instanceof String) {
                     cpr.addString((String)o);
+                } else if (o instanceof Class) {
+                    jq_Type r = Reflection.getJQType((Class)o);
+                    if (r instanceof jq_Reference) {
+                        r = ClassLibInterface.convertClassLibCPEntry((jq_Reference)r);
+                        x.setObject(r.getJavaLangClassObject());
+                    }
+                    cpr.addType(r);
                 } else if (o instanceof jq_Type) {
                     if (o instanceof jq_Reference)
                         x.setObject(o = ClassLibInterface.convertClassLibCPEntry((jq_Reference)o));
@@ -1898,6 +1905,8 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                 Object o = x.getObject();
                 if (o instanceof String) {
                     cpr.addString((String) o);
+                } else if (o instanceof Class) {
+                    cpr.addType(Reflection.getJQType((Class)o));
                 } else if (o instanceof jq_Type) {
                     if (o instanceof jq_Reference)
                         cpr.addType((jq_Type) o);
@@ -2514,47 +2523,50 @@ uphere2:
         }
         for (int i=0; i < declared_instance_fields.length; ++i) {
             jq_InstanceField f = declared_instance_fields[i];
-            cpr.addOther(f.getName());
-            cpr.addOther(f.getDesc());
+            cpr.addUtf8(f.getName());
+            cpr.addUtf8(f.getDesc());
             cpr.addAttributeNames(f);
         }
         for (int i=0; i < static_fields.length; ++i) {
             jq_StaticField f = static_fields[i];
-            cpr.addOther(f.getName());
-            cpr.addOther(f.getDesc());
+            cpr.addUtf8(f.getName());
+            cpr.addUtf8(f.getDesc());
             cpr.addAttributeNames(f);
             if (f.isConstant()) {
-                if (f.getConstantValue() instanceof String)
+                Object o = f.getConstantValue();
+                if (o instanceof String)
                     cpr.addString((String) f.getConstantValue());
+                else if (o instanceof Class)
+                    cpr.addType(Reflection.getJQType((Class)o));
                 else
                     cpr.addOther(f.getConstantValue());
             }
         }
         for (int i=0; i < declared_instance_methods.length; ++i) {
             jq_InstanceMethod f = declared_instance_methods[i];
-            cpr.addOther(f.getName());
-            cpr.addOther(f.getDesc());
+            cpr.addUtf8(f.getName());
+            cpr.addUtf8(f.getDesc());
             cpr.addAttributeNames(f);
             if (addCode) cpr.addCode(f);
             cpr.addExceptions(f);
         }
         for (int i=0; i < static_methods.length; ++i) {
             jq_StaticMethod f = static_methods[i];
-            cpr.addOther(f.getName());
-            cpr.addOther(f.getDesc());
+            cpr.addUtf8(f.getName());
+            cpr.addUtf8(f.getDesc());
             cpr.addAttributeNames(f);
             if (addCode) cpr.addCode(f);
             cpr.addExceptions(f);
         }
         Utf8 sourcefile = getSourceFile();
         if (sourcefile != null) {
-            cpr.addOther(sourcefile);
+            cpr.addUtf8(sourcefile);
         }
         // TODO: InnerClasses
         for (Iterator i = attributes.entrySet().iterator(); i.hasNext(); ) {
             Map.Entry e = (Map.Entry)i.next();
             Utf8 name = (Utf8)e.getKey();
-            cpr.addOther(name);
+            cpr.addUtf8(name);
         }
         
         return cpr;
