@@ -56,13 +56,13 @@ import Compil3r.Quad.Operator;
 import Compil3r.Quad.Quad;
 import Compil3r.Quad.Operand.RegisterOperand;
 import Compil3r.Quad.RegisterFactory.Register;
-import Compil3r.Analysis.IPA.ProgramLocation.QuadProgramLocation;
 import Main.HostedVM;
 import Main.Driver;
 import Util.Assert;
 import Util.Strings;
 import Util.IO.SourceLister;
 import Util.Collections.HashWorklist;
+import Util.Collections.LinearSet;
 import Util.Collections.Pair;
 import Util.Collections.Triple;
 import Util.Collections.IndexMap;
@@ -321,7 +321,7 @@ public class PAResults implements PointerAnalysisResults {
                         int k = getTypeIndex(c);
                         results.add(r.T1.ithVar(k));
                     }
-                } else if (command.equals("method") || command.equals("callsin") || command.equals("summary")) {
+                } else if (command.equals("method") || command.equals("callsin") || command.equals("summary") || command.equals("params")) {
                     jq_Class c = parseClassName(st.nextToken());
                     if (c == null || !c.isLoaded()) {
                         System.out.println("Cannot find class");
@@ -361,10 +361,19 @@ public class PAResults implements PointerAnalysisResults {
                                             rc.orWith(r.I.ithVar(iidx));
                                     }
                                     results.add(rc);
-                                } else {
-                                    System.out.println(ms);
-                                    increaseCount = false;
-                                }
+                                } 
+                                else if (command.equals("params")) {
+                                   for(int j = 0; j < ms.getNumOfParams(); j++) {
+                                       Node pn = ms.getParamNode(j);
+                                       System.out.println("\t" + pn);
+                                   }
+                                   // print out all fields in the
+                                   increaseCount = false; 
+                               }
+                               else {
+                                   System.out.println(ms);
+                                   increaseCount = false;
+                               }
                             }
                         }
                     }
@@ -506,7 +515,9 @@ public class PAResults implements PointerAnalysisResults {
         System.out.println("method  class name [signature]:   lookup method in class, shows M and N indices");
         System.out.println("callsin class name [signature]:   list all call sites in a given method");
         System.out.println("summary class name [signature]:   list method summary for a given method");
+        System.out.println("params class name [signature]:    list method parameters for a given method");
         System.out.println("source bdd [#before [#after]]:    show source code surrounding items in bdd");
+        System.out.println("field class name:                 show information about field name in class");
         System.out.println("\nHow to use this driver:");
         System.out.println("include file:                     execute commands in file");
         System.out.println("[driver] arg0 arg1 ...:           pass args to Main.Driver for interpretation");
@@ -1013,18 +1024,18 @@ public class PAResults implements PointerAnalysisResults {
     /** Given a starting method and a context (MxV1c), calculate the transitive mod
      * set (H1xH1cxF). */
     public BDD getTransitiveModSet(BDD method_plus_context0) {
-                BDD reachableVars = getReachableVars(method_plus_context0); // V1xV1c
-                BDD stores = r.S.relprod(reachableVars, r.V2set); // V1xV1c x V1xV1cxFxV2xV2c = V1xV1cxF
-                BDD result = stores.relprod(r.vP, r.V1set); // V1xV1cxF x V1xV1cxH1xH1c = H1xH1cxF
-                return result;
+        BDD reachableVars = getReachableVars(method_plus_context0); // V1xV1c
+        BDD stores = r.S.relprod(reachableVars, r.V2set);           // V1xV1c x V1xV1cxFxV2xV2c = V1xV1cxF
+        BDD result = stores.relprod(r.vP, r.V1set);                 // V1xV1cxF x V1xV1cxH1xH1c = H1xH1cxF
+        return result;
     }
     
     /** Given a starting method and a context (MxV1c), calculate the transitive ref
      * set (H1xH1cxF). */
     public BDD getTransitiveRefSet(BDD method_plus_context0) {
         BDD reachableVars = getReachableVars(method_plus_context0); // V1xV1c
-        BDD loads = r.L.relprod(reachableVars, r.V2set); // V1xV1c x V1xV1cxFxV2xV2c = V1xV1cxF
-        BDD result = loads.relprod(r.vP, r.V1set); // V1xV1cxF x V1xV1cxH1xH1c = H1xH1cxF
+        BDD loads = r.L.relprod(reachableVars, r.V2set);            // V1xV1c x V1xV1cxFxV2xV2c = V1xV1cxF
+        BDD result = loads.relprod(r.vP, r.V1set);                  // V1xV1cxF x V1xV1cxH1xH1c = H1xH1cxF
         return result;
     }
     
@@ -1375,9 +1386,20 @@ public class PAResults implements PointerAnalysisResults {
     /**
      * Compute the set of results based on the BDD results.
      * */
-    public Set getCallTargets2(ProgramLocation invoke) {
+    public Set getCallTargets(ProgramLocation invoke) {
         //Assert._assert(invoke.getOperator() instanceof Operator.Invoke);
         LoadedCallGraph.mapCall(invoke);
+        if(invoke.isSingleTarget()) {
+            Set result = new LinearSet();
+            result.add(invoke.getTargetMethod());
+            //System.err.println("invoke: " + invoke);
+            
+            return result;
+        }else 
+        if(!r.Imap.contains(invoke)){
+            System.err.println("No call information about " + invoke.toString());
+            return new LinearSet();
+        }
         
         BDD t1 = r.actual.restrict(r.Z.ithVar(0));  // IxV2
         t1.replaceWith(r.bdd.makePair(r.V2, r.V1)); // IxV1
@@ -1420,43 +1442,51 @@ public class PAResults implements PointerAnalysisResults {
         return new PACallGraph.BDDSet(t7, r.M, r.Mmap);
     }
     
-    public Set getCallTargets(ProgramLocation invoke) {
+    public Set getCallTargets2(ProgramLocation invoke) {
         Collection c = this.cg.getTargetMethods(invoke);
         
         return new HashSet(c);
     }
     
     public Set mod(ProgramLocation invoke) {
-        invoke = LoadedCallGraph.mapCall(invoke);
-                //Assert._assert(r.Imap.contains(invoke), "No information about " + invoke.toString());
-                if(!r.Imap.contains(invoke)){
-                        //System.err.println("No mod information about " + invoke.toString() + "; Imap has " + r.Imap.size() + " elements \n");
-                        return null;
-                }
-                int I_i = r.Imap.get(invoke);
-                BDD i   = r.I.ithVar(I_i);
+        int I_i = 0;
+        if(invoke.isCall()) {
+            invoke = LoadedCallGraph.mapCall(invoke);
+            //Assert._assert(r.Imap.contains(invoke), "No information about " + invoke.toString());
+            if(!r.Imap.contains(invoke)){
+                //System.err.println("No mod information about " + invoke.toString() + "; Imap has " + r.Imap.size() + " elements \n");
+                return null;
+            }
+            I_i = r.Imap.get(invoke);
+        }else {
+            // in case this is a store, need to get the results for that store
+            // TODO:
+            return null;            
+        }
+        BDD i   = r.I.ithVar(I_i);
         BDD m_c = r.IEcs.relprod(i, r.V2c.set().and(r.Iset));
-        BDD s   = getTransitiveModSet(m_c);
+        // get transitive mod set for this particular method call   
+        BDD s   = getTransitiveModSet(m_c);             
         BDD q   = s.exist(r.H1c.set());
         
-                return new HeapLocationSet(q);
+        return new HeapLocationSet(q);
     }
     
-        public Set ref(ProgramLocation invoke) {
-                invoke = LoadedCallGraph.mapCall(invoke);
-                //Assert._assert(r.Imap.contains(invoke), "No information about " + invoke.toString());
-                if(!r.Imap.contains(invoke)){
-                        //System.err.println("No ref information about " + invoke.toString() + "; Imap has " + r.Imap.size() + " elements \n");
-                        return null;
-                }
-                int I_i = r.Imap.get(invoke);
-                BDD i   = r.I.ithVar(I_i);
-                BDD m_c = r.IEcs.relprod(i, r.V2c.set().and(r.Iset));
-                BDD s   = getTransitiveRefSet(m_c);
-                BDD q   = s.exist(r.H1c.set());
-                
-                return new HeapLocationSet(q);
-        }
+    public Set ref(ProgramLocation invoke) {
+            invoke = LoadedCallGraph.mapCall(invoke);
+            //Assert._assert(r.Imap.contains(invoke), "No information about " + invoke.toString());
+            if(!r.Imap.contains(invoke)){
+                //System.err.println("No ref information about " + invoke.toString() + "; Imap has " + r.Imap.size() + " elements \n");
+                return null;
+            }
+            int I_i = r.Imap.get(invoke);
+            BDD i   = r.I.ithVar(I_i);
+            BDD m_c = r.IEcs.relprod(i, r.V2c.set().and(r.Iset));
+            BDD s   = getTransitiveRefSet(m_c);
+            BDD q   = s.exist(r.H1c.set());
+            
+            return new HeapLocationSet(q);
+    }
     
     public Set mod(jq_Method m, BasicBlock bb, Quad quad) {
         MethodSummary ms = MethodSummary.getSummary(CodeCache.getCode(m));
