@@ -239,8 +239,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
     }
     
     public int getRegisterID(Register r) {
-        int x = r.getNumber() + 2;
-        Assert._assert(x > 0);
+        int x = r.getNumber() + 1;
         return x;
     }
     
@@ -410,7 +409,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         dos.writeBytes(name+" ( ");
         for (int i = 0; i < a.length; ++i) {
             if (i > 0) dos.writeBytes(", ");
-            BDDDomain d = bdd.getDomain(i);
+            BDDDomain d = bdd.getDomain(a[i]);
             dos.writeBytes(d.toString()+" : ");
             if (d == quad || d == fallthrough || d == target) dos.writeBytes("quad ");
             else if (d == method) dos.writeBytes("method ");
@@ -428,9 +427,9 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         DataOutputStream dos = new DataOutputStream(new FileOutputStream(fileName));
         dumpRelation(dos, "m2q", methodToQuad);
         if (SSA) {
-            dumpRelation(dos, "cfg", allQuads);
-        } else {
             dumpRelation(dos, "ssa", allQuads);
+        } else {
+            dumpRelation(dos, "cfg", allQuads);
         }
         dumpRelation(dos, "entries", methodEntries);
         dumpRelation(dos, "nullconstant", nullConstant);
