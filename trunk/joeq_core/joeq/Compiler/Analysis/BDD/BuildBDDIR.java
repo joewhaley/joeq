@@ -419,9 +419,9 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
     }
     
     public void dump() throws IOException {
-        bdd.save("quads.bdd", allQuads);
-        dumpTuples("quads.tuples", allQuads);
-        dumpMap(quadMap, "quads.map");
+        bdd.save("cfg.bdd", allQuads);
+        dumpTuples("cfg.tuples", allQuads);
+        dumpMap(quadMap, "quad.map");
         dumpMap(opMap, "op.map");
         dumpMap(regMap, "reg.map");
         dumpMap(memberMap, "member.map");
