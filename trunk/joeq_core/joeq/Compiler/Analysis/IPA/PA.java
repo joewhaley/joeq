@@ -3853,7 +3853,7 @@ public class PA {
     }
     
     private void dumpSSA() throws IOException {
-	String dumpPath = System.getProperty("pa.dumppath", ""); // really a tab
+	String dumpPath = System.getProperty("pa.dumppath", ""); // it's a tab
         jq_MethodVisitor mv = null;
         ControlFlowGraphVisitor cfgv = null;
         mv = new ControlFlowGraphVisitor.CodeCacheVisitor(bddIRBuilder,
