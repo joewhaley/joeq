@@ -19,7 +19,7 @@ import Memory.StackAddress;
 import Run_Time.ArrayCopy;
 import Run_Time.HashCode;
 import Run_Time.Reflection;
-import Run_Time.StackWalker;
+import Run_Time.StackCodeWalker;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
 
@@ -28,7 +28,7 @@ import Run_Time.Unsafe;
  * @version $Id$
  */
 public abstract class System {
-    
+
     private static void registerNatives() { }
     private static void setIn0(InputStream in) {
         Reflection.putstatic_A(_in, in);
@@ -52,7 +52,7 @@ public abstract class System {
     }
     public static native void initializeSystemClass();
     static java.lang.Class getCallerClass() {
-        StackWalker sw = new StackWalker(null, StackAddress.getBasePointer());
+        StackCodeWalker sw = new StackCodeWalker(null, StackAddress.getBasePointer());
         sw.gotoNext(); sw.gotoNext(); sw.gotoNext();
         jq_CompiledCode cc = sw.getCode();
         if (cc == null) return null;

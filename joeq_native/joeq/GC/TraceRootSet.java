@@ -11,16 +11,20 @@
  */
 package GC;
 
+import Scheduler.jq_RegisterState;
+
 import java.util.ArrayList;
 
-public class TraceRootSet {
+class TraceRootSet {
 
-    public static /*final*/ boolean TRACE = false;
+    static /*final*/ boolean TRACE = false;
 
     private ArrayList suspendedThreadStates = new ArrayList();
 
-    public boolean add(Object o) {
+    boolean add(Object o) {
+        if (!(o instanceof jq_RegisterState)) {
+            throw new IllegalArgumentException();
+        }
         return suspendedThreadStates.add(o);
     }
-
 }

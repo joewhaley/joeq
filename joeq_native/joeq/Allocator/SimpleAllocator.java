@@ -24,24 +24,29 @@ import GC.GCBits;
 
 public class SimpleAllocator extends HeapAllocator {
 
-    /** Size of blocks allocated from the OS.
+    /**
+     * Size of blocks allocated from the OS.
      */
     public static final int BLOCK_SIZE = 2097152;
 
-    /** Maximum memory, in bytes, to be allocated from the OS.
+    /**
+     * Maximum memory, in bytes, to be allocated from the OS.
      */
     public static final int MAX_MEMORY = 67108864;
 
-    /** Threshold for direct OS allocation.  When an array overflows the current block
+    /**
+     * Threshold for direct OS allocation.  When an array overflows the current block
      * and is larger than this size, it is allocated directly from the OS.
      */
     public static final int LARGE_THRESHOLD = 262144;
 
-    /** Pointers to the start, current, and end of the heap.
+    /**
+     * Pointers to the start, current, and end of the heap.
      */
     private HeapAddress heapFirst, heapCurrent, heapEnd;
 
-    /** Perform initialization for this allocator.  This will be called before any other methods.
+    /**
+     * Perform initialization for this allocator.  This will be called before any other methods.
      * This allocates an initial block of memory from the OS and sets up relevant pointers.
      *
      * @throws OutOfMemoryError if there is not enough memory for initialization
@@ -53,7 +58,8 @@ public class SimpleAllocator extends HeapAllocator {
         heapEnd = (HeapAddress) heapFirst.offset(BLOCK_SIZE - HeapAddress.size());
     }
 
-    /** Returns an estimate of the amount of free memory available.
+    /**
+     * Returns an estimate of the amount of free memory available.
      *
      * @return bytes of free memory
      */
@@ -61,7 +67,8 @@ public class SimpleAllocator extends HeapAllocator {
         return heapEnd.difference(heapCurrent);
     }
 
-    /** Returns an estimate of the total memory allocated (both used and unused).
+    /**
+     * Returns an estimate of the total memory allocated (both used and unused).
      *
      * @return bytes of memory allocated
      */
@@ -75,7 +82,8 @@ public class SimpleAllocator extends HeapAllocator {
         return total;
     }
 
-    /** Allocate an object with the default alignment.
+    /**
+     * Allocate an object with the default alignment.
      * If the object cannot be allocated due to lack of memory, throws OutOfMemoryError.
      *
      * @param size size of object to allocate (including object header), in bytes
@@ -112,7 +120,8 @@ public class SimpleAllocator extends HeapAllocator {
         return addr.asObject();
     }
 
-    /** Allocate an object such that the first field is 8-byte aligned.
+    /**
+     * Allocate an object such that the first field is 8-byte aligned.
      * If the object cannot be allocated due to lack of memory, throws OutOfMemoryError.
      *
      * @param size size of object to allocate (including object header), in bytes
@@ -125,7 +134,8 @@ public class SimpleAllocator extends HeapAllocator {
         return allocateObject(size, vtable);
     }
 
-    /** Allocate an array with the default alignment.
+    /**
+     * Allocate an array with the default alignment.
      * If length is negative, throws NegativeArraySizeException.
      * If the array cannot be allocated due to lack of memory, throws OutOfMemoryError.
      *
@@ -175,7 +185,8 @@ public class SimpleAllocator extends HeapAllocator {
         return addr.asObject();
     }
 
-    /** Allocate an array such that the elements are 8-byte aligned.
+    /**
+     * Allocate an array such that the elements are 8-byte aligned.
      * If length is negative, throws NegativeArraySizeException.
      * If the array cannot be allocated due to lack of memory, throws OutOfMemoryError.
      *

@@ -92,7 +92,7 @@ public abstract class TraceFlags {
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceStackWalker")) {
-            Run_Time.StackWalker.TRACE = true;
+            Run_Time.StackCodeWalker.TRACE = true;
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceUtf8")) {
@@ -188,7 +188,7 @@ public abstract class TraceFlags {
         }
         return i;
     }
-    
+
     public static int parseArg(Object[] args, int m, jq_Type type, String[] s_args, int j) {
         if (type == PrimordialClassLoader.loader.getJavaLangString())
             args[m] = s_args[++j];
@@ -265,5 +265,5 @@ public abstract class TraceFlags {
             jq.UNREACHABLE("Parsing of type " + type + " is not implemented");
         return j;
     }
-    
+
 }

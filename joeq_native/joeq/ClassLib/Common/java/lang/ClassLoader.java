@@ -23,7 +23,7 @@ import Main.jq;
 import Memory.CodeAddress;
 import Memory.StackAddress;
 import Run_Time.Reflection;
-import Run_Time.StackWalker;
+import Run_Time.StackCodeWalker;
 import Run_Time.Unsafe;
 import UTF.Utf8;
 
@@ -32,11 +32,11 @@ import UTF.Utf8;
  * @version $Id$
  */
 public abstract class ClassLoader {
-    
+
     private boolean initialized;
     private java.lang.ClassLoader parent;
     private static ClassLoader scl;
-    
+
     // additional instance field
     private final Map/*<Utf8, jq_Type>*/ desc2type;
 
@@ -71,7 +71,7 @@ public abstract class ClassLoader {
     native boolean isAncestor(ClassLoader cl);
     static native RuntimePermission getGetClassLoaderPerm();
     public native Class loadClass(java.lang.String name);
-    
+
     // overridden methods.
     public static java.lang.ClassLoader getSystemClassLoader() {
         java.lang.Object o = PrimordialClassLoader.loader;
@@ -97,7 +97,7 @@ public abstract class ClassLoader {
         o = scl;
         return (java.lang.ClassLoader)o;
     }
-    
+
     // native method implementations.
     private java.lang.Class defineClass0(java.lang.String name, byte[] b, int off, int len,
                                          ProtectionDomain pd) {
@@ -146,7 +146,7 @@ public abstract class ClassLoader {
         return Reflection.getJDKType(t);
     }
     static ClassLoader getCallerClassLoader() {
-        StackWalker sw = new StackWalker(null, StackAddress.getBasePointer());
+        StackCodeWalker sw = new StackCodeWalker(null, StackAddress.getBasePointer());
         sw.gotoNext(); sw.gotoNext(); sw.gotoNext();
         jq_CompiledCode cc = sw.getCode();
         if (cc == null) return null;
@@ -195,5 +195,5 @@ public abstract class ClassLoader {
         Map desc2type = this.desc2type;
         desc2type.remove(t.getDesc());
     }
-    
+
 }
