@@ -24,7 +24,12 @@ import Compil3r.Quad.Operator.Return;
  */
 public class ControlDependence extends jq_MethodVisitor.EmptyVisitor {
 
+    jq_Method current_method;
+    
     public void visitMethod(jq_Method m) {
+        if (m.getBytecode() == null) return;
+        System.out.println("Visiting method "+m);
+        current_method = m;
         ControlFlowGraph cfg = Compil3r.Quad.CodeCache.getCode(m);
         Dominators dom = new Dominators(false);
         dom.visitMethod(m);
@@ -35,6 +40,10 @@ public class ControlDependence extends jq_MethodVisitor.EmptyVisitor {
         while (li.hasNext()) {
             BasicBlock bb = li.nextBasicBlock();
             Quad q = bb.getLastQuad();
+            if (q == null) {
+                System.out.println("NOTE! empty basic block "+bb+" goes to exit");
+                continue;
+            }
             if (q.getOperator() == Return.THROW_A.INSTANCE) {
                 System.out.println("Found throw statement in "+bb+"! "+q);
                 // find control dependence
@@ -54,20 +63,24 @@ public class ControlDependence extends jq_MethodVisitor.EmptyVisitor {
         return null;
     }
 
-    static void findControlDependence(Dominators.DominatorNode p, Dominators.DominatorNode root) {
+    void findControlDependence(Dominators.DominatorNode p, Dominators.DominatorNode root) {
         Iterator i = p.getChildren().iterator();
         if (!i.hasNext()) {
-            System.out.println("Reached leaf node: "+p);
+            if (p.getBasicBlock().isEntry()) {
+                System.out.println("Post-dominates entry "+p);
+                return;
+            }
+            //System.out.println("Reached leaf node: "+p);
             List.BasicBlock preds = p.getBasicBlock().getPredecessors();
-            System.out.println("Predecessors: "+preds);
+            //System.out.println("Predecessors: "+preds);
             ListIterator.BasicBlock li = preds.basicBlockIterator();
             while (li.hasNext()) {
                 BasicBlock pred = li.nextBasicBlock();
                 Quad q = pred.getLastQuad();
-                System.out.println("last quad of "+pred+" is "+q);
+                //System.out.println("last quad of "+pred+" is "+q);
                 if (pred.size() < 2) break;
                 Quad q2 = pred.getQuad(pred.size()-2);
-                System.out.println("next-to-last quad is "+q2);
+                //System.out.println("next-to-last quad is "+q2);
                 if (q.getOperator() instanceof IntIfCmp) {
                     Operand src1 = IntIfCmp.getSrc1(q);
                     Operand src2 = IntIfCmp.getSrc2(q);
@@ -77,14 +90,16 @@ public class ControlDependence extends jq_MethodVisitor.EmptyVisitor {
                        ((AConstOperand)src2).getValue() == null) {
                         if (q2.getOperator() instanceof Getfield) {
                             FieldOperand fo = Getfield.getField(q2);
-                            System.out.println(cond+" comparison between field "+fo+" and const null");
+                            System.out.println("depends on "+cond+" comparison between field "+fo+" and const null");
+                            add(current_method);
                             findControlDependence(getDomNode(root, pred), root);
                         }
                     } else if ((q.getOperator() == IntIfCmp.IFCMP_I.INSTANCE) &&
                              (src2 instanceof IConstOperand)) {
                         if (q2.getOperator() instanceof Getfield) {
                             FieldOperand fo = Getfield.getField(q2);
-                            System.out.println(cond+" comparison between field "+fo+" and const "+((IConstOperand)src2).getValue());
+                            System.out.println("depends on "+cond+" comparison between field "+fo+" and const "+((IConstOperand)src2).getValue());
+                            add(current_method);
                             findControlDependence(getDomNode(root, pred), root);
                         }
                     }
@@ -98,4 +113,13 @@ public class ControlDependence extends jq_MethodVisitor.EmptyVisitor {
         }
     }
     
+    public java.util.HashSet found_classes = new java.util.HashSet();
+    public java.util.HashSet found_methods = new java.util.HashSet();
+    
+    void add(jq_Method x) {
+        found_methods.add(x);
+        found_classes.add(x.getDeclaringClass());
+    }
+    
+    public String toString() { return "found "+found_methods.size()+" methods in "+found_classes.size()+" classes"; }
 }
