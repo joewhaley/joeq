@@ -17,6 +17,8 @@ import java.util.Map;
 
 import Bootstrap.PrimordialClassLoader;
 import Main.jq;
+import Memory.Address;
+import Memory.HeapAddress;
 import Run_Time.Unsafe;
 import UTF.Utf8;
 
@@ -28,8 +30,8 @@ public final class jq_StaticField extends jq_Field {
 
     // null if not a constant.
     private Object constantValue;
-
-    private int/*HeapAddress*/ address;
+    
+    private HeapAddress address;
     
     // clazz, name, desc, access_flags are inherited
     private jq_StaticField(jq_Class clazz, jq_NameAndDesc nd) {
@@ -118,23 +120,56 @@ public final class jq_StaticField extends jq_Field {
         super.dumpAttributes(out, cpr);
     }
 
-    public final void sf_initialize(int[] static_data, int offset) { jq.Assert(state == STATE_PREPARED); state = STATE_SFINITIALIZED; this.address = Unsafe.addressOf(static_data) + offset; }
-    public final int getAddress() { chkState(STATE_SFINITIALIZED); return address; }
-    public final void setValue(int v) { getDeclaringClass().setStaticData(this, v); }
-    public final void setValue(float v) { getDeclaringClass().setStaticData(this, v); }
-    public final void setValue(long v) { getDeclaringClass().setStaticData(this, v); }
-    public final void setValue(double v) { getDeclaringClass().setStaticData(this, v); }
-    public final void setValue(Object v) { getDeclaringClass().setStaticData(this, v); }
+    public final void sf_initialize(int[] static_data, int offset) {
+        jq.Assert(state == STATE_PREPARED);
+        state = STATE_SFINITIALIZED;
+        this.address = (HeapAddress)HeapAddress.addressOf(static_data).offset(offset);
+    }
+    public final HeapAddress getAddress() {
+        chkState(STATE_SFINITIALIZED);
+        return address;
+    }
+    public final void setValue(int v) {
+        getDeclaringClass().setStaticData(this, v);
+    }
+    public final void setValue(float v) {
+        getDeclaringClass().setStaticData(this, v);
+    }
+    public final void setValue(long v) {
+        getDeclaringClass().setStaticData(this, v);
+    }
+    public final void setValue(double v) {
+        getDeclaringClass().setStaticData(this, v);
+    }
+    public final void setValue(Object v) {
+        getDeclaringClass().setStaticData(this, v);
+    }
+    public final void setValue(Address v) {
+        getDeclaringClass().setStaticData(this, v);
+    }
     
     public final boolean needsDynamicLink(jq_Method method) {
         return getDeclaringClass().needsDynamicLink(method);
     }
-    public final boolean isConstant() { chkState(STATE_LOADED); return constantValue != null; }
-    public final Object getConstantValue() { return constantValue; }
-    public final boolean isStatic() { return true; }
+    public final boolean isConstant() {
+        chkState(STATE_LOADED);
+        return constantValue != null;
+    }
+    public final Object getConstantValue() {
+        return constantValue;
+    }
+    public final boolean isStatic() {
+        return true;
+    }
 
-    public final void prepare() { jq.Assert(state == STATE_LOADED); state = STATE_PREPARED; }
-    public final void unprepare() { jq.Assert(state == STATE_PREPARED); state = STATE_LOADED; }
+    public final void prepare() {
+        jq.Assert(state == STATE_LOADED);
+        state = STATE_PREPARED;
+    }
+    public final void unprepare() {
+        jq.Assert(state == STATE_PREPARED);
+        state = STATE_LOADED;
+    }
     
     public void accept(jq_FieldVisitor mv) {
         mv.visitStaticField(this);
@@ -142,9 +177,7 @@ public final class jq_StaticField extends jq_Field {
     }
     
     public static final jq_Class _class;
-    public static final jq_InstanceField _address;
     static {
         _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LClazz/jq_StaticField;");
-        _address = _class.getOrCreateInstanceField("address", "I");
     }
 }

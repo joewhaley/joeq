@@ -9,6 +9,8 @@ package Scheduler;
 
 import Assembler.x86.x86Constants;
 import Clazz.jq_DontAlign;
+import Memory.CodeAddress;
+import Memory.StackAddress;
 
 /*
  * @author  John Whaley
@@ -39,7 +41,11 @@ public class jq_RegisterState implements x86Constants, jq_DontAlign {
     // integer registers
     int Edi, Esi, Ebx, Edx, Ecx, Eax;
     // control registers
-    int Ebp, Eip, SegCs, EFlags, Esp, SegSs;
+    StackAddress Ebp;
+    CodeAddress Eip;
+    int SegCs, EFlags;
+    StackAddress Esp;
+    int SegSs;
 
     public static final int EFLAGS_CARRY      = 0x00000001;
     public static final int EFLAGS_PARITY     = 0x00000004;

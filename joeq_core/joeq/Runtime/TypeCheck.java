@@ -17,6 +17,9 @@ import Clazz.jq_Primitive;
 import Clazz.jq_Reference;
 import Clazz.jq_StaticMethod;
 import Clazz.jq_Type;
+import Main.jq;
+import Memory.Address;
+import Memory.HeapAddress;
 
 /**
  * @author  John Whaley
@@ -26,7 +29,7 @@ public abstract class TypeCheck implements jq_ClassFileConstants {
     
     public static Object checkcast(Object k, jq_Type t) {
         if (k != null) {
-            jq_Type t2 = Unsafe.getTypeOf(k);
+            jq_Type t2 = jq_Reference.getTypeOf(k);
             if (!TypeCheck.isAssignable(t2, t)) 
                 throw new ClassCastException(t2+" cannot be cast into "+t);
         }
@@ -35,17 +38,19 @@ public abstract class TypeCheck implements jq_ClassFileConstants {
     public static boolean instance_of(Object k, jq_Type t) {
         if (k == null)
             return false;
-        jq_Type t2 = Unsafe.getTypeOf(k);
+        jq_Type t2 = jq_Reference.getTypeOf(k);
         if (!TypeCheck.isAssignable(t2, t)) 
             return false;
         return true;
     }
-    public static void arrayStoreCheck(Object value, Object[] arrayref) 
+    public static void arrayStoreCheck(HeapAddress value, Object[] arrayref) 
     throws ArrayStoreException {
-        if (value == null) return;
-        jq_Type t = Unsafe.getTypeOf(value);
-        jq_Array a = (jq_Array)Unsafe.getTypeOf(arrayref);
+        if (value.isNull()) return;
+        jq_Array a = (jq_Array)jq_Reference.getTypeOf(arrayref);
         jq_Type t2 = a.getElementType();
+	if (t2.isAddressType()) return;
+        Object v = value.asObject();
+        jq_Type t = jq_Reference.getTypeOf(v);
         if (!isAssignable(t, t2))
             throw new ArrayStoreException(t+" into array "+a);
     }
@@ -57,6 +62,8 @@ public abstract class TypeCheck implements jq_ClassFileConstants {
         if (S == T)
             return true;
         jq_Type s2 = S, t2 = T;
+        jq.Assert(!t2.isAddressType());
+        jq.Assert(!s2.isAddressType());
         while (t2.isArrayType()) {
             if (!s2.isArrayType()) {
                 return false;
@@ -90,6 +97,32 @@ public abstract class TypeCheck implements jq_ClassFileConstants {
         // t2 is not an interface
         if (!is_t2_loaded) return false;
         return isSuperclassOf((jq_Class)t2, (jq_Class)s2);
+    }
+    
+    public static final byte YES = 2;
+    public static final byte MAYBE = 1;
+    public static final byte NO = 0;
+    // returns YES if "T = S;" would be legal. (T is same or supertype of S)
+    public static byte isAssignable_noload(jq_Type S, jq_Type T) {
+        if (S == jq_Reference.jq_NullType.NULL_TYPE) {
+            if (T.isReferenceType()) return YES;
+            else return NO;
+        }
+        if (T == jq_Reference.jq_NullType.NULL_TYPE) return NO;
+        if (T == S) return YES;
+        if (T.isIntLike() && S.isIntLike()) return YES;
+        if (T == PrimordialClassLoader.loader.getJavaLangObject() && S.isReferenceType()) return YES;
+        if (!T.isPrepared() || !S.isPrepared()) return MAYBE;
+        if (T.isArrayType()) {
+            jq_Type elemType = ((jq_Array)T).getInnermostElementType();
+            if (!elemType.isPrepared()) return MAYBE;
+        }
+        if (S.isArrayType()) {
+            jq_Type elemType = ((jq_Array)S).getInnermostElementType();
+            if (!elemType.isPrepared()) return MAYBE;
+        }
+        if (TypeCheck.isAssignable(S, T)) return YES;
+        else return NO;
     }
     
     // Returns true if t1 is a superclass of t2
@@ -184,6 +217,6 @@ public abstract class TypeCheck implements jq_ClassFileConstants {
         jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LRun_Time/TypeCheck;");
         _checkcast = k.getOrCreateStaticMethod("checkcast", "(Ljava/lang/Object;LClazz/jq_Type;)Ljava/lang/Object;");
         _instance_of = k.getOrCreateStaticMethod("instance_of", "(Ljava/lang/Object;LClazz/jq_Type;)Z");
-        _arrayStoreCheck = k.getOrCreateStaticMethod("arrayStoreCheck", "(Ljava/lang/Object;[Ljava/lang/Object;)V");
+        _arrayStoreCheck = k.getOrCreateStaticMethod("arrayStoreCheck", "(LMemory/HeapAddress;[Ljava/lang/Object;)V");
     }
 }

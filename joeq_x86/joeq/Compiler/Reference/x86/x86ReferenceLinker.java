@@ -16,6 +16,10 @@ import Clazz.jq_Reference;
 import Clazz.jq_StaticField;
 import Clazz.jq_StaticMethod;
 import Main.jq;
+import Memory.Address;
+import Memory.CodeAddress;
+import Memory.HeapAddress;
+import Memory.StackAddress;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
 
@@ -27,13 +31,13 @@ public abstract class x86ReferenceLinker {
 
     public static /*final*/ boolean TRACE = false;
     
-    static void patchCaller(jq_Method m, int retloc) {
-        if ((Unsafe.peek(retloc-6)&0xFFFF) == 0xE890) {
+    static void patchCaller(jq_Method m, CodeAddress retloc) {
+        if (retloc.offset(-6).peek2() == (short)0xE890) {
             // patch static call
-            Unsafe.poke4(retloc-4, m.getDefaultCompiledVersion().getEntrypoint()-retloc);
+            retloc.offset(-4).poke4(m.getDefaultCompiledVersion().getEntrypoint().difference(retloc));
         }
         if (!m.isStatic() && ((jq_InstanceMethod)m).isVirtual()) {
-            ((int[])m.getDeclaringClass().getVTable())[((jq_InstanceMethod)m).getOffset()>>2] = m.getDefaultCompiledVersion().getEntrypoint();
+            ((Address[])m.getDeclaringClass().getVTable())[((jq_InstanceMethod)m).getOffset()>>2] = m.getDefaultCompiledVersion().getEntrypoint();
         }
     }
     
@@ -41,170 +45,170 @@ public abstract class x86ReferenceLinker {
         f = f.resolve1();
         jq_Class k = f.getDeclaringClass();
         k.load(); k.verify(); k.prepare(); k.sf_initialize(); k.cls_initialize();
-        int retloc = Unsafe.peek(Unsafe.EBP()+4);
-        if (TRACE) SystemInterface.debugmsg("backpatching getstatic4 "+f+" ip: "+jq.hex8(retloc));
+        CodeAddress retloc = (CodeAddress) StackAddress.getBasePointer().offset(4).peek();
+        if (TRACE) SystemInterface.debugmsg("backpatching getstatic4 "+f+" ip: "+retloc.stringRep());
         int patchsize = x86ReferenceCompiler.patch_getstatic4(retloc, f);
         // change our return address to reexecute patched region
-        Unsafe.poke4(Unsafe.EBP()+4, retloc-patchsize);
+        StackAddress.getBasePointer().offset(4).poke(retloc.offset(-patchsize));
     }
     static void getstatic8(jq_StaticField f) {
         f = f.resolve1();
         jq_Class k = f.getDeclaringClass();
         k.load(); k.verify(); k.prepare(); k.sf_initialize(); k.cls_initialize();
-        int retloc = Unsafe.peek(Unsafe.EBP()+4);
-        if (TRACE) SystemInterface.debugmsg("backpatching getstatic8 "+f+" ip: "+jq.hex8(retloc));
+        CodeAddress retloc = (CodeAddress) StackAddress.getBasePointer().offset(4).peek();
+        if (TRACE) SystemInterface.debugmsg("backpatching getstatic8 "+f+" ip: "+retloc.stringRep());
         int patchsize = x86ReferenceCompiler.patch_getstatic8(retloc, f);
         // change our return address to reexecute patched region
-        Unsafe.poke4(Unsafe.EBP()+4, retloc-patchsize);
+        StackAddress.getBasePointer().offset(4).poke(retloc.offset(-patchsize));
     }
     static void putstatic4(jq_StaticField f) {
         f = f.resolve1();
         jq_Class k = f.getDeclaringClass();
         k.load(); k.verify(); k.prepare(); k.sf_initialize(); k.cls_initialize();
-        int retloc = Unsafe.peek(Unsafe.EBP()+4);
-        if (TRACE) SystemInterface.debugmsg("backpatching putstatic4 "+f+" ip: "+jq.hex8(retloc));
+        CodeAddress retloc = (CodeAddress) StackAddress.getBasePointer().offset(4).peek();
+        if (TRACE) SystemInterface.debugmsg("backpatching putstatic4 "+f+" ip: "+retloc.stringRep());
         int patchsize = x86ReferenceCompiler.patch_putstatic4(retloc, f);
         // change our return address to reexecute patched region
-        Unsafe.poke4(Unsafe.EBP()+4, retloc-patchsize);
+        StackAddress.getBasePointer().offset(4).poke(retloc.offset(-patchsize));
     }
     static void putstatic8(jq_StaticField f) {
         f = f.resolve1();
         jq_Class k = f.getDeclaringClass();
         k.load(); k.verify(); k.prepare(); k.sf_initialize(); k.cls_initialize();
-        int retloc = Unsafe.peek(Unsafe.EBP()+4);
-        if (TRACE) SystemInterface.debugmsg("backpatching putstatic8 "+f+" ip: "+jq.hex8(retloc));
+        CodeAddress retloc = (CodeAddress) StackAddress.getBasePointer().offset(4).peek();
+        if (TRACE) SystemInterface.debugmsg("backpatching putstatic8 "+f+" ip: "+retloc.stringRep());
         int patchsize = x86ReferenceCompiler.patch_putstatic8(retloc, f);
         // change our return address to reexecute patched region
-        Unsafe.poke4(Unsafe.EBP()+4, retloc-patchsize);
+        StackAddress.getBasePointer().offset(4).poke(retloc.offset(-patchsize));
     }
     static void getfield1(jq_InstanceField f) {
         f = f.resolve1();
         jq_Class k = f.getDeclaringClass();
         jq.Assert(k.isClsInitialized());
-        int retloc = Unsafe.peek(Unsafe.EBP()+4);
-        if (TRACE) SystemInterface.debugmsg("backpatching getfield1 "+f+" ip: "+jq.hex8(retloc));
+        CodeAddress retloc = (CodeAddress) StackAddress.getBasePointer().offset(4).peek();
+        if (TRACE) SystemInterface.debugmsg("backpatching getfield1 "+f+" ip: "+retloc.stringRep());
         int patchsize = x86ReferenceCompiler.patch_getfield1(retloc, f);
         // change our return address to reexecute patched region
-        Unsafe.poke4(Unsafe.EBP()+4, retloc-patchsize);
+        StackAddress.getBasePointer().offset(4).poke(retloc.offset(-patchsize));
     }
     static void cgetfield(jq_InstanceField f) {
         f = f.resolve1();
         jq_Class k = f.getDeclaringClass();
         jq.Assert(k.isClsInitialized());
-        int retloc = Unsafe.peek(Unsafe.EBP()+4);
-        if (TRACE) SystemInterface.debugmsg("backpatching cgetfield "+f+" ip: "+jq.hex8(retloc));
+        CodeAddress retloc = (CodeAddress) StackAddress.getBasePointer().offset(4).peek();
+        if (TRACE) SystemInterface.debugmsg("backpatching cgetfield "+f+" ip: "+retloc.stringRep());
         int patchsize = x86ReferenceCompiler.patch_cgetfield(retloc, f);
         // change our return address to reexecute patched region
-        Unsafe.poke4(Unsafe.EBP()+4, retloc-patchsize);
+        StackAddress.getBasePointer().offset(4).poke(retloc.offset(-patchsize));
     }
     static void sgetfield(jq_InstanceField f) {
         f = f.resolve1();
         jq_Class k = f.getDeclaringClass();
         jq.Assert(k.isClsInitialized());
-        int retloc = Unsafe.peek(Unsafe.EBP()+4);
-        if (TRACE) SystemInterface.debugmsg("backpatching sgetfield "+f+" ip: "+jq.hex8(retloc));
+        CodeAddress retloc = (CodeAddress) StackAddress.getBasePointer().offset(4).peek();
+        if (TRACE) SystemInterface.debugmsg("backpatching sgetfield "+f+" ip: "+retloc.stringRep());
         int patchsize = x86ReferenceCompiler.patch_sgetfield(retloc, f);
         // change our return address to reexecute patched region
-        Unsafe.poke4(Unsafe.EBP()+4, retloc-patchsize);
+        StackAddress.getBasePointer().offset(4).poke(retloc.offset(-patchsize));
     }
     static void getfield4(jq_InstanceField f) {
         f = f.resolve1();
         jq_Class k = f.getDeclaringClass();
         jq.Assert(k.isClsInitialized());
-        int retloc = Unsafe.peek(Unsafe.EBP()+4);
-        if (TRACE) SystemInterface.debugmsg("backpatching getfield4 "+f+" ip: "+jq.hex8(retloc));
+        CodeAddress retloc = (CodeAddress) StackAddress.getBasePointer().offset(4).peek();
+        if (TRACE) SystemInterface.debugmsg("backpatching getfield4 "+f+" ip: "+retloc.stringRep());
         int patchsize = x86ReferenceCompiler.patch_getfield4(retloc, f);
         // change our return address to reexecute patched region
-        Unsafe.poke4(Unsafe.EBP()+4, retloc-patchsize);
+        StackAddress.getBasePointer().offset(4).poke(retloc.offset(-patchsize));
     }
     static void getfield8(jq_InstanceField f) {
         f = f.resolve1();
         jq_Class k = f.getDeclaringClass();
         jq.Assert(k.isClsInitialized());
-        int retloc = Unsafe.peek(Unsafe.EBP()+4);
-        if (TRACE) SystemInterface.debugmsg("backpatching getfield8 "+f+" ip: "+jq.hex8(retloc));
+        CodeAddress retloc = (CodeAddress) StackAddress.getBasePointer().offset(4).peek();
+        if (TRACE) SystemInterface.debugmsg("backpatching getfield8 "+f+" ip: "+retloc.stringRep());
         int patchsize = x86ReferenceCompiler.patch_getfield8(retloc, f);
         // change our return address to reexecute patched region
-        Unsafe.poke4(Unsafe.EBP()+4, retloc-patchsize);
+        StackAddress.getBasePointer().offset(4).poke(retloc.offset(-patchsize));
     }
     static void putfield1(jq_InstanceField f) {
         f = f.resolve1();
         jq_Class k = f.getDeclaringClass();
         jq.Assert(k.isClsInitialized());
-        int retloc = Unsafe.peek(Unsafe.EBP()+4);
-        if (TRACE) SystemInterface.debugmsg("backpatching putfield1 "+f+" ip: "+jq.hex8(retloc));
+        CodeAddress retloc = (CodeAddress) StackAddress.getBasePointer().offset(4).peek();
+        if (TRACE) SystemInterface.debugmsg("backpatching putfield1 "+f+" ip: "+retloc.stringRep());
         int patchsize = x86ReferenceCompiler.patch_putfield1(retloc, f);
         // change our return address to reexecute patched region
-        Unsafe.poke4(Unsafe.EBP()+4, retloc-patchsize);
+        StackAddress.getBasePointer().offset(4).poke(retloc.offset(-patchsize));
     }
     static void putfield2(jq_InstanceField f) {
         f = f.resolve1();
         jq_Class k = f.getDeclaringClass();
         jq.Assert(k.isClsInitialized());
-        int retloc = Unsafe.peek(Unsafe.EBP()+4);
-        if (TRACE) SystemInterface.debugmsg("backpatching putfield2 "+f+" ip: "+jq.hex8(retloc));
+        CodeAddress retloc = (CodeAddress) StackAddress.getBasePointer().offset(4).peek();
+        if (TRACE) SystemInterface.debugmsg("backpatching putfield2 "+f+" ip: "+retloc.stringRep());
         int patchsize = x86ReferenceCompiler.patch_putfield2(retloc, f);
         // change our return address to reexecute patched region
-        Unsafe.poke4(Unsafe.EBP()+4, retloc-patchsize);
+        StackAddress.getBasePointer().offset(4).poke(retloc.offset(-patchsize));
     }
     static void putfield4(jq_InstanceField f) {
         f = f.resolve1();
         jq_Class k = f.getDeclaringClass();
         jq.Assert(k.isClsInitialized());
-        int retloc = Unsafe.peek(Unsafe.EBP()+4);
-        if (TRACE) SystemInterface.debugmsg("backpatching putfield4 "+f+" ip: "+jq.hex8(retloc));
+        CodeAddress retloc = (CodeAddress) StackAddress.getBasePointer().offset(4).peek();
+        if (TRACE) SystemInterface.debugmsg("backpatching putfield4 "+f+" ip: "+retloc.stringRep());
         int patchsize = x86ReferenceCompiler.patch_putfield4(retloc, f);
         // change our return address to reexecute patched region
-        Unsafe.poke4(Unsafe.EBP()+4, retloc-patchsize);
+        StackAddress.getBasePointer().offset(4).poke(retloc.offset(-patchsize));
     }
     static void putfield8(jq_InstanceField f) {
         f = f.resolve1();
         jq_Class k = f.getDeclaringClass();
         jq.Assert(k.isClsInitialized());
-        int retloc = Unsafe.peek(Unsafe.EBP()+4);
-        if (TRACE) SystemInterface.debugmsg("backpatching putfield8 "+f+" ip: "+jq.hex8(retloc));
+        CodeAddress retloc = (CodeAddress) StackAddress.getBasePointer().offset(4).peek();
+        if (TRACE) SystemInterface.debugmsg("backpatching putfield8 "+f+" ip: "+retloc.stringRep());
         int patchsize = x86ReferenceCompiler.patch_putfield8(retloc, f);
         // change our return address to reexecute patched region
-        Unsafe.poke4(Unsafe.EBP()+4, retloc-patchsize);
+        StackAddress.getBasePointer().offset(4).poke(retloc.offset(-patchsize));
     }
     static void invokevirtual(jq_InstanceMethod f) {
         f = f.resolve1();
         jq_Class k = f.getDeclaringClass();
         jq.Assert(k.isClsInitialized());
-        int retloc = Unsafe.peek(Unsafe.EBP()+4);
-        if (TRACE) SystemInterface.debugmsg("backpatching invokevirtual "+f+" ip: "+jq.hex8(retloc));
+        CodeAddress retloc = (CodeAddress) StackAddress.getBasePointer().offset(4).peek();
+        if (TRACE) SystemInterface.debugmsg("backpatching invokevirtual "+f+" ip: "+retloc.stringRep());
         int patchsize = x86ReferenceCompiler.patch_invokevirtual(retloc, f);
         // change our return address to reexecute patched region
-        Unsafe.poke4(Unsafe.EBP()+4, retloc-patchsize);
+        StackAddress.getBasePointer().offset(4).poke(retloc.offset(-patchsize));
     }
     static void invokestatic(jq_Method f) {
         f = (jq_Method)f.resolve();
         jq_Class k = f.getDeclaringClass();
         k.load(); k.verify(); k.prepare(); k.sf_initialize(); k.cls_initialize();
-        int retloc = Unsafe.peek(Unsafe.EBP()+4);
-        if (TRACE) SystemInterface.debugmsg("backpatching invokestatic "+f+" ip: "+jq.hex8(retloc));
+        CodeAddress retloc = (CodeAddress) StackAddress.getBasePointer().offset(4).peek();
+        if (TRACE) SystemInterface.debugmsg("backpatching invokestatic "+f+" ip: "+retloc.stringRep());
         int patchsize = x86ReferenceCompiler.patch_invokestatic(retloc, f);
         // change our return address to reexecute patched region
-        Unsafe.poke4(Unsafe.EBP()+4, retloc-patchsize);
+        StackAddress.getBasePointer().offset(4).poke(retloc.offset(-patchsize));
     }
     static void invokespecial(jq_InstanceMethod f) {
         f = f.resolve1();
         jq_Class k = f.getDeclaringClass();
         k.load(); k.verify(); k.prepare(); k.sf_initialize(); k.cls_initialize();
         f = jq_Class.getInvokespecialTarget(k, f);
-        int retloc = Unsafe.peek(Unsafe.EBP()+4);
-        if (TRACE) SystemInterface.debugmsg("backpatching invokespecial "+f+" ip: "+jq.hex8(retloc));
+        CodeAddress retloc = (CodeAddress) StackAddress.getBasePointer().offset(4).peek();
+        if (TRACE) SystemInterface.debugmsg("backpatching invokespecial "+f+" ip: "+retloc.stringRep());
         // special invocation is now directly bound.
         int patchsize = x86ReferenceCompiler.patch_invokestatic(retloc, f);
         // change our return address to reexecute patched region
-        Unsafe.poke4(Unsafe.EBP()+4, retloc-patchsize);
+        StackAddress.getBasePointer().offset(4).poke(retloc.offset(-patchsize));
     }
     static long invokeinterface(jq_InstanceMethod f) throws Throwable {
         f = f.resolve1();
         int n_paramwords = f.getParamWords();
-        int obj_location = Unsafe.EBP() + ((n_paramwords+2)<<2);
-        Object o = Unsafe.asObject(Unsafe.peek(obj_location));
-        jq_Reference t = Unsafe.getTypeOf(o);
+        StackAddress obj_location = (StackAddress) StackAddress.getBasePointer().offset((n_paramwords+2)<<2);
+        Object o = ((HeapAddress) obj_location.peek()).asObject();
+        jq_Reference t = jq_Reference.getTypeOf(o);
         if (!t.implementsInterface(f.getDeclaringClass()))
             throw new IncompatibleClassChangeError(t+" does not implement interface "+f.getDeclaringClass());
         jq_InstanceMethod m = t.getVirtualMethod(f.getNameAndDesc());
@@ -214,7 +218,8 @@ public abstract class x86ReferenceLinker {
         jq_Class k = m.getDeclaringClass();
         k.sf_initialize(); k.cls_initialize();
         for (int i=0; i<n_paramwords; ++i) {
-            Unsafe.pushArg(Unsafe.peek(Unsafe.EBP() + ((n_paramwords-i+2)<<2)));
+            int v = StackAddress.getBasePointer().offset((n_paramwords-i+2)<<2).peek4();
+            Unsafe.pushArg(v);
         }
         return Unsafe.invoke(m.getDefaultCompiledVersion().getEntrypoint());
     }

@@ -17,6 +17,8 @@ import java.util.Map;
 
 import ClassLib.ClassLibInterface;
 import Main.jq;
+import Memory.CodeAddress;
+import Memory.StackAddress;
 import Run_Time.Reflection;
 import Run_Time.StackWalker;
 import Run_Time.TypeCheck;
@@ -233,14 +235,13 @@ public abstract class jq_Member implements jq_ClassFileConstants {
         return getAttribute("Deprecated") != null;
     }
 
-    public void checkCallerAccess(int depth)
-            throws java.lang.IllegalAccessException {
+    public void checkCallerAccess(int depth) throws IllegalAccessException {
         jq_Class field_class = this.getDeclaringClass();
         if (this.isPublic() && field_class.isPublic()) {
             // completely public!
             return;
         }
-        StackWalker sw = new StackWalker(0, Unsafe.EBP());
+        StackWalker sw = new StackWalker(CodeAddress.min(), StackAddress.getBasePointer());
         while (--depth >= 0) sw.gotoNext();
         jq_CompiledCode cc = sw.getCode();
         if (cc != null) {
@@ -268,7 +269,7 @@ public abstract class jq_Member implements jq_ClassFileConstants {
                 }
             }
         }
-        throw new java.lang.IllegalAccessException();
+        throw new IllegalAccessException();
     }
 
     // available after resolution

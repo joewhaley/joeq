@@ -14,6 +14,7 @@ import Clazz.jq_CompiledCode;
 import Clazz.jq_InstanceField;
 import Clazz.jq_Method;
 import Main.jq;
+import Memory.CodeAddress;
 
 /*
  * @author  John Whaley
@@ -21,10 +22,10 @@ import Main.jq;
  */
 public class DirectBindCall {
 
-    private int/*CodeAddress*/ source;
+    private CodeAddress source;
     private jq_Method target;
 
-    public DirectBindCall(int/*CodeAddress*/ source, jq_Method target) {
+    public DirectBindCall(CodeAddress source, jq_Method target) {
         this.source = source; this.target = target;
     }
     
@@ -38,16 +39,11 @@ public class DirectBindCall {
         DefaultCodeAllocator.patchRelativeOffset(source, cc.getEntrypoint());
     }
     
-    public int/*CodeAddress*/ getSource() { return source; }
+    public CodeAddress getSource() { return source; }
     public jq_Method getTarget() { return target; }
 
     public String toString() {
-        return "from code:"+jq.hex8(source)+" to method:"+target;
+        return "from code:"+source.stringRep()+" to method:"+target;
     }
     
-    public static final jq_InstanceField _source;
-    static {
-        jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LAssembler/x86/DirectBindCall;");
-        _source = k.getOrCreateInstanceField("source", "I");
-    }
 }

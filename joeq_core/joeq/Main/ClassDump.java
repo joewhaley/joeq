@@ -37,10 +37,12 @@ public abstract class ClassDump {
         jq.DontCompile = true;
         jq.boot_types = new java.util.HashSet();
 
+        /*
         Unsafe.installRemapper(new Unsafe.Remapper() {
             public int addressOf(Object o) { return 0; }
             public jq_Type getType(Object o) { return Reflection.getJQType(o.getClass()); }
         });
+        */
         
         jq.Assert(true); // initialize jq
         String classpath = System.getProperty("java.class.path")+

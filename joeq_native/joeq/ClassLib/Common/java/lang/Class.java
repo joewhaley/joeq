@@ -18,6 +18,7 @@ import Clazz.jq_InstanceMethod;
 import Clazz.jq_Method;
 import Clazz.jq_NameAndDesc;
 import Clazz.jq_Primitive;
+import Clazz.jq_Reference;
 import Clazz.jq_StaticField;
 import Clazz.jq_StaticMethod;
 import Clazz.jq_Type;
@@ -88,7 +89,7 @@ public class Class {
 
     public boolean isInstance(java.lang.Object obj) {
         if (obj == null) return false;
-        jq_Type t = Unsafe.getTypeOf(obj);
+        jq_Reference t = jq_Reference.getTypeOf(obj);
         jq_Type jq_type = this.jq_type;
         jq_type.load(); jq_type.verify(); jq_type.prepare();
         return TypeCheck.isAssignable(t, jq_type);

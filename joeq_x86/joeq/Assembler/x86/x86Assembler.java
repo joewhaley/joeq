@@ -12,6 +12,7 @@ import java.util.Map;
 import Allocator.DefaultCodeAllocator;
 import Allocator.CodeAllocator.x86CodeBuffer;
 import Main.jq;
+import Memory.CodeAddress;
 import Util.LightRelation;
 import Util.Relation;
 
@@ -56,13 +57,13 @@ public class x86Assembler implements x86Constants {
         return mc;
     }
     public int getCurrentOffset() { return mc.getCurrentOffset(); }
-    public int/*CodeAddress*/ getCurrentAddress() { return mc.getCurrentAddress(); }
+    public CodeAddress getCurrentAddress() { return mc.getCurrentAddress(); }
     public void patch1(int offset, byte value) { mc.put1(offset, value); }
     public void patch4_endian(int offset, int value) { mc.put4_endian(offset, value); }
 
     public x86Assembler(int num_targets, int est_size, int offset, int alignment) {
         mc = DefaultCodeAllocator.getCodeBuffer(est_size, offset, alignment);
-        if (TRACE) System.out.println("Assembler start address: "+jq.hex8(mc.getCurrentAddress()));
+        if (TRACE) System.out.println("Assembler start address: "+mc.getCurrentAddress().stringRep());
         branchtargetmap = new HashMap();
         branches_to_patch = new LightRelation();
     }

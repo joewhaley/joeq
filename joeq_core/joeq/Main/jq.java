@@ -19,6 +19,7 @@ import Clazz.jq_Primitive;
 import Clazz.jq_Reference;
 import Clazz.jq_StaticMethod;
 import Clazz.jq_Type;
+import Memory.HeapAddress;
 import Run_Time.Reflection;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
@@ -469,10 +470,12 @@ public abstract class jq {
         jq.DontCompile = true;
         jq.boot_types = new java.util.HashSet();
 
+        /*
         Unsafe.installRemapper(new Unsafe.Remapper() {
             public int addressOf(Object o) { return 0; }
             public jq_Type getType(Object o) { return Reflection.getJQType(o.getClass()); }
         });
+        */
         
         String classpath = System.getProperty("java.class.path")+
                            System.getProperty("path.separator")+
@@ -605,7 +608,7 @@ public abstract class jq {
         if (jq.Bootstrapping)
             return hex(System.identityHashCode(o));
         else
-            return hex(Unsafe.addressOf(o));
+            return HeapAddress.addressOf(o).stringRep();
     }
     public static String hex8(int i) {
         String t = Integer.toHexString(i);

@@ -101,6 +101,10 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
             try { if (zf!=null) zf.close(); } finally { super.finalize(); }
         }
     }
+    // These should be static so that we don't need to look them up during
+    // class loading.
+    public static final String pathsep = System.getProperty("path.separator");
+    public static final String filesep = System.getProperty("file.separator");
     /** A regular path string in the CLASSPATH. */
     static class PathElement extends ClasspathElement {
         String path;
@@ -109,7 +113,6 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
         public String toString() { return path; }
         InputStream getResourceAsStream(String name) {
             try { // try to open the file, starting from path.
-                final String filesep = System.getProperty("file.separator");
                 if (filesep.charAt(0) != '/') name = name.replace('/', filesep.charAt(0));
                 if (TRACE) out.println("Searching for "+name+" in path "+path);
                 File f = new File(path, name);
@@ -119,7 +122,6 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
             }
         }
         Iterator listPackage(final String pathn, final boolean recursive) {
-            final String filesep = System.getProperty("file.separator");
             final String pathname;
             if (filesep.charAt(0) != '/') pathname = pathn.replace('/', filesep.charAt(0));
             else pathname = pathn;
@@ -151,7 +153,6 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
 
     /** Vector of ClasspathElements corresponding to CLASSPATH entries. */
     public void addToClasspath(String s) {
-        final String pathsep = System.getProperty("path.separator");
         jq.Assert(s.indexOf(pathsep) == -1);
         Set duplicates = new HashSet(); // don't add duplicates.
         duplicates.addAll(classpathList);
@@ -178,8 +179,6 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
      *  CLASSPATH. */
     public static final Iterator classpaths(String classpath) {
 
-        final String pathsep = System.getProperty("path.separator");
-        
         // For convenience, make sure classpath begins with and ends with pathsep.
         if (!classpath.startsWith(pathsep)) classpath = pathsep + classpath;
         if (!classpath.endsWith(pathsep)) classpath = classpath + pathsep;
@@ -216,7 +215,6 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
     }
     
     public String classpathToString() {
-        final String pathsep = System.getProperty("path.separator");
         StringBuffer result = new StringBuffer(pathsep);
         for (Iterator it = classpathList.iterator(); it.hasNext(); ) {
             ClasspathElement cpe = (ClasspathElement) it.next();
@@ -238,7 +236,6 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
      */
     public static String classnameToResource(String classname) {
         jq.Assert(classname.indexOf('/')==-1); // should have '.' separators.
-        String filesep = System.getProperty("file.separator");
         // Swap all '.' for '/' & append ".class"
         return classname.replace('.', filesep.charAt(0)) + ".class";
     }

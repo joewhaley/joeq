@@ -7,6 +7,7 @@
 
 package ClassLib.Common.java.io;
 
+import Memory.HeapAddress;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
 
@@ -48,7 +49,7 @@ abstract class FileOutputStream {
         // BUG in Sun's implementation, which we mimic here.  off=b.length and len=0 doesn't throw an error (?)
         if (off < 0) throw new IndexOutOfBoundsException();
         if (len == 0) return;
-        int start = Unsafe.addressOf(b)+off;
+        HeapAddress start = (HeapAddress) HeapAddress.addressOf(b).offset(off);
         int result = SystemInterface.file_writebytes(fdnum, start, len);
         if (result != len)
             throw new java.io.IOException();

@@ -19,6 +19,7 @@ public class jq_Primitive extends jq_Type implements jq_ClassFileConstants {
     public final boolean isClassType() { return false; }
     public final boolean isArrayType() { return false; }
     public final boolean isPrimitiveType() { return true; }
+    public final boolean isAddressType() { return false; }
     public final String getName() { return name; }
     public final String shortName() { return name; }
     public final String getJDKDesc() { return desc.toString(); }

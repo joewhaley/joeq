@@ -13,6 +13,8 @@ import ClassLib.ClassLibInterface;
 import Clazz.jq_Class;
 import Clazz.jq_InstanceMethod;
 import Main.jq;
+import Memory.HeapAddress;
+import Memory.StackAddress;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
 
@@ -29,7 +31,7 @@ public class jq_InterrupterThread extends Thread {
         if (TRACE) SystemInterface.debugmsg("Initialized timer interrupt for native thread "+other_nt);
         myself = ClassLibInterface.DEFAULT.getJQThread(this);
         myself.disableThreadSwitch();
-        this.tid = SystemInterface.create_thread(_run.getDefaultCompiledVersion().getEntrypoint(), Unsafe.addressOf(this));
+        this.tid = SystemInterface.create_thread(_run.getDefaultCompiledVersion().getEntrypoint(), HeapAddress.addressOf(this));
         jq_NativeThread my_nt = new jq_NativeThread(myself);
         my_nt.getCodeAllocator().init();
         my_nt.getHeapAllocator().init();
@@ -63,10 +65,12 @@ public class jq_InterrupterThread extends Thread {
                 if (!b) {
                     if (TRACE) SystemInterface.debugmsg("Failed to get thread context for "+other_nt);
                 } else {
-                    if (TRACE) SystemInterface.debugmsg(other_nt+" : "+javaThread+" ip="+jq.hex8(regs.Eip)+" sp="+jq.hex8(regs.Esp)+" cc="+CodeAllocator.getCodeContaining(regs.Eip));
+                    if (TRACE) SystemInterface.debugmsg(other_nt+" : "+javaThread+" ip="+regs.Eip.stringRep()+" sp="+regs.Esp.stringRep()+" cc="+CodeAllocator.getCodeContaining(regs.Eip));
                     // simulate a call to threadSwitch method
-                    Unsafe.poke4(regs.Esp -= 4, Unsafe.addressOf(other_nt));
-                    Unsafe.poke4(regs.Esp -= 4, regs.Eip);
+                    regs.Esp = (StackAddress) regs.Esp.offset(-4);
+                    regs.Esp.poke(HeapAddress.addressOf(other_nt));
+                    regs.Esp = (StackAddress) regs.Esp.offset(-4);
+                    regs.Esp.poke(regs.Eip);
                     regs.Eip = jq_NativeThread._threadSwitch.getDefaultCompiledVersion().getEntrypoint();
                     regs.ContextFlags = jq_RegisterState.CONTEXT_CONTROL;
                     b = other_nt.setContext(regs);

@@ -14,6 +14,8 @@ import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
 import Clazz.jq_CompiledCode;
 import Clazz.jq_StaticField;
+import Memory.CodeAddress;
+import Memory.StackAddress;
 import Run_Time.ArrayCopy;
 import Run_Time.HashCode;
 import Run_Time.Reflection;
@@ -50,7 +52,7 @@ public abstract class System {
     }
     public static native void initializeSystemClass();
     static java.lang.Class getCallerClass() {
-        StackWalker sw = new StackWalker(0, Unsafe.EBP());
+        StackWalker sw = new StackWalker(CodeAddress.min(), StackAddress.getBasePointer());
         sw.gotoNext(); sw.gotoNext(); sw.gotoNext();
         jq_CompiledCode cc = sw.getCode();
         if (cc == null) return null;

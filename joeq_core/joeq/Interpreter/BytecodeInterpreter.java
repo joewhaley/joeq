@@ -21,6 +21,8 @@ import Clazz.jq_TryCatchBC;
 import Clazz.jq_Type;
 import Compil3r.BytecodeAnalysis.BytecodeVisitor;
 import Main.jq;
+import Memory.Address;
+import Memory.HeapAddress;
 import Run_Time.Reflection;
 import Run_Time.Unsafe;
 
@@ -94,16 +96,19 @@ public abstract class BytecodeInterpreter {
             } else {
                 Object v = params[i];
                 if (callee == null) {
-                    Unsafe.pushArg(Unsafe.addressOf(v));
+                    Unsafe.pushArgA(HeapAddress.addressOf(v));
                 } else callee.setLocal_A(j, v);
             }
         }
         if (callee == null) {
-            long result = Unsafe.invoke(m.getDefaultCompiledVersion().getEntrypoint());
             jq_Type returnType = m.getReturnType();
-            if (returnType.isReferenceType())
-                return Unsafe.asObject((int)(result>>32));
-            else if (returnType == jq_Primitive.VOID)
+            if (returnType.isReferenceType()) {
+                Address result = Unsafe.invokeA(m.getDefaultCompiledVersion().getEntrypoint());
+                if (returnType.isAddressType()) return result;
+                return ((HeapAddress) result).asObject();
+            }
+            long result = Unsafe.invoke(m.getDefaultCompiledVersion().getEntrypoint());
+            if (returnType == jq_Primitive.VOID)
                 return null;
             else if (returnType == jq_Primitive.LONG)
                 return new Long(result);
@@ -232,42 +237,6 @@ public abstract class BytecodeInterpreter {
     }
     
     public abstract static class VMInterface {
-        public abstract int getstatic_I(jq_StaticField f);
-        public abstract long getstatic_L(jq_StaticField f);
-        public abstract float getstatic_F(jq_StaticField f);
-        public abstract double getstatic_D(jq_StaticField f);
-        public abstract Object getstatic_A(jq_StaticField f);
-        public abstract boolean getstatic_Z(jq_StaticField f);
-        public abstract byte getstatic_B(jq_StaticField f);
-        public abstract char getstatic_C(jq_StaticField f);
-        public abstract short getstatic_S(jq_StaticField f);
-        public abstract void putstatic_I(jq_StaticField f, int v);
-        public abstract void putstatic_L(jq_StaticField f, long v);
-        public abstract void putstatic_F(jq_StaticField f, float v);
-        public abstract void putstatic_D(jq_StaticField f, double v);
-        public abstract void putstatic_A(jq_StaticField f, Object v);
-        public abstract void putstatic_Z(jq_StaticField f, boolean v);
-        public abstract void putstatic_B(jq_StaticField f, byte v);
-        public abstract void putstatic_C(jq_StaticField f, char v);
-        public abstract void putstatic_S(jq_StaticField f, short v);
-        public abstract int getfield_I(Object o, jq_InstanceField f);
-        public abstract long getfield_L(Object o, jq_InstanceField f);
-        public abstract float getfield_F(Object o, jq_InstanceField f);
-        public abstract double getfield_D(Object o, jq_InstanceField f);
-        public abstract Object getfield_A(Object o, jq_InstanceField f);
-        public abstract byte getfield_B(Object o, jq_InstanceField f);
-        public abstract char getfield_C(Object o, jq_InstanceField f);
-        public abstract short getfield_S(Object o, jq_InstanceField f);
-        public abstract boolean getfield_Z(Object o, jq_InstanceField f);
-        public abstract void putfield_I(Object o, jq_InstanceField f, int v);
-        public abstract void putfield_L(Object o, jq_InstanceField f, long v);
-        public abstract void putfield_F(Object o, jq_InstanceField f, float v);
-        public abstract void putfield_D(Object o, jq_InstanceField f, double v);
-        public abstract void putfield_A(Object o, jq_InstanceField f, Object v);
-        public abstract void putfield_B(Object o, jq_InstanceField f, byte v);
-        public abstract void putfield_C(Object o, jq_InstanceField f, char v);
-        public abstract void putfield_S(Object o, jq_InstanceField f, short v);
-        public abstract void putfield_Z(Object o, jq_InstanceField f, boolean v);
         public abstract Object new_obj(jq_Type t);
         public abstract Object new_array(jq_Type t, int length);
         public abstract Object checkcast(Object o, jq_Type t);
@@ -276,7 +245,6 @@ public abstract class BytecodeInterpreter {
         public abstract void monitorenter(Object o, MethodInterpreter v);
         public abstract void monitorexit(Object o);
         public abstract Object multinewarray(int[] dims, jq_Type t);
-        public abstract jq_Type getJQTypeOf(Object o);
     }
 
     public static class WrappedException extends RuntimeException {
@@ -354,7 +322,7 @@ public abstract class BytecodeInterpreter {
         }
         
         private void handleException(Throwable x) throws WrappedException {
-            jq_Class t = (jq_Class)vm.getJQTypeOf(x);
+            jq_Class t = (jq_Class)jq_Reference.getTypeOf(x);
             t.load(); t.verify(); t.prepare();
             jq_TryCatchBC[] tc = method.getExceptionTable();
             for (int i=0; i<tc.length; ++i) {
@@ -992,191 +960,191 @@ public abstract class BytecodeInterpreter {
         public void visitIGETSTATIC(jq_StaticField f) {
             super.visitIGETSTATIC(f);
             f = resolve(f);
-            state.push_I(vm.getstatic_I(f));
+            state.push_I(Reflection.getstatic_I(f));
         }
         public void visitLGETSTATIC(jq_StaticField f) {
             super.visitLGETSTATIC(f);
             f = resolve(f);
-            state.push_L(vm.getstatic_L(f));
+            state.push_L(Reflection.getstatic_L(f));
         }
         public void visitFGETSTATIC(jq_StaticField f) {
             super.visitFGETSTATIC(f);
             f = resolve(f);
-            state.push_F(vm.getstatic_F(f));
+            state.push_F(Reflection.getstatic_F(f));
         }
         public void visitDGETSTATIC(jq_StaticField f) {
             super.visitDGETSTATIC(f);
             f = resolve(f);
-            state.push_D(vm.getstatic_D(f));
+            state.push_D(Reflection.getstatic_D(f));
         }
         public void visitAGETSTATIC(jq_StaticField f) {
             super.visitAGETSTATIC(f);
             f = resolve(f);
-            state.push_A(vm.getstatic_A(f));
+            state.push_A(Reflection.getstatic_A(f));
         }
         public void visitZGETSTATIC(jq_StaticField f) {
             super.visitZGETSTATIC(f);
             f = resolve(f);
-            state.push_I(vm.getstatic_Z(f)?1:0);
+            state.push_I(Reflection.getstatic_Z(f)?1:0);
         }
         public void visitBGETSTATIC(jq_StaticField f) {
             super.visitBGETSTATIC(f);
             f = resolve(f);
-            state.push_I(vm.getstatic_B(f));
+            state.push_I(Reflection.getstatic_B(f));
         }
         public void visitCGETSTATIC(jq_StaticField f) {
             super.visitCGETSTATIC(f);
             f = resolve(f);
-            state.push_I(vm.getstatic_C(f));
+            state.push_I(Reflection.getstatic_C(f));
         }
         public void visitSGETSTATIC(jq_StaticField f) {
             super.visitSGETSTATIC(f);
             f = resolve(f);
-            state.push_I(vm.getstatic_S(f));
+            state.push_I(Reflection.getstatic_S(f));
         }
         public void visitIPUTSTATIC(jq_StaticField f) {
             super.visitIPUTSTATIC(f);
             f = resolve(f);
-            vm.putstatic_I(f, state.pop_I());
+            Reflection.putstatic_I(f, state.pop_I());
         }
         public void visitLPUTSTATIC(jq_StaticField f) {
             super.visitLPUTSTATIC(f);
             f = resolve(f);
-            vm.putstatic_L(f, state.pop_L());
+            Reflection.putstatic_L(f, state.pop_L());
         }
         public void visitFPUTSTATIC(jq_StaticField f) {
             super.visitFPUTSTATIC(f);
             f = resolve(f);
-            vm.putstatic_F(f, state.pop_F());
+            Reflection.putstatic_F(f, state.pop_F());
         }
         public void visitDPUTSTATIC(jq_StaticField f) {
             super.visitDPUTSTATIC(f);
             f = resolve(f);
-            vm.putstatic_D(f, state.pop_D());
+            Reflection.putstatic_D(f, state.pop_D());
         }
         public void visitAPUTSTATIC(jq_StaticField f) {
             super.visitAPUTSTATIC(f);
             f = resolve(f);
-            vm.putstatic_A(f, state.pop_A());
+            Reflection.putstatic_A(f, state.pop_A());
         }
         public void visitZPUTSTATIC(jq_StaticField f) {
             super.visitZPUTSTATIC(f);
             f = resolve(f);
-            vm.putstatic_Z(f, state.pop_I()!=0);
+            Reflection.putstatic_Z(f, state.pop_I()!=0);
         }
         public void visitBPUTSTATIC(jq_StaticField f) {
             super.visitBPUTSTATIC(f);
             f = resolve(f);
-            vm.putstatic_B(f, (byte)state.pop_I());
+            Reflection.putstatic_B(f, (byte)state.pop_I());
         }
         public void visitCPUTSTATIC(jq_StaticField f) {
             super.visitCPUTSTATIC(f);
             f = resolve(f);
-            vm.putstatic_C(f, (char)state.pop_I());
+            Reflection.putstatic_C(f, (char)state.pop_I());
         }
         public void visitSPUTSTATIC(jq_StaticField f) {
             super.visitSPUTSTATIC(f);
             f = resolve(f);
-            vm.putstatic_S(f, (short)state.pop_I());
+            Reflection.putstatic_S(f, (short)state.pop_I());
         }
         public void visitIGETFIELD(jq_InstanceField f) {
             super.visitIGETFIELD(f);
             f = resolve(f);
-            state.push_I(vm.getfield_I(state.pop_A(), f));
+            state.push_I(Reflection.getfield_I(state.pop_A(), f));
         }
         public void visitLGETFIELD(jq_InstanceField f) {
             super.visitLGETFIELD(f);
             f = resolve(f);
-            state.push_L(vm.getfield_L(state.pop_A(), f));
+            state.push_L(Reflection.getfield_L(state.pop_A(), f));
         }
         public void visitFGETFIELD(jq_InstanceField f) {
             super.visitFGETFIELD(f);
             f = resolve(f);
-            state.push_F(vm.getfield_F(state.pop_A(), f));
+            state.push_F(Reflection.getfield_F(state.pop_A(), f));
         }
         public void visitDGETFIELD(jq_InstanceField f) {
             super.visitDGETFIELD(f);
             f = resolve(f);
-            state.push_D(vm.getfield_D(state.pop_A(), f));
+            state.push_D(Reflection.getfield_D(state.pop_A(), f));
         }
         public void visitAGETFIELD(jq_InstanceField f) {
             super.visitAGETFIELD(f);
             f = resolve(f);
-            state.push_A(vm.getfield_A(state.pop_A(), f));
+            state.push_A(Reflection.getfield_A(state.pop_A(), f));
         }
         public void visitBGETFIELD(jq_InstanceField f) {
             super.visitBGETFIELD(f);
             f = resolve(f);
-            state.push_I(vm.getfield_B(state.pop_A(), f));
+            state.push_I(Reflection.getfield_B(state.pop_A(), f));
         }
         public void visitCGETFIELD(jq_InstanceField f) {
             super.visitCGETFIELD(f);
             f = resolve(f);
-            state.push_I(vm.getfield_C(state.pop_A(), f));
+            state.push_I(Reflection.getfield_C(state.pop_A(), f));
         }
         public void visitSGETFIELD(jq_InstanceField f) {
             super.visitSGETFIELD(f);
             f = resolve(f);
-            state.push_I(vm.getfield_S(state.pop_A(), f));
+            state.push_I(Reflection.getfield_S(state.pop_A(), f));
         }
         public void visitZGETFIELD(jq_InstanceField f) {
             super.visitZGETFIELD(f);
             f = resolve(f);
-            state.push_I(vm.getfield_Z(state.pop_A(), f)?1:0);
+            state.push_I(Reflection.getfield_Z(state.pop_A(), f)?1:0);
         }
         public void visitIPUTFIELD(jq_InstanceField f) {
             super.visitIPUTFIELD(f);
             f = resolve(f);
             int v = state.pop_I();
-            vm.putfield_I(state.pop_A(), f, v);
+            Reflection.putfield_I(state.pop_A(), f, v);
         }
         public void visitLPUTFIELD(jq_InstanceField f) {
             super.visitLPUTFIELD(f);
             f = resolve(f);
             long v = state.pop_L();
-            vm.putfield_L(state.pop_A(), f, v);
+            Reflection.putfield_L(state.pop_A(), f, v);
         }
         public void visitFPUTFIELD(jq_InstanceField f) {
             super.visitFPUTFIELD(f);
             f = resolve(f);
             float v = state.pop_F();
-            vm.putfield_F(state.pop_A(), f, v);
+            Reflection.putfield_F(state.pop_A(), f, v);
         }
         public void visitDPUTFIELD(jq_InstanceField f) {
             super.visitDPUTFIELD(f);
             f = resolve(f);
             double v = state.pop_D();
-            vm.putfield_D(state.pop_A(), f, v);
+            Reflection.putfield_D(state.pop_A(), f, v);
         }
         public void visitAPUTFIELD(jq_InstanceField f) {
             super.visitAPUTFIELD(f);
             f = resolve(f);
             Object v = state.pop_A();
-            vm.putfield_A(state.pop_A(), f, v);
+            Reflection.putfield_A(state.pop_A(), f, v);
         }
         public void visitBPUTFIELD(jq_InstanceField f) {
             super.visitBPUTFIELD(f);
             f = resolve(f);
             byte v = (byte)state.pop_I();
-            vm.putfield_B(state.pop_A(), f, v);
+            Reflection.putfield_B(state.pop_A(), f, v);
         }
         public void visitCPUTFIELD(jq_InstanceField f) {
             super.visitCPUTFIELD(f);
             f = resolve(f);
             char v = (char)state.pop_I();
-            vm.putfield_C(state.pop_A(), f, v);
+            Reflection.putfield_C(state.pop_A(), f, v);
         }
         public void visitSPUTFIELD(jq_InstanceField f) {
             super.visitSPUTFIELD(f);
             f = resolve(f);
             short v = (short)state.pop_I();
-            vm.putfield_S(state.pop_A(), f, v);
+            Reflection.putfield_S(state.pop_A(), f, v);
         }
         public void visitZPUTFIELD(jq_InstanceField f) {
             super.visitZPUTFIELD(f);
             f = resolve(f);
             boolean v = state.pop_I()!=0;
-            vm.putfield_Z(state.pop_A(), f, v);
+            Reflection.putfield_Z(state.pop_A(), f, v);
         }
         protected Object INVOKEhelper(byte op, jq_Method f) {
             f = (jq_Method)resolve(f);
@@ -1186,7 +1154,7 @@ public abstract class BytecodeInterpreter {
                 f = jq_Class.getInvokespecialTarget(clazz, (jq_InstanceMethod)f);
             } else if (op != INVOKE_STATIC) {
                 Object o = state.peek_A(f.getParamWords()-1);
-                jq_Reference t = (jq_Reference)vm.getJQTypeOf(o);
+                jq_Reference t = jq_Reference.getTypeOf(o);
                 t.load(); t.verify(); t.prepare(); t.sf_initialize(); t.cls_initialize();
                 if (op == INVOKE_INTERFACE) {
                     if (!t.implementsInterface(f.getDeclaringClass()))

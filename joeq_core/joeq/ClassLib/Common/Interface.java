@@ -25,6 +25,9 @@ import Clazz.jq_Type;
 import Clazz.jq_Reference.jq_NullType;
 import Compil3r.Quad.BytecodeToQuad.jq_ReturnAddressType;
 import Main.jq;
+import Memory.CodeAddress;
+import Memory.HeapAddress;
+import Memory.StackAddress;
 import Run_Time.Reflection;
 import Run_Time.TypeCheck;
 import Run_Time.Unsafe;
@@ -58,7 +61,10 @@ public class Interface {
         protected static final java.util.Set nullInstanceFields = new java.util.HashSet();
         protected static final java.util.Map mappedObjects = new java.util.HashMap();
         public void initialize() {
-            nullStaticFields.add(Unsafe._remapper_object);
+            //nullStaticFields.add(Unsafe._remapper_object);
+            nullStaticFields.add(CodeAddress._FACTORY);
+            nullStaticFields.add(HeapAddress._FACTORY);
+            nullStaticFields.add(StackAddress._FACTORY);
             nullStaticFields.add(Reflection._obj_trav);
             nullStaticFields.add(Reflection._declaredFieldsCache);
             nullStaticFields.add(Allocator.DefaultCodeAllocator._default_allocator);

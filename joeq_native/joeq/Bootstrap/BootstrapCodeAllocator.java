@@ -19,6 +19,8 @@ import Clazz.jq_CompiledCode;
 import Clazz.jq_Method;
 import Clazz.jq_TryCatch;
 import Main.jq;
+import Memory.Address;
+import Memory.CodeAddress;
 import Run_Time.ExceptionDeliverer;
 
 /*
@@ -27,6 +29,8 @@ import Run_Time.ExceptionDeliverer;
  */
 public class BootstrapCodeAllocator extends CodeAllocator {
 
+    public static final BootstrapCodeAllocator DEFAULT = new BootstrapCodeAllocator();
+    
     /** Creates new BootstrapCodeAllocator */
     public BootstrapCodeAllocator() {}
 
@@ -41,6 +45,7 @@ public class BootstrapCodeAllocator extends CodeAllocator {
     private List all_code_relocs, all_data_relocs;
     
     public void init() {
+        if (TRACE) System.out.println("Initializing "+this);
         bundles = new Vector();
         bundles.addElement(current_bundle = new byte[bundle_size]);
         bundle_idx = 0;
@@ -92,37 +97,55 @@ public class BootstrapCodeAllocator extends CodeAllocator {
         out.write(current_bundle, 0, idx+1);
     }
     
-    public void patchAbsolute(int/*CodeAddress*/ code, int/*HeapAddress*/ heap) {
-        poke4(code, heap);
+    public void patchAbsolute(Address code, Address heap) {
+        poke((CodeAddress) code, heap);
     }
     
-    public void patchRelativeOffset(int/*CodeAddress*/ code, int/*CodeAddress*/ target) {
-        poke4(code, target-code-4);
+    public void patchRelativeOffset(CodeAddress code, CodeAddress target) {
+        poke4(code, target.difference(code)-4);
     }
     
-    public void poke1(int/*CodeAddress*/ k, byte v) {
-        int i = k >> bundle_shift;
-        int j = k & bundle_mask;
+    public void poke(CodeAddress k, Address v) {
+        poke4(k, v.to32BitValue());
+    }
+    public void poke1(CodeAddress k, byte v) {
+        int a = k.to32BitValue();
+        int i = a >> bundle_shift;
+        int j = a & bundle_mask;
         byte[] b = (byte[])bundles.elementAt(i);
         b[j] = v;
     }
-    
-    public void poke4(int/*CodeAddress*/ k, int v) {
+    public void poke2(CodeAddress k, short v) {
         poke1(k, (byte)(v));
-        poke1(k+1, (byte)(v>>8));
-        poke1(k+2, (byte)(v>>16));
-        poke1(k+3, (byte)(v>>24));
+        poke1((CodeAddress) k.offset(1), (byte)(v>>8));
+    }
+    public void poke4(CodeAddress k, int v) {
+        poke2(k, (short)(v));
+        poke2((CodeAddress) k.offset(2), (short)(v>>16));
+    }
+    public void poke8(CodeAddress k, long v) {
+        poke4(k, (int)(v));
+        poke4((CodeAddress) k.offset(4), (int)(v>>32));
     }
     
-    public byte peek1(int/*CodeAddress*/ k) {
-        int i = k >> bundle_shift;
-        int j = k & bundle_mask;
+    public Address peek(CodeAddress k) {
+        return new BootstrapCodeAddress(peek4(k));
+    }
+    public byte peek1(CodeAddress k) {
+        int a = k.to32BitValue();
+        int i = a >> bundle_shift;
+        int j = a & bundle_mask;
         byte[] b = (byte[])bundles.elementAt(i);
         return b[j];
     }
-    
-    public int peek4(int/*CodeAddress*/ k) {
-        return jq.fourBytesToInt(peek1(k), peek1(k+1), peek1(k+2), peek1(k+3));
+    public short peek2(CodeAddress k) {
+        return jq.twoBytesToShort(peek1(k), peek1((CodeAddress) k.offset(1)));
+    }
+    public int peek4(CodeAddress k) {
+        return jq.fourBytesToInt(peek1(k), peek1((CodeAddress) k.offset(1)), peek1((CodeAddress) k.offset(2)), peek1((CodeAddress) k.offset(3)));
+    }
+    public long peek8(CodeAddress k) {
+        return jq.twoIntsToLong(peek4(k), peek4((CodeAddress) k.offset(4)));
     }
     
     public class Bootstrapx86CodeBuffer extends CodeAllocator.x86CodeBuffer {
@@ -139,7 +162,7 @@ public class BootstrapCodeAllocator extends CodeAllocator {
         public int getEntryIndex() { return entryIndex; }
         
         public int getCurrentOffset() { return size()-startIndex; }
-        public int getCurrentAddress() { return size(); }
+        public CodeAddress getCurrentAddress() { return new BootstrapCodeAddress(size()); }
         
         public void setEntrypoint() { entryIndex = size(); }
 
@@ -181,29 +204,25 @@ public class BootstrapCodeAllocator extends CodeAllocator {
         }
 
         public byte get1(int k) {
-            k += startIndex;
-            return peek1(k);
+            return peek1(new BootstrapCodeAddress(k+startIndex));
         }
 
-        public int get4_endian (int k) {
-            k += startIndex;
-            return peek4(k);
+        public int get4_endian(int k) {
+            return peek4(new BootstrapCodeAddress(k+startIndex));
         }
 
         public void put1(int k, byte instr) {
-            k += startIndex;
-            poke1(k, instr);
+            poke1(new BootstrapCodeAddress(k+startIndex), instr);
         }
 
         public void put4_endian(int k, int instr) {
-            k += startIndex;
-            poke4(k, instr);
+            poke4(new BootstrapCodeAddress(k+startIndex), instr);
         }
 
         public void skip(int nbytes) {
-        	jq.Assert(nbytes < bundle_size);
-        	idx += nbytes;
-        	//checkSize();
+            jq.Assert(nbytes < bundle_size);
+            idx += nbytes;
+            //checkSize();
         }
 
         public jq_CompiledCode allocateCodeBlock(jq_Method m, jq_TryCatch[] ex, jq_BytecodeMap bcm,
@@ -215,7 +234,9 @@ public class BootstrapCodeAllocator extends CodeAllocator {
                 all_code_relocs.addAll(code_relocs);
             if (data_relocs != null)
                 all_data_relocs.addAll(data_relocs);
-            jq_CompiledCode cc = new jq_CompiledCode(m, start, total, entry, ex, bcm, exd, code_relocs, data_relocs);
+            jq_CompiledCode cc = new jq_CompiledCode(m, new BootstrapCodeAddress(start),
+                                                     total, new BootstrapCodeAddress(entry),
+                                                     ex, bcm, exd, code_relocs, data_relocs);
             CodeAllocator.registerCode(cc);
             return cc;
         }

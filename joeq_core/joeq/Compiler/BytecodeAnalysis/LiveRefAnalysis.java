@@ -19,6 +19,7 @@ import Clazz.jq_Primitive;
 import Clazz.jq_StaticField;
 import Clazz.jq_Type;
 import Main.jq;
+import Memory.HeapAddress;
 import Run_Time.TypeCheck;
 import Run_Time.Unsafe;
 import Util.BitString;
@@ -288,7 +289,9 @@ public class LiveRefAnalysis {
             return null;
         }
         public Type getElementType() {
-            return new SystemType(((jq_Array)type).getElementType());
+            jq_Array a = (jq_Array)type;
+            if (a.getElementType().isAddressType()) return DerivedRef.INSTANCE;
+            return new SystemType(a.getElementType());
         }
         public boolean equals(SystemType that) {
             return this.type == that.type;
@@ -743,13 +746,8 @@ public class LiveRefAnalysis {
             //if (t.equals(SystemType.LONG) || t.equals(SystemType.DOUBLE)) stack[stackDepth++] = HalfOfNumber.INSTANCE;
         }
         void pop(jq_Type t) {
-            if (t.isReferenceType()) pop_A();
-            else if (t.isIntLike()) {
-                Type t2 = pop();
-                if (t2 instanceof DerivedRef)
-                    System.err.println("WARNING: method takes derived ref as an argument");
-                else jq.Assert(t2.equals(SystemType.INT));
-            }
+            if (t.isAddressType()) pop_R();
+            else if (t.isReferenceType()) pop_A();
             else if (t.isIntLike()) pop_I();
             else if (t == jq_Primitive.FLOAT) pop_F();
             else if (t == jq_Primitive.LONG) pop_L();
@@ -767,6 +765,7 @@ public class LiveRefAnalysis {
         void setLocal_F(int i) { locals[i] = SystemType.FLOAT; }
         void setLocal_L(int i) { locals[i] = SystemType.LONG; locals[i+1] = HalfOfNumber.INSTANCE; }
         void setLocal_D(int i) { locals[i] = SystemType.DOUBLE; locals[i+1] = HalfOfNumber.INSTANCE; }
+        void setLocal_R(int i) { locals[i] = DerivedRef.INSTANCE; }
         void setLocal(int i, Type t) { locals[i] = t; }
         public Type getLocal(int i) { return locals[i]; }
 
@@ -1012,7 +1011,7 @@ public class LiveRefAnalysis {
         }
         public void visitILOAD(int i) {
             super.visitILOAD(i);
-            current_state.push(current_state.getLocal(i));
+            current_state.push_I();
         }
         public void visitLLOAD(int i) {
             super.visitLLOAD(i);
@@ -1032,7 +1031,7 @@ public class LiveRefAnalysis {
         }
         public void visitISTORE(int i) {
             super.visitISTORE(i);
-            current_state.setLocal(i, current_state.pop());
+            current_state.pop_I(); current_state.setLocal_I(i);
         }
         public void visitLSTORE(int i) {
             super.visitLSTORE(i);
@@ -1095,9 +1094,7 @@ public class LiveRefAnalysis {
         }
         public void visitIASTORE() {
             super.visitIASTORE();
-            Type t1 = current_state.pop(); // may be storing a derived ref
-            Type t2 = current_state.pop(); // may be using address as index
-            current_state.pop_A();
+            current_state.pop_I(); current_state.pop_I(); current_state.pop_A();
             mergeWithExceptionHandlers();
         }
         public void visitLASTORE() {
@@ -1117,7 +1114,11 @@ public class LiveRefAnalysis {
         }
         public void visitAASTORE() {
             super.visitAASTORE();
-            current_state.pop_A(); current_state.pop_I(); current_state.pop_A();
+            Type t = current_state.pop(); // may be storing derived ref
+            current_state.pop_I();
+            Type t2 = current_state.pop();
+            if (t instanceof DerivedRef)
+                jq.Assert(t2.getElementType() instanceof DerivedRef);
             mergeWithExceptionHandlers();
         }
         public void visitBASTORE() {
@@ -1179,11 +1180,7 @@ public class LiveRefAnalysis {
         }
         public void visitIBINOP(byte op) {
             super.visitIBINOP(op);
-            Type t1 = current_state.pop(); Type t2 = current_state.pop();
-            if ((t1 instanceof DerivedRef) || (t2 instanceof DerivedRef))
-                current_state.push_R();
-            else
-                current_state.push_I();
+            current_state.pop_I();
         }
         public void visitLBINOP(byte op) {
             super.visitLBINOP(op);
@@ -1375,7 +1372,10 @@ public class LiveRefAnalysis {
         }
         public void visitAGETSTATIC(jq_StaticField f) {
             super.visitAGETSTATIC(f);
-            current_state.push(new SystemType(f.getType()));
+            Type t;
+            if (f.getType().isAddressType()) t = DerivedRef.INSTANCE;
+            else t = new SystemType(f.getType());
+            current_state.push(t);
         }
         public void visitZGETSTATIC(jq_StaticField f) {
             super.visitZGETSTATIC(f);
@@ -1411,7 +1411,8 @@ public class LiveRefAnalysis {
         }
         public void visitAPUTSTATIC(jq_StaticField f) {
             super.visitAPUTSTATIC(f);
-            current_state.pop_A();
+            if (f.getType().isAddressType()) current_state.pop_R();
+            else current_state.pop_A();
         }
         public void visitZPUTSTATIC(jq_StaticField f) {
             super.visitZPUTSTATIC(f);
@@ -1452,7 +1453,10 @@ public class LiveRefAnalysis {
         public void visitAGETFIELD(jq_InstanceField f) {
             super.visitAGETFIELD(f);
             current_state.pop_A();
-            current_state.push(new SystemType(f.getType()));
+            Type t;
+            if (f.getType().isAddressType()) t = DerivedRef.INSTANCE;
+            else t = new SystemType(f.getType());
+            current_state.push(t);
             mergeWithExceptionHandlers();
         }
         public void visitBGETFIELD(jq_InstanceField f) {
@@ -1477,8 +1481,7 @@ public class LiveRefAnalysis {
         }
         public void visitIPUTFIELD(jq_InstanceField f) {
             super.visitIPUTFIELD(f);
-            current_state.pop(); // field may be address field
-            current_state.pop_A();
+            current_state.pop_I(); current_state.pop_A();
             mergeWithExceptionHandlers();
         }
         public void visitLPUTFIELD(jq_InstanceField f) {
@@ -1498,7 +1501,9 @@ public class LiveRefAnalysis {
         }
         public void visitAPUTFIELD(jq_InstanceField f) {
             super.visitAPUTFIELD(f);
-            current_state.pop_A(); current_state.pop_A();
+            if (f.getType().isAddressType()) current_state.pop_R();
+            else current_state.pop_A();
+            current_state.pop_A();
             mergeWithExceptionHandlers();
         }
         public void visitBPUTFIELD(jq_InstanceField f) {
@@ -1530,11 +1535,7 @@ public class LiveRefAnalysis {
         }
         public void visitIINVOKE(byte op, jq_Method f) {
             super.visitIINVOKE(op, f);
-            if (f == Unsafe._addressOf) {
-                current_state.pop_A(); current_state.push_R();
-            } else {
-                INVOKEhelper(f); current_state.push_I();
-            }
+            INVOKEhelper(f); current_state.push_I();
         }
         public void visitLINVOKE(byte op, jq_Method f) {
             super.visitLINVOKE(op, f);
@@ -1550,12 +1551,11 @@ public class LiveRefAnalysis {
         }
         public void visitAINVOKE(byte op, jq_Method f) {
             super.visitAINVOKE(op, f);
-            if (f == Unsafe._asObject) {
-                current_state.pop_R(); current_state.push(SystemType.OBJECT);
-            } else {
-                INVOKEhelper(f);
-                current_state.push(new SystemType(f.getReturnType()));
-            }
+            INVOKEhelper(f);
+            Type t;
+            if (f.getReturnType().isAddressType()) t = DerivedRef.INSTANCE;
+            else t = new SystemType(f.getReturnType());
+            current_state.push(t);
         }
         public void visitVINVOKE(byte op, jq_Method f) {
             super.visitVINVOKE(op, f);

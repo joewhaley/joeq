@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 import Main.jq;
+import Memory.HeapAddress;
 import Util.LittleEndianOutputStream;
 
 /*
@@ -19,12 +20,12 @@ import Util.LittleEndianOutputStream;
  */
 public class ExternalReference extends Reloc {
 
-    private int/*HeapAddress*/ heap_from;
+    private HeapAddress heap_from;
     private int symbol_ndx;
     private String external_name;
     
     /** Creates new ExternalReference */
-    public ExternalReference(int heap_from, String external_name) {
+    public ExternalReference(HeapAddress heap_from, String external_name) {
         this.heap_from = heap_from;
         this.external_name = external_name;
     }
@@ -33,24 +34,17 @@ public class ExternalReference extends Reloc {
     
     public void dumpCOFF(OutputStream out) throws IOException {
         jq.Assert(symbol_ndx != 0);
-        LittleEndianOutputStream.write_s32(out, heap_from);         // r_vaddr
+        LittleEndianOutputStream.write_s32(out, heap_from.to32BitValue()); // r_vaddr
         LittleEndianOutputStream.write_s32(out, symbol_ndx);        // r_symndx
         LittleEndianOutputStream.write_u16(out, Reloc.RELOC_ADDR32);// r_type
     }
     
-    public int/*HeapAddress*/ getAddress() { return heap_from; }
+    public HeapAddress getAddress() { return heap_from; }
     public int getSymbolIndex() { return symbol_ndx; }
     public String getName() { return external_name; }
     
     public String toString() {
-        return "from heap:"+jq.hex8(heap_from)+" to external:"+external_name+" (symndx "+symbol_ndx+")";
+        return "from heap:"+heap_from.stringRep()+" to external:"+external_name+" (symndx "+symbol_ndx+")";
     }
     
-    /*
-    public static final jq_InstanceField _heap_from;
-    static {
-        jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LAssembler/x86/ExternalReference;");
-        _heap_from = k.getOrCreateInstanceField("heap_from", "I");
-    }
-     */
 }

@@ -7,15 +7,23 @@
 
 package Clazz;
 
+import Allocator.ObjectLayout;
 import Bootstrap.PrimordialClassLoader;
 import Main.jq;
+import Memory.HeapAddress;
+import Run_Time.Reflection;
 import UTF.Utf8;
 
 /*
  * @author  John Whaley
  * @version $Id$
  */
-public abstract class jq_Reference extends jq_Type implements jq_ClassFileConstants {
+public abstract class jq_Reference extends jq_Type implements jq_ClassFileConstants, ObjectLayout {
+
+    public static final jq_Reference getTypeOf(Object o) {
+        if (jq.Bootstrapping) return Reflection.getTypeOf(o);
+	return ((HeapAddress)HeapAddress.addressOf(o).offset(VTABLE_OFFSET).peek().peek()).asReferenceType();
+    }
 
     public final int getState() { return state; }
     public final boolean isLoaded() { return state >= STATE_LOADED; }
@@ -55,6 +63,7 @@ public abstract class jq_Reference extends jq_Type implements jq_ClassFileConsta
 
     public static class jq_NullType extends jq_Reference {
         private jq_NullType() { super(Utf8.get("L&NULL;"), PrimordialClassLoader.loader); }
+        public boolean isAddressType() { return false; }
         public String getJDKName() { jq.UNREACHABLE(); return null; }
         public String getJDKDesc() { jq.UNREACHABLE(); return null; }
         public jq_Class[] getInterfaces() { jq.UNREACHABLE(); return null; }

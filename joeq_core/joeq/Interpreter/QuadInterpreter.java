@@ -21,6 +21,7 @@ import Clazz.jq_Initializer;
 import Clazz.jq_InstanceMethod;
 import Clazz.jq_Method;
 import Clazz.jq_Primitive;
+import Clazz.jq_Reference;
 import Clazz.jq_StaticMethod;
 import Clazz.jq_Type;
 import Compil3r.Quad.BasicBlock;
@@ -305,7 +306,7 @@ public class QuadInterpreter {
         }
 
         public void handleException(Throwable x) {
-            jq_Class t = (jq_Class)ReflectiveVMInterface.INSTANCE.getJQTypeOf(x);
+            jq_Class t = (jq_Class)jq_Reference.getTypeOf(x);
             t.load(); t.verify(); t.prepare();
             ExceptionHandler eh = current_bb.getExceptionHandlers().mustCatch(t);
             if (eh != null) {

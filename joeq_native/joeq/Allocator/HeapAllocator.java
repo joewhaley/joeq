@@ -17,6 +17,8 @@ import Bootstrap.PrimordialClassLoader;
 import Run_Time.Unsafe;
 import Run_Time.SystemInterface;
 import Main.jq;
+import Memory.HeapAddress;
+import Memory.StackAddress;
 
 import java.lang.reflect.Array;
 import java.util.Set;
@@ -138,14 +140,14 @@ public abstract class HeapAllocator implements jq_ClassFileConstants, ObjectLayo
         if (a.getDimensionality() < dim)
             throw new VerifyError();
         int[] n_elem = new int[dim];
-        int/*StackAddress*/ p = Unsafe.EBP() + 16;
+        StackAddress p = (StackAddress) StackAddress.getBasePointer().offset(16);
         for (int i=dim-1; i>=0; --i) {
-            n_elem[i] = Unsafe.peek(p);
+            n_elem[i] = p.peek4();
             // check for dim < 0 here, because if a dim is zero, later dim's
             // are not checked by multinewarray_helper.
             if (n_elem[i] < 0)
                 throw new NegativeArraySizeException("dim "+i+": "+n_elem[i]+" < 0");
-            p += 4;
+            p = (StackAddress) p.offset(4);
         }
         return multinewarray_helper(n_elem, 0, a);
     }
@@ -186,12 +188,12 @@ public abstract class HeapAllocator implements jq_ClassFileConstants, ObjectLayo
      */
     public static Object clone(Object o)
     throws OutOfMemoryError {
-        jq_Reference t = Unsafe.getTypeOf(o);
+        jq_Reference t = jq_Reference.getTypeOf(o);
         if (t.isClassType()) {
             jq_Class k = (jq_Class)t;
             Object p = k.newInstance();
             if (k.getInstanceSize()-OBJ_HEADER_SIZE > 0)
-                SystemInterface.mem_cpy(Unsafe.addressOf(p), Unsafe.addressOf(o), k.getInstanceSize()-OBJ_HEADER_SIZE);
+                SystemInterface.mem_cpy(HeapAddress.addressOf(p), HeapAddress.addressOf(o), k.getInstanceSize()-OBJ_HEADER_SIZE);
             return p;
         } else {
             jq.Assert(t.isArrayType());
@@ -199,7 +201,7 @@ public abstract class HeapAllocator implements jq_ClassFileConstants, ObjectLayo
             int length = Array.getLength(o);
             Object p = k.newInstance(length);
             if (length > 0)
-                SystemInterface.mem_cpy(Unsafe.addressOf(p), Unsafe.addressOf(o), k.getInstanceSize(length)-ARRAY_HEADER_SIZE);
+                SystemInterface.mem_cpy(HeapAddress.addressOf(p), HeapAddress.addressOf(o), k.getInstanceSize(length)-ARRAY_HEADER_SIZE);
             return p;
         }
     }
@@ -221,19 +223,12 @@ public abstract class HeapAllocator implements jq_ClassFileConstants, ObjectLayo
         throw outofmemoryerror;
     }
     
-    public static final Set heapAddressFields;
     public static final jq_StaticMethod _clsinitAndAllocateObject;
     public static final jq_StaticMethod _multinewarray;
     static {
         jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LAllocator/HeapAllocator;");
         _clsinitAndAllocateObject = k.getOrCreateStaticMethod("clsinitAndAllocateObject", "(LClazz/jq_Type;)Ljava/lang/Object;");
         _multinewarray = k.getOrCreateStaticMethod("multinewarray", "(CLClazz/jq_Type;)Ljava/lang/Object;");
-        heapAddressFields = new HashSet();
-        heapAddressFields.add(Assembler.x86.Code2HeapReference._to_heaploc);
-        heapAddressFields.add(Assembler.x86.Heap2CodeReference._from_heaploc);
-        heapAddressFields.add(Assembler.x86.Heap2HeapReference._from_heaploc);
-        heapAddressFields.add(Assembler.x86.Heap2HeapReference._to_heaploc);
-        heapAddressFields.add(Clazz.jq_StaticField._address);
     }
     
 }

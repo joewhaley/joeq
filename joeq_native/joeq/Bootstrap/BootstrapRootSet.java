@@ -28,6 +28,9 @@ import Clazz.jq_StaticMethod;
 import Clazz.jq_Type;
 import Clazz.jq_TypeVisitor;
 import Main.jq;
+import Memory.CodeAddress;
+import Memory.HeapAddress;
+import Memory.StackAddress;
 import Run_Time.ExceptionDeliverer;
 import Run_Time.Reflection;
 import Run_Time.SystemInterface;
@@ -196,6 +199,9 @@ public class BootstrapRootSet {
         addNecessaryType(jq_StaticMethod._class);
         addNecessaryType(jq_Initializer._class);
         addNecessaryType(jq_ClassInitializer._class);
+        addNecessaryType(CodeAddress._class);
+        addNecessaryType(HeapAddress._class);
+        addNecessaryType(StackAddress._class);
         addNecessaryField(jq_Reference._vtable);
         
         // the bootstrap loader uses the static fields in the SystemInterface class.
@@ -212,7 +218,7 @@ public class BootstrapRootSet {
             if (sms[i] instanceof jq_ClassInitializer) continue;
             addNecessaryMethod(sms[i]);
         }
-        addNecessaryField(Unsafe._remapper_object);
+        //addNecessaryField(Unsafe._remapper_object);
 
         // We need to be able to allocate objects and code.
         addNecessaryType(Allocator.SimpleAllocator._class);
@@ -269,6 +275,9 @@ public class BootstrapRootSet {
         addNecessaryMethod(Scheduler.jq_NativeThread._ctrl_break_handler);
         // entrypoint for interrupter thread
         addNecessaryMethod(Scheduler.jq_InterrupterThread._run);
+        
+        // dunno why this doesn't show up
+        addNecessaryType(Assembler.x86.Heap2HeapReference._class);
         
         // tracing in the compiler uses these
         //c = jq._class; c.load(); c.verify(); c.prepare();

@@ -7,6 +7,7 @@
 
 package ClassLib.Common.java.io;
 
+import Memory.HeapAddress;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
 
@@ -44,7 +45,7 @@ abstract class FileInputStream {
         // BUG in Sun's implementation, which we mimic here.  off=b.length and len=0 doesn't throw an error (?)
         if (off < 0) throw new IndexOutOfBoundsException();
         if (len == 0) return 0;
-        int start = Unsafe.addressOf(b)+off;
+        HeapAddress start = (HeapAddress) HeapAddress.addressOf(b).offset(off);
         int result = SystemInterface.file_readbytes(fdnum, start, len);
         if (result == 0)
             return -1; // EOF

@@ -10,6 +10,9 @@ import Allocator.CodeAllocator.x86CodeBuffer;
 import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
 import Clazz.jq_StaticField;
+import Memory.Address;
+import Memory.CodeAddress;
+import Memory.HeapAddress;
 import Run_Time.Unsafe;
 
 /*
@@ -33,10 +36,10 @@ public abstract class DefaultCodeAllocator {
         x86CodeBuffer o = def().getCodeBuffer(estimatedSize, offset, alignment);
         return o;
     }
-    public static final void patchAbsolute(int/*CodeAddress*/ code, int/*HeapAddress*/ heap) {
+    public static final void patchAbsolute(Address code, Address heap) {
         def().patchAbsolute(code, heap);
     }
-    public static final void patchRelativeOffset(int/*CodeAddress*/ code, int/*CodeAddress*/ target) {
+    public static final void patchRelativeOffset(CodeAddress code, CodeAddress target) {
         def().patchRelativeOffset(code, target);
     }
     

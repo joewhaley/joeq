@@ -14,6 +14,7 @@ import Clazz.jq_Primitive;
 import Clazz.jq_Reference;
 import Clazz.jq_Type;
 import Main.jq;
+import Memory.HeapAddress;
 import Run_Time.Reflection;
 import Run_Time.TypeCheck;
 import Run_Time.Unsafe;
@@ -46,7 +47,7 @@ public class Method extends AccessibleObject {
         jq_Method jq_m = this.jq_method;
         jq_Class k = jq_m.getDeclaringClass();
         if (!jq_m.isStatic()) {
-            jq_Reference t = Unsafe.getTypeOf(obj);
+            jq_Reference t = jq_Reference.getTypeOf(obj);
             if (!TypeCheck.isAssignable(t, k))
                 throw new java.lang.IllegalArgumentException(t+" is not assignable to "+k);
         }
@@ -64,14 +65,15 @@ public class Method extends AccessibleObject {
         if (jq_m.isStatic()) {
             k.verify(); k.prepare(); k.sf_initialize(); k.cls_initialize();
         } else {
-            jq_Reference t = Unsafe.getTypeOf(obj);
+            jq_Reference t = jq_Reference.getTypeOf(obj);
             jq_m = t.getVirtualMethod(jq_m.getNameAndDesc());
             if (jq_m == null || jq_m.isAbstract())
                 throw new java.lang.AbstractMethodError();
         }
-        long result = Reflection.invoke(jq_m, obj, initargs);
         jq_Type retType = jq_m.getReturnType();
-        if (retType.isReferenceType()) return Unsafe.asObject((int)result);
+        if (retType.isReferenceType())
+            return ((HeapAddress) Reflection.invokeA(jq_m, obj, initargs)).asObject();
+        long result = Reflection.invoke(jq_m, obj, initargs);
         if (retType == jq_Primitive.VOID) return null;
         if (retType == jq_Primitive.INT) return new Integer((int)result);
         if (retType == jq_Primitive.LONG) return new Long(result);

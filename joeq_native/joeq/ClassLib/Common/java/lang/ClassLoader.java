@@ -20,6 +20,8 @@ import Clazz.jq_ClassFileConstants;
 import Clazz.jq_CompiledCode;
 import Clazz.jq_Type;
 import Main.jq;
+import Memory.CodeAddress;
+import Memory.StackAddress;
 import Run_Time.Reflection;
 import Run_Time.StackWalker;
 import Run_Time.Unsafe;
@@ -144,7 +146,7 @@ public abstract class ClassLoader {
         return Reflection.getJDKType(t);
     }
     static ClassLoader getCallerClassLoader() {
-        StackWalker sw = new StackWalker(0, Unsafe.EBP());
+        StackWalker sw = new StackWalker(CodeAddress.min(), StackAddress.getBasePointer());
         sw.gotoNext(); sw.gotoNext(); sw.gotoNext();
         jq_CompiledCode cc = sw.getCode();
         if (cc == null) return null;

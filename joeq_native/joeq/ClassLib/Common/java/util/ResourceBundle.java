@@ -9,6 +9,8 @@ package ClassLib.Common.java.util;
 
 import Clazz.jq_CompiledCode;
 import Main.jq;
+import Memory.CodeAddress;
+import Memory.StackAddress;
 import Run_Time.Reflection;
 import Run_Time.StackWalker;
 import Run_Time.Unsafe;
@@ -20,12 +22,12 @@ import Run_Time.Unsafe;
 abstract class ResourceBundle {
     
     private static Class[] getClassContext() {
-        StackWalker sw = new StackWalker(0, Unsafe.EBP());
+        StackWalker sw = new StackWalker(CodeAddress.min(), StackAddress.getBasePointer());
         sw.gotoNext();
         int i;
         for (i=0; sw.hasNext(); ++i, sw.gotoNext()) ;
         Class[] classes = new Class[i];
-        sw = new StackWalker(0, Unsafe.EBP());
+        sw = new StackWalker(CodeAddress.min(), StackAddress.getBasePointer());
         sw.gotoNext();
         for (i=0; sw.hasNext(); ++i, sw.gotoNext()) {
             jq_CompiledCode cc = sw.getCode();
