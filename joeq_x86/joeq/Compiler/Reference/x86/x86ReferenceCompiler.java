@@ -2442,6 +2442,18 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             asm.emitShort_Reg(x86.POP_r, EAX);
             asm.emit2_Reg_Mem(x86.MOV_r_m32, EBX, VTABLE_OFFSET, EAX);
             asm.emit2_Mem(x86.PUSH_m, 0, EBX);
+        } else if (f == Unsafe._popFP32) {
+            asm.emit2_Reg_Mem(x86.LEA, ESP, 4, ESP);
+            asm.emit2_Mem(x86.FSTP_m32, 0, ESP);
+        } else if (f == Unsafe._popFP64) {
+            asm.emit2_Reg_Mem(x86.LEA, ESP, 8, ESP);
+            asm.emit2_Mem(x86.FSTP_m64, 0, ESP);
+        } else if (f == Unsafe._pushFP32) {
+            asm.emit2_Reg_Mem(x86.LEA, ESP, 4, ESP);
+            asm.emit2_Mem(x86.FLD_m32, 0, ESP);
+        } else if (f == Unsafe._pushFP64) {
+            asm.emit2_Reg_Mem(x86.LEA, ESP, 8, ESP);
+            asm.emit2_Mem(x86.FLD_m64, 0, ESP);
         } else if (f == Unsafe._EAX) {
             asm.emitShort_Reg(x86.PUSH_r, EAX);
         } else if (f == Unsafe._EBP) {
@@ -2463,10 +2475,11 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             asm.emitprefix(x86.PREFIX_FS);
             asm.emit2_Mem(x86.POP_m, 0x14);
         } else if (f == Unsafe._switchRegisterState) {
-            asm.emitShort_Reg(x86.POP_r, EAX); // sp
+            asm.emitShort_Reg(x86.POP_r, EAX); // eax
+            asm.emitShort_Reg(x86.POP_r, EBX); // sp
             asm.emitShort_Reg(x86.POP_r, EBP); // fp
             asm.emitShort_Reg(x86.POP_r, ECX); // ip
-            asm.emit2_Reg_Reg(x86.MOV_r_r32, ESP, EAX);
+            asm.emit2_Reg_Reg(x86.MOV_r_r32, ESP, EBX);
             asm.emit2_Reg(x86.JMP_r, ECX);
         } else if (f == Unsafe._cas4) {
             asm.emitShort_Reg(x86.POP_r, EBX); // after
