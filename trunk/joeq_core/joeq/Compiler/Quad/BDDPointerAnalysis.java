@@ -1514,7 +1514,7 @@ public class BDDPointerAnalysis {
         int j = 0;
         while (j < variableIndexMap.size()) {
             Node node = getVariable(j);
-            node.write(out);
+            node.write(variableIndexMap, out);
             out.writeByte('\n');
             ++j;
         }
@@ -1528,7 +1528,7 @@ public class BDDPointerAnalysis {
             // UnknownTypeNode
             Node node = getHeapobj(j);
             if (node == null) out.writeBytes("null");
-            else node.write(out);
+            else node.write(heapobjIndexMap, out);
             out.writeByte('\n');
             ++j;
         }
