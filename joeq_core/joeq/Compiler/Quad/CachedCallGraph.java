@@ -170,7 +170,7 @@ public class CachedCallGraph extends CallGraph {
     }
     
     public void inlineEdge(jq_Method caller, ProgramLocation callSite, jq_Method callee) {
-        System.out.println("Inlining edge "+callSite+" -> "+callee);
+        if (false) System.out.println("Inlining edge "+callSite+" -> "+callee);
         // remove call site from caller.
         callSites.remove(caller, callSite);
         // add all call sites in callee into caller.
