@@ -83,15 +83,16 @@ public class PA {
     
     int bddnodes = Integer.parseInt(System.getProperty("bddnodes", "2500000"));
     int bddcache = Integer.parseInt(System.getProperty("bddcache", "150000"));
-    static String resultsFileName = System.getProperty("bddresults", "pa");
-    static String callgraphfilename = System.getProperty("callgraph", "callgraph");
+    static String resultsFileName = System.getProperty("pa.results", "pa");
+    static String callgraphFileName = System.getProperty("pa.callgraph", "callgraph");
+    static String initialCallgraphFileName = System.getProperty("pa.icallgraph", callgraphFileName);
     
     BDDFactory bdd;
     
     BDDDomain V1, V2, I, H1, H2, Z, F, T1, T2, N, M;
     BDDDomain V1c, V2c, H1c, H2c;
     
-    int V_BITS=16, I_BITS=15, H_BITS=15, Z_BITS=5, F_BITS=12, T_BITS=12, N_BITS=11, M_BITS=14;
+    int V_BITS=17, I_BITS=16, H_BITS=15, Z_BITS=5, F_BITS=12, T_BITS=12, N_BITS=13, M_BITS=14;
     int VC_BITS=1, HC_BITS=1;
     int MAX_HC_BITS = Integer.parseInt(System.getProperty("pa.maxhc", "6"));
     
@@ -780,6 +781,7 @@ public class PA {
             int start = (T_i < last_T)?last_N:0;
             for (int N_i = start; N_i < Nmap.size(); ++N_i) {
                 jq_Method n = (jq_Method) Nmap.get(N_i);
+                n.getDeclaringClass().prepare();
                 jq_Method m;
                 if (n.isStatic()) {
                     if (t != null) continue;
@@ -1234,11 +1236,11 @@ public class PA {
     }
     
     static CallGraph loadCallGraph(Collection roots) {
-        if (new File(callgraphfilename).exists()) {
+        if (new File(initialCallgraphFileName).exists()) {
             try {
                 System.out.print("Loading initial call graph...");
                 long time = System.currentTimeMillis();
-                CallGraph cg = new LoadedCallGraph("callgraph");
+                CallGraph cg = new LoadedCallGraph(initialCallgraphFileName);
                 time = System.currentTimeMillis() - time;
                 System.out.println("done. ("+time/1000.+" seconds)");
                 if (cg.getRoots().containsAll(roots)) {
@@ -1262,7 +1264,17 @@ public class PA {
         
         jq_Class c = (jq_Class) jq_Type.parseType(args[0]);
         c.prepare();
+        
         Collection roots = Arrays.asList(c.getDeclaredStaticMethods());
+        if (args.length > 1) {
+            for (Iterator i = roots.iterator(); i.hasNext(); ) {
+                jq_Method sm = (jq_Method) i.next();
+                if (args[1].equals(sm.getName().toString())) {
+                    roots = Collections.singleton(sm);
+                    break;
+                }
+            }
+        }
         
         PA dis = new PA();
         
@@ -1383,7 +1395,7 @@ public class PA {
         CallGraph callgraph = new CachedCallGraph(new PACallGraph(this));
         //CallGraph callgraph = callGraph;
         DataOutputStream dos;
-        dos = new DataOutputStream(new FileOutputStream("callgraph"));
+        dos = new DataOutputStream(new FileOutputStream(callgraphFileName));
         LoadedCallGraph.write(callgraph, dos);
         dos.close();
         
