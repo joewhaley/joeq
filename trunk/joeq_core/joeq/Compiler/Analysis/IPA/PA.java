@@ -448,10 +448,11 @@ public class PA {
             hT.orWith(H_bdd.and(T_bdd));
             
             if (type != null) {
-                if (type instanceof jq_Class)
+                if (n instanceof ConcreteTypeNode && type instanceof jq_Class)
                     addClassInitializer((jq_Class) type);
-                if (type.isSubtypeOf(PrimordialClassLoader.getJavaLangThread()) ||
-                    type.isSubtypeOf(PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/Runnable;"))) {
+                if (ADD_THREADS &&
+                    (type.isSubtypeOf(PrimordialClassLoader.getJavaLangThread()) ||
+                     type.isSubtypeOf(PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/Runnable;")))) {
                     addThreadRun(H_bdd, (jq_Class) type);
                 }
             }
@@ -1000,6 +1001,7 @@ public class PA {
                 throw new InternalError(o.toString());
             }
             out.writeByte('\n');
+            //System.out.println(j+": "+o);
             ++j;
         }
     }
