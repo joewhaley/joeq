@@ -241,6 +241,7 @@ public abstract class Solver {
         List/*<RuleTerm>*/ terms = new LinkedList();
         for (;;) {
             RuleTerm rt = parseRuleTerm(nameToVar, st);
+            if (rt == null) break;
             terms.add(rt);
             String sep = nextToken(st);
             if (sep.equals("/")) break;
@@ -253,6 +254,7 @@ public abstract class Solver {
     
     RuleTerm parseRuleTerm(Map/*<String,Variable>*/ nameToVar, StringTokenizer st) {
         String openParen = nextToken(st);
+        if (openParen.equals("/")) return null;
         if (!openParen.equals("(")) throw new IllegalArgumentException("Expected '(', got '"+openParen+"'");
         List/*<Object>*/ vars = new LinkedList();
         for (;;) {
