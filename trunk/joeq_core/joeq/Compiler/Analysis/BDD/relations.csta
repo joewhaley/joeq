@@ -6,9 +6,9 @@
 vP0 ( v:V bdd=V0, h:H bdd=H0 ) load
 vTc ( vc:VC bdd=VC0, v:V bdd=V0 , type:T bdd=T0 ) save
 A ( vcdest:VC bdd=VC0, dest:V bdd=V0 , vcsrc:VC bdd=VC1, source:V bdd=V1 ) load
-tP ( ta:T bdd=T0 , field:F bdd=F0 , tb:T bdd=T1 ) save
 S ( base:V bdd=V0 , field:F bdd=F0 , src:V bdd=V1 ) load
 L ( base:V bdd=V0 , field:F bdd=F0 , dest:V bdd=V1 ) load
+fT ( field:F bdd=F0 , type:T bdd=T0 )
 vT ( var:V bdd=V0 , type:T bdd=T0 ) load
 hT ( heap:H bdd=H0 , type:T bdd=T1 ) load
 aT ( type:T bdd=T0 , type:T bdd=T1 ) load
