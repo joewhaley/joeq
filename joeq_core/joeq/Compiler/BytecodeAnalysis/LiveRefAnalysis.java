@@ -970,7 +970,7 @@ public class LiveRefAnalysis {
         private boolean mergeJSRStateWith(BasicBlock before, BasicBlock after) {
             Assert._assert(current_state instanceof ExactJSRState);
             if (end_states[before.id] == null) {
-                System.err.println(method+" ::: Warning! Successor of JSR block has not yet been visited.");
+                System.err.println(method+" ::: Warning! Successor of JSR block "+before+" has not yet been visited.");
                 return false;
             }
             ExactJSRState jsr_state = (ExactJSRState)current_state;
