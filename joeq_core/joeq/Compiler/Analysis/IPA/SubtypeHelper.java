@@ -175,6 +175,7 @@ public abstract class SubtypeHelper {
             for(Iterator iter = subtypeNames.iterator(); iter.hasNext();){
                 String subtypeName = (String) iter.next();
                 jq_Class subtypeClass = (jq_Class) jq_Class.parseType(subtypeName);
+                subtypeClass.prepare();
                 result.add(subtypeClass);
             }
             Assert._assert(result.size() == subtypeNames.size());
