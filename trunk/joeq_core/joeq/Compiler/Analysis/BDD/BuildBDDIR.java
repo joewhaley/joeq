@@ -68,7 +68,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
     IndexMap memberMap;
     IndexMap constantMap;
     
-    int quadBits = 18, opBits = 8, regBits = 10, constantBits = 32, memberBits = 13;    
+    int quadBits = 18, opBits = 8, regBits = 8, constantBits = 11, memberBits = 13;    
 
     BDDFactory bdd;
     BDDDomain quad, opc, dest, src1, src2, constant, fallthrough, target, member;
@@ -423,7 +423,9 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         }
         
         System.out.println("Method: " + cfg.getMethod());
-        System.out.println("Quads: " + quadMap.size() +", nodes: " + allQuads.nodeCount());
+        int qSize = quadMap.size();
+        int nodes = allQuads.nodeCount();
+        System.out.println("Quads: " +qSize+", nodes: "+nodes+", average: "+(float)nodes/qSize);
     }
     
     public String toString() {
@@ -433,6 +435,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         System.out.println("quadMap size: " + quadMap.size());
         System.out.println("regMap size: " + regMap.size());
         System.out.println("memberMap size: " + memberMap.size());
+        System.out.println("constantMap size: " + memberMap.size());
         
         try {
             //print();
@@ -488,8 +491,6 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
     }
     
     public void dump() throws IOException {
-        bdd.save("cfg.bdd", allQuads);
-        dumpTuples("cfg.tuples", allQuads);
         dumpMap(quadMap, "quad.map");
         dumpMap(opMap, "op.map");
         dumpMap(regMap, "reg.map");
@@ -497,6 +498,8 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         dumpMap(constantMap, "constant.map");
         dumpFieldDomains("fielddomains.cfg");
         dumpRelations("relations.cfg");
+        bdd.save("cfg.bdd", allQuads);
+        dumpTuples("cfg.tuples", allQuads);
     }
     
     void dumpFieldDomains(String fileName) throws IOException {
