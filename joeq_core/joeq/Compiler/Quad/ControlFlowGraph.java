@@ -6,8 +6,10 @@
  */
 
 package Compil3r.Quad;
+import Clazz.jq_Method;
 import Util.FilterIterator;
 import Util.Templates.List;
+import Util.Templates.ListWrapper;
 import Util.Templates.ListIterator;
 import Util.Templates.UnmodifiableList;
 
@@ -28,6 +30,8 @@ import Util.Templates.UnmodifiableList;
 
 public class ControlFlowGraph {
 
+    /* Method that this control flow graph represents. May be null for synthetic methods. */
+    private final jq_Method method;
     /* Reference to the start node of this control flow graph. */
     private final BasicBlock start_node;
     /* Reference to the end node of this control flow graph. */
@@ -46,7 +50,8 @@ public class ControlFlowGraph {
     /** Creates a new ControlFlowGraph.
      * @param numOfExits  the expected number of branches to the exit node.
      * @param numOfExceptionHandlers  the expected number of exception handlers. */
-    public ControlFlowGraph(int numOfExits, int numOfExceptionHandlers, RegisterFactory rf) {
+    public ControlFlowGraph(jq_Method method, int numOfExits, int numOfExceptionHandlers, RegisterFactory rf) {
+	this.method = method;
         start_node = BasicBlock.createStartNode();
         end_node = BasicBlock.createEndNode(numOfExits);
         exception_handlers = new java.util.ArrayList(numOfExceptionHandlers);
@@ -60,6 +65,11 @@ public class ControlFlowGraph {
     /** Returns the exit node.
      * @return  the exit node. */
     public BasicBlock exit() { return end_node; }
+
+    /** Returns the method this control flow graph represents.
+     *  May be null for synthetic methods.
+     *  @return method this control flow graph represents, or null for synthetic. */
+    public jq_Method getMethod() { return method; }
 
     /** Returns the register factory used by this control flow graph.
      * @return  the register factory used by this control flow graph. */
@@ -202,6 +212,12 @@ public class ControlFlowGraph {
         exception_handlers.add(eh);
     }
     
+    /** Return the list of exception handlers in this control flow graph.
+     */
+    public List.ExceptionHandler getExceptionHandlers() {
+	return new ListWrapper.ExceptionHandler(exception_handlers);
+    }
+
     /** Return an iterator of the exception handlers with the given entry point.
      * @param b  basic block to check exception handlers against.
      * @return  an iterator of the exception handlers with the given entry point. */
@@ -220,6 +236,7 @@ public class ControlFlowGraph {
      * @return  a verbose string of every basic block in this control flow graph. */
     public String fullDump() {
 	StringBuffer sb = new StringBuffer();
+	sb.append("Control flow graph for "+method+":\n");
 	ListIterator.BasicBlock i = reversePostOrderIterator();
 	while (i.hasNext()) {
 	    BasicBlock bb = i.nextBasicBlock();
