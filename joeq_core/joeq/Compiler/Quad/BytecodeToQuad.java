@@ -601,38 +601,93 @@ public class BytecodeToQuad extends BytecodeVisitor {
     public void visitDUP() {
         super.visitDUP();
         Operand op = current_state.pop();
-        current_state.push(op);
-        current_state.push(op.copy());
+        int d = current_state.getStackSize();
+        jq_Type type = getTypeOf(op);
+        RegisterOperand t = new RegisterOperand(rf.getNewStack(d+1, type), type);
+        Quad q = Move.create(quad_cfg.getNewQuadID(), Move.getMoveOp(type), t, op);
+        appendQuad(q);
+        current_state.push(op.copy(), type);
+        current_state.push(t.copy(), type);
+    }
+    private void do_DUP_x1() {
+        Operand op1 = current_state.pop();
+        Operand op2 = current_state.pop();
+        int d = current_state.getStackSize();
+        jq_Type type1 = getTypeOf(op1);
+        jq_Type type2 = getTypeOf(op2);
+        RegisterOperand t1 = new RegisterOperand(rf.getNewStack(d+2, type1), type1);
+        Quad q1 = Move.create(quad_cfg.getNewQuadID(), Move.getMoveOp(type1), t1, op1);
+        appendQuad(q1);
+        RegisterOperand t2 = new RegisterOperand(rf.getNewStack(d+1, type2), type2);
+        Quad q2 = Move.create(quad_cfg.getNewQuadID(), Move.getMoveOp(type2), t2, op2);
+        appendQuad(q2);
+        RegisterOperand t3 = new RegisterOperand(rf.getNewStack(d, type1), type1);
+        Quad q3 = Move.create(quad_cfg.getNewQuadID(), Move.getMoveOp(type1), t3, t1.copy());
+        appendQuad(q3);
+        current_state.push(t3.copy(), type1);
+        current_state.push(t2.copy(), type2);
+        current_state.push(t1.copy(), type1);
     }
     public void visitDUP_x1() {
         super.visitDUP_x1();
-        Operand op1 = current_state.pop();
-        Operand op2 = current_state.pop();
-        current_state.push(op1);
-        current_state.push(op2);
-        current_state.push(op1.copy());
+        do_DUP_x1();
     }
     public void visitDUP_x2() {
         super.visitDUP_x2();
         Operand op1 = current_state.pop();
         Operand op2 = current_state.pop();
         Operand op3 = current_state.pop();
-        current_state.push(op1);
-        current_state.push(op3);
-        current_state.push(op2);
-        current_state.push(op1.copy());
+        int d = current_state.getStackSize();
+        jq_Type type1 = getTypeOf(op1);
+        RegisterOperand t1 = new RegisterOperand(rf.getNewStack(d+3, type1), type1);
+        Quad q1 = Move.create(quad_cfg.getNewQuadID(), Move.getMoveOp(type1), t1, op1);
+        appendQuad(q1);
+        RegisterOperand t2 = null; jq_Type type2 = null;
+        if (op2 != AbstractState.DummyOperand.DUMMY) {
+            type2 = getTypeOf(op2);
+            t2 = new RegisterOperand(rf.getNewStack(d+2, type2), type2);
+            Quad q2 = Move.create(quad_cfg.getNewQuadID(), Move.getMoveOp(type2), t2, op2);
+            appendQuad(q2);
+        }
+        jq_Type type3 = getTypeOf(op3);
+        RegisterOperand t3 = new RegisterOperand(rf.getNewStack(d+1, type3), type3);
+        Quad q3 = Move.create(quad_cfg.getNewQuadID(), Move.getMoveOp(type3), t3, op3);
+        appendQuad(q3);
+        RegisterOperand t4 = new RegisterOperand(rf.getNewStack(d, type1), type1);
+        Quad q4 = Move.create(quad_cfg.getNewQuadID(), Move.getMoveOp(type3), t4, t1.copy());
+        appendQuad(q4);
+        current_state.push(t4.copy(), type1);
+        current_state.push(t3.copy(), type3);
+        if (op2 != AbstractState.DummyOperand.DUMMY)
+            current_state.push(t2.copy(), type2);
+        current_state.push(t1.copy(), type1);
     }
     public void visitDUP2() {
         super.visitDUP2();
         Operand op1 = current_state.pop();
         Operand op2 = current_state.pop();
-        current_state.push(op2);
-        current_state.push(op1);
-        current_state.push(op2.copy());
-        current_state.push(op1.copy());
+        int d = current_state.getStackSize();
+        RegisterOperand t1 = null; jq_Type type1 = null;
+        if (op1 != AbstractState.DummyOperand.DUMMY) {
+            type1 = getTypeOf(op1);
+            t1 = new RegisterOperand(rf.getNewStack(d+3, type1), type1);
+            Quad q1 = Move.create(quad_cfg.getNewQuadID(), Move.getMoveOp(type1), t1, op1);
+            appendQuad(q1);
+        }
+        jq_Type type2 = getTypeOf(op2);
+        RegisterOperand t2 = new RegisterOperand(rf.getNewStack(d+2, type2), type2);
+        Quad q2 = Move.create(quad_cfg.getNewQuadID(), Move.getMoveOp(type2), t2, op2);
+        appendQuad(q2);
+        current_state.push(t2.copy(), type2);
+        if (op1 != AbstractState.DummyOperand.DUMMY)
+            current_state.push(t1.copy(), type1);
+        current_state.push(op2.copy(), type2);
+        if (op1 != AbstractState.DummyOperand.DUMMY)
+            current_state.push(op1.copy(), type1);
     }
     public void visitDUP2_x1() {
         super.visitDUP2_x1();
+        // TODO: do this correctly.
         Operand op1 = current_state.pop();
         Operand op2 = current_state.pop();
         Operand op3 = current_state.pop();
@@ -644,6 +699,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
     }
     public void visitDUP2_x2() {
         super.visitDUP2_x2();
+        // TODO: do this correctly.
         Operand op1 = current_state.pop();
         Operand op2 = current_state.pop();
         Operand op3 = current_state.pop();
@@ -657,10 +713,8 @@ public class BytecodeToQuad extends BytecodeVisitor {
     }
     public void visitSWAP() {
         super.visitSWAP();
-        Operand op1 = current_state.pop();
-        Operand op2 = current_state.pop();
-        current_state.push(op1);
-        current_state.push(op2);
+        do_DUP_x1();
+        current_state.pop();
     }
     private void BINOPhelper(Binary operator, jq_Type tr, jq_Type t1, jq_Type t2, boolean zero_check) {
         Operand op2 = current_state.pop(t2);
@@ -2240,12 +2294,14 @@ public class BytecodeToQuad extends BytecodeVisitor {
         }
         
         static AbstractState allocateEmptyState(jq_Method m) {
-            AbstractState s = new AbstractState(m.getMaxStack(), m.getMaxLocals());
+            // +1 because SWAP requires a temporary location.
+            AbstractState s = new AbstractState(m.getMaxStack()+1, m.getMaxLocals());
             return s;
         }
         
         static AbstractState allocateInitialState(RegisterFactory rf, jq_Method m) {
-            AbstractState s = new AbstractState(m.getMaxStack(), m.getMaxLocals());
+            // +1 because SWAP requires a temporary location.
+            AbstractState s = new AbstractState(m.getMaxStack()+1, m.getMaxLocals());
             jq_Type[] paramTypes = m.getParamTypes();
             for (int i=0, j=-1; i<paramTypes.length; ++i) {
                 jq_Type paramType = paramTypes[i];
