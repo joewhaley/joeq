@@ -273,18 +273,20 @@ public final class SCComponent implements Comparable, Serializable, Textualizabl
         for (int i = 0; i < size; i++) {
             Object node = nodes_array[i];
 
-            Collection next = nav.next(node);
-            for (Iterator j = next.iterator(); j.hasNext(); ) {
-                if (!nodes.contains(j.next())) {
+            Collection prev = nav.prev(node);
+            for (Iterator j = prev.iterator(); j.hasNext(); ) {
+                Object jnext = j.next();
+                if (!nodes.contains(jnext)) {
                     isEntry[i] = true;
                     nb_entries++;
                     break;
                 }
             }
 
-            Collection prev = nav.prev(node);
+            Collection next = nav.next(node);
             for (Iterator j = prev.iterator(); j.hasNext(); ) {
-                if (!nodes.contains(j.next())) {
+                Object jnext = j.next();
+                if (!nodes.contains(jnext)) {
                     isExit[i] = true;
                     nb_exits++;
                     break;
