@@ -7,7 +7,9 @@
 
 package Main;
 
+import java.lang.reflect.Field;
 import java.util.Iterator;
+import java.util.Collection;
 
 import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Array;
@@ -15,6 +17,7 @@ import Clazz.jq_Class;
 import Clazz.jq_Primitive;
 import Clazz.jq_StaticField;
 import Clazz.jq_Type;
+import Run_Time.DebugInterface;
 import Run_Time.Reflection;
 import UTF.Utf8;
 
@@ -26,106 +29,108 @@ public abstract class TraceFlags {
 
     public static int setTraceFlag(String[] args, int i) {
         if (args[i].equalsIgnoreCase("-TraceCodeAllocator")) {
-            Allocator.CodeAllocator.TRACE = true;
-            Allocator.RuntimeCodeAllocator.TRACE = true;
+	    makeTrue("Allocator.CodeAllocator", "TRACE");
+	    makeTrue("Allocator.RuntimeCodeAllocator", "TRACE");
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceAssembler")) {
-            Assembler.x86.x86Assembler.TRACE = true;
+	    makeTrue("Assembler.x86.x86Assembler", "TRACE");
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceBC2Quad")) {
-            Compil3r.Quad.BytecodeToQuad.ALWAYS_TRACE = true;
-            Compil3r.Quad.BytecodeToQuad.AbstractState.TRACE = true;
+	    makeTrue("Compil3r.Quad.BytecodeToQuad","ALWAYS_TRACE");
+            makeTrue("Compil3r.Quad.BytecodeToQuad.AbstractState","TRACE");
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceLiveRef")) {
-            Compil3r.BytecodeAnalysis.LiveRefAnalysis.ALWAYS_TRACE = true;
+            makeTrue("Compil3r.BytecodeAnalysis.LiveRefAnalysis","ALWAYS_TRACE");
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceBootImage")) {
-            Bootstrap.BootImage.TRACE = true;
+	    
+            makeTrue("Bootstrap.BootImage","TRACE");
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceObjectTraverser")) {
-            Bootstrap.ObjectTraverser.TRACE = true;
+            makeTrue("Bootstrap.ObjectTraverser","TRACE");
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceClassLoader")) {
-            Bootstrap.PrimordialClassLoader.TRACE = true;
+            makeTrue("Bootstrap.PrimordialClassLoader","TRACE");
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceClass")) {
-            Clazz.jq_Class.TRACE = true;
-            Clazz.jq_Array.TRACE = true;
+            makeTrue("Clazz.jq_Class","TRACE");
+            makeTrue("Clazz.jq_Array","TRACE");
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceExceptions")) {
-            Clazz.jq_CompiledCode.TRACE = true;
-            Compil3r.Reference.x86.x86ReferenceExceptionDeliverer.TRACE = true;
-            Run_Time.ExceptionDeliverer.TRACE = true;
+            makeTrue("Clazz.jq_CompiledCode","TRACE");
+            makeTrue("Compil3r.Reference.x86.x86ReferenceExceptionDeliverer","TRACE");
+            makeTrue("Run_Time.ExceptionDeliverer","TRACE");
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceTrimmer")) {
-            Compil3r.BytecodeAnalysis.Trimmer.TRACE = true;
-            Bootstrap.BootstrapRootSet.TRACE = true;
+            makeTrue("Compil3r.BytecodeAnalysis.Trimmer","TRACE");
+            makeTrue("Bootstrap.BootstrapRootSet","TRACE");
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceCompiler")) {
-            Compil3r.Reference.x86.x86ReferenceCompiler.ALWAYS_TRACE = true;
+            makeTrue("Compil3r.Reference.x86.x86ReferenceCompiler","ALWAYS_TRACE");
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceCompileStubs")) {
-            Compil3r.Reference.x86.x86ReferenceCompiler.TRACE_STUBS = true;
+            makeTrue("Compil3r.Reference.x86.x86ReferenceCompiler","TRACE_STUBS");
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceLinker")) {
-            Compil3r.Reference.x86.x86ReferenceLinker.TRACE = true;
+            makeTrue("Compil3r.Reference.x86.x86ReferenceLinker","TRACE");
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceInterpreter")) {
-            Interpreter.BytecodeInterpreter.ALWAYS_TRACE = true;
+	    makeTrue("Interpreter.BytecodeInterpreter","ALWAYS_TRACE");
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceQuadInterpreter")) {
-            Interpreter.QuadInterpreter.TRACE = true;
+            makeTrue("Interpreter.QuadInterpreter","TRACE");
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceStackWalker")) {
-            Run_Time.StackCodeWalker.TRACE = true;
+            makeTrue("Run_Time.StackCodeWalker","TRACE");
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceUtf8")) {
-            UTF.Utf8.TRACE = true;
+            makeTrue("UTF.Utf8","TRACE");
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceScheduler")) {
-            Scheduler.jq_NativeThread.TRACE = true;
-            Scheduler.jq_InterrupterThread.TRACE = true;
+            makeTrue("Scheduler.jq_NativeThread","TRACE");
+            makeTrue("Scheduler.jq_InterrupterThread","TRACE");
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceLocks")) {
-            Run_Time.Monitor.TRACE = true;
+            makeTrue("Run_Time.Monitor","TRACE");
             return i+1;
         }
+	/* ARGH: Fix this. */
         if (args[i].equalsIgnoreCase("-TraceByMethodName")) {
-            Compil3r.Reference.x86.x86ReferenceCompiler.TraceMethod_MethodNames.add(args[++i]);
+	    addReflect("Compil3r.Reference.x86.x86ReferenceCompiler","TraceMethod_MethodNames", args[++i]);
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceByClassName")) {
-            Compil3r.Reference.x86.x86ReferenceCompiler.TraceMethod_ClassNames.add(args[++i]);
+            addReflect("Compil3r.Reference.x86.x86ReferenceCompiler","TraceMethod_ClassNames", args[++i]);
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceBCByMethodName")) {
-            Compil3r.Reference.x86.x86ReferenceCompiler.TraceBytecode_MethodNames.add(args[++i]);
+            addReflect("Compil3r.Reference.x86.x86ReferenceCompiler","TraceBytecode_MethodNames", args[++i]);
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceBCByClassName")) {
-            Compil3r.Reference.x86.x86ReferenceCompiler.TraceBytecode_ClassNames.add(args[++i]);
+            addReflect("Compil3r.Reference.x86.x86ReferenceCompiler","TraceBytecode_ClassNames", args[++i]);
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-ReplaceClass")) {
-            Clazz.jq_Class.REPLACE_CLASS       = true;
+            makeTrue("Clazz.jq_Class","REPLACE_CLASS");
             // collect a list of classes to replace
             String s = args[++i];
             for (;;) {
@@ -144,7 +149,7 @@ public abstract class TraceFlags {
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceReplaceClass")) {
-            Clazz.jq_Class.TRACE_REPLACE_CLASS = true;
+            makeTrue("Clazz.jq_Class","TRACE_REPLACE_CLASS");
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-Set")) {
@@ -262,4 +267,24 @@ public abstract class TraceFlags {
         return j;
     }
 
+    public static void makeTrue(String classname, String fieldname) {
+	try {
+	    Class c = Class.forName(classname);
+	    Field f = c.getField(fieldname);
+	    f.setBoolean(null, true);
+	} catch (Exception e) {
+	    DebugInterface.debugwriteln("Cannot set the flag "+classname+"."+fieldname);
+	}
+    }
+
+    public static void addReflect(String classname, String collectionname, Object toadd) {
+	try {
+	    Class c = Class.forName(classname);
+	    Field f = c.getField(collectionname);
+	    Collection col = (Collection)f.get(null);
+	    col.add(toadd);
+	} catch (Exception e) {
+	    DebugInterface.debugwriteln("Cannot add to collection "+classname+"."+collectionname);
+	}
+    }
 }
