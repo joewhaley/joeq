@@ -11,13 +11,45 @@ import java.util.HashSet;
 import java.util.Iterator;
 
 import Clazz.jq_Class;
+import Clazz.jq_Method;
 import Util.Templates.ListIterator;
 
 /**
- * @author Godmar Back <gback@cs.utah.edu>
+ * @author Godmar Back <gback@cs.utah.edu, @stanford.edu> 
+ *
+ * This class is a ControlFlowGraphVisitor.
+ * For each CFG, it produces a "dot" file in the output directory. 
+ * See or change createMethodName to adapt how the filenames are formed.
+ *
+ * @see DotGraph#outputDir
+ * @see DotGraph#dotFilePrefix
+ * @see DotGraph#createMethodName
+ *
  * @version $Id$
  */
 public class DotGraph implements ControlFlowGraphVisitor {
+
+    /**
+     * The output directory for the dot graph descriptions
+     */
+    public static String outputDir = "dottedcfgs";
+
+    /**
+     * Prefix that goes before the name.
+     */
+    public static String dotFilePrefix = "joeq-";
+
+    /**
+     * Adapt this method to create filenames the way you want them.
+     */
+    String createMethodName(jq_Method mth) {
+	String filename = dotFilePrefix + mth.toString();
+	filename = filename.replace('/', '_');
+	filename = filename.replace(' ', '_');
+	filename = filename.replace('<', '_');
+	filename = filename.replace('>', '_');
+	return filename;
+    }
 
     /**
      * dot - helper class for outputting graphviz specifications for simple cfgs
@@ -25,6 +57,7 @@ public class DotGraph implements ControlFlowGraphVisitor {
      * See http://www.research.att.com/sw/tools/graphviz/
      *
      * Process with, for instance, "dot -Tgif -o graph.gif <inputfile>"
+     * or simply "dotgif <inputfile>"
      *
      * @author Godmar Back <gback@cs.utah.edu>
      */
@@ -33,7 +66,7 @@ public class DotGraph implements ControlFlowGraphVisitor {
 
         public static void openGraph(String name) {
             try {
-                String dirname = "dottedcfgs";
+                String dirname = outputDir;
                 File d = new File(dirname);
                 if (!d.exists()) {
                     d.mkdir();
@@ -139,14 +172,13 @@ public class DotGraph implements ControlFlowGraphVisitor {
         }
     }
 
+    /**
+     * Use the dot helper class to output this cfg as a Graph.
+     */
     public void visitCFG (ControlFlowGraph cfg) {
         try {
-            String filename = "joeq-" + cfg.getMethod().toString();
-            filename = filename.replace('/', '_');
-            filename = filename.replace(' ', '_');
-            filename = filename.replace('<', '_');
-            filename = filename.replace('>', '_');
-            dot.openGraph(filename);
+            String filename = createMethodName(cfg.getMethod());
+	    dot.openGraph(filename);
             cfg.visitBasicBlocks(new BasicBlockVisitor() {
                 public void visitBasicBlock(BasicBlock bb) {
                     if (bb.isEntry()) {
