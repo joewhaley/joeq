@@ -286,7 +286,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         //currentQuad.andWith(fallthrough.ithVar(fallthroughID));
         if (ZERO_FIELDS || targetID != 0) currentQuad.andWith(target.ithVar(targetID));
         if (ZERO_FIELDS || memberID != 0) currentQuad.andWith(member.ithVar(memberID));
-        if (srcsID != null) {
+        if (srcsID != null && !srcsID.isEmpty()) {
             BDD temp = bdd.zero();
             int j = 1;
             for (i = srcsID.iterator(); i.hasNext(); ++j) {
