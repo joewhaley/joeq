@@ -112,9 +112,9 @@ public class BDDRelation extends Relation {
         solver.bdd.save(filename, relation);
     }
 
-	public void saveNegated() throws IOException {
-		solver.bdd.save("not"+name+".rbdd", relation.not());
-	}
+    public void saveNegated() throws IOException {
+        solver.bdd.save("not"+name+".rbdd", relation.not());
+    }
     
     public void saveTuples() throws IOException {
         saveTuples(name+".rtuples");
@@ -132,7 +132,6 @@ public class BDDRelation extends Relation {
                 BDD t = solver.bdd.one();
                 for (Iterator j = domains.iterator(); j.hasNext(); ) {
                     BDDDomain d = (BDDDomain) j.next();
-                    if (!domains.contains(d)) continue;
                     if (quantifyOtherDomains(q, d).isOne()) {
                         dos.writeBytes("* ");
                         t.andWith(d.domain());

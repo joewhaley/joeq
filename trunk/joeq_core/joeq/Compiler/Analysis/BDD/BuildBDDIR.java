@@ -48,6 +48,7 @@ import joeq.Compiler.Quad.Operator.ZeroCheck;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Util.Assert;
 import joeq.Util.Collections.IndexMap;
+import joeq.Util.Templates.UnmodifiableList;
 
 import org.sf.javabdd.BDD;
 import org.sf.javabdd.BDDDomain;
@@ -400,7 +401,11 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
             currentQuad.andWith(quad.ithVar(quadID));
             int opID = opMap.get(q.getOperator())+1;
             currentQuad.andWith(opc.ithVar(opID));
-            q.accept(this);
+            if (false) {
+                q.accept(this);
+            } else {
+                handleQuad(q);
+            }
             BDD succ = bdd.zero();
             for (Iterator j = i.successors(); j.hasNext(); ) {
                 Quad q2 = (Quad) j.next();
@@ -416,6 +421,49 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
             dump();
         } catch (IOException x) {
         }
+    }
+    
+    void handleQuad(Quad q) {
+        int quadID=0, opcID=0, destID=0, src1ID=0, src2ID=0, constantID=0, fallthroughID=0, targetID=0, memberID=0;
+        quadID = quadMap.get(q)+1;
+        opcID = opMap.get(q.getOperator())+1;
+        Iterator i = q.getDefinedRegisters().iterator();
+        if (i.hasNext()) {
+            destID = regMap.get(((RegisterOperand)i.next()).getRegister())+1;
+            Assert._assert(!i.hasNext());
+        }
+        i = q.getUsedRegisters().iterator();
+        if (i.hasNext()) {
+            src1ID = regMap.get(((RegisterOperand)i.next()).getRegister())+1;
+            if (i.hasNext()) {
+                src2ID = regMap.get(((RegisterOperand)i.next()).getRegister())+1;
+            }
+        }
+        i = q.getAllOperands().iterator();
+        while (i.hasNext()) {
+            Operand op = (Operand) i.next();
+            if (op instanceof RegisterOperand) continue;
+            else if (op instanceof Const4Operand) {
+                constantID = ((Const4Operand) op).getBits();
+            } else if (op instanceof TargetOperand) {
+                targetID = quadMap.get(((TargetOperand) op).getTarget().getQuad(0))+1;
+            } else if (op instanceof FieldOperand) {
+                memberID = memberMap.get(((FieldOperand) op).getField())+1;
+            } else if (op instanceof MethodOperand) {
+                memberID = memberMap.get(((MethodOperand) op).getMethod())+1;
+            } else if (op instanceof TypeOperand) {
+                memberID = memberMap.get(((TypeOperand) op).getType())+1;
+            }
+        }
+        currentQuad.andWith(quad.ithVar(quadID));
+        currentQuad.andWith(opc.ithVar(opcID));
+        currentQuad.andWith(dest.ithVar(destID));
+        currentQuad.andWith(src1.ithVar(src1ID));
+        currentQuad.andWith(src2.ithVar(src2ID));
+        currentQuad.andWith(constant.ithVar(constantID));
+        //currentQuad.andWith(fallthrough.ithVar(fallthroughID));
+        currentQuad.andWith(target.ithVar(targetID));
+        currentQuad.andWith(member.ithVar(memberID));
     }
     
     public void dump() throws IOException {
