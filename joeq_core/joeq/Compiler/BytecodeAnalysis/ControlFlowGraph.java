@@ -113,7 +113,7 @@ public class ControlFlowGraph {
         public BasicBlock nextBB() { return rpo[++index]; }
         public Object next() { return nextBB(); }
         public int nextIndex() { return index+1; }
-        public boolean hasPrevious() { return index >= 0; }
+        public boolean hasPrevious() { return index >= 0 && rpo[index] != null; }
         public BasicBlock previousBB() { return rpo[index--]; }
         public Object previous() { return previousBB(); }
         public int previousIndex() { return index; }
