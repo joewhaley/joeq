@@ -16,16 +16,21 @@ import java.util.NoSuchElementException;
 
 public class ArrayIterator extends UnmodifiableIterator implements Iterator {
     final Object[] oa;
-    int i = 0;
+    int i, h;
 
-    /** Creates an <code>ArrayEnumerator</code>. */
+    /** Creates an <code>ArrayIterator</code>. */
     public ArrayIterator(Object[] oa) {
         this.oa = oa;
+        i = -1; h = oa.length-1;
     }
-    public boolean hasNext() { return ( i < oa.length ); }
+    public ArrayIterator(Object[] oa, int start, int end) {
+        this.oa = oa;
+        i = start-1; h = end-1;
+    }
+    public boolean hasNext() { return i < h; }
     public Object  next() {
-        if (i < oa.length)
-            return oa[i++];
+        if (i < h)
+            return oa[++i];
         else
             throw new NoSuchElementException();
     }
