@@ -7,6 +7,7 @@ for arg in "$@"
 do
  if [ ".java" == .${arg##*.} ]
  then
+  echo Checking $arg
   if [ -e $arg ]
   then
    if grep -l "	" $arg
