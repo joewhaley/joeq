@@ -3,7 +3,6 @@
 	<name>joeq</name>
 	<comment>joeq virtual machine</comment>
 	<projects>
-		<project>JavaBDD</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
