@@ -96,6 +96,34 @@ typedef struct _NativeThread {
     int pid;
 } NativeThread;
 
+typedef struct _Utf8 {
+    char* data;
+    int hash;
+    void* cache;
+} Utf8;
+
+typedef struct _jq_Type {
+    Utf8* desc;
+    void* class_object;
+    void* display;
+    int offset;
+    void* s_s_array;
+    int s_s_array_length;
+} jq_Type;
+
+typedef struct _jq_Reference jq_Reference;
+
+typedef struct _VTable {
+    jq_Reference* type;
+} VTable;
+
+struct _jq_Reference {
+    jq_Type type;
+    VTable* vtable;
+    int state;
+    void* class_loader;
+};
+
 void __stdcall trap_handler(int);
 void __stdcall debug_trap_handler(int);
 void __stdcall ctrl_break_handler();
