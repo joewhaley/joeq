@@ -1,7 +1,7 @@
 # relations format:
 # name ( fname1:fdname1 , fname2:fdname2 )
 #
-# Best order seems to be: N0_F0_I0_M0_Z0_V1xV0_T0_H1_T1_H0
+# Best order seems to be: N0_F0_I0_M0_V1xV0_T0_Z0_T1_H0_H1
 #
 vP0 (v:V bdd=V0 , h:H bdd=H0 ) load
 vP ( v:V bdd=V0 , h:H bdd=H0 ) save
