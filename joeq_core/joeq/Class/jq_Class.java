@@ -872,7 +872,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
             stub = (jq_StaticMethod)stubm;
         }
         //char access_flags = (char)(m.getAccessFlags() & ~ACC_NATIVE);
-        char max_stack = (char)m.getParamWords();
+        char max_stack = (char)Math.max(m.getParamWords(), m.getReturnType().getReferenceSize()>>2);
         char max_locals = (char)(m.getParamWords()-1);
         stub.load(access_flags, max_stack, max_locals, bc, new jq_TryCatchBC[0], new jq_LineNumberBC[0], new HashMap());
         return stub;
@@ -926,7 +926,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
             stub = (jq_InstanceMethod)stubm;
         }
         //char access_flags = (char)(m.getAccessFlags() & ~ACC_NATIVE);
-        char max_stack = (char)m.getParamWords();
+        char max_stack = (char)Math.max(m.getParamWords(), m.getReturnType().getReferenceSize()>>2);
         char max_locals = (char)m.getParamWords();
         stub.load(access_flags, max_stack, max_locals, bc, new jq_TryCatchBC[0], new jq_LineNumberBC[0], new HashMap());
         return stub;
