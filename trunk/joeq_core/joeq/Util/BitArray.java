@@ -38,18 +38,18 @@ public class BitArray {
             }
         }
 
-        public int next() {
+        public Object next() {
             int nextIndex = nextIndex();
             ++currentIndex;
             if (isSet(nextIndex)) {
-                return 1;
+                return new Integer(1);
             } else {
-                return 0;
+                return new Integer(0);
             }
         }
 
         public boolean hasNext() {
-            return currentIndex != bits.length*32-1
+            return currentIndex != bits.length*32-1;
         }
 
         public void remove() { throw new UnsupportedOperationException(); }
