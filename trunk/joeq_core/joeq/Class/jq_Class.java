@@ -1429,6 +1429,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
             byte[] b = new byte[2];
             jq.charToTwoBytes(cpr.get(sf), b, 0);
             attributes.put("SourceFile", b);
+            if (TRACE) SystemInterface.debugmsg("Reset SourceFile attribute to cp idx "+(int)cpr.get(sf)+".");
         }
     }
     
