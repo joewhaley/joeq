@@ -896,10 +896,17 @@ public class BytecodeToQuad extends BytecodeVisitor {
         BasicBlock target_bb = quad_bbs[target_bcbb.id];
         BasicBlock successor_bb = quad_bbs[bc_bb.id+1];
         RegisterOperand op0 = getStackRegister(jq_ReturnAddressType.INSTANCE);
+        Compil3r.BytecodeAnalysis.JSRInfo jsrinfo = bc_cfg.getJSRInfo(target_bcbb);
+        if (jsrinfo == null) {
+            if (TRACE) out.println("jsr with no ret! converting to GOTO.");
+            Quad q = Goto.create(quad_cfg.getNewQuadID(), Goto.GOTO.INSTANCE, new TargetOperand(target_bb));
+            appendQuad(q);
+            current_state.push(op0.copy());
+            return;
+        }
         Quad q = Jsr.create(quad_cfg.getNewQuadID(), Jsr.JSR.INSTANCE, op0, new TargetOperand(target_bb), new TargetOperand(successor_bb));
         appendQuad(q);
         Compil3r.BytecodeAnalysis.BasicBlock next_bb = bc_cfg.getBasicBlock(bc_bb.id+1);
-        Compil3r.BytecodeAnalysis.JSRInfo jsrinfo = bc_cfg.getJSRInfo(target_bcbb);
         Compil3r.BytecodeAnalysis.BasicBlock ret_bb = jsrinfo.exit_block;
         setJSRState(next_bb, current_state);
         // we need to visit the ret block even when it has been visited before,
