@@ -431,23 +431,23 @@ outer:
         // in the callee's control flow graph.
         BasicBlock successor_bb = caller.createBasicBlock(callee.exit().getNumberOfPredecessors() + 1, bb.getNumberOfSuccessors(), bb.size() - invokeLocation, bb.getExceptionHandlers());
         
-        /* Insert a fake replacement method call */
-        MethodOperand fakeOperand = getFakeMethodOperand(Invoke.getMethod(q).getMethod());
-        if(fakeOperand != null){
-            int len = fakeOperand.getMethod().getParamTypes().length;
-            Quad fakeCallQuad = Invoke.InvokeStatic.create(
-                caller.getNewQuadID(), Invoke.INVOKESTATIC_A.INSTANCE, 
-                (RegisterOperand) q.getOp1().copy(), (MethodOperand) fakeOperand.copy(), 
-                len);
-            
-            for(int i = 0; i < len; i++){
-                Invoke.setParam(fakeCallQuad, i, (RegisterOperand) Invoke.getParam(q, i).copy());
-            }
-            successor_bb.appendQuad(fakeCallQuad);
-//            System.out.println(
-//                "Replaced a call to " + Invoke.getMethod(q) + 
-//                " with a call to " + fakeOperand.getMethod());
-        }
+//        /* Insert a fake replacement method call */
+//        MethodOperand fakeOperand = getFakeMethodOperand(Invoke.getMethod(q).getMethod());
+//        if(fakeOperand != null){
+//            int len = fakeOperand.getMethod().getParamTypes().length;
+//            Quad fakeCallQuad = Invoke.InvokeStatic.create(
+//                caller.getNewQuadID(), Invoke.INVOKESTATIC_A.INSTANCE, 
+//                (RegisterOperand) q.getOp1().copy(), (MethodOperand) fakeOperand.copy(), 
+//                len);
+//            
+//            for(int i = 0; i < len; i++){
+//                Invoke.setParam(fakeCallQuad, i, (RegisterOperand) Invoke.getParam(q, i).copy());
+//            }
+//            successor_bb.appendQuad(fakeCallQuad);
+////            System.out.println(
+////                "Replaced a call to " + Invoke.getMethod(q) + 
+////                " with a call to " + fakeOperand.getMethod());
+//        }
         
         int bb_size = bb.size();
         for (int i=invokeLocation+1; i<bb_size; ++i) {
