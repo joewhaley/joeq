@@ -77,7 +77,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         }
         if (SSA) {
             regBits = 11;
-            varargsBits = 5;
+            varargsBits = 6;
             int index = varOrderDesc.indexOf("xtargetxfallthrough");
             varOrderDesc = varOrderDesc.substring(0, index) + varOrderDesc.substring(index + "xtargetxfallthrough".length());
             
@@ -203,8 +203,9 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         totalTime += time;
         System.out.println("Method: " + cfg.getMethod() + " time: " + time);
         int qSize = totalQuads;
-        int nodes = allQuads.nodeCount();
-        System.out.println("Quads: " +qSize+", nodes: "+nodes+", average: "+(float)nodes/qSize);
+        //int nodes = allQuads.nodeCount();
+        //System.out.println("Quads: " +qSize+", nodes: "+nodes+", average:
+        // "+(float)nodes/qSize);
     }
     
     long totalTime;
@@ -238,7 +239,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
     }
     
     public int getRegisterID(Register r) {
-        int x = r.getNumber();
+        int x = r.getNumber() + 2;
         Assert._assert(x > 0);
         return x;
     }
@@ -353,21 +354,34 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         //dumpMap(regMap, "reg.map");
         dumpMap(memberMap, "member.map");
         dumpMap(constantMap, "constant.map");
-        dumpBDDConfig("bdd.cfg");
-        dumpFieldDomains("fielddomains.cfg");
-        dumpRelations("relations.cfg");
-        System.out.print("Saving BDD...");
-        bdd.save("cfg.bdd", allQuads);
+        
+        String relationName;
+        if (SSA) {
+            relationName = "ssa";
+        }
+        else {
+            relationName = "cfg";
+        }
+        
+        dumpBDDConfig("bdd."+relationName);
+        dumpFieldDomains("fielddomains."+relationName);
+        dumpRelations("relations."+relationName);            
+        
+        System.out.print("Saving BDDs...");
+        bdd.save(relationName+".bdd", allQuads);            
         bdd.save("m2q.bdd", methodToQuad);
         bdd.save("entries.bdd", methodEntries);
         bdd.save("nullconstant.bdd", nullConstant);
         bdd.save("nonnullconstants.bdd", nonNullConstants);
         System.out.println("done.");
-        dumpTuples("cfg.tuples", allQuads);
+        
+        System.out.println("Saving tuples....");
+        dumpTuples(relationName+".tuples", allQuads);            
         dumpTuples("m2q.tuples", methodToQuad);
         dumpTuples("entries.tuples", methodEntries);
         dumpTuples("nullconstant.tuples", nullConstant);
         dumpTuples("nonnullconstants.tuples", nonNullConstants);
+        System.out.println("done.");
     }
     
     void dumpBDDConfig(String fileName) throws IOException {
@@ -412,8 +426,12 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
     
     void dumpRelations(String fileName) throws IOException {
         DataOutputStream dos = new DataOutputStream(new FileOutputStream(fileName));
-        dumpRelation(dos, "cfg", allQuads);
         dumpRelation(dos, "m2q", methodToQuad);
+        if (SSA) {
+            dumpRelation(dos, "cfg", allQuads);
+        } else {
+            dumpRelation(dos, "ssa", allQuads);
+        }
         dumpRelation(dos, "entries", methodEntries);
         dumpRelation(dos, "nullconstant", nullConstant);
         dumpRelation(dos, "nonnullconstant", nonNullConstants);
