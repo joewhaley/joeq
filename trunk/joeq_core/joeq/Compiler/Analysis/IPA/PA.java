@@ -594,6 +594,11 @@ public class PA {
                 }
                 BDD V_bdd = actual.relprod(I_bdd, Iset).restrictWith(Z.ithVar(0));
                 int V_i = V_bdd.scanVar(V2).intValue();
+                if(V_i >= Vmap.size()) {
+                    // TODO: this is kind of weird. Why does this happen?
+                    System.out.println("Index " + V_i + " is greater than the map size: " + Vmap.size());
+                    continue;
+                }
                 Node n = (Node) Vmap.get(V_i);
                 jq_Reference type = n.getDeclaredType();
                 if (type instanceof jq_Class) {
