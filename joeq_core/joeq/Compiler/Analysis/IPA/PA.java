@@ -1,4 +1,4 @@
-    // PA.java, created Oct 16, 2003 3:39:34 PM by joewhaley
+// PA.java, created Oct 16, 2003 3:39:34 PM by joewhaley
 // Copyright (C) 2003 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Analysis.IPA;
