@@ -3,6 +3,8 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Quad.IPA;
 
+import java.io.DataOutputStream;
+import java.io.FileOutputStream;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -121,10 +123,10 @@ public class CSPointerAnalysis extends Solver {
             System.out.println("done. ("+time/1000.+" seconds)");
         
             try {
-                java.io.FileWriter fw = new java.io.FileWriter("callgraph");
-                java.io.PrintWriter pw = new java.io.PrintWriter(fw);
-                LoadedCallGraph.write(cg, pw);
-                pw.close();
+                FileOutputStream o = new FileOutputStream("callgraph");
+                DataOutputStream d = new DataOutputStream(o);
+                LoadedCallGraph.write(cg, d);
+                d.close(); o.close();
             } catch (java.io.IOException x) {
                 x.printStackTrace();
             }

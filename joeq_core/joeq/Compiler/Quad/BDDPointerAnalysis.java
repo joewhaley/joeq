@@ -387,10 +387,10 @@ public class BDDPointerAnalysis {
         System.out.println("Bytecodes: "+bc);
         
         try {
-            java.io.FileWriter fw = new java.io.FileWriter("callgraph");
-            java.io.PrintWriter pw = new java.io.PrintWriter(fw);
-            LoadedCallGraph.write(cg, pw);
-            pw.close();
+            FileOutputStream o = new FileOutputStream("callgraph");
+            DataOutputStream d = new DataOutputStream(o);
+            LoadedCallGraph.write(cg, d);
+            d.close(); o.close();
         } catch (java.io.IOException x) {
             x.printStackTrace();
         }
