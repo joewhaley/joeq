@@ -517,14 +517,48 @@ public final class BitString implements Cloneable, java.io.Serializable {
         return buffer.toString();
     }
     
-    public BitStringIterator iterator() {
-        return new BitStringIterator();
+    // initialize an array with bit-reversed indices
+    static int[] bit_reverse(int serSize, int[] newSer) {
+        int iterSerSize = 1;
+        newSer[0] = 0;
+        while (iterSerSize < serSize) {
+            int iterVal = 0;
+            for (int iterPos=0; iterPos < iterSerSize; iterPos++) {
+                iterVal = newSer[iterPos]*2;
+                newSer[iterPos] = iterVal;
+                newSer[iterPos+iterSerSize] = iterVal+1;
+            }
+            iterSerSize = iterSerSize * 2;
+        }
+        return newSer;
+    }
+
+    public ForwardBitStringIterator iterator() {
+        return new ForwardBitStringIterator();
     }
     
-    public class BitStringIterator {
+    public BackwardBitStringIterator backwardsIterator() {
+        return new BackwardBitStringIterator();
+    }
+
+    public BackwardBitStringIterator backwardsIterator(int i) {
+        return new BackwardBitStringIterator(i);
+    }
+    
+    public static abstract class BitStringIterator implements java.util.Iterator {
+
+        public abstract int nextIndex();
+        public Object next() { return new Integer(nextIndex()); }
+        public abstract boolean hasNext();
+        
+        public void remove() { throw new UnsupportedOperationException(); }
+        
+    }
+    
+    public class ForwardBitStringIterator extends BitStringIterator {
         private int j, k, t;
         
-        BitStringIterator() {
+        ForwardBitStringIterator() {
             j = 0; k = 0;
             t = bits[0];
         }
@@ -550,5 +584,56 @@ public final class BitString implements Cloneable, java.io.Serializable {
             return k + index;
         }
         
+    }
+
+    public class BackwardBitStringIterator extends BitStringIterator {
+        private int j, k, t;
+        
+        BackwardBitStringIterator(int i) {
+	    if (TRACE) System.out.println("BackwardBitStringIterator for "+BitString.this);
+            j = subscript(i);
+            t = bits[j];
+            t &= (1 << ((i+1) & MASK)) - 1;
+            k = j << BITS_PER_UNIT;
+	    if (TRACE) System.out.println("BackwardBitStringIterator i="+i+" j="+j+" t="+jq.hex(t)+" k="+k);
+        }
+        
+        BackwardBitStringIterator() {
+	    if (TRACE) System.out.println("BackwardBitStringIterator for "+BitString.this);
+            j = bits.length-1;
+            t = bits[j];
+            k = j << BITS_PER_UNIT;
+	    if (TRACE) System.out.println("BackwardBitStringIterator j="+j+" t="+jq.hex(t)+" k="+k);
+        }
+        
+        public boolean hasNext() {
+            while (t == 0) {
+		if (TRACE) System.out.println("BackwardBitStringIterator: t == 0");
+                if (j == 0) {
+		    if (TRACE) System.out.println("BackwardBitStringIterator: j == 0 -> the end");
+		    return false;
+		}
+                t = bits[--j];
+                k -= 1 << BITS_PER_UNIT;
+		if (TRACE) System.out.println("BackwardBitStringIterator: t = "+jq.hex(t)+" j = "+j+" k = "+k);
+            }
+            return true;
+        }
+        
+        public int nextIndex() {
+            while (t == 0) {
+		if (TRACE) System.out.println("BackwardBitStringIterator: t = 0");
+                if (j == 0) throw new java.util.NoSuchElementException();
+                t = bits[--j];
+                k -= 1 << BITS_PER_UNIT;
+		if (TRACE) System.out.println("BackwardBitStringIterator: t = "+jq.hex(t)+" j = "+j+" k = "+k);
+            }
+            int index = bsr(t) - 1;
+            t &= ~(1 << index);
+	    if (TRACE) System.out.println("BackwardBitStringIterator: t="+jq.hex(t)+" index="+index+" k="+k);
+            return k + index;
+        }
+        
+	public boolean TRACE = false;
     }
 }
