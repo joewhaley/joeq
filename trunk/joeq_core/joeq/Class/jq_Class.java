@@ -22,7 +22,7 @@ import java.util.LinkedList;
 
 import jq;
 import Allocator.ObjectLayout;
-import Allocator.DefaultAllocator;
+import Allocator.DefaultHeapAllocator;
 import Bootstrap.PrimordialClassLoader;
 import Run_Time.TypeCheck;
 import Run_Time.Unsafe;
@@ -542,7 +542,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
 
     public final Object newInstance() {
         load(); verify(); prepare(); sf_initialize(); cls_initialize();
-        return DefaultAllocator.allocateObject(instance_size, vtable);
+        return DefaultHeapAllocator.allocateObject(instance_size, vtable);
     }
     
     //// Implementation garbage.
@@ -565,6 +565,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
     private jq_InstanceField[] instance_fields;
     private jq_InstanceMethod[] virtual_methods;
     private int[] static_data;
+    private boolean dont_align;
 
     private static jq_Member findByNameAndDesc(jq_Member[] array, jq_NameAndDesc nd) {
         // linear search
@@ -819,6 +820,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                     if (declared_interfaces[i].isLoaded() && !declared_interfaces[i].isInterface()) {
                         throw new ClassFormatError("implemented interface ("+super_class.getName()+") is not an interface type");
                     }
+                    if (declared_interfaces[i] == jq_DontAlign._class) dont_align = true;
                 }
 
                 char n_declared_fields = (char)in.readUnsignedShort();
@@ -869,18 +871,20 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                         declared_instance_fields[++di] = (jq_InstanceField)temp_declared_fields[i];
                     }
                 }
-                // sort instance fields in reverse by their size.
-                Arrays.sort(declared_instance_fields, new Comparator() {
-                    public int compare(jq_InstanceField o1, jq_InstanceField o2) {
-                        int s1 = o1.getSize(), s2 = o2.getSize();
-                        if (s1 > s2) return -1;
-                        else if (s1 < s2) return 1;
-                        else return 0;
-                    }
-                    public int compare(Object o1, Object o2) {
-                        return compare((jq_InstanceField)o1, (jq_InstanceField)o2);
-                    }
-                });
+                if (!dont_align) {
+                    // sort instance fields in reverse by their size.
+                    Arrays.sort(declared_instance_fields, new Comparator() {
+                        public int compare(jq_InstanceField o1, jq_InstanceField o2) {
+                            int s1 = o1.getSize(), s2 = o2.getSize();
+                            if (s1 > s2) return -1;
+                            else if (s1 < s2) return 1;
+                            else return 0;
+                        }
+                        public int compare(Object o1, Object o2) {
+                            return compare((jq_InstanceField)o1, (jq_InstanceField)o2);
+                        }
+                    });
+                }
 
                 char n_declared_methods = (char)in.readUnsignedShort();
                 char[] temp_declared_method_flags = new char[n_declared_methods];
@@ -1344,21 +1348,23 @@ uphere2:
             if (super_class != null) size = super_class.instance_size;
             else size = OBJ_HEADER_SIZE;
             if (declared_instance_fields.length > 0) {
-                // align on the largest data type
-                int largestDataType = declared_instance_fields[0].getSize();
-                int align = size & largestDataType-1;
-                if (align != 0) {
-                    // fill in the gap with smaller fields
-                    for (int i=1; i<declared_instance_fields.length; ++i) {
-                        jq_InstanceField f = declared_instance_fields[i];
-                        int fsize = f.getSize();
-                        if (fsize <= largestDataType-align) {
-                            instance_fields[++currentInstanceField] = f;
-                            f.setOffset(size - OBJ_HEADER_SIZE);
-                            size += fsize;
-                            align += fsize;
+                if (!dont_align) {
+                    // align on the largest data type
+                    int largestDataType = declared_instance_fields[0].getSize();
+                    int align = size & largestDataType-1;
+                    if (align != 0) {
+                        // fill in the gap with smaller fields
+                        for (int i=1; i<declared_instance_fields.length; ++i) {
+                            jq_InstanceField f = declared_instance_fields[i];
+                            int fsize = f.getSize();
+                            if (fsize <= largestDataType-align) {
+                                instance_fields[++currentInstanceField] = f;
+                                f.setOffset(size - OBJ_HEADER_SIZE);
+                                size += fsize;
+                                align += fsize;
+                            }
+                            if (align == largestDataType) break;
                         }
-                        if (align == largestDataType) break;
                     }
                 }
                 for (int i=0; i<declared_instance_fields.length; ++i) {
