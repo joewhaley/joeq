@@ -76,7 +76,9 @@ public abstract class CallTargets extends AbstractSet {
                                 complete = false; // conservative.
                                 break;
                             }
-                            target = (jq_InstanceMethod)rclass.getDeclaredMember(imethod.getNameAndDesc());
+                            jq_Method mtarget = (jq_Method)rclass.getDeclaredMember(imethod.getNameAndDesc());
+                            if (!(mtarget instanceof jq_InstanceMethod)) break;
+                            target = (jq_InstanceMethod)mtarget;
                             if (target != null) {
                                 jq.assert(imethod.getNameAndDesc().equals(target.getNameAndDesc()));
                                 if (!target.isAbstract())
@@ -121,7 +123,9 @@ public abstract class CallTargets extends AbstractSet {
                             complete = false; // conservative.
                             break;
                         }
-                        target = (jq_InstanceMethod)rclass.getDeclaredMember(imethod.getNameAndDesc());
+                        jq_Method mtarget = (jq_Method)rclass.getDeclaredMember(imethod.getNameAndDesc());
+                        if (!(mtarget instanceof jq_InstanceMethod)) break;
+                        target = (jq_InstanceMethod)mtarget;
                         if (target != null) {
                             jq.assert(imethod.getNameAndDesc().equals(target.getNameAndDesc()));
                             if (!target.isAbstract())
@@ -184,7 +188,9 @@ public abstract class CallTargets extends AbstractSet {
             if (loadClasses) rclass.load();
             if (!rclass.isLoaded()) return NoCallTarget.INSTANCE;
             for (;;) {
-                jq_InstanceMethod target = (jq_InstanceMethod)rclass.getDeclaredMember(imethod.getNameAndDesc());
+                jq_Method mtarget = (jq_Method)rclass.getDeclaredMember(imethod.getNameAndDesc());
+                if (!(mtarget instanceof jq_InstanceMethod)) break;
+                jq_InstanceMethod target = (jq_InstanceMethod)mtarget;
                 if (target != null) return new SingleCallTarget(target, true);
                 jq.assert(rclass != imethod.getDeclaringClass());
                 if (loadClasses) rclass.load();
@@ -248,7 +254,9 @@ public abstract class CallTargets extends AbstractSet {
                     }
                     if (TRACE) System.out.println("Class "+rclass+" has "+rclass.getSubClasses().length+" subclasses");
                     if (!rclass.isPrepared()) {
-                        target = (jq_InstanceMethod)rclass.getDeclaredMember(imethod.getNameAndDesc());
+                        jq_Method mtarget = (jq_Method)rclass.getDeclaredMember(imethod.getNameAndDesc());
+                        if (!(mtarget instanceof jq_InstanceMethod)) break;
+                        target = (jq_InstanceMethod)mtarget;
                         if (TRACE) System.out.println("Class "+rclass+" target: "+target);
                         if ((target != null) && !target.isAbstract()) c.add(target);
                     } else {
@@ -304,7 +312,9 @@ public abstract class CallTargets extends AbstractSet {
                 complete = false; // conservative.
                 break;
             }
-            jq_InstanceMethod target = (jq_InstanceMethod)rclass.getDeclaredMember(imethod.getNameAndDesc());
+            jq_Method mtarget = (jq_Method)rclass.getDeclaredMember(imethod.getNameAndDesc());
+            if (!(mtarget instanceof jq_InstanceMethod)) break;
+            jq_InstanceMethod target = (jq_InstanceMethod)mtarget;
             if (target != null) {
                 if (!target.isAbstract()) c.add(target);
                 break;
@@ -326,7 +336,9 @@ public abstract class CallTargets extends AbstractSet {
                 complete = false; // conservative.
                 continue;
             }
-            jq_InstanceMethod target = (jq_InstanceMethod)rclass.getDeclaredMember(imethod.getNameAndDesc());
+            jq_Method mtarget = (jq_Method)rclass.getDeclaredMember(imethod.getNameAndDesc());
+            if (!(mtarget instanceof jq_InstanceMethod)) break;
+            jq_InstanceMethod target = (jq_InstanceMethod)mtarget;
             if (target != null) {
                 if (TRACE) System.out.println("Class "+rclass+" target: "+target);
                 if (!target.isAbstract()) {
@@ -468,7 +480,9 @@ public abstract class CallTargets extends AbstractSet {
             if (loadClasses) rclass.load();
             if (!rclass.isLoaded()) continue;
             jq.assert(!rclass.isInterface());
-            jq_InstanceMethod target = (jq_InstanceMethod)rclass.getDeclaredMember(imethod.getNameAndDesc());
+            jq_Method mtarget = (jq_Method)rclass.getDeclaredMember(imethod.getNameAndDesc());
+            if (!(mtarget instanceof jq_InstanceMethod)) break;
+            jq_InstanceMethod target = (jq_InstanceMethod)mtarget;
             if (target != null) {
                 if (!target.isAbstract()) c.add(target);
                 if (target.isFinal() || target.isPrivate()) continue;
