@@ -437,6 +437,7 @@ public class BDDSolver extends Solver {
         List fieldDomains = new Pair(fd, fd);
         List fieldOptions = new Pair("", "");
         BDDRelation r = new BDDRelation(this, name, names, fieldDomains, fieldOptions);
+        r.initialize();
         BDDDomain d1 = (BDDDomain) r.domains.get(0);
         BDDDomain d2 = (BDDDomain) r.domains.get(1);
         r.relation.free();
@@ -450,6 +451,7 @@ public class BDDSolver extends Solver {
         List fieldDomains = new Pair(fd, fd);
         List fieldOptions = new Pair("", "");
         BDDRelation r = new BDDRelation(this, name, names, fieldDomains, fieldOptions);
+        r.initialize();
         BDDDomain d1 = (BDDDomain) r.domains.get(0);
         BDDDomain d2 = (BDDDomain) r.domains.get(1);
         r.relation.free();
