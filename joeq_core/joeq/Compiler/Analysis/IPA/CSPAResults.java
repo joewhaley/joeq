@@ -3,15 +3,6 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Analysis.IPA;
 
-import java.io.DataInput;
-import java.io.DataInputStream;
-import java.io.DataOutput;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -26,16 +17,18 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.StringTokenizer;
-
-import org.sf.javabdd.BDD;
-import org.sf.javabdd.BDDDomain;
-import org.sf.javabdd.BDDFactory;
-import org.sf.javabdd.BDDPairing;
-
+import java.io.DataInput;
+import java.io.DataInputStream;
+import java.io.DataOutput;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.math.BigInteger;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Field;
-import joeq.Class.jq_LineNumberBC;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_NameAndDesc;
 import joeq.Class.jq_Reference;
@@ -50,9 +43,7 @@ import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.ReturnValueNode;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.ThrownExceptionNode;
 import joeq.Compiler.Analysis.IPA.PA.ThreadRootMap;
 import joeq.Compiler.Analysis.IPA.PA.VarPathSelector;
-import joeq.Compiler.Analysis.IPA.ProgramLocation.BCProgramLocation;
 import joeq.Compiler.Analysis.IPA.ProgramLocation.QuadProgramLocation;
-import joeq.Compiler.BytecodeAnalysis.Bytecodes;
 import joeq.Compiler.Quad.CallGraph;
 import joeq.Compiler.Quad.CodeCache;
 import joeq.Compiler.Quad.ControlFlowGraph;
@@ -79,7 +70,10 @@ import joeq.Util.Graphs.SCComponent;
 import joeq.Util.Graphs.Traversals;
 import joeq.Util.Graphs.PathNumbering.Range;
 import joeq.Util.Graphs.SCCPathNumbering.Path;
-import joeq.Util.IO.ByteSequence;
+import org.sf.javabdd.BDD;
+import org.sf.javabdd.BDDDomain;
+import org.sf.javabdd.BDDFactory;
+import org.sf.javabdd.BDDPairing;
 
 /**
  * Records results for context-sensitive pointer analysis.  The results can
