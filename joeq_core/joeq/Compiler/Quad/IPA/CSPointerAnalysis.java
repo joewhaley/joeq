@@ -1141,7 +1141,7 @@ public class CSPointerAnalysis extends Solver {
                             BDD callee_used = callee.nodes.id();
                             renumbering13 = bdd.zero();
                             for (;;) {
-                                int p = callee_used.scanVar(V1);
+                                int p = (int) callee_used.scanVar(V1);
                                 if (p < 0) break;
                                 BDD pth = V1.ithVar(p);
                                 int q;

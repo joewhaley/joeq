@@ -773,7 +773,7 @@ public class CSPAResults implements PointerAnalysisResults {
         int num = 0;
         while (!iter.isZero()) {
             ++num;
-            BDD sol = iter.satOneSet(H1H2set, bdd.zero());
+            BDD sol = iter.satOne(H1H2set, bdd.zero());
             BDD sol_h2 = sol.exist(H1set);
             sol.free();
             BDD sol3 = iter.restrict(sol_h2);
@@ -898,9 +898,9 @@ public class CSPAResults implements PointerAnalysisResults {
         BDD iter;
         iter = reachable.id();
         while (!iter.isZero()) {
-            BDD s = iter.satOneSet(H1.set(), bdd.zero());
-            int[] val = s.scanAllVar();
-            int target_i = val[H1.getIndex()];
+            BDD s = iter.satOne(H1.set(), bdd.zero());
+            long[] val = s.scanAllVar();
+            int target_i = (int) val[H1.getIndex()];
             s.andWith(H1.ithVar(target_i));
             HeapObject h = (HeapObject) getHeapNode(target_i);
             ProgramLocation l = (h != null) ? h.getLocation() : null;
@@ -922,9 +922,9 @@ public class CSPAResults implements PointerAnalysisResults {
         
         iter = reachable.id();
         while (!iter.isZero()) {
-            BDD s = iter.satOneSet(H1.set(), bdd.zero());
-            int[] val = s.scanAllVar();
-            int target_i = val[H1.getIndex()];
+            BDD s = iter.satOne(H1.set(), bdd.zero());
+            long[] val = s.scanAllVar();
+            int target_i = (int) val[H1.getIndex()];
             s.andWith(H1.ithVar(target_i));
             HeapObject h = (HeapObject) getHeapNode(target_i);
             jq_Type t = null;
@@ -937,16 +937,16 @@ public class CSPAResults implements PointerAnalysisResults {
             }
             BDD pt = ci_fieldPt.restrict(H1.ithVar(target_i));
             while (!pt.isZero()) {
-                BDD s2 = pt.satOneSet(H2.set().and(F.set()), bdd.zero());
-                int[] val2 = s2.scanAllVar();
-                int target2_i = val2[H2.getIndex()];
+                BDD s2 = pt.satOne(H2.set().and(F.set()), bdd.zero());
+                long[] val2 = s2.scanAllVar();
+                int target2_i = (int) val2[H2.getIndex()];
                 s2.andWith(H2.ithVar(target2_i));
                 HeapObject target = (HeapObject) getHeapNode(target2_i);
                 if (FILTER_NULL && target != null && target.getDeclaredType() == null) {
                     pt.applyWith(s2, BDDFactory.diff);
                     continue;
                 }
-                int fn = val2[F.getIndex()];
+                int fn = (int) val2[F.getIndex()];
                 jq_Field f = getField(fn);
                 String fieldName = "[]";
                 if (f != null) fieldName = f.getName().toString();
@@ -989,15 +989,15 @@ public class CSPAResults implements PointerAnalysisResults {
                 continue;
             BDD pt = ci_fieldPt.restrict(H1.ithVar(j));
             while (!pt.isZero()) {
-                BDD s = pt.satOneSet(H2.set().and(F.set()), bdd.zero());
-                int[] val = s.scanAllVar();
-                int target_i = val[H2.getIndex()];
+                BDD s = pt.satOne(H2.set().and(F.set()), bdd.zero());
+                long[] val = s.scanAllVar();
+                int target_i = (int) val[H2.getIndex()];
                 HeapObject target = (HeapObject) getHeapNode(target_i);
                 s.andWith(H2.ithVar(target_i));
                 if (FILTER_NULL && h != null && h.getDeclaredType() == null) {
                     continue;
                 }
-                int fn = val[F.getIndex()];
+                int fn = (int) val[F.getIndex()];
                 jq_Field f = getField(fn);
                 String fieldName = "[]";
                 if (f != null) fieldName = f.getName().toString();
@@ -1273,7 +1273,7 @@ public class CSPAResults implements PointerAnalysisResults {
                     bad = true;
                     break;
                 }
-                int H_i = b.scanVar(H1);
+                int H_i = (int) b.scanVar(H1);
                 Node n2 = (Node) Hmap.get(H_i);
                 if (!(n2 instanceof ConcreteTypeNode)) {
                     bad = true;
@@ -1632,19 +1632,19 @@ public class CSPAResults implements PointerAnalysisResults {
         return d.getName();
     }
 
-    public String elementToString(BDDDomain d, int i) {
+    public String elementToString(BDDDomain d, long i) {
         StringBuffer sb = new StringBuffer();
         sb.append(domainName(d)+"("+i+")");
         Node n = null;
         if (d == V1 || d == V2 || d == V3) {
-            n = (Node) getVariableNode(i);
+            n = (Node) getVariableNode((int) i);
         } else if (d == H1 || d == H2 || d == H3) {
-            n = (Node) getHeapNode(i);
+            n = (Node) getHeapNode((int) i);
         } else if (d == F) {
-            jq_Field f = getField(i);
+            jq_Field f = getField((int) i);
             sb.append(": "+(f==null?"[]":f.getName().toString()));
         } else if (d == M) {
-            jq_Method m = getMethod(i);
+            jq_Method m = getMethod((int) i);
             sb.append(": "+m.getDeclaringClass().shortName()+"."+m.getName().toString()+"()");
         }
         if (n != null) {
@@ -2188,13 +2188,13 @@ public class CSPAResults implements PointerAnalysisResults {
                     sb.append(Strings.lineSep);
                     break;
                 }
-                int[] val = b.scanAllVar();
+                long[] val = b.scanAllVar();
                 //sb.append((long)b.satCount(dset));
                 sb.append("\t(");
                 BDD temp = b.getFactory().one();
                 for (Iterator i=dom.iterator(); i.hasNext(); ) {
                     BDDDomain d = (BDDDomain) i.next();
-                    int e = val[d.getIndex()];
+                    long e = val[d.getIndex()];
                     sb.append(elementToString(d, e));
                     if (i.hasNext()) sb.append(' ');
                     temp.andWith(d.ithVar(e));
@@ -2219,7 +2219,7 @@ public class CSPAResults implements PointerAnalysisResults {
                 }
 
                 public int nextInt() {
-                    int v = t.scanVar(d);
+                    int v = (int) t.scanVar(d);
                     if (v == -1)
                         throw new NoSuchElementException();
                     t.applyWith(d.ithVar(v), BDDFactory.diff);
