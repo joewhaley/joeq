@@ -130,11 +130,7 @@ public class BootImage implements ELFConstants {
     
     public HeapAddress getOrAllocateObject(Object o) {
         if (o == null) return HeapAddress.getNull();
-        jq.Assert(!(o instanceof Address));
-        if (o instanceof Address) {
-            jq.UNREACHABLE(((Address)o).stringRep());
-            return new BootstrapHeapAddress(((Address)o).to32BitValue());
-        }
+        //jq.Assert(!(o instanceof Address));
         IdentityHashCodeWrapper k = IdentityHashCodeWrapper.create(o);
         Entry e = (Entry)hash.get(k);
         if (e != null) return e.getAddress();
