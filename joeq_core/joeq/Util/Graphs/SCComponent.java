@@ -290,12 +290,14 @@ public final class SCComponent implements Comparable, Serializable {
 
     /** Returns the <code>i</code>th successor. */
     public final SCComponent next(int i) { return next[i]; }
+    public final SCComponent[] next() { return next; }
 
     /** Returns the number of predecessors. */
     public final int prevLength() { return prev.length; }
 
     /** Returns the <code>i</code>th predecessor. */
     public final SCComponent prev(int i) { return prev[i]; }
+    public final SCComponent[] prev() { return prev; }
 
     /** Returns the nodes of <code>this</code> strongly connected component
 	(set version). */
