@@ -26,7 +26,7 @@ import Run_Time.Unsafe;
 public class jq_InterrupterThread extends Thread {
 
     public static /*final*/ boolean TRACE = false;
-    
+
     jq_InterrupterThread(jq_NativeThread other_nt) {
         this.other_nt = other_nt;
         if (TRACE) SystemInterface.debugmsg("Initialized timer interrupt for native thread "+other_nt);
@@ -39,14 +39,14 @@ public class jq_InterrupterThread extends Thread {
         // start it up
         SystemInterface.resume_thread(this.tid);
     }
-    
+
     // C thread handles
     private int tid, pid;
     private jq_NativeThread other_nt;
     private jq_Thread myself; // for convenience, so we don't have to call Reflection.getfield_A
-    
+
     public static final int QUANTA = 50;
-    
+
     public void run() {
         this.pid = SystemInterface.init_thread();
         Unsafe.setThreadBlock(this.myself);
@@ -66,12 +66,12 @@ public class jq_InterrupterThread extends Thread {
                 if (!b) {
                     if (TRACE) SystemInterface.debugmsg("Failed to get thread context for "+other_nt);
                 } else {
-                    if (TRACE) SystemInterface.debugmsg(other_nt+" : "+javaThread+" ip="+regs.Eip.stringRep()+" sp="+regs.Esp.stringRep()+" cc="+CodeAllocator.getCodeContaining(regs.Eip));
+                    if (TRACE) SystemInterface.debugmsg(other_nt+" : "+javaThread+" ip="+regs.Eip.stringRep()+" sp="+regs.getEsp().stringRep()+" cc="+CodeAllocator.getCodeContaining(regs.Eip));
                     // simulate a call to threadSwitch method
-                    regs.Esp = (StackAddress) regs.Esp.offset(-HeapAddress.size());
-                    regs.Esp.poke(HeapAddress.addressOf(other_nt));
-                    regs.Esp = (StackAddress) regs.Esp.offset(-CodeAddress.size());
-                    regs.Esp.poke(regs.Eip);
+                    regs.Esp = (StackAddress) regs.getEsp().offset(-HeapAddress.size());
+                    regs.getEsp().poke(HeapAddress.addressOf(other_nt));
+                    regs.Esp = (StackAddress) regs.getEsp().offset(-CodeAddress.size());
+                    regs.getEsp().poke(regs.Eip);
                     regs.Eip = jq_NativeThread._threadSwitch.getDefaultCompiledVersion().getEntrypoint();
                     regs.ContextFlags = jq_RegisterState.CONTEXT_CONTROL;
                     b = other_nt.setContext(regs);

@@ -11,14 +11,28 @@ package GC;
 import Allocator.HeapAllocator.HeapPointer;
 import Memory.StackAddress;
 import Memory.HeapAddress;
+import Memory.Address;
 
-import java.util.Comparator;
-import java.util.TreeMap;
-import java.util.SortedMap;
+import java.util.*;
 
 public class GCBitsManager {
 
+    public static class SweepUnit {
+        private Address head;
+        private int byteLength;
+
+        public SweepUnit(Address head, int byteLength) {
+            this.head = head;
+            this.byteLength = byteLength;
+        }
+
+        public SweepUnit(Address head, Address end) {
+            this(head, end.difference(head));
+        }
+    }
+
     private static TreeMap pool = new TreeMap();
+    private static HashSet units = new HashSet();
 
     public static void register(GCBits newcomer) {
         pool.put(new HeapPointer(newcomer.blockEnd), newcomer);
@@ -52,6 +66,20 @@ public class GCBitsManager {
             return value.isSet((HeapAddress) (addr.offset(-12)));
         } else { // Maybe an object
             return value.isSet((HeapAddress) (addr.offset(-8)));
+        }
+    }
+
+    public static void mark(HeapAddress addr) {
+        HeapPointer key = (HeapPointer) pool.tailMap(addr).firstKey();
+        GCBits value = (GCBits) pool.get(key);
+        value.mark(addr);
+    }
+
+    public static void diff() {
+        Iterator iter = pool.values().iterator();
+        while (iter.hasNext()) {
+            GCBits bits = (GCBits)iter.next();
+            units.addAll(bits.diff());
         }
     }
 }
