@@ -174,12 +174,12 @@ public class jq_NativeThread implements x86Constants {
         SystemInterface.suspend_thread(thread_handle);
     }
     /** Gets context of this native thread and puts it in r. */
-    public void getContext(jq_RegisterState r) {
-        SystemInterface.get_thread_context(pid, r);
+    public boolean getContext(jq_RegisterState r) {
+        return SystemInterface.get_thread_context(pid, r);
     }
     /** Sets context of this native thread to r. */
-    public void setContext(jq_RegisterState r) {
-        SystemInterface.set_thread_context(pid, r);
+    public boolean setContext(jq_RegisterState r) {
+        return SystemInterface.set_thread_context(pid, r);
     }
     
     /** Counter for round-robin scheduling. */

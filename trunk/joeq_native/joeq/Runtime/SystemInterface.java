@@ -552,21 +552,25 @@ public abstract class SystemInterface {
         } catch (Throwable t) { jq.UNREACHABLE(); }
         return 0;
     }
-    public static void get_thread_context(int pid, jq_RegisterState context) {
+    public static boolean get_thread_context(int pid, jq_RegisterState context) {
         try {
             Unsafe.pushArg(Unsafe.addressOf(context));
             Unsafe.pushArg(pid);
 	    jq.assert(!Unsafe.getThreadBlock().isThreadSwitchEnabled());
-            Unsafe.invoke(get_thread_context_8);
+            int v = (int)Unsafe.invoke(get_thread_context_8);
+            return v!=0;
         } catch (Throwable t) { jq.UNREACHABLE(); }
+        return false;
     }
-    public static void set_thread_context(int pid, jq_RegisterState context) {
+    public static boolean set_thread_context(int pid, jq_RegisterState context) {
         try {
             Unsafe.pushArg(Unsafe.addressOf(context));
             Unsafe.pushArg(pid);
 	    jq.assert(!Unsafe.getThreadBlock().isThreadSwitchEnabled());
-            Unsafe.invoke(set_thread_context_8);
+            int v = (int)Unsafe.invoke(set_thread_context_8);
+            return v!=0;
         } catch (Throwable t) { jq.UNREACHABLE(); }
+        return false;
     }
     public static void set_current_context(jq_Thread thread, jq_RegisterState context) {
         try {
