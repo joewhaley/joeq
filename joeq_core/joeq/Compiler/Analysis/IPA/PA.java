@@ -1,4 +1,4 @@
-// PA.java, created Oct 16, 2003 3:39:34 PM by joewhaley
+    // PA.java, created Oct 16, 2003 3:39:34 PM by joewhaley
 // Copyright (C) 2003 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Analysis.IPA;
@@ -2045,10 +2045,11 @@ public class PA {
                 if (TRACE_SOLVER) {
                     out.println("Call graph edges after: "+IE.satCount(IMset));
                 }
-            }            
+            }
+            out.println("Call graph edges after: "+IE.satCount(IMset));
         
             return true;
-        } else {        
+        } else {
             return false;
         }
     }
@@ -2382,7 +2383,8 @@ public class PA {
             solvePointsTo();
             bindInvocations();
             if(RESOLVE_REFLECTION){
-                change |= bindReflection();
+                /*change |= */
+                bindReflection();
             }
             if (handleNewTargets())
                 change = true;
