@@ -17,7 +17,7 @@ public class BogusSummaryProvider {
     HashMap classMap 		  = new HashMap();
     HashMap methodMap 		  = new HashMap();
     
-    private static final boolean TRACE = true;    
+    private static final boolean TRACE = false;    
     
     public BogusSummaryProvider() {
         jq_Class realString       = getClassByName("java.lang.String");

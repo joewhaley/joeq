@@ -190,13 +190,13 @@ public class MethodSummary {
             return null;
         }
         
-        jq_Method replacement = bogusSummaryProvider.getReplacementMethod(m);
-        if(replacement != null) {
-            System.out.println("Replacing a summary of " + m + 
-                " with one for "+ replacement);
-            ControlFlowGraph cfg = CodeCache.getCode(replacement);
-            return getSummary(cfg);
-        }
+//        jq_Method replacement = bogusSummaryProvider.getReplacementMethod(m);
+//        if(replacement != null) {
+//            System.out.println("Replacing a summary of " + m + 
+//                " with one for "+ replacement);
+//            ControlFlowGraph cfg = CodeCache.getCode(replacement);
+//            return getSummary(cfg);
+//        }
 
         ControlFlowGraph cfg = CodeCache.getCode(m);
         if (SSA & !ssaEntered.contains(cfg)) {
@@ -840,7 +840,7 @@ public class MethodSummary {
                 /*&& !m.getReturnType().isAddressType()*/
                 )
             {
-                if(bogusSummaryProvider.getReplacementMethod(m) != null) {
+                if(false /*&& bogusSummaryProvider.getReplacementMethod(m) != null*/) {
 //                  special case: replaced methods.
                     RegisterOperand dest = Invoke.getDest(obj);
                     if (dest != null) {
