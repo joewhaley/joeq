@@ -38,7 +38,7 @@ public class SimpleAllocator extends HeapAllocator {
     /** Pointers to the start, current, and end of the heap.
      */
     private HeapAddress heapFirst, heapCurrent, heapEnd;
-    
+
     /** Perform initialization for this allocator.  This will be called before any other methods.
      * This allocates an initial block of memory from the OS and sets up relevant pointers.
      *
@@ -82,7 +82,7 @@ public class SimpleAllocator extends HeapAllocator {
      * @throws OutOfMemoryError if there is insufficient memory to perform the operation
      */
     public final Object allocateObject(int size, Object vtable) throws OutOfMemoryError {
-        if (size < OBJ_HEADER_SIZE) // size overflow!
+        if (size < OBJ_HEADER_SIZE) // size overflow! become minus!
             HeapAllocator.outOfMemory();
         //jq.Assert((size & 0x3) == 0);
         size = (size + 3) & ~3; // align size
