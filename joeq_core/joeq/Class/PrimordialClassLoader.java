@@ -3,8 +3,6 @@
  *
  * Created on January 15, 2001, 12:59 AM
  *
- * @author  jwhaley
- * @version 
  */
 
 package Bootstrap;
@@ -40,6 +38,10 @@ import Util.UnmodifiableIterator;
 import Util.AppendIterator;
 import Util.Default;
 
+/**
+ * @author  John Whaley
+ * @version $Id$
+ */
 public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileConstants {
     
     public static /*final*/ boolean TRACE = false;

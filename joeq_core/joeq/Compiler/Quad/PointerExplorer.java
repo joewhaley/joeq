@@ -21,7 +21,7 @@ import Compil3r.Quad.MethodSummary.PassedParameter;
 /**
  *
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 public class PointerExplorer {
 

@@ -3,8 +3,6 @@
  *
  * Created on January 15, 2001, 6:20 PM
  *
- * @author  jwhaley
- * @version 
  */
 
 package Main;
@@ -15,6 +13,10 @@ import Bootstrap.*;
 import Run_Time.*;
 import Main.jq;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public abstract class Hello {
 
     /**

@@ -19,7 +19,7 @@ import Util.LinkedHashSet;
 /**
  *
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 public class BootstrapRootSet {
 

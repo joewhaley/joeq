@@ -7,9 +7,9 @@
 
 package ClassLib.Common.java.util.zip;
 
-/*
+/**
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 public interface ZipConstants {
 

@@ -3,9 +3,7 @@
  *
  * Created on December 19, 2000, 11:29 AM
  *
- * @author  jwhaley
- * @version
-*/
+ */
 
 package Clazz;
 
@@ -26,6 +24,10 @@ import Run_Time.TypeCheck;
 import Run_Time.Unsafe;
 import UTF.Utf8;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public abstract class jq_Member implements jq_ClassFileConstants {
 
     protected final void chkState(int s) {

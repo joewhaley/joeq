@@ -3,8 +3,6 @@
  *
  * Created on December 20, 2000, 1:18 AM
  *
- * @author  jwhaley
- * @version 
  */
 
 package Main;
@@ -20,6 +18,10 @@ import Main.jq;
 
 import Util.ArrayIterator;
 
+/**
+ * @author  John Whaley
+ * @version $Id$
+ */
 public abstract class ClassDump {
     
     public static void main(String[] args) {

@@ -3,8 +3,6 @@
  *
  * Created on December 12, 2001, 1:27 AM
  *
- * @author  John Whaley
- * @version 
  */
 
 package ClassLib.sun14_win32;
@@ -17,6 +15,10 @@ import Allocator.DefaultCodeAllocator;
 import Scheduler.jq_NativeThread;
 import Main.jq;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public final class Interface extends ClassLib.ClassLibInterface {
 
     /** Creates new Interface */

@@ -9,7 +9,7 @@ package ClassLib.Common.java.lang.reflect;
 /**
  *
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 public abstract class AccessibleObject {
 

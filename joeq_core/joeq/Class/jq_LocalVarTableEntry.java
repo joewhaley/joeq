@@ -3,12 +3,14 @@
  *
  * Created on Mon Jul  1 11:05:19 PDT 2002
  *
- * @author  gback
- * @version 
  */
 
 package Clazz;
 
+/*
+ * @author  gback
+ * @version $Id$
+ */
 public class jq_LocalVarTableEntry implements Comparable {
 
     private char startPC;

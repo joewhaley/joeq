@@ -12,9 +12,9 @@ import Clazz.*;
 import Run_Time.*;
 import Main.jq;
 
-/*
+/**
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 public abstract class Runtime {
 

@@ -3,12 +3,14 @@
  *
  * Created on April 5, 2001, 12:01 AM
  *
- * @author  John Whaley
- * @version 
  */
 
 package Util;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public class AtomicCounter {
 
     private int current;

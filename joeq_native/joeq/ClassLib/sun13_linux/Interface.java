@@ -3,8 +3,6 @@
  *
  * Created on December 12, 2001, 1:27 AM
  *
- * @author  John Whaley
- * @version 
  */
 
 package ClassLib.sun13_linux;
@@ -16,6 +14,10 @@ import Run_Time.Reflection;
 import Allocator.DefaultCodeAllocator;
 import Main.jq;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public final class Interface extends ClassLib.ClassLibInterface {
 
     /** Creates new Interface */

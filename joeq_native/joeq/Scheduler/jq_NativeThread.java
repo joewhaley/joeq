@@ -3,8 +3,6 @@
  *
  * Created on March 26, 2001, 10:47 AM
  *
- * @author  John Whaley
- * @version 
  */
 
 package Scheduler;
@@ -32,6 +30,10 @@ import Main.jq;
 import java.util.List;
 import java.util.LinkedList;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public class jq_NativeThread implements x86Constants {
 
     /** Trace flag. */

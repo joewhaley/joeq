@@ -3,8 +3,6 @@
  *
  * Created on January 25, 2001, 11:50 AM
  *
- * @author  jwhaley
- * @version 
  */
 
 package Synchronization;
@@ -16,6 +14,10 @@ import Main.jq;
 
 import java.lang.reflect.*;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public abstract class Atomic {
     
     public static final int cas4(Object o, jq_InstanceField f, int before, int after) {

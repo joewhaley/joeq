@@ -3,8 +3,6 @@
  *
  * Created on April 22, 2001, 11:14 AM
  *
- * @author  John Whaley
- * @version 
  */
 
 package Util;
@@ -12,6 +10,10 @@ package Util;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public class AppendListIterator implements ListIterator {
 
     private final ListIterator iterator1;

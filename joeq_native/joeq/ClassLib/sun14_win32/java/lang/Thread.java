@@ -19,7 +19,7 @@ import Main.jq;
 
 /*
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 public abstract class Thread {
 

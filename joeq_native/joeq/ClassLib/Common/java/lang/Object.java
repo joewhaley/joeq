@@ -15,7 +15,7 @@ import Scheduler.jq_Thread;
 
 /*
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 public abstract class Object {
 

@@ -11,7 +11,7 @@ import Run_Time.SystemInterface;
 
 /*
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 abstract class FileDescriptor {
     

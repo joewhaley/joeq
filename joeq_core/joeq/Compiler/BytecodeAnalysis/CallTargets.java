@@ -3,8 +3,6 @@
  *
  * Created on June 27, 2001, 9:26 PM
  *
- * @author  John Whaley
- * @version 
  */
 
 package Compil3r.BytecodeAnalysis;
@@ -18,6 +16,10 @@ import Util.SingletonIterator;
 import Main.jq;
 import java.util.*;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public abstract class CallTargets extends AbstractSet {
 
     public static final boolean TRACE = false;

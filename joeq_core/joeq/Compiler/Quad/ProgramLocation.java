@@ -23,7 +23,7 @@ import java.util.Iterator;
  * This is useful for interprocedural analysis.
  *
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 public class ProgramLocation {
 

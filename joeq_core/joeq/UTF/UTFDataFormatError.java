@@ -3,12 +3,14 @@
  *
  * Created on December 19, 2000, 11:48 AM
  *
- * @author  jwhaley
- * @version 
  */
 
 package UTF;
 
+/**
+ * @author  John Whaley
+ * @version $Id$
+ */
 public class UTFDataFormatError extends RuntimeException {
 
     /**

@@ -70,7 +70,7 @@ import Main.jq;
  * @see  BytecodeVisitor
  * @see  BytecodeAnalysis.ControlFlowGraph
  * @author  John Whaley
- * @version  @version $Id$
+ * @version $Id$
  */
 
 public class BytecodeToQuad extends BytecodeVisitor {

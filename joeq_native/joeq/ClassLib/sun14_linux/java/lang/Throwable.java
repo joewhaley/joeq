@@ -3,8 +3,6 @@
  *
  * Created on January 29, 2000, 10:16 AM
  *
- * @author  jwhaley
- * @version 
  */
 
 package ClassLib.sun14_linux.java.lang;
@@ -15,6 +13,10 @@ import Clazz.jq_CompiledCode;
 import Clazz.jq_Method;
 import Main.jq;
 
+/**
+ * @author  John Whaley
+ * @version $Id$
+ */
 public abstract class Throwable {
     
     private java.lang.Object backtrace;

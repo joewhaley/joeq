@@ -3,8 +3,6 @@
  *
  * Created on January 12, 2001, 8:59 AM
  *
- * @author  jwhaley
- * @version 
  */
 
 package Scheduler;
@@ -15,6 +13,10 @@ import Clazz.jq_Class;
 import Clazz.jq_InstanceField;
 import Clazz.jq_DontAlign;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public class jq_RegisterState implements x86Constants, jq_DontAlign {
 
     // WARNING: the layout of this object should match the CONTEXT data structure

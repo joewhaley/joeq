@@ -3,8 +3,6 @@
  *
  * Created on January 11, 2001, 10:34 PM
  *
- * @author  jwhaley
- * @version 
  */
 
 package Run_Time;
@@ -19,6 +17,10 @@ import Run_Time.Unsafe;
 import UTF.Utf8;
 import Main.jq;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public abstract class ExceptionDeliverer {
 
     public static /*final*/ boolean TRACE = false;

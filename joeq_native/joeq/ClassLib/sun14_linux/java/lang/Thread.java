@@ -3,8 +3,6 @@
  *
  * Created on January 29, 2001, 10:21 AM
  *
- * @author  John Whaley
- * @version 
  */
 
 package ClassLib.sun14_linux.java.lang;
@@ -19,6 +17,10 @@ import Run_Time.Reflection;
 import Scheduler.jq_Thread;
 import Main.jq;
 
+/**
+ * @author  John Whaley
+ * @version $Id$
+ */
 public abstract class Thread {
 
     public final jq_Thread jq_thread;

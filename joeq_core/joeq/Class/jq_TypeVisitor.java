@@ -3,12 +3,14 @@
  *
  * Created on January 9, 2002, 9:40 AM
  *
- * @author  Administrator
- * @version 
  */
 
 package Clazz;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public interface jq_TypeVisitor {
 
     public void visitClass(jq_Class m);

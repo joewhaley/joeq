@@ -10,7 +10,7 @@ import java.util.zip.Checksum;
 /**
  *
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 public abstract class CRC32 implements Checksum {
 

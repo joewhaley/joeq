@@ -15,7 +15,7 @@ import Allocator.CodeAllocator.x86CodeBuffer;
 /*
  *
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 public abstract class DefaultCodeAllocator {
 

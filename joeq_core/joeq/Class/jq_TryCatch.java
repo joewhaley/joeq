@@ -3,8 +3,6 @@
  *
  * Created on January 2, 2001, 4:23 PM
  *
- * @author  jwhaley
- * @version 
  */
 
 package Clazz;
@@ -15,13 +13,17 @@ import Run_Time.TypeCheck;
 import Run_Time.SystemInterface;
 import Main.jq;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public class jq_TryCatch {
 
     public static final boolean DEBUG = false;
     
     // NOTE: startPC is exclusive, endPC is inclusive (opposite of jq_TryCatchBC)
     // this is because the IP that we check against is IMMEDIATELY AFTER where the exception actually occurred.
-    // these are OFFSETS.
+    // these are CODE OFFSETS.
     private int startPC, endPC, handlerPC;
     private jq_Class exType;
 

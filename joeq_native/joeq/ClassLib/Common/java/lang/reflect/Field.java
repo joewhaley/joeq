@@ -3,8 +3,6 @@
  *
  * Created on April 13, 2001, 6:19 PM
  *
- * @author  John Whaley
- * @version 
  */
 
 package ClassLib.Common.java.lang.reflect;
@@ -14,6 +12,10 @@ import Clazz.*;
 import Run_Time.*;
 import Main.jq;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public class Field extends AccessibleObject {
     
     // additional instance field.

@@ -3,14 +3,16 @@
  *
  * Created on January 11, 2001, 4:48 PM
  *
- * @author  jwhaley
- * @version 
  */
 
 package Util;
 
 import Main.jq;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public class IdentityHashCodeWrapper {
     
     private Object o;

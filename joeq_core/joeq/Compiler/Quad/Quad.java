@@ -3,8 +3,6 @@
  *
  * Created on April 21, 2001, 11:06 PM
  *
- * @author  John Whaley
- * @version 
  */
 
 package Compil3r.Quad;
@@ -17,6 +15,10 @@ import Clazz.jq_Class;
 import Interpreter.QuadInterpreter.State;
 import Main.jq;
 
+/**
+ * @author  John Whaley
+ * @version $Id$
+ */
 public class Quad {
 
     /** The operator.  Operator objects are shared across all quads. */

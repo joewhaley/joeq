@@ -3,8 +3,6 @@
  *
  * Created on October 24, 2001, 5:43 PM
  *
- * @author  John Whaley
- * @version
  */
 
 package Compil3r.BytecodeAnalysis;
@@ -51,6 +49,10 @@ import Util.LinearSet;
 
 import Main.jq;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public interface Bytecodes {
     
     public abstract class Instruction implements Cloneable, Serializable {

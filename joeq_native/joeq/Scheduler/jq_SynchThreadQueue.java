@@ -3,12 +3,14 @@
  *
  * Created on March 27, 2001, 11:21 PM
  *
- * @author  John Whaley
- * @version 
  */
 
 package Scheduler;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public class jq_SynchThreadQueue extends jq_ThreadQueue {
 
     //public synchronized boolean isEmpty() { return super.isEmpty(); }

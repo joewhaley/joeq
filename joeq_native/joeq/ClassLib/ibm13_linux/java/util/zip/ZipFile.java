@@ -9,7 +9,7 @@ package ClassLib.ibm13_linux.java.util.zip;
 /**
  *
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 public abstract class ZipFile {
 

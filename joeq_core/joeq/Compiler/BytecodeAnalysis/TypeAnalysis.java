@@ -3,8 +3,6 @@
  *
  * Created on June 23, 2001, 5:32 PM
  *
- * @author  John Whaley
- * @version
  */
 
 package Compil3r.BytecodeAnalysis;
@@ -19,6 +17,10 @@ import Util.IdentityHashCodeWrapper;
 import UTF.Utf8;
 import java.util.*;
 
+/**
+ * @author  John Whaley
+ * @version $Id$
+ */
 public class TypeAnalysis {
     
     static Map/*<jq_Method, AnalysisSummary>*/ summaries = new HashMap();

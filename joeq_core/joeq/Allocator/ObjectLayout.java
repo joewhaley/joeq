@@ -11,7 +11,7 @@ package Allocator;
  *  You can play with these constants to experiment with different object layouts.
  *
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 public interface ObjectLayout {
 

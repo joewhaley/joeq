@@ -19,8 +19,8 @@ import Compil3r.Quad.Operator.Return;
 
 /**
  *
- * @author  Administrator
- * @version 
+ * @author  John Whaley
+ * @version $Id$
  */
 public class ControlDependence extends jq_MethodVisitor.EmptyVisitor {
 

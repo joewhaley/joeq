@@ -3,8 +3,6 @@
  *
  * Created on April 22, 2001, 1:10 PM
  *
- * @author  John Whaley
- * @version 
  */
 
 package Compil3r.BytecodeAnalysis;
@@ -15,6 +13,10 @@ import Util.BitString.BitStringIterator;
 import Main.jq;
 import java.util.ListIterator;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public class ControlFlowGraph {
 
     public static final boolean TRACE = false;

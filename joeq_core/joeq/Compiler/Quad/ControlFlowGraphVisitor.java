@@ -11,7 +11,7 @@ import Clazz.jq_MethodVisitor;
 /**
  *
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 public interface ControlFlowGraphVisitor {
     public void visitCFG(ControlFlowGraph cfg);

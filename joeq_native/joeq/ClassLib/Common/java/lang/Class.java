@@ -30,7 +30,7 @@ import Run_Time.Unsafe;
 
 /*
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 public class Class {
     

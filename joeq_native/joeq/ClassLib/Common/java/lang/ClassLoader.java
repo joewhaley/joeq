@@ -34,7 +34,7 @@ import java.security.ProtectionDomain;
 
 /*
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 public abstract class ClassLoader {
     

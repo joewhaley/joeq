@@ -9,7 +9,7 @@ package ClassLib.ibm13_linux.java.lang.ref;
 
 /*
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 public abstract class Finalizer {
 

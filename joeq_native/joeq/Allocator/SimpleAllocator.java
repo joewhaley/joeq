@@ -18,8 +18,8 @@ import Run_Time.SystemInterface;
 import java.lang.reflect.Array;
 
 /*
- * @author  jwhaley
- * @version 
+ * @author  John Whaley
+ * @version $Id$
  */
 public class SimpleAllocator extends HeapAllocator {
 

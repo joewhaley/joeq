@@ -3,8 +3,6 @@
  *
  * Created on December 19, 2000, 11:25 AM
  *
- * @author  jwhaley
- * @version 
  */
 
 package Clazz;
@@ -15,6 +13,10 @@ import Bootstrap.PrimordialClassLoader;
 import Main.jq;
 import UTF.Utf8;
 
+/**
+ * @author  John Whaley
+ * @version $Id$
+ */
 public final class jq_ClassInitializer extends jq_StaticMethod {
 
     // clazz, nd are inherited

@@ -11,7 +11,7 @@ import UTF.Utf8;
 
 /*
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 public abstract class String {
 

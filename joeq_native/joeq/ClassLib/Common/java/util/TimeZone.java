@@ -9,7 +9,7 @@ package ClassLib.Common.java.util;
 
 /*
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 abstract class TimeZone {
 

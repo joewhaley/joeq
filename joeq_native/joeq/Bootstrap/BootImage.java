@@ -51,8 +51,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
 /*
- * @author  jwhaley
- * @version 
+ * @author  John Whaley
+ * @version $Id$
  */
 public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConstants {
 

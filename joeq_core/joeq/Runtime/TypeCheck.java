@@ -2,9 +2,7 @@
  * TypeCheck.java
  *
  * Created on January 2, 2001, 10:41 AM
- *
- * @author  jwhaley
- * @version 
+ * 
  */
 
 package Run_Time;
@@ -24,6 +22,10 @@ import Main.jq;
 
 import java.util.Stack;
 
+/**
+ * @author  John Whaley
+ * @version $Id$
+ */
 public abstract class TypeCheck implements jq_ClassFileConstants {
     
     public static Object checkcast(Object k, jq_Type t) {

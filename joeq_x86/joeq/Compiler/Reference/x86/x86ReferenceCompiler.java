@@ -3,8 +3,6 @@
  *
  * Created on December 22, 2000, 6:21 AM
  *
- * @author  jwhaley
- * @version 
  */
 
 package Compil3r.Reference.x86;
@@ -59,6 +57,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.HashSet;
 
+/**
+ * @author  John Whaley
+ * @version $Id$
+ */
 public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInterface, x86Constants, jq_ClassFileConstants, ObjectLayout {
 
     public static /*final*/ boolean ALWAYS_TRACE = false;

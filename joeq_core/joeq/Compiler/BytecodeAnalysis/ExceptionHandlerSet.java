@@ -3,8 +3,6 @@
  *
  * Created on May 18, 2001, 10:20 AM
  *
- * @author  John Whaley
- * @version 
  */
 
 package Compil3r.BytecodeAnalysis;
@@ -12,6 +10,10 @@ package Compil3r.BytecodeAnalysis;
 import Clazz.jq_Class;
 import Util.ListFactory;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public class ExceptionHandlerSet {
 
     final ExceptionHandler exception_handler;

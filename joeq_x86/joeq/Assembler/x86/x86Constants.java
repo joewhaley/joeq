@@ -9,7 +9,7 @@ package Assembler.x86;
 
 /*
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 public interface x86Constants {
 

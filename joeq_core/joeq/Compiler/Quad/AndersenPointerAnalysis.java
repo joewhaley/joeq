@@ -37,7 +37,7 @@ import Main.jq;
 /**
  *
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 public class AndersenPointerAnalysis {
 

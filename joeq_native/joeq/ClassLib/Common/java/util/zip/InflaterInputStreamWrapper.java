@@ -7,7 +7,7 @@ package ClassLib.Common.java.util.zip;
 
 /*
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 public class InflaterInputStreamWrapper extends java.util.zip.InflaterInputStream {
     private boolean isClosed;

@@ -3,8 +3,6 @@
  *
  * Created on January 12, 2001, 12:48 PM
  *
- * @author  jwhaley
- * @version 
  */
 
 package Run_Time;
@@ -31,6 +29,10 @@ import Main.jq;
 
 import java.lang.reflect.*;
 
+/**
+ * @author  John Whaley
+ * @version $Id$
+ */
 public abstract class Reflection {
 
     public static ObjectTraverser obj_trav;

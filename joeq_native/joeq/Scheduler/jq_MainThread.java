@@ -3,8 +3,6 @@
  *
  * Created on April 1, 2001, 12:22 AM
  *
- * @author  John Whaley
- * @version 
  */
 
 package Scheduler;
@@ -12,6 +10,10 @@ package Scheduler;
 import Clazz.jq_StaticMethod;
 import Run_Time.Reflection;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public class jq_MainThread extends java.lang.Thread {
 
     jq_StaticMethod m;

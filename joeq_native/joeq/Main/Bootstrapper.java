@@ -3,8 +3,6 @@
  *
  * Created on January 1, 2001, 11:46 PM
  *
- * @author  jwhaley
- * @version 
  */
 
 package Main;
@@ -25,6 +23,10 @@ import java.util.*;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public abstract class Bootstrapper implements ObjectLayout {
 
     private static BootImage objmap;

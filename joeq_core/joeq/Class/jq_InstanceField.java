@@ -3,8 +3,6 @@
  *
  * Created on December 19, 2000, 11:22 AM
  *
- * @author  jwhaley
- * @version 
  */
 
 package Clazz;
@@ -19,6 +17,10 @@ import Bootstrap.PrimordialClassLoader;
 
 //friend jq_ClassLoader;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public final class jq_InstanceField extends jq_Field {
 
     public static final int INVALID_OFFSET = 0x80000000;

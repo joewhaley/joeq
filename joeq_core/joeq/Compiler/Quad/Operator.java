@@ -3,8 +3,6 @@
  *
  * Created on May 11, 2001, 12:17 AM
  *
- * @author  John Whaley
- * @version 
  */
 
 package Compil3r.Quad;
@@ -35,6 +33,10 @@ import Interpreter.QuadInterpreter.State;
 import Interpreter.QuadInterpreter.UninitializedReference;
 import java.util.Set;
 
+/**
+ * @author  John Whaley
+ * @version $Id$
+ */
 public abstract class Operator {
 
     public void accept(Quad q, QuadVisitor qv) {

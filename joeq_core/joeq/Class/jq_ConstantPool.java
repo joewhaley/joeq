@@ -3,8 +3,6 @@
  *
  * Created on November 1, 2001, 4:45 PM
  *
- * @author  jwhaley
- * @version 
  */
 
 package Clazz;
@@ -26,6 +24,10 @@ import Compil3r.BytecodeAnalysis.Bytecodes;
 
 import Main.jq;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public class jq_ConstantPool implements jq_ClassFileConstants {
 
     private Object[] constant_pool;

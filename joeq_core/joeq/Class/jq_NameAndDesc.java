@@ -3,14 +3,16 @@
  *
  * Created on January 2, 2001, 12:26 AM
  *
- * @author  jwhaley
- * @version 
  */
 
 package Clazz;
 
 import UTF.Utf8;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public class jq_NameAndDesc {
 
     private Utf8 name, desc;

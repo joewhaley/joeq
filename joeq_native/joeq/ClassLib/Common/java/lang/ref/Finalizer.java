@@ -3,8 +3,6 @@
  *
  * Created on February 26, 2001, 9:01 PM
  *
- * @author  John Whaley
- * @version 
  */
 
 package ClassLib.Common.java.lang.ref;
@@ -17,6 +15,10 @@ import Run_Time.Unsafe;
 import UTF.Utf8;
 import Main.jq;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public abstract class Finalizer {
 
     public static native void runFinalization();

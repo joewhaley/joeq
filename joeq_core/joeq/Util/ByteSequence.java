@@ -3,8 +3,6 @@
  *
  * Created on October 25, 2001, 11:17 AM
  *
- * @author  jwhaley
- * @version 
  */
 
 package Util;
@@ -12,6 +10,10 @@ package Util;
 import java.io.DataInputStream;
 import java.io.ByteArrayInputStream;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public final class ByteSequence extends DataInputStream {
   private ByteArrayStream byte_stream;
 

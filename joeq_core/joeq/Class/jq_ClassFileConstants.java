@@ -3,12 +3,14 @@
  *
  * Created on December 19, 2000, 9:02 AM
  *
- * @author  jwhaley
- * @version 
  */
 
 package Clazz;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public interface jq_ClassFileConstants {
 
     /* ClassFile format: common access flags for classes(C), methods(M) and fields(F)

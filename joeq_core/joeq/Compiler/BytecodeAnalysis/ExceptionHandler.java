@@ -3,14 +3,16 @@
  *
  * Created on May 18, 2001, 10:20 AM
  *
- * @author  John Whaley
- * @version 
  */
 
 package Compil3r.BytecodeAnalysis;
 
 import Clazz.jq_Class;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public class ExceptionHandler {
 
     final jq_Class exceptionType;

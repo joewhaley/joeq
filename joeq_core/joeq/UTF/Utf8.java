@@ -3,8 +3,6 @@
  *
  * Created on December 19, 2000, 10:21 AM
  *
- * @author  jwhaley
- * @version 
  */
 
 package UTF;
@@ -15,6 +13,10 @@ import Main.jq;
 import Util.UnmodifiableIterator;
 import Clazz.jq_ClassFileConstants;
 
+/**
+ * @author  John Whaley
+ * @version $Id$
+ */
 public class Utf8 implements jq_ClassFileConstants {
 
     public static /*final*/ boolean TRACE = false;

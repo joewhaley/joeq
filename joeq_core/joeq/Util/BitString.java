@@ -3,14 +3,16 @@
  *
  * Created on April 22, 2001, 2:16 PM
  *
- * @author  John Whaley
- * @version
  */
 
 package Util;
 
 import Main.jq;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public final class BitString implements Cloneable, java.io.Serializable {
     /* There are 2^BITS_PER_UNIT bits in each unit (int) */
     private final static int BITS_PER_UNIT = 5;

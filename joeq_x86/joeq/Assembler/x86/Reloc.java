@@ -12,7 +12,7 @@ import java.io.OutputStream;
 
 /*
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 public abstract class Reloc {
 

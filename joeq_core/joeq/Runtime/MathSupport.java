@@ -2,9 +2,7 @@
  * MathSupport.java
  *
  * Created on December 22, 2000, 11:27 AM
- *
- * @author  jwhaley
- * @version 
+ * 
  */
 
 package Run_Time;
@@ -17,6 +15,10 @@ import Clazz.jq_NameAndDesc;
 import UTF.Utf8;
 import Main.jq;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public abstract class MathSupport {
 
     public static boolean ucmp(/*unsigned*/int a, /*unsigned*/int b) {

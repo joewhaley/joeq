@@ -3,8 +3,6 @@
  *
  * Created on January 12, 2001, 1:07 AM
  *
- * @author  jwhaley
- * @version 
  */
 
 package Scheduler;
@@ -25,6 +23,10 @@ import UTF.Utf8;
 import Util.AtomicCounter;
 import Main.jq;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public class jq_Thread implements ObjectLayout {
 
     private final jq_RegisterState registers;

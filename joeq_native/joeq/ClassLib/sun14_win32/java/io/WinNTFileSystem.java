@@ -9,7 +9,7 @@ package ClassLib.sun14_win32.java.io;
 
 /*
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 public abstract class WinNTFileSystem extends Win32FileSystem {
 

@@ -3,8 +3,6 @@
  *
  * Created on January 2, 2001, 2:55 AM
  *
- * @author  jwhaley
- * @version 
  */
 
 package Run_Time;
@@ -24,6 +22,10 @@ import Clazz.jq_InstanceField;
 import Scheduler.jq_Thread;
 import UTF.Utf8;
 
+/**
+ * @author  John Whaley
+ * @version $Id$
+ */
 public abstract class Unsafe {
 
     private static /*final*/ Remapper remapper_object = new Remapper();

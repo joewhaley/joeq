@@ -11,7 +11,7 @@ import Run_Time.JMath;
 
 /*
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 abstract class StrictMath extends java.lang.Object {
 

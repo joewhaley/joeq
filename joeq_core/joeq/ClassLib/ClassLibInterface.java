@@ -3,8 +3,6 @@
  *
  * Created on December 11, 2001, 3:59 PM
  *
- * @author  John Whaley
- * @version 
  */
 
 package ClassLib;
@@ -22,6 +20,10 @@ import Run_Time.SystemInterface;
 import UTF.Utf8;
 import Main.jq;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public abstract class ClassLibInterface {
 
     public static boolean USE_JOEQ_CLASSLIB;

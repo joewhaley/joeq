@@ -3,8 +3,6 @@
  *
  * Created on May 10, 2001, 8:34 PM
  *
- * @author  John Whaley
- * @version 
  */
 
 package Compil3r.Quad;
@@ -15,6 +13,10 @@ import java.util.Iterator;
 import java.util.ArrayList;
 import Main.jq;
 
+/**
+ * @author  John Whaley
+ * @version $Id$
+ */
 public class RegisterFactory {
 
     private ArrayList/*<Register>*/ local_I;

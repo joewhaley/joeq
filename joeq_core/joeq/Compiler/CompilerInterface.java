@@ -3,14 +3,16 @@
  *
  * Created on December 16, 2000, 1:27 PM
  *
- * @author  jwhaley
- * @version 
  */
 
 package Compil3r;
 
 import Clazz.jq_CompiledCode;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public interface Compil3rInterface {
     public jq_CompiledCode compile();
 }

@@ -3,8 +3,6 @@
  *
  * Created on February 1, 2001, 12:35 PM
  *
- * @author  John Whaley
- * @version 
  */
 
 package Main;
@@ -15,6 +13,10 @@ import Bootstrap.PrimordialClassLoader;
 import Run_Time.Reflection;
 import java.util.Iterator;
 
+/**
+ * @author  John Whaley
+ * @version $Id$
+ */
 public abstract class TraceFlags {
 
     public static int setTraceFlag(String[] args, int i) {

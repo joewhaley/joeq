@@ -3,8 +3,6 @@
  *
  * Created on December 19, 2000, 8:54 AM
  *
- * @author  jwhaley
- * @version 
  */
 
 package Clazz;
@@ -12,6 +10,10 @@ package Clazz;
 import UTF.Utf8;
 import Bootstrap.PrimordialClassLoader;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public class jq_Primitive extends jq_Type implements jq_ClassFileConstants {
 
     public final boolean isClassType() { return false; }

@@ -9,7 +9,7 @@ package Linker.ELF;
 /**
  *
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 public interface ELFConstants {
 

@@ -3,8 +3,6 @@
  *
  * Created on December 20, 2000, 1:18 AM
  *
- * @author  jwhaley
- * @version 
  */
 
 package Main;
@@ -25,7 +23,10 @@ import Util.*;
 import UTF.Utf8;
 import Main.jq;
 
-
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public abstract class DoTypeAnalysis {
     
     public static void main(String[] args) throws IOException {

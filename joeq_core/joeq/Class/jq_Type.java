@@ -3,8 +3,6 @@
  *
  * Created on December 19, 2000, 8:38 AM
  *
- * @author  jwhaley
- * @version 
  */
 
 package Clazz;
@@ -16,6 +14,10 @@ import Run_Time.Reflection;
 import ClassLib.ClassLibInterface;
 import Bootstrap.PrimordialClassLoader;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public abstract class jq_Type {
     
     protected final Utf8 desc;

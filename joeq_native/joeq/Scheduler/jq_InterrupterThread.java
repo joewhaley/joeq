@@ -3,8 +3,6 @@
  *
  * Created on April 3, 2001, 8:07 PM
  *
- * @author  John Whaley
- * @version 
  */
 
 package Scheduler;
@@ -19,6 +17,10 @@ import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
 import Main.jq;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public class jq_InterrupterThread extends Thread {
 
     public static /*final*/ boolean TRACE = false;

@@ -10,8 +10,8 @@ import java.util.ListIterator;
 
 /**
  *
- * @author  Administrator
- * @version 
+ * @author  John Whaley
+ * @version $Id$
  */
 public class BackwardIterator implements ListIterator {
 

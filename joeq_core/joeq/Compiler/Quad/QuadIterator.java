@@ -14,7 +14,7 @@ import Clazz.jq_Class;
 /**
  *
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 public class QuadIterator implements ListIterator.Quad {
 

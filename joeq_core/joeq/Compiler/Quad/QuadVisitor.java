@@ -3,12 +3,14 @@
  *
  * Created on January 9, 2002, 8:14 AM
  *
- * @author  Administrator
- * @version 
  */
 
 package Compil3r.Quad;
 
+/**
+ * @author  John Whaley
+ * @version $Id$
+ */
 public interface QuadVisitor {
 
     /** A potentially excepting instruction.. */

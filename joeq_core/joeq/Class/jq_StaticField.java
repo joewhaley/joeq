@@ -3,8 +3,6 @@
  *
  * Created on December 19, 2000, 12:34 PM
  *
- * @author  jwhaley
- * @version 
  */
 
 package Clazz;
@@ -22,6 +20,10 @@ import Run_Time.Unsafe;
 import UTF.Utf8;
 import Main.jq;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public final class jq_StaticField extends jq_Field {
 
     // null if not a constant.

@@ -9,7 +9,7 @@ package Util;
 /**
  *
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 public abstract class Templates {
 

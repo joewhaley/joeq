@@ -13,7 +13,7 @@ package Clazz;
  * starting bytecode indices.
  *
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 public class jq_LineNumberBC implements Comparable {
 

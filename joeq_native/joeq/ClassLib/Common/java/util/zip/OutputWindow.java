@@ -9,7 +9,7 @@ package ClassLib.Common.java.util.zip;
 /**
  *
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 class OutputWindow {
   private final int WINDOW_SIZE = 1 << 15;
