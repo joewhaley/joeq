@@ -11,6 +11,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
@@ -40,7 +41,8 @@ import Compil3r.Quad.Operand.ParamListOperand;
 import Compil3r.Quad.Operator.Invoke;
 import Main.jq;
 import Util.Default;
-import Util.LinkedHashSet;
+import Util.SetFactory;
+import Util.SetRepository;
 
 /**
  *
@@ -60,12 +62,13 @@ public class AndersenPointerAnalysis {
     public static boolean IGNORE_CLINIT = true;
     
     public static final boolean HANDLE_ESCAPE = true;
-    public static final boolean USE_SOFT_REFERENCES = true;
+    public static final boolean USE_SOFT_REFERENCES = false;
     public static boolean FORCE_GC = false;
     public static final boolean REUSE_CACHES = true;
     public static final boolean TRACK_CHANGES = true;
     public static final boolean TRACK_CHANGED_FIELDS = false; // doesn't work.
     public static boolean TRACK_SOURCE_QUADS = true;
+    public static final boolean USE_SET_REPOSITORY = false;
 
     public boolean addToRootSet(ControlFlowGraph cfg) {
         if (TRACE) out.println("Adding "+cfg.getMethod()+" to root set.");
@@ -428,6 +431,8 @@ public class AndersenPointerAnalysis {
     HashSet newChangedFields;
     HashSet changedFields_Methods;
     
+    SetFactory setFactory;
+    
     /** Change flag, for iterations. */
     boolean change;
     
@@ -457,6 +462,11 @@ public class AndersenPointerAnalysis {
         if (TRACK_CHANGED_FIELDS) {
             /*oldChangedFields =*/ newChangedFields = new HashSet();
             changedFields_Methods = new HashSet();
+        }
+        if (USE_SET_REPOSITORY) {
+            setFactory = new SetRepository();
+        } else {
+            setFactory = SetRepository.LinkedHashSetFactory.INSTANCE;
         }
         this.initializeStatics(addDefaults);
     }
@@ -931,7 +941,7 @@ public class AndersenPointerAnalysis {
     
     Set getInclusionEdges(Node n) { return (Set)nodeToInclusionEdges.get(n); }
     
-    LinkedHashSet getFromCache(OutsideNode n) {
+    Set getFromCache(OutsideNode n) {
         if (USE_SOFT_REFERENCES) {
             java.lang.ref.SoftReference r = (java.lang.ref.SoftReference)nodeToConcreteNodes.get(n);
             return r != null ? (LinkedHashSet)r.get() : null;
@@ -940,7 +950,7 @@ public class AndersenPointerAnalysis {
         }
     }
     
-    void addToCache(OutsideNode n, LinkedHashSet s) {
+    void addToCache(OutsideNode n, Set s) {
         if (USE_SOFT_REFERENCES) {
             nodeToConcreteNodes.put(n, new java.lang.ref.SoftReference(s));
         } else {
@@ -1101,14 +1111,14 @@ public class AndersenPointerAnalysis {
     
     boolean temp_change;
     
-    LinkedHashSet getConcreteNodes(OutsideNode from, Path p) {
+    Set getConcreteNodes(OutsideNode from, Path p) {
         while (from.skip != null) {
             from = from.skip;
         }
         if (from.visited) {
             Path p2 = p;
             if (TRACE_CYCLES) out.println("cycle detected! node="+from+" path="+p);
-            LinkedHashSet s = (LinkedHashSet)nodeToInclusionEdges.get(from);
+            Set s = (Set)nodeToInclusionEdges.get(from);
             if (VerifyAssertions) jq.Assert(s != null);
             OutsideNode last = from;
             for (;; p = p.cdr()) {
@@ -1118,10 +1128,14 @@ public class AndersenPointerAnalysis {
                 if (TRACE) out.println("next in path: "+n+", merging into: "+from);
                 if (VerifyAssertions) jq.Assert(n.skip == null);
                 n.skip = from;
-                LinkedHashSet s2 = (LinkedHashSet)nodeToInclusionEdges.get(n);
+                Set s2 = (Set)nodeToInclusionEdges.get(n);
                 //s2.remove(last);
                 if (TRACE) out.println("Set of inclusion edges from node "+n+": "+s2);
-                s.addAll(s2);
+                if (USE_SET_REPOSITORY) {
+                    s = ((SetRepository.SharedSet)s).copyAndAddAll(s2, false);
+                } else {
+                    s.addAll(s2);
+                }
                 nodeToInclusionEdges.put(n, s);
                 last = n;
             }
@@ -1141,12 +1155,13 @@ public class AndersenPointerAnalysis {
             if (TRACE) out.println("Final set of inclusion edges from node "+from+": "+s);
             return null;
         }
-        LinkedHashSet result = getFromCache(from);
+        Set result = getFromCache(from);
         boolean brand_new = false;
         if (REUSE_CACHES) {
             if (result == null) {
                 if (TRACE) out.println("No cache for "+from+" yet, creating.");
-                addToCache(from, result = new LinkedHashSet());
+                result = setFactory.makeSet();
+                addToCache(from, result);
                 brand_new = true;
             } else {
                 Object b = cacheIsCurrent.get(from);
@@ -1163,7 +1178,8 @@ public class AndersenPointerAnalysis {
                 if (TRACE) out.println("Using cached result for "+from+".");
                 return result;
             }
-            addToCache(from, result = new LinkedHashSet());
+            result = setFactory.makeSet();
+            addToCache(from, result);
         }
         LinkedHashSet s = (LinkedHashSet)nodeToInclusionEdges.get(from);
         if (s == null) {
@@ -1197,7 +1213,7 @@ public class AndersenPointerAnalysis {
                 if (to instanceof OutsideNode) {
                     if (TRACE) out.println("Visiting inclusion edge "+from+" --> "+to+"...");
                     from.visited = true;
-                    LinkedHashSet s2 = getConcreteNodes((OutsideNode)to, p);
+                    Set s2 = getConcreteNodes((OutsideNode)to, p);
                     from.visited = false;
                     if (from.skip != null) {
                         if (TRACE) out.println("Node "+from+" is skipped...");
@@ -1218,13 +1234,37 @@ public class AndersenPointerAnalysis {
                                 continue;
                             }
                         }
-                        if (result.addAll(s2)) {
+                        boolean change_from_union;
+                        if (USE_SET_REPOSITORY) {
+                            Set result2 = ((SetRepository.SharedSet)result).copyAndAddAll(s2, false);
+                            if (result != result2) {
+                                change_from_union = true;
+                                addToCache(from, result = result2);
+                            } else {
+                                change_from_union = false;
+                            }
+                        } else {
+                            change_from_union = result.addAll(s2);
+                        }
+                        if (change_from_union) {
                             if (TRACE) out.println("Unioning cache of target "+to+" changed our cache");
                             local_change = true;
                         }
                     }
                 } else {
-                    if (result.add(to)) {
+                    boolean change_from_add;
+                    if (USE_SET_REPOSITORY) {
+                        Set result2 = ((SetRepository.SharedSet)result).copyAndAddAll(Collections.singleton(to), false);
+                        if (result != result2) {
+                            change_from_add = true;
+                            addToCache(from, result = result2);
+                        } else {
+                            change_from_add = false;
+                        }
+                    } else {
+                        change_from_add = result.add(to);
+                    }
+                    if (change_from_add) {
                         if (TRACE) out.println("Adding concrete node "+to+" changed our cache");
                         local_change = true;
                     }
