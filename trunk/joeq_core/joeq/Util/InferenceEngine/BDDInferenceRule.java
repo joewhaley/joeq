@@ -90,7 +90,8 @@ public class BDDInferenceRule extends InferenceRule {
             RuleTerm rt = (RuleTerm) top.get(i);
             BDDRelation r = (BDDRelation) rt.relation;
             relationValues[i] = r.relation.id();
-            if (solver.TRACE) solver.out.println("Relation "+r+", current value: "+relationValues[i].toStringWithDomains());
+            if (solver.TRACE) solver.out.println("Relation "+r);
+            if (solver.TRACE_FULL) solver.out.println("   current value: "+relationValues[i].toStringWithDomains());
             BDDPairing pairing = null;
             for (int j = 0; j < rt.variables.size(); ++j) {
                 Variable v = (Variable) rt.variables.get(j);
@@ -115,7 +116,7 @@ public class BDDInferenceRule extends InferenceRule {
             }
         }
         BDDRelation r = (BDDRelation) bottom.relation;
-        if (solver.TRACE) solver.out.println("Current value of relation "+bottom+": "+r.relation.toStringWithDomains());
+        if (solver.TRACE_FULL) solver.out.println("Current value of relation "+bottom+": "+r.relation.toStringWithDomains());
         
         Set variablesToQuantify = new HashSet(variableToBDDDomain.keySet());
         variablesToQuantify.removeAll(bottom.variables);
@@ -156,10 +157,10 @@ public class BDDInferenceRule extends InferenceRule {
             result.replaceWith(pairing);
             pairing.reset();
         }
-        if (solver.TRACE) solver.out.println("Adding to "+bottom+": "+result.toStringWithDomains());
+        if (solver.TRACE_FULL) solver.out.println("Adding to "+bottom+": "+result.toStringWithDomains());
         BDD oldRelation = r.relation.id();
         r.relation.orWith(result);
-        if (solver.TRACE) solver.out.println("Relation "+r+" is now: "+r.relation.toStringWithDomains());
+        if (solver.TRACE_FULL) solver.out.println("Relation "+r+" is now: "+r.relation.toStringWithDomains());
         boolean changed = !oldRelation.equals(r.relation);
         oldRelation.free();
         return changed;
@@ -177,7 +178,8 @@ public class BDDInferenceRule extends InferenceRule {
             RuleTerm rt = (RuleTerm) top.get(i);
             BDDRelation r = (BDDRelation) rt.relation;
             allRelationValues[i] = r.relation.id();
-            if (solver.TRACE) solver.out.println("Relation "+r+", current value: "+allRelationValues[i].toStringWithDomains());
+            if (solver.TRACE) solver.out.println("Relation "+r);
+            if (solver.TRACE_FULL) solver.out.println("   current value: "+allRelationValues[i].toStringWithDomains());
             BDDPairing pairing = null;
             for (int j = 0; j < rt.variables.size(); ++j) {
                 Variable v = (Variable) rt.variables.get(j);
@@ -202,10 +204,10 @@ public class BDDInferenceRule extends InferenceRule {
             }
             newRelationValues[i] = allRelationValues[i].apply(oldRelationValues[i], BDDFactory.diff);
             oldRelationValues[i].free();
-            if (solver.TRACE) solver.out.println("New for relation "+r+": "+newRelationValues[i].toStringWithDomains());
+            if (solver.TRACE_FULL) solver.out.println("New for relation "+r+": "+newRelationValues[i].toStringWithDomains());
         }
         BDDRelation r = (BDDRelation) bottom.relation;
-        if (solver.TRACE) solver.out.println("Current value of relation "+bottom+": "+r.relation.toStringWithDomains());
+        if (solver.TRACE_FULL) solver.out.println("Current value of relation "+bottom+": "+r.relation.toStringWithDomains());
         
         Set variablesToQuantify = new HashSet(variableToBDDDomain.keySet());
         variablesToQuantify.removeAll(bottom.variables);
@@ -234,7 +236,8 @@ public class BDDInferenceRule extends InferenceRule {
             results[i] = topBdd.relprod(newRelationValues[i], quantify);
             topBdd.free();
             newRelationValues[i].free();
-            if (solver.TRACE) solver.out.println(" = "+results[i].toStringWithDomains());
+            if (solver.TRACE_FULL) solver.out.println(" = "+results[i].toStringWithDomains());
+            else if (solver.TRACE) solver.out.println(" = ");
         }
         BDD result = solver.bdd.zero();
         for (int i = 0; i < results.length; ++i) {
@@ -257,10 +260,10 @@ public class BDDInferenceRule extends InferenceRule {
             result.replaceWith(pairing);
             pairing.reset();
         }
-        if (solver.TRACE) solver.out.println("Adding to "+bottom+": "+result.toStringWithDomains());
+        if (solver.TRACE_FULL) solver.out.println("Adding to "+bottom+": "+result.toStringWithDomains());
         BDD oldRelation = r.relation.id();
         r.relation.orWith(result);
-        if (solver.TRACE) solver.out.println("Relation "+r+" is now: "+r.relation.toStringWithDomains());
+        if (solver.TRACE_FULL) solver.out.println("Relation "+r+" is now: "+r.relation.toStringWithDomains());
         boolean changed = !oldRelation.equals(r.relation);
         oldRelation.free();
         oldRelationValues = allRelationValues;
