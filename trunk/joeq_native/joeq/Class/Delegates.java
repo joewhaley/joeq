@@ -17,7 +17,7 @@ import Memory.StackAddress;
 import Run_Time.Debug;
 import Run_Time.ExceptionDeliverer;
 
-class Delegates implements jq_ClassFileConstants {
+public class Delegates implements jq_ClassFileConstants {
     static class Field implements jq_Field.Delegate {
 	public final boolean isCodeAddressType(jq_Field f) {
 	    return f.getType() == CodeAddress._class ||
@@ -63,18 +63,30 @@ class Delegates implements jq_ClassFileConstants {
                     default_compiled_version = x86ReferenceLinker._abstractMethodError.getDefaultCompiledVersion();
                 }
             } else {
-                Compil3rInterface c;
-                if (true)
-                    c = new x86ReferenceCompiler(m);
-                //else
-                //    c = new x86OpenJITCompiler(m);
-                default_compiled_version = c.compile();
+                default_compiled_version = default_compiler.compile(m);
                 if (jq.RunningNative)
                     default_compiled_version.patchDirectBindCalls();
             }
 	    return default_compiled_version;
 	}
     }
+    public static Compil3rInterface default_compiler;
+    static {
+        String default_compiler = System.getProperty("joeq.compiler", "Compil3r.Reference.x86.x86ReferenceCompiler$Factory");
+        setDefaultCompiler(default_compiler);
+    }
+    public static void setDefaultCompiler(String name) {
+        try {
+            Class c = Class.forName(name);
+            default_compiler = (Compil3rInterface) c.newInstance();
+        } catch (Exception x) {
+            System.err.println("Error occurred while instantiating compiler "+name);
+            x.printStackTrace();
+            if (default_compiler == null)
+                default_compiler = new Compil3r.Reference.x86.x86ReferenceCompiler.Factory();
+        }
+    }
+    
     static class CompiledCode implements jq_CompiledCode.Delegate {
 	public void patchDirectBindCalls (Iterator i) {
 	    while (i.hasNext()) {
