@@ -9,13 +9,12 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
-
 import joeq.Class.jq_Method;
 import joeq.Compiler.Analysis.IPA.ProgramLocation;
-import joeq.Util.Collections.GenericInvertibleMultiMap;
-import joeq.Util.Collections.GenericMultiMap;
-import joeq.Util.Collections.InvertibleMultiMap;
-import joeq.Util.Collections.MultiMap;
+import jwutil.collections.GenericInvertibleMultiMap;
+import jwutil.collections.GenericMultiMap;
+import jwutil.collections.InvertibleMultiMap;
+import jwutil.collections.MultiMap;
 
 /**
  * @author John Whaley <jwhaley@alum.mit.edu>
@@ -173,16 +172,21 @@ public class CachedCallGraph extends CallGraph {
         return callSites.getValues(caller);
     }
 
-    /**
-     * @param context
-     * @param callSite
-     * @return
+    /* (non-Javadoc)
+     * @see joeq.Compiler.Quad.CallGraph#getTargetMethods(java.lang.Object, joeq.Compiler.Analysis.IPA.ProgramLocation)
      */
     public Collection getTargetMethods(Object context, ProgramLocation callSite) {
         if (edges == null) invalidateCache();
         return edges.getValues(callSite);
     }
     
+    /**
+     * Inline the given edge in the call graph.
+     * 
+     * @param caller  caller method
+     * @param callSite  call site to inline
+     * @param callee  callee method
+     */
     public void inlineEdge(jq_Method caller, ProgramLocation callSite, jq_Method callee) {
         if (false) System.out.println("Inlining edge "+callSite+" -> "+callee);
         // remove call site from caller.

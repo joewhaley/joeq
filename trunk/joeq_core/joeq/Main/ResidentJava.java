@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import joeq.Util.IO.MyStringTokenizer;
+import jwutil.strings.MyStringTokenizer;
 
 /**
  * ResidentJava

@@ -10,7 +10,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_Type;
@@ -21,13 +20,13 @@ import joeq.Compiler.Quad.ControlFlowGraphVisitor;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Main.HostedVM;
-import joeq.Util.BitString;
-import joeq.Util.Collections.BitStringSet;
-import joeq.Util.Collections.Pair;
-import joeq.Util.Graphs.EdgeGraph;
-import joeq.Util.Graphs.Graph;
 import joeq.Util.Templates.List;
 import joeq.Util.Templates.ListIterator;
+import jwutil.collections.BitStringSet;
+import jwutil.collections.Pair;
+import jwutil.graphs.EdgeGraph;
+import jwutil.graphs.Graph;
+import jwutil.math.BitString;
 
 /**
  * ReachingDefs

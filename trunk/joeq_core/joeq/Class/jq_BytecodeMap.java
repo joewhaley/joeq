@@ -3,7 +3,7 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Class;
 
-import joeq.Util.Assert;
+import jwutil.util.Assert;
 
 /**
  * This class implements a mapping from code offsets to bytecode indices.

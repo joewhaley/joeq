@@ -5,7 +5,6 @@ package joeq.Compiler.Quad;
 
 import java.util.Collection;
 import java.util.Iterator;
-
 import joeq.Class.jq_Class;
 import joeq.Util.Templates.List;
 import joeq.Util.Templates.ListIterator;

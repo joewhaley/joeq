@@ -9,7 +9,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
-
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
@@ -24,10 +23,10 @@ import joeq.Class.jq_Type;
 import joeq.Runtime.Reflection;
 import joeq.Runtime.TypeCheck;
 import joeq.UTF.Utf8;
-import joeq.Util.Assert;
-import joeq.Util.Strings;
-import joeq.Util.Collections.IdentityHashCodeWrapper;
-import joeq.Util.Collections.LinearSet;
+import jwutil.collections.IdentityHashCodeWrapper;
+import jwutil.collections.LinearSet;
+import jwutil.strings.Strings;
+import jwutil.util.Assert;
 
 /**
  * @author  John Whaley <jwhaley@alum.mit.edu>

@@ -3,10 +3,6 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Class;
 
-import java.io.DataInput;
-import java.io.DataInputStream;
-import java.io.DataOutput;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
@@ -18,9 +14,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
-
+import java.io.DataInput;
+import java.io.DataInputStream;
+import java.io.DataOutput;
+import java.io.IOException;
 import joeq.Allocator.ObjectLayout;
-import joeq.Class.PrimordialClassLoader;
 import joeq.ClassLib.ClassLibInterface;
 import joeq.Compiler.CompilationConstants;
 import joeq.Compiler.BytecodeAnalysis.Bytecodes;
@@ -34,10 +32,10 @@ import joeq.Runtime.Reflection;
 import joeq.Runtime.TypeCheck;
 import joeq.UTF.UTFDataFormatError;
 import joeq.UTF.Utf8;
-import joeq.Util.Assert;
-import joeq.Util.IO.Textualizer;
-import joeq.Util.Convert;
-import joeq.Util.Strings;
+import jwutil.io.Textualizer;
+import jwutil.strings.Strings;
+import jwutil.util.Assert;
+import jwutil.util.Convert;
 
 /**
  * jq_Class

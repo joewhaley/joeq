@@ -4,9 +4,8 @@
 package joeq.Compiler.Dataflow;
 
 import java.util.Comparator;
-
 import joeq.Compiler.Quad.BasicBlock;
-import joeq.Util.Collections.Pair;
+import jwutil.collections.Pair;
 
 public class BBComparator implements Comparator {
 

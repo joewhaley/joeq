@@ -3,18 +3,17 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Runtime;
 
+import java.util.Iterator;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.util.Iterator;
-
-import joeq.ClassLib.ClassLibInterface;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_InstanceField;
 import joeq.Class.jq_StaticField;
+import joeq.ClassLib.ClassLibInterface;
 import joeq.Main.jq;
-import joeq.Util.Assert;
 import joeq.UTF.Utf8;
+import jwutil.util.Assert;
 
 /**
  * ObjectTraverser

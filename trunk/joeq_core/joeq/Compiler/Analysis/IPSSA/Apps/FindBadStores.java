@@ -1,8 +1,5 @@
 package joeq.Compiler.Analysis.IPSSA.Apps;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -10,7 +7,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Set;
-
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Field;
@@ -21,8 +20,8 @@ import joeq.Compiler.Analysis.IPSSA.IPSSABuilder;
 import joeq.Compiler.Quad.CallGraph;
 import joeq.Compiler.Quad.RootedCHACallGraph;
 import joeq.Main.HostedVM;
-import joeq.Util.Assert;
-import joeq.Util.Collections.AppendIterator;
+import jwutil.collections.AppendIterator;
+import jwutil.util.Assert;
 
 public class FindBadStores extends IPSSABuilder.Application {    
     private static CallGraph _cg         = null;

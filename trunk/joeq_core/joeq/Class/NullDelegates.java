@@ -4,10 +4,9 @@
 package joeq.Class;
 
 import java.util.Iterator;
-
 import joeq.Memory.CodeAddress;
 import joeq.Memory.StackAddress;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
 
 /**
  * NullDelegates

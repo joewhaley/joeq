@@ -1,8 +1,5 @@
 package joeq.Compiler.Analysis.IPSSA.Apps;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -15,7 +12,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
-
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Field;
@@ -26,8 +25,8 @@ import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.ReturnedNode;
 import joeq.Compiler.Quad.CallGraph;
 import joeq.Compiler.Quad.RootedCHACallGraph;
 import joeq.Main.HostedVM;
-import joeq.Util.Assert;
-import joeq.Util.Collections.AppendIterator;
+import jwutil.collections.AppendIterator;
+import jwutil.util.Assert;
 
 class ClassHierarchy {
     protected class ClassHieraryNode {

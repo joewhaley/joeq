@@ -9,7 +9,6 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.Stack;
-
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_InstanceMethod;
@@ -19,9 +18,9 @@ import joeq.Class.jq_StaticMethod;
 import joeq.Compiler.CompilationConstants;
 import joeq.Compiler.CompilationState;
 import joeq.Runtime.TypeCheck;
-import joeq.Util.Assert;
-import joeq.Util.Collections.HashCodeComparator;
-import joeq.Util.Collections.SortedArraySet;
+import jwutil.collections.HashCodeComparator;
+import jwutil.collections.SortedArraySet;
+import jwutil.util.Assert;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>

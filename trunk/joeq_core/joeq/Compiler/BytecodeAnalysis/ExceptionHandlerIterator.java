@@ -6,8 +6,7 @@ package joeq.Compiler.BytecodeAnalysis;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
-
-import joeq.Util.Collections.AppendListIterator;
+import jwutil.collections.AppendListIterator;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>

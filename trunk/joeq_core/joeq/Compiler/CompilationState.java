@@ -4,22 +4,21 @@
 package joeq.Compiler;
 
 import java.util.Collection;
-import java.util.Set;
 import java.util.HashMap;
-
+import java.util.Set;
 import joeq.Class.PrimordialClassLoader;
-import joeq.Compiler.Quad.Quad;
-import joeq.Compiler.Quad.Operator.CheckCast;
-import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Member;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_Type;
-import joeq.Util.Templates.List;
-import joeq.Util.Templates.UnmodifiableList;
+import joeq.Compiler.Quad.Quad;
+import joeq.Compiler.Quad.Operator.CheckCast;
+import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Main.jq;
 import joeq.Runtime.TypeCheck;
 import joeq.UTF.Utf8;
+import joeq.Util.Templates.List;
+import joeq.Util.Templates.UnmodifiableList;
 
 /**
  * CompilationState

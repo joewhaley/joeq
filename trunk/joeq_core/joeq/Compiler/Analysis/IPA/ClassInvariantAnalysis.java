@@ -3,7 +3,6 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Analysis.IPA;
 
-import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -12,7 +11,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
-
+import java.io.PrintStream;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Field;
@@ -22,17 +21,17 @@ import joeq.Class.jq_Method;
 import joeq.Class.jq_Primitive;
 import joeq.Class.jq_Type;
 import joeq.Class.jq_TypeVisitor;
-import joeq.Compiler.Quad.CallGraph;
-import joeq.Compiler.Quad.CodeCache;
-import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.FieldNode;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.Node;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.NodeSet;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.ParamNode;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.UnknownTypeNode;
-import joeq.Util.Assert;
-import joeq.Util.Graphs.Navigator;
+import joeq.Compiler.Quad.CallGraph;
+import joeq.Compiler.Quad.CodeCache;
+import joeq.Compiler.Quad.ControlFlowGraph;
+import jwutil.graphs.Navigator;
+import jwutil.util.Assert;
 
 /**
  * ClassInvariantAnalysis
@@ -82,7 +81,7 @@ public class ClassInvariantAnalysis
         CallGraph cg;
 
         /**
-         * @see joeq.Util.Graphs.Navigator#next(java.lang.Object)
+         * @see jwutil.graphs.Navigator#next(java.lang.Object)
          */
         public Collection next(Object node) {
             jq_Method caller = (jq_Method) node;
@@ -98,7 +97,7 @@ public class ClassInvariantAnalysis
         }
 
         /**
-         * @see joeq.Util.Graphs.Navigator#prev(java.lang.Object)
+         * @see jwutil.graphs.Navigator#prev(java.lang.Object)
          */
         public Collection prev(Object node) {
             jq_Method callee = (jq_Method) node;

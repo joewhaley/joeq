@@ -3,7 +3,7 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Dataflow;
 
-import joeq.Util.Graphs.Graph;
+import jwutil.graphs.Graph;
 
 /**
  * Problem
@@ -13,20 +13,23 @@ import joeq.Util.Graphs.Graph;
  */
 public abstract class Problem {
 
-    /** Performs necessary initialization for this dataflow problem.
+    /**
+     * Performs necessary initialization for this dataflow problem.
      * 
      * @param g graph of locations that we will run over
      */
     public void initialize(Graph g) {}
 
-    /** Returns true if this is a forward dataflow problem, false if it is
+    /**
+     * Returns true if this is a forward dataflow problem, false if it is
      * a backward dataflow problem.
      * 
      * @return direction
      */
     public abstract boolean direction();
 
-    /** Returns the boundary value for this dataflow problem.  For a forward
+    /**
+     * Returns the boundary value for this dataflow problem.  For a forward
      * problem, this is the value at the entrypoint, whereas for a backward problem,
      * this is the value at the exitpoint.
      * 
@@ -34,20 +37,23 @@ public abstract class Problem {
      */
     public abstract Fact boundary();
 
-    /** Returns the value that the interior points should be initialized to.
+    /**
+     * Returns the value that the interior points should be initialized to.
      * 
      * @return value for interior points
      */
     public abstract Fact interior();
     
-    /** Returns the transfer function for the given code element.
+    /**
+     * Returns the transfer function for the given code element.
      * 
      * @param e code element
      * @return transfer function for the given code element
      */
     public abstract TransferFunction getTransferFunction(Object e);
     
-    /** Applies the transfer function to the given dataflow value, yielding
+    /**
+     * Applies the transfer function to the given dataflow value, yielding
      * another dataflow value.
      * 
      * @param tf transfer function
@@ -58,7 +64,8 @@ public abstract class Problem {
         return tf.apply(f);
     }
     
-    /** Compares two dataflow facts, returning true if they are equal and false
+    /**
+     * Compares two dataflow facts, returning true if they are equal and false
      * otherwise.
      * 
      * @param f1 first fact
@@ -69,7 +76,8 @@ public abstract class Problem {
         return f1.equals(f2);
     }
     
-    /** Combines two dataflow values, returning a new value that is the confluence
+    /**
+     * Combines two dataflow values, returning a new value that is the confluence
      * of the two.
      * 
      * @param f1 first fact
@@ -80,7 +88,8 @@ public abstract class Problem {
         return f1.merge(f2);
     }
     
-    /** Returns the composition of two transfer functions.  The default implementation
+    /**
+     * Returns the composition of two transfer functions.  The default implementation
      * simply returns a transfer function that applies each of the transfer functions
      * in turn.
      * 
@@ -100,13 +109,14 @@ public abstract class Problem {
         };
     }
     
-    /** Returns the closure of the given transfer function.  The closure is a
+    /**
+     * Returns the closure of the given transfer function.  The closure is a
      * transfer function that is equivalent to composing the given transfer function
      * with itself repeatedly until the value stablizes.  (A monotone lattice with
      * finite descending chains guarantees this.)
      * 
      * @param tf
-     * @return
+     * @return  transfer function representing the closure
      */
     public TransferFunction closure(TransferFunction tf) {
         final TransferFunction t = tf;

@@ -3,10 +3,6 @@
 //Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.BytecodeAnalysis;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -18,7 +14,10 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
-
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.Serializable;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
@@ -39,10 +38,10 @@ import joeq.Class.jq_TryCatchBC;
 import joeq.Class.jq_Type;
 import joeq.Runtime.Reflection;
 import joeq.UTF.Utf8;
-import joeq.Util.Assert;
-import joeq.Util.Strings;
-import joeq.Util.Collections.LinearSet;
-import joeq.Util.IO.ByteSequence;
+import jwutil.collections.LinearSet;
+import jwutil.io.ByteSequence;
+import jwutil.strings.Strings;
+import jwutil.util.Assert;
 
 /*
 * @author  John Whaley <jwhaley@alum.mit.edu>

@@ -3,8 +3,6 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Quad;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -13,7 +11,7 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
-
+import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_ClassInitializer;
 import joeq.Class.jq_Field;
@@ -22,9 +20,6 @@ import joeq.Class.jq_Method;
 import joeq.Class.jq_Reference;
 import joeq.Class.jq_StaticField;
 import joeq.Class.jq_Type;
-import joeq.Class.PrimordialClassLoader;
-import joeq.Compiler.Analysis.IPA.*;
-import joeq.Compiler.BytecodeAnalysis.CallTargets;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.CallSite;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.ConcreteTypeNode;
@@ -38,14 +33,16 @@ import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.PassedParameter;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.ReturnValueNode;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.ThrownExceptionNode;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.UnknownTypeNode;
-import joeq.Util.Assert;
-import joeq.Util.Strings;
-import joeq.Util.Collections.HashCodeComparator;
-import joeq.Util.Collections.LinearSet;
-import joeq.Util.Collections.Pair;
-import joeq.Util.Collections.SetFactory;
-import joeq.Util.Collections.SetRepository;
-import joeq.Util.Collections.SortedArraySet;
+import joeq.Compiler.Analysis.IPA.ProgramLocation;
+import joeq.Compiler.BytecodeAnalysis.CallTargets;
+import jwutil.collections.HashCodeComparator;
+import jwutil.collections.LinearSet;
+import jwutil.collections.Pair;
+import jwutil.collections.SetFactory;
+import jwutil.collections.SetRepository;
+import jwutil.collections.SortedArraySet;
+import jwutil.strings.Strings;
+import jwutil.util.Assert;
 
 /**
  *

@@ -3,7 +3,7 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Util.Templates;
 
-import joeq.Util.Collections.UnmodifiableListIterator;
+import jwutil.collections.UnmodifiableListIterator;
 
 /**
  * @author John Whaley <jwhaley@alum.mit.edu>

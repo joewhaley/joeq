@@ -78,24 +78,24 @@ import joeq.Memory.Address;
 import joeq.Memory.StackAddress;
 import joeq.Runtime.Reflection;
 import joeq.Runtime.TypeCheck;
-import joeq.Util.Assert;
-import joeq.Util.Strings;
-import joeq.Util.Collections.CollectionTestWrapper;
-import joeq.Util.Collections.FilterIterator;
-import joeq.Util.Collections.FlattenedCollection;
-import joeq.Util.Collections.HashCodeComparator;
-import joeq.Util.Collections.IdentityHashCodeWrapper;
-import joeq.Util.Collections.IndexMap;
-import joeq.Util.Collections.InstrumentedSetWrapper;
-import joeq.Util.Collections.MultiMap;
-import joeq.Util.Collections.Pair;
-import joeq.Util.Collections.SetFactory;
-import joeq.Util.Collections.SortedArraySet;
-import joeq.Util.Collections.Triple;
-import joeq.Util.Graphs.Navigator;
-import joeq.Util.IO.Textualizable;
-import joeq.Util.IO.Textualizer;
-
+import jwutil.collections.CollectionTestWrapper;
+import jwutil.collections.Filter;
+import jwutil.collections.FilterIterator;
+import jwutil.collections.FlattenedCollection;
+import jwutil.collections.HashCodeComparator;
+import jwutil.collections.IdentityHashCodeWrapper;
+import jwutil.collections.IndexMap;
+import jwutil.collections.InstrumentedSetWrapper;
+import jwutil.collections.MultiMap;
+import jwutil.collections.Pair;
+import jwutil.collections.SetFactory;
+import jwutil.collections.SortedArraySet;
+import jwutil.collections.Triple;
+import jwutil.graphs.Navigator;
+import jwutil.io.Textualizable;
+import jwutil.io.Textualizer;
+import jwutil.strings.Strings;
+import jwutil.util.Assert;
 
 /**
  * MethodSummary
@@ -147,8 +147,9 @@ public class MethodSummary {
     /**
      * Get the method summary for the given CFG.  Builds and caches it if it doesn't
      * already exist.
+     * 
      * @param cfg
-     * @return
+     * @return  summary for the given CFG
      */
     public static MethodSummary getSummary(ControlFlowGraph cfg) {
         MethodSummary s = (MethodSummary) summary_cache.get(cfg);
@@ -224,7 +225,7 @@ public class MethodSummary {
      * 
      * @param cfg
      * @param cs
-     * @return
+     * @return  summary for the given CFG and context
      */
     public static MethodSummary getSummary(ControlFlowGraph cfg, CallSite cs) {
         if (clone_cache != null) {
@@ -1246,7 +1247,7 @@ public class MethodSummary {
     public static class InsideEdgeNavigator implements Navigator {
 
         /* (non-Javadoc)
-         * @see joeq.Util.Graphs.Navigator#next(java.lang.Object)
+         * @see jwutil.graphs.Navigator#next(java.lang.Object)
          */
         public Collection next(Object node) {
             Node n = (Node) node;
@@ -1254,7 +1255,7 @@ public class MethodSummary {
         }
 
         /* (non-Javadoc)
-         * @see joeq.Util.Graphs.Navigator#prev(java.lang.Object)
+         * @see jwutil.graphs.Navigator#prev(java.lang.Object)
          */
         public Collection prev(Object node) {
             Node n = (Node) node;
@@ -2172,12 +2173,12 @@ public class MethodSummary {
         }
         
         /* (non-Javadoc)
-         * @see joeq.Util.IO.Textualizable#addEdge(java.lang.String, joeq.Util.IO.Textualizable)
+         * @see jwutil.io.Textualizable#addEdge(java.lang.String, jwutil.io.Textualizable)
          */
         public void addEdge(String edge, Textualizable t) { }
 
         /* (non-Javadoc)
-         * @see joeq.Util.IO.Textualizable#writeEdges(joeq.Util.IO.Textualizer)
+         * @see jwutil.io.Textualizable#writeEdges(jwutil.io.Textualizer)
          */
         public void writeEdges(Textualizer t) throws IOException { }
 
@@ -3968,7 +3969,7 @@ outer:
             return new FilterIterator(succ.iterator(), filter);
         }
         /** A filter to unwrap objects from their IdentityHashCodeWrapper. */
-        public static final FilterIterator.Filter filter = new FilterIterator.Filter() {
+        public static final Filter filter = new Filter() {
             public Object map(Object o) { return ((IdentityHashCodeWrapper)o).getObject(); }
         };
     }

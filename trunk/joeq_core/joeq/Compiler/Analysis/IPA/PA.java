@@ -65,23 +65,23 @@ import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Main.HostedVM;
-import joeq.Util.Assert;
-import joeq.Util.Collections.IndexMap;
-import joeq.Util.Collections.IndexedMap;
-import joeq.Util.Collections.Pair;
-import joeq.Util.Graphs.GlobalPathNumbering;
-import joeq.Util.Graphs.Navigator;
-import joeq.Util.Graphs.PathNumbering;
-import joeq.Util.Graphs.RootPathNumbering;
-import joeq.Util.Graphs.SCCPathNumbering;
-import joeq.Util.Graphs.SCCTopSortedGraph;
-import joeq.Util.Graphs.SCComponent;
-import joeq.Util.Graphs.Traversals;
-import joeq.Util.Graphs.PathNumbering.Range;
-import joeq.Util.Graphs.SCCPathNumbering.Selector;
-import joeq.Util.IO.SystemProperties;
-import joeq.Util.IO.Textualizable;
-import joeq.Util.IO.Textualizer;
+import jwutil.collections.IndexMap;
+import jwutil.collections.IndexedMap;
+import jwutil.collections.Pair;
+import jwutil.graphs.GlobalPathNumbering;
+import jwutil.graphs.Navigator;
+import jwutil.graphs.PathNumbering;
+import jwutil.graphs.RootPathNumbering;
+import jwutil.graphs.SCCPathNumbering;
+import jwutil.graphs.SCCTopSortedGraph;
+import jwutil.graphs.SCComponent;
+import jwutil.graphs.Traversals;
+import jwutil.graphs.PathNumbering.Range;
+import jwutil.graphs.PathNumbering.Selector;
+import jwutil.io.SystemProperties;
+import jwutil.io.Textualizable;
+import jwutil.io.Textualizer;
+import jwutil.util.Assert;
 import org.sf.javabdd.BDD;
 import org.sf.javabdd.BDDBitVector;
 import org.sf.javabdd.BDDDomain;
@@ -3194,6 +3194,9 @@ public class PA {
             this.maxBits = max_bits;
         }
         
+        /* (non-Javadoc)
+         * @see jwutil.graphs.PathNumbering.Selector#isImportant(java.lang.Object, java.lang.Object, java.math.BigInteger)
+         */
         public boolean isImportant(Object a, Object b, BigInteger num) {
             if (num.bitLength() > maxBits) return false;
             if (THREADS_ONLY) {
@@ -3207,7 +3210,7 @@ public class PA {
         }
         
         /* (non-Javadoc)
-         * @see joeq.Util.Graphs.PathNumbering.Selector#isImportant(joeq.Util.Graphs.SCComponent, Util.Graphs.SCComponent)
+         * @see jwutil.graphs.PathNumbering.Selector#isImportant(jwutil.graphs.SCComponent, jwutil.graphs.SCComponent, java.math.BigInteger)
          */
         public boolean isImportant(SCComponent scc1, SCComponent scc2, BigInteger num) {
             if (num.bitLength() > maxBits) return false;
@@ -3264,7 +3267,7 @@ public class PA {
         }
         
         /* (non-Javadoc)
-         * @see joeq.Util.Graphs.PathNumbering.Selector#isImportant(joeq.Util.Graphs.SCComponent, joeq.Util.Graphs.SCComponent)
+         * @see jwutil.graphs.PathNumbering.Selector#isImportant(jwutil.graphs.SCComponent, jwutil.graphs.SCComponent, java.math.BigInteger)
          */
         public boolean isImportant(SCComponent scc1, SCComponent scc2, BigInteger num) {
             if (num.bitLength() > MAX_HC_BITS) return false;
@@ -3275,6 +3278,9 @@ public class PA {
             return isImportant(scc1, o, num);
         }
         
+        /* (non-Javadoc)
+         * @see jwutil.graphs.PathNumbering.Selector#isImportant(java.lang.Object, java.lang.Object, java.math.BigInteger)
+         */
         public boolean isImportant(Object p, Object o, BigInteger num) {
             if (num.bitLength() > MAX_HC_BITS) return false;
             if (o instanceof ProgramLocation) return true;
@@ -3318,7 +3324,7 @@ public class PA {
         }
         
         /* (non-Javadoc)
-         * @see joeq.Util.Graphs.PathNumbering.Selector#isImportant(joeq.Util.Graphs.SCComponent, joeq.Util.Graphs.SCComponent)
+         * @see jwutil.graphs.PathNumbering.Selector#isImportant(java.lang.Object, java.lang.Object, java.math.BigInteger)
          */
         public boolean isImportant(Object p, Object o, BigInteger num) {
             if (o instanceof jq_Array) {
@@ -3354,7 +3360,7 @@ public class PA {
         }
         
         /* (non-Javadoc)
-         * @see joeq.Util.Graphs.PathNumbering.Selector#isImportant(joeq.Util.Graphs.SCComponent, joeq.Util.Graphs.SCComponent)
+         * @see jwutil.graphs.PathNumbering.Selector#isImportant(jwutil.graphs.SCComponent, jwutil.graphs.SCComponent, java.math.BigInteger)
          */
         public boolean isImportant(SCComponent scc1, SCComponent scc2, BigInteger num) {
             Set s = scc2.nodeSet();

@@ -6,7 +6,6 @@ package joeq.Compiler.Quad;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
-
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
@@ -72,8 +71,8 @@ import joeq.Memory.HeapAddress;
 import joeq.Memory.StackAddress;
 import joeq.Runtime.Reflection;
 import joeq.UTF.Utf8;
-import joeq.Util.Assert;
-import joeq.Util.Strings;
+import jwutil.strings.Strings;
+import jwutil.util.Assert;
 
 /**
  * Converts stack-based Java bytecode to Quad intermediate format.

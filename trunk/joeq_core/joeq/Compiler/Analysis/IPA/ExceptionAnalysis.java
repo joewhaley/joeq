@@ -11,11 +11,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.ref.SoftReference;
-
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
@@ -42,8 +40,8 @@ import joeq.Compiler.Quad.Operator.Return;
 import joeq.Compiler.Quad.Operator.Special;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Main.HostedVM;
-import joeq.Util.Graphs.SCComponent;
-import joeq.Util.Graphs.Traversals;
+import jwutil.graphs.SCComponent;
+import jwutil.graphs.Traversals;
 
 /**
  * Uses a call graph to figure out what exceptions can be thrown by a method invocation.

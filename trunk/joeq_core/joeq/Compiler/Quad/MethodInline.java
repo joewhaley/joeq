@@ -4,12 +4,11 @@
 package joeq.Compiler.Quad;
 
 import java.util.Collection;
-
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_Primitive;
 import joeq.Class.jq_Type;
-import joeq.Compiler.Analysis.IPA.*;
+import joeq.Compiler.Analysis.IPA.ProgramLocation;
 import joeq.Compiler.Analysis.IPA.ProgramLocation.QuadProgramLocation;
 import joeq.Compiler.BytecodeAnalysis.BytecodeVisitor;
 import joeq.Compiler.Quad.Operand.ConditionOperand;
@@ -25,8 +24,8 @@ import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.Operator.Move;
 import joeq.Compiler.Quad.Operator.Return;
 import joeq.Compiler.Quad.RegisterFactory.Register;
-import joeq.Util.Assert;
 import joeq.Util.Templates.ListIterator;
+import jwutil.util.Assert;
 
 /**
  * @author John Whaley <jwhaley@alum.mit.edu>

@@ -3,23 +3,22 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Main;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Set;
-
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.PrintStream;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_InstanceMethod;
 import joeq.Class.jq_StaticMethod;
 import joeq.Runtime.TypeCheck;
-import joeq.Util.Collections.AppendIterator;
+import jwutil.collections.AppendIterator;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>

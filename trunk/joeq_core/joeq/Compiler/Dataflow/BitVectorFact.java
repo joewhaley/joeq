@@ -3,7 +3,7 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Dataflow;
 
-import joeq.Util.BitString;
+import jwutil.math.BitString;
 
 public abstract class BitVectorFact implements Fact {
 

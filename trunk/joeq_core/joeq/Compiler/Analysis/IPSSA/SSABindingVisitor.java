@@ -7,7 +7,6 @@
 package joeq.Compiler.Analysis.IPSSA;
 
 import java.io.PrintStream;
-
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.ControlFlowGraph;
 

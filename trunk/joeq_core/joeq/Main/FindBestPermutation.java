@@ -3,14 +3,12 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Main;
 
+import java.util.StringTokenizer;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.util.StringTokenizer;
-
-import joeq.Util.Assert;
-
+import jwutil.util.Assert;
 import org.sf.javabdd.BDD;
 import org.sf.javabdd.BDDDomain;
 import org.sf.javabdd.BDDFactory;

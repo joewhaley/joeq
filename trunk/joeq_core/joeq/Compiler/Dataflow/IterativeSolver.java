@@ -6,13 +6,12 @@ package joeq.Compiler.Dataflow;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-
-import joeq.Util.Assert;
-import joeq.Util.Strings;
-import joeq.Util.Collections.MapFactory;
-import joeq.Util.Graphs.Graph;
-import joeq.Util.Graphs.Navigator;
-import joeq.Util.Graphs.Traversals;
+import jwutil.collections.MapFactory;
+import jwutil.graphs.Graph;
+import jwutil.graphs.Navigator;
+import jwutil.graphs.Traversals;
+import jwutil.strings.Strings;
+import jwutil.util.Assert;
 
 /**
  * Solves a dataflow problem using a iterative technique.  Successively
@@ -57,10 +56,11 @@ public class IterativeSolver
         this.initialize(p, graph, order);
     }
     
-    /** Initializes this solver with the given dataflow problem, graph, and
+    /**
+     * Initializes this solver with the given dataflow problem, graph, and
      * traversal order.
      * 
-     * @see joeq.Compiler.Dataflow.Solver#initialize(joeq.Compiler.Dataflow.Problem, joeq.Util.Graphs.Graph)
+     * @see joeq.Compiler.Dataflow.Solver#initialize(joeq.Compiler.Dataflow.Problem, jwutil.graphs.Graph)
      */
     public void initialize(Problem p, Graph graph, List order) {
         super.initialize(p, graph);

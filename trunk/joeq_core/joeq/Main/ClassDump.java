@@ -3,10 +3,9 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Main;
 
-import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Iterator;
-
+import java.io.PrintStream;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_InstanceField;

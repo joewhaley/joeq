@@ -5,8 +5,7 @@ package joeq.Class;
 
 import java.util.Arrays;
 import java.util.Iterator;
-
-import joeq.Util.Collections.AppendIterator;
+import jwutil.collections.AppendIterator;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>

@@ -9,16 +9,14 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-
+import joeq.Compiler.Quad.CallGraph;
+import joeq.Compiler.Quad.LoadedCallGraph;
+import jwutil.collections.IndexMap;
+import jwutil.collections.UnmodifiableIterator;
+import jwutil.util.Assert;
 import org.sf.javabdd.BDD;
 import org.sf.javabdd.BDDDomain;
 import org.sf.javabdd.BDDFactory;
-
-import joeq.Compiler.Quad.CallGraph;
-import joeq.Compiler.Quad.LoadedCallGraph;
-import joeq.Util.Assert;
-import joeq.Util.Collections.IndexMap;
-import joeq.Util.Collections.UnmodifiableIterator;
 
 /**
  * PACallGraph

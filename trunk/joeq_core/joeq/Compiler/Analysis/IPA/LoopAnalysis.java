@@ -1,17 +1,11 @@
 package joeq.Compiler.Analysis.IPA;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Set;
-
-import joeq.Main.Helper;
-import joeq.Util.Assert;
-import joeq.Util.Graphs.SCCTopSortedGraph;
-import joeq.Util.Graphs.SCComponent;
-import joeq.Util.Graphs.Traversals;
+import java.io.IOException;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.BasicBlock;
@@ -22,6 +16,11 @@ import joeq.Compiler.Quad.ControlFlowGraphVisitor;
 import joeq.Compiler.Quad.LoadedCallGraph;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.QuadVisitor;
+import joeq.Main.Helper;
+import jwutil.graphs.SCCTopSortedGraph;
+import jwutil.graphs.SCComponent;
+import jwutil.graphs.Traversals;
+import jwutil.util.Assert;
 
 /**
  * @author jwhaley

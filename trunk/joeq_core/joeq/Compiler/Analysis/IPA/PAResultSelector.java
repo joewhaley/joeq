@@ -8,13 +8,11 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Set;
-
 import joeq.Class.jq_Field;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_Type;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.Node;
-import joeq.Util.Assert;
-
+import jwutil.util.Assert;
 import org.sf.javabdd.BDD;
 import org.sf.javabdd.BDDDomain;
 import org.sf.javabdd.TypedBDDFactory.TypedBDD;

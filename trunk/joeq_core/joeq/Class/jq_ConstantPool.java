@@ -3,22 +3,20 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Class;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
-
-import joeq.Class.PrimordialClassLoader;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 import joeq.Compiler.BytecodeAnalysis.Bytecodes;
 import joeq.Runtime.Debug;
 import joeq.Runtime.Reflection;
 import joeq.UTF.Utf8;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>

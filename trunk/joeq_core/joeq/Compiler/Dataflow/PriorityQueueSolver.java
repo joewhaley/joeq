@@ -8,12 +8,11 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
-import joeq.Util.Collections.BinHeapPriorityQueue;
-import joeq.Util.Collections.MapFactory;
-import joeq.Util.Collections.MaxPriorityQueue;
-import joeq.Util.Graphs.Graph;
-import joeq.Util.Graphs.Traversals;
+import jwutil.collections.BinHeapPriorityQueue;
+import jwutil.collections.MapFactory;
+import jwutil.collections.MaxPriorityQueue;
+import jwutil.graphs.Graph;
+import jwutil.graphs.Traversals;
 
 /**
  * PriorityQueueSolver
@@ -45,7 +44,7 @@ public class PriorityQueueSolver extends WorklistSolver {
     /** Initializes this solver with the given dataflow problem, graph, and
      * traversal order.
      * 
-     * @see joeq.Compiler.Dataflow.Solver#initialize(joeq.Compiler.Dataflow.Problem, joeq.Util.Graphs.Graph)
+     * @see joeq.Compiler.Dataflow.Solver#initialize(joeq.Compiler.Dataflow.Problem, jwutil.graphs.Graph)
      */
     public void initialize(Problem p, Graph graph, List traversalOrder) {
         super.initialize(p, graph);

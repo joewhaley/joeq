@@ -15,7 +15,7 @@ import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_Type;
 import joeq.Compiler.Analysis.IPA.ProgramLocation;
-import joeq.Util.Collections.SizedArrayList;
+import jwutil.collections.SizedArrayList;
 
 /**
  * A simple call graph implementation based on class-hierarchy analysis with

@@ -13,7 +13,7 @@ import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Memory.Address;
 import joeq.Memory.HeapAddress;
 import joeq.Runtime.Reflection;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>

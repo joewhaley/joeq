@@ -23,10 +23,11 @@ import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.QuadIterator;
 import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.UTF.Utf8;
-import joeq.Util.Assert;
-import joeq.Util.IO.ByteSequence;
-import joeq.Util.IO.Textualizable;
-import joeq.Util.IO.Textualizer;
+import jwutil.io.ByteSequence;
+import jwutil.io.Textualizable;
+import jwutil.io.Textualizer;
+import jwutil.util.Assert;
+import jwutil.util.Convert;
 
 /**
  * This class provides a general mechanism to describe a location in the code,
@@ -292,7 +293,7 @@ public abstract class ProgramLocation implements Textualizable {
         public jq_Method getTargetMethod() {
             jq_Class clazz = ((jq_Method) super.m).getDeclaringClass();
             byte[] bc = ((jq_Method) super.m).getBytecode();
-            char cpi = joeq.Util.Convert.twoBytesToChar(bc, bcIndex+1);
+            char cpi = Convert.twoBytesToChar(bc, bcIndex+1);
             switch (bc[bcIndex]) {
                 case (byte) jq_ClassFileConstants.jbc_INVOKEVIRTUAL:
                 case (byte) jq_ClassFileConstants.jbc_INVOKESPECIAL:
@@ -368,7 +369,7 @@ public abstract class ProgramLocation implements Textualizable {
             jq_Class clazz = ((jq_Method) super.m).getDeclaringClass();
             byte[] bc = ((jq_Method) super.m).getBytecode();
             if (bc == null || bcIndex < 0 || bcIndex+2 >= bc.length) return null;
-            char cpi = joeq.Util.Convert.twoBytesToChar(bc, bcIndex+1);
+            char cpi = jwutil.util.Convert.twoBytesToChar(bc, bcIndex+1);
             byte type;
             jq_Method method;
             switch (bc[bcIndex]) {
@@ -399,7 +400,7 @@ public abstract class ProgramLocation implements Textualizable {
             jq_Class clazz = ((jq_Method) super.m).getDeclaringClass();
             byte[] bc = ((jq_Method) super.m).getBytecode();
             if (bc == null || bcIndex < 0 || bcIndex+2 >= bc.length) return null;
-            char cpi = joeq.Util.Convert.twoBytesToChar(bc, bcIndex+1);
+            char cpi = jwutil.util.Convert.twoBytesToChar(bc, bcIndex+1);
             byte type;
             jq_Method method;
             switch (bc[bcIndex]) {
@@ -430,7 +431,7 @@ public abstract class ProgramLocation implements Textualizable {
             jq_Class clazz = ((jq_Method) super.m).getDeclaringClass();
             byte[] bc = ((jq_Method) super.m).getBytecode();
             if (bc == null || bcIndex < 0 || bcIndex+2 >= bc.length) return null;
-            char cpi = joeq.Util.Convert.twoBytesToChar(bc, bcIndex+1);
+            char cpi = jwutil.util.Convert.twoBytesToChar(bc, bcIndex+1);
             byte type;
             jq_Method method;
             switch (bc[bcIndex]) {

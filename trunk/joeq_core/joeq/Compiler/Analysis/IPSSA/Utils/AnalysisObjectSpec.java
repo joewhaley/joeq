@@ -1,18 +1,15 @@
 package joeq.Compiler.Analysis.IPSSA.Utils;
 
-import joeq.Class.PrimordialClassLoader;
-import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.Node;
 import java.util.StringTokenizer;
-
-import org.sf.javabdd.TypedBDDFactory.TypedBDD;
-
-import joeq.Util.Assert;
-
+import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
+import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.Node;
 import joeq.Compiler.Analysis.IPA.PAResultSelector;
 import joeq.Compiler.Analysis.IPSSA.IPSSABuilder;
 import joeq.Compiler.Analysis.IPSSA.SSADefinition;
+import jwutil.util.Assert;
+import org.sf.javabdd.TypedBDDFactory.TypedBDD;
 
 /**
  * Allows referring to analysis objects in a simple textual fashion.

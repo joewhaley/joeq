@@ -2,6 +2,10 @@
 // Generated via joeq.Util.MakeProxy
 package joeq.Compiler.Analysis.IPA;
 
+import jwutil.collections.IndexMap;
+import jwutil.collections.IndexedMap;
+import jwutil.graphs.PathNumbering;
+
 public class PAProxy {
   public PAProxy(PA that) {
     this.VerifyAssertions = that.VerifyAssertions;
@@ -273,16 +277,16 @@ public class PAProxy {
   public int HC_BITS;
   public int MAX_VC_BITS;
   public int MAX_HC_BITS;
-  public joeq.Util.Collections.IndexMap Vmap;
-  public joeq.Util.Collections.IndexMap Imap;
-  public joeq.Util.Collections.IndexedMap Hmap;
-  public joeq.Util.Collections.IndexMap Fmap;
-  public joeq.Util.Collections.IndexMap Tmap;
-  public joeq.Util.Collections.IndexMap Nmap;
-  public joeq.Util.Collections.IndexMap Mmap;
-  public joeq.Util.Graphs.PathNumbering vCnumbering;
-  public joeq.Util.Graphs.PathNumbering hCnumbering;
-  public joeq.Util.Graphs.PathNumbering oCnumbering;
+  public IndexMap Vmap;
+  public IndexMap Imap;
+  public IndexedMap Hmap;
+  public IndexMap Fmap;
+  public IndexMap Tmap;
+  public IndexMap Nmap;
+  public IndexMap Mmap;
+  public PathNumbering vCnumbering;
+  public PathNumbering hCnumbering;
+  public PathNumbering oCnumbering;
   public org.sf.javabdd.BDD A;
   public org.sf.javabdd.BDD vP;
   public org.sf.javabdd.BDD S;

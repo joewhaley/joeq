@@ -4,12 +4,11 @@
 package joeq.Compiler.BytecodeAnalysis;
 
 import java.util.Stack;
-
 import joeq.Class.jq_InstanceField;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_StaticField;
 import joeq.Class.jq_Type;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
 
 /**
  * @author  John Whaley <jwhaley@alum.mit.edu>

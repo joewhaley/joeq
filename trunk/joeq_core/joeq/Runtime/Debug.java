@@ -6,7 +6,7 @@ package joeq.Runtime;
 import joeq.Main.jq;
 import joeq.Memory.Address;
 import joeq.UTF.Utf8;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
 
 /**
  * @author  John Whaley <jwhaley@alum.mit.edu>

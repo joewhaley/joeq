@@ -5,7 +5,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Set;
-
 import joeq.Compiler.Analysis.IPSSA.SSADefinition;
 import joeq.Compiler.Analysis.IPSSA.SSAIterator;
 import joeq.Compiler.Analysis.IPSSA.SSAValue;

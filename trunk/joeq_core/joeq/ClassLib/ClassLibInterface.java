@@ -15,7 +15,7 @@ import joeq.Class.jq_StaticMethod;
 import joeq.Main.jq;
 import joeq.Runtime.Debug;
 import joeq.UTF.Utf8;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
 
 /**
  * ClassLibInterface

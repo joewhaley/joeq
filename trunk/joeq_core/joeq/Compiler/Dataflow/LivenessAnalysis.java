@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
-
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_Type;
@@ -19,13 +18,13 @@ import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Main.HostedVM;
-import joeq.Util.Assert;
-import joeq.Util.BitString;
-import joeq.Util.Graphs.EdgeGraph;
-import joeq.Util.Graphs.Graph;
-import joeq.Util.Graphs.ReverseGraph;
 import joeq.Util.Templates.List;
 import joeq.Util.Templates.ListIterator;
+import jwutil.graphs.EdgeGraph;
+import jwutil.graphs.Graph;
+import jwutil.graphs.ReverseGraph;
+import jwutil.math.BitString;
+import jwutil.util.Assert;
 
 /**
  * LivenessAnalysis

@@ -6,15 +6,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
-
 import joeq.Class.jq_Method;
 import joeq.Class.jq_MethodVisitor;
-import joeq.Util.BitString;
-import joeq.Util.BitString.BitStringIterator;
-import joeq.Util.Graphs.Navigator;
-import joeq.Util.Graphs.Traversals;
 import joeq.Util.Templates.List;
 import joeq.Util.Templates.ListIterator;
+import jwutil.graphs.Navigator;
+import jwutil.graphs.Traversals;
+import jwutil.math.BitString;
+import jwutil.math.BitString.BitStringIterator;
 
 /**
  *

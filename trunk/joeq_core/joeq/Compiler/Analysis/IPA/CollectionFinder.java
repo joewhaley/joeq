@@ -6,10 +6,6 @@
  */
 package joeq.Compiler.Analysis.IPA;
 
-import java.io.DataOutputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.PrintStream;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -17,11 +13,10 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
-
-import org.sf.javabdd.BDD;
-import org.sf.javabdd.TypedBDDFactory;
-import org.sf.javabdd.TypedBDDFactory.TypedBDD;
-
+import java.io.DataOutputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintStream;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Field;
 import joeq.Class.jq_Initializer;
@@ -33,7 +28,10 @@ import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.Node;
 import joeq.Compiler.Analysis.IPSSA.IPSSABuilder;
 import joeq.Compiler.Analysis.IPSSA.IPSSABuilder.Application;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
+import org.sf.javabdd.BDD;
+import org.sf.javabdd.TypedBDDFactory;
+import org.sf.javabdd.TypedBDDFactory.TypedBDD;
 
 /**
  * Finds and outputs information about polymorphic:

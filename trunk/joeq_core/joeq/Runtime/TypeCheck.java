@@ -5,7 +5,6 @@ package joeq.Runtime;
 
 import java.util.Collection;
 import java.util.Stack;
-
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
@@ -17,7 +16,7 @@ import joeq.Class.jq_Type;
 import joeq.Compiler.CompilationConstants;
 import joeq.Memory.Address;
 import joeq.Memory.HeapAddress;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
 
 /**
  * Implements Java type checking.

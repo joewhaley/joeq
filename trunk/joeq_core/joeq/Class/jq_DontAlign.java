@@ -3,8 +3,6 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Class;
 
-import joeq.Class.PrimordialClassLoader;
-
 /**
  * This interface is used as a marker to signify that the fields in the
  * class should not be aligned.  This is necessary if the layout must

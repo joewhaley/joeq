@@ -5,9 +5,6 @@ package joeq.Compiler.Analysis.IPSSA.Apps;
 
 import java.util.Collection;
 import java.util.Iterator;
-
-import org.sf.javabdd.TypedBDDFactory.TypedBDD;
-
 import joeq.Class.jq_Method;
 import joeq.Compiler.Analysis.IPA.PAResultSelector;
 import joeq.Compiler.Analysis.IPA.PAResults;
@@ -16,7 +13,8 @@ import joeq.Compiler.Analysis.IPSSA.SSADefinition;
 import joeq.Compiler.Analysis.IPSSA.Utils.AnalysisObjectSpec;
 import joeq.Compiler.Analysis.IPSSA.Utils.ReachabilityTrace;
 import joeq.Compiler.Analysis.IPSSA.Utils.AnalysisObjectSpec.UnknownAnalysisObjectExeption;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
+import org.sf.javabdd.TypedBDDFactory.TypedBDD;
 
 /**
  * @author V.Benjamin Livshits

@@ -5,11 +5,9 @@ package joeq.Compiler.Dataflow;
 
 import java.util.Iterator;
 import java.util.Map;
-
-import joeq.Util.Collections.Factories;
-import joeq.Util.Collections.MapFactory;
-import joeq.Util.Graphs.Graph;
-import joeq.Util.Graphs.Traversals;
+import jwutil.collections.MapFactory;
+import jwutil.graphs.Graph;
+import jwutil.graphs.Traversals;
 
 /**
  * Solver
@@ -32,7 +30,7 @@ public abstract class Solver {
         this.factory = factory;
     }
     protected Solver() {
-        this(Factories.hashMapFactory);
+        this(MapFactory.hashMapFactory);
     }
     
     /** Returns the direction of the dataflow problem that we are solving. */

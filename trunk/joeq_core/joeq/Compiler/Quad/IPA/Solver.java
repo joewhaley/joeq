@@ -7,14 +7,13 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.CallGraph;
-import joeq.Util.Assert;
-import joeq.Util.Graphs.Navigator;
-import joeq.Util.Graphs.SCCTopSortedGraph;
-import joeq.Util.Graphs.SCComponent;
-import joeq.Util.Graphs.Traversals;
+import jwutil.graphs.Navigator;
+import jwutil.graphs.SCCTopSortedGraph;
+import jwutil.graphs.SCComponent;
+import jwutil.graphs.Traversals;
+import jwutil.util.Assert;
 
 /**
  * Solver

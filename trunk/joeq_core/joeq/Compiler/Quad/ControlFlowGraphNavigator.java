@@ -8,15 +8,14 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_Type;
 import joeq.Main.HostedVM;
-import joeq.Util.Collections.AppendList;
-import joeq.Util.Graphs.Navigator;
-import joeq.Util.Graphs.SCCTopSortedGraph;
-import joeq.Util.Graphs.SCComponent;
+import jwutil.collections.AppendList;
+import jwutil.graphs.Navigator;
+import jwutil.graphs.SCCTopSortedGraph;
+import jwutil.graphs.SCComponent;
 
 /**
  * @author John Whaley <jwhaley@alum.mit.edu>
