@@ -363,6 +363,23 @@ uphere:
             return;
         }
     }
+    public static void invokeinstance_V(jq_InstanceMethod m, Object dis, Object arg1, Object arg2, Object arg3, long arg4) throws Throwable {
+        jq.assert(TypeCheck.isAssignable(Unsafe.getTypeOf(dis), m.getDeclaringClass()));
+        if (!jq.Bootstrapping) {
+            jq.assert(m.getDeclaringClass().isClsInitRunning());
+            Unsafe.pushArg(Unsafe.addressOf(dis));
+            Unsafe.pushArg(Unsafe.addressOf(arg1));
+            Unsafe.pushArg(Unsafe.addressOf(arg2));
+            Unsafe.pushArg(Unsafe.addressOf(arg3));
+            Unsafe.pushArg((int)(arg4 >> 32)); // hi
+            Unsafe.pushArg((int)arg4);         // lo
+            Unsafe.invoke(m.getDefaultCompiledVersion().getEntrypoint());
+            return;
+        } else {
+            jq.UNREACHABLE();
+            return;
+        }
+    }
     public static void invokeinstance_V(jq_InstanceMethod m, Object dis, Object arg1, int arg2, long arg3, int arg4) throws Throwable {
         jq.assert(TypeCheck.isAssignable(Unsafe.getTypeOf(dis), m.getDeclaringClass()));
         if (!jq.Bootstrapping) {
