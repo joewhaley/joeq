@@ -26,10 +26,10 @@ public class CountPaths {
         HashMap counts = new HashMap();
         List list = Traversals.reversePostOrder(nav, roots);
         long max = 0L;
-        for (Iterator i=list.iterator(); i.hasNext(); ) {
+        for (Iterator i = list.iterator(); i.hasNext(); ) {
             Object o = i.next();
             long myValue = 0L;
-            for (Iterator j=nav.prev(o).iterator(); j.hasNext(); ) {
+            for (Iterator j = nav.prev(o).iterator(); j.hasNext(); ) {
                 Object p = j.next();
                 long[] d = (long[]) counts.get(p);
                 Assert._assert(list.contains(p));
@@ -51,12 +51,12 @@ public class CountPaths {
         HashMap counts = new HashMap();
         List list = Traversals.reversePostOrder(nav, roots);
         long max = 0L;
-        for (Iterator i=list.iterator(); i.hasNext(); ) {
+        for (Iterator i = list.iterator(); i.hasNext(); ) {
             Object o = i.next();
             long[] myValue = new long[k+1];
             Collection prev = nav.prev(o);
             max = Math.max(max, myValue[0]);
-            for (Iterator j=prev.iterator(); j.hasNext(); ) {
+            for (Iterator j = prev.iterator(); j.hasNext(); ) {
                 Object p = j.next();
                 long[] d = (long[]) counts.get(p);
                 Assert._assert(list.contains(p));
