@@ -464,7 +464,7 @@ extern "C" pthread_t __stdcall create_thread(void * (*start)(void *), void* arg)
 {
   int code;
   pthread_t p;
-  code = pthread_create(&p, 0, start, arg);
+  code = pthread_create(&p, 0, start, arg); // note: NOT SUSPENDED.
   if (!code) {
     // error occurred while creating the thread.
   }
@@ -473,11 +473,33 @@ extern "C" pthread_t __stdcall create_thread(void * (*start)(void *), void* arg)
 extern "C" void __stdcall init_thread(const pthread_t handle)
 {
   Setup_LDT_Keeper();
+  for (;;) {
+    int initialized = 0;
+    sleep(0);
+    __asm (" movl %0, %%fs:4 "
+	   :"=r"(initialized)
+	   :
+	   );
+    if (initialized) continue;
+  }
 }
 extern "C" int __stdcall resume_thread(const pthread_t handle)
 {
-  ptrace( PTRACE_CONT, handle, (caddr_t)1, SIGSTOP );
-  return 0;
+  int initialized;
+  __asm (" movl %0, %%fs:4 "
+	 :"=r"(initialized)
+	 :
+	 );
+  if (!initialized) {
+    __asm (" movl %%fs:4, %0 "
+	   :
+	   :"r"(initialized)
+	   );
+    return 0;
+  } else {
+    ptrace( PTRACE_CONT, handle, (caddr_t)1, SIGSTOP );
+    return 0;
+  }
 }
 extern "C" int __stdcall suspend_thread(const pthread_t handle)
 {
