@@ -888,7 +888,9 @@ public class BootImage implements ObjectLayout, ELFConstants {
             jq_StaticField[] fs = k.getDeclaredStaticFields();
             for (int j=0; j<fs.length; ++j) {   
                 jq_StaticField f = fs[j];
-                if (f.getType().isReferenceType()) {
+                if (f.getType().isAddressType()) {
+                    // not a possible path.
+                } else if (f.getType().isReferenceType()) {
                     Object val = Reflection.getstatic_A(f);
                     if (val == p) return f;
                 }
@@ -913,7 +915,9 @@ public class BootImage implements ObjectLayout, ELFConstants {
             jq_Reference jqType = (jq_Reference)Reflection.getJQType(objType);
             if (jqType.isArrayType()) {
                 jq_Type elemType = ((jq_Array)jqType).getElementType();
-                if (elemType.isReferenceType()) {
+                if (elemType.isAddressType()) {
+                    // not a possible path.
+                } else if (elemType.isReferenceType()) {
                     int length = Array.getLength(o);
                     Object[] v = (Object[])o;
                     for (int k=0; k<length; ++k) {
@@ -937,7 +941,9 @@ public class BootImage implements ObjectLayout, ELFConstants {
                 for (int k=0; k<fields.length; ++k) {
                     jq_InstanceField f = fields[k];
                     jq_Type ftype = f.getType();
-                    if (ftype.isReferenceType()) {
+                    if (ftype.isAddressType()) {
+                        // not a possible path.
+                    } else if (ftype.isReferenceType()) {
                         Object val = Reflection.getfield_A(o, f);
                         if (val == p) {
                             System.err.println("Possible path: ."+f.getName());

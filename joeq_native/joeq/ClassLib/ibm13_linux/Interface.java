@@ -72,13 +72,15 @@ public final class Interface extends ClassLib.Common.Interface {
         }
         
         public java.lang.Object mapInstanceField(java.lang.Object o, Clazz.jq_InstanceField f) {
-            jq_Class c = f.getDeclaringClass();
-            if (c == PrimordialClassLoader.getJavaLangThread()) {
-                String fieldName = f.getName().toString();
-                if (fieldName.equals("threadLocals"))
-                    return java.util.Collections.EMPTY_MAP;
-                if (fieldName.equals("inheritableThreadLocals"))
-                    return java.util.Collections.EMPTY_MAP;
+            if (IGNORE_THREAD_LOCALS) {
+                jq_Class c = f.getDeclaringClass();
+                if (c == PrimordialClassLoader.getJavaLangThread()) {
+                    String fieldName = f.getName().toString();
+                    if (fieldName.equals("threadLocals"))
+                        return java.util.Collections.EMPTY_MAP;
+                    if (fieldName.equals("inheritableThreadLocals"))
+                        return java.util.Collections.EMPTY_MAP;
+                }
             }
             return super.mapInstanceField(o, f);
         }

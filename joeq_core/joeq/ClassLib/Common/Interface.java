@@ -61,6 +61,7 @@ public class Interface {
         protected static final java.util.Set nullStaticFields = new java.util.HashSet();
         protected static final java.util.Set nullInstanceFields = new java.util.HashSet();
         protected static final java.util.Map mappedObjects = new java.util.HashMap();
+        public static /*final*/ boolean IGNORE_THREAD_LOCALS = true;
         public void initialize() {
             //nullStaticFields.add(Unsafe._remapper_object);
             nullStaticFields.add(CodeAddress._FACTORY);
