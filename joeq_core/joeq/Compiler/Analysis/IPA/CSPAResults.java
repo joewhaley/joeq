@@ -88,7 +88,7 @@ import Util.IO.ByteSequence;
  * @author John Whaley
  * @version $Id$
  */
-public class CSPAResults implements PointerAnalysisResults {
+public class CSPAResults {
 
     /** Call graph. */
     CallGraph cg;
@@ -2636,60 +2636,6 @@ public class CSPAResults implements PointerAnalysisResults {
         System.out.println("escape:               run escape analysis");
         System.out.println("findequiv:            find equivalent objects");
         System.out.println("relprod b1 b2 bs:     relational product of b1 and b2 w.r.t. set bs");
-    }
-
-    /* (non-Javadoc)
-     * @see Compil3r.Analysis.IPA.PointerAnalysisResults#mod(Compil3r.Analysis.IPA.ProgramLocation)
-     */
-    public Set/*<SSALocation>*/ mod(ProgramLocation call) {
-        // a.f = b;  a->1;    ==>   return  1, .f
-        return null;
-    }
-
-    /* (non-Javadoc)
-     * @see Compil3r.Analysis.IPA.PointerAnalysisResults#ref(Compil3r.Analysis.IPA.ProgramLocation)
-     */
-    public Set/*<SSALocation>*/ ref(ProgramLocation call) {
-        // b = a.f;  a->1;    ==>   return  1, .f
-        return null;
-    }
-
-    public boolean isAliased(SSALocation a, SSALocation b) {
-        // (1, .f)   (1, .f)   ==>   true
-        // (1, .f)   (2, .f)   ==>   false
-        return a.equals(b);
-    }
-
-    /* (non-Javadoc)
-     * @see Compil3r.Analysis.IPA.PointerAnalysisResults#getAliases(Clazz.jq_Method, Compil3r.Analysis.IPA.SSALocation)
-     */
-    public Set/*<ContextSet.ContextLocationPair>*/ getAliases(jq_Method method, SSALocation loc) {
-        return Collections.EMPTY_SET;
-    }
-
-    /* (non-Javadoc)
-     * @see Compil3r.Analysis.IPA.PointerAnalysisResults#hasAliases(Clazz.jq_Method, Compil3r.Analysis.IPA.SSALocation, Compil3r.Analysis.IPA.ContextSet)
-     */
-    public boolean hasAliases(jq_Method method, SSALocation loc, ContextSet contextSet) {
-        return false;
-    }
-
-    /* (non-Javadoc)
-     * @see Compil3r.Analysis.IPA.PointerAnalysisResults#hasAliases(Clazz.jq_Method, Compil3r.Analysis.IPA.SSALocation)
-     */
-    public boolean hasAliases(jq_Method method, SSALocation loc) {
-        return false;
-    }
-
-    public static class HeapLocation implements SSALocation {
-        Node n;      // allocation site
-        jq_Field f;  // field
-        
-        HeapLocation(Node n, jq_Field f) {
-            this.n = n;
-            this.f = f;
-        }
-        
     }
 
     public BDD whoReferences(BDD heaps) {
