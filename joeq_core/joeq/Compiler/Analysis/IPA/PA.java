@@ -42,7 +42,7 @@ import Util.Collections.IndexMap;
 public class PA {
 
     boolean TRACE = false;
-    boolean TRACE_SOLVER = true;
+    boolean TRACE_SOLVER = false;
     boolean TRACE_BIND = false;
     boolean TRACE_RELATIONS = false;
     PrintStream out = System.out;
@@ -52,8 +52,8 @@ public class PA {
     boolean INCREMENTAL1 = true;
     boolean INCREMENTAL2 = true;
     
-    int bddnodes = Integer.parseInt(System.getProperty("bddnodes", "5000000"));
-    int bddcache = Integer.parseInt(System.getProperty("bddcache", "250000"));
+    int bddnodes = Integer.parseInt(System.getProperty("bddnodes", "1000000"));
+    int bddcache = Integer.parseInt(System.getProperty("bddcache", "100000"));
     
     BDDFactory bdd;
     
@@ -95,7 +95,7 @@ public class PA {
     BDD V1V2set, V1H1set, IMset, H1Fset, H1FH2set, T2Nset, MZset;
     
     Set visitedMethods = new HashSet();
-    BDD visited; // M
+    BDD visited; // M, visited methods
     
     BDDDomain makeDomain(String name, int bits) {
         BDDDomain d = bdd.extDomain(new long[] { 1L << bits })[0];
@@ -122,7 +122,8 @@ public class PA {
         M = makeDomain("M", M_BITS);
         
         boolean reverseLocal = System.getProperty("bddreverse", "true") != null;
-        String varorder = System.getProperty("bddordering", "M_N_F_Z_I_T2_T1_H2_V2xV1_H1");
+        // IxH1xN x H1xT2
+        String varorder = System.getProperty("bddordering", "M_N_F_Z_I_T1_V2xV1_H2_T2_H1");
         int[] ordering = bdd.makeVarOrdering(reverseLocal, varorder);
         bdd.setVarOrder(ordering);
         
