@@ -3,6 +3,7 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Quad;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -4135,6 +4136,19 @@ outer:
                 }
             }
         }
+    }
+
+    ProgramLocation getLocationOf(ConcreteTypeNode n) {
+        return new ProgramLocation.QuadProgramLocation(method, n.q);
+    }
+    
+    Collection/*<ProgramLocation>*/ getLocationOf(FieldNode n) {
+        ArrayList list = new ArrayList();
+        for (Iterator i=n.quads.iterator(); i.hasNext(); ) {
+            Quad q = (Quad) i.next();
+            list.add(new ProgramLocation.QuadProgramLocation(method, q));
+        }
+        return list;
     }
 
 }
