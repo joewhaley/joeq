@@ -10,6 +10,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Set;
 
@@ -23,6 +25,7 @@ import Clazz.jq_Reference;
 import Clazz.jq_Type;
 import Compil3r.Quad.BytecodeToQuad.jq_ReturnAddressType;
 import Compil3r.Quad.Operand.AConstOperand;
+import Compil3r.Quad.Operand.PConstOperand;
 import Compil3r.Quad.Operand.ParamListOperand;
 import Compil3r.Quad.Operand.RegisterOperand;
 import Compil3r.Quad.Operator.ALoad;
@@ -43,8 +46,6 @@ import Compil3r.Quad.RegisterFactory.Register;
 import Main.jq;
 import Util.FilterIterator;
 import Util.IdentityHashCodeWrapper;
-import Util.LinkedHashMap;
-import Util.LinkedHashSet;
 import Util.Templates.List;
 import Util.Templates.ListIterator;
 
@@ -415,12 +416,13 @@ public class MethodSummary {
                     if (val instanceof RegisterOperand) {
                         Register src_r = ((RegisterOperand)val).getRegister();
                         heapStore(base_r, src_r, null, obj);
-                    } else {
-                        jq.Assert(val instanceof AConstOperand);
+                    } else if (val instanceof AConstOperand) {
                         jq_Reference type = ((AConstOperand)val).getType();
                         ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(obj);
                         if (n == null) quadsToNodes.put(obj, n = new ConcreteTypeNode(type, obj));
                         heapStore(base_r, n, null, obj);
+                    } else {
+                        jq.UNREACHABLE();
                     }
                 } else {
                     // base is not a register?!
@@ -487,11 +489,11 @@ public class MethodSummary {
             ParamListOperand plo = Invoke.getParamList(obj);
             jq.Assert(m == Allocator.HeapAllocator._multinewarray || params.length == plo.length());
             for (int i=0; i<params.length; ++i) {
-                if (!params[i].isReferenceType()) continue;
+                if (!params[i].isReferenceType() || params[i].isAddressType()) continue;
                 Register r = plo.get(i).getRegister();
                 passParameter(r, mc, i);
             }
-            if (m.getReturnType().isReferenceType()) {
+            if (m.getReturnType().isReferenceType() && !m.getReturnType().isAddressType()) {
                 RegisterOperand dest = Invoke.getDest(obj);
                 if (dest != null) {
                     Register dest_r = dest.getRegister();
