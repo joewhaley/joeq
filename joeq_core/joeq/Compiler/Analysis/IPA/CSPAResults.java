@@ -69,10 +69,10 @@ import jwutil.graphs.PathNumbering.Range;
 import jwutil.graphs.SCCPathNumbering.Path;
 import jwutil.strings.Strings;
 import jwutil.util.Assert;
-import org.sf.javabdd.BDD;
-import org.sf.javabdd.BDDDomain;
-import org.sf.javabdd.BDDFactory;
-import org.sf.javabdd.BDDPairing;
+import net.sf.javabdd.BDD;
+import net.sf.javabdd.BDDDomain;
+import net.sf.javabdd.BDDFactory;
+import net.sf.javabdd.BDDPairing;
 
 /**
  * Records results for context-sensitive pointer analysis.  The results can
@@ -772,7 +772,7 @@ public class CSPAResults {
         int num = 0;
         while (!iter.isZero()) {
             ++num;
-            BDD sol = iter.satOne(H1H2set, bdd.zero());
+            BDD sol = iter.satOne(H1H2set, false);
             BDD sol_h2 = sol.exist(H1set);
             sol.free();
             BDD sol3 = iter.restrict(sol_h2);
@@ -897,9 +897,9 @@ public class CSPAResults {
         BDD iter;
         iter = reachable.id();
         while (!iter.isZero()) {
-            BDD s = iter.satOne(H1.set(), bdd.zero());
-            long[] val = s.scanAllVar();
-            int target_i = (int) val[H1.getIndex()];
+            BDD s = iter.satOne(H1.set(), false);
+            BigInteger[] val = s.scanAllVar();
+            int target_i = val[H1.getIndex()].intValue();
             s.andWith(H1.ithVar(target_i));
             HeapObject h = (HeapObject) getHeapNode(target_i);
             ProgramLocation l = (h != null) ? h.getLocation() : null;
@@ -921,9 +921,9 @@ public class CSPAResults {
         
         iter = reachable.id();
         while (!iter.isZero()) {
-            BDD s = iter.satOne(H1.set(), bdd.zero());
-            long[] val = s.scanAllVar();
-            int target_i = (int) val[H1.getIndex()];
+            BDD s = iter.satOne(H1.set(), false);
+            BigInteger[] val = s.scanAllVar();
+            int target_i = val[H1.getIndex()].intValue();
             s.andWith(H1.ithVar(target_i));
             HeapObject h = (HeapObject) getHeapNode(target_i);
             jq_Type t = null;
@@ -936,16 +936,16 @@ public class CSPAResults {
             }
             BDD pt = ci_fieldPt.restrict(H1.ithVar(target_i));
             while (!pt.isZero()) {
-                BDD s2 = pt.satOne(H2.set().and(F.set()), bdd.zero());
-                long[] val2 = s2.scanAllVar();
-                int target2_i = (int) val2[H2.getIndex()];
+                BDD s2 = pt.satOne(H2.set().and(F.set()), false);
+                BigInteger[] val2 = s2.scanAllVar();
+                int target2_i = val2[H2.getIndex()].intValue();
                 s2.andWith(H2.ithVar(target2_i));
                 HeapObject target = (HeapObject) getHeapNode(target2_i);
                 if (FILTER_NULL && target != null && target.getDeclaredType() == null) {
                     pt.applyWith(s2, BDDFactory.diff);
                     continue;
                 }
-                int fn = (int) val2[F.getIndex()];
+                int fn = val2[F.getIndex()].intValue();
                 jq_Field f = getField(fn);
                 String fieldName = "[]";
                 if (f != null) fieldName = f.getName().toString();
@@ -988,15 +988,15 @@ public class CSPAResults {
                 continue;
             BDD pt = ci_fieldPt.restrict(H1.ithVar(j));
             while (!pt.isZero()) {
-                BDD s = pt.satOne(H2.set().and(F.set()), bdd.zero());
-                long[] val = s.scanAllVar();
-                int target_i = (int) val[H2.getIndex()];
+                BDD s = pt.satOne(H2.set().and(F.set()), false);
+                BigInteger[] val = s.scanAllVar();
+                int target_i = val[H2.getIndex()].intValue();
                 HeapObject target = (HeapObject) getHeapNode(target_i);
                 s.andWith(H2.ithVar(target_i));
                 if (FILTER_NULL && h != null && h.getDeclaredType() == null) {
                     continue;
                 }
-                int fn = (int) val[F.getIndex()];
+                int fn = val[F.getIndex()].intValue();
                 jq_Field f = getField(fn);
                 String fieldName = "[]";
                 if (f != null) fieldName = f.getName().toString();
@@ -1276,7 +1276,7 @@ public class CSPAResults {
                     bad = true;
                     break;
                 }
-                int H_i = (int) b.scanVar(H1);
+                int H_i = b.scanVar(H1).intValue();
                 Node n2 = (Node) Hmap.get(H_i);
                 if (!(n2 instanceof ConcreteTypeNode)) {
                     bad = true;
@@ -1635,19 +1635,19 @@ public class CSPAResults {
         return d.getName();
     }
 
-    public String elementToString(BDDDomain d, long i) {
+    public String elementToString(BDDDomain d, BigInteger i) {
         StringBuffer sb = new StringBuffer();
         sb.append(domainName(d)+"("+i+")");
         Node n = null;
         if (d == V1 || d == V2 || d == V3) {
-            n = (Node) getVariableNode((int) i);
+            n = (Node) getVariableNode(i.intValue());
         } else if (d == H1 || d == H2 || d == H3) {
-            n = (Node) getHeapNode((int) i);
+            n = (Node) getHeapNode(i.intValue());
         } else if (d == F) {
-            jq_Field f = getField((int) i);
+            jq_Field f = getField(i.intValue());
             sb.append(": "+(f==null?"[]":f.getName().toString()));
         } else if (d == M) {
-            jq_Method m = getMethod((int) i);
+            jq_Method m = getMethod(i.intValue());
             sb.append(": "+m.getDeclaringClass().shortName()+"."+m.getName().toString()+"()");
         }
         if (n != null) {
@@ -2089,14 +2089,14 @@ public class CSPAResults {
                     sb.append(Strings.lineSep);
                     break;
                 }
-                long[] val = b.scanAllVar();
+                BigInteger[] val = b.scanAllVar();
                 //sb.append((long)b.satCount(dset));
                 sb.append("\t(");
                 BDD temp = b.getFactory().one();
                 for (Iterator i=dom.iterator(); i.hasNext(); ) {
                     BDDDomain d = (BDDDomain) i.next();
-                    long e = val[d.getIndex()];
-                    if (e < 0 || e >= d.size()) {
+                    BigInteger e = val[d.getIndex()];
+                    if (e.signum() < 0 || e.compareTo(d.size()) >= 0) {
                         System.out.println("Error: out of range "+e);
                         break;
                     }
@@ -2124,7 +2124,7 @@ public class CSPAResults {
                 }
 
                 public int nextInt() {
-                    int v = (int) t.scanVar(d);
+                    int v = t.scanVar(d).intValue();
                     if (v == -1)
                         throw new NoSuchElementException();
                     t.applyWith(d.ithVar(v), BDDFactory.diff);
@@ -2857,21 +2857,21 @@ public class CSPAResults {
     public class ToString extends BDD.BDDToString {
         
         /* (non-Javadoc)
-         * @see org.sf.javabdd.BDD.BDDToString#elementName(int, long)
+         * @see net.sf.javabdd.BDD.BDDToString#elementName(int, long)
          */
-        public String elementName(int arg0, long arg1) {
-            return elementToString(bdd.getDomain(arg0), (int) arg1);
+        public String elementName(int arg0, BigInteger arg1) {
+            return elementToString(bdd.getDomain(arg0), arg1);
         }
         
         /* (non-Javadoc)
-         * @see org.sf.javabdd.BDD.BDDToString#elementNames(int, long, long)
+         * @see net.sf.javabdd.BDD.BDDToString#elementNames(int, long, long)
          */
-        public String elementNames(int arg0, long arg1, long arg2) {
+        public String elementNames(int arg0, BigInteger arg1, BigInteger arg2) {
             StringBuffer sb = new StringBuffer();
-            while (arg1 < arg2) {
+            while (arg1.compareTo(arg2) < 0) {
                 sb.append(elementName(arg0, arg1));
                 sb.append(", ");
-                ++arg1;
+                arg1 = arg1.add(BigInteger.ONE);
             }
             sb.append(elementName(arg0, arg1));
             return sb.toString();

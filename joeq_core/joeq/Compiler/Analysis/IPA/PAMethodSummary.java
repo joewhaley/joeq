@@ -29,7 +29,7 @@ import joeq.Compiler.Quad.LoadedCallGraph;
 import joeq.Main.HostedVM;
 import jwutil.collections.Pair;
 import jwutil.util.Assert;
-import org.sf.javabdd.BDD;
+import net.sf.javabdd.BDD;
 
 /**
  * @author jwhaley
@@ -228,15 +228,15 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
 
             jq_Method replacement = null;
             if(PA.USE_BOGUS_SUMMARIES) {
-	            replacement = PA.getBogusSummaryProvider().getReplacementMethod(target);
-	            if(replacement != null) {
-					if(PA.TRACE_BOGUS){
+                replacement = PA.getBogusSummaryProvider().getReplacementMethod(target);
+                if(replacement != null) {
+                    if(PA.TRACE_BOGUS){
                         System.out.println("Replacing a call to " + target + 
-					    				" with a call to "+ replacement);
+                                        " with a call to "+ replacement);
                     }
-					
-					target = replacement;
-	            }
+                    
+                    target = replacement;
+                }
             }
             if (target.isStatic())
                 pa.addClassInitializer(target.getDeclaringClass());
@@ -250,14 +250,14 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
                 
                 offset = 0;
             } else {
-	            if (target.isStatic()) {
-	                thisptr = Collections.singleton(GlobalNode.GLOBAL);
-	                offset = 0;
-	            } else {
-	                thisptr = ms.getNodesThatCall(mc, 0);
-	                offset = 1;
-	            }
-	            pa.addToActual(I_bdd, 0, thisptr);
+                if (target.isStatic()) {
+                    thisptr = Collections.singleton(GlobalNode.GLOBAL);
+                    offset = 0;
+                } else {
+                    thisptr = ms.getNodesThatCall(mc, 0);
+                    offset = 1;
+                }
+                pa.addToActual(I_bdd, 0, thisptr);
             }            
             
             if (mc.isSingleTarget()) {

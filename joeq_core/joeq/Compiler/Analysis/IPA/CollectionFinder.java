@@ -17,6 +17,7 @@ import java.io.DataOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.math.BigInteger;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Field;
 import joeq.Class.jq_Initializer;
@@ -29,9 +30,9 @@ import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.Node;
 import joeq.Compiler.Analysis.IPSSA.IPSSABuilder;
 import joeq.Compiler.Analysis.IPSSA.IPSSABuilder.Application;
 import jwutil.util.Assert;
-import org.sf.javabdd.BDD;
-import org.sf.javabdd.TypedBDDFactory;
-import org.sf.javabdd.TypedBDDFactory.TypedBDD;
+import net.sf.javabdd.BDD;
+import net.sf.javabdd.TypedBDDFactory;
+import net.sf.javabdd.TypedBDDFactory.TypedBDD;
 
 /**
  * Finds and outputs information about polymorphic:
@@ -134,10 +135,10 @@ public class CollectionFinder extends Application {
     }
 
     public jq_Reference getType(TypedBDD types) {              
-        long[] indeces = _r.T2.getVarIndices(types);
+        BigInteger[] indeces = _r.T2.getVarIndices(types);
         Assert._assert(indeces.length == 1, "There are " + indeces.length + " indeces in " + types.toStringWithDomains());
-        long index = indeces[0];
-        jq_Reference type = (jq_Reference)_r.Tmap.get((int)index);
+        BigInteger index = indeces[0];
+        jq_Reference type = (jq_Reference)_r.Tmap.get(index.intValue());
         //System.out.println("Index: " + index + " type: " + type);
  
         return type;        
