@@ -144,6 +144,7 @@ public class PA {
     boolean INCLUDE_ALL_UNKNOWN_TYPES = !System.getProperty("pa.allunknowntypes", "no").equals("no");
     boolean ADD_SUPERTYPES = !System.getProperty("pa.addsupertypes", "no").equals("no");
     boolean ADD_ROOT_PLACEHOLDERS = !System.getProperty("pa.addrootplaceholders", "no").equals("no");
+    boolean FULL_CHA = !System.getProperty("pa.fullcha", "no").equals("no");
     int MAX_PARAMS = Integer.parseInt(System.getProperty("pa.maxparams", "4"));
     
     int bddnodes = Integer.parseInt(System.getProperty("bddnodes", "2500000"));
@@ -3716,7 +3717,34 @@ public class PA {
         return Character.isDigit(c);
     }
     
+    void addToNmap(jq_Method m) {
+        Assert._assert(!m.isStatic());
+        Assert._assert(!m.isPrivate());
+        Nmap.get(m);
+        jq_Class c = m.getDeclaringClass().getSuperclass();
+        jq_Method m2 = c.getVirtualMethod(m.getNameAndDesc());
+        if (m2 != null) addToNmap(m2);
+        jq_Class[] cs = m.getDeclaringClass().getDeclaredInterfaces();
+        for (int i = 0; i < cs.length; ++i) {
+            jq_Class interf = cs[i];
+            jq_Method m3 = interf.getVirtualMethod(m.getNameAndDesc());
+            if (m3 != null) addToNmap(m3);
+        }
+    }
+    
     public void dumpBDDRelations() throws IOException {
+        
+        if (FULL_CHA) {
+            for (Iterator i = Mmap.iterator(); i.hasNext(); ) {
+                Object o = i.next();
+                if (o instanceof jq_Method) {
+                    jq_Method m = (jq_Method) o;
+                    if (m.isStatic() || m.isPrivate()) continue;
+                    addToNmap(m);
+                }
+            }
+            buildTypes();
+        }
         
         // difference in compatibility
         BDD S0 = S.exist(V1cV2cset);
