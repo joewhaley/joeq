@@ -105,7 +105,7 @@ public class ClasspathWalker {
 
     static void collectSuperclasses(jq_Class c, Collection interfaces, Collection superclasses) {
         do {
-            if(SKIP_ABSTRACT && !c.isAbstract()){
+            if(!SKIP_ABSTRACT || !c.isAbstract()){
                 if(TRACE) System.out.println("Skipping abstract class " + c);
                 superclasses.add(c);
             }
