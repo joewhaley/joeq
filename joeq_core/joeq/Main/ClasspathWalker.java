@@ -29,7 +29,7 @@ public class ClasspathWalker {
     private static PrintWriter pw;
     private static int classCount = 0;
     static boolean SKIP_ABSTRACT = !System.getProperty("skipabstract", "no").equals("no");
-    boolean GC = !System.getProperty("gc", "no").equals("no");
+    static boolean GC = !System.getProperty("gc", "no").equals("no");
        
     public static void main(String[] args) throws FileNotFoundException {
         System.out.println("Classpath: " + PrimordialClassLoader.loader.classpathToString() + "\n");
