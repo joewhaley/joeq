@@ -1,11 +1,17 @@
-<!-- ATTENTIION: customize properties: "src", "build", "dist", "docs"-->
+<!--        ATTENTIION   -->
+<!-- This file should remain UNCHANGED.
+     COPY it to somewhere OUTSIDE your 
+     cvs checkout before customizing
+     properties: "src", "build", "dist", "docs"-->
+<!-- Never COMMIT your modified version.-->
+
 
 <project name="joeq" default="compile" basedir=".">
 
-	<property name="src" value="../"/>
-	<property name="build" value="../../build"/>
-	<property name="dist" value="../../dist"/>
-	<property name="docs" value="../../docs/api"/>
+	<property name="src" value="src"/>
+	<property name="build" value="build"/>
+	<property name="dist" value="dist"/>
+	<property name="docs" value="docs/api"/>
 	
 	<target name="init">
 		<tstamp/>
