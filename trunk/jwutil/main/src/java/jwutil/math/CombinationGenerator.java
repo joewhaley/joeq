@@ -25,10 +25,10 @@ public class CombinationGenerator {
      */
     public CombinationGenerator(int n, int r) {
         if (r > n) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException(r+" > "+n);
         }
         if (n < 1) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException(n+" < 1");
         }
         this.n = n;
         this.r = r;
