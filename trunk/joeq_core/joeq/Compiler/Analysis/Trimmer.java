@@ -10,8 +10,8 @@
 package Compil3r.Analysis;
 
 import jq;
-import Allocator.Allocator;
-import Allocator.SimpleAllocator;
+import Allocator.HeapAllocator;
+import Allocator.DefaultAllocator;
 import Clazz.jq_ClassFileConstants;
 import Clazz.jq_Type;
 import Clazz.jq_Primitive;
@@ -719,9 +719,9 @@ public class Trimmer {
         public void visitNEW(jq_Type f) {
             super.visitNEW(f);
             if (true) {
-                INVOKEhelper(INVOKE_STATIC, SimpleAllocator._allocateObject);
+                INVOKEhelper(INVOKE_STATIC, DefaultAllocator._allocateObject);
             } else {
-                INVOKEhelper(INVOKE_STATIC, Allocator._clsinitAndAllocateObject);
+                INVOKEhelper(INVOKE_STATIC, HeapAllocator._clsinitAndAllocateObject);
             }
             if (!instantiatedTypes.contains(f)) {
                 f.load(); f.verify(); f.prepare();
@@ -733,7 +733,7 @@ public class Trimmer {
         }
         public void visitNEWARRAY(jq_Array f) {
             super.visitNEWARRAY(f);
-            INVOKEhelper(INVOKE_STATIC, SimpleAllocator._allocateArray);
+            INVOKEhelper(INVOKE_STATIC, DefaultAllocator._allocateArray);
             f.load(); f.verify(); f.prepare();
             if (!instantiatedTypes.contains(f)) {
                 f.load(); f.verify(); f.prepare();
@@ -761,7 +761,7 @@ public class Trimmer {
         }
         public void visitMULTINEWARRAY(jq_Type f, char dim) {
             super.visitMULTINEWARRAY(f, dim);
-            INVOKEhelper(INVOKE_STATIC, Allocator._multinewarray);
+            INVOKEhelper(INVOKE_STATIC, HeapAllocator._multinewarray);
             if (!instantiatedTypes.contains(f)) {
                 f.load(); f.verify(); f.prepare();
                 addToInstantiatedTypes(f);
