@@ -184,7 +184,7 @@ public abstract class jq_Method extends jq_Member {
         //System.out.println("Compiling: "+this);
         jq.assert(!jq.DontCompile);
         chkState(STATE_PREPARED);
-        if (isNative()) {
+        if (isNative() && getBytecode() == null) {
             System.out.println("Unimplemented native method! "+this);
             if (x86ReferenceLinker._nativeMethodError.getState() < STATE_CLSINITIALIZED) {
                 jq_Class k = x86ReferenceLinker._class;
@@ -236,26 +236,21 @@ public abstract class jq_Method extends jq_Member {
     public final jq_CompiledCode getDefaultCompiledVersion() { chkState(STATE_SFINITIALIZED); return default_compiled_version; }
     public char getMaxStack() {
         chkState(STATE_LOADED);
-        jq.assert(!isNative());
-        jq.assert(!isAbstract());
+        jq.assert(getBytecode() != null);
         return max_stack;
     }
     public char getMaxLocals() {
         chkState(STATE_LOADED);
-        jq.assert(!isNative());
-        jq.assert(!isAbstract());
+        jq.assert(getBytecode() != null);
         return max_locals;
     }
     public byte[] getBytecode() {
         chkState(STATE_LOADED);
-        jq.assert(!isNative());
-        jq.assert(!isAbstract());
         return bytecode;
     }
     public jq_TryCatchBC[] getExceptionTable() {
         chkState(STATE_LOADED);
-        jq.assert(!isNative());
-        jq.assert(!isAbstract());
+        jq.assert(getBytecode() != null);
         return exception_table;
     }
     public int getLineNumber(int bci) {
