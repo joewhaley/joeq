@@ -77,6 +77,8 @@ public class FairnessTest {
         
         System.out.println("All threads running");
         
+        long startTime = System.currentTimeMillis();
+        
         BusyThread.start = false; //make sure it's yielding
         BusyThread.stop = false;
         
@@ -84,6 +86,8 @@ public class FairnessTest {
         Thread.sleep(TIME);  //let it run for 20 sec
         BusyThread.stop = true;
         
+        long endTime = System.currentTimeMillis();
+
         System.out.println("All threads stopped");
         
         long[] total = new long[max+1];
@@ -95,25 +99,26 @@ public class FairnessTest {
             }
             overall += total[i];
         }
-        System.out.println(overall+" ticks recorded");
+        System.out.println(overall+" ticks recorded, time spent "+(endTime-startTime)+" ms");
         
         for (int i = min; i <= max; ++i) {
             double average = (double) total[i] / overall; //to give percentage of how much the priority got executed
             System.out.println("Total for priority "+i+": "+s2(100.*average)+"%");
-            System.out.println("Breakdown within priority: ");
+            System.out.print("Breakdown within priority: ");
             double stddev = 0.;
             double average2 = (double)total[i] / NUMBER; //average count each thread suppose to have in this priority
             for (int j = 0; j < NUMBER; ++j) {
                 BusyThread t = threads[i][j];
-                System.out.print(s2(t.counter / average2)); //ideal is 1.0
-                System.out.print("x\t");
-                double diff = t.counter / average2 - 1.;
-                stddev += diff * diff;
+                double d = t.counter / average2;
+                System.out.print(s2(d)); //ideal is 1.0
+                System.out.print("\t");
+                double diff = d - 1.;
+                stddev = stddev + diff * diff;
             }
             System.out.println();//goto next line
-            stddev /= (max-min);  //computation for standard deviation
+            stddev = stddev / (NUMBER-1);  //computation for standard deviation
             stddev = Math.sqrt(stddev);
-            System.out.println("Standard deviation: "+s2(stddev));  //0 is the best
+            System.out.println("Standard deviation: "+stddev);  //0 is the best
             System.out.println();
         }
         
