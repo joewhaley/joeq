@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="src" path=""/>
-	<classpathentry kind="lib" path="joeq/Support/java14.jar"/>
-	<classpathentry exported="true" kind="lib" path="joeq/Support/javabdd_0.6.jar"/>
-	<classpathentry kind="lib" path="C:/eclipse/plugins/org.eclipse.jdt.core_3.0.0/jdtcore.jar"/>
-	<classpathentry kind="lib" path="C:/eclipse/plugins/org.eclipse.core.runtime_3.0.0/runtime.jar"/>
-	<classpathentry kind="lib" path="C:/eclipse/plugins/org.eclipse.osgi_3.0.0/osgi.jar"/>
-	<classpathentry kind="lib" path="C:/eclipse/plugins/org.eclipse.core.resources_3.0.0/resources.jar"/>
-	<classpathentry kind="lib" path="C:/eclipse/plugins/org.eclipse.core.filebuffers_3.0.0/filebuffers.jar"/>
-	<classpathentry kind="output" path=""/>
+    <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+    <classpathentry kind="src" path=""/>
+    <classpathentry kind="lib" path="joeq/Support/java14.jar"/>
+    <classpathentry exported="true" kind="lib" path="joeq/Support/javabdd_0.6.jar"/>
+    <classpathentry kind="output" path=""/>
 </classpath>
