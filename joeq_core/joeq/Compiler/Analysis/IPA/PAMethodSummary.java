@@ -236,7 +236,7 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
 
             jq_Method replacement = null;            
             if(pa.USE_BOGUS_SUMMARIES) {
-                replacement = PA.getBogusSummaryProvider().getReplacementMethod(target, new Integer(0));
+                replacement = PA.getBogusSummaryProvider().getReplacementMethod(target);
                 if(replacement != null) {
                     if(pa.TRACE_BOGUS){
                         System.out.println("Replacing a call to " + target + 
@@ -244,6 +244,7 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
                     }
                     jq_Method oldTarget = target;
                     target = replacement;
+                    
                     if(!PA.getBogusSummaryProvider().hasStaticReplacement(replacement)){
                         if(mc instanceof ProgramLocation.QuadProgramLocation){
                             Quad q = ( (ProgramLocation.QuadProgramLocation) mc).getQuad();
@@ -253,31 +254,33 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
                             }else{
                                 base = 1;
                             }
-                            Assert._assert(q.getAllOperands().getOperand(base) instanceof MethodOperand,
-                                "Operand " + 
-                                q.getAllOperands().getOperand(base) +
-                                " of " + mc.toStringLong() +
-                                " is not of the right type: " + q.getAllOperands().getOperand(base).getClass());
-                            Operand.MethodOperand methodOp = (MethodOperand) q.getAllOperands().getOperand(base);
-                            Assert._assert(methodOp.getMethod() == oldTarget);
-                            methodOp.setMethod(replacement);
-                            
-                            if(!replacement.isStatic()){
-                                Operand.ParamListOperand listOp = (ParamListOperand) q.getAllOperands().getOperand(base+1);
-                                if(listOp.get(0).getType() != oldTarget.getDeclaringClass()){
-                                    listOp.get(0).setType(replacement.getDeclaringClass());
+//                            Assert._assert(q.getAllOperands().getOperand(base) instanceof MethodOperand,
+//                                "Operand " + 
+//                                q.getAllOperands().getOperand(base) +
+//                                " of " + mc.toStringLong() +
+//                                " is not of the right type: " + q.getAllOperands().getOperand(base).getClass());
+                            if(q.getAllOperands().getOperand(base) instanceof MethodOperand){
+                                Operand.MethodOperand methodOp = (MethodOperand) q.getAllOperands().getOperand(base);
+                                Assert._assert(methodOp.getMethod() == oldTarget);
+                                methodOp.setMethod(replacement);
+                                
+                                if(!replacement.isStatic()){
+                                    Operand.ParamListOperand listOp = (ParamListOperand) q.getAllOperands().getOperand(base+1);
+                                    if(listOp.get(0).getType() != oldTarget.getDeclaringClass()){
+                                        listOp.get(0).setType(replacement.getDeclaringClass());
+                                    }
                                 }
                             }
                         }
                     }
                 }
             }            
-            if (target.isStatic())
+            if (target.isStatic()){
                 pa.addClassInitializer(target.getDeclaringClass());
-
+            }
             
             Set thisptr;
-            if(replacement != null && PA.getBogusSummaryProvider().hasStaticReplacement(replacement)) {                
+            if( (replacement != null) && PA.getBogusSummaryProvider().hasStaticReplacement(replacement)) {                
                 thisptr = Collections.singleton(GlobalNode.GLOBAL);
                 pa.addToActual(I_bdd, 0, thisptr);
                 //pa.addToActual(I_bdd, 1, ms.getNodesThatCall(mc, 0));
@@ -369,26 +372,28 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
             I_bdd.free();
         }
        
-        for (Iterator i = ms.getCalls().iterator(); i.hasNext(); ) {
-            ProgramLocation mc = (ProgramLocation) i.next();
-            if (TRACE) out.println("Visiting call site "+mc);
-            int I_i = pa.Imap.get(LoadedCallGraph.mapCall(mc));
-            BDD I_bdd = pa.I.ithVar(I_i);
-            jq_Method target = mc.getTargetMethod();
-
-            if(ReflectionInformationProvider.isForName(target)){
-                ConcreteTypeNode h = ConcreteTypeNode.get(
-                    pa.class_class, 
-                    /*new ProgramLocation.PlaceholderParameterProgramLocation(m, "forName @" + mc.getEmacsName())*/ mc, 
-                    new Integer(++pa.opn));
-                pa.addToForNameMap(h, I_bdd);
-                if(pa.TRACE_REFLECTION && pa.TRACE){
-                    System.out.println("Processing a call to forName: " + mc.getEmacsName());
+        if(pa.USE_REFLECTION_PROVIDER){
+            for (Iterator i = ms.getCalls().iterator(); i.hasNext(); ) {
+                ProgramLocation mc = (ProgramLocation) i.next();
+                if (TRACE) out.println("Visiting call site "+mc);
+                int I_i = pa.Imap.get(LoadedCallGraph.mapCall(mc));
+                BDD I_bdd = pa.I.ithVar(I_i);
+                jq_Method target = mc.getTargetMethod();
+    
+                if(ReflectionInformationProvider.isForName(target)){
+                    ConcreteTypeNode h = ConcreteTypeNode.get(
+                        pa.class_class, 
+                        /*new ProgramLocation.PlaceholderParameterProgramLocation(m, "forName @" + mc.getEmacsName())*/ mc, 
+                        new Integer(++pa.opn));
+                    pa.addToForNameMap(h, I_bdd);
+                    if(pa.TRACE_REFLECTION && pa.TRACE){
+                        System.out.println("Processing a call to forName: " + mc.getEmacsName());
+                    }
+                    int H_i = pa.Hmap.get(h);
+                    pa.addToVP(ms.getRVN(mc), H_i);
+                    
+                    //continue;
                 }
-                int H_i = pa.Hmap.get(h);
-                pa.addToVP(ms.getRVN(mc), H_i);
-                
-                //continue;
             }
         }
         
