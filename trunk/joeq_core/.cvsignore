@@ -1,7 +1,5 @@
 .source_list
+bootclasspath
 callgraph
 callgraph.dot
-cspa.bdd
-cspa.config
-cspa.heap
-cspa.vars
+pa.*
