@@ -3,8 +3,6 @@
  *
  * Created on February 13, 2001, 11:11 PM
  *
- * @author  John Whaley
- * @version 
  */
 
 package Assembler.x86;
@@ -17,6 +15,10 @@ import Util.LittleEndianOutputStream;
 import java.io.OutputStream;
 import java.io.IOException;
 
+/*
+ * @author  John Whaley
+ * @version 
+ */
 public class Heap2HeapReference extends Reloc {
 
     private int/*HeapAddress*/ from_heaploc;

@@ -15,7 +15,7 @@ import Clazz.jq_Class;
 import Clazz.jq_StaticField;
 import Clazz.jq_NameAndDesc;
 import UTF.Utf8;
-import jq;
+import Main.jq;
 
 public abstract class MathSupport {
 

@@ -3,8 +3,6 @@
  *
  * Created on January 29, 2001, 11:16 AM
  *
- * @author  John Whaley
- * @version 
  */
 
 package ClassLib.Common.java.lang;
@@ -25,7 +23,7 @@ import Run_Time.Unsafe;
 import Run_Time.SystemInterface;
 import Bootstrap.PrimordialClassLoader;
 import UTF.Utf8;
-import jq;
+import Main.jq;
 import java.io.ByteArrayInputStream;
 import java.io.DataInput;
 import java.io.DataInputStream;
@@ -34,6 +32,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.security.ProtectionDomain;
 
+/*
+ * @author  John Whaley
+ * @version 
+ */
 public abstract class ClassLoader {
     
     private boolean initialized;
@@ -52,7 +54,7 @@ public abstract class ClassLoader {
 	if (security != null) {
 	    security.checkCreateClassLoader();
 	}
-        jq.assert(parent != null);
+        jq.Assert(parent != null);
         this.parent = parent;
         Map m = new HashMap();
         this.desc2type = m;
@@ -64,7 +66,7 @@ public abstract class ClassLoader {
 	    security.checkCreateClassLoader();
 	}
         java.lang.ClassLoader parent = getSystemClassLoader();
-        jq.assert(parent != null);
+        jq.Assert(parent != null);
         this.parent = parent;
         Map m = new HashMap();
         this.desc2type = m;
@@ -126,7 +128,7 @@ public abstract class ClassLoader {
     }
     private java.lang.Class findBootstrapClass(java.lang.String name) throws ClassNotFoundException {
         java.lang.Object o = PrimordialClassLoader.loader;
-        jq.assert(this == o);
+        jq.Assert(this == o);
         if (!name.startsWith("[")) name = "L"+name+";";
         Utf8 desc = Utf8.get(name.replace('.','/'));
         jq_Type k;
@@ -159,7 +161,7 @@ public abstract class ClassLoader {
 
     // additional methods
     public jq_Type getType(Utf8 desc) {
-        jq.assert(!jq.Bootstrapping);
+        jq.Assert(!jq.Bootstrapping);
         Map desc2type = this.desc2type;
         jq_Type t = (jq_Type)desc2type.get(desc);
         return t;

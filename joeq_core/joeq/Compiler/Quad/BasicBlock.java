@@ -6,7 +6,7 @@
  */
 
 package Compil3r.Quad;
-import jq;
+import Main.jq;
 import Util.BackwardIterator;
 import Util.Templates.List;
 import Util.Templates.ListIterator;
@@ -184,14 +184,14 @@ public class BasicBlock {
      * @param index  the index to add the quad
      * @param q  quad to add */
     public void addQuad(int index, Quad q) {
-	jq.assert(instructions != null, "Cannot add instructions to entry/exit basic block");
+	jq.Assert(instructions != null, "Cannot add instructions to entry/exit basic block");
         instructions.add(index, q);
     }
     /** Append a quad to the end of this basic block.
      * Cannot add quads to the entry or exit basic blocks.
      * @param q  quad to add */
     public void appendQuad(Quad q) {
-	jq.assert(instructions != null, "Cannot add instructions to entry/exit basic block");
+	jq.Assert(instructions != null, "Cannot add instructions to entry/exit basic block");
         instructions.add(q);
     }
     
@@ -199,39 +199,39 @@ public class BasicBlock {
      * Cannot add predecessors to the entry basic block.
      * @param b  basic block to add as a predecessor */
     public void addPredecessor(BasicBlock b) {
-	jq.assert(predecessors != null, "Cannot add predecessor to entry basic block");
+	jq.Assert(predecessors != null, "Cannot add predecessor to entry basic block");
 	predecessors.add(b);
     }
     /** Add a successor basic block to this basic block.
      * Cannot add successors to the exit basic block.
      * @param b  basic block to add as a successor */
     public void addSuccessor(BasicBlock b) {
-	jq.assert(successors != null, "Cannot add successor to exit basic block");
+	jq.Assert(successors != null, "Cannot add successor to exit basic block");
 	successors.add(b);
     }
     
     public boolean removePredecessor(BasicBlock bb) {
-	jq.assert(predecessors != null, "Cannot remove predecessor from entry basic block");
+	jq.Assert(predecessors != null, "Cannot remove predecessor from entry basic block");
         return predecessors.remove(bb);
     }
     public void removePredecessor(int i) {
-	jq.assert(predecessors != null, "Cannot remove predecessor from entry basic block");
+	jq.Assert(predecessors != null, "Cannot remove predecessor from entry basic block");
         predecessors.remove(i);
     }
     public boolean removeSuccessor(BasicBlock bb) {
-	jq.assert(successors != null, "Cannot remove successor from exit basic block");
+	jq.Assert(successors != null, "Cannot remove successor from exit basic block");
         return successors.remove(bb);
     }
     public void removeSuccessor(int i) {
-	jq.assert(successors != null, "Cannot remove successor from exit basic block");
+	jq.Assert(successors != null, "Cannot remove successor from exit basic block");
         successors.remove(i);
     }
     public void removeAllPredecessors() {
-	jq.assert(predecessors != null, "Cannot remove predecessors from entry basic block");
+	jq.Assert(predecessors != null, "Cannot remove predecessors from entry basic block");
         predecessors.clear();
     }
     public void removeAllSuccessors() {
-	jq.assert(successors != null, "Cannot remove successors from exit basic block");
+	jq.Assert(successors != null, "Cannot remove successors from exit basic block");
         successors.clear();
     }
         
@@ -279,7 +279,7 @@ public class BasicBlock {
     
     void addExceptionHandler_first(ExceptionHandlerList eh) {
         eh.getHandler().addHandledBasicBlock(this);
-        jq.assert(eh.parent == null);
+        jq.Assert(eh.parent == null);
         eh.parent = this.exception_handler_list;
         this.exception_handler_list = eh;
     }
@@ -337,11 +337,11 @@ public class BasicBlock {
      * @return  the name of this basic block. */
     public String toString() {
         if (isEntry()) {
-            jq.assert(getID() == 0);
+            jq.Assert(getID() == 0);
             return "BB0 (ENTRY)";
         }
         if (isExit()) {
-            jq.assert(getID() == 1);
+            jq.Assert(getID() == 1);
             return "BB1 (EXIT)";
         }
         return "BB"+getID();

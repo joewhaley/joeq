@@ -14,7 +14,7 @@ import Clazz.*;
 import Run_Time.Unsafe;
 import Run_Time.Reflection;
 import Allocator.DefaultCodeAllocator;
-import jq;
+import Main.jq;
 
 public final class Interface extends ClassLib.ClassLibInterface {
 
@@ -47,7 +47,7 @@ public final class Interface extends ClassLib.ClassLibInterface {
         nullStaticFields.add(PrimordialClassLoader.loader.getJavaLangClassLoader().getOrCreateStaticField("loadedLibraryNames", "Ljava/util/Vector;"));
         nullStaticFields.add(PrimordialClassLoader.loader.getJavaLangClassLoader().getOrCreateStaticField("systemNativeLibraries", "Ljava/util/Vector;"));
         nullStaticFields.add(PrimordialClassLoader.loader.getJavaLangClassLoader().getOrCreateStaticField("nativeLibraryContext", "Ljava/util/Stack;"));
-        jq_Class jq_class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljq;");
+        jq_Class jq_class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LMain/jq;");
         nullStaticFields.add(jq_class.getOrCreateStaticField("on_vm_startup", "Ljava/util/List;"));
         jq_Class launcher_class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Lsun/misc/Launcher;");
         nullStaticFields.add(launcher_class.getOrCreateStaticField("launcher", "Lsun/misc/Launcher;"));
@@ -137,7 +137,7 @@ public final class Interface extends ClassLib.ClassLibInterface {
     
     public Clazz.jq_Type getOrCreateType(java.lang.ClassLoader cl, UTF.Utf8 desc) {
         if (jq.Bootstrapping) {
-            jq.assert(cl == PrimordialClassLoader.loader);
+            jq.Assert(cl == PrimordialClassLoader.loader);
             return PrimordialClassLoader.loader.getOrCreateBSType(desc);
         }
         java.lang.Object o = cl;
@@ -170,7 +170,7 @@ public final class Interface extends ClassLib.ClassLibInterface {
     
     public void unloadType(java.lang.ClassLoader cl, Clazz.jq_Type t) {
         if (jq.Bootstrapping) {
-            jq.assert(cl == PrimordialClassLoader.loader);
+            jq.Assert(cl == PrimordialClassLoader.loader);
             PrimordialClassLoader.loader.unloadBSType(t);
             return;
         }

@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.LinkedList;
 import java.util.Iterator;
 import Util.AppendIterator;
-import jq;
+import Main.jq;
 
 /**
  * Defines a section in an ELF file.
@@ -26,6 +26,8 @@ import jq;
  * @version 
  */
 public abstract class Section implements ELFConstants {
+    
+    public static final String DEFAULT_ENCODING = "ISO-8859-1";
     
     protected String name;
     protected int index;
@@ -111,32 +113,32 @@ public abstract class Section implements ELFConstants {
         public Section parseHeader() throws IOException {
             switch (type) {
             case SHT_NULL: {
-                jq.assert(this.flags == 0);
-                jq.assert(this.addr == 0);
-                jq.assert(this.offset == 0);
-                jq.assert(this.size == 0);
-                jq.assert(this.link == SHN_UNDEF);
-                jq.assert(this.info == 0);
-                jq.assert(this.addralign == 0);
-                jq.assert(this.entsize == 0);
+                jq.Assert(this.flags == 0);
+                jq.Assert(this.addr == 0);
+                jq.Assert(this.offset == 0);
+                jq.Assert(this.size == 0);
+                jq.Assert(this.link == SHN_UNDEF);
+                jq.Assert(this.info == 0);
+                jq.Assert(this.addralign == 0);
+                jq.Assert(this.entsize == 0);
                 return NullSection.INSTANCE;
             }
             case SHT_PROGBITS: {
-                jq.assert(this.link == SHN_UNDEF);
-                jq.assert(this.info == 0);
-                jq.assert(this.entsize == 0);
+                jq.Assert(this.link == SHN_UNDEF);
+                jq.Assert(this.info == 0);
+                jq.Assert(this.entsize == 0);
                 return ProgBitsSectionImpl.empty(this.flags, this.addr, this.addralign);
             }
             case SHT_SYMTAB: {
-                jq.assert(this.addralign == 4);
-                jq.assert(this.entsize == SymbolTableEntry.getEntrySize());
+                jq.Assert(this.addralign == 4);
+                jq.Assert(this.entsize == SymbolTableEntry.getEntrySize());
                 return SymTabSection.empty(this.flags, this.addr);
             }
             case SHT_STRTAB: {
-                jq.assert(this.link == SHN_UNDEF);
-                jq.assert(this.info == 0);
-                jq.assert(this.addralign == 1);
-                jq.assert(this.entsize == 0);
+                jq.Assert(this.link == SHN_UNDEF);
+                jq.Assert(this.info == 0);
+                jq.Assert(this.addralign == 1);
+                jq.Assert(this.entsize == 0);
                 return StrTabSection.empty(this.flags, this.addr);
             }
             case SHT_RELA:
@@ -146,21 +148,21 @@ public abstract class Section implements ELFConstants {
                 jq.TODO(); return null;
             }
             case SHT_NOTE: {
-                jq.assert(this.link == SHN_UNDEF);
-                jq.assert(this.info == 0);
-                jq.assert(this.addralign == 1);
-                jq.assert(this.entsize == 0);
+                jq.Assert(this.link == SHN_UNDEF);
+                jq.Assert(this.info == 0);
+                jq.Assert(this.addralign == 1);
+                jq.Assert(this.entsize == 0);
                 return NoteSection.empty(this.flags, this.addr);
             }
             case SHT_NOBITS: {
-                jq.assert(this.link == SHN_UNDEF);
-                jq.assert(this.info == 0);
-                jq.assert(this.entsize == 0);
+                jq.Assert(this.link == SHN_UNDEF);
+                jq.Assert(this.info == 0);
+                jq.Assert(this.entsize == 0);
                 return NoBitsSection.empty(this.flags, this.addr, this.size, this.addralign);
             }
             case SHT_REL:
-                jq.assert(this.addralign == 4);
-                jq.assert(this.entsize == RelocEntry.getEntrySize());
+                jq.Assert(this.addralign == 4);
+                jq.Assert(this.entsize == RelocEntry.getEntrySize());
                 return RelSection.empty(this.flags, this.addr);
             case SHT_SHLIB:
             default:
@@ -215,10 +217,10 @@ public abstract class Section implements ELFConstants {
         public int getInfo() { return 0; }
         public int getAddrAlign() { return 0; }
         public int getEntSize() { return 0; }
-        public void setIndex(int index) { jq.assert(index == 0); }
-        public void setName(String name) { jq.assert(name.equals("")); }
-        public void setAddr(int addr) { jq.assert(addr == 0); }
-        public void setOffset(int offset) { jq.assert(offset == 0); }
+        public void setIndex(int index) { jq.Assert(index == 0); }
+        public void setName(String name) { jq.Assert(name.equals("")); }
+        public void setAddr(int addr) { jq.Assert(addr == 0); }
+        public void setOffset(int offset) { jq.Assert(offset == 0); }
         public void setWrite() { jq.UNREACHABLE(); }
         public void setAlloc() { jq.UNREACHABLE(); }
         public void setExecInstr() { jq.UNREACHABLE(); }
@@ -447,7 +449,7 @@ public abstract class Section implements ELFConstants {
                 Set set = (Set)e.getValue();
                 for (Iterator j=set.iterator(); j.hasNext(); ) {
                     String s1 = (String)j.next();
-                    jq.assert(s1.length() == in);
+                    jq.Assert(s1.length() == in);
                     int index2;
                     for (Iterator k=string_set.iterator(); ; ) {
                         if (!k.hasNext()) {
@@ -483,7 +485,16 @@ public abstract class Section implements ELFConstants {
 		if (e.getValue() == null) continue;
                 index = ((Integer)e.getValue()).intValue();
                 //System.out.println("Writing "+s.length()+" bytes for \""+s+"\" to table index "+index);
-                s.getBytes(0, s.length(), table, index);
+                
+                if (false) {
+                    // deprecated
+                    //s.getBytes(0, s.length(), table, index);
+                } else {
+                    try {
+                        byte[] b = s.getBytes(DEFAULT_ENCODING);
+                        System.arraycopy(b, 0, table, index, b.length);
+                    } catch (UnsupportedEncodingException x) { jq.UNREACHABLE(); }
+                }
             }
         }
         
@@ -509,7 +520,16 @@ public abstract class Section implements ELFConstants {
                 Map.Entry e = (Map.Entry)i.next();
                 String s = (String)e.getKey();
                 //System.out.println("Writing "+s.length()+" bytes for \""+s+"\" to table index "+index);
-                s.getBytes(0, s.length(), table, index);
+                
+                if (false) {
+                    // deprecated
+                    //s.getBytes(0, s.length(), table, index);
+                } else {
+                    try {
+                        byte[] b = s.getBytes(DEFAULT_ENCODING);
+                        System.arraycopy(b, 0, table, index, b.length);
+                    } catch (UnsupportedEncodingException x) { jq.UNREACHABLE(); }
+                }
                 index += s.length() + 1;
             }
         }
@@ -526,7 +546,9 @@ public abstract class Section implements ELFConstants {
                 if (table[n+i] == '\0') break;
                 ++n;
             }
-            return new String(table, 0, i, n);
+            try {
+                return new String(table, i, n, DEFAULT_ENCODING);
+            } catch (UnsupportedEncodingException x) { jq.UNREACHABLE(); return null; }
         }
         public int getSize() { return table.length; }
         public int getAddrAlign() { return 1; }
@@ -666,7 +688,15 @@ public abstract class Section implements ELFConstants {
             file.write_word(notedesc.length);
             file.write_word(notetype);
             byte[] notename_b = new byte[getNameLength()];
-            notename.getBytes(0, notename.length(), notename_b, 0);
+            if (false) {
+                // deprecated
+                //notename.getBytes(0, notename.length(), notename_b, 0);
+            } else {
+                try {
+                    byte[] b = notename.getBytes(DEFAULT_ENCODING);
+                    System.arraycopy(b, 0, notename_b, 0, b.length);
+                } catch (UnsupportedEncodingException x) { jq.UNREACHABLE(); }
+            }
             file.write_bytes(notename_b);
             file.write_bytes(notedesc);
         }
@@ -687,7 +717,9 @@ public abstract class Section implements ELFConstants {
             this.notetype = file.read_word();
             byte[] notename_b = new byte[nlength];
             file.read_bytes(notename_b);
-            this.notename = new String(notename_b, 0);
+            try {
+                this.notename = new String(notename_b, DEFAULT_ENCODING);
+            } catch (UnsupportedEncodingException x) { jq.UNREACHABLE(); }
             this.notedesc = new byte[dlength];
             file.read_bytes(notedesc);
             if (this.getSize() != s.size) throw new IOException();

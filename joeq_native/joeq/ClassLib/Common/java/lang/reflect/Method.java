@@ -3,8 +3,6 @@
  *
  * Created on April 14, 2001, 3:11 PM
  *
- * @author  John Whaley
- * @version 
  */
 
 package ClassLib.Common.java.lang.reflect;
@@ -12,8 +10,12 @@ package ClassLib.Common.java.lang.reflect;
 import Bootstrap.PrimordialClassLoader;
 import Clazz.*;
 import Run_Time.*;
-import jq;
+import Main.jq;
 
+/*
+ * @author  John Whaley
+ * @version 
+ */
 public class Method extends AccessibleObject {
 
     // additional instance field.
@@ -87,10 +89,10 @@ public class Method extends AccessibleObject {
 	java.lang.String name = jq_method.getName().toString();
         o.name = name;
 	java.lang.Class clazz = jq_method.getDeclaringClass().getJavaLangClassObject();
-	jq.assert(clazz != null);
+	jq.Assert(clazz != null);
         o.clazz = clazz;
 	java.lang.Class returnType = jq_method.getReturnType().getJavaLangClassObject();
-	jq.assert(returnType != null);
+	jq.Assert(returnType != null);
         o.returnType = returnType;
 	jq_Type[] paramTypes = jq_method.getParamTypes();
 	int offset;
@@ -101,7 +103,7 @@ public class Method extends AccessibleObject {
 	java.lang.Class[] parameterTypes = new java.lang.Class[paramTypes.length-offset];
 	for (int i=offset; i<paramTypes.length; ++i) {
 	    parameterTypes[i-offset] = Reflection.getJDKType(paramTypes[i]);
-	    jq.assert(parameterTypes[i-offset] != null);
+	    jq.Assert(parameterTypes[i-offset] != null);
 	}
         o.parameterTypes = parameterTypes;
 	// TODO: exception types

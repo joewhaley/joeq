@@ -3,8 +3,6 @@
  *
  * Created on February 13, 2001, 9:36 PM
  *
- * @author  John Whaley
- * @version 
  */
 
 package Assembler.x86;
@@ -16,8 +14,12 @@ import Clazz.jq_CompiledCode;
 import Clazz.jq_Method;
 import Clazz.jq_InstanceField;
 
-import jq;
+import Main.jq;
 
+/*
+ * @author  John Whaley
+ * @version 
+ */
 public class DirectBindCall {
 
     private int/*CodeAddress*/ source;
@@ -29,7 +31,7 @@ public class DirectBindCall {
     
     public void patch() {
         jq_CompiledCode cc = target.getDefaultCompiledVersion();
-        jq.assert(cc != null);
+        jq.Assert(cc != null);
         DefaultCodeAllocator.patchRelativeOffset(source, cc.getEntrypoint());
     }
     

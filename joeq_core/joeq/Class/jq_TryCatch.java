@@ -13,7 +13,7 @@ import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
 import Run_Time.TypeCheck;
 import Run_Time.SystemInterface;
-import jq;
+import Main.jq;
 
 public class jq_TryCatch {
 

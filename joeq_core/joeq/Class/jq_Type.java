@@ -10,7 +10,7 @@
 package Clazz;
 
 import UTF.Utf8;
-import jq;
+import Main.jq;
 import Run_Time.Unsafe;
 import Run_Time.Reflection;
 import ClassLib.ClassLibInterface;
@@ -45,7 +45,7 @@ public abstract class jq_Type {
     }
     public boolean needsDynamicLink(jq_Method method) { return false; }
     public final Class getJavaLangClassObject() {
-        jq.assert(!jq.Bootstrapping);
+        jq.Assert(!jq.Bootstrapping);
         return class_object;
     }
 

@@ -15,7 +15,7 @@ import Clazz.jq_NameAndDesc;
 import Run_Time.Reflection;
 import Run_Time.Unsafe;
 import UTF.Utf8;
-import jq;
+import Main.jq;
 
 public abstract class Finalizer {
 
@@ -25,7 +25,7 @@ public abstract class Finalizer {
     static void invokeFinalizeMethod(Object o) throws Throwable {
         jq_Reference c = Unsafe.getTypeOf(o);
         jq_InstanceMethod m = c.getVirtualMethod(new jq_NameAndDesc(Utf8.get("finalize"), Utf8.get("()V")));
-        jq.assert(m != null);
+        jq.Assert(m != null);
         Reflection.invokeinstance_V(m, o);
     }
 }

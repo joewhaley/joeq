@@ -14,7 +14,7 @@ package Clazz;
 import Bootstrap.PrimordialClassLoader;
 import ClassLib.ClassLibInterface;
 import UTF.Utf8;
-import jq;
+import Main.jq;
 
 public class jq_StaticMethod extends jq_Method {
 
@@ -65,9 +65,9 @@ public class jq_StaticMethod extends jq_Method {
         throw new NoSuchMethodError(this.toString());
     }
     
-    public final void prepare() { jq.assert(state == STATE_LOADED); state = STATE_PREPARED; }
+    public final void prepare() { jq.Assert(state == STATE_LOADED); state = STATE_PREPARED; }
 
-    public final void unprepare() { jq.assert(state == STATE_PREPARED); state = STATE_LOADED; }
+    public final void unprepare() { jq.Assert(state == STATE_PREPARED); state = STATE_LOADED; }
     
     public void accept(jq_MethodVisitor mv) {
         mv.visitStaticMethod(this);

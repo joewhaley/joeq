@@ -3,14 +3,16 @@
  *
  * Created on January 29, 2001, 11:13 AM
  *
- * @author  John Whaley
- * @version 
  */
 
 package ClassLib.Common.java.lang;
 
 import Run_Time.Unsafe;
 
+/*
+ * @author  John Whaley
+ * @version 
+ */
 abstract class Float {
     
     // native method implementations.

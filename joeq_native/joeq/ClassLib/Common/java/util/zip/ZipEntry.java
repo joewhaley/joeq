@@ -3,8 +3,6 @@
  *
  * Created on January 29, 2001, 3:04 PM
  *
- * @author  John Whaley
- * @version 
  */
 
 package ClassLib.Common.java.util.zip;
@@ -14,7 +12,13 @@ import Run_Time.Reflection;
 import Clazz.jq_Class;
 import Clazz.jq_InstanceField;
 import Clazz.jq_Initializer;
+import java.io.UnsupportedEncodingException;
+import Main.jq;
 
+/*
+ * @author  John Whaley
+ * @version 
+ */
 class ZipEntry implements ZipConstants {
     
     String name;
@@ -32,6 +36,8 @@ class ZipEntry implements ZipConstants {
     ZipEntry() { 
         this.name = "UNINITIALIZED";
     }
+    
+    public static final String DEFAULT_ENCODING = "ISO-8859-1";
     
     public int load(byte[] cenbuf, int st_off, long cenpos, int cenlen)
     throws java.util.zip.ZipException {
@@ -57,8 +63,10 @@ class ZipEntry implements ZipConstants {
         if (len == 0 || off + len > cenlen) {
             throw new java.util.zip.ZipException("invalid CEN entry name");
         }
-        String s = new String(cenbuf, 0, off, len);
-        this.name = s;
+        try {
+            String s = new String(cenbuf, off, len, DEFAULT_ENCODING);
+            this.name = s;
+        } catch (UnsupportedEncodingException x) { jq.UNREACHABLE(); }
         off += len;
         // Get extra field data
         len = ZipFile.get16(cenbuf, baseoff + CENEXT);
@@ -77,8 +85,10 @@ class ZipEntry implements ZipConstants {
             if (off + len > cenlen) {
                 throw new java.util.zip.ZipException("invalid CEN entry comment");
             }
-            String comment = new String(cenbuf, 0, off, len);
-            this.comment = comment;
+            try {
+                String comment = new String(cenbuf, off, len, DEFAULT_ENCODING);
+                this.comment = comment;
+            } catch (UnsupportedEncodingException x) { jq.UNREACHABLE(); }
             off += len;
         }
         return off - st_off;

@@ -3,12 +3,14 @@
  *
  * Created on January 29, 2001, 2:29 PM
  *
- * @author  John Whaley
- * @version 
  */
 
 package ClassLib.sun14_win32.java.io;
 
+/*
+ * @author  John Whaley
+ * @version 
+ */
 public abstract class WinNTFileSystem extends Win32FileSystem {
 
     public java.lang.String canonicalize(java.lang.String s) throws java.io.IOException { return super.canonicalize(s); }

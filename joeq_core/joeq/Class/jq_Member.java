@@ -18,7 +18,7 @@ import java.io.DataInput;
 import java.io.IOException;
 import java.io.DataOutput;
 
-import jq;
+import Main.jq;
 import ClassLib.ClassLibInterface;
 import Run_Time.StackWalker;
 import Run_Time.Reflection;
@@ -49,8 +49,8 @@ public abstract class jq_Member implements jq_ClassFileConstants {
     static final boolean USE_MEMBER_OBJECT_FIELD = false;
 
     protected jq_Member(jq_Class clazz, jq_NameAndDesc nd) {
-        jq.assert(clazz != null);
-        jq.assert(nd != null);
+        jq.Assert(clazz != null);
+        jq.Assert(nd != null);
         this.clazz = clazz; this.nd = nd;
         Member c = null;
         try {
@@ -83,7 +83,7 @@ public abstract class jq_Member implements jq_ClassFileConstants {
     }
 
     public final Member getJavaLangReflectMemberObject() {
-        //jq.assert(!jq.Bootstrapping);
+        //jq.Assert(!jq.Bootstrapping);
         return member_object;
     }
     
@@ -127,7 +127,7 @@ public abstract class jq_Member implements jq_ClassFileConstants {
     
     public void dumpAttributes(DataOutput out, jq_ConstantPool.ConstantPoolRebuilder cpr) throws IOException {
 	int nattributes = attributes.size();
-	jq.assert(nattributes <= Character.MAX_VALUE);
+	jq.Assert(nattributes <= Character.MAX_VALUE);
 	out.writeChar(nattributes);
 	for (Iterator i = attributes.entrySet().iterator(); i.hasNext(); ) {
 	    Map.Entry e = (Map.Entry)i.next();

@@ -3,8 +3,6 @@
  *
  * Created on January 11, 2001, 10:55 AM
  *
- * @author  jwhaley
- * @version 
  */
 
 package Allocator;
@@ -19,10 +17,14 @@ import Bootstrap.PrimordialClassLoader;
 import Run_Time.ExceptionDeliverer;
 import Run_Time.Unsafe;
 import Run_Time.SystemInterface;
-import jq;
+import Main.jq;
 
 import java.util.List;
 
+/*
+ * @author  John Whaley
+ * @version 
+ */
 public class RuntimeCodeAllocator extends CodeAllocator {
 
     public static final int ALIGNMENT = 32;
@@ -51,7 +53,7 @@ public class RuntimeCodeAllocator extends CodeAllocator {
     
     public x86CodeBuffer getCodeBuffer(int estimated_size) {
         // should not be called recursively.
-        jq.assert(!isGenerating); isGenerating = true;
+        jq.Assert(!isGenerating); isGenerating = true;
 	if (TRACE) SystemInterface.debugmsg("Code generation started: "+this);
         if (heapCurrent + estimated_size <= heapEnd) {
             if (TRACE) SystemInterface.debugmsg("Estimated size ("+jq.hex(estimated_size)+" fits within free space in current block "+jq.hex8(heapCurrent)+"-"+jq.hex8(heapEnd));
@@ -62,7 +64,7 @@ public class RuntimeCodeAllocator extends CodeAllocator {
             if (TRACE) SystemInterface.debugmsg("Estimated size ("+jq.hex(estimated_size)+" fits within a prior block: maxfreeprev="+jq.hex(maxFreePrevious));
             int ptr = heapFirst;
             for (;;) {
-                jq.assert(ptr != 0);
+                jq.Assert(ptr != 0);
                 int ptr2 = ptr+BLOCK_SIZE-8;
                 int ptr3 = Unsafe.peek(ptr2);
                 if (TRACE) SystemInterface.debugmsg("Checking block "+jq.hex8(ptr)+"-"+jq.hex8(ptr2)+", current ptr="+jq.hex8(ptr3));
@@ -119,7 +121,7 @@ public class RuntimeCodeAllocator extends CodeAllocator {
             if (currentAddress+size < endAddress) return;
             // overflow!
             allocateNewBlock();
-            jq.assert(currentAddress-startAddress+size < heapEnd-heapCurrent);
+            jq.Assert(currentAddress-startAddress+size < heapEnd-heapCurrent);
             SystemInterface.mem_cpy(heapCurrent, startAddress, currentAddress-startAddress);
             currentAddress = currentAddress-startAddress+heapCurrent;
             startAddress = heapCurrent;
@@ -173,11 +175,11 @@ public class RuntimeCodeAllocator extends CodeAllocator {
         public jq_CompiledCode allocateCodeBlock(jq_Method m, jq_TryCatch[] ex,
                                                  jq_BytecodeMap bcm, ExceptionDeliverer exd,
                                                  List code_relocs, List data_relocs) {
-            jq.assert(isGenerating);
+            jq.Assert(isGenerating);
             int start = getStart();
             int current = getCurrent();
             int end = getEnd();
-            jq.assert(current <= end);
+            jq.Assert(current <= end);
             // align pointer for next allocation
             int align = current & (ALIGNMENT-1);
             if (align != 0) current += (ALIGNMENT-align);

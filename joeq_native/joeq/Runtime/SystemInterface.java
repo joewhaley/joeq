@@ -19,7 +19,7 @@ import Run_Time.Unsafe;
 import Scheduler.jq_Thread;
 import Scheduler.jq_NativeThread;
 import Scheduler.jq_RegisterState;
-import jq;
+import Main.jq;
 
 public abstract class SystemInterface {
 
@@ -134,10 +134,10 @@ public abstract class SystemInterface {
     }
     
     public static byte[] toCString(String s) {
-        int len = s.length();
-        byte[] b = new byte[len+1];
-        s.getBytes(0, len, b, 0);
-        return b;
+        byte[] b = s.getBytes();
+        byte[] b2 = new byte[b.length+1];
+        System.arraycopy(b, 0, b2, 0, b.length);
+        return b2;
     }
 
     public static String fromCString(int p) {
@@ -519,7 +519,7 @@ public abstract class SystemInterface {
     public static int resume_thread(int/*CPointer*/ thread_handle) {
         try {
             Unsafe.pushArg(thread_handle);
-	    jq.assert(!Unsafe.getThreadBlock().isThreadSwitchEnabled());
+	    jq.Assert(!Unsafe.getThreadBlock().isThreadSwitchEnabled());
             int v = (int)Unsafe.invoke(resume_thread_4);
 	    return v;
         } catch (Throwable t) { jq.UNREACHABLE(); }
@@ -528,7 +528,7 @@ public abstract class SystemInterface {
     public static int suspend_thread(int/*CPointer*/ thread_handle) {
         try {
             Unsafe.pushArg(thread_handle);
-	    jq.assert(!Unsafe.getThreadBlock().isThreadSwitchEnabled());
+	    jq.Assert(!Unsafe.getThreadBlock().isThreadSwitchEnabled());
             int v = (int)Unsafe.invoke(suspend_thread_4);
 	    return v;
         } catch (Throwable t) { jq.UNREACHABLE(); }
@@ -546,7 +546,7 @@ public abstract class SystemInterface {
     }
     public static int/*CPointer*/ get_current_thread_handle() {
         try {
-	    jq.assert(!Unsafe.getThreadBlock().isThreadSwitchEnabled());
+	    jq.Assert(!Unsafe.getThreadBlock().isThreadSwitchEnabled());
             int v = (int)Unsafe.invoke(get_current_thread_handle_0);
 	    return v;
         } catch (Throwable t) { jq.UNREACHABLE(); }
@@ -556,7 +556,7 @@ public abstract class SystemInterface {
         try {
             Unsafe.pushArg(Unsafe.addressOf(context));
             Unsafe.pushArg(pid);
-	    jq.assert(!Unsafe.getThreadBlock().isThreadSwitchEnabled());
+	    jq.Assert(!Unsafe.getThreadBlock().isThreadSwitchEnabled());
             int v = (int)Unsafe.invoke(get_thread_context_8);
             return v!=0;
         } catch (Throwable t) { jq.UNREACHABLE(); }
@@ -566,7 +566,7 @@ public abstract class SystemInterface {
         try {
             Unsafe.pushArg(Unsafe.addressOf(context));
             Unsafe.pushArg(pid);
-	    jq.assert(!Unsafe.getThreadBlock().isThreadSwitchEnabled());
+	    jq.Assert(!Unsafe.getThreadBlock().isThreadSwitchEnabled());
             int v = (int)Unsafe.invoke(set_thread_context_8);
             return v!=0;
         } catch (Throwable t) { jq.UNREACHABLE(); }
@@ -576,7 +576,7 @@ public abstract class SystemInterface {
         try {
             Unsafe.pushArg(Unsafe.addressOf(context));
             Unsafe.pushArg(Unsafe.addressOf(thread));
-	    jq.assert(!Unsafe.getThreadBlock().isThreadSwitchEnabled());
+	    jq.Assert(!Unsafe.getThreadBlock().isThreadSwitchEnabled());
             Unsafe.invoke(set_current_context_8);
         } catch (Throwable t) { jq.UNREACHABLE(); }
     }

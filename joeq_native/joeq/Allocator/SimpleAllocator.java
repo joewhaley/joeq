@@ -3,8 +3,6 @@
  *
  * Created on January 1, 2001, 9:41 PM
  *
- * @author  jwhaley
- * @version 
  */
 
 package Allocator;
@@ -14,11 +12,15 @@ import Clazz.jq_Array;
 import Clazz.jq_Class;
 import Clazz.jq_Reference;
 import Bootstrap.PrimordialClassLoader;
-import jq;
+import Main.jq;
 import Run_Time.Unsafe;
 import Run_Time.SystemInterface;
 import java.lang.reflect.Array;
 
+/*
+ * @author  jwhaley
+ * @version 
+ */
 public class SimpleAllocator extends HeapAllocator {
 
     /** Size of blocks allocated from the OS.
@@ -84,13 +86,13 @@ public class SimpleAllocator extends HeapAllocator {
     throws OutOfMemoryError {
 	if (size < OBJ_HEADER_SIZE) // size overflow!
 	    HeapAllocator.outOfMemory();
-        jq.assert((size & 0x3) == 0);
+        jq.Assert((size & 0x3) == 0);
         int/*HeapAddress*/ addr = heapCurrent + OBJ_HEADER_SIZE;
         heapCurrent += size;
         if (heapCurrent > heapEnd) {
             // not enough space (rare path)
             if (totalMemory() >= MAX_MEMORY) HeapAllocator.outOfMemory();
-            jq.assert(size < BLOCK_SIZE-4);
+            jq.Assert(size < BLOCK_SIZE-4);
             if (0 == (heapCurrent = SystemInterface.syscalloc(BLOCK_SIZE)))
                 HeapAllocator.outOfMemory();
             Unsafe.poke4(heapEnd, heapCurrent);
@@ -146,7 +148,7 @@ public class SimpleAllocator extends HeapAllocator {
                 addr += ARRAY_HEADER_SIZE;
             } else {
                 if (totalMemory() >= MAX_MEMORY) HeapAllocator.outOfMemory();
-                jq.assert(size < BLOCK_SIZE-4);
+                jq.Assert(size < BLOCK_SIZE-4);
                 if (0 == (heapCurrent = SystemInterface.syscalloc(BLOCK_SIZE)))
                     outOfMemory();
                 Unsafe.poke4(heapEnd, heapCurrent);

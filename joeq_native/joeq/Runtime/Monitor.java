@@ -17,7 +17,7 @@ import Clazz.jq_StaticMethod;
 import Clazz.jq_InstanceField;
 import Run_Time.Unsafe;
 import Scheduler.jq_Thread;
-import jq;
+import Main.jq;
 
 public class Monitor implements ObjectLayout {
 
@@ -74,7 +74,7 @@ public class Monitor implements ObjectLayout {
                 m.entry_count = entrycount;
                 newlockword = Unsafe.addressOf(m) | LOCK_EXPANDED | status_flags;
                 // we own the lock, so a simple write is sufficient.
-                jq.assert(Unsafe.peek(Unsafe.addressOf(k)+STATUS_WORD_OFFSET) == oldlockword);
+                jq.Assert(Unsafe.peek(Unsafe.addressOf(k)+STATUS_WORD_OFFSET) == oldlockword);
                 Unsafe.poke4(Unsafe.addressOf(k)+STATUS_WORD_OFFSET, newlockword);
             } else {
                 // thin lock owned by another thread.
@@ -142,17 +142,17 @@ public class Monitor implements ObjectLayout {
      *  Uses a spin-loop to wait until the object is unlocked or inflated.
      */
     public static void installInflatedLock(Object k, Monitor m) {
-        jq.assert(m.monitor_owner == Unsafe.getThreadBlock());
-        jq.assert(m.entry_count >= 1);
+        jq.Assert(m.monitor_owner == Unsafe.getThreadBlock());
+        jq.Assert(m.entry_count >= 1);
         for (;;) {
             int oldlockword = Unsafe.peek(Unsafe.addressOf(k)+STATUS_WORD_OFFSET);
             if (oldlockword < 0) {
                 // inflated by another thread!  free our inflated lock and use that one.
-                jq.assert(m.entry_count == 1);
+                jq.Assert(m.entry_count == 1);
                 m.free();
                 Monitor m2 = getMonitor(oldlockword);
                 if (TRACE) SystemInterface.debugmsg("Inflated by another thread! lockword="+jq.hex8(oldlockword)+" lock="+m2);
-                jq.assert(m != m2);
+                jq.Assert(m != m2);
                 m2.lock(Unsafe.getThreadBlock());
                 return;
             }
@@ -181,8 +181,8 @@ public class Monitor implements ObjectLayout {
         jq_Thread m_t = this.monitor_owner;
         if (m_t == t) {
             // we own the lock.
-            jq.assert(this.atomic_count >= 0);
-            jq.assert(this.entry_count > 0);
+            jq.Assert(this.atomic_count >= 0);
+            jq.Assert(this.entry_count > 0);
             ++this.entry_count;
             if (TRACE) SystemInterface.debugmsg("We ("+t+") own lock "+this+", incrementing entry count: "+this.entry_count);
             return;
@@ -199,9 +199,9 @@ public class Monitor implements ObjectLayout {
         } else {
             if (TRACE) SystemInterface.debugmsg(this+" is unlocked, we ("+t+") obtain it.");
         }
-        jq.assert(this.monitor_owner == null);
-        jq.assert(this.entry_count == 0);
-	jq.assert(this.atomic_count >= 0);
+        jq.Assert(this.monitor_owner == null);
+        jq.Assert(this.entry_count == 0);
+	jq.Assert(this.atomic_count >= 0);
         if (TRACE) SystemInterface.debugmsg("We ("+t+") obtained lock "+this);
         this.monitor_owner = t;
         this.entry_count = 1;

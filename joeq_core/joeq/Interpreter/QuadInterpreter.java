@@ -19,10 +19,10 @@ import Compil3r.Quad.RegisterFactory.Register;
 import Compil3r.Quad.Operand.ParamListOperand;
 import Run_Time.Reflection;
 import Util.Templates.ListIterator;
-import ReflectiveInterpreter.ReflectiveVMInterface;
+import Interpreter.ReflectiveInterpreter.ReflectiveVMInterface;
 import Bootstrap.PrimordialClassLoader;
 import Util.FilterIterator.Filter;
-import jq;
+import Main.jq;
 
 /**
  *
@@ -104,7 +104,7 @@ public class QuadInterpreter {
 			Constructor co = (Constructor)Reflection.getJDKMember(f);
 			co.setAccessible(true);
 			UninitializedReference u = (UninitializedReference)getReg_A(plo.get(0).getRegister());
-			jq.assert(u.k == f.getDeclaringClass(), u.k+" != "+f.getDeclaringClass());
+			jq.Assert(u.k == f.getDeclaringClass(), u.k+" != "+f.getDeclaringClass());
 			Object inited = co.newInstance(param);
 			replaceUninitializedReferences(inited, u);
 		    } catch (InstantiationException x) {

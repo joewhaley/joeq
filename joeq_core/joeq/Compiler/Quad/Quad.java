@@ -9,13 +9,13 @@
 
 package Compil3r.Quad;
 
-import Operand.RegisterOperand;
-import Operator.Return;
+import Compil3r.Quad.Operand.RegisterOperand;
+import Compil3r.Quad.Operator.Return;
 import Util.Templates.List;
 import Util.Templates.UnmodifiableList;
 import Clazz.jq_Class;
 import Interpreter.QuadInterpreter.State;
-import jq;
+import Main.jq;
 
 public class Quad {
 

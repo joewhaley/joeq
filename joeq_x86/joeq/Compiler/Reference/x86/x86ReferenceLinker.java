@@ -24,7 +24,7 @@ import Clazz.jq_NameAndDesc;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
 import UTF.Utf8;
-import jq;
+import Main.jq;
 
 public abstract class x86ReferenceLinker {
 
@@ -83,7 +83,7 @@ public abstract class x86ReferenceLinker {
     static void getfield1(jq_InstanceField f) {
         f = f.resolve1();
         jq_Class k = f.getDeclaringClass();
-        jq.assert(k.isClsInitialized());
+        jq.Assert(k.isClsInitialized());
         int retloc = Unsafe.peek(Unsafe.EBP()+4);
         if (TRACE) SystemInterface.debugmsg("backpatching getfield1 "+f+" ip: "+jq.hex8(retloc));
         int patchsize = x86ReferenceCompiler.patch_getfield1(retloc, f);
@@ -93,7 +93,7 @@ public abstract class x86ReferenceLinker {
     static void cgetfield(jq_InstanceField f) {
         f = f.resolve1();
         jq_Class k = f.getDeclaringClass();
-        jq.assert(k.isClsInitialized());
+        jq.Assert(k.isClsInitialized());
         int retloc = Unsafe.peek(Unsafe.EBP()+4);
         if (TRACE) SystemInterface.debugmsg("backpatching cgetfield "+f+" ip: "+jq.hex8(retloc));
         int patchsize = x86ReferenceCompiler.patch_cgetfield(retloc, f);
@@ -103,7 +103,7 @@ public abstract class x86ReferenceLinker {
     static void sgetfield(jq_InstanceField f) {
         f = f.resolve1();
         jq_Class k = f.getDeclaringClass();
-        jq.assert(k.isClsInitialized());
+        jq.Assert(k.isClsInitialized());
         int retloc = Unsafe.peek(Unsafe.EBP()+4);
         if (TRACE) SystemInterface.debugmsg("backpatching sgetfield "+f+" ip: "+jq.hex8(retloc));
         int patchsize = x86ReferenceCompiler.patch_sgetfield(retloc, f);
@@ -113,7 +113,7 @@ public abstract class x86ReferenceLinker {
     static void getfield4(jq_InstanceField f) {
         f = f.resolve1();
         jq_Class k = f.getDeclaringClass();
-        jq.assert(k.isClsInitialized());
+        jq.Assert(k.isClsInitialized());
         int retloc = Unsafe.peek(Unsafe.EBP()+4);
         if (TRACE) SystemInterface.debugmsg("backpatching getfield4 "+f+" ip: "+jq.hex8(retloc));
         int patchsize = x86ReferenceCompiler.patch_getfield4(retloc, f);
@@ -123,7 +123,7 @@ public abstract class x86ReferenceLinker {
     static void getfield8(jq_InstanceField f) {
         f = f.resolve1();
         jq_Class k = f.getDeclaringClass();
-        jq.assert(k.isClsInitialized());
+        jq.Assert(k.isClsInitialized());
         int retloc = Unsafe.peek(Unsafe.EBP()+4);
         if (TRACE) SystemInterface.debugmsg("backpatching getfield8 "+f+" ip: "+jq.hex8(retloc));
         int patchsize = x86ReferenceCompiler.patch_getfield8(retloc, f);
@@ -133,7 +133,7 @@ public abstract class x86ReferenceLinker {
     static void putfield1(jq_InstanceField f) {
         f = f.resolve1();
         jq_Class k = f.getDeclaringClass();
-        jq.assert(k.isClsInitialized());
+        jq.Assert(k.isClsInitialized());
         int retloc = Unsafe.peek(Unsafe.EBP()+4);
         if (TRACE) SystemInterface.debugmsg("backpatching putfield1 "+f+" ip: "+jq.hex8(retloc));
         int patchsize = x86ReferenceCompiler.patch_putfield1(retloc, f);
@@ -143,7 +143,7 @@ public abstract class x86ReferenceLinker {
     static void putfield2(jq_InstanceField f) {
         f = f.resolve1();
         jq_Class k = f.getDeclaringClass();
-        jq.assert(k.isClsInitialized());
+        jq.Assert(k.isClsInitialized());
         int retloc = Unsafe.peek(Unsafe.EBP()+4);
         if (TRACE) SystemInterface.debugmsg("backpatching putfield2 "+f+" ip: "+jq.hex8(retloc));
         int patchsize = x86ReferenceCompiler.patch_putfield2(retloc, f);
@@ -153,7 +153,7 @@ public abstract class x86ReferenceLinker {
     static void putfield4(jq_InstanceField f) {
         f = f.resolve1();
         jq_Class k = f.getDeclaringClass();
-        jq.assert(k.isClsInitialized());
+        jq.Assert(k.isClsInitialized());
         int retloc = Unsafe.peek(Unsafe.EBP()+4);
         if (TRACE) SystemInterface.debugmsg("backpatching putfield4 "+f+" ip: "+jq.hex8(retloc));
         int patchsize = x86ReferenceCompiler.patch_putfield4(retloc, f);
@@ -163,7 +163,7 @@ public abstract class x86ReferenceLinker {
     static void putfield8(jq_InstanceField f) {
         f = f.resolve1();
         jq_Class k = f.getDeclaringClass();
-        jq.assert(k.isClsInitialized());
+        jq.Assert(k.isClsInitialized());
         int retloc = Unsafe.peek(Unsafe.EBP()+4);
         if (TRACE) SystemInterface.debugmsg("backpatching putfield8 "+f+" ip: "+jq.hex8(retloc));
         int patchsize = x86ReferenceCompiler.patch_putfield8(retloc, f);
@@ -173,7 +173,7 @@ public abstract class x86ReferenceLinker {
     static void invokevirtual(jq_InstanceMethod f) {
         f = f.resolve1();
         jq_Class k = f.getDeclaringClass();
-        jq.assert(k.isClsInitialized());
+        jq.Assert(k.isClsInitialized());
         int retloc = Unsafe.peek(Unsafe.EBP()+4);
         if (TRACE) SystemInterface.debugmsg("backpatching invokevirtual "+f+" ip: "+jq.hex8(retloc));
         int patchsize = x86ReferenceCompiler.patch_invokevirtual(retloc, f);

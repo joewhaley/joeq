@@ -49,7 +49,7 @@ import Util.ByteSequence;
 import Util.Strings;
 import Util.LinearSet;
 
-import jq;
+import Main.jq;
 
 public interface Bytecodes {
     
@@ -6212,7 +6212,7 @@ public interface Bytecodes {
         
         public NEWARRAY(jq_Array type) {
             super(jq_ClassFileConstants.jbc_NEWARRAY, (short)2);
-	    jq.assert(type.getElementType().isPrimitiveType());
+	    jq.Assert(type.getElementType().isPrimitiveType());
             this.type = type;
         }
         
@@ -7472,7 +7472,7 @@ public interface Bytecodes {
 	 * @param out Output stream
 	 */
         public void dump(DataOutputStream out) throws IOException {
-	    jq.assert(index != 0);
+	    jq.Assert(index != 0);
             out.writeByte(opcode);
             out.writeChar(index);
         }
@@ -7504,7 +7504,7 @@ public interface Bytecodes {
 	 */
         protected void initFromFile(jq_ConstantPool cp, ByteSequence bytes, boolean wide) throws IOException {
 	    o = cp.get((char)bytes.readUnsignedShort());
-            jq.assert(!(o instanceof jq_MemberReference));
+            jq.Assert(!(o instanceof jq_MemberReference));
             length = 3;
         }
         
@@ -8383,9 +8383,9 @@ public interface Bytecodes {
         public void setHandlerPC(InstructionHandle i) { this.handler = i; }
         
         public jq_TryCatchBC finish() {
-            jq.assert(this.start.getPosition() >= 0);
-            jq.assert(this.end.getPosition()+this.end.getInstruction().getLength() > 0);
-            jq.assert(this.handler.getPosition() >= 0);
+            jq.Assert(this.start.getPosition() >= 0);
+            jq.Assert(this.end.getPosition()+this.end.getInstruction().getLength() > 0);
+            jq.Assert(this.handler.getPosition() >= 0);
             return new jq_TryCatchBC((char)this.start.getPosition(),
                                      (char)(this.end.getPosition()+this.end.getInstruction().getLength()),
                                      (char)this.handler.getPosition(),

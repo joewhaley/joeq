@@ -2,9 +2,6 @@
  * DefaultCodeAllocator.java
  *
  * Created on April 1, 2001, 5:59 PM
- *
- * @author  John Whaley
- * @version 
  */
 
 package Allocator;
@@ -15,6 +12,11 @@ import Clazz.jq_StaticField;
 import Run_Time.Unsafe;
 import Allocator.CodeAllocator.x86CodeBuffer;
 
+/*
+ *
+ * @author  John Whaley
+ * @version 
+ */
 public abstract class DefaultCodeAllocator {
 
     public static CodeAllocator default_allocator;

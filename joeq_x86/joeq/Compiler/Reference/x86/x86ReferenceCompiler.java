@@ -48,7 +48,7 @@ import UTF.Utf8;
 
 import Compil3r.BytecodeAnalysis.BytecodeVisitor;
 
-import jq;
+import Main.jq;
 
 import java.util.Collection;
 import java.util.List;
@@ -219,7 +219,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         jq_Type[] params = method.getParamTypes();
         n_paramwords = method.getParamWords();
         int n_localwords = method.getMaxLocals();
-        jq.assert(n_paramwords <= n_localwords);
+        jq.Assert(n_paramwords <= n_localwords);
         
         // stack frame before prolog:
         // b0: FP->| caller's saved FP  |
@@ -288,7 +288,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
                 }
                 // lock the java.lang.Class object
                 Class c = Reflection.getJDKType(method.getDeclaringClass());
-                jq.assert(c != null);
+                jq.Assert(c != null);
                 emitPushAddressOf(c);
             } else {
                 if (TraceBytecodes) {
@@ -1010,7 +1010,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             emitPushAddressOf(SystemInterface.toCString(i_start+": IUNOP "+op));
             emitCallMemory(SystemInterface._debugmsg);
         }
-        jq.assert(op == UNOP_NEG);
+        jq.Assert(op == UNOP_NEG);
         asm.emit2_Mem(x86.NEG_m32, 0, ESP);
     }
     public void visitLUNOP(byte op) {
@@ -1019,7 +1019,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             emitPushAddressOf(SystemInterface.toCString(i_start+": LUNOP "+op));
             emitCallMemory(SystemInterface._debugmsg);
         }
-        jq.assert(op == UNOP_NEG);
+        jq.Assert(op == UNOP_NEG);
         asm.emit2_Mem(x86.NEG_m32, 4, ESP);  // hi
         asm.emit2_Mem(x86.NEG_m32, 0, ESP);  // lo
         asm.emitARITH_Mem_Imm(x86.SBB_m_i32, 4, ESP, 0);
@@ -1030,7 +1030,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             emitPushAddressOf(SystemInterface.toCString(i_start+": FUNOP "+op));
             emitCallMemory(SystemInterface._debugmsg);
         }
-        jq.assert(op == UNOP_NEG);
+        jq.Assert(op == UNOP_NEG);
         asm.emit2_Mem(x86.FLD_m32, 0, ESP);
         asm.emit2(x86.FCHS);
         asm.emit2_Mem(x86.FSTP_m32, 0, ESP);
@@ -1599,7 +1599,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             emitCallMemory(SystemInterface._debugmsg);
         }
         int count = high-low+1;
-        jq.assert(count == targets.length);
+        jq.Assert(count == targets.length);
         asm.emitShort_Reg(x86.POP_r, EAX);
         if (low != 0)
             asm.emitARITH_Reg_Imm(x86.SUB_r_i32, EAX, low);
@@ -1649,7 +1649,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             }
             // lock the java.lang.Class object
             Class c = Reflection.getJDKType(method.getDeclaringClass());
-            jq.assert(c != null);
+            jq.Assert(c != null);
             emitPushAddressOf(c);
         } else {
             if (TraceBytecodes) {
@@ -2321,7 +2321,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         }
         switch(op) {
             case INVOKE_VIRTUAL: {
-                jq.assert((jq.Bootstrapping && jq.boot_types.contains(f.getDeclaringClass())) ||
+                jq.Assert((jq.Bootstrapping && jq.boot_types.contains(f.getDeclaringClass())) ||
                           (f.getState() >= STATE_PREPARED) ||
                           (f.getDeclaringClass() == method.getDeclaringClass()));
                 int objptroffset = (f.getParamWords() << 2) - 4;
@@ -2333,19 +2333,19 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             }
             case INVOKE_SPECIAL:
                 f = jq_Class.getInvokespecialTarget(clazz, (jq_InstanceMethod)f);
-                jq.assert((jq.Bootstrapping && jq.boot_types.contains(f.getDeclaringClass())) ||
+                jq.Assert((jq.Bootstrapping && jq.boot_types.contains(f.getDeclaringClass())) ||
                           (f.getState() >= STATE_PREPARED) ||
                           (f.getDeclaringClass() == method.getDeclaringClass()));
                 emitCallRelative(f);
                 break;
             case INVOKE_STATIC:
-                jq.assert((jq.Bootstrapping && jq.boot_types.contains(f.getDeclaringClass())) ||
+                jq.Assert((jq.Bootstrapping && jq.boot_types.contains(f.getDeclaringClass())) ||
                           (f.getState() >= STATE_SFINITIALIZED) ||
                           (f.getDeclaringClass() == method.getDeclaringClass()));
                 emitCallRelative(f);
                 break;
             case INVOKE_INTERFACE:
-                //jq.assert(jq.Bootstrapping || f.getDeclaringClass().isInterface());
+                //jq.Assert(jq.Bootstrapping || f.getDeclaringClass().isInterface());
                 emitPushAddressOf(f);
                 emitCallRelative(x86ReferenceLinker._invokeinterface);
                 // need to pop args ourselves.

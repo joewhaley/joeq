@@ -3,8 +3,6 @@
  *
  * Created on January 16, 2001, 9:45 PM
  *
- * @author  jwhaley
- * @version 
  */
 
 package Allocator;
@@ -18,12 +16,16 @@ import Clazz.jq_StaticMethod;
 import Bootstrap.PrimordialClassLoader;
 import Run_Time.Unsafe;
 import Run_Time.SystemInterface;
-import jq;
+import Main.jq;
 
 import java.lang.reflect.Array;
 import java.util.Set;
 import java.util.HashSet;
 
+/*
+ * @author  jwhaley
+ * @version 
+ */
 public abstract class HeapAllocator implements jq_ClassFileConstants, ObjectLayout {
     
     //// ABSTRACT METHODS THAT ALLOCATORS NEED TO IMPLEMENT.
@@ -164,7 +166,7 @@ public abstract class HeapAllocator implements jq_ClassFileConstants, ObjectLayo
         a.chkState(STATE_CLSINITIALIZED);
         int length = dims[ind];
         Object o = a.newInstance(length);
-	jq.assert(length >= 0);
+	jq.Assert(length >= 0);
         if (ind == dims.length-1)
             return o;
         Object[] o2 = (Object[])o;
@@ -192,7 +194,7 @@ public abstract class HeapAllocator implements jq_ClassFileConstants, ObjectLayo
                 SystemInterface.mem_cpy(Unsafe.addressOf(p), Unsafe.addressOf(o), k.getInstanceSize()-OBJ_HEADER_SIZE);
             return p;
         } else {
-            jq.assert(t.isArrayType());
+            jq.Assert(t.isArrayType());
             jq_Array k = (jq_Array)t;
             int length = Array.getLength(o);
             Object p = k.newInstance(length);

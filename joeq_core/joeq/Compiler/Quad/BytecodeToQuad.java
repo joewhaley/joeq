@@ -59,7 +59,7 @@ import Scheduler.jq_Thread;
 import Bootstrap.PrimordialClassLoader;
 import UTF.Utf8;
 import java.util.LinkedList;
-import jq;
+import Main.jq;
 
 /**
  * Converts stack-based Java bytecode to Quad intermediate format.
@@ -128,7 +128,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         for (int i=exs.length-1; i>=0; --i) {
             jq_TryCatchBC ex = exs[i];
             Compil3r.BytecodeAnalysis.BasicBlock bc_bb = bc_cfg.getBasicBlockByBytecodeIndex(ex.getStartPC());
-            jq.assert(bc_bb.getStart() < ex.getEndPC());
+            jq.Assert(bc_bb.getStart() < ex.getEndPC());
             BasicBlock ex_handler = quad_bbs[bc_cfg.getBasicBlockByBytecodeIndex(ex.getHandlerPC()).id];
             ex_handler.setExceptionHandlerEntry();
             int numOfProtectedBlocks = (ex.getEndPC()==method.getBytecode().length?quad_bbs.length:bc_cfg.getBasicBlockByBytecodeIndex(ex.getEndPC()).id) - bc_bb.id;
@@ -167,7 +167,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         // traverse reverse post-order over basic blocks to generate instructions
         Compil3r.BytecodeAnalysis.ControlFlowGraph.RPOBasicBlockIterator rpo = bc_cfg.reversePostOrderIterator();
         Compil3r.BytecodeAnalysis.BasicBlock first_bb = rpo.nextBB();
-        jq.assert(first_bb == bc_cfg.getEntry());
+        jq.Assert(first_bb == bc_cfg.getEntry());
         while (rpo.hasNext()) {
             Compil3r.BytecodeAnalysis.BasicBlock bc_bb = rpo.nextBB();
             visited[bc_bb.id] = true;
@@ -325,7 +325,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
             RegisterOperand rop = (RegisterOperand)op;
             return (Operand)rop.scratchObject;
         }
-        jq.assert(op instanceof AConstOperand);
+        jq.Assert(op instanceof AConstOperand);
         return new UnnecessaryGuardOperand();
     }
     
@@ -924,7 +924,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         Operand op0 = current_state.pop_I();
 	saveStackIntoRegisters();
         BasicBlock target_bb = quad_bbs[bc_cfg.getBasicBlockByBytecodeIndex(default_target).id];
-        jq.assert(high-low+1 == targets.length);
+        jq.Assert(high-low+1 == targets.length);
         Quad q = TableSwitch.create(quad_cfg.getNewQuadID(), TableSwitch.TABLESWITCH.INSTANCE, op0, new IConstOperand(low),
                                     new TargetOperand(target_bb), targets.length);
         for (int i = 0; i < targets.length; ++i) {
@@ -2013,8 +2013,8 @@ public class BytecodeToQuad extends BytecodeVisitor {
         }
 
         void overwriteWith(AbstractState that) {
-            jq.assert(this.stack.length == that.stack.length);
-            jq.assert(this.locals.length == that.locals.length);
+            jq.Assert(this.stack.length == that.stack.length);
+            jq.Assert(this.locals.length == that.locals.length);
             System.arraycopy(that.stack, 0, this.stack, 0, that.stackptr);
             System.arraycopy(that.locals, 0, this.locals, 0, that.locals.length);
             this.stackptr = that.stackptr;
@@ -2034,7 +2034,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         }
         boolean merge(AbstractState that, RegisterFactory rf) {
             if (this.stackptr != that.stackptr) throw new VerifyError(this.stackptr+" != "+that.stackptr);
-            jq.assert(this.locals.length == that.locals.length);
+            jq.Assert(this.locals.length == that.locals.length);
             boolean change = false;
             for (int i=0; i<this.stackptr; ++i) {
                 Operand o = meet(this.stack[i], that.stack[i], true, i, rf);
@@ -2051,8 +2051,8 @@ public class BytecodeToQuad extends BytecodeVisitor {
         
         boolean mergeExceptionHandler(AbstractState that, jq_Class exType, RegisterFactory rf) {
             if (exType == null) exType = PrimordialClassLoader.getJavaLangThrowable();
-            jq.assert(this.locals.length == that.locals.length);
-            jq.assert(this.stackptr == 1);
+            jq.Assert(this.locals.length == that.locals.length);
+            jq.Assert(this.stackptr == 1);
             boolean change = false;
 	    RegisterOperand ex = new RegisterOperand(rf.getStack(0, exType), exType);
             Operand o = meet(this.stack[0], ex, true, 0, rf);
@@ -2228,13 +2228,13 @@ public class BytecodeToQuad extends BytecodeVisitor {
         
         int getStackSize() { return this.stackptr; }
         
-        void push_I(Operand op) { jq.assert(getTypeOf(op).isIntLike()); push(op); }
-        void push_F(Operand op) { jq.assert(getTypeOf(op) == jq_Primitive.FLOAT); push(op); }
-        void push_L(Operand op) { jq.assert(getTypeOf(op) == jq_Primitive.LONG); push(op); pushDummy(); }
-        void push_D(Operand op) { jq.assert(getTypeOf(op) == jq_Primitive.DOUBLE); push(op); pushDummy(); }
-        void push_A(Operand op) { jq.assert(getTypeOf(op).isReferenceType()); push(op); }
+        void push_I(Operand op) { jq.Assert(getTypeOf(op).isIntLike()); push(op); }
+        void push_F(Operand op) { jq.Assert(getTypeOf(op) == jq_Primitive.FLOAT); push(op); }
+        void push_L(Operand op) { jq.Assert(getTypeOf(op) == jq_Primitive.LONG); push(op); pushDummy(); }
+        void push_D(Operand op) { jq.Assert(getTypeOf(op) == jq_Primitive.DOUBLE); push(op); pushDummy(); }
+        void push_A(Operand op) { jq.Assert(getTypeOf(op).isReferenceType()); push(op); }
         void push(Operand op, jq_Type t) {
-            jq.assert(isAssignable(getTypeOf(op), t) == YES);
+            jq.Assert(isAssignable(getTypeOf(op), t) == YES);
             push(op); if (t.getReferenceSize() == 8) pushDummy();
         }
         void pushDummy() { push(DummyOperand.DUMMY); }
@@ -2243,16 +2243,16 @@ public class BytecodeToQuad extends BytecodeVisitor {
             this.stack[this.stackptr++] = op;
         }
 
-        Operand pop_I() { Operand op = pop(); jq.assert(getTypeOf(op).isIntLike()); return op; }
-        Operand pop_F() { Operand op = pop(); jq.assert(getTypeOf(op) == jq_Primitive.FLOAT); return op; }
-        Operand pop_L() { popDummy(); Operand op = pop(); jq.assert(getTypeOf(op) == jq_Primitive.LONG); return op; }
-        Operand pop_D() { popDummy(); Operand op = pop(); jq.assert(getTypeOf(op) == jq_Primitive.DOUBLE); return op; }
-        Operand pop_A() { Operand op = pop(); jq.assert(getTypeOf(op).isReferenceType()); return op; }
-        void popDummy() { Operand op = pop(); jq.assert(op == DummyOperand.DUMMY); }
+        Operand pop_I() { Operand op = pop(); jq.Assert(getTypeOf(op).isIntLike()); return op; }
+        Operand pop_F() { Operand op = pop(); jq.Assert(getTypeOf(op) == jq_Primitive.FLOAT); return op; }
+        Operand pop_L() { popDummy(); Operand op = pop(); jq.Assert(getTypeOf(op) == jq_Primitive.LONG); return op; }
+        Operand pop_D() { popDummy(); Operand op = pop(); jq.Assert(getTypeOf(op) == jq_Primitive.DOUBLE); return op; }
+        Operand pop_A() { Operand op = pop(); jq.Assert(getTypeOf(op).isReferenceType()); return op; }
+        void popDummy() { Operand op = pop(); jq.Assert(op == DummyOperand.DUMMY); }
         Operand pop(jq_Type t) {
             if (t.getReferenceSize() == 8) popDummy();
             Operand op = pop();
-            //jq.assert(isAssignable(getTypeOf(op), t) != NO);
+            //jq.Assert(isAssignable(getTypeOf(op), t) != NO);
             return op;
         }
         Operand pop() {
@@ -2264,23 +2264,23 @@ public class BytecodeToQuad extends BytecodeVisitor {
         void pokeStack(int i, Operand op) { this.stack[this.stackptr-i-1] = op; }
 	void clearStack() { this.stackptr = 0; }
         
-        Operand getLocal_I(int i) { Operand op = getLocal(i); jq.assert(getTypeOf(op).isIntLike()); return op; }
-        Operand getLocal_F(int i) { Operand op = getLocal(i); jq.assert(getTypeOf(op) == jq_Primitive.FLOAT); return op; }
+        Operand getLocal_I(int i) { Operand op = getLocal(i); jq.Assert(getTypeOf(op).isIntLike()); return op; }
+        Operand getLocal_F(int i) { Operand op = getLocal(i); jq.Assert(getTypeOf(op) == jq_Primitive.FLOAT); return op; }
         Operand getLocal_L(int i) {
             Operand op = getLocal(i);
-            jq.assert(getTypeOf(op) == jq_Primitive.LONG);
-            jq.assert(getLocal(i+1) == DummyOperand.DUMMY);
+            jq.Assert(getTypeOf(op) == jq_Primitive.LONG);
+            jq.Assert(getLocal(i+1) == DummyOperand.DUMMY);
             return op;
         }
         Operand getLocal_D(int i) {
             Operand op = getLocal(i);
-            jq.assert(getTypeOf(op) == jq_Primitive.DOUBLE);
-            jq.assert(getLocal(i+1) == DummyOperand.DUMMY);
+            jq.Assert(getTypeOf(op) == jq_Primitive.DOUBLE);
+            jq.Assert(getLocal(i+1) == DummyOperand.DUMMY);
             return op;
         }
         Operand getLocal_A(int i) {
             Operand op = getLocal(i);
-            jq.assert(getTypeOf(op).isReferenceType(), op.toString());
+            jq.Assert(getTypeOf(op).isReferenceType(), op.toString());
             return op;
         }
         Operand getLocal(int i) {

@@ -1,8 +1,6 @@
 /*
  * ExtendedSystem.java
  *
- * @author  John Whaley
- * @version 
  */
 
 package ClassLib.ibm13_linux.com.ibm.jvm;
@@ -12,6 +10,10 @@ import Clazz.jq_Array;
 import Run_Time.Unsafe;
 import Run_Time.Reflection;
 
+/*
+ * @author  John Whaley
+ * @version 
+ */
 public abstract class ExtendedSystem {
     
     private static boolean isJVMUnresettable() { return false; }

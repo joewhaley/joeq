@@ -14,7 +14,7 @@ import Clazz.jq_Method;
 import Run_Time.ExceptionDeliverer;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
-import jq;
+import Main.jq;
 
 public class x86ReferenceExceptionDeliverer extends ExceptionDeliverer {
 
@@ -41,7 +41,7 @@ public class x86ReferenceExceptionDeliverer extends ExceptionDeliverer {
     public final Object getThisPointer(jq_CompiledCode cc, int ip, int fp) {
         jq_Method m = cc.getMethod();
         int n_paramwords = m.getParamWords();
-        jq.assert(n_paramwords >= 1);
+        jq.Assert(n_paramwords >= 1);
         return Unsafe.asObject(Unsafe.peek(fp + ((n_paramwords+1)<<2)));
     }
 

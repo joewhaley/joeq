@@ -13,7 +13,7 @@ import Clazz.*;
 import Compil3r.Quad.Operand.RegisterOperand;
 import java.util.Iterator;
 import java.util.ArrayList;
-import jq;
+import Main.jq;
 
 public class RegisterFactory {
 
@@ -181,7 +181,7 @@ public class RegisterFactory {
     }
 
     static void fillRegisters(ArrayList list, int offset, int n, boolean t) {
-	jq.assert(list.size() == 0);
+	jq.Assert(list.size() == 0);
 	for (int i=0; i<n; ++i) {
 	    list.add(i, new Register(offset+i, t));
 	}

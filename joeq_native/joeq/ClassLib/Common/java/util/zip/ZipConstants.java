@@ -3,12 +3,14 @@
  *
  * Created on January 31, 2001, 1:51 PM
  *
- * @author  John Whaley
- * @version 
  */
 
 package ClassLib.Common.java.util.zip;
 
+/*
+ * @author  John Whaley
+ * @version 
+ */
 public interface ZipConstants {
 
     static final long LOCSIG = 0x04034b50L;

@@ -47,7 +47,7 @@ import Compil3r.Quad.Operator.Putstatic;
 import Compil3r.Quad.Operator.Return;
 import Compil3r.Quad.Operator.Special;
 import Compil3r.Quad.Operator.Unary;
-import jq;
+import Main.jq;
 
 /**
  *
@@ -153,7 +153,7 @@ public class MethodSummary {
             int i = r.getNumber();
             if (r.isTemp()) i += nLocals;
             if (n instanceof LinkedHashSet) n = ((LinkedHashSet)n).clone();
-            else jq.assert(n instanceof Node);
+            else jq.Assert(n instanceof Node);
             s.registers[i] = n;
         }
         /** Get the node or set of nodes in the given register in the current state. */
@@ -201,7 +201,7 @@ public class MethodSummary {
                     /*
                     if (this.bb.isExceptionHandlerEntry()) {
                         java.util.Iterator i = cfg.getExceptionHandlersMatchingEntry(this.bb);
-                        jq.assert(i.hasNext());
+                        jq.Assert(i.hasNext());
                         ExceptionHandler eh = (ExceptionHandler)i.next();
                         CaughtExceptionNode n = new CaughtExceptionNode(eh);
                         if (i.hasNext()) {
@@ -409,7 +409,7 @@ public class MethodSummary {
                         Register src_r = ((RegisterOperand)val).getRegister();
                         heapStore(base_r, src_r, null);
                     } else {
-                        jq.assert(val instanceof AConstOperand);
+                        jq.Assert(val instanceof AConstOperand);
                         jq_Reference type = ((AConstOperand)val).getType();
                         ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(obj);
                         if (n == null) quadsToNodes.put(obj, n = new ConcreteTypeNode(type, obj));
@@ -430,7 +430,7 @@ public class MethodSummary {
                 Register src_r = ((RegisterOperand)src).getRegister();
                 setRegister(dest_r, getRegister(src_r));
             } else {
-                jq.assert(src instanceof AConstOperand);
+                jq.Assert(src instanceof AConstOperand);
                 jq_Reference type = ((AConstOperand)src).getType();
                 ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(obj);
                 if (n == null) quadsToNodes.put(obj, n = new ConcreteTypeNode(type, obj));
@@ -478,7 +478,7 @@ public class MethodSummary {
             this.methodCalls.add(mc);
             jq_Type[] params = m.getParamTypes();
             ParamListOperand plo = Invoke.getParamList(obj);
-            jq.assert(m == Allocator.HeapAllocator._multinewarray || params.length == plo.length());
+            jq.Assert(m == Allocator.HeapAllocator._multinewarray || params.length == plo.length());
             for (int i=0; i<params.length; ++i) {
                 if (!params[i].isReferenceType()) continue;
                 Register r = plo.get(i).getRegister();
@@ -506,7 +506,7 @@ public class MethodSummary {
                     Register src_r = rop.getRegister();
                     setRegister(dest_r, getRegister(src_r));
                 } else {
-                    jq.assert(src instanceof AConstOperand);
+                    jq.Assert(src instanceof AConstOperand);
                     jq_Reference type = ((AConstOperand)src).getType();
                     ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(obj);
                     if (n == null) quadsToNodes.put(obj, n = new ConcreteTypeNode(type, obj));
@@ -547,7 +547,7 @@ public class MethodSummary {
                         Register src_r = ((RegisterOperand)val).getRegister();
                         heapStore(base_r, src_r, f);
                     } else {
-                        jq.assert(val instanceof AConstOperand);
+                        jq.Assert(val instanceof AConstOperand);
                         jq_Reference type = ((AConstOperand)val).getType();
                         ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(obj);
                         if (n == null) quadsToNodes.put(obj, n = new ConcreteTypeNode(type, obj));
@@ -570,7 +570,7 @@ public class MethodSummary {
                     Register src_r = ((RegisterOperand)val).getRegister();
                     heapStore(my_global, src_r, f);
                 } else {
-                    jq.assert(val instanceof AConstOperand);
+                    jq.Assert(val instanceof AConstOperand);
                     jq_Reference type = ((AConstOperand)val).getType();
                     ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(obj);
                     if (n == null) quadsToNodes.put(obj, n = new ConcreteTypeNode(type, obj));
@@ -596,7 +596,7 @@ public class MethodSummary {
                 Register src_r = ((RegisterOperand)src).getRegister();
                 addToSet(r, getRegister(src_r));
             } else {
-                jq.assert(src instanceof AConstOperand);
+                jq.Assert(src instanceof AConstOperand);
                 jq_Reference type = ((AConstOperand)src).getType();
                 ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(obj);
                 if (n == null) quadsToNodes.put(obj, n = new ConcreteTypeNode(type, obj));
@@ -705,7 +705,7 @@ public class MethodSummary {
                 else
                     return BytecodeVisitor.INVOKE_STATIC;
             } else {
-                jq.assert(q.getOperator() instanceof InvokeInterface);
+                jq.Assert(q.getOperator() instanceof InvokeInterface);
                 return BytecodeVisitor.INVOKE_INTERFACE;
             }
         }
@@ -798,7 +798,7 @@ public class MethodSummary {
          *  the nodes in the set.  The passed parameter set of this node is also
          *  added to every node in the given set. */
         public void replaceBy(Set set, boolean removeSelf) {
-            jq.assert(!set.contains(this));
+            jq.Assert(!set.contains(this));
             if (this.predecessors != null) {
                 for (Iterator i=this.predecessors.entrySet().iterator(); i.hasNext(); ) {
                     java.util.Map.Entry e = (java.util.Map.Entry)i.next();
@@ -852,7 +852,7 @@ public class MethodSummary {
                         i.remove();
                     if (o instanceof Node) {
                         Node that = (Node)o;
-                        jq.assert(that != this); // cyclic edges handled above.
+                        jq.Assert(that != this); // cyclic edges handled above.
                         if (removeSelf)
                             that.removePredecessor(f, this);
                         for (Iterator j=set.iterator(); j.hasNext(); ) {
@@ -864,7 +864,7 @@ public class MethodSummary {
                             Node that = (Node)k.next();
                             if (removeSelf)
                                 k.remove();
-                            jq.assert(that != this); // cyclic edges handled above.
+                            jq.Assert(that != this); // cyclic edges handled above.
                             if (removeSelf)
                                 that.removePredecessor(f, this);
                             for (Iterator j=set.iterator(); j.hasNext(); ) {
@@ -884,7 +884,7 @@ public class MethodSummary {
                         i.remove();
                     if (o instanceof FieldNode) {
                         FieldNode that = (FieldNode)o;
-                        jq.assert(that != this); // cyclic edges handled above.
+                        jq.Assert(that != this); // cyclic edges handled above.
                         if (removeSelf)
                             that.field_predecessors.remove(this);
                         for (Iterator j=set.iterator(); j.hasNext(); ) {
@@ -896,7 +896,7 @@ public class MethodSummary {
                             FieldNode that = (FieldNode)k.next();
                             if (removeSelf)
                                 k.remove();
-                            jq.assert(that != this); // cyclic edges handled above.
+                            jq.Assert(that != this); // cyclic edges handled above.
                             if (removeSelf)
                                 that.field_predecessors.remove(this);
                             for (Iterator j=set.iterator(); j.hasNext(); ) {
@@ -1565,7 +1565,7 @@ public class MethodSummary {
             if (fn.field_predecessors == null) fn.field_predecessors = new LinkedHashSet();
             fn.field_predecessors.add(base);
             if (s != null) {
-                jq.assert(base.accessPathEdges.get(f) == s);
+                jq.Assert(base.accessPathEdges.get(f) == s);
                 s.add(fn);
             } else {
                 base.accessPathEdges.put(f, fn);
@@ -1589,7 +1589,7 @@ public class MethodSummary {
             // go through once to add all quads, so that the hash code will be stable.
             for (Iterator i=s.iterator(); i.hasNext(); ) {
                 FieldNode dat = (FieldNode)i.next();
-                jq.assert(f == dat.f);
+                jq.Assert(f == dat.f);
                 dis.quads.addAll(dat.quads);
             }
             // once again to do the replacement.
@@ -1603,7 +1603,7 @@ public class MethodSummary {
         }
         
         public void replaceBy(Set set, boolean removeSelf) {
-            jq.assert(!set.contains(this));
+            jq.Assert(!set.contains(this));
             if (this.field_predecessors != null) {
                 for (Iterator i=this.field_predecessors.iterator(); i.hasNext(); ) {
                     Node that = (Node)i.next();

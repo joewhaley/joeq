@@ -16,7 +16,7 @@ import Clazz.*;
 import Bootstrap.*;
 import Run_Time.*;
 import UTF.Utf8;
-import jq;
+import Main.jq;
 
 import Util.ArrayIterator;
 
@@ -25,7 +25,7 @@ public abstract class ClassDump {
     public static void main(String[] args) {
         String classname;
         if (args.length > 0) classname = args[0];
-        else classname = "Ljq;";
+        else classname = "LMain/jq;";
         
         jq.Bootstrapping = true;
         jq.DontCompile = true;
@@ -36,7 +36,7 @@ public abstract class ClassDump {
             public jq_Type getType(Object o) { return Reflection.getJQType(o.getClass()); }
         });
         
-        jq.assert(true); // initialize jq
+        jq.Assert(true); // initialize jq
         String classpath = System.getProperty("java.class.path")+
                            System.getProperty("path.separator")+
                            System.getProperty("sun.boot.class.path");

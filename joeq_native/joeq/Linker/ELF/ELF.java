@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Iterator;
-import jq;
+import Main.jq;
 
 /**
  *
@@ -85,7 +85,7 @@ public abstract class ELF implements ELFConstants {
     public void write() throws IOException {
         // sanity check - sections should include the string tables.
         if (section_header_string_table != null)
-            jq.assert(sections.contains(section_header_string_table));
+            jq.Assert(sections.contains(section_header_string_table));
         
         // add section header names to the section header string table.
         if (section_header_string_table != null) {
@@ -111,7 +111,7 @@ public abstract class ELF implements ELFConstants {
         // pack all sections and calculate section header offset.
         Iterator si = sections.iterator();
         Section s = (Section)si.next();
-        jq.assert(s instanceof Section.NullSection);
+        jq.Assert(s instanceof Section.NullSection);
 	int i = 0;
         while (si.hasNext()) {
             s = (Section)si.next();

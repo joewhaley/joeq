@@ -3,12 +3,14 @@
  *
  * Created on March 11, 2001, 2:45 AM
  *
- * @author  John Whaley
- * @version 
  */
 
 package ClassLib.Common.java.util;
 
+/*
+ * @author  John Whaley
+ * @version 
+ */
 abstract class TimeZone {
 
     private static String getSystemTimeZoneID(String javaHome, String region) {

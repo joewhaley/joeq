@@ -19,9 +19,9 @@ import Run_Time.Unsafe;
 import Run_Time.Reflection;
 import UTF.Utf8;
 import java.util.HashSet;
-import jq;
+import Main.jq;
 
-public class ReflectiveInterpreter extends Interpreter {
+public class ReflectiveInterpreter extends BytecodeInterpreter {
 
     /** Creates new ReflectiveInterpreter */
     public ReflectiveInterpreter(State initialState) {
@@ -31,7 +31,7 @@ public class ReflectiveInterpreter extends Interpreter {
     public Object invokeReflective(jq_Method m) throws Throwable {
         //System.out.println("Invoking reflectively: "+m);
         jq_Class t = m.getDeclaringClass();
-        jq.assert(t.isClsInitialized());
+        jq.Assert(t.isClsInitialized());
         Class c = Reflection.getJDKType(t);
         jq_Type[] param_jq = m.getParamTypes();
         int offset = 0;
@@ -59,7 +59,7 @@ public class ReflectiveInterpreter extends Interpreter {
                 Constructor co = c.getDeclaredConstructor(param_jdk);
                 co.setAccessible(true);
                 UninitializedType u = (UninitializedType)state.pop_A();
-                jq.assert(u.k == m.getDeclaringClass());
+                jq.Assert(u.k == m.getDeclaringClass());
                 Object inited = co.newInstance(param);
                 ((ReflectiveState)state).replaceUninitializedReferences(inited, u);
                 return null;
@@ -100,8 +100,8 @@ public class ReflectiveInterpreter extends Interpreter {
             try {
                 return this.invokeMethod(m, callee);
             } catch (MonitorExit x) {
-                jq.assert(m.isSynchronized());
-                jq.assert(state != callee);
+                jq.Assert(m.isSynchronized());
+                jq.Assert(state != callee);
                 return callee.getReturnVal_A();
             }
         }
@@ -122,7 +122,7 @@ public class ReflectiveInterpreter extends Interpreter {
         }
     }
     
-    public static class ReflectiveState extends Interpreter.State {
+    public static class ReflectiveState extends BytecodeInterpreter.State {
         final Object[] locals;
         final Object[] stack;
         final jq_Method m;
@@ -196,7 +196,7 @@ public class ReflectiveInterpreter extends Interpreter {
         UninitializedType(jq_Class k) { this.k = k; }
     }
     
-    public static class ReflectiveVMInterface extends Interpreter.VMInterface {
+    public static class ReflectiveVMInterface extends BytecodeInterpreter.VMInterface {
         ObjectTraverser ot;
         ReflectiveVMInterface() {
             ot = new ObjectTraverser(new HashSet(), new HashSet());
@@ -261,7 +261,7 @@ public class ReflectiveInterpreter extends Interpreter {
                 try {
                     v.continueForwardTraversal();
                 } catch (MonitorExit x) {
-                    jq.assert(x.o == o, "synchronization blocks are not nested!");
+                    jq.Assert(x.o == o, "synchronization blocks are not nested!");
                     return;
                 } catch (WrappedException ix) {
                     // if the method throws an exception, the object will automatically be unlocked

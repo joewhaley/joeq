@@ -12,7 +12,7 @@ package ClassLib.Common.java.lang.reflect;
 import Bootstrap.PrimordialClassLoader;
 import Clazz.*;
 import Run_Time.*;
-import jq;
+import Main.jq;
 
 public class Field extends AccessibleObject {
     
@@ -789,10 +789,10 @@ public class Field extends AccessibleObject {
 	java.lang.String name = jq_field.getName().toString();
         o.name = name;
 	java.lang.Class clazz = jq_field.getDeclaringClass().getJavaLangClassObject();
-	jq.assert(clazz != null);
+	jq.Assert(clazz != null);
         o.clazz = clazz;
 	java.lang.Class type = Reflection.getJDKType(jq_field.getType());
-	jq.assert(type != null);
+	jq.Assert(type != null);
         o.type = type;
 	int modifiers = jq_field.getAccessFlags();
         o.modifiers = modifiers;

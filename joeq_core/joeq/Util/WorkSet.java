@@ -6,7 +6,7 @@ package Util;
 import java.util.HashMap;
 import java.util.Iterator;
 
-import jq;
+import Main.jq;
 
 /**
  * A <code>WorkSet</code> is a <code>Set</code> offering constant-time
@@ -57,7 +57,7 @@ public class WorkSet extends java.util.AbstractSet implements Worklist{
 	listhead.add(nel);
 	hm.put(o, nel);
 	// verify list/set correspondence.
-	if (debug) jq.assert(EntryList.equals(listhead, hm.keySet()));
+	if (debug) jq.Assert(EntryList.equals(listhead, hm.keySet()));
 	return true;
     }
     /** Adds an element to the end of the (ordered) set and returns true,
@@ -71,7 +71,7 @@ public class WorkSet extends java.util.AbstractSet implements Worklist{
 	listfoot.prev.add(nel);
 	hm.put(o, nel);
 	// verify list/set correspondence.
-	if (debug) jq.assert(EntryList.equals(listhead, hm.keySet()));
+	if (debug) jq.Assert(EntryList.equals(listhead, hm.keySet()));
 	return true;
     }
     /** Returns the first element in the ordered set. */
@@ -180,7 +180,7 @@ public class WorkSet extends java.util.AbstractSet implements Worklist{
 		hm.remove(elp.o);
 		(elp = elp.prev).next.remove();
 		// verify list/set correspondence.
-		if (debug) jq.assert(EntryList.equals(listhead, hm.keySet()));
+		if (debug) jq.Assert(EntryList.equals(listhead, hm.keySet()));
 	    }
 	};
     }
@@ -191,7 +191,7 @@ public class WorkSet extends java.util.AbstractSet implements Worklist{
 	// remove from linked list.
 	elp.remove();
 	// verify list/set correspondence.
-	if (debug) jq.assert(EntryList.equals(listhead, hm.keySet()));
+	if (debug) jq.Assert(EntryList.equals(listhead, hm.keySet()));
 	return true;
     }
     public int size() { return hm.size(); }

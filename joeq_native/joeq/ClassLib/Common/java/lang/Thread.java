@@ -3,8 +3,6 @@
  *
  * Created on January 29, 2001, 10:21 AM
  *
- * @author  John Whaley
- * @version 
  */
 
 package ClassLib.Common.java.lang;
@@ -17,8 +15,12 @@ import Bootstrap.PrimordialClassLoader;
 import Run_Time.Unsafe;
 import Run_Time.Reflection;
 import Scheduler.jq_Thread;
-import jq;
+import Main.jq;
 
+/*
+ * @author  John Whaley
+ * @version 
+ */
 public abstract class Thread {
 
     // additional fields

@@ -13,7 +13,7 @@ import java.io.DataInput;
 import java.io.IOException;
 import java.util.Map;
 import java.util.HashMap;
-import jq;
+import Main.jq;
 
 import Bootstrap.PrimordialClassLoader;
 
@@ -63,8 +63,8 @@ public final class jq_InstanceField extends jq_Field {
     
     public final boolean isUnsignedType() { return type == jq_Primitive.CHAR; }
     public final int getSize() { return type.getReferenceSize(); }
-    public final void prepare(int offset) { jq.assert(state == STATE_LOADED); state = STATE_PREPARED; this.offset = offset; }
-    public final int getOffset() { chkState(STATE_PREPARED); jq.assert(offset != INVALID_OFFSET); return offset; }
+    public final void prepare(int offset) { jq.Assert(state == STATE_LOADED); state = STATE_PREPARED; this.offset = offset; }
+    public final int getOffset() { chkState(STATE_PREPARED); jq.Assert(offset != INVALID_OFFSET); return offset; }
     public final boolean needsDynamicLink(jq_Method method) {
         if (jq.Bootstrapping) return (state < STATE_PREPARED) || getDeclaringClass().needsDynamicLink(method);
         return state < STATE_PREPARED;

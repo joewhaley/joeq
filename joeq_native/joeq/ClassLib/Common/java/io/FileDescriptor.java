@@ -3,14 +3,16 @@
  *
  * Created on January 29, 2001, 1:33 PM
  *
- * @author  John Whaley
- * @version 
  */
 
 package ClassLib.Common.java.io;
 
 import Run_Time.SystemInterface;
 
+/*
+ * @author  John Whaley
+ * @version 
+ */
 abstract class FileDescriptor {
     
     int fd;

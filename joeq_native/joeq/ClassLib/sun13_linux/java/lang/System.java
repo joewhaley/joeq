@@ -3,13 +3,15 @@
  *
  * Created on January 29, 2001, 10:26 AM
  *
- * @author  John Whaley
- * @version 
  */
 
 package ClassLib.sun13_linux.java.lang;
 import Bootstrap.PrimordialClassLoader;
 
+/*
+ * @author  John Whaley
+ * @version 
+ */
 public abstract class System {
     
     private static java.util.Properties initProperties(java.util.Properties props) {

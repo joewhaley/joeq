@@ -3,15 +3,17 @@
  *
  * Created on January 29, 2000, 10:16 AM
  *
- * @author  jwhaley
- * @version 
  */
 
 package ClassLib.Common.java.lang;
 
 import Run_Time.ExceptionDeliverer;
-import jq;
+import Main.jq;
 
+/*
+ * @author  jwhaley
+ * @version 
+ */
 public abstract class Throwable {
     
     private java.lang.Object backtrace;

@@ -3,8 +3,6 @@
  *
  * Created on January 14, 2001, 11:56 AM
  *
- * @author  jwhaley
- * @version 
  */
 
 package Bootstrap;
@@ -36,7 +34,7 @@ import Assembler.x86.DirectBindCall;
 import Assembler.x86.Reloc;
 import UTF.Utf8;
 import Linker.ELF.*;
-import jq;
+import Main.jq;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.Iterator;
@@ -52,6 +50,10 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
+/*
+ * @author  jwhaley
+ * @version 
+ */
 public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConstants {
 
     public static /*final*/ boolean TRACE = false;
@@ -127,7 +129,7 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
         Entry e = (Entry)hash.get(k);
         if (e != null) return e.getAddress();
         // not yet allocated, allocate it.
-        jq.assert(alloc_enabled);
+        jq.Assert(alloc_enabled);
         Class objType = o.getClass();
         jq_Reference type = (jq_Reference)Reflection.getJQType(objType);
         if (!jq.boot_types.contains(type)) {
@@ -142,7 +144,7 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
             if (TRACE)
                 out.println("Allocating entry "+entries.size()+": "+objType+" length "+Array.getLength(o)+" size "+size+" "+jq.hex(System.identityHashCode(o))+" at "+jq.hex(addr));
         } else {
-            jq.assert(type.isClassType());
+            jq.Assert(type.isClassType());
             addr = heapCurrent + OBJ_HEADER_SIZE;
             size = ((jq_Class)type).getInstanceSize();
             if (TRACE)
@@ -168,7 +170,7 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
         }
         Class objType = o.getClass();
         jq_Reference type = (jq_Reference)Reflection.getJQType(objType);
-        jq.assert(type.isClsInitialized(), type.toString());
+        jq.Assert(type.isClsInitialized(), type.toString());
         return e.getAddress();
     }
 
@@ -265,7 +267,7 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
                     }
                 }
             } else {
-                jq.assert(jqType.isClassType());
+                jq.Assert(jqType.isClassType());
                 jq_Class clazz = (jq_Class)jqType;
                 jq_InstanceField[] fields = clazz.getInstanceFields();
                 for (int k=0; k<fields.length; ++k) {
@@ -300,7 +302,7 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
         private int address;    // address in target vm
         private Entry(Object o, int address) { this.o = o; this.address = address; }
         public static Entry create(Object o, int address) {
-            jq.assert(o != null);
+            jq.Assert(o != null);
             return new Entry(o, address);
         }
         public Object getObject() { return o; }
@@ -507,7 +509,7 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
         int k = 2+NUM_OF_EXTERNAL_SYMS;
         while (i.hasNext()) {
             ExternalReference extref = (ExternalReference)i.next();
-            jq.assert(extref.getSymbolIndex() == k);
+            jq.Assert(extref.getSymbolIndex() == k);
             String name = extref.getName();
             if (name.length() <= 8) {
                 write_bytes(out, name, 8);  // s_name
@@ -681,7 +683,7 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
 		    if (TRACE) System.out.println("Adding vtable relocs for: "+t);
 		    int[] vtable = (int[])((jq_Reference)t).getVTable();
 		    int/*HeapAddress*/ addr = getAddressOf(vtable);
-		    //jq.assert(vtable[0] != 0, t.toString());
+		    //jq.Assert(vtable[0] != 0, t.toString());
 		    Heap2HeapReference r1 = new Heap2HeapReference(addr, vtable[0]);
 		    list.add(r1);
 		    for (int j=1; j<vtable.length; ++j) {
@@ -782,7 +784,7 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
             dumpMETHODSYMENT(out, r);
             ++j;
         }
-        jq.assert(j == num_ccs);
+        jq.Assert(j == num_ccs);
         
         // write string table
         dump_strings(out);
@@ -841,7 +843,7 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
                     }
                 }
             } else {
-                jq.assert(jqType.isClassType());
+                jq.Assert(jqType.isClassType());
                 jq_Class clazz = (jq_Class)jqType;
                 jq_InstanceField[] fields = clazz.getInstanceFields();
                 for (int k=0; k<fields.length; ++k) {
@@ -868,11 +870,11 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
     
     private void dumpHeap(OutputStream out)
     throws IOException {
-        jq.assert(ARRAY_LENGTH_OFFSET == -12);
-        jq.assert(STATUS_WORD_OFFSET == -8);
-        jq.assert(VTABLE_OFFSET == -4);
-        jq.assert(OBJ_HEADER_SIZE == 8);
-        jq.assert(ARRAY_HEADER_SIZE == 12);
+        jq.Assert(ARRAY_LENGTH_OFFSET == -12);
+        jq.Assert(STATUS_WORD_OFFSET == -8);
+        jq.Assert(VTABLE_OFFSET == -4);
+        jq.Assert(OBJ_HEADER_SIZE == 8);
+        jq.Assert(ARRAY_HEADER_SIZE == 12);
         Iterator i = entries.iterator();
         int currentAddr=0;
         int j=0;
@@ -904,7 +906,7 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
                 write_ulong(out, 0);
                 write_ulong(out, vtable);
                 currentAddr += 12;
-                jq.assert(addr == currentAddr);
+                jq.Assert(addr == currentAddr);
                 jq_Type elemType = ((jq_Array)jqType).getElementType();
                 if (elemType.isPrimitiveType()) {
                     if (elemType == jq_Primitive.INT) {
@@ -963,7 +965,7 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
                     currentAddr += length << 2;
                 }
             } else {
-                jq.assert(jqType.isClassType());
+                jq.Assert(jqType.isClassType());
                 jq_Class clazz = (jq_Class)jqType;
                 while (currentAddr+OBJ_HEADER_SIZE < addr) {
                     write_char(out, (byte)0); ++currentAddr;
@@ -971,7 +973,7 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
                 write_ulong(out, 0);
                 write_ulong(out, vtable);
                 currentAddr += 8;
-                jq.assert(addr == currentAddr);
+                jq.Assert(addr == currentAddr);
                 jq_InstanceField[] fields = clazz.getInstanceFields();
                 for (int k=0; k<fields.length; ++k) {
                     jq_InstanceField f = fields[k];
@@ -1064,7 +1066,7 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
     }
     public static void write_bytes(OutputStream out, String s, int len)
     throws IOException {
-        jq.assert(s.length() <= len);
+        jq.Assert(s.length() <= len);
         int i;
         for (i=0; ; ++i) {
             if (i == s.length()) {

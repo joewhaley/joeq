@@ -9,7 +9,7 @@
 
 package Clazz;
 
-import jq;
+import Main.jq;
 
 /**
  * This class implements a mapping from code offsets to bytecode indices.
@@ -34,7 +34,7 @@ public class jq_BytecodeMap {
      * @param bytecode_index  bytecode index array
      */
     public jq_BytecodeMap(int[] offset, int[] bytecode_index) {
-        jq.assert(offset.length == bytecode_index.length);
+        jq.Assert(offset.length == bytecode_index.length);
         this.offset = offset;
         this.bytecode_index = bytecode_index;
     }

@@ -17,7 +17,7 @@ import Util.BitString;
 import Util.BitString.BitStringIterator;
 import Util.LinearSet;
 import java.util.Set;
-import jq;
+import Main.jq;
 
 public class LiveRefAnalysis {
 
@@ -75,7 +75,7 @@ public class LiveRefAnalysis {
             fpv.go_again = false;
             Compil3r.BytecodeAnalysis.ControlFlowGraph.RPOBasicBlockIterator rpo = bc_cfg.reversePostOrderIterator();
             BasicBlock first_bb = rpo.nextBB();
-            jq.assert(first_bb == bc_cfg.getEntry());
+            jq.Assert(first_bb == bc_cfg.getEntry());
             // initialize start states
             while (rpo.hasNext()) {
                 if (ALWAYS_TRACE)
@@ -167,7 +167,7 @@ public class LiveRefAnalysis {
             return that;
         }
         public boolean merge(State that) {
-            jq.assert(this.stackDepth == that.stackDepth);
+            jq.Assert(this.stackDepth == that.stackDepth);
             boolean change = false;
             for (int i=0; i<this.stackDepth; ++i) {
                 if (this.stack[i] != that.stack[i]) { this.stack[i] = NOT_LIVE; change = true; }
@@ -178,8 +178,8 @@ public class LiveRefAnalysis {
             return change;
         }
         public void overwriteWith(State that) {
-            jq.assert(this.stack.length == that.stack.length);
-            jq.assert(this.locals.length == that.locals.length);
+            jq.Assert(this.stack.length == that.stack.length);
+            jq.Assert(this.locals.length == that.locals.length);
             System.arraycopy(that.stack, 0, this.stack, 0, that.stackDepth);
             System.arraycopy(that.locals, 0, this.locals, 0, that.locals.length);
             this.stackDepth = that.stackDepth;
@@ -191,12 +191,12 @@ public class LiveRefAnalysis {
         void push_A() { stack[stackDepth++] = LIVE_REF; }
         void push_R() { stack[stackDepth++] = LIVE_DERIVED_REF; }
         void push_RetAddr() { stack[stackDepth++] = LIVE_RETADDR; }
-        void pop_I() { --stackDepth; jq.assert(stack[stackDepth] == LIVE_INT); }
-        void pop_F() { --stackDepth; jq.assert(stack[stackDepth] == LIVE_FLOAT); }
-        void pop_L() { stackDepth-=2; jq.assert(stack[stackDepth] == LIVE_LONG1); jq.assert(stack[stackDepth+1] == LIVE_LONG2); }
-        void pop_D() { stackDepth-=2; jq.assert(stack[stackDepth] == LIVE_DOUBLE1); jq.assert(stack[stackDepth+1] == LIVE_DOUBLE2); }
-        void pop_A() { --stackDepth; jq.assert(stack[stackDepth] == LIVE_REF); }
-        void pop_R() { --stackDepth; jq.assert(stack[stackDepth] == LIVE_DERIVED_REF); }
+        void pop_I() { --stackDepth; jq.Assert(stack[stackDepth] == LIVE_INT); }
+        void pop_F() { --stackDepth; jq.Assert(stack[stackDepth] == LIVE_FLOAT); }
+        void pop_L() { stackDepth-=2; jq.Assert(stack[stackDepth] == LIVE_LONG1); jq.Assert(stack[stackDepth+1] == LIVE_LONG2); }
+        void pop_D() { stackDepth-=2; jq.Assert(stack[stackDepth] == LIVE_DOUBLE1); jq.Assert(stack[stackDepth+1] == LIVE_DOUBLE2); }
+        void pop_A() { --stackDepth; jq.Assert(stack[stackDepth] == LIVE_REF); }
+        void pop_R() { --stackDepth; jq.Assert(stack[stackDepth] == LIVE_DERIVED_REF); }
         byte pop() { return stack[--stackDepth]; }
         void push(byte t) { stack[stackDepth++] = t; }
         void pop(jq_Type t) {
@@ -382,7 +382,7 @@ public class LiveRefAnalysis {
             return that;
         }
         public boolean merge(ExactState that) {
-            jq.assert(this.stackDepth == that.stackDepth);
+            jq.Assert(this.stackDepth == that.stackDepth);
             boolean change = false;
             for (int i=0; i<this.stackDepth; ++i) {
                 if (this.stack[i] == null) continue;
@@ -418,7 +418,7 @@ public class LiveRefAnalysis {
             return change;
         }
         public boolean mergeWithHandler(ExactState that) {
-            jq.assert(this.stackDepth == 1);
+            jq.Assert(this.stackDepth == 1);
             boolean change = false;
             for (int i=0; i<this.locals.length; ++i) {
                 if (this.locals[i] == null) continue;
@@ -618,7 +618,7 @@ public class LiveRefAnalysis {
 	*/
 
         public boolean merge(ExactState that) {
-            jq.assert(this.stackDepth == that.stackDepth);
+            jq.Assert(this.stackDepth == that.stackDepth);
             boolean change = false;
             for (int i=0; i<this.stackDepth; ++i) {
                 if (this.stack[i] == null) continue;
@@ -644,7 +644,7 @@ public class LiveRefAnalysis {
         }
 	// this == after JSR call, that == before JSR call, jsr_state == end of JSR body
         public boolean mergeJSR(ExactState that, ExactJSRState jsr_state) {
-            jq.assert(this.stackDepth == jsr_state.stackDepth);
+            jq.Assert(this.stackDepth == jsr_state.stackDepth);
             boolean change = false;
             for (int i=0; i<this.stackDepth; ++i) {
                 if (this.stack[i] == null) continue;
@@ -675,7 +675,7 @@ public class LiveRefAnalysis {
             return change;
         }
         public boolean mergeWithHandler(ExactState that) {
-            jq.assert(this.stackDepth == 1);
+            jq.Assert(this.stackDepth == 1);
             boolean change = false;
             for (int i=0; i<this.locals.length; ++i) {
 		if (this.locals[i] == null) {
@@ -699,12 +699,12 @@ public class LiveRefAnalysis {
         void push_D() { stack[stackDepth++] = SystemType.DOUBLE; stack[stackDepth++] = HalfOfNumber.INSTANCE; }
         void push_R() { stack[stackDepth++] = DerivedRef.INSTANCE; }
         void push_RetAddr(int target) { stack[stackDepth++] = new Retaddr(target); }
-        void pop_I() { --stackDepth; jq.assert(stack[stackDepth].equals(SystemType.INT)); }
-        void pop_F() { --stackDepth; jq.assert(stack[stackDepth].equals(SystemType.FLOAT)); }
-        void pop_L() { stackDepth-=2; jq.assert(stack[stackDepth].equals(SystemType.LONG)); jq.assert(stack[stackDepth+1] == HalfOfNumber.INSTANCE); }
-        void pop_D() { stackDepth-=2; jq.assert(stack[stackDepth].equals(SystemType.DOUBLE)); jq.assert(stack[stackDepth+1] == HalfOfNumber.INSTANCE); }
-        void pop_A() { --stackDepth; jq.assert(stack[stackDepth].isReferenceType()); }
-        void pop_R() { --stackDepth; jq.assert(stack[stackDepth] == DerivedRef.INSTANCE); }
+        void pop_I() { --stackDepth; jq.Assert(stack[stackDepth].equals(SystemType.INT)); }
+        void pop_F() { --stackDepth; jq.Assert(stack[stackDepth].equals(SystemType.FLOAT)); }
+        void pop_L() { stackDepth-=2; jq.Assert(stack[stackDepth].equals(SystemType.LONG)); jq.Assert(stack[stackDepth+1] == HalfOfNumber.INSTANCE); }
+        void pop_D() { stackDepth-=2; jq.Assert(stack[stackDepth].equals(SystemType.DOUBLE)); jq.Assert(stack[stackDepth+1] == HalfOfNumber.INSTANCE); }
+        void pop_A() { --stackDepth; jq.Assert(stack[stackDepth].isReferenceType()); }
+        void pop_R() { --stackDepth; jq.Assert(stack[stackDepth] == DerivedRef.INSTANCE); }
         Type pop() { return stack[--stackDepth]; }
         void push(Type t) {
             stack[stackDepth++] = t;
@@ -716,7 +716,7 @@ public class LiveRefAnalysis {
 		Type t2 = pop();
 		if (t2 instanceof DerivedRef)
 		    System.err.println("WARNING: method takes derived ref as an argument");
-                else jq.assert(t2.equals(SystemType.INT));
+                else jq.Assert(t2.equals(SystemType.INT));
 	    }
             else if (t.isIntLike()) pop_I();
             else if (t == jq_Primitive.FLOAT) pop_F();
@@ -927,14 +927,14 @@ public class LiveRefAnalysis {
                 return true;
             } else {
                 if (jsr) {
-                    jq.assert(start_states[bb2.id] instanceof ExactJSRState);
+                    jq.Assert(start_states[bb2.id] instanceof ExactJSRState);
                 }
                 return start_states[bb2.id].merge(current_state);
             }
         }
         
         private boolean mergeJSRStateWith(BasicBlock before, BasicBlock after) {
-            jq.assert(current_state instanceof ExactJSRState);
+            jq.Assert(current_state instanceof ExactJSRState);
             if (end_states[before.id] == null) {
                 System.err.println("Warning! Successor of JSR block has not yet been visited.");
                 return false;

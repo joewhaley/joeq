@@ -3,8 +3,6 @@
  *
  * Created on April 16, 2001, 1:25 AM
  *
- * @author  John Whaley
- * @version 
  */
 
 package ClassLib.Common.java.lang;
@@ -12,8 +10,12 @@ package ClassLib.Common.java.lang;
 import Bootstrap.PrimordialClassLoader;
 import Clazz.*;
 import Run_Time.*;
-import jq;
+import Main.jq;
 
+/*
+ * @author  John Whaley
+ * @version 
+ */
 public abstract class Runtime {
 
     // native method implementations.
