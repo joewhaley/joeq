@@ -324,6 +324,8 @@ public class CSPA {
     void dumpResults(String dumpfilename) throws IOException {
         bdd.save(dumpfilename+".bdd", g_pointsTo);
         bdd.save(dumpfilename+".bdd2", g_fieldPt);
+        bdd.save(dumpfilename+".stores", g_stores);
+        bdd.save(dumpfilename+".loads", g_loads);
         
         DataOutputStream dos;
         dos = new DataOutputStream(new FileOutputStream(dumpfilename+".config"));

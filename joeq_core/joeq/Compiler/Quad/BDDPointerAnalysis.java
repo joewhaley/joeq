@@ -138,6 +138,7 @@ public class BDDPointerAnalysis {
 
     BDD V1set;
     BDD V1andH1set;
+    BDD V1andV2andFDset;
     BDD T1set;
     BDD T2set;
     BDD H1andFDset;
@@ -198,6 +199,9 @@ public class BDDPointerAnalysis {
         H1andFDset = H1.set(); H1andFDset.andWith(FD.set());
         H1andT3set = H1.set(); H1andT3set.andWith(T3.set());
         V1andH1set = V1.set(); V1andH1set.andWith(H1.set());
+        V1andV2andFDset = V1.set();
+        V1andV2andFDset.andWith(V2.set());
+        V1andV2andFDset.andWith(FD.set());
         
         reset();
     }
@@ -1480,10 +1484,21 @@ public class BDDPointerAnalysis {
         cs_pointsTo.andWith(H1c.ithVar(0));
         System.out.println("pointsTo = "+(long)cs_pointsTo.satCount(V1andH1set)+" relations, "+cs_pointsTo.nodeCount()+" nodes");
         bdd.save(dumpfilename+".bdd", cs_pointsTo);
+        
         BDD cs_fieldPt = fieldPt.and(H1c.ithVar(0));
         cs_fieldPt.andWith(H2c.ithVar(0));
         System.out.println("fieldPt = "+(long)cs_fieldPt.satCount(H1andFDset.and(H2.set()))+" relations, "+cs_fieldPt.nodeCount()+" nodes");
         bdd.save(dumpfilename+".bdd2", cs_fieldPt);
+        
+        BDD cs_stores = stores.and(V1c.ithVar(0));
+        cs_stores.andWith(V2c.ithVar(0));
+        System.out.println("stores = "+(long)cs_stores.satCount(V1andV2andFDset)+" relations, "+cs_stores.nodeCount()+" nodes");
+        bdd.save(dumpfilename+".stores", cs_stores);
+        
+        BDD cs_loads = loads.and(V1c.ithVar(0));
+        cs_loads.andWith(V2c.ithVar(0));
+        System.out.println("loads = "+(long)cs_loads.satCount(V1andV2andFDset)+" relations, "+cs_loads.nodeCount()+" nodes");
+        bdd.save(dumpfilename+".loads", cs_loads);
         
         DataOutputStream dos;
         dos = new DataOutputStream(new FileOutputStream(dumpfilename+".config"));
