@@ -1,0 +1,90 @@
+/*
+ * Interface.java
+ *
+ * Created on December 12, 2001, 1:27 AM
+ *
+ */
+
+package ClassLib.ibm13_win32;
+
+import java.util.Iterator;
+
+import Bootstrap.ObjectTraverser;
+import Bootstrap.PrimordialClassLoader;
+import ClassLib.ClassLibInterface;
+import Clazz.jq_Class;
+import Main.jq;
+
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
+public final class Interface extends ClassLib.Common.InterfaceImpl {
+
+    /** Creates new Interface */
+    public Interface() {}
+
+    public Iterator getImplementationClassDescs(UTF.Utf8 desc) {
+        if (ClassLibInterface.USE_JOEQ_CLASSLIB && (desc.toString().startsWith("Ljava/") ||
+                                                    desc.toString().startsWith("Lcom/ibm/jvm/"))) {
+            UTF.Utf8 u = UTF.Utf8.get("LClassLib/ibm13_win32/"+desc.toString().substring(1));
+            return new Util.Collections.AppendIterator(super.getImplementationClassDescs(desc),
+                                            java.util.Collections.singleton(u).iterator());
+        }
+        return super.getImplementationClassDescs(desc);
+    }
+    
+    public ObjectTraverser getObjectTraverser() {
+        return ibm13_win32ObjectTraverser.INSTANCE;
+    }
+    
+    public static class ibm13_win32ObjectTraverser extends CommonObjectTraverser {
+        public static ibm13_win32ObjectTraverser INSTANCE = new ibm13_win32ObjectTraverser();
+        protected ibm13_win32ObjectTraverser() {}
+        public void initialize() {
+            super.initialize();
+            
+            // access the ISO-8859-1 character encoding, as it is used during bootstrapping
+            try {
+                String s = new String(new byte[0], 0, 0, "ISO-8859-1");
+            } catch (java.io.UnsupportedEncodingException x) {}
+            PrimordialClassLoader.loader.getOrCreateBSType("Lsun/io/CharToByteISO8859_1;");
+    
+            jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/net/URLClassLoader$ClassFinder;");
+            nullInstanceFields.add(k.getOrCreateInstanceField("name", "Ljava/lang/String;"));
+            
+            k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Lsun/misc/Launcher;");
+            nullStaticFields.add(k.getOrCreateStaticField("launcher", "Lsun/misc/Launcher;"));
+            //k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/net/URLClassLoader;");
+            //nullStaticFields.add(k.getOrCreateStaticField("extLoader", "Ljava/net/URLClassLoader;"));
+            k = PrimordialClassLoader.getJavaLangString();
+            nullStaticFields.add(k.getOrCreateStaticField("btcConverter", "Ljava/lang/ThreadLocal;"));
+            nullStaticFields.add(k.getOrCreateStaticField("ctbConverter", "Ljava/lang/ThreadLocal;"));
+            k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/util/zip/ZipFile;");
+            nullStaticFields.add(k.getOrCreateStaticField("inflaters", "Ljava/util/Vector;"));
+            
+            // we need to reinitialize the inflaters array on startup.
+            if (jq.on_vm_startup != null) {
+                Object[] args = { } ;
+                Clazz.jq_Method init_inflaters = k.getOrCreateStaticMethod("init_inflaters", "()V");
+                Bootstrap.MethodInvocation mi = new Bootstrap.MethodInvocation(init_inflaters, args);
+                jq.on_vm_startup.add(mi);
+                System.out.println("Added call to reinitialize java.util.zip.ZipFile.inflaters field on joeq startup: "+mi);
+            }
+        }
+        
+        public java.lang.Object mapInstanceField(java.lang.Object o, Clazz.jq_InstanceField f) {
+            if (IGNORE_THREAD_LOCALS) {
+                jq_Class c = f.getDeclaringClass();
+                if (c == PrimordialClassLoader.getJavaLangThread()) {
+                    String fieldName = f.getName().toString();
+                    if (fieldName.equals("threadLocals"))
+                        return java.util.Collections.EMPTY_MAP;
+                    if (fieldName.equals("inheritableThreadLocals"))
+                        return java.util.Collections.EMPTY_MAP;
+                }
+            }
+            return super.mapInstanceField(o, f);
+        }
+    }
+}

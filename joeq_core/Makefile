@@ -77,6 +77,8 @@ bootstrap-sun14-win32:	javac
 bootstrap-sun13-win32:	javac
 	java -Xbootclasspath/a:$(JDK14SUPPORT_LIB) -ms120M -mx120M Main.Bootstrapper -cl ClassLib/sun13_win32/classlist.txt
 
+bootstrap-ibm13-win32:	javac
+	java -Xbootclasspath/a:$(JDK14SUPPORT_LIB)\;C:\\Program\ Files\\IBM\\Java13\\jre\\lib\\ext\\IBMJCEProvider.jar -ms150M -mx150M Main.Bootstrapper -cl ClassLib/ibm13_win32/classlist.txt
 
 ### RULES FOR BUILDING JAVADOC
 #
