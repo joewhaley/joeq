@@ -65,16 +65,19 @@ public class PA {
     boolean INCREMENTAL1 = true;
     boolean INCREMENTAL2 = true;
     boolean INCREMENTAL3 = true;
+    boolean CONTEXT_SENSITIVE = false;
     
-    int bddnodes = Integer.parseInt(System.getProperty("bddnodes", "1500000"));
-    int bddcache = Integer.parseInt(System.getProperty("bddcache", "100000"));
+    int bddnodes = Integer.parseInt(System.getProperty("bddnodes", "2500000"));
+    int bddcache = Integer.parseInt(System.getProperty("bddcache", "150000"));
     static String resultsFileName = System.getProperty("bddresults", "pa");
     
     BDDFactory bdd;
     
     BDDDomain V1, V2, I, H1, H2, Z, F, T1, T2, N, M;
+    BDDDomain V1c, V2c, H1c, H2c;
     
     int V_BITS=16, I_BITS=15, H_BITS=15, Z_BITS=5, F_BITS=12, T_BITS=12, N_BITS=11, M_BITS=14;
+    int VC_BITS=1, HC_BITS=1;
     
     IndexMap/*Node*/ Vmap;
     IndexMap/*ProgramLocation*/ Imap;
@@ -105,7 +108,8 @@ public class PA {
     BDD IE;     // IxM, invocation edges
     BDD filter; // V1xH1, type filter
     
-    String varorder = System.getProperty("bddordering", "N_F_Z_I_M_T1_V2xV1_H2_T2_H1");
+    String varorder = System.getProperty("bddordering", "N_F_Z_I_M_T1_V2xV1_V2cxV1c_H2c_H2_T2_H1c_H1");
+    //String varorder = System.getProperty("bddordering", "N_F_Z_I_M_T1_V2xV1_H2_T2_H1");
     boolean reverseLocal = System.getProperty("bddreverse", "true").equals("true");
     
     BDDPairing V1toV2, V2toV1, H1toH2, H2toH1, V1H1toV2H2, V2H2toV1H1;
@@ -140,6 +144,11 @@ public class PA {
         N = makeDomain("N", N_BITS);
         M = makeDomain("M", M_BITS);
         
+        V1c = makeDomain("V1c", VC_BITS);
+        V2c = makeDomain("V2c", VC_BITS);
+        H1c = makeDomain("H1c", HC_BITS);
+        H2c = makeDomain("H2c", HC_BITS);
+        
         // IxH1xN x H1xT2
         int[] ordering = bdd.makeVarOrdering(reverseLocal, varorder);
         bdd.setVarOrder(ordering);
@@ -152,14 +161,29 @@ public class PA {
         Nmap = makeMap("Names", N_BITS);
         Mmap = makeMap("Methods", M_BITS);
         
-        V1toV2 = bdd.makePair(V1, V2);
-        V2toV1 = bdd.makePair(V2, V1);
-        V1H1toV2H2 = bdd.makePair();
-        V1H1toV2H2.set(new BDDDomain[] {V1,H1},
-                       new BDDDomain[] {V2,H2});
-        V2H2toV1H1 = bdd.makePair();
-        V2H2toV1H1.set(new BDDDomain[] {V2,H2},
-                       new BDDDomain[] {V1,H1});
+        if (CONTEXT_SENSITIVE) {
+            V1toV2 = bdd.makePair();
+            V1toV2.set(new BDDDomain[] {V1,V1c},
+                       new BDDDomain[] {V2,V2c});
+            V2toV1 = bdd.makePair();
+            V2toV1.set(new BDDDomain[] {V2,V2c},
+                       new BDDDomain[] {V1,V1c});
+            V1H1toV2H2 = bdd.makePair();
+            V1H1toV2H2.set(new BDDDomain[] {V1,H1,V1c,H1c},
+                           new BDDDomain[] {V2,H2,V2c,H2c});
+            V2H2toV1H1 = bdd.makePair();
+            V2H2toV1H1.set(new BDDDomain[] {V2,H2,V2c,H2c},
+                           new BDDDomain[] {V1,H1,V1c,H1c});
+        } else {
+            V1toV2 = bdd.makePair(V1, V2);
+            V2toV1 = bdd.makePair(V2, V1);
+            V1H1toV2H2 = bdd.makePair();
+            V1H1toV2H2.set(new BDDDomain[] {V1,H1},
+                           new BDDDomain[] {V2,H2});
+            V2H2toV1H1 = bdd.makePair();
+            V2H2toV1H1.set(new BDDDomain[] {V2,H2},
+                           new BDDDomain[] {V1,H1});
+        }
         
         V1set = V1.set();
         V2set = V2.set();
@@ -172,6 +196,12 @@ public class PA {
         Nset = N.set();
         Iset = I.set();
         Zset = Z.set();
+        if (CONTEXT_SENSITIVE) {
+            V1set.andWith(V1c.set());
+            V2set.andWith(V2c.set());
+            H1set.andWith(H1c.set());
+            H2set.andWith(H2c.set());
+        }
         V1V2set = V1set.and(V2set);
         V1H1set = V1set.and(H1set);
         IMset = Iset.and(Mset);
@@ -221,6 +251,156 @@ public class PA {
             PrimordialClassLoader.getJavaLangThread().prepare();
             PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/Runnable;").prepare();
         }
+    }
+    
+    void addToVisited(BDD M_bdd) {
+        if (TRACE_RELATIONS) out.println("Adding to visited: (M:"+M_bdd.scanVar(M)+")");
+        visited.orWith(M_bdd.id());
+    }
+    
+    void addToFormal(BDD M_bdd, int z, Node v) {
+        BDD bdd1 = Z.ithVar(z);
+        int V_i = Vmap.get(v);
+        bdd1.andWith(V1.ithVar(V_i));
+        bdd1.andWith(M_bdd.id());
+        if (TRACE_RELATIONS) out.println("Adding to formal: (M:"+M_bdd.scanVar(M)+",Z:"+z+",V1:"+V_i+")");
+        formal.orWith(bdd1);
+    }
+    
+    void addToIE(BDD I_bdd, jq_Method target) {
+        int M2_i = Mmap.get(target);
+        BDD bdd1 = M.ithVar(M2_i);
+        bdd1.andWith(I_bdd.id());
+        if (TRACE_RELATIONS) out.println("Adding to IE: (I:"+I_bdd.scanVar(I)+",M:"+M2_i+")");
+        IE.orWith(bdd1);
+    }
+    
+    void addToMI(BDD M_bdd, BDD I_bdd, jq_Method target) {
+        int N_i = Nmap.get(target);
+        BDD bdd1 = N.ithVar(N_i);
+        bdd1.andWith(M_bdd.id());
+        bdd1.andWith(I_bdd.id());
+        if (TRACE_RELATIONS) out.println("Adding to mI: (M:"+M_bdd.scanVar(M)+",I:"+I_bdd.scanVar(I)+",N:"+N_i+")");
+        mI.orWith(bdd1);
+    }
+    
+    void addToActual(BDD I_bdd, int z, Set s) {
+        BDD bdd1 = bdd.zero();
+        for (Iterator j = s.iterator(); j.hasNext(); ) {
+            int V_i = Vmap.get(j.next());
+            if (TRACE_RELATIONS) out.println("Adding to actual: (I:"+I_bdd.scanVar(I)+",Z:"+z+",V2:"+V_i+")");
+            bdd1.orWith(V2.ithVar(V_i));
+        }
+        bdd1.andWith(Z.ithVar(z));
+        bdd1.andWith(I_bdd.id());
+        actual.orWith(bdd1);
+    }
+    
+    void addToIret(BDD I_bdd, Node v) {
+        int V_i = Vmap.get(v);
+        BDD bdd1 = V1.ithVar(V_i);
+        bdd1.andWith(I_bdd.id());
+        if (TRACE_RELATIONS) out.println("Adding to Iret: (I:"+I_bdd.scanVar(I)+",V1:"+V_i+")");
+        Iret.orWith(bdd1);
+    }
+    
+    void addToIthr(BDD I_bdd, Node v) {
+        int V_i = Vmap.get(v);
+        BDD bdd1 = V1.ithVar(V_i);
+        bdd1.andWith(I_bdd.id());
+        if (TRACE_RELATIONS) out.println("Adding to Ithr: (I:"+I_bdd.scanVar(I)+",V1:"+V_i+")");
+        Ithr.orWith(bdd1);
+    }
+    
+    void addToMV(BDD M_bdd, BDD V_bdd) {
+        BDD bdd = M_bdd.id();
+        bdd.andWith(V_bdd.id());
+        if (TRACE_RELATIONS) out.println("Adding to mV: (M:"+M_bdd.scanVar(M)+",V1:"+V_bdd.scanVar(V1)+")");
+        mV.orWith(bdd);
+    }
+    
+    void addToMret(BDD M_bdd, Node v) {
+        addToMret(M_bdd, Vmap.get(v));
+    }
+    
+    void addToMret(BDD M_bdd, int V_i) {
+        BDD bdd = V2.ithVar(V_i);
+        bdd.andWith(M_bdd.id());
+        if (TRACE_RELATIONS) out.println("Adding to Mret: (M:"+M_bdd.scanVar(M)+",V2:"+V_i+")");
+        Mret.orWith(bdd);
+    }
+    
+    void addToMthr(BDD M_bdd, int V_i) {
+        BDD bdd = V2.ithVar(V_i);
+        bdd.andWith(M_bdd.id());
+        if (TRACE_RELATIONS) out.println("Adding to Mthr: (M:"+M_bdd.scanVar(M)+",V2:"+V_i+")");
+        Mthr.orWith(bdd);
+    }
+    
+    void addToVP(Node p, int H_i) {
+        int V1_i = Vmap.get(p);
+        BDD bdd1 = V1.ithVar(V1_i);
+        bdd1.andWith(H1.ithVar(H_i));
+        vP.orWith(bdd1);
+    }
+    
+    void addToVP(BDD V_bdd, Node h) {
+        int H_i = Hmap.get(h);
+        BDD bdd1 = H1.ithVar(H_i);
+        bdd1.andWith(V_bdd.id());
+        if (TRACE_RELATIONS) out.println("Adding to vP: (V1:"+V_bdd.scanVar(V1)+",H1:"+H_i+")");
+        vP.orWith(bdd1);
+    }
+    
+    void addToA(int V1_i, int V2_i) {
+        BDD V_bdd = V1.ithVar(V1_i);
+        addToA(V_bdd, V2_i);
+        V_bdd.free();
+    }
+    
+    void addToA(BDD V_bdd, int V2_i) {
+        BDD bdd1 = V2.ithVar(V2_i);
+        bdd1.andWith(V_bdd.id());
+        if (TRACE_RELATIONS) out.println("Adding to A: (V1:"+V_bdd.scanVar(V1)+",V2:"+V2_i+")");
+        A.orWith(bdd1);
+    }
+    
+    void addToS(BDD V_bdd, jq_Field f, Collection c) {
+        int F_i = Fmap.get(f);
+        BDD F_bdd = F.ithVar(F_i);
+        for (Iterator k = c.iterator(); k.hasNext(); ) {
+            Node node2 = (Node) k.next();
+            if (node2 instanceof ConcreteTypeNode ||
+                node2 instanceof ConcreteObjectNode) {
+                jq_Reference type = node2.getDeclaredType();
+                if (type == null) {
+                    if (TRACE) out.println("Skipping null constant.");
+                    continue;
+                }
+            }
+            int V2_i = Vmap.get(node2);
+            BDD bdd1 = V2.ithVar(V2_i);
+            bdd1.andWith(F_bdd.id());
+            bdd1.andWith(V_bdd.id());
+            if (TRACE_RELATIONS) out.println("Adding to S: (V1:"+V_bdd.scanVar(V1)+",F:"+F_i+",V2:"+V2_i+")");
+            S.orWith(bdd1);
+        }
+        F_bdd.free();
+    }
+    
+    void addToL(BDD V_bdd, jq_Field f, Collection c) {
+        int F_i = Fmap.get(f);
+        BDD F_bdd = F.ithVar(F_i);
+        for (Iterator k = c.iterator(); k.hasNext(); ) {
+            Node node2 = (Node) k.next();
+            int V2_i = Vmap.get(node2);
+            BDD bdd1 = V2.ithVar(V2_i);
+            bdd1.andWith(F_bdd.id());
+            bdd1.andWith(V_bdd.id());
+            if (TRACE_RELATIONS) out.println("Adding to L: (V1:"+V_bdd.scanVar(V1)+",F:"+F_i+",V2:"+V2_i+")");
+            L.orWith(bdd1);
+        }
+        F_bdd.free();
     }
     
     public void visitMethod(jq_Method m) {
