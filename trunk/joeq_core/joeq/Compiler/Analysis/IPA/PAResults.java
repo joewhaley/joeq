@@ -14,6 +14,7 @@ import java.lang.reflect.Field;
 import java.math.BigInteger;
 import java.util.AbstractSet;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -51,7 +52,11 @@ import Util.Assert;
 import Util.Strings;
 import Util.Collections.HashWorklist;
 import Util.Collections.UnmodifiableIterator;
+import Util.Graphs.PathNumbering;
 import Util.Graphs.SCCPathNumbering;
+import Util.Graphs.SCComponent;
+import Util.Graphs.SCCTopSortedGraph;
+import Util.Graphs.Graph;
 import Util.Graphs.SCCPathNumbering.Path;
 
 /**
@@ -348,6 +353,9 @@ public class PAResults implements PointerAnalysisResults {
                 } else if (command.equals("collectiontypes")) {
 		    TypedBDD r = findCollectionTypes();
 		    results.add(r);
+                } else if (command.equals("gini")) {
+		    computeGini(r.vCnumbering);
+		    increaseCount = false;
                 } else if (command.equals("stats")) {
                     printStats();
                     increaseCount = false;
@@ -1360,6 +1368,10 @@ public class PAResults implements PointerAnalysisResults {
      */
     public TypedBDD findCollectionTypes() {
 	TypedBDD storedin = (TypedBDD)r.bdd.zero(); 		// H1xH1cxH2xH2c
+	if (!r.CONTEXT_SENSITIVE) {
+            System.out.println("Sorry, this analysis has only been debugged in context-sensitivity mode");
+	    return storedin;
+	}
 	BDD V1cset = r.V1c.set();
 	BDD V1set = r.V1.set();
 	BDD H1set = r.H1.set();
@@ -1410,12 +1422,19 @@ public class PAResults implements PointerAnalysisResults {
 	    storedin.andWith(one_to_one);
 	}
 
-	// project away H1c, H2c
-	TypedBDD tmp = (TypedBDD)storedin.exist(r.H1cH2cset);
-	storedin.free();
-	storedin = tmp;
+	TypedBDD tmp = null;
+	if (r.CONTEXT_SENSITIVE) {	
+	    // project away H1c, H2c
+	    tmp = (TypedBDD)storedin.exist(r.H1cH2cset);
+	    storedin.free();
+	    storedin = tmp;
+	}
 
 	tmp = (TypedBDD)storedin.exist(H1set);
+	if (tmp.isZero()) {
+	    System.out.println("Didn't find any collections");
+	    return tmp;
+	}
 	BDD supertypes = r.bdd.zero();				// H2 x T1
 	for (Iterator collections = tmp.iterator(); collections.hasNext(); ) {
 	    BDD c = (BDD)collections.next();
@@ -1429,5 +1448,40 @@ public class PAResults implements PointerAnalysisResults {
 	}
 	tmp.free();
 	return (TypedBDD)supertypes;
+    }
+
+    public void computeGini(PathNumbering pn) {
+        if (!(pn instanceof SCCPathNumbering)) {
+            System.out.println(pn.getClass() + " is not using a SCC numbering");
+            return;
+        }
+        SCCTopSortedGraph graph = ((SCCPathNumbering)pn).getSCCGraph();
+        List sccs = graph.list();
+        int []sccs_sizes = new int[sccs.size()];
+        int n = 0;
+        for (int i = 0; i < sccs.size(); i++) {
+            SCComponent scc = (SCComponent)sccs.get(i);
+            sccs_sizes[i] = scc.size();
+            n += scc.size();
+        }
+        int x[] = new int[n];
+        Arrays.sort(sccs_sizes);
+        System.arraycopy(sccs_sizes, 0, x, 0, sccs_sizes.length);
+        double gini = 0.0;
+        // g=\frac{\sum_{i=1}^n\sum_{j=1}^n |x_i-x_j|}{n^2}
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+	        gini += Math.abs(x[i]-x[j]);
+            }
+        }
+        gini = gini / n / n;
+
+        System.out.println("Gini-Coefficient is " + gini);
+        int PRINTMAX = 10;
+        System.out.print(PRINTMAX + " largest SCCs are :");
+        for (int i = sccs_sizes.length - 1; i>=0 && i>sccs_sizes.length-1-PRINTMAX; --i) {
+            System.out.print(" " + sccs_sizes[i]);
+        }
+	System.out.println();
     }
 }
