@@ -811,7 +811,7 @@ public class SimpleAllocator extends HeapAllocator {
                     isFree = getGCBit(o) != flip;
                 } else {
                     next_p = p;
-                    isFree = true;
+                    isFree = !getBlockNext(currBlock).isNull();
                     if (TRACE_FREELIST) Debug.write("<end of block>");
                 }
                 
