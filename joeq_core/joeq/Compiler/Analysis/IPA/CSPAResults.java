@@ -49,6 +49,7 @@ import Compil3r.Analysis.FlowInsensitive.MethodSummary.PassedParameter;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.ReturnValueNode;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.ThrownExceptionNode;
 import Compil3r.Analysis.IPA.PA.ThreadRootMap;
+import Compil3r.Analysis.IPA.PA.VarPathSelector;
 import Compil3r.Analysis.IPA.ProgramLocation.BCProgramLocation;
 import Compil3r.Analysis.IPA.ProgramLocation.QuadProgramLocation;
 import Compil3r.BytecodeAnalysis.Bytecodes;
@@ -269,7 +270,8 @@ public class CSPAResults implements PointerAnalysisResults {
     }
 
     public void numberPaths() {
-        pn = new PathNumbering();
+        // todo: load path numbering instead of renumbering.
+        pn = new PathNumbering(new VarPathSelector(VC_BITS));
         Map thread_map = new ThreadRootMap(findThreadRuns(cg));
         Number paths = pn.countPaths(cg.getRoots(), cg.getCallSiteNavigator(), thread_map);
         System.out.println("Number of paths in call graph="+paths);
@@ -646,6 +648,9 @@ public class CSPAResults implements PointerAnalysisResults {
             }
             relation.orWith(localStores);
         }
+        
+        if (callGraphRelation == null)
+            buildCallGraphRelation();
         
         BDD newRelations = relation.id();
         for (int i=0; ; ++i) {
@@ -1221,6 +1226,8 @@ public class CSPAResults implements PointerAnalysisResults {
         System.out.print("S "+this.S.nodeCount()+" nodes, ");
         this.L = bdd.load(fn+".L");
         System.out.print("L "+this.L.nodeCount()+" nodes, ");
+        this.A = bdd.load(fn+".A");
+        System.out.print("A "+this.A.nodeCount()+" nodes, ");
         this.mV = bdd.load(fn+".mV");
         System.out.print("mV "+this.mV.nodeCount()+" nodes, ");
         this.mI = bdd.load(fn+".mI");
@@ -1623,7 +1630,7 @@ public class CSPAResults implements PointerAnalysisResults {
         buildContextInsensitive();
         initializeMethodMap();
         buildSCCToVarBDD();
-        buildCallGraphRelation();
+        //buildCallGraphRelation();
         //buildAccessibleLocations();
         sanityCheck();
     }
@@ -2195,6 +2202,10 @@ public class CSPAResults implements PointerAnalysisResults {
                 for (Iterator i=dom.iterator(); i.hasNext(); ) {
                     BDDDomain d = (BDDDomain) i.next();
                     long e = val[d.getIndex()];
+                    if (e < 0 || e >= d.size()) {
+                        System.out.println("Error: out of range "+e);
+                        break;
+                    }
                     sb.append(elementToString(d, e));
                     if (i.hasNext()) sb.append(' ');
                     temp.andWith(d.ithVar(e));
@@ -2239,25 +2250,30 @@ public class CSPAResults implements PointerAnalysisResults {
 
     TypedBDD parseBDD(List a, String s) {
         if (s.equals("vP")) {
-            return new TypedBDD(vP, V1c, V1, H1c, H1 );
+            return new TypedBDD(vP, V1c, V1, H1c, H1);
         }
         if (s.equals("vP_ci")) {
-            return new TypedBDD(vP_ci, V1, H1 );
+            return new TypedBDD(vP_ci, V1, H1);
         }
         if (s.equals("hP")) {
-            return new TypedBDD(hP, H1c, H1, F, H2c, H2 );
+            return new TypedBDD(hP, H1c, H1, F, H2c, H2);
         }
         if (s.equals("S")) {
-            return new TypedBDD(S, V1c, V1, F, V2c, V2 );
+            return new TypedBDD(S, V1c, V1, F, V2c, V2);
         }
         if (s.equals("L")) {
-            return new TypedBDD(L, V1c, V1, F, V2c, V2 );
+            return new TypedBDD(L, V1c, V1, F, V2c, V2);
+        }
+        if (s.equals("A")) {
+            return new TypedBDD(A, V1c, V1, V2c, V2);
         }
         if (s.equals("al")) {
-            return new TypedBDD(accessibleLocations, V1c, V1, V2c, V2 );
+            return new TypedBDD(accessibleLocations, V1c, V1, V2c, V2);
         }
         if (s.equals("cg")) {
-            return new TypedBDD(callGraphRelation, V1c, V1, V2c, V2 );
+            if (callGraphRelation == null)
+                buildCallGraphRelation();
+            return new TypedBDD(callGraphRelation, V1c, V1, V2c, V2);
         }
         if (s.startsWith("V1(")) {
             int x = Integer.parseInt(s.substring(3, s.length()-1));
@@ -2557,6 +2573,18 @@ public class CSPAResults implements PointerAnalysisResults {
                     results.add(bdd);
                 } else if (command.equals("comparemods")) {
                     compareMods();
+                    increaseCount = false;
+                } else if (command.equals("printusedef")) {
+                    TypedBDD bdd1 = parseBDD(results, st.nextToken());
+                    printUseDefChain(bdd1.bdd);
+                    increaseCount = false;
+                } else if (command.equals("usedef")) {
+                    TypedBDD bdd1 = parseBDD(results, st.nextToken());
+                    BDD bdd = printUseDef(bdd1.bdd);
+                    results.add(new TypedBDD(bdd, V1c, V1));
+                } else if (command.equals("printdefuse")) {
+                    TypedBDD bdd1 = parseBDD(results, st.nextToken());
+                    printDefUseChain(bdd1.bdd);
                     increaseCount = false;
                 } else if (command.equals("encapsulation")) {
                     countEncapsulation();
@@ -2871,6 +2899,144 @@ public class CSPAResults implements PointerAnalysisResults {
         }
         System.out.println("Total encapsulated: "+totalEncapsulated);
         System.out.println("Total unencapsulated: "+totalUnencapsulated);
+    }
+    
+    public void printUseDefChain(BDD vPrelation) {
+        BDD visited = bdd.zero();
+        vPrelation = vPrelation.id();
+        for (int k = 1; !vPrelation.isZero(); ++k) {
+            System.out.println("Step "+k+":");
+            System.out.println(vPrelation.toStringWithDomains(ts));
+            visited.orWith(vPrelation.id());
+            // A: v2=v1;
+            BDD b = A.relprod(vPrelation, V1set);
+            System.out.println("Arguments/Return Values = "+b.satCount(V2set));
+            // L: v2=v1.f;
+            vPrelation.replaceWith(V1toV2);
+            BDD c = L.relprod(vPrelation, V2set); // V1xF
+            vPrelation.free();
+            BDD d = vP.relprod(c, V1set); // H1xF
+            c.free();
+            BDD e = hP.relprod(d, H1Fset); // H2
+            d.free();
+            e.replaceWith(H2toH1);
+            BDD f = vP.relprod(e, H1set); // V1
+            System.out.println("Loads/Stores = "+f.satCount(V1set));
+            e.free();
+            vPrelation = b;
+            vPrelation.replaceWith(V2toV1);
+            vPrelation.orWith(f);
+            vPrelation.applyWith(visited.id(), BDDFactory.diff);
+        }
+    }
+    
+    public void dumpUseDefChain(DataOutput out, BDD vPrelation) throws IOException {
+        BDD visited = bdd.zero();
+        vPrelation = vPrelation.id();
+        HashSet visitedNodes = new HashSet();
+        for (int k = 1; !vPrelation.isZero(); ++k) {
+            {
+                BDD foo = vPrelation.exist(V1c.set());
+                for (Iterator i = new TypedBDD(foo, V1).iterator(); i.hasNext(); ) {
+                    int V_i = ((Integer) i.next()).intValue();
+                    Node n = (Node) Vmap.get(V_i);
+                    String name = n.getDefiningMethod().toString();
+                    if (!visitedNodes.contains(n)) {
+                        out.writeBytes("n"+V_i+" [label=\""+name+"\"];\n");
+                        visitedNodes.add(n);
+                    }
+                }
+            }
+            System.out.println("Step "+k+":");
+            System.out.println(vPrelation.toStringWithDomains(ts));
+            visited.orWith(vPrelation.id());
+            // A: v2=v1;
+            BDD b = A.relprod(vPrelation, V1set);
+            System.out.println("Arguments/Return Values = "+b.satCount(V2set));
+            // L: v2=v1.f;
+            vPrelation.replaceWith(V1toV2);
+            BDD c = L.relprod(vPrelation, V2set); // V1xF
+            vPrelation.free();
+            BDD d = vP.relprod(c, V1set); // H1xF
+            c.free();
+            BDD e = hP.relprod(d, H1Fset); // H2
+            d.free();
+            e.replaceWith(H2toH1);
+            BDD f = vP.relprod(e, H1set); // V1
+            System.out.println("Loads/Stores = "+f.satCount(V1set));
+            e.free();
+            vPrelation = b;
+            vPrelation.replaceWith(V2toV1);
+            vPrelation.orWith(f);
+            vPrelation.applyWith(visited.id(), BDDFactory.diff);
+        }
+    }
+    
+    public BDD printUseDef(BDD vPrelation) {
+        vPrelation = vPrelation.id();
+        // A: v2=v1;
+        BDD b = A.relprod(vPrelation, V1set);
+        System.out.println("Arguments/Return Values = "+b.satCount(V2set));
+        // L: v2=v1.f;
+        vPrelation.replaceWith(V1toV2);
+        BDD c = L.relprod(vPrelation, V2set); // V1xF
+        vPrelation.free();
+        BDD d = vP.relprod(c, V1set); // H1xF
+        c.free();
+        BDD e = hP.relprod(d, H1Fset); // H2
+        d.free();
+        e.replaceWith(H2toH1);
+        BDD f = vP.relprod(e, H1set); // V1
+        System.out.println("Loads/Stores = "+f.satCount(V1set));
+        e.free();
+        vPrelation = b;
+        vPrelation.replaceWith(V2toV1);
+        vPrelation.orWith(f);
+        System.out.println(vPrelation.toStringWithDomains(ts));
+        return vPrelation;
+    }
+    
+    public void printDefUseChain(BDD vPrelation) {
+        BDD visited = bdd.zero();
+        vPrelation = vPrelation.id();
+        for (int k = 1; !vPrelation.isZero(); ++k) {
+            System.out.println("Step "+k+":");
+            System.out.println(vPrelation.toStringWithDomains(ts));
+            visited.orWith(vPrelation.id());
+            vPrelation.replaceWith(V1toV2);
+            // A: v2=v1;
+            BDD b = A.relprod(vPrelation, V2set);
+            vPrelation.free();
+            vPrelation = b;
+            vPrelation.applyWith(visited.id(), BDDFactory.diff);
+        }
+    }
+    
+    ToString ts = new ToString();
+    
+    public class ToString extends BDD.BDDToString {
+        
+        /* (non-Javadoc)
+         * @see org.sf.javabdd.BDD.BDDToString#elementName(int, long)
+         */
+        public String elementName(int arg0, long arg1) {
+            return elementToString(bdd.getDomain(arg0), (int) arg1);
+        }
+        
+        /* (non-Javadoc)
+         * @see org.sf.javabdd.BDD.BDDToString#elementNames(int, long, long)
+         */
+        public String elementNames(int arg0, long arg1, long arg2) {
+            StringBuffer sb = new StringBuffer();
+            while (arg1 < arg2) {
+                sb.append(elementName(arg0, arg1));
+                sb.append(", ");
+                ++arg1;
+            }
+            sb.append(elementName(arg0, arg1));
+            return sb.toString();
+        }
+
     }
     
 }
