@@ -7,10 +7,13 @@ import java.io.DataOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.ControlFlowGraphVisitor;
 import joeq.Compiler.Quad.Operand;
+import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.QuadIterator;
 import joeq.Compiler.Quad.QuadVisitor;
@@ -44,18 +47,19 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
     IndexMap memberMap;
     IndexMap constantMap;
     
-    String varOrderDesc = "method_quadxtargetxfallthrough_member_constant_src2_opc_src1_dest";
+    String varOrderDesc = "method_quadxtargetxfallthrough_member_constant_src2_opc_src1_dest_srcs_srcNum";
     
-    int methodBits = 14, quadBits = 18, opBits = 8, regBits = 7, constantBits = 13, memberBits = 14;
+    int methodBits = 14, quadBits = 18, opBits = 8, regBits = 7, constantBits = 13, memberBits = 14, varargsBits = 4;
 
     BDDFactory bdd;
-    BDDDomain method, quad, opc, dest, src1, src2, constant, fallthrough, target, member;
+    BDDDomain method, quad, opc, dest, src1, src2, constant, fallthrough, target, member, srcNum, srcs;
     BDD methodToQuad;
     BDD allQuads;
     BDD currentQuad;
     
     int totalQuads;
     
+    boolean ZERO_FIELDS = !System.getProperty("zerofields", "yes").equals("no");
     boolean GLOBAL_QUAD_NUMBERS = !System.getProperty("globalquadnumber", "yes").equals("no");
     boolean SSA = !System.getProperty("ssa", "no").equals("no");
     
@@ -64,7 +68,8 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
             quadBits = 13;
         }
         if (SSA) {
-            regBits = 10;
+            regBits = 11;
+            varargsBits = 5;
         }
         methodMap = new IndexMap("method");
         opMap = new IndexMap("op");
@@ -83,6 +88,8 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         fallthrough = makeDomain("fallthrough", quadBits);
         target = makeDomain("target", quadBits);
         member = makeDomain("member", memberBits);
+        srcNum = makeDomain("srcNum", varargsBits);
+        srcs = makeDomain("srcs", regBits);
         allQuads = bdd.zero();
         methodToQuad = bdd.zero();
         int [] varOrder = bdd.makeVarOrdering(true, varOrderDesc);
@@ -114,7 +121,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         while (i.hasNext()) {
             Quad q = i.nextQuad();
             currentQuad = bdd.one();
-            int quadID = quadMap.get(q)+1;
+            int quadID = getQuadID(q);
             //System.out.println("Quad id: "+quadID);
             currentQuad.andWith(quad.ithVar(quadID));
             if (!GLOBAL_QUAD_NUMBERS) {
@@ -123,15 +130,18 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
             } else {
                 methodToQuad.orWith(currentQuad.and(method.ithVar(methodID)));
             }
-            int opID = opMap.get(q.getOperator())+1;
+            int opID = getOpID(q.getOperator());
             currentQuad.andWith(opc.ithVar(opID));
             handleQuad(q);
             BDD succ = bdd.zero();
-            for (Iterator j = i.successors(); j.hasNext(); ) {
+            Iterator j = i.successors();
+            if (!j.hasNext()) {
+                succ.orWith(fallthrough.ithVar(0));
+            } else do {
                 Quad q2 = (Quad) j.next();
-                int quad2ID = quadMap.get(q2)+1;
+                int quad2ID = getQuadID(q2);
                 succ.orWith(fallthrough.ithVar(quad2ID));
-            }
+            } while (j.hasNext());
             currentQuad.andWith(succ);
             //printQuad(currentQuad);
             allQuads.orWith(currentQuad);
@@ -167,14 +177,12 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         return ("BuildBDDIR, node count: " + allQuads.nodeCount());
     }
     
-    public static boolean ZERO_FIELDS = false;
-    
     public int getRegisterID(Register r) {
         return r.getNumber()+1;
     }
     
     public int getConstantID(Object c) {
-        return constantMap.get(c);
+        return constantMap.get(c)+1;
     }
     
     public int getQuadID(Quad r) {
@@ -185,10 +193,15 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         return memberMap.get(r)+1;
     }
     
+    public int getOpID(Operator r) {
+        return opMap.get(r)+1;
+    }
+    
     void handleQuad(Quad q) {
         int quadID=0, opcID=0, destID=0, src1ID=0, src2ID=0, constantID=0, fallthroughID=0, targetID=0, memberID=0;
-        quadID = quadMap.get(q)+1;
-        opcID = opMap.get(q.getOperator())+1;
+        List srcsID = null;
+        quadID = getQuadID(q);
+        opcID = getOpID(q.getOperator());
         Iterator i = q.getDefinedRegisters().iterator();
         if (i.hasNext()) {
             destID = getRegisterID(((RegisterOperand)i.next()).getRegister());
@@ -202,6 +215,13 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
             if (i.hasNext()) {
                 rop = (RegisterOperand) i.next();
                 if (rop != null) src2ID = getRegisterID(rop.getRegister());
+                if (i.hasNext()) {
+                    srcsID = new LinkedList();
+                    do {
+                        rop = (RegisterOperand) i.next();
+                        if (rop != null) srcsID.add(new Integer(getRegisterID(rop.getRegister())));
+                    } while (i.hasNext());
+                }
             }
         }
         i = q.getAllOperands().iterator();
@@ -229,6 +249,26 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         //currentQuad.andWith(fallthrough.ithVar(fallthroughID));
         if (ZERO_FIELDS || targetID != 0) currentQuad.andWith(target.ithVar(targetID));
         if (ZERO_FIELDS || memberID != 0) currentQuad.andWith(member.ithVar(memberID));
+        if (srcsID != null) {
+            BDD temp = bdd.zero();
+            int j = 1;
+            for (i = srcsID.iterator(); i.hasNext(); ++j) {
+                int srcID = ((Integer) i.next()).intValue();
+                if (ZERO_FIELDS || srcID != 0) {
+                    BDD temp2 = srcNum.ithVar(j);
+                    temp2.andWith(srcs.ithVar(srcID));
+                    temp.orWith(temp2);
+                }
+            }
+            if (!temp.isZero())
+                currentQuad.andWith(temp);
+            else
+                temp.free();
+        } else if (ZERO_FIELDS) {
+            BDD temp2 = srcNum.ithVar(0);
+            temp2.andWith(srcs.ithVar(0));
+            currentQuad.andWith(temp2);
+        }
         ++totalQuads;
     }
     
@@ -262,6 +302,8 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         dos.writeBytes("fallthrough "+(1L<<quadBits)+"\n");
         dos.writeBytes("target "+(1L<<quadBits)+"\n");
         dos.writeBytes("member "+(1L<<memberBits)+"\n");
+        dos.writeBytes("srcNum "+(1L<<varargsBits)+"\n");
+        dos.writeBytes("srcs "+(1L<<regBits)+"\n");
         dos.close();
     }
     
@@ -273,15 +315,16 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         dos.writeBytes("reg "+(1L<<regBits)+"\n");
         dos.writeBytes("constant "+(1L<<constantBits)+"\n");
         dos.writeBytes("member "+(1L<<memberBits)+"\n");
+        dos.writeBytes("varargs "+(1L<<varargsBits)+"\n");
         dos.close();
     }
     
     void dumpRelations(String fileName) throws IOException {
         DataOutputStream dos = new DataOutputStream(new FileOutputStream(fileName));
         if (GLOBAL_QUAD_NUMBERS) {
-            dos.writeBytes("cfg ( id : quad , op : op , dest : reg , src1 : reg , src2 : reg , const : constant , fallthrough : quad , target : quad , member : member )\n");
+            dos.writeBytes("cfg ( id : quad , op : op , dest : reg , src1 : reg , src2 : reg , const : constant , fallthrough : quad , target : quad , member : member , srcNum : varargs , srcs : reg )\n");
         } else {
-            dos.writeBytes("cfg ( method : method , id : quad , op : op , dest : reg , src1 : reg , src2 : reg , const : constant , fallthrough : quad , target : quad , member : member )\n");
+            dos.writeBytes("cfg ( method : method , id : quad , op : op , dest : reg , src1 : reg , src2 : reg , const : constant , fallthrough : quad , target : quad , member : member , srcNum : varargs , srcs : reg )\n");
         }
         dos.writeBytes("m2q ( method : method , id : quad )\n");
         dos.close();
@@ -298,29 +341,58 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
     
     void dumpTuples(String fileName, BDD allQ) throws IOException {
         DataOutputStream dos = new DataOutputStream(new FileOutputStream(fileName));
+        int[] a = allQ.support().scanSetDomains();
+        BDD allDomains = bdd.one();
+        System.out.print(fileName+" domains {");
+        for (int i = 0; i < a.length; ++i) {
+            BDDDomain d = bdd.getDomain(i);
+            System.out.print(" "+d.toString());
+            allDomains.andWith(d.set());
+        }
+        System.out.println(" ) = "+allQ.nodeCount()+" nodes");
+        int lines = 0;
         for (int i = 0; i < quadMap.size(); ++i) {
             BDD q = quad.ithVar(i).andWith(allQ.id());
             while (!q.isZero()) {
-                long[] v = q.scanAllVar();
+                BDD sat = q.satOne(allDomains, bdd.zero());
+                BDD sup = q.support();
+                int[] b = sup.scanSetDomains();
+                sup.free();
+                long[] v = sat.scanAllVar();
+                sat.free();
                 BDD t = bdd.one();
-                for (int j = 0; j < v.length; ++j) {
+                for (int j = 0, k = 0; j < bdd.numberOfDomains(); ++j) {
                     BDDDomain d = bdd.getDomain(j);
-                    BDD r = quantifyOtherDomains(q, d);
-                    if (r.isOne()) {
+                    if (k >= a.length || a[k] != j) {
+                        Assert._assert(v[j] == 0, "v["+j+"] is "+v[j]);
                         dos.writeBytes("* ");
                         t.andWith(d.domain());
+                        continue;
                     } else {
-                        dos.writeBytes(v[j]+" ");
-                        t.andWith(bdd.getDomain(j).ithVar(v[j]));
+                        ++k;
                     }
-                    r.free();
+                    if (v[j] == 0) {
+                        BDD qs = q.support();
+                        qs.orWith(d.set());
+                        boolean contains = qs.isOne();
+                        qs.free();
+                        if (!contains) {
+                            dos.writeBytes("* ");
+                            t.andWith(d.domain());
+                            continue;
+                        }
+                    }
+                    dos.writeBytes(v[j]+" ");
+                    t.andWith(bdd.getDomain(j).ithVar(v[j]));
                 }
                 q.applyWith(t, BDDFactory.diff);
                 dos.writeBytes("\n");
+                ++lines;
             }
             q.free();
         }
         dos.close();
+        System.out.println("Done printing "+lines+" lines.");
     }
     
     BDD quantifyOtherDomains(BDD q, BDDDomain d) {
