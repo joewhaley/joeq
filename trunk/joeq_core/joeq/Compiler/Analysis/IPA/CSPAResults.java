@@ -1378,6 +1378,11 @@ public class CSPAResults implements PointerAnalysisResults {
         return m;
     }
     
+    public static void main(String[] args) throws IOException {
+        CSPAResults r = runAnalysis(args, null);
+        r.interactive();
+    }
+    
     public static CSPAResults runAnalysis(String[] args, String addToClasspath) throws IOException {
         String prefix;
         if (args.length > 0) {
