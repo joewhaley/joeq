@@ -2201,6 +2201,9 @@ public class PA {
         boolean change = false;
         for(Iterator iter = I.iterator(Iset); iter.hasNext();){
             BDD I_bdd = (BDD) iter.next();
+            if(TRACE_FORNAME){
+                System.out.println("Resolving a forName call at " + I_bdd.toStringWithDomains(TS));
+            }
                         
             BDD t = actual.relprod(I_bdd, Iset);
 //            System.out.println("t: " + t.toStringWithDomains(TS));            
@@ -2219,10 +2222,10 @@ public class PA {
                         ConcreteTypeNode cn = (ConcreteTypeNode) n;
                         String stringConst = (String) MethodSummary.stringNodes2Values.get(n);
                         if(stringConst != null){
-                            System.out.println(I_bdd.toStringWithDomains(TS) + " -> " + stringConst);
+//                            System.out.println(I_bdd.toStringWithDomains(TS) + " -> " + stringConst);
                             if(stringConst == null){
                                 if(missingConst.get(stringConst) == null){
-                                    if(TRACE_REFLECTION) System.err.println("No constant string for " + n + " at " + n);                                    
+                                    if(TRACE_FORNAME) System.err.println("No constant string for " + n + " at " + n);                                    
                                     missingConst.put(stringConst, new Integer(0));
                                 }                
                                 continue;
@@ -2232,7 +2235,7 @@ public class PA {
                             try {
                                 if(!isWellFormed(stringConst)) {
                                     if(wellFormedClasses.get(stringConst) == null){
-                                        if(TRACE_REFLECTION) out.println(stringConst + " is not well-formed.");
+                                        if(TRACE_FORNAME) out.println(stringConst + " is not well-formed.");
                                             wellFormedClasses.put(stringConst, new Integer(0));
                                         }                
 
@@ -2248,21 +2251,21 @@ public class PA {
                                     Assert._assert(c != null);
                                 }else{
                                     if(cantCastTypes.get(clazz) == null){
-                                        if(TRACE_REFLECTION) System.err.println("Can't cast " + clazz + " to jq_Class at " + I_bdd.toStringWithDomains(TS) + " -- stringConst: " + stringConst);
+                                        if(TRACE_FORNAME) System.err.println("Can't cast " + clazz + " to jq_Class at " + I_bdd.toStringWithDomains(TS) + " -- stringConst: " + stringConst);
                                         cantCastTypes.put(clazz, new Integer(0));
                                     }
                                     continue;
                                 }
                             } catch(NoClassDefFoundError e) {
                                 if(missingClasses.get(stringConst) == null){
-                                    if(TRACE_REFLECTION) System.err.println("Resolving reflection: unable to load " + stringConst + 
+                                    if(TRACE_FORNAME) System.err.println("Resolving reflection: unable to load " + stringConst + 
                                         " at " + I_bdd.toStringWithDomains(TS));
                                     missingClasses.put(stringConst, new Integer(0));
                                 }
                                 continue;
                             } catch(java.lang.ClassCircularityError e) {
                                 if(circularClasses.get(stringConst) == null){
-                                    if(TRACE_REFLECTION) System.err.println("Resolving reflection: circularity error " + stringConst + 
+                                    if(TRACE_FORNAME) System.err.println("Resolving reflection: circularity error " + stringConst + 
                                         " at " + I_bdd.toStringWithDomains(TS));
                                     circularClasses.put(stringConst, new Integer(0));
                                 }                
