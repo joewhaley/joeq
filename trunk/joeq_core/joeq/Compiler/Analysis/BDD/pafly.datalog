@@ -28,10 +28,10 @@ Ithr (invoke:I0, v:V0) input
 mI (method:M0, invoke:I0, name:N0) input
 visited (method:M0) input output
 IE (invoke:I0, target:M0) output
-mS (method:M0, base:V0, field:F0, src:V1 ) input
-mL (method:M0, base:V0, field:F0, dest:V1 ) input
-mvP (method:M0, v:V0, h:H0 ) input
-mIE (method:M0, invoke:I0, target:M1 ) input
+mS (method:M0, base:V0, field:F0, src:V1) input
+mL (method:M0, base:V0, field:F0, dest:V1) input
+mvP (method:M0, v:V0, h:H0) input
+mIE (method:M0, invoke:I0, target:M1) input
 
 ### Rules
 
