@@ -156,7 +156,7 @@ public abstract class TraceFlags {
             }
             return i+1;
         }
-        return i+1;
+        return i;
     }
     
     public static int parseArg(Object[] args, int m, jq_Type type, String[] s_args, int j) {
