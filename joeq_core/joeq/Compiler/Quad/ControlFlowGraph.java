@@ -8,7 +8,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.PrimordialClassLoader;
 import joeq.Clazz.jq_Method;
 import joeq.Clazz.jq_Primitive;
 import joeq.Clazz.jq_Type;

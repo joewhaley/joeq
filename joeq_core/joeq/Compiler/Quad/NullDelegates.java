@@ -10,7 +10,7 @@ import joeq.Interpreter.QuadInterpreter;
  * @version $Id$
  */
 class NullDelegates {
-    static class Op implements Compil3r.Quad.Operator.Delegate {
+    static class Op implements joeq.Compil3r.Quad.Operator.Delegate {
         public void interpretGetThreadBlock(Operator.Special op, Quad q, QuadInterpreter s) { }
         public void interpretSetThreadBlock(Operator.Special op, Quad q, QuadInterpreter s) { }
         public void interpretMonitorEnter(Operator.Monitor op, Quad q, QuadInterpreter s) { }

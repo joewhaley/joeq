@@ -275,7 +275,7 @@ public abstract class ProgramLocation implements Textualizable {
         public jq_Method getTargetMethod() {
             jq_Class clazz = ((jq_Method) super.m).getDeclaringClass();
             byte[] bc = ((jq_Method) super.m).getBytecode();
-            char cpi = Util.Convert.twoBytesToChar(bc, bcIndex+1);
+            char cpi = joeq.Util.Convert.twoBytesToChar(bc, bcIndex+1);
             switch (bc[bcIndex]) {
                 case (byte) jq_ClassFileConstants.jbc_INVOKEVIRTUAL:
                 case (byte) jq_ClassFileConstants.jbc_INVOKESPECIAL:
@@ -284,7 +284,7 @@ public abstract class ProgramLocation implements Textualizable {
                 case (byte) jq_ClassFileConstants.jbc_INVOKESTATIC:
                     return clazz.getCPasStaticMethod(cpi);
                 case (byte) jq_ClassFileConstants.jbc_MULTIANEWARRAY:
-                    return Run_Time.Arrays._multinewarray;
+                    return joeq.Run_Time.Arrays._multinewarray;
                 default:
                     return null;
             }
@@ -351,7 +351,7 @@ public abstract class ProgramLocation implements Textualizable {
             jq_Class clazz = ((jq_Method) super.m).getDeclaringClass();
             byte[] bc = ((jq_Method) super.m).getBytecode();
             if (bc == null || bcIndex < 0 || bcIndex+2 >= bc.length) return null;
-            char cpi = Util.Convert.twoBytesToChar(bc, bcIndex+1);
+            char cpi = joeq.Util.Convert.twoBytesToChar(bc, bcIndex+1);
             byte type;
             jq_Method method;
             switch (bc[bcIndex]) {
@@ -370,7 +370,7 @@ public abstract class ProgramLocation implements Textualizable {
                     type = BytecodeVisitor.INVOKE_STATIC;
                     break;
                 case (byte) jq_ClassFileConstants.jbc_MULTIANEWARRAY:
-                    method = Run_Time.Arrays._multinewarray;
+                    method = joeq.Run_Time.Arrays._multinewarray;
                     type = BytecodeVisitor.INVOKE_STATIC;
                     break;
                 default:
@@ -382,7 +382,7 @@ public abstract class ProgramLocation implements Textualizable {
             jq_Class clazz = ((jq_Method) super.m).getDeclaringClass();
             byte[] bc = ((jq_Method) super.m).getBytecode();
             if (bc == null || bcIndex < 0 || bcIndex+2 >= bc.length) return null;
-            char cpi = Util.Convert.twoBytesToChar(bc, bcIndex+1);
+            char cpi = joeq.Util.Convert.twoBytesToChar(bc, bcIndex+1);
             byte type;
             jq_Method method;
             switch (bc[bcIndex]) {
@@ -401,7 +401,7 @@ public abstract class ProgramLocation implements Textualizable {
                     type = BytecodeVisitor.INVOKE_STATIC;
                     break;
                 case (byte) jq_ClassFileConstants.jbc_MULTIANEWARRAY:
-                    method = Run_Time.Arrays._multinewarray;
+                    method = joeq.Run_Time.Arrays._multinewarray;
                     type = BytecodeVisitor.INVOKE_STATIC;
                     break;
                 default:
@@ -413,7 +413,7 @@ public abstract class ProgramLocation implements Textualizable {
             jq_Class clazz = ((jq_Method) super.m).getDeclaringClass();
             byte[] bc = ((jq_Method) super.m).getBytecode();
             if (bc == null || bcIndex < 0 || bcIndex+2 >= bc.length) return null;
-            char cpi = Util.Convert.twoBytesToChar(bc, bcIndex+1);
+            char cpi = joeq.Util.Convert.twoBytesToChar(bc, bcIndex+1);
             byte type;
             jq_Method method;
             switch (bc[bcIndex]) {
@@ -432,7 +432,7 @@ public abstract class ProgramLocation implements Textualizable {
                     type = BytecodeVisitor.INVOKE_STATIC;
                     break;
                 case (byte) jq_ClassFileConstants.jbc_MULTIANEWARRAY:
-                    method = Run_Time.Arrays._multinewarray;
+                    method = joeq.Run_Time.Arrays._multinewarray;
                     type = BytecodeVisitor.INVOKE_STATIC;
                     break;
                 default:

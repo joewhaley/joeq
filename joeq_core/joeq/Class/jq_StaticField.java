@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.PrimordialClassLoader;
 import joeq.Memory.Address;
 import joeq.Memory.HeapAddress;
 import joeq.UTF.Utf8;

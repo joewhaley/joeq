@@ -12,7 +12,7 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Set;
 
-import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.PrimordialClassLoader;
 import joeq.Clazz.jq_Class;
 import joeq.Clazz.jq_Method;
 import joeq.Clazz.jq_Type;

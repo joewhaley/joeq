@@ -22,6 +22,7 @@ import joeq.Clazz.jq_Method;
 import joeq.Clazz.jq_Reference;
 import joeq.Clazz.jq_StaticField;
 import joeq.Clazz.jq_Type;
+import joeq.Clazz.PrimordialClassLoader;
 import joeq.Compil3r.Analysis.IPA.*;
 import joeq.Compil3r.BytecodeAnalysis.CallTargets;
 import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary;
@@ -269,7 +270,7 @@ public class AndersenPointerAnalysis {
             }
         }
         public static void calcRTA() {
-            Collection/*<jq_Type>*/ s = Bootstrap.PrimordialClassLoader.loader.getAllTypes();
+            Collection/*<jq_Type>*/ s = PrimordialClassLoader.loader.getAllTypes();
             for (;;) {
                 int size = s.size();
                 Iterator i = new ArrayList(s).iterator();
@@ -277,7 +278,7 @@ public class AndersenPointerAnalysis {
                     jq_Type t = (jq_Type)i.next();
                     t.prepare();
                 }
-                s = Bootstrap.PrimordialClassLoader.loader.getAllTypes();
+                s = PrimordialClassLoader.loader.getAllTypes();
                 if (false && s.size() == size)
                     break;
             }
@@ -316,7 +317,7 @@ public class AndersenPointerAnalysis {
             System.out.println("Number of RTA bytecodes: "+nBytecodes);
         }
         
-        static class InvokeCounter extends Compil3r.BytecodeAnalysis.BytecodeVisitor {
+        static class InvokeCounter extends joeq.Compil3r.BytecodeAnalysis.BytecodeVisitor {
             int invokeCount = 0; int targetCount = 0;
             InvokeCounter(jq_Method m) { super(m); }
             void visitInvoke(byte op, jq_Method f) {
@@ -371,7 +372,7 @@ public class AndersenPointerAnalysis {
     
     public void initializeStatics(boolean addMethodsToVisit) {
         // add initializations for System.in/out/err
-        jq_Class fd = (jq_Class)Bootstrap.PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/FileDescriptor;");
+        jq_Class fd = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/FileDescriptor;");
         fd.load();
         ConcreteTypeNode fd_n1 = ConcreteTypeNode.get(fd);
         jq_Initializer fd_init = (jq_Initializer)fd.getOrCreateInstanceMethod("<init>", "(I)V");
@@ -379,7 +380,7 @@ public class AndersenPointerAnalysis {
         ProgramLocation mc_fd_init = new ProgramLocation.QuadProgramLocation(fd_init, null);
         fd_n1.recordPassedParameter(mc_fd_init, 0);
         
-        jq_Class fis = (jq_Class)Bootstrap.PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/FileInputStream;");
+        jq_Class fis = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/FileInputStream;");
         fis.load();
         ConcreteTypeNode fis_n = ConcreteTypeNode.get(fis);
         jq_Initializer fis_init = (jq_Initializer)fis.getOrCreateInstanceMethod("<init>", "(Ljava/io/FileDescriptor;)V");
@@ -387,7 +388,7 @@ public class AndersenPointerAnalysis {
         ProgramLocation mc_fis_init = new ProgramLocation.QuadProgramLocation(fis_init, null);
         fis_n.recordPassedParameter(mc_fis_init, 0);
         fd_n1.recordPassedParameter(mc_fis_init, 1);
-        jq_Class bis = (jq_Class)Bootstrap.PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/BufferedInputStream;");
+        jq_Class bis = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/BufferedInputStream;");
         bis.load();
         ConcreteTypeNode bis_n = ConcreteTypeNode.get(bis);
         jq_Initializer bis_init = (jq_Initializer)bis.getOrCreateInstanceMethod("<init>", "(Ljava/io/InputStream;)V");
@@ -396,7 +397,7 @@ public class AndersenPointerAnalysis {
         bis_n.recordPassedParameter(mc_bis_init, 0);
         fis_n.recordPassedParameter(mc_bis_init, 1);
         
-        jq_Class jls = Bootstrap.PrimordialClassLoader.getJavaLangSystem();
+        jq_Class jls = PrimordialClassLoader.getJavaLangSystem();
         jls.load();
         jq_StaticField si = jls.getOrCreateStaticField("in", "Ljava/io/InputStream;");
         Assert._assert(si.isLoaded());
@@ -418,7 +419,7 @@ public class AndersenPointerAnalysis {
         
         ConcreteTypeNode fd_n2 = ConcreteTypeNode.get(fd);
         fd_n2.recordPassedParameter(mc_fd_init, 0);
-        jq_Class fos = (jq_Class)Bootstrap.PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/FileOutputStream;");
+        jq_Class fos = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/FileOutputStream;");
         fos.load();
         ConcreteTypeNode fos_n1 = ConcreteTypeNode.get(fos);
         jq_Initializer fos_init = (jq_Initializer)fos.getOrCreateInstanceMethod("<init>", "(Ljava/io/FileDescriptor;)V");
@@ -426,7 +427,7 @@ public class AndersenPointerAnalysis {
         ProgramLocation mc_fos_init = new ProgramLocation.QuadProgramLocation(fos_init, null);
         fos_n1.recordPassedParameter(mc_fos_init, 0);
         fd_n2.recordPassedParameter(mc_fos_init, 1);
-        jq_Class bos = (jq_Class)Bootstrap.PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/BufferedOutputStream;");
+        jq_Class bos = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/BufferedOutputStream;");
         bos.load();
         ConcreteTypeNode bos_n1 = ConcreteTypeNode.get(bos);
         jq_Initializer bos_init = (jq_Initializer)bos.getOrCreateInstanceMethod("<init>", "(Ljava/io/OutputStream;I)V");
@@ -435,7 +436,7 @@ public class AndersenPointerAnalysis {
         bos_n1.recordPassedParameter(mc_bos_init, 0);
         fos_n1.recordPassedParameter(mc_bos_init, 1);
         
-        jq_Class ps = (jq_Class)Bootstrap.PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/PrintStream;");
+        jq_Class ps = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/PrintStream;");
         ps.load();
         ConcreteTypeNode ps_n1 = ConcreteTypeNode.get(ps);
         jq_Initializer ps_init = (jq_Initializer)ps.getOrCreateInstanceMethod("<init>", "(Ljava/io/OutputStream;Z)V");
@@ -489,21 +490,21 @@ public class AndersenPointerAnalysis {
         addInclusionEdge(on, bos_n1, null);
         addInclusionEdge(on, bos_n2, null);
         
-        jq_Class nt = (jq_Class)Bootstrap.PrimordialClassLoader.loader.getOrCreateBSType("LScheduler/jq_NativeThread;");
+        jq_Class nt = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LScheduler/jq_NativeThread;");
         nt.load();
         ConcreteTypeNode nt_n1 = ConcreteTypeNode.get(nt);
-        Assert._assert(Scheduler.jq_NativeThread._nativeThreadEntry.isLoaded());
-        ProgramLocation mc_nte = new ProgramLocation.QuadProgramLocation(Scheduler.jq_NativeThread._nativeThreadEntry, null);
-        nt_n1.recordPassedParameter(mc_nte, 0);
-        MethodSummary nte_summary = getMethodSummary(Scheduler.jq_NativeThread._nativeThreadEntry);
-        on = nte_summary.getParamNode(0);
-        addInclusionEdge(on, nt_n1, null);
-        Assert._assert(Scheduler.jq_NativeThread._threadSwitch.isLoaded());
-        ProgramLocation mc_ts = new ProgramLocation.QuadProgramLocation(Scheduler.jq_NativeThread._threadSwitch, null);
-        nt_n1.recordPassedParameter(mc_ts, 0);
-        MethodSummary ts_summary = getMethodSummary(Scheduler.jq_NativeThread._threadSwitch);
-        on = ts_summary.getParamNode(0);
-        addInclusionEdge(on, nt_n1, null);
+        //Assert._assert(joeq.Scheduler.jq_NativeThread._nativeThreadEntry.isLoaded());
+        //ProgramLocation mc_nte = new ProgramLocation.QuadProgramLocation(joeq.Scheduler.jq_NativeThread._nativeThreadEntry, null);
+        //nt_n1.recordPassedParameter(mc_nte, 0);
+        //MethodSummary nte_summary = getMethodSummary(joeq.Scheduler.jq_NativeThread._nativeThreadEntry);
+        //on = nte_summary.getParamNode(0);
+        //addInclusionEdge(on, nt_n1, null);
+        //Assert._assert(joeq.Scheduler.jq_NativeThread._threadSwitch.isLoaded());
+        //ProgramLocation mc_ts = new ProgramLocation.QuadProgramLocation(joeq.Scheduler.jq_NativeThread._threadSwitch, null);
+        //nt_n1.recordPassedParameter(mc_ts, 0);
+        //MethodSummary ts_summary = getMethodSummary(joeq.Scheduler.jq_NativeThread._threadSwitch);
+        //on = ts_summary.getParamNode(0);
+        //addInclusionEdge(on, nt_n1, null);
         
         if (addMethodsToVisit) {
             methodSummariesToVisit.add(fd_init_summary);
@@ -512,8 +513,8 @@ public class AndersenPointerAnalysis {
             methodSummariesToVisit.add(fos_init_summary);
             methodSummariesToVisit.add(bos_init_summary);
             methodSummariesToVisit.add(ps_init_summary);
-            methodSummariesToVisit.add(nte_summary);
-            methodSummariesToVisit.add(ts_summary);
+            //methodSummariesToVisit.add(nte_summary);
+            //methodSummariesToVisit.add(ts_summary);
         }
     }
     
@@ -896,7 +897,7 @@ public class AndersenPointerAnalysis {
             for (Iterator j=definite_targets.iterator(); j.hasNext(); ) {
                 jq_Method callee = (jq_Method)j.next();
                 // temporary: skip multinewarray.
-                if (callee == Run_Time.Arrays._multinewarray) continue;
+                if (callee == joeq.Run_Time.Arrays._multinewarray) continue;
                 callee.getDeclaringClass().load();
                 if (!callee.isBodyLoaded()) {
                     CallSite cs2 = new CallSite(null, mc);
@@ -985,7 +986,7 @@ public class AndersenPointerAnalysis {
         }
         ThrownExceptionNode ten = caller.getTEN(mc);
         if (ten != null) {
-            UnknownTypeNode utn = UnknownTypeNode.get((jq_Reference)Bootstrap.PrimordialClassLoader.getJavaLangObject());
+            UnknownTypeNode utn = UnknownTypeNode.get((jq_Reference)PrimordialClassLoader.getJavaLangObject());
             if (TRACE) out.println("Adding thrown mapping "+ten+" to "+utn);
             OutsideNode on = ten;
             while (on.skip != null) on = on.skip;

@@ -10,7 +10,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.PrimordialClassLoader;
 import joeq.ClassLib.ClassLibInterface;
 import joeq.Compil3r.BytecodeAnalysis.Bytecodes;
 import joeq.Main.jq;

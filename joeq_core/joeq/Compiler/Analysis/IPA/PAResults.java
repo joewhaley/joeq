@@ -37,7 +37,7 @@ import org.sf.javabdd.BDDFactory;
 import org.sf.javabdd.BDDPairing;
 import org.sf.javabdd.TypedBDDFactory.TypedBDD;
 
-import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.PrimordialClassLoader;
 import joeq.Clazz.jq_Class;
 import joeq.Clazz.jq_Field;
 import joeq.Clazz.jq_Method;
@@ -111,8 +111,8 @@ public class PAResults implements PointerAnalysisResults {
         // We use bytecode maps.
         CodeCache.AlwaysMap = true;
         if (PA.USE_JOEQ_CLASSLIBS) {
-            System.setProperty("joeq.classlibinterface", "ClassLib.pa.Interface");
-            ClassLib.ClassLibInterface.useJoeqClasslib(true);
+            System.setProperty("joeq.classlibinterface", "joeq.ClassLib.pa.Interface");
+            joeq.ClassLib.ClassLibInterface.useJoeqClasslib(true);
         }
         HostedVM.initialize();
         
@@ -270,8 +270,8 @@ public class PAResults implements PointerAnalysisResults {
                     increaseCount = false;
                 } else if (command.equals("source")) {
                     TypedBDD r = parseBDDWithCheck(results, st.nextToken());
-                    int before = st.hasMoreTokens() ? Integer.parseInt(st.nextToken()) : Util.IO.SourceLister.defaultLinesBefore;
-                    int after = st.hasMoreTokens() ? Integer.parseInt(st.nextToken()) : Util.IO.SourceLister.defaultLinesAfter;
+                    int before = st.hasMoreTokens() ? Integer.parseInt(st.nextToken()) : SourceLister.defaultLinesBefore;
+                    int after = st.hasMoreTokens() ? Integer.parseInt(st.nextToken()) : SourceLister.defaultLinesAfter;
                     showSource(r, before, after);
                     increaseCount = false;
                 } else if (command.equals("list")) {
@@ -1746,11 +1746,11 @@ public class PAResults implements PointerAnalysisResults {
      * Works for ProgramLocations (callsites), but only for those variable and heap 
      * nodes that have implemented getLocation() methods.
      *
-     * @see Util.IO.SourceLister
+     * @see joeq.Util.IO.SourceLister
      */
     public void showSource(TypedBDD b, final int before, final int after) {
         final PA fr = r;
-        // construct a new one every time, uses defaults in Util.IO.
+        // construct a new one every time, uses defaults in joeq.Util.IO.
         final SourceLister sourceLister = new SourceLister();
 
         BDD.BDDToString ts = new BDD.BDDToString() {

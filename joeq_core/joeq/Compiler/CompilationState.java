@@ -7,7 +7,7 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.HashMap;
 
-import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.PrimordialClassLoader;
 import joeq.Compil3r.Quad.Quad;
 import joeq.Compil3r.Quad.Operator.CheckCast;
 import joeq.Compil3r.Quad.Operator.Invoke;

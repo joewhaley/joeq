@@ -7,12 +7,13 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.PrimordialClassLoader;
 import joeq.Clazz.jq_Array;
 import joeq.Clazz.jq_Class;
 import joeq.Clazz.jq_InstanceField;
 import joeq.Clazz.jq_InstanceMethod;
 import joeq.Clazz.jq_Method;
+import joeq.Clazz.jq_NameAndDesc;
 import joeq.Clazz.jq_Primitive;
 import joeq.Clazz.jq_Reference;
 import joeq.Clazz.jq_StaticField;
@@ -81,7 +82,7 @@ import joeq.Util.Strings;
  * code.
  *
  * @see  BytecodeVisitor
- * @see  Compil3r.BytecodeAnalysis.ControlFlowGraph
+ * @see  joeq.Compil3r.BytecodeAnalysis.ControlFlowGraph
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
@@ -90,8 +91,8 @@ public class BytecodeToQuad extends BytecodeVisitor {
     
     private ControlFlowGraph quad_cfg;
     private BasicBlock quad_bb;
-    private Compil3r.BytecodeAnalysis.ControlFlowGraph bc_cfg;
-    private Compil3r.BytecodeAnalysis.BasicBlock bc_bb;
+    private joeq.Compil3r.BytecodeAnalysis.ControlFlowGraph bc_cfg;
+    private joeq.Compil3r.BytecodeAnalysis.BasicBlock bc_bb;
     private BasicBlock[] quad_bbs;
     private RegisterFactory rf;
     
@@ -124,7 +125,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
     /** Perform conversion process from bytecode to quad.
      * @return  the control flow graph of the resulting quad representation. */
     public ControlFlowGraph convert() {
-        bc_cfg = Compil3r.BytecodeAnalysis.ControlFlowGraph.computeCFG(method);
+        bc_cfg = joeq.Compil3r.BytecodeAnalysis.ControlFlowGraph.computeCFG(method);
         
         // initialize register factory
         this.rf = new RegisterFactory(method);
@@ -137,7 +138,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         quad_bbs[0] = this.quad_cfg.entry();
         quad_bbs[1] = this.quad_cfg.exit();
         for (int i=2; i<quad_bbs.length; ++i) {
-            Compil3r.BytecodeAnalysis.BasicBlock bc_bb = bc_cfg.getBasicBlock(i);
+            joeq.Compil3r.BytecodeAnalysis.BasicBlock bc_bb = bc_cfg.getBasicBlock(i);
             int n_pred = bc_bb.getNumberOfPredecessors();
             int n_succ = bc_bb.getNumberOfSuccessors();
             int n_inst = bc_bb.getEnd() - bc_bb.getStart() + 1; // estimate
@@ -148,7 +149,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         // add exception handlers.
         for (int i=exs.length-1; i>=0; --i) {
             jq_TryCatchBC ex = exs[i];
-            Compil3r.BytecodeAnalysis.BasicBlock bc_bb = bc_cfg.getBasicBlockByBytecodeIndex(ex.getStartPC());
+            joeq.Compil3r.BytecodeAnalysis.BasicBlock bc_bb = bc_cfg.getBasicBlockByBytecodeIndex(ex.getStartPC());
             Assert._assert(bc_bb.getStart() < ex.getEndPC());
             BasicBlock ex_handler = quad_bbs[bc_cfg.getBasicBlockByBytecodeIndex(ex.getHandlerPC()).id];
             ex_handler.setExceptionHandlerEntry();
@@ -167,7 +168,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         }
         this.start_states = new AbstractState[quad_bbs.length];
         for (int i=0; i<quad_bbs.length; ++i) {
-            Compil3r.BytecodeAnalysis.BasicBlock bc_bb = bc_cfg.getBasicBlock(i);
+            joeq.Compil3r.BytecodeAnalysis.BasicBlock bc_bb = bc_cfg.getBasicBlock(i);
             BasicBlock bb = quad_bbs[i];
             for (int j=0; j<bc_bb.getNumberOfPredecessors(); ++j) {
                 bb.addPredecessor(quad_bbs[bc_bb.getPredecessor(j).id]);
@@ -186,17 +187,17 @@ public class BytecodeToQuad extends BytecodeVisitor {
         regenerate = new LinkedList();
         visited = new boolean[quad_bbs.length];
         // traverse reverse post-order over basic blocks to generate instructions
-        Compil3r.BytecodeAnalysis.ControlFlowGraph.RPOBasicBlockIterator rpo = bc_cfg.reversePostOrderIterator();
-        Compil3r.BytecodeAnalysis.BasicBlock first_bb = rpo.nextBB();
+        joeq.Compil3r.BytecodeAnalysis.ControlFlowGraph.RPOBasicBlockIterator rpo = bc_cfg.reversePostOrderIterator();
+        joeq.Compil3r.BytecodeAnalysis.BasicBlock first_bb = rpo.nextBB();
         Assert._assert(first_bb == bc_cfg.getEntry());
         while (rpo.hasNext()) {
-            Compil3r.BytecodeAnalysis.BasicBlock bc_bb = rpo.nextBB();
+            joeq.Compil3r.BytecodeAnalysis.BasicBlock bc_bb = rpo.nextBB();
             visited[bc_bb.id] = true;
             this.traverseBB(bc_bb);
         }
         while (!regenerate.isEmpty()) {
-            Compil3r.BytecodeAnalysis.BasicBlock bc_bb =
-                (Compil3r.BytecodeAnalysis.BasicBlock)regenerate.removeFirst();
+            joeq.Compil3r.BytecodeAnalysis.BasicBlock bc_bb =
+                (joeq.Compil3r.BytecodeAnalysis.BasicBlock)regenerate.removeFirst();
             this.traverseBB(bc_bb);
         }
         return this.quad_cfg;
@@ -207,7 +208,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
     
     /**
      * @param  bc_bb  */
-    public void traverseBB(Compil3r.BytecodeAnalysis.BasicBlock bc_bb) {
+    public void traverseBB(joeq.Compil3r.BytecodeAnalysis.BasicBlock bc_bb) {
         if (start_states[bc_bb.id] == null) {
             // unreachable block!
             if (TRACE) out.println("Basic block "+bc_bb+" is unreachable!");
@@ -256,7 +257,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         return i_start > bc_bb.getEnd() || endBasicBlock;
     }
     
-    private void mergeStateWith(Compil3r.BytecodeAnalysis.BasicBlock bc_bb) {
+    private void mergeStateWith(joeq.Compil3r.BytecodeAnalysis.BasicBlock bc_bb) {
         if (start_states[bc_bb.id] == null) {
             if (TRACE) out.println("Copying current state to "+bc_bb);
             start_states[bc_bb.id] = current_state.copy();
@@ -271,8 +272,8 @@ public class BytecodeToQuad extends BytecodeVisitor {
             }
         }
     }
-    private void mergeStateWith(Compil3r.BytecodeAnalysis.ExceptionHandler eh) {
-        Compil3r.BytecodeAnalysis.BasicBlock bc_bb = eh.getEntry();
+    private void mergeStateWith(joeq.Compil3r.BytecodeAnalysis.ExceptionHandler eh) {
+        joeq.Compil3r.BytecodeAnalysis.BasicBlock bc_bb = eh.getEntry();
         if (start_states[bc_bb.id] == null) {
             if (TRACE) out.println("Copying exception state to "+bc_bb);
             start_states[bc_bb.id] = current_state.copyExceptionHandler(eh.getExceptionType(), rf);
@@ -1015,19 +1016,19 @@ public class BytecodeToQuad extends BytecodeVisitor {
         appendQuad(q);
     }
     java.util.Map jsr_states = new java.util.HashMap();
-    void setJSRState(Compil3r.BytecodeAnalysis.BasicBlock bb, AbstractState s) {
+    void setJSRState(joeq.Compil3r.BytecodeAnalysis.BasicBlock bb, AbstractState s) {
         jsr_states.put(bb, s.copyAfterJSR());
     }
-    AbstractState getJSRState(Compil3r.BytecodeAnalysis.BasicBlock bb) {
+    AbstractState getJSRState(joeq.Compil3r.BytecodeAnalysis.BasicBlock bb) {
         return (AbstractState)jsr_states.get(bb);
     }
     public void visitJSR(int target) {
         super.visitJSR(target);
         this.uncond_branch = true;
-        Compil3r.BytecodeAnalysis.BasicBlock target_bcbb = bc_cfg.getBasicBlockByBytecodeIndex(target);
+        joeq.Compil3r.BytecodeAnalysis.BasicBlock target_bcbb = bc_cfg.getBasicBlockByBytecodeIndex(target);
         BasicBlock target_bb = quad_bbs[target_bcbb.id];
         BasicBlock successor_bb = quad_bbs[bc_bb.id+1];
-        Compil3r.BytecodeAnalysis.JSRInfo jsrinfo = bc_cfg.getJSRInfo(target_bcbb);
+        joeq.Compil3r.BytecodeAnalysis.JSRInfo jsrinfo = bc_cfg.getJSRInfo(target_bcbb);
         if (jsrinfo == null) {
             if (TRACE) out.println("jsr with no ret! converting to GOTO.");
             // push a null constant in place of the return address,
@@ -1046,8 +1047,8 @@ public class BytecodeToQuad extends BytecodeVisitor {
         RegisterOperand op0 = getStackRegister(jq_ReturnAddressType.INSTANCE);
         Quad q = Jsr.create(quad_cfg.getNewQuadID(), Jsr.JSR.INSTANCE, op0, new TargetOperand(target_bb), new TargetOperand(successor_bb));
         appendQuad(q);
-        Compil3r.BytecodeAnalysis.BasicBlock next_bb = bc_cfg.getBasicBlock(bc_bb.id+1);
-        Compil3r.BytecodeAnalysis.BasicBlock ret_bb = jsrinfo.exit_block;
+        joeq.Compil3r.BytecodeAnalysis.BasicBlock next_bb = bc_cfg.getBasicBlock(bc_bb.id+1);
+        joeq.Compil3r.BytecodeAnalysis.BasicBlock ret_bb = jsrinfo.exit_block;
         setJSRState(next_bb, current_state);
         // we need to visit the ret block even when it has been visited before,
         // so that when we visit its ret instruction, next_bb will get updated
@@ -1068,10 +1069,10 @@ public class BytecodeToQuad extends BytecodeVisitor {
         current_state.setLocal(i, null);
         endsWithRET = true;
         // get JSR info
-        Compil3r.BytecodeAnalysis.JSRInfo jsrinfo = bc_cfg.getJSRInfo(bc_bb);
+        joeq.Compil3r.BytecodeAnalysis.JSRInfo jsrinfo = bc_cfg.getJSRInfo(bc_bb);
         // find all callers to this subroutine.
         for (int j=0; j<bc_bb.getNumberOfSuccessors(); ++j) {
-            Compil3r.BytecodeAnalysis.BasicBlock caller_next = bc_bb.getSuccessor(j);
+            joeq.Compil3r.BytecodeAnalysis.BasicBlock caller_next = bc_bb.getSuccessor(j);
             AbstractState caller_state = getJSRState(caller_next);
             if (caller_state == null) {
                 if (TRACE) out.println("haven't seen jsr call from "+caller_next+" yet.");
@@ -1998,7 +1999,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
     public void visitMULTINEWARRAY(jq_Type f, char dim) {
         super.visitMULTINEWARRAY(f, dim);
         RegisterOperand result = getStackRegister(f, dim-1);
-        Quad q = Invoke.create(quad_cfg.getNewQuadID(), Invoke.INVOKESTATIC_A.INSTANCE, result, new MethodOperand(Run_Time.Arrays._multinewarray), dim+2);
+        Quad q = Invoke.create(quad_cfg.getNewQuadID(), Invoke.INVOKESTATIC_A.INSTANCE, result, new MethodOperand(joeq.Run_Time.Arrays._multinewarray), dim+2);
         RegisterOperand rop = new RegisterOperand(rf.getNewStack(current_state.getStackSize(), jq_Primitive.INT), jq_Primitive.INT);
         Quad q2 = Move.create(quad_cfg.getNewQuadID(), Move.MOVE_I.INSTANCE, rop, new IConstOperand(dim));
         appendQuad(q2);
@@ -2213,18 +2214,18 @@ public class BytecodeToQuad extends BytecodeVisitor {
     }
     
     void mergeStateWithAllExHandlers(boolean cfgEdgeToExit) {
-        Compil3r.BytecodeAnalysis.ExceptionHandlerIterator i =
+        joeq.Compil3r.BytecodeAnalysis.ExceptionHandlerIterator i =
             bc_bb.getExceptionHandlers();
         while (i.hasNext()) {
-            Compil3r.BytecodeAnalysis.ExceptionHandler eh = i.nextEH();
+            joeq.Compil3r.BytecodeAnalysis.ExceptionHandler eh = i.nextEH();
             mergeStateWith(eh);
         }
     }
     void mergeStateWithNullPtrExHandler(boolean cfgEdgeToExit) {
-        Compil3r.BytecodeAnalysis.ExceptionHandlerIterator i =
+        joeq.Compil3r.BytecodeAnalysis.ExceptionHandlerIterator i =
             bc_bb.getExceptionHandlers();
         while (i.hasNext()) {
-            Compil3r.BytecodeAnalysis.ExceptionHandler eh = i.nextEH();
+            joeq.Compil3r.BytecodeAnalysis.ExceptionHandler eh = i.nextEH();
             jq_Class k = eh.getExceptionType();
             if (k == PrimordialClassLoader.getJavaLangNullPointerException() ||
                 k == PrimordialClassLoader.getJavaLangRuntimeException() ||
@@ -2237,10 +2238,10 @@ public class BytecodeToQuad extends BytecodeVisitor {
         }
     }
     void mergeStateWithArithExHandler(boolean cfgEdgeToExit) {
-        Compil3r.BytecodeAnalysis.ExceptionHandlerIterator i =
+        joeq.Compil3r.BytecodeAnalysis.ExceptionHandlerIterator i =
             bc_bb.getExceptionHandlers();
         while (i.hasNext()) {
-            Compil3r.BytecodeAnalysis.ExceptionHandler eh = i.nextEH();
+            joeq.Compil3r.BytecodeAnalysis.ExceptionHandler eh = i.nextEH();
             jq_Class k = eh.getExceptionType();
             if (k == PrimordialClassLoader.getJavaLangArithmeticException() ||
                 k == PrimordialClassLoader.getJavaLangRuntimeException() ||
@@ -2253,10 +2254,10 @@ public class BytecodeToQuad extends BytecodeVisitor {
         }
     }
     void mergeStateWithArrayBoundsExHandler(boolean cfgEdgeToExit) {
-        Compil3r.BytecodeAnalysis.ExceptionHandlerIterator i =
+        joeq.Compil3r.BytecodeAnalysis.ExceptionHandlerIterator i =
             bc_bb.getExceptionHandlers();
         while (i.hasNext()) {
-            Compil3r.BytecodeAnalysis.ExceptionHandler eh = i.nextEH();
+            joeq.Compil3r.BytecodeAnalysis.ExceptionHandler eh = i.nextEH();
             jq_Class k = eh.getExceptionType();
             if (k == PrimordialClassLoader.getJavaLangArrayIndexOutOfBoundsException() ||
                 k == PrimordialClassLoader.getJavaLangIndexOutOfBoundsException() ||
@@ -2270,10 +2271,10 @@ public class BytecodeToQuad extends BytecodeVisitor {
         }
     }
     void mergeStateWithObjArrayStoreExHandler(boolean cfgEdgeToExit) {
-        Compil3r.BytecodeAnalysis.ExceptionHandlerIterator i =
+        joeq.Compil3r.BytecodeAnalysis.ExceptionHandlerIterator i =
             bc_bb.getExceptionHandlers();
         while (i.hasNext()) {
-            Compil3r.BytecodeAnalysis.ExceptionHandler eh = i.nextEH();
+            joeq.Compil3r.BytecodeAnalysis.ExceptionHandler eh = i.nextEH();
             jq_Class k = eh.getExceptionType();
             if (k == PrimordialClassLoader.getJavaLangArrayStoreException() ||
                 k == PrimordialClassLoader.getJavaLangRuntimeException() ||
@@ -2713,18 +2714,18 @@ public class BytecodeToQuad extends BytecodeVisitor {
     public static class jq_ReturnAddressType extends jq_Reference {
         public static final jq_ReturnAddressType INSTANCE = new jq_ReturnAddressType();
         private BasicBlock returnTarget;
-        private jq_ReturnAddressType() { super(Utf8.get("L&ReturnAddress;"), Bootstrap.PrimordialClassLoader.loader); }
+        private jq_ReturnAddressType() { super(Utf8.get("L&ReturnAddress;"), PrimordialClassLoader.loader); }
         private jq_ReturnAddressType(BasicBlock returnTarget) {
-            super(Utf8.get("L&ReturnAddress;"), Bootstrap.PrimordialClassLoader.loader);
+            super(Utf8.get("L&ReturnAddress;"), PrimordialClassLoader.loader);
             this.returnTarget = returnTarget;
         }
         public boolean isAddressType() { return false; }
         public String getJDKName() { return desc.toString(); }
         public String getJDKDesc() { return getJDKName(); }
-        public Clazz.jq_Class[] getInterfaces() { Assert.UNREACHABLE(); return null; }
-        public Clazz.jq_Class getInterface(Utf8 desc) { Assert.UNREACHABLE(); return null; }
-        public boolean implementsInterface(Clazz.jq_Class k) { Assert.UNREACHABLE(); return false; }
-        public Clazz.jq_InstanceMethod getVirtualMethod(Clazz.jq_NameAndDesc nd) { Assert.UNREACHABLE(); return null; }
+        public jq_Class[] getInterfaces() { Assert.UNREACHABLE(); return null; }
+        public jq_Class getInterface(Utf8 desc) { Assert.UNREACHABLE(); return null; }
+        public boolean implementsInterface(jq_Class k) { Assert.UNREACHABLE(); return false; }
+        public jq_InstanceMethod getVirtualMethod(jq_NameAndDesc nd) { Assert.UNREACHABLE(); return null; }
         public String getName() { return "<retaddr>"; }
         public String shortName() { return "<retaddr>"; }
         public boolean isClassType() { Assert.UNREACHABLE(); return false; }
@@ -2760,10 +2761,10 @@ public class BytecodeToQuad extends BytecodeVisitor {
         _unsafe = null;
         boolean nullVM = jq.nullVM;
         if (!nullVM) {
-            _unsafe = attemptDelegate("Compil3r.Quad.B2QUnsafeHandler");
+            _unsafe = attemptDelegate("joeq.Compil3r.Quad.B2QUnsafeHandler");
         }
         if (_unsafe == null) {
-            _unsafe = new Compil3r.Quad.B2QUnsafeIgnorer();
+            _unsafe = new joeq.Compil3r.Quad.B2QUnsafeIgnorer();
         }
     }
 

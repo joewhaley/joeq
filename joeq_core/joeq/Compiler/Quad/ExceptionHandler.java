@@ -3,7 +3,7 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compil3r.Quad;
 
-import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.PrimordialClassLoader;
 import joeq.Clazz.jq_Class;
 import joeq.Run_Time.TypeCheck;
 import joeq.Util.Templates.List;

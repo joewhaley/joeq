@@ -19,17 +19,19 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.PrimordialClassLoader;
 import joeq.Clazz.jq_Array;
 import joeq.Clazz.jq_Class;
 import joeq.Clazz.jq_ClassFileConstants;
 import joeq.Clazz.jq_ConstantPool;
 import joeq.Clazz.jq_Field;
 import joeq.Clazz.jq_InstanceField;
+import joeq.Clazz.jq_InstanceMethod;
 import joeq.Clazz.jq_LineNumberBC;
 import joeq.Clazz.jq_Member;
 import joeq.Clazz.jq_MemberReference;
 import joeq.Clazz.jq_Method;
+import joeq.Clazz.jq_NameAndDesc;
 import joeq.Clazz.jq_Primitive;
 import joeq.Clazz.jq_Reference;
 import joeq.Clazz.jq_StaticField;
@@ -8345,18 +8347,18 @@ public interface Bytecodes {
     class jq_ReturnAddressType extends jq_Reference {
         public static final jq_ReturnAddressType NO_TARGET = new jq_ReturnAddressType();
         private InstructionHandle returnTarget;
-        private jq_ReturnAddressType() { super(Utf8.get("L&ReturnAddress;"), Bootstrap.PrimordialClassLoader.loader); }
+        private jq_ReturnAddressType() { super(Utf8.get("L&ReturnAddress;"), PrimordialClassLoader.loader); }
         private jq_ReturnAddressType(InstructionHandle returnTarget) {
-            super(Utf8.get("L&ReturnAddress;"), Bootstrap.PrimordialClassLoader.loader);
+            super(Utf8.get("L&ReturnAddress;"), PrimordialClassLoader.loader);
             this.returnTarget = returnTarget;
         }
         public boolean isAddressType() { return false; }
         public String getJDKName() { return desc.toString(); }
         public String getJDKDesc() { return getJDKName(); }
-        public Clazz.jq_Class[] getInterfaces() { Assert.UNREACHABLE(); return null; }
-        public Clazz.jq_Class getInterface(Utf8 desc) { Assert.UNREACHABLE(); return null; }
-        public boolean implementsInterface(Clazz.jq_Class k) { Assert.UNREACHABLE(); return false; }
-        public Clazz.jq_InstanceMethod getVirtualMethod(Clazz.jq_NameAndDesc nd) { Assert.UNREACHABLE(); return null; }
+        public jq_Class[] getInterfaces() { Assert.UNREACHABLE(); return null; }
+        public jq_Class getInterface(Utf8 desc) { Assert.UNREACHABLE(); return null; }
+        public boolean implementsInterface(jq_Class k) { Assert.UNREACHABLE(); return false; }
+        public jq_InstanceMethod getVirtualMethod(jq_NameAndDesc nd) { Assert.UNREACHABLE(); return null; }
         public String getName() { Assert.UNREACHABLE(); return null; }
         public String shortName() { Assert.UNREACHABLE(); return null; }
         public boolean isClassType() { Assert.UNREACHABLE(); return false; }

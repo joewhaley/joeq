@@ -39,7 +39,7 @@ public class Dominators extends jq_MethodVisitor.EmptyVisitor implements BasicBl
     
     public void visitMethod(jq_Method m) {
         if (m.getBytecode() == null) return;
-        cfg = Compil3r.Quad.CodeCache.getCode(m);
+        cfg = joeq.Compil3r.Quad.CodeCache.getCode(m);
         bbs = new BasicBlock[cfg.getNumberOfBasicBlocks()];
         dominators = new BitString[cfg.getNumberOfBasicBlocks()];
         temp = new BitString(dominators.length);
@@ -183,9 +183,9 @@ public class Dominators extends jq_MethodVisitor.EmptyVisitor implements BasicBl
     }
     
     public static void main(String[] args) {
-        Main.HostedVM.initialize();
+        joeq.Main.HostedVM.initialize();
         
-        Clazz.jq_Class c = (Clazz.jq_Class) Clazz.jq_Type.parseType(args[0]);
+        joeq.Clazz.jq_Class c = (joeq.Clazz.jq_Class) joeq.Clazz.jq_Type.parseType(args[0]);
         c.load();
         Dominators dom = new Dominators();
         jq_Method[] ms = c.getDeclaredStaticMethods();

@@ -1,18 +1,18 @@
 // Arrays.java, created Mon Dec 23 23:01:25 2002 by mcmartin
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Run_Time;
+package joeq.Run_Time;
 
-import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Array;
-import Clazz.jq_Class;
-import Clazz.jq_ClassFileConstants;
-import Clazz.jq_StaticMethod;
-import Clazz.jq_Type;
-import Memory.CodeAddress;
-import Memory.HeapAddress;
-import Memory.StackAddress;
-import Util.Assert;
+import joeq.Clazz.PrimordialClassLoader;
+import joeq.Clazz.jq_Array;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_ClassFileConstants;
+import joeq.Clazz.jq_StaticMethod;
+import joeq.Clazz.jq_Type;
+import joeq.Memory.CodeAddress;
+import joeq.Memory.HeapAddress;
+import joeq.Memory.StackAddress;
+import joeq.Util.Assert;
 
 /**
  * Arrays

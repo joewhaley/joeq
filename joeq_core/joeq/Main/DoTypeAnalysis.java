@@ -14,7 +14,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Set;
 
-import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.PrimordialClassLoader;
 import joeq.Clazz.jq_Class;
 import joeq.Clazz.jq_InstanceMethod;
 import joeq.Clazz.jq_StaticMethod;
@@ -30,19 +30,19 @@ public abstract class DoTypeAnalysis {
     public static void main(String[] args) throws IOException {
         HostedVM.initialize();
         
-        Compil3r.BytecodeAnalysis.TypeAnalysis.classesToAnalyze = new HashSet();
+        joeq.Compil3r.BytecodeAnalysis.TypeAnalysis.classesToAnalyze = new HashSet();
         Iterator i = null; String memberName = null;
         jq_Class interfaceCheck = null;
         for (int x=0; x<args.length; ++x) {
             if (args[x].equals("-trace")) {
-                Compil3r.BytecodeAnalysis.TypeAnalysis.TypeAnalysisVisitor.ALWAYS_TRACE = true;
-                //Compil3r.BytecodeAnalysis.TypeAnalysis.MethodCallSequence.PRINT_MODEL = true;
-                Compil3r.BytecodeAnalysis.TypeAnalysis.TRACE_MAIN = true;
-                Compil3r.BytecodeAnalysis.TypeAnalysis.TRACE_ITERATION = true;
-                Compil3r.BytecodeAnalysis.TypeAnalysis.AnalysisSummary.TRACE_TRIM = true;
+                joeq.Compil3r.BytecodeAnalysis.TypeAnalysis.TypeAnalysisVisitor.ALWAYS_TRACE = true;
+                //joeq.Compil3r.BytecodeAnalysis.TypeAnalysis.MethodCallSequence.PRINT_MODEL = true;
+                joeq.Compil3r.BytecodeAnalysis.TypeAnalysis.TRACE_MAIN = true;
+                joeq.Compil3r.BytecodeAnalysis.TypeAnalysis.TRACE_ITERATION = true;
+                joeq.Compil3r.BytecodeAnalysis.TypeAnalysis.AnalysisSummary.TRACE_TRIM = true;
             } else
             if (args[x].equals("-dumpsummaries")) {
-                Compil3r.BytecodeAnalysis.TypeAnalysis.DUMP_SUMMARY = true;
+                joeq.Compil3r.BytecodeAnalysis.TypeAnalysis.DUMP_SUMMARY = true;
             } else
             if (args[x].equals("-i")) {
                 String interfaceName = args[++x];
@@ -52,32 +52,32 @@ public abstract class DoTypeAnalysis {
                 interfaceCheck.prepare();
             } else
             if (args[x].equals("-bypackage")) {
-                Compil3r.BytecodeAnalysis.TypeAnalysis.TypeAnalysisVisitor.BY_PACKAGE = true;
+                joeq.Compil3r.BytecodeAnalysis.TypeAnalysis.TypeAnalysisVisitor.BY_PACKAGE = true;
             } else
             if (args[x].equals("-maxdepth")) {
-                Compil3r.BytecodeAnalysis.TypeAnalysis.TypeAnalysisVisitor.MAX_DEPTH = Integer.parseInt(args[++x]);
+                joeq.Compil3r.BytecodeAnalysis.TypeAnalysis.TypeAnalysisVisitor.MAX_DEPTH = Integer.parseInt(args[++x]);
             } else
             if (args[x].equals("-full")) {
-                Compil3r.BytecodeAnalysis.TypeAnalysis.classesToAnalyze = null;
+                joeq.Compil3r.BytecodeAnalysis.TypeAnalysis.classesToAnalyze = null;
             } else
             if (args[x].equals("-printmodel")) {
                 /*** TEMPORARILY COMMENT OUT UNTIL WE CHECK IN DETOX STUFF. ***
-                Compil3r.BytecodeAnalysis.TypeAnalysis.MethodCallSequence.DetoxModelChecker.PRINT_MODEL = true;
+                joeq.Compil3r.BytecodeAnalysis.TypeAnalysis.MethodCallSequence.DetoxModelChecker.PRINT_MODEL = true;
                  *** TEMPORARILY COMMENT OUT UNTIL WE CHECK IN DETOX STUFF. ***/
             } else
             if (args[x].equals("-tracemethod")) {
-                Compil3r.BytecodeAnalysis.TypeAnalysis.TypeAnalysisVisitor.trace_method_names.add(args[++x]);
+                joeq.Compil3r.BytecodeAnalysis.TypeAnalysis.TypeAnalysisVisitor.trace_method_names.add(args[++x]);
             } else
             if (args[x].equals("-buildmodel")) {
                 /*** TEMPORARILY COMMENT OUT UNTIL WE CHECK IN DETOX STUFF. ***
-                Compil3r.BytecodeAnalysis.TypeAnalysis.MethodCallSequence.modeler =
-                    new Compil3r.BytecodeAnalysis.TypeAnalysis.MethodCallSequence.DetoxModelBuilder();
+                joeq.Compil3r.BytecodeAnalysis.TypeAnalysis.MethodCallSequence.modeler =
+                    new joeq.Compil3r.BytecodeAnalysis.TypeAnalysis.MethodCallSequence.DetoxModelBuilder();
                  *** TEMPORARILY COMMENT OUT UNTIL WE CHECK IN DETOX STUFF. ***/
             } else
             if (args[x].equals("-checkmodel")) {
                 /*** TEMPORARILY COMMENT OUT UNTIL WE CHECK IN DETOX STUFF. ***
-                Compil3r.BytecodeAnalysis.TypeAnalysis.MethodCallSequence.modeler =
-                    new Compil3r.BytecodeAnalysis.TypeAnalysis.MethodCallSequence.DetoxModelChecker();
+                joeq.Compil3r.BytecodeAnalysis.TypeAnalysis.MethodCallSequence.modeler =
+                    new joeq.Compil3r.BytecodeAnalysis.TypeAnalysis.MethodCallSequence.DetoxModelChecker();
                  *** TEMPORARILY COMMENT OUT UNTIL WE CHECK IN DETOX STUFF. ***/
             } else
             if (args[x].equals("-file")) {
@@ -119,7 +119,7 @@ public abstract class DoTypeAnalysis {
             classes.add(c);
         }
         
-        Set classes2 = Compil3r.BytecodeAnalysis.TypeAnalysis.classesToAnalyze;
+        Set classes2 = joeq.Compil3r.BytecodeAnalysis.TypeAnalysis.classesToAnalyze;
         if (classes2 != null) {
             classes2.addAll(classes);
         }
@@ -137,7 +137,7 @@ public abstract class DoTypeAnalysis {
             doClass(System.out, c, memberName);
         }
         try {
-            Compil3r.BytecodeAnalysis.TypeAnalysis.dump();
+            joeq.Compil3r.BytecodeAnalysis.TypeAnalysis.dump();
         } catch (java.io.IOException x) { x.printStackTrace(); }
     }
 
@@ -161,7 +161,7 @@ public abstract class DoTypeAnalysis {
             if (memberName == null || m.getName().toString().equals(memberName))
             {
                 out.println(m.toString());
-                Compil3r.BytecodeAnalysis.TypeAnalysis.analyze(m);
+                joeq.Compil3r.BytecodeAnalysis.TypeAnalysis.analyze(m);
             }
         }
         for(it = Arrays.asList(c.getDeclaredInstanceMethods()).iterator();
@@ -172,7 +172,7 @@ public abstract class DoTypeAnalysis {
             if (memberName == null || m.getName().toString().equals(memberName))
             {
                 out.println(m.toString());
-                Compil3r.BytecodeAnalysis.TypeAnalysis.analyze(m);
+                joeq.Compil3r.BytecodeAnalysis.TypeAnalysis.analyze(m);
             }
         }
     }

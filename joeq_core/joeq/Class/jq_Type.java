@@ -6,7 +6,7 @@ package joeq.Clazz;
 import java.io.IOException;
 import java.util.StringTokenizer;
 
-import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.PrimordialClassLoader;
 import joeq.ClassLib.ClassLibInterface;
 import joeq.Main.jq;
 import joeq.Run_Time.Debug;

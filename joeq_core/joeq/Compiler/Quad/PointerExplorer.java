@@ -650,7 +650,7 @@ uphere:
         
         int index = 0; int index0 = -1;
         while (index != index0 && index < args.length) {
-            index = Main.TraceFlags.setTraceFlag(args, index0 = index);
+            index = joeq.Main.TraceFlags.setTraceFlag(args, index0 = index);
         }
         
         System.out.println("Select the root method.");

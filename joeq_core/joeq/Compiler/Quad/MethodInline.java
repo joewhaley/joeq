@@ -142,7 +142,7 @@ public class MethodInline implements ControlFlowGraphVisitor {
                 return null;
             }
             // HACK: for interpreter.
-            if (!Interpreter.QuadInterpreter.interpret_filter.isElement(target)) {
+            if (!joeq.Interpreter.QuadInterpreter.interpret_filter.isElement(target)) {
                 if (TRACE_ORACLE) out.println("Skipping because the interpreter cannot handle the target method.");
                 return null;
             }

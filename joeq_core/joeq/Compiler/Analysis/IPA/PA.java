@@ -42,7 +42,7 @@ import org.sf.javabdd.BDDPairing;
 import org.sf.javabdd.TypedBDDFactory;
 import org.sf.javabdd.TypedBDDFactory.TypedBDD;
 
-import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.PrimordialClassLoader;
 import joeq.Clazz.jq_Array;
 import joeq.Clazz.jq_Class;
 import joeq.Clazz.jq_Field;
@@ -2142,8 +2142,8 @@ public class PA {
 
     public static void main(String[] args) throws IOException {
         if (USE_JOEQ_CLASSLIBS) {
-            System.setProperty("joeq.classlibinterface", "ClassLib.pa.Interface");
-            ClassLib.ClassLibInterface.useJoeqClasslib(true);
+            System.setProperty("joeq.classlibinterface", "joeq.ClassLib.pa.Interface");
+            joeq.ClassLib.ClassLibInterface.useJoeqClasslib(true);
         }
         HostedVM.initialize();
         CodeCache.AlwaysMap = true;

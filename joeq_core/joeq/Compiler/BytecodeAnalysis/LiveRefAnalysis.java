@@ -5,7 +5,7 @@ package joeq.Compil3r.BytecodeAnalysis;
 
 import java.util.Set;
 
-import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.PrimordialClassLoader;
 import joeq.Clazz.jq_Array;
 import joeq.Clazz.jq_InstanceField;
 import joeq.Clazz.jq_Method;
@@ -77,7 +77,7 @@ public class LiveRefAnalysis {
         this.start_states[2] = ExactState.allocateInitialState(method);
         for (;;) {
             fpv.go_again = false;
-            Compil3r.BytecodeAnalysis.ControlFlowGraph.RPOBasicBlockIterator rpo = bc_cfg.reversePostOrderIterator();
+            joeq.Compil3r.BytecodeAnalysis.ControlFlowGraph.RPOBasicBlockIterator rpo = bc_cfg.reversePostOrderIterator();
             BasicBlock first_bb = rpo.nextBB();
             Assert._assert(first_bb == bc_cfg.getEntry());
             // initialize start states
@@ -102,7 +102,7 @@ public class LiveRefAnalysis {
         // traverse post-order over basic blocks
         for (;;) {
             spv.go_again = false;
-            Compil3r.BytecodeAnalysis.ControlFlowGraph.RPOBasicBlockIterator rpo = bc_cfg.reversePostOrderIterator();
+            joeq.Compil3r.BytecodeAnalysis.ControlFlowGraph.RPOBasicBlockIterator rpo = bc_cfg.reversePostOrderIterator();
             rpo.jumpToEnd();
             while (rpo.hasPrevious()) {
                 if (ALWAYS_TRACE)
@@ -884,7 +884,7 @@ public class LiveRefAnalysis {
 
         public BitString getBytecodeStart() { return bytecode_start; }
 
-        public void traverseBB(Compil3r.BytecodeAnalysis.BasicBlock bb) {
+        public void traverseBB(joeq.Compil3r.BytecodeAnalysis.BasicBlock bb) {
             if (start_states[bb.id] == null) {
                 // unreachable block!
                 if (TRACE) out.println("Basic block "+bb+" is unreachable!");
@@ -1621,7 +1621,7 @@ public class LiveRefAnalysis {
         
         public String toString() { return "LR2/"+this.method.getName(); }
         
-        public void traverseBB(Compil3r.BytecodeAnalysis.BasicBlock bb) {
+        public void traverseBB(joeq.Compil3r.BytecodeAnalysis.BasicBlock bb) {
             if ((end_states[bb.id] == null) || (start_states[bb.id] == null)) {
                 // unreachable block!
                 if (TRACE) out.println("Basic block "+bb+" is unreachable!");

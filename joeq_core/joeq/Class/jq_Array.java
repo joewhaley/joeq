@@ -4,7 +4,7 @@
 package joeq.Clazz;
 
 import joeq.Allocator.ObjectLayout;
-import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.PrimordialClassLoader;
 import joeq.Main.jq;
 import joeq.Memory.Address;
 import joeq.Memory.HeapAddress;

@@ -50,7 +50,7 @@ public class Helper {
             !canonicalPackageName.endsWith("/"))
             canonicalPackageName += '/';
         Iterator i =
-            Bootstrap.PrimordialClassLoader.loader.listPackage(
+            joeq.Clazz.PrimordialClassLoader.loader.listPackage(
                 canonicalPackageName,
                 recursive);
         if (!i.hasNext()) {

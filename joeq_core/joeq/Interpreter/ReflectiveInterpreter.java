@@ -1,7 +1,7 @@
 // ReflectiveInterpreter.java, created Mon Feb  5 23:23:21 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Interpreter;
+package joeq.Interpreter;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
@@ -11,19 +11,19 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 
-import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Array;
-import Clazz.jq_Class;
-import Clazz.jq_Initializer;
-import Clazz.jq_Method;
-import Clazz.jq_Primitive;
-import Clazz.jq_StaticMethod;
-import Clazz.jq_Type;
-import Main.HostedVM;
-import Run_Time.Reflection;
-import Run_Time.Unsafe;
-import UTF.Utf8;
-import Util.Assert;
+import joeq.Clazz.PrimordialClassLoader;
+import joeq.Clazz.jq_Array;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_Initializer;
+import joeq.Clazz.jq_Method;
+import joeq.Clazz.jq_Primitive;
+import joeq.Clazz.jq_StaticMethod;
+import joeq.Clazz.jq_Type;
+import joeq.Main.HostedVM;
+import joeq.Run_Time.Reflection;
+import joeq.Run_Time.Unsafe;
+import joeq.UTF.Utf8;
+import joeq.Util.Assert;
 
 /**
  * @author  John Whaley <jwhaley@alum.mit.edu>

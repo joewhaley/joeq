@@ -90,7 +90,7 @@ public class ExceptionHandlerList extends java.util.AbstractList implements List
     public java.util.Iterator iterator() { return exceptionHandlerIterator(); }
     public java.util.ListIterator listIterator() { return exceptionHandlerIterator(); }
     
-    public Compil3r.Quad.ExceptionHandler getExceptionHandler(int index) {
+    public joeq.Compil3r.Quad.ExceptionHandler getExceptionHandler(int index) {
         if (index < 0) throw new IndexOutOfBoundsException();
         ExceptionHandlerList p = this;
         while (--index >= 0) {

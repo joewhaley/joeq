@@ -10,7 +10,7 @@ import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 
-import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.PrimordialClassLoader;
 import joeq.Clazz.jq_Class;
 import joeq.Clazz.jq_ClassFileConstants;
 import joeq.Clazz.jq_ConstantPool;

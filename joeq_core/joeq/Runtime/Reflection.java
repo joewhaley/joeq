@@ -1,7 +1,7 @@
 // Reflection.java, created Mon Feb  5 23:23:21 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Run_Time;
+package joeq.Run_Time;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -10,23 +10,23 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.util.Set;
 
-import Bootstrap.ObjectTraverser;
-import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Class;
-import Clazz.jq_Field;
-import Clazz.jq_Initializer;
-import Clazz.jq_InstanceField;
-import Clazz.jq_InstanceMethod;
-import Clazz.jq_Member;
-import Clazz.jq_Method;
-import Clazz.jq_Primitive;
-import Clazz.jq_Reference;
-import Clazz.jq_StaticField;
-import Clazz.jq_StaticMethod;
-import Clazz.jq_Type;
-import Main.jq;
-import Memory.Address;
-import UTF.Utf8;
+import joeq.Bootstrap.ObjectTraverser;
+import joeq.Clazz.PrimordialClassLoader;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_Field;
+import joeq.Clazz.jq_Initializer;
+import joeq.Clazz.jq_InstanceField;
+import joeq.Clazz.jq_InstanceMethod;
+import joeq.Clazz.jq_Member;
+import joeq.Clazz.jq_Method;
+import joeq.Clazz.jq_Primitive;
+import joeq.Clazz.jq_Reference;
+import joeq.Clazz.jq_StaticField;
+import joeq.Clazz.jq_StaticMethod;
+import joeq.Clazz.jq_Type;
+import joeq.Main.jq;
+import joeq.Memory.Address;
+import joeq.UTF.Utf8;
 
 /**
  * @author  John Whaley <jwhaley@alum.mit.edu>
@@ -425,7 +425,7 @@ public abstract class Reflection {
             _delegate = attemptDelegate("Run_Time.ReflectionImpl");
         }
         if (_delegate == null) {
-            _delegate = new Run_Time.BasicReflectionImpl();
+            _delegate = new joeq.Run_Time.BasicReflectionImpl();
         }
 
         _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LRun_Time/Reflection;");

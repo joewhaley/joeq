@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
-import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.PrimordialClassLoader;
 import joeq.Clazz.jq_Array;
 import joeq.Clazz.jq_Class;
 import joeq.Clazz.jq_Field;

@@ -22,7 +22,7 @@ public interface ControlFlowGraphVisitor {
         public void visitMethod(jq_Method m) {
             if (m.getBytecode() == null) return;
             if (trace) System.out.println(m.toString());
-            ControlFlowGraph cfg = Compil3r.Quad.CodeCache.getCode(m);
+            ControlFlowGraph cfg = joeq.Compil3r.Quad.CodeCache.getCode(m);
             bbv.visitCFG(cfg);
         }
     }

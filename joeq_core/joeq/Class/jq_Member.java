@@ -284,7 +284,7 @@ public abstract class jq_Member implements jq_ClassFileConstants, Textualizable 
             Object o = m.getName().toString();
             CharSequence cs;
             if (o instanceof CharSequence) cs = (CharSequence) o;
-            else cs = new Util.CharSequenceWrapper((String) o);
+            else cs = new joeq.Util.CharSequenceWrapper((String) o);
             return p.matcher(cs).matches();
         }
     }
@@ -297,7 +297,7 @@ public abstract class jq_Member implements jq_ClassFileConstants, Textualizable 
             Object o = m.getDeclaringClass().shortName();
             CharSequence cs;
             if (o instanceof CharSequence) cs = (CharSequence) o;
-            else cs = new Util.CharSequenceWrapper((String) o);
+            else cs = new joeq.Util.CharSequenceWrapper((String) o);
             return p.matcher(cs).matches();
         }
     }
