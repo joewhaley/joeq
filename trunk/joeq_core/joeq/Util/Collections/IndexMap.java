@@ -79,6 +79,11 @@ public class IndexMap implements IndexedMap {
         return list.iterator();
     }
     
+    public void clear() {
+        hash.clear();
+        list.clear();
+    }
+    
     public boolean addAll(Collection c) {
         int before = size();
         for (Iterator i=c.iterator(); i.hasNext(); ) {
