@@ -76,6 +76,7 @@ public class MethodSummary {
     public static final class MethodSummaryBuilder implements ControlFlowGraphVisitor {
         public void visitCFG(ControlFlowGraph cfg) {
             MethodSummary s = getSummary(cfg);
+            System.out.println(s.toString());
         }
     }
     
@@ -155,16 +156,9 @@ public class MethodSummary {
         /** Returns the summary. Call this after iteration has completed. */
         public MethodSummary getSummary() {
             MethodSummary s = new MethodSummary(method, param_nodes, my_global, methodCalls, callToRVN, callToTEN, returned, thrown, passedAsParameter);
-            // merge global nodes.
-            Set set = Collections.singleton(GlobalNode.GLOBAL);
-            my_global.replaceBy(set, true);
-            s.nodes.remove(my_global);
-            if (VERIFY_ASSERTIONS) {
-                s.verifyNoReferences(my_global);
-            }
             return s;
         }
-        
+
         /** Set the given local in the current state to point to the given node. */
         protected void setLocal(int i, Node n) { s.registers[i] = n; }
         /** Set the given register in the current state to point to the given node. */
@@ -2803,6 +2797,8 @@ outer:
     final Set returned;
     /** The thrown nodes. */
     final Set thrown;
+    /** The global node. */
+    /*final*/ GlobalNode global;
     /** The method calls that this method makes. */
     final Set calls;
     /** Map from a method call that this method makes, and its ReturnValueNode. */
@@ -2822,6 +2818,7 @@ outer:
         this.passedParamToNodes = USE_PARAMETER_MAP?new HashMap():null;
         this.returned = returned;
         this.thrown = thrown;
+        this.global = my_global;
         this.nodes = new LinkedHashMap();
         
         // build useful node set
@@ -2938,6 +2935,8 @@ outer:
         this.nodes = nodes;
     }
 
+    public GlobalNode getGlobal() { return global; }
+
     public ParamNode getParamNode(int i) { return params[i]; }
     public int getNumOfParams() { return params.length; }
     public Set getCalls() { return calls; }
@@ -2968,6 +2967,18 @@ outer:
         return s;
     }
     
+    public void mergeGlobal() {
+        // merge global nodes.
+        Set set = Collections.singleton(GlobalNode.GLOBAL);
+        global.replaceBy(set, true);
+        nodes.remove(global);
+        unifyAccessPaths(new LinkedHashSet(set));
+        if (VERIFY_ASSERTIONS) {
+            verifyNoReferences(global);
+        }
+        global = null;
+    }
+        
     /** Utility function to add to a multi map. */
     public static boolean addToMultiMap(HashMap mm, Object from, Object to) {
         Set s = (Set)mm.get(from);
