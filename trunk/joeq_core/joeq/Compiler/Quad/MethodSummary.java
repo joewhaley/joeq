@@ -748,10 +748,10 @@ public class MethodSummary {
         public CallSite(MethodSummary caller, MethodCall m) {
             this.caller = caller; this.m = m;
         }
-        public int hashCode() { return caller.hashCode() ^ m.hashCode(); }
+        public int hashCode() { return (caller == null?0x0:caller.hashCode()) ^ m.hashCode(); }
         public boolean equals(CallSite that) { return this.m.equals(that.m) && this.caller == that.caller; }
         public boolean equals(Object o) { if (o instanceof CallSite) return equals((CallSite)o); return false; }
-        public String toString() { return caller.getMethod()+" "+m.toString(); }
+        public String toString() { return (caller!=null?caller.getMethod():null)+" "+m.toString(); }
     }
     
     public abstract static class Node implements Cloneable {
@@ -764,6 +764,8 @@ public class MethodSummary {
         LinkedHashMap addedEdges;
         /** Map from fields to sets of outside edges from this node on that field. */
         LinkedHashMap accessPathEdges;
+        /** Whether or not this node escapes into some unanalyzable code. */
+        boolean escapes;
         
         protected Node() {}
         protected Node(Node n) {
@@ -771,6 +773,7 @@ public class MethodSummary {
             this.passedParameters = n.passedParameters;
             this.addedEdges = n.addedEdges;
             this.accessPathEdges = n.accessPathEdges;
+            this.escapes = n.escapes;
         }
         
         /** Replace this node by the given set of nodes.  All inside and outside
@@ -1130,15 +1133,43 @@ public class MethodSummary {
         
         /** Add the nodes that are targets of inside edges on the given field
          *  to the given result set. */
-        public void getEdges(jq_Field m, LinkedHashSet result) {
-            if (addedEdges == null) return;
-            Object o = addedEdges.get(m);
-            if (o == null) return;
-            if (o instanceof LinkedHashSet) {
-                result.addAll((LinkedHashSet)o);
-            } else {
-                result.add(o);
+        public final void getEdges(jq_Field m, LinkedHashSet result) {
+            if (addedEdges != null) {
+                Object o = addedEdges.get(m);
+                if (o != null) {
+                    if (o instanceof LinkedHashSet) {
+                        result.addAll((LinkedHashSet)o);
+                    } else {
+                        result.add(o);
+                    }
+                }
             }
+            if (this.escapes)
+                getEdges_escaped(m, result);
+        }
+        
+        /** Add the nodes that are targets of inside edges on the given field
+         *  to the given result set. */
+        public void getEdges_escaped(jq_Field m, LinkedHashSet result) {
+            if (TRACE_INTER) out.println("Getting escaped edges "+this+"."+m);
+            jq_Reference type = this.getDeclaredType();
+            if (m == null) {
+                if (type != null && (type.isArrayType() || type == PrimordialClassLoader.getJavaLangObject()))
+                    result.add(UnknownTypeNode.get(PrimordialClassLoader.getJavaLangObject()));
+                return;
+            }
+            if (type != null) {
+                type.load(); type.verify(); type.prepare();
+                m.getDeclaringClass().load(); m.getDeclaringClass().verify(); m.getDeclaringClass().prepare();
+                if (Run_Time.TypeCheck.isAssignable(type, m.getDeclaringClass()) ||
+                    Run_Time.TypeCheck.isAssignable(m.getDeclaringClass(), type)) {
+                    jq_Reference r = (jq_Reference)m.getType();
+                    result.add(UnknownTypeNode.get(r));
+                } else {
+                    if (TRACE_INTER) out.println("Object of type "+type+" cannot possibly have field "+m);
+                }
+            }
+            if (TRACE_INTER) out.println("New result: "+result);
         }
         
         /** Return a set of Map.Entry objects corresponding to the inside edges
@@ -1182,7 +1213,7 @@ public class MethodSummary {
         
         /** Return a string representation of the node in short form. */
         public abstract String toString_short();
-        public String toString() { return toString_short(); }
+        public String toString() { return toString_short() + (this.escapes?"*":""); }
         /** Return a string representation of the node in long form.
          *  Includes inside and outside edges and passed parameters. */
         public String toString_long() {
@@ -1279,27 +1310,9 @@ public class MethodSummary {
         final jq_Reference type;
         
         private UnknownTypeNode(jq_Reference type) {
-            this.type = type;
+            this.type = type; this.escapes = true;
         }
         private UnknownTypeNode(UnknownTypeNode that) { super(that); this.type = that.type; }
-        
-        /** Add the nodes that are targets of inside edges on the given field
-         *  to the given result set. */
-        public void getEdges(jq_Field m, LinkedHashSet result) {
-            if (m == null) {
-                if (this.type.isArrayType() || this.type == PrimordialClassLoader.getJavaLangObject())
-                    result.add(get(PrimordialClassLoader.getJavaLangObject()));
-                return;
-            }
-            this.type.load(); this.type.verify(); this.type.prepare();
-            m.getDeclaringClass().load(); m.getDeclaringClass().verify(); m.getDeclaringClass().prepare();
-            if (Run_Time.TypeCheck.isAssignable(this.type, m.getDeclaringClass()) ||
-                Run_Time.TypeCheck.isAssignable(m.getDeclaringClass(), this.type)) {
-                jq_Reference r = (jq_Reference)m.getType();
-                result.add(get(r));
-            }
-            super.getEdges(m, result);
-        }
         
         private void addDummyEdges() {
             if (type instanceof jq_Class) {
