@@ -382,6 +382,15 @@ public class PA {
     public void visitNode(Node node) {
         if (TRACE) out.println("Visiting node "+node);
         
+        if (node instanceof ConcreteTypeNode ||
+            node instanceof ConcreteObjectNode) {
+            jq_Reference type = node.getDeclaredType();
+            if (type == null) {
+                if (TRACE) out.println("Skipping null constant.");
+                return;
+            }
+        }
+        
         int V_i = Vmap.get(node);
         BDD V_bdd = V1.ithVar(V_i);
         
