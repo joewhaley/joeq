@@ -23,6 +23,7 @@ public abstract class TraceFlags {
         }
         if (args[i].equalsIgnoreCase("-TraceBC2Quad")) {
             Compil3r.Quad.BytecodeToQuad.ALWAYS_TRACE = true;
+            Compil3r.Quad.BytecodeToQuad.AbstractState.TRACE = true;
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceBootImage")) {
