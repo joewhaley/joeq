@@ -429,7 +429,6 @@ public class BDDInferenceRule extends InferenceRule {
         for (int i = 0; i < newRelationValues.length; ++i) {
             if (newRelationValues[i] == null) {
                 if (solver.TRACE) solver.out.println("Nothing new for "+(RuleTerm)top.get(i)+", skipping.");
-                newRelationValues[i].free();
                 continue;
             }
             Assert._assert(!newRelationValues[i].isZero());
