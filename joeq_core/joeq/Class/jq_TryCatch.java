@@ -32,6 +32,7 @@ public class jq_TryCatch {
         this.endPC = endPC;
         this.handlerPC = handlerPC;
         this.exType = exType;
+        this.exceptionOffset = exceptionOffset;
     }
 
     // note: offset is the offset of the instruction after the one which threw the exception.
@@ -53,7 +54,7 @@ public class jq_TryCatch {
     public int getExceptionOffset() { return exceptionOffset; }
 
     public String toString() {
-        return "(start="+Strings.hex(startPC)+",end="+Strings.hex(endPC)+",handler="+Strings.hex(handlerPC)+",type="+exType+",offset="+Strings.hex(exceptionOffset)+")";
+        return "(start="+Strings.hex(startPC)+",end="+Strings.hex(endPC)+",handler="+Strings.hex(handlerPC)+",type="+exType+",offset="+Strings.shex(exceptionOffset)+")";
     }
     
 }
