@@ -1740,6 +1740,8 @@ public class PA {
         bdd.save(dumpfilename+".mI", mI);
         System.out.println("mV: "+(long) mV.satCount(Mset.and(V1.set()))+" relations, "+mV.nodeCount()+" nodes");
         bdd.save(dumpfilename+".mV", mV);
+        System.out.println("sync: "+(long) sync.satCount(V1.set())+" relations, "+sync.nodeCount()+" nodes");
+        bdd.save(dumpfilename+".sync", sync);
         
         System.out.println("hP: "+(long) hP.satCount(H1FH2set)+" relations, "+hP.nodeCount()+" nodes");
         bdd.save(dumpfilename+".hP", hP);
