@@ -17,7 +17,7 @@ import java.lang.reflect.*;
 
 public abstract class Atomic {
     
-    public static final boolean cas4(Object o, jq_InstanceField f, int before, int after) {
+    public static final int cas4(Object o, jq_InstanceField f, int before, int after) {
         if (jq.Bootstrapping) {
             String fieldName = f.getName().toString();
             Class c = o.getClass();
@@ -29,25 +29,26 @@ public abstract class Atomic {
                         f2.setAccessible(true);
                         jq.assert((f2.getModifiers() & Modifier.STATIC) == 0);
                         try {
-                            if (((Integer)f2.get(o)).intValue() == before) {
+                            int v = ((Integer)f2.get(o)).intValue();
+                            if (v == before) {
                                 f2.set(o, new Integer(after));
-                                return true;
+                                return after;
                             } else {
-                                return false;
+                                return v;
                             }
                         } catch (IllegalAccessException x) {
                             jq.UNREACHABLE();
-                            return false;
+                            return 0;
                         }
                     }
                 }
                 c = c.getSuperclass();
             }
             jq.UNREACHABLE("Cannot find field "+f+" in class "+o.getClass());
-            return false;
+            return 0;
         } else {
             int address = Unsafe.addressOf(o)+f.getOffset();
-            return Unsafe.cas4(address, before, after);
+            return Unsafe.atomicCas4(address, before, after);
         }
     }
     
