@@ -27,12 +27,15 @@ import Clazz.jq_Field;
 import Clazz.jq_InstanceField;
 import Clazz.jq_Member;
 import Clazz.jq_Method;
+import Clazz.jq_FakeInstanceMethod;
 import Clazz.jq_Reference;
 import Clazz.jq_StaticField;
 import Clazz.jq_Type;
+import Clazz.jq_NameAndDesc;
 import Compil3r.Analysis.IPA.LoopAnalysis;
 import Compil3r.Analysis.IPA.ProgramLocation;
 import Compil3r.Analysis.IPA.ProgramLocation.QuadProgramLocation;
+import Compil3r.Analysis.IPA.ProgramLocation.BCProgramLocation;
 import Compil3r.Quad.BasicBlock;
 import Compil3r.Quad.CodeCache;
 import Compil3r.Quad.ControlFlowGraph;
@@ -2657,7 +2660,7 @@ public class MethodSummary {
     
     /** A ParamNode represents an incoming parameter.
      */
-    public static final class ParamNode extends OutsideNode {
+    public static class ParamNode extends OutsideNode {
         final jq_Method m; final int n; final jq_Reference declaredType;
         
         public ParamNode(jq_Method m, int n, jq_Reference declaredType) { this.m = m; this.n = n; this.declaredType = declaredType; }
@@ -2670,7 +2673,7 @@ public class MethodSummary {
         public jq_Method getMethod() { return m; }
         public int getIndex() { return n; }
         
-        public final Node copy() { return new ParamNode(this); }
+        public Node copy() { return new ParamNode(this); }
         
         public String toString_long() {
             return Integer.toHexString(this.hashCode())+": "+this.toString_short()+super.toString_long();
@@ -2693,6 +2696,25 @@ public class MethodSummary {
             jq_Reference type = (jq_Reference) m.getParamTypes()[k];
             //n.readEdges(map, st);
             return new ParamNode(m, k, type);
+        }
+    }
+
+    // fake methods have fake param nodes
+    public static final class FakeParamNode extends ParamNode {
+        public FakeParamNode(jq_Method m, int n, jq_Reference declaredType) {
+            super(m, n, declaredType);
+        }
+        private FakeParamNode(FakeParamNode that) {
+            super(that);
+        }
+        public final Node copy() { return new FakeParamNode(this); }
+
+        public static ParamNode read(StringTokenizer st) {
+            jq_Method m = (jq_Method) jq_FakeInstanceMethod.read(st);
+            int k = Integer.parseInt(st.nextToken());
+            jq_Reference type = (jq_Reference) m.getParamTypes()[k];
+            //n.readEdges(map, st);
+            return new FakeParamNode(m, k, type);
         }
     }
     
@@ -4858,6 +4880,14 @@ outer:
         String name = null, desc = null;
         if (args.length > 1) {
             name = args[1];
+
+            if (name.equals("#clone")) {
+                MethodSummary ms = fakeCloneMethodSummary((jq_FakeInstanceMethod)jq_FakeInstanceMethod.fakeCloneMethod(c));
+                if (DUMP_DOTGRAPH) ms.dotGraph(new DataOutputStream(System.out));
+                else System.out.println(ms);
+                return;
+            }
+
             if (args.length > 2) {
                 desc = args[2];
             }
@@ -4893,4 +4923,49 @@ outer:
         else return ((Collection) o);
     }
     
+    /**
+     * fake method summaries for fake methods.
+     */
+    private static HashMap fakeCache = new HashMap();
+    public static MethodSummary fakeMethodSummary(jq_FakeInstanceMethod method) {
+        MethodSummary ms = (MethodSummary)fakeCache.get(method);
+        if (ms != null)
+            return ms;
+        if (method.getName().toString().equals("clone"))
+            ms = fakeCloneMethodSummary(method);
+        else
+            throw new Error("don't know how to fake " + method);
+        fakeCache.put(method, ms);
+        return ms;
+    }
+
+    /**
+     * fake a method summary that simulates the effect of the inherited default clone().
+     */
+    public static MethodSummary fakeCloneMethodSummary(jq_FakeInstanceMethod method) {
+        jq_Class clazz = method.getDeclaringClass();
+        ParamNode []params = new ParamNode[] { new FakeParamNode(method, 0, clazz) };
+        ConcreteTypeNode clone = new ConcreteTypeNode(clazz, null);
+
+        clazz.prepare();
+        jq_InstanceField [] f = clazz.getInstanceFields();
+        for (int i = 0; i < f.length; i++) {
+            if (f[i].getType().isReferenceType())
+                clone.addEdge(f[i], FieldNode.get(params[0], f[i], new BCProgramLocation(method, i)));
+        }
+
+        return new MethodSummary((BuildMethodSummary)null,
+                         method,
+                         params, 
+                         new GlobalNode(method),
+                         /* methodCalls */ Collections.EMPTY_SET,
+                         /* callToRVN */Collections.EMPTY_MAP,
+                         /* callToTEN */Collections.EMPTY_MAP,
+                         /* castMap */Collections.EMPTY_MAP,
+                         /* castPredecessors */Collections.EMPTY_SET,
+                         /* returned */Collections.singleton(clone),
+                         /* thrown */Collections.EMPTY_SET,
+                         /* passedAsParameters */Collections.EMPTY_SET,
+                         /* sync_ops */Collections.EMPTY_MAP);
+    }
 }

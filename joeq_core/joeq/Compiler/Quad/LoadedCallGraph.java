@@ -21,6 +21,7 @@ import java.util.TreeMap;
 import Clazz.jq_Class;
 import Clazz.jq_Member;
 import Clazz.jq_Method;
+import Clazz.jq_FakeInstanceMethod;
 import Clazz.jq_Type;
 import Compil3r.Analysis.IPA.ProgramLocation;
 import Compil3r.Analysis.IPA.ProgramLocation.BCProgramLocation;
@@ -103,8 +104,9 @@ public class LoadedCallGraph extends CallGraph {
             for (Iterator j = classesToMethods.getValues(klass).iterator(); j.hasNext(); ) {
                 jq_Method m = (jq_Method) j.next();
                 out.writeBytes(" METHOD "+m.getName()+" "+m.getDesc());
-                if (cg.getRoots().contains(m)) out.writeBytes(" ROOT\n");
-                else out.writeByte('\n');
+                if (cg.getRoots().contains(m)) out.writeBytes(" ROOT");
+                if (m instanceof jq_FakeInstanceMethod) out.writeBytes(" FAKE");
+                out.writeByte('\n');
                 // put them in a set for deterministic iteration.
                 Set s = sortedArraySetFactory.makeSet(callsite_comparator, cg.getCallSites(m));
                 for (Iterator k = s.iterator(); k.hasNext(); ) {
@@ -114,7 +116,10 @@ public class LoadedCallGraph extends CallGraph {
                     Set s2 = sortedArraySetFactory.makeSet(cg.getTargetMethods(pl));
                     for (Iterator l = s2.iterator(); l.hasNext(); ) {
                         jq_Method target = (jq_Method) l.next();
-                        out.writeBytes("   TARGET "+target.getDeclaringClass().getJDKName().replace('.', '/')+"."+target.getName()+" "+target.getDesc()+"\n");
+                        out.writeBytes("   TARGET "+target.getDeclaringClass().getJDKName().replace('.', '/')+"."+target.getName()+" "+target.getDesc());
+                        if (target instanceof jq_FakeInstanceMethod)
+                            out.writeBytes(" FAKE");
+                        out.writeBytes("\n");
                     }
                 }
             }
@@ -164,16 +169,24 @@ public class LoadedCallGraph extends CallGraph {
                 if (!st.hasMoreTokens())
                     throw new IOException();
                 String methodDesc = st.nextToken();
-                m = (jq_Method) k.getDeclaredMember(methodName, methodDesc);
+                boolean isroot = false;
+                boolean isfake = false;
+                while (st.hasMoreTokens()) {
+                    String arg = st.nextToken();
+                    if (arg.equals("ROOT")) isroot = true;
+                    if (arg.equals("FAKE")) isfake = true;
+                }
+                if (isfake)
+                    m = jq_FakeInstanceMethod.fakeMethod(k, methodName, methodDesc);
+                else
+                    m = (jq_Method) k.getDeclaredMember(methodName, methodDesc);
                 if (m == null) {
                     System.err.println("Cannot find \""+methodName+"\" \""+methodDesc+"\" in "+k);
                     continue;
                 }
                 methods.add(m);
-                if (st.hasMoreTokens()) {
-                    String arg = st.nextToken();
-                    if (arg.equals("ROOT")) roots.add(m);
-                }
+                if (isroot)
+                    roots.add(m);
                 continue;
             }
             if (id.equals("CALLSITE")) {
@@ -194,9 +207,20 @@ public class LoadedCallGraph extends CallGraph {
                 if (!st.hasMoreTokens())
                     throw new IOException();
                 String methodDesc = st.nextToken();
+                boolean isfake = false;
+                if (st.hasMoreTokens()) {
+                    String arg = st.nextToken();
+                    if (arg.equals("FAKE"))
+                        isfake = true;
+                }
+                    
                 jq_Class targetClass = (jq_Class) jq_Type.parseType(className);
                 targetClass.load();
-                jq_Method targetMethod = (jq_Method) targetClass.getDeclaredMember(methodName, methodDesc);
+                jq_Method targetMethod;
+                if (isfake)
+                    targetMethod = jq_FakeInstanceMethod.fakeMethod(targetClass, methodName, methodDesc);
+                else
+                    targetMethod = (jq_Method) targetClass.getDeclaredMember(methodName, methodDesc);
                 if (m == null) {
                     // reported above.
                     continue;
