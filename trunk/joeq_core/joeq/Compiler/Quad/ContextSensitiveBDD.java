@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 import org.sf.javabdd.BDD;
 import org.sf.javabdd.BDDDomain;
@@ -25,8 +26,12 @@ import Compil3r.Quad.MethodSummary.ConcreteTypeNode;
 import Compil3r.Quad.MethodSummary.FieldNode;
 import Compil3r.Quad.MethodSummary.GlobalNode;
 import Compil3r.Quad.MethodSummary.Node;
+import Compil3r.Quad.MethodSummary.ParamNode;
+import Compil3r.Quad.MethodSummary.PassedParameter;
+import Compil3r.Quad.MethodSummary.ReturnedNode;
 import Compil3r.Quad.MethodSummary.UnknownTypeNode;
 import Main.HostedVM;
+import Util.Assert;
 import Util.Collections.HashWorklist;
 import Util.Graphs.Navigator;
 import Util.Graphs.SCCTopSortedGraph;
@@ -37,9 +42,8 @@ import Util.Graphs.SCComponent;
  */
 public class ContextSensitiveBDD {
     
-    public static final boolean TRACE = false;
-    public static final boolean TRACE_INST = false;
-    public static final boolean TRACE_VIRTUAL = false;
+    public static final boolean TRACE = true;
+    public static final boolean TRACE_INST = true;
 
     /**
      * The default initial node count.  Smaller values save memory for
@@ -60,56 +64,41 @@ public class ContextSensitiveBDD {
      */
     private final BDDFactory bdd;
 
-    // the size of domains, can be changed to reflect the size of inputs
-    int domainBits[] = {18, 18, 18, 18, 13, 14, 14};
-    // to be computed in sysInit function
-    int domainSpos[] = {0, 0, 0, 0, 0, 0, 0}; 
+    /** BDD domains that we use in the analysis. **/
+    BDDDomain      V1, V2, V3, V4, FD, H1, H2, CS;
+    /** Default sizes of the domains defined above. **/
+    int dBits[] = {18, 18, 18, 18, 13, 14, 14,  8};
+    /** Temporary domains that overlap with other domains. **/
+    BDDDomain      T2, T1;
 
-    // V1 V2 are domains for variables 
-    // H1 H2 are domains for heap objects
-    // FD is a domain for field signature
-    BDDDomain V1, V2, V3, V4, FD, H1, H2;
-    // T1 and T2 are used to compute typeFilter
-    // T1 = V2, and T2 = V1
-    BDDDomain T1, T2, T3, T4; 
-
-    // domain pairs for bdd_replace
+    /** Cached domain pairings for replace() operations. **/
     BDDPairing V1ToV2;
     BDDPairing V2ToV1;
     BDDPairing V1ToV3;
     BDDPairing V2ToV4;
+    BDDPairing V3ToV1;
+    BDDPairing V3ToV2;
     BDDPairing V3ToV4;
     BDDPairing V4ToV3;
     BDDPairing H1ToH2;
     BDDPairing H2ToH1;
     BDDPairing T2ToT1;
 
-    // relations
-    BDD pointsTo;     // V1 x H1
-    BDD edgeSet;      // V1 x V2
-    BDD typeFilter;   // V1 x H1
-    BDD stores;       // V1 x (V2 x FD) 
-    BDD loads;        // (V1 x FD) x V2
-
-    // cached temporary relations
-    BDD storePt;      // (V1 x FD) x H2
-    BDD fieldPt;      // (H1 x FD) x H2
-    BDD loadAss;      // (H1 x FD) x V2
-    BDD loadPt;       // V2 x H2
-
+    /** Default constructor and initialization. **/
     public ContextSensitiveBDD() {
         this(DEFAULT_NODE_COUNT, DEFAULT_CACHE_SIZE);
     }
 
+    /** Constructor and initialization. **/
     public ContextSensitiveBDD(int nodeCount, int cacheSize) {
         bdd = BuDDyFactory.init(nodeCount, cacheSize);
     
         bdd.setCacheRatio(4);
         bdd.setMaxIncrease(cacheSize);
     
-        int[] domains = new int[domainBits.length];
-        for (int i=0; i<domainBits.length; ++i) {
-            domains[i] = (1 << domainBits[i]);
+        int[] domains = new int[dBits.length];
+        for (int i=0; i<dBits.length; ++i) {
+            domains[i] = (1 << dBits[i]);
         }
         BDDDomain[] bdd_domains = bdd.extDomain(domains);
         V1 = bdd_domains[0];
@@ -119,24 +108,27 @@ public class ContextSensitiveBDD {
         FD = bdd_domains[4];
         H1 = bdd_domains[5];
         H2 = bdd_domains[6];
+        CS = bdd_domains[7];
         T1 = V2;
         T2 = V1;
-        T3 = H2;
-        T4 = V2;
     
-        int varnum = bdd.varNum();
-        int[] varorder = new int[varnum];
-        //makeVarOrdering(varorder);
-        for (int i=0; i<varorder.length; ++i) {
-            //System.out.println("varorder["+i+"]="+varorder[i]);
+        if (false) {
+            int varnum = bdd.varNum();
+            int[] varorder = new int[varnum];
+            //makeVarOrdering(varorder);
+            for (int i=0; i<varorder.length; ++i) {
+                //System.out.println("varorder["+i+"]="+varorder[i]);
+            }
+            bdd.setVarOrder(varorder);
+            bdd.enableReorder();
         }
-        bdd.setVarOrder(varorder);
-        bdd.enableReorder();
     
         V1ToV2 = bdd.makePair(V1, V2);
         V2ToV1 = bdd.makePair(V2, V1);
         V1ToV3 = bdd.makePair(V1, V3);
         V2ToV4 = bdd.makePair(V2, V4);
+        V3ToV1 = bdd.makePair(V3, V1);
+        V3ToV2 = bdd.makePair(V3, V2);
         V3ToV4 = bdd.makePair(V3, V4);
         V4ToV3 = bdd.makePair(V4, V3);
         H1ToH2 = bdd.makePair(H1, H2);
@@ -144,17 +136,18 @@ public class ContextSensitiveBDD {
         T2ToT1 = bdd.makePair(T2, T1);
     }
     
-    void reset() {
-        // initialize relations to zero.
-        pointsTo = bdd.zero();
-        edgeSet = bdd.zero();
-        typeFilter = bdd.zero();
-        stores = bdd.zero();
-        loads = bdd.zero();
-        storePt = bdd.zero();
-        fieldPt = bdd.zero();
-        loadAss = bdd.zero();
-        loadPt = bdd.zero();
+    /** Returns the named domain. **/
+    BDDDomain getDomain(String s) {
+        try {
+            java.lang.reflect.Field f = ContextSensitiveBDD.class.getDeclaredField(s);
+            return (BDDDomain) f.get(this);
+        } catch (NoSuchFieldException _) {
+            Assert.UNREACHABLE("No such domain "+s);
+            return null;
+        } catch (IllegalAccessException _) {
+            Assert.UNREACHABLE("Cannot access domain "+s);
+            return null;
+        }
     }
 
     public static void main(String[] args) {
@@ -163,10 +156,11 @@ public class ContextSensitiveBDD {
         boolean DUMP = System.getProperty("bdddump") != null;
         
         ContextSensitiveBDD dis = new ContextSensitiveBDD();
-        dis.reset();
         jq_Class c = (jq_Class) jq_Type.parseType(args[0]);
         c.prepare();
         Collection roots = Arrays.asList(c.getDeclaredStaticMethods());
+        
+        dis.go(roots);
         
         if (DUMP)
             dis.dumpResults();
@@ -183,25 +177,38 @@ public class ContextSensitiveBDD {
     public CallGraph go(Collection roots) {
         long time = System.currentTimeMillis();
         
+        /* Build the initial call graph using CHA. */
         initial_cg = new RootedCHACallGraph();
         initial_cg.setRoots(roots);
+        /* Calculate the reachable methods once to touch each method,
+           so that the set of types are stable. */
+        initial_cg.calculateReachableMethods(roots);
         
+        /* Build SCCs. */
         Navigator navigator = initial_cg.getNavigator();
         Set sccs = SCComponent.buildSCC(roots, navigator);
         SCCTopSortedGraph graph = SCCTopSortedGraph.topSort(sccs);
         
-        worklist.push(graph.getLast());
+        /* Put SCCs on worklist in reverse order. */
+        SCComponent scc = graph.getLast();
+        while (scc != null) {
+            worklist.push(scc);
+            scc = scc.prevTopSort();
+        }
         
         System.out.println("Initial setup:\t\t"+(System.currentTimeMillis()-time)/1000.+" seconds.");
         
+        /* Iterate through worklist. */
         while (!worklist.isEmpty()) {
-            SCComponent scc = (SCComponent) worklist.pull();
+            scc = (SCComponent) worklist.pull();
             Object[] nodes = scc.nodes();
             boolean change = false;
             for (int i=0; i<nodes.length; ++i) {
                 jq_Method m = (jq_Method) nodes[i];
+                /* Get the cached summary for this method. */
                 BDDMethodSummary s = (BDDMethodSummary) summaries.get(m);
                 if (s == null) {
+                    /* Not yet visited, build a new summary. */
                     summaries.put(m, s = new BDDMethodSummary(m));
                 }
                 if (s.visit()) {
@@ -209,25 +216,20 @@ public class ContextSensitiveBDD {
                 }
             }
             if (change) {
+                if (TRACE) System.out.println("Changed, adding predecessors to worklist.");
+                if (scc.isLoop()) {
+                    //if (TRACE) System.out.println("Adding self-loop to worklist: "+scc);
+                    worklist.push(scc);
+                }
                 for (int j=0; j<scc.prevLength(); ++j) {
                     SCComponent prev = scc.prev(j);
+                    //if (TRACE) System.out.println("Adding to worklist: "+prev);
                     worklist.push(prev);
                 }
             }
         }
         
         return null;
-    }
-    
-    void printSet(String desc, BDD b) {
-        System.out.print(desc+": ");
-        System.out.flush();
-        b.printSetWithDomains();
-        System.out.println();
-    }
-    
-    void printSet(String desc, BDD b, String type) {
-        printSet(desc+" ("+type+")", b);
     }
     
     IndexMap/* Node->index */ variableIndexMap = new IndexMap("Variable");
@@ -276,31 +278,70 @@ public class ContextSensitiveBDD {
     
     public class BDDMethodSummary {
         
+        /** The method summary graph that this BDD summary represents.
+         */
         MethodSummary ms;
         
-        // instructions contained within this summary
-        BDD stores;       // V1 x (V2 x FD) 
-        BDD loads;        // (V2 x FD) x V1
+        /** Store instructions in this summary, along with those propagated from
+         * callees. V1 x (V2 x FD)   (v2.fd = v1;)
+         */
+        BDD stores;
         
-        // mapping between our nodes and callee nodes
-        BDD callMappings; // V2 x V4
+        /** Load instructions in this summary, along with those propagated from
+         * callees. V1 x (V2 x FD)   (v1 = v2.fd;)
+         */
+        BDD loads;
+        
+        /** Collection of the targets of all allocations and loads, along with
+         * those propagated from callees.  This is stored as V2xV4 for convenient
+         * combination with callMappings.
+         */
+        BDD allocsAndLoads; // V2 x V4
+        
+        /** Mapping between our nodes and callee nodes.
+         */
+        BDD allCallMappings; // V2 x CS x V4
         
         // relations
         BDD pointsTo;     // V1 x H1
-        BDD edgeSet;      // V1 x V2
+        BDD edgeSet;      // V1 x V2   (v2 = v1;)
         BDD typeFilter;   // V1 x H1
         
-        BDD allocsAndLoads; // V2 x V4
-
+        /** Indices for the call sites in this method.
+         */
+        IndexMap/* ProgramLocation->index */ callSiteIndexMap = new IndexMap("CallSite");
+        
+        int getCallSite(ProgramLocation mc) {
+            return callSiteIndexMap.get(mc);
+        }
+        
         public BDDMethodSummary(jq_Method m) {
+            this.reset();
             if (m.getBytecode() != null) {
+                if (TRACE) System.out.println("Generating summary for method "+m);
                 ControlFlowGraph cfg = CodeCache.getCode(m);
                 ms = MethodSummary.getSummary(cfg);
                 for (Iterator i=ms.nodeIterator(); i.hasNext(); ) {
                     Node n = (Node) i.next();
                     handleNode(n);
                 }
+                for (Iterator i=UnknownTypeNode.getAll().iterator(); i.hasNext(); ) {
+                    Node n = (Node) i.next();
+                    handleNode(n);
+                }
+            } else {
+                if (TRACE) System.out.println("Skipping native method "+m);
             }
+        }
+        
+        void reset() {
+            stores = bdd.zero();
+            loads = bdd.zero();
+            allCallMappings = bdd.zero();
+            pointsTo = bdd.zero();
+            edgeSet = bdd.zero();
+            typeFilter = bdd.zero();
+            allocsAndLoads = bdd.zero();
         }
 
         public void handleNode(Node n) {
@@ -353,6 +394,10 @@ public class ContextSensitiveBDD {
         }
 
         public boolean visit() {
+            if (this.ms == null) {
+                return false;
+            }
+            if (TRACE) System.out.println("Visiting "+this.ms.getMethod());
             boolean change = false;
             // find all methods that we call.
             for (Iterator i=ms.getCalls().iterator(); i.hasNext(); ) {
@@ -361,98 +406,198 @@ public class ContextSensitiveBDD {
                 for (Iterator j=targets.iterator(); j.hasNext(); ) {
                     jq_Method target = (jq_Method) j.next();
                     BDDMethodSummary s = (BDDMethodSummary) summaries.get(target);
-                    if (s != null)
-                        handleMethodCall(s);
+                    if (s != null) {
+                        if (handleMethodCall(mc, s)) {
+                            if (TRACE) System.out.println("Method call "+mc+"->"+s.ms.getMethod()+" changed");
+                            change = true;
+                        }
+                    }
                 }
             }
             return change;
         }
         
-        public void init() {
-            stores = bdd.zero();
-            loads = bdd.zero();
-            allocsAndLoads = bdd.zero();
+        public boolean handleMethodCall(ProgramLocation mc, BDDMethodSummary that) {
             
-            callMappings = bdd.zero();
+            if (that.ms == null) {
+                if (TRACE_INST) System.out.println("Skipping call: "+mc);
+                return false;
+            }
             
-            pointsTo = bdd.zero();
-            edgeSet = bdd.zero();
-            typeFilter = bdd.one();
-        }
-
-        public void handleMethodCall(BDDMethodSummary that) {
+            // cache to check for changes.
+            BDD oldLoads = this.loads.id();
+            BDD oldStores = this.stores.id();
+            BDD oldAllCallMappings = this.allCallMappings.id();
+            
+            if (TRACE_INST) System.out.println("Handling call graph edge: "+mc+"->"+that.ms.getMethod());
+            
+            BDD callSite = CS.ithVar(getCallSite(mc));
+            BDD myCallMappings = allCallMappings.restrict(callSite);
+            
+            /* Add mapping between actual and formal parameters to myCallMappings. */
+            for (int i=0; i<mc.getNumParams(); ++i) {
+                PassedParameter pp = new PassedParameter(mc, i);
+                Set s = this.ms.getNodesThatCall(pp);
+                ParamNode pn = that.ms.getParamNode(i);
+                addParameterPass(myCallMappings, pn, s);
+            }
             
             BDD tmpRel1, tmpRel2;
             BDD that_stores, that_loads;
-            BDD V2set = V2.set(), V3set = V3.set(), V4set = V4.set(), FDset = FD.set();
+            BDD V1set = V1.set(), V2set = V2.set(), V3set = V3.set(), V4set = V4.set(), FDset = FD.set();
             BDD V2andFDset = V2set.and(FDset);
             
+            /* Replace domains in callee "stores" BDD to become:
+               (V3x(V4xFD))   (v4.fd = v3;)
+             */
             tmpRel1 = that.stores.replace(V1ToV3);
             that_stores = tmpRel1.replace(V2ToV4);
             tmpRel1.free();
             
+            if (TRACE) {
+                printSet("that stores", that_stores, "V3xV4xFD");
+            }
+            
+            /* Replace domains in callee "loads" BDD to become:
+               (V3x(V4xFD))   (v3 = v4.fd;)
+             */
             tmpRel1 = that.loads.replace(V1ToV3);
             that_loads = tmpRel1.replace(V2ToV4);
             tmpRel1.free();
             
-            callMappings.orWith(that.allocsAndLoads.id());
+            if (TRACE) {
+                printSet("that loads", that_loads, "V3xV4xFD");
+            }
+            
+            /* Map all allocs and loads in callee directly into caller. */
+            if (TRACE) {
+                printSet("that allocs and loads", that.allocsAndLoads, "V2xV4");
+            }
+            myCallMappings.orWith(that.allocsAndLoads.id());
+            
+            /* Include all callee allocs and loads in caller allocs and loads set. */
             allocsAndLoads.orWith(that.allocsAndLoads.id());
             
+            /* Loop to match read/write edges, until there is no change to the mapping. */
             for (;;) {
                 BDD newMappings;
                 
-                BDD oldMappings = callMappings.id();
+                /* Make a copy of the mappings for comparison later, for termination condition. */
+                BDD oldMappings = myCallMappings.id();
                 
-                if (false) {
-                    // match callee stores to caller loads.
-                    // (V3x(V4xFD)) x (V2xV4) = (V3x(V2xFD))
-                    tmpRel1 = that_stores.relprod(callMappings, V4set);
-                    // (V3x(V2xFD)) x ((V2xFD)xV1) = (V1xV3)
-                    newMappings = tmpRel1.relprod(tmpRel1, V2andFDset);
+                if (true) {
+                    /* match callee stores to caller loads. */
+                    // (V3x(V4xFD)) x (V2xCSxV4) = (V3x(V2xFD)xCS)
+                    tmpRel1 = that_stores.relprod(myCallMappings, V4set);
+                    // (V3x(V2xFD)) x (V1x(V2xFD)) = (V1xV3)
+                    newMappings = tmpRel1.relprod(this.loads, V2andFDset);
                     tmpRel1.free();
                 } else {
                     newMappings = bdd.zero();
                 }
                 
-                // match callee loads to caller stores.
-                // ((V4xFD)xV3) x (V2xV4) = ((V2xFD)xV3)
-                tmpRel1 = that_loads.relprod(callMappings, V4set);
-                // ((V2xFD)xV3) x (V1x(V2xFD)) = (V1xV3)
+                /* match callee loads to caller stores. */
+                // (V3x(V4xFD)) x (V2xV4) = (V3x(V2xFD))
+                tmpRel1 = that_loads.relprod(oldMappings, V4set);
+                // (V3x(V2xFD)) x (V1x(V2xFD)) = (V1xV3)
                 tmpRel2 = tmpRel1.relprod(this.stores, V2andFDset);
                 tmpRel1.free();
                 newMappings.orWith(tmpRel2);
                 
+                /* replace domains in newMappings: (V1xV3) -> (V2xV4) */
                 tmpRel1 = newMappings.replace(V1ToV2);
                 newMappings = tmpRel1.replace(V3ToV4);
                 tmpRel1.free();
                 
-                callMappings.orWith(newMappings);
+                /* add to myCallMappings */
+                myCallMappings.orWith(newMappings);
                 
-                boolean exit = oldMappings.equals(callMappings);
+                if (TRACE) {
+                    printSet("my call mappings", myCallMappings, "V2xV4");
+                }
+                
+                /* exit if callMappings changed */
+                boolean exit = oldMappings.equals(myCallMappings);
+                tmpRel1.free();
                 oldMappings.free();
                 if (exit) break;
             }
             
-            BDD callMappings2;
+            /* Now that mapping is done, add mapping for return nodes. */
+            ReturnedNode rn = (ReturnedNode) this.ms.callToRVN.get(mc);
+            if (rn != null) {
+                addReturnValue(myCallMappings, rn, that.ms.returned);
+            }
+            rn = (ReturnedNode) this.ms.callToTEN.get(mc);
+            if (rn != null && !that.ms.thrown.isEmpty())
+                addReturnValue(myCallMappings, rn, that.ms.thrown);
             
-            tmpRel1 = callMappings.replace(V2ToV1);
-            callMappings2 = tmpRel1.replace(V4ToV3);
+            if (TRACE) {
+                printSet("final call mappings", myCallMappings, "V2xV4");
+            }
+            
+            /* Build myCallMappings2, which is (V1xV3) */
+            BDD myCallMappings2;
+            tmpRel1 = myCallMappings.restrict(callSite);
+            tmpRel2 = tmpRel1.replace(V2ToV1);
+            myCallMappings2 = tmpRel2.replace(V4ToV3);
             tmpRel1.free();
             
-            // add callee stores to caller stores.
+            /* add callee stores to caller stores. */
             // (V3x(V4xFD)) x (V2xV4) = (V3x(V2xFD))
-            tmpRel1 = that_stores.relprod(callMappings, V4set);
+            tmpRel1 = that_stores.relprod(myCallMappings, V4set);
             // (V3x(V2xFD)) x (V1xV3) = (V1x(V2xFD))
-            tmpRel2 = tmpRel1.relprod(callMappings2, V3set);
+            tmpRel2 = tmpRel1.relprod(myCallMappings2, V3set);
             this.stores.orWith(tmpRel2);
             
-            // add callee loads to caller loads.
-            // ((V4xFD)xV3) x (V2xV4) = ((V2xFD)xV3)
-            tmpRel1 = that_loads.relprod(callMappings, V4set);
-            // ((V2xFD)xV3) x (V1xV3) = ((V2xFD)xV1)
-            tmpRel2 = tmpRel1.relprod(callMappings2, V3set);
+            if (TRACE) {
+                printSet("this stores now", this.stores, "V1xV2xFD");
+            }
+            
+            /* Add edges to/from return nodes to the mapped return nodes. */
+            tmpRel1 = this.edgeSet.replace(V1ToV3);
+            // (v2=v3;) (v2.fd=v1;) -> (v3.fd=v1;)
+            // (V2xV3) x (V1xV2xFD) = (V1xV3xFD)
+            tmpRel2 = tmpRel1.relprod(this.stores, V2set);
+            tmpRel1.free();
+            tmpRel1 = tmpRel2.replace(V3ToV2);
+            tmpRel2.free();
+            this.stores.orWith(tmpRel1);
+            
+            tmpRel2 = this.edgeSet.replace(V1ToV3);
+            tmpRel1 = tmpRel2.replace(V2ToV1);
+            tmpRel2.free();
+            // (v1=v3;) (v2.fd=v1;) -> (v2.fd=v3;)
+            // (V1xV3) x (V1xV2xFD) = (V2xV3xFD)
+            tmpRel2 = tmpRel1.relprod(this.stores, V1set);
+            tmpRel1.free();
+            tmpRel1 = tmpRel2.replace(V3ToV1);
+            tmpRel2.free();
+            this.stores.orWith(tmpRel1);
+            
+            /* Add callee loads to caller loads. */
+            // (V3x(V4xFD)) x (V2xV4) = (V3x(V2xFD))
+            tmpRel1 = that_loads.relprod(myCallMappings, V4set);
+            // (V3x(V2xFD)) x (V1xV3) = (V1x(V2xFD))
+            tmpRel2 = tmpRel1.relprod(myCallMappings2, V3set);
+            myCallMappings2.free();
             this.loads.orWith(tmpRel2);
             
+            if (TRACE) {
+                printSet("this loads now", this.loads, "V1xV2xFD");
+            }
+            
+            /* Add the current call mappings to the set of all call mappings. */
+            myCallMappings.andWith(callSite);
+            callSite.free();
+            allCallMappings.orWith(myCallMappings);
+            
+            /* Check if anything changed. */
+            boolean changed;
+            changed = !oldLoads.equals(this.loads) || !oldStores.equals(this.stores) ||
+                      !oldAllCallMappings.equals(this.allCallMappings);
+            oldLoads.free(); oldStores.free(); oldAllCallMappings.free();
+            return changed;
         }
 
         public void addObjectAllocation(Node dest, Node site) {
@@ -593,6 +738,57 @@ public class ContextSensitiveBDD {
             base_bdd.free(); f_bdd.free();
         }
         
+        public void addParameterPass(BDD callMappings, ParamNode dest, Set srcs) {
+            int dest_i = getVariableIndex(dest);
+            BDD dest_bdd = V4.ithVar(dest_i);
+            for (Iterator i=srcs.iterator(); i.hasNext(); ) {
+                Node src = (Node) i.next();
+                int src_i = getVariableIndex(src);
+                BDD src_bdd = V2.ithVar(src_i);
+                src_bdd.andWith(dest_bdd.id());
+                if (TRACE_INST) {
+                    System.out.println("Adding parameter pass dest="+dest_i+" src="+src_i);
+                }
+                callMappings.orWith(src_bdd);
+                if (TRACE) {
+                    printSet("callMappings is now", callMappings, "V2xV4");
+                }
+            }
+            dest_bdd.free();
+        }
+    
+        public void addReturnValue(BDD callMappings, ReturnedNode dest, Set srcs) {
+            int dest_i = getVariableIndex(dest);
+            BDD dest_bdd = V2.ithVar(dest_i);
+            BDD V4set = V4.set();
+            for (Iterator i=srcs.iterator(); i.hasNext(); ) {
+                Node src = (Node) i.next();
+                int src_i = getVariableIndex(src);
+                BDD src_bdd = V4.ithVar(src_i);
+                if (TRACE_INST) {
+                    printSet("Return value in callee", src_bdd, "V4");
+                }
+                // V4 x (V2 x V4) = V2
+                BDD src_bdd2 = src_bdd.relprod(callMappings, V4set);
+                src_bdd.free();
+                if (TRACE_INST) {
+                    printSet("Return value corresponds to", src_bdd2, "V2");
+                }
+                src_bdd = src_bdd2.replace(V2ToV1);
+                src_bdd2.free();
+                src_bdd.andWith(dest_bdd.id());
+                if (TRACE_INST) {
+                    printSet("Adding return value", src_bdd, "V1xV2");
+                }
+                edgeSet.orWith(src_bdd);
+                if (TRACE) {
+                    printSet("edgeSet is now", edgeSet, "V1xV2");
+                }
+            }
+            V4set.free();
+            dest_bdd.free();
+        }
+            
         public void addClassInit(jq_Type t) {
         }
         
@@ -603,4 +799,192 @@ public class ContextSensitiveBDD {
         }
 
     }
+    
+    String getElementName(String desc, int index) {
+        if ("V1".equals(desc) ||
+            "V2".equals(desc) ||
+            "V3".equals(desc) ||
+            "V4".equals(desc)) return this.variableIndexMap.get(index).toString();
+        if ("H1".equals(desc) ||
+            "H2".equals(desc)) return this.heapobjIndexMap.get(index).toString();
+        if ("FD".equals(desc)) return this.fieldIndexMap.get(index).toString();
+        return null;
+    }
+    
+    void printSet(String desc, BDD b, String type) {
+        java.io.PrintStream ofile = System.out;
+        
+        ofile.print(desc);
+        ofile.print(": ");
+        
+        if (b.equals(bdd.zero())) {
+            ofile.print("F");
+        } else if (b.equals(bdd.one())) {
+            ofile.print("T");
+        } else {
+            int[] set = new int[bdd.varNum()];
+            fdd_printset_rec(type, ofile, b, set);
+            //free(set);
+        }
+        
+        System.out.println();
+    }
+    
+    void fdd_printset_rec(String type, java.io.PrintStream ofile, BDD r, int[] set) {
+        int n, m, i;
+        boolean used = false;
+        int[] var;
+        boolean[] binval;
+        boolean ok, first;
+   
+        if (r.equals(bdd.zero()))
+            return;
+        else if (r.equals(bdd.one())) {
+            ofile.print("<");
+            first = true;
+
+            for (StringTokenizer st = new StringTokenizer(type, "x_", false);
+                st.hasMoreTokens(); ) {
+                String domainName = st.nextToken();
+                BDDDomain domain_n = getDomain(domainName);
+                n = domain_n.getIndex();
+                
+                boolean firstval = true;
+                used = false;
+
+                int[] domain_n_ivar = domain_n.vars();
+                int domain_n_varnum = domain_n.varNum();
+                for (m=0 ; m<domain_n_varnum ; m++)
+                    if (set[domain_n_ivar[m]] != 0)
+                        used = true;
+     
+                if (used) {
+                    if (!first)
+                        ofile.print(", ");
+                    first = false;
+                    ofile.print(domainName);
+                    ofile.print(":");
+
+                    var = domain_n_ivar;
+                    
+                    for (m=0 ; m<(1<<domain_n_varnum) ; m++) {
+                        binval = fdddec2bin(n, m);
+                        ok = true;
+           
+                        for (i=0 ; i<domain_n_varnum && ok ; i++)
+                            if (set[var[i]] == 1  &&  binval[i] != false)
+                                ok = false;
+                            else if (set[var[i]] == 2  &&  binval[i] != true)
+                                ok = false;
+
+                        if (ok) {
+                            if (!firstval)
+                                ofile.print("/");
+                            ofile.print(getElementName(domainName, m));
+                            firstval = false;
+                        }
+
+                        //free(binval);
+                    }
+                }
+            }
+
+            ofile.print(">");
+        } else {
+            set[r.var()] = 1;
+            fdd_printset_rec(type, ofile, r.low(), set);
+      
+            set[r.var()] = 2;
+            fdd_printset_rec(type, ofile, r.high(), set);
+      
+            set[r.var()] = 0;
+        }
+    }
+    
+    void fdd_printset_rec(java.io.PrintStream ofile, BDD r, int[] set) {
+        int fdvarnum = bdd.numberOfDomains();
+        
+        int n, m, i;
+        boolean used = false;
+        int[] var;
+        boolean[] binval;
+        boolean ok, first;
+   
+        if (r.equals(bdd.zero()))
+            return;
+        else if (r.equals(bdd.one())) {
+            ofile.print("<");
+            first = true;
+
+            for (n=0 ; n<fdvarnum ; n++) {
+                boolean firstval = true;
+                used = false;
+
+                BDDDomain domain_n = bdd.getDomain(n);
+
+                int[] domain_n_ivar = domain_n.vars();
+                int domain_n_varnum = domain_n.varNum();
+                for (m=0 ; m<domain_n_varnum ; m++)
+                    if (set[domain_n_ivar[m]] != 0)
+                        used = true;
+     
+                if (used) {
+                    if (!first)
+                        ofile.print(", ");
+                    first = false;
+                    ofile.print(n);
+                    ofile.print(":");
+
+                    var = domain_n_ivar;
+        
+                    for (m=0 ; m<(1<<domain_n_varnum) ; m++) {
+                        binval = fdddec2bin(n, m);
+                        ok = true;
+           
+                        for (i=0 ; i<domain_n_varnum && ok ; i++)
+                            if (set[var[i]] == 1  &&  binval[i] != false)
+                                ok = false;
+                            else if (set[var[i]] == 2  &&  binval[i] != true)
+                                ok = false;
+
+                        if (ok) {
+                            if (!firstval)
+                                ofile.print("/");
+                            ofile.print(m);
+                            firstval = false;
+                        }
+
+                        //free(binval);
+                    }
+                }
+            }
+
+            ofile.print(">");
+        } else {
+            set[r.var()] = 1;
+            fdd_printset_rec(ofile, r.low(), set);
+      
+            set[r.var()] = 2;
+            fdd_printset_rec(ofile, r.high(), set);
+      
+            set[r.var()] = 0;
+        }
+    }
+    
+    boolean[] fdddec2bin(int var, int val) {
+        boolean[] res;
+        int n = 0;
+
+        res = new boolean[bdd.getDomain(var).varNum()];
+
+        while (val > 0) {
+            if ((val & 0x1) != 0)
+                res[n] = true;
+            val >>= 1;
+            n++;
+        }
+
+        return res;
+    }
+    
 }
