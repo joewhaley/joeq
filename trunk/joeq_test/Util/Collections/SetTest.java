@@ -363,7 +363,6 @@ public class SetTest extends TestCase {
         assertTrue(Arrays.asList(oa).contains(NULL));
         assertTrue(oa instanceof String[]);
         sa = new String[3];
-        Class asc = sa.getClass();
         for (int i = 0; i < sa.length; i++) {
             sa[i] = "ok";
         }
