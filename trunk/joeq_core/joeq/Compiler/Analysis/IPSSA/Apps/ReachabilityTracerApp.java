@@ -106,8 +106,7 @@ public abstract class ReachabilityTracerApp extends IPSSABuilder.Application {
         
         /**
          * Get a BDD for the return node of method.
-         * */        
-        
+         * */                
         public void test() {
             Assert._assert(_builder != null);
             _pa = _builder.getPAResults();

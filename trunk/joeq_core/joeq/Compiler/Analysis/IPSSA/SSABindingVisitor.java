@@ -7,7 +7,6 @@
 package Compil3r.Analysis.IPSSA;
 
 import java.io.PrintStream;
-import java.util.Iterator;
 
 import Clazz.jq_Method;
 import Compil3r.Quad.ControlFlowGraph;
@@ -17,8 +16,8 @@ public abstract class SSABindingVisitor {
 	public void visitCFG(ControlFlowGraph _cfg) {
 		jq_Method method = _cfg.getMethod();
 				
-		for (Iterator j=SSAProcInfo.retrieveQuery(method).getBindingIterator(method); j.hasNext(); ) {
-			SSABinding b = (SSABinding)j.next();
+		for (SSAIterator.BindingIterator j=SSAProcInfo.retrieveQuery(method).getBindingIterator(method); j.hasNext(); ) {
+			SSABinding b = j.nextBinding();
 			b.accept(this);
 		}				
 	}
