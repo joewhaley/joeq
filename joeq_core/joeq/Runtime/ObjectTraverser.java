@@ -207,6 +207,12 @@ public class ObjectTraverser {
                 mapped_objects.put(o, o2 = new jq_Thread((Thread)o));
                 return o2;
             }
+            if (fieldName.equals("threadLocals")) {
+		return java.util.Collections.EMPTY_MAP;
+	    }
+            if (fieldName.equals("inheritableThreadLocals")) {
+		return java.util.Collections.EMPTY_MAP;
+	    }
         }
         if (c == ClassLoader.class) {
             if (o == PrimordialClassLoader.loader) {
