@@ -155,6 +155,7 @@ public class PA {
     static boolean ADD_INSTANCE_METHODS = !System.getProperty("pa.addinstancemethods", "no").equals("no");
     static boolean USE_BOGUS_SUMMARIES = !System.getProperty("pa.usebogussummaries", "no").equals("no");
     static boolean USE_REFLECTION_PROVIDER = !System.getProperty("pa.usereflectionprovider", "no").equals("no");
+    static boolean RESOLVE_REFLECTION = !System.getProperty("pa.    ", "no").equals("no");
     static boolean TRACE_BOGUS = !System.getProperty("pa.tracebogus", "no").equals("no");
     public static boolean TRACE_REFLECTION = !System.getProperty("pa.tracereflection", "no").equals("no");
     int MAX_PARAMS = Integer.parseInt(System.getProperty("pa.maxparams", "4"));
@@ -177,7 +178,7 @@ public class PA {
     
     BDDFactory bdd;
     
-    BDDDomain V1, V2, I, H1, H2, Z, F, T1, T2, N, M, M2;
+    BDDDomain V1, V2, I, I2, H1, H2, Z, F, T1, T2, N, M, M2;
     BDDDomain V1c[], V2c[], H1c[], H2c[];
     
     int V_BITS=19, I_BITS=19, H_BITS=16, Z_BITS=6, F_BITS=14, T_BITS=14, N_BITS=16, M_BITS=16;
@@ -227,6 +228,7 @@ public class PA {
     BDD IEfilter; // V2cxIxV1cxM, context-sensitive edge filter
     
     BDD visited; // M, visited methods
+    BDD forNameMap; // IXH1, heap allocation sites for forClass.Name
     // maps to SSA form
     BuildBDDIR bddIRBuilder;
     BDD vReg; // Vxreg
@@ -238,11 +240,11 @@ public class PA {
     boolean reverseLocal = System.getProperty("bddreverse", "true").equals("true");
     String varorder = System.getProperty("bddordering");
     
-    BDDPairing V1toV2, V2toV1, H1toH2, H2toH1, V1H1toV2H2, V2H2toV1H1;
+    BDDPairing V1toV2, V2toV1, H1toH2, ItoI2, I2toI, H2toH1, V1H1toV2H2, V2H2toV1H1;
     BDDPairing V1ctoV2c, V1cV2ctoV2cV1c, V1cH1ctoV2cV1c;
     BDDPairing T2toT1, T1toT2;
     BDDPairing H1toV1c[], V1ctoH1[]; BDD V1csets[], V1cH1equals[];
-    BDD V1set, V2set, H1set, H2set, T1set, T2set, Fset, Mset, Nset, Iset, Zset;
+    BDD V1set, V2set, H1set, H2set, T1set, T2set, Fset, Mset, Nset, Iset, I2set, Zset;
     BDD V1V2set, V1Fset, V2Fset, V1FV2set, V1H1set, H1Fset, H2Fset, H1H2set, H1FH2set;
     BDD IMset, INset, INH1set, INT2set, T2Nset, MZset;
     BDD V1cset, V2cset, H1cset, H2cset, V1cV2cset, V1cH1cset, H1cH2cset;
@@ -274,6 +276,7 @@ public class PA {
         V1 = makeDomain("V1", V_BITS);
         V2 = makeDomain("V2", V_BITS);
         I = makeDomain("I", I_BITS);
+        I2 = makeDomain("I2", I_BITS);
         H1 = makeDomain("H1", H_BITS);
         H2 = makeDomain("H2", H_BITS);
         Z = makeDomain("Z", Z_BITS);
@@ -315,19 +318,19 @@ public class PA {
             // default variable orderings.
             if (CONTEXT_SENSITIVE || THREAD_SENSITIVE || OBJECT_SENSITIVE) {
                 if (HC_BITS > 0) {
-                    varorder = "N_F_Z_I_M2_M_T1_V2xV1_V2cxV1c_H2xH2c_T2_H1xH1c";
+                    varorder = "N_F_Z_I_I2_M2_M_T1_V2xV1_V2cxV1c_H2xH2c_T2_H1xH1c";
                 } else {
                     //varorder = "N_F_Z_I_M2_M_T1_V2xV1_V2cxV1c_H2_T2_H1";
-                    varorder = "N_F_I_M2_M_Z_V2xV1_V2cxV1c_T1_H2_T2_H1";
+                    varorder = "N_F_I_I2_M2_M_Z_V2xV1_V2cxV1c_T1_H2_T2_H1";
                 }
             } else if (CARTESIAN_PRODUCT && false) {
-                varorder = "N_F_Z_I_M2_M_T1_V2xV1_T2_H2xH1";
+                varorder = "N_F_Z_I_I2_M2_M_T1_V2xV1_T2_H2xH1";
                 for (int i = 0; i < V1c.length; ++i) {
                     varorder += "xV1c"+i+"xV2c"+i;
                 }
             } else {
                 //varorder = "N_F_Z_I_M2_M_T1_V2xV1_H2_T2_H1";
-                varorder = "N_F_I_M2_M_Z_V2xV1_T1_H2_T2_H1";
+                varorder = "N_F_I_I2_M2_M_Z_V2xV1_T1_H2_T2_H1";
             }
         }
         
@@ -356,6 +359,10 @@ public class PA {
         H1toH2 = bdd.makePair();
         H1toH2.set(H1, H2);
         H1toH2.set(H1c, H2c);
+        ItoI2 = bdd.makePair();
+        ItoI2.set(I, I2);
+        I2toI = bdd.makePair();
+        I2toI.set(I2, I);
         H2toH1 = bdd.makePair();
         H2toH1.set(H2, H1);
         H2toH1.set(H2c, H1c);
@@ -416,6 +423,7 @@ public class PA {
         Mset = M.set();
         Nset = N.set();
         Iset = I.set();
+        I2set = I2.set();
         Zset = Z.set();
         V1cV2cset = (V1c.length > 0) ? V1cset.and(V2cset) : bdd.zero();
         H1cH2cset = (H1c.length > 0) ? H1cset.and(H2cset) : bdd.zero();
@@ -465,6 +473,7 @@ public class PA {
         IE = bdd.zero();
         hP = bdd.zero();
         visited = bdd.zero();
+        forNameMap =  bdd.zero();
         
         if (OBJECT_SENSITIVE || CARTESIAN_PRODUCT) staticCalls = bdd.zero();
         
@@ -529,6 +538,19 @@ public class PA {
     void addToVisited(BDD M_bdd) {
         if (TRACE_RELATIONS) out.println("Adding to visited: "+M_bdd.toStringWithDomains());
         visited.orWith(M_bdd.id());
+    }
+    
+    public void addToForNameMap(ConcreteTypeNode h, BDD i_bdd) {
+        BDD H_i = H1.ithVar(Hmap.get(h));
+        H_i.andWith(i_bdd.id());
+//        System.out.println("H_i: " + H_i.toStringWithDomains(TS));
+//        H_i.relprod(actual, Iset);                      // H1xI x IxZxV2 = H1xZxIxV2
+//        System.out.println("H_i: " + H_i.toStringWithDomains(TS));
+//        H_i.restrict(Z.ithVar(1));                      // H1xIxV2
+        
+        forNameMap.orWith(H_i);
+         
+        System.out.println("forNameMap: " + forNameMap.toStringWithDomains(TS));
     }
     
     void addToFormal(BDD M_bdd, int z, Node v) {
@@ -1062,6 +1084,15 @@ public class PA {
         object_class.prepare();
         javaLangObject_clone = object_class.getDeclaredInstanceMethod(new jq_NameAndDesc("clone", "()Ljava/lang/Object;"));
     }
+    
+    jq_Class class_class = PrimordialClassLoader.getJavaLangClass();
+    jq_Method javaLangClass_newInstance;
+    {
+        class_class.prepare();
+        javaLangClass_newInstance = class_class.getDeclaredInstanceMethod(new jq_NameAndDesc("newInstance", "()Ljava/lang/Object;"));
+        Assert._assert(javaLangClass_newInstance != null);
+    }
+    
     jq_Class cloneable_class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/Cloneable;");
     jq_Class throwable_class = (jq_Class) PrimordialClassLoader.getJavaLangThrowable();
     jq_Method javaLangObject_fakeclone = jq_FakeInstanceMethod.fakeMethod(object_class, 
@@ -1294,7 +1325,8 @@ public class PA {
                         if(TRACE_REFLECTION) System.out.println("No reflective targets for a call to " + m);    
                     }                    
                 }
-            
+                
+                
                 // default case
                 addToCHA(T_bdd, N_i, m);            
             }
@@ -1884,6 +1916,90 @@ public class PA {
         t6.free();
     }
     
+    /** Updates IE/IEcs with new edges obtained from resolving reflective invocations */
+    public boolean bindReflection(){
+        BDD t1 = actual.restrict(Z.ithVar(0));          // IxV2
+        if (USE_VCONTEXT) t1.andWith(V2cdomain.id());   // IxV2cxV2
+        t1.replaceWith(V2toV1);
+        BDD t11 = IE.restrict(M.ithVar(Mmap.get(javaLangClass_newInstance)));
+        BDD t3 = t1.relprod(IE, Mset);                  // IxV1cxV1 & IxM = V1xI2
+        if(TRACE_REFLECTION) System.out.println("t3: " + t3.toStringWithDomains(TS));
+        BDD t31 = t3.replace(ItoI2);
+        if(TRACE_REFLECTION) System.out.println("t31: " + t31.toStringWithDomains(TS));
+        t1.free();
+        
+        BDD t4;
+        if (CS_CALLGRAPH) {
+            // We keep track of where a call goes under different contexts.
+            t4 = t31.relprod(vP, V1.set());              // IxV1cxV1xN x V1cxV1xH1cxH1 = V1cxIxH1cxH1xN
+        } else {
+            // By quantifying out V1c, we merge all contexts.
+            t4 = t31.relprod(vP, V1set);                  // IxV1cxV1xN x V1cxV1xH1cxH1 = IxH1cxH1
+        }
+        //t4.exist(Iset);
+        if(TRACE_REFLECTION) System.out.println("t4: " + t4.toStringWithDomains(TS) + " of size " + t4.satCount(Iset));
+        BDD t41 = t4.relprod(forNameMap, Nset);          // H1cxH1xN x H1xI = IxH1cxH1
+        t4.free();
+        if(TRACE_REFLECTION) System.out.println("t41: " + t41.toStringWithDomains(TS) + " of size " + t41.satCount(Iset));
+        
+        BDD t6 = t41.relprod(actual, Iset.and(H1set));
+        t41.free();
+        BDD t7 = t6.restrict(Z.ithVar(1));
+        t6.free();
+        if(TRACE_REFLECTION) System.out.println("t7: " + t7.toStringWithDomains(TS) + " of size " + t7.satCount(Iset));
+        
+        BDD t8 = t7.replace(V2toV1);
+        t7.free();
+        BDD t9 = t8.relprod(vP, V1set);
+        t8.free();
+        
+        if(TRACE_REFLECTION) System.out.println("t9: " + t9.toStringWithDomains(TS) + " of size " + t9.satCount(Iset));
+        BDD constructorIE = bdd.zero(); 
+        for(Iterator iter = t9.iterator(H1set.and(I2set)); iter.hasNext();){
+            BDD h = (BDD) iter.next();
+            int h_i = h.scanVar(H1).intValue();
+            MethodSummary.ConcreteTypeNode n = (ConcreteTypeNode) Hmap.get(h_i);
+            String stringConst = (String) MethodSummary.stringNodes2Values.get(n);
+            if(stringConst == null){
+                System.err.println("No constant string for " + n);
+                continue;
+            }
+            if(TRACE_REFLECTION) System.out.println("stringConst: " + stringConst);
+            jq_Class c = null;
+            try {
+                c = (jq_Class) jq_Type.parseType(stringConst);
+                c.prepare();
+                Assert._assert(c != null);
+            }catch(NoClassDefFoundError e){
+                System.err.println("Resolving reflection: unable to load " + stringConst);
+                continue;
+            }            
+            jq_Method constructor = c.getClassInitializer();
+            constructorIE.orWith(M.ithVar(Mmap.get(constructor)).and(h));
+        }
+        if(TRACE_REFLECTION) System.out.println("constructorIE: " + constructorIE.toStringWithDomains(TS) + " of size " + constructorIE.satCount(H1set));
+        
+        BDD t10 = constructorIE.exist(H1set).replace(I2toI);
+        constructorIE.free();
+        if(TRACE_REFLECTION) System.out.println("t10: " + t10.toStringWithDomains(TS) + " of size " + constructorIE.satCount(H1set));
+        
+        
+        BDD old_IE = IE.id();
+        if (CS_CALLGRAPH){ 
+            IE.orWith(t10.exist(V1cset));
+        } else { 
+            IE.orWith(t10);
+            if (TRACE_SOLVER) {
+                out.println("Call graph edges after: "+IE.satCount(IMset));
+            }
+        }
+        
+        boolean changed = IE.equals(old_IE);
+        old_IE.free();
+        
+        return changed;        
+    }
+    
     BDD old3_t3;
     BDD old3_vP;
     BDD old3_t4;
@@ -2186,6 +2302,9 @@ public class PA {
             buildTypes();
             solvePointsTo();
             bindInvocations();
+            if(RESOLVE_REFLECTION){
+                change |= bindReflection();
+            }
             if (handleNewTargets())
                 change = true;
             if (!change && vP.equals(vP_old) && IE.equals(IE_old)) {
@@ -2611,7 +2730,7 @@ public class PA {
                 case 0: // fallthrough
                 case 1: return findInMap(Vmap, j.intValue());
                 case 2: return findInMap(Imap, j.intValue());
-                case 3: // fallthrough
+                case 3: return findInMap(Imap, j.intValue());// fallthrough
                 case 4: return findInMap(Hmap, j.intValue());
                 case 5: return j.toString();
                 case 6: return findInMap(Fmap, j.intValue());
@@ -4459,6 +4578,5 @@ public class PA {
         bdd_save(dumpPath + "/fMember.bdd", fMember);
         //System.out.println("hQuad: "+(long) sync.satCount(H1.set().and(quad.set()))+" relations, "+hQuad.nodeCount()+" nodes");
         //bdd_save(resultsFileName+".hQuad", sync);
-    }
-    
+    }    
 }

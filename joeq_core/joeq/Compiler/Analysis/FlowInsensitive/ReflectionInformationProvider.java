@@ -70,6 +70,8 @@ public abstract class ReflectionInformationProvider {
             jq_Method method = clazz.getDeclaredMethod(methodName);
             Assert._assert(method != null);
             
+            if(PA.TRACE_REFLECTION) System.out.println("Retrieved method " + method);
+            
             return method;
         }
         
@@ -111,7 +113,28 @@ public abstract class ReflectionInformationProvider {
         
         public void addSubclasses(String className) {
             jq_Class clazz = getClass(className);
-            Assert._assert(false);  
+            //Assert._assert(clazz != null);
+            for(Iterator iter = PrimordialClassLoader.loader.listPackages(); iter.hasNext();){
+                //System.out.println("\t" + iter.next());
+                String packageName = (String) iter.next();
+                
+                for(Iterator classIter = PrimordialClassLoader.loader.listPackage(packageName, true); classIter.hasNext();){
+                    String className2 = (String) classIter.next();
+                    className2 = className2.substring(0, className2.length()-6); 
+                    //System.out.println("\tClass: " + className2);
+                    jq_Class c = (jq_Class) jq_Type.parseType(className2);
+                    try {
+                        c.prepare();
+                    } catch(Throwable e){
+                        continue;
+                    }
+                    
+                    if(c.isSubtypeOf(clazz)){
+                        System.out.println("\tClass: " + c);    
+                    }
+                }
+                
+            }
         }        
     }
     
@@ -153,7 +176,7 @@ public abstract class ReflectionInformationProvider {
         jq_Method target = mc.getTargetMethod();
         return isNewInstance(target);
     }
-
+    
     /**
      * Checks if target is a newInstance method. 
      */
@@ -163,6 +186,16 @@ public abstract class ReflectionInformationProvider {
         
         if(!className.equals("java.lang.Class")) return false;
         if(!methodName.equals("newInstance")) return false;
+        
+        return true;
+    }
+    
+    public static boolean isForName(jq_Method target) {
+        String className = target.getDeclaringClass().getName(); 
+        String methodName = target.getName().toString();
+        
+        if(!className.equals("java.lang.Class")) return false;
+        if(!methodName.equals("forName")) return false;
         
         return true;
     }
@@ -296,5 +329,5 @@ public abstract class ReflectionInformationProvider {
             }
             return null;            
         }
-    }
+    }  
 }

@@ -123,6 +123,7 @@ public class MethodSummary {
     public static final boolean SPLIT_THREADS = true;
     
     public static Set ssaEntered = new HashSet();
+    public static Map stringNodes2Values = new HashMap();
     
     /**
      * Helper class to output method summary in dot graph format.
@@ -678,8 +679,16 @@ public class MethodSummary {
                 } else if (GLOBAL_TYPE_CONSTANTS) {
                     n = ConcreteTypeNode.get(aop.getType());
                 } else {
-                    if (MERGE_LOCAL_CONSTANTS) n = ConcreteObjectNode.get(aop, pl);
-                    else n = ConcreteTypeNode.get(aop.getType(), pl, new Integer(opn));
+                    if (MERGE_LOCAL_CONSTANTS) {
+                        n = ConcreteObjectNode.get(aop, pl);
+                    } else {
+                        n = ConcreteTypeNode.get(aop.getType(), pl, new Integer(opn));
+                        if(aop.getValue() instanceof String){
+                            String value = (String) aop.getValue();
+                            
+                            stringNodes2Values.put(n, value);
+                        }
+                    }
                 }
             } else {
                 jq_Reference type = ((PConstOperand)op).getType();
@@ -978,9 +987,12 @@ public class MethodSummary {
                     }
                 }
             }
+            
+            
             Node n = ConcreteTypeNode.get(type, new QuadProgramLocation(method, obj));
             setRegister(dest_r, n);
         }
+        
         /** Visit an array allocation instruction. */
         public void visitNewArray(Quad obj) {
             if (TRACE_INTRA) out.println("Visiting: "+obj);
