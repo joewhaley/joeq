@@ -66,7 +66,7 @@ public class HeapAddress extends Address {
 
     public native int atomicCas4(int before, int after);
 
-    public native int atomicCas8(long before, long after);
+    public native long atomicCas8(long before, long after);
 
     public native Address peek();
 
