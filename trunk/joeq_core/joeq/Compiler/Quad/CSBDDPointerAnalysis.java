@@ -187,7 +187,7 @@ public class CSBDDPointerAnalysis {
                 if (TRACE_WORKLIST) System.out.println("Loop changed, redoing SCC.");
             } else {
                 if (TRACE_WORKLIST) System.out.println("Finished SCC"+scc.getId());
-                Set entrypoints = scc.getEntrypoints(navigator);
+                Collection entrypoints = Arrays.asList(scc.entries());
                 for (int i=0; i<nodes.length; ++i) {
                     jq_Method m = (jq_Method) nodes[i];
                     if (m.getBytecode() == null) continue;
@@ -210,7 +210,7 @@ public class CSBDDPointerAnalysis {
                         if (TRACE_WORKLIST) System.out.println(m.getName()+" is an entrypoint with "+number+" predecessors.");
                     }
                 }
-                Set exitedges = scc.getExitEdges(navigator);
+                Collection exitedges = Arrays.asList(scc.exits());
                 for (Iterator i=exitedges.iterator(); i.hasNext(); ) {
                     Pair p = (Pair) i.next();
                     if (TRACE_WORKLIST) System.out.println("Looking at edge "+p);
