@@ -66,6 +66,8 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
     IndexMap regMap;
     IndexMap memberMap;
     
+    int quadBits = 14, opBits = 8, regBits = 13, constantBits = 32, memberBits = 11;    
+
     BDDFactory bdd;
     BDDDomain quad, opc, dest, src1, src2, constant, fallthrough, target, member;
     BDD allQuads;
@@ -77,21 +79,21 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         regMap = new IndexMap("reg");
         memberMap = new IndexMap("member");
         bdd = BDDFactory.init(1000000, 10000);
-        quad = makeDomain("quad", 14);
-        opc = makeDomain("opc", 8);
-        dest = makeDomain("dest", 13);
-        src1 = makeDomain("src1", 13);
-        src2 = makeDomain("src2", 13);
-        constant = makeDomain("constant", 32);
-        fallthrough = makeDomain("fallthrough", 14);
-        target = makeDomain("target", 14);
-        member = makeDomain("member", 11);
+        quad = makeDomain("quad", quadBits);
+        opc = makeDomain("opc", opBits);
+        dest = makeDomain("dest", regBits);
+        src1 = makeDomain("src1", regBits);
+        src2 = makeDomain("src2", regBits);
+        constant = makeDomain("constant", constantBits);
+        fallthrough = makeDomain("fallthrough", quadBits);
+        target = makeDomain("target", quadBits);
+        member = makeDomain("member", memberBits);
         allQuads = bdd.zero();
     }
     
     void handleTarget(TargetOperand top) {
         Quad q = top.getTarget().getQuad(0);
-        int qid = quadMap.get(q);
+        int qid = quadMap.get(q)+1;
         currentQuad.andWith(target.ithVar(qid));
     }
     void handleConst(Const4Operand cop) {
@@ -101,14 +103,14 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
     void handleDest(RegisterOperand rop) {
         if (rop == null) return;
         Register r = rop.getRegister();
-        int rid = regMap.get(r);
+        int rid = regMap.get(r)+1;
         currentQuad.andWith(dest.ithVar(rid));
     }
     void handleSrc1(Operand op) {
         if (op instanceof RegisterOperand) {
             RegisterOperand rop = (RegisterOperand) op;
             Register r = rop.getRegister();
-            int rid = regMap.get(r);
+            int rid = regMap.get(r)+1;
             currentQuad.andWith(src1.ithVar(rid));
         } else if (op instanceof Const4Operand) {
             Const4Operand cop = (Const4Operand) op;
@@ -119,7 +121,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         if (op instanceof RegisterOperand) {
             RegisterOperand rop = (RegisterOperand) op;
             Register r = rop.getRegister();
-            int rid = regMap.get(r);
+            int rid = regMap.get(r)+1;
             currentQuad.andWith(src2.ithVar(rid));
         } else if (op instanceof Const4Operand) {
             Const4Operand cop = (Const4Operand) op;
@@ -138,7 +140,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
             Assert.UNREACHABLE();
             return;
         }
-        int mid = memberMap.get(o);
+        int mid = memberMap.get(o)+1;
         currentQuad.andWith(member.ithVar(mid));
     }
     
@@ -393,16 +395,16 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         while (i.hasNext()) {
             Quad q = i.nextQuad();
             currentQuad = bdd.one();
-            int quadID = quadMap.get(q);
+            int quadID = quadMap.get(q)+1;
             //System.out.println("Quad id: "+quadID);
             currentQuad.andWith(quad.ithVar(quadID));
-            int opID = opMap.get(q.getOperator());
+            int opID = opMap.get(q.getOperator())+1;
             currentQuad.andWith(opc.ithVar(opID));
             q.accept(this);
             BDD succ = bdd.zero();
             for (Iterator j = i.successors(); j.hasNext(); ) {
                 Quad q2 = (Quad) j.next();
-                int quad2ID = quadMap.get(q2);
+                int quad2ID = quadMap.get(q2)+1;
                 succ.orWith(fallthrough.ithVar(quad2ID));
             }
             currentQuad.andWith(succ);
@@ -423,6 +425,24 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         dumpMap(opMap, "op.map");
         dumpMap(regMap, "reg.map");
         dumpMap(memberMap, "member.map");
+        dumpFieldDomains("fielddomains.quads");
+        dumpRelations("relations.quads");
+    }
+    
+    void dumpFieldDomains(String fileName) throws IOException {
+        DataOutputStream dos = new DataOutputStream(new FileOutputStream(fileName));
+        dos.writeBytes("quad "+(1L<<quadBits)+"\n");
+        dos.writeBytes("op "+(1L<<opBits)+"\n");
+        dos.writeBytes("reg "+(1L<<regBits)+"\n");
+        dos.writeBytes("constant "+(1L<<constantBits)+"\n");
+        dos.writeBytes("member "+(1L<<memberBits)+"\n");
+        dos.close();
+    }
+    
+    void dumpRelations(String fileName) throws IOException {
+        DataOutputStream dos = new DataOutputStream(new FileOutputStream(fileName));
+        dos.writeBytes("cfg ( id : quad , op : opc , dest : reg , src1 : reg , src2 : reg , const : constant , fallthrough : quad , target : quad , member : member )");
+        dos.close();
     }
     
     void dumpMap(IndexMap map, String fileName) throws IOException {
