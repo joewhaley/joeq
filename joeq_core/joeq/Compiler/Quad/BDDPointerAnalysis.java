@@ -113,6 +113,8 @@ public class BDDPointerAnalysis {
     // T1 and T2 are used to compute typeFilter
     // T1 = V2, and T2 = V1
     BDDDomain T1, T2, T3, T4; 
+    // context domains: unused
+    BDDDomain V1c, V2c, H1c, H2c;
 
     // domain pairs for bdd_replace
     BDDPairing V1ToV2;
@@ -161,10 +163,14 @@ public class BDDPointerAnalysis {
             Assert._assert(bdd_domains[i].varNum() == domainBits[i], "Domain "+i+" bits "+bdd_domains[i].varNum());
         }
         V1 = bdd_domains[0];
+        V1c = bdd_domains[1];
         V2 = bdd_domains[2];
+        V2c = bdd_domains[3];
         FD = bdd_domains[4];
         H1 = bdd_domains[5];
+        H1c = bdd_domains[6];
         H2 = bdd_domains[7];
+        H2c = bdd_domains[8];
         T1 = V2;
         T2 = V1;
         T3 = H2;
@@ -525,15 +531,17 @@ public class BDDPointerAnalysis {
             System.out.println("Calculate type filter:\t"+(time3-time2)/1000.+" seconds.");
 
             BDD myOldPointsTo = oldPointsTo.id();
-            System.out.println("Old points-to relations: "+myOldPointsTo.satCount(V1andH1set));
+            if (TRACE)
+                System.out.println("Old points-to relations: "+(long)myOldPointsTo.satCount(V1andH1set));
             if (INCREMENTAL_POINTSTO) this.solveIncremental();
             else this.solveNonincremental();
             oldPointsTo.free();
-            System.out.println("Old points-to relations: "+myOldPointsTo.satCount(V1andH1set));
-            System.out.println("Current points-to relations: "+this.pointsTo.satCount(V1andH1set));
+            if (TRACE)
+                System.out.println("Current points-to relations: "+(long)this.pointsTo.satCount(V1andH1set));
             BDD newPointsTo = this.pointsTo.apply(myOldPointsTo, BDDFactory.diff);
             myOldPointsTo.free();
-            System.out.println("New points-to relations: "+newPointsTo.satCount(V1andH1set));
+            if (TRACE)
+                System.out.println("New points-to relations: "+(long)newPointsTo.satCount(V1andH1set));
 
             time3 = System.currentTimeMillis() - time3;
             System.out.println("Solve pointers:\t\t"+time3/1000.+" seconds.");
@@ -1467,9 +1475,15 @@ public class BDDPointerAnalysis {
      */
     void dumpResults(String dumpfilename) throws IOException {
         System.out.println("pointsTo = "+(long)pointsTo.satCount(V1andH1set)+" relations, "+pointsTo.nodeCount()+" nodes");
-        bdd.save(dumpfilename+".bdd", pointsTo);
-        System.out.println("fieldPt = "+(long)fieldPt.satCount(H1andFDset.and(H2.set()))+" relations, "+fieldPt.nodeCount()+" nodes");
-        bdd.save(dumpfilename+".bdd2", fieldPt);
+        
+        BDD cs_pointsTo = pointsTo.and(V1c.ithVar(0));
+        cs_pointsTo.andWith(H1c.ithVar(0));
+        System.out.println("pointsTo = "+(long)cs_pointsTo.satCount(V1andH1set)+" relations, "+cs_pointsTo.nodeCount()+" nodes");
+        bdd.save(dumpfilename+".bdd", cs_pointsTo);
+        BDD cs_fieldPt = fieldPt.and(H1c.ithVar(0));
+        cs_fieldPt.andWith(H2c.ithVar(0));
+        System.out.println("fieldPt = "+(long)cs_fieldPt.satCount(H1andFDset.and(H2.set()))+" relations, "+cs_fieldPt.nodeCount()+" nodes");
+        bdd.save(dumpfilename+".bdd2", cs_fieldPt);
         
         DataOutputStream dos;
         dos = new DataOutputStream(new FileOutputStream(dumpfilename+".config"));
