@@ -351,7 +351,7 @@ public class PAResults implements PointerAnalysisResults {
                     BDD r = getEncapsulatedHeapObjects();
                     results.add(r);
                 } else if (command.equals("collectiontypes")) {
-		    CollectionType tfinder = new CollectionType(this);
+		    CollectionType tfinder = new CollectionType(this, st.hasMoreTokens());
 		    TypedBDD r = tfinder.findCollectionTypes();
 		    results.add(r);
                 } else if (command.equals("gini")) {
