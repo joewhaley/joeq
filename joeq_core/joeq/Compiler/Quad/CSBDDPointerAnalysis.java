@@ -1,7 +1,6 @@
 
 package Compil3r.Quad;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -20,7 +19,6 @@ import org.sf.javabdd.BuDDyFactory;
 
 import Clazz.jq_Class;
 import Clazz.jq_Field;
-import Clazz.jq_InstanceMethod;
 import Clazz.jq_Method;
 import Clazz.jq_Reference;
 import Clazz.jq_Type;
@@ -129,6 +127,7 @@ public class CSBDDPointerAnalysis {
                 if (TRACE_WORKLIST) System.out.println();
                 else System.out.print("\r");
                 if (m.getBytecode() == null) continue;
+                long time2 = System.currentTimeMillis();
                 ControlFlowGraph cfg = CodeCache.getCode(m);
                 MethodSummary ms = MethodSummary.getSummary(cfg);
                 /* Get the cached summary for this method. */
@@ -148,6 +147,8 @@ public class CSBDDPointerAnalysis {
                 if (change && !scc.isLoop()) {
                     s.trim();
                 }
+                time2 = System.currentTimeMillis() - time2;
+                if (TRACE_TIMES || time2 > 1000) System.out.println("Total for "+m.getName()+"()="+(time2/1000.)+" seconds");
             }
             if (scc.isLoop() && change) {
                 if (TRACE_WORKLIST) System.out.println("Loop changed, redoing SCC.");
@@ -185,6 +186,11 @@ public class CSBDDPointerAnalysis {
      */
     private final CallGraph cg;
 
+    public static final int VARBITS = 20;
+    public static final int HEAPBITS = 20;
+    public static final int FIELDBITS = 13;
+    public static final int CLASSBITS = 13;
+    
     // the size of domains, can be changed to reflect the size of inputs
     int domainBits[] = {20, 20, 20, 13, 14, 14};
     // to be computed in sysInit function
@@ -243,9 +249,10 @@ public class CSBDDPointerAnalysis {
         T3 = H2;
         T4 = V2;
         
-        int varnum = bdd.varNum();
-        int[] varorder = new int[varnum];
-        makeVarOrdering(varorder);
+        boolean reverseLocal = System.getProperty("bddreverse", "true").equals("true");
+        String ordering = System.getProperty("bddordering", "V3_FD_H2_V2xV1_H1");
+        
+        int[] varorder = makeVarOrdering(reverseLocal, ordering);
         for (int i=0; i<varorder.length; ++i) {
             //System.out.println("varorder["+i+"]="+varorder[i]);
         }
@@ -272,21 +279,11 @@ public class CSBDDPointerAnalysis {
         typeFilter = bdd.zero();
     }
 
-    void makeVarOrdering(int[] varorder) {
-        
-        boolean reverseLocal = System.getProperty("bddreverse", "true").equals("true");
-        String ordering = System.getProperty("bddordering", "V3_FD_H2_V2xV1_H1");
+    int[] makeVarOrdering(boolean reverseLocal, String ordering) {
         
         int varnum = bdd.varNum();
         
         int[][] localOrders = new int[domainBits.length][];
-        /*
-        localOrders[0] = new int[domainBits[0]];
-        localOrders[1] = localOrders[0];
-        localOrders[2] = new int[domainBits[2]];
-        localOrders[3] = new int[domainBits[3]];
-        localOrders[4] = localOrders[3];
-        */
         for (int i=0; i<localOrders.length; ++i) {
             localOrders[i] = new int[domainBits[i]];
         }
@@ -305,10 +302,12 @@ public class CSBDDPointerAnalysis {
         
         BDDDomain[] doms = new BDDDomain[domainBits.length];
         
+        int[] varorder = new int[varnum];
+        
         System.out.println("Ordering: "+ordering);
         StringTokenizer st = new StringTokenizer(ordering, "x_", true);
-        int a = 0, idx = 0;
-        for (;;) {
+        int numberOfDomains = 0, bitIndex = 0;
+        for (int i=0; ; ++i) {
             String s = st.nextToken();
             BDDDomain d;
             if (s.equals("V1")) d = V1;
@@ -319,59 +318,62 @@ public class CSBDDPointerAnalysis {
             else if (s.equals("H2")) d = H2;
             else {
                 Assert.UNREACHABLE("bad domain: "+s);
-                return;
+                return null;
             }
-            doms[a] = d;
+            doms[i] = d;
+            if (st.hasMoreTokens()) {
+                s = st.nextToken();
+                if (s.equals("x")) {
+                    ++numberOfDomains;
+                    continue;
+                }
+            }
+            bitIndex = fillInVarIndices(doms, i-numberOfDomains, numberOfDomains+1,
+                                        localOrders, bitIndex, varorder);
             if (!st.hasMoreTokens()) {
-                idx = fillInVarIndices(localOrders, idx, varorder, a+1, doms);
                 break;
             }
-            s = st.nextToken();
             if (s.equals("_")) {
-                idx = fillInVarIndices(localOrders, idx, varorder, a+1, doms);
-                a = 0;
-            } else if (s.equals("x")) {
-                a++;
+                numberOfDomains = 0;
             } else {
                 Assert.UNREACHABLE("bad token: "+s);
-                return;
+                return null;
             }
         }
         
-        // according to the documentation of buddy, the default ordering is x1, y1, z1, x2, y2, z2, .....
-        // V1[0] -> default variable number
-        int[] outside2inside = new int[varnum];
         for (int i=0; i<doms.length; ++i) {
             doms[i] = bdd.getDomain(i);
         }
-        getVariableMap(outside2inside, doms, domainBits.length);
+        int[] outside2inside = new int[varnum];
+        getVariableMap(outside2inside, doms);
         
         remapping(varorder, outside2inside);
+        
+        return varorder;
     }
     
-    int fillInVarIndices(int[][] localOrders, int start, int[] varorder, int numdoms, BDDDomain[] doms) {
-        int totalvars = 0;
-        int[] bits = new int[numdoms];
-        for (int i = 0; i < numdoms; i++) {
-            totalvars += domainBits[doms[i].getIndex()];
-            bits[i] = 0;
+    int fillInVarIndices(BDDDomain[] doms, int domainIndex, int numDomains,
+                         int[][] localOrders, int bitIndex, int[] varorder) {
+        int maxBits = 0;
+        for (int i=0; i<numDomains; ++i) {
+            BDDDomain d = doms[domainIndex+i];
+            int di = d.getIndex();
+            maxBits = Math.max(maxBits, domainBits[di]);
         }
-
-        for (int i = start, n = start + totalvars, j = 0; i < n; i++) {
-            int dji = doms[j].getIndex();
-            while (bits[j] >= domainBits[dji]) {
-                j = (j + 1) % numdoms;
+        for (int bitNumber=0; bitNumber<maxBits; ++bitNumber) {
+            for (int i=0; i<numDomains; ++i) {
+                BDDDomain d = doms[domainIndex+i];
+                int di = d.getIndex();
+                if (bitNumber < domainBits[di])
+                    varorder[bitIndex++] = domainSpos[di] + localOrders[di][bitNumber];
             }
-            varorder[i] = domainSpos[dji] + localOrders[dji][bits[j]++];
-            j = (j + 1) % numdoms;
         }
-
-        return start + totalvars;
+        return bitIndex;
     }
-
-    void getVariableMap(int[] map, BDDDomain[] doms, int domnum) {
+    
+    void getVariableMap(int[] map, BDDDomain[] doms) {
         int idx = 0;
-        for (int var = 0; var < domnum; var++) {
+        for (int var = 0; var < doms.length; var++) {
             int[] vars = doms[var].vars();
             for (int i = 0; i < vars.length; i++) {
                 map[idx++] = vars[i];
@@ -381,9 +383,11 @@ public class CSBDDPointerAnalysis {
     
     /* remap according to a map */
     void remapping(int[] varorder, int[] maps) {
+        int[] varorder2 = new int[varorder.length];
         for (int i = 0; i < varorder.length; i++) {
-            varorder[i] = maps[varorder[i]];
+            varorder2[i] = maps[varorder[i]];
         }
+        System.arraycopy(varorder2, 0, varorder, 0, varorder.length);
     }
     
     boolean change;
@@ -395,102 +399,16 @@ public class CSBDDPointerAnalysis {
         return null;
     }
 
-    void printSet(String desc, BDD b) {
-        System.out.print(desc+": ");
-        System.out.flush();
-        //if (desc.startsWith(" "))
-            b.printSetWithDomains();
-        System.out.println();
-    }
-    
-    void printSet(String desc, BDD b, String type) {
-        printSet(desc+" ("+type+")", b);
-        
-        if (false) {
-            int i = 0, n = 1;
-            while ((i = type.indexOf('x', i)+1) > 0) {
-                n++;
-            }
-            BDDDomain[] d = new BDDDomain[n];
-            IndexMap[] m = new IndexMap[n];
-            String[] names = new String[n];
-            i = 0;
-            for (int j=0; j<d.length; ++j) {
-                i = type.indexOf('x', i);
-                String s;
-                if (i >= 0) {
-                    s = type.substring(0, i);
-                    type = type.substring(i+1);
-                } else {
-                    Assert._assert(j == d.length-1);
-                    s = type;
-                }
-                names[j] = s;
-                BDDDomain t1;
-                IndexMap t2;
-                if (s.equals("V1")) {
-                    t1 = V1; t2 = variableIndexMap;
-                } else if (s.equals("V2")) {
-                    t1 = V1; t2 = variableIndexMap;
-                } else if (s.equals("FD")) {
-                    t1 = FD; t2 = fieldIndexMap;
-                } else if (s.equals("H1")) {
-                    t1 = H1; t2 = heapobjIndexMap;
-                } else if (s.equals("H2")) {
-                    t1 = H2; t2 = heapobjIndexMap;
-                } else if (s.equals("T1")) {
-                    t1 = T1; t2 = typeIndexMap;
-                } else if (s.equals("T2")) {
-                    t1 = T2; t2 = typeIndexMap;
-                } else if (s.equals("T3")) {
-                    t1 = T3; t2 = methodIndexMap;
-                } else if (s.equals("T4")) {
-                    t1 = T4; t2 = targetIndexMap;
-                } else {
-                    System.out.println("Unknown domain "+s);
-                    return;
-                }
-                d[j] = t1;
-                m[j] = t2;
-            }
-    
-            System.out.print(desc+": ");
-            printSet_recurse(b.id(), d, m, names, 0);
-            System.out.println();
-        }
-    }
-
-    void printSet_recurse(BDD b, BDDDomain[] d, IndexMap[] m, String[] names, int i) {
-        System.out.print(names[i]+": ");
-        int k=0;
-        for (;;++k) {
-            int p = b.scanVar(d[i]);
-            if (p < 0) break;
-            if (k != 0) System.out.print("/");
-            System.out.print(m[i].get(p));
-            BDD r = d[i].ithVar(p);
-            if (i < d.length-1) {
-                BDD b2 = b.restrict(r);
-                System.out.print(", ");
-                printSet_recurse(b2, d, m, names, i+1);
-                b2.free();
-            }
-            b.applyWith(r, BDDFactory.diff);
-        }
-    }
-
     HashSet visitedMethods = new HashSet();
 
     HashMap callSiteToTargets = new HashMap();
 
     HashSet callGraphEdges = new HashSet();
     
-    IndexMap/* Node->index */ variableIndexMap = new IndexMap("Variable");
-    IndexMap/* Node->index */ heapobjIndexMap = new IndexMap("HeapObj");
-    IndexMap/* jq_Field->index */ fieldIndexMap = new IndexMap("Field");
-    IndexMap/* jq_Reference->index */ typeIndexMap = new IndexMap("Class");
-    IndexMap/* jq_InstanceMethod->index */ methodIndexMap = new IndexMap("MethodCall");
-    IndexMap/* jq_InstanceMethod->index */ targetIndexMap = new IndexMap("MethodTarget");
+    IndexMap/* Node->index */ variableIndexMap = new IndexMap("Variable", 1 << VARBITS);
+    IndexMap/* Node->index */ heapobjIndexMap = new IndexMap("HeapObj", 1 << HEAPBITS);
+    IndexMap/* jq_Field->index */ fieldIndexMap = new IndexMap("Field", 1 << FIELDBITS);
+    IndexMap/* jq_Reference->index */ typeIndexMap = new IndexMap("Class", 1 << CLASSBITS);
 
     int getVariableIndex(Node dest) {
         return variableIndexMap.get(dest);
@@ -504,12 +422,6 @@ public class CSBDDPointerAnalysis {
     int getTypeIndex(jq_Reference f) {
         return typeIndexMap.get(f);
     }
-    int getMethodIndex(jq_InstanceMethod f) {
-        return methodIndexMap.get(f);
-    }
-    int getTargetIndex(jq_InstanceMethod f) {
-        return targetIndexMap.get(f);
-    }
     Node getVariable(int index) {
         return (Node) variableIndexMap.get(index);
     }
@@ -521,12 +433,6 @@ public class CSBDDPointerAnalysis {
     }
     jq_Reference getType(int index) {
         return (jq_Reference) typeIndexMap.get(index);
-    }
-    jq_InstanceMethod getMethod(int index) {
-        return (jq_InstanceMethod) methodIndexMap.get(index);
-    }
-    jq_InstanceMethod getTarget(int index) {
-        return (jq_InstanceMethod) targetIndexMap.get(index);
     }
 
     public void addClassType(jq_Reference type) {
@@ -621,26 +527,31 @@ public class CSBDDPointerAnalysis {
     public static class IndexMap {
         private final String name;
         private final HashMap hash;
-        private final ArrayList list;
+        private final Object[] list;
+        private int index;
         
-        public IndexMap(String name) {
+        public IndexMap(String name, int maxIndex) {
             this.name = name;
             hash = new HashMap();
-            list = new ArrayList();
+            list = new Object[maxIndex];
+            index = -1;
         }
         
         public int get(Object o) {
             Integer i = (Integer) hash.get(o);
             if (i == null) {
-                hash.put(o, i = new Integer(list.size()));
-                list.add(o);
-                if (TRACE_MAPS) System.out.println(this+"["+i+"] = "+o);
+                int j = ++index;
+                while (list[j] != null)
+                    ++j;
+                list[j] = o;
+                hash.put(o, i = new Integer(j));
+                if (TRACE_MAPS) System.out.println(this+"["+j+"] = "+o);
             }
             return i.intValue();
         }
         
         public Object get(int i) {
-            return list.get(i);
+            return list[i];
         }
         
         public boolean contains(Object o) {
@@ -648,7 +559,7 @@ public class CSBDDPointerAnalysis {
         }
         
         public int size() {
-            return list.size();
+            return index;
         }
         
         public String toString() {
@@ -733,7 +644,7 @@ public class CSBDDPointerAnalysis {
             
             time = System.currentTimeMillis();
             // match up edges for local stuff.
-            solveNonincremental();
+            solveIncremental();
             time = System.currentTimeMillis() - time;
             if (TRACE_TIMES || time > 400) System.out.println("Matching local edges: "+(time/1000.));
             
@@ -947,6 +858,100 @@ public class CSBDDPointerAnalysis {
 
         }
         
+        public void solveIncremental() {
+
+            calculateTypeFilter();
+            
+            BDD empty = bdd.zero();
+        
+            BDD oldPointsTo = bdd.zero();
+            BDD newPointsTo = pointsTo.id();
+            BDD V1set = V1.set();
+            BDD H1andFDset = H1.set();
+            H1andFDset.andWith(FD.set());
+
+            BDD fieldPt = bdd.zero();
+            BDD storePt = bdd.zero();
+            BDD loadAss = bdd.zero();
+
+            // start solving 
+            for (;;) {
+
+                // repeat rule (1) in the inner loop
+                for (;;) {
+                    BDD newPt1 = edgeSet.relprod(newPointsTo, V1set);
+                    newPointsTo.free();
+                    BDD newPt2 = newPt1.replace(V2ToV1);
+                    newPt1.free();
+                    newPt2.applyWith(pointsTo.id(), BDDFactory.diff);
+                    newPt2.andWith(typeFilter.id());
+                    newPointsTo = newPt2;
+                    if (newPointsTo.equals(empty)) break;
+                    pointsTo.orWith(newPointsTo.id());
+                }
+                newPointsTo.free();
+                newPointsTo = pointsTo.apply(oldPointsTo, BDDFactory.diff);
+
+                // apply rule (2)
+                BDD tmpRel1 = stores.relprod(newPointsTo, V1set); // time-consuming!
+                // (V2xFD)xH1
+                BDD tmpRel2 = tmpRel1.replace(V2ToV1);
+                tmpRel1.free();
+                BDD tmpRel3 = tmpRel2.replace(H1ToH2);
+                tmpRel2.free();
+                // (V1xFD)xH2
+                tmpRel3.applyWith(storePt.id(), BDDFactory.diff);
+                BDD newStorePt = tmpRel3;
+                // cache storePt
+                storePt.orWith(newStorePt.id()); // (V1xFD)xH2
+
+                BDD newFieldPt = storePt.relprod(newPointsTo, V1set); // time-consuming!
+                // (H1xFD)xH2
+                newFieldPt.orWith(newStorePt.relprod(oldPointsTo, V1set));
+                newStorePt.free();
+                oldPointsTo.free();
+                // (H1xFD)xH2
+                newFieldPt.applyWith(fieldPt.id(), BDDFactory.diff);
+                // cache fieldPt
+                fieldPt.orWith(newFieldPt.id()); // (H1xFD)xH2
+
+                // apply rule (3)
+                BDD tmpRel4 = loads.relprod(newPointsTo, V1set); // time-consuming!
+                newPointsTo.free();
+                // (H1xFD)xV2
+                BDD newLoadAss = tmpRel4.apply(loadAss, BDDFactory.diff);
+                tmpRel4.free();
+                BDD newLoadPt = loadAss.relprod(newFieldPt, H1andFDset);
+                newFieldPt.free();
+                // V2xH2
+                newLoadPt.orWith(newLoadAss.relprod(fieldPt, H1andFDset));
+                // V2xH2
+                // cache loadAss
+                loadAss.orWith(newLoadAss);
+
+                // update oldPointsTo
+                oldPointsTo = pointsTo.id();
+
+                // convert new points-to relation to normal type
+                BDD tmpRel5 = newLoadPt.replace(V2ToV1);
+                newPointsTo = tmpRel5.replace(H2ToH1);
+                tmpRel5.free();
+                newPointsTo.applyWith(pointsTo.id(), BDDFactory.diff);
+
+                // apply typeFilter
+                newPointsTo.andWith(typeFilter.id());
+                if (newPointsTo.equals(empty)) break;
+                pointsTo.orWith(newPointsTo.id());
+            }
+        
+            newPointsTo.free();
+            empty.free();
+            V1set.free(); H1andFDset.free();
+            fieldPt.free();
+            storePt.free();
+            loadAss.free();
+        }
+        
         boolean transitiveClosure(BDD srcNodes) {
             BDD V2set, FDset;
             V2set = V2.set();
@@ -985,6 +990,8 @@ public class CSBDDPointerAnalysis {
             FDset.free();
             return change;
         }
+        
+        public static final boolean RENUMBER = false;
         
         boolean doCallees() {
             BDD newEdges = bdd.zero();
@@ -1031,44 +1038,45 @@ public class CSBDDPointerAnalysis {
                     }
                     
                     // renumber if there is any overlap in node numbers.
-                    BDD overlap = nodes.and(callee.nodes);
                     BDD renumbering13 = null;
                     BDD renumbering23 = null;
-                    if (!overlap.equals(bdd.zero())) {
-                        if (TRACE_OVERLAP) System.out.println("... non-zero overlap! "+overlap.toStringWithDomains(bdd));
-                        long time = System.currentTimeMillis();
-                        BDD callee_used = callee.nodes.id();
-                        renumbering13 = bdd.zero();
-                        for (;;) {
-                            int p = callee_used.scanVar(V1);
-                            if (p < 0) break;
-                            BDD pth = V1.ithVar(p);
-                            int q;
-                            if (nodes.and(pth).equals(bdd.zero())) {
-                                q = p;
-                            } else {
-                                q = getNewVariableIndex(mc, target, p);
-                                if (TRACE_OVERLAP) System.out.println("Variable "+p+" overlaps, new variable index "+q);
-                                jq_Reference type = getVariableType(p);
-                                BDD var_bdd = V1.ithVar(q);
-                                BDD type_bdd = T1.ithVar(getTypeIndex(type));
-                                type_bdd.andWith(var_bdd);
-                                if (TRACE_TYPES) System.out.println("Adding var type: "+type_bdd.toStringWithDomains(bdd));
-                                vC.orWith(type_bdd);
+                    if (RENUMBER) {
+                        BDD overlap = nodes.and(callee.nodes);
+                        if (!overlap.equals(bdd.zero())) {
+                            if (TRACE_OVERLAP) System.out.println("... non-zero overlap! "+overlap.toStringWithDomains(bdd));
+                            long time = System.currentTimeMillis();
+                            BDD callee_used = callee.nodes.id();
+                            renumbering13 = bdd.zero();
+                            for (;;) {
+                                int p = callee_used.scanVar(V1);
+                                if (p < 0) break;
+                                BDD pth = V1.ithVar(p);
+                                int q;
+                                if (nodes.and(pth).equals(bdd.zero())) {
+                                    q = p;
+                                } else {
+                                    q = getNewVariableIndex(mc, target, p);
+                                    if (TRACE_OVERLAP) System.out.println("Variable "+p+" overlaps, new variable index "+q);
+                                    jq_Reference type = getVariableType(p);
+                                    BDD var_bdd = V1.ithVar(q);
+                                    BDD type_bdd = T1.ithVar(getTypeIndex(type));
+                                    type_bdd.andWith(var_bdd);
+                                    if (TRACE_TYPES) System.out.println("Adding var type: "+type_bdd.toStringWithDomains(bdd));
+                                    vC.orWith(type_bdd);
+                                }
+                                BDD qth = V3.ithVar(q);
+                                qth.andWith(pth.id());
+                                renumbering13.orWith(qth);
+                                callee_used.applyWith(pth, BDDFactory.diff);
                             }
-                            BDD qth = V3.ithVar(q);
-                            qth.andWith(pth.id());
-                            renumbering13.orWith(qth);
-                            callee_used.applyWith(pth, BDDFactory.diff);
+                            renumbering23 = renumbering13.replace(V1ToV2);
+                            time = System.currentTimeMillis() - time;
+                            if (TRACE_TIMES || time > 400) System.out.println("Build renumbering: "+(time/1000.));
+                        } else {
+                            if (TRACE_CALLEE) System.out.println("...zero overlap!");
                         }
-                        renumbering23 = renumbering13.replace(V1ToV2);
-                        time = System.currentTimeMillis() - time;
-                        if (TRACE_TIMES || time > 400) System.out.println("Build renumbering: "+(time/1000.));
-                    } else {
-                        if (TRACE_CALLEE) System.out.println("...zero overlap!");
+                        overlap.free();
                     }
-                    
-                    overlap.free();
                     long time = System.currentTimeMillis();
                     BDD callee_loads = renumber(callee.loads, renumbering13, V1.set(), V3ToV1, renumbering23, V2.set(), V3ToV2);
                     BDD callee_stores = renumber(callee.stores, renumbering13, V1.set(), V3ToV1, renumbering23, V2.set(), V3ToV2);
@@ -1254,7 +1262,7 @@ public class CSBDDPointerAnalysis {
             boolean b;
             BDD oldEdges = edgeSet.id();
             edgeSet.orWith(newEdges);
-            solveNonincremental();
+            solveIncremental();
             b = !oldEdges.equals(edgeSet);
             oldEdges.free();
             return b;
