@@ -202,96 +202,55 @@ public class ReflectiveInterpreter extends Interpreter {
             ot = new ObjectTraverser(new HashSet(), new HashSet());
         }
 	public static final ReflectiveVMInterface INSTANCE = new ReflectiveVMInterface();
-        public Object getField(Object o, jq_Field f) {
-            jq_Class k = f.getDeclaringClass();
-            k.load(); k.verify(); k.prepare(); k.sf_initialize(); k.cls_initialize();
-            Class c = Reflection.getJDKType(f.getDeclaringClass());
-            String fieldName = f.getName().toString();
-            Class c2 = c;
-            while (c != null) {
-                Field[] fields = c.getDeclaredFields();
-                for (int i=0; i<fields.length; ++i) {
-                    Field f2 = fields[i];
-                    if (f2.getName().equals(fieldName)) {
-                        f2.setAccessible(true);
-                        try {
-                            return f2.get(o);
-                        } catch (IllegalAccessException x) {
-                            jq.UNREACHABLE();
-                            return null;
-                        }
-                    }
-                }
-                c = c.getSuperclass();
-            }
-            jq.UNREACHABLE("host jdk does not contain field "+c2.getName()+"."+fieldName);
-            return null;
-        }
         public void putField(Object o, jq_Field f, Object v) {
             jq_Class k = f.getDeclaringClass();
             k.load(); k.verify(); k.prepare(); k.sf_initialize(); k.cls_initialize();
-            Class c = Reflection.getJDKType(f.getDeclaringClass());
-            String fieldName = f.getName().toString();
-            Class c2 = c;
-            while (c != null) {
-                Field[] fields = c.getDeclaredFields();
-                for (int i=0; i<fields.length; ++i) {
-                    Field f2 = fields[i];
-                    if (f2.getName().equals(fieldName)) {
-                        f2.setAccessible(true);
-                        try {
-                            f2.set(o, v);
-                            return;
-                        } catch (IllegalAccessException x) {
-                            jq.UNREACHABLE();
-                            return;
-                        } catch (IllegalArgumentException x) {
-                            jq.UNREACHABLE("object type: "+o.getClass()+" field: "+f2+" value: "+v);
-                            return;
-                        }
-                    }
-                }
-                c = c.getSuperclass();
+            Field f2 = (Field)Reflection.getJDKMember(f);
+            f2.setAccessible(true);
+            try {
+                f2.set(o, v);
+            } catch (IllegalAccessException x) {
+                jq.UNREACHABLE();
+            } catch (IllegalArgumentException x) {
+                jq.UNREACHABLE("object type: "+o.getClass()+" field: "+f2+" value: "+v);
             }
-            jq.UNREACHABLE("host jdk does not contain field "+c2.getName()+"."+fieldName);
-            return;
         }
-        public int getstatic_I(jq_StaticField f) { return ((Integer)ot.getStaticFieldValue(f)).intValue(); }
-        public long getstatic_L(jq_StaticField f) { return ((Long)ot.getStaticFieldValue(f)).longValue(); }
-        public float getstatic_F(jq_StaticField f) { return ((Float)ot.getStaticFieldValue(f)).floatValue(); }
-        public double getstatic_D(jq_StaticField f) { return ((Double)ot.getStaticFieldValue(f)).doubleValue(); }
-        public Object getstatic_A(jq_StaticField f) { return ot.getStaticFieldValue(f); }
-        public boolean getstatic_Z(jq_StaticField f) { return ((Boolean)ot.getStaticFieldValue(f)).booleanValue(); }
-        public byte getstatic_B(jq_StaticField f) { return ((Byte)ot.getStaticFieldValue(f)).byteValue(); }
-        public char getstatic_C(jq_StaticField f) { return ((Character)ot.getStaticFieldValue(f)).charValue(); }
-        public short getstatic_S(jq_StaticField f) { return ((Short)ot.getStaticFieldValue(f)).shortValue(); }
-        public void putstatic_I(jq_StaticField f, int v) { putField(null, f, new Integer(v)); }
-        public void putstatic_L(jq_StaticField f, long v) { putField(null, f, new Long(v)); }
-        public void putstatic_F(jq_StaticField f, float v) { putField(null, f, new Float(v)); }
-        public void putstatic_D(jq_StaticField f, double v) { putField(null, f, new Double(v)); }
-        public void putstatic_A(jq_StaticField f, Object v) { putField(null, f, v); }
-        public void putstatic_Z(jq_StaticField f, boolean v) { putField(null, f, new Boolean(v)); }
-        public void putstatic_B(jq_StaticField f, byte v) { putField(null, f, new Byte(v)); }
-        public void putstatic_C(jq_StaticField f, char v) { putField(null, f, new Character(v)); }
-        public void putstatic_S(jq_StaticField f, short v) { putField(null, f, new Short(v)); }
-        public int getfield_I(Object o, jq_InstanceField f) { return ((Integer)ot.getInstanceFieldValue(o, f)).intValue(); }
-        public long getfield_L(Object o, jq_InstanceField f) { return ((Long)ot.getInstanceFieldValue(o, f)).longValue(); }
-        public float getfield_F(Object o, jq_InstanceField f) { return ((Float)ot.getInstanceFieldValue(o, f)).floatValue(); }
-        public double getfield_D(Object o, jq_InstanceField f) { return ((Double)ot.getInstanceFieldValue(o, f)).doubleValue(); }
-        public Object getfield_A(Object o, jq_InstanceField f) { return ot.getInstanceFieldValue(o, f); }
-        public byte getfield_B(Object o, jq_InstanceField f) { return ((Byte)ot.getInstanceFieldValue(o, f)).byteValue(); }
-        public char getfield_C(Object o, jq_InstanceField f) { return ((Character)ot.getInstanceFieldValue(o, f)).charValue(); }
-        public short getfield_S(Object o, jq_InstanceField f) { return ((Short)ot.getInstanceFieldValue(o, f)).shortValue(); }
-        public boolean getfield_Z(Object o, jq_InstanceField f) { return ((Boolean)ot.getInstanceFieldValue(o, f)).booleanValue(); }
-        public void putfield_I(Object o, jq_InstanceField f, int v) { putField(o, f, new Integer(v)); }
-        public void putfield_L(Object o, jq_InstanceField f, long v) { putField(o, f, new Long(v)); }
-        public void putfield_F(Object o, jq_InstanceField f, float v) { putField(o, f, new Float(v)); }
-        public void putfield_D(Object o, jq_InstanceField f, double v) { putField(o, f, new Double(v)); }
-        public void putfield_A(Object o, jq_InstanceField f, Object v) { putField(o, f, v); }
-        public void putfield_B(Object o, jq_InstanceField f, byte v) { putField(o, f, new Byte(v)); }
-        public void putfield_C(Object o, jq_InstanceField f, char v) { putField(o, f, new Character(v)); }
-        public void putfield_S(Object o, jq_InstanceField f, short v) { putField(o, f, new Short(v)); }
-        public void putfield_Z(Object o, jq_InstanceField f, boolean v) { putField(o, f, new Boolean(v)); }
+        public int getstatic_I(jq_StaticField f) { return Reflection.getstatic_I(f); }
+        public long getstatic_L(jq_StaticField f) { return Reflection.getstatic_L(f); }
+        public float getstatic_F(jq_StaticField f) { return Reflection.getstatic_F(f); }
+        public double getstatic_D(jq_StaticField f) { return Reflection.getstatic_D(f); }
+        public Object getstatic_A(jq_StaticField f) { return Reflection.getstatic_A(f); }
+        public byte getstatic_B(jq_StaticField f) { return Reflection.getstatic_B(f); }
+        public char getstatic_C(jq_StaticField f) { return Reflection.getstatic_C(f); }
+        public short getstatic_S(jq_StaticField f) { return Reflection.getstatic_S(f); }
+        public boolean getstatic_Z(jq_StaticField f) { return Reflection.getstatic_Z(f); }
+        public void putstatic_I(jq_StaticField f, int v) { Reflection.putstatic_I(f, v); }
+        public void putstatic_L(jq_StaticField f, long v) { Reflection.putstatic_L(f, v); }
+        public void putstatic_F(jq_StaticField f, float v) { Reflection.putstatic_F(f, v); }
+        public void putstatic_D(jq_StaticField f, double v) { Reflection.putstatic_D(f, v); }
+        public void putstatic_A(jq_StaticField f, Object v) { Reflection.putstatic_A(f, v); }
+        public void putstatic_B(jq_StaticField f, byte v) { Reflection.putstatic_B(f, v); }
+        public void putstatic_C(jq_StaticField f, char v) { Reflection.putstatic_C(f, v); }
+        public void putstatic_S(jq_StaticField f, short v) { Reflection.putstatic_S(f, v); }
+        public void putstatic_Z(jq_StaticField f, boolean v) { Reflection.putstatic_Z(f, v); }
+        public int getfield_I(Object o, jq_InstanceField f) { return Reflection.getfield_I(o, f); }
+        public long getfield_L(Object o, jq_InstanceField f) { return Reflection.getfield_L(o, f); }
+        public float getfield_F(Object o, jq_InstanceField f) { return Reflection.getfield_F(o, f); }
+        public double getfield_D(Object o, jq_InstanceField f) { return Reflection.getfield_D(o, f); }
+        public Object getfield_A(Object o, jq_InstanceField f) { return Reflection.getfield_A(o, f); }
+        public byte getfield_B(Object o, jq_InstanceField f) { return Reflection.getfield_B(o, f); }
+        public char getfield_C(Object o, jq_InstanceField f) { return Reflection.getfield_C(o, f); }
+        public short getfield_S(Object o, jq_InstanceField f) { return Reflection.getfield_S(o, f); }
+        public boolean getfield_Z(Object o, jq_InstanceField f) { return Reflection.getfield_Z(o, f); }
+        public void putfield_I(Object o, jq_InstanceField f, int v) { Reflection.putfield_I(o, f, v); }
+        public void putfield_L(Object o, jq_InstanceField f, long v) { Reflection.putfield_L(o, f, v); }
+        public void putfield_F(Object o, jq_InstanceField f, float v) { Reflection.putfield_F(o, f, v); }
+        public void putfield_D(Object o, jq_InstanceField f, double v) { Reflection.putfield_D(o, f, v); }
+        public void putfield_A(Object o, jq_InstanceField f, Object v) { Reflection.putfield_A(o, f, v); }
+        public void putfield_B(Object o, jq_InstanceField f, byte v) { Reflection.putfield_B(o, f, v); }
+        public void putfield_C(Object o, jq_InstanceField f, char v) { Reflection.putfield_C(o, f, v); }
+        public void putfield_S(Object o, jq_InstanceField f, short v) { Reflection.putfield_S(o, f, v); }
+        public void putfield_Z(Object o, jq_InstanceField f, boolean v) { Reflection.putfield_Z(o, f, v); }
         public Object new_obj(jq_Type t) { t.load(); t.verify(); t.prepare(); t.sf_initialize(); t.cls_initialize(); return new UninitializedType((jq_Class)t); }
         public Object new_array(jq_Type t, int length) { t.load(); t.verify(); t.prepare(); t.sf_initialize(); t.cls_initialize(); return Array.newInstance(Reflection.getJDKType(((jq_Array)t).getElementType()), length); }
         public Object checkcast(Object o, jq_Type t) { if (o == null) return o; if (!Reflection.getJDKType(t).isAssignableFrom(o.getClass())) throw new ClassCastException(); return o; }
@@ -336,18 +295,7 @@ public class ReflectiveInterpreter extends Interpreter {
         String rootMethodClassName = s.substring(0, dotloc);
         String rootMethodName = s.substring(dotloc+1);
         
-        jq.Bootstrapping = true;
-        jq.DontCompile = true;
-
-        Unsafe.installRemapper(new Unsafe.Remapper() {
-            public int addressOf(Object o) { return 0; }
-            public jq_Type getType(Object o) { return Reflection.getJQType(o.getClass()); }
-        });
-        
-        String classpath = System.getProperty("java.class.path")+
-                           System.getProperty("path.separator")+
-                           System.getProperty("sun.boot.class.path");
-        PrimordialClassLoader.loader.addToClasspath(classpath);
+        jq.initializeForHostJVMExecution();
         
         jq_Class c = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("L"+rootMethodClassName.replace('.','/')+";");
         c.load(); c.verify(); c.prepare(); c.sf_initialize(); c.cls_initialize();

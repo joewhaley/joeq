@@ -31,7 +31,7 @@ public class BootstrapRootSet {
     protected final Set/*jq_Field*/ necessaryFields;
     protected final Set/*jq_Method*/ necessaryMethods;
     
-    protected final Set/*Object*/ visitedObjects;
+    protected final LinkedHashSet/*Object*/ visitedObjects;
     
     protected List/*jq_TypeVisitor*/ instantiatedTypesListeners;
     protected List/*jq_TypeVisitor*/ necessaryTypesListeners;
@@ -117,8 +117,15 @@ public class BootstrapRootSet {
                 }
             }
             if (t instanceof jq_Class) {
+                jq_Class klass = (jq_Class)t;
+                if (AddAllFields) {
+                    jq_StaticField[] sfs = klass.getDeclaredStaticFields();
+                    for (int i=0; i<sfs.length; ++i) {
+                        addNecessaryField(sfs[i]);
+                    }
+                }
                 // add superclass as necessary, as well.
-                addNecessaryType(((jq_Class)t).getSuperclass());
+                addNecessaryType(klass.getSuperclass());
             }
         }
         return b;
@@ -188,6 +195,10 @@ public class BootstrapRootSet {
         }
         addNecessaryField(Unsafe._remapper_object);
 
+        // We need to be able to allocate objects and code.
+        addNecessaryType(Allocator.SimpleAllocator._class);
+        addNecessaryType(PrimordialClassLoader.loader.getOrCreateBSType("LAllocator/RuntimeCodeAllocator;"));
+        
         // setIn0, setOut0, and setErr0 use these fields, but the trimmer doesn't detect the uses.
         c = PrimordialClassLoader.loader.getJavaLangSystem();
         s_f = c.getOrCreateStaticField("in", "Ljava/io/InputStream;");
@@ -220,6 +231,7 @@ public class BootstrapRootSet {
         s_m = ExceptionDeliverer._trap_handler;
         addNecessaryMethod(s_m);
         
+        // we want the compiler to be able to run at run time, too.
         i_m = jq_Method._compile;
         addNecessaryMethod(i_m);
         
@@ -239,11 +251,14 @@ public class BootstrapRootSet {
     }
     
     public boolean addObjectAndSubfields(Object o) {
+        return addObjectAndSubfields(o, visitedObjects);
+    }
+    private boolean addObjectAndSubfields(Object o, LinkedHashSet objs) {
         if (o == null) return false;
         IdentityHashCodeWrapper a = IdentityHashCodeWrapper.create(o);
-        if (visitedObjects.contains(a))
+        if (visitedObjects.contains(a) || objs.contains(a))
             return false;
-        visitedObjects.add(a);
+        objs.add(a);
         Class objType = o.getClass();
         jq_Reference jqType = (jq_Reference)Reflection.getJQType(objType);
         if (TRACE) out.println("Adding object of type "+jqType);
@@ -260,8 +275,8 @@ public class BootstrapRootSet {
                 Object[] v = (Object[])o;
                 if (TRACE) out.println("Visiting "+jqType+" of "+length+" elements");
                 for (int k=0; k<length; ++k) {
-                    Object o2 = v[k];
-                    addObjectAndSubfields(o2);
+                    Object o2 = Reflection.obj_trav.mapValue(v[k]);
+                    addObjectAndSubfields(o2, objs);
                 }
             }
         } else {
@@ -276,32 +291,44 @@ public class BootstrapRootSet {
                 if (ftype.isReferenceType()) {
                     if (TRACE) out.println("Visiting field "+f);
                     Object o2 = Reflection.getfield_A(o, f);
-                    addObjectAndSubfields(o2);
+                    addObjectAndSubfields(o2, objs);
                 }
             }
         }
         return true;
     }
     
-    public void addSubfieldOfAllVisitedObjects(jq_InstanceField sf) {
-        if (!sf.getType().isReferenceType()) return;
-        // look for objects with this field.
-        Class c = Reflection.getJDKType(sf.getDeclaringClass());
-        int j = 0;
-        for (Iterator i = visitedObjects.iterator(); i.hasNext(); ) {
-            Object o = ((IdentityHashCodeWrapper)i.next()).getObject(); ++j;
-            if (c.isAssignableFrom(o.getClass())) {
-                Object o2 = Reflection.getfield_A(o, sf);
-                boolean change = addObjectAndSubfields(o2);
-                if (change) {
-                    // reset iterator to avoid ConcurrentModificationException
-                    i = visitedObjects.iterator();
-                    Object o3 = null;
-                    for (int k=0; k<j; ++k)
-                        o3 = i.next();
-                    jq.assert(((IdentityHashCodeWrapper)o3).getObject() == o);
+    public void addNecessarySubfieldsOfVisitedObjects() {
+        if (AddAllFields) return;
+        LinkedHashSet objs = visitedObjects;
+        for (;;) {
+            LinkedHashSet objs2 = new LinkedHashSet();
+            boolean change = false;
+            for (Iterator i = objs.iterator(); i.hasNext(); ) {
+                Object o = ((IdentityHashCodeWrapper)i.next()).getObject();
+                Class objType = o.getClass();
+                jq_Reference jqType = (jq_Reference)Reflection.getJQType(objType);
+                if (jqType.isArrayType()) continue;
+                jq.assert(jqType.isClassType());
+                jq_Class clazz = (jq_Class)jqType;
+                jq_InstanceField[] fields = clazz.getInstanceFields();
+                for (int k=0; k<fields.length; ++k) {
+                    jq_InstanceField f = fields[k];
+                    if (!necessaryFields.contains(f))
+                        continue;
+                    jq_Type ftype = f.getType();
+                    if (ftype.isReferenceType()) {
+                        if (TRACE) out.println("Visiting field "+f+" of object of type "+clazz);
+                        Object o2 = Reflection.getfield_A(o, f);
+                        if (addObjectAndSubfields(o2, objs2))
+                            change = true;
+                    }
                 }
             }
+            if (!change) break;
+            if (TRACE) out.println("Objects added: "+objs2.size()+", iterating over those objects.");
+            visitedObjects.addAll(objs2);
+            objs = objs2;
         }
     }
     

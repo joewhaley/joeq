@@ -76,38 +76,41 @@ public interface jq_ClassFileConstants {
     // A thread has finished loading the constant pool, and is loading the class
     // members and other information.
     public static final byte STATE_LOADING2     = 2;
+    // A thread has finished loading the class, and is now merging in implementation
+    // classes.
+    public static final byte STATE_LOADING3     = 3;
     // This class has been loaded and all members have been created.
-    public static final byte STATE_LOADED       = 3;
+    public static final byte STATE_LOADED       = 4;
     // A thread is in the process of verifying this class. (Jvm spec 2.17.3)
     // (see verify pass 2 Jvm spec 4.9.1)
     // It checks the code in each declared method in the class.
-    public static final byte STATE_VERIFYING    = 4;
+    public static final byte STATE_VERIFYING    = 5;
     // This class has been successfully verified.
-    public static final byte STATE_VERIFIED     = 5;
+    public static final byte STATE_VERIFIED     = 6;
     // A thread is in the process of preparing this class. (Jvm spec 2.17.3)
     // Preparation lays out the object fields and creates a method table.
     // Static fields are created and initialized in the NEXT step.
-    public static final byte STATE_PREPARING    = 6;
+    public static final byte STATE_PREPARING    = 7;
     // This class has been prepared.
-    public static final byte STATE_PREPARED     = 7;
+    public static final byte STATE_PREPARED     = 8;
     // A thread is creating the static fields for the class, and initializing the
     // ones that have ConstantValue attributes.
-    public static final byte STATE_SFINITIALIZING = 8;
+    public static final byte STATE_SFINITIALIZING = 9;
     // This class has its static fields created and initialized.
-    public static final byte STATE_SFINITIALIZED = 9;
+    public static final byte STATE_SFINITIALIZED = 10;
     // A thread is in the process of initializing this class. (Jvm spec 2.17.4-5)
     // Initialization is triggered when code is about to execute that will create
     // an instance, execute a static method, or use or assign a nonconstant static
     // field.
-    public static final byte STATE_CLSINITIALIZING = 10;
-    public static final byte STATE_CLSINITRUNNING = 11;
+    public static final byte STATE_CLSINITIALIZING = 11;
+    public static final byte STATE_CLSINITRUNNING = 12;
     // An error occurred during initialization!  This resulted in a throwing of 
     // a NoClassDefFoundError, ExceptionInInitializerError, or OutOfMemoryError
     // for the initializing thread.  Any further attempts to initialize should
     // result in the throwing of a NoClassDefFoundError. 
-    public static final byte STATE_CLSINITERROR = 12;
+    public static final byte STATE_CLSINITERROR = 13;
     // This class has been fully initialized!
-    public static final byte STATE_CLSINITIALIZED  = 13;
+    public static final byte STATE_CLSINITIALIZED  = 14;
 
     /**
      * Illegal codes

@@ -45,7 +45,7 @@ public class Trimmer {
     public static final PrintStream out = System.out;
     
     private final BootstrapRootSet rs;
-    private final List/*jq_Method*/ worklist;
+    private final List/*jq_Method*/ methodWorklist;
     
     private final Set/*jq_Method*/ invokedVirtualMethods;
     private final Set/*jq_Method*/ invokedInterfaceMethods;
@@ -55,11 +55,12 @@ public class Trimmer {
         addToWorklist(method);
     }
     public Trimmer(Set initialClassSet, boolean addall) {
-        worklist = new LinkedList();
+        methodWorklist = new LinkedList();
         invokedVirtualMethods = new HashSet();
         invokedInterfaceMethods = new HashSet();
         rs = new BootstrapRootSet(addall);
-        rs.registerNecessaryMethodListener(new AddToWorklist());
+        rs.registerNecessaryMethodListener(new AddMethodToWorklist());
+        rs.registerNecessaryFieldListener(new AddStaticFieldContents());
         rs.registerNecessaryTypeListener(new UpkeepForNewlyDiscoveredClasses());
         
         rs.addDefaultRoots();
@@ -71,7 +72,7 @@ public class Trimmer {
     public BootstrapRootSet getRootSet() { return rs; }
     
     public void addToWorklist(jq_Method m) {
-        worklist.add(m);
+        methodWorklist.add(m);
     }
     
     public void addInvokedInterfaceMethod(jq_InstanceMethod m) {
@@ -125,12 +126,19 @@ public class Trimmer {
     }
      */
     
-    public class AddToWorklist extends jq_MethodVisitor.EmptyVisitor {
+    public class AddMethodToWorklist extends jq_MethodVisitor.EmptyVisitor {
         public void visitMethod(jq_Method m) {
             addToWorklist(m);
         }
     }
     
+    public class AddStaticFieldContents extends jq_FieldVisitor.EmptyVisitor {
+        public void visitStaticField(jq_StaticField f) {
+            if (f.getType().isPrimitiveType()) return;
+            Object o2 = Reflection.getstatic_A(f);
+            rs.addObjectAndSubfields(o2);
+        }
+    }
     /*
     private void addClassInterfaceImplementations(jq_Class k) {
         jq_Class[] in = k.getInterfaces();
@@ -177,27 +185,30 @@ public class Trimmer {
      */
     
     public void go() {
-        while (!worklist.isEmpty()) {
-            jq_Method m = (jq_Method)worklist.remove(0);
-            if (TRACE) out.println("Pulling method "+m+" from worklist");
-            
-            jq_Class c = m.getDeclaringClass();
-            //addClassInitializer(c);
-            //if (!m.isStatic()) {
-            //    if (c.isInterface()) {
-            //        jq.assert(m.isAbstract());
-            //        addAllInterfaceMethodImplementations((jq_InstanceMethod)m);
-            //        continue;
-            //    } else {
-            //        addSubclassVirtualMethods(c, (jq_InstanceMethod)m);
-            //    }
-            //}
-            if (m.getBytecode() == null) {
-                // native/abstract method
-                continue;
+        while (!methodWorklist.isEmpty()) {
+            while (!methodWorklist.isEmpty()) {
+                jq_Method m = (jq_Method)methodWorklist.remove(0);
+                if (TRACE) out.println("Pulling method "+m+" from worklist");
+
+                //jq_Class c = m.getDeclaringClass();
+                //addClassInitializer(c);
+                //if (!m.isStatic()) {
+                //    if (c.isInterface()) {
+                //        jq.assert(m.isAbstract());
+                //        addAllInterfaceMethodImplementations((jq_InstanceMethod)m);
+                //        continue;
+                //    } else {
+                //        addSubclassVirtualMethods(c, (jq_InstanceMethod)m);
+                //    }
+                //}
+                if (m.getBytecode() == null) {
+                    // native/abstract method
+                    continue;
+                }
+                TrimmerVisitor v = new TrimmerVisitor(m);
+                v.forwardTraversal();
             }
-            TrimmerVisitor v = new TrimmerVisitor(m);
-            v.forwardTraversal();
+            rs.addNecessarySubfieldsOfVisitedObjects();
         }
     }
     
@@ -207,7 +218,7 @@ public class Trimmer {
         
         TrimmerVisitor(jq_Method method) {
             super(method);
-            //this.TRACE=true;
+            //this.TRACE = true;
         }
 
         public String toString() {
@@ -265,7 +276,6 @@ public class Trimmer {
             f = resolve(f);
             //addClassInitializer(f.getDeclaringClass());
             rs.addNecessaryField(f);
-            
             if (false) {
                 if (f.getWidth() == 8)
                     INVOKEhelper(INVOKE_STATIC, x86ReferenceLinker._getstatic8);
@@ -292,8 +302,6 @@ public class Trimmer {
         public void visitAGETSTATIC(jq_StaticField f) {
             super.visitAGETSTATIC(f);
             GETSTATIChelper(f);
-            Object o2 = Reflection.getstatic_A(f);
-            rs.addObjectAndSubfields(o2);
             if (true) {
                 if (f.getType() == jq_InstanceMethod._class ||
                     f.getType() == jq_StaticMethod._class ||
@@ -392,7 +400,6 @@ public class Trimmer {
         public void visitAGETFIELD(jq_InstanceField f) {
             super.visitAGETFIELD(f);
             GETFIELDhelper(f);
-            rs.addSubfieldOfAllVisitedObjects(f);
         }
         public void visitBGETFIELD(jq_InstanceField f) {
             super.visitBGETFIELD(f);
@@ -450,13 +457,15 @@ public class Trimmer {
             f = resolve(f);
             switch (op) {
             case INVOKE_STATIC:
-                //if (f.getDeclaringClass() == Unsafe._class)
-                //    return;
+                if (f.getDeclaringClass() == Unsafe._class)
+                    return;
                 rs.addNecessaryMethod(x86ReferenceLinker._invokestatic);
+                rs.addNecessaryMethod(f);
                 break;
             case INVOKE_SPECIAL:
-                f = jq_Class.getInvokespecialTarget(method.getDeclaringClass(), (jq_InstanceMethod)f);
                 rs.addNecessaryMethod(x86ReferenceLinker._invokespecial);
+                f = jq_Class.getInvokespecialTarget(method.getDeclaringClass(), (jq_InstanceMethod)f);
+                rs.addNecessaryMethod(f);
                 break;
             case INVOKE_INTERFACE:
                 rs.addNecessaryMethod(x86ReferenceLinker._invokeinterface);
@@ -518,11 +527,8 @@ public class Trimmer {
         }
         public void visitNEW(jq_Type f) {
             super.visitNEW(f);
-            if (true) {
-                INVOKEhelper(INVOKE_STATIC, DefaultHeapAllocator._allocateObject);
-            } else {
-                INVOKEhelper(INVOKE_STATIC, HeapAllocator._clsinitAndAllocateObject);
-            }
+            //INVOKEhelper(INVOKE_STATIC, DefaultHeapAllocator._allocateObject);
+            INVOKEhelper(INVOKE_STATIC, HeapAllocator._clsinitAndAllocateObject);
             rs.addNecessaryType(f);
         }
         public void visitNEWARRAY(jq_Array f) {
@@ -572,7 +578,7 @@ public class Trimmer {
             jq_InstanceMethod m = ms[i];
             if (!invokedInterfaceMethods.contains(m)) continue;
             jq_InstanceMethod m2 = c.getVirtualMethod(m.getNameAndDesc());
-            if (c == null) continue;
+            if (m2 == null) continue;
             rs.addNecessaryMethod(m2);
         }
         jq_Class[] interfaces = inter.getInterfaces();
@@ -588,15 +594,15 @@ public class Trimmer {
             for (int i=0; i<ms.length; ++i) {
                 jq_InstanceMethod m = ms[i];
                 if (m.isOverriding()) {
-                    if (TRACE) out.println("Checking virtual method "+m);
+                    //if (TRACE) out.println("Checking virtual method "+m);
                     jq_InstanceMethod m2 = c.getSuperclass().getVirtualMethod(m.getNameAndDesc());
                     if (m2 != null) {
                         if (invokedVirtualMethods.contains(m2)) {
-                            if (TRACE) out.println("Overridden method "+m2+" is necessary!");
+                            if (TRACE) out.println("Method "+m+" is necessary because it overrides "+m2);
                             rs.addNecessaryMethod(m);
                             continue;
                         } else {
-                            if (TRACE) out.println("Overridden method "+m2+" is not necessary!");
+                            //if (TRACE) out.println("Overridden method "+m2+" is not necessary!");
                         }
                     }
                 }

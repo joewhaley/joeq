@@ -82,6 +82,50 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
         }
     }
     
+    public void updateCPIndex(char index) {
+        int i_size = i_end - i_start;
+        char op = (char)(bcs[i_start] & 0xff);
+        switch (i_size) {
+            case 1:
+                // ldc
+                jq.assert(op == 0x12);
+                jq.assert(index <= 127);
+                bcs[i_end] = (byte)index;
+                break;
+            case 2:
+                // ldc_w, ldc2_w
+                // getstatic, putstatic
+                // getfield, putfield
+                // invokevirtual, invokespecial, invokestatic
+                // new, anewarray
+                // checkcast, instanceof
+                jq.assert(op == 0x13 || op == 0x14 ||
+                          op == 0xb2 || op == 0xb3 ||
+                          op == 0xb4 || op == 0xb5 ||
+                          op == 0xb6 || op == 0xb7 || op == 0xb8 ||
+                          op == 0xbb || op == 0xbd ||
+                          op == 0xc0 || op == 0xc1);
+                bcs[i_end-1] = (byte)(index >> 8);
+                bcs[i_end] = (byte)index;
+                break;
+            case 3:
+                // multianewarray
+                jq.assert(op == 0xc5);
+                bcs[i_end-2] = (byte)(index >> 8);
+                bcs[i_end-1] = (byte)index;
+                break;
+            case 4:
+                // invokeinterface
+                jq.assert(op == 0xb9);
+                bcs[i_end-3] = (byte)(index >> 8);
+                bcs[i_end-2] = (byte)index;
+                break;
+            default:
+                jq.UNREACHABLE(jq.hex(op));
+                return;
+        }
+    }
+    
     public void updateMemberReference(jq_Member m) {
         char index;
         int i_size = i_end - i_start;

@@ -20,15 +20,12 @@ public final class Interface extends ClassLib.ClassLibInterface {
     /** Creates new Interface */
     public Interface() {}
 
-    public static boolean USE_JOEQ_CLASSLIB = false;
-    
-    public void useJoeqClasslib(boolean b) { USE_JOEQ_CLASSLIB = b; }
-    
-    public java.lang.String getImplementationClassDesc(UTF.Utf8 desc) {
+    public java.util.Iterator getImplementationClassDescs(UTF.Utf8 desc) {
         if (USE_JOEQ_CLASSLIB && desc.toString().startsWith("Ljava/")) {
-            return "LClassLib/sun13_linux/"+desc.toString().substring(1);
+            UTF.Utf8 u = UTF.Utf8.get("LClassLib/sun13_linux/"+desc.toString().substring(1));
+            return new Util.SingletonIterator(u);
         }
-        return null;
+        return Util.NullIterator.INSTANCE;
     }
     
     public java.util.Set bootstrapNullStaticFields() {
@@ -54,31 +51,34 @@ public final class Interface extends ClassLib.ClassLibInterface {
     }
     
     public java.lang.Class createNewClass(Clazz.jq_Type f) {
-        return ClassLib.sun13_linux.java.lang.Class.createNewClass(ClassLib.sun13_win32.java.lang.Class._class, f);
+        return ClassLib.sun13_linux.java.lang.Class.createNewClass(ClassLib.sun13_linux.java.lang.Class._class, f);
     }
     
     public java.lang.reflect.Constructor createNewConstructor(Clazz.jq_Initializer f) {
-        return ClassLib.sun13_linux.java.lang.reflect.Constructor.createNewConstructor(ClassLib.sun13_win32.java.lang.reflect.Constructor._class, f);
+        return ClassLib.Common.java.lang.reflect.Constructor.createNewConstructor(f);
     }
     
-    public void initNewConstructor(java.lang.reflect.Constructor o, Clazz.jq_Initializer f) {
-        ClassLib.sun13_linux.java.lang.reflect.Constructor.initNewConstructor(o, f);
+    public void initNewConstructor(java.lang.reflect.Constructor dis, Clazz.jq_Initializer f) {
+        java.lang.Object o = dis;
+        ClassLib.Common.java.lang.reflect.Constructor.initNewConstructor((ClassLib.Common.java.lang.reflect.Constructor)o, f);
     }
     
     public java.lang.reflect.Field createNewField(Clazz.jq_Field f) {
-        return ClassLib.sun13_linux.java.lang.reflect.Field.createNewField(ClassLib.sun13_win32.java.lang.reflect.Field._class, f);
+        return ClassLib.Common.java.lang.reflect.Field.createNewField(f);
     }
     
-    public void initNewField(java.lang.reflect.Field o, Clazz.jq_Field f) {
-        ClassLib.sun13_linux.java.lang.reflect.Field.initNewField(o, f);
+    public void initNewField(java.lang.reflect.Field dis, Clazz.jq_Field f) {
+        java.lang.Object o = dis;
+        ClassLib.Common.java.lang.reflect.Field.initNewField((ClassLib.Common.java.lang.reflect.Field)o, f);
     }
     
     public java.lang.reflect.Method createNewMethod(Clazz.jq_Method f) {
-        return ClassLib.sun13_linux.java.lang.reflect.Method.createNewMethod(ClassLib.sun13_win32.java.lang.reflect.Method._class, f);
+        return ClassLib.Common.java.lang.reflect.Method.createNewMethod(f);
     }
     
-    public void initNewMethod(java.lang.reflect.Method o, Clazz.jq_Method f) {
-        ClassLib.sun13_linux.java.lang.reflect.Method.initNewMethod(o, f);
+    public void initNewMethod(java.lang.reflect.Method dis, Clazz.jq_Method f) {
+        java.lang.Object o = dis;
+        ClassLib.Common.java.lang.reflect.Method.initNewMethod((ClassLib.Common.java.lang.reflect.Method)o, f);
     }
     
     public Clazz.jq_Field getJQField(java.lang.reflect.Field f) {
@@ -106,7 +106,7 @@ public final class Interface extends ClassLib.ClassLibInterface {
     }
     
     public void init_zipfile(java.util.zip.ZipFile o, java.lang.String name) throws java.io.IOException {
-        ClassLib.sun13_linux.java.util.zip.ZipFile.__init__(o, name);
+        ClassLib.sun13_linux.java.util.zip.ZipFile.__init__((java.util.zip.ZipFile)o, name);
     }
     
     public void init_inflater(java.util.zip.Inflater o, boolean nowrap) {

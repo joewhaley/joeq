@@ -35,10 +35,13 @@ import Clazz.jq_Class;
 import Clazz.jq_ClassFileConstants;
 import Clazz.jq_ConstantPool;
 import Clazz.jq_Member;
+import Clazz.jq_MemberReference;
 import Clazz.jq_Field;
 import Clazz.jq_InstanceField;
 import Clazz.jq_StaticField;
 import Clazz.jq_Method;
+import Clazz.jq_TryCatchBC;
+import Clazz.jq_LineNumberBC;
 
 import UTF.Utf8;
 
@@ -599,6 +602,10 @@ public interface Bytecodes {
             return findHandle(ihs, byte_positions, pos);
         }
         
+        public InstructionList(jq_Method m) {
+            this(m.getDeclaringClass().getCP(), m.getBytecode());
+        }
+        
         /**
          * Initialize instruction list from byte array.
          *
@@ -631,6 +638,7 @@ public interface Bytecodes {
                     
                     ih.setPosition(off);
                     ihs.add(ih);
+                    //System.out.println("Instruction handle: "+ih);
                     
                     count++;
                 }
@@ -648,10 +656,10 @@ public interface Bytecodes {
                     int target = bi.position + bi.getIndex(); /* Byte code position:
                                                                * relative -> absolute. */
                     // Search for target position
-                    InstructionHandle ih = findHandle(ihs, pos, target);
+                    InstructionHandle ih = findHandle(ihs, byte_positions, target);
                     
                     if(ih == null) // Search failed
-                        throw new BytecodeException("Couldn't find target for branch: " + bi);
+                        throw new BytecodeException("Couldn't find target "+target+" for branch: " + bi);
                     
                     bi.setTarget(ih); // Update target
                     
@@ -662,10 +670,10 @@ public interface Bytecodes {
                         
                         for(int j=0; j < indices.length; j++) {
                             target = bi.position + indices[j];
-                            ih     = findHandle(ihs, pos, target);
+                            ih     = findHandle(ihs, byte_positions, target);
                             
                             if(ih == null) // Search failed
-                                throw new BytecodeException("Couldn't find target for switch: " + bi);
+                                throw new BytecodeException("Couldn't find target "+target+" for switch: " + bi);
                             
                             s.setTarget(j, ih); // Update target
                         }
@@ -1630,7 +1638,7 @@ public interface Bytecodes {
         }
         
         /**
-         * Delete contents of list. Provides besser memory utilization,
+         * Delete contents of list. Provides better memory utilization,
          * because the system then may reuse the instruction handles. This
          * method is typically called right after
          * <href="MethodGen.html#getMethod()">MethodGen.getMethod()</a>.
@@ -1728,8 +1736,7 @@ public interface Bytecodes {
          * @@param new_target the new target instruction handle
          * @@see MethodGen
          */
-        /*
-        public void redirectExceptionHandlers(CodeExceptionGen[] exceptions, InstructionHandle old_target, InstructionHandle new_target) {
+        public void redirectExceptionHandlers(CodeException[] exceptions, InstructionHandle old_target, InstructionHandle new_target) {
             for(int i=0; i < exceptions.length; i++) {
                 if(exceptions[i].getStartPC() == old_target)
                     exceptions[i].setStartPC(new_target);
@@ -1741,7 +1748,6 @@ public interface Bytecodes {
                     exceptions[i].setHandlerPC(new_target);
             }
         }
-         */
         
         private List observers;
         
@@ -3356,6 +3362,16 @@ public interface Bytecodes {
         
         public int produceStack() { return getFieldSize(); }
         
+	/**
+	 * Read needed data (i.e., index) from file.
+	 * @param bytes input stream
+	 * @param wide wide prefix?
+	 */
+        protected void initFromFile(jq_ConstantPool cp, ByteSequence bytes, boolean wide) throws IOException {
+	    o = cp.getAsInstanceField((char)bytes.readUnsignedShort());
+            length = 3;
+        }
+        
         public Set/*<jq_Class>*/ getExceptions() {
 	    /*
             Class[] cs = new Class[2 + ExceptionConstants.EXCS_FIELD_AND_METHOD_RESOLUTION.length];
@@ -3405,6 +3421,16 @@ public interface Bytecodes {
         }
         
         public int produceStack() { return getFieldSize(); }
+        
+	/**
+	 * Read needed data (i.e., index) from file.
+	 * @param bytes input stream
+	 * @param wide wide prefix?
+	 */
+        protected void initFromFile(jq_ConstantPool cp, ByteSequence bytes, boolean wide) throws IOException {
+	    o = cp.getAsStaticField((char)bytes.readUnsignedShort());
+            length = 3;
+        }
         
         public Set/*<jq_Class>*/ getExceptions() {
 	    /*
@@ -4692,10 +4718,11 @@ public interface Bytecodes {
         
 	/**
 	 * Read needed data (i.e., index) from file.
+	 * @param bytes input stream
+	 * @param wide wide prefix?
 	 */
         protected void initFromFile(jq_ConstantPool cp, ByteSequence bytes, boolean wide) throws IOException {
-            super.initFromFile(cp, bytes, wide);
-            
+	    o = cp.getAsInstanceMethod((char)bytes.readUnsignedShort());
             length = 5;
             nargs = bytes.readUnsignedByte();
             bytes.readByte(); // Skip 0 byte
@@ -4761,6 +4788,16 @@ public interface Bytecodes {
             super(jq_ClassFileConstants.jbc_INVOKESPECIAL, f);
         }
         
+	/**
+	 * Read needed data (i.e., index) from file.
+	 * @param bytes input stream
+	 * @param wide wide prefix?
+	 */
+        protected void initFromFile(jq_ConstantPool cp, ByteSequence bytes, boolean wide) throws IOException {
+	    o = cp.getAsInstanceMethod((char)bytes.readUnsignedShort());
+            length = 3;
+        }
+        
         public Set/*<jq_Class>*/ getExceptions() {
 	    /*
             Class[] cs = new Class[4 + ExceptionConstants.EXCS_FIELD_AND_METHOD_RESOLUTION.length];
@@ -4810,6 +4847,16 @@ public interface Bytecodes {
             super(jq_ClassFileConstants.jbc_INVOKESTATIC, f);
         }
         
+	/**
+	 * Read needed data (i.e., index) from file.
+	 * @param bytes input stream
+	 * @param wide wide prefix?
+	 */
+        protected void initFromFile(jq_ConstantPool cp, ByteSequence bytes, boolean wide) throws IOException {
+	    o = cp.getAsStaticMethod((char)bytes.readUnsignedShort());
+            length = 3;
+        }
+        
         public Set/*<jq_Class>*/ getExceptions() {
 	    /*
             Class[] cs = new Class[2 + ExceptionConstants.EXCS_FIELD_AND_METHOD_RESOLUTION.length];
@@ -4855,6 +4902,16 @@ public interface Bytecodes {
         
         public INVOKEVIRTUAL(jq_Method f) {
             super(jq_ClassFileConstants.jbc_INVOKEVIRTUAL, f);
+        }
+        
+	/**
+	 * Read needed data (i.e., index) from file.
+	 * @param bytes input stream
+	 * @param wide wide prefix?
+	 */
+        protected void initFromFile(jq_ConstantPool cp, ByteSequence bytes, boolean wide) throws IOException {
+	    o = cp.getAsInstanceMethod((char)bytes.readUnsignedShort());
+            length = 3;
         }
         
         public Set/*<jq_Class>*/ getExceptions() {
@@ -5744,6 +5801,7 @@ public interface Bytecodes {
             for(int i=0; i < match_length; i++) {
                 match[i]   = bytes.readInt();
                 indices[i] = bytes.readInt();
+                targets.add(null);
             }
         }
         
@@ -6484,6 +6542,16 @@ public interface Bytecodes {
         
         public int consumeStack() { return getFieldSize() + 1; }
         
+	/**
+	 * Read needed data (i.e., index) from file.
+	 * @param bytes input stream
+	 * @param wide wide prefix?
+	 */
+        protected void initFromFile(jq_ConstantPool cp, ByteSequence bytes, boolean wide) throws IOException {
+	    o = cp.getAsInstanceField((char)bytes.readUnsignedShort());
+            length = 3;
+        }
+        
         public Set/*<jq_Class>*/ getExceptions() {
 	    /*
             Class[] cs = new Class[2 + ExceptionConstants.EXCS_FIELD_AND_METHOD_RESOLUTION.length];
@@ -6532,6 +6600,16 @@ public interface Bytecodes {
         }
         
         public int consumeStack() { return getFieldSize(); }
+        
+	/**
+	 * Read needed data (i.e., index) from file.
+	 * @param bytes input stream
+	 * @param wide wide prefix?
+	 */
+        protected void initFromFile(jq_ConstantPool cp, ByteSequence bytes, boolean wide) throws IOException {
+	    o = cp.getAsStaticField((char)bytes.readUnsignedShort());
+            length = 3;
+        }
         
         public Set/*<jq_Class>*/ getExceptions() {
 	    /*
@@ -6992,6 +7070,7 @@ public interface Bytecodes {
             
             for(int i=0; i < match_length; i++) {
                 indices[i] = bytes.readInt();
+                targets.add(null);
             }
         }
         
@@ -7371,7 +7450,7 @@ public interface Bytecodes {
     }
     
     public abstract class CPInstruction extends Instruction implements TypedInstruction {
-	protected Object o;    // constant pool value
+	protected Object o;   // constant pool value
 	protected char index; // index into constant pool
         
 	/**
@@ -7425,6 +7504,7 @@ public interface Bytecodes {
 	 */
         protected void initFromFile(jq_ConstantPool cp, ByteSequence bytes, boolean wide) throws IOException {
 	    o = cp.get((char)bytes.readUnsignedShort());
+            jq.assert(!(o instanceof jq_MemberReference));
             length = 3;
         }
         
@@ -7448,6 +7528,10 @@ public interface Bytecodes {
 	    return o;
 	}
 
+        public void setObject(Object o) {
+	    this.o = o;
+	}
+        
 	/** @return type related with this instruction.
 	 */
         public jq_Type getType() {
@@ -7555,6 +7639,8 @@ public interface Bytecodes {
         public jq_Class getLoadClassType() {
             return getClassType();
         }
+        
+        protected abstract void initFromFile(jq_ConstantPool cp, ByteSequence bytes, boolean wide) throws IOException;
     }
 
     public abstract class GotoInstruction extends BranchInstruction implements UnconditionalBranch
@@ -7621,7 +7707,7 @@ public interface Bytecodes {
             return jq_ClassFileConstants.OPCODE_NAMES[opcode] + " " + getMethod();
         }
 
-        jq_Method getMethod() { return (jq_Method)getObject(); }
+        public jq_Method getMethod() { return (jq_Method)getObject(); }
 
 	/**
 	 * Also works for instructions whose stack effect depends on the
@@ -8233,7 +8319,7 @@ public interface Bytecodes {
     
     
     
-    public class BytecodeException extends RuntimeException {
+    public static class BytecodeException extends RuntimeException {
 	public BytecodeException() { super(); }
 	public BytecodeException(String s) { super(s); }
     }
@@ -8273,6 +8359,54 @@ public interface Bytecodes {
         }
     }
     
+    public static class CodeException {
+        private InstructionHandle start, end, handler;
+        private jq_Class type;
+        
+        public CodeException(InstructionList il, jq_TryCatchBC tc) {
+            this.start = il.findHandle(tc.getStartPC());
+            this.end = il.findHandle(tc.getEndPC());
+            this.handler = il.findHandle(tc.getHandlerPC());
+            this.type = tc.getExceptionType();
+        }
+        
+        public InstructionHandle getStartPC() { return start; }
+        public void setStartPC(InstructionHandle i) { this.start = i; }
+        public InstructionHandle getEndPC() { return end; }
+        public void setEndPC(InstructionHandle i) { this.end = i; }
+        public InstructionHandle getHandlerPC() { return handler; }
+        public void setHandlerPC(InstructionHandle i) { this.handler = i; }
+        
+        public jq_TryCatchBC finish() {
+            return new jq_TryCatchBC((char)this.start.getPosition(),
+                                     (char)this.end.getPosition(),
+                                     (char)this.handler.getPosition(),
+                                     this.type);
+        }
+    }
+    
+    public static class LineNumber {
+        private InstructionHandle start;
+        private char num;
+        
+        public LineNumber(InstructionList il, jq_LineNumberBC tc) {
+            this.start = il.findHandle(tc.getStartPC());
+            if (this.start == null) {
+                System.out.println("Cannot find index "+(int)tc.getStartPC()+" in "+il);
+            }
+            this.num = tc.getLineNum();
+        }
+        
+        public InstructionHandle getStartPC() { return start; }
+        public void setStartPC(InstructionHandle i) { this.start = i; }
+        
+        public jq_LineNumberBC finish() {
+            char c;
+            if (this.start == null) c = 0;
+            else c = (char)this.start.getPosition();
+            return new jq_LineNumberBC(c, this.num);
+        }
+    }
     
     public interface InstructionConstants {
         /** Predefined instruction objects

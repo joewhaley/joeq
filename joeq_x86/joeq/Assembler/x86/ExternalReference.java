@@ -48,9 +48,11 @@ public class ExternalReference extends Reloc {
         return "from heap:"+jq.hex8(heap_from)+" to external:"+external_name+" (symndx "+symbol_ndx+")";
     }
     
+    /*
     public static final jq_InstanceField _heap_from;
     static {
         jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LAssembler/x86/ExternalReference;");
         _heap_from = k.getOrCreateInstanceField("heap_from", "I");
     }
+     */
 }

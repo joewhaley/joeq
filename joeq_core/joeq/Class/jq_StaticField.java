@@ -14,6 +14,8 @@ package Clazz;
 import java.io.DataInput;
 import java.io.IOException;
 import java.io.DataOutput;
+import java.util.Map;
+import java.util.HashMap;
 
 import Bootstrap.PrimordialClassLoader;
 import Run_Time.Unsafe;
@@ -36,9 +38,25 @@ public final class jq_StaticField extends jq_Field {
         return new jq_StaticField(clazz, nd);
     }
 
+    public final void load(jq_StaticField that) {
+        this.access_flags = that.access_flags;
+        this.attributes = (Map)((HashMap)that.attributes).clone();
+        this.constantValue = that.constantValue;
+        state = STATE_LOADED;
+    }
+    
+    public final void load(char access_flags, Map attributes) {
+        super.load(access_flags, attributes);
+        parseAttributes();
+    }
+    
     public final void load(char access_flags, DataInput in) 
     throws IOException, ClassFormatError {
         super.load(access_flags, in);
+        parseAttributes();
+    }
+    
+    private final void parseAttributes() throws ClassFormatError {
         byte[] a = getAttribute("ConstantValue");
         if (a != null) {
             if (a.length != 2) throw new ClassFormatError();
@@ -74,7 +92,7 @@ public final class jq_StaticField extends jq_Field {
                     constantValue = clazz.getCPasInt(cpidx);
                     break;
                 default:
-                    throw new ClassFormatError();
+                    throw new ClassFormatError("Unknown tag "+clazz.getCPtag(cpidx)+" at cp index "+(int)cpidx);
             }
         }
         state = STATE_LOADED;
