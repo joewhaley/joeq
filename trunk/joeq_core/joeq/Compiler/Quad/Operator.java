@@ -3447,7 +3447,7 @@ public abstract class Operator {
             public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg1_check(q); }
             public void interpret(Quad q, QuadInterpreter s) {
 		int a = getIntOpValue(getOp1(q), s);
-		Run_Time.DebugInterface.die(a);
+		Run_Time.Debug.die(a);
 		jq.UNREACHABLE();
             }
         }

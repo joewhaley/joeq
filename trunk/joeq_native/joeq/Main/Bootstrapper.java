@@ -82,6 +82,8 @@ public abstract class Bootstrapper {
         
         ClassLibInterface.useJoeqClasslib(true);
         
+        CodeAllocator.initializeCompiledMethodMap();
+        
         if (ClassLibInterface.DEFAULT.getClass().toString().indexOf("win32") != -1) {
             DUMP_COFF = true;
             x86ReferenceCompiler.THREAD_BLOCK_PREFIX = Assembler.x86.x86.PREFIX_FS;

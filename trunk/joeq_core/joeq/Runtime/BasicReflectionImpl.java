@@ -98,7 +98,7 @@ public class BasicReflectionImpl implements Reflection.Delegate {
             //return Class.forName(c.getJDKName(), false, c.getClassLoader());
         } catch (ClassNotFoundException x) {
             if (!c.getJDKName().startsWith("ClassLib") && !c.getJDKName().startsWith("L&"))
-                DebugInterface.debugwriteln("Note: "+c.getJDKName()+" was not found in host jdk");
+                Debug.writeln("Note: "+c.getJDKName()+" was not found in host jdk");
             return null;
         }
     }
@@ -178,7 +178,7 @@ public class BasicReflectionImpl implements Reflection.Delegate {
                 try {
                     fields = c.getDeclaredFields();
                 } catch (NoClassDefFoundError x) {
-                    DebugInterface.debugwriteln("Note: "+c+" could not be loaded in host jdk");
+                    Debug.writeln("Note: "+c+" could not be loaded in host jdk");
                     return null;
                 }
                 declaredFieldsCache.put(c, fields);
@@ -187,7 +187,7 @@ public class BasicReflectionImpl implements Reflection.Delegate {
             try {
                 fields = c.getDeclaredFields();
             } catch (NoClassDefFoundError x) {
-                DebugInterface.debugwriteln("Note: "+c+" could not be loaded in host jdk");
+                Debug.writeln("Note: "+c+" could not be loaded in host jdk");
                 return null;
             }
 	}
@@ -206,7 +206,7 @@ public class BasicReflectionImpl implements Reflection.Delegate {
         try {
             methods = c.getDeclaredMethods();
         } catch (NoClassDefFoundError x) {
-            DebugInterface.debugwriteln("Note: "+c+" could not be loaded in host jdk");
+            Debug.writeln("Note: "+c+" could not be loaded in host jdk");
             return null;
         }
 uphere:
@@ -230,7 +230,7 @@ uphere:
         try {
             consts = c.getDeclaredConstructors();
         } catch (NoClassDefFoundError x) {
-            DebugInterface.debugwriteln("Note: "+c+" could not be loaded in host jdk");
+            Debug.writeln("Note: "+c+" could not be loaded in host jdk");
             return null;
         }
 uphere:

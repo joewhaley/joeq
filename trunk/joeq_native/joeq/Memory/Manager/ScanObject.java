@@ -8,7 +8,7 @@ import Clazz.jq_Array;
 import Clazz.jq_Class;
 import Clazz.jq_Reference;
 import Clazz.jq_Type;
-import Memory.Debug;
+import Run_Time.Debug;
 import Memory.HeapAddress;
 
 /**

@@ -18,7 +18,6 @@ import Clazz.jq_StaticField;
 import Main.jq;
 import Memory.Address;
 import Memory.CodeAddress;
-import Memory.Debug;
 import Memory.HeapAddress;
 import Memory.StackAddress;
 import Scheduler.jq_RegisterState;

@@ -5,7 +5,7 @@ import Clazz.jq_Array;
 import Clazz.jq_Class;
 import Clazz.jq_Primitive;
 import Clazz.jq_Reference;
-import Memory.Debug;
+import Run_Time.Debug;
 import Memory.HeapAddress;
 import Memory.Heap.BootHeap;
 import Memory.Heap.Heap;

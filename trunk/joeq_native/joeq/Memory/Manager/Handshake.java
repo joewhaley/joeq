@@ -1,6 +1,6 @@
 package Memory.Manager;
 
-import Memory.Debug;
+import Run_Time.Debug;
 import Run_Time.HighResolutionTimer;
 import Run_Time.SystemInterface;
 import Scheduler.jq_NativeThread;

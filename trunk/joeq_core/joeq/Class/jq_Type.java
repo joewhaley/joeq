@@ -11,6 +11,7 @@ import Bootstrap.PrimordialClassLoader;
 import ClassLib.ClassLibInterface;
 import Compil3r.Quad.AndersenInterface.AndersenType;
 import Main.jq;
+import Run_Time.Debug;
 import Run_Time.Reflection;
 import UTF.Utf8;
 
@@ -61,6 +62,40 @@ public abstract class jq_Type implements AndersenType {
         return class_object;
     }
 
+    public static final int DISPLAY_SIZE = 8;
+    
+    /** 
+     * The first two elements are the positive and negative cache,
+     * respectively.  The remainder are the primary supertypes of this type
+     * ordered by the tree relation.  This array should be inlined into the
+     * jq_Type object, hopefully.
+     * 
+     * See paper "Fast subtype checking in the HotSpot JVM".
+     */
+    protected jq_Type[] display;
+    
+    /** 
+     * The offset of our type in the display array if this is a primary type, or
+     * 0 or 1 if this is a secondary type.
+     * 
+     * See paper "Fast subtype checking in the HotSpot JVM".
+     */
+    protected int offset;
+    
+    /**
+     * A reference to the secondary subtype array for this type.
+     * 
+     * See paper "Fast subtype checking in the HotSpot JVM".
+     */
+    protected jq_Reference[] s_s_array;
+    
+    /**
+     * The maximum index used in the secondary subtype array.
+     * 
+     * See paper "Fast subtype checking in the HotSpot JVM".
+     */
+    protected int s_s_array_length;
+    
     //// useful functions for parsing class and method names
     public static jq_Type parseType(String s) {
         if (s.length() == 1) {
@@ -82,6 +117,69 @@ public abstract class jq_Type implements AndersenType {
         return (jq_Reference) PrimordialClassLoader.loader.getOrCreateBSType(s);
     }
 
+    public static final boolean TRACE = false;
+
+    public final boolean isSubtypeOf(jq_Type that) {
+        jq.Assert(this.isPrepared());
+        jq.Assert(that.isPrepared());
+        
+        int off = that.offset;
+        if (that == this.display[off]) {
+            // matches cache or depth
+            if (TRACE) {
+                Debug.write(this.getDesc());
+                Debug.write(" matches ");
+                Debug.write(that.getDesc());
+                Debug.write(" offset=");
+                Debug.writeln(off);
+            }
+            return off != 1;
+        }
+        if (off > 1) {
+            // other class is a primary type that isn't a superclass.
+            if (TRACE) {
+                Debug.write(this.getDesc());
+                Debug.write(" doesn't match ");
+                Debug.write(that.getDesc());
+                Debug.write(", offset ");
+                Debug.write(off);
+                Debug.write(" is ");
+                if (this.display[off] == null)
+                    Debug.writeln("null");
+                else
+                    Debug.writeln(this.display[off].getDesc());
+            }
+            return false;
+        }
+        if (this == that) {
+            // classes are exactly the same.
+            return true;
+        }
+        int n = this.s_s_array_length;
+        for (int i=0; i<n; ++i) {
+            if (this.s_s_array[i] == that) {
+                this.display[0] = that;
+                that.offset = 0;
+                if (TRACE) {
+                    Debug.write(this.getDesc());
+                    Debug.write(" matches ");
+                    Debug.write(that.getDesc());
+                    Debug.writeln(" in s_s_array");
+                }
+                return true;
+            }
+        }
+        this.display[1] = that;
+        that.offset = 1;
+        if (TRACE) {
+            Debug.write(this.getDesc());
+            Debug.write(" doesn't match ");
+            Debug.write(that.getDesc());
+            Debug.writeln(" in s_s_array");
+        }
+        return false;
+    }
+    
     public boolean isBootType() {
         return jq.boot_types.contains(this);
     }

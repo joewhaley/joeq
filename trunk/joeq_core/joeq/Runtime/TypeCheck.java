@@ -60,9 +60,8 @@ public abstract class TypeCheck implements jq_ClassFileConstants {
     public static boolean isAssignable(jq_Type S, jq_Type T) {
         if (S == T)
             return true;
-        if (S instanceof jq_Reference && T instanceof jq_Reference)
-            return ((jq_Reference) S).isSubtypeOf((jq_Reference) T);
-        return false;
+        T.prepare();
+        return S.isSubtypeOf(T);
     }
     
     public static boolean isAssignable_graph(jq_Type S, jq_Type T) {

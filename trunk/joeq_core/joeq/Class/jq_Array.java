@@ -234,15 +234,24 @@ public class jq_Array extends jq_Reference implements jq_ClassFileConstants {
                 !((jq_Class) innermost).isInterface()) {
                 jq_Reference dps = this.getDirectPrimarySupertype();
                 dps.prepare();
-                System.arraycopy(dps.display, 2, this.display, 2, dps.offset-1);
-                this.offset = dps.offset + 1;
+                int num = dps.offset;
+                if (num < 2) num = DISPLAY_SIZE+1;
+                System.arraycopy(dps.display, 2, this.display, 2, num-1);
+                this.offset = num + 1;
                 if (this.offset >= DISPLAY_SIZE+2)
                     this.offset = 0;
                 this.display[this.offset] = this;
                 // todo: if innermost element type implements some interfaces,
                 // we need to add some more to s_s_array.
             } else {
-                this.display[2] = PrimordialClassLoader.getJavaLangObject();
+                jq_Reference r = PrimordialClassLoader.getJavaLangObject();
+                this.display[2] = r;
+                int dim = this.getDimensionality();
+                for (int i=0; i<dim; ++i) {
+                    if (i >= DISPLAY_SIZE-1) break;
+                    r = r.getArrayTypeForElementType();
+                    this.display[i+3] = r;
+                }
             }
             this.s_s_array_length = getCacheIndexForDim(this.getDimensionality());
             // todo: when s_s_array_cache changes, previously prepared types still

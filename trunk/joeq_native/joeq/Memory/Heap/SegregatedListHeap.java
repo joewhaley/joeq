@@ -5,7 +5,7 @@ import Allocator.ObjectLayoutMethods;
 import Clazz.jq_Array;
 import Main.jq;
 import Memory.Address;
-import Memory.Debug;
+import Run_Time.Debug;
 import Memory.HeapAddress;
 import Memory.Manager.CollectorThread;
 import Memory.Manager.GCConstants;

@@ -441,7 +441,7 @@ public class jq_NativeThread implements x86Constants {
             SystemInterface.suspend_thread(native_threads[i].thread_handle);
         }
         //dumpThreads();
-        Debug.OnlineDebugger.debuggerEntryPoint();
+        Debugger.OnlineDebugger.debuggerEntryPoint();
         for (int i = 0; i < native_threads.length; ++i) {
             SystemInterface.resume_thread(native_threads[i].thread_handle);
         }

@@ -9,7 +9,7 @@ package Main;
 import java.util.List;
 import java.util.Set;
 
-import Run_Time.DebugInterface;
+import Run_Time.Debug;
 
 /**
  *
@@ -378,9 +378,9 @@ public abstract class jq {
 
     public static void Assert(boolean b, String reason) {
         if (!b) {
-            DebugInterface.debugwriteln("Assertion Failure!");
-            DebugInterface.debugwriteln(reason);
-	    _crash.die();
+            Debug.writeln("Assertion Failure!");
+            Debug.writeln(reason);
+            Debug.die(-1);
         }
     }
 
@@ -389,23 +389,23 @@ public abstract class jq {
     }
 
     public static void TODO(String s) {
-        DebugInterface.debugwriteln("TODO: " + s);
-	_crash.die();
+        Debug.writeln("TODO: " + s);
+        Debug.die(-1);
     }
 
     public static void TODO() {
-        DebugInterface.debugwriteln("TODO");
-	_crash.die();
+        Debug.writeln("TODO");
+        Debug.die(-1);
     }
 
     public static void UNREACHABLE(String s) {
-        DebugInterface.debugwriteln("UNREACHABLE: " + s);
-	_crash.die();
+        Debug.writeln("UNREACHABLE: " + s);
+        Debug.die(-1);
     }
 
     public static void UNREACHABLE() {
-        DebugInterface.debugwriteln("BUG! unreachable code reached!");
-	_crash.die();
+        Debug.writeln("BUG! unreachable code reached!");
+        Debug.die(-1);
     }
 
     //// converting bytes to other data types
@@ -476,9 +476,4 @@ public abstract class jq {
 
     //public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateType("LMain/jq;");
 
-    static interface CrashInterface {
-        void die();
-    }
-
-    static CrashInterface _crash;
 }

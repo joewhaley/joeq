@@ -1,7 +1,7 @@
 package Memory.Manager;
 
 import Allocator.DefaultHeapAllocator;
-import Memory.Debug;
+import Run_Time.Debug;
 import Memory.HeapAddress;
 import Run_Time.HighResolutionTimer;
 import Run_Time.Unsafe;

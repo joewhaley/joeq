@@ -208,9 +208,12 @@ public abstract class CodeAllocator {
      */
     private static CodeAddress lowAddress, highAddress;
     static {
-        //lowAddress = (CodeAddress) CodeAddress.getNull().offset(0x7FFFFFFF);
-        //highAddress = CodeAddress.getNull();
         compiledMethods = new TreeMap();
+    }
+
+    public static void initializeCompiledMethodMap() {
+        lowAddress = (CodeAddress) CodeAddress.getNull().offset(0x7FFFFFFF);
+        highAddress = CodeAddress.getNull();
         jq_CompiledCode cc = new jq_CompiledCode(null, highAddress, 0, highAddress,
                                                  null, null, null, null, null);
         compiledMethods.put(cc, cc);

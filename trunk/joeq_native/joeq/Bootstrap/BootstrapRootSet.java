@@ -293,7 +293,7 @@ public class BootstrapRootSet {
         
         // JDK1.4: an instance of this class is created via reflection during VM initialization.
         try {
-            Class.forName("sun.nio.cs.ISO8859_1");
+            Class.forName("sun.nio.cs.ISO_8859_1");
         }
         catch (java.lang.ClassNotFoundException x) { }
         try {
@@ -302,25 +302,33 @@ public class BootstrapRootSet {
             i_m = c.getOrCreateInstanceMethod("<init>", "()V");
             addNecessaryMethod(i_m);
         }
-        catch (java.lang.NoClassDefFoundError x) { }
+        catch (java.lang.NoClassDefFoundError x) {
+            PrimordialClassLoader.loader.unloadBSType(c);
+        }
         try {
             c = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Lsun/nio/cs/ISO_8859_1$Encoder;");
             c.load();
             addNecessaryType(c);
         }
-        catch (java.lang.NoClassDefFoundError x) { }
+        catch (java.lang.NoClassDefFoundError x) {
+            PrimordialClassLoader.loader.unloadBSType(c);
+        }
         try {
             c = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Lsun/nio/cs/ISO_8859_1$Decoder;");
             c.load();
             addNecessaryType(c);
         }
-        catch (java.lang.NoClassDefFoundError x) { }
+        catch (java.lang.NoClassDefFoundError x) {
+            PrimordialClassLoader.loader.unloadBSType(c);
+        }
         try {
             c = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Lsun/nio/cs/ISO_8859_1$1;");
             c.load();
             addNecessaryType(c);
         }
-        catch (java.lang.NoClassDefFoundError x) { }
+        catch (java.lang.NoClassDefFoundError x) {
+            PrimordialClassLoader.loader.unloadBSType(c);
+        }
         
         // tracing in the compiler uses these
         //c = jq._class; c.prepare();

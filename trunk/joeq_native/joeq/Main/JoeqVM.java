@@ -32,7 +32,6 @@ public abstract class JoeqVM {
             // call java.lang.System.initializeSystemClass()
             ClassLibInterface.DEFAULT.initializeSystemClass();
 
-	    jq._crash = new DebuggerCrash();
         } catch (Throwable x) {
             SystemInterface.debugwriteln("Exception occurred during virtual machine initialization");
             SystemInterface.debugwriteln("Exception: " + x);
@@ -97,7 +96,7 @@ public abstract class JoeqVM {
                 } catch (Throwable x) {
                     SystemInterface.debugwriteln("Exception occurred while initializing the virtual machine");
                     SystemInterface.debugwriteln(x.toString());
-                    x.printStackTrace(System.err);
+                    //x.printStackTrace(System.err);
                     //return;
                 }
             }
