@@ -62,10 +62,10 @@ public class BuildBDDIR implements ControlFlowGraphVisitor {
     
     String dumpDir = System.getProperty("bdddumpdir", "");
     boolean DUMP_TUPLES = !System.getProperty("dumptuples", "yes").equals("no");
-    
+
     String varOrderDesc = "method_quadxtargetxfallthrough_member_constant_opc_srcs_dest_srcNum";
     
-    int methodBits = 14, quadBits = 19, opBits = 8, regBits = 7, constantBits = 14, memberBits = 15, varargsBits = 4;
+    int methodBits = 14, quadBits = 19, opBits = 9, regBits = 7, constantBits = 14, memberBits = 15, varargsBits = 4;
 
     BDDFactory bdd;
     BDDDomain method, quad, opc, dest, src1, src2, constant, fallthrough, target, member, srcNum, srcs;
@@ -307,7 +307,7 @@ public class BuildBDDIR implements ControlFlowGraphVisitor {
     }
     
     void handleQuad(Quad q, jq_Method m) {
-        System.out.println("handling quad: "+q);
+        //System.out.println("handling quad: "+q);
         int quadID=0, opcID=0, destID=0, src1ID=0, src2ID=0, constantID=0, targetID=0, memberID=0;
         List srcsID = null;
         quadID = getQuadID(q);
@@ -315,9 +315,9 @@ public class BuildBDDIR implements ControlFlowGraphVisitor {
         Iterator i = q.getDefinedRegisters().iterator();
         if (i.hasNext()) {
             RegisterOperand ro = (RegisterOperand) i.next();
-            System.out.println("destination register is "+ro.getRegister());
+            //System.out.println("destination register is "+ro.getRegister());
             destID = getRegisterID(ro.getRegister());
-            System.out.println("destination register id "+destID);
+            //System.out.println("destination register id "+destID);
             Assert._assert(!i.hasNext());
         }
         i = q.getUsedRegisters().iterator();
@@ -334,9 +334,9 @@ public class BuildBDDIR implements ControlFlowGraphVisitor {
             srcsID = new LinkedList();
             do {
                 RegisterOperand rop = (RegisterOperand) i.next();
-                System.out.println("source register is "+rop.getRegister());                
+                //System.out.println("source register is "+rop.getRegister());                
                 if (rop != null) srcsID.add(new Integer(getRegisterID(rop.getRegister())));
-                System.out.println("source register id "+getRegisterID(rop.getRegister()));
+                //System.out.println("source register id "+getRegisterID(rop.getRegister()));
             } while (i.hasNext());
         }
         i = q.getAllOperands().iterator();
@@ -356,7 +356,7 @@ public class BuildBDDIR implements ControlFlowGraphVisitor {
                 memberID = getMemberID(((TypeOperand) op).getType());
             }
         }
-        System.out.println("quadID "+quadID+" destID "+destID);
+        //System.out.println("quadID "+quadID+" destID "+destID);
         if (ZERO_FIELDS || quadID != 0) currentQuad.andWith(quad.ithVar(quadID));
         if (ZERO_FIELDS || opcID != 0) currentQuad.andWith(opc.ithVar(opcID));
         if (ZERO_FIELDS || destID != 0) currentQuad.andWith(dest.ithVar(destID));
@@ -374,7 +374,7 @@ public class BuildBDDIR implements ControlFlowGraphVisitor {
             int j = 1;
             for (i = srcsID.iterator(); i.hasNext(); ++j) {
                 int srcID = ((Integer) i.next()).intValue();
-                System.out.println("source "+j+" srcID "+srcID);
+                //System.out.println("source "+j+" srcID "+srcID);
                 if (ZERO_FIELDS || srcID != 0) {
                     BDD temp2 = srcNum.ithVar(j);
                     temp2.andWith(srcs.ithVar(srcID));
@@ -511,7 +511,25 @@ public class BuildBDDIR implements ControlFlowGraphVisitor {
         DataOutputStream dos = new DataOutputStream(new FileOutputStream(fileName));
         for (int i = 0; i < map.size(); ++i) {
             Object o = map.get(i);
-            dos.writeBytes(o + "\n");
+            String s;
+            if (o != null) {
+               s = o.toString();
+            }
+            else {
+               s = "(null)"; 
+            }
+            // suppress nonprintables in the output
+            StringBuffer sb = new StringBuffer(s);
+            for (int j=0; j<sb.length(); ++j) {
+                if (sb.charAt(j) < 32) {
+                    sb.setCharAt(j, ' ');
+                }
+                else if (sb.charAt(j) > 127) {
+                    sb.setCharAt(j, ' ');
+                }
+            }
+            s = new String(sb);
+            dos.writeBytes(s + "\n");
         }
         dos.close();
     }
