@@ -5,7 +5,7 @@
 
 package Assembler.x86;
 
-import Allocator.CodeAllocator;
+import Allocator.DefaultCodeAllocator;
 import Allocator.CodeAllocator.x86CodeBuffer;
 import Util.LightRelation;
 import Util.Relation;
@@ -59,9 +59,10 @@ public class x86Assembler implements x86Constants {
     public int getCurrentOffset() { return mc.getCurrentOffset(); }
     public int/*CodeAddress*/ getCurrentAddress() { return mc.getCurrentAddress(); }
     public void patch1(int offset, byte value) { mc.put1(offset, value); }
+    public void patch4_endian(int offset, int value) { mc.put4_endian(offset, value); }
 
     public x86Assembler(int num_targets, int est_size) {
-        mc = CodeAllocator.DEFAULT.getCodeBuffer(est_size);
+        mc = DefaultCodeAllocator.getCodeBuffer(est_size);
         if (TRACE) System.out.println("Assembler start address: "+jq.hex8(mc.getCurrentAddress()));
         branchtargetmap = new HashMap();
         branches_to_patch = new LightRelation();
@@ -251,6 +252,9 @@ public class x86Assembler implements x86Constants {
     }
     public void emit2_Reg(x86 x, int r1) {
         ip += x.emit2_Reg(mc, r1);
+    }
+    public void emit2_Reg_Mem(x86 x, int r1, int addr) {
+        ip += x.emit2_Reg_Abs32(mc, r1, addr);
     }
     public void emit2_Reg_Mem(x86 x, int r1, int off, int base) {
         if (base == ESP)
