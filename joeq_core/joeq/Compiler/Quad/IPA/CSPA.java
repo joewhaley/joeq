@@ -3,31 +3,37 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Quad.IPA;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.StringTokenizer;
+import java.util.TreeSet;
 
 import org.sf.javabdd.BDD;
 import org.sf.javabdd.BDDBitVector;
 import org.sf.javabdd.BDDDomain;
 import org.sf.javabdd.BDDFactory;
 import org.sf.javabdd.BDDPairing;
-import org.sf.javabdd.BuDDyFactory;
 
 import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
 import Clazz.jq_Field;
 import Clazz.jq_Method;
 import Clazz.jq_Reference;
+import Clazz.jq_StaticMethod;
 import Clazz.jq_Type;
+import Compil3r.Quad.BDDPointerAnalysis;
 import Compil3r.Quad.CachedCallGraph;
 import Compil3r.Quad.CallGraph;
 import Compil3r.Quad.CodeCache;
@@ -35,7 +41,10 @@ import Compil3r.Quad.ControlFlowGraph;
 import Compil3r.Quad.LoadedCallGraph;
 import Compil3r.Quad.MethodInline;
 import Compil3r.Quad.MethodSummary;
+import Compil3r.Quad.Operator;
 import Compil3r.Quad.ProgramLocation;
+import Compil3r.Quad.Quad;
+import Compil3r.Quad.QuadIterator;
 import Compil3r.Quad.RootedCHACallGraph;
 import Compil3r.Quad.MethodSummary.ConcreteObjectNode;
 import Compil3r.Quad.MethodSummary.ConcreteTypeNode;
@@ -66,19 +75,24 @@ import Util.Graphs.Traversals;
  */
 public class CSPA {
 
+    /***** FLAGS *****/
+
+    /** Various trace flags. */
     public static final boolean TRACE_ALL = false;
     
     public static final boolean TRACE_MATCHING  = true || TRACE_ALL;
     public static final boolean TRACE_TYPES     = false || TRACE_ALL;
     public static final boolean TRACE_MAPS      = false || TRACE_ALL;
-    public static final boolean TRACE_SIZES      = true || TRACE_ALL;
+    public static final boolean TRACE_SIZES     = false || TRACE_ALL;
+    public static final boolean TRACE_CALLGRAPH = false || TRACE_ALL;
     public static final boolean TRACE_EDGES     = false || TRACE_ALL;
     public static final boolean TRACE_TIMES     = false || TRACE_ALL;
-    public static final boolean TRACE_VARORDER     = true || TRACE_ALL;
-    public static final boolean TRACE_NUMBERING     = false || TRACE_ALL;
+    public static final boolean TRACE_VARORDER  = false || TRACE_ALL;
+    public static final boolean TRACE_NUMBERING = false || TRACE_ALL;
+    public static final boolean TRACE_RELATIONS = false || TRACE_ALL;
     
-    public static final boolean USE_CHA     = true;
-    public static final boolean DO_INLINING = true;
+    public static final boolean USE_CHA     = false;
+    public static final boolean DO_INLINING = false;
 
     public static boolean LOADED_CALLGRAPH = false;
     public static final boolean TEST_CALLGRAPH = false;
@@ -86,31 +100,39 @@ public class CSPA {
     public static boolean BREAK_RECURSION = false;
     
     public static final boolean CONTEXT_SENSITIVE = true;
-    public static final boolean CONTEXT_SENSITIVE_HEAP = false;
+    public static final boolean CONTEXT_SENSITIVE_HEAP = true;
     
     public static void main(String[] args) {
-        HostedVM.initialize();
-        
+        // We use bytecode maps.
         CodeCache.AlwaysMap = true;
-        
-        boolean DUMP = System.getProperty("bdddump") != null;
+        HostedVM.initialize();
         
         jq_Class c = (jq_Class) jq_Type.parseType(args[0]);
         c.prepare();
         Collection roots = Arrays.asList(c.getDeclaredStaticMethods());
+        if (args.length > 1) {
+            for (Iterator i=roots.iterator(); i.hasNext(); ) {
+                jq_StaticMethod sm = (jq_StaticMethod) i.next();
+                if (args[1].equals(sm.getName().toString())) {
+                    roots = Collections.singleton(sm);
+                    break;
+                }
+            }
+        }
+        
+        String callgraphfilename = System.getProperty("callgraph", "callgraph");
         
         CallGraph cg = null;
-        if (new java.io.File("callgraph").exists()) {
+        if (new File(callgraphfilename).exists()) {
             try {
                 System.out.print("Loading initial call graph...");
                 long time = System.currentTimeMillis();
                 cg = new LoadedCallGraph("callgraph");
                 time = System.currentTimeMillis() - time;
                 System.out.println("done. ("+time/1000.+" seconds)");
-                //Compil3r.Quad.RootedCHACallGraph.test(cg);
                 roots = cg.getRoots();
                 LOADED_CALLGRAPH = true;
-            } catch (java.io.IOException x) {
+            } catch (IOException x) {
                 x.printStackTrace();
             }
         }
@@ -122,6 +144,12 @@ public class CSPA {
                 cg = new CachedCallGraph(cg);
                 cg.setRoots(roots);
             } else {
+                BDDPointerAnalysis dis = new BDDPointerAnalysis("java", 1000000, 100000);
+                cg = dis.goIncremental(roots);
+                cg = new CachedCallGraph(cg);
+                // BDD pointer analysis changes the root set by adding class initializers,
+                // thread entry points, etc.
+                roots = cg.getRoots();
             }
             time = System.currentTimeMillis() - time;
             System.out.println("done. ("+time/1000.+" seconds)");
@@ -164,7 +192,7 @@ public class CSPA {
                 jq_Method m = (jq_Method) i.next();
                 if (m.getBytecode() == null) continue;
                 ControlFlowGraph cfg = CodeCache.getCode(m);
-                MethodSummary ms = MethodSummary.getSummary(cfg);
+                //MethodSummary ms = MethodSummary.getSummary(cfg);
                 mi.visitCFG(cfg);
             }
             time = System.currentTimeMillis() - time;
@@ -184,16 +212,31 @@ public class CSPA {
             RootedCHACallGraph.test(cg);
         }
         
-        // Allocate CSPA object.  Also initializes BDD package.
+        System.out.print("Counting size of call graph...");
+        time = System.currentTimeMillis();
+        countCallGraph(cg);
+        time = System.currentTimeMillis() - time;
+        System.out.println("done. ("+time/1000.+" seconds)");
+        
+        // Allocate CSPA object.
         CSPA dis = new CSPA(cg);
         dis.roots = roots;
+        
+        // Initialize BDD package.
+        dis.initializeBDD(DEFAULT_NODE_COUNT, DEFAULT_CACHE_SIZE);
         
         // Add edges for existing globals.
         dis.addGlobals();
         
-        System.out.print("Initial generation and counting paths...");
+        System.out.print("Generating BDD summaries without context...");
         time = System.currentTimeMillis();
-        long paths = dis.countPaths();
+        dis.generateBDDSummaries();
+        time = System.currentTimeMillis() - time;
+        System.out.println("done. ("+time/1000.+" seconds)");
+        
+        System.out.print("Counting paths...");
+        time = System.currentTimeMillis();
+        long paths = dis.countPaths2();
         time = System.currentTimeMillis() - time;
         System.out.println("done. ("+time/1000.+" seconds)");
         System.out.println(paths+" paths");
@@ -211,6 +254,9 @@ public class CSPA {
         System.out.println("done. ("+time/1000.+" seconds)");
         
         dis.printHistogram();
+        dis.escapeAnalysis();
+        
+        String dumpfilename = System.getProperty("cspa.dumpfile");
     }
     
     void printHistogram() {
@@ -246,38 +292,40 @@ public class CSPA {
     }
     
     public void addGlobalV1Context(BDD b) {
-        if (false)
-            b.andWith(V1c.ithVar(0));
-        else
+        if (CONTEXT_SENSITIVE)
             b.andWith(V1c.domain());
+        else
+            b.andWith(V1c.ithVar(0));
     }
     public void addGlobalV2Context(BDD b) {
-        if (false)
-            b.andWith(V2c.ithVar(0));
-        else
+        if (CONTEXT_SENSITIVE)
             b.andWith(V2c.domain());
+        else
+            b.andWith(V2c.ithVar(0));
     }
     public void addGlobalH1Context(BDD b) {
-        if (false)
-            b.andWith(H1c.ithVar(0));
+        if (CONTEXT_SENSITIVE)
+            b.andWith(H1c.domain());
         else
-            b.andWith(V2c.domain());
+            b.andWith(H1c.ithVar(0));
     }
-    public void addV1Context(BDD b, long lo, long hi) {
+    public BDD getV1Context(long lo, long hi) {
         if (CONTEXT_SENSITIVE)
-            b.andWith(V1c.varRange(lo, hi));
+            return V1c.varRange(lo, hi);
+        else
+            return V1c.ithVar(0);
     }
-    public void addV2Context(BDD b, long lo, long hi) {
+    public BDD getV2Context(long lo, long hi) {
         if (CONTEXT_SENSITIVE)
-            b.andWith(V2c.varRange(lo, hi));
+            return V2c.varRange(lo, hi);
+        else
+            return V2c.ithVar(0);
     }
-    public void addH1Context(BDD b, long lo, long hi) {
-        if (CONTEXT_SENSITIVE) {
-            if (CONTEXT_SENSITIVE_HEAP)
-                b.andWith(H1c.varRange(lo, hi));
-            else
-                b.andWith(H1c.ithVar(0));
-        }
+    public BDD getH1Context(long lo, long hi) {
+        if (CONTEXT_SENSITIVE)
+            return H1c.varRange(lo, hi);
+        else
+            return H1c.ithVar(0);
     }
     
     public void addGlobalObjectAllocation(Node dest, Node site) {
@@ -400,20 +448,16 @@ public class CSPA {
     /**
      * Singleton BDD object that provides access to BDD functions.
      */
-    private final BDDFactory bdd;
+    private BDDFactory bdd;
     
-    public static final int VARBITS = 15;
-    public static final int HEAPBITS = 12;
-    public static final int FIELDBITS = 10;
-    public static final int CLASSBITS = 10;
-    public static final int CONTEXTBITS = 35;
+    public static int VARBITS = 18;
+    public static int HEAPBITS = 15;
+    public static int FIELDBITS = 14;
+    public static int CLASSBITS = 14;
+    public static int CONTEXTBITS = 38;
     
     // the size of domains, can be changed to reflect the size of inputs
-    int domainBits[] = {VARBITS, CONTEXTBITS,
-                        VARBITS, CONTEXTBITS,
-                        FIELDBITS,
-                        HEAPBITS, CONTEXTBITS,
-                        HEAPBITS, CONTEXTBITS};
+    int domainBits[];
     // to be computed in sysInit function
     int domainSpos[] = {0,  0,  0,  0,  0,  0,  0,  0,  0}; 
     
@@ -445,20 +489,71 @@ public class CSPA {
     BDD cC; // T1 x T2
     BDD typeFilter; // V1 x H1
 
+    public static void countCallGraph(CallGraph cg) {
+        Set fields = new HashSet();
+        Set classes = new HashSet();
+        int vars = 0, heaps = 0, bcodes = 0, methods = 0, calls = 0;
+        for (Iterator i=cg.getAllMethods().iterator(); i.hasNext(); ) {
+            jq_Method m = (jq_Method) i.next();
+            ++methods;
+            if (m.getBytecode() == null) continue;
+            bcodes += m.getBytecode().length;
+            ControlFlowGraph cfg = CodeCache.getCode(m);
+            MethodSummary ms = MethodSummary.getSummary(cfg);
+            for (Iterator j=ms.nodeIterator(); j.hasNext(); ) {
+                Node n = (Node) j.next();
+                ++vars;
+                if (n instanceof ConcreteTypeNode ||
+                    n instanceof UnknownTypeNode ||
+                    n instanceof ConcreteObjectNode)
+                    ++heaps;
+                fields.addAll(n.getAccessPathEdgeFields());
+                fields.addAll(n.getEdgeFields());
+                if (n instanceof GlobalNode) continue;
+                jq_Reference r = (jq_Reference) n.getDeclaredType();
+                classes.add(r);
+            }
+            calls += ms.getCalls().size();
+        }
+        System.out.println();
+        System.out.println("Methods="+methods+" Bytecodes="+bcodes+" Call sites="+calls);
+        //long paths = Util.Graphs.CountPaths.countPaths(cg);
+        long paths = countPaths3(cg);
+        System.out.println("Vars="+vars+" Heaps="+heaps+" Classes="+classes.size()+" Fields="+fields.size()+" Paths="+paths);
+        double log2 = Math.log(2);
+        VARBITS = (int) (Math.log(vars+256)/log2 + 1.0);
+        HEAPBITS = (int) (Math.log(heaps+256)/log2 + 1.0);
+        FIELDBITS = (int) (Math.log(fields.size()+64)/log2 + 2.0);
+        CLASSBITS = (int) (Math.log(classes.size()+64)/log2 + 2.0);
+        CONTEXTBITS = (int) (Math.log(paths)/log2 + 1.0);
+        CONTEXTBITS = Math.min(60, CONTEXTBITS);
+        System.out.println("Var bits="+VARBITS+" Heap bits="+HEAPBITS+" Class bits="+CLASSBITS+" Field bits="+FIELDBITS+" Context bits="+CONTEXTBITS);
+    }
+
     public CSPA(CallGraph cg) {
-        this(cg, DEFAULT_NODE_COUNT, DEFAULT_CACHE_SIZE);
+        this.cg = cg;
     }
     
     CallGraph cg;
     Collection roots;
     
-    public CSPA(CallGraph cg, int nodeCount, int cacheSize) {
-        this.cg = cg;
+    public void initializeBDD(int nodeCount, int cacheSize) {
+        bdd = BDDFactory.init(nodeCount, cacheSize);
         
-        bdd = BuDDyFactory.init(nodeCount, cacheSize);
+        bdd.setCacheRatio(8);
+        bdd.setMaxIncrease(Math.min(nodeCount/4, 2500000));
+        bdd.setMaxNodeNum(0);
         
-        bdd.setCacheRatio(4);
-        bdd.setMaxIncrease(nodeCount/4);
+        variableIndexMap = new IndexMap("Variable", 1 << VARBITS);
+        heapobjIndexMap = new IndexMap("HeapObj", 1 << HEAPBITS);
+        fieldIndexMap = new IndexMap("Field", 1 << FIELDBITS);
+        typeIndexMap = new IndexMap("Class", 1 << CLASSBITS);
+
+        domainBits = new int[] {VARBITS, CONTEXTBITS,
+                                VARBITS, CONTEXTBITS,
+                                FIELDBITS,
+                                HEAPBITS, CONTEXTBITS,
+                                HEAPBITS, CONTEXTBITS};
         
         long[] domains = new long[domainBits.length];
         for (int i=0; i<domainBits.length; ++i) {
@@ -483,7 +578,7 @@ public class CSPA {
         }
         
         boolean reverseLocal = System.getProperty("bddreverse", "true").equals("true");
-        String ordering = System.getProperty("bddordering", "FD_H2cxH2o_V2cxV2oxV1cxV1o_H1cxH1o");
+        String ordering = System.getProperty("bddordering", "FD_H2cxH2o_V2cxV1cxV2oxV1o_H1cxH1o");
         
         int[] varorder = makeVarOrdering(reverseLocal, ordering);
         if (TRACE_VARORDER) {
@@ -660,10 +755,10 @@ public class CSPA {
         System.arraycopy(varorder2, 0, varorder, 0, varorder.length);
     }
     
-    IndexMap/* Node->index */ variableIndexMap = new IndexMap("Variable", 1 << VARBITS);
-    IndexMap/* Node->index */ heapobjIndexMap = new IndexMap("HeapObj", 1 << HEAPBITS);
-    IndexMap/* jq_Field->index */ fieldIndexMap = new IndexMap("Field", 1 << FIELDBITS);
-    IndexMap/* jq_Reference->index */ typeIndexMap = new IndexMap("Class", 1 << CLASSBITS);
+    IndexMap/* Node->index */ variableIndexMap;
+    IndexMap/* Node->index */ heapobjIndexMap;
+    IndexMap/* jq_Field->index */ fieldIndexMap;
+    IndexMap/* jq_Reference->index */ typeIndexMap;
 
     int getVariableIndex(Node dest) {
         return variableIndexMap.get(dest);
@@ -794,11 +889,26 @@ public class CSPA {
         return result;
     }
     
+    BDDMethodSummary getBDDSummary(jq_Method m) {
+        if (m.getBytecode() == null) return null;
+        ControlFlowGraph cfg = CodeCache.getCode(m);
+        MethodSummary ms = MethodSummary.getSummary(cfg);
+        return getBDDSummary(ms);
+    }
+    
     public ProgramLocation mapCall(ProgramLocation callSite) {
         if (LOADED_CALLGRAPH && callSite instanceof ProgramLocation.QuadProgramLocation) {
             jq_Method m = (jq_Method) callSite.getMethod();
             Map map = CodeCache.getBCMap(m);
-            int bcIndex = ((Integer) map.get(((ProgramLocation.QuadProgramLocation) callSite).getQuad())).intValue();
+            Quad q = ((ProgramLocation.QuadProgramLocation) callSite).getQuad();
+            if (q == null) {
+                Assert.UNREACHABLE("Error: cannot find call site "+callSite);
+            }
+            Integer i = (Integer) map.get(q);
+            if (i == null) {
+                Assert.UNREACHABLE("Error: no mapping for quad "+q);
+            }
+            int bcIndex = i.intValue();
             callSite = new ProgramLocation.BCProgramLocation(m, bcIndex);
         }
         return callSite;
@@ -813,31 +923,69 @@ public class CSPA {
     BDD g_stores;
     BDD g_loads;
 
+    static boolean USE_REPLACE_V2 = true;
+    static boolean USE_REPLACE_H1 = false;
+    static BDDPairing V1cToV2c, V1cToH1c;
+
     public void addRelations(MethodSummary ms) {
         BDDMethodSummary bms = this.getBDDSummary(ms);
 
-        //System.out.println("Adding relations for "+ms.getMethod());
+        if (TRACE_RELATIONS)
+            System.out.println("Adding relations for "+ms.getMethod());
+        
+        long time = System.currentTimeMillis();
+        BDD v1c, v2c, h1c;
+        v1c = getV1Context(0, bms.n_paths);
+        if (USE_REPLACE_V2) {
+            if (V1cToV2c == null) V1cToV2c = bdd.makePair(V1c, V2c);
+            v2c = v1c.replace(V1cToV2c);
+        } else {
+            v2c = getV2Context(0, bms.n_paths);
+        }
+        if (USE_REPLACE_H1) {
+            if (V1cToH1c == null) V1cToH1c = bdd.makePair(V1c, H1c);
+            h1c = v1c.replace(V1cToH1c);
+        } else {
+            h1c = getH1Context(0, bms.n_paths);
+        }
+        time = System.currentTimeMillis() - time;
+        if (TRACE_TIMES || time > 500)
+            System.out.println("Building context BDD: "+(time/1000.));
+        
+        time = System.currentTimeMillis();
         
         BDD t1 = bms.m_pointsTo.id();
-        addV1Context(t1, 0, bms.n_paths);
-        addH1Context(t1, 0, bms.n_paths);
+        t1.andWith(v1c.id());
+        t1.andWith(h1c);
         g_pointsTo.orWith(t1);
 
-        t1 = bms.m_loads.id();
-        addV1Context(t1, 0, bms.n_paths);
-        addV2Context(t1, 0, bms.n_paths);
-        g_loads.orWith(t1);
-        
-        t1 = bms.m_stores.id();
-        addV1Context(t1, 0, bms.n_paths);
-        addV2Context(t1, 0, bms.n_paths);
-        g_stores.orWith(t1);
+        if (false) {
+            t1 = bms.m_loads.id();
+            t1.andWith(v1c.id());
+            t1.andWith(v2c.id());
+            g_loads.orWith(t1);
+            t1 = bms.m_stores.id();
+            t1.andWith(v1c);
+            t1.andWith(v2c);
+            g_stores.orWith(t1);
+        } else {
+            v1c.andWith(v2c);
+            t1 = bms.m_loads.id();
+            t1.andWith(v1c.id());
+            g_loads.orWith(t1);
+            t1 = bms.m_stores.id();
+            t1.andWith(v1c);
+            g_stores.orWith(t1);
+        }
+        time = System.currentTimeMillis() - time;
+        if (TRACE_TIMES || time > 500)
+            System.out.println("Adding relations to global: "+(time/1000.));
         
         bms.dispose();
     }
     
     public void bindCallEdges(MethodSummary caller) {
-        if (TRACE_EDGES) System.out.println("Adding call graph edges for "+caller.getMethod());
+        if (TRACE_CALLGRAPH) System.out.println("Adding call graph edges for "+caller.getMethod());
         for (Iterator i=caller.getCalls().iterator(); i.hasNext(); ) {
             ProgramLocation mc = (ProgramLocation) i.next();
             for (Iterator j=getTargetMethods(mc).iterator(); j.hasNext(); ) {
@@ -879,7 +1027,7 @@ public class CSPA {
     }
     
     public void bindParameters(MethodSummary caller, ProgramLocation mc, MethodSummary callee) {
-        if (TRACE_EDGES)
+        if (TRACE_CALLGRAPH)
             System.out.println("Adding call graph edge "+caller.getMethod()+"->"+callee.getMethod());
         BDDMethodSummary caller_s = this.getBDDSummary(caller);
         BDDMethodSummary callee_s = this.getBDDSummary(callee);
@@ -887,7 +1035,7 @@ public class CSPA {
         Range r = (Range) callGraphEdges.get(p);
         if (backEdges.contains(p))
             System.out.println("Back edge: "+p+"="+r);
-        if (TRACE_EDGES)
+        if (TRACE_CALLGRAPH)
             System.out.println("Context range "+r);
         BDD context_map;
         // for parameters: V1 in caller matches V2 in callee
@@ -1028,7 +1176,7 @@ public class CSPA {
     }
     
     public void addEdge(BDD context_map, Node dest, Set srcs) {
-        if (TRACE_EDGES) System.out.println(" Context map: "+context_map.toStringWithDomains());
+        //if (TRACE_EDGES) System.out.println(" Context map: "+context_map.toStringWithDomains());
         int dest_i = getVariableIndex(dest);
         BDD dest_bdd = V2o.ithVar(dest_i);
         for (Iterator i=srcs.iterator(); i.hasNext(); ) {
@@ -1199,16 +1347,23 @@ public class CSPA {
     
     HashMap callGraphEdges = new HashMap();
     
-    long max_paths = 0L;
+    static long max_paths = 0L;
     
     public long countPaths() {
+        if (TRACE_NUMBERING) System.out.print("Building and sorting SCCs...");
+        Navigator navigator = cg.getNavigator();
+        Set sccs = SCComponent.buildSCC(roots, navigator);
+        SCCTopSortedGraph graph = SCCTopSortedGraph.topSort(sccs);
+        if (TRACE_NUMBERING) System.out.print("done.");
+        
         List list = Traversals.reversePostOrder(cg.getNavigator(), cg.getRoots());
         boolean again;
         do {
             again = false;
             for (Iterator i=list.iterator(); i.hasNext(); ) {
                 jq_Method m = (jq_Method) i.next();
-                if (countPaths_helper(m)) {
+                SCComponent scc = getSCC(graph, m);
+                if (countPaths_helper(m, scc)) {
                     if (TRACE_NUMBERING) System.out.println(m+" changed.");
                     again = true;
                 }
@@ -1217,30 +1372,79 @@ public class CSPA {
         return max_paths;
     }
     
+    SCComponent getSCC(SCCTopSortedGraph graph, Object o) {
+        SCComponent scc = graph.getFirst();
+        while (scc != null) {
+            if (scc.contains(o)) return scc;
+            scc = scc.nextTopSort();
+        }
+        return null;
+    }
+    
+    public void generateBDDSummaries() {
+        for (Iterator i=cg.getAllMethods().iterator(); i.hasNext(); ) {
+            jq_Method m = (jq_Method) i.next();
+            getOrCreateBDDSummary(m);
+        }
+    }
+    
     public long countPaths2() {
+        max_paths = 0L;
+        
         if (TRACE_NUMBERING) System.out.print("Building and sorting SCCs...");
         Navigator navigator = cg.getNavigator();
         Set sccs = SCComponent.buildSCC(roots, navigator);
         SCCTopSortedGraph graph = SCCTopSortedGraph.topSort(sccs);
         if (TRACE_NUMBERING) System.out.print("done.");
         
-        /* Walk through SCCs in forward order. */
         SCComponent scc = graph.getFirst();
         while (scc != null) {
-            /* Visit each method in the SCC. */
-            if (TRACE_NUMBERING) System.out.println("Visiting SCC"+scc.getId()+(scc.isLoop()?" (loop)":" (non-loop)"));
-            Object[] nodes = scc.nodes();
-            boolean change = false;
-            for (int i=0; i<nodes.length; ++i) {
-                jq_Method m = (jq_Method) nodes[i];
-                if (countPaths_helper(m)) {
-                    if (TRACE_NUMBERING && scc.isLoop()) System.out.println(m+" changed.");
-                    change = true;
+            initializeSccMap(scc);
+            scc = scc.nextTopSort();
+        }
+            
+        /* Walk through SCCs in forward order. */
+        scc = graph.getFirst();
+        Assert._assert(scc.prevLength() == 0);
+        while (scc != null) {
+            /* Assign a number for each SCC. */
+            if (TRACE_NUMBERING)
+                System.out.println("Visiting SCC"+scc.getId()+(scc.isLoop()?" (loop)":" (non-loop)"));
+            long total = 0L;
+            countNumberOfEdges(scc);
+            for (Iterator i=Arrays.asList(scc.prev()).iterator(); i.hasNext(); ) {
+                SCComponent pred = (SCComponent) i.next();
+                Pair edge = new Pair(pred, scc);
+                //System.out.println("Visiting edge SCC"+pred.getId()+" to SCC"+scc.getId());
+                long nedges = ((long[]) sccEdgeCounts.get(edge))[0];
+                Range r = (Range) sccNumbering.get(pred);
+                long newtotal = total + nedges * (r.high+1L);
+                if (newtotal < (1L << CONTEXTBITS) && newtotal >= 0L) {
+                    total = newtotal;
+                } else {
+                    // overflow of bits for context.
+                    System.out.println("Overflow of bits for SCC"+pred.getId()+" to SCC"+scc.getId()+": "+newtotal);
                 }
             }
-            if (scc.isLoop() && change) {
-                if (TRACE_NUMBERING) System.out.println("Loop changed, redoing SCC.");
-                continue;
+            if (total == 0L) total = 1L;
+            Range r = new Range(total, total-1L);
+            if (TRACE_NUMBERING)
+                System.out.println("Paths to SCC"+scc.getId()+(scc.isLoop()?" (loop)":" (non-loop)")+"="+total);
+            sccNumbering.put(scc, r);
+            max_paths = Math.max(max_paths, total);
+            scc = scc.nextTopSort();
+        }
+        scc = graph.getFirst();
+        while (scc != null) {
+            addEdges(scc);
+            scc = scc.nextTopSort();
+        }
+        scc = graph.getFirst();
+        while (scc != null) {
+            Range r = (Range) sccNumbering.get(scc);
+            if (TRACE_NUMBERING) System.out.println("Range for SCC"+scc.getId()+(scc.isLoop()?" (loop)":" (non-loop)")+"="+r);
+            if (r.low != 0L) {
+                Assert.UNREACHABLE("SCC"+scc.getId()+" Range="+r);
             }
             scc = scc.nextTopSort();
         }
@@ -1249,7 +1453,190 @@ public class CSPA {
         
     HashSet backEdges = new HashSet();
     
-    public boolean countPaths_helper(jq_Method callee) {
+    static HashMap sccNumbering = new HashMap();
+    static HashMap methodToScc = new HashMap();
+    
+    public static void initializeSccMap(SCComponent scc1) {
+        Object[] nodes1 = scc1.nodes();
+        for (int i=0; i<nodes1.length; ++i) {
+            jq_Method caller = (jq_Method) nodes1[i];
+            methodToScc.put(caller, scc1);
+        }
+    }
+    
+    static Map sccEdges = new HashMap();
+    static Map sccEdgeCounts = new HashMap();
+    
+    public void countNumberOfEdges(SCComponent scc1) {
+        Object[] nodes1 = scc1.nodes();
+        long total = 0L;
+        for (int i=0; i<nodes1.length; ++i) {
+            jq_Method caller = (jq_Method) nodes1[i];
+            BDDMethodSummary ms2 = getOrCreateBDDSummary(caller);
+            for (Iterator k=cg.getCallSites(caller).iterator(); k.hasNext(); ) {
+                ProgramLocation mc = (ProgramLocation) k.next();
+                Assert._assert(mc == mapCall(mc));
+                Collection targetMethods = getTargetMethods(mc);
+                for (Iterator j=targetMethods.iterator(); j.hasNext(); ) {
+                    jq_Method callee = (jq_Method) j.next();
+                    SCComponent scc2 = (SCComponent) methodToScc.get(callee);
+                    Pair edge = new Pair(scc1, scc2);
+                    if (TRACE_NUMBERING) System.out.println("Edge SCC"+scc1.getId()+" to SCC"+scc2.getId()+": "+mc);
+                    long[] value = (long[]) sccEdgeCounts.get(edge);
+                    if (value == null) sccEdgeCounts.put(edge, value = new long[] {1L});
+                    else value[0]++;
+                    HashSet calls = (HashSet) sccEdges.get(edge);
+                    if (calls == null) sccEdges.put(edge, calls = new HashSet());
+                    calls.add(new Pair(mc, callee));
+                }
+            }
+        }
+    }
+    
+    public static void countNumberOfEdges2(CallGraph cg, SCComponent scc1) {
+        Object[] nodes1 = scc1.nodes();
+        long total = 0L;
+        for (int i=0; i<nodes1.length; ++i) {
+            jq_Method caller = (jq_Method) nodes1[i];
+            for (Iterator k=cg.getCallSites(caller).iterator(); k.hasNext(); ) {
+                ProgramLocation mc = (ProgramLocation) k.next();
+                Collection targetMethods = cg.getTargetMethods(mc);
+                for (Iterator j=targetMethods.iterator(); j.hasNext(); ) {
+                    jq_Method callee = (jq_Method) j.next();
+                    SCComponent scc2 = (SCComponent) methodToScc.get(callee);
+                    Pair edge = new Pair(scc1, scc2);
+                    if (TRACE_NUMBERING) System.out.println("Edge SCC"+scc1.getId()+" to SCC"+scc2.getId()+": "+mc);
+                    long[] value = (long[]) sccEdgeCounts.get(edge);
+                    if (value == null) sccEdgeCounts.put(edge, value = new long[] {1L});
+                    else value[0]++;
+                    HashSet calls = (HashSet) sccEdges.get(edge);
+                    if (calls == null) sccEdges.put(edge, calls = new HashSet());
+                    calls.add(new Pair(mc, callee));
+                }
+            }
+        }
+    }
+    
+    public void addEdges(SCComponent scc1) {
+        if (TRACE_NUMBERING) System.out.println("Adding edges SCC"+scc1.getId());
+        Object[] nodes1 = scc1.nodes();
+        Range r1 = (Range) sccNumbering.get(scc1);
+        if (scc1.prevLength() == 0) {
+            if (TRACE_NUMBERING) System.out.println("SCC"+scc1.getId()+" is in the root set");
+            Assert._assert(r1.low == 1L && r1.high == 0L);
+            r1.low = 0L;
+        }
+        for (int i=0; i<nodes1.length; ++i) {
+            jq_Method caller = (jq_Method) nodes1[i];
+            BDDMethodSummary ms1 = getOrCreateBDDSummary(caller);
+            if (ms1 != null) {
+                ms1.n_paths = r1.high+1L;
+                if (TRACE_NUMBERING) System.out.println("Paths to SCC"+scc1.getId()+" "+caller+"="+ms1.n_paths);
+            }
+        }
+        if (scc1.isLoop()) {
+            Set internalCalls = (Set) sccEdges.get(new Pair(scc1, scc1));
+            for (Iterator i=internalCalls.iterator(); i.hasNext(); ) {
+                Pair p = (Pair) i.next();
+                ProgramLocation mc = (ProgramLocation) p.left;
+                Assert._assert(mc == mapCall(mc));
+                jq_Method callee = (jq_Method) p.right;
+                BDDMethodSummary ms2 = getOrCreateBDDSummary(callee);
+                if (ms2 != null) {
+                    ms2.n_paths = r1.high+1L;
+                    if (TRACE_NUMBERING) System.out.println("Paths to SCC"+scc1.getId()+" "+callee+"="+ms2.n_paths);
+                }
+                Assert._assert(scc1.contains(callee));
+                Pair edge = new Pair(mc, callee);
+                if (TRACE_NUMBERING) System.out.println("Range for "+edge+" = "+r1+" "+Strings.hex(r1));
+                callGraphEdges.put(edge, r1);
+            }
+        }
+        for (Iterator i=Arrays.asList(scc1.next()).iterator(); i.hasNext(); ) {
+            SCComponent scc2 = (SCComponent) i.next();
+            Range r2 = (Range) sccNumbering.get(scc2);
+            Set calls = (Set) sccEdges.get(new Pair(scc1, scc2));
+            for (Iterator k=calls.iterator(); k.hasNext(); ) {
+                Pair p = (Pair) k.next();
+                ProgramLocation mc = (ProgramLocation) p.left;
+                Assert._assert(mc == mapCall(mc));
+                jq_Method callee = (jq_Method) p.right;
+                BDDMethodSummary ms2 = getOrCreateBDDSummary(callee);
+                if (ms2 != null) {
+                    ms2.n_paths = r2.high+1L;
+                    if (TRACE_NUMBERING) System.out.println("Paths to SCC"+scc2.getId()+" "+callee+"="+ms2.n_paths);
+                }
+                Assert._assert(scc2.contains(callee));
+                // external call. update internal object and make new object.
+                long newlow = r2.low - (r1.high + 1L);
+                if (newlow >= 0L) {
+                    r2.low = newlow;
+                } else {
+                    // loss of context due to not enough bits.
+                    if (TRACE_NUMBERING) System.out.println("Loss of context between SCC"+scc1.getId()+" = "+r1+" and SCC"+scc2.getId()+" = "+r2+", "+newlow);
+                    r2.low = newlow = 0L;
+                }
+                if (TRACE_NUMBERING) System.out.println("External call!  New range for SCC"+scc2.getId()+" = "+r2);
+                Range r3 = new Range(newlow, newlow + r1.high);
+                Pair edge = new Pair(mc, callee);
+                if (TRACE_NUMBERING) System.out.println("Range for "+edge+" = "+r3+" "+Strings.hex(r3));
+                callGraphEdges.put(edge, r3);
+            }
+        }
+    }
+    
+    public static long countPaths3(CallGraph cg) {
+        max_paths = 0L;
+        
+        int max_scc = 0;
+        int num_scc = 0;
+        
+        if (TRACE_NUMBERING) System.out.print("Building and sorting SCCs...");
+        Navigator navigator = cg.getNavigator();
+        Set sccs = SCComponent.buildSCC(cg.getRoots(), navigator);
+        SCCTopSortedGraph graph = SCCTopSortedGraph.topSort(sccs);
+        if (TRACE_NUMBERING) System.out.print("done.");
+        
+        SCComponent scc = graph.getFirst();
+        while (scc != null) {
+            initializeSccMap(scc);
+            max_scc = Math.max(scc.getId(), max_scc);
+            scc = scc.nextTopSort();
+            ++num_scc;
+        }
+        System.out.println("Max SCC="+max_scc+", Num SCC="+num_scc);
+        
+        /* Walk through SCCs in forward order. */
+        scc = graph.getFirst();
+        Assert._assert(scc.prevLength() == 0);
+        while (scc != null) {
+            /* Assign a number for each SCC. */
+            if (TRACE_NUMBERING)
+                System.out.println("Visiting SCC"+scc.getId()+(scc.isLoop()?" (loop)":" (non-loop)"));
+            long total = 0L;
+            countNumberOfEdges2(cg, scc);
+            for (Iterator i=Arrays.asList(scc.prev()).iterator(); i.hasNext(); ) {
+                SCComponent pred = (SCComponent) i.next();
+                Pair edge = new Pair(pred, scc);
+                //System.out.println("Visiting edge SCC"+pred.getId()+" to SCC"+scc.getId());
+                long nedges = ((long[]) sccEdgeCounts.get(edge))[0];
+                Range r = (Range) sccNumbering.get(pred);
+                long newtotal = total + nedges * (r.high+1L);
+                total = newtotal;
+            }
+            if (total == 0L) total = 1L;
+            Range r = new Range(total, total-1L);
+            if (TRACE_NUMBERING || total > max_paths)
+                System.out.println("Paths to SCC"+scc.getId()+(scc.isLoop()?" (loop)":" (non-loop)")+"="+total);
+            sccNumbering.put(scc, r);
+            max_paths = Math.max(max_paths, total);
+            scc = scc.nextTopSort();
+        }
+        
+        return max_paths;
+    }
+    
+    public boolean countPaths_helper(jq_Method callee, SCComponent scc) {
         BDDMethodSummary ms = getOrCreateBDDSummary(callee);
         if (ms == null) {
             return false;
@@ -1273,30 +1660,41 @@ public class CSPA {
                     if (r == null) {
                         // never visited this edge before.
                         Assert._assert(!already_visited);
-                        if (isCallInteresting(edge, myPaths, ms2.n_paths)) {
-                            r = new Range(myPaths, myPaths + ms2.n_paths - 1L);
-                            myPaths = r.high + 1;
+                        if (scc.isLoop()) {
+                            r = (Range) sccNumbering.get(scc);
+                            if (r == null) r = new Range(0, -1L);
+                            if (!scc.contains(caller)) {
+                                // external edge.
+                                Assert._assert(ms2.n_paths > 0L);
+                                r.high += ms2.n_paths;
+                            } else {
+                                // internal edge, use the shared range.
+                            }
                         } else {
-                            r = new Range(0, ms2.n_paths - 1L);
+                            if (isCallInteresting(edge, myPaths, ms2.n_paths)) {
+                                r = new Range(myPaths, myPaths + ms2.n_paths - 1L);
+                                myPaths = r.high + 1;
+                            } else {
+                                r = new Range(0, ms2.n_paths - 1L);
+                            }
                         }
-                        //System.out.println("Registering call graph edge "+edge+": "+r);
                         callGraphEdges.put(edge, r);
                         if (ms2.n_paths == 0L) {
                             //System.out.println("Back edge "+edge);
-                            if (BREAK_RECURSION)
-                                backEdges.add(edge);
-                            else
-                                change = true;
+                            backEdges.add(edge);
+                            change = true;
                         }
                         maxPaths = Math.max(maxPaths, r.high + 1);
                     } else {
-                        // edge has been visited before (loop)
-                        long new_paths = Math.max(r.high, ms2.n_paths-1);
-                        change |= r.high != new_paths;
-                        if (TRACE_NUMBERING && r.high != new_paths)
-                            System.out.println(edge+" updated, old high = "+r.high+" new high = "+new_paths);
-                        Assert._assert(new_paths <= max_paths);
-                        r.high = new_paths;
+                        if (false) {
+                            // edge has been visited before (loop)
+                            long new_paths = Math.max(r.high, ms2.n_paths-1);
+                            change |= r.high != new_paths;
+                            if (TRACE_NUMBERING && r.high != new_paths)
+                                System.out.println(edge+" updated, old high = "+r.high+" new high = "+new_paths);
+                            Assert._assert(new_paths <= max_paths);
+                            r.high = new_paths;
+                        }
                     }
                     if (TRACE_NUMBERING)
                         System.out.println(edge+": "+r);
@@ -1305,6 +1703,9 @@ public class CSPA {
         }
         if (maxPaths == 0L) maxPaths = 1L;
         ms.n_paths = maxPaths;
+        if (maxPaths > max_paths) {
+            System.out.println("New max paths: "+callee+"="+maxPaths);
+        }
         max_paths = Math.max(max_paths, maxPaths);
         return change;
     }
@@ -1323,8 +1724,9 @@ public class CSPA {
         /** The number of paths that reach this method. */
         long n_paths;
         
-        /** BDD representing all of the paths that reach this method. */
-        BDD context; // V1c
+        /** BDD representing all of the variables in this method and its callees.  For escape analysis. */
+        BDD vars; // V1c
+        int lowVarIndex, highVarIndex;
         
         BDD m_pointsTo;     // V1 x H1
         BDD m_stores;       // V1 x (V2 x FD) 
@@ -1332,8 +1734,10 @@ public class CSPA {
         
         BDDMethodSummary(MethodSummary ms) {
             this.ms = ms;
+            lowVarIndex = variableIndexMap.size();
             reset();
             computeInitial();
+            highVarIndex = variableIndexMap.size() - 1;
         }
         
         void reset() {
@@ -1536,6 +1940,25 @@ public class CSPA {
             return name;
         }
         
+        public Iterator iterator() {
+            return new Iterator() {
+                int foo = -1;
+
+                public void remove() {
+                    throw new UnsupportedOperationException();
+                }
+
+                public boolean hasNext() {
+                    return foo < index;
+                }
+
+                public Object next() {
+                    if (!hasNext()) throw new java.util.NoSuchElementException();
+                    return list[++foo];
+                }
+            };
+        }
+        
     }
 
     public void goForIt() {
@@ -1550,6 +1973,263 @@ public class CSPA {
             addRelations(ms);
             bindCallEdges(ms);
         }
+    }
+
+    public static boolean TRACE_ESCAPE = false;
+
+    public void escapeAnalysis() {
+        
+        BDD escapingLocations = bdd.zero();
+        
+        BDD myPointsTo;
+        myPointsTo = g_pointsTo.exist(V1c.set().and(H1c.set()));
+        
+        List order = Traversals.postOrder(cg.getNavigator(), cg.getRoots());
+        for (Iterator i=order.iterator(); i.hasNext(); ) {
+            jq_Method m = (jq_Method) i.next();
+            BDDMethodSummary bms = getOrCreateBDDSummary(m);
+            if (bms == null) continue;
+            BDD range;
+            SCComponent scc = (SCComponent) methodToScc.get(m);
+            if (scc.isLoop()) {
+                bms.vars = bdd.zero();
+            } else {
+                bms.vars = V1o.varRange(bms.lowVarIndex, bms.highVarIndex);
+                for (Iterator j=cg.getCallees(m).iterator(); j.hasNext(); ) {
+                    jq_Method callee = (jq_Method) j.next();
+                    BDDMethodSummary bms2 = getOrCreateBDDSummary(callee);
+                    if (bms2 == null) continue;
+                    bms.vars.orWith(bms2.vars.id());
+                }
+            }
+            HashMap concreteNodes = new HashMap();
+            MethodSummary ms = bms.ms;
+            for (Iterator j=ms.nodeIterator(); j.hasNext(); ) {
+                Node o = (Node) j.next();
+                if (o instanceof ConcreteTypeNode) {
+                    ConcreteTypeNode ctn = (ConcreteTypeNode) o;
+                    concreteNodes.put(ctn.getQuad(), ctn);
+                }
+                boolean bad = false;
+                if (o.getEscapes()) {
+                    if (TRACE_ESCAPE) System.out.println(o+" escapes, bad");
+                    bad = true;
+                } else if (cg.getRoots().contains(m) && ms.getThrown().contains(o)) {
+                    if (TRACE_ESCAPE) System.out.println(o+" is thrown from root set, bad");
+                    bad = true;
+                } else {
+                    Set passedParams = o.getPassedParameters();
+                    if (passedParams != null) {
+                        outer:
+                        for (Iterator k=passedParams.iterator(); k.hasNext(); ) {
+                            PassedParameter pp = (PassedParameter) k.next();
+                            ProgramLocation mc = pp.getCall();
+                            for (Iterator a=getTargetMethods(mc).iterator(); a.hasNext(); ) {
+                                jq_Method m2 = (jq_Method) a.next();
+                                if (m2.getBytecode() == null) {
+                                    if (TRACE_ESCAPE) System.out.println(o+" is passed into a native method, bad");
+                                    bad = true;
+                                    break outer;
+                                }
+                            }
+                        }
+                    }
+                }
+                if (bad) {
+                    int v_i = getVariableIndex(o);
+                    bms.vars.and(V1o.ithVar(v_i).not());
+                }
+            }
+            if (TRACE_ESCAPE) System.out.println("Non-escaping locations for "+m+" = "+bms.vars.toStringWithDomains());
+            ControlFlowGraph cfg = CodeCache.getCode(m);
+            boolean trivial = false;
+            for (QuadIterator j=new QuadIterator(cfg); j.hasNext(); ) {
+                Quad q = j.nextQuad();
+                if (q.getOperator() instanceof Operator.New ||
+                    q.getOperator() instanceof Operator.NewArray) {
+                    ConcreteTypeNode ctn = (ConcreteTypeNode) concreteNodes.get(q);
+                    if (ctn == null) {
+                        //trivial = true;
+                        trivial = q.getOperator() instanceof Operator.New;
+                        System.out.println(cfg.getMethod()+": "+q+" trivially doesn't escape.");
+                    } else {
+                        int h_i = getHeapobjIndex(ctn);
+                        BDD h = H1o.ithVar(h_i);
+                        if (TRACE_ESCAPE) {
+                            System.out.println("Heap location: "+h.toStringWithDomains()+" = "+ctn);
+                            System.out.println("Pointed to by: "+myPointsTo.restrict(h).toStringWithDomains());
+                        }
+                        h.andWith(bms.vars.not());
+                        escapingLocations.orWith(h);
+                    }
+                }
+            }
+            if (trivial) {
+                System.out.println(cfg.fullDump());
+            }
+        }
+        BDD escapingHeap = escapingLocations.relprod(myPointsTo, V1set);
+        System.out.println("Escaping heap: "+escapingHeap.satCount(H1o.set()));
+        //System.out.println("Escaping heap: "+escapingHeap.toStringWithDomains());
+        BDD capturedHeap = escapingHeap.not();
+        capturedHeap.andWith(H1o.varRange(0, heapobjIndexMap.size()-1));
+        System.out.println("Captured heap: "+capturedHeap.satCount(H1o.set()));
+        
+        int capturedSites = 0;
+        int escapedSites = 0;
+        long capturedSize = 0L;
+        long escapedSize = 0L;
+        
+        for (Iterator i=heapobjIndexMap.iterator(); i.hasNext(); ) {
+            Node n = (Node) i.next();
+            int ndex = heapobjIndexMap.get(n);
+            if (n instanceof ConcreteTypeNode) {
+                ConcreteTypeNode ctn = (ConcreteTypeNode) n;
+                jq_Reference t = (jq_Reference) ctn.getDeclaredType();
+                int size = 0;
+                if (t instanceof jq_Class)
+                    size = ((jq_Class) t).getInstanceSize();
+                else
+                    continue;
+                BDD bdd = capturedHeap.and(H1o.ithVar(ndex));
+                if (capturedHeap.and(H1o.ithVar(ndex)).isZero()) {
+                    // not captured.
+                    if (TRACE_ESCAPE) System.out.println("Escaped: "+n);
+                    escapedSites ++;
+                    escapedSize += size;
+                } else {
+                    // captured.
+                    if (TRACE_ESCAPE) System.out.println("Captured: "+n);
+                    capturedSites ++;
+                    capturedSize += size;
+                }
+            }
+        }
+        System.out.println("Captured sites = "+capturedSites+", "+capturedSize+" bytes.");
+        System.out.println("Escaped sites = "+escapedSites+", "+escapedSize+" bytes.");
+    }
+
+    /*
+    void dumpResults(String filename) throws IOException {
+        PrintWriter out = new PrintWriter(new FileWriter(filename));
+        int j=0;
+        for (Iterator i=this.variableIndexMap.iterator(); i.hasNext(); ++j) {
+            Node n = (Node) i.next();
+            Assert._assert(this.variableIndexMap.get(n) == j);
+            out.print("VARIABLE ");
+            n.print(out);
+            out.println();
+        }
+        j=0;
+        for (Iterator i=this.heapobjIndexMap.iterator(); i.hasNext(); ++j) {
+            Node n = (Node) i.next();
+            Assert._assert(this.heapobjIndexMap.get(n) == j);
+            out.print("HEAPOBJ ");
+            n.print(out);
+            out.println();
+        }
+    }
+    */
+
+    BDD getAllHeapOfType(jq_Reference type) {
+        if (false) {
+            int j=0;
+            BDD result = bdd.zero();
+            for (Iterator i=heapobjIndexMap.iterator(); i.hasNext(); ++j) {
+                Node n = (Node) i.next();
+                Assert._assert(this.heapobjIndexMap.get(n) == j);
+                if (n.getDeclaredType() == type)
+                    result.orWith(V1o.ithVar(j));
+            }
+            return result;
+        } else {
+            int i = typeIndexMap.get(type);
+            BDD a = T2.ithVar(i);
+            BDD result = aC.restrict(a);
+            a.free();
+            return result;
+        }
+    }
+
+    BDD getTypesOf(Node variable) {
+        BDD context = V1c.set();
+        context.andWith(H1c.set());
+        BDD ci_pointsTo = g_pointsTo.exist(context);
+        context.free();
+        int i = variableIndexMap.get(variable);
+        BDD a = V1o.ithVar(i);
+        BDD heapObjs = ci_pointsTo.restrict(a);
+        a.free();
+        BDD result = ci_pointsTo.relprod(heapObjs, H1o.set());
+        heapObjs.free();
+        return result;
+    }
+    
+    Map postOrderNumbering;
+    
+    void numberPostOrder() {
+        Navigator navigator = cg.getNavigator();
+        Set sccs = SCComponent.buildSCC(roots, navigator);
+        SCCTopSortedGraph graph = SCCTopSortedGraph.topSort(sccs);
+        
+        SCComponent scc = graph.getFirst();
+        int j = 0;
+        while (scc != null) {
+            postOrderNumbering.put(scc, new Integer(j++));
+        }
+    }
+    
+    final PostOrderComparator po_comparator = new PostOrderComparator();
+    
+    public class PostOrderComparator implements Comparator {
+
+        private PostOrderComparator() {}
+        
+        /* (non-Javadoc)
+         * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
+         */
+        public int compare(Object arg0, Object arg1) {
+            if (arg0 == arg1) return 0;
+            int a = ((Integer) postOrderNumbering.get(arg0)).intValue();
+            int b = ((Integer) postOrderNumbering.get(arg1)).intValue();
+            if (a < b) return -1;
+            Assert._assert(a > b);
+            return 1;
+        }
+    }
+    
+    public static class CallString {
+        
+    }
+    
+    List getContext(jq_Method callee, BDD context) {
+        // visit methods in post order.
+        numberPostOrder();
+        SortedSet worklist = new TreeSet(po_comparator);
+        worklist.add(callee);
+        
+        Map contexts = new HashMap();
+        contexts.put(callee, context);
+        
+        while (!worklist.isEmpty()) {
+            
+            
+            
+            BDDMethodSummary callee_s = this.getBDDSummary(callee);
+            for (Iterator i=cg.getCallees(callee).iterator(); i.hasNext(); ) {
+                jq_Method caller = (jq_Method) i.next();
+                BDDMethodSummary caller_s = this.getBDDSummary(caller);
+                for (Iterator j=cg.getCallSites(caller).iterator(); j.hasNext(); ) {
+                    ProgramLocation call = (ProgramLocation) j.next();
+                    Pair p = new Pair(mapCall(call), callee);
+                    Range r = (Range) callGraphEdges.get(p);
+                    // V1 in callee matches V2 in caller
+                    BDD context_map = buildVarContextMap(r.low, r.high, 0, caller_s.n_paths - 1);
+                
+                }
+            }
+        }
+        return null;
     }
 
 }
