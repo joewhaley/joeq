@@ -11,7 +11,7 @@ void __stdcall debugwwrite(const unsigned short* s, int length)
     unsigned short* temp = (unsigned short*)malloc((length+1)*sizeof(unsigned short));
     memcpy(temp, s, length*sizeof(unsigned short));
     temp[length] = 0;
-    _putws(temp);
+    fputws(temp, stdout);
     free(temp);
 #else
     // TODO: actually write wide characters
