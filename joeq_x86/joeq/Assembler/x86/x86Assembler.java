@@ -5,6 +5,7 @@
 
 package Assembler.x86;
 
+import Allocator.CodeAllocator;
 import Allocator.CodeAllocator.x86CodeBuffer;
 import Util.LightRelation;
 import Util.Relation;
@@ -32,10 +33,10 @@ public class x86Assembler implements x86Constants {
         void patchTo(x86CodeBuffer mc, int target) {
             if (patchSize == 4) {
                 int v = mc.get4_endian(patchLocation - 4);
-                jq.assert(v == 0x44444444 || v == 0x55555555 || v == 0x66666666 || v == 0x77777777);
+                jq.assert(v == 0x44444444 || v == 0x55555555 || v == 0x66666666 || v == 0x77777777, jq.hex8(v));
                 mc.put4_endian(patchLocation - 4, target - patchLocation);
             } else if (patchSize == 1) {
-                byte v = mc.get(patchLocation - 1);
+                byte v = mc.get1(patchLocation - 1);
                 jq.assert(v == 0);
                 jq.assert(target - patchLocation <= 127);
                 jq.assert(target - patchLocation >= -128);
@@ -56,10 +57,11 @@ public class x86Assembler implements x86Constants {
         return mc;
     }
     public int getCurrentOffset() { return mc.getCurrentOffset(); }
+    public int/*CodeAddress*/ getCurrentAddress() { return mc.getCurrentAddress(); }
     public void patch1(int offset, byte value) { mc.put1(offset, value); }
 
-    public x86Assembler(int num_targets) {
-        mc = new x86CodeBuffer();
+    public x86Assembler(int num_targets, int est_size) {
+        mc = CodeAllocator.DEFAULT.getCodeBuffer(est_size);
         branchtargetmap = new HashMap();
         branches_to_patch = new LightRelation();
     }
@@ -424,14 +426,9 @@ public class x86Assembler implements x86Constants {
     }
 
     // relative calls
-    public void emitCALL_abs(x86 x, int address) {
+    public void emitCALL_rel32(x86 x, int address) {
         jq.assert(x.length == 1);
-        jq.assert(address == 0x66666666); // will be backpatched later
         ip += x.emitCall_Near(mc, address);
-    }
-    public void emitCALL_rel(x86 x, int offset) {
-        jq.assert(x.length == 1);
-        ip += x.emitCall_Near(mc, offset);
     }
     public void emitCALL_Back(x86 x, Object target) {
         jq.assert(x.length == 1);
