@@ -33,7 +33,7 @@ import Compil3r.Quad.SelectiveCloning.Specialization;
 import Main.jq;
 import Util.Default;
 import Util.FilterIterator;
-
+import Compil3r.Quad.AndersenInterface.*;
 /**
  *
  * @author  John Whaley
@@ -214,7 +214,7 @@ uphere2:
         }
     }
     
-    static void printAllInclusionEdges(HashSet visited, MethodSummary.Node pnode, MethodSummary.Node node, String indent, boolean all, jq_Field f, boolean verbose) throws IOException {
+    static void printAllInclusionEdges(HashSet visited, MethodSummary.Node pnode, MethodSummary.Node node, String indent, boolean all, AndersenField f, boolean verbose) throws IOException {
         if (verbose) System.out.print(indent+"Node: "+node);
         if (pnode != null) {
             Object q = apa.edgesToReasons.get(Default.pair(pnode, node));
@@ -235,7 +235,7 @@ uphere2:
             }
             if (onode instanceof MethodSummary.FieldNode) {
                 MethodSummary.FieldNode fnode = (MethodSummary.FieldNode)onode;
-                jq_Field field = fnode.f;
+                AndersenField field = fnode.f;
                 Set inEdges = fnode.getAccessPathPredecessors();
                 System.out.println(indent+"Field "+field.getName().toString()+" Parent nodes: "+inEdges);
                 System.out.print(indent+"Type 'w' to find matching writes to parent nodes, 'u' to go up: ");
@@ -325,7 +325,7 @@ uphere2:
         for (Iterator it = inline.iterator(); it.hasNext(); ) {
             Map.Entry e = (Map.Entry)it.next();
             CallSite cs = (CallSite)e.getKey();
-            MethodSummary caller = MethodSummary.getSummary(CodeCache.getCode(cs.caller.method));
+            MethodSummary caller = MethodSummary.getSummary(CodeCache.getCode((jq_Method)cs.caller.method));
             ProgramLocation mc = cs.m;
             cs = new CallSite(caller, mc);
             InlineSet targets = (InlineSet)e.getValue();
@@ -470,7 +470,7 @@ uphere:
                               HashMap to_clone,
                               LinkedHashSet path,
                               HashMap visited,
-                              jq_Method m) {
+                              AndersenMethod m) {
         if (path.contains(m)) {
             System.out.println("Attempting to clone recursive cycle: method "+m);
             return -1;
@@ -488,7 +488,7 @@ uphere:
                 Set s3 = (Set) to_clone.get(s2);
                 for (Iterator j=s3.iterator(); j.hasNext(); ) {
                     ProgramLocation mc = (ProgramLocation) j.next();
-                    jq_Method source_m = mc.getMethod();
+                    AndersenMethod source_m = mc.getMethod();
                     int r = setDepth_clone(methodToSpecializations, to_clone, path, visited, source_m);
                     if (r == -1) {
                         //System.out.println("Removing edge "+source_m.getName()+"->"+m.getName()+" from clone set");
@@ -569,20 +569,20 @@ uphere:
             //System.out.println("Method summary "+target_ms.getMethod()+" has "+s2+" to specialize.");
             for (Iterator j=s2.iterator(); j.hasNext(); ) {
                 ProgramLocation mc = (ProgramLocation) j.next();
-                jq_Method source_m = mc.getMethod();
+                AndersenMethod source_m = mc.getMethod();
                 Set s3 = (Set) methodToSpecializations.get(source_m);
                 if (s3 != null) {
                     for (Iterator k=s3.iterator(); k.hasNext(); ) {
                         Specialization s4 = (Specialization) k.next();
                         MethodSummary source_ms = (MethodSummary) specialToMS.get(s4);
                         CallSite cs = new CallSite(source_ms, mc);
-                        ControlFlowGraph target_cfg = CodeCache.getCode(target_ms.getMethod());
+                        ControlFlowGraph target_cfg = CodeCache.getCode((jq_Method)target_ms.getMethod());
                         MethodSummary.clone_cache.put(Default.pair(target_cfg, cs), target_ms);
                         //System.out.println(source_m+" is also specialized, adding special edges to "+target_ms.getMethod());
                     }
                 }
-                ControlFlowGraph target_cfg = CodeCache.getCode(target_ms.getMethod());
-                ControlFlowGraph source_cfg = CodeCache.getCode(source_m);
+                ControlFlowGraph target_cfg = CodeCache.getCode((jq_Method)target_ms.getMethod());
+                ControlFlowGraph source_cfg = CodeCache.getCode((jq_Method)source_m);
                 MethodSummary source_ms = MethodSummary.getSummary(source_cfg);
                 CallSite cs = new CallSite(source_ms, mc);
                 MethodSummary.clone_cache.put(Default.pair(target_cfg, cs), target_ms);
