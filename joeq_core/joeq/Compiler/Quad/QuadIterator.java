@@ -4,12 +4,11 @@
 package joeq.Compiler.Quad;
 import java.util.Collection;
 import java.util.NoSuchElementException;
-
 import joeq.Class.jq_Class;
-import joeq.Util.Graphs.Navigator;
 import joeq.Util.Templates.List;
 import joeq.Util.Templates.ListIterator;
 import joeq.Util.Templates.UnmodifiableList;
+import jwutil.graphs.Navigator;
 
 /**
  *

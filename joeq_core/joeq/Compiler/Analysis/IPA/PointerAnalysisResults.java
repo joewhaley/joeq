@@ -4,7 +4,6 @@
 package joeq.Compiler.Analysis.IPA;
 
 import java.util.Set;
-
 import joeq.Class.jq_Method;
 import joeq.Compiler.Analysis.IPA.ProgramLocation.QuadProgramLocation;
 import joeq.Compiler.Analysis.IPSSA.ContextSet;

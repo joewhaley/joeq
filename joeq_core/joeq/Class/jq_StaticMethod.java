@@ -5,10 +5,9 @@ package joeq.Class;
 
 //friend jq_ClassLoader;
 
-import joeq.Class.PrimordialClassLoader;
 import joeq.Main.jq;
 import joeq.UTF.Utf8;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>

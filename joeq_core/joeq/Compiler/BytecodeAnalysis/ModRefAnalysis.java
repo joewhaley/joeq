@@ -8,12 +8,11 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-
 import joeq.Class.jq_InstanceField;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_MethodVisitor;
 import joeq.Class.jq_StaticField;
-import joeq.Util.Strings;
+import jwutil.strings.Strings;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>

@@ -24,14 +24,14 @@ import joeq.Class.jq_Method;
 import joeq.Class.jq_Type;
 import joeq.Compiler.Analysis.IPA.ProgramLocation;
 import joeq.Compiler.Analysis.IPA.ProgramLocation.BCProgramLocation;
-import joeq.Util.Assert;
-import joeq.Util.Collections.GenericInvertibleMultiMap;
-import joeq.Util.Collections.GenericMultiMap;
-import joeq.Util.Collections.InvertibleMultiMap;
-import joeq.Util.Collections.MapFactory;
-import joeq.Util.Collections.MultiMap;
-import joeq.Util.Collections.SetFactory;
-import joeq.Util.Collections.SortedArraySet;
+import jwutil.collections.GenericInvertibleMultiMap;
+import jwutil.collections.GenericMultiMap;
+import jwutil.collections.InvertibleMultiMap;
+import jwutil.collections.MapFactory;
+import jwutil.collections.MultiMap;
+import jwutil.collections.SetFactory;
+import jwutil.collections.SortedArraySet;
+import jwutil.util.Assert;
 
 /**
  * A call graph that is loaded from a file.

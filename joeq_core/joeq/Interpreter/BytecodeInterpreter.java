@@ -15,7 +15,7 @@ import joeq.Class.jq_TryCatchBC;
 import joeq.Class.jq_Type;
 import joeq.Compiler.BytecodeAnalysis.BytecodeVisitor;
 import joeq.Runtime.Reflection;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>

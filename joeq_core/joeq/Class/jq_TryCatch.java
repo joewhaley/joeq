@@ -5,7 +5,7 @@ package joeq.Class;
 
 import joeq.Runtime.Debug;
 import joeq.Runtime.TypeCheck;
-import joeq.Util.Strings;
+import jwutil.strings.Strings;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>

@@ -3,18 +3,16 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Class;
 
-import java.io.IOException;
 import java.util.StringTokenizer;
-
-import joeq.Class.PrimordialClassLoader;
+import java.io.IOException;
 import joeq.ClassLib.ClassLibInterface;
 import joeq.Main.jq;
 import joeq.Runtime.Debug;
 import joeq.Runtime.Reflection;
 import joeq.UTF.Utf8;
-import joeq.Util.Assert;
-import joeq.Util.IO.Textualizable;
-import joeq.Util.IO.Textualizer;
+import jwutil.io.Textualizable;
+import jwutil.io.Textualizer;
+import jwutil.util.Assert;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>

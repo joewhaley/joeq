@@ -6,13 +6,13 @@ package joeq.Compiler.Quad;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Set;
-
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Type;
 import joeq.Main.HostedVM;
-import joeq.Util.Graphs.Navigator;
-import joeq.Util.Graphs.SCCTopSortedGraph;
-import joeq.Util.Graphs.SCComponent;
+import jwutil.graphs.CountPaths;
+import jwutil.graphs.Navigator;
+import jwutil.graphs.SCCTopSortedGraph;
+import jwutil.graphs.SCComponent;
 
 /**
  * @author John Whaley <jwhaley@alum.mit.edu>
@@ -98,7 +98,7 @@ public class RootedCHACallGraph extends CHACallGraph {
                 System.out.println("Number of paths (k="+i+") = "+paths);
             }
             */
-            System.out.println("Number of paths (k=infinity) = "+joeq.Util.Graphs.CountPaths.countPaths(g.getNavigator(), s));
+            System.out.println("Number of paths (k=infinity) = "+CountPaths.countPaths(g.getNavigator(), s));
         }
         
         if (false) {

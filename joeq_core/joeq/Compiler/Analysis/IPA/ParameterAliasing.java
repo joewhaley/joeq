@@ -1,14 +1,12 @@
 package joeq.Compiler.Analysis.IPA;
 
 import java.util.Iterator;
-
 import joeq.Class.jq_Initializer;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.ParamNode;
 import joeq.Compiler.Analysis.IPSSA.IPSSABuilder;
-import joeq.Util.Assert;
-
+import jwutil.util.Assert;
 import org.sf.javabdd.BDD;
 import org.sf.javabdd.BDDDomain;
 import org.sf.javabdd.BDDFactory;

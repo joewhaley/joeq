@@ -3,13 +3,12 @@ package joeq.Compiler.Analysis.IPSSA;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Vector;
-
 import joeq.Class.jq_Method;
 import joeq.Compiler.Analysis.IPSSA.SSAIterator.DefinitionIterator;
 import joeq.Compiler.Analysis.IPSSA.Utils.DefinitionSet;
 import joeq.Compiler.Analysis.IPSSA.Utils.IteratorHelper;
 import joeq.Compiler.Quad.Quad;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
 
 /**
  * The RHS of a binding. Has multiple subclasses.

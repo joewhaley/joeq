@@ -6,7 +6,6 @@ package joeq.Main;
 import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
-
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_ClassFileConstants;

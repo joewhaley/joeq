@@ -6,12 +6,11 @@ package joeq.Compiler.BytecodeAnalysis;
 import java.util.HashMap;
 import java.util.ListIterator;
 import java.util.Map;
-
 import joeq.Class.jq_Method;
 import joeq.Class.jq_TryCatchBC;
-import joeq.Util.Assert;
-import joeq.Util.BitString;
-import joeq.Util.BitString.BitStringIterator;
+import jwutil.math.BitString;
+import jwutil.math.BitString.BitStringIterator;
+import jwutil.util.Assert;
 
 /**
  * Control flow graph for a bytecode stream.  The data structure is immutable

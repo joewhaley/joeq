@@ -11,13 +11,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
-
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
@@ -36,9 +34,9 @@ import joeq.Compiler.Quad.LoadedCallGraph;
 import joeq.Compiler.Quad.QuadVisitor;
 import joeq.Runtime.Reflection;
 import joeq.UTF.Utf8;
-import joeq.Util.Assert;
-import joeq.Util.SimpleInterpreter;
-import joeq.Util.Strings;
+import jwutil.console.SimpleInterpreter;
+import jwutil.strings.Strings;
+import jwutil.util.Assert;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>

@@ -5,18 +5,16 @@ package joeq.Class;
 
 //friend jq_ClassLoader;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-
-import joeq.Class.PrimordialClassLoader;
 import joeq.Memory.Address;
 import joeq.Memory.HeapAddress;
 import joeq.UTF.Utf8;
-import joeq.Util.Assert;
-import joeq.Util.Convert;
+import jwutil.util.Assert;
+import jwutil.util.Convert;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>

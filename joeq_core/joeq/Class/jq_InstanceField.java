@@ -3,14 +3,12 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Class;
 
-import java.io.DataInput;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-
-import joeq.Class.PrimordialClassLoader;
+import java.io.DataInput;
+import java.io.IOException;
 import joeq.Main.jq;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
 
 //friend jq_ClassLoader;
 

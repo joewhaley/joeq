@@ -4,7 +4,6 @@
 package joeq.Compiler.BytecodeAnalysis;
 
 import java.io.PrintStream;
-
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_ClassFileConstants;
@@ -18,8 +17,8 @@ import joeq.Class.jq_StaticMethod;
 import joeq.Class.jq_Type;
 import joeq.Compiler.CompilationConstants;
 import joeq.Compiler.CompilationState;
-import joeq.Util.Assert;
-import joeq.Util.Strings;
+import jwutil.strings.Strings;
+import jwutil.util.Assert;
 
 /*
 * @author  John Whaley <jwhaley@alum.mit.edu>

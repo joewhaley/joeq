@@ -4,7 +4,6 @@
 package joeq.Compiler.Quad;
 import java.util.HashMap;
 import java.util.Iterator;
-
 import joeq.Class.jq_Method;
 import joeq.Class.jq_MethodVisitor;
 

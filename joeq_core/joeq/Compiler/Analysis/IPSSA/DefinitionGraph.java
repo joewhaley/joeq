@@ -6,16 +6,15 @@
  */
 package joeq.Compiler.Analysis.IPSSA;
 
-import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Set;
-import joeq.Util.Assert;
-import joeq.Util.Collections.LinearSet;
-import joeq.Compiler.Analysis.IPSSA.Utils.*;
-import joeq.Compiler.Analysis.IPSSA.ContextSet;
+import java.io.PrintStream;
+import joeq.Compiler.Analysis.IPSSA.Utils.IteratorHelper;
+import jwutil.collections.LinearSet;
+import jwutil.util.Assert;
 
 /**
  * This is a graph consisting of definitions that uses as much sharing as possible.

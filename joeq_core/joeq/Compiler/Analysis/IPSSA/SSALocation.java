@@ -1,8 +1,6 @@
 package joeq.Compiler.Analysis.IPSSA;
 
 import java.util.HashMap;
-
-import joeq.Util.Assert;
 import joeq.Class.jq_LocalVarTableEntry;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_NameAndDesc;
@@ -10,6 +8,7 @@ import joeq.Compiler.Analysis.IPA.PA;
 import joeq.Compiler.Quad.CodeCache;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.RegisterFactory;
+import jwutil.util.Assert;
 
 /**
  * @author V.Benjamin Livshits

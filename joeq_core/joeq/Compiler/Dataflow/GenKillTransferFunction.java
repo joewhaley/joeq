@@ -3,8 +3,8 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Dataflow;
 
-import joeq.Util.BitString;
-import joeq.Util.Strings;
+import jwutil.math.BitString;
+import jwutil.strings.Strings;
 
 public class GenKillTransferFunction implements TransferFunction {
 

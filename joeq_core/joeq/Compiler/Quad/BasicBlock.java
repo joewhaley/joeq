@@ -5,17 +5,16 @@ package joeq.Compiler.Quad;
 
 import java.util.Collection;
 import java.util.Iterator;
-
 import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.Operator.Move;
 import joeq.Compiler.Quad.Operator.Ret;
-import joeq.Util.Assert;
-import joeq.Util.Strings;
-import joeq.Util.Collections.BackwardIterator;
 import joeq.Util.Templates.List;
 import joeq.Util.Templates.ListIterator;
 import joeq.Util.Templates.ListWrapper;
 import joeq.Util.Templates.UnmodifiableList;
+import jwutil.collections.BackwardIterator;
+import jwutil.strings.Strings;
+import jwutil.util.Assert;
 
 /**
  * Represents a basic block in the quad intermediate representation.

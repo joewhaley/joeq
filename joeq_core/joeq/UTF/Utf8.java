@@ -5,11 +5,10 @@ package joeq.UTF;
 
 import java.io.DataOutput;
 import java.io.IOException;
-
 import joeq.Class.jq_ClassFileConstants;
 import joeq.Runtime.Debug;
-import joeq.Util.Assert;
-import joeq.Util.Collections.UnmodifiableIterator;
+import jwutil.collections.UnmodifiableIterator;
+import jwutil.util.Assert;
 
 /**
  * TODO: ummm, synchronization?!

@@ -3,7 +3,6 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Class;
 
-import joeq.Class.PrimordialClassLoader;
 import joeq.UTF.Utf8;
 
 /*

@@ -7,8 +7,7 @@
 package joeq.Compiler.Analysis.IPSSA.Utils;
 
 import java.util.Iterator;
-
-import joeq.Util.Assert;
+import jwutil.util.Assert;
 
 /**
  * @author livshits

@@ -1,14 +1,14 @@
 package joeq.Compiler.Analysis.IPSSA.Utils;
 
-import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-
-import joeq.Util.Assert;
-
+import java.io.PrintStream;
 import joeq.Class.jq_Method;
+import joeq.Compiler.Analysis.IPA.ProgramLocation;
+import joeq.Compiler.Analysis.IPA.ProgramLocation.QuadProgramLocation;
+import joeq.Compiler.Analysis.IPSSA.DominatorQuery;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.BasicBlockVisitor;
 import joeq.Compiler.Quad.CodeCache;
@@ -19,9 +19,7 @@ import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.QuadIterator;
 import joeq.Compiler.Quad.Dominators.DominatorNode;
 import joeq.Util.SyntheticGraphs.Graph;
-import joeq.Compiler.Analysis.IPA.ProgramLocation;
-import joeq.Compiler.Analysis.IPA.ProgramLocation.QuadProgramLocation;
-import joeq.Compiler.Analysis.IPSSA.DominatorQuery;
+import jwutil.util.Assert;
 
 /**
  * A pretty obvious implementation of DominatorQuery, nothing fancy here. 

@@ -4,7 +4,6 @@
 package joeq.Compiler.BytecodeAnalysis;
 
 import java.util.Set;
-
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_InstanceField;
@@ -13,11 +12,11 @@ import joeq.Class.jq_Primitive;
 import joeq.Class.jq_StaticField;
 import joeq.Class.jq_Type;
 import joeq.Runtime.TypeCheck;
-import joeq.Util.Assert;
-import joeq.Util.BitString;
-import joeq.Util.Strings;
-import joeq.Util.BitString.BitStringIterator;
-import joeq.Util.Collections.LinearSet;
+import jwutil.collections.LinearSet;
+import jwutil.math.BitString;
+import jwutil.math.BitString.BitStringIterator;
+import jwutil.strings.Strings;
+import jwutil.util.Assert;
 
 /**
  * @author  John Whaley <jwhaley@alum.mit.edu>

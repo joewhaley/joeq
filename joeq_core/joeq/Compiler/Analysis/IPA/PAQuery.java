@@ -3,12 +3,8 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Analysis.IPA;
 
-import java.io.PrintStream;
 import java.util.Iterator;
-
-import org.sf.javabdd.BDD;
-import org.sf.javabdd.TypedBDDFactory.TypedBDD;
-
+import java.io.PrintStream;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.ParamNode;
@@ -16,7 +12,9 @@ import joeq.Compiler.Analysis.IPSSA.IPSSABuilder;
 import joeq.Compiler.Quad.CodeCache;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.QuadIterator;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
+import org.sf.javabdd.BDD;
+import org.sf.javabdd.TypedBDDFactory.TypedBDD;
 
 /**
  * A query on top of PAResults. Will probably need to move nested classes 

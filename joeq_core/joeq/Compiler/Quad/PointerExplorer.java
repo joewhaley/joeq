@@ -3,9 +3,6 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Quad;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -19,7 +16,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
-
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Field;
 import joeq.Class.jq_Method;
@@ -27,13 +26,15 @@ import joeq.Class.jq_Type;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.CallSite;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.PassedParameter;
-import joeq.Compiler.Analysis.IPA.*;
+import joeq.Compiler.Analysis.IPA.ProgramLocation;
 import joeq.Compiler.Quad.AndersenPointerAnalysis.AccessPath;
 import joeq.Main.HostedVM;
-import joeq.Util.Assert;
-import joeq.Util.Collections.FilterIterator;
-import joeq.Util.Collections.LinearSet;
-import joeq.Util.Collections.Pair;
+import jwutil.collections.Filter;
+import jwutil.collections.FilterIterator;
+import jwutil.collections.LinearSet;
+import jwutil.collections.Pair;
+import jwutil.util.Assert;
+
 /**
  *
  * @author  John Whaley <jwhaley@alum.mit.edu>
@@ -763,7 +764,7 @@ uphere:
             }
             if (s.startsWith("source")) {
                 final jq_Method m2 = getMethod();
-                FilterIterator.Filter f = new FilterIterator.Filter() {
+                Filter f = new Filter() {
                         public boolean isElement(Object o) {
                             Map.Entry e = (Map.Entry)o;
                             CallSite cs = (CallSite)e.getKey();
@@ -821,7 +822,7 @@ uphere:
             if (s.startsWith("printsize ")) {
                 try {
                     final int size = Integer.parseInt(s.substring(10));
-                    FilterIterator.Filter f = new FilterIterator.Filter() {
+                    Filter f = new Filter() {
                             public boolean isElement(Object o) {
                                 Map.Entry e = (Map.Entry)o;
                                 Set set = (Set)e.getValue();
@@ -838,7 +839,7 @@ uphere:
                 continue;
             }
             if (s.startsWith("selectmultitarget")) {
-                FilterIterator.Filter f = new FilterIterator.Filter() {
+                Filter f = new Filter() {
                         public boolean isElement(Object o) {
                             Map.Entry e = (Map.Entry)o;
                             Set set = (Set)e.getValue();
@@ -856,7 +857,7 @@ uphere:
             if (s.startsWith("size ")) {
                 try {
                     final int size = Integer.parseInt(s.substring(5));
-                    FilterIterator.Filter f = new FilterIterator.Filter() {
+                    Filter f = new Filter() {
                             public boolean isElement(Object o) {
                                 Map.Entry e = (Map.Entry)o;
                                 Set set = (Set)e.getValue();

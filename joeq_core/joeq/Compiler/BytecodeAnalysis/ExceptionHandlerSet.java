@@ -3,7 +3,7 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.BytecodeAnalysis;
 
-import joeq.Util.Collections.ListFactory;
+import java.util.Collections;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>
@@ -23,6 +23,6 @@ public class ExceptionHandlerSet {
     public ExceptionHandlerSet getParent() { return parent; }
 
     public ExceptionHandlerIterator iterator() {
-        return new ExceptionHandlerIterator(ListFactory.singleton(exception_handler), parent);
+        return new ExceptionHandlerIterator(Collections.singletonList(exception_handler), parent);
     }
 }

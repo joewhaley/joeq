@@ -9,10 +9,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
-
-import joeq.Util.Collections.MapFactory;
-import joeq.Util.Graphs.Graph;
-import joeq.Util.Graphs.Traversals;
+import jwutil.collections.MapFactory;
+import jwutil.graphs.Graph;
+import jwutil.graphs.Traversals;
 
 /**
  * SortedSetSolver
@@ -49,7 +48,7 @@ public class SortedSetSolver extends WorklistSolver {
     }
     
     /* (non-Javadoc)
-     * @see joeq.Compiler.Dataflow.Solver#initialize(joeq.Compiler.Dataflow.Problem, joeq.Util.Graphs.Graph)
+     * @see joeq.Compiler.Dataflow.Solver#initialize(joeq.Compiler.Dataflow.Problem, jwutil.graphs.Graph)
      */
     public void initialize(Problem p, Graph graph) {
         super.initialize(p, graph);

@@ -3,23 +3,23 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Class;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-import java.lang.reflect.Member;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.StringTokenizer;
-
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.lang.reflect.Member;
 import joeq.ClassLib.ClassLibInterface;
 import joeq.Main.jq;
 import joeq.Runtime.Reflection;
 import joeq.UTF.Utf8;
-import joeq.Util.Assert;
-import joeq.Util.Collections.FilterIterator;
-import joeq.Util.IO.Textualizable;
-import joeq.Util.IO.Textualizer;
+import jwutil.collections.Filter;
+import jwutil.io.Textualizable;
+import jwutil.io.Textualizer;
+import jwutil.strings.CharSequenceWrapper;
+import jwutil.util.Assert;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>
@@ -275,7 +275,7 @@ public abstract class jq_Member implements jq_ClassFileConstants, Textualizable 
         return c.getDeclaredMember(name, desc);
     }
     
-    public static class FilterByName extends FilterIterator.Filter {
+    public static class FilterByName extends Filter {
         private java.util.regex.Pattern p;
         public FilterByName(java.util.regex.Pattern p) { this.p = p; }
         public FilterByName(String s) { this(java.util.regex.Pattern.compile(s)); }
@@ -284,11 +284,11 @@ public abstract class jq_Member implements jq_ClassFileConstants, Textualizable 
             Object o = m.getName().toString();
             CharSequence cs;
             if (o instanceof CharSequence) cs = (CharSequence) o;
-            else cs = new joeq.Util.CharSequenceWrapper((String) o);
+            else cs = new CharSequenceWrapper((String) o);
             return p.matcher(cs).matches();
         }
     }
-    public static class FilterByShortClassName extends FilterIterator.Filter {
+    public static class FilterByShortClassName extends Filter {
         private java.util.regex.Pattern p;
         public FilterByShortClassName(java.util.regex.Pattern p) { this.p = p; }
         public FilterByShortClassName(String s) { this(java.util.regex.Pattern.compile(s)); }
@@ -297,7 +297,7 @@ public abstract class jq_Member implements jq_ClassFileConstants, Textualizable 
             Object o = m.getDeclaringClass().shortName();
             CharSequence cs;
             if (o instanceof CharSequence) cs = (CharSequence) o;
-            else cs = new joeq.Util.CharSequenceWrapper((String) o);
+            else cs = new CharSequenceWrapper((String) o);
             return p.matcher(cs).matches();
         }
     }

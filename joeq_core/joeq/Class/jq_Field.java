@@ -3,11 +3,9 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Class;
 
+import java.util.Map;
 import java.io.DataInput;
 import java.io.IOException;
-import java.util.Map;
-
-import joeq.Class.PrimordialClassLoader;
 import joeq.ClassLib.ClassLibInterface;
 import joeq.Main.jq;
 

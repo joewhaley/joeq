@@ -6,11 +6,10 @@
  */
 package joeq.Compiler.Analysis.IPA;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
-
+import java.io.IOException;
 import org.sf.javabdd.BDDFactory;
 
 /**

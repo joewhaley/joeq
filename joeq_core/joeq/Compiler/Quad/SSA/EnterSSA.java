@@ -10,7 +10,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
-
 import joeq.Class.jq_Primitive;
 import joeq.Class.jq_Type;
 import joeq.Class.jq_Reference.jq_NullType;
@@ -32,12 +31,12 @@ import joeq.Compiler.Quad.Operator.Phi;
 import joeq.Compiler.Quad.Operator.Special;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Runtime.TypeCheck;
-import joeq.Util.Assert;
-import joeq.Util.BitString;
-import joeq.Util.BitString.BitStringIterator;
-import joeq.Util.Collections.GenericMultiMap;
-import joeq.Util.Collections.MultiMap;
-import joeq.Util.Collections.Pair;
+import jwutil.collections.GenericMultiMap;
+import jwutil.collections.MultiMap;
+import jwutil.collections.Pair;
+import jwutil.math.BitString;
+import jwutil.math.BitString.BitStringIterator;
+import jwutil.util.Assert;
 
 /**
  * Transform IR into SSA form.

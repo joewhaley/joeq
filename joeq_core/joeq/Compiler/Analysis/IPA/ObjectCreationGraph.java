@@ -28,12 +28,12 @@ import joeq.Compiler.Quad.QuadVisitor;
 import joeq.Compiler.Quad.Operator.New;
 import joeq.Compiler.Quad.Operator.NewArray;
 import joeq.Main.HostedVM;
-import joeq.Util.Collections.GenericMultiMap;
-import joeq.Util.Collections.MultiMap;
-import joeq.Util.Graphs.Graph;
-import joeq.Util.Graphs.Navigator;
-import joeq.Util.Graphs.SCCPathNumbering;
-import joeq.Util.Graphs.Traversals;
+import jwutil.collections.GenericMultiMap;
+import jwutil.collections.MultiMap;
+import jwutil.graphs.Graph;
+import jwutil.graphs.Navigator;
+import jwutil.graphs.SCCPathNumbering;
+import jwutil.graphs.Traversals;
 
 /**
  * @author jwhaley
@@ -60,14 +60,14 @@ public class ObjectCreationGraph extends QuadVisitor.EmptyVisitor
     class Nav implements Navigator {
 
         /* (non-Javadoc)
-         * @see joeq.Util.Graphs.Navigator#next(java.lang.Object)
+         * @see jwutil.graphs.Navigator#next(java.lang.Object)
          */
         public Collection next(Object node) {
             return succ.getValues(node);
         }
 
         /* (non-Javadoc)
-         * @see joeq.Util.Graphs.Navigator#prev(java.lang.Object)
+         * @see jwutil.graphs.Navigator#prev(java.lang.Object)
          */
         public Collection prev(Object node) {
             return pred.getValues(node);
@@ -76,7 +76,7 @@ public class ObjectCreationGraph extends QuadVisitor.EmptyVisitor
     }
     
     /* (non-Javadoc)
-     * @see joeq.Util.Graphs.Graph#getRoots()
+     * @see jwutil.graphs.Graph#getRoots()
      */
     public Collection getRoots() {
         HashSet set = new HashSet();
@@ -98,7 +98,7 @@ public class ObjectCreationGraph extends QuadVisitor.EmptyVisitor
     }
 
     /* (non-Javadoc)
-     * @see joeq.Util.Graphs.Graph#getNavigator()
+     * @see jwutil.graphs.Graph#getNavigator()
      */
     public Navigator getNavigator() {
         return new Nav();

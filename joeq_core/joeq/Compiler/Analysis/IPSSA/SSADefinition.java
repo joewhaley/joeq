@@ -2,7 +2,6 @@ package joeq.Compiler.Analysis.IPSSA;
 
 import java.util.HashMap;
 import java.util.LinkedHashSet;
-
 import joeq.Class.jq_Method;
 import joeq.Compiler.Analysis.IPSSA.SSALocation.LocalLocation;
 import joeq.Compiler.Analysis.IPSSA.Utils.DefinitionSet;

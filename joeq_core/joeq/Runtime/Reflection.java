@@ -3,13 +3,12 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Runtime;
 
+import java.util.Set;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
-import java.util.Set;
-
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Field;

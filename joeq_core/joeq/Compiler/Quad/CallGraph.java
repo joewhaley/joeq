@@ -15,20 +15,19 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-
 import joeq.Class.jq_Method;
-import joeq.Compiler.Analysis.IPA.*;
+import joeq.Compiler.Analysis.IPA.ProgramLocation;
 import joeq.Compiler.Quad.Operator.Invoke;
-import joeq.Util.Assert;
-import joeq.Util.Strings;
-import joeq.Util.Collections.GenericInvertibleMultiMap;
-import joeq.Util.Collections.HashWorklist;
-import joeq.Util.Collections.InvertibleMultiMap;
-import joeq.Util.Collections.MultiMap;
-import joeq.Util.Collections.UnmodifiableIterator;
-import joeq.Util.Collections.UnmodifiableMultiMap;
-import joeq.Util.Graphs.Graph;
-import joeq.Util.Graphs.Navigator;
+import jwutil.collections.GenericInvertibleMultiMap;
+import jwutil.collections.HashWorklist;
+import jwutil.collections.InvertibleMultiMap;
+import jwutil.collections.MultiMap;
+import jwutil.collections.UnmodifiableIterator;
+import jwutil.collections.UnmodifiableMultiMap;
+import jwutil.graphs.Graph;
+import jwutil.graphs.Navigator;
+import jwutil.strings.Strings;
+import jwutil.util.Assert;
 
 /**
  * Abstract representation of a call graph.
@@ -452,7 +451,7 @@ public abstract class CallGraph extends UnmodifiableMultiMap implements Graph {
         }
 
         /* (non-Javadoc)
-         * @see joeq.Util.Collections.UnmodifiableMultiMap#entrySet()
+         * @see java.util.Map#entrySet()
          */
         public Set entrySet() {
             if (methods == null)
@@ -461,7 +460,7 @@ public abstract class CallGraph extends UnmodifiableMultiMap implements Graph {
         }
 
         /* (non-Javadoc)
-         * @see joeq.Util.Collections.MultiMap#getValues(java.lang.Object)
+         * @see jwutil.collections.MultiMap#getValues(java.lang.Object)
          */
         public Collection getValues(Object key) {
             jq_Method m = (jq_Method) key;
@@ -469,7 +468,7 @@ public abstract class CallGraph extends UnmodifiableMultiMap implements Graph {
         }
 
         /* (non-Javadoc)
-         * @see joeq.Util.Collections.MultiMap#contains(java.lang.Object, java.lang.Object)
+         * @see jwutil.collections.BinaryRelation#contains(java.lang.Object, java.lang.Object)
          */
         public boolean contains(Object a, Object b) {
             ProgramLocation cs = (ProgramLocation) b;
@@ -490,7 +489,7 @@ public abstract class CallGraph extends UnmodifiableMultiMap implements Graph {
         }
 
         /* (non-Javadoc)
-         * @see joeq.Util.Collections.UnmodifiableMultiMap#entrySet()
+         * @see java.util.Map#entrySet()
          */
         public Set entrySet() {
             if (callSites == null)
@@ -499,7 +498,7 @@ public abstract class CallGraph extends UnmodifiableMultiMap implements Graph {
         }
 
         /* (non-Javadoc)
-         * @see joeq.Util.Collections.MultiMap#getValues(java.lang.Object)
+         * @see jwutil.collections.MultiMap#getValues(java.lang.Object)
          */
         public Collection getValues(Object key) {
             ProgramLocation cs = (ProgramLocation) key;
@@ -507,7 +506,7 @@ public abstract class CallGraph extends UnmodifiableMultiMap implements Graph {
         }
 
         /* (non-Javadoc)
-         * @see joeq.Util.Collections.MultiMap#contains(java.lang.Object, java.lang.Object)
+         * @see jwutil.collections.BinaryRelation#contains(java.lang.Object, java.lang.Object)
          */
         public boolean contains(Object a, Object b) {
             return getValues(a).contains(b);
@@ -525,14 +524,14 @@ public abstract class CallGraph extends UnmodifiableMultiMap implements Graph {
         }
         
         /* (non-Javadoc)
-         * @see joeq.Util.Collections.UnmodifiableMultiMap#entrySet()
+         * @see java.util.Map#entrySet()
          */
         public Set entrySet() {
             return entrySetHelper(methodToCallSite.keySet());
         }
         
         /* (non-Javadoc)
-         * @see joeq.Util.Collections.MultiMap#getValues(java.lang.Object)
+         * @see jwutil.collections.MultiMap#getValues(java.lang.Object)
          */
         public Collection getValues(Object key) {
             Collection c1 = methodToCallSite.getValues(key);
@@ -548,8 +547,9 @@ public abstract class CallGraph extends UnmodifiableMultiMap implements Graph {
             }
             return result;
         }
+        
         /* (non-Javadoc)
-         * @see joeq.Util.Collections.MultiMap#contains(java.lang.Object, java.lang.Object)
+         * @see jwutil.collections.BinaryRelation#contains(java.lang.Object, java.lang.Object)
          */
         public boolean contains(Object a, Object b) {
             return getValues(a).contains(b);
@@ -560,7 +560,7 @@ public abstract class CallGraph extends UnmodifiableMultiMap implements Graph {
     public class CallGraphMethodNavigator implements Navigator {
 
         /**
-         * @see joeq.Util.Graphs.Navigator#next(java.lang.Object)
+         * @see jwutil.graphs.Navigator#next(java.lang.Object)
          */
         public Collection next(Object node) {
             jq_Method caller = (jq_Method) node;
@@ -569,7 +569,7 @@ public abstract class CallGraph extends UnmodifiableMultiMap implements Graph {
         }
 
         /**
-         * @see joeq.Util.Graphs.Navigator#prev(java.lang.Object)
+         * @see jwutil.graphs.Navigator#prev(java.lang.Object)
          */
         public Collection prev(Object node) {
             jq_Method callee = (jq_Method) node;
@@ -582,7 +582,7 @@ public abstract class CallGraph extends UnmodifiableMultiMap implements Graph {
     public class CallGraphCSNavigator implements Navigator {
 
         /**
-         * @see joeq.Util.Graphs.Navigator#next(java.lang.Object)
+         * @see jwutil.graphs.Navigator#next(java.lang.Object)
          */
         public Collection next(Object node) {
             if (node instanceof jq_Method)
@@ -592,7 +592,7 @@ public abstract class CallGraph extends UnmodifiableMultiMap implements Graph {
         }
 
         /**
-         * @see joeq.Util.Graphs.Navigator#prev(java.lang.Object)
+         * @see jwutil.graphs.Navigator#prev(java.lang.Object)
          */
         public Collection prev(Object node) {
             if (node instanceof jq_Method)
@@ -611,7 +611,7 @@ public abstract class CallGraph extends UnmodifiableMultiMap implements Graph {
     }
 
     /* (non-Javadoc)
-     * @see joeq.Util.Collections.BinaryRelation#contains(java.lang.Object, java.lang.Object)
+     * @see jwutil.collections.BinaryRelation#contains(java.lang.Object, java.lang.Object)
      */
     public boolean contains(Object a, Object b) {
         ProgramLocation p = (ProgramLocation) a;
@@ -619,7 +619,7 @@ public abstract class CallGraph extends UnmodifiableMultiMap implements Graph {
     }
 
     /* (non-Javadoc)
-     * @see joeq.Util.Collections.MultiMap#getValues(java.lang.Object)
+     * @see jwutil.collections.MultiMap#getValues(java.lang.Object)
      */
     public Collection getValues(Object key) {
         ProgramLocation p = (ProgramLocation) key;

@@ -7,9 +7,9 @@ import joeq.Class.jq_Class;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.Operator.Return;
 import joeq.Interpreter.QuadInterpreter;
-import joeq.Util.Strings;
 import joeq.Util.Templates.List;
 import joeq.Util.Templates.UnmodifiableList;
+import jwutil.strings.Strings;
 
 /**
  * @author  John Whaley <jwhaley@alum.mit.edu>

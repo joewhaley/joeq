@@ -9,22 +9,22 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
-
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.Operand.BasicBlockTableOperand;
 import joeq.Compiler.Quad.Operand.ParamListOperand;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.Operand.TargetOperand;
 import joeq.Compiler.Quad.RegisterFactory.Register;
-import joeq.Util.Assert;
-import joeq.Util.Strings;
-import joeq.Util.Collections.FilterIterator;
-import joeq.Util.Graphs.Graph;
-import joeq.Util.Graphs.Navigator;
 import joeq.Util.Templates.List;
 import joeq.Util.Templates.ListIterator;
 import joeq.Util.Templates.ListWrapper;
 import joeq.Util.Templates.UnmodifiableList;
+import jwutil.collections.Filter;
+import jwutil.collections.FilterIterator;
+import jwutil.graphs.Graph;
+import jwutil.graphs.Navigator;
+import jwutil.strings.Strings;
+import jwutil.util.Assert;
 
 /**
  * Control flow graph for the Quad format.
@@ -60,9 +60,12 @@ public class ControlFlowGraph implements Graph {
     /* Current number of quads, used to generate unique id's. */
     private int quad_counter;
     
-    /** Creates a new ControlFlowGraph.
+    /**
+     * Creates a new ControlFlowGraph.
+     * 
      * @param numOfExits  the expected number of branches to the exit node.
-     * @param numOfExceptionHandlers  the expected number of exception handlers. */
+     * @param numOfExceptionHandlers  the expected number of exception handlers.
+     */
     public ControlFlowGraph(jq_Method method, int numOfExits, int numOfExceptionHandlers, RegisterFactory rf) {
         this.method = method;
         start_node = BasicBlock.createStartNode();
@@ -72,24 +75,39 @@ public class ControlFlowGraph implements Graph {
         bb_counter = 1; quad_counter = 0;
     }
 
-    /** Returns the entry node.
-     * @return  the entry node. */
+    /**
+     * Returns the entry node.
+     * 
+     * @return  the entry node.
+     */
     public BasicBlock entry() { return start_node; }
-    /** Returns the exit node.
-     * @return  the exit node. */
+    
+    /**
+     * Returns the exit node.
+     * 
+     * @return  the exit node.
+     */
     public BasicBlock exit() { return end_node; }
 
-    /** Returns the method this control flow graph represents.
-     *  May be null for synthetic methods.
-     *  @return method this control flow graph represents, or null for synthetic. */
+    /**
+     * Returns the method this control flow graph represents.
+     * May be null for synthetic methods.
+     * 
+     * @return method this control flow graph represents, or null for synthetic.
+     */
     public jq_Method getMethod() { return method; }
 
-    /** Returns the register factory used by this control flow graph.
-     * @return  the register factory used by this control flow graph. */
+    /**
+     * Returns the register factory used by this control flow graph.
+     * 
+     * @return  the register factory used by this control flow graph.
+     */
     public RegisterFactory getRegisterFactory() { return rf; }
 
-    /** Create a new basic block in this control flow graph.  The new basic block
+    /**
+     * Create a new basic block in this control flow graph.  The new basic block
      * is given a new, unique id number.
+     * 
      * @param numOfPredecessors  number of predecessor basic blocks that this
                                  basic block is expected to have.
      * @param numOfSuccessors  number of successor basic blocks that this
@@ -97,15 +115,21 @@ public class ControlFlowGraph implements Graph {
      * @param numOfInstructions  number of instructions that this basic block
                                  is expected to have.
      * @param ehs  set of exception handlers for this basic block.
-     * @return  the newly created basic block. */
+     * @return  the newly created basic block.
+     */
     public BasicBlock createBasicBlock(int numOfPredecessors, int numOfSuccessors, int numOfInstructions,
                                        ExceptionHandlerList ehs) {
         return BasicBlock.createBasicBlock(++bb_counter, numOfPredecessors, numOfSuccessors, numOfInstructions, ehs);
     }
+    
     /** Use with care after renumbering basic blocks. */
     void updateBBcounter(int value) { bb_counter = value-1; }
-    /** Returns a maximum on the number of basic blocks in this control flow graph.
-     * @return  a maximum on the number of basic blocks in this control flow graph. */
+    
+    /**
+     * Returns a maximum on the number of basic blocks in this control flow graph.
+     * 
+     * @return  a maximum on the number of basic blocks in this control flow graph.
+     */
     public int getNumberOfBasicBlocks() { return bb_counter+1; }
     
     public int getNumberOfQuads() {
@@ -136,36 +160,51 @@ public class ControlFlowGraph implements Graph {
         return (JSRInfo) jsr_map.get(bb);
     }
     
-    /** Returns an iteration of the basic blocks in this graph in reverse post order.
-     * @return  an iteration of the basic blocks in this graph in reverse post order. */
+    /**
+     * Returns an iteration of the basic blocks in this graph in reverse post order.
+     * 
+     * @return  an iteration of the basic blocks in this graph in reverse post order.
+     */
     public ListIterator.BasicBlock reversePostOrderIterator() {
         return reversePostOrderIterator(start_node);
     }
     
-    /** Returns an iteration of the basic blocks in the reversed graph in reverse post order.
+    /**
+     * Returns an iteration of the basic blocks in the reversed graph in reverse post order.
      * The reversed graph is the graph where all edges are reversed.
-     * @return  an iteration of the basic blocks in the reversed graph in reverse post order. */
+     * 
+     * @return  an iteration of the basic blocks in the reversed graph in reverse post order.
+     */
     public ListIterator.BasicBlock reversePostOrderOnReverseGraphIterator() {
         return reversePostOrderOnReverseGraph(end_node).basicBlockIterator();
     }
     
-    /** Returns an iteration of the basic blocks in the reversed graph in post order.
+    /**
+     * Returns an iteration of the basic blocks in the reversed graph in post order.
      * The reversed graph is the graph where all edges are reversed.
-     * @return  an iteration of the basic blocks in the reversed graph in post order. */
+     * 
+     * @return  an iteration of the basic blocks in the reversed graph in post order.
+     */
     public ListIterator.BasicBlock postOrderOnReverseGraphIterator() {
         return postOrderOnReverseGraph(end_node).basicBlockIterator();
     }
     
-    /** Returns an iteration of the basic blocks in this graph reachable from the given
+    /**
+     * Returns an iteration of the basic blocks in this graph reachable from the given
      * basic block in reverse post order, starting from the given basic block.
+     * 
      * @param start_bb  basic block to start reverse post order from.
-     * @return  an iteration of the basic blocks in this graph reachable from the given basic block in reverse post order. */
+     * @return  an iteration of the basic blocks in this graph reachable from the given basic block in reverse post order.
+     */
     public ListIterator.BasicBlock reversePostOrderIterator(BasicBlock start_bb) {
         return reversePostOrder(start_bb).basicBlockIterator();
     }
 
-    /** Visits all of the basic blocks in this graph with the given visitor.
-     * @param bbv  visitor to visit each basic block with. */
+    /**
+     * Visits all of the basic blocks in this graph with the given visitor.
+     * 
+     * @param bbv  visitor to visit each basic block with.
+     */
     public void visitBasicBlocks(BasicBlockVisitor bbv) {
         for (ListIterator.BasicBlock i=reversePostOrderIterator(); i.hasNext(); ) {
             BasicBlock bb = i.nextBasicBlock();
@@ -173,9 +212,12 @@ public class ControlFlowGraph implements Graph {
         }
     }
     
-    /** Returns a list of basic blocks in reverse post order, starting at the given basic block.
+    /**
+     * Returns a list of basic blocks in reverse post order, starting at the given basic block.
+     * 
      * @param start_bb  basic block to start from.
-     * @return  a list of basic blocks in reverse post order, starting at the given basic block. */
+     * @return  a list of basic blocks in reverse post order, starting at the given basic block.
+     */
     public List.BasicBlock reversePostOrder(BasicBlock start_bb) {
         java.util.LinkedList/*<BasicBlock>*/ result = new java.util.LinkedList();
         boolean[] visited = new boolean[bb_counter+1];
@@ -185,9 +227,12 @@ public class ControlFlowGraph implements Graph {
         return new UnmodifiableList.BasicBlock(bb);
     }
 
-    /** Returns a list of basic blocks of the reversed graph in reverse post order, starting at the given basic block.
+    /**
+     * Returns a list of basic blocks of the reversed graph in reverse post order, starting at the given basic block.
+     * 
      * @param start_bb  basic block to start from.
-     * @return  a list of basic blocks of the reversed graph in reverse post order, starting at the given basic block. */
+     * @return  a list of basic blocks of the reversed graph in reverse post order, starting at the given basic block.
+     */
     public List.BasicBlock reversePostOrderOnReverseGraph(BasicBlock start_bb) {
         java.util.LinkedList/*<BasicBlock>*/ result = new java.util.LinkedList();
         boolean[] visited = new boolean[bb_counter+1];
@@ -197,9 +242,12 @@ public class ControlFlowGraph implements Graph {
         return new UnmodifiableList.BasicBlock(bb);
     }
     
-    /** Returns a list of basic blocks of the reversed graph in post order, starting at the given basic block.
+    /**
+     * Returns a list of basic blocks of the reversed graph in post order, starting at the given basic block.
+     * 
      * @param start_bb  basic block to start from.
-     * @return  a list of basic blocks of the reversed graph in post order, starting at the given basic block. */
+     * @return  a list of basic blocks of the reversed graph in post order, starting at the given basic block.
+     */
     public List.BasicBlock postOrderOnReverseGraph(BasicBlock start_bb) {
         java.util.LinkedList/*<BasicBlock>*/ result = new java.util.LinkedList();
         boolean[] visited = new boolean[bb_counter+1];
@@ -247,19 +295,23 @@ public class ControlFlowGraph implements Graph {
         exception_handlers.add(eh);
     }
     
-    /** Return the list of exception handlers in this control flow graph.
+    /**
+     * Return the list of exception handlers in this control flow graph.
      */
     public List.ExceptionHandler getExceptionHandlers() {
         return new ListWrapper.ExceptionHandler(exception_handlers);
     }
 
-    /** Return an iterator of the exception handlers with the given entry point.
+    /**
+     * Return an iterator of the exception handlers with the given entry point.
+     * 
      * @param b  basic block to check exception handlers against.
-     * @return  an iterator of the exception handlers with the given entry point. */
+     * @return  an iterator of the exception handlers with the given entry point.
+     */
     public java.util.Iterator getExceptionHandlersMatchingEntry(BasicBlock b) {
         final BasicBlock bb = b;
         return new FilterIterator(exception_handlers.iterator(),
-            new FilterIterator.Filter() {
+            new Filter() {
                 public boolean isElement(Object o) {
                     ExceptionHandler eh = (ExceptionHandler)o;
                     return eh.getEntry() == bb;
@@ -267,8 +319,11 @@ public class ControlFlowGraph implements Graph {
         });
     }
     
-    /** Returns a verbose string of every basic block in this control flow graph.
-     * @return  a verbose string of every basic block in this control flow graph. */
+    /**
+     * Returns a verbose string of every basic block in this control flow graph.
+     * 
+     * @return  a verbose string of every basic block in this control flow graph.
+     */
     public String fullDump() {
         StringBuffer sb = new StringBuffer();
         sb.append("Control flow graph for "+method+":"+Strings.lineSep);
@@ -377,7 +432,8 @@ public class ControlFlowGraph implements Graph {
                                   RegisterFactory to) {
     }
 
-    /** Merges the given control flow graph into this control flow graph.
+    /**
+     * Merges the given control flow graph into this control flow graph.
      * Doesn't modify the given control flow graph.  A copy of the
      * given control flow graph (with appropriate renumberings) is
      * returned.
@@ -425,14 +481,14 @@ public class ControlFlowGraph implements Graph {
     }
 
     /* (non-Javadoc)
-     * @see joeq.Util.Graphs.Graph#getRoots()
+     * @see jwutil.graphs.Graph#getRoots()
      */
     public Collection getRoots() {
         return Collections.singleton(start_node);
     }
 
     /* (non-Javadoc)
-     * @see joeq.Util.Graphs.Graph#getNavigator()
+     * @see jwutil.graphs.Graph#getNavigator()
      */
     public Navigator getNavigator() {
         return new ControlFlowGraphNavigator(this);

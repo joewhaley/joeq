@@ -1,13 +1,5 @@
 package joeq.Compiler.Analysis.IPSSA;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -18,7 +10,14 @@ import java.util.LinkedList;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.Vector;
-
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintStream;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
@@ -42,12 +41,12 @@ import joeq.Compiler.Quad.QuadIterator;
 import joeq.Compiler.Quad.QuadVisitor;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Main.HostedVM;
-import joeq.Util.Assert;
-import joeq.Util.Collections.AppendIterator;
-import joeq.Util.Graphs.SCCTopSortedGraph;
-import joeq.Util.Graphs.SCComponent;
-import joeq.Util.Graphs.Traversals;
 import joeq.Util.Templates.ListIterator;
+import jwutil.collections.AppendIterator;
+import jwutil.graphs.SCCTopSortedGraph;
+import jwutil.graphs.SCComponent;
+import jwutil.graphs.Traversals;
+import jwutil.util.Assert;
 
 /**
  * This is where the main action pertaining to IPSSA construction happens. 

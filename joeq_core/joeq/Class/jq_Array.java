@@ -4,12 +4,11 @@
 package joeq.Class;
 
 import joeq.Allocator.ObjectLayout;
-import joeq.Class.PrimordialClassLoader;
 import joeq.Main.jq;
 import joeq.Memory.Address;
 import joeq.Memory.HeapAddress;
 import joeq.UTF.Utf8;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
 
 /**
  * @author  John Whaley <jwhaley@alum.mit.edu>

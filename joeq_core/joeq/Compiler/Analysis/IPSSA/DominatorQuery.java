@@ -6,9 +6,8 @@
  */
 package joeq.Compiler.Analysis.IPSSA;
 
-import java.io.PrintStream;
 import java.util.Set;
-
+import java.io.PrintStream;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.Quad;
 

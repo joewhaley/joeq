@@ -4,7 +4,6 @@
 package joeq.Compiler.Quad;
 
 import java.util.NoSuchElementException;
-
 import joeq.Util.Templates.ListIterator;
 
 /**

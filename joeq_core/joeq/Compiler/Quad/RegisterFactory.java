@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_Primitive;
@@ -15,8 +14,8 @@ import joeq.Class.jq_Reference;
 import joeq.Class.jq_Type;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Runtime.TypeCheck;
-import joeq.Util.Assert;
-import joeq.Util.Collections.Pair;
+import jwutil.collections.Pair;
+import jwutil.util.Assert;
 
 /**
  * @author  John Whaley <jwhaley@alum.mit.edu>

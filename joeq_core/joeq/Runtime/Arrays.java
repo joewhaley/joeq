@@ -12,7 +12,7 @@ import joeq.Class.jq_Type;
 import joeq.Memory.CodeAddress;
 import joeq.Memory.HeapAddress;
 import joeq.Memory.StackAddress;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
 
 /**
  * Arrays

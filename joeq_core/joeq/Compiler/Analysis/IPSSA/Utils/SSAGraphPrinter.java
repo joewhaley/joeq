@@ -6,16 +6,15 @@
  */
 package joeq.Compiler.Analysis.IPSSA.Utils;
 
-import java.io.PrintStream;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-
+import java.io.PrintStream;
 import joeq.Compiler.Analysis.IPSSA.SSADefinition;
 import joeq.Compiler.Analysis.IPSSA.SSAIterator;
 import joeq.Compiler.Analysis.IPSSA.SSAValue;
-import joeq.Util.Assert;
-import joeq.Util.Collections.Pair;
+import jwutil.collections.Pair;
+import jwutil.util.Assert;
 
 /**
  * @author V.Benjamin Livshits

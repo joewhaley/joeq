@@ -3,8 +3,8 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Quad;
 
-import joeq.Util.Collections.IndexMap;
 import joeq.Util.Templates.ListIterator;
+import jwutil.collections.IndexMap;
 
 /**
  * RegisterNumberVisitor

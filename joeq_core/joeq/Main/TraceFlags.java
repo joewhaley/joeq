@@ -3,11 +3,10 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Main;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Iterator;
-
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
@@ -18,7 +17,8 @@ import joeq.Class.jq_Type;
 import joeq.Runtime.Debug;
 import joeq.Runtime.Reflection;
 import joeq.UTF.Utf8;
-import joeq.Util.Assert;
+import jwutil.collections.Filter;
+import jwutil.util.Assert;
 
 /**
  * @author  John Whaley <jwhaley@alum.mit.edu>
@@ -162,7 +162,7 @@ public abstract class TraceFlags {
             Object d = callMethod("joeq.Class.Delegates", "getCompiler", args[++i]);
             Object c = new jq_Member.FilterByShortClassName(args[++i]);
             callMethod("joeq.Class.Delegates", "registerCompiler",
-                       new Class[] { joeq.Util.Collections.FilterIterator.Filter.class, 
+                       new Class[] { Filter.class, 
                                      joeq.Compiler.CompilerInterface.class },
                        new Object[] { c, d });
             return i+1;
@@ -171,7 +171,7 @@ public abstract class TraceFlags {
             Object d = callMethod("joeq.Class.Delegates", "getCompiler", args[++i]);
             Object c = new jq_Member.FilterByName(args[++i]);
             callMethod("joeq.Class.Delegates", "registerCompiler",
-                       new Class[] { joeq.Util.Collections.FilterIterator.Filter.class, 
+                       new Class[] { Filter.class, 
                                      joeq.Compiler.CompilerInterface.class },
                        new Object[] { c, d });
             return i+1;

@@ -5,13 +5,11 @@ package joeq.Class;
 
 import java.util.Iterator;
 import java.util.List;
-
-import joeq.Class.PrimordialClassLoader;
 import joeq.Main.jq;
 import joeq.Memory.CodeAddress;
 import joeq.Memory.StackAddress;
 import joeq.Runtime.Debug;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
 
 /**
  * @author  John Whaley <jwhaley@alum.mit.edu>

@@ -36,8 +36,8 @@ import joeq.Memory.Address;
 import joeq.Memory.HeapAddress;
 import joeq.Runtime.Reflection;
 import joeq.Runtime.TypeCheck;
-import joeq.Util.Assert;
 import joeq.Util.Templates.UnmodifiableList;
+import jwutil.util.Assert;
 
 /**
  * @author  John Whaley <jwhaley@alum.mit.edu>

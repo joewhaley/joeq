@@ -6,8 +6,7 @@
 package joeq.Compiler.Analysis.IPSSA;
 
 import java.util.Iterator;
-
-import joeq.Util.Collections.UnmodifiableIterator;
+import jwutil.collections.UnmodifiableIterator;
 
 /**
  * @author V.Benjamin Livshits

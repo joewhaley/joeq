@@ -9,7 +9,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import joeq.Compiler.Analysis.IPA.PA;
-import joeq.Util.HijackingClassLoader;
+import jwutil.classloader.HijackingClassLoader;
 
 /**
  * Generate initial relations for BDD pointer analysis.

@@ -3,14 +3,13 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Interpreter;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
@@ -22,7 +21,7 @@ import joeq.Class.jq_Type;
 import joeq.Main.HostedVM;
 import joeq.Runtime.Reflection;
 import joeq.UTF.Utf8;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
 
 /**
  * @author  John Whaley <jwhaley@alum.mit.edu>

@@ -5,10 +5,9 @@ package joeq.Compiler.Dataflow;
 
 import java.util.Collection;
 import java.util.Iterator;
-
-import joeq.Util.Collections.MapFactory;
-import joeq.Util.Graphs.Graph;
-import joeq.Util.Graphs.Navigator;
+import jwutil.collections.MapFactory;
+import jwutil.graphs.Graph;
+import jwutil.graphs.Navigator;
 
 /**
  * WorklistSolver

@@ -1,8 +1,5 @@
 package joeq.Compiler.Analysis.IPSSA.Apps;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -10,7 +7,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
-
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_InstanceMethod;
@@ -24,12 +23,12 @@ import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.RegisterFactory;
 import joeq.Main.HostedVM;
-import joeq.Util.Assert;
-import joeq.Util.Collections.AppendIterator;
-import joeq.Util.Collections.HashWorklist;
-import joeq.Util.Collections.Worklist;
 import joeq.Util.Templates.List;
 import joeq.Util.Templates.ListIterator;
+import jwutil.collections.AppendIterator;
+import jwutil.collections.HashWorklist;
+import jwutil.collections.Worklist;
+import jwutil.util.Assert;
 
 public class FindOwnership {
     static class SimpleOwnershipFinder implements Runnable {

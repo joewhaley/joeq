@@ -4,7 +4,6 @@
 package joeq.Main;
 
 import java.util.Iterator;
-
 import joeq.Class.PrimordialClassLoader;
 import joeq.ClassLib.ClassLibInterface;
 import joeq.Memory.Address;
@@ -12,7 +11,7 @@ import joeq.Memory.CodeAddress;
 import joeq.Memory.HeapAddress;
 import joeq.Memory.StackAddress;
 import joeq.Runtime.Reflection;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
 
 /**
  * @author  Michael Martin <mcmartin@stanford.edu>
