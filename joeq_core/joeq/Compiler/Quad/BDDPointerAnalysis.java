@@ -276,6 +276,10 @@ public class BDDPointerAnalysis {
         aC = bdd.zero(); vC = bdd.zero(); cC = bdd.zero();
         vtable_bdd = bdd.zero();
     }
+    
+    void done() {
+        bdd.done();
+    }
 
     public static boolean INCREMENTAL_POINTSTO = true;
     public static boolean INCREMENTAL_ITERATION = true;
