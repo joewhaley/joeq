@@ -57,7 +57,7 @@ public interface Operand {
         public void attachToQuad(Quad q) { jq.assert(instruction == null); instruction = q; }
         public Quad getQuad() { return instruction; }
         public boolean isSimilar(Operand that) { return that instanceof RegisterOperand && ((RegisterOperand)that).getRegister() == this.getRegister(); }
-        public String toString() { return register+" "+((type==null)?"<null>":type.shortName()); }
+        public String toString() { return register+" "+((type==null)?"<g>":type.shortName()); }
     }
     
     public static class AConstOperand implements Operand {
