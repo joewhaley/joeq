@@ -237,28 +237,28 @@ public class FindCollectionImplementations {
     
     
     public FindCollectionImplementations(Iterator i) {
-        Set classes = new HashSet();
         Collection roots = new LinkedList();
         while(i.hasNext()) {
             jq_Class c = (jq_Class) jq_Type.parseType((String)i.next());
             c.load();
 
-            classes.add(c);
             roots.addAll(Arrays.asList(c.getDeclaredStaticMethods()));
         }
         
-        System.out.println("Classes: " + classes);
+        //System.out.println("Classes: " + classes);
         System.out.println("Roots: " + roots);
         
         System.out.print("Building call graph...");
         long time = System.currentTimeMillis();
-        _cg = new RootedCHACallGraph(classes);
+        _cg = new RootedCHACallGraph();
         _cg.setRoots(roots);
         _cg = new CachedCallGraph(_cg);
         
         time = System.currentTimeMillis() - time;
         System.out.println("done. ("+(time/1000.)+" seconds)");
         _classes = getClasses(_cg.getAllMethods());
+        
+        System.out.println("Considering classes: " + _classes);
         
         _collections = new HashSet();
         _iterators   = new HashSet();
