@@ -1975,9 +1975,13 @@ public class PA {
         buildTypes();
         bindParameters();
         try {
+            long time = System.currentTimeMillis();
             dumpBDDRelations();
+            System.out.println("Dump took "+(System.currentTimeMillis()-time)/1000);
         } catch (IOException x) {}
+        long time = System.currentTimeMillis();
         solvePointsTo();
+        System.out.println("Solve points-to took "+(System.currentTimeMillis()-time)/1000);
     }
     
     public void iterate() {
