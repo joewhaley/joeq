@@ -1,0 +1,12 @@
+#!/bin/bash
+
+for arg in "$@"
+do
+  if grep -l "	" $arg
+  then
+    echo "Tab characters not allowed!  Use spaces or \\t instead."
+    exit 1
+  fi
+done
+
+exit 0
