@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.math.BigInteger;
+import java.util.Comparator;
 import java.util.AbstractSet;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -40,6 +41,7 @@ import Clazz.jq_Reference;
 import Clazz.jq_Type;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.CheckCastNode;
 import Compil3r.Analysis.IPSSA.ContextSet;
 import Compil3r.Analysis.IPSSA.SSALocation;
 import Compil3r.Quad.BasicBlock;
@@ -57,6 +59,7 @@ import Util.Assert;
 import Util.Strings;
 import Util.Collections.HashWorklist;
 import Util.Collections.Pair;
+import Util.Collections.Triple;
 import Util.Collections.UnmodifiableIterator;
 import Util.Graphs.PathNumbering;
 import Util.Graphs.PathNumbering.Range;
@@ -83,8 +86,8 @@ public class PAResults implements PointerAnalysisResults {
     }
     
     public PA getPAResults() {
-		return r;
-	}
+                return r;
+        }
     
     public static void main(String[] args) throws IOException {
         initialize(null);
@@ -145,7 +148,7 @@ public class PAResults implements PointerAnalysisResults {
         int i = 1;
         List results = new ArrayList();
         DataInput in = new DataInputStream(System.in);
-	CollectionType tfinder = null;
+        CollectionType tfinder = null;
         for (;;) {
             boolean increaseCount = true;
             int listHowMany = DEFAULT_NUM_TO_PRINT;
@@ -177,19 +180,19 @@ public class PAResults implements PointerAnalysisResults {
                     }
                 } else if (command.equals("restrict")) {
                     TypedBDD bdd1 = parseBDD(results, st.nextToken());
-		    TypedBDD r = bdd1;
-		    while (st.hasMoreTokens()) {
-			TypedBDD bdd2 = parseBDD(results, st.nextToken());
-			r = (TypedBDD) r.restrict(bdd2);
-		    }
+                    TypedBDD r = bdd1;
+                    while (st.hasMoreTokens()) {
+                        TypedBDD bdd2 = parseBDD(results, st.nextToken());
+                        r = (TypedBDD) r.restrict(bdd2);
+                    }
                     results.add(r);
                 } else if (command.equals("exist")) {
                     TypedBDD bdd1 = parseBDD(results, st.nextToken());
-		    TypedBDD r = bdd1;
-		    while (st.hasMoreTokens()) {
-			TypedBDD set = parseBDDset(results, st.nextToken());
-			r = (TypedBDD) r.exist(set);
-		    }
+                    TypedBDD r = bdd1;
+                    while (st.hasMoreTokens()) {
+                        TypedBDD set = parseBDDset(results, st.nextToken());
+                        r = (TypedBDD) r.exist(set);
+                    }
                     results.add(r);
                 } else if (command.equals("diff")) {
                     TypedBDD bdd1 = parseBDD(results, st.nextToken());
@@ -212,15 +215,15 @@ public class PAResults implements PointerAnalysisResults {
                     TypedBDD r = (TypedBDD) bdd1.or(bdd2);
                     results.add(r);
                 } else if (command.equals("findpath")) {
-		    int m1 = Integer.parseInt(st.nextToken());
-		    int m2 = Integer.parseInt(st.nextToken());
-		    Path trace = findPath(m1, m2);
-		    if (trace != null) {
-			System.out.println(getMethod(m2));
-			printTrace(System.out, trace);
-		    } else
-			System.out.println("there is no path from " + getMethod(m1) + " to " + getMethod(m2));
-		    increaseCount = false;
+                    int m1 = Integer.parseInt(st.nextToken());
+                    int m2 = Integer.parseInt(st.nextToken());
+                    Path trace = findPath(m1, m2);
+                    if (trace != null) {
+                        System.out.println(getMethod(m2));
+                        printTrace(System.out, trace);
+                    } else
+                        System.out.println("there is no path from " + getMethod(m1) + " to " + getMethod(m2));
+                    increaseCount = false;
                 } else if (command.equals("store")) {
                     String name = st.nextToken();
                     TypedBDD bdd1 = parseBDD(results, st.nextToken());
@@ -234,13 +237,13 @@ public class PAResults implements PointerAnalysisResults {
                     increaseCount = false;
                 } else if (command.equals("showdomains")) {
                     TypedBDD r = parseBDDWithCheck(results, st.nextToken());
-		    System.out.println("Domains: " + r.getDomainSet());
+                    System.out.println("Domains: " + r.getDomainSet());
                     increaseCount = false;
                 } else if (command.equals("list")) {
                     TypedBDD r = parseBDDWithCheck(results, st.nextToken());
-		    results.add(r);
-		    listHowMany = st.hasMoreTokens() ? Integer.parseInt(st.nextToken()) : -1;
-		    System.out.println("Domains: " + r.getDomainSet());
+                    results.add(r);
+                    listHowMany = st.hasMoreTokens() ? Integer.parseInt(st.nextToken()) : -1;
+                    System.out.println("Domains: " + r.getDomainSet());
                 } else if (command.equals("contextvar") || command.equals("stacktracevar")) {
                     int varNum = Integer.parseInt(st.nextToken());
                     Node n = getVariableNode(varNum);
@@ -253,12 +256,12 @@ public class PAResults implements PointerAnalysisResults {
                             System.out.println("No method for node "+n);
                         } else {
                             Path trace = ((SCCPathNumbering)r.vCnumbering).getPath(m, c);
-			    if (command.equals("stacktracevar")) {
-				System.out.println(m + " called in context #" + c);
-				printTrace(System.out, trace);
-			    } else
-				System.out.println(m+" context "+c+":\n"+trace);
-			    
+                            if (command.equals("stacktracevar")) {
+                                System.out.println(m + " called in context #" + c);
+                                printTrace(System.out, trace);
+                            } else
+                                System.out.println(m+" context "+c+":\n"+trace);
+                            
                         }
                     }
                     increaseCount = false;
@@ -274,11 +277,11 @@ public class PAResults implements PointerAnalysisResults {
                             System.out.println("No method for node "+n);
                         } else {
                             Path trace = ((SCCPathNumbering)r.hCnumbering).getPath(m, c);
-			    if (command.equals("stacktraceheap")) {
-				System.out.println(m + " called in context #" + c);
-				printTrace(System.out, trace);
+                            if (command.equals("stacktraceheap")) {
+                                System.out.println(m + " called in context #" + c);
+                                printTrace(System.out, trace);
                             } else
-				System.out.println(m+" context "+c+": "+trace);
+                                System.out.println(m+" context "+c+": "+trace);
                         }
                     }
                     increaseCount = false;
@@ -310,27 +313,31 @@ public class PAResults implements PointerAnalysisResults {
                                 int k = getMethodIndex(m);
                                 int n = getNameIndex(m);
                                 System.out.println("Method: "+m+" N("+n+")");
-				if (r.vCnumbering instanceof SCCPathNumbering) {
-				    SCComponent scc = ((SCCPathNumbering)r.vCnumbering).getSCC(m);
-				    Range range = ((SCCPathNumbering)r.vCnumbering).getRange(m);
-				    if (scc != null) {
-					System.out.println("is located in SCC #" + System.identityHashCode(scc) 
-					    + " of size " + scc.size() + "; context range is " + range);
-				    } 
-				}
+                                if (r.vCnumbering instanceof SCCPathNumbering) {
+                                    SCComponent scc = ((SCCPathNumbering)r.vCnumbering).getSCC(m);
+                                    Range range = ((SCCPathNumbering)r.vCnumbering).getRange(m);
+                                    if (scc != null) {
+                                        System.out.println("is located in SCC #" + System.identityHashCode(scc) 
+                                            + " of size " + scc.size() + "; context range is " + range);
+                                    } 
+                                }
                                 results.add(r.M.ithVar(k));
                             } else {
                                 MethodSummary ms = MethodSummary.getSummary(CodeCache.getCode(m));
                                 if (command.equals("callsin")) {
-				    TypedBDD rc = (TypedBDD)r.bdd.zero();
+                                    TypedBDD rc = (TypedBDD)r.bdd.zero();
                                     for (Iterator j=ms.getCalls().iterator(); j.hasNext(); ) {
                                         ProgramLocation mc = (ProgramLocation) j.next();
-					rc.orWith(r.I.ithVar(getInvokeIndex(mc)));
+                                        int iidx = getInvokeIndex(mc);
+                                        if (iidx == -1)
+                                            System.out.println("callsite not in index: " + mc + " at " + mc.toStringLong());
+                                        else
+                                            rc.orWith(r.I.ithVar(iidx));
                                     }
-				    results.add(rc);
+                                    results.add(rc);
                                 } else {
                                     System.out.println(ms);
-				    increaseCount = false;
+                                    increaseCount = false;
                                 }
                             }
                         }
@@ -394,21 +401,24 @@ public class PAResults implements PointerAnalysisResults {
                     BDD r = getEncapsulatedHeapObjects();
                     results.add(r);
                 } else if (command.equals("collectiontypes")) {
-		    tfinder = new CollectionType(this);
-		    TypedBDD r = tfinder.findCollectionTypes(st.hasMoreTokens());
-		    results.add(r);
+                    tfinder = new CollectionType(this);
+                    TypedBDD r = tfinder.findCollectionTypes(st.hasMoreTokens());
+                    results.add(r);
                 } else if (command.equals("getsupertypes")) {
-		    TypedBDD r = tfinder.determineSupertypes(st.hasMoreTokens());
-		    results.add(r);
+                    TypedBDD r = tfinder.determineSupertypes(st.hasMoreTokens());
+                    results.add(r);
                 } else if (command.equals("checkmusthaves")) {
-		    TypedBDD r = tfinder.checkMustHaves(st.hasMoreTokens());
-		    results.add(r);
+                    TypedBDD r = tfinder.checkMustHaves(st.hasMoreTokens());
+                    results.add(r);
                 } else if (command.equals("checkbadtypes")) {
-		    TypedBDD r = tfinder.checkBadTypes(st.hasMoreTokens());
-		    results.add(r);
+                    TypedBDD r = tfinder.checkBadTypes(st.hasMoreTokens());
+                    results.add(r);
+                } else if (command.equals("castprecision")) {
+                    computeCastPrecision(st.hasMoreTokens());
+                    increaseCount = false;
                 } else if (command.equals("gini")) {
-		    computeGini(r.vCnumbering);
-		    increaseCount = false;
+                    computeGini(r.vCnumbering);
+                    increaseCount = false;
                 } else if (command.equals("stats")) {
                     printStats();
                     increaseCount = false;
@@ -417,14 +427,14 @@ public class PAResults implements PointerAnalysisResults {
                     increaseCount = false;
                 } else {
                     increaseCount = false;
-		    if (command.equals("driver")) 	// prefix "driver"
-			command = st.nextToken();
-		    String []cmds = new String[st.countTokens()+1];
-		    cmds[0] = command;
-		    for (int j = 1; j < cmds.length; j++)
-			cmds[j] = st.nextToken();
-		    for (int j = 0; j < cmds.length; j++)
-			j = Driver.processCommand(cmds, j);
+                    if (command.equals("driver"))       // prefix "driver"
+                        command = st.nextToken();
+                    String []cmds = new String[st.countTokens()+1];
+                    cmds[0] = command;
+                    for (int j = 1; j < cmds.length; j++)
+                        cmds[j] = st.nextToken();
+                    for (int j = 0; j < cmds.length; j++)
+                        j = Driver.processCommand(cmds, j);
                 }
             } catch (Exception e) {
                 System.err.println("Error: "+e);
@@ -434,7 +444,7 @@ public class PAResults implements PointerAnalysisResults {
 
             if (increaseCount) {
                 TypedBDD r = (TypedBDD) results.get(i-1);
-		System.out.println(i+" -> "+toString(r, listHowMany));
+                System.out.println(i+" -> "+toString(r, listHowMany));
                 Assert._assert(i == results.size());
                 ++i;
             }
@@ -472,25 +482,25 @@ public class PAResults implements PointerAnalysisResults {
         System.out.println("summary class name [signature]:   list method summary for a given method");
         System.out.println("[driver] arg0 arg1 ...:           pass args to Main.Driver for interpretation");
 
-	printAvailableBDDs(results);
+        printAvailableBDDs(results);
     }
 
     public void printAvailableBDDs(List results) {
-	Collection allbdds = new ArrayList();
+        Collection allbdds = new ArrayList();
         for (int i = 0; i < r.bdd.numberOfDomains(); ++i)
-	    allbdds.add(r.bdd.getDomain(i));
-	Field []f = PA.class.getDeclaredFields();
-	for (int i = 0; i < f.length; i++) {
-	    try {
-		if (f[i].getType() == BDD.class && f[i].get(r) != null)
-		    allbdds.add(f[i].getName());
-	    } catch (IllegalAccessException _) { }
-	}
-	if (storedBDDs.size() > 0)
-	    allbdds.add("stored BDDs " + (storedBDDs.keySet()));
-	if (results.size() >= 1)
-	    allbdds.add("and previous results 1.." + (results.size()));
-	System.out.println("\ncurrently known BDDs are " + allbdds);
+            allbdds.add(r.bdd.getDomain(i));
+        Field []f = PA.class.getDeclaredFields();
+        for (int i = 0; i < f.length; i++) {
+            try {
+                if (f[i].getType() == BDD.class && f[i].get(r) != null)
+                    allbdds.add(f[i].getName());
+            } catch (IllegalAccessException _) { }
+        }
+        if (storedBDDs.size() > 0)
+            allbdds.add("stored BDDs " + (storedBDDs.keySet()));
+        if (results.size() >= 1)
+            allbdds.add("and previous results 1.." + (results.size()));
+        System.out.println("\ncurrently known BDDs are " + allbdds);
     }
 
     /** Print a Path as if it were a stacktrace. */
@@ -507,44 +517,44 @@ public class PAResults implements PointerAnalysisResults {
      * Find a path from a method to another method in the callgraph.
      */
     Path findPath(int from, int to) {
-	jq_Method fm = getMethod(from);
-	jq_Method tm = getMethod(to);
-	if (fm == null || tm == null)
-	    return null;
+        jq_Method fm = getMethod(from);
+        jq_Method tm = getMethod(to);
+        if (fm == null || tm == null)
+            return null;
 
-	// breadth-first-search
-	Navigator ng = cg.getCallSiteNavigator();
-	LinkedList queue = new LinkedList();
-	HashMap prev = new HashMap();
+        // breadth-first-search
+        Navigator ng = cg.getCallSiteNavigator();
+        LinkedList queue = new LinkedList();
+        HashMap prev = new HashMap();
 
-	queue.addLast(fm);
-	prev.put(fm, null);
+        queue.addLast(fm);
+        prev.put(fm, null);
     outer:
-	while (queue.size() != 0) {
-	    Object f = queue.removeFirst();
-	    Collection succ = ng.next(f);
-	    Iterator it = succ.iterator();
-	    while (it.hasNext()) {
-		Object t = it.next();
-		if (!prev.containsKey(t)) {
-		    prev.put(t, f);
-		    queue.addLast(t);
-		}
-		if (t == tm)
-		    break outer;
-	    }
-	}
-	
-	if (!prev.containsKey(tm))
-	    return null;
+        while (queue.size() != 0) {
+            Object f = queue.removeFirst();
+            Collection succ = ng.next(f);
+            Iterator it = succ.iterator();
+            while (it.hasNext()) {
+                Object t = it.next();
+                if (!prev.containsKey(t)) {
+                    prev.put(t, f);
+                    queue.addLast(t);
+                }
+                if (t == tm)
+                    break outer;
+            }
+        }
+        
+        if (!prev.containsKey(tm))
+            return null;
 
-	Path rc = new Path(tm);
-	Object f = prev.get(tm);
-	while (f != null) {
-	    rc = new Path(f, rc);
-	    f = prev.get(f);
-	}
-	return rc;
+        Path rc = new Path(tm);
+        Object f = prev.get(tm);
+        while (f != null) {
+            rc = new Path(f, rc);
+            f = prev.get(f);
+        }
+        return rc;
     }
 
     public jq_Class parseClassName(String className) {
@@ -675,12 +685,12 @@ public class PAResults implements PointerAnalysisResults {
     }
 
     TypedBDD parseBDDWithCheck(List results, String bddname) throws Exception {
-	TypedBDD r = parseBDD(results, bddname);
-	if (r == null) {
-	    printAvailableBDDs(results);
-	    throw new Exception("No such BDD: " + bddname);
-	}
-	return r;
+        TypedBDD r = parseBDD(results, bddname);
+        if (r == null) {
+            printAvailableBDDs(results);
+            throw new Exception("No such BDD: " + bddname);
+        }
+        return r;
     }
 
     BDDPairing parsePairing(String s) {
@@ -692,8 +702,8 @@ public class PAResults implements PointerAnalysisResults {
         } catch (NoSuchFieldException e) {
         } catch (IllegalArgumentException e) {
         } catch (IllegalAccessException e) {
-	}
-	return null;
+        }
+        return null;
     }
 
     TypedBDD parseBDD(List a, String s) {
@@ -720,8 +730,8 @@ public class PAResults implements PointerAnalysisResults {
         if (d != null) {
             return (TypedBDD) d.domain();
         }
-	TypedBDD stored = (TypedBDD)storedBDDs.get(s);
-	if (stored != null)
+        TypedBDD stored = (TypedBDD)storedBDDs.get(s);
+        if (stored != null)
             return stored;
         try {
             int num = Integer.parseInt(s) - 1;
@@ -729,12 +739,12 @@ public class PAResults implements PointerAnalysisResults {
                 return (TypedBDD) a.get(num);
             }
         } catch (NumberFormatException e) { }
-	if (s.equals("$last"))
-	    return (TypedBDD)a.get(a.size()-1);
-	if (s.equals("$one"))
-	    return (TypedBDD)r.bdd.one();
-	if (s.equals("$zero"))
-	    return (TypedBDD)r.bdd.zero();
+        if (s.equals("$last"))
+            return (TypedBDD)a.get(a.size()-1);
+        if (s.equals("$one"))
+            return (TypedBDD)r.bdd.one();
+        if (s.equals("$zero"))
+            return (TypedBDD)r.bdd.zero();
         return null;
     }
 
@@ -974,10 +984,10 @@ public class PAResults implements PointerAnalysisResults {
     /** Given a starting method and a context (MxV1c), calculate the transitive mod
      * set (H1xH1cxF). */
     public BDD getTransitiveModSet(BDD method_plus_context0) {
-		BDD reachableVars = getReachableVars(method_plus_context0); // V1xV1c
-		BDD stores = r.S.relprod(reachableVars, r.V2set); // V1xV1c x V1xV1cxFxV2xV2c = V1xV1cxF
-		BDD result = stores.relprod(r.vP, r.V1set); // V1xV1cxF x V1xV1cxH1xH1c = H1xH1cxF
-		return result;
+                BDD reachableVars = getReachableVars(method_plus_context0); // V1xV1c
+                BDD stores = r.S.relprod(reachableVars, r.V2set); // V1xV1c x V1xV1cxFxV2xV2c = V1xV1cxF
+                BDD result = stores.relprod(r.vP, r.V1set); // V1xV1cxF x V1xV1cxH1xH1c = H1xH1cxF
+                return result;
     }
     
     /** Given a starting method and a context (MxV1c), calculate the transitive ref
@@ -1388,36 +1398,36 @@ public class PAResults implements PointerAnalysisResults {
     }
     
     public Set mod(ProgramLocation invoke) {
-    	invoke = LoadedCallGraph.mapCall(invoke);
-		//Assert._assert(r.Imap.contains(invoke), "No information about " + invoke.toString());
-		if(!r.Imap.contains(invoke)){
-			//System.err.println("No mod information about " + invoke.toString() + "; Imap has " + r.Imap.size() + " elements \n");
-			return null;
-		}
-		int I_i = r.Imap.get(invoke);
-		BDD i 	= r.I.ithVar(I_i);
+        invoke = LoadedCallGraph.mapCall(invoke);
+                //Assert._assert(r.Imap.contains(invoke), "No information about " + invoke.toString());
+                if(!r.Imap.contains(invoke)){
+                        //System.err.println("No mod information about " + invoke.toString() + "; Imap has " + r.Imap.size() + " elements \n");
+                        return null;
+                }
+                int I_i = r.Imap.get(invoke);
+                BDD i   = r.I.ithVar(I_i);
         BDD m_c = r.IEcs.relprod(i, r.V2c.set().and(r.Iset));
-        BDD s 	= getTransitiveModSet(m_c);
-        BDD q 	= s.exist(r.H1c.set());
+        BDD s   = getTransitiveModSet(m_c);
+        BDD q   = s.exist(r.H1c.set());
         
-		return new HeapLocationSet(q);
+                return new HeapLocationSet(q);
     }
     
-	public Set ref(ProgramLocation invoke) {
-		invoke = LoadedCallGraph.mapCall(invoke);
-		//Assert._assert(r.Imap.contains(invoke), "No information about " + invoke.toString());
-		if(!r.Imap.contains(invoke)){
-			//System.err.println("No ref information about " + invoke.toString() + "; Imap has " + r.Imap.size() + " elements \n");
-			return null;
-		}
-		int I_i = r.Imap.get(invoke);
-		BDD i 	= r.I.ithVar(I_i);
-		BDD m_c = r.IEcs.relprod(i, r.V2c.set().and(r.Iset));
-		BDD s 	= getTransitiveRefSet(m_c);
-		BDD q 	= s.exist(r.H1c.set());
-		
-		return new HeapLocationSet(q);
-	}
+        public Set ref(ProgramLocation invoke) {
+                invoke = LoadedCallGraph.mapCall(invoke);
+                //Assert._assert(r.Imap.contains(invoke), "No information about " + invoke.toString());
+                if(!r.Imap.contains(invoke)){
+                        //System.err.println("No ref information about " + invoke.toString() + "; Imap has " + r.Imap.size() + " elements \n");
+                        return null;
+                }
+                int I_i = r.Imap.get(invoke);
+                BDD i   = r.I.ithVar(I_i);
+                BDD m_c = r.IEcs.relprod(i, r.V2c.set().and(r.Iset));
+                BDD s   = getTransitiveRefSet(m_c);
+                BDD q   = s.exist(r.H1c.set());
+                
+                return new HeapLocationSet(q);
+        }
     
     public Set mod(jq_Method m, BasicBlock bb, Quad quad) {
         MethodSummary ms = MethodSummary.getSummary(CodeCache.getCode(m));
@@ -1446,32 +1456,32 @@ public class PAResults implements PointerAnalysisResults {
         return new HeapLocationSet(q);
     }
     
-	public boolean isAliased(SSALocation a, SSALocation b) {
-		// (1, .f)   (1, .f)   ==>   true
-		// (1, .f)   (2, .f)   ==>   false
-		return a.equals(b);
-	}
+        public boolean isAliased(SSALocation a, SSALocation b) {
+                // (1, .f)   (1, .f)   ==>   true
+                // (1, .f)   (2, .f)   ==>   false
+                return a.equals(b);
+        }
 
-	/* (non-Javadoc)
-	 * @see Compil3r.Analysis.IPA.PointerAnalysisResults#getAliases(Clazz.jq_Method, Compil3r.Analysis.IPA.SSALocation)
-	 */
-	public Set/*<ContextSet.ContextLocationPair>*/ getAliases(jq_Method method, SSALocation loc) {
-		return Collections.EMPTY_SET;
-	}
+        /* (non-Javadoc)
+         * @see Compil3r.Analysis.IPA.PointerAnalysisResults#getAliases(Clazz.jq_Method, Compil3r.Analysis.IPA.SSALocation)
+         */
+        public Set/*<ContextSet.ContextLocationPair>*/ getAliases(jq_Method method, SSALocation loc) {
+                return Collections.EMPTY_SET;
+        }
 
-	/* (non-Javadoc)
-	 * @see Compil3r.Analysis.IPA.PointerAnalysisResults#hasAliases(Clazz.jq_Method, Compil3r.Analysis.IPA.SSALocation, Compil3r.Analysis.IPA.ContextSet)
-	 */
-	public boolean hasAliases(jq_Method method, SSALocation loc, ContextSet contextSet) {
-		return false;
-	}
+        /* (non-Javadoc)
+         * @see Compil3r.Analysis.IPA.PointerAnalysisResults#hasAliases(Clazz.jq_Method, Compil3r.Analysis.IPA.SSALocation, Compil3r.Analysis.IPA.ContextSet)
+         */
+        public boolean hasAliases(jq_Method method, SSALocation loc, ContextSet contextSet) {
+                return false;
+        }
 
-	/* (non-Javadoc)
-	 * @see Compil3r.Analysis.IPA.PointerAnalysisResults#hasAliases(Clazz.jq_Method, Compil3r.Analysis.IPA.SSALocation)
-	 */
-	public boolean hasAliases(jq_Method method, SSALocation loc) {
-		return false;
-	}
+        /* (non-Javadoc)
+         * @see Compil3r.Analysis.IPA.PointerAnalysisResults#hasAliases(Clazz.jq_Method, Compil3r.Analysis.IPA.SSALocation)
+         */
+        public boolean hasAliases(jq_Method method, SSALocation loc) {
+                return false;
+        }
     
     public class HeapLocationSet extends AbstractSet {
 
@@ -1515,16 +1525,16 @@ public class PAResults implements PointerAnalysisResults {
         jq_Field f;  // field
         
         public static class FACTORY {
-        	static HashMap _locationMap;
-        	HeapLocation createHeapLocation(Node n, jq_Field f){
-				Pair pair = new Pair(n, f); 
-				HeapLocation loc = (HeapLocation) _locationMap.get(pair); 
-        		if(loc == null){
-					loc = new HeapLocation(n, f);
-					_locationMap.put(pair, loc);
-        		}
-				return loc;
-        	}
+                static HashMap _locationMap;
+                HeapLocation createHeapLocation(Node n, jq_Field f){
+                                Pair pair = new Pair(n, f); 
+                                HeapLocation loc = (HeapLocation) _locationMap.get(pair); 
+                        if(loc == null){
+                                        loc = new HeapLocation(n, f);
+                                        _locationMap.put(pair, loc);
+                        }
+                                return loc;
+                }
         }
         
         private HeapLocation(Node n, jq_Field f) {
@@ -1553,12 +1563,12 @@ public class PAResults implements PointerAnalysisResults {
             return n.toString_short()+fname;
         }
         
-		public String toString(PA r) {
-			String fname = (f == null) ? "[]" : "."+f.getName().toString();
-			//return n.toString_short()+fname;
-			//return r.findInMap(r.Vmap, r.getHeapIndex(n)) + fname;
-			return r.longForm(n) + fname;
-		}
+                public String toString(PA r) {
+                        String fname = (f == null) ? "[]" : "."+f.getName().toString();
+                        //return n.toString_short()+fname;
+                        //return r.findInMap(r.Vmap, r.getHeapIndex(n)) + fname;
+                        return r.longForm(n) + fname;
+                }
     }   
 
     public void computeGini(PathNumbering pn) {
@@ -1579,11 +1589,11 @@ public class PAResults implements PointerAnalysisResults {
         Arrays.sort(sccs_sizes);
         System.arraycopy(sccs_sizes, 0, x, n - sccs_sizes.length, sccs_sizes.length);
         double gini = 0.0;
-	// for sorted sets, the gini is g=\sum_{i=1}^n (2*i-n-1)*x_i/n^2
+        // for sorted sets, the gini is g=\sum_{i=1}^n (2*i-n-1)*x_i/n^2
         for (int i = 0; i < n; i++) {
-	    gini += (2*(i+1)-n-1)*x[i];
+            gini += (2*(i+1)-n-1)*x[i];
         }
-	// correct for bias by multiplying by n/(n-1)
+        // correct for bias by multiplying by n/(n-1)
         gini = gini / n / (n - 1);
 
         System.out.println("Gini-Coefficient is " + gini);
@@ -1592,6 +1602,116 @@ public class PAResults implements PointerAnalysisResults {
         for (int i = sccs_sizes.length - 1; i>=0 && i>sccs_sizes.length-1-PRINTMAX; --i) {
             System.out.print(" " + sccs_sizes[i]);
         }
-	System.out.println();
+        System.out.println();
+    }
+
+    /**
+     * Compute imprecision.
+     * In a perfect world, code isn't buggy and every downcast succeeds.
+     * In this world, every type-incompatible object that arrives in the
+     * points-to set of the input to a downcast is due to imprecision in
+     * the points-to analysis.
+     *
+     * This method looks at each cast and the predecessors nodes leading to it.
+     * It compute the vcontext-insensitive points-to sets of both.
+     * It counts and reports if a cast always or never succeeds.
+     * It reports if a cast's predecessor appear to have empty points-to sets
+     * (This would be bad and could indicate an analysis bug.)
+     * Those casts that aren't perfect are sorted by the z-ranking of the
+     * set sizes of |compatible heap objects|:|all objects reaching predecessors|
+     */
+    public void computeCastPrecision(boolean trace) {
+        // first step: find all casts
+        TypedBDD casts = (TypedBDD)r.bdd.zero();          // V1
+        for (int i = 0; i < r.Vmap.size(); i++) {
+            Node n = (Node)r.Vmap.get(i);
+            if (n instanceof CheckCastNode) {
+                casts.orWith(r.V1.ithVar(i));
+            }
+        }
+        // second step: find all predecessors of casts
+        BDD cast_to_pred = r.A.relprod(casts, r.V1cV2cset);     // V1xV1cxV2xV2c & V1 -> V1xV2 
+        // compute the points-to sets of predecessors and casts
+        BDDPairing V2toV1 = r.bdd.makePair(r.V2, r.V1);
+        BDD V1cset = r.V1c.set();
+        BDD preds_pt = r.vP.relprod(cast_to_pred.exist(r.V1.set()).replaceWith(V2toV1), V1cset);   // V1xH1xH1c
+        BDD casts_pt = r.vP.relprod(cast_to_pred.exist(r.V2.set()), V1cset);                       // V1xH1xH1c
+        ArrayList res = new ArrayList();
+        int perfect = 0, notreached = 0, alwaysfails = 0;
+        // now look at each cast individually
+        for (int i = 0; i < r.Vmap.size(); i++) {
+            Node n = (Node)r.Vmap.get(i);
+            if (!(n instanceof CheckCastNode))
+                continue;
+            TypedBDD cast = (TypedBDD)r.V1.ithVar(i);   // V1
+            TypedBDD castpt = (TypedBDD)casts_pt.restrict(cast);       // H1xH1c
+            BDD preds = cast_to_pred.restrict(cast);    // V2
+            preds.replaceWith(V2toV1);                  // V2 -> V1
+            TypedBDD predpt = (TypedBDD)preds_pt.relprod(preds, r.V1.set()); // V1xH1xH1c x V1 -> H1xH1c
+            if (castpt.equals(predpt)) {
+                if (trace)
+                    System.out.println("perfect match for: V1" + r.findInMap(r.Vmap, i));
+                perfect++;
+            } else {
+                double compatible = castpt.satCount(r.H1set);
+                double all = predpt.satCount(r.H1set);
+                if (all == 0.0) {
+                    notreached++;
+                    System.out.println("warning: points-to set of all cast predecessors is empty: V1" + r.findInMap(r.Vmap, i));
+                } else {
+                    if (compatible == 0.0) {
+                        alwaysfails++;
+                        if (trace)
+                            System.out.println("cast appears to always fail: V1" + r.findInMap(r.Vmap, i));
+                    }
+                    res.add(new Triple(new Double(compatible), new Double(all), "V1("+i+")"+r.longForm(n)));
+                }
+            }
+            preds.free(); predpt.free(); castpt.free();
+        }
+
+        Object[] rc = res.toArray();
+        Arrays.sort(rc, new Comparator() {
+            public int compare(Object o1, Object o2) {
+                double z1 = zHelper((Triple)o1);
+                double z2 = zHelper((Triple)o2);
+                final int direction = -1;
+                if (Double.isNaN(z1)) return direction;
+                if (Double.isNaN(z2)) return -direction;
+                return z1 < z2 ? direction : z1 > z2 ? -direction : 0;
+            }
+        });
+        for (int i = 0; i < rc.length; i++) {
+            System.out.println("#"+i+" z="+zHelper((Triple)rc[i])+" "+rc[i]);
+        }
+        System.out.println("#casts=" + casts.satCount(r.V1.set())); 
+        System.out.println("#perfect(casts that provably always succeed)=" + perfect);
+        System.out.println("#notreached(casts with empty predecessor points-to set)=" + notreached);
+        System.out.println("#alwaysfails(casts with empty compatible points-to sets)=" + alwaysfails);
+    }
+
+    private static double zHelper(Triple t) {
+        double compatible = ((Double)t.left).doubleValue();
+        double all = ((Double)t.middle).doubleValue();
+        return zcompute(compatible, all-compatible);
+    }
+
+    /**
+     * Generic z-statistic stuff.
+     * Default p0. Set with set Compil3r.Analysis.PAResults.p0 0.5
+     */
+    public static double p0 = 0.85;
+
+    public static double zcompute(double e1, double c1, double p_0) {
+        double p_hat, q_0, n;
+
+        q_0 = 1. - p_0;
+        n = e1 + c1;
+        p_hat = e1 / n;
+        return (p_hat - p_0) / Math.sqrt((p_0 * q_0) / n);
+    }
+
+    public static double zcompute(double e1, double c1) {
+        return zcompute(e1, c1, p0);
     }
 }
