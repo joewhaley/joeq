@@ -40,6 +40,7 @@ public abstract class CodeAllocator {
 
         public abstract int getCurrentOffset();
         public abstract int/*CodeAddress*/ getCurrentAddress();
+
         public abstract void add1(byte i);
         public abstract void add2_endian(int i);
         public abstract void add2(int i);
