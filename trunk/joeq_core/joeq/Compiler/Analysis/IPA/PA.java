@@ -1996,7 +1996,12 @@ public class PA {
          * @see java.util.AbstractMap#entrySet()
          */
         public Set entrySet() {
-            throw new UnsupportedOperationException();
+            HashMap m = new HashMap();
+            for (Iterator i = map.keySet().iterator(); i.hasNext(); ) {
+                Object o = i.next();
+                m.put(o, get(o));
+            }
+            return m.entrySet();
         }
     }
     
@@ -2073,7 +2078,8 @@ public class PA {
         }
         System.out.println();
         System.out.println("Methods="+methods+" Bytecodes="+bcodes+" Call sites="+calls);
-        PathNumbering pn = new PathNumbering(varPathSelector);
+        //PathNumbering pn = new PathNumbering(varPathSelector);
+        PathNumbering pn = new PathNumbering.RootNumbering();
         System.out.println("Thread runs="+thread_runs);
         Map initialCounts = new ThreadRootMap(thread_runs);
         BigInteger paths = (BigInteger) pn.countPaths(cg.getRoots(), cg.getCallSiteNavigator(), initialCounts);
@@ -2261,7 +2267,8 @@ public class PA {
     public PathNumbering countHeapNumbering(CallGraph cg, boolean updateBits) {
         if (VerifyAssertions)
             Assert._assert(CONTEXT_SENSITIVE);
-        PathNumbering pn = new PathNumbering(heapPathSelector);
+        //PathNumbering pn = new PathNumbering(heapPathSelector);
+        PathNumbering pn = new PathNumbering.RootNumbering();
         Map initialCounts = new ThreadRootMap(thread_runs);
         BigInteger paths = (BigInteger) pn.countPaths(cg.getRoots(), cg.getCallSiteNavigator(), initialCounts);
         System.out.println("Number of paths for heap context sensitivity: "+paths);
