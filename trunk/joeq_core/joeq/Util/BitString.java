@@ -334,6 +334,23 @@ public final class BitString implements Cloneable, java.io.Serializable {
     }
 
     /**
+     * Logically subtracts this bit set with the specified set of bits.
+     * Returns <code>true</code> if <code>this</code> was modified in
+     * response to the operation.
+     * @param set the bit set to subtract
+     */
+    public boolean minus(BitString set) {
+        int n = bits.length;
+        boolean changed = false;
+        for (int i = n; i-- > 0;) {
+            int old = bits[i];
+            bits[i] &= ~set.bits[i];
+            changed |= (old != bits[i]);
+        }
+        return changed;
+    }
+    
+    /**
      * Check if the intersection of the two sets is empty
      * @param set the set to check intersection with
      */
