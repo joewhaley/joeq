@@ -116,8 +116,8 @@ public class ExceptionHandlerList extends java.util.AbstractList implements List
     public static final ExceptionHandlerList EMPTY = new ExceptionHandlerList(null) {
         public int size() { return 0; }
         public ListIterator.ExceptionHandler exceptionHandlerIterator() { return ExceptionHandlerIterator.getEmptyIterator(); }
-        public boolean mustCatch() { return false; }
-        public boolean mayCatch() { return false; }
+        public ExceptionHandler mustCatch() { return null; }
+        public List.ExceptionHandler mayCatch(jq_Class exType) { return getEmptyList(); }
     };
     
 }
