@@ -12,6 +12,7 @@ import java.util.Set;
 import joeq.Compiler.Quad.CallGraph;
 import joeq.Compiler.Quad.LoadedCallGraph;
 import jwutil.collections.IndexMap;
+import jwutil.collections.IndexedMap;
 import jwutil.collections.UnmodifiableIterator;
 import jwutil.util.Assert;
 import net.sf.javabdd.BDD;
@@ -92,8 +93,8 @@ public class PACallGraph extends CallGraph {
         BDD b;
         BDDDomain d;
         BDD dset;
-        IndexMap map;
-        public BDDSet(BDD b, BDDDomain d, IndexMap map) {
+        IndexedMap map;
+        public BDDSet(BDD b, BDDDomain d, IndexedMap map) {
             this.b = b;
             this.d = d;
             this.dset = d.set();

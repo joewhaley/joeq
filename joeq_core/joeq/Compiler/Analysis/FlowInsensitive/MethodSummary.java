@@ -35,7 +35,6 @@ import joeq.Class.jq_StaticField;
 import joeq.Class.jq_Type;
 import joeq.Class.jq_Reference.jq_NullType;
 import joeq.Compiler.Analysis.IPA.LoopAnalysis;
-import joeq.Compiler.Analysis.IPA.PA;
 import joeq.Compiler.Analysis.IPA.ProgramLocation;
 import joeq.Compiler.Analysis.IPA.ProgramLocation.FakeProgramLocation;
 import joeq.Compiler.Analysis.IPA.ProgramLocation.QuadProgramLocation;
@@ -2248,7 +2247,7 @@ public class MethodSummary {
         final ProgramLocation q;        
 
         public String toString_short() {
-            return q.getEmacsName() + " (" + dstType.shortName() + ") @ "+q;
+            return q.getEmacsName() + " Cast to (" + dstType.shortName() + ") @ "+(q==null?-1:q.getID());
         }
         private CheckCastNode(jq_Reference dstType, ProgramLocation q) {
             this.dstType = dstType;
@@ -2471,7 +2470,9 @@ public class MethodSummary {
         }
         
         public String toString_long() { return Integer.toHexString(this.hashCode())+": "+toString_short()+super.toString_long(); }
-        public String toString_short() { return "Object "+getDeclaredType(); }
+        public String toString_short() {
+            return (q==null?"":q.getEmacsName())+" Object: "+(getDeclaredType()==null?"null":getDeclaredType().shortName())+" @ "+(q==null?-1:q.getID());
+        }
         
         /* (non-Javadoc)
          * @see joeq.Compiler.Quad.MethodSummary.Node#getNonEscapingEdgeFields()
@@ -2719,7 +2720,9 @@ public class MethodSummary {
         public final Node copy() { return this; }
         
         public String toString_long() { return Integer.toHexString(this.hashCode())+": "+toString_short()+super.toString_long(); }
-        public String toString_short() { return "Unknown: "+type; }
+        public String toString_short() {
+            return "Unknown: "+type;
+        }
 
         public void write(Textualizer t) throws IOException {
             getDeclaredType().write(t);
@@ -2816,7 +2819,9 @@ public class MethodSummary {
         public final Node copy() { return this; }
         
         public String toString_long() { return Integer.toHexString(this.hashCode())+": "+toString_short()+super.toString_long(); }
-        public String toString_short() { return "Placeholder: "+member+" "+s+" type "+type; }
+        public String toString_short() {
+            return "Placeholder: "+member+" "+s+" type "+type;
+        }
 
         public void write(Textualizer t) throws IOException {
             member.write(t);
@@ -2883,7 +2888,7 @@ public class MethodSummary {
         }
         public String toString_long() { return Integer.toHexString(this.hashCode())+": "+toString_short()+super.toString_long(); }
         public String toString_short() {
-            return "global("+(method==null?null:method.getName())+")";
+            return "global("+(method==null?"null":method.toString())+")";
         }
         public static GlobalNode GLOBAL = GlobalNode.get((jq_Method) null);
         
@@ -3068,7 +3073,7 @@ public class MethodSummary {
             return Integer.toHexString(this.hashCode())+": "+this.toString_short()+super.toString_long();
         }
         public String toString_short() {
-            return "Param#"+n+" method "+m.getName();
+            return "Param#"+n+" method "+m;
         }
         
         /* (non-Javadoc)

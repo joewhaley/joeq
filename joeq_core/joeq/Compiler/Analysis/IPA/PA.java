@@ -1434,12 +1434,12 @@ public class PA {
             buildTypes();
         }
     }
-    ReflectionInformationProvider reflectionInformationProvider = null;
-    public ReflectionInformationProvider getReflectionProvider() {
-        if(this.reflectionInformationProvider == null){
-            this.reflectionInformationProvider = new ReflectionInformationProvider.CribSheetReflectionInformationProvider();            
+    static ReflectionInformationProvider reflectionInformationProvider = null;
+    public static ReflectionInformationProvider getReflectionProvider() {
+        if(reflectionInformationProvider == null){
+            reflectionInformationProvider = new ReflectionInformationProvider.CribSheetReflectionInformationProvider();            
         }
-        return this.reflectionInformationProvider;
+        return reflectionInformationProvider;
     }
     public void addClassInitializer(jq_Class c) {
         if (!ADD_CLINIT) return;

@@ -275,6 +275,24 @@ public abstract class jq_Member implements jq_ClassFileConstants, Textualizable 
         return c.getDeclaredMember(name, desc);
     }
     
+    public static jq_Member parseMember(String s) {
+        int i = s.indexOf(' ');
+        String desc = s.substring(i+1);
+        int j = s.lastIndexOf('.');
+        if (j > i) return null;
+        String memberName = s.substring(j+1, i);
+        String className = s.substring(0, j);
+        jq_Class c = (jq_Class) jq_Type.parseType(className);
+        try {
+            c.load();
+        } catch (NoClassDefFoundError x) {
+            PrimordialClassLoader.loader.unloadBSType(c);
+            return null;
+        }
+        jq_Member m = c.getDeclaredMember(memberName, desc);
+        return m;
+    }
+    
     public static class FilterByName extends Filter {
         private java.util.regex.Pattern p;
         public FilterByName(java.util.regex.Pattern p) { this.p = p; }
