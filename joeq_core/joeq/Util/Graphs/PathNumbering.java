@@ -316,6 +316,7 @@ public class PathNumbering {
     
     public Number numberOfPathsToSCC(SCComponent scc) {
         Range r = (Range) sccNumbering.get(scc);
+        if (r == null) return null;
         Number n = fromBigInt(toBigInt(r.high).add(BigInteger.ONE));
         return n;
     }
@@ -651,6 +652,7 @@ public class PathNumbering {
     
     public void dotGraph(DataOutput out) throws IOException {
         out.writeBytes("digraph \"PathNumbering\" {\n");
+        out.writeBytes("  concentrate=true; node[fontsize=7];\n");
         IndexMap m = new IndexMap("NodeMap");
         for (Iterator i=nodeToScc.keySet().iterator(); i.hasNext(); ) {
             Object o = i.next();
