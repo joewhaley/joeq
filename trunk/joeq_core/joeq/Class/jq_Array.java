@@ -12,13 +12,14 @@ package Clazz;
 import jq;
 import Run_Time.Unsafe;
 import Allocator.ObjectLayout;
-import Allocator.SimpleAllocator;
+import Allocator.DefaultAllocator;
 import Bootstrap.PrimordialClassLoader;
-import Bootstrap.ClassLoaderInterface;
 import UTF.Utf8;
 
 public class jq_Array extends jq_Reference implements jq_ClassFileConstants, ObjectLayout {
 
+    public static /*final*/ boolean TRACE = false;
+    
     public final boolean isClassType() { return false; }
     public final boolean isArrayType() { return true; }
     public final String getName() {
@@ -40,7 +41,7 @@ public class jq_Array extends jq_Reference implements jq_ClassFileConstants, Obj
 
     public final Object newInstance(int length) {
         load(); verify(); prepare(); sf_initialize(); cls_initialize();
-        return SimpleAllocator.allocateArray(length, getInstanceSize(length), vtable);
+        return DefaultAllocator.allocateArray(length, getInstanceSize(length), vtable);
     }
     
     public final int getDimensionality() {
@@ -136,10 +137,19 @@ public class jq_Array extends jq_Reference implements jq_ClassFileConstants, Obj
         return (size+3) & ~3;
     }
     
-    public final void load() { if (isLoaded()) return; state = STATE_LOADED; }
-    public final void verify() { if (isVerified()) return; state = STATE_VERIFIED; }
+    public final void load() {
+        if (isLoaded()) return;
+        if (TRACE) System.out.println("Loading "+this+"...");
+        state = STATE_LOADED;
+    }
+    public final void verify() {
+        if (isVerified()) return;
+        if (TRACE) System.out.println("Verifying "+this+"...");
+        state = STATE_VERIFIED;
+    }
     public final void prepare() {
         if (isPrepared()) return;
+        if (TRACE) System.out.println("Preparing "+this+"...");
         state = STATE_PREPARING;
         // vtable is a copy of Ljava/lang/Object;
         jq_Class jlo = PrimordialClassLoader.loader.getJavaLangObject();
@@ -148,9 +158,14 @@ public class jq_Array extends jq_Reference implements jq_ClassFileConstants, Obj
         vtable = new int[jlovtable.length];
         state = STATE_PREPARED;
     }
-    public final void sf_initialize() { if (isSFInitialized()) return; state = STATE_SFINITIALIZED; }
+    public final void sf_initialize() {
+        if (isSFInitialized()) return;
+        if (TRACE) System.out.println("SF init "+this+"...");
+        state = STATE_SFINITIALIZED;
+    }
     public final void cls_initialize() {
         if (isClsInitialized()) return;
+        if (TRACE) System.out.println("Class init "+this+"...");
         state = STATE_CLSINITIALIZING;
         jq_Class jlo = PrimordialClassLoader.loader.getJavaLangObject();
         jlo.sf_initialize(); jlo.cls_initialize();
