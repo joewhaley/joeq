@@ -39,6 +39,7 @@ public class PathNumbering implements Externalizable {
 
     public static final boolean TRACE_NUMBERING = false;
     public static final boolean TRACE_PATH = false;
+    public static final boolean VERIFY_ASSERTIONS = false;
 
     public static class Range {
         public Number low, high;
@@ -65,6 +66,7 @@ public class PathNumbering implements Externalizable {
         countPaths(g);
     }
     
+    /** Navigator for the graph. */
     Navigator navigator;
     
     /** Cache of topologically-sorted SCC graph. */
@@ -96,10 +98,12 @@ public class PathNumbering implements Externalizable {
         return n;
     }
 
+    /** Counts the number of paths in the given graph. */
     public Number countPaths(Graph graph) {
         return countPaths(graph.getRoots(), graph.getNavigator());
     }
     
+    /** Counts the number of paths from the given root set, using the given graph navigator. */
     public Number countPaths(Collection roots, Navigator navigator) {
         BigInteger max_paths = BigInteger.ZERO;
         
@@ -123,7 +127,7 @@ public class PathNumbering implements Externalizable {
         
         /* Walk through SCCs in forward order. */
         scc = graph.getFirst();
-        Assert._assert(scc.prevLength() == 0);
+        if (VERIFY_ASSERTIONS) Assert._assert(scc.prevLength() == 0);
         while (scc != null) {
             /* Assign a number for each SCC. */
             if (TRACE_NUMBERING)
@@ -155,19 +159,22 @@ public class PathNumbering implements Externalizable {
             scc = scc.nextTopSort();
         }
         
-        scc = graph.getFirst();
-        while (scc != null) {
-            Range r = (Range) sccNumbering.get(scc);
-            if (TRACE_NUMBERING) System.out.println("Range for SCC"+scc.getId()+(scc.isLoop()?" (loop)":" (non-loop)")+"="+r);
-            if (r.low.longValue() != 0L) {
-                Assert.UNREACHABLE("SCC"+scc.getId()+" Range="+r);
+        if (VERIFY_ASSERTIONS) {
+            scc = graph.getFirst();
+            while (scc != null) {
+                Range r = (Range) sccNumbering.get(scc);
+                if (TRACE_NUMBERING) System.out.println("Range for SCC"+scc.getId()+(scc.isLoop()?" (loop)":" (non-loop)")+"="+r);
+                if (r.low.longValue() != 0L) {
+                    if (VERIFY_ASSERTIONS) Assert.UNREACHABLE("SCC"+scc.getId()+" Range="+r);
+                }
+                scc = scc.nextTopSort();
             }
-            scc = scc.nextTopSort();
         }
         
         return max_paths;
     }
 
+    /** Initialize the mapping from nodes to their SCCs. */
     private void initializeSccMap(SCComponent scc1) {
         Object[] nodes1 = scc1.nodes();
         for (int i=0; i<nodes1.length; ++i) {
@@ -176,6 +183,7 @@ public class PathNumbering implements Externalizable {
         }
     }
     
+    /** Record the outgoing edges between nodes in the given SCC. */
     private void recordEdgesFromSCC(SCComponent scc1) {
         Object[] nodes = scc1.nodes();
         int total = 0;
@@ -200,7 +208,7 @@ public class PathNumbering implements Externalizable {
         Range r1 = (Range) sccNumbering.get(scc1);
         if (scc1.prevLength() == 0) {
             if (TRACE_NUMBERING) System.out.println("SCC"+scc1.getId()+" is in the root set");
-            Assert._assert(r1.low.longValue() == 1L && r1.high.longValue() == 0L);
+            if (VERIFY_ASSERTIONS) Assert._assert(r1.low.longValue() == 1L && r1.high.longValue() == 0L);
             r1.low = new Integer(0);
         }
         if (scc1.isLoop()) {
@@ -258,16 +266,20 @@ public class PathNumbering implements Externalizable {
         return (SCComponent) nodeToScc.get(node);
     }
     
-    public static class PostOrderComparator implements Comparator {
+    /** Comparator used to put nodes in post order according to the SCC post order. */
+    static class PostOrderComparator implements Comparator {
 
-        final Map nodeToScc;
-        final IndexMap postOrderNumbering;
+        private final Map nodeToScc;
+        private final IndexMap postOrderNumberingOfSccs;
         
+        /** Construct a post-order comparator with the given node-to-scc mapping and
+         * topologically-sorted SCC graph.
+         */
         public PostOrderComparator(Map nodeToScc, SCCTopSortedGraph g) {
             this.nodeToScc = nodeToScc;
             List list = g.list();
-            postOrderNumbering = new IndexMap("PostOrderNumbering", list.size());
-            postOrderNumbering.addAll(list);
+            postOrderNumberingOfSccs = new IndexMap("PostOrderNumbering", list.size());
+            postOrderNumberingOfSccs.addAll(list);
         }
         
         /* (non-Javadoc)
@@ -277,41 +289,46 @@ public class PathNumbering implements Externalizable {
             if (arg0.equals(arg1)) return 0;
             SCComponent scc0 = (SCComponent) nodeToScc.get(arg0);
             SCComponent scc1 = (SCComponent) nodeToScc.get(arg1);
-            int a = postOrderNumbering.get(scc0);
-            int b = postOrderNumbering.get(scc1);
+            int a = postOrderNumberingOfSccs.get(scc0);
+            int b = postOrderNumberingOfSccs.get(scc1);
             if (a < b) return -1;
             if (a > b) return 1;
             // in the same SCC.
             a = Arrays.asList(scc0.nodes()).indexOf(arg0);
             b = Arrays.asList(scc1.nodes()).indexOf(arg1);
             if (a < b) return -1;
-            Assert._assert(a != b);
+            if (VERIFY_ASSERTIONS) Assert._assert(a != b);
             return 1;
         }
     }
     
+    /** Represents a path through the graph as an immutable linked structure. */
     public static class Path extends AbstractList {
 
-        final Object o;
-        final int length;
-        final Path next;
+        private final Object o;
+        private final int length;
+        private final Path next;
 
+        /** Construct a path with exactly one element: the given one. */
         public Path(Object o) {
             this.o = o;
             this.length = 1;
             this.next = null;
         }
 
+        /** Construct a path by prepending an element to an existing path. */
         public Path(Object o, Path next) {
             this.o = o;
             this.length = next.length+1;
             this.next = next;
         }
         
+        /** Return the length of this path. */
         public int size() {
             return this.length;
         }
         
+        /** Return a certain element of this path. */
         public Object get(int i) {
             Path p = this;
             for (;;) {
@@ -321,6 +338,9 @@ public class PathNumbering implements Externalizable {
             }
         }
         
+        /* (non-Javadoc)
+         * @see java.util.Collection#iterator()
+         */
         public Iterator iterator() {
             return new UnmodifiableIterator() {
                 Path p = Path.this;
@@ -337,6 +357,7 @@ public class PathNumbering implements Externalizable {
             };
         }
         
+        /** Return a string representation of this path. */
         public String toString() {
             StringBuffer sb = new StringBuffer();
             sb.append("\t<");
