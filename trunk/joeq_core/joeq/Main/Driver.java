@@ -353,6 +353,7 @@ public abstract class Driver {
                         return o1.toString().compareTo(o2.toString());
                     }
                 });
+                s.addAll(classesToProcess);
                 for (Iterator i = s.iterator(); i.hasNext();) {
                     jq_Type t = (jq_Type) i.next();
                     try {
