@@ -602,7 +602,17 @@ public class MethodSummary {
                 r.add(n);
             }
         }
-            
+        
+        static void setAsEscapes(Object o) {
+            if (o instanceof LinkedHashSet) {
+                for (Iterator i=((LinkedHashSet)o).iterator(); i.hasNext(); ) {
+                    ((Node)i.next()).escapes = true;
+                }
+            } else {
+                ((Node)o).escapes = true;
+            }
+        }
+        
         public void visitSpecial(Quad obj) {
             if (obj.getOperator() == Special.GET_THREAD_BLOCK.INSTANCE) {
                 if (TRACE_INTRA) out.println("Visiting: "+obj);
@@ -610,7 +620,12 @@ public class MethodSummary {
                 jq_Reference type = Scheduler.jq_Thread._class;
                 ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(obj);
                 if (n == null) quadsToNodes.put(obj, n = new ConcreteTypeNode(type, obj));
+                n.escapes = true;
                 setRegister(dest_r, n);
+            } else if (obj.getOperator() == Special.SET_THREAD_BLOCK.INSTANCE) {
+                if (TRACE_INTRA) out.println("Visiting: "+obj);
+                Register src_r = ((RegisterOperand)Special.getOp1(obj)).getRegister();
+                setAsEscapes(getRegister(src_r));
             } else if (obj.getOperator() == Special.GET_TYPE_OF.INSTANCE) {
                 if (TRACE_INTRA) out.println("Visiting: "+obj);
                 Register dest_r = ((RegisterOperand)Special.getOp1(obj)).getRegister();
