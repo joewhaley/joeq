@@ -72,6 +72,15 @@ public abstract class TraceFlags {
             UTF.Utf8.TRACE = true;
             return i+1;
         }
+        if (args[i].equalsIgnoreCase("-TraceScheduler")) {
+            Scheduler.jq_NativeThread.TRACE = true;
+            Scheduler.jq_InterrupterThread.TRACE = true;
+            return i+1;
+        }
+        if (args[i].equalsIgnoreCase("-TraceLocks")) {
+            Run_Time.Monitor.TRACE = true;
+            return i+1;
+        }
         if (args[i].equalsIgnoreCase("-TraceByMethodName")) {
             Compil3r.Reference.x86.x86ReferenceCompiler.TraceMethod_MethodNames.add(args[++i]);
             return i+1;
