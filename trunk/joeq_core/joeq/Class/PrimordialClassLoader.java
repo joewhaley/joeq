@@ -57,6 +57,7 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
         public String toString() { return zf.getName(); }
         InputStream getResourceAsStream(String name) {
             try { // look for name in zipfile, return null if something goes wrong.
+                if (TRACE) out.println("Searching for "+name+" in zip file "+zf);
                 ZipEntry ze = zf.getEntry(name);
                 return (ze==null)?null:zf.getInputStream(ze);
             } catch (UnsatisfiedLinkError e) {
@@ -99,6 +100,7 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
             try { // try to open the file, starting from path.
                 final String filesep = System.getProperty("file.separator");
                 if (filesep.charAt(0) != '/') name = name.replace('/', filesep.charAt(0));
+                if (TRACE) out.println("Searching for "+name+" in path "+path);
                 File f = new File(path, name);
                 return new FileInputStream(f);
             } catch (FileNotFoundException e) {
@@ -117,6 +119,8 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
 
     /** Vector of ClasspathElements corresponding to CLASSPATH entries. */
     public void addToClasspath(String s) {
+        final String pathsep = System.getProperty("path.separator");
+        jq.assert(s.indexOf(pathsep) == -1);
         Set duplicates = new HashSet(); // don't add duplicates.
         duplicates.addAll(classpathList);
         for (Iterator it = classpaths(s); it.hasNext(); ) {
@@ -126,9 +130,11 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
             if (path.toLowerCase().endsWith(".zip") ||
                 path.toLowerCase().endsWith(".jar"))
                 try {
+                    if (TRACE) out.println("Adding zip file "+path+" to classpath");
                     classpathList.add(new ZipFileElement(new ZipFile(path)));
                 } catch (IOException ex) { /* skip this zip file, then. */ }
             else {
+                if (TRACE) out.println("Adding path "+path+" to classpath");
                 classpathList.add(new PathElement(path));
             }
         }
