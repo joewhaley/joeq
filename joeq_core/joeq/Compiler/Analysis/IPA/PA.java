@@ -3,20 +3,6 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Analysis.IPA;
 
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.TreeSet;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -31,6 +17,20 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.TreeSet;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
@@ -2219,7 +2219,7 @@ public class PA {
                         ConcreteTypeNode cn = (ConcreteTypeNode) n;
                         String stringConst = (String) MethodSummary.stringNodes2Values.get(n);
                         if(stringConst != null){
-                            //System.out.println(I_bdd.toStringWithDomains(TS) + " -> " + stringConst);
+                            System.out.println(I_bdd.toStringWithDomains(TS) + " -> " + stringConst);
                             if(stringConst == null){
                                 if(missingConst.get(stringConst) == null){
                                     if(TRACE_REFLECTION) System.err.println("No constant string for " + n + " at " + n);                                    
