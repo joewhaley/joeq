@@ -1123,8 +1123,8 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
         Section.SymTabSection symtab = new Section.SymTabSection(".symtab", 0, 0, strtab);
         Section.ProgBitsSection text = new TextSection();
         Section.ProgBitsSection data = new DataSection();
-        Section.RelSection textrel = new Section.RelSection(".textrel", 0, 0, symtab, text);
-        Section.RelSection datarel = new Section.RelSection(".datarel", 0, 0, symtab, data);
+        Section.RelSection textrel = new Section.RelSection(".rel.text", 0, 0, symtab, text);
+        Section.RelSection datarel = new Section.RelSection(".rel.data", 0, 0, symtab, data);
         f.setSectionHeaderStringTable(shstrtab);
         //f.setSymbolStringTable(strtab);
         f.addSection(empty);
@@ -1151,8 +1151,9 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
         Iterator it = exts.iterator();
         while (it.hasNext()) {
             ExternalReference r = (ExternalReference)it.next();
-            SymbolTableEntry e = new SymbolTableEntry(r.getName(), 0, 0, SymbolTableEntry.STB_WEAK, SymbolTableEntry.STT_FUNC, empty);
+            SymbolTableEntry e = new SymbolTableEntry(r.getName(), 0, 0, SymbolTableEntry.STB_GLOBAL, SymbolTableEntry.STT_FUNC, empty);
             symtab.addSymbol(e);
+	    datarel.addReloc(new RelocEntry(r.getAddress(), e, RelocEntry.R_386_32));
         }
 
         it = CodeAllocator.getCompiledMethods();
@@ -1208,8 +1209,7 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
                 Heap2CodeReference cr = (Heap2CodeReference)r;
                 datarel.addReloc(new RelocEntry(cr.getFrom(), textsyment, RelocEntry.R_386_32));
             } else if (r instanceof ExternalReference) {
-                ExternalReference cr = (ExternalReference)r;
-                datarel.addReloc(new RelocEntry(cr.getAddress(), datasyment, RelocEntry.R_386_32));
+		// already done.
             } else {
                 jq.UNREACHABLE(r.toString());
             }

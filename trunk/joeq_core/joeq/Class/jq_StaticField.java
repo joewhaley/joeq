@@ -106,7 +106,7 @@ public final class jq_StaticField extends jq_Field {
     public final void setValue(Object v) { getDeclaringClass().setStaticData(this, v); }
     
     public final boolean needsDynamicLink(jq_Method method) {
-        return state < STATE_SFINITIALIZED || getDeclaringClass().needsDynamicLink(method);
+	return getDeclaringClass().needsDynamicLink(method);
     }
     public final boolean isConstant() { chkState(STATE_LOADED); return constantValue != null; }
     public final Object getConstantValue() { return constantValue; }
