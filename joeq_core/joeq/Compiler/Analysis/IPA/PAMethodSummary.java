@@ -56,13 +56,13 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
     }
     
     public void registerRelations(BDD V1V2context, BDD V1H1context) {
-        if (TRACE) out.println("Adding "+this.m+" with context");
+        if (TRACE) out.println("Adding "+m+" with context");
         BDD b;
         if (V1H1context != null) {
             b = vP.and(V1H1context);
             if (PA.VerifyAssertions) {
                 if (!b.exist(pa.V1cH1cset).equals(vP)) {
-                    System.out.println("m = "+this.m);
+                    System.out.println("m = "+m);
                     System.out.println("vP = "+vP.toStringWithDomains(pa.TS));
                     System.out.println("V1H1context = "+V1H1context.toStringWithDomains());
                     System.out.println("b = "+b.toStringWithDomains());
@@ -70,9 +70,13 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
                 }
             }
         } else {
-            if (PA.VerifyAssertions)
-                Assert._assert((!pa.OBJECT_SENSITIVE && !pa.CONTEXT_SENSITIVE) ||
-                               vP.isZero());
+            if (PA.VerifyAssertions) {
+                if ((pa.OBJECT_SENSITIVE || pa.CONTEXT_SENSITIVE) && !vP.isZero()) {
+                    System.out.println("m = "+m);
+                    System.out.println("vP = "+vP.toStringWithDomains(pa.TS));
+                    Assert.UNREACHABLE();
+                }
+            }
             b = vP.id();
         }
         pa.vP.orWith(b);
