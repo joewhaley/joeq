@@ -196,7 +196,7 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
         private void listPackages(final String dir, final HashSet pkgs) {
             final File f = dir == null ? new File(path) : new File(path, dir);
             if (!f.exists() || !f.isDirectory()) return;
-            pkgs.add(f);    // add the current directory first
+            pkgs.add(path);    // add the current directory first
             String [] subdirs = f.list(new java.io.FilenameFilter() {
                 public boolean accept(File _dir, String name) {
                     if (dir != null && name.endsWith(".class"))
