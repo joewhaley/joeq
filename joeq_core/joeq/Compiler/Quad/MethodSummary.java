@@ -2544,13 +2544,34 @@ public class MethodSummary {
                 }
             }
         }
-        if (n.predecessors != null) useful = true;
         if (n.passedParameters != null) useful = true;
         if (returned.contains(n)) useful = true;
         if (thrown.contains(n)) useful = true;
         if (n instanceof ReturnedNode) useful = true;
-        if (useful)
+        if (n.predecessors != null) {
+            useful = true;
+            for (Iterator i=n.predecessors.entrySet().iterator(); i.hasNext(); ) {
+                java.util.Map.Entry e = (java.util.Map.Entry)i.next();
+                jq_Field f = (jq_Field)e.getKey();
+                Object o = e.getValue();
+                if (o instanceof Node) {
+                    addAsUseful(visited, (Node)o);
+                } else {
+                    for (Iterator j=((LinkedHashSet)o).iterator(); j.hasNext(); ) {
+                        addAsUseful(visited, (Node)j.next());
+                    }
+                }
+            }
+        }
+        if (useful) {
             this.nodes.put(n, n);
+            if (n instanceof FieldNode) {
+                FieldNode fn = (FieldNode)n;
+                for (Iterator i=fn.field_predecessors.iterator(); i.hasNext(); ) {
+                    addAsUseful(visited, (Node)i.next());
+                }
+            }
+        }
         if (TRACE_INTER && !useful) out.println("Not useful: "+n);
         return useful;
     }
@@ -2590,6 +2611,26 @@ public class MethodSummary {
                         }
                     }
                 }
+            }
+        }
+        if (n.predecessors != null) {
+            for (Iterator i=n.predecessors.entrySet().iterator(); i.hasNext(); ) {
+                java.util.Map.Entry e = (java.util.Map.Entry)i.next();
+                jq_Field f = (jq_Field)e.getKey();
+                Object o = e.getValue();
+                if (o instanceof Node) {
+                    addAsUseful(visited, (Node)o);
+                } else {
+                    for (Iterator j=((LinkedHashSet)o).iterator(); j.hasNext(); ) {
+                        addAsUseful(visited, (Node)j.next());
+                    }
+                }
+            }
+        }
+        if (n instanceof FieldNode) {
+            FieldNode fn = (FieldNode)n;
+            for (Iterator i=fn.field_predecessors.iterator(); i.hasNext(); ) {
+                addAsUseful(visited, (Node)i.next());
             }
         }
     }
