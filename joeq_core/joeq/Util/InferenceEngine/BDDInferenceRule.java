@@ -212,21 +212,59 @@ public class BDDInferenceRule extends InferenceRule {
         BDD[] allRelationValues = new BDD[top.size()];
         BDD[] newRelationValues = new BDD[top.size()];
         
-        // Replace BDDDomain's in the BDD relations to match variable assignments.
+        // Quantify out unnecessary fields in input relations.
+        Set necessaryVariables = new HashSet();
+        Set unnecessaryVariables = new HashSet();
+        for (int i = 0; i < top.size(); ++i) {
+            RuleTerm rt = (RuleTerm) top.get(i);
+            BDDRelation r = (BDDRelation) rt.relation;
+            for (int j = 0; j < rt.variables.size(); ++j) {
+                Variable v = (Variable) rt.variables.get(j);
+                if (necessaryVariables.contains(v)) continue;
+                if (unnecessaryVariables.contains(v)) {
+                    necessaryVariables.add(v);
+                    unnecessaryVariables.remove(v);
+                } else {
+                    unnecessaryVariables.add(v);
+                }
+            }
+        }
+        unnecessaryVariables.removeAll(bottom.variables);
+        necessaryVariables.addAll(bottom.variables);
+        if (solver.TRACE) solver.out.println("Necessary variables: "+necessaryVariables);
+        if (solver.TRACE) solver.out.println("Unnecessary variables: "+unnecessaryVariables);
         for (int i = 0; i < top.size(); ++i) {
             RuleTerm rt = (RuleTerm) top.get(i);
             BDDRelation r = (BDDRelation) rt.relation;
             allRelationValues[i] = r.relation.id();
-            if (solver.TRACE) solver.out.println("Relation "+r);
-            if (solver.TRACE_FULL) solver.out.println("   current value: "+allRelationValues[i].toStringWithDomains());
-            BDDPairing pairing = null;
             for (int j = 0; j < rt.variables.size(); ++j) {
                 Variable v = (Variable) rt.variables.get(j);
                 BDDDomain d = (BDDDomain) r.domains.get(j);
                 if (v instanceof Constant) {
                     if (solver.TRACE) solver.out.println("Constant: restricting "+d+" = "+v);
                     allRelationValues[i].restrictWith(d.ithVar(((Constant)v).value));
+                    continue;
                 }
+                if (unnecessaryVariables.contains(v)) {
+                    if (solver.TRACE) solver.out.println(v+" is unnecessary, quantifying out "+d);
+                    BDD q = allRelationValues[i].exist(d.set());
+                    allRelationValues[i].free();
+                    allRelationValues[i] = q;
+                }
+            }
+        }
+        
+        // Replace BDDDomain's in the BDD relations to match variable assignments.
+        for (int i = 0; i < top.size(); ++i) {
+            RuleTerm rt = (RuleTerm) top.get(i);
+            BDDRelation r = (BDDRelation) rt.relation;
+            if (solver.TRACE) solver.out.println("Relation "+r);
+            if (solver.TRACE_FULL) solver.out.println("   current value: "+allRelationValues[i].toStringWithDomains());
+            BDDPairing pairing = null;
+            for (int j = 0; j < rt.variables.size(); ++j) {
+                Variable v = (Variable) rt.variables.get(j);
+                if (unnecessaryVariables.contains(v)) continue;
+                BDDDomain d = (BDDDomain) r.domains.get(j);
                 BDDDomain d2 = (BDDDomain) variableToBDDDomain.get(v);
                 Assert._assert(d2 != null);
                 if (d != d2) {
@@ -248,7 +286,7 @@ public class BDDInferenceRule extends InferenceRule {
         BDDRelation r = (BDDRelation) bottom.relation;
         if (solver.TRACE_FULL) solver.out.println("Current value of relation "+bottom+": "+r.relation.toStringWithDomains());
         
-        Set variablesToQuantify = new HashSet(variableToBDDDomain.keySet());
+        Set variablesToQuantify = new HashSet(necessaryVariables);
         variablesToQuantify.removeAll(bottom.variables);
         if (solver.TRACE) solver.out.println("Variables to quantify: "+variablesToQuantify);
         List domainsToQuantify = new LinkedList();
