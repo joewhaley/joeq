@@ -72,6 +72,7 @@ import joeq.Util.Assert;
 import joeq.Util.Collections.IndexMap;
 import joeq.Util.Collections.IndexedMap;
 import joeq.Util.Collections.Pair;
+import joeq.Util.Graphs.GlobalPathNumbering;
 import joeq.Util.Graphs.Navigator;
 import joeq.Util.Graphs.PathNumbering;
 import joeq.Util.Graphs.RootPathNumbering;
@@ -135,6 +136,7 @@ public class PA {
     boolean THREAD_SENSITIVE = !System.getProperty("pa.ts", "no").equals("no");
     boolean OBJECT_SENSITIVE = !System.getProperty("pa.os", "no").equals("no");
     boolean CONTEXT_SENSITIVE = !System.getProperty("pa.cs", "no").equals("no");
+    boolean BETTER_CONTEXT_NUMBERING = !System.getProperty("bettercontextnumbering.cs", "no").equals("no");
     boolean CS_CALLGRAPH = !System.getProperty("pa.cscg", "no").equals("no");
     boolean DISCOVER_CALL_GRAPH = !System.getProperty("pa.discover", "no").equals("no");
     boolean PRINT_CALL_GRAPH_SCCS = !System.getProperty("pa.printsccs", "no").equals("no");
@@ -2091,21 +2093,26 @@ public class PA {
         long time = System.currentTimeMillis();
         vCnumbering = countCallGraph(cg, ocg, updateBits);
         if(PRINT_CALL_GRAPH_SCCS){
-	        SCCPathNumbering sccNumbering = (SCCPathNumbering) vCnumbering;
-	        SCCTopSortedGraph sccGraph = sccNumbering.getSCCGraph();
-	        for(Iterator iter = sccGraph.list().iterator(); iter.hasNext(); ){
-	        	SCComponent component = (SCComponent) iter.next();
-	        	
-	        	if(component.size() < 2) continue;
-	        		
-	        	System.out.print(component.getId() + "\t: ");
-	        	for(int i = 0; i < component.entries().length; i++){
-	        		Object entry = component.entries()[i];
-	        		System.out.print(entry.toString() + " ");
-	        	}
-	        	System.out.println("");
-	        }
+            SCCPathNumbering sccNumbering = (SCCPathNumbering) vCnumbering;
+            SCCTopSortedGraph sccGraph = sccNumbering.getSCCGraph();
+            System.out.println("Printing the SCC in the call graph (" + sccGraph.list().size()+ ")");
+            for(Iterator iter = sccGraph.list().iterator(); iter.hasNext(); ){
+                    SCComponent component = (SCComponent) iter.next();
+
+                    if(component.size() < 2) continue;
+                    if(component.nodes() == null) continue;
+
+                    System.out.print("\t" + component.getId() + "\t: " + component.nodes().length + "\t");
+
+                    for(int i = 0; i < component.nodes().length; i++){
+                        Object node = component.nodes()[i];
+                        System.out.print(node.toString() + " ");
+                    }
+                    System.out.println("");
+            }
+            System.out.println("Done.");
         }
+
         if (OBJECT_SENSITIVE) {
             oCnumbering = new SCCPathNumbering(objectPathSelector);
             BigInteger paths = (BigInteger) oCnumbering.countPaths(ocg);
@@ -3001,7 +3008,11 @@ public class PA {
         System.out.println("Vars="+vars+" Heaps="+heaps+" Classes="+classes.size()+" Fields="+fields.size());
         PathNumbering pn = null;
         if (CONTEXT_SENSITIVE)
-            pn = new SCCPathNumbering(varPathSelector);
+        	if(BETTER_CONTEXT_NUMBERING){
+        		pn = new GlobalPathNumbering();
+        	} else {
+        		pn = new SCCPathNumbering(varPathSelector);	
+        	}     	
         else
             pn = null;
         if (updateBits) {
