@@ -230,10 +230,10 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
             jq_Method target = mc.getTargetMethod();
 
             jq_Method replacement = null;            
-            if(PA.USE_BOGUS_SUMMARIES) {
+            if(pa.USE_BOGUS_SUMMARIES) {
                 replacement = PA.getBogusSummaryProvider().getReplacementMethod(target);
                 if(replacement != null) {
-                    if(PA.TRACE_BOGUS){
+                    if(pa.TRACE_BOGUS){
                         System.out.println("Replacing a call to " + target + 
                                         " with a call to "+ replacement);
                     }
@@ -264,17 +264,17 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
             }            
             
             Collection/*<jq_Method>*/ targets = null;
-            if(PA.USE_REFLECTION_PROVIDER && ReflectionInformationProvider.isNewInstance(target)){                
+            if(pa.USE_REFLECTION_PROVIDER && ReflectionInformationProvider.isNewInstance(target)){                
                 targets = pa.getReflectionProvider().getNewInstanceTargets(m);
                 if(targets != null){
-                    if(PA.TRACE_REFLECTION)  {
+                    if(pa.TRACE_REFLECTION)  {
                         System.out.println("Replacing a call to " + target + " with " + targets); 
                     }
                 
                     for(Iterator iter = targets.iterator(); iter.hasNext();){
                         jq_Method newTarget = (jq_Method) iter.next();
                         
-                        if(PA.TRACE_REFLECTION) {
+                        if(pa.TRACE_REFLECTION) {
                             System.out.println("Adding a refective call to " + newTarget);
                         }
                         pa.addToMI(M_bdd, I_bdd, newTarget);
@@ -334,7 +334,7 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
                     /*new ProgramLocation.PlaceholderParameterProgramLocation(m, "forName @" + mc.getEmacsName())*/ mc, 
                     new Integer(++pa.opn));
                 pa.addToForNameMap(h, I_bdd);
-                if(PA.TRACE_REFLECTION){
+                if(pa.TRACE_REFLECTION && pa.TRACE){
                     System.out.println("Processing a call to forName: " + mc.getEmacsName());
                 }
                 int H_i = pa.Hmap.get(h);
