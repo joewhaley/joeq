@@ -68,7 +68,9 @@ import Compil3r.Quad.Operator.ZeroCheck;
 import Compil3r.Quad.RegisterFactory.Register;
 import Main.jq;
 import Memory.Address;
+import Memory.CodeAddress;
 import Memory.HeapAddress;
+import Memory.StackAddress;
 import Run_Time.Reflection;
 import Run_Time.TypeCheck;
 import Run_Time.Unsafe;
@@ -969,6 +971,10 @@ public class BytecodeToQuad extends BytecodeVisitor {
             appendQuad(q);
             return;
         }
+        jq.Assert(quad_bbs[jsrinfo.entry_block.id] == target_bb);
+        BasicBlock last_bb = quad_bbs[jsrinfo.exit_block.id];
+        JSRInfo q_jsrinfo = new JSRInfo(target_bb, last_bb, jsrinfo.changedLocals);
+        this.quad_cfg.addJSRInfo(q_jsrinfo);
         saveStackIntoRegisters();
         RegisterOperand op0 = getStackRegister(jq_ReturnAddressType.INSTANCE);
         Quad q = Jsr.create(quad_cfg.getNewQuadID(), Jsr.JSR.INSTANCE, op0, new TargetOperand(target_bb), new TargetOperand(successor_bb));
@@ -1091,7 +1097,14 @@ public class BytecodeToQuad extends BytecodeVisitor {
         this.uncond_branch = true;
         // could be A or R
         Operand op0 = current_state.pop();
-        Return operator = method.getReturnType().isAddressType()?(Return)Return.RETURN_P.INSTANCE:Return.RETURN_A.INSTANCE;
+        jq_Type t = getTypeOf(op0);
+        Return operator;
+        if (method.getReturnType().isAddressType()) {
+        	operator = Return.RETURN_P.INSTANCE;
+            jq.Assert(t.isAddressType() || t == jq_Reference.jq_NullType.NULL_TYPE, t.toString());
+        } else {
+            operator = t.isAddressType()?(Return)Return.RETURN_P.INSTANCE:Return.RETURN_A.INSTANCE;
+        }
         Quad q = Return.create(quad_cfg.getNewQuadID(), operator, op0);
         appendQuad(q);
         current_state.clearStack();
@@ -1385,7 +1398,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
             current_state.push_L(res);
         } else if (name == alloca) {
             Operand amt = current_state.pop_I();
-            RegisterOperand res = getStackRegister(jq_Primitive.INT);
+            RegisterOperand res = getStackRegister(StackAddress._class);
             q = Special.create(quad_cfg.getNewQuadID(), Special.ALLOCA.INSTANCE, res, amt);
             current_state.push_P(res);
         } else {
@@ -1426,9 +1439,9 @@ public class BytecodeToQuad extends BytecodeVisitor {
             q = Special.create(quad_cfg.getNewQuadID(), Special.SET_THREAD_BLOCK.INSTANCE, loc);
         } else if (m == Unsafe._longJump) {
             Operand eax = current_state.pop_I();
-            Operand sp = current_state.pop_I();
-            Operand fp = current_state.pop_I();
-            Operand ip = current_state.pop_I();
+            Operand sp = current_state.pop(StackAddress._class);
+            Operand fp = current_state.pop(StackAddress._class);
+            Operand ip = current_state.pop(CodeAddress._class);
             q = Special.create(quad_cfg.getNewQuadID(), Special.LONG_JUMP.INSTANCE, ip, fp, sp, eax);
             endBasicBlock = true;
         } else {
@@ -1669,7 +1682,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
     public void visitAINVOKE(byte op, jq_Method f) {
         super.visitAINVOKE(op, f);
         if (f.getDeclaringClass() == Unsafe._class) {
-            UNSAFEhelper(f, Invoke.INVOKESTATIC_A.INSTANCE);
+            UNSAFEhelper(f, f.getReturnType().isAddressType()?(Invoke)Invoke.INVOKESTATIC_P.INSTANCE:Invoke.INVOKESTATIC_A.INSTANCE);
             return;
         }
         if (f.getDeclaringClass().isAddressType()) {
@@ -1790,13 +1803,16 @@ public class BytecodeToQuad extends BytecodeVisitor {
     }
     public void visitCHECKCAST(jq_Type f) {
         super.visitCHECKCAST(f);
-        if (f.isAddressType()) return;
-        Operand op = current_state.pop_A();
+        Operand op = current_state.pop(); // could be P or A
         RegisterOperand res = getStackRegister(f);
-        Quad q = CheckCast.create(quad_cfg.getNewQuadID(), CheckCast.CHECKCAST.INSTANCE, res, op, new TypeOperand(f));
-        appendQuad(q);
-        mergeStateWithAllExHandlers(false);
-        current_state.push_A(res);
+        if (!f.isAddressType()) {
+	        Quad q = CheckCast.create(quad_cfg.getNewQuadID(), CheckCast.CHECKCAST.INSTANCE, res, op, new TypeOperand(f));
+	        appendQuad(q);
+	        mergeStateWithAllExHandlers(false);
+	        current_state.push_A(res);
+        } else {
+        	current_state.push_P(res);
+        }
     }
     public void visitINSTANCEOF(jq_Type f) {
         super.visitINSTANCEOF(f);
@@ -1994,9 +2010,10 @@ public class BytecodeToQuad extends BytecodeVisitor {
             return false;
         }
         RegisterOperand guard = makeGuardReg();
-        ZeroCheck oper;
+        ZeroCheck oper = null;
         if (rop.getType() == jq_Primitive.LONG) oper = ZeroCheck.ZERO_CHECK_L.INSTANCE;
-        else oper = ZeroCheck.ZERO_CHECK_I.INSTANCE;
+        else if (rop.getType().isIntLike()) oper = ZeroCheck.ZERO_CHECK_I.INSTANCE;
+        else jq.UNREACHABLE("Zero check on "+rop+" type "+rop.getType());
         Quad q = ZeroCheck.create(quad_cfg.getNewQuadID(), oper, guard, rop.copy());
         appendQuad(q);
         mergeStateWithArithExHandler(false);
@@ -2006,11 +2023,13 @@ public class BytecodeToQuad extends BytecodeVisitor {
         jq_Type type = rop.getType();
         int number = getLocalNumber(rop.getRegister(), type);
         if (rf.isLocal(rop, number, type)) {
-            Operand op2;
-            if (type == jq_Primitive.INT)
+            Operand op2 = null;
+            if (type == jq_Primitive.LONG)
+                op2 = current_state.getLocal_L(number);
+            else if (type.isIntLike())
                 op2 = current_state.getLocal_I(number);
             else
-                op2 = current_state.getLocal_L(number);
+                jq.UNREACHABLE("Unknown type for local "+number+" "+rop+": "+type);
             if (TRACE) System.out.println(rop+" is a local variable of type "+type+": currently "+op2);
             if (op2 instanceof RegisterOperand) {
                 setGuard((RegisterOperand)op2, guard);

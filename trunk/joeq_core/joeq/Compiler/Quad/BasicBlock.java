@@ -7,6 +7,7 @@
 
 package Compil3r.Quad;
 import Main.jq;
+import Compil3r.Quad.Operator.Ret;
 import Util.BackwardIterator;
 import Util.Templates.List;
 import Util.Templates.ListIterator;
@@ -328,6 +329,20 @@ public class BasicBlock {
     /** Marks this basic block as an exception handler entry point.
      */
     public void setExceptionHandlerEntry() { flags |= EXCEPTION_HANDLER_ENTRY; }
+    
+    /** Returns true if this basic block has been marked as a JSR entry.
+     * entry point.  Returns false otherwise.
+     * @return  if this basic block has been marked as a JSR entry. */
+    public boolean isJSREntry() { return (flags & JSR_ENTRY) != 0; }
+    /** Marks this basic block as a JSR entry.
+     */
+    public void setJSREntry() { flags |= JSR_ENTRY; }
+    
+    public boolean endsInRet() {
+        Quad last = getLastQuad();
+        if (last == null) return false;
+        return last.getOperator() == Ret.RET.INSTANCE;
+    }
     
     /** Returns the name of this basic block.
      * @return  the name of this basic block. */

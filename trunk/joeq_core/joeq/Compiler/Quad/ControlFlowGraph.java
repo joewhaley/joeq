@@ -7,6 +7,7 @@
 
 package Compil3r.Quad;
 import java.util.HashMap;
+import java.util.Map;
 
 import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Method;
@@ -108,6 +109,18 @@ public class ControlFlowGraph {
 
     /** Returns a new id number for a quad. */
     public int getNewQuadID() { return ++quad_counter; }
+    
+    Map jsr_map;
+    
+    public void addJSRInfo(JSRInfo info) {
+        if (jsr_map == null) jsr_map = new HashMap();
+        jsr_map.put(info.entry_block, info);
+        jsr_map.put(info.exit_block, info);
+    }
+    
+    public JSRInfo getJSRInfo(BasicBlock bb) {
+        return (JSRInfo) jsr_map.get(bb);
+    }
     
     /** Returns an iteration of the basic blocks in this graph in reverse post order.
      * @return  an iteration of the basic blocks in this graph in reverse post order. */
