@@ -5,6 +5,7 @@ package ClassLib.Common.java.lang;
 
 import Run_Time.Unsafe;
 import Scheduler.jq_Thread;
+import Util.Assert;
 
 /**
  * Thread
@@ -113,7 +114,9 @@ public abstract class Thread {
     }
     private void setPriority0(int newPriority) {
         jq_Thread jq_thread = this.jq_thread;
-        jq_thread.setPriority(newPriority);
+        Assert._assert(newPriority >= 1);
+        Assert._assert(newPriority <= 10);
+        jq_thread.setPriority(newPriority - 1);
     }
     private void stop0(java.lang.Object o) {
         jq_Thread jq_thread = this.jq_thread;
