@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 import org.sf.javabdd.BDD;
 import org.sf.javabdd.BDDDomain;
@@ -34,8 +35,8 @@ import Compil3r.Quad.MethodSummary.ReturnedNode;
 import Compil3r.Quad.MethodSummary.ThrownExceptionNode;
 import Compil3r.Quad.MethodSummary.UnknownTypeNode;
 import Main.HostedVM;
+import Util.Assert;
 import Util.Strings;
-import Util.Collections.HashWorklist;
 import Util.Collections.Triple;
 import Util.Graphs.Navigator;
 import Util.Graphs.SCCTopSortedGraph;
@@ -47,6 +48,18 @@ import Util.Graphs.SCComponent;
  */
 public class FullyContextSensitiveBDD {
 
+    public static final boolean TRACE_ALL = false;
+
+    public static final boolean TRACE_WORKLIST  = false || TRACE_ALL;
+    public static final boolean TRACE_SUMMARIES = false || TRACE_ALL;
+    public static final boolean TRACE_CALLEE    = false || TRACE_ALL;
+    public static final boolean TRACE_OVERLAP   = false || TRACE_ALL;
+    public static final boolean TRACE_MATCHING  = false || TRACE_ALL;
+    public static final boolean TRACE_TRIMMING  = false || TRACE_ALL;
+    public static final boolean TRACE_TIMES     = false || TRACE_ALL;
+
+    public static final boolean USE_CHA = false;
+
     public static void main(String[] args) {
         HostedVM.initialize();
         
@@ -55,8 +68,17 @@ public class FullyContextSensitiveBDD {
         jq_Class c = (jq_Class) jq_Type.parseType(args[0]);
         c.prepare();
         Collection roots = Arrays.asList(c.getDeclaredStaticMethods());
-        CallGraph cg = new RootedCHACallGraph();
-        cg.setRoots(roots);
+        CallGraph cg;
+        if (USE_CHA) {
+            cg = new RootedCHACallGraph();
+            cg = new CachedCallGraph(cg);
+            cg.setRoots(roots);
+        } else {
+            BDDPointerAnalysis pa = new BDDPointerAnalysis();
+            pa.reset();
+            cg = pa.goIncremental(roots);
+            pa.done();
+        }
         /* Calculate the reachable methods once to touch each method,
            so that the set of types are stable. */
         cg.calculateReachableMethods(roots);
@@ -95,6 +117,7 @@ public class FullyContextSensitiveBDD {
     
     // the size of domains, can be changed to reflect the size of inputs
     int domainBits[] = {18, 18, 18, 18, 13};
+    int domainSpos[] = {0,  0,  0,  0,  0 };
     BDDDomain           V1, V2, V3, V4, FD;
 
     BDDPairing V1toV2;
@@ -133,7 +156,10 @@ public class FullyContextSensitiveBDD {
         V4 = bdd_domains[3];
         FD = bdd_domains[4];
         
-        // TODO: domain ordering.
+        int[] varorder = new int[bdd.varNum()];
+        makeVarOrdering(varorder);
+        bdd.setVarOrder(varorder);
+        bdd.enableReorder();
         
         V1toV2 = bdd.makePair(V1, V2);
         V2toV1 = bdd.makePair(V2, V1);
@@ -156,27 +182,19 @@ public class FullyContextSensitiveBDD {
         Set sccs = SCComponent.buildSCC(roots, navigator);
         SCCTopSortedGraph graph = SCCTopSortedGraph.topSort(sccs);
         
-        HashWorklist worklist = new HashWorklist(false);
-        
-        /* Put SCCs on worklist in reverse order. */
-        SCComponent scc = graph.getLast();
-        while (scc != null) {
-            worklist.push(scc);
-            scc = scc.prevTopSort();
-        }
-        
         System.out.println("Initial setup:\t\t"+(System.currentTimeMillis()-time)/1000.+" seconds.");
         
-        /* Iterate through worklist. */
-        while (!worklist.isEmpty()) {
-            System.out.println("Worklist size: "+worklist.size());
-            scc = (SCComponent) worklist.pull();
-            System.out.println("Pulled off of worklist: SCC"+scc.getId());
+        /* Walk through SCCs in reverse order. */
+        SCComponent scc = graph.getLast();
+        while (scc != null) {
+            if (TRACE_WORKLIST) System.out.println("Visiting SCC"+scc.getId());
             Object[] nodes = scc.nodes();
             boolean change = false;
             for (int i=0; i<nodes.length; ++i) {
                 jq_Method m = (jq_Method) nodes[i];
-                System.out.println("SCC"+scc.getId()+" node "+i+": "+m);
+                System.out.print(Strings.left("SCC"+scc.getId()+" node "+i+": "+m.getDeclaringClass().shortName()+"."+m.getName()+"() "+variableIndexMap.size()+" vars", 78));
+                if (TRACE_WORKLIST) System.out.println();
+                else System.out.print("\r");
                 if (m.getBytecode() == null) continue;
                 ControlFlowGraph cfg = CodeCache.getCode(m);
                 MethodSummary ms = MethodSummary.getSummary(cfg);
@@ -184,12 +202,12 @@ public class FullyContextSensitiveBDD {
                 BDDMethodSummary s = (BDDMethodSummary) bddSummaries.get(ms);
                 if (s == null) {
                     /* Not yet visited, build a new summary. */
-                    System.out.println("Building a new summary for "+m);
+                    if (TRACE_WORKLIST) System.out.println("Building a new summary for "+m);
                     bddSummaries.put(ms, s = new BDDMethodSummary(ms));
-                    System.out.println(s.toString());
+                    if (TRACE_SUMMARIES) System.out.println(s.toString());
                     change = true;
                 } else {
-                    System.out.println("Using existing summary for "+m);
+                    if (TRACE_WORKLIST) System.out.println("Using existing summary for "+m);
                 }
                 if (s.visit()) {
                     change = true;
@@ -198,17 +216,10 @@ public class FullyContextSensitiveBDD {
                     s.trim();
                 }
             }
-            if (change) {
-                System.out.println("Changed, adding predecessors to worklist.");
-                if (scc.isLoop()) {
-                    System.out.println("Adding self-loop to worklist: SCC"+scc.getId());
-                    worklist.push(scc);
-                }
-                for (int j=0; j<scc.prevLength(); ++j) {
-                    SCComponent prev = scc.prev(j);
-                    System.out.println("Adding to worklist: SCC"+prev.getId());
-                    worklist.push(prev);
-                }
+            if (scc.isLoop() && change) {
+                if (TRACE_WORKLIST) System.out.println("Loop changed, redoing SCC.");
+            } else {
+                scc = scc.prevTopSort();
             }
         }
     }
@@ -240,6 +251,14 @@ public class FullyContextSensitiveBDD {
         return (jq_Field) fieldIndexMap.get(index);
     }
     int getNewVariableIndex(ProgramLocation mc, jq_Method callee, int p) {
+        Object o = variableIndexMap.get(p);
+        while (o instanceof Triple) {
+            Triple t = (Triple) o;
+            int v = ((Integer) t.get(2)).intValue();
+            if (mc == t.get(0) && callee == t.get(1))
+                return v;
+            o = variableIndexMap.get(v);
+        }
         return variableIndexMap.get(new Triple(mc, callee, new Integer(p)));
     }
     
@@ -247,7 +266,7 @@ public class FullyContextSensitiveBDD {
     BDDMethodSummary getBDDSummary(MethodSummary ms) {
         BDDMethodSummary result = (BDDMethodSummary) bddSummaries.get(ms);
         if (result == null) {
-            System.out.println(" Recursive cycle? No summary for "+ms.getMethod());
+            if (TRACE_WORKLIST) System.out.println(" Recursive cycle? No summary for "+ms.getMethod());
             return null;
         }
         return result;
@@ -352,7 +371,7 @@ public class FullyContextSensitiveBDD {
             // find all call sites.
             for (Iterator i=ms.getCalls().iterator(); i.hasNext(); ) {
                 ProgramLocation mc = (ProgramLocation) i.next();
-                System.out.println("Visiting call site "+mc);
+                if (TRACE_CALLEE) System.out.println("Visiting call site "+mc);
                 
                 // build up an array of BDD's corresponding to each of the
                 // parameters passed into this method call.
@@ -367,24 +386,24 @@ public class FullyContextSensitiveBDD {
                         int m = getVariableIndex((Node) k.next());
                         params[j].orWith(V3.ithVar(m));
                     }
-                    System.out.println("Params["+j+"]="+params[j].toStringWithDomains(bdd, ts));
+                    if (TRACE_CALLEE) System.out.println("Params["+j+"]="+params[j].toStringWithDomains(bdd, ts));
                 }
                 
                 // find all targets of this call.
                 Collection targets = cg.getTargetMethods(mc);
                 for (Iterator j=targets.iterator(); j.hasNext(); ) {
                     jq_Method target = (jq_Method) j.next();
-                    System.out.print("Target "+target);
+                    if (TRACE_CALLEE) System.out.print("Target "+target);
                     if (target.getBytecode() == null) {
                         // TODO: calls to native methods.
-                        System.out.println("... native method!");
+                        if (TRACE_CALLEE) System.out.println("... native method!");
                         continue;
                     }
                     ControlFlowGraph cfg = CodeCache.getCode(target);
                     MethodSummary ms_callee = MethodSummary.getSummary(cfg);
                     BDDMethodSummary callee = getBDDSummary(ms_callee);
                     if (callee == null) {
-                        System.out.println("... no BDD summary yet!");
+                        if (TRACE_CALLEE) System.out.println("... no BDD summary yet!");
                         continue;
                     }
                     
@@ -394,7 +413,8 @@ public class FullyContextSensitiveBDD {
                     BDD renumbering14 = null;
                     BDD renumbering34 = null;
                     if (!overlap.equals(bdd.zero())) {
-                        System.out.println("... non-zero overlap! "+overlap.toStringWithDomains(bdd, ts));
+                        if (TRACE_OVERLAP) System.out.println("... non-zero overlap! "+overlap.toStringWithDomains(bdd, ts));
+                        long time = System.currentTimeMillis();
                         BDD callee_used = callee.nodes.id();
                         renumbering24 = bdd.zero();
                         for (;;) {
@@ -406,7 +426,7 @@ public class FullyContextSensitiveBDD {
                                 q = p;
                             } else {
                                 q = getNewVariableIndex(mc, target, p);
-                                System.out.println("Variable "+p+" overlaps, new variable index "+q);
+                                if (TRACE_OVERLAP) System.out.println("Variable "+p+" overlaps, new variable index "+q);
                             }
                             BDD qth = V4.ithVar(q);
                             qth.andWith(pth.id());
@@ -415,18 +435,26 @@ public class FullyContextSensitiveBDD {
                         }
                         renumbering14 = renumbering24.replace(V2toV1);
                         renumbering34 = renumbering24.replace(V2toV3);
+                        time = System.currentTimeMillis() - time;
+                        if (TRACE_TIMES || time > 400) System.out.println("Build renumbering: "+(time/1000.));
                     } else {
-                        System.out.println("...zero overlap!");
+                        if (TRACE_CALLEE) System.out.println("...zero overlap!");
                     }
+                    
                     overlap.free();
+                    long time = System.currentTimeMillis();
                     BDD callee_loads = renumber(callee.loads, renumbering14, V1.set(), V4toV1, renumbering24, V2.set(), V4toV2);
                     BDD callee_stores = renumber(callee.stores, renumbering24, V2.set(), V4toV2, renumbering34, V3.set(), V4toV3);
                     BDD callee_edges = renumber(callee.edges, renumbering14, V1.set(), V4toV1, renumbering34, V3.set(), V4toV3);
-                    //BDD callee_nodes = renumber(callee.nodes, renumbering24, V2.set(), V4toV2);
+                    /* BDD callee_nodes = renumber(callee.nodes, renumbering24, V2.set(), V4toV2); */
+                    time = System.currentTimeMillis() - time;
+                    if (TRACE_TIMES || time > 400) System.out.println("Renumbering: "+(time/1000.));
                     
-                    System.out.println("New loads: "+callee_loads.toStringWithDomains(bdd, ts));
-                    System.out.println("New stores: "+callee_stores.toStringWithDomains(bdd, ts));
-                    System.out.println("New edges: "+callee_edges.toStringWithDomains(bdd, ts));
+                    if (TRACE_CALLEE) { 
+                        System.out.println("New loads: "+callee_loads.toStringWithDomains(bdd, ts));
+                        System.out.println("New stores: "+callee_stores.toStringWithDomains(bdd, ts));
+                        System.out.println("New edges: "+callee_edges.toStringWithDomains(bdd, ts));
+                    }
                     
                     // incorporate callee operations into caller.
                     loads.orWith(callee_loads);
@@ -436,55 +464,69 @@ public class FullyContextSensitiveBDD {
                     // add edges for parameters.
                     for (int k=0; k<callee.ms.getNumOfParams(); ++k) {
                         ParamNode pn = callee.ms.getParamNode(k);
+                        if (pn == null) continue;
                         int pnIndex = getVariableIndex(pn);
                         BDD tmp = V1.ithVar(pnIndex);
                         BDD paramEdge = renumber(tmp, renumbering14, V1.set(), V4toV1);
                         tmp.free();
                         paramEdge.andWith(params[k].id());
-                        System.out.println("Param#"+k+" edges "+paramEdge.toStringWithDomains(bdd, ts));
+                        if (TRACE_CALLEE) System.out.println("Param#"+k+" edges "+paramEdge.toStringWithDomains(bdd, ts));
                         edges.orWith(paramEdge);
                     }
                     
                     // add edges for return value, if one exists.
                     if (((jq_Method)callee.ms.method).getReturnType().isReferenceType() &&
                         !callee.ms.returned.isEmpty()) {
-                        BDD retVal = bdd.zero();
-                        for (Iterator k=callee.ms.returned.iterator(); k.hasNext(); ) {
-                            int nIndex = getVariableIndex((Node) k.next());
-                            BDD tmp = V3.ithVar(nIndex);
-                            retVal.orWith(renumber(tmp, renumbering34, V3.set(), V4toV3));
-                            tmp.free();
+                        ReturnedNode rvn = (ReturnValueNode) ms.callToRVN.get(mc);
+                        if (rvn != null) {
+                            BDD retVal = bdd.zero();
+                            for (Iterator k=callee.ms.returned.iterator(); k.hasNext(); ) {
+                                int nIndex = getVariableIndex((Node) k.next());
+                                BDD tmp = V3.ithVar(nIndex);
+                                retVal.orWith(renumber(tmp, renumbering34, V3.set(), V4toV3));
+                                tmp.free();
+                            }
+                            int rIndex = getVariableIndex(rvn);
+                            retVal.andWith(V1.ithVar(rIndex));
+                            if (TRACE_CALLEE) System.out.println("Return value edges "+retVal.toStringWithDomains(bdd, ts));
+                            edges.orWith(retVal);
                         }
-                        int rIndex = getVariableIndex((ReturnValueNode) ms.callToRVN.get(mc));
-                        retVal.andWith(V1.ithVar(rIndex));
-                        System.out.println("Return value edges "+retVal.toStringWithDomains(bdd, ts));
-                        edges.orWith(retVal);
                     }
                     // add edges for thrown exception, if one exists.
                     if (!callee.ms.thrown.isEmpty()) {
-                        BDD retVal = bdd.zero();
-                        for (Iterator k=callee.ms.returned.iterator(); k.hasNext(); ) {
-                            int nIndex = getVariableIndex((Node) k.next());
-                            BDD tmp = V3.ithVar(nIndex);
-                            retVal.orWith(renumber(tmp, renumbering34, V3.set(), V4toV3));
-                            tmp.free();
+                        ReturnedNode rvn = (ThrownExceptionNode) ms.callToTEN.get(mc);
+                        if (rvn != null) {
+                            BDD retVal = bdd.zero();
+                            for (Iterator k=callee.ms.returned.iterator(); k.hasNext(); ) {
+                                int nIndex = getVariableIndex((Node) k.next());
+                                BDD tmp = V3.ithVar(nIndex);
+                                retVal.orWith(renumber(tmp, renumbering34, V3.set(), V4toV3));
+                                tmp.free();
+                            }
+                            int rIndex = getVariableIndex(rvn);
+                            retVal.andWith(V1.ithVar(rIndex));
+                            if (TRACE_CALLEE) System.out.println("Thrown exception edges "+retVal.toStringWithDomains(bdd, ts));
+                            edges.orWith(retVal);
                         }
-                        int rIndex = getVariableIndex((ThrownExceptionNode) ms.callToTEN.get(mc));
-                        retVal.andWith(V1.ithVar(rIndex));
-                        System.out.println("Thrown exception edges "+retVal.toStringWithDomains(bdd, ts));
-                        edges.orWith(retVal);
                     }
                     
+                    time = System.currentTimeMillis();
                     // propagate loads/stores.
                     matchEdges();
+                    time = System.currentTimeMillis() - time;
+                    if (TRACE_TIMES || time > 400) System.out.println("Matching edges: "+(time/1000.));
                     
+                    time = System.currentTimeMillis();
                     // recalculate reachable nodes.
                     transitiveClosure(nodes);
+                    time = System.currentTimeMillis() - time;
+                    if (TRACE_TIMES || time > 400) System.out.println("Transitive closure: "+(time/1000.));
                     
-                    System.out.println("Reachable nodes is now "+nodes.toStringWithDomains(bdd, ts));
+                    if (TRACE_CALLEE) System.out.println("Reachable nodes is now "+nodes.toStringWithDomains(bdd, ts));
                 }
                 for (int j=0; j<mc.getNumParams(); ++j) {
-                    params[j].free();
+                    if (params[j] != null)
+                        params[j].free();
                 }
             }
         }
@@ -634,7 +676,7 @@ public class FullyContextSensitiveBDD {
         }
         
         boolean matchEdges() {
-            System.out.println("Matching edges...");
+            if (TRACE_MATCHING) System.out.println("Matching edges...");
             
             BDD V2set, V4andFDset;
             V2set = V2.set();
@@ -662,7 +704,7 @@ public class FullyContextSensitiveBDD {
                     // Check for termination.
                     BDD newEdges24 = edges.replace(V1V3toV2V4);
                     boolean done = edges24.equals(newEdges24);
-                    if (!done) {
+                    if (TRACE_MATCHING && !done) {
                         System.out.println("New edges: "+newEdges24.apply(edges24, BDDFactory.diff).toStringWithDomains(bdd, ts));
                     }
                     edges24.free();
@@ -699,7 +741,7 @@ public class FullyContextSensitiveBDD {
                 // Check if any edges were added.
                 BDD newEdges24 = edges.replace(V1V3toV2V4);
                 boolean done = edges24.equals(newEdges24);
-                if (!done) {
+                if (TRACE_MATCHING && !done) {
                     System.out.println("New edges: "+newEdges24.apply(edges24, BDDFactory.diff).toStringWithDomains(bdd, ts));
                 }
                 edges24.free();
@@ -710,7 +752,7 @@ public class FullyContextSensitiveBDD {
             edges24.free();
             V2set.free();
             V4andFDset.free();
-            System.out.println("Done matching edges.");
+            if (TRACE_MATCHING) System.out.println("Done matching edges.");
             return change;
         }
         
@@ -758,10 +800,12 @@ public class FullyContextSensitiveBDD {
         }
         
         void trim(BDD set) {
-            System.out.println("Trimming edges outside of the set "+set.toStringWithDomains(bdd, ts));
-            System.out.println("Before: edges="+edges.nodeCount()+
-                                      " loads="+loads.nodeCount()+
-                                     " stores="+stores.nodeCount());
+            if (TRACE_TRIMMING) {
+                System.out.println("Trimming edges outside of the set "+set.toStringWithDomains(bdd, ts));
+                System.out.println("Before: edges="+edges.nodeCount()+
+                                          " loads="+loads.nodeCount()+
+                                         " stores="+stores.nodeCount());
+            }
                                      
             BDD v1_set = set.replace(V2toV1);
             BDD v3_set = set.replace(V2toV3);
@@ -779,9 +823,11 @@ public class FullyContextSensitiveBDD {
             v1_set.free();
             v3_set.free();
 
-            System.out.println("After: edges="+edges.nodeCount()+
-                                     " loads="+loads.nodeCount()+
-                                    " stores="+stores.nodeCount());
+            if (TRACE_TRIMMING) {
+                System.out.println("After: edges="+edges.nodeCount()+
+                                         " loads="+loads.nodeCount()+
+                                        " stores="+stores.nodeCount());
+            }
         }
     }
     
@@ -806,10 +852,118 @@ public class FullyContextSensitiveBDD {
             case 3:
                 return variableIndexMap.get(j).toString()+"("+j+")";
             case 4:
-                return fieldIndexMap.get(j).toString();
+                Object o = fieldIndexMap.get(j);
+                return o==null?"[]":o.toString();
             default:
                 throw new InternalError();
             }
+        }
+    }
+
+    void makeVarOrdering(int[] varorder) {
+        
+        boolean reverseLocal = System.getProperty("csbddreverse", "true").equals("true");
+        String ordering = System.getProperty("csbddordering", "FD_V4xV2xV3xV1");
+        
+        int varnum = bdd.varNum();
+        
+        int[][] localOrders = new int[domainBits.length][];
+        localOrders[0] = new int[domainBits[0]];
+        localOrders[1] = localOrders[0];
+        localOrders[2] = new int[domainBits[2]];
+        localOrders[3] = new int[domainBits[3]];
+        localOrders[4] = localOrders[3];
+        
+        for (int i=0, pos=0; i<domainBits.length; ++i) {
+            domainSpos[i] = pos;
+            pos += domainBits[i];
+            for (int j=0; j<domainBits[i]; ++j) {
+                if (reverseLocal) {
+                    localOrders[i][j] = domainBits[i] - j - 1;
+                } else {
+                    localOrders[i][j] = j;
+                }
+            }
+        }
+        
+        BDDDomain[] doms = new BDDDomain[domainBits.length];
+        
+        System.out.println("Ordering: "+ordering);
+        StringTokenizer st = new StringTokenizer(ordering, "x_", true);
+        int a = 0, idx = 0;
+        for (;;) {
+            String s = st.nextToken();
+            BDDDomain d;
+            if (s.equals("V1")) d = V1;
+            else if (s.equals("V2")) d = V2;
+            else if (s.equals("V3")) d = V3;
+            else if (s.equals("V4")) d = V4;
+            else if (s.equals("FD")) d = FD;
+            else {
+                Assert.UNREACHABLE("bad domain: "+s);
+                return;
+            }
+            doms[a] = d;
+            if (!st.hasMoreTokens()) {
+                idx = fillInVarIndices(localOrders, idx, varorder, a+1, doms);
+                break;
+            }
+            s = st.nextToken();
+            if (s.equals("_")) {
+                idx = fillInVarIndices(localOrders, idx, varorder, a+1, doms);
+                a = 0;
+            } else if (s.equals("x")) {
+                a++;
+            } else {
+                Assert.UNREACHABLE("bad token: "+s);
+                return;
+            }
+        }
+        
+        // according to the documentation of buddy, the default ordering is x1, y1, z1, x2, y2, z2, .....
+        // V1[0] -> default variable number
+        int[] outside2inside = new int[varnum];
+        doms[0] = V1; doms[1] = V2; doms[2] = V3; doms[3] = V4;
+        doms[4] = FD;
+        getVariableMap(outside2inside, doms, domainBits.length);
+        
+        remapping(varorder, outside2inside);
+    }
+    
+    int fillInVarIndices(int[][] localOrders, int start, int[] varorder, int numdoms, BDDDomain[] doms) {
+        int totalvars = 0;
+        int[] bits = new int[numdoms];
+        for (int i = 0; i < numdoms; i++) {
+            totalvars += domainBits[doms[i].getIndex()];
+            bits[i] = 0;
+        }
+
+        for (int i = start, n = start + totalvars, j = 0; i < n; i++) {
+            int dji = doms[j].getIndex();
+            while (bits[j] >= domainBits[dji]) {
+                j = (j + 1) % numdoms;
+            }
+            varorder[i] = domainSpos[dji] + localOrders[dji][bits[j]++];
+            j = (j + 1) % numdoms;
+        }
+
+        return start + totalvars;
+    }
+
+    static void getVariableMap(int[] map, BDDDomain[] doms, int domnum) {
+        int idx = 0;
+        for (int var = 0; var < domnum; var++) {
+            int[] vars = doms[var].vars();
+            for (int i = 0; i < vars.length; i++) {
+                map[idx++] = vars[i];
+            }
+        }
+    }
+    
+    /* remap according to a map */
+    static void remapping(int[] varorder, int[] maps) {
+        for (int i = 0; i < varorder.length; i++) {
+            varorder[i] = maps[varorder[i]];
         }
     }
     
