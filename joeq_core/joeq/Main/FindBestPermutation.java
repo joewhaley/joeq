@@ -48,6 +48,7 @@ public class FindBestPermutation extends Thread {
     
     public void run() {
         BDDFactory bdd = JavaFactory.init(1000000, 50000);
+        bdd.setMaxIncrease(250000);
         readBDDConfig(bdd);
         int[] varorder = bdd.makeVarOrdering(reverse, orderingToTry);
         bdd.setVarOrder(varorder);
@@ -114,7 +115,8 @@ public class FindBestPermutation extends Thread {
     
     public static void readBDDConfig(BDDFactory bdd) {
         try {
-            BufferedReader in = new BufferedReader(new FileReader("bdd.cfg"));
+            String fileName = System.getProperty("bddcfg", "bdd.cfg");
+            BufferedReader in = new BufferedReader(new FileReader(fileName));
             for (;;) {
                 String s = in.readLine();
                 if (s == null || s.equals("")) break;

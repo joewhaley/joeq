@@ -20,6 +20,8 @@ import joeq.Compiler.Quad.Operand.MethodOperand;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.Operand.TargetOperand;
 import joeq.Compiler.Quad.Operand.TypeOperand;
+import joeq.Compiler.Quad.RegisterFactory.Register;
+import joeq.Compiler.Quad.SSA.EnterSSA;
 import joeq.Util.Assert;
 import joeq.Util.Collections.IndexMap;
 
@@ -38,7 +40,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
     IndexMap methodMap;
     IndexMap opMap;
     IndexMap quadMap;
-    IndexMap regMap;
+    //IndexMap regMap;
     IndexMap memberMap;
     IndexMap constantMap;
     
@@ -54,16 +56,20 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
     
     int totalQuads;
     
-    boolean GLOBAL_QUAD_NUMBERS = true;
+    boolean GLOBAL_QUAD_NUMBERS = !System.getProperty("globalquadnumber", "yes").equals("no");
+    boolean SSA = !System.getProperty("ssa", "no").equals("no");
     
     public BuildBDDIR() {
         if (!GLOBAL_QUAD_NUMBERS) {
             quadBits = 13;
         }
+        if (SSA) {
+            regBits = 10;
+        }
         methodMap = new IndexMap("method");
         opMap = new IndexMap("op");
         quadMap = new IndexMap("quad");
-        regMap = new IndexMap("reg");
+        //regMap = new IndexMap("reg");
         memberMap = new IndexMap("member");
         constantMap = new IndexMap("constant");
         bdd = BDDFactory.init(1000000, 50000);
@@ -95,6 +101,9 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
      * @see joeq.Compiler.Quad.ControlFlowGraphVisitor#visitCFG(joeq.Compiler.Quad.ControlFlowGraph)
      */
     public void visitCFG(ControlFlowGraph cfg) {
+        if (SSA) {
+            new EnterSSA().visitCFG(cfg);
+        }
         QuadIterator i = new QuadIterator(cfg);
         int methodID = methodMap.get(cfg.getMethod());
         
@@ -146,7 +155,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         System.out.println("methodMap size: " + methodMap.size());
         System.out.println("opMap size: " + opMap.size());
         System.out.println("quadMap size: " + quadMap.size());
-        System.out.println("regMap size: " + regMap.size());
+        //System.out.println("regMap size: " + regMap.size());
         System.out.println("memberMap size: " + memberMap.size());
         System.out.println("constantMap size: " + constantMap.size());
         
@@ -160,20 +169,39 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
     
     public static boolean ZERO_FIELDS = false;
     
+    public int getRegisterID(Register r) {
+        return r.getNumber()+1;
+    }
+    
+    public int getConstantID(Object c) {
+        return constantMap.get(c);
+    }
+    
+    public int getQuadID(Quad r) {
+        return quadMap.get(r)+1;
+    }
+    
+    public int getMemberID(Object r) {
+        return memberMap.get(r)+1;
+    }
+    
     void handleQuad(Quad q) {
         int quadID=0, opcID=0, destID=0, src1ID=0, src2ID=0, constantID=0, fallthroughID=0, targetID=0, memberID=0;
         quadID = quadMap.get(q)+1;
         opcID = opMap.get(q.getOperator())+1;
         Iterator i = q.getDefinedRegisters().iterator();
         if (i.hasNext()) {
-            destID = regMap.get(((RegisterOperand)i.next()).getRegister().toString())+1;
+            destID = getRegisterID(((RegisterOperand)i.next()).getRegister());
             Assert._assert(!i.hasNext());
         }
         i = q.getUsedRegisters().iterator();
         if (i.hasNext()) {
-            src1ID = regMap.get(((RegisterOperand)i.next()).getRegister().toString())+1;
+            RegisterOperand rop;
+            rop = (RegisterOperand) i.next();
+            if (rop != null) src1ID = getRegisterID(rop.getRegister());
             if (i.hasNext()) {
-                src2ID = regMap.get(((RegisterOperand)i.next()).getRegister().toString())+1;
+                rop = (RegisterOperand) i.next();
+                if (rop != null) src2ID = getRegisterID(rop.getRegister());
             }
         }
         i = q.getAllOperands().iterator();
@@ -181,15 +209,15 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
             Operand op = (Operand) i.next();
             if (op instanceof RegisterOperand) continue;
             else if (op instanceof ConstOperand) {
-                constantID = constantMap.get(((ConstOperand) op).getWrapped());
+                constantID = getConstantID(((ConstOperand) op).getWrapped());
             } else if (op instanceof TargetOperand) {
-                targetID = quadMap.get(((TargetOperand) op).getTarget().getQuad(0))+1;
+                targetID = getQuadID(((TargetOperand) op).getTarget().getQuad(0));
             } else if (op instanceof FieldOperand) {
-                memberID = memberMap.get(((FieldOperand) op).getField())+1;
+                memberID = getMemberID(((FieldOperand) op).getField());
             } else if (op instanceof MethodOperand) {
-                memberID = memberMap.get(((MethodOperand) op).getMethod())+1;
+                memberID = getMemberID(((MethodOperand) op).getMethod());
             } else if (op instanceof TypeOperand) {
-                memberID = memberMap.get(((TypeOperand) op).getType())+1;
+                memberID = getMemberID(((TypeOperand) op).getType());
             }
         }
         if (ZERO_FIELDS || quadID != 0) currentQuad.andWith(quad.ithVar(quadID));
@@ -208,7 +236,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         System.out.println("Var order: "+varOrderDesc);
         dumpMap(quadMap, "quad.map");
         dumpMap(opMap, "op.map");
-        dumpMap(regMap, "reg.map");
+        //dumpMap(regMap, "reg.map");
         dumpMap(memberMap, "member.map");
         dumpMap(constantMap, "constant.map");
         dumpBDDConfig("bdd.cfg");
