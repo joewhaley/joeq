@@ -9,6 +9,7 @@ import joeq.Compiler.Analysis.IPSSA.IPSSABuilder;
 import joeq.Util.Assert;
 
 import org.sf.javabdd.BDD;
+import org.sf.javabdd.BDDFactory;
 import org.sf.javabdd.TypedBDDFactory.TypedBDD;
 
 class ParameterAliasing {
@@ -16,8 +17,10 @@ class ParameterAliasing {
      * Finds parameter aliases under different constexts.
      * */
     public static class ParamAliasFinder extends IPSSABuilder.Application {
-        PAResults _paResults = null;
-        PA _r = null;
+        PAResults _paResults        = null;
+        PA _r                       = null;
+        private boolean _verbose    = false;
+        private boolean _RECURSIVE  = true;
          
         public ParamAliasFinder() {
             super(null, null, null);
@@ -40,7 +43,10 @@ class ParameterAliasing {
         
         void visitMethod(jq_Method m){
             //if(getBuilder().skipMethod(m)) return;
-            System.out.println("Processing method " + m.toString());
+            //if(m.toString().startsWith("java.")) return;
+            if(_verbose) {
+                System.out.println("Processing method " + m.toString());
+            }
             MethodSummary ms = MethodSummary.getSummary(m);
             if(ms == null) return;
             if(ms.getNumOfParams() < 2) return;
@@ -49,66 +55,109 @@ class ParameterAliasing {
             _r = _paResults.getPAResults();
  
             // get formal arguments for the method
-            BDD methodBDD = _r.M.ithVar(_paResults.getMethodIndex(m));
-            BDD params = _r.formal.relprod(methodBDD, _r.Mset);
+            BDD methodBDD = _r.M.ithVar(_paResults.getMethodIndex(m));  // 
+            BDD params    = _r.formal.relprod(methodBDD, _r.Mset);      // V1xZ
             //System.out.println("params: " + params.toStringWithDomains());
-            Assert._assert(_paResults.r.H1cset != null);
+            Assert._assert(_r.H1cset != null);
             Assert._assert(_r.H1.set() != null);
             Assert._assert(_r.Z.set() != null);
-            TypedBDD contexts = (TypedBDD)params.relprod(_r.vP, 
-                _r.V1.set().andWith(_r.H1cset).andWith(_r.H1.set()).andWith(_r.Z.set()) );
-            //System.out.println("contexts: \n" + paResults.toString(contexts, -1));
+            TypedBDD contexts =                                         // V1c
+                (TypedBDD)params.relprod ( _r.vP, _r.V1.set().and(_r.H1cset).andWith(_r.H1.set()).andWith(_r.Z.set()) );
+            //System.out.println("contexts: \n" + contexts.toStringWithDomains());
             //TypedBDD pointsTo = (TypedBDD)params.relprod(r.vP, r.V1cH1cset);
             //System.out.println("pointsTo: \n" + paResults.toString(pointsTo, -1));
+            
+            /** Iterate through all the relevant contexts for this method */            
             int i = 0;
             ModifiableBoolean printedInfo = new ModifiableBoolean(false);
             long contextSize = (long)contexts.satCount(_r.V1cset);
-            for(Iterator contextIter = contexts.iterator(); contextIter.hasNext(); i++) {
+            boolean foundAliasing = false;
+            for ( Iterator contextIter = contexts.iterator(); contextIter.hasNext() && i < 2; i++ ) {
+                // for this particular context #
                 TypedBDD context = (TypedBDD)contextIter.next();
+                //System.out.println("context: \n" + context.toStringWithDomains());
 
-                processContext(m, ms, params, context, contextSize, printedInfo, i);
+                Assert._assert(_r.vPfilter != null);
+                TypedBDD pointsTo  = (TypedBDD)_r.vP.and(_r.vPfilter.id());   // restrict by the type filter
+                TypedBDD t2 = (TypedBDD)params.relprod(pointsTo, _r.V1.set().and(_r.V1cset));
+                pointsTo.free();
+                pointsTo = t2;
+                //t = (TypedBDD)t2.exist(_r.Z.set());
+                
+                //System.out.println("pointsTo 1: " + pointsTo.toStringWithDomains());
+                if(_RECURSIVE) {
+                    pointsTo = (TypedBDD) calculateHeapConnectivity(pointsTo);
+                }
+                //System.out.println("pointsTo 2: " + pointsTo.toStringWithDomains());
+
+                //System.out.println("t: " + t.toStringWithDomains());
+
+                //t: H1xH1cxZ
+                foundAliasing |= processContext(m, ms, pointsTo, context, printedInfo);
             }
+            if ( contextSize > 2 && foundAliasing ) {
+                System.out.println("\t\t(A total of " + contextSize + " contexts) ");  
+            }
+        }        
+        
+        public BDD calculateHeapConnectivity(BDD h1) {
+            BDD result = _r.bdd.zero();
+            result.orWith(h1.id());
+            BDD h1h2 = _r.hP.exist(_r.Fset);
+            for (;;) {
+                BDD b = h1.relprod(h1h2, _r.H1set);
+                b.replaceWith(_r.H2toH1);
+                b.applyWith(result.id(), BDDFactory.diff);
+                result.orWith(b.id());
+                if (b.isZero()) break;
+                h1 = b;
+                //++heapConnectivitySteps;
+            }
+            h1h2.free();
+            
+            return result;
         }
         
-        void processContext(jq_Method m, MethodSummary ms, BDD params, TypedBDD context, long contextSize, ModifiableBoolean printedInfo, int i){
-            //System.out.println("context #" + i + ": " + context.toStringWithDomains());
-                
-            Assert._assert(_r.vPfilter != null);
-            TypedBDD t = (TypedBDD)_r.vP.and(_r.vPfilter.id());   // restrict by the type filter
-            TypedBDD t2 = (TypedBDD)params.relprod(t, _r.V1.set());
-            t.free();
-            t = t2;
-                
-            //TypedBDD t = (TypedBDD)params.relprod(r.vP, r.V1.set());
-            TypedBDD pointsTo = (TypedBDD)context.relprod(t, _r.V1cset.andWith(_r.H1cset));                
+        /**
+         *  Process context #i in the set of contexts.
+         * */
+        boolean processContext(jq_Method m, MethodSummary ms, BDD t, TypedBDD context, ModifiableBoolean printedInfo){
+            boolean result = false;  
+
+            TypedBDD pointsTo = (TypedBDD)context.relprod(t, (TypedBDD) _r.V1cset.and(_r.H1cset));   // H1xZ
+            //System.out.println("pointsTo: " + pointsTo.toStringWithDomains());
             t.free();
                 
             t = (TypedBDD)pointsTo.exist(_r.Z.set());
             //System.out.println(t.satCount() + ", " + pointsTo.satCount());
             int pointsToSize = (int)pointsTo.satCount(_r.H1.set().and(_r.Zset));
-            int projSize     = (int)t.satCount( _r.H1.set() ); 
+            int projSize     = (int)t.satCount( _r.H1.set() );
             if(projSize < pointsToSize) {
                 if(!printedInfo.getValue()) {
-                    printMethodInfo(m, ms);
+                    //printMethodInfo(m, ms);
                     printedInfo.setValue(true);
-                }                
-                ProgramLocation loc = new ProgramLocation.BCProgramLocation(m, 0);
-                System.out.println("\tPotential aliasing in context #" + i + " calling " + m.toString() + " at " + 
-                    loc.getSourceFile() + ":" + loc.getLineNumber());
-                if(contextSize > 5) {
-                    System.out.println("\t\t(A total of " + contextSize + " contexts) \n");  
-                    return;
                 }
+                ProgramLocation loc = new ProgramLocation.BCProgramLocation(m, 0);
+                System.out.println("\tPotential aliasing in context calling " + m.toString() + " at " + 
+                    loc.getSourceFile() + ":" + loc.getLineNumber());
+                //System.out.println(pointsTo.toStringWithDomains() + ", " + t.toStringWithDomains());
+                result = true;
+                //b.applyWith(result.id(), BDDFactory.diff);
             }
             t.free();
+            
+            return result;
         }
         
         void printMethodInfo(jq_Method m, MethodSummary ms) {
-            System.out.println("Processing method " + m + ":\t[" + ms.getNumOfParams() + "]");
+            if(_verbose = false) {
+                System.out.println("Processing method " + m + ":\t[" + ms.getNumOfParams() + "]");
+            }
+            
             for(int i = 0; i < ms.getNumOfParams(); i++) {
                 ParamNode paramNode = ms.getParamNode(i);
                 System.out.print("\t\t");
-                System.out.println(paramNode == null ? "<null>" : paramNode.toString_long());
+                System.out.println("Param: " + paramNode == null ? "<null>" : paramNode.toString_long());
             }
             System.out.print("\n");
         }
