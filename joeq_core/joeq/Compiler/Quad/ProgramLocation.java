@@ -115,7 +115,9 @@ public abstract class ProgramLocation {
         public int getNumParams() { return Invoke.getParamList(q).length(); }
         public AndersenType getParamType(int i) { return Invoke.getParamList(q).get(i).getType(); }
         
-        public int hashCode() { return (q==null)?-1:q.hashCode(); }
+        public int hashCode() {
+            return (q==null)?-1:q.hashCode();
+        }
         public boolean equals(QuadProgramLocation that) { return this.q == that.q; }
         public boolean equals(Object o) { if (o instanceof QuadProgramLocation) return equals((QuadProgramLocation)o); return false; }
         
@@ -261,7 +263,9 @@ public abstract class ProgramLocation {
             return bc[bcIndex] == jq_ClassFileConstants.jbc_INVOKEINTERFACE;
         }
 
-        public int hashCode() { return super.m.hashCode() ^ bcIndex; }
+        public int hashCode() {
+            return super.m.hashCode() ^ bcIndex;
+        }
         public boolean equals(BCProgramLocation that) {
             return this.bcIndex == that.bcIndex && super.m == that.m;
         }
