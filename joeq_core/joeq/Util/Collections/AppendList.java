@@ -1,9 +1,6 @@
-/*
- * Created on May 26, 2003
- *
- * To change the template for this generated file go to
- * Window>Preferences>Java>Code Generation>Code and Comments
- */
+// MultiMapSet.java, created Fri May 26 23:58:36 2003 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Util.Collections;
 
 import java.lang.reflect.Array;
@@ -15,10 +12,10 @@ import java.util.ListIterator;
 import java.util.NoSuchElementException;
 
 /**
+ * A list which is two lists appended together.
+ * 
  * @author John Whaley
- *
- * To change the template for this generated type comment go to
- * Window>Preferences>Java>Code Generation>Code and Comments
+ * @version $Id$
  */
 public class AppendList implements List {
 

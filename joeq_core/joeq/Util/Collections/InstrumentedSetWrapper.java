@@ -19,6 +19,8 @@ import joeq.Util.Assert;
 import joeq.Util.Strings;
 
 /**
+ * Allows you to profile set operations.
+ * 
  * @author John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */

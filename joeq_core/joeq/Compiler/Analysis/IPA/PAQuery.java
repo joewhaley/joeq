@@ -1,4 +1,8 @@
+// PAQuery.java, created Oct 21, 2003 12:56:45 AM by livshits
+// Copyright (C) 2003 Vladimir Livshits
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Analysis.IPA;
+
 import java.io.PrintStream;
 import java.util.Iterator;
 

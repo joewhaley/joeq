@@ -16,7 +16,8 @@ import joeq.Util.IO.Textualizable;
 import joeq.Util.IO.Textualizer;
 
 /**
- * IndexMap
+ * An IndexMap provides a fast mapping between elements and (integer)
+ * indices.
  * 
  * @author John Whaley
  * @version $Id$

@@ -3,7 +3,10 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Util;
 
-/*
+/**
+ * An atomic counter class.  Provides atomic increment and reset
+ * functionality.
+ * 
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */

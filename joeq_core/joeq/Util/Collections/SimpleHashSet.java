@@ -15,6 +15,8 @@ import java.util.Set;
 import joeq.Util.Assert;
 
 /**
+ * A simple implementation of a hash map.
+ * 
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */

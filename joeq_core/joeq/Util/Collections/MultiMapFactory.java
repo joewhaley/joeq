@@ -3,7 +3,8 @@
 // Licensed under the terms of the GNU GPL; see COPYING for details.
 package joeq.Util.Collections;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Map;
 /** <code>MultiMapFactory</code> is a <code>MultiMap</code> generator.
  *  Subclasses should implement constructions of specific types of
  *  <code>MultiMap</code>s.

@@ -1,3 +1,6 @@
+// PAResultSelector.java, created Nov 3, 2003 12:34:24 AM by joewhaley
+// Copyright (C) 2003 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Analysis.IPA;
 
 import java.util.Collection;

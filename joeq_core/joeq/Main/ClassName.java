@@ -1,9 +1,6 @@
-/*
- * Created on Oct 24, 2003
- *
- * To change the template for this generated file go to
- * Window - Preferences - Java - Code Generation - Code and Comments
- */
+// ClassDump.java, created Oct 24 23:23:21 2003 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Main;
 
 import java.io.DataInputStream;
@@ -16,10 +13,10 @@ import joeq.Class.jq_ClassFileConstants;
 import joeq.Class.jq_ConstantPool;
 
 /**
+ * Extracts the class name from the class file(s) given on the command line.
+ * 
  * @author jwhaley
- *
- * To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Generation - Code and Comments
+ * @version $Id$
  */
 public class ClassName implements jq_ClassFileConstants {
 

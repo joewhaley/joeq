@@ -4,6 +4,8 @@
 package joeq.UTF;
 
 /**
+ * Indicates a UTF format error.
+ * 
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */

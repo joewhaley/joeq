@@ -1,3 +1,6 @@
+// PAMethodSummary.java, created Oct 21, 2003 12:56:45 AM by joewhaley
+// Copyright (C) 2003 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Analysis.IPA;
 
 import java.io.PrintStream;

@@ -1,6 +1,6 @@
-//PointerAnalysisResults.java, created Mon Sep 22 17:38:25 2003 by joewhaley
-//Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
-//Licensed under the terms of the GNU LGPL; see COPYING for details.
+// PointerAnalysisResults.java, created Mon Sep 22 17:38:25 2003 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Analysis.IPA;
 
 import java.util.Set;
