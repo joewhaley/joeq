@@ -52,7 +52,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
-public class BootImage extends Unsafe.Remapper implements ObjectLayout {
+public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConstants {
 
     public static /*final*/ boolean TRACE = false;
     public static final PrintStream out = System.out;
@@ -1088,18 +1088,18 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout {
     
     public void writeELF(OutputStream out) throws IOException {
         final int datasize = heapCurrent;
-        ELFFile f = new ELFFile(ELFFile.ELFDATA2LSB, ELFFile.ET_REL, ELFFile.EM_386, 0);
+        ELFOutputStream f = new ELFOutputStream(ELFDATA2LSB, ET_REL, EM_386, 0, out);
         f.setLittleEndian();
         Section.NullSection empty = new Section.NullSection();
-        Section.StrTabSection shstrtab = new Section.StrTabSection(".shstrtab", 0);
-        Section.StrTabSection strtab = new Section.StrTabSection(".strtab", 0);
-        Section.SymTabSection symtab = new Section.SymTabSection(".symtab", 0, strtab);
+        Section.StrTabSection shstrtab = new Section.StrTabSection(".shstrtab", 0, 0);
+        Section.StrTabSection strtab = new Section.StrTabSection(".strtab", 0, 0);
+        Section.SymTabSection symtab = new Section.SymTabSection(".symtab", 0, 0, strtab);
         Section.ProgBitsSection text = new TextSection();
         Section.ProgBitsSection data = new DataSection();
-        Section.RelSection textrel = new Section.RelSection(".textrel", 0, symtab, text);
-        Section.RelSection datarel = new Section.RelSection(".datarel", 0, symtab, data);
+        Section.RelSection textrel = new Section.RelSection(".textrel", 0, 0, symtab, text);
+        Section.RelSection datarel = new Section.RelSection(".datarel", 0, 0, symtab, data);
         f.setSectionHeaderStringTable(shstrtab);
-        f.setSymbolStringTable(strtab);
+        //f.setSymbolStringTable(strtab);
         f.addSection(empty);
         f.addSection(shstrtab);
         f.addSection(strtab);
@@ -1154,30 +1154,35 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout {
             }
         }
         
-        f.write(out);
+        f.write();
         
         out.flush();
     }
 
     class TextSection extends Section.ProgBitsSection {
         TextSection() {
-            super(".text", Section.SHF_ALLOC | Section.SHF_EXECINSTR | Section.SHF_WRITE);
+            super(".text", Section.SHF_ALLOC | Section.SHF_EXECINSTR | Section.SHF_WRITE, 0);
         }
         public int getSize() { return bca.size(); }
         public int getAddrAlign() { return 64; }
-        public void writeData(ELFFile file, OutputStream out) throws IOException {
+        public void writeData(ELF file) throws IOException {
+            OutputStream out = ((ELFOutputStream)file).getOutputStream();
             bca.dump(out);
+        }
+        public void load(Section.UnloadedSection s, ELF file) throws IOException {
+            jq.UNREACHABLE();
         }
     }
 
     class DataSection extends Section.ProgBitsSection {
         DataSection() {
-            super(".data", Section.SHF_ALLOC | Section.SHF_WRITE);
+            super(".data", Section.SHF_ALLOC | Section.SHF_WRITE, 0);
         }
         public int getSize() { return heapCurrent; }
         public int getAddrAlign() { return 64; }
-        public void writeData(ELFFile file, OutputStream out) throws IOException {
+        public void writeData(ELF file) throws IOException {
             try {
+                OutputStream out = ((ELFOutputStream)file).getOutputStream();
                 dumpHeap(out);
             } catch (UnknownObjectException x) {
                 Object u = x.getObject();
@@ -1185,6 +1190,9 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout {
                 findReferencePath(u, x, visited);
                 throw x;
             }
+        }
+        public void load(Section.UnloadedSection s, ELF file) throws IOException {
+            jq.UNREACHABLE();
         }
     }
 }
