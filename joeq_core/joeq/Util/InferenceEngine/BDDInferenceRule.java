@@ -682,6 +682,9 @@ public class BDDInferenceRule extends InferenceRule {
             try {
                 fbo.init(b1, b2, b3, BDDFactory.and);
             } catch (IOException x) {
+                System.err.println("IO Exception occurred: "+x);
+                fbo.cleanup();
+                fbo = null;
             }
         }
         String bestVarOrder = origVarOrder;
