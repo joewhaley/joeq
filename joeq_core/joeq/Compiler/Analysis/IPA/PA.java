@@ -2227,7 +2227,6 @@ public class PA {
                 visitMethod(method);
             } else {
                 System.err.println("NULL method in handleNewTargets");
-                continue;
             }
             targets.applyWith(target, BDDFactory.diff);
         }
