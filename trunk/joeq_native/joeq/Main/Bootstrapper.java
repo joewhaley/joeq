@@ -234,31 +234,33 @@ public abstract class Bootstrapper implements ObjectLayout {
         // initialize the set of boot types
         jq.boot_types = classset;
         
-        ArrayList class_list = new ArrayList(classset);
-        Collections.sort(class_list, new Comparator() {
-            public int compare(Object o1, Object o2) {
-                return ((jq_Type)o1).getDesc().toString().compareTo(((jq_Type)o2).getDesc().toString());
+        if (false) {
+            ArrayList class_list = new ArrayList(classset);
+            Collections.sort(class_list, new Comparator() {
+                public int compare(Object o1, Object o2) {
+                    return ((jq_Type)o1).getDesc().toString().compareTo(((jq_Type)o2).getDesc().toString());
+                }
+                public boolean equals(Object o1, Object o2) { return o1 == o2; }
+            });
+            System.out.println("Types:");
+            Set packages = new LinearSet();
+            Iterator it = class_list.iterator();
+            while (it.hasNext()) {
+                jq_Type t = (jq_Type)it.next();
+                String s = t.getDesc().toString();
+                System.out.println(s);
+                if (s.charAt(0) == 'L') {
+                    int index = s.lastIndexOf('/');
+                    if (index == -1) s = "";
+                    else s = s.substring(1, index+1);
+                    packages.add(s);
+                }
             }
-            public boolean equals(Object o1, Object o2) { return o1 == o2; }
-        });
-        System.out.println("Types:");
-        Set packages = new LinearSet();
-        Iterator it = class_list.iterator();
-        while (it.hasNext()) {
-            jq_Type t = (jq_Type)it.next();
-            String s = t.getDesc().toString();
-            System.out.println(s);
-            if (s.charAt(0) == 'L') {
-                int index = s.lastIndexOf('/');
-                if (index == -1) s = "";
-                else s = s.substring(1, index+1);
-                packages.add(s);
+            System.out.println("Packages:");
+            it = packages.iterator();
+            while (it.hasNext()) {
+                System.out.println("L"+it.next()+"*");
             }
-        }
-        System.out.println("Packages:");
-        it = packages.iterator();
-        while (it.hasNext()) {
-            System.out.println("L"+it.next()+"*");
         }
         
         // enable allocations
@@ -276,7 +278,7 @@ public abstract class Bootstrapper implements ObjectLayout {
         
         // initialize the static fields for all the necessary types
         starttime = System.currentTimeMillis();
-        it = classset.iterator();
+        Iterator it = classset.iterator();
         while (it.hasNext()) {
             jq_Type t = (jq_Type)it.next();
             jq.assert(t.isPrepared());
