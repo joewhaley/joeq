@@ -171,7 +171,7 @@ public interface Operand {
         public byte getCondition() { return condition; }
         public void setCondition(byte o) { this.condition = o; }
         public String toString() { return BytecodeVisitor.cmpopnames[condition]; }
-        public Operand copy() { return new UnnecessaryGuardOperand(); }
+        public Operand copy() { return new ConditionOperand(condition); }
         public void attachToQuad(Quad q) { jq.assert(instruction == null); instruction = q; }
         public Quad getQuad() { return instruction; }
         public boolean isSimilar(Operand that) { return that instanceof ConditionOperand && ((ConditionOperand)that).getCondition() == this.getCondition(); }
@@ -301,7 +301,9 @@ public interface Operand {
         }
         public Operand copy() {
             RegisterOperand[] t2 = new RegisterOperand[this.params.length];
-            System.arraycopy(this.params, 0, t2, 0, t2.length);
+	    for (int i=0; i<t2.length; ++i) {
+		t2[i] = (RegisterOperand)this.params[i].copy();
+	    }
             return new ParamListOperand(t2);
         }
         public void attachToQuad(Quad q) { jq.assert(instruction == null); instruction = q; }

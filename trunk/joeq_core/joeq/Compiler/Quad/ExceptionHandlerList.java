@@ -27,10 +27,12 @@ import Util.Templates.ListWrapper;
 public class ExceptionHandlerList extends java.util.AbstractList implements List.ExceptionHandler {
 
     /** The exception handler. */
-    private final ExceptionHandler exception_handler;
+    private ExceptionHandler exception_handler;
     /** The parent exception handler set. */
     ExceptionHandlerList parent;
     
+    ExceptionHandlerList() {}
+
     /** Creates new ExceptionHandlerList containing the given exception handler and no parent set.
      * @param exception_handler  exception handler to include in the set. */
     public ExceptionHandlerList(ExceptionHandler exception_handler) {
@@ -48,9 +50,11 @@ public class ExceptionHandlerList extends java.util.AbstractList implements List
     /** Return the handler in this set.  Doesn't include parent handlers.
      * @return  the handler in this set, without parent handlers. */    
     public ExceptionHandler getHandler() { return exception_handler; }
+    public void setHandler(ExceptionHandler eh) { exception_handler = eh; }
     /** Return the parent set of exception handlers, or null if this set doesn't have a parent.
      * @return  the parent set of exception handlers, or null if this set doesn't have a parent. */
     public ExceptionHandlerList getParent() { return parent; }
+    public void setParent(ExceptionHandlerList p) { parent = p; }
     
     /** Returns the first exception handler in the list that MUST catch an
      * exception of the given type, or null if there is no handler that must catch it.

@@ -7,11 +7,21 @@
 
 package Compil3r.Quad;
 import Clazz.jq_Method;
+import Clazz.jq_Type;
+import Clazz.jq_Primitive;
+import Bootstrap.PrimordialClassLoader;
 import Util.FilterIterator;
 import Util.Templates.List;
 import Util.Templates.ListWrapper;
 import Util.Templates.ListIterator;
 import Util.Templates.UnmodifiableList;
+import Operand.TargetOperand;
+import Operand.BasicBlockTableOperand;
+import Operand.RegisterOperand;
+import Operand.ParamListOperand;
+import RegisterFactory.Register;
+import java.util.HashMap;
+import jq;
 
 /**
  * Control flow graph for the Quad format.
@@ -96,7 +106,7 @@ public class ControlFlowGraph {
     public int getNumberOfBasicBlocks() { return bb_counter+1; }
 
     /** Returns a new id number for a quad. */
-    int getNewQuadID() { return ++quad_counter; }
+    public int getNewQuadID() { return ++quad_counter; }
     
     /** Returns an iteration of the basic blocks in this graph in reverse post order.
      * @see  BasicBlockIterator
@@ -243,7 +253,162 @@ public class ControlFlowGraph {
 	    sb.append(bb.fullDump());
 	}
         sb.append("Exception handlers: "+exception_handlers);
+	sb.append("\nRegister factory: "+rf);
 	return sb.toString();
+    }
+
+    private ExceptionHandler copier(HashMap map, ExceptionHandler this_eh) {
+	ExceptionHandler that_eh = (ExceptionHandler)map.get(this_eh);
+	if (that_eh != null) return that_eh;
+	map.put(this_eh, that_eh = new ExceptionHandler(this_eh.getExceptionType()));
+	that_eh.setEntry(copier(map, this_eh.getEntry()));
+	for (ListIterator.BasicBlock li =
+	         this_eh.getHandledBasicBlocks().basicBlockIterator();
+	     li.hasNext(); ) {
+	    that_eh.addHandledBasicBlock(copier(map, li.nextBasicBlock()));
+	}
+	return that_eh;
+    }
+
+    private ExceptionHandlerList copier(HashMap map, ExceptionHandlerList this_ehl) {
+	if (this_ehl == null || this_ehl.size() == 0) return null;
+	ExceptionHandlerList that_ehl =	(ExceptionHandlerList)map.get(this_ehl);
+	if (that_ehl != null) return that_ehl;
+	map.put(this_ehl, that_ehl = new ExceptionHandlerList());
+	that_ehl.setHandler(copier(map, this_ehl.getHandler()));
+	that_ehl.setParent(copier(map, this_ehl.getParent()));
+	return that_ehl;
+    }
+
+    private void updateOperand(HashMap map, Operand op) {
+	if (op == null) return;
+	if (op instanceof TargetOperand) {
+	    ((TargetOperand)op).setTarget(copier(map, ((TargetOperand)op).getTarget()));
+	} else if (op instanceof BasicBlockTableOperand) {
+	    BasicBlockTableOperand bt = (BasicBlockTableOperand)op;
+	    for (int i=0; i<bt.size(); ++i) {
+		bt.set(i, copier(map, bt.get(i)));
+	    }
+	} else if (op instanceof RegisterOperand) {
+	    RegisterOperand rop = (RegisterOperand)op;
+	    Register r = (Register)map.get(rop.getRegister());
+	    if (r == null) {
+		if (rop.getRegister().getNumber() == -1) {
+		    r = RegisterFactory.makeGuardReg().getRegister();
+		    map.put(rop.getRegister(), r);
+		} else {
+		    jq.UNREACHABLE(rop.toString());
+		}
+	    } else {
+		rop.setRegister(r);
+	    }
+	} else if (op instanceof ParamListOperand) {
+	    ParamListOperand plo = (ParamListOperand)op;
+	    for (int i=0; i<plo.length(); ++i) {
+		updateOperand(map, plo.get(i));
+	    }
+	}
+    }
+
+    private Quad copier(HashMap map, Quad this_q) {
+	Quad that_q = (Quad)map.get(this_q);
+	if (that_q != null) return that_q;
+	map.put(this_q, that_q = this_q.copy(++quad_counter));
+	updateOperand(map, that_q.getOp1());
+	updateOperand(map, that_q.getOp2());
+	updateOperand(map, that_q.getOp3());
+	updateOperand(map, that_q.getOp4());
+	return that_q;
+    }
+
+    private BasicBlock copier(HashMap map, BasicBlock this_bb) {
+	BasicBlock that_bb = (BasicBlock)map.get(this_bb);
+	if (that_bb != null) return that_bb;
+	that_bb = BasicBlock.createBasicBlock(++this.bb_counter,
+					      this_bb.getNumberOfPredecessors(),
+					      this_bb.getNumberOfSuccessors(),
+					      this_bb.size());
+	map.put(this_bb, that_bb);
+	ExceptionHandlerList that_ehl = copier(map, this_bb.getExceptionHandlers());
+	that_bb.setExceptionHandlerList(that_ehl);
+	for (ListIterator.BasicBlock bbs = this_bb.getSuccessors().basicBlockIterator();
+	     bbs.hasNext(); ) {
+	    that_bb.addSuccessor(copier(map, bbs.nextBasicBlock()));
+	}
+	for (ListIterator.BasicBlock bbs = this_bb.getPredecessors().basicBlockIterator();
+	     bbs.hasNext(); ) {
+	    that_bb.addPredecessor(copier(map, bbs.nextBasicBlock()));
+	}
+	for (ListIterator.Quad qs = this_bb.iterator();
+	     qs.hasNext(); ) {
+	    that_bb.appendQuad(copier(map, qs.nextQuad()));
+	}
+	return that_bb;
+    }
+
+    static void addRegistersToMap(HashMap map, RegisterFactory from,
+				  RegisterFactory to, jq_Type type) {
+	int n = from.getLocalSize(type);
+	jq.assert(n == to.getLocalSize(type));
+	for (int i=0; i<n; ++i) {
+	    map.put(from.getLocal(i, type), to.getLocal(i, type));
+	}
+	n = from.getStackSize(type);
+	jq.assert(n == to.getStackSize(type));
+	for (int i=0; i<n; ++i) {
+	    map.put(from.getStack(i, type), to.getStack(i, type));
+	}
+    }
+
+    static void addRegistersToMap(HashMap map, RegisterFactory from,
+				  RegisterFactory to) {
+	addRegistersToMap(map, from, to, jq_Primitive.INT);
+	addRegistersToMap(map, from, to, jq_Primitive.FLOAT);
+	addRegistersToMap(map, from, to, jq_Primitive.LONG);
+	addRegistersToMap(map, from, to, jq_Primitive.DOUBLE);
+	addRegistersToMap(map, from, to, PrimordialClassLoader.getJavaLangObject());
+    }
+
+    /** Merges the given control flow graph into this control flow graph.
+     * Doesn't modify the given control flow graph.  A copy of the
+     * given control flow graph (with appropriate renumberings) is
+     * returned.
+     */
+    public ControlFlowGraph merge(ControlFlowGraph from) {
+	RegisterFactory that_rf = this.rf.merge(from.rf);
+	ControlFlowGraph that = new ControlFlowGraph(from.getMethod(),
+						     from.exit().getNumberOfPredecessors(), from.exception_handlers.size(), that_rf);
+	HashMap map = new HashMap();
+	map.put(from.entry(), that.entry());
+	map.put(from.exit(), that.exit());
+
+	addRegistersToMap(map, from.getRegisterFactory(), that_rf);
+
+	for (ListIterator.ExceptionHandler exs = from.getExceptionHandlers().exceptionHandlerIterator();
+	     exs.hasNext(); ) {
+	    that.addExceptionHandler(copier(map, exs.nextExceptionHandler()));
+	}
+
+	that.entry().addSuccessor(copier(map, from.entry().getFallthroughSuccessor()));
+	for (ListIterator.BasicBlock bbs = from.exit().getPredecessors().basicBlockIterator();
+	     bbs.hasNext(); ) {
+	    that.exit().addPredecessor(copier(map, bbs.nextBasicBlock()));
+	}
+
+	that.bb_counter = this.bb_counter;
+	that.quad_counter = this.quad_counter;
+
+	return that;
+    }
+
+    public void appendExceptionHandlers(ExceptionHandlerList ehl) {
+	if (ehl == null || ehl.size() == 0) return;
+	ListIterator.BasicBlock l = reversePostOrderIterator();
+	while (l.hasNext()) {
+	    BasicBlock bb = l.nextBasicBlock();
+	    if (bb.isEntry() || bb.isExit()) continue;
+	    bb.appendExceptionHandlerList(ehl);
+	}
     }
 
 }
