@@ -144,6 +144,10 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         chkState(STATE_LOADED);
         return static_methods;
     }
+    public final jq_StaticMethod getDeclaredStaticMethod(jq_NameAndDesc nd) {
+        chkState(STATE_LOADED);
+        return (jq_StaticMethod)findByNameAndDesc(static_methods, nd);
+    }
     public final jq_StaticMethod getStaticMethod(jq_NameAndDesc nd) {
         chkState(STATE_LOADED);
         jq_StaticMethod m = (jq_StaticMethod)findByNameAndDesc(static_methods, nd);
@@ -181,7 +185,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
     }
     public final jq_ClassInitializer getClassInitializer() {
         chkState(STATE_LOADED);
-        return (jq_ClassInitializer)getStaticMethod(new jq_NameAndDesc(Utf8.get("<clinit>"), Utf8.get("()V")));
+        return (jq_ClassInitializer)getDeclaredStaticMethod(new jq_NameAndDesc(Utf8.get("<clinit>"), Utf8.get("()V")));
     }
     public final Object[] getCP() {
         chkState(STATE_LOADING2);
@@ -1560,7 +1564,7 @@ uphere2:
         }
     }
 
-    public void invokeclinit() throws ExceptionInInitializerError {
+    private void invokeclinit() throws ExceptionInInitializerError {
         try {
             state = STATE_CLSINITRUNNING;
             jq_ClassInitializer clinit = this.getClassInitializer();
