@@ -140,32 +140,8 @@ public class ObjectTraverser {
                 return null;
         }
         else if (c == PrimordialClassLoader.loader.getBSType("Ljava/util/zip/Inflater;")) {
-            if (fieldName.equals("mode"))
-                return null;
-            if (fieldName.equals("readAdler"))
-                return null;
-            if (fieldName.equals("neededBits"))
-                return null;
-            if (fieldName.equals("repLength"))
-                return null;
-            if (fieldName.equals("repDist"))
-                return null;
-            if (fieldName.equals("uncomprLen"))
-                return null;
-            if (fieldName.equals("isLastBlock"))
-                return null;
-            if (fieldName.equals("totalOut"))
-                return null;
-            if (fieldName.equals("totalIn"))
-                return null;
-            if (fieldName.equals("nowrap"))
-                return null;
-            if (fieldName.equals("adler"))
-                return null;
-            if (fieldName.equals("input"))
-                return null;
-            if (fieldName.equals("outputWindow"))
-                return null;
+        	// Inflater objects are reinitialized on VM startup.
+        	return null;
         }
 
     	return NO_OBJECT;
