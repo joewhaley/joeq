@@ -1,29 +1,32 @@
-// stdafx.h : include file for standard system include files,
-//  or project specific include files that are used frequently, but
-//      are changed infrequently
-//
+// All include files for the joeq virtual machine.
+// Be careful!  joeq compiles on many compilers/OS's, so be sure that your
+// changes here do not break the build for other compilers/OS's.
 
-#if !defined(AFX_STDAFX_H__B24BD5A2_E719_11D4_882B_00008632F0B0__INCLUDED_)
-#define AFX_STDAFX_H__B24BD5A2_E719_11D4_882B_00008632F0B0__INCLUDED_
-
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
-
-#include <stdio.h>
+// Includes that are standard for all compilers.
+#include <stdio.h>          // printf, etc...
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <stddef.h>
 #include <stdlib.h>
 
+#if defined(__MINGW32__)
+//#undef __STRICT_ANSI__
+//#undef RC_INVOKED
+#include <excpt.h>
+#endif
+
+// Includes for WIN32 systems.
 #if defined(WIN32)
 
-#define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
-#define _WIN32_WINNT 0x0400		// Include SetWaitableTimer
+#define WIN32_LEAN_AND_MEAN     // Exclude rarely-used stuff from Windows headers
+#define _WIN32_WINNT 0x0400     // Include SetWaitableTimer
 
-#include "windows.h"
+#include <windows.h>
 #include <io.h>
-#include <direct.h>
+//#if !defined(__CYGWIN32__)	// cygwin doesn't have this file
+#include <direct.h>		// _getdcwd, _getdrive, _mkdir
+//#endif
+
 
 #if defined(__BORLANDC__)
 #include <dos.h>
@@ -67,6 +70,16 @@
 #include <semaphore.h>
 #endif
 
+#if defined(__CYGWIN32__)
+#include <pthread.h>
+#include <signal.h>
+#include <sys/wait.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <semaphore.h>
+#include "context.h"
+#endif
+
 #include "native.h"
 #include "handler.h"
 
@@ -85,8 +98,3 @@ typedef struct _NativeThread {
 void __stdcall trap_handler(void*, int);
 void __stdcall ctrl_break_handler();
 void __stdcall threadSwitch(void*);
-
-//{{AFX_INSERT_LOCATION}}
-// Microsoft Visual C++ will insert additional declarations immediately before the previous line.
-
-#endif // !defined(AFX_STDAFX_H__B24BD5A2_E719_11D4_882B_00008632F0B0__INCLUDED_)
