@@ -154,7 +154,7 @@ public class BDDPointerAnalysis {
     void makeVarOrdering(int[] varorder) {
         
         boolean reverseLocal = System.getProperty("bddreverse", "true").equals("true");
-        String ordering = System.getProperty("bddordering", "H2xFD_V2xV1_H1");
+        String ordering = System.getProperty("bddordering", "FD_H2_V2xV1_H1");
         
         int varnum = bdd.varNum();
         
