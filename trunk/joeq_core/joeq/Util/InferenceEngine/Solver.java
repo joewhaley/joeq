@@ -9,6 +9,7 @@ import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -24,7 +25,8 @@ import java.util.StringTokenizer;
  */
 public abstract class Solver {
     
-    boolean TRACE = true;
+    boolean NOISY = true;
+    boolean TRACE = System.getProperty("tracesolve") != null;
     PrintStream out = System.out;
     
     abstract InferenceRule createInferenceRule(List/*<RuleTerm>*/ top, RuleTerm bottom);
@@ -42,6 +44,7 @@ public abstract class Solver {
     Map/*<String,FieldDomain>*/ nameToFieldDomain;
     Map/*<String,Relation>*/ nameToRelation;
     List/*<InferenceRule>*/ rules;
+    Collection/*<Relation>*/ relationsToDump;
     
     public static void main(String[] args) throws IOException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         
@@ -53,27 +56,35 @@ public abstract class Solver {
         Solver dis;
         dis = (Solver) Class.forName(solverName).newInstance();
         
-        if (dis.TRACE) dis.out.println("Loading field domains from \""+fdFilename+"\"");
+        if (dis.NOISY) dis.out.println("Loading field domains from \""+fdFilename+"\"");
         BufferedReader in = new BufferedReader(new FileReader(fdFilename));
         dis.readFieldDomains(in);
         in.close();
-        if (dis.TRACE) dis.out.println("Done loading "+dis.nameToFieldDomain.size()+" field domains.");
+        if (dis.NOISY) dis.out.println("Done loading "+dis.nameToFieldDomain.size()+" field domains.");
         
-        if (dis.TRACE) dis.out.println("Loading relations from \""+relationsFilename+"\"");
+        if (dis.NOISY) dis.out.println("Loading relations from \""+relationsFilename+"\"");
         in = new BufferedReader(new FileReader(relationsFilename));
         dis.readRelations(in);
         in.close();
-        if (dis.TRACE) dis.out.println("Done loading "+dis.nameToRelation.size()+" relations.");
+        if (dis.NOISY) dis.out.println("Done loading "+dis.nameToRelation.size()+" relations.");
         
-        if (dis.TRACE) dis.out.println("Loading rules from \""+rulesFilename+"\"");
+        if (dis.NOISY) dis.out.println("Loading rules from \""+rulesFilename+"\"");
         in = new BufferedReader(new FileReader(rulesFilename));
         dis.readRules(in);
         in.close();
-        if (dis.TRACE) dis.out.println("Done loading "+dis.rules.size()+" rules.");
+        if (dis.NOISY) dis.out.println("Done loading "+dis.rules.size()+" rules.");
         
+        if (dis.NOISY) dis.out.println("Loading initial relations...");
         dis.loadInitialRelations();
+        if (dis.NOISY) dis.out.println("done.");
         
+        if (dis.NOISY) dis.out.println("Solving...");
         dis.solve();
+        if (dis.NOISY) dis.out.println("done.");
+        
+        if (dis.NOISY) dis.out.println("Saving results...");
+        dis.saveResults();
+        if (dis.NOISY) dis.out.println("done.");
     }
     
     void readFieldDomains(BufferedReader in) throws IOException {
@@ -105,6 +116,7 @@ public abstract class Solver {
     
     void readRelations(BufferedReader in) throws IOException {
         nameToRelation = new HashMap();
+        relationsToDump = new LinkedList();
         for (;;) {
             String s = in.readLine();
             if (s == null) break;
@@ -137,6 +149,12 @@ public abstract class Solver {
             if (!comma.equals(",")) throw new IllegalArgumentException("Expected \",\", got \""+fName+"\"");
         }
         Relation r = createRelation(name, fieldNames, fieldDomains);
+        if (st.hasMoreTokens()) {
+            String option = st.nextToken();
+            if (option.equals("save")) {
+                relationsToDump.add(r);
+            }
+        }
         return r;
     }
     
@@ -216,4 +234,12 @@ public abstract class Solver {
             r.load();
         }
     }
+    
+    void saveResults() throws IOException {
+        for (Iterator i = relationsToDump.iterator(); i.hasNext(); ) {
+            Relation r = (Relation) i.next();
+            r.save();
+        }
+    }
+
 }

@@ -45,7 +45,7 @@ public class BDDSolver extends Solver {
     
     BDDDomain allocateBDDDomain(FieldDomain dom) {
         int version = getBDDDomains(dom).size();
-        int bits = BigInteger.valueOf(dom.size).bitLength();
+        int bits = BigInteger.valueOf(dom.size-1).bitLength();
         BDDDomain d = makeDomain(dom.name+version, bits);
         if (TRACE) out.println("Allocated BDD domain "+d+", size "+dom.size+", "+bits+" bits.");
         fielddomainsToBDDdomains.add(dom, d);
