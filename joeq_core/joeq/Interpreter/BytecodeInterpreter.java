@@ -9,14 +9,11 @@ import joeq.Class.jq_Class;
 import joeq.Class.jq_InstanceField;
 import joeq.Class.jq_InstanceMethod;
 import joeq.Class.jq_Method;
-import joeq.Class.jq_Primitive;
 import joeq.Class.jq_Reference;
 import joeq.Class.jq_StaticField;
 import joeq.Class.jq_TryCatchBC;
 import joeq.Class.jq_Type;
 import joeq.Compiler.BytecodeAnalysis.BytecodeVisitor;
-import joeq.Memory.Address;
-import joeq.Memory.HeapAddress;
 import joeq.Runtime.Reflection;
 import joeq.Util.Assert;
 

@@ -16,7 +16,6 @@ import joeq.Class.jq_Class;
 import joeq.Class.jq_InstanceMethod;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_Type;
-import joeq.Compiler.Analysis.IPSSA.Apps.FindOwnership.SimpleOwnershipFinder.OwnershipValue;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.CodeCache;
 import joeq.Compiler.Quad.ControlFlowGraph;
