@@ -87,6 +87,19 @@ public class BDDRelation extends Relation {
             domains.add(d);
             domainSet.andWith(d.set());
         }
+        boolean is_equiv = solver.equivalenceRelations.values().contains(this);
+        boolean is_nequiv = solver.notequivalenceRelations.values().contains(this);
+        if (is_equiv || is_nequiv) {
+            BDDDomain d1 = (BDDDomain) domains.get(0);
+            BDDDomain d2 = (BDDDomain) domains.get(1);
+            relation.free();
+            BDD b = d1.buildEquals(d2);
+            if (is_nequiv) {
+                relation = b.not(); b.free();
+            } else {
+                relation = b;
+            }
+        }
     }
     
     public void load() throws IOException {
