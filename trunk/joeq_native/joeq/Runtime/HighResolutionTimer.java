@@ -107,7 +107,7 @@ public class HighResolutionTimer {
     
     public static void boot() {
         Library kernel32 = SystemInterface.registerLibrary("kernel32");
-        Library c = SystemInterface.registerLibrary("c");
+        Library c = SystemInterface.registerLibrary("libc.so.6");
 
         if (kernel32 != null) {
             QueryPerformanceFrequency = kernel32.resolve("QueryPerformanceFrequency");
