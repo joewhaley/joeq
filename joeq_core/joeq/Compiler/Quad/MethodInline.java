@@ -162,16 +162,18 @@ public class MethodInline implements ControlFlowGraphVisitor {
 
     }
     
+    /**
+     * 	Inline methods whose munged names are read from file methodNameFile (methods.txt). 
+     * */
     public static class InlineSelectedCalls implements Oracle {        
         protected CallGraph cg;
         protected HashMap/*<String,null>*/ knownMethods = new HashMap(10);
+        public static final String methodNameFile = "methods.txt";
           
         public InlineSelectedCalls(CallGraph cg) {
             this.cg = cg;
             initializeNames();
         }
-    
-        String methodNameFile = "methods.txt";
         
 		private void initializeNames() {			
 			BufferedReader r = null;
