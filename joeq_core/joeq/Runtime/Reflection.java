@@ -463,7 +463,9 @@ uphere:
             jq.Assert(params.length == args.length+offset);
             for (int i=0; i<args.length; ++i) {
                 jq_Type c = params[i+offset];
-                if (c.isReferenceType()) {
+                if (c.isAddressType()) {
+                    jq.TODO();
+                } else if (c.isReferenceType()) {
                     if (args[i] != null && !TypeCheck.isAssignable(jq_Reference.getTypeOf(args[i]), c))
                         throw new IllegalArgumentException(args[i].getClass()+" is not assignable to "+c);
                     Unsafe.pushArgA(HeapAddress.addressOf(args[i]));
@@ -522,7 +524,9 @@ uphere:
             jq.Assert(params.length == args.length+offset);
             for (int i=0; i<args.length; ++i) {
                 jq_Type c = params[i+offset];
-                if (c.isReferenceType()) {
+                if (c.isAddressType()) {
+                    jq.TODO();
+                } else if (c.isReferenceType()) {
                     if (args[i] != null && !TypeCheck.isAssignable(jq_Reference.getTypeOf(args[i]), c))
                         throw new IllegalArgumentException(args[i].getClass()+" is not assignable to "+c);
                     Unsafe.pushArgA(HeapAddress.addressOf(args[i]));
@@ -660,7 +664,7 @@ uphere:
         return Double.longBitsToDouble(getfield_L(o, f));
     }
     public static Object getfield_A(Object o, jq_InstanceField f) {
-        jq.Assert(f.getType().isReferenceType());
+        jq.Assert(f.getType().isReferenceType() && !f.getType().isAddressType());
         if (jq.Bootstrapping) return obj_trav.getInstanceFieldValue(o, f);
         jq.Assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
         return ((HeapAddress) HeapAddress.addressOf(o).offset(f.getOffset()).peek()).asObject();
@@ -769,9 +773,18 @@ uphere:
             obj_trav.putInstanceFieldValue(o, f, v);
             return;
         }
-        jq.Assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
         jq.Assert(v == null || TypeCheck.isAssignable(jq_Reference.getTypeOf(v), f.getType()));
+        jq.Assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
         HeapAddress.addressOf(o).offset(f.getOffset()).poke(HeapAddress.addressOf(v));
+    }
+    public static void putfield_P(Object o, jq_InstanceField f, Address v) {
+        jq.Assert(f.getType().isAddressType());
+        if (jq.Bootstrapping) {
+            obj_trav.putInstanceFieldValue(o, f, v);
+            return;
+        }
+        jq.Assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
+        HeapAddress.addressOf(o).offset(f.getOffset()).poke(v);
     }
     public static void putfield_B(Object o, jq_InstanceField f, byte v) {
         jq.Assert(f.getType() == jq_Primitive.BYTE);
@@ -848,7 +861,7 @@ uphere:
         return Double.longBitsToDouble(getstatic_L(f));
     }
     public static Object getstatic_A(jq_StaticField f) {
-        jq.Assert(f.getType().isReferenceType());
+        jq.Assert(f.getType().isReferenceType() && !f.getType().isAddressType());
         if (jq.Bootstrapping) return obj_trav.getStaticFieldValue(f);
         return ((HeapAddress) f.getAddress().peek()).asObject();
     }
@@ -915,6 +928,7 @@ uphere:
     }
     public static void putstatic_A(jq_StaticField f, Object v) {
         jq.Assert(v == null || TypeCheck.isAssignable(jq_Reference.getTypeOf(v), f.getType()));
+        jq.Assert(!f.getType().isAddressType());
         f.getDeclaringClass().setStaticData(f, v);
     }
     public static void putstatic_P(jq_StaticField f, Address v) {
@@ -944,7 +958,11 @@ uphere:
         return HeapAddress.addressOf(o).offset(Allocator.ObjectLayout.ARRAY_LENGTH_OFFSET).peek4();
     }
     public static Object arrayload_A(Object[] o, int i) {
-        return obj_trav.mapValue(o[i]);
+        if (jq.Bootstrapping) return obj_trav.mapValue(o[i]);
+        return o[i];
+    }
+    public static Address arrayload_R(Address[] o, int i) {
+        return o[i];
     }
     
     public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LRun_Time/Reflection;");
