@@ -102,7 +102,7 @@ public class ClassInvariantAnalysis
          */
         public Collection prev(Object node) {
             jq_Method callee = (jq_Method) node;
-            Collection s = cg.getCallers(callee);
+            Collection s = cg.getCallerMethods(callee);
             LinkedList ll = new LinkedList();
             for (Iterator i = s.iterator(); i.hasNext(); ) {
                 jq_Method caller = (jq_Method) i.next();
