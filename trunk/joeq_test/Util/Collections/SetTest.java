@@ -335,7 +335,7 @@ public class SetTest extends TestCase {
         assertTrue(Arrays.asList(oa).contains(NULL));
 
         try {
-            ac.toArray(null);
+            ac.toArray((String[]) null);
             fail("should throw a NullPointerException");
         } catch (NullPointerException ne) {
             assertTrue(true);
