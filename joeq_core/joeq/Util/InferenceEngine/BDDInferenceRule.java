@@ -598,6 +598,7 @@ public class BDDInferenceRule extends InferenceRule {
     }
     
     static int MAX_ORDERS = 25;
+    static int MAX_DIFF = 10000;
     
     String findBestDomainOrder(BDDFactory bdd,
                                List domains,
@@ -655,26 +656,31 @@ public class BDDInferenceRule extends InferenceRule {
         if (ranking.size() <= 1) {
             if (ranking.size() == 0) System.out.println("Warning: no valid permutations for "+domains);
             return varOrder2;
-        }
-        if (ranking.size() > MAX_ORDERS) {
-            System.out.println("Too many orders!  Skipping all but the best "+MAX_ORDERS);
-            Iterator i = ranking.iterator();
-            for (int j = 0; j < MAX_ORDERS; ++j) {
-                i.next();
+        } else {
+            if (ranking.size() > MAX_ORDERS) {
+                System.out.println("Too many orders ("+ranking.size()+"), skipping all but the best "+MAX_ORDERS+".");
             }
+            Iterator i = ranking.iterator();
+            PermData pd = (PermData) i.next();
+            long bestTime = pd.time;
+            int j = 1;
             while (i.hasNext()) {
-                PermData pd = (PermData) i.next();
-                if (pd.time < 50) continue;
-                solver.registerOrderConstraint(pd.order, Long.MAX_VALUE);
+                pd = (PermData) i.next();
+                if (j > MAX_ORDERS && pd.time > 50 || pd.time > bestTime + MAX_DIFF) {
+                    System.out.println(pd.order+" too slow ("+pd.time+" ms)");
+                    solver.registerOrderConstraint(pd.order, Long.MAX_VALUE);
+                    i.remove();
+                }
+                ++j;
             }
         }
         FindBestOrder fbo = null;
         System.out.println("Trying "+ranking.size()+" permutations of "+domains);
         if (true) {
+            fbo = new FindBestOrder(solver.BDDNODES, solver.BDDCACHE, solver.BDDNODES/2,
+                Long.MAX_VALUE, 5000);
             try {
-                fbo = new FindBestOrder(b1, b2, b3, BDDFactory.and,
-                        solver.BDDNODES, solver.BDDCACHE, solver.BDDNODES/2,
-                        Long.MAX_VALUE, 5000);
+                fbo.init(b1, b2, b3, BDDFactory.and);
             } catch (IOException x) {
             }
         }
@@ -710,6 +716,7 @@ public class BDDInferenceRule extends InferenceRule {
                 System.out.println("New best order: "+bestOrder+" time: "+bestTime+" ms");
             }
         }
+        if (fbo != null) fbo.cleanup();
         System.out.println("Best relative order: "+bestOrder);
         System.out.println("Best variable ordering: "+bestVarOrder);
         return bestVarOrder;
