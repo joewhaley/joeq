@@ -1,8 +1,6 @@
 // UnmodifiableList.java, created Wed Mar  5  0:26:32 2003 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
-// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Util.Templates;
 
 import Util.Collections.UnmodifiableListIterator;
@@ -54,7 +52,9 @@ public abstract class UnmodifiableList {
         public RegisterOperand(Compil3r.Quad.Operand.RegisterOperand[] c) { a = c; }
         public int size() { return a.length; }
         public Object get(int index) { return getRegisterOperand(index); }
+        public Compil3r.Quad.Operand getOperand(int index) { return getRegisterOperand(index); }
         public Compil3r.Quad.Operand.RegisterOperand getRegisterOperand(int index) { return a[index]; }
+        public ListIterator.Operand operandIterator() { return new Iterator(); }
         public ListIterator.RegisterOperand registerOperandIterator() { return new Iterator(); }
         private class Iterator extends UnmodifiableListIterator implements ListIterator.RegisterOperand {
             private int i = -1;
@@ -63,14 +63,42 @@ public abstract class UnmodifiableList {
             public int nextIndex() { return i+1; }
             public int previousIndex() { return i; }
             public Object next() { return a[++i]; }
+            public Compil3r.Quad.Operand nextOperand() { return a[++i]; }
             public Compil3r.Quad.Operand.RegisterOperand nextRegisterOperand() { return a[++i]; }
             public Object previous() { return a[i--]; }
+            public Compil3r.Quad.Operand previousOperand() { return a[i--]; }
             public Compil3r.Quad.Operand.RegisterOperand previousRegisterOperand() { return a[i--]; }
         }
         public static final RegisterOperand EMPTY = new RegisterOperand(new Compil3r.Quad.Operand.RegisterOperand[0]);
         public static RegisterOperand getEmptyList() { return EMPTY; }
     }
         
+    public static class Operand extends java.util.AbstractList implements List.Operand {
+        private final Compil3r.Quad.Operand[] a;
+        public Operand(Compil3r.Quad.Operand c) { a = new Compil3r.Quad.Operand[] { c }; }
+        public Operand(Compil3r.Quad.Operand c1, Compil3r.Quad.Operand c2) { a = new Compil3r.Quad.Operand[] { c1, c2 }; }
+        public Operand(Compil3r.Quad.Operand c1, Compil3r.Quad.Operand c2, Compil3r.Quad.Operand c3) { a = new Compil3r.Quad.Operand[] { c1, c2, c3 }; }
+        public Operand(Compil3r.Quad.Operand c1, Compil3r.Quad.Operand c2, Compil3r.Quad.Operand c3, Compil3r.Quad.Operand c4) { a = new Compil3r.Quad.Operand[] { c1, c2, c3, c4 }; }
+        public Operand(Compil3r.Quad.Operand[] c) { a = c; }
+        public int size() { return a.length; }
+        public Object get(int index) { return getOperand(index); }
+        public Compil3r.Quad.Operand getOperand(int index) { return a[index]; }
+        public ListIterator.Operand operandIterator() { return new Iterator(); }
+        private class Iterator extends UnmodifiableListIterator implements ListIterator.Operand {
+            private int i = -1;
+            public boolean hasNext() { return i+1 < a.length; }
+            public boolean hasPrevious() { return i >= 0; }
+            public int nextIndex() { return i+1; }
+            public int previousIndex() { return i; }
+            public Object next() { return a[++i]; }
+            public Compil3r.Quad.Operand nextOperand() { return a[++i]; }
+            public Object previous() { return a[i--]; }
+            public Compil3r.Quad.Operand previousOperand() { return a[i--]; }
+        }
+        public static final Operand EMPTY = new Operand(new Compil3r.Quad.Operand[0]);
+        public static Operand getEmptyList() { return EMPTY; }
+    }
+   
     public static class BasicBlock extends java.util.AbstractList implements List.BasicBlock {
         private final Compil3r.Quad.BasicBlock[] a;
         public BasicBlock(Compil3r.Quad.BasicBlock[] c) { a = c; }

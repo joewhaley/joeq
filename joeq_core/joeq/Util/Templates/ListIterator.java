@@ -49,7 +49,11 @@ public abstract class ListIterator {
         Compil3r.Quad.Quad nextQuad();
         Compil3r.Quad.Quad previousQuad();
     }
-    public interface RegisterOperand extends java.util.ListIterator {
+    public interface Operand extends java.util.ListIterator {
+        Compil3r.Quad.Operand nextOperand();
+        Compil3r.Quad.Operand previousOperand();
+    }
+    public interface RegisterOperand extends Operand {
         Compil3r.Quad.Operand.RegisterOperand nextRegisterOperand();
         Compil3r.Quad.Operand.RegisterOperand previousRegisterOperand();
     }

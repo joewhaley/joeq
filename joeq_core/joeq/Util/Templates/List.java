@@ -49,7 +49,11 @@ public abstract class List {
         Compil3r.Quad.Quad getQuad(int index);
         ListIterator.Quad quadIterator();
     }
-    public interface RegisterOperand extends java.util.List {
+    public interface Operand extends java.util.List {
+        Compil3r.Quad.Operand getOperand(int index);
+        ListIterator.Operand operandIterator();
+    }
+    public interface RegisterOperand extends Operand {
         Compil3r.Quad.Operand.RegisterOperand getRegisterOperand(int index);
         ListIterator.RegisterOperand registerOperandIterator();
     }
