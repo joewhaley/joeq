@@ -4,6 +4,7 @@
 package Util.Collections;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 
@@ -58,6 +59,14 @@ public class IndexMap {
     
     public Iterator iterator() {
         return list.iterator();
+    }
+    
+    public boolean addAll(Collection c) {
+        int before = size();
+        for (Iterator i=c.iterator(); i.hasNext(); ) {
+            get(i.next());
+        }
+        return before != size();
     }
     
 }
