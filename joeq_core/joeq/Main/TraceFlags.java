@@ -15,6 +15,7 @@ import java.util.Iterator;
 import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Array;
 import Clazz.jq_Class;
+import Clazz.jq_Member;
 import Clazz.jq_Primitive;
 import Clazz.jq_StaticField;
 import Clazz.jq_Type;
@@ -157,6 +158,24 @@ public abstract class TraceFlags {
             callMethod("Clazz.Delegates", "setDefaultCompiler", args[++i]);
             return i+1;
         }
+        if (args[i].equalsIgnoreCase("-UseCompilerForClasses")) {
+            Object d = callMethod("Clazz.Delegates", "getCompiler", args[++i]);
+            Object c = new jq_Member.FilterByShortClassName(args[++i]);
+            callMethod("Clazz.Delegates", "registerCompiler",
+                       new Class[] { Util.Collections.FilterIterator.Filter.class, 
+                                     Compil3r.Compil3rInterface.class },
+                       new Object[] { c, d });
+            return i+1;
+        }
+        if (args[i].equalsIgnoreCase("-UseCompilerForMethods")) {
+            Object d = callMethod("Clazz.Delegates", "getCompiler", args[++i]);
+            Object c = new jq_Member.FilterByName(args[++i]);
+            callMethod("Clazz.Delegates", "registerCompiler",
+                       new Class[] { Util.Collections.FilterIterator.Filter.class, 
+                                     Compil3r.Compil3rInterface.class },
+                       new Object[] { c, d });
+            return i+1;
+        }
         if (args[i].equalsIgnoreCase("-Set")) {
             String fullName = args[++i];
             int b = fullName.lastIndexOf('.') + 1;
@@ -293,13 +312,20 @@ public abstract class TraceFlags {
 	}
     }
     
-    public static void callMethod(String classname, String methodname, String arg) {
+    public static Object callMethod(String classname, String methodname, String arg) {
+        return callMethod(classname, methodname, new Class[] { String.class }, new Object[] { arg });
+    }
+    
+    public static Object callMethod(String classname, String methodname, Class[] argtypes, Object[] args) {
         try {
             Class c = Class.forName(classname);
-            Method m = c.getMethod(methodname, new Class[] { String.class });
-            m.invoke(null, new Object[] { arg });
+            Method m = c.getMethod(methodname, argtypes);
+            return m.invoke(null, args);
         } catch (Exception e) {
             Debug.writeln("Exception while invoking method "+classname+"."+methodname);
+            e.printStackTrace();
+            return null;
         }
     }
+    
 }

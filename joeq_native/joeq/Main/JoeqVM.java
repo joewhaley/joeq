@@ -57,6 +57,14 @@ public abstract class JoeqVM {
             if (args[i].equals("-cp") || args[i].equals("-classpath")) { // class path
                 classpath = args[++i];
                 ++i;
+                // update classpath here.
+                if (classpath != null) {
+                    Iterator it = PrimordialClassLoader.classpaths(classpath);
+                    while (it.hasNext()) {
+                        String s = (String) it.next();
+                        PrimordialClassLoader.loader.addToClasspath(s);
+                    }
+                }
                 continue;
             }
             if (args[i].equals("-nt") || args[i].equals("-native_threads")) { // number of native threads
@@ -100,13 +108,6 @@ public abstract class JoeqVM {
                     x.printStackTrace(System.err);
                     //return;
                 }
-            }
-        }
-        if (classpath != null) {
-            Iterator it = PrimordialClassLoader.classpaths(classpath);
-            while (it.hasNext()) {
-                String s = (String) it.next();
-                PrimordialClassLoader.loader.addToClasspath(s);
             }
         }
 
