@@ -10,7 +10,7 @@ import Compil3r.Quad.Quad;
 import Compil3r.Quad.Operator;
 import Compil3r.Quad.QuadIterator;
 
-class AssertionDetectionPass implements ControlFlowGraphVisitor {
+public class AssertionAnalysis implements ControlFlowGraphVisitor {
     public void visitCFG(ControlFlowGraph cfg) {
         for(QuadIterator iter = new QuadIterator(cfg); iter.hasNext(); ) {
             Quad quad = (Quad)iter.next();
