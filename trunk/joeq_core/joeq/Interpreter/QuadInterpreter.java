@@ -79,7 +79,7 @@ public class QuadInterpreter extends joeq.Compiler.Quad.QuadVisitor.EmptyVisitor
     public void setThrown(Throwable t) { thrown = t; }
     public Throwable getCaught() { return caught; }
 
-    public Register getExceptionRegister() { return rf.getStack(0, PrimordialClassLoader.getJavaLangObject()); }
+    public Register getExceptionRegister() { return rf.getOrCreateStack(0, PrimordialClassLoader.getJavaLangObject()); }
 
     public QuadInterpreter invokeReflective(jq_Method f, ParamListOperand plo) {
         if (f instanceof jq_StaticMethod)
@@ -278,7 +278,7 @@ public class QuadInterpreter extends joeq.Compiler.Quad.QuadVisitor.EmptyVisitor
         // initialize parameters
         jq_Type[] paramTypes = m.getParamTypes();
         for (int i=0, j=0; i<paramTypes.length; ++i, ++j) {
-            Register r = rf.getLocal(j, paramTypes[i]);
+            Register r = rf.getOrCreateLocal(j, paramTypes[i]);
             registers.put(r, params[i]);
             if (paramTypes[i].getReferenceSize() == 8) ++j;
         }
