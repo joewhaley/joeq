@@ -14,8 +14,10 @@ import Clazz.jq_NameAndDesc;
 import Clazz.jq_StaticMethod;
 import Compil3r.CompilationState;
 import Compil3r.CompilationState.DynamicCompilation;
+import Run_Time.Debug;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
+import Scheduler.jq_InterrupterThread;
 import Scheduler.jq_MainThread;
 import Scheduler.jq_NativeThread;
 import Scheduler.jq_Thread;
@@ -84,6 +86,21 @@ public abstract class JoeqVM {
                 ++i;
                 continue;
             }
+            if (args[i].startsWith("-D")) { // system property
+                String key;
+                String value;
+                int equals = args[i].indexOf('=');
+                if (equals != -1) {
+                    key = args[i].substring(2, equals);
+                    value = args[i].substring(equals+1);
+                } else {
+                    key = args[i].substring(2);
+                    value = "";
+                }
+                System.setProperty(key, value);
+                ++i;
+                continue;
+            }
             if (args[i].startsWith("-mx")) { // max memory
                 String amt = args[i].substring(3);
                 int mult = 1;
@@ -123,6 +140,8 @@ public abstract class JoeqVM {
             }
         }
 
+        handleSystemProperties();
+        
         jq_Thread tb = Unsafe.getThreadBlock();
         jq_NativeThread nt = tb.getNativeThread();
         jq_NativeThread.initNativeThreads(nt, jq.NumOfNativeThreads);
@@ -160,6 +179,21 @@ public abstract class JoeqVM {
         Assert.UNREACHABLE();
     }
 
+    public static void handleSystemProperties() {
+        String s;
+        
+        s = System.getProperty("scheduler.quanta");
+        if (s != null) {
+            try {
+                jq_InterrupterThread.QUANTA = Integer.parseInt(s);
+                Debug.write("Scheduler quanta is ");
+                Debug.writeln(jq_InterrupterThread.QUANTA);
+            } catch (NumberFormatException x) {
+                Debug.writeln("Bad scheduler.quanta, ignoring.");
+            }
+        }
+    }
+    
     public static void printUsage() {
         System.out.println("Usage: joeq <classname> <parameters>");
     }
