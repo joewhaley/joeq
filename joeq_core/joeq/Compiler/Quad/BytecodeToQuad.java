@@ -2557,16 +2557,12 @@ public class BytecodeToQuad extends BytecodeVisitor {
     static {
 	/* Set up delegates. */
 	_unsafe = null;
-	boolean nullVM = System.getProperty("joeq.nullvm") != null;
+	boolean nullVM = jq.nullVM || System.getProperty("joeq.nullvm") != null;
 	if (!nullVM) {
 	    _unsafe = attemptDelegate("Compil3r.Quad.B2QUnsafeHandler");
 	}
 	if (_unsafe == null) {
-	    _unsafe = attemptDelegate("Compil3r.Quad.B2QUnsafeIgnorer");
-	}
-	if (_unsafe == null) {
-	    System.err.println("FATAL: Cannot load BytecodeToQuad Delegate");
-	    System.exit(-1);
+	    _unsafe = new Compil3r.Quad.B2QUnsafeIgnorer();
 	}
     }
 

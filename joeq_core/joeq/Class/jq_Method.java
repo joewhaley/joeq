@@ -367,16 +367,12 @@ public abstract class jq_Method extends jq_Member implements AndersenMethod {
         _compile = _class.getOrCreateInstanceMethod("compile", "()LClazz/jq_CompiledCode;");
 	/* Set up delegates. */
 	_delegate = null;
-	boolean nullVM = System.getProperty("joeq.nullvm") != null;
+	boolean nullVM = jq.nullVM || System.getProperty("joeq.nullvm") != null;
 	if (!nullVM) {
 	    _delegate = attemptDelegate("Clazz.Delegates$Method");
 	}
 	if (_delegate == null) {
-	    _delegate = attemptDelegate("Clazz.NullDelegates$Method");
-	}
-	if (_delegate == null) {
-	    System.err.println("FATAL: Cannot load Method Delegate");
-	    System.exit(-1);
+	    _delegate = new NullDelegates.Method();
 	}
     }
 

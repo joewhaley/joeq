@@ -37,8 +37,13 @@ public abstract class ClassLibInterface {
     static {
         ClassLib.Common.Interface f = null;
 	String classlibinterface = System.getProperty("joeq.classlibinterface");
+	boolean nullVM = jq.nullVM || System.getProperty("joeq.nullvm") != null;
+
 	if (classlibinterface != null) {
 	    f = attemptClassLibInterface(classlibinterface);
+	}
+	if (nullVM) {
+	    f = new ClassLib.Common.NullInterfaceImpl();
 	}
 	if (f == null) {
 	    String classlibrary = System.getProperty("classlibrary");
@@ -101,11 +106,7 @@ public abstract class ClassLibInterface {
 	    f = attemptClassLibInterface("ClassLib."+classlibrary+".Interface");
 	}
 	if (f == null) {
-	    f = attemptClassLibInterface("ClassLib.Common.NullInterfaceImpl");
-	}
-	if (f == null) {
-	    System.err.println("Could not load any acceptable ClassLibInterface.");
-	    System.exit (-1);
+	    f = new ClassLib.Common.NullInterfaceImpl();
 	}
 	
         DEFAULT = f;

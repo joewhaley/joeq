@@ -188,16 +188,12 @@ public class jq_CompiledCode implements Comparable {
         _entrypoint = k.getOrCreateInstanceField("entrypoint", "LMemory/CodeAddress;");
 	/* Set up delegates. */
 	_delegate = null;
-	boolean nullVM = System.getProperty("joeq.nullvm") != null;
+	boolean nullVM = jq.nullVM || System.getProperty("joeq.nullvm") != null;
 	if (!nullVM) {
 	    _delegate = attemptDelegate("Clazz.Delegates$CompiledCode");
 	}
 	if (_delegate == null) {
-	    _delegate = attemptDelegate("Clazz.NullDelegates$CompiledCode");
-	}
-	if (_delegate == null) {
-	    System.err.println("FATAL: Cannot load compiled code delegate");
-	    System.exit(-1);
+	    _delegate = new NullDelegates.CompiledCode();
 	}
     }
 
