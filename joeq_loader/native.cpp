@@ -480,7 +480,7 @@ extern "C" void __stdcall init_thread(const pthread_t handle)
 	   :"=r"(initialized)
 	   :
 	   );
-    if (initialized) continue;
+    if (initialized) break;
   }
 }
 extern "C" int __stdcall resume_thread(const pthread_t handle)

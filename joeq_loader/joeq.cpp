@@ -76,6 +76,11 @@ int main(int argc, char* argv[])
 	}
 #endif
 	Setup_LDT_Keeper();
+	int initialized = 1;
+	__asm (" movl %%fs:4, %0"
+	       :
+	       :"r"(initialized)
+	       );
 
 	printf("branching to entrypoint at location 0x%08x\n", entry);
 	fflush(stdout);
