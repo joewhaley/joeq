@@ -28,5 +28,6 @@ public interface ObjectLayout {
     public static final int THREAD_ID_MASK    = 0x7FFFFE00;
     public static final int LOCK_COUNT_MASK   = 0x000001F0;
     public static final int LOCK_COUNT_INC    = 0x00000010;
+    public static final int LOCK_COUNT_SHIFT  = 4;
     public static final int LOCK_EXPANDED     = 0x80000000;
 }
