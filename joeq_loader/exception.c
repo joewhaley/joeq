@@ -38,7 +38,7 @@ EXCEPTION_DISPOSITION hardwareExceptionHandler(EXCEPTION_RECORD *exceptionRecord
     // push arguments
     esp = (DWORD*)contextRecord->Esp;
     if (trace_exceptions) {
-        printf("Hardware exception occurred at eip=0x%p, code=%d, java_code=%d\n", eip, ex_code, java_ex_code);
+        printf("Hardware exception occurred at eip=0x%p, code=%d, java_code=%d\n", (void*)eip, ex_code, java_ex_code);
     }
     
     *--esp = (DWORD)java_ex_code;

@@ -9,12 +9,6 @@
 #include <stddef.h>
 #include <stdlib.h>
 
-#if defined(__MINGW32__)
-//#undef __STRICT_ANSI__
-//#undef RC_INVOKED
-#include <excpt.h>
-#endif
-
 // Includes for WIN32 systems.
 #if defined(WIN32)
 
@@ -26,6 +20,13 @@
 //#if !defined(__CYGWIN32__)	// cygwin doesn't have this file
 #include <direct.h>		// _getdcwd, _getdrive, _mkdir
 //#endif
+
+
+#if defined(__MINGW32__)
+//#undef __STRICT_ANSI__
+//#undef RC_INVOKED
+#include <excpt.h>
+#endif
 
 
 #if defined(__BORLANDC__)

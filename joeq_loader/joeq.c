@@ -6,7 +6,7 @@
 int joeq_argc;
 char **joeq_argv;
 
-void __stdcall entry(void);
+extern void __stdcall entry(void);
 extern void installSignalHandler(void);
 extern void initSemaphoreLock(void);
 
@@ -51,10 +51,8 @@ int main(int argc, char* argv[])
         _asm mov fs:[0],eax // point first word of thread control block to exception handler registration chain
 #else
         __asm__ __volatile__ (
-            "
-            movl %0, %%eax
-            movl %%eax, %%fs:0
-            "
+            "movl %0, %%eax\n\t"\
+            "movl %%eax, %%fs:0\n\t"
             :
 	    :"r"(erp)
             :"%eax"
@@ -84,22 +82,20 @@ int main(int argc, char* argv[])
     }
 #elif defined(WIN32)
     __asm__ __volatile__ (
-        "pushl %%ebp
-         xor %%ebp, %%ebp
-         call _entry@0
-         popl %%ebp
-            "
+        "pushl %%ebp\n\t"\
+        "xor %%ebp, %%ebp\n\t"\
+        "call _entry@0\n\t"\
+        "popl %%ebp\n\t"
             :
             :
             :"%eax","%edx","%ecx","%ebx","%edi","%esi"
             );
 #else
     __asm__ __volatile__ (
-        "pushl %%ebp
-         xor %%ebp, %%ebp
-         call entry
-         popl %%ebp
-            "
+        "pushl %%ebp\n\t"\
+        "xor %%ebp, %%ebp\n\t"\
+        "call entry\n\t"\
+        "popl %%ebp\n\t"
             :
             :
             :"%eax","%edx","%ecx","%ebx","%edi","%esi"

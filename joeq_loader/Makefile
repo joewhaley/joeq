@@ -2,7 +2,7 @@
 all:	linux
 
 mingw:	set_text_writeable
-	gcc -g joeq.c native.c exception.c ../joeq/jq.obj -o joeq
+	gcc -mno-cygwin -g joeq.c native.c exception.c ../joeq/jq.obj -o joeq.exe
 	./set_text_writeable joeq.exe
 
 msvc:	set_text_writeable_msvc
