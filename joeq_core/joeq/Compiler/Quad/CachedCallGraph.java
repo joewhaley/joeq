@@ -32,7 +32,7 @@ public class CachedCallGraph extends CallGraph {
         this.delegate = cg;
     }
 
-    private void invalidateCache() {
+    public void invalidateCache() {
         this.edges = new GenericInvertibleMultiMap();
         for (Iterator i = delegate.getAllCallSites().iterator(); i.hasNext(); ) {
             ProgramLocation p = (ProgramLocation) i.next();
@@ -170,6 +170,7 @@ public class CachedCallGraph extends CallGraph {
     }
     
     public void inlineEdge(jq_Method caller, ProgramLocation callSite, jq_Method callee) {
+        System.out.println("Inlining edge "+callSite+" -> "+callee);
         // remove call site from caller.
         callSites.remove(caller, callSite);
         // add all call sites in callee into caller.
