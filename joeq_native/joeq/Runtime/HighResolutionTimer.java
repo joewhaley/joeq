@@ -20,6 +20,7 @@ import Util.Assert;
  * @version $Id$
  */
 public class HighResolutionTimer {
+	private static boolean native_library_present;
 
     static {
         try {
@@ -29,7 +30,6 @@ public class HighResolutionTimer {
     }
     public static native long ticks();
     public static final double TICKS_PER_SECOND = 2e9;
-    private static boolean native_library_present;
     public static void main(String[] args) throws Exception {
         for (int i=0; i<10; ++i) {
             System.out.println("Now: "+now());
