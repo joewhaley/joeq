@@ -119,7 +119,7 @@ public abstract class Section implements ELFConstants {
                 jq.assert(this.info == 0);
                 jq.assert(this.addralign == 0);
                 jq.assert(this.entsize == 0);
-                return new NullSection();
+                return NullSection.INSTANCE;
             }
             case SHT_PROGBITS: {
                 jq.assert(this.link == SHN_UNDEF);
@@ -206,7 +206,8 @@ public abstract class Section implements ELFConstants {
     }
         
     public static class NullSection extends Section {
-        public NullSection() { super("", 0, 0); }
+	public static final NullSection INSTANCE = new NullSection();
+        private NullSection() { super("", 0, 0); }
         public int getIndex() { return 0; }
         public int getType() { return SHT_NULL; }
         public int getSize() { return 0; }
@@ -281,6 +282,7 @@ public abstract class Section implements ELFConstants {
             super(name, flags, addr);
             this.stringTable = stringTable;
             this.localSymbols = new LinkedList(); this.globalSymbols = new LinkedList();
+	    addSymbol(SymbolTableEntry.EmptySymbolTableEntry.INSTANCE);
         }
         protected SymTabSection(int flags, int addr) {
             super(flags, addr);
@@ -296,6 +298,14 @@ public abstract class Section implements ELFConstants {
         public final int getLink() { return stringTable.getIndex(); }
         public final int getInfo() { return localSymbols.size(); }
         public final int getEntSize() { return SymbolTableEntry.getEntrySize(); }
+	public void setIndices() {
+            Iterator i = new AppendIterator(localSymbols.iterator(), globalSymbols.iterator());
+	    int j=-1;
+            while (i.hasNext()) {
+                SymbolTableEntry e = (SymbolTableEntry)i.next();
+		e.setIndex(++j);
+            }
+	}
         public SymbolTableEntry getSymbolTableEntry(int i) {
             if (i < localSymbols.size()) return (SymbolTableEntry)localSymbols.get(i);
             i -= localSymbols.size();
