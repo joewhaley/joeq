@@ -64,11 +64,16 @@ void installSignalHandler()
 
 void hardwareExceptionHandler(int signo, siginfo_t *si, void *context)
 {
-  // magic to get sigcontext!
-  sigcontext *sc = (sigcontext *)((char *)context+5*4);
-  void *eip = (void *)sc->eip;
-  int ex_code = signo;
+  struct sigcontext *sc;
+  void *eip;
+  int ex_code;
   int java_ex_code;
+  int *esp;
+
+  // magic to get sigcontext!
+  sc = (struct sigcontext *)((char *)context+5*4);
+  eip = (void *)sc->eip;
+  ex_code = signo;
   switch (ex_code) {
   case SIGSEGV: // null pointer exception
     // int 5 seems to create an access violation, for some reason.
@@ -88,7 +93,7 @@ void hardwareExceptionHandler(int signo, siginfo_t *si, void *context)
   }
 
   // push arguments
-  int *esp = (int *)sc->esp;
+  esp = (int *)sc->esp;
   *--esp = java_ex_code;
   *--esp = (int)eip;
   sc->esp = (int)esp;
@@ -98,7 +103,7 @@ void hardwareExceptionHandler(int signo, siginfo_t *si, void *context)
   return;
 }
 
-void copyFromSigcontext(CONTEXT* c, sigcontext* sc)
+void copyFromSigcontext(CONTEXT* c, struct sigcontext* sc)
 {
   c->Eax = sc->eax;
   c->Ebx = sc->ebx;
@@ -118,10 +123,13 @@ void copyFromSigcontext(CONTEXT* c, sigcontext* sc)
 
 void softwareSignalHandler(int signo, siginfo_t *si, void *context)
 {
+  Thread* java_thread;
+  NativeThread* native_thread;
+  struct sigcontext *sc;
+  int *esp;
   //printf("PID %d received tick.\n", getpid());
 
   // get current Java thread
-  Thread* java_thread;
   __asm ("movl %%fs:20, %0":"=r"(java_thread));
   // check if thread switch is ok
   if (java_thread->thread_switch_enabled != 0) {
@@ -129,15 +137,15 @@ void softwareSignalHandler(int signo, siginfo_t *si, void *context)
     return;
   }
   
-  NativeThread* native_thread = java_thread->native_thread;
+  native_thread = java_thread->native_thread;
 
   // magic to get sigcontext!
-  sigcontext *sc = (sigcontext *)((char *)context+5*4);
+  sc = (struct sigcontext *)((char *)context+5*4);
 
   //printf("Java thread 0x%08x: thread switch enabled (%d) eip=0x%08x esp=0x%08x\n", java_thread, java_thread->thread_switch_enabled, sc->eip, sc->esp);
 
   // simulate a call to the threadSwitch method.
-  int *esp = (int *)sc->esp;
+  esp = (int *)sc->esp;
   *--esp = (int)native_thread;
   *--esp = (int)sc->eip;
   sc->esp = (int)esp;
@@ -157,6 +165,7 @@ void installSignalHandler(void)
 {
   // install a stack for the hardware trap handler
   stack_t stack;
+  struct sigaction action;
   memset(&stack, 0, sizeof stack);
   stack.ss_sp = malloc(SIGSTKSZ);
   stack.ss_size = SIGSTKSZ;
@@ -168,7 +177,6 @@ void installSignalHandler(void)
   }
   
   // install hardware trap signal handler
-  struct sigaction action;
   memset(&action, 0, sizeof action);
   action.sa_sigaction = &hardwareExceptionHandler;
 

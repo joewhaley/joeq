@@ -734,6 +734,7 @@ static int current_id = 16;
 int __stdcall init_thread()
 {
   int my_id;
+  void* descr = calloc(1, 1024);
   __asm__ __volatile__
     (
      "nop
@@ -748,7 +749,6 @@ uphere:
         :"m"(current_id)
         :"%eax"
     );
-  void* descr = calloc(1, 1024);
   INIT_THREAD_SELF(descr, 1*1024, my_id);
   //printf("Thread %d finished initialization, pid=%d, id=%d.\n", pthread_self(), getpid(), my_id);
   return getpid();
@@ -787,19 +787,21 @@ static inline int get_debug_reg( int pid, int num, DWORD *data )
 
 int __stdcall get_thread_context(const int pid, CONTEXT* context)
 {
+  int status;
+  int result;
+  int flags;
   //printf("Getting thread context for pid %d.\n", pid);
   if (ptrace(PTRACE_ATTACH, pid, 0, 0) == -1) {
     printf("Attempt to attach to pid %d failed! %s errno %d\n", pid, strerror(errno), errno);
     return 0;
   }
-  int status;
   waitpid(pid, &status, WUNTRACED);
   if (WIFSTOPPED(status)) {
     //printf("Child is stopped, signal=%d.\n", WSTOPSIG(status));
   }
 
-  int result = 0;
-  int flags = context->ContextFlags;
+  result = 0;
+  flags = context->ContextFlags;
   if (flags & CONTEXT_FULL) {
     struct kernel_user_regs_struct regs;
     if (ptrace( PTRACE_GETREGS, pid, 0, &regs ) == -1) goto error;
@@ -856,19 +858,21 @@ int __stdcall get_thread_context(const int pid, CONTEXT* context)
 
 int __stdcall set_thread_context(int pid, CONTEXT* context)
 {
+  int status;
+  int result;
+  int flags;
   //printf("Setting thread context for pid %d, ip=0x%08x, sp=0x%08x\n", pid, context->Eip, context->Esp);
   if (ptrace(PTRACE_ATTACH, pid, 0, 0) == -1) {
     printf("Attempt to attach to pid %d failed! %s errno %d\n", pid, strerror(errno), errno);
     return 0;
   }
-  int status;
   waitpid(pid, &status, WUNTRACED);
   if (WIFSTOPPED(status)) {
     //printf("Child is stopped, signal=%d.\n", WSTOPSIG(status));
   }
 
-  int result = 0;
-  int flags = context->ContextFlags;
+  result = 0;
+  flags = context->ContextFlags;
   if (flags & CONTEXT_FULL) {
     struct kernel_user_regs_struct regs;
     
@@ -969,11 +973,11 @@ int __stdcall init_semaphore(void)
 #define WAIT_TIMEOUT 0x00000102
 int __stdcall wait_for_single_object(int handle, int time)
 {
+    struct timeval tv1;
     //printf("Thread %d: Waiting on semaphore %x for %d ms.\n", pthread_self(), (int)handle, time);
     if (sem_trywait((sem_t*)handle) == 0) return 0;
     //printf("Thread %d: Waiting on semaphore %x initially failed, looping.\n", pthread_self(), (int)handle);
     fflush(stdout);
-    struct timeval tv1;
     gettimeofday(&tv1, 0);
     for (;;) {
 	struct timeval tv2;
@@ -995,8 +999,8 @@ int __stdcall wait_for_single_object(int handle, int time)
 
 int __stdcall release_semaphore(int semaphore, int a)
 {
-    //printf("Thread %d: Releasing semaphore %x %d times.\n", pthread_self(), (int)semaphore, a);
     int v = 0;
+    //printf("Thread %d: Releasing semaphore %x %d times.\n", pthread_self(), (int)semaphore, a);
     while (--a >= 0)
 	v = sem_post((sem_t*)semaphore);
     return v;
@@ -1004,8 +1008,8 @@ int __stdcall release_semaphore(int semaphore, int a)
 
 void __stdcall set_interval_timer(int type, int ms)
 {
-  //printf("Thread %d: Setting interval timer type %d, %d ms.\n", pthread_self(), (int)type, ms);
   struct itimerval v;
+  //printf("Thread %d: Setting interval timer type %d, %d ms.\n", pthread_self(), (int)type, ms);
   v.it_interval.tv_sec = v.it_value.tv_sec = ms / 1000;
   v.it_interval.tv_usec = v.it_value.tv_usec = (ms % 1000) * 1000;
   setitimer(type, &v, 0);
