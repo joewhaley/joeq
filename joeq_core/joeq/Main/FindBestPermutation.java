@@ -92,7 +92,7 @@ public class FindBestPermutation extends Thread {
                 bestOrdering = ordering;
                 bestTime = System.currentTimeMillis() - time;
                 System.out.println("New best: ordering = "+bestOrdering+" node count: "+bestNodeCount+" time: "+bestTime+" ms");
-                updated = true;
+                if (index1 != 0 || index2 != 0) updated = true;
             }
             if (flip) {
                 ordering = tweakInterleaving(bestOrdering);
