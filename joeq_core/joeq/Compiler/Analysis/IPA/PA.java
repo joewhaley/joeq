@@ -2615,6 +2615,8 @@ public class PA {
     
     public static String getName(BDDDomain d) {
         String s = d.getName();
+        if (s.equals("V1c")) return "VC0";
+        if (s.equals("V2c")) return "VC1";
         if (s.endsWith("2")) return s.substring(0, s.length()-1)+"1";
         if (s.endsWith("1")) return s.substring(0, s.length()-1)+"0";
         return s+"0";
