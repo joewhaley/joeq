@@ -421,9 +421,9 @@ public class BDDPointerAnalysis {
         this.addObjectAllocation(GlobalNode.GLOBAL, null);
         this.addAllocType(null, PrimordialClassLoader.getJavaLangObject());
         this.addVarType(GlobalNode.GLOBAL, PrimordialClassLoader.getJavaLangObject());
-        this.handleNode(GlobalNode.GLOBAL);
+        this.handleNode(GlobalNode.GLOBAL, false);
         for (Iterator i=ConcreteObjectNode.getAll().iterator(); i.hasNext(); ) {
-            this.handleNode((ConcreteObjectNode) i.next());
+            this.handleNode((ConcreteObjectNode) i.next(), false);
         }
         
         for (Iterator i=roots.iterator(); i.hasNext(); ) {
@@ -506,9 +506,9 @@ public class BDDPointerAnalysis {
         this.addObjectAllocation(GlobalNode.GLOBAL, null);
         this.addAllocType(null, PrimordialClassLoader.getJavaLangObject());
         this.addVarType(GlobalNode.GLOBAL, PrimordialClassLoader.getJavaLangObject());
-        this.handleNode(GlobalNode.GLOBAL);
+        this.handleNode(GlobalNode.GLOBAL, false);
         for (Iterator i=ConcreteObjectNode.getAll().iterator(); i.hasNext(); ) {
-            this.handleNode((ConcreteObjectNode) i.next());
+            this.handleNode((ConcreteObjectNode) i.next(), false);
         }
         
         for (Iterator i=roots.iterator(); i.hasNext(); ) {
@@ -712,7 +712,7 @@ public class BDDPointerAnalysis {
 
     public static boolean NO_HEAP = System.getProperty("noheap") != null;
 
-    public void handleNode(Node n) {
+    public void handleNode(Node n, boolean add_clinit) {
         if (TRACE) System.out.println("Handling node: "+n);
         
         if (NO_HEAP) {
@@ -720,7 +720,7 @@ public class BDDPointerAnalysis {
         }
         
         Iterator j;
-        j = n.getEdges().iterator();
+        j = n.getAllEdges().iterator();
         while (j.hasNext()) {
             Map.Entry e = (Map.Entry) j.next();
             jq_Field f = (jq_Field) e.getKey();
@@ -730,9 +730,9 @@ public class BDDPointerAnalysis {
                 addFieldStore(n, f, (Set) o);
             } else {
                 addFieldStore(n, f, (Node) o);
-                if (n instanceof GlobalNode)
-                    addClassInit(f.getDeclaringClass());
             }
+            if (add_clinit && n instanceof GlobalNode)
+                addClassInit(f.getDeclaringClass());
         }
         j = n.getAccessPathEdges().iterator();
         while (j.hasNext()) {
@@ -744,15 +744,16 @@ public class BDDPointerAnalysis {
                 addLoadField((Set) o, n, f);
             } else {
                 addLoadField((FieldNode) o, n, f);
-                if (n instanceof GlobalNode)
-                    addClassInit(f.getDeclaringClass());
             }
+            if (add_clinit && n instanceof GlobalNode)
+                addClassInit(f.getDeclaringClass());
         }
         if (n instanceof ConcreteTypeNode) {
             ConcreteTypeNode ctn = (ConcreteTypeNode) n;
             addObjectAllocation(ctn, ctn);
             addAllocType(ctn, (jq_Reference) ctn.getDeclaredType());
-            addClassInit((jq_Reference) ctn.getDeclaredType());
+            if (add_clinit)
+                addClassInit((jq_Reference) ctn.getDeclaredType());
         } else if (n instanceof UnknownTypeNode) {
             UnknownTypeNode utn = (UnknownTypeNode) n;
             addObjectAllocation(utn, utn);
@@ -784,7 +785,7 @@ public class BDDPointerAnalysis {
         if (TRACE) System.out.println("Handling method summary: "+ms);
         for (Iterator i = ms.nodeIterator(); i.hasNext(); ) {
             Node n = (Node) i.next();
-            handleNode(n);
+            handleNode(n, true);
         }
         
         addClassInit(((jq_Method) ms.getMethod()).getDeclaringClass());
@@ -955,7 +956,7 @@ public class BDDPointerAnalysis {
 
     public void bindParameters_native(MethodSummary caller, ProgramLocation mc) {
         // only handle return value for now.
-        jq_Type t = caller.getMethod().getReturnType();
+        jq_Type t = mc.getReturnType();
         if (t instanceof jq_Reference) {
             ReturnValueNode rvn = caller.getRVN(mc);
             UnknownTypeNode utn = UnknownTypeNode.get((jq_Reference) t);

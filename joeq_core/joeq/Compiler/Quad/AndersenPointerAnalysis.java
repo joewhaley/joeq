@@ -813,7 +813,7 @@ public class AndersenPointerAnalysis {
         // find edges in graph
         for (Iterator i=ms.nodeIterator(); i.hasNext(); ) {
             Node n = (Node)i.next();
-            for (Iterator j=n.getEdges().iterator(); j.hasNext(); ) {
+            for (Iterator j=n.getNonEscapingEdges().iterator(); j.hasNext(); ) {
                 Map.Entry e = (Map.Entry)j.next();
                 jq_Field f = (jq_Field)e.getKey();
                 if (TRACK_CHANGED_FIELDS) {
@@ -1266,7 +1266,7 @@ public class AndersenPointerAnalysis {
     
     // from = global.f
     void addGlobalEdges(OutsideNode from, jq_Field f) {
-        Set result = GlobalNode.GLOBAL.getEdges(f);
+        Set result = GlobalNode.GLOBAL.getNonEscapingEdges(f);
         while (from.skip != null) from = from.skip;
         FieldNode fn = FieldNode.get(GlobalNode.GLOBAL, f, null);
         addInclusionEdges(from, result, fn);
@@ -1274,7 +1274,7 @@ public class AndersenPointerAnalysis {
     
     // from = global.f
     void addGlobalEdges(Set from, jq_Field f) {
-        Set result = GlobalNode.GLOBAL.getEdges(f);
+        Set result = GlobalNode.GLOBAL.getNonEscapingEdges(f);
         FieldNode fn = FieldNode.get(GlobalNode.GLOBAL, f, null);
         for (Iterator j=from.iterator(); j.hasNext(); ) {
             OutsideNode n2 = (OutsideNode)j.next();
@@ -1290,7 +1290,7 @@ public class AndersenPointerAnalysis {
         Set result = NodeSet.FACTORY.makeSet();
         for (Iterator j=s.iterator(); j.hasNext(); ) {
             Node n2 = (Node)j.next();
-            n2.getEdges(f, result);
+            n2.getAllEdges(f, result);
         }
         if (TRACE) out.println("Edges from "+base+((f==null)?"[]":("."+f.getName()))+" : "+result);
         for (Iterator j=from.iterator(); j.hasNext(); ) {
@@ -1307,7 +1307,7 @@ public class AndersenPointerAnalysis {
         Set result = NodeSet.FACTORY.makeSet();
         for (Iterator j=s.iterator(); j.hasNext(); ) {
             Node n2 = (Node)j.next();
-            n2.getEdges(f, result);
+            n2.getAllEdges(f, result);
         }
         if (TRACE) out.println("Edges from "+base+((f==null)?"[]":("."+f.getName()))+" : "+result);
         while (from.skip != null) from = from.skip;
@@ -1321,7 +1321,7 @@ public class AndersenPointerAnalysis {
         Set result = NodeSet.FACTORY.makeSet();
         for (Iterator j=s.iterator(); j.hasNext(); ) {
             Node n2 = (Node)j.next();
-            n2.getEdges(f, result);
+            n2.getAllEdges(f, result);
         }
         Set result2 = NodeSet.FACTORY.makeSet();
         ap = ap.next();

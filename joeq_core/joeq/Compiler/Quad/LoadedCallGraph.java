@@ -10,23 +10,28 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.TreeMap;
 
+import Clazz.jq_Class;
+import Clazz.jq_Member;
+import Clazz.jq_Method;
+import Clazz.jq_Type;
+import Compil3r.Analysis.IPA.ProgramLocation;
+import Compil3r.Analysis.IPA.ProgramLocation.BCProgramLocation;
 import Util.Assert;
 import Util.Collections.GenericInvertibleMultiMap;
 import Util.Collections.GenericMultiMap;
 import Util.Collections.InvertibleMultiMap;
+import Util.Collections.MapFactory;
 import Util.Collections.MultiMap;
-
-import Clazz.jq_Class;
-import Clazz.jq_Method;
-import Clazz.jq_Type;
-import Compil3r.Analysis.IPA.*;
-import Compil3r.Analysis.IPA.ProgramLocation.BCProgramLocation;
+import Util.Collections.SetFactory;
+import Util.Collections.SortedArraySet;
 
 /**
  * A call graph that is loaded from a file.
@@ -36,9 +41,58 @@ import Compil3r.Analysis.IPA.ProgramLocation.BCProgramLocation;
  */
 public class LoadedCallGraph extends CallGraph {
 
+    public static Comparator type_comparator = new Comparator() {
+        public int compare(Object o1, Object o2) {
+            String s1 = ((jq_Type) o1).getDesc().toString();
+            String s2 = ((jq_Type) o2).getDesc().toString();
+            return s1.compareTo(s2);
+        }
+    };
+    public static Comparator member_comparator = new Comparator() {
+        public int compare(Object o1, Object o2) {
+            String s1 = ((jq_Member) o1).getNameAndDesc().toString();
+            String s2 = ((jq_Member) o2).getNameAndDesc().toString();
+            return s1.compareTo(s2);
+        }
+    };
+    public static Comparator callsite_comparator = new Comparator() {
+        public int compare(Object o1, Object o2) {
+            ProgramLocation p1 = (ProgramLocation) o1;
+            ProgramLocation p2 = (ProgramLocation) o2;
+            Assert._assert(p1.getMethod() == p2.getMethod());
+            int i1 = p1.getBytecodeIndex();
+            int i2 = p2.getBytecodeIndex();
+            if (i1 < i2) return -1;
+            if (i1 > i2) return 1;
+            Assert._assert(o1 == o2);
+            return 0;
+        }
+    };
+    
+    public static final MapFactory treeMapFactory = new MapFactory() {
+        public Map makeMap(Map map) {
+            TreeMap m = new TreeMap(type_comparator);
+            m.putAll(map);
+            return m;
+        }
+    };
+    
+    public static final SortedArraySetFactory sortedArraySetFactory = new SortedArraySetFactory();
+    
+    public static class SortedArraySetFactory extends SetFactory {
+        public Set makeSet(Comparator c1, Collection c2) {
+            Set s = SortedArraySet.FACTORY.makeSet(c1);
+            s.addAll(c2);
+            return s;
+        }
+        public Set makeSet(Collection c) {
+            return makeSet(member_comparator, c);
+        }
+    }
+    
     public static void write(CallGraph cg, DataOutput out) throws IOException {
         Assert._assert(cg.getAllMethods().containsAll(cg.getRoots()));
-        MultiMap classesToMethods = new GenericMultiMap();
+        MultiMap classesToMethods = new GenericMultiMap(treeMapFactory, sortedArraySetFactory);
         for (Iterator i = cg.getAllMethods().iterator(); i.hasNext(); ) {
             jq_Method m = (jq_Method) i.next();
             classesToMethods.add(m.getDeclaringClass(), m);
@@ -51,10 +105,14 @@ public class LoadedCallGraph extends CallGraph {
                 out.writeBytes(" METHOD "+m.getName()+" "+m.getDesc());
                 if (cg.getRoots().contains(m)) out.writeBytes(" ROOT\n");
                 else out.writeByte('\n');
-                for (Iterator k = cg.getCallSites(m).iterator(); k.hasNext(); ) {
+                // put them in a set for deterministic iteration.
+                Set s = sortedArraySetFactory.makeSet(callsite_comparator, cg.getCallSites(m));
+                for (Iterator k = s.iterator(); k.hasNext(); ) {
                     ProgramLocation pl = (ProgramLocation) k.next();
                     out.writeBytes("  CALLSITE "+pl.getBytecodeIndex()+"\n");
-                    for (Iterator l = cg.getTargetMethods(pl).iterator(); l.hasNext(); ) {
+                    // put them in a set for deterministic iteration.
+                    Set s2 = sortedArraySetFactory.makeSet(cg.getTargetMethods(pl));
+                    for (Iterator l = s2.iterator(); l.hasNext(); ) {
                         jq_Method target = (jq_Method) l.next();
                         out.writeBytes("   TARGET "+target.getDeclaringClass().getJDKName().replace('.', '/')+"."+target.getName()+" "+target.getDesc()+"\n");
                     }

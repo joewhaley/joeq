@@ -650,7 +650,7 @@ public class CSPointerAnalysis extends Solver {
             }
             
             Iterator j;
-            j = n.getEdges().iterator();
+            j = n.getAllEdges().iterator();
             while (j.hasNext()) {
                 Map.Entry e = (Map.Entry) j.next();
                 jq_Field f = (jq_Field) e.getKey();

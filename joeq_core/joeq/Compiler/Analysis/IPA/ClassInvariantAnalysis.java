@@ -199,7 +199,7 @@ public class ClassInvariantAnalysis
         for (Iterator i=dis.getAccessPathEdges().iterator(); i.hasNext(); ) {
             Map.Entry e = (Map.Entry) i.next();
             jq_Field f = (jq_Field) e.getKey();
-            System.out.println("Field "+f.getName()+" = "+dis.getEdges(f));
+            System.out.println("Field "+f.getName()+" = "+dis.getAllEdges(f));
         }
         for (Iterator i=returned.entrySet().iterator(); i.hasNext(); ) {
             Map.Entry e = (Map.Entry) i.next();

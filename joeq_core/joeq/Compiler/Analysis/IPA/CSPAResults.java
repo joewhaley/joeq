@@ -223,7 +223,7 @@ public class CSPAResults implements PointerAnalysisResults {
         return new TypedBDD(result, H1);
         /*
         {
-            int i = typeIndexMap.get(type);
+            int i = Tmap.get(type);
             BDD a = T2.ithVar(i);
             BDD result = aC.restrict(a);
             a.free();
@@ -1219,8 +1219,33 @@ public class CSPAResults implements PointerAnalysisResults {
         
         buildCallGraphRelation();
         //buildAccessibleLocations();
+        
+        sanityCheck();
     }
-
+    
+    private void sanityCheck() {
+        boolean bad = false;
+        for (int i = 0; i < Vmap.size(); ++i) {
+            Node n = (Node) Vmap.get(i);
+            if (n instanceof ConcreteTypeNode) {
+                BDD b = vP.restrict(V1.ithVar(i));
+                if (b.satCount(H1.set()) != 1.0) {
+                    bad = true;
+                    break;
+                }
+                int H_i = b.scanVar(H1);
+                Node n2 = (Node) Hmap.get(H_i);
+                if (!(n2 instanceof ConcreteTypeNode)) {
+                    bad = true;
+                    break;
+                }
+            }
+        }
+        if (bad) {
+            System.err.println("Something is wrong, vP BDD looks corrupted.");
+        }
+    }
+    
     private void buildContextInsensitive() {
         BDD context = V1c.set();
         context.andWith(H1c.set());
@@ -1228,10 +1253,10 @@ public class CSPAResults implements PointerAnalysisResults {
         context.free();
     }
 
-    boolean reverse = System.getProperty("bddreverse") != null;
     String varorder;
+    boolean reverseLocal = true;
 
-    int V_BITS=16, I_BITS=15, H_BITS=15, Z_BITS=5, F_BITS=12, T_BITS=12, N_BITS=11, M_BITS=14;
+    int V_BITS=1, I_BITS=1, H_BITS=1, Z_BITS=1, F_BITS=1, T_BITS=1, N_BITS=1, M_BITS=1;
     int VC_BITS=1, HC_BITS=1;
 
     private void readConfig(DataInput in) throws IOException {
@@ -1264,6 +1289,8 @@ public class CSPAResults implements PointerAnalysisResults {
                 HC_BITS = Integer.parseInt(s2);
             } else if (s1.equals("Order")) {
                 varorder = s2;
+            } else if (s1.equals("Reverse")) {
+                reverseLocal = s2.equals("true");
             } else {
                 System.err.println("Unknown config option "+s);
             }
@@ -1310,7 +1337,7 @@ public class CSPAResults implements PointerAnalysisResults {
         V3c = makeDomain("V3c", VC_BITS);
         H3c = makeDomain("H3c", HC_BITS);
         
-        int[] order = bdd.makeVarOrdering(reverse, varorder);
+        int[] order = bdd.makeVarOrdering(reverseLocal, varorder);
         bdd.setVarOrder(order);
     }
     
@@ -2212,6 +2239,28 @@ public class CSPAResults implements PointerAnalysisResults {
                         }
                     }
                     increaseCount = false;
+                } else if (command.equals("method")) {
+                    jq_Class c = (jq_Class) jq_Type.parseType(st.nextToken());
+                    if (c == null) {
+                        System.out.println("Cannot find class");
+                        increaseCount = false;
+                    } else {
+                        jq_Method m = c.getDeclaredMethod(st.nextToken());
+                        if (m == null) {
+                            System.out.println("Cannot find method");
+                            increaseCount = false;
+                        } else {
+                            System.out.println("Method: "+m);
+                            Collection method_nodes = methodToVariables.getValues(m);
+                            BDD localVars = bdd.zero();
+                            for (Iterator k = method_nodes.iterator(); k.hasNext(); ) {
+                                Node node = (Node) k.next();
+                                int x = getVariableIndex(node);
+                                localVars.orWith(V1.ithVar(x));
+                            }
+                            results.add(new TypedBDD(localVars, V1));
+                        }
+                    }
                 } else if (command.equals("aliasedparams")) {
                     findAliasedParameters();
                     increaseCount = false;
