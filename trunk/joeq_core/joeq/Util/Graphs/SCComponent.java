@@ -309,7 +309,7 @@ public final class SCComponent implements Comparable, Serializable {
 
     /** Returns the numeric ID of <code>this</code> <code>SCComponent</code>.
         Just for debug purposes ... */
-    public int getId(){ return id; }
+    public int getId() { return id; }
 
     // The nodes of this SCC (Strongly Connected Component).
     Set nodes;
@@ -478,6 +478,21 @@ public final class SCComponent implements Comparable, Serializable {
         buffer.append(prevStringRepr());
         buffer.append(nextStringRepr());
         return buffer.toString();
+    }
+
+    public static final boolean DETERMINISTIC = true;
+
+    public int hashCode() {
+        if (DETERMINISTIC) {
+            int h = 0;
+            for (int i = 0; i < nodes_array.length; ++i) {
+                Object o = nodes_array[i]; 
+                if (o != null) h ^= o.hashCode();
+            }
+            return h;
+        } else {
+            return System.identityHashCode(this);
+        }
     }
 
 }
