@@ -499,7 +499,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
                 }
             }
             ConstantPoolEntry cpe = new ConstantPoolEntry(o, tag);
-            Iterator it = toadd_cp.iterator();
+            //Iterator it = toadd_cp.iterator();
             i = toadd_cp.indexOf(cpe);
             if (i != -1) return (char)i;
             i = constant_pool.length + toadd_cp.size();
