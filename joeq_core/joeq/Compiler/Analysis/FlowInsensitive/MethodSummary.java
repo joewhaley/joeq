@@ -72,6 +72,7 @@ import Compil3r.Quad.Operator.Unary;
 import Compil3r.Quad.RegisterFactory.Register;
 import Main.HostedVM;
 import Memory.Address;
+import Memory.StackAddress;
 import Run_Time.Reflection;
 import Util.Assert;
 import Util.Strings;
@@ -1009,6 +1010,18 @@ public class MethodSummary {
                 if (TRACE_INTRA) out.println("Visiting: "+obj);
                 Register src_r = ((RegisterOperand)Special.getOp2(obj)).getRegister();
                 setAsEscapes(getRegister(src_r));
+            } else if (obj.getOperator() == Special.GET_STACK_POINTER.INSTANCE ||
+                    obj.getOperator() == Special.GET_BASE_POINTER.INSTANCE ||
+                    obj.getOperator() == Special.ALLOCA.INSTANCE ) {
+                if (TRACE_INTRA) out.println("Visiting: "+obj);
+                Register dest_r = ((RegisterOperand)Special.getOp1(obj)).getRegister();
+                jq_Reference type = StackAddress._class;
+                ConcreteTypeNode n = (ConcreteTypeNode)nodeCache.get(obj);
+                Object key = obj;
+                if (n == null)
+                    nodeCache.put(key, n = new ConcreteTypeNode(type, new QuadProgramLocation(method, obj)));
+                //n.setEscapes();
+                setRegister(dest_r, n);
                 /*
             } else if (obj.getOperator() == Special.GET_TYPE_OF.INSTANCE) {
                 if (TRACE_INTRA) out.println("Visiting: "+obj);
