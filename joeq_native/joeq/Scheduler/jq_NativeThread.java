@@ -478,7 +478,7 @@ public class jq_NativeThread implements x86Constants {
         if (TRACE) SystemInterface.debugwriteln("Break thread initialized");
     }
 
-    private static int gcType = GCManager.MS_TR_GC;
+    private static int gcType = GCManager.MS_GC;
     private static jq_NativeThread gc_nthread;
     private static jq_Thread gc_jthread;
 
