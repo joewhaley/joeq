@@ -28,10 +28,15 @@ public class Helper {
     }
 
     public static jq_Type load(String classname) {
-        jq_Type c = jq_Type.parseType(classname);
-        c.load();
-        c.prepare();
-        return c;
+    	try {
+    		jq_Type c = jq_Type.parseType(classname);
+    		c.load();
+    		c.prepare();
+    		return c;
+    	} catch (NoClassDefFoundError e) {
+    		System.err.println ("Could not find class "+classname+", skipping.");
+    	}
+    	return null;
     }
 
     public static jq_Type[] loadPackage(String packagename) {
@@ -62,7 +67,9 @@ public class Helper {
         while (i.hasNext()) {
             String c = (String) i.next();
             c = c.substring(0, c.length() - 6);
-            ll.add(Helper.load(c));
+            jq_Type t = Helper.load(c);
+            if (t != null)
+            	ll.add(t);
         }
 
         return (jq_Class[]) ll.toArray(new jq_Class[0]);
