@@ -49,13 +49,13 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
     }
     public final boolean isInSamePackage(jq_Class that) {
         if (this.getClassLoader() != that.getClassLoader()) return false;
-        String s1 = this.getName().toString();
-        String s2 = that.getName().toString();
+        String s1 = this.getName();
+        String s2 = that.getName();
         int ind1 = s1.lastIndexOf('.');
         int ind2 = s2.lastIndexOf('.');
         if (ind1 != ind2) return false;
         if (ind1 != -1) {
-            if (s1.substring(0, ind1).equals(s2.substring(0, ind1)))
+            if (!s1.substring(0, ind1).equals(s2.substring(0, ind1)))
                 return false;
         }
         return true;
@@ -547,8 +547,16 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         return instance_fields;
     }
     public final jq_InstanceField getInstanceField(jq_NameAndDesc nd) {
-        chkState(STATE_PREPARED);
-        return (jq_InstanceField)findByNameAndDesc(instance_fields, nd);
+        chkState(STATE_LOADED);
+        jq_InstanceField m = (jq_InstanceField)findByNameAndDesc(declared_instance_fields, nd);
+        if (m != null) return m;
+        // check superclasses.
+        if (super_class != null) {
+            super_class.load();
+            m = super_class.getInstanceField(nd);
+            if (m != null) return m;
+        }
+        return null;
     }
     public final jq_InstanceMethod[] getVirtualMethods() {
         chkState(STATE_PREPARED);
@@ -1407,6 +1415,7 @@ uphere2:
                             int fsize = f.getSize();
                             if (fsize <= largestDataType-align) {
                                 instance_fields[++currentInstanceField] = f;
+                                if (TRACE) SystemInterface.debugmsg("Filling in field #"+currentInstanceField+" "+f+" at offset "+jq.hex(size - OBJ_HEADER_SIZE));
                                 f.setOffset(size - OBJ_HEADER_SIZE);
                                 size += fsize;
                                 align += fsize;
@@ -1419,6 +1428,7 @@ uphere2:
                     jq_InstanceField f = declared_instance_fields[i];
                     if (f.getState() == STATE_LOADED) {
                         instance_fields[++currentInstanceField] = f;
+                        if (TRACE) SystemInterface.debugmsg("Laying out field #"+currentInstanceField+" "+f+" at offset "+jq.hex(size - OBJ_HEADER_SIZE));
                         f.setOffset(size - OBJ_HEADER_SIZE);
                         size += f.getSize();
                     }
@@ -1441,6 +1451,7 @@ uphere2:
                             System.out.println("error: method "+m+" overrides method "+m2);
                         }
                         m2.isOverriddenBy(m);
+                        if (TRACE) SystemInterface.debugmsg("Virtual method "+m+" overrides method "+m2+" offset "+jq.hex(m2.getOffset()));
                         m.setOffset(m2.getOffset());
                         continue;
                     }
@@ -1473,6 +1484,7 @@ uphere2:
                 }
                 jq.assert(m.getState() == STATE_LOADED);
                 virtual_methods[++j] = m;
+                if (TRACE) SystemInterface.debugmsg("Virtual method "+m+" is new, offset "+jq.hex((j+1)<<2));
                 m.setOffset((j+1)<<2);
             }
             // allocate space for vtable
