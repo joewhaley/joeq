@@ -174,6 +174,8 @@ public abstract class ProgramLocation implements Textualizable {
                 sb.append(" => ");
                 sb.append(Invoke.getMethod(q).getMethod().getName());
                 sb.append("()");
+                if (isSingleTarget())
+                    sb.append("*");
             }
             return sb.toString();
         }
