@@ -70,7 +70,8 @@ public class GlobalPathNumbering extends PathNumbering {
                 Object edge = new Pair(p, o);
                 if (!selector.isImportant(p, o, newPathsToNode)) {
                     // Unimportant edge.
-                    Range range = new Range(pathsToNode, pathsToNode);
+                    Range range = new Range(pathsToNode.subtract(BigInteger.ONE),
+                                            pathsToNode.subtract(BigInteger.ONE));
                     edgeNumbering.put(edge, range);
                     //System.out.println("Putting unimportant Edge ("+edge+") = "+range);
                 } else {
