@@ -46,6 +46,7 @@ import Compil3r.Quad.Operator.Special;
 import Compil3r.Quad.Operator.Unary;
 import Compil3r.Quad.RegisterFactory.Register;
 import Main.jq;
+import Util.Default;
 import Util.FilterIterator;
 import Util.IdentityHashCodeWrapper;
 import Util.Templates.List;
@@ -97,6 +98,15 @@ public class MethodSummary {
         ConcreteTypeNode.FACTORY.clear();
         UnknownTypeNode.FACTORY.clear();
         GlobalNode.GLOBAL = new GlobalNode();
+    }
+    
+    public static HashMap clone_cache;
+    public static MethodSummary getSummary(ControlFlowGraph cfg, CallSite cs) {
+        if (clone_cache != null) {
+            MethodSummary ms = (MethodSummary) clone_cache.get(Default.pair(cfg, cs));
+            if (ms != null) return ms;
+        }
+        return getSummary(cfg);
     }
     
     /** Visitor class to build an intramethod summary. */

@@ -153,7 +153,8 @@ public class AndersenPointerAnalysis {
 
     public boolean addToRootSet(ControlFlowGraph cfg) {
         if (TRACE) out.println("Adding "+cfg.getMethod()+" to root set.");
-        return this.rootSet.add(cfg);
+        MethodSummary s = MethodSummary.getSummary(cfg);
+        return this.rootSet.add(s);
     }
     
     public static final class Visitor implements ControlFlowGraphVisitor {
@@ -464,14 +465,14 @@ public class AndersenPointerAnalysis {
         addInclusionEdge(on, nt_n1, null);
         
         if (addMethodsToVisit) {
-            methodsToVisit.add(fd_init_cfg);
-            methodsToVisit.add(fis_init_cfg);
-            methodsToVisit.add(bis_init_cfg);
-            methodsToVisit.add(fos_init_cfg);
-            methodsToVisit.add(bos_init_cfg);
-            methodsToVisit.add(ps_init_cfg);
-            methodsToVisit.add(nte_cfg);
-            methodsToVisit.add(ts_cfg);
+            methodSummariesToVisit.add(fd_init_summary);
+            methodSummariesToVisit.add(fis_init_summary);
+            methodSummariesToVisit.add(bis_init_summary);
+            methodSummariesToVisit.add(fos_init_summary);
+            methodSummariesToVisit.add(bos_init_summary);
+            methodSummariesToVisit.add(ps_init_summary);
+            methodSummariesToVisit.add(nte_summary);
+            methodSummariesToVisit.add(ts_summary);
         }
     }
     
@@ -487,7 +488,7 @@ public class AndersenPointerAnalysis {
     
     /** Set of all MethodSummary's that we care about. */
     final LinkedHashSet rootSet;
-    final LinkedHashSet methodsToVisit;
+    final LinkedHashSet methodSummariesToVisit;
     
     /** Maps a call site to its set of targets. */
     final HashMap callSiteToTargets;
@@ -522,7 +523,7 @@ public class AndersenPointerAnalysis {
         nodeToConcreteNodes = new HashMap();
         nodeToInclusionEdges = new HashMap();
         rootSet = new LinkedHashSet();
-        methodsToVisit = new LinkedHashSet();
+        methodSummariesToVisit = new LinkedHashSet();
         callSiteToTargets = new HashMap();
         linkedTargets = new HashSet();
         if (REUSE_CACHES)
@@ -561,9 +562,11 @@ public class AndersenPointerAnalysis {
     public String computeStats() {
         StringBuffer sb = new StringBuffer();
         HashSet classes = new HashSet();
+        HashSet methods = new HashSet();
         long bytecodes = 0;
-        for (Iterator i=methodsToVisit.iterator(); i.hasNext(); ) {
-            ControlFlowGraph ms = (ControlFlowGraph)i.next();
+        for (Iterator i=methodSummariesToVisit.iterator(); i.hasNext(); ) {
+            MethodSummary ms = (MethodSummary)i.next();
+            methods.add(ms.getMethod());
             bytecodes += ms.getMethod().getBytecode().length;
             jq_Class c = ms.getMethod().getDeclaringClass();
             while (c != null) {
@@ -575,7 +578,9 @@ public class AndersenPointerAnalysis {
         sb.append(" Classes: ");
         sb.append(classes.size());
         sb.append(" Methods: ");
-        sb.append(methodsToVisit.size());
+        sb.append(methods.size());
+        sb.append(" Summaries: ");
+        sb.append(methodSummariesToVisit.size());
         sb.append(" Calls: ");
         sb.append(callSiteToTargets.size());
         sb.append(" Bytecodes ");
@@ -655,17 +660,17 @@ public class AndersenPointerAnalysis {
     int count;
     
     public void iterate() {
-        methodsToVisit.addAll(rootSet);
+        methodSummariesToVisit.addAll(rootSet);
         count = 1;
         for (;;) {
             this.change = false;
-            System.err.println("Iteration "+count+": "+methodsToVisit.size()+" methods "+callSiteToTargets.size()+" call sites "+linkedTargets.size()+" call graph edges");
+            System.err.println("Iteration "+count+": "+methodSummariesToVisit.size()+" methods "+callSiteToTargets.size()+" call sites "+linkedTargets.size()+" call graph edges");
             doGlobals();
             LinkedList ll = new LinkedList();
-            ll.addAll(methodsToVisit);
+            ll.addAll(methodSummariesToVisit);
             for (Iterator i=ll.iterator(); i.hasNext(); ) {
-                ControlFlowGraph cfg = (ControlFlowGraph)i.next();
-                visitMethod(cfg);
+                MethodSummary ms = (MethodSummary)i.next();
+                visitMethod(ms);
             }
             if (!change) break;
             if (REUSE_CACHES)
@@ -695,7 +700,8 @@ public class AndersenPointerAnalysis {
                 jq_ClassInitializer clinit = c.getClassInitializer();
                 if (clinit != null) {
                     ControlFlowGraph clinit_cfg = CodeCache.getCode(clinit);
-                    if (methodsToVisit.add(clinit_cfg)) {
+                    MethodSummary ms = MethodSummary.getSummary(clinit_cfg);
+                    if (methodSummariesToVisit.add(ms)) {
                         if ((TRACE_CHANGE && !this.change) || TRACE) {
                             out.println("Changed! New clinit method: "+clinit);
                         }
@@ -713,8 +719,11 @@ public class AndersenPointerAnalysis {
     }
     
     void visitMethod(ControlFlowGraph cfg) {
-        if (TRACE) out.println("Visiting method: "+cfg.getMethod());
         MethodSummary ms = MethodSummary.getSummary(cfg);
+        this.visitMethod(ms);
+    }
+    void visitMethod(MethodSummary ms) {
+        if (TRACE) out.println("Visiting method: "+ms.getMethod());
         // find edges in graph
         for (Iterator i=ms.nodeIterator(); i.hasNext(); ) {
             Node n = (Node)i.next();
@@ -815,7 +824,7 @@ public class AndersenPointerAnalysis {
                     continue;
                 }
                 ControlFlowGraph callee_cfg = CodeCache.getCode(callee);
-                MethodSummary callee_summary = MethodSummary.getSummary(callee_cfg);
+                MethodSummary callee_summary = MethodSummary.getSummary(callee_cfg, cs);
                 CallSite cs2 = new CallSite(callee_summary, mc);
                 if (linkedTargets.contains(cs2)) continue;
                 linkedTargets.add(cs2);
@@ -824,7 +833,7 @@ public class AndersenPointerAnalysis {
                 }
                 this.change = true;
                 addParameterAndReturnMappings(ms, mc, callee_summary);
-                methodsToVisit.add(callee_cfg);
+                methodSummariesToVisit.add(callee_summary);
             }
         }
     }
