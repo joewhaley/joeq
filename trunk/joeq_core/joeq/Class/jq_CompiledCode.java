@@ -13,7 +13,6 @@ import Bootstrap.PrimordialClassLoader;
 import Main.jq;
 import Memory.CodeAddress;
 import Memory.StackAddress;
-import Run_Time.ExceptionDeliverer;
 import Run_Time.DebugInterface;
 
 /**
@@ -31,10 +30,10 @@ public class jq_CompiledCode implements Comparable {
     protected final int length;
     protected final jq_TryCatch[] handlers;
     protected final jq_BytecodeMap bcm;
-    protected final ExceptionDeliverer ed;
+    protected final Object /* ExceptionDeliverer */ ed;
     protected final List code_reloc, data_reloc;
 
-    public jq_CompiledCode(jq_Method method, CodeAddress start, int length, CodeAddress entrypoint, jq_TryCatch[] handlers, jq_BytecodeMap bcm, ExceptionDeliverer ed, List code_reloc, List data_reloc) {
+    public jq_CompiledCode(jq_Method method, CodeAddress start, int length, CodeAddress entrypoint, jq_TryCatch[] handlers, jq_BytecodeMap bcm, Object /* ExceptionDeliverer */ ed, List code_reloc, List data_reloc) {
         this.method = method;
         this.entrypoint = entrypoint;
         this.start = start;
@@ -81,12 +80,12 @@ public class jq_CompiledCode implements Comparable {
 
     public void deliverException(CodeAddress entry, StackAddress fp, Throwable x) {
         jq.Assert(ed != null);
-        ed.deliverToStackFrame(this, x, entry, fp);
+        _delegate.deliverToStackFrame(ed, this, x, entry, fp);
     }
 
     public Object getThisPointer(CodeAddress ip, StackAddress fp) {
         jq.Assert(ed != null);
-        return ed.getThisPointer(this, ip, fp);
+        return _delegate.getThisPointer(ed, this, ip, fp);
     }
 
     public int getBytecodeIndex(CodeAddress ip) {
@@ -130,6 +129,8 @@ public class jq_CompiledCode implements Comparable {
 	void patchDirectBindCalls(Iterator i);
 	void patchDirectBindCalls(Iterator i, jq_Method method, jq_CompiledCode cc);
 	Iterator getCompiledMethods();
+	void deliverToStackFrame(Object ed, jq_CompiledCode t, Throwable x, CodeAddress entry, StackAddress fp);
+	Object getThisPointer(Object ed, jq_CompiledCode t, CodeAddress ip, StackAddress fp);
     }
     
     private static Delegate _delegate;
