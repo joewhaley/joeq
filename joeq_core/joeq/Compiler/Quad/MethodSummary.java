@@ -869,6 +869,8 @@ public class MethodSummary {
         public PassedParameter(ProgramLocation m, int paramNum) {
             this.m = m; this.paramNum = paramNum;
         }
+        public ProgramLocation getCall() { return m; }
+        public int getParamNum() { return paramNum; }
         public int hashCode() { return m.hashCode() ^ paramNum; }
         public boolean equals(PassedParameter that) { return this.m.equals(that.m) && this.paramNum == that.paramNum; }
         public boolean equals(Object o) { if (o instanceof PassedParameter) return equals((PassedParameter)o); return false; }
@@ -1712,6 +1714,8 @@ public class MethodSummary {
             super(that);
             this.type = that.type; this.q = that.q;
         }
+        
+        public Quad getQuad() { return q; }
         
         public AndersenReference getDeclaredType() { return type; }
         
