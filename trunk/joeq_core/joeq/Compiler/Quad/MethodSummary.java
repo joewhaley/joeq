@@ -963,6 +963,8 @@ public class MethodSummary {
             return compareTo((Node)o);
         }
         
+        public Set getPassedParameters() { return passedParameters; }
+        
         /** Replace this node by the given set of nodes.  All inside and outside
          *  edges to and from this node are replaced by sets of edges to and from
          *  the nodes in the set.  The passed parameter set of this node is also
@@ -3669,6 +3671,19 @@ outer:
 
     /** Returns an iteration of all nodes in this summary. */
     public Iterator nodeIterator() { return nodes.keySet().iterator(); }
+
+    public Set getReturned() {
+        return returned;
+    }
+    public Set getThrown() {
+        return thrown;
+    }
+    public ReturnValueNode getRVN(ProgramLocation mc) {
+        return (ReturnValueNode) callToRVN.get(mc);
+    }
+    public ThrownExceptionNode getTEN(ProgramLocation mc) {
+        return (ThrownExceptionNode) callToTEN.get(mc);
+    }
 
     void verify() {
         for (int i=0; i<this.params.length; ++i) {
