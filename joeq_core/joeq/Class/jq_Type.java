@@ -13,7 +13,6 @@ import UTF.Utf8;
 import jq;
 import Run_Time.Unsafe;
 import Run_Time.Reflection;
-import Bootstrap.ClassLoaderInterface;
 import Bootstrap.PrimordialClassLoader;
 
 public abstract class jq_Type {
@@ -48,6 +47,7 @@ public abstract class jq_Type {
     public abstract boolean isVerified();
     public abstract boolean isPrepared();
     public abstract boolean isSFInitialized();
+    public abstract boolean isClsInitRunning();
     public abstract boolean isClsInitialized();
     
     public abstract boolean isFinal();
