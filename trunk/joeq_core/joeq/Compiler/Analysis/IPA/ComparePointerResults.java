@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.io.IOException;
-import org.sf.javabdd.BDDFactory;
+import net.sf.javabdd.BDDFactory;
 
 /**
  * @author jwhaley

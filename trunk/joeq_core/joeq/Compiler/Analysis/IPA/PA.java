@@ -3,20 +3,6 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Analysis.IPA;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.io.PrintWriter;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.math.BigInteger;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,6 +17,20 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.math.BigInteger;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
@@ -67,8 +67,6 @@ import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Main.HostedVM;
-import joeq.UTF.Utf8;
-import joeq.UTF.Utf8.MethodDescriptorIterator;
 import jwutil.collections.IndexMap;
 import jwutil.collections.IndexedMap;
 import jwutil.collections.Pair;
@@ -86,13 +84,13 @@ import jwutil.io.SystemProperties;
 import jwutil.io.Textualizable;
 import jwutil.io.Textualizer;
 import jwutil.util.Assert;
-import org.sf.javabdd.BDD;
-import org.sf.javabdd.BDDBitVector;
-import org.sf.javabdd.BDDDomain;
-import org.sf.javabdd.BDDFactory;
-import org.sf.javabdd.BDDPairing;
-import org.sf.javabdd.TypedBDDFactory;
-import org.sf.javabdd.TypedBDDFactory.TypedBDD;
+import net.sf.javabdd.BDD;
+import net.sf.javabdd.BDDBitVector;
+import net.sf.javabdd.BDDDomain;
+import net.sf.javabdd.BDDFactory;
+import net.sf.javabdd.BDDPairing;
+import net.sf.javabdd.TypedBDDFactory;
+import net.sf.javabdd.TypedBDDFactory.TypedBDD;
 /**
  * Pointer analysis using BDDs.  Includes both context-insensitive and context-sensitive
  * analyses.  This version corresponds exactly to the description in the paper.
@@ -1266,14 +1264,14 @@ public class PA {
                 if (m == null) continue;
                 
                 if(USE_BOGUS_SUMMARIES && m != null) {
-	                jq_Method replacement = getBogusSummaryProvider().getReplacementMethod(m);
-	                if(replacement != null) {
-						if(TRACE_BOGUS) System.out.println("Replacing a call to " + m + 
-						    				" with a call to "+ replacement);
-						
-						addToCHA(T_bdd, Nmap.get(replacement), replacement);     // for replacement methods
-						return;
-	                }
+                    jq_Method replacement = getBogusSummaryProvider().getReplacementMethod(m);
+                    if(replacement != null) {
+                        if(TRACE_BOGUS) System.out.println("Replacing a call to " + m + 
+                                        " with a call to "+ replacement);
+                        
+                        addToCHA(T_bdd, Nmap.get(replacement), replacement);     // for replacement methods
+                        return;
+                    }
                 }                
                 addToCHA(T_bdd, N_i, m);
             }
@@ -1622,10 +1620,10 @@ public class PA {
                     else if (d.satCount(V1csets[j]) > 10) System.out.print("many");
                     else for (Iterator k = d.iterator(V1csets[j]); k.hasNext(); ) {
                         BDD e = (BDD) k.next();
-                        long v = e.scanVar(V1c[j]);
-                        long mask = (1L << (H_BITS)) - 1;
-                        long val = v & mask;
-                        if (val != 0) System.out.print(TS.elementName(H1.getIndex(), val));
+                        BigInteger v = e.scanVar(V1c[j]);
+                        BigInteger mask = BigInteger.ONE.shiftLeft(H_BITS).subtract(BigInteger.ONE);
+                        BigInteger val = v.and(mask);
+                        if (val.signum() != 0) System.out.print(TS.elementName(H1.getIndex(), val));
                         else System.out.print('_');
                         if (k.hasNext()) System.out.print(',');
                     }
@@ -1639,7 +1637,7 @@ public class PA {
     public void dumpIEcs() {
         for (Iterator i = IEcs.iterator(Iset); i.hasNext(); ) {
             BDD q = (BDD) i.next(); // V2cxIxV1cxM
-            long I_i = q.scanVar(I);
+            BigInteger I_i = q.scanVar(I);
             System.out.println("Invocation site "+TS.elementName(I.getIndex(), I_i));
             BDD a = q.exist(IMset.and(V1cset)); // V2c
             Iterator k = null;
@@ -1663,7 +1661,7 @@ public class PA {
                 }
                 for (Iterator j = s.iterator(Mset); j.hasNext(); ) {
                     BDD r = (BDD) j.next(); // V2cxIxV1cxM
-                    long M_i = r.scanVar(M);
+                    BigInteger M_i = r.scanVar(M);
                     System.out.println(" calls "+TS.elementName(M.getIndex(), M_i));
                     BDD b = r.exist(IMset.and(V2cset));
                     if (b.isOne()) {
@@ -1684,11 +1682,11 @@ public class PA {
     public void dumpVP(BDD my_vP) {
         for (Iterator i = my_vP.iterator(V1.set()); i.hasNext(); ) {
             BDD q = (BDD) i.next();
-            long V_i = q.scanVar(V1);
+            BigInteger V_i = q.scanVar(V1);
             System.out.println("Variable "+TS.elementName(V1.getIndex(), V_i)+" points to:");
             for (Iterator j = q.iterator(H1.set()); j.hasNext(); ) {
                 BDD r = (BDD) j.next();
-                long H_i = r.scanVar(H1);
+                BigInteger H_i = r.scanVar(H1);
                 System.out.println("  "+TS.elementName(H1.getIndex(), H_i));
                 if (USE_VCONTEXT) {
                     BDD a = r.exist(V1.set().and(H1set));
@@ -1711,7 +1709,7 @@ public class PA {
                                 System.out.print("many");
                             } else for (Iterator k = b.iterator(V1csets[m]); k.hasNext(); ) {
                                 BDD s = (BDD) k.next();
-                                long foo = s.scanVar(V1c[m]);
+                                BigInteger foo = s.scanVar(V1c[m]);
                                 System.out.print(TS.elementName(H1.getIndex(), foo));
                                 if (k.hasNext()) System.out.print(",");
                             }
@@ -2030,8 +2028,8 @@ public class PA {
         if (targets.isZero()) return false;
         if (TRACE_SOLVER) out.println("New target methods: "+targets.satCount(Mset));
         while (!targets.isZero()) {
-            BDD target = targets.satOne(Mset, bdd.zero());
-            int M_i = (int) target.scanVar(M);
+            BDD target = targets.satOne(Mset, false);
+            int M_i = target.scanVar(M).intValue();
             jq_Method method = (jq_Method) Mmap.get(M_i);
             if (TRACE) out.println("New target method: "+method);
             visitMethod(method);
@@ -2579,23 +2577,23 @@ public class PA {
     }
 
     public class ToString extends BDD.BDDToString {
-        public String elementName(int i, long j) {
+        public String elementName(int i, BigInteger j) {
             switch (i) {
                 case 0: // fallthrough
-                case 1: return findInMap(Vmap, (int)j);
-                case 2: return findInMap(Imap, (int)j);
+                case 1: return findInMap(Vmap, j.intValue());
+                case 2: return findInMap(Imap, j.intValue());
                 case 3: // fallthrough
-                case 4: return findInMap(Hmap, (int)j);
-                case 5: return Long.toString(j);
-                case 6: return findInMap(Fmap, (int)j);
+                case 4: return findInMap(Hmap, j.intValue());
+                case 5: return j.toString();
+                case 6: return findInMap(Fmap, j.intValue());
                 case 7: // fallthrough
-                case 8: return findInMap(Tmap, (int)j);
-                case 9: return findInMap(Nmap, (int)j);
-                case 10: return findInMap(Mmap, (int)j);
+                case 8: return findInMap(Tmap, j.intValue());
+                case 9: return findInMap(Nmap, j.intValue());
+                case 10: return findInMap(Mmap, j.intValue());
                 default: return "("+j+")"+"??";
             }
         }
-        public String elementNames(int i, long j, long k) {
+        public String elementNames(int i, BigInteger j, BigInteger k) {
             // TODO: don't bother printing out long form of big sets.
             return super.elementNames(i, j, k);
         }
@@ -2848,7 +2846,7 @@ public class PA {
             try {
                 Field field = PA.class.getDeclaredField(name);
                 if (field == null) continue;
-                if (field.getType() == org.sf.javabdd.BDD.class) {
+                if (field.getType() == net.sf.javabdd.BDD.class) {
                     System.out.print(name+": ");
                     BDD b = pa.bdd.load(f.getAbsolutePath());
                     System.out.print(b.nodeCount()+" nodes, ");
@@ -4133,7 +4131,7 @@ public class PA {
         BDD mC = bdd.zero();
         for (Iterator i = visited.iterator(Mset); i.hasNext(); ) {
             BDD m = (BDD) i.next();
-            int m_i = (int) m.scanVar(M);
+            int m_i = m.scanVar(M).intValue();
             jq_Method method = (jq_Method) Mmap.get(m_i);
             BDD c = getV1V2Context(method);
             if (c != null) {
