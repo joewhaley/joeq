@@ -20,6 +20,7 @@ import java.util.StringTokenizer;
 import org.sf.javabdd.BDD;
 import org.sf.javabdd.BDDDomain;
 import org.sf.javabdd.BDDFactory;
+import org.sf.javabdd.BDDPairing;
 import org.sf.javabdd.TypedBDDFactory.TypedBDD;
 
 import Bootstrap.PrimordialClassLoader;
@@ -268,6 +269,9 @@ public class PAResults {
                     DataOutput out = new DataOutputStream(new FileOutputStream("defuse.dot"));
                     this.defUseGraph(bdd1, true, out);
                     increaseCount = false;
+                } else if (command.equals("encapsulation")) {
+                    BDD r = getEncapsulatedHeapObjects();
+                    results.add(r);
                 } else if (command.equals("stats")) {
                     printStats();
                     increaseCount = false;
@@ -475,7 +479,7 @@ public class PAResults {
         int j = 0;
         for (Iterator i = b.iterator(); i.hasNext(); ++j) {
             if (numToPrint >= 0 && j > numToPrint - 1) {
-                sb.append("\tand "+(long)b.satCount(dset)+" others.");
+                sb.append("\tand "+((long)b.satCount(dset)-numToPrint)+" others.");
                 sb.append(Strings.lineSep);
                 break;
             }
@@ -696,6 +700,58 @@ public class PAResults {
         System.out.println("All local objects: "+allObjects.satCount(r.H1set));
         
         return allObjects;
+    }
+    
+    BDDDomain H3;
+    BDDPairing H1toH3;
+    
+    public void initializeExtraDomains() {
+        if (H3 == null) {
+            H3 = r.makeDomain("H3", r.H_BITS);
+            H1toH3 = r.bdd.makePair(r.H1, H3);
+        }
+    }
+    
+    public BDD getEncapsulatedHeapObjects() {
+        initializeExtraDomains();
+        
+        // find objects that are pointed to by only one object.
+        BDD hP_ci = r.hP.exist(r.H1cH2cset).exist(r.Fset);
+        BDD set = r.H1.set().and(r.H2.set());
+        
+        BDD one_to_one = r.H1.buildEquals(H3).andWith(r.H2.domain());
+        BDD my_set = r.H1.set().andWith(H3.set());
+        
+        BDD b = hP_ci.replace(H1toH3); // H3xH2
+        b.andWith(hP_ci.id());     // H1xH3xH2
+        // find when H1=H3 is the ONLY relation
+        BDD a = b.applyAll(one_to_one, BDDFactory.imp, my_set);
+        b.free(); one_to_one.free();
+        a.andWith(hP_ci.id());
+        
+        System.out.println("Number = "+a.satCount(set));
+        
+        BDD result = r.bdd.zero();
+        int count = 0;
+        for (int i = 0; i < r.Hmap.size(); ++i) {
+            BDD x = r.H2.ithVar(i);
+            BDD y = hP_ci.restrict(x);
+            if (y.satCount(r.H1.set()) == 1.0) {
+                ++count;
+                result.orWith(x.and(y));
+            }
+            x.free();
+            y.free();
+        }
+        
+        System.out.println("Number = "+result.satCount(set));
+        
+        if (!a.equals(result)) {
+            System.out.println("a has extra: "+a.apply(result, BDDFactory.diff).toStringWithDomains());
+            System.out.println("a is missing: "+result.apply(a, BDDFactory.diff).toStringWithDomains());
+        }
+        
+        return result;
     }
     
     /***** STATISTICS *****/
