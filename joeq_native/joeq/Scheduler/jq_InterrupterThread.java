@@ -10,6 +10,7 @@ import Clazz.jq_InstanceMethod;
 import Memory.CodeAddress;
 import Memory.HeapAddress;
 import Memory.StackAddress;
+import Run_Time.Debug;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
 
@@ -20,6 +21,7 @@ import Run_Time.Unsafe;
 public class jq_InterrupterThread extends Thread {
 
     public static /*final*/ boolean TRACE = false;
+    public static final boolean STATISTICS = true;
 
     jq_InterrupterThread(jq_NativeThread other_nt) {
         this.other_nt = other_nt;
@@ -45,17 +47,30 @@ public class jq_InterrupterThread extends Thread {
     private jq_Thread myself;
     // for convenience, so we don't have to call Reflection.getfield_A
 
+    private int enabledCount;
+    private int disabledCount;
+    
+    public void dumpStatistics() {
+        Debug.write("enabled=");
+        Debug.write(enabledCount);
+        Debug.write(" disabled=");
+        Debug.writeln(disabledCount);
+    }
+    
     public static int QUANTA = 10;
 
     public void run() {
         this.pid = SystemInterface.init_thread();
         Unsafe.setThreadBlock(this.myself);
+        // set to a high priority so we don't starve.
+        SystemInterface.set_thread_priority(this.tid, SystemInterface.THREAD_PRIORITY_TIME_CRITICAL);
         for (;;) {
             SystemInterface.msleep(QUANTA);
             other_nt.suspend();
             // The other thread may hold a system lock, so outputting any debug info here may lead to deadlock
             jq_Thread javaThread = other_nt.getCurrentJavaThread();
             if (javaThread.isThreadSwitchEnabled()) {
+                if (STATISTICS) ++enabledCount;
                 if (TRACE)
                     SystemInterface.debugwriteln(
                         "TICK! " + other_nt + " Java Thread = " + javaThread);
@@ -111,6 +126,7 @@ public class jq_InterrupterThread extends Thread {
                 }
             } else {
                 // the current Java thread does not have thread switching enabled.
+                if (STATISTICS) ++disabledCount;
                 //if (TRACE) SystemInterface.debugwriteln(other_nt+" : "+javaThread+" Thread switch not enabled");
             }
             other_nt.resume();

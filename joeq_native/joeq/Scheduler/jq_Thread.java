@@ -168,6 +168,8 @@ public class jq_Thread implements jq_DontAlign {
         this.getNativeThread().yieldCurrentThreadTo(t);
     }
     public void setPriority(int newPriority) {
+        Assert._assert(newPriority >= 0);
+        Assert._assert(newPriority <= 9);
         this.priority = newPriority;
     }
     public int getPriority() {

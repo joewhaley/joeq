@@ -25,6 +25,7 @@ import Memory.HeapAddress;
 import Memory.StackAddress;
 import Memory.Heap.SegregatedListHeap;
 import Memory.Heap.SizeControl;
+import Run_Time.Debug;
 import Run_Time.StackCodeWalker;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
@@ -47,6 +48,8 @@ public class jq_NativeThread implements x86Constants, jq_DontAlign {
      */
     public static /*final*/ boolean TRACE = false;
 
+    public static final boolean STATISTICS = true;
+    
     /** Data structure to represent the native thread that exists at virtual
      * machine startup.
      */
@@ -237,18 +240,23 @@ public class jq_NativeThread implements x86Constants, jq_DontAlign {
         return SystemInterface.set_thread_context(pid, r);
     }
 
+    int chosenAsLeastBusy;
+    
     /** Returns the least-busy native thread. */
     static jq_NativeThread getLeastBusyThread() {
         int min_i = 0;
         int min = native_threads[min_i].preempted_thread_counter +
                   native_threads[min_i].transferQueue.length();
         for (int i = 1; i < native_threads.length; ++i) {
-            if (native_threads[i].preempted_thread_counter < min) {
-                min = native_threads[i].preempted_thread_counter +
-                      native_threads[i].transferQueue.length();
+            int v = native_threads[i].preempted_thread_counter +
+                    native_threads[i].transferQueue.length();
+            if (v < min) {
+                min = v;
                 min_i = i;
             }
         }
+        if (STATISTICS)
+            native_threads[min_i].chosenAsLeastBusy++;
         return native_threads[min_i];
     }
     
@@ -298,6 +306,8 @@ public class jq_NativeThread implements x86Constants, jq_DontAlign {
 
     public static boolean USE_INTERRUPTER_THREAD = false;
 
+    jq_InterrupterThread it;
+    
     /** The entry point for new native threads.
      */
     public void nativeThreadEntry() {
@@ -308,8 +318,7 @@ public class jq_NativeThread implements x86Constants, jq_DontAlign {
 
         if (USE_INTERRUPTER_THREAD) {
             // start up another native thread to periodically interrupt this one.
-            //jq_InterrupterThread it =
-                new jq_InterrupterThread(this);
+            it = new jq_InterrupterThread(this);
         } else {
             // use setitimer
             SystemInterface.set_interval_timer(SystemInterface.ITIMER_VIRTUAL, 10);
@@ -356,10 +365,46 @@ public class jq_NativeThread implements x86Constants, jq_DontAlign {
                 Assert.UNREACHABLE();
             }
         }
+        dumpStatistics();
         SystemInterface.die(0);
         Assert.UNREACHABLE();
     }
 
+    public static void dumpStatistics() {
+        for (int i = 0; i < native_threads.length; ++i) {
+            native_threads[i].dumpStats();
+        }
+    }
+    
+    public void dumpStats() {
+        if (STATISTICS) {
+            Debug.write("Native thread ");
+            Debug.write(index);
+            Debug.write(": transferred out=");
+            Debug.write(transferredOut);
+            Debug.write("(");
+            Debug.write(failedTransferOut);
+            Debug.write(" failed) in=");
+            Debug.writeln(transferredIn);
+            Debug.write("               : chosen as least busy=");
+            Debug.writeln(chosenAsLeastBusy);
+            for (int i = 0; i < readyQueueLength.length; ++i) {
+                Debug.write("               : average ready queue length ");
+                Debug.write(i);
+                Debug.write(": ");
+                System.err.println((double)readyQueueLength[i] / readyQueueN);
+            }
+            Debug.write("               : preempted thread length=");
+            System.err.println((double)preemptedThreadsLength / readyQueueN);
+        }
+        if (it != null && jq_InterrupterThread.STATISTICS) {
+            Debug.write("Native thread ");
+            Debug.write(index);
+            Debug.write(": ");
+            it.dumpStatistics();
+        }
+    }
+    
     /** Thread switch based on a timer or poker interrupt. */
     public void threadSwitch() {
         jq_Thread t1 = this.currentThread;
@@ -474,16 +519,22 @@ public class jq_NativeThread implements x86Constants, jq_DontAlign {
         Assert.UNREACHABLE();
     }
 
+    public static float TRANSFER_THRESHOLD = 1.5f;
+    
+    int transferredOut;
+    int failedTransferOut;
     /** Transfer extra work from our ready queue into a less-busy thread's transfer queue. */
     private void transferExtraWork() {
         jq_NativeThread that = getLeastBusyThread();
         if (this == that) return;
         // if we are much more busy than the other thread.
-        if (this.preempted_thread_counter*2 > (that.preempted_thread_counter+1)) {
+        if (this.preempted_thread_counter*TRANSFER_THRESHOLD > (that.preempted_thread_counter+1)) {
             // find a ready queue where we have more than he does
-            for (int i = readyQueue.length-1; i >= 0; --i) {
+            int i;
+            for (i = readyQueue.length-1; i >= 0; --i) {
                 if (this.readyQueue[i].length() > that.readyQueue[i].length()) {
-                    // transfer one thread to him. 
+                    if (STATISTICS) ++transferredOut;
+                    // transfer one thread to him.
                     jq_Thread t2 = this.readyQueue[i].dequeue();
                     Assert._assert(!t2.isThreadSwitchEnabled());
                     if (t2.wasPreempted && !t2.isDaemon())
@@ -492,6 +543,8 @@ public class jq_NativeThread implements x86Constants, jq_DontAlign {
                     break;
                 }
             }
+            if (STATISTICS && i < 0)
+                ++failedTransferOut;
         }
     }
 
@@ -519,15 +572,28 @@ public class jq_NativeThread implements x86Constants, jq_DontAlign {
         }
     }
     
+    int readyQueueLength[] = new int[10];
+    int preemptedThreadsLength;
+    int readyQueueN;
+    int transferredIn;
     /** Get the next ready thread from the transfer queue or the ready queue.
      *  Return null if there are no threads ready.
      */
     private jq_Thread getNextReadyThread() {
         if (!transferQueue.isEmpty()) {
+            if (STATISTICS) transferredIn++;
             jq_Thread t = transferQueue.dequeue();
             t.setNativeThread(this);
             Assert._assert(!t.isThreadSwitchEnabled());
             return t;
+        }
+        if (STATISTICS) {
+            for (int i = 0; i<readyQueue.length; ++i) {
+                readyQueueLength[i] += readyQueue[i].length();
+            }
+            preemptedThreadsLength += this.preempted_thread_counter;
+            ++readyQueueN;
+            verifyCount();
         }
         jq_ThreadQueue q = chooseNextQueue();
         while (q != null && !q.isEmpty()) {
