@@ -344,15 +344,22 @@ extern "C" void __stdcall msleep(int ms)
 	Sleep(ms);
 }
 #if defined(WIN32)
+extern "C" HANDLE __stdcall get_current_thread_handle(void)
+{
+	HANDLE currentProcess = GetCurrentProcess();
+	HANDLE targetHandle;
+	DuplicateHandle(currentProcess, GetCurrentThread(), currentProcess, &targetHandle, 0, TRUE, DUPLICATE_SAME_ACCESS);
+	return targetHandle;
+}
 extern "C" HANDLE __stdcall create_thread(LPTHREAD_START_ROUTINE start, LPVOID arg)
 {
 	DWORD tid;
 	return CreateThread(NULL, 0, start, arg, CREATE_SUSPENDED, &tid);
 }
-extern "C" int __stdcall init_thread(void)
+extern "C" HANDLE __stdcall init_thread(void)
 {
 	// nothing to do here.
-	return GetCurrentThreadId();
+	return get_current_thread_handle();
 }
 extern "C" int __stdcall resume_thread(const HANDLE handle)
 {
@@ -382,25 +389,26 @@ extern "C" void* __stdcall allocate_stack(const int size)
 	if (!VirtualProtect(lpvAddr, dwPageSize, PAGE_GUARD | PAGE_READWRITE, &oldProtect)) {
 		fprintf(stderr, "PANIC! Cannot create stack guard page!");
 	}
+	//printf("Allocated stack of size %d starting at 0x%08x\n", size, (int)lpvAddr+dwFinalSize);
 	return (void*)((int)lpvAddr+dwFinalSize);
 }
 
-extern "C" void __stdcall get_thread_context(HANDLE t, CONTEXT* c)
+extern "C" int __stdcall get_thread_context(HANDLE t, CONTEXT* c)
 {
-	GetThreadContext(t, c);
+	int result = GetThreadContext(t, c);
+	if (!result) {
+		fprintf(stderr, "PANIC! Cannot get context of thread %x: %d.\n", t, GetLastError());
+	}
+	return result;
 }
 
-extern "C" void __stdcall set_thread_context(HANDLE t, CONTEXT* c)
+extern "C" int __stdcall set_thread_context(HANDLE t, CONTEXT* c)
 {
-	SetThreadContext(t, c);
-}
-
-extern "C" HANDLE __stdcall get_current_thread_handle(void)
-{
-	HANDLE currentProcess = GetCurrentProcess();
-	HANDLE targetHandle;
-	DuplicateHandle(currentProcess, GetCurrentThread(), currentProcess, &targetHandle, 0, TRUE, DUPLICATE_SAME_ACCESS);
-	return targetHandle;
+	int result = SetThreadContext(t, c);
+	if (!result) {
+		fprintf(stderr, "PANIC! Cannot set context of thread %x: %d.\n", t, GetLastError());
+	}
+	return result;
 }
 
 CRITICAL_SECTION semaphore_init;
@@ -479,6 +487,7 @@ extern "C" void __stdcall set_interval_timer(int type, int ms)
 
 extern "C" void __stdcall set_current_context(Thread* jthread, const CONTEXT* context)
 {
+    //printf("Thread %d: switching to jthread 0x%08x, ip=0x%08x, sp=0x%08x\n", GetCurrentThreadId(), jthread, context->Eip, context->Esp);
 	__asm {
 		// set thread block
 		mov EDX, jthread
