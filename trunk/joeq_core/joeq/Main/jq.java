@@ -482,7 +482,7 @@ public abstract class jq {
             PrimordialClassLoader.loader.addToClasspath(s);
         }
 
-        Reflection.obj_trav = new Bootstrap.ObjectTraverser();
+        Reflection.obj_trav = new Bootstrap.ObjectTraverser.Empty();
     }
     
     public static int NumOfNativeThreads = 1;

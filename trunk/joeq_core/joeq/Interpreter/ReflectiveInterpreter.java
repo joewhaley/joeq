@@ -213,11 +213,12 @@ public class ReflectiveInterpreter extends BytecodeInterpreter {
     }
     
     public static class ReflectiveVMInterface extends BytecodeInterpreter.VMInterface {
-        ObjectTraverser ot;
+        //ObjectTraverser ot;
         ReflectiveVMInterface() {
-            ot = new ObjectTraverser();
+            //ot = new ObjectTraverser.Empty();
         }
         public static final ReflectiveVMInterface INSTANCE = new ReflectiveVMInterface();
+        /*
         public void putField(Object o, jq_Field f, Object v) {
             jq_Class k = f.getDeclaringClass();
             k.load(); k.verify(); k.prepare(); k.sf_initialize(); k.cls_initialize();
@@ -231,6 +232,7 @@ public class ReflectiveInterpreter extends BytecodeInterpreter {
                 jq.UNREACHABLE("object type: "+o.getClass()+" field: "+f2+" value: "+v);
             }
         }
+        */
         public int getstatic_I(jq_StaticField f) { return Reflection.getstatic_I(f); }
         public long getstatic_L(jq_StaticField f) { return Reflection.getstatic_L(f); }
         public float getstatic_F(jq_StaticField f) { return Reflection.getstatic_F(f); }
