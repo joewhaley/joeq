@@ -3,16 +3,20 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package jwutil.gui;
 
-import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.Insets;
-import java.io.DataInputStream;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.Writer;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import javax.swing.JApplet;
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -44,7 +48,8 @@ public class AppletIO extends JApplet {
             }
             
             String str = new String(cbuf, off, len);
-            textArea.append(str);
+            outputArea.append(str);
+            jumpToEndOfOutput();
         }
 
         /* (non-Javadoc)
@@ -78,7 +83,8 @@ public class AppletIO extends JApplet {
          * @see java.io.OutputStream#write(int)
          */
         public void write(int b) throws IOException {
-            textArea.append(new String(new byte[] { (byte) b }));
+            outputArea.append(new String(new byte[] { (byte) b }));
+            jumpToEndOfOutput();
         }
         
         /* (non-Javadoc)
@@ -90,7 +96,8 @@ public class AppletIO extends JApplet {
             }
             
             String str = new String(b, off, len);
-            textArea.append(str);
+            outputArea.append(str);
+            jumpToEndOfOutput();
         }
     }
     
@@ -142,24 +149,38 @@ public class AppletIO extends JApplet {
 
     }
     
-    JTextArea textArea;
+    public void jumpToEndOfOutput() {
+        outputArea.setCaretPosition(outputArea.getDocument().getLength());        
+    }
+    
+    JTextArea outputArea;
     JTextArea inputArea;
     Writer inputWriter;
     
     public void init() {
-        textArea = new JTextArea();
-        textArea.setMargin(new Insets(5, 5, 5, 5));
-        getContentPane().setLayout(new BorderLayout());
-        getContentPane().add(new JScrollPane(textArea));
-        textArea.setEditable(false);
+        outputArea = new JTextArea();
+        outputArea.setMargin(new Insets(5, 5, 5, 5));
+        outputArea.setEditable(false);
         
         inputArea = new JTextArea();
         inputArea.setMargin(new Insets(5, 5, 5, 5));
-        getContentPane().add(
-            new JScrollPane(inputArea,
-                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER),
-            BorderLayout.SOUTH);
+        
+        JScrollPane top = new JScrollPane(outputArea);
+        JScrollPane bottom = new JScrollPane(inputArea,
+            JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+            JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        
+        JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, top, bottom);
+        //splitPane.setDividerLocation(350);
+        splitPane.setResizeWeight(1.0);
+
+        getContentPane().add(splitPane);
+        
+        // Provide minimum sizes for the two components in the split pane.
+        Dimension minimumSize = new Dimension(400, 40);
+        top.setMinimumSize(minimumSize);
+        bottom.setMinimumSize(minimumSize);
+        bottom.setPreferredSize(minimumSize);
         
         // Use this listener to listen to changes to the text area.
         DocumentListener myListener = new TextAreaListener();
@@ -167,16 +188,22 @@ public class AppletIO extends JApplet {
         
         // Redirect System.out/System.err to our text area.
         PrintStream out = new PrintStream(new AppletOutputStream());
-        System.setOut(out);
-        System.setErr(out);
+        try {
+            System.setOut(out);
+            System.setErr(out);
         
-        // Redirect System.in from our input area.
-        FillableInputStream in = new FillableInputStream();
-        inputWriter = in.getWriter();
-        System.setIn(in);
+            // Redirect System.in from our input area.
+            FillableInputStream in = new FillableInputStream();
+            inputWriter = in.getWriter();
+            System.setIn(in);
+        } catch (SecurityException x) {
+            outputArea.append("Cannot reset stdio: "+x);
+            x.printStackTrace(out);
+        }
+        
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] s) throws SecurityException, NoSuchMethodException, ClassNotFoundException {
         JApplet applet = new AppletIO();
         JFrame f = new JFrame();
         f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -186,20 +213,52 @@ public class AppletIO extends JApplet {
         applet.init();
         f.setVisible(true);
         
-        System.out.println("Applet started.");
-
+        go(s);
+    }
+    
+    public static void go(String[] s) throws SecurityException, NoSuchMethodException, ClassNotFoundException {
+        Method method;
+        Object[] args;
+        if (s.length < 1) {
+            method = AppletIO.class.getDeclaredMethod("example", new Class[0]);
+            args = new Object[0];
+        } else {
+            method = Class.forName(s[0]).getDeclaredMethod("main", new Class[] { String[].class });
+            String[] s2 = new String[s.length-1];
+            System.arraycopy(s, 1, s2, 0, s2.length);
+            args = new Object[] { s2 };
+        }
+        System.out.println("Starting "+method+"...");
+        launch(method, args);
+    }
+    
+    public static void launch(final Method m, final Object[] args) {
         new Thread() {
             public void run() {
-                DataInputStream in = new DataInputStream(System.in);
-                for (;;) {
-                    try {
-                        String s = in.readLine();
-                        System.out.println("IN: "+s);
-                    } catch (IOException x) {
-                        x.printStackTrace();
-                    }
+                try {
+                    m.invoke(null, args);
+                } catch (InvocationTargetException e) {
+                    e.getTargetException().printStackTrace();
+                } catch (IllegalArgumentException e) {
+                    e.printStackTrace();
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
                 }
             }
         }.start();
     }
+    
+    // For an example, make a thread that just consumes System.in.
+    public static void example() {
+        BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+        for (;;) {
+            try {
+                String s = in.readLine();
+                System.out.println("IN: "+s);
+            } catch (IOException x) {
+                x.printStackTrace();
+            }
+        }
+    }
+    
 }
