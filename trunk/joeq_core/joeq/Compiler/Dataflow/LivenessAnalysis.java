@@ -21,7 +21,6 @@ import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Main.HostedVM;
 import joeq.Util.Assert;
 import joeq.Util.BitString;
-import joeq.Util.Collections.Pair;
 import joeq.Util.Graphs.EdgeGraph;
 import joeq.Util.Graphs.Graph;
 import joeq.Util.Graphs.ReverseGraph;
@@ -80,11 +79,11 @@ public class LivenessAnalysis extends Problem {
                     gen.set(index);
                 }
             }
-            if (!bb.getExceptionHandlers().isEmpty()) {
-                handleEdges(bb, bb.getExceptionHandlerEntries(), gen, kill, null);
-            }
             GenKillTransferFunction tf = new GenKillTransferFunction(gen, new BitString(bitVectorSize));
-            handleEdges(bb, bb.getSuccessors(), gen, kill, tf);
+            tf.gen.or(gen);
+            tf.kill.or(kill);
+            Assert._assert(!transferFunctions.containsKey(bb));
+            transferFunctions.put(bb, tf);
         }
         if (TRACE) {
             System.out.println("Transfer functions:");
@@ -93,22 +92,6 @@ public class LivenessAnalysis extends Problem {
                 System.out.println(e.getKey());
                 System.out.println(e.getValue());
             }
-        }
-    }
-
-    private void handleEdges(BasicBlock bb, List.BasicBlock bbs, BitString gen, BitString kill, GenKillTransferFunction defaultTF) {
-        for (ListIterator.BasicBlock k = bbs.basicBlockIterator(); k.hasNext(); ) {
-            BasicBlock bb2 = k.nextBasicBlock();
-            Object edge = new Pair(bb2, bb);
-            GenKillTransferFunction tf = (GenKillTransferFunction) transferFunctions.get(edge);
-            if (tf == null) {
-                tf = (defaultTF != null)? defaultTF : new GenKillTransferFunction(gen.size());
-                transferFunctions.put(edge, tf);
-            }
-            if (gen != null)
-                tf.gen.or(gen);
-            if (kill != null)
-                tf.kill.or(kill);
         }
     }
 
@@ -177,6 +160,7 @@ public class LivenessAnalysis extends Problem {
         p.mySolver = s1;
         solve(cfg, s1, p);
         if (TRACE) System.out.println("Finished solving Liveness.");
+        Solver.dumpResults(cfg, s1);
         return p;
     }
     
@@ -186,37 +170,29 @@ public class LivenessAnalysis extends Problem {
     }
 
     public boolean isLiveAtOut(BasicBlock bb, Register r) {
-        BitVectorFact f = (BitVectorFact) mySolver.getDataflowValue(bb);
-        return f.fact.get(r.getNumber()+1);
-    }
-    
-    public boolean isLiveAtIn(BasicBlock bb, Register r) {
-        if (bb.getNumberOfPredecessors() > 0)
-            bb = bb.getPredecessors().getBasicBlock(0);
+        if (bb.getNumberOfSuccessors() > 0)
+            bb = bb.getSuccessors().getBasicBlock(0);
         BitVectorFact f = (BitVectorFact) mySolver.getDataflowValue(bb);
         if (f == null) throw new RuntimeException(bb.toString()+" reg "+r);
         return f.fact.get(r.getNumber()+1);
     }
     
+    public boolean isLiveAtIn(BasicBlock bb, Register r) {
+        BitVectorFact f = (BitVectorFact) mySolver.getDataflowValue(bb);
+        return f.fact.get(r.getNumber()+1);
+    }
+    
     public void setLiveAtIn(BasicBlock bb, Register r) {
-        for (ListIterator.BasicBlock k = bb.getPredecessors().basicBlockIterator(); k.hasNext(); ) {
-            BasicBlock bb2 = k.nextBasicBlock();
-            Object edge = new Pair(bb2, bb);
-            GenKillTransferFunction tf = (GenKillTransferFunction) transferFunctions.get(edge);
-            Assert._assert(tf != null);
-            tf.gen.set(r.getNumber()+1);
-            BitVectorFact f = (BitVectorFact) mySolver.getDataflowValue(bb2);
-            f.fact.set(r.getNumber()+1);
-        }
+        BitVectorFact f = (BitVectorFact) mySolver.getDataflowValue(bb);
+        f.fact.set(r.getNumber()+1);
+        GenKillTransferFunction tf = (GenKillTransferFunction) transferFunctions.get(bb);
+        tf.gen.set(r.getNumber()+1);
     }
     
     public void setKilledAtIn(BasicBlock bb, Register r) {
-        for (ListIterator.BasicBlock k = bb.getPredecessors().basicBlockIterator(); k.hasNext(); ) {
-            BasicBlock bb2 = k.nextBasicBlock();
-            Object edge = new Pair(bb2, bb);
-            GenKillTransferFunction tf = (GenKillTransferFunction) transferFunctions.get(edge);
-            Assert._assert(tf != null);
-            tf.kill.set(r.getNumber()+1);
-        }
+        BitVectorFact f = (BitVectorFact) mySolver.getDataflowValue(bb);
+        f.fact.clear(r.getNumber()+1);
+        GenKillTransferFunction tf = (GenKillTransferFunction) transferFunctions.get(bb);
+        tf.kill.set(r.getNumber()+1);
     }
 }

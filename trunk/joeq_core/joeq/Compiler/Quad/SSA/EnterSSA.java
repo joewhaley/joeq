@@ -249,14 +249,21 @@ public class EnterSSA implements ControlFlowGraphVisitor {
             if (DEBUG)
                 System.out.println("Start iterated frontier...");
             BitString needsPhi = dominators.getIteratedDominanceFrontier(defs[r]);
+            if (DEBUG)
+                System.out.println("Iterated frontier = "+needsPhi);
             removePhisThatDominateAllDefs(needsPhi, ir, defs[r]);
             if (DEBUG)
                 System.out.println("Done.");
-            for (int b = 0; b < needsPhi.length(); b++) {
-                if (needsPhi.get(b)) {
-                    BasicBlock bb = basic_blocks[b];
-                    if (live.isLiveAtIn(bb, reg))
-                        insertPhi(bb, reg);
+            for (BitStringIterator i = needsPhi.iterator(); i.hasNext(); ) {
+                int b = i.nextIndex();
+                BasicBlock bb = basic_blocks[b];
+                if (live.isLiveAtIn(bb, reg)) {
+                    if (DEBUG)
+                        System.out.println("Inserting phi at "+bb);
+                    insertPhi(bb, reg);
+                } else {
+                    if (DEBUG)
+                        System.out.println(reg+" not live at "+bb);
                 }
             }
         }
@@ -275,8 +282,11 @@ public class EnterSSA implements ControlFlowGraphVisitor {
     private void removePhisThatDominateAllDefs(BitString needsPhi, ControlFlowGraph ir, BitString defs) {
         for (BitStringIterator i = needsPhi.iterator(); i.hasNext(); ) {
             int index = i.nextIndex();
-            if (dominators.dominates(index, defs))
+            if (dominators.dominates(index, defs)) {
+                if (DEBUG)
+                    System.out.println(index+" dominates all defs, so phi is not needed.");
                 needsPhi.clear(index);
+            }
         }
     }
     
