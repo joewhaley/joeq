@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.LinkedList;
 import Util.LinkedHashSet;
+import Util.Default;
 import jq;
 
 /**
@@ -42,14 +43,25 @@ public class AndersenPointerAnalysis {
     public static final boolean TRACE = false;
     public static final boolean TRACE_CHANGE = false;
     public static final boolean TRACE_CYCLES = false;
+    public static final boolean VerifyAssertions = false;
     public static boolean FORCE_GC = false;
+    public static final boolean REUSE_CACHES = true;
+    public static final boolean TRACK_CHANGES = true;
 
     public static final class Visitor implements ControlFlowGraphVisitor {
+        public static boolean added_hook = false;
         public void visitCFG(ControlFlowGraph cfg) {
             INSTANCE.methodsToVisit.add(cfg);
             INSTANCE.iterate();
-            System.out.println("Result after analyzing "+cfg.getMethod()+":");
-            System.out.println(INSTANCE.dumpResults());
+            if (!added_hook) {
+                added_hook = true;
+                Runtime.getRuntime().addShutdownHook(new Thread() {
+                    public void run() {
+                        System.out.println("Result of Andersen pointer analysis:");
+                        System.out.println(INSTANCE.dumpResults());
+                    }
+                });
+            }
         }
     }
     
@@ -194,13 +206,25 @@ public class AndersenPointerAnalysis {
     final HashMap nodeToInclusionEdges;
     
     /** Set of all MethodSummary's that we care about. */
-    final HashSet methodsToVisit;
+    final LinkedHashSet methodsToVisit;
     
     /** Maps a call site to its set of targets. */
     final HashMap callSiteToTargets;
     
     /** The set of method call->targets that have already been linked. */
     final HashSet linkedTargets;
+    
+    /** Records if the cache for the node is current, and whether it has changed
+     *  since the last iteration.  Only used if REUSE_CACHES is true. */
+    final HashMap cacheIsCurrent;
+
+    /** Records edges that have not yet been propagated.
+     *  Only used if TRACK_CHANGES is true. */
+    final HashSet unpropagatedEdges;
+    
+    /** Records nodes that have been collapsed, and which predecessors have
+     *  seen the collapse.  Only used if TRACK_CHANGES is true. */
+    final HashMap collapsedNodes;
     
     /** Change flag, for iterations. */
     boolean change;
@@ -209,9 +233,20 @@ public class AndersenPointerAnalysis {
     public AndersenPointerAnalysis() {
         nodeToConcreteNodes = new HashMap();
         nodeToInclusionEdges = new HashMap();
-        methodsToVisit = new HashSet();
+        methodsToVisit = new LinkedHashSet();
         callSiteToTargets = new HashMap();
         linkedTargets = new HashSet();
+        if (REUSE_CACHES)
+            cacheIsCurrent = new HashMap();
+        else
+            cacheIsCurrent = null;
+        if (TRACK_CHANGES) {
+            unpropagatedEdges = new HashSet();
+            collapsedNodes = new HashMap();
+        } else {
+            unpropagatedEdges = null;
+            collapsedNodes = null;
+        }
         this.initializeStatics();
     }
 
@@ -240,6 +275,7 @@ public class AndersenPointerAnalysis {
         }
         for (int i=0; i<HISTOGRAM_SIZE; ++i) {
             if (histogram[i] > 0) {
+                if (i == HISTOGRAM_SIZE-1) sb.append(">=");
                 sb.append(i);
                 sb.append(" targets:\t");
                 sb.append(histogram[i]);
@@ -264,7 +300,10 @@ public class AndersenPointerAnalysis {
                 visitMethod(cfg);
             }
             if (!change) break;
-            nodeToConcreteNodes.clear();
+            if (REUSE_CACHES)
+                cacheIsCurrent.clear();
+            else
+                nodeToConcreteNodes.clear();
 	    if (FORCE_GC) System.gc();
             ++count;
         }
@@ -292,8 +331,8 @@ public class AndersenPointerAnalysis {
                 }
             }
             // o = n.f
-            if (o instanceof HashSet) {
-                addGlobalEdges((HashSet)o, f);
+            if (o instanceof LinkedHashSet) {
+                addGlobalEdges((LinkedHashSet)o, f);
             } else {
                 addGlobalEdges((FieldNode)o, f);
             }
@@ -312,8 +351,8 @@ public class AndersenPointerAnalysis {
                 Object o = e.getValue();
                 if (TRACE) out.println("Visiting edge: "+n+((f==null)?"[]":("."+f.getName()))+" = "+o);
                 // n.f = o
-                if (o instanceof HashSet) {
-                    addEdgesFromConcreteNodes(n, f, (HashSet)o);
+                if (o instanceof LinkedHashSet) {
+                    addEdgesFromConcreteNodes(n, f, (LinkedHashSet)o);
                 } else {
                     addEdgesFromConcreteNodes(n, f, (Node)o);
                 }
@@ -324,8 +363,8 @@ public class AndersenPointerAnalysis {
                 Object o = e.getValue();
                 if (TRACE) out.println("Visiting edge: "+o+" = "+n+((f==null)?"[]":("."+f.getName())));
                 // o = n.f
-                if (o instanceof HashSet) {
-                    addInclusionEdgesToConcreteNodes((HashSet)o, n, f);
+                if (o instanceof LinkedHashSet) {
+                    addInclusionEdgesToConcreteNodes((LinkedHashSet)o, n, f);
                 } else {
                     addInclusionEdgesToConcreteNodes((FieldNode)o, n, f);
                 }
@@ -339,7 +378,7 @@ public class AndersenPointerAnalysis {
             if (TRACE) out.println("Found call: "+cs);
             CallTargets ct = mc.getCallTargets();
             if (TRACE) out.println("Possible targets ignoring type information: "+ct);
-            HashSet definite_targets = new HashSet();
+            LinkedHashSet definite_targets = new LinkedHashSet();
             //jq.assert(!callSiteToTargets.containsKey(cs));
             callSiteToTargets.put(cs, definite_targets);
             if (ct.size() == 1 && ct.isComplete()) {
@@ -348,7 +387,7 @@ public class AndersenPointerAnalysis {
                 definite_targets.add(ct.iterator().next());
             } else {
                 // use the type information about the receiver object to find targets.
-                HashSet set = new HashSet();
+                LinkedHashSet set = new LinkedHashSet();
                 PassedParameter pp = new PassedParameter(mc, 0);
                 ms.getNodesThatCall(pp, set);
                 if (TRACE) out.println("Possible nodes for receiver object: "+set);
@@ -390,7 +429,7 @@ public class AndersenPointerAnalysis {
             if (!(t instanceof jq_Reference)) continue;
             ParamNode pn = callee.getParamNode(i);
             PassedParameter pp = new PassedParameter(mc, i);
-            HashSet s = new HashSet();
+            LinkedHashSet s = new LinkedHashSet();
             caller.getNodesThatCall(pp, s);
             //s.add(pn);
             if (TRACE) out.println("Adding parameter mapping "+pn+" to set "+s);
@@ -400,7 +439,7 @@ public class AndersenPointerAnalysis {
         }
         ReturnValueNode rvn = (ReturnValueNode)caller.nodes.get(new ReturnValueNode(mc));
         if (rvn != null) {
-            HashSet s = (HashSet)callee.returned.clone();
+            LinkedHashSet s = (LinkedHashSet)callee.returned.clone();
             //s.add(rvn);
             if (TRACE) out.println("Adding return mapping "+rvn+" to set "+s);
             OutsideNode on = rvn;
@@ -409,7 +448,7 @@ public class AndersenPointerAnalysis {
         }
         ThrownExceptionNode ten = (ThrownExceptionNode)caller.nodes.get(new ThrownExceptionNode(mc));
         if (ten != null) {
-            HashSet s = (HashSet)callee.thrown.clone();
+            LinkedHashSet s = (LinkedHashSet)callee.thrown.clone();
             //s.add(ten);
             if (TRACE) out.println("Adding thrown mapping "+ten+" to set "+s);
             OutsideNode on = ten;
@@ -419,7 +458,7 @@ public class AndersenPointerAnalysis {
     }
     
     boolean addInclusionEdges(OutsideNode n, Set s) {
-        jq.assert(n.skip == null);
+        if (VerifyAssertions) jq.assert(n.skip == null);
         Set s2 = (Set)nodeToInclusionEdges.get(n);
         if (s2 == null) {
             nodeToInclusionEdges.put(n, s);
@@ -427,6 +466,19 @@ public class AndersenPointerAnalysis {
                 out.println("Changed! New set of inclusion edges for node "+n);
             }
             this.change = true;
+            if (TRACK_CHANGES) {
+                // we need to mark these edges so that they will be propagated
+                // regardless of whether or not the target set has changed.
+                if (nodeToConcreteNodes.containsKey(n)) {
+                    for (Iterator i=s.iterator(); i.hasNext(); ) {
+                        Object o = i.next();
+                        if (o instanceof OutsideNode) {
+                            if (TRACE) out.println("Adding "+n+"->"+o+" as an unpropagated edge...");
+                            recordUnpropagatedEdge(n, (OutsideNode)o);
+                        }
+                    }
+                }
+            }
             return true;
         } else {
             for (Iterator i=s.iterator(); i.hasNext(); ) {
@@ -444,6 +496,16 @@ public class AndersenPointerAnalysis {
                         out.println("Changed! New inclusion edge for node "+n+": "+o);
                     }
                     this.change = true;
+                    if (TRACK_CHANGES) {
+                        if (o instanceof OutsideNode) {
+                            // we need to mark this edge so that it will be propagated
+                            // regardless of whether or not the target set has changed.
+                            if (nodeToConcreteNodes.containsKey(n)) {
+                                if (TRACE) out.println("Adding "+n+"->"+o+" as an unpropagated edge...");
+                                recordUnpropagatedEdge(n, (OutsideNode)o);
+                            }
+                        }
+                    }
                 }
             }
             return false;
@@ -451,7 +513,7 @@ public class AndersenPointerAnalysis {
     }
     
     void addInclusionEdge(OutsideNode n, Node s) {
-        jq.assert(n.skip == null);
+        if (VerifyAssertions) jq.assert(n.skip == null);
         if (s instanceof OutsideNode) {
             OutsideNode on = (OutsideNode)s;
             while (on.skip != null) {
@@ -462,16 +524,36 @@ public class AndersenPointerAnalysis {
         if (n == s) return;
         Set s2 = (Set)nodeToInclusionEdges.get(n);
         if (s2 == null) {
-            nodeToInclusionEdges.put(n, s2 = new HashSet()); s2.add(s);
+            nodeToInclusionEdges.put(n, s2 = new LinkedHashSet()); s2.add(s);
             if (TRACE_CHANGE && !this.change) {
                 out.println("Changed! New set of inclusion edges for node "+n);
             }
             this.change = true;
+            if (TRACK_CHANGES) {
+                if (s instanceof OutsideNode) {
+                    // we need to mark this edge so that it will be propagated
+                    // regardless of whether or not the target set has changed.
+                    if (nodeToConcreteNodes.containsKey(n)) {
+                        if (TRACE) out.println("Adding "+n+"->"+s+" as an unpropagated edge...");
+                        recordUnpropagatedEdge(n, (OutsideNode)s);
+                    }
+                }
+            }
         } else if (s2.add(s)) {
             if (TRACE_CHANGE && !this.change) {
                 out.println("Changed! New inclusion edge for node "+n+": "+s);
             }
             this.change = true;
+            if (TRACK_CHANGES) {
+                if (s instanceof OutsideNode) {
+                    // we need to mark this edge so that it will be propagated
+                    // regardless of whether or not the target set has changed.
+                    if (nodeToConcreteNodes.containsKey(n)) {
+                        if (TRACE) out.println("Adding "+n+"->"+s+" as an unpropagated edge...");
+                        recordUnpropagatedEdge(n, (OutsideNode)s);
+                    }
+                }
+            }
         }
     }
     
@@ -505,7 +587,7 @@ public class AndersenPointerAnalysis {
     }
     
     // from.f = to
-    void addEdgesFromConcreteNodes(Node from, jq_Field f, HashSet to) {
+    void addEdgesFromConcreteNodes(Node from, jq_Field f, LinkedHashSet to) {
         Set s = getConcreteNodes(from);
         if (TRACE) out.println("Node "+from+" corresponds to concrete nodes "+s);
         for (Iterator i=s.iterator(); i.hasNext(); ) {
@@ -538,28 +620,28 @@ public class AndersenPointerAnalysis {
     
     // from = global.f
     void addGlobalEdges(OutsideNode from, jq_Field f) {
-        HashSet result = new HashSet();
+        LinkedHashSet result = new LinkedHashSet();
         GlobalNode.GLOBAL.getEdges(f, result);
         while (from.skip != null) from = from.skip;
         addInclusionEdges(from, result);
     }
     
     // from = global.f
-    void addGlobalEdges(HashSet from, jq_Field f) {
-        HashSet result = new HashSet();
+    void addGlobalEdges(LinkedHashSet from, jq_Field f) {
+        LinkedHashSet result = new LinkedHashSet();
         GlobalNode.GLOBAL.getEdges(f, result);
         for (Iterator j=from.iterator(); j.hasNext(); ) {
             OutsideNode n2 = (OutsideNode)j.next();
             while (n2.skip != null) n2 = n2.skip;
-            if (addInclusionEdges(n2, result)) result = (HashSet)result.clone();
+            if (addInclusionEdges(n2, result)) result = (LinkedHashSet)result.clone();
         }
     }
     
     // from = base.f
-    void addInclusionEdgesToConcreteNodes(HashSet from, Node base, jq_Field f) {
+    void addInclusionEdgesToConcreteNodes(LinkedHashSet from, Node base, jq_Field f) {
         Set s = getConcreteNodes(base);
         if (TRACE) out.println("Node "+base+" corresponds to concrete nodes "+s);
-        HashSet result = new HashSet();
+        LinkedHashSet result = new LinkedHashSet();
         for (Iterator j=s.iterator(); j.hasNext(); ) {
             Node n2 = (Node)j.next();
             n2.getEdges(f, result);
@@ -567,7 +649,7 @@ public class AndersenPointerAnalysis {
         for (Iterator j=from.iterator(); j.hasNext(); ) {
             OutsideNode n2 = (OutsideNode)j.next();
             while (n2.skip != null) n2 = n2.skip;
-            if (addInclusionEdges(n2, result)) result = (HashSet)result.clone();
+            if (addInclusionEdges(n2, result)) result = (LinkedHashSet)result.clone();
         }
     }
     
@@ -575,7 +657,7 @@ public class AndersenPointerAnalysis {
     void addInclusionEdgesToConcreteNodes(OutsideNode from, Node base, jq_Field f) {
         Set s = getConcreteNodes(base);
         if (TRACE) out.println("Node "+base+" corresponds to concrete nodes "+s);
-        HashSet result = new HashSet();
+        LinkedHashSet result = new LinkedHashSet();
         for (Iterator j=s.iterator(); j.hasNext(); ) {
             Node n2 = (Node)j.next();
             n2.getEdges(f, result);
@@ -591,23 +673,26 @@ public class AndersenPointerAnalysis {
             return Collections.singleton(from);
     }
     
-    Set getConcreteNodes(OutsideNode from, Path p) {
+    boolean temp_change;
+    
+    LinkedHashSet getConcreteNodes(OutsideNode from, Path p) {
         while (from.skip != null) {
             from = from.skip;
         }
         if (from.visited) {
             Path p2 = p;
             if (TRACE_CYCLES) out.println("cycle detected! node="+from+" path="+p);
-            HashSet s = (HashSet)nodeToInclusionEdges.get(from);
-            jq.assert(s != null);
+            LinkedHashSet s = (LinkedHashSet)nodeToInclusionEdges.get(from);
+            if (VerifyAssertions) jq.assert(s != null);
             OutsideNode last = from;
             for (;; p = p.cdr()) {
                 OutsideNode n = p.car();
+                if (TRACK_CHANGES) markCollapsedNode(n);
                 if (n == from) break;
                 if (TRACE) out.println("next in path: "+n+", merging into: "+from);
-                jq.assert(n.skip == null);
+                if (VerifyAssertions) jq.assert(n.skip == null);
                 n.skip = from;
-                HashSet s2 = (HashSet)nodeToInclusionEdges.get(n);
+                LinkedHashSet s2 = (LinkedHashSet)nodeToInclusionEdges.get(n);
                 //s2.remove(last);
                 if (TRACE) out.println("Set of inclusion edges from node "+n+": "+s2);
                 s.addAll(s2);
@@ -630,24 +715,63 @@ public class AndersenPointerAnalysis {
             if (TRACE) out.println("Final set of inclusion edges from node "+from+": "+s);
             return null;
         }
-        Set cached = (Set)nodeToConcreteNodes.get(from);
-        if (cached != null) return cached;
+        LinkedHashSet result = (LinkedHashSet)nodeToConcreteNodes.get(from);
+        boolean brand_new = false;
+        if (REUSE_CACHES) {
+            if (result == null) {
+                if (TRACE) out.println("No cache for "+from+" yet, creating.");
+                nodeToConcreteNodes.put(from, result = new LinkedHashSet());
+                brand_new = true;
+            } else {
+                Object b = cacheIsCurrent.get(from);
+                if (b != null) {
+                    if (TRACE) out.println("Cache for "+from+" is current: "+result+" changed since last iteration: "+b);
+                    if (TRACK_CHANGES) this.temp_change = ((Boolean)b).booleanValue();
+                    return result;
+                } else {
+                    if (TRACE) out.println("Cache for "+from+" "+result+" is not current, updating.");
+                }
+            }
+        } else {
+            if (result != null) {
+                if (TRACE) out.println("Using cached result for "+from+".");
+                return result;
+            }
+            nodeToConcreteNodes.put(from, result = new LinkedHashSet());
+        }
+        LinkedHashSet s = (LinkedHashSet)nodeToInclusionEdges.get(from);
+        if (s == null) {
+            if (TRACE) out.println("No inclusion edges for "+from+", returning.");
+            if (TRACK_CHANGES) {
+                cacheIsCurrent.put(from, Boolean.FALSE);
+                this.temp_change = false;
+            } else if (REUSE_CACHES) {
+                cacheIsCurrent.put(from, from);
+            }
+            return result;
+        }
         p = new Path(from, p);
-        Set s = (Set)nodeToInclusionEdges.get(from);
-        HashSet result = new HashSet();
-        nodeToConcreteNodes.put(from, result);
-        if (s == null) return Collections.EMPTY_SET;
+        boolean local_change = false;
         for (;;) {
             Iterator i = s.iterator();
             for (;;) {
                 if (!i.hasNext()) {
+                    if (TRACE) out.println("Finishing exploring "+from+", change in cache="+local_change+", cache="+result);
+                    if (REUSE_CACHES) {
+                        if (TRACK_CHANGES) {
+                            cacheIsCurrent.put(from, local_change?Boolean.TRUE:Boolean.FALSE);
+                            this.temp_change = local_change;
+                        } else {
+                            cacheIsCurrent.put(from, from);
+                        }
+                    }
                     return result;
                 }
                 Node to = (Node)i.next();
                 if (to instanceof OutsideNode) {
                     if (TRACE) out.println("Visiting inclusion edge "+from+" --> "+to+"...");
                     from.visited = true;
-                    Set s2 = getConcreteNodes((OutsideNode)to, p);
+                    LinkedHashSet s2 = getConcreteNodes((OutsideNode)to, p);
                     from.visited = false;
                     if (from.skip != null) {
                         if (TRACE) out.println("Node "+from+" is skipped...");
@@ -656,17 +780,53 @@ public class AndersenPointerAnalysis {
                     if (s2 == null) {
                         if (TRACE) out.println("Nodes were merged into "+from);
                         if (TRACE) out.println("redoing iteration on "+s);
-                        jq.assert(nodeToInclusionEdges.get(from) == s);
+                        if (TRACK_CHANGES) brand_new = true; // we have new children, so always union them.
+                        if (VerifyAssertions) jq.assert(nodeToInclusionEdges.get(from) == s);
                         break;
                     } else {
-                        result.addAll(s2);
+                        if (TRACK_CHANGES) {
+                            boolean b = removeUnpropagatedEdge(from, (OutsideNode)to);
+                            if (!brand_new && !b && !this.temp_change) {
+                                if (TRACE) out.println("No change in cache of target "+to+", skipping union operation");
+                                if (VerifyAssertions) jq.assert(result.containsAll(s2), from+" result "+result+" should contain all of "+to+" result "+s2);
+                                continue;
+                            }
+                        }
+                        if (result.addAll(s2)) {
+                            if (TRACE) out.println("Unioning cache of target "+to+" changed our cache");
+                            local_change = true;
+                        }
                     }
                 } else {
-                    if (TRACE) out.println("Found concrete node "+to);
-                    result.add(to);
+                    if (result.add(to)) {
+                        if (TRACE) out.println("Adding concrete node "+to+" changed our cache");
+                        local_change = true;
+                    }
                 }
             }
         }
+    }
+    
+    void recordUnpropagatedEdge(OutsideNode from, OutsideNode to) {
+        unpropagatedEdges.add(Default.pair(from, to));
+    }
+    boolean removeUnpropagatedEdge(OutsideNode from, OutsideNode to) {
+        if (unpropagatedEdges.remove(getPair(from, to))) return true;
+        HashSet s = (HashSet)collapsedNodes.get(to);
+        if (s == null) return false;
+        if (s.contains(from)) return false;
+        s.add(from);
+        return true;
+    }
+    void markCollapsedNode(OutsideNode n) {
+        HashSet s = (HashSet)collapsedNodes.get(n);
+        if (s == null) collapsedNodes.put(n, s = new HashSet());
+        else s.clear();
+    }
+    
+    final Default.PairList my_pair_list = new Default.PairList(null, null);
+    public Default.PairList getPair(Object left, Object right) {
+        my_pair_list.left = left; my_pair_list.right = right; return my_pair_list;
     }
     
     public static class Path {
