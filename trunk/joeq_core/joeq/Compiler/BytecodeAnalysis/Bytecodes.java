@@ -3,7 +3,7 @@
  *
  * Created on October 24, 2001, 5:43 PM
  *
- * @author  root
+ * @author  John Whaley
  * @version
  */
 
@@ -8363,9 +8363,14 @@ public interface Bytecodes {
         private InstructionHandle start, end, handler;
         private jq_Class type;
         
-        public CodeException(InstructionList il, jq_TryCatchBC tc) {
+        public CodeException(InstructionList il, byte[] b, jq_TryCatchBC tc) {
             this.start = il.findHandle(tc.getStartPC());
-            this.end = il.findHandle(tc.getEndPC());
+	    if (tc.getEndPC() == b.length) {
+		this.end = il.getEnd();
+	    } else {
+		this.end = il.findHandle(tc.getEndPC());
+		this.end = this.end.getPrev();
+	    }
             this.handler = il.findHandle(tc.getHandlerPC());
             this.type = tc.getExceptionType();
         }

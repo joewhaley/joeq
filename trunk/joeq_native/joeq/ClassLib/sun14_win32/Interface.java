@@ -24,8 +24,12 @@ public final class Interface extends ClassLib.ClassLibInterface {
 
     public java.util.Iterator getImplementationClassDescs(UTF.Utf8 desc) {
         if (USE_JOEQ_CLASSLIB && desc.toString().startsWith("Ljava/")) {
-            UTF.Utf8 u = UTF.Utf8.get("LClassLib/sun14_win32/"+desc.toString().substring(1));
-            return new Util.SingletonIterator(u);
+            UTF.Utf8 u = UTF.Utf8.get("LClassLib/Common/"+desc.toString().substring(1));
+	    java.util.LinkedList ll = new java.util.LinkedList();
+	    ll.add(u);
+	    u = UTF.Utf8.get("LClassLib/sun14_win32/"+desc.toString().substring(1));
+	    ll.add(u);
+            return ll.iterator();
         }
         return Util.NullIterator.INSTANCE;
     }

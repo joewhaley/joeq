@@ -139,6 +139,31 @@ public abstract class ExceptionDeliverer {
         }
     }
     
+    public static void printStackTrace(Object backtrace) {
+        StackFrame sf = (StackFrame)backtrace;
+        while (sf.next != null) {
+            int/*CodeAddress*/ ip = sf.ip;
+            jq_CompiledCode cc = CodeAllocator.getCodeContaining(ip);
+            String s;
+            if (cc != null) {
+                jq_Method m = cc.getMethod();
+                int code_offset = ip - cc.getEntrypoint();
+                if (m != null) {
+                    Utf8 sourcefile = m.getDeclaringClass().getSourceFile();
+                    int bc_index = cc.getBytecodeIndex(ip);
+                    int line_num = m.getLineNumber(bc_index);
+                    s = "\tat "+m+" ("+sourcefile+":"+line_num+" bc:"+bc_index+" off:"+jq.hex(code_offset)+")";
+                } else {
+                    s = "\tat <unknown cc> (start:"+jq.hex8(ip-code_offset)+" off:"+jq.hex(code_offset)+")";
+                }
+            } else {
+                s = "\tat <unknown addr> (ip:"+jq.hex8(ip)+")";
+            }
+	    SystemInterface.debugmsg(s);
+            sf = sf.next;
+        }
+    }
+    
     public static Object getStackTrace() {
         // stack traces are a linked list.
         int/*CodeAddress*/ ip = Unsafe.peek(Unsafe.EBP()+4);
@@ -148,16 +173,16 @@ public abstract class ExceptionDeliverer {
         return sf;
     }
     
-    static class StackFrame {
-        int fp; // location of this stack frame
-        int ip; // ip address
-        StackFrame next; // next frame in linked list
+    public static class StackFrame {
+        protected int/*StackAddress*/ fp; // location of this stack frame
+        protected int/*CodeAddress*/ ip;  // ip address
+        protected StackFrame next; // next frame in linked list
         
-        StackFrame(int/*StackAddress*/ fp, int/*CodeAddress*/ ip) {
+        public StackFrame(int/*StackAddress*/ fp, int/*CodeAddress*/ ip) {
             this.fp = fp; this.ip = ip;
         }
         
-        void fillInStackTrace() {
+        public void fillInStackTrace() {
             StackFrame dis = this;
             while (dis.fp != 0) {
                 int/*CodeAddress*/ ip2 = Unsafe.peek(dis.fp+4);
@@ -166,6 +191,10 @@ public abstract class ExceptionDeliverer {
                 dis = dis.next;
             }
         }
+
+	public StackFrame getNext() { return next; }
+	public int/*StackAddress*/ getFP() { return fp; }
+	public int/*CodeAddress*/ getIP() { return ip; }
     }
     
     public static final jq_StaticMethod _athrow;

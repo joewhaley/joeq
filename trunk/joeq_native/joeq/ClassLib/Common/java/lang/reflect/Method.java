@@ -42,7 +42,7 @@ public class Method extends AccessibleObject {
             if (!TypeCheck.isAssignable(t, k))
                 throw new java.lang.IllegalArgumentException(t+" is not assignable to "+k);
         }
-        if (!this.isAccessible()) jq_m.checkCallerAccess(3);
+        if (!this.isAccessible()) jq_m.checkCallerAccess(2);
         int offset;
         if (jq_m.isStatic()) {
             obj = null; offset = 0;

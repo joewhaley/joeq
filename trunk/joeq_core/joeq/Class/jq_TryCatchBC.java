@@ -15,7 +15,7 @@ import jq;
 
 public class jq_TryCatchBC {
 
-    // NOTE: startPC is inclusive, endPC is exclusive (opposite of jq_TryCatch)
+    // NOTE: startPC is inclusive, endPC is exclusive
     private char startPC, endPC, handlerPC;
     private jq_Class exType;
 

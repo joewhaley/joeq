@@ -61,7 +61,7 @@ public abstract class ObjectInputStream {
         jq_Initializer i = c2.getInitializer(new jq_NameAndDesc(Utf8.get("<init>"), Utf8.get("()V")));
         if (i == null)
             throw new InstantiationException("no empty arg initializer in "+initclass);
-        i.checkCallerAccess(4);
+        i.checkCallerAccess(3);
         c1.verify(); c1.prepare(); c1.sf_initialize(); c1.cls_initialize(); 
         Object o = c1.newInstance();
         try {

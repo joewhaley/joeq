@@ -72,7 +72,7 @@ public class Class {
         jq_Initializer i = jq_class.getInitializer(new jq_NameAndDesc(Utf8.get("<init>"), Utf8.get("()V")));
         if (i == null)
             throw new InstantiationException("no empty arg initializer in "+this);
-        i.checkCallerAccess(4);
+        i.checkCallerAccess(3);
         jq_class.verify(); jq_class.prepare(); jq_class.sf_initialize(); jq_class.cls_initialize(); 
         java.lang.Object o = jq_class.newInstance();
         try {
@@ -123,7 +123,7 @@ public class Class {
         else return jq_type.getName().toString();
     }
     
-    private java.lang.ClassLoader getClassLoader0() {
+    java.lang.ClassLoader getClassLoader0() {
         jq_Type jq_type = this.jq_type;
         return (java.lang.ClassLoader)jq_type.getClassLoader();
     }

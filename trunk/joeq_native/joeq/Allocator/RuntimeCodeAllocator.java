@@ -52,6 +52,7 @@ public class RuntimeCodeAllocator extends CodeAllocator {
     public x86CodeBuffer getCodeBuffer(int estimated_size) {
         // should not be called recursively.
         jq.assert(!isGenerating); isGenerating = true;
+	if (TRACE) SystemInterface.debugmsg("Code generation started: "+this);
         if (heapCurrent + estimated_size <= heapEnd) {
             if (TRACE) SystemInterface.debugmsg("Estimated size ("+jq.hex(estimated_size)+" fits within free space in current block "+jq.hex8(heapCurrent)+"-"+jq.hex8(heapEnd));
             return new Runtimex86CodeBuffer(heapCurrent, heapEnd);
@@ -172,7 +173,7 @@ public class RuntimeCodeAllocator extends CodeAllocator {
         public jq_CompiledCode allocateCodeBlock(jq_Method m, jq_TryCatch[] ex,
                                                  jq_BytecodeMap bcm, ExceptionDeliverer exd,
                                                  List code_relocs, List data_relocs) {
-            jq.assert(isGenerating); isGenerating = false;
+            jq.assert(isGenerating);
             int start = getStart();
             int current = getCurrent();
             int end = getEnd();
@@ -202,6 +203,8 @@ public class RuntimeCodeAllocator extends CodeAllocator {
                 // current block
                 heapCurrent = current;
             }
+	    isGenerating = false;
+	    if (TRACE) SystemInterface.debugmsg("Code generation completed: "+this);
             jq_CompiledCode cc = new jq_CompiledCode(m, start, current-start, ex, bcm, exd, code_relocs, data_relocs);
             CodeAllocator.registerCode(cc);
             return cc;

@@ -423,6 +423,7 @@ public class jq_NativeThread implements x86Constants {
         break_nthread = new jq_NativeThread(-1);
         Thread t = new Thread("_break_");
         break_jthread = ClassLibInterface.i.getJQThread(t);
+	break_jthread.disableThreadSwitch();
         break_jthread.setNativeThread(break_nthread);
         if (TRACE) SystemInterface.debugmsg("Break thread initialized");
     }

@@ -56,7 +56,7 @@ public class Field extends AccessibleObject {
         jq_Field jq_f = this.jq_field;
         jq_Type t = jq_f.getType();
         if (jq_f.isStatic()) {
-            if (!this.isAccessible()) jq_f.checkCallerAccess(3);
+            if (!this.isAccessible()) jq_f.checkCallerAccess(2);
             jq_StaticField sf = (jq_StaticField)jq_f;
             if (t.isReferenceType()) return Reflection.getstatic_A(sf);
             if (t == jq_Primitive.INT) return new Integer(Reflection.getstatic_I(sf));
@@ -72,7 +72,7 @@ public class Field extends AccessibleObject {
             if (!TypeCheck.isAssignable(obj_t, jq_f.getDeclaringClass())) {
                 throw new IllegalArgumentException();
             }
-            if (!this.isAccessible()) jq_f.checkCallerAccess(3);
+            if (!this.isAccessible()) jq_f.checkCallerAccess(2);
             jq_InstanceField f = (jq_InstanceField)jq_f;
             if (t.isReferenceType()) return Reflection.getfield_A(obj, f);
             if (t == jq_Primitive.INT) return new Integer(Reflection.getfield_I(obj, f));
@@ -94,7 +94,7 @@ public class Field extends AccessibleObject {
         jq_Field jq_f = this.jq_field;
         jq_Type t = jq_f.getType();
         if (jq_f.isStatic()) {
-            if (!this.isAccessible()) jq_f.checkCallerAccess(3);
+            if (!this.isAccessible()) jq_f.checkCallerAccess(2);
             jq_StaticField sf = (jq_StaticField)jq_f;
             if (t == jq_Primitive.BOOLEAN) return Reflection.getstatic_Z(sf);
         } else {
@@ -102,7 +102,7 @@ public class Field extends AccessibleObject {
             if (!TypeCheck.isAssignable(obj_t, jq_f.getDeclaringClass())) {
                 throw new IllegalArgumentException();
             }
-            if (!this.isAccessible()) jq_f.checkCallerAccess(3);
+            if (!this.isAccessible()) jq_f.checkCallerAccess(2);
             jq_InstanceField f = (jq_InstanceField)jq_f;
             if (t == jq_Primitive.BOOLEAN) return Reflection.getfield_Z(obj, f);
         }
@@ -116,7 +116,7 @@ public class Field extends AccessibleObject {
         jq_Field jq_f = this.jq_field;
         jq_Type t = jq_f.getType();
         if (jq_f.isStatic()) {
-            if (!this.isAccessible()) jq_f.checkCallerAccess(3);
+            if (!this.isAccessible()) jq_f.checkCallerAccess(2);
             jq_StaticField sf = (jq_StaticField)jq_f;
             if (t == jq_Primitive.BYTE) return Reflection.getstatic_B(sf);
         } else {
@@ -124,7 +124,7 @@ public class Field extends AccessibleObject {
             if (!TypeCheck.isAssignable(obj_t, jq_f.getDeclaringClass())) {
                 throw new IllegalArgumentException();
             }
-            if (!this.isAccessible()) jq_f.checkCallerAccess(3);
+            if (!this.isAccessible()) jq_f.checkCallerAccess(2);
             jq_InstanceField f = (jq_InstanceField)jq_f;
             if (t == jq_Primitive.BYTE) return Reflection.getfield_B(obj, f);
         }
@@ -138,7 +138,7 @@ public class Field extends AccessibleObject {
         jq_Field jq_f = this.jq_field;
         jq_Type t = jq_f.getType();
         if (jq_f.isStatic()) {
-            if (!this.isAccessible()) jq_f.checkCallerAccess(3);
+            if (!this.isAccessible()) jq_f.checkCallerAccess(2);
             jq_StaticField sf = (jq_StaticField)jq_f;
             if (t == jq_Primitive.CHAR) return Reflection.getstatic_C(sf);
         } else {
@@ -146,7 +146,7 @@ public class Field extends AccessibleObject {
             if (!TypeCheck.isAssignable(obj_t, jq_f.getDeclaringClass())) {
                 throw new IllegalArgumentException();
             }
-            if (!this.isAccessible()) jq_f.checkCallerAccess(3);
+            if (!this.isAccessible()) jq_f.checkCallerAccess(2);
             jq_InstanceField f = (jq_InstanceField)jq_f;
             if (t == jq_Primitive.CHAR) return Reflection.getfield_C(obj, f);
         }
@@ -161,7 +161,7 @@ public class Field extends AccessibleObject {
         jq_Field jq_f = this.jq_field;
         jq_Type t = jq_f.getType();
         if (jq_f.isStatic()) {
-            if (!this.isAccessible()) jq_f.checkCallerAccess(3);
+            if (!this.isAccessible()) jq_f.checkCallerAccess(2);
             jq_StaticField sf = (jq_StaticField)jq_f;
             if (t == jq_Primitive.SHORT) return Reflection.getstatic_S(sf);
             if (t == jq_Primitive.BYTE) return (short)Reflection.getstatic_B(sf);
@@ -170,7 +170,7 @@ public class Field extends AccessibleObject {
             if (!TypeCheck.isAssignable(obj_t, jq_f.getDeclaringClass())) {
                 throw new IllegalArgumentException();
             }
-            if (!this.isAccessible()) jq_f.checkCallerAccess(3);
+            if (!this.isAccessible()) jq_f.checkCallerAccess(2);
             jq_InstanceField f = (jq_InstanceField)jq_f;
             if (t == jq_Primitive.SHORT) return Reflection.getfield_S(obj, f);
             if (t == jq_Primitive.BYTE) return (short)Reflection.getfield_B(obj, f);
@@ -188,7 +188,7 @@ public class Field extends AccessibleObject {
         jq_Field jq_f = this.jq_field;
         jq_Type t = jq_f.getType();
         if (jq_f.isStatic()) {
-            if (!this.isAccessible()) jq_f.checkCallerAccess(3);
+            if (!this.isAccessible()) jq_f.checkCallerAccess(2);
             jq_StaticField sf = (jq_StaticField)jq_f;
             if (t == jq_Primitive.INT) return Reflection.getstatic_I(sf);
             if (t == jq_Primitive.BYTE) return (int)Reflection.getstatic_B(sf);
@@ -199,7 +199,7 @@ public class Field extends AccessibleObject {
             if (!TypeCheck.isAssignable(obj_t, jq_f.getDeclaringClass())) {
                 throw new IllegalArgumentException();
             }
-            if (!this.isAccessible()) jq_f.checkCallerAccess(3);
+            if (!this.isAccessible()) jq_f.checkCallerAccess(2);
             jq_InstanceField f = (jq_InstanceField)jq_f;
             if (t == jq_Primitive.INT) return Reflection.getfield_I(obj, f);
             if (t == jq_Primitive.BYTE) return (int)Reflection.getfield_B(obj, f);
@@ -220,7 +220,7 @@ public class Field extends AccessibleObject {
         jq_Field jq_f = this.jq_field;
         jq_Type t = jq_f.getType();
         if (jq_f.isStatic()) {
-            if (!this.isAccessible()) jq_f.checkCallerAccess(3);
+            if (!this.isAccessible()) jq_f.checkCallerAccess(2);
             jq_StaticField sf = (jq_StaticField)jq_f;
             if (t == jq_Primitive.LONG) return Reflection.getstatic_L(sf);
             if (t == jq_Primitive.BYTE) return (long)Reflection.getstatic_B(sf);
@@ -232,7 +232,7 @@ public class Field extends AccessibleObject {
             if (!TypeCheck.isAssignable(obj_t, jq_f.getDeclaringClass())) {
                 throw new IllegalArgumentException();
             }
-            if (!this.isAccessible()) jq_f.checkCallerAccess(3);
+            if (!this.isAccessible()) jq_f.checkCallerAccess(2);
             jq_InstanceField f = (jq_InstanceField)jq_f;
             if (t == jq_Primitive.LONG) return Reflection.getfield_L(obj, f);
             if (t == jq_Primitive.BYTE) return (long)Reflection.getfield_B(obj, f);
@@ -255,7 +255,7 @@ public class Field extends AccessibleObject {
         jq_Field jq_f = this.jq_field;
         jq_Type t = jq_f.getType();
         if (jq_f.isStatic()) {
-            if (!this.isAccessible()) jq_f.checkCallerAccess(3);
+            if (!this.isAccessible()) jq_f.checkCallerAccess(2);
             jq_StaticField sf = (jq_StaticField)jq_f;
             if (t == jq_Primitive.FLOAT) return Reflection.getstatic_F(sf);
             if (t == jq_Primitive.BYTE) return (float)Reflection.getstatic_B(sf);
@@ -268,7 +268,7 @@ public class Field extends AccessibleObject {
             if (!TypeCheck.isAssignable(obj_t, jq_f.getDeclaringClass())) {
                 throw new IllegalArgumentException();
             }
-            if (!this.isAccessible()) jq_f.checkCallerAccess(3);
+            if (!this.isAccessible()) jq_f.checkCallerAccess(2);
             jq_InstanceField f = (jq_InstanceField)jq_f;
             if (t == jq_Primitive.FLOAT) return Reflection.getfield_F(obj, f);
             if (t == jq_Primitive.BYTE) return (float)Reflection.getfield_B(obj, f);
@@ -293,7 +293,7 @@ public class Field extends AccessibleObject {
         jq_Field jq_f = this.jq_field;
         jq_Type t = jq_f.getType();
         if (jq_f.isStatic()) {
-            if (!this.isAccessible()) jq_f.checkCallerAccess(3);
+            if (!this.isAccessible()) jq_f.checkCallerAccess(2);
             jq_StaticField sf = (jq_StaticField)jq_f;
             if (t == jq_Primitive.DOUBLE) return Reflection.getstatic_D(sf);
             if (t == jq_Primitive.BYTE) return (double)Reflection.getstatic_B(sf);
@@ -307,7 +307,7 @@ public class Field extends AccessibleObject {
             if (!TypeCheck.isAssignable(obj_t, jq_f.getDeclaringClass())) {
                 throw new IllegalArgumentException();
             }
-            if (!this.isAccessible()) jq_f.checkCallerAccess(3);
+            if (!this.isAccessible()) jq_f.checkCallerAccess(2);
             jq_InstanceField f = (jq_InstanceField)jq_f;
             if (t == jq_Primitive.DOUBLE) return Reflection.getfield_F(obj, f);
             if (t == jq_Primitive.BYTE) return (double)Reflection.getfield_B(obj, f);
@@ -327,7 +327,7 @@ public class Field extends AccessibleObject {
         jq_Field jq_f = this.jq_field;
         jq_Type t = jq_f.getType();
         if (jq_f.isStatic()) {
-            if (!this.isAccessible()) jq_f.checkCallerAccess(3);
+            if (!this.isAccessible()) jq_f.checkCallerAccess(2);
             if (jq_f.isFinal()) {
                 throw new IllegalAccessException();
             }
@@ -371,7 +371,7 @@ public class Field extends AccessibleObject {
             if (!TypeCheck.isAssignable(obj_t, jq_f.getDeclaringClass())) {
                 throw new IllegalArgumentException();
             }
-            if (!this.isAccessible()) jq_f.checkCallerAccess(3);
+            if (!this.isAccessible()) jq_f.checkCallerAccess(2);
             if (!jq_f.isFinal()) {
                 throw new IllegalAccessException();
             }
@@ -420,7 +420,7 @@ public class Field extends AccessibleObject {
         jq_Field jq_f = this.jq_field;
         jq_Type t = jq_f.getType();
         if (jq_f.isStatic()) {
-            if (!this.isAccessible()) jq_f.checkCallerAccess(3);
+            if (!this.isAccessible()) jq_f.checkCallerAccess(2);
             if (jq_f.isFinal()) {
                 throw new IllegalAccessException();
             }
@@ -434,7 +434,7 @@ public class Field extends AccessibleObject {
             if (!TypeCheck.isAssignable(obj_t, jq_f.getDeclaringClass())) {
                 throw new IllegalArgumentException();
             }
-            if (!this.isAccessible()) jq_f.checkCallerAccess(3);
+            if (!this.isAccessible()) jq_f.checkCallerAccess(2);
             if (!jq_f.isFinal()) {
                 throw new IllegalAccessException();
             }
@@ -451,7 +451,7 @@ public class Field extends AccessibleObject {
         jq_Field jq_f = this.jq_field;
         jq_Type t = jq_f.getType();
         if (jq_f.isStatic()) {
-            if (!this.isAccessible()) jq_f.checkCallerAccess(3);
+            if (!this.isAccessible()) jq_f.checkCallerAccess(2);
             if (jq_f.isFinal()) {
                 throw new IllegalAccessException();
             }
@@ -480,7 +480,7 @@ public class Field extends AccessibleObject {
             if (!TypeCheck.isAssignable(obj_t, jq_f.getDeclaringClass())) {
                 throw new IllegalArgumentException();
             }
-            if (!this.isAccessible()) jq_f.checkCallerAccess(3);
+            if (!this.isAccessible()) jq_f.checkCallerAccess(2);
             if (!jq_f.isFinal()) {
                 throw new IllegalAccessException();
             }
@@ -512,7 +512,7 @@ public class Field extends AccessibleObject {
         jq_Field jq_f = this.jq_field;
         jq_Type t = jq_f.getType();
         if (jq_f.isStatic()) {
-            if (!this.isAccessible()) jq_f.checkCallerAccess(3);
+            if (!this.isAccessible()) jq_f.checkCallerAccess(2);
             if (jq_f.isFinal()) {
                 throw new IllegalAccessException();
             }
@@ -538,7 +538,7 @@ public class Field extends AccessibleObject {
             if (!TypeCheck.isAssignable(obj_t, jq_f.getDeclaringClass())) {
                 throw new IllegalArgumentException();
             }
-            if (!this.isAccessible()) jq_f.checkCallerAccess(3);
+            if (!this.isAccessible()) jq_f.checkCallerAccess(2);
             if (!jq_f.isFinal()) {
                 throw new IllegalAccessException();
             }
@@ -567,7 +567,7 @@ public class Field extends AccessibleObject {
         jq_Field jq_f = this.jq_field;
         jq_Type t = jq_f.getType();
         if (jq_f.isStatic()) {
-            if (!this.isAccessible()) jq_f.checkCallerAccess(3);
+            if (!this.isAccessible()) jq_f.checkCallerAccess(2);
             if (jq_f.isFinal()) {
                 throw new IllegalAccessException();
             }
@@ -593,7 +593,7 @@ public class Field extends AccessibleObject {
             if (!TypeCheck.isAssignable(obj_t, jq_f.getDeclaringClass())) {
                 throw new IllegalArgumentException();
             }
-            if (!this.isAccessible()) jq_f.checkCallerAccess(3);
+            if (!this.isAccessible()) jq_f.checkCallerAccess(2);
             if (!jq_f.isFinal()) {
                 throw new IllegalAccessException();
             }
@@ -622,7 +622,7 @@ public class Field extends AccessibleObject {
         jq_Field jq_f = this.jq_field;
         jq_Type t = jq_f.getType();
         if (jq_f.isStatic()) {
-            if (!this.isAccessible()) jq_f.checkCallerAccess(3);
+            if (!this.isAccessible()) jq_f.checkCallerAccess(2);
             if (jq_f.isFinal()) {
                 throw new IllegalAccessException();
             }
@@ -645,7 +645,7 @@ public class Field extends AccessibleObject {
             if (!TypeCheck.isAssignable(obj_t, jq_f.getDeclaringClass())) {
                 throw new IllegalArgumentException();
             }
-            if (!this.isAccessible()) jq_f.checkCallerAccess(3);
+            if (!this.isAccessible()) jq_f.checkCallerAccess(2);
             if (!jq_f.isFinal()) {
                 throw new IllegalAccessException();
             }
@@ -671,7 +671,7 @@ public class Field extends AccessibleObject {
         jq_Field jq_f = this.jq_field;
         jq_Type t = jq_f.getType();
         if (jq_f.isStatic()) {
-            if (!this.isAccessible()) jq_f.checkCallerAccess(3);
+            if (!this.isAccessible()) jq_f.checkCallerAccess(2);
             if (jq_f.isFinal()) {
                 throw new IllegalAccessException();
             }
@@ -688,7 +688,7 @@ public class Field extends AccessibleObject {
             if (!TypeCheck.isAssignable(obj_t, jq_f.getDeclaringClass())) {
                 throw new IllegalArgumentException();
             }
-            if (!this.isAccessible()) jq_f.checkCallerAccess(3);
+            if (!this.isAccessible()) jq_f.checkCallerAccess(2);
             if (!jq_f.isFinal()) {
                 throw new IllegalAccessException();
             }
@@ -708,7 +708,7 @@ public class Field extends AccessibleObject {
         jq_Field jq_f = this.jq_field;
         jq_Type t = jq_f.getType();
         if (jq_f.isStatic()) {
-            if (!this.isAccessible()) jq_f.checkCallerAccess(3);
+            if (!this.isAccessible()) jq_f.checkCallerAccess(2);
             if (jq_f.isFinal()) {
                 throw new IllegalAccessException();
             }
@@ -728,7 +728,7 @@ public class Field extends AccessibleObject {
             if (!TypeCheck.isAssignable(obj_t, jq_f.getDeclaringClass())) {
                 throw new IllegalArgumentException();
             }
-            if (!this.isAccessible()) jq_f.checkCallerAccess(3);
+            if (!this.isAccessible()) jq_f.checkCallerAccess(2);
             if (!jq_f.isFinal()) {
                 throw new IllegalAccessException();
             }
@@ -751,7 +751,7 @@ public class Field extends AccessibleObject {
         jq_Field jq_f = this.jq_field;
         jq_Type t = jq_f.getType();
         if (jq_f.isStatic()) {
-            if (!this.isAccessible()) jq_f.checkCallerAccess(3);
+            if (!this.isAccessible()) jq_f.checkCallerAccess(2);
             if (jq_f.isFinal()) {
                 throw new IllegalAccessException();
             }
@@ -765,7 +765,7 @@ public class Field extends AccessibleObject {
             if (!TypeCheck.isAssignable(obj_t, jq_f.getDeclaringClass())) {
                 throw new IllegalArgumentException();
             }
-            if (!this.isAccessible()) jq_f.checkCallerAccess(3);
+            if (!this.isAccessible()) jq_f.checkCallerAccess(2);
             if (!jq_f.isFinal()) {
                 throw new IllegalAccessException();
             }

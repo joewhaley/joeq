@@ -35,7 +35,7 @@ public class Constructor extends AccessibleObject {
         jq_Initializer jq_i = this.jq_init;
         jq_Class k = jq_i.getDeclaringClass();
         if (k.isAbstract()) throw new InstantiationException();
-        if (!this.isAccessible()) jq_i.checkCallerAccess(3);
+        if (!this.isAccessible()) jq_i.checkCallerAccess(2);
         jq_Type[] argtypes = jq_i.getParamTypes();
 	int nargs = initargs == null ? 0 : initargs.length;
 	if (nargs != argtypes.length-1)
