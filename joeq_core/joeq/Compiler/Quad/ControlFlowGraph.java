@@ -37,6 +37,8 @@ public class ControlFlowGraph {
     
     /* Current number of basic blocks, used to generate unique id's. */
     private int bb_counter;
+    /* Current number of quads, used to generate unique id's. */
+    private int quad_counter;
     
     /** Creates a new ControlFlowGraph.
      * @param numOfExits  the expected number of branches to the exit node.
@@ -45,7 +47,7 @@ public class ControlFlowGraph {
         start_node = BasicBlock.createStartNode();
         end_node = BasicBlock.createEndNode(numOfExits);
         exception_handlers = new java.util.ArrayList(numOfExceptionHandlers);
-        bb_counter = 1;
+        bb_counter = 1; quad_counter = 0;
     }
 
     /** Returns the entry node.
@@ -75,6 +77,9 @@ public class ControlFlowGraph {
      * @return  a maximum on the number of basic blocks in this control flow graph. */
     public int getNumberOfBasicBlocks() { return bb_counter+1; }
 
+    /** Returns a new id number for a quad. */
+    int getNewQuadID() { return ++quad_counter; }
+    
     /** Returns an iteration of the basic blocks in this graph in reverse post order.
      * @see  BasicBlockIterator
      * @return  an iteration of the basic blocks in this graph in reverse post order. */
