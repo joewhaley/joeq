@@ -932,6 +932,7 @@ public class MethodSummary {
          *  Two nodes are equal if they have all the same edges and equivalent passed
          *  parameter sets.
          */
+        /*
         public boolean equals(Node that) {
             if (this.predecessors != that.predecessors) {
                 if ((this.predecessors == null) || (that.predecessors == null)) return false;
@@ -955,6 +956,7 @@ public class MethodSummary {
             if (o instanceof Node) return equals((Node)o);
             return false;
         }
+         */
         /** Return a shallow copy of this node. */
         public Object clone() { return this.copy(); }
         
