@@ -112,4 +112,14 @@ public class IndexMap implements IndexedMap {
         return dis;
     }
     
+    public static IndexMap loadStringMap(String name, DataInput in) throws IOException {
+        IndexMap dis = new IndexMap(name);
+        for (;;) {
+            String o = in.readLine();
+            if (o == null) break;
+            dis.hash.put(o, new Integer(dis.list.size()));
+            dis.list.add(o);
+        }
+        return dis;
+    }
 }
