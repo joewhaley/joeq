@@ -15,20 +15,20 @@ import java.io.*;
 public class SymbolTableEntry {
 
     // Symbol Binding
-    public static final int STB_LOCAL   = 0;
-    public static final int STB_GLOBAL  = 1;
-    public static final int STB_WEAK    = 2;
-    public static final int STB_LOPROC  = 13;
-    public static final int STB_HIPROC  = 15;
+    public static final byte STB_LOCAL   = 0;
+    public static final byte STB_GLOBAL  = 1;
+    public static final byte STB_WEAK    = 2;
+    public static final byte STB_LOPROC  = 13;
+    public static final byte STB_HIPROC  = 15;
     
     // Symbol Types
-    public static final int STT_NOTYPE  = 0;
-    public static final int STT_OBJECT  = 1;
-    public static final int STT_FUNC    = 2;
-    public static final int STT_SECTION = 3;
-    public static final int STT_FILE    = 4;
-    public static final int STT_LOPROC  = 13;
-    public static final int STT_HIPROC  = 15;
+    public static final byte STT_NOTYPE  = 0;
+    public static final byte STT_OBJECT  = 1;
+    public static final byte STT_FUNC    = 2;
+    public static final byte STT_SECTION = 3;
+    public static final byte STT_FILE    = 4;
+    public static final byte STT_LOPROC  = 13;
+    public static final byte STT_HIPROC  = 15;
     
     protected int index;
     protected String name;
@@ -37,13 +37,15 @@ public class SymbolTableEntry {
     protected byte info;
     protected Section section;
     
-    public SymbolTableEntry(String name, int value, int size, byte info, Section section) {
-        this.name = name; this.value = value; this.size = size; this.info = info; this.section = section;
+    public SymbolTableEntry(String name, int value, int size, byte bind, byte type, Section section) {
+        this.name = name; this.value = value; this.size = size; this.info = (byte)((bind<<4) | type); this.section = section;
     }
 
     public final String getName() { return name; }
     public final int getValue() { return value; }
     public final int getSize() { return size; }
+    public final byte getBind() { return (byte)(info>>4); }
+    public final byte getType() { return (byte)(info&0xf); }
     public final byte getInfo() { return info; }
     public final byte getOther() { return 0; }
     public final int getSHndx() { return section.getIndex(); }

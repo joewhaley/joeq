@@ -9,6 +9,7 @@ import java.io.*;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.Iterator;
+import jq;
 
 /**
  *
@@ -123,17 +124,29 @@ public class ELFFile {
             }
             e_shoff = e_phoff + ((pindex+1) * ProgramHeader.getSize());
         }
-        // number all sections and calculate section header offset.
-        // also add section header names to the section header string table.
+        
+        // add section header names to the section header string table.
+        if (section_header_string_table != null) {
+            Iterator si = sections.iterator();
+            while (si.hasNext()) {
+                Section s = (Section)si.next();
+                section_header_string_table.addString(s.getName());
+            }
+        }
+        
+        // number and pack all sections and calculate section header offset.
         Iterator si = sections.iterator();
-        int sindex = -1; 
+        int sindex = 0;
+        Section s = (Section)si.next();
+        jq.assert(s instanceof Section.NullSection);
         while (si.hasNext()) {
-            Section s = (Section)si.next();
+            s = (Section)si.next();
             s.setIndex(++sindex);
             s.setOffset(e_shoff);
-            if (section_header_string_table != null)
-                section_header_string_table.addString(s.getName());
-            e_shoff += s.getSize();
+            if (s instanceof Section.StrTabSection)
+                ((Section.StrTabSection)s).pack();
+            if (!(s instanceof Section.NoBitsSection))
+                e_shoff += s.getSize();
         }
         // pack string tables.
         if (section_header_string_table != null)
