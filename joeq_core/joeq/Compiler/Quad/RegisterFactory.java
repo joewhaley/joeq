@@ -57,7 +57,7 @@ public class RegisterFactory {
         }
     }
 
-    Register getStack(int i, jq_Type t) {
+    public Register getStack(int i, jq_Type t) {
         if (t.isReferenceType()) return (Register)stack_A.get(i);
         if (t.isIntLike()) return (Register)stack_I.get(i);
         if (t == jq_Primitive.FLOAT) return (Register)stack_F.get(i);
@@ -67,7 +67,7 @@ public class RegisterFactory {
         return null;
     }
     
-    Register getLocal(int i, jq_Type t) {
+    public Register getLocal(int i, jq_Type t) {
         if (t.isReferenceType()) return (Register)local_A.get(i);
         if (t.isIntLike()) return (Register)local_I.get(i);
         if (t == jq_Primitive.FLOAT) return (Register)local_F.get(i);
@@ -77,7 +77,7 @@ public class RegisterFactory {
         return null;
     }
     
-    boolean isLocal(Operand op, int index, jq_Type type) {
+    public boolean isLocal(Operand op, int index, jq_Type type) {
 	if (index >= getLocalSize()) return false;
         if (op instanceof RegisterOperand) {
             Register r = ((RegisterOperand)op).getRegister();
@@ -88,7 +88,7 @@ public class RegisterFactory {
 
     private int getLocalSize() { return local_I.size(); }
 
-    RegisterOperand makeGuardReg() {
+    public RegisterOperand makeGuardReg() {
         return new RegisterOperand(new Register(-1, true), null);
     }
     
