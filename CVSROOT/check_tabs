@@ -1,6 +1,8 @@
 #!/bin/bash
 
+echo Changing dir to $1
 cd $1
+ls
 shift
 
 for arg in "$@"
@@ -8,11 +10,13 @@ do
  if [ ".java" == .${arg##*.} ]
  then
   echo Checking $arg
+  if [ -e $arg ]
    if grep -l "	" $arg
    then
     echo "Tab characters not allowed!  Use spaces or \\t instead."
     exit 1
    fi
+  fi
  fi
 done
 
