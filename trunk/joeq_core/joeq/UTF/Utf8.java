@@ -15,6 +15,8 @@ import Clazz.jq_ClassFileConstants;
 
 public class Utf8 implements jq_ClassFileConstants {
 
+    public static /*final*/ boolean TRACE = false;
+    
     public static final int SENTINEL = -1;
     public static final int STARTING_TABLE_SIZE = 16384;
     public static final int STARTING_HASH_SIZE = 9999;
@@ -196,82 +198,6 @@ here:
         return get(b);
     }
 
-    /*
-    public Utf8 typeDescToJavaLang() {
-        int i=0;
-        for (;;) {
-            switch (data[i]) {
-                default:
-                    return this;
-                case TC_ARRAY:
-                    ++i; continue;
-                case TC_CLASS:
-                    if ((data[i+1] == (byte)'j') &&
-                        (data[i+2] == (byte)'a') &&
-                        (data[i+3] == (byte)'v') &&
-                        (data[i+4] == BOOTSTRAP_FROM_CHAR)) {
-                        byte[] b = new byte[data.length];
-                        System.arraycopy(data, 0, b, 0, data.length);
-                        b[i+4] = BOOTSTRAP_TO_CHAR;
-                        return get(b);
-                    } else
-                        return this;
-            }
-        }
-    }
-    public Utf8 methodDescToJavaLang() {
-        int i=1;
-        byte[] b = null;
-        while (data[i] != TC_PARAMEND) {
-            switch (data[i]) {
-                default:
-                    break;
-                case TC_CLASS:
-                    if ((data[i+1] == (byte)'j') &&
-                        (data[i+2] == (byte)'a') &&
-                        (data[i+3] == (byte)'v') &&
-                        (data[i+4] == BOOTSTRAP_FROM_CHAR)) {
-                        if (b == null) {
-                            b = new byte[data.length];
-                            System.arraycopy(data, 0, b, 0, data.length);
-                        }
-                        b[i+4] = BOOTSTRAP_TO_CHAR;
-                    }
-                    while (data[++i] != TC_CLASSEND) ;
-                    break;
-            }
-            ++i;
-        }
-        ++i;
-here2:
-        for (;;) {
-            switch (data[i]) {
-                default:
-                    break here2;
-                case TC_ARRAY:
-                    ++i; continue;
-                case TC_CLASS:
-                    if ((data[i+1] == (byte)'j') &&
-                        (data[i+2] == (byte)'a') &&
-                        (data[i+3] == (byte)'v') &&
-                        (data[i+4] == BOOTSTRAP_FROM_CHAR)) {
-                        if (b == null) {
-                            b = new byte[data.length];
-                            System.arraycopy(data, 0, b, 0, data.length);
-                        }
-                        b[i+4] = BOOTSTRAP_TO_CHAR;
-                        break here2;
-                    } else
-                        break here2;
-            }
-        }
-        if (b == null)
-            return this;
-        else
-            return get(b);
-    }
-    */
-    
     public MethodDescriptorIterator getParamDescriptors() {
         return new MethodDescriptorIterator();
     }
@@ -343,6 +269,7 @@ here2:
         }
         table[size] = new Utf8(b, hash);
         chain[index] = size;
+        if (TRACE) System.out.println("allocated new Utf8: "+table[size]);
         return size;
     }
     
@@ -429,7 +356,7 @@ here2:
      * @throws UTFDataFormatException if the (pseudo-)utf8 byte array is not valid (pseudo-)utf8
      * @returns unicode string
      */
-    static String fromUtf8(byte[] utf8)
+    public static String fromUtf8(byte[] utf8)
     throws UTFDataFormatError {
 	char[] result = new char[utf8.length];
 	int result_index = 0;
@@ -491,7 +418,7 @@ here2:
      * @param s String to convert
      * @returns array containing sequence of (pseudo-)utf8 formatted bytes
      */
-    static byte[] toUtf8(String s) {
+    public static byte[] toUtf8(String s) {
 	byte[] result = new byte[lengthUtf8(s)];
 	int result_index = 0;
 	for (int i = 0, n = s.length(); i < n; ++i) {
@@ -515,7 +442,7 @@ here2:
     /**
      * Returns the length of a string's utf8 encoded form.
      */
-    static int lengthUtf8(String s) {
+    public static int lengthUtf8(String s) {
 	int utflen = 0;
 	for (int i = 0, n = s.length(); i < n; ++i) {
 	    int c = s.charAt(i);
@@ -535,7 +462,7 @@ here2:
      * @param bytes byte array to check
      * @returns true iff the given sequence is valid (pseudo-)utf8.
      */
-    static boolean checkUtf8(byte[] bytes) {
+    public static boolean checkUtf8(byte[] bytes) {
 	for (int i=0, n=bytes.length; i<n; ) {
 	    byte b = bytes[i++];
 	    if (STRICTLY_CHECK_FORMAT && !ALLOW_NORMAL_UTF8)
