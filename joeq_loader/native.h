@@ -1,5 +1,4 @@
 
-extern "C" void __stdcall debugwmsg(const wchar_t* s);
 extern "C" void __stdcall debugmsg(const char* s);
 extern "C" void* __stdcall syscalloc(const int size);
 extern "C" void __stdcall die(const int code);
