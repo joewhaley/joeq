@@ -556,10 +556,12 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
                     (e.getKey() instanceof Double))
                     ++j;
             }
+            if (TRACE) Debug.writeln("After renumbering constant pool: "+(j+1)+" entries.");
             return j+1;
         }
 
-        jq_ConstantPool finish() {
+        public jq_ConstantPool finish() {
+            if (TRACE) Debug.writeln("Finishing rebuilding constant pool...");
             int cp_size = renumber();
             int j = 0;
             Assert._assert(cp_size <= Character.MAX_VALUE);
@@ -600,13 +602,14 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
                 } else if (o instanceof jq_StaticField) {
                     newcp.constant_pool_tags[j] = CONSTANT_ResolvedSFieldRef;
                 } else {
-                    Assert.UNREACHABLE();
+                    Assert.UNREACHABLE(o.toString());
                 }
             }
             return newcp;
         }
 
         public void addCode(jq_Method m) {
+            if (TRACE) Debug.writeln("Adding code for "+m);
             byte[] bc = m.getBytecode();
             if (bc == null) return;
             Bytecodes.InstructionList il = new Bytecodes.InstructionList(m.getDeclaringClass().getCP(), bc);
@@ -614,15 +617,20 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
         }
 
         public void addCode(Bytecodes.InstructionList il) {
+            if (TRACE) Debug.writeln("Adding code for "+il);
             RebuildCPVisitor v = new RebuildCPVisitor();
             il.accept(v);
         }
         
         public void addExceptions(jq_Method m) {
-            // TODO
+            jq_TryCatchBC[] t = m.getExceptionTable();
+            for (int i=0; i<t.length; ++i) {
+                addType(t[i].getExceptionType());
+            }
         }
 
         public void addAttributeNames(jq_Member f) {
+            if (TRACE) Debug.writeln("Adding attribute names for "+f);
             Map m = f.getAttributes();
             for (Iterator i = m.entrySet().iterator(); i.hasNext(); ) {
                 Map.Entry e = (Map.Entry)i.next();
@@ -662,7 +670,10 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
                     ++j;
                 } else if (o instanceof jq_Type) {
                     out.writeByte(CONSTANT_Class);
-                    out.writeChar(get(((jq_Type)o).getDesc()));
+                    Utf8 u = ((jq_Type)o).getDesc();
+                    if (o instanceof jq_Class)
+                        u = u.getClassName();
+                    out.writeChar(get(u));
                 } else if (o instanceof String) {
                     out.writeByte(CONSTANT_String);
                     out.writeChar(get(Utf8.get((String)o)));
@@ -692,6 +703,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
         }
 
         public char get(Object o) {
+            Assert._assert(o != null);
             Character c = (Character)new_entries.get(o);
             if (c == null) {
                 Assert.UNREACHABLE("No such constant pool entry: type "+o.getClass()+" value "+o);
@@ -700,28 +712,38 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
         }
 
         public void addString(String o) {
+            if (TRACE) Debug.writeln("Adding string "+o);
             new_entries.put(Utf8.get(o), null);
             new_entries.put(o, null);
         }
         public void addType(jq_Type o) {
-            new_entries.put(o.getDesc(), null);
+            if (TRACE) Debug.writeln("Adding type "+o);
+            Utf8 u = o.getDesc();
+            if (o instanceof jq_Class)
+                u = u.getClassName();
+            new_entries.put(u, null);
             new_entries.put(o, null);
         }
         public void addMember(jq_Member o) {
+            if (TRACE) Debug.writeln("Adding member "+o);
             new_entries.put(o.getName(), null);
             new_entries.put(o.getDesc(), null);
-            new_entries.put(o.getDeclaringClass(), null);
-            new_entries.put(o.getDeclaringClass().getDesc(), null);
+            new_entries.put(o.getNameAndDesc(), null);
+            addType(o.getDeclaringClass());
             new_entries.put(o, null);
         }
         public void addOther(Object o) {
+            if (o == null) return;
+            if (TRACE) Debug.writeln("Adding other "+o);
             new_entries.put(o, null);
         }
         public void remove(Object o) {
+            if (TRACE) Debug.writeln("Removing "+o);
             new_entries.remove(o);
         }
         
         public void resetIndices(Bytecodes.InstructionList il) {
+            if (TRACE) Debug.writeln("Resetting indices of "+il);
             final jq_ConstantPool.ConstantPoolRebuilder my_cpr = this;
             Bytecodes.EmptyVisitor v = new Bytecodes.EmptyVisitor() {
                 public void visitCPInstruction(Bytecodes.CPInstruction i) {
@@ -761,7 +783,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
             this.cp = cp;
         }
 
-        jq_ConstantPool finish() {
+        public jq_ConstantPool finish() {
             // use this cp adder to add entrys.
             Adder adder = cp.getAdder();
             int index = -1;
