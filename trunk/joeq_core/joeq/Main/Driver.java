@@ -131,7 +131,9 @@ public abstract class Driver {
             } else if (commandBuffer[index].equalsIgnoreCase("exit") || commandBuffer[index].equalsIgnoreCase("quit")) {
                 System.exit(0);
             } else {
-                System.err.println("Unknown command "+commandBuffer[index++]);
+		int index2 = TraceFlags.setTraceFlag(commandBuffer, index);
+		if (index == index2)
+		    System.err.println("Unknown command "+commandBuffer[index++]);
             }
         } catch (ArrayIndexOutOfBoundsException x) {
             System.err.println("Incomplete command");
