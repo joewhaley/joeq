@@ -174,7 +174,9 @@ public abstract class SubtypeHelper {
             Collection result = new LinkedList();
             for(Iterator iter = subtypeNames.iterator(); iter.hasNext();){
                 String subtypeName = (String) iter.next();
-                jq_Class subtypeClass = (jq_Class) jq_Class.parseType(subtypeName);
+                String canonicalName = canonicalizeClassName(subtypeName);
+                jq_Class subtypeClass = (jq_Class) jq_Class.parseType(canonicalName);
+                
                 subtypeClass.prepare();
                 result.add(subtypeClass);
             }
