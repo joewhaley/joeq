@@ -3,6 +3,7 @@
 
 <cdtproject id="org.eclipse.cdt.make.core.make">
 <extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
+<extension id="org.eclipse.cdt.core.PE" point="org.eclipse.cdt.core.BinaryParser"/>
 <data>
 <item id="org.eclipse.cdt.core.pathentry">
 <pathentry kind="src" path=""/>
