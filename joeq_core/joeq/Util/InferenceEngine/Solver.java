@@ -65,6 +65,7 @@ public abstract class Solver {
     Collection/*<Relation>*/ relationsToDumpNegated;
     Collection/*<Relation>*/ relationsToDumpTuples;
     Collection/*<Relation>*/ relationsToDumpNegatedTuples;
+    Collection/*<Relation>*/ relationsToPrintSize;
     
     public static void main(String[] args) throws IOException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         
@@ -163,6 +164,7 @@ public abstract class Solver {
         relationsToDumpNegated = new LinkedList();
         relationsToDumpTuples = new LinkedList();
         relationsToDumpNegatedTuples = new LinkedList();
+        relationsToPrintSize = new LinkedList();
         equivalenceRelations = new HashMap();
         notequivalenceRelations = new HashMap();
         for (;;) {
@@ -226,6 +228,8 @@ public abstract class Solver {
                 relationsToLoad.add(r);
             } else if (option.equals("loadtuples")) {
                 relationsToLoadTuples.add(r);
+            } else if (option.equals("printsize")) {
+                relationsToPrintSize.add(r);
             } else {
                 throw new IllegalArgumentException("Unexpected option '"+option+"'");
             }
@@ -426,6 +430,10 @@ public abstract class Solver {
     }
     
     void saveResults() throws IOException {
+        for (Iterator i = relationsToPrintSize.iterator(); i.hasNext(); ) {
+            Relation r = (Relation) i.next();
+            out.println("SIZE OF "+r+": "+r.size());
+        }
         for (Iterator i = relationsToDump.iterator(); i.hasNext(); ) {
             Relation r = (Relation) i.next();
             if (NOISY) out.println("Dumping BDD for "+r);
