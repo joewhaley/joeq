@@ -409,6 +409,8 @@ public abstract class Section implements ELFConstants {
         public final int getInfo() { return 0; }
         public final int getEntSize() { return 0; }
 
+	public final int getNumberOfEntries() { return string_map.size(); }
+
         public void addString(String s) { string_map.put(s, null); }
 
         public void super_pack() {
