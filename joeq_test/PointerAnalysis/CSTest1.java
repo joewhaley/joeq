@@ -17,7 +17,7 @@ public class CSTest1 {
         CSTest1 a = (CSTest1) id(x);
         CSTest1 b = (CSTest1) id(y);
         
-        a.virtual();
+        a.virtual(); // should be to CSTest1.virtual()
     }
     
     public static void main2(String[] args) {
@@ -27,7 +27,7 @@ public class CSTest1 {
         update(x, x);
         update(x, y);
         
-        x.f.virtual();
+        x.f.virtual(); // flow-insensitive says to CSTest1+CSTest2
     }
         
     static Object id(Object o) { return o; }
@@ -50,10 +50,11 @@ public class CSTest1 {
         update(x, y);
         update(y, y);
         
-        CSTest1 a = (CSTest1) x.recursive();
-        CSTest1 b = (CSTest1) y.recursive();
+        CSTest1 a = (CSTest1) x.recursive(); // should be to CSTest1
+        CSTest1 b = (CSTest1) y.recursive(); // should be to CSTest2
         
-        a.virtual();
+        a.virtual(); // flow-insensitive says to CSTest1+CSTest2
+        b.virtual(); // should be to CSTest2
     }
 
     public CSTest1 recursive() {
@@ -68,4 +69,9 @@ class CSTest2 extends CSTest1 {
     CSTest2() {}
     
     public int virtual() { return 2; }
+    
+    public CSTest1 recursive() {
+        if (f == null) return this;
+        return f.recursive(); // should be to CSTest2
+    }
 }
