@@ -176,10 +176,14 @@ public abstract class ProgramLocation {
             return targetMethod.getCallTargets(targetMethod.getDeclaringClass(), false);
         }
         public CallTargets getCallTargets(AndersenReference klass, boolean exact) {
+	    
             SSAType ssaType = (SSAType)klass;
+	    SSAClass clazz = null;
+	    if (ssaType.getTargetType()!=null)
+		clazz = ssaType.getTargetType().getSSAClass();
+	    // else this is not a pointer to a class
 
-            // todo: handle other types (non-classes)
-            return targetMethod.getCallTargets(ssaType.getSSAClass(), exact);
+            return targetMethod.getCallTargets(clazz, exact);
         }
         public CallTargets getCallTargets(java.util.Set receiverTypes, boolean exact) {
             CallTargets ct = CallTargets.NoCallTarget.INSTANCE;

@@ -12,9 +12,14 @@ import java.io.FileInputStream;
 import java.io.BufferedReader;
 import java.util.zip.GZIPInputStream;
 import java.io.IOException;
+import java.util.Set;
 import java.util.HashSet;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
+import java.util.LinkedHashSet;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Collections;
 import UTF.Utf8;
 import Clazz.jq_NameAndDesc;
 import Main.jq;
@@ -29,9 +34,6 @@ import Compil3r.Quad.MethodSummary.ConcreteTypeNode;
 import Compil3r.Quad.MethodSummary.ParamNode;
 import Compil3r.Quad.MethodSummary.GlobalNode;
 import Compil3r.Quad.MethodSummary.ReturnValueNode;
-import java.util.LinkedHashSet;
-import java.util.HashMap;
-import java.util.Iterator;
 import Compil3r.Quad.AndersenInterface.*;
 
 /**
@@ -42,12 +44,14 @@ public class SSAReader {
     static class SSAClass implements AndersenClass {
         final Utf8 name;
         final String fileLocation;
+	final SSAType type;
         ArrayList superclasses;
         HashSet ancestors;
         
         public SSAClass(Utf8 name, String fileLocation) {
             this.name = name;
             this.fileLocation = fileLocation;
+	    this.type = new SSAType(this);
         }
         
         public void addSuperclass(SSAClass superclass) {
@@ -67,11 +71,12 @@ public class SSAReader {
             if (superclasses!=null) {
                 for (int i=0; i<superclasses.size(); i++) {
                     SSAClass superClass = (SSAClass)superclasses.get(i);
-                    ancestors.add(superClass);
                     ancestors.addAll(superClass.computeAncestors());
                 }
             }
-            
+
+            ancestors.add(this);
+
             return ancestors;
         }
         
@@ -85,6 +90,8 @@ public class SSAReader {
         public AndersenClassInitializer and_getClassInitializer() {
             return null;
         }
+
+	public SSAType getType() { return type; }
 
         public String toString() { return name.toString(); }
         
@@ -117,9 +124,31 @@ public class SSAReader {
         SSAType[] params;
         ArrayList callTargets;
         MethodSummary summary = null;
+	public final boolean isConstructor;
+	public final boolean isCompilerGenerated;
         
-        public SSAMethod(Utf8 name, String fileLocation, SSAClass declaringClass, boolean isstatic) {
+        public SSAMethod(Utf8 name, String fileLocation, SSAClass declaringClass, 
+			 boolean isstatic, boolean isConstructor, boolean isCompilerGenerated) {
             super(name, fileLocation, declaringClass, isstatic);
+	    this.isConstructor = isConstructor;
+	    this.isCompilerGenerated = isCompilerGenerated;
+
+	    /*
+	      Changed - just force the return type to be a concreteType in readprocdef
+	    if (isConstructor && isCompilerGenerated) {
+		// special case - we make a methodSummary that returns the correct data type
+		ParamNode[] paramNodeArray = { new ParamNode(this, 0, universalType) };
+		ConcreteTypeNode returned = new ConcreteTypeNode(declaringClass.getType().getPointerToThis());
+		summary = new MethodSummary(this, paramNodeArray,
+					    new GlobalNode(),
+					    Collections.EMPTY_SET,
+					    new HashMap(),
+					    new HashMap(),
+					    Collections.singleton(returned),
+					    Collections.EMPTY_SET,
+					    Collections.EMPTY_SET);
+	    }
+	    */
         }
         
         public AndersenType and_getReturnType() {
@@ -155,6 +184,12 @@ public class SSAReader {
                 return new CallTargets.SingleCallTarget(this, true);
             }
             
+	    if (receiverClass==null) {
+		// receiverClass is universal type - use this method's declaring class
+		receiverClass = getDeclaringClass();
+		exact = false; // can't have an 'exact' universal type
+	    }
+	    
             CallTargets ct = CallTargets.NoCallTarget.INSTANCE;
             
             boolean overridden = false;
@@ -175,8 +210,7 @@ public class SSAReader {
             }
             
             if (!overridden) ct = ct.union(new CallTargets.SingleCallTarget(this, true));
-            
-            System.out.println("Debug: "+ct);
+
             return ct;
         }
 
@@ -205,20 +239,69 @@ public class SSAReader {
     
     static class SSAType implements AndersenReference {
         final SSAClass klass;
+        final SSAType pointerTargetType;
+	final boolean isReference;
+
+	SSAType pointerToThis = null;
+	SSAType referenceToThis = null;
+
+        SSAType(SSAClass klass) { 
+	    // base type - not a pointer or reference
+	    this.klass = klass; 
+	    this.pointerTargetType = null;
+	    this.isReference = false;
+	}
+
+	SSAType(SSAType target, boolean isReference) {
+	    // a pointer or reference (pointer => isReference=false)
+	    this.klass = null;
+	    this.pointerTargetType = target;
+	    this.isReference = isReference;
+	}
         
-        SSAType(SSAClass klass) { this.klass = klass; }
-        
-        public boolean isArrayType() { return false; }
+	public boolean isBaseType() { return klass!=null; }
+	public boolean isPointerType() { return pointerTargetType!=null&&!isReference; }
+        public boolean isArrayType() { return isPointerType(); }
+	public boolean isReferenceType() { return isReference; }
+	public boolean isUniversalType() { return klass==null && pointerTargetType==null; }
+
         public SSAClass getSSAClass() { return klass; }
-        
+	public SSAType getTargetType() { return pointerTargetType; }
+	
+	public SSAType getPointerToThis(int pointerCount) {
+	    if (pointerCount==0) return this;
+
+	    if (pointerToThis==null) {
+		pointerToThis = new SSAType(this, false);
+	    }
+
+	    return pointerToThis.getPointerToThis(pointerCount-1);
+	}
+        public SSAType getPointerToThis() { return getPointerToThis(1); }
+
+	public SSAType getReferenceToThis() {
+	    if (referenceToThis==null) {
+		referenceToThis = new SSAType(this, true);
+	    }
+
+	    return referenceToThis;
+	}
+
         public String toString() {
-            if (klass==null) return "UniversalType";
-            return klass.toString();
+            if (klass!=null) return klass.toString();
+	    if (pointerTargetType != null) {
+		String targ = pointerTargetType.toString();
+		if (isReference)
+		    return targ+'&';
+		else
+		    return targ+'*';
+	    }
+	    return "UniversalType";
         }
         
         public void load() {}; public void verify() {}; public void prepare() {};
     }
-    final SSAType universalType = new SSAType(null); // as long as everything has the same type, only make one instance
+    final static SSAType universalType = new SSAType(null); // as long as everything has the same type, only make one instance
     
     static class LocalVar {
         final Utf8 name;
@@ -339,8 +422,20 @@ public class SSAReader {
         int filelocStart = line.lastIndexOf("{");
         String fileLocation = line.substring(filelocStart+1, line.length()-1);
 
-        //finally, extract the name
+        // extract the name
         String name = line.substring(line.indexOf('"')+1, line.lastIndexOf('"',filelocStart));
+
+	// extract attributes
+	StringTokenizer st = new StringTokenizer(line.substring(line.lastIndexOf('[')+1, 
+								line.lastIndexOf(']')), ", ");
+
+	boolean isConstructor = false;
+	boolean isCompilerGenerated = false;
+	while (st.hasMoreTokens()) {
+	    String token = st.nextToken();
+	    if (token.equals("constructor")) isConstructor = true;
+	    if (token.equals("compiler_generated")) isCompilerGenerated = true;
+	}
 
         boolean isglobal = false;
         boolean isstatic = false;
@@ -382,7 +477,8 @@ public class SSAReader {
         }
         
         if (isProc) {
-            SSAMethod meth = new SSAMethod(Utf8.get(name), fileLocation, clazz, isstatic);
+            SSAMethod meth = new SSAMethod(Utf8.get(name), fileLocation, clazz, isstatic,
+					   isConstructor, isCompilerGenerated);
             setArrayListElem(methods, number, meth);
         } else {
             SSAField field = new SSAField(Utf8.get(name), fileLocation, clazz, isstatic);
@@ -407,7 +503,34 @@ public class SSAReader {
 
         return true;
     }
-    
+
+    SSAType readType(String properties) {
+	int pointerDepth = 0;
+	int classNum = -1;
+	boolean reference = false;
+
+	StringTokenizer st = new StringTokenizer(properties, " ,");
+	
+	while (st.hasMoreTokens()) {
+	    String token = st.nextToken();
+	    if (token.equals("reference")) reference = true;
+	    else if (token.startsWith("Class")) {
+		classNum = Integer.parseInt(token.substring(token.indexOf('<')+1, token.lastIndexOf('>')));
+	    } else if (token.startsWith("depth")) {
+		pointerDepth = Integer.parseInt(token.substring(token.indexOf('<')+1, token.lastIndexOf('>')));
+	    }
+	}
+
+	if (classNum == -1) {
+	    // we aren't given adequate type information - use universal type
+	    return universalType;
+	}
+
+	SSAClass clazz = (SSAClass)classes.get(classNum);
+	SSAType type = clazz.getType().getPointerToThis(pointerDepth);
+	if (reference) return type.getReferenceToThis();
+	return type;
+    }
     
     static boolean assignBaseToNode(Node base, Node dest) {
         if (base.hasEdge(null, dest)) return false;
@@ -461,7 +584,8 @@ public class SSAReader {
             } else if (line.startsWith("LocalVar")) {
                 int varNum = getIndex(line, 0, "LocalVar");
                 String name = line.substring(line.indexOf('"')+1, line.lastIndexOf('"'));
-                setArrayListElem(localVars, varNum, new LocalVar(Utf8.get(name), universalType));
+		SSAType type = readType(line.substring(line.indexOf('[')+1, line.lastIndexOf(']')));
+                setArrayListElem(localVars, varNum, new LocalVar(Utf8.get(name), type));
             } else if (line.startsWith("VVNode")) {
                 int vvNum = getIndex(line, 0, "VVNode");
                 int varPos = line.indexOf(':')+2;
@@ -509,7 +633,6 @@ public class SSAReader {
                     VVNode vvNode = (VVNode)vvNodes.get(vvNum);
                     LocalVar localVar = vvNode.getLocalVar();
 
-                    System.out.println(vvNum);
                     assignBaseToNode(vvNode.getNode(), new ConcreteTypeNode(localVar.getType()));
                 } else if (constraint.startsWith("ASSIGN") 
                             || constraint.startsWith("SELF_ASSIGN")
@@ -526,7 +649,7 @@ public class SSAReader {
             
             for (int i=0; i<instructions.size(); i++) {
                 String inst = (String)instructions.get(i);
-                System.out.println(inst);
+
                 if (inst.startsWith("ASSIGN")) {
                     StringTokenizer st = new StringTokenizer(inst.substring(inst.indexOf('(')), "(), ");
                     int inVVNum = getIndex(st.nextToken(), 0, "VVNode");
@@ -536,8 +659,6 @@ public class SSAReader {
                     int outVVNum = getIndex(st.nextToken(), 0, "VVNode");
                     VVNode outVV = (VVNode)vvNodes.get(outVVNum);
 
-                    System.out.println(""+destVVNum+" "+inVVNum);
-                    System.out.println(""+outVVNum+" "+inVVNum);
                     if (assignBaseToBase(destVV.getNode(), inVV.getNode())) changed = true;
                     if (assignBaseToBase(outVV.getNode(), inVV.getNode())) changed = true;
                 } else if (inst.startsWith("SELF_ASSIGN") || inst.startsWith("ARG_ASSIGN")) {
@@ -547,7 +668,6 @@ public class SSAReader {
                     int destVVNum = getIndex(st.nextToken(), 0, "VVNode");
                     VVNode destVV = (VVNode)vvNodes.get(destVVNum);
 
-                    System.out.println(""+destVVNum+" "+inVVNum);
                     if (assignBaseToBase(destVV.getNode(), inVV.getNode())) changed = true;
                 } else if (inst.startsWith("LAMBDA")) {
                     StringTokenizer st = new StringTokenizer(inst.substring(inst.indexOf('(')+1, inst.length()-1), ", ");
@@ -558,7 +678,7 @@ public class SSAReader {
                         if (token.startsWith("VVNode")) {
                             int destVVNum = getIndex(token, 0, "VVNode");
                             VVNode destVV = (VVNode)vvNodes.get(destVVNum);
-                    System.out.println(""+destVVNum+" "+inVVNum);
+
                             if (assignBaseToBase(destVV.getNode(), inVV.getNode())) changed = true;
                         }
                     }
@@ -571,7 +691,7 @@ public class SSAReader {
                         if (token.startsWith("VVNode")) {
                             int inVVNum = getIndex(token, 0, "VVNode");
                             VVNode inVV = (VVNode)vvNodes.get(inVVNum);
-                    System.out.println(""+destVVNum+" "+inVVNum);
+
                             if (assignBaseToBase(destVV.getNode(), inVV.getNode())) changed = true;
                         }
                     }
@@ -595,7 +715,7 @@ public class SSAReader {
 
                         LinkedHashSet sourceNodes = new LinkedHashSet();
                         vvNode.getNode().getEdges(null, sourceNodes);
-                        
+
                         for (Iterator it = sourceNodes.iterator(); it.hasNext(); ) {
                             Node n = (Node)it.next();
                             if (n.recordPassedParameter(mc, argIdx)) changed = true;
@@ -615,7 +735,7 @@ public class SSAReader {
         
         GlobalNode myGlobal = new GlobalNode();
         LinkedHashSet methodCallsSet = new LinkedHashSet(methodCalls);
-        LinkedHashSet returned = new LinkedHashSet();
+        Set returned = new LinkedHashSet();
         for (int i=0; i<returnVVNodeNums.size(); i++) {
             int vvNum = ((Integer)returnVVNodeNums.get(i)).intValue();
             Node baseNode = ((VVNode)vvNodes.get(vvNum)).getNode();
@@ -624,7 +744,12 @@ public class SSAReader {
         
         LinkedHashSet thrown = new LinkedHashSet();
 
-        System.out.println(returned.size());
+	if (method.isConstructor) {
+	    // force return to be concreteTypeNode so we know the datatype
+	    SSAType returnType = method.getDeclaringClass().getType().getPointerToThis();
+
+	    returned = Collections.singleton(new ConcreteTypeNode(returnType));
+	}
         
         MethodSummary methodSummary = new MethodSummary(method, paramNodeArray, myGlobal, methodCallsSet, callToRVN, callToTEN, returned, thrown, passedAsParameter);
         method.setSummary(methodSummary);
@@ -635,6 +760,7 @@ public class SSAReader {
         }
         method.setParamTypes(paramTypes);
         
+	//	System.out.println(methodSummary);
     }
     
     /** Creates a new instance of SSAReader */
