@@ -41,6 +41,7 @@ public abstract class x86ReferenceLinker {
     }
     
     static void getstatic4(jq_StaticField f) {
+        f = f.resolve1();
         jq_Class k = f.getDeclaringClass();
         k.load(); k.verify(); k.prepare(); k.sf_initialize(); k.cls_initialize();
         int retloc = Unsafe.peek(Unsafe.EBP()+4);
@@ -50,6 +51,7 @@ public abstract class x86ReferenceLinker {
         Unsafe.poke4(Unsafe.EBP()+4, retloc-patchsize);
     }
     static void getstatic8(jq_StaticField f) {
+        f = f.resolve1();
         jq_Class k = f.getDeclaringClass();
         k.load(); k.verify(); k.prepare(); k.sf_initialize(); k.cls_initialize();
         int retloc = Unsafe.peek(Unsafe.EBP()+4);
@@ -59,6 +61,7 @@ public abstract class x86ReferenceLinker {
         Unsafe.poke4(Unsafe.EBP()+4, retloc-patchsize);
     }
     static void putstatic4(jq_StaticField f) {
+        f = f.resolve1();
         jq_Class k = f.getDeclaringClass();
         k.load(); k.verify(); k.prepare(); k.sf_initialize(); k.cls_initialize();
         int retloc = Unsafe.peek(Unsafe.EBP()+4);
@@ -68,6 +71,7 @@ public abstract class x86ReferenceLinker {
         Unsafe.poke4(Unsafe.EBP()+4, retloc-patchsize);
     }
     static void putstatic8(jq_StaticField f) {
+        f = f.resolve1();
         jq_Class k = f.getDeclaringClass();
         k.load(); k.verify(); k.prepare(); k.sf_initialize(); k.cls_initialize();
         int retloc = Unsafe.peek(Unsafe.EBP()+4);
@@ -77,6 +81,7 @@ public abstract class x86ReferenceLinker {
         Unsafe.poke4(Unsafe.EBP()+4, retloc-patchsize);
     }
     static void getfield1(jq_InstanceField f) {
+        f = f.resolve1();
         jq_Class k = f.getDeclaringClass();
         jq.assert(k.isClsInitialized());
         int retloc = Unsafe.peek(Unsafe.EBP()+4);
@@ -86,6 +91,7 @@ public abstract class x86ReferenceLinker {
         Unsafe.poke4(Unsafe.EBP()+4, retloc-patchsize);
     }
     static void cgetfield(jq_InstanceField f) {
+        f = f.resolve1();
         jq_Class k = f.getDeclaringClass();
         jq.assert(k.isClsInitialized());
         int retloc = Unsafe.peek(Unsafe.EBP()+4);
@@ -95,6 +101,7 @@ public abstract class x86ReferenceLinker {
         Unsafe.poke4(Unsafe.EBP()+4, retloc-patchsize);
     }
     static void sgetfield(jq_InstanceField f) {
+        f = f.resolve1();
         jq_Class k = f.getDeclaringClass();
         jq.assert(k.isClsInitialized());
         int retloc = Unsafe.peek(Unsafe.EBP()+4);
@@ -104,6 +111,7 @@ public abstract class x86ReferenceLinker {
         Unsafe.poke4(Unsafe.EBP()+4, retloc-patchsize);
     }
     static void getfield4(jq_InstanceField f) {
+        f = f.resolve1();
         jq_Class k = f.getDeclaringClass();
         jq.assert(k.isClsInitialized());
         int retloc = Unsafe.peek(Unsafe.EBP()+4);
@@ -113,6 +121,7 @@ public abstract class x86ReferenceLinker {
         Unsafe.poke4(Unsafe.EBP()+4, retloc-patchsize);
     }
     static void getfield8(jq_InstanceField f) {
+        f = f.resolve1();
         jq_Class k = f.getDeclaringClass();
         jq.assert(k.isClsInitialized());
         int retloc = Unsafe.peek(Unsafe.EBP()+4);
@@ -122,6 +131,7 @@ public abstract class x86ReferenceLinker {
         Unsafe.poke4(Unsafe.EBP()+4, retloc-patchsize);
     }
     static void putfield1(jq_InstanceField f) {
+        f = f.resolve1();
         jq_Class k = f.getDeclaringClass();
         jq.assert(k.isClsInitialized());
         int retloc = Unsafe.peek(Unsafe.EBP()+4);
@@ -131,6 +141,7 @@ public abstract class x86ReferenceLinker {
         Unsafe.poke4(Unsafe.EBP()+4, retloc-patchsize);
     }
     static void putfield2(jq_InstanceField f) {
+        f = f.resolve1();
         jq_Class k = f.getDeclaringClass();
         jq.assert(k.isClsInitialized());
         int retloc = Unsafe.peek(Unsafe.EBP()+4);
@@ -140,6 +151,7 @@ public abstract class x86ReferenceLinker {
         Unsafe.poke4(Unsafe.EBP()+4, retloc-patchsize);
     }
     static void putfield4(jq_InstanceField f) {
+        f = f.resolve1();
         jq_Class k = f.getDeclaringClass();
         jq.assert(k.isClsInitialized());
         int retloc = Unsafe.peek(Unsafe.EBP()+4);
@@ -149,6 +161,7 @@ public abstract class x86ReferenceLinker {
         Unsafe.poke4(Unsafe.EBP()+4, retloc-patchsize);
     }
     static void putfield8(jq_InstanceField f) {
+        f = f.resolve1();
         jq_Class k = f.getDeclaringClass();
         jq.assert(k.isClsInitialized());
         int retloc = Unsafe.peek(Unsafe.EBP()+4);
@@ -158,6 +171,7 @@ public abstract class x86ReferenceLinker {
         Unsafe.poke4(Unsafe.EBP()+4, retloc-patchsize);
     }
     static void invokevirtual(jq_InstanceMethod f) {
+        f = f.resolve1();
         jq_Class k = f.getDeclaringClass();
         jq.assert(k.isClsInitialized());
         int retloc = Unsafe.peek(Unsafe.EBP()+4);
@@ -167,6 +181,7 @@ public abstract class x86ReferenceLinker {
         Unsafe.poke4(Unsafe.EBP()+4, retloc-patchsize);
     }
     static void invokestatic(jq_Method f) {
+        f = (jq_Method)f.resolve();
         jq_Class k = f.getDeclaringClass();
         k.load(); k.verify(); k.prepare(); k.sf_initialize(); k.cls_initialize();
         int retloc = Unsafe.peek(Unsafe.EBP()+4);
@@ -176,6 +191,7 @@ public abstract class x86ReferenceLinker {
         Unsafe.poke4(Unsafe.EBP()+4, retloc-patchsize);
     }
     static void invokespecial(jq_InstanceMethod f) {
+        f = f.resolve1();
         jq_Class k = f.getDeclaringClass();
         k.load(); k.verify(); k.prepare(); k.sf_initialize(); k.cls_initialize();
         f = jq_Class.getInvokespecialTarget(k, f);
@@ -187,6 +203,7 @@ public abstract class x86ReferenceLinker {
         Unsafe.poke4(Unsafe.EBP()+4, retloc-patchsize);
     }
     static long invokeinterface(jq_InstanceMethod f) throws Throwable {
+        f = f.resolve1();
         int n_paramwords = f.getParamWords();
         int obj_location = Unsafe.EBP() + ((n_paramwords+2)<<2);
         Object o = Unsafe.asObject(Unsafe.peek(obj_location));
