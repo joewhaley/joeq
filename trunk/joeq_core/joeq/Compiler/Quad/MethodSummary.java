@@ -473,6 +473,7 @@ public class MethodSummary {
         public void visitInvoke(Quad obj) {
             if (TRACE_INTRA) out.println("Visiting: "+obj);
             jq_Method m = Invoke.getMethod(obj).getMethod();
+            m = (jq_Method)m.resolve();
             MethodCall mc = new MethodCall(m, obj);
             this.methodCalls.add(mc);
             jq_Type[] params = m.getParamTypes();
@@ -647,6 +648,7 @@ public class MethodSummary {
             // special case for method invocation.
             if (obj.getOperator() instanceof Invoke) {
                 jq_Method m = Invoke.getMethod(obj).getMethod();
+                m = (jq_Method)m.resolve();
                 MethodCall mc = new MethodCall(m, obj);
                 ThrownExceptionNode n = new ThrownExceptionNode(mc);
                 ListIterator.ExceptionHandler eh = bb.getExceptionHandlers().exceptionHandlerIterator();
