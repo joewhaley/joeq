@@ -553,7 +553,7 @@ void* __stdcall allocate_stack(const int size)
         lpvAddr = calloc(sizeof(char), size);
         if (lpvAddr != NULL) {
             lpvAddr = (void*)((DWORD_PTR)lpvAddr+size);
-            fprintf(stderr, "Stack allocation reverted to normal allocation (no stack overflow checking)\n");
+            fprintf(stderr, "Stack allocated from normal memory (no stack overflow checking)\n");
         }
         return lpvAddr;
     }
