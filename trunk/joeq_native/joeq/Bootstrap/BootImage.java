@@ -927,7 +927,7 @@ public class BootImage implements ELFConstants {
             jq_Class k = (jq_Class)o;
             if (!k.isLoaded()) continue;
             jq_StaticField[] fs = k.getDeclaredStaticFields();
-            for (int j=0; j<fs.length; ++j) {   
+            for (int j=0; j<fs.length; ++j) {
                 jq_StaticField f = fs[j];
                 if (f.getType().isAddressType()) {
                     // not a possible path.
