@@ -15,6 +15,7 @@ import Memory.HeapAddress;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
 import Util.BitString;
+import GC.GCBits;
 
 /*
  * @author  John Whaley
@@ -36,20 +37,6 @@ public class SimpleAllocator extends HeapAllocator {
      */
     public static final int LARGE_THRESHOLD = 262144;
 
-    /** Each bit in allocbits corresponds to 8 bytes on the heap. When an object
-     * allocated and aligned on 8 byte boundary, the bit in allocbits corresponding
-     * to the starting 8 bytes (excluding HEADER) of the object is set.
-     * Currently, allocbits' size is MAX_MEMORY/64.
-     */
-    private final BitString allocbits = new BitString(1048576);
-
-    /** Each bit in markbits corresponds to 8 bytes on the heap. When an object
-     * is reachable from TraceRootSet, the bit in markbits corresponding to the
-     * starting 8 bytes (excluding HEADER) of the object is set.
-     * Currently, markbits' size is MAX_MEMORY/64.
-     */
-    private final BitString markbits = new BitString(1048576);
-
     /** Pointers to the start, current, and end of the heap.
      */
     private HeapAddress heapFirst, heapCurrent, heapEnd;
@@ -60,10 +47,10 @@ public class SimpleAllocator extends HeapAllocator {
      * @throws OutOfMemoryError if there is not enough memory for initialization
      */
     public final void init() throws OutOfMemoryError {
-        heapCurrent = heapFirst = (HeapAddress)SystemInterface.syscalloc(BLOCK_SIZE);
+        heapCurrent = heapFirst = (HeapAddress) SystemInterface.syscalloc(BLOCK_SIZE);
         if (heapCurrent.isNull())
             HeapAllocator.outOfMemory();
-        heapEnd = (HeapAddress)heapFirst.offset(BLOCK_SIZE - HeapAddress.size());
+        heapEnd = (HeapAddress) heapFirst.offset(BLOCK_SIZE - HeapAddress.size());
     }
 
     /** Returns an estimate of the amount of free memory available.
@@ -83,7 +70,7 @@ public class SimpleAllocator extends HeapAllocator {
         HeapAddress ptr = heapFirst;
         while (!ptr.isNull()) {
             total += BLOCK_SIZE;
-            ptr = (HeapAddress)ptr.offset(BLOCK_SIZE-HeapAddress.size()).peek();
+            ptr = (HeapAddress) ptr.offset(BLOCK_SIZE - HeapAddress.size()).peek();
         }
         return total;
     }
@@ -101,22 +88,26 @@ public class SimpleAllocator extends HeapAllocator {
             HeapAllocator.outOfMemory();
         //jq.Assert((size & 0x3) == 0);
         size = (size + 3) & ~3; // align size
-        HeapAddress addr = (HeapAddress)heapCurrent.offset(OBJ_HEADER_SIZE);
-        heapCurrent = (HeapAddress)heapCurrent.offset(size);
+        HeapAddress addr = (HeapAddress) heapCurrent.offset(OBJ_HEADER_SIZE);
+        heapCurrent = (HeapAddress) heapCurrent.offset(size);
         if (heapEnd.difference(heapCurrent) < 0) {
             // not enough space (rare path)
             if (totalMemory() >= MAX_MEMORY) HeapAllocator.outOfMemory();
-            jq.Assert(size < BLOCK_SIZE-HeapAddress.size());
-            heapCurrent = (HeapAddress)SystemInterface.syscalloc(BLOCK_SIZE);
+            jq.Assert(size < BLOCK_SIZE - HeapAddress.size());
+            heapCurrent = (HeapAddress) SystemInterface.syscalloc(BLOCK_SIZE);
             if (heapCurrent.isNull())
                 HeapAllocator.outOfMemory();
-            heapEnd.poke(heapCurrent);
-            heapEnd = (HeapAddress)heapCurrent.offset(BLOCK_SIZE - HeapAddress.size());
-            addr = (HeapAddress)heapCurrent.offset(OBJ_HEADER_SIZE);
-            heapCurrent = (HeapAddress)heapCurrent.offset(size);
+            // GCBits address already filled at allocation
+            heapEnd.offset(HeapAddress.size()).poke(heapCurrent);
+            // address for per block GCBits plus address for next block
+            heapEnd = (HeapAddress) heapCurrent.offset(BLOCK_SIZE - 2 * HeapAddress.size());
+            heapEnd.poke(HeapAddress.addressOf(new GCBits(heapCurrent, heapEnd)));
+            addr = (HeapAddress) heapCurrent.offset(OBJ_HEADER_SIZE);
+            heapCurrent = (HeapAddress) heapCurrent.offset(size);
         }
         // fast path
-        // allocbits.set((addr.to32BitValue() - heapFirst.to32BitValue())/8);
+        GCBits gcBits = (GCBits) ((HeapAddress) heapEnd.peek()).asObject();
+        gcBits.set((HeapAddress) addr.offset(-OBJ_HEADER_SIZE));
         addr.offset(VTABLE_OFFSET).poke(HeapAddress.addressOf(vtable));
         return addr.asObject();
     }
@@ -129,9 +120,8 @@ public class SimpleAllocator extends HeapAllocator {
      * @return new uninitialized object
      * @throws OutOfMemoryError if there is insufficient memory to perform the operation
      */
-    public final Object allocateObjectAlign8(int size, Object vtable)
-    throws OutOfMemoryError {
-        heapCurrent = (HeapAddress)heapCurrent.offset(OBJ_HEADER_SIZE).align(3).offset(-OBJ_HEADER_SIZE);
+    public final Object allocateObjectAlign8(int size, Object vtable) throws OutOfMemoryError {
+        heapCurrent = (HeapAddress) heapCurrent.offset(OBJ_HEADER_SIZE).align(3).offset(-OBJ_HEADER_SIZE);
         return allocateObject(size, vtable);
     }
 
@@ -151,31 +141,35 @@ public class SimpleAllocator extends HeapAllocator {
         if (size < ARRAY_HEADER_SIZE) // size overflow!
             HeapAllocator.outOfMemory();
         size = (size + 3) & ~3; // align size
-        HeapAddress addr = (HeapAddress)heapCurrent.offset(ARRAY_HEADER_SIZE);
-        heapCurrent = (HeapAddress)heapCurrent.offset(size);
+        HeapAddress addr = (HeapAddress) heapCurrent.offset(ARRAY_HEADER_SIZE);
+        heapCurrent = (HeapAddress) heapCurrent.offset(size);
         if (heapEnd.difference(heapCurrent) < 0) {
             // not enough space (rare path)
             if (size > LARGE_THRESHOLD) {
                 // special large-object allocation
-                heapCurrent = (HeapAddress)heapCurrent.offset(-size);
-                addr = (HeapAddress)SystemInterface.syscalloc(size);
+                heapCurrent = (HeapAddress) heapCurrent.offset(-size);
+                addr = (HeapAddress) SystemInterface.syscalloc(size);
                 if (addr.isNull())
                     outOfMemory();
-                addr = (HeapAddress)addr.offset(ARRAY_HEADER_SIZE);
+                addr = (HeapAddress) addr.offset(ARRAY_HEADER_SIZE);
             } else {
                 if (totalMemory() >= MAX_MEMORY) HeapAllocator.outOfMemory();
-                jq.Assert(size < BLOCK_SIZE - 4);
-                heapCurrent = (HeapAddress)SystemInterface.syscalloc(BLOCK_SIZE);
+                jq.Assert(size < BLOCK_SIZE - 2 * HeapAddress.size());
+                heapCurrent = (HeapAddress) SystemInterface.syscalloc(BLOCK_SIZE);
                 if (heapCurrent.isNull())
                     outOfMemory();
-                heapEnd.poke(heapCurrent);
-                heapEnd = (HeapAddress)heapCurrent.offset(BLOCK_SIZE - HeapAddress.size());
-                addr = (HeapAddress)heapCurrent.offset(ARRAY_HEADER_SIZE);
-                heapCurrent = (HeapAddress)heapCurrent.offset(size);
+                // GCBits address already filled at allocation
+                heapEnd.offset(HeapAddress.size()).poke(heapCurrent);
+                // address for per block GCBits plus address for next block
+                heapEnd = (HeapAddress) heapCurrent.offset(BLOCK_SIZE - 2 * HeapAddress.size());
+                heapEnd.poke(HeapAddress.addressOf(new GCBits(heapCurrent, heapEnd)));
+                addr = (HeapAddress) heapCurrent.offset(ARRAY_HEADER_SIZE);
+                heapCurrent = (HeapAddress) heapCurrent.offset(size);
             }
         }
         // fast path
-        // allocbits.set((addr.to32BitValue() - heapFirst.to32BitValue())/8);
+        GCBits gcBits = (GCBits) ((HeapAddress) heapEnd.peek()).asObject();
+        gcBits.set((HeapAddress) addr.offset(-ARRAY_HEADER_SIZE));
         addr.offset(ARRAY_LENGTH_OFFSET).poke4(length);
         addr.offset(VTABLE_OFFSET).poke(HeapAddress.addressOf(vtable));
         return addr.asObject();
@@ -193,7 +187,7 @@ public class SimpleAllocator extends HeapAllocator {
      * @throws OutOfMemoryError if there is insufficient memory to perform the operation
      */
     public final Object allocateArrayAlign8(int length, int size, Object vtable) throws OutOfMemoryError, NegativeArraySizeException {
-        heapCurrent = (HeapAddress)heapCurrent.offset(ARRAY_HEADER_SIZE).align(3).offset(-ARRAY_HEADER_SIZE);
+        heapCurrent = (HeapAddress) heapCurrent.offset(ARRAY_HEADER_SIZE).align(3).offset(-ARRAY_HEADER_SIZE);
         return allocateArray(length, size, vtable);
     }
 
