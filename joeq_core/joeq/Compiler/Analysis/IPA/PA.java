@@ -836,6 +836,7 @@ public class PA {
     ConcreteTypeNode addPlaceholderObject(jq_Reference type, int depth) {
         ConcreteTypeNode h = ConcreteTypeNode.get(type, null, new Integer(++opn));
         if (depth > 0) {
+        	System.out.println("Initializing class " + type + " at depth " + depth);
             if (type.isClassType()) {
                 jq_Class c = (jq_Class) type;
                 c.prepare();
