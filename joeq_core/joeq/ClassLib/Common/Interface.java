@@ -149,6 +149,12 @@ public class Interface extends Bootstrap.ObjectTraverser {
         ((ClassLib.Common.java.util.zip.ZipFile)o).__init__(name);
     }
     
+    public void init_inflater(java.util.zip.Inflater dis, boolean nowrap) throws java.io.IOException {
+    	jq.Assert(!jq.Bootstrapping);
+        java.lang.Object o = dis;
+        ((ClassLib.Common.java.util.zip.Inflater)o).__init__(nowrap);
+    }
+    
     public void initializeSystemClass() throws java.lang.Throwable {
     	jq.Assert(!jq.Bootstrapping);
         ClassLib.Common.java.lang.System.initializeSystemClass();
