@@ -166,7 +166,11 @@ public abstract class Debug {
             _delegate = attemptDelegate("joeq.Runtime.DebugImpl");
         }
         if (_delegate == null) {
-            _delegate = new joeq.Runtime.BasicDebugImpl();
+            if(System.getProperty("silentdebug", "no").equals("yes")){
+                _delegate = new joeq.Runtime.SilentDebugImpl();
+            }else{
+                _delegate = new joeq.Runtime.BasicDebugImpl();
+            }
         }
     }
 
