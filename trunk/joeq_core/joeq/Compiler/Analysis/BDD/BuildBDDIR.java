@@ -80,6 +80,8 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
             varargsBits = 5;
             int index = varOrderDesc.indexOf("xtargetxfallthrough");
             varOrderDesc = varOrderDesc.substring(0, index) + varOrderDesc.substring(index + "xtargetxfallthrough".length());
+            
+            varOrderDesc = "memberxquad_method_constant_opc_srcs_dest_srcNum";
         }
         if (USE_SRC12) {
             int index = varOrderDesc.indexOf("_srcs");
