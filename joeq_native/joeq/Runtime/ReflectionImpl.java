@@ -211,13 +211,29 @@ public class ReflectionImpl implements Reflection.Delegate {
         //jq.UNREACHABLE(c+"."+name);
         return null;
     }
+    public boolean USE_DECLARED_METHODS_CACHE = true;
+    private static java.util.HashMap declaredMethodsCache;
     public final Method getJDKMethod(Class c, String name, Class[] args) {
-        Method[] methods;
-        try {
-            methods = c.getDeclaredMethods();
-        } catch (NoClassDefFoundError x) {
-            SystemInterface.debugwriteln("Note: "+c+" could not be loaded in host jdk");
-            return null;
+        Method[] methods = null;
+        if (USE_DECLARED_METHODS_CACHE) {
+            if (declaredMethodsCache == null) declaredMethodsCache = new java.util.HashMap();
+            else methods = (Method[])declaredMethodsCache.get(c);
+            if (methods == null) {
+                try {
+                    methods = c.getDeclaredMethods();
+                } catch (NoClassDefFoundError x) {
+                    SystemInterface.debugwriteln("Note: "+c+" could not be loaded in host jdk");
+                    return null;
+                }
+                declaredMethodsCache.put(c, methods);
+            }
+        } else {
+            try {
+                methods = c.getDeclaredMethods();
+            } catch (NoClassDefFoundError x) {
+                SystemInterface.debugwriteln("Note: "+c+" could not be loaded in host jdk");
+                return null;
+            }
         }
 uphere:
         for (int i=0; i<methods.length; ++i) {
