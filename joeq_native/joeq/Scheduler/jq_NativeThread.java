@@ -4,7 +4,6 @@
 package joeq.Scheduler;
 
 import java.util.Iterator;
-import java.util.Random;
 import joeq.Allocator.CodeAllocator;
 import joeq.Allocator.HeapAllocator;
 import joeq.Allocator.RuntimeCodeAllocator;
@@ -35,7 +34,6 @@ import joeq.Util.Strings;
  * @author  Miho Kurano
  * @version $Id$
  */
-
 public class jq_NativeThread implements jq_DontAlign {
 
     /** Trace flag.  When this is true, prints out debugging information about
@@ -572,18 +570,29 @@ public class jq_NativeThread implements jq_DontAlign {
         }
     }
 
-    Random rng = new Random();
-    static final float[] DISTRIBUTION = {
-                .05f, .11f, .18f, .26f, .35f, .45f, .56f, .68f, .81f, 1.0f
+    /**
+     * GCD of relatively_prime_value and the maximum value in
+     * DISTRIBUTION should be 1.
+     */
+    static final int relatively_prime_value = 37;
+    static final int[] DISTRIBUTION = {
+        5, 11, 18, 26, 35, 45, 56, 68, 81, 100
     };
+    /**
+     * Keeps track of last value used, so we can compute the next value.
+     */
+    int distCounter;
     
     private jq_ThreadQueue chooseNextQueue() {
-        // use monte carlo distribution.
-        float f = rng.nextFloat();
+        distCounter += relatively_prime_value;
+        int max = DISTRIBUTION[DISTRIBUTION.length-1];
+        while (distCounter >= max) {
+            distCounter -= max;
+        }
         for (int i = 0; ; ++i) {
-            if (f < DISTRIBUTION[i]) {
+            if (distCounter < DISTRIBUTION[i]) {
                 if (!readyQueue[i].isEmpty()) return readyQueue[i];
-                int c = rng.nextBoolean() ? 1 : -1;
+                int c = ((distCounter&1)==1) ? 1 : -1;
                 for (int j = i + c; j < DISTRIBUTION.length && j >= 0; j += c) {
                     if (!readyQueue[j].isEmpty()) return readyQueue[j];
                 }
