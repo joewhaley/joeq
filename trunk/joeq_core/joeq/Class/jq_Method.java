@@ -192,21 +192,36 @@ public abstract class jq_Method extends jq_Member implements AndersenMethod {
         }
     }
 
-    public void setCode(Bytecodes.InstructionList il, jq_ConstantPool.ConstantPoolRebuilder cpr) {
+    public Bytecodes.CodeException[] getExceptionTable(Bytecodes.InstructionList il) {
         Bytecodes.CodeException[] ex_table = new Bytecodes.CodeException[exception_table.length];
         for (int i=0; i<ex_table.length; ++i) {
             ex_table[i] = new Bytecodes.CodeException(il, bytecode, exception_table[i]);
         }
+        return ex_table;
+    }
+    
+    public Bytecodes.LineNumber[] getLineNumberTable(Bytecodes.InstructionList il) {
         Bytecodes.LineNumber[] line_num = new Bytecodes.LineNumber[line_num_table.length];
         for (int i=0; i<line_num.length; ++i) {
             line_num[i] = new Bytecodes.LineNumber(il, line_num_table[i]);
         }
+        return line_num;
+    }
+    
+    public void setCode(Bytecodes.InstructionList il,
+                       Bytecodes.CodeException[] ex_table,
+                       Bytecodes.LineNumber[] line_num,
+                       jq_ConstantPool.ConstantPoolRebuilder cpr) {
         cpr.resetIndices(il);
         bytecode = il.getByteCode();
+        if (exception_table.length != ex_table.length)
+            exception_table = new jq_TryCatchBC[ex_table.length];
         // TODO: recalculate max_stack and max_locals.
         for (int i=0; i<ex_table.length; ++i) {
             exception_table[i] = ex_table[i].finish();
         }
+        if (line_num_table.length != line_num.length)
+            line_num_table = new jq_LineNumberBC[line_num.length];
         for (int i=0; i<line_num.length; ++i) {
             line_num_table[i] = line_num[i].finish();
         }
@@ -215,7 +230,9 @@ public abstract class jq_Method extends jq_Member implements AndersenMethod {
     public void update(jq_ConstantPool.ConstantPoolRebuilder cpr) {
         if (bytecode != null) {
             Bytecodes.InstructionList il = new Bytecodes.InstructionList(getDeclaringClass().getCP(), bytecode);
-            setCode(il, cpr);
+            Bytecodes.CodeException[] ex_table = getExceptionTable(il);
+            Bytecodes.LineNumber[] line_num = getLineNumberTable(il);
+            setCode(il, ex_table, line_num, cpr);
         }
     }
     
