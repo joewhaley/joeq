@@ -35,6 +35,7 @@ import Compil3r.Quad.Operand.ParamListOperand;
 import Compil3r.Quad.RegisterFactory.Register;
 import Interpreter.ReflectiveInterpreter.ReflectiveVMInterface;
 import Main.jq;
+import Memory.Address;
 import Run_Time.Reflection;
 import Util.FilterIterator.Filter;
 import Util.Templates.ListIterator;
@@ -326,6 +327,7 @@ public class QuadInterpreter {
         public long getReg_L(Register r) { return ((Long)registers.get(r)).longValue(); }
         public double getReg_D(Register r) { return ((Double)registers.get(r)).doubleValue(); }
         public Object getReg_A(Register r) { return registers.get(r); }
+        public Address getReg_P(Register r) { jq.TODO(); return null; }
         public Object getReg(Register r) { return registers.get(r); }
         
         public void putReg_I(Register r, int i) { registers.put(r, new Integer(i)); }
@@ -333,6 +335,7 @@ public class QuadInterpreter {
         public void putReg_L(Register r, long i) { registers.put(r, new Long(i)); }
         public void putReg_D(Register r, double i) { registers.put(r, new Double(i)); }
         public void putReg_A(Register r, Object i) { registers.put(r, i); }
+        public void putReg_P(Register r, Address i) { jq.TODO(); }
         public void putReg(Register r, Object i) { registers.put(r, i); }
         
         public void replaceUninitializedReferences(Object o, UninitializedReference u) {
