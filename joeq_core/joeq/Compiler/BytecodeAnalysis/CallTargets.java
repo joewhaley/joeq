@@ -32,6 +32,7 @@ import Util.SingletonIterator;
 public abstract class CallTargets extends AbstractSet {
 
     public static final boolean TRACE = false;
+    public static final boolean VerifyAssertions = false;
     
     public static CallTargets getTargets(jq_Class callingClass,
                                          jq_Method method,
@@ -46,7 +47,8 @@ public abstract class CallTargets extends AbstractSet {
         if (type == BytecodeVisitor.INVOKE_STATIC) return getStaticTargets((jq_StaticMethod)method);
         jq_InstanceMethod imethod = (jq_InstanceMethod)method;
         if (type == BytecodeVisitor.INVOKE_SPECIAL) return getSpecialTargets(callingClass, imethod, loadClasses);
-        jq.Assert(type == BytecodeVisitor.INVOKE_VIRTUAL || type == BytecodeVisitor.INVOKE_INTERFACE);
+        if (VerifyAssertions)
+            jq.Assert(type == BytecodeVisitor.INVOKE_VIRTUAL || type == BytecodeVisitor.INVOKE_INTERFACE, ""+type);
 
         if (TRACE) System.out.println("Getting call targets of "+method+" type "+type+" receiver types "+possibleReceiverTypes+" exact="+exact);
         if (!exact) {
@@ -67,10 +69,12 @@ public abstract class CallTargets extends AbstractSet {
         boolean complete = true;
         if ((type == BytecodeVisitor.INVOKE_VIRTUAL) && imethod.getDeclaringClass().isPrepared()) {
             // fast search using vtable
-            jq.Assert(!imethod.getDeclaringClass().isInterface());
+            if (VerifyAssertions)
+                jq.Assert(!imethod.getDeclaringClass().isInterface(), imethod.toString());
             int offset = imethod.getOffset() >>> 2;
             if (TRACE) System.out.println("Fast search using vtable offset "+offset+" for method "+imethod);
-            jq.Assert(offset >= 1);
+            if (VerifyAssertions)
+                jq.Assert(offset >= 1);
             Iterator i = possibleReceiverTypes.iterator();
             while (i.hasNext()) {
                 jq_Reference rtype = (jq_Reference)i.next();
@@ -91,7 +95,8 @@ public abstract class CallTargets extends AbstractSet {
                             if (mtarget instanceof jq_StaticMethod) break;
                             target = (jq_InstanceMethod)mtarget;
                             if (target != null) {
-                                jq.Assert(imethod.getNameAndDesc().equals(target.getNameAndDesc()));
+                                if (VerifyAssertions)
+                                    jq.Assert(imethod.getNameAndDesc().equals(target.getNameAndDesc()), imethod+" != "+target);
                                 if (!target.isAbstract())
                                     c.add(target);
                                 break;
@@ -109,13 +114,16 @@ public abstract class CallTargets extends AbstractSet {
                     jq_InstanceMethod target = rclass.getVirtualMethods()[offset-1];
                     if (!imethod.getNameAndDesc().equals(target.getNameAndDesc()))
                         continue;
-                    jq.Assert(!target.isAbstract());
+                    if (VerifyAssertions)
+                        jq.Assert(!target.isAbstract());
                     c.add(target);
                 } else {
-                    jq.Assert(rtype.isArrayType());
+                    if (VerifyAssertions)
+                        jq.Assert(rtype.isArrayType(), rtype.toString());
                     if (imethod.getDeclaringClass() != PrimordialClassLoader.loader.getJavaLangObject())
                         continue;
-                    jq.Assert(!imethod.isAbstract());
+                    if (VerifyAssertions)
+                        jq.Assert(!imethod.isAbstract(), imethod.toString());
                     c.add(imethod);
                 }
             }
@@ -138,7 +146,8 @@ public abstract class CallTargets extends AbstractSet {
                         if (mtarget instanceof jq_StaticMethod) break;
                         target = (jq_InstanceMethod)mtarget;
                         if (target != null) {
-                            jq.Assert(imethod.getNameAndDesc().equals(target.getNameAndDesc()));
+                            if (VerifyAssertions)
+                                jq.Assert(imethod.getNameAndDesc().equals(target.getNameAndDesc()), imethod+" != "+target);
                             if (!target.isAbstract())
                                 c.add(target);
                             break;
@@ -151,10 +160,12 @@ public abstract class CallTargets extends AbstractSet {
                     }
                     continue;
                 } else {
-                    jq.Assert(rtype.isArrayType());
+                    if (VerifyAssertions)
+                        jq.Assert(rtype.isArrayType(), rtype.toString());
                     if (imethod.getDeclaringClass() != PrimordialClassLoader.loader.getJavaLangObject())
                         continue;
-                    jq.Assert(!imethod.isAbstract());
+                    if (VerifyAssertions)
+                        jq.Assert(!imethod.isAbstract());
                     c.add(imethod);
                 }
             }
@@ -176,8 +187,9 @@ public abstract class CallTargets extends AbstractSet {
         if (type == BytecodeVisitor.INVOKE_STATIC) return getStaticTargets((jq_StaticMethod)method);
         jq_InstanceMethod imethod = (jq_InstanceMethod)method;
         if (type == BytecodeVisitor.INVOKE_SPECIAL) return getSpecialTargets(callingClass, imethod, loadClasses);
-        jq.Assert(type == BytecodeVisitor.INVOKE_VIRTUAL || type == BytecodeVisitor.INVOKE_INTERFACE);
-
+        if (VerifyAssertions)
+            jq.Assert(type == BytecodeVisitor.INVOKE_VIRTUAL || type == BytecodeVisitor.INVOKE_INTERFACE, ""+type);
+            
         if (receiverType.isArrayType()) {
             if (imethod.getDeclaringClass() != PrimordialClassLoader.loader.getJavaLangObject())
                 return NoCallTarget.INSTANCE;
@@ -203,7 +215,8 @@ public abstract class CallTargets extends AbstractSet {
                 if (mtarget instanceof jq_StaticMethod) return NoCallTarget.INSTANCE;
                 jq_InstanceMethod target = (jq_InstanceMethod)mtarget;
                 if (target != null) return new SingleCallTarget(target, true);
-                jq.Assert(rclass != imethod.getDeclaringClass());
+                if (VerifyAssertions)
+                    jq.Assert(rclass != imethod.getDeclaringClass(), rclass+" != "+imethod.getDeclaringClass());
                 if (loadClasses) rclass.load();
                 if (!rclass.isLoaded()) return NoCallTarget.INSTANCE;
                 rclass = rclass.getSuperclass();
@@ -219,7 +232,8 @@ public abstract class CallTargets extends AbstractSet {
         if (loadClasses) {
             rclass.load();
             if (rclass.isInterface() && type == BytecodeVisitor.INVOKE_VIRTUAL) {
-                jq.Assert(!imethod.getDeclaringClass().isInterface());
+                if (VerifyAssertions)
+                    jq.Assert(!imethod.getDeclaringClass().isInterface(), imethod.toString());
                 receiverType = rclass = imethod.getDeclaringClass();
             }
         }
@@ -229,9 +243,11 @@ public abstract class CallTargets extends AbstractSet {
         if (type == BytecodeVisitor.INVOKE_VIRTUAL) {
             if (imethod.getDeclaringClass().isPrepared()) {
                 // fast search.
-                jq.Assert(!imethod.getDeclaringClass().isInterface());
+                if (VerifyAssertions)
+                    jq.Assert(!imethod.getDeclaringClass().isInterface());
                 int offset = imethod.getOffset() >>> 2;
-                jq.Assert(offset >= 1);
+                if (VerifyAssertions)
+                    jq.Assert(offset >= 1);
                 if (!rclass.isPrepared()) {
                     for (;;) {
                         if (loadClasses) rclass.load();
@@ -245,7 +261,8 @@ public abstract class CallTargets extends AbstractSet {
                                 c.add(target);
                             break;
                         }
-                        jq.Assert(rclass != imethod.getDeclaringClass());
+                        if (VerifyAssertions)
+                            jq.Assert(rclass != imethod.getDeclaringClass());
                         rclass = rclass.getSuperclass();
                         if (rclass == null) {
                             // method doesn't exist in this class or any of its superclasses.
@@ -401,7 +418,8 @@ public abstract class CallTargets extends AbstractSet {
     }
 
     static byte declaresInterface(jq_Class klass, Set interfaces, boolean loadClasses) {
-        jq.Assert(klass.isLoaded());
+        if (VerifyAssertions)
+            jq.Assert(klass.isLoaded());
         jq_Class[] klass_interfaces = klass.getDeclaredInterfaces();
         for (int i=0; i<klass_interfaces.length; ++i) {
             if (!loadClasses && !klass_interfaces[i].isLoaded()) return MAYBE;
@@ -434,9 +452,11 @@ public abstract class CallTargets extends AbstractSet {
         if (type == BytecodeVisitor.INVOKE_SPECIAL) return getSpecialTargets(callingClass, imethod, loadClasses);
         if (type == BytecodeVisitor.INVOKE_VIRTUAL)
             return getTargets(callingClass, imethod, type, imethod.getDeclaringClass(), false, loadClasses);
-        jq.Assert(type == BytecodeVisitor.INVOKE_INTERFACE);
-        jq.Assert(!imethod.getDeclaringClass().isLoaded() ||
-                  imethod.getDeclaringClass().isInterface());
+        if (VerifyAssertions)
+            jq.Assert(type == BytecodeVisitor.INVOKE_INTERFACE);
+        if (VerifyAssertions)
+            jq.Assert(!imethod.getDeclaringClass().isLoaded() ||
+                      imethod.getDeclaringClass().isInterface());
 
         // find the set of equivalent interfaces
         jq_Class interf = method.getDeclaringClass();
@@ -468,7 +488,8 @@ public abstract class CallTargets extends AbstractSet {
         Stack worklist = new Stack();     // unchecked classes
         Stack implementers = new Stack(); // do/may implement
         jq_Class rclass = PrimordialClassLoader.loader.getJavaLangObject();
-        jq.Assert(rclass.isLoaded()); // java.lang.Object had better be loaded!
+        if (VerifyAssertions)
+            jq.Assert(rclass.isLoaded()); // java.lang.Object had better be loaded!
         if (rclass.implementsInterface(interf)) implementers.push(rclass);
         else {
             worklist.push(rclass);
@@ -491,7 +512,8 @@ public abstract class CallTargets extends AbstractSet {
             rclass = (jq_Class)implementers.pop();
             if (loadClasses) rclass.load();
             if (!rclass.isLoaded()) continue;
-            jq.Assert(!rclass.isInterface());
+            if (VerifyAssertions)
+                jq.Assert(!rclass.isInterface());
             jq_Method mtarget = (jq_Method)rclass.getDeclaredMember(imethod.getNameAndDesc());
             if (mtarget instanceof jq_StaticMethod) continue;
             jq_InstanceMethod target = (jq_InstanceMethod)mtarget;
@@ -580,7 +602,8 @@ public abstract class CallTargets extends AbstractSet {
                 this.set.add(sct.method);
                 if (!sct.isComplete()) this.complete = false;
             } else {
-                jq.Assert(s instanceof MultipleCallTargets);
+                if (VerifyAssertions)
+                    jq.Assert(s instanceof MultipleCallTargets);
                 this.set.addAll(((MultipleCallTargets)s).set);
             }
             return this;
