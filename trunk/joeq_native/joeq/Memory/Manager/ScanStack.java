@@ -3,8 +3,6 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Memory.Manager;
 
-import java.util.Iterator;
-
 import joeq.Allocator.CodeAllocator;
 import joeq.Allocator.DefaultHeapAllocator;
 import joeq.Class.PrimordialClassLoader;
@@ -115,7 +113,7 @@ public class ScanStack {
                     !refaddr.isNull();
                     refaddr = iterator.getNextReferenceAddress()) {
 
-                    DefaultHeapAllocator.processPtrField(refaddr, true);
+                    DefaultHeapAllocator.processObjectReference((HeapAddress) refaddr);
                 }
 
                 iterator.cleanupPointers();
@@ -146,7 +144,7 @@ public class ScanStack {
                     jq_StaticField sf = sfs[j];
                     if (sf.getType().isReferenceType()) {
                         HeapAddress addr = sf.getAddress();
-                        DefaultHeapAllocator.processPtrField(addr, true);
+                        DefaultHeapAllocator.processObjectReference(addr);
                     }
                 }
             }

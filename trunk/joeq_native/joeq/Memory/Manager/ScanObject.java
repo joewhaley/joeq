@@ -32,7 +32,7 @@ public class ScanObject {
         if (type.isClassType()) {
             int[] referenceOffsets = ((jq_Class)type).getReferenceOffsets();
             for (int i = 0, n = referenceOffsets.length; i < n; i++) {
-                DefaultHeapAllocator.processPtrField(objRef.offset(referenceOffsets[i]), true);
+                DefaultHeapAllocator.processObjectReference((HeapAddress) objRef.offset(referenceOffsets[i]));
             }
         } else {
             jq_Type elementType = ((jq_Array)type).getElementType();
@@ -42,7 +42,7 @@ public class ScanObject {
                 HeapAddress location = (HeapAddress) objRef.offset(ObjectLayout.ARRAY_ELEMENT_OFFSET);
                 HeapAddress end = (HeapAddress) location.offset(numBytes);
                 while (location.difference(end) < 0) {
-                    DefaultHeapAllocator.processPtrField(location, true);
+                    DefaultHeapAllocator.processObjectReference(location);
                     location =
                         (HeapAddress) location.offset(HeapAddress.size());
                 }

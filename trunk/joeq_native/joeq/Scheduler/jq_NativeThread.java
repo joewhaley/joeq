@@ -16,8 +16,6 @@ import joeq.Class.jq_DontAlign;
 import joeq.Class.jq_InstanceMethod;
 import joeq.Class.jq_StaticField;
 import joeq.Class.jq_StaticMethod;
-import joeq.GC.GCManager;
-import joeq.GC.GCVisitor;
 import joeq.Main.jq;
 import joeq.Memory.CodeAddress;
 import joeq.Memory.HeapAddress;
@@ -669,10 +667,6 @@ public class jq_NativeThread implements jq_DontAlign {
         if (TRACE) SystemInterface.debugwriteln("Break thread initialized");
     }
 
-    private static int gcType = GCManager.MS_GC;
-    private static jq_NativeThread gc_nthread;
-    private static jq_Thread gc_jthread;
-
     // Suspend all threads except for the current one.
     // The current thread must have thread switch disabled.
     public static void suspendAllThreads() {
@@ -717,49 +711,6 @@ public class jq_NativeThread implements jq_DontAlign {
         if (TRACE) Debug.writeln("All native threads resumed");
     }
     
-    // Stop all the native threads and start GC
-    public static void stopTheWorld() {
-        jq_Thread t = Unsafe.getThreadBlock();
-        if (TRACE) SystemInterface.debugwriteln("Ending Java thread " + t);
-        t.disableThreadSwitch();
-        _num_of_java_threads.getAddress().atomicSub(1);
-        if (t.isDaemon()) {
-            _num_of_daemon_threads.getAddress().atomicSub(1);
-        }
-        Unsafe.setThreadBlock(gc_jthread);
-        gc_nthread.currentThread = gc_jthread;
-        gc_nthread.thread_handle = SystemInterface.get_current_thread_handle();
-        SystemInterface.debugwriteln("*** GC Starts! ***");
-        for (int i = 0; i < native_threads.length; ++i) {
-            SystemInterface.suspend_thread(native_threads[i].thread_handle);
-        }
-        jq_RegisterState rs = jq_RegisterState.create();
-        rs.setContextFlags(jq_RegisterState.CONTEXT_FULL);
-        GCVisitor visitor = (GCVisitor)GCManager.getGC(gcType);
-        for (int i = 0; i < native_threads.length; ++i) {
-            SystemInterface.get_thread_context(native_threads[i].pid, rs);
-            visitor.visit(rs);
-            if (TRACE) native_threads[i].dump(rs);
-        }
-    }
-
-    public static void resumeTheFeast() {
-        GCVisitor visitor = (GCVisitor)GCManager.getGC(gcType);
-        visitor.farewell(native_threads);
-        startNativeThreads();
-    }
-
-    public static void initGCThread() {
-        gc_nthread = new jq_NativeThread(-2);
-        // TO DO: select gc from command line
-        Thread t = new Thread((Runnable)GCManager.getGC(gcType), "_gc_");
-        t.setDaemon(true);
-        gc_jthread = ThreadUtils.getJQThread(t);
-        gc_jthread.disableThreadSwitch();
-        gc_jthread.setNativeThread(gc_nthread);
-        if (TRACE) SystemInterface.debugwriteln("GC thread initialized");
-    }
-
     public void dump(jq_RegisterState regs) {
         SystemInterface.debugwriteln(this + ": current Java thread = " + currentThread);
         StackCodeWalker.stackDump(regs.getEip(), regs.getEbp());

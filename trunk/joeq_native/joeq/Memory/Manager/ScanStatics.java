@@ -3,9 +3,6 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Memory.Manager;
 
-import java.util.Collection;
-import java.util.Iterator;
-
 import joeq.Allocator.DefaultHeapAllocator;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
@@ -36,7 +33,7 @@ public class ScanStatics {
                     jq_StaticField sf = sfs[j];
                     if (sf.getType().isReferenceType()) {
                         HeapAddress a = sf.getAddress();
-                        DefaultHeapAllocator.processPtrField(a, true);
+                        DefaultHeapAllocator.processObjectReference(a);
                     }
                 }
             }

@@ -37,15 +37,11 @@ public abstract class SemiConservative {
         if (SimpleAllocator.TRACE) Debug.writeln("Threads suspended.");
         SimpleAllocator s = (SimpleAllocator) DefaultHeapAllocator.def();
         if (SimpleAllocator.TRACE) Debug.writeln("--> Marking roots.");
-        scanRoots(true);
+        scanRoots();
         if (SimpleAllocator.TRACE) Debug.writeln("--> Marking queue.");
-        s.scanGCQueue(true);
+        s.scanGCQueue();
         if (SimpleAllocator.TRACE) Debug.writeln("--> Sweeping.");
         s.sweep();
-        if (SimpleAllocator.TRACE) Debug.writeln("--> Unmarking roots.");
-        scanRoots(false);
-        if (SimpleAllocator.TRACE) Debug.writeln("--> Unmarking queue.");
-        s.scanGCQueue(false);
         
         if (SimpleAllocator.TRACE) Debug.writeln("Resuming threads.");
         jq_NativeThread.resumeAllThreads();
@@ -53,15 +49,15 @@ public abstract class SemiConservative {
         t.enableThreadSwitch();
     }
     
-    public static void scanRoots(boolean b) {
-        scanStatics(b);
-        scanAllThreads(b);
+    public static void scanRoots() {
+        scanStatics();
+        scanAllThreads();
     }
     
     /**
      * Scan static variables for object references.
      */
-    public static void scanStatics(boolean b) {
+    public static void scanStatics() {
         // todo: other classloaders?
         jq_Type[] types = PrimordialClassLoader.loader.getAllTypes();
         int num = PrimordialClassLoader.loader.getNumTypes();
@@ -75,7 +71,7 @@ public abstract class SemiConservative {
                         jq_StaticField sf = sfs[j];
                         if (sf.getType().isReferenceType()) {
                             HeapAddress a = sf.getAddress();
-                            DefaultHeapAllocator.processPtrField(a, b);
+                            DefaultHeapAllocator.processObjectReference(a);
                         }
                     }
                 }
@@ -83,45 +79,45 @@ public abstract class SemiConservative {
         }
     }
     
-    public static void scanAllThreads(boolean b) {
+    public static void scanAllThreads() {
         if (jq_NativeThread.allNativeThreadsInitialized()) {
             for (int i = 0; i < jq_NativeThread.native_threads.length; ++i) {
                 jq_NativeThread nt = jq_NativeThread.native_threads[i];
-                scanQueuedThreads(nt, b);
+                scanQueuedThreads(nt);
                 //addObject(nt, b);
             }
         } else {
             jq_NativeThread nt = Unsafe.getThreadBlock().getNativeThread();
-            scanQueuedThreads(nt, b);
+            scanQueuedThreads(nt);
         }
-        scanCurrentThreadStack(3, b);
+        scanCurrentThreadStack(3);
     }
     
-    public static void scanQueuedThreads(jq_NativeThread nt, boolean b) {
+    public static void scanQueuedThreads(jq_NativeThread nt) {
         for (int i = 0; i < jq_NativeThread.NUM_OF_QUEUES; ++i) {
-            scanThreadQueue(nt.getReadyQueue(i), b);
+            scanThreadQueue(nt.getReadyQueue(i));
         }
-        scanThreadQueue(nt.getIdleQueue(), b);
-        scanThreadQueue(nt.getTransferQueue(), b);
+        scanThreadQueue(nt.getIdleQueue());
+        scanThreadQueue(nt.getTransferQueue());
     }
     
-    public static void scanThreadQueue(jq_ThreadQueue q, boolean b) {
+    public static void scanThreadQueue(jq_ThreadQueue q) {
         jq_Thread t = q.peek();
         while (t != null) {
-            scanThreadStack(t, b);
+            scanThreadStack(t);
             //addObject(t);
             t = t.getNext();
         }
     }
     
-    public static void scanCurrentThreadStack(int skip, boolean b) {
+    public static void scanCurrentThreadStack(int skip) {
         StackAddress fp = StackAddress.getBasePointer();
         StackAddress sp = StackAddress.getStackPointer();
         CodeAddress ip = (CodeAddress) fp.offset(HeapAddress.size()).peek();
         while (!fp.isNull()) {
             if (--skip < 0) {
                 while (fp.difference(sp) > 0) {
-                    addConservativeAddress(sp.peek(), b);
+                    addConservativeAddress(sp.peek());
                     sp = (StackAddress) sp.offset(HeapAddress.size());
                 }
             }
@@ -131,14 +127,14 @@ public abstract class SemiConservative {
         }
     }
     
-    public static void scanThreadStack(jq_Thread t, boolean b) {
+    public static void scanThreadStack(jq_Thread t) {
         jq_RegisterState s = t.getRegisterState();
         StackAddress fp = s.getEbp();
         CodeAddress ip = s.getEip();
         StackAddress sp = s.getEsp();
         while (!fp.isNull()) {
             while (fp.difference(sp) > 0) {
-                addConservativeAddress(sp.peek(), b);
+                addConservativeAddress(sp.peek());
                 sp = (StackAddress) sp.offset(HeapAddress.size());
             }
             ip = (CodeAddress) fp.offset(HeapAddress.size()).peek();
@@ -147,8 +143,9 @@ public abstract class SemiConservative {
         }
     }
     
-    public static void addConservativeAddress(Address a, boolean b) {
-        DefaultHeapAllocator.processPtrField(a, b);
+    public static void addConservativeAddress(Address a) {
+        // todo: check if address falls in heap
+        DefaultHeapAllocator.processObjectReference((HeapAddress) a);
     }
     
     public static boolean isMarked(Object o) {
