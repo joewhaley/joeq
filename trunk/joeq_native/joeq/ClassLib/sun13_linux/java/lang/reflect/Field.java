@@ -770,16 +770,37 @@ public abstract class Field {
     
     // additional methods.
     // ONLY TO BE CALLED BY jq_Member CONSTRUCTOR!!!
-    public static java.lang.reflect.Field createNewField(jq_Class clazz, jq_Field jq_field) {
+    public static java.lang.reflect.Field createNewField(jq_Class claz, jq_Field jq_field) {
         java.lang.reflect.Field o = (java.lang.reflect.Field)_class.newInstance();
         Reflection.putfield_A(o, _jq_field, jq_field);
         return o;
     }
+    public static void initNewField(java.lang.reflect.Field o, jq_Field jq_field) {
+	if (jq.Bootstrapping) return;
+	java.lang.String name = jq_field.getName().toString();
+        Reflection.putfield_A(o, _name, name);
+	java.lang.Class clazz = jq_field.getDeclaringClass().getJavaLangClassObject();
+	jq.assert(clazz != null);
+	Reflection.putfield_A(o, _clazz, clazz);
+	java.lang.Class type = Reflection.getJDKType(jq_field.getType());
+	jq.assert(type != null);
+	Reflection.putfield_A(o, _type, type);
+	int modifiers = jq_field.getAccessFlags();
+	Reflection.putfield_I(o, _modifiers, modifiers);
+    }
     
     public static final jq_Class _class;
     public static final jq_InstanceField _jq_field;
+    public static final jq_InstanceField _clazz;
+    public static final jq_InstanceField _name;
+    public static final jq_InstanceField _type;
+    public static final jq_InstanceField _modifiers;
     static {
         _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/reflect/Field;");
         _jq_field = _class.getOrCreateInstanceField("jq_field", "LClazz/jq_Field;");
+        _clazz = _class.getOrCreateInstanceField("clazz", "Ljava/lang/Class;");
+        _name = _class.getOrCreateInstanceField("name", "Ljava/lang/String;");
+        _type = _class.getOrCreateInstanceField("type", "Ljava/lang/Class;");
+	_modifiers = _class.getOrCreateInstanceField("modifiers", "I");
     }
 }

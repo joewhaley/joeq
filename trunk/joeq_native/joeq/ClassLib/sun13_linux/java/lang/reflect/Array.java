@@ -15,6 +15,7 @@ import Allocator.ObjectLayout;
 import Allocator.HeapAllocator;
 import ClassLib.ClassLibInterface;
 import Clazz.jq_Array;
+import Clazz.jq_Primitive;
 import Clazz.jq_Type;
 import Clazz.jq_Class;
 import Bootstrap.PrimordialClassLoader;
@@ -22,7 +23,7 @@ import Bootstrap.PrimordialClassLoader;
 abstract class Array {
 
     public static int getLength(jq_Class clazz, Object array) throws IllegalArgumentException {
-        if (!Unsafe.getTypeOf(array).isArrayType())throw new IllegalArgumentException(Unsafe.getTypeOf(array).toString());
+        if (!Unsafe.getTypeOf(array).isArrayType()) throw new IllegalArgumentException(Unsafe.getTypeOf(array).toString());
         return Unsafe.peek(Unsafe.addressOf(array)+ObjectLayout.ARRAY_LENGTH_OFFSET);
     }
     public static Object get(jq_Class clazz, Object array, int index)
@@ -200,6 +201,8 @@ abstract class Array {
     private static Object newArray(jq_Class clazz, Class componentType, int length)
     throws NegativeArraySizeException {
         jq_Type t = ClassLibInterface.i.getJQType(componentType);
+	if (t == jq_Primitive.VOID)
+	    throw new IllegalArgumentException("cannot create a void array");
         jq_Array a = t.getArrayTypeForElementType();
         a.load(); a.verify(); a.prepare(); a.sf_initialize(); a.cls_initialize();
         return a.newInstance(length);
@@ -207,8 +210,15 @@ abstract class Array {
     private static Object multiNewArray(jq_Class clazz, Class componentType, int[] dimensions)
     throws IllegalArgumentException, NegativeArraySizeException {
         jq_Type a = ClassLibInterface.i.getJQType(componentType);
-        if (dimensions.length == 0) throw new IllegalArgumentException();
+	if (a == jq_Primitive.VOID)
+	    throw new IllegalArgumentException("cannot create a void array");
+        if (dimensions.length == 0)
+	    throw new IllegalArgumentException("dimensions array is zero");
         for (int i=0; i<dimensions.length; ++i) {
+	    // check for dim < 0 here, because if a dim is zero, later dim's
+	    // are not checked by multinewarray_helper.
+	    if (dimensions[i] < 0)
+		throw new NegativeArraySizeException("dim "+i+": "+dimensions[i]+" < 0");
             a = a.getArrayTypeForElementType();
             a.load(); a.verify(); a.prepare(); a.sf_initialize(); a.cls_initialize();
         }
