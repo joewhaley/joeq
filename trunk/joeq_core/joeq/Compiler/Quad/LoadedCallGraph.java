@@ -95,6 +95,7 @@ public class LoadedCallGraph extends CallGraph {
         MultiMap classesToMethods = new GenericMultiMap(treeMapFactory, sortedArraySetFactory);
         for (Iterator i = cg.getAllMethods().iterator(); i.hasNext(); ) {
             jq_Method m = (jq_Method) i.next();
+            if (m == null) continue;
             classesToMethods.add(m.getDeclaringClass(), m);
         }
         for (Iterator i = classesToMethods.keySet().iterator(); i.hasNext(); ) {
@@ -115,6 +116,7 @@ public class LoadedCallGraph extends CallGraph {
                     Set s2 = sortedArraySetFactory.makeSet(cg.getTargetMethods(pl));
                     for (Iterator l = s2.iterator(); l.hasNext(); ) {
                         jq_Method target = (jq_Method) l.next();
+                        if (target == null) continue;
                         out.write("   TARGET "+target.getDeclaringClass().getJDKName().replace('.', '/')+"."+target.getName()+" "+target.getDesc());
                         if (target instanceof jq_FakeInstanceMethod)
                             out.write(" FAKE");
