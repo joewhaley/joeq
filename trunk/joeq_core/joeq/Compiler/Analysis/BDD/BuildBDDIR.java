@@ -3,13 +3,15 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Analysis.BDD;
 
-import java.io.DataOutputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import java.io.DataOutputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.ControlFlowGraphVisitor;
 import joeq.Compiler.Quad.Operand;
@@ -118,8 +120,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
             new EnterSSA().visitCFG(cfg);
         }
         QuadIterator i = new QuadIterator(cfg);
-        int methodID = 
-            methodMap.get(cfg.getMethod());
+        int methodID = getMethodID(cfg.getMethod());
         
         if (!GLOBAL_QUAD_NUMBERS) quadMap.clear();
         
@@ -193,6 +194,10 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         } catch (IOException x) {
         }
         return ("BuildBDDIR, node count: " + allQuads.nodeCount());
+    }
+    
+    public int getMethodID(jq_Method m) {
+        return methodMap.get(m)+1;
     }
     
     public int getRegisterID(Register r) {
