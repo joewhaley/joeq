@@ -74,8 +74,13 @@ public class MethodSummary {
         if (s == null) {
             if (TRACE_INTER) out.println("vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv");
             if (TRACE_INTER) out.println("Building summary for "+cfg.getMethod());
-            BuildMethodSummary b = new BuildMethodSummary(cfg);
-            s = b.getSummary();
+            try {
+                BuildMethodSummary b = new BuildMethodSummary(cfg);
+                s = b.getSummary();
+            } catch (RuntimeException t) {
+                System.err.println("Runtime exception when getting method summary for "+cfg.getMethod());
+                throw t;
+            }
             summary_cache.put(cfg, s);
             if (TRACE_INTER) out.println("Summary for "+cfg.getMethod()+":");
             if (TRACE_INTER) out.println(s);
@@ -619,7 +624,7 @@ public class MethodSummary {
                 if (TRACE_INTRA) out.println("Visiting: "+obj);
                 Register dest_r = Unary.getDest(obj).getRegister();
                 jq_Reference type = PrimordialClassLoader.getJavaLangObject();
-                UnknownTypeNode n = (UnknownTypeNode)quadsToNodes.get(type);
+                UnknownTypeNode n = UnknownTypeNode.get(type);
                 setRegister(dest_r, n);
             }
         }
