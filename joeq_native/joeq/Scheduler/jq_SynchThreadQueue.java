@@ -11,6 +11,8 @@ public class jq_SynchThreadQueue extends jq_ThreadQueue {
 
     //public synchronized boolean isEmpty() { return super.isEmpty(); }
     public synchronized void enqueue(jq_Thread t) { super.enqueue(t); }
+    public synchronized void enqueueFront(jq_Thread t) { super.enqueueFront(t); }
     public synchronized jq_Thread dequeue() { return super.dequeue(); }
+    public synchronized boolean remove(jq_Thread t2) { return super.remove(t2); }
 
 }
