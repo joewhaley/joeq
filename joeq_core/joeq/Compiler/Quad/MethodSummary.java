@@ -1202,6 +1202,15 @@ public class MethodSummary {
     public static final class ConcreteTypeNode extends Node {
         final jq_Reference type; final Quad q;
         
+        static final HashMap FACTORY = new HashMap();
+        public static ConcreteTypeNode get(jq_Reference type) {
+            ConcreteTypeNode n = (ConcreteTypeNode)FACTORY.get(type);
+            if (n == null) {
+                FACTORY.put(type, n = new ConcreteTypeNode(type));
+            }
+            return n;
+        }
+        
         public ConcreteTypeNode(jq_Reference type) { this.type = type; this.q = null; }
         public ConcreteTypeNode(jq_Reference type, Quad q) { this.type = type; this.q = q; }
         private ConcreteTypeNode(ConcreteTypeNode that) {
@@ -1249,6 +1258,24 @@ public class MethodSummary {
             this.type = type;
         }
         private UnknownTypeNode(UnknownTypeNode that) { super(that); this.type = that.type; }
+        
+        /** Add the nodes that are targets of inside edges on the given field
+         *  to the given result set. */
+        public void getEdges(jq_Field m, LinkedHashSet result) {
+            if (m == null) {
+                if (this.type.isArrayType() || this.type == PrimordialClassLoader.getJavaLangObject())
+                    result.add(get(PrimordialClassLoader.getJavaLangObject()));
+                return;
+            }
+            this.type.load(); this.type.verify(); this.type.prepare();
+            m.getDeclaringClass().load(); m.getDeclaringClass().verify(); m.getDeclaringClass().prepare();
+            if (Run_Time.TypeCheck.isAssignable(this.type, m.getDeclaringClass()) ||
+                Run_Time.TypeCheck.isAssignable(m.getDeclaringClass(), this.type)) {
+                jq_Reference r = (jq_Reference)m.getType();
+                result.add(get(r));
+            }
+            super.getEdges(m, result);
+        }
         
         private void addDummyEdges() {
             if (type instanceof jq_Class) {
@@ -1345,28 +1372,34 @@ public class MethodSummary {
         public String toString_short() { return jq.hex(this)+": "+"Return value of "+m; }
     }
     
-    /*
     public static final class CaughtExceptionNode extends OutsideNode {
-        ExceptionHandler eh;
-        CaughtExceptionNode(ExceptionHandler eh) { this.eh = eh; }
-        CaughtExceptionNode(CaughtExceptionNode that) {
+        final ExceptionHandler eh;
+        LinkedHashSet caughtExceptions;
+        public CaughtExceptionNode(ExceptionHandler eh) { this.eh = eh; }
+        private CaughtExceptionNode(CaughtExceptionNode that) {
             super(that); this.eh = that.eh;
         }
+        /*
         public boolean equals(CaughtExceptionNode that) { return this.eh.equals(that.eh); }
         public boolean equals(Object o) {
             if (o instanceof CaughtExceptionNode) return equals((CaughtExceptionNode)o);
             else return false;
         }
         public int hashCode() { return eh.hashCode(); }
+         */
+        
+        public void addCaughtException(ThrownExceptionNode n) {
+            if (caughtExceptions == null) caughtExceptions = new LinkedHashSet();
+            caughtExceptions.add(n);
+        }
         
         public jq_Reference getDeclaredType() { return (jq_Reference)eh.getExceptionType(); }
         
-        Node copy() { return new CaughtExceptionNode(this); }
+        public Node copy() { return new CaughtExceptionNode(this); }
         
         public String toString_long() { return toString_short()+super.toString_long(); }
-        public String toString_short() { return "Caught exception: "+eh; }
+        public String toString_short() { return jq.hex(this)+": "+"Caught exception: "+eh; }
     }
-     */
     
     /** A ThrownExceptionNode represents the thrown exception of a method call.
      */
