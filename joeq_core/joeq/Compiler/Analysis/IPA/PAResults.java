@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -61,7 +62,10 @@ public class PAResults {
     public static void main(String[] args) throws IOException {
         initialize(null);
         PAResults r = loadResults(args, null);
-        r.interactive();
+        if (System.getProperty("pa.stats") != null)
+            r.printStats();
+        else
+            r.interactive();
     }
     
     public static void initialize(String addToClasspath) {
@@ -83,7 +87,7 @@ public class PAResults {
         } else {
             prefix = "";
         }
-        String fileName = System.getProperty("bddresults", "pa");
+        String fileName = System.getProperty("pa.results", "pa");
         String bddfactory = "typed";
         PAResults r = loadResults(bddfactory, prefix, fileName);
         return r;
@@ -96,7 +100,10 @@ public class PAResults {
         PAResults r = new PAResults(pa);
         r.loadCallGraph(prefix+"callgraph");
         // todo: load path numbering instead of renumbering.
-        pa.numberPaths(r.cg, null, false);
+        if (pa.CONTEXT_SENSITIVE || pa.OBJECT_SENSITIVE) {
+            pa.addDefaults();
+            pa.numberPaths(r.cg, pa.ocg, false);
+        }
         return r;
     }
     
@@ -529,6 +536,54 @@ public class PAResults {
 
     /***** COOL OPERATIONS BELOW *****/
     
+    int heapConnectivityQueries;
+    int heapConnectivitySteps;
+    /** Given a heap object (H1xH1c), calculate the set of heap objects (H1xH1c) that
+     * are reachable by following a chain of access paths.
+     */
+    public BDD calculateHeapConnectivity(BDD h1) {
+        BDD result = r.bdd.zero();
+        BDD h1h2 = r.hP.exist(r.Fset);
+        for (;;) {
+            BDD b = h1.relprod(h1h2, r.H1set);
+            b.replaceWith(r.H2toH1);
+            b.applyWith(result.id(), BDDFactory.diff);
+            result.orWith(b.id());
+            if (b.isZero()) break;
+            h1 = b;
+            ++heapConnectivitySteps;
+        }
+        h1h2.free();
+        ++heapConnectivityQueries;
+        return result;
+    }
+    
+    /** Given a set of types (T2), calculate the tightest common superclass (T2).
+     */
+    public BDD calculateCommonSupertype(BDD types) {
+        if (types.isZero()) return r.bdd.zero();
+        BDD bestTypes = r.T1.domain();
+        //System.out.println("Looking for supertype of "+types.toStringWithDomains(r.TS));
+        for (Iterator i = types.iterator(r.T2set); i.hasNext(); ) {
+            BDD b = (BDD) i.next();
+            BDD c = b.relprod(r.aT, r.T2set);
+            b.free();
+            bestTypes.andWith(c); // T1
+        }
+        for (Iterator i = bestTypes.iterator(r.T1set); i.hasNext(); ) {
+            BDD b = (BDD) i.next();
+            BDD c = b.relprod(r.aT, r.T1set); // T2
+            b.free();
+            c.replaceWith(r.T2toT1); // T1
+            c.andWith(bestTypes.id()); // T1
+            if (c.satCount(r.T1set) == 1.0) {
+                return c;
+            }
+        }
+        System.out.println("No subtype matches! "+bestTypes.toStringWithDomains(r.TS));
+        return null;
+    }
+    
     /** Given a set of uses (V1xV1c), calculate the set of definitions (V1xV1c) that
      * reach that set of uses.  Only does one step at a time; you'll have to iterate
      * to get the transitive closure.
@@ -562,7 +617,7 @@ public class PAResults {
         BDD r_v2 = r_v1.replace(r.V1toV2);
         // A: v2=v1;
         BDD b = r.A.relprod(r_v2, r.V2set);
-        System.out.println("Arguments/Return Values = "+b.satCount(r.V1set));
+        //System.out.println("Arguments/Return Values = "+b.satCount(r.V1set));
         // S: v1.f=v2;
         BDD c = r.S.relprod(r_v2, r.V2set); // V1xF
         r_v2.free();
@@ -573,7 +628,7 @@ public class PAResults {
         // L: v2=v1.f;
         BDD f = r.L.relprod(e, r.V1Fset); // V2
         f.replaceWith(r.V2toV1);
-        System.out.println("Loads/Stores = "+f.satCount(r.V1set));
+        //System.out.println("Loads/Stores = "+f.satCount(r.V1set));
         f.orWith(b);
         return f;
     }
@@ -631,7 +686,7 @@ public class PAResults {
             visited.orWith(vPrelation.id());
             // A: v2=v1;
             BDD b = r.A.relprod(vPrelation, r.V1set);
-            System.out.println("Arguments/Return Values = "+b.satCount(r.V2set));
+            //System.out.println("Arguments/Return Values = "+b.satCount(r.V2set));
             // L: v2=v1.f;
             vPrelation.replaceWith(r.V1toV2);
             BDD c = r.L.relprod(vPrelation, r.V2set); // V1xF
@@ -642,7 +697,7 @@ public class PAResults {
             d.free();
             e.replaceWith(r.H2toH1);
             BDD f = r.vP.relprod(e, r.H1set); // V1
-            System.out.println("Loads/Stores = "+f.satCount(r.V1set));
+            //System.out.println("Loads/Stores = "+f.satCount(r.V1set));
             e.free();
             vPrelation = b;
             vPrelation.replaceWith(r.V2toV1);
@@ -660,13 +715,14 @@ public class PAResults {
         BDD allInvokes = r.mI.exist(r.Nset);
         BDD new_m = method_plus_context0.id();
         BDD V2cIset = r.Iset.and(r.V2c.set());
+        BDD IEcs = (r.CONTEXT_SENSITIVE || r.OBJECT_SENSITIVE) ? r.IEcs : r.IE;
         for (int k=1; ; ++k) {
-            System.out.println("Iteration "+k);
+            //System.out.println("Iteration "+k);
             BDD vars = new_m.relprod(r.mV, r.Mset); // V1cxM x MxV1 = V1cxV1
             result.orWith(vars);
             BDD invokes = new_m.relprod(allInvokes, r.Mset); // V1cxM x MxI = V1cxI
             invokes.replaceWith(r.V1ctoV2c); // V2cxI
-            BDD methods = invokes.relprod(r.IEcs, V2cIset); // V2cxI x V2cxIxV1cxM = V1cxM
+            BDD methods = invokes.relprod(IEcs, V2cIset); // V2cxI x V2cxIxV1cxM = V1cxM
             new_m.orWith(methods);
             new_m.applyWith(method_plus_context0.id(), BDDFactory.diff);
             if (new_m.isZero()) break;
@@ -791,7 +847,7 @@ public class PAResults {
     
     /***** STATISTICS *****/
     
-    public void printStats() {
+    public void printStats() throws IOException {
         System.out.println("Number of types="+r.Tmap.size());
         System.out.println("Number of methods="+r.Mmap.size());
         int bytecodes = 0;
@@ -810,26 +866,118 @@ public class PAResults {
         //System.out.println("Number of loads="+r.L.satCount(r.V1.set().andWith(r.F.set()).andWith(r.V2.set())));
         System.out.println("Number of callgraph edges="+r.IE.satCount(r.Iset.and(r.Mset)));
         
-        System.out.println("Thread-local objects: "+countThreadLocalObjects());
+        BDD all_v1 = r.vP.exist(r.H1set);
+        all_v1.orWith(r.A.exist(r.V2set));
+        all_v1.orWith(r.A.exist(r.V1set).replaceWith(r.V2toV1));
+        all_v1.orWith(r.L.exist(r.V2Fset));
+        all_v1.orWith(r.L.exist(r.V1Fset).replaceWith(r.V2toV1));
+        
+        double v1h1_count = r.vP.satCount(r.V1H1set);
+        //int v1_count = r.Vmap.size();
+        double v1_count = all_v1.satCount(r.V1set);
+        System.out.println("Points-to: "+v1h1_count+" / "+v1_count+" = "+(double)v1h1_count/v1_count);
+        
+        BDD all_h1 = r.vP.exist(r.V1set);
+        
+        double h1fh2_count = r.hP.satCount(r.H1FH2set);
+        double h1f_count = r.hP.exist(r.H2set).satCount(r.H1Fset);
+        //int h1_count = r.Hmap.size();
+        double h1_count = all_h1.satCount(r.H1set);
+        //System.out.println("Heap object points to (each field): "+h1fh2_count+" / "+h1f_count+" = "+(double)h1fh2_count/h1f_count);
+        System.out.println("Heap object points to (all fields): "+h1fh2_count+" / "+h1_count+" = "+(double)h1fh2_count/h1_count);
+        
         {
-            long sum = 0L; int n = 0;
-            for (int i = 0; i < r.Vmap.size(); ++i) {
-                BDD b = r.V1.ithVar(i);
-                b.andWith(r.V1c.domain());
-                int result = countPointsTo(b);
-                sum += result;
-                ++n;
+            long heapConnectSum = 0L; int heapConnect = 0;
+            long heapPointsToSum = 0L; long heapPointsTo = 0L;
+            for (int i = 0; i < r.Hmap.size(); ++i) {
+                BDD b = r.H1.ithVar(i);
+                if (r.CONTEXT_SENSITIVE) b.andWith(r.H1c.domain());
+                BDD c = calculateHeapConnectivity(b);
+                heapConnectSum += c.satCount(r.H1set);
+                ++heapConnect;
+                c.free();
+                BDD d = r.hP.relprod(b, r.H1set);
+                heapPointsToSum += d.satCount(r.H2Fset);
+                heapPointsTo += d.exist(r.H2set).satCount(r.Fset);
+                b.free();
+                //System.out.print("Heap connectivity: "+heapConnectSum+" / "+heapConnect+" = "+(double)heapConnectSum/heapConnect+"\r");
             }
-            System.out.println("Points-to: "+sum+" / "+n+" = "+(double)sum/n);
+            System.out.println("Heap connectivity: "+heapConnectSum+" / "+heapConnect+" = "+(double)heapConnectSum/heapConnect+"           ");
+            System.out.println("Heap chain length: "+heapConnectivitySteps+" / "+heapConnectivityQueries+" = "+(double)heapConnectivitySteps/heapConnectivityQueries);
+            System.out.println("Heap points-to, per field: "+heapPointsToSum+" / "+heapPointsTo+" = "+(double)heapPointsToSum/heapPointsTo);
         }
+        
+        {
+            BDD fh2 = r.hP.exist(r.H1set); // FxH2
+            int singleTypeFields = 0, singleObjectFields = 0, unusedFields = 0, refinedTypeFields = 0;
+            Set polyClasses = new HashSet();
+            for (int i = 0; i < r.Fmap.size(); ++i) {
+                BDD b = r.F.ithVar(i);
+                BDD c = fh2.restrict(b); // H2
+                if (c.isZero()) {
+                    ++unusedFields;
+                    continue;
+                }
+                c.replaceWith(r.H2toH1); // H1
+                if (c.satCount(r.H1set) == 1.0) {
+                    ++singleObjectFields;
+                }
+                BDD d = c.relprod(r.hT, r.H1set); // T2
+                jq_Field f = (jq_Field) r.Fmap.get(i);
+                if (d.satCount(r.T2set) == 1.0) {
+                    ++singleTypeFields;
+                } else {
+                    if (f != null && !f.isStatic()) {
+                        polyClasses.add(f.getDeclaringClass());
+                    }
+                }
+                BDD e = calculateCommonSupertype(d); // T1
+                if (f != null) {
+                    int T_i = r.Tmap.get(f.getType());
+                    BDD g = r.T1.ithVar(T_i);
+                    if (!e.equals(g)) {
+                        e.replaceWith(r.T1toT2);
+                        if (e.andWith(g).and(r.aT).isZero()) {
+                            System.out.println("Field "+f);
+                            System.out.println(" Declared: "+f.getType()+" Computed: "+e.toStringWithDomains(r.TS));
+                        } else {
+                            ++refinedTypeFields;
+                        }
+                    }
+                    g.free();
+                }
+                d.free();
+                e.free();
+                c.free();
+                b.free();
+            }
+            System.out.println("Refined-type fields: "+refinedTypeFields+" / "+r.Fmap.size()+" = "+(double)refinedTypeFields/r.Fmap.size());
+            System.out.println("Single-type fields: "+singleTypeFields+" / "+r.Fmap.size()+" = "+(double)singleTypeFields/r.Fmap.size());
+            System.out.println("Single-object fields: "+singleObjectFields+" / "+r.Fmap.size()+" = "+(double)singleObjectFields/r.Fmap.size());
+            System.out.println("Unused fields: "+unusedFields+" / "+r.Fmap.size()+" = "+(double)unusedFields/r.Fmap.size());
+            System.out.println("Poly classes: "+polyClasses.size());
+            
+            DataOutput out = new DataOutputStream(new FileOutputStream("polyclasses"));
+            for (Iterator i = polyClasses.iterator(); i.hasNext(); ) {
+                jq_Class c = (jq_Class) i.next();
+                out.writeBytes(c.getJDKName()+"\n");
+            }
+        }
+        
+        if (r.CONTEXT_SENSITIVE) {
+            System.out.println("Thread-local objects: "+countThreadLocalObjects());
+        }
+        
+        if (false)
         {
             long sum = 0L; int n = 0;
             for (int i = 0; i < r.Vmap.size(); ++i) {
                 BDD b = r.V1.ithVar(i);
-                b.andWith(r.V1c.domain());
+                if (r.CONTEXT_SENSITIVE || r.OBJECT_SENSITIVE) b.andWith(r.V1c.domain());
                 int result = countTransitiveReachingDefs(b);
                 sum += result;
                 ++n;
+                System.out.print("Reaching defs: "+sum+" / "+n+" = "+(double)sum/n+"\r");
             }
             System.out.println("Reaching defs: "+sum+" / "+n+" = "+(double)sum/n);
         }
@@ -843,13 +991,13 @@ public class PAResults {
     
     public int countTransitiveReachingDefs(BDD vPrelation) {
         BDD visited = r.bdd.zero();
-        vPrelation = vPrelation.id();
+        vPrelation = vPrelation.id(); // V1
         for (int k = 1; !vPrelation.isZero(); ++k) {
-            visited.orWith(vPrelation.id());
+            visited.orWith(vPrelation.id()); // V1
             // A: v2=v1;
-            BDD b = r.A.relprod(vPrelation, r.V1set);
+            BDD b = r.A.relprod(vPrelation, r.V1set); // V2
             // L: v2=v1.f;
-            vPrelation.replaceWith(r.V1toV2);
+            vPrelation.replaceWith(r.V1toV2); // V2
             BDD c = r.L.relprod(vPrelation, r.V2set); // V1xF
             vPrelation.free();
             BDD d = r.vP.relprod(c, r.V1set); // H1xF
@@ -870,7 +1018,7 @@ public class PAResults {
     
     public int countThreadLocalObjects() {
         BDD b = getThreadLocalObjects();
-        double result = b.satCount(r.H1.set());
+        double result = b.satCount(r.H1set);
         return (int) result;
     }
 }

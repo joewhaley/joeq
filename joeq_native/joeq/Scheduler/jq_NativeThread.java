@@ -38,6 +38,7 @@ import Util.Strings;
  * The Java (lightweight) threads are multiplexed across the jq_NativeThreads.
  * 
  * @author  John Whaley <jwhaley@alum.mit.edu>
+ * @author  Miho Kurano
  * @version $Id$
  */
 
@@ -498,7 +499,7 @@ public class jq_NativeThread implements x86Constants, jq_DontAlign {
                     Assert.UNREACHABLE();
                     return;
                 }
-                boolean exists = readyQueue[i].remove(t2); // which ready queue?
+                boolean exists = readyQueue[i].remove(t2); 
                 if (exists) break;
             }
             if (t2.wasPreempted && !t2.isDaemon())
@@ -509,7 +510,7 @@ public class jq_NativeThread implements x86Constants, jq_DontAlign {
             ip = t2.getRegisterState().Eip;
             if (TRACE) SystemInterface.debugwriteln("New ready Java thread: " + t2 + " ip: " + ip.stringRep() + " cc: " + CodeAllocator.getCodeContaining(ip));
             int priority = t1.getPriority();
-            readyQueue[priority].enqueue(t1);  // specify the queue
+            readyQueue[priority].enqueue(t1);  
             if (t1.wasPreempted && !t1.isDaemon())
                 ++preempted_thread_counter;
             Assert._assert(!t2.isThreadSwitchEnabled());
