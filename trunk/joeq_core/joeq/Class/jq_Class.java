@@ -303,6 +303,9 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         }
         return null;
     }
+    public final jq_Initializer getInitializer(Utf8 desc) {
+        return getInitializer(new jq_NameAndDesc(Utf8.get("<init>"), desc));
+    }
     public final jq_Initializer getInitializer(jq_NameAndDesc nd) {
         chkState(STATE_LOADING3);
         return (jq_Initializer)getDeclaredInstanceMethod(nd);
@@ -1235,7 +1238,8 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                 }
                 continue;
             }
-            if (bc.length == 5 && that_m instanceof jq_Initializer && that_m.getDesc() == Utf8.get("()V")) {
+            if (bc.length == 5 && that_m instanceof jq_Initializer && that_m.getDesc() == Utf8.get("()V") &&
+                this.getInitializer(Utf8.get("()V")) != null) {
                 if (TRACE) SystemInterface.debugmsg("Skipping default initializer "+that_m+".");
                 continue;
             }
