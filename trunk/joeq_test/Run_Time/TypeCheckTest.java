@@ -3,8 +3,8 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Run_Time;
 
-import Compil3r.CompilationConstants;
 import junit.framework.TestCase;
+import Compil3r.CompilationConstants;
 
 /**
  * Tests for Run_Time.TypeCheck 
@@ -12,7 +12,7 @@ import junit.framework.TestCase;
  * @author John Whaley
  * @version $Id$
  */
-public class TypeCheckTest extends TestCase {
+public class TypeCheckTest extends TestCase implements Compil3r.CompilationConstants {
 
     /**
      * Constructor for TypeCheckTest.
