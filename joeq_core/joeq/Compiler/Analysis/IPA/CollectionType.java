@@ -55,9 +55,11 @@ import Util.Graphs.PathNumbering;
 public class CollectionType {
 
     PAResults res;
+    boolean TRACE = false;
     
-    public CollectionType(PAResults res) {
+    public CollectionType(PAResults res, boolean TRACE) {
         this.res = res;
+        this.TRACE = TRACE;
     }
 
     public HashMap cmethods = new HashMap();
@@ -73,12 +75,16 @@ public class CollectionType {
 		e.printStackTrace();
 	    }
 	} else {
-	    // an example
+	    // some examples
 	    String fContent = 
 		"Ljava/util/List; add (ILjava/lang/Object;)V 2\n" +
 		"Ljava/util/List; set (ILjava/lang/Object;)Ljava/lang/Object; 2\n" +
 		"Ljava/util/Collection; add (Ljava/lang/Object;)Z 1\n" +
-		"Ljava/util/Vector; addElement (Ljava/lang/Object;)V 1\n";
+		"Ljava/util/Vector; addElement (Ljava/lang/Object;)V 1\n" +
+		"Ljava/util/Map; put (Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object; 2\n" +
+		"Ljava/util/Collection; addAll (Ljava/util/Collection;)Z 1 ALL\n" +
+		"Ljava/util/List; addAll (ILjava/util/Collection;)Z 2 ALL\n" +
+		"Ljava/util/LinkedList; <init> (Ljava/util/Collection;)V 1 ALL\n";
 	    in = new DataInputStream(new ByteArrayInputStream(fContent.getBytes()));
 	}
 
@@ -86,52 +92,68 @@ public class CollectionType {
 	    for (;;) {
 		String s = in.readLine();
 		if (s == null) break;
+		if (s.startsWith("#"))
+		    continue;
 		StringTokenizer st = new StringTokenizer(s);
 		jq_Member m = jq_Member.read(st);
 		if (m == null) {
 		    System.out.println("Could not resolve `" + s + "', ignoring it");
 		    continue;
 		}
+		boolean addsAll = false;
 		int pidx = Integer.parseInt(st.nextToken());
-		cmethods.put(m.getDeclaringClass(), new Pair(m, new Integer(pidx)));
+		if (st.hasMoreTokens()) {
+		    String mod = st.nextToken();
+		    if ("all".equalsIgnoreCase(mod))
+			addsAll = true;
+		}
+		cmethods.put(m.getDeclaringClass(), new CollCall((jq_Method)m, pidx, addsAll));
 	    }
 	} catch (IOException e) {
 	    e.printStackTrace();
         }
-	// don't handle addAll() yet
+    }
+
+    static class CollCall {
+	jq_Method meth;
+	int pidx;
+	boolean addsAll;
+
+	CollCall(jq_Method meth, int pidx, boolean addsAll) {
+	    this.meth = meth;
+	    this.pidx = pidx;
+	    this.addsAll = addsAll;
+	}
     }
 
     /**
      * Check if m is a method that adds to a collection, if so, return idx of parameter.
      *
-     * @return paramidx or -1 if not a method
+     * @return collection call or null if it isn't one
      */
-    private int isCollectionMethod(jq_Method m) {
+    private CollCall isCollectionCall(jq_Method m) {
 	// see if any superclass or implemented interface declares the method 
 	// that is being invoked as a collection-add method
 	jq_Class mclass = m.getDeclaringClass();
 	while (mclass != null) {
-	    Integer pidx = checkMethodForType(mclass, m); 
-	    if (pidx != null)
-		return pidx.intValue();
+	    CollCall cc = checkMethodForType(mclass, m); 
+	    if (cc != null)
+		return cc;
 	    mclass = mclass.getSuperclass();
 	}
 	jq_Class []ifs = m.getDeclaringClass().getInterfaces();
 	for (int i = 0; i < ifs.length; i++) {
-	    Integer pidx = checkMethodForType(ifs[i], m); 
-	    if (pidx != null)
-		return pidx.intValue();
+	    CollCall cc = checkMethodForType(ifs[i], m); 
+	    if (cc != null)
+		return cc;
 	}
-	return -1;
+	return null;
     }
 
-    private Integer checkMethodForType(jq_Class type, jq_Method m) {
-	Pair p = (Pair)cmethods.get(type);
-	if (p != null) {
-	    jq_Method cm = (jq_Method)p.left;
-	    if (cm.getNameAndDesc().equals(m.getNameAndDesc()))
-		return ((Integer)p.right);
-	}
+    private CollCall checkMethodForType(jq_Class type, jq_Method m) {
+	CollCall cc = (CollCall)cmethods.get(type);
+	if (cc != null && cc.meth.getNameAndDesc().equals(m.getNameAndDesc()))
+	    return cc;
 	return null;
     }
 
@@ -143,25 +165,32 @@ public class CollectionType {
     public TypedBDD findCollectionTypes() {
 	PA r = res.r;
 	TypedBDD storedin = (TypedBDD)r.bdd.zero(); 		// H1xH1cxH2xH2c
+	TypedBDD copiedin = (TypedBDD)r.bdd.zero(); 		// H1xH2
 	if (!r.CONTEXT_SENSITIVE) {
             System.out.println("Sorry, this analysis has only been debugged in context-sensitivity mode");
 	    return storedin;
 	}
+	res.initializeExtraDomains();	// for H3
 	BDD V1cset = r.V1c.set();
 	BDD V1set = r.V1.set();
 	BDD H1set = r.H1.set();
+	BDD H2set = r.H2.set();
 
 	// iterate over all callsites (XXX use a BDD-filter for this instead?)
 	for (int iidx = 0; iidx < r.Imap.size(); iidx++) {
 	    ProgramLocation call = (ProgramLocation)r.Imap.get(iidx);
 
 	    // is this a call that adds to a collection?
-	    // if so, find the parameter index of the item being added
-	    int pidx = isCollectionMethod(call.getTargetMethod());
-	    if (pidx == -1)
+	    CollCall cc = isCollectionCall(call.getTargetMethod());
+	    if (cc == null)
 		continue;
+	    // if so, find the parameter index of the item or collection being added
+	    int pidx = cc.pidx;
 	    
-	    // System.out.println("adding I(" + iidx + ") Z(" + pidx + ") from " + m);
+	    if (TRACE) {
+		System.out.println("I(" + iidx + ") Z(" + cc.pidx + ") method " 
+		    + cc.meth + " all=" + cc.addsAll + " " + call.toStringLong());
+	    }
 	    BDD isite = r.I.ithVar(iidx);
 	    BDDPairing V2toV1 = r.bdd.makePair(r.V2, r.V1);
 	    BDD actuals = r.actual.restrict(isite);		// V2xZ
@@ -170,25 +199,31 @@ public class CollectionType {
 	    BDD v0 = actuals.restrict(z0);			// V2
 	    z0.free();
 	    v0.replaceWith(V2toV1);				// V1
-	    BDD vp = actuals.restrictWith(r.Z.ithVar(pidx));	// V2
-	    vp.replaceWith(V2toV1);				// V1
 
 	    BDD v0pt = r.vP.relprod(v0, V1set);			// V1cxH1xH1c
 	    v0.free(); 
 	    if (r.NNfilter != null) v0pt.andWith(r.NNfilter.id());
 	    v0pt.replaceWith(r.H1toH2);				// V1cxH2xH2c
+
+	    BDD vp = actuals.restrictWith(r.Z.ithVar(pidx));	// V2
+	    vp.replaceWith(V2toV1);				// V1
 	    BDD vppt = r.vP.relprod(vp, V1set);			// V1cxH1xH1c
 	    vp.free();
 	    if (r.NNfilter != null) vppt.andWith(r.NNfilter.id());
 	    BDD h0hp = v0pt.relprod(vppt, V1cset);		// H1xH1cxH2xH2c
 	    v0pt.free();
 	    vppt.free();
-	    storedin.orWith(h0hp);
+	    if (cc.addsAll) {
+		copiedin.orWith(h0hp);	// H2 has collection, H1 has collection being added
+	    } else {
+		storedin.orWith(h0hp);	// H2 has collection, H1 has items being added
+	    }
 	}
 
 	if (true) {	// does this make sense?
 	    BDD one_to_one = r.H1c.buildEquals(r.H2c);
-	    storedin.andWith(one_to_one);
+	    storedin.andWith(one_to_one.id());
+	    copiedin.andWith(one_to_one);
 	}
 
 	TypedBDD tmp = null;
@@ -197,6 +232,9 @@ public class CollectionType {
 	    tmp = (TypedBDD)storedin.exist(r.H1cH2cset);
 	    storedin.free();
 	    storedin = tmp;
+	    tmp = (TypedBDD)copiedin.exist(r.H1cH2cset);
+	    copiedin.free();
+	    copiedin = tmp;
 	}
 
 	tmp = (TypedBDD)storedin.exist(H1set);
@@ -204,6 +242,7 @@ public class CollectionType {
 	    System.out.println("Didn't find any collections");
 	    return tmp;
 	}
+	// determine the supertype of all inserted items for each collection
 	BDD supertypes = r.bdd.zero();				// H2 x T1
 	for (Iterator collections = tmp.iterator(); collections.hasNext(); ) {
 	    BDD c = (BDD)collections.next();
@@ -214,6 +253,37 @@ public class CollectionType {
 	    itemtypes.free();
 	    c.andWith(stypes);					// H2 x T1
 	    supertypes.orWith(c);
+	}
+	tmp.free();
+
+	// propagate the supertype of all copied collections to the copy destination
+	tmp = (TypedBDD)copiedin.exist(H1set);
+	BDD old_s = supertypes.id();
+	for (int cnt = 1;;++cnt) {
+	    for (Iterator collections = tmp.iterator(); collections.hasNext(); ) {
+		BDD this_col = (BDD)collections.next();			// H2
+		BDD other_cols = copiedin.restrict(this_col);		// H1xH2 -> H1
+		BDDPairing H1toH2 = r.bdd.makePair(r.H1, r.H2);
+		other_cols.replaceWith(H1toH2);				// H1 -> H2
+		BDD othertypes = supertypes.relprod(other_cols, H2set);	// H2xT1 x H2 -> T1
+		if (othertypes.isZero())
+		    continue;
+		BDD thistype = supertypes.relprod(this_col, H2set);	// H2 x H2xT1 -> T1
+		othertypes.orWith(thistype);
+		othertypes.replaceWith(r.T1toT2);
+		BDD newtypeforthis = res.calculateCommonSupertype(othertypes);
+		othertypes.free();
+		// supertypes.applyWith(this_col.and(r.T1.domain()), BDDFactory.diff);
+		supertypes.applyWith(this_col.id(), BDDFactory.diff);
+		this_col.andWith(newtypeforthis);
+		supertypes.orWith(this_col);
+	    }
+	    boolean nochange = supertypes.equals(old_s);
+	    old_s.free();
+	    if (nochange)
+		break;
+	    old_s = supertypes.id();
+	    System.out.println("iteration #" + cnt);
 	}
 	tmp.free();
 	return (TypedBDD)supertypes;
