@@ -486,7 +486,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
 	    if (TRACE) System.out.println("Bounds check triggered on "+ref+" "+index);
 	    return;
 	}
-        if (t.isReferenceType()) {
+        if (t.isReferenceType() && ref instanceof RegisterOperand) {
             // refine type and perform checkstore
             if (performCheckStore((RegisterOperand)ref, val)) return;
         }
