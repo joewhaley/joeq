@@ -146,7 +146,7 @@ public abstract class ClassLoader {
         return Reflection.getJDKType(t);
     }
     static ClassLoader getCallerClassLoader() {
-        StackWalker sw = new StackWalker(CodeAddress.min(), StackAddress.getBasePointer());
+        StackWalker sw = new StackWalker(null, StackAddress.getBasePointer());
         sw.gotoNext(); sw.gotoNext(); sw.gotoNext();
         jq_CompiledCode cc = sw.getCode();
         if (cc == null) return null;

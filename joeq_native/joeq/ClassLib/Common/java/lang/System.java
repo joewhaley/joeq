@@ -52,7 +52,7 @@ public abstract class System {
     }
     public static native void initializeSystemClass();
     static java.lang.Class getCallerClass() {
-        StackWalker sw = new StackWalker(CodeAddress.min(), StackAddress.getBasePointer());
+        StackWalker sw = new StackWalker(null, StackAddress.getBasePointer());
         sw.gotoNext(); sw.gotoNext(); sw.gotoNext();
         jq_CompiledCode cc = sw.getCode();
         if (cc == null) return null;
