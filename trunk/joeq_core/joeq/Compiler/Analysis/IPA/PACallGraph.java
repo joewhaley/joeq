@@ -15,6 +15,7 @@ import org.sf.javabdd.BDDDomain;
 import org.sf.javabdd.BDDFactory;
 
 import Compil3r.Quad.CallGraph;
+import Compil3r.Quad.LoadedCallGraph;
 import Util.Assert;
 import Util.Collections.IndexMap;
 import Util.Collections.UnmodifiableIterator;
@@ -63,7 +64,7 @@ public class PACallGraph extends CallGraph {
      * @see Compil3r.Quad.CallGraph#getTargetMethods(java.lang.Object, Compil3r.Analysis.IPA.ProgramLocation)
      */
     public Collection getTargetMethods(Object context, ProgramLocation callSite) {
-        callSite = PA.mapCall(callSite);
+        callSite = LoadedCallGraph.mapCall(callSite);
         int I_i = Imap.get(callSite);
         BDD I_bdd = I.ithVar(I_i);
         BDD b = IE.restrict(I_bdd);

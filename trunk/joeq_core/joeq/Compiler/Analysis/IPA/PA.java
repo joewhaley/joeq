@@ -43,9 +43,7 @@ import Compil3r.Quad.CachedCallGraph;
 import Compil3r.Quad.CallGraph;
 import Compil3r.Quad.CodeCache;
 import Compil3r.Quad.LoadedCallGraph;
-import Compil3r.Quad.Quad;
 import Main.HostedVM;
-import Util.Assert;
 import Util.Collections.IndexMap;
 import Util.Collections.Pair;
 import Util.Graphs.PathNumbering;
@@ -448,7 +446,7 @@ public class PA {
     }
     
     BDD getVC(ProgramLocation mc, jq_Method callee) {
-        Pair p = new Pair(mapCall(mc), callee);
+        Pair p = new Pair(LoadedCallGraph.mapCall(mc), callee);
         Range r_edge = vCnumbering.getEdge(p);
         Range r_caller = vCnumbering.getRange(mc.getMethod());
         if (r_edge == null) {
@@ -555,7 +553,7 @@ public class PA {
         for (Iterator i = ms.getCalls().iterator(); i.hasNext(); ) {
             ProgramLocation mc = (ProgramLocation) i.next();
             if (TRACE) out.println("Visiting call site "+mc);
-            int I_i = Imap.get(mapCall(mc));
+            int I_i = Imap.get(LoadedCallGraph.mapCall(mc));
             BDD I_bdd = I.ithVar(I_i);
             jq_Method target = mc.getTargetMethod();
             if (mc.isSingleTarget()) {
@@ -735,10 +733,8 @@ public class PA {
         for (int H_i = last_H; H_i < Hmap.size(); ++H_i) {
             Node n = (Node) Hmap.get(H_i);
             jq_Reference type = n.getDeclaredType();
-            if (type != null) type.prepare();
-            addToHT(H_i, type);
-            
             if (type != null) {
+                type.prepare();
                 if (n instanceof ConcreteTypeNode && type instanceof jq_Class) {
                     addClassInitializer((jq_Class) type);
                     addFinalizer((jq_Class) type);
@@ -749,6 +745,7 @@ public class PA {
                     addThreadRun(H_i, (jq_Class) type);
                 }
             }
+            addToHT(H_i, type);
         }
         
         // build up 'aT'
@@ -828,9 +825,17 @@ public class PA {
             visitMethod(m);
             roots.add(m);
             Node p = MethodSummary.getSummary(CodeCache.getCode(m)).getParamNode(0);
-            BDD context = bdd.one();
+            Node h = (Node) Hmap.get(H_i);
+            BDD context = null;
+            if (CONTEXT_SENSITIVE) {
+                int context_i = getThreadRunIndex(m, h);
+                System.out.println("Thread "+h+" index "+context_i);
+                context = H1c.ithVar(context_i);
+            }
             addToVP(context, p, H_i);
-            context.free();
+            if (CONTEXT_SENSITIVE) {
+                context.free();
+            }
         }
     }
     
@@ -1195,7 +1200,7 @@ public class PA {
     }
     
     public void assumeKnownCallGraph() {
-        IE = IEc;
+        if (IEc != null) IE = IEc;
         handleNewTargets();
         buildTypes();
         bindParameters();
@@ -1258,58 +1263,25 @@ public class PA {
         return null;
     }
     
-    public static void main(String[] args) throws IOException {
-        HostedVM.initialize();
-        CodeCache.AlwaysMap = true;
-        
-        jq_Class c = (jq_Class) jq_Type.parseType(args[0]);
-        c.prepare();
-        
-        Collection roots = Arrays.asList(c.getDeclaredStaticMethods());
-        if (args.length > 1) {
-            for (Iterator i = roots.iterator(); i.hasNext(); ) {
-                jq_Method sm = (jq_Method) i.next();
-                if (args[1].equals(sm.getName().toString())) {
-                    roots = Collections.singleton(sm);
-                    break;
-                }
-            }
+    public void run(CallGraph cg, Collection rootMethods) throws IOException {
+        if (cg != null) {
+            numberPaths(cg);
         }
         
-        PA dis = new PA();
-        
-        CallGraph cg = null;
-        if (dis.CONTEXT_SENSITIVE || !dis.DISCOVER_CALL_GRAPH) {
-            cg = loadCallGraph(roots);
-            if (cg == null) {
-                if (dis.CONTEXT_SENSITIVE) {
-                    System.out.println("Turning off context sensitivity.");
-                    dis.CONTEXT_SENSITIVE = false;
-                }
-                if (!dis.DISCOVER_CALL_GRAPH) {
-                    System.out.println("Turning on call graph discovery.");
-                    dis.DISCOVER_CALL_GRAPH = true;
-                }
-            } else {
-                roots = cg.getRoots();
-                dis.numberPaths(cg);
-            }
-        }
-        
-        dis.initialize();
-        dis.roots.addAll(roots);
+        initialize();
+        roots.addAll(rootMethods);
         
         if (cg != null) {
             System.out.print("Calculating call graph relation...");
             long time = System.currentTimeMillis();
-            dis.calculateIEc(cg);
+            calculateIEc(cg);
             time = System.currentTimeMillis() - time;
             System.out.println("done. ("+time/1000.+" seconds)");
             
-            if (dis.CONTEXT_SENSITIVE) {
+            if (CONTEXT_SENSITIVE) {
                 System.out.print("Building var-heap context correspondence...");
                 time = System.currentTimeMillis();
-                dis.buildVarHeapCorrespondence(cg);
+                buildVarHeapCorrespondence(cg);
                 time = System.currentTimeMillis() - time;
                 System.out.println("done. ("+time/1000.+" seconds)");
             }
@@ -1319,36 +1291,79 @@ public class PA {
         
         GlobalNode.GLOBAL.addDefaultStatics();
         BDD context = null;
-        if (dis.CONTEXT_SENSITIVE) {
-            context = dis.bdd.one();
+        if (CONTEXT_SENSITIVE) {
+            context = bdd.one();
         }
-        dis.visitNode(context, context, GlobalNode.GLOBAL);
+        visitNode(context, context, GlobalNode.GLOBAL);
         for (Iterator i = ConcreteObjectNode.getAll().iterator(); i.hasNext(); ) {
-            dis.visitNode(context, context, (ConcreteObjectNode) i.next());
+            visitNode(context, context, (ConcreteObjectNode) i.next());
         }
-        if (dis.CONTEXT_SENSITIVE) {
+        if (CONTEXT_SENSITIVE) {
             context.free();
         }
         
         for (Iterator i = roots.iterator(); i.hasNext(); ) {
             jq_Method m = (jq_Method) i.next();
-            dis.visitMethod(m);
+            visitMethod(m);
         }
         
-        if (dis.DISCOVER_CALL_GRAPH) {
-            dis.iterate();
+        if (DISCOVER_CALL_GRAPH) {
+            iterate();
         } else {
-            dis.assumeKnownCallGraph();
+            assumeKnownCallGraph();
         }
         
         System.out.println("Time spent solving: "+(System.currentTimeMillis()-time)/1000.);
 
-        dis.printSizes();
+        printSizes();
         
         System.out.println("Writing results...");
         time = System.currentTimeMillis();
-        dis.dumpResults(resultsFileName);
+        dumpResults(resultsFileName);
         System.out.println("Time spent writing: "+(System.currentTimeMillis()-time)/1000.);
+    }
+    
+    public static void main(String[] args) throws IOException {
+        HostedVM.initialize();
+        CodeCache.AlwaysMap = true;
+        
+        jq_Class c = (jq_Class) jq_Type.parseType(args[0]);
+        c.prepare();
+        
+        Collection rootMethods = Arrays.asList(c.getDeclaredStaticMethods());
+        if (args.length > 1) {
+            for (Iterator i = rootMethods.iterator(); i.hasNext(); ) {
+                jq_Method sm = (jq_Method) i.next();
+                if (args[1].equals(sm.getName().toString())) {
+                    rootMethods = Collections.singleton(sm);
+                    break;
+                }
+            }
+        }
+        
+        PA dis = new PA();
+        CallGraph cg = null;
+        if (dis.CONTEXT_SENSITIVE || !dis.DISCOVER_CALL_GRAPH) {
+            cg = loadCallGraph(rootMethods);
+            if (cg == null) {
+                if (dis.CONTEXT_SENSITIVE) {
+                    System.out.println("Discovering call graph first...");
+                    dis.CONTEXT_SENSITIVE = false;
+                    dis.DISCOVER_CALL_GRAPH = true;
+                    dis.run(cg, rootMethods);
+                    System.out.println("Finished discovering call graph.");
+                    dis = new PA();
+                    cg = loadCallGraph(rootMethods);
+                    rootMethods = cg.getRoots();
+                } else if (!dis.DISCOVER_CALL_GRAPH) {
+                    System.out.println("Call graph doesn't exist yet, so turning on call graph discovery.");
+                    dis.DISCOVER_CALL_GRAPH = true;
+                }
+            } else {
+                rootMethods = cg.getRoots();
+            }
+        }
+        dis.run(cg, rootMethods);
     }
     
     public void printSizes() {
@@ -1474,13 +1489,14 @@ public class PA {
     }
     
     public static class ThreadRootMap extends AbstractMap {
-        Collection roots;
-        ThreadRootMap(Collection s) {
-            roots = s;
+        Map map;
+        ThreadRootMap(Map s) {
+            map = s;
         }
         public Object get(Object o) {
-            if (roots.contains(o)) return new Integer(1);
-            return new Integer(0);
+            Set s = (Set) map.get(o);
+            if (s == null) return new Integer(0);
+            return new Integer(s.size()-1);
         }
         /* (non-Javadoc)
          * @see java.util.AbstractMap#entrySet()
@@ -1490,9 +1506,23 @@ public class PA {
         }
     }
     
-    static Set thread_runs = new HashSet();
+    static Map thread_runs = new HashMap();
+    
+    public static int getThreadRunIndex(jq_Method m, Node n) {
+        Set s = (Set) thread_runs.get(m);
+        if (s != null) {
+            Iterator i = s.iterator();
+            for (int k = 0; i.hasNext(); ++k) {
+                if (i.next() == n) return k;
+            }
+        }
+        return 0;
+    }
     
     public PathNumbering countCallGraph(CallGraph cg) {
+        jq_Class jlt = PrimordialClassLoader.getJavaLangThread();
+        jq_Class jlr = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/Runnable;");
+        
         Set fields = new HashSet();
         Set classes = new HashSet();
         int vars = 0, heaps = 0, bcodes = 0, methods = 0, calls = 0;
@@ -1501,26 +1531,26 @@ public class PA {
             ++methods;
             if (m.getBytecode() == null) continue;
             bcodes += m.getBytecode().length;
-            if (m.getNameAndDesc().equals(run_method)) {
-                jq_Class k = m.getDeclaringClass();
-                k.prepare();
-                PrimordialClassLoader.getJavaLangThread().prepare();
-                jq_Class jlr = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/Runnable;");
-                jlr.prepare();
-                if (k.isSubtypeOf(PrimordialClassLoader.getJavaLangThread()) ||
-                    k.isSubtypeOf(jlr)) {
-                    if (TRACE) System.out.println("Thread run method found: "+m);
-                    thread_runs.add(m);
-                }
-            }
             MethodSummary ms = MethodSummary.getSummary(CodeCache.getCode(m));
             for (Iterator j = ms.nodeIterator(); j.hasNext(); ) {
                 Node n = (Node) j.next();
                 ++vars;
                 if (n instanceof ConcreteTypeNode ||
                     n instanceof UnknownTypeNode ||
-                    n instanceof ConcreteObjectNode)
+                    n instanceof ConcreteObjectNode) {
                     ++heaps;
+                    jq_Reference type = n.getDeclaredType(); 
+                    if (type != null) {
+                        type.prepare();
+                        if (type.isSubtypeOf(jlt) ||
+                            type.isSubtypeOf(jlr)) {
+                            jq_Method rm = type.getVirtualMethod(run_method);
+                            Set s = (Set) thread_runs.get(rm);
+                            if (s == null) thread_runs.put(rm, s = new HashSet());
+                            s.add(n);
+                        }
+                    }
+                }
                 fields.addAll(n.getAccessPathEdgeFields());
                 fields.addAll(n.getNonEscapingEdgeFields());
                 if (n instanceof GlobalNode) continue;
@@ -1532,6 +1562,7 @@ public class PA {
         System.out.println();
         System.out.println("Methods="+methods+" Bytecodes="+bcodes+" Call sites="+calls);
         PathNumbering pn = new PathNumbering();
+        System.out.println("Thread runs="+thread_runs);
         Map initialCounts = new ThreadRootMap(thread_runs);
         BigInteger paths = (BigInteger) pn.countPaths(cg.getRoots(), cg.getCallSiteNavigator(), initialCounts);
         System.out.println("Vars="+vars+" Heaps="+heaps+" Classes="+classes.size()+" Fields="+fields.size()+" Paths="+paths);
@@ -1606,7 +1637,7 @@ public class PA {
         IEc = bdd.zero();
         for (Iterator i = cg.getAllCallSites().iterator(); i.hasNext(); ) {
             ProgramLocation mc = (ProgramLocation) i.next();
-            mc = mapCall(mc);
+            mc = LoadedCallGraph.mapCall(mc);
             int I_i = Imap.get(mc);
             for (Iterator j = cg.getTargetMethods(mc).iterator(); j.hasNext(); ) {
                 jq_Method callee = (jq_Method) j.next();
@@ -1632,24 +1663,6 @@ public class PA {
         }
     }
     
-    public static ProgramLocation mapCall(ProgramLocation callSite) {
-        if (callSite instanceof ProgramLocation.QuadProgramLocation) {
-            jq_Method m = (jq_Method) callSite.getMethod();
-            Map map = CodeCache.getBCMap(m);
-            Quad q = ((ProgramLocation.QuadProgramLocation) callSite).getQuad();
-            if (q == null) {
-                Assert.UNREACHABLE("Error: cannot find call site "+callSite);
-            }
-            Integer i = (Integer) map.get(q);
-            if (i == null) {
-                Assert.UNREACHABLE("Error: no mapping for quad "+q);
-            }
-            int bcIndex = i.intValue();
-            callSite = new ProgramLocation.BCProgramLocation(m, bcIndex);
-        }
-        return callSite;
-    }
-    
     Map V1H1correspondence;
     public void buildVarHeapCorrespondence(CallGraph cg) {
         BDDPairing V2cH2ctoV1cH1c = bdd.makePair();
@@ -1668,7 +1681,7 @@ public class PA {
             if (n1.equals(n2)) {
                 relation = V1c.buildAdd(H1c, BigInteger.valueOf(n1.longValue()).bitLength(), 0);
                 relation.andWith(V1c.varRange(0, n1.longValue()-1));
-                System.out.println("Root numbering: "+relation.toStringWithDomains());
+                System.out.println("Root "+root+" numbering: "+relation.toStringWithDomains());
             } else {
                 System.out.println("Root numbering doesn't match: "+root);
                 // just intermix them all, because we don't know the mapping.
