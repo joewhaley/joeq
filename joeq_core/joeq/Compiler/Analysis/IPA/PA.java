@@ -50,6 +50,7 @@ import joeq.Class.jq_Reference.jq_NullType;
 import joeq.Compiler.Analysis.BDD.BuildBDDIR;
 import joeq.Compiler.Analysis.FlowInsensitive.BogusSummaryProvider;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary;
+import joeq.Compiler.Analysis.FlowInsensitive.ReflectionInformationProvider;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.ConcreteObjectNode;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.ConcreteTypeNode;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.GlobalNode;
@@ -153,6 +154,7 @@ public class PA {
     boolean FULL_CHA = !System.getProperty("pa.fullcha", "no").equals("no");
     static boolean ADD_INSTANCE_METHODS = !System.getProperty("pa.addinstancemethods", "no").equals("no");
     static boolean USE_BOGUS_SUMMARIES = !System.getProperty("pa.usebogussummaries", "no").equals("no");
+    static boolean USE_REFLECTION_PROVIDER = !System.getProperty("pa.usereflectionprovider", "no").equals("no");
     static boolean TRACE_BOGUS = !System.getProperty("pa.tracebogus", "no").equals("no");    
     int MAX_PARAMS = Integer.parseInt(System.getProperty("pa.maxparams", "4"));
     
@@ -1264,16 +1266,30 @@ public class PA {
                 if (m == null) continue;
                 
                 if(USE_BOGUS_SUMMARIES && m != null) {
-                    jq_Method replacement = getBogusSummaryProvider().getReplacementMethod(m);
-                    if(replacement != null) {
-                        if(TRACE_BOGUS) System.out.println("Replacing a call to " + m + 
-                                        " with a call to "+ replacement);
-                        
-                        addToCHA(T_bdd, Nmap.get(replacement), replacement);     // for replacement methods
-                        return;
-                    }
-                }                
-                addToCHA(T_bdd, N_i, m);
+	                jq_Method replacement = getBogusSummaryProvider().getReplacementMethod(m);
+	                if(replacement != null) {
+						if(TRACE_BOGUS) System.out.println("Replacing a call to " + m + 
+						    				" with a call to "+ replacement);
+						
+						addToCHA(T_bdd, Nmap.get(replacement), replacement);     // for replacement methods
+						continue;
+	                }                    
+                }
+                
+                if(USE_REFLECTION_PROVIDER && m != null && ReflectionInformationProvider.isNewInstance(n)){
+                    Collection/*<jq_Method>*/ targets = getReflectionProvider().getNewInstanceTargets(n);
+                    if(targets != null){
+                        for(Iterator iter = targets.iterator(); iter.hasNext();){
+                            jq_Method target = (jq_Method) iter.next();
+                            
+                            addToCHA(T_bdd, Nmap.get(target), target);
+                        }
+                        continue;
+                    }                    
+                }
+            
+                // default case
+                addToCHA(T_bdd, N_i, m);            
             }
             T_bdd.free();
         }
@@ -1291,7 +1307,13 @@ public class PA {
             buildTypes();
         }
     }
-    
+    ReflectionInformationProvider reflectionInformationProvider = null;
+    private ReflectionInformationProvider getReflectionProvider() {
+        if(this.reflectionInformationProvider == null){
+            this.reflectionInformationProvider = new ReflectionInformationProvider.CribSheetReflectionInformationProvider();            
+        }
+        return this.reflectionInformationProvider;
+    }
     public void addClassInitializer(jq_Class c) {
         if (!ADD_CLINIT) return;
         jq_Method m = c.getClassInitializer();
