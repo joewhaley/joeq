@@ -50,6 +50,7 @@ import Clazz.jq_StaticField;
 import Clazz.jq_StaticMethod;
 import Clazz.jq_TryCatch;
 import Clazz.jq_Type;
+import Compil3r.Compil3rInterface;
 import Compil3r.BytecodeAnalysis.BytecodeVisitor;
 import Compil3r.Quad.BasicBlock;
 import Compil3r.Quad.BasicBlockVisitor;
@@ -104,7 +105,7 @@ import Compil3r.Reference.x86.x86ReferenceLinker;
  * @author John Whaley
  * @version $Id$
  */
-public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisitor {
+public class SimpleCompiler implements Compil3rInterface, x86Constants, BasicBlockVisitor, QuadVisitor {
 
     public static /*final*/ boolean ALWAYS_TRACE = true;
     public static /*final*/ boolean TRACE_STUBS = false;
@@ -114,19 +115,32 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
     public static final Set TraceQuad_MethodNames = new HashSet();
     public static final Set TraceQuad_ClassNames = new HashSet();
     
-    public final boolean TraceQuads;
-    public final boolean TraceMethods;
-    public final boolean TraceArguments;
+    public boolean TraceQuads;
+    public boolean TraceMethods;
+    public boolean TraceArguments;
     
     public static final int DEFAULT_ALIGNMENT = 32;
     
-    public final ControlFlowGraph cfg;
-    public final jq_Method method;
-    public final Map registerLocations;
+    public ControlFlowGraph cfg;
+    public jq_Method method;
+    public Map registerLocations;
     
-    public final boolean TRACE;
+    public boolean TRACE;
     
-    public SimpleCompiler(ControlFlowGraph cfg) {
+    public SimpleCompiler() { }
+    public SimpleCompiler(ControlFlowGraph cfg) { this.init(cfg); }
+    public SimpleCompiler(jq_Method m) { this.init(m); }
+    
+    public final jq_CompiledCode compile(jq_Method m) {
+        this.init(m);
+        return this.compile();
+    }
+        
+    public void init(jq_Method m) {
+        init(CodeCache.getCode(m));
+    }
+    
+    public void init(ControlFlowGraph cfg) {
         this.cfg = cfg;
         method = cfg.getMethod();
         TRACE = ALWAYS_TRACE;
@@ -148,6 +162,8 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         }
         TraceArguments = false;
         registerLocations = new HashMap();
+        code_relocs = new LinkedList();
+        data_relocs = new LinkedList();
     }
     
     public String toString() {
@@ -157,8 +173,8 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
     private x86Assembler asm;   // Assembler to output to.
     private int n_paramwords;   // number of words used by incoming parameters.
 
-    private List code_relocs = new LinkedList();
-    private List data_relocs = new LinkedList();
+    private List code_relocs;
+    private List data_relocs;
     
     public final void emitCallRelative(jq_Method target) { emitCallRelative(target, asm, code_relocs); }
     public static final void emitCallRelative(jq_Method target, x86Assembler asm, List code_relocs) {

@@ -8,6 +8,7 @@
 package Main;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -48,7 +49,6 @@ public abstract class TraceFlags {
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceBootImage")) {
-	    
             makeTrue("Bootstrap.BootImage","TRACE");
             return i+1;
         }
@@ -151,6 +151,10 @@ public abstract class TraceFlags {
         }
         if (args[i].equalsIgnoreCase("-TraceReplaceClass")) {
             makeTrue("Clazz.jq_Class","TRACE_REPLACE_CLASS");
+            return i+1;
+        }
+        if (args[i].equalsIgnoreCase("-SetCompiler")) {
+            callMethod("Clazz.Delegates", "setDefaultCompiler", args[++i]);
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-Set")) {
@@ -287,5 +291,15 @@ public abstract class TraceFlags {
 	} catch (Exception e) {
 	    Debug.writeln("Cannot add to collection "+classname+"."+collectionname);
 	}
+    }
+    
+    public static void callMethod(String classname, String methodname, String arg) {
+        try {
+            Class c = Class.forName(classname);
+            Method m = c.getMethod(methodname, new Class[] { String.class });
+            m.invoke(null, new Object[] { arg });
+        } catch (Exception e) {
+            Debug.writeln("Exception while invoking method "+classname+"."+methodname);
+        }
     }
 }

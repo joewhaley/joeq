@@ -24,90 +24,144 @@ public final class Unsafe {
         HeapAddress a = HeapAddress.addressOf(o);
         return ((HeapAddress)a.offset(x).peek()).asObject();
     }
+    public java.lang.Object getObject(java.lang.Object o, long x) {
+        return getObject(o, (int) x);
+    }
     
     public void putObject(java.lang.Object o1, int x, java.lang.Object v) {
         HeapAddress a = HeapAddress.addressOf(o1);
         a.offset(x).poke(HeapAddress.addressOf(v));
+    }
+    public void putObject(java.lang.Object o1, long x, java.lang.Object v) {
+        putObject(o1, (int) x, v);
     }
     
     public boolean getBoolean(java.lang.Object o, int x) {
         HeapAddress a = HeapAddress.addressOf(o);
         return a.offset(x).peek1() != (byte)0;
     }
+    public boolean getBoolean(java.lang.Object o, long x) {
+        return getBoolean(o, (int) x);
+    }
     
     public void putBoolean(java.lang.Object o, int x, boolean v) {
         HeapAddress a = HeapAddress.addressOf(o);
         a.offset(x).poke1(v?(byte)1:(byte)0);
+    }
+    public void putBoolean(java.lang.Object o1, long x, boolean v) {
+        putBoolean(o1, (int) x, v);
     }
     
     public byte getByte(java.lang.Object o, int x) {
         HeapAddress a = HeapAddress.addressOf(o);
         return a.offset(x).peek1();
     }
+    public byte getByte(java.lang.Object o, long x) {
+        return getByte(o, (int) x);
+    }
     
     public void putByte(java.lang.Object o, int x, byte v) {
         HeapAddress a = HeapAddress.addressOf(o);
         a.offset(x).poke1(v);
+    }
+    public void putByte(java.lang.Object o1, long x, byte v) {
+        putByte(o1, (int) x, v);
     }
     
     public short getShort(java.lang.Object o, int x) {
         HeapAddress a = HeapAddress.addressOf(o);
         return a.offset(x).peek2();
     }
+    public short getShort(java.lang.Object o, long x) {
+        return getShort(o, (int) x);
+    }
     
     public void putShort(java.lang.Object o, int x, short v) {
         HeapAddress a = HeapAddress.addressOf(o);
         a.offset(x).poke2(v);
+    }
+    public void putShort(java.lang.Object o1, long x, short v) {
+        putShort(o1, (int) x, v);
     }
     
     public char getChar(java.lang.Object o, int x) {
         HeapAddress a = HeapAddress.addressOf(o);
         return (char) a.offset(x).peek2();
     }
+    public char getChar(java.lang.Object o, long x) {
+        return getChar(o, (int) x);
+    }
     
     public void putChar(java.lang.Object o, int x, char v) {
         HeapAddress a = HeapAddress.addressOf(o);
         a.offset(x).poke2((short) v);
+    }
+    public void putChar(java.lang.Object o1, long x, char v) {
+        putChar(o1, (int) x, v);
     }
     
     public int getInt(java.lang.Object o, int x) {
         HeapAddress a = HeapAddress.addressOf(o);
         return a.offset(x).peek4();
     }
+    public int getInt(java.lang.Object o, long x) {
+        return getInt(o, (int) x);
+    }
     
     public void putInt(java.lang.Object o, int x, int v) {
         HeapAddress a = HeapAddress.addressOf(o);
         a.offset(x).poke4(v);
+    }
+    public void putInt(java.lang.Object o1, long x, int v) {
+        putInt(o1, (int) x, v);
     }
     
     public long getLong(java.lang.Object o, int x) {
         HeapAddress a = HeapAddress.addressOf(o);
         return a.offset(x).peek8();
     }
+    public long getLong(java.lang.Object o, long x) {
+        return getLong(o, (int) x);
+    }
     
     public void putLong(java.lang.Object o, int x, long v) {
         HeapAddress a = HeapAddress.addressOf(o);
         a.offset(x).poke8(v);
+    }
+    public void putLong(java.lang.Object o1, long x, long v) {
+        putLong(o1, (int) x, v);
     }
     
     public float getFloat(java.lang.Object o, int x) {
         HeapAddress a = HeapAddress.addressOf(o);
         return Float.intBitsToFloat(a.offset(x).peek4());
     }
+    public float getFloat(java.lang.Object o, long x) {
+        return getFloat(o, (int) x);
+    }
     
     public void putFloat(java.lang.Object o, int x, float v) {
         HeapAddress a = HeapAddress.addressOf(o);
         a.offset(x).poke4(Float.floatToRawIntBits(v));
+    }
+    public void putFloat(java.lang.Object o1, long x, float v) {
+        putFloat(o1, (int) x, v);
     }
     
     public double getDouble(java.lang.Object o, int x) {
         HeapAddress a = HeapAddress.addressOf(o);
         return Double.longBitsToDouble(a.offset(x).peek8());
     }
+    public double getDouble(java.lang.Object o, long x) {
+        return getDouble(o, (int) x);
+    }
     
     public void putDouble(java.lang.Object o, int x, double v) {
         HeapAddress a = HeapAddress.addressOf(o);
         a.offset(x).poke8(Double.doubleToRawLongBits(v));
+    }
+    public void putDouble(java.lang.Object o1, long x, double v) {
+        putDouble(o1, (int) x, v);
     }
     
     public byte getByte(long addr) {

@@ -57,7 +57,15 @@ import Util.Strings;
  * @author  John Whaley
  * @version $Id$
  */
-public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInterface, x86Constants, jq_ClassFileConstants {
+public class x86ReferenceCompiler extends BytecodeVisitor implements x86Constants, jq_ClassFileConstants {
+
+    public static class Factory implements Compil3rInterface {
+        public static final Factory INSTANCE = new Factory();
+        public Factory() {}
+        public jq_CompiledCode compile(jq_Method m) {
+            return new x86ReferenceCompiler(m).compile();
+        }
+    }
 
     public static /*final*/ boolean ALWAYS_TRACE = false;
     public static /*final*/ boolean TRACE_STUBS = false;
@@ -93,6 +101,10 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             TraceMethods = false;
         }
         TraceArguments = false;
+    }
+    
+    public void init(jq_Method method) {
+        Assert._assert(method == this.method);
     }
     
     public String toString() {
