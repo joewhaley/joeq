@@ -194,7 +194,7 @@ public class FindCollectionImplementations {
     
     static jq_Class _collectionClass  = null;
     static jq_Class _iteratorClass    = null;
-    bool FILTER = false;
+    boolean FILTER = false;
 
     static final String COLLECTION_SIGNATURE = "Ljava.util.Collection;";
     static final String ITERATOR_SIGNATURE   = "Ljava.util.Iterator;";    
@@ -362,10 +362,12 @@ public class FindCollectionImplementations {
         h = new ClassHierarchy(_iteratorClass, _iterators);
         h.makeHierarchy();
         h.printHierarchy();
+
+	System.out.println("Found " + _collections.size() + " collections, " + _iterators.size() + " iterators");
     }
     
     protected void run() {        
-        System.err.println("Looking for subclasses of " + _collectionClass + " and " + _iteratorClass);
+        System.out.println("Looking for subclasses of " + _collectionClass + " and " + _iteratorClass);
         
         findCollections();
         findIterators();        
