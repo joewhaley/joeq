@@ -16,6 +16,8 @@ import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
 import Memory.HeapAddress;
 
+import java.util.HashSet;
+
 public class GCBits {
 
     protected static final int bitLength = SimpleAllocator.BLOCK_SIZE / 8;
@@ -24,7 +26,7 @@ public class GCBits {
     protected HeapAddress blockHead, blockEnd;
 
     /**
-     * Each bit in allocbits corresponds to 8 bytes on the heap. When an object
+     * Each bit in allocbits corresponds to 8 bytes on the heap. When an object is
      * allocated and aligned on 8 byte boundary, the bit in allocbits corresponding
      * to the starting 8 bytes (including HEADER) of the object is set.
      */
@@ -66,6 +68,23 @@ public class GCBits {
 
     public boolean isMarked(HeapAddress addr) {
         return markbits.get((addr.difference(blockHead)) / 8);
+    }
+
+    public HashSet diff() {
+        markbits.xor(allocbits);
+        BitString.ForwardBitStringIterator iter = markbits.iterator();
+        HashSet units = new HashSet();
+        int i, j;
+        while (iter.hasNext()) {
+            i = iter.nextIndex();
+            j = allocbits.firstSet(i);
+            if (j != -1) {
+                units.add(new GCBitsManager.SweepUnit(blockHead.offset(i*8), (j-i)*8));
+            } else {
+                units.add(new GCBitsManager.SweepUnit(blockHead.offset(i*8), blockEnd));
+            }
+        }
+        return units;
     }
 
     public static final jq_Class _class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LGC/GCBits;");

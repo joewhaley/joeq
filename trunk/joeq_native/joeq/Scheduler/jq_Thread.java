@@ -85,13 +85,13 @@ public class jq_Thread implements ObjectLayout {
         this.registers.Esp = SystemInterface.allocate_stack(INITIAL_STACK_SIZE);
         this.registers.Eip = entry_point.getEntrypoint();
         // bogus return address
-        this.registers.Esp = (StackAddress) this.registers.Esp.offset(-CodeAddress.size());
+        this.registers.Esp = (StackAddress) this.registers.getEsp().offset(-CodeAddress.size());
         // arg to run(): t
-        this.registers.Esp = (StackAddress) this.registers.Esp.offset(-HeapAddress.size());
-        this.registers.Esp.poke(HeapAddress.addressOf(t));
+        this.registers.Esp = (StackAddress) this.registers.getEsp().offset(-HeapAddress.size());
+        this.registers.getEsp().poke(HeapAddress.addressOf(t));
         // return from run() directly to destroy()
-        this.registers.Esp = (StackAddress) this.registers.Esp.offset(-CodeAddress.size());
-        this.registers.Esp.poke(_destroyCurrentThread.getDefaultCompiledVersion().getEntrypoint());
+        this.registers.Esp = (StackAddress) this.registers.getEsp().offset(-CodeAddress.size());
+        this.registers.getEsp().poke(_destroyCurrentThread.getDefaultCompiledVersion().getEntrypoint());
     }
     public void start() {
         this.isDead = false;

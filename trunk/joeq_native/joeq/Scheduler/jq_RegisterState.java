@@ -20,7 +20,7 @@ public class jq_RegisterState implements x86Constants, jq_DontAlign {
 
     // WARNING: the layout of this object should match the CONTEXT data structure
     // used in GetThreadContext/SetThreadContext.  see "winnt.h".
-    
+
     // Used as a param in GetThreadContext/SetThreadContext
     int ContextFlags;
     // debug registers
@@ -57,16 +57,16 @@ public class jq_RegisterState implements x86Constants, jq_DontAlign {
     public static final int EFLAGS_DIRECTION  = 0x00000400;
     public static final int EFLAGS_OVERFLOW   = 0x00000800;
     public static final int EFLAGS_NESTEDTASK = 0x00004000;
-    
+
     public static final int EFLAGS_IOPRIV_MASK = 0x00003000;
     public static final int EFLAGS_IOPRIV_SHIFT = 12;
-    
+
     public jq_RegisterState() {
         ControlWord = 0x027f;
         StatusWord = 0x4000;
         TagWord = 0xffff;
     }
-    
+
     public static final int CONTEXT_i386               = 0x00010000;
     public static final int CONTEXT_CONTROL            = (CONTEXT_i386 | 0x00000001); // SS:SP, CS:IP, FLAGS, BP
     public static final int CONTEXT_INTEGER            = (CONTEXT_i386 | 0x00000002); // AX, BX, CX, DX, SI, DI
@@ -75,6 +75,14 @@ public class jq_RegisterState implements x86Constants, jq_DontAlign {
     public static final int CONTEXT_DEBUG_REGISTERS    = (CONTEXT_i386 | 0x00000010); // DB 0-3,6,7
     public static final int CONTEXT_EXTENDED_REGISTERS = (CONTEXT_i386 | 0x00000020); // cpu specific extensions
     public static final int CONTEXT_FULL = (CONTEXT_CONTROL | CONTEXT_INTEGER | CONTEXT_SEGMENTS);
+
+    public StackAddress getEbp() {
+        return Ebp;
+    }
+
+    public StackAddress getEsp() {
+        return Esp;
+    }
 
     /*
     public static final jq_Class _class;

@@ -312,8 +312,8 @@ public class jq_NativeThread implements x86Constants {
         // simulate a return in the current register state, so when the thread gets swapped back
         // in, it will continue where it left off.
         jq_RegisterState state = t1.getRegisterState();
-        state.Eip = (CodeAddress) state.Esp.peek();
-        state.Esp = (StackAddress) state.Esp.offset(StackAddress.size() + CodeAddress.size());
+        state.Eip = (CodeAddress) state.getEsp().peek();
+        state.Esp = (StackAddress) state.getEsp().offset(StackAddress.size() + CodeAddress.size());
 
         jq_Thread t2 = getNextReadyThread();
         transferExtraWork();
@@ -349,8 +349,8 @@ public class jq_NativeThread implements x86Constants {
         // simulate a return in the current register state, so when the thread gets swapped back
         // in, it will continue where it left off.
         jq_RegisterState state = t1.getRegisterState();
-        state.Eip = (CodeAddress) state.Esp.peek();
-        state.Esp = (StackAddress) state.Esp.offset(StackAddress.size() + CodeAddress.size());
+        state.Eip = (CodeAddress) state.getEsp().peek();
+        state.Esp = (StackAddress) state.getEsp().offset(StackAddress.size() + CodeAddress.size());
 
         if (t1 != t2) {
             // find given thread in our queue.
@@ -483,7 +483,7 @@ public class jq_NativeThread implements x86Constants {
 
     public void dump(jq_RegisterState regs) {
         SystemInterface.debugmsg(this + ": current Java thread = " + currentThread);
-        StackCodeWalker.stackDump(regs.Eip, regs.Ebp);
+        StackCodeWalker.stackDump(regs.Eip, regs.getEbp());
         SystemInterface.debugmsg(this + ": ready queue = " + readyQueue);
         SystemInterface.debugmsg(this + ": idle queue = " + idleQueue);
         SystemInterface.debugmsg(this + ": transfer queue = " + transferQueue);
