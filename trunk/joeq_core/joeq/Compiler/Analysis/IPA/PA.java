@@ -876,8 +876,8 @@ public class PA {
     public void visitGlobalNode(Node node) {
         if (TRACE) out.println("Visiting node "+node);
         
-        if (FILTER_NULL && isNullConstant(node))
-	    return;
+        if (FILTER_NULL && isNullConstant(node))    
+	    return; // this line has a tab!
         
         int V_i = Vmap.get(node);
         BDD V_bdd = V1.ithVar(V_i);
