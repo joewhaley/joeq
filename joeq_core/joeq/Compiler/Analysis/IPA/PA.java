@@ -78,6 +78,7 @@ public class PA {
     boolean CONTEXT_SENSITIVE = System.getProperty("pa.cs") != null;
     boolean DISCOVER_CALL_GRAPH = System.getProperty("pa.discover") != null;
     boolean DUMP_DOTGRAPH = System.getProperty("pa.dumpdotgraph") != null;
+    boolean FILTER_NULL = System.getProperty("pa.dontfilternull") == null;
     
     int bddnodes = Integer.parseInt(System.getProperty("bddnodes", "2500000"));
     int bddcache = Integer.parseInt(System.getProperty("bddcache", "150000"));
@@ -403,14 +404,9 @@ public class PA {
         BDD F_bdd = F.ithVar(F_i);
         for (Iterator k = c.iterator(); k.hasNext(); ) {
             Node node2 = (Node) k.next();
-            if (node2 instanceof ConcreteTypeNode ||
-                node2 instanceof ConcreteObjectNode) {
-                jq_Reference type = node2.getDeclaredType();
-                if (type == null) {
-                    if (TRACE) out.println("Skipping null constant.");
-                    continue;
-                }
-            }
+            if (FILTER_NULL && isNullConstant(node2))
+		continue;
+
             int V2_i = Vmap.get(node2);
             BDD bdd1 = V2.ithVar(V2_i);
             bdd1.andWith(F_bdd.id());
@@ -598,14 +594,8 @@ public class PA {
         for (Iterator i = ms.nodeIterator(); i.hasNext(); ) {
             Node node = (Node) i.next();
             
-            if (node instanceof ConcreteTypeNode ||
-                node instanceof ConcreteObjectNode) {
-                jq_Reference type = node.getDeclaredType();
-                if (type == null) {
-                    if (TRACE) out.println("Skipping null constant.");
-                    continue;
-                }
-            }
+            if (FILTER_NULL && isNullConstant(node))
+		continue;
             
             int V_i = Vmap.get(node);
             BDD V_bdd = V1.ithVar(V_i);
@@ -629,15 +619,9 @@ public class PA {
     
     public void visitNode(BDD V1V2context, BDD V1H1context, Node node) {
         if (TRACE) out.println("Visiting node "+node);
-        
-        if (node instanceof ConcreteTypeNode ||
-            node instanceof ConcreteObjectNode) {
-            jq_Reference type = node.getDeclaredType();
-            if (type == null) {
-                if (TRACE) out.println("Skipping null constant.");
-                return;
-            }
-        }
+       
+        if (FILTER_NULL && isNullConstant(node))
+	    return;
         
         int V_i = Vmap.get(node);
         BDD V_bdd = V1.ithVar(V_i);
@@ -681,6 +665,17 @@ public class PA {
             if (node instanceof GlobalNode)
                 addClassInitializer(f.getDeclaringClass());
         }
+    }
+
+    private boolean isNullConstant(Node node) {
+	if (node instanceof ConcreteTypeNode || node instanceof ConcreteObjectNode) {
+            jq_Reference type = node.getDeclaredType();
+            if (type == null) {
+                if (TRACE) out.println("Skipping null constant.");
+                return true;
+            }
+        }
+	return false;
     }
     
     void addToVT(int V_i, jq_Reference type) {
@@ -1522,8 +1517,9 @@ public class PA {
     
     public PathNumbering countCallGraph(CallGraph cg) {
         jq_Class jlt = PrimordialClassLoader.getJavaLangThread();
+        jlt.prepare();
         jq_Class jlr = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/Runnable;");
-        
+        jlr.prepare();
         Set fields = new HashSet();
         Set classes = new HashSet();
         int vars = 0, heaps = 0, bcodes = 0, methods = 0, calls = 0;
