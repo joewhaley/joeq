@@ -45,7 +45,9 @@ public class HijackingClassLoader extends URLClassLoader {
             try {
                 URL url = getFileURL(s);
                 if (url != null) urls.add(url);
-            } catch (IOException x) {}
+            } catch (IOException x) {
+                // URL cannot be loaded, skip it.
+            }
         }
         URL[] u = (URL[]) urls.toArray(new URL[urls.size()]);
         return u;
@@ -221,6 +223,7 @@ public class HijackingClassLoader extends URLClassLoader {
             try {
                 return findClass(name);
             } catch (ClassNotFoundException e) {
+                // We don't have it, load from the superclass instead.
             }
         }
         Class c = super.loadClass(name, resolve);
