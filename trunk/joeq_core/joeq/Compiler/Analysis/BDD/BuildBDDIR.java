@@ -7,7 +7,9 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
@@ -77,7 +79,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
             varargsBits = 5;
         }
         methodMap = new IndexMap("method");
-        opMap = new IndexMap("op");
+        loadOpMap();
         quadMap = new IndexMap("quad");
         //regMap = new IndexMap("reg");
         memberMap = new IndexMap("member");
@@ -110,6 +112,18 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         BDDDomain d = bdd.extDomain(new long[] { 1L << bits })[0];
         d.setName(name);
         return d;
+    }
+    
+    void loadOpMap() {
+        String fileName = "op.map";
+        try {
+            DataInputStream in = new DataInputStream(new FileInputStream(fileName));
+            opMap = IndexMap.loadStringMap("op", in);
+            in.close();
+        } catch (IOException x) {
+            System.out.println("Cannot load op map "+fileName);
+            opMap = new IndexMap("op");
+        }
     }
     
     /* (non-Javadoc)
@@ -217,7 +231,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
     }
     
     public int getOpID(Operator r) {
-        return opMap.get(r)+1;
+        return opMap.get(r.toString())+1;
     }
     
     void handleQuad(Quad q) {
@@ -373,18 +387,26 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
     
     void dumpTuples(String fileName, BDD allQ) throws IOException {
         DataOutputStream dos = new DataOutputStream(new FileOutputStream(fileName));
+        if (allQ.isZero()) {
+            dos.close();
+            return;
+        }
+        Assert._assert(!allQ.isOne());
         int[] a = allQ.support().scanSetDomains();
         BDD allDomains = bdd.one();
         System.out.print(fileName+" domains {");
         for (int i = 0; i < a.length; ++i) {
-            BDDDomain d = bdd.getDomain(i);
+            BDDDomain d = bdd.getDomain(a[i]);
             System.out.print(" "+d.toString());
             allDomains.andWith(d.set());
         }
         System.out.println(" ) = "+allQ.nodeCount()+" nodes");
+        BDDDomain primaryDomain = bdd.getDomain(a[0]);
         int lines = 0;
-        for (int i = 0; i < quadMap.size(); ++i) {
-            BDD q = quad.ithVar(i).andWith(allQ.id());
+        BDD foo = allQ.exist(allDomains.and(primaryDomain.ithVar(0)));
+        for (Iterator i = foo.iterator(primaryDomain.set()); i.hasNext(); ) {
+            BDD q = (BDD) i.next();
+            q.andWith(allQ.id());
             while (!q.isZero()) {
                 BDD sat = q.satOne(allDomains, bdd.zero());
                 BDD sup = q.support();
