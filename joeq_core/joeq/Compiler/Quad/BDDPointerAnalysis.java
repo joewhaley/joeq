@@ -34,6 +34,7 @@ import Compil3r.BytecodeAnalysis.BytecodeVisitor;
 import Compil3r.BytecodeAnalysis.CallTargets;
 import Compil3r.Quad.AndersenInterface.AndersenType;
 import Compil3r.Quad.MethodSummary.CallSite;
+import Compil3r.Quad.MethodSummary.ConcreteObjectNode;
 import Compil3r.Quad.MethodSummary.ConcreteTypeNode;
 import Compil3r.Quad.MethodSummary.FieldNode;
 import Compil3r.Quad.MethodSummary.GlobalNode;
@@ -315,6 +316,8 @@ public class BDDPointerAnalysis {
     public static void main(String[] args) {
         HostedVM.initialize();
         
+        CodeCache.AlwaysMap = true;
+        
         boolean DUMP = System.getProperty("bdddump") != null;
         
         BDDPointerAnalysis dis = new BDDPointerAnalysis();
@@ -336,6 +339,15 @@ public class BDDPointerAnalysis {
         
         RootedCHACallGraph.test(cg);
         
+        try {
+            java.io.FileWriter fw = new java.io.FileWriter("callgraph");
+            java.io.PrintWriter pw = new java.io.PrintWriter(fw);
+            LoadedCallGraph.write(cg, pw);
+            pw.close();
+        } catch (java.io.IOException x) {
+            x.printStackTrace();
+        }
+        
         if (DUMP)
             dis.dumpResults(cg);
             
@@ -344,9 +356,14 @@ public class BDDPointerAnalysis {
     public CallGraph goNonincremental(Collection roots) {
         long time = System.currentTimeMillis();
         
+        GlobalNode.GLOBAL.addDefaultStatics();
         this.addObjectAllocation(GlobalNode.GLOBAL, null);
         this.addAllocType(null, PrimordialClassLoader.getJavaLangObject());
         this.addVarType(GlobalNode.GLOBAL, PrimordialClassLoader.getJavaLangObject());
+        this.handleNode(GlobalNode.GLOBAL);
+        for (Iterator i=ConcreteObjectNode.getAll().iterator(); i.hasNext(); ) {
+            this.handleNode((ConcreteObjectNode) i.next());
+        }
         
         for (Iterator i=roots.iterator(); i.hasNext(); ) {
             jq_StaticMethod m = (jq_StaticMethod) i.next();
@@ -411,9 +428,14 @@ public class BDDPointerAnalysis {
     public CallGraph goIncremental(Collection roots) {
         long time = System.currentTimeMillis();
         
+        GlobalNode.GLOBAL.addDefaultStatics();
         this.addObjectAllocation(GlobalNode.GLOBAL, null);
         this.addAllocType(null, PrimordialClassLoader.getJavaLangObject());
         this.addVarType(GlobalNode.GLOBAL, PrimordialClassLoader.getJavaLangObject());
+        this.handleNode(GlobalNode.GLOBAL);
+        for (Iterator i=ConcreteObjectNode.getAll().iterator(); i.hasNext(); ) {
+            this.handleNode((ConcreteObjectNode) i.next());
+        }
         
         for (Iterator i=roots.iterator(); i.hasNext(); ) {
             jq_StaticMethod m = (jq_StaticMethod) i.next();
@@ -676,6 +698,9 @@ public class BDDPointerAnalysis {
             UnknownTypeNode utn = (UnknownTypeNode) n;
             addObjectAllocation(utn, utn);
             addAllocType(utn, (jq_Reference) utn.getDeclaredType());
+        } else if (n instanceof ConcreteObjectNode) {
+            addObjectAllocation(n, n);
+            addAllocType(n, (jq_Reference) n.getDeclaredType());
         }
         if (n instanceof GlobalNode) {
             addDirectAssignment(GlobalNode.GLOBAL, n);
