@@ -106,6 +106,10 @@ public class CSPA {
     public static final boolean CONTEXT_SENSITIVE_HEAP = true;
     
     public static void main(String[] args) throws IOException {
+    	runAnalysis(args);
+    }
+    
+    public static void runAnalysis(String[] args) throws IOException {
         // We use bytecode maps.
         CodeCache.AlwaysMap = true;
         HostedVM.initialize();
