@@ -5,7 +5,6 @@ package Compil3r.Quad;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Set;
 
 import Clazz.jq_Class;
@@ -83,10 +82,12 @@ public class RootedCHACallGraph extends CHACallGraph {
             time = System.currentTimeMillis() - time;
             System.out.println("done. ("+(time/1000.)+" seconds)");
             
+            /*
             for (Iterator j=g.getFirst().listTopSort().iterator(); j.hasNext(); ) {
                 SCComponent d = (SCComponent) j.next();
                 System.out.println(d);
             }
+            */
         }
         
         if (false) {
