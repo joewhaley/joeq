@@ -259,7 +259,7 @@ public abstract class CallGraph extends UnmodifiableMultiMap {
      * @return set of reachable methods
      */
     public Set/*jq_Method*/ calculateReachableMethods(Collection roots) {
-        HashWorklist worklist = new HashWorklist();
+        HashWorklist worklist = new HashWorklist(true);
         worklist.addAll(roots);
         while (!worklist.isEmpty()) {
             jq_Method m = (jq_Method) worklist.pull();
