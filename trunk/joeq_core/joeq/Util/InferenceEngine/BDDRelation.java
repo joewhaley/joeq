@@ -103,6 +103,8 @@ public class BDDRelation extends Relation {
         if (r2 != null) {
             if (r2.isZero()) {
                 System.out.println("Warning: "+filename+" is zero.");
+            } else if (r2.isOne()) {
+                System.out.println("Warning: "+filename+" is one.");
             } else {
                 BDD s = r2.support();
                 BDD t = domainSet.and(s);
