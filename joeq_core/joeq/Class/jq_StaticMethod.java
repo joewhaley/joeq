@@ -47,7 +47,7 @@ public class jq_StaticMethod extends jq_Method {
     }
     
     public final boolean needsDynamicLink(jq_Method method) {
-        return (state >= STATE_PREPARED) && getDeclaringClass().needsDynamicLink(method);
+        return (state < STATE_SFINITIALIZED) || getDeclaringClass().needsDynamicLink(method);
     }
 
     public final boolean isStatic() { return true; }
