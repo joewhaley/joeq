@@ -811,7 +811,7 @@ public class BDDPointerAnalysis {
                 callSiteToTargets.put(mc, definite_targets);
                 jq_InstanceMethod method = (jq_InstanceMethod) mc.getTargetMethod();
                 addClassInit(method.getDeclaringClass());
-                //int methodIndex = getMethodIndex(method);
+                getMethodIndex(method); // allocate index in the method map.
                 PassedParameter pp = new PassedParameter(mc, 0);
                 Set receiverObjects = ms.getNodesThatCall(pp);
                 BDD receiverBDD = bdd.zero();
@@ -1272,8 +1272,8 @@ public class BDDPointerAnalysis {
         int n1 = methodIndexMap.size();
         int n2 = heapobjIndexMap.size();
         if (TRACE) {
-            System.out.println(n1-last_methodIndex + " new distinct virtual methods");
-            System.out.println(n2-last_heapobjIndex + " new heap objects");
+            System.out.println(n1-last_methodIndex + " new distinct virtual methods, total="+n1);
+            System.out.println(n2-last_heapobjIndex + " new heap objects, total="+n2);
         }
         for (int i1=0; i1<n1; ++i1) {
             jq_InstanceMethod m = (jq_InstanceMethod) methodIndexMap.get(i1);
@@ -1286,10 +1286,16 @@ public class BDDPointerAnalysis {
                 jq_Reference r2 = (jq_Reference) c.getDeclaredType();
                 if (r2 == null) continue;
                 r2.prepare(); m.getDeclaringClass().prepare();
+                if (TRACE) {
+                    System.out.println("Comparing "+r2+" and "+m);
+                }
                 if (!r2.isSubtypeOf(m.getDeclaringClass())) continue;
                 BDD heapobj_bdd = H1.ithVar(i2);
                 if (c instanceof ConcreteTypeNode || c instanceof ConcreteObjectNode || ALL_CONCRETE) {
                     jq_InstanceMethod target = r2.getVirtualMethod(m.getNameAndDesc());
+                    if (TRACE) {
+                        System.out.println("Target = "+target);
+                    }
                     if (target != null) {
                         int i3 = getTargetIndex(target);
                         BDD target_bdd = T4.ithVar(i3);
@@ -1299,6 +1305,9 @@ public class BDDPointerAnalysis {
                     }
                 } else {
                     CallTargets ct = CallTargets.getTargets(m.getDeclaringClass(), m, BytecodeVisitor.INVOKE_VIRTUAL, r2, false, true);
+                    if (TRACE) {
+                        System.out.println("Targets = "+ct);
+                    }
                     for (Iterator i=ct.iterator(); i.hasNext(); ) {
                         jq_InstanceMethod target = (jq_InstanceMethod) i.next();
                         int i3 = getTargetIndex(target);
