@@ -19,6 +19,7 @@ import Clazz.jq_StaticField;
 import Bootstrap.PrimordialClassLoader;
 import Run_Time.ExceptionDeliverer;
 
+import java.util.Iterator;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.List;
@@ -28,8 +29,6 @@ import java.util.TreeMap;
 public abstract class CodeAllocator {
     
     public static /*final*/ boolean TRACE = false;
-    
-    public static /*final*/ CodeAllocator DEFAULT;
     
     public abstract void init();
     public abstract x86CodeBuffer getCodeBuffer(int estimated_size);
@@ -77,6 +76,15 @@ public abstract class CodeAllocator {
     }
     public static int/*CodeAddress*/ getLowAddress() { return lowAddress; }
     public static int/*CodeAddress*/ getHighAddress() { return highAddress; }
+
+    public static Iterator getCompiledMethods() {
+        Iterator i = compiled_methods.keySet().iterator();
+        i.next(); // skip bogus compiled code
+        return i;
+    }
+    public static int getNumberOfCompiledMethods() {
+        return compiled_methods.keySet().size()-1;  // skip bogus compiled code
+    }
     
     // NOTE: doesn't implement hashCode() very well!
     public static class InstructionPointer implements Comparable {
@@ -120,13 +128,11 @@ public abstract class CodeAllocator {
     
     public static final Set codeAddressFields;
     public static final jq_StaticField _compiled_methods;
-    public static final jq_StaticField _DEFAULT;
     public static final jq_StaticField _lowAddress;
     public static final jq_StaticField _highAddress;
     static {
         jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LAllocator/CodeAllocator;");
         _compiled_methods = k.getOrCreateStaticField("compiled_methods", "Ljava/util/SortedMap;");
-        _DEFAULT = k.getOrCreateStaticField("DEFAULT", "LAllocator/CodeAllocator;");
         _lowAddress = k.getOrCreateStaticField("lowAddress", "I");
         _highAddress = k.getOrCreateStaticField("highAddress", "I");
         codeAddressFields = new HashSet();
