@@ -127,7 +127,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
             ex_handler.setExceptionHandlerEntry();
             int numOfProtectedBlocks = (ex.getEndPC()==method.getBytecode().length?quad_bbs.length:bc_cfg.getBasicBlockByBytecodeIndex(ex.getEndPC()).id) - bc_bb.id;
             ExceptionHandler eh = new ExceptionHandler(ex.getExceptionType(), numOfProtectedBlocks, ex_handler);
-            ExceptionHandlerSet ehs = new ExceptionHandlerSet(eh, null);
+            ExceptionHandlerList ehs = new ExceptionHandlerList(eh, null);
             BasicBlock bb = quad_bbs[bc_bb.id];
             bb.addExceptionHandler_first(ehs);
             while (bc_bb.getStart() < ex.getEndPC()) {

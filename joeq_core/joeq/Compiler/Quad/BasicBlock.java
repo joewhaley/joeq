@@ -7,7 +7,11 @@
 
 package Compil3r.Quad;
 import jq;
-import java.util.*;
+import Util.BackwardIterator;
+import Util.Templates.List;
+import Util.Templates.ListIterator;
+import Util.Templates.UnmodifiableList;
+import Util.Templates.ListWrapper;
 
 /**
  * Represents a basic block in the quad intermediate representation.
@@ -35,14 +39,14 @@ public class BasicBlock {
     /** Unique id number for this basic block. */
     private int id_number;
     /** List of instructions. */
-    private final List/*<Quad>*/ instructions;
+    private final java.util.List/*<Quad>*/ instructions;
     /** List of successor basic blocks. */
-    private final List/*<BasicBlock>*/ successors;
+    private final java.util.List/*<BasicBlock>*/ successors;
     /** List of predecessor basic blocks. */
-    private final List/*<BasicBlock>*/ predecessors;
+    private final java.util.List/*<BasicBlock>*/ predecessors;
     
-    /** Set of exception handlers for this basic block. */
-    private ExceptionHandlerSet exception_handler_set;
+    /** List of exception handlers for this basic block. */
+    private ExceptionHandlerList exception_handler_list;
     
     /** Flags for this basic block. */
     private int flags;
@@ -63,20 +67,20 @@ public class BasicBlock {
         this.id_number = 0;
         this.instructions = null;
         this.predecessors = null;
-        this.successors = new ArrayList(1);
-        this.exception_handler_set = null;
+        this.successors = new java.util.ArrayList(1);
+        this.exception_handler_list = null;
     }
     /** Creates new exit node */
     static BasicBlock createEndNode(int numOfPredecessors) {
         return new BasicBlock(numOfPredecessors);
     }
     /** Private constructor for the exit node. */
-    private BasicBlock(int numOfPredecessors) {
+    private BasicBlock(int numOfExits) {
         this.id_number = 1;
         this.instructions = null;
         this.successors = null;
-        this.predecessors = new ArrayList(numOfPredecessors);
-        this.exception_handler_set = null;
+        this.predecessors = new java.util.ArrayList(numOfExits);
+        this.exception_handler_list = null;
     }
     /** Create new basic block with no exception handlers.
      * Only to be called by ControlFlowGraph. */
@@ -85,17 +89,17 @@ public class BasicBlock {
     }
     /** Create new basic block with the given exception handlers.
      * Only to be called by ControlFlowGraph. */
-    static BasicBlock createBasicBlock(int id, int numOfPredecessors, int numOfSuccessors, int numOfInstructions, ExceptionHandlerSet ehs) {
+    static BasicBlock createBasicBlock(int id, int numOfPredecessors, int numOfSuccessors, int numOfInstructions, ExceptionHandlerList ehs) {
         return new BasicBlock(id, numOfPredecessors, numOfSuccessors, numOfInstructions, ehs);
     }
     /** Private constructor for internal nodes. */
     private BasicBlock(int id, int numOfPredecessors, int numOfSuccessors, int numOfInstructions,
-                       ExceptionHandlerSet ehs) {
+                       ExceptionHandlerList ehs) {
         this.id_number = id;
-        this.predecessors = new ArrayList(numOfPredecessors);
-        this.successors = new ArrayList(numOfSuccessors);
-        this.instructions = new ArrayList(numOfInstructions);
-        this.exception_handler_set = ehs;
+        this.predecessors = new java.util.ArrayList(numOfPredecessors);
+        this.successors = new java.util.ArrayList(numOfSuccessors);
+        this.instructions = new java.util.ArrayList(numOfInstructions);
+        this.exception_handler_list = ehs;
     }
 
     /** Returns true if this is the entry basic block.
@@ -108,17 +112,17 @@ public class BasicBlock {
     /** Returns an iterator over the quads in this basic block in forward order.
      * @see  QuadIterator
      * @return  an iterator over the quads in this basic block in forward order. */
-    public QuadIterator iterator() {
-	if (instructions == null) return QuadIterator.getEmptyIterator();
-        return new QuadIterator(instructions);
+    public ListIterator.Quad iterator() {
+	if (instructions == null) return ListWrapper.Quad.EmptyIterator.INSTANCE;
+        return new ListWrapper.Quad.Iterator(instructions.listIterator());
     }
     
     /** Returns an iterator over the quads in this basic block in backward order.
      * @see  QuadIterator
      * @return  an iterator over the quads in this basic block in backward order. */
-    public QuadIterator backwardIterator() {
-	if (instructions == null) return QuadIterator.getEmptyIterator();
-        return new BackwardQuadIterator(instructions);
+    public ListIterator.Quad backwardIterator() {
+	if (instructions == null) return ListWrapper.Quad.EmptyIterator.INSTANCE;
+        return new ListWrapper.Quad.Iterator(new BackwardIterator(instructions.listIterator()));
     }
 
     /** Visit all of the quads in this basic block in forward order
@@ -126,7 +130,7 @@ public class BasicBlock {
      * @see  QuadVisitor
      * @param qv  QuadVisitor to visit the quads with. */
     public void visitQuads(QuadVisitor qv) {
-        for (QuadIterator i = iterator(); i.hasNext(); ) {
+        for (ListIterator.Quad i = iterator(); i.hasNext(); ) {
             Quad q = i.nextQuad();
             q.accept(qv);
         }
@@ -137,7 +141,7 @@ public class BasicBlock {
      * @see  QuadVisitor
      * @param qv  QuadVisitor to visit the quads with. */
     public void backwardVisitQuads(QuadVisitor qv) {
-        for (QuadIterator i = backwardIterator(); i.hasNext(); ) {
+        for (ListIterator.Quad i = backwardIterator(); i.hasNext(); ) {
             Quad q = i.nextQuad();
             q.accept(qv);
         }
@@ -148,6 +152,10 @@ public class BasicBlock {
     public int size() {
         if (instructions == null) return 0; // entry or exit block
         return instructions.size();
+    }
+    
+    public Quad getQuad(int i) {
+        return (Quad)instructions.get(i);
     }
 
     /** Add a quad to this basic block at the given location.
@@ -181,6 +189,16 @@ public class BasicBlock {
 	successors.add(b);
     }
     
+    public void removePredecessor(int i) {
+	jq.assert(predecessors != null, "Cannot remove predecessor from entry basic block");
+        predecessors.remove(i);
+    }
+    public void removeSuccessor(int i) {
+	jq.assert(successors != null, "Cannot remove successor from exit basic block");
+        successors.remove(i);
+    }
+        
+    
     /** Returns the fallthrough successor to this basic block, if it exists.
      * If there is none, returns null.
      * @return  the fallthrough successor, or null if there is none. */
@@ -200,39 +218,39 @@ public class BasicBlock {
     /** Returns an iterator of the successors of this basic block.
      * @see BasicBlockIterator
      * @return  an iterator of the successors of this basic block. */
-    public BasicBlockIterator getSuccessors() {
-	if (successors == null) return BasicBlockIterator.getEmptyIterator();
-        return new BasicBlockIterator(successors);
+    public List.BasicBlock getSuccessors() {
+	if (successors == null) return UnmodifiableList.BasicBlock.getEmptyList();
+        return new ListWrapper.BasicBlock(successors);
     }
     
     /** Returns an iterator of the predecessors of this basic block.
      * @see BasicBlockIterator
      * @return  an iterator of the predecessors of this basic block. */
-    public BasicBlockIterator getPredecessors() {
-	if (predecessors == null) return BasicBlockIterator.getEmptyIterator();
-        return new BasicBlockIterator(predecessors);
+    public List.BasicBlock getPredecessors() {
+	if (predecessors == null) return UnmodifiableList.BasicBlock.getEmptyList();
+        return new ListWrapper.BasicBlock(predecessors);
     }
     
-    void addExceptionHandler_first(ExceptionHandlerSet eh) {
+    void addExceptionHandler_first(ExceptionHandlerList eh) {
         eh.getHandler().addHandledBasicBlock(this);
         jq.assert(eh.parent == null);
-        eh.parent = this.exception_handler_set;
-        this.exception_handler_set = eh;
+        eh.parent = this.exception_handler_list;
+        this.exception_handler_list = eh;
     }
-    ExceptionHandlerSet addExceptionHandler(ExceptionHandlerSet eh) {
+    ExceptionHandlerList addExceptionHandler(ExceptionHandlerList eh) {
         eh.getHandler().addHandledBasicBlock(this);
-        if (eh.parent == this.exception_handler_set)
-            return this.exception_handler_set = eh;
+        if (eh.parent == this.exception_handler_list)
+            return this.exception_handler_list = eh;
         else
-            return this.exception_handler_set = new ExceptionHandlerSet(eh.getHandler(), this.exception_handler_set);
+            return this.exception_handler_list = new ExceptionHandlerList(eh.getHandler(), this.exception_handler_list);
     }
     
     /** Returns an iterator of the exception handlers that guard this basic block.
      * @see ExceptionHandlerIterator
      * @return  an iterator of the exception handlers that guard this basic block. */
-    public ExceptionHandlerIterator getExceptionHandlers() {
-        if (exception_handler_set == null) return ExceptionHandlerIterator.getEmptyIterator();
-        return exception_handler_set.iterator();
+    public ExceptionHandlerList getExceptionHandlers() {
+        if (exception_handler_list == null) return ExceptionHandlerList.getEmptyList();
+        return exception_handler_list;
     }
     
     /** Returns the unique id number for this basic block.
@@ -268,37 +286,37 @@ public class BasicBlock {
         StringBuffer sb = new StringBuffer();
         sb.append(toString());
         sb.append("\t(in: ");
-        BasicBlockIterator bbi = getPredecessors();
+        ListIterator.BasicBlock bbi = getPredecessors().basicBlockIterator();
         if (!bbi.hasNext()) sb.append("<none>");
         else {
-            sb.append(bbi.nextBB().toString());
+            sb.append(bbi.nextBasicBlock().toString());
             while (bbi.hasNext()) {
                 sb.append(", ");
-                sb.append(bbi.nextBB().toString());
+                sb.append(bbi.nextBasicBlock().toString());
             }
         }
         sb.append(", out: ");
-        bbi = getSuccessors();
+        bbi = getSuccessors().basicBlockIterator();
         if (!bbi.hasNext()) sb.append("<none>");
         else {
-            sb.append(bbi.nextBB().toString());
+            sb.append(bbi.nextBasicBlock().toString());
             while (bbi.hasNext()) {
                 sb.append(", ");
-                sb.append(bbi.nextBB().toString());
+                sb.append(bbi.nextBasicBlock().toString());
             }
         }
         sb.append(')');
-        ExceptionHandlerIterator ehi = getExceptionHandlers();
+        ListIterator.ExceptionHandler ehi = getExceptionHandlers().exceptionHandlerIterator();
         if (ehi.hasNext()) {
             sb.append("\n\texception handlers: ");
-            sb.append(ehi.nextEH().toString());
+            sb.append(ehi.next().toString());
             while (ehi.hasNext()) {
                 sb.append(", ");
-                sb.append(ehi.nextEH().toString());
+                sb.append(ehi.next().toString());
             }
         }
         sb.append("\n");
-        QuadIterator qi = iterator();
+        ListIterator.Quad qi = iterator();
         while (qi.hasNext()) {
             sb.append(qi.nextQuad().toString());
             sb.append('\n');

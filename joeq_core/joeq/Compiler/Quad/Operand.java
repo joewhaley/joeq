@@ -267,6 +267,7 @@ public interface Operand {
         ParamListOperand(RegisterOperand[] t) { params = t; }
         public void set(int i, RegisterOperand b) { params[i] = b; }
         public RegisterOperand get(int i) { return params[i]; }
+        public int length() { return params.length; }
         public String toString() {
             StringBuffer sb = new StringBuffer("(");
             if (params.length > 0) {

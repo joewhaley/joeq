@@ -36,11 +36,11 @@ public class RegisterFactory {
         local_D = new ArrayList(nlocals);
         local_A = new ArrayList(nlocals);
         for (int i=0; i<nlocals; ++i) {
-            local_I.add(i, new Register(i));
-            local_F.add(i, new Register(i));
-            local_L.add(i, new Register(i));
-            local_D.add(i, new Register(i));
-            local_A.add(i, new Register(i));
+            local_I.add(i, new Register(i, false));
+            local_F.add(i, new Register(i, false));
+            local_L.add(i, new Register(i, false));
+            local_D.add(i, new Register(i, false));
+            local_A.add(i, new Register(i, false));
         }
         int nstack = m.getMaxStack();
         stack_I = new ArrayList(nstack);
@@ -49,11 +49,11 @@ public class RegisterFactory {
         stack_D = new ArrayList(nstack);
         stack_A = new ArrayList(nstack);
         for (int i=0; i<nstack; ++i) {
-            stack_I.add(i, new Register(i));
-            stack_F.add(i, new Register(i));
-            stack_L.add(i, new Register(i));
-            stack_D.add(i, new Register(i));
-            stack_A.add(i, new Register(i));
+            stack_I.add(i, new Register(i, true));
+            stack_F.add(i, new Register(i, true));
+            stack_L.add(i, new Register(i, true));
+            stack_D.add(i, new Register(i, true));
+            stack_A.add(i, new Register(i, true));
         }
     }
 
@@ -89,14 +89,14 @@ public class RegisterFactory {
     private int getLocalSize() { return local_I.size(); }
 
     RegisterOperand makeGuardReg() {
-        return new RegisterOperand(new Register(-1), null);
+        return new RegisterOperand(new Register(-1, true), null);
     }
     
     public static class Register {
-        private int id;
-        Register(int id) { this.id = id; }
+        private int id; private boolean isTemp;
+        Register(int id, boolean isTemp) { this.id = id; this.isTemp = isTemp; }
         public int getNumber() { return id; }
-        public String toString() { return "R"+id; }
+        public String toString() { return (isTemp?"T":"R")+id; }
     }
 
 }

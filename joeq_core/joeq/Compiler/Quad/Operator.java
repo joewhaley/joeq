@@ -33,7 +33,161 @@ public class Operator {
     public UnmodifiableList.jq_Class getThrownExceptions() {
         return noexceptions;
     }
+    public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) {
+        return noregisters;
+    }
+    public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) {
+        return noregisters;
+    }
     
+    public UnmodifiableList.RegisterOperand getReg1(Quad q) {
+        return new UnmodifiableList.RegisterOperand((RegisterOperand)q.getOp1());
+    }
+    public UnmodifiableList.RegisterOperand getReg1_check(Quad q) {
+        if (q.getOp1() instanceof RegisterOperand)
+            return new UnmodifiableList.RegisterOperand((RegisterOperand)q.getOp1());
+        else
+            return noregisters;
+    }
+    public UnmodifiableList.RegisterOperand getReg2(Quad q) {
+        if (q.getOp2() instanceof RegisterOperand)
+            return new UnmodifiableList.RegisterOperand((RegisterOperand)q.getOp2());
+        else
+            return noregisters;
+    }
+    public UnmodifiableList.RegisterOperand getReg3(Quad q) {
+        if (q.getOp3() instanceof RegisterOperand)
+            return new UnmodifiableList.RegisterOperand((RegisterOperand)q.getOp3());
+        else
+            return noregisters;
+    }
+    protected UnmodifiableList.RegisterOperand getReg12(Quad q) {
+        if (q.getOp1() instanceof RegisterOperand) {
+            if (q.getOp2() instanceof RegisterOperand)
+                return new UnmodifiableList.RegisterOperand((RegisterOperand)q.getOp1(), (RegisterOperand)q.getOp2());
+            else
+                return new UnmodifiableList.RegisterOperand((RegisterOperand)q.getOp1());
+        } else {
+            if (q.getOp2() instanceof RegisterOperand)
+                return new UnmodifiableList.RegisterOperand((RegisterOperand)q.getOp2());
+            else
+                return noregisters;
+        }
+    }
+    protected UnmodifiableList.RegisterOperand getReg23(Quad q) {
+        if (q.getOp2() instanceof RegisterOperand) {
+            if (q.getOp3() instanceof RegisterOperand)
+                return new UnmodifiableList.RegisterOperand((RegisterOperand)q.getOp2(), (RegisterOperand)q.getOp3());
+            else
+                return new UnmodifiableList.RegisterOperand((RegisterOperand)q.getOp2());
+        } else {
+            if (q.getOp3() instanceof RegisterOperand)
+                return new UnmodifiableList.RegisterOperand((RegisterOperand)q.getOp3());
+            else
+                return noregisters;
+        }
+    }
+    protected UnmodifiableList.RegisterOperand getReg24(Quad q) {
+        if (q.getOp2() instanceof RegisterOperand) {
+            if (q.getOp4() instanceof RegisterOperand)
+                return new UnmodifiableList.RegisterOperand((RegisterOperand)q.getOp2(), (RegisterOperand)q.getOp4());
+            else
+                return new UnmodifiableList.RegisterOperand((RegisterOperand)q.getOp2());
+        } else {
+            if (q.getOp4() instanceof RegisterOperand)
+                return new UnmodifiableList.RegisterOperand((RegisterOperand)q.getOp4());
+            else
+                return noregisters;
+        }
+    }
+    protected UnmodifiableList.RegisterOperand getReg124(Quad q) {
+        if (q.getOp1() instanceof RegisterOperand) {
+            if (q.getOp2() instanceof RegisterOperand) {
+                if (q.getOp4() instanceof RegisterOperand)
+                    return new UnmodifiableList.RegisterOperand((RegisterOperand)q.getOp1(), (RegisterOperand)q.getOp2(), (RegisterOperand)q.getOp4());
+                else
+                    return new UnmodifiableList.RegisterOperand((RegisterOperand)q.getOp1(), (RegisterOperand)q.getOp2());
+            } else {
+                if (q.getOp4() instanceof RegisterOperand)
+                    return new UnmodifiableList.RegisterOperand((RegisterOperand)q.getOp1(), (RegisterOperand)q.getOp4());
+                else
+                    return noregisters;
+            }
+        } else return getReg24(q);
+    }
+    protected UnmodifiableList.RegisterOperand getReg123(Quad q) {
+        if (q.getOp1() instanceof RegisterOperand) {
+            if (q.getOp2() instanceof RegisterOperand) {
+                if (q.getOp3() instanceof RegisterOperand)
+                    return new UnmodifiableList.RegisterOperand((RegisterOperand)q.getOp1(), (RegisterOperand)q.getOp2(), (RegisterOperand)q.getOp3());
+                else
+                    return new UnmodifiableList.RegisterOperand((RegisterOperand)q.getOp1(), (RegisterOperand)q.getOp2());
+            } else {
+                if (q.getOp3() instanceof RegisterOperand)
+                    return new UnmodifiableList.RegisterOperand((RegisterOperand)q.getOp1(), (RegisterOperand)q.getOp3());
+                else
+                    return new UnmodifiableList.RegisterOperand((RegisterOperand)q.getOp1());
+            }
+        } else return getReg23(q);
+    }
+    protected UnmodifiableList.RegisterOperand getReg234(Quad q) {
+        if (q.getOp2() instanceof RegisterOperand) {
+            if (q.getOp3() instanceof RegisterOperand) {
+                if (q.getOp4() instanceof RegisterOperand)
+                    return new UnmodifiableList.RegisterOperand((RegisterOperand)q.getOp2(), (RegisterOperand)q.getOp3(), (RegisterOperand)q.getOp4());
+                else
+                    return new UnmodifiableList.RegisterOperand((RegisterOperand)q.getOp2(), (RegisterOperand)q.getOp3());
+            } else {
+                if (q.getOp4() instanceof RegisterOperand)
+                    return new UnmodifiableList.RegisterOperand((RegisterOperand)q.getOp2(), (RegisterOperand)q.getOp4());
+                else
+                    return new UnmodifiableList.RegisterOperand((RegisterOperand)q.getOp2());
+            }
+        } else {
+            if (q.getOp3() instanceof RegisterOperand) {
+                if (q.getOp4() instanceof RegisterOperand)
+                    return new UnmodifiableList.RegisterOperand((RegisterOperand)q.getOp3(), (RegisterOperand)q.getOp4());
+                else
+                    return new UnmodifiableList.RegisterOperand((RegisterOperand)q.getOp3());
+            } else {
+                if (q.getOp4() instanceof RegisterOperand)
+                    return new UnmodifiableList.RegisterOperand((RegisterOperand)q.getOp4());
+                else
+                    return noregisters;
+            }
+        }
+    }
+    protected UnmodifiableList.RegisterOperand getReg1234(Quad q) {
+        if (q.getOp1() instanceof RegisterOperand) {
+            if (q.getOp2() instanceof RegisterOperand) {
+                if (q.getOp3() instanceof RegisterOperand) {
+                    if (q.getOp4() instanceof RegisterOperand)
+                        return new UnmodifiableList.RegisterOperand((RegisterOperand)q.getOp1(), (RegisterOperand)q.getOp2(), (RegisterOperand)q.getOp3(), (RegisterOperand)q.getOp4());
+                    else
+                        return new UnmodifiableList.RegisterOperand((RegisterOperand)q.getOp1(), (RegisterOperand)q.getOp2(), (RegisterOperand)q.getOp3());
+                } else {
+                    if (q.getOp4() instanceof RegisterOperand)
+                        return new UnmodifiableList.RegisterOperand((RegisterOperand)q.getOp1(), (RegisterOperand)q.getOp2(), (RegisterOperand)q.getOp4());
+                    else
+                        return new UnmodifiableList.RegisterOperand((RegisterOperand)q.getOp1(), (RegisterOperand)q.getOp2());
+                }
+            } else {
+                if (q.getOp3() instanceof RegisterOperand) {
+                    if (q.getOp4() instanceof RegisterOperand)
+                        return new UnmodifiableList.RegisterOperand((RegisterOperand)q.getOp1(), (RegisterOperand)q.getOp3(), (RegisterOperand)q.getOp4());
+                    else
+                        return new UnmodifiableList.RegisterOperand((RegisterOperand)q.getOp1(), (RegisterOperand)q.getOp3());
+                } else {
+                    if (q.getOp4() instanceof RegisterOperand)
+                        return new UnmodifiableList.RegisterOperand((RegisterOperand)q.getOp1(), (RegisterOperand)q.getOp4());
+                    else
+                        return new UnmodifiableList.RegisterOperand((RegisterOperand)q.getOp1());
+                }
+            }
+        } else return getReg234(q);
+    }
+    
+    public static final UnmodifiableList.RegisterOperand noregisters;
     public static final UnmodifiableList.jq_Class noexceptions;
     public static final UnmodifiableList.jq_Class anyexception;
     public static final UnmodifiableList.jq_Class resolutionexceptions;
@@ -45,6 +199,7 @@ public class Operator {
     public static final UnmodifiableList.jq_Class classcastexceptions;
     public static final UnmodifiableList.jq_Class illegalmonitorstateexception;
     static {
+        noregisters = new UnmodifiableList.RegisterOperand( new RegisterOperand[0] );
         noexceptions = new UnmodifiableList.jq_Class( new jq_Class[0] );
         anyexception = new UnmodifiableList.jq_Class(
             PrimordialClassLoader.getJavaLangThrowable()
@@ -88,6 +243,8 @@ public class Operator {
         }
         public static RegisterOperand getDest(Quad q) { return (RegisterOperand)q.getOp1(); }
         public static Operand getSrc(Quad q) { return q.getOp2(); }
+        public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
+        public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg2(q); }
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitMove(q);
@@ -129,6 +286,8 @@ public class Operator {
         public static RegisterOperand getDest(Quad q) { return (RegisterOperand)q.getOp1(); }
         public static Operand getSrc1(Quad q) { return q.getOp2(); }
         public static Operand getSrc2(Quad q) { return q.getOp3(); }
+        public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
+        public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg23(q); }
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitBinary(q);
@@ -319,6 +478,8 @@ public class Operator {
         }
         public static RegisterOperand getDest(Quad q) { return (RegisterOperand)q.getOp1(); }
         public static Operand getSrc(Quad q) { return q.getOp2(); }
+        public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
+        public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg2(q); }
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitUnary(q);
@@ -461,6 +622,8 @@ public class Operator {
         public static Operand getBase(Quad q) { return q.getOp2(); }
         public static Operand getIndex(Quad q) { return q.getOp3(); }
         public static Operand getGuard(Quad q) { return q.getOp4(); }
+        public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
+        public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg234(q); }
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitALoad(q);
@@ -518,6 +681,7 @@ public class Operator {
         public static Operand getBase(Quad q) { return q.getOp2(); }
         public static Operand getIndex(Quad q) { return q.getOp3(); }
         public static Operand getGuard(Quad q) { return q.getOp4(); }
+        public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg1234(q); }
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitAStore(q);
@@ -574,6 +738,7 @@ public class Operator {
         public static Operand getSrc2(Quad q) { return q.getOp2(); }
         public static ConditionOperand getCond(Quad q) { return (ConditionOperand)q.getOp3(); }
         public static TargetOperand getTarget(Quad q) { return (TargetOperand)q.getOp4(); }
+        public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg12(q); }
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitIntIfCmp(q);
@@ -619,6 +784,7 @@ public class Operator {
         }
         public static RegisterOperand getDest(Quad q) { return (RegisterOperand)q.getOp1(); }
         public static TargetOperand getTarget(Quad q) { return (TargetOperand)q.getOp2(); }
+        public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitJsr(q);
@@ -638,6 +804,7 @@ public class Operator {
             return new Quad(operator, loc);
         }
         public static RegisterOperand getTarget(Quad q) { return (RegisterOperand)q.getOp1(); }
+        public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg1(q); }
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitRet(q);
@@ -664,6 +831,7 @@ public class Operator {
         public static IConstOperand getLow(Quad q) { return (IConstOperand)q.getOp3(); }
         public static BasicBlock getTarget(Quad q, int i) { return ((BasicBlockTableOperand)q.getOp4()).get(i); }
         public static BasicBlockTableOperand getTargetTable(Quad q) { return (BasicBlockTableOperand)q.getOp4(); }
+        public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg1_check(q); }
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitTableSwitch(q);
@@ -695,6 +863,7 @@ public class Operator {
         public static BasicBlock getTarget(Quad q, int i) { return ((BasicBlockTableOperand)q.getOp4()).get(i); }
         public static IntValueTableOperand getValueTable(Quad q) { return (IntValueTableOperand)q.getOp3(); }
         public static BasicBlockTableOperand getTargetTable(Quad q) { return (BasicBlockTableOperand)q.getOp4(); }
+        public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg1_check(q); }
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitLookupSwitch(q);
@@ -733,31 +902,37 @@ public class Operator {
             public static final RETURN_I INSTANCE = new RETURN_I();
             private RETURN_I() { }
             public String toString() { return "RETURN_I"; }
+            public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg1_check(q); }
         }
         public static class RETURN_F extends Return {
             public static final RETURN_F INSTANCE = new RETURN_F();
             private RETURN_F() { }
             public String toString() { return "RETURN_F"; }
+            public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg1_check(q); }
         }
         public static class RETURN_L extends Return {
             public static final RETURN_L INSTANCE = new RETURN_L();
             private RETURN_L() { }
             public String toString() { return "RETURN_L"; }
+            public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg1_check(q); }
         }
         public static class RETURN_D extends Return {
             public static final RETURN_D INSTANCE = new RETURN_D();
             private RETURN_D() { }
             public String toString() { return "RETURN_D"; }
+            public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg1_check(q); }
         }
         public static class RETURN_A extends Return {
             public static final RETURN_A INSTANCE = new RETURN_A();
             private RETURN_A() { }
             public String toString() { return "RETURN_A"; }
+            public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg1_check(q); }
         }
         public static class THROW_A extends Return {
             public static final THROW_A INSTANCE = new THROW_A();
             private THROW_A() { }
             public String toString() { return "THROW_A"; }
+            public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg1_check(q); }
         }
     }
 
@@ -767,6 +942,7 @@ public class Operator {
         }
         public static RegisterOperand getDest(Quad q) { return (RegisterOperand)q.getOp1(); }
         public static FieldOperand getField(Quad q) { return (FieldOperand)q.getOp2(); }
+        public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitGetstatic(q);
@@ -868,6 +1044,7 @@ public class Operator {
         }
         public static Operand getSrc(Quad q) { return q.getOp1(); }
         public static FieldOperand getField(Quad q) { return (FieldOperand)q.getOp2(); }
+        public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg1_check(q); }
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitPutstatic(q);
@@ -971,6 +1148,8 @@ public class Operator {
         public static Operand getBase(Quad q) { return q.getOp2(); }
         public static FieldOperand getField(Quad q) { return (FieldOperand)q.getOp3(); }
         public static Operand getGuard(Quad q) { return q.getOp4(); }
+        public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
+        public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg24(q); }
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitGetfield(q);
@@ -1142,6 +1321,7 @@ public class Operator {
         public static Operand getSrc(Quad q) { return (RegisterOperand)q.getOp2(); }
         public static FieldOperand getField(Quad q) { return (FieldOperand)q.getOp3(); }
         public static Operand getGuard(Quad q) { return q.getOp4(); }
+        public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg124(q); }
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitPutfield(q);
@@ -1311,6 +1491,8 @@ public class Operator {
         }
         public static Operand getDest(Quad q) { return q.getOp1(); }
         public static Operand getSrc(Quad q) { return q.getOp2(); }
+        public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1_check(q); }
+        public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg2(q); }
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitNullCheck(q);
@@ -1335,6 +1517,8 @@ public class Operator {
         }
         public static Operand getDest(Quad q) { return q.getOp1(); }
         public static Operand getSrc(Quad q) { return q.getOp2(); }
+        public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1_check(q); }
+        public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg2(q); }
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitZeroCheck(q);
@@ -1360,6 +1544,8 @@ public class Operator {
         public static Operand getRef(Quad q) { return q.getOp1(); }
         public static Operand getIndex(Quad q) { return q.getOp2(); }
         public static Operand getGuard(Quad q) { return q.getOp3(); }
+        public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg3(q); }
+        public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg123(q); }
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitBoundsCheck(q);
@@ -1385,6 +1571,8 @@ public class Operator {
         public static Operand getRef(Quad q) { return q.getOp1(); }
         public static Operand getElement(Quad q) { return q.getOp2(); }
         public static Operand getGuard(Quad q) { return q.getOp3(); }
+        public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg3(q); }
+        public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg123(q); }
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitStoreCheck(q);
@@ -1415,6 +1603,12 @@ public class Operator {
         public static MethodOperand getMethod(Quad q) { return (MethodOperand)q.getOp2(); }
         public static RegisterOperand getParam(Quad q, int i) { return ((ParamListOperand)q.getOp3()).get(i); }
         public static ParamListOperand getParamList(Quad q) { return (ParamListOperand)q.getOp3(); }
+        public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) {
+            ParamListOperand plo = getParamList(q);
+            RegisterOperand[] a = new RegisterOperand[plo.length()];
+            for (int i=0; i<a.length; ++i) a[i] = plo.get(i);
+            return new UnmodifiableList.RegisterOperand(a);
+        }
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitInvoke(q);
@@ -1434,26 +1628,31 @@ public class Operator {
             public static final INVOKEVIRTUAL_I INSTANCE = new INVOKEVIRTUAL_I();
             private INVOKEVIRTUAL_I() { }
             public String toString() { return "INVOKEVIRTUAL_I"; }
+            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         }
         public static class INVOKEVIRTUAL_F extends Invoke {
             public static final INVOKEVIRTUAL_F INSTANCE = new INVOKEVIRTUAL_F();
             private INVOKEVIRTUAL_F() { }
             public String toString() { return "INVOKEVIRTUAL_F"; }
+            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         }
         public static class INVOKEVIRTUAL_L extends Invoke {
             public static final INVOKEVIRTUAL_L INSTANCE = new INVOKEVIRTUAL_L();
             private INVOKEVIRTUAL_L() { }
             public String toString() { return "INVOKEVIRTUAL_L"; }
+            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         }
         public static class INVOKEVIRTUAL_D extends Invoke {
             public static final INVOKEVIRTUAL_D INSTANCE = new INVOKEVIRTUAL_D();
             private INVOKEVIRTUAL_D() { }
             public String toString() { return "INVOKEVIRTUAL_D"; }
+            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         }
         public static class INVOKEVIRTUAL_A extends Invoke {
             public static final INVOKEVIRTUAL_A INSTANCE = new INVOKEVIRTUAL_A();
             private INVOKEVIRTUAL_A() { }
             public String toString() { return "INVOKEVIRTUAL_A"; }
+            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         }
         public static class INVOKESTATIC_V extends Invoke {
             public static final INVOKESTATIC_V INSTANCE = new INVOKESTATIC_V();
@@ -1464,26 +1663,31 @@ public class Operator {
             public static final INVOKESTATIC_I INSTANCE = new INVOKESTATIC_I();
             private INVOKESTATIC_I() { }
             public String toString() { return "INVOKESTATIC_I"; }
+            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         }
         public static class INVOKESTATIC_F extends Invoke {
             public static final INVOKESTATIC_F INSTANCE = new INVOKESTATIC_F();
             private INVOKESTATIC_F() { }
             public String toString() { return "INVOKESTATIC_F"; }
+            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         }
         public static class INVOKESTATIC_L extends Invoke {
             public static final INVOKESTATIC_L INSTANCE = new INVOKESTATIC_L();
             private INVOKESTATIC_L() { }
             public String toString() { return "INVOKESTATIC_L"; }
+            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         }
         public static class INVOKESTATIC_D extends Invoke {
             public static final INVOKESTATIC_D INSTANCE = new INVOKESTATIC_D();
             private INVOKESTATIC_D() { }
             public String toString() { return "INVOKESTATIC_D"; }
+            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         }
         public static class INVOKESTATIC_A extends Invoke {
             public static final INVOKESTATIC_A INSTANCE = new INVOKESTATIC_A();
             private INVOKESTATIC_A() { }
             public String toString() { return "INVOKESTATIC_A"; }
+            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         }
         public static class INVOKEVIRTUAL_V_DYNLINK extends Invoke {
             public static final INVOKEVIRTUAL_V_DYNLINK INSTANCE = new INVOKEVIRTUAL_V_DYNLINK();
@@ -1494,6 +1698,7 @@ public class Operator {
             public static final INVOKEVIRTUAL_I_DYNLINK INSTANCE = new INVOKEVIRTUAL_I_DYNLINK();
             private INVOKEVIRTUAL_I_DYNLINK() { }
             public String toString() { return "INVOKEVIRTUAL_I%"; }
+            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         }
         public static class INVOKEVIRTUAL_F_DYNLINK extends Invoke {
             public static final INVOKEVIRTUAL_F_DYNLINK INSTANCE = new INVOKEVIRTUAL_F_DYNLINK();
@@ -1504,16 +1709,19 @@ public class Operator {
             public static final INVOKEVIRTUAL_L_DYNLINK INSTANCE = new INVOKEVIRTUAL_L_DYNLINK();
             private INVOKEVIRTUAL_L_DYNLINK() { }
             public String toString() { return "INVOKEVIRTUAL_L%"; }
+            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         }
         public static class INVOKEVIRTUAL_D_DYNLINK extends Invoke {
             public static final INVOKEVIRTUAL_D_DYNLINK INSTANCE = new INVOKEVIRTUAL_D_DYNLINK();
             private INVOKEVIRTUAL_D_DYNLINK() { }
             public String toString() { return "INVOKEVIRTUAL_D%"; }
+            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         }
         public static class INVOKEVIRTUAL_A_DYNLINK extends Invoke {
             public static final INVOKEVIRTUAL_A_DYNLINK INSTANCE = new INVOKEVIRTUAL_A_DYNLINK();
             private INVOKEVIRTUAL_A_DYNLINK() { }
             public String toString() { return "INVOKEVIRTUAL_A%"; }
+            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         }
         public static class INVOKESTATIC_V_DYNLINK extends Invoke {
             public static final INVOKESTATIC_V_DYNLINK INSTANCE = new INVOKESTATIC_V_DYNLINK();
@@ -1524,26 +1732,31 @@ public class Operator {
             public static final INVOKESTATIC_I_DYNLINK INSTANCE = new INVOKESTATIC_I_DYNLINK();
             private INVOKESTATIC_I_DYNLINK() { }
             public String toString() { return "INVOKESTATIC_I%"; }
+            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         }
         public static class INVOKESTATIC_F_DYNLINK extends Invoke {
             public static final INVOKESTATIC_F_DYNLINK INSTANCE = new INVOKESTATIC_F_DYNLINK();
             private INVOKESTATIC_F_DYNLINK() { }
             public String toString() { return "INVOKESTATIC_F%"; }
+            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         }
         public static class INVOKESTATIC_L_DYNLINK extends Invoke {
             public static final INVOKESTATIC_L_DYNLINK INSTANCE = new INVOKESTATIC_L_DYNLINK();
             private INVOKESTATIC_L_DYNLINK() { }
             public String toString() { return "INVOKESTATIC_L%"; }
+            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         }
         public static class INVOKESTATIC_D_DYNLINK extends Invoke {
             public static final INVOKESTATIC_D_DYNLINK INSTANCE = new INVOKESTATIC_D_DYNLINK();
             private INVOKESTATIC_D_DYNLINK() { }
             public String toString() { return "INVOKESTATIC_D%"; }
+            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         }
         public static class INVOKESTATIC_A_DYNLINK extends Invoke {
             public static final INVOKESTATIC_A_DYNLINK INSTANCE = new INVOKESTATIC_A_DYNLINK();
             private INVOKESTATIC_A_DYNLINK() { }
             public String toString() { return "INVOKESTATIC_A%"; }
+            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         }
         public static class INVOKESPECIAL_V_DYNLINK extends Invoke {
             public static final INVOKESPECIAL_V_DYNLINK INSTANCE = new INVOKESPECIAL_V_DYNLINK();
@@ -1554,26 +1767,31 @@ public class Operator {
             public static final INVOKESPECIAL_I_DYNLINK INSTANCE = new INVOKESPECIAL_I_DYNLINK();
             private INVOKESPECIAL_I_DYNLINK() { }
             public String toString() { return "INVOKESPECIAL_I%"; }
+            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         }
         public static class INVOKESPECIAL_F_DYNLINK extends Invoke {
             public static final INVOKESPECIAL_F_DYNLINK INSTANCE = new INVOKESPECIAL_F_DYNLINK();
             private INVOKESPECIAL_F_DYNLINK() { }
             public String toString() { return "INVOKESPECIAL_F%"; }
+            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         }
         public static class INVOKESPECIAL_L_DYNLINK extends Invoke {
             public static final INVOKESPECIAL_L_DYNLINK INSTANCE = new INVOKESPECIAL_L_DYNLINK();
             private INVOKESPECIAL_L_DYNLINK() { }
             public String toString() { return "INVOKESPECIAL_L%"; }
+            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         }
         public static class INVOKESPECIAL_D_DYNLINK extends Invoke {
             public static final INVOKESPECIAL_D_DYNLINK INSTANCE = new INVOKESPECIAL_D_DYNLINK();
             private INVOKESPECIAL_D_DYNLINK() { }
             public String toString() { return "INVOKESPECIAL_D%"; }
+            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         }
         public static class INVOKESPECIAL_A_DYNLINK extends Invoke {
             public static final INVOKESPECIAL_A_DYNLINK INSTANCE = new INVOKESPECIAL_A_DYNLINK();
             private INVOKESPECIAL_A_DYNLINK() { }
             public String toString() { return "INVOKESPECIAL_A%"; }
+            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         }
         public static class INVOKEINTERFACE_V extends Invoke {
             public static final INVOKEINTERFACE_V INSTANCE = new INVOKEINTERFACE_V();
@@ -1584,26 +1802,31 @@ public class Operator {
             public static final INVOKEINTERFACE_I INSTANCE = new INVOKEINTERFACE_I();
             private INVOKEINTERFACE_I() { }
             public String toString() { return "INVOKEINTERFACE_I"; }
+            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         }
         public static class INVOKEINTERFACE_F extends Invoke {
             public static final INVOKEINTERFACE_F INSTANCE = new INVOKEINTERFACE_F();
             private INVOKEINTERFACE_F() { }
             public String toString() { return "INVOKEINTERFACE_F"; }
+            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         }
         public static class INVOKEINTERFACE_L extends Invoke {
             public static final INVOKEINTERFACE_L INSTANCE = new INVOKEINTERFACE_L();
             private INVOKEINTERFACE_L() { }
             public String toString() { return "INVOKEINTERFACE_L"; }
+            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         }
         public static class INVOKEINTERFACE_D extends Invoke {
             public static final INVOKEINTERFACE_D INSTANCE = new INVOKEINTERFACE_D();
             private INVOKEINTERFACE_D() { }
             public String toString() { return "INVOKEINTERFACE_D"; }
+            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         }
         public static class INVOKEINTERFACE_A extends Invoke {
             public static final INVOKEINTERFACE_A INSTANCE = new INVOKEINTERFACE_A();
             private INVOKEINTERFACE_A() { }
             public String toString() { return "INVOKEINTERFACE_A"; }
+            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         }
     }
     
@@ -1613,6 +1836,7 @@ public class Operator {
         }
         public static RegisterOperand getDest(Quad q) { return (RegisterOperand)q.getOp1(); }
         public static TypeOperand getType(Quad q) { return (TypeOperand)q.getOp2(); }
+        public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitNew(q);
@@ -1634,6 +1858,8 @@ public class Operator {
         public static RegisterOperand getDest(Quad q) { return (RegisterOperand)q.getOp1(); }
         public static Operand getSize(Quad q) { return q.getOp2(); }
         public static TypeOperand getType(Quad q) { return (TypeOperand)q.getOp3(); }
+        public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
+        public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg2(q); }
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitNewArray(q);
@@ -1659,6 +1885,8 @@ public class Operator {
         public static RegisterOperand getDest(Quad q) { return (RegisterOperand)q.getOp1(); }
         public static Operand getSrc(Quad q) { return q.getOp2(); }
         public static TypeOperand getType(Quad q) { return (TypeOperand)q.getOp3(); }
+        public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
+        public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg2(q); }
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitCheckCast(q);
@@ -1685,6 +1913,8 @@ public class Operator {
         public static RegisterOperand getDest(Quad q) { return (RegisterOperand)q.getOp1(); }
         public static Operand getSrc(Quad q) { return q.getOp2(); }
         public static TypeOperand getType(Quad q) { return (TypeOperand)q.getOp3(); }
+        public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
+        public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg2(q); }
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitInstanceOf(q);
@@ -1709,6 +1939,8 @@ public class Operator {
         }
         public static RegisterOperand getDest(Quad q) { return (RegisterOperand)q.getOp1(); }
         public static Operand getSrc(Quad q) { return q.getOp2(); }
+        public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
+        public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg2(q); }
 
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitALength(q);
@@ -1727,6 +1959,7 @@ public class Operator {
             return new Quad(operator, null, val);
         }
         public static Operand getSrc(Quad q) { return q.getOp2(); }
+        public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg1_check(q); }
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitMonitor(q);
@@ -1755,6 +1988,8 @@ public class Operator {
         }
         public static RegisterOperand getDest(Quad q) { return (RegisterOperand)q.getOp1(); }
         public static Operand getAddress(Quad q) { return q.getOp2(); }
+        public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
+        public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg2(q); }
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitMemLoad(q);
@@ -1785,6 +2020,7 @@ public class Operator {
         }
         public static Operand getAddress(Quad q) { return q.getOp1(); }
         public static Operand getValue(Quad q) { return q.getOp2(); }
+        public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg12(q); }
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitMemStore(q);
@@ -1840,26 +2076,32 @@ public class Operator {
             public static final GET_THREAD_BLOCK INSTANCE = new GET_THREAD_BLOCK();
             private GET_THREAD_BLOCK() { }
             public String toString() { return "GET_THREAD_BLOCK"; }
+            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         }
         public static class SET_THREAD_BLOCK extends Special {
             public static final SET_THREAD_BLOCK INSTANCE = new SET_THREAD_BLOCK();
             private SET_THREAD_BLOCK() { }
             public String toString() { return "SET_THREAD_BLOCK"; }
+            public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg1_check(q); }
         }
         public static class ALLOCA extends Special {
             public static final ALLOCA INSTANCE = new ALLOCA();
             private ALLOCA() { }
             public String toString() { return "ALLOCA"; }
+            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
+            public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg2(q); }
         }
         public static class LONG_JUMP extends Special {
             public static final LONG_JUMP INSTANCE = new LONG_JUMP();
             private LONG_JUMP() { }
             public String toString() { return "LONG_JUMP"; }
+            public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg1234(q); }
         }
         public static class DIE extends Special {
             public static final DIE INSTANCE = new DIE();
             private DIE() { }
             public String toString() { return "DIE"; }
+            public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg1_check(q); }
         }
     }
 }
