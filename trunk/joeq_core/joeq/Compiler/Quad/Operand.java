@@ -213,6 +213,7 @@ public interface Operand {
         IntValueTableOperand(int[] t) { table = t; }
         public void set(int i, int b) { table[i] = b; }
         public int get(int i) { return table[i]; }
+	public int size() { return table.length; }
         public String toString() {
             StringBuffer sb = new StringBuffer("{ ");
             if (table.length > 0) {
@@ -240,6 +241,7 @@ public interface Operand {
         BasicBlockTableOperand(BasicBlock[] t) { table = t; }
         public void set(int i, BasicBlock b) { table[i] = b; }
         public BasicBlock get(int i) { return table[i]; }
+	public int size() { return table.length; }
         public String toString() {
             StringBuffer sb = new StringBuffer("{ ");
             if (table.length > 0) {
