@@ -1,5 +1,5 @@
 /**
- * TraceMSGC
+ * Trace Mark & Sweep GC
  *
  * Created on Sep 23, 2002, 11:04:51 PM
  *

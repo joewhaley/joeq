@@ -1,5 +1,5 @@
 /**
- * SimpleRCGC
+ * Simple Reference Counting GC
  *
  * Created on Sep 25, 2002, 9:21:02 PM
  *
