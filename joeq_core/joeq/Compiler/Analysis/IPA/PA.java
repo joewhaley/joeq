@@ -1,4 +1,4 @@
-// PA.java, created Oct 16, 2003 3:39:34 PM by joewhaley
+    // PA.java, created Oct 16, 2003 3:39:34 PM by joewhaley
 // Copyright (C) 2003 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Analysis.IPA;
@@ -164,6 +164,7 @@ public class PA {
     boolean TRACE_NO_DEST = !System.getProperty("pa.tracenodest", "no").equals("no");
     boolean REFLECTION_STAT = !System.getProperty("pa.reflectionstat", "no").equals("no");
     public static boolean TRACE_REFLECTION = !System.getProperty("pa.tracereflection", "no").equals("no");
+    public static boolean TRACE_REFLECTION_DOMAINS = !System.getProperty("pa.tracereflectiondomains", "no").equals("no");
     boolean TRACE_FORNAME = !System.getProperty("pa.traceforname", "no").equals("no");
     int MAX_PARAMS = Integer.parseInt(System.getProperty("pa.maxparams", "4"));
     
@@ -227,8 +228,8 @@ public class PA {
     BDD fC;     // FxT2, field containing types         (no context)
 
     BDD hP;     // H1xFxH2, heap points-to              (+context)
-    BDD IE;     // IxM, invocation edges                (no context)
     BDD IEcs;   // V2cxIxV1cxM, context-sensitive invocation edges
+    BDD IE;     // IxM, invocation edges                (no context)
     BDD vPfilter; // V1xH1, type filter                 (no context)
     BDD hPfilter; // H1xFxH2, type filter               (no context)
     BDD NNfilter; // H1, non-null filter                (no context)
@@ -236,7 +237,7 @@ public class PA {
     
     BDD visited; // M, visited methods
     // maps to SSA form
-    BDD forNameMap; // IXH1, heap allocation sites for forClass.Name
+    BDD forNameMap; // IxH1, heap allocation sites for forClass.Name
     BuildBDDIR bddIRBuilder;
     BDD vReg; // Vxreg
     BDD iQuad; // Ixquad
@@ -2008,13 +2009,99 @@ public class PA {
     Map wellFormedClasses = new HashMap();
     BDD reflectiveCalls;
     
+    public String getBDDDomains(BDD r) {
+        if (r.isZero() || r.isOne()) return "[]";
+        
+        BDDFactory bdd = r.getFactory();
+        StringBuffer sb = new StringBuffer();
+        int[] set = new int[bdd.varNum()];
+        fdd_printset_rec(bdd, sb, r, set);
+        return sb.toString();
+    }
+    
+    private static void fdd_printset_rec(BDDFactory bdd, StringBuffer sb, BDD r, int[] set) {
+        int fdvarnum = bdd.numberOfDomains();
+        
+        int n, m, i;
+        boolean used = false;
+        int[] var;
+        boolean first;
+        
+        if (r.isZero())
+            return;
+        else if (r.isOne()) {
+            sb.append('<');
+            first = true;
+            
+            for (n=0 ; n<fdvarnum ; n++) {
+                used = false;
+                
+                BDDDomain domain_n = bdd.getDomain(n);
+                
+                int[] domain_n_ivar = domain_n.vars();
+                int domain_n_varnum = domain_n_ivar.length;
+                for (m=0 ; m<domain_n_varnum ; m++)
+                    if (set[domain_n_ivar[m]] != 0)
+                        used = true;
+                
+                if (used) {
+                    if (!first)
+                        sb.append(", ");
+                    first = false;
+                    sb.append(domain_n.getName());
+                                        
+                    var = domain_n_ivar;
+                    
+                    BigInteger pos = BigInteger.ZERO;
+                    int maxSkip = -1;
+                    boolean hasDontCare = false;
+                    for (i=0; i<domain_n_varnum; ++i) {
+                        int val = set[var[i]];
+                        if (val == 0) {
+                            hasDontCare = true;
+                            if (maxSkip == i-1)
+                                maxSkip = i;
+                        }
+                    }
+                    for (i=domain_n_varnum-1; i>=0; --i) {
+                        pos = pos.shiftLeft(1);
+                        int val = set[var[i]];
+                        if (val == 2) {
+                            pos = pos.setBit(0);
+                        }
+                    }
+                    /*if (!hasDontCare) {
+                        sb.append(ts.elementName(n, pos));
+                    } else {
+                    }*/
+                }
+            }
+            
+            sb.append('>');
+        } else {
+            set[r.var()] = 1;
+            BDD lo = r.low();
+            fdd_printset_rec(bdd, sb, lo, set);
+            lo.free();
+            
+            set[r.var()] = 2;
+            BDD hi = r.high();
+            fdd_printset_rec(bdd, sb, hi, set);
+            hi.free();
+            
+            set[r.var()] = 0;
+        }
+    }
+    
+    
     /** Updates IE/IEcs with new edges obtained from resolving reflective invocations */
     public boolean bindReflection(){
         BDD t1 = actual.restrict(Z.ithVar(0));          // IxV2
         if (USE_VCONTEXT) t1.andWith(V2cdomain.id());   // IxV2cxV2
-        t1.replaceWith(V2toV1);
+        BDD t2 = t1.replaceWith(V2toV1);                // IxV1cxV1
         BDD t11 = IE.restrict(M.ithVar(Mmap.get(javaLangClass_newInstance)));   // I
         if(t11.isZero()){
+            // no calls to newInstance()
             t11.free();
             
             return false;
@@ -2022,41 +2109,46 @@ public class PA {
         if(REFLECTION_STAT){
             System.out.println("There are " + (int)t11.satCount(Iset) + " calls to Class.newInstance");
         }
-        BDD t3  = t1.relprod(t11, bdd.zero());
+        BDD t3  = t2.relprod(t11, bdd.zero());          // IxV1
         t11.free();
         t1.free();
-        BDD t31 = t3.replace(ItoI2);
+        BDD t31 = t3.replace(ItoI2);                    // I2xV1
         if(TRACE_REFLECTION && TRACE) out.println("t31: " + t31.toStringWithDomains(TS));
                 
         BDD t4;
         if (CS_CALLGRAPH) {
             // We keep track of where a call goes under different contexts.
-            t4 = t31.relprod(vP, V1.set());              // IxV1cxV1xN x V1cxV1xH1cxH1 = V1cxIxH1cxH1xN
+            t4 = t31.relprod(vP, V1.set());              
         } else {
             // By quantifying out V1c, we merge all contexts.
-            t4 = t31.relprod(vP, V1set);                  // IxV1cxV1xN x V1cxV1xH1cxH1 = IxH1cxH1
+            t4 = t31.relprod(vP, V1set);                  // I2xV1 x V1cxV1xH1 = V1cxI2xH1
         }
         //t4.exist(Iset); 
         if(TRACE_REFLECTION && TRACE) out.println("t4: " + t4.toStringWithDomains(TS) + " of size " + t4.satCount(Iset));
-        BDD t41 = t4.relprod(forNameMap, Nset);          // H1cxH1xN x H1xI = IxH1cxH1
+        BDD t41 = t4.relprod(forNameMap, Nset);          // V1cxI2xH1 x H1xI = IxH1cxH1
         t4.free();
         if(TRACE_REFLECTION && TRACE) out.println("t41: " + t41.toStringWithDomains(TS) + " of size " + t41.satCount(Iset));
         
-        BDD t6 = t41.relprod(actual, Iset.and(H1set));
+        BDD t6 = t41.relprod(actual, Iset.and(H1set));  // V2xI2xZ
+        if(TRACE_REFLECTION_DOMAINS) out.println("t6: " + getBDDDomains(t6));
         t41.free();
-        BDD t7 = t6.restrict(Z.ithVar(1));
+        BDD t7 = t6.restrict(Z.ithVar(1));              // V2xI2
+        if(TRACE_REFLECTION_DOMAINS) out.println("t7: " + getBDDDomains(t7));
         t6.free();
         if(TRACE_REFLECTION && TRACE) out.println("t7: " + t7.toStringWithDomains(TS) + " of size " + t7.satCount(Iset));
         
-        BDD t8 = t7.replace(V2toV1);
+        BDD t8 = t7.replace(V2toV1);                    // V1xI2
+        if(TRACE_REFLECTION_DOMAINS) out.println("t8: " + getBDDDomains(t8));
         t7.free();
-        BDD t9 = t8.relprod(vP, V1set);
+        BDD t9 = t8.relprod(vP, V1set);                 // V1xI2 x V1xH1 = I2xH1
         t8.free();
         
         if(TRACE_REFLECTION && TRACE) out.println("t9: " + t9.toStringWithDomains(TS) + " of size " + t9.satCount(Iset));
+        if(TRACE_REFLECTION_DOMAINS) out.println("t9: " + getBDDDomains(t9));
         BDD constructorIE = bdd.zero(); 
         for(Iterator iter = t9.iterator(H1set.and(I2set)); iter.hasNext();){
             BDD h = (BDD) iter.next();
+            if(TRACE_REFLECTION_DOMAINS) out.println("h: " + getBDDDomains(h));
             int h_i = h.scanVar(H1).intValue();
             Object node = Hmap.get(h_i);
             if(!(node instanceof ConcreteTypeNode)) {
@@ -2308,82 +2400,8 @@ public class PA {
         I.free();
         
         return change;        
-    }
-    
-    void initializeForNameMapEntries(){
-        System.err.println(forNameMap.toStringWithDomains(TS));
-        
-        for(Iterator iter = forNameMap.iterator(H1set.and(Iset)); iter.hasNext();){
-            BDD h = (BDD) iter.next();
-            int h_i = h.scanVar(H1).intValue();
-            Object node = Hmap.get(h_i);
-            if(!(node instanceof ConcreteTypeNode)) {
-                //System.err.println("Can't cast " + node + " to ConcreteTypeNode for " + h.toStringWithDomains(TS));
-                continue;
-            }            
-            MethodSummary.ConcreteTypeNode n = (ConcreteTypeNode) node;
-            String stringConst = (String) MethodSummary.stringNodes2Values.get(n);
-            if(stringConst == null){
-                if(missingConst.get(stringConst) == null){
-                    if(TRACE_REFLECTION) System.err.println("No constant string for " + n + " at " + h.toStringWithDomains(TS));                                    
-                    missingConst.put(stringConst, new Integer(0));
-                }                
-                continue;
-            }
-            
-            jq_Class c = null;
-            try {
-                if(!isWellFormed(stringConst)) {
-                    if(wellFormedClasses.get(stringConst) == null){
-                        if(TRACE_REFLECTION) out.println(stringConst + " is not well-formed.");
-                            wellFormedClasses.put(stringConst, new Integer(0));
-                        }                
-
-                    continue;
-                }
-                jq_Type clazz = jq_Type.parseType(stringConst);
-                if( clazz instanceof jq_Class && clazz != null){
-                    c = (jq_Class) clazz;
-            
-                    if(TRACE_REFLECTION) out.println("Calling class by name: " + stringConst);
-                    c.load();
-                    c.prepare();
-                    Assert._assert(c != null);
-                }else{
-                    if(cantCastTypes.get(clazz) == null){
-                        if(TRACE_REFLECTION) System.err.println("Can't cast " + clazz + " to jq_Class at " + h.toStringWithDomains(TS) + " -- stringConst: " + stringConst);
-                        cantCastTypes.put(clazz, new Integer(0));
-                    }
-                    continue;
-                }
-            } catch(NoClassDefFoundError e) {
-                if(missingClasses.get(stringConst) == null){
-                    if(TRACE_REFLECTION) System.err.println("Resolving reflection: unable to load " + stringConst + 
-                        " at " + h.toStringWithDomains(TS));
-                    missingClasses.put(stringConst, new Integer(0));
-                }
-                continue;
-            } catch(java.lang.ClassCircularityError e) {
-                if(circularClasses.get(stringConst) == null){
-                    if(TRACE_REFLECTION) System.err.println("Resolving reflection: circularity error " + stringConst + 
-                        " at " + h.toStringWithDomains(TS));
-                    circularClasses.put(stringConst, new Integer(0));
-                }                
-                continue;
-            }
-            Assert._assert(c != null);            
-            
-            jq_Method constructor = (jq_Method) c.getDeclaredMember(
-                new jq_NameAndDesc(
-                    Utf8.get("<clinit>"), 
-                    Utf8.get("()V")));
-            
-            if(constructor != null){
-                
-            }
-        }
-    }
-    
+    }    
+      
     private boolean isWellFormed(String stringConst) {
         if(stringConst.equals(".")) {
             return false;   
