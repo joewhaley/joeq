@@ -3,6 +3,7 @@
 	<name>joeqtest</name>
 	<comment></comment>
 	<projects>
+		<project>JavaBDD</project>
 		<project>joeq</project>
 	</projects>
 	<buildSpec>
