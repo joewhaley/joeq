@@ -629,7 +629,7 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
         write_uchar(out, (byte)0);  // e_numaux
     }
     
-    public void addSystemInterfaceRelocs(List extref, List heap2code) {
+    public void addSystemInterfaceRelocs_COFF(List extref, List heap2code) {
         jq_StaticField[] fs = SystemInterface._class.getDeclaredStaticFields();
         int total = 1+NUM_OF_EXTERNAL_SYMS;
         for (int i=0; i<fs.length; ++i) {
@@ -650,6 +650,26 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
         //return total-3;
     }
 
+    public void addSystemInterfaceRelocs_ELF(List extref, List heap2code) {
+        jq_StaticField[] fs = SystemInterface._class.getDeclaredStaticFields();
+        int total = 1+NUM_OF_EXTERNAL_SYMS;
+        for (int i=0; i<fs.length; ++i) {
+            jq_StaticField f = fs[i];
+            if (f.isFinal()) continue;
+            if (f.getType() != jq_Primitive.INT) continue;
+            {
+                String name = f.getName().toString();
+                int ind = name.lastIndexOf('_');
+                name = name.substring(0, ind);
+                System.out.println("External ref="+f+", symndx="+(total+1)+" address="+jq.hex8(f.getAddress()));
+                ExternalReference r = new ExternalReference(f.getAddress(), name);
+                r.setSymbolIndex(++total);
+                extref.add(r);
+                heap2code.add(r);
+            }
+        }
+    }
+    
     public int addVTableRelocs(List list) {
         int total = 0;
         Iterator i = jq.boot_types.iterator();
@@ -690,7 +710,7 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
         final int datastart = 20+40+40+textsize+(10*ntextreloc);
         final int datasize = heapCurrent;
         final int numOfVTableRelocs = addVTableRelocs(data_relocs);
-        addSystemInterfaceRelocs(exts, data_relocs);
+        addSystemInterfaceRelocs_COFF(exts, data_relocs);
         int ndatareloc = data_relocs.size();
         if (ndatareloc > 65535) ++ndatareloc;
         final int symtabstart = datastart+datasize+(10*ndatareloc)+(10*nlinenum);
@@ -1112,7 +1132,7 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
         final List text_relocs = bca.getAllDataRelocs();
         final List exts = new LinkedList();
         final int numOfVTableRelocs = addVTableRelocs(data_relocs);
-        addSystemInterfaceRelocs(exts, data_relocs);
+        addSystemInterfaceRelocs_ELF(exts, data_relocs);
 
         symtab.addSymbol(new SymbolTableEntry("", 0, 0, SymbolTableEntry.STB_LOCAL, SymbolTableEntry.STT_NOTYPE, empty));
         
@@ -1128,19 +1148,19 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
         
 	{
 	    jq_CompiledCode cc = rootm.getDefaultCompiledVersion();
-	    SymbolTableEntry e = new SymbolTableEntry("_entry@0", cc.getEntrypoint(), cc.getLength(), STB_GLOBAL, STT_FUNC, text);
+	    SymbolTableEntry e = new SymbolTableEntry("entry", cc.getEntrypoint(), cc.getLength(), STB_GLOBAL, STT_FUNC, text);
 	    symtab.addSymbol(e);
 
 	    cc = ExceptionDeliverer._trap_handler.getDefaultCompiledVersion();
-	    e = new SymbolTableEntry("_trap_handler@8", cc.getEntrypoint(), cc.getLength(), STB_GLOBAL, STT_FUNC, text);
+	    e = new SymbolTableEntry("trap_handler", cc.getEntrypoint(), cc.getLength(), STB_GLOBAL, STT_FUNC, text);
 	    symtab.addSymbol(e);
 
 	    cc = jq_NativeThread._threadSwitch.getDefaultCompiledVersion();
-	    e = new SymbolTableEntry("_threadSwitch@4", cc.getEntrypoint(), cc.getLength(), STB_GLOBAL, STT_FUNC, text);
+	    e = new SymbolTableEntry("threadSwitch", cc.getEntrypoint(), cc.getLength(), STB_GLOBAL, STT_FUNC, text);
 	    symtab.addSymbol(e);
 
 	    cc = jq_NativeThread._ctrl_break_handler.getDefaultCompiledVersion();
-	    e = new SymbolTableEntry("_ctrl_break_handler@0", cc.getEntrypoint(), cc.getLength(), STB_GLOBAL, STT_FUNC, text);
+	    e = new SymbolTableEntry("ctrl_break_handler", cc.getEntrypoint(), cc.getLength(), STB_GLOBAL, STT_FUNC, text);
 	    symtab.addSymbol(e);
 	}
 
