@@ -34,8 +34,11 @@ public class StackWalker implements Iterator {
     }
     
     public boolean hasNext() {
-        if (TRACE) SystemInterface.debugmsg("StackWalker hasnext: next ip="+jq.hex8(Unsafe.peek(fp+4))+" "+CodeAllocator.getCodeContaining(Unsafe.peek(fp+4)));
-        return Unsafe.peek(fp+4) >= CodeAllocator.getStartAddress();
+        int/*CodeAddress*/ addr = Unsafe.peek(fp+4);
+        if (TRACE) SystemInterface.debugmsg("StackWalker hasnext: next ip="+jq.hex8(addr)+" "+CodeAllocator.getCodeContaining(addr));
+        if (TRACE) SystemInterface.debugmsg("Min code addr="+jq.hex8(CodeAllocator.getLowAddress())+" max code addr="+jq.hex8(CodeAllocator.getHighAddress()));
+        return (addr >= CodeAllocator.getLowAddress()) &&
+               (addr < CodeAllocator.getHighAddress());
     }
     
     public Object next() throws NoSuchElementException {
