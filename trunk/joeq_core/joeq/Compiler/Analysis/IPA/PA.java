@@ -2891,10 +2891,6 @@ public class PA {
                         if (ocg != null) {
                             ocg.addEdge(c, n, type);
                         }
-                        if (type instanceof jq_Class) {
-                            addClassInitializer((jq_Class) type);
-                            addFinalizer((jq_Class) type);
-                        }
                     }
                 }
                 fields.addAll(n.getAccessPathEdgeFields());
