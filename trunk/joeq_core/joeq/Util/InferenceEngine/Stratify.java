@@ -360,10 +360,12 @@ public class Stratify {
         outputs.addAll(solver.relationsToDumpNegated);
         outputs.addAll(solver.relationsToDumpNegatedTuples);
         outputs.addAll(solver.relationsToPrintSize);
+        Iterator i = solver.dotGraphsToDump.iterator();
+        //outputs.addAll(((Dot)i.next()).getUsedRelations());
         
         stratify(solver.rules, inputs, outputs);
         
-        Iterator i = firstSCCs.iterator();
+        i = firstSCCs.iterator();
         for (int a = 1; i.hasNext(); ++a) {
             SCComponent first = (SCComponent) i.next();
             if (solver.NOISY) out.println("Solving stratum #"+a+"...");

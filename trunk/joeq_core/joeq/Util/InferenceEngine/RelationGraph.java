@@ -40,9 +40,12 @@ public class RelationGraph implements Graph {
     RelationGraph(Relation roots, Relation edges) {
         Assert._assert(roots.fieldDomains.size() == 1);
         Assert._assert(edges.fieldDomains.size() == 2);
-        this.rootVariable = new Variable("_", (FieldDomain) roots.fieldDomains.get(0));
+        FieldDomain fd = (FieldDomain) roots.fieldDomains.get(0);
+        this.rootVariable = new Variable(fd.toString(), fd);
         List varList = Collections.singletonList(rootVariable);
         this.root = new RuleTerm(varList, roots);
+        Assert._assert(edges.fieldDomains.get(0) == fd);
+        Assert._assert(edges.fieldDomains.get(1) == fd);
         List varList2 = new Pair(rootVariable, rootVariable);
         RuleTerm edge = new RuleTerm(varList2, edges);
         this.edges = Collections.singletonList(edge);
