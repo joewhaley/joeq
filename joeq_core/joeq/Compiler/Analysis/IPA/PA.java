@@ -95,6 +95,7 @@ public class PA {
     boolean IGNORE_EXCEPTIONS = !System.getProperty("pa.ignoreexceptions", "no").equals("no");
     boolean FILTER_VP = !System.getProperty("pa.vpfilter", "yes").equals("no");
     boolean FILTER_HP = !System.getProperty("pa.hpfilter", "no").equals("no");
+    boolean THREAD_SENSITIVE = !System.getProperty("pa.ts", "no").equals("no");
     boolean OBJECT_SENSITIVE = !System.getProperty("pa.os", "no").equals("no");
     boolean CONTEXT_SENSITIVE = !System.getProperty("pa.cs", "no").equals("no");
     boolean DISCOVER_CALL_GRAPH = !System.getProperty("pa.discover", "no").equals("no");
@@ -227,7 +228,7 @@ public class PA {
         }
         T2toT1 = bdd.makePair(T2, T1);
         T1toT2 = bdd.makePair(T1, T2);
-        if (CONTEXT_SENSITIVE || OBJECT_SENSITIVE) {
+        if (CONTEXT_SENSITIVE || OBJECT_SENSITIVE || THREAD_SENSITIVE) {
             V1toV2 = bdd.makePair();
             V1toV2.set(new BDDDomain[] {V1,V1c},
                        new BDDDomain[] {V2,V2c});
@@ -277,7 +278,7 @@ public class PA {
         V1cV2cset = V1c.set(); V1cV2cset.andWith(V2c.set());
         V1cH1cset = V1c.set(); V1cH1cset.andWith(H1c.set());
         H1cH2cset = H1c.set(); H1cH2cset.andWith(H2c.set());
-        if (CONTEXT_SENSITIVE || OBJECT_SENSITIVE) {
+        if (CONTEXT_SENSITIVE || OBJECT_SENSITIVE || THREAD_SENSITIVE) {
             V1set.andWith(V1c.set());
             V2set.andWith(V2c.set());
             H1set.andWith(H1c.set());
@@ -465,24 +466,24 @@ public class PA {
     }
     
     void addToVP(Node p, int H_i) {
-        BDD context = CONTEXT_SENSITIVE||OBJECT_SENSITIVE?bdd.one():null;
+        BDD context = CONTEXT_SENSITIVE||OBJECT_SENSITIVE||THREAD_SENSITIVE?bdd.one():null;
         addToVP(context, p, H_i);
-        if (CONTEXT_SENSITIVE||OBJECT_SENSITIVE) context.free();
+        if (CONTEXT_SENSITIVE||OBJECT_SENSITIVE||THREAD_SENSITIVE) context.free();
     }
     
     void addToVP(BDD V1H1context, Node p, int H_i) {
         int V1_i = Vmap.get(p);
         BDD bdd1 = V1.ithVar(V1_i);
         bdd1.andWith(H1.ithVar(H_i));
-        if (CONTEXT_SENSITIVE || OBJECT_SENSITIVE) bdd1.andWith(V1H1context.id());
+        if (CONTEXT_SENSITIVE || OBJECT_SENSITIVE || THREAD_SENSITIVE) bdd1.andWith(V1H1context.id());
         if (TRACE_RELATIONS) out.println("Adding to vP: "+bdd1.toStringWithDomains());
         vP.orWith(bdd1);
     }
     
     void addToVP(BDD V_bdd, Node h) {
-        BDD context = CONTEXT_SENSITIVE||OBJECT_SENSITIVE?bdd.one():null;
+        BDD context = CONTEXT_SENSITIVE||OBJECT_SENSITIVE||THREAD_SENSITIVE?bdd.one():null;
         addToVP(context, V_bdd, h);
-        if (CONTEXT_SENSITIVE||OBJECT_SENSITIVE) context.free();
+        if (CONTEXT_SENSITIVE||OBJECT_SENSITIVE||THREAD_SENSITIVE) context.free();
     }
     
     void addToVP(BDD V1H1context, BDD V_bdd, Node h) {
@@ -495,9 +496,9 @@ public class PA {
     }
     
     void addToA(int V1_i, int V2_i) {
-        BDD context = CONTEXT_SENSITIVE||OBJECT_SENSITIVE?bdd.one():null;
+        BDD context = CONTEXT_SENSITIVE||OBJECT_SENSITIVE||THREAD_SENSITIVE?bdd.one():null;
         addToA(context, V1_i, V2_i);
-        if (CONTEXT_SENSITIVE || OBJECT_SENSITIVE) context.free();
+        if (CONTEXT_SENSITIVE || OBJECT_SENSITIVE || THREAD_SENSITIVE) context.free();
     }
     
     void addToA(BDD V1V2context, int V1_i, int V2_i) {
@@ -507,23 +508,23 @@ public class PA {
     }
     
     void addToA(BDD V_bdd, int V2_i) {
-        BDD context = CONTEXT_SENSITIVE||OBJECT_SENSITIVE?bdd.one():null;
+        BDD context = CONTEXT_SENSITIVE||OBJECT_SENSITIVE||THREAD_SENSITIVE?bdd.one():null;
         addToA(context, V_bdd, V2_i);
-        if (CONTEXT_SENSITIVE || OBJECT_SENSITIVE) context.free();
+        if (CONTEXT_SENSITIVE || OBJECT_SENSITIVE || THREAD_SENSITIVE) context.free();
     }
     
     void addToA(BDD V1V2context, BDD V_bdd, int V2_i) {
         BDD bdd1 = V2.ithVar(V2_i);
         bdd1.andWith(V_bdd.id());
-        if (CONTEXT_SENSITIVE || OBJECT_SENSITIVE) bdd1.andWith(V1V2context.id());
+        if (CONTEXT_SENSITIVE || OBJECT_SENSITIVE || THREAD_SENSITIVE) bdd1.andWith(V1V2context.id());
         if (TRACE_RELATIONS) out.println("Adding to A: "+bdd1.toStringWithDomains());
         A.orWith(bdd1);
     }
     
     void addToS(BDD V_bdd, jq_Field f, Collection c) {
-        BDD context = CONTEXT_SENSITIVE||OBJECT_SENSITIVE?bdd.one():null;
+        BDD context = CONTEXT_SENSITIVE||OBJECT_SENSITIVE||THREAD_SENSITIVE?bdd.one():null;
         addToS(context, V_bdd, f, c);
-        if (CONTEXT_SENSITIVE || OBJECT_SENSITIVE) context.free();
+        if (CONTEXT_SENSITIVE || OBJECT_SENSITIVE || THREAD_SENSITIVE) context.free();
     }
     
     void addToS(BDD V1V2context, BDD V_bdd, jq_Field f, Collection c) {
@@ -538,7 +539,7 @@ public class PA {
             BDD bdd1 = V2.ithVar(V2_i);
             bdd1.andWith(F_bdd.id());
             bdd1.andWith(V_bdd.id());
-            if (CONTEXT_SENSITIVE || OBJECT_SENSITIVE) bdd1.andWith(V1V2context.id());
+            if (CONTEXT_SENSITIVE || OBJECT_SENSITIVE || THREAD_SENSITIVE) bdd1.andWith(V1V2context.id());
             if (TRACE_RELATIONS) out.println("Adding to S: "+bdd1.toStringWithDomains());
             S.orWith(bdd1);
         }
@@ -554,7 +555,7 @@ public class PA {
             BDD bdd1 = V2.ithVar(V2_i);
             bdd1.andWith(F_bdd.id());
             bdd1.andWith(V_bdd.id());
-            if (CONTEXT_SENSITIVE || OBJECT_SENSITIVE) bdd1.andWith(V1V2context.id());
+            if (CONTEXT_SENSITIVE || OBJECT_SENSITIVE || THREAD_SENSITIVE) bdd1.andWith(V1V2context.id());
             if (TRACE_RELATIONS) out.println("Adding to L: "+bdd1.toStringWithDomains());
             L.orWith(bdd1);
         }
@@ -569,7 +570,7 @@ public class PA {
     }
     
     BDD getVC(ProgramLocation mc, jq_Method callee) {
-        if (CONTEXT_SENSITIVE) {
+        if (CONTEXT_SENSITIVE || THREAD_SENSITIVE) {
             Pair p = new Pair(LoadedCallGraph.mapCall(mc), callee);
             Range r_edge = vCnumbering.getEdge(p);
             Range r_caller = vCnumbering.getRange(mc.getMethod());
@@ -689,7 +690,7 @@ public class PA {
     Map rangeMap;
     
     public BDD getV1V2Context(jq_Method m) {
-        if (CONTEXT_SENSITIVE) {
+        if (CONTEXT_SENSITIVE || THREAD_SENSITIVE) {
             Range r = vCnumbering.getRange(m);
             int bits = BigInteger.valueOf(r.high.longValue()).bitLength();
             BDD V1V2context = V1c.buildAdd(V2c, bits, 0L);
@@ -1223,7 +1224,7 @@ public class PA {
         IE.orWith(t6.id());
         if (TRACE_SOLVER) out.println("Call graph edges after: "+IE.satCount(IMset));
         
-        if (CONTEXT_SENSITIVE) {
+        if (CONTEXT_SENSITIVE || THREAD_SENSITIVE) {
             // Add the context for the new call graph edges.
             t6.andWith(IEfilter.id());
             IEcs.orWith(t6.id());
@@ -1447,7 +1448,7 @@ public class PA {
                 System.out.print("Object paths="+paths+" ("+VC_BITS+" bits), ");
             }
         }
-        if (CONTEXT_SENSITIVE && MAX_HC_BITS > 1) {
+        if (CONTEXT_SENSITIVE && MAX_HC_BITS > 1 || THREAD_SENSITIVE) {
             hCnumbering = countHeapNumbering(cg, updateBits);
         }
         time = System.currentTimeMillis() - time;
@@ -1614,10 +1615,11 @@ public class PA {
         if (dis.CONTEXT_SENSITIVE || !dis.DISCOVER_CALL_GRAPH) {
             dis.cg = loadCallGraph(rootMethods);
             if (dis.cg == null) {
-                if (dis.CONTEXT_SENSITIVE || dis.OBJECT_SENSITIVE) {
+                if (dis.CONTEXT_SENSITIVE || dis.OBJECT_SENSITIVE || dis.THREAD_SENSITIVE) {
                     System.out.println("Discovering call graph first...");
                     dis.CONTEXT_SENSITIVE = false;
                     dis.OBJECT_SENSITIVE = false;
+                    dis.THREAD_SENSITIVE = false;
                     dis.DISCOVER_CALL_GRAPH = true;
                     dis.run("java", dis.cg, rootMethods);
                     System.out.println("Finished discovering call graph.");
@@ -1850,22 +1852,22 @@ public class PA {
         
         // Set types for loaded BDDs.
         if (pa.A instanceof TypedBDD)
-            if (pa.CONTEXT_SENSITIVE || pa.OBJECT_SENSITIVE)
+            if (pa.CONTEXT_SENSITIVE || pa.OBJECT_SENSITIVE || pa.THREAD_SENSITIVE)
                 ((TypedBDD) pa.A).setDomains(pa.V1, pa.V1c, pa.V2, pa.V2c);
             else
                 ((TypedBDD) pa.A).setDomains(pa.V1, pa.V2);
         if (pa.vP instanceof TypedBDD)
-            if (pa.CONTEXT_SENSITIVE || pa.OBJECT_SENSITIVE)
+            if (pa.CONTEXT_SENSITIVE || pa.OBJECT_SENSITIVE || pa.THREAD_SENSITIVE)
                 ((TypedBDD) pa.vP).setDomains(pa.V1, pa.V1c, pa.H1, pa.H1c);
             else
                 ((TypedBDD) pa.vP).setDomains(pa.V1, pa.H1);
         if (pa.S instanceof TypedBDD)
-            if (pa.CONTEXT_SENSITIVE || pa.OBJECT_SENSITIVE)
+            if (pa.CONTEXT_SENSITIVE || pa.OBJECT_SENSITIVE || pa.THREAD_SENSITIVE)
                 ((TypedBDD) pa.S).setDomains(pa.V1, pa.V1c, pa.F, pa.V2, pa.V2c);
             else
                 ((TypedBDD) pa.S).setDomains(pa.V1, pa.F, pa.V2);
         if (pa.L instanceof TypedBDD)
-            if (pa.CONTEXT_SENSITIVE || pa.OBJECT_SENSITIVE)
+            if (pa.CONTEXT_SENSITIVE || pa.OBJECT_SENSITIVE || pa.THREAD_SENSITIVE)
                 ((TypedBDD) pa.L).setDomains(pa.V1, pa.V1c, pa.F, pa.V2, pa.V2c);
             else
                 ((TypedBDD) pa.L).setDomains(pa.V1, pa.F, pa.V2);
@@ -1902,7 +1904,7 @@ public class PA {
             ((TypedBDD) pa.fC).setDomains(pa.F, pa.T2);
 
         if (pa.hP instanceof TypedBDD)
-            if (pa.CONTEXT_SENSITIVE || pa.OBJECT_SENSITIVE)
+            if (pa.CONTEXT_SENSITIVE || pa.OBJECT_SENSITIVE || pa.THREAD_SENSITIVE)
                 ((TypedBDD) pa.hP).setDomains(pa.H1, pa.H1c, pa.F, pa.H2, pa.H2c);
             else
                 ((TypedBDD) pa.hP).setDomains(pa.H1, pa.F, pa.H2);
@@ -1936,6 +1938,7 @@ public class PA {
         out.writeBytes("HC="+HC_BITS+"\n");
         out.writeBytes("CS="+(CONTEXT_SENSITIVE?"yes":"no")+"\n");
         out.writeBytes("OS="+(OBJECT_SENSITIVE?"yes":"no")+"\n");
+        out.writeBytes("TS="+(THREAD_SENSITIVE?"yes":"no")+"\n");
         out.writeBytes("Order="+varorder+"\n");
         out.writeBytes("Reverse="+reverseLocal+"\n");
     }
@@ -1972,6 +1975,8 @@ public class PA {
                 CONTEXT_SENSITIVE = s2.equals("yes");
             } else if (s1.equals("OS")) {
                 OBJECT_SENSITIVE = s2.equals("yes");
+            } else if (s1.equals("TS")) {
+                THREAD_SENSITIVE = s2.equals("yes");
             } else if (s1.equals("Order")) {
                 varorder = s2;
             } else if (s1.equals("Reverse")) {
@@ -2082,8 +2087,9 @@ public class PA {
         }
         System.out.println();
         System.out.println("Methods="+methods+" Bytecodes="+bcodes+" Call sites="+calls);
-        //PathNumbering pn = new PathNumbering(varPathSelector);
-        PathNumbering pn = new PathNumbering.RootNumbering();
+        PathNumbering pn;
+	if (THREAD_SENSITIVE) pn = new PathNumbering.RootNumbering();
+        else pn = new PathNumbering(varPathSelector);
         System.out.println("Thread runs="+thread_runs);
         Map initialCounts = new ThreadRootMap(thread_runs);
         BigInteger paths = (BigInteger) pn.countPaths(cg.getRoots(), cg.getCallSiteNavigator(), initialCounts);
@@ -2271,8 +2277,9 @@ public class PA {
     public PathNumbering countHeapNumbering(CallGraph cg, boolean updateBits) {
         if (VerifyAssertions)
             Assert._assert(CONTEXT_SENSITIVE);
-        //PathNumbering pn = new PathNumbering(heapPathSelector);
-        PathNumbering pn = new PathNumbering.RootNumbering();
+        PathNumbering pn;
+	if (THREAD_SENSITIVE) pn = new PathNumbering.RootNumbering();
+        else pn = new PathNumbering(heapPathSelector);
         Map initialCounts = new ThreadRootMap(thread_runs);
         BigInteger paths = (BigInteger) pn.countPaths(cg.getRoots(), cg.getCallSiteNavigator(), initialCounts);
         System.out.println("Number of paths for heap context sensitivity: "+paths);
@@ -2315,7 +2322,7 @@ public class PA {
     }
     
     public BDD getV1H1Context(jq_Method m) {
-        if (CONTEXT_SENSITIVE) {
+        if (CONTEXT_SENSITIVE || THREAD_SENSITIVE) {
             if (V1H1correspondence != null)
                 return (BDD) V1H1correspondence.get(m);
             Range r1 = vCnumbering.getRange(m);
