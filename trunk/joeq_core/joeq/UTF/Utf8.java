@@ -371,7 +371,7 @@ here:
      *
      * @param utf8 (pseudo-)utf8 byte array
      * @throws UTFDataFormatException if the (pseudo-)utf8 byte array is not valid (pseudo-)utf8
-     * @returns unicode string
+     * @return unicode string
      */
     public static String fromUtf8(byte[] utf8)
     throws UTFDataFormatError {
@@ -433,7 +433,7 @@ here:
      * The output format is controlled by the WRITE_PSEUDO_UTF8 flag.
      *
      * @param s String to convert
-     * @returns array containing sequence of (pseudo-)utf8 formatted bytes
+     * @return array containing sequence of (pseudo-)utf8 formatted bytes
      */
     public static byte[] toUtf8(String s) {
 	byte[] result = new byte[lengthUtf8(s)];
@@ -477,7 +477,7 @@ here:
      * Check whether the given sequence of bytes is valid (pseudo-)utf8.
      *
      * @param bytes byte array to check
-     * @returns true iff the given sequence is valid (pseudo-)utf8.
+     * @return true iff the given sequence is valid (pseudo-)utf8.
      */
     public static boolean checkUtf8(byte[] bytes) {
 	for (int i=0, n=bytes.length; i<n; ) {
