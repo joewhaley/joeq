@@ -15,7 +15,7 @@ import java.util.Set;
 import Util.Assert;
 import Util.Collections.LinearSet;
 import Compil3r.Analysis.IPSSA.Utils.*;
-import Compil3r.Analysis.IPA.ContextSet;
+import Compil3r.Analysis.IPSSA.ContextSet;
 
 /**
  * This is a graph consisting of definitions that uses as much sharing as possible.

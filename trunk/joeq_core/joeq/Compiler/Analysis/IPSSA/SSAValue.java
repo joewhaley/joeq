@@ -5,7 +5,7 @@ import java.util.LinkedHashSet;
 import java.util.Vector;
 
 import Clazz.jq_Method;
-import Compil3r.Analysis.IPA.ContextSet;
+import Compil3r.Analysis.IPSSA.ContextSet;
 import Compil3r.Quad.Quad;
 import Compil3r.Quad.Operator.Invoke;
 import Util.Assert;

@@ -61,7 +61,7 @@ public class SSAGraphPrinter {
 				//System.err.println("Definition " + currentDef + " has no uses");
 				continue;
 			}else {
-				System.err.println("Definition " + currentDef + " has uses");
+				//System.err.println("Definition " + currentDef + " has uses");
 			}
 						
 			do {
@@ -69,7 +69,11 @@ public class SSAGraphPrinter {
 				SSADefinition lhsDef = value.getDestination();
 				Assert._assert(lhsDef != null, "Destination of " + value + " is null");
 				// add edge def -> lhsDef
-				edges.add(new Pair(currentDef, lhsDef));
+                if(currentDef.getID() < lhsDef.getID()) {
+				    edges.add(new Pair(currentDef, lhsDef));
+                }else {
+                    edges.add(new Pair(lhsDef, currentDef));
+                }
 			} while(useIter.hasNext());			
 		}
 		out.println("\n");

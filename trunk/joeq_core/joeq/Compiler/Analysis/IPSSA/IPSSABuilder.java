@@ -15,6 +15,7 @@ import Compil3r.Analysis.IPA.PAResults;
 import Compil3r.Analysis.IPA.PointerAnalysisResults;
 import Compil3r.Analysis.IPA.ProgramLocation;
 import Compil3r.Quad.BasicBlock;
+import Compil3r.Quad.BasicBlockVisitor;
 import Compil3r.Quad.ControlFlowGraph;
 import Compil3r.Quad.ControlFlowGraphVisitor;
 import Compil3r.Quad.Quad;
@@ -28,7 +29,7 @@ import Compil3r.Analysis.IPSSA.SSAProcInfo.Helper;
 import Compil3r.Analysis.IPSSA.SSAProcInfo.Query;
 import Compil3r.Analysis.IPSSA.SSAProcInfo.SSABindingAnnote;
 import Compil3r.Analysis.IPSSA.Utils.SSAGraphPrinter;
-import Compil3r.Analysis.IPA.ContextSet;
+import Compil3r.Analysis.IPSSA.ContextSet;
 import Util.Templates.ListIterator;
 
 /**
@@ -89,7 +90,7 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 			this._method 	= method;
 			this._cfg 		= CodeCache.getCode(_method);
 			this._verbosity = verbosity;
-			this._q         = SSAProcInfo.retrieveQuery(_method); 
+			this._q         = null; 
 			this._ptr    	= ptr;
 		}		
 
@@ -184,13 +185,14 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 			
 			for(Iterator iter = set.iterator(); iter.hasNext();){
 				Quad dom = (Quad)iter.next();
-				//if(dom == quad) continue;
+				Assert._assert(dom.getOperator() instanceof Operator.Special.NOP, "" +
+                    "Expected the quad on the dominance frontier to be a NOP, not a " + dom);
 				if(_q.getDefinitionFor(loc, dom) == null){				
 					SSAValue.Gamma gamma = new SSAValue.Gamma();
 					
 					// to be filled in later
 					result += addBinding(dom, loc, gamma, null);
-					if(_verbosity > 1) System.err.println("Created a gamma function for " + loc + " at " + dom);
+					if(_verbosity > 3) System.err.println("Created a gamma function for " + loc + " at " + dom);
 				}else{
 					// TODO: fill the gamma?
 				}
@@ -219,8 +221,12 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 		/******************************************** Stages ********************************************/
 		//////////////////////////////////////////////////////////////////////////////////////////////////		
 		public void run(){
-			SSAProcInfo.Query q = SSAProcInfo.retrieveQuery(_method);
-			if(_verbosity>2) System.out.println("Created query: " + q.toString());
+            // lift the merge points
+            _cfg.visitBasicBlocks(new LiftMergesVisitor());
+            
+            // create the query now after the lifting has been done
+			_q = SSAProcInfo.retrieveQuery(_method);
+			if(_verbosity>2) System.out.println("Created query: " + _q.toString());
 			if(_verbosity > 0){
 				String name = _method.toString();
 				if(name.length() > 40){
@@ -231,6 +237,7 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 				System.out.println("============= Processing method " + name + " in IPSSABuilder =============");
 			}
 			
+            
 			/*
 			 * Stages of intraprocedural processing:
 			 * 	Stage 1     : Process all statements in turn and create slots for each modified location.
@@ -285,6 +292,20 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 				}				
 			}
 		}
+        
+        class LiftMergesVisitor implements BasicBlockVisitor {
+            public void visitBasicBlock(BasicBlock bb) {
+                if(bb.getPredecessors().size() > 1) {
+                    // more than one predecessor -- add a padding NOP quad int he beginning of the block
+                    Quad padding = Operator.Special.create(0, Operator.Special.NOP.INSTANCE);
+                    int oldSize = bb.size();
+                    // TODO: what index should we really be using here?
+                    bb.addQuad(0, padding);
+                    Assert._assert(oldSize + 1 == bb.size());
+                }
+            }
+        }
+        
 		/** 
 		 * Stage 1     : Process all statements in turn and create slots for each modified location. 
 		 * Invariant 1 : All necessary assignments are created by this point and all definitions are numbered.
@@ -543,10 +564,21 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 				// TODO: make up a location for return?
 			}			
 			public void visitInvoke(Quad quad) {
-				processCall(quad);	
+				processCall(quad);
+                QuadProgramLocation pl = new QuadProgramLocation(_method, quad);
+                Set/*jq_Method*/ targets = _ptr.getCallTargets(pl);
+                if(targets.size() > 0) {
+                    System.out.print(targets.size() + " targets of " + quad + ": "); 
+                    for(Iterator iter = targets.iterator(); iter.hasNext();) {
+                        jq_Method method = (jq_Method)iter.next();
+                        System.out.print(method.toString() + " ");
+                    }
+                    System.out.print("\n");
+                }
 			}
 			/**************************** End of handlers ****************************/ 
-			private void processStore(Quad quad) {
+			
+            private void processStore(Quad quad) {
 				// the destinations have been marked at this point
 				// need to fill in the RHSs
 				for(Iterator iter = _q.getBindingIterator(quad); iter.hasNext();) {  					
@@ -555,25 +587,24 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 					b.setValue(markUses(quad));
 				}
 			}
-			
-			public void visitCFG(ControlFlowGraph cfg) {
-				// fill in all the gammas
-				for(Iterator iter = new QuadIterator(cfg); iter.hasNext();){
-					Quad quad = (Quad)iter.next();
-					
-					Iterator bindingIter = _q.getBindingIterator(quad);
-					while(bindingIter.hasNext()){
-						SSABinding b = (SSABinding) bindingIter.next();
-						SSAValue value = b.getValue();
-						
-						if(value != null && value instanceof SSAValue.Gamma){
-							SSAValue.Gamma gamma = (SSAValue.Gamma)value;
-							fillInGamma(quad, gamma);
-						}
-					}
-				}
-			}
 
+            /// Fill in all the gammas
+            /** A special instruction. */
+            public void visitSpecial(Quad quad) {
+                if(quad.getOperator() instanceof Operator.Special.NOP) {
+                    Iterator bindingIter = _q.getBindingIterator(quad);
+                    while(bindingIter.hasNext()){
+                        SSABinding b = (SSABinding) bindingIter.next();
+                        SSAValue value = b.getValue();
+                    
+                        if(value != null && value instanceof SSAValue.Gamma){
+                            SSAValue.Gamma gamma = (SSAValue.Gamma)value;
+                            fillInGamma(quad, gamma);
+                        }
+                    }
+                }
+            }
+            
 			/**
 			 * Fill in the gamma function with reaching definitions
 			 * */
@@ -630,7 +661,17 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 			}
             
             private void processCall(Quad quad) {
-                Assert._assert(isCall(quad));   
+                Assert._assert(isCall(quad));
+                // TODO: add processing
+                for(Iterator iter = _q.getBindingIterator(quad); iter.hasNext(); ) {
+                    SSABinding b = (SSABinding)iter.next();
+                    SSAValue value = b.getValue();
+                    
+                    if(value instanceof SSAValue.ActualOut) {
+                        // deal with the rho's
+                        
+                    }
+                }
             }
 			
 			private SSAValue.Normal markUses(Quad quad) {
