@@ -19,6 +19,8 @@ public abstract class Relation {
     List/*<FieldDomain>*/ fieldDomains;
     List/*<String>*/ fieldOptions;
     
+    Relation negated;
+    
     /**
      * @param name
      * @param fieldNames
@@ -41,6 +43,10 @@ public abstract class Relation {
     public abstract void saveNegatedTuples() throws IOException;
     
     public abstract double size();
+    
+    public Relation getNegated() {
+        return negated;
+    }
     
     public String toString() {
         return name;
