@@ -3004,7 +3004,7 @@ public class PA {
         PathNumbering pn = null;
         if (CONTEXT_SENSITIVE)
             if(BETTER_CONTEXT_NUMBERING){
-                pn = new GlobalPathNumbering();
+                pn = new GlobalPathNumbering(varPathSelector);
             } else {
                 pn = new SCCPathNumbering(varPathSelector);
             }
@@ -3058,6 +3058,18 @@ public class PA {
             this.maxBits = max_bits;
         }
         
+        public boolean isImportant(Object a, Object b, BigInteger num) {
+            if (num.bitLength() > maxBits) return false;
+            if (THREADS_ONLY) {
+                if (b instanceof ProgramLocation) return true;
+                jq_Method m = (jq_Method) a;
+                if (m.getNameAndDesc() == main_method) return true;
+                if (m.getNameAndDesc() == run_method) return true;
+                return false;
+            }
+            return true;
+        }
+        
         /* (non-Javadoc)
          * @see joeq.Util.Graphs.PathNumbering.Selector#isImportant(joeq.Util.Graphs.SCComponent, Util.Graphs.SCComponent)
          */
@@ -3068,11 +3080,8 @@ public class PA {
                 Iterator i = s.iterator();
                 Object o = i.next();
                 if (i.hasNext()) return false;
-                if (o instanceof ProgramLocation) return true;
-                jq_Method m = (jq_Method) o;
-                if (m.getNameAndDesc() == main_method) return true;
-                if (m.getNameAndDesc() == run_method) return true;
-                return false;
+                jq_Method m = (jq_Method) scc1.nodes()[0];
+                return isImportant(m, o, num);
             }
             return true;
         }
@@ -3127,6 +3136,11 @@ public class PA {
             Iterator i = s.iterator();
             Object o = i.next();
             if (i.hasNext()) return false;
+            return isImportant(scc1, o, num);
+        }
+        
+        public boolean isImportant(Object p, Object o, BigInteger num) {
+            if (num.bitLength() > MAX_HC_BITS) return false;
             if (o instanceof ProgramLocation) return true;
             jq_Method m = (jq_Method) o;
             if (m.getNameAndDesc() == main_method) return true;
@@ -3135,7 +3149,7 @@ public class PA {
             if (MATCH_FACTORY) {
                 if (!m.getReturnType().isReferenceType()) return false;
                 MethodSummary ms = MethodSummary.getSummary(CodeCache.getCode(m));
-                for (i = ms.getReturned().iterator(); i.hasNext(); ) {
+                for (Iterator i = ms.getReturned().iterator(); i.hasNext(); ) {
                     Node n = (Node) i.next();
                     if (!(n instanceof ConcreteTypeNode)) {
                         //return false;
@@ -3170,14 +3184,7 @@ public class PA {
         /* (non-Javadoc)
          * @see joeq.Util.Graphs.PathNumbering.Selector#isImportant(joeq.Util.Graphs.SCComponent, joeq.Util.Graphs.SCComponent)
          */
-        public boolean isImportant(SCComponent scc1, SCComponent scc2, BigInteger num) {
-            Set s = scc2.nodeSet();
-            Iterator i = s.iterator();
-            Object o = i.next();
-            if (i.hasNext()) {
-                if (TRACE_OBJECT) out.println("No object sensitivity for "+s+": CYCLE");
-                return false;
-            }
+        public boolean isImportant(Object p, Object o, BigInteger num) {
             if (o instanceof jq_Array) {
                 if (!((jq_Array) o).getElementType().isReferenceType()) {
                     if (TRACE_OBJECT) out.println("No object sensitivity for "+o+": PRIMITIVE ARRAY");
@@ -3208,6 +3215,20 @@ public class PA {
                 }
             }
             return true;
+        }
+        
+        /* (non-Javadoc)
+         * @see joeq.Util.Graphs.PathNumbering.Selector#isImportant(joeq.Util.Graphs.SCComponent, joeq.Util.Graphs.SCComponent)
+         */
+        public boolean isImportant(SCComponent scc1, SCComponent scc2, BigInteger num) {
+            Set s = scc2.nodeSet();
+            Iterator i = s.iterator();
+            Object o = i.next();
+            if (i.hasNext()) {
+                if (TRACE_OBJECT) out.println("No object sensitivity for "+s+": CYCLE");
+                return false;
+            }
+            return isImportant(scc1, o, num);
         }
     }
     

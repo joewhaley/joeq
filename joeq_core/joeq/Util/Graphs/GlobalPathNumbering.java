@@ -10,6 +10,7 @@ import java.util.Map;
 import java.math.BigInteger;
 import joeq.Util.Assert;
 import joeq.Util.Collections.Pair;
+import joeq.Util.Graphs.SCCPathNumbering.Selector;
 
 /**
  * GlobalPathNumbering
@@ -18,6 +19,12 @@ import joeq.Util.Collections.Pair;
  * @version $Id$
  */
 public class GlobalPathNumbering extends PathNumbering {
+    
+    public GlobalPathNumbering(Selector s) {
+        this.selector = s;
+    }
+    
+    Selector selector;
     
     /** Navigator for the graph. */
     Navigator navigator;
@@ -56,11 +63,18 @@ public class GlobalPathNumbering extends PathNumbering {
                     //System.out.println("Loop edge: "+p+" -> "+o);
                     nodeNumbering.put(p, val2 = BigInteger.ONE);
                 }
-                BigInteger val3 = val.add(val2);
+                BigInteger val3;
+                val3 = val.add(val2);
                 Object edge = new Pair(p, o);
-                Range range = new Range(val, val3.subtract(BigInteger.ONE));
-                edgeNumbering.put(edge, range);
-                //System.out.println("Putting Edge ("+edge+") = "+range);
+                if (!selector.isImportant(p, o, val3)) {
+                    Range range = new Range(val, val);
+                    edgeNumbering.put(edge, range);
+                    //System.out.println("Putting Edge ("+edge+") = "+range);
+                } else {
+                    Range range = new Range(val, val3.subtract(BigInteger.ONE));
+                    edgeNumbering.put(edge, range);
+                    //System.out.println("Putting Edge ("+edge+") = "+range);
+                }
                 val = val3;
             }
             nodeNumbering.put(o, val);
@@ -69,6 +83,11 @@ public class GlobalPathNumbering extends PathNumbering {
         return max;
     }
 
+    public boolean isImportant(Object a, Object b, BigInteger num) {
+        if (selector == null) return true;
+        return selector.isImportant(a, b, num);
+    }
+    
     /* (non-Javadoc)
      * @see joeq.Util.Graphs.PathNumbering#getRange(java.lang.Object)
      */
