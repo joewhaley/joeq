@@ -76,16 +76,16 @@ import Util.Graphs.PathNumbering.Selector;
 public class PA {
 
     public static final boolean VerifyAssertions = true;
-    boolean TRACE = false;
-    boolean TRACE_SOLVER = false;
-    boolean TRACE_BIND = false;
-    boolean TRACE_RELATIONS = false;
-    boolean TRACE_OBJECT = false;
+    boolean TRACE = !System.getProperty("pa.trace", "no").equals("no");
+    boolean TRACE_SOLVER = !System.getProperty("pa.tracesolver", "no").equals("no");
+    boolean TRACE_BIND = !System.getProperty("pa.tracebind", "no").equals("no");
+    boolean TRACE_RELATIONS = !System.getProperty("pa.tracerelations", "no").equals("no");
+    boolean TRACE_OBJECT = !System.getProperty("pa.traceobject", "no").equals("no");
     PrintStream out = System.out;
 
-    boolean INCREMENTAL1 = true; // incremental points-to
-    boolean INCREMENTAL2 = true; // incremental parameter binding
-    boolean INCREMENTAL3 = true; // incremental invocation binding
+    boolean INCREMENTAL1 = !System.getProperty("pa.inc1", "yes").equals("no"); // incremental points-to
+    boolean INCREMENTAL2 = !System.getProperty("pa.inc2", "yes").equals("no"); // incremental parameter binding
+    boolean INCREMENTAL3 = !System.getProperty("pa.inc3", "yes").equals("no"); // incremental invocation binding
     
     boolean ADD_CLINIT = !System.getProperty("pa.clinit", "yes").equals("no");
     boolean ADD_THREADS = !System.getProperty("pa.threads", "yes").equals("no");
@@ -971,7 +971,7 @@ public class PA {
             Node p = MethodSummary.getSummary(CodeCache.getCode(m)).getParamNode(0);
             Node h = (Node) Hmap.get(H_i);
             BDD context = null;
-            if (CONTEXT_SENSITIVE) {
+            if (CONTEXT_SENSITIVE && MAX_HC_BITS > 1) {
                 int context_i = getThreadRunIndex(m, h);
                 System.out.println("Thread "+h+" index "+context_i);
                 context = H1c.ithVar(context_i);
@@ -1943,6 +1943,7 @@ public class PA {
         }
     }
     
+    // Map between thread run() methods and the ConcreteTypeNodes of the corresponding threads.
     static Map thread_runs = new HashMap();
     
     public static int getThreadRunIndex(jq_Method m, Node n) {
