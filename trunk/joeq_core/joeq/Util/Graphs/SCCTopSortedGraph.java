@@ -4,11 +4,11 @@
 package Util.Graphs;
 
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import Util.Assert;
@@ -137,20 +137,11 @@ public class SCCTopSortedGraph implements Graph, Serializable {
      * @see Util.Graphs.Graph#getNavigator()
      */
     public Navigator getNavigator() {
-        return new Navigator() {
+        return SCComponent.SCC_NAVIGATOR;
+    }
 
-            public Collection next(Object node) {
-                SCComponent scc = (SCComponent) node;
-                Collection c = Arrays.asList(scc.next());
-                return c;
-            }
-
-            public Collection prev(Object node) {
-                SCComponent scc = (SCComponent) node;
-                Collection c = Arrays.asList(scc.prev());
-                return c;
-            }
-        };
+    public List list() {
+        return first.listTopSort();
     }
 
 }
