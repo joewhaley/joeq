@@ -51,40 +51,39 @@ public class GlobalPathNumbering extends PathNumbering {
         Iterator rpo = Traversals.reversePostOrder(navigator, roots).iterator();
         while (rpo.hasNext()) {
             Object o = rpo.next();
-            BigInteger val = (BigInteger) nodeNumbering.get(o);
-            Collection prev = navigator.prev(o);
-            if (prev.size() == 0 && val == null) {
-                Assert.UNREACHABLE("Missing root! "+o);
+            BigInteger pathsToNode = (BigInteger) nodeNumbering.get(o);
+            if (pathsToNode == null) {
+                // This node is not a root.
+                pathsToNode = BigInteger.ONE;
             }
-            if (val == null) val = BigInteger.ZERO;
+            Collection prev = navigator.prev(o);
             for (Iterator i = prev.iterator(); i.hasNext(); ) {
                 Object p = i.next();
-                BigInteger val2 = (BigInteger) nodeNumbering.get(p);
-                if (val2 == null) {
+                BigInteger pathsToPred = (BigInteger) nodeNumbering.get(p);
+                if (pathsToPred == null) {
+                    // We haven't visited this predecessor yet.
+                    // Because this is topological, it must be a loop edge.
                     //System.out.println("Loop edge: "+p+" -> "+o+" current target num="+val);
-                    val2 = BigInteger.ONE;
+                    pathsToPred = BigInteger.ONE;
                 }
-                BigInteger val3;
-                val3 = val.add(val2);
+                BigInteger newPathsToNode = pathsToNode.add(pathsToPred).subtract(BigInteger.ONE);
                 Object edge = new Pair(p, o);
-                if (!selector.isImportant(p, o, val3)) {
-                    Range range = new Range(val, val);
+                if (!selector.isImportant(p, o, newPathsToNode)) {
+                    // Unimportant edge.
+                    Range range = new Range(pathsToNode, pathsToNode);
                     edgeNumbering.put(edge, range);
-                    val3 = val;
                     //System.out.println("Putting unimportant Edge ("+edge+") = "+range);
                 } else {
-                    Range range = new Range(val, val3.subtract(BigInteger.ONE));
+                    Range range = new Range(pathsToNode.subtract(BigInteger.ONE),
+                                            newPathsToNode.subtract(BigInteger.ONE));
                     edgeNumbering.put(edge, range);
                     //System.out.println("Putting important Edge ("+edge+") = "+range);
+                    pathsToNode = newPathsToNode;
                 }
-                val = val3;
-            }
-            if(val.equals(BigInteger.ZERO)) {
-                val = BigInteger.ONE;
             }
             //Assert._assert(!val.equals(BigInteger.ZERO), o.toString());
-            nodeNumbering.put(o, val);
-            if (val.compareTo(max) > 0) max = val;
+            nodeNumbering.put(o, pathsToNode);
+            if (pathsToNode.compareTo(max) > 0) max = pathsToNode;
         }
         return max;
     }
