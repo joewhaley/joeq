@@ -85,7 +85,7 @@ public class Quad {
     public String toString() {
         StringBuffer s = new StringBuffer();
         s.append(jq.left(Integer.toString(id_number), 4));
-        s.append(jq.left(operator.toString(), 30));
+        s.append(jq.left(operator.toString(), 24));
         if (operand1 == null) return s.toString();
         s.append(operand1.toString());
         if (operand2 == null) return s.toString();
