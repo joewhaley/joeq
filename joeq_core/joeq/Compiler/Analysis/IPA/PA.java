@@ -1976,18 +1976,18 @@ public class PA {
                 if(missingConst.get(stringConst) == null){
                     System.err.println("No constant string for " + n + " at " + h.toStringWithDomains(TS));                                    
                     missingConst.put(stringConst, new Integer(0));
-                }
-                
+                }                
                 continue;
             }
-            if(TRACE_REFLECTION) System.out.println("stringConst: " + stringConst);
+            
             jq_Class c = null;
             try {
-//                if(stringConst.eq)
+//              if(stringConst.eq)
                 jq_Type clazz = jq_Type.parseType(stringConst);
                 if(clazz instanceof jq_Class && isWellFormed(stringConst)){
                     c = (jq_Class) clazz;
-                    
+            
+                    if(TRACE_REFLECTION) System.out.println("stringConst: " + stringConst);
                     c.load();
                     c.prepare();
                     Assert._assert(c != null);
@@ -2056,14 +2056,20 @@ public class PA {
         if(stringConst.equals(".")) {
             return false;   
         }
-        
+        int dotCount = 0;
         for(int i = 0; i < stringConst.length(); i++){
             char ch = stringConst.charAt(i);
             
-            if(!Character.isLetterOrDigit(ch) && ch != '.'){
-                return false;                
-            }            
+            if(ch == '.'){
+                dotCount++;                
+            } else {            
+                if(!Character.isLetterOrDigit(ch)){
+                    return false;                
+                }      
+            }
         }
+        
+        if(dotCount == 0) return false;
         
         return true;
     }
