@@ -195,7 +195,7 @@ public abstract class ReflectionInformationProvider {
                 readSpec(cribSheetFileName);
             } catch (IOException e) {
                 // TODO Auto-generated catch block
-                e.printStackTrace();
+                System.err.println("Error reading " + cribSheetFileName + e.getMessage());                
             }
         }
               
@@ -233,6 +233,12 @@ public abstract class ReflectionInformationProvider {
                 line = in.readLine();
             } while (line != null);
             in.close();
+            
+            if(PA.TRACE_REFLECTION) {
+                System.out.println(
+                    "There are " + specs.size() +            
+                    " specifications read from " + cribSheetFileName);
+            }
         }
         
         Collection/*<NewInstanceTargets>*/ specs      = new LinkedList();
@@ -277,7 +283,7 @@ public abstract class ReflectionInformationProvider {
         }
         
         public Collection/*<jq_Method>*/ getNewInstanceTargets(jq_Method n) {
-            if(PA.TRACE_REFLECTION) System.out.println("There are " + specs.size() + " to check against.");
+            if(PA.TRACE_REFLECTION) System.out.println("There are " + specs.size() + " specs to check against.");
             for(Iterator iter = specs.iterator(); iter.hasNext();){
                 NewInstanceTargets spec = (NewInstanceTargets) iter.next();
                 if(PA.TRACE_REFLECTION) System.out.println("\tChecking agains " + spec.getDeclaredIn());                
