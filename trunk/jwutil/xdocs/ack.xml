@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document>
+
+  <properties>
+    <title>jwutil Acknowledgements</title>
+    <author email="jwhaley@stanford.edu">John Whaley</author> 
+  </properties>
+
+  <body>
+     <section name="Thanks">
+       <p>
+       This library contains code originally due to Alex Salcianu and Felix S. Klock II
+       for use in the <a href="http://www.flex-compiler.lcs.mit.edu/">Flex compiler infrastructure</a>.
+       Thanks to Alex and Felix for allowing their code to be used in jwutil.
+       </p>
+    </section>
+  </body>
+</document>
