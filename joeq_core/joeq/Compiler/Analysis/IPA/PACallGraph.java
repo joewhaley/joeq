@@ -27,10 +27,22 @@ import Util.Collections.UnmodifiableIterator;
  */
 public class PACallGraph extends CallGraph {
 
-    PA pa;
+    final BDDFactory bdd;
+    final BDDDomain M, I;
+    final Collection roots;
+    final BDD visited;
+    final BDD IE;
+    final IndexMap Mmap, Imap;
     
     public PACallGraph(PA pa) {
-        this.pa = pa;
+        this.bdd = pa.bdd;
+        this.M = pa.M;
+        this.I = pa.I;
+        this.roots = pa.roots;
+        this.visited = pa.visited;
+        this.IE = pa.IE.exist(pa.V1cV2cset);
+        this.Mmap = pa.Mmap;
+        this.Imap = pa.Imap;
     }
     
     /* (non-Javadoc)
@@ -44,26 +56,29 @@ public class PACallGraph extends CallGraph {
      * @see Compil3r.Quad.CallGraph#getRoots()
      */
     public Collection getRoots() {
-        return pa.roots;
+        return roots;
     }
 
     /* (non-Javadoc)
      * @see Compil3r.Quad.CallGraph#getTargetMethods(java.lang.Object, Compil3r.Analysis.IPA.ProgramLocation)
      */
     public Collection getTargetMethods(Object context, ProgramLocation callSite) {
-        int I_i = pa.Imap.get(callSite);
-        BDD I_bdd = pa.I.ithVar(I_i);
-        BDD b = pa.IE.restrict(I_bdd);
+        callSite = PA.mapCall(callSite);
+        int I_i = Imap.get(callSite);
+        BDD I_bdd = I.ithVar(I_i);
+        BDD b = IE.restrict(I_bdd);
         I_bdd.free();
-        return new BDDSet(b, pa.M, pa.Mmap);
+        return new BDDSet(b, M, Mmap);
     }
-        
+    
     /* (non-Javadoc)
      * @see Compil3r.Quad.CallGraph#getAllMethods()
      */
     public Collection getAllMethods() {
-        BDD b = pa.visited.id();
-        return new BDDSet(b, pa.M, pa.Mmap);
+        BDD b = visited.id();
+        //b.orWith(pa.IE.exist(pa.Iset));
+        //b.orWith(pa.Mret.exist(pa.V2set));
+        return new BDDSet(b, M, Mmap);
     }
 
     public static class BDDSet extends AbstractSet {
@@ -96,7 +111,7 @@ public class PACallGraph extends CallGraph {
         }
     }
     
-    
+    // Not used.
     public static class PACallTargetMap extends AbstractMap {
 
         PA pa;
