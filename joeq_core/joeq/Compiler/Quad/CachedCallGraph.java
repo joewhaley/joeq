@@ -41,7 +41,7 @@ public class CachedCallGraph extends CallGraph {
             Collection callees2 = delegate.getTargetMethods(p);
             callees.addAll(callees2);
         }
-        this.methods = new HashSet();
+        this.methods = new HashSet(delegate.getRoots());
         this.callSites = new GenericMultiMap();
         for (Iterator i = this.edges.keySet().iterator(); i.hasNext(); ) {
             ProgramLocation p = (ProgramLocation) i.next();
@@ -126,9 +126,19 @@ public class CachedCallGraph extends CallGraph {
     }
     
     /* (non-Javadoc)
-     * @see Compil3r.Quad.CallGraph#getCallers(Clazz.jq_Method)
+     * @see Compil3r.Quad.CallGraph#getCallerMethods(Clazz.jq_Method)
      */
     public Collection getCallers(jq_Method callee) {
+        if (edges == null) invalidateCache();
+        MultiMap m1 = edges.invert();
+        Collection c1 = m1.getValues(callee);
+        return c1;
+    }
+
+    /* (non-Javadoc)
+     * @see Compil3r.Quad.CallGraph#getCallerMethods(Clazz.jq_Method)
+     */
+    public Collection getCallerMethods(jq_Method callee) {
         if (edges == null) invalidateCache();
         MultiMap m1 = edges.invert();
         Collection c1 = m1.getValues(callee);
