@@ -242,6 +242,7 @@ public abstract class Solver {
         for (Iterator i = relationsToDump.iterator(); i.hasNext(); ) {
             Relation r = (Relation) i.next();
             r.save();
+            r.saveTuples();
         }
     }
 
