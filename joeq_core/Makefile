@@ -71,6 +71,9 @@ bootstrap-sun13-linux:	javac
 bootstrap-ibm13-linux:	javac
 	java -Xbootclasspath/a:$(JDK14SUPPORT_LIB):/opt/IBMJava2-131/jre/lib/ext/ibmjcaprovider.jar -ms230M -mx230M Main.Bootstrapper -cl ClassLib/ibm13_linux/classlist.txt
 
+bootstrap-sun142-win32:	javac
+	java -ms185M -mx185M Main.Bootstrapper -cl ClassLib/sun142_win32/classlist.txt
+
 bootstrap-sun14-win32:	javac
 	java -ms180M -mx180M Main.Bootstrapper -cl ClassLib/sun14_win32/classlist.txt
 
