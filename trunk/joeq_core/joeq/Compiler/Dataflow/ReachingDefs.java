@@ -15,11 +15,11 @@ import joeq.Class.jq_Type;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.CodeCache;
 import joeq.Compiler.Quad.ControlFlowGraph;
+import joeq.Compiler.Quad.ControlFlowGraphVisitor;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Main.HostedVM;
 import joeq.Util.BitString;
-import joeq.Util.Strings;
 import joeq.Util.Collections.Pair;
 import joeq.Util.Graphs.EdgeGraph;
 import joeq.Util.Graphs.Graph;
@@ -34,6 +34,31 @@ import joeq.Util.Templates.ListIterator;
  */
 public class ReachingDefs extends Problem {
 
+    public static class RDVisitor implements ControlFlowGraphVisitor {
+
+        public static boolean DUMP = false;
+        
+        long totalTime;
+        
+        /* (non-Javadoc)
+         * @see joeq.Compiler.Quad.ControlFlowGraphVisitor#visitCFG(joeq.Compiler.Quad.ControlFlowGraph)
+         */
+        public void visitCFG(ControlFlowGraph cfg) {
+            long time = System.currentTimeMillis();
+            Problem p = new ReachingDefs();
+            Solver s1 = new IterativeSolver();
+            solve(cfg, s1, p);
+            time = System.currentTimeMillis() - time;
+            totalTime += time;
+            if (DUMP) 
+                Solver.dumpResults(cfg, s1);
+        }
+        
+        public String toString() {
+            return "Total time: "+totalTime+" ms";
+        }
+    }
+    
     Quad[] quads;
     Map transferFunctions;
     BitVectorFact emptySet;

@@ -85,18 +85,24 @@ public abstract class Solver {
         if (dis.NOISY) dis.out.println("Done loading "+dis.rules.size()+" rules.");
         
         if (dis.NOISY) dis.out.println("Loading initial relations...");
+        long time = System.currentTimeMillis();
         dis.loadInitialRelations();
-        if (dis.NOISY) dis.out.println("done.");
+        time = System.currentTimeMillis() - time;
+        if (dis.NOISY) dis.out.println("done. ("+time+" ms)");
         
         if (dis.NOISY) dis.out.println("Solving...");
+        time = System.currentTimeMillis();
         dis.solve();
-        if (dis.NOISY) dis.out.println("done.");
+        time = System.currentTimeMillis() - time;
+        if (dis.NOISY) dis.out.println("done. ("+time+" ms)");
         
         dis.finish();
         
         if (dis.NOISY) dis.out.println("Saving results...");
+        time = System.currentTimeMillis();
         dis.saveResults();
-        if (dis.NOISY) dis.out.println("done.");
+        time = System.currentTimeMillis() - time;
+        if (dis.NOISY) dis.out.println("done. ("+time+" ms)");
         
     }
     
