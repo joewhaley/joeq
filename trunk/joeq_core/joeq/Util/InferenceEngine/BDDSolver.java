@@ -285,9 +285,16 @@ public class BDDSolver extends Solver {
         String varOrderString = System.getProperty("bddvarorder", null);
         
         if (varOrderString != null) {
+            System.out.print("Setting variable ordering to "+varOrderString);
             int [] varOrder = bdd.makeVarOrdering(true, varOrderString);
             bdd.setVarOrder(varOrder);
+            System.out.println(", done.");
         }
         super.readRules(in);
+    }
+    
+    void saveResults() throws IOException {
+        super.saveResults();
+        bdd.done();
     }
 }

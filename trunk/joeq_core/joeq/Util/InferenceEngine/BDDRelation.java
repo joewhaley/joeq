@@ -107,7 +107,9 @@ public class BDDRelation extends Relation {
                 BDD s = r2.support();
                 BDD t = domainSet.and(s);
                 s.free();
-                if (!t.equals(domainSet)) {
+                boolean b = !t.equals(domainSet);
+                t.free();
+                if (b) {
                     throw new IOException("Expected domains for loaded BDD "+filename+" to be "+domains+", but found "+activeDomains(r2)+" instead");
                 }
             }
@@ -147,14 +149,17 @@ public class BDDRelation extends Relation {
     }
     
     public void save(String filename) throws IOException {
+        System.out.println("Relation "+this+": "+relation.nodeCount()+" nodes");
         solver.bdd.save(filename, relation);
     }
 
     public void saveNegated() throws IOException {
+        System.out.println("Relation "+this+": "+relation.not().nodeCount()+" nodes");
         solver.bdd.save("not"+name+".rbdd", relation.not());
     }
     
     public void saveTuples() throws IOException {
+        System.out.println("Relation "+this+": "+relation.nodeCount()+" nodes");
         saveTuples(name+".rtuples");
     }
     
