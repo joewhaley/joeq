@@ -3,6 +3,7 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Util.Collections;
 
+import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -10,6 +11,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 
+import Util.Assert;
 import Util.IO.Textualizable;
 import Util.IO.Textualizer;
 
@@ -89,13 +91,24 @@ public class IndexMap implements IndexedMap {
         t.writeBytes(size()+"\n");
         for (int j = 0; j < size(); ++j) {
             Textualizable o = (Textualizable) get(j);
-            if (o == null) {
-                t.writeBytes("null");
-            } else {
-                t.writeObject(o);
-            }
+            t.writeTypeOf(o);
+            t.writeObject(o);
             t.writeBytes("\n");
-            ++j;
         }
     }
+    
+    public static IndexMap load(String name, DataInput in) throws IOException {
+        String s = in.readLine();
+        int size = Integer.parseInt(s);
+        IndexMap dis = new IndexMap(name, size);
+        Textualizer t = new Textualizer.Map(in, dis);
+        for (int i = 0; i < size; ++i) {
+            t.nextLine();
+            Textualizable n = t.readObject();
+            int j = dis.get(n);
+            Assert._assert(i == j);
+        }
+        return dis;
+    }
+    
 }

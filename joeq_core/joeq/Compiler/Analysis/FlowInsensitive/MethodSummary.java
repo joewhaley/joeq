@@ -1054,7 +1054,7 @@ public class MethodSummary {
         public boolean equals(Object o) { if (o instanceof PassedParameter) return equals((PassedParameter)o); return false; }
         public String toString() { return "Param "+paramNum+" for "+m; }
         public void write(Textualizer t) throws IOException {
-            t.writeObject(m);
+            m.write(t);
             t.writeBytes(" "+paramNum);
         }
         public void writeEdges(Textualizer t) throws IOException { }
@@ -1969,20 +1969,7 @@ public class MethodSummary {
             return sb.toString();
         }
         
-        public void addEdge(String edgeName, Textualizable t) {
-            if (edgeName.equals("fsucc")) {
-                
-            }
-        }
-        
-        public void writeEdges(Textualizer t) throws IOException {
-            if (accessPathEdges != null) {
-                for (Iterator i = this.getAccessPathEdgeTargets().iterator(); i.hasNext(); ) {
-                    Node n = (Node) i.next();
-                    if (!t.contains(n)) continue;
-                    t.writeEdge("fsucc", n);
-                }
-            }
+        public void write(Textualizer t) throws IOException {
             if (addedEdges != null) {
                 for (Iterator i = this.getNonEscapingEdges().iterator(); i.hasNext(); ) {
                     Map.Entry e = (Map.Entry) i.next();
@@ -1996,7 +1983,9 @@ public class MethodSummary {
                         Node n = (Node) j.next();
                         if (!t.contains(n)) continue;
                         t.writeBytes(" succ ");
-                        t.writeObject(f);
+                        if (f == null) t.writeBytes("null");
+                        else f.write(t);
+                        t.writeBytes(" ");
                         t.writeReference(n);
                     }
                 }
@@ -2014,13 +2003,67 @@ public class MethodSummary {
                         Node n = (Node) j.next();
                         if (!t.contains(n)) continue;
                         t.writeBytes(" pred ");
-                        t.writeObject(f);
+                        if (f == null) t.writeBytes("null");
+                        else f.write(t);
+                        t.writeBytes(" ");
                         t.writeReference(n);
                     }
                 }
             }
+            if (accessPathEdges != null) {
+                for (Iterator i = this.getAccessPathEdgeTargets().iterator(); i.hasNext(); ) {
+                    Node n = (Node) i.next();
+                    if (!t.contains(n)) continue;
+                    t.writeEdge("fsucc", n);
+                }
+            }
         }
         
+        public void readEdges(IndexMap map, StringTokenizer st) {
+            while (st.hasMoreElements()) {
+                String edgeName = st.nextToken();
+                if (edgeName.equals("succ")) {
+                    jq_Field f = (jq_Field) jq_Member.read(st);
+                    int index = Integer.parseInt(st.nextToken());
+                    if (index < map.size()) {
+                        addEdge(f, (Node) map.get(index));
+                    }
+                } else if (edgeName.equals("pred")) {
+                    jq_Field f = (jq_Field) jq_Member.read(st);
+                    int index = Integer.parseInt(st.nextToken());
+                    if (index < map.size()) {
+                        Node that = (Node) map.get(index);
+                        that.addEdge(f, this);
+                    }
+                } else if (edgeName.equals("fsucc")) {
+                    int index = Integer.parseInt(st.nextToken());
+                    if (index < map.size()) {
+                        FieldNode fn = (FieldNode) map.get(index);
+                        addAccessPathEdge(fn.getField(), fn);
+                    }
+                } else if (edgeName.equals("fpred")) {
+                    int index = Integer.parseInt(st.nextToken());
+                    if (index < map.size()) {
+                        Node n = (Node) map.get(index);
+                        FieldNode fn = (FieldNode) this;
+                        n.addAccessPathEdge(fn.getField(), fn);
+                    }
+                } else {
+                    Assert.UNREACHABLE(edgeName);
+                }
+            }
+        }
+        
+        /* (non-Javadoc)
+         * @see Util.IO.Textualizable#addEdge(java.lang.String, Util.IO.Textualizable)
+         */
+        public void addEdge(String edge, Textualizable t) { }
+
+        /* (non-Javadoc)
+         * @see Util.IO.Textualizable#writeEdges(Util.IO.Textualizer)
+         */
+        public void writeEdges(Textualizer t) throws IOException { }
+
     }
     
     /** A ConcreteTypeNode refers to an object with a concrete type.
@@ -2072,58 +2115,19 @@ public class MethodSummary {
         }
 
         public void write(Textualizer t) throws IOException {
-            t.writeBytes("Concrete ");
-            t.writeObject(type);
+            type.write(t);
             t.writeBytes(" ");
-            t.writeObject(q);
-            //super.write(t);
+            q.write(t);
+            super.write(t);
         }
-    }
-    
-    public static Node readNode(StringTokenizer st) throws IOException {
-        String s = st.nextToken();
-        Node n;
-        if (s.equals("Global")) {
-            jq_Method m = (jq_Method) jq_Member.read(st);
-            //if (m == null) return null;
-            n = new GlobalNode(m);
-        } else if (s.equals("Concrete")) {
-            jq_Reference r = (jq_Reference) jq_Type.read(st);
-            ProgramLocation q = ProgramLocation.read(st);
-            n = new ConcreteTypeNode(r, q);
-        } else if (s.equals("ConcreteObject")) {
-            // TODO.
-            jq_Reference r = (jq_Reference) jq_Type.read(st);
-            n = new ConcreteTypeNode(r);
-        } else if (s.equals("Unknown")) {
-            jq_Reference r = (jq_Reference) jq_Type.read(st);
-            n = new UnknownTypeNode(r);
-        } else if (s.equals("ReturnValue")) {
+        
+        public static ConcreteTypeNode read(StringTokenizer st) {
+            jq_Reference type = (jq_Reference) jq_Type.read(st);
             ProgramLocation pl = ProgramLocation.read(st);
-            n = new ReturnValueNode(pl);
-        } else if (s.equals("ThrownException")) {
-            ProgramLocation pl = ProgramLocation.read(st);
-            n = new ThrownExceptionNode(pl);
-        } else if (s.equals("Param")) {
-            jq_Method m = (jq_Method) jq_Member.read(st);
-            if (m == null) return null;
-            int i = Integer.parseInt(st.nextToken());
-            jq_Reference t = (jq_Reference) m.getParamTypes()[i];
-            n = new ParamNode(m, i, t);
-        } else if (s.equals("Field")) {
-            jq_Field m = (jq_Field) jq_Member.read(st);
-            int k = Integer.parseInt(st.nextToken());
-            Set locs = SortedArraySet.FACTORY.makeSet(HashCodeComparator.INSTANCE);
-            while (--k >= 0)
-                locs.add(ProgramLocation.read(st));
-            n = new FieldNode(m, locs);
-        } else if (s.equals("null")) {
-            return null;
-        } else {
-            Assert.UNREACHABLE(s);
-            return null;
+            ConcreteTypeNode n = new ConcreteTypeNode(type, pl);
+            //n.readEdges(map, st);
+            return n;
         }
-        return n;
     }
     
     /** A ConcreteObjectNode refers to an object that we discovered through reflection.
@@ -2298,11 +2302,18 @@ public class MethodSummary {
         }
 
         public void write(Textualizer t) throws IOException {
-            t.writeBytes("ConcreteObject ");
-            t.writeObject(getDeclaredType());
-            //super.write(t);
+            jq_Reference type = getDeclaredType();
+            if (type == null) t.writeBytes("null");
+            else type.write(t);
+            super.write(t);
         }
 
+        public static Node read(StringTokenizer st) {
+            jq_Reference type = (jq_Reference) jq_Type.read(st);
+            // TODO: just use ConcreteTypeNode for now.
+            //n.readEdges(map, st);
+            return new ConcreteTypeNode(type);
+        }
     }
     
     /** A UnknownTypeNode refers to an object with an unknown type.  All that is
@@ -2397,9 +2408,13 @@ public class MethodSummary {
         public String toString_short() { return "Unknown: "+type; }
 
         public void write(Textualizer t) throws IOException {
-            t.writeBytes("Unknown ");
-            t.writeObject(getDeclaredType());
-            //super.write(t);
+            getDeclaredType().write(t);
+            super.write(t);
+        }
+        public static UnknownTypeNode read(StringTokenizer st) {
+            jq_Reference type = (jq_Reference) jq_Type.read(st);
+            //n.readEdges(map, st);
+            return new UnknownTypeNode(type);
         }
     }
     
@@ -2466,9 +2481,14 @@ public class MethodSummary {
         }
         
         public void write(Textualizer t) throws IOException {
-            t.writeBytes("Global ");
-            t.writeObject(method);
-            //super.write(t);
+            if (method == null) t.writeBytes("null");
+            else method.write(t);
+            super.write(t);
+        }
+        public static GlobalNode read(StringTokenizer st) {
+            jq_Method m = (jq_Method) jq_Member.read(st);
+            //n.readEdges(map, st);
+            return new GlobalNode(m);
         }
         
     }
@@ -2506,9 +2526,13 @@ public class MethodSummary {
         }
         
         public void write(Textualizer t) throws IOException {
-            t.writeBytes("ReturnValue ");
-            t.writeObject(m);
-            //super.write(t);
+            m.write(t);
+            super.write(t);
+        }
+        public static ReturnValueNode read(StringTokenizer st) {
+            ProgramLocation m = ProgramLocation.read(st);
+            //n.readEdges(map, st);
+            return new ReturnValueNode(m);
         }
     }
     
@@ -2559,9 +2583,13 @@ public class MethodSummary {
          * @see Compil3r.Quad.MethodSummary.Node#print(Compil3r.Quad.MethodSummary, java.io.PrintWriter)
          */
         public void write(Textualizer t) throws IOException {
-            t.writeBytes("ThrownException ");
-            t.writeObject(m);
-            //super.write(t);
+            m.write(t);
+            super.write(t);
+        }
+        public static ThrownExceptionNode read(StringTokenizer st) {
+            ProgramLocation m = ProgramLocation.read(st);
+            //n.readEdges(map, st);
+            return new ThrownExceptionNode(m);
         }
     }
     
@@ -2593,10 +2621,16 @@ public class MethodSummary {
          * @see Compil3r.Quad.MethodSummary.Node#print(Compil3r.Quad.MethodSummary, java.io.PrintWriter)
          */
         public void write(Textualizer t) throws IOException {
-            t.writeBytes("Param ");
-            t.writeObject(m);
+            m.write(t);
             t.writeBytes(" "+n);
-            //super.write(t);
+            super.write(t);
+        }
+        public static ParamNode read(StringTokenizer st) {
+            jq_Method m = (jq_Method) jq_Member.read(st);
+            int k = Integer.parseInt(st.nextToken());
+            jq_Reference type = (jq_Reference) m.getParamTypes()[k];
+            //n.readEdges(map, st);
+            return new ParamNode(m, k, type);
         }
     }
     
@@ -2861,20 +2895,31 @@ public class MethodSummary {
          * @see Compil3r.Quad.MethodSummary.Node#print
          */
         public void write(Textualizer t) throws IOException {
-            t.writeBytes("Field ");
-            t.writeObject(f);
+            if (f == null) t.writeBytes("null");
+            else f.write(t);
             t.writeBytes(" "+locs.size());
             for (Iterator i = locs.iterator(); i.hasNext(); ) {
                 t.writeBytes(" ");
                 ProgramLocation pl = (ProgramLocation) i.next();
-                t.writeObject(pl);
+                pl.write(t);
             }
             for (Iterator i = this.field_predecessors.iterator(); i.hasNext(); ) {
                 Node n = (Node) i.next();
                 if (!t.contains(n)) continue;
                 t.writeEdge("fpred", n);
             }
-            //super.write(t);
+            super.write(t);
+        }
+        public static FieldNode read(StringTokenizer st) {
+            jq_Field f = (jq_Field) jq_Member.read(st);
+            int k = Integer.parseInt(st.nextToken());
+            Set locs = SortedArraySet.FACTORY.makeSet(HashCodeComparator.INSTANCE);
+            for (int i = 0; i < k; ++i) {
+                ProgramLocation pl = ProgramLocation.read(st);
+                locs.add(pl);
+            }
+            //n.readEdges(map, st);
+            return new FieldNode(f, locs);
         }
     }
     

@@ -259,7 +259,7 @@ public abstract class jq_Member implements jq_ClassFileConstants, Textualizable 
     public abstract boolean isStatic();
     
     public void write(Textualizer t) throws IOException {
-        t.writeReference(getDeclaringClass());
+        getDeclaringClass().write(t);
         t.writeBytes(" "+getName()+" "+getDesc());
     }
     public void writeEdges(Textualizer t) throws IOException { }

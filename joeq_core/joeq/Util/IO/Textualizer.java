@@ -29,11 +29,14 @@ public interface Textualizer {
     Textualizable readObject() throws IOException;
     Textualizable readReference() throws IOException;
     
+    void writeTypeOf(Textualizable object) throws IOException;
     void writeObject(Textualizable object) throws IOException;
     void writeEdge(String edgeName, Textualizable object) throws IOException;
     void writeReference(Textualizable object) throws IOException;
 
     void writeBytes(String s) throws IOException;
+    
+    StringTokenizer nextLine() throws IOException;
 
     int getIndex(Textualizable object);
     boolean contains(Textualizable object);
@@ -51,6 +54,10 @@ public interface Textualizer {
             this.out = out;
         }
         
+        public StringTokenizer nextLine() throws IOException {
+            return st = new StringTokenizer(in.readLine());
+        }
+        
         protected void updateTokenizer() throws IOException {
             if (st == null || !st.hasMoreElements())
                 st = new StringTokenizer(in.readLine());
@@ -59,6 +66,7 @@ public interface Textualizer {
         public Textualizable readObject() throws IOException {
             updateTokenizer();
             String className = st.nextToken();
+            if (className.equals("null")) return null;
             try {
                 Class c = Class.forName(className);
                 Method m = c.getMethod("read", new Class[] {StringTokenizer.class});
@@ -82,14 +90,19 @@ public interface Textualizer {
         public Textualizable readReference() throws IOException {
             return readObject();
         }
-    
-        public void writeObject(Textualizable object) throws IOException {
-            if (object == null) {
-                out.writeBytes("null");
-            } else {
+        
+        public void writeTypeOf(Textualizable object) throws IOException {
+            if (object != null) {
                 out.writeBytes(object.getClass().getName());
-                out.writeBytes(" ");
+                out.write(' ');
+            }
+        }
+        
+        public void writeObject(Textualizable object) throws IOException {
+            if (object != null) {
                 object.write(this);
+            } else {
+                out.writeBytes("null");
             }
         }
         
@@ -119,8 +132,12 @@ public interface Textualizer {
         protected java.util.Map deferredEdges;
         
         public Map(DataInput in) {
+            this(in, new IndexMap(""));
+        }
+        
+        public Map(DataInput in, IndexedMap map) {
             super(in);
-            this.map = new IndexMap("");
+            this.map = map;
         }
         
         public Map(DataOutput out, IndexedMap map) {
@@ -130,17 +147,21 @@ public interface Textualizer {
         
         public Textualizable readObject() throws IOException {
             Textualizable t = super.readObject();
+            int s = map.size();
             int f = map.get(t);
-            readEdges(t);
-            Collection d = (Collection) deferredEdges.get(new Integer(f));
-            if (d != null) {
-                for (Iterator i = d.iterator(); i.hasNext(); ) {
-                    Pair def = (Pair) i.next();
-                    Textualizable source = (Textualizable) def.left;
-                    String edgeName = (String) def.right;
-                    source.addEdge(edgeName, t);
+            Assert._assert(f == s);
+            if (false) readEdges(t);
+            if (deferredEdges != null) {
+                Collection d = (Collection) deferredEdges.get(new Integer(f));
+                if (d != null) {
+                    for (Iterator i = d.iterator(); i.hasNext(); ) {
+                        Pair def = (Pair) i.next();
+                        Textualizable source = (Textualizable) def.left;
+                        String edgeName = (String) def.right;
+                        source.addEdge(edgeName, t);
+                    }
+                    deferredEdges.remove(t);
                 }
-                deferredEdges.remove(t);
             }
             return t;
         }
@@ -168,13 +189,14 @@ public interface Textualizer {
         }
         
         public void writeObject(Textualizable object) throws IOException {
-            map.get(object);
+            //map.get(object);
             super.writeObject(object);
             if (object != null) object.writeEdges(this);
         }
         
         public void writeReference(Textualizable object) throws IOException {
             if (!map.contains(object)) {
+                System.out.println("Not in map: "+object);
                 writeObject(object);
             } else {
                 int id = map.get(object);
@@ -197,6 +219,10 @@ public interface Textualizer {
         
         public boolean contains(Textualizable object) {
             return map.contains(object);
+        }
+        
+        public IndexedMap getMap() {
+            return map;
         }
     }
     

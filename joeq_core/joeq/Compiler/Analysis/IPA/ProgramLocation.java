@@ -212,7 +212,7 @@ public abstract class ProgramLocation implements Textualizable {
         */
         
         public void write(Textualizer t) throws IOException {
-            t.writeReference(m);
+            t.writeObject(m);
             t.writeBytes(" quad "+q.getID());
         }
         
@@ -435,7 +435,7 @@ public abstract class ProgramLocation implements Textualizable {
         */
         
         public void write(Textualizer t) throws IOException {
-            t.writeReference(m);
+            t.writeObject(m);
             t.writeBytes(" bc "+bcIndex);
         }
         

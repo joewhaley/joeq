@@ -7,6 +7,7 @@ import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -35,14 +36,12 @@ import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
 import Clazz.jq_Field;
 import Clazz.jq_LineNumberBC;
-import Clazz.jq_Member;
 import Clazz.jq_Method;
+import Clazz.jq_NameAndDesc;
 import Clazz.jq_Reference;
 import Clazz.jq_Type;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.ConcreteTypeNode;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.FieldNode;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary.GlobalNode;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.HeapObject;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.ParamNode;
@@ -1217,10 +1216,16 @@ public class CSPAResults implements PointerAnalysisResults {
         System.out.print("L "+this.L.nodeCount()+" nodes, ");
         this.mV = bdd.load(fn+".mV");
         System.out.print("mV "+this.mV.nodeCount()+" nodes, ");
+        this.mI = bdd.load(fn+".mI");
+        System.out.print("mI "+this.mI.nodeCount()+" nodes, ");
         this.actual = bdd.load(fn+".actual");
         System.out.print("actual "+this.actual.nodeCount()+" nodes, ");
         this.IE = bdd.load(fn+".IE");
         System.out.print("IE "+this.IE.nodeCount()+" nodes, ");
+        if (new File(fn+".IEc").exists()) {
+            this.IEc = bdd.load(fn+".IEc");
+            System.out.print("IEc "+this.IEc.nodeCount()+" nodes, ");
+        }
         System.out.println("done.");
         
         this.returned = new HashSet();
@@ -1229,23 +1234,23 @@ public class CSPAResults implements PointerAnalysisResults {
         
         System.out.print("Loading maps...");
         di = new DataInputStream(new FileInputStream(fn+".Vmap"));
-        Vmap = readNodeIndexMap("Variable", di);
+        Vmap = IndexMap.load("Variable", di);
         di.close();
         
         di = new DataInputStream(new FileInputStream(fn+".Imap"));
-        Imap = readProgramLocationIndexMap("Invoke", di);
+        Imap = IndexMap.load("Invoke", di);
         di.close();
         
         di = new DataInputStream(new FileInputStream(fn+".Hmap"));
-        Hmap = readNodeIndexMap("Heap", di);
+        Hmap = IndexMap.load("Heap", di);
         di.close();
         
         di = new DataInputStream(new FileInputStream(fn+".Mmap"));
-        Mmap = readMemberIndexMap("Method", di);
+        Mmap = IndexMap.load("Method", di);
         di.close();
         
         di = new DataInputStream(new FileInputStream(fn+".Fmap"));
-        Fmap = readMemberIndexMap("Field", di);
+        Fmap = IndexMap.load("Field", di);
         di.close();
         System.out.println("done.");
 
@@ -1564,105 +1569,6 @@ public class CSPAResults implements PointerAnalysisResults {
         MZset = that.MZset;
     }
 
-    private IndexMap readNodeIndexMap(String name, DataInput in) throws IOException {
-        int size = Integer.parseInt(in.readLine());
-        IndexMap m = new IndexMap(name, size);
-        for (int i=0; i<size; ++i) {
-            String s = in.readLine();
-            StringTokenizer st = new StringTokenizer(s);
-            Node n = MethodSummary.readNode(st);
-            if (n == null && i != 0) {
-                System.out.println("Cannot find node: "+s);
-                n = new GlobalNode((jq_Method) null);
-            }
-            int j = m.get(n);
-            //System.out.println(i+" = "+n);
-            Assert._assert(i == j);
-            while (st.hasMoreTokens()) {
-                String t = st.nextToken();
-                if (t.equals("returned")) {
-                    returned.add(n);
-                } else if (t.equals("thrown")) {
-                    thrown.add(n);
-                } else if (t.equals("passed")) {
-                    PassedParameter pp = PassedParameter.read(st);
-                    passedParams.add(pp, n);
-                    n.recordPassedParameter(pp);
-                } else if (t.equals("fsucc")) {
-                    int num = Integer.parseInt(st.nextToken());
-                    if (num <= j) {
-                        FieldNode n2 = (FieldNode) m.get(num);
-                        n.addAccessPathEdge(n2.getField(), n2);
-                    }
-                } else if (t.equals("fpred")) {
-                    int num = Integer.parseInt(st.nextToken());
-                    if (num <= j) {
-                        FieldNode fn = (FieldNode) n;
-                        Node n2 = (Node) m.get(num);
-                        n2.addAccessPathEdge(fn.getField(), fn);
-                    }
-                } else if (t.equals("succ")) {
-                    jq_Field f = (jq_Field) jq_Member.read(st);
-                    int num = Integer.parseInt(st.nextToken());
-                    if (num <= j) {
-                        Node n2 = (Node) m.get(num);
-                        n.addEdge(f, n2);
-                    }
-                } else if (t.equals("pred")) {
-                    jq_Field f = (jq_Field) jq_Member.read(st);
-                    int num = Integer.parseInt(st.nextToken());
-                    if (num <= j) {
-                        Node n2 = (Node) m.get(num);
-                        n2.addEdge(f, n);
-                    }
-                }
-            }
-        }
-        return m;
-    }
-    
-    private IndexMap readMemberIndexMap(String name, DataInput in) throws IOException {
-        int size = Integer.parseInt(in.readLine());
-        IndexMap m = new IndexMap(name, size);
-        for (int i=0; i<size; ++i) {
-            String s = in.readLine();
-            StringTokenizer st = new StringTokenizer(s);
-            jq_Member f = jq_Member.read(st);
-            int j = m.get(f);
-            //System.out.println(i+" = "+n);
-            Assert._assert(i == j);
-        }
-        return m;
-    }
-    
-    private IndexMap readTypeIndexMap(String name, DataInput in) throws IOException {
-        int size = Integer.parseInt(in.readLine());
-        IndexMap m = new IndexMap(name, size);
-        for (int i=0; i<size; ++i) {
-            String s = in.readLine();
-            StringTokenizer st = new StringTokenizer(s);
-            jq_Type f = jq_Type.read(st);
-            int j = m.get(f);
-            //System.out.println(i+" = "+n);
-            Assert._assert(i == j);
-        }
-        return m;
-    }
-    
-    private IndexMap readProgramLocationIndexMap(String name, DataInput in) throws IOException {
-        int size = Integer.parseInt(in.readLine());
-        IndexMap m = new IndexMap(name, size);
-        for (int i=0; i<size; ++i) {
-            String s = in.readLine();
-            StringTokenizer st = new StringTokenizer(s);
-            ProgramLocation mc = ProgramLocation.read(st);
-            int j = m.get(mc);
-            //System.out.println(i+" = "+n);
-            Assert._assert(i == j);
-        }
-        return m;
-    }
-    
     public static void main(String[] args) throws IOException {
         CSPAResults r = runAnalysis(args, null);
         r.interactive();
@@ -2522,6 +2428,23 @@ public class CSPAResults implements PointerAnalysisResults {
                             increaseCount = false;
                         } else {
                             System.out.println("Method: "+m);
+                            int k = Mmap.get(m);
+                            TypedBDD bdd = new TypedBDD(M.ithVar(k), M);
+                            results.add(bdd);
+                        }
+                    }
+                } else if (command.equals("methodvars")) {
+                    jq_Class c = (jq_Class) jq_Type.parseType(st.nextToken());
+                    if (c == null) {
+                        System.out.println("Cannot find class");
+                        increaseCount = false;
+                    } else {
+                        jq_Method m = c.getDeclaredMethod(st.nextToken());
+                        if (m == null) {
+                            System.out.println("Cannot find method");
+                            increaseCount = false;
+                        } else {
+                            System.out.println("Method: "+m);
                             Collection method_nodes = methodToVariables.getValues(m);
                             BDD localVars = bdd.zero();
                             for (Iterator k = method_nodes.iterator(); k.hasNext(); ) {
@@ -2596,8 +2519,13 @@ public class CSPAResults implements PointerAnalysisResults {
                 } else if (command.equals("thread")) {
                     int k = Integer.parseInt(st.nextToken());
                     jq_Method run = (jq_Method) thread_runs.get(k);
+                    System.out.println(k+": "+run);
                     BDD m = M.ithVar(getMethodIndex(run));
-                    TypedBDD bdd = new TypedBDD(getReachableVars(m), V1c, V1);
+                    TypedBDD bdd = new TypedBDD(m, M);
+                    results.add(bdd);
+                } else if (command.equals("reachable")) {
+                    TypedBDD bdd1 = parseBDD(results, st.nextToken());
+                    TypedBDD bdd = new TypedBDD(getReachableVars(bdd1.bdd), V1c, V1);
                     results.add(bdd);
                 } else if (command.equals("comparemods")) {
                     compareMods();
@@ -2798,6 +2726,7 @@ public class CSPAResults implements PointerAnalysisResults {
     }
     
     public BDD getReachableVars(BDD method_plus_context0) {
+        System.out.println("Method = "+method_plus_context0.toStringWithDomains());
         BDD result = bdd.zero();
         BDD allInvokes = mI.exist(Nset);
         BDD new_m = method_plus_context0.id();
@@ -2810,8 +2739,53 @@ public class CSPAResults implements PointerAnalysisResults {
             new_m.orWith(methods);
             new_m.applyWith(method_plus_context0.id(), BDDFactory.diff);
             if (new_m.isZero()) break;
-            method_plus_context0.orWith(new_m);
+            method_plus_context0.orWith(new_m.id());
         }
+        return result;
+    }
+    
+    public BDD getThreadLocalObjects() {
+        jq_NameAndDesc main_nd = new jq_NameAndDesc("main", "([Ljava/lang/String;)V");
+        jq_Method main = null;
+        for (Iterator i = Mmap.iterator(); i.hasNext(); ) {
+            main = (jq_Method) i.next();
+            if (main_nd.equals(main.getNameAndDesc()))
+                break;
+        }
+        BDD result = bdd.zero();
+        int M_i;
+        BDD m, b;
+        if (main != null) {
+            M_i = Mmap.get(main);
+            m = M.ithVar(M_i);
+            m.andWith(V1c.ithVar(0));
+            b = getReachableVars(m);
+            BDD b2 = b.relprod(vP, V1set);
+            b.free();
+            b2.andWith(M.ithVar(M_i));
+            b2.andWith(Z.ithVar(0));
+            result.orWith(b2);
+            m.free();
+        }
+        for (Iterator i = thread_runs.iterator(); i.hasNext(); ) {
+            jq_Method run = (jq_Method) i.next();
+            M_i = Mmap.get(run);
+            m = M.ithVar(M_i);
+            for (int j = 0; j <= 1; ++j) {
+                m.andWith(V1c.ithVar(j));
+                b = getReachableVars(m);
+                BDD b2 = b.relprod(vP, V1set);
+                b.free();
+                b2.andWith(M.ithVar(M_i));
+                b2.andWith(Z.ithVar(j));
+                result.orWith(b2);
+            }
+            m.free();
+        }
+        
+        // find objects for which exactly one thread points to it.
+        
+        
         return result;
     }
     
