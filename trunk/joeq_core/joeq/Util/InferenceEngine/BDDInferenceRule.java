@@ -150,6 +150,7 @@ public class BDDInferenceRule extends InferenceRule {
                 }
             }
             if (pairing != null) {
+                System.out.println("Relation "+r+" domains "+domainsOf(relationValues[i]));
                 relationValues[i].replaceWith(pairing);
                 pairing.reset();
             }
@@ -176,6 +177,10 @@ public class BDDInferenceRule extends InferenceRule {
         for (int i = 1; i < relationValues.length; ++i) {
             topBdd.andWith(relationValues[i]);
         }
+        
+        if (solver.TRACE) {
+            solver.out.println("Doing relprod, bdd sizes: "+topBdd.nodeCount()+", "+relationValues[0].nodeCount()+", "+quantify.nodeCount());
+        }
         BDD result = topBdd.relprod(relationValues[0], quantify);
         topBdd.free();
         quantify.free();
@@ -193,6 +198,8 @@ public class BDDInferenceRule extends InferenceRule {
             }
         }
         if (pairing != null) {
+            if (solver.TRACE)
+                System.out.println("Result domains "+domainsOf(result));
             result.replaceWith(pairing);
             pairing.reset();
         }
@@ -276,7 +283,11 @@ public class BDDInferenceRule extends InferenceRule {
                 }
             }
             if (pairing != null) {
+                if (solver.TRACE)
+                    System.out.println("Relation "+r+" domains "+domainsOf(allRelationValues[i]));
                 allRelationValues[i].replaceWith(pairing);
+                if (solver.TRACE)
+                    System.out.println("Relation "+r+" domains now "+domainsOf(allRelationValues[i]));
                 pairing.reset();
             }
             newRelationValues[i] = allRelationValues[i].apply(oldRelationValues[i], BDDFactory.diff);
@@ -310,7 +321,9 @@ public class BDDInferenceRule extends InferenceRule {
                 topBdd.andWith(allRelationValues[j].id());
             }
             if (solver.TRACE) solver.out.print(" x " + ((RuleTerm)top.get(i)).relation+"'");
+            if (solver.TRACE) solver.out.print(" (relprod nodes: "+topBdd.nodeCount()+"x"+newRelationValues[i].nodeCount()+"x"+quantify.nodeCount());
             results[i] = topBdd.relprod(newRelationValues[i], quantify);
+            if (solver.TRACE) solver.out.print("="+results[i].nodeCount()+")");
             topBdd.free();
             newRelationValues[i].free();
             if (solver.TRACE_FULL) solver.out.println(" = "+results[i].toStringWithDomains());
@@ -334,6 +347,8 @@ public class BDDInferenceRule extends InferenceRule {
             }
         }
         if (pairing != null) {
+            if (solver.TRACE)
+                System.out.println("Result domains "+domainsOf(result));
             result.replaceWith(pairing);
             pairing.reset();
         }
@@ -345,6 +360,21 @@ public class BDDInferenceRule extends InferenceRule {
         oldRelation.free();
         oldRelationValues = allRelationValues;
         return changed;
+    }
+
+    /**
+     * @param bdd
+     * @return
+     */
+    private String domainsOf(BDD b) {
+        int[] a = b.support().scanSetDomains();
+        if (a == null) return "(none)";
+        StringBuffer sb = new StringBuffer();
+        for (int i = 0; i < a.length; ++i) {
+            sb.append(solver.bdd.getDomain(a[i]));
+            if (i < a.length-1) sb.append(',');
+        }
+        return sb.toString();
     }
     
 }
