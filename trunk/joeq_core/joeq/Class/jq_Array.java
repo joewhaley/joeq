@@ -25,6 +25,9 @@ public class jq_Array extends jq_Reference implements jq_ClassFileConstants, Obj
     public final String getName() {
         return element_type.getName()+"[]";
     }
+    public final String shortName() {
+        return element_type.shortName()+"[]";
+    }
     public final String getJDKName() { return "["+element_type.getJDKDesc(); }
     public final String getJDKDesc() { return getJDKName(); }
     public final byte getLogElementSize() {
@@ -133,6 +136,18 @@ public class jq_Array extends jq_Reference implements jq_ClassFileConstants, Obj
         }
     }
 
+    public static byte getTypecode(jq_Array array) {
+	if (array == BOOLEAN_ARRAY) return T_BOOLEAN;
+	if (array == CHAR_ARRAY) return T_CHAR;
+	if (array == FLOAT_ARRAY) return T_FLOAT;
+	if (array == DOUBLE_ARRAY) return T_DOUBLE;
+	if (array == BYTE_ARRAY) return T_BYTE;
+	if (array == SHORT_ARRAY) return T_SHORT;
+	if (array == INT_ARRAY) return T_INT;
+	if (array == LONG_ARRAY) return T_LONG;
+	throw new ClassFormatError();
+    }
+
     public final int getInstanceSize(int length) {
         int size = ARRAY_HEADER_SIZE+(length<<getLogElementSize());
         return (size+3) & ~3;
@@ -182,6 +197,11 @@ public class jq_Array extends jq_Reference implements jq_ClassFileConstants, Obj
         vt[0] = Unsafe.addressOf(this);
         System.arraycopy(jlovtable, 1, vt, 1, jlovtable.length-1);
         state = STATE_CLSINITIALIZED;
+    }
+    
+    public void accept(jq_TypeVisitor tv) {
+        tv.visitArray(this);
+        super.accept(tv);
     }
     
     private final jq_Type element_type;

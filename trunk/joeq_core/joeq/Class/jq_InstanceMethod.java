@@ -12,6 +12,7 @@ package Clazz;
 //friend jq_ClassLoader;
 
 import Bootstrap.PrimordialClassLoader;
+import ClassLib.ClassLibInterface;
 import UTF.Utf8;
 import jq;
 
@@ -44,14 +45,14 @@ public class jq_InstanceMethod extends jq_Method {
         i = nd.getDesc().getParamDescriptors();
         for (int j=1; j<num; ++j) {
             Utf8 pd = (Utf8)i.nextUtf8();
-            param_types[j] = ClassLib.sun13.java.lang.ClassLoader.getOrCreateType(clazz.getClassLoader(), pd);
+            param_types[j] = ClassLibInterface.i.getOrCreateType(clazz.getClassLoader(), pd);
             ++words;
             if ((param_types[j] == jq_Primitive.LONG) ||
                 (param_types[j] == jq_Primitive.DOUBLE)) ++words;
         }
         param_words = words;
         Utf8 rd = i.getReturnDescriptor();
-        return_type = ClassLib.sun13.java.lang.ClassLoader.getOrCreateType(clazz.getClassLoader(), rd);
+        return_type = ClassLibInterface.i.getOrCreateType(clazz.getClassLoader(), rd);
     }
     public final void clearOverrideFlags() { this.isOverridden = false; this.isOverriding = false; }
     public final void isOverriddenBy(jq_InstanceMethod that) {
@@ -59,7 +60,8 @@ public class jq_InstanceMethod extends jq_Method {
     }
     public final boolean isOverriding() { return isOverriding; }
     public final boolean isOverridden() { return isOverridden; }
-    public final void setOffset(int offset) {
+    public final void prepare() { prepare(INVALID_OFFSET); }
+    public final void prepare(int offset) {
         jq.assert(state == STATE_LOADED); state = STATE_PREPARED; this.offset = offset;
     }
     public final int getOffset() { chkState(STATE_PREPARED); return offset; }
@@ -75,5 +77,10 @@ public class jq_InstanceMethod extends jq_Method {
     
     public boolean isInitializer() { return false; }
 
+    public void accept(jq_MethodVisitor mv) {
+        mv.visitInstanceMethod(this);
+        super.accept(mv);
+    }
+    
     public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LClazz/jq_InstanceMethod;");
 }

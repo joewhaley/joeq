@@ -12,7 +12,7 @@ package Interpreter;
 import Clazz.*;
 import Run_Time.*;
 import Bootstrap.PrimordialClassLoader;
-import Compil3r.Analysis.BytecodeVisitor;
+import Compil3r.BytecodeAnalysis.BytecodeVisitor;
 import jq;
 
 public abstract class Interpreter {

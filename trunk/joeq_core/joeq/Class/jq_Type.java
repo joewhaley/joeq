@@ -13,6 +13,7 @@ import UTF.Utf8;
 import jq;
 import Run_Time.Unsafe;
 import Run_Time.Reflection;
+import ClassLib.ClassLibInterface;
 import Bootstrap.PrimordialClassLoader;
 
 public abstract class jq_Type {
@@ -24,11 +25,12 @@ public abstract class jq_Type {
         this.desc = desc;
         Class c = null;
         if (!jq.Bootstrapping)
-            c = ClassLib.sun13.java.lang.Class.createNewClass(ClassLib.sun13.java.lang.Class._class, this);
+            c = ClassLibInterface.i.createNewClass(this);
         this.class_object = c;
     }
     
     public abstract String getName();
+    public abstract String shortName();
     public final Utf8 getDesc() { return desc; }
     public abstract String getJDKDesc();
     public abstract boolean isClassType();
@@ -39,7 +41,7 @@ public abstract class jq_Type {
     public abstract ClassLoader getClassLoader();
     public abstract int getReferenceSize();
     public final jq_Array getArrayTypeForElementType() {
-        return (jq_Array)ClassLib.sun13.java.lang.ClassLoader.getOrCreateType(getClassLoader(), desc.getAsArrayDescriptor());
+        return (jq_Array)ClassLibInterface.i.getOrCreateType(getClassLoader(), desc.getAsArrayDescriptor());
     }
     public boolean needsDynamicLink(jq_Method method) { return false; }
     public final Class getJavaLangClassObject() {
@@ -62,6 +64,8 @@ public abstract class jq_Type {
     public abstract void sf_initialize();
     public abstract void cls_initialize();
 
+    public void accept(jq_TypeVisitor tv) { tv.visitType(this); }
+    
     public String toString() { return getName(); }
     
     public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LClazz/jq_Type;");

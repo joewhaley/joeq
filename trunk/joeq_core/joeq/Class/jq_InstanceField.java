@@ -46,7 +46,7 @@ public final class jq_InstanceField extends jq_Field {
     
     public final boolean isUnsignedType() { return type == jq_Primitive.CHAR; }
     public final int getSize() { return type.getReferenceSize(); }
-    public final void setOffset(int offset) { jq.assert(state == STATE_LOADED); state = STATE_PREPARED; this.offset = offset; }
+    public final void prepare(int offset) { jq.assert(state == STATE_LOADED); state = STATE_PREPARED; this.offset = offset; }
     public final int getOffset() { chkState(STATE_PREPARED); return offset; }
     public final boolean needsDynamicLink(jq_Method method) {
         if (jq.Bootstrapping) return getDeclaringClass().needsDynamicLink(method);
