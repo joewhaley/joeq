@@ -102,7 +102,7 @@ unsigned char* my_mmap(int start, int length)
 
     buffer = (unsigned char*)mmap(0, actual_length, PROT_READ | PROT_WRITE, MAP_SHARED, fd, actual_start);
     if (buffer == MAP_FAILED) {
-        printf("Cannot map file %s offset %d size %d.\n", filename, actual_start, actual_length);
+        printf("Cannot memory map at offset %d size %d.\n", actual_start, actual_length);
         exit(-1);
     }
     return ((unsigned char*)buffer)+start-actual_start;
