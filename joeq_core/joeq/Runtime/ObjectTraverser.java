@@ -12,6 +12,7 @@ import ClassLib.ClassLibInterface;
 import Clazz.jq_Class;
 import Clazz.jq_InstanceField;
 import Clazz.jq_StaticField;
+import Main.jq;
 import Run_Time.Reflection;
 import Util.Assert;
 
@@ -33,10 +34,8 @@ public abstract class ObjectTraverser {
     
     public static final java.lang.Object NO_OBJECT = new java.lang.Object();
     
-    public static boolean IsBootstrapping;
-
     public Object getStaticFieldValue(jq_StaticField f) {
-        if (IsBootstrapping) {
+        if (jq.IsBootstrapping) {
             java.lang.Object result = this.mapStaticField(f);
             if (result != NO_OBJECT) return this.mapValue(result);
         }
@@ -77,7 +76,7 @@ public abstract class ObjectTraverser {
         Assert._assert((f2.getModifiers() & Modifier.STATIC) != 0);
         try {
             Object o = f2.get(null);
-            if (IsBootstrapping) o = this.mapValue(o);
+            if (jq.IsBootstrapping) o = this.mapValue(o);
             return o;
         } catch (IllegalAccessException x) {
             Assert.UNREACHABLE();
@@ -86,7 +85,7 @@ public abstract class ObjectTraverser {
     }
     
     public Object getInstanceFieldValue(Object base, jq_InstanceField f) {
-        if (IsBootstrapping) {
+        if (jq.IsBootstrapping) {
             java.lang.Object result = this.mapInstanceField(base, f);
             if (result != NO_OBJECT) return this.mapValue(result);
         }
@@ -105,7 +104,7 @@ public abstract class ObjectTraverser {
         Assert._assert((f2.getModifiers() & Modifier.STATIC) == 0);
         try {
             Object o = f2.get(base);
-            if (IsBootstrapping) o = this.mapValue(o);
+            if (jq.IsBootstrapping) o = this.mapValue(o);
             return o;
         } catch (IllegalAccessException x) {
             Assert.UNREACHABLE();

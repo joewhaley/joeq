@@ -9,7 +9,6 @@ import Allocator.RuntimeCodeAllocator;
 import Allocator.SimpleAllocator;
 import Assembler.x86.x86Constants;
 import Bootstrap.PrimordialClassLoader;
-import Bootstrap.ObjectTraverser;
 import Clazz.jq_Class;
 import Clazz.jq_InstanceMethod;
 import Clazz.jq_StaticField;
@@ -179,7 +178,7 @@ public class jq_NativeThread implements x86Constants {
             schedulerThread.setNativeThread(this);
         } else {
             // schedulerThread is null if we are not native/bootstrapping.
-            Assert._assert(!ObjectTraverser.IsBootstrapping && !jq.RunningNative);
+            Assert._assert(!jq.IsBootstrapping && !jq.RunningNative);
         }
     }
 
