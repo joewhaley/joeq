@@ -48,6 +48,7 @@ public class jq_Thread implements ObjectLayout {
         this.thread_id = thread_id_factory.get() << THREAD_ID_SHIFT;
         jq.assert(this.thread_id > 0);
         jq.assert(this.thread_id < THREAD_ID_MASK);
+        this.isDead = true; // threads start as dead.
     }
 
     public Thread getJavaLangThreadObject() { return thread_object; }
@@ -85,6 +86,7 @@ public class jq_Thread implements ObjectLayout {
         Unsafe.poke4(this.registers.Esp -= 4, _destroyCurrentThread.getDefaultCompiledVersion().getEntrypoint());
     }
     public void start() {
+        this.isDead = false;
         jq_NativeThread.startJavaThread(this);
     }
     public void sleep(long millis) {
@@ -141,6 +143,8 @@ public class jq_Thread implements ObjectLayout {
     public void interrupt() { }
     public boolean isInterrupted(boolean clear) { return false; }
     public boolean isAlive() { return !isDead; }
+    public boolean isDaemon() { return isDaemon; }
+    public void setDaemon(boolean b) { isDaemon = b; }
     public int countStackFrames() { return 0; }
     public int getThreadId() { return thread_id; }
 
