@@ -1202,9 +1202,6 @@ public class PA {
     }
     
     public void solvePointsTo() {
-        try {
-            dumpBDDRelations();
-        } catch (IOException x) {}
         if (INCREMENTAL1) {
             solvePointsTo_incremental();
             return;
@@ -1977,6 +1974,9 @@ public class PA {
         addAllMethods();
         buildTypes();
         bindParameters();
+        try {
+            dumpBDDRelations();
+        } catch (IOException x) {}
         solvePointsTo();
     }
     
