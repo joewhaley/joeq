@@ -58,7 +58,7 @@ public class FullyContextSensitiveBDD {
     public static final boolean TRACE_TRIMMING  = false || TRACE_ALL;
     public static final boolean TRACE_TIMES     = false || TRACE_ALL;
 
-    public static final boolean USE_CHA = false;
+    public static final boolean USE_CHA = true;
 
     public static void main(String[] args) {
         HostedVM.initialize();
@@ -321,7 +321,7 @@ public class FullyContextSensitiveBDD {
             boolean change = false;
             
             // propagate loads/stores.
-            if (matchEdges()) change = true;
+            if (matchEdges_incremental()) change = true;
             
             return change;
         }
@@ -512,7 +512,7 @@ public class FullyContextSensitiveBDD {
                     
                     time = System.currentTimeMillis();
                     // propagate loads/stores.
-                    matchEdges();
+                    matchEdges_incremental();
                     time = System.currentTimeMillis() - time;
                     if (TRACE_TIMES || time > 400) System.out.println("Matching edges: "+(time/1000.));
                     
@@ -521,6 +521,12 @@ public class FullyContextSensitiveBDD {
                     transitiveClosure(nodes);
                     time = System.currentTimeMillis() - time;
                     if (TRACE_TIMES || time > 400) System.out.println("Transitive closure: "+(time/1000.));
+                    
+                    if (renumbering14 != null) {
+                        renumbering14.free();
+                        renumbering24.free();
+                        renumbering34.free();
+                    }
                     
                     if (TRACE_CALLEE) System.out.println("Reachable nodes is now "+nodes.toStringWithDomains(bdd, ts));
                 }
@@ -750,6 +756,154 @@ public class FullyContextSensitiveBDD {
                 change = true;
             }
             edges24.free();
+            V2set.free();
+            V4andFDset.free();
+            if (TRACE_MATCHING) System.out.println("Done matching edges.");
+            return change;
+        }
+        
+        boolean matchEdges_incremental() {
+            if (TRACE_MATCHING) System.out.println("Matching edges...");
+            
+            BDD V2set, V4andFDset;
+            V2set = V2.set();
+            V4andFDset = V4.set(); V4andFDset.andWith(FD.set());
+            
+            // Keep track of whether there was a change.
+            boolean change = false;
+            
+            BDD allEdges12 = edges.replace(V3toV2);
+            BDD allEdges23 = edges.replace(V1toV2);
+            BDD allEdges24 = edges.replace(V1V3toV2V4);
+            BDD newEdges12 = allEdges12.id();
+            BDD newEdges23 = allEdges23.id();
+            BDD newEdges24 = allEdges24.id();
+            
+            BDD newLoads14 = loads.replace(V2toV4);
+            BDD newStores43 = stores.replace(V2toV4);
+            
+            for (;;) {
+                
+                // loop-carried dependencies: allEdges12, allEdges23, allEdges24,
+                //                            newEdges12, newEdges23, newEdges24,
+                //                            newLoads14, newStores43
+                
+                // cache old edges.
+                BDD oldEdges13 = edges.id();
+                
+                // Repeat for transitive closure.
+                for (;;) {
+                    // Transitive closure.
+                    // V1xV2 , V2xV3                        v1=v2; v2=v3;
+                    // -------------                        -------------
+                    //     V1xV3                                v1=v3;
+                    BDD newEdges13 = allEdges12.relprod(newEdges23, V2set);
+                    if (!allEdges12.equals(newEdges12) || !newEdges23.equals(allEdges23)) {
+                        newEdges13.orWith(newEdges12.relprod(allEdges23, V2set));
+                    }
+                    newEdges12.free(); newEdges23.free();
+                    newEdges13.applyWith(edges.id(), BDDFactory.diff);
+                    if (newEdges13.isZero()) {
+                        newEdges13.free();
+                        break;
+                    }
+                    
+                    change = true;
+                    
+                    if (TRACE_MATCHING) {
+                        System.out.println("New edges due to transitive closure: "+newEdges13.toStringWithDomains(bdd));
+                    }
+                    
+                    newEdges12 = newEdges13.replace(V3toV2);
+                    newEdges23 = newEdges13.replace(V1toV2);
+                    
+                    edges.orWith(newEdges13);
+                    allEdges12.orWith(newEdges12.id());
+                    allEdges23.orWith(newEdges23.id());
+                }
+                
+                // Matching rules:
+                
+                // Propagate loads to their children.
+                // V1x(V2xFD) , V2xV4                   v1=v2.fd; v2=v4;
+                // ------------------                   ----------------
+                //     V1x(V4xFD)                           v1=v4.fd;
+                BDD newLoadSet1 = loads.relprod(newEdges24, V2set);
+                
+                // Temporarily make loads into V1x(V4xFD)
+                loads.replaceWith(V2toV4);
+                
+                // Add result to loads.
+                newLoadSet1.applyWith(loads.id(), BDDFactory.diff);
+                if (TRACE_MATCHING) System.out.println("New loads: "+newLoadSet1.toStringWithDomains(bdd));
+                loads.orWith(newLoadSet1.id());
+                newLoads14.orWith(newLoadSet1);
+                
+                // Propagate stores to their children.
+                // (V2xFD)xV3 , V2xV4                   v2.fd=v3; v2=v4;
+                // ------------------                   ----------------
+                //     (V4xFD)xV3                           v4.fd=v3;
+                BDD newStoreSet1 = stores.relprod(newEdges24, V2set);
+                
+                // Temporarily make stores into (V4xFD)xV3
+                stores.replaceWith(V2toV4);
+                
+                // Add result to stores.
+                newStoreSet1.applyWith(stores.id(), BDDFactory.diff);
+                if (TRACE_MATCHING) System.out.println("New stores: "+newStoreSet1.toStringWithDomains(bdd));
+                stores.orWith(newStoreSet1.id());
+                newStores43.orWith(newStoreSet1);
+                
+                // Match loads and stores.
+                // V1x(V4xFD) , (V4xFD)xV3           v1=v4.fd; v4.fd=v3; 
+                // -----------------------           -------------------
+                //          V1xV3                           v1=v3;
+                BDD newEdges13 = loads.relprod(newStores43, V4andFDset);
+                if (!loads.equals(newLoads14) || !newStores43.equals(stores)) {
+                    newEdges13.orWith(newLoads14.relprod(stores, V4andFDset));
+                }
+                
+                // calculate the diff.
+                newEdges13.applyWith(edges.id(), BDDFactory.diff);
+                
+                // Change loads back into V1x(V2xFD)
+                loads.replaceWith(V4toV2);
+                // Change stores back into (V2xFD)xV3
+                stores.replaceWith(V4toV2);
+                
+                // test for termination.
+                if (newEdges13.isZero()) {
+                    newEdges13.free();
+                    break;
+                }
+                
+                change = true;
+                
+                if (TRACE_MATCHING) {
+                    System.out.println("New edges due to matching load/stores: "+newEdges13.toStringWithDomains(bdd));
+                }
+                
+                // recalculate loop-carried dependencies
+                newEdges12 = newEdges13.replace(V3toV2);
+                newEdges23 = newEdges13.replace(V1toV2);
+                allEdges12.orWith(newEdges12.id());
+                allEdges23.orWith(newEdges23.id());
+                newLoads14 = bdd.zero();
+                newStores43 = bdd.zero();
+
+                // Add result to edges.
+                edges.orWith(newEdges13);
+                
+                // recalculate newEdges24 and allEdges24
+                newEdges24 = edges.id();
+                newEdges24.applyWith(oldEdges13, BDDFactory.diff);
+                newEdges24.replaceWith(V1V3toV2V4);
+                allEdges24.orWith(newEdges24.id());
+                
+                if (TRACE_MATCHING) {
+                    System.out.println("Total new edges: "+newEdges24.toStringWithDomains(bdd));
+                }
+            }
             V2set.free();
             V4andFDset.free();
             if (TRACE_MATCHING) System.out.println("Done matching edges.");
