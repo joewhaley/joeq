@@ -385,14 +385,16 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         dos.close();
     }
     
-    void dumpTuples(String fileName, BDD allQ) throws IOException {
+    void dumpTuples(String fileName, BDD relation) throws IOException {
         DataOutputStream dos = new DataOutputStream(new FileOutputStream(fileName));
-        if (allQ.isZero()) {
+        if (relation.isZero()) {
             dos.close();
             return;
         }
-        Assert._assert(!allQ.isOne());
-        int[] a = allQ.support().scanSetDomains();
+        Assert._assert(!relation.isOne());
+        BDD rsup = relation.support();
+        int[] a = rsup.scanSetDomains();
+        rsup.free();
         BDD allDomains = bdd.one();
         System.out.print(fileName+" domains {");
         for (int i = 0; i < a.length; ++i) {
@@ -400,13 +402,13 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
             System.out.print(" "+d.toString());
             allDomains.andWith(d.set());
         }
-        System.out.println(" ) = "+allQ.nodeCount()+" nodes");
+        System.out.println(" ) = "+relation.nodeCount()+" nodes");
         BDDDomain primaryDomain = bdd.getDomain(a[0]);
         int lines = 0;
-        BDD foo = allQ.exist(allDomains.and(primaryDomain.ithVar(0)));
+        BDD foo = relation.exist(allDomains.exist(primaryDomain.set()));
         for (Iterator i = foo.iterator(primaryDomain.set()); i.hasNext(); ) {
             BDD q = (BDD) i.next();
-            q.andWith(allQ.id());
+            q.andWith(relation.id());
             while (!q.isZero()) {
                 BDD sat = q.satOne(allDomains, bdd.zero());
                 BDD sup = q.support();
@@ -415,26 +417,23 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
                 long[] v = sat.scanAllVar();
                 sat.free();
                 BDD t = bdd.one();
-                for (int j = 0, k = 0; j < bdd.numberOfDomains(); ++j) {
+                for (int j = 0, k = 0, l = 0; j < bdd.numberOfDomains(); ++j) {
                     BDDDomain d = bdd.getDomain(j);
                     if (k >= a.length || a[k] != j) {
                         Assert._assert(v[j] == 0, "v["+j+"] is "+v[j]);
-                        dos.writeBytes("* ");
+                        //dos.writeBytes("* ");
                         t.andWith(d.domain());
                         continue;
                     } else {
                         ++k;
                     }
-                    if (v[j] == 0) {
-                        BDD qs = q.support();
-                        qs.andWith(d.ithVar(0));
-                        boolean no_intersection = qs.isZero();
-                        qs.free();
-                        if (no_intersection) {
-                            dos.writeBytes("* ");
-                            t.andWith(d.domain());
-                            continue;
-                        }
+                    if (l >= b.length || b[l] != j) {
+                        Assert._assert(v[j] == 0, "v["+j+"] is "+v[j]);
+                        dos.writeBytes("* ");
+                        t.andWith(d.domain());
+                        continue;
+                    } else {
+                        ++l;
                     }
                     dos.writeBytes(v[j]+" ");
                     t.andWith(d.ithVar(v[j]));
