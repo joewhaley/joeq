@@ -50,19 +50,34 @@ public class AndersenPointerAnalysis {
     public static final boolean TRACK_CHANGED_FIELDS = false;
 
     public static final class Visitor implements ControlFlowGraphVisitor {
-        public static boolean added_hook = false;
+        public static boolean added_hook = true;
         public void visitCFG(ControlFlowGraph cfg) {
             INSTANCE.methodsToVisit.add(cfg);
             if (!added_hook) {
                 added_hook = true;
                 Runtime.getRuntime().addShutdownHook(new Thread() {
                     public void run() {
-                        INSTANCE.iterate();
-                        System.out.println("Result of Andersen pointer analysis:");
-                        System.out.println(INSTANCE.dumpResults());
+                        doIt();
                     }
                 });
             }
+        }
+        public static void doIt() {
+            INSTANCE.iterate();
+            System.out.println("Result of Andersen pointer analysis:");
+            System.out.println(dumpResults(INSTANCE.callSiteToTargets));
+            System.out.println(computeStats(INSTANCE.callSiteToTargets));
+
+            System.out.println("Compare to CHA/RTA:");
+            HashMap cha_rta_callSiteToTargets = new HashMap();
+            for (Iterator i=INSTANCE.callSiteToTargets.entrySet().iterator(); i.hasNext(); ) {
+                Map.Entry e = (Map.Entry)i.next();
+                CallSite cs = (CallSite)e.getKey();
+                CallTargets ct = cs.m.getCallTargets();
+                cha_rta_callSiteToTargets.put(cs, ct);
+            }
+            System.out.println(dumpResults(cha_rta_callSiteToTargets));
+            System.out.println(computeStats(cha_rta_callSiteToTargets));
         }
     }
     
@@ -264,24 +279,18 @@ public class AndersenPointerAnalysis {
     
     public static final String lineSep = System.getProperty("line.separator");
     
-    public static final int HISTOGRAM_SIZE = 50;
+    public static final int HISTOGRAM_SIZE = 100;
     
-    public String dumpResults() {
+    public static String computeStats(Map m) {
         StringBuffer sb = new StringBuffer();
         int[] histogram = new int[HISTOGRAM_SIZE];
-        for (Iterator i=callSiteToTargets.entrySet().iterator(); i.hasNext(); ) {
+        for (Iterator i=m.entrySet().iterator(); i.hasNext(); ) {
             Map.Entry e = (Map.Entry)i.next();
             CallSite cs = (CallSite)e.getKey();
             Set s = (Set)e.getValue();
-            sb.append(cs.toString());
-            sb.append(": {");
             int x = s.size();
-            sb.append(x);
             if (x >= HISTOGRAM_SIZE) x = HISTOGRAM_SIZE-1;
             histogram[x]++;
-            sb.append("} ");
-            sb.append(s.toString());
-            sb.append(lineSep);
         }
         for (int i=0; i<HISTOGRAM_SIZE; ++i) {
             if (histogram[i] > 0) {
@@ -293,6 +302,23 @@ public class AndersenPointerAnalysis {
                 if (histogram[i] > 1) sb.append('s');
                 sb.append(lineSep);
             }
+        }
+        return sb.toString();
+    }
+    
+    public static String dumpResults(Map m) {
+        StringBuffer sb = new StringBuffer();
+        for (Iterator i=m.entrySet().iterator(); i.hasNext(); ) {
+            Map.Entry e = (Map.Entry)i.next();
+            CallSite cs = (CallSite)e.getKey();
+            Set s = (Set)e.getValue();
+            sb.append(cs.toString());
+            sb.append(": {");
+            int x = s.size();
+            sb.append(x);
+            sb.append("} ");
+            sb.append(s.toString());
+            sb.append(lineSep);
         }
         return sb.toString();
     }
@@ -420,7 +446,8 @@ public class AndersenPointerAnalysis {
                     Node base = (Node)j.next();
                     if (TRACE) out.println("Checking base node: "+base);
                     Set s_cn = getConcreteNodes(base);
-                    definite_targets.addAll(mc.getCallTargets(s_cn));
+                    Set targets = mc.getCallTargets(s_cn);
+                    definite_targets.addAll(targets);
                 }
             }
             if (TRACE) out.println("Set of definite targets of "+mc+": "+definite_targets);
