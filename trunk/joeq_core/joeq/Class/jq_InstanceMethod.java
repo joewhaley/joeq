@@ -64,10 +64,12 @@ public class jq_InstanceMethod extends jq_Method {
     }
     public final int getOffset() { chkState(STATE_PREPARED); return offset; }
     public final boolean isVirtual() { chkState(STATE_PREPARED); return offset != INVALID_OFFSET; }
-    public final boolean needsDynamicLink(jq_Method method) { 
+    public final boolean needsDynamicLink(jq_Method method) {
         if (jq.Bootstrapping) return getDeclaringClass().needsDynamicLink(method);
-        return state >= STATE_PREPARED;
-    } 
+        if (method.getDeclaringClass() == this.getDeclaringClass())
+            return false;
+        return state < STATE_SFINITIALIZED;
+    }
     public final boolean isStatic() { return false; }
     public final void unprepare() { chkState(STATE_PREPARED); offset = INVALID_OFFSET; state = STATE_LOADED; }
     
