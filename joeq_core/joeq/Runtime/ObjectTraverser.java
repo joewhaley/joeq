@@ -326,6 +326,7 @@ public class ObjectTraverser {
             }
             
             // we need to reopen the RandomAccessFile on VM startup
+            jq.assert(((Object[])o2)[0] != null);
             Object[] args = { ((Object[])o2)[0], name, new Boolean(false) };
             jq_Method raf_open = ClassLibInterface._class.getOrCreateStaticMethod("open_static", "(Ljava/io/RandomAccessFile;Ljava/lang/String;Z)V");
             MethodInvocation mi = new MethodInvocation(raf_open, args);

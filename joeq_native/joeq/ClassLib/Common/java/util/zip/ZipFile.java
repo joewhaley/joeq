@@ -35,11 +35,11 @@ public abstract class ZipFile implements ZipConstants {
     private static void initIDs() { }
     public static void bootstrap_init(java.util.zip.ZipFile dis, String name) throws java.io.IOException {
         jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/util/zip/ZipFile;");
-        //jq_InstanceField _raf = _class.getOrCreateInstanceField("raf", "Ljava/io/RandomAccessFile;");
         jq_InstanceField _name = _class.getOrCreateInstanceField("name", "Ljava/lang/String;");
         Reflection.putfield_A(dis, _name, name);
-        //RandomAccessFile raf = new RandomAccessFile(name, "r");
-        //Reflection.putfield_A(dis, _raf, raf);
+        jq_InstanceField _raf = _class.getOrCreateInstanceField("raf", "Ljava/io/RandomAccessFile;");
+        RandomAccessFile raf = new RandomAccessFile(name, "r");
+        Reflection.putfield_A(dis, _raf, raf);
 	//this.readCEN();
     }
     public void __init__(String name) throws java.io.IOException {
