@@ -20,7 +20,6 @@ import org.sf.javabdd.BDD;
 import org.sf.javabdd.BDDDomain;
 import org.sf.javabdd.BDDFactory;
 import org.sf.javabdd.BDDPairing;
-import org.sf.javabdd.BuDDyFactory;
 
 import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
@@ -127,7 +126,8 @@ public class BDDPointerAnalysis {
     }
     
     public BDDPointerAnalysis(int nodeCount, int cacheSize) {
-        bdd = BuDDyFactory.init(nodeCount, cacheSize);
+        bdd = org.sf.javabdd.BuDDyFactory.init(nodeCount, cacheSize);
+        //bdd = org.sf.javabdd.CUDDFactory.init(nodeCount, cacheSize);
         
         bdd.setCacheRatio(4);
         bdd.setMaxIncrease(nodeCount / 4);
@@ -1420,7 +1420,7 @@ public class BDDPointerAnalysis {
         /* (non-Javadoc)
          * @see Compil3r.Quad.CallGraph#getRoots()
          */
-        protected Collection getRoots() {
+        public Collection getRoots() {
             return roots;
         }
         
