@@ -823,18 +823,8 @@ public class MethodSummary {
                     setRegister(dest_r, n);
                 }
                 return;
-            }else
-            if(bogusSummaryProvider.getReplacementMethod(m) != null) {
-//              special case: replaced methods.
-                RegisterOperand dest = Invoke.getDest(obj);
-                if (dest != null) {
-                    Register dest_r = dest.getRegister();
-                    // todo: get the real type.                    
-                    Node n = ConcreteTypeNode.get((jq_Reference) m.getReturnType(), new QuadProgramLocation(method, obj));
-                    setRegister(dest_r, n);
-                }
-                return;
             }
+            
             this.methodCalls.add(mc);
             jq_Type[] params = m.getParamTypes();
             ParamListOperand plo = Invoke.getParamList(obj);
@@ -848,16 +838,28 @@ public class MethodSummary {
             }
             if (m.getReturnType().isReferenceType()
                 /*&& !m.getReturnType().isAddressType()*/
-                ) {
-                RegisterOperand dest = Invoke.getDest(obj);
-                if (dest != null) {
-                    Register dest_r = dest.getRegister();
-                    ReturnValueNode n = (ReturnValueNode)callToRVN.get(mc);
-                    if (n == null) {
-                        callToRVN.put(mc, n = new ReturnValueNode(mc));
-                        passedAsParameter.add(n);
+                )
+            {
+                if(bogusSummaryProvider.getReplacementMethod(m) != null) {
+//                  special case: replaced methods.
+                    RegisterOperand dest = Invoke.getDest(obj);
+                    if (dest != null) {
+                        Register dest_r = dest.getRegister();
+                        // todo: get the real type.                    
+                        Node n = ConcreteTypeNode.get((jq_Reference) m.getReturnType(), new QuadProgramLocation(method, obj));
+                        setRegister(dest_r, n);
                     }
-                    setRegister(dest_r, n);
+                } else {
+	                RegisterOperand dest = Invoke.getDest(obj);
+	                if (dest != null) {
+	                    Register dest_r = dest.getRegister();
+	                    ReturnValueNode n = (ReturnValueNode)callToRVN.get(mc);
+	                    if (n == null) {
+	                        callToRVN.put(mc, n = new ReturnValueNode(mc));
+	                        passedAsParameter.add(n);
+	                    }
+	                    setRegister(dest_r, n);
+	                }
                 }
             }
             // exceptions are handled by visitExceptionThrower.
