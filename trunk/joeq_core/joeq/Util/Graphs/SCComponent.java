@@ -4,27 +4,25 @@
 package Util.Graphs;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.Vector;
 
 import Clazz.jq_Method;
 import Compil3r.Quad.CallGraph;
 import Util.Assert;
-import Util.Collections.Pair;
 
 /**
  * <code>SCComponent</code> models a <i>Strongly connected component</i> \
  of a graph.
  * The only way to split a graph into <code>SCComponent</code>s is though
- * <code>buildSSC</code>.
+ * <code>buildSCC</code>.
  * That method is quite flexible: all it needs is a root node (or a set of
  * root nodes) and a <i>Navigator</i>: an object implementing the 
  * <code>Navigator</code> interface that provides the 
@@ -40,6 +38,17 @@ import Util.Collections.Pair;
  */
 public final class SCComponent implements Comparable, Serializable {
 
+    /** Default navigator through a component graph (a dag of strongly
+        connected components).  */
+    public static final Navigator SCC_NAVIGATOR = new Navigator() {
+        public Collection next(Object node) {
+            return Arrays.asList(((SCComponent) node).next);
+        }
+        public Collection prev(Object node) {
+            return Arrays.asList(((SCComponent) node).prev);
+        }
+    };
+    
     // THE FIRST PART CONTAINS JUST SOME STATIC METHODS & FIELDS
 
     // The internal version of a SCC: basically the same as the external
@@ -48,14 +57,14 @@ public final class SCComponent implements Comparable, Serializable {
     // to the small one to save some memory ...
     private static class SCComponentInt{
 	// the nodes of this SCC
-	public Vector nodes = new Vector();
+	public ArrayList nodes = new ArrayList();
 	// the successors; kept as both a set (for quick membership testing)
 	// and a vector for uniquely ordered and fast iterations. 
 	public Set next = new HashSet();
-	public Vector next_vec = new Vector();
+	public ArrayList next_vec = new ArrayList();
 	// the predecessors; similar to next, next_vec
 	public Set prev = new HashSet();
-	public Vector prev_vec = new Vector();
+	public ArrayList prev_vec = new ArrayList();
 	// the "economic format" component
 	public SCComponent comp = new SCComponent();
 	// is there any edge to itself?
@@ -69,17 +78,27 @@ public final class SCComponent implements Comparable, Serializable {
     // Mapping node (Object) -> Strongly Connected Component (SCComponentInt)
     private static Hashtable node2scc;
     // The vector of the reached nodes, in the order DFS finished them
-    private static Vector nodes_vector;
+    private static ArrayList nodes_vector;
     private static SCComponentInt current_scc_int;
     // the navigator used in the DFS algorithm
     private static Navigator nav;
     // vector to put the generated SCCs in.
-    private static Vector scc_vector;
+    private static ArrayList scc_vector;
 
 
+    /** Convenient version of <code>buildSCC(Object[],Navigator)</code>
+     * 
+     * @param graph directed graph
+     * @return set of <code>graph</code>'s strongly connected components
+     */
+    public static final Set/*SCComponent<Node>*/ buildSCC(Graph /*Node*/ graph) {
+        return buildSCC(graph.getRoots(), graph.getNavigator());
+    }
+    
     /** Convenient version for the single root case (see the other 
-	<code>buildSCC</code> for details). Returns the single element of
-	the set of top level SCCs. */
+     * <code>buildSCC</code> for details). Returns the single element of
+     * the set of top level SCCs.
+     */
     public static final SCComponent buildSCC(final Object root,
 					     final Navigator navigator) {
 	Set set = buildSCC(Collections.singleton(root), navigator);
@@ -99,13 +118,13 @@ public final class SCComponent implements Comparable, Serializable {
 	<code>SCCTopSortedGraph</code>). */
     public static final Set buildSCC(final Collection roots,
 				     final Navigator navigator) {
-	scc_vector = new Vector();
+	scc_vector = new ArrayList();
 	// STEP 1: compute the finished time of each node in a DFS exploration.
 	// At the end of this step, nodes_vector will contain all the reached
 	// nodes, in the order of their "finished" time. 
 	nav = navigator;
 	analyzed_nodes = new HashSet();
-	nodes_vector   = new Vector();
+	nodes_vector   = new ArrayList();
         for(Iterator i=roots.iterator(); i.hasNext(); ) {
             Object root = i.next();
 	    // avoid reanalyzing nodes
@@ -116,14 +135,7 @@ public final class SCComponent implements Comparable, Serializable {
 	// STEP 2. build the SCCs by doing a DFS in the reverse graph.
 	node2scc = new Hashtable();
 	// "in reverse" navigator
-	nav = new Navigator() {
-		public Collection next(Object node) {
-		    return navigator.prev(node);
-		}
-		public Collection prev(Object node) {
-		    return navigator.next(node);
-		}
-	    };
+	nav = new ReverseNavigator(navigator);
 
 	// Explore the nodes in the decreasing order of their finishing time.
 	// This phase will create the SCCs (big format) and initialize the
@@ -135,7 +147,7 @@ public final class SCComponent implements Comparable, Serializable {
 	reachable_nodes = analyzed_nodes; 
 	analyzed_nodes = new HashSet();
 	for(int i = nodes_vector.size() - 1; i >= 0; i--){
-	    Object node = nodes_vector.elementAt(i);
+	    Object node = nodes_vector.get(i);
 	    // explore nodes that are still unanalyzed
 	    if(node2scc.get(node) == null) {
 		current_scc_int = new SCComponentInt();
@@ -152,7 +164,7 @@ public final class SCComponent implements Comparable, Serializable {
 
 	// Save the root SCComponents somewhere before activating the GC.
 	Set root_sccs = new HashSet();
-	Vector root_sccs_vec = new Vector();
+        ArrayList root_sccs_vec = new ArrayList();
         for(Iterator i=roots.iterator(); i.hasNext(); ) {
             Object root = i.next();
 	    SCComponent root_scc = ((SCComponentInt) node2scc.get(root)).comp;
@@ -206,7 +218,7 @@ public final class SCComponent implements Comparable, Serializable {
     private static final void put_the_edges(final Navigator navigator){
 	int nb_scc = scc_vector.size();
 	for(int i = 0; i < scc_vector.size(); i++){
-	    SCComponentInt compi = (SCComponentInt) scc_vector.elementAt(i);
+	    SCComponentInt compi = (SCComponentInt) scc_vector.get(i);
 	    for(Iterator it = compi.nodes.iterator(); it.hasNext(); ) {
 		Object node = it.next();
                 Collection edges = navigator.next(node);
@@ -236,7 +248,7 @@ public final class SCComponent implements Comparable, Serializable {
     // the deterministic case). 
     private static final void build_compressed_format() {
 	for(int i = 0; i < scc_vector.size(); i++){
-	    SCComponentInt compInt = (SCComponentInt) scc_vector.elementAt(i);
+	    SCComponentInt compInt = (SCComponentInt) scc_vector.get(i);
 	    SCComponent comp = compInt.comp;
 	    comp.loop  = compInt.loop;
 	    comp.nodes = new HashSet(compInt.nodes);
@@ -249,6 +261,46 @@ public final class SCComponent implements Comparable, Serializable {
 	}
     }
 
+    final void fillEntriesAndExits(Navigator nav) {
+        int size = this.size();
+
+        boolean isEntry[] = new boolean[size()];
+        boolean isExit[] = new boolean[size()];
+        int nb_entries = 0;
+        int nb_exits = 0;
+
+        for (int i = 0; i < size; i++) {
+            Object node = nodes_array[i];
+
+            Collection next = nav.next(node);
+            for (Iterator j = next.iterator(); j.hasNext(); ) {
+                if (!nodes.contains(j.next())) {
+                    isEntry[i] = true;
+                    nb_entries++;
+                    break;
+                }
+            }
+
+            Collection prev = nav.prev(node);
+            for (Iterator j = prev.iterator(); j.hasNext(); ) {
+                if (!nodes.contains(j.next())) {
+                    isExit[i] = true;
+                    nb_exits++;
+                    break;
+                }
+            }
+        }
+
+        entries = new Object[nb_entries];
+        exits = new Object[nb_exits];
+
+        for (int i = 0, pentries = 0, pexits = 0; i < size; i++) {
+            if (isEntry[i])
+                entries[pentries++] = nodes_array[i];
+            if (isExit[i])
+                exits[pexits++] = nodes_array[i];
+        }
+    }
 
     // HERE STARTS THE REAL (i.e. NON STATIC) CLASS
 
@@ -267,6 +319,10 @@ public final class SCComponent implements Comparable, Serializable {
     // The predecessors.
     private SCComponent[] prev;
 
+    // entries into this SCC
+    private Object[] entries;
+    private Object[] exits;
+    
     // is there any arc to itself?
     private boolean loop;
     /** Checks whether <code>this</code> strongly connected component
@@ -317,6 +373,15 @@ public final class SCComponent implements Comparable, Serializable {
 	return nodes.contains(node);
     }
 
+    /** Returns the entry nodes of <code>this</code> strongly
+        connected component.  These are the nodes taht are reachable
+        from outside the component. */
+    public final Object[] entries() { return entries; }
+    /** Returns the exit nodes of <code>this</code> strongly connected
+        component.  These are the nodes that have arcs toward nodes
+        outside the component. */
+    public final Object[] exits()   { return exits; }
+    
     // the next and prev links in the double linked list of SCCs in
     // decreasing topological order
     SCComponent nextTopSort = null;
@@ -330,52 +395,7 @@ public final class SCComponent implements Comparable, Serializable {
      * decreasing topological order */
     public final SCComponent prevTopSort() { return prevTopSort; }
 
-    public final Set getEntrypoints(final Navigator nav) {
-        LinkedHashSet result = new LinkedHashSet();
-outer:
-        for (int i=0; i<this.nodes_array.length; ++i) {
-            Object node1 = this.nodes_array[i];
-            for (Iterator j=nav.prev(node1).iterator(); j.hasNext(); ) {
-                Object node2 = j.next();
-                if (!this.nodes.contains(node2)) {
-                    result.add(node1);
-                    continue outer;
-                }
-            }
-        }
-        return result;
-    }
-
-    public final Set getExitpoints(final Navigator nav) {
-        LinkedHashSet result = new LinkedHashSet();
-outer:
-        for (int i=0; i<this.nodes_array.length; ++i) {
-            Object node1 = this.nodes_array[i];
-            for (Iterator j=nav.next(node1).iterator(); j.hasNext(); ) {
-                Object node2 = j.next();
-                if (!this.nodes.contains(node2)) {
-                    result.add(node1);
-                    continue outer;
-                }
-            }
-        }
-        return result;
-    }
-    
-    public final Set getExitEdges(final Navigator nav) {
-        LinkedHashSet result = new LinkedHashSet();
-        for (int i=0; i<this.nodes_array.length; ++i) {
-            Object node1 = this.nodes_array[i];
-            for (Iterator j=nav.next(node1).iterator(); j.hasNext(); ) {
-                Object node2 = j.next();
-                if (!this.nodes.contains(node2)) {
-                    result.add(new Pair(node1, node2));
-                }
-            }
-        }
-        return result;
-    }
-    
+    /** Returns the list of <code>SCComponent</code>s in topologically-sorted order. */
     public final List/*<SCComponent>*/ listTopSort() {
         int n = 1;
         SCComponent c = this;
