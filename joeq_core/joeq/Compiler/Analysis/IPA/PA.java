@@ -2316,7 +2316,7 @@ public class PA {
     
     SubtypeHelper retrieveSubtypeHelper(){
         if(this._subtypeHelper == null){
-            this._subtypeHelper = new SubtypeHelper(this); 
+            this._subtypeHelper = SubtypeHelper.newSubtypeHelper(this, System.getProperty("pa.subtypehelpertype")); 
         }
         
         return this._subtypeHelper;
