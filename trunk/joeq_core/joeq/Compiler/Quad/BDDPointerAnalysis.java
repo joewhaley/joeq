@@ -52,6 +52,15 @@ import Util.Collections.IndexMap;
 import Util.Collections.SortedArraySet;
 
 /**
+ * This is an implementation of the "Points-to Analysis using BDDs" algorithm
+ * described in the PLDI 2003 paper by Berndl, Lhotak, Qian, Hendren and Umanee.
+ * This code is based on their original implementation available at:
+ * http://www.sable.mcgill.ca/bdd/.  This version has been rewritten in Java and
+ * requires the open-source JavaBDD library, available at http://javabdd.sf.net.
+ * 
+ * This implementation extends Berndl et al.'s algorithm to support on-the-fly
+ * computation of the call graph using BDDs.  See the handleVirtualCalls() method.
+ * 
  * @author John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
@@ -121,7 +130,7 @@ public class BDDPointerAnalysis {
         bdd = BuDDyFactory.init(nodeCount, cacheSize);
         
         bdd.setCacheRatio(4);
-        bdd.setMaxIncrease(cacheSize);
+        bdd.setMaxIncrease(nodeCount / 4);
         
         int[] domains = new int[domainBits.length];
         for (int i=0; i<domainBits.length; ++i) {
