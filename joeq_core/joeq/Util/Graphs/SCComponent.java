@@ -262,7 +262,7 @@ public final class SCComponent implements Comparable, Serializable, Textualizabl
         }
     }
 
-    final void fillEntriesAndExits(Navigator nav) {
+    public final void fillEntriesAndExits(Navigator nav) {
         int size = this.size();
 
         boolean isEntry[] = new boolean[size()];
