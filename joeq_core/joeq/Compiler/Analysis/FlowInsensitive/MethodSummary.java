@@ -34,6 +34,7 @@ import joeq.Class.jq_Reference;
 import joeq.Class.jq_StaticField;
 import joeq.Class.jq_Type;
 import joeq.Compiler.Analysis.IPA.LoopAnalysis;
+import joeq.Compiler.Analysis.IPA.PA;
 import joeq.Compiler.Analysis.IPA.ProgramLocation;
 import joeq.Compiler.Analysis.IPA.ProgramLocation.FakeProgramLocation;
 import joeq.Compiler.Analysis.IPA.ProgramLocation.QuadProgramLocation;
@@ -865,7 +866,7 @@ public class MethodSummary {
                 /*&& !m.getReturnType().isAddressType()*/
                 )
             {
-                if(false /*&& bogusSummaryProvider.getReplacementMethod(m) != null*/) {
+                if(PA.getBogusSummaryProvider().getReplacementMethod(m) != null) {
 //                  special case: replaced methods.
                     RegisterOperand dest = Invoke.getDest(obj);
                     if (dest != null) {
