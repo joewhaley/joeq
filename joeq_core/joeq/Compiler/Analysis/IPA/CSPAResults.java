@@ -326,6 +326,10 @@ public class CSPAResults {
             return new TypedBDD(bdd.or(bdd1.bdd), newDom);
         }
         
+        public String getDomainNames() {
+            return domainNames(dom);
+        }
+        
         BDD getDomains() {
             BDDFactory f = bdd.getFactory();
             BDD r = f.one();
@@ -342,6 +346,10 @@ public class CSPAResults {
         
         public String toString() {
         	return toString(DEFAULT_NUM_TO_PRINT);
+        }
+        
+        public String toStringAll() {
+            return toString(PRINT_ALL);
         }
         
 		public String toString(int numToPrint) {
@@ -493,6 +501,7 @@ public class CSPAResults {
 					TypedBDD r = parseBDD(results, st.nextToken());
 					results.add(r);
 					listAll = true;
+                    System.out.println("Domains: " + r.getDomainNames());
 	            } else {
 	            	System.err.println("Unrecognized command");
 	            	increaseCount = false;
@@ -514,8 +523,12 @@ public class CSPAResults {
 
 			if (increaseCount) {
 	            TypedBDD r = (TypedBDD) results.get(i-1);
-	            if (listAll) System.out.println(i+" -> "+r.toString(TypedBDD.PRINT_ALL));
-	            else System.out.println(i+" -> "+r);
+	            if (listAll) {
+                    System.out.println(i+" -> "+r.toStringAll());
+                } 
+	            else {
+                    System.out.println(i+" -> "+r);
+                } 
 	            Assert._assert(i == results.size());
 	            ++i;
 			}
