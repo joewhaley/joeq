@@ -124,7 +124,7 @@ public class MethodSummary {
             // merge global nodes.
             if ((my_global.accessPathEdges != null) || (my_global.addedEdges != null)) {
                 Set set = Collections.singleton(GlobalNode.GLOBAL);
-                my_global.replaceBy(set);
+                my_global.replaceBy(set, true);
                 /*
                 for (Iterator i=my_global.accessPathEdges.entrySet().iterator(); i.hasNext(); ) {
                     java.util.Map.Entry e = (java.util.Map.Entry)i.next();
@@ -777,14 +777,15 @@ public class MethodSummary {
          *  edges to and from this node are replaced by sets of edges to and from
          *  the nodes in the set.  The passed parameter set of this node is also
          *  added to every node in the given set. */
-        public void replaceBy(Set set) {
+        public void replaceBy(Set set, boolean removeSelf) {
             jq.assert(!set.contains(this));
             if (this.predecessors != null) {
                 for (Iterator i=this.predecessors.entrySet().iterator(); i.hasNext(); ) {
                     java.util.Map.Entry e = (java.util.Map.Entry)i.next();
                     jq_Field f = (jq_Field)e.getKey();
                     Object o = e.getValue();
-                    i.remove();
+                    if (removeSelf)
+                        i.remove();
                     if (o instanceof Node) {
                         Node that = (Node)o;
                         if (that == this) {
@@ -795,14 +796,16 @@ public class MethodSummary {
                             }
                             continue;
                         }
-                        that._removeEdge(f, this);
+                        if (removeSelf)
+                            that._removeEdge(f, this);
                         for (Iterator j=set.iterator(); j.hasNext(); ) {
                             that.addEdge(f, (Node)j.next());
                         }
                     } else {
                         for (Iterator k=((LinkedHashSet)o).iterator(); k.hasNext(); ) {
                             Node that = (Node)k.next();
-                            k.remove();
+                            if (removeSelf)
+                                k.remove();
                             if (that == this) {
                                 // add self-cycles on f to all mapped nodes.
                                 for (Iterator j=set.iterator(); j.hasNext(); ) {
@@ -811,7 +814,8 @@ public class MethodSummary {
                                 }
                                 continue;
                             }
-                            that._removeEdge(f, this);
+                            if (removeSelf)
+                                that._removeEdge(f, this);
                             for (Iterator j=set.iterator(); j.hasNext(); ) {
                                 that.addEdge(f, (Node)j.next());
                             }
@@ -824,11 +828,13 @@ public class MethodSummary {
                     java.util.Map.Entry e = (java.util.Map.Entry)i.next();
                     jq_Field f = (jq_Field)e.getKey();
                     Object o = e.getValue();
-                    i.remove();
+                    if (removeSelf)
+                        i.remove();
                     if (o instanceof Node) {
                         Node that = (Node)o;
                         jq.assert(that != this); // cyclic edges handled above.
-                        that.removePredecessor(f, this);
+                        if (removeSelf)
+                            that.removePredecessor(f, this);
                         for (Iterator j=set.iterator(); j.hasNext(); ) {
                             Node node2 = (Node)j.next();
                             node2.addEdge(f, that);
@@ -836,9 +842,11 @@ public class MethodSummary {
                     } else {
                         for (Iterator k=((LinkedHashSet)o).iterator(); k.hasNext(); ) {
                             Node that = (Node)k.next();
-                            k.remove();
+                            if (removeSelf)
+                                k.remove();
                             jq.assert(that != this); // cyclic edges handled above.
-                            that.removePredecessor(f, this);
+                            if (removeSelf)
+                                that.removePredecessor(f, this);
                             for (Iterator j=set.iterator(); j.hasNext(); ) {
                                 Node node2 = (Node)j.next();
                                 node2.addEdge(f, that);
@@ -852,11 +860,13 @@ public class MethodSummary {
                     java.util.Map.Entry e = (java.util.Map.Entry)i.next();
                     jq_Field f = (jq_Field)e.getKey();
                     Object o = e.getValue();
-                    i.remove();
+                    if (removeSelf)
+                        i.remove();
                     if (o instanceof FieldNode) {
                         FieldNode that = (FieldNode)o;
                         jq.assert(that != this); // cyclic edges handled above.
-                        that.field_predecessors.remove(this);
+                        if (removeSelf)
+                            that.field_predecessors.remove(this);
                         for (Iterator j=set.iterator(); j.hasNext(); ) {
                             Node node2 = (Node)j.next();
                             node2.addAccessPathEdge(f, that);
@@ -864,9 +874,11 @@ public class MethodSummary {
                     } else {
                         for (Iterator k=((LinkedHashSet)o).iterator(); k.hasNext(); ) {
                             FieldNode that = (FieldNode)k.next();
-                            k.remove();
+                            if (removeSelf)
+                                k.remove();
                             jq.assert(that != this); // cyclic edges handled above.
-                            that.field_predecessors.remove(this);
+                            if (removeSelf)
+                                that.field_predecessors.remove(this);
                             for (Iterator j=set.iterator(); j.hasNext(); ) {
                                 Node node2 = (Node)j.next();
                                 node2.addAccessPathEdge(f, that);
@@ -1554,33 +1566,35 @@ public class MethodSummary {
             for (Iterator i=s.iterator(); i.hasNext(); ) {
                 FieldNode dat = (FieldNode)i.next();
                 Set s2 = Collections.singleton(dis);
-                dat.replaceBy(s2);
+                dat.replaceBy(s2, true);
             }
             if (TRACE_INTRA) out.println("Resulting field node: "+dis);
             return dis;
         }
         
-        public void replaceBy(Set set) {
+        public void replaceBy(Set set, boolean removeSelf) {
             jq.assert(!set.contains(this));
             if (this.field_predecessors != null) {
                 for (Iterator i=this.field_predecessors.iterator(); i.hasNext(); ) {
                     Node that = (Node)i.next();
+                    if (removeSelf)
+                        i.remove();
                     if (that == this) {
                         // add self-cycles on f to all nodes in set.
                         for (Iterator j=set.iterator(); j.hasNext(); ) {
                             FieldNode k = (FieldNode)j.next();
                             k.addAccessPathEdge(f, k);
                         }
-                        i.remove();
                         continue;
                     }
-                    that._removeAccessPathEdge(f, this); i.remove();
+                    if (removeSelf)
+                        that._removeAccessPathEdge(f, this);
                     for (Iterator j=set.iterator(); j.hasNext(); ) {
                         that.addAccessPathEdge(f, (FieldNode)j.next());
                     }
                 }
             }
-            super.replaceBy(set);
+            super.replaceBy(set, removeSelf);
         }
         
         public void update(HashMap um) {
@@ -2208,7 +2222,7 @@ public class MethodSummary {
     }
 
     /** Instantiate a copy of the callee summary into the caller. */
-    public static void instantiate(MethodSummary caller, MethodCall mc, MethodSummary callee) {
+    public static void instantiate(MethodSummary caller, MethodCall mc, MethodSummary callee, boolean removeCall) {
         callee = callee.copy();
         //System.out.println("Instantiating "+callee+" into "+caller);
         HashMap callee_to_caller = new HashMap();
@@ -2225,7 +2239,7 @@ public class MethodSummary {
             ParamNode pn = callee.params[ii];
             if (pn == null) continue;
             LinkedHashSet s = (LinkedHashSet)callee_to_caller.get(pn);
-            pn.replaceBy(s);
+            pn.replaceBy(s, removeCall);
             if (callee.returned.contains(pn)) {
                 callee.returned.remove(pn); callee.returned.addAll(s);
             }
@@ -2236,7 +2250,7 @@ public class MethodSummary {
         ReturnValueNode rvn = new ReturnValueNode(mc);
         rvn = (ReturnValueNode)caller.nodes.get(rvn);
         if (rvn != null) {
-            rvn.replaceBy(callee.returned);
+            rvn.replaceBy(callee.returned, removeCall);
             if (caller.returned.contains(rvn)) {
                 caller.returned.remove(rvn); caller.returned.addAll(callee.returned);
             }
@@ -2247,7 +2261,7 @@ public class MethodSummary {
         ThrownExceptionNode ten = new ThrownExceptionNode(mc);
         ten = (ThrownExceptionNode)caller.nodes.get(ten);
         if (ten != null) {
-            ten.replaceBy(callee.thrown);
+            ten.replaceBy(callee.thrown, removeCall);
             if (caller.returned.contains(ten)) {
                 caller.returned.remove(ten); caller.returned.addAll(callee.thrown);
             }
@@ -2265,6 +2279,8 @@ public class MethodSummary {
             s.addAll(t);
         }
         caller.unifyAccessPaths(s);
+        if (removeCall)
+            caller.calls.remove(mc);
     }
 
     public jq_Method getMethod() { return method; }
