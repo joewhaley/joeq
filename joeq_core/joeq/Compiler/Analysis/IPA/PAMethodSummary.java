@@ -332,7 +332,9 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
                     /*new ProgramLocation.PlaceholderParameterProgramLocation(m, "forName @" + mc.getEmacsName())*/ mc, 
                     new Integer(++pa.opn));
                 pa.addToForNameMap(h, I_bdd);
-                System.out.println("Processing a call to forName: " + mc.getEmacsName());
+                if(PA.TRACE_REFLECTION){
+                    System.out.println("Processing a call to forName: " + mc.getEmacsName());
+                }
                 int H_i = pa.Hmap.get(h);
                 pa.addToVP(ms.getRVN(mc), H_i);
                 
