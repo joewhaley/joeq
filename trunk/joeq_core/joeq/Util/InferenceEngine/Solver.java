@@ -109,10 +109,12 @@ public abstract class Solver {
         dis.solve();
         time = System.currentTimeMillis() - time;
         dis.out.println("done. ("+time+" ms)");
+        long solveTime = time;
         
         dis.finish();
         
         if (dis.REPORT_STATS) {
+            System.out.println("SOLVE_TIME="+solveTime);
             dis.reportStats();
         }
         
