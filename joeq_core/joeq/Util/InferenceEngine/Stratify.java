@@ -5,12 +5,15 @@ package joeq.Util.InferenceEngine;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import java.io.IOException;
 import java.io.PrintStream;
 
 import joeq.Util.Assert;
@@ -19,6 +22,7 @@ import joeq.Util.Collections.HashWorklist;
 import joeq.Util.Collections.MultiMap;
 import joeq.Util.Collections.FilterIterator.Filter;
 import joeq.Util.Graphs.DumpDotGraph;
+import joeq.Util.Graphs.Navigator;
 import joeq.Util.Graphs.SCCTopSortedGraph;
 import joeq.Util.Graphs.SCComponent;
 
@@ -78,6 +82,8 @@ public class Stratify {
             if (o instanceof Relation) allRelations.add(o);
         }
         
+        InferenceRule.DependenceNavigator depNav_orig = new InferenceRule.DependenceNavigator(depNav);
+        
         for (int i = 1; ; ++i) {
             // Discover current stratum.
             if (TRACE) out.println("Discovering Stratum #"+i+"...");
@@ -111,6 +117,10 @@ public class Stratify {
             s.addAll(depNav.relationToUsingRule.keySet());
             System.out.println("Warning: The following relations are necessary, but not present in any strata:");
             System.out.println("    "+s);
+        }
+        
+        if (DUMP_DOTGRAPH) {
+            dumpDotGraph(depNav_orig, necessary);
         }
     }
     
@@ -381,7 +391,32 @@ public class Stratify {
     
     static boolean DUMP_DOTGRAPH = !System.getProperty("dumprulegraph", "no").equals("no");
     
+    void buildNodeToSCCMap(Map node2scc, SCComponent scc) {
+        for (Iterator i = scc.nodeSet().iterator(); i.hasNext(); ) {
+            Object o = i.next();
+            if (o instanceof SCComponent) continue;
+            Object old = node2scc.put(o, scc);
+            Assert._assert(old == null);
+        }
+    }
+    
     public void dumpDotGraph(InferenceRule.DependenceNavigator depNav, Set roots) {
+        final Map node2scc = new HashMap();
+        for (Iterator i = firstSCCs.iterator(); i.hasNext(); ) {
+            SCComponent scc = (SCComponent) i.next();
+            while (scc != null) {
+                buildNodeToSCCMap(node2scc, scc);
+                scc = scc.nextTopSort();
+            }
+        }
+        for (Iterator i = innerSCCs.keySet().iterator(); i.hasNext(); ) {
+            SCComponent scc = (SCComponent) i.next();
+            while (scc != null) {
+                buildNodeToSCCMap(node2scc, scc);
+                scc = scc.nextTopSort();
+            }
+        }
+        
         DumpDotGraph ddg = new DumpDotGraph();
         ddg.setNavigator(depNav);
         ddg.setNodeLabels(new Filter() {
@@ -389,17 +424,28 @@ public class Stratify {
                 return o.toString();
             }
         });
+        ddg.setClusters(new Filter() {
+            public Object map(Object o) {
+                return node2scc.get(o);
+            }
+        });
+        ddg.setClusterNesting(new Navigator() {
+            public Collection next(Object node) {
+                return innerSCCs.getValues(node);
+            }
+            public Collection prev(Object node) {
+                Assert.UNREACHABLE();
+                return null;
+            }
+        });
+        
         ddg.computeTransitiveClosure(roots);
         
-        
-        Iterator i = firstSCCs.iterator();
-        for (int a = 1; i.hasNext(); ++a) {
-            SCComponent first = (SCComponent) i.next();
-            if (solver.NOISY) out.println("Solving stratum #"+a+"...");
-            for (;;) {
-                iterate(first, false);
-                if (!again) break;
-            }
+        try {
+            ddg.dump("rules.dot");
+        } catch (IOException x) {
+            System.err.println("Error outputting rules.dot");
+            x.printStackTrace();
         }
     }
 }
