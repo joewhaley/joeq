@@ -118,7 +118,8 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
             new EnterSSA().visitCFG(cfg);
         }
         QuadIterator i = new QuadIterator(cfg);
-        int methodID = methodMap.get(cfg.getMethod());
+        int methodID = 
+            methodMap.get(cfg.getMethod());
         
         if (!GLOBAL_QUAD_NUMBERS) quadMap.clear();
         
@@ -399,10 +400,10 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
                     }
                     if (v[j] == 0) {
                         BDD qs = q.support();
-                        qs.orWith(d.set());
-                        boolean contains = qs.isOne();
+                        qs.andWith(d.ithVar(0));
+                        boolean no_intersection = qs.isZero();
                         qs.free();
-                        if (!contains) {
+                        if (no_intersection) {
                             dos.writeBytes("* ");
                             t.andWith(d.domain());
                             continue;
