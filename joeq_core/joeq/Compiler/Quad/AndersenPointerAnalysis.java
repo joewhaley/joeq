@@ -889,6 +889,7 @@ public class AndersenPointerAnalysis {
         ParamListOperand plo = Invoke.getParamList(mc.getQuad());
         for (int i=0; i<plo.length(); ++i) {
             jq_Type t = plo.get(i).getType();
+            if (i >= callee.getNumOfParams()) break;
             ParamNode pn = callee.getParamNode(i);
             if (pn == null) continue;
             PassedParameter pp = new PassedParameter(mc, i);
