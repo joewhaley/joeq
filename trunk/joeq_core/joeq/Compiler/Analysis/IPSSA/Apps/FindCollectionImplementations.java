@@ -194,6 +194,7 @@ public class FindCollectionImplementations {
     
     static jq_Class _collectionClass  = null;
     static jq_Class _iteratorClass    = null;
+    bool FILTER = false;
 
     static final String COLLECTION_SIGNATURE = "Ljava.util.Collection;";
     static final String ITERATOR_SIGNATURE   = "Ljava.util.Iterator;";    
@@ -263,9 +264,12 @@ public class FindCollectionImplementations {
         
         time = System.currentTimeMillis() - time;
         System.out.println("done. ("+(time/1000.)+" seconds)");
-        _classes = filter(getClasses(_cg.getAllMethods()), root_classes);
+	_classes = getClasses(_cg.getAllMethods());
+        if(FILTER) _classes = filter(_classes, root_classes);
         
-        System.out.println("Considering classes: " + _classes);
+        if(FILTER){
+	    System.out.println("Considering classes: " + _classes);
+	}
         
         _collections = new HashSet();
         _iterators   = new HashSet();
