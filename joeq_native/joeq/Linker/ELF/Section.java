@@ -113,14 +113,22 @@ public abstract class Section implements ELFConstants {
         public Section parseHeader() throws IOException {
             switch (type) {
             case SHT_NULL: {
-                Assert._assert(this.flags == 0);
-                Assert._assert(this.addr == 0);
-                Assert._assert(this.offset == 0);
-                Assert._assert(this.size == 0);
-                Assert._assert(this.link == SHN_UNDEF);
-                Assert._assert(this.info == 0);
-                //Assert._assert(this.addralign == 0);
-                Assert._assert(this.entsize == 0);
+                if (this.flags != 0)
+                    System.err.println("Warning! Null section flags is not 0: "+this.flags);
+                if (this.addr != 0)
+                    System.err.println("Warning! Null section addr is not 0: "+this.addr);
+                if (this.offset != 0)
+                    System.err.println("Warning! Null section offset is not 0: "+this.offset);
+                if (this.size != 0)
+                    System.err.println("Warning! Null section size is not 0: "+this.size);
+                if (this.link != SHN_UNDEF)
+                    System.err.println("Warning! Null section link is not SHN_UNDEF: "+this.link);
+                if (this.info != 0)
+                    System.err.println("Warning! Null section info is not 0: "+this.info);
+                if (this.addralign != 0)
+                    System.err.println("Warning! Null section addralign is not 0: "+this.addralign);
+                if (this.entsize != 0)
+                    System.err.println("Warning! Null section entsize is not 0: "+this.entsize);
                 return NullSection.INSTANCE;
             }
             case SHT_PROGBITS: {
@@ -135,10 +143,14 @@ public abstract class Section implements ELFConstants {
                 return SymTabSection.empty(this.flags, this.addr);
             }
             case SHT_STRTAB: {
-                Assert._assert(this.link == SHN_UNDEF);
-                Assert._assert(this.info == 0);
-                Assert._assert(this.addralign == 1);
-                Assert._assert(this.entsize == 0);
+                if (this.link != SHN_UNDEF)
+                    System.err.println("Warning! Strtab section link is not SHN_UNDEF: "+this.link);
+                if (this.info != 0)
+                    System.err.println("Warning! Strtab section info is not 0: "+this.info);
+                if (this.addralign != 1)
+                    System.err.println("Warning! Strtab section addralign is not 0: "+this.addralign);
+                if (this.entsize != 0)
+                    System.err.println("Warning! Strtab section entsize is not 0: "+this.entsize);
                 return StrTabSection.empty(this.flags, this.addr);
             }
             case SHT_RELA:
@@ -148,16 +160,23 @@ public abstract class Section implements ELFConstants {
                 Assert.TODO(); return null;
             }
             case SHT_NOTE: {
-                Assert._assert(this.link == SHN_UNDEF);
-                Assert._assert(this.info == 0);
-                Assert._assert(this.addralign == 1);
-                Assert._assert(this.entsize == 0);
+                if (this.link != SHN_UNDEF)
+                    System.err.println("Warning! Note section link is not SHN_UNDEF: "+this.link);
+                if (this.info != 0)
+                    System.err.println("Warning! Note section info is not 0: "+this.info);
+                if (this.addralign != 1)
+                    System.err.println("Warning! Note section addralign is not 0: "+this.addralign);
+                if (this.entsize != 0)
+                    System.err.println("Warning! Note section entsize is not 0: "+this.entsize);
                 return NoteSection.empty(this.flags, this.addr);
             }
             case SHT_NOBITS: {
-                Assert._assert(this.link == SHN_UNDEF);
-                Assert._assert(this.info == 0);
-                Assert._assert(this.entsize == 0);
+                if (this.link != SHN_UNDEF)
+                    System.err.println("Warning! Nobits section link is not SHN_UNDEF: "+this.link);
+                if (this.info != 0)
+                    System.err.println("Warning! Nobits section info is not 0: "+this.info);
+                if (this.entsize != 0)
+                    System.err.println("Warning! Nobits section entsize is not 0: "+this.entsize);
                 return NoBitsSection.empty(this.flags, this.addr, this.size, this.addralign);
             }
             case SHT_REL:
