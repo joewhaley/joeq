@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Collection;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 /**
  * <code>LinearSet</code> is a simplistic light-weight
@@ -106,7 +107,20 @@ public class LinearSet extends AbstractSet implements Cloneable,
 	    return true;
 	}
     }
+    
+    public void clear() {
+        list.clear();
+    }
 
+    public Object get(Object o) {
+        int index = list.indexOf(o);
+        if (index == -1) {
+            return null;
+            //throw new NoSuchElementException(o);
+        }
+        return list.get(index);
+    }
+    
     public Object clone() {
 	try{
 	    LinearSet newset = (LinearSet) super.clone();

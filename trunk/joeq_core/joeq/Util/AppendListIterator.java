@@ -12,7 +12,7 @@ package Util;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
 
-public class AppendListIterator {
+public class AppendListIterator implements ListIterator {
 
     private final ListIterator iterator1;
     private final ListIterator iterator2;
