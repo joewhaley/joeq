@@ -13,6 +13,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
@@ -27,8 +29,6 @@ import Compil3r.Quad.MethodSummary.PassedParameter;
 import Main.jq;
 import Util.Default;
 import Util.FilterIterator;
-import Util.LinkedHashMap;
-import Util.LinkedHashSet;
 
 /**
  *

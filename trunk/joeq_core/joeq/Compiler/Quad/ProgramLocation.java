@@ -7,6 +7,7 @@
 package Compil3r.Quad;
 
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 
 import Clazz.jq_InstanceMethod;
 import Clazz.jq_Method;
@@ -17,7 +18,6 @@ import Compil3r.Quad.MethodSummary.ConcreteTypeNode;
 import Compil3r.Quad.MethodSummary.Node;
 import Compil3r.Quad.Operator.Invoke;
 import Main.jq;
-import Util.LinkedHashSet;
 
 /**
  * This class combines a jq_Method with a Quad to represent a location in the code.
