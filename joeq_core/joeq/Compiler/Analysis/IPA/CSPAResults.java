@@ -3,10 +3,14 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Analysis.IPA;
 
-import java.io.*;
+import java.io.DataInput;
+import java.io.DataInputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
@@ -14,22 +18,36 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import org.sf.javabdd.*;
+import org.sf.javabdd.BDD;
+import org.sf.javabdd.BDDDomain;
+import org.sf.javabdd.BDDFactory;
 
+import Clazz.jq_Class;
+import Clazz.jq_LineNumberBC;
 import Clazz.jq_Method;
 import Clazz.jq_Reference;
 import Clazz.jq_Type;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.ConcreteTypeNode;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.FieldNode;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.ParamNode;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.ReturnValueNode;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.ThrownExceptionNode;
+import Compil3r.Analysis.IPA.ProgramLocation.BCProgramLocation;
+import Compil3r.BytecodeAnalysis.Bytecodes;
 import Compil3r.Quad.CallGraph;
 import Compil3r.Quad.LoadedCallGraph;
 import Main.HostedVM;
 import Util.Assert;
 import Util.Strings;
+import Util.Collections.GenericMultiMap;
 import Util.Collections.IndexMap;
+import Util.Collections.MultiMap;
 import Util.Collections.SortedArraySet;
 import Util.Graphs.PathNumbering;
 import Util.Graphs.PathNumbering.Path;
+import Util.IO.ByteSequence;
 
 /**
  * Records results for context-sensitive pointer analysis.  The results can
@@ -253,6 +271,118 @@ public class CSPAResults {
         }
         
     };
+    
+	public static ProgramLocation getLoadLocation(jq_Class klass, int lineNum) {
+		return getProgramLocation(klass, lineNum, Bytecodes.LoadInstruction.class, 0);
+	}
+	
+	public static ProgramLocation getAllocLocation(jq_Class klass, int lineNum) {
+		return getProgramLocation(klass, lineNum, Bytecodes.AllocationInstruction.class, 0);
+	}
+	
+	public static ProgramLocation getInvokeLocation(jq_Class klass, int lineNum) {
+		return getProgramLocation(klass, lineNum, Bytecodes.InvokeInstruction.class, 0);
+	}
+	
+    public static ProgramLocation getProgramLocation(jq_Class klass, int lineNum, Class instructionType, int k) {
+    	jq_Method m = klass.getMethodContainingLine((char) lineNum);
+    	if (m == null) return null;
+		jq_LineNumberBC[] ln = m.getLineNumberTable();
+		if (ln == null) return null;
+		int i = 0;
+		for ( ; i<ln.length; ++i) {
+			if (ln[i].getLineNum() == lineNum) break;
+		}
+		if (i == ln.length) return null;
+		int loIndex = ln[i].getStartPC();
+		int hiIndex = m.getBytecode().length;
+		if (i < ln.length-1) hiIndex = ln[i+1].getStartPC();
+		ByteSequence bs = new ByteSequence(m.getBytecode(), loIndex, hiIndex-loIndex);
+		try {
+			while (bs.available() > 0) {
+				int off = bs.getIndex();
+				Bytecodes.Instruction in = Bytecodes.Instruction.readInstruction(klass.getCP(), bs);
+				if (instructionType.isInstance(in)) {
+					if (k == 0)
+						return new BCProgramLocation(m, off);
+					--k;
+				}
+			}
+		} catch (IOException x) {
+			Assert.UNREACHABLE();
+		}
+		return null;
+    }
+    
+    /** ProgramLocation is the location of the method invocation that you want the return value of. */
+    public int getReturnValueIndex(ProgramLocation pl) {
+    	return variableIndexMap.get(new ReturnValueNode(pl));
+    }
+    
+	public int getThrownExceptionIndex(ProgramLocation pl) {
+		return variableIndexMap.get(new ThrownExceptionNode(pl));
+	}
+	
+	MultiMap methodToVariables;
+	
+	public void initializeMethodMap() {
+		methodToVariables = new GenericMultiMap();
+		for (Iterator i = variableIndexMap.iterator(); i.hasNext(); ) {
+			Node o = (Node) i.next();
+			methodToVariables.add(o.getDefiningMethod(), o);
+		}
+	}
+	
+	public int getLoadIndex(ProgramLocation pl) {
+		Collection c = methodToVariables.getValues(pl.getMethod());
+		for (Iterator i = c.iterator(); i.hasNext(); ) {
+			Node o = (Node) i.next();
+			if (o instanceof FieldNode) {
+				FieldNode ctn = (FieldNode) o;
+				if (ctn.getLocations().contains(pl))
+					return heapobjIndexMap.get(o);
+			}
+		}
+		return -1;
+	}
+	
+	public int getHeapObjectIndex(ProgramLocation pl) {
+		Collection c = methodToVariables.getValues(pl.getMethod());
+		for (Iterator i = c.iterator(); i.hasNext(); ) {
+			Node o = (Node) i.next();
+			if (o instanceof ConcreteTypeNode) {
+				ConcreteTypeNode ctn = (ConcreteTypeNode) o;
+				ProgramLocation pl2 = ctn.getLocation();
+				if (pl2 != null && pl2.equals(pl)) return heapobjIndexMap.get(o);
+			}
+		}
+		return -1;
+	}
+	
+	public static jq_Class getClass(String classname) {
+		jq_Class klass = (jq_Class) jq_Type.parseType(classname);
+		return klass;
+	}
+
+	public static jq_Method getMethod(String classname, String name, String desc) {
+		jq_Class klass = (jq_Class) jq_Type.parseType(classname);
+		if (klass == null) return null;
+		jq_Method m = (jq_Method) klass.getDeclaredMember(name, desc);
+		return m;
+	}
+	
+    public int getParameterIndex(jq_Method m, int k) {
+		Collection c = methodToVariables.getValues(m);
+		for (Iterator i = c.iterator(); i.hasNext(); ) {
+    		Object o = i.next();
+    		if (o instanceof ParamNode) {
+    			ParamNode pn = (ParamNode) o;
+    			if (pn.getMethod() == m && k == pn.getIndex())
+    				return variableIndexMap.get(o);
+    		}
+    	}
+    	return -1;
+    }
     
     public class TypedBDD {
         private static final int DEFAULT_NUM_TO_PRINT = 6;
@@ -570,10 +700,10 @@ public class CSPAResults {
                 } 
                 else {
                     System.out.println(i+" -> "+r);
-                } 
-                Assert._assert(i == results.size());
-                ++i;
-            }
+                }
+	            Assert._assert(i == results.size());
+	            ++i;
+			}
         }
     }
 
