@@ -83,6 +83,7 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
         }
         pa.vP.orWith(b);
         if (V1V2context != null) {
+            if (L.isZero()) L.andWith(pa.V1.domain().and(pa.V2.domain()).and(pa.F.domain()));
             b = L.and(V1V2context);
             if (PA.VerifyAssertions) {
                 Assert._assert(b.exist(pa.V1cV2cset).equals(L));
@@ -92,6 +93,7 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
         }
         pa.L.orWith(b);
         if (V1V2context != null) {
+            if (S.isZero()) S.andWith(pa.V1.domain().and(pa.V2.domain()).and(pa.F.domain()));
             b = S.and(V1V2context);
             if (PA.VerifyAssertions) {
                 Assert._assert(b.exist(pa.V1cV2cset).equals(S));
