@@ -2376,6 +2376,7 @@ public class PA {
                     dis.run("java", dis.cg, rootMethods);
                     System.out.println("Finished discovering call graph.");
                     dis = new PA();
+                    initialCallgraphFileName = callgraphFileName;
                     dis.cg = loadCallGraph(rootMethods);
                     rootMethods = dis.cg.getRoots();
                 } else if (!dis.DISCOVER_CALL_GRAPH) {
