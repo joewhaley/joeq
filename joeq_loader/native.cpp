@@ -460,6 +460,12 @@ extern "C" void __stdcall set_current_context(Thread* jthread, const CONTEXT* co
 	}
 }
 #else
+extern "C" int __stdcall suspend_thread(const pthread_t handle)
+{
+  printf("Suspending thread %d.\n", handle);
+  kill( handle, SIGSTOP );
+  return 0;
+}
 extern "C" pthread_t __stdcall create_thread(void * (*start)(void *), void* arg)
 {
   int code;
@@ -468,42 +474,18 @@ extern "C" pthread_t __stdcall create_thread(void * (*start)(void *), void* arg)
   if (!code) {
     // error occurred while creating the thread.
   }
+  printf("Created thread %d.\n", p);
+  suspend_thread(p);
   return p;
 }
 extern "C" void __stdcall init_thread(const pthread_t handle)
 {
-  Setup_LDT_Keeper();
-  for (;;) {
-    int initialized = 0;
-    sleep(0);
-    __asm (" movl %0, %%fs:4 "
-	   :"=r"(initialized)
-	   :
-	   );
-    if (initialized) break;
-  }
+  printf("Thread %d (%d) finished initialization.\n", handle, pthread_self());
 }
 extern "C" int __stdcall resume_thread(const pthread_t handle)
 {
-  int initialized;
-  __asm (" movl %0, %%fs:4 "
-	 :"=r"(initialized)
-	 :
-	 );
-  if (!initialized) {
-    __asm (" movl %%fs:4, %0 "
-	   :
-	   :"r"(initialized)
-	   );
-    return 0;
-  } else {
-    ptrace( PTRACE_CONT, handle, (caddr_t)1, SIGSTOP );
-    return 0;
-  }
-}
-extern "C" int __stdcall suspend_thread(const pthread_t handle)
-{
-  kill( handle, SIGSTOP );
+  printf("Resuming thread %d (%d).\n", handle, pthread_self());
+  ptrace( PTRACE_CONT, handle, (caddr_t)1, SIGSTOP );
   return 0;
 }
 
@@ -670,13 +652,13 @@ extern "C" int __stdcall release_semaphore(int semaphore, int a)
 extern "C" void __stdcall set_current_context(Thread* jthread, const CONTEXT* context)
 {
   __asm ("
-		movl %%edx, %0
-		movl %%fs:20, %%edx
-		movl %%ecx, %1
-		movl %%esp, 196(%%ecx)
+		movl %0, %%edx
+		movl %%edx, %%fs:20
+		movl %1, %%ecx
+		movl 196(%%ecx), %%esp
 		frstor 28(%%ecx)
 		pushl 184(%%ecx)
-		movl 196(%%ecx), %%esp
+		movl %%esp, 196(%%ecx)
 		pushl 176(%%ecx)
 		pushl 172(%%ecx)
 		pushl 168(%%ecx)
