@@ -96,7 +96,7 @@ public abstract class JoeqVM {
                 } catch (Throwable x) {
                     SystemInterface.debugwriteln("Exception occurred while initializing the virtual machine");
                     SystemInterface.debugwriteln(x.toString());
-                    //x.printStackTrace(System.err);
+                    x.printStackTrace(System.err);
                     //return;
                 }
             }
