@@ -158,6 +158,7 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
         InputStream getResourceAsStream(String name) {
             if (TRACE) out.println("Getting resource for "+name+" in path "+path);
             if (entries == null) initializeEntryMap();
+            if (name.charAt(0) == '/') name = name.substring(1);
             if (!entries.contains(name))
                 return null;
             if (filesep.charAt(0) != '/') name = name.replace('/', filesep.charAt(0));
@@ -229,7 +230,7 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
             if (!f.exists() || !f.isDirectory()) return;
             String[] cls = f.list(new java.io.FilenameFilter() {
                     public boolean accept(File _dir, String name) {
-                        return name.endsWith(".class");
+                        return !new File(_dir, name).isDirectory();
                     }
                 });
             
