@@ -30,9 +30,11 @@ public interface jq_MethodVisitor {
     }
     
     public class DeclaredMethodVisitor extends jq_TypeVisitor.EmptyVisitor {
-        final jq_MethodVisitor mv;
+        final jq_MethodVisitor mv; boolean trace;
         public DeclaredMethodVisitor(jq_MethodVisitor mv) { this.mv = mv; }
+        public DeclaredMethodVisitor(jq_MethodVisitor mv, boolean trace) { this.mv = mv; this.trace = trace; }
         public void visitClass(jq_Class k) {
+            if (trace) System.out.println(k.toString());
             Iterator it = new AppendIterator(new ArrayIterator(k.getDeclaredStaticMethods()),
                                                 new ArrayIterator(k.getDeclaredInstanceMethods()));
             while (it.hasNext()) {
