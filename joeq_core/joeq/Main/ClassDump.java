@@ -71,8 +71,7 @@ public abstract class ClassDump {
             //if (c.getName().toString().equals("right"))
             {
                 out.println(c.toString());
-                Compil3r.Quad.BytecodeToQuad b2q = new Compil3r.Quad.BytecodeToQuad(c);
-		Compil3r.Quad.ControlFlowGraph cfg = b2q.convert();
+                Compil3r.Quad.ControlFlowGraph cfg = Compil3r.Quad.CodeCache.getCode(c);
 		System.out.println(cfg.fullDump());
             }
         }
@@ -84,8 +83,7 @@ public abstract class ClassDump {
             //if (c.getName().toString().equals("right"))
             {
                 out.println(c.toString());
-                Compil3r.Quad.BytecodeToQuad b2q = new Compil3r.Quad.BytecodeToQuad(c);
-		Compil3r.Quad.ControlFlowGraph cfg = b2q.convert();
+                Compil3r.Quad.ControlFlowGraph cfg = Compil3r.Quad.CodeCache.getCode(c);
 		System.out.println(cfg.fullDump());
             }
         }
