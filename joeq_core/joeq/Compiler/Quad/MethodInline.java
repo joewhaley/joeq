@@ -431,15 +431,24 @@ outer:
         // in the callee's control flow graph.
         BasicBlock successor_bb = caller.createBasicBlock(callee.exit().getNumberOfPredecessors() + 1, bb.getNumberOfSuccessors(), bb.size() - invokeLocation, bb.getExceptionHandlers());
         
-        Quad fakeCallQuad = q.copy(caller.getNewQuadID());
-        Assert._assert(Invoke.getParamList(q).length() == Invoke.getParamList(fakeCallQuad).length());
+//        Quad fakeCallQuad = q.copy(caller.getNewQuadID());
+//        Assert._assert(Invoke.getParamList(q).length() == Invoke.getParamList(fakeCallQuad).length());
         MethodOperand fakeOperand = getFakeMethodOperand(Invoke.getMethod(q).getMethod());
-        if(fakeOperand != null && true){
-            Invoke.setMethod(fakeCallQuad, fakeOperand);
-//            Invoke.set
+        if(fakeOperand != null){
+            int len = fakeOperand.getMethod().getParamTypes().length;
+            Quad fakeCallQuad = Invoke.InvokeStatic.create(
+                caller.getNewQuadID(), Invoke.INVOKESTATIC_V_DYNLINK.INSTANCE, 
+                (RegisterOperand) q.getOp1().copy(), (MethodOperand) fakeOperand.copy(), 
+                len);
+            
+//            Invoke.setParam(fakeCallQuad, 0, (RegisterOperand) q.getOp1().copy());
+            for(int i = 0; i < len; i++){
+                Invoke.setParam(fakeCallQuad, i, (RegisterOperand) Invoke.getParam(q, i).copy());
+            }
+//            Invoke.setParamList(fakeCallQuad, (ParamListOperand) Invoke.getParamList(q).copy());
             successor_bb.appendQuad(fakeCallQuad);
         }
-        successor_bb.appendQuad(fakeCallQuad);
+//        successor_bb.appendQuad(fakeCallQuad);
         
         int bb_size = bb.size();
         for (int i=invokeLocation+1; i<bb_size; ++i) {
