@@ -881,7 +881,8 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                             if (TRACE) SystemInterface.debugmsg("Rewriting field signature from "+this_m.getNameAndDesc()+" to "+nd);
                             jq_InstanceField this_m2 = getOrCreateInstanceField(nd);
                             this_m2.load(this_m);
-                            this_m.unload(); this.members.remove(this_m.getNameAndDesc()); cpr.remove(this_m);
+                            this_m.unload(); Object b = this.members.remove(this_m.getNameAndDesc()); cpr.remove(this_m);
+                            if (TRACE) SystemInterface.debugmsg("Removed member "+this_m.getNameAndDesc()+" from member set of "+this+": "+b);
                             this.addDeclaredMember(nd, this_m2);
                             this_m = declared_instance_fields[i] = this_m2;
                         }
@@ -894,7 +895,8 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                             if (TRACE) SystemInterface.debugmsg("Rewriting field signature from "+this_m.getNameAndDesc()+" to "+nd);
                             jq_StaticField this_m2 = getOrCreateStaticField(nd);
                             this_m2.load(this_m);
-                            this_m.unload(); this.members.remove(this_m.getNameAndDesc()); cpr.remove(this_m);
+                            this_m.unload(); Object b = this.members.remove(this_m.getNameAndDesc()); cpr.remove(this_m);
+                            if (TRACE) SystemInterface.debugmsg("Removed member "+this_m.getNameAndDesc()+" from member set of "+this+": "+b);
                             this.addDeclaredMember(nd, this_m2);
                             this_m = static_fields[i] = this_m2;
                         }
@@ -908,7 +910,8 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                             if (TRACE) SystemInterface.debugmsg("Rewriting method signature from "+this_m.getNameAndDesc()+" to "+nd);
                             jq_InstanceMethod this_m2 = getOrCreateInstanceMethod(nd);
                             this_m2.load(this_m);
-                            this_m.unload(); this.members.remove(this_m.getNameAndDesc()); cpr.remove(this_m);
+                            this_m.unload(); Object b = this.members.remove(this_m.getNameAndDesc()); cpr.remove(this_m);
+                            if (TRACE) SystemInterface.debugmsg("Removed member "+this_m.getNameAndDesc()+" from member set of "+this+": "+b);
                             this.addDeclaredMember(nd, this_m2);
                             this_m = this_m2;
                         }
@@ -936,7 +939,8 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                             if (TRACE) SystemInterface.debugmsg("Rewriting method signature from "+this_m.getNameAndDesc()+" to "+nd);
                             jq_StaticMethod this_m2 = getOrCreateStaticMethod(nd);
                             this_m2.load(this_m);
-                            this_m.unload(); this.members.remove(this_m.getNameAndDesc()); cpr.remove(this_m);
+                            this_m.unload(); Object b = this.members.remove(this_m.getNameAndDesc()); cpr.remove(this_m);
+                            if (TRACE) SystemInterface.debugmsg("Removed member "+this_m.getNameAndDesc()+" from member set of "+this+": "+b);
                             this.addDeclaredMember(nd, this_m2);
                             this_m = this_m2;
                         }
@@ -1167,7 +1171,8 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
             this_f = getOrCreateInstanceField(nd);
             jq.assert(this_f.getState() == STATE_UNLOADED);
             this_f.load(that_f);
-            that_f.unload(); that.members.remove(that_f.getNameAndDesc());
+            that_f.unload(); Object b = that.members.remove(that_f.getNameAndDesc());
+            if (TRACE) SystemInterface.debugmsg("Removed member "+that_f.getNameAndDesc()+" from member set of "+that+": "+b);
             if (TRACE) SystemInterface.debugmsg("Adding instance field: "+this_f);
             this.addDeclaredMember(nd, this_f);
             newInstanceFields.add(this_f);
@@ -1202,7 +1207,8 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
             this_f = getOrCreateStaticField(nd);
             jq.assert(this_f.getState() == STATE_UNLOADED);
             this_f.load(that_f);
-            that_f.unload(); that.members.remove(that_f.getNameAndDesc());
+            that_f.unload(); Object b = that.members.remove(that_f.getNameAndDesc());
+            if (TRACE) SystemInterface.debugmsg("Removed member "+that_f.getNameAndDesc()+" from member set of "+that+": "+b);
             if (TRACE) SystemInterface.debugmsg("Adding static field: "+this_f);
             this.addDeclaredMember(nd, this_f);
             newStaticFields.add(this_f);
@@ -1257,7 +1263,8 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                 if (TRACE) SystemInterface.debugmsg("Creating new instance method object "+nd+".");
                 this_m = getOrCreateInstanceMethod(nd);
                 this.addDeclaredMember(nd, this_m);
-                that_m.unload(); that.members.remove(that_m.getNameAndDesc());
+                that_m.unload(); Object b = that.members.remove(that_m.getNameAndDesc());
+                if (TRACE) SystemInterface.debugmsg("Removed member "+that_m.getNameAndDesc()+" from member set of "+that+": "+b);
             }
             this_m.load(that_m);
             
@@ -1328,8 +1335,8 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                 // extract instructions of method.
                 il = new Bytecodes.InstructionList(that_m);
                 
-                that_m.unload(); that.members.remove(that_m.getNameAndDesc());
-                
+                that_m.unload(); Object b = that.members.remove(that_m.getNameAndDesc());
+                if (TRACE) SystemInterface.debugmsg("Removed member "+that_m.getNameAndDesc()+" from member set of "+that+": "+b);
             } else {
                 jq_NameAndDesc nd = that_m.getNameAndDesc();
                 //jq_NameAndDesc nd = merge_convertNameAndDesc(that_m.getNameAndDesc());
@@ -1353,7 +1360,8 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                 } else {
                     this_m = getOrCreateStaticMethod(nd);
                     this.addDeclaredMember(nd, this_m);
-                    that_m.unload(); that.members.remove(that_m.getNameAndDesc());
+                    that_m.unload(); Object b = that.members.remove(that_m.getNameAndDesc());
+                    if (TRACE) SystemInterface.debugmsg("Removed member "+that_m.getNameAndDesc()+" from member set of "+that+": "+b);
                     if (TRACE) SystemInterface.debugmsg("Created new static method object "+this_m+".");
                 }
                 this_m.load(that_m);
