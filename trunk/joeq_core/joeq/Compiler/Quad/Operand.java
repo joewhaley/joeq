@@ -215,6 +215,7 @@ public interface Operand {
         public FieldOperand(jq_Field f) { field = f; }
         public jq_Field getField() { return field; }
         public void setField(jq_Field f) { this.field = f; }
+        public void resolve() { this.field = (jq_Field) this.field.resolve(); }
         public String toString() { return "."+field.getName(); }
         public Operand copy() { return new FieldOperand(field); }
         public void attachToQuad(Quad q) { jq.Assert(instruction == null); instruction = q; }
@@ -251,6 +252,7 @@ public interface Operand {
         public MethodOperand(jq_Method t) { target = t; }
         public jq_Method getMethod() { return target; }
         public void setMethod(jq_Method f) { this.target = f; }
+        public void resolve() { this.target = (jq_Method) this.target.resolve(); }
         public String toString() { return target.toString(); }
         public Operand copy() { return new MethodOperand(target); }
         public void attachToQuad(Quad q) { jq.Assert(instruction == null); instruction = q; }

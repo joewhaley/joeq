@@ -186,7 +186,7 @@ uphere2:
             if (input.equalsIgnoreCase("a")) {
                 which = -1;
                 break;
-            } else { 
+            } else {
                 try {
                     which = Integer.parseInt(input);
                     if ((which >= 1) && (which <= count))
@@ -209,9 +209,9 @@ uphere2:
     static void printAllInclusionEdges(HashSet visited, MethodSummary.Node pnode, MethodSummary.Node node, String indent, boolean all, jq_Field f, boolean verbose) throws IOException {
         if (verbose) System.out.print(indent+"Node: "+node);
         if (pnode != null) {
-            Quad q = (Quad)apa.edgesToQuads.get(Default.pair(pnode, node));
+            Object q = apa.edgesToReasons.get(Default.pair(pnode, node));
             if (q != null)
-                if (verbose) System.out.print(" from instruction "+q);
+                if (verbose) System.out.print(" from "+q);
         }
         if (visited.contains(node)) {
             if (verbose) System.out.println(" <duplicate>, skipping.");
@@ -232,15 +232,17 @@ uphere2:
                 System.out.println(indent+"Field "+field.getName().toString()+" Parent nodes: "+inEdges);
                 System.out.print(indent+"Type 'w' to find matching writes to parent nodes, 'u' to go up: ");
                 String s = in.readLine();
-                if (s.equalsIgnoreCase("u")) {
-                    for (Iterator it3 = inEdges.iterator(); it3.hasNext(); ) {
-                        MethodSummary.Node node4 = (MethodSummary.Node)it3.next();
-                        printAllInclusionEdges(visited, null, node4, indent+"<", all, field, true);
-                    }
-                } else if (s.equalsIgnoreCase("w")) {
-                    for (Iterator it3 = inEdges.iterator(); it3.hasNext(); ) {
-                        MethodSummary.Node node4 = (MethodSummary.Node)it3.next();
-                        printAllInclusionEdges(visited, null, node4, indent+"<", all, field, false);
+                if (s != null) {
+                    if (s.equalsIgnoreCase("u")) {
+                        for (Iterator it3 = inEdges.iterator(); it3.hasNext(); ) {
+                            MethodSummary.Node node4 = (MethodSummary.Node)it3.next();
+                            printAllInclusionEdges(visited, null, node4, indent+"<", all, field, true);
+                        }
+                    } else if (s.equalsIgnoreCase("w")) {
+                        for (Iterator it3 = inEdges.iterator(); it3.hasNext(); ) {
+                            MethodSummary.Node node4 = (MethodSummary.Node)it3.next();
+                            printAllInclusionEdges(visited, null, node4, indent+"<", all, field, false);
+                        }
                     }
                 }
             }
@@ -584,6 +586,25 @@ uphere:
                     selectCallSites("size="+size, it1, it2);
                 } catch (NumberFormatException x) {
                     System.out.println("Invalid size: "+s.substring(5));
+                }
+                continue;
+            }
+            if (s.startsWith("selectivecloning")) {
+                for (Iterator it = selectedCallSites.iterator(); it.hasNext(); ) {
+                    CallSite cs = (CallSite)it.next();
+                    System.out.println("For call site: "+cs);
+                    Set targets = (Set) callGraph.get(cs);
+                    MethodSummary ms = cs.caller;
+                    PassedParameter pp = new PassedParameter(cs.m, 0);
+                    LinkedHashSet set = new LinkedHashSet();
+                    ms.getNodesThatCall(pp, set);
+                    for (Iterator it2 = set.iterator(); it2.hasNext(); ) {
+                        MethodSummary.Node node = (MethodSummary.Node)it2.next();
+                        if (node instanceof MethodSummary.OutsideNode) {
+                            SelectiveCloning.pa = apa;
+                            SelectiveCloning.searchForCloningOpportunities(toInline, (MethodSummary.OutsideNode) node, cs.m);
+                        }
+                    }
                 }
                 continue;
             }

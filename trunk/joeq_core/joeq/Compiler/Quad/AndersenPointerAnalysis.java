@@ -142,7 +142,7 @@ public class AndersenPointerAnalysis {
      * Keep track of the reason why each inclusion edge was
      * added to the graph.
      */
-    public static boolean TRACK_SOURCE_QUADS = true;
+    public static boolean TRACK_REASONS = true;
     
     /**
      * Use a set repository, rather than a set factory.
@@ -481,9 +481,9 @@ public class AndersenPointerAnalysis {
     /** Maps a node to its set of outgoing inclusion edges. */
     final HashMap nodeToInclusionEdges;
     
-    /** Maps an inclusion edge to the quad that caused the edge.
-     *  Only used if TRACK_SOURCE_QUADS is set. */
-    final HashMap edgesToQuads;
+    /** Maps an inclusion edge to the ProgramLocation that caused the edge.
+     *  Only used if TRACK_REASONS is set. */
+    final HashMap edgesToReasons;
     
     /** Set of all MethodSummary's that we care about. */
     final LinkedHashSet rootSet;
@@ -536,10 +536,10 @@ public class AndersenPointerAnalysis {
             unpropagatedEdges = null;
             collapsedNodes = null;
         }
-        if (TRACK_SOURCE_QUADS)
-            edgesToQuads = new HashMap();
+        if (TRACK_REASONS)
+            edgesToReasons = new HashMap();
         else
-            edgesToQuads = null;
+            edgesToReasons = null;
         if (TRACK_CHANGED_FIELDS) {
             /*oldChangedFields =*/ newChangedFields = new HashSet();
             changedFields_Methods = new HashSet();
@@ -774,7 +774,7 @@ public class AndersenPointerAnalysis {
         for (Iterator i=ms.getCalls().iterator(); i.hasNext(); ) {
             ProgramLocation mc = (ProgramLocation)i.next();
             CallSite cs = new CallSite(ms, mc);
-            if (TRACE) out.println("Found call: "+cs);
+            if (TRACE) out.println("Found call: "+ms+": "+mc.getQuad());
             CallTargets ct = mc.getCallTargets();
             if (TRACE) out.println("Possible targets ignoring type information: "+ct);
             LinkedHashSet definite_targets = new LinkedHashSet();
@@ -832,6 +832,7 @@ public class AndersenPointerAnalysis {
     void addParameterAndReturnMappings_native(MethodSummary caller, ProgramLocation mc) {
         if (TRACE) out.println("Adding parameter and return mappings for "+mc+" from "+caller.getMethod()+" to an unanalyzable method.");
         ParamListOperand plo = Invoke.getParamList(mc.getQuad());
+        jq_Method targetMethod = Invoke.getMethod(mc.getQuad()).getMethod();
         for (int i=0; i<plo.length(); ++i) {
             jq_Type t = plo.get(i).getType();
             if (!(t instanceof jq_Reference)) continue;
@@ -853,11 +854,11 @@ public class AndersenPointerAnalysis {
         }
         ReturnValueNode rvn = (ReturnValueNode)caller.nodes.get(new ReturnValueNode(mc));
         if (rvn != null) {
-            UnknownTypeNode utn = UnknownTypeNode.get((jq_Reference)mc.getMethod().getReturnType());
+            UnknownTypeNode utn = UnknownTypeNode.get((jq_Reference)targetMethod.getReturnType());
             if (TRACE) out.println("Adding return mapping "+rvn+" to "+utn);
             OutsideNode on = rvn;
             while (on.skip != null) on = on.skip;
-            addInclusionEdge(on, utn, mc.getQuad());
+            addInclusionEdge(on, utn, mc);
         }
         ThrownExceptionNode ten = (ThrownExceptionNode)caller.nodes.get(new ThrownExceptionNode(mc));
         if (ten != null) {
@@ -865,7 +866,7 @@ public class AndersenPointerAnalysis {
             if (TRACE) out.println("Adding thrown mapping "+ten+" to "+utn);
             OutsideNode on = ten;
             while (on.skip != null) on = on.skip;
-            addInclusionEdge(on, utn, mc.getQuad());
+            addInclusionEdge(on, utn, mc);
         }
     }
     
@@ -874,8 +875,8 @@ public class AndersenPointerAnalysis {
         ParamListOperand plo = Invoke.getParamList(mc.getQuad());
         for (int i=0; i<plo.length(); ++i) {
             jq_Type t = plo.get(i).getType();
-            if (!(t instanceof jq_Reference)) continue;
             ParamNode pn = callee.getParamNode(i);
+            if (pn == null) continue;
             PassedParameter pp = new PassedParameter(mc, i);
             LinkedHashSet s = new LinkedHashSet();
             caller.getNodesThatCall(pp, s);
@@ -883,7 +884,7 @@ public class AndersenPointerAnalysis {
             if (TRACE) out.println("Adding parameter mapping "+pn+" to set "+s);
             OutsideNode on = pn;
             while (on.skip != null) on = on.skip;
-            addInclusionEdges(on, s, mc.getQuad());
+            addInclusionEdges(on, s, mc);
         }
         ReturnValueNode rvn = (ReturnValueNode)caller.nodes.get(new ReturnValueNode(mc));
         if (rvn != null) {
@@ -892,7 +893,7 @@ public class AndersenPointerAnalysis {
             if (TRACE) out.println("Adding return mapping "+rvn+" to set "+s);
             OutsideNode on = rvn;
             while (on.skip != null) on = on.skip;
-            addInclusionEdges(on, s, mc.getQuad());
+            addInclusionEdges(on, s, mc);
         }
         ThrownExceptionNode ten = (ThrownExceptionNode)caller.nodes.get(new ThrownExceptionNode(mc));
         if (ten != null) {
@@ -901,11 +902,11 @@ public class AndersenPointerAnalysis {
             if (TRACE) out.println("Adding thrown mapping "+ten+" to set "+s);
             OutsideNode on = ten;
             while (on.skip != null) on = on.skip;
-            addInclusionEdges(on, s, mc.getQuad());
+            addInclusionEdges(on, s, mc);
         }
     }
     
-    boolean addInclusionEdges(OutsideNode n, LinkedHashSet s, Quad q) {
+    boolean addInclusionEdges(OutsideNode n, LinkedHashSet s, Object mc) {
         if (VerifyAssertions) jq.Assert(n.skip == null);
         LinkedHashSet s2 = (LinkedHashSet)nodeToInclusionEdges.get(n);
         if (s2 == null) {
@@ -927,10 +928,10 @@ public class AndersenPointerAnalysis {
                     }
                 }
             }
-            if (TRACK_SOURCE_QUADS) {
+            if (TRACK_REASONS) {
                 for (Iterator i=s.iterator(); i.hasNext(); ) {
                     Object o = i.next();
-                    edgesToQuads.put(Default.pair(n, o), q);
+                    edgesToReasons.put(Default.pair(n, o), mc);
                 }
             }
             return true;
@@ -960,8 +961,8 @@ public class AndersenPointerAnalysis {
                             }
                         }
                     }
-                    if (TRACK_SOURCE_QUADS) {
-                        edgesToQuads.put(Default.pair(n, o), q);
+                    if (TRACK_REASONS) {
+                        edgesToReasons.put(Default.pair(n, o), mc);
                     }
                 }
             }
@@ -969,7 +970,7 @@ public class AndersenPointerAnalysis {
         }
     }
     
-    void addInclusionEdge(OutsideNode n, Node s, Quad q) {
+    void addInclusionEdge(OutsideNode n, Node s, Object mc) {
         if (VerifyAssertions) jq.Assert(n.skip == null);
         if (s instanceof OutsideNode) {
             OutsideNode on = (OutsideNode)s;
@@ -997,8 +998,8 @@ public class AndersenPointerAnalysis {
                     }
                 }
             }
-            if (TRACK_SOURCE_QUADS) {
-                edgesToQuads.put(Default.pair(n, s), q);
+            if (TRACK_REASONS) {
+                edgesToReasons.put(Default.pair(n, s), mc);
             }
         } else if (s2.add(s)) {
             if ((TRACE_CHANGE && !this.change) || TRACE) {
@@ -1015,8 +1016,8 @@ public class AndersenPointerAnalysis {
                     }
                 }
             }
-            if (TRACK_SOURCE_QUADS) {
-                edgesToQuads.put(Default.pair(n, s), q);
+            if (TRACK_REASONS) {
+                edgesToReasons.put(Default.pair(n, s), mc);
             }
         }
     }
@@ -1084,26 +1085,12 @@ public class AndersenPointerAnalysis {
         for (Iterator i=s.iterator(); i.hasNext(); ) {
             Node n = (Node)i.next();
             if (checkInvalidFieldAccess(n, f)) continue;
-            if (TRACK_SOURCE_QUADS) {
-                for (Iterator j=to.iterator(); j.hasNext(); ) {
-                    Node o = (Node)j.next();
-                    Quad q = TRACK_SOURCE_QUADS ? from.getSourceQuad(f, o) : (Quad)null;
-                    if (n.addEdge(f, o, q)) {
-                        if ((TRACE_CHANGE && !this.change) || TRACE) {
-                            out.println("Changed! New edge for concrete node "+n+"."+f+": "+o);
-                        }
-                        if (TRACK_CHANGED_FIELDS) newChangedFields.add(f);
-                        this.change = true;
-                    }
+            if (n.addEdges(f, to, from)) {
+                if ((TRACE_CHANGE && !this.change) || TRACE) {
+                    out.println("Changed! New edges for concrete node "+n+"."+f+": "+to);
                 }
-            } else {
-                if (n.addEdges(f, to, null)) {
-                    if ((TRACE_CHANGE && !this.change) || TRACE) {
-                        out.println("Changed! New edges for concrete node "+n+"."+f+": "+to);
-                    }
-                    if (TRACK_CHANGED_FIELDS) newChangedFields.add(f);
-                    this.change = true;
-                }
+                if (TRACK_CHANGED_FIELDS) newChangedFields.add(f);
+                this.change = true;
             }
         }
     }
@@ -1112,11 +1099,10 @@ public class AndersenPointerAnalysis {
     void addEdgesFromConcreteNodes(Node from, jq_Field f, Node to) {
         Set s = getConcreteNodes(from);
         if (TRACE) out.println("Node "+from+" corresponds to concrete nodes "+s);
-        Quad q = TRACK_SOURCE_QUADS ? from.getSourceQuad(f, to) : (Quad)null;
         for (Iterator i=s.iterator(); i.hasNext(); ) {
             Node n = (Node)i.next();
             if (checkInvalidFieldAccess(n, f)) continue;
-            if (n.addEdge(f, to, q)) {
+            if (n.addEdge(f, to, from)) {
                 if ((TRACE_CHANGE && !this.change) || TRACE) {
                     out.println("Changed! New edge for concrete node "+n+"."+f+": "+to);
                 }
@@ -1131,17 +1117,19 @@ public class AndersenPointerAnalysis {
         LinkedHashSet result = new LinkedHashSet();
         GlobalNode.GLOBAL.getEdges(f, result);
         while (from.skip != null) from = from.skip;
-        addInclusionEdges(from, result, null);
+        FieldNode fn = FieldNode.get(GlobalNode.GLOBAL, f, null);
+        addInclusionEdges(from, result, fn);
     }
     
     // from = global.f
     void addGlobalEdges(LinkedHashSet from, jq_Field f) {
         LinkedHashSet result = new LinkedHashSet();
         GlobalNode.GLOBAL.getEdges(f, result);
+        FieldNode fn = FieldNode.get(GlobalNode.GLOBAL, f, null);
         for (Iterator j=from.iterator(); j.hasNext(); ) {
             OutsideNode n2 = (OutsideNode)j.next();
             while (n2.skip != null) n2 = n2.skip;
-            if (addInclusionEdges(n2, result, null)) result = (LinkedHashSet)result.clone();
+            if (addInclusionEdges(n2, result, fn)) result = (LinkedHashSet)result.clone();
         }
     }
     
@@ -1154,15 +1142,12 @@ public class AndersenPointerAnalysis {
             Node n2 = (Node)j.next();
             n2.getEdges(f, result);
         }
-        if (TRACE) out.println("Edges from "+base+"."+f+" : "+result);
+        if (TRACE) out.println("Edges from "+base+((f==null)?"[]":("."+f.getName()))+" : "+result);
         for (Iterator j=from.iterator(); j.hasNext(); ) {
             OutsideNode n2 = (OutsideNode)j.next();
             FieldNode fn = (FieldNode)n2;
-            Quad q;
-            if (fn.quads.isEmpty()) q = null;
-            else q = (Quad)fn.quads.iterator().next();
             while (n2.skip != null) n2 = n2.skip;
-            if (addInclusionEdges(n2, result, q)) result = (LinkedHashSet)result.clone();
+            if (addInclusionEdges(n2, result, fn)) result = (LinkedHashSet)result.clone();
         }
     }
     
@@ -1175,13 +1160,10 @@ public class AndersenPointerAnalysis {
             Node n2 = (Node)j.next();
             n2.getEdges(f, result);
         }
-        if (TRACE) out.println("Edges from "+base+"."+f+" : "+result);
+        if (TRACE) out.println("Edges from "+base+((f==null)?"[]":("."+f.getName()))+" : "+result);
         FieldNode fn = (FieldNode)from;
-        Quad q;
-        if (fn.quads.isEmpty()) q = null;
-        else q = (Quad)fn.quads.iterator().next();
         while (from.skip != null) from = from.skip;
-        addInclusionEdges(from, result, q);
+        addInclusionEdges(from, result, fn);
     }
     
     Set getConcreteNodes(Node from) {
