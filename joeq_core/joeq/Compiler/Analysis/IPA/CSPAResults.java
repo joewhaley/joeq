@@ -237,6 +237,8 @@ public class CSPAResults {
     };
     
     public class TypedBDD {
+    	private static final int DEFAULT_NUM_TO_PRINT = 6;
+    	private static final int PRINT_ALL = -1;
         BDD bdd;
         Set dom;
         
@@ -339,36 +341,40 @@ public class CSPAResults {
         }
         
         public String toString() {
-            BDD dset = getDomains();
-            double s = bdd.satCount(dset);
-            if (s == 0.) return "<empty>";
-            BDD b = bdd.id();
-            StringBuffer sb = new StringBuffer();
-            int j = 0;
-            while (!b.isZero()) {
-                if (j > 5) {
-                    sb.append("\tand "+(long)b.satCount(dset)+" others.");
-                    sb.append(Strings.lineSep);
-                    break;
-                }
-                int[] val = b.scanAllVar();
-                sb.append("\t(");
-                BDD temp = b.getFactory().one();
-                for (Iterator i=dom.iterator(); i.hasNext(); ) {
-                    BDDDomain d = (BDDDomain) i.next();
-                    int e = val[d.getIndex()];
-                    sb.append(elementToString(d, e));
-                    if (i.hasNext()) sb.append(' ');
-                    temp.andWith(d.ithVar(e));
-                }
-                sb.append(')');
-                b.applyWith(temp, BDDFactory.diff);
-                ++j;
-                sb.append(Strings.lineSep);
-            }
-            //sb.append(bdd.toStringWithDomains());
-            return sb.toString();
+        	return toString(DEFAULT_NUM_TO_PRINT);
         }
+        
+		public String toString(int numToPrint) {
+			BDD dset = getDomains();
+			double s = bdd.satCount(dset);
+			if (s == 0.) return "<empty>";
+			BDD b = bdd.id();
+			StringBuffer sb = new StringBuffer();
+			int j = 0;
+			while (!b.isZero()) {
+				if (numToPrint != PRINT_ALL && j > numToPrint - 1) {
+					sb.append("\tand "+(long)b.satCount(dset)+" others.");
+					sb.append(Strings.lineSep);
+					break;
+				}
+				int[] val = b.scanAllVar();
+				sb.append("\t(");
+				BDD temp = b.getFactory().one();
+				for (Iterator i=dom.iterator(); i.hasNext(); ) {
+					BDDDomain d = (BDDDomain) i.next();
+					int e = val[d.getIndex()];
+					sb.append(elementToString(d, e));
+					if (i.hasNext()) sb.append(' ');
+					temp.andWith(d.ithVar(e));
+				}
+				sb.append(')');
+				b.applyWith(temp, BDDFactory.diff);
+				++j;
+				sb.append(Strings.lineSep);
+			}
+			//sb.append(bdd.toStringWithDomains());
+			return sb.toString();
+		}
     }
 
     TypedBDD parseBDD(List a, String s) {
@@ -427,6 +433,7 @@ public class CSPAResults {
         DataInput in = new DataInputStream(System.in);
         for (;;) {
 			boolean increaseCount = true;
+			boolean listAll = false;
 			
         	try {
 	            System.out.print(i+"> ");
@@ -482,6 +489,10 @@ public class CSPAResults {
 	                    TypedBDD r = new TypedBDD(getAllHeapOfType(typeRef), H1o);
 	                    results.add(r);
 	                }
+	            } else if (command.equals("list")) {
+					TypedBDD r = parseBDD(results, st.nextToken());
+					results.add(r);
+					listAll = true;
 	            } else {
 	            	System.err.println("Unrecognized command");
 	            	increaseCount = false;
@@ -503,7 +514,8 @@ public class CSPAResults {
 
 			if (increaseCount) {
 	            TypedBDD r = (TypedBDD) results.get(i-1);
-	            System.out.println(i+" -> "+r);
+	            if (listAll) System.out.println(i+" -> "+r.toString(TypedBDD.PRINT_ALL));
+	            else System.out.println(i+" -> "+r);
 	            Assert._assert(i == results.size());
 	            ++i;
 			}
