@@ -203,7 +203,9 @@ public class BDDInferenceRule extends InferenceRule {
         }
         BDD topBdd = solver.bdd.one();
         for (int i = 1; i < relationValues.length; ++i) {
+            if (solver.TRACE) solver.out.print(" (and nodes: "+topBdd.nodeCount()+"x"+relationValues[i].nodeCount());
             topBdd.andWith(relationValues[i]);
+            if (solver.TRACE) solver.out.print("="+topBdd.nodeCount()+")");
             if (topBdd.isZero()) {
                 if (solver.TRACE) solver.out.println("Result became empty!  Stopping early.");
                 for ( ; i < relationValues.length; ++i) {
