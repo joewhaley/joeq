@@ -98,80 +98,62 @@ public class CSPAResults implements PointerAnalysisResults {
     /** BDD factory object, to perform BDD operations. */
     BDDFactory bdd;
 
-    /** Map between variables and indices in the V1o domain. */
-    IndexMap variableIndexMap;
-    /** Map between heap objects and indices in the H1o domain. */
-    IndexMap heapobjIndexMap;
-    /** Map between fields and indices in the FD domain. */
-    IndexMap fieldIndexMap;
+    /** Map between variables and indices in the V1 domain. */
+    IndexMap Vmap;
+    /** Map between heap objects and indices in the H1 domain. */
+    IndexMap Hmap;
+    /** Map between fields and indices in the F domain. */
+    IndexMap Fmap;
 
-    /** BDD domain for context number of variable. */
-    public BDDDomain V1c;
-    /** BDD domain for variable number. */
-    public BDDDomain V1o;
-    /** BDD domain for context number of heap object. */
-    public BDDDomain H1c;
-    /** BDD domain for heap object number. */
-    public BDDDomain H1o;
-    /** BDD domain for field descriptor. */
-    public BDDDomain FD;
-    /** Extra BDD domain for context number of variable. */
-    public BDDDomain V2c;
-    /** Extra BDD domain for variable number. */
-    public BDDDomain V2o;
-    /** Extra BDD domain for context number of heap object. */
-    public BDDDomain H2c;
-    /** Extra BDD domain for heap object number. */
-    public BDDDomain H2o;
+    BDDDomain V1, V2, I, H1, H2, Z, F, T1, T2, N, M;
+    BDDDomain V1c, V2c, H1c, H2c;
+    BDDDomain V3, V3c, H3, H3c;
     
-    public BDDDomain V3c, V3o;
-    public BDDDomain H3c, H3o;
-    
-    /** Points-to BDD: V1c x V1o x H1c x H1o.
+    /** Points-to BDD: V1c x V1 x H1c x H1.
      * This contains the result of the points-to analysis.
      * A relation (V,H) is in the BDD if variable V can point to heap object H.
      */
-    BDD pointsTo;
+    BDD vP;
 
-    /** Field BDD: H1c x H1o x FD x H2c x H2o.
+    /** Field BDD: H1c x H1 x F x H2c x H2.
      * This contains the result of the points-to analysis.
      * A relation (H1,F,H2) is in the BDD if the field F of heap object H1 can
      * point to heap object H2.
      */
-    BDD fieldPt;
+    BDD hP;
     
-    /** Accessible locations BDD: V1c x V1o x V2c x V2o.
+    /** Accessible locations BDD: V1c x V1 x V2c x V2.
      * This contains the call graph relation.
-     * A relation (V1c,V1o,V2c,V2o) is in the BDD if the method containing V1o
-     * under the context V1c calls the method containing V2o under the context
+     * A relation (V1c,V1,V2c,V2) is in the BDD if the method containing V1
+     * under the context V1c calls the method containing V2 under the context
      * V2c.
      */
     BDD callGraphRelation;
     
-    /** Accessible locations BDD: V1c x V1o x V2c x V2o.
+    /** Accessible locations BDD: V1c x V1 x V2c x V2.
      * This contains the transitive call graph relation.
-     * A relation (V1c,V1o,V2c,V2o) is in the BDD if there is a path in the
-     * call graph from the method containing V1o under the context V1c to the
-     * method containing V2o under the context V2c.
+     * A relation (V1c,V1,V2c,V2) is in the BDD if there is a path in the
+     * call graph from the method containing V1 under the context V1c to the
+     * method containing V2 under the context V2c.
      */
     BDD accessibleLocations;
     
-    /** Points-to BDD: V1o x H1o.
+    /** Points-to BDD: V1 x H1.
      * Just cached because it is used often.
      */
     BDD ci_pointsTo;
 
-    /** Stores BDD: V2c x V2o x FD x V1c x V1o. 
+    /** Stores BDD: V2c x V2 x F x V1c x V1. 
      * Holds the store instructions in the program.
-     * A relation (V2c,V2o,FD,V1c,V1o) is in the BDD if the program contains
-     * a store instruction of the form v2.fd = v1;
+     * A relation (V2c,V2,F,V1c,V1) is in the BDD if the program contains
+     * a store instruction of the form v2.F = v1;
      */
     BDD stores;
 
-    /** Loads BDD: V2c x V2o x V1c x V1o x FD. 
+    /** Loads BDD: V2c x V2 x V1c x V1 x F. 
      * Holds the load instructions in the program.
-     * A relation (V2c,V2o,V1c,V1o,FD) is in the BDD if the program contains
-     * a load instruction of the form v2 = v1.fd;
+     * A relation (V2c,V2,V1c,V1,F) is in the BDD if the program contains
+     * a load instruction of the form v2 = v1.F;
      */
     BDD loads;
     
@@ -195,36 +177,36 @@ public class CSPAResults implements PointerAnalysisResults {
     
     /** Returns the points-to set for the given variable. */
     public TypedBDD getPointsToSet(int var) {
-        BDD result = ci_pointsTo.restrict(V1o.ithVar(var));
-        return new TypedBDD(result, H1o);
+        BDD result = ci_pointsTo.restrict(V1.ithVar(var));
+        return new TypedBDD(result, H1);
     }
 
     /** Returns the pointed-to-by set for the given heap object. */
     public TypedBDD getPointedToBySet(int heap) {
-        BDD result = ci_pointsTo.restrict(H1o.ithVar(heap));
-        return new TypedBDD(result, V1o);
+        BDD result = ci_pointsTo.restrict(H1.ithVar(heap));
+        return new TypedBDD(result, V1);
     }
     
     /** Returns the locations that are aliased with the given location. */
     public TypedBDD getAliasedLocations(int var) {
-        BDD a = V1o.ithVar(var);
+        BDD a = V1.ithVar(var);
         BDD heapObjs = ci_pointsTo.restrict(a);
         a.free();
-        TypedBDD result = new TypedBDD(ci_pointsTo.relprod(heapObjs, H1o.set()), V1o);
+        TypedBDD result = new TypedBDD(ci_pointsTo.relprod(heapObjs, H1.set()), V1);
         heapObjs.free();
         return result;
     }
     
     /** Returns the set of objects pointed to by BOTH of the given variables. */
     public TypedBDD getAliased(int v1, int v2) {
-        BDD a = V1o.ithVar(v1);
+        BDD a = V1.ithVar(v1);
         BDD heapObjs1 = ci_pointsTo.restrict(a);
         a.free();
-        BDD b = V1o.ithVar(v2);
+        BDD b = V1.ithVar(v2);
         BDD heapObjs2 = ci_pointsTo.restrict(b);
         b.free();
         heapObjs1.andWith(heapObjs2);
-        TypedBDD result = new TypedBDD(heapObjs1, H1o);
+        TypedBDD result = new TypedBDD(heapObjs1, H1);
         return result;
     }
     
@@ -232,13 +214,13 @@ public class CSPAResults implements PointerAnalysisResults {
     public TypedBDD getAllHeapOfType(jq_Reference type) {
         int j=0;
         BDD result = bdd.zero();
-        for (Iterator i=heapobjIndexMap.iterator(); i.hasNext(); ++j) {
+        for (Iterator i=Hmap.iterator(); i.hasNext(); ++j) {
             Node n = (Node) i.next();
             Assert._assert(getHeapIndex(n) == j);
             if (n != null && n.getDeclaredType() == type)
-                result.orWith(H1o.ithVar(j));
+                result.orWith(H1.ithVar(j));
         }
-        return new TypedBDD(result, H1o);
+        return new TypedBDD(result, H1);
         /*
         {
             int i = typeIndexMap.get(type);
@@ -252,10 +234,10 @@ public class CSPAResults implements PointerAnalysisResults {
     
     /** Get a context-insensitive version of the points-to information.
      * It achieves this by merging all of the contexts together.  The
-     * returned BDD is: V1o x H1o.
+     * returned BDD is: V1 x H1.
      */
     public TypedBDD getContextInsensitivePointsTo() {
-        return new TypedBDD(ci_pointsTo.id(), V1o, H1o);
+        return new TypedBDD(ci_pointsTo.id(), V1, H1);
     }
 
     /** Load call graph from the given file name.
@@ -278,20 +260,20 @@ public class CSPAResults implements PointerAnalysisResults {
             //if (!(o instanceof ThrownExceptionNode) && !(o instanceof GlobalNode))
                 paramNodes.add(o);
                 int v1 = getVariableIndex((Node) o);
-                vars.orWith(V1o.ithVar(v1));
+                vars.orWith(V1.ithVar(v1));
             }
         }
-        BDD mpointsTo = pointsTo.and(vars);
+        BDD mpointsTo = vP.and(vars);
         BDDPairing V1toV2 = bdd.makePair();
-        V1toV2.set(new BDDDomain[] {V1c, V1o}, new BDDDomain[] {V2c, V2o});
+        V1toV2.set(new BDDDomain[] {V1c, V1}, new BDDDomain[] {V2c, V2});
         BDD v2_mpointsTo = mpointsTo.replace(V1toV2);
         BDD dom = H1c.set();
-        dom.andWith(H1o.set());
+        dom.andWith(H1.set());
         BDD result = mpointsTo.relprod(v2_mpointsTo, dom);
         v2_mpointsTo.free();
         dom.free();
         if (false) {
-            TypedBDD r = new TypedBDD(result, V1c, V1o, V2c, V2o);
+            TypedBDD r = new TypedBDD(result, V1c, V1, V2c, V2);
         }
         return !result.isZero();
     }
@@ -311,7 +293,7 @@ public class CSPAResults implements PointerAnalysisResults {
         for (Iterator i = sccs.iterator(); i.hasNext(); ) {
             SCComponent scc = (SCComponent) i.next();
             if (TRACE_ACC_LOC) System.out.println("Visiting SCC"+scc.getId());
-            // build the set of local vars in domain V1o
+            // build the set of local vars in domain V1
             BDD localVars = bdd.zero();
             for (Iterator j = scc.nodeSet().iterator(); j.hasNext(); ) {
                 Object o = j.next();
@@ -322,7 +304,7 @@ public class CSPAResults implements PointerAnalysisResults {
                 for (Iterator k = method_nodes.iterator(); k.hasNext(); ) {
                     Node n = (Node) k.next();
                     int x = getVariableIndex(n);
-                    localVars.orWith(V1o.ithVar(x));
+                    localVars.orWith(V1.ithVar(x));
                 }
             }
             sccToVars.put(scc, localVars);
@@ -338,7 +320,9 @@ public class CSPAResults implements PointerAnalysisResults {
 
     /** Build a map from SCC to the set of local variables. */
     void buildCallGraphRelation() {
-        BDDPairing V1oToV2o = bdd.makePair(V1o, V2o);
+        if (VC_BITS <= 1) return;
+        
+        BDDPairing V1ToV2 = bdd.makePair(V1, V2);
         
         System.out.print("Building call graph relation...");
         long time = System.currentTimeMillis();
@@ -356,7 +340,7 @@ public class CSPAResults implements PointerAnalysisResults {
         for (Iterator i = sccs.iterator(); i.hasNext(); ) {
             SCComponent scc = (SCComponent) i.next();
             if (TRACE_CG_RELATION) System.out.println("Visiting SCC"+scc.getId());
-            // build the set of local vars in domain V1o
+            // build the set of local vars in domain V1
             BDD localVars = bdd.zero();
             boolean anyMethods = false;
             for (Iterator j = scc.nodeSet().iterator(); j.hasNext(); ) {
@@ -371,11 +355,11 @@ public class CSPAResults implements PointerAnalysisResults {
                 for (Iterator k = method_nodes.iterator(); k.hasNext(); ) {
                     Node n = (Node) k.next();
                     int x = getVariableIndex(n);
-                    localVars.orWith(V1o.ithVar(x));
+                    localVars.orWith(V1.ithVar(x));
                 }
             }
             if (!anyMethods) continue;
-            sccToVars.put(scc, localVars.replace(V1oToV2o));
+            sccToVars.put(scc, localVars.replace(V1ToV2));
             
             Range r1 = pn.getSCCRange(scc);
             if (TRACE_CG_RELATION) System.out.println("Local Vars="+localVars.toStringWithDomains()+" Context Range="+r1);
@@ -435,22 +419,22 @@ public class CSPAResults implements PointerAnalysisResults {
         if (sccToVarsTransitive == null) buildSCCToVarBDD();
         SCComponent scc = pn.getSCC(m);
         BDD b = (BDD) sccToVarsTransitive.get(scc);
-        return new TypedBDD(b, V1o);
+        return new TypedBDD(b, V1);
     }
     
     public TypedBDD getAccessedLocationsCS(jq_Method m) {
         if (accessibleLocations != null) {
             BDDPairing V2ToV1 = bdd.makePair();
-            V2ToV1.set(new BDDDomain[] {V2c, V2o}, new BDDDomain[] {V1c, V1o} );
+            V2ToV1.set(new BDDDomain[] {V2c, V2}, new BDDDomain[] {V1c, V1} );
             
             Collection method_nodes = methodToVariables.getValues(m);
             Node n = (Node) method_nodes.iterator().next();
-            BDD b = V1o.ithVar(getVariableIndex(n));
+            BDD b = V1.ithVar(getVariableIndex(n));
             b.andWith(accessibleLocations.id());
             BDD c = b.exist(V1c.set());
             b.free();
             c.replaceWith(V2ToV1);
-            return new TypedBDD(c, V1c, V1o);
+            return new TypedBDD(c, V1c, V1);
         }
         
         // TODO!
@@ -470,9 +454,9 @@ public class CSPAResults implements PointerAnalysisResults {
         System.out.print("Building transitive call graph relation...");
         long time = System.currentTimeMillis();
         BDDPairing V1ToV2 = bdd.makePair();
-        V1ToV2.set(new BDDDomain[] {V1c, V1o}, new BDDDomain[] {V2c, V2o} );
+        V1ToV2.set(new BDDDomain[] {V1c, V1}, new BDDDomain[] {V2c, V2} );
         BDDPairing V3cToV1c = bdd.makePair(V3c, V1c);
-        BDDPairing V2oToV1o = bdd.makePair(V2o, V1o);
+        BDDPairing V2ToV1 = bdd.makePair(V2, V1);
         BDD V1cset = V1c.set();
         
         SCCTopSortedGraph sccgraph = pn.getSCCGraph();
@@ -488,7 +472,7 @@ public class CSPAResults implements PointerAnalysisResults {
         for (Iterator i = sccs.iterator(); i.hasNext(); ) {
             SCComponent scc = (SCComponent) i.next();
             if (TRACE_ACC_LOC) System.out.println("Visiting SCC"+scc.getId());
-            // build the set of local vars in domain V2o
+            // build the set of local vars in domain V2
             BDD localVars = bdd.zero();
             for (Iterator j = scc.nodeSet().iterator(); j.hasNext(); ) {
                 Object o = j.next();
@@ -499,7 +483,7 @@ public class CSPAResults implements PointerAnalysisResults {
                 for (Iterator k = method_nodes.iterator(); k.hasNext(); ) {
                     Node n = (Node) k.next();
                     int x = getVariableIndex(n);
-                    localVars.orWith(V2o.ithVar(x));
+                    localVars.orWith(V2.ithVar(x));
                 }
             }
             Range r1 = pn.getSCCRange(scc);
@@ -535,7 +519,7 @@ public class CSPAResults implements PointerAnalysisResults {
             if (TRACE_ACC_LOC) System.out.println("Final context vars for SCC"+scc.getId()+": "+contextVars.toStringWithDomains());
             sccToVars.put(scc, contextVars);
             BDD al = contextVars.id();
-            al.andWith(localVars.replace(V2oToV1o));
+            al.andWith(localVars.replace(V2ToV1));
             if (TRACE_ACC_LOC) System.out.println("Final location map for SCC"+scc.getId()+": "+al.toStringWithDomains());
             accessibleLocations.orWith(al);
         }
@@ -564,8 +548,8 @@ public class CSPAResults implements PointerAnalysisResults {
                 TypedBDD res = findMod(m);
                 n_mods = (int) res.satCount();
                 
-                BDD f = res.bdd.exist(H1c.set().and(H1o.set()));
-                TypedBDD f2 = new TypedBDD(f, FD);
+                BDD f = res.bdd.exist(H1c.set().and(H1.set()));
+                TypedBDD f2 = new TypedBDD(f, F);
                 for (Iterator j = f2.iterator(); j.hasNext(); ) {
                     int z = ((Integer) j.next()).intValue();
                     jq_Field field = getField(z);
@@ -597,12 +581,12 @@ public class CSPAResults implements PointerAnalysisResults {
     
     public TypedBDD findMod(Object method) {
         if (method == null) {
-            return new TypedBDD(bdd.zero(), V1c, V1o, H1c, H1o, FD);
+            return new TypedBDD(bdd.zero(), V1c, V1, H1c, H1, F);
         }
-        BDD V1set = V1c.set(); V1set.andWith(V1o.set());
-        BDD H1FDset = H1c.set(); H1FDset.andWith(H1o.set()); H1FDset.andWith(FD.set());
+        BDD V1set = V1c.set(); V1set.andWith(V1.set());
+        BDD H1Fset = H1c.set(); H1Fset.andWith(H1.set()); H1Fset.andWith(F.set());
         BDDPairing V2ToV1 = bdd.makePair();
-        V2ToV1.set(new BDDDomain[] {V2c, V2o}, new BDDDomain[] {V1c, V1o});
+        V2ToV1.set(new BDDDomain[] {V2c, V2}, new BDDDomain[] {V1c, V1});
         
         SCComponent sc = pn.getSCC(method);
         
@@ -610,18 +594,18 @@ public class CSPAResults implements PointerAnalysisResults {
             BDD bdd1 = (BDD) sccToVars.get(sc);
             //BDD a = bdd1.getDomains();
             BDD a = bdd.one();
-            a.andWith(V1c.set()); a.andWith(V1o.set());
-            BDD b = accessibleLocations.relprod(bdd1, a); // V2c x V2o
-            BDD d = stores.exist(V1set); // FD x V2c x V2o
+            a.andWith(V1c.set()); a.andWith(V1.set());
+            BDD b = accessibleLocations.relprod(bdd1, a); // V2c x V2
+            BDD d = stores.exist(V1set); // F x V2c x V2
             d.andWith(b);
-            d.replaceWith(V2ToV1); // V1c x V1o x FD
-            BDD e = pointsTo.and(d); // V1c x V1o x H1c x H1o x FD
-            return new TypedBDD(e, V1c, V1o, H1c, H1o, FD);
+            d.replaceWith(V2ToV1); // V1c x V1 x F
+            BDD e = vP.and(d); // V1c x V1 x H1c x H1 x F
+            return new TypedBDD(e, V1c, V1, H1c, H1, F);
         }
         
         BDD globalStores = stores.exist(V1set);
         globalStores.replaceWith(V2ToV1);
-        globalStores.andWith(pointsTo.id());
+        globalStores.andWith(vP.id());
         
         BDD relation = bdd.zero();
         SCCTopSortedGraph sccgraph = pn.getSCCGraph();
@@ -633,7 +617,7 @@ public class CSPAResults implements PointerAnalysisResults {
             BDD localStores = locations.and(globalStores);
             if (TRACE_MOD) {
                 System.out.println("Visiting "+scc);
-                System.out.println("Mods: "+new TypedBDD(localStores, V1c, V1o, H1c, H1o, FD));
+                System.out.println("Mods: "+new TypedBDD(localStores, V1c, V1, H1c, H1, F));
             }
             relation.orWith(localStores);
         }
@@ -656,20 +640,20 @@ public class CSPAResults implements PointerAnalysisResults {
             relation.orWith(newRelations.id());
         }
         
-        return new TypedBDD(relation, V1c, V1o, H1c, H1o, FD);
+        return new TypedBDD(relation, V1c, V1, H1c, H1, F);
     }
 
     public TypedBDD findRef(TypedBDD bdd1) {
-        BDD V1set = V1c.set(); V1set.andWith(V1o.set());
+        BDD V1set = V1c.set(); V1set.andWith(V1.set());
         BDDPairing V2ToV1 = bdd.makePair();
-        V2ToV1.set(new BDDDomain[] {V2c, V2o}, new BDDDomain[] {V1c, V1o});
+        V2ToV1.set(new BDDDomain[] {V2c, V2}, new BDDDomain[] {V1c, V1});
         
         BDD a = bdd1.getDomains();
-        a.andWith(V1c.set()); a.andWith(V1o.set());
-        BDD b = accessibleLocations.relprod(bdd1.bdd, a); // V2c x V2o
-        b.replaceWith(V2ToV1); // V1c x V1o
-        BDD e = pointsTo.relprod(b, V1set); // H1c x H1o
-        return new TypedBDD(e, H1c, H1o);
+        a.andWith(V1c.set()); a.andWith(V1.set());
+        BDD b = accessibleLocations.relprod(bdd1.bdd, a); // V2c x V2
+        b.replaceWith(V2ToV1); // V1c x V1
+        BDD e = vP.relprod(b, V1set); // H1c x H1
+        return new TypedBDD(e, H1c, H1);
     }
     
     Map buildTransitiveAccessedLocations() {
@@ -691,7 +675,7 @@ public class CSPAResults implements PointerAnalysisResults {
                 for (Iterator k = method_nodes.iterator(); k.hasNext(); ) {
                     Node n = (Node) k.next();
                     int x = getVariableIndex(n);
-                    vars.orWith(V1o.ithVar(x));
+                    vars.orWith(V1.ithVar(x));
                 }
             }
             for (int j = 0; j < scc.nextLength(); ++j) {
@@ -709,19 +693,19 @@ public class CSPAResults implements PointerAnalysisResults {
         SCComponent scc = pn.getSCC(m);
         BDD b = (BDD) sccToVarBDD.get(scc);
         BDD dom = V1c.set();
-        dom.andWith(V1o.set());
-        BDD c = b.relprod(pointsTo, dom);
-        return new TypedBDD(c, H1c, H1o);
+        dom.andWith(V1.set());
+        BDD c = b.relprod(vP, dom);
+        return new TypedBDD(c, H1c, H1);
     }
 
     public TypedBDD findEquivalentObjects_fi() {
         BDDPairing H2toH3 = bdd.makePair();
-        H2toH3.set(new BDDDomain[] { H2c, H2o }, new BDDDomain[] { H3c, H3o } );
+        H2toH3.set(new BDDDomain[] { H2c, H2 }, new BDDDomain[] { H3c, H3 } );
         BDDPairing H3toH1 = bdd.makePair();
-        H3toH1.set(new BDDDomain[] { H3c, H3o }, new BDDDomain[] { H1c, H1o } );
-        BDD H1set = H1c.set().and(H1o.set());
+        H3toH1.set(new BDDDomain[] { H3c, H3 }, new BDDDomain[] { H1c, H1 } );
+        BDD H1set = H1c.set().and(H1.set());
         
-        BDD heapPt = fieldPt.exist(FD.set());
+        BDD heapPt = hP.exist(F.set());
         BDD heapPt2 = heapPt.replace(H2toH3);
         
         BDD heapPt3 = heapPt.applyAll(heapPt2, BDDFactory.biimp, H1set);
@@ -729,32 +713,32 @@ public class CSPAResults implements PointerAnalysisResults {
         
         heapPt3.replaceWith(H3toH1);
         
-        BDD pointedTo = fieldPt.exist(H1set.and(FD.set()));
+        BDD pointedTo = hP.exist(H1set.and(F.set()));
         heapPt3.andWith(pointedTo);
-        return new TypedBDD(heapPt3, H1c, H1o, H2c, H2o);
+        return new TypedBDD(heapPt3, H1c, H1, H2c, H2);
     }
 
     public TypedBDD findEquivalentObjects_fs() {
         BDDPairing H1toH2 = bdd.makePair();
-        H1toH2.set(new BDDDomain[] { H1c, H1o }, new BDDDomain[] { H2c, H2o } );
+        H1toH2.set(new BDDDomain[] { H1c, H1 }, new BDDDomain[] { H2c, H2 } );
         BDDPairing H2toH1 = bdd.makePair();
-        H2toH1.set(new BDDDomain[] { H2c, H2o }, new BDDDomain[] { H1c, H1o } );
+        H2toH1.set(new BDDDomain[] { H2c, H2 }, new BDDDomain[] { H1c, H1 } );
         BDDPairing H2toH3 = bdd.makePair();
-        H2toH3.set(new BDDDomain[] { H2c, H2o }, new BDDDomain[] { H3c, H3o } );
+        H2toH3.set(new BDDDomain[] { H2c, H2 }, new BDDDomain[] { H3c, H3 } );
         BDDPairing H3toH1 = bdd.makePair();
-        H3toH1.set(new BDDDomain[] { H3c, H3o }, new BDDDomain[] { H1c, H1o } );
-        BDD H1set = H1c.set().and(H1o.set());
-        BDD H1H2set = H1set.and(H2c.set().and(H2o.set()));
-        BDD H1andFDset = H1set.and(FD.set());
+        H3toH1.set(new BDDDomain[] { H3c, H3 }, new BDDDomain[] { H1c, H1 } );
+        BDD H1set = H1c.set().and(H1.set());
+        BDD H1H2set = H1set.and(H2c.set().and(H2.set()));
+        BDD H1andFset = H1set.and(F.set());
         
-        BDD fieldPt2 = fieldPt.replace(H2toH3);
-        BDD fieldPt3 = fieldPt.applyAll(fieldPt2, BDDFactory.biimp, H1andFDset);
+        BDD fieldPt2 = hP.replace(H2toH3);
+        BDD fieldPt3 = hP.applyAll(fieldPt2, BDDFactory.biimp, H1andFset);
         fieldPt2.free();
         
         fieldPt3.replaceWith(H3toH1);
         
-        BDD pointedTo = fieldPt.exist(H1andFDset);
-        BDD filter = H1o.buildEquals(H2o);
+        BDD pointedTo = hP.exist(H1andFset);
+        BDD filter = H1.buildEquals(H2);
         //filter.andWith(H1c.buildEquals(H2c));
         fieldPt3.andWith(filter.not());
         filter.free();
@@ -770,7 +754,7 @@ public class CSPAResults implements PointerAnalysisResults {
             BDD sol3 = iter.restrict(sol_h2);
             sol3.orWith(sol_h2.replace(H2toH1));
             sol_h2.free();
-            System.out.println("EC "+num+":\n"+new TypedBDD(sol3, H1c, H1o).toString());
+            System.out.println("EC "+num+":\n"+new TypedBDD(sol3, H1c, H1).toString());
             sol3.andWith(sol3.replace(H1toH2));
             iter.applyWith(sol3, BDDFactory.diff);
             //try { System.in.read(); } catch (IOException x) {}
@@ -778,7 +762,7 @@ public class CSPAResults implements PointerAnalysisResults {
         iter.free();
         System.out.println("There are "+num+" equivalence classes.");
         
-        return new TypedBDD(fieldPt3, H1c, H1o, H2c, H2o);
+        return new TypedBDD(fieldPt3, H1c, H1, H2c, H2);
     }
     
     public boolean findAliasedParameters(jq_Method m) {
@@ -804,10 +788,10 @@ public class CSPAResults implements PointerAnalysisResults {
                 TypedBDD result = getAliased(v1, v2);
                 for (Iterator l = result.iterator(); l.hasNext(); ) {
                     int h = ((Integer)l.next()).intValue();
-                    BDD relation = V1o.ithVar(v1);
-                    relation.orWith(V1o.ithVar(v2));
-                    relation.andWith(H1o.ithVar(h));
-                    BDD c_result = pointsTo.relprod(relation, V1o.set().and(H1o.set()));
+                    BDD relation = V1.ithVar(v1);
+                    relation.orWith(V1.ithVar(v2));
+                    relation.andWith(H1.ithVar(h));
+                    BDD c_result = vP.relprod(relation, V1.set().and(H1.set()));
                     relation.free();
                     if (!c_result.isZero()) {
                         //System.out.println("Aliased: "+m+" "+p1+" "+p2+":");
@@ -838,19 +822,19 @@ public class CSPAResults implements PointerAnalysisResults {
 
     public TypedBDD getReachableObjects(int heap) {
         BDDPairing H1H2toH2H3 = bdd.makePair();
-        H1H2toH2H3.set(new BDDDomain[] { H1c, H1o, H2c, H2o }, new BDDDomain[] { H2c, H2o, H3c, H3o } );
+        H1H2toH2H3.set(new BDDDomain[] { H1c, H1, H2c, H2 }, new BDDDomain[] { H2c, H2, H3c, H3 } );
         BDDPairing H3toH2 = bdd.makePair();
-        H3toH2.set(new BDDDomain[] { H3c, H3o }, new BDDDomain[] { H2c, H2o } );
+        H3toH2.set(new BDDDomain[] { H3c, H3 }, new BDDDomain[] { H2c, H2 } );
         BDDPairing H2toH1 = bdd.makePair();
-        H2toH1.set(new BDDDomain[] { H2c, H2o }, new BDDDomain[] { H1c, H1o } );
+        H2toH1.set(new BDDDomain[] { H2c, H2 }, new BDDDomain[] { H1c, H1 } );
         BDD H1set = H1c.set();
-        H1set.andWith(H1o.set());
+        H1set.andWith(H1.set());
         BDD H2set = H2c.set();
-        H2set.andWith(H2o.set());
+        H2set.andWith(H2.set());
         
-        BDD heapPt12 = fieldPt.exist(FD.set().and(H1c.set()).and(H2c.set()));
+        BDD heapPt12 = hP.exist(F.set().and(H1c.set()).and(H2c.set()));
         BDD heapPt23 = heapPt12.replace(H1H2toH2H3);
-        BDD oldReachable = heapPt12.and(H1o.ithVar(heap));
+        BDD oldReachable = heapPt12.and(H1.ithVar(heap));
         BDD reachable = oldReachable.id();
         int count = 0;
         for (;;) {
@@ -866,7 +850,7 @@ public class CSPAResults implements PointerAnalysisResults {
         System.out.println("Depth: "+count);
         BDD result = reachable.exist(H1set);
         result.replaceWith(H2toH1);
-        return new TypedBDD(result, H1c, H1o);
+        return new TypedBDD(result, H1c, H1);
     }
 
     static final boolean FILTER_NULL = true;
@@ -878,21 +862,21 @@ public class CSPAResults implements PointerAnalysisResults {
     public void dumpObjectConnectivityGraph(int heapnum, DataOutput out) throws IOException {
         BDD context = H1c.set();
         context.andWith(H2c.set());
-        BDD ci_fieldPt = fieldPt.exist(context);
+        BDD ci_fieldPt = hP.exist(context);
 
         TypedBDD reach = getReachableObjects(heapnum);
         System.out.println(reach);
         BDD reachable = reach.bdd;
-        reachable.orWith(H1o.ithVar(heapnum));
+        reachable.orWith(H1.ithVar(heapnum));
 
         out.writeBytes("digraph \"ObjectConnectivity\" {\n");
         BDD iter;
         iter = reachable.id();
         while (!iter.isZero()) {
-            BDD s = iter.satOneSet(H1o.set(), bdd.zero());
+            BDD s = iter.satOneSet(H1.set(), bdd.zero());
             int[] val = s.scanAllVar();
-            int target_i = val[H1o.getIndex()];
-            s.andWith(H1o.ithVar(target_i));
+            int target_i = val[H1.getIndex()];
+            s.andWith(H1.ithVar(target_i));
             HeapObject h = (HeapObject) getHeapNode(target_i);
             ProgramLocation l = (h != null) ? h.getLocation() : null;
             jq_Type t = null;
@@ -905,7 +889,7 @@ public class CSPAResults implements PointerAnalysisResults {
             }
             String name = null;
             if (t != null) name = t.shortName();
-            int j = heapobjIndexMap.get(h);
+            int j = Hmap.get(h);
             out.writeBytes("n"+j+" [label=\""+name+"\"];\n");
             iter.applyWith(s, BDDFactory.diff);
         }
@@ -913,10 +897,10 @@ public class CSPAResults implements PointerAnalysisResults {
         
         iter = reachable.id();
         while (!iter.isZero()) {
-            BDD s = iter.satOneSet(H1o.set(), bdd.zero());
+            BDD s = iter.satOneSet(H1.set(), bdd.zero());
             int[] val = s.scanAllVar();
-            int target_i = val[H1o.getIndex()];
-            s.andWith(H1o.ithVar(target_i));
+            int target_i = val[H1.getIndex()];
+            s.andWith(H1.ithVar(target_i));
             HeapObject h = (HeapObject) getHeapNode(target_i);
             jq_Type t = null;
             if (h != null) {
@@ -926,18 +910,18 @@ public class CSPAResults implements PointerAnalysisResults {
                     continue;
                 }
             }
-            BDD pt = ci_fieldPt.restrict(H1o.ithVar(target_i));
+            BDD pt = ci_fieldPt.restrict(H1.ithVar(target_i));
             while (!pt.isZero()) {
-                BDD s2 = pt.satOneSet(H2o.set().and(FD.set()), bdd.zero());
+                BDD s2 = pt.satOneSet(H2.set().and(F.set()), bdd.zero());
                 int[] val2 = s2.scanAllVar();
-                int target2_i = val2[H2o.getIndex()];
-                s2.andWith(H2o.ithVar(target2_i));
+                int target2_i = val2[H2.getIndex()];
+                s2.andWith(H2.ithVar(target2_i));
                 HeapObject target = (HeapObject) getHeapNode(target2_i);
                 if (FILTER_NULL && target != null && target.getDeclaredType() == null) {
                     pt.applyWith(s2, BDDFactory.diff);
                     continue;
                 }
-                int fn = val2[FD.getIndex()];
+                int fn = val2[F.getIndex()];
                 jq_Field f = getField(fn);
                 String fieldName = "[]";
                 if (f != null) fieldName = f.getName().toString();
@@ -955,13 +939,13 @@ public class CSPAResults implements PointerAnalysisResults {
     public void dumpObjectConnectivityGraph(DataOutput out) throws IOException {
         BDD context = H1c.set();
         context.andWith(H2c.set());
-        BDD ci_fieldPt = fieldPt.exist(context);
+        BDD ci_fieldPt = hP.exist(context);
 
         out.writeBytes("digraph \"ObjectConnectivity\" {\n");
         int j = 0;
-        for (Iterator i = heapobjIndexMap.iterator(); i.hasNext(); ++j) {
+        for (Iterator i = Hmap.iterator(); i.hasNext(); ++j) {
             HeapObject h = (HeapObject) i.next();
-            Assert._assert(j == heapobjIndexMap.get(h));
+            Assert._assert(j == Hmap.get(h));
             jq_Type t = null;
             if (h != null) {
                 t = h.getDeclaredType();
@@ -973,22 +957,22 @@ public class CSPAResults implements PointerAnalysisResults {
         }
         
         j = 0;
-        for (Iterator i = heapobjIndexMap.iterator(); i.hasNext(); ++j) {
+        for (Iterator i = Hmap.iterator(); i.hasNext(); ++j) {
             HeapObject h = (HeapObject) i.next();
-            Assert._assert(j == heapobjIndexMap.get(h));
+            Assert._assert(j == Hmap.get(h));
             if (FILTER_NULL && h != null && h.getDeclaredType() == null)
                 continue;
-            BDD pt = ci_fieldPt.restrict(H1o.ithVar(j));
+            BDD pt = ci_fieldPt.restrict(H1.ithVar(j));
             while (!pt.isZero()) {
-                BDD s = pt.satOneSet(H2o.set().and(FD.set()), bdd.zero());
+                BDD s = pt.satOneSet(H2.set().and(F.set()), bdd.zero());
                 int[] val = s.scanAllVar();
-                int target_i = val[H2o.getIndex()];
+                int target_i = val[H2.getIndex()];
                 HeapObject target = (HeapObject) getHeapNode(target_i);
-                s.andWith(H2o.ithVar(target_i));
+                s.andWith(H2.ithVar(target_i));
                 if (FILTER_NULL && h != null && h.getDeclaredType() == null) {
                     continue;
                 }
-                int fn = val[FD.getIndex()];
+                int fn = val[F.getIndex()];
                 jq_Field f = getField(fn);
                 String fieldName = "[]";
                 if (f != null) fieldName = f.getName().toString();
@@ -1079,7 +1063,7 @@ public class CSPAResults implements PointerAnalysisResults {
                 }
                 if (!bad) {
                     int v_i = getVariableIndex(o);
-                    m_vars.orWith(V1o.ithVar(v_i));
+                    m_vars.orWith(V1.ithVar(v_i));
                     //if (TRACE_ESCAPE) System.out.println("Var "+v_i+" is good: "+m_vars.toStringWithDomains());
                 }
             }
@@ -1099,8 +1083,8 @@ public class CSPAResults implements PointerAnalysisResults {
                         System.out.println(cfg.getMethod()+": "+q+" trivially doesn't escape.");
                     } else {
                         int v_i = getVariableIndex(ctn);
-                        BDD h = ci_pointsTo.restrict(V1o.ithVar(v_i));
-                        Assert._assert(h.satCount(H1o.set()) == 1.0);
+                        BDD h = ci_pointsTo.restrict(V1.ithVar(v_i));
+                        Assert._assert(h.satCount(H1.set()) == 1.0);
                         if (TRACE_ESCAPE) {
                             System.out.println("Heap location: "+h.toStringWithDomains()+" = "+ctn);
                             System.out.println("Pointed to by: "+ci_pointsTo.restrict(h).toStringWithDomains());
@@ -1119,20 +1103,20 @@ public class CSPAResults implements PointerAnalysisResults {
             b.free();
         }
 
-        BDD escapingHeap = escapingLocations.relprod(ci_pointsTo, V1o.set());
+        BDD escapingHeap = escapingLocations.relprod(ci_pointsTo, V1.set());
         escapingLocations.free();
-        System.out.println("Escaping heap: "+escapingHeap.satCount(H1o.set()));
+        System.out.println("Escaping heap: "+escapingHeap.satCount(H1.set()));
         //System.out.println("Escaping heap: "+escapingHeap.toStringWithDomains());
         BDD capturedHeap = escapingHeap.not();
-        capturedHeap.andWith(H1o.varRange(0, heapobjIndexMap.size()-1));
-        System.out.println("Captured heap: "+capturedHeap.satCount(H1o.set()));
+        capturedHeap.andWith(H1.varRange(0, Hmap.size()-1));
+        System.out.println("Captured heap: "+capturedHeap.satCount(H1.set()));
         
         int capturedSites = 0;
         int escapedSites = 0;
         long capturedSize = 0L;
         long escapedSize = 0L;
         
-        for (Iterator i = heapobjIndexMap.iterator(); i.hasNext(); ) {
+        for (Iterator i = Hmap.iterator(); i.hasNext(); ) {
             Node n = (Node) i.next();
             int ndex = getHeapIndex(n);
             if (n instanceof ConcreteTypeNode) {
@@ -1145,7 +1129,7 @@ public class CSPAResults implements PointerAnalysisResults {
                     size = ((jq_Class) t).getInstanceSize();
                 else
                     continue;
-                BDD bdd = capturedHeap.and(H1o.ithVar(ndex));
+                BDD bdd = capturedHeap.and(H1.ithVar(ndex));
                 if (bdd.isZero()) {
                     // not captured.
                     if (TRACE_ESCAPE) System.out.println("Escaped: "+n);
@@ -1161,7 +1145,7 @@ public class CSPAResults implements PointerAnalysisResults {
         }
         System.out.println("Captured sites = "+capturedSites+", "+capturedSize+" bytes.");
         System.out.println("Escaped sites = "+escapedSites+", "+escapedSize+" bytes.");
-        return new TypedBDD(capturedHeap, H1o);
+        return new TypedBDD(capturedHeap, H1);
     }
 
     public static Set findThreadRuns(CallGraph cg) {
@@ -1194,19 +1178,19 @@ public class CSPAResults implements PointerAnalysisResults {
         readConfig(di);
         di.close();
         
-        System.out.print("Loading BDDs...");
-        this.pointsTo = bdd.load(fn+".bdd");
-        System.out.print("pointsTo "+this.pointsTo.nodeCount()+" nodes");
-        this.fieldPt = bdd.load(fn+".bdd2");
-        System.out.print(", fieldPt "+this.fieldPt.nodeCount()+" nodes");
-        this.stores = bdd.load(fn+".stores");
-        System.out.print(", stores "+this.stores.nodeCount()+" nodes");
-        this.loads = bdd.load(fn+".loads");
-        System.out.print(", loads "+this.loads.nodeCount()+" nodes");
-        System.out.println(", done.");
+        System.out.print("Initializing...");
+        initialize();
+        System.out.println("done.");
         
-        System.out.print("Adding extra domains and reordering...");
-        this.addExtraDomains();
+        System.out.print("Loading BDDs...");
+        this.vP = bdd.load(fn+".vP");
+        System.out.print("vP "+this.vP.nodeCount()+" nodes, ");
+        this.hP = bdd.load(fn+".hP");
+        System.out.print("hP "+this.hP.nodeCount()+" nodes, ");
+        this.stores = bdd.load(fn+".S");
+        System.out.print("stores "+this.stores.nodeCount()+" nodes, ");
+        this.loads = bdd.load(fn+".L");
+        System.out.print("loads "+this.loads.nodeCount()+" nodes, ");
         System.out.println("done.");
         
         this.returned = new HashSet();
@@ -1214,16 +1198,16 @@ public class CSPAResults implements PointerAnalysisResults {
         this.passedParams = new GenericInvertibleMultiMap();
         
         System.out.print("Loading maps...");
-        di = new DataInputStream(new FileInputStream(fn+".vars"));
-        variableIndexMap = readIndexMap("Variable", di);
+        di = new DataInputStream(new FileInputStream(fn+".Vmap"));
+        Vmap = readIndexMap("Variable", di);
         di.close();
         
-        di = new DataInputStream(new FileInputStream(fn+".heap"));
-        heapobjIndexMap = readIndexMap("Heap", di);
+        di = new DataInputStream(new FileInputStream(fn+".Hmap"));
+        Hmap = readIndexMap("Heap", di);
         di.close();
         
-        di = new DataInputStream(new FileInputStream(fn+".fields"));
-        fieldIndexMap = readFieldIndexMap("Variable", di);
+        di = new DataInputStream(new FileInputStream(fn+".Fmap"));
+        Fmap = readFieldIndexMap("Variable", di);
         di.close();
         System.out.println("done.");
 
@@ -1240,72 +1224,94 @@ public class CSPAResults implements PointerAnalysisResults {
     private void buildContextInsensitive() {
         BDD context = V1c.set();
         context.andWith(H1c.set());
-        this.ci_pointsTo = pointsTo.exist(context);
+        this.ci_pointsTo = vP.exist(context);
         context.free();
     }
 
-    int VARBITS, HEAPBITS, FIELDBITS, CLASSBITS, VARCONTEXTBITS, HEAPCONTEXTBITS;
+    boolean reverse = System.getProperty("bddreverse") != null;
+    String varorder;
+
+    int V_BITS=16, I_BITS=15, H_BITS=15, Z_BITS=5, F_BITS=12, T_BITS=12, N_BITS=11, M_BITS=14;
+    int VC_BITS=1, HC_BITS=1;
 
     private void readConfig(DataInput in) throws IOException {
-        String s = in.readLine();
-        StringTokenizer st = new StringTokenizer(s);
-        VARBITS = Integer.parseInt(st.nextToken());
-        HEAPBITS = Integer.parseInt(st.nextToken());
-        FIELDBITS = Integer.parseInt(st.nextToken());
-        CLASSBITS = Integer.parseInt(st.nextToken());
-        VARCONTEXTBITS = Integer.parseInt(st.nextToken());
-        HEAPCONTEXTBITS = Integer.parseInt(st.nextToken());
-        int[] domainBits;
-        BDDDomain[] bdd_domains;
-        domainBits = new int[] {VARBITS, VARCONTEXTBITS,
-                                VARBITS, VARCONTEXTBITS,
-                                FIELDBITS,
-                                HEAPBITS, HEAPCONTEXTBITS,
-                                HEAPBITS, HEAPCONTEXTBITS};
-        
-        long[] domains = new long[domainBits.length];
-        for (int i=0; i<domainBits.length; ++i) {
-            domains[i] = (1L << domainBits[i]);
+        for (;;) {
+            String s = in.readLine();
+            if (s == null) break;
+            int index = s.indexOf('=');
+            if (index == -1) index = s.length();
+            String s1 = s.substring(0, index);
+            String s2 = index < s.length() ? s.substring(index+1) : null;
+            if (s1.equals("V")) {
+                V_BITS = Integer.parseInt(s2);
+            } else if (s1.equals("I")) {
+                I_BITS = Integer.parseInt(s2);
+            } else if (s1.equals("H")) {
+                H_BITS = Integer.parseInt(s2);
+            } else if (s1.equals("Z")) {
+                Z_BITS = Integer.parseInt(s2);
+            } else if (s1.equals("F")) {
+                F_BITS = Integer.parseInt(s2);
+            } else if (s1.equals("T")) {
+                T_BITS = Integer.parseInt(s2);
+            } else if (s1.equals("N")) {
+                N_BITS = Integer.parseInt(s2);
+            } else if (s1.equals("M")) {
+                M_BITS = Integer.parseInt(s2);
+            } else if (s1.equals("VC")) {
+                VC_BITS = Integer.parseInt(s2);
+            } else if (s1.equals("HC")) {
+                HC_BITS = Integer.parseInt(s2);
+            } else if (s1.equals("Order")) {
+                varorder = s2;
+            } else {
+                System.err.println("Unknown config option "+s);
+            }
         }
-        bdd_domains = bdd.extDomain(domains);
-        for (int i=0; i<domainBits.length; ++i) {
-            Assert._assert(bdd_domains[i].varNum() == domainBits[i], "Domain "+i+" bits "+bdd_domains[i].varNum());
-        }
-        V1o = bdd_domains[0]; V1o.setName("V1o");
-        V1c = bdd_domains[1]; V1c.setName("V1c");
-        V2o = bdd_domains[2]; V2o.setName("V2o");
-        V2c = bdd_domains[3]; V2c.setName("V2c");
-        FD = bdd_domains[4];  FD.setName("FD");
-        H1o = bdd_domains[5]; H1o.setName("H1o");
-        H1c = bdd_domains[6]; H1c.setName("H1c");
-        H2o = bdd_domains[7]; H2o.setName("H2o");
-        H2c = bdd_domains[8]; H2c.setName("H2c");
-        
-        boolean reverseLocal = System.getProperty("bddreverse", "true").equals("true");
-        String ordering = System.getProperty("bddordering", "FD_V2oxV1o_V2cxV1c_H2c_H2o_H1c_H1o");
-        int[] varorder = CSPA.makeVarOrdering(bdd, reverseLocal, ordering);
-        bdd.setVarOrder(varorder);
-        bdd.enableReorder();
     }
     
-    private void addExtraDomains() throws IOException {
-        long[] domains2 = new long[4];
-        domains2[0] = 1 << VARBITS;
-        domains2[1] = 1 << VARCONTEXTBITS;
-        domains2[2] = 1 << HEAPBITS;
-        domains2[3] = 1 << HEAPCONTEXTBITS;
-        BDDDomain[] bdd_domains2 = bdd.extDomain(domains2);
+    BDDDomain makeDomain(String name, int bits) {
+        BDDDomain d = bdd.extDomain(new long[] { 1L << bits })[0];
+        d.setName(name);
+        return d;
+    }
+    IndexMap makeMap(String name, int bits) {
+        return new IndexMap(name, 1 << bits);
+    }
+    
+    private void initialize() {
+        V1 = makeDomain("V1", V_BITS);
+        V2 = makeDomain("V2", V_BITS);
+        I = makeDomain("I", I_BITS);
+        H1 = makeDomain("H1", H_BITS);
+        H2 = makeDomain("H2", H_BITS);
+        Z = makeDomain("Z", Z_BITS);
+        F = makeDomain("F", F_BITS);
+        T1 = makeDomain("T1", T_BITS);
+        T2 = makeDomain("T2", T_BITS);
+        N = makeDomain("N", N_BITS);
+        M = makeDomain("M", M_BITS);
         
-        V3o = bdd_domains2[0];
-        V3c = bdd_domains2[1];
-        H3o = bdd_domains2[2];
-        H3c = bdd_domains2[3];
+        if (varorder.indexOf("V1c") == -1) {
+            varorder = "V2cxV1c_H1c_H2c_" + varorder;
+        }
         
-        boolean reverseLocal = System.getProperty("bddreverse", "true").equals("true");
-        String ordering = System.getProperty("bddordering", "FD_V3oxV2oxV1o_V3cxV2cxV1c_H3c_H3o_H2c_H2o_H1c_H1o");
-        int[] varorder = CSPA.makeVarOrdering(bdd, reverseLocal, ordering);
-        bdd.setVarOrder(varorder);
-        bdd.enableReorder();
+        V1c = makeDomain("V1c", VC_BITS);
+        V2c = makeDomain("V2c", VC_BITS);
+        H1c = makeDomain("H1c", HC_BITS);
+        H2c = makeDomain("H2c", HC_BITS);
+        
+        if (varorder.indexOf("V3") == -1) {
+            varorder = "V3_V3c_H3_H3c_" + varorder;
+        }
+        
+        V3 = makeDomain("V3", V_BITS);
+        H3 = makeDomain("H3", H_BITS);
+        V3c = makeDomain("V3c", VC_BITS);
+        H3c = makeDomain("H3c", HC_BITS);
+        
+        int[] order = bdd.makeVarOrdering(reverse, varorder);
+        bdd.setVarOrder(order);
     }
     
     private IndexMap readIndexMap(String name, DataInput in) throws IOException {
@@ -1432,11 +1438,11 @@ public class CSPAResults implements PointerAnalysisResults {
         StringBuffer sb = new StringBuffer();
         sb.append(domainName(d)+"("+i+")");
         Node n = null;
-        if (d == V1o || d == V2o || d == V3o) {
+        if (d == V1 || d == V2 || d == V3) {
             n = (Node) getVariableNode(i);
-        } else if (d == H1o || d == H2o || d == H3o) {
+        } else if (d == H1 || d == H2 || d == H3) {
             n = (Node) getHeapNode(i);
-        } else if (d == FD) {
+        } else if (d == F) {
             jq_Field f = getField(i);
             sb.append(": "+(f==null?"[]":f.getName().toString()));
         }
@@ -1675,7 +1681,7 @@ public class CSPAResults implements PointerAnalysisResults {
     
     public void initializeMethodMap() {
         methodToVariables = new GenericMultiMap();
-        for (Iterator i = variableIndexMap.iterator(); i.hasNext(); ) {
+        for (Iterator i = Vmap.iterator(); i.hasNext(); ) {
             Node o = (Node) i.next();
             if (o != null)
                 methodToVariables.add(o.getDefiningMethod(), o);
@@ -1730,37 +1736,37 @@ public class CSPAResults implements PointerAnalysisResults {
     }
     
     public Node getVariableNode(int v) {
-        if (v < 0 || v >= variableIndexMap.size())
+        if (v < 0 || v >= Vmap.size())
             return null;
-        Node n = (Node) variableIndexMap.get(v);
+        Node n = (Node) Vmap.get(v);
         return n;
     }
     
     public int getVariableIndex(Node n) {
-        int size = variableIndexMap.size();
-        int v = variableIndexMap.get(n);
-        Assert._assert(size == variableIndexMap.size());
+        int size = Vmap.size();
+        int v = Vmap.get(n);
+        Assert._assert(size == Vmap.size());
         return v;
     }
 
     public Node getHeapNode(int v) {
-        if (v < 0 || v >= heapobjIndexMap.size())
+        if (v < 0 || v >= Hmap.size())
             return null;
-        Node n = (Node) heapobjIndexMap.get(v);
+        Node n = (Node) Hmap.get(v);
         return n;
     }
     
     public int getHeapIndex(Node n) {
-        int size = heapobjIndexMap.size();
-        int v = heapobjIndexMap.get(n);
-        Assert._assert(size == heapobjIndexMap.size());
+        int size = Hmap.size();
+        int v = Hmap.get(n);
+        Assert._assert(size == Hmap.size());
         return v;
     }
 
     public jq_Field getField(int v) {
-        if (v < 0 || v >= fieldIndexMap.size())
+        if (v < 0 || v >= Fmap.size())
             return null;
-        jq_Field n = (jq_Field) fieldIndexMap.get(v);
+        jq_Field n = (jq_Field) Fmap.get(v);
         return n;
     }
     
@@ -1803,7 +1809,7 @@ public class CSPAResults implements PointerAnalysisResults {
         Set dom;
         
         /**
-         * @param pointsTo
+         * @param vP
          * @param domains
          */
         public TypedBDD(BDD bdd, BDDDomain[] domains) {
@@ -2017,59 +2023,59 @@ public class CSPAResults implements PointerAnalysisResults {
     }
 
     TypedBDD parseBDD(List a, String s) {
-        if (s.equals("pointsTo")) {
-            return new TypedBDD(pointsTo, V1c, V1o, H1c, H1o );
+        if (s.equals("vP")) {
+            return new TypedBDD(vP, V1c, V1, H1c, H1 );
         }
-        if (s.equals("fieldPt")) {
-            return new TypedBDD(fieldPt, H1c, H1o, FD, H2c, H2o );
+        if (s.equals("hP")) {
+            return new TypedBDD(hP, H1c, H1, F, H2c, H2 );
         }
         if (s.equals("stores")) {
-            return new TypedBDD(stores, V1c, V1o, FD, V2c, V2o );
+            return new TypedBDD(stores, V1c, V1, F, V2c, V2 );
         }
         if (s.equals("loads")) {
-            return new TypedBDD(loads, V1c, V1o, FD, V2c, V2o );
+            return new TypedBDD(loads, V1c, V1, F, V2c, V2 );
         }
         if (s.equals("al")) {
-            return new TypedBDD(accessibleLocations, V1c, V1o, V2c, V2o );
+            return new TypedBDD(accessibleLocations, V1c, V1, V2c, V2 );
         }
         if (s.equals("cg")) {
-            return new TypedBDD(callGraphRelation, V1c, V1o, V2c, V2o );
+            return new TypedBDD(callGraphRelation, V1c, V1, V2c, V2 );
         }
-        if (s.startsWith("V1o(")) {
-            int x = Integer.parseInt(s.substring(4, s.length()-1));
-            return new TypedBDD(V1o.ithVar(x), V1o);
+        if (s.startsWith("V1(")) {
+            int x = Integer.parseInt(s.substring(3, s.length()-1));
+            return new TypedBDD(V1.ithVar(x), V1);
         }
         if (s.startsWith("V1c(")) {
             int x = Integer.parseInt(s.substring(4, s.length()-1));
             return new TypedBDD(V1c.ithVar(x), V1c);
         }
-        if (s.startsWith("V2o(")) {
-            int x = Integer.parseInt(s.substring(4, s.length()-1));
-            return new TypedBDD(V2o.ithVar(x), V2o);
+        if (s.startsWith("V2(")) {
+            int x = Integer.parseInt(s.substring(3, s.length()-1));
+            return new TypedBDD(V2.ithVar(x), V2);
         }
         if (s.startsWith("V2c(")) {
             int x = Integer.parseInt(s.substring(4, s.length()-1));
             return new TypedBDD(V2c.ithVar(x), V2c);
         }
-        if (s.startsWith("H1o(")) {
-            int x = Integer.parseInt(s.substring(4, s.length()-1));
-            return new TypedBDD(H1o.ithVar(x), H1o);
+        if (s.startsWith("H1(")) {
+            int x = Integer.parseInt(s.substring(3, s.length()-1));
+            return new TypedBDD(H1.ithVar(x), H1);
         }
         if (s.startsWith("H1c(")) {
             int x = Integer.parseInt(s.substring(4, s.length()-1));
             return new TypedBDD(H1c.ithVar(x), H1c);
         }
-        if (s.startsWith("H2o(")) {
-            int x = Integer.parseInt(s.substring(4, s.length()-1));
-            return new TypedBDD(H2o.ithVar(x), H2o);
+        if (s.startsWith("H2(")) {
+            int x = Integer.parseInt(s.substring(3, s.length()-1));
+            return new TypedBDD(H2.ithVar(x), H2);
         }
         if (s.startsWith("H2c(")) {
             int x = Integer.parseInt(s.substring(4, s.length()-1));
             return new TypedBDD(H2c.ithVar(x), H2c);
         }
-        if (s.startsWith("FD(")) {
-            int x = Integer.parseInt(s.substring(3, s.length()-1));
-            return new TypedBDD(FD.ithVar(x), FD);
+        if (s.startsWith("F(")) {
+            int x = Integer.parseInt(s.substring(2, s.length()-1));
+            return new TypedBDD(F.ithVar(x), F);
         }
         BDDDomain d = parseDomain(s);
         if (d != null) {
@@ -2081,12 +2087,12 @@ public class CSPAResults implements PointerAnalysisResults {
 
     TypedBDD parseBDDset(List a, String s) {
         if (s.equals("V1")) {
-            BDD b = V1o.set(); b.andWith(V1c.set());
-            return new TypedBDD(b, V1c, V1o);
+            BDD b = V1.set(); b.andWith(V1c.set());
+            return new TypedBDD(b, V1c, V1);
         }
         if (s.equals("H1")) {
-            BDD b = H1o.set(); b.andWith(H1c.set());
-            return new TypedBDD(b, H1c, H1o);
+            BDD b = H1.set(); b.andWith(H1c.set());
+            return new TypedBDD(b, H1c, H1);
         }
         if (s.equals("C")) {
             BDD b = V1c.set(); b.andWith(H1c.set());
@@ -2101,15 +2107,10 @@ public class CSPAResults implements PointerAnalysisResults {
     }
 
     BDDDomain parseDomain(String dom) {
-        if (dom.equals("V1c")) return V1c;
-        if (dom.equals("V1o")) return V1o;
-        if (dom.equals("V2c")) return V2c;
-        if (dom.equals("V2o")) return V2o;
-        if (dom.equals("FD")) return FD;
-        if (dom.equals("H1c")) return H1c;
-        if (dom.equals("H1o")) return H1o;
-        if (dom.equals("H2c")) return H2c;
-        if (dom.equals("H2o")) return H2o;
+        for (int i = 0; i < bdd.numberOfDomains(); ++i) {
+            if (dom.equals(bdd.getDomain(i).getName()))
+                return bdd.getDomain(i);
+        }
         return null;
     }
 
@@ -2156,11 +2157,11 @@ public class CSPAResults implements PointerAnalysisResults {
                     results.add(r);
                 } else if (command.equals("var")) {
                     int z = Integer.parseInt(st.nextToken());
-                    TypedBDD r = new TypedBDD(V1o.ithVar(z), V1o);
+                    TypedBDD r = new TypedBDD(V1.ithVar(z), V1);
                     results.add(r);
                 } else if (command.equals("heap")) {
                     int z = Integer.parseInt(st.nextToken());
-                    TypedBDD r = new TypedBDD(H1o.ithVar(z), H1o);
+                    TypedBDD r = new TypedBDD(H1.ithVar(z), H1);
                     results.add(r);
                 } else if (command.equals("quit") || command.equals("exit")) {
                     break;
