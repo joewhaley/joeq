@@ -31,11 +31,13 @@ public class BogusSummaryProvider {
         realStringBuffer = getClassByName("java.lang.StringBuffer");
         realHashMap      = getClassByName("java.util.HashMap");
         Assert._assert(realString != null && realStringBuffer != null && realHashMap != null);
+        realString.prepare(); realStringBuffer.prepare(); realHashMap.prepare();
         
         fakeString       = getClassByName("MyMockLib.MyString");
         fakeStringBuffer = getClassByName("MyMockLib.MyStringBuffer");        
         fakeHashMap      = getClassByName("MyMockLib.MyHashMap");               
-        Assert._assert(fakeString != null && fakeStringBuffer != null && fakeHashMap != null);
+        Assert._assert(fakeString != null && fakeStringBuffer != null && fakeHashMap != null);        
+        fakeString.prepare(); fakeStringBuffer.prepare(); fakeHashMap.prepare();
         
         classMap.put(realString, fakeString);
         classMap.put(realStringBuffer, fakeStringBuffer);
@@ -47,14 +49,14 @@ public class BogusSummaryProvider {
      * 
      * @return replacement for m.
      * */
-    public jq_Method getReplacementMethod(jq_Method m, Integer offset) {
+    public jq_Method getReplacementMethod(jq_Method m) {
         jq_Method replacement = (jq_Method) methodMap.get(m);
         
         if(replacement == null) {
 	        jq_Class c = (jq_Class) classMap.get(m.getDeclaringClass());
 	        
 	        if(c != null) {
-	            replacement = findReplacementMethod(c, m, offset);
+	            replacement = findReplacementMethod(c, m);
 	            
 	            if(replacement == null) {
 	                if(TRACE) System.err.println("No replacement for " + m + " found in " + c);
@@ -71,7 +73,7 @@ public class BogusSummaryProvider {
         }
     }
     
-    private static jq_Method findReplacementMethod(jq_Class clazz, jq_Method originalMethod, Integer offset) {
+    private static jq_Method findReplacementMethod(jq_Class clazz, jq_Method originalMethod) {
         for(Iterator iter = clazz.getMembers().iterator(); iter.hasNext();){
             Object o = iter.next();
             if(!(o instanceof jq_Method)) continue;

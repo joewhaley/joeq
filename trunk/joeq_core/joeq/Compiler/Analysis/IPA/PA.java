@@ -1308,7 +1308,7 @@ public class PA {
                 //System.out.println("n = " + n + ", m = " + m);
                 
                 if(USE_BOGUS_SUMMARIES && m != null) {
-                    jq_Method replacement = getBogusSummaryProvider().getReplacementMethod(m, new Integer(0));
+                    jq_Method replacement = getBogusSummaryProvider().getReplacementMethod(m);
                     if(replacement != null) {
                         if(TRACE_BOGUS) System.out.println("Replacing a call to " + m + 
                                         " with a call to "+ replacement);
