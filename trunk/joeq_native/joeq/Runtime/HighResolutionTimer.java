@@ -24,12 +24,16 @@ public class HighResolutionTimer {
     static {
         try {
             System.loadLibrary("timer");
+            native_library_present = true;
         } catch (Throwable _) {}
     }
     public static native long ticks();
-    public static void main(String[] args) {
-        for (int i=0; i<10; ++i)
-            System.out.println("Ticks: "+ticks());
+    public static final double TICKS_PER_SECOND = 2e9;
+    private static boolean native_library_present;
+    public static void main(String[] args) throws Exception {
+        for (int i=0; i<10; ++i) {
+            System.out.println("Now: "+now());
+        }
     }
 
     private static long counter_frequency = 0L;
@@ -50,6 +54,8 @@ public class HighResolutionTimer {
             int sec = (int) (l >> 32);
             int usec = (int) l;
             return ((double)sec) * 1000000 + usec;
+        } else if (native_library_present) {
+            return ticks() / TICKS_PER_SECOND;
         } else {
             return 0.;
         }
