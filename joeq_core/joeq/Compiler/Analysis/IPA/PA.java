@@ -3047,7 +3047,7 @@ public class PA {
         System.out.println("Methods="+methods+" Bytecodes="+bcodes+" Call sites="+calls);
         System.out.println("Vars="+vars+" Heaps="+heaps+" Classes="+classes.size()+" Fields="+fields.size());
         PathNumbering pn = null;
-        if (CONTEXT_SENSITIVE)
+        if (CONTEXT_SENSITIVE) {
             if(BETTER_CONTEXT_NUMBERING){
                 Set sccs = SCComponent.buildSCC(cg);
                 SCCTopSortedGraph graph = SCCTopSortedGraph.topSort(sccs);
@@ -3060,12 +3060,14 @@ public class PA {
                     System.err.println("Using a VarPathSelector \n");
                     selector = varPathSelector; 
                 }
+                System.err.println("Using GlobalPathNumbering");
                 pn = new GlobalPathNumbering(selector);
             } else {
                 pn = new SCCPathNumbering(varPathSelector);
             }
-        else
+        } else {
             pn = null;
+        }
         Map initialCounts = null; //new ThreadRootMap(thread_runs);
         BigInteger paths = (BigInteger) pn.countPaths(cg.getRoots(), cg.getCallSiteNavigator(), initialCounts);
         if (updateBits) {
