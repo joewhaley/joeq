@@ -581,7 +581,7 @@ public class PAResults {
             }
         }
         System.out.println("No subtype matches! "+bestTypes.toStringWithDomains(r.TS));
-        return null;
+        return r.bdd.zero();
     }
     
     /** Given a set of uses (V1xV1c), calculate the set of definitions (V1xV1c) that
@@ -889,7 +889,7 @@ public class PAResults {
         {
             long heapConnectSum = 0L; int heapConnect = 0;
             long heapPointsToSum = 0L; long heapPointsTo = 0L;
-            for (int i = 0; i < r.Hmap.size(); ++i) {
+            for (int i = 0; i < r.Hmap.size() && i < 4000; ++i) {
                 BDD b = r.H1.ithVar(i);
                 if (r.CONTEXT_SENSITIVE) b.andWith(r.H1c.domain());
                 BDD c = calculateHeapConnectivity(b);
