@@ -70,8 +70,11 @@ public abstract class CallGraph extends UnmodifiableMultiMap implements Graph {
      */
     public Collection/*<ProgramLocation>*/ getAllCallSites() {
         LinkedList list = new LinkedList();
-        for (Iterator i = getAllMethods().iterator(); i.hasNext(); )
-            list.addAll(getCallSites((jq_Method)i.next()));
+        for (Iterator i = getAllMethods().iterator(); i.hasNext(); ) {
+            jq_Method m = (jq_Method) i.next();
+            if (m == null) continue;
+            list.addAll(getCallSites(m));
+        }
         return list;
     }
     
@@ -325,6 +328,7 @@ public abstract class CallGraph extends UnmodifiableMultiMap implements Graph {
         LinkedList worklist = new LinkedList();
         for (Iterator i=roots.iterator(); i.hasNext(); ) {
             jq_Method m = (jq_Method) i.next();
+            if (m == null) continue;
             backEdges.put(m, new HashSet());
             worklist.add(m);
         }
@@ -336,6 +340,7 @@ public abstract class CallGraph extends UnmodifiableMultiMap implements Graph {
                 Collection callees = this.getTargetMethods(cs);
                 for (Iterator j=callees.iterator(); j.hasNext(); ) {
                     jq_Method callee = (jq_Method) i.next();
+                    if (callee == null) continue;
                     Set s = (Set) backEdges.get(callee);
                     if (s == null) {
                         backEdges.put(callee, s = new HashSet());
@@ -359,6 +364,7 @@ public abstract class CallGraph extends UnmodifiableMultiMap implements Graph {
         InvertibleMultiMap edges = new GenericInvertibleMultiMap();
         for (Iterator i = this.getAllMethods().iterator(); i.hasNext(); ) {
             jq_Method caller = (jq_Method) i.next();
+            if (caller == null) continue;
             Collection callsites = edges.getValues(caller);
             Collection callsites2 = this.getCallSites(caller);
             callsites.addAll(callsites2);
@@ -384,6 +390,7 @@ public abstract class CallGraph extends UnmodifiableMultiMap implements Graph {
             LinkedList current = new LinkedList();
             for (Iterator i=previous.iterator(); i.hasNext(); ) {
                 jq_Method caller = (jq_Method) i.next();
+                if (caller == null) continue;
                 for (Iterator j=getCallSites(caller).iterator(); j.hasNext(); ) {
                     ProgramLocation cs = (ProgramLocation) j.next();
                     for (Iterator k=getTargetMethods(cs).iterator(); k.hasNext(); ) {
