@@ -65,9 +65,12 @@ public class GenRelations {
     public static void addClassesToClasspath(PrimordialClassLoader loader, String[] args) throws IOException {
         for(int i = 0; i < args.length; i++){
             String arg = args[i];
-            if(arg.startsWith("-I"))
-            loader.addToClasspath(arg.substring(2, arg.length()));
-        }        
+            if(arg.startsWith("-I")){
+                arg = arg.substring(2, arg.length());
+                loader.addToClasspath(arg);
+                System.out.println("New classpath is " + loader.classpathToString());
+            }
+        }
     }
     
     public static void main(String[] args) throws IOException {        
