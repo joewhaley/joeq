@@ -1,4 +1,4 @@
-// MultiMapSet.java, created Fri May 26 23:58:36 2003 by joewhaley
+// AppendList.java, created Fri May 26 23:58:36 2003 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Util.Collections;
