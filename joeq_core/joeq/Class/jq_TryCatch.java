@@ -11,6 +11,7 @@ import Bootstrap.PrimordialClassLoader;
 import Main.jq;
 import Run_Time.SystemInterface;
 import Run_Time.TypeCheck;
+import Util.Strings;
 
 /*
  * @author  John Whaley
@@ -35,7 +36,7 @@ public class jq_TryCatch {
 
     // note: offset is the offset of the instruction after the one which threw the exception.
     public boolean catches(int offset, jq_Class t) {
-        if (DEBUG) SystemInterface.debugmsg(this+": checking "+jq.hex(offset)+" "+t);
+        if (DEBUG) SystemInterface.debugmsg(this+": checking "+Strings.hex(offset)+" "+t);
         if (offset <= startPC) return false;
         if (offset > endPC) return false;
         if (exType != null) {
@@ -51,7 +52,7 @@ public class jq_TryCatch {
     public jq_Class getExceptionType() { return exType; }
 
     public String toString() {
-        return "(start="+jq.hex(startPC)+",end="+jq.hex(endPC)+",handler="+jq.hex(handlerPC)+",type="+exType+")";
+        return "(start="+Strings.hex(startPC)+",end="+Strings.hex(endPC)+",handler="+Strings.hex(handlerPC)+",type="+exType+")";
     }
     
     public static final jq_InstanceField _startPC;

@@ -55,6 +55,7 @@ import Run_Time.Unsafe;
 import Scheduler.jq_NativeThread;
 import Util.ExtendedDataOutput;
 import Util.IdentityHashCodeWrapper;
+import Util.Strings;
 
 /*
  * @author  John Whaley
@@ -154,13 +155,13 @@ public class BootImage implements ObjectLayout, ELFConstants {
             size = ((jq_Array)type).getInstanceSize(Array.getLength(o));
             size = (size+3) & ~3;
             if (TRACE)
-                out.println("Allocating entry "+entries.size()+": "+objType+" length "+Array.getLength(o)+" size "+size+" "+jq.hex(System.identityHashCode(o))+" at "+jq.hex(addr));
+                out.println("Allocating entry "+entries.size()+": "+objType+" length "+Array.getLength(o)+" size "+size+" "+Strings.hex(System.identityHashCode(o))+" at "+Strings.hex(addr));
         } else {
             jq.Assert(type.isClassType());
             addr = heapCurrent + OBJ_HEADER_SIZE;
             size = ((jq_Class)type).getInstanceSize();
             if (TRACE)
-                out.println("Allocating entry "+entries.size()+": "+objType+" size "+size+" "+jq.hex(System.identityHashCode(o))+" at "+jq.hex(addr)+((o instanceof jq_Type)?": "+o:""));
+                out.println("Allocating entry "+entries.size()+": "+objType+" size "+size+" "+Strings.hex(System.identityHashCode(o))+" at "+Strings.hex(addr)+((o instanceof jq_Type)?": "+o:""));
         }
         heapCurrent += size;
         BootstrapHeapAddress a = new BootstrapHeapAddress(addr);
@@ -178,7 +179,7 @@ public class BootImage implements ObjectLayout, ELFConstants {
         IdentityHashCodeWrapper k = IdentityHashCodeWrapper.create(o);
         Entry e = (Entry)hash.get(k);
         if (e == null) {
-            System.err.println("Unknown object of type: "+o.getClass()+" address: "+jq.hex(System.identityHashCode(o))+" value: "+o);
+            System.err.println("Unknown object of type: "+o.getClass()+" address: "+Strings.hex(System.identityHashCode(o))+" value: "+o);
             if (IGNORE_UNKNOWN_OBJECTS) return HeapAddress.getNull();
             throw new UnknownObjectException(o);
         }
@@ -280,7 +281,7 @@ public class BootImage implements ObjectLayout, ELFConstants {
             Class objType = o.getClass();
             jq_Reference jqType = (jq_Reference)Reflection.getJQType(objType);
             if (TRACE)
-                out.println("Entry "+i+": "+objType+" "+jq.hex(System.identityHashCode(o)));
+                out.println("Entry "+i+": "+objType+" "+Strings.hex(System.identityHashCode(o)));
             addDataReloc((HeapAddress)addr.offset(VTABLE_OFFSET), getOrAllocateObject(jqType));
             if (jqType.isArrayType()) {
                 jq_Type elemType = ((jq_Array)jqType).getElementType();
@@ -818,7 +819,7 @@ public class BootImage implements ObjectLayout, ELFConstants {
         
         Iterator i = bca.getAllCodeRelocs().iterator();
         while (i.hasNext()) {
-            Object r = (Object)i.next();
+            Object r = i.next();
             if (r instanceof DirectBindCall)
                 ((DirectBindCall)r).patch();
         }
@@ -891,16 +892,26 @@ public class BootImage implements ObjectLayout, ELFConstants {
     }
 
     static class UnknownObjectException extends RuntimeException {
-        Object o; String message;
+        Object o; StringBuffer message;
         UnknownObjectException(Object o) {
             this.o = o;
-            this.message = "type: "+o.getClass()+" address: "+jq.hex(System.identityHashCode(o))+" ";
+            this.message = new StringBuffer();
+            this.message.append("type: ");
+            this.message.append(o.getClass().toString());
+            this.message.append(" address: ");
+            this.message.append(Strings.hex(System.identityHashCode(o)));
+            this.message.append(' ');
         }
         void setObject(Object o) { this.o = o; }
         Object getObject() { return o; }
-        void prependMessage(String s) { this.message = s + this.message; }
-        void appendMessage(String s) { this.message += s; }
-        public String toString() { return this.message; }
+        void prependMessage(String s) {
+            StringBuffer sb = new StringBuffer();
+            sb.append(s);
+            sb.append(this.message);
+            this.message = sb;
+        }
+        void appendMessage(String s) { this.message.append(s); }
+        public String toString() { return this.message.toString(); }
     }
 
     private jq_StaticField searchStaticVariables(Object p) {
@@ -1007,7 +1018,7 @@ public class BootImage implements ObjectLayout, ELFConstants {
             Class objType = o.getClass();
             jq_Reference jqType = (jq_Reference)Reflection.getJQType(objType);
             if (TRACE)
-                this.out.println("Dumping entry "+j+": "+objType+" "+jq.hex(System.identityHashCode(o))+" addr "+addr.stringRep());
+                this.out.println("Dumping entry "+j+": "+objType+" "+Strings.hex(System.identityHashCode(o))+" addr "+addr.stringRep());
             jq.Assert(!jqType.isAddressType());
             if (!jqType.isClsInitialized()) {
                 jq.UNREACHABLE(jqType.toString());
@@ -1108,7 +1119,7 @@ public class BootImage implements ObjectLayout, ELFConstants {
                     jq_InstanceField f = fields[k];
                     jq_Type ftype = f.getType();
                     int foffset = f.getOffset();
-                    if (TRACE) this.out.println("Field "+f+" offset "+jq.shex(foffset)+": "+System.identityHashCode(Reflection.getfield(o, f)));
+                    if (TRACE) this.out.println("Field "+f+" offset "+Strings.shex(foffset)+": "+System.identityHashCode(Reflection.getfield(o, f)));
                     while (currentAddr != addr.offset(foffset).to32BitValue()) {
                         out.writeByte((byte)0); ++currentAddr;
                     }
@@ -1169,11 +1180,9 @@ public class BootImage implements ObjectLayout, ELFConstants {
     }
     
     private String mungeMemberName(jq_Member m) {
-        String name = m.getDeclaringClass().getName().toString();
-        //name = name.substring(name.lastIndexOf('.')+1);
-        name += "_"+m.getName();
-        //name += "_"+m.getDesc().toString().replace('(','_').replace(')','_').replace(';','_');
-        name += "_"+m.getDesc();
+        String name = m.getDeclaringClass().getName().toString() +
+                      "_"+m.getName()+
+                      "_"+m.getDesc();
         return name;
     }
     
@@ -1201,7 +1210,7 @@ public class BootImage implements ObjectLayout, ELFConstants {
     public void dumpELF(ExtendedDataOutput out, jq_StaticMethod rootm) throws IOException {
         Iterator i = bca.getAllCodeRelocs().iterator();
         while (i.hasNext()) {
-            Object r = (Object)i.next();
+            Object r = i.next();
             if (r instanceof DirectBindCall)
                 ((DirectBindCall)r).patch();
         }

@@ -20,6 +20,7 @@ import java.util.TreeMap;
 
 import Main.jq;
 import Util.AppendIterator;
+import Util.Strings;
 
 /**
  * Defines a section in an ELF file.
@@ -169,7 +170,7 @@ public abstract class Section implements ELFConstants {
             case SHT_SHLIB:
             default:
                 // unsupported.
-                throw new IOException("bad section type: "+jq.hex(type));
+                throw new IOException("bad section type: "+Strings.hex(type));
             }
         }
         

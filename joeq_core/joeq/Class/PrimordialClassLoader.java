@@ -440,14 +440,16 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
         bs_desc2type.put(newDesc, new_c);
 
         // take inputstream on OLD class, but load in NEW class.
+        DataInputStream in = null;
         try {
-            DataInputStream in = getClassFileStream(oldDesc);
-            if (in == null) throw new NoClassDefFoundError(((jq_Class)old).className(oldDesc));
+            in = getClassFileStream(oldDesc);
+            if (in == null) throw new NoClassDefFoundError(jq_Class.className(oldDesc));
             new_c.load(in); // will generate the replacement
-            in.close();
         } catch (IOException x) {
             x.printStackTrace(); // for debugging
             throw new ClassFormatError(x.toString());
+        } finally {
+            try { if (in != null) in.close(); } catch (IOException _) { }
         }
     }
     

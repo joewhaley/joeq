@@ -31,6 +31,7 @@ import Compil3r.Quad.ControlFlowGraphVisitor;
 import Compil3r.Quad.QuadVisitor;
 import Run_Time.Reflection;
 import UTF.Utf8;
+import Util.Strings;
 
 /*
  * @author  John Whaley
@@ -367,7 +368,7 @@ public abstract class Driver {
     }
 
     public static void printHelp() {
-        String nl = System.getProperty("line.separator");
+        String nl = Strings.lineSep;
         String helpMessage =
                 nl+
                 "Usage: command1 [args...] [command2 [args...]]..."+nl+nl +
@@ -408,7 +409,7 @@ public abstract class Driver {
     }
 
     public static int parseArg(Object[] args, int m, jq_Type type, String[] s_args, int j) {
-        if (type == PrimordialClassLoader.loader.getJavaLangString())
+        if (type == PrimordialClassLoader.getJavaLangString())
             args[m] = s_args[++j];
         else if (type == jq_Primitive.BOOLEAN)
             args[m] = Boolean.valueOf(s_args[++j]);
@@ -432,7 +433,7 @@ public abstract class Driver {
             int count = 0;
             while (!s_args[++j].equals("}")) ++count;
             jq_Type elementType = ((jq_Array) type).getElementType();
-            if (elementType == PrimordialClassLoader.loader.getJavaLangString()) {
+            if (elementType == PrimordialClassLoader.getJavaLangString()) {
                 String[] array = new String[count];
                 for (int k = 0; k < count; ++k)
                     array[k] = s_args[j - count + k];

@@ -315,7 +315,7 @@ uphere:
         Class[] param_types = new Class[num];
         i = desc.getParamDescriptors();
         for (int j=0; j<num; ++j) {
-            Utf8 pd = (Utf8)i.nextUtf8();
+            Utf8 pd = i.nextUtf8();
             jq_Type t = PrimordialClassLoader.loader.getOrCreateBSType(pd);
             param_types[j] = getJDKType(t);
         }

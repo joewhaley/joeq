@@ -3,20 +3,122 @@
  *
  * Created on October 25, 2001, 12:01 PM
  *
- * @author  John Whaley
- * @version $Id$
  */
 
 package Util;
 
+import Main.jq;
+import Memory.HeapAddress;
+
+/**
+ * @author  John Whaley
+ * @version $Id$
+ */
 public abstract class Strings {
 
+    public static final String lineSep = System.getProperty("line.separator");
+
     /**
-     * Replace all occurences of <em>old</em> in <em>str</em> with <em>new</em>.
+     * Return the number as a hex string, prepended by "0x".
+     *
+     * @param i number
+     * @return hex string
+     */
+    public static String hex(int i) {
+        return "0x" + Integer.toHexString(i);
+    }
+
+    /**
+     * Return a string representation of the address of an object.
+     * If we are not running native, then it uses the identity hash code.
+     *
+     * @param o object
+     * @return hex string of address of object
+     */
+    public static String hex(Object o) {
+        if (!jq.RunningNative)
+            return hex(System.identityHashCode(o));
+        else
+            return HeapAddress.addressOf(o).stringRep();
+    }
+
+    /**
+     * Return the number as a hex string, padded to eight digits and prepended by "0x".
+     *
+     * @param i number
+     * @return hex string
+     */
+    public static String hex8(int i) {
+        String t = Integer.toHexString(i);
+        return "0x00000000".substring(0, 10 - t.length()) + t;
+    }
+
+    /**
+     * Return the number as a hex string, padded to sixteen digits and prepended by "0x".
+     *
+     * @param i number
+     * @return hex string
+     */
+    public static String hex16(long i) {
+        String t = Long.toHexString(i);
+        return "0x0000000000000000".substring(0, 18 - t.length()) + t;
+    }
+
+    /**
+     * Return the number as a signed hex string, prepended by "0x".
+     *
+     * @param i number
+     * @return hex string
+     */
+    public static String shex(int i) {
+        if (i < 0)
+            return "-" + hex(-i);
+        else
+            return hex(i);
+    }
+
+    /**
+     * Return the w leftmost characters of the string, padding with spaces if necessary.
+     *
+     * @param s string
+     * @param w number of characters
+     * @return truncated/padded string
+     */
+    public static String left(String s, int w) {
+        int n = s.length();
+        if (w < n) return s.substring(0, w);
+        StringBuffer b = new StringBuffer(w);
+        b.append(s);
+        for (int i = n; i < w; ++i) {
+            b.append(' ');
+        }
+        return b.toString();
+    }
+
+    /**
+     * Return the w rightmost characters of the string, padding with spaces if necessary.
+     *
+     * @param s string
+     * @param w number of characters
+     * @return truncated/padded string
+     */
+    public static String right(String s, int w) {
+        int n = s.length();
+        if (w < n) return s.substring(n - w);
+        StringBuffer b = new StringBuffer(w);
+        for (int i = n; i < w; ++i) {
+            b.append(' ');
+        }
+        b.append(s);
+        return b.toString();
+    }
+    
+    /**
+     * Replace all occurrences of <em>old</em> in <em>str</em> with <em>new_</em>.
      *
      * @param str String to permute
      * @param old String to be replaced
-     * @param new Replacement string
+     * @param new_ Replacement string
      * @return new String object
      */
     public static final String replace(String str, String old, String new_) {

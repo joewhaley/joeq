@@ -6,6 +6,7 @@
 
 package Compil3r.Quad;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -32,6 +33,7 @@ import Compil3r.Quad.MethodSummary.ConcreteTypeNode;
 import Compil3r.Quad.MethodSummary.FieldNode;
 import Compil3r.Quad.MethodSummary.GlobalNode;
 import Compil3r.Quad.MethodSummary.Node;
+import Compil3r.Quad.MethodSummary.NodeSet;
 import Compil3r.Quad.MethodSummary.OutsideNode;
 import Compil3r.Quad.MethodSummary.ParamNode;
 import Compil3r.Quad.MethodSummary.PassedParameter;
@@ -42,9 +44,13 @@ import Compil3r.Quad.Operand.ParamListOperand;
 import Compil3r.Quad.Operator.Invoke;
 import Main.jq;
 import Util.Default;
+import Util.HashCodeComparator;
+import Util.InstrumentedSetWrapper;
 import Util.LinearSet;
 import Util.SetFactory;
 import Util.SetRepository;
+import Util.SortedArraySet;
+import Util.Strings;
 
 /**
  *
@@ -224,7 +230,7 @@ public class AndersenPointerAnalysis {
             }
         }
         public static void calcRTA() {
-            Set/*jq_Type*/ s = Bootstrap.PrimordialClassLoader.loader.getAllTypes();
+            Set/*<jq_Type>*/ s = Bootstrap.PrimordialClassLoader.loader.getAllTypes();
             for (;;) {
                 int size = s.size();
                 Iterator i = s.iterator();
@@ -239,7 +245,7 @@ public class AndersenPointerAnalysis {
             System.out.println("Number of RTA classes: "+s.size());
             int nMethods = 0;
             Iterator i = s.iterator();
-            HashSet methods = new HashSet();
+            Set methods = new HashSet();
             while (i.hasNext()) {
                 jq_Type t = (jq_Type)i.next();
                 if (t instanceof jq_Class) {
@@ -489,8 +495,8 @@ public class AndersenPointerAnalysis {
     final HashMap edgesToReasons;
     
     /** Set of all MethodSummary's that we care about. */
-    final LinkedHashSet rootSet;
-    final LinkedHashSet methodSummariesToVisit;
+    final Set rootSet;
+    final Set methodSummariesToVisit;
     
     /** Maps a call site to its set of targets. */
     final HashMap callSiteToTargets;
@@ -515,7 +521,8 @@ public class AndersenPointerAnalysis {
     HashSet newChangedFields;
     HashSet changedFields_Methods;
     
-    SetFactory setFactory;
+    SetFactory cacheSetFactory;
+    SetFactory inclusionEdgeSetFactory;
     
     /** Change flag, for iterations. */
     boolean change;
@@ -524,7 +531,7 @@ public class AndersenPointerAnalysis {
     public AndersenPointerAnalysis(boolean addDefaults) {
         nodeToConcreteNodes = new HashMap();
         nodeToInclusionEdges = new HashMap();
-        rootSet = new LinkedHashSet();
+        rootSet = new SortedArraySet(HashCodeComparator.INSTANCE);
         methodSummariesToVisit = new LinkedHashSet();
         callSiteToTargets = new HashMap();
         linkedTargets = new HashSet();
@@ -548,16 +555,18 @@ public class AndersenPointerAnalysis {
             changedFields_Methods = new HashSet();
         }
         if (USE_SET_REPOSITORY) {
-            setFactory = new SetRepository();
+            cacheSetFactory = new SetRepository();
         } else {
-            setFactory = SetRepository.LinkedHashSetFactory.INSTANCE;
+            //cacheSetFactory = SetRepository.LinkedHashSetFactory.INSTANCE;
+            //cacheSetFactory = SetRepository.SortedArraySetFactory.INSTANCE;
+            cacheSetFactory = NodeSet.FACTORY;
         }
+        //inclusionEdgeSetFactory = SetRepository.LinkedHashSetFactory.INSTANCE;
+        inclusionEdgeSetFactory = NodeSet.FACTORY;
         this.initializeStatics(addDefaults);
     }
 
     public static AndersenPointerAnalysis INSTANCE = new AndersenPointerAnalysis(true);
-    
-    public static final String lineSep = System.getProperty("line.separator");
     
     public static final int HISTOGRAM_SIZE = 100;
     
@@ -589,7 +598,7 @@ public class AndersenPointerAnalysis {
         sb.append(bytecodes);
         sb.append(" Iteration ");
         sb.append(count);
-        sb.append(lineSep);
+        sb.append(Strings.lineSep);
         return sb.toString();
     }
     public static Map buildOriginalCallGraph(Map m) {
@@ -628,7 +637,7 @@ public class AndersenPointerAnalysis {
             sb.append(": ");
             Set s = (Set) e.getValue();
             sb.append(s.size());
-            sb.append(lineSep);
+            sb.append(Strings.lineSep);
         }
         return sb.toString();
     }
@@ -663,7 +672,7 @@ public class AndersenPointerAnalysis {
         sb.append(total);
         sb.append('/');
         sb.append(total+histogram[0]);
-        sb.append(lineSep);
+        sb.append(Strings.lineSep);
         for (int i=0; i<HISTOGRAM_SIZE; ++i) {
             if (histogram[i] > 0) {
                 if (i == HISTOGRAM_SIZE-1) sb.append(">=");
@@ -672,19 +681,19 @@ public class AndersenPointerAnalysis {
                 sb.append(histogram[i]);
                 sb.append(" call site");
                 if (histogram[i] > 1) sb.append('s');
-                sb.append(lineSep);
+                sb.append(Strings.lineSep);
             }
         }
         sb.append("Average # of targets: "+(double)total/(double)table.size());
-        sb.append(lineSep);
+        sb.append(Strings.lineSep);
         long total_multi = total - histogram[1];
         long cs_multi = table.size() - histogram[1] - histogram[0];
         sb.append("# of multi-target calls: "+cs_multi);
-        sb.append(lineSep);
+        sb.append(Strings.lineSep);
         sb.append("Total targets for multi-target calls: "+total_multi);
-        sb.append(lineSep);
+        sb.append(Strings.lineSep);
         sb.append("Average # of targets for multi: "+(double)total_multi/(double)cs_multi);
-        sb.append(lineSep);
+        sb.append(Strings.lineSep);
         return sb.toString();
     }
     public static String computeHistogram(Map m) {
@@ -704,7 +713,7 @@ public class AndersenPointerAnalysis {
         sb.append(total);
         sb.append('/');
         sb.append(total+histogram[0]);
-        sb.append(lineSep);
+        sb.append(Strings.lineSep);
         for (int i=0; i<HISTOGRAM_SIZE; ++i) {
             if (histogram[i] > 0) {
                 if (i == HISTOGRAM_SIZE-1) sb.append(">=");
@@ -713,7 +722,7 @@ public class AndersenPointerAnalysis {
                 sb.append(histogram[i]);
                 sb.append(" call site");
                 if (histogram[i] > 1) sb.append('s');
-                sb.append(lineSep);
+                sb.append(Strings.lineSep);
             }
         }
         sb.append("Average # of targets: "+(double)total/(double)m.size());
@@ -748,7 +757,7 @@ public class AndersenPointerAnalysis {
             sb.append(x);
             sb.append("} ");
             sb.append(s.toString());
-            sb.append(lineSep);
+            sb.append(Strings.lineSep);
         }
         return sb.toString();
     }
@@ -810,8 +819,8 @@ public class AndersenPointerAnalysis {
                 }
             }
             // o = n.f
-            if (o instanceof LinkedHashSet) {
-                addGlobalEdges((LinkedHashSet)o, f);
+            if (o instanceof Set) {
+                addGlobalEdges((Set)o, f);
             } else {
                 addGlobalEdges((FieldNode)o, f);
             }
@@ -838,8 +847,8 @@ public class AndersenPointerAnalysis {
                 Object o = e.getValue();
                 if (TRACE) out.println("Visiting edge: "+n+((f==null)?"[]":("."+f.getName()))+" = "+o);
                 // n.f = o
-                if (o instanceof LinkedHashSet) {
-                    addEdgesFromConcreteNodes(n, f, (LinkedHashSet)o);
+                if (o instanceof Set) {
+                    addEdgesFromConcreteNodes(n, f, (Set)o);
                 } else {
                     addEdgesFromConcreteNodes(n, f, (Node)o);
                 }
@@ -871,8 +880,8 @@ public class AndersenPointerAnalysis {
                 Object o = e.getValue();
                 if (TRACE) out.println("Visiting edge: "+o+" = "+n+((f==null)?"[]":("."+f.getName())));
                 // o = n.f
-                if (o instanceof LinkedHashSet) {
-                    addInclusionEdgesToConcreteNodes((LinkedHashSet)o, n, f);
+                if (o instanceof Set) {
+                    addInclusionEdgesToConcreteNodes((Set)o, n, f);
                 } else {
                     addInclusionEdgesToConcreteNodes((FieldNode)o, n, f);
                 }
@@ -886,7 +895,7 @@ public class AndersenPointerAnalysis {
             if (TRACE) out.println("Found call: "+ms+": "+mc.getQuad());
             CallTargets ct = mc.getCallTargets();
             if (TRACE) out.println("Possible targets ignoring type information: "+ct);
-            LinkedHashSet definite_targets = new LinkedHashSet();
+            Set definite_targets = new SortedArraySet(HashCodeComparator.INSTANCE);
             //jq.Assert(!callSiteToTargets.containsKey(cs));
             callSiteToTargets.put(cs, definite_targets);
             if (ct.size() == 1 && ct.isComplete()) {
@@ -895,9 +904,8 @@ public class AndersenPointerAnalysis {
                 definite_targets.add(ct.iterator().next());
             } else {
                 // use the type information about the receiver object to find targets.
-                LinkedHashSet set = new LinkedHashSet();
                 PassedParameter pp = new PassedParameter(mc, 0);
-                ms.getNodesThatCall(pp, set);
+                Set set = ms.getNodesThatCall(pp);
                 if (TRACE) out.println("Possible nodes for receiver object: "+set);
                 for (Iterator j=set.iterator(); j.hasNext(); ) {
                     Node base = (Node)j.next();
@@ -949,8 +957,7 @@ public class AndersenPointerAnalysis {
             if (!(t instanceof jq_Reference)) continue;
             // parameters passed into native methods escape.
             PassedParameter pp = new PassedParameter(mc, i);
-            LinkedHashSet s = new LinkedHashSet();
-            caller.getNodesThatCall(pp, s);
+            Set s = caller.getNodesThatCall(pp);
             for (Iterator j=s.iterator(); j.hasNext(); ) {
                 Node n = (Node)j.next();
                 if (!n.getEscapes()) {
@@ -1004,9 +1011,7 @@ public class AndersenPointerAnalysis {
             ParamNode pn = callee.getParamNode(i);
             if (pn == null) continue;
             PassedParameter pp = new PassedParameter(mc, i);
-            LinkedHashSet s = new LinkedHashSet();
-            caller.getNodesThatCall(pp, s);
-            //s.add(pn);
+            Set s = caller.getNodesThatCall(pp);
             if (TRACE) out.println("Adding parameter mapping "+pn+" to set "+s);
             OutsideNode on = pn;
             while (on.skip != null) on = on.skip;
@@ -1020,8 +1025,7 @@ public class AndersenPointerAnalysis {
         for (Iterator i=rvn_s.iterator(); i.hasNext(); ) {
             ReturnValueNode rvn = (ReturnValueNode) i.next();
             if (rvn != null) {
-                LinkedHashSet s = (LinkedHashSet)callee.returned.clone();
-                //s.add(rvn);
+                Set s = callee.returned;
                 if (TRACE) out.println("Adding return mapping "+rvn+" to set "+s);
                 OutsideNode on = rvn;
                 while (on.skip != null) on = on.skip;
@@ -1036,8 +1040,7 @@ public class AndersenPointerAnalysis {
         for (Iterator i=ten_s.iterator(); i.hasNext(); ) {
             ThrownExceptionNode ten = (ThrownExceptionNode) i.next();
             if (ten != null) {
-                LinkedHashSet s = (LinkedHashSet)callee.thrown.clone();
-                //s.add(ten);
+                Set s = callee.thrown;
                 if (TRACE) out.println("Adding thrown mapping "+ten+" to set "+s);
                 OutsideNode on = ten;
                 while (on.skip != null) on = on.skip;
@@ -1046,10 +1049,11 @@ public class AndersenPointerAnalysis {
         }
     }
     
-    boolean addInclusionEdges(OutsideNode n, LinkedHashSet s, Object mc) {
+    boolean addInclusionEdges(OutsideNode n, Set s, Object mc) {
         if (VerifyAssertions) jq.Assert(n.skip == null);
-        LinkedHashSet s2 = (LinkedHashSet)nodeToInclusionEdges.get(n);
+        Set s2 = (Set)nodeToInclusionEdges.get(n);
         if (s2 == null) {
+            s = inclusionEdgeSetFactory.makeSet(s);
             nodeToInclusionEdges.put(n, s);
             if ((TRACE_CHANGE && !this.change) || TRACE) {
                 out.println("Changed! New set of inclusion edges for node "+n);
@@ -1120,9 +1124,9 @@ public class AndersenPointerAnalysis {
             s = on;
         }
         if (n == s) return;
-        LinkedHashSet s2 = (LinkedHashSet)nodeToInclusionEdges.get(n);
+        Set s2 = (Set)nodeToInclusionEdges.get(n);
         if (s2 == null) {
-            s2 = new LinkedHashSet(); s2.add(s);
+            s2 = inclusionEdgeSetFactory.makeSet(); s2.add(s);
             nodeToInclusionEdges.put(n, s2);
             if ((TRACE_CHANGE && !this.change) || TRACE) {
                 out.println("Changed! New set of inclusion edges for node "+n);
@@ -1162,12 +1166,12 @@ public class AndersenPointerAnalysis {
         }
     }
     
-    LinkedHashSet getInclusionEdges(Node n) { return (LinkedHashSet)nodeToInclusionEdges.get(n); }
+    Set getInclusionEdges(Node n) { return (Set)nodeToInclusionEdges.get(n); }
     
     Set getFromCache(OutsideNode n) {
         if (USE_SOFT_REFERENCES) {
             java.lang.ref.SoftReference r = (java.lang.ref.SoftReference)nodeToConcreteNodes.get(n);
-            return r != null ? (LinkedHashSet)r.get() : null;
+            return r != null ? (Set)r.get() : null;
         } else {
             return (Set)nodeToConcreteNodes.get(n);
         }
@@ -1219,7 +1223,7 @@ public class AndersenPointerAnalysis {
     }
     
     // from.f = to
-    void addEdgesFromConcreteNodes(Node from, jq_Field f, LinkedHashSet to) {
+    void addEdgesFromConcreteNodes(Node from, jq_Field f, Set to) {
         Set s = getConcreteNodes(from);
         if (TRACE) out.println("Node "+from+" corresponds to concrete nodes "+s);
         for (Iterator i=s.iterator(); i.hasNext(); ) {
@@ -1254,30 +1258,28 @@ public class AndersenPointerAnalysis {
     
     // from = global.f
     void addGlobalEdges(OutsideNode from, jq_Field f) {
-        LinkedHashSet result = new LinkedHashSet();
-        GlobalNode.GLOBAL.getEdges(f, result);
+        Set result = GlobalNode.GLOBAL.getEdges(f);
         while (from.skip != null) from = from.skip;
         FieldNode fn = FieldNode.get(GlobalNode.GLOBAL, f, null);
         addInclusionEdges(from, result, fn);
     }
     
     // from = global.f
-    void addGlobalEdges(LinkedHashSet from, jq_Field f) {
-        LinkedHashSet result = new LinkedHashSet();
-        GlobalNode.GLOBAL.getEdges(f, result);
+    void addGlobalEdges(Set from, jq_Field f) {
+        Set result = GlobalNode.GLOBAL.getEdges(f);
         FieldNode fn = FieldNode.get(GlobalNode.GLOBAL, f, null);
         for (Iterator j=from.iterator(); j.hasNext(); ) {
             OutsideNode n2 = (OutsideNode)j.next();
             while (n2.skip != null) n2 = n2.skip;
-            if (addInclusionEdges(n2, result, fn)) result = (LinkedHashSet)result.clone();
+            addInclusionEdges(n2, result, fn);
         }
     }
     
     // from = base.f
-    void addInclusionEdgesToConcreteNodes(LinkedHashSet from, Node base, jq_Field f) {
+    void addInclusionEdgesToConcreteNodes(Set from, Node base, jq_Field f) {
         Set s = getConcreteNodes(base);
         if (TRACE) out.println("Node "+base+" corresponds to concrete nodes "+s);
-        LinkedHashSet result = new LinkedHashSet();
+        Set result = NodeSet.FACTORY.makeSet();
         for (Iterator j=s.iterator(); j.hasNext(); ) {
             Node n2 = (Node)j.next();
             n2.getEdges(f, result);
@@ -1287,7 +1289,7 @@ public class AndersenPointerAnalysis {
             OutsideNode n2 = (OutsideNode)j.next();
             FieldNode fn = (FieldNode)n2;
             while (n2.skip != null) n2 = n2.skip;
-            if (addInclusionEdges(n2, result, base)) result = (LinkedHashSet)result.clone();
+            addInclusionEdges(n2, result, base);
         }
     }
     
@@ -1295,7 +1297,7 @@ public class AndersenPointerAnalysis {
     void addInclusionEdgesToConcreteNodes(OutsideNode from, Node base, jq_Field f) {
         Set s = getConcreteNodes(base);
         if (TRACE) out.println("Node "+base+" corresponds to concrete nodes "+s);
-        LinkedHashSet result = new LinkedHashSet();
+        Set result = NodeSet.FACTORY.makeSet();
         for (Iterator j=s.iterator(); j.hasNext(); ) {
             Node n2 = (Node)j.next();
             n2.getEdges(f, result);
@@ -1310,12 +1312,12 @@ public class AndersenPointerAnalysis {
         Set s = getConcreteNodes(from);
         if (ap == null) return s;
         jq_Field f = ap.first();
-        LinkedHashSet result = new LinkedHashSet();
+        Set result = NodeSet.FACTORY.makeSet();
         for (Iterator j=s.iterator(); j.hasNext(); ) {
             Node n2 = (Node)j.next();
             n2.getEdges(f, result);
         }
-        LinkedHashSet result2 = new LinkedHashSet();
+        Set result2 = NodeSet.FACTORY.makeSet();
         ap = ap.next();
         for (Iterator j=result.iterator(); j.hasNext(); ) {
             Node n2 = (Node)j.next();
@@ -1323,7 +1325,7 @@ public class AndersenPointerAnalysis {
         }
         return result2;
     }
-        
+    
     Set getConcreteNodes(Node from) {
         if (from instanceof OutsideNode) 
             return getConcreteNodes((OutsideNode)from, (Path)null);
@@ -1340,7 +1342,7 @@ public class AndersenPointerAnalysis {
         if (from.visited) {
             Path p2 = p;
             if (TRACE_CYCLES) out.println("cycle detected! node="+from+" path="+p);
-            LinkedHashSet s = (LinkedHashSet)nodeToInclusionEdges.get(from);
+            Set s = (Set)nodeToInclusionEdges.get(from);
             if (VerifyAssertions) jq.Assert(s != null);
             OutsideNode last = from;
             for (;; p = p.cdr()) {
@@ -1378,7 +1380,7 @@ public class AndersenPointerAnalysis {
         if (REUSE_CACHES) {
             if (result == null) {
                 if (TRACE) out.println("No cache for "+from+" yet, creating.");
-                result = setFactory.makeSet();
+                result = cacheSetFactory.makeSet();
                 addToCache(from, result);
                 brand_new = true;
             } else {
@@ -1396,10 +1398,10 @@ public class AndersenPointerAnalysis {
                 if (TRACE) out.println("Using cached result for "+from+".");
                 return result;
             }
-            result = setFactory.makeSet();
+            result = cacheSetFactory.makeSet();
             addToCache(from, result);
         }
-        LinkedHashSet s = (LinkedHashSet)nodeToInclusionEdges.get(from);
+        Set s = (Set)nodeToInclusionEdges.get(from);
         if (s == null) {
             if (TRACE) out.println("No inclusion edges for "+from+", returning.");
             if (TRACK_CHANGES) {
@@ -1496,14 +1498,14 @@ public class AndersenPointerAnalysis {
     }
     boolean removeUnpropagatedEdge(OutsideNode from, OutsideNode to) {
         if (unpropagatedEdges.remove(getPair(from, to))) return true;
-        HashSet s = (HashSet)collapsedNodes.get(to);
+        Set s = (Set)collapsedNodes.get(to);
         if (s == null) return false;
         if (s.contains(from)) return false;
         s.add(from);
         return true;
     }
     void markCollapsedNode(OutsideNode n) {
-        HashSet s = (HashSet)collapsedNodes.get(n);
+        Set s = (Set)collapsedNodes.get(n);
         if (s == null) collapsedNodes.put(n, s = new HashSet());
         else s.clear();
     }

@@ -20,6 +20,7 @@ import Compil3r.Quad.Operand.TargetOperand;
 import Compil3r.Quad.RegisterFactory.Register;
 import Main.jq;
 import Util.FilterIterator;
+import Util.Strings;
 import Util.Templates.List;
 import Util.Templates.ListIterator;
 import Util.Templates.ListWrapper;
@@ -257,14 +258,14 @@ public class ControlFlowGraph {
      * @return  a verbose string of every basic block in this control flow graph. */
     public String fullDump() {
         StringBuffer sb = new StringBuffer();
-        sb.append("Control flow graph for "+method+":\n");
+        sb.append("Control flow graph for "+method+":"+Strings.lineSep);
         ListIterator.BasicBlock i = reversePostOrderIterator();
         while (i.hasNext()) {
             BasicBlock bb = i.nextBasicBlock();
             sb.append(bb.fullDump());
         }
         sb.append("Exception handlers: "+exception_handlers);
-        sb.append("\nRegister factory: "+rf);
+        sb.append(Strings.lineSep+"Register factory: "+rf);
         return sb.toString();
     }
 

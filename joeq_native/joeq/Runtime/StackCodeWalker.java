@@ -18,6 +18,7 @@ import Memory.CodeAddress;
 import Memory.StackAddress;
 import Memory.HeapAddress;
 import UTF.Utf8;
+import Util.Strings;
 
 /**
  * @author  John Whaley
@@ -117,9 +118,9 @@ public class StackCodeWalker implements Iterator {
                 Utf8 sourcefile = m.getDeclaringClass().getSourceFile();
                 int bc_index = cc.getBytecodeIndex(ip);
                 int line_num = m.getLineNumber(bc_index);
-                s = "\tat " + m + " (" + sourcefile + ":" + line_num + " bc:" + bc_index + " off:" + jq.hex(code_offset) + ")";
+                s = "\tat " + m + " (" + sourcefile + ":" + line_num + " bc:" + bc_index + " off:" + Strings.hex(code_offset) + ")";
             } else {
-                s = "\tat <unknown cc> (start:" + cc.getStart().stringRep() + " off:" + jq.hex(code_offset) + ")";
+                s = "\tat <unknown cc> (start:" + cc.getStart().stringRep() + " off:" + Strings.hex(code_offset) + ")";
             }
         } else {
             s = "\tat <unknown addr> (ip:" + ip.stringRep() + ")";

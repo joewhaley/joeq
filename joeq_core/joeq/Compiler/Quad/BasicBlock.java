@@ -9,6 +9,7 @@ package Compil3r.Quad;
 import Main.jq;
 import Compil3r.Quad.Operator.Ret;
 import Util.BackwardIterator;
+import Util.Strings;
 import Util.Templates.List;
 import Util.Templates.ListIterator;
 import Util.Templates.ListWrapper;
@@ -387,20 +388,20 @@ public class BasicBlock {
         sb.append(')');
         ListIterator.ExceptionHandler ehi = getExceptionHandlers().exceptionHandlerIterator();
         if (ehi.hasNext()) {
-            sb.append("\n\texception handlers: ");
+            sb.append(Strings.lineSep+"\texception handlers: ");
             sb.append(ehi.next().toString());
             while (ehi.hasNext()) {
                 sb.append(", ");
                 sb.append(ehi.next().toString());
             }
         }
-        sb.append("\n");
+        sb.append(Strings.lineSep);
         ListIterator.Quad qi = iterator();
         while (qi.hasNext()) {
             sb.append(qi.nextQuad().toString());
-            sb.append('\n');
+            sb.append(Strings.lineSep);
         }
-        sb.append('\n');
+        sb.append(Strings.lineSep);
         return sb.toString();
     }
     

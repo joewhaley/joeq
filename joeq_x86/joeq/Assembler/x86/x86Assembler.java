@@ -15,6 +15,7 @@ import Main.jq;
 import Memory.CodeAddress;
 import Util.LightRelation;
 import Util.Relation;
+import Util.Strings;
 
 // Referenced classes of package Assembler.x86:
 //            x86Constants, x86CodeBuffer, x86
@@ -33,7 +34,7 @@ public class x86Assembler implements x86Constants {
         void patchTo(x86CodeBuffer mc, int target) {
             if (patchSize == 4) {
                 int v = mc.get4_endian(patchLocation - 4);
-                jq.Assert(v == 0x44444444 || v == 0x55555555 || v == 0x66666666 || v == 0x77777777, "Location: "+jq.hex(patchLocation-4)+" value: "+jq.hex8(v));
+                jq.Assert(v == 0x44444444 || v == 0x55555555 || v == 0x66666666 || v == 0x77777777, "Location: "+Strings.hex(patchLocation-4)+" value: "+Strings.hex8(v));
                 mc.put4_endian(patchLocation - 4, target - patchLocation);
             } else if (patchSize == 1) {
                 byte v = mc.get1(patchLocation - 1);
@@ -46,7 +47,7 @@ public class x86Assembler implements x86Constants {
         }
         
         public String toString() {
-            return "loc:"+jq.hex(patchLocation)+" size:"+patchSize;
+            return "loc:"+Strings.hex(patchLocation)+" size:"+patchSize;
         }
 
     }
@@ -86,7 +87,7 @@ public class x86Assembler implements x86Constants {
 
     // forward branches
     public void recordForwardBranch(int patchsize, Object target) {
-        if (TRACE) System.out.println("recording forward branch from "+jq.hex(ip)+" (size "+patchsize+") to "+target);
+        if (TRACE) System.out.println("recording forward branch from "+Strings.hex(ip)+" (size "+patchsize+") to "+target);
         branches_to_patch.add(target, new PatchInfo(ip, patchsize));
     }
     public void resolveForwardBranches(Object target) {
@@ -94,7 +95,7 @@ public class x86Assembler implements x86Constants {
         Iterator it = branches_to_patch.getValues(target).iterator();
         while (it.hasNext()) {
             p = (PatchInfo)it.next();
-            if (TRACE) System.out.println("patching branch to "+target+" ("+p+") to point to "+jq.hex(ip));
+            if (TRACE) System.out.println("patching branch to "+target+" ("+p+") to point to "+Strings.hex(ip));
             p.patchTo(mc, ip);
         }
         branches_to_patch.removeKey(target);
@@ -132,37 +133,39 @@ public class x86Assembler implements x86Constants {
             ip += x86.PUSH_i32.emit1_Imm32(mc, imm);
     }
     public void emit2_SHIFT_Mem_Imm8(x86 x, int off, int base, byte imm) {
-        if (base == ESP)
-            if (off == 0)
+        if (base == ESP) {
+            if (off == 0) {
                 if (imm == 1)
                     ip += x.emit2_Once_SIB_EA(mc, ESP, ESP, SCALE_1);
                 else
                     ip += x.emit2_SIB_EA_Imm8(mc, ESP, ESP, SCALE_1, imm);
-            else if (fits_signed(off, 8))
+            } else if (fits_signed(off, 8)) {
                 if (imm == 1)
                     ip += x.emit2_Once_SIB_DISP8(mc, ESP, ESP, SCALE_1, (byte)off);
                 else
                     ip += x.emit2_SIB_DISP8_Imm8(mc, ESP, ESP, SCALE_1, (byte)off, imm);
-            else
+            } else {
                 if (imm == 1)
                     ip += x.emit2_Once_SIB_DISP32(mc, ESP, ESP, SCALE_1, off);
                 else
                     ip += x.emit2_SIB_DISP32_Imm8(mc, ESP, ESP, SCALE_1, off, imm);
-        else if (off == 0 && base != EBP)
+            }
+        } else if (off == 0 && base != EBP) {
             if (imm == 1)
                 ip += x.emit2_Once_EA(mc, base);
             else
                 ip += x.emit2_EA_Imm8(mc, base, imm);
-        else if (fits_signed(off, 8))
+        } else if (fits_signed(off, 8)) {
             if (imm == 1)
                 ip += x.emit2_Once_DISP8(mc, (byte)off, base);
             else
                 ip += x.emit2_DISP8_Imm8(mc, (byte)off, base, imm);
-        else
+        } else {
             if (imm == 1)
                 ip += x.emit2_Once_DISP32(mc, off, base);
             else
                 ip += x.emit2_DISP32_Imm8(mc, off, base, imm);
+        }
     }
 
     public void emit2_SHIFT_Reg_Imm8(x86 x, int r1, byte imm) {
@@ -215,14 +218,14 @@ public class x86Assembler implements x86Constants {
         ip += x.emit2_Abs32(mc, imm);
     }
     public void emit2_Mem(x86 x, int off, int base) {
-        if (base == ESP)
+        if (base == ESP) {
             if (off == 0)
                 ip += x.emit2_SIB_EA(mc, ESP, ESP, SCALE_1);
             else if (fits_signed(off, 8))
                 ip += x.emit2_SIB_DISP8(mc, ESP, ESP, SCALE_1, (byte)off);
             else
                 ip += x.emit2_SIB_DISP32(mc, ESP, ESP, SCALE_1, off);
-        else if (off == 0 && base != EBP)
+        } else if (off == 0 && base != EBP)
             ip += x.emit2_EA(mc, base);
         else if (fits_signed(off, 8))
             ip += x.emit2_DISP8(mc, (byte)off, base);
@@ -240,14 +243,14 @@ public class x86Assembler implements x86Constants {
             ip += x.emit2_SIB_DISP32(mc, base, ind, scale, off);
     }
     public void emit2_Mem_Imm(x86 x, int off, int base, int imm) {
-        if (base == ESP)
+        if (base == ESP) {
             if (off == 0)
                 ip += x.emit2_SIB_EA_Imm32(mc, ESP, ESP, SCALE_1, imm);
             else if (fits_signed(off, 8))
                 ip += x.emit2_SIB_DISP8_Imm32(mc, ESP, ESP, SCALE_1, (byte)off, imm);
             else
                 ip += x.emit2_SIB_DISP32_Imm32(mc, ESP, ESP, SCALE_1, off, imm);
-        else if (off == 0 && base != EBP)
+        } else if (off == 0 && base != EBP)
             ip += x.emit2_EA_Imm32(mc, base, imm);
         else if (fits_signed(off, 8))
             ip += x.emit2_DISP8_Imm32(mc, (byte)off, base, imm);
@@ -261,14 +264,14 @@ public class x86Assembler implements x86Constants {
         ip += x.emit2_Reg_Abs32(mc, r1, addr);
     }
     public void emit2_Reg_Mem(x86 x, int r1, int off, int base) {
-        if (base == ESP)
+        if (base == ESP) {
             if (off == 0)
                 ip += x.emit2_Reg_SIB_EA(mc, r1, ESP, ESP, SCALE_1);
             else if (fits_signed(off, 8))
                 ip += x.emit2_Reg_SIB_DISP8(mc, r1, ESP, ESP, SCALE_1, (byte)off);
             else
                 ip += x.emit2_Reg_SIB_DISP32(mc, r1, ESP, ESP, SCALE_1, off);
-        else if (off == 0 && base != EBP)
+        } else if (off == 0 && base != EBP)
             ip += x.emit2_Reg_EA(mc, r1, base);
         else if (fits_signed(off, 8))
             ip += x.emit2_Reg_DISP8(mc, r1, (byte)off, base);
@@ -295,14 +298,14 @@ public class x86Assembler implements x86Constants {
         ip += x.emit3_Reg_Abs32(mc, r1, addr);
     }
     public void emit3_Reg_Mem(x86 x, int r1, int off, int base) {
-        if (base == ESP)
+        if (base == ESP) {
             if (off == 0)
                 ip += x.emit3_Reg_SIB_EA(mc, r1, ESP, ESP, SCALE_1);
             else if (fits_signed(off, 8))
                 ip += x.emit3_Reg_SIB_DISP8(mc, r1, ESP, ESP, SCALE_1, (byte)off);
             else
                 ip += x.emit3_Reg_SIB_DISP32(mc, r1, ESP, ESP, SCALE_1, off);
-        else if (off == 0 && base != EBP)
+        } else if (off == 0 && base != EBP)
             ip += x.emit3_Reg_EA(mc, r1, base);
         else if (fits_signed(off, 8))
             ip += x.emit3_Reg_DISP8(mc, r1, (byte)off, base);
@@ -320,37 +323,39 @@ public class x86Assembler implements x86Constants {
     
     // arithmetic (with special EAX, Imm forms and 8-bit sign-extended immediates)
     public void emitARITH_Mem_Imm(x86 x, int off, int base, int imm) {
-        if (base == ESP)
-            if (off == 0)
+        if (base == ESP) {
+            if (off == 0) {
                 if (x != x86.TEST_r_i32 && fits_signed(imm, 8))
                     ip += x.emit2_SIB_EA_SEImm8(mc, ESP, ESP, SCALE_1, (byte)imm);
                 else
                     ip += x.emit2_SIB_EA_Imm32(mc, ESP, ESP, SCALE_1, imm);
-            else if (fits_signed(off, 8))
+            } else if (fits_signed(off, 8)) {
                 if (x != x86.TEST_r_i32 && fits_signed(imm, 8))
                     ip += x.emit2_SIB_DISP8_SEImm8(mc, ESP, ESP, SCALE_1, (byte)off, (byte)imm);
                 else
                     ip += x.emit2_SIB_DISP8_Imm32(mc, ESP, ESP, SCALE_1, (byte)off, imm);
-            else
+            } else {
                 if (x != x86.TEST_r_i32 && fits_signed(imm, 8))
                     ip += x.emit2_SIB_DISP32_SEImm8(mc, ESP, ESP, SCALE_1, off, (byte)imm);
                 else
                     ip += x.emit2_SIB_DISP32_Imm32(mc, ESP, ESP, SCALE_1, off, imm);
-        else if (off == 0 && base != 5)
+            }
+        } else if (off == 0 && base != 5) {
             if (x != x86.TEST_r_i32 && fits_signed(imm, 8))
                 ip += x.emit2_EA_SEImm8(mc, base, (byte)imm);
             else
                 ip += x.emit2_EA_Imm32(mc, base, imm);
-        else if (fits_signed(off, 8))
+        } else if (fits_signed(off, 8)) {
             if (x != x86.TEST_r_i32 && fits_signed(imm, 8))
                 ip += x.emit2_DISP8_SEImm8(mc, (byte)off, base, (byte)imm);
             else
                 ip += x.emit2_DISP8_Imm32(mc, (byte)off, base, imm);
-        else
+        } else {
             if (x != x86.TEST_r_i32 && fits_signed(imm, 8))
                 ip += x.emit2_DISP32_SEImm8(mc, off, base, (byte)imm);
             else
                 ip += x.emit2_DISP32_Imm32(mc, off, base, imm);
+        }
     }
     public void emitARITH_Reg_Imm(x86 x, int r1, int imm) {
         //if (r1 == EAX)
@@ -365,14 +370,14 @@ public class x86Assembler implements x86Constants {
         ip += x.emit2_Reg_Reg(mc, r1, r2);
     }
     public void emitARITH_Reg_Mem(x86 x, int r1, int off, int base) {
-        if (base == ESP)
+        if (base == ESP) {
             if (off == 0)
                 ip += x.emit2_Reg_SIB_EA(mc, r1, ESP, ESP, SCALE_1);
             else if (fits_signed(off, 8))
                 ip += x.emit2_Reg_SIB_DISP8(mc, r1, ESP, ESP, SCALE_1, (byte)off);
             else
                 ip += x.emit2_Reg_SIB_DISP32(mc, r1, ESP, ESP, SCALE_1, off);
-        else if (off == 0 && base != 5)
+        } else if (off == 0 && base != 5)
             ip += x.emit2_Reg_EA(mc, r1, base);
         else if (fits_signed(off, 8))
             ip += x.emit2_Reg_DISP8(mc, r1, (byte)off, base);
@@ -385,10 +390,10 @@ public class x86Assembler implements x86Constants {
         jq.Assert(x.length == 1);
         int offset = getBranchTarget(target) - ip - 2;
         if (offset >= -128) {
-            if (TRACE) System.out.println("Short cjump back from offset "+jq.hex(ip+2)+" to "+target+" offset "+getBranchTarget(target)+" (relative offset "+jq.shex(offset)+")");
+            if (TRACE) System.out.println("Short cjump back from offset "+Strings.hex(ip+2)+" to "+target+" offset "+getBranchTarget(target)+" (relative offset "+Strings.shex(offset)+")");
             ip += x.emitCJump_Short(mc, (byte)offset);
         } else {
-            if (TRACE) System.out.println("Near cjump back from offset "+jq.hex(ip+6)+" to "+target+" offset "+getBranchTarget(target)+" (relative offset "+jq.shex(offset-4)+")");
+            if (TRACE) System.out.println("Near cjump back from offset "+Strings.hex(ip+6)+" to "+target+" offset "+getBranchTarget(target)+" (relative offset "+Strings.shex(offset-4)+")");
             ip += x.emitCJump_Near(mc, offset - 4);
         }
     }
@@ -412,10 +417,10 @@ public class x86Assembler implements x86Constants {
         jq.Assert(x.length == 1);
         int offset = getBranchTarget(target) - ip - 2;
         if(offset >= -128) {
-            if (TRACE) System.out.println("Short jump back from offset "+jq.hex(ip+2)+" to "+target+" offset "+getBranchTarget(target)+" (relative offset "+jq.shex(offset)+")");
+            if (TRACE) System.out.println("Short jump back from offset "+Strings.hex(ip+2)+" to "+target+" offset "+getBranchTarget(target)+" (relative offset "+Strings.shex(offset)+")");
             ip += x.emitJump_Short(mc, (byte)offset);
         } else {
-            if (TRACE) System.out.println("Near jump back from offset "+jq.hex(ip+5)+" to "+target+" offset "+getBranchTarget(target)+" (relative offset "+jq.shex(offset-3)+")");
+            if (TRACE) System.out.println("Near jump back from offset "+Strings.hex(ip+5)+" to "+target+" offset "+getBranchTarget(target)+" (relative offset "+Strings.shex(offset-3)+")");
             ip += x.emitJump_Near(mc, offset - 3);
         }
     }

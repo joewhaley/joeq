@@ -1447,7 +1447,7 @@ public interface Bytecodes {
             StringBuffer buf = new StringBuffer();
             
             for(InstructionHandle ih=start; ih != null; ih = ih.next) {
-                buf.append(ih.toString(verbose) + "\n");
+                buf.append(ih.toString(verbose) + Strings.lineSep);
             }
             
             return buf.toString();

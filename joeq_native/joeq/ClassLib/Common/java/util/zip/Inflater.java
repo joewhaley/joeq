@@ -661,8 +661,9 @@ public abstract class Inflater {
   /**
    * Finalizes this object.
    */
-  protected void finalize()
+  protected void finalize() throws Throwable
   {
     /* Exists only for compatibility */
+    super.finalize();
   }
 }

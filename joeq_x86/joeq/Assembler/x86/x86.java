@@ -9,6 +9,7 @@ package Assembler.x86;
 
 import Allocator.CodeAllocator;
 import Main.jq;
+import Util.Strings;
 
 /*
  * @author  John Whaley
@@ -830,7 +831,7 @@ public class x86 implements x86Constants {
             mc.add1((byte)(opcode | CJUMP_SHORT));
             mc.add1((byte)(offset & 0xFF));
         }
-        if (x86Assembler.TRACE) dbg(mc, 2, desc, jq.hex(mc.getCurrentOffset()+offset)+" (offset "+jq.shex(offset)+")");
+        if (x86Assembler.TRACE) dbg(mc, 2, desc, Strings.hex(mc.getCurrentOffset()+offset)+" (offset "+Strings.shex(offset)+")");
         return 2;
     }
     public static final int s_Jump_Short() { return 2; }
@@ -840,7 +841,7 @@ public class x86 implements x86Constants {
             mc.add1((byte)(opcode | JUMP_SHORT));
             mc.add1((byte)(offset & 0xFF));
         }
-        if (x86Assembler.TRACE) dbg(mc, 2, desc, jq.hex(mc.getCurrentOffset()+offset)+" (offset "+jq.shex(offset)+")");
+        if (x86Assembler.TRACE) dbg(mc, 2, desc, Strings.hex(mc.getCurrentOffset()+offset)+" (offset "+Strings.shex(offset)+")");
         return 2;
     }
     public static final int s_1_Imm8() { return 2; }
@@ -1828,7 +1829,7 @@ public class x86 implements x86Constants {
         StringBuffer s = new StringBuffer();
         if (mc != null) {
             int n = mc.getCurrentOffset();
-            s.append(jq.hex(n - length));
+            s.append(Strings.hex(n - length));
             s.append('\t');
             while (length > 0) {
                 int b = ((int)mc.get1(n-length)) & 0xFF;

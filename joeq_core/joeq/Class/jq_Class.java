@@ -38,6 +38,7 @@ import Run_Time.TypeCheck;
 import Run_Time.Unsafe;
 import UTF.UTFDataFormatError;
 import UTF.Utf8;
+import Util.Strings;
 
 // friend jq_ClassLoader;
 
@@ -672,14 +673,17 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
     throws ClassFormatError, UnsupportedClassVersionError, ClassCircularityError, NoClassDefFoundError {
         if (isLoaded()) return; // quick test
         jq.Assert(class_loader == PrimordialClassLoader.loader);
+        DataInputStream in = null;
         try {
-            DataInputStream in = ((PrimordialClassLoader)class_loader).getClassFileStream(desc);
+            in = ((PrimordialClassLoader)class_loader).getClassFileStream(desc);
             if (in == null) throw new NoClassDefFoundError(className(desc));
             load(in);
             in.close();
         } catch (IOException x) {
             x.printStackTrace(); // for debugging
             throw new ClassFormatError(x.toString());
+        } finally {
+            try { if (in != null) in.close(); } catch (IOException _) { }
         }
     }
     public void load(DataInput in)
@@ -745,7 +749,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                     super_class.addSubclass(this);
                 } else {
                     // no superclass --> java.lang.Object
-                    if (PrimordialClassLoader.loader.getJavaLangObject() != this) {
+                    if (PrimordialClassLoader.getJavaLangObject() != this) {
                         throw new ClassFormatError("no superclass listed for class "+this);
                     }
                 }
@@ -1115,7 +1119,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                 // update OLD according to NEW
                 if (TRACE_REPLACE_CLASS)
                     Run_Time.SystemInterface.debugmsg(
-                        "\n\nIn REPLACE: STARTING REPLACEMENT of:\t" + old_m);
+                        Strings.lineSep+Strings.lineSep+"In REPLACE: STARTING REPLACEMENT of:\t" + old_m);
 
                 jq_NameAndDesc old_m_nd = old_m.getNameAndDesc();
 
@@ -1163,7 +1167,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
 
                     if (TRACE_REPLACE_CLASS)
                         SystemInterface.debugmsg(
-                            "\n\nIn Replace: DONE REPLACEMENT for STATIC method "
+                            Strings.lineSep+Strings.lineSep+"In Replace: DONE REPLACEMENT for STATIC method "
                                 + old_m);
                 }
             } else {
@@ -1193,7 +1197,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
 
                 if (TRACE_REPLACE_CLASS)
                     Run_Time.SystemInterface.debugmsg(
-                        "\n\nIn REPLACE: STARTING REPLACEMENT of:\t" + old_m);
+                        Strings.lineSep+Strings.lineSep+"In REPLACE: STARTING REPLACEMENT of:\t" + old_m);
 
                 //info useful for new_m
                 jq_NameAndDesc old_m_nd = old_m.getNameAndDesc();
@@ -1266,7 +1270,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
 
                     if (TRACE_REPLACE_CLASS)
                         SystemInterface.debugmsg(
-                            "\n\nIn Replace: DONE REPLACING instance method "
+                            Strings.lineSep+Strings.lineSep+"In Replace: DONE REPLACING instance method "
                                 + old_m);
                 }
             } else {
@@ -1809,7 +1813,7 @@ uphere1:
                         if (this_param.length+1 != that_param.length) continue;
                         for (int k=0; k<this_param.length; ++k) {
                             if ((this_param[k] != that_param[k+1]) &&
-                                (that_param[k+1] != PrimordialClassLoader.loader.getJavaLangObject())) continue uphere1;
+                                (that_param[k+1] != PrimordialClassLoader.getJavaLangObject())) continue uphere1;
                         }
                         jq_NameAndDesc nd = f.getNameAndDesc();
                         access_flags = f.getAccessFlags();
@@ -1822,7 +1826,7 @@ uphere1:
             } else {
                 // overridden instance method
                 char access_flags = (char)(sm.getAccessFlags() & ~ACC_STATIC);
-                jq.Assert(that_param[0] == PrimordialClassLoader.loader.getJavaLangObject() || that_param[0] == this, sm.toString());
+                jq.Assert(that_param[0] == PrimordialClassLoader.getJavaLangObject() || that_param[0] == this, sm.toString());
 uphere2:
                 for (int j=0; ; ++j) {
                     if (j>=declared_instance_methods.length) {
@@ -1845,7 +1849,7 @@ uphere2:
                         if (this_param.length != that_param.length) continue;
                         for (int k=0; k<this_param.length; ++k) {
                             if ((this_param[k] != that_param[k]) &&
-                            (that_param[k] != PrimordialClassLoader.loader.getJavaLangObject())) continue uphere2;
+                            (that_param[k] != PrimordialClassLoader.getJavaLangObject())) continue uphere2;
                         }
                         jq_NameAndDesc nd = f.getNameAndDesc();
                         access_flags = f.getAccessFlags();
@@ -1973,7 +1977,7 @@ uphere2:
                             int fsize = f.getSize();
                             if (fsize <= largestDataType-align) {
                                 instance_fields[++currentInstanceField] = f;
-                                if (TRACE) SystemInterface.debugmsg("Filling in field #"+currentInstanceField+" "+f+" at offset "+jq.hex(size - OBJ_HEADER_SIZE));
+                                if (TRACE) SystemInterface.debugmsg("Filling in field #"+currentInstanceField+" "+f+" at offset "+Strings.shex(size - OBJ_HEADER_SIZE));
                                 f.prepare(size - OBJ_HEADER_SIZE);
                                 size += fsize;
                                 align += fsize;
@@ -1991,7 +1995,7 @@ uphere2:
                     jq_InstanceField f = declared_instance_fields[i];
                     if (f.getState() == STATE_LOADED) {
                         instance_fields[++currentInstanceField] = f;
-                        if (TRACE) SystemInterface.debugmsg("Laying out field #"+currentInstanceField+" "+f+" at offset "+jq.hex(size - OBJ_HEADER_SIZE));
+                        if (TRACE) SystemInterface.debugmsg("Laying out field #"+currentInstanceField+" "+f+" at offset "+Strings.shex(size - OBJ_HEADER_SIZE));
                         f.prepare(size - OBJ_HEADER_SIZE);
                         size += f.getSize();
                     }
@@ -2015,8 +2019,8 @@ uphere2:
                             m2.isPrivate() || m2.isFinal()) {// should not be overridden
                             System.out.println("error: method "+m+" overrides method "+m2);
                         }
-                        m2.isOverriddenBy(m);
-                        if (TRACE) SystemInterface.debugmsg("Virtual method "+m+" overrides method "+m2+" offset "+jq.hex(m2.getOffset()));
+                        m2.overriddenBy(m);
+                        if (TRACE) SystemInterface.debugmsg("Virtual method "+m+" overrides method "+m2+" offset "+Strings.shex(m2.getOffset()));
                         m.prepare(m2.getOffset());
                         continue;
                     }
@@ -2052,7 +2056,7 @@ uphere2:
                 }
                 jq.Assert(m.getState() == STATE_LOADED);
                 virtual_methods[++j] = m;
-                if (TRACE) SystemInterface.debugmsg("Virtual method "+m+" is new, offset "+jq.hex((j+1)*CodeAddress.size()));
+                if (TRACE) SystemInterface.debugmsg("Virtual method "+m+" is new, offset "+Strings.shex((j+1)*CodeAddress.size()));
                 m.prepare((j+1)*CodeAddress.size());
             }
             // allocate space for vtable
@@ -2228,13 +2232,13 @@ uphere2:
             jq_Member m = (jq_Member)e.getValue();
             if (m instanceof jq_Field) {
                 if (!necessaryFields.contains(m)) {
-                    if (trim.TRACE) trim.out.println("Eliminating field: "+m);
+                    if (BootstrapRootSet.TRACE) BootstrapRootSet.out.println("Eliminating field: "+m);
                     it.remove();
                 }
             } else {
                 jq.Assert(m instanceof jq_Method);
                 if (!necessaryMethods.contains(m)) {
-                    if (trim.TRACE) trim.out.println("Eliminating method: "+m);
+                    if (BootstrapRootSet.TRACE) BootstrapRootSet.out.println("Eliminating method: "+m);
                     it.remove();
                 }
             }
@@ -2254,7 +2258,7 @@ uphere2:
                 ifs[++j] = f;
                 ++NumOfIFieldsKept;
             } else {
-                if (trim.TRACE) trim.out.println("Eliminating instance field: "+f);
+                if (BootstrapRootSet.TRACE) BootstrapRootSet.out.println("Eliminating instance field: "+f);
                 ++NumOfIFieldsEliminated;
             }
         }
@@ -2275,7 +2279,7 @@ uphere2:
                 ++NumOfSFieldsKept;
             }
             else {
-                if (trim.TRACE) trim.out.println("Eliminating static field: "+f);
+                if (BootstrapRootSet.TRACE) BootstrapRootSet.out.println("Eliminating static field: "+f);
                 ++NumOfSFieldsEliminated;
             }
         }
@@ -2295,7 +2299,7 @@ uphere2:
                 ims[++j] = f;
                 ++NumOfIMethodsKept;
             } else {
-                if (trim.TRACE) trim.out.println("Eliminating instance method: "+f);
+                if (BootstrapRootSet.TRACE) BootstrapRootSet.out.println("Eliminating instance method: "+f);
                 ++NumOfIMethodsEliminated;
             }
         }
@@ -2314,7 +2318,7 @@ uphere2:
                 sms[++j] = f;
                 ++NumOfSMethodsKept;
             } else {
-                if (trim.TRACE) trim.out.println("Eliminating static method: "+f);
+                if (BootstrapRootSet.TRACE) BootstrapRootSet.out.println("Eliminating static method: "+f);
                 ++NumOfSMethodsEliminated;
             }
         }

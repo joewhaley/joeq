@@ -12,6 +12,7 @@ import Compil3r.Quad.Operand.RegisterOperand;
 import Compil3r.Quad.Operator.Return;
 import Interpreter.QuadInterpreter;
 import Main.jq;
+import Util.Strings;
 import Util.Templates.List;
 import Util.Templates.UnmodifiableList;
 
@@ -98,8 +99,8 @@ public class Quad {
     /** Returns a string representation of this quad. */
     public String toString() {
         StringBuffer s = new StringBuffer();
-        s.append(jq.left(Integer.toString(id_number), 4));
-        s.append(jq.left(operator.toString(), 24));
+        s.append(Strings.left(Integer.toString(id_number), 4));
+        s.append(Strings.left(operator.toString(), 24));
         if (operand1 == null) {
             if (operand2 == null) return s.toString();
             s.append("    \t");
@@ -121,8 +122,9 @@ public class Quad {
     /** Returns a short string representation of this quad, without any operands. */
     public String toString_short() {
         StringBuffer s = new StringBuffer();
-        s.append(jq.left(Integer.toString(id_number), 4));
+        s.append(Strings.left(Integer.toString(id_number), 4));
         s.append(operator.toString());
         return s.toString();
     }
+    
 }

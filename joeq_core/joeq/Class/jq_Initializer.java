@@ -40,7 +40,7 @@ public final class jq_Initializer extends jq_InstanceMethod {
         param_types[0] = clazz;
         i = nd.getDesc().getParamDescriptors();
         for (int j=1; j<num; ++j) {
-            Utf8 pd = (Utf8)i.nextUtf8();
+            Utf8 pd = i.nextUtf8();
             param_types[j] = PrimordialClassLoader.getOrCreateType(clazz.getClassLoader(), pd);
             ++words;
             if ((param_types[j] == jq_Primitive.LONG) ||

@@ -125,7 +125,7 @@ public abstract class CallTargets extends AbstractSet {
                 } else {
                     if (VerifyAssertions)
                         jq.Assert(rtype.isArrayType(), rtype.toString());
-                    if (imethod.getDeclaringClass() != PrimordialClassLoader.loader.getJavaLangObject())
+                    if (imethod.getDeclaringClass() != PrimordialClassLoader.getJavaLangObject())
                         continue;
                     if (VerifyAssertions)
                         jq.Assert(!imethod.isAbstract(), imethod.toString());
@@ -167,7 +167,7 @@ public abstract class CallTargets extends AbstractSet {
                 } else {
                     if (VerifyAssertions)
                         jq.Assert(rtype.isArrayType(), rtype.toString());
-                    if (imethod.getDeclaringClass() != PrimordialClassLoader.loader.getJavaLangObject())
+                    if (imethod.getDeclaringClass() != PrimordialClassLoader.getJavaLangObject())
                         continue;
                     if (VerifyAssertions)
                         jq.Assert(!imethod.isAbstract());
@@ -193,7 +193,7 @@ public abstract class CallTargets extends AbstractSet {
             jq.Assert(type == BytecodeVisitor.INVOKE_VIRTUAL || type == BytecodeVisitor.INVOKE_INTERFACE, ""+type);
             
         if (receiverType.isArrayType()) {
-            if (imethod.getDeclaringClass() != PrimordialClassLoader.loader.getJavaLangObject())
+            if (imethod.getDeclaringClass() != PrimordialClassLoader.getJavaLangObject())
                 return NoCallTarget.INSTANCE;
             return new SingleCallTarget(imethod, true);
         }
@@ -475,7 +475,7 @@ public abstract class CallTargets extends AbstractSet {
         boolean again;
         do {
             again = false;
-            jq_Class rclass = PrimordialClassLoader.loader.getJavaLangObject();
+            jq_Class rclass = PrimordialClassLoader.getJavaLangObject();
             Stack worklist = new Stack();
             worklist.push(rclass);
             while (!worklist.empty()) {
@@ -497,7 +497,7 @@ public abstract class CallTargets extends AbstractSet {
         // find the set of classes that implement these interfaces.
         Stack worklist = new Stack();     // unchecked classes
         Stack implementers = new Stack(); // do/may implement
-        jq_Class rclass = PrimordialClassLoader.loader.getJavaLangObject();
+        jq_Class rclass = PrimordialClassLoader.getJavaLangObject();
         if (VerifyAssertions)
             jq.Assert(rclass.isLoaded()); // java.lang.Object had better be loaded!
         if (rclass.implementsInterface(interf)) implementers.push(rclass);

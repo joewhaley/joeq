@@ -89,7 +89,7 @@ public class jq_Array extends jq_Reference implements jq_ClassFileConstants, Obj
     
     public final jq_InstanceMethod getVirtualMethod(jq_NameAndDesc nd) {
         chkState(STATE_PREPARED);
-        jq_Class jlo = PrimordialClassLoader.loader.getJavaLangObject();
+        jq_Class jlo = PrimordialClassLoader.getJavaLangObject();
         return jlo.getVirtualMethod(nd);
     }
     
@@ -185,7 +185,7 @@ public class jq_Array extends jq_Reference implements jq_ClassFileConstants, Obj
         if (TRACE) System.out.println("Preparing "+this+"...");
         state = STATE_PREPARING;
         // vtable is a copy of Ljava/lang/Object;
-        jq_Class jlo = PrimordialClassLoader.loader.getJavaLangObject();
+        jq_Class jlo = PrimordialClassLoader.getJavaLangObject();
         jlo.load(); jlo.verify(); jlo.prepare();
         Address[] jlovtable = (Address[])jlo.getVTable();
         vtable = new Address[jlovtable.length];
@@ -200,7 +200,7 @@ public class jq_Array extends jq_Reference implements jq_ClassFileConstants, Obj
         if (isClsInitialized()) return;
         if (TRACE) System.out.println("Class init "+this+"...");
         state = STATE_CLSINITIALIZING;
-        jq_Class jlo = PrimordialClassLoader.loader.getJavaLangObject();
+        jq_Class jlo = PrimordialClassLoader.getJavaLangObject();
         jlo.sf_initialize(); jlo.cls_initialize();
         Address[] jlovtable = (Address[])jlo.getVTable();
         Address[] vt = (Address[])this.vtable;
