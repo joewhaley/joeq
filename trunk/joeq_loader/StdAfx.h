@@ -29,25 +29,14 @@
 #include <dos.h>
 #endif
 
-#if !defined(_umask)
-#define _umask umask
-#endif
-
 #else
 
 #if !defined(__stdcall)
 #define __stdcall __attribute__((stdcall))
 #endif
-#define _umask umask
 #define __int64 int64_t
-#define _open open
-#define _read read
-#define _write write
 #define _commit fsync
-#define _lseeki64 lseek
-#define _close close
 #define _mkdir(s) mkdir((s),0777)
-#define _chmod chmod
 #define Sleep(ms) usleep(1000*(ms))
 
 #include <wchar.h>
@@ -56,6 +45,10 @@
 #include <unistd.h>
 #include <dirent.h>
 
+#endif
+
+#if !defined(_umask)
+#define _umask umask
 #endif
 
 #if defined(linux)
@@ -85,9 +78,9 @@ typedef struct _NativeThread {
         int pid;
 } NativeThread;
 
-extern "C" void __stdcall trap_handler(void*, int);
-extern "C" void __stdcall ctrl_break_handler();
-extern "C" void __stdcall threadSwitch(void*);
+void __stdcall trap_handler(void*, int);
+void __stdcall ctrl_break_handler();
+void __stdcall threadSwitch(void*);
 
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.
