@@ -218,11 +218,13 @@ public class InterfaceImpl implements Interface {
                 String name = ((java.util.zip.ZipFile)o).getName();
             
                 // we need to reopen the ZipFile on VM startup
-                Object[] args = { o, name };
-                jq_Method zip_open = ClassLibInterface._class.getOrCreateStaticMethod("init_zipfile_static", "(Ljava/util/zip/ZipFile;Ljava/lang/String;)V");
-                MethodInvocation mi = new MethodInvocation(zip_open, args);
-                jq.on_vm_startup.add(mi);
-                System.out.println("Reopening zip file on joeq startup: "+name);
+                if (jq.on_vm_startup != null) {
+                    Object[] args = { o, name };
+                    jq_Method zip_open = ClassLibInterface._class.getOrCreateStaticMethod("init_zipfile_static", "(Ljava/util/zip/ZipFile;Ljava/lang/String;)V");
+                    MethodInvocation mi = new MethodInvocation(zip_open, args);
+                    jq.on_vm_startup.add(mi);
+                    System.out.println("Reopening zip file on joeq startup: "+name);
+                }
             }
             else
             if (o instanceof java.util.zip.Inflater) {
@@ -232,11 +234,13 @@ public class InterfaceImpl implements Interface {
                 boolean nowrap = false; // TODO: how do we know?
                 
                 // we need to reinitialize the Inflater on VM startup
-                Object[] args = { o, new Boolean(nowrap) };
-                jq_Method zip_open = ClassLibInterface._class.getOrCreateStaticMethod("init_inflater_static", "(Ljava/util/zip/Inflater;Z)V");
-                MethodInvocation mi = new MethodInvocation(zip_open, args);
-                jq.on_vm_startup.add(mi);
-                System.out.println("Reinitializing inflater on joeq startup: "+o);
+                if (jq.on_vm_startup != null) {
+                    Object[] args = { o, new Boolean(nowrap) };
+                    jq_Method zip_open = ClassLibInterface._class.getOrCreateStaticMethod("init_inflater_static", "(Ljava/util/zip/Inflater;Z)V");
+                    MethodInvocation mi = new MethodInvocation(zip_open, args);
+                    jq.on_vm_startup.add(mi);
+                    System.out.println("Reinitializing inflater on joeq startup: "+o);
+                }
             }
             return o;
         }
