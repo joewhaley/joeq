@@ -132,7 +132,7 @@ public abstract class InferenceRule {
         while (top.size() > 2) {
             RuleTerm rt1 = (RuleTerm) top.remove(0);
             RuleTerm rt2 = (RuleTerm) top.remove(0);
-            if (s.NOISY) s.out.println("Combining "+rt1+" and "+rt2+" into a new rule.");
+            if (s.TRACE) s.out.println("Combining "+rt1+" and "+rt2+" into a new rule.");
             
             // Calculate our new necessary variables.
             LinkedList ll = new LinkedList();
@@ -200,21 +200,21 @@ public abstract class InferenceRule {
                 newVariables.add(v);
             }
             String relationName = bottom.relation.name+"_"+myIndex+"_"+count;
-            if (s.NOISY) s.out.println("Field names: "+fieldNames+" Field domains: "+fieldDomains+" Options: "+fieldOptions);
+            if (s.TRACE) s.out.println("Field names: "+fieldNames+" Field domains: "+fieldDomains+" Options: "+fieldOptions);
             Relation newRelation = s.createRelation(relationName, fieldNames, fieldDomains, fieldOptions);
-            if (s.NOISY) s.out.println("New relation: "+newRelation);
+            if (s.TRACE) s.out.println("New relation: "+newRelation);
             RuleTerm newBottom = new RuleTerm(newVariables, newRelation);
             InferenceRule newRule = s.createInferenceRule(newTop, newBottom);
-            if (s.NOISY) s.out.println("New rule: "+newRule);
-            if (s.NOISY) s.out.println("Necessary variables: "+newRule.necessaryVariables);
+            if (s.TRACE) s.out.println("New rule: "+newRule);
+            if (s.TRACE) s.out.println("Necessary variables: "+newRule.necessaryVariables);
             //s.rules.add(newRule);
             newRules.add(newRule);
             // Now include the bottom of the new rule on the top of our rule.
             top.add(0, newBottom);
             // Reinitialize this rule because the terms have changed.
             this.initialize();
-            if (s.NOISY) s.out.println("Current rule is now: "+this);
-            if (s.NOISY) s.out.println("My new necessary variables: "+necessaryVariables);
+            if (s.TRACE) s.out.println("Current rule is now: "+this);
+            if (s.TRACE) s.out.println("My new necessary variables: "+necessaryVariables);
             Assert._assert(necessaryVariables.equals(myNewNecessaryVariables));
             ++count;
         }
