@@ -14,6 +14,7 @@ import java.lang.reflect.Field;
 import java.math.BigInteger;
 import java.util.AbstractSet;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -59,6 +60,7 @@ import Util.Graphs.SCCPathNumbering;
 import Util.Graphs.SCComponent;
 import Util.Graphs.SCCTopSortedGraph;
 import Util.Graphs.Graph;
+import Util.Graphs.Navigator;
 import Util.Graphs.SCCPathNumbering.Path;
 
 /**
@@ -156,6 +158,16 @@ public class PAResults implements PointerAnalysisResults {
                     TypedBDD set = parseBDDset(results, st.nextToken());
                     TypedBDD r = (TypedBDD) bdd1.relprod(bdd2, set);
                     results.add(r);
+                } else if (command.equals("replace")) {
+                    TypedBDD bdd = parseBDD(results, st.nextToken());
+                    String ps = st.nextToken();
+                    BDDPairing pair = parsePairing(ps);
+                    if (pair != null) {
+                        results.add(bdd.replace(pair));
+                    } else {
+                        System.out.println("No such pairing: " + ps);
+                        increaseCount = false;
+                    }
                 } else if (command.equals("restrict")) {
                     TypedBDD bdd1 = parseBDD(results, st.nextToken());
 		    TypedBDD r = bdd1;
@@ -192,6 +204,16 @@ public class PAResults implements PointerAnalysisResults {
                     TypedBDD bdd2 = parseBDD(results, st.nextToken());
                     TypedBDD r = (TypedBDD) bdd1.or(bdd2);
                     results.add(r);
+                } else if (command.equals("findpath")) {
+		    int m1 = Integer.parseInt(st.nextToken());
+		    int m2 = Integer.parseInt(st.nextToken());
+		    Path trace = findPath(m1, m2);
+		    if (trace != null) {
+			System.out.println(getMethod(m2));
+			printTrace(System.out, trace);
+		    } else
+			System.out.println("there is no path from " + getMethod(m1) + " to " + getMethod(m2));
+		    increaseCount = false;
                 } else if (command.equals("store")) {
                     String name = st.nextToken();
                     TypedBDD bdd1 = parseBDD(results, st.nextToken());
@@ -224,9 +246,10 @@ public class PAResults implements PointerAnalysisResults {
                             System.out.println("No method for node "+n);
                         } else {
                             Path trace = ((SCCPathNumbering)r.vCnumbering).getPath(m, c);
-			    if (command.equals("stacktracevar"))
-				printTrace(System.out, m, c, trace);
-			    else
+			    if (command.equals("stacktracevar")) {
+				System.out.println(m + " called in context #" + c);
+				printTrace(System.out, trace);
+			    } else
 				System.out.println(m+" context "+c+":\n"+trace);
 			    
                         }
@@ -244,9 +267,10 @@ public class PAResults implements PointerAnalysisResults {
                             System.out.println("No method for node "+n);
                         } else {
                             Path trace = ((SCCPathNumbering)r.hCnumbering).getPath(m, c);
-			    if (command.equals("stacktraceheap"))
-				printTrace(System.out, m, c, trace);
-                            else
+			    if (command.equals("stacktraceheap")) {
+				System.out.println(m + " called in context #" + c);
+				printTrace(System.out, trace);
+                            } else
 				System.out.println(m+" context "+c+": "+trace);
                         }
                     }
@@ -404,6 +428,7 @@ public class PAResults implements PointerAnalysisResults {
     public void printHelp(List results) {
         System.out.println("BDD manipulation:");
         System.out.println("relprod b1 b2 bs:                 relational product of b1 and b2 w.r.t. set bs");
+        System.out.println("replace b1 pair:                  replace b1 according to pair");
         System.out.println("restrict b1 b2 (bi)*:             restrict b2 to bi in b1");
         System.out.println("exist b1 bs1 (bsi)*:              exist bs2 to bsi in b1");
         System.out.println("(and|or|diff) b1 b2:              compute b1 and|or|diff b2");
@@ -450,14 +475,57 @@ public class PAResults implements PointerAnalysisResults {
     }
 
     /** Print a Path as if it were a stacktrace. */
-    public void printTrace(PrintStream out, jq_Method m, Number c, Path trace) {
-        out.println(m + " called in context #" + c);
+    public void printTrace(PrintStream out, Path trace) {
         for (int i = trace.size() - 1; i >= 0; --i) {
             Object o = trace.get(i);
             if (o instanceof ProgramLocation) {
                 out.println(" at " + ((ProgramLocation)o).toStringLong());
             }
         }
+    }
+
+    /**
+     * Find a path from a method to another method in the callgraph.
+     */
+    Path findPath(int from, int to) {
+	jq_Method fm = getMethod(from);
+	jq_Method tm = getMethod(to);
+	if (fm == null || tm == null)
+	    return null;
+
+	// breadth-first-search
+	Navigator ng = cg.getCallSiteNavigator();
+	LinkedList queue = new LinkedList();
+	HashMap prev = new HashMap();
+
+	queue.addLast(fm);
+	prev.put(fm, null);
+    outer:
+	while (queue.size() != 0) {
+	    Object f = queue.removeFirst();
+	    Collection succ = ng.next(f);
+	    Iterator it = succ.iterator();
+	    while (it.hasNext()) {
+		Object t = it.next();
+		if (!prev.containsKey(t)) {
+		    prev.put(t, f);
+		    queue.addLast(t);
+		}
+		if (t == tm)
+		    break outer;
+	    }
+	}
+	
+	if (!prev.containsKey(tm))
+	    return null;
+
+	Path rc = new Path(tm);
+	Object f = prev.get(tm);
+	while (f != null) {
+	    rc = new Path(f, rc);
+	    f = prev.get(f);
+	}
+	return rc;
     }
 
     public jq_Class parseClassName(String className) {
@@ -594,6 +662,19 @@ public class PAResults implements PointerAnalysisResults {
 	    throw new Exception("No such BDD: " + bddname);
 	}
 	return r;
+    }
+
+    BDDPairing parsePairing(String s) {
+        try {
+            Field f = PA.class.getDeclaredField(s);
+            if (f.getType() == BDDPairing.class) {
+                return (BDDPairing) f.get(r);
+            }
+        } catch (NoSuchFieldException e) {
+        } catch (IllegalArgumentException e) {
+        } catch (IllegalAccessException e) {
+	}
+	return null;
     }
 
     TypedBDD parseBDD(List a, String s) {
