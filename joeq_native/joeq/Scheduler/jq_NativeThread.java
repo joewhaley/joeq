@@ -9,12 +9,14 @@ import Allocator.RuntimeCodeAllocator;
 import Allocator.SimpleAllocator;
 import Assembler.x86.x86Constants;
 import Bootstrap.PrimordialClassLoader;
+import Bootstrap.ObjectTraverser;
 import Clazz.jq_Class;
 import Clazz.jq_InstanceMethod;
 import Clazz.jq_StaticField;
 import Clazz.jq_StaticMethod;
 import GC.GCManager;
 import GC.GCVisitor;
+import Main.jq;
 import Memory.CodeAddress;
 import Memory.HeapAddress;
 import Memory.StackAddress;
@@ -172,8 +174,13 @@ public class jq_NativeThread implements x86Constants {
         index = i;
         Thread t = new Thread("_scheduler_" + i);
         currentThread = schedulerThread = ThreadUtils.getJQThread(t);
-        schedulerThread.disableThreadSwitch(); // don't preempt while in the scheduler
-        schedulerThread.setNativeThread(this);
+        if (schedulerThread != null) {
+            schedulerThread.disableThreadSwitch(); // don't preempt while in the scheduler
+            schedulerThread.setNativeThread(this);
+        } else {
+            // schedulerThread is null if we are not native/bootstrapping.
+            Assert._assert(!ObjectTraverser.IsBootstrapping && !jq.RunningNative);
+        }
     }
 
     /** Create a new jq_NativeThread that is tied to a specific jq_Thread. */
