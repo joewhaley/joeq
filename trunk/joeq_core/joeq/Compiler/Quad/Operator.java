@@ -2980,9 +2980,6 @@ public abstract class Operator {
             qv.visitExceptionThrower(q);
             super.accept(q, qv);
         }
-        public UnmodifiableList.jq_Class getThrownExceptions() {
-            return illegalmonitorstateexception;
-        }
         
         public static class MONITORENTER extends Monitor {
             public static final MONITORENTER INSTANCE = new MONITORENTER();
@@ -2993,6 +2990,9 @@ public abstract class Operator {
                 if (!jq.Bootstrapping)
                     Run_Time.Monitor.monitorenter(o);
 	    }
+	    public UnmodifiableList.jq_Class getThrownExceptions() {
+		return nullptrexception;
+	    }
         }
         public static class MONITOREXIT extends Monitor {
             public static final MONITOREXIT INSTANCE = new MONITOREXIT();
@@ -3002,6 +3002,9 @@ public abstract class Operator {
 		Object o = getObjectOpValue(getSrc(q), s);
                 if (!jq.Bootstrapping)
                     Run_Time.Monitor.monitorexit(o);
+	    }
+	    public UnmodifiableList.jq_Class getThrownExceptions() {
+		return illegalmonitorstateexception;
 	    }
         }
     }
