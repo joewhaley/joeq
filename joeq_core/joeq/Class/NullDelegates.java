@@ -3,6 +3,8 @@ package Clazz;
 import java.util.Iterator;
 
 import Main.jq;
+import Memory.StackAddress;
+import Memory.CodeAddress;
 
 abstract class NullDelegates {
     static class Field implements jq_Field.Delegate {
@@ -26,6 +28,8 @@ abstract class NullDelegates {
 	public final Iterator getCompiledMethods () { 
 	    return new java.util.LinkedList().iterator();
 	}
+	public final void deliverToStackFrame(Object ed, jq_CompiledCode t, Throwable x, CodeAddress entry, StackAddress fp) { }
+	public final Object getThisPointer(Object ed, jq_CompiledCode t, CodeAddress ip, StackAddress fp) { return null; }
     }
 
     static class Klass implements jq_Class.Delegate {

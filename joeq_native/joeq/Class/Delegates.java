@@ -16,6 +16,7 @@ import ClassLib.ClassLibInterface;
 import Compil3r.Compil3rInterface;
 import Main.jq;
 import Run_Time.DebugInterface;
+import Run_Time.ExceptionDeliverer;
 
 class Delegates implements jq_ClassFileConstants {
     static class Field implements jq_Field.Delegate {
@@ -93,6 +94,12 @@ class Delegates implements jq_ClassFileConstants {
 	}
 	public Iterator getCompiledMethods() {
 	    return CodeAllocator.getCompiledMethods();
+	}
+	public final void deliverToStackFrame(Object ed, jq_CompiledCode t, Throwable x, CodeAddress entry, StackAddress fp) {
+	    ((ExceptionDeliverer)ed).deliverToStackFrame(t, x, entry, fp);
+	}
+	public final Object getThisPointer(Object ed, jq_CompiledCode t, CodeAddress ip, StackAddress fp) {
+	    return ((ExceptionDeliverer)ed).getThisPointer(t, ip, fp);
 	}
     }
     
