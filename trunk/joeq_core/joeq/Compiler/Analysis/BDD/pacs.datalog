@@ -23,9 +23,9 @@ Mret (method:M0, v:V1) input
 Mthr (method:M0, v:V1) input
 Iret (invoke:I0, v:V0) input
 Ithr (invoke:I0, v:V0) input
-IE0 (invoke:I, target:M0) input
-IEfilter (ccaller:VC1, invoke:I, ccallee:VC0, target:M0) input
-IE (ccaller:VC1, invoke:I, ccallee:VC0, target:M0) output
+IE0 (invoke:I0, target:M0) input
+IEfilter (ccaller:VC1, invoke:I0, ccallee:VC0, target:M0) input
+IE (ccaller:VC1, invoke:I0, ccallee:VC0, target:M0) output
 
 ### Rules
 
@@ -38,3 +38,10 @@ vP(vc1,v2,h2) :- L(v1,f,v2), vP(vc1,v1,h1), hP(h1,f,h2), vPfilter(v2,h2). split
 A(vc1,v1,vc2,v2) :- formal(m,z,v1), IE(vc2,i,vc1,m), actual(i,z,v2).
 A(vc2,v2,vc1,v1) :- Mret(m,v1), IE(vc2,i,vc1,m), Iret(i,v2).
 A(vc2,v2,vc1,v1) :- Mthr(m,v1), IE(vc2,i,vc1,m), Ithr(i,v2).
+
+#roots (method:M0) input
+#mI (method:M0, invoke:I0, name:N0) input
+#mI0 (method:M0, invoke:I0)
+#IEnum (invoke:I0, target:M0, ccaller:VC1, ccallee:VC0) output
+#mI0(m,i) :- mI(m,i,_).
+#IEnum(i,m,vc2,vc1) :- roots(m), mI0(m,i), IE0(i,m). number

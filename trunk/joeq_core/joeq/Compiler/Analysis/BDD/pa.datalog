@@ -26,8 +26,8 @@ Mthr (method:M0, v:V1) input
 Iret (invoke:I0, v:V0) input
 Ithr (invoke:I0, v:V0) input
 mI (method:M0, invoke:I0, name:N0) input
-IE0 (invoke:I, target:M0) input
-IE (invoke:I, target:M0) output
+IE0 (invoke:I0, target:M0) input
+IE (invoke:I0, target:M0) output
 
 ### Rules
 
