@@ -246,6 +246,22 @@ public abstract class InferenceRule {
         }
     }
     
+    static void removeAll(MultiMap mm, Collection c) {
+        for (Iterator i = mm.keySet().iterator(); i.hasNext(); ) {
+            Object o = i.next();
+            if (c.contains(o)) {
+                i.remove();
+                continue;
+            }
+            for (Iterator j = mm.getValues(o).iterator(); j.hasNext(); ) {
+                Object o2 = j.next();
+                if (c.contains(o2)) {
+                    j.remove();
+                }
+            }
+        }
+    }
+    
     public static class DependenceNavigator implements Navigator {
 
         MultiMap relationToUsingRule;
@@ -258,6 +274,11 @@ public abstract class InferenceRule {
         public void retainAll(Collection c) {
             InferenceRule.retainAll(relationToUsingRule, c);
             InferenceRule.retainAll(relationToDefiningRule, c);
+        }
+        
+        public void removeAll(Collection c) {
+            InferenceRule.removeAll(relationToUsingRule, c);
+            InferenceRule.removeAll(relationToDefiningRule, c);
         }
         
         public void removeEdge(Object from, Object to) {
