@@ -121,6 +121,7 @@ public class PA {
     BDD Mthr;   // MxV2, method thrown value            (no context)
     BDD mI;     // MxIxN, method invocations            (no context)
     BDD mV;     // MxV, method variables                (no context)
+    BDD sync;   // V, synced locations                  (no context)
     
     BDD hP;     // H1xFxH2, heap points-to              (+context)
     BDD IE;     // IxM, invocation edges                (no context)
@@ -129,14 +130,14 @@ public class PA {
     
     BDD visited; // M, visited methods
     
-    String varorder = System.getProperty("bddordering", "N_F_Z_I_M_T1_V2xV1_V2cxV1c_H2cxH2_T2_H1cxH1");
+    String varorder = System.getProperty("bddordering", "N_F_Z_I_M_T1_V2xV1_V2cxV1c_H2xH2c_T2_H1xH1c");
     //String varorder = System.getProperty("bddordering", "N_F_Z_I_M_T1_V2xV1_H2_T2_H1");
     boolean reverseLocal = System.getProperty("bddreverse", "true").equals("true");
     
     BDDPairing V1toV2, V2toV1, H1toH2, H2toH1, V1H1toV2H2, V2H2toV1H1;
     BDDPairing V1cV2ctoV2cV1c;
     BDD V1set, V2set, H1set, H2set, T1set, T2set, Fset, Mset, Nset, Iset, Zset;
-    BDD V1V2set, V1H1set, IMset, H1Fset, H1FH2set, T2Nset, MZset;
+    BDD V1V2set, V1H1set, IMset, H1Fset, H2Fset, H1FH2set, T2Nset, MZset;
     BDD V1cV2cset;
     
     Set visitedMethods = new HashSet();
@@ -232,6 +233,7 @@ public class PA {
         V1H1set = V1set.and(H1set);
         IMset = Iset.and(Mset);
         H1Fset = H1set.and(Fset);
+        H2Fset = H2set.and(Fset);
         H1FH2set = H1Fset.and(H2set);
         T2Nset = T2set.and(Nset);
         MZset = Mset.and(Zset);
@@ -252,6 +254,7 @@ public class PA {
         Mthr = bdd.zero();
         mI = bdd.zero();
         mV = bdd.zero();
+        sync = bdd.zero();
         IE = bdd.zero();
         hP = bdd.zero();
         visited = bdd.zero();
@@ -436,6 +439,13 @@ public class PA {
         F_bdd.free();
     }
     
+    void addToSync(Node n) {
+        int V_i = Vmap.get(n);
+        BDD bdd1 = V1.ithVar(V_i);
+        if (TRACE_RELATIONS) out.println("Adding to sync: "+bdd1.toStringWithDomains());
+        sync.orWith(bdd1);
+    }
+    
     BDD getVC(ProgramLocation mc, jq_Method callee) {
         Pair p = new Pair(mapCall(mc), callee);
         Range r_edge = vCnumbering.getEdge(p);
@@ -502,6 +512,10 @@ public class PA {
             V1V2context = V1c.buildAdd(V2c, bits, 0L);
             V1V2context.andWith(V1c.varRange(0, n1.longValue()-1));
             V1H1context = (BDD) V1H1correspondence.get(m);
+        }
+        
+        if (m.isSynchronized()) {
+            //addToSync();
         }
         
         if (m.getBytecode() == null) {
@@ -1373,22 +1387,53 @@ public class PA {
         LoadedCallGraph.write(callgraph, dos);
         dos.close();
         
+        bdd.save(dumpfilename+".A", A);
         bdd.save(dumpfilename+".vP", vP);
-        bdd.save(dumpfilename+".hP", hP);
         bdd.save(dumpfilename+".S", S);
         bdd.save(dumpfilename+".L", L);
+        bdd.save(dumpfilename+".vT", vT);
+        bdd.save(dumpfilename+".hT", hT);
+        bdd.save(dumpfilename+".aT", aT);
+        bdd.save(dumpfilename+".cha", cha);
+        bdd.save(dumpfilename+".actual", actual);
+        bdd.save(dumpfilename+".formal", formal);
+        bdd.save(dumpfilename+".Iret", Iret);
+        bdd.save(dumpfilename+".Mret", Mret);
+        bdd.save(dumpfilename+".Ithr", Ithr);
+        bdd.save(dumpfilename+".Mthr", Mthr);
+        bdd.save(dumpfilename+".mI", mI);
+        bdd.save(dumpfilename+".mV", mV);
+        
+        bdd.save(dumpfilename+".hP", hP);
+        bdd.save(dumpfilename+".IE", IE);
+        bdd.save(dumpfilename+".filter", filter);
+        if (IEc != null) bdd.save(dumpfilename+".IEc", IEc);
+        bdd.save(dumpfilename+".visited", visited);
         
         dos = new DataOutputStream(new FileOutputStream(dumpfilename+".config"));
         dumpConfig(dos);
         dos.close();
+        
         dos = new DataOutputStream(new FileOutputStream(dumpfilename+".Vmap"));
         dumpMap(dos, Vmap);
+        dos.close();
+        dos = new DataOutputStream(new FileOutputStream(dumpfilename+".Imap"));
+        dumpMap(dos, Imap);
         dos.close();
         dos = new DataOutputStream(new FileOutputStream(dumpfilename+".Hmap"));
         dumpMap(dos, Hmap);
         dos.close();
         dos = new DataOutputStream(new FileOutputStream(dumpfilename+".Fmap"));
         dumpMap(dos, Fmap);
+        dos.close();
+        dos = new DataOutputStream(new FileOutputStream(dumpfilename+".Tmap"));
+        dumpMap(dos, Tmap);
+        dos.close();
+        dos = new DataOutputStream(new FileOutputStream(dumpfilename+".Nmap"));
+        dumpMap(dos, Nmap);
+        dos.close();
+        dos = new DataOutputStream(new FileOutputStream(dumpfilename+".Mmap"));
+        dumpMap(dos, Mmap);
         dos.close();
     }
 
@@ -1419,6 +1464,10 @@ public class PA {
                 ((Node) o).write(m, out);
             } else if (o instanceof jq_Member) {
                 ((jq_Member) o).writeDesc(out);
+            } else if (o instanceof jq_Type) {
+                ((jq_Type) o).writeDesc(out);
+            } else if (o instanceof ProgramLocation) {
+                ((ProgramLocation) o).write(out);
             } else {
                 throw new InternalError(o.toString());
             }
@@ -1532,15 +1581,17 @@ public class PA {
             MethodSummary ms = MethodSummary.getSummary(CodeCache.getCode(m));
             for (i = ms.getReturned().iterator(); i.hasNext(); ) {
                 Node n = (Node) i.next();
-                if (!(n instanceof ConcreteTypeNode))
-                    return false;
+                if (!(n instanceof ConcreteTypeNode)) {
+                    //return false;
+                }
                 jq_Reference type = n.getDeclaredType();
-                if (type == null)
+                if (type == null) {
                     return false;
+                }
                 type.prepare();
-                if (!type.isSubtypeOf(collection_class) &&
-                    !type.isSubtypeOf(map_class))
-                    return false;
+                //if (!type.isSubtypeOf(collection_class) &&
+                //    !type.isSubtypeOf(map_class))
+                //    return false;
             }
             return true;
         }
