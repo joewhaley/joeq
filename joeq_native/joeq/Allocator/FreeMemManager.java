@@ -20,7 +20,8 @@ public class FreeMemManager {
 
     public FreeMemManager(FreeMemStrategy stg) {
         this.stg = stg;
-        stg.addCollection(freePool);
+        //JW: freePool is uninitialized, causes crash.
+        //stg.addCollection(freePool);
     }
 
     public FreeMemManager() {
