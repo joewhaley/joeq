@@ -1,11 +1,11 @@
 // jq_StaticMethod.java, created Mon Feb  5 23:23:20 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Clazz;
+package joeq.Class;
 
 //friend jq_ClassLoader;
 
-import joeq.Clazz.PrimordialClassLoader;
+import joeq.Class.PrimordialClassLoader;
 import joeq.Main.jq;
 import joeq.UTF.Utf8;
 import joeq.Util.Assert;
@@ -74,6 +74,6 @@ public class jq_StaticMethod extends jq_Method {
     
     public static final jq_Class _class;
     static {
-        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Clazz/jq_StaticMethod;");
+        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Class/jq_StaticMethod;");
     }
 }

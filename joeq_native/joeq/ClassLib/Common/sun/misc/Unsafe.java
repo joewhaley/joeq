@@ -4,14 +4,14 @@
 package joeq.ClassLib.Common.sun.misc;
 
 import joeq.ClassLib.ClassLibInterface;
-import joeq.Clazz.jq_Array;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_Field;
-import joeq.Clazz.jq_InstanceField;
-import joeq.Clazz.jq_StaticField;
-import joeq.Clazz.jq_Type;
+import joeq.Class.jq_Array;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_Field;
+import joeq.Class.jq_InstanceField;
+import joeq.Class.jq_StaticField;
+import joeq.Class.jq_Type;
 import joeq.Memory.HeapAddress;
-import joeq.Run_Time.SystemInterface;
+import joeq.Runtime.SystemInterface;
 
 /**
  * Unsafe
@@ -343,14 +343,14 @@ public final class Unsafe {
     }
     
     public void monitorEnter(java.lang.Object o) {
-        joeq.Run_Time.Monitor.monitorenter(o);
+        joeq.Runtime.Monitor.monitorenter(o);
     }
     
     public void monitorExit(java.lang.Object o) {
-        joeq.Run_Time.Monitor.monitorexit(o);
+        joeq.Runtime.Monitor.monitorexit(o);
     }
     
     public void throwException(java.lang.Throwable o) {
-        joeq.Run_Time.ExceptionDeliverer.athrow(o);
+        joeq.Runtime.ExceptionDeliverer.athrow(o);
     }
 }

@@ -3,7 +3,7 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Memory.Manager;
 
-import joeq.Clazz.jq_CompiledCode;
+import joeq.Class.jq_CompiledCode;
 import joeq.Memory.Address;
 import joeq.Scheduler.jq_RegisterState;
 import joeq.Scheduler.jq_Thread;

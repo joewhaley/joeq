@@ -1,7 +1,7 @@
 // PA.java, created Oct 16, 2003 3:39:34 PM by joewhaley
 // Copyright (C) 2003 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Compil3r.Analysis.IPA;
+package joeq.Compiler.Analysis.IPA;
 
 import java.io.DataInput;
 import java.io.DataInputStream;
@@ -42,29 +42,29 @@ import org.sf.javabdd.BDDPairing;
 import org.sf.javabdd.TypedBDDFactory;
 import org.sf.javabdd.TypedBDDFactory.TypedBDD;
 
-import joeq.Clazz.PrimordialClassLoader;
-import joeq.Clazz.jq_Array;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_Field;
-import joeq.Clazz.jq_InstanceField;
-import joeq.Clazz.jq_Method;
-import joeq.Clazz.jq_FakeInstanceMethod;
-import joeq.Clazz.jq_NameAndDesc;
-import joeq.Clazz.jq_Reference;
-import joeq.Clazz.jq_Type;
-import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary;
-import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.ConcreteObjectNode;
-import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.ConcreteTypeNode;
-import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.GlobalNode;
-import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
-import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.UnknownTypeNode;
-import joeq.Compil3r.Quad.CachedCallGraph;
-import joeq.Compil3r.Quad.CallGraph;
-import joeq.Compil3r.Quad.CodeCache;
-import joeq.Compil3r.Quad.LoadedCallGraph;
-import joeq.Compil3r.Quad.Quad;
-import joeq.Compil3r.Quad.Operand.RegisterOperand;
-import joeq.Compil3r.Quad.Operator.Invoke;
+import joeq.Class.PrimordialClassLoader;
+import joeq.Class.jq_Array;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_Field;
+import joeq.Class.jq_InstanceField;
+import joeq.Class.jq_Method;
+import joeq.Class.jq_FakeInstanceMethod;
+import joeq.Class.jq_NameAndDesc;
+import joeq.Class.jq_Reference;
+import joeq.Class.jq_Type;
+import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary;
+import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.ConcreteObjectNode;
+import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.ConcreteTypeNode;
+import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.GlobalNode;
+import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.Node;
+import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.UnknownTypeNode;
+import joeq.Compiler.Quad.CachedCallGraph;
+import joeq.Compiler.Quad.CallGraph;
+import joeq.Compiler.Quad.CodeCache;
+import joeq.Compiler.Quad.LoadedCallGraph;
+import joeq.Compiler.Quad.Quad;
+import joeq.Compiler.Quad.Operand.RegisterOperand;
+import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Main.HostedVM;
 import joeq.Util.Assert;
 import joeq.Util.Collections.IndexMap;
@@ -2217,7 +2217,7 @@ public class PA {
                 w.print(" -D" + key + "=" + val);
             }
         }
-        w.println(" Compil3r.Analysis.IPA.PAResults");
+        w.println(" Compiler.Analysis.IPA.PAResults");
         w.close();
     }
     

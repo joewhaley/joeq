@@ -1,13 +1,13 @@
-package joeq.Compil3r.Analysis.IPSSA.Apps;
+package joeq.Compiler.Analysis.IPSSA.Apps;
 
-import joeq.Clazz.jq_Method;
-import joeq.Compil3r.Analysis.IPA.ProgramLocation;
-import joeq.Compil3r.Analysis.IPA.ProgramLocation.QuadProgramLocation;
-import joeq.Compil3r.Quad.ControlFlowGraph;
-import joeq.Compil3r.Quad.ControlFlowGraphVisitor;
-import joeq.Compil3r.Quad.Operator;
-import joeq.Compil3r.Quad.Quad;
-import joeq.Compil3r.Quad.QuadIterator;
+import joeq.Class.jq_Method;
+import joeq.Compiler.Analysis.IPA.ProgramLocation;
+import joeq.Compiler.Analysis.IPA.ProgramLocation.QuadProgramLocation;
+import joeq.Compiler.Quad.ControlFlowGraph;
+import joeq.Compiler.Quad.ControlFlowGraphVisitor;
+import joeq.Compiler.Quad.Operator;
+import joeq.Compiler.Quad.Quad;
+import joeq.Compiler.Quad.QuadIterator;
 
 public class AssertionAnalysis implements ControlFlowGraphVisitor {
     public void visitCFG(ControlFlowGraph cfg) {

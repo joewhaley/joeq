@@ -1,4 +1,4 @@
-package joeq.Compil3r.Analysis.IPSSA.Apps;
+package joeq.Compiler.Analysis.IPSSA.Apps;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -16,15 +16,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import joeq.Clazz.PrimordialClassLoader;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_Field;
-import joeq.Clazz.jq_Method;
-import joeq.Clazz.jq_Type;
-import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary;
-import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.ReturnedNode;
-import joeq.Compil3r.Quad.CallGraph;
-import joeq.Compil3r.Quad.RootedCHACallGraph;
+import joeq.Class.PrimordialClassLoader;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_Field;
+import joeq.Class.jq_Method;
+import joeq.Class.jq_Type;
+import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary;
+import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.ReturnedNode;
+import joeq.Compiler.Quad.CallGraph;
+import joeq.Compiler.Quad.RootedCHACallGraph;
 import joeq.Main.HostedVM;
 import joeq.Util.Assert;
 import joeq.Util.Collections.AppendIterator;
@@ -50,7 +50,7 @@ class ClassHierarchy {
         public Iterator getChildIterator() {
             return _children.iterator();
         }
-        public jq_Class getClazz() {
+        public jq_Class getClas() {
             return _class;
         }
         public void reset() {
@@ -113,7 +113,7 @@ class ClassHierarchy {
         for(Iterator iter = _nodes.iterator(); iter.hasNext();) {
             ClassHieraryNode node = (ClassHieraryNode)iter.next();
             
-            if(node.getClazz() == c) {
+            if(node.getClas() == c) {
                 return node;
             }
         }
@@ -133,14 +133,14 @@ class ClassHierarchy {
         // use the nodes currently in the set and reset the links
         for(Iterator iter = _nodes.iterator(); iter.hasNext();) {
             ClassHieraryNode node = (ClassHieraryNode)iter.next();
-            jq_Class c = node.getClazz();
+            jq_Class c = node.getClas();
             
             do {
                 if(c instanceof jq_Class && ((jq_Class)c).isInterface()){
                     //System.err.println("Reached interface: " + c);
                 }
                 // directly supports this interface
-                if(c.getDeclaredInterface(_root.getClazz().getDesc()) != null){
+                if(c.getDeclaredInterface(_root.getClas().getDesc()) != null){
                     // termination condition
                     //System.err.println("Reached root: " + c);
                     if(node != _root){

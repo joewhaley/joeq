@@ -6,9 +6,9 @@ package joeq.ClassLib.ibm13_linux;
 import java.util.Iterator;
 
 import joeq.Bootstrap.ObjectTraverser;
-import joeq.Clazz.PrimordialClassLoader;
+import joeq.Class.PrimordialClassLoader;
 import joeq.ClassLib.ClassLibInterface;
-import joeq.Clazz.jq_Class;
+import joeq.Class.jq_Class;
 import joeq.Main.jq;
 
 /**
@@ -64,14 +64,14 @@ public final class Interface extends joeq.ClassLib.Common.InterfaceImpl {
             // we need to reinitialize the inflaters array on startup.
             if (jq.on_vm_startup != null) {
                 Object[] args = { } ;
-                joeq.Clazz.jq_Method init_inflaters = k.getOrCreateStaticMethod("init_inflaters", "()V");
+                joeq.Class.jq_Method init_inflaters = k.getOrCreateStaticMethod("init_inflaters", "()V");
                 joeq.Bootstrap.MethodInvocation mi = new joeq.Bootstrap.MethodInvocation(init_inflaters, args);
                 jq.on_vm_startup.add(mi);
                 System.out.println("Added call to reinitialize java.util.zip.ZipFile.inflaters field on joeq startup: "+mi);
             }
         }
         
-        public java.lang.Object mapInstanceField(java.lang.Object o, joeq.Clazz.jq_InstanceField f) {
+        public java.lang.Object mapInstanceField(java.lang.Object o, joeq.Class.jq_InstanceField f) {
             if (IGNORE_THREAD_LOCALS) {
                 jq_Class c = f.getDeclaringClass();
                 if (c == PrimordialClassLoader.getJavaLangThread()) {

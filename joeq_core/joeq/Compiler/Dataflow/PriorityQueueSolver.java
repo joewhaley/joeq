@@ -1,7 +1,7 @@
 // PriorityQueueSolver.java, created Thu Apr 25 16:32:26 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Compil3r.Dataflow;
+package joeq.Compiler.Dataflow;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -36,7 +36,7 @@ public class PriorityQueueSolver extends WorklistSolver {
     }
 
     /* (non-Javadoc)
-     * @see Compil3r.Dataflow.Solver#initialize(Compil3r.Dataflow.Problem, Util.Graphs.Graph)
+     * @see Compiler.Dataflow.Solver#initialize(Compiler.Dataflow.Problem, Util.Graphs.Graph)
      */
     public void initialize(Problem p, Graph graph) {
         this.initialize(p, graph, Traversals.reversePostOrder(graph.getNavigator(), graph.getRoots()));
@@ -45,7 +45,7 @@ public class PriorityQueueSolver extends WorklistSolver {
     /** Initializes this solver with the given dataflow problem, graph, and
      * traversal order.
      * 
-     * @see Compil3r.Dataflow.Solver#initialize(Compil3r.Dataflow.Problem, Util.Graphs.Graph)
+     * @see Compiler.Dataflow.Solver#initialize(Compiler.Dataflow.Problem, Util.Graphs.Graph)
      */
     public void initialize(Problem p, Graph graph, List traversalOrder) {
         super.initialize(p, graph);
@@ -63,14 +63,14 @@ public class PriorityQueueSolver extends WorklistSolver {
     }
 
     /* (non-Javadoc)
-     * @see Compil3r.Dataflow.Solver#allLocations()
+     * @see Compiler.Dataflow.Solver#allLocations()
      */
     public Iterator allLocations() {
         return nodesToPriorities.keySet().iterator();
     }
 
     /* (non-Javadoc)
-     * @see Compil3r.Dataflow.WorklistSolver#initializeWorklist()
+     * @see Compiler.Dataflow.WorklistSolver#initializeWorklist()
      */
     protected void initializeWorklist() {
         worklist = new BinHeapPriorityQueue(nodesToPriorities.size());
@@ -84,21 +84,21 @@ public class PriorityQueueSolver extends WorklistSolver {
     }
 
     /* (non-Javadoc)
-     * @see Compil3r.Dataflow.WorklistSolver#hasNext()
+     * @see Compiler.Dataflow.WorklistSolver#hasNext()
      */
     protected boolean hasNext() {
         return !worklist.isEmpty();
     }
 
     /* (non-Javadoc)
-     * @see Compil3r.Dataflow.WorklistSolver#pull()
+     * @see Compiler.Dataflow.WorklistSolver#pull()
      */
     protected Object pull() {
         return worklist.deleteMax();
     }
 
     /* (non-Javadoc)
-     * @see Compil3r.Dataflow.WorklistSolver#pushAll(java.util.Collection)
+     * @see Compiler.Dataflow.WorklistSolver#pushAll(java.util.Collection)
      */
     protected void pushAll(Collection c) {
         for (Iterator i = c.iterator(); i.hasNext(); ) {

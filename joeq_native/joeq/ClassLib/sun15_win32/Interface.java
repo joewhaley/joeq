@@ -6,11 +6,11 @@ package joeq.ClassLib.sun15_win32;
 import java.util.Iterator;
 
 import joeq.Bootstrap.ObjectTraverser;
-import joeq.Clazz.PrimordialClassLoader;
+import joeq.Class.PrimordialClassLoader;
 import joeq.ClassLib.ClassLibInterface;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_InstanceField;
-import joeq.Clazz.jq_StaticField;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_InstanceField;
+import joeq.Class.jq_StaticField;
 import joeq.Main.jq;
 
 /*
@@ -67,7 +67,7 @@ public class Interface extends joeq.ClassLib.sun142_win32.Interface {
             if (jq.on_vm_startup != null) {
                 Object[] args = { } ;
                 k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/FileDescriptor;");
-                joeq.Clazz.jq_Method init_fd = k.getOrCreateStaticMethod("init", "()V");
+                joeq.Class.jq_Method init_fd = k.getOrCreateStaticMethod("init", "()V");
                 joeq.Bootstrap.MethodInvocation mi = new joeq.Bootstrap.MethodInvocation(init_fd, args);
                 jq.on_vm_startup.add(mi);
                 System.out.println("Added call to reinitialize in/out/err file descriptors on joeq startup: "+mi);
@@ -75,7 +75,7 @@ public class Interface extends joeq.ClassLib.sun142_win32.Interface {
         }
         
         /*
-        public java.lang.Object mapInstanceField(java.lang.Object o, joeq.Clazz.jq_InstanceField f) {
+        public java.lang.Object mapInstanceField(java.lang.Object o, joeq.Class.jq_InstanceField f) {
             if (o instanceof FileDescriptor) {
                 String fieldName = f.getName().toString();
                 if (fieldName.equals("fd")) {

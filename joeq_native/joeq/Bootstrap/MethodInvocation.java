@@ -5,8 +5,8 @@ package joeq.Bootstrap;
 
 import java.lang.reflect.InvocationTargetException;
 
-import joeq.Clazz.jq_Method;
-import joeq.Run_Time.Reflection;
+import joeq.Class.jq_Method;
+import joeq.Runtime.Reflection;
 
 /**
  * MethodInvocation

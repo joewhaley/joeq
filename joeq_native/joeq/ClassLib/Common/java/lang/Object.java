@@ -4,10 +4,10 @@
 package joeq.ClassLib.Common.java.lang;
 
 import joeq.Allocator.HeapAllocator;
-import joeq.Clazz.jq_Reference;
-import joeq.Run_Time.Monitor;
-import joeq.Run_Time.Reflection;
-import joeq.Run_Time.Unsafe;
+import joeq.Class.jq_Reference;
+import joeq.Runtime.Monitor;
+import joeq.Runtime.Reflection;
+import joeq.Runtime.Unsafe;
 import joeq.Scheduler.jq_Thread;
 
 /**

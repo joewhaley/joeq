@@ -4,7 +4,7 @@
 package joeq.ClassLib.sun14_win32.java.io;
 
 import joeq.Memory.HeapAddress;
-import joeq.Run_Time.SystemInterface;
+import joeq.Runtime.SystemInterface;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>

@@ -6,9 +6,9 @@ package joeq.ClassLib.sun14_win32;
 import java.util.Iterator;
 
 import joeq.Bootstrap.ObjectTraverser;
-import joeq.Clazz.PrimordialClassLoader;
+import joeq.Class.PrimordialClassLoader;
 import joeq.ClassLib.ClassLibInterface;
-import joeq.Clazz.jq_Class;
+import joeq.Class.jq_Class;
 import joeq.Scheduler.jq_NativeThread;
 import joeq.Util.Assert;
 
@@ -62,11 +62,11 @@ public class Interface extends joeq.ClassLib.Common.InterfaceImpl {
             nullInstanceFields.add(k.getOrCreateInstanceField("fieldAccessor", "Lsun/reflect/FieldAccessor;"));
             k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/reflect/Method;");
             nullInstanceFields.add(k.getOrCreateInstanceField("methodAccessor", "Lsun/reflect/MethodAccessor;"));
-            k = (joeq.Clazz.jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/reflect/Constructor;");
+            k = (joeq.Class.jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/reflect/Constructor;");
             nullInstanceFields.add(k.getOrCreateInstanceField("constructorAccessor", "Lsun/reflect/ConstructorAccessor;"));
             
             if (IGNORE_THREAD_LOCALS) {
-                k = (joeq.Clazz.jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/Thread;");
+                k = (joeq.Class.jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/Thread;");
                 nullInstanceFields.add(k.getOrCreateInstanceField("threadLocals", "Ljava/lang/ThreadLocal$ThreadLocalMap;"));
                 nullInstanceFields.add(k.getOrCreateInstanceField("inheritableThreadLocals", "Ljava/lang/ThreadLocal$ThreadLocalMap;"));
             }
@@ -76,7 +76,7 @@ public class Interface extends joeq.ClassLib.Common.InterfaceImpl {
         
         public static final jq_Class acp_class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Lsun/nio/cs/AbstractCharsetProvider;");
         
-        public java.lang.Object mapInstanceField(java.lang.Object o, joeq.Clazz.jq_InstanceField f) {
+        public java.lang.Object mapInstanceField(java.lang.Object o, joeq.Class.jq_InstanceField f) {
             jq_Class c = f.getDeclaringClass();
             if (c == acp_class) {
                 String fieldName = f.getName().toString();

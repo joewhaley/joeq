@@ -1,7 +1,7 @@
 // WorklistSolver.java, created Thu Apr 25 16:32:26 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Compil3r.Dataflow;
+package joeq.Compiler.Dataflow;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -45,14 +45,14 @@ public abstract class WorklistSolver extends Solver {
     protected abstract void pushAll(Collection c);
 
     /* (non-Javadoc)
-     * @see Compil3r.Dataflow.Solver#boundaryLocations()
+     * @see Compiler.Dataflow.Solver#boundaryLocations()
      */
     public Iterator boundaryLocations() {
         return boundaries.iterator();
     }
     
     /* (non-Javadoc)
-     * @see Compil3r.Dataflow.Solver#initialize(Compil3r.Dataflow.Problem, Util.Graphs.Graph)
+     * @see Compiler.Dataflow.Solver#initialize(Compiler.Dataflow.Problem, Util.Graphs.Graph)
      */
     public void initialize(Problem p, Graph graph) {
         super.initialize(p, graph);
@@ -61,7 +61,7 @@ public abstract class WorklistSolver extends Solver {
     }
 
     /* (non-Javadoc)
-     * @see Compil3r.Dataflow.Solver#solve()
+     * @see Compiler.Dataflow.Solver#solve()
      */
     public void solve() {
         initializeDataflowValueMap();

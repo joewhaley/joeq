@@ -8,11 +8,11 @@ import java.util.Iterator;
 import java.util.List;
 
 import joeq.Allocator.ObjectLayoutMethods;
-import joeq.Clazz.jq_Array;
-import joeq.Clazz.jq_Class;
+import joeq.Class.jq_Array;
+import joeq.Class.jq_Class;
 import joeq.Memory.HeapAddress;
-import joeq.Run_Time.Debug;
-import joeq.Run_Time.SystemInterface;
+import joeq.Runtime.Debug;
+import joeq.Runtime.SystemInterface;
 import joeq.Util.Assert;
 
 /**

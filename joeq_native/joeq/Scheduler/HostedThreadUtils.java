@@ -3,8 +3,8 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Scheduler;
 
-import joeq.Clazz.jq_Class;
-import joeq.Run_Time.Reflection;
+import joeq.Class.jq_Class;
+import joeq.Runtime.Reflection;
 
 /**
  * @author  John Whaley <jwhaley@alum.mit.edu>
@@ -12,8 +12,8 @@ import joeq.Run_Time.Reflection;
  */
 public class HostedThreadUtils implements ThreadUtils.Delegate {
     public jq_Thread getJQThread(java.lang.Thread t) {
-        jq_Class k = joeq.Clazz.PrimordialClassLoader.getJavaLangThread();
-        joeq.Clazz.jq_InstanceField f = k.getOrCreateInstanceField("jq_thread", "Ljoeq/Scheduler/jq_Thread;");
+        jq_Class k = joeq.Class.PrimordialClassLoader.getJavaLangThread();
+        joeq.Class.jq_InstanceField f = k.getOrCreateInstanceField("jq_thread", "Ljoeq/Scheduler/jq_Thread;");
         return (jq_Thread)Reflection.getfield_A(t, f);
     }    
 }

@@ -3,8 +3,8 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Bootstrap;
 
-import joeq.Clazz.PrimordialClassLoader;
-import joeq.Clazz.jq_Class;
+import joeq.Class.PrimordialClassLoader;
+import joeq.Class.jq_Class;
 import joeq.Memory.Address;
 import joeq.Memory.HeapAddress;
 import joeq.Util.Assert;

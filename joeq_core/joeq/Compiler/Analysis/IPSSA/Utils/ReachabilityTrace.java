@@ -1,4 +1,4 @@
-package joeq.Compil3r.Analysis.IPSSA.Utils;
+package joeq.Compiler.Analysis.IPSSA.Utils;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -6,9 +6,9 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Set;
 
-import joeq.Compil3r.Analysis.IPSSA.SSADefinition;
-import joeq.Compil3r.Analysis.IPSSA.SSAIterator;
-import joeq.Compil3r.Analysis.IPSSA.SSAValue;
+import joeq.Compiler.Analysis.IPSSA.SSADefinition;
+import joeq.Compiler.Analysis.IPSSA.SSAIterator;
+import joeq.Compiler.Analysis.IPSSA.SSAValue;
 
 /**
  * Implements a trace of SSADefinitions.

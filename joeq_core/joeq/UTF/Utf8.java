@@ -6,8 +6,8 @@ package joeq.UTF;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import joeq.Clazz.jq_ClassFileConstants;
-import joeq.Run_Time.Debug;
+import joeq.Class.jq_ClassFileConstants;
+import joeq.Runtime.Debug;
 import joeq.Util.Assert;
 import joeq.Util.Collections.UnmodifiableIterator;
 

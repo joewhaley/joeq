@@ -3,12 +3,12 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.ClassLib.Common;
 
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_CompiledCode;
-import joeq.Clazz.jq_Member;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_CompiledCode;
+import joeq.Class.jq_Member;
 import joeq.Memory.StackAddress;
-import joeq.Run_Time.StackCodeWalker;
-import joeq.Run_Time.TypeCheck;
+import joeq.Runtime.StackCodeWalker;
+import joeq.Runtime.TypeCheck;
 
 /**
  * ClassUtils

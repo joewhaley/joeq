@@ -3,7 +3,7 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.ClassLib.Common.java.lang;
 
-import joeq.Run_Time.ExceptionDeliverer;
+import joeq.Runtime.ExceptionDeliverer;
 import joeq.Util.Assert;
 
 /**

@@ -1,7 +1,7 @@
 // jq_Method.java, created Mon Feb  5 23:23:20 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Clazz;
+package joeq.Class;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -10,9 +10,9 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import joeq.Clazz.PrimordialClassLoader;
+import joeq.Class.PrimordialClassLoader;
 import joeq.ClassLib.ClassLibInterface;
-import joeq.Compil3r.BytecodeAnalysis.Bytecodes;
+import joeq.Compiler.BytecodeAnalysis.Bytecodes;
 import joeq.Main.jq;
 import joeq.UTF.Utf8;
 import joeq.Util.Assert;
@@ -412,13 +412,13 @@ public abstract class jq_Method extends jq_Member {
     public static final jq_Class _class;
     public static final jq_InstanceMethod _compile;
     static {
-        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Clazz/jq_Method;");
-        _compile = _class.getOrCreateInstanceMethod("compile", "()Ljoeq/Clazz/jq_CompiledCode;");
+        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Class/jq_Method;");
+        _compile = _class.getOrCreateInstanceMethod("compile", "()Ljoeq/Class/jq_CompiledCode;");
         /* Set up delegates. */
         _delegate = null;
         boolean nullVM = jq.nullVM;
         if (!nullVM) {
-            _delegate = attemptDelegate("joeq.Clazz.Delegates$Method");
+            _delegate = attemptDelegate("joeq.Class.Delegates$Method");
         }
         if (_delegate == null) {
             _delegate = new NullDelegates.Method();

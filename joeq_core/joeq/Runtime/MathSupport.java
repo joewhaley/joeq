@@ -1,12 +1,12 @@
 // MathSupport.java, created Mon Feb  5 23:23:21 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Run_Time;
+package joeq.Runtime;
 
-import joeq.Clazz.PrimordialClassLoader;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_StaticField;
-import joeq.Clazz.jq_StaticMethod;
+import joeq.Class.PrimordialClassLoader;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_StaticField;
+import joeq.Class.jq_StaticMethod;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>
@@ -441,7 +441,7 @@ public abstract class MathSupport {
     public static final jq_StaticField _maxlong;
     public static final jq_StaticField _minlong;
     static {
-        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Run_Time/MathSupport;");
+        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Runtime/MathSupport;");
         _lmul = _class.getOrCreateStaticMethod("lmul", "(JJ)J");
         _ldiv = _class.getOrCreateStaticMethod("ldiv", "(JJ)J");
         _lrem = _class.getOrCreateStaticMethod("lrem", "(JJ)J");

@@ -1,7 +1,7 @@
 // MethodSummary.java, created Aug 13, 2003 10:52:08 PM by joewhaley
 // Copyright (C) 2003 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Compil3r.Analysis.FlowInsensitive;
+package joeq.Compiler.Analysis.FlowInsensitive;
 
 import java.io.DataOutput;
 import java.io.DataOutputStream;
@@ -22,61 +22,61 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import joeq.Clazz.PrimordialClassLoader;
-import joeq.Clazz.jq_Array;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_FakeInstanceMethod;
-import joeq.Clazz.jq_Field;
-import joeq.Clazz.jq_InstanceField;
-import joeq.Clazz.jq_Member;
-import joeq.Clazz.jq_Method;
-import joeq.Clazz.jq_Reference;
-import joeq.Clazz.jq_StaticField;
-import joeq.Clazz.jq_Type;
-import joeq.Compil3r.Analysis.IPA.LoopAnalysis;
-import joeq.Compil3r.Analysis.IPA.ProgramLocation;
-import joeq.Compil3r.Analysis.IPA.ProgramLocation.FakeProgramLocation;
-import joeq.Compil3r.Analysis.IPA.ProgramLocation.QuadProgramLocation;
-import joeq.Compil3r.Quad.BasicBlock;
-import joeq.Compil3r.Quad.CodeCache;
-import joeq.Compil3r.Quad.ControlFlowGraph;
-import joeq.Compil3r.Quad.ControlFlowGraphVisitor;
-import joeq.Compil3r.Quad.ExceptionHandler;
-import joeq.Compil3r.Quad.JSRInfo;
-import joeq.Compil3r.Quad.Operand;
-import joeq.Compil3r.Quad.Operator;
-import joeq.Compil3r.Quad.Quad;
-import joeq.Compil3r.Quad.QuadVisitor;
-import joeq.Compil3r.Quad.RegisterFactory;
-import joeq.Compil3r.Quad.BytecodeToQuad.jq_ReturnAddressType;
-import joeq.Compil3r.Quad.Operand.AConstOperand;
-import joeq.Compil3r.Quad.Operand.Const4Operand;
-import joeq.Compil3r.Quad.Operand.PConstOperand;
-import joeq.Compil3r.Quad.Operand.ParamListOperand;
-import joeq.Compil3r.Quad.Operand.RegisterOperand;
-import joeq.Compil3r.Quad.Operator.ALoad;
-import joeq.Compil3r.Quad.Operator.AStore;
-import joeq.Compil3r.Quad.Operator.Binary;
-import joeq.Compil3r.Quad.Operator.CheckCast;
-import joeq.Compil3r.Quad.Operator.Getfield;
-import joeq.Compil3r.Quad.Operator.Getstatic;
-import joeq.Compil3r.Quad.Operator.Invoke;
-import joeq.Compil3r.Quad.Operator.Jsr;
-import joeq.Compil3r.Quad.Operator.Monitor;
-import joeq.Compil3r.Quad.Operator.Move;
-import joeq.Compil3r.Quad.Operator.New;
-import joeq.Compil3r.Quad.Operator.NewArray;
-import joeq.Compil3r.Quad.Operator.Putfield;
-import joeq.Compil3r.Quad.Operator.Putstatic;
-import joeq.Compil3r.Quad.Operator.Return;
-import joeq.Compil3r.Quad.Operator.Special;
-import joeq.Compil3r.Quad.Operator.Unary;
-import joeq.Compil3r.Quad.RegisterFactory.Register;
+import joeq.Class.PrimordialClassLoader;
+import joeq.Class.jq_Array;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_FakeInstanceMethod;
+import joeq.Class.jq_Field;
+import joeq.Class.jq_InstanceField;
+import joeq.Class.jq_Member;
+import joeq.Class.jq_Method;
+import joeq.Class.jq_Reference;
+import joeq.Class.jq_StaticField;
+import joeq.Class.jq_Type;
+import joeq.Compiler.Analysis.IPA.LoopAnalysis;
+import joeq.Compiler.Analysis.IPA.ProgramLocation;
+import joeq.Compiler.Analysis.IPA.ProgramLocation.FakeProgramLocation;
+import joeq.Compiler.Analysis.IPA.ProgramLocation.QuadProgramLocation;
+import joeq.Compiler.Quad.BasicBlock;
+import joeq.Compiler.Quad.CodeCache;
+import joeq.Compiler.Quad.ControlFlowGraph;
+import joeq.Compiler.Quad.ControlFlowGraphVisitor;
+import joeq.Compiler.Quad.ExceptionHandler;
+import joeq.Compiler.Quad.JSRInfo;
+import joeq.Compiler.Quad.Operand;
+import joeq.Compiler.Quad.Operator;
+import joeq.Compiler.Quad.Quad;
+import joeq.Compiler.Quad.QuadVisitor;
+import joeq.Compiler.Quad.RegisterFactory;
+import joeq.Compiler.Quad.BytecodeToQuad.jq_ReturnAddressType;
+import joeq.Compiler.Quad.Operand.AConstOperand;
+import joeq.Compiler.Quad.Operand.Const4Operand;
+import joeq.Compiler.Quad.Operand.PConstOperand;
+import joeq.Compiler.Quad.Operand.ParamListOperand;
+import joeq.Compiler.Quad.Operand.RegisterOperand;
+import joeq.Compiler.Quad.Operator.ALoad;
+import joeq.Compiler.Quad.Operator.AStore;
+import joeq.Compiler.Quad.Operator.Binary;
+import joeq.Compiler.Quad.Operator.CheckCast;
+import joeq.Compiler.Quad.Operator.Getfield;
+import joeq.Compiler.Quad.Operator.Getstatic;
+import joeq.Compiler.Quad.Operator.Invoke;
+import joeq.Compiler.Quad.Operator.Jsr;
+import joeq.Compiler.Quad.Operator.Monitor;
+import joeq.Compiler.Quad.Operator.Move;
+import joeq.Compiler.Quad.Operator.New;
+import joeq.Compiler.Quad.Operator.NewArray;
+import joeq.Compiler.Quad.Operator.Putfield;
+import joeq.Compiler.Quad.Operator.Putstatic;
+import joeq.Compiler.Quad.Operator.Return;
+import joeq.Compiler.Quad.Operator.Special;
+import joeq.Compiler.Quad.Operator.Unary;
+import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Main.HostedVM;
 import joeq.Memory.Address;
 import joeq.Memory.StackAddress;
-import joeq.Run_Time.Reflection;
-import joeq.Run_Time.TypeCheck;
+import joeq.Runtime.Reflection;
+import joeq.Runtime.TypeCheck;
 import joeq.Util.Assert;
 import joeq.Util.Strings;
 import joeq.Util.Collections.CollectionTestWrapper;
@@ -783,7 +783,7 @@ public class MethodSummary {
             Invoke.getMethod(obj).resolve();
             jq_Method m = Invoke.getMethod(obj).getMethod();
             ProgramLocation mc = new ProgramLocation.QuadProgramLocation(method, obj);
-            if (m == joeq.Run_Time.Arrays._multinewarray) {
+            if (m == joeq.Runtime.Arrays._multinewarray) {
                 // special case: multi-dimensional array.
                 RegisterOperand dest = Invoke.getDest(obj);
                 if (dest != null) {
@@ -798,7 +798,7 @@ public class MethodSummary {
             this.methodCalls.add(mc);
             jq_Type[] params = m.getParamTypes();
             ParamListOperand plo = Invoke.getParamList(obj);
-            Assert._assert(m == joeq.Run_Time.Arrays._multinewarray || params.length == plo.length());
+            Assert._assert(m == joeq.Runtime.Arrays._multinewarray || params.length == plo.length());
             for (int i=0; i<params.length; ++i) {
                 if (!params[i].isReferenceType()
                     /*|| params[i].isAddressType()*/
@@ -828,7 +828,7 @@ public class MethodSummary {
          */
         HashMap jsr_states;
         /**
-         * @see Compil3r.Quad.QuadVisitor#visitJsr(Compil3r.Quad.Quad)
+         * @see Compiler.Quad.QuadVisitor#visitJsr(Compiler.Quad.Quad)
          */
         public void visitJsr(Quad obj) {
             if (TRACE_INTRA) out.println("Visiting: "+obj);
@@ -2340,7 +2340,7 @@ public class MethodSummary {
         public String toString_short() { return "Object "+getDeclaredType(); }
         
         /* (non-Javadoc)
-         * @see Compil3r.Quad.MethodSummary.Node#getNonEscapingEdgeFields()
+         * @see Compiler.Quad.MethodSummary.Node#getNonEscapingEdgeFields()
          */
         public Set getNonEscapingEdgeFields() {
             if (ADD_EDGES)
@@ -2368,7 +2368,7 @@ public class MethodSummary {
         }
 
         /* (non-Javadoc)
-         * @see Compil3r.Quad.MethodSummary.Node#getEdges()
+         * @see Compiler.Quad.MethodSummary.Node#getEdges()
          */
         public Set getEdges() {
             if (ADD_EDGES)
@@ -2429,7 +2429,7 @@ public class MethodSummary {
         }
 
         /* (non-Javadoc)
-         * @see Compil3r.Quad.MethodSummary.Node#hasEdges()
+         * @see Compiler.Quad.MethodSummary.Node#hasEdges()
          */
         public boolean hasEdges() {
             if (ADD_EDGES)
@@ -2783,7 +2783,7 @@ public class MethodSummary {
         }
         
         /* (non-Javadoc)
-         * @see Compil3r.Quad.MethodSummary.Node#print(Compil3r.Quad.MethodSummary, java.io.PrintWriter)
+         * @see Compiler.Quad.MethodSummary.Node#print(Compiler.Quad.MethodSummary, java.io.PrintWriter)
          */
         public void write(Textualizer t) throws IOException {
             m.write(t);
@@ -2830,7 +2830,7 @@ public class MethodSummary {
         }
         
         /* (non-Javadoc)
-         * @see Compil3r.Quad.MethodSummary.Node#print(Compil3r.Quad.MethodSummary, java.io.PrintWriter)
+         * @see Compiler.Quad.MethodSummary.Node#print(Compiler.Quad.MethodSummary, java.io.PrintWriter)
          */
         public void write(Textualizer t) throws IOException {
             m.write(t);
@@ -3138,7 +3138,7 @@ public class MethodSummary {
         }
 
         /* (non-Javadoc)
-         * @see Compil3r.Quad.MethodSummary.Node#print
+         * @see Compiler.Quad.MethodSummary.Node#print
          */
         public void write(Textualizer t) throws IOException {
             t.writeObject(f);

@@ -1,7 +1,7 @@
 // ControlFlowGraphNavigator.java, created Sat Mar 29  0:56:01 2003 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Compil3r.Quad;
+package joeq.Compiler.Quad;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -9,9 +9,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_Method;
-import joeq.Clazz.jq_Type;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_Method;
+import joeq.Class.jq_Type;
 import joeq.Main.HostedVM;
 import joeq.Util.Collections.AppendList;
 import joeq.Util.Graphs.Navigator;

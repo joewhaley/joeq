@@ -4,16 +4,16 @@
  * To change the template for this generated file go to
  * Window>Preferences>Java>Code Generation>Code and Comments
  */
-package joeq.Compil3r.Analysis.IPSSA.Utils;
+package joeq.Compiler.Analysis.IPSSA.Utils;
 
 import java.io.PrintStream;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import joeq.Compil3r.Analysis.IPSSA.SSADefinition;
-import joeq.Compil3r.Analysis.IPSSA.SSAIterator;
-import joeq.Compil3r.Analysis.IPSSA.SSAValue;
+import joeq.Compiler.Analysis.IPSSA.SSADefinition;
+import joeq.Compiler.Analysis.IPSSA.SSAIterator;
+import joeq.Compiler.Analysis.IPSSA.SSAValue;
 import joeq.Util.Assert;
 import joeq.Util.Collections.Pair;
 

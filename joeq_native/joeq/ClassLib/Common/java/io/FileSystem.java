@@ -5,10 +5,10 @@ package joeq.ClassLib.Common.java.io;
 
 import java.lang.reflect.Method;
 
-import joeq.Clazz.PrimordialClassLoader;
-import joeq.Clazz.jq_Class;
+import joeq.Class.PrimordialClassLoader;
+import joeq.Class.jq_Class;
 import joeq.Main.jq;
-import joeq.Run_Time.Reflection;
+import joeq.Runtime.Reflection;
 import joeq.Util.Assert;
 
 /**

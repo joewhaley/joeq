@@ -1,4 +1,4 @@
-package joeq.Compil3r.Analysis.IPSSA.Apps;
+package joeq.Compiler.Analysis.IPSSA.Apps;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -11,19 +11,19 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 
-import joeq.Clazz.PrimordialClassLoader;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_InstanceMethod;
-import joeq.Clazz.jq_Method;
-import joeq.Clazz.jq_Type;
-import joeq.Compil3r.Analysis.IPSSA.Apps.FindOwnership.SimpleOwnershipFinder.OwnershipValue;
-import joeq.Compil3r.Quad.BasicBlock;
-import joeq.Compil3r.Quad.CodeCache;
-import joeq.Compil3r.Quad.ControlFlowGraph;
-import joeq.Compil3r.Quad.Operand;
-import joeq.Compil3r.Quad.Operator;
-import joeq.Compil3r.Quad.Quad;
-import joeq.Compil3r.Quad.RegisterFactory;
+import joeq.Class.PrimordialClassLoader;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_InstanceMethod;
+import joeq.Class.jq_Method;
+import joeq.Class.jq_Type;
+import joeq.Compiler.Analysis.IPSSA.Apps.FindOwnership.SimpleOwnershipFinder.OwnershipValue;
+import joeq.Compiler.Quad.BasicBlock;
+import joeq.Compiler.Quad.CodeCache;
+import joeq.Compiler.Quad.ControlFlowGraph;
+import joeq.Compiler.Quad.Operand;
+import joeq.Compiler.Quad.Operator;
+import joeq.Compiler.Quad.Quad;
+import joeq.Compiler.Quad.RegisterFactory;
 import joeq.Main.HostedVM;
 import joeq.Util.Assert;
 import joeq.Util.Collections.AppendIterator;

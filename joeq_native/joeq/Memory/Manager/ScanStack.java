@@ -7,16 +7,16 @@ import java.util.Iterator;
 
 import joeq.Allocator.CodeAllocator;
 import joeq.Allocator.DefaultHeapAllocator;
-import joeq.Clazz.PrimordialClassLoader;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_CompiledCode;
-import joeq.Clazz.jq_Method;
-import joeq.Clazz.jq_StaticField;
+import joeq.Class.PrimordialClassLoader;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_CompiledCode;
+import joeq.Class.jq_Method;
+import joeq.Class.jq_StaticField;
 import joeq.Memory.Address;
 import joeq.Memory.CodeAddress;
 import joeq.Memory.HeapAddress;
 import joeq.Memory.StackAddress;
-import joeq.Run_Time.Unsafe;
+import joeq.Runtime.Unsafe;
 import joeq.Scheduler.jq_Thread;
 
 /**

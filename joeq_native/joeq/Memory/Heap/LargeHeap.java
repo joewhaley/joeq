@@ -5,8 +5,8 @@ package joeq.Memory.Heap;
 
 import joeq.Allocator.HeapAllocator;
 import joeq.Memory.HeapAddress;
-import joeq.Run_Time.Debug;
-import joeq.Run_Time.SystemInterface;
+import joeq.Runtime.Debug;
+import joeq.Runtime.SystemInterface;
 import joeq.Util.Assert;
 
 /**

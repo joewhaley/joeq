@@ -3,8 +3,8 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Scheduler;
 
-import joeq.Clazz.jq_StaticMethod;
-import joeq.Run_Time.Reflection;
+import joeq.Class.jq_StaticMethod;
+import joeq.Runtime.Reflection;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>

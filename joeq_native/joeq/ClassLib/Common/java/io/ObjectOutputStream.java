@@ -3,7 +3,7 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.ClassLib.Common.java.io;
 
-import joeq.Run_Time.Unsafe;
+import joeq.Runtime.Unsafe;
 import joeq.Util.Assert;
 import joeq.Util.Convert;
 

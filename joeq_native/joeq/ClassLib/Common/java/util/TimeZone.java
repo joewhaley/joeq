@@ -4,19 +4,19 @@
 package joeq.ClassLib.Common.java.util;
 
 import joeq.Bootstrap.MethodInvocation;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_DontAlign;
-import joeq.Clazz.jq_Method;
-import joeq.Clazz.jq_NameAndDesc;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_DontAlign;
+import joeq.Class.jq_Method;
+import joeq.Class.jq_NameAndDesc;
 import joeq.Main.jq;
 import joeq.Memory.CodeAddress;
 import joeq.Memory.HeapAddress;
-import joeq.Run_Time.Debug;
-import joeq.Run_Time.Reflection;
-import joeq.Run_Time.SystemInterface;
-import joeq.Run_Time.Unsafe;
-import joeq.Run_Time.SystemInterface.ExternalLink;
-import joeq.Run_Time.SystemInterface.Library;
+import joeq.Runtime.Debug;
+import joeq.Runtime.Reflection;
+import joeq.Runtime.SystemInterface;
+import joeq.Runtime.Unsafe;
+import joeq.Runtime.SystemInterface.ExternalLink;
+import joeq.Runtime.SystemInterface.Library;
 import joeq.Util.Assert;
 
 /**

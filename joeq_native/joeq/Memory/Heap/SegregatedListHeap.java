@@ -5,14 +5,14 @@ package joeq.Memory.Heap;
 
 import joeq.Allocator.HeapAllocator;
 import joeq.Allocator.ObjectLayoutMethods;
-import joeq.Clazz.jq_Array;
+import joeq.Class.jq_Array;
 import joeq.Memory.Address;
 import joeq.Memory.HeapAddress;
 import joeq.Memory.Manager.CollectorThread;
 import joeq.Memory.Manager.GCConstants;
-import joeq.Run_Time.Debug;
-import joeq.Run_Time.SystemInterface;
-import joeq.Run_Time.Unsafe;
+import joeq.Runtime.Debug;
+import joeq.Runtime.SystemInterface;
+import joeq.Runtime.Unsafe;
 import joeq.Scheduler.jq_NativeThread;
 import joeq.Util.Assert;
 

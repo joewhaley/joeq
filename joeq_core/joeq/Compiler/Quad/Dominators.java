@@ -1,12 +1,12 @@
 // Dominators.java, created Wed Jan 30 22:34:43 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Compil3r.Quad;
+package joeq.Compiler.Quad;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import joeq.Clazz.jq_Method;
-import joeq.Clazz.jq_MethodVisitor;
+import joeq.Class.jq_Method;
+import joeq.Class.jq_MethodVisitor;
 import joeq.Util.BitString;
 import joeq.Util.Templates.List;
 import joeq.Util.Templates.ListIterator;
@@ -39,7 +39,7 @@ public class Dominators extends jq_MethodVisitor.EmptyVisitor implements BasicBl
     
     public void visitMethod(jq_Method m) {
         if (m.getBytecode() == null) return;
-        cfg = joeq.Compil3r.Quad.CodeCache.getCode(m);
+        cfg = joeq.Compiler.Quad.CodeCache.getCode(m);
         bbs = new BasicBlock[cfg.getNumberOfBasicBlocks()];
         dominators = new BitString[cfg.getNumberOfBasicBlocks()];
         temp = new BitString(dominators.length);
@@ -185,7 +185,7 @@ public class Dominators extends jq_MethodVisitor.EmptyVisitor implements BasicBl
     public static void main(String[] args) {
         joeq.Main.HostedVM.initialize();
         
-        joeq.Clazz.jq_Class c = (joeq.Clazz.jq_Class) joeq.Clazz.jq_Type.parseType(args[0]);
+        joeq.Class.jq_Class c = (joeq.Class.jq_Class) joeq.Class.jq_Type.parseType(args[0]);
         c.load();
         Dominators dom = new Dominators();
         jq_Method[] ms = c.getDeclaredStaticMethods();

@@ -1,13 +1,13 @@
 // jq_Reference.java, created Mon Feb  5 23:23:20 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Clazz;
+package joeq.Class;
 
 import joeq.Allocator.ObjectLayout;
-import joeq.Clazz.PrimordialClassLoader;
+import joeq.Class.PrimordialClassLoader;
 import joeq.Main.jq;
 import joeq.Memory.HeapAddress;
-import joeq.Run_Time.Reflection;
+import joeq.Runtime.Reflection;
 import joeq.UTF.Utf8;
 import joeq.Util.Assert;
 
@@ -106,7 +106,7 @@ public abstract class jq_Reference extends jq_Type implements jq_ClassFileConsta
     public static final jq_InstanceField _vtable;
     public static /*final*/ jq_InstanceField _state; // set after PrimordialClassLoader finishes initialization
     static {
-        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Clazz/jq_Reference;");
+        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Class/jq_Reference;");
         _vtable = _class.getOrCreateInstanceField("vtable", "Ljava/lang/Object;");
         // primitive types have not yet been created!
         _state = _class.getOrCreateInstanceField("state", "I");

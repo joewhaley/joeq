@@ -1,4 +1,4 @@
-package joeq.Compil3r.Analysis.IPSSA;
+package joeq.Compiler.Analysis.IPSSA;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -19,28 +19,28 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
-import joeq.Clazz.PrimordialClassLoader;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_Method;
-import joeq.Compil3r.Analysis.IPA.PAResults;
-import joeq.Compil3r.Analysis.IPA.PointerAnalysisResults;
-import joeq.Compil3r.Analysis.IPA.ProgramLocation;
-import joeq.Compil3r.Analysis.IPA.ProgramLocation.QuadProgramLocation;
-import joeq.Compil3r.Analysis.IPSSA.SSAProcInfo.Helper;
-import joeq.Compil3r.Analysis.IPSSA.SSAProcInfo.Query;
-import joeq.Compil3r.Analysis.IPSSA.SSAProcInfo.SSABindingAnnote;
-import joeq.Compil3r.Analysis.IPSSA.SSAValue.ActualOut;
-import joeq.Compil3r.Analysis.IPSSA.Utils.SSAGraphPrinter;
-import joeq.Compil3r.Quad.BasicBlock;
-import joeq.Compil3r.Quad.BasicBlockVisitor;
-import joeq.Compil3r.Quad.CallGraph;
-import joeq.Compil3r.Quad.CodeCache;
-import joeq.Compil3r.Quad.ControlFlowGraph;
-import joeq.Compil3r.Quad.Operator;
-import joeq.Compil3r.Quad.Quad;
-import joeq.Compil3r.Quad.QuadIterator;
-import joeq.Compil3r.Quad.QuadVisitor;
-import joeq.Compil3r.Quad.RegisterFactory.Register;
+import joeq.Class.PrimordialClassLoader;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_Method;
+import joeq.Compiler.Analysis.IPA.PAResults;
+import joeq.Compiler.Analysis.IPA.PointerAnalysisResults;
+import joeq.Compiler.Analysis.IPA.ProgramLocation;
+import joeq.Compiler.Analysis.IPA.ProgramLocation.QuadProgramLocation;
+import joeq.Compiler.Analysis.IPSSA.SSAProcInfo.Helper;
+import joeq.Compiler.Analysis.IPSSA.SSAProcInfo.Query;
+import joeq.Compiler.Analysis.IPSSA.SSAProcInfo.SSABindingAnnote;
+import joeq.Compiler.Analysis.IPSSA.SSAValue.ActualOut;
+import joeq.Compiler.Analysis.IPSSA.Utils.SSAGraphPrinter;
+import joeq.Compiler.Quad.BasicBlock;
+import joeq.Compiler.Quad.BasicBlockVisitor;
+import joeq.Compiler.Quad.CallGraph;
+import joeq.Compiler.Quad.CodeCache;
+import joeq.Compiler.Quad.ControlFlowGraph;
+import joeq.Compiler.Quad.Operator;
+import joeq.Compiler.Quad.Quad;
+import joeq.Compiler.Quad.QuadIterator;
+import joeq.Compiler.Quad.QuadVisitor;
+import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Main.HostedVM;
 import joeq.Util.Assert;
 import joeq.Util.Collections.AppendIterator;
@@ -1054,7 +1054,7 @@ public class IPSSABuilder implements Runnable {
         public static void main(String[] args) {
             HostedVM.initialize();
 
-            joeq.Compil3r.BytecodeAnalysis.TypeAnalysis.classesToAnalyze = new HashSet();
+            joeq.Compiler.BytecodeAnalysis.TypeAnalysis.classesToAnalyze = new HashSet();
             Iterator i = null; String memberName = null;
             for (int x=0; x<args.length; ++x) {
                 if (args[x].equals("-file")) {

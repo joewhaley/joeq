@@ -6,17 +6,17 @@ package joeq.Main;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_Method;
-import joeq.Clazz.jq_MethodVisitor;
-import joeq.Clazz.jq_Type;
-import joeq.Clazz.jq_TypeVisitor;
-import joeq.Compil3r.Quad.BasicBlock;
-import joeq.Compil3r.Quad.BasicBlockVisitor;
-import joeq.Compil3r.Quad.ControlFlowGraph;
-import joeq.Compil3r.Quad.ControlFlowGraphVisitor;
-import joeq.Compil3r.Quad.Quad;
-import joeq.Compil3r.Quad.QuadVisitor;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_Method;
+import joeq.Class.jq_MethodVisitor;
+import joeq.Class.jq_Type;
+import joeq.Class.jq_TypeVisitor;
+import joeq.Compiler.Quad.BasicBlock;
+import joeq.Compiler.Quad.BasicBlockVisitor;
+import joeq.Compiler.Quad.ControlFlowGraph;
+import joeq.Compiler.Quad.ControlFlowGraphVisitor;
+import joeq.Compiler.Quad.Quad;
+import joeq.Compiler.Quad.QuadVisitor;
 
 /**
  * @author  Michael Martin <mcmartin@stanford.edu>
@@ -50,7 +50,7 @@ public class Helper {
             !canonicalPackageName.endsWith("/"))
             canonicalPackageName += '/';
         Iterator i =
-            joeq.Clazz.PrimordialClassLoader.loader.listPackage(
+            joeq.Class.PrimordialClassLoader.loader.listPackage(
                 canonicalPackageName,
                 recursive);
         if (!i.hasNext()) {

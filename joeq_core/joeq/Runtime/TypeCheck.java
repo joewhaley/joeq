@@ -1,20 +1,20 @@
 // TypeCheck.java, created Mon Feb  5 23:23:21 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Run_Time;
+package joeq.Runtime;
 
 import java.util.Collection;
 import java.util.Stack;
 
-import joeq.Clazz.PrimordialClassLoader;
-import joeq.Clazz.jq_Array;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_ClassFileConstants;
-import joeq.Clazz.jq_Primitive;
-import joeq.Clazz.jq_Reference;
-import joeq.Clazz.jq_StaticMethod;
-import joeq.Clazz.jq_Type;
-import joeq.Compil3r.CompilationConstants;
+import joeq.Class.PrimordialClassLoader;
+import joeq.Class.jq_Array;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_ClassFileConstants;
+import joeq.Class.jq_Primitive;
+import joeq.Class.jq_Reference;
+import joeq.Class.jq_StaticMethod;
+import joeq.Class.jq_Type;
+import joeq.Compiler.CompilationConstants;
 import joeq.Memory.Address;
 import joeq.Memory.HeapAddress;
 import joeq.Util.Assert;
@@ -276,9 +276,9 @@ public abstract class TypeCheck implements jq_ClassFileConstants, CompilationCon
     public static final jq_StaticMethod _instance_of;
     public static final jq_StaticMethod _arrayStoreCheck;
     static {
-        jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Run_Time/TypeCheck;");
-        _checkcast = k.getOrCreateStaticMethod("checkcast", "(Ljava/lang/Object;Ljoeq/Clazz/jq_Type;)Ljava/lang/Object;");
-        _instance_of = k.getOrCreateStaticMethod("instance_of", "(Ljava/lang/Object;Ljoeq/Clazz/jq_Type;)Z");
+        jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Runtime/TypeCheck;");
+        _checkcast = k.getOrCreateStaticMethod("checkcast", "(Ljava/lang/Object;Ljoeq/Class/jq_Type;)Ljava/lang/Object;");
+        _instance_of = k.getOrCreateStaticMethod("instance_of", "(Ljava/lang/Object;Ljoeq/Class/jq_Type;)Z");
         _arrayStoreCheck = k.getOrCreateStaticMethod("arrayStoreCheck", "(Ljoeq/Memory/HeapAddress;[Ljava/lang/Object;)V");
     }
 }

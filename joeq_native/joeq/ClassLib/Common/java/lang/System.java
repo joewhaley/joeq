@@ -6,16 +6,16 @@ package joeq.ClassLib.Common.java.lang;
 import java.io.InputStream;
 import java.io.PrintStream;
 
-import joeq.Clazz.PrimordialClassLoader;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_CompiledCode;
-import joeq.Clazz.jq_StaticField;
+import joeq.Class.PrimordialClassLoader;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_CompiledCode;
+import joeq.Class.jq_StaticField;
 import joeq.Memory.StackAddress;
-import joeq.Run_Time.ArrayCopy;
-import joeq.Run_Time.HashCode;
-import joeq.Run_Time.Reflection;
-import joeq.Run_Time.StackCodeWalker;
-import joeq.Run_Time.SystemInterface;
+import joeq.Runtime.ArrayCopy;
+import joeq.Runtime.HashCode;
+import joeq.Runtime.Reflection;
+import joeq.Runtime.StackCodeWalker;
+import joeq.Runtime.SystemInterface;
 
 /**
  * System

@@ -1,6 +1,6 @@
-// Public proxy class for joeq.Compil3r.Analysis.IPA.PA
+// Public proxy class for joeq.Compiler.Analysis.IPA.PA
 // Generated via joeq.Util.MakeProxy
-package joeq.Compil3r.Analysis.IPA;
+package joeq.Compiler.Analysis.IPA;
 
 public class PAProxy {
   public PAProxy(PA that) {
@@ -243,8 +243,8 @@ public class PAProxy {
   public boolean USE_HCONTEXT;
   public java.util.Map newMethodSummaries;
   public java.util.Set rootMethods;
-  public joeq.Compil3r.Quad.CallGraph cg;
-  public joeq.Compil3r.Analysis.IPA.ObjectCreationGraph ocg;
+  public joeq.Compiler.Quad.CallGraph cg;
+  public joeq.Compiler.Analysis.IPA.ObjectCreationGraph ocg;
   public org.sf.javabdd.BDDFactory bdd;
   public org.sf.javabdd.BDDDomain V1;
   public org.sf.javabdd.BDDDomain V2;
@@ -366,19 +366,19 @@ public class PAProxy {
   public org.sf.javabdd.BDD H1cdomain;
   public org.sf.javabdd.BDD H2cdomain;
   public java.util.Map rangeMap;
-  public joeq.Clazz.jq_Class object_class;
-  public joeq.Clazz.jq_Method javaLangObject_clone;
-  public joeq.Clazz.jq_Class cloneable_class;
-  public joeq.Clazz.jq_Class throwable_class;
-  public joeq.Clazz.jq_Method javaLangObject_fakeclone;
+  public joeq.Class.jq_Class object_class;
+  public joeq.Class.jq_Method javaLangObject_clone;
+  public joeq.Class.jq_Class cloneable_class;
+  public joeq.Class.jq_Class throwable_class;
+  public joeq.Class.jq_Method javaLangObject_fakeclone;
   public int last_V;
   public int last_H;
   public int last_T;
   public int last_N;
   public int last_F;
-  public joeq.Clazz.jq_NameAndDesc finalizer_method;
-  public static joeq.Clazz.jq_NameAndDesc main_method;
-  public static joeq.Clazz.jq_NameAndDesc run_method;
+  public joeq.Class.jq_NameAndDesc finalizer_method;
+  public static joeq.Class.jq_NameAndDesc main_method;
+  public static joeq.Class.jq_NameAndDesc run_method;
   public org.sf.javabdd.BDD old1_A;
   public org.sf.javabdd.BDD old1_S;
   public org.sf.javabdd.BDD old1_L;
@@ -392,13 +392,13 @@ public class PAProxy {
   public org.sf.javabdd.BDD[] old3_t9;
   public org.sf.javabdd.BDD old2_myIE;
   public org.sf.javabdd.BDD old2_visited;
-  public joeq.Compil3r.Analysis.IPA.PA.ToString TS;
+  public joeq.Compiler.Analysis.IPA.PA.ToString TS;
   public static java.util.Map thread_runs;
-  public joeq.Compil3r.Analysis.IPA.PA.VarPathSelector varPathSelector;
+  public joeq.Compiler.Analysis.IPA.PA.VarPathSelector varPathSelector;
   public static boolean THREADS_ONLY;
-  public joeq.Compil3r.Analysis.IPA.PA.HeapPathSelector heapPathSelector;
+  public joeq.Compiler.Analysis.IPA.PA.HeapPathSelector heapPathSelector;
   public static java.util.Set polyClasses;
   public static boolean MATCH_FACTORY;
-  public joeq.Compil3r.Analysis.IPA.PA.ObjectPathSelector objectPathSelector;
+  public joeq.Compiler.Analysis.IPA.PA.ObjectPathSelector objectPathSelector;
   public java.util.Map V1H1correspondence;
 }

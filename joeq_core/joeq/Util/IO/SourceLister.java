@@ -9,8 +9,8 @@ import java.io.File;
 import java.util.Arrays;
 import java.text.DecimalFormat;
 
-import joeq.Clazz.jq_Class;
-import joeq.Compil3r.Analysis.IPA.ProgramLocation;
+import joeq.Class.jq_Class;
+import joeq.Compiler.Analysis.IPA.ProgramLocation;
 
 /**
  * SourceLister

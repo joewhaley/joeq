@@ -5,17 +5,17 @@ package joeq.Allocator;
 
 import java.lang.reflect.Array;
 
-import joeq.Clazz.PrimordialClassLoader;
-import joeq.Clazz.jq_Array;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_ClassFileConstants;
-import joeq.Clazz.jq_Reference;
-import joeq.Clazz.jq_StaticMethod;
-import joeq.Clazz.jq_Type;
+import joeq.Class.PrimordialClassLoader;
+import joeq.Class.jq_Array;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_ClassFileConstants;
+import joeq.Class.jq_Reference;
+import joeq.Class.jq_StaticMethod;
+import joeq.Class.jq_Type;
 import joeq.Memory.Address;
 import joeq.Memory.HeapAddress;
 import joeq.Memory.Heap.Heap;
-import joeq.Run_Time.SystemInterface;
+import joeq.Runtime.SystemInterface;
 import joeq.Util.Assert;
 
 /**
@@ -258,6 +258,6 @@ public abstract class HeapAllocator implements jq_ClassFileConstants {
     public static final jq_StaticMethod _clsinitAndAllocateObject;
     static {
         jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Allocator/HeapAllocator;");
-        _clsinitAndAllocateObject = k.getOrCreateStaticMethod("clsinitAndAllocateObject", "(Ljoeq/Clazz/jq_Type;)Ljava/lang/Object;");
+        _clsinitAndAllocateObject = k.getOrCreateStaticMethod("clsinitAndAllocateObject", "(Ljoeq/Class/jq_Type;)Ljava/lang/Object;");
     }
 }

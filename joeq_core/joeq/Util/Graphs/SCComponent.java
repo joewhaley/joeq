@@ -15,8 +15,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import joeq.Clazz.jq_Method;
-import joeq.Compil3r.Quad.CallGraph;
+import joeq.Class.jq_Method;
+import joeq.Compiler.Quad.CallGraph;
 import joeq.Util.Assert;
 import joeq.Util.IO.Textualizable;
 import joeq.Util.IO.Textualizer;

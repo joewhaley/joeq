@@ -1,7 +1,7 @@
 // BasicDebugImpl.java, created Sat Feb 22 13:35:27 2003 by joewhaley
 // Copyright (C) 2001-3 mcmartin
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Run_Time;
+package joeq.Runtime;
 
 /**
  * BasicDebugImpl

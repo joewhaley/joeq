@@ -1,9 +1,9 @@
 // ExceptionHandlerList.java, created Fri Jan 18 19:33:00 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Compil3r.Quad;
+package joeq.Compiler.Quad;
 
-import joeq.Clazz.jq_Class;
+import joeq.Class.jq_Class;
 import joeq.Util.Templates.List;
 import joeq.Util.Templates.ListIterator;
 import joeq.Util.Templates.ListWrapper;
@@ -90,7 +90,7 @@ public class ExceptionHandlerList extends java.util.AbstractList implements List
     public java.util.Iterator iterator() { return exceptionHandlerIterator(); }
     public java.util.ListIterator listIterator() { return exceptionHandlerIterator(); }
     
-    public joeq.Compil3r.Quad.ExceptionHandler getExceptionHandler(int index) {
+    public joeq.Compiler.Quad.ExceptionHandler getExceptionHandler(int index) {
         if (index < 0) throw new IndexOutOfBoundsException();
         ExceptionHandlerList p = this;
         while (--index >= 0) {

@@ -4,13 +4,13 @@
  * To change the template for this generated file go to
  * Window - Preferences - Java - Code Generation - Code and Comments
  */
-package joeq.Compil3r.Analysis.IPSSA;
+package joeq.Compiler.Analysis.IPSSA;
 
 import java.io.PrintStream;
 import java.util.Set;
 
-import joeq.Compil3r.Quad.BasicBlock;
-import joeq.Compil3r.Quad.Quad;
+import joeq.Compiler.Quad.BasicBlock;
+import joeq.Compiler.Quad.Quad;
 
  /**
  * @author Vladimir Livshits

@@ -5,9 +5,9 @@ package joeq.Memory.Manager;
 
 import joeq.Allocator.DefaultHeapAllocator;
 import joeq.Memory.HeapAddress;
-import joeq.Run_Time.Debug;
-import joeq.Run_Time.HighResolutionTimer;
-import joeq.Run_Time.Unsafe;
+import joeq.Runtime.Debug;
+import joeq.Runtime.HighResolutionTimer;
+import joeq.Runtime.Unsafe;
 import joeq.Scheduler.jq_NativeThread;
 import joeq.Util.AtomicCounter;
 

@@ -1,11 +1,11 @@
 // ExceptionHandler.java, created Fri Jan 11 16:42:38 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Compil3r.Quad;
+package joeq.Compiler.Quad;
 
-import joeq.Clazz.PrimordialClassLoader;
-import joeq.Clazz.jq_Class;
-import joeq.Run_Time.TypeCheck;
+import joeq.Class.PrimordialClassLoader;
+import joeq.Class.jq_Class;
+import joeq.Runtime.TypeCheck;
 import joeq.Util.Templates.List;
 import joeq.Util.Templates.ListWrapper;
 
@@ -19,7 +19,7 @@ import joeq.Util.Templates.ListWrapper;
  * inheritance and interface checks may be necessary.
  * 
  * @see  ExceptionHandlerList
- * @see  Run_Time.TypeCheck
+ * @see  Runtime.TypeCheck
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version  $Id$
  */

@@ -4,10 +4,10 @@
 package joeq.ClassLib.sun13_linux;
 
 import joeq.Bootstrap.ObjectTraverser;
-import joeq.Clazz.PrimordialClassLoader;
+import joeq.Class.PrimordialClassLoader;
 import joeq.ClassLib.ClassLibInterface;
-import joeq.Clazz.jq_Class;
-import joeq.Run_Time.SystemInterface;
+import joeq.Class.jq_Class;
+import joeq.Runtime.SystemInterface;
 import joeq.UTF.Utf8;
 
 /**
@@ -37,7 +37,7 @@ public final class Interface extends joeq.ClassLib.Common.InterfaceImpl {
     public static class sun13_linuxObjectTraverser extends CommonObjectTraverser {
         public static sun13_linuxObjectTraverser INSTANCE = new sun13_linuxObjectTraverser();
         protected sun13_linuxObjectTraverser() {}
-        public java.lang.Object mapInstanceField(java.lang.Object o, joeq.Clazz.jq_InstanceField f) {
+        public java.lang.Object mapInstanceField(java.lang.Object o, joeq.Class.jq_InstanceField f) {
             if (IGNORE_THREAD_LOCALS) {
                 jq_Class c = f.getDeclaringClass();
                 if (c == PrimordialClassLoader.getJavaLangThread()) {

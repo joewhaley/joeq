@@ -1,7 +1,7 @@
 // CHACallGraph.java, created Mon Mar  3 18:01:33 2003 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Compil3r.Quad;
+package joeq.Compiler.Quad;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,11 +12,11 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Set;
 
-import joeq.Clazz.PrimordialClassLoader;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_Method;
-import joeq.Clazz.jq_Type;
-import joeq.Compil3r.Analysis.IPA.*;
+import joeq.Class.PrimordialClassLoader;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_Method;
+import joeq.Class.jq_Type;
+import joeq.Compiler.Analysis.IPA.*;
 
 /**
  * A simple call graph implementation based on class-hierarchy analysis with
@@ -41,7 +41,7 @@ public class CHACallGraph extends CallGraph {
     protected CHACallGraph() { this.classes = null; }
 
     /**
-     * @see Compil3r.Quad.CallGraph#getTargetMethods(java.lang.Object, Compil3r.Quad.ProgramLocation)
+     * @see Compiler.Quad.CallGraph#getTargetMethods(java.lang.Object, Compiler.Quad.ProgramLocation)
      */
     public Collection getTargetMethods(Object context, ProgramLocation callSite) {
         jq_Method method = (jq_Method) callSite.getTargetMethod();
@@ -89,14 +89,14 @@ public class CHACallGraph extends CallGraph {
     }
 
     /* (non-Javadoc)
-     * @see Compil3r.Quad.CallGraph#getRoots()
+     * @see Compiler.Quad.CallGraph#getRoots()
      */
     public Collection getRoots() {
         throw new UnsupportedOperationException();
     }
 
     /* (non-Javadoc)
-     * @see Compil3r.Quad.CallGraph#setRoots(java.util.Collection)
+     * @see Compiler.Quad.CallGraph#setRoots(java.util.Collection)
      */
     public void setRoots(Collection roots) {
         throw new UnsupportedOperationException();

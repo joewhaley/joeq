@@ -1,40 +1,40 @@
 // Operator.java, created Fri Jan 11 16:42:38 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Compil3r.Quad;
+package joeq.Compiler.Quad;
 
-import joeq.Clazz.PrimordialClassLoader;
-import joeq.Clazz.jq_Array;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_InstanceField;
-import joeq.Clazz.jq_Method;
-import joeq.Clazz.jq_Primitive;
-import joeq.Clazz.jq_Reference;
-import joeq.Clazz.jq_StaticField;
-import joeq.Clazz.jq_Type;
-import joeq.Compil3r.BytecodeAnalysis.BytecodeVisitor;
-import joeq.Compil3r.Quad.Operand.AConstOperand;
-import joeq.Compil3r.Quad.Operand.BasicBlockTableOperand;
-import joeq.Compil3r.Quad.Operand.ConditionOperand;
-import joeq.Compil3r.Quad.Operand.DConstOperand;
-import joeq.Compil3r.Quad.Operand.FConstOperand;
-import joeq.Compil3r.Quad.Operand.FieldOperand;
-import joeq.Compil3r.Quad.Operand.IConstOperand;
-import joeq.Compil3r.Quad.Operand.IntValueTableOperand;
-import joeq.Compil3r.Quad.Operand.LConstOperand;
-import joeq.Compil3r.Quad.Operand.MethodOperand;
-import joeq.Compil3r.Quad.Operand.PConstOperand;
-import joeq.Compil3r.Quad.Operand.ParamListOperand;
-import joeq.Compil3r.Quad.Operand.RegisterOperand;
-import joeq.Compil3r.Quad.Operand.TargetOperand;
-import joeq.Compil3r.Quad.Operand.TypeOperand;
+import joeq.Class.PrimordialClassLoader;
+import joeq.Class.jq_Array;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_InstanceField;
+import joeq.Class.jq_Method;
+import joeq.Class.jq_Primitive;
+import joeq.Class.jq_Reference;
+import joeq.Class.jq_StaticField;
+import joeq.Class.jq_Type;
+import joeq.Compiler.BytecodeAnalysis.BytecodeVisitor;
+import joeq.Compiler.Quad.Operand.AConstOperand;
+import joeq.Compiler.Quad.Operand.BasicBlockTableOperand;
+import joeq.Compiler.Quad.Operand.ConditionOperand;
+import joeq.Compiler.Quad.Operand.DConstOperand;
+import joeq.Compiler.Quad.Operand.FConstOperand;
+import joeq.Compiler.Quad.Operand.FieldOperand;
+import joeq.Compiler.Quad.Operand.IConstOperand;
+import joeq.Compiler.Quad.Operand.IntValueTableOperand;
+import joeq.Compiler.Quad.Operand.LConstOperand;
+import joeq.Compiler.Quad.Operand.MethodOperand;
+import joeq.Compiler.Quad.Operand.PConstOperand;
+import joeq.Compiler.Quad.Operand.ParamListOperand;
+import joeq.Compiler.Quad.Operand.RegisterOperand;
+import joeq.Compiler.Quad.Operand.TargetOperand;
+import joeq.Compiler.Quad.Operand.TypeOperand;
 import joeq.Interpreter.QuadInterpreter;
 import joeq.Interpreter.QuadInterpreter.UninitializedReference;
 import joeq.Main.jq;
 import joeq.Memory.Address;
 import joeq.Memory.HeapAddress;
-import joeq.Run_Time.Reflection;
-import joeq.Run_Time.TypeCheck;
+import joeq.Runtime.Reflection;
+import joeq.Runtime.TypeCheck;
 import joeq.Util.Assert;
 import joeq.Util.Templates.UnmodifiableList;
 
@@ -1341,7 +1341,7 @@ public abstract class Operator {
                 case BytecodeVisitor.CMP_GE: r = s1 >= s2; break;
                 case BytecodeVisitor.CMP_LE: r = s1 <= s2; break;
                 case BytecodeVisitor.CMP_GT: r = s1 > s2; break;
-                case BytecodeVisitor.CMP_AE: r = joeq.Run_Time.MathSupport.ucmp(s1, s2); break;
+                case BytecodeVisitor.CMP_AE: r = joeq.Runtime.MathSupport.ucmp(s1, s2); break;
                 case BytecodeVisitor.CMP_UNCOND: r = true; break;
                 default: Assert.UNREACHABLE(); r = false; break;
                 }
@@ -3833,10 +3833,10 @@ public abstract class Operator {
         _delegate = null;
         boolean nullVM = jq.nullVM;
         if (!nullVM) {
-            _delegate = attemptDelegate("joeq.Compil3r.Quad.Delegates$Op");
+            _delegate = attemptDelegate("joeq.Compiler.Quad.Delegates$Op");
         }
         if (_delegate == null) {
-            _delegate = new joeq.Compil3r.Quad.NullDelegates.Op();
+            _delegate = new joeq.Compiler.Quad.NullDelegates.Op();
         }
     }
 

@@ -5,12 +5,12 @@ package joeq.ClassLib.Common.java.lang.reflect;
 
 import joeq.ClassLib.ClassLibInterface;
 import joeq.ClassLib.Common.ClassUtils;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_Initializer;
-import joeq.Clazz.jq_NameAndDesc;
-import joeq.Clazz.jq_Type;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_Initializer;
+import joeq.Class.jq_NameAndDesc;
+import joeq.Class.jq_Type;
 import joeq.Main.jq;
-import joeq.Run_Time.Reflection;
+import joeq.Runtime.Reflection;
 import joeq.UTF.Utf8;
 import joeq.Util.Assert;
 

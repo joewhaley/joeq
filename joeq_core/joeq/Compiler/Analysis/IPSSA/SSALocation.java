@@ -1,20 +1,20 @@
-package joeq.Compil3r.Analysis.IPSSA;
+package joeq.Compiler.Analysis.IPSSA;
 
 import java.util.HashMap;
 
 import joeq.Util.Assert;
-import joeq.Clazz.jq_LocalVarTableEntry;
-import joeq.Clazz.jq_Method;
-import joeq.Clazz.jq_NameAndDesc;
-import joeq.Compil3r.Analysis.IPA.PA;
-import joeq.Compil3r.Quad.CodeCache;
-import joeq.Compil3r.Quad.Quad;
-import joeq.Compil3r.Quad.RegisterFactory;
+import joeq.Class.jq_LocalVarTableEntry;
+import joeq.Class.jq_Method;
+import joeq.Class.jq_NameAndDesc;
+import joeq.Compiler.Analysis.IPA.PA;
+import joeq.Compiler.Quad.CodeCache;
+import joeq.Compiler.Quad.Quad;
+import joeq.Compiler.Quad.RegisterFactory;
 
 /**
  * @author Vladimir Livshits
- * @see Compil3r.Analysis.IPSSA.SSADefinition
- * @see Compil3r.Analysis.IPSSA.SSABinding
+ * @see Compiler.Analysis.IPSSA.SSADefinition
+ * @see Compiler.Analysis.IPSSA.SSABinding
  * @version $Id$
  */
 public interface SSALocation {

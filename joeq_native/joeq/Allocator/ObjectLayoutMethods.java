@@ -4,7 +4,7 @@
 package joeq.Allocator;
 
 import joeq.Memory.HeapAddress;
-import joeq.Run_Time.Unsafe;
+import joeq.Runtime.Unsafe;
 
 /** This interface contains utility functions for the joeq object layout.
  *  You can play with these constants to experiment with different object layouts.

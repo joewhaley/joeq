@@ -4,8 +4,8 @@
 package joeq.ClassLib.Common;
 
 import joeq.Bootstrap.ObjectTraverser;
-import joeq.Clazz.jq_InstanceField;
-import joeq.Clazz.jq_StaticField;
+import joeq.Class.jq_InstanceField;
+import joeq.Class.jq_StaticField;
 
 /**
  * NullInterfaceImpl
@@ -35,55 +35,55 @@ public class NullInterfaceImpl implements joeq.ClassLib.Common.Interface {
         public static final NullObjectTraverser INSTANCE = new NullObjectTraverser();
     }
     
-    public java.lang.Class createNewClass(joeq.Clazz.jq_Type f) {
+    public java.lang.Class createNewClass(joeq.Class.jq_Type f) {
         throw new UnsupportedOperationException("Using a Null ClassLib Interface!");
     }
     
-    public java.lang.reflect.Constructor createNewConstructor(joeq.Clazz.jq_Initializer f) {
+    public java.lang.reflect.Constructor createNewConstructor(joeq.Class.jq_Initializer f) {
         throw new UnsupportedOperationException("Using a Null ClassLib Interface!");
     }
     
-    public void initNewConstructor(java.lang.reflect.Constructor dis, joeq.Clazz.jq_Initializer f) {
+    public void initNewConstructor(java.lang.reflect.Constructor dis, joeq.Class.jq_Initializer f) {
         throw new UnsupportedOperationException("Using a Null ClassLib Interface!");
     }
     
-    public java.lang.reflect.Field createNewField(joeq.Clazz.jq_Field f) {
+    public java.lang.reflect.Field createNewField(joeq.Class.jq_Field f) {
         throw new UnsupportedOperationException("Using a Null ClassLib Interface!");
     }
     
-    public void initNewField(java.lang.reflect.Field dis, joeq.Clazz.jq_Field f) {
+    public void initNewField(java.lang.reflect.Field dis, joeq.Class.jq_Field f) {
         throw new UnsupportedOperationException("Using a Null ClassLib Interface!");
     }
     
-    public java.lang.reflect.Method createNewMethod(joeq.Clazz.jq_Method f) {
+    public java.lang.reflect.Method createNewMethod(joeq.Class.jq_Method f) {
         throw new UnsupportedOperationException("Using a Null ClassLib Interface!");
     }
     
-    public void initNewMethod(java.lang.reflect.Method dis, joeq.Clazz.jq_Method f) {
+    public void initNewMethod(java.lang.reflect.Method dis, joeq.Class.jq_Method f) {
         throw new UnsupportedOperationException("Using a Null ClassLib Interface!");
     }
     
-    public joeq.Clazz.jq_Field getJQField(java.lang.reflect.Field f) {
+    public joeq.Class.jq_Field getJQField(java.lang.reflect.Field f) {
         throw new UnsupportedOperationException("Using a Null ClassLib Interface!");
     }
     
-    public joeq.Clazz.jq_Initializer getJQInitializer(java.lang.reflect.Constructor f) {
+    public joeq.Class.jq_Initializer getJQInitializer(java.lang.reflect.Constructor f) {
         throw new UnsupportedOperationException("Using a Null ClassLib Interface!");
     }
     
-    public joeq.Clazz.jq_Method getJQMethod(java.lang.reflect.Method f) {
+    public joeq.Class.jq_Method getJQMethod(java.lang.reflect.Method f) {
         throw new UnsupportedOperationException("Using a Null ClassLib Interface!");
     }
     
-    public joeq.Clazz.jq_Type getJQType(java.lang.Class k) {
+    public joeq.Class.jq_Type getJQType(java.lang.Class k) {
         throw new UnsupportedOperationException("Using a Null ClassLib Interface!");
     }
     
-    public joeq.Clazz.jq_Type getOrCreateType(java.lang.ClassLoader cl, joeq.UTF.Utf8 desc) {
+    public joeq.Class.jq_Type getOrCreateType(java.lang.ClassLoader cl, joeq.UTF.Utf8 desc) {
         throw new UnsupportedOperationException("Using a Null ClassLib Interface!");
     }
     
-    public void unloadType(java.lang.ClassLoader cl, joeq.Clazz.jq_Type t) {
+    public void unloadType(java.lang.ClassLoader cl, joeq.Class.jq_Type t) {
         throw new UnsupportedOperationException("Using a Null ClassLib Interface!");
     }
     

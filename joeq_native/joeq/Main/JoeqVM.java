@@ -7,16 +7,16 @@ import java.util.Iterator;
 
 import joeq.Allocator.SimpleAllocator;
 import joeq.Bootstrap.MethodInvocation;
-import joeq.Clazz.PrimordialClassLoader;
+import joeq.Class.PrimordialClassLoader;
 import joeq.ClassLib.ClassLibInterface;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_NameAndDesc;
-import joeq.Clazz.jq_StaticMethod;
-import joeq.Compil3r.CompilationState;
-import joeq.Compil3r.CompilationState.DynamicCompilation;
-import joeq.Run_Time.Debug;
-import joeq.Run_Time.SystemInterface;
-import joeq.Run_Time.Unsafe;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_NameAndDesc;
+import joeq.Class.jq_StaticMethod;
+import joeq.Compiler.CompilationState;
+import joeq.Compiler.CompilationState.DynamicCompilation;
+import joeq.Runtime.Debug;
+import joeq.Runtime.SystemInterface;
+import joeq.Runtime.Unsafe;
 import joeq.Scheduler.jq_InterrupterThread;
 import joeq.Scheduler.jq_MainThread;
 import joeq.Scheduler.jq_NativeThread;
@@ -151,12 +151,12 @@ public abstract class JoeqVM {
         jq_NativeThread.initNativeThreads(nt, jq.NumOfNativeThreads);
 
         // Here we start method replacement of classes whose name were given as arguments to -replace on the cmd line.
-        if (joeq.Clazz.jq_Class.TRACE_REPLACE_CLASS) SystemInterface.debugwriteln(Strings.lineSep+"STARTING REPLACEMENT of classes: " + joeq.Clazz.jq_Class.classToReplace);
-        for (Iterator it = joeq.Clazz.jq_Class.classToReplace.iterator(); it.hasNext();) {
+        if (joeq.Class.jq_Class.TRACE_REPLACE_CLASS) SystemInterface.debugwriteln(Strings.lineSep+"STARTING REPLACEMENT of classes: " + joeq.Class.jq_Class.classToReplace);
+        for (Iterator it = joeq.Class.jq_Class.classToReplace.iterator(); it.hasNext();) {
             String newCName = (String) it.next();
             PrimordialClassLoader.loader.replaceClass(newCName);
         }
-        if (joeq.Clazz.jq_Class.TRACE_REPLACE_CLASS) SystemInterface.debugwriteln(Strings.lineSep+"DONE with Classes Replacement!");
+        if (joeq.Class.jq_Class.TRACE_REPLACE_CLASS) SystemInterface.debugwriteln(Strings.lineSep+"DONE with Classes Replacement!");
 
         String className = args[i];
         jq_Class main_class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("L" + className.replace('.', '/') + ";");

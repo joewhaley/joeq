@@ -1,12 +1,12 @@
-package joeq.Compil3r.Analysis.IPSSA;
-import joeq.Clazz.jq_Method;
-import joeq.Compil3r.Quad.Quad;
+package joeq.Compiler.Analysis.IPSSA;
+import joeq.Class.jq_Method;
+import joeq.Compiler.Quad.Quad;
 
 /**
  * An SSABinding is an assignment of an SSAValue to to an SSADefinition.
  * @see SSADefinition
- * @see Compil3r.Analysis.IPSSA.SSAValue
- * @see Compil3r.Analysis.IPSSA.SSADefinition
+ * @see Compiler.Analysis.IPSSA.SSAValue
+ * @see Compiler.Analysis.IPSSA.SSADefinition
  * @version $Id$
  * */
 public class SSABinding {

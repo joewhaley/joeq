@@ -1,7 +1,7 @@
 // jq_Member.java, created Mon Feb  5 23:23:20 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Clazz;
+package joeq.Class;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -14,7 +14,7 @@ import java.util.StringTokenizer;
 
 import joeq.ClassLib.ClassLibInterface;
 import joeq.Main.jq;
-import joeq.Run_Time.Reflection;
+import joeq.Runtime.Reflection;
 import joeq.UTF.Utf8;
 import joeq.Util.Assert;
 import joeq.Util.Collections.FilterIterator;

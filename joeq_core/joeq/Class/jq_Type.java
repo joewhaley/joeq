@@ -1,16 +1,16 @@
 // jq_Type.java, created Mon Feb  5 23:23:20 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Clazz;
+package joeq.Class;
 
 import java.io.IOException;
 import java.util.StringTokenizer;
 
-import joeq.Clazz.PrimordialClassLoader;
+import joeq.Class.PrimordialClassLoader;
 import joeq.ClassLib.ClassLibInterface;
 import joeq.Main.jq;
-import joeq.Run_Time.Debug;
-import joeq.Run_Time.Reflection;
+import joeq.Runtime.Debug;
+import joeq.Runtime.Reflection;
 import joeq.UTF.Utf8;
 import joeq.Util.Assert;
 import joeq.Util.IO.Textualizable;
@@ -242,5 +242,5 @@ public abstract class jq_Type implements Textualizable {
         jq_Type r = PrimordialClassLoader.loader.getOrCreateBSType(desc);
         return r;
     }    
-    public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Clazz/jq_Type;");
+    public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Class/jq_Type;");
 }

@@ -4,15 +4,15 @@
 package joeq.Scheduler;
 
 import joeq.Allocator.CodeAllocator;
-import joeq.Clazz.PrimordialClassLoader;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_InstanceMethod;
+import joeq.Class.PrimordialClassLoader;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_InstanceMethod;
 import joeq.Memory.CodeAddress;
 import joeq.Memory.HeapAddress;
 import joeq.Memory.StackAddress;
-import joeq.Run_Time.Debug;
-import joeq.Run_Time.SystemInterface;
-import joeq.Run_Time.Unsafe;
+import joeq.Runtime.Debug;
+import joeq.Runtime.SystemInterface;
+import joeq.Runtime.Unsafe;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>

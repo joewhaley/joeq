@@ -1,7 +1,7 @@
 // CachedCallGraph.java, created Sat Mar 29  0:56:01 2003 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Compil3r.Quad;
+package joeq.Compiler.Quad;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -10,8 +10,8 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import joeq.Clazz.jq_Method;
-import joeq.Compil3r.Analysis.IPA.ProgramLocation;
+import joeq.Class.jq_Method;
+import joeq.Compiler.Analysis.IPA.ProgramLocation;
 import joeq.Util.Collections.GenericInvertibleMultiMap;
 import joeq.Util.Collections.GenericMultiMap;
 import joeq.Util.Collections.InvertibleMultiMap;
@@ -57,7 +57,7 @@ public class CachedCallGraph extends CallGraph {
     }
 
     /* (non-Javadoc)
-     * @see Compil3r.Quad.CallGraph#setRoots(java.util.Collection)
+     * @see Compiler.Quad.CallGraph#setRoots(java.util.Collection)
      */
     public void setRoots(Collection roots) {
         delegate.setRoots(roots);
@@ -65,7 +65,7 @@ public class CachedCallGraph extends CallGraph {
     }
 
     /* (non-Javadoc)
-     * @see Compil3r.Quad.CallGraph#entrySet()
+     * @see Compiler.Quad.CallGraph#entrySet()
      */
     public Set entrySet() {
         if (edges == null) invalidateCache();
@@ -73,7 +73,7 @@ public class CachedCallGraph extends CallGraph {
     }
 
     /* (non-Javadoc)
-     * @see Compil3r.Quad.CallGraph#getAllCallSites()
+     * @see Compiler.Quad.CallGraph#getAllCallSites()
      */
     public Collection getAllCallSites() {
         if (edges == null) invalidateCache();
@@ -85,7 +85,7 @@ public class CachedCallGraph extends CallGraph {
     }
 
     /* (non-Javadoc)
-     * @see Compil3r.Quad.CallGraph#getAllMethods()
+     * @see Compiler.Quad.CallGraph#getAllMethods()
      */
     public Collection getAllMethods() {
         if (edges == null) invalidateCache();
@@ -99,14 +99,14 @@ public class CachedCallGraph extends CallGraph {
     }
 
     /* (non-Javadoc)
-     * @see Compil3r.Quad.CallGraph#getCallees(Compil3r.Quad.ControlFlowGraph)
+     * @see Compiler.Quad.CallGraph#getCallees(Compiler.Quad.ControlFlowGraph)
      */
     public Collection getCallees(ControlFlowGraph cfg) {
         return getCallees(cfg.getMethod());
     }
 
     /* (non-Javadoc)
-     * @see Compil3r.Quad.CallGraph#getCallees(Clazz.jq_Method)
+     * @see Compiler.Quad.CallGraph#getCallees(Class.jq_Method)
      */
     public Collection getCallees(jq_Method caller) {
         if (edges == null) invalidateCache();
@@ -129,7 +129,7 @@ public class CachedCallGraph extends CallGraph {
     }
     
     /* (non-Javadoc)
-     * @see Compil3r.Quad.CallGraph#getCallerMethods(Clazz.jq_Method)
+     * @see Compiler.Quad.CallGraph#getCallerMethods(Class.jq_Method)
      */
     public Collection getCallers(jq_Method callee) {
         if (edges == null) invalidateCache();
@@ -139,7 +139,7 @@ public class CachedCallGraph extends CallGraph {
     }
 
     /* (non-Javadoc)
-     * @see Compil3r.Quad.CallGraph#getCallerMethods(Clazz.jq_Method)
+     * @see Compiler.Quad.CallGraph#getCallerMethods(Class.jq_Method)
      */
     public Collection getCallerMethods(jq_Method callee) {
         if (edges == null) invalidateCache();
@@ -159,14 +159,14 @@ public class CachedCallGraph extends CallGraph {
     }
 
     /* (non-Javadoc)
-     * @see Compil3r.Quad.CallGraph#getCallSites(Compil3r.Quad.ControlFlowGraph)
+     * @see Compiler.Quad.CallGraph#getCallSites(Compiler.Quad.ControlFlowGraph)
      */
     public Collection getCallSites(ControlFlowGraph cfg) {
         return getCallSites(cfg.getMethod());
     }
 
     /* (non-Javadoc)
-     * @see Compil3r.Quad.CallGraph#getCallSites(Clazz.jq_Method)
+     * @see Compiler.Quad.CallGraph#getCallSites(Class.jq_Method)
      */
     public Collection getCallSites(jq_Method caller) {
         if (callSites == null) invalidateCache();
@@ -200,7 +200,7 @@ public class CachedCallGraph extends CallGraph {
     }
 
     /* (non-Javadoc)
-     * @see Compil3r.Quad.CallGraph#getRoots()
+     * @see Compiler.Quad.CallGraph#getRoots()
      */
     public Collection getRoots() {
         return delegate.getRoots();

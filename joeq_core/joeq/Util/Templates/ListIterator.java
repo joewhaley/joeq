@@ -9,52 +9,52 @@ package joeq.Util.Templates;
  */
 public abstract class ListIterator {
     public interface jq_Type extends java.util.ListIterator {
-        joeq.Clazz.jq_Type nextType();
-        joeq.Clazz.jq_Type previousType();
+        joeq.Class.jq_Type nextType();
+        joeq.Class.jq_Type previousType();
     }
     public interface jq_Reference extends jq_Type {
-        joeq.Clazz.jq_Reference nextReference();
-        joeq.Clazz.jq_Reference previousReference();
+        joeq.Class.jq_Reference nextReference();
+        joeq.Class.jq_Reference previousReference();
     }
     public interface jq_Class extends jq_Reference {
-        joeq.Clazz.jq_Class nextClass();
-        joeq.Clazz.jq_Class previousClass();
+        joeq.Class.jq_Class nextClass();
+        joeq.Class.jq_Class previousClass();
     }
     public interface jq_Member extends java.util.ListIterator {
-        joeq.Clazz.jq_Member nextMember();
-        joeq.Clazz.jq_Member previousMember();
+        joeq.Class.jq_Member nextMember();
+        joeq.Class.jq_Member previousMember();
     }
     public interface jq_Method extends jq_Member {
-        joeq.Clazz.jq_Method nextMethod();
-        joeq.Clazz.jq_Method previousMethod();
+        joeq.Class.jq_Method nextMethod();
+        joeq.Class.jq_Method previousMethod();
     }
     public interface jq_InstanceMethod extends jq_Method {
-        joeq.Clazz.jq_InstanceMethod nextInstanceMethod();
-        joeq.Clazz.jq_InstanceMethod previousInstanceMethod();
+        joeq.Class.jq_InstanceMethod nextInstanceMethod();
+        joeq.Class.jq_InstanceMethod previousInstanceMethod();
     }
     public interface jq_StaticMethod extends jq_Method {
-        joeq.Clazz.jq_StaticMethod nextStaticMethod();
-        joeq.Clazz.jq_StaticMethod previousStaticMethod();
+        joeq.Class.jq_StaticMethod nextStaticMethod();
+        joeq.Class.jq_StaticMethod previousStaticMethod();
     }
         
     public interface BasicBlock extends java.util.ListIterator {
-        joeq.Compil3r.Quad.BasicBlock nextBasicBlock();
-        joeq.Compil3r.Quad.BasicBlock previousBasicBlock();
+        joeq.Compiler.Quad.BasicBlock nextBasicBlock();
+        joeq.Compiler.Quad.BasicBlock previousBasicBlock();
     }
     public interface ExceptionHandler extends java.util.ListIterator {
-        joeq.Compil3r.Quad.ExceptionHandler nextExceptionHandler();
-        joeq.Compil3r.Quad.ExceptionHandler previousExceptionHandler();
+        joeq.Compiler.Quad.ExceptionHandler nextExceptionHandler();
+        joeq.Compiler.Quad.ExceptionHandler previousExceptionHandler();
     }
     public interface Quad extends java.util.ListIterator {
-        joeq.Compil3r.Quad.Quad nextQuad();
-        joeq.Compil3r.Quad.Quad previousQuad();
+        joeq.Compiler.Quad.Quad nextQuad();
+        joeq.Compiler.Quad.Quad previousQuad();
     }
     public interface Operand extends java.util.ListIterator {
-        joeq.Compil3r.Quad.Operand nextOperand();
-        joeq.Compil3r.Quad.Operand previousOperand();
+        joeq.Compiler.Quad.Operand nextOperand();
+        joeq.Compiler.Quad.Operand previousOperand();
     }
     public interface RegisterOperand extends Operand {
-        joeq.Compil3r.Quad.Operand.RegisterOperand nextRegisterOperand();
-        joeq.Compil3r.Quad.Operand.RegisterOperand previousRegisterOperand();
+        joeq.Compiler.Quad.Operand.RegisterOperand nextRegisterOperand();
+        joeq.Compiler.Quad.Operand.RegisterOperand previousRegisterOperand();
     }
 }

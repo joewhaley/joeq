@@ -1,18 +1,18 @@
 // LiveRefAnalysis.java, created Fri Jan 11 16:49:00 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Compil3r.BytecodeAnalysis;
+package joeq.Compiler.BytecodeAnalysis;
 
 import java.util.Set;
 
-import joeq.Clazz.PrimordialClassLoader;
-import joeq.Clazz.jq_Array;
-import joeq.Clazz.jq_InstanceField;
-import joeq.Clazz.jq_Method;
-import joeq.Clazz.jq_Primitive;
-import joeq.Clazz.jq_StaticField;
-import joeq.Clazz.jq_Type;
-import joeq.Run_Time.TypeCheck;
+import joeq.Class.PrimordialClassLoader;
+import joeq.Class.jq_Array;
+import joeq.Class.jq_InstanceField;
+import joeq.Class.jq_Method;
+import joeq.Class.jq_Primitive;
+import joeq.Class.jq_StaticField;
+import joeq.Class.jq_Type;
+import joeq.Runtime.TypeCheck;
 import joeq.Util.Assert;
 import joeq.Util.BitString;
 import joeq.Util.Strings;
@@ -77,7 +77,7 @@ public class LiveRefAnalysis {
         this.start_states[2] = ExactState.allocateInitialState(method);
         for (;;) {
             fpv.go_again = false;
-            joeq.Compil3r.BytecodeAnalysis.ControlFlowGraph.RPOBasicBlockIterator rpo = bc_cfg.reversePostOrderIterator();
+            joeq.Compiler.BytecodeAnalysis.ControlFlowGraph.RPOBasicBlockIterator rpo = bc_cfg.reversePostOrderIterator();
             BasicBlock first_bb = rpo.nextBB();
             Assert._assert(first_bb == bc_cfg.getEntry());
             // initialize start states
@@ -102,7 +102,7 @@ public class LiveRefAnalysis {
         // traverse post-order over basic blocks
         for (;;) {
             spv.go_again = false;
-            joeq.Compil3r.BytecodeAnalysis.ControlFlowGraph.RPOBasicBlockIterator rpo = bc_cfg.reversePostOrderIterator();
+            joeq.Compiler.BytecodeAnalysis.ControlFlowGraph.RPOBasicBlockIterator rpo = bc_cfg.reversePostOrderIterator();
             rpo.jumpToEnd();
             while (rpo.hasPrevious()) {
                 if (ALWAYS_TRACE)
@@ -884,7 +884,7 @@ public class LiveRefAnalysis {
 
         public BitString getBytecodeStart() { return bytecode_start; }
 
-        public void traverseBB(joeq.Compil3r.BytecodeAnalysis.BasicBlock bb) {
+        public void traverseBB(joeq.Compiler.BytecodeAnalysis.BasicBlock bb) {
             if (start_states[bb.id] == null) {
                 // unreachable block!
                 if (TRACE) out.println("Basic block "+bb+" is unreachable!");
@@ -1621,7 +1621,7 @@ public class LiveRefAnalysis {
         
         public String toString() { return "LR2/"+this.method.getName(); }
         
-        public void traverseBB(joeq.Compil3r.BytecodeAnalysis.BasicBlock bb) {
+        public void traverseBB(joeq.Compiler.BytecodeAnalysis.BasicBlock bb) {
             if ((end_states[bb.id] == null) || (start_states[bb.id] == null)) {
                 // unreachable block!
                 if (TRACE) out.println("Basic block "+bb+" is unreachable!");

@@ -1,7 +1,7 @@
 // PointerExplorer.java, created Tue Aug 27 16:04:29 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Compil3r.Quad;
+package joeq.Compiler.Quad;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -20,15 +20,15 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_Field;
-import joeq.Clazz.jq_Method;
-import joeq.Clazz.jq_Type;
-import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary;
-import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.CallSite;
-import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.PassedParameter;
-import joeq.Compil3r.Analysis.IPA.*;
-import joeq.Compil3r.Quad.AndersenPointerAnalysis.AccessPath;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_Field;
+import joeq.Class.jq_Method;
+import joeq.Class.jq_Type;
+import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary;
+import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.CallSite;
+import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.PassedParameter;
+import joeq.Compiler.Analysis.IPA.*;
+import joeq.Compiler.Quad.AndersenPointerAnalysis.AccessPath;
 import joeq.Main.HostedVM;
 import joeq.Util.Assert;
 import joeq.Util.Collections.FilterIterator;

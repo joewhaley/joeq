@@ -7,13 +7,13 @@ import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Iterator;
 
-import joeq.Clazz.PrimordialClassLoader;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_InstanceField;
-import joeq.Clazz.jq_InstanceMethod;
-import joeq.Clazz.jq_StaticField;
-import joeq.Clazz.jq_StaticMethod;
-import joeq.Clazz.jq_Type;
+import joeq.Class.PrimordialClassLoader;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_InstanceField;
+import joeq.Class.jq_InstanceMethod;
+import joeq.Class.jq_StaticField;
+import joeq.Class.jq_StaticMethod;
+import joeq.Class.jq_Type;
 import joeq.UTF.Utf8;
 
 /**
@@ -42,8 +42,8 @@ public abstract class ClassDump {
         //c.compile();
         dumpClass(System.out, c);
         //jq_Class c2 = (jq_Class)PrimordialClassLoader.loader.getOrCreateType("Ljava/lang/Exception;");
-        //System.out.println(Run_Time.TypeCheck.isAssignable(c, c2));
-        //System.out.println(Run_Time.TypeCheck.isAssignable(c2, c));
+        //System.out.println(Runtime.TypeCheck.isAssignable(c, c2));
+        //System.out.println(Runtime.TypeCheck.isAssignable(c2, c));
         //Allocator.DefaultCodeAllocator.default_allocator = new BootstrapCodeAllocator();
         //Allocator.DefaultCodeAllocator.default_allocator.init();
         compileClass(System.out, c);
@@ -58,7 +58,7 @@ public abstract class ClassDump {
             //if (c.getName().toString().equals("right"))
             {
                 out.println(c.toString());
-                joeq.Compil3r.Quad.ControlFlowGraph cfg = joeq.Compil3r.Quad.CodeCache.getCode(c);
+                joeq.Compiler.Quad.ControlFlowGraph cfg = joeq.Compiler.Quad.CodeCache.getCode(c);
                 System.out.println(cfg.fullDump());
             }
         }
@@ -70,7 +70,7 @@ public abstract class ClassDump {
             //if (c.getName().toString().equals("right"))
             {
                 out.println(c.toString());
-                joeq.Compil3r.Quad.ControlFlowGraph cfg = joeq.Compil3r.Quad.CodeCache.getCode(c);
+                joeq.Compiler.Quad.ControlFlowGraph cfg = joeq.Compiler.Quad.CodeCache.getCode(c);
                 System.out.println(cfg.fullDump());
             }
         }

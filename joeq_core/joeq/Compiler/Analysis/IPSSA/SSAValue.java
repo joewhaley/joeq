@@ -1,19 +1,19 @@
-package joeq.Compil3r.Analysis.IPSSA;
+package joeq.Compiler.Analysis.IPSSA;
 
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Vector;
 
-import joeq.Clazz.jq_Method;
-import joeq.Compil3r.Analysis.IPSSA.SSAIterator.DefinitionIterator;
-import joeq.Compil3r.Analysis.IPSSA.Utils.DefinitionSet;
-import joeq.Compil3r.Analysis.IPSSA.Utils.IteratorHelper;
-import joeq.Compil3r.Quad.Quad;
+import joeq.Class.jq_Method;
+import joeq.Compiler.Analysis.IPSSA.SSAIterator.DefinitionIterator;
+import joeq.Compiler.Analysis.IPSSA.Utils.DefinitionSet;
+import joeq.Compiler.Analysis.IPSSA.Utils.IteratorHelper;
+import joeq.Compiler.Quad.Quad;
 import joeq.Util.Assert;
 
 /**
  * The RHS of a binding. Has multiple subclasses.
- * @see Compil3r.Analysis.IPSSA.SSADefinition
+ * @see Compiler.Analysis.IPSSA.SSADefinition
  * @version $Id$
  * */
 public abstract class  SSAValue {

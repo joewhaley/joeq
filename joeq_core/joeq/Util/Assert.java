@@ -3,7 +3,7 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Util;
 
-import joeq.Run_Time.Debug;
+import joeq.Runtime.Debug;
 
 /**
  * Includes methods for an assertion mechanism.  When an assertion fails, it
