@@ -2624,8 +2624,12 @@ public class PA {
         List ds = activeDomains(b);
         if (ds == null) {
             b.getFactory().save(filename, b);
-            return;
+        } else {
+            bdd_save(filename, b, ds);
         }
+    }
+    
+    public static void bdd_save(String filename, BDD b, List ds) throws IOException {
         BufferedWriter out = null;
         try {
             out = new BufferedWriter(new FileWriter(filename));
@@ -4102,7 +4106,7 @@ public class PA {
         bdd_save(dumpPath+"L.bdd", L0);
         bdd_save(dumpPath+"S.bdd", S0);
         if (CONTEXT_SENSITIVE) {
-            bdd_save(dumpPath+"cA.bdd", A);
+            bdd_save(dumpPath+"cA.bdd", A, Arrays.asList(new BDDDomain[] { V1, V2, V1c[0], V2c[0] }));
         } else {
             bdd_save(dumpPath+"A.bdd", A);
         }
