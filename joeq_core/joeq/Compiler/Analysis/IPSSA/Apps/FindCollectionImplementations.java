@@ -15,7 +15,9 @@ import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
 import Clazz.jq_Method;
 import Clazz.jq_Type;
+import Compil3r.Quad.CachedCallGraph;
 import Compil3r.Quad.CallGraph;
+import Compil3r.Quad.RootedCHACallGraph;
 import Main.HostedVM;
 import Util.Assert;
 import Util.Collections.AppendIterator;
@@ -60,7 +62,7 @@ class ClassHierarchy {
             return _class.toString();                
         }
     }
-    Set _nodes = new HashSet();
+    Set _nodes = new HashSet();     
     ClassHieraryNode _root  = null;
     
     ClassHierarchy(ClassHieraryNode root){
@@ -235,20 +237,19 @@ public class FindCollectionImplementations {
     
     
     public FindCollectionImplementations(Iterator i) {
-        _classes = new HashSet();
+        Set classes = new HashSet();
         Collection roots = new LinkedList();
         while(i.hasNext()) {
             jq_Class c = (jq_Class) jq_Type.parseType((String)i.next());
             c.load();
 
-            _classes.add(c);
+            classes.add(c);
             roots.addAll(Arrays.asList(c.getDeclaredStaticMethods()));
         }
         
-        System.out.println("Classes: " + _classes);
+        System.out.println("Classes: " + classes);
         System.out.println("Roots: " + roots);
         
-        /*
         System.out.print("Building call graph...");
         long time = System.currentTimeMillis();
         _cg = new RootedCHACallGraph(classes);
@@ -258,7 +259,7 @@ public class FindCollectionImplementations {
         time = System.currentTimeMillis() - time;
         System.out.println("done. ("+(time/1000.)+" seconds)");
         _classes = getClasses(_cg.getAllMethods());
-        */
+        
         _collections = new HashSet();
         _iterators   = new HashSet();
         
