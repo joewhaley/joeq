@@ -15,6 +15,7 @@ import java.math.BigInteger;
 import java.util.AbstractSet;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -117,6 +118,7 @@ public class PAResults {
         cg = new LoadedCallGraph(fn);
     }
     
+    private HashMap/*<String,TypedBDD>*/ storedBDDs = new HashMap();
     public void interactive() {
         int i = 1;
         List results = new ArrayList();
@@ -161,11 +163,22 @@ public class PAResults {
                     TypedBDD bdd2 = parseBDD(results, st.nextToken());
                     TypedBDD r = (TypedBDD) bdd1.and(bdd2);
                     results.add(r);
+                } else if (command.equals("cmp") || command.equals("equals")) {
+                    TypedBDD bdd1 = parseBDD(results, st.nextToken());
+                    TypedBDD bdd2 = parseBDD(results, st.nextToken());
+                    System.out.println(command + " " + bdd1.equals(bdd2));
+                    increaseCount = false;
                 } else if (command.equals("or")) {
                     TypedBDD bdd1 = parseBDD(results, st.nextToken());
                     TypedBDD bdd2 = parseBDD(results, st.nextToken());
                     TypedBDD r = (TypedBDD) bdd1.or(bdd2);
                     results.add(r);
+                } else if (command.equals("store")) {
+                    String name = st.nextToken();
+                    TypedBDD bdd1 = parseBDD(results, st.nextToken());
+                    storedBDDs.put(name, bdd1);
+                    System.out.println("Stored BDD under name `" + name + "'");
+                    increaseCount = false;
                 } else if (command.equals("satcount")) {
                     TypedBDD r = parseBDDWithCheck(results, st.nextToken());
                     System.out.println("Domains:  " + r.getDomainSet());
@@ -200,7 +213,7 @@ public class PAResults {
                         }
                     }
                     increaseCount = false;
-                } else if (command.equals("contextheap")) {
+                } else if (command.equals("contextheap") || command.equals("stacktraceheap")) {
                     int varNum = Integer.parseInt(st.nextToken());
                     Node n = (Node) getHeapNode(varNum);
                     if (n == null) {
@@ -212,7 +225,10 @@ public class PAResults {
                             System.out.println("No method for node "+n);
                         } else {
                             Path trace = r.hCnumbering.getPath(m, c);
-                            System.out.println(m+" context "+c+": "+trace);
+			    if (command.equals("stacktraceheap"))
+				printTrace(System.out, m, c, trace);
+                            else
+				System.out.println(m+" context "+c+": "+trace);
                         }
                     }
                     increaseCount = false;
@@ -249,7 +265,6 @@ public class PAResults {
                                 MethodSummary ms = MethodSummary.getSummary(CodeCache.getCode(m));
                                 increaseCount = false;
                                 if (command.equals("callsin")) {
-                                    System.out.println("Calls in "+m+"\n");
                                     for (Iterator j=ms.getCalls().iterator(); j.hasNext(); ) {
                                         ProgramLocation mc = (ProgramLocation) j.next();
                                         System.out.println("I("+getInvokeIndex(mc)+") "+mc.toStringLong());
@@ -349,18 +364,28 @@ public class PAResults {
     }
     
     public void printHelp(List results) {
-        System.out.println("dumpconnect # <fn>:               dump heap connectivity graph for heap object # to file fn");
-        System.out.println("dumpallconnect <fn>:              dump entire heap connectivity graph to file fn");
-        System.out.println("escape:                           run escape analysis");
-        System.out.println("findequiv:                        find equivalent objects");
+        System.out.println("BDD manipulation:");
         System.out.println("relprod b1 b2 bs:                 relational product of b1 and b2 w.r.t. set bs");
         System.out.println("restrict b1 b2 (bi)*:             restrict b2 to bi in b1");
         System.out.println("exist b1 bs1 (bsi)*:              exist bs2 to bsi in b1");
-        System.out.println("contextvar #vidx #cidx:           show path in vCnumbering for var #vidx in context #");
-        System.out.println("stacktracevar #vidx #cidx:        like contextvar, except print as stacktrace");
+        System.out.println("(and|or) b1 b2:                   compute b1 and|or b2");
+        System.out.println("(equals|cmp) b1 b2:               compare bdds b1 and b2");
         System.out.println("list b1:                          list elements of bdd b1");
         System.out.println("showdomains b1:                   show domains of bdd b1");
         System.out.println("satcount b1:                      print satcount (restricted by domain)");
+        System.out.println("store name b1:                    store BDD b1 under name");
+        System.out.println("\nAnalysis Results:");
+        System.out.println("dumpconnect # <fn>:               dump heap connectivity graph for heap object # to file fn");
+        System.out.println("dumpallconnect <fn>:              dump entire heap connectivity graph to file fn");
+        System.out.println("dumpdefuse b1:                    dump def/use graph to defuse.dot, bdd must be in V1xV1c");
+        System.out.println("dumpusedef b1:                    dump use/def graph to usedef.dot, bdd must be in V1xV1c");
+        System.out.println("escape:                           run escape analysis");
+        System.out.println("findequiv:                        find equivalent objects");
+        System.out.println("contextvar #vidx #cidx:           show path in vCnumbering for var #vidx in context #");
+        System.out.println("stacktracevar #vidx #cidx:        like contextvar, except print as stacktrace");
+        System.out.println("contextheap #hidx #cidx:          show path in hCnumbering for heap obj #hidx in context #");
+        System.out.println("stacktraceheap #hidx #cidx:       like contextheap, except print as stacktrace");
+        System.out.println("\nProgram Information:");
         System.out.println("method  class name [signature]:   lookup method in class, shows M and N indices");
         System.out.println("callsin class name [signature]:   list all call sites in a given method");
         System.out.println("summary class name [signature]:   list method summary for a given method");
@@ -379,6 +404,8 @@ public class PAResults {
 		    allbdds.add(f[i].getName());
 	    } catch (IllegalAccessException _) { }
 	}
+	if (storedBDDs.size() > 0)
+	    allbdds.add("stored BDDs " + (storedBDDs.keySet()));
 	if (results.size() >= 1)
 	    allbdds.add("and previous results 1.." + (results.size()));
 	System.out.println("\ncurrently known BDDs are " + allbdds);
@@ -555,6 +582,9 @@ public class PAResults {
         if (d != null) {
             return (TypedBDD) d.domain();
         }
+	TypedBDD stored = (TypedBDD)storedBDDs.get(s);
+	if (stored != null)
+            return stored;
         try {
             int num = Integer.parseInt(s) - 1;
             if (num >= 0 && num < a.size()) {
@@ -715,7 +745,7 @@ public class PAResults {
                 int k2 = (int) c.scanVar(r.V1);
                 Node n2 = getVariableNode(k2);
                 if (w.add(n2)) {
-                    String name = n2.toString();
+                    String name = r.LONG_LOCATIONS ? r.findInMap(r.Vmap, k2) : n2.toString();
                     out.writeBytes("n"+k2+" [label=\""+name+"\"];\n");
                 }
                 if (n != null) {
