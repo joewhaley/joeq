@@ -152,6 +152,20 @@ public class CSPAResults {
      */
     BDD ci_pointsTo;
 
+    /** Stores BDD: V2c x V2o x FD x V1c x V1o. 
+     * Holds the store instructions in the program.
+     * A relation (V2c,V2o,FD,V1c,V1o) is in the BDD if the program contains
+     * a store instruction of the form v2.fd = v1;
+     */
+    BDD stores;
+
+    /** Loads BDD: V2c x V2o x V1c x V1o x FD. 
+     * Holds the load instructions in the program.
+     * A relation (V2c,V2o,V1c,V1o,FD) is in the BDD if the program contains
+     * a load instruction of the form v2 = v1.fd;
+     */
+    BDD loads;
+    
     /** Nodes that are returned from their methods. */
     Collection returned;
     /** Nodes that are thrown from their methods. */
@@ -258,6 +272,8 @@ public class CSPAResults {
     }
 
     void buildAccessibleLocations() {
+        System.out.print("Building transitive call graph relation...");
+        long time = System.currentTimeMillis();
         BDDPairing V1ToV2 = bdd.makePair();
         V1ToV2.set(new BDDDomain[] {V1c, V1o}, new BDDDomain[] {V2c, V2o} );
         BDDPairing V3cToV1c = bdd.makePair(V3c, V1c);
@@ -303,7 +319,7 @@ public class CSPAResults {
                 SCComponent callee = scc.next(j);
                 Number npaths2 = pn.numberOfPathsToSCC(callee);
                 Collection edges = pn.getSCCEdges(scc, callee);
-                System.out.println("SCC"+scc.getId()+" -> SCC"+callee.getId()+": "+edges.size()+" edges");
+                if (TRACE_ACC_LOC) System.out.println("SCC"+scc.getId()+" -> SCC"+callee.getId()+": "+edges.size()+" edges");
                 BDD contextVars_callee = (BDD) sccToVars.get(callee);
                 // build a map to translate callee path numbers into caller path numbers
                 BDD contextMap = bdd.zero();
@@ -330,8 +346,38 @@ public class CSPAResults {
             if (TRACE_ACC_LOC) System.out.println("Final location map for SCC"+scc.getId()+": "+al.toStringWithDomains());
             accessibleLocations.orWith(al);
         }
+        time = System.currentTimeMillis() - time;
+        System.out.println("done. ("+time/1000.+" seconds, "+accessibleLocations.nodeCount()+" nodes)");
     }
 
+    public TypedBDD findMod(TypedBDD bdd1) {
+        BDD V1set = V1c.set(); V1set.andWith(V1o.set());
+        BDDPairing V2ToV1 = bdd.makePair();
+        V2ToV1.set(new BDDDomain[] {V2c, V2o}, new BDDDomain[] {V1c, V1o});
+        
+        BDD a = bdd1.getDomains();
+        a.andWith(V1c.set()); a.andWith(V1o.set());
+        BDD b = accessibleLocations.relprod(bdd1.bdd, a); // V2c x V2o
+        BDD d = stores.exist(V1set); // FD x V2c x V2o
+        d.andWith(b);
+        d.replaceWith(V2ToV1); // V1c x V1o x FD
+        BDD e = pointsTo.relprod(d, V1set); // H1c x H1o x FD
+        return new TypedBDD(e, H1c, H1o, FD);
+    }
+
+    public TypedBDD findRef(TypedBDD bdd1) {
+        BDD V1set = V1c.set(); V1set.andWith(V1o.set());
+        BDDPairing V2ToV1 = bdd.makePair();
+        V2ToV1.set(new BDDDomain[] {V2c, V2o}, new BDDDomain[] {V1c, V1o});
+        
+        BDD a = bdd1.getDomains();
+        a.andWith(V1c.set()); a.andWith(V1o.set());
+        BDD b = accessibleLocations.relprod(bdd1.bdd, a); // V2c x V2o
+        b.replaceWith(V2ToV1); // V1c x V1o
+        BDD e = pointsTo.relprod(b, V1set); // H1c x H1o
+        return new TypedBDD(e, H1c, H1o);
+    }
+    
     Map buildTransitiveAccessedLocations() {
         SCCTopSortedGraph sccgraph = pn.getSCCGraph();
         List sccroots = new LinkedList();
@@ -850,8 +896,12 @@ public class CSPAResults {
         this.pointsTo = bdd.load(fn+".bdd");
         System.out.print("pointsTo "+this.pointsTo.nodeCount()+" nodes");
         this.fieldPt = bdd.load(fn+".bdd2");
-        System.out.print(", fieldPt "+this.fieldPt.nodeCount()+" nodes, ");
-        System.out.println("done.");
+        System.out.print(", fieldPt "+this.fieldPt.nodeCount()+" nodes");
+        this.stores = bdd.load(fn+".stores");
+        System.out.print(", stores "+this.stores.nodeCount()+" nodes");
+        this.loads = bdd.load(fn+".loads");
+        System.out.print(", loads "+this.stores.nodeCount()+" nodes");
+        System.out.println(", done.");
         
         this.returned = new HashSet();
         this.thrown = new HashSet();
@@ -923,7 +973,7 @@ public class CSPAResults {
         H2c = bdd_domains[8];
         
         boolean reverseLocal = System.getProperty("bddreverse", "true").equals("true");
-        String ordering = System.getProperty("bddordering", "FD_H2cxH2o_V2cxV1cxV2oxV1o_H1cxH1o");
+        String ordering = System.getProperty("bddordering", "FD_V2oxV1o_V2cxV1c_H2c_H2o_H1c_H1o");
         int[] varorder = CSPA.makeVarOrdering(bdd, domainBits, domainSpos,
                                               reverseLocal, ordering);
         bdd.setVarOrder(varorder);
@@ -1051,16 +1101,13 @@ public class CSPAResults {
         StringBuffer sb = new StringBuffer();
         sb.append(domainName(d)+"("+i+")");
         Node n = null;
-        if (d == V1o) {
+        if (d == V1o || d == V2o || d == V3o) {
             n = (Node) getVariableNode(i);
-        } else if (d == V2o) {
-            n = (Node) getVariableNode(i);
-        } else if (d == H1o) {
+        } else if (d == H1o || d == H2o || d == H3o) {
             n = (Node) getHeapNode(i);
-        } else if (d == H2o) {
-            n = (Node) getHeapNode(i);
-        } else if (d == H3o) {
-            n = (Node) getHeapNode(i);
+        } else if (d == FD) {
+            jq_Field f = getField(i);
+            sb.append(": "+(f==null?"[]":f.getName().toString()));
         }
         if (n != null) {
             sb.append(": ");
@@ -1850,9 +1897,14 @@ public class CSPAResults {
                 } else if (command.equals("escape")) {
                     escapeAnalysis();
                     increaseCount = false;
-                } else if (command.equals("modref")) {
-                    buildAccessibleLocations();
-                    increaseCount = false;
+                } else if (command.equals("mod")) {
+                    TypedBDD bdd1 = parseBDD(results, st.nextToken());
+                    TypedBDD bdd = findMod(bdd1);
+                    results.add(bdd);
+                } else if (command.equals("ref")) {
+                    TypedBDD bdd1 = parseBDD(results, st.nextToken());
+                    TypedBDD bdd = findRef(bdd1);
+                    results.add(bdd);
                 } else {
                     System.err.println("Unrecognized command");
                     increaseCount = false;
