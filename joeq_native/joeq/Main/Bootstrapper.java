@@ -530,8 +530,12 @@ public abstract class Bootstrapper {
         
         // By now we have probably added everything we need for the on_vm_startup list.
         // Set the "on_vm_startup" field to the current value.
+        // We can't use our normal reflection, because it is in nullStaticFields so it
+        // always just returns null.
         HeapAddress addr = HeapAddress.addressOf(jq.on_vm_startup);
-        jq_class.setStaticData(jq_class.getOrCreateStaticField("on_vm_startup", "Ljava/util/List;"), addr);
+        jq_StaticField _on_vm_startup = jq_class.getOrCreateStaticField("on_vm_startup", "Ljava/util/List;");
+        jq_class.setStaticData(_on_vm_startup, addr);
+        objmap.addDataReloc(_on_vm_startup.getAddress(), addr);
         
         // Now actually set the field values in the image and add relocs.
         it = classset.iterator();
