@@ -696,10 +696,11 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                 if (magicNum != 0xCAFEBABE)
                     throw new ClassFormatError("bad magic number: "+Integer.toHexString(magicNum));
                 minor_version = (char)in.readUnsignedShort(); // 3 or 0
-                major_version = (char)in.readUnsignedShort(); // 45 or 46
+                major_version = (char)in.readUnsignedShort(); // 45 to 48
                 if (((major_version != 45) || (minor_version != 0)) &&
                     ((major_version != 45) || (minor_version != 3)) &&
                     ((major_version != 46) || (minor_version != 0)) &&
+                    ((major_version != 47) || (minor_version != 0)) &&
                     ((major_version != 48) || (minor_version != 0))) {
                     throw new UnsupportedClassVersionError("unsupported version "+(int)major_version+"."+(int)minor_version);
                 }

@@ -15,19 +15,19 @@ public interface jq_ClassFileConstants {
 
     /* ClassFile format: common access flags for classes(C), methods(M) and fields(F)
        (VM Spec Chapter 4.7) */
-    public static final char ACC_PUBLIC       = 0x0001; // C, M, F
-    public static final char ACC_PRIVATE      = 0x0002; // M, F
-    public static final char ACC_PROTECTED    = 0x0004; // M, F
-    public static final char ACC_STATIC       = 0x0008; // M, F
-    public static final char ACC_FINAL        = 0x0010; // C, M, F
-    public static final char ACC_SYNCHRONIZED = 0x0020; // same value M, F
-    public static final char ACC_SUPER        = 0x0020; // same value C
-    public static final char ACC_VOLATILE     = 0x0040; // M  Declared volatile; cannot be cached
-    public static final char ACC_TRANSIENT    = 0x0080; // M
-    public static final char ACC_NATIVE       = 0x0100; // F
-    public static final char ACC_INTERFACE    = 0x0200; // C
-    public static final char ACC_ABSTRACT     = 0x0400; // C, F
-    public static final char ACC_STRICT       = 0x0800; // F  Declared strictfp; floating-point mode is FP-strict
+    char ACC_PUBLIC       = 0x0001; // C, M, F
+    char ACC_PRIVATE      = 0x0002; // M, F
+    char ACC_PROTECTED    = 0x0004; // M, F
+    char ACC_STATIC       = 0x0008; // M, F
+    char ACC_FINAL        = 0x0010; // C, M, F
+    char ACC_SYNCHRONIZED = 0x0020; // same value M, F
+    char ACC_SUPER        = 0x0020; // same value C
+    char ACC_VOLATILE     = 0x0040; // M  Declared volatile; cannot be cached
+    char ACC_TRANSIENT    = 0x0080; // M
+    char ACC_NATIVE       = 0x0100; // F
+    char ACC_INTERFACE    = 0x0200; // C
+    char ACC_ABSTRACT     = 0x0400; // C, F
+    char ACC_STRICT       = 0x0800; // F  Declared strictfp; floating-point mode is FP-strict
 
     /* Each item in the constant_pool table must begin with
        a 1-byte tag indicating the kind of cp_info entry.
@@ -38,326 +38,326 @@ public interface jq_ClassFileConstants {
        the tag value. Tag values are given below.
        (VM Spec Chapter 4.4) */
 
-    public static final byte CONSTANT_Class              = 7;
-    public static final byte CONSTANT_FieldRef           = 9;
-    public static final byte CONSTANT_MethodRef          = 10;
-    public static final byte CONSTANT_InterfaceMethodRef = 11;
-    public static final byte CONSTANT_String             = 8;
-    public static final byte CONSTANT_Integer            = 3;
-    public static final byte CONSTANT_Float              = 4;
-    public static final byte CONSTANT_Long               = 5;
-    public static final byte CONSTANT_Double             = 6;
-    public static final byte CONSTANT_NameAndType        = 12;
-    public static final byte CONSTANT_Utf8               = 1;
-    public static final byte CONSTANT_ResolvedClass      = 13; // doesn't exist in class file.
-    public static final byte CONSTANT_ResolvedSFieldRef  = 14; // doesn't exist in class file.
-    public static final byte CONSTANT_ResolvedIFieldRef  = 15; // doesn't exist in class file.
-    public static final byte CONSTANT_ResolvedSMethodRef = 16; // doesn't exist in class file.
-    public static final byte CONSTANT_ResolvedIMethodRef = 17; // doesn't exist in class file.
+    byte CONSTANT_Class              = 7;
+    byte CONSTANT_FieldRef           = 9;
+    byte CONSTANT_MethodRef          = 10;
+    byte CONSTANT_InterfaceMethodRef = 11;
+    byte CONSTANT_String             = 8;
+    byte CONSTANT_Integer            = 3;
+    byte CONSTANT_Float              = 4;
+    byte CONSTANT_Long               = 5;
+    byte CONSTANT_Double             = 6;
+    byte CONSTANT_NameAndType        = 12;
+    byte CONSTANT_Utf8               = 1;
+    byte CONSTANT_ResolvedClass      = 13; // doesn't exist in class file.
+    byte CONSTANT_ResolvedSFieldRef  = 14; // doesn't exist in class file.
+    byte CONSTANT_ResolvedIFieldRef  = 15; // doesn't exist in class file.
+    byte CONSTANT_ResolvedSMethodRef = 16; // doesn't exist in class file.
+    byte CONSTANT_ResolvedIMethodRef = 17; // doesn't exist in class file.
 
     /* A descriptor is a string representing the type of a field
        or method. Descriptors are represented in the class file
        format using UTF-8 strings. Followings are the BaseType
        characters corresponding to respective types.
        (VM Spec Chapter 4.3) */
-    public static final byte TC_BYTE     = (byte)'B'; // signed byte
-    public static final byte TC_CHAR     = (byte)'C'; // Unicode character
-    public static final byte TC_DOUBLE   = (byte)'D'; // double-precision floating-point value
-    public static final byte TC_FLOAT    = (byte)'F'; // single-precision floating-point value
-    public static final byte TC_INT      = (byte)'I'; // integer
-    public static final byte TC_LONG     = (byte)'J'; // long integer
-    public static final byte TC_CLASS    = (byte)'L'; // L<classname>; an instance of class <classname>
-    public static final byte TC_CLASSEND = (byte)';'; //
-    public static final byte TC_SHORT    = (byte)'S'; // signed short
-    public static final byte TC_BOOLEAN  = (byte)'Z'; // true or false
-    public static final byte TC_ARRAY    = (byte)'['; // one array dimension
-    public static final byte TC_PARAM    = (byte)'('; //
-    public static final byte TC_PARAMEND = (byte)')'; //
-    public static final byte TC_VOID     = (byte)'V'; // indicates that the method returns no value(void)
+    byte TC_BYTE     = (byte)'B'; // signed byte
+    byte TC_CHAR     = (byte)'C'; // Unicode character
+    byte TC_DOUBLE   = (byte)'D'; // double-precision floating-point value
+    byte TC_FLOAT    = (byte)'F'; // single-precision floating-point value
+    byte TC_INT      = (byte)'I'; // integer
+    byte TC_LONG     = (byte)'J'; // long integer
+    byte TC_CLASS    = (byte)'L'; // L<classname>; an instance of class <classname>
+    byte TC_CLASSEND = (byte)';'; //
+    byte TC_SHORT    = (byte)'S'; // signed short
+    byte TC_BOOLEAN  = (byte)'Z'; // true or false
+    byte TC_ARRAY    = (byte)'['; // one array dimension
+    byte TC_PARAM    = (byte)'('; //
+    byte TC_PARAMEND = (byte)')'; //
+    byte TC_VOID     = (byte)'V'; // indicates that the method returns no value(void)
 
-    public static final byte T_BOOLEAN = 4;
-    public static final byte T_CHAR    = 5;
-    public static final byte T_FLOAT   = 6;
-    public static final byte T_DOUBLE  = 7;
-    public static final byte T_BYTE    = 8;
-    public static final byte T_SHORT   = 9;
-    public static final byte T_INT     = 10;
-    public static final byte T_LONG    = 11;
+    byte T_BOOLEAN = 4;
+    byte T_CHAR    = 5;
+    byte T_FLOAT   = 6;
+    byte T_DOUBLE  = 7;
+    byte T_BYTE    = 8;
+    byte T_SHORT   = 9;
+    byte T_INT     = 10;
+    byte T_LONG    = 11;
 
     // We have seen a reference to this class/member (for example, in the constant
     // pool of another class), but it has not been loaded, and therefore we know
     // nothing about it other than its name.
-    public static final byte STATE_UNLOADED     = 0;
+    byte STATE_UNLOADED     = 0;
     // A thread is in the process of loading the constant pool for this class.
     // (see verify pass 1 Jvm spec 4.9.1)
-    public static final byte STATE_LOADING1     = 1;
+    byte STATE_LOADING1     = 1;
     // A thread has finished loading the constant pool, and is loading the class
     // members and other information.
-    public static final byte STATE_LOADING2     = 2;
+    byte STATE_LOADING2     = 2;
     // A thread has finished loading the class, and is now merging in implementation
     // classes.
-    public static final byte STATE_LOADING3     = 3;
+    byte STATE_LOADING3     = 3;
     // This class has been loaded and all members have been created.
-    public static final byte STATE_LOADED       = 4;
+    byte STATE_LOADED       = 4;
     // A thread is in the process of verifying this class. (Jvm spec 2.17.3)
     // (see verify pass 2 Jvm spec 4.9.1)
     // It checks the code in each declared method in the class.
-    public static final byte STATE_VERIFYING    = 5;
+    byte STATE_VERIFYING    = 5;
     // This class has been successfully verified.
-    public static final byte STATE_VERIFIED     = 6;
+    byte STATE_VERIFIED     = 6;
     // A thread is in the process of preparing this class. (Jvm spec 2.17.3)
     // Preparation lays out the object fields and creates a method table.
     // Static fields are created and initialized in the NEXT step.
-    public static final byte STATE_PREPARING    = 7;
+    byte STATE_PREPARING    = 7;
     // This class has been prepared.
-    public static final byte STATE_PREPARED     = 8;
+    byte STATE_PREPARED     = 8;
     // A thread is creating the static fields for the class, and initializing the
     // ones that have ConstantValue attributes.
-    public static final byte STATE_SFINITIALIZING = 9;
+    byte STATE_SFINITIALIZING = 9;
     // This class has its static fields created and initialized.
-    public static final byte STATE_SFINITIALIZED = 10;
+    byte STATE_SFINITIALIZED = 10;
     // A thread is in the process of initializing this class. (Jvm spec 2.17.4-5)
     // Initialization is triggered when code is about to execute that will create
     // an instance, execute a static method, or use or assign a nonconstant static
     // field.
-    public static final byte STATE_CLSINITIALIZING = 11;
-    public static final byte STATE_CLSINITRUNNING = 12;
+    byte STATE_CLSINITIALIZING = 11;
+    byte STATE_CLSINITRUNNING = 12;
     // An error occurred during initialization!  This resulted in a throwing of 
     // a NoClassDefFoundError, ExceptionInInitializerError, or OutOfMemoryError
     // for the initializing thread.  Any further attempts to initialize should
     // result in the throwing of a NoClassDefFoundError. 
-    public static final byte STATE_CLSINITERROR = 13;
+    byte STATE_CLSINITERROR = 13;
     // This class has been fully initialized!
-    public static final byte STATE_CLSINITIALIZED  = 14;
+    byte STATE_CLSINITIALIZED  = 14;
 
     /**
      * Illegal codes
      */
-    public static final short  UNDEFINED      = -1;
-    public static final short  UNPREDICTABLE  = -2;
-    public static final short  RESERVED       = -3;
-    public static final String ILLEGAL_OPCODE = "<illegal opcode>";
-    public static final String ILLEGAL_TYPE   = "<illegal type>";
+    short  UNDEFINED      = -1;
+    short  UNPREDICTABLE  = -2;
+    short  RESERVED       = -3;
+    String ILLEGAL_OPCODE = "<illegal opcode>";
+    String ILLEGAL_TYPE   = "<illegal type>";
 
     /** Java VM opcodes.
      *  (VM Spec Chapter 6)
      */
-    public static final short jbc_NOP              = 0;
-    public static final short jbc_ACONST_NULL      = 1;
-    public static final short jbc_ICONST_M1        = 2;
-    public static final short jbc_ICONST_0         = 3;
-    public static final short jbc_ICONST_1         = 4;
-    public static final short jbc_ICONST_2         = 5;
-    public static final short jbc_ICONST_3         = 6;
-    public static final short jbc_ICONST_4         = 7;
-    public static final short jbc_ICONST_5         = 8;
-    public static final short jbc_LCONST_0         = 9;
-    public static final short jbc_LCONST_1         = 10;
-    public static final short jbc_FCONST_0         = 11;
-    public static final short jbc_FCONST_1         = 12;
-    public static final short jbc_FCONST_2         = 13;
-    public static final short jbc_DCONST_0         = 14;
-    public static final short jbc_DCONST_1         = 15;
-    public static final short jbc_BIPUSH           = 16;
-    public static final short jbc_SIPUSH           = 17;
-    public static final short jbc_LDC              = 18;
-    public static final short jbc_LDC_W            = 19;
-    public static final short jbc_LDC2_W           = 20;
-    public static final short jbc_ILOAD            = 21;
-    public static final short jbc_LLOAD            = 22;
-    public static final short jbc_FLOAD            = 23;
-    public static final short jbc_DLOAD            = 24;
-    public static final short jbc_ALOAD            = 25;
-    public static final short jbc_ILOAD_0          = 26;
-    public static final short jbc_ILOAD_1          = 27;
-    public static final short jbc_ILOAD_2          = 28;
-    public static final short jbc_ILOAD_3          = 29;
-    public static final short jbc_LLOAD_0          = 30;
-    public static final short jbc_LLOAD_1          = 31;
-    public static final short jbc_LLOAD_2          = 32;
-    public static final short jbc_LLOAD_3          = 33;
-    public static final short jbc_FLOAD_0          = 34;
-    public static final short jbc_FLOAD_1          = 35;
-    public static final short jbc_FLOAD_2          = 36;
-    public static final short jbc_FLOAD_3          = 37;
-    public static final short jbc_DLOAD_0          = 38;
-    public static final short jbc_DLOAD_1          = 39;
-    public static final short jbc_DLOAD_2          = 40;
-    public static final short jbc_DLOAD_3          = 41;
-    public static final short jbc_ALOAD_0          = 42;
-    public static final short jbc_ALOAD_1          = 43;
-    public static final short jbc_ALOAD_2          = 44;
-    public static final short jbc_ALOAD_3          = 45;
-    public static final short jbc_IALOAD           = 46;
-    public static final short jbc_LALOAD           = 47;
-    public static final short jbc_FALOAD           = 48;
-    public static final short jbc_DALOAD           = 49;
-    public static final short jbc_AALOAD           = 50;
-    public static final short jbc_BALOAD           = 51;
-    public static final short jbc_CALOAD           = 52;
-    public static final short jbc_SALOAD           = 53;
-    public static final short jbc_ISTORE           = 54;
-    public static final short jbc_LSTORE           = 55;
-    public static final short jbc_FSTORE           = 56;
-    public static final short jbc_DSTORE           = 57;
-    public static final short jbc_ASTORE           = 58;
-    public static final short jbc_ISTORE_0         = 59;
-    public static final short jbc_ISTORE_1         = 60;
-    public static final short jbc_ISTORE_2         = 61;
-    public static final short jbc_ISTORE_3         = 62;
-    public static final short jbc_LSTORE_0         = 63;
-    public static final short jbc_LSTORE_1         = 64;
-    public static final short jbc_LSTORE_2         = 65;
-    public static final short jbc_LSTORE_3         = 66;
-    public static final short jbc_FSTORE_0         = 67;
-    public static final short jbc_FSTORE_1         = 68;
-    public static final short jbc_FSTORE_2         = 69;
-    public static final short jbc_FSTORE_3         = 70;
-    public static final short jbc_DSTORE_0         = 71;
-    public static final short jbc_DSTORE_1         = 72;
-    public static final short jbc_DSTORE_2         = 73;
-    public static final short jbc_DSTORE_3         = 74;
-    public static final short jbc_ASTORE_0         = 75;
-    public static final short jbc_ASTORE_1         = 76;
-    public static final short jbc_ASTORE_2         = 77;
-    public static final short jbc_ASTORE_3         = 78;
-    public static final short jbc_IASTORE          = 79;
-    public static final short jbc_LASTORE          = 80;
-    public static final short jbc_FASTORE          = 81;
-    public static final short jbc_DASTORE          = 82;
-    public static final short jbc_AASTORE          = 83;
-    public static final short jbc_BASTORE          = 84;
-    public static final short jbc_CASTORE          = 85;
-    public static final short jbc_SASTORE          = 86;
-    public static final short jbc_POP              = 87;
-    public static final short jbc_POP2             = 88;
-    public static final short jbc_DUP              = 89;
-    public static final short jbc_DUP_X1           = 90;
-    public static final short jbc_DUP_X2           = 91;
-    public static final short jbc_DUP2             = 92;
-    public static final short jbc_DUP2_X1          = 93;
-    public static final short jbc_DUP2_X2          = 94;
-    public static final short jbc_SWAP             = 95;
-    public static final short jbc_IADD             = 96;
-    public static final short jbc_LADD             = 97;
-    public static final short jbc_FADD             = 98;
-    public static final short jbc_DADD             = 99;
-    public static final short jbc_ISUB             = 100;
-    public static final short jbc_LSUB             = 101;
-    public static final short jbc_FSUB             = 102;
-    public static final short jbc_DSUB             = 103;
-    public static final short jbc_IMUL             = 104;
-    public static final short jbc_LMUL             = 105;
-    public static final short jbc_FMUL             = 106;
-    public static final short jbc_DMUL             = 107;
-    public static final short jbc_IDIV             = 108;
-    public static final short jbc_LDIV             = 109;
-    public static final short jbc_FDIV             = 110;
-    public static final short jbc_DDIV             = 111;
-    public static final short jbc_IREM             = 112;
-    public static final short jbc_LREM             = 113;
-    public static final short jbc_FREM             = 114;
-    public static final short jbc_DREM             = 115;
-    public static final short jbc_INEG             = 116;
-    public static final short jbc_LNEG             = 117;
-    public static final short jbc_FNEG             = 118;
-    public static final short jbc_DNEG             = 119;
-    public static final short jbc_ISHL             = 120;
-    public static final short jbc_LSHL             = 121;
-    public static final short jbc_ISHR             = 122;
-    public static final short jbc_LSHR             = 123;
-    public static final short jbc_IUSHR            = 124;
-    public static final short jbc_LUSHR            = 125;
-    public static final short jbc_IAND             = 126;
-    public static final short jbc_LAND             = 127;
-    public static final short jbc_IOR              = 128;
-    public static final short jbc_LOR              = 129;
-    public static final short jbc_IXOR             = 130;
-    public static final short jbc_LXOR             = 131;
-    public static final short jbc_IINC             = 132;
-    public static final short jbc_I2L              = 133;
-    public static final short jbc_I2F              = 134;
-    public static final short jbc_I2D              = 135;
-    public static final short jbc_L2I              = 136;
-    public static final short jbc_L2F              = 137;
-    public static final short jbc_L2D              = 138;
-    public static final short jbc_F2I              = 139;
-    public static final short jbc_F2L              = 140;
-    public static final short jbc_F2D              = 141;
-    public static final short jbc_D2I              = 142;
-    public static final short jbc_D2L              = 143;
-    public static final short jbc_D2F              = 144;
-    public static final short jbc_I2B              = 145;
-    public static final short jbc_INT2BYTE         = 145; // Old notion
-    public static final short jbc_I2C              = 146;
-    public static final short jbc_INT2CHAR         = 146; // Old notion
-    public static final short jbc_I2S              = 147;
-    public static final short jbc_INT2SHORT        = 147; // Old notion
-    public static final short jbc_LCMP             = 148;
-    public static final short jbc_FCMPL            = 149;
-    public static final short jbc_FCMPG            = 150;
-    public static final short jbc_DCMPL            = 151;
-    public static final short jbc_DCMPG            = 152;
-    public static final short jbc_IFEQ             = 153;
-    public static final short jbc_IFNE             = 154;
-    public static final short jbc_IFLT             = 155;
-    public static final short jbc_IFGE             = 156;
-    public static final short jbc_IFGT             = 157;
-    public static final short jbc_IFLE             = 158;
-    public static final short jbc_IF_ICMPEQ        = 159;
-    public static final short jbc_IF_ICMPNE        = 160;
-    public static final short jbc_IF_ICMPLT        = 161;
-    public static final short jbc_IF_ICMPGE        = 162;
-    public static final short jbc_IF_ICMPGT        = 163;
-    public static final short jbc_IF_ICMPLE        = 164;
-    public static final short jbc_IF_ACMPEQ        = 165;
-    public static final short jbc_IF_ACMPNE        = 166;
-    public static final short jbc_GOTO             = 167;
-    public static final short jbc_JSR              = 168;
-    public static final short jbc_RET              = 169;
-    public static final short jbc_TABLESWITCH      = 170;
-    public static final short jbc_LOOKUPSWITCH     = 171;
-    public static final short jbc_IRETURN          = 172;
-    public static final short jbc_LRETURN          = 173;
-    public static final short jbc_FRETURN          = 174;
-    public static final short jbc_DRETURN          = 175;
-    public static final short jbc_ARETURN          = 176;
-    public static final short jbc_RETURN           = 177;
-    public static final short jbc_GETSTATIC        = 178;
-    public static final short jbc_PUTSTATIC        = 179;
-    public static final short jbc_GETFIELD         = 180;
-    public static final short jbc_PUTFIELD         = 181;
-    public static final short jbc_INVOKEVIRTUAL    = 182;
-    public static final short jbc_INVOKESPECIAL    = 183;
-    public static final short jbc_INVOKENONVIRTUAL = 183; // Old name in JDK 1.0
-    public static final short jbc_INVOKESTATIC     = 184;
-    public static final short jbc_INVOKEINTERFACE  = 185;
-    public static final short jbc_NEW              = 187;
-    public static final short jbc_NEWARRAY         = 188;
-    public static final short jbc_ANEWARRAY        = 189;
-    public static final short jbc_ARRAYLENGTH      = 190;
-    public static final short jbc_ATHROW           = 191;
-    public static final short jbc_CHECKCAST        = 192;
-    public static final short jbc_INSTANCEOF       = 193;
-    public static final short jbc_MONITORENTER     = 194;
-    public static final short jbc_MONITOREXIT      = 195;
-    public static final short jbc_WIDE             = 196;
-    public static final short jbc_MULTIANEWARRAY   = 197;
-    public static final short jbc_IFNULL           = 198;
-    public static final short jbc_IFNONNULL        = 199;
-    public static final short jbc_GOTO_W           = 200;
-    public static final short jbc_JSR_W            = 201;
+    short jbc_NOP              = 0;
+    short jbc_ACONST_NULL      = 1;
+    short jbc_ICONST_M1        = 2;
+    short jbc_ICONST_0         = 3;
+    short jbc_ICONST_1         = 4;
+    short jbc_ICONST_2         = 5;
+    short jbc_ICONST_3         = 6;
+    short jbc_ICONST_4         = 7;
+    short jbc_ICONST_5         = 8;
+    short jbc_LCONST_0         = 9;
+    short jbc_LCONST_1         = 10;
+    short jbc_FCONST_0         = 11;
+    short jbc_FCONST_1         = 12;
+    short jbc_FCONST_2         = 13;
+    short jbc_DCONST_0         = 14;
+    short jbc_DCONST_1         = 15;
+    short jbc_BIPUSH           = 16;
+    short jbc_SIPUSH           = 17;
+    short jbc_LDC              = 18;
+    short jbc_LDC_W            = 19;
+    short jbc_LDC2_W           = 20;
+    short jbc_ILOAD            = 21;
+    short jbc_LLOAD            = 22;
+    short jbc_FLOAD            = 23;
+    short jbc_DLOAD            = 24;
+    short jbc_ALOAD            = 25;
+    short jbc_ILOAD_0          = 26;
+    short jbc_ILOAD_1          = 27;
+    short jbc_ILOAD_2          = 28;
+    short jbc_ILOAD_3          = 29;
+    short jbc_LLOAD_0          = 30;
+    short jbc_LLOAD_1          = 31;
+    short jbc_LLOAD_2          = 32;
+    short jbc_LLOAD_3          = 33;
+    short jbc_FLOAD_0          = 34;
+    short jbc_FLOAD_1          = 35;
+    short jbc_FLOAD_2          = 36;
+    short jbc_FLOAD_3          = 37;
+    short jbc_DLOAD_0          = 38;
+    short jbc_DLOAD_1          = 39;
+    short jbc_DLOAD_2          = 40;
+    short jbc_DLOAD_3          = 41;
+    short jbc_ALOAD_0          = 42;
+    short jbc_ALOAD_1          = 43;
+    short jbc_ALOAD_2          = 44;
+    short jbc_ALOAD_3          = 45;
+    short jbc_IALOAD           = 46;
+    short jbc_LALOAD           = 47;
+    short jbc_FALOAD           = 48;
+    short jbc_DALOAD           = 49;
+    short jbc_AALOAD           = 50;
+    short jbc_BALOAD           = 51;
+    short jbc_CALOAD           = 52;
+    short jbc_SALOAD           = 53;
+    short jbc_ISTORE           = 54;
+    short jbc_LSTORE           = 55;
+    short jbc_FSTORE           = 56;
+    short jbc_DSTORE           = 57;
+    short jbc_ASTORE           = 58;
+    short jbc_ISTORE_0         = 59;
+    short jbc_ISTORE_1         = 60;
+    short jbc_ISTORE_2         = 61;
+    short jbc_ISTORE_3         = 62;
+    short jbc_LSTORE_0         = 63;
+    short jbc_LSTORE_1         = 64;
+    short jbc_LSTORE_2         = 65;
+    short jbc_LSTORE_3         = 66;
+    short jbc_FSTORE_0         = 67;
+    short jbc_FSTORE_1         = 68;
+    short jbc_FSTORE_2         = 69;
+    short jbc_FSTORE_3         = 70;
+    short jbc_DSTORE_0         = 71;
+    short jbc_DSTORE_1         = 72;
+    short jbc_DSTORE_2         = 73;
+    short jbc_DSTORE_3         = 74;
+    short jbc_ASTORE_0         = 75;
+    short jbc_ASTORE_1         = 76;
+    short jbc_ASTORE_2         = 77;
+    short jbc_ASTORE_3         = 78;
+    short jbc_IASTORE          = 79;
+    short jbc_LASTORE          = 80;
+    short jbc_FASTORE          = 81;
+    short jbc_DASTORE          = 82;
+    short jbc_AASTORE          = 83;
+    short jbc_BASTORE          = 84;
+    short jbc_CASTORE          = 85;
+    short jbc_SASTORE          = 86;
+    short jbc_POP              = 87;
+    short jbc_POP2             = 88;
+    short jbc_DUP              = 89;
+    short jbc_DUP_X1           = 90;
+    short jbc_DUP_X2           = 91;
+    short jbc_DUP2             = 92;
+    short jbc_DUP2_X1          = 93;
+    short jbc_DUP2_X2          = 94;
+    short jbc_SWAP             = 95;
+    short jbc_IADD             = 96;
+    short jbc_LADD             = 97;
+    short jbc_FADD             = 98;
+    short jbc_DADD             = 99;
+    short jbc_ISUB             = 100;
+    short jbc_LSUB             = 101;
+    short jbc_FSUB             = 102;
+    short jbc_DSUB             = 103;
+    short jbc_IMUL             = 104;
+    short jbc_LMUL             = 105;
+    short jbc_FMUL             = 106;
+    short jbc_DMUL             = 107;
+    short jbc_IDIV             = 108;
+    short jbc_LDIV             = 109;
+    short jbc_FDIV             = 110;
+    short jbc_DDIV             = 111;
+    short jbc_IREM             = 112;
+    short jbc_LREM             = 113;
+    short jbc_FREM             = 114;
+    short jbc_DREM             = 115;
+    short jbc_INEG             = 116;
+    short jbc_LNEG             = 117;
+    short jbc_FNEG             = 118;
+    short jbc_DNEG             = 119;
+    short jbc_ISHL             = 120;
+    short jbc_LSHL             = 121;
+    short jbc_ISHR             = 122;
+    short jbc_LSHR             = 123;
+    short jbc_IUSHR            = 124;
+    short jbc_LUSHR            = 125;
+    short jbc_IAND             = 126;
+    short jbc_LAND             = 127;
+    short jbc_IOR              = 128;
+    short jbc_LOR              = 129;
+    short jbc_IXOR             = 130;
+    short jbc_LXOR             = 131;
+    short jbc_IINC             = 132;
+    short jbc_I2L              = 133;
+    short jbc_I2F              = 134;
+    short jbc_I2D              = 135;
+    short jbc_L2I              = 136;
+    short jbc_L2F              = 137;
+    short jbc_L2D              = 138;
+    short jbc_F2I              = 139;
+    short jbc_F2L              = 140;
+    short jbc_F2D              = 141;
+    short jbc_D2I              = 142;
+    short jbc_D2L              = 143;
+    short jbc_D2F              = 144;
+    short jbc_I2B              = 145;
+    short jbc_INT2BYTE         = 145; // Old notion
+    short jbc_I2C              = 146;
+    short jbc_INT2CHAR         = 146; // Old notion
+    short jbc_I2S              = 147;
+    short jbc_INT2SHORT        = 147; // Old notion
+    short jbc_LCMP             = 148;
+    short jbc_FCMPL            = 149;
+    short jbc_FCMPG            = 150;
+    short jbc_DCMPL            = 151;
+    short jbc_DCMPG            = 152;
+    short jbc_IFEQ             = 153;
+    short jbc_IFNE             = 154;
+    short jbc_IFLT             = 155;
+    short jbc_IFGE             = 156;
+    short jbc_IFGT             = 157;
+    short jbc_IFLE             = 158;
+    short jbc_IF_ICMPEQ        = 159;
+    short jbc_IF_ICMPNE        = 160;
+    short jbc_IF_ICMPLT        = 161;
+    short jbc_IF_ICMPGE        = 162;
+    short jbc_IF_ICMPGT        = 163;
+    short jbc_IF_ICMPLE        = 164;
+    short jbc_IF_ACMPEQ        = 165;
+    short jbc_IF_ACMPNE        = 166;
+    short jbc_GOTO             = 167;
+    short jbc_JSR              = 168;
+    short jbc_RET              = 169;
+    short jbc_TABLESWITCH      = 170;
+    short jbc_LOOKUPSWITCH     = 171;
+    short jbc_IRETURN          = 172;
+    short jbc_LRETURN          = 173;
+    short jbc_FRETURN          = 174;
+    short jbc_DRETURN          = 175;
+    short jbc_ARETURN          = 176;
+    short jbc_RETURN           = 177;
+    short jbc_GETSTATIC        = 178;
+    short jbc_PUTSTATIC        = 179;
+    short jbc_GETFIELD         = 180;
+    short jbc_PUTFIELD         = 181;
+    short jbc_INVOKEVIRTUAL    = 182;
+    short jbc_INVOKESPECIAL    = 183;
+    short jbc_INVOKENONVIRTUAL = 183; // Old name in JDK 1.0
+    short jbc_INVOKESTATIC     = 184;
+    short jbc_INVOKEINTERFACE  = 185;
+    short jbc_NEW              = 187;
+    short jbc_NEWARRAY         = 188;
+    short jbc_ANEWARRAY        = 189;
+    short jbc_ARRAYLENGTH      = 190;
+    short jbc_ATHROW           = 191;
+    short jbc_CHECKCAST        = 192;
+    short jbc_INSTANCEOF       = 193;
+    short jbc_MONITORENTER     = 194;
+    short jbc_MONITOREXIT      = 195;
+    short jbc_WIDE             = 196;
+    short jbc_MULTIANEWARRAY   = 197;
+    short jbc_IFNULL           = 198;
+    short jbc_IFNONNULL        = 199;
+    short jbc_GOTO_W           = 200;
+    short jbc_JSR_W            = 201;
 
     /**
      * Non-legal opcodes, may be used by JVM internally.
      */
-    public static final short jbc_BREAKPOINT       = 202;
+    short jbc_BREAKPOINT       = 202;
 
     /**
      * Number of byte code operands, i.e., number of bytes after the tag byte
      * itself.
      */
-  public static final short[] NO_OF_OPERANDS = {
+  short[] NO_OF_OPERANDS = {
       0/*nop*/, 0/*aconst_null*/, 0/*iconst_m1*/, 0/*iconst_0*/,
       0/*iconst_1*/, 0/*iconst_2*/, 0/*iconst_3*/, 0/*iconst_4*/,
       0/*iconst_5*/, 0/*lconst_0*/, 0/*lconst_1*/, 0/*fconst_0*/,
@@ -421,7 +421,7 @@ public interface jq_ClassFileConstants {
     /**
      * How the byte code operands are to be interpreted.
      */
-    public static final short[][] TYPE_OF_OPERANDS = {
+    short[][] TYPE_OF_OPERANDS = {
         {}/*nop*/, {}/*aconst_null*/, {}/*iconst_m1*/, {}/*iconst_0*/,
         {}/*iconst_1*/, {}/*iconst_2*/, {}/*iconst_3*/, {}/*iconst_4*/,
         {}/*iconst_5*/, {}/*lconst_0*/, {}/*lconst_1*/, {}/*fconst_0*/,
@@ -488,7 +488,7 @@ public interface jq_ClassFileConstants {
     /**
      * Names of opcodes.
      */ 
-    public static final String[] OPCODE_NAMES = {
+    String[] OPCODE_NAMES = {
         "nop", "aconst_null", "iconst_m1", "iconst_0", "iconst_1",
         "iconst_2", "iconst_3", "iconst_4", "iconst_5", "lconst_0",
         "lconst_1", "fconst_0", "fconst_1", "fconst_2", "dconst_0",
@@ -540,7 +540,7 @@ public interface jq_ClassFileConstants {
     /**
      * Number of words consumed on operand stack by instructions.
      */ 
-    public static final int[] CONSUME_STACK = {
+    int[] CONSUME_STACK = {
         0/*nop*/, 0/*aconst_null*/, 0/*iconst_m1*/, 0/*iconst_0*/, 0/*iconst_1*/,
         0/*iconst_2*/, 0/*iconst_3*/, 0/*iconst_4*/, 0/*iconst_5*/, 0/*lconst_0*/,
         0/*lconst_1*/, 0/*fconst_0*/, 0/*fconst_1*/, 0/*fconst_2*/, 0/*dconst_0*/,
@@ -594,7 +594,7 @@ public interface jq_ClassFileConstants {
     /**
      * Number of words produced onto operand stack by instructions.
      */ 
-    public static final int[] PRODUCE_STACK = {
+    int[] PRODUCE_STACK = {
         0/*nop*/, 1/*aconst_null*/, 1/*iconst_m1*/, 1/*iconst_0*/, 1/*iconst_1*/,
         1/*iconst_2*/, 1/*iconst_3*/, 1/*iconst_4*/, 1/*iconst_5*/, 2/*lconst_0*/,
         2/*lconst_1*/, 1/*fconst_0*/, 1/*fconst_1*/, 1/*fconst_2*/, 2/*dconst_0*/,

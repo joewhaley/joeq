@@ -14,5 +14,5 @@ import Clazz.jq_CompiledCode;
  * @version $Id$
  */
 public interface Compil3rInterface {
-    public jq_CompiledCode compile();
+    jq_CompiledCode compile();
 }

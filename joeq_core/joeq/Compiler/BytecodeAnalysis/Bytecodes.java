@@ -51,7 +51,7 @@ import Util.Strings;
  */
 public interface Bytecodes {
     
-    public abstract class Instruction implements Cloneable, Serializable {
+    abstract class Instruction implements Cloneable, Serializable {
         protected short length = 1;  // Length of instruction in bytes
         protected short opcode = -1; // Opcode number
         
@@ -238,7 +238,7 @@ public interface Bytecodes {
         public abstract void accept(Visitor v);
     }
     
-    public class InstructionHandle implements Serializable {
+    class InstructionHandle implements Serializable {
         InstructionHandle next, prev;  // Will be set from the outside
         Instruction       instruction;
         protected int     i_position = -1; // byte code offset of instruction
@@ -434,7 +434,7 @@ public interface Bytecodes {
         }
     }
     
-    public final class BranchHandle extends InstructionHandle {
+    final class BranchHandle extends InstructionHandle {
         private BranchInstruction bi; // An alias in fact, but saves lots of casts
         
         private BranchHandle(BranchInstruction i) {
@@ -516,7 +516,7 @@ public interface Bytecodes {
         }
     }
 
-    public class InstructionList implements Serializable {
+    class InstructionList implements Serializable {
         private InstructionHandle start  = null, end = null;
         private int               length = 0; // number of elements in list
         private int[]             byte_positions; // byte code offsets corresponding to instructions
@@ -1787,7 +1787,7 @@ public interface Bytecodes {
 
     }
     
-    public final class TargetLostException extends Exception {
+    final class TargetLostException extends Exception {
         private List/*<InstructionHandle>*/ targets;
         
         TargetLostException(List/*<InstructionHandle>*/ t, String mesg) {
@@ -1801,8 +1801,8 @@ public interface Bytecodes {
         public List/*<InstructionHandle>*/ getTargets() { return targets; }
     }
 
-    public interface InstructionListObserver {
-        public void notify(InstructionList list);
+    interface InstructionListObserver {
+        void notify(InstructionList list);
     }
 
     
@@ -1813,7 +1813,7 @@ public interface Bytecodes {
     
     
     
-    public class ARRAYLENGTH extends Instruction implements ExceptionThrower, StackProducer {
+    class ARRAYLENGTH extends Instruction implements ExceptionThrower, StackProducer {
         /** Get length of array
          */
         public ARRAYLENGTH() {
@@ -1842,7 +1842,7 @@ public interface Bytecodes {
         }
     }
     
-    public class AALOAD extends ArrayInstruction implements StackProducer, ExceptionThrower, TypedInstruction {
+    class AALOAD extends ArrayInstruction implements StackProducer, ExceptionThrower, TypedInstruction {
         /** Load reference from array
          */
         public AALOAD() {
@@ -1867,7 +1867,7 @@ public interface Bytecodes {
         
     }
     
-    public class AASTORE extends ArrayInstruction implements StackConsumer, ExceptionThrower, TypedInstruction {
+    class AASTORE extends ArrayInstruction implements StackConsumer, ExceptionThrower, TypedInstruction {
         /** Store into reference array
          */
         public AASTORE() {
@@ -1891,7 +1891,7 @@ public interface Bytecodes {
         }
     }
     
-    public class ACONST_NULL extends Instruction implements StackProducer, PushInstruction, TypedInstruction {
+    class ACONST_NULL extends Instruction implements StackProducer, PushInstruction, TypedInstruction {
         /**
          * Push null reference
          */
@@ -1921,7 +1921,7 @@ public interface Bytecodes {
         }
     }
     
-    public class ALOAD extends LoadInstruction implements StackProducer, PushInstruction, TypedInstruction {
+    class ALOAD extends LoadInstruction implements StackProducer, PushInstruction, TypedInstruction {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -1957,7 +1957,7 @@ public interface Bytecodes {
         }
     }
     
-    public class ANEWARRAY extends CPInstruction implements /*LoadClass,*/ AllocationInstruction, ExceptionThrower, StackProducer, TypedInstruction {
+    class ANEWARRAY extends CPInstruction implements /*LoadClass,*/ AllocationInstruction, ExceptionThrower, StackProducer, TypedInstruction {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -2011,7 +2011,7 @@ public interface Bytecodes {
          */
     }
     
-    public class ARETURN extends ReturnInstruction implements TypedInstruction, StackConsumer {
+    class ARETURN extends ReturnInstruction implements TypedInstruction, StackConsumer {
         /**
          * Return reference from method
          */
@@ -2036,7 +2036,7 @@ public interface Bytecodes {
         }
     }
     
-    public class ASTORE extends StoreInstruction {
+    class ASTORE extends StoreInstruction {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -2066,7 +2066,7 @@ public interface Bytecodes {
         }
     }
     
-    public class ATHROW extends Instruction implements UnconditionalBranch, ExceptionThrower {
+    class ATHROW extends Instruction implements UnconditionalBranch, ExceptionThrower {
         /**
          *  Throw exception
          */
@@ -2096,7 +2096,7 @@ public interface Bytecodes {
         }
     }
     
-    public class BALOAD extends ArrayInstruction implements StackProducer, ExceptionThrower, TypedInstruction {
+    class BALOAD extends ArrayInstruction implements StackProducer, ExceptionThrower, TypedInstruction {
         /** Load byte or boolean from array
          */
         public BALOAD() {
@@ -2120,7 +2120,7 @@ public interface Bytecodes {
         }
     }
     
-    public class BASTORE extends ArrayInstruction implements StackConsumer, ExceptionThrower, TypedInstruction {
+    class BASTORE extends ArrayInstruction implements StackConsumer, ExceptionThrower, TypedInstruction {
         /** Store byte or boolean into array
          */
         public BASTORE() {
@@ -2144,7 +2144,7 @@ public interface Bytecodes {
         }
     }
     
-    public class BIPUSH extends Instruction implements PushInstruction, StackProducer, TypedInstruction, ConstantPushInstruction {
+    class BIPUSH extends Instruction implements PushInstruction, StackProducer, TypedInstruction, ConstantPushInstruction {
         private byte b;
         
         /**
@@ -2208,7 +2208,7 @@ public interface Bytecodes {
         }
     }
     
-    public class BREAKPOINT extends Instruction {
+    class BREAKPOINT extends Instruction {
         public BREAKPOINT() {
             super(jq_ClassFileConstants.jbc_BREAKPOINT, (short)1);
         }
@@ -2226,7 +2226,7 @@ public interface Bytecodes {
         }
     }
     
-    public class CALOAD extends ArrayInstruction implements StackProducer, ExceptionThrower, TypedInstruction {
+    class CALOAD extends ArrayInstruction implements StackProducer, ExceptionThrower, TypedInstruction {
         /** Load char from array
          */
         public CALOAD() {
@@ -2250,7 +2250,7 @@ public interface Bytecodes {
         }
     }
     
-    public class CASTORE extends ArrayInstruction implements StackConsumer, ExceptionThrower, TypedInstruction {
+    class CASTORE extends ArrayInstruction implements StackConsumer, ExceptionThrower, TypedInstruction {
         /** Store char into array
          */
         public CASTORE() {
@@ -2274,7 +2274,7 @@ public interface Bytecodes {
         }
     }
     
-    public class CHECKCAST extends CPInstruction implements LoadClass, ExceptionThrower, StackProducer, StackConsumer, TypedInstruction {
+    class CHECKCAST extends CPInstruction implements LoadClass, ExceptionThrower, StackProducer, StackConsumer, TypedInstruction {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -2331,7 +2331,7 @@ public interface Bytecodes {
         }
     }
     
-    public class D2F extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class D2F extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
         /** Convert double to float
          */
         public D2F() {
@@ -2355,7 +2355,7 @@ public interface Bytecodes {
         }
     }
     
-    public class D2I extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class D2I extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
         /** Convert double to int
          */
         public D2I() {
@@ -2379,7 +2379,7 @@ public interface Bytecodes {
         }
     }
     
-    public class D2L extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class D2L extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
         /** Convert double to long
          */
         public D2L() {
@@ -2403,7 +2403,7 @@ public interface Bytecodes {
         }
     }
     
-    public class DADD extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class DADD extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
         /** Add doubles
          */
         public DADD() {
@@ -2427,7 +2427,7 @@ public interface Bytecodes {
         }
     }
     
-    public class DALOAD extends ArrayInstruction implements StackProducer, ExceptionThrower, TypedInstruction {
+    class DALOAD extends ArrayInstruction implements StackProducer, ExceptionThrower, TypedInstruction {
         /** Load double from array
          */
         public DALOAD() {
@@ -2451,7 +2451,7 @@ public interface Bytecodes {
         }
     }
     
-    public class DASTORE extends ArrayInstruction implements StackConsumer, ExceptionThrower, TypedInstruction {
+    class DASTORE extends ArrayInstruction implements StackConsumer, ExceptionThrower, TypedInstruction {
         /** Store double into array
          */
         public DASTORE() {
@@ -2475,7 +2475,7 @@ public interface Bytecodes {
         }
     }
     
-    public class DCMPG extends Instruction implements TypedInstruction, StackProducer, StackConsumer {
+    class DCMPG extends Instruction implements TypedInstruction, StackProducer, StackConsumer {
         
         public DCMPG() {
             super(jq_ClassFileConstants.jbc_DCMPG, (short)1);
@@ -2503,7 +2503,7 @@ public interface Bytecodes {
         }
     }
     
-    public class DCMPL extends Instruction implements TypedInstruction, StackProducer, StackConsumer {
+    class DCMPL extends Instruction implements TypedInstruction, StackProducer, StackConsumer {
         
         public DCMPL() {
             super(jq_ClassFileConstants.jbc_DCMPL, (short)1);
@@ -2531,7 +2531,7 @@ public interface Bytecodes {
         }
     }
     
-    public class DCONST extends Instruction implements PushInstruction, StackProducer, TypedInstruction, ConstantPushInstruction {
+    class DCONST extends Instruction implements PushInstruction, StackProducer, TypedInstruction, ConstantPushInstruction {
         private double value;
         
         /**
@@ -2578,7 +2578,7 @@ public interface Bytecodes {
         }
     }
     
-    public class DDIV extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class DDIV extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
         /** Divide doubles
          */
         public DDIV() {
@@ -2602,7 +2602,7 @@ public interface Bytecodes {
         }
     }
     
-    public class DLOAD extends LoadInstruction {
+    class DLOAD extends LoadInstruction {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -2632,7 +2632,7 @@ public interface Bytecodes {
         }
     }
     
-    public class DMUL extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class DMUL extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
         /** Multiply doubles
          */
         public DMUL() {
@@ -2656,7 +2656,7 @@ public interface Bytecodes {
         }
     }
     
-    public class DNEG extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class DNEG extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
         public DNEG() {
             super(jq_ClassFileConstants.jbc_DNEG);
         }
@@ -2678,7 +2678,7 @@ public interface Bytecodes {
         }
     }
     
-    public class DREM extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class DREM extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
         /** Remainder of doubles
          */
         public DREM() {
@@ -2702,7 +2702,7 @@ public interface Bytecodes {
         }
     }
     
-    public class DRETURN extends ReturnInstruction implements TypedInstruction, StackConsumer {
+    class DRETURN extends ReturnInstruction implements TypedInstruction, StackConsumer {
         /** Return double from method
          */
         public DRETURN() {
@@ -2726,7 +2726,7 @@ public interface Bytecodes {
         }
     }
     
-    public class DSTORE extends StoreInstruction {
+    class DSTORE extends StoreInstruction {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -2756,7 +2756,7 @@ public interface Bytecodes {
         }
     }
     
-    public class DSUB extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class DSUB extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
         /** Substract doubles
          */
         public DSUB() {
@@ -2780,7 +2780,7 @@ public interface Bytecodes {
         }
     }
     
-    public class DUP2 extends StackInstruction implements StackProducer, PushInstruction {
+    class DUP2 extends StackInstruction implements StackProducer, PushInstruction {
         public DUP2() {
             super(jq_ClassFileConstants.jbc_DUP2);
         }
@@ -2801,7 +2801,7 @@ public interface Bytecodes {
         }
     }
     
-    public class DUP2_X1 extends StackInstruction {
+    class DUP2_X1 extends StackInstruction {
         public DUP2_X1() {
             super(jq_ClassFileConstants.jbc_DUP2_X1);
         }
@@ -2820,7 +2820,7 @@ public interface Bytecodes {
         }
     }
     
-    public class DUP2_X2 extends StackInstruction {
+    class DUP2_X2 extends StackInstruction {
         public DUP2_X2() {
             super(jq_ClassFileConstants.jbc_DUP2_X2);
         }
@@ -2839,7 +2839,7 @@ public interface Bytecodes {
         }
     }
     
-    public class DUP extends StackInstruction implements StackProducer, PushInstruction {
+    class DUP extends StackInstruction implements StackProducer, PushInstruction {
         public DUP() {
             super(jq_ClassFileConstants.jbc_DUP);
         }
@@ -2860,7 +2860,7 @@ public interface Bytecodes {
         }
     }
     
-    public class DUP_X1 extends StackInstruction {
+    class DUP_X1 extends StackInstruction {
         public DUP_X1() {
             super(jq_ClassFileConstants.jbc_DUP_X1);
         }
@@ -2879,7 +2879,7 @@ public interface Bytecodes {
         }
     }
     
-    public class DUP_X2 extends StackInstruction {
+    class DUP_X2 extends StackInstruction {
         public DUP_X2() {
             super(jq_ClassFileConstants.jbc_DUP_X2);
         }
@@ -2898,7 +2898,7 @@ public interface Bytecodes {
         }
     }
     
-    public class F2D extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class F2D extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
         /** Convert float to double
          */
         public F2D() {
@@ -2922,7 +2922,7 @@ public interface Bytecodes {
         }
     }
     
-    public class F2I extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class F2I extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
         /** Convert float to int
          */
         public F2I() {
@@ -2946,7 +2946,7 @@ public interface Bytecodes {
         }
     }
     
-    public class F2L extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class F2L extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
         /** Convert float to long
          */
         public F2L() {
@@ -2970,7 +2970,7 @@ public interface Bytecodes {
         }
     }
     
-    public class FADD extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class FADD extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
         /** Add floats
          */
         public FADD() {
@@ -2994,7 +2994,7 @@ public interface Bytecodes {
         }
     }
     
-    public class FALOAD extends ArrayInstruction implements StackProducer, ExceptionThrower, TypedInstruction {
+    class FALOAD extends ArrayInstruction implements StackProducer, ExceptionThrower, TypedInstruction {
         /** Load float from array
          */
         public FALOAD() {
@@ -3018,7 +3018,7 @@ public interface Bytecodes {
         }
     }
     
-    public class FASTORE extends ArrayInstruction implements StackConsumer, ExceptionThrower, TypedInstruction {
+    class FASTORE extends ArrayInstruction implements StackConsumer, ExceptionThrower, TypedInstruction {
         /** Store float into array
          */
         public FASTORE() {
@@ -3042,7 +3042,7 @@ public interface Bytecodes {
         }
     }
     
-    public class FCMPG extends Instruction implements TypedInstruction, StackProducer, StackConsumer {
+    class FCMPG extends Instruction implements TypedInstruction, StackProducer, StackConsumer {
         public FCMPG() {
             super(jq_ClassFileConstants.jbc_FCMPG, (short)1);
         }
@@ -3069,7 +3069,7 @@ public interface Bytecodes {
         }
     }
     
-    public class FCMPL extends Instruction implements TypedInstruction, StackProducer, StackConsumer {
+    class FCMPL extends Instruction implements TypedInstruction, StackProducer, StackConsumer {
         public FCMPL() {
             super(jq_ClassFileConstants.jbc_FCMPL, (short)1);
         }
@@ -3096,7 +3096,7 @@ public interface Bytecodes {
         }
     }
     
-    public class FCONST extends Instruction implements PushInstruction, StackProducer, TypedInstruction, ConstantPushInstruction {
+    class FCONST extends Instruction implements PushInstruction, StackProducer, TypedInstruction, ConstantPushInstruction {
         private float value;
         
         /**
@@ -3145,7 +3145,7 @@ public interface Bytecodes {
         }
     }
     
-    public class FDIV extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class FDIV extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
         /** Divide floats
          */
         public FDIV() {
@@ -3169,7 +3169,7 @@ public interface Bytecodes {
         }
     }
     
-    public class FLOAD extends LoadInstruction {
+    class FLOAD extends LoadInstruction {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -3199,7 +3199,7 @@ public interface Bytecodes {
         }
     }
     
-    public class FMUL extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class FMUL extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
         /** Multiply floats
          */
         public FMUL() {
@@ -3223,7 +3223,7 @@ public interface Bytecodes {
         }
     }
     
-    public class FNEG extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class FNEG extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
         public FNEG() {
             super(jq_ClassFileConstants.jbc_FNEG);
         }
@@ -3245,7 +3245,7 @@ public interface Bytecodes {
         }
     }
     
-    public class FREM extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class FREM extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
         /** Remainder of floats
          */
         public FREM() {
@@ -3269,7 +3269,7 @@ public interface Bytecodes {
         }
     }
     
-    public class FRETURN extends ReturnInstruction implements TypedInstruction, StackConsumer {
+    class FRETURN extends ReturnInstruction implements TypedInstruction, StackConsumer {
         /** Return float from method
          */
         public FRETURN() {
@@ -3293,7 +3293,7 @@ public interface Bytecodes {
         }
     }
     
-    public class FSTORE extends StoreInstruction {
+    class FSTORE extends StoreInstruction {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -3323,7 +3323,7 @@ public interface Bytecodes {
         }
     }
     
-    public class FSUB extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class FSUB extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
         /** Substract floats
          */
         public FSUB() {
@@ -3347,7 +3347,7 @@ public interface Bytecodes {
         }
     }
     
-    public class GETFIELD extends FieldInstruction implements ExceptionThrower, StackConsumer, StackProducer, TypedInstruction, LoadClass {
+    class GETFIELD extends FieldInstruction implements ExceptionThrower, StackConsumer, StackProducer, TypedInstruction, LoadClass {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -3407,7 +3407,7 @@ public interface Bytecodes {
         }
     }
     
-    public class GETSTATIC extends FieldInstruction implements ExceptionThrower, StackProducer, PushInstruction, TypedInstruction, LoadClass {
+    class GETSTATIC extends FieldInstruction implements ExceptionThrower, StackProducer, PushInstruction, TypedInstruction, LoadClass {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -3465,7 +3465,7 @@ public interface Bytecodes {
         }
     }
     
-    public class GOTO extends GotoInstruction implements VariableLengthInstruction, UnconditionalBranch {
+    class GOTO extends GotoInstruction implements VariableLengthInstruction, UnconditionalBranch {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -3525,7 +3525,7 @@ public interface Bytecodes {
         }
     }
     
-    public class GOTO_W extends GotoInstruction implements UnconditionalBranch {
+    class GOTO_W extends GotoInstruction implements UnconditionalBranch {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -3571,7 +3571,7 @@ public interface Bytecodes {
         }
     }
     
-    public class I2B extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class I2B extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
         /** Convert int to byte
          */
         public I2B() {
@@ -3595,7 +3595,7 @@ public interface Bytecodes {
         }
     }
     
-    public class I2C extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class I2C extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
         /** Convert int to char
          */
         public I2C() {
@@ -3619,7 +3619,7 @@ public interface Bytecodes {
         }
     }
     
-    public class I2D extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class I2D extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
         /** Convert int to double
          */
         public I2D() {
@@ -3643,7 +3643,7 @@ public interface Bytecodes {
         }
     }
     
-    public class I2F extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class I2F extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
         /** Convert int to float
          */
         public I2F() {
@@ -3667,7 +3667,7 @@ public interface Bytecodes {
         }
     }
     
-    public class I2L extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class I2L extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
         /** Convert int to long
          */
         public I2L() {
@@ -3691,7 +3691,7 @@ public interface Bytecodes {
         }
     }
     
-    public class I2S extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class I2S extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
         public I2S() {
             super(jq_ClassFileConstants.jbc_I2S);
         }
@@ -3713,7 +3713,7 @@ public interface Bytecodes {
         }
     }
     
-    public class IADD extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class IADD extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
         /** Add ints
          */
         public IADD() {
@@ -3737,7 +3737,7 @@ public interface Bytecodes {
         }
     }
     
-    public class IALOAD extends ArrayInstruction implements StackProducer, ExceptionThrower, TypedInstruction {
+    class IALOAD extends ArrayInstruction implements StackProducer, ExceptionThrower, TypedInstruction {
         /**
          * Load int from array
          */
@@ -3762,7 +3762,7 @@ public interface Bytecodes {
         }
     }
     
-    public class IAND extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class IAND extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
         public IAND() {
             super(jq_ClassFileConstants.jbc_IAND);
         }
@@ -3784,7 +3784,7 @@ public interface Bytecodes {
         }
     }
     
-    public class IASTORE extends ArrayInstruction implements StackConsumer, ExceptionThrower, TypedInstruction {
+    class IASTORE extends ArrayInstruction implements StackConsumer, ExceptionThrower, TypedInstruction {
         /**
          * Store into int array
          */
@@ -3809,7 +3809,7 @@ public interface Bytecodes {
         }
     }
     
-    public class ICONST extends Instruction implements PushInstruction, StackProducer, TypedInstruction, ConstantPushInstruction {
+    class ICONST extends Instruction implements PushInstruction, StackProducer, TypedInstruction, ConstantPushInstruction {
         private int value;
         
         /**
@@ -3854,7 +3854,7 @@ public interface Bytecodes {
         }
     }
     
-    public class IDIV extends ArithmeticInstruction implements ExceptionThrower, TypedInstruction, StackProducer, StackConsumer {
+    class IDIV extends ArithmeticInstruction implements ExceptionThrower, TypedInstruction, StackProducer, StackConsumer {
         /** Divide ints
          */
         public IDIV() {
@@ -3886,7 +3886,7 @@ public interface Bytecodes {
         }
     }
     
-    public class IF_ACMPEQ extends IfInstruction implements StackConsumer {
+    class IF_ACMPEQ extends IfInstruction implements StackConsumer {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -3920,7 +3920,7 @@ public interface Bytecodes {
         }
     }
     
-    public class IF_ACMPNE extends IfInstruction implements StackConsumer {
+    class IF_ACMPNE extends IfInstruction implements StackConsumer {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -3954,7 +3954,7 @@ public interface Bytecodes {
         }
     }
     
-    public class IFEQ extends IfInstruction implements StackConsumer {
+    class IFEQ extends IfInstruction implements StackConsumer {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -3988,7 +3988,7 @@ public interface Bytecodes {
         }
     }
     
-    public class IFGE extends IfInstruction implements StackConsumer {
+    class IFGE extends IfInstruction implements StackConsumer {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -4022,7 +4022,7 @@ public interface Bytecodes {
         }
     }
     
-    public class IFGT extends IfInstruction implements StackConsumer {
+    class IFGT extends IfInstruction implements StackConsumer {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -4056,7 +4056,7 @@ public interface Bytecodes {
         }
     }
     
-    public class IF_ICMPEQ extends IfInstruction implements StackConsumer {
+    class IF_ICMPEQ extends IfInstruction implements StackConsumer {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -4090,7 +4090,7 @@ public interface Bytecodes {
         }
     }
     
-    public class IF_ICMPGE extends IfInstruction implements StackConsumer {
+    class IF_ICMPGE extends IfInstruction implements StackConsumer {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -4124,7 +4124,7 @@ public interface Bytecodes {
         }
     }
     
-    public class IF_ICMPGT extends IfInstruction implements StackConsumer {
+    class IF_ICMPGT extends IfInstruction implements StackConsumer {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -4158,7 +4158,7 @@ public interface Bytecodes {
         }
     }
     
-    public class IF_ICMPLE extends IfInstruction implements StackConsumer {
+    class IF_ICMPLE extends IfInstruction implements StackConsumer {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -4192,7 +4192,7 @@ public interface Bytecodes {
         }
     }
     
-    public class IF_ICMPLT extends IfInstruction implements StackConsumer {
+    class IF_ICMPLT extends IfInstruction implements StackConsumer {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -4226,7 +4226,7 @@ public interface Bytecodes {
         }
     }
     
-    public class IF_ICMPNE extends IfInstruction implements StackConsumer {
+    class IF_ICMPNE extends IfInstruction implements StackConsumer {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -4260,7 +4260,7 @@ public interface Bytecodes {
         }
     }
     
-    public class IFLE extends IfInstruction implements StackConsumer {
+    class IFLE extends IfInstruction implements StackConsumer {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -4294,7 +4294,7 @@ public interface Bytecodes {
         }
     }
     
-    public class IFLT extends IfInstruction implements StackConsumer {
+    class IFLT extends IfInstruction implements StackConsumer {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -4328,7 +4328,7 @@ public interface Bytecodes {
         }
     }
     
-    public class IFNE extends IfInstruction implements StackConsumer {
+    class IFNE extends IfInstruction implements StackConsumer {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -4362,7 +4362,7 @@ public interface Bytecodes {
         }
     }
     
-    public class IFNONNULL extends IfInstruction implements StackConsumer {
+    class IFNONNULL extends IfInstruction implements StackConsumer {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -4396,7 +4396,7 @@ public interface Bytecodes {
         }
     }
     
-    public class IFNULL extends IfInstruction implements StackConsumer {
+    class IFNULL extends IfInstruction implements StackConsumer {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -4430,7 +4430,7 @@ public interface Bytecodes {
         }
     }
     
-    public class IINC extends LocalVariableInstruction {
+    class IINC extends LocalVariableInstruction {
         private boolean wide;
         private int     c;
         
@@ -4547,7 +4547,7 @@ public interface Bytecodes {
         }
     }
     
-    public class ILOAD extends LoadInstruction {
+    class ILOAD extends LoadInstruction {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -4577,7 +4577,7 @@ public interface Bytecodes {
         }
     }
     
-    public class IMUL extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class IMUL extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
         /** Multiply ints
          */
         public IMUL() {
@@ -4601,7 +4601,7 @@ public interface Bytecodes {
         }
     }
     
-    public class INEG extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class INEG extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
         public INEG() {
             super(jq_ClassFileConstants.jbc_INEG);
         }
@@ -4623,7 +4623,7 @@ public interface Bytecodes {
         }
     }
     
-    public class INSTANCEOF extends CPInstruction implements LoadClass, ExceptionThrower, StackProducer, StackConsumer, TypedInstruction {
+    class INSTANCEOF extends CPInstruction implements LoadClass, ExceptionThrower, StackProducer, StackConsumer, TypedInstruction {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -4669,7 +4669,7 @@ public interface Bytecodes {
         }
     }
     
-    public final class INVOKEINTERFACE extends InvokeInstruction implements ExceptionThrower, TypedInstruction, StackConsumer, StackProducer, LoadClass {
+    final class INVOKEINTERFACE extends InvokeInstruction implements ExceptionThrower, TypedInstruction, StackConsumer, StackProducer, LoadClass {
         private int nargs; // Number of arguments on stack (number of stack slots), called "count" in vmspec2
         
         /**
@@ -4775,7 +4775,7 @@ public interface Bytecodes {
         }
     }
     
-    public class INVOKESPECIAL extends InvokeInstruction implements ExceptionThrower, TypedInstruction, StackConsumer, StackProducer, LoadClass {
+    class INVOKESPECIAL extends InvokeInstruction implements ExceptionThrower, TypedInstruction, StackConsumer, StackProducer, LoadClass {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -4834,7 +4834,7 @@ public interface Bytecodes {
         }
     }
     
-    public class INVOKESTATIC extends InvokeInstruction implements ExceptionThrower, TypedInstruction, StackConsumer, StackProducer, LoadClass {
+    class INVOKESTATIC extends InvokeInstruction implements ExceptionThrower, TypedInstruction, StackConsumer, StackProducer, LoadClass {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -4891,7 +4891,7 @@ public interface Bytecodes {
         }
     }
     
-    public class INVOKEVIRTUAL extends InvokeInstruction implements ExceptionThrower, TypedInstruction, StackConsumer, StackProducer, LoadClass {
+    class INVOKEVIRTUAL extends InvokeInstruction implements ExceptionThrower, TypedInstruction, StackConsumer, StackProducer, LoadClass {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -4950,7 +4950,7 @@ public interface Bytecodes {
         }
     }
     
-    public class IOR extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class IOR extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
         public IOR() {
             super(jq_ClassFileConstants.jbc_IOR);
         }
@@ -4972,7 +4972,7 @@ public interface Bytecodes {
         }
     }
     
-    public class IREM extends ArithmeticInstruction implements ExceptionThrower, TypedInstruction, StackProducer, StackConsumer {
+    class IREM extends ArithmeticInstruction implements ExceptionThrower, TypedInstruction, StackProducer, StackConsumer {
         /** Remainder of ints
          */
         public IREM() {
@@ -5006,7 +5006,7 @@ public interface Bytecodes {
         }
     }
     
-    public class IRETURN extends ReturnInstruction implements TypedInstruction, StackConsumer {
+    class IRETURN extends ReturnInstruction implements TypedInstruction, StackConsumer {
         /** Return int from method
          */
         public IRETURN() {
@@ -5029,7 +5029,7 @@ public interface Bytecodes {
         }
     }
     
-    public class ISHL extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class ISHL extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
         public ISHL() {
             super(jq_ClassFileConstants.jbc_ISHL);
         }
@@ -5051,7 +5051,7 @@ public interface Bytecodes {
         }
     }
     
-    public class ISHR extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class ISHR extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
         public ISHR() {
             super(jq_ClassFileConstants.jbc_ISHR);
         }
@@ -5073,7 +5073,7 @@ public interface Bytecodes {
         }
     }
     
-    public class ISTORE extends StoreInstruction {
+    class ISTORE extends StoreInstruction {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -5103,7 +5103,7 @@ public interface Bytecodes {
         }
     }
     
-    public class ISUB extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class ISUB extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
         /** Substract ints
          */
         public ISUB() {
@@ -5127,7 +5127,7 @@ public interface Bytecodes {
         }
     }
     
-    public class IUSHR extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class IUSHR extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
         public IUSHR() {
             super(jq_ClassFileConstants.jbc_IUSHR);
         }
@@ -5149,7 +5149,7 @@ public interface Bytecodes {
         }
     }
     
-    public class IXOR extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class IXOR extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
         public IXOR() {
             super(jq_ClassFileConstants.jbc_IXOR);
         }
@@ -5171,7 +5171,7 @@ public interface Bytecodes {
         }
     }
     
-    public class JSR extends JsrInstruction implements StackProducer, VariableLengthInstruction {
+    class JSR extends JsrInstruction implements StackProducer, VariableLengthInstruction {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -5228,7 +5228,7 @@ public interface Bytecodes {
         }
     }
     
-    public class JSR_W extends JsrInstruction implements StackProducer {
+    class JSR_W extends JsrInstruction implements StackProducer {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -5274,7 +5274,7 @@ public interface Bytecodes {
         }
     }
     
-    public class L2D extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class L2D extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
         public L2D() {
             super(jq_ClassFileConstants.jbc_L2D);
         }
@@ -5296,7 +5296,7 @@ public interface Bytecodes {
         }
     }
     
-    public class L2F extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class L2F extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
         public L2F() {
             super(jq_ClassFileConstants.jbc_L2F);
         }
@@ -5318,7 +5318,7 @@ public interface Bytecodes {
         }
     }
     
-    public class L2I extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class L2I extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
         public L2I() {
             super(jq_ClassFileConstants.jbc_L2I);
         }
@@ -5340,7 +5340,7 @@ public interface Bytecodes {
         }
     }
     
-    public class LADD extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class LADD extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
         public LADD() {
             super(jq_ClassFileConstants.jbc_LADD);
         }
@@ -5362,7 +5362,7 @@ public interface Bytecodes {
         }
     }
     
-    public class LALOAD extends ArrayInstruction implements StackProducer, ExceptionThrower, TypedInstruction {
+    class LALOAD extends ArrayInstruction implements StackProducer, ExceptionThrower, TypedInstruction {
         /** Load long from array
          */
         public LALOAD() {
@@ -5386,7 +5386,7 @@ public interface Bytecodes {
         }
     }
     
-    public class LAND extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class LAND extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
         public LAND() {
             super(jq_ClassFileConstants.jbc_LAND);
         }
@@ -5408,7 +5408,7 @@ public interface Bytecodes {
         }
     }
     
-    public class LASTORE extends ArrayInstruction implements StackConsumer, ExceptionThrower, TypedInstruction {
+    class LASTORE extends ArrayInstruction implements StackConsumer, ExceptionThrower, TypedInstruction {
         /** Store long into array
          */
         public LASTORE() {
@@ -5432,7 +5432,7 @@ public interface Bytecodes {
         }
     }
     
-    public class LCMP extends Instruction implements TypedInstruction, StackProducer, StackConsumer {
+    class LCMP extends Instruction implements TypedInstruction, StackProducer, StackConsumer {
         public LCMP() {
             super(jq_ClassFileConstants.jbc_LCMP, (short)1);
         }
@@ -5459,7 +5459,7 @@ public interface Bytecodes {
         }
     }
     
-    public class LCONST extends Instruction implements PushInstruction, StackProducer, TypedInstruction, ConstantPushInstruction {
+    class LCONST extends Instruction implements PushInstruction, StackProducer, TypedInstruction, ConstantPushInstruction {
         private long value;
         
         /**
@@ -5506,7 +5506,7 @@ public interface Bytecodes {
         }
     }
     
-    public class LDC2_W extends CPInstruction implements StackProducer, PushInstruction, TypedInstruction {
+    class LDC2_W extends CPInstruction implements StackProducer, PushInstruction, TypedInstruction {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -5544,7 +5544,7 @@ public interface Bytecodes {
         }
     }
     
-    public class LDC extends CPInstruction implements PushInstruction, ExceptionThrower, TypedInstruction {
+    class LDC extends CPInstruction implements PushInstruction, ExceptionThrower, TypedInstruction {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -5632,7 +5632,7 @@ public interface Bytecodes {
         }
     }
     
-    public class LDC_W extends LDC {
+    class LDC_W extends LDC {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -5652,7 +5652,7 @@ public interface Bytecodes {
         }
     }
     
-    public class LDIV extends ArithmeticInstruction implements ExceptionThrower, TypedInstruction, StackProducer, StackConsumer {
+    class LDIV extends ArithmeticInstruction implements ExceptionThrower, TypedInstruction, StackProducer, StackConsumer {
         public LDIV() {
             super(jq_ClassFileConstants.jbc_LDIV);
         }
@@ -5682,7 +5682,7 @@ public interface Bytecodes {
         }
     }
     
-    public class LLOAD extends LoadInstruction {
+    class LLOAD extends LoadInstruction {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -5709,7 +5709,7 @@ public interface Bytecodes {
         }
     }
     
-    public class LMUL extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class LMUL extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
         public LMUL() {
             super(jq_ClassFileConstants.jbc_LMUL);
         }
@@ -5731,7 +5731,7 @@ public interface Bytecodes {
         }
     }
     
-    public class LNEG extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class LNEG extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
         public LNEG() {
             super(jq_ClassFileConstants.jbc_LNEG);
         }
@@ -5753,7 +5753,7 @@ public interface Bytecodes {
         }
     }
     
-    public class LOOKUPSWITCH extends Select {
+    class LOOKUPSWITCH extends Select {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -5820,7 +5820,7 @@ public interface Bytecodes {
         }
     }
     
-    public class LOR extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class LOR extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
         public LOR() {
             super(jq_ClassFileConstants.jbc_LOR);
         }
@@ -5842,7 +5842,7 @@ public interface Bytecodes {
         }
     }
     
-    public class LREM extends ArithmeticInstruction implements ExceptionThrower, TypedInstruction, StackProducer, StackConsumer {
+    class LREM extends ArithmeticInstruction implements ExceptionThrower, TypedInstruction, StackProducer, StackConsumer {
         public LREM() {
             super(jq_ClassFileConstants.jbc_LREM);
         }
@@ -5872,7 +5872,7 @@ public interface Bytecodes {
         }
     }
     
-    public class LRETURN extends ReturnInstruction implements TypedInstruction, StackConsumer {
+    class LRETURN extends ReturnInstruction implements TypedInstruction, StackConsumer {
         public LRETURN() {
             super(jq_ClassFileConstants.jbc_LRETURN);
         }
@@ -5894,7 +5894,7 @@ public interface Bytecodes {
         }
     }
     
-    public class LSHL extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class LSHL extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
         public LSHL() {
             super(jq_ClassFileConstants.jbc_LSHL);
         }
@@ -5916,7 +5916,7 @@ public interface Bytecodes {
         }
     }
     
-    public class LSHR extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class LSHR extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
         public LSHR() {
             super(jq_ClassFileConstants.jbc_LSHR);
         }
@@ -5938,7 +5938,7 @@ public interface Bytecodes {
         }
     }
     
-    public class LSTORE extends StoreInstruction {
+    class LSTORE extends StoreInstruction {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -5965,7 +5965,7 @@ public interface Bytecodes {
         }
     }
     
-    public class LSUB extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class LSUB extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
         public LSUB() {
             super(jq_ClassFileConstants.jbc_LSUB);
         }
@@ -5987,7 +5987,7 @@ public interface Bytecodes {
         }
     }
     
-    public class LUSHR extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class LUSHR extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
         public LUSHR() {
             super(jq_ClassFileConstants.jbc_LUSHR);
         }
@@ -6009,7 +6009,7 @@ public interface Bytecodes {
         }
     }
     
-    public class LXOR extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
+    class LXOR extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
         public LXOR() {
             super(jq_ClassFileConstants.jbc_LXOR);
         }
@@ -6031,7 +6031,7 @@ public interface Bytecodes {
         }
     }
     
-    public class MONITORENTER extends Instruction implements ExceptionThrower, StackConsumer {
+    class MONITORENTER extends Instruction implements ExceptionThrower, StackConsumer {
         public MONITORENTER() {
             super(jq_ClassFileConstants.jbc_MONITORENTER, (short)1);
         }
@@ -6058,7 +6058,7 @@ public interface Bytecodes {
         }
     }
     
-    public class MONITOREXIT extends Instruction implements ExceptionThrower, StackConsumer {
+    class MONITOREXIT extends Instruction implements ExceptionThrower, StackConsumer {
         public MONITOREXIT() {
             super(jq_ClassFileConstants.jbc_MONITOREXIT, (short)1);
         }
@@ -6085,7 +6085,7 @@ public interface Bytecodes {
         }
     }
     
-    public class MULTIANEWARRAY extends CPInstruction implements AllocationInstruction, ExceptionThrower, TypedInstruction {
+    class MULTIANEWARRAY extends CPInstruction implements AllocationInstruction, ExceptionThrower, TypedInstruction {
         private short dimensions;
         
         /**
@@ -6194,7 +6194,7 @@ public interface Bytecodes {
         }
     }
     
-    public class NEWARRAY extends Instruction implements AllocationInstruction, ExceptionThrower, StackProducer {
+    class NEWARRAY extends Instruction implements AllocationInstruction, ExceptionThrower, StackProducer {
         private jq_Array type;
         
         /**
@@ -6273,7 +6273,7 @@ public interface Bytecodes {
         }
     }
     
-    public class NEW extends CPInstruction implements LoadClass, AllocationInstruction, ExceptionThrower, StackProducer, TypedInstruction {
+    class NEW extends CPInstruction implements LoadClass, AllocationInstruction, ExceptionThrower, StackProducer, TypedInstruction {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -6322,7 +6322,7 @@ public interface Bytecodes {
         }
     }
     
-    public class NOP extends Instruction {
+    class NOP extends Instruction {
         public NOP() {
             super(jq_ClassFileConstants.jbc_NOP, (short)1);
         }
@@ -6340,7 +6340,7 @@ public interface Bytecodes {
         }
     }
     
-    public class POP2 extends StackInstruction implements PopInstruction {
+    class POP2 extends StackInstruction implements PopInstruction {
         public POP2() {
             super(jq_ClassFileConstants.jbc_POP2);
         }
@@ -6362,7 +6362,7 @@ public interface Bytecodes {
         }
     }
     
-    public class POP extends StackInstruction implements PopInstruction {
+    class POP extends StackInstruction implements PopInstruction {
         public POP() {
             super(jq_ClassFileConstants.jbc_POP);
         }
@@ -6384,7 +6384,7 @@ public interface Bytecodes {
         }
     }
     
-    public final class PUSH implements CompoundInstruction, VariableLengthInstruction {
+    final class PUSH implements CompoundInstruction, VariableLengthInstruction {
         private Instruction instruction;
         
         /**
@@ -6527,7 +6527,7 @@ public interface Bytecodes {
         }
     }
     
-    public class PUTFIELD extends FieldInstruction implements ExceptionThrower, TypedInstruction, LoadClass {
+    class PUTFIELD extends FieldInstruction implements ExceptionThrower, TypedInstruction, LoadClass {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -6586,7 +6586,7 @@ public interface Bytecodes {
         }
     }
     
-    public class PUTSTATIC extends FieldInstruction implements ExceptionThrower, StackConsumer, PopInstruction, TypedInstruction, LoadClass {
+    class PUTSTATIC extends FieldInstruction implements ExceptionThrower, StackConsumer, PopInstruction, TypedInstruction, LoadClass {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -6644,7 +6644,7 @@ public interface Bytecodes {
         }
     }
     
-    public class RET extends Instruction implements IndexedInstruction, TypedInstruction {
+    class RET extends Instruction implements IndexedInstruction, TypedInstruction {
         private boolean wide;
         private int     index; // index to local variable containg the return address
         
@@ -6740,7 +6740,7 @@ public interface Bytecodes {
         }
     }
     
-    public class RETURN extends ReturnInstruction implements TypedInstruction, StackConsumer {
+    class RETURN extends ReturnInstruction implements TypedInstruction, StackConsumer {
         public RETURN() {
             super(jq_ClassFileConstants.jbc_RETURN);
         }
@@ -6761,7 +6761,7 @@ public interface Bytecodes {
         }
     }
     
-    public class SALOAD extends ArrayInstruction implements StackProducer, ExceptionThrower, TypedInstruction {
+    class SALOAD extends ArrayInstruction implements StackProducer, ExceptionThrower, TypedInstruction {
         public SALOAD() {
             super(jq_ClassFileConstants.jbc_SALOAD);
         }
@@ -6783,7 +6783,7 @@ public interface Bytecodes {
         }
     }
     
-    public class SASTORE extends ArrayInstruction implements StackConsumer, ExceptionThrower, TypedInstruction {
+    class SASTORE extends ArrayInstruction implements StackConsumer, ExceptionThrower, TypedInstruction {
         public SASTORE() {
             super(jq_ClassFileConstants.jbc_SASTORE);
         }
@@ -6805,7 +6805,7 @@ public interface Bytecodes {
         }
     }
     
-    public class SIPUSH extends Instruction implements PushInstruction, StackProducer, TypedInstruction, ConstantPushInstruction {
+    class SIPUSH extends Instruction implements PushInstruction, StackProducer, TypedInstruction, ConstantPushInstruction {
         private short b;
         
         /**
@@ -6868,7 +6868,7 @@ public interface Bytecodes {
         }
     }
     
-    public class SWAP extends StackInstruction implements StackConsumer, StackProducer {
+    class SWAP extends StackInstruction implements StackConsumer, StackProducer {
         public SWAP() {
             super(jq_ClassFileConstants.jbc_SWAP);
         }
@@ -6889,7 +6889,7 @@ public interface Bytecodes {
         }
     }
     
-    public final class SWITCH implements CompoundInstruction {
+    final class SWITCH implements CompoundInstruction {
         private int[]               match;
         private ArrayList/*<InstructionHandle>*/ targets;
         private Select              instruction;
@@ -7007,7 +7007,7 @@ public interface Bytecodes {
         }
     }
     
-    public class TABLESWITCH extends Select implements VariableLengthInstruction, StackProducer {
+    class TABLESWITCH extends Select implements VariableLengthInstruction, StackProducer {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -7129,9 +7129,9 @@ public interface Bytecodes {
     
     
     
-    public interface AllocationInstruction {}
+    interface AllocationInstruction {}
     
-    public abstract class ArithmeticInstruction extends Instruction
+    abstract class ArithmeticInstruction extends Instruction
     implements TypedInstruction, StackProducer, StackConsumer {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
@@ -7176,7 +7176,7 @@ public interface Bytecodes {
         }
     }
     
-    public abstract class ArrayInstruction extends Instruction implements ExceptionThrower, TypedInstruction {
+    abstract class ArrayInstruction extends Instruction implements ExceptionThrower, TypedInstruction {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -7223,7 +7223,7 @@ public interface Bytecodes {
         }
     }
     
-    public abstract class BranchInstruction extends Instruction implements InstructionTargeter {
+    abstract class BranchInstruction extends Instruction implements InstructionTargeter {
         protected int               index;    // Branch target relative to this instruction
         protected InstructionHandle target;   // Target object in instruction list
         protected int               position; // Byte code offset
@@ -7400,15 +7400,15 @@ public interface Bytecodes {
         }
     }
     
-    public interface CompoundInstruction {
-        public InstructionList getInstructionList();
+    interface CompoundInstruction {
+        InstructionList getInstructionList();
     }
     
-    public interface ConstantPushInstruction extends PushInstruction, TypedInstruction {
-        public Number getValue();
+    interface ConstantPushInstruction extends PushInstruction, TypedInstruction {
+        Number getValue();
     }
     
-    public abstract class ConversionInstruction extends Instruction implements TypedInstruction, StackProducer, StackConsumer {
+    abstract class ConversionInstruction extends Instruction implements TypedInstruction, StackProducer, StackConsumer {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -7447,7 +7447,7 @@ public interface Bytecodes {
         }
     }
     
-    public abstract class CPInstruction extends Instruction implements TypedInstruction {
+    abstract class CPInstruction extends Instruction implements TypedInstruction {
         protected Object o;   // constant pool value
         protected char index; // index into constant pool
         
@@ -7538,11 +7538,11 @@ public interface Bytecodes {
 
     }
     
-    public interface ExceptionThrower {
-        public Set/*<jq_Class>*/ getExceptions();
+    interface ExceptionThrower {
+        Set/*<jq_Class>*/ getExceptions();
     }
     
-    public abstract class FieldInstruction extends FieldOrMethod implements TypedInstruction {
+    abstract class FieldInstruction extends FieldOrMethod implements TypedInstruction {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -7590,7 +7590,7 @@ public interface Bytecodes {
         }
     }
     
-    public abstract class FieldOrMethod extends CPInstruction implements LoadClass {
+    abstract class FieldOrMethod extends CPInstruction implements LoadClass {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -7641,7 +7641,7 @@ public interface Bytecodes {
         protected abstract void initFromFile(jq_ConstantPool cp, ByteSequence bytes, boolean wide) throws IOException;
     }
 
-    public abstract class GotoInstruction extends BranchInstruction implements UnconditionalBranch
+    abstract class GotoInstruction extends BranchInstruction implements UnconditionalBranch
     {
         GotoInstruction(short opcode, InstructionHandle target) {
             super(opcode, target);
@@ -7654,7 +7654,7 @@ public interface Bytecodes {
         GotoInstruction() {}
     }
     
-    public abstract class IfInstruction extends BranchInstruction implements StackConsumer {
+    abstract class IfInstruction extends BranchInstruction implements StackConsumer {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -7674,17 +7674,17 @@ public interface Bytecodes {
         public abstract IfInstruction negate();
     }
     
-    public interface IndexedInstruction {
-        public int getIndex();
-        public void setIndex(int index);
+    interface IndexedInstruction {
+        int getIndex();
+        void setIndex(int index);
     }
     
-    public interface InstructionTargeter {
-        public boolean containsTarget(InstructionHandle ih);
-        public void updateTarget(InstructionHandle old_ih, InstructionHandle new_ih);
+    interface InstructionTargeter {
+        boolean containsTarget(InstructionHandle ih);
+        void updateTarget(InstructionHandle old_ih, InstructionHandle new_ih);
     }
     
-    public abstract class InvokeInstruction extends FieldOrMethod implements ExceptionThrower, TypedInstruction, StackConsumer, StackProducer {
+    abstract class InvokeInstruction extends FieldOrMethod implements ExceptionThrower, TypedInstruction, StackConsumer, StackProducer {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -7750,7 +7750,7 @@ public interface Bytecodes {
         }
     }
     
-    public abstract class JsrInstruction extends BranchInstruction implements UnconditionalBranch, TypedInstruction, StackProducer {
+    abstract class JsrInstruction extends BranchInstruction implements UnconditionalBranch, TypedInstruction, StackProducer {
         JsrInstruction(short opcode, InstructionHandle target) {
             super(opcode, target);
         }
@@ -7802,14 +7802,14 @@ public interface Bytecodes {
         }
     }
     
-    public interface LoadClass {
+    interface LoadClass {
         /**
          * Returns the jq_Class of the referenced class or interface
          * that may be loaded and resolved.
          * @return object type that may be loaded or null if a primitive is
          * referenced
          */
-        public jq_Class getLoadClassType();
+        jq_Class getLoadClassType();
         
         /**
          * Returns the type associated with this instruction.
@@ -7823,10 +7823,10 @@ public interface Bytecodes {
          * an int[][].
          * @see #getLoadClassType()
          */
-        public jq_Type getType();
+        jq_Type getType();
     }
     
-    public abstract class LoadInstruction extends LocalVariableInstruction implements PushInstruction {
+    abstract class LoadInstruction extends LocalVariableInstruction implements PushInstruction {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -7862,7 +7862,7 @@ public interface Bytecodes {
         }
     }
     
-    public abstract class LocalVariableInstruction extends Instruction implements TypedInstruction, IndexedInstruction {
+    abstract class LocalVariableInstruction extends Instruction implements TypedInstruction, IndexedInstruction {
         protected int     n         = -1; // index of referenced variable
         private short     c_tag     = -1; // compact version, such as ILOAD_0
         private short     canon_tag = -1; // canonical tag such as ILOAD
@@ -8016,11 +8016,11 @@ public interface Bytecodes {
         }
     }
     
-    public interface PopInstruction extends StackConsumer {}
+    interface PopInstruction extends StackConsumer {}
     
-    public interface PushInstruction extends StackProducer {}
+    interface PushInstruction extends StackProducer {}
     
-    public abstract class ReturnInstruction extends Instruction implements ExceptionThrower, TypedInstruction, StackConsumer {
+    abstract class ReturnInstruction extends Instruction implements ExceptionThrower, TypedInstruction, StackConsumer {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -8055,7 +8055,7 @@ public interface Bytecodes {
         
     }
     
-    public abstract class Select extends BranchInstruction implements VariableLengthInstruction, StackProducer {
+    abstract class Select extends BranchInstruction implements VariableLengthInstruction, StackProducer {
         protected int[]               match;        // matches, i.e., case 1: ...
         protected int[]               indices;      // target offsets
         protected ArrayList/*<InstructionHandle>*/ targets;      // target objects in instruction list
@@ -8241,13 +8241,13 @@ public interface Bytecodes {
         public List/*<InstructionHandle>*/ getTargets() { return targets; }
     }
     
-    public interface StackConsumer {
+    interface StackConsumer {
         /** @return how many words are consumed from stack
          */
-        public int consumeStack();
+        int consumeStack();
     }
     
-    public abstract class StackInstruction extends Instruction {
+    abstract class StackInstruction extends Instruction {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
          * Instruction.readInstruction(). Not to be used otherwise.
@@ -8263,13 +8263,13 @@ public interface Bytecodes {
         
     }
     
-    public interface StackProducer {
+    interface StackProducer {
         /** @return how many words are produced on stack
          */
-        public int produceStack();
+        int produceStack();
     }
     
-    public abstract class StoreInstruction extends LocalVariableInstruction implements PopInstruction
+    abstract class StoreInstruction extends LocalVariableInstruction implements PopInstruction
     {
         /**
          * Empty constructor needed for the Class.newInstance() statement in
@@ -8307,23 +8307,23 @@ public interface Bytecodes {
         }
     }
     
-    public interface TypedInstruction {
-        public jq_Type getType();
+    interface TypedInstruction {
+        jq_Type getType();
     }
     
-    public interface UnconditionalBranch {}
+    interface UnconditionalBranch {}
     
-    public interface VariableLengthInstruction {}
+    interface VariableLengthInstruction {}
     
     
     
-    public static class BytecodeException extends RuntimeException {
+    class BytecodeException extends RuntimeException {
         public BytecodeException() { super(); }
         public BytecodeException(String s) { super(s); }
     }
 
     
-    public static class jq_ReturnAddressType extends jq_Reference {
+    class jq_ReturnAddressType extends jq_Reference {
         public static final jq_ReturnAddressType NO_TARGET = new jq_ReturnAddressType();
         private InstructionHandle returnTarget;
         private jq_ReturnAddressType() { super(Utf8.get("L&ReturnAddress;"), Bootstrap.PrimordialClassLoader.loader); }
@@ -8358,7 +8358,7 @@ public interface Bytecodes {
         }
     }
     
-    public static class CodeException {
+    class CodeException {
         private InstructionHandle start, end, handler;
         private jq_Class type;
         
@@ -8392,7 +8392,7 @@ public interface Bytecodes {
         }
     }
     
-    public static class LineNumber {
+    class LineNumber {
         private InstructionHandle start;
         private char num;
         
@@ -8415,145 +8415,145 @@ public interface Bytecodes {
         }
     }
     
-    public interface InstructionConstants {
+    interface InstructionConstants {
         /** Predefined instruction objects
          */
-        public static final Instruction           NOP          = new NOP();
-        public static final Instruction           ACONST_NULL  = new ACONST_NULL();
-        public static final Instruction           ICONST_M1    = new ICONST(-1);
-        public static final Instruction           ICONST_0     = new ICONST(0);
-        public static final Instruction           ICONST_1     = new ICONST(1);
-        public static final Instruction           ICONST_2     = new ICONST(2);
-        public static final Instruction           ICONST_3     = new ICONST(3);
-        public static final Instruction           ICONST_4     = new ICONST(4);
-        public static final Instruction           ICONST_5     = new ICONST(5);
-        public static final Instruction           LCONST_0     = new LCONST(0);
-        public static final Instruction           LCONST_1     = new LCONST(1);
-        public static final Instruction           FCONST_0     = new FCONST(0);
-        public static final Instruction           FCONST_1     = new FCONST(1);
-        public static final Instruction           FCONST_2     = new FCONST(2);
-        public static final Instruction           DCONST_0     = new DCONST(0);
-        public static final Instruction           DCONST_1     = new DCONST(1);
-        public static final ArrayInstruction      IALOAD       = new IALOAD();
-        public static final ArrayInstruction      LALOAD       = new LALOAD();
-        public static final ArrayInstruction      FALOAD       = new FALOAD();
-        public static final ArrayInstruction      DALOAD       = new DALOAD();
-        public static final ArrayInstruction      AALOAD       = new AALOAD();
-        public static final ArrayInstruction      BALOAD       = new BALOAD();
-        public static final ArrayInstruction      CALOAD       = new CALOAD();
-        public static final ArrayInstruction      SALOAD       = new SALOAD();
-        public static final ArrayInstruction      IASTORE      = new IASTORE();
-        public static final ArrayInstruction      LASTORE      = new LASTORE();
-        public static final ArrayInstruction      FASTORE      = new FASTORE();
-        public static final ArrayInstruction      DASTORE      = new DASTORE();
-        public static final ArrayInstruction      AASTORE      = new AASTORE();
-        public static final ArrayInstruction      BASTORE      = new BASTORE();
-        public static final ArrayInstruction      CASTORE      = new CASTORE();
-        public static final ArrayInstruction      SASTORE      = new SASTORE();
-        public static final StackInstruction      POP          = new POP();
-        public static final StackInstruction      POP2         = new POP2();
-        public static final StackInstruction      DUP          = new DUP();
-        public static final StackInstruction      DUP_X1       = new DUP_X1();
-        public static final StackInstruction      DUP_X2       = new DUP_X2();
-        public static final StackInstruction      DUP2         = new DUP2();
-        public static final StackInstruction      DUP2_X1      = new DUP2_X1();
-        public static final StackInstruction      DUP2_X2      = new DUP2_X2();
-        public static final StackInstruction      SWAP         = new SWAP();
-        public static final ArithmeticInstruction IADD         = new IADD();
-        public static final ArithmeticInstruction LADD         = new LADD();
-        public static final ArithmeticInstruction FADD         = new FADD();
-        public static final ArithmeticInstruction DADD         = new DADD();
-        public static final ArithmeticInstruction ISUB         = new ISUB();
-        public static final ArithmeticInstruction LSUB         = new LSUB();
-        public static final ArithmeticInstruction FSUB         = new FSUB();
-        public static final ArithmeticInstruction DSUB         = new DSUB();
-        public static final ArithmeticInstruction IMUL         = new IMUL();
-        public static final ArithmeticInstruction LMUL         = new LMUL();
-        public static final ArithmeticInstruction FMUL         = new FMUL();
-        public static final ArithmeticInstruction DMUL         = new DMUL();
-        public static final ArithmeticInstruction IDIV         = new IDIV();
-        public static final ArithmeticInstruction LDIV         = new LDIV();
-        public static final ArithmeticInstruction FDIV         = new FDIV();
-        public static final ArithmeticInstruction DDIV         = new DDIV();
-        public static final ArithmeticInstruction IREM         = new IREM();
-        public static final ArithmeticInstruction LREM         = new LREM();
-        public static final ArithmeticInstruction FREM         = new FREM();
-        public static final ArithmeticInstruction DREM         = new DREM();
-        public static final ArithmeticInstruction INEG         = new INEG();
-        public static final ArithmeticInstruction LNEG         = new LNEG();
-        public static final ArithmeticInstruction FNEG         = new FNEG();
-        public static final ArithmeticInstruction DNEG         = new DNEG();
-        public static final ArithmeticInstruction ISHL         = new ISHL();
-        public static final ArithmeticInstruction LSHL         = new LSHL();
-        public static final ArithmeticInstruction ISHR         = new ISHR();
-        public static final ArithmeticInstruction LSHR         = new LSHR();
-        public static final ArithmeticInstruction IUSHR        = new IUSHR();
-        public static final ArithmeticInstruction LUSHR        = new LUSHR();
-        public static final ArithmeticInstruction IAND         = new IAND();
-        public static final ArithmeticInstruction LAND         = new LAND();
-        public static final ArithmeticInstruction IOR          = new IOR();
-        public static final ArithmeticInstruction LOR          = new LOR();
-        public static final ArithmeticInstruction IXOR         = new IXOR();
-        public static final ArithmeticInstruction LXOR         = new LXOR();
-        public static final ConversionInstruction I2L          = new I2L();
-        public static final ConversionInstruction I2F          = new I2F();
-        public static final ConversionInstruction I2D          = new I2D();
-        public static final ConversionInstruction L2I          = new L2I();
-        public static final ConversionInstruction L2F          = new L2F();
-        public static final ConversionInstruction L2D          = new L2D();
-        public static final ConversionInstruction F2I          = new F2I();
-        public static final ConversionInstruction F2L          = new F2L();
-        public static final ConversionInstruction F2D          = new F2D();
-        public static final ConversionInstruction D2I          = new D2I();
-        public static final ConversionInstruction D2L          = new D2L();
-        public static final ConversionInstruction D2F          = new D2F();
-        public static final ConversionInstruction I2B          = new I2B();
-        public static final ConversionInstruction I2C          = new I2C();
-        public static final ConversionInstruction I2S          = new I2S();
-        public static final Instruction           LCMP         = new LCMP();
-        public static final Instruction           FCMPL        = new FCMPL();
-        public static final Instruction           FCMPG        = new FCMPG();
-        public static final Instruction           DCMPL        = new DCMPL();
-        public static final Instruction           DCMPG        = new DCMPG();
-        public static final ReturnInstruction     IRETURN      = new IRETURN();
-        public static final ReturnInstruction     LRETURN      = new LRETURN();
-        public static final ReturnInstruction     FRETURN      = new FRETURN();
-        public static final ReturnInstruction     DRETURN      = new DRETURN();
-        public static final ReturnInstruction     ARETURN      = new ARETURN();
-        public static final ReturnInstruction     RETURN       = new RETURN();
-        public static final Instruction           ARRAYLENGTH  = new ARRAYLENGTH();
-        public static final Instruction           ATHROW       = new ATHROW();
-        public static final Instruction           MONITORENTER = new MONITORENTER();
-        public static final Instruction           MONITOREXIT  = new MONITOREXIT();
+        Instruction           NOP          = new NOP();
+        Instruction           ACONST_NULL  = new ACONST_NULL();
+        Instruction           ICONST_M1    = new ICONST(-1);
+        Instruction           ICONST_0     = new ICONST(0);
+        Instruction           ICONST_1     = new ICONST(1);
+        Instruction           ICONST_2     = new ICONST(2);
+        Instruction           ICONST_3     = new ICONST(3);
+        Instruction           ICONST_4     = new ICONST(4);
+        Instruction           ICONST_5     = new ICONST(5);
+        Instruction           LCONST_0     = new LCONST(0);
+        Instruction           LCONST_1     = new LCONST(1);
+        Instruction           FCONST_0     = new FCONST(0);
+        Instruction           FCONST_1     = new FCONST(1);
+        Instruction           FCONST_2     = new FCONST(2);
+        Instruction           DCONST_0     = new DCONST(0);
+        Instruction           DCONST_1     = new DCONST(1);
+        ArrayInstruction      IALOAD       = new IALOAD();
+        ArrayInstruction      LALOAD       = new LALOAD();
+        ArrayInstruction      FALOAD       = new FALOAD();
+        ArrayInstruction      DALOAD       = new DALOAD();
+        ArrayInstruction      AALOAD       = new AALOAD();
+        ArrayInstruction      BALOAD       = new BALOAD();
+        ArrayInstruction      CALOAD       = new CALOAD();
+        ArrayInstruction      SALOAD       = new SALOAD();
+        ArrayInstruction      IASTORE      = new IASTORE();
+        ArrayInstruction      LASTORE      = new LASTORE();
+        ArrayInstruction      FASTORE      = new FASTORE();
+        ArrayInstruction      DASTORE      = new DASTORE();
+        ArrayInstruction      AASTORE      = new AASTORE();
+        ArrayInstruction      BASTORE      = new BASTORE();
+        ArrayInstruction      CASTORE      = new CASTORE();
+        ArrayInstruction      SASTORE      = new SASTORE();
+        StackInstruction      POP          = new POP();
+        StackInstruction      POP2         = new POP2();
+        StackInstruction      DUP          = new DUP();
+        StackInstruction      DUP_X1       = new DUP_X1();
+        StackInstruction      DUP_X2       = new DUP_X2();
+        StackInstruction      DUP2         = new DUP2();
+        StackInstruction      DUP2_X1      = new DUP2_X1();
+        StackInstruction      DUP2_X2      = new DUP2_X2();
+        StackInstruction      SWAP         = new SWAP();
+        ArithmeticInstruction IADD         = new IADD();
+        ArithmeticInstruction LADD         = new LADD();
+        ArithmeticInstruction FADD         = new FADD();
+        ArithmeticInstruction DADD         = new DADD();
+        ArithmeticInstruction ISUB         = new ISUB();
+        ArithmeticInstruction LSUB         = new LSUB();
+        ArithmeticInstruction FSUB         = new FSUB();
+        ArithmeticInstruction DSUB         = new DSUB();
+        ArithmeticInstruction IMUL         = new IMUL();
+        ArithmeticInstruction LMUL         = new LMUL();
+        ArithmeticInstruction FMUL         = new FMUL();
+        ArithmeticInstruction DMUL         = new DMUL();
+        ArithmeticInstruction IDIV         = new IDIV();
+        ArithmeticInstruction LDIV         = new LDIV();
+        ArithmeticInstruction FDIV         = new FDIV();
+        ArithmeticInstruction DDIV         = new DDIV();
+        ArithmeticInstruction IREM         = new IREM();
+        ArithmeticInstruction LREM         = new LREM();
+        ArithmeticInstruction FREM         = new FREM();
+        ArithmeticInstruction DREM         = new DREM();
+        ArithmeticInstruction INEG         = new INEG();
+        ArithmeticInstruction LNEG         = new LNEG();
+        ArithmeticInstruction FNEG         = new FNEG();
+        ArithmeticInstruction DNEG         = new DNEG();
+        ArithmeticInstruction ISHL         = new ISHL();
+        ArithmeticInstruction LSHL         = new LSHL();
+        ArithmeticInstruction ISHR         = new ISHR();
+        ArithmeticInstruction LSHR         = new LSHR();
+        ArithmeticInstruction IUSHR        = new IUSHR();
+        ArithmeticInstruction LUSHR        = new LUSHR();
+        ArithmeticInstruction IAND         = new IAND();
+        ArithmeticInstruction LAND         = new LAND();
+        ArithmeticInstruction IOR          = new IOR();
+        ArithmeticInstruction LOR          = new LOR();
+        ArithmeticInstruction IXOR         = new IXOR();
+        ArithmeticInstruction LXOR         = new LXOR();
+        ConversionInstruction I2L          = new I2L();
+        ConversionInstruction I2F          = new I2F();
+        ConversionInstruction I2D          = new I2D();
+        ConversionInstruction L2I          = new L2I();
+        ConversionInstruction L2F          = new L2F();
+        ConversionInstruction L2D          = new L2D();
+        ConversionInstruction F2I          = new F2I();
+        ConversionInstruction F2L          = new F2L();
+        ConversionInstruction F2D          = new F2D();
+        ConversionInstruction D2I          = new D2I();
+        ConversionInstruction D2L          = new D2L();
+        ConversionInstruction D2F          = new D2F();
+        ConversionInstruction I2B          = new I2B();
+        ConversionInstruction I2C          = new I2C();
+        ConversionInstruction I2S          = new I2S();
+        Instruction           LCMP         = new LCMP();
+        Instruction           FCMPL        = new FCMPL();
+        Instruction           FCMPG        = new FCMPG();
+        Instruction           DCMPL        = new DCMPL();
+        Instruction           DCMPG        = new DCMPG();
+        ReturnInstruction     IRETURN      = new IRETURN();
+        ReturnInstruction     LRETURN      = new LRETURN();
+        ReturnInstruction     FRETURN      = new FRETURN();
+        ReturnInstruction     DRETURN      = new DRETURN();
+        ReturnInstruction     ARETURN      = new ARETURN();
+        ReturnInstruction     RETURN       = new RETURN();
+        Instruction           ARRAYLENGTH  = new ARRAYLENGTH();
+        Instruction           ATHROW       = new ATHROW();
+        Instruction           MONITORENTER = new MONITORENTER();
+        Instruction           MONITOREXIT  = new MONITOREXIT();
         
         /** You can use these constants in multiple places safely, if you can guarantee
          * that you will never alter their internal values, e.g. call setIndex().
          */
-        public static final LocalVariableInstruction THIS    = new ALOAD(0);
-        public static final LocalVariableInstruction ALOAD_0 = THIS;
-        public static final LocalVariableInstruction ALOAD_1 = new ALOAD(1);
-        public static final LocalVariableInstruction ALOAD_2 = new ALOAD(2);
-        public static final LocalVariableInstruction ILOAD_0 = new ILOAD(0);
-        public static final LocalVariableInstruction ILOAD_1 = new ILOAD(1);
-        public static final LocalVariableInstruction ILOAD_2 = new ILOAD(2);
-        public static final LocalVariableInstruction ASTORE_0 = new ASTORE(0);
-        public static final LocalVariableInstruction ASTORE_1 = new ASTORE(1);
-        public static final LocalVariableInstruction ASTORE_2 = new ASTORE(2);
-        public static final LocalVariableInstruction ISTORE_0 = new ISTORE(0);
-        public static final LocalVariableInstruction ISTORE_1 = new ISTORE(1);
-        public static final LocalVariableInstruction ISTORE_2 = new ISTORE(2);
+        LocalVariableInstruction THIS    = new ALOAD(0);
+        LocalVariableInstruction ALOAD_0 = THIS;
+        LocalVariableInstruction ALOAD_1 = new ALOAD(1);
+        LocalVariableInstruction ALOAD_2 = new ALOAD(2);
+        LocalVariableInstruction ILOAD_0 = new ILOAD(0);
+        LocalVariableInstruction ILOAD_1 = new ILOAD(1);
+        LocalVariableInstruction ILOAD_2 = new ILOAD(2);
+        LocalVariableInstruction ASTORE_0 = new ASTORE(0);
+        LocalVariableInstruction ASTORE_1 = new ASTORE(1);
+        LocalVariableInstruction ASTORE_2 = new ASTORE(2);
+        LocalVariableInstruction ISTORE_0 = new ISTORE(0);
+        LocalVariableInstruction ISTORE_1 = new ISTORE(1);
+        LocalVariableInstruction ISTORE_2 = new ISTORE(2);
         
         /** Get object via its opcode, for immutable instructions like
          * branch instructions entries are set to null.
          */
-        public static final Instruction[] INSTRUCTIONS = new Instruction[256];
+        Instruction[] INSTRUCTIONS = new Instruction[256];
         
         /** Interfaces may have no static initializers, so we simulate this
          * with an inner class.
          */
-        static final Clinit bla = new Clinit();
+        Clinit bla = new Clinit();
         
-        static class Clinit {
+        class Clinit {
             Clinit() {
                 INSTRUCTIONS[jq_ClassFileConstants.jbc_NOP] = NOP;
                 INSTRUCTIONS[jq_ClassFileConstants.jbc_ACONST_NULL] = ACONST_NULL;
@@ -8666,188 +8666,188 @@ public interface Bytecodes {
         }
     }
     
-    public interface Visitor {
-        public void visitStackInstruction(StackInstruction obj);
-        public void visitLocalVariableInstruction(LocalVariableInstruction obj);
-        public void visitBranchInstruction(BranchInstruction obj);
-        public void visitLoadClass(LoadClass obj);
-        public void visitFieldInstruction(FieldInstruction obj);
-        public void visitIfInstruction(IfInstruction obj);
-        public void visitConversionInstruction(ConversionInstruction obj);
-        public void visitPopInstruction(PopInstruction obj);
-        public void visitStoreInstruction(StoreInstruction obj);
-        public void visitTypedInstruction(TypedInstruction obj);
-        public void visitSelect(Select obj);
-        public void visitJsrInstruction(JsrInstruction obj);
-        public void visitGotoInstruction(GotoInstruction obj);
-        public void visitUnconditionalBranch(UnconditionalBranch obj);
-        public void visitPushInstruction(PushInstruction obj);
-        public void visitArithmeticInstruction(ArithmeticInstruction obj);
-        public void visitCPInstruction(CPInstruction obj);
-        public void visitInvokeInstruction(InvokeInstruction obj);
-        public void visitArrayInstruction(ArrayInstruction obj);
-        public void visitAllocationInstruction(AllocationInstruction obj);
-        public void visitReturnInstruction(ReturnInstruction obj);
-        public void visitFieldOrMethod(FieldOrMethod obj);
-        public void visitConstantPushInstruction(ConstantPushInstruction obj);
-        public void visitExceptionThrower(ExceptionThrower obj);
-        public void visitLoadInstruction(LoadInstruction obj);
-        public void visitVariableLengthInstruction(VariableLengthInstruction obj);
-        public void visitStackProducer(StackProducer obj);
-        public void visitStackConsumer(StackConsumer obj);
-        public void visitACONST_NULL(ACONST_NULL obj);
-        public void visitGETSTATIC(GETSTATIC obj);
-        public void visitIF_ICMPLT(IF_ICMPLT obj);
-        public void visitMONITOREXIT(MONITOREXIT obj);
-        public void visitIFLT(IFLT obj);
-        public void visitLSTORE(LSTORE obj);
-        public void visitPOP2(POP2 obj);
-        public void visitBASTORE(BASTORE obj);
-        public void visitISTORE(ISTORE obj);
-        public void visitCHECKCAST(CHECKCAST obj);
-        public void visitFCMPG(FCMPG obj);
-        public void visitI2F(I2F obj);
-        public void visitATHROW(ATHROW obj);
-        public void visitDCMPL(DCMPL obj);
-        public void visitARRAYLENGTH(ARRAYLENGTH obj);
-        public void visitDUP(DUP obj);
-        public void visitINVOKESTATIC(INVOKESTATIC obj);
-        public void visitLCONST(LCONST obj);
-        public void visitDREM(DREM obj);
-        public void visitIFGE(IFGE obj);
-        public void visitCALOAD(CALOAD obj);
-        public void visitLASTORE(LASTORE obj);
-        public void visitI2D(I2D obj);
-        public void visitDADD(DADD obj);
-        public void visitINVOKESPECIAL(INVOKESPECIAL obj);
-        public void visitIAND(IAND obj);
-        public void visitPUTFIELD(PUTFIELD obj);
-        public void visitILOAD(ILOAD obj);
-        public void visitDLOAD(DLOAD obj);
-        public void visitDCONST(DCONST obj);
-        public void visitNEW(NEW obj);
-        public void visitIFNULL(IFNULL obj);
-        public void visitLSUB(LSUB obj);
-        public void visitL2I(L2I obj);
-        public void visitISHR(ISHR obj);
-        public void visitTABLESWITCH(TABLESWITCH obj);
-        public void visitIINC(IINC obj);
-        public void visitDRETURN(DRETURN obj);
-        public void visitFSTORE(FSTORE obj);
-        public void visitDASTORE(DASTORE obj);
-        public void visitIALOAD(IALOAD obj);
-        public void visitDDIV(DDIV obj);
-        public void visitIF_ICMPGE(IF_ICMPGE obj);
-        public void visitLAND(LAND obj);
-        public void visitIDIV(IDIV obj);
-        public void visitLOR(LOR obj);
-        public void visitCASTORE(CASTORE obj);
-        public void visitFREM(FREM obj);
-        public void visitLDC(LDC obj);
-        public void visitBIPUSH(BIPUSH obj);
-        public void visitDSTORE(DSTORE obj);
-        public void visitF2L(F2L obj);
-        public void visitFMUL(FMUL obj);
-        public void visitLLOAD(LLOAD obj);
-        public void visitJSR(JSR obj);
-        public void visitFSUB(FSUB obj);
-        public void visitSASTORE(SASTORE obj);
-        public void visitALOAD(ALOAD obj);
-        public void visitDUP2_X2(DUP2_X2 obj);
-        public void visitRETURN(RETURN obj);
-        public void visitDALOAD(DALOAD obj);
-        public void visitSIPUSH(SIPUSH obj);
-        public void visitDSUB(DSUB obj);
-        public void visitL2F(L2F obj);
-        public void visitIF_ICMPGT(IF_ICMPGT obj);
-        public void visitF2D(F2D obj);
-        public void visitI2L(I2L obj);
-        public void visitIF_ACMPNE(IF_ACMPNE obj);
-        public void visitPOP(POP obj);
-        public void visitI2S(I2S obj);
-        public void visitIFEQ(IFEQ obj);
-        public void visitSWAP(SWAP obj);
-        public void visitIOR(IOR obj);
-        public void visitIREM(IREM obj);
-        public void visitIASTORE(IASTORE obj);
-        public void visitNEWARRAY(NEWARRAY obj);
-        public void visitINVOKEINTERFACE(INVOKEINTERFACE obj);
-        public void visitINEG(INEG obj);
-        public void visitLCMP(LCMP obj);
-        public void visitJSR_W(JSR_W obj);
-        public void visitMULTIANEWARRAY(MULTIANEWARRAY obj);
-        public void visitDUP_X2(DUP_X2 obj);
-        public void visitSALOAD(SALOAD obj);
-        public void visitIFNONNULL(IFNONNULL obj);
-        public void visitDMUL(DMUL obj);
-        public void visitIFNE(IFNE obj);
-        public void visitIF_ICMPLE(IF_ICMPLE obj);
-        public void visitLDC2_W(LDC2_W obj);
-        public void visitGETFIELD(GETFIELD obj);
-        public void visitLADD(LADD obj);
-        public void visitNOP(NOP obj);
-        public void visitFALOAD(FALOAD obj);
-        public void visitINSTANCEOF(INSTANCEOF obj);
-        public void visitIFLE(IFLE obj);
-        public void visitLXOR(LXOR obj);
-        public void visitLRETURN(LRETURN obj);
-        public void visitFCONST(FCONST obj);
-        public void visitIUSHR(IUSHR obj);
-        public void visitBALOAD(BALOAD obj);
-        public void visitDUP2(DUP2 obj);
-        public void visitIF_ACMPEQ(IF_ACMPEQ obj);
-        public void visitMONITORENTER(MONITORENTER obj);
-        public void visitLSHL(LSHL obj);
-        public void visitDCMPG(DCMPG obj);
-        public void visitD2L(D2L obj);
-        public void visitL2D(L2D obj);
-        public void visitRET(RET obj);
-        public void visitIFGT(IFGT obj);
-        public void visitIXOR(IXOR obj);
-        public void visitINVOKEVIRTUAL(INVOKEVIRTUAL obj);
-        public void visitFASTORE(FASTORE obj);
-        public void visitIRETURN(IRETURN obj);
-        public void visitIF_ICMPNE(IF_ICMPNE obj);
-        public void visitFLOAD(FLOAD obj);
-        public void visitLDIV(LDIV obj);
-        public void visitPUTSTATIC(PUTSTATIC obj);
-        public void visitAALOAD(AALOAD obj);
-        public void visitD2I(D2I obj);
-        public void visitIF_ICMPEQ(IF_ICMPEQ obj);
-        public void visitAASTORE(AASTORE obj);
-        public void visitARETURN(ARETURN obj);
-        public void visitDUP2_X1(DUP2_X1 obj);
-        public void visitFNEG(FNEG obj);
-        public void visitGOTO_W(GOTO_W obj);
-        public void visitD2F(D2F obj);
-        public void visitGOTO(GOTO obj);
-        public void visitISUB(ISUB obj);
-        public void visitF2I(F2I obj);
-        public void visitDNEG(DNEG obj);
-        public void visitICONST(ICONST obj);
-        public void visitFDIV(FDIV obj);
-        public void visitI2B(I2B obj);
-        public void visitLNEG(LNEG obj);
-        public void visitLREM(LREM obj);
-        public void visitIMUL(IMUL obj);
-        public void visitIADD(IADD obj);
-        public void visitLSHR(LSHR obj);
-        public void visitLOOKUPSWITCH(LOOKUPSWITCH obj);
-        public void visitDUP_X1(DUP_X1 obj);
-        public void visitFCMPL(FCMPL obj);
-        public void visitI2C(I2C obj);
-        public void visitLMUL(LMUL obj);
-        public void visitLUSHR(LUSHR obj);
-        public void visitISHL(ISHL obj);
-        public void visitLALOAD(LALOAD obj);
-        public void visitASTORE(ASTORE obj);
-        public void visitANEWARRAY(ANEWARRAY obj);
-        public void visitFRETURN(FRETURN obj);
-        public void visitFADD(FADD obj);
-        public void visitBREAKPOINT(BREAKPOINT obj);
+    interface Visitor {
+        void visitStackInstruction(StackInstruction obj);
+        void visitLocalVariableInstruction(LocalVariableInstruction obj);
+        void visitBranchInstruction(BranchInstruction obj);
+        void visitLoadClass(LoadClass obj);
+        void visitFieldInstruction(FieldInstruction obj);
+        void visitIfInstruction(IfInstruction obj);
+        void visitConversionInstruction(ConversionInstruction obj);
+        void visitPopInstruction(PopInstruction obj);
+        void visitStoreInstruction(StoreInstruction obj);
+        void visitTypedInstruction(TypedInstruction obj);
+        void visitSelect(Select obj);
+        void visitJsrInstruction(JsrInstruction obj);
+        void visitGotoInstruction(GotoInstruction obj);
+        void visitUnconditionalBranch(UnconditionalBranch obj);
+        void visitPushInstruction(PushInstruction obj);
+        void visitArithmeticInstruction(ArithmeticInstruction obj);
+        void visitCPInstruction(CPInstruction obj);
+        void visitInvokeInstruction(InvokeInstruction obj);
+        void visitArrayInstruction(ArrayInstruction obj);
+        void visitAllocationInstruction(AllocationInstruction obj);
+        void visitReturnInstruction(ReturnInstruction obj);
+        void visitFieldOrMethod(FieldOrMethod obj);
+        void visitConstantPushInstruction(ConstantPushInstruction obj);
+        void visitExceptionThrower(ExceptionThrower obj);
+        void visitLoadInstruction(LoadInstruction obj);
+        void visitVariableLengthInstruction(VariableLengthInstruction obj);
+        void visitStackProducer(StackProducer obj);
+        void visitStackConsumer(StackConsumer obj);
+        void visitACONST_NULL(ACONST_NULL obj);
+        void visitGETSTATIC(GETSTATIC obj);
+        void visitIF_ICMPLT(IF_ICMPLT obj);
+        void visitMONITOREXIT(MONITOREXIT obj);
+        void visitIFLT(IFLT obj);
+        void visitLSTORE(LSTORE obj);
+        void visitPOP2(POP2 obj);
+        void visitBASTORE(BASTORE obj);
+        void visitISTORE(ISTORE obj);
+        void visitCHECKCAST(CHECKCAST obj);
+        void visitFCMPG(FCMPG obj);
+        void visitI2F(I2F obj);
+        void visitATHROW(ATHROW obj);
+        void visitDCMPL(DCMPL obj);
+        void visitARRAYLENGTH(ARRAYLENGTH obj);
+        void visitDUP(DUP obj);
+        void visitINVOKESTATIC(INVOKESTATIC obj);
+        void visitLCONST(LCONST obj);
+        void visitDREM(DREM obj);
+        void visitIFGE(IFGE obj);
+        void visitCALOAD(CALOAD obj);
+        void visitLASTORE(LASTORE obj);
+        void visitI2D(I2D obj);
+        void visitDADD(DADD obj);
+        void visitINVOKESPECIAL(INVOKESPECIAL obj);
+        void visitIAND(IAND obj);
+        void visitPUTFIELD(PUTFIELD obj);
+        void visitILOAD(ILOAD obj);
+        void visitDLOAD(DLOAD obj);
+        void visitDCONST(DCONST obj);
+        void visitNEW(NEW obj);
+        void visitIFNULL(IFNULL obj);
+        void visitLSUB(LSUB obj);
+        void visitL2I(L2I obj);
+        void visitISHR(ISHR obj);
+        void visitTABLESWITCH(TABLESWITCH obj);
+        void visitIINC(IINC obj);
+        void visitDRETURN(DRETURN obj);
+        void visitFSTORE(FSTORE obj);
+        void visitDASTORE(DASTORE obj);
+        void visitIALOAD(IALOAD obj);
+        void visitDDIV(DDIV obj);
+        void visitIF_ICMPGE(IF_ICMPGE obj);
+        void visitLAND(LAND obj);
+        void visitIDIV(IDIV obj);
+        void visitLOR(LOR obj);
+        void visitCASTORE(CASTORE obj);
+        void visitFREM(FREM obj);
+        void visitLDC(LDC obj);
+        void visitBIPUSH(BIPUSH obj);
+        void visitDSTORE(DSTORE obj);
+        void visitF2L(F2L obj);
+        void visitFMUL(FMUL obj);
+        void visitLLOAD(LLOAD obj);
+        void visitJSR(JSR obj);
+        void visitFSUB(FSUB obj);
+        void visitSASTORE(SASTORE obj);
+        void visitALOAD(ALOAD obj);
+        void visitDUP2_X2(DUP2_X2 obj);
+        void visitRETURN(RETURN obj);
+        void visitDALOAD(DALOAD obj);
+        void visitSIPUSH(SIPUSH obj);
+        void visitDSUB(DSUB obj);
+        void visitL2F(L2F obj);
+        void visitIF_ICMPGT(IF_ICMPGT obj);
+        void visitF2D(F2D obj);
+        void visitI2L(I2L obj);
+        void visitIF_ACMPNE(IF_ACMPNE obj);
+        void visitPOP(POP obj);
+        void visitI2S(I2S obj);
+        void visitIFEQ(IFEQ obj);
+        void visitSWAP(SWAP obj);
+        void visitIOR(IOR obj);
+        void visitIREM(IREM obj);
+        void visitIASTORE(IASTORE obj);
+        void visitNEWARRAY(NEWARRAY obj);
+        void visitINVOKEINTERFACE(INVOKEINTERFACE obj);
+        void visitINEG(INEG obj);
+        void visitLCMP(LCMP obj);
+        void visitJSR_W(JSR_W obj);
+        void visitMULTIANEWARRAY(MULTIANEWARRAY obj);
+        void visitDUP_X2(DUP_X2 obj);
+        void visitSALOAD(SALOAD obj);
+        void visitIFNONNULL(IFNONNULL obj);
+        void visitDMUL(DMUL obj);
+        void visitIFNE(IFNE obj);
+        void visitIF_ICMPLE(IF_ICMPLE obj);
+        void visitLDC2_W(LDC2_W obj);
+        void visitGETFIELD(GETFIELD obj);
+        void visitLADD(LADD obj);
+        void visitNOP(NOP obj);
+        void visitFALOAD(FALOAD obj);
+        void visitINSTANCEOF(INSTANCEOF obj);
+        void visitIFLE(IFLE obj);
+        void visitLXOR(LXOR obj);
+        void visitLRETURN(LRETURN obj);
+        void visitFCONST(FCONST obj);
+        void visitIUSHR(IUSHR obj);
+        void visitBALOAD(BALOAD obj);
+        void visitDUP2(DUP2 obj);
+        void visitIF_ACMPEQ(IF_ACMPEQ obj);
+        void visitMONITORENTER(MONITORENTER obj);
+        void visitLSHL(LSHL obj);
+        void visitDCMPG(DCMPG obj);
+        void visitD2L(D2L obj);
+        void visitL2D(L2D obj);
+        void visitRET(RET obj);
+        void visitIFGT(IFGT obj);
+        void visitIXOR(IXOR obj);
+        void visitINVOKEVIRTUAL(INVOKEVIRTUAL obj);
+        void visitFASTORE(FASTORE obj);
+        void visitIRETURN(IRETURN obj);
+        void visitIF_ICMPNE(IF_ICMPNE obj);
+        void visitFLOAD(FLOAD obj);
+        void visitLDIV(LDIV obj);
+        void visitPUTSTATIC(PUTSTATIC obj);
+        void visitAALOAD(AALOAD obj);
+        void visitD2I(D2I obj);
+        void visitIF_ICMPEQ(IF_ICMPEQ obj);
+        void visitAASTORE(AASTORE obj);
+        void visitARETURN(ARETURN obj);
+        void visitDUP2_X1(DUP2_X1 obj);
+        void visitFNEG(FNEG obj);
+        void visitGOTO_W(GOTO_W obj);
+        void visitD2F(D2F obj);
+        void visitGOTO(GOTO obj);
+        void visitISUB(ISUB obj);
+        void visitF2I(F2I obj);
+        void visitDNEG(DNEG obj);
+        void visitICONST(ICONST obj);
+        void visitFDIV(FDIV obj);
+        void visitI2B(I2B obj);
+        void visitLNEG(LNEG obj);
+        void visitLREM(LREM obj);
+        void visitIMUL(IMUL obj);
+        void visitIADD(IADD obj);
+        void visitLSHR(LSHR obj);
+        void visitLOOKUPSWITCH(LOOKUPSWITCH obj);
+        void visitDUP_X1(DUP_X1 obj);
+        void visitFCMPL(FCMPL obj);
+        void visitI2C(I2C obj);
+        void visitLMUL(LMUL obj);
+        void visitLUSHR(LUSHR obj);
+        void visitISHL(ISHL obj);
+        void visitLALOAD(LALOAD obj);
+        void visitASTORE(ASTORE obj);
+        void visitANEWARRAY(ANEWARRAY obj);
+        void visitFRETURN(FRETURN obj);
+        void visitFADD(FADD obj);
+        void visitBREAKPOINT(BREAKPOINT obj);
     }
     
-    public abstract class EmptyVisitor implements Visitor {
+    abstract class EmptyVisitor implements Visitor {
         public void visitStackInstruction(StackInstruction obj) { }
         public void visitLocalVariableInstruction(LocalVariableInstruction obj) { }
         public void visitBranchInstruction(BranchInstruction obj) { }

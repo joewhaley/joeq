@@ -13,103 +13,103 @@ package Util;
  */
 public abstract class Templates {
 
-    public static abstract class List {
-        public static interface jq_Type extends java.util.List {
-            public Clazz.jq_Type getType(int index);
-            public ListIterator.jq_Type typeIterator();
+    public abstract static class List {
+        public interface jq_Type extends java.util.List {
+            Clazz.jq_Type getType(int index);
+            ListIterator.jq_Type typeIterator();
         }
-        public static interface jq_Reference extends jq_Type {
-            public Clazz.jq_Reference getReference(int index);
-            public ListIterator.jq_Reference referenceIterator();
+        public interface jq_Reference extends jq_Type {
+            Clazz.jq_Reference getReference(int index);
+            ListIterator.jq_Reference referenceIterator();
         }
-        public static interface jq_Class extends jq_Reference {
-            public Clazz.jq_Class getClass(int index);
-            public ListIterator.jq_Class classIterator();
+        public interface jq_Class extends jq_Reference {
+            Clazz.jq_Class getClass(int index);
+            ListIterator.jq_Class classIterator();
         }
-        public static interface jq_Member extends java.util.List {
-            public Clazz.jq_Member getMember(int index);
-            public ListIterator.jq_Member memberIterator();
+        public interface jq_Member extends java.util.List {
+            Clazz.jq_Member getMember(int index);
+            ListIterator.jq_Member memberIterator();
         }
-        public static interface jq_Method extends jq_Member {
-            public Clazz.jq_Method getMethod(int index);
-            public ListIterator.jq_Method methodIterator();
+        public interface jq_Method extends jq_Member {
+            Clazz.jq_Method getMethod(int index);
+            ListIterator.jq_Method methodIterator();
         }
-        public static interface jq_InstanceMethod extends jq_Method {
-            public Clazz.jq_InstanceMethod getInstanceMethod(int index);
-            public ListIterator.jq_InstanceMethod instanceMethodIterator();
+        public interface jq_InstanceMethod extends jq_Method {
+            Clazz.jq_InstanceMethod getInstanceMethod(int index);
+            ListIterator.jq_InstanceMethod instanceMethodIterator();
         }
-        public static interface jq_StaticMethod extends jq_Method {
-            public Clazz.jq_StaticMethod getStaticMethod(int index);
-            public ListIterator.jq_StaticMethod staticMethodIterator();
+        public interface jq_StaticMethod extends jq_Method {
+            Clazz.jq_StaticMethod getStaticMethod(int index);
+            ListIterator.jq_StaticMethod staticMethodIterator();
         }
         
-        public static interface BasicBlock extends java.util.List {
-            public Compil3r.Quad.BasicBlock getBasicBlock(int index);
-            public ListIterator.BasicBlock basicBlockIterator();
+        public interface BasicBlock extends java.util.List {
+            Compil3r.Quad.BasicBlock getBasicBlock(int index);
+            ListIterator.BasicBlock basicBlockIterator();
         }
-        public static interface ExceptionHandler extends java.util.List {
-            public Compil3r.Quad.ExceptionHandler getExceptionHandler(int index);
-            public ListIterator.ExceptionHandler exceptionHandlerIterator();
+        public interface ExceptionHandler extends java.util.List {
+            Compil3r.Quad.ExceptionHandler getExceptionHandler(int index);
+            ListIterator.ExceptionHandler exceptionHandlerIterator();
         }
-        public static interface Quad extends java.util.List {
-            public Compil3r.Quad.Quad getQuad(int index);
-            public ListIterator.Quad quadIterator();
+        public interface Quad extends java.util.List {
+            Compil3r.Quad.Quad getQuad(int index);
+            ListIterator.Quad quadIterator();
         }
-        public static interface RegisterOperand extends java.util.List {
-            public Compil3r.Quad.Operand.RegisterOperand getRegisterOperand(int index);
-            public ListIterator.RegisterOperand registerOperandIterator();
+        public interface RegisterOperand extends java.util.List {
+            Compil3r.Quad.Operand.RegisterOperand getRegisterOperand(int index);
+            ListIterator.RegisterOperand registerOperandIterator();
         }
     }
     
-    public static abstract class ListIterator {
-        public static interface jq_Type extends java.util.ListIterator {
-            public Clazz.jq_Type nextType();
-            public Clazz.jq_Type previousType();
+    public abstract static class ListIterator {
+        public interface jq_Type extends java.util.ListIterator {
+            Clazz.jq_Type nextType();
+            Clazz.jq_Type previousType();
         }
-        public static interface jq_Reference extends jq_Type {
-            public Clazz.jq_Reference nextReference();
-            public Clazz.jq_Reference previousReference();
+        public interface jq_Reference extends jq_Type {
+            Clazz.jq_Reference nextReference();
+            Clazz.jq_Reference previousReference();
         }
-        public static interface jq_Class extends jq_Reference {
-            public Clazz.jq_Class nextClass();
-            public Clazz.jq_Class previousClass();
+        public interface jq_Class extends jq_Reference {
+            Clazz.jq_Class nextClass();
+            Clazz.jq_Class previousClass();
         }
-        public static interface jq_Member extends java.util.ListIterator {
-            public Clazz.jq_Member nextMember();
-            public Clazz.jq_Member previousMember();
+        public interface jq_Member extends java.util.ListIterator {
+            Clazz.jq_Member nextMember();
+            Clazz.jq_Member previousMember();
         }
-        public static interface jq_Method extends jq_Member {
-            public Clazz.jq_Method nextMethod();
-            public Clazz.jq_Method previousMethod();
+        public interface jq_Method extends jq_Member {
+            Clazz.jq_Method nextMethod();
+            Clazz.jq_Method previousMethod();
         }
-        public static interface jq_InstanceMethod extends jq_Method {
-            public Clazz.jq_InstanceMethod nextInstanceMethod();
-            public Clazz.jq_InstanceMethod previousInstanceMethod();
+        public interface jq_InstanceMethod extends jq_Method {
+            Clazz.jq_InstanceMethod nextInstanceMethod();
+            Clazz.jq_InstanceMethod previousInstanceMethod();
         }
-        public static interface jq_StaticMethod extends jq_Method {
-            public Clazz.jq_StaticMethod nextStaticMethod();
-            public Clazz.jq_StaticMethod previousStaticMethod();
+        public interface jq_StaticMethod extends jq_Method {
+            Clazz.jq_StaticMethod nextStaticMethod();
+            Clazz.jq_StaticMethod previousStaticMethod();
         }
         
-        public static interface BasicBlock extends java.util.ListIterator {
-            public Compil3r.Quad.BasicBlock nextBasicBlock();
-            public Compil3r.Quad.BasicBlock previousBasicBlock();
+        public interface BasicBlock extends java.util.ListIterator {
+            Compil3r.Quad.BasicBlock nextBasicBlock();
+            Compil3r.Quad.BasicBlock previousBasicBlock();
         }
-        public static interface ExceptionHandler extends java.util.ListIterator {
-            public Compil3r.Quad.ExceptionHandler nextExceptionHandler();
-            public Compil3r.Quad.ExceptionHandler previousExceptionHandler();
+        public interface ExceptionHandler extends java.util.ListIterator {
+            Compil3r.Quad.ExceptionHandler nextExceptionHandler();
+            Compil3r.Quad.ExceptionHandler previousExceptionHandler();
         }
-        public static interface Quad extends java.util.ListIterator {
-            public Compil3r.Quad.Quad nextQuad();
-            public Compil3r.Quad.Quad previousQuad();
+        public interface Quad extends java.util.ListIterator {
+            Compil3r.Quad.Quad nextQuad();
+            Compil3r.Quad.Quad previousQuad();
         }
-        public static interface RegisterOperand extends java.util.ListIterator {
-            public Compil3r.Quad.Operand.RegisterOperand nextRegisterOperand();
-            public Compil3r.Quad.Operand.RegisterOperand previousRegisterOperand();
+        public interface RegisterOperand extends java.util.ListIterator {
+            Compil3r.Quad.Operand.RegisterOperand nextRegisterOperand();
+            Compil3r.Quad.Operand.RegisterOperand previousRegisterOperand();
         }
     }
     
-    public static abstract class UnmodifiableList {
+    public abstract static class UnmodifiableList {
         public static class jq_Class extends java.util.AbstractList implements List.jq_Class {
             private final Clazz.jq_Class[] a;
             public jq_Class(Clazz.jq_Class c) { a = new Clazz.jq_Class[] { c }; }
@@ -215,7 +215,7 @@ public abstract class Templates {
         }
     }
 
-    public static abstract class ListWrapper {
+    public abstract static class ListWrapper {
         
         public static class BasicBlock extends java.util.AbstractList implements List.BasicBlock {
             private final java.util.List/*<Compil3r.Quad.BasicBlock>*/ a;

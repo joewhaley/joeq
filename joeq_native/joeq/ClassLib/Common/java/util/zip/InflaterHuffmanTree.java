@@ -13,7 +13,7 @@ package ClassLib.Common.java.util.zip;
  */
 class InflaterHuffmanTree {
 
-  private final static int MAX_BITLEN = 15;
+  private static final int MAX_BITLEN = 15;
   private short[] tree;
 
   public static InflaterHuffmanTree defLitLenTree, defDistTree;

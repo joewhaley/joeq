@@ -314,7 +314,7 @@ public abstract class Operator {
             );
     }
     
-    public static abstract class Move extends Operator {
+    public abstract static class Move extends Operator {
         
         public static Quad create(int id, Move operator, RegisterOperand dst, Operand src) {
             return new Quad(id, operator, dst, src);
@@ -391,7 +391,7 @@ public abstract class Operator {
         }
     }
 
-    public static abstract class Binary extends Operator {
+    public abstract static class Binary extends Operator {
         
         public static Quad create(int id, Binary operator, RegisterOperand dst, Operand src1, Operand src2) {
             return new Quad(id, operator, dst, src1, src2);
@@ -731,7 +731,7 @@ public abstract class Operator {
         }
     }
 
-    public static abstract class Unary extends Operator {
+    public abstract static class Unary extends Operator {
         
         public static Quad create(int id, Unary operator, RegisterOperand dst, Operand src1) {
             return new Quad(id, operator, dst, src1);
@@ -953,7 +953,7 @@ public abstract class Operator {
         }
     }
 
-    public static abstract class ALoad extends Operator {
+    public abstract static class ALoad extends Operator {
         
         public static Quad create(int id, ALoad operator, RegisterOperand dst, Operand base, Operand ind, Operand guard) {
             return new Quad(id, operator, dst, base, ind, guard);
@@ -1072,7 +1072,7 @@ public abstract class Operator {
         }
     }
     
-    public static abstract class AStore extends Operator {
+    public abstract static class AStore extends Operator {
         
         public static Quad create(int id, AStore operator, Operand val, Operand base, Operand ind, Operand guard) {
             return new Quad(id, operator, val, base, ind, guard);
@@ -1196,7 +1196,7 @@ public abstract class Operator {
         }
     }
 
-    public static abstract class IntIfCmp extends Operator {
+    public abstract static class IntIfCmp extends Operator {
         public static Quad create(int id, IntIfCmp operator, Operand op0, Operand op1, ConditionOperand cond, TargetOperand target) {
             return new Quad(id, operator, op0, op1, cond, target);
         }
@@ -1279,7 +1279,7 @@ public abstract class Operator {
         }
     }
     
-    public static abstract class Goto extends Operator {
+    public abstract static class Goto extends Operator {
         public static Quad create(int id, Goto operator, TargetOperand target) {
             return new Quad(id, operator, target);
         }
@@ -1303,7 +1303,7 @@ public abstract class Operator {
         }
     }
     
-    public static abstract class Jsr extends Operator {
+    public abstract static class Jsr extends Operator {
         public static Quad create(int id, Jsr operator, RegisterOperand loc, TargetOperand target, TargetOperand successor) {
             return new Quad(id, operator, loc, target, successor);
         }
@@ -1334,7 +1334,7 @@ public abstract class Operator {
         }
     }
     
-    public static abstract class Ret extends Operator {
+    public abstract static class Ret extends Operator {
         public static Quad create(int id, Ret operator, RegisterOperand loc) {
             return new Quad(id, operator, loc);
         }
@@ -1360,7 +1360,7 @@ public abstract class Operator {
         }
     }
     
-    public static abstract class TableSwitch extends Operator {
+    public abstract static class TableSwitch extends Operator {
         public static Quad create(int id, TableSwitch operator, Operand val, IConstOperand low, TargetOperand def, int length) {
             return new Quad(id, operator, val, low, def, new BasicBlockTableOperand(new BasicBlock[length]));
         }
@@ -1404,7 +1404,7 @@ public abstract class Operator {
         }
     }
     
-    public static abstract class LookupSwitch extends Operator {
+    public abstract static class LookupSwitch extends Operator {
         public static Quad create(int id, LookupSwitch operator, Operand val, TargetOperand def, int length) {
             return new Quad(id, operator, val, def, new IntValueTableOperand(new int[length]), new BasicBlockTableOperand(new BasicBlock[length]));
         }
@@ -1453,7 +1453,7 @@ public abstract class Operator {
         }
     }
     
-    public static abstract class Return extends Operator {
+    public abstract static class Return extends Operator {
         public static Quad create(int id, Return operator, Operand val) {
             return new Quad(id, operator, val);
         }
@@ -1531,7 +1531,7 @@ public abstract class Operator {
         }
     }
 
-    public static abstract class Getstatic extends Operator {
+    public abstract static class Getstatic extends Operator {
         public static Quad create(int id, Getstatic operator, RegisterOperand dst, FieldOperand field) {
             return new Quad(id, operator, dst, field);
         }
@@ -1771,7 +1771,7 @@ public abstract class Operator {
         }
     }
     
-    public static abstract class Putstatic extends Operator {
+    public abstract static class Putstatic extends Operator {
         public static Quad create(int id, Putstatic operator, Operand src, FieldOperand field) {
             return new Quad(id, operator, src, field);
         }
@@ -2011,7 +2011,7 @@ public abstract class Operator {
         }
     }
 
-    public static abstract class Getfield extends Operator {
+    public abstract static class Getfield extends Operator {
         public static Quad create(int id, Getfield operator, RegisterOperand dst, Operand base, FieldOperand field, Operand guard) {
             return new Quad(id, operator, dst, base, field, guard);
         }
@@ -2266,7 +2266,7 @@ public abstract class Operator {
         }
     }
     
-    public static abstract class Putfield extends Operator {
+    public abstract static class Putfield extends Operator {
         public static Quad create(int id, Putfield operator, Operand base, FieldOperand field, Operand src, Operand guard) {
             return new Quad(id, operator, base, field, src, guard);
         }
@@ -2510,7 +2510,7 @@ public abstract class Operator {
         }
     }
 
-    public static abstract class NullCheck extends Operator {
+    public abstract static class NullCheck extends Operator {
         public static Quad create(int id, NullCheck operator, Operand dst, Operand src) {
             return new Quad(id, operator, dst, src);
         }
@@ -2544,7 +2544,7 @@ public abstract class Operator {
         }
     }
 
-    public static abstract class ZeroCheck extends Operator {
+    public abstract static class ZeroCheck extends Operator {
         public static Quad create(int id, ZeroCheck operator, Operand dst, Operand src) {
             return new Quad(id, operator, dst, src);
         }
@@ -2589,7 +2589,7 @@ public abstract class Operator {
         }
     }
     
-    public static abstract class BoundsCheck extends Operator {
+    public abstract static class BoundsCheck extends Operator {
         public static Quad create(int id, BoundsCheck operator, Operand ref, Operand idx, Operand guard) {
             return new Quad(id, operator, ref, idx, guard);
         }
@@ -2628,7 +2628,7 @@ public abstract class Operator {
         }
     }
     
-    public static abstract class StoreCheck extends Operator {
+    public abstract static class StoreCheck extends Operator {
         public static Quad create(int id, StoreCheck operator, Operand ref, Operand elem, Operand guard) {
             return new Quad(id, operator, ref, elem, guard);
         }
@@ -2671,7 +2671,7 @@ public abstract class Operator {
         }
     }
     
-    public static abstract class Invoke extends Operator {
+    public abstract static class Invoke extends Operator {
         public static Quad create(int id, Invoke operator, RegisterOperand res, MethodOperand m, int length) {
             return new Quad(id, operator, res, m, new ParamListOperand(new RegisterOperand[length]));
         }
@@ -2739,15 +2739,15 @@ public abstract class Operator {
             }
         }
 
-        public static abstract class InvokeVirtual extends Invoke {
+        public abstract static class InvokeVirtual extends Invoke {
             public boolean isVirtual() { return true; }
             public void interpret(Quad q, QuadInterpreter s) { interpret_virtual(q, s); }
         }
-        public static abstract class InvokeStatic extends Invoke {
+        public abstract static class InvokeStatic extends Invoke {
             public boolean isVirtual() { return false; }
             public void interpret(Quad q, QuadInterpreter s) { interpret_static(q, s); }
         }
-        public static abstract class InvokeInterface extends Invoke {
+        public abstract static class InvokeInterface extends Invoke {
             public boolean isVirtual() { return true; }
             public void interpret(Quad q, QuadInterpreter s) { interpret_virtual(q, s); }
         }
@@ -2981,7 +2981,7 @@ public abstract class Operator {
         }
     }
     
-    public static abstract class New extends Operator {
+    public abstract static class New extends Operator {
         public static Quad create(int id, New operator, RegisterOperand res, TypeOperand type) {
             return new Quad(id, operator, res, type);
         }
@@ -3013,7 +3013,7 @@ public abstract class Operator {
         }
     }
     
-    public static abstract class NewArray extends Operator {
+    public abstract static class NewArray extends Operator {
         public static Quad create(int id, NewArray operator, RegisterOperand res, Operand size, TypeOperand type) {
             return new Quad(id, operator, res, size, type);
         }
@@ -3050,7 +3050,7 @@ public abstract class Operator {
         }
     }
     
-    public static abstract class CheckCast extends Operator {
+    public abstract static class CheckCast extends Operator {
         public static Quad create(int id, CheckCast operator, RegisterOperand res, Operand val, TypeOperand type) {
             return new Quad(id, operator, res, val, type);
         }
@@ -3096,7 +3096,7 @@ public abstract class Operator {
         }
     }
     
-    public static abstract class InstanceOf extends Operator {
+    public abstract static class InstanceOf extends Operator {
         public static Quad create(int id, InstanceOf operator, RegisterOperand res, Operand val, TypeOperand type) {
             return new Quad(id, operator, res, val, type);
         }
@@ -3166,7 +3166,7 @@ public abstract class Operator {
         }
     }
     
-    public static abstract class Monitor extends Operator {
+    public abstract static class Monitor extends Operator {
         public static Quad create(int id, Monitor operator, Operand val) {
             return new Quad(id, operator, null, val);
         }
@@ -3209,7 +3209,7 @@ public abstract class Operator {
         }
     }
     
-    public static abstract class MemLoad extends Operator {
+    public abstract static class MemLoad extends Operator {
         public static Quad create(int id, MemLoad operator, RegisterOperand dst, Operand addr) {
             return new Quad(id, operator, dst, addr);
         }
@@ -3279,7 +3279,7 @@ public abstract class Operator {
         }
     }
 
-    public static abstract class MemStore extends Operator {
+    public abstract static class MemStore extends Operator {
         public static Quad create(int id, MemStore operator, Operand addr, Operand val) {
             return new Quad(id, operator, null, addr, val);
         }
@@ -3353,7 +3353,7 @@ public abstract class Operator {
         }
     }
     
-    public static abstract class Special extends Operator {
+    public abstract static class Special extends Operator {
         
         public static Quad create(int id, GET_EXCEPTION operator, RegisterOperand res) {
             return new Quad(id, operator, res);

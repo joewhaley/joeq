@@ -19,13 +19,13 @@ import Util.ArrayIterator;
  */
 public interface jq_MethodVisitor {
 
-    public void visitClassInitializer(jq_ClassInitializer m);
-    public void visitInitializer(jq_Initializer m);
-    public void visitStaticMethod(jq_StaticMethod m);
-    public void visitInstanceMethod(jq_InstanceMethod m);
-    public void visitMethod(jq_Method m);
+    void visitClassInitializer(jq_ClassInitializer m);
+    void visitInitializer(jq_Initializer m);
+    void visitStaticMethod(jq_StaticMethod m);
+    void visitInstanceMethod(jq_InstanceMethod m);
+    void visitMethod(jq_Method m);
     
-    public class EmptyVisitor implements jq_MethodVisitor {
+    class EmptyVisitor implements jq_MethodVisitor {
         public void visitClassInitializer(jq_ClassInitializer m) {}
         public void visitInitializer(jq_Initializer m) {}
         public void visitStaticMethod(jq_StaticMethod m) {}
@@ -33,7 +33,7 @@ public interface jq_MethodVisitor {
         public void visitMethod(jq_Method m) {}
     }
     
-    public class DeclaredMethodVisitor extends jq_TypeVisitor.EmptyVisitor {
+    class DeclaredMethodVisitor extends jq_TypeVisitor.EmptyVisitor {
         final jq_MethodVisitor mv; final Set methodNames; boolean trace;
         public DeclaredMethodVisitor(jq_MethodVisitor mv) { this.mv = mv; this.methodNames = null; this.trace = false; }
         public DeclaredMethodVisitor(jq_MethodVisitor mv, boolean trace) { this.mv = mv; this.methodNames = null; this.trace = trace; }

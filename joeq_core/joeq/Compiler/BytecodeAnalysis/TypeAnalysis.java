@@ -444,7 +444,7 @@ public class TypeAnalysis {
         boolean contains(ProgramLocation p) { return sources.contains(p); }
     }
     
-    static abstract class Dereference {
+    abstract static class Dereference {
         public abstract jq_Type getType();
     }
     // Immutable class
@@ -485,7 +485,7 @@ public class TypeAnalysis {
         public jq_Type getType() { return field.getType(); }
     }
     
-    static abstract class ProgramLocation {
+    abstract static class ProgramLocation {
         protected Map/*<Dereference, SetOfLocations>*/ inside_edges;
         protected MethodCallSequences methodSequences;
         protected ProgramLocation() {
@@ -613,7 +613,7 @@ public class TypeAnalysis {
         public final MethodCallSequences getMethodCallSequences() { return methodSequences; }
     }
     
-    static abstract class OutsideProgramLocation extends ProgramLocation {
+    abstract static class OutsideProgramLocation extends ProgramLocation {
         private Map/*<Dereference, SetOfLocations*/ outside_edges;
         protected OutsideProgramLocation() {
         }
@@ -1350,7 +1350,7 @@ public class TypeAnalysis {
         
         public static Modeler modeler;
         
-        public static abstract class Modeler {
+        public abstract static class Modeler {
             public void checkModel(String loc, jq_Type type, Set lastCalled, Set s) {
                 for (Iterator i=s.iterator(); i.hasNext(); ) {
                     checkModel(loc, type, lastCalled, (MethodCall)i.next());

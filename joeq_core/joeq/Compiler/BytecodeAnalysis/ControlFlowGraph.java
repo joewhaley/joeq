@@ -75,9 +75,9 @@ public class ControlFlowGraph {
         return new RPOBasicBlockIterator(basic_blocks, start_bb);
     }
     
-    public static interface BasicBlockIterator extends ListIterator {
-        public BasicBlock nextBB();
-        public BasicBlock previousBB();
+    public interface BasicBlockIterator extends ListIterator {
+        BasicBlock nextBB();
+        BasicBlock previousBB();
     }
     
     public static class RPOBasicBlockIterator implements BasicBlockIterator {
