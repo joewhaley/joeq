@@ -69,7 +69,7 @@ bootstrap:	joeq/Main/Bootstrapper.class
 	java -Xbootclasspath/a:$(JDK14SUPPORT_LIB) -cp $(BOOTSTRAP_CLASSPATH) -mx450M joeq.Main.Bootstrapper
 
 bootstrap-sun142-linux:	javac
-	java -cp $(BOOTSTRAP_CLASSPATH) -ms320M -mx320M joeq.Main.Bootstrapper -cl ../native/joeq/ClassLib/sun142_linux/classlist.txt -TraceUtf8
+	java -cp $(BOOTSTRAP_CLASSPATH) -ms320M -mx320M joeq.Main.Bootstrapper -cl ../native/joeq/ClassLib/sun142_linux/classlist.txt
 
 bootstrap-sun14-linux:	javac
 	java -cp $(BOOTSTRAP_CLASSPATH) -ms240M -mx240M joeq.Main.Bootstrapper -cl ../native/joeq/ClassLib/sun14_linux/classlist.txt

@@ -13,6 +13,7 @@ import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_CompiledCode;
 import joeq.Class.jq_InstanceField;
+import joeq.Class.jq_LocalVarTableEntry;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_Primitive;
 import joeq.Class.jq_Reference;
@@ -150,7 +151,7 @@ uphere:
             if (s.startsWith("toString ")) {
                 s = s.substring(9);
                 if (s.startsWith("0x") || s.startsWith("0X")) s = s.substring(2);
-                int k = Integer.parseInt(s, 16);
+                int k = (int) Long.parseLong(s, 16);
                 HeapAddress addr = HeapAddress.address32(k);
                 Object o = addr.asObject();
                 SystemInterface.debugwriteln(o.toString());
@@ -159,7 +160,7 @@ uphere:
             if (s.startsWith("dumpObject ")) {
                 s = s.substring(11);
                 if (s.startsWith("0x") || s.startsWith("0X")) s = s.substring(2);
-                int k = Integer.parseInt(s, 16);
+                int k = (int) Long.parseLong(s, 16);
                 dumpObject(k);
                 continue;
             }
@@ -297,7 +298,10 @@ uphere:
                 SystemInterface.debugwriteln("Caller FP:      "+ptr.stringRep()+" : "+ptr.peek().stringRep());
             } else if (m != null && next_fp.difference(ptr) <= StackAddress.size()*(m.getMaxLocals()-m.getParamWords())) {
                 int n = next_fp.difference(ptr) / StackAddress.size() - 1;
-                SystemInterface.debugwriteln(Strings.left("Local "+n+": ", 16)+ptr.stringRep()+" : "+ptr.peek().stringRep());
+                int offset = sw.getBCIndex();
+                jq_LocalVarTableEntry e = m.getLocalVarTableEntry(offset, n);
+                String nd = (e != null) ? e.getNameAndDesc().toString() : "";
+                SystemInterface.debugwriteln(Strings.left("Local "+n+": ", 16)+ptr.stringRep()+" : "+ptr.peek().stringRep()+"\t"+nd);
             } else if (m != null && ptr.difference(my_fp) > StackAddress.size()) {
                 int n = next_fp.difference(ptr) / StackAddress.size() - m.getMaxLocals() + m.getParamWords() - 2;
                 SystemInterface.debugwriteln(Strings.left("Stack "+n+": ", 16)+ptr.stringRep()+" : "+ptr.peek().stringRep());
