@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 import java.util.StringTokenizer;
 
@@ -18,6 +17,8 @@ import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintStream;
+
+import joeq.Util.Collections.Pair;
 
 /**
  * Solver
@@ -35,6 +36,7 @@ public abstract class Solver {
     PrintStream out = System.out;
     
     abstract InferenceRule createInferenceRule(List/*<RuleTerm>*/ top, RuleTerm bottom);
+    abstract Relation createEquivalenceRelation(FieldDomain fd);
     abstract Relation createRelation(String name,
                                      List/*<String>*/ names,
                                      List/*<FieldDomain>*/ fieldDomains,
@@ -53,6 +55,7 @@ public abstract class Solver {
     
     Map/*<String,FieldDomain>*/ nameToFieldDomain;
     Map/*<String,Relation>*/ nameToRelation;
+    Map/*<FieldDomain,Relation>*/ equivalenceRelations;
     List/*<InferenceRule>*/ rules;
     Collection/*<Relation>*/ relationsToLoad;
     Collection/*<Relation>*/ relationsToLoadTuples;
@@ -227,7 +230,7 @@ public abstract class Solver {
             if (s == null) break;
             if (s.length() == 0) continue;
             if (s.startsWith("#")) continue;
-            StringTokenizer st = new StringTokenizer(s, " (:,/)", true);
+            StringTokenizer st = new StringTokenizer(s, " (,/).", true);
             InferenceRule r = parseRule(st);
             if (TRACE) out.println("Loaded rule(s) "+r);
             else out.print('.');
@@ -238,16 +241,19 @@ public abstract class Solver {
     
     InferenceRule parseRule(StringTokenizer st) {
         Map/*<String,Variable>*/ nameToVar = new HashMap();
+        RuleTerm bottom = parseRuleTerm(nameToVar, st);
+        String sep = nextToken(st);
+        if (!sep.equals(":-"))
+            throw new IllegalArgumentException("Expected \":-\", got \""+sep+"\"");
         List/*<RuleTerm>*/ terms = new LinkedList();
         for (;;) {
             RuleTerm rt = parseRuleTerm(nameToVar, st);
             if (rt == null) break;
             terms.add(rt);
-            String sep = nextToken(st);
-            if (sep.equals("/")) break;
+            sep = nextToken(st);
+            if (sep.equals(".")) break;
             if (!sep.equals(",")) throw new IllegalArgumentException();
         }
-        RuleTerm bottom = parseRuleTerm(nameToVar, st);
         InferenceRule ir = createInferenceRule(terms, bottom);
         parseRuleOptions(ir, st);
         return ir;
@@ -269,19 +275,46 @@ public abstract class Solver {
     }
     
     RuleTerm parseRuleTerm(Map/*<String,Variable>*/ nameToVar, StringTokenizer st) {
+        String relationName = nextToken(st);
         String openParen = nextToken(st);
-        if (openParen.equals("/")) return null;
-        if (!openParen.equals("(")) throw new IllegalArgumentException("Expected '(', got '"+openParen+"'");
-        List/*<Object>*/ vars = new LinkedList();
+        if (openParen.equals("=")) {
+            // "a = b".
+            FieldDomain fd = null;
+            Variable var1 = (Variable) nameToVar.get(relationName);
+            if (var1 == null) nameToVar.put(relationName, var1 = new Variable(relationName));
+            else fd = var1.fieldDomain;
+            String varName2 = nextToken(st);
+            Variable var2 = (Variable) nameToVar.get(varName2);
+            if (var2 == null) nameToVar.put(varName2, var2 = new Variable(varName2));
+            else {
+                FieldDomain fd2 = var2.fieldDomain;
+                if (fd == null) fd = fd2;
+                else if (fd != fd2)
+                    throw new IllegalArgumentException("Variable "+var1+" and "+var2+" have different field domains.");
+            }
+            if (fd == null)
+                throw new IllegalArgumentException("Cannot use \"=\" on two unbound variables.");
+            Relation r = getEquivalenceRelation(fd);
+            List vars = new Pair(var1, var2);
+            RuleTerm rt = new RuleTerm(vars, r);
+            return rt;
+        } else if (!openParen.equals("("))
+            throw new IllegalArgumentException("Expected \"(\" or \"=\", got \""+openParen+"\"");
+
+        Relation r = getRelation(relationName);
+        if (r == null)
+            throw new IllegalArgumentException("Unknown relation "+relationName);
+        List/*<Variable>*/ vars = new LinkedList();
         for (;;) {
+            FieldDomain fd = (FieldDomain) r.fieldDomains.get(vars.size()); 
             String varName = nextToken(st);
             char firstChar = varName.charAt(0);
-            Object var;
+            Variable var;
             if (firstChar >= '0' && firstChar <= '9') {
                 var = new Constant(Long.parseLong(varName));
             } else if (firstChar == '"') {
                 String namedConstant = varName.substring(1, varName.length()-1);
-                var = namedConstant;
+                var = new Constant(fd.namedConstant(namedConstant));
             } else if (!varName.equals("_")) {
                 var = (Variable) nameToVar.get(varName);
                 if (var == null) nameToVar.put(varName, var = new Variable(varName));
@@ -290,33 +323,15 @@ public abstract class Solver {
             }
             if (vars.contains(var)) throw new IllegalArgumentException("Duplicate variable "+var);
             vars.add(var);
+            if (var.fieldDomain == null) var.fieldDomain = fd;
+            else if (var.fieldDomain != fd) throw new IllegalArgumentException("Variable "+var+" used as both "+var.fieldDomain+" and "+fd);
             String sep = nextToken(st);
             if (sep.equals(")")) break;
             if (!sep.equals(",")) throw new IllegalArgumentException("Expected ',' or ')', got '"+sep+"'");
         }
-        String in = nextToken(st);
-        if (!in.equals("in")) throw new IllegalArgumentException();
-        String relationName = nextToken(st);
-        Relation r = getRelation(relationName);
-        if (r == null) throw new IllegalArgumentException("Unknown relation "+relationName);
-        if (r.fieldDomains.size() != vars.size()) throw new IllegalArgumentException("Wrong number of vars in rule term for "+relationName);
+        if (r.fieldDomains.size() != vars.size())
+            throw new IllegalArgumentException("Wrong number of vars in rule term for "+relationName);
         
-        int n = 0;
-        for (ListIterator li = vars.listIterator(); li.hasNext(); ++n) {
-            Object var = li.next();
-            if (var instanceof String) {
-                String namedConstant = (String) var;
-                FieldDomain fd = (FieldDomain) r.fieldDomains.get(n);
-                Variable constant = new Constant(fd.namedConstant(namedConstant));
-                li.set(constant);
-            }
-        }
-        for (int i = 0; i < r.fieldDomains.size(); ++i) {
-            Variable var = (Variable) vars.get(i);
-            FieldDomain fd = (FieldDomain) r.fieldDomains.get(i);
-            if (var.fieldDomain == null) var.fieldDomain = fd;
-            else if (var.fieldDomain != fd) throw new IllegalArgumentException();
-        }
         RuleTerm rt = new RuleTerm(vars, r);
         return rt;
     }
@@ -326,6 +341,14 @@ public abstract class Solver {
 //        if (r == null) nameToRelation.put(name, r = createRelation(name, vars));
 //        return r;
 //    }
+    
+    Relation getEquivalenceRelation(FieldDomain fd) {
+        Relation r = (Relation) equivalenceRelations.get(fd);
+        if (r == null) {
+            equivalenceRelations.put(fd, createEquivalenceRelation(fd));
+        }
+        return r;
+    }
     
     void loadInitialRelations() throws IOException {
         for (Iterator i = relationsToLoad.iterator(); i.hasNext(); ) {

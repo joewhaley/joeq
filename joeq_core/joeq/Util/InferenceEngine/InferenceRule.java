@@ -320,12 +320,13 @@ public abstract class InferenceRule {
     
     public String toString() {
         StringBuffer sb = new StringBuffer();
+        sb.append(bottom);
+        sb.append(" :- ");
         for (Iterator i = top.iterator(); i.hasNext(); ) {
             sb.append(i.next());
             if (i.hasNext()) sb.append(", ");
         }
-        sb.append(" / ");
-        sb.append(bottom);
+        sb.append(".");
         return sb.toString();
     }
 }
