@@ -134,11 +134,11 @@ public class BytecodeToQuad extends BytecodeVisitor {
             ExceptionHandlerList ehs = new ExceptionHandlerList(eh, null);
             BasicBlock bb = quad_bbs[bc_bb.id];
             bb.addExceptionHandler_first(ehs);
-            while (bc_bb.getStart() < ex.getEndPC()) {
-                eh.addHandledBasicBlock(bb);
-                ehs = bb.addExceptionHandler(ehs);
+            for (;;) {
                 bc_bb = bc_cfg.getBasicBlock(bc_bb.id+1);
                 bb = quad_bbs[bc_bb.id];
+                if (bc_bb.getStart() >= ex.getEndPC()) break;
+                ehs = bb.addExceptionHandler(ehs);
             }
         }
         this.start_states = new AbstractState[quad_bbs.length];
@@ -197,6 +197,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         }
         if (TRACE) out.println("Visiting "+bc_bb);
         this.quad_bb = quad_bbs[bc_bb.id];
+        this.quad_bb.removeAllQuads();
         this.bc_bb = bc_bb;
         this.uncond_branch = false;
         this.current_state.overwriteWith(start_states[bc_bb.id]);
