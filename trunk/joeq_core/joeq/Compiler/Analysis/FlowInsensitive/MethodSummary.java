@@ -701,8 +701,8 @@ public class MethodSummary {
                 while (i.hasNext()) {
                     Node fn = (Node)i.next();
                     Pair key = new Pair(fn, obj);
-                    castMap.put(key, n);
-                    castPredecessors.add(fn);
+                    if (castMap.put(key, n) == null)
+                        castPredecessors.add(fn);
                 }
                 setRegister(dest_r, n);
             } else {
@@ -3836,6 +3836,8 @@ outer:
         for (Iterator i=passedAsParameters.iterator(); i.hasNext(); ) {
             addAsUseful(visited, path, (Node)i.next());
         }
+        // castPredecessors is redundant
+        castPredecessors = null;        
         
         if (UNIFY_ACCESS_PATHS) {
             HashSet roots = new HashSet();
