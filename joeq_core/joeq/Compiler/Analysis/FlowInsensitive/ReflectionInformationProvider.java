@@ -39,6 +39,12 @@ public abstract class ReflectionInformationProvider {
         public NewInstanceTargets(String declaredIn) {
             this.declaredIn = getMethod(declaredIn);
         }
+        
+        public boolean isValid(){
+            return 
+                getDeclaredIn() != null &&
+                targets.size() > 0;
+        }
 
         private jq_Method getMethod(String fullMethodName) {
             int index = fullMethodName.lastIndexOf('.');
@@ -49,23 +55,35 @@ public abstract class ReflectionInformationProvider {
 //            className = "L" + className + ";";
             
             jq_Class clazz = (jq_Class) jq_Type.parseType(className);
-            clazz.prepare();
+            try {
+                clazz.prepare();
+            } catch (NoClassDefFoundError e){
+                // no class found
+                return null;
+            }
             jq_Method method = clazz.getDeclaredMethod(methodName);
             Assert._assert(method != null);
             
             return method;
         }
         
-        private jq_Class getClass(String className) {
+        private jq_Class getClass(String className) {            
             jq_Class clazz = (jq_Class) jq_Type.parseType(className);
-            clazz.prepare();
+            try {
+                clazz.prepare();
+            } catch (NoClassDefFoundError e){
+                return null;
+            }
             Assert._assert(clazz != null);
             
             return clazz;
         }
 
         public void addTarget(String target) {
-            addTarget(getClass(target));            
+            jq_Class clazz = getClass(target);
+            if(clazz != null){
+                addTarget(clazz);
+            }
         }
 
         public void addTarget(jq_Class clazz) {
@@ -83,6 +101,11 @@ public abstract class ReflectionInformationProvider {
 
         public Collection getTargets() {
             return this.targets;
+        }
+        
+        public void addSubclasses(String className) {
+            jq_Class clazz = getClass(className);
+            Assert._assert(false);  
         }        
     }
     
@@ -154,7 +177,7 @@ public abstract class ReflectionInformationProvider {
      * reads answers from a file. 
      * */
     public static class CribSheetReflectionInformationProvider extends ReflectionInformationProvider {
-        private static final boolean TRACE = true;
+        private static boolean TRACE = false;
         private static final String DEFAULT_CRIB_FILE = "reflection.spec";
 
         public CribSheetReflectionInformationProvider(String cribSheetFileName){
@@ -174,6 +197,7 @@ public abstract class ReflectionInformationProvider {
         public static void main(String[] args) {
             HostedVM.initialize();
             CodeCache.AlwaysMap = true;
+            TRACE = true;
             
             CribSheetReflectionInformationProvider provider = 
                 new CribSheetReflectionInformationProvider(args[0]);
@@ -187,25 +211,40 @@ public abstract class ReflectionInformationProvider {
             FileReader fileIn = new FileReader(cribSheetFileName);
             LineNumberReader in = new LineNumberReader(fileIn);
             String line = in.readLine();
-            do {                
-                NewInstanceTargets spec = parseSpecLine(line);
-                specs.add(spec);
+            do {
+                if(!line.startsWith("#") && line.trim().length() > 0){
+                    NewInstanceTargets spec = parseSpecLine(line);
+                    if(spec.isValid()){
+                        specs.add(spec);
+                    }
+                }
                 line = in.readLine();
             } while (line != null);
             in.close();
         }
         
         Collection/*<NewInstanceTargets>*/ specs = new LinkedList();
+        private static final Object SUBCLASSES_MARKER = "<";
+        private static final Object ELLIPSES = "...";
         
         private NewInstanceTargets parseSpecLine(String line) {
             //org.roller.presentation.RollerContext.getAuthenticator org.roller.presentation.DefaultAuthenticator ...
             StringTokenizer tok = new StringTokenizer(line);
             String declaredIn = tok.nextToken();
             NewInstanceTargets targets = new NewInstanceTargets(declaredIn);
-            while(tok.hasMoreElements()){
-                targets.addTarget(tok.nextToken());
+            while(tok.hasMoreTokens()){
+                String token = tok.nextToken();
+                if(!token.equals(ELLIPSES)){
+                    if(!token.equals(SUBCLASSES_MARKER)){
+                        targets.addTarget(token);
+                    }else{
+                        targets.addSubclasses(tok.nextToken());
+                    }
+                }
             }
-            if(TRACE) System.out.println("Read " + targets);
+            if(TRACE && targets.isValid()){
+                System.out.println("Read " + targets);
+            }
             
             return targets;
         }
