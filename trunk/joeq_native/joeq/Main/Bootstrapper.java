@@ -79,6 +79,10 @@ public abstract class Bootstrapper implements ObjectLayout {
         // initialize list of methods to invoke on joeq startup
         jq.on_vm_startup = new LinkedList();
         
+        CodeAddress.FACTORY = Bootstrap.BootstrapCodeAddress.FACTORY;
+        HeapAddress.FACTORY = Bootstrap.BootstrapHeapAddress.FACTORY;
+        //StackAddress.FACTORY = Bootstrap.BootstrapStackAddress.FACTORY;
+        
         ClassLibInterface.useJoeqClasslib(true);
         
         if (ClassLibInterface.DEFAULT.getClass().toString().indexOf("win32") != -1) {
@@ -405,10 +409,7 @@ public abstract class Bootstrapper implements ObjectLayout {
             if (m instanceof jq_Method) {
                 jq_Method m2 = ((jq_Method)m);
                 if (m2.getDeclaringClass() == Unsafe._class) continue;
-                if (m2.getDeclaringClass() == Address._class) continue;
-                if (m2.getDeclaringClass() == HeapAddress._class) continue;
-                if (m2.getDeclaringClass() == CodeAddress._class) continue;
-                if (m2.getDeclaringClass() == StackAddress._class) continue;
+                if (m2.getDeclaringClass().isAddressType()) continue;
                 m2.compile();
             }
         }

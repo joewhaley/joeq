@@ -19,7 +19,9 @@ import Clazz.jq_Primitive;
 import Clazz.jq_Reference;
 import Clazz.jq_StaticMethod;
 import Clazz.jq_Type;
+import Memory.CodeAddress;
 import Memory.HeapAddress;
+import Memory.StackAddress;
 import Run_Time.Reflection;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
@@ -470,13 +472,24 @@ public abstract class jq {
         jq.DontCompile = true;
         jq.boot_types = new java.util.HashSet();
 
-        /*
-        Unsafe.installRemapper(new Unsafe.Remapper() {
-            public int addressOf(Object o) { return 0; }
-            public jq_Type getType(Object o) { return Reflection.getJQType(o.getClass()); }
-        });
-        */
-        
+        CodeAddress.FACTORY = new CodeAddress.CodeAddressFactory() {
+            public int size() { return 4; }
+        };
+        HeapAddress.FACTORY = new HeapAddress.HeapAddressFactory() {
+            public int size() { return 4; }
+            //public HeapAddress getNull() { return new Bootstrap.BootstrapHeapAddress(0); }
+            //public HeapAddress addressOf(Object o) { return new Bootstrap.BootstrapHeapAddress(0); }
+            //public HeapAddress address32(int val) { return new Bootstrap.BootstrapHeapAddress(val); }
+            public HeapAddress getNull() { return null; }
+            public HeapAddress addressOf(Object o) { return null; }
+            public HeapAddress address32(int val) { return null; }
+        };
+        StackAddress.FACTORY = new StackAddress.StackAddressFactory() {
+            public int size() { return 4; }
+            public StackAddress alloca(int a) { jq.UNREACHABLE(); return null; }
+            public StackAddress getBasePointer() { jq.UNREACHABLE(); return null; }
+            public StackAddress getStackPointer() { jq.UNREACHABLE(); return null; }
+        };
         String classpath = System.getProperty("java.class.path")+
                            System.getProperty("path.separator")+
                            System.getProperty("sun.boot.class.path");
@@ -485,7 +498,8 @@ public abstract class jq {
             PrimordialClassLoader.loader.addToClasspath(s);
         }
 
-        Reflection.obj_trav = new Bootstrap.ObjectTraverser.Empty();
+        Reflection.obj_trav = ClassLib.Common.Interface.CommonObjectTraverser.INSTANCE;
+        Reflection.obj_trav.initialize();
     }
     
     public static int NumOfNativeThreads = 1;
