@@ -2782,7 +2782,6 @@ public class CSPAResults implements PointerAnalysisResults {
                 break;
             }
         }
-        BDD result = bdd.zero();
         BDD allObjects = bdd.zero();
         BDD sharedObjects = bdd.zero();
         if (main != null) {

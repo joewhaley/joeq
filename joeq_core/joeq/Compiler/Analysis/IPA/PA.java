@@ -831,6 +831,7 @@ public class PA {
                 int context_i = getThreadRunIndex(m, h);
                 System.out.println("Thread "+h+" index "+context_i);
                 context = H1c.ithVar(context_i);
+                context.andWith(V1c.ithVar(context_i));
             }
             addToVP(context, p, H_i);
             if (CONTEXT_SENSITIVE) {
