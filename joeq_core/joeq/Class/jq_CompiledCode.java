@@ -9,43 +9,51 @@
 
 package Clazz;
 
+import Assembler.x86.DirectBindCall;
 import Allocator.CodeAllocator;
 import Bootstrap.PrimordialClassLoader;
 import Run_Time.ExceptionDeliverer;
 import Run_Time.SystemInterface;
+import Run_Time.Unsafe;
 import UTF.Utf8;
 
 import jq;
+
+import java.util.List;
+import java.util.Iterator;
 
 // NOTE: doesn't implement hashCode() very well!
 public class jq_CompiledCode implements Comparable {
 
     public static /*final*/ boolean TRACE = false;
     
-    protected final int/*Address*/ entrypoint;
+    protected final int/*CodeAddress*/ entrypoint;
     protected final jq_Method method;
     protected final int length;
     protected final jq_TryCatch[] handlers;
     protected final jq_BytecodeMap bcm;
     protected final ExceptionDeliverer ed;
+    protected final List code_reloc, data_reloc;
 
     public jq_CompiledCode(jq_Method method,
-                           int/*Address*/ entrypoint, int length,
+                           int/*CodeAddress*/ entrypoint, int length,
                            jq_TryCatch[] handlers, jq_BytecodeMap bcm,
-                           ExceptionDeliverer ed) {
+                           ExceptionDeliverer ed, List code_reloc, List data_reloc) {
         this.method = method;
         this.entrypoint = entrypoint;
         this.length = length;
         this.handlers = handlers;
         this.bcm = bcm;
         this.ed = ed;
+        this.code_reloc = code_reloc;
+        this.data_reloc = data_reloc;
     }
     
     public jq_Method getMethod() { return method; }
-    public int/*Address*/ getEntrypoint() { return entrypoint; }
+    public int/*CodeAddress*/ getEntrypoint() { return entrypoint; }
     public int getLength() { return length; }
 
-    public int/*Address*/ findCatchBlock(int/*Address*/ ip, jq_Class extype) {
+    public int/*CodeAddress*/ findCatchBlock(int/*CodeAddress*/ ip, jq_Class extype) {
         int offset = ip - entrypoint;
         if (TRACE) SystemInterface.debugmsg("checking for handlers for ip "+jq.hex8(ip)+" offset "+jq.hex(offset)+" in "+method);
         for (int i=0; i<handlers.length; ++i) {
@@ -71,16 +79,27 @@ public class jq_CompiledCode implements Comparable {
         return address >= entrypoint && address < entrypoint+length;
     }
     
+    public void patchDirectBindCalls() {
+        jq.assert(!jq.Bootstrapping);
+        Iterator i = code_reloc.iterator();
+        while (i.hasNext()) {
+            DirectBindCall r = (DirectBindCall)i.next();
+            r.patch();
+        }
+    }
+    
     public int compareTo(CodeAllocator.InstructionPointer that) {
-        int/*Address*/ ip = that.getIP();
-        if (this.entrypoint > ip) return 1;
+        int/*CodeAddress*/ ip = that.getIP();
+        if (this.entrypoint >= ip) return 1;
         if (this.entrypoint+this.length < ip) return -1;
         return 0;
     }
     public int compareTo(jq_CompiledCode that) {
         if (this == that) return 0;
         if (this.entrypoint < that.entrypoint) return -1;
-        jq.assert(this.entrypoint >= that.entrypoint+that.length);
+        if (this.entrypoint < that.entrypoint+that.length) {
+            jq.UNREACHABLE(this+" overlaps "+that);
+        }
         return 1;
     }
     public int compareTo(Object o) {
@@ -90,7 +109,7 @@ public class jq_CompiledCode implements Comparable {
             return compareTo((CodeAllocator.InstructionPointer)o);
     }
     public boolean equals(CodeAllocator.InstructionPointer that) {
-        int/*Address*/ ip = that.getIP();
+        int/*CodeAddress*/ ip = that.getIP();
         if (ip < entrypoint) return false;
         if (ip > entrypoint+length) return false;
         return true;
