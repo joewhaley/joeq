@@ -157,6 +157,7 @@ public class PA {
     boolean USE_REFLECTION_PROVIDER = !System.getProperty("pa.usereflectionprovider", "no").equals("no");
     boolean RESOLVE_REFLECTION = !System.getProperty("pa.resolvereflection", "no").equals("no");
     boolean TRACE_BOGUS = !System.getProperty("pa.tracebogus", "no").equals("no");
+    boolean REFLECTION_STAT = !System.getProperty("pa.reflectionstat", "no").equals("no");
     public static boolean TRACE_REFLECTION = !System.getProperty("pa.tracereflection", "no").equals("no");
     int MAX_PARAMS = Integer.parseInt(System.getProperty("pa.maxparams", "4"));
     
@@ -1931,7 +1932,9 @@ public class PA {
             
             return false;
         }
-        System.out.println("There are " + (int)t11.satCount(Iset) + " calls to Class.newInstance");
+        if(REFLECTION_STAT){
+            System.out.println("There are " + (int)t11.satCount(Iset) + " calls to Class.newInstance");
+        }
         BDD t3  = t1.relprod(t11, bdd.zero());
         t11.free();
         t1.free();
@@ -2028,15 +2031,14 @@ public class PA {
             }
             constructorIE.orWith(M.ithVar(Mmap.get(constructor)).and(h));
         }
-        //if(TRACE_REFLECTION && TRACE)
-        if(!constructorIE.isZero()){
-            out.println("constructorIE: " + constructorIE.toStringWithDomains(TS) + 
-                " of size " + constructorIE.satCount(I2set.and(H1set).and(Mset)));
-        }
         
         BDD old_reflectiveCalls  = reflectiveCalls.id();
         reflectiveCalls = constructorIE.exist(H1set).replace(I2toI);
         constructorIE.free();
+        if(REFLECTION_STAT && !reflectiveCalls.isZero()){
+            out.println("reflectiveCalls: " + reflectiveCalls.toStringWithDomains(TS) + 
+                " of size " + reflectiveCalls.satCount(Iset.and(Mset)));
+        }
         
         BDD new_reflectiveCalls = reflectiveCalls.apply(old_reflectiveCalls, BDDFactory.diff);
         old_reflectiveCalls.free();
