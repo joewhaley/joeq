@@ -435,7 +435,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         System.out.println("quadMap size: " + quadMap.size());
         System.out.println("regMap size: " + regMap.size());
         System.out.println("memberMap size: " + memberMap.size());
-        System.out.println("constantMap size: " + memberMap.size());
+        System.out.println("constantMap size: " + constantMap.size());
         
         try {
             //print();
