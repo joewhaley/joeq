@@ -70,7 +70,13 @@ public abstract class jq_Reference extends jq_Type implements jq_ClassFileConsta
     protected Object vtable;
 
     public static class jq_NullType extends jq_Reference {
-        private jq_NullType() { super(Utf8.get("L&NULL;"), PrimordialClassLoader.loader); }
+        private jq_NullType() {
+            super(Utf8.get("L&NULL;"), PrimordialClassLoader.loader);
+            this.state = STATE_CLSINITIALIZED;
+            this.display = new jq_Type[DISPLAY_SIZE+2];
+            this.s_s_array = new jq_Reference[0];
+            this.s_s_array_length = 0;
+        }
         public boolean isAddressType() { return false; }
         public String getJDKName() { return desc.toString(); }
         public String getJDKDesc() { return getJDKName(); }
