@@ -20,6 +20,7 @@ import java.util.Map;
 
 import Allocator.CodeAllocator;
 import Allocator.ObjectLayout;
+import Assembler.x86.Code2CodeReference;
 import Assembler.x86.Code2HeapReference;
 import Assembler.x86.DirectBindCall;
 import Assembler.x86.ExternalReference;
@@ -778,12 +779,24 @@ public class BootImage implements ELFConstants {
     
     public void dumpCOFF(ExtendedDataOutput out, jq_StaticMethod rootm) throws IOException {
         
+        final List text_relocs1 = bca.getAllCodeRelocs();
+        final List text_relocs2 = bca.getAllDataRelocs();
+        
+        Iterator i = text_relocs1.iterator();
+        while (i.hasNext()) {
+            Object r = i.next();
+            ((Reloc)r).patch();
+            // directly bound calls do not need to be relocated,
+            // because they are relative offsets, not absolute addresses.
+            if (r instanceof DirectBindCall)
+                i.remove();
+        }
+        
         // calculate sizes/offsets
         final int textsize = bca.size();
-        final List text_relocs = bca.getAllDataRelocs();
         final List exts = new LinkedList();
         final int nlinenum = 0;
-        int ntextreloc = text_relocs.size();
+        int ntextreloc = text_relocs1.size() + text_relocs2.size();
         if (ntextreloc > 65535) ++ntextreloc;
         final int datastart = 20+40+40+textsize+(10*ntextreloc);
         final int datasize = heapCurrent;
@@ -813,13 +826,6 @@ public class BootImage implements ELFConstants {
         dumpTEXTSCNHDR(out, textsize, ntextreloc);
         dumpDATASCNHDR(out, datastart, datasize, ndatareloc);
         
-        Iterator i = bca.getAllCodeRelocs().iterator();
-        while (i.hasNext()) {
-            Object r = i.next();
-            if (r instanceof DirectBindCall)
-                ((DirectBindCall)r).patch();
-        }
-        
         // write text section
         bca.dump(out);
         
@@ -829,7 +835,12 @@ public class BootImage implements ELFConstants {
             out.writeUInt(0);
             out.writeUShort((char)0);
         }
-        Iterator it = text_relocs.iterator();
+        Iterator it = text_relocs1.iterator();
+        while (it.hasNext()) {
+            Reloc r = (Reloc)it.next();
+            r.dumpCOFF(out);
+        }
+        it = text_relocs2.iterator();
         while (it.hasNext()) {
             Reloc r = (Reloc)it.next();
             r.dumpCOFF(out);
@@ -863,7 +874,7 @@ public class BootImage implements ELFConstants {
             r.dumpCOFF(out);
             ++j;
         }
-		BootImage.out.println("Written: "+ndatareloc+" relocations                    \n");
+        BootImage.out.println("Written: "+ndatareloc+" relocations                    \n");
         Assert._assert(j == ndatareloc);
         
         // write line numbers
@@ -1204,11 +1215,16 @@ public class BootImage implements ELFConstants {
 
     
     public void dumpELF(ExtendedDataOutput out, jq_StaticMethod rootm) throws IOException {
-        Iterator i = bca.getAllCodeRelocs().iterator();
+        final List text_relocs1 = bca.getAllCodeRelocs();
+        final List text_relocs2 = bca.getAllDataRelocs();
+        Iterator i = text_relocs1.iterator();
         while (i.hasNext()) {
             Object r = i.next();
+            ((Reloc)r).patch();
+            // directly bound calls do not need to be relocated,
+            // because they are relative offsets, not absolute addresses.
             if (r instanceof DirectBindCall)
-                ((DirectBindCall)r).patch();
+                i.remove();
         }
 
         final int datasize = heapCurrent;
@@ -1233,7 +1249,6 @@ public class BootImage implements ELFConstants {
         f.addSection(textrel);
         f.addSection(datarel);
 
-        final List text_relocs = bca.getAllDataRelocs();
         final List exts = new LinkedList();
         final int numOfVTableRelocs = addVTableRelocs(data_relocs);
         addSystemInterfaceRelocs_ELF(exts, data_relocs);
@@ -1295,7 +1310,18 @@ public class BootImage implements ELFConstants {
             symtab.addSymbol(e);
         }
 
-        it = text_relocs.iterator();
+        it = text_relocs1.iterator();
+        while (it.hasNext()) {
+            Reloc r = (Reloc)it.next();
+            if (r instanceof Code2CodeReference) {
+                Code2CodeReference cr = (Code2CodeReference)r;
+                textrel.addReloc(new RelocEntry(cr.getFrom().to32BitValue(), datasyment, RelocEntry.R_386_32));
+            } else {
+                Assert.UNREACHABLE(r.toString());
+            }
+        }
+        
+        it = text_relocs2.iterator();
         while (it.hasNext()) {
             Reloc r = (Reloc)it.next();
             if (r instanceof Code2HeapReference) {

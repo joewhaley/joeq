@@ -28,6 +28,7 @@ import Allocator.DefaultCodeAllocator;
 import Allocator.DefaultHeapAllocator;
 import Allocator.HeapAllocator;
 import Allocator.ObjectLayout;
+import Assembler.x86.Code2CodeReference;
 import Assembler.x86.Code2HeapReference;
 import Assembler.x86.DirectBindCall;
 import Assembler.x86.x86;
@@ -1261,11 +1262,17 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         if (TRACE) System.out.println(this+" Jsr: "+obj);
         BasicBlock succ = Jsr.getSuccessor(obj).getTarget();
         if (asm.containsTarget(succ)) {
-            int address = asm.getBranchTarget(succ);
-            asm.emitShort_Reg_Imm(x86.MOV_r_i32, EAX, address);
+            int offset = asm.getBranchTarget(succ);
+            CodeAddress a = (CodeAddress) asm.getStartAddress().offset(offset);
+            asm.emitShort_Reg_Imm(x86.MOV_r_i32, EAX, a.to32BitValue());
+            Code2CodeReference r = new Code2CodeReference((CodeAddress) asm.getCurrentAddress().offset(-4), a);
+            code_relocs.add(r);
         } else {
             asm.emitShort_Reg_Imm(x86.MOV_r_i32, EAX, 0x77777777);
-            asm.recordForwardBranch(4, succ);
+            asm.recordAbsoluteReference(4, succ);
+            // hack: null references don't actually get written, so this works.
+            Code2CodeReference r = new Code2CodeReference((CodeAddress) asm.getCurrentAddress().offset(-4), null);
+            code_relocs.add(r);
         }
         storeOperand(Jsr.getDest(obj), EAX);
         branchHelper(BytecodeVisitor.CMP_UNCOND, Jsr.getTarget(obj).getTarget());

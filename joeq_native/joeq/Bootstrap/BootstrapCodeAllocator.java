@@ -163,6 +163,7 @@ public class BootstrapCodeAllocator extends CodeAllocator {
         public int getEntryIndex() { return entryIndex; }
         
         public int getCurrentOffset() { return size()-startIndex; }
+        public CodeAddress getStartAddress() { return new BootstrapCodeAddress(getStartIndex()); }
         public CodeAddress getCurrentAddress() { return new BootstrapCodeAddress(size()); }
         
         public void setEntrypoint() { entryIndex = size(); }

@@ -100,6 +100,12 @@ public abstract class CodeAllocator {
          * Returns the current address in this code buffer.
          * @return  current address
          */
+        public abstract CodeAddress getStartAddress();
+        
+        /**
+         * Returns the current address in this code buffer.
+         * @return  current address
+         */
         public abstract CodeAddress getCurrentAddress();
 
         /**

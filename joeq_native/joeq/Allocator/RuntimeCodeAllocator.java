@@ -146,6 +146,7 @@ public class RuntimeCodeAllocator extends CodeAllocator {
         }
         
         public int getCurrentOffset() { return currentAddress.difference(startAddress) + 1; }
+        public CodeAddress getStartAddress() { return startAddress; }
         public CodeAddress getCurrentAddress() { return (CodeAddress)currentAddress.offset(1); }
         
         public CodeAddress getStart() { return startAddress; }

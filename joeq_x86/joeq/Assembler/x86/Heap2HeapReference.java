@@ -31,6 +31,10 @@ public class Heap2HeapReference extends Reloc {
     public HeapAddress getFrom() { return from_heaploc; }
     public HeapAddress getTo() { return to_heaploc; }
     
+    public void patch() {
+        from_heaploc.poke(to_heaploc);
+    }
+    
     public void dumpCOFF(DataOutput out) throws IOException {
         out.writeInt(from_heaploc.to32BitValue()); // r_vaddr
         out.writeInt(1);                           // r_symndx

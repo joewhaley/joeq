@@ -20,4 +20,5 @@ public abstract class Reloc {
     public static final char RELOC_REL32  = (char)0x0014;
     
     public abstract void dumpCOFF(DataOutput out) throws IOException;
+    public abstract void patch();
 }

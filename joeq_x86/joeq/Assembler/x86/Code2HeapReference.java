@@ -30,6 +30,8 @@ public class Code2HeapReference extends Reloc {
     public CodeAddress getFrom() { return from_codeloc; }
     public HeapAddress getTo() { return to_heaploc; }
     
+    public void patch() { from_codeloc.poke(to_heaploc); }
+    
     public void dumpCOFF(DataOutput out) throws IOException {
         out.writeInt(from_codeloc.to32BitValue()); // r_vaddr
         out.writeInt(1);                           // r_symndx
