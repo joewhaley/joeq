@@ -8,7 +8,6 @@ package Compil3r.Quad;
 
 import Clazz.*;
 import Compil3r.BytecodeAnalysis.CallTargets;
-import Compil3r.Quad.MethodSummary.MethodCall;
 import Compil3r.Quad.MethodSummary.PassedParameter;
 import Compil3r.Quad.MethodSummary.CallSite;
 import Compil3r.Quad.MethodSummary.Node;
@@ -235,7 +234,7 @@ public class AndersenPointerAnalysis {
         ConcreteTypeNode fd_n1 = new ConcreteTypeNode(fd);
         jq_Initializer fd_init = (jq_Initializer)fd.getOrCreateInstanceMethod("<init>", "(I)V");
         jq.Assert(fd_init.isLoaded());
-        MethodCall mc_fd_init = new MethodCall(fd_init, null);
+        ProgramLocation mc_fd_init = new ProgramLocation(fd_init, null);
         fd_n1.recordPassedParameter(mc_fd_init, 0);
         
         jq_Class fis = (jq_Class)Bootstrap.PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/FileInputStream;");
@@ -243,7 +242,7 @@ public class AndersenPointerAnalysis {
         ConcreteTypeNode fis_n = new ConcreteTypeNode(fis);
         jq_Initializer fis_init = (jq_Initializer)fis.getOrCreateInstanceMethod("<init>", "(Ljava/io/FileDescriptor;)V");
         jq.Assert(fis_init.isLoaded());
-        MethodCall mc_fis_init = new MethodCall(fis_init, null);
+        ProgramLocation mc_fis_init = new ProgramLocation(fis_init, null);
         fis_n.recordPassedParameter(mc_fis_init, 0);
         fd_n1.recordPassedParameter(mc_fis_init, 1);
         jq_Class bis = (jq_Class)Bootstrap.PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/BufferedInputStream;");
@@ -251,7 +250,7 @@ public class AndersenPointerAnalysis {
         ConcreteTypeNode bis_n = new ConcreteTypeNode(bis);
         jq_Initializer bis_init = (jq_Initializer)bis.getOrCreateInstanceMethod("<init>", "(Ljava/io/InputStream;)V");
         jq.Assert(bis_init.isLoaded());
-        MethodCall mc_bis_init = new MethodCall(bis_init, null);
+        ProgramLocation mc_bis_init = new ProgramLocation(bis_init, null);
         bis_n.recordPassedParameter(mc_bis_init, 0);
         fis_n.recordPassedParameter(mc_bis_init, 1);
         
@@ -285,7 +284,7 @@ public class AndersenPointerAnalysis {
         ConcreteTypeNode fos_n1 = new ConcreteTypeNode(fos);
         jq_Initializer fos_init = (jq_Initializer)fos.getOrCreateInstanceMethod("<init>", "(Ljava/io/FileDescriptor;)V");
         jq.Assert(fos_init.isLoaded());
-        MethodCall mc_fos_init = new MethodCall(fos_init, null);
+        ProgramLocation mc_fos_init = new ProgramLocation(fos_init, null);
         fos_n1.recordPassedParameter(mc_fos_init, 0);
         fd_n2.recordPassedParameter(mc_fos_init, 1);
         jq_Class bos = (jq_Class)Bootstrap.PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/BufferedOutputStream;");
@@ -293,7 +292,7 @@ public class AndersenPointerAnalysis {
         ConcreteTypeNode bos_n1 = new ConcreteTypeNode(bos);
         jq_Initializer bos_init = (jq_Initializer)bos.getOrCreateInstanceMethod("<init>", "(Ljava/io/OutputStream;I)V");
         jq.Assert(bos_init.isLoaded());
-        MethodCall mc_bos_init = new MethodCall(bos_init, null);
+        ProgramLocation mc_bos_init = new ProgramLocation(bos_init, null);
         bos_n1.recordPassedParameter(mc_bos_init, 0);
         fos_n1.recordPassedParameter(mc_bos_init, 1);
         
@@ -302,7 +301,7 @@ public class AndersenPointerAnalysis {
         ConcreteTypeNode ps_n1 = new ConcreteTypeNode(ps);
         jq_Initializer ps_init = (jq_Initializer)ps.getOrCreateInstanceMethod("<init>", "(Ljava/io/OutputStream;Z)V");
         jq.Assert(ps_init.isLoaded());
-        MethodCall mc_ps_init = new MethodCall(ps_init, null);
+        ProgramLocation mc_ps_init = new ProgramLocation(ps_init, null);
         ps_n1.recordPassedParameter(mc_ps_init, 0);
         bos_n1.recordPassedParameter(mc_ps_init, 1);
         
@@ -358,14 +357,14 @@ public class AndersenPointerAnalysis {
         nt.load();
         ConcreteTypeNode nt_n1 = new ConcreteTypeNode(nt);
         jq.Assert(Scheduler.jq_NativeThread._nativeThreadEntry.isLoaded());
-        MethodCall mc_nte = new MethodCall(Scheduler.jq_NativeThread._nativeThreadEntry, null);
+        ProgramLocation mc_nte = new ProgramLocation(Scheduler.jq_NativeThread._nativeThreadEntry, null);
         nt_n1.recordPassedParameter(mc_nte, 0);
         ControlFlowGraph nte_cfg = CodeCache.getCode(Scheduler.jq_NativeThread._nativeThreadEntry);
         MethodSummary nte_summary = MethodSummary.getSummary(nte_cfg);
         on = nte_summary.getParamNode(0);
         addInclusionEdge(on, nt_n1, null);
         jq.Assert(Scheduler.jq_NativeThread._threadSwitch.isLoaded());
-        MethodCall mc_ts = new MethodCall(Scheduler.jq_NativeThread._threadSwitch, null);
+        ProgramLocation mc_ts = new ProgramLocation(Scheduler.jq_NativeThread._threadSwitch, null);
         nt_n1.recordPassedParameter(mc_ts, 0);
         ControlFlowGraph ts_cfg = CodeCache.getCode(Scheduler.jq_NativeThread._threadSwitch);
         MethodSummary ts_summary = MethodSummary.getSummary(ts_cfg);
@@ -674,7 +673,7 @@ public class AndersenPointerAnalysis {
         
         // find all methods that we call.
         for (Iterator i=ms.getCalls().iterator(); i.hasNext(); ) {
-            MethodCall mc = (MethodCall)i.next();
+            ProgramLocation mc = (ProgramLocation)i.next();
             CallSite cs = new CallSite(ms, mc);
             if (TRACE) out.println("Found call: "+cs);
             CallTargets ct = mc.getCallTargets();
@@ -731,9 +730,9 @@ public class AndersenPointerAnalysis {
         }
     }
 
-    void addParameterAndReturnMappings_native(MethodSummary caller, MethodCall mc) {
+    void addParameterAndReturnMappings_native(MethodSummary caller, ProgramLocation mc) {
         if (TRACE) out.println("Adding parameter and return mappings for "+mc+" from "+caller.getMethod()+" to an unanalyzable method.");
-        ParamListOperand plo = Invoke.getParamList(mc.q);
+        ParamListOperand plo = Invoke.getParamList(mc.getQuad());
         for (int i=0; i<plo.length(); ++i) {
             jq_Type t = plo.get(i).getType();
             if (!(t instanceof jq_Reference)) continue;
@@ -755,11 +754,11 @@ public class AndersenPointerAnalysis {
         }
         ReturnValueNode rvn = (ReturnValueNode)caller.nodes.get(new ReturnValueNode(mc));
         if (rvn != null) {
-            UnknownTypeNode utn = UnknownTypeNode.get((jq_Reference)mc.m.getReturnType());
+            UnknownTypeNode utn = UnknownTypeNode.get((jq_Reference)mc.getMethod().getReturnType());
             if (TRACE) out.println("Adding return mapping "+rvn+" to "+utn);
             OutsideNode on = rvn;
             while (on.skip != null) on = on.skip;
-            addInclusionEdge(on, utn, mc.q);
+            addInclusionEdge(on, utn, mc.getQuad());
         }
         ThrownExceptionNode ten = (ThrownExceptionNode)caller.nodes.get(new ThrownExceptionNode(mc));
         if (ten != null) {
@@ -767,13 +766,13 @@ public class AndersenPointerAnalysis {
             if (TRACE) out.println("Adding thrown mapping "+ten+" to "+utn);
             OutsideNode on = ten;
             while (on.skip != null) on = on.skip;
-            addInclusionEdge(on, utn, mc.q);
+            addInclusionEdge(on, utn, mc.getQuad());
         }
     }
     
-    void addParameterAndReturnMappings(MethodSummary caller, MethodCall mc, MethodSummary callee) {
+    void addParameterAndReturnMappings(MethodSummary caller, ProgramLocation mc, MethodSummary callee) {
         if (TRACE) out.println("Adding parameter and return mappings for "+mc+" from "+caller.getMethod()+" to "+callee.getMethod());
-        ParamListOperand plo = Invoke.getParamList(mc.q);
+        ParamListOperand plo = Invoke.getParamList(mc.getQuad());
         for (int i=0; i<plo.length(); ++i) {
             jq_Type t = plo.get(i).getType();
             if (!(t instanceof jq_Reference)) continue;
@@ -785,7 +784,7 @@ public class AndersenPointerAnalysis {
             if (TRACE) out.println("Adding parameter mapping "+pn+" to set "+s);
             OutsideNode on = pn;
             while (on.skip != null) on = on.skip;
-            addInclusionEdges(on, s, mc.q);
+            addInclusionEdges(on, s, mc.getQuad());
         }
         ReturnValueNode rvn = (ReturnValueNode)caller.nodes.get(new ReturnValueNode(mc));
         if (rvn != null) {
@@ -794,7 +793,7 @@ public class AndersenPointerAnalysis {
             if (TRACE) out.println("Adding return mapping "+rvn+" to set "+s);
             OutsideNode on = rvn;
             while (on.skip != null) on = on.skip;
-            addInclusionEdges(on, s, mc.q);
+            addInclusionEdges(on, s, mc.getQuad());
         }
         ThrownExceptionNode ten = (ThrownExceptionNode)caller.nodes.get(new ThrownExceptionNode(mc));
         if (ten != null) {
@@ -803,7 +802,7 @@ public class AndersenPointerAnalysis {
             if (TRACE) out.println("Adding thrown mapping "+ten+" to set "+s);
             OutsideNode on = ten;
             while (on.skip != null) on = on.skip;
-            addInclusionEdges(on, s, mc.q);
+            addInclusionEdges(on, s, mc.getQuad());
         }
     }
     

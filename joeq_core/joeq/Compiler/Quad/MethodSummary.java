@@ -372,7 +372,7 @@ public class MethodSummary {
 
         /** Record that the nodes in the given register were passed to the given
          *  method call as the given parameter. */
-        void passParameter(Register r, MethodCall m, int p) {
+        void passParameter(Register r, ProgramLocation m, int p) {
             Object v = getRegister(r);
             if (TRACE_INTRA) out.println("Passing "+r+" to "+m+" param "+p+": "+v);
             if (v instanceof LinkedHashSet) {
@@ -479,7 +479,7 @@ public class MethodSummary {
             if (TRACE_INTRA) out.println("Visiting: "+obj);
             jq_Method m = Invoke.getMethod(obj).getMethod();
             m = (jq_Method)m.resolve();
-            MethodCall mc = new MethodCall(m, obj);
+            ProgramLocation mc = new ProgramLocation(m, obj);
             this.methodCalls.add(mc);
             jq_Type[] params = m.getParamTypes();
             ParamListOperand plo = Invoke.getParamList(obj);
@@ -657,7 +657,7 @@ public class MethodSummary {
             if (obj.getOperator() instanceof Invoke) {
                 jq_Method m = Invoke.getMethod(obj).getMethod();
                 m = (jq_Method)m.resolve();
-                MethodCall mc = new MethodCall(m, obj);
+                ProgramLocation mc = new ProgramLocation(m, obj);
                 ThrownExceptionNode n = new ThrownExceptionNode(mc);
                 passedAsParameter.add(n);
                 ListIterator.ExceptionHandler eh = bb.getExceptionHandlers().exceptionHandlerIterator();
@@ -694,73 +694,10 @@ public class MethodSummary {
         
     }
     
-    /** Represents a particular method call. */
-    public static class MethodCall {
-        final jq_Method m; final Quad q;
-        public MethodCall(jq_Method m, Quad q) {
-            this.m = m; this.q = q;
-        }
-        public int hashCode() { return (q==null)?-1:q.hashCode(); }
-        public boolean equals(MethodCall that) { return this.q == that.q; }
-        public boolean equals(Object o) { if (o instanceof MethodCall) return equals((MethodCall)o); return false; }
-        public String toString() { return "quad "+((q==null)?-1:q.getID())+" "+m.getName()+"()"; }
-        
-        private byte getType() {
-            if (q.getOperator() instanceof InvokeVirtual) {
-                return BytecodeVisitor.INVOKE_VIRTUAL;
-            } else if (q.getOperator() instanceof InvokeStatic) {
-                if (m instanceof jq_InstanceMethod)
-                    return BytecodeVisitor.INVOKE_SPECIAL;
-                else
-                    return BytecodeVisitor.INVOKE_STATIC;
-            } else {
-                jq.Assert(q.getOperator() instanceof InvokeInterface);
-                return BytecodeVisitor.INVOKE_INTERFACE;
-            }
-        }
-        
-        public CallTargets getCallTargets() {
-            byte type = getType();
-            return CallTargets.getTargets(m.getDeclaringClass(), m, type, true);
-        }
-        
-        public CallTargets getCallTargets(Node n) {
-            return getCallTargets(n.getDeclaredType(), n instanceof ConcreteTypeNode);
-        }
-        
-        public CallTargets getCallTargets(jq_Reference klass, boolean exact) {
-            byte type = getType();
-            return CallTargets.getTargets(m.getDeclaringClass(), m, type, klass, exact, true);
-        }
-        
-        public CallTargets getCallTargets(java.util.Set receiverTypes, boolean exact) {
-            byte type = getType();
-            return CallTargets.getTargets(m.getDeclaringClass(), m, type, receiverTypes, exact, true);
-        }
-        
-        public Set getCallTargets(java.util.Set nodes) {
-            byte type = getType();
-            LinkedHashSet exact_types = new LinkedHashSet();
-            LinkedHashSet notexact_types = new LinkedHashSet();
-            for (Iterator i=nodes.iterator(); i.hasNext(); ) {
-                Node n = (Node)i.next();
-                LinkedHashSet s = (n instanceof ConcreteTypeNode)?exact_types:notexact_types;
-                if (n.getDeclaredType() != null)
-                    s.add(n.getDeclaredType());
-            }
-            if (notexact_types.isEmpty()) return getCallTargets(exact_types, true);
-            if (exact_types.isEmpty()) return getCallTargets(notexact_types, false);
-            LinkedHashSet result = new LinkedHashSet();
-            result.addAll(getCallTargets(exact_types, true));
-            result.addAll(getCallTargets(notexact_types, false));
-            return result;
-        }
-    }
-    
     /** Represents a particular parameter passed to a particular method call. */
     public static class PassedParameter {
-        final MethodCall m; final int paramNum;
-        public PassedParameter(MethodCall m, int paramNum) {
+        final ProgramLocation m; final int paramNum;
+        public PassedParameter(ProgramLocation m, int paramNum) {
             this.m = m; this.paramNum = paramNum;
         }
         public int hashCode() { return m.hashCode() ^ paramNum; }
@@ -770,8 +707,8 @@ public class MethodSummary {
     }
     
     public static class CallSite {
-        final MethodSummary caller; final MethodCall m;
-        public CallSite(MethodSummary caller, MethodCall m) {
+        final MethodSummary caller; final ProgramLocation m;
+        public CallSite(MethodSummary caller, ProgramLocation m) {
             this.caller = caller; this.m = m;
         }
         public int hashCode() { return (caller == null?0x0:caller.hashCode()) ^ m.hashCode(); }
@@ -1116,7 +1053,7 @@ public class MethodSummary {
         /** Record the passed parameter of the given method call and argument number in
          *  the set for this node.
          *  Returns true if that passed parameter didn't already exist, false otherwise. */
-        public boolean recordPassedParameter(MethodCall m, int paramNum) {
+        public boolean recordPassedParameter(ProgramLocation m, int paramNum) {
             if (passedParameters == null) passedParameters = new LinkedHashSet();
             PassedParameter cm = new PassedParameter(m, paramNum);
             return passedParameters.add(cm);
@@ -1526,18 +1463,18 @@ public class MethodSummary {
     
     /** A ReturnedNode represents a return value or thrown exception from a method call. */
     public abstract static class ReturnedNode extends OutsideNode {
-        final MethodCall m;
-        public ReturnedNode(MethodCall m) { this.m = m; }
+        final ProgramLocation m;
+        public ReturnedNode(ProgramLocation m) { this.m = m; }
         public ReturnedNode(ReturnedNode that) {
             super(that); this.m = that.m;
         }
-        public final MethodCall getMethodCall() { return m; }
+        public final ProgramLocation getMethodCall() { return m; }
     }
     
     /** A ReturnValueNode represents the return value of a method call.
      */
     public static final class ReturnValueNode extends ReturnedNode {
-        public ReturnValueNode(MethodCall m) { super(m); }
+        public ReturnValueNode(ProgramLocation m) { super(m); }
         private ReturnValueNode(ReturnValueNode that) { super(that); }
         
         public boolean equals(ReturnValueNode that) { return this.m.equals(that.m); }
@@ -1547,7 +1484,7 @@ public class MethodSummary {
         }
         public int hashCode() { return m.hashCode(); }
         
-        public jq_Reference getDeclaredType() { return (jq_Reference)m.m.getReturnType(); }
+        public jq_Reference getDeclaredType() { return (jq_Reference)m.getMethod().getReturnType(); }
         
         public Node copy() { return new ReturnValueNode(this); }
         
@@ -1587,7 +1524,7 @@ public class MethodSummary {
     /** A ThrownExceptionNode represents the thrown exception of a method call.
      */
     public static final class ThrownExceptionNode extends ReturnedNode {
-        public ThrownExceptionNode(MethodCall m) { super(m); }
+        public ThrownExceptionNode(ProgramLocation m) { super(m); }
         private ThrownExceptionNode(ThrownExceptionNode that) { super(that); }
         
         public boolean equals(ThrownExceptionNode that) { return this.m.equals(that.m); }
@@ -2446,7 +2383,7 @@ public class MethodSummary {
     }
 
     /** Instantiate a copy of the callee summary into the caller. */
-    public static void instantiate(MethodSummary caller, MethodCall mc, MethodSummary callee, boolean removeCall) {
+    public static void instantiate(MethodSummary caller, ProgramLocation mc, MethodSummary callee, boolean removeCall) {
         callee = callee.copy();
         if (TRACE_INTER) out.println("Instantiating "+callee+" into "+caller+", remove call="+removeCall);
         HashMap callee_to_caller = new HashMap();
