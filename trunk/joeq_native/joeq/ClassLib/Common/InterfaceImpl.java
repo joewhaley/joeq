@@ -235,7 +235,7 @@ public abstract class InterfaceImpl implements Interface {
                 
                 // we need to reinitialize the Inflater on VM startup
                 if (jq.on_vm_startup != null) {
-                    Object[] args = { o, new Boolean(nowrap) };
+                    Object[] args = { o, Boolean.valueOf(nowrap) };
                     jq_Method zip_open = ClassLibInterface._class.getOrCreateStaticMethod("init_inflater_static", "(Ljava/util/zip/Inflater;Z)V");
                     MethodInvocation mi = new MethodInvocation(zip_open, args);
                     jq.on_vm_startup.add(mi);

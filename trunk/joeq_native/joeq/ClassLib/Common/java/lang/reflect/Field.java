@@ -99,7 +99,7 @@ public class Field extends AccessibleObject {
             if (t == jq_Primitive.FLOAT) return new Float(Reflection.getstatic_F(sf));
             if (t == jq_Primitive.LONG) return new Long(Reflection.getstatic_L(sf));
             if (t == jq_Primitive.DOUBLE) return new Double(Reflection.getstatic_D(sf));
-            if (t == jq_Primitive.BOOLEAN) return new Boolean(Reflection.getstatic_Z(sf));
+            if (t == jq_Primitive.BOOLEAN) return Boolean.valueOf(Reflection.getstatic_Z(sf));
             if (t == jq_Primitive.BYTE) return new Byte(Reflection.getstatic_B(sf));
             if (t == jq_Primitive.SHORT) return new Short(Reflection.getstatic_S(sf));
             if (t == jq_Primitive.CHAR) return new Character(Reflection.getstatic_C(sf));
