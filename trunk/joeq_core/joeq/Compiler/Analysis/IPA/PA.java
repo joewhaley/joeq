@@ -158,6 +158,7 @@ public class PA {
     boolean USE_REFLECTION_PROVIDER = !System.getProperty("pa.usereflectionprovider", "no").equals("no");
     boolean RESOLVE_REFLECTION = !System.getProperty("pa.resolvereflection", "no").equals("no");
     boolean TRACE_BOGUS = !System.getProperty("pa.tracebogus", "no").equals("no");
+    boolean FIX_NO_DEST = !System.getProperty("pa.fixnodest", "no").equals("no");
     boolean TRACE_NO_DEST = !System.getProperty("pa.tracenodest", "no").equals("no");
     boolean REFLECTION_STAT = !System.getProperty("pa.reflectionstat", "no").equals("no");
     public static boolean TRACE_REFLECTION = !System.getProperty("pa.tracereflection", "no").equals("no");
@@ -2790,7 +2791,9 @@ public class PA {
             System.out.println("Time spent solving: "+(System.currentTimeMillis()-time)/1000.);
         }
         
-        analyzeIE();
+        if(FIX_NO_DEST){
+            analyzeIE();
+        }
 
         printSizes();
         
