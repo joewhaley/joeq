@@ -440,6 +440,8 @@ public class PA {
         
         if (OBJECT_SENSITIVE || CARTESIAN_PRODUCT) staticCalls = bdd.zero();
         
+        if (THREAD_SENSITIVE) threadRuns = bdd.zero();
+        
         if (INCREMENTAL1) {
             old1_A = bdd.zero();
             old1_S = bdd.zero();
@@ -828,7 +830,11 @@ public class PA {
     Map rangeMap;
     
     public BDD getV1V2Context(jq_Method m) {
-        if (CONTEXT_SENSITIVE || THREAD_SENSITIVE) {
+        if (THREAD_SENSITIVE) {
+            BDD b = (BDD) V1H1correspondence.get(m);
+            BDD c = b.replace(V1ctoV2c);
+            return c.andWith(b.id());
+        } else if (CONTEXT_SENSITIVE) {
             Range r = vCnumbering.getRange(m);
             int bits = BigInteger.valueOf(r.high.longValue()).bitLength();
             if (TRACE_CONTEXT) out.println("Range to "+m+" = "+r+" ("+bits+" bits)");
@@ -1016,7 +1022,7 @@ public class PA {
                 if (ADD_THREADS && type != jq_NullType.NULL_TYPE &&
                     (type.isSubtypeOf(PrimordialClassLoader.getJavaLangThread()) ||
                      type.isSubtypeOf(PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/Runnable;")))) {
-                    addThreadRun(H_i, (jq_Class) type);
+                    addThreadRun(n.getDefiningMethod(), n, (jq_Class) type);
                 }
             }
             addToHT(H_i, type);
@@ -1175,18 +1181,34 @@ public class PA {
         }
     }
     
+    BDD threadRuns; // vc1,v1,hc1,h1 :  threadrun v1 matches thread object h1
+    
     static jq_NameAndDesc main_method = new jq_NameAndDesc("main", "([Ljava/lang/String;)V");
     static jq_NameAndDesc run_method = new jq_NameAndDesc("run", "()V");
-    public void addThreadRun(int H_i, jq_Class c) {
+    public void addThreadRun(jq_Method caller, Node h, jq_Class c) {
         if (!ADD_THREADS) return;
+        int H_i = Hmap.get(h);
         jq_Method m = c.getVirtualMethod(run_method);
         if (m != null && m.getBytecode() != null) {
             visitMethod(m);
             rootMethods.add(m);
             Node p = MethodSummary.getSummary(m).getParamNode(0);
-            Node h = (Node) Hmap.get(H_i);
             BDD context = null;
-            if (CONTEXT_SENSITIVE && MAX_HC_BITS > 1) {
+            if (THREAD_SENSITIVE) {
+                int context_j = getThreadRunIndex(m, h);
+                if (context_j == -1) {
+                    System.out.println("Unknown thread node "+h+" method "+m);
+                    return;
+                }
+                BDD hcontext = getV1H1Context(caller).exist(V1cset);
+                int V_i = Vmap.get(p);
+                System.out.println("Thread "+h+" contexts "+hcontext.toStringWithDomains()+" matches vcontext "+context_j+" "+p);
+                hcontext.andWith(V1c[0].ithVar(context_j));
+                hcontext.andWith(H1.ithVar(H_i));
+                hcontext.andWith(V1.ithVar(V_i));
+                threadRuns.orWith(hcontext.id());
+                if (!DUMP_INITIAL) vP.orWith(hcontext);
+            } else if (CONTEXT_SENSITIVE && MAX_HC_BITS > 1) {
                 int context_i = getThreadRunIndex(m, h);
                 int context_j = context_i + vCnumbering.getRange(m).low.intValue();
                 System.out.println("Thread "+h+" index "+context_j);
@@ -2019,7 +2041,7 @@ public class PA {
                 System.out.print("Object paths="+paths+" ("+VC_BITS+" bits), ");
             }
         }
-        if ((CONTEXT_SENSITIVE && MAX_HC_BITS > 1) || THREAD_SENSITIVE) {
+        if (CONTEXT_SENSITIVE && MAX_HC_BITS > 1) {
             hCnumbering = countHeapNumbering(cg, updateBits);
         }
         time = System.currentTimeMillis() - time;
@@ -2118,6 +2140,8 @@ public class PA {
                 buildVarHeapCorrespondence(cg);
                 time = System.currentTimeMillis() - time;
                 System.out.println("done. ("+time/1000.+" seconds)");
+            } else if (THREAD_SENSITIVE) {
+                buildThreadV1H1(thread_runs, cg);
             }
             
             // Use the IE filter as the set of invocation edges.
@@ -2308,6 +2332,8 @@ public class PA {
                     dis.CS_CALLGRAPH = false;
                     dis.DUMP_INITIAL = false;
                     dis.DUMP_RESULTS = false;
+                    dis.SKIP_SOLVE = false;
+                    dis.DUMP_FLY = false;
                     dis.run("java", dis.cg, rootMethods);
                     System.out.println("Finished discovering call graph.");
                     dis = new PA();
@@ -2792,16 +2818,14 @@ public class PA {
     
     // Map between thread run() methods and the ConcreteTypeNodes of the corresponding threads.
     static Map thread_runs = new HashMap();
+    IndexMap threadNumbers;
     
-    public static int getThreadRunIndex(jq_Method m, Node n) {
-        Set s = (Set) thread_runs.get(m);
-        if (s != null) {
-            Iterator i = s.iterator();
-            for (int k = 0; i.hasNext(); ++k) {
-                if (i.next() == n) return k;
-            }
+    public int getThreadRunIndex(jq_Method m, Node n) {
+        if (!threadNumbers.contains(n)) {
+            //Assert.UNREACHABLE("Method "+m+" Node "+n);
+            return -1;
         }
-        return 0;
+        return threadNumbers.get(n);
     }
     
     public PathNumbering countCallGraph(CallGraph cg, ObjectCreationGraph ocg, boolean updateBits) {
@@ -2812,6 +2836,7 @@ public class PA {
         Set fields = new HashSet();
         Set classes = new HashSet();
         int vars = 0, heaps = 0, bcodes = 0, methods = 0, calls = 0;
+        int threads = 0;
         for (Iterator i = cg.getAllMethods().iterator(); i.hasNext(); ) {
             jq_Method m = (jq_Method) i.next();
             if (TRACE_OBJECT) out.println("Counting "+m);
@@ -2847,6 +2872,7 @@ public class PA {
                             Set s = (Set) thread_runs.get(rm);
                             if (s == null) thread_runs.put(rm, s = new HashSet());
                             s.add(n);
+                            ++threads;
                         }
                         if (ocg != null) {
                             ocg.addEdge(c, n, type);
@@ -2865,9 +2891,7 @@ public class PA {
         System.out.println("Methods="+methods+" Bytecodes="+bcodes+" Call sites="+calls);
         System.out.println("Vars="+vars+" Heaps="+heaps+" Classes="+classes.size()+" Fields="+fields.size());
         PathNumbering pn = null;
-        if (THREAD_SENSITIVE)
-            pn = new RootPathNumbering();
-        else if (CONTEXT_SENSITIVE)
+        if (CONTEXT_SENSITIVE)
             pn = new SCCPathNumbering(varPathSelector);
         else
             pn = null;
@@ -2879,7 +2903,7 @@ public class PA {
             T_BITS = BigInteger.valueOf(classes.size()+64).bitLength();
             N_BITS = I_BITS;
             M_BITS = BigInteger.valueOf(methods).bitLength() + 1;
-            if (CONTEXT_SENSITIVE || THREAD_SENSITIVE) {
+            if (CONTEXT_SENSITIVE) {
                 System.out.println("Thread runs="+thread_runs);
                 Map initialCounts = new ThreadRootMap(thread_runs);
                 BigInteger paths = (BigInteger) pn.countPaths(cg.getRoots(), cg.getCallSiteNavigator(), initialCounts);
@@ -2888,6 +2912,10 @@ public class PA {
                     System.out.println("Trimming var context bits from "+VC_BITS);
                 VC_BITS = Math.min(MAX_VC_BITS, VC_BITS);
                 System.out.println("Paths="+paths+", Var context bits="+VC_BITS);
+            } else if (THREAD_SENSITIVE) {
+                ++threads; // for main()
+                VC_BITS = HC_BITS = BigInteger.valueOf(threads).bitLength();
+                System.out.println("Threads="+threads+", context bits="+VC_BITS);
             }
             System.out.println(" V="+V_BITS+" I="+I_BITS+" H="+H_BITS+
                                " F="+F_BITS+" T="+T_BITS+" N="+N_BITS+
@@ -3108,8 +3136,15 @@ public class PA {
         }
     }
     
+    BDDPairing V1ctoH1c;
     public BDD getV1H1Context(jq_Method m) {
-        if (CONTEXT_SENSITIVE || THREAD_SENSITIVE) {
+        if (THREAD_SENSITIVE) {
+            BDD b = (BDD) V1H1correspondence.get(m);
+            if (b == null) System.out.println("Unknown method "+m);
+            if (V1ctoH1c == null) V1ctoH1c = bdd.makePair(V1c[0], H1c[0]);
+            BDD c = b.replace(V1ctoH1c);
+            return c.andWith(b.id());
+        } else if (CONTEXT_SENSITIVE) {
             if (V1H1correspondence != null)
                 return (BDD) V1H1correspondence.get(m);
             Range r1 = vCnumbering.getRange(m);
@@ -3136,6 +3171,59 @@ public class PA {
         } else {
             return null;
         }
+    }
+    
+    public void buildThreadV1H1(Map threadNodes, CallGraph g) {
+        out.println("Building thread map.");
+        threadNumbers = new IndexMap("Thread");
+        V1H1correspondence = new HashMap();
+        Navigator nav = g.getMethodNavigator();
+        threadNumbers.get("main"); // "main" context.
+        for (Iterator i = g.getRoots().iterator(); i.hasNext(); ) {
+            Object o = i.next();
+            if (threadNodes.containsKey(o)) continue;
+            BDD b = V1c[0].ithVar(0);
+            V1H1correspondence.put(o, b);
+        }
+        for (Iterator i = threadNodes.entrySet().iterator(); i.hasNext(); ) {
+            Map.Entry e = (Map.Entry) i.next();
+            Object o = e.getKey();
+            BDD b;
+            V1H1correspondence.put(o, b = bdd.zero());
+            Collection s = (Collection) e.getValue();
+            for (Iterator j = s.iterator(); j.hasNext(); ) {
+                Node n = (Node) j.next();
+                int k = threadNumbers.get(n);
+                if (TRACE) System.out.println("Thread "+k+": "+n);
+                b.orWith(V1c[0].ithVar(k));
+            }
+        }
+        boolean change;
+        do {
+            change = false;
+            for (Iterator i = Traversals.reversePostOrder(nav, g.getRoots()).iterator(); i.hasNext(); ) {
+                Object o = i.next();
+                BDD b = (BDD) V1H1correspondence.get(o);
+                if (b == null) {
+                    V1H1correspondence.put(o, b = bdd.zero());
+                    Assert._assert(!threadNodes.containsKey(o));
+                    change = true;
+                }
+                for (Iterator j2 = nav.prev(o).iterator(); j2.hasNext(); ) {
+                    Object o2 = j2.next();
+                    BDD b2 = (BDD) V1H1correspondence.get(o2);
+                    if (b2 != null) {
+                        BDD old = b.id();
+                        b.orWith(b2.id());
+                        change |= !old.equals(b);
+                        old.free();
+                    }
+                }
+                if (TRACE) out.println("Map for "+o+": "+b.toStringWithDomains());
+            }
+        } while (change);
+        // Global threads have context 0.
+        V1H1correspondence.put(null, V1c[0].ithVar(0));
     }
     
     public void buildObjectSensitiveV1H1(ObjectCreationGraph g) {
@@ -3549,7 +3637,12 @@ public class PA {
         bdd.save(dumpPath+"Iret.bdd", Iret);
         bdd.save(dumpPath+"Ithr.bdd", Ithr);
         bdd.save(dumpPath+"IE0.bdd", IE0);
+        bdd.save(dumpPath+"threadRuns.bdd", threadRuns);
         if (IEfilter != null) bdd.save(dumpPath+"IEfilter.bdd", IEfilter);
+        
+        if (THREAD_SENSITIVE) {
+            bdd.save(dumpPath+"eq.bdd", V1c[0].buildEquals(H1c[0]));
+        }
         
         if (DUMP_FLY) {
             initFly();

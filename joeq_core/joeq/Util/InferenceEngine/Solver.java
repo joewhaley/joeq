@@ -324,6 +324,8 @@ public abstract class Solver {
             throw new IllegalArgumentException("Unknown relation "+relationName);
         List/*<Variable>*/ vars = new LinkedList();
         for (;;) {
+            if (r.fieldDomains.size() <= vars.size())
+                throw new IllegalArgumentException("Too many fields for "+r);
             FieldDomain fd = (FieldDomain) r.fieldDomains.get(vars.size()); 
             String varName = nextToken(st);
             char firstChar = varName.charAt(0);
