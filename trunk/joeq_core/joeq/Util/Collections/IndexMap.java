@@ -16,13 +16,19 @@ public class IndexMap {
     private final String name;
     private final HashMap hash;
     private final ArrayList list;
-        
+    
     public IndexMap(String name) {
         this.name = name;
         hash = new HashMap();
         list = new ArrayList();
     }
-        
+    
+    public IndexMap(String name, int size) {
+        this.name = name;
+        hash = new HashMap(size);
+        list = new ArrayList(size);
+    }
+    
     public int get(Object o) {
         Integer i = (Integer) hash.get(o);
         if (i == null) {
