@@ -11,7 +11,7 @@ import java.util.NoSuchElementException;
 
 /**
  * Iterator for iterating through exception handlers.  Compatible with ListIterator.
- * @see  ListIterator
+ * @see  Templates.ListIterator
  * @see  ExceptionHandler
  * @author  John Whaley
  * @version  $Id$
