@@ -377,6 +377,23 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         return (jq_ClassInitializer)getDeclaredStaticMethod(new jq_NameAndDesc(Utf8.get("<clinit>"), Utf8.get("()V")));
     }
     
+    public jq_Field getDeclaredField(String name) {
+        return getDeclaredField(Utf8.get(name));
+    }
+    
+    public jq_Field getDeclaredField(Utf8 name) {
+        chkState(STATE_LOADED);
+        for (int i=0; i<declared_instance_fields.length; ++i) {
+            jq_Field m = declared_instance_fields[i];
+            if (m.getName() == name) return m;
+        }
+        for (int i=0; i<static_fields.length; ++i) {
+            jq_Field m = static_fields[i];
+            if (m.getName() == name) return m;
+        }
+        return null;
+    }
+    
     public jq_Method getDeclaredMethod(String name) {
         return getDeclaredMethod(Utf8.get(name));
     }
