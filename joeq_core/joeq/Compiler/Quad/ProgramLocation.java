@@ -90,7 +90,7 @@ public class ProgramLocation {
         return CallTargets.getTargets(target.getDeclaringClass(), target, type, receiverTypes, exact, true);
     }
 
-    public java.util.Set getCallTargets(java.util.Set nodes) {
+    public CallTargets getCallTargets(java.util.Set nodes) {
         if (!(q.getOperator() instanceof Invoke)) return null;
         LinkedHashSet exact_types = new LinkedHashSet();
         LinkedHashSet notexact_types = new LinkedHashSet();
@@ -102,9 +102,8 @@ public class ProgramLocation {
         }
         if (notexact_types.isEmpty()) return getCallTargets(exact_types, true);
         if (exact_types.isEmpty()) return getCallTargets(notexact_types, false);
-        LinkedHashSet result = new LinkedHashSet();
-        result.addAll(getCallTargets(exact_types, true));
-        result.addAll(getCallTargets(notexact_types, false));
-        return result;
+        CallTargets ct = getCallTargets(exact_types, true);
+        ct.union(getCallTargets(notexact_types, false));
+        return ct;
     }
 }
