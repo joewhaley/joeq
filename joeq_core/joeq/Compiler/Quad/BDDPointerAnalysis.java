@@ -145,7 +145,7 @@ public class BDDPointerAnalysis {
     BDD H1andT3set;
 
     public BDDPointerAnalysis() {
-        this("buddy", DEFAULT_NODE_COUNT, DEFAULT_CACHE_SIZE);
+        this(System.getProperty("bdd", "buddy"), DEFAULT_NODE_COUNT, DEFAULT_CACHE_SIZE);
     }
     
     public BDDPointerAnalysis(String bddpackage, int nodeCount, int cacheSize) {
