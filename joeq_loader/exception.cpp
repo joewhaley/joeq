@@ -51,14 +51,9 @@ BOOL WINAPI windows_break_handler(DWORD dwCtrlType)
 	return 0;
 }
 
-void installSignalHandler(void)
+void installSignalHandler()
 {
-	// install hardware exception handler.
-	HandlerRegistrationRecord er, *erp = &er;
-	er.previous = NULL;
-	er.handler = hardwareExceptionHandler;
-	_asm mov eax,[erp]
-	_asm mov fs:[0],eax // point first word of thread control block to exception handler registration chain
+	// exception handler is done in main()
 
 	// install ctrl-break handler
 	SetConsoleCtrlHandler(windows_break_handler, TRUE);

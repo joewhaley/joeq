@@ -87,6 +87,10 @@ extern "C" void __stdcall mem_cpy(void* to, const void* from, const int size)
 
 extern "C" int __stdcall file_open(const char* s, const int mode, const int smode)
 {
+	printf("Opening %s...\n", s);
+	if (strlen(s) == 46) {
+		printf("46?\n");
+	}
 	return _open(s, mode, smode);
 }
 extern "C" int __stdcall file_readbytes(const int fd, char* b, const int len)
