@@ -144,7 +144,7 @@ outer:
 	    BasicBlock pred_bb = it.nextBasicBlock();
 	    while (pred_bb.size() == 0) { 
 		if (TRACE) System.out.println("Predecessor of exit has no quads? "+pred_bb);
-		if (pred_bb.getNumberOfPredecessors() == 0) continue;
+		if (pred_bb.getNumberOfPredecessors() == 0) continue outer;
 		pred_bb = pred_bb.getFallthroughPredecessor();
 	    }
 	    Quad lq = pred_bb.getLastQuad();
