@@ -24,7 +24,7 @@ public abstract class Throwable {
     // native method implementations
     private int getStackTraceDepth() {
         ExceptionDeliverer.StackFrame backtrace = (ExceptionDeliverer.StackFrame)this.backtrace;
-	int i=0;
+	int i=-1;
 	while (backtrace != null) { backtrace = backtrace.getNext(); ++i; }
 	return i;
     }
