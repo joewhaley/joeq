@@ -51,7 +51,8 @@ import Util.Assert;
 import Util.Strings;
 import Util.Collections.HashWorklist;
 import Util.Collections.UnmodifiableIterator;
-import Util.Graphs.PathNumbering.Path;
+import Util.Graphs.SCCPathNumbering;
+import Util.Graphs.SCCPathNumbering.Path;
 
 /**
  * Records results for pointer analysis.  The results can be saved and reloaded.
@@ -210,7 +211,7 @@ public class PAResults implements PointerAnalysisResults {
                         if (m == null) {
                             System.out.println("No method for node "+n);
                         } else {
-                            Path trace = r.vCnumbering.getPath(m, c);
+                            Path trace = ((SCCPathNumbering)r.vCnumbering).getPath(m, c);
 			    if (command.equals("stacktracevar"))
 				printTrace(System.out, m, c, trace);
 			    else
@@ -230,7 +231,7 @@ public class PAResults implements PointerAnalysisResults {
                         if (m == null) {
                             System.out.println("No method for node "+n);
                         } else {
-                            Path trace = r.hCnumbering.getPath(m, c);
+                            Path trace = ((SCCPathNumbering)r.hCnumbering).getPath(m, c);
 			    if (command.equals("stacktraceheap"))
 				printTrace(System.out, m, c, trace);
                             else
@@ -1196,6 +1197,7 @@ public class PAResults implements PointerAnalysisResults {
     }
     
     public Set mod(ProgramLocation invoke) {
+        Assert._assert(r.Imap.contains(invoke));
         BDD i = r.I.ithVar(r.Imap.get(invoke));
         BDD m_c = r.IEcs.relprod(i, r.V2c.set().and(r.Iset));
         BDD s = getTransitiveModSet(m_c);
@@ -1219,6 +1221,7 @@ public class PAResults implements PointerAnalysisResults {
         BDD b = r.bdd.zero();
         for (Iterator i = c.iterator(); i.hasNext(); ) {
             Node n = (Node) i.next();
+            Assert._assert(r.Vmap.contains(n));
             int V_i = r.Vmap.get(n);
             b.orWith(r.V1.ithVar(V_i));
         }
@@ -1230,7 +1233,9 @@ public class PAResults implements PointerAnalysisResults {
     }
     
     public Set ref(ProgramLocation invoke) {
-        BDD i = r.I.ithVar(r.Imap.get(invoke));
+        Assert._assert(r.Imap.contains(invoke));
+        int I_i = r.Imap.get(invoke);
+        BDD i = r.I.ithVar(I_i);
         BDD m_c = r.IEcs.relprod(i, r.V2c.set().and(r.Iset));
         BDD s = getTransitiveRefSet(m_c);
         BDD q = s.exist(r.H1c.set());

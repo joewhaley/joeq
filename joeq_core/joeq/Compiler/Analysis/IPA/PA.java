@@ -15,8 +15,8 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.math.BigInteger;
 import java.util.AbstractMap;
 import java.util.Arrays;
@@ -64,10 +64,12 @@ import Util.Collections.IndexMap;
 import Util.Collections.Pair;
 import Util.Graphs.Navigator;
 import Util.Graphs.PathNumbering;
+import Util.Graphs.RootPathNumbering;
+import Util.Graphs.SCCPathNumbering;
 import Util.Graphs.SCComponent;
 import Util.Graphs.Traversals;
 import Util.Graphs.PathNumbering.Range;
-import Util.Graphs.PathNumbering.Selector;
+import Util.Graphs.SCCPathNumbering.Selector;
 
 /**
  * Pointer analysis using BDDs.  Includes both context-insensitive and context-sensitive
@@ -1444,7 +1446,7 @@ public class PA {
         long time = System.currentTimeMillis();
         vCnumbering = countCallGraph(cg, ocg, updateBits);
         if (OBJECT_SENSITIVE) {
-            oCnumbering = new PathNumbering(objectPathSelector);
+            oCnumbering = new SCCPathNumbering(objectPathSelector);
             BigInteger paths = (BigInteger) oCnumbering.countPaths(ocg);
             if (updateBits) {
                 HC_BITS = VC_BITS = paths.bitLength();
@@ -1731,9 +1733,9 @@ public class PA {
         }
     }
    
-    private void dumpCallGraphAsDot(CallGraph callgraph, String dotFileName) throws IOException {
+    private void dumpCallGraphAsDot(CallGraph cg, String dotFileName) throws IOException {
 	DataOutputStream dos = new DataOutputStream(new FileOutputStream(dotFileName));
-	countCallGraph(callgraph, null, false).dotGraph(dos);
+	countCallGraph(cg, null, false).dotGraph(dos, cg.getRoots(), cg.getCallSiteNavigator());
 	dos.close();
     }
 
@@ -2126,8 +2128,8 @@ public class PA {
         System.out.println();
         System.out.println("Methods="+methods+" Bytecodes="+bcodes+" Call sites="+calls);
         PathNumbering pn;
-	if (THREAD_SENSITIVE) pn = new PathNumbering.RootNumbering();
-        else pn = new PathNumbering(varPathSelector);
+	if (THREAD_SENSITIVE) pn = new RootPathNumbering();
+        else pn = new SCCPathNumbering(varPathSelector);
         System.out.println("Thread runs="+thread_runs);
         Map initialCounts = new ThreadRootMap(thread_runs);
         BigInteger paths = (BigInteger) pn.countPaths(cg.getRoots(), cg.getCallSiteNavigator(), initialCounts);
@@ -2316,8 +2318,8 @@ public class PA {
         if (VerifyAssertions)
             Assert._assert(CONTEXT_SENSITIVE);
         PathNumbering pn;
-	if (THREAD_SENSITIVE) pn = new PathNumbering.RootNumbering();
-        else pn = new PathNumbering(heapPathSelector);
+	if (THREAD_SENSITIVE) pn = new RootPathNumbering();
+        else pn = new SCCPathNumbering(heapPathSelector);
         Map initialCounts = new ThreadRootMap(thread_runs);
         BigInteger paths = (BigInteger) pn.countPaths(cg.getRoots(), cg.getCallSiteNavigator(), initialCounts);
         System.out.println("Number of paths for heap context sensitivity: "+paths);

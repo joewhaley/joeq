@@ -33,7 +33,7 @@ import Util.Collections.GenericMultiMap;
 import Util.Collections.MultiMap;
 import Util.Graphs.Graph;
 import Util.Graphs.Navigator;
-import Util.Graphs.PathNumbering;
+import Util.Graphs.SCCPathNumbering;
 import Util.Graphs.Traversals;
 
 /**
@@ -229,7 +229,7 @@ public class ObjectCreationGraph extends QuadVisitor.EmptyVisitor
         
         g.handleCallGraph(cg);
         
-        PathNumbering n = new PathNumbering();
+        SCCPathNumbering n = new SCCPathNumbering();
         Number paths = n.countPaths(g);
         System.out.println("Number of paths: "+paths.longValue());
         
@@ -242,7 +242,7 @@ public class ObjectCreationGraph extends QuadVisitor.EmptyVisitor
         }
         
         DataOutputStream out = new DataOutputStream(new FileOutputStream("creation_graph.dot"));
-        n.dotGraph(out);
+        n.dotGraph(out, g.getRoots(), g.getNavigator());
         out.close();
     }
 

@@ -73,11 +73,12 @@ import Util.Collections.SortedArraySet;
 import Util.Collections.UnmodifiableIterator;
 import Util.Graphs.Navigator;
 import Util.Graphs.PathNumbering;
+import Util.Graphs.SCCPathNumbering;
 import Util.Graphs.SCCTopSortedGraph;
 import Util.Graphs.SCComponent;
 import Util.Graphs.Traversals;
-import Util.Graphs.PathNumbering.Path;
 import Util.Graphs.PathNumbering.Range;
+import Util.Graphs.SCCPathNumbering.Path;
 import Util.IO.ByteSequence;
 
 /**
@@ -93,7 +94,7 @@ public class CSPAResults implements PointerAnalysisResults {
     CallGraph cg;
 
     /** Path numbering for call graph. */
-    PathNumbering pn;
+    SCCPathNumbering pn;
 
     /** BDD factory object, to perform BDD operations. */
     BDDFactory bdd;
@@ -271,7 +272,7 @@ public class CSPAResults implements PointerAnalysisResults {
 
     public void numberPaths() {
         // todo: load path numbering instead of renumbering.
-        pn = new PathNumbering(new VarPathSelector(VC_BITS));
+        pn = new SCCPathNumbering(new VarPathSelector(VC_BITS));
         Map thread_map = new ThreadRootMap(findThreadRuns(cg));
         Number paths = pn.countPaths(cg.getRoots(), cg.getCallSiteNavigator(), thread_map);
         System.out.println("Number of paths in call graph="+paths);
