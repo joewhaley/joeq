@@ -252,7 +252,7 @@ public abstract class Reflection {
     public static void putstatic_Z(jq_StaticField f, boolean v) {
 	_delegate.putstatic_Z(f, v);
     }
-    public static void putstatic_B(jq_StaticField f, int v) {
+    public static void putstatic_B(jq_StaticField f, byte v) {
 	_delegate.putstatic_B(f, v);
     }
     public static void putstatic_S(jq_StaticField f, short v) {
@@ -398,7 +398,7 @@ public abstract class Reflection {
 	void putstatic_A(jq_StaticField f, Object v);
 	void putstatic_P(jq_StaticField f, Address v);
 	void putstatic_Z(jq_StaticField f, boolean v);
-	void putstatic_B(jq_StaticField f, int v);
+	void putstatic_B(jq_StaticField f, byte v);
 	void putstatic_S(jq_StaticField f, short v);
 	void putstatic_C(jq_StaticField f, char v);
 	int arraylength(Object o);
