@@ -3,16 +3,18 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Util.InferenceEngine;
 
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.StringTokenizer;
+
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
 
 import org.sf.javabdd.BDD;
 import org.sf.javabdd.BDDDomain;
@@ -157,7 +159,7 @@ public class BDDRelation extends Relation {
         }
         System.out.println(" ) = "+relation.nodeCount()+" nodes");
         BDDDomain iterDomain = (BDDDomain) domains.get(0);
-        BDD foo = quantifyOtherDomains(relation, iterDomain);
+        BDD foo = relation.exist(allDomains.exist(iterDomain.set()));
         int lines = 0;
         for (Iterator i = foo.iterator(iterDomain.set()); i.hasNext(); ) {
             BDD q = (BDD) i.next();
@@ -170,28 +172,16 @@ public class BDDRelation extends Relation {
                 long[] v = sat.scanAllVar();
                 sat.free();
                 BDD t = solver.bdd.one();
-                for (int j = 0, k = 0; j < solver.bdd.numberOfDomains(); ++j) {
-                    BDDDomain d = solver.bdd.getDomain(j);
-                    if (k >= a.length || a[k] != j) {
+                for (Iterator j = domains.iterator(); j.hasNext(); ) {
+                    BDDDomain d = (BDDDomain) j.next();
+                    int jj = d.getIndex();
+                    if (Arrays.binarySearch(b, jj) < 0) {
                         dos.writeBytes("* ");
                         t.andWith(d.domain());
-                        continue;
                     } else {
-                        ++k;
+                        dos.writeBytes(v[jj]+" ");
+                        t.andWith(d.ithVar(v[jj]));
                     }
-                    if (v[j] == 0) {
-                        BDD qs = q.support();
-                        qs.orWith(d.set());
-                        boolean contains = qs.isOne();
-                        qs.free();
-                        if (!contains) {
-                            dos.writeBytes("* ");
-                            t.andWith(d.domain());
-                            continue;
-                        }
-                    }
-                    dos.writeBytes(v[j]+" ");
-                    t.andWith(d.ithVar(v[j]));
                 }
                 q.applyWith(t, BDDFactory.diff);
                 dos.writeBytes("\n");
@@ -201,17 +191,6 @@ public class BDDRelation extends Relation {
         }
         dos.close();
         System.out.println("Done writing "+lines+" lines.");
-    }
-    
-    BDD quantifyOtherDomains(BDD q, BDDDomain d) {
-        BDD result = q.id();
-        for (int i = 0; i < solver.bdd.numberOfDomains(); ++i) {
-            if (i == d.getIndex()) continue;
-            BDD r2 = result.exist(solver.bdd.getDomain(i).set());
-            result.free();
-            result = r2;
-        }
-        return result;
     }
     
     public String activeDomains() {
