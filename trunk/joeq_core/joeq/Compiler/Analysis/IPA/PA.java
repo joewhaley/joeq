@@ -2339,6 +2339,7 @@ public class PA {
                     dis.CONTEXT_SENSITIVE = false;
                     dis.OBJECT_SENSITIVE = false;
                     dis.THREAD_SENSITIVE = false;
+                    dis.CARTESIAN_PRODUCT = false;
                     dis.DISCOVER_CALL_GRAPH = true;
                     dis.CS_CALLGRAPH = false;
                     dis.DUMP_INITIAL = false;
