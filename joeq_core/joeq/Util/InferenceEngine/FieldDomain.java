@@ -3,7 +3,11 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Util.InferenceEngine;
 
+import java.io.DataInput;
+import java.io.IOException;
+
 import joeq.Util.Collections.IndexMap;
+import joeq.Util.Collections.IndexedMap;
 
 /**
  * FieldDomain
@@ -13,7 +17,30 @@ import joeq.Util.Collections.IndexMap;
  */
 public class FieldDomain {
     
-    int size;
-    IndexMap map;
+    String name;
+    long size;
+    IndexedMap map;
     
+    /**
+     * @param name
+     * @param size
+     */
+    public FieldDomain(String name, long size) {
+        super();
+        this.name = name;
+        this.size = size;
+    }
+    
+    public void loadMap(DataInput in) throws IOException {
+        map = IndexMap.load(name, in);
+    }
+    
+    public String toString() {
+        return name;
+    }
+    
+    public String toString(int val) {
+        if (map == null) return Integer.toString(val);
+        else return map.get(val).toString();
+    }
 }
