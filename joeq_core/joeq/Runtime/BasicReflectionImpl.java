@@ -582,7 +582,7 @@ uphere:
     }
 
     public void initialize() {
-        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LRun_Time/BasicReflectionImpl;");
+        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Run_Time/BasicReflectionImpl;");
         _declaredFieldsCache = _class.getOrCreateStaticField("declaredFieldsCache", "Ljava/util/HashMap;");
     }
     

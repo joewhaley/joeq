@@ -412,8 +412,8 @@ public abstract class jq_Method extends jq_Member {
     public static final jq_Class _class;
     public static final jq_InstanceMethod _compile;
     static {
-        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LClazz/jq_Method;");
-        _compile = _class.getOrCreateInstanceMethod("compile", "()LClazz/jq_CompiledCode;");
+        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Clazz/jq_Method;");
+        _compile = _class.getOrCreateInstanceMethod("compile", "()Ljoeq/Clazz/jq_CompiledCode;");
         /* Set up delegates. */
         _delegate = null;
         boolean nullVM = jq.nullVM;

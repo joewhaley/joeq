@@ -131,7 +131,7 @@ public abstract class ClassLibInterface {
         return null;
     }
 
-    public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LClassLib/ClassLibInterface;");
+    public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/ClassLib/ClassLibInterface;");
     
     public static /*final*/ boolean TRACE = false;
     

@@ -1,16 +1,16 @@
 // Atomic.java, created Mon Feb  5 23:23:21 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Synchronization;
+package joeq.Synchronization;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
-import Clazz.jq_InstanceField;
-import Main.jq;
-import Memory.HeapAddress;
-import Run_Time.Reflection;
-import Util.Assert;
+import joeq.Clazz.jq_InstanceField;
+import joeq.Main.jq;
+import joeq.Memory.HeapAddress;
+import joeq.Run_Time.Reflection;
+import joeq.Util.Assert;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>

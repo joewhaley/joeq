@@ -276,9 +276,9 @@ public abstract class TypeCheck implements jq_ClassFileConstants, CompilationCon
     public static final jq_StaticMethod _instance_of;
     public static final jq_StaticMethod _arrayStoreCheck;
     static {
-        jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LRun_Time/TypeCheck;");
-        _checkcast = k.getOrCreateStaticMethod("checkcast", "(Ljava/lang/Object;LClazz/jq_Type;)Ljava/lang/Object;");
-        _instance_of = k.getOrCreateStaticMethod("instance_of", "(Ljava/lang/Object;LClazz/jq_Type;)Z");
-        _arrayStoreCheck = k.getOrCreateStaticMethod("arrayStoreCheck", "(LMemory/HeapAddress;[Ljava/lang/Object;)V");
+        jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Run_Time/TypeCheck;");
+        _checkcast = k.getOrCreateStaticMethod("checkcast", "(Ljava/lang/Object;Ljoeq/Clazz/jq_Type;)Ljava/lang/Object;");
+        _instance_of = k.getOrCreateStaticMethod("instance_of", "(Ljava/lang/Object;Ljoeq/Clazz/jq_Type;)Z");
+        _arrayStoreCheck = k.getOrCreateStaticMethod("arrayStoreCheck", "(Ljoeq/Memory/HeapAddress;[Ljava/lang/Object;)V");
     }
 }

@@ -1,18 +1,18 @@
 // jq_InterrupterThread.java, created Mon Apr  9  1:52:50 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Scheduler;
+package joeq.Scheduler;
 
-import Allocator.CodeAllocator;
-import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Class;
-import Clazz.jq_InstanceMethod;
-import Memory.CodeAddress;
-import Memory.HeapAddress;
-import Memory.StackAddress;
-import Run_Time.Debug;
-import Run_Time.SystemInterface;
-import Run_Time.Unsafe;
+import joeq.Allocator.CodeAllocator;
+import joeq.Clazz.PrimordialClassLoader;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_InstanceMethod;
+import joeq.Memory.CodeAddress;
+import joeq.Memory.HeapAddress;
+import joeq.Memory.StackAddress;
+import joeq.Run_Time.Debug;
+import joeq.Run_Time.SystemInterface;
+import joeq.Run_Time.Unsafe;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>
@@ -138,7 +138,7 @@ public class jq_InterrupterThread extends Thread {
     static {
         _class =
             (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType(
-                "LScheduler/jq_InterrupterThread;");
+                "Ljoeq/Scheduler/jq_InterrupterThread;");
         _run = _class.getOrCreateInstanceMethod("run", "()V");
     }
 }

@@ -106,7 +106,7 @@ public abstract class jq_Reference extends jq_Type implements jq_ClassFileConsta
     public static final jq_InstanceField _vtable;
     public static /*final*/ jq_InstanceField _state; // set after PrimordialClassLoader finishes initialization
     static {
-        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LClazz/jq_Reference;");
+        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Clazz/jq_Reference;");
         _vtable = _class.getOrCreateInstanceField("vtable", "Ljava/lang/Object;");
         // primitive types have not yet been created!
         _state = _class.getOrCreateInstanceField("state", "I");

@@ -49,5 +49,5 @@ public class jq_FakeInstanceMethod extends jq_InstanceMethod {
         return fakeMethod(clazz, new jq_NameAndDesc(name, desc));
     }
 
-    public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LClazz/jq_FakeInstanceMethod;");
+    public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Clazz/jq_FakeInstanceMethod;");
 }

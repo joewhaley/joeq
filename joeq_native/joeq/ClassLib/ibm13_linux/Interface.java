@@ -1,15 +1,15 @@
 // Interface.java, created Fri Jan 11 17:07:15 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package ClassLib.ibm13_linux;
+package joeq.ClassLib.ibm13_linux;
 
 import java.util.Iterator;
 
-import Bootstrap.ObjectTraverser;
-import Bootstrap.PrimordialClassLoader;
-import ClassLib.ClassLibInterface;
-import Clazz.jq_Class;
-import Main.jq;
+import joeq.Bootstrap.ObjectTraverser;
+import joeq.Clazz.PrimordialClassLoader;
+import joeq.ClassLib.ClassLibInterface;
+import joeq.Clazz.jq_Class;
+import joeq.Main.jq;
 
 /**
  * Interface
@@ -17,16 +17,16 @@ import Main.jq;
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
-public final class Interface extends ClassLib.Common.InterfaceImpl {
+public final class Interface extends joeq.ClassLib.Common.InterfaceImpl {
 
     /** Creates new Interface */
     public Interface() {}
 
-    public Iterator getImplementationClassDescs(UTF.Utf8 desc) {
+    public Iterator getImplementationClassDescs(joeq.UTF.Utf8 desc) {
         if (ClassLibInterface.USE_JOEQ_CLASSLIB && (desc.toString().startsWith("Ljava/") ||
                                                     desc.toString().startsWith("Lcom/ibm/jvm/"))) {
-            UTF.Utf8 u = UTF.Utf8.get("LClassLib/ibm13_linux/"+desc.toString().substring(1));
-            return new Util.Collections.AppendIterator(super.getImplementationClassDescs(desc),
+            joeq.UTF.Utf8 u = joeq.UTF.Utf8.get("Ljoeq/ClassLib/ibm13_linux/"+desc.toString().substring(1));
+            return new joeq.Util.Collections.AppendIterator(super.getImplementationClassDescs(desc),
                                             java.util.Collections.singleton(u).iterator());
         }
         return super.getImplementationClassDescs(desc);
@@ -64,14 +64,14 @@ public final class Interface extends ClassLib.Common.InterfaceImpl {
             // we need to reinitialize the inflaters array on startup.
             if (jq.on_vm_startup != null) {
                 Object[] args = { } ;
-                Clazz.jq_Method init_inflaters = k.getOrCreateStaticMethod("init_inflaters", "()V");
-                Bootstrap.MethodInvocation mi = new Bootstrap.MethodInvocation(init_inflaters, args);
+                joeq.Clazz.jq_Method init_inflaters = k.getOrCreateStaticMethod("init_inflaters", "()V");
+                joeq.Bootstrap.MethodInvocation mi = new joeq.Bootstrap.MethodInvocation(init_inflaters, args);
                 jq.on_vm_startup.add(mi);
                 System.out.println("Added call to reinitialize java.util.zip.ZipFile.inflaters field on joeq startup: "+mi);
             }
         }
         
-        public java.lang.Object mapInstanceField(java.lang.Object o, Clazz.jq_InstanceField f) {
+        public java.lang.Object mapInstanceField(java.lang.Object o, joeq.Clazz.jq_InstanceField f) {
             if (IGNORE_THREAD_LOCALS) {
                 jq_Class c = f.getDeclaringClass();
                 if (c == PrimordialClassLoader.getJavaLangThread()) {

@@ -558,7 +558,7 @@ public class Trimmer {
         }
         public void visitMULTINEWARRAY(jq_Type f, char dim) {
             super.visitMULTINEWARRAY(f, dim);
-            INVOKEhelper(INVOKE_STATIC, Run_Time.Arrays._multinewarray);
+            INVOKEhelper(INVOKE_STATIC, joeq.Run_Time.Arrays._multinewarray);
             rs.addNecessaryType(f);
             for (int i=0; i<dim; ++i) {
                 if (!f.isArrayType()) {

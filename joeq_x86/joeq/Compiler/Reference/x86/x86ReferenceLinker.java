@@ -3,7 +3,7 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compil3r.Reference.x86;
 
-import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.PrimordialClassLoader;
 import joeq.Clazz.jq_Class;
 import joeq.Clazz.jq_InstanceField;
 import joeq.Clazz.jq_InstanceMethod;
@@ -249,24 +249,24 @@ public abstract class x86ReferenceLinker {
     public static final jq_StaticMethod _abstractMethodError;
     public static final jq_StaticMethod _nativeMethodError;
     static {
-        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LCompil3r/Reference/x86/x86ReferenceLinker;");
-        _getstatic4 = _class.getOrCreateStaticMethod("getstatic4", "(LClazz/jq_StaticField;)V");
-        _getstatic8 = _class.getOrCreateStaticMethod("getstatic8", "(LClazz/jq_StaticField;)V");
-        _putstatic4 = _class.getOrCreateStaticMethod("putstatic4", "(LClazz/jq_StaticField;)V");
-        _putstatic8 = _class.getOrCreateStaticMethod("putstatic8", "(LClazz/jq_StaticField;)V");
-        _getfield1 = _class.getOrCreateStaticMethod("getfield1", "(LClazz/jq_InstanceField;)V");
-        _sgetfield = _class.getOrCreateStaticMethod("sgetfield", "(LClazz/jq_InstanceField;)V");
-        _cgetfield = _class.getOrCreateStaticMethod("cgetfield", "(LClazz/jq_InstanceField;)V");
-        _getfield4 = _class.getOrCreateStaticMethod("getfield4", "(LClazz/jq_InstanceField;)V");
-        _getfield8 = _class.getOrCreateStaticMethod("getfield8", "(LClazz/jq_InstanceField;)V");
-        _putfield1 = _class.getOrCreateStaticMethod("putfield1", "(LClazz/jq_InstanceField;)V");
-        _putfield2 = _class.getOrCreateStaticMethod("putfield2", "(LClazz/jq_InstanceField;)V");
-        _putfield4 = _class.getOrCreateStaticMethod("putfield4", "(LClazz/jq_InstanceField;)V");
-        _putfield8 = _class.getOrCreateStaticMethod("putfield8", "(LClazz/jq_InstanceField;)V");
-        _invokevirtual = _class.getOrCreateStaticMethod("invokevirtual", "(LClazz/jq_InstanceMethod;)V");
-        _invokestatic = _class.getOrCreateStaticMethod("invokestatic", "(LClazz/jq_Method;)V");
-        _invokespecial = _class.getOrCreateStaticMethod("invokespecial", "(LClazz/jq_InstanceMethod;)V");
-        _invokeinterface = _class.getOrCreateStaticMethod("invokeinterface", "(LClazz/jq_InstanceMethod;)J");
+        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Compil3r/Reference/x86/x86ReferenceLinker;");
+        _getstatic4 = _class.getOrCreateStaticMethod("getstatic4", "(Ljoeq/Clazz/jq_StaticField;)V");
+        _getstatic8 = _class.getOrCreateStaticMethod("getstatic8", "(Ljoeq/Clazz/jq_StaticField;)V");
+        _putstatic4 = _class.getOrCreateStaticMethod("putstatic4", "(Ljoeq/Clazz/jq_StaticField;)V");
+        _putstatic8 = _class.getOrCreateStaticMethod("putstatic8", "(Ljoeq/Clazz/jq_StaticField;)V");
+        _getfield1 = _class.getOrCreateStaticMethod("getfield1", "(Ljoeq/Clazz/jq_InstanceField;)V");
+        _sgetfield = _class.getOrCreateStaticMethod("sgetfield", "(Ljoeq/Clazz/jq_InstanceField;)V");
+        _cgetfield = _class.getOrCreateStaticMethod("cgetfield", "(Ljoeq/Clazz/jq_InstanceField;)V");
+        _getfield4 = _class.getOrCreateStaticMethod("getfield4", "(Ljoeq/Clazz/jq_InstanceField;)V");
+        _getfield8 = _class.getOrCreateStaticMethod("getfield8", "(Ljoeq/Clazz/jq_InstanceField;)V");
+        _putfield1 = _class.getOrCreateStaticMethod("putfield1", "(Ljoeq/Clazz/jq_InstanceField;)V");
+        _putfield2 = _class.getOrCreateStaticMethod("putfield2", "(Ljoeq/Clazz/jq_InstanceField;)V");
+        _putfield4 = _class.getOrCreateStaticMethod("putfield4", "(Ljoeq/Clazz/jq_InstanceField;)V");
+        _putfield8 = _class.getOrCreateStaticMethod("putfield8", "(Ljoeq/Clazz/jq_InstanceField;)V");
+        _invokevirtual = _class.getOrCreateStaticMethod("invokevirtual", "(Ljoeq/Clazz/jq_InstanceMethod;)V");
+        _invokestatic = _class.getOrCreateStaticMethod("invokestatic", "(Ljoeq/Clazz/jq_Method;)V");
+        _invokespecial = _class.getOrCreateStaticMethod("invokespecial", "(Ljoeq/Clazz/jq_InstanceMethod;)V");
+        _invokeinterface = _class.getOrCreateStaticMethod("invokeinterface", "(Ljoeq/Clazz/jq_InstanceMethod;)J");
         _abstractMethodError = _class.getOrCreateStaticMethod("abstractMethodError", "()V");
         _nativeMethodError = _class.getOrCreateStaticMethod("nativeMethodError", "()V");
     }

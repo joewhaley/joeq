@@ -27,7 +27,7 @@ public abstract class ClassDump {
         
         String classname;
         if (args.length > 0) classname = args[0];
-        else classname = "LMain/jq;";
+        else classname = "Ljoeq/Main/jq;";
         
         jq_Class c = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType(classname);
         System.out.println("Loading "+c+"...");

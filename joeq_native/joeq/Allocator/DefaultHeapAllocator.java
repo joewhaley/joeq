@@ -1,13 +1,13 @@
 // DefaultHeapAllocator.java, created Mon Apr  9  1:01:31 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Allocator;
+package joeq.Allocator;
 
-import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Class;
-import Clazz.jq_StaticMethod;
-import Memory.Address;
-import Run_Time.Unsafe;
+import joeq.Clazz.PrimordialClassLoader;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_StaticMethod;
+import joeq.Memory.Address;
+import joeq.Run_Time.Unsafe;
 
 /**
  * DefaultHeapAllocator
@@ -68,7 +68,7 @@ public abstract class DefaultHeapAllocator {
     public static final jq_StaticMethod _allocateArray;
     public static final jq_StaticMethod _allocateArrayAlign8;
     static {
-        jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LAllocator/DefaultHeapAllocator;");
+        jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Allocator/DefaultHeapAllocator;");
         _allocateObject = k.getOrCreateStaticMethod("allocateObject", "(ILjava/lang/Object;)Ljava/lang/Object;");
         _allocateObjectAlign8 = k.getOrCreateStaticMethod("allocateObjectAlign8", "(ILjava/lang/Object;)Ljava/lang/Object;");
         _allocateArray = k.getOrCreateStaticMethod("allocateArray", "(IILjava/lang/Object;)Ljava/lang/Object;");

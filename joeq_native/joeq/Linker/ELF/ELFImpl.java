@@ -1,14 +1,14 @@
 // ELFImpl.java, created Thu May  8 12:49:13 2003 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Linker.ELF;
+package joeq.Linker.ELF;
 
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import Util.Assert;
+import joeq.Util.Assert;
 
 /**
  *

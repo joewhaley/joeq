@@ -1,13 +1,13 @@
 // Code2CodeReference.java, created Thu Mar  6 22:18:34 2003 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Assembler.x86;
+package joeq.Assembler.x86;
 
 import java.io.DataOutput;
 import java.io.IOException;
 
-import Allocator.DefaultCodeAllocator;
-import Memory.CodeAddress;
+import joeq.Allocator.DefaultCodeAllocator;
+import joeq.Memory.CodeAddress;
 
 /**
  * Code2CodeReference

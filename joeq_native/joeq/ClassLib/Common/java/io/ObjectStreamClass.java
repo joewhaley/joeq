@@ -1,12 +1,12 @@
 // ObjectStreamClass.java, created Mon Jul  8  0:41:49 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package ClassLib.Common.java.io;
+package joeq.ClassLib.Common.java.io;
 
-import Clazz.jq_Class;
-import Clazz.jq_Type;
-import Run_Time.Reflection;
-import Util.Assert;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_Type;
+import joeq.Run_Time.Reflection;
+import joeq.Util.Assert;
 
 /**
  * ObjectStreamClass

@@ -66,7 +66,7 @@ public class ScanObject {
         if (!GCUtil.validRef(ref)) {
             Debug.write("ScanObject.validateRefs: Bad Ref = ");
             GCUtil.dumpRef(ref);
-            //VM_Memory.dumpMemory(ref, 32, 32);
+            //VM_joeq.Memory.dumpMemory(ref, 32, 32);
             // dump 16 words on either side of bad ref
             return false;
         }

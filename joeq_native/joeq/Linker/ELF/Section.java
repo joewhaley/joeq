@@ -1,7 +1,7 @@
 // Section.java, created Wed Mar  6 18:38:47 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Linker.ELF;
+package joeq.Linker.ELF;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -15,9 +15,9 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import Util.Assert;
-import Util.Strings;
-import Util.Collections.AppendIterator;
+import joeq.Util.Assert;
+import joeq.Util.Strings;
+import joeq.Util.Collections.AppendIterator;
 
 /**
  * Defines a section in an ELF file.

@@ -198,8 +198,8 @@ public class jq_CompiledCode implements Comparable {
     public static final jq_InstanceField _entrypoint;
 
     static {
-        jq_Class k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LClazz/jq_CompiledCode;");
-        _entrypoint = k.getOrCreateInstanceField("entrypoint", "LMemory/CodeAddress;");
+        jq_Class k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Clazz/jq_CompiledCode;");
+        _entrypoint = k.getOrCreateInstanceField("entrypoint", "Ljoeq/Memory/CodeAddress;");
         /* Set up delegates. */
         _delegate = null;
         boolean nullVM = jq.nullVM;

@@ -1,38 +1,38 @@
-// DirectInterpreter.java, created Mon Feb  5 23:23:21 2001 by joewhaley
+// Directjoeq.Interpreter.java, created Mon Feb  5 23:23:21 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Interpreter;
+package joeq.Interpreter;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import Allocator.ObjectLayout;
-import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Array;
-import Clazz.jq_Class;
-import Clazz.jq_InstanceField;
-import Clazz.jq_Method;
-import Clazz.jq_Primitive;
-import Clazz.jq_Reference;
-import Clazz.jq_StaticField;
-import Clazz.jq_StaticMethod;
-import Clazz.jq_Type;
-import Main.TraceFlags;
-import Main.jq;
-import Memory.Address;
-import Memory.HeapAddress;
-import Memory.StackAddress;
-import Run_Time.Monitor;
-import Run_Time.Reflection;
-import Run_Time.SystemInterface;
-import Run_Time.TypeCheck;
-import Run_Time.Unsafe;
-import UTF.Utf8;
-import Util.Assert;
-import Util.Convert;
-import Util.Collections.FilterIterator;
+import joeq.Allocator.ObjectLayout;
+import joeq.Clazz.PrimordialClassLoader;
+import joeq.Clazz.jq_Array;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_InstanceField;
+import joeq.Clazz.jq_Method;
+import joeq.Clazz.jq_Primitive;
+import joeq.Clazz.jq_Reference;
+import joeq.Clazz.jq_StaticField;
+import joeq.Clazz.jq_StaticMethod;
+import joeq.Clazz.jq_Type;
+import joeq.Main.TraceFlags;
+import joeq.Main.jq;
+import joeq.Memory.Address;
+import joeq.Memory.HeapAddress;
+import joeq.Memory.StackAddress;
+import joeq.Run_Time.Monitor;
+import joeq.Run_Time.Reflection;
+import joeq.Run_Time.SystemInterface;
+import joeq.Run_Time.TypeCheck;
+import joeq.Run_Time.Unsafe;
+import joeq.UTF.Utf8;
+import joeq.Util.Assert;
+import joeq.Util.Convert;
+import joeq.Util.Collections.FilterIterator;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>
@@ -52,9 +52,9 @@ public class DirectInterpreter extends BytecodeInterpreter {
         bad_classes = new HashSet();
         bad_classes.add(SystemInterface._class);
         bad_classes.add(Reflection._class);
-        bad_classes.add(PrimordialClassLoader.loader.getOrCreateBSType("LRun_Time/ExceptionDeliverer;"));
+        bad_classes.add(PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Run_Time/ExceptionDeliverer;"));
         bad_methods = new HashSet();
-        bad_methods.add(Run_Time.Arrays._multinewarray);
+        bad_methods.add(joeq.Run_Time.Arrays._multinewarray);
         interpret_filter = new FilterIterator.Filter() {
             public boolean isElement(Object o) {
                 jq_Method m = (jq_Method)o;
@@ -85,6 +85,134 @@ public class DirectInterpreter extends BytecodeInterpreter {
         return result;
     }
     
+    // callee == null -> call compiled version
+    public Object invokeMethod(jq_Method m, State callee) throws Throwable {
+        //Run_Time.SystemInterface.debugwriteln("Invoking method "+m);
+        jq_Class k = m.getDeclaringClass();
+        Assert._assert(k.isClsInitialized());
+        Assert._assert(m.getBytecode() != null);
+        jq_Type[] paramTypes = m.getParamTypes();
+        Object[] params = new Object[paramTypes.length];
+        for (int i=paramTypes.length-1; i>=0; --i) {
+            jq_Type t = paramTypes[i];
+            if (t.isPrimitiveType()) {
+                if (t == jq_Primitive.LONG) {
+                    params[i] = new Long(istate.pop_L());
+                } else if (t == jq_Primitive.FLOAT) {
+                    params[i] = new Float(istate.pop_F());
+                } else if (t == jq_Primitive.DOUBLE) {
+                    params[i] = new Double(istate.pop_D());
+                } else {
+                    params[i] = new Integer(istate.pop_I());
+                }
+            } else {
+                params[i] = istate.pop_A();
+            }
+            //System.out.println("Param "+i+": "+params[i]);
+        }
+        for (int i=0, j=0; i<paramTypes.length; ++i, ++j) {
+            jq_Type t = paramTypes[i];
+            if (t.isPrimitiveType()) {
+                if (t == jq_Primitive.LONG) {
+                    long v = ((Long)params[i]).longValue();
+                    if (callee == null) {
+                        Unsafe.pushArg((int)(v>>32)); // hi
+                        Unsafe.pushArg((int)v);       // lo
+                    } else callee.setLocal_L(j, v);
+                    ++j;
+                } else if (t == jq_Primitive.FLOAT) {
+                    float v = ((Float)params[i]).floatValue();
+                    if (callee == null) {
+                        Unsafe.pushArg(Float.floatToRawIntBits(v));
+                    } else callee.setLocal_F(j, v);
+                } else if (t == jq_Primitive.DOUBLE) {
+                    long v = Double.doubleToRawLongBits(((Double)params[i]).doubleValue());
+                    if (callee == null) {
+                        Unsafe.pushArg((int)(v>>32)); // hi
+                        Unsafe.pushArg((int)v);       // lo
+                    } else callee.setLocal_D(j, Double.longBitsToDouble(v));
+                    ++j;
+                } else {
+                    int v = ((Integer)params[i]).intValue();
+                    if (callee == null) {
+                        Unsafe.pushArg(v);
+                    } else callee.setLocal_I(j, v);
+                }
+            } else {
+                Object v = params[i];
+                if (callee == null) {
+                    Unsafe.pushArgA(HeapAddress.addressOf(v));
+                } else callee.setLocal_A(j, v);
+            }
+        }
+        if (callee == null) {
+            jq_Type returnType = m.getReturnType();
+            if (returnType.isReferenceType()) {
+                Address result = Unsafe.invokeA(m.getDefaultCompiledVersion().getEntrypoint());
+                if (returnType.isAddressType()) return result;
+                return ((HeapAddress) result).asObject();
+            }
+            long result = Unsafe.invoke(m.getDefaultCompiledVersion().getEntrypoint());
+            if (returnType == jq_Primitive.VOID)
+                return null;
+            else if (returnType == jq_Primitive.LONG)
+                return new Long(result);
+            else if (returnType == jq_Primitive.FLOAT)
+                return new Float(Float.intBitsToFloat((int)(result)));
+            else if (returnType == jq_Primitive.DOUBLE)
+                return new Double(Double.longBitsToDouble(result));
+            else
+                return new Integer((int)(result));
+        } else {
+            State oldState = this.istate;
+            this.istate = callee;
+            MethodInterpreter mi = new MethodInterpreter(m);
+            Object synchobj = null;
+            try {
+                if (m.isSynchronized()) {
+                    if (!m.isStatic()) {
+                        if (mi.getTraceFlag()) mi.getTraceOut().println("synchronized instance method, locking 'this' object");
+                        vm.monitorenter(synchobj = istate.getLocal_A(0), mi);
+                    } else {
+                        if (mi.getTraceFlag()) mi.getTraceOut().println("synchronized static method, locking class object");
+                        vm.monitorenter(synchobj = Reflection.getJDKType(m.getDeclaringClass()), mi);
+                    }
+                }
+                mi.forwardTraversal();
+                this.istate = oldState;
+                if (m.isSynchronized()) {
+                    if (mi.getTraceFlag()) mi.getTraceOut().println("exiting synchronized method, unlocking object");
+                    vm.monitorexit(synchobj);
+                }
+                jq_Type returnType = m.getReturnType();
+                Object retval;
+                if (returnType.isReferenceType()) {
+                    retval = callee.getReturnVal_A();
+                } else if (returnType == jq_Primitive.VOID) {
+                    retval = null;
+                } else if (returnType == jq_Primitive.LONG) {
+                    retval = new Long(callee.getReturnVal_L());
+                } else if (returnType == jq_Primitive.FLOAT) {
+                    retval = new Float(callee.getReturnVal_F());
+                } else if (returnType == jq_Primitive.DOUBLE) {
+                    retval = new Double(callee.getReturnVal_D());
+                } else {
+                    retval = new Integer(callee.getReturnVal_I());
+                }
+                if (mi.getTraceFlag())
+                    mi.getTraceOut().println("Return value: "+retval);
+                return retval;
+            } catch (WrappedException ix) {
+                this.istate = oldState;
+                if (m.isSynchronized()) {
+                    if (mi.getTraceFlag()) mi.getTraceOut().println("exiting synchronized method, unlocking object");
+                    vm.monitorexit(synchobj);
+                }
+                throw ix.t;
+            }
+        }
+    }
+
     public Object invokeUnsafeMethod(jq_Method f) throws Throwable {
         if (f == Unsafe._intBitsToFloat) {
             return new Float(istate.pop_F());
@@ -357,7 +485,7 @@ public class DirectInterpreter extends BytecodeInterpreter {
         public int arraylength(Object o) { return HeapAddress.addressOf(o).offset(ObjectLayout.ARRAY_LENGTH_OFFSET).peek4(); }
         public void monitorenter(Object o, MethodInterpreter v) { Monitor.monitorenter(o); }
         public void monitorexit(Object o) { Monitor.monitorexit(o); }
-        public Object multinewarray(int[] dims, jq_Type t) { return Run_Time.Arrays.multinewarray_helper(dims, 0, (jq_Array)t); }
+        public Object multinewarray(int[] dims, jq_Type t) { return joeq.Run_Time.Arrays.multinewarray_helper(dims, 0, (jq_Array)t); }
         public jq_Reference getJQTypeOf(Object o) { return jq_Reference.getTypeOf(o); }
     }
 

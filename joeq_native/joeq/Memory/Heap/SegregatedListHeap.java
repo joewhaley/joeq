@@ -289,7 +289,7 @@ public class SegregatedListHeap extends Heap implements GCConstants {
     /**
      * Allocate a fixed-size small chunk when we have run off the end of the 
      * current block.  This will either use a partially filled block of the 
-     * given size, or a completely empty block, or it may trigger GC.
+     * given size, or a completely empty block, or it may trigger joeq.GC.
      *   @param the_size Header record for the given slot size
      *   @param size Size in bytes to allocate
      *   @return Address of free, zero-filled storage
@@ -452,18 +452,18 @@ public class SegregatedListHeap extends Heap implements GCConstants {
     protected void do_check(BlockControl the_block, SizeControl the_size) {
         int count = 0;
         if (blocks[the_size.current_block] != the_block) {
-            //VM_Scheduler.trace("do_check", "BlockControls don't match");
+            //VM_joeq.Scheduler.trace("do_check", "BlockControls don't match");
             Assert.UNREACHABLE("BlockControl Inconsistency");
         }
         /*
         if (the_size.next_slot.isNull())
-            VM_Scheduler.trace("do_check", "no free slots in block");
+            VM_joeq.Scheduler.trace("do_check", "no free slots in block");
             */
         HeapAddress temp = the_size.next_slot;
         while (!temp.isNull()) {
             if ((temp.difference(the_block.baseAddr) < 0)
                 || (temp.difference(the_block.baseAddr.offset(GC_BLOCKSIZE)) > 0)) {
-                //VM_Scheduler.trace("do_check: TILT:", "invalid slot ptr", temp);
+                //VM_joeq.Scheduler.trace("do_check: TILT:", "invalid slot ptr", temp);
                 Assert.UNREACHABLE("Bad freelist");
             }
             count++;
@@ -471,7 +471,7 @@ public class SegregatedListHeap extends Heap implements GCConstants {
         }
 
         if (count > the_block.mark.length) {
-            //VM_Scheduler.trace("do_check: TILT:", "too many slots in block");
+            //VM_joeq.Scheduler.trace("do_check: TILT:", "too many slots in block");
             Assert.UNREACHABLE("too many slots");
         }
     }

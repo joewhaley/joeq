@@ -29,7 +29,7 @@ public class Handshake {
      * to complete.
      *
      * While mutators are executing, all the GC threads (VM_CollectorThreads)
-     * reside on a single system queue, VM_Scheduler.collectorQueue.  This
+     * reside on a single system queue, VM_joeq.Scheduler.collectorQueue.  This
      * method determines which processors will participate in the collection,
      * dequeues the GC threads associated with those processors, and
      * schedules them for executing on their respective processors.

@@ -87,7 +87,7 @@ public class Delegates implements jq_ClassFileConstants {
     public static Compil3rInterface default_compiler;
     public static List compilers = new LinkedList();
     static {
-        String default_compiler_name = System.getProperty("joeq.compiler", "Compil3r.Reference.x86.x86ReferenceCompiler$Factory");
+        String default_compiler_name = System.getProperty("joeq.compiler", "joeq.Compil3r.Reference.x86.x86ReferenceCompiler$Factory");
         setDefaultCompiler(default_compiler_name);
     }
     public static Compil3rInterface getCompiler(String name) {
@@ -102,7 +102,7 @@ public class Delegates implements jq_ClassFileConstants {
     }
     public static void setDefaultCompiler(String name) {
         Compil3rInterface c = getCompiler(name);
-        if (c == null) c = new Compil3r.Reference.x86.x86ReferenceCompiler.Factory();
+        if (c == null) c = new joeq.Compil3r.Reference.x86.x86ReferenceCompiler.Factory();
         default_compiler = c;
     }
     public static void registerCompiler(FilterIterator.Filter f, Compil3rInterface c) {

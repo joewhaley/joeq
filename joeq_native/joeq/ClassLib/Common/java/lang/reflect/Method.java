@@ -1,23 +1,23 @@
 // Method.java, created Thu Jul  4  4:50:03 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package ClassLib.Common.java.lang.reflect;
+package joeq.ClassLib.Common.java.lang.reflect;
 
-import ClassLib.ClassLibInterface;
-import ClassLib.Common.ClassUtils;
-import Clazz.jq_Class;
-import Clazz.jq_InstanceMethod;
-import Clazz.jq_Method;
-import Clazz.jq_NameAndDesc;
-import Clazz.jq_Primitive;
-import Clazz.jq_Reference;
-import Clazz.jq_Type;
-import Main.jq;
-import Memory.HeapAddress;
-import Run_Time.Reflection;
-import Run_Time.TypeCheck;
-import UTF.Utf8;
-import Util.Assert;
+import joeq.ClassLib.ClassLibInterface;
+import joeq.ClassLib.Common.ClassUtils;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_InstanceMethod;
+import joeq.Clazz.jq_Method;
+import joeq.Clazz.jq_NameAndDesc;
+import joeq.Clazz.jq_Primitive;
+import joeq.Clazz.jq_Reference;
+import joeq.Clazz.jq_Type;
+import joeq.Main.jq;
+import joeq.Memory.HeapAddress;
+import joeq.Run_Time.Reflection;
+import joeq.Run_Time.TypeCheck;
+import joeq.UTF.Utf8;
+import joeq.Util.Assert;
 
 /**
  * Method
@@ -65,7 +65,7 @@ public class Method extends AccessibleObject {
         desc.append(')');
         desc.append(Reflection.getJQType(returnType).getDesc().toString());
         jq_NameAndDesc nd = new jq_NameAndDesc(Utf8.get(name), Utf8.get(desc.toString()));
-        nd = ClassLib.ClassLibInterface.convertClassLibNameAndDesc(k, nd);
+        nd = joeq.ClassLib.ClassLibInterface.convertClassLibNameAndDesc(k, nd);
         jq_Method m = (jq_Method) k.getDeclaredMember(nd);
         if (m == null) {
             if (java.lang.reflect.Modifier.isStatic(modifiers))

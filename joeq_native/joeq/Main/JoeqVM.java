@@ -7,7 +7,7 @@ import java.util.Iterator;
 
 import joeq.Allocator.SimpleAllocator;
 import joeq.Bootstrap.MethodInvocation;
-import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.PrimordialClassLoader;
 import joeq.ClassLib.ClassLibInterface;
 import joeq.Clazz.jq_Class;
 import joeq.Clazz.jq_NameAndDesc;
@@ -151,12 +151,12 @@ public abstract class JoeqVM {
         jq_NativeThread.initNativeThreads(nt, jq.NumOfNativeThreads);
 
         // Here we start method replacement of classes whose name were given as arguments to -replace on the cmd line.
-        if (Clazz.jq_Class.TRACE_REPLACE_CLASS) SystemInterface.debugwriteln(Strings.lineSep+"STARTING REPLACEMENT of classes: " + Clazz.jq_Class.classToReplace);
-        for (Iterator it = Clazz.jq_Class.classToReplace.iterator(); it.hasNext();) {
+        if (joeq.Clazz.jq_Class.TRACE_REPLACE_CLASS) SystemInterface.debugwriteln(Strings.lineSep+"STARTING REPLACEMENT of classes: " + joeq.Clazz.jq_Class.classToReplace);
+        for (Iterator it = joeq.Clazz.jq_Class.classToReplace.iterator(); it.hasNext();) {
             String newCName = (String) it.next();
             PrimordialClassLoader.loader.replaceClass(newCName);
         }
-        if (Clazz.jq_Class.TRACE_REPLACE_CLASS) SystemInterface.debugwriteln(Strings.lineSep+"DONE with Classes Replacement!");
+        if (joeq.Clazz.jq_Class.TRACE_REPLACE_CLASS) SystemInterface.debugwriteln(Strings.lineSep+"DONE with Classes Replacement!");
 
         String className = args[i];
         jq_Class main_class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("L" + className.replace('.', '/') + ";");

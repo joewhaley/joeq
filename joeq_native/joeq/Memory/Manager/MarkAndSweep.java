@@ -84,13 +84,13 @@ public class MarkAndSweep implements GCConstants {
         verbose = VM_Interface.verbose();
         int smallHeapSize = VM_Interface.smallHeapSize();
         smallHeapSize = (smallHeapSize / GC_BLOCKALIGNMENT) * GC_BLOCKALIGNMENT;
-        smallHeapSize = VM_Memory.roundUpPage(smallHeapSize);
+        smallHeapSize = VM_joeq.Memory.roundUpPage(smallHeapSize);
         int largeSize = VM_Interface.largeHeapSize();
         int immortalSize =
-            VM_Memory.roundUpPage(
-                4 * (largeSize / VM_Memory.getPagesize())
+            VM_joeq.Memory.roundUpPage(
+                4 * (largeSize / VM_joeq.Memory.getPagesize())
                     + ((int) (0.05 * smallHeapSize))
-                    + 4 * VM_Memory.getPagesize());
+                    + 4 * VM_joeq.Memory.getPagesize());
         */
 
         Heap.boot();
@@ -186,7 +186,7 @@ public class MarkAndSweep implements GCConstants {
 
     // following is called from CollectorThread.boot() - to set the number
     // of system threads into the synchronization object; this number
-    // is not yet available at Allocator.boot() time
+    // is not yet available at joeq.Allocator.boot() time
     public static void gcSetup(int numSysThreads) {
         GCWorkQueue.workQueue.initialSetup(numSysThreads);
     }
@@ -349,7 +349,7 @@ public class MarkAndSweep implements GCConstants {
             }
         } else {
             Debug.write(
-                "VM_Allocator.gc_scanObjectOrArray: type not Array or Class");
+                "VM_joeq.Allocator.gc_scanObjectOrArray: type not Array or Class");
             SystemInterface.die(1000);
         }
     } //  gc_scanObjectOrArray

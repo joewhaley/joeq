@@ -1,18 +1,18 @@
 // Constructor.java, created Thu Jul  4  4:50:03 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package ClassLib.Common.java.lang.reflect;
+package joeq.ClassLib.Common.java.lang.reflect;
 
-import ClassLib.ClassLibInterface;
-import ClassLib.Common.ClassUtils;
-import Clazz.jq_Class;
-import Clazz.jq_Initializer;
-import Clazz.jq_NameAndDesc;
-import Clazz.jq_Type;
-import Main.jq;
-import Run_Time.Reflection;
-import UTF.Utf8;
-import Util.Assert;
+import joeq.ClassLib.ClassLibInterface;
+import joeq.ClassLib.Common.ClassUtils;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_Initializer;
+import joeq.Clazz.jq_NameAndDesc;
+import joeq.Clazz.jq_Type;
+import joeq.Main.jq;
+import joeq.Run_Time.Reflection;
+import joeq.UTF.Utf8;
+import joeq.Util.Assert;
 
 /**
  * Constructor
@@ -58,7 +58,7 @@ public class Constructor extends AccessibleObject {
         }
         desc.append(")V");
         jq_NameAndDesc nd = new jq_NameAndDesc(Utf8.get("<init>"), Utf8.get(desc.toString()));
-        nd = ClassLib.ClassLibInterface.convertClassLibNameAndDesc(k, nd);
+        nd = joeq.ClassLib.ClassLibInterface.convertClassLibNameAndDesc(k, nd);
         jq_Initializer init = (jq_Initializer) k.getDeclaredMember(nd);
         if (init == null) {
             init = (jq_Initializer) k.getOrCreateInstanceMethod(nd);

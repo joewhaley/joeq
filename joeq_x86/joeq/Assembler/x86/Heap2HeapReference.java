@@ -1,14 +1,14 @@
 // Heap2HeapReference.java, created Tue Feb 27  2:59:43 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Assembler.x86;
+package joeq.Assembler.x86;
 
 import java.io.DataOutput;
 import java.io.IOException;
 
-import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Class;
-import Memory.HeapAddress;
+import joeq.Clazz.PrimordialClassLoader;
+import joeq.Clazz.jq_Class;
+import joeq.Memory.HeapAddress;
 
 /**
  * Heap2HeapReference
@@ -43,5 +43,5 @@ public class Heap2HeapReference extends Reloc {
         return "from heap:"+from_heaploc.stringRep()+" to heap:"+to_heaploc.stringRep();
     }
     
-    public static final jq_Class _class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LAssembler/x86/Heap2HeapReference;");
+    public static final jq_Class _class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Assembler/x86/Heap2HeapReference;");
 }

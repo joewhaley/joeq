@@ -104,7 +104,7 @@ public class HeapAddress extends Address {
     public static final jq_StaticField _FACTORY;
 
     static {
-        _class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LMemory/HeapAddress;");
-        _FACTORY = _class.getOrCreateStaticField("FACTORY", "LMemory/HeapAddress$HeapAddressFactory;");
+        _class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Memory/HeapAddress;");
+        _FACTORY = _class.getOrCreateStaticField("FACTORY", "Ljoeq/Memory/HeapAddress$HeapAddressFactory;");
     }
 }

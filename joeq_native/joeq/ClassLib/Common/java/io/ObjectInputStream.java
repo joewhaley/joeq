@@ -1,19 +1,19 @@
 // ObjectInputStream.java, created Mon Jul  8  0:41:49 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package ClassLib.Common.java.io;
+package joeq.ClassLib.Common.java.io;
 
-import ClassLib.Common.ClassUtils;
-import Clazz.jq_Array;
-import Clazz.jq_Class;
-import Clazz.jq_Initializer;
-import Clazz.jq_NameAndDesc;
-import Clazz.jq_Type;
-import Run_Time.Reflection;
-import Run_Time.Unsafe;
-import UTF.Utf8;
-import Util.Assert;
-import Util.Convert;
+import joeq.ClassLib.Common.ClassUtils;
+import joeq.Clazz.jq_Array;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_Initializer;
+import joeq.Clazz.jq_NameAndDesc;
+import joeq.Clazz.jq_Type;
+import joeq.Run_Time.Reflection;
+import joeq.Run_Time.Unsafe;
+import joeq.UTF.Utf8;
+import joeq.Util.Assert;
+import joeq.Util.Convert;
 
 /**
  * ObjectInputStream

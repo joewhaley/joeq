@@ -52,7 +52,7 @@ public class CodeAddress extends Address {
     public static final jq_Class _class;
     public static final jq_StaticField _FACTORY;
     static {
-        _class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LMemory/CodeAddress;");
-        _FACTORY = _class.getOrCreateStaticField("FACTORY", "LMemory/CodeAddress$CodeAddressFactory;");
+        _class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Memory/CodeAddress;");
+        _FACTORY = _class.getOrCreateStaticField("FACTORY", "Ljoeq/Memory/CodeAddress$CodeAddressFactory;");
     }
 }

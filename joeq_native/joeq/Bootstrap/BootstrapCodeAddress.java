@@ -1,12 +1,13 @@
 // BootstrapCodeAddress.java, created Wed Sep 18  1:22:47 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Bootstrap;
+package joeq.Bootstrap;
 
-import Clazz.jq_Class;
-import Memory.Address;
-import Memory.CodeAddress;
-import Util.Strings;
+import joeq.Clazz.PrimordialClassLoader;
+import joeq.Clazz.jq_Class;
+import joeq.Memory.Address;
+import joeq.Memory.CodeAddress;
+import joeq.Util.Strings;
 
 /**
  * BootstrapCodeAddress
@@ -57,6 +58,6 @@ public class BootstrapCodeAddress extends CodeAddress implements BootstrapAddres
     
     public static final jq_Class _class;
     static {
-        _class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LBootstrap/BootstrapCodeAddress;");
+        _class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Bootstrap/BootstrapCodeAddress;");
     }
 }

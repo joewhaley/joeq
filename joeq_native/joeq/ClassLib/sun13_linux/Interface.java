@@ -1,14 +1,14 @@
 // Interface.java, created Fri May 17 22:58:31 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package ClassLib.sun13_linux;
+package joeq.ClassLib.sun13_linux;
 
-import Bootstrap.ObjectTraverser;
-import Bootstrap.PrimordialClassLoader;
-import ClassLib.ClassLibInterface;
-import Clazz.jq_Class;
-import Run_Time.SystemInterface;
-import UTF.Utf8;
+import joeq.Bootstrap.ObjectTraverser;
+import joeq.Clazz.PrimordialClassLoader;
+import joeq.ClassLib.ClassLibInterface;
+import joeq.Clazz.jq_Class;
+import joeq.Run_Time.SystemInterface;
+import joeq.UTF.Utf8;
 
 /**
  * Interface
@@ -16,15 +16,15 @@ import UTF.Utf8;
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
-public final class Interface extends ClassLib.Common.InterfaceImpl {
+public final class Interface extends joeq.ClassLib.Common.InterfaceImpl {
 
     /** Creates new Interface */
     public Interface() {}
 
-    public java.util.Iterator getImplementationClassDescs(UTF.Utf8 desc) {
+    public java.util.Iterator getImplementationClassDescs(joeq.UTF.Utf8 desc) {
         if (ClassLibInterface.USE_JOEQ_CLASSLIB && desc.toString().startsWith("Ljava/")) {
-            UTF.Utf8 u = UTF.Utf8.get("LClassLib/sun13_linux/"+desc.toString().substring(1));
-            return new Util.Collections.AppendIterator(super.getImplementationClassDescs(desc),
+            joeq.UTF.Utf8 u = joeq.UTF.Utf8.get("Ljoeq/ClassLib/sun13_linux/"+desc.toString().substring(1));
+            return new joeq.Util.Collections.AppendIterator(super.getImplementationClassDescs(desc),
                                             java.util.Collections.singleton(u).iterator());
         }
         return super.getImplementationClassDescs(desc);
@@ -37,7 +37,7 @@ public final class Interface extends ClassLib.Common.InterfaceImpl {
     public static class sun13_linuxObjectTraverser extends CommonObjectTraverser {
         public static sun13_linuxObjectTraverser INSTANCE = new sun13_linuxObjectTraverser();
         protected sun13_linuxObjectTraverser() {}
-        public java.lang.Object mapInstanceField(java.lang.Object o, Clazz.jq_InstanceField f) {
+        public java.lang.Object mapInstanceField(java.lang.Object o, joeq.Clazz.jq_InstanceField f) {
             if (IGNORE_THREAD_LOCALS) {
                 jq_Class c = f.getDeclaringClass();
                 if (c == PrimordialClassLoader.getJavaLangThread()) {

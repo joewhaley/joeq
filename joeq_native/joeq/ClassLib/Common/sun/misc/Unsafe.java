@@ -1,17 +1,17 @@
 // Unsafe.java, created Tue Dec 10 14:02:37 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package ClassLib.Common.sun.misc;
+package joeq.ClassLib.Common.sun.misc;
 
-import ClassLib.ClassLibInterface;
-import Clazz.jq_Array;
-import Clazz.jq_Class;
-import Clazz.jq_Field;
-import Clazz.jq_InstanceField;
-import Clazz.jq_StaticField;
-import Clazz.jq_Type;
-import Memory.HeapAddress;
-import Run_Time.SystemInterface;
+import joeq.ClassLib.ClassLibInterface;
+import joeq.Clazz.jq_Array;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_Field;
+import joeq.Clazz.jq_InstanceField;
+import joeq.Clazz.jq_StaticField;
+import joeq.Clazz.jq_Type;
+import joeq.Memory.HeapAddress;
+import joeq.Run_Time.SystemInterface;
 
 /**
  * Unsafe
@@ -324,11 +324,11 @@ public final class Unsafe {
         return 1 << HeapAddress.pageAlign();
     }
     
-    public java.lang.Class defineClass(java.lang.String name, byte[] b, int off, int len, ClassLib.Common.java.lang.ClassLoader cl, java.security.ProtectionDomain pd) {
+    public java.lang.Class defineClass(java.lang.String name, byte[] b, int off, int len, joeq.ClassLib.Common.java.lang.ClassLoader cl, java.security.ProtectionDomain pd) {
         return cl.defineClass0(name, b, off, len, pd);
     }
     
-    public java.lang.Class defineClass(java.lang.String name, byte[] b, int off, int len, ClassLib.Common.java.lang.ClassLoader cl) {
+    public java.lang.Class defineClass(java.lang.String name, byte[] b, int off, int len, joeq.ClassLib.Common.java.lang.ClassLoader cl) {
         return cl.defineClass0(name, b, off, len, null);
     }
     
@@ -343,14 +343,14 @@ public final class Unsafe {
     }
     
     public void monitorEnter(java.lang.Object o) {
-        Run_Time.Monitor.monitorenter(o);
+        joeq.Run_Time.Monitor.monitorenter(o);
     }
     
     public void monitorExit(java.lang.Object o) {
-        Run_Time.Monitor.monitorexit(o);
+        joeq.Run_Time.Monitor.monitorexit(o);
     }
     
     public void throwException(java.lang.Throwable o) {
-        Run_Time.ExceptionDeliverer.athrow(o);
+        joeq.Run_Time.ExceptionDeliverer.athrow(o);
     }
 }

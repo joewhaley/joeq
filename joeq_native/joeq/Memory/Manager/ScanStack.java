@@ -7,7 +7,7 @@ import java.util.Iterator;
 
 import joeq.Allocator.CodeAllocator;
 import joeq.Allocator.DefaultHeapAllocator;
-import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.PrimordialClassLoader;
 import joeq.Clazz.jq_Class;
 import joeq.Clazz.jq_CompiledCode;
 import joeq.Clazz.jq_Method;
@@ -48,7 +48,7 @@ public class ScanStack {
      * Scans a threads stack during collection to find object references.
      * Locates and updates references in stack frames using stack maps,
      * and references associated with JNI native frames.  Located references
-     * are processed by calling VM_Allocator.processPtrField.
+     * are processed by calling VM_joeq.Allocator.processPtrField.
      * <p>
      * If relocate_code is true, moves code objects, and updates saved
      * link registers in the stack frames.

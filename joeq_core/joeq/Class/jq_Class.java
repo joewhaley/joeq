@@ -1421,7 +1421,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
     }
     
     public boolean isInClassLib() {
-        return (this.getDesc().toString().startsWith("LClassLib/") &&
+        return (this.getDesc().toString().startsWith("Ljoeq/ClassLib/") &&
                 this.getDesc().toString().indexOf('/', 11) != -1);
     }
     
@@ -1928,7 +1928,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                 // overridden static method
                 char access_flags = sm.getAccessFlags();
                 if (classfield_index == 0) {
-                    jq_StaticField that_sf = that.getDeclaredStaticField(new jq_NameAndDesc(Utf8.get("_class"), Utf8.get("LClazz/jq_Class;")));
+                    jq_StaticField that_sf = that.getDeclaredStaticField(new jq_NameAndDesc(Utf8.get("_class"), Utf8.get("Ljoeq/Clazz/jq_Class;")));
                     Assert._assert(that_sf != null);
                     classfield_index = cp_adder.add(that_sf, CONSTANT_ResolvedSFieldRef);
                 }
@@ -2615,7 +2615,7 @@ uphere2:
         }
     }
 
-    public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LClazz/jq_Class;");
+    public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Clazz/jq_Class;");
 
     static interface Delegate {
         Object newInstance(jq_Class c, int instance_size, Object vtable);

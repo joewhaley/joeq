@@ -1,24 +1,24 @@
 // CodeAllocator.java, created Mon Feb  5 23:23:19 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Allocator;
+package joeq.Allocator;
 
 import java.util.Iterator;
 import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_BytecodeMap;
-import Clazz.jq_Class;
-import Clazz.jq_CompiledCode;
-import Clazz.jq_InstanceField;
-import Clazz.jq_Method;
-import Clazz.jq_StaticField;
-import Clazz.jq_TryCatch;
-import Memory.Address;
-import Memory.CodeAddress;
-import Run_Time.ExceptionDeliverer;
+import joeq.Clazz.PrimordialClassLoader;
+import joeq.Clazz.jq_BytecodeMap;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_CompiledCode;
+import joeq.Clazz.jq_InstanceField;
+import joeq.Clazz.jq_Method;
+import joeq.Clazz.jq_StaticField;
+import joeq.Clazz.jq_TryCatch;
+import joeq.Memory.Address;
+import joeq.Memory.CodeAddress;
+import joeq.Run_Time.ExceptionDeliverer;
 
 /**
  * This class provides the abstract interface for code allocators.  A code
@@ -395,7 +395,7 @@ public abstract class CodeAllocator {
         
         public static final jq_InstanceField _ip;
         static {
-            jq_Class k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LAllocator/CodeAllocator$InstructionPointer;");
+            jq_Class k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Allocator/CodeAllocator$InstructionPointer;");
             _ip = k.getOrCreateInstanceField("ip", "I");
         }
     }
@@ -403,8 +403,8 @@ public abstract class CodeAllocator {
     public static final jq_StaticField _lowAddress;
     public static final jq_StaticField _highAddress;
     static {
-        jq_Class k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LAllocator/CodeAllocator;");
-        _lowAddress = k.getOrCreateStaticField("lowAddress", "LMemory/CodeAddress;");
-        _highAddress = k.getOrCreateStaticField("highAddress", "LMemory/CodeAddress;");
+        jq_Class k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Allocator/CodeAllocator;");
+        _lowAddress = k.getOrCreateStaticField("lowAddress", "Ljoeq/Memory/CodeAddress;");
+        _highAddress = k.getOrCreateStaticField("highAddress", "Ljoeq/Memory/CodeAddress;");
     }
 }

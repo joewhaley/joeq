@@ -1,15 +1,15 @@
 // Interface.java, created Fri Aug 16 18:11:47 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package ClassLib.sun14_linux;
+package joeq.ClassLib.sun14_linux;
 
 import java.util.Iterator;
 
-import Bootstrap.ObjectTraverser;
-import Bootstrap.PrimordialClassLoader;
-import ClassLib.ClassLibInterface;
-import Clazz.jq_Class;
-import Scheduler.jq_NativeThread;
+import joeq.Bootstrap.ObjectTraverser;
+import joeq.Clazz.PrimordialClassLoader;
+import joeq.ClassLib.ClassLibInterface;
+import joeq.Clazz.jq_Class;
+import joeq.Scheduler.jq_NativeThread;
 
 /**
  * Interface
@@ -17,15 +17,15 @@ import Scheduler.jq_NativeThread;
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
-public class Interface extends ClassLib.Common.InterfaceImpl {
+public class Interface extends joeq.ClassLib.Common.InterfaceImpl {
 
     /** Creates new Interface */
     public Interface() {}
 
-    public Iterator getImplementationClassDescs(UTF.Utf8 desc) {
+    public Iterator getImplementationClassDescs(joeq.UTF.Utf8 desc) {
         if (ClassLibInterface.USE_JOEQ_CLASSLIB && desc.toString().startsWith("Ljava/")) {
-            UTF.Utf8 u = UTF.Utf8.get("LClassLib/sun14_linux/"+desc.toString().substring(1));
-            return new Util.Collections.AppendIterator(super.getImplementationClassDescs(desc),
+            joeq.UTF.Utf8 u = joeq.UTF.Utf8.get("Ljoeq/ClassLib/sun14_linux/"+desc.toString().substring(1));
+            return new joeq.Util.Collections.AppendIterator(super.getImplementationClassDescs(desc),
                                             java.util.Collections.singleton(u).iterator());
         }
         return super.getImplementationClassDescs(desc);
@@ -61,13 +61,13 @@ public class Interface extends ClassLib.Common.InterfaceImpl {
             nullInstanceFields.add(k.getOrCreateInstanceField("fieldAccessor", "Lsun/reflect/FieldAccessor;"));
             k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/reflect/Method;");
             nullInstanceFields.add(k.getOrCreateInstanceField("methodAccessor", "Lsun/reflect/MethodAccessor;"));
-            k = (Clazz.jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/reflect/Constructor;");
+            k = (joeq.Clazz.jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/reflect/Constructor;");
             nullInstanceFields.add(k.getOrCreateInstanceField("constructorAccessor", "Lsun/reflect/ConstructorAccessor;"));
             
             if (IGNORE_THREAD_LOCALS) {
                 // for some reason, thread local gets created during bootstrapping. (SoftReference)
                 // for now, just kill all thread locals.
-                k = (Clazz.jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/Thread;");
+                k = (joeq.Clazz.jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/Thread;");
                 nullInstanceFields.add(k.getOrCreateInstanceField("threadLocals", "Ljava/lang/ThreadLocal$ThreadLocalMap;"));
                 nullInstanceFields.add(k.getOrCreateInstanceField("inheritableThreadLocals", "Ljava/lang/ThreadLocal$ThreadLocalMap;"));
             }
@@ -78,7 +78,7 @@ public class Interface extends ClassLib.Common.InterfaceImpl {
             //PrimordialClassLoader.loader.getOrCreateBSType("Lsun/nio/cs/ISO_8859_1;");
         }
         
-        public java.lang.Object mapInstanceField(java.lang.Object o, Clazz.jq_InstanceField f) {
+        public java.lang.Object mapInstanceField(java.lang.Object o, joeq.Clazz.jq_InstanceField f) {
             jq_Class c = f.getDeclaringClass();
             if (c == PrimordialClassLoader.loader.getBSType("Lsun/nio/cs/AbstractCharsetProvider;")) {
                 String fieldName = f.getName().toString();

@@ -17,5 +17,5 @@ import joeq.Clazz.PrimordialClassLoader;
  */
 public interface jq_DontAlign {
 
-    jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LClazz/jq_DontAlign;");
+    jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Clazz/jq_DontAlign;");
 }

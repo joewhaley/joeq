@@ -1,21 +1,21 @@
 // System.java, created Thu Jul  4  4:50:03 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package ClassLib.Common.java.lang;
+package joeq.ClassLib.Common.java.lang;
 
 import java.io.InputStream;
 import java.io.PrintStream;
 
-import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Class;
-import Clazz.jq_CompiledCode;
-import Clazz.jq_StaticField;
-import Memory.StackAddress;
-import Run_Time.ArrayCopy;
-import Run_Time.HashCode;
-import Run_Time.Reflection;
-import Run_Time.StackCodeWalker;
-import Run_Time.SystemInterface;
+import joeq.Clazz.PrimordialClassLoader;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_CompiledCode;
+import joeq.Clazz.jq_StaticField;
+import joeq.Memory.StackAddress;
+import joeq.Run_Time.ArrayCopy;
+import joeq.Run_Time.HashCode;
+import joeq.Run_Time.Reflection;
+import joeq.Run_Time.StackCodeWalker;
+import joeq.Run_Time.SystemInterface;
 
 /**
  * System

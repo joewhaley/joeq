@@ -1,16 +1,16 @@
 // SimpleAllocator.java, created Mon Feb  5 23:23:19 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Allocator;
+package joeq.Allocator;
 
-import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Class;
-import Clazz.jq_InstanceMethod;
-import GC.GCBits;
-import Memory.Address;
-import Memory.HeapAddress;
-import Run_Time.SystemInterface;
-import Util.Assert;
+import joeq.Clazz.PrimordialClassLoader;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_InstanceMethod;
+import joeq.GC.GCBits;
+import joeq.Memory.Address;
+import joeq.Memory.HeapAddress;
+import joeq.Run_Time.SystemInterface;
+import joeq.Util.Assert;
 
 /**
  * SimpleAllocator
@@ -253,7 +253,7 @@ public class SimpleAllocator extends HeapAllocator {
     public static final jq_InstanceMethod _allocateArrayAlign8;
 
     static {
-        _class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LAllocator/SimpleAllocator;");
+        _class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Allocator/SimpleAllocator;");
         _allocateObject = _class.getOrCreateInstanceMethod("allocateObject", "(ILjava/lang/Object;)Ljava/lang/Object;");
         _allocateObjectAlign8 = _class.getOrCreateInstanceMethod("allocateObjectAlign8", "(ILjava/lang/Object;)Ljava/lang/Object;");
         _allocateArray = _class.getOrCreateInstanceMethod("allocateArray", "(IILjava/lang/Object;)Ljava/lang/Object;");

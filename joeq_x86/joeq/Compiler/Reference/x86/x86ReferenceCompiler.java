@@ -19,7 +19,7 @@ import joeq.Assembler.x86.DirectBindCall;
 import joeq.Assembler.x86.x86;
 import joeq.Assembler.x86.x86Assembler;
 import joeq.Assembler.x86.x86Constants;
-import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.PrimordialClassLoader;
 import joeq.Clazz.jq_Array;
 import joeq.Clazz.jq_BytecodeMap;
 import joeq.Clazz.jq_Class;
@@ -2583,7 +2583,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements x86Constant
         }
         asm.emitPUSH_i(dim);
         emitPushAddressOf(f);
-        emitCallRelative(Run_Time.Arrays._multinewarray);
+        emitCallRelative(joeq.Run_Time.Arrays._multinewarray);
         // pop dim args, because the callee doesn't do it.
         asm.emit2_Reg_Mem(x86.LEA, ESP, dim<<2, ESP);
         asm.emitShort_Reg(x86.PUSH_r, EAX);
@@ -2696,7 +2696,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements x86Constant
                    f.getName() == to32BitValue) {
             asm.emit1(x86.NOP);
         } else if (f.getName() == stringRep) {
-            jq_Class k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LUtil/Strings;");
+            jq_Class k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Util/Strings;");
             jq_StaticMethod sm = k.getOrCreateStaticMethod("hex8", "(I)Ljava/lang/String;");
             emitCallRelative(sm);
             asm.emitShort_Reg(x86.PUSH_r, EAX);
@@ -2835,7 +2835,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements x86Constant
     /*
     public static final jq_StaticField _call_patches;
     static {
-        jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LCompil3r/Reference/x86/x86ReferenceCompiler;");
+        jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Compil3r/Reference/x86/x86ReferenceCompiler;");
         _call_patches = k.getOrCreateStaticField("call_patches", "Ljava/util/Collection;");
     }
      */

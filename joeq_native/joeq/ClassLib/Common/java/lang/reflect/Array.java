@@ -1,15 +1,15 @@
 // Array.java, created Thu Jul  4  4:50:03 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package ClassLib.Common.java.lang.reflect;
+package joeq.ClassLib.Common.java.lang.reflect;
 
-import Allocator.ObjectLayout;
-import ClassLib.ClassLibInterface;
-import Clazz.jq_Array;
-import Clazz.jq_Primitive;
-import Clazz.jq_Reference;
-import Clazz.jq_Type;
-import Memory.HeapAddress;
+import joeq.Allocator.ObjectLayout;
+import joeq.ClassLib.ClassLibInterface;
+import joeq.Clazz.jq_Array;
+import joeq.Clazz.jq_Primitive;
+import joeq.Clazz.jq_Reference;
+import joeq.Clazz.jq_Type;
+import joeq.Memory.HeapAddress;
 
 /**
  * Array
@@ -220,7 +220,7 @@ public abstract class Array {
             a = a.getArrayTypeForElementType();
             a.cls_initialize();
         }
-        return Run_Time.Arrays.multinewarray_helper(dimensions, 0, (jq_Array)a);
+        return joeq.Run_Time.Arrays.multinewarray_helper(dimensions, 0, (jq_Array)a);
     }
     
 }

@@ -1,4 +1,4 @@
-package Linker.ELF;
+package joeq.Linker.ELF;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;

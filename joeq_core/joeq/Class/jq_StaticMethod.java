@@ -74,6 +74,6 @@ public class jq_StaticMethod extends jq_Method {
     
     public static final jq_Class _class;
     static {
-        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LClazz/jq_StaticMethod;");
+        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Clazz/jq_StaticMethod;");
     }
 }

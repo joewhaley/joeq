@@ -1,12 +1,12 @@
 // jq_RegisterState.java, created Mon Feb  5 23:23:21 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Scheduler;
+package joeq.Scheduler;
 
-import Assembler.x86.x86Constants;
-import Clazz.jq_DontAlign;
-import Memory.CodeAddress;
-import Memory.StackAddress;
+import joeq.Assembler.x86.x86Constants;
+import joeq.Clazz.jq_DontAlign;
+import joeq.Memory.CodeAddress;
+import joeq.Memory.StackAddress;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>
@@ -97,7 +97,7 @@ public class jq_RegisterState implements x86Constants, jq_DontAlign {
     public static final jq_InstanceField _eax, _ecx, _edx, _ebx, _esi, _edi, _ebp, _esp, _eip;
     public static final jq_InstanceField _eflags, _fp_state;
     static {
-        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LScheduler/jq_RegisterState;");
+        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Scheduler/jq_RegisterState;");
         _eax = _class.getOrCreateInstanceField("eax", "I");
         _ecx = _class.getOrCreateInstanceField("ecx", "I");
         _edx = _class.getOrCreateInstanceField("edx", "I");

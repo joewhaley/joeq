@@ -1,9 +1,9 @@
 // Thread.java, created Thu Sep  5 10:48:53 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package ClassLib.apple13_osx.java.lang;
+package joeq.ClassLib.apple13_osx.java.lang;
 
-import Scheduler.jq_Thread;
+import joeq.Scheduler.jq_Thread;
 
 /**
  * Thread

@@ -1,22 +1,22 @@
 // Inet4AddressImpl.java, created Fri Mar  7 11:01:56 2003 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package ClassLib.Common.java.net;
+package joeq.ClassLib.Common.java.net;
 
-import Bootstrap.MethodInvocation;
-import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Class;
-import Clazz.jq_Method;
-import Clazz.jq_NameAndDesc;
-import Main.jq;
-import Memory.Address;
-import Memory.CodeAddress;
-import Memory.HeapAddress;
-import Run_Time.SystemInterface;
-import Run_Time.Unsafe;
-import Run_Time.SystemInterface.ExternalLink;
-import Run_Time.SystemInterface.Library;
-import Util.Assert;
+import joeq.Bootstrap.MethodInvocation;
+import joeq.Clazz.PrimordialClassLoader;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_Method;
+import joeq.Clazz.jq_NameAndDesc;
+import joeq.Main.jq;
+import joeq.Memory.Address;
+import joeq.Memory.CodeAddress;
+import joeq.Memory.HeapAddress;
+import joeq.Run_Time.SystemInterface;
+import joeq.Run_Time.Unsafe;
+import joeq.Run_Time.SystemInterface.ExternalLink;
+import joeq.Run_Time.SystemInterface.Library;
+import joeq.Util.Assert;
 
 /**
  * Inet4AddressImpl

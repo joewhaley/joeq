@@ -1,25 +1,25 @@
 // SystemInterface.java, created Mon Feb  5 23:23:21 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Run_Time;
+package joeq.Run_Time;
 
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Class;
-import Clazz.jq_InstanceField;
-import Clazz.jq_StaticField;
-import Main.jq;
-import Memory.Address;
-import Memory.CodeAddress;
-import Memory.HeapAddress;
-import Memory.StackAddress;
-import Scheduler.jq_RegisterState;
-import Scheduler.jq_Thread;
-import UTF.Utf8;
-import Util.Assert;
+import joeq.Clazz.PrimordialClassLoader;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_InstanceField;
+import joeq.Clazz.jq_StaticField;
+import joeq.Main.jq;
+import joeq.Memory.Address;
+import joeq.Memory.CodeAddress;
+import joeq.Memory.HeapAddress;
+import joeq.Memory.StackAddress;
+import joeq.Scheduler.jq_RegisterState;
+import joeq.Scheduler.jq_Thread;
+import joeq.UTF.Utf8;
+import joeq.Util.Assert;
 
 /**
  * @author  John Whaley <jwhaley@alum.mit.edu>
@@ -268,9 +268,9 @@ public abstract class SystemInterface {
     public static final jq_InstanceField _string_offset;
     public static final jq_InstanceField _string_count;
     static {
-        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LRun_Time/SystemInterface;");
-        _debugwrite = _class.getOrCreateStaticField("debugwrite_8", "LMemory/CodeAddress;");
-        _debugwriteln = _class.getOrCreateStaticField("debugwriteln_8", "LMemory/CodeAddress;");
+        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Run_Time/SystemInterface;");
+        _debugwrite = _class.getOrCreateStaticField("debugwrite_8", "Ljoeq/Memory/CodeAddress;");
+        _debugwriteln = _class.getOrCreateStaticField("debugwriteln_8", "Ljoeq/Memory/CodeAddress;");
         // cannot use getJavaLangString here, as it may not yet have been initialized.
         jq_Class jls = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/String;");
         _string_value = jls.getOrCreateInstanceField("value", "[C");

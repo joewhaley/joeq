@@ -210,7 +210,7 @@ public class ReflectiveInterpreter extends BytecodeInterpreter {
         }
     }
     public Object invokeUnsafeMethod(jq_Method f) throws Throwable {
-        jq_Class _class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LRun_Time/Unsafe;");
+        jq_Class _class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Run_Time/Unsafe;");
         jq_StaticMethod _floatToIntBits = _class.getOrCreateStaticMethod("floatToIntBits", "(F)I");
         jq_StaticMethod _intBitsToFloat = _class.getOrCreateStaticMethod("intBitsToFloat", "(I)F");
         jq_StaticMethod _doubleToLongBits = _class.getOrCreateStaticMethod("doubleToLongBits", "(D)J");
