@@ -36,6 +36,7 @@ import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Array;
 import Clazz.jq_Class;
 import Clazz.jq_Field;
+import Clazz.jq_InstanceField;
 import Clazz.jq_Method;
 import Clazz.jq_NameAndDesc;
 import Clazz.jq_Reference;
@@ -1280,7 +1281,7 @@ public class PA {
         BDD targets = IE.exist(Iset); // IxM -> M
         targets.applyWith(visited.id(), BDDFactory.diff);
         if (targets.isZero()) return false;
-        if (TRACE) out.println("New target methods: "+targets.satCount(Mset));
+        if (TRACE_SOLVER) out.println("New target methods: "+targets.satCount(Mset));
         while (!targets.isZero()) {
             BDD target = targets.satOne(Mset, bdd.zero());
             int M_i = (int) target.scanVar(M);
@@ -1289,7 +1290,6 @@ public class PA {
             visitMethod(method);
             targets.applyWith(target, BDDFactory.diff);
         }
-        addAllMethods();
         return true;
     }
     
@@ -1376,16 +1376,10 @@ public class PA {
     }
     
     public void assumeKnownCallGraph() {
-        // use the filter as the known call graph.
         if (VerifyAssertions)
-            Assert._assert(IEfilter != null);
-        if (CONTEXT_SENSITIVE) {
-            IEcs = IEfilter;
-            IE = IEcs.exist(V1cV2cset);
-        } else {
-            IE = IEfilter;
-        }
+            Assert._assert(!IE.isZero());
         handleNewTargets();
+        addAllMethods();
         buildTypes();
         bindParameters();
         solvePointsTo();
@@ -1409,6 +1403,7 @@ public class PA {
                 break;
             }
             vP_old.free(); vP_old = vP.id();
+            addAllMethods();
             bindParameters();
             if (TRACE_SOLVER)
                 out.println("Time spent: "+(System.currentTimeMillis()-time)/1000.);
@@ -1420,7 +1415,7 @@ public class PA {
         long time = System.currentTimeMillis();
         vCnumbering = countCallGraph(cg, ocg, updateBits);
         if (OBJECT_SENSITIVE) {
-            oCnumbering = new PathNumbering();
+            oCnumbering = new PathNumbering(objectPathSelector);
             BigInteger paths = (BigInteger) oCnumbering.countPaths(ocg);
             if (updateBits) {
                 HC_BITS = VC_BITS = paths.bitLength();
@@ -1461,8 +1456,10 @@ public class PA {
         run(null, cg, rootMethods);
     }
     public void run(String bddfactory, CallGraph cg, Collection rootMethods) throws IOException {
+        // Add the default static variables (System in/out/err...)
         GlobalNode.GLOBAL.addDefaultStatics();
         
+        // If using object-sensitive, initialize the object creation graph.
         ObjectCreationGraph ocg = null;
         if (OBJECT_SENSITIVE) {
             ocg = new ObjectCreationGraph();
@@ -1475,14 +1472,17 @@ public class PA {
             }
         }
         
+        // If we have a call graph, use it for numbering and calculating domain sizes.
         if (cg != null) {
             numberPaths(cg, ocg, true);
         }
         
+        // Now we know domain sizes, so initialize the BDD package.
         initializeBDD(bddfactory);
         initializeMaps();
         this.rootMethods.addAll(rootMethods);
         
+        // Use the existing call graph to calculate IE filter
         if (cg != null) {
             System.out.print("Calculating call graph relation...");
             long time = System.currentTimeMillis();
@@ -1490,6 +1490,7 @@ public class PA {
             time = System.currentTimeMillis() - time;
             System.out.println("done. ("+time/1000.+" seconds)");
             
+            // Build up var-heap correspondence in context-sensitive case.
             if (CONTEXT_SENSITIVE && HC_BITS > 1) {
                 System.out.print("Building var-heap context correspondence...");
                 time = System.currentTimeMillis();
@@ -1497,26 +1498,53 @@ public class PA {
                 time = System.currentTimeMillis() - time;
                 System.out.println("done. ("+time/1000.+" seconds)");
             }
+            
+            // Use the IE filter as the set of invocation edges.
+            if (!DISCOVER_CALL_GRAPH) {
+                if (VerifyAssertions)
+                    Assert._assert(IEfilter != null);
+                if (CONTEXT_SENSITIVE) {
+                    IEcs = IEfilter;
+                    IE = IEcs.exist(V1cV2cset);
+                } else {
+                    IE = IEfilter;
+                }
+            }
         }
         
+        // Start timing.
         long time = System.currentTimeMillis();
         
+        // Add the global relations first.
         visitGlobalNode(GlobalNode.GLOBAL);
         for (Iterator i = ConcreteObjectNode.getAll().iterator(); i.hasNext(); ) {
             ConcreteObjectNode con = (ConcreteObjectNode) i.next();
             visitGlobalNode(con);
         }
         
+        // Calculate the relations for the root methods.
         for (Iterator i = rootMethods.iterator(); i.hasNext(); ) {
             jq_Method m = (jq_Method) i.next();
             visitMethod(m);
         }
         
+        // Calculate the relations for any other methods we know about.
+        handleNewTargets();
+        
+        // For object-sensitivity, build up the context mapping.
         if (OBJECT_SENSITIVE) {
+            buildTypes();
             buildObjectSensitiveV1H1(ocg);
         }
         
+        // Now that contexts are calculated, add the relations for all methods
+        // to the global relation.
         addAllMethods();
+        
+        System.out.println("Time spent initializing: "+(System.currentTimeMillis()-time)/1000.);
+        
+        // Start timing solver.
+        time = System.currentTimeMillis();
         
         if (DISCOVER_CALL_GRAPH || OBJECT_SENSITIVE) {
             iterate();
@@ -1643,35 +1671,67 @@ public class PA {
         if (DUMP_DOTGRAPH)
             dumpCallGraphAsDot(callgraph, callgraphFileName + ".dot");
         
+        System.out.println("A: "+(int) A.satCount(V1V2set)+" relations, "+A.nodeCount()+" nodes");
         bdd.save(dumpfilename+".A", A);
+        System.out.println("vP: "+(int) vP.satCount(V1H1set)+" relations, "+vP.nodeCount()+" nodes");
         bdd.save(dumpfilename+".vP", vP);
+        System.out.println("S: "+(int) S.satCount(V1FV2set)+" relations, "+S.nodeCount()+" nodes");
         bdd.save(dumpfilename+".S", S);
+        System.out.println("L: "+(int) L.satCount(V1FV2set)+" relations, "+L.nodeCount()+" nodes");
         bdd.save(dumpfilename+".L", L);
+        System.out.println("vT: "+(int) vT.satCount(V1.set().and(T1set))+" relations, "+vT.nodeCount()+" nodes");
         bdd.save(dumpfilename+".vT", vT);
+        System.out.println("hT: "+(int) hT.satCount(H1.set().and(T2set))+" relations, "+hT.nodeCount()+" nodes");
         bdd.save(dumpfilename+".hT", hT);
+        System.out.println("aT: "+(int) aT.satCount(T1set.and(T2set))+" relations, "+aT.nodeCount()+" nodes");
         bdd.save(dumpfilename+".aT", aT);
+        System.out.println("cha: "+(int) cha.satCount(T2Nset.and(Mset))+" relations, "+cha.nodeCount()+" nodes");
         bdd.save(dumpfilename+".cha", cha);
+        System.out.println("actual: "+(int) actual.satCount(Iset.and(Zset).and(V2.set()))+" relations, "+actual.nodeCount()+" nodes");
         bdd.save(dumpfilename+".actual", actual);
+        System.out.println("formal: "+(int) formal.satCount(this.MZset.and(V2.set()))+" relations, "+formal.nodeCount()+" nodes");
         bdd.save(dumpfilename+".formal", formal);
+        System.out.println("Iret: "+(int) Iret.satCount(IV1set)+" relations, "+Iret.nodeCount()+" nodes");
         bdd.save(dumpfilename+".Iret", Iret);
+        System.out.println("Mret: "+(int) Mret.satCount(Mset.and(V2.set()))+" relations, "+Mret.nodeCount()+" nodes");
         bdd.save(dumpfilename+".Mret", Mret);
+        System.out.println("Ithr: "+(int) Ithr.satCount(IV1set)+" relations, "+Ithr.nodeCount()+" nodes");
         bdd.save(dumpfilename+".Ithr", Ithr);
+        System.out.println("Mthr: "+(int) Mthr.satCount(Mset.and(V2.set()))+" relations, "+Mthr.nodeCount()+" nodes");
         bdd.save(dumpfilename+".Mthr", Mthr);
+        System.out.println("mI: "+(int) mI.satCount(INset.and(Mset))+" relations, "+mI.nodeCount()+" nodes");
         bdd.save(dumpfilename+".mI", mI);
+        System.out.println("mV: "+(int) mV.satCount(Mset.and(V1.set()))+" relations, "+mV.nodeCount()+" nodes");
         bdd.save(dumpfilename+".mV", mV);
         
+        System.out.println("hP: "+(int) hP.satCount(H1FH2set)+" relations, "+hP.nodeCount()+" nodes");
         bdd.save(dumpfilename+".hP", hP);
+        System.out.println("IE: "+(int) IE.satCount(IMset)+" relations, "+IE.nodeCount()+" nodes");
         bdd.save(dumpfilename+".IE", IE);
-        if (IEcs != null) bdd.save(dumpfilename+".IEcs", IEcs);
-        if (vPfilter != null) bdd.save(dumpfilename+".vPfilter", vPfilter);
-        if (hPfilter != null) bdd.save(dumpfilename+".hPfilter", hPfilter);
-        if (IEfilter != null) bdd.save(dumpfilename+".IEfilter", IEfilter);
+        if (IEcs != null) {
+            System.out.println("IEcs: "+(int) IEcs.satCount(IMset.and(V1cV2cset))+" relations, "+IEcs.nodeCount()+" nodes");
+            bdd.save(dumpfilename+".IEcs", IEcs);
+        }
+        if (vPfilter != null) {
+            System.out.println("vPfilter: "+(int) vPfilter.satCount(V1.set().and(H1.set()))+" relations, "+vPfilter.nodeCount()+" nodes");
+            bdd.save(dumpfilename+".vPfilter", vPfilter);
+        }
+        if (hPfilter != null) {
+            System.out.println("hPfilter: "+(int) hPfilter.satCount(H1.set().and(Fset).and(H1.set()))+" relations, "+hPfilter.nodeCount()+" nodes");
+            bdd.save(dumpfilename+".hPfilter", hPfilter);
+        }
+        if (IEfilter != null) {
+            System.out.println("IEfilter: "+IEfilter.nodeCount()+" nodes");
+            bdd.save(dumpfilename+".IEfilter", IEfilter);
+        }
+        System.out.println("visited: "+(int) visited.satCount(Mset)+" relations, "+visited.nodeCount()+" nodes");
         bdd.save(dumpfilename+".visited", visited);
         
         dos = new DataOutputStream(new FileOutputStream(dumpfilename+".config"));
         dumpConfig(dos);
         dos.close();
         
+        System.out.print("Dumping maps...");
         dos = new DataOutputStream(new FileOutputStream(dumpfilename+".Vmap"));
         Vmap.dump(dos);
         dos.close();
@@ -1693,6 +1753,7 @@ public class PA {
         dos = new DataOutputStream(new FileOutputStream(dumpfilename+".Mmap"));
         Mmap.dump(dos);
         dos.close();
+        System.out.println("done.");
     }
 
     public static PA loadResults(String bddfactory, String loaddir, String loadfilename) throws IOException {
@@ -1758,7 +1819,7 @@ public class PA {
         if (pa.vT instanceof TypedBDD)
             ((TypedBDD) pa.vT).setDomains(pa.V1, pa.T1);
         if (pa.hT instanceof TypedBDD)
-            ((TypedBDD) pa.hT).setDomains(pa.V1, pa.T1);
+            ((TypedBDD) pa.hT).setDomains(pa.H1, pa.T2);
         if (pa.aT instanceof TypedBDD)
             ((TypedBDD) pa.aT).setDomains(pa.T1, pa.T2);
         if (pa.cha instanceof TypedBDD)
@@ -2040,6 +2101,59 @@ public class PA {
         }
     }
 
+    public final ObjectPathSelector objectPathSelector = new ObjectPathSelector();
+    
+    public class ObjectPathSelector implements Selector {
+
+        jq_Class throwable_class = (jq_Class) PrimordialClassLoader.getJavaLangThrowable();
+        ObjectPathSelector() {
+            throwable_class.prepare();
+        }
+        
+        /* (non-Javadoc)
+         * @see Util.Graphs.PathNumbering.Selector#isImportant(Util.Graphs.SCComponent, Util.Graphs.SCComponent)
+         */
+        public boolean isImportant(SCComponent scc1, SCComponent scc2, BigInteger num) {
+            Set s = scc2.nodeSet();
+            Iterator i = s.iterator();
+            Object o = i.next();
+            if (i.hasNext()) {
+                if (TRACE_OBJECT) out.println("No object sensitivity for "+s+": CYCLE");
+                return false;
+            }
+            if (o instanceof jq_Array) {
+                if (!((jq_Array) o).getElementType().isReferenceType()) {
+                    if (TRACE_OBJECT) out.println("No object sensitivity for "+o+": PRIMITIVE ARRAY");
+                    return false;
+                }
+            } else if (o instanceof jq_Class) {
+                jq_Class c = (jq_Class) o;
+                if (c == PrimordialClassLoader.getJavaLangString()) {
+                    if (TRACE_OBJECT) out.println("No object sensitivity for "+c+": STRING");
+                    return false;
+                }
+                c.prepare();
+                if (c.isSubtypeOf(throwable_class)) {
+                    if (TRACE_OBJECT) out.println("No object sensitivity for "+c+": THROWABLE");
+                    return false;
+                }
+                boolean hasReferenceMember = false;
+                jq_InstanceField[] f = c.getInstanceFields();
+                for (int j = 0; j < f.length; ++j) {
+                    if (f[j].getType().isReferenceType()) {
+                        hasReferenceMember = true;
+                        break;
+                    }
+                }
+                if (!hasReferenceMember) {
+                    if (TRACE_OBJECT) out.println("No object sensitivity for "+c+": NO REF FIELDS");
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+    
     public PathNumbering countHeapNumbering(CallGraph cg, boolean updateBits) {
         if (VerifyAssertions)
             Assert._assert(CONTEXT_SENSITIVE);
@@ -2094,9 +2208,7 @@ public class PA {
             b.andWith(H1c.ithVar(0));
             return b;
         } else if (OBJECT_SENSITIVE) {
-            jq_Class c;
-            if (m.isStatic()) c = null;
-            else c = m.getDeclaringClass();
+            jq_Class c = m.isStatic() ? null : m.getDeclaringClass(); 
             BDD result = (BDD) V1H1correspondence.get(c);
             if (result == null) {
                 if (TRACE_OBJECT) out.println("Note: "+c+" is not in object creation graph.");
@@ -2168,12 +2280,14 @@ public class PA {
                     // we don't know which creation site, so just use all sites that
                     // have the same type.
                     heap = hT.restrict(T_bdd);
+                    if (VerifyAssertions)
+                        Assert._assert(!heap.isZero(), c2.toString());
                 } else {
                     int H_i = Hmap.get(node);
                     heap = H1.ithVar(H_i);
                 }
                 T_bdd.free();
-                if (TRACE_OBJECT) out.println(c1+" creation site "+node+" Range: "+r2);
+                if (TRACE_OBJECT) out.println(c1+" creation site "+node+" "+c2+" Range: "+r2);
                 BDD cm;
                 cm = buildContextMap(V1c,
                                      PathNumbering.toBigInt(r1.low),
