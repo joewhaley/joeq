@@ -50,7 +50,7 @@ public abstract class DefaultCodeAllocator {
      * @param estimatedSize
      * @param offset
      * @param alignment
-     * @return
+     * @return  a new code buffer
      */
     public static final x86CodeBuffer getCodeBuffer(int estimatedSize, int offset, int alignment) {
         x86CodeBuffer o = def().getCodeBuffer(estimatedSize, offset, alignment);
