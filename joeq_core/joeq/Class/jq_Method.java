@@ -27,6 +27,7 @@ public abstract class jq_Method extends jq_Member {
     // Available after loading
     protected char max_stack;
     protected char max_locals;
+    protected jq_Class[] thrown_exceptions_table;
     protected byte[] bytecode;
     protected jq_TryCatchBC[] exception_table;
     protected jq_LineNumberBC[] line_num_table;
@@ -89,6 +90,15 @@ public abstract class jq_Method extends jq_Member {
         parseAttributes();
     }
     
+    private final jq_Class getResolvedClassFromCP(char cpidx) {
+	if (clazz.getCPtag(cpidx) != CONSTANT_ResolvedClass)
+	    throw new ClassFormatError();
+	jq_Type class_type = clazz.getCPasType(cpidx);
+	if (!class_type.isClassType())
+	    throw new ClassFormatError();
+	return (jq_Class)class_type;
+    }
+
     private final void parseAttributes() throws ClassFormatError {
         // parse attributes
         byte[] a = getAttribute("Code");
@@ -109,16 +119,10 @@ public abstract class jq_Method extends jq_Member {
                 char handler_pc = Convert.twoBytesToChar(a, idx+4);
                 char catch_cpidx = Convert.twoBytesToChar(a, idx+6);
                 idx += 8;
-                jq_Class catch_class;
+                jq_Class catch_class = null;
                 if (catch_cpidx != 0) {
-                    if (clazz.getCPtag(catch_cpidx) != CONSTANT_ResolvedClass)
-                        throw new ClassFormatError();
-                    jq_Type catch_type = clazz.getCPasType(catch_cpidx);
-                    if (!catch_type.isClassType())
-                        throw new ClassFormatError();
-                    catch_class = (jq_Class)catch_type;
-                } else
-                    catch_class = null;
+		    catch_class = getResolvedClassFromCP(catch_cpidx);
+                }
                 exception_table[i] = new jq_TryCatchBC(start_pc, end_pc, handler_pc, catch_class);
             }
             int attrib_count = Convert.twoBytesToChar(a, idx);
@@ -179,7 +183,16 @@ public abstract class jq_Method extends jq_Member {
             if (!isNative() && !isAbstract())
                 throw new ClassFormatError();
         }
-        // TODO: Exceptions
+        // read thrown Exceptions
+        a = getAttribute("Exceptions");
+        if (a != null) {
+            char number_of_thrown_exceptions = Convert.twoBytesToChar(a, 0);
+	    thrown_exceptions_table = new jq_Class[number_of_thrown_exceptions];
+	    for (int i = 0; i < number_of_thrown_exceptions; i++) {
+		char cpidx = Convert.twoBytesToChar(a, 2 + 2*i);
+		thrown_exceptions_table[i] = getResolvedClassFromCP(cpidx);
+	    }
+	}
         state = STATE_LOADED;
         if (jq.RunningNative) {
             if (this instanceof jq_Initializer) {
@@ -342,6 +355,10 @@ public abstract class jq_Method extends jq_Member {
         chkState(STATE_LOADED);
         Assert._assert(getBytecode() != null);
         return exception_table;
+    }
+    public jq_Class[] getThrownExceptionsTable() { 
+        chkState(STATE_LOADED);
+	return thrown_exceptions_table; 
     }
     public jq_LocalVarTableEntry getLocalVarTableEntry(int bci, int index) {
         if (localvar_table == null)
