@@ -178,11 +178,11 @@ public class Comparisons {
         vp2.replaceWith(r.V1toV2);      // V2xV2cxH2xH2c
         v2 = cmp.and(r.vP);             // FxV1xV2 x V1xV1cxH1xH1c -> FxV1xV1cxH1xH1cxV2
         v2.andWith(vp2);                // FxV1xV1cxH1xH1cxV2 x V2xV2cxH2xH2c -> FxV1xV1cxH1xH1cxV2xV2cxH2xH2c
-        BDD sameVc = r.V1c.buildEquals(r.V2c);
-        BDD sameHc = r.H1c.buildEquals(r.H2c);
+        BDD sameVc = r.V1c[0].buildEquals(r.V2c[0]);
+        BDD sameHc = r.H1c[0].buildEquals(r.H2c[0]);
         v2.andWith(sameVc);
         v2.andWith(sameHc);
-        v2 = v2.exist(r.V1c.set()).exist(r.V2c.set()).exist(r.H1c.set()).exist(r.H2c.set());
+        v2 = v2.exist(r.V1cset).exist(r.V2cset).exist(r.H1cset).exist(r.H2cset);
         TypedBDD sameH = (TypedBDD)r.H1.buildEquals(r.H2);
         res.storeBDD("sameh", sameH);
 

@@ -165,7 +165,7 @@ public class CollectionTypes {
 
     private BDD getPointsToForP0andPi(PAProxy r, ProgramLocation call, int iidx, CollCall cc, boolean keepV1) {
         int pidx = Integer.parseInt(cc.pidx);
-        BDD V1cset = r.V1c.set();
+        BDD V1cset = r.V1cset;
         BDD V1set = r.V1.set();
         BDD isite = r.I.ithVar(iidx);
         BDDPairing V2toV1 = r.bdd.makePair(r.V2, r.V1);
@@ -292,7 +292,7 @@ public class CollectionTypes {
      */
     public TypedBDD determineSupertypes(boolean trace) {
         BDD H1set = r.H1.set();
-        BDD H1cset = r.H1c.set();
+        BDD H1cset = r.H1cset;
         TypedBDD tmp = (TypedBDD)storedin.exist(r.H1set);       // H2xH2c
 
         // determine the supertype of all inserted items for each collection
@@ -323,13 +323,13 @@ public class CollectionTypes {
      * Do not include objects that implement equals for now.
      */
     public TypedBDD checkMustHaves(boolean trace) {
-        TypedBDD t = (TypedBDD)musthave.apply(storedin.and(r.V1c.domain()).andWith(r.V1.domain()), BDDFactory.diff);    
+        TypedBDD t = (TypedBDD)musthave.apply(storedin.and(r.V1c[0].domain()).andWith(r.V1.domain()), BDDFactory.diff);    
 
         TypedBDD hasequals = res.typesThatOverrideEquals();                     // T2
         BDD heapobjects_with_equals = r.hT.relprod(hasequals, r.T2set);         // H1
         hasequals.free();
-        t.applyWith(heapobjects_with_equals.andWith(r.V1c.domain()).andWith(r.V1.domain())
-                        .andWith(r.H2.domain()).andWith(r.H1c.domain()).andWith(r.H2c.domain()), 
+        t.applyWith(heapobjects_with_equals.andWith(r.V1c[0].domain()).andWith(r.V1.domain())
+                        .andWith(r.H2.domain()).andWith(r.H1c[0].domain()).andWith(r.H2c[0].domain()), 
                     BDDFactory.diff);
         return t;
     }
@@ -357,7 +357,7 @@ public class CollectionTypes {
         BDD t = musthave.relprod(supertypes, H2set);    // H1xH2xMORE x H2xT1 -> H1xT1xMORE
         BDD t2 = r.hT.relprod(t, H1set);        // H1xT2 x H1xT1xMORE -> T2xT1xMORE
         t.free();
-        BDD pacifyTypedBDD = r.aT.and(r.H1c.domain()).andWith(r.H2c.domain());
+        BDD pacifyTypedBDD = r.aT.and(r.H1c[0].domain()).andWith(r.H2c[0].domain());
         BDD incompatible = t2.apply(pacifyTypedBDD, BDDFactory.diff);
         t2.free();
         return (TypedBDD)incompatible;

@@ -53,9 +53,9 @@ public class PAResultSelector {
 
         Assert._assert(domains.size() == 1);
         BDDDomain dom = (BDDDomain)domains.iterator().next();
-        Assert._assert(dom != r.V1c && dom != r.V2c);        
+        Assert._assert(dom != r.V1c[0] && dom != r.V2c[0]);        
         
-        tbdd.setDomains(dom, r.V1c);
+        tbdd.setDomains(dom, r.V1c[0]);
         //BDD result = (TypedBDD)tbd q  d.and(r.V1c.set());
         //tbdd.free();
         
@@ -66,7 +66,7 @@ public class PAResultSelector {
     protected Collection getUses(TypedBDD bdd) {
         bdd = (TypedBDD)addAllContextToVar(bdd);
         TypedBDD reach = (TypedBDD)_results.calculateDefUse(bdd);
-        BDD vars = reach.exist(r.V1c.set());
+        BDD vars = reach.exist(r.V1cset);
         
         Collection result = new LinkedList();
         for(Iterator iter = ( (TypedBDD)vars ).iterator(); iter.hasNext(); ) {
@@ -132,7 +132,7 @@ public class PAResultSelector {
             if(_verbose) System.err.println("Finished with " + last);
             results.add(trace); return;
         }
-                   
+        
         if(_verbose) {
             System.err.println("Node " + last + " has " + c.size() + " successor(s): " + c +
                         "\t trace: " + trace);
@@ -200,7 +200,7 @@ public class PAResultSelector {
         BDD reach;
         Assert._assert(_results != null);
         do {
-            BDD vars = bdd.exist(r.V1c.set());
+            BDD vars = bdd.exist(r.V1cset);
             System.err.print("Generation " + i + ": ");
             for(Iterator li = ((TypedBDD)vars).iterator(); li.hasNext(); ) {
                 System.err.print(((TypedBDD)li.next()).toStringWithDomains() + " ");

@@ -65,7 +65,7 @@ public class CastPrecision {
         BDD cast_to_pred = r.A.relprod(casts, r.V1cV2cset);     // V1xV1cxV2xV2c & V1 -> V1xV2 
         // compute the points-to sets of predecessors and casts
         BDDPairing V2toV1 = r.bdd.makePair(r.V2, r.V1);
-        BDD V1cset = r.V1c.set();
+        BDD V1cset = r.V1cset;
         BDD preds_pt = r.vP.relprod(cast_to_pred.exist(r.V1.set()).replaceWith(V2toV1), V1cset);   // V1xH1xH1c
         BDD casts_pt = r.vP.relprod(cast_to_pred.exist(r.V2.set()), V1cset);                       // V1xH1xH1c
         ArrayList reslist = new ArrayList();
