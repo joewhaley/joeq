@@ -188,7 +188,9 @@ void installSignalHandler(void)
     //printf("Installing hardware trap signal handler stack.\n");
     if (sigaltstack(&stack, 0)) {
         // TODO: error.
-        printf("Error installing hardware trap signal handler stack %d.\n", errno);
+        // Note: use of "errno" seems broken on RedHat 9.
+        //printf("Error installing hardware trap signal handler stack %d.\n", errno);
+        printf("Error installing hardware trap signal handler stack.\n");
         return;
     }
 
@@ -201,7 +203,9 @@ void installSignalHandler(void)
     //printf("Filling hardware trap signal handler set.\n");
     if (sigfillset(&(action.sa_mask))) {
         // TODO: error.
-        printf("Error filling hardware trap signal handler set %d.\n", errno);
+        // Note: use of "errno" seems broken on RedHat 9.
+        //printf("Error filling hardware trap signal handler set %d.\n", errno);
+        printf("Error filling hardware trap signal handler set.\n");
         return;
     }
 #if 0
@@ -209,12 +213,16 @@ void installSignalHandler(void)
     // native threads.
     if (sigdelset(&(action.sa_mask), SIGSTOP)) {
         // TODO: error.
-        printf("Error deleting from hardware trap signal handler set %d\n", errno);
+        // Note: use of "errno" seems broken on RedHat 9.
+        //printf("Error deleting from hardware trap signal handler set %d.\n", errno);
+        printf("Error deleting from hardware trap signal handler set.\n");
         return;
     }
     if (sigdelset(&(action.sa_mask), SIGCONT)) {
         // TODO: error.
-        printf("Error deleting from hardware trap signal handler set %d\n", errno);
+        // Note: use of "errno" seems broken on RedHat 9.
+        //printf("Error deleting from hardware trap signal handler set %d.\n", errno);
+        printf("Error deleting from hardware trap signal handler set.\n");
         return;
     }
 #endif
@@ -222,19 +230,25 @@ void installSignalHandler(void)
     //printf("Setting hardware trap signal handler.\n");
     if (sigaction(SIGSEGV, &action, 0)) {
         // TODO: error.
-        printf("Error setting hardware trap signal handler %d\n", errno);
+        // Note: use of "errno" seems broken on RedHat 9.
+        //printf("Error setting hardware trap signal handler %d.\n", errno);
+        printf("Error setting hardware trap signal handler.\n");
         return;
     }
     //printf("Setting hardware trap signal handler.\n");
     if (sigaction(SIGFPE, &action, 0)) {
         // TODO: error.
-        printf("Error setting hardware trap signal handler %d\n", errno);
+        // Note: use of "errno" seems broken on RedHat 9.
+        //printf("Error setting hardware trap signal handler %d.\n", errno);
+        printf("Error setting hardware trap signal handler.\n");
         return;
     }
     //printf("Setting hardware trap signal handler.\n");
     if (sigaction(SIGTRAP, &action, 0)) {
         // TODO: error.
-        printf("Error setting hardware trap signal handler %d\n", errno);
+        // Note: use of "errno" seems broken on RedHat 9.
+        //printf("Error setting hardware trap signal handler %d.\n", errno);
+        printf("Error setting hardware trap signal handler.\n");
         return;
     }
 
@@ -243,7 +257,9 @@ void installSignalHandler(void)
     //printf("Setting software signal handler.\n");
     if (sigaction(SIGVTALRM, &action, 0)) {
         // TODO: error.
-        printf("Error setting software signal handler %d\n", errno);
+        // Note: use of "errno" seems broken on RedHat 9.
+        //printf("Error setting software signal handler %d.\n", errno);
+        printf("Error setting software signal handler.\n");
         return;
     }
 
