@@ -58,7 +58,7 @@ public final class jq_InstanceField extends jq_Field {
     public final void prepare(int offset) { jq.assert(state == STATE_LOADED); state = STATE_PREPARED; this.offset = offset; }
     public final int getOffset() { chkState(STATE_PREPARED); return offset; }
     public final boolean needsDynamicLink(jq_Method method) {
-        if (jq.Bootstrapping) return (state >= STATE_PREPARED) && getDeclaringClass().needsDynamicLink(method);
+        if (jq.Bootstrapping) return (state < STATE_PREPARED) || getDeclaringClass().needsDynamicLink(method);
         return state < STATE_PREPARED;
     }
     public final boolean isStatic() { return false; }
