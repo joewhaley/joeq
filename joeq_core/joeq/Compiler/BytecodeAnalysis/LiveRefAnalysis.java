@@ -1335,6 +1335,22 @@ public class LiveRefAnalysis {
             super.visitAGETSTATIC(f);
             current_state.push(new SystemType(f.getType()));
         }
+        public void visitZGETSTATIC(jq_StaticField f) {
+            super.visitZGETSTATIC(f);
+            current_state.push_I();
+        }
+        public void visitBGETSTATIC(jq_StaticField f) {
+            super.visitBGETSTATIC(f);
+            current_state.push_I();
+        }
+        public void visitCGETSTATIC(jq_StaticField f) {
+            super.visitCGETSTATIC(f);
+            current_state.push_I();
+        }
+        public void visitSGETSTATIC(jq_StaticField f) {
+            super.visitSGETSTATIC(f);
+            current_state.push_I();
+        }
         public void visitIPUTSTATIC(jq_StaticField f) {
             super.visitIPUTSTATIC(f);
             current_state.pop_I();
@@ -1354,6 +1370,22 @@ public class LiveRefAnalysis {
         public void visitAPUTSTATIC(jq_StaticField f) {
             super.visitAPUTSTATIC(f);
             current_state.pop_A();
+        }
+        public void visitZPUTSTATIC(jq_StaticField f) {
+            super.visitZPUTSTATIC(f);
+            current_state.pop_I();
+        }
+        public void visitBPUTSTATIC(jq_StaticField f) {
+            super.visitBPUTSTATIC(f);
+            current_state.pop_I();
+        }
+        public void visitCPUTSTATIC(jq_StaticField f) {
+            super.visitCPUTSTATIC(f);
+            current_state.pop_I();
+        }
+        public void visitSPUTSTATIC(jq_StaticField f) {
+            super.visitSPUTSTATIC(f);
+            current_state.pop_I();
         }
         public void visitIGETFIELD(jq_InstanceField f) {
             super.visitIGETFIELD(f);

@@ -364,6 +364,22 @@ public class StackDepthVisitor extends BytecodeVisitor {
         super.visitAGETSTATIC(f);
         ++currentStackDepth;
     }
+    public void visitZGETSTATIC(jq_StaticField f) {
+        super.visitZGETSTATIC(f);
+        ++currentStackDepth;
+    }
+    public void visitBGETSTATIC(jq_StaticField f) {
+        super.visitBGETSTATIC(f);
+        ++currentStackDepth;
+    }
+    public void visitCGETSTATIC(jq_StaticField f) {
+        super.visitCGETSTATIC(f);
+        ++currentStackDepth;
+    }
+    public void visitSGETSTATIC(jq_StaticField f) {
+        super.visitSGETSTATIC(f);
+        ++currentStackDepth;
+    }
     public void visitIPUTSTATIC(jq_StaticField f) {
         super.visitIPUTSTATIC(f);
         --currentStackDepth;
@@ -382,6 +398,22 @@ public class StackDepthVisitor extends BytecodeVisitor {
     }
     public void visitAPUTSTATIC(jq_StaticField f) {
         super.visitAPUTSTATIC(f);
+        --currentStackDepth;
+    }
+    public void visitZPUTSTATIC(jq_StaticField f) {
+        super.visitZPUTSTATIC(f);
+        --currentStackDepth;
+    }
+    public void visitBPUTSTATIC(jq_StaticField f) {
+        super.visitBPUTSTATIC(f);
+        --currentStackDepth;
+    }
+    public void visitCPUTSTATIC(jq_StaticField f) {
+        super.visitCPUTSTATIC(f);
+        --currentStackDepth;
+    }
+    public void visitSPUTSTATIC(jq_StaticField f) {
+        super.visitSPUTSTATIC(f);
         --currentStackDepth;
     }
     public void visitLGETFIELD(jq_InstanceField f) {
