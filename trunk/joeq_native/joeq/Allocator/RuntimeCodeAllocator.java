@@ -1,5 +1,5 @@
 /*
- * CodeAllocator.java
+ * RuntimeCodeAllocator.java
  *
  * Created on January 11, 2001, 10:55 AM
  *
@@ -26,8 +26,6 @@ import java.util.List;
 public class RuntimeCodeAllocator extends CodeAllocator {
 
     public static final int ALIGNMENT = 32;
-    
-    public static /*final*/ boolean TRACE = false;
     
     /** Size of blocks allocated from the OS.  No single code buffer can be larger than this.
      */
