@@ -27,6 +27,8 @@ import Util.NullIterator;
 import Util.SingletonIterator;
 import Util.SortedArraySet;
 
+import Compil3r.Quad.AndersenInterface.AndersenMethod;
+
 /*
  * @author  John Whaley
  * @version $Id$
@@ -565,7 +567,7 @@ public abstract class CallTargets extends AbstractSet {
     public abstract CallTargets union(CallTargets s);
     public abstract int size();
     
-    static class NoCallTarget extends CallTargets
+    public static class NoCallTarget extends CallTargets
     {
         public Iterator iterator() { return NullIterator.INSTANCE; }
         public boolean isComplete() { return false; }
@@ -576,10 +578,10 @@ public abstract class CallTargets extends AbstractSet {
         public String toString() { return "{}"; }
     }
     
-    static class SingleCallTarget extends CallTargets
+    public static class SingleCallTarget extends CallTargets
     {
-        final jq_Method method; final boolean complete;
-        SingleCallTarget(jq_Method m, boolean c) { method = m; complete = c; }
+        final AndersenMethod method; final boolean complete;
+        public SingleCallTarget(AndersenMethod m, boolean c) { method = m; complete = c; }
         public Iterator iterator() { return new SingletonIterator(method); }
         public boolean isComplete() { return complete; }
         public CallTargets union(CallTargets s) {
