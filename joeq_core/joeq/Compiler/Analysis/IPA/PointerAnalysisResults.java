@@ -1,60 +1,76 @@
-/*
- * Created on Sep 19, 2003
- *
- * To change the template for this generated file go to
- * Window>Preferences>Java>Code Generation>Code and Comments
- */
+//PointerAnalysisResults.java, created Mon Sep 22 17:38:25 2003 by joewhaley
+//Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+//Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Analysis.IPA;
 
-import java.util.Collection;
+import java.util.Set;
 
 import Clazz.jq_Method;
-import Compil3r.Analysis.IPA.ProgramLocation;
-import Compil3r.Analysis.IPA.SSALocation;
-import Compil3r.Quad.Operator.Getfield;
-import Compil3r.Quad.Operator.Getstatic;
-//import Compil3r.Quad.Operator.Invoke;
-import Compil3r.Quad.Operator.Putfield;
-import Compil3r.Quad.Operator.Putstatic;
 
+/**
+ * This interface summarizes all the relevant results of the 
+ * external pointer analysis in one convenient place.
+ * 
+ * @author Vladimir Livshits
+ * @author John Whaley
+ * @version $Id$
+ */
 public interface PointerAnalysisResults {
-	//private ContextSet _contextSet;	
-	//PointerAnalysisResults(ContextSet contextSet){
-	//	this._contextSet = contextSet; 
-	//}
-	
-	/*
-	 * This class summarizes all the relevant results of the 
-	 * external pointer analysis in one convenient place.
-	 * 
-	 * The following things are necessary:
-	*/
-	 
-	//-------------- 1. Transitive MOD and REF sets for each call       --------------//
-	/** Returns the transitively modified locations of the call */
-	public Collection/*<SSALocation>*/ mod(ProgramLocation call);
-	/** Returns the transitively accessible locations of the call */
-	public Collection/*<SSALocation>*/ ref(ProgramLocation call);
-			
-	//-------------- 2. Sets of affected locations for a LOAD or a STORE --------------//
-	/** 
-	 * 	Each of the methods below returns a set of locations pointed to by a 
-	 * specific load or store operation 
-	 * */
-	public Collection/*<SSALocation>*/ pointsTo(Getfield op);
-	public Collection/*<SSALocation>*/ pointsTo(Getstatic op);
-	public Collection/*<SSALocation>*/ pointsTo(Putfield op);
-	public Collection/*<SSALocation>*/ pointsTo(Putstatic op);
-	
-	//-------------- 3. Aliasing of parameters                          --------------//
-	/** Returns a list of locations/contextSet pairs that may be aliased with location loc */
-	public Collection/*<Pair<SSALocation, ContextSet> >*/ getAliases(jq_Method method, SSALocation loc);
-	/** Returns whether location loc may have aliases in the set of contexts contextSet */
-	public boolean hasAliases(jq_Method method, SSALocation loc, ContextSet contextSet);
-	/** Returns whether location loc may have aliases in any of the contexts */
-	public boolean hasAliases(jq_Method method, SSALocation loc);
-};
+    
+    /*
+     * This interface summarizes all the relevant results of the 
+     * external pointer analysis in one convenient place.
+     * 
+     * The following things are necessary:
+     */
+     
+    //-------------- 1. Transitive MOD and REF sets for each call       --------------//
+    
+    /** Returns the set of potentially-modified locations of the
+     * given call (and transitively any calls the target may make).  Each
+     * location is represented by an SSALocation.
+     */
+    Set/*<SSALocation>*/ mod(ProgramLocation call);
+    
+    /**
+     *  Returns the set of potentially-referenced locations of the
+     * given call (and transitively any calls the target may make).  Each
+     * location is represented by an SSALocation.
+     */
+    Set/*<SSALocation>*/ ref(ProgramLocation call);
+
+    
+    //-------------- 2. Sets of affected locations for a LOAD or a STORE --------------//
+    
+    /** 
+     * Returns the set of locations that the load/store instruction at the
+     * given location can possibly reference.  Each location is represented
+     * by an SSALocation.
+     */
+    Set/*<SSALocation>*/ pointsTo(ProgramLocation op);
+    
+    
+    //-------------- 3. Aliasing of parameters                          --------------//
+    
+    /**
+     * Returns a set of location/contextset pairs of locations that may be
+     * aliased with the given location, along with the set of contexts under
+     * which each alias can occur.
+     */
+    Set/*<Pair<SSALocation, ContextSet> >*/ getAliases(jq_Method method, SSALocation loc);
+    
+    /**
+     * Returns whether the given location may have aliases in the given set of
+     * contexts.
+     */
+    boolean hasAliases(jq_Method method, SSALocation loc, ContextSet contextSet);
+    
+    /**
+     * Returns whether the given location may have aliases in any context.
+     */
+    boolean hasAliases(jq_Method method, SSALocation loc);
+}
 
 class ContextSet {
-	// TODO: fill in the details of the representation
-};
+    // TODO: fill in the details of the representation
+}
