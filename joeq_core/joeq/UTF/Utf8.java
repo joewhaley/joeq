@@ -283,12 +283,12 @@ here:
     // Helper function.
     private static int addToTable_helper(byte[] b, int hash, int[] chain, int index) {
         if (NO_NEW) {
-            Assert.UNREACHABLE("Trying to add Utf8 "+fromUtf8(b));
+            throw new IllegalStateException("Trying to add Utf8 "+fromUtf8(b));
         }
         if (++size == table.length) growTable_helper();
         if (!checkUtf8(b)) {
             fromUtf8(b); // fromUtf8 has more informative error messages.
-            Assert.UNREACHABLE();
+            Assert.UNREACHABLE(); // fromUtf8 should have thrown an exception.
         }
         table[size] = new Utf8(b, hash);
         chain[index] = size+1;

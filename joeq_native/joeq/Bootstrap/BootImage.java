@@ -139,33 +139,44 @@ public class BootImage implements ELFConstants {
         // not yet allocated, allocate it.
         Assert._assert(alloc_enabled);
         Class objType = o.getClass();
-        jq_Reference type = (jq_Reference)Reflection.getJQType(objType);
-        if (!boot_types.contains(type)) {
-            System.err.println("--> class "+type+" is not in the set of boot types!");
-            //new Exception().printStackTrace();
+        try {
+            jq_Reference type = (jq_Reference)Reflection.getJQType(objType);
+            if (!boot_types.contains(type)) {
+                System.err.println("--> class "+type+" is not in the set of boot types!");
+                //new Exception().printStackTrace();
+                return HeapAddress.getNull();
+            }
+            int addr;
+            int size;
+            if (type.isArrayType()) {
+                addr = heapCurrent + ObjectLayout.ARRAY_HEADER_SIZE;
+                size = ((jq_Array)type).getInstanceSize(Array.getLength(o));
+                size = (size+3) & ~3;
+                if (TRACE)
+                    out.println("Allocating entry "+entries.size()+": "+objType+" length "+Array.getLength(o)+" size "+size+" "+Strings.hex(System.identityHashCode(o))+" at "+Strings.hex(addr));
+            } else {
+                Assert._assert(type.isClassType());
+                addr = heapCurrent + ObjectLayout.OBJ_HEADER_SIZE;
+                size = ((jq_Class)type).getInstanceSize();
+                if (TRACE)
+                    out.println("Allocating entry "+entries.size()+": "+objType+" size "+size+" "+Strings.hex(System.identityHashCode(o))+" at "+Strings.hex(addr)+((o instanceof jq_Type)?": "+o:""));
+            }
+            heapCurrent += size;
+            BootstrapHeapAddress a = new BootstrapHeapAddress(addr);
+            e = Entry.create(o, a);
+            hash.put(k, e);
+            entries.add(e);
+            return a;
+        } catch (Exception ie) {
+            ie.printStackTrace();
+            HashSet visited = new HashSet();
+            UnknownObjectException x = new UnknownObjectException(o);
+            boolean found = findReferencePath(o, x, visited);
+            if (found) {
+                System.out.println(x);
+            }
             return HeapAddress.getNull();
         }
-        int addr;
-        int size;
-        if (type.isArrayType()) {
-            addr = heapCurrent + ObjectLayout.ARRAY_HEADER_SIZE;
-            size = ((jq_Array)type).getInstanceSize(Array.getLength(o));
-            size = (size+3) & ~3;
-            if (TRACE)
-                out.println("Allocating entry "+entries.size()+": "+objType+" length "+Array.getLength(o)+" size "+size+" "+Strings.hex(System.identityHashCode(o))+" at "+Strings.hex(addr));
-        } else {
-            Assert._assert(type.isClassType());
-            addr = heapCurrent + ObjectLayout.OBJ_HEADER_SIZE;
-            size = ((jq_Class)type).getInstanceSize();
-            if (TRACE)
-                out.println("Allocating entry "+entries.size()+": "+objType+" size "+size+" "+Strings.hex(System.identityHashCode(o))+" at "+Strings.hex(addr)+((o instanceof jq_Type)?": "+o:""));
-        }
-        heapCurrent += size;
-        BootstrapHeapAddress a = new BootstrapHeapAddress(addr);
-        e = Entry.create(o, a);
-        hash.put(k, e);
-        entries.add(e);
-        return a;
     }
     
     public static boolean IGNORE_UNKNOWN_OBJECTS = false;

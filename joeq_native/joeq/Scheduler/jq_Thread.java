@@ -49,6 +49,8 @@ public class jq_Thread implements jq_DontAlign {
     private volatile int isInterrupted;
     private final int thread_id;
 
+    public volatile boolean is_delivering_exception;
+    
     public static final int INITIAL_STACK_SIZE = 65536;
 
     public static AtomicCounter thread_id_factory = new AtomicCounter(1);

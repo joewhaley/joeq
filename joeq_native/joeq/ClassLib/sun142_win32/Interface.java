@@ -14,7 +14,7 @@ import Clazz.jq_Class;
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
-public final class Interface extends ClassLib.sun14_win32.Interface {
+public class Interface extends ClassLib.sun14_win32.Interface {
 
     /** Creates new Interface */
     public Interface() {}
@@ -40,8 +40,8 @@ public final class Interface extends ClassLib.sun14_win32.Interface {
             
             jq_Class k;
             try {
-	            k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LClassLib/Common/java/util/zip/DeflaterHuffman;");
-	            k.load();
+                k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LClassLib/Common/java/util/zip/DeflaterHuffman;");
+                k.load();
             } catch (NoClassDefFoundError _) {
             	System.err.println("Error preloading DeflaterHuffman class");
             }

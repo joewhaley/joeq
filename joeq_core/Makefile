@@ -37,8 +37,8 @@ javac:	bootclasspath source_list _javac
 # _javac: Assumes prior existence of the .source_list file.
 # Useful on cygwin, because cygwin takes a long time to build the .source_list file.
 _javac:	
-#	javac -target $(CLASSFILE_VERSION) -bootclasspath @bootclasspath -classpath $(BUILD_CLASSPATH) @.source_list
-	javac -target $(CLASSFILE_VERSION) -bootclasspath "`cat bootclasspath`" -classpath $(BUILD_CLASSPATH) @.source_list
+#	javac -source $(CLASSFILE_VERSION) -target $(CLASSFILE_VERSION) -bootclasspath @bootclasspath -classpath $(BUILD_CLASSPATH) @.source_list
+	javac -source $(CLASSFILE_VERSION) -target $(CLASSFILE_VERSION) -bootclasspath "`cat bootclasspath`" -classpath $(BUILD_CLASSPATH) @.source_list
 
 
 ### RULES TO CLEAN

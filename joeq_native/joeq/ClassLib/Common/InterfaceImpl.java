@@ -126,8 +126,10 @@ public abstract class InterfaceImpl implements Interface {
                     fieldName.equals("class_object"))
                     return Reflection.getJDKType((jq_Type) o);
             } else if (c == PrimordialClassLoader.getJavaLangReflectField()) {
-                if (fieldName.equals("jq_field"))
-                    return Reflection.getJQMember((java.lang.reflect.Field) o);
+                if (fieldName.equals("jq_field")) {
+                    Object r = Reflection.getJQMember((java.lang.reflect.Field) o);
+                    return r;
+                }
             } else if (c == PrimordialClassLoader.getJavaLangReflectMethod()) {
                 if (fieldName.equals("jq_method"))
                     return Reflection.getJQMember((java.lang.reflect.Method) o);

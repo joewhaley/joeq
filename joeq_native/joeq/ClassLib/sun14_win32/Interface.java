@@ -10,6 +10,7 @@ import Bootstrap.PrimordialClassLoader;
 import ClassLib.ClassLibInterface;
 import Clazz.jq_Class;
 import Scheduler.jq_NativeThread;
+import Util.Assert;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>
@@ -43,6 +44,8 @@ public class Interface extends ClassLib.Common.InterfaceImpl {
             nullStaticFields.add(k.getOrCreateStaticField("theUnsafe", "Lsun/misc/Unsafe;"));
             k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Lsun/reflect/UnsafeFieldAccessorImpl;");
             nullStaticFields.add(k.getOrCreateStaticField("unsafe", "Lsun/misc/Unsafe;"));
+            
+            // leads to sun.nio.cs.UTF_8, etc.
             k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/nio/charset/Charset;");
             nullStaticFields.add(k.getOrCreateStaticField("cache", "[Ljava/lang/Object;"));
             
@@ -69,6 +72,24 @@ public class Interface extends ClassLib.Common.InterfaceImpl {
             }
             
             jq_NativeThread.USE_INTERRUPTER_THREAD = true;
+        }
+        
+        public static final jq_Class acp_class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Lsun/nio/cs/AbstractCharsetProvider;");
+        
+        public java.lang.Object mapInstanceField(java.lang.Object o, Clazz.jq_InstanceField f) {
+            jq_Class c = f.getDeclaringClass();
+            if (c == acp_class) {
+                String fieldName = f.getName().toString();
+                if (fieldName.equals("cache")) {
+                    Object o2 = mappedObjects.get(o);
+                    if (o2 != null)
+                        return o2;
+                    o2 = new java.util.TreeMap(java.lang.String.CASE_INSENSITIVE_ORDER);
+                    mappedObjects.put(o, o2);
+                    return o2;
+                }
+            }
+            return super.mapInstanceField(o, f);
         }
     }
 }
