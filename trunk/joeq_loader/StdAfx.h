@@ -10,19 +10,43 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
+#include <stdio.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <stddef.h>
+#include <stdlib.h>
+
+#if defined(WIN32)
+
 #define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
 
-#include <stdio.h>
-
-// TODO: reference additional headers your program requires here
 #include "windows.h"
-#include <fcntl.h>
-#include <stdlib.h>
 #include <io.h>
 #include <tchar.h>
 #include <direct.h>
-#include <sys/stat.h>
-#include <stddef.h>
+
+#else
+
+#define __stdcall __attribute__((stdcall))
+#define _umask umask
+#define __int64 int64_t
+#define _open open
+#define _read read
+#define _write write
+#define _commit fsync
+#define _lseeki64 lseek
+#define _close close
+#define _mkdir(s) mkdir((s),0777)
+#define _chmod chmod
+#define Sleep(ms) usleep(1000*(ms))
+
+#include <wchar.h>
+#include <sys/timeb.h>
+#include <string.h>
+#include <unistd.h>
+#include <dirent.h>
+
+#endif
 
 #include "native.h"
 #include "handler.h"

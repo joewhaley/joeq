@@ -1,6 +1,7 @@
 
 #include "StdAfx.h"
 
+#if defined(WIN32)
 extern "C" void __stdcall trap_handler(void*, int);
 //extern "C" void* trap_handler;
 
@@ -42,3 +43,4 @@ EXCEPTION_DISPOSITION hardwareExceptionHandler(EXCEPTION_RECORD *exceptionRecord
 	contextRecord->Eip = (int)trap_handler;
 	return ExceptionContinueExecution;
 }
+#endif

@@ -1,7 +1,7 @@
 // joeq.cpp : Defines the entry point for the console application.
 //
 
-#include "stdafx.h"
+#include "StdAfx.h"
 
 int _argc;
 char **_argv;
@@ -10,6 +10,7 @@ extern "C" void __stdcall entry();
 extern "C" void __stdcall ctrl_break_handler();
 extern void initSemaphoreLock(void);
 
+#if defined(WIN32)
 BOOL WINAPI windows_break_handler(DWORD dwCtrlType)
 {
 	if (dwCtrlType == CTRL_BREAK_EVENT) {
@@ -18,7 +19,7 @@ BOOL WINAPI windows_break_handler(DWORD dwCtrlType)
 	}
 	return 0;
 }
-
+#endif
 
 int main(int argc, char* argv[])
 {
@@ -29,6 +30,7 @@ int main(int argc, char* argv[])
 	_argc = argc-1;
 	_argv = argv+1;
 
+#if defined(WIN32)
 	// install hardware exception handler.
 	HandlerRegistrationRecord er, *erp = &er;
 	er.previous = NULL;
@@ -40,16 +42,34 @@ int main(int argc, char* argv[])
 	SetConsoleCtrlHandler(windows_break_handler, TRUE);
 
 	initSemaphoreLock();
+#endif
 
 	printf("branching to entrypoint at location 0x%08x\n", entry);
 	fflush(stdout);
 
+#if defined(WIN32)
 	__asm {
 		// set it up so FP = 0, so we know the stack top.
+		push EBP
 		xor EBP, EBP
-		// go there!
+
+		// jump into joeq
 		call entry
+
+		// restore FP, so chkesp doesn't complain
+		pop EBP
 	}
+#else
+	__asm (
+	       "push %%ebp
+		xor %%ebp, %%ebp
+		call entry
+		pop %%ebp"
+	       :
+	       :
+	       :"%ebp"
+	       );
+#endif
 
 	// unreachable.
 	return 0;
