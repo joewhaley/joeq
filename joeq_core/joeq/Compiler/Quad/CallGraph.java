@@ -26,6 +26,7 @@ import Util.Collections.InvertibleMultiMap;
 import Util.Collections.MultiMap;
 import Util.Collections.UnmodifiableIterator;
 import Util.Collections.UnmodifiableMultiMap;
+import Util.Graphs.Graph;
 import Util.Graphs.Navigator;
 
 /**
@@ -34,7 +35,7 @@ import Util.Graphs.Navigator;
  * @author John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
-public abstract class CallGraph extends UnmodifiableMultiMap {
+public abstract class CallGraph extends UnmodifiableMultiMap implements Graph {
     
     /**
      * Sets up the root methods to be the given set.  Later call graph queries
@@ -46,7 +47,7 @@ public abstract class CallGraph extends UnmodifiableMultiMap {
      */
     public abstract void setRoots(Collection/*<ProgramLocation>*/ roots);
     
-    protected abstract Collection/*<ProgramLocation>*/ getRoots();
+    public abstract Collection/*<ProgramLocation>*/ getRoots();
     
     /**
      * Returns the collection of all methods in the call graph.
