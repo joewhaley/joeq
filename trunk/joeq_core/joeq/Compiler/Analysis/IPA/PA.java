@@ -2600,72 +2600,119 @@ public class PA {
         
     }
     
+    public static List activeDomains(BDD r) {
+        BDDFactory bdd = r.getFactory();
+        BDD s = r.support();
+        int[] a = s.scanSetDomains();
+        s.free();
+        if (a == null) return null;
+        List result = new ArrayList(a.length);
+        for (int i = 0; i < a.length; ++i) {
+            result.add(bdd.getDomain(a[i]));
+        }
+        return result;
+    }
+    
+    public static void bdd_save(String filename, BDD b) throws IOException {
+        List ds = activeDomains(b);
+        if (ds == null) {
+            b.getFactory().save(filename, b);
+            return;
+        }
+        BufferedWriter out = null;
+        try {
+            out = new BufferedWriter(new FileWriter(filename));
+            out.write('#');
+            for (Iterator i = ds.iterator(); i.hasNext(); ) {
+                BDDDomain d = (BDDDomain) i.next();
+                out.write(' ');
+                out.write(d.getName());
+                out.write(':');
+                out.write(Integer.toString(d.varNum()));
+            }
+            out.write('\n');
+            for (Iterator i = ds.iterator(); i.hasNext(); ) {
+                BDDDomain d = (BDDDomain) i.next();
+                out.write('#');
+                int[] vars = d.vars();
+                for (int j = 0; j < vars.length; ++j) {
+                    out.write(' ');
+                    out.write(Integer.toString(vars[j]));
+                }
+                out.write('\n');
+            }
+            b.getFactory().save(out, b);
+        } finally {
+            if (out != null) try { out.close(); } catch (IOException _) { }
+        }
+    }
+    
     public void dumpResults(String dumpfilename) throws IOException {
 
         System.out.println("A: "+(long) A.satCount(V1V2set)+" relations, "+A.nodeCount()+" nodes");
-        bdd.save(dumpfilename+".A", A);
+        bdd_save(dumpfilename+".A", A);
         System.out.println("vP: "+(long) vP.satCount(V1H1set)+" relations, "+vP.nodeCount()+" nodes");
-        bdd.save(dumpfilename+".vP", vP);
+        bdd_save(dumpfilename+".vP", vP);
         //BuildBDDIR.dumpTuples(bdd, dumpfilename+".vP.tuples", vP);
         System.out.println("S: "+(long) S.satCount(V1FV2set)+" relations, "+S.nodeCount()+" nodes");
-        bdd.save(dumpfilename+".S", S);
+        bdd_save(dumpfilename+".S", S);
         System.out.println("L: "+(long) L.satCount(V1FV2set)+" relations, "+L.nodeCount()+" nodes");
-        bdd.save(dumpfilename+".L", L);
+        bdd_save(dumpfilename+".L", L);
         System.out.println("vT: "+(long) vT.satCount(V1.set().and(T1set))+" relations, "+vT.nodeCount()+" nodes");
-        bdd.save(dumpfilename+".vT", vT);
+        bdd_save(dumpfilename+".vT", vT);
         System.out.println("hT: "+(long) hT.satCount(H1.set().and(T2set))+" relations, "+hT.nodeCount()+" nodes");
-        bdd.save(dumpfilename+".hT", hT);
+        bdd_save(dumpfilename+".hT", hT);
         System.out.println("aT: "+(long) aT.satCount(T1set.and(T2set))+" relations, "+aT.nodeCount()+" nodes");
-        bdd.save(dumpfilename+".aT", aT);
+        bdd_save(dumpfilename+".aT", aT);
         System.out.println("cha: "+(long) cha.satCount(T2Nset.and(Mset))+" relations, "+cha.nodeCount()+" nodes");
-        bdd.save(dumpfilename+".cha", cha);
+        bdd_save(dumpfilename+".cha", cha);
         System.out.println("actual: "+(long) actual.satCount(Iset.and(Zset).and(V2.set()))+" relations, "+actual.nodeCount()+" nodes");
-        bdd.save(dumpfilename+".actual", actual);
+        bdd_save(dumpfilename+".actual", actual);
         System.out.println("formal: "+(long) formal.satCount(MZset.and(V1.set()))+" relations, "+formal.nodeCount()+" nodes");
-        bdd.save(dumpfilename+".formal", formal);
+        bdd_save(dumpfilename+".formal", formal);
         System.out.println("Iret: "+(long) Iret.satCount(Iset.and(V1.set()))+" relations, "+Iret.nodeCount()+" nodes");
-        bdd.save(dumpfilename+".Iret", Iret);
+        bdd_save(dumpfilename+".Iret", Iret);
         System.out.println("Mret: "+(long) Mret.satCount(Mset.and(V2.set()))+" relations, "+Mret.nodeCount()+" nodes");
-        bdd.save(dumpfilename+".Mret", Mret);
+        bdd_save(dumpfilename+".Mret", Mret);
         System.out.println("Ithr: "+(long) Ithr.satCount(Iset.and(V1.set()))+" relations, "+Ithr.nodeCount()+" nodes");
-        bdd.save(dumpfilename+".Ithr", Ithr);
+        bdd_save(dumpfilename+".Ithr", Ithr);
         System.out.println("Mthr: "+(long) Mthr.satCount(Mset.and(V2.set()))+" relations, "+Mthr.nodeCount()+" nodes");
-        bdd.save(dumpfilename+".Mthr", Mthr);
+        bdd_save(dumpfilename+".Mthr", Mthr);
         System.out.println("mI: "+(long) mI.satCount(INset.and(Mset))+" relations, "+mI.nodeCount()+" nodes");
-        bdd.save(dumpfilename+".mI", mI);
+        bdd_save(dumpfilename+".mI", mI);
         System.out.println("mV: "+(long) mV.satCount(Mset.and(V1.set()))+" relations, "+mV.nodeCount()+" nodes");
-        bdd.save(dumpfilename+".mV", mV);
+        bdd_save(dumpfilename+".mV", mV);
         System.out.println("sync: "+(long) sync.satCount(V1.set())+" relations, "+sync.nodeCount()+" nodes");
-        bdd.save(dumpfilename+".sync", sync);
+        bdd_save(dumpfilename+".sync", sync);
         
         System.out.println("hP: "+(long) hP.satCount(H1FH2set)+" relations, "+hP.nodeCount()+" nodes");
-        bdd.save(dumpfilename+".hP", hP);
+        bdd_save(dumpfilename+".hP", hP);
         //BuildBDDIR.dumpTuples(bdd, dumpfilename+".hP.tuples", hP);
         System.out.println("IE: "+(long) IE.satCount(IMset)+" relations, "+IE.nodeCount()+" nodes");
-        bdd.save(dumpfilename+".IE", IE);
+        bdd_save(dumpfilename+".IE", IE);
         BuildBDDIR.dumpTuples(bdd, dumpfilename+".IE.tuples", IE);
         if (IEcs != null) {
             System.out.println("IEcs: "+(long) IEcs.satCount(IMset.and(V1cV2cset))+" relations, "+IEcs.nodeCount()+" nodes");
-            bdd.save(dumpfilename+".IEcs", IEcs);
+            bdd_save(dumpfilename+".IEcs", IEcs);
         }
         if (vPfilter != null) {
             System.out.println("vPfilter: "+(long) vPfilter.satCount(V1.set().and(H1.set()))+" relations, "+vPfilter.nodeCount()+" nodes");
-            bdd.save(dumpfilename+".vPfilter", vPfilter);
+            bdd_save(dumpfilename+".vPfilter", vPfilter);
         }
         if (hPfilter != null) {
             System.out.println("hPfilter: "+(long) hPfilter.satCount(H1.set().and(Fset).and(H1.set()))+" relations, "+hPfilter.nodeCount()+" nodes");
-            bdd.save(dumpfilename+".hPfilter", hPfilter);
+            bdd_save(dumpfilename+".hPfilter", hPfilter);
         }
         if (IEfilter != null) {
             System.out.println("IEfilter: "+IEfilter.nodeCount()+" nodes");
-            bdd.save(dumpfilename+".IEfilter", IEfilter);
+            bdd_save(dumpfilename+".IEfilter", IEfilter);
         }
         if (NNfilter != null) {
             System.out.println("NNfilter: "+NNfilter.nodeCount()+" nodes");
-            bdd.save(dumpfilename+".NNfilter", NNfilter);
+            bdd_save(dumpfilename+".NNfilter", NNfilter);
         }
         System.out.println("visited: "+(long) visited.satCount(Mset)+" relations, "+visited.nodeCount()+" nodes");
-        bdd.save(dumpfilename+".visited", visited);
+        bdd_save(dumpfilename+".visited", visited);
         
         BufferedWriter dos = null;
         try {
@@ -4043,48 +4090,48 @@ public class PA {
             mC.orWith(m);
         }
         
-        bdd.save(dumpPath+"vP0.bdd", vP0);
-        bdd.save(dumpPath+"hP0.bdd", hP);
-        bdd.save(dumpPath+"L.bdd", L0);
-        bdd.save(dumpPath+"S.bdd", S0);
+        bdd_save(dumpPath+"vP0.bdd", vP0);
+        bdd_save(dumpPath+"hP0.bdd", hP);
+        bdd_save(dumpPath+"L.bdd", L0);
+        bdd_save(dumpPath+"S.bdd", S0);
         if (CONTEXT_SENSITIVE) {
-            bdd.save(dumpPath+"cA.bdd", A);
+            bdd_save(dumpPath+"cA.bdd", A);
         } else {
-            bdd.save(dumpPath+"A.bdd", A);
+            bdd_save(dumpPath+"A.bdd", A);
         }
-        bdd.save(dumpPath+"vT.bdd", vT);
-        bdd.save(dumpPath+"hT.bdd", hT);
-        bdd.save(dumpPath+"aT.bdd", aT);
-        bdd.save(dumpPath+"cha.bdd", cha);
-        bdd.save(dumpPath+"actual.bdd", actual);
-        bdd.save(dumpPath+"formal.bdd", formal);
-        bdd.save(dumpPath+"mV.bdd", mV);
-        bdd.save(dumpPath+"mC.bdd", mC);
-        bdd.save(dumpPath+"mI.bdd", mI);
-        bdd.save(dumpPath+"Mret.bdd", Mret);
-        bdd.save(dumpPath+"Mthr.bdd", Mthr);
-        bdd.save(dumpPath+"Iret.bdd", Iret);
-        bdd.save(dumpPath+"Ithr.bdd", Ithr);
-        bdd.save(dumpPath+"IE0.bdd", IE0);
-        bdd.save(dumpPath+"sync.bdd", sync);
-        bdd.save(dumpPath+"mSync.bdd", mSync);
+        bdd_save(dumpPath+"vT.bdd", vT);
+        bdd_save(dumpPath+"hT.bdd", hT);
+        bdd_save(dumpPath+"aT.bdd", aT);
+        bdd_save(dumpPath+"cha.bdd", cha);
+        bdd_save(dumpPath+"actual.bdd", actual);
+        bdd_save(dumpPath+"formal.bdd", formal);
+        bdd_save(dumpPath+"mV.bdd", mV);
+        bdd_save(dumpPath+"mC.bdd", mC);
+        bdd_save(dumpPath+"mI.bdd", mI);
+        bdd_save(dumpPath+"Mret.bdd", Mret);
+        bdd_save(dumpPath+"Mthr.bdd", Mthr);
+        bdd_save(dumpPath+"Iret.bdd", Iret);
+        bdd_save(dumpPath+"Ithr.bdd", Ithr);
+        bdd_save(dumpPath+"IE0.bdd", IE0);
+        bdd_save(dumpPath+"sync.bdd", sync);
+        bdd_save(dumpPath+"mSync.bdd", mSync);
         if (threadRuns != null)
-            bdd.save(dumpPath+"threadRuns.bdd", threadRuns);
+            bdd_save(dumpPath+"threadRuns.bdd", threadRuns);
         if (IEfilter != null)
-            bdd.save(dumpPath+"IEfilter.bdd", IEfilter);
-        bdd.save(dumpPath+"roots.bdd", getRoots());
+            bdd_save(dumpPath+"IEfilter.bdd", IEfilter);
+        bdd_save(dumpPath+"roots.bdd", getRoots());
         
         if (V1c.length > 0 && H1c.length > 0) {
-            bdd.save(dumpPath+"eq.bdd", V1c[0].buildEquals(H1c[0]));
+            bdd_save(dumpPath+"eq.bdd", V1c[0].buildEquals(H1c[0]));
         }
         
         if (DUMP_FLY) {
             initFly();
-            bdd.save(dumpPath+"visited.bdd", visitedFly);
-            bdd.save(dumpPath+"mS.bdd", mS);
-            bdd.save(dumpPath+"mL.bdd", mL);
-            bdd.save(dumpPath+"mvP.bdd", mvP);
-            bdd.save(dumpPath+"mIE.bdd", mIE);
+            bdd_save(dumpPath+"visited.bdd", visitedFly);
+            bdd_save(dumpPath+"mS.bdd", mS);
+            bdd_save(dumpPath+"mL.bdd", mL);
+            bdd_save(dumpPath+"mvP.bdd", mvP);
+            bdd_save(dumpPath+"mIE.bdd", mIE);
         }
         
         dos = null;
@@ -4321,17 +4368,17 @@ public class PA {
         System.out.println("vReg: "
                 + (long) vReg.satCount(V1.set().and(reg.set().and(M.set())))
                 + " relations, " + vReg.nodeCount() + " nodes");
-        bdd.save(dumpPath + "/vReg.bdd", vReg);
+        bdd_save(dumpPath + "/vReg.bdd", vReg);
         System.out.println("iQuad: "
                 + (long) iQuad.satCount(I.set().and(quad.set()))
                 + " relations, " + iQuad.nodeCount() + " nodes");
-        bdd.save(dumpPath + "/iQuad.bdd", iQuad);
+        bdd_save(dumpPath + "/iQuad.bdd", iQuad);
         System.out.println("fMember: "
                 + (long) fMember.satCount(F.set().and(member.set()))
                 + " relations, " + fMember.nodeCount() + " nodes");
-        bdd.save(dumpPath + "/fMember.bdd", fMember);
+        bdd_save(dumpPath + "/fMember.bdd", fMember);
         //System.out.println("hQuad: "+(long) sync.satCount(H1.set().and(quad.set()))+" relations, "+hQuad.nodeCount()+" nodes");
-        //bdd.save(resultsFileName+".hQuad", sync);
+        //bdd_save(resultsFileName+".hQuad", sync);
     }
     
 }
