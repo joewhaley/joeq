@@ -67,8 +67,8 @@ public class CSPointerAnalysis extends Solver {
     public static final boolean TRACE_CALLEE    = false || TRACE_ALL;
     public static final boolean TRACE_OVERLAP   = false || TRACE_ALL;
     public static final boolean TRACE_MATCHING  = false || TRACE_ALL;
-    public static final boolean TRACE_TRIMMING  = true || TRACE_ALL;
-    public static final boolean TRACE_SIMPLIFY  = true || TRACE_ALL;
+    public static final boolean TRACE_TRIMMING  = false || TRACE_ALL;
+    public static final boolean TRACE_SIMPLIFY  = false || TRACE_ALL;
     public static final boolean TRACE_TYPES     = false || TRACE_ALL;
     public static final boolean TRACE_MAPS      = false || TRACE_ALL;
     public static final boolean TRACE_SIZE      = false || TRACE_ALL;
@@ -113,33 +113,6 @@ public class CSPointerAnalysis extends Solver {
             time = System.currentTimeMillis() - time;
             System.out.println("done. ("+time/1000.+" seconds)");
         
-            if (DO_INLINING) {
-                System.out.print("Doing inlining on call graph...");
-                time = System.currentTimeMillis();
-                // pre-initialize all classes so that we can inline more.
-                for (Iterator i=cg.getAllMethods().iterator(); i.hasNext(); ) {
-                    jq_Method m = (jq_Method) i.next();
-                    m.getDeclaringClass().cls_initialize();
-                }
-                MethodInline mi = new MethodInline(cg);
-                Navigator navigator = cg.getNavigator();
-                for (Iterator i=Traversals.postOrder(navigator, roots).iterator(); i.hasNext(); ) {
-                    jq_Method m = (jq_Method) i.next();
-                    if (m.getBytecode() == null) continue;
-                    ControlFlowGraph cfg = CodeCache.getCode(m);
-                    MethodSummary ms = MethodSummary.getSummary(cfg);
-                    mi.visitCFG(cfg);
-                }
-                time = System.currentTimeMillis() - time;
-                System.out.println("done. ("+time/1000.+" seconds)");
-            
-                System.out.print("Rebuilding call graph...");
-                time = System.currentTimeMillis();
-                cg.setRoots(roots);
-                time = System.currentTimeMillis() - time;
-                System.out.println("done. ("+time/1000.+" seconds)");
-            }
-        
             System.out.print("Calculating reachable methods...");
             time = System.currentTimeMillis();
             /* Calculate the reachable methods once to touch each method,
@@ -157,6 +130,33 @@ public class CSPointerAnalysis extends Solver {
                 x.printStackTrace();
             }
             
+        }
+        
+        if (DO_INLINING) {
+            System.out.print("Doing inlining on call graph...");
+            long time = System.currentTimeMillis();
+            // pre-initialize all classes so that we can inline more.
+            for (Iterator i=cg.getAllMethods().iterator(); i.hasNext(); ) {
+                jq_Method m = (jq_Method) i.next();
+                m.getDeclaringClass().cls_initialize();
+            }
+            MethodInline mi = new MethodInline(cg);
+            Navigator navigator = cg.getNavigator();
+            for (Iterator i=Traversals.postOrder(navigator, roots).iterator(); i.hasNext(); ) {
+                jq_Method m = (jq_Method) i.next();
+                if (m.getBytecode() == null) continue;
+                ControlFlowGraph cfg = CodeCache.getCode(m);
+                MethodSummary ms = MethodSummary.getSummary(cfg);
+                mi.visitCFG(cfg);
+            }
+            time = System.currentTimeMillis() - time;
+            System.out.println("done. ("+time/1000.+" seconds)");
+            
+            System.out.print("Rebuilding call graph...");
+            time = System.currentTimeMillis();
+            cg.setRoots(roots);
+            time = System.currentTimeMillis() - time;
+            System.out.println("done. ("+time/1000.+" seconds)");
         }
         
         CSPointerAnalysis dis = new CSPointerAnalysis(cg);
