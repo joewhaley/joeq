@@ -1,17 +1,18 @@
 PACKAGES = Allocator Assembler Bootstrap ClassLib Clazz Compil3r Debugger GC Interpreter Linker Main Memory Run_Time Scheduler Synchronization UTF Util
 SUPPORT_LIBS = Support/javabdd_0.3.jar
-JDK14SUPPORT = Support/java14.jar
+JDK14SUPPORT_LIB = Support/java14.jar
+
+ifeq (${OS},Windows_NT)
+BUILD_CLASSPATH = ".;$(subst $(space),;,$(SUPPORT_LIBS))"
+else
+BUILD_CLASSPATH = .:$(subst $(space),:,$(SUPPORT_LIBS))
+endif
 
 ALLDIRS = $(shell find $(PACKAGES) -type d | grep -v CVS)
 ALLJAVA = $(foreach d, $(ALLDIRS), $(wildcard $(d)/*.java))
 ALLPKGS = $(sort $(foreach j, $(ALLJAVA), $(patsubst %/,%,$(dir $(j)))))
 ALLPKGNAMES = $(subst /,.,$(ALLPKGS))
 ALLCLASS = $(foreach d, $(ALLDIRS), $(wildcard $(d)/*.class))
-ifeq (${OS},Windows_NT)
-BUILD_CLASSPATH = ".;$(subst $(space),;,$(subst /,\,$(SUPPORT_LIBS)))"
-else
-BUILD_CLASSPATH = .:$(subst $(space),:,$(SUPPORT_LIBS))
-endif
 
 CLASSFILE_VERSION = 1.3
 
@@ -19,7 +20,10 @@ all:	javac
 
 ### RULES TO BUILD SOURCE CODE
 #
-jikes:	bootclasspath source_list
+jikes:	bootclasspath source_list _jikes
+# _jikes: Assumes prior existence of the .source_list file.
+# Useful on cygwin, because cygwin takes a long time to build the .source_list file.
+_jikes:	
 	jikes -target $(CLASSFILE_VERSION) -bootclasspath @bootclasspath -classpath $(BUILD_CLASSPATH) @.source_list
 
 jikes-pedantic:	bootclasspath source_list
@@ -29,7 +33,8 @@ javac:	bootclasspath source_list _javac
 # _javac: Assumes prior existence of the .source_list file.
 # Useful on cygwin, because cygwin takes a long time to build the .source_list file.
 _javac:	
-	javac -target $(CLASSFILE_VERSION) -bootclasspath @bootclasspath -classpath $(BUILD_CLASSPATH) @.source_list
+#	javac -target $(CLASSFILE_VERSION) -bootclasspath @bootclasspath -classpath $(BUILD_CLASSPATH) @.source_list
+	javac -target $(CLASSFILE_VERSION) -bootclasspath "`cat bootclasspath`" -classpath $(BUILD_CLASSPATH) @.source_list
 
 
 ### RULES TO CLEAN
@@ -55,22 +60,22 @@ commit:
 ### RULES FOR BUILDING BOOT IMAGES
 #
 bootstrap:	Main/Bootstrapper.class
-	java -Xbootclasspath/a:$(JDK14SUPPORT) -mx400M Main.Bootstrapper
+	java -Xbootclasspath/a:$(JDK14SUPPORT_LIB) -mx400M Main.Bootstrapper
 
 bootstrap-sun14-linux:	javac
 	java -ms240M -mx240M Main.Bootstrapper -cl ClassLib/sun14_linux/classlist.txt
 
 bootstrap-sun13-linux:	javac
-	java -Xbootclasspath/a:$(JDK14SUPPORT) -ms170M -mx170M Main.Bootstrapper -cl ClassLib/sun13_linux/classlist.txt
+	java -Xbootclasspath/a:$(JDK14SUPPORT_LIB) -ms170M -mx170M Main.Bootstrapper -cl ClassLib/sun13_linux/classlist.txt
 
 bootstrap-ibm13-linux:	javac
-	java -Xbootclasspath/a:$(JDK14SUPPORT) -ms230M -mx230M Main.Bootstrapper -cl ClassLib/ibm13_linux/classlist.txt
+	java -Xbootclasspath/a:$(JDK14SUPPORT_LIB) -ms230M -mx230M Main.Bootstrapper -cl ClassLib/ibm13_linux/classlist.txt
 
 bootstrap-sun14-win32:	javac
 	java -ms180M -mx180M Main.Bootstrapper -cl ClassLib/sun14_win32/classlist.txt
 
 bootstrap-sun13-win32:	javac
-	java -Xbootclasspath/a:$(JDK14SUPPORT) -ms120M -mx120M Main.Bootstrapper -cl ClassLib/sun13_win32/classlist.txt
+	java -Xbootclasspath/a:$(JDK14SUPPORT_LIB) -ms120M -mx120M Main.Bootstrapper -cl ClassLib/sun13_win32/classlist.txt
 
 
 ### RULES FOR BUILDING JAVADOC
@@ -96,7 +101,7 @@ Main/Bootstrapper.class:
 	$(MAKE) javac
 
 bootclasspath:	Main/GetBootClassPath.class
-	java Main.GetBootClassPath $(JDK14SUPPORT) > bootclasspath
+	java Main.GetBootClassPath $(JDK14SUPPORT_LIB) > bootclasspath
 
 Main/GetBootClassPath.class:	Main/GetBootClassPath.java
 	javac Main/GetBootClassPath.java

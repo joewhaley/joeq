@@ -30,6 +30,7 @@ import Compil3r.Quad.AndersenInterface.AndersenMethod;
 import Compil3r.Quad.AndersenInterface.AndersenReference;
 import Compil3r.Quad.BytecodeToQuad.jq_ReturnAddressType;
 import Compil3r.Quad.Operand.AConstOperand;
+import Compil3r.Quad.Operand.PConstOperand;
 import Compil3r.Quad.Operand.ParamListOperand;
 import Compil3r.Quad.Operand.RegisterOperand;
 import Compil3r.Quad.Operator.ALoad;
@@ -166,6 +167,7 @@ public class MethodSummary {
             int i = r.getNumber();
             if (r.isTemp()) i += nLocals;
             s.registers[i] = n;
+            if (TRACE_INTRA) out.println("Setting register "+r+" to "+n);
         }
         /** Set the given register in the current state to point to the given node or set of nodes. */
         protected void setRegister(Register r, Object n) {
@@ -174,6 +176,7 @@ public class MethodSummary {
             if (n instanceof Set) n = NodeSet.FACTORY.makeSet((Set)n);
             else jq.Assert(n instanceof Node);
             s.registers[i] = n;
+            if (TRACE_INTRA) out.println("Setting register "+r+" to "+n);
         }
         /** Get the node or set of nodes in the given register in the current state. */
         protected Object getRegister(Register r) {
@@ -199,7 +202,9 @@ public class MethodSummary {
             jq_Type[] params = this.method.getParamTypes();
             this.param_nodes = new ParamNode[params.length];
             for (int i=0, j=0; i<params.length; ++i, ++j) {
-                if (params[i].isReferenceType() && !params[i].isAddressType()) {
+                if (params[i].isReferenceType()
+                    /*&& !params[i].isAddressType()*/
+                    ) {
                     setLocal(j, param_nodes[i] = new ParamNode(method, i, (jq_Reference)params[i]));
                 } else if (params[i].getReferenceSize() == 8) ++j;
             }
@@ -445,7 +450,9 @@ public class MethodSummary {
         
         /** Visit an array load instruction. */
         public void visitALoad(Quad obj) {
-            if (obj.getOperator() instanceof Operator.ALoad.ALOAD_A) {
+            if (obj.getOperator() instanceof Operator.ALoad.ALOAD_A
+                || obj.getOperator() instanceof Operator.ALoad.ALOAD_P
+                ) {
                 if (TRACE_INTRA) out.println("Visiting: "+obj);
                 Register r = ALoad.getDest(obj).getRegister();
                 Operand o = ALoad.getBase(obj);
@@ -459,7 +466,9 @@ public class MethodSummary {
         }
         /** Visit an array store instruction. */
         public void visitAStore(Quad obj) {
-            if (obj.getOperator() instanceof Operator.AStore.ASTORE_A) {
+            if (obj.getOperator() instanceof Operator.AStore.ASTORE_A
+                || obj.getOperator() instanceof Operator.AStore.ASTORE_P
+                ) {
                 if (TRACE_INTRA) out.println("Visiting: "+obj);
                 Operand base = AStore.getBase(obj);
                 Operand val = AStore.getValue(obj);
@@ -475,7 +484,9 @@ public class MethodSummary {
                         if (n == null) quadsToNodes.put(key, n = new ConcreteTypeNode(type, obj));
                         heapStore(base_r, n, null, obj);
                     } else {
-                        jq.UNREACHABLE();
+                        jq_Reference type = ((PConstOperand)val).getType();
+                        UnknownTypeNode n = UnknownTypeNode.get(type);
+                        heapStore(base_r, n, null, obj);
                     }
                 } else {
                     // base is not a register?!
@@ -491,19 +502,23 @@ public class MethodSummary {
             if (src instanceof RegisterOperand) {
                 Register src_r = ((RegisterOperand)src).getRegister();
                 setRegister(dest_r, getRegister(src_r));
-            } else {
-                jq.Assert(src instanceof AConstOperand);
+            } else if (src instanceof AConstOperand) {
                 jq_Reference type = ((AConstOperand)src).getType();
                 Object key = type;
                 ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(key);
                 if (n == null) quadsToNodes.put(key, n = new ConcreteTypeNode(type, obj));
                 setRegister(dest_r, n);
+            } else {
+                jq_Reference type = ((PConstOperand)src).getType();
+                UnknownTypeNode n = UnknownTypeNode.get(type);
+                setRegister(dest_r, n);
             }
         }
         /** Visit a get instance field instruction. */
         public void visitGetfield(Quad obj) {
-            if ((obj.getOperator() instanceof Operator.Getfield.GETFIELD_A) ||
-               (obj.getOperator() instanceof Operator.Getfield.GETFIELD_A_DYNLINK)) {
+            if (obj.getOperator() instanceof Operator.Getfield.GETFIELD_A
+                || obj.getOperator() instanceof Operator.Getfield.GETFIELD_P
+                ) {
                 if (TRACE_INTRA) out.println("Visiting: "+obj);
                 Register r = Getfield.getDest(obj).getRegister();
                 Operand o = Getfield.getBase(obj);
@@ -520,8 +535,9 @@ public class MethodSummary {
         }
         /** Visit a get static field instruction. */
         public void visitGetstatic(Quad obj) {
-            if ((obj.getOperator() instanceof Operator.Getstatic.GETSTATIC_A) ||
-               (obj.getOperator() instanceof Operator.Getstatic.GETSTATIC_A_DYNLINK)) {
+            if (obj.getOperator() instanceof Operator.Getstatic.GETSTATIC_A
+                || obj.getOperator() instanceof Operator.Getstatic.GETSTATIC_P
+                ) {
                 if (TRACE_INTRA) out.println("Visiting: "+obj);
                 Register r = Getstatic.getDest(obj).getRegister();
                 Getstatic.getField(obj).resolve();
@@ -545,11 +561,15 @@ public class MethodSummary {
             ParamListOperand plo = Invoke.getParamList(obj);
             jq.Assert(m == Run_Time.Arrays._multinewarray || params.length == plo.length());
             for (int i=0; i<params.length; ++i) {
-                if (!params[i].isReferenceType() || params[i].isAddressType()) continue;
+                if (!params[i].isReferenceType()
+                    /*|| params[i].isAddressType()*/
+                    ) continue;
                 Register r = plo.get(i).getRegister();
                 passParameter(r, mc, i);
             }
-            if (m.getReturnType().isReferenceType() && !m.getReturnType().isAddressType()) {
+            if (m.getReturnType().isReferenceType()
+                /*&& !m.getReturnType().isAddressType()*/
+                ) {
                 RegisterOperand dest = Invoke.getDest(obj);
                 if (dest != null) {
                     Register dest_r = dest.getRegister();
@@ -577,7 +597,9 @@ public class MethodSummary {
         
         /** Visit a register move instruction. */
         public void visitMove(Quad obj) {
-            if (obj.getOperator() instanceof Operator.Move.MOVE_A) {
+            if (obj.getOperator() instanceof Operator.Move.MOVE_A
+                || obj.getOperator() instanceof Operator.Move.MOVE_P
+                ) {
                 if (TRACE_INTRA) out.println("Visiting: "+obj);
                 Register dest_r = Move.getDest(obj).getRegister();
                 Operand src = Move.getSrc(obj);
@@ -586,12 +608,15 @@ public class MethodSummary {
                     if (rop.getType() instanceof jq_ReturnAddressType) return;
                     Register src_r = rop.getRegister();
                     setRegister(dest_r, getRegister(src_r));
-                } else {
-                    jq.Assert(src instanceof AConstOperand);
+                } else if (src instanceof AConstOperand) {
                     jq_Reference type = ((AConstOperand)src).getType();
                     Object key = type;
                     ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(key);
                     if (n == null) quadsToNodes.put(key, n = new ConcreteTypeNode(type, obj));
+                    setRegister(dest_r, n);
+                } else {
+                    jq_Reference type = ((PConstOperand)src).getType();
+                    UnknownTypeNode n = UnknownTypeNode.get(type);
                     setRegister(dest_r, n);
                 }
             }
@@ -616,8 +641,9 @@ public class MethodSummary {
         }
         /** Visit a put instance field instruction. */
         public void visitPutfield(Quad obj) {
-            if ((obj.getOperator() instanceof Operator.Putfield.PUTFIELD_A) ||
-               (obj.getOperator() instanceof Operator.Putfield.PUTFIELD_A_DYNLINK)) {
+            if (obj.getOperator() instanceof Operator.Putfield.PUTFIELD_A
+                || obj.getOperator() instanceof Operator.Putfield.PUTFIELD_P
+                ) {
                 if (TRACE_INTRA) out.println("Visiting: "+obj);
                 Operand base = Putfield.getBase(obj);
                 Operand val = Putfield.getSrc(obj);
@@ -629,12 +655,15 @@ public class MethodSummary {
                     if (val instanceof RegisterOperand) {
                         Register src_r = ((RegisterOperand)val).getRegister();
                         heapStore(base_r, src_r, f, obj);
-                    } else {
-                        jq.Assert(val instanceof AConstOperand);
+                    } else if (val instanceof AConstOperand) {
                         jq_Reference type = ((AConstOperand)val).getType();
                         Object key = type;
                         ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(key);
                         if (n == null) quadsToNodes.put(key, n = new ConcreteTypeNode(type, obj));
+                        heapStore(base_r, n, f, obj);
+                    } else {
+                        jq_Reference type = ((PConstOperand)val).getType();
+                        UnknownTypeNode n = UnknownTypeNode.get(type);
                         heapStore(base_r, n, f, obj);
                     }
                 } else {
@@ -644,8 +673,9 @@ public class MethodSummary {
         }
         /** Visit a put static field instruction. */
         public void visitPutstatic(Quad obj) {
-            if ((obj.getOperator() instanceof Operator.Putstatic.PUTSTATIC_A) ||
-               (obj.getOperator() instanceof Operator.Putstatic.PUTSTATIC_A_DYNLINK)) {
+            if (obj.getOperator() instanceof Operator.Putstatic.PUTSTATIC_A
+                || obj.getOperator() instanceof Operator.Putstatic.PUTSTATIC_P
+                ) {
                 if (TRACE_INTRA) out.println("Visiting: "+obj);
                 Operand val = Putstatic.getSrc(obj);
                 Putstatic.getField(obj).resolve();
@@ -654,12 +684,15 @@ public class MethodSummary {
                 if (val instanceof RegisterOperand) {
                     Register src_r = ((RegisterOperand)val).getRegister();
                     heapStore(my_global, src_r, f, obj);
-                } else {
-                    jq.Assert(val instanceof AConstOperand);
+                } else if (val instanceof AConstOperand) {
                     jq_Reference type = ((AConstOperand)val).getType();
                     Object key = type;
                     ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(key);
                     if (n == null) quadsToNodes.put(key, n = new ConcreteTypeNode(type, obj));
+                    heapStore(my_global, n, f, obj);
+                } else {
+                    jq_Reference type = ((PConstOperand)val).getType();
+                    UnknownTypeNode n = UnknownTypeNode.get(type);
                     heapStore(my_global, n, f, obj);
                 }
             }
@@ -674,19 +707,24 @@ public class MethodSummary {
         public void visitReturn(Quad obj) {
             Operand src = Return.getSrc(obj);
             Set r;
-            if (obj.getOperator() == Return.RETURN_A.INSTANCE) r = returned;
+            if (obj.getOperator() == Return.RETURN_A.INSTANCE
+                || obj.getOperator() == Return.RETURN_P.INSTANCE
+                ) r = returned;
             else if (obj.getOperator() == Return.THROW_A.INSTANCE) r = thrown;
             else return;
             if (TRACE_INTRA) out.println("Visiting: "+obj);
             if (src instanceof RegisterOperand) {
                 Register src_r = ((RegisterOperand)src).getRegister();
                 addToSet(r, getRegister(src_r));
-            } else {
-                jq.Assert(src instanceof AConstOperand);
+            } else if (src instanceof AConstOperand) {
                 jq_Reference type = ((AConstOperand)src).getType();
                 Object key = type;
                 ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(key);
                 if (n == null) quadsToNodes.put(key, n = new ConcreteTypeNode(type, obj));
+                r.add(n);
+            } else {
+                jq_Reference type = ((PConstOperand)src).getType();
+                UnknownTypeNode n = UnknownTypeNode.get(type);
                 r.add(n);
             }
         }
