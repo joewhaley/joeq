@@ -36,8 +36,10 @@ public abstract class ClassDump {
         });
         
         jq.assert(true); // initialize jq
-        String classpath = System.getProperty("java.class.path");
-        PrimordialClassLoader.loader.initClasspath(classpath);
+        String classpath = System.getProperty("java.class.path")+
+                           System.getProperty("path.separator")+
+                           System.getProperty("sun.boot.class.path");
+        PrimordialClassLoader.loader.addToClasspath(classpath);
         jq_Class c = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType(classname);
         System.out.println("Loading "+c+"...");
         c.load();

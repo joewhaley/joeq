@@ -347,13 +347,10 @@ public class ReflectiveInterpreter extends Interpreter {
             public jq_Type getType(Object o) { return Reflection.getJQType(o.getClass()); }
         });
         
-        /*
-        String classpath = "ClassLib"+System.getProperty("file.separator")+
-                           "sun13"+System.getProperty("path.separator")+
-                           System.getProperty("java.class.path");
-        */
-        String classpath = System.getProperty("java.class.path");
-        PrimordialClassLoader.loader.initClasspath(classpath);
+        String classpath = System.getProperty("java.class.path")+
+                           System.getProperty("path.separator")+
+                           System.getProperty("sun.boot.class.path");
+        PrimordialClassLoader.loader.addToClasspath(classpath);
         
         jq_Class c = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("L"+rootMethodClassName.replace('.','/')+";");
         c.load(); c.verify(); c.prepare(); c.sf_initialize(); c.cls_initialize();
