@@ -54,12 +54,26 @@ public abstract class Driver {
     }
 
     static List classesToProcess = new LinkedList();
+    static boolean trace_bb = false;
+    static boolean trace_method = false;
+    static boolean trace_type = false;
     
     public static int processCommand(String[] commandBuffer, int index) {
         try {
             if (commandBuffer[index].equalsIgnoreCase("addtoclasspath")) {
                 String path = commandBuffer[++index];
                 PrimordialClassLoader.loader.addToClasspath(path);
+            } else if (commandBuffer[index].equalsIgnoreCase("trace")) {
+                String which = commandBuffer[++index];
+                if (which.equalsIgnoreCase("bb")) {
+                    trace_bb = true;
+                } else if (which.equalsIgnoreCase("method")) {
+                    trace_method = true;
+                } else if (which.equalsIgnoreCase("type")) {
+                    trace_type = true;
+                } else {
+                    System.err.println("Unknown trace option "+which);
+                }
             } else if (commandBuffer[index].equalsIgnoreCase("class")) {
                 String canonicalClassName = canonicalizeClassName(commandBuffer[++index]);
                 try {
@@ -72,9 +86,10 @@ public abstract class Driver {
             } else if (commandBuffer[index].equalsIgnoreCase("runpass")) {
                 String passname = commandBuffer[++index];
                 jq_TypeVisitor cv = null; jq_MethodVisitor mv = null; BasicBlockVisitor bbv = null; QuadVisitor qv = null;
+                Object o;
                 try {
                     Class c = Class.forName(passname);
-                    Object o = c.newInstance();
+                    o = c.newInstance();
                     if (o instanceof jq_TypeVisitor) {
                         cv = (jq_TypeVisitor)o;
                     } else {
@@ -90,11 +105,11 @@ public abstract class Driver {
                                     System.err.println("Unknown pass type "+c);
                                     return index;
                                 }
-                                bbv = new QuadVisitor.AllQuadVisitor(qv);
+                                bbv = new QuadVisitor.AllQuadVisitor(qv, trace_bb);
                             }
-                            mv = new BasicBlockVisitor.AllBasicBlockVisitor(bbv);
+                            mv = new BasicBlockVisitor.AllBasicBlockVisitor(bbv, trace_method);
                         }
-                        cv = new jq_MethodVisitor.DeclaredMethodVisitor(mv);
+                        cv = new jq_MethodVisitor.DeclaredMethodVisitor(mv, trace_type);
                     }
                 } catch (java.lang.ClassNotFoundException x) {
                     System.err.println("Cannot find pass named "+passname+".");
@@ -105,12 +120,14 @@ public abstract class Driver {
                     return index;
                 } catch (java.lang.IllegalAccessException x) {
                     System.err.println("Cannot access pass "+passname+": "+x);
+                    System.err.println("Be sure that you made your class public?");
                     return index;
                 }
                 for (Iterator i = classesToProcess.iterator(); i.hasNext(); ) {
                     jq_Type t = (jq_Type)i.next();
                     t.accept(cv);
                 }
+                System.out.println("Completed pass! "+o);
             } else if (commandBuffer[index].equalsIgnoreCase("exit") || commandBuffer[index].equalsIgnoreCase("quit")) {
                 System.exit(0);
             } else {
