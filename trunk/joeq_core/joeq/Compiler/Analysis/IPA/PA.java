@@ -96,6 +96,7 @@ public class PA {
     
     int V_BITS=17, I_BITS=16, H_BITS=15, Z_BITS=5, F_BITS=12, T_BITS=12, N_BITS=13, M_BITS=14;
     int VC_BITS=1, HC_BITS=1;
+    int MAX_VC_BITS = Integer.parseInt(System.getProperty("pa.maxvc", "40"));
     int MAX_HC_BITS = Integer.parseInt(System.getProperty("pa.maxhc", "6"));
     
     IndexMap/*Node*/ Vmap;
@@ -511,6 +512,15 @@ public class PA {
         return r;
     }
     
+    public BDD getV1H1Context(jq_Method m) {
+        if (V1H1correspondence != null)
+            return (BDD) V1H1correspondence.get(m);
+        Range r1 = vCnumbering.getRange(m);
+        BDD b = V1c.varRange(r1.low.longValue(), r1.high.longValue());
+        b.andWith(H1c.ithVar(0));
+        return b;
+    }
+    
     public void visitMethod(jq_Method m) {
         if (visitedMethods.contains(m)) return;
         visitedMethods.add(m);
@@ -528,7 +538,7 @@ public class PA {
             int bits = BigInteger.valueOf(n1.longValue()).bitLength();
             V1V2context = V1c.buildAdd(V2c, bits, 0L);
             V1V2context.andWith(V1c.varRange(0, n1.longValue()-1));
-            V1H1context = (BDD) V1H1correspondence.get(m);
+            V1H1context = getV1H1Context(m);
         }
         
         if (m.isSynchronized()) {
@@ -1328,7 +1338,9 @@ public class PA {
         System.out.print("Counting size of call graph...");
         long time = System.currentTimeMillis();
         vCnumbering = countCallGraph(cg);
-        hCnumbering = countHeapNumbering(cg);
+        if (CONTEXT_SENSITIVE && MAX_HC_BITS > 1) {
+            hCnumbering = countHeapNumbering(cg);
+        }
         time = System.currentTimeMillis() - time;
         System.out.println("done. ("+time/1000.+" seconds)");
     }
@@ -1374,7 +1386,7 @@ public class PA {
             time = System.currentTimeMillis() - time;
             System.out.println("done. ("+time/1000.+" seconds)");
             
-            if (CONTEXT_SENSITIVE) {
+            if (CONTEXT_SENSITIVE && HC_BITS > 1) {
                 System.out.print("Building var-heap context correspondence...");
                 time = System.currentTimeMillis();
                 buildVarHeapCorrespondence(cg);
@@ -1659,7 +1671,7 @@ public class PA {
         }
         System.out.println();
         System.out.println("Methods="+methods+" Bytecodes="+bcodes+" Call sites="+calls);
-        PathNumbering pn = new PathNumbering();
+        PathNumbering pn = new PathNumbering(varPathSelector);
         System.out.println("Thread runs="+thread_runs);
         Map initialCounts = new ThreadRootMap(thread_runs);
         BigInteger paths = (BigInteger) pn.countPaths(cg.getRoots(), cg.getCallSiteNavigator(), initialCounts);
@@ -1671,14 +1683,35 @@ public class PA {
         T_BITS = BigInteger.valueOf(classes.size()+64).bitLength();
         N_BITS = I_BITS;
         M_BITS = BigInteger.valueOf(methods).bitLength() + 1;
-        VC_BITS = paths.bitLength();
-        VC_BITS = Math.min(60, VC_BITS);
+        if (CONTEXT_SENSITIVE) {
+            VC_BITS = paths.bitLength();
+            VC_BITS = Math.min(MAX_VC_BITS, VC_BITS);
+        }
         System.out.println(" V="+V_BITS+" I="+I_BITS+" H="+H_BITS+
                            " F="+F_BITS+" T="+T_BITS+" N="+N_BITS+
                            " M="+M_BITS+" VC="+VC_BITS);
         return pn;
     }
 
+    public final VarPathSelector varPathSelector = new VarPathSelector(MAX_VC_BITS);
+    
+    public static class VarPathSelector implements Selector {
+
+        int maxBits;
+        
+        VarPathSelector(int max_bits) {
+            this.maxBits = max_bits;
+        }
+        
+        /* (non-Javadoc)
+         * @see Util.Graphs.PathNumbering.Selector#isImportant(Util.Graphs.SCComponent, Util.Graphs.SCComponent)
+         */
+        public boolean isImportant(SCComponent scc1, SCComponent scc2, BigInteger num) {
+            if (num.bitLength() > maxBits) return false;
+            return true;
+        }
+    }
+    
     public final HeapPathSelector heapPathSelector = new HeapPathSelector();
     
     public class HeapPathSelector implements Selector {
@@ -1726,8 +1759,11 @@ public class PA {
         PathNumbering pn = new PathNumbering(heapPathSelector);
         Map initialCounts = new ThreadRootMap(thread_runs);
         BigInteger paths = (BigInteger) pn.countPaths(cg.getRoots(), cg.getCallSiteNavigator(), initialCounts);
-        HC_BITS = paths.bitLength();
-        System.out.println("Heap context bits="+HC_BITS);
+        System.out.println("Number of paths for heap context sensitivity: "+paths);
+        if (CONTEXT_SENSITIVE) {
+            HC_BITS = paths.bitLength();
+            System.out.println("Heap context bits="+HC_BITS);
+        }
         return pn;
     }
     
