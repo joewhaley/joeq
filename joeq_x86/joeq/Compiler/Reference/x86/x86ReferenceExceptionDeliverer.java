@@ -35,7 +35,7 @@ public class x86ReferenceExceptionDeliverer extends ExceptionDeliverer {
         // push exception object there
         Unsafe.poke4(sp, Unsafe.addressOf(x));
         // branch!
-        Unsafe.switchRegisterState(ip, fp, sp);
+        Unsafe.switchRegisterState(ip, fp, sp, 0);
     }
 
 }
