@@ -3,7 +3,7 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="src" path=""/>
 	<classpathentry kind="lib" path="joeq/Support/java14.jar"/>
-	<classpathentry exported="true" kind="lib" path="joeq/Support/javabdd_0.6.jar"/>
 	<classpathentry exported="true" kind="lib" path="joeq/Support/jwutil-1.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="joeq/Support/javabdd.jar"/>
 	<classpathentry kind="output" path=""/>
 </classpath>

@@ -8,14 +8,15 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Set;
+import java.math.BigInteger;
 import joeq.Class.jq_Field;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_Type;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.Node;
 import jwutil.util.Assert;
-import org.sf.javabdd.BDD;
-import org.sf.javabdd.BDDDomain;
-import org.sf.javabdd.TypedBDDFactory.TypedBDD;
+import net.sf.javabdd.BDD;
+import net.sf.javabdd.BDDDomain;
+import net.sf.javabdd.TypedBDDFactory.TypedBDD;
 
 /**
  * A helper class for PAResults.
@@ -88,10 +89,10 @@ public class PAResultSelector {
     }
     
     public Node getNode(TypedBDD var) {              
-        long[] indeces = r.V1.getVarIndices(var);
+        BigInteger[] indeces = r.V1.getVarIndices(var);
         Assert._assert(indeces.length == 1, "There are " + indeces.length + " indeces in " + var.toStringWithDomains());
-        long index = indeces[0];        
-        Node node = _results.getVariableNode((int)index);
+        BigInteger index = indeces[0];        
+        Node node = _results.getVariableNode(index.intValue());
         
         return node;
     }
@@ -240,10 +241,10 @@ public class PAResultSelector {
         for(Iterator typeIter = typesOfH2.iterator(); typeIter.hasNext();) {
             TypedBDD typeBDD = (TypedBDD)((TypedBDD)typeIter.next()); // T
             
-            long[] indeces = r.T1.getVarIndices(typeBDD);
+            BigInteger[] indeces = r.T1.getVarIndices(typeBDD);
             Assert._assert(indeces.length == 1, "There are " + indeces.length + " indeces in " + typeBDD.toStringWithDomains());
-            long index = indeces[0];        
-            jq_Type type = r.getResults().getType((int)index);
+            BigInteger index = indeces[0];        
+            jq_Type type = r.getResults().getType(index.intValue());
             Assert._assert(type != null);
             
             result.add(type);

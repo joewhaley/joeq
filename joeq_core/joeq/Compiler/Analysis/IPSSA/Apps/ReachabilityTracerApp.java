@@ -14,7 +14,7 @@ import joeq.Compiler.Analysis.IPSSA.Utils.AnalysisObjectSpec;
 import joeq.Compiler.Analysis.IPSSA.Utils.ReachabilityTrace;
 import joeq.Compiler.Analysis.IPSSA.Utils.AnalysisObjectSpec.UnknownAnalysisObjectExeption;
 import jwutil.util.Assert;
-import org.sf.javabdd.TypedBDDFactory.TypedBDD;
+import net.sf.javabdd.TypedBDDFactory.TypedBDD;
 
 /**
  * @author V.Benjamin Livshits

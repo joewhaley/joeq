@@ -9,7 +9,7 @@ import joeq.Compiler.Analysis.IPA.PAResultSelector;
 import joeq.Compiler.Analysis.IPSSA.IPSSABuilder;
 import joeq.Compiler.Analysis.IPSSA.SSADefinition;
 import jwutil.util.Assert;
-import org.sf.javabdd.TypedBDDFactory.TypedBDD;
+import net.sf.javabdd.TypedBDDFactory.TypedBDD;
 
 /**
  * Allows referring to analysis objects in a simple textual fashion.
