@@ -28,7 +28,6 @@ import Clazz.jq_Type;
 import Compil3r.Quad.AndersenInterface.AndersenField;
 import Compil3r.Quad.AndersenInterface.AndersenMethod;
 import Compil3r.Quad.AndersenInterface.AndersenReference;
-import Compil3r.Quad.AndersenInterface.AndersenType;
 import Compil3r.Quad.BytecodeToQuad.jq_ReturnAddressType;
 import Compil3r.Quad.Operand.AConstOperand;
 import Compil3r.Quad.Operand.ParamListOperand;
