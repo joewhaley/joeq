@@ -1478,17 +1478,6 @@ public class CSPointerAnalysis extends Solver {
     public final ToString ts = new ToString();
     public class ToString extends BDD.BDDToString {
         ToString() { super(); }
-        public String domainName(int i) {
-            switch (i) {
-            case 0: return "V1";
-            case 1: return "V2";
-            case 2: return "V3";
-            case 3: return "FD";
-            case 4: return "H1";
-            case 5: return "H2";
-            default: throw new InternalError();
-            }
-        }
         public String elementName(int i, int j) {
             switch (i) {
             case 0: 

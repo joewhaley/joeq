@@ -1277,16 +1277,6 @@ public class FullyContextSensitiveBDD {
     public final ToString ts = new ToString();
     public class ToString extends BDD.BDDToString {
         ToString() { super(); }
-        public String domainName(int i) {
-            switch (i) {
-            case 0: return "V1";
-            case 1: return "V2";
-            case 2: return "V3";
-            case 3: return "V4";
-            case 4: return "FD";
-            default: throw new InternalError();
-            }
-        }
         public String elementName(int i, int j) {
             switch (i) {
             case 0: 
