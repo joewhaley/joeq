@@ -137,11 +137,11 @@ public abstract class Solver {
     }
     
     FieldDomain readFieldDomain(StringTokenizer st) throws IOException {
-        String name = st.nextToken();
-        long size = Long.parseLong(st.nextToken());
+        String name = nextToken(st);
+        long size = Long.parseLong(nextToken(st));
         FieldDomain fd = new FieldDomain(name, size);
         if (st.hasMoreTokens()) {
-            String mapName = st.nextToken();
+            String mapName = nextToken(st);
             DataInputStream dis = new DataInputStream(new FileInputStream(mapName));
             fd.loadMap(dis);
             dis.close();
@@ -161,34 +161,41 @@ public abstract class Solver {
             if (s == null) break;
             if (s.length() == 0) continue;
             if (s.startsWith("#")) continue;
-            StringTokenizer st = new StringTokenizer(s);
+            StringTokenizer st = new StringTokenizer(s, " (:,)", true);
             Relation r = parseRelation(st);
             if (TRACE) out.println("Loaded relation "+r);
             nameToRelation.put(r.name, r);
         }
     }
     
+    static String nextToken(StringTokenizer st) {
+        String s;
+        do {
+            s = st.nextToken();
+        } while (s.equals(" "));
+        return s;
+    }
+    
     Relation parseRelation(StringTokenizer st) {
-        String name = st.nextToken();
-        String openParen = st.nextToken();
-        if (!openParen.equals("(")) throw new IllegalArgumentException();
+        String name = nextToken(st);
+        String openParen = nextToken(st);
         List fieldNames = new LinkedList();
         List fieldDomains = new LinkedList();
         List fieldOptions = new LinkedList();
         
         for (;;) {
-            String fName = st.nextToken();
+            String fName = nextToken(st);
             fieldNames.add(fName);
-            String colon = st.nextToken();
+            String colon = nextToken(st);
             if (!colon.equals(":")) throw new IllegalArgumentException("Expected \":\", got \""+colon+"\"");
-            String fdName = st.nextToken();
+            String fdName = nextToken(st);
             FieldDomain fd = getFieldDomain(fdName);
             if (fd == null) throw new IllegalArgumentException("Unknown field domain "+fdName);
             fieldDomains.add(fd);
-            String comma = st.nextToken();
-            if (comma.startsWith("bdd:")) {
+            String comma = nextToken(st);
+            if (comma.startsWith("bdd=")) {
                 fieldOptions.add(comma.substring(4));
-                comma = st.nextToken();
+                comma = nextToken(st);
             } else {
                 fieldOptions.add("");
             }
@@ -197,7 +204,7 @@ public abstract class Solver {
         }
         Relation r = createRelation(name, fieldNames, fieldDomains, fieldOptions);
         while (st.hasMoreTokens()) {
-            String option = st.nextToken();
+            String option = nextToken(st);
             if (option.equals("save")) {
                 relationsToDump.add(r);
             } else if (option.equals("savenot")) {
@@ -222,7 +229,7 @@ public abstract class Solver {
             if (s == null) break;
             if (s.length() == 0) continue;
             if (s.startsWith("#")) continue;
-            StringTokenizer st = new StringTokenizer(s);
+            StringTokenizer st = new StringTokenizer(s, " (:,/)", true);
             InferenceRule r = parseRule(st);
             if (TRACE) out.println("Loaded rule(s) "+r);
             rules.add(r);
@@ -235,7 +242,7 @@ public abstract class Solver {
         for (;;) {
             RuleTerm rt = parseRuleTerm(nameToVar, st);
             terms.add(rt);
-            String sep = st.nextToken();
+            String sep = nextToken(st);
             if (sep.equals("/")) break;
             if (!sep.equals(",")) throw new IllegalArgumentException();
         }
@@ -245,11 +252,11 @@ public abstract class Solver {
     }
     
     RuleTerm parseRuleTerm(Map/*<String,Variable>*/ nameToVar, StringTokenizer st) {
-        String openParen = st.nextToken();
+        String openParen = nextToken(st);
         if (!openParen.equals("(")) throw new IllegalArgumentException("Expected '(', got '"+openParen+"'");
         List/*<Object>*/ vars = new LinkedList();
         for (;;) {
-            String varName = st.nextToken();
+            String varName = nextToken(st);
             char firstChar = varName.charAt(0);
             Object var;
             if (firstChar >= '0' && firstChar <= '9') {
@@ -265,13 +272,13 @@ public abstract class Solver {
             }
             if (vars.contains(var)) throw new IllegalArgumentException("Duplicate variable "+var);
             vars.add(var);
-            String sep = st.nextToken();
+            String sep = nextToken(st);
             if (sep.equals(")")) break;
             if (!sep.equals(",")) throw new IllegalArgumentException("Expected ',' or ')', got '"+sep+"'");
         }
-        String in = st.nextToken();
+        String in = nextToken(st);
         if (!in.equals("in")) throw new IllegalArgumentException();
-        String relationName = st.nextToken();
+        String relationName = nextToken(st);
         Relation r = getRelation(relationName);
         if (r == null) throw new IllegalArgumentException("Unknown relation "+relationName);
         if (r.fieldDomains.size() != vars.size()) throw new IllegalArgumentException();

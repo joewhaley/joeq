@@ -29,11 +29,10 @@ public class RuleTerm {
     
     public String toString() {
         StringBuffer sb = new StringBuffer();
-        sb.append("( ");
+        sb.append("(");
         for (Iterator i = variables.iterator(); i.hasNext(); ) {
             sb.append(i.next());
-            sb.append(" ");
-            if (i.hasNext()) sb.append(", ");
+            if (i.hasNext()) sb.append(",");
         }
         sb.append(") in ");
         sb.append(relation);

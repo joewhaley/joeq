@@ -2357,7 +2357,7 @@ public class PA {
         bdd.save(dumpfilename+".A", A);
         System.out.println("vP: "+(long) vP.satCount(V1H1set)+" relations, "+vP.nodeCount()+" nodes");
         bdd.save(dumpfilename+".vP", vP);
-        BuildBDDIR.dumpTuples(bdd, dumpfilename+".vP.tuples", vP);
+        //BuildBDDIR.dumpTuples(bdd, dumpfilename+".vP.tuples", vP);
         System.out.println("S: "+(long) S.satCount(V1FV2set)+" relations, "+S.nodeCount()+" nodes");
         bdd.save(dumpfilename+".S", S);
         System.out.println("L: "+(long) L.satCount(V1FV2set)+" relations, "+L.nodeCount()+" nodes");
@@ -2391,7 +2391,7 @@ public class PA {
         
         System.out.println("hP: "+(long) hP.satCount(H1FH2set)+" relations, "+hP.nodeCount()+" nodes");
         bdd.save(dumpfilename+".hP", hP);
-        BuildBDDIR.dumpTuples(bdd, dumpfilename+".hP.tuples", hP);
+        //BuildBDDIR.dumpTuples(bdd, dumpfilename+".hP.tuples", hP);
         System.out.println("IE: "+(long) IE.satCount(IMset)+" relations, "+IE.nodeCount()+" nodes");
         bdd.save(dumpfilename+".IE", IE);
         BuildBDDIR.dumpTuples(bdd, dumpfilename+".IE.tuples", IE);
