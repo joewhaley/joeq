@@ -2775,7 +2775,7 @@ public class PA {
                     n instanceof ConcreteObjectNode) {
                     ++heaps;
                     jq_Reference type = n.getDeclaredType(); 
-                    if (type != null) {
+                    if (type != null && type != jq_NullType.NULL_TYPE) {
                         type.prepare();
                         if (type.isSubtypeOf(jlt) ||
                             type.isSubtypeOf(jlr)) {
