@@ -13,6 +13,7 @@ import MethodSummary.PassedParameter;
 import MethodSummary.Node;
 import MethodSummary.ConcreteTypeNode;
 import MethodSummary.OutsideNode;
+import MethodSummary.GlobalNode;
 import MethodSummary.FieldNode;
 import MethodSummary.ParamNode;
 import MethodSummary.ReturnValueNode;
@@ -38,6 +39,7 @@ public class AndersenPointerAnalysis {
 
     public static java.io.PrintStream out = System.out;
     public static final boolean TRACE = true;
+    public static final boolean TRACE_SETS = true;
 
     public static final class AndersenVisitor implements ControlFlowGraphVisitor {
         public void visitCFG(ControlFlowGraph cfg) {
@@ -266,15 +268,37 @@ public class AndersenPointerAnalysis {
                 addMapping(node2, ap_result);
             }
         }
-        for (Iterator i=node.getAccessPathEdges().iterator(); i.hasNext(); ) {
-            Map.Entry e = (Map.Entry)i.next();
-            jq_Field f = (jq_Field)e.getKey();
-            SetOfNodes result = nodes.getAllEdges(f, null);
-            HashSet s = new HashSet();
-            node.getEdges(f, s);
-            result = new SetOfNodes(s, result);
-            Node node2 = (Node)e.getValue();
-            addMapping(node2, result);
+        if (node instanceof GlobalNode) {
+            for (Iterator i=node.getAccessPathEdges().iterator(); i.hasNext(); ) {
+                Map.Entry e = (Map.Entry)i.next();
+                jq_Field f = (jq_Field)e.getKey();
+                SetOfNodes result = nodes.getAllEdges(f, null);
+                HashSet s = new HashSet();
+                node.getEdges(f, s);
+                result = new SetOfNodes(s, result);
+                Object o = e.getValue();
+                if (o instanceof HashSet) {
+                    HashSet set = (HashSet)o;
+                    for (Iterator j=set.iterator(); j.hasNext(); ) {
+                        Node node2 = (Node)j.next();
+                        addMapping(node2, result);
+                    }
+                } else {
+                    Node node2 = (Node)o;
+                    addMapping(node2, result);
+                }
+            }
+        } else {
+            for (Iterator i=node.getAccessPathEdges().iterator(); i.hasNext(); ) {
+                Map.Entry e = (Map.Entry)i.next();
+                jq_Field f = (jq_Field)e.getKey();
+                SetOfNodes result = nodes.getAllEdges(f, null);
+                HashSet s = new HashSet();
+                node.getEdges(f, s);
+                result = new SetOfNodes(s, result);
+                Node node2 = (Node)e.getValue();
+                addMapping(node2, result);
+            }
         }
     }
 
@@ -315,6 +339,54 @@ public class AndersenPointerAnalysis {
             }
             return change;
         }
+
+        private String toString_addr() { return jq.hex(System.identityHashCode(this)); }
+            
+        private static String dumpSetContents(Set s) {
+            if (s == null) return "{}";
+            StringBuffer sb = new StringBuffer();
+            sb.append('{');
+            Iterator i=s.iterator();
+            if (i.hasNext()) {
+                sb.append(jq.hex(System.identityHashCode(i.next())));
+                while (i.hasNext()) {
+                    sb.append(',');
+                    sb.append(jq.hex(System.identityHashCode(i.next())));
+                }
+            }
+            sb.append('}');
+            return sb.toString();
+        }
+
+        private String toString_full() {
+            StringBuffer sb = new StringBuffer();
+            sb.append("Set ");
+            sb.append(this.toString_addr());
+            if (skip != null) {
+                sb.append(" skip=");
+                sb.append(this.skip.toString_addr());
+                return sb.toString();
+            }
+            sb.append(" nodes ");
+            sb.append(dumpSetContents(set));
+            sb.append(" contains ");
+            sb.append(dumpSetContents(contains));
+            sb.append(" types ");
+            sb.append(types.toString());
+            if (listeners != null) {
+                sb.append(" listeners ");
+                sb.append(listeners.toString());
+            }
+            if (dirty_fields != null) {
+                sb.append(" dirty_fields ");
+                sb.append(dirty_fields.toString());
+            }
+            if (back_pointers != null) {
+                sb.append(" back_pointers ");
+                sb.append(back_pointers.toString());
+            }
+            return sb.toString();
+        }
         
         SetOfNodes(HashSet set) { this(set, (LinkedHashSet)null); }
         SetOfNodes(LinkedHashSet contains) { this((HashSet)null, contains); }
@@ -323,6 +395,7 @@ public class AndersenPointerAnalysis {
             getTypes(set, this.types = new HashSet());
             this.contains.add(next);
             next.addBackPointer(this); this.addTypes(next.types);
+            if (TRACE_SETS) out.println("Constructed "+this.toString_full());
         }
         SetOfNodes(HashSet set, LinkedHashSet contains) {
             this.set = set; this.contains = contains;
@@ -333,6 +406,7 @@ public class AndersenPointerAnalysis {
                     son.addBackPointer(this); this.addTypes(son.types);
                 }
             }
+            if (TRACE_SETS) out.println("Constructed "+this.toString_full());
         }
 
         public boolean equals(Object o) {
@@ -355,6 +429,7 @@ public class AndersenPointerAnalysis {
         Set getNodeTypes() { return types; }
         
         void addBackPointer(SetOfNodes that) {
+            if (TRACE_SETS) out.println("Adding back pointer from "+this.toString_addr()+" to "+that.toString_addr());
             if (back_pointers == null) back_pointers = new HashSet();
             back_pointers.add(that);
         }
@@ -371,6 +446,7 @@ public class AndersenPointerAnalysis {
             if (this.set != null) {
                 getTouchedFields(this.set, result);
             }
+            if (TRACE_SETS) out.println(this.toString_addr()+": getting the touched fields, current is "+result);
             if (this.contains != null) {
                 for (Iterator i=this.contains.iterator(); i.hasNext(); ) {
                     SetOfNodes son = (SetOfNodes)i.next();
@@ -380,6 +456,7 @@ public class AndersenPointerAnalysis {
         }
         
         boolean setSkip(SetOfNodes s, HashSet bad_fields) {
+            if (TRACE_SETS) out.println(this.toString_addr()+": setting the skip to "+s.toString_addr());
             boolean change = false;
             this.ap_cache = null; this.all_cache = null;
             if (this.set != null) {
@@ -388,6 +465,7 @@ public class AndersenPointerAnalysis {
                     boolean c = s.set.add(o);
                     if (c) {
                         Node n = (Node)o;
+                        if (TRACE_SETS) out.println("added new node "+n+" to the local set of "+s.toString_addr()+", marking the fields as bad: "+n.getEdgeFields()+", "+n.getAccessPathEdgeFields());
                         bad_fields.addAll(n.getEdgeFields());
                         bad_fields.addAll(n.getAccessPathEdgeFields());
                         change = true;
@@ -399,29 +477,41 @@ public class AndersenPointerAnalysis {
                     SetOfNodes son = (SetOfNodes)i.next();
                     boolean c = s.contains.add(son);
                     if (c) {
+                        if (TRACE_SETS) out.println("added new set "+son.toString_addr()+" to the contains set of "+s.toString_addr()+", marking the fields as bad");
                         son.getTouchedFields(bad_fields);
                         change = true;
                     }
+                    if (TRACE_SETS) out.println(son.toString_addr()+": replacing back pointer "+this.toString_addr()+" with "+s.toString_addr());
                     son.back_pointers.remove(this);
                     son.back_pointers.add(s);
                 }
             }
+            if (TRACE_SETS) out.println("adding types of "+this.toString_addr()+"="+this.types+" to "+s.toString_addr());
             s.addTypes(this.types);
             this.skip = s;
             return change;
         }
 
         void backPropagateDirtyFields(HashSet bad_fields) {
-            // only need to do ap_cache because it subsumes all_cache
+            if (this.skip != null) { this.skip.backPropagateDirtyFields(bad_fields); return; }
+            if (TRACE_SETS) out.println("back propagating dirty fields "+bad_fields+" to "+this.toString_addr());
             if (ap_cache == null) return;
             for (Iterator i=bad_fields.iterator(); i.hasNext(); ) {
-                if (ap_cache.containsKey(i.next()))
+                Object o = i.next();
+                if (ap_cache.containsKey(o)) {
+                    if (TRACE_SETS) out.println(this.toString_addr()+": removing entry for field "+o+" from ap_cache");
                     i.remove();
+                }
+                if (all_cache != null && all_cache.containsKey(o)) {
+                    if (TRACE_SETS) out.println(this.toString_addr()+": removing entry for field "+o+" from all_cache");
+                    all_cache.remove(o);
+                }
             }
-            if (this.dirty_fields == null)
+            if (this.dirty_fields == null) {
                 this.dirty_fields = bad_fields;
-            else {
+            } else {
                 bad_fields.removeAll(this.dirty_fields);
+                if (TRACE_SETS) out.println(this.toString_addr()+": new dirty fields: "+bad_fields);
                 this.dirty_fields.addAll(bad_fields);
             }
             if (bad_fields.isEmpty()) return;
@@ -434,14 +524,18 @@ public class AndersenPointerAnalysis {
         }
         
         void addTypes(HashSet types) {
+            if (this.skip != null) { this.skip.addTypes(types); return; }
+            if (TRACE_SETS) out.println(this.toString_addr()+": adding types "+types);
             for (Iterator i=types.iterator(); i.hasNext(); ) {
                 Object o = i.next();
-                jq.assert(o instanceof jq_Reference);
+                jq_Reference r = (jq_Reference)o;
                 if (this.types.contains(o)) {
+                    if (TRACE_SETS) out.println(this.toString_addr()+": already contains type "+r);
                     i.remove();
                 } else {
-                    checkTypeListeners((jq_Reference)o);
-                    this.types.add(o);
+                    if (TRACE_SETS) out.println(this.toString_addr()+": new type "+r);
+                    checkTypeListeners(r);
+                    this.types.add(r);
                 }
             }
             if (types.isEmpty()) return;
@@ -454,13 +548,17 @@ public class AndersenPointerAnalysis {
         }
         
         void addTypeListener(CallTargetListener ctl) {
+            if (this.skip != null) { this.skip.addTypeListener(ctl); return; }
             if (listeners == null)
                 listeners = new HashSet();
+            if (TRACE_SETS) out.println(this.toString_addr()+": adding listener "+ctl);
             listeners.add(ctl);
         }
         
         void checkTypeListeners(jq_Reference new_type) {
+            if (this.skip != null) { this.skip.checkTypeListeners(new_type); return; }
             if (listeners == null) return;
+            if (TRACE_SETS) out.println(this.toString_addr()+": checking for listener for new class "+new_type);
             for (Iterator i=listeners.iterator(); i.hasNext(); ) {
                 CallTargetListener cs = (CallTargetListener)i.next();
                 // check if the new type gives us a new call target.
@@ -470,14 +568,21 @@ public class AndersenPointerAnalysis {
         
         SetOfNodes getAccessPathEdges(jq_Field f, Path p) {
             if (this.skip != null) return this.skip.getAccessPathEdges(f, p);
+            if (TRACE_SETS) out.println(this.toString_addr()+": getting ap edges "+f);
             if (this.onPath) {
+                if (TRACE_SETS) out.println(this.toString_addr()+": cycle detected! path="+p);
                 SetOfNodes son;
                 boolean change = false;
                 HashSet bad_fields = new HashSet();
                 while (p != null) {
                     son = p.car();
-                    if (son != this)
-                        if (son.setSkip(this, bad_fields)) change = true;
+                    if (TRACE_SETS) out.println("next in path: "+son.toString_addr());
+                    if (son != this) {
+                        if (son.setSkip(this, bad_fields)) {
+                            if (TRACE_SETS) out.println("change when setting skip on "+son.toString_addr()+", bad fields="+bad_fields);
+                            change = true;
+                        }
+                    }
                     p = p.cdr();
                 }
                 // change flag is redundant: if change is false, bad_fields will always be empty.
@@ -493,23 +598,33 @@ public class AndersenPointerAnalysis {
                 if (sr != null) {
                     son = (SetOfNodes)sr.get();
                     if (son != null) {
+                        if (TRACE_SETS) out.println(this.toString_addr()+": ap_cache contains entry for "+f+": "+son.toString_addr());
                         if (dirty_fields != null) {
-                            if (!dirty_fields.contains(f))
+                            if (!dirty_fields.contains(f)) {
                                 return son;
+                            } else {
+                                if (TRACE_SETS) out.println(this.toString_addr()+": field "+f+" is dirty! recalculating.");
+                            }
                         }
                     }
                 }
             } else {
+                if (TRACE_SETS) out.println(this.toString_addr()+": allocating ap_cache");
                 ap_cache = new HashMap();
             }
-            if (dirty_fields != null) dirty_fields.remove(f);
+            if (dirty_fields != null) {
+                if (TRACE_SETS) out.println(this.toString_addr()+": removing field "+f+" from the dirty set");
+                dirty_fields.remove(f);
+            }
             HashSet my_result;
             if (set != null) {
                 my_result = new HashSet();
+                if (TRACE_SETS) out.println(this.toString_addr()+": getting the ap edges on field "+f+" of local nodes "+set);
                 for (Iterator i=set.iterator(); i.hasNext(); ) {
                     Node n = (Node)i.next();
                     n.getAccessPathEdges(f, my_result);
                 }
+                if (TRACE_SETS) out.println(this.toString_addr()+": result on local nodes: "+my_result);
             } else {
                 my_result = null;
             }
@@ -519,6 +634,7 @@ public class AndersenPointerAnalysis {
                 int j=0;
                 p = new Path(this, p);
                 LinkedHashSet my_contains = contains;
+                if (TRACE_SETS) out.println(this.toString_addr()+": getting the ap edges on field "+f+" of children "+dumpSetContents(my_contains));
                 for (Iterator i=my_contains.iterator(); i.hasNext(); ) {
                     SetOfNodes n = (SetOfNodes)i.next(); ++j;
                     int size = my_contains.size();
@@ -526,10 +642,14 @@ public class AndersenPointerAnalysis {
                     SetOfNodes o = n.getAccessPathEdges(f, p);
                     this.onPath = false;
                     if (size != my_contains.size()) {
+                        if (TRACE_SETS) out.println(this.toString_addr()+": size of contains set changed ("+size+" to "+my_contains.size()+"), redoing iterator");
                         i = my_contains.iterator();
                         for (int k=0; k<j; ++k) i.next();
                     }
-                    if (o != null && !o.isEmpty()) child_results.add(o);
+                    if (TRACE_SETS) out.println(this.toString_addr()+": adding "+o.toString_addr()+" to child results");
+                    if (o != null && !o.isEmpty()) {
+                        child_results.add(o);
+                    }
                 }
                 if (child_results.isEmpty()) child_results = null;
             } else {
@@ -539,11 +659,13 @@ public class AndersenPointerAnalysis {
             if (son == null) {
                 son = son2;
             } else {
+                if (TRACE_SETS) out.println("adding new results to existing results "+son.toString_addr());
                 son.addAll(son2);
             }
             if (ap_cache != null) {
                 sr = new java.lang.ref.SoftReference(son);
                 ap_cache.put(f, sr);
+                if (TRACE_SETS) out.println("putting results "+son.toString_addr()+" into ap cache for field "+f);
             }
             return son;
         }
