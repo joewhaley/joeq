@@ -62,6 +62,7 @@ public class x86Assembler implements x86Constants {
 
     public x86Assembler(int num_targets, int est_size) {
         mc = CodeAllocator.DEFAULT.getCodeBuffer(est_size);
+        if (TRACE) System.out.println("Assembler start address: "+jq.hex8(mc.getCurrentAddress()));
         branchtargetmap = new HashMap();
         branches_to_patch = new LightRelation();
     }
