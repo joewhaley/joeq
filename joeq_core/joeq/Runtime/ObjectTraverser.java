@@ -222,35 +222,10 @@ public class ObjectTraverser {
         }
         if (c == java.util.zip.ZipFile.class) {
             if (fieldName.equals("raf")) {
-                /*
-                Object[] o2 = (Object[])mapped_objects.get(o);
-                if (o2 != null) {
-                    if (o2[0] != null) return o2[0];
-                } else {
-                    mapped_objects.put(o, o2 = new Object[2]);
-                }
-                String name = ((java.util.zip.ZipFile)o).getName();
-                return o2[0] = new java.io.RandomAccessFile(name);
-                 */
                 Object[] o2 = (Object[])mapped_objects.get(o);
                 return o2[0];
             }
             if (fieldName.equals("entries")) {
-                /*
-                Object[] o2 = (Object[])mapped_objects.get(o);
-                if (o2 != null) {
-                    if (o2[1] != null) return o2[1];
-                } else {
-                    mapped_objects.put(o, o2 = new Object[2]);
-                }
-                Enumeration e = ((java.util.zip.ZipFile)o).entries();
-                Hashtable entries = new Hashtable();
-                while (e.hasNext()) {
-                    java.util.zip.ZipEntry ze = (java.util.zip.ZipEntry)e.next();
-                    entries.put(ze.getName(), ze);
-                }
-                return o2[1] = entries;
-                 */
                 Object[] o2 = (Object[])mapped_objects.get(o);
                 return o2[1];
             }
@@ -289,6 +264,13 @@ public class ObjectTraverser {
             } catch (IOException x) {
                 jq.UNREACHABLE("cannot open zip file "+o+": "+x);
             }
+            
+            // we need to reopen the RandomAccessFile on VM startup
+            Object[] args = { ((Object[])o2)[0], name, new Boolean(false) };
+            MethodInvocation mi = new MethodInvocation(ClassLib.sun13.java.io.RandomAccessFile._open, args);
+            jq.on_vm_startup.add(mi);
+            System.out.println("Added call to reopen zip file "+name+" on joeq startup: "+mi);
+            
             return o;
         }
         return o;
