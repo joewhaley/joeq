@@ -3,21 +3,23 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Generics;
 
+
 /**
  * Simple
  * 
  * @author jwhaley
  * @version $Id$
  */
-public class Simple /*<T>*/ {
+public class Simple /*<T3,T2 extends T3,T1 extends T2,T5,T4 extends T5>*/ {
 
-    Object o;
+    /*T2*/Object o;
     
-    Object get() { return o; }
-    void set(Object o) { this.o = o; }
+    /*T3*/Object get() { return o; }
+    void set(/*T1*/Object o) { this.o = o; }
+    /*T5*/Object id(/*T4*/Object a) { return a; }
     
     public static void main(String[] args) {
-        Simple/*<Integer>*/ s = new Simple/*<Integer>*/();
+        Simple/*<Foo,Foo,Foo,Foo,Foo>*/ s = new Simple/*<Foo,Foo,Foo,Foo,Foo>*/();
         s.set(new Foo());
         Foo f = (Foo) s.get(); // cast can be eliminated.
     }
