@@ -27,6 +27,7 @@ public class BogusSummaryProvider {
     private static jq_Class realVector;
     private static jq_Class realHashtable;
     private static jq_Class realArrayList;
+    private static jq_Class realLinkedList;
     
     private static jq_Class fakeString;
     private static jq_Class fakeStringBuffer;
@@ -34,6 +35,7 @@ public class BogusSummaryProvider {
     private static jq_Class fakeVector;
     private static jq_Class fakeHashtable;
     private static jq_Class fakeArrayList;
+    private static jq_Class fakeLinkedList;
     
     public BogusSummaryProvider() {
         realString       = getClassByName("java.lang.String");
@@ -42,8 +44,9 @@ public class BogusSummaryProvider {
         realVector       = getClassByName("java.util.Vector");
         realHashtable    = getClassByName("java.util.Hashtable");
         realArrayList    = getClassByName("java.util.ArrayList");
+        realLinkedList   = getClassByName("java.util.LinkedList");
         Assert._assert(realString != null && realStringBuffer != null && realHashMap != null && realVector != null && realHashtable != null);
-        realString.prepare(); realStringBuffer.prepare(); realHashMap.prepare(); realVector.prepare(); realHashtable.prepare();
+        realString.prepare(); realStringBuffer.prepare(); realHashMap.prepare(); realVector.prepare(); realHashtable.prepare(); realArrayList.prepare(); realLinkedList.prepare();
         
         fakeString       = getClassByName("MyMockLib.MyString");
         fakeStringBuffer = getClassByName("MyMockLib.MyStringBuffer");        
@@ -51,8 +54,9 @@ public class BogusSummaryProvider {
         fakeVector       = getClassByName("MyMockLib.MyVector");
         fakeHashtable    = getClassByName("MyMockLib.MyHashtable");
         fakeArrayList    = getClassByName("MyMockLib.MyArrayList");
+        fakeLinkedList   = getClassByName("MyMockLib.MyLinkedList");
         Assert._assert(fakeString != null && fakeStringBuffer != null && fakeHashMap != null && fakeVector != null && fakeHashtable != null);        
-        fakeString.prepare(); fakeStringBuffer.prepare(); fakeHashMap.prepare(); fakeVector.prepare(); fakeHashtable.prepare();
+        fakeString.prepare(); fakeStringBuffer.prepare(); fakeHashMap.prepare(); fakeVector.prepare(); fakeHashtable.prepare(); fakeArrayList.prepare(); fakeLinkedList.prepare();  
         
         classMap.put(realString, fakeString);
         classMap.put(realStringBuffer, fakeStringBuffer);
