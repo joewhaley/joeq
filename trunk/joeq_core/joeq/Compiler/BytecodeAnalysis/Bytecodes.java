@@ -5615,10 +5615,7 @@ public interface Bytecodes {
      protected void initFromFile(jq_ConstantPool cp, ByteSequence bytes, boolean wide) throws IOException {
          char c = (char) bytes.readUnsignedByte();
          o = cp.get(c);
-         if (c == (char) jq_ClassFileConstants.CONSTANT_Class) {
-             Assert.UNREACHABLE("ldc of unresolved class: "+o);
-         }
-         if (c == (char) jq_ClassFileConstants.CONSTANT_ResolvedClass)
+         if (cp.getTag(c) == (char) jq_ClassFileConstants.CONSTANT_ResolvedClass)
              o = Reflection.getJDKType((jq_Type) o);
          else 
              o = cp.get(c);
@@ -5678,8 +5675,7 @@ public interface Bytecodes {
      protected void initFromFile(jq_ConstantPool cp, ByteSequence bytes, boolean wide) throws IOException {
          char c = (char) bytes.readUnsignedShort();
          o = cp.get(c);
-         Assert._assert(c != jq_ClassFileConstants.CONSTANT_Class);
-         if (c == (char) jq_ClassFileConstants.CONSTANT_ResolvedClass)
+         if (cp.getTag(c) == (char) jq_ClassFileConstants.CONSTANT_ResolvedClass)
              o = Reflection.getJDKType((jq_Type) o);
          else 
              o = cp.get(c);
@@ -7254,7 +7250,7 @@ public interface Bytecodes {
              case jq_ClassFileConstants.jbc_AALOAD: case jq_ClassFileConstants.jbc_AASTORE:
                  return PrimordialClassLoader.getJavaLangObject();
                  
-                 default: throw new BytecodeException("Oops: unknown case in switch" + opcode);
+             default: throw new BytecodeException("Oops: unknown case in switch" + opcode);
          }
      }
  }
