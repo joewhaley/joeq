@@ -531,73 +531,73 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
     }
     
     /**
-     * @see joeq.Compiler.Quad.QuadVisitor#visitExceptionThrower(Compiler.Quad.Quad)
+     * @see joeq.Compiler.Quad.QuadVisitor#visitExceptionThrower(joeq.Compiler.Quad.Quad)
      */
     public void visitExceptionThrower(Quad obj) {
         if (TRACE) System.out.println(this+" PEI: "+obj);
     }
     /**
-     * @see joeq.Compiler.Quad.QuadVisitor#visitLoad(Compiler.Quad.Quad)
+     * @see joeq.Compiler.Quad.QuadVisitor#visitLoad(joeq.Compiler.Quad.Quad)
      */
     public void visitLoad(Quad obj) {
         if (TRACE) System.out.println(this+" Load: "+obj);
     }
     /**
-     * @see joeq.Compiler.Quad.QuadVisitor#visitStore(Compiler.Quad.Quad)
+     * @see joeq.Compiler.Quad.QuadVisitor#visitStore(joeq.Compiler.Quad.Quad)
      */
     public void visitStore(Quad obj) {
         if (TRACE) System.out.println(this+" Store: "+obj);
     }
     /**
-     * @see joeq.Compiler.Quad.QuadVisitor#visitBranch(Compiler.Quad.Quad)
+     * @see joeq.Compiler.Quad.QuadVisitor#visitBranch(joeq.Compiler.Quad.Quad)
      */
     public void visitBranch(Quad obj) {
         if (TRACE) System.out.println(this+" Branch: "+obj);
     }
     /**
-     * @see joeq.Compiler.Quad.QuadVisitor#visitCondBranch(Compiler.Quad.Quad)
+     * @see joeq.Compiler.Quad.QuadVisitor#visitCondBranch(joeq.Compiler.Quad.Quad)
      */
     public void visitCondBranch(Quad obj) {
         if (TRACE) System.out.println(this+" CondBranch: "+obj);
     }
     /**
-     * @see joeq.Compiler.Quad.QuadVisitor#visitCheck(Compiler.Quad.Quad)
+     * @see joeq.Compiler.Quad.QuadVisitor#visitCheck(joeq.Compiler.Quad.Quad)
      */
     public void visitCheck(Quad obj) {
         if (TRACE) System.out.println(this+" Check: "+obj);
     }
     /**
-     * @see joeq.Compiler.Quad.QuadVisitor#visitStaticField(Compiler.Quad.Quad)
+     * @see joeq.Compiler.Quad.QuadVisitor#visitStaticField(joeq.Compiler.Quad.Quad)
      */
     public void visitStaticField(Quad obj) {
         if (TRACE) System.out.println(this+" StaticField: "+obj);
     }
     /**
-     * @see joeq.Compiler.Quad.QuadVisitor#visitInstanceField(Compiler.Quad.Quad)
+     * @see joeq.Compiler.Quad.QuadVisitor#visitInstanceField(joeq.Compiler.Quad.Quad)
      */
     public void visitInstanceField(Quad obj) {
         if (TRACE) System.out.println(this+" InstanceField: "+obj);
     }
     /**
-     * @see joeq.Compiler.Quad.QuadVisitor#visitArray(Compiler.Quad.Quad)
+     * @see joeq.Compiler.Quad.QuadVisitor#visitArray(joeq.Compiler.Quad.Quad)
      */
     public void visitArray(Quad obj) {
         if (TRACE) System.out.println(this+" Array: "+obj);
     }
     /**
-     * @see joeq.Compiler.Quad.QuadVisitor#visitAllocation(Compiler.Quad.Quad)
+     * @see joeq.Compiler.Quad.QuadVisitor#visitAllocation(joeq.Compiler.Quad.Quad)
      */
     public void visitAllocation(Quad obj) {
         if (TRACE) System.out.println(this+" Allocation: "+obj);
     }
     /**
-     * @see joeq.Compiler.Quad.QuadVisitor#visitTypeCheck(Compiler.Quad.Quad)
+     * @see joeq.Compiler.Quad.QuadVisitor#visitTypeCheck(joeq.Compiler.Quad.Quad)
      */
     public void visitTypeCheck(Quad obj) {
         if (TRACE) System.out.println(this+" TypeCheck: "+obj);
     }
     /**
-     * @see joeq.Compiler.Quad.QuadVisitor#visitALoad(Compiler.Quad.Quad)
+     * @see joeq.Compiler.Quad.QuadVisitor#visitALoad(joeq.Compiler.Quad.Quad)
      */
     public void visitALoad(Quad obj) {
         if (TRACE) System.out.println(this+" ALoad: "+obj);
@@ -628,7 +628,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         this.handled = true;
     }
     /**
-     * @see joeq.Compiler.Quad.QuadVisitor#visitAStore(Compiler.Quad.Quad)
+     * @see joeq.Compiler.Quad.QuadVisitor#visitAStore(joeq.Compiler.Quad.Quad)
      */
     public void visitAStore(Quad obj) {
         if (TRACE) System.out.println(this+" AStore: "+obj);
@@ -659,7 +659,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         this.handled = true;
     }
     /**
-     * @see joeq.Compiler.Quad.QuadVisitor#visitALength(Compiler.Quad.Quad)
+     * @see joeq.Compiler.Quad.QuadVisitor#visitALength(joeq.Compiler.Quad.Quad)
      */
     public void visitALength(Quad obj) {
         if (TRACE) System.out.println(this+" ALength: "+obj);
@@ -669,7 +669,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         this.handled = true;
     }
     /**
-     * @see joeq.Compiler.Quad.QuadVisitor#visitBinary(Compiler.Quad.Quad)
+     * @see joeq.Compiler.Quad.QuadVisitor#visitBinary(joeq.Compiler.Quad.Quad)
      */
     public void visitBinary(Quad obj) {
         if (TRACE) System.out.println(this+" Binary: "+obj);
@@ -1005,7 +1005,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         this.handled = true;
     }
     /**
-     * @see joeq.Compiler.Quad.QuadVisitor#visitBoundsCheck(Compiler.Quad.Quad)
+     * @see joeq.Compiler.Quad.QuadVisitor#visitBoundsCheck(joeq.Compiler.Quad.Quad)
      */
     public void visitBoundsCheck(Quad obj) {
         if (TRACE) System.out.println(this+" BoundsCheck: "+obj);
@@ -1016,7 +1016,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         this.handled = true;
     }
     /**
-     * @see joeq.Compiler.Quad.QuadVisitor#visitCheckCast(Compiler.Quad.Quad)
+     * @see joeq.Compiler.Quad.QuadVisitor#visitCheckCast(joeq.Compiler.Quad.Quad)
      */
     public void visitCheckCast(Quad obj) {
         if (TRACE) System.out.println(this+" CheckCast: "+obj);
@@ -1029,7 +1029,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         this.handled = true;
     }
     /**
-     * @see joeq.Compiler.Quad.QuadVisitor#visitGetfield(Compiler.Quad.Quad)
+     * @see joeq.Compiler.Quad.QuadVisitor#visitGetfield(joeq.Compiler.Quad.Quad)
      */
     public void visitGetfield(Quad obj) {
         if (TRACE) System.out.println(this+" Getfield: "+obj);
@@ -1109,7 +1109,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         this.handled = true;
     }
     /**
-     * @see joeq.Compiler.Quad.QuadVisitor#visitGetstatic(Compiler.Quad.Quad)
+     * @see joeq.Compiler.Quad.QuadVisitor#visitGetstatic(joeq.Compiler.Quad.Quad)
      */
     public void visitGetstatic(Quad obj) {
         if (TRACE) System.out.println(this+" Getstatic: "+obj);
@@ -1142,7 +1142,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         this.handled = true;
     }
     /**
-     * @see joeq.Compiler.Quad.QuadVisitor#visitGoto(Compiler.Quad.Quad)
+     * @see joeq.Compiler.Quad.QuadVisitor#visitGoto(joeq.Compiler.Quad.Quad)
      */
     public void visitGoto(Quad obj) {
         if (TRACE) System.out.println(this+" Goto: "+obj);
@@ -1175,7 +1175,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         this.handled = true;
     }
     /**
-     * @see joeq.Compiler.Quad.QuadVisitor#visitInstanceOf(Compiler.Quad.Quad)
+     * @see joeq.Compiler.Quad.QuadVisitor#visitInstanceOf(joeq.Compiler.Quad.Quad)
      */
     public void visitInstanceOf(Quad obj) {
         if (TRACE) System.out.println(this+" InstanceOf: "+obj);
@@ -1188,7 +1188,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         this.handled = true;
     }
     /**
-     * @see joeq.Compiler.Quad.QuadVisitor#visitIntIfCmp(Compiler.Quad.Quad)
+     * @see joeq.Compiler.Quad.QuadVisitor#visitIntIfCmp(joeq.Compiler.Quad.Quad)
      */
     public void visitIntIfCmp(Quad obj) {
         if (TRACE) System.out.println(this+" IntIfCmp: "+obj);
@@ -1280,7 +1280,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         this.handled = true;
     }
     /**
-     * @see joeq.Compiler.Quad.QuadVisitor#visitInvoke(Compiler.Quad.Quad)
+     * @see joeq.Compiler.Quad.QuadVisitor#visitInvoke(joeq.Compiler.Quad.Quad)
      */
     public void visitInvoke(Quad obj) {
         if (TRACE) System.out.println(this+" Invoke: "+obj);
@@ -1308,7 +1308,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         this.handled = true;
     }
     /**
-     * @see joeq.Compiler.Quad.QuadVisitor#visitJsr(Compiler.Quad.Quad)
+     * @see joeq.Compiler.Quad.QuadVisitor#visitJsr(joeq.Compiler.Quad.Quad)
      */
     public void visitJsr(Quad obj) {
         if (TRACE) System.out.println(this+" Jsr: "+obj);
@@ -1331,7 +1331,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         this.handled = true;
     }
     /**
-     * @see joeq.Compiler.Quad.QuadVisitor#visitLookupSwitch(Compiler.Quad.Quad)
+     * @see joeq.Compiler.Quad.QuadVisitor#visitLookupSwitch(joeq.Compiler.Quad.Quad)
      */
     public void visitLookupSwitch(Quad obj) {
         if (TRACE) System.out.println(this+" LookupSwitch: "+obj);
@@ -1347,7 +1347,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         this.handled = true;
     }
     /**
-     * @see joeq.Compiler.Quad.QuadVisitor#visitMemLoad(Compiler.Quad.Quad)
+     * @see joeq.Compiler.Quad.QuadVisitor#visitMemLoad(joeq.Compiler.Quad.Quad)
      */
     public void visitMemLoad(Quad obj) {
         if (TRACE) System.out.println(this+" MemLoad: "+obj);
@@ -1372,7 +1372,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         this.handled = true;
     }
     /**
-     * @see joeq.Compiler.Quad.QuadVisitor#visitMemStore(Compiler.Quad.Quad)
+     * @see joeq.Compiler.Quad.QuadVisitor#visitMemStore(joeq.Compiler.Quad.Quad)
      */
     public void visitMemStore(Quad obj) {
         if (TRACE) System.out.println(this+" MemStore: "+obj);
@@ -1398,7 +1398,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         this.handled = true;
     }
     /**
-     * @see joeq.Compiler.Quad.QuadVisitor#visitMonitor(Compiler.Quad.Quad)
+     * @see joeq.Compiler.Quad.QuadVisitor#visitMonitor(joeq.Compiler.Quad.Quad)
      */
     public void visitMonitor(Quad obj) {
         if (TRACE) System.out.println(this+" Monitor: "+obj);
@@ -1409,7 +1409,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         this.handled = true;
     }
     /**
-     * @see joeq.Compiler.Quad.QuadVisitor#visitMove(Compiler.Quad.Quad)
+     * @see joeq.Compiler.Quad.QuadVisitor#visitMove(joeq.Compiler.Quad.Quad)
      */
     public void visitMove(Quad obj) {
         if (TRACE) System.out.println(this+" Move: "+obj);
@@ -1421,14 +1421,14 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         this.handled = true;
     }
     /**
-     * @see joeq.Compiler.Quad.QuadVisitor#visitPhi(Compiler.Quad.Quad)
+     * @see joeq.Compiler.Quad.QuadVisitor#visitPhi(joeq.Compiler.Quad.Quad)
      */
     public void visitPhi(Quad obj) {
         if (TRACE) System.out.println(this+" Phi: "+obj);
         Assert.UNREACHABLE();
     }
     /**
-     * @see joeq.Compiler.Quad.QuadVisitor#visitNew(Compiler.Quad.Quad)
+     * @see joeq.Compiler.Quad.QuadVisitor#visitNew(joeq.Compiler.Quad.Quad)
      */
     public void visitNew(Quad obj) {
         if (TRACE) System.out.println(this+" New: "+obj);
@@ -1446,7 +1446,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         this.handled = true;
     }
     /**
-     * @see joeq.Compiler.Quad.QuadVisitor#visitNewArray(Compiler.Quad.Quad)
+     * @see joeq.Compiler.Quad.QuadVisitor#visitNewArray(joeq.Compiler.Quad.Quad)
      */
     public void visitNewArray(Quad obj) {
         if (TRACE) System.out.println(this+" NewArray: "+obj);
@@ -1469,7 +1469,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         this.handled = true;
     }
     /**
-     * @see joeq.Compiler.Quad.QuadVisitor#visitNullCheck(Compiler.Quad.Quad)
+     * @see joeq.Compiler.Quad.QuadVisitor#visitNullCheck(joeq.Compiler.Quad.Quad)
      */
     public void visitNullCheck(Quad obj) {
         if (TRACE) System.out.println(this+" NullCheck: "+obj);
@@ -1478,7 +1478,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         this.handled = true;
     }
     /**
-     * @see joeq.Compiler.Quad.QuadVisitor#visitPutfield(Compiler.Quad.Quad)
+     * @see joeq.Compiler.Quad.QuadVisitor#visitPutfield(joeq.Compiler.Quad.Quad)
      */
     public void visitPutfield(Quad obj) {
         if (TRACE) System.out.println(this+" Putfield: "+obj);
@@ -1551,7 +1551,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         this.handled = true;
     }
     /**
-     * @see joeq.Compiler.Quad.QuadVisitor#visitPutstatic(Compiler.Quad.Quad)
+     * @see joeq.Compiler.Quad.QuadVisitor#visitPutstatic(joeq.Compiler.Quad.Quad)
      */
     public void visitPutstatic(Quad obj) {
         if (TRACE) System.out.println(this+" Putstatic: "+obj);
@@ -1584,7 +1584,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         this.handled = true;
     }
     /**
-     * @see joeq.Compiler.Quad.QuadVisitor#visitRet(Compiler.Quad.Quad)
+     * @see joeq.Compiler.Quad.QuadVisitor#visitRet(joeq.Compiler.Quad.Quad)
      */
     public void visitRet(Quad obj) {
         if (TRACE) System.out.println(this+" Ret: "+obj);
@@ -1592,7 +1592,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         this.handled = true;
     }
     /**
-     * @see joeq.Compiler.Quad.QuadVisitor#visitReturn(Compiler.Quad.Quad)
+     * @see joeq.Compiler.Quad.QuadVisitor#visitReturn(joeq.Compiler.Quad.Quad)
      */
     public void visitReturn(Quad obj) {
         if (TRACE) System.out.println(this+" Return: "+obj);
@@ -1637,7 +1637,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         this.handled = true;
     }
     /**
-     * @see joeq.Compiler.Quad.QuadVisitor#visitSpecial(Compiler.Quad.Quad)
+     * @see joeq.Compiler.Quad.QuadVisitor#visitSpecial(joeq.Compiler.Quad.Quad)
      */
     public void visitSpecial(Quad obj) {
         if (TRACE) System.out.println(this+" Special: "+obj);
@@ -1754,7 +1754,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         this.handled = true;
     }
     /**
-     * @see joeq.Compiler.Quad.QuadVisitor#visitStoreCheck(Compiler.Quad.Quad)
+     * @see joeq.Compiler.Quad.QuadVisitor#visitStoreCheck(joeq.Compiler.Quad.Quad)
      */
     public void visitStoreCheck(Quad obj) {
         if (TRACE) System.out.println(this+" StoreCheck: "+obj);
@@ -1766,7 +1766,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         this.handled = true;
     }
     /**
-     * @see joeq.Compiler.Quad.QuadVisitor#visitTableSwitch(Compiler.Quad.Quad)
+     * @see joeq.Compiler.Quad.QuadVisitor#visitTableSwitch(joeq.Compiler.Quad.Quad)
      */
     public void visitTableSwitch(Quad obj) {
         if (TRACE) System.out.println(this+" TableSwitch: "+obj);
@@ -1800,7 +1800,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         this.handled = true;
     }
     /**
-     * @see joeq.Compiler.Quad.QuadVisitor#visitUnary(Compiler.Quad.Quad)
+     * @see joeq.Compiler.Quad.QuadVisitor#visitUnary(joeq.Compiler.Quad.Quad)
      */
     public void visitUnary(Quad obj) {
         if (TRACE) System.out.println(this+" Unary: "+obj);
@@ -2038,7 +2038,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         this.handled = true;
     }
     /**
-     * @see joeq.Compiler.Quad.QuadVisitor#visitZeroCheck(Compiler.Quad.Quad)
+     * @see joeq.Compiler.Quad.QuadVisitor#visitZeroCheck(joeq.Compiler.Quad.Quad)
      */
     public void visitZeroCheck(Quad obj) {
         if (TRACE) System.out.println(this+" ZeroCheck: "+obj);
@@ -2050,7 +2050,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
     }
     boolean handled;
     /**
-     * @see joeq.Compiler.Quad.QuadVisitor#visitQuad(Compiler.Quad.Quad)
+     * @see joeq.Compiler.Quad.QuadVisitor#visitQuad(joeq.Compiler.Quad.Quad)
      */
     public void visitQuad(Quad obj) {
         Assert._assert(handled, obj.toString());
