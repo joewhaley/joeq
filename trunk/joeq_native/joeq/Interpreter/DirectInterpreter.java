@@ -27,7 +27,7 @@ public class DirectInterpreter extends Interpreter implements ObjectLayout {
         k.load(); k.verify(); k.prepare(); k.sf_initialize(); k.cls_initialize();
         int localsize = m.getMaxLocals()<<2;
         int stacksize = m.getMaxStack()<<2;
-        int/*Address*/ newframe = Unsafe.alloca(localsize+stacksize);
+        int/*StackAddress*/ newframe = Unsafe.alloca(localsize+stacksize);
         DirectState callee = new DirectState(newframe, newframe+localsize, m.getMaxLocals());
         return this.invokeMethod(m, callee);
     }
@@ -47,17 +47,17 @@ public class DirectInterpreter extends Interpreter implements ObjectLayout {
             return new Integer(Unsafe.peek(state.pop_I()));
         } else if (f == Unsafe._poke1) {
             byte val = (byte)state.pop_I();
-            int addr = state.pop_I();
+            int/*Address*/ addr = state.pop_I();
             Unsafe.poke1(addr, val);
             return null;
         } else if (f == Unsafe._poke2) {
             short val = (short)state.pop_I();
-            int addr = state.pop_I();
+            int/*Address*/ addr = state.pop_I();
             Unsafe.poke2(addr, val);
             return null;
         } else if (f == Unsafe._poke4) {
             int val = state.pop_I();
-            int addr = state.pop_I();
+            int/*Address*/ addr = state.pop_I();
             Unsafe.poke4(addr, val);
             return null;
         } else if (f == Unsafe._getTypeOf) {
@@ -74,11 +74,12 @@ public class DirectInterpreter extends Interpreter implements ObjectLayout {
     }
         
     public static class DirectState extends Interpreter.State {
-        final int/*Address*/ fp, nlocals;
-        int/*Address*/ sp;
+        final int/*StackAddress*/ fp;
+        final int nlocals;
+        int/*StackAddress*/ sp;
         int loResult, hiResult;
         
-        public DirectState(int/*Address*/ fp, int/*Address*/ sp, int nlocals) {
+        public DirectState(int/*StackAddress*/ fp, int/*StackAddress*/ sp, int nlocals) {
             this.fp = fp; this.sp = sp;
             this.nlocals = nlocals;
         }
@@ -156,7 +157,7 @@ public class DirectInterpreter extends Interpreter implements ObjectLayout {
         public int arraylength(Object o) { return Unsafe.peek(Unsafe.addressOf(o)+ARRAY_LENGTH_OFFSET); }
         public void monitorenter(Object o, MethodInterpreter v) { Monitor.monitorenter(o); }
         public void monitorexit(Object o) { Monitor.monitorexit(o); }
-        public Object multinewarray(int[] dims, jq_Type t) { return Allocator.multinewarray_helper(dims, 0, (jq_Array)t); }
+        public Object multinewarray(int[] dims, jq_Type t) { return HeapAllocator.multinewarray_helper(dims, 0, (jq_Array)t); }
         public jq_Type getJQTypeOf(Object o) { return Unsafe.getTypeOf(o); }
     }
 
