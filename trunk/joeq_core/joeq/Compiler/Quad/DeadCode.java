@@ -7,13 +7,13 @@ package Compil3r.Quad;
  * @author Michael Martin <mcmartin@stanford.edu>
  * @version $Id$
  */
-public class DeadCode extends Dataflow.EmptyAnalysis {
-    static class TraceFact implements Dataflow.Fact {
+public class DeadCode extends DataflowFramework.EmptyAnalysis {
+    static class TraceFact implements DataflowFramework.Fact {
         boolean _val;
         public TraceFact(boolean t) { _val = t; }
 
-        public Dataflow.Fact deepCopy() { return new TraceFact(_val); }
-        public Dataflow.Fact meetWith(Dataflow.Fact f) {
+        public DataflowFramework.Fact deepCopy() { return new TraceFact(_val); }
+        public DataflowFramework.Fact meetWith(DataflowFramework.Fact f) {
             TraceFact other = (TraceFact) f;
             _val = _val || other._val;
             return this;
@@ -38,8 +38,8 @@ public class DeadCode extends Dataflow.EmptyAnalysis {
     }
 
     public boolean transfer(Quad q) {
-        Dataflow.Fact older = _fc.getPost(q).deepCopy();
-        Dataflow.Fact newer = _fc.getPre(q).deepCopy();
+        DataflowFramework.Fact older = _fc.getPost(q).deepCopy();
+        DataflowFramework.Fact newer = _fc.getPre(q).deepCopy();
         _fc.setPost(q, newer);
         return !newer.equals(older);
     }
