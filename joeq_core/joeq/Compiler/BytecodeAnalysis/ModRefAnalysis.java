@@ -1,0 +1,196 @@
+
+package Compil3r.BytecodeAnalysis;
+import Clazz.*;
+import java.util.*;
+
+public class ModRefAnalysis extends BytecodeVisitor {
+
+    public static final boolean INTRA_CLASS = true;
+    public static final boolean ALWAYS_TRACE = false;
+
+    public static class ModRefVisitor extends jq_MethodVisitor.EmptyVisitor {
+        public void visitMethod(jq_Method m) {
+            m.getDeclaringClass().load();
+            if (m.getBytecode() == null) return;
+            ModRefAnalysis s = new ModRefAnalysis(m);
+            results.put(m, s);
+            s.forwardTraversal();
+        }
+    }
+    
+    public static Map results = new HashMap();
+
+    protected Set mod = new HashSet();
+    protected Set ref = new HashSet();
+    
+    /** Creates new ModRefAnalysis */
+    public ModRefAnalysis(jq_Method m) {
+        super(m);
+        this.TRACE = ALWAYS_TRACE;
+    }
+
+    public Set getMod() { return mod; }
+    public Set getRef() { return ref; }
+    
+    public void visitIGETSTATIC(jq_StaticField f) {
+        super.visitIGETSTATIC(f);
+        ref.add(f);
+    }
+    public void visitLGETSTATIC(jq_StaticField f) {
+        super.visitLGETSTATIC(f);
+        ref.add(f);
+    }
+    public void visitFGETSTATIC(jq_StaticField f) {
+        super.visitFGETSTATIC(f);
+        ref.add(f);
+    }
+    public void visitDGETSTATIC(jq_StaticField f) {
+        super.visitDGETSTATIC(f);
+        ref.add(f);
+    }
+    public void visitAGETSTATIC(jq_StaticField f) {
+        super.visitAGETSTATIC(f);
+        ref.add(f);
+    }
+    public void visitIPUTSTATIC(jq_StaticField f) {
+        super.visitIPUTSTATIC(f);
+        mod.add(f);
+    }
+    public void visitLPUTSTATIC(jq_StaticField f) {
+        super.visitLPUTSTATIC(f);
+        mod.add(f);
+    }
+    public void visitFPUTSTATIC(jq_StaticField f) {
+        super.visitFPUTSTATIC(f);
+        mod.add(f);
+    }
+    public void visitDPUTSTATIC(jq_StaticField f) {
+        super.visitDPUTSTATIC(f);
+        mod.add(f);
+    }
+    public void visitAPUTSTATIC(jq_StaticField f) {
+        super.visitAPUTSTATIC(f);
+        mod.add(f);
+    }
+    public void visitIGETFIELD(jq_InstanceField f) {
+        super.visitIGETFIELD(f);
+        ref.add(f);
+    }
+    public void visitLGETFIELD(jq_InstanceField f) {
+        super.visitLGETFIELD(f);
+        ref.add(f);
+    }
+    public void visitFGETFIELD(jq_InstanceField f) {
+        super.visitFGETFIELD(f);
+        ref.add(f);
+    }
+    public void visitDGETFIELD(jq_InstanceField f) {
+        super.visitDGETFIELD(f);
+        ref.add(f);
+    }
+    public void visitAGETFIELD(jq_InstanceField f) {
+        super.visitAGETFIELD(f);
+        ref.add(f);
+    }
+    public void visitBGETFIELD(jq_InstanceField f) {
+        super.visitBGETFIELD(f);
+        ref.add(f);
+    }
+    public void visitCGETFIELD(jq_InstanceField f) {
+        super.visitCGETFIELD(f);
+        ref.add(f);
+    }
+    public void visitSGETFIELD(jq_InstanceField f) {
+        super.visitSGETFIELD(f);
+        ref.add(f);
+    }
+    public void visitZGETFIELD(jq_InstanceField f) {
+        super.visitZGETFIELD(f);
+        ref.add(f);
+    }
+    public void visitIPUTFIELD(jq_InstanceField f) {
+        super.visitIPUTFIELD(f);
+        mod.add(f);
+    }
+    public void visitLPUTFIELD(jq_InstanceField f) {
+        super.visitLPUTFIELD(f);
+        mod.add(f);
+    }
+    public void visitFPUTFIELD(jq_InstanceField f) {
+        super.visitFPUTFIELD(f);
+        mod.add(f);
+    }
+    public void visitDPUTFIELD(jq_InstanceField f) {
+        super.visitDPUTFIELD(f);
+        mod.add(f);
+    }
+    public void visitAPUTFIELD(jq_InstanceField f) {
+        super.visitAPUTFIELD(f);
+        mod.add(f);
+    }
+    public void visitBPUTFIELD(jq_InstanceField f) {
+        super.visitBPUTFIELD(f);
+        mod.add(f);
+    }
+    public void visitCPUTFIELD(jq_InstanceField f) {
+        super.visitCPUTFIELD(f);
+        mod.add(f);
+    }
+    public void visitSPUTFIELD(jq_InstanceField f) {
+        super.visitSPUTFIELD(f);
+        mod.add(f);
+    }
+    public void visitZPUTFIELD(jq_InstanceField f) {
+        super.visitZPUTFIELD(f);
+        mod.add(f);
+    }
+    protected void handleInvoke(jq_Method target) {
+        ModRefAnalysis s = (ModRefAnalysis)results.get(target);
+        if (s == null) {
+            if (INTRA_CLASS) {
+                if (target.getDeclaringClass() != this.method.getDeclaringClass())
+                    return;
+            }
+            target.getDeclaringClass().load();
+            if (target.getBytecode() == null) return;
+            s = new ModRefAnalysis(target);
+            results.put(target, s);
+            s.forwardTraversal();
+        }
+        mod.addAll(s.mod);
+        ref.addAll(s.ref);
+    }
+    protected void invokeHelper(byte op, jq_Method f) {
+        Iterator i = CallTargets.getTargets(this.method.getDeclaringClass(), f, op, true).iterator();
+        while (i.hasNext()) {
+            jq_Method m = (jq_Method)i.next();
+            handleInvoke(m);
+        }
+    }
+    public void visitIINVOKE(byte op, jq_Method f) {
+        super.visitIINVOKE(op, f);
+        invokeHelper(op, f);
+    }
+    public void visitLINVOKE(byte op, jq_Method f) {
+        super.visitLINVOKE(op, f);
+        invokeHelper(op, f);
+    }
+    public void visitFINVOKE(byte op, jq_Method f) {
+        super.visitFINVOKE(op, f);
+        invokeHelper(op, f);
+    }
+    public void visitDINVOKE(byte op, jq_Method f) {
+        super.visitDINVOKE(op, f);
+        invokeHelper(op, f);
+    }
+    public void visitAINVOKE(byte op, jq_Method f) {
+        super.visitAINVOKE(op, f);
+        invokeHelper(op, f);
+    }
+    public void visitVINVOKE(byte op, jq_Method f) {
+        super.visitVINVOKE(op, f);
+        invokeHelper(op, f);
+    }
+    
+    public String toString() { return "Mod: "+mod+"\nRef: "+ref; }
+}
