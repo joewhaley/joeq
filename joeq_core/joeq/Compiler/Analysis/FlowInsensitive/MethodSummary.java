@@ -229,8 +229,8 @@ public class MethodSummary {
         
         /** The method that we are building a summary for. */
         protected final jq_Method method;
-        /** The number of locals and number of registers. */
-        protected final int nLocals, nRegisters;
+        /** The register factory. */
+        protected final RegisterFactory rf;
         /** The parameter nodes. */
         protected final ParamNode[] param_nodes;
         /** The global node. */
@@ -269,8 +269,7 @@ public class MethodSummary {
         
         BuildMethodSummary(BuildMethodSummary that) {
             this.method = that.method;
-            this.nLocals = that.nLocals;
-            this.nRegisters = that.nRegisters;
+            this.rf = that.rf;
             this.param_nodes = that.param_nodes;
             this.my_global = that.my_global;
             this.start_states = that.start_states;
@@ -312,14 +311,12 @@ public class MethodSummary {
         /** Set the given register in the current state to point to the given node. */
         protected void setRegister(Register r, Node n) {
             int i = r.getNumber();
-            if (r.isTemp()) i += nLocals;
             s.registers[i] = n;
             if (TRACE_INTRA) out.println("Setting register "+r+" to "+n);
         }
         /** Set the given register in the current state to point to the given node or set of nodes. */
         protected void setRegister(Register r, Object n) {
             int i = r.getNumber();
-            if (r.isTemp()) i += nLocals;
             if (n instanceof Collection) n = NodeSet.FACTORY.makeSet((Collection)n);
             else Assert._assert(n instanceof Node);
             s.registers[i] = n;
@@ -328,7 +325,6 @@ public class MethodSummary {
         /** Get the node or set of nodes in the given register in the current state. */
         public Object getRegister(Register r) {
             int i = r.getNumber();
-            if (r.isTemp()) i += nLocals;
             Assert._assert(s.registers[i] != null);
             return s.registers[i];
         }
@@ -347,9 +343,7 @@ public class MethodSummary {
         
         /** Build a summary for the given method. */
         public BuildMethodSummary(ControlFlowGraph cfg) {
-            RegisterFactory rf = cfg.getRegisterFactory();
-            this.nLocals = rf.getLocalSize(PrimordialClassLoader.getJavaLangObject());
-            this.nRegisters = this.nLocals + rf.getStackSize(PrimordialClassLoader.getJavaLangObject());
+            this.rf = cfg.getRegisterFactory();
             this.method = cfg.getMethod();
             this.start_states = new State[cfg.getNumberOfBasicBlocks()];
             this.methodCalls = SortedArraySet.FACTORY.makeSet(HashCodeComparator.INSTANCE);
@@ -357,7 +351,7 @@ public class MethodSummary {
             this.callToTEN = new HashMap();
             this.passedAsParameter = NodeSet.FACTORY.makeSet();
             this.nodeCache = new HashMap();
-            this.s = this.start_states[0] = new State(this.nRegisters);
+            this.s = this.start_states[0] = new State(rf.size());
             jq_Type[] params = this.method.getParamTypes();
             this.param_nodes = new ParamNode[params.length];
             for (int i=0, j=0; i<params.length; ++i, ++j) {
@@ -486,15 +480,19 @@ public class MethodSummary {
             if (this.start_states[succ.getID()] == null) {
                 if (TRACE_INTRA) out.println(succ+" not yet visited.");
                 this.start_states[succ.getID()] = this.s.copy();
-                for (int i=nLocals; i<this.s.registers.length; ++i) {
-                    this.start_states[succ.getID()].registers[i] = null;
+                for (Iterator i = rf.iterator(); i.hasNext(); ) {
+                    Register r = (Register) i.next();
+                    if (r.isTemp())
+                        this.start_states[succ.getID()].registers[r.getNumber()] = null;
                 }
                 this.change = true;
             } else {
                 //if (TRACE_INTRA) out.println("merging out set of "+bb+" "+Strings.hex8(this.s.hashCode())+" into in set of ex handler "+succ+" "+Strings.hex8(this.start_states[succ.getID()].hashCode()));
                 if (TRACE_INTRA) out.println("merging out set of "+bb+" into in set of ex handler "+succ);
-                for (int i=0; i<nLocals; ++i) {
-                    if (this.start_states[succ.getID()].merge(i, this.s.registers[i]))
+                for (Iterator i = rf.iterator(); i.hasNext(); ) {
+                    Register r = (Register) i.next();
+                    if (r.isTemp()) continue;
+                    if (this.start_states[succ.getID()].merge(r.getNumber(), this.s.registers[r.getNumber()]))
                         this.change = true;
                 }
                 if (TRACE_INTRA && this.change) out.println(succ+" in set changed");
@@ -1059,7 +1057,8 @@ public class MethodSummary {
                 while (eh.hasNext()) {
                     ExceptionHandler h = eh.nextExceptionHandler();
                     this.mergeWith(h);
-                    this.start_states[h.getEntry().getID()].merge(nLocals, n);
+                    Register r = rf.getOrCreateStack(0, PrimordialClassLoader.getJavaLangObject());
+                    this.start_states[h.getEntry().getID()].merge(r.getNumber(), n);
                     if (h.mustCatch(PrimordialClassLoader.getJavaLangThrowable()))
                         return;
                 }
@@ -1076,7 +1075,8 @@ public class MethodSummary {
                     ExceptionHandler h = eh.nextExceptionHandler();
                     if (h.mayCatch(x)) {
                         this.mergeWith(h);
-                        this.start_states[h.getEntry().getID()].merge(nLocals, n);
+                        Register r = rf.getOrCreateStack(0, PrimordialClassLoader.getJavaLangObject());
+                        this.start_states[h.getEntry().getID()].merge(r.getNumber(), n);
                     }
                     if (h.mustCatch(x)) {
                         caught = true;
