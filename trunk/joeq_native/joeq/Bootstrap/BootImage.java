@@ -1107,10 +1107,17 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
 
     
     public void dumpELF(OutputStream out, jq_StaticMethod rootm) throws IOException {
+        Iterator i = bca.getAllCodeRelocs().iterator();
+        while (i.hasNext()) {
+            Object r = (Object)i.next();
+            if (r instanceof DirectBindCall)
+                ((DirectBindCall)r).patch();
+        }
+
         final int datasize = heapCurrent;
         ELFOutputStream f = new ELFOutputStream(ELFDATA2LSB, ET_REL, EM_386, 0, out);
         f.setLittleEndian();
-        Section.NullSection empty = new Section.NullSection();
+        Section.NullSection empty = Section.NullSection.INSTANCE;
         Section.StrTabSection shstrtab = new Section.StrTabSection(".shstrtab", 0, 0);
         Section.StrTabSection strtab = new Section.StrTabSection(".strtab", 0, 0);
         Section.SymTabSection symtab = new Section.SymTabSection(".symtab", 0, 0, strtab);
@@ -1138,14 +1145,30 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
         
         SymbolTableEntry textsyment = new SymbolTableEntry("", 0, 0, SymbolTableEntry.STB_LOCAL, SymbolTableEntry.STT_SECTION, text);
         SymbolTableEntry datasyment = new SymbolTableEntry("", 0, 0, SymbolTableEntry.STB_LOCAL, SymbolTableEntry.STT_SECTION, data);
-        
+        symtab.addSymbol(textsyment);
+	symtab.addSymbol(datasyment);
+
         Iterator it = exts.iterator();
         while (it.hasNext()) {
             ExternalReference r = (ExternalReference)it.next();
             SymbolTableEntry e = new SymbolTableEntry(r.getName(), 0, 0, SymbolTableEntry.STB_WEAK, SymbolTableEntry.STT_FUNC, empty);
             symtab.addSymbol(e);
         }
-        
+
+        it = CodeAllocator.getCompiledMethods();
+        while (it.hasNext()) {
+            jq_CompiledCode cc = (jq_CompiledCode)it.next();
+	    jq_Method m = cc.getMethod();
+	    String name;
+	    if (m == null) {
+		name = "unknown@"+jq.hex8(cc.getEntrypoint());
+	    } else {
+		name = mungeMemberName(m);
+	    }
+	    SymbolTableEntry e = new SymbolTableEntry(name, cc.getEntrypoint(), cc.getLength(), STB_LOCAL, STT_FUNC, text);
+	    symtab.addSymbol(e);
+        }
+
 	{
 	    jq_CompiledCode cc = rootm.getDefaultCompiledVersion();
 	    SymbolTableEntry e = new SymbolTableEntry("entry", cc.getEntrypoint(), cc.getLength(), STB_GLOBAL, STT_FUNC, text);

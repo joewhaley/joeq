@@ -121,6 +121,9 @@ public abstract class ELF implements ELFConstants {
 		    ss.super_pack();
 		else
 		    ss.pack();
+	    } else if (s instanceof Section.SymTabSection) {
+		Section.SymTabSection ss = (Section.SymTabSection)s;
+		ss.setIndices();
 	    }
             if (!(s instanceof Section.NoBitsSection))
                 e_shoff += s.getSize();
