@@ -88,6 +88,15 @@ public class RootedCHACallGraph extends CHACallGraph {
                 System.out.println(d);
             }
             */
+            
+            long paths = 0L;
+            for (int i=1; ; ++i) {
+                long paths2 = Util.Graphs.CountPaths.countPaths(cg, i);
+                if (paths2 == paths) break;
+                paths = paths2;
+                System.out.println("Number of paths (k="+i+") = "+paths);
+            }
+            System.out.println("Number of paths (k=infinity) = "+Util.Graphs.CountPaths.countPaths(cg));
         }
         
         if (false) {
