@@ -16,6 +16,7 @@ import Clazz.jq_Primitive;
 import Clazz.jq_Reference;
 import Clazz.jq_Member;
 import Clazz.jq_Method;
+import Clazz.jq_StaticMethod;
 import Clazz.jq_StaticField;
 import Clazz.jq_InstanceField;
 import Clazz.jq_CompiledCode;
@@ -23,6 +24,7 @@ import Allocator.ObjectLayout;
 import Allocator.CodeAllocator;
 import Run_Time.Unsafe;
 import Run_Time.Reflection;
+import Run_Time.ExceptionDeliverer;
 import Run_Time.SystemInterface;
 import Scheduler.jq_NativeThread;
 import Util.IdentityHashCodeWrapper;
@@ -438,12 +440,11 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout {
         write_uchar(out, (byte)0);
     }
     
-    public static final int NUM_OF_EXTERNAL_SYMS = 3;
-    public void dumpEXTSYMENTs(OutputStream out)
+    public static final int NUM_OF_EXTERNAL_SYMS = 4;
+    public void dumpEXTSYMENTs(OutputStream out, jq_StaticMethod rootm)
     throws IOException {
         write_bytes(out, "_entry@0", 8);  // s_name
-        int/*CodeAddress*/ addr = SystemInterface.entry_0;
-        //int/*HeapAddress*/ addr = SystemInterface._entry.getAddress();
+        int/*CodeAddress*/ addr = rootm.getDefaultCompiledVersion().getEntrypoint();
         write_ulong(out, addr);
         write_short(out, (short)1);
         write_ushort(out, (char)DT_FCN);
@@ -453,8 +454,7 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout {
         write_ulong(out, 0);    // e_zeroes
         int idx = alloc_string("_trap_handler@8");
         write_ulong(out, idx);  // e_offset
-        addr = SystemInterface.trap_handler_8;
-        //addr = SystemInterface._trap_handler.getAddress();
+        addr = ExceptionDeliverer._trap_handler.getDefaultCompiledVersion().getEntrypoint();
         write_ulong(out, addr);
         write_short(out, (short)1);
         write_ushort(out, (char)DT_FCN);
@@ -465,6 +465,16 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout {
         idx = alloc_string("_threadSwitch@4");
         write_ulong(out, idx);  // e_offset
         addr = jq_NativeThread._threadSwitch.getDefaultCompiledVersion().getEntrypoint();
+        write_ulong(out, addr);
+        write_short(out, (short)1);
+        write_ushort(out, (char)DT_FCN);
+        write_uchar(out, C_EXT);
+        write_uchar(out, (byte)0);
+        
+        write_ulong(out, 0);    // e_zeroes
+        idx = alloc_string("_ctrl_break_handler@0");
+        write_ulong(out, idx);  // e_offset
+        addr = jq_NativeThread._ctrl_break_handler.getDefaultCompiledVersion().getEntrypoint();
         write_ulong(out, addr);
         write_short(out, (short)1);
         write_ushort(out, (char)DT_FCN);
@@ -607,15 +617,7 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout {
             jq_StaticField f = fs[i];
             if (f.isFinal()) continue;
             if (f.getType() != jq_Primitive.INT) continue;
-            if (f.getName() == Utf8.get("entry_0")) {
-                System.out.println("ENTRY @"+jq.hex8(f.getAddress())+" = "+jq.hex8(SystemInterface.entry_0));
-                Heap2CodeReference r = new Heap2CodeReference(f.getAddress(), SystemInterface.entry_0);
-                heap2code.add(r);
-            } else if (f.getName() == Utf8.get("trap_handler_8")) {
-                System.out.println("TRAP_HANDLER @"+jq.hex8(f.getAddress())+" = "+jq.hex8(SystemInterface.trap_handler_8));
-                Heap2CodeReference r = new Heap2CodeReference(f.getAddress(), SystemInterface.trap_handler_8);
-                heap2code.add(r);
-            } else {
+            {
                 String name = f.getName().toString();
                 int ind = name.lastIndexOf('_');
                 name = "_"+name.substring(0, ind)+"@"+name.substring(ind+1);
@@ -653,7 +655,7 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout {
         return total;
     }
     
-    public void dumpCOFF(OutputStream out) throws IOException {
+    public void dumpCOFF(OutputStream out, jq_StaticMethod rootm) throws IOException {
         // calculate sizes/offsets
         final int textsize = bca.size();
         final List text_relocs = bca.getAllDataRelocs();
@@ -720,7 +722,7 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout {
         
         // write symbol table
         dumpSECTIONSYMENTs(out);
-        dumpEXTSYMENTs(out);
+        dumpEXTSYMENTs(out, rootm);
         dumpEXTDEFSYMENTs(out, exts);
         it = CodeAllocator.getCompiledMethods();
         int j=0;
