@@ -81,6 +81,7 @@ public class IPSSABuilder implements Runnable {
             if(resdir != null) {
                 args = new String[1];
                 args[0] = resdir;
+                System.err.println("Reading pointer analysis results from directory " + resdir);
             }
 			_ptr = PAResults.loadResults(args, null);
 		} catch (IOException e) {
