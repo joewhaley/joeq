@@ -188,7 +188,7 @@ public class FindOwnership {
 
         private OwnershipValue getInitValue(jq_Method m) {
             OwnershipValue result = new OwnershipValue();
-            RegisterFactory rf = CodeCache.getRegisterFactory(m);
+            //RegisterFactory rf = CodeCache.getRegisterFactory(m);
             //System.out.println("Method: " + m + "; " + rf);
             
             /*for(Iterator iter = rf.iterator(); iter.hasNext();) {
