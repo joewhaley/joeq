@@ -308,7 +308,7 @@ public class BuildBDDIR implements ControlFlowGraphVisitor {
         }
         int bcIndex = j.intValue();
         ProgramLocation quadLoc = new ProgramLocation.BCProgramLocation(m, bcIndex);
-        quadLineMap.get(q + " @ " + quadLoc);
+        quadLineMap.get(q + " @ " + quadLoc.toStringLong());
     }
     
     public int getMemberID(Object r) {
