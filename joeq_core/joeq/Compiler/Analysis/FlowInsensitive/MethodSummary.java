@@ -2373,7 +2373,7 @@ public class MethodSummary {
             super(that);
             this.method = that.method;
         }
-        public jq_Reference getDeclaredType() { Assert.UNREACHABLE(); return null; }
+        public jq_Reference getDeclaredType() { return null; }
         public jq_Method getDefiningMethod() { return method; }
         public final Node copy() {
             Assert._assert(this != GLOBAL);
