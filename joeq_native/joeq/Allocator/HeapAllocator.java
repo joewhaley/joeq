@@ -4,18 +4,19 @@
 package joeq.Allocator;
 
 import java.lang.reflect.Array;
-
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_ClassFileConstants;
 import joeq.Class.jq_Primitive;
 import joeq.Class.jq_Reference;
+import joeq.Class.jq_StaticField;
 import joeq.Class.jq_StaticMethod;
 import joeq.Class.jq_Type;
 import joeq.Memory.Address;
 import joeq.Memory.HeapAddress;
 import joeq.Memory.Heap.Heap;
+import joeq.Runtime.Debug;
 import joeq.Runtime.SystemInterface;
 import joeq.Util.Assert;
 
@@ -190,64 +191,158 @@ public abstract class HeapAllocator implements jq_ClassFileConstants {
         throw outofmemoryerror;
     }
     
+    public static HeapAddress data_segment_start;
+    public static HeapAddress data_segment_end;
+    
+    public static void initializeDataSegment() {
+        // need to initialize these to be non-null so that they will
+        // have relocations.
+        data_segment_start = (HeapAddress) HeapAddress.getNull().offset(-1);
+        data_segment_end = (HeapAddress) HeapAddress.getNull().offset(-1);
+    }
+    
+    public static final boolean isInDataSegment(Address a) {
+        boolean b = a.difference(data_segment_start) > 0 &&
+                    a.difference(data_segment_end) < 0;
+        return b;
+    }
+    
     public static boolean isValidAddress(Address a) {
         return DefaultHeapAllocator.isValidAddress(a);
     }
     
+    public static final boolean TRACE = false;
+    
     public static boolean isValidObjectRef(Address a) {
-        if (!isValidAddress(a)) return false;
+        if (TRACE) Debug.writeln("Checking if valid object ref: ", a);
+        if (!isValidAddress(a)) {
+            if (TRACE) Debug.writeln("Cannot be object, invalid address");
+            return false;
+        }
         Address vt = a.offset(ObjectLayout.VTABLE_OFFSET).peek();
-        return isValidVTable(vt);
+        boolean b = isValidVTable(vt);
+        if (TRACE) {
+            if (b) Debug.writeln("Valid object: ", a);
+            else Debug.writeln("Cannot be object, invalid vtable: ", vt);
+        }
+        return b;
     }
     
     public static boolean isValidArrayRef(Address a) {
-        if (!isValidAddress(a)) return false;
+        if (TRACE) Debug.writeln("Checking if valid array ref: ", a);
+        if (!isValidAddress(a)) {
+            if (TRACE) Debug.writeln("Cannot be array, invalid address");
+            return false;
+        }
         Address vt = a.offset(ObjectLayout.VTABLE_OFFSET).peek();
-        return isValidArrayVTable(vt);
+        boolean b = isValidArrayVTable(vt);
+        if (TRACE) {
+            if (b) Debug.writeln("Valid array: ", a);
+            else Debug.writeln("Cannot be object, invalid array vtable: ", vt);
+        }
+        return b;
     }
     
     public static boolean isValidVTable(Address a) {
-        if (!isValidAddress(a)) return false;
-        Address vtableTypeAddr = a.offset(ObjectLayout.VTABLE_OFFSET);
+        if (TRACE) Debug.writeln("Checking if vtable: ", a);
+        if (!isValidAddress(a)) {
+            if (TRACE) Debug.writeln("Cannot be vtable, invalid address");
+            return false;
+        }
+        Address vtableTypeAddr = a.offset(ObjectLayout.VTABLE_OFFSET).peek();
         jq_Reference r = PrimordialClassLoader.getAddressArray();
-        if (!isType(vtableTypeAddr, r)) return false;
-        return isValidType((HeapAddress) a.peek());
+        if (!isType(vtableTypeAddr, r)) {
+            if (TRACE) Debug.writeln("Cannot be vtable, has wrong type: ", vtableTypeAddr);
+            return false;
+        }
+        boolean b = isValidType((HeapAddress) a.peek());
+        if (TRACE) {
+            if (b) Debug.writeln("Valid vtable: ", a);
+            else Debug.writeln("Cannot be vtable, invalid type in vtable[0]: ", a.peek());
+        }
+        return b;
     }
     
     public static boolean isValidArrayVTable(Address a) {
-        if (!isValidAddress(a)) return false;
+        if (TRACE) Debug.writeln("Checking if array vtable: ", a);
+        if (!isValidAddress(a)) {
+            if (TRACE) Debug.writeln("Cannot be array vtable, invalid address");
+            return false;
+        }
         Address vtableTypeAddr = a.offset(ObjectLayout.VTABLE_OFFSET);
         jq_Reference r = PrimordialClassLoader.getAddressArray();
-        if (!isType(vtableTypeAddr, r)) return false;
-        return isValidArrayType((HeapAddress) a.peek());
+        if (!isType(vtableTypeAddr, r)) {
+            if (TRACE) Debug.writeln("Cannot be array vtable, has wrong type: ", vtableTypeAddr);
+            return false;
+        }
+        boolean b = isValidArrayType((HeapAddress) a.peek());
+        if (TRACE) {
+            if (b) Debug.writeln("Valid array vtable: ", a);
+            else Debug.writeln("Cannot be array vtable, invalid type in vtable[0]: ", a.peek());
+        }
+        return b;
     }
     
     public static boolean isType(Address a, jq_Reference t) {
-        if (!isValidAddress(a)) return false;
+        if (TRACE) {
+            Debug.writeln("Checking if matching type: ", a);
+            Debug.writeln(t.getDesc());
+        }
+        if (!isValidAddress(a)) {
+            if (TRACE) Debug.writeln("Cannot be type, invalid address");
+            return false;
+        }
 
         Address vtable = a.offset(ObjectLayout.VTABLE_OFFSET).peek();
-        if (!isValidAddress(vtable)) return false;
+        if (!isValidAddress(vtable)) {
+            if (TRACE) Debug.writeln("Cannot be type, invalid vtable address: ", vtable);
+            return false;
+        }
         Address type = vtable.peek();
         Address expected = HeapAddress.addressOf(t);
-        return expected.difference(type) == 0;
+        boolean b = expected.difference(type) == 0;
+        if (TRACE) {
+            if (b) Debug.writeln("Matching type: ", type);
+            else {
+                Debug.writeln("Not matching type: ", type);
+                Debug.writeln(jq_Reference.getTypeOf(((HeapAddress) a).asObject()).getDesc());
+            }
+        }
+        return b;
     }
     
     public static boolean isValidType(Address typeAddress) {
-        if (!isValidAddress(typeAddress)) return false;
+        if (TRACE) Debug.writeln("Checking if valid type: ", typeAddress);
+        if (!isValidAddress(typeAddress)) {
+            if (TRACE) Debug.writeln("Cannot be type, invalid address");
+            return false;
+        }
 
         // check if vtable is one of three possible values
         Object vtable = ObjectLayoutMethods.getVTable(((HeapAddress) typeAddress).asObject());
         boolean valid = vtable == jq_Class._class.getVTable() ||
                         vtable == jq_Array._class.getVTable() ||
                         vtable == jq_Primitive._class.getVTable();
+        if (TRACE) {
+            if (valid) Debug.writeln("Matching vtable: ", HeapAddress.addressOf(vtable));
+            else Debug.writeln("Not matching vtable: ", HeapAddress.addressOf(vtable));
+        }
         return valid;
     }
     
     public static boolean isValidArrayType(Address typeAddress) {
-        if (!isValidAddress(typeAddress)) return false;
+        if (TRACE) Debug.writeln("Checking if valid array type: ", typeAddress);
+        if (!isValidAddress(typeAddress)) {
+            if (TRACE) Debug.writeln("Cannot be array type, invalid address");
+            return false;
+        }
 
         Object vtable = ObjectLayoutMethods.getVTable(((HeapAddress) typeAddress).asObject());
         boolean valid = vtable == jq_Array._class.getVTable();
+        if (TRACE) {
+            if (valid) Debug.writeln("Matching array vtable: ", HeapAddress.addressOf(vtable));
+            else Debug.writeln("Not matching array vtable: ", HeapAddress.addressOf(vtable));
+        }
         return valid;
     }
     
@@ -316,8 +411,12 @@ public abstract class HeapAllocator implements jq_ClassFileConstants {
     }
     
     public static final jq_StaticMethod _clsinitAndAllocateObject;
+    public static final jq_StaticField _data_segment_start;
+    public static final jq_StaticField _data_segment_end;
     static {
         jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Allocator/HeapAllocator;");
         _clsinitAndAllocateObject = k.getOrCreateStaticMethod("clsinitAndAllocateObject", "(Ljoeq/Class/jq_Type;)Ljava/lang/Object;");
+        _data_segment_start = k.getOrCreateStaticField("data_segment_start", "Ljoeq/Memory/HeapAddress;");
+        _data_segment_end = k.getOrCreateStaticField("data_segment_end", "Ljoeq/Memory/HeapAddress;");
     }
 }

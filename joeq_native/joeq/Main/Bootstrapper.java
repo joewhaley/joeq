@@ -3,12 +3,6 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Main;
 
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -19,18 +13,23 @@ import java.util.LinkedList;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
-
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.nio.ByteOrder;
 import joeq.Allocator.CodeAllocator;
 import joeq.Allocator.DefaultCodeAllocator;
+import joeq.Allocator.HeapAllocator;
 import joeq.Bootstrap.BootImage;
 import joeq.Bootstrap.BootstrapCodeAddress;
 import joeq.Bootstrap.BootstrapCodeAllocator;
+import joeq.Bootstrap.BootstrapHeapAddress;
 import joeq.Bootstrap.BootstrapRootSet;
-import joeq.Runtime.ObjectTraverser;
-import joeq.Class.PrimordialClassLoader;
 import joeq.Bootstrap.BootstrapCodeAddress.BootstrapCodeAddressFactory;
-import joeq.ClassLib.ClassLibInterface;
 import joeq.Class.Delegates;
+import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Member;
@@ -39,11 +38,13 @@ import joeq.Class.jq_Reference;
 import joeq.Class.jq_StaticField;
 import joeq.Class.jq_StaticMethod;
 import joeq.Class.jq_Type;
+import joeq.ClassLib.ClassLibInterface;
 import joeq.Compiler.CompilationState;
 import joeq.Compiler.BytecodeAnalysis.Trimmer;
 import joeq.Compiler.CompilationState.BootstrapCompilation;
 import joeq.Memory.CodeAddress;
 import joeq.Memory.HeapAddress;
+import joeq.Runtime.ObjectTraverser;
 import joeq.Runtime.Reflection;
 import joeq.Runtime.SystemInterface;
 import joeq.Runtime.Unsafe;
@@ -89,6 +90,7 @@ public abstract class Bootstrapper {
         ClassLibInterface.useJoeqClasslib(true);
         
         CodeAllocator.initializeCompiledMethodMap();
+        HeapAllocator.initializeDataSegment();
         
         if (ClassLibInterface.DEFAULT.getClass().toString().indexOf("win32") != -1) {
             DUMP_COFF = true;
@@ -508,9 +510,16 @@ public abstract class Bootstrapper {
         System.out.println("Image code size = "+bca.size());
         
         // update code min/max addresses
-        // don't use initStaticField because it (re-)adds relocs
+        // careful not to re-add relocs for these fields!
         objmap.initStaticField(CodeAllocator._lowAddress);
         objmap.initStaticField(CodeAllocator._highAddress);
+        
+        // update heap min/max addresses
+        // careful not to re-add relocs for these fields!
+        HeapAllocator.data_segment_start = new BootstrapHeapAddress(-1);
+        HeapAllocator.data_segment_end = new BootstrapHeapAddress(objmap.size());
+        objmap.initStaticField(HeapAllocator._data_segment_start);
+        objmap.initStaticField(HeapAllocator._data_segment_end);
         
         // dump it!
         FileOutputStream fos = new FileOutputStream(imageName);

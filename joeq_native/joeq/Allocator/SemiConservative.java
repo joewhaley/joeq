@@ -147,10 +147,6 @@ public abstract class SemiConservative {
         }
     }
     
-    public static void addObject(Object o, boolean b) {
-        DefaultHeapAllocator.processPtrField(HeapAddress.addressOf(o), b);
-    }
-    
     public static void addConservativeAddress(Address a, boolean b) {
         DefaultHeapAllocator.processPtrField(a, b);
     }

@@ -260,8 +260,6 @@ public abstract class SystemInterface {
     public static CodeAddress init_semaphore_0;
     public static CodeAddress wait_for_single_object_8;
     public static CodeAddress release_semaphore_8;
-    public static HeapAddress joeq_data_startaddress;
-    public static HeapAddress joeq_data_endaddress;
 
     public static final jq_Class _class;
     public static final jq_StaticField _debugwrite;
