@@ -303,7 +303,7 @@ public class CSPA {
         time = System.currentTimeMillis() - time;
         System.out.println("done. ("+time/1000.+" seconds)");
         
-        dis.freeVarHeapCorrespondence();
+        //dis.freeVarHeapCorrespondence();
         
         System.out.print("Solving pointers...");
         time = System.currentTimeMillis();
@@ -349,6 +349,7 @@ public class CSPA {
         for (Iterator i = V1H1correspondence.entrySet().iterator(); i.hasNext(); ) {
             Map.Entry e = (Map.Entry) i.next();
             BDD b = (BDD) e.getValue();
+            System.out.println(System.identityHashCode(b)+": "+b.hashCode());
             b.free();
             i.remove();
         }
@@ -1365,15 +1366,17 @@ public class CSPA {
         
         time = System.currentTimeMillis();
         
+        v1ch1c = (BDD) V1H1correspondence.get(ms.getMethod());
         BDD t1;
         if (!bms.m_pointsTo.isZero()) {
-            v1ch1c = (BDD) V1H1correspondence.get(ms.getMethod());
             t1 = bms.m_pointsTo.id();
             t1.andWith(v1ch1c);
             if (TRACE_BDD) {
                 System.out.println("Adding to g_pointsTo: "+t1.toStringWithDomains());
             }
             g_pointsTo.orWith(t1);
+        } else {
+            v1ch1c.free();
         }
 
         t1 = bms.m_loads.id();
@@ -1546,8 +1549,9 @@ public class CSPA {
     
     public static final boolean MASK = true;
     
-    public BDD buildContextMap(BDDDomain d1, BigInteger startD1, BigInteger endD1,
-                               BDDDomain d2, BigInteger startD2, BigInteger endD2) {
+    public static BDD buildContextMap(BDDDomain d1, BigInteger startD1, BigInteger endD1,
+                                      BDDDomain d2, BigInteger startD2, BigInteger endD2) {
+        BDDFactory bdd = d1.getFactory();
         if (!CONTEXT_SENSITIVE) {
             return bdd.one();
         }
@@ -1572,31 +1576,27 @@ public class CSPA {
                 r.andWith(d2.ithVar(0));
             }
         } else {
-            if (sizeD1.compareTo(sizeD2) != -1) { // >=
-                int bits = endD2.bitLength();
-                long val = startD2.subtract(startD1).longValue();
-                r = d1.buildAdd(d2, bits, val);
-                if (TRACE_SIZES) {
-                    report("add "+val, r);
-                }
-                if (MASK) {
-                    r.andWith(d1.varRange(startD1.longValue(), endD1.longValue()));
-                    if (TRACE_SIZES) {
-                        report("after mask", r);
-                    }
-                }
+            int bits;
+            if (endD1.compareTo(endD2) != -1) { // >=
+                bits = endD1.bitLength();
             } else {
-                int bits = endD1.bitLength();
-                long val = startD2.subtract(startD1).longValue();
-                r = d1.buildAdd(d2, bits, val);
-                if (TRACE_SIZES) {
-                    report("add "+val, r);
-                }
-                if (MASK) {
+                bits = endD2.bitLength();
+            }
+            long val = startD2.subtract(startD1).longValue();
+            r = d1.buildAdd(d2, bits, val);
+            if (TRACE_SIZES) {
+                report("add "+val, r);
+            }
+            if (MASK) {
+                if (sizeD2.compareTo(sizeD1) != -1) { // >=
+                    // D2 is bigger, or they are equal.
+                    r.andWith(d1.varRange(startD1.longValue(), endD1.longValue()));
+                } else {
+                    // D1 is bigger.
                     r.andWith(d2.varRange(startD2.longValue(), endD2.longValue()));
-                    if (TRACE_SIZES) {
-                        report("after mask", r);
-                    }
+                }
+                if (TRACE_SIZES) {
+                    report("after mask", r);
                 }
             }
         }
