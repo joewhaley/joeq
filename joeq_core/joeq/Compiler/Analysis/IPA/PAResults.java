@@ -139,9 +139,10 @@ public class PAResults implements PointerAnalysisResults {
         int i = 1;
         List results = new ArrayList();
         DataInput in = new DataInputStream(System.in);
+	CollectionType tfinder = null;
         for (;;) {
             boolean increaseCount = true;
-            boolean listAll = false;
+            int listHowMany = DEFAULT_NUM_TO_PRINT;
             
             try {
                 System.out.print(i+"> ");
@@ -232,7 +233,7 @@ public class PAResults implements PointerAnalysisResults {
                 } else if (command.equals("list")) {
                     TypedBDD r = parseBDDWithCheck(results, st.nextToken());
 		    results.add(r);
-		    listAll = true;
+		    listHowMany = st.hasMoreTokens() ? Integer.parseInt(st.nextToken()) : -1;
 		    System.out.println("Domains: " + r.getDomainSet());
                 } else if (command.equals("contextvar") || command.equals("stacktracevar")) {
                     int varNum = Integer.parseInt(st.nextToken());
@@ -387,8 +388,17 @@ public class PAResults implements PointerAnalysisResults {
                     BDD r = getEncapsulatedHeapObjects();
                     results.add(r);
                 } else if (command.equals("collectiontypes")) {
-		    CollectionType tfinder = new CollectionType(this, st.hasMoreTokens());
-		    TypedBDD r = tfinder.findCollectionTypes();
+		    tfinder = new CollectionType(this);
+		    TypedBDD r = tfinder.findCollectionTypes(st.hasMoreTokens());
+		    results.add(r);
+                } else if (command.equals("getsupertypes")) {
+		    TypedBDD r = tfinder.determineSupertypes(st.hasMoreTokens());
+		    results.add(r);
+                } else if (command.equals("checkmusthaves")) {
+		    TypedBDD r = tfinder.checkMustHaves(st.hasMoreTokens());
+		    results.add(r);
+                } else if (command.equals("checkbadtypes")) {
+		    TypedBDD r = tfinder.checkBadTypes(st.hasMoreTokens());
 		    results.add(r);
                 } else if (command.equals("gini")) {
 		    computeGini(r.vCnumbering);
@@ -401,6 +411,8 @@ public class PAResults implements PointerAnalysisResults {
                     increaseCount = false;
                 } else {
                     increaseCount = false;
+		    if (command.equals("driver")) 	// prefix "driver"
+			command = st.nextToken();
 		    String []cmds = new String[st.countTokens()+1];
 		    cmds[0] = command;
 		    for (int j = 1; j < cmds.length; j++)
@@ -416,11 +428,7 @@ public class PAResults implements PointerAnalysisResults {
 
             if (increaseCount) {
                 TypedBDD r = (TypedBDD) results.get(i-1);
-                if (listAll) {
-                    System.out.println(i+" -> "+toString(r, -1));
-                } else {
-                    System.out.println(i+" -> "+toString(r, DEFAULT_NUM_TO_PRINT));
-                }
+		System.out.println(i+" -> "+toString(r, listHowMany));
                 Assert._assert(i == results.size());
                 ++i;
             }
@@ -435,7 +443,7 @@ public class PAResults implements PointerAnalysisResults {
         System.out.println("exist b1 bs1 (bsi)*:              exist bs2 to bsi in b1");
         System.out.println("(and|or|diff) b1 b2:              compute b1 and|or|diff b2");
         System.out.println("(equals|cmp) b1 b2:               compare bdds b1 and b2");
-        System.out.println("list b1:                          list elements of bdd b1");
+        System.out.println("list b1 [#n]:                     list #n (or all) elements of bdd b1");
         System.out.println("showdomains b1:                   show domains of bdd b1");
         System.out.println("satcount b1:                      print satcount (restricted by domain)");
         System.out.println("store name b1:                    store BDD b1 under name");
@@ -450,10 +458,13 @@ public class PAResults implements PointerAnalysisResults {
         System.out.println("stacktracevar #vidx #cidx:        like contextvar, except print as stacktrace");
         System.out.println("contextheap #hidx #cidx:          show path in hCnumbering for heap obj #hidx in context #");
         System.out.println("stacktraceheap #hidx #cidx:       like contextheap, except print as stacktrace");
+        System.out.println("findpath #from #to:               find a path in callgraph from method #from to #to");
+        System.out.println("gini:                             compute unbiased Gini-coefficient for callgraph and show SCCs");
         System.out.println("\nProgram Information:");
         System.out.println("method  class name [signature]:   lookup method in class, shows M and N indices");
         System.out.println("callsin class name [signature]:   list all call sites in a given method");
         System.out.println("summary class name [signature]:   list method summary for a given method");
+        System.out.println("[driver] arg0 arg1 ...:           pass args to Main.Driver for interpretation");
 
 	printAvailableBDDs(results);
     }
@@ -712,6 +723,12 @@ public class PAResults implements PointerAnalysisResults {
                 return (TypedBDD) a.get(num);
             }
         } catch (NumberFormatException e) { }
+	if (s.equals("$last"))
+	    return (TypedBDD)a.get(a.size()-1);
+	if (s.equals("$one"))
+	    return (TypedBDD)r.bdd.one();
+	if (s.equals("$zero"))
+	    return (TypedBDD)r.bdd.zero();
         return null;
     }
 
