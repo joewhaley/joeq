@@ -1,7 +1,8 @@
 <project>
     <pomVersion>3</pomVersion>
-    <id>jwutil</id>
+    <artifactId>jwutil</artifactId>
     <name>jwutil</name>
+    <groupId>jwutil</groupId>
     <currentVersion>1.0</currentVersion>
     <organization>
         <name>SUIF Compiler Group</name>
@@ -13,10 +14,16 @@
     <logo>suif-logo.gif</logo>
     <description>A collection of useful Java classes I have collected or developed over the years.  I have found them useful for multiple projects, so I have consolidated them into a single library.</description>
     <shortDescription>Collection of useful utility classes for Java</shortDescription>
-    <url>http://suif.stanford.edu/pub/jwutil</url>
-    <siteAddress>suif.stanford.edu</siteAddress>
-    <siteDirectory>/var/www/html/pub/jwutil</siteDirectory>
-    <repository/>
+    <url>http://joeq.sourceforge.net/jwutil</url>
+    <issueTrackingUrl>http://sourceforge.net/tracker/?group_id=19634</issueTrackingUrl>
+    <siteAddress>joeq.sourceforge.net</siteAddress>
+    <siteDirectory>/home/groups/j/jo/joeq/htdocs/jwutil</siteDirectory>
+    <distributionDirectory>/home/groups/b/bd/bddbddb/</distributionDirectory>
+    <repository>
+        <connection>scm:cvs:pserver:anonymous@cvs.sourceforge.net:/cvsroot/joeq:jwutil</connection>
+        <developerConnection>scm:cvs:ext:joewhaley@cvs.sourceforge.net:/cvsroot/joeq:jwutil</developerConnection>
+        <url>http://cvs.sourceforge.net/viewcvs.py/joeq/jwutil/</url>
+    </repository>
     <developers>
         <developer>
             <name>John Whaley</name>
@@ -44,5 +51,19 @@
         <sourceDirectory>main/src/java</sourceDirectory>
         <unitTestSourceDirectory>main/test/java</unitTestSourceDirectory>
     </build>
+    <reports>
+        <report>maven-developer-activity-plugin</report>
+        <report>maven-changelog-plugin</report>
+        <report>maven-checkstyle-plugin</report>
+        <report>maven-file-activity-plugin</report>
+        <report>maven-findbugs-plugin</report>
+        <report>maven-javadoc-plugin</report>
+        <report>maven-jdepend-plugin</report>
+        <report>maven-jxr-plugin</report>
+        <report>maven-license-plugin</report>
+        <report>maven-linkcheck-plugin</report>
+        <report>maven-pmd-plugin</report>
+        <report>maven-simian-plugin</report>
+    </reports>
     <properties/>
 </project>
