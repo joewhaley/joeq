@@ -602,50 +602,6 @@ public class CSBDDPointerAnalysis {
         if (false) typeFilter = bdd.one();
     }
 
-    public static class IndexMap {
-        private final String name;
-        private final HashMap hash;
-        private final Object[] list;
-        private int index;
-        
-        public IndexMap(String name, int maxIndex) {
-            this.name = name;
-            hash = new HashMap();
-            list = new Object[maxIndex];
-            index = -1;
-        }
-        
-        public int get(Object o) {
-            Integer i = (Integer) hash.get(o);
-            if (i == null) {
-                int j = ++index;
-                while (list[j] != null)
-                    ++j;
-                list[j] = o;
-                hash.put(o, i = new Integer(j));
-                if (TRACE_MAPS) System.out.println(this+"["+j+"] = "+o);
-            }
-            return i.intValue();
-        }
-        
-        public Object get(int i) {
-            return list[i];
-        }
-        
-        public boolean contains(Object o) {
-            return hash.containsKey(o);
-        }
-        
-        public int size() {
-            return index;
-        }
-        
-        public String toString() {
-            return name;
-        }
-        
-    }
-
     jq_Reference getVariableType(int index) {
         Object o = variableIndexMap.get(index);
         while (o instanceof Triple) {
@@ -1384,4 +1340,47 @@ public class CSBDDPointerAnalysis {
         }
     }
     
+    public static class IndexMap {
+        private final String name;
+        private final HashMap hash;
+        private final Object[] list;
+        private int index;
+        
+        public IndexMap(String name, int maxIndex) {
+            this.name = name;
+            hash = new HashMap();
+            list = new Object[maxIndex];
+            index = -1;
+        }
+        
+        public int get(Object o) {
+            Integer i = (Integer) hash.get(o);
+            if (i == null) {
+                int j = ++index;
+                while (list[j] != null)
+                    ++j;
+                list[j] = o;
+                hash.put(o, i = new Integer(j));
+                if (TRACE_MAPS) System.out.println(this+"["+j+"] = "+o);
+            }
+            return i.intValue();
+        }
+        
+        public Object get(int i) {
+            return list[i];
+        }
+        
+        public boolean contains(Object o) {
+            return hash.containsKey(o);
+        }
+        
+        public int size() {
+            return index;
+        }
+        
+        public String toString() {
+            return name;
+        }
+        
+    }
 }
