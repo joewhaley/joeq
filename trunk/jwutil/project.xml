@@ -1,0 +1,48 @@
+<project>
+    <pomVersion>3</pomVersion>
+    <id>jwutil</id>
+    <name>jwutil</name>
+    <currentVersion>1.0</currentVersion>
+    <organization>
+        <name>SUIF Compiler Group</name>
+        <url>http://suif.stanford.edu</url>
+        <logo>http://suif.stanford.edu/suif-logo.gif</logo>
+    </organization>
+    <inceptionYear>2004</inceptionYear>
+    <package>jwutil</package>
+    <logo>suif-logo.gif</logo>
+    <description>A collection of useful Java classes I have collected or developed over the years.  I have found them useful for multiple projects, so I have consolidated them into a single library.</description>
+    <shortDescription>Collection of useful utility classes for Java</shortDescription>
+    <url>http://suif.stanford.edu/pub/jwutil</url>
+    <siteAddress>suif.stanford.edu</siteAddress>
+    <siteDirectory>/var/www/html/pub/jwutil</siteDirectory>
+    <repository/>
+    <developers>
+        <developer>
+            <name>John Whaley</name>
+            <id>jwhaley</id>
+            <email>jwhaley@stanford.edu</email>
+            <organization>SUIF Compiler Group</organization>
+            <roles>
+                <role>Project Manager</role>
+            </roles>
+            <url>http://www.stanford.edu/~jwhaley</url>
+            <timezone>-8</timezone>
+        </developer>
+    </developers>
+    <dependencies>
+        <dependency>
+            <groupId>jw</groupId>
+            <artifactId>java14</artifactId>
+            <jar>main/src/jar/java14.jar</jar>
+            <type>jar</type>
+            <properties/>
+        </dependency>
+    </dependencies>
+    <build>
+        <nagEmailAddress>joewhaley@users.sourceforge.net</nagEmailAddress>
+        <sourceDirectory>main/src/java</sourceDirectory>
+        <unitTestSourceDirectory>main/test/java</unitTestSourceDirectory>
+    </build>
+    <properties/>
+</project>
