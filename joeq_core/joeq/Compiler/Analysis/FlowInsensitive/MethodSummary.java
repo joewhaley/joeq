@@ -688,6 +688,7 @@ public class MethodSummary {
                             String value = (String) aop.getValue();
                             
                             stringNodes2Values.put(n, value);
+                            //System.out.println("Saved mapping " + n + " -> " + value);
                         }
                     }
                 }
@@ -988,6 +989,9 @@ public class MethodSummary {
                     }
                 }
             }
+            
+            // TODO: special-case allocations of HashMaps
+            
             
             
             Node n = ConcreteTypeNode.get(type, new QuadProgramLocation(method, obj));
