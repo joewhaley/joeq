@@ -32,6 +32,7 @@ public abstract class Relation {
     
     public abstract void load();
     public abstract void save() throws IOException;
+    public abstract void saveNegated() throws IOException;
     public abstract void saveTuples() throws IOException;
     
     public String toString() {

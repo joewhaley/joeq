@@ -47,6 +47,8 @@ public abstract class Solver {
     Map/*<String,Relation>*/ nameToRelation;
     List/*<InferenceRule>*/ rules;
     Collection/*<Relation>*/ relationsToDump;
+    Collection/*<Relation>*/ relationsToDumpNegated;
+    Collection/*<Relation>*/ relationsToDumpTuples;
     
     public static void main(String[] args) throws IOException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         
@@ -124,6 +126,8 @@ public abstract class Solver {
     void readRelations(BufferedReader in) throws IOException {
         nameToRelation = new HashMap();
         relationsToDump = new LinkedList();
+        relationsToDumpNegated = new LinkedList();
+        relationsToDumpTuples = new LinkedList();
         for (;;) {
             String s = in.readLine();
             if (s == null) break;
@@ -142,6 +146,7 @@ public abstract class Solver {
         if (!openParen.equals("(")) throw new IllegalArgumentException();
         List fieldNames = new LinkedList();
         List fieldDomains = new LinkedList();
+        
         for (;;) {
             String fName = st.nextToken();
             fieldNames.add(fName);
@@ -156,10 +161,19 @@ public abstract class Solver {
             if (!comma.equals(",")) throw new IllegalArgumentException("Expected \",\", got \""+fName+"\"");
         }
         Relation r = createRelation(name, fieldNames, fieldDomains);
-        if (st.hasMoreTokens()) {
+        while (st.hasMoreTokens()) {
             String option = st.nextToken();
             if (option.equals("save")) {
                 relationsToDump.add(r);
+            }
+            else if (option.equals("savenot")) {
+            	relationsToDumpNegated.add(r);
+            }
+            else if (option.equals("savetuples")) {
+            	relationsToDumpTuples.add(r);
+            }
+            else {
+            	throw new IllegalArgumentException("Unexpected option '"+option+"'");
             }
         }
         return r;
@@ -196,7 +210,7 @@ public abstract class Solver {
     
     RuleTerm parseRuleTerm(Map/*<String,Variable>*/ nameToVar, StringTokenizer st) {
         String openParen = st.nextToken();
-        if (!openParen.equals("(")) throw new IllegalArgumentException();
+        if (!openParen.equals("(")) throw new IllegalArgumentException("Expected '(', got '"+openParen+"'");
         List/*<Variable>*/ vars = new LinkedList();
         for (;;) {
             String varName = st.nextToken();
@@ -214,7 +228,7 @@ public abstract class Solver {
             vars.add(var);
             String sep = st.nextToken();
             if (sep.equals(")")) break;
-            if (!sep.equals(",")) throw new IllegalArgumentException();
+            if (!sep.equals(",")) throw new IllegalArgumentException("Expected ',' or ')', got '"+sep+"'");
         }
         String in = st.nextToken();
         if (!in.equals("in")) throw new IllegalArgumentException();
@@ -250,6 +264,14 @@ public abstract class Solver {
             Relation r = (Relation) i.next();
             r.save();
             r.saveTuples();
+        }
+        for (Iterator i = relationsToDumpNegated.iterator(); i.hasNext(); ) {
+        	Relation r = (Relation) i.next();
+        	r.saveNegated();
+        }
+        for (Iterator i = relationsToDumpTuples.iterator(); i.hasNext(); ) {
+        	Relation r = (Relation) i.next();
+        	r.saveTuples();
         }
     }
 
