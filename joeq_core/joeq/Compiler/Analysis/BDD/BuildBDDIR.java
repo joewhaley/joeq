@@ -206,7 +206,7 @@ public class BuildBDDIR implements ControlFlowGraphVisitor {
             Quad q = i.nextQuad();
             currentQuad = bdd.one();
             int quadID = getQuadID(q);
-            addQuadLoc(q);
+            addQuadLoc(m, q);
             //System.out.println("Quad id: "+quadID);
             
             // first quad visited is the entry point
