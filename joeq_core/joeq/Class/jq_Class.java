@@ -17,6 +17,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 import Allocator.ObjectLayout;
 import Bootstrap.PrimordialClassLoader;
@@ -34,6 +35,7 @@ import Run_Time.TypeCheck;
 import UTF.UTFDataFormatError;
 import UTF.Utf8;
 import Util.Assert;
+import Util.IO.Textualizer;
 import Util.Convert;
 import Util.Strings;
 
@@ -2645,5 +2647,40 @@ uphere2:
             System.err.println("Cannot access "+type+" "+s+": "+x);
         }
         return null;
+    }
+
+    static final HashMap/*<String,StringConstant>*/ stringConstants = new HashMap();
+    public StringConstant findStringConstant(String s) {
+        StringConstant sc = (StringConstant)stringConstants.get(s); 
+        if (sc == null) {
+            char idx = getCP().findEqual(s, CONSTANT_String);
+            if (idx != 0)
+                stringConstants.put(s, sc = new StringConstant(idx));
+        }
+        return sc;
+    }
+    public static StringConstant readStringConstant(StringTokenizer st) {
+        jq_Class clazz = (jq_Class)jq_Type.read(st);
+        char cpindex = (char)Integer.parseInt(st.nextToken());
+        clazz.load();
+        return clazz.findStringConstant(clazz.getCPasString(cpindex));
+    }
+
+    public class StringConstant {
+        char cpindex;
+        StringConstant(char cpindex) {
+            this.cpindex = cpindex;
+        }
+        public void write(Textualizer t) throws IOException {
+            jq_Class.this.write(t);
+            t.writeBytes(" "+(int)cpindex);
+        }
+        public String getString() {
+            load();
+            return getCPasString(cpindex);
+        }
+        public String toString() {
+            return "StringConstant[class="+jq_Class.this+",idx="+(int)cpindex+"]";
+        }
     }
 }
