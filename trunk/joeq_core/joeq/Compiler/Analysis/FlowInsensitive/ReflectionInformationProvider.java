@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.StringTokenizer;
+import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_Type;
@@ -34,7 +35,7 @@ public abstract class ReflectionInformationProvider {
          */
         public NewInstanceTargets(String declaredIn) {
             this.declaredIn = getMethod(declaredIn);
-            if(PA.TRACE_REFLECTION) System.out.println("No method for " + declaredIn);
+            if(PA.TRACE_REFLECTION) System.out.println("No method for " + declaredIn + " in NewInstanceTargets");
         }
         
         public boolean isValid(){
@@ -49,9 +50,11 @@ public abstract class ReflectionInformationProvider {
             
             String className = fullMethodName.substring(0, index);
             String methodName = fullMethodName.substring(index+1, fullMethodName.length());
-//            className = "L" + className + ";";
             
-            jq_Class clazz = (jq_Class) jq_Type.parseType(className);
+            String classdesc = "L" + className.replace('.', '/') + ";";
+            jq_Class clazz = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType(classdesc);
+            
+//            jq_Class clazz = (jq_Class) jq_Type.parseType(className);
             try {
                 clazz.prepare();
             } catch (NoClassDefFoundError e){
