@@ -3,6 +3,6 @@
     <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
     <classpathentry kind="src" path=""/>
     <classpathentry kind="lib" path="Support/java14.jar"/>
-    <classpathentry kind="lib" path="Support/javabdd_0.4.jar"/>
+    <classpathentry kind="lib" path="Support/javabdd_0.5.jar"/>
     <classpathentry kind="output" path=""/>
 </classpath>
