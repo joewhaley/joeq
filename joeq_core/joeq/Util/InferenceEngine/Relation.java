@@ -3,6 +3,7 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Util.InferenceEngine;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -30,6 +31,7 @@ public abstract class Relation {
     }
     
     public abstract void load();
+    public abstract void save() throws IOException;
     
     public String toString() {
         return name;

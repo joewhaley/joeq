@@ -57,11 +57,13 @@ public class BDDRelation extends Relation {
     public void load() {
         try {
             load(name+".bdd");
+            if (solver.NOISY) solver.out.println("Loaded BDD from file: "+name+".bdd");
         } catch (IOException x) {
         }
         
         try {
             loadTuples(name+".tuples");
+            if (solver.NOISY) solver.out.println("Loaded tuples from file: "+name+".tuples");
         } catch (IOException x) {
         }
     }
@@ -97,5 +99,13 @@ public class BDDRelation extends Relation {
             if (solver.TRACE) solver.out.println();
             relation.orWith(b);
         }
+    }
+    
+    public void save() throws IOException {
+        save(name+".rbdd");
+    }
+    
+    public void save(String filename) throws IOException {
+        solver.bdd.save(filename, relation);
     }
 }
