@@ -194,15 +194,15 @@ uphere2:
         }
     }
     
-    static void printAllInclusionEdges(HashSet visited, MethodSummary.Node pnode, MethodSummary.Node node, String indent, boolean all, jq_Field f) throws IOException {
-        System.out.print(indent+"Node: "+node);
+    static void printAllInclusionEdges(HashSet visited, MethodSummary.Node pnode, MethodSummary.Node node, String indent, boolean all, jq_Field f, boolean verbose) throws IOException {
+        if (verbose) System.out.print(indent+"Node: "+node);
         if (pnode != null) {
             Quad q = (Quad)apa.edgesToQuads.get(Default.pair(pnode, node));
             if (q != null)
-                System.out.print(" from instruction "+q);
+                if (verbose) System.out.print(" from instruction "+q);
         }
         if (visited.contains(node)) {
-            System.out.println(" <duplicate>, skipping.");
+            if (verbose) System.out.println(" <duplicate>, skipping.");
             return;
         }
         visited.add(node);
@@ -210,7 +210,7 @@ uphere2:
         if (node instanceof MethodSummary.OutsideNode) {
             MethodSummary.OutsideNode onode = (MethodSummary.OutsideNode)node;
             while (onode.skip != null) {
-                System.out.println(indent+onode+" equivalent to "+onode.skip);
+                if (verbose) System.out.println(indent+onode+" equivalent to "+onode.skip);
                 onode = onode.skip;
             }
             if (onode instanceof MethodSummary.FieldNode) {
@@ -218,18 +218,23 @@ uphere2:
                 jq_Field field = fnode.f;
                 Set inEdges = fnode.getAccessPathPredecessors();
                 System.out.println(indent+"Parent nodes: "+inEdges);
-                System.out.print(indent+"Type 'u' to go up to parent nodes: ");
+                System.out.print(indent+"Type 'w' to find matching writes to parent nodes, 'u' to go up: ");
                 String s = in.readLine();
                 if (s.equalsIgnoreCase("u")) {
                     for (Iterator it3 = inEdges.iterator(); it3.hasNext(); ) {
                         MethodSummary.Node node4 = (MethodSummary.Node)it3.next();
-                        printAllInclusionEdges(visited, null, node4, indent+"<", all, field);
+                        printAllInclusionEdges(visited, null, node4, indent+"<", all, field, true);
+                    }
+                } else if (s.equalsIgnoreCase("w")) {
+                    for (Iterator it3 = inEdges.iterator(); it3.hasNext(); ) {
+                        MethodSummary.Node node4 = (MethodSummary.Node)it3.next();
+                        printAllInclusionEdges(visited, null, node4, indent+"<", all, field, false);
                     }
                 }
             }
             Set outEdges = (Set)apa.nodeToInclusionEdges.get(onode);
             if (outEdges != null) {
-                boolean yes = all;
+                boolean yes = all || !verbose;
                 if (!yes) {
                     System.out.print(indent+outEdges.size()+" out edges, print them? ('y' for yes, 'a' for all) ");
                     String s = in.readLine();
@@ -239,7 +244,7 @@ uphere2:
                 if (yes) {
                     for (Iterator it3 = outEdges.iterator(); it3.hasNext(); ) {
                         MethodSummary.Node node2 = (MethodSummary.Node)it3.next();
-                        printAllInclusionEdges(visited, onode, node2, indent+" ", all, null);
+                        printAllInclusionEdges(visited, onode, node2, indent+" ", all, null, verbose);
                     }
                 }
             }
@@ -253,7 +258,7 @@ uphere2:
                     Quad quad = node.getSourceQuad(f, node2);
                     if (quad != null)
                         System.out.println(indent+"From instruction: "+quad);
-                    printAllInclusionEdges(visited, null, node2, indent+">", all, null);
+                    printAllInclusionEdges(visited, null, node2, indent+">", all, null, verbose);
                 }
             }
         }
@@ -416,7 +421,7 @@ uphere2:
                     ms.getNodesThatCall(pp, set);
                     for (Iterator it2 = set.iterator(); it2.hasNext(); ) {
                         MethodSummary.Node node = (MethodSummary.Node)it2.next();
-                        printAllInclusionEdges(new HashSet(), null, node, "", false, null);
+                        printAllInclusionEdges(new HashSet(), null, node, "", false, null, true);
                     }
                 }
                 continue;
