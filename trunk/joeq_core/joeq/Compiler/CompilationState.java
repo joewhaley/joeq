@@ -76,13 +76,6 @@ public abstract class CompilationState implements CompilationConstants {
          * @see Compil3r.CompilationState#tryResolve(Clazz.jq_Member)
          */
         public jq_Member tryResolve(jq_Member m) {
-            return m.resolve();
-        }
-
-        /* (non-Javadoc)
-         * @see Compil3r.CompilationState#resolve(Clazz.jq_Member)
-         */
-        public jq_Member resolve(jq_Member m) {
             try {
                 m = m.resolve();
             } catch (Error _) { }
@@ -90,9 +83,17 @@ public abstract class CompilationState implements CompilationConstants {
         }
 
         /* (non-Javadoc)
+         * @see Compil3r.CompilationState#resolve(Clazz.jq_Member)
+         */
+        public jq_Member resolve(jq_Member m) {
+            return m.resolve();
+        }
+
+        /* (non-Javadoc)
          * @see Compil3r.CompilationState#isSubtype(Clazz.jq_Type, Clazz.jq_Type)
          */
         public byte isSubtype(jq_Type t1, jq_Type t2) {
+            t1.prepare(); t2.prepare();
             return t1.isSubtypeOf(t2) ? YES : NO;
         }
 
@@ -114,6 +115,8 @@ public abstract class CompilationState implements CompilationConstants {
          * @see Compil3r.CompilationState#implementsInterface(Clazz.jq_Class, Clazz.jq_Class)
          */
         public byte implementsInterface(jq_Class klass, jq_Class inter) {
+            klass.prepare();
+            inter.prepare();
             return klass.isSubtypeOf(inter) ? YES : NO;
         }
 
