@@ -14,6 +14,7 @@ import org.sf.javabdd.BDD;
 import Clazz.jq_Class;
 import Clazz.jq_Field;
 import Clazz.jq_Method;
+import Clazz.jq_FakeInstanceMethod;
 import Clazz.jq_MethodVisitor;
 import Clazz.jq_Reference;
 import Clazz.jq_Type;
@@ -161,8 +162,12 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
         int M_i = pa.Mmap.get(m);
         BDD M_bdd = pa.M.ithVar(M_i);
         pa.addToVisited(M_bdd);
+
+        MethodSummary ms = null;
+        if (m instanceof jq_FakeInstanceMethod) 
+            ms = MethodSummary.fakeMethodSummary((jq_FakeInstanceMethod)m);
         
-        if (m.getBytecode() == null) {
+        if (m.getBytecode() == null && ms == null) {
             // todo: parameters passed into native methods.
             // build up 'Mret'
             jq_Type retType = m.getReturnType();
@@ -175,7 +180,9 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
             return;
         }
         
-        MethodSummary ms = MethodSummary.getSummary(CodeCache.getCode(m));
+        if (ms == null) {
+            ms = MethodSummary.getSummary(CodeCache.getCode(m));
+        }
         if (TRACE) out.println("Visiting method summary "+ms);
         
         if (m.isSynchronized() && !m.isStatic()) {

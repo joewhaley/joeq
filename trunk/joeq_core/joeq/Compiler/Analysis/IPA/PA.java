@@ -45,6 +45,7 @@ import Clazz.jq_Class;
 import Clazz.jq_Field;
 import Clazz.jq_InstanceField;
 import Clazz.jq_Method;
+import Clazz.jq_FakeInstanceMethod;
 import Clazz.jq_NameAndDesc;
 import Clazz.jq_Reference;
 import Clazz.jq_Type;
@@ -383,6 +384,9 @@ public class PA {
     }
     
     void addSingleTargetCall(Set thisptr, ProgramLocation mc, BDD I_bdd, jq_Method target) {
+        if (target == javaLangObject_clone)      // super.clone()
+            target = fakeCloneIfNeeded(mc.getContainingClass());
+
         addToIE(I_bdd, target);
         if (OBJECT_SENSITIVE) {
             BDD bdd1 = bdd.zero();
@@ -817,6 +821,27 @@ public class PA {
         cha.orWith(bdd1);
     }
     
+    jq_Class jlo = PrimordialClassLoader.getJavaLangObject();
+    jq_Method javaLangObject_clone;
+    {
+        jlo.prepare();
+        javaLangObject_clone = jlo.getDeclaredInstanceMethod(new jq_NameAndDesc("clone", "()Ljava/lang/Object;"));
+    }
+    jq_Class jlcloneable = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/Cloneable;");
+
+    private jq_Method fakeCloneIfNeeded(jq_Type t) {
+        jq_Method m = javaLangObject_clone;
+        if (t instanceof jq_Class) {
+            jq_Class c = (jq_Class)t;
+            if (!c.isInterface() && c.implementsInterface(jlcloneable)) {
+                m = jq_FakeInstanceMethod.fakeCloneMethod(c);
+                visitMethod(m);
+            }
+        }
+        // TODO: handle cloning of arrays
+        return m;
+    }
+
     int last_V = 0;
     int last_H = 0;
     int last_T = 0;
@@ -855,16 +880,9 @@ public class PA {
                     addThreadRun(H_i, (jq_Class) type);
                 }
             }
-            if (false && n instanceof UnknownTypeNode) {
-                // conservatively say that it can be any type.
-                BDD Tdom = T2.domain();
-                addToHT(H_i, Tdom);
-                Tdom.free();
-            } else {
-                addToHT(H_i, type);
-            }
+            addToHT(H_i, type);
         }
-        
+
         int Fsize = Fmap.size();
         int Tsize = Tmap.size();
         // build up 'aT'
@@ -905,6 +923,26 @@ public class PA {
                 T2_bdd.free();
             }
             T1_bdd.free();
+        }
+        
+        // add types for UnknownTypeNodes to 'hT'
+        for (int H_i = last_H; H_i < Hsize; ++H_i) {
+            Node n = (Node) Hmap.get(H_i);
+            if (!(n instanceof UnknownTypeNode))
+                continue;
+            jq_Reference type = n.getDeclaredType();
+            if (type == null)
+                continue;
+            if (type == jlo) {
+                System.out.println("warning: excluding UnknownTypeNode java.lang.Object* from hT: H1("+H_i+")");
+            } else {
+                // conservatively say that it can be any known subtype.
+                BDD T_i = T1.ithVar(Tmap.get(type));
+                BDD Tsub = aT.relprod(T_i, T1set);
+                addToHT(H_i, Tsub);
+                Tsub.free();
+                T_i.free();
+            }
         }
         
         // make type filters
@@ -949,6 +987,9 @@ public class PA {
                 } else {
                     if (t == null || !t.isSubtypeOf(n.getDeclaringClass())) continue;
                     m = t.getVirtualMethod(n.getNameAndDesc());
+                }
+                if (m == javaLangObject_clone && t != jlo) {
+                    m = fakeCloneIfNeeded(t);
                 }
                 if (m == null) continue;
                 addToCHA(T_bdd, N_i, m);
