@@ -82,7 +82,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         }
         if (SSA) {
             regBits = 11;
-            varargsBits = 6;
+            varargsBits = 7;
             int index = varOrderDesc.indexOf("xtargetxfallthrough");
             varOrderDesc = varOrderDesc.substring(0, index) + varOrderDesc.substring(index + "xtargetxfallthrough".length());
             
