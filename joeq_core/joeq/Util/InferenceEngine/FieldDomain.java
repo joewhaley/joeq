@@ -44,4 +44,10 @@ public class FieldDomain {
         if (map == null) return Integer.toString(val);
         else return map.get(val).toString();
     }
+    
+    public int namedConstant(String constant) {
+        if (map == null) throw new IllegalArgumentException("No constant map for FieldDomain "+name+" in which to look up constant "+constant);
+        if (!map.contains(constant)) throw new IllegalArgumentException("Constant "+name+" not found in map for relation "+constant);
+        return map.get(constant);
+    }
 }

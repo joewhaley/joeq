@@ -31,9 +31,11 @@ public class BDDInferenceRule extends InferenceRule {
     BDD[] oldRelationValues;
     Map variableToBDDDomain;
     boolean incrementalize = true;
+    int updateCount;
     
-    public BDDInferenceRule(BDDSolver solver, List/*<RuleTerm>*/ top, RuleTerm bottom) {
+    public BDDInferenceRule(BDDSolver solver, List/* <RuleTerm> */ top, RuleTerm bottom) {
         super(top, bottom);
+        updateCount = 0;
         this.solver = solver;
         this.variableToBDDDomain = new HashMap();
         for (int i = 0; i < top.size(); ++i) {
@@ -82,12 +84,14 @@ public class BDDInferenceRule extends InferenceRule {
     
     // non-incremental version.
     public boolean update() {
+        ++updateCount;
         if (incrementalize) {
             if (oldRelationValues != null) return updateIncremental();
             else initializeOldRelationValues();
         }
         
-        if (solver.TRACE) solver.out.println("Applying inference rule "+this);
+        //if (solver.TRACE)
+            solver.out.println("Applying inference rule "+this+" (update "+updateCount+")");
         
         BDD[] relationValues = new BDD[top.size()];
         
@@ -96,7 +100,6 @@ public class BDDInferenceRule extends InferenceRule {
         Set unnecessaryVariables = new HashSet();
         for (int i = 0; i < top.size(); ++i) {
             RuleTerm rt = (RuleTerm) top.get(i);
-            BDDRelation r = (BDDRelation) rt.relation;
             for (int j = 0; j < rt.variables.size(); ++j) {
                 Variable v = (Variable) rt.variables.get(j);
                 if (necessaryVariables.contains(v)) continue;
@@ -108,8 +111,18 @@ public class BDDInferenceRule extends InferenceRule {
                 }
             }
         }
-        unnecessaryVariables.removeAll(bottom.variables);
-        necessaryVariables.addAll(bottom.variables);
+        
+        for (int j = 0; j < bottom.variables.size(); ++j) {
+            Variable v = (Variable) bottom.variables.get(j);
+            if (necessaryVariables.contains(v)) continue;
+            if (unnecessaryVariables.contains(v)) {
+               necessaryVariables.add(v);
+               unnecessaryVariables.remove(v);
+            } else {
+                    unnecessaryVariables.add(v);
+            }
+        }
+
         if (solver.TRACE) solver.out.println("Necessary variables: "+necessaryVariables);
         if (solver.TRACE) solver.out.println("Unnecessary variables: "+unnecessaryVariables);
         for (int i = 0; i < top.size(); ++i) {
@@ -140,7 +153,8 @@ public class BDDInferenceRule extends InferenceRule {
             }
         }
         
-        // Replace BDDDomain's in the BDD relations to match variable assignments.
+        // Replace BDDDomain's in the BDD relations to match variable
+        // assignments.
         for (int i = 0; i < top.size(); ++i) {
             RuleTerm rt = (RuleTerm) top.get(i);
             BDDRelation r = (BDDRelation) rt.relation;
@@ -225,6 +239,14 @@ public class BDDInferenceRule extends InferenceRule {
             result.replaceWith(pairing);
             pairing.reset();
         }
+        for (int i = 0; i < bottom.variables.size(); ++i) {
+            Variable v = (Variable) bottom.variables.get(i);
+            if (v instanceof Constant) {
+                Constant c = (Constant) v;
+                BDDDomain d = (BDDDomain) r.domains.get(i);
+                result.andWith(d.ithVar(c.value));
+            }
+        }
         if (solver.TRACE_FULL) solver.out.println("Adding to "+bottom+": "+result.toStringWithDomains());
         BDD oldRelation = r.relation.id();
         r.relation.orWith(result);
@@ -238,7 +260,8 @@ public class BDDInferenceRule extends InferenceRule {
     
     // Incremental version.
     public boolean updateIncremental() {
-        if (solver.TRACE) solver.out.println("Applying inference rule "+this+" (incremental)");
+        //if (solver.TRACE)
+        solver.out.println("Applying inference rule "+this+" (incremental)"+" (update "+updateCount+")");
         
         BDD[] allRelationValues = new BDD[top.size()];
         BDD[] newRelationValues = new BDD[top.size()];
@@ -248,7 +271,6 @@ public class BDDInferenceRule extends InferenceRule {
         Set unnecessaryVariables = new HashSet();
         for (int i = 0; i < top.size(); ++i) {
             RuleTerm rt = (RuleTerm) top.get(i);
-            BDDRelation r = (BDDRelation) rt.relation;
             for (int j = 0; j < rt.variables.size(); ++j) {
                 Variable v = (Variable) rt.variables.get(j);
                 if (necessaryVariables.contains(v)) continue;
@@ -260,8 +282,18 @@ public class BDDInferenceRule extends InferenceRule {
                 }
             }
         }
-        unnecessaryVariables.removeAll(bottom.variables);
-        necessaryVariables.addAll(bottom.variables);
+        
+        for (int j = 0; j < bottom.variables.size(); ++j) {
+            Variable v = (Variable) bottom.variables.get(j);
+            if (necessaryVariables.contains(v)) continue;
+            if (unnecessaryVariables.contains(v)) {
+               necessaryVariables.add(v);
+               unnecessaryVariables.remove(v);
+            } else {
+                    unnecessaryVariables.add(v);
+            }
+        }
+
         if (solver.TRACE) solver.out.println("Necessary variables: "+necessaryVariables);
         if (solver.TRACE) solver.out.println("Unnecessary variables: "+unnecessaryVariables);
         for (int i = 0; i < top.size(); ++i) {
@@ -291,7 +323,8 @@ public class BDDInferenceRule extends InferenceRule {
             }
         }
         
-        // Replace BDDDomain's in the BDD relations to match variable assignments.
+        // Replace BDDDomain's in the BDD relations to match variable
+        // assignments.
         for (int i = 0; i < top.size(); ++i) {
             RuleTerm rt = (RuleTerm) top.get(i);
             BDDRelation r = (BDDRelation) rt.relation;
@@ -396,6 +429,14 @@ public class BDDInferenceRule extends InferenceRule {
                 System.out.println("Result domains "+domainsOf(result));
             result.replaceWith(pairing);
             pairing.reset();
+        }
+        for (int i = 0; i < bottom.variables.size(); ++i) {
+            Variable v = (Variable) bottom.variables.get(i);
+            if (v instanceof Constant) {
+                Constant c = (Constant) v;
+                BDDDomain d = (BDDDomain) r.domains.get(i);
+                result.andWith(d.ithVar(c.value));
+            }
         }
         if (solver.TRACE_FULL) solver.out.println("Adding to "+bottom+": "+result.toStringWithDomains());
         BDD oldRelation = r.relation.id();
