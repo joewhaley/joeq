@@ -40,15 +40,13 @@ public abstract class ReflectionInformationProvider {
                     System.out.println("No method for " + declaredIn + " in NewInstanceTargets. "
                         + " The classpath is [" + PrimordialClassLoader.loader.classpathToString() + "]");
                 } else {
-                    System.out.println("Created a NewInstanceTarget object for " + declaredIn);
+                    System.out.println("Created a NewInstanceTarget object for " + this.declaredIn.toString());
                 }
             }
         }
         
         public boolean isValid(){
-            return 
-                getDeclaredIn() != null &&
-                targets.size() > 0;
+            return getDeclaredIn() != null && targets.size() > 0;
         }
 
         private jq_Method getMethod(String fullMethodName) {
@@ -66,6 +64,7 @@ public abstract class ReflectionInformationProvider {
                 clazz.prepare();
             } catch (NoClassDefFoundError e){
                 // no class found
+                if(PA.TRACE_REFLECTION) System.err.println("Failed to load class " + className);
                 return null;
             }
             jq_Method method = clazz.getDeclaredMethod(methodName);
@@ -267,7 +266,7 @@ public abstract class ReflectionInformationProvider {
                     }
                 }
             }
-            if(TRACE && targets.isValid()){
+            if(PA.TRACE_REFLECTION && targets.isValid()){
                 System.out.println("Read " + targets);
             }
             
@@ -286,9 +285,9 @@ public abstract class ReflectionInformationProvider {
             if(PA.TRACE_REFLECTION) System.out.println("There are " + specs.size() + " specs to check against.");
             for(Iterator iter = specs.iterator(); iter.hasNext();){
                 NewInstanceTargets spec = (NewInstanceTargets) iter.next();
-                if(PA.TRACE_REFLECTION) System.out.println("\tChecking agains " + spec.getDeclaredIn());                
+                if(PA.TRACE_REFLECTION) System.out.println("\tChecking against " + spec.getDeclaredIn());                
                 
-                if(spec.getDeclaredIn() == n){                            
+                if(spec.getDeclaredIn() == n){
                     return spec.getTargets();
                 }
             }
