@@ -7,6 +7,7 @@ import joeq.Class.jq_Field;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_Reference;
 import joeq.Class.jq_Type;
+import joeq.Class.jq_Reference.jq_NullType;
 import joeq.Compiler.BytecodeAnalysis.BytecodeVisitor;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Memory.Address;
@@ -93,7 +94,7 @@ public interface Operand {
             return "AConst: "+value;
         }
         public jq_Reference getType() {
-            if (value == null) return null;
+            if (value == null) return jq_NullType.NULL_TYPE;
             return Reflection.getTypeOf(this.value);
         }
         public void attachToQuad(Quad q) { Assert._assert(instruction == null); instruction = q; }
