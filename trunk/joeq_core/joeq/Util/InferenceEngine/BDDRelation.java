@@ -364,6 +364,17 @@ public class BDDRelation extends Relation {
         return new MyTupleIterator(i, domains);
     }
     
+    public TupleIterator iterator(long[] j) {
+        BDD val = relation.id();
+        for (int i = 0; i < j.length; ++i) {
+            if (j[i] == -1) continue;
+            final BDDDomain d = (BDDDomain) domains.get(i);
+            val.andWith(d.ithVar(j[i]));
+        }
+        final Iterator i = val.iterator(domainSet);
+        return new MyTupleIterator(i, domains);
+    }
+    
     public boolean contains(int k, long j) {
         final BDDDomain d = (BDDDomain) domains.get(k);
         BDD b = relation.id();
