@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.Vector;
@@ -17,6 +18,7 @@ import java.util.Vector;
 import Clazz.jq_Method;
 import Compil3r.Quad.CallGraph;
 import Util.Assert;
+import Util.Collections.Pair;
 
 /**
  * <code>SCComponent</code> models a <i>Strongly connected component</i> \
@@ -326,6 +328,52 @@ public final class SCComponent implements Comparable, Serializable {
      * decreasing topological order */
     public final SCComponent prevTopSort() { return prevTopSort; }
 
+    public final Set getEntrypoints(final Navigator nav) {
+        LinkedHashSet result = new LinkedHashSet();
+outer:
+        for (int i=0; i<this.nodes_array.length; ++i) {
+            Object node1 = this.nodes_array[i];
+            for (Iterator j=nav.prev(node1).iterator(); j.hasNext(); ) {
+                Object node2 = j.next();
+                if (!this.nodes.contains(node2)) {
+                    result.add(node1);
+                    continue outer;
+                }
+            }
+        }
+        return result;
+    }
+
+    public final Set getExitpoints(final Navigator nav) {
+        LinkedHashSet result = new LinkedHashSet();
+outer:
+        for (int i=0; i<this.nodes_array.length; ++i) {
+            Object node1 = this.nodes_array[i];
+            for (Iterator j=nav.next(node1).iterator(); j.hasNext(); ) {
+                Object node2 = j.next();
+                if (!this.nodes.contains(node2)) {
+                    result.add(node1);
+                    continue outer;
+                }
+            }
+        }
+        return result;
+    }
+    
+    public final Set getExitEdges(final Navigator nav) {
+        LinkedHashSet result = new LinkedHashSet();
+        for (int i=0; i<this.nodes_array.length; ++i) {
+            Object node1 = this.nodes_array[i];
+            for (Iterator j=nav.next(node1).iterator(); j.hasNext(); ) {
+                Object node2 = j.next();
+                if (!this.nodes.contains(node2)) {
+                    result.add(new Pair(node1, node2));
+                }
+            }
+        }
+        return result;
+    }
+    
     public final List/*<SCComponent>*/ listTopSort() {
         int n = 1;
         SCComponent c = this;

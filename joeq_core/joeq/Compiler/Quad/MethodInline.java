@@ -3,13 +3,13 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Quad;
 
+import java.util.Collection;
+
 import Clazz.jq_Class;
-import Clazz.jq_InstanceMethod;
 import Clazz.jq_Method;
 import Clazz.jq_Primitive;
 import Clazz.jq_Type;
 import Compil3r.BytecodeAnalysis.BytecodeVisitor;
-import Compil3r.BytecodeAnalysis.CallTargets;
 import Compil3r.Quad.Operand.ConditionOperand;
 import Compil3r.Quad.Operand.IConstOperand;
 import Compil3r.Quad.Operand.ParamListOperand;
@@ -22,9 +22,9 @@ import Compil3r.Quad.Operator.IntIfCmp;
 import Compil3r.Quad.Operator.Invoke;
 import Compil3r.Quad.Operator.Move;
 import Compil3r.Quad.Operator.Return;
+import Compil3r.Quad.ProgramLocation.QuadProgramLocation;
 import Compil3r.Quad.RegisterFactory.Register;
 import Util.Assert;
-import Util.Collections.FilterIterator.Filter;
 import Util.Templates.ListIterator;
 
 /**
@@ -33,70 +33,156 @@ import Util.Templates.ListIterator;
  */
 public class MethodInline implements ControlFlowGraphVisitor {
 
-    public static final boolean TRACE = true;
+    public static final boolean TRACE = false;
+    public static final boolean TRACE_ORACLE = false;
+    public static final boolean TRACE_DECISIONS = true;
     public static final java.io.PrintStream out = System.out;
 
-    protected Filter f;
+    Oracle oracle;
 
-    public MethodInline(Filter f) { this.f = f; }
-    public MethodInline() { }
+    public MethodInline(Oracle o) {
+        this.oracle = o;
+    }
+    public MethodInline(CallGraph cg) {
+        this(new InlineSmallSingleTargetCalls(cg));
+    }
+    public MethodInline() {
+        this(new InlineSmallSingleTargetCalls(CHACallGraph.INSTANCE));
+    }
+
+    public static interface Oracle {
+        InliningDecision shouldInline(ControlFlowGraph caller, BasicBlock bb, Quad callSite);
+    }
+    
+    public static abstract class InliningDecision {
+        public abstract void inlineCall(ControlFlowGraph caller, BasicBlock bb, Quad q);
+    }
+    
+    public static final class DontInline extends InliningDecision {
+        private DontInline() {}
+        public void inlineCall(ControlFlowGraph caller, BasicBlock bb, Quad q) {
+        }
+        public static final DontInline INSTANCE = new DontInline();
+    }
+    
+    public static class NoCheckInliningDecision extends InliningDecision {
+        ControlFlowGraph callee;
+        public NoCheckInliningDecision(jq_Method target) {
+            this(CodeCache.getCode(target));
+        }
+        public NoCheckInliningDecision(ControlFlowGraph target) {
+            this.callee = target;
+        }
+        public void inlineCall(ControlFlowGraph caller, BasicBlock bb, Quad q) {
+            inlineNonVirtualCallSite(caller, bb, q, callee);
+        }
+        public String toString() { return callee.getMethod().toString(); }
+    }
+    
+    public static class TypeCheckInliningDecision extends InliningDecision {
+        jq_Class expectedType;
+        ControlFlowGraph callee;
+        public TypeCheckInliningDecision(jq_Method target) {
+            this.expectedType = target.getDeclaringClass();
+            this.callee = CodeCache.getCode(target);
+        }
+        public void inlineCall(ControlFlowGraph caller, BasicBlock bb, Quad q) {
+            inlineVirtualCallSiteWithTypeCheck(caller, bb, q, callee, expectedType);
+        }
+        public String toString() { return callee.getMethod().toString(); }
+    }
+    
+    public static class InlineSmallSingleTargetCalls implements Oracle {
+        
+        protected CallGraph cg;
+        int bcThreshold;
+        public static final int DEFAULT_THRESHOLD = 25;
+        
+        public InlineSmallSingleTargetCalls(CallGraph cg) {
+            this(cg, DEFAULT_THRESHOLD);
+        }
+        public InlineSmallSingleTargetCalls(CallGraph cg, int bcThreshold) {
+            this.cg = cg;
+            this.bcThreshold = bcThreshold;
+        }
+    
+        public InliningDecision shouldInline(ControlFlowGraph caller, BasicBlock bb, Quad callSite) {
+            if (TRACE_ORACLE) out.println("Oracle evaluating "+callSite);
+            if (Invoke.getMethod(callSite).getMethod().needsDynamicLink(caller.getMethod())) {
+                if (TRACE_ORACLE) out.println("Skipping because call site needs dynamic link.");
+                return null;
+            }
+            Invoke i = (Invoke) callSite.getOperator();
+            jq_Method target;
+            if (i.isVirtual()) {
+                ProgramLocation pl = new QuadProgramLocation(caller.getMethod(), callSite);
+                Collection c = cg.getTargetMethods(pl);
+                if (c.size() != 1) {
+                    if (TRACE_ORACLE) out.println("Skipping because call site has multiple targets.");
+                    return null;
+                }
+                target = (jq_Method) c.iterator().next();
+            } else {
+                target = Invoke.getMethod(callSite).getMethod();
+            }
+            if (target.getBytecode() == null) {
+                if (TRACE_ORACLE) out.println("Skipping because target method is native.");
+                return null;
+            }
+            if (target.getBytecode().length > bcThreshold) {
+                if (TRACE_ORACLE) out.println("Skipping because target method is too large ("+target.getBytecode().length+").");
+                return null;
+            }
+            if (target == caller.getMethod()) {
+                if (TRACE_ORACLE) out.println("Skipping because method is recursive.");
+                return null;
+            }
+            // HACK: for interpreter.
+            if (!Interpreter.QuadInterpreter.interpret_filter.isElement(target)) {
+                if (TRACE_ORACLE) out.println("Skipping because the interpreter cannot handle the target method.");
+                return null;
+            }
+            
+            if (TRACE_ORACLE) out.println("Oracle says to inline!");
+            return new NoCheckInliningDecision(target);
+        }
+
+    }
     
     public void visitCFG(ControlFlowGraph cfg) {
         QuadIterator qi = new QuadIterator(cfg);
         java.util.LinkedList inline_blocks = new java.util.LinkedList();
         java.util.LinkedList inline_quads = new java.util.LinkedList();
-        java.util.LinkedList inline2_blocks = new java.util.LinkedList();
-        java.util.LinkedList inline2_quads = new java.util.LinkedList();
-        java.util.LinkedList inline2_types = new java.util.LinkedList();
+        java.util.LinkedList inline_decisions = new java.util.LinkedList();
         while (qi.hasNext()) {
             Quad q = qi.nextQuad();
             if (q.getOperator() instanceof Invoke) {
-                if (Invoke.getMethod(q).getMethod().needsDynamicLink(cfg.getMethod())) continue;
-                Invoke i = (Invoke) q.getOperator();
-                if (i.isVirtual()) {
-                    jq_InstanceMethod m = (jq_InstanceMethod) Invoke.getMethod(q).getMethod();
-                    CallTargets ct = CallTargets.getTargets(cfg.getMethod().getDeclaringClass(), m, BytecodeVisitor.INVOKE_VIRTUAL, false);
-                    if (ct.size() == 1) {
-                        m = (jq_InstanceMethod) ct.iterator().next();
-                        jq_Class type = m.getDeclaringClass();
-                        inline2_quads.add(q);
-                        inline2_blocks.add(qi.getCurrentBasicBlock());
-                        inline2_types.add(type);
-                    }
-                } else {
-                    if (Invoke.getMethod(q).getMethod().getBytecode() == null) continue;
-                    // HACK: for interpreter.
-                    if (!Interpreter.QuadInterpreter.interpret_filter.isElement(Invoke.getMethod(q).getMethod())) continue;
+                BasicBlock bb = qi.getCurrentBasicBlock();
+                InliningDecision d = oracle.shouldInline(cfg, bb, q);
+                if (d != null) {
+                    if (TRACE_DECISIONS) out.println("Decided to inline "+d);
+                    inline_blocks.add(bb);
                     inline_quads.add(q);
-                    inline_blocks.add(qi.getCurrentBasicBlock());
+                    inline_decisions.add(d);
                 }
             }
         }
         // do the inlining backwards, so that basic blocks don't change.
         java.util.ListIterator li1 = inline_blocks.listIterator();
         java.util.ListIterator li2 = inline_quads.listIterator();
-        while (li1.hasNext()) { li1.next(); li2.next(); }
+        java.util.ListIterator li3 = inline_decisions.listIterator();
+        while (li1.hasNext()) { li1.next(); li2.next(); li3.next(); }
         while (li1.hasPrevious()) {
             BasicBlock bb = (BasicBlock)li1.previous();
             Quad q = (Quad)li2.previous();
-            MethodInline.inlineNonVirtualCallSite(cfg, bb, q);
-        }
-        li1 = inline2_blocks.listIterator();
-        li2 = inline2_quads.listIterator();
-        java.util.ListIterator li3 = inline2_types.listIterator();
-        while (li1.hasNext()) { li1.next(); li2.next(); li3.next(); }
-        while (li1.hasPrevious()) {
-            BasicBlock bb = (BasicBlock) li1.previous();
-            Quad q = (Quad) li2.previous();
-            jq_Class type = (jq_Class) li3.previous();
-            MethodInline.inlineVirtualCallSiteWithTypeCheck(cfg, bb, q, type);
+            InliningDecision d = (InliningDecision)li3.previous();
+            if (TRACE_DECISIONS) out.println("Performing inlining "+d);
+            d.inlineCall(cfg, bb, q);
         }
     }
     
-    public static void inlineNonVirtualCallSite(ControlFlowGraph caller, BasicBlock bb, Quad q) {
-        if (TRACE) out.println("Inlining "+q+" in "+bb);
-        jq_Method m = Invoke.getMethod(q).getMethod();
-        ControlFlowGraph callee = CodeCache.getCode(m);
+    public static void inlineNonVirtualCallSite(ControlFlowGraph caller, BasicBlock bb, Quad q, ControlFlowGraph callee) {
+        if (TRACE) out.println("Inlining "+q+" target "+callee.getMethod()+" in "+bb);
 
         int invokeLocation = bb.getQuadIndex(q);
         Assert._assert(invokeLocation != -1);
@@ -132,7 +218,7 @@ public class MethodInline implements ControlFlowGraphVisitor {
 
         // add instructions to set parameters.
         ParamListOperand plo = Invoke.getParamList(q);
-        jq_Type[] params = m.getParamTypes();
+        jq_Type[] params = callee.getMethod().getParamTypes();
         for (int i=0, j=0; i<params.length; ++i, ++j) {
             Move op = Move.getMoveOp(params[i]);
             Register dest_r = callee.getRegisterFactory().getLocal(j, params[i]);
@@ -202,15 +288,12 @@ outer:
         if (TRACE) out.println(caller.getRegisterFactory().fullDump());
 
         if (TRACE) out.println("Original code:");
-        if (TRACE) out.println(CodeCache.getCode(m).fullDump());
-        if (TRACE) out.println(CodeCache.getCode(m).getRegisterFactory().fullDump());
+        if (TRACE) out.println(CodeCache.getCode(callee.getMethod()).fullDump());
+        if (TRACE) out.println(CodeCache.getCode(callee.getMethod()).getRegisterFactory().fullDump());
     }
 
-    public static void inlineVirtualCallSiteWithTypeCheck(ControlFlowGraph caller, BasicBlock bb, Quad q, jq_Class type) {
-        if (TRACE) out.println("Inlining "+q+" in "+bb+" for target "+type);
-        jq_Method m = Invoke.getMethod(q).getMethod();
-        m = type.getVirtualMethod(m.getNameAndDesc());
-        ControlFlowGraph callee = CodeCache.getCode(m);
+    public static void inlineVirtualCallSiteWithTypeCheck(ControlFlowGraph caller, BasicBlock bb, Quad q, ControlFlowGraph callee, jq_Class type) {
+        if (TRACE) out.println("Inlining "+q+" in "+bb+" for target "+callee.getMethod());
 
         int invokeLocation = bb.getQuadIndex(q);
         Assert._assert(invokeLocation != -1);
@@ -276,7 +359,7 @@ outer:
         
         // add instructions to set parameters.
         ParamListOperand plo = Invoke.getParamList(q);
-        jq_Type[] params = m.getParamTypes();
+        jq_Type[] params = callee.getMethod().getParamTypes();
         for (int i=0, j=0; i<params.length; ++i, ++j) {
             Move op = Move.getMoveOp(params[i]);
             Register dest_r = callee.getRegisterFactory().getLocal(j, params[i]);
@@ -350,7 +433,7 @@ outer:
         if (TRACE) out.println(caller.getRegisterFactory().fullDump());
 
         if (TRACE) out.println("Original code:");
-        if (TRACE) out.println(CodeCache.getCode(m).fullDump());
-        if (TRACE) out.println(CodeCache.getCode(m).getRegisterFactory().fullDump());
+        if (TRACE) out.println(CodeCache.getCode(callee.getMethod()).fullDump());
+        if (TRACE) out.println(CodeCache.getCode(callee.getMethod()).getRegisterFactory().fullDump());
     }
 }

@@ -320,6 +320,17 @@ public class BasicBlock {
      * @return  the unique id number for this basic block. */
     public int getID() { return id_number; }
 
+    public List.BasicBlock getExceptionHandlerEntries() {
+        if (exception_handler_list == null) return UnmodifiableList.BasicBlock.getEmptyList();
+        java.util.ArrayList result = new java.util.ArrayList(exception_handler_list.size());
+        for (ListIterator.ExceptionHandler i = exception_handler_list.exceptionHandlerIterator();
+             i.hasNext(); ) {
+            ExceptionHandler eh = i.nextExceptionHandler();
+            result.add(eh.getEntry());
+        }
+        return new ListWrapper.BasicBlock(result);
+    }
+    
     /** Returns true if this basic block has been marked as an exception handler
      * entry point.  Returns false otherwise.
      * @return  if this basic block has been marked as an exception handler entry point. */
