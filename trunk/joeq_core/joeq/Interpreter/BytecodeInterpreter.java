@@ -27,7 +27,7 @@ import Util.Assert;
  */
 public abstract class BytecodeInterpreter {
 
-    public static /*final*/ boolean ALWAYS_TRACE = false;
+    public static /*final*/ boolean ALWAYS_TRACE = System.getProperty("interpreter.trace") != null;
     
     /** Creates new Interpreter */
     public BytecodeInterpreter(VMInterface vm, State state) {
