@@ -35,19 +35,19 @@ public class Quad {
     Quad(int id, Operator operator, Operand operand1, Operand operand2) {
         this.id_number = id; this.operator = operator; this.operand1 = operand1; this.operand2 = operand2;
         if (operand1 != null) operand1.attachToQuad(this);
-        operand2.attachToQuad(this);
+        if (operand2 != null) operand2.attachToQuad(this);
     }
     Quad(int id, Operator operator, Operand operand1, Operand operand2, Operand operand3) {
         this.id_number = id; this.operator = operator; this.operand1 = operand1; this.operand2 = operand2; this.operand3 = operand3;
         if (operand1 != null) operand1.attachToQuad(this);
-        operand2.attachToQuad(this);
-        operand3.attachToQuad(this);
+        if (operand2 != null) operand2.attachToQuad(this);
+        if (operand3 != null) operand3.attachToQuad(this);
     }
     Quad(int id, Operator operator, Operand operand1, Operand operand2, Operand operand3, Operand operand4) {
         this.id_number = id; this.operator = operator; this.operand1 = operand1; this.operand2 = operand2; this.operand3 = operand3; this.operand4 = operand4;
         if (operand1 != null) operand1.attachToQuad(this);
-        operand2.attachToQuad(this);
-        operand3.attachToQuad(this);
+        if (operand2 != null) operand2.attachToQuad(this);
+        if (operand3 != null) operand3.attachToQuad(this);
         if (operand4 != null) operand4.attachToQuad(this); // maybe null guard
     }
     /** These are not intended to be used outside of the joeq.Compiler.Quad package.
