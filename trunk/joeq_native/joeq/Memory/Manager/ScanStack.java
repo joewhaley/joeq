@@ -114,7 +114,7 @@ public class ScanStack {
                     !refaddr.isNull();
                     refaddr = iterator.getNextReferenceAddress()) {
 
-                    DefaultHeapAllocator.processPtrField(refaddr);
+                    DefaultHeapAllocator.processPtrField(refaddr, true);
                 }
 
                 iterator.cleanupPointers();
@@ -143,7 +143,7 @@ public class ScanStack {
                     jq_StaticField sf = sfs[j];
                     if (sf.getType().isReferenceType()) {
                         HeapAddress addr = sf.getAddress();
-                        DefaultHeapAllocator.processPtrField(addr);
+                        DefaultHeapAllocator.processPtrField(addr, true);
                     }
                 }
             }

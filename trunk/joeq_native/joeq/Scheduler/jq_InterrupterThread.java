@@ -13,6 +13,7 @@ import joeq.Memory.StackAddress;
 import joeq.Runtime.Debug;
 import joeq.Runtime.SystemInterface;
 import joeq.Runtime.Unsafe;
+import joeq.Util.Assert;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>
@@ -75,6 +76,7 @@ public class jq_InterrupterThread extends Thread {
                     SystemInterface.debugwriteln(
                         "TICK! " + other_nt + " Java Thread = " + javaThread);
                 javaThread.disableThreadSwitch();
+                Assert._assert(other_nt.getCurrentJavaThread() == javaThread);
                 jq_RegisterState regs = javaThread.getRegisterState();
                 regs.setContextFlags(
                     jq_RegisterState.CONTEXT_CONTROL

@@ -46,6 +46,10 @@ public class jq_ThreadQueue {
         return t;
     }
     
+    public jq_Thread peek() {
+        return head;
+    }
+    
     public int length() {
         return size;
     }

@@ -105,7 +105,7 @@ public abstract class HeapAllocator implements jq_ClassFileConstants {
     /**
      * Process a reference to a heap object during garbage collection.
      */
-    public abstract void processPtrField(Address a);
+    public abstract void processPtrField(Address a, boolean b);
     
     //// STATIC, ALLOCATION-RELATED HELPER METHODS.
     
