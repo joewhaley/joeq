@@ -978,158 +978,195 @@ public abstract class Interpreter {
         }
         public void visitIGETSTATIC(jq_StaticField f) {
             super.visitIGETSTATIC(f);
+            f = f.resolve();
             state.push_I(vm.getstatic_I(f));
         }
         public void visitLGETSTATIC(jq_StaticField f) {
             super.visitLGETSTATIC(f);
+            f = f.resolve();
             state.push_L(vm.getstatic_L(f));
         }
         public void visitFGETSTATIC(jq_StaticField f) {
             super.visitFGETSTATIC(f);
+            f = f.resolve();
             state.push_F(vm.getstatic_F(f));
         }
         public void visitDGETSTATIC(jq_StaticField f) {
             super.visitDGETSTATIC(f);
+            f = f.resolve();
             state.push_D(vm.getstatic_D(f));
         }
         public void visitAGETSTATIC(jq_StaticField f) {
             super.visitAGETSTATIC(f);
+            f = f.resolve();
             state.push_A(vm.getstatic_A(f));
         }
         public void visitZGETSTATIC(jq_StaticField f) {
             super.visitZGETSTATIC(f);
+            f = f.resolve();
             state.push_I(vm.getstatic_Z(f)?1:0);
         }
         public void visitBGETSTATIC(jq_StaticField f) {
             super.visitBGETSTATIC(f);
+            f = f.resolve();
             state.push_I(vm.getstatic_B(f));
         }
         public void visitCGETSTATIC(jq_StaticField f) {
             super.visitCGETSTATIC(f);
+            f = f.resolve();
             state.push_I(vm.getstatic_C(f));
         }
         public void visitSGETSTATIC(jq_StaticField f) {
             super.visitSGETSTATIC(f);
+            f = f.resolve();
             state.push_I(vm.getstatic_S(f));
         }
         public void visitIPUTSTATIC(jq_StaticField f) {
             super.visitIPUTSTATIC(f);
+            f = f.resolve();
             vm.putstatic_I(f, state.pop_I());
         }
         public void visitLPUTSTATIC(jq_StaticField f) {
             super.visitLPUTSTATIC(f);
+            f = f.resolve();
             vm.putstatic_L(f, state.pop_L());
         }
         public void visitFPUTSTATIC(jq_StaticField f) {
             super.visitFPUTSTATIC(f);
+            f = f.resolve();
             vm.putstatic_F(f, state.pop_F());
         }
         public void visitDPUTSTATIC(jq_StaticField f) {
             super.visitDPUTSTATIC(f);
+            f = f.resolve();
             vm.putstatic_D(f, state.pop_D());
         }
         public void visitAPUTSTATIC(jq_StaticField f) {
             super.visitAPUTSTATIC(f);
+            f = f.resolve();
             vm.putstatic_A(f, state.pop_A());
         }
         public void visitZPUTSTATIC(jq_StaticField f) {
             super.visitZPUTSTATIC(f);
+            f = f.resolve();
             vm.putstatic_Z(f, state.pop_I()!=0);
         }
         public void visitBPUTSTATIC(jq_StaticField f) {
             super.visitBPUTSTATIC(f);
+            f = f.resolve();
             vm.putstatic_B(f, (byte)state.pop_I());
         }
         public void visitCPUTSTATIC(jq_StaticField f) {
             super.visitCPUTSTATIC(f);
+            f = f.resolve();
             vm.putstatic_C(f, (char)state.pop_I());
         }
         public void visitSPUTSTATIC(jq_StaticField f) {
             super.visitSPUTSTATIC(f);
+            f = f.resolve();
             vm.putstatic_S(f, (short)state.pop_I());
         }
         public void visitIGETFIELD(jq_InstanceField f) {
             super.visitIGETFIELD(f);
+            f = f.resolve();
             state.push_I(vm.getfield_I(state.pop_A(), f));
         }
         public void visitLGETFIELD(jq_InstanceField f) {
             super.visitLGETFIELD(f);
+            f = f.resolve();
             state.push_L(vm.getfield_L(state.pop_A(), f));
         }
         public void visitFGETFIELD(jq_InstanceField f) {
             super.visitFGETFIELD(f);
+            f = f.resolve();
             state.push_F(vm.getfield_F(state.pop_A(), f));
         }
         public void visitDGETFIELD(jq_InstanceField f) {
             super.visitDGETFIELD(f);
+            f = f.resolve();
             state.push_D(vm.getfield_D(state.pop_A(), f));
         }
         public void visitAGETFIELD(jq_InstanceField f) {
             super.visitAGETFIELD(f);
+            f = f.resolve();
             state.push_A(vm.getfield_A(state.pop_A(), f));
         }
         public void visitBGETFIELD(jq_InstanceField f) {
             super.visitBGETFIELD(f);
+            f = f.resolve();
             state.push_I(vm.getfield_B(state.pop_A(), f));
         }
         public void visitCGETFIELD(jq_InstanceField f) {
             super.visitCGETFIELD(f);
+            f = f.resolve();
             state.push_I(vm.getfield_C(state.pop_A(), f));
         }
         public void visitSGETFIELD(jq_InstanceField f) {
             super.visitSGETFIELD(f);
+            f = f.resolve();
             state.push_I(vm.getfield_S(state.pop_A(), f));
         }
         public void visitZGETFIELD(jq_InstanceField f) {
             super.visitZGETFIELD(f);
+            f = f.resolve();
             state.push_I(vm.getfield_Z(state.pop_A(), f)?1:0);
         }
         public void visitIPUTFIELD(jq_InstanceField f) {
             super.visitIPUTFIELD(f);
+            f = f.resolve();
             int v = state.pop_I();
             vm.putfield_I(state.pop_A(), f, v);
         }
         public void visitLPUTFIELD(jq_InstanceField f) {
             super.visitLPUTFIELD(f);
+            f = f.resolve();
             long v = state.pop_L();
             vm.putfield_L(state.pop_A(), f, v);
         }
         public void visitFPUTFIELD(jq_InstanceField f) {
             super.visitFPUTFIELD(f);
+            f = f.resolve();
             float v = state.pop_F();
             vm.putfield_F(state.pop_A(), f, v);
         }
         public void visitDPUTFIELD(jq_InstanceField f) {
             super.visitDPUTFIELD(f);
+            f = f.resolve();
             double v = state.pop_D();
             vm.putfield_D(state.pop_A(), f, v);
         }
         public void visitAPUTFIELD(jq_InstanceField f) {
             super.visitAPUTFIELD(f);
+            f = f.resolve();
             Object v = state.pop_A();
             vm.putfield_A(state.pop_A(), f, v);
         }
         public void visitBPUTFIELD(jq_InstanceField f) {
             super.visitBPUTFIELD(f);
+            f = f.resolve();
             byte v = (byte)state.pop_I();
             vm.putfield_B(state.pop_A(), f, v);
         }
         public void visitCPUTFIELD(jq_InstanceField f) {
             super.visitCPUTFIELD(f);
+            f = f.resolve();
             char v = (char)state.pop_I();
             vm.putfield_C(state.pop_A(), f, v);
         }
         public void visitSPUTFIELD(jq_InstanceField f) {
             super.visitSPUTFIELD(f);
+            f = f.resolve();
             short v = (short)state.pop_I();
             vm.putfield_S(state.pop_A(), f, v);
         }
         public void visitZPUTFIELD(jq_InstanceField f) {
             super.visitZPUTFIELD(f);
+            f = f.resolve();
             boolean v = state.pop_I()!=0;
             vm.putfield_Z(state.pop_A(), f, v);
         }
         protected Object INVOKEhelper(byte op, jq_Method f) {
+            f = f.resolve();
             jq_Class k = f.getDeclaringClass();
             k.load(); k.verify(); k.prepare(); k.sf_initialize(); k.cls_initialize();
             if (op == INVOKE_SPECIAL) {

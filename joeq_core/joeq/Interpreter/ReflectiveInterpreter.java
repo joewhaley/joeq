@@ -199,7 +199,7 @@ public class ReflectiveInterpreter extends Interpreter {
     public static class ReflectiveVMInterface extends Interpreter.VMInterface {
         ObjectTraverser ot;
         ReflectiveVMInterface() {
-            ot = new ObjectTraverser(new HashSet());
+            ot = new ObjectTraverser(new HashSet(), new HashSet());
         }
 	public static final ReflectiveVMInterface INSTANCE = new ReflectiveVMInterface();
         public Object getField(Object o, jq_Field f) {
