@@ -27,10 +27,10 @@ public final class Interface extends ClassLib.ClassLibInterface {
     public java.util.Iterator getImplementationClassDescs(UTF.Utf8 desc) {
         if (USE_JOEQ_CLASSLIB && desc.toString().startsWith("Ljava/")) {
             UTF.Utf8 u = UTF.Utf8.get("LClassLib/Common/"+desc.toString().substring(1));
-	    java.util.LinkedList ll = new java.util.LinkedList();
-	    ll.add(u);
-	    u = UTF.Utf8.get("LClassLib/sun14_linux/"+desc.toString().substring(1));
-	    ll.add(u);
+            java.util.LinkedList ll = new java.util.LinkedList();
+            ll.add(u);
+            u = UTF.Utf8.get("LClassLib/sun14_linux/"+desc.toString().substring(1));
+            ll.add(u);
             return ll.iterator();
         }
         return Util.NullIterator.INSTANCE;
@@ -74,18 +74,18 @@ public final class Interface extends ClassLib.ClassLibInterface {
         nullInstanceFields.add(jq_class.getOrCreateInstanceField("methodAccessor", "Lsun/reflect/MethodAccessor;"));
         jq_class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/reflect/Constructor;");
         nullInstanceFields.add(jq_class.getOrCreateInstanceField("constructorAccessor", "Lsun/reflect/ConstructorAccessor;"));
-	// for some reason, thread local gets created during bootstrapping. (SoftReference)
-	// for now, just kill all thread locals.
-	jq_class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/Thread;");
-	nullInstanceFields.add(jq_class.getOrCreateInstanceField("threadLocals", "Ljava/lang/ThreadLocal$ThreadLocalMap;"));
+        // for some reason, thread local gets created during bootstrapping. (SoftReference)
+        // for now, just kill all thread locals.
+        jq_class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/Thread;");
+        nullInstanceFields.add(jq_class.getOrCreateInstanceField("threadLocals", "Ljava/lang/ThreadLocal$ThreadLocalMap;"));
         return nullInstanceFields;
     }
     
     public void initializeDefaults() {
         jq_NativeThread.USE_INTERRUPTER_THREAD = false;
         
-	// access the ISO-8859-1 character encoding, as it is used during bootstrapping
-	Bootstrap.PrimordialClassLoader.loader.getOrCreateBSType("Lsun/nio/cs/ISO_8859_1;");
+        // access the ISO-8859-1 character encoding, as it is used during bootstrapping
+        Bootstrap.PrimordialClassLoader.loader.getOrCreateBSType("Lsun/nio/cs/ISO_8859_1;");
 
     }
     

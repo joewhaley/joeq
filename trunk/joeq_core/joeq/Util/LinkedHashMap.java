@@ -1,5 +1,5 @@
 /*
- * @(#)LinkedHashMap.java	1.9 01/12/03
+ * @(#)LinkedHashMap.java       1.9 01/12/03
  *
  * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
  * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
@@ -157,7 +157,7 @@ public class LinkedHashMap extends JDK14HashMap {
      * @throws IllegalArgumentException if the initial capacity is negative.
      */
     public LinkedHashMap(int initialCapacity) {
-	super(initialCapacity);
+        super(initialCapacity);
         accessOrder = false;
     }
 
@@ -166,7 +166,7 @@ public class LinkedHashMap extends JDK14HashMap {
      * with a default capacity (16) and load factor (0.75).
      */
     public LinkedHashMap() {
-	super();
+        super();
         accessOrder = false;
     }
 
@@ -282,7 +282,7 @@ public class LinkedHashMap extends JDK14HashMap {
         // These fields comprise the doubly linked list used for iteration.
         Entry before, after;
 
-	Entry(int hash, Object key, Object value, JDK14HashMap.Entry next) {
+        Entry(int hash, Object key, Object value, JDK14HashMap.Entry next) {
             super(hash, key, value, next);
         }
 
@@ -325,53 +325,53 @@ public class LinkedHashMap extends JDK14HashMap {
     }
 
     private abstract class LinkedHashIterator implements Iterator {
-	Entry nextEntry    = header.after;
-	Entry lastReturned = null;
+        Entry nextEntry    = header.after;
+        Entry lastReturned = null;
 
-	/**
-	 * The modCount value that the iterator believes that the backing
-	 * List should have.  If this expectation is violated, the iterator
-	 * has detected concurrent modification.
-	 */
-	int expectedModCount = modCount;
+        /**
+         * The modCount value that the iterator believes that the backing
+         * List should have.  If this expectation is violated, the iterator
+         * has detected concurrent modification.
+         */
+        int expectedModCount = modCount;
 
-	public boolean hasNext() {
+        public boolean hasNext() {
             return nextEntry != header;
-	}
+        }
 
-	public void remove() {
-	    if (lastReturned == null)
-		throw new IllegalStateException();
-	    if (modCount != expectedModCount)
-		throw new ConcurrentModificationException();
+        public void remove() {
+            if (lastReturned == null)
+                throw new IllegalStateException();
+            if (modCount != expectedModCount)
+                throw new ConcurrentModificationException();
 
             LinkedHashMap.this.remove(lastReturned.key);
             lastReturned = null;
             expectedModCount = modCount;
-	}
+        }
 
-	Entry nextEntry() {
-	    if (modCount != expectedModCount)
-		throw new ConcurrentModificationException();
+        Entry nextEntry() {
+            if (modCount != expectedModCount)
+                throw new ConcurrentModificationException();
             if (nextEntry == header)
                 throw new NoSuchElementException();
 
             Entry e = lastReturned = nextEntry;
             nextEntry = e.after;
             return e;
-	}
+        }
     }
 
     private class KeyIterator extends LinkedHashIterator {
-	public Object next() { return nextEntry().getKey(); }
+        public Object next() { return nextEntry().getKey(); }
     }
 
     private class ValueIterator extends LinkedHashIterator {
-	public Object next() { return nextEntry().value; }
+        public Object next() { return nextEntry().value; }
     }
 
     private class EntryIterator extends LinkedHashIterator {
-	public Object next() { return nextEntry(); }
+        public Object next() { return nextEntry(); }
     }
 
     // These Overrides alter the behavior of superclass view iterator() methods

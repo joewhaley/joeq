@@ -111,11 +111,11 @@ public final class jq_StaticField extends jq_Field {
     }
     
     public void dumpAttributes(DataOutput out, jq_ConstantPool.ConstantPoolRebuilder cpr) throws IOException {
-	if (constantValue != null) {
-	    byte[] b = new byte[2]; jq.charToTwoBytes(cpr.get(constantValue), b, 0);
-	    attributes.put(Utf8.get("ConstantValue"), b);
-	}
-	super.dumpAttributes(out, cpr);
+        if (constantValue != null) {
+            byte[] b = new byte[2]; jq.charToTwoBytes(cpr.get(constantValue), b, 0);
+            attributes.put(Utf8.get("ConstantValue"), b);
+        }
+        super.dumpAttributes(out, cpr);
     }
 
     public final void sf_initialize(int[] static_data, int offset) { jq.Assert(state == STATE_PREPARED); state = STATE_SFINITIALIZED; this.address = Unsafe.addressOf(static_data) + offset; }
@@ -127,7 +127,7 @@ public final class jq_StaticField extends jq_Field {
     public final void setValue(Object v) { getDeclaringClass().setStaticData(this, v); }
     
     public final boolean needsDynamicLink(jq_Method method) {
-	return getDeclaringClass().needsDynamicLink(method);
+        return getDeclaringClass().needsDynamicLink(method);
     }
     public final boolean isConstant() { chkState(STATE_LOADED); return constantValue != null; }
     public final Object getConstantValue() { return constantValue; }

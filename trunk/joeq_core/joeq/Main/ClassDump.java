@@ -74,7 +74,7 @@ public abstract class ClassDump {
             {
                 out.println(c.toString());
                 Compil3r.Quad.ControlFlowGraph cfg = Compil3r.Quad.CodeCache.getCode(c);
-		System.out.println(cfg.fullDump());
+                System.out.println(cfg.fullDump());
             }
         }
         for(it = new ArrayIterator(t.getDeclaredInstanceMethods());
@@ -86,7 +86,7 @@ public abstract class ClassDump {
             {
                 out.println(c.toString());
                 Compil3r.Quad.ControlFlowGraph cfg = Compil3r.Quad.CodeCache.getCode(c);
-		System.out.println(cfg.fullDump());
+                System.out.println(cfg.fullDump());
             }
         }
     }

@@ -29,7 +29,7 @@ public class jq_InterrupterThread extends Thread {
         this.other_nt = other_nt;
         if (TRACE) SystemInterface.debugmsg("Initialized timer interrupt for native thread "+other_nt);
         myself = ClassLibInterface.i.getJQThread(this);
-	myself.disableThreadSwitch();
+        myself.disableThreadSwitch();
         this.tid = SystemInterface.create_thread(_run.getDefaultCompiledVersion().getEntrypoint(), Unsafe.addressOf(this));
         jq_NativeThread my_nt = new jq_NativeThread(myself);
         my_nt.getCodeAllocator().init();
@@ -46,9 +46,9 @@ public class jq_InterrupterThread extends Thread {
     public static final int QUANTA = 50;
     
     public void run() {
-	this.pid = SystemInterface.init_thread();
+        this.pid = SystemInterface.init_thread();
         Unsafe.setThreadBlock(this.myself);
-	for (;;) {
+        for (;;) {
             SystemInterface.msleep(QUANTA);
             other_nt.suspend();
             // The other thread may hold a system lock, so outputting any debug info here may lead to deadlock
@@ -82,7 +82,7 @@ public class jq_InterrupterThread extends Thread {
                 //if (TRACE) SystemInterface.debugmsg(other_nt+" : "+javaThread+" Thread switch not enabled");
             }
             other_nt.resume();
-	}
+        }
     }
 
     public static final jq_Class _class;

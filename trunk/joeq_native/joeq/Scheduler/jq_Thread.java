@@ -61,16 +61,16 @@ public class jq_Thread implements ObjectLayout {
     void setNativeThread(jq_NativeThread nt) { native_thread = nt; }
     public boolean isThreadSwitchEnabled() { return thread_switch_enabled == 0; }
     public void disableThreadSwitch() {
-	if (jq.Bootstrapping) 
-	    ++thread_switch_enabled;
-	else
-	    Unsafe.atomicAdd(Unsafe.addressOf(this)+_thread_switch_enabled.getOffset(), 1);
+        if (jq.Bootstrapping) 
+            ++thread_switch_enabled;
+        else
+            Unsafe.atomicAdd(Unsafe.addressOf(this)+_thread_switch_enabled.getOffset(), 1);
     }
     public void enableThreadSwitch() {
-	if (jq.Bootstrapping) 
-	    --thread_switch_enabled;
-	else
-	    Unsafe.atomicSub(Unsafe.addressOf(this)+_thread_switch_enabled.getOffset(), 1);
+        if (jq.Bootstrapping) 
+            --thread_switch_enabled;
+        else
+            Unsafe.atomicSub(Unsafe.addressOf(this)+_thread_switch_enabled.getOffset(), 1);
     }
 
     public void init() {
@@ -119,16 +119,16 @@ public class jq_Thread implements ObjectLayout {
         this.getNativeThread().threadSwitch();
     }
     public void yieldTo(jq_Thread t) {
-	jq.Assert(this == Unsafe.getThreadBlock());
-	// if that thread is in the thread queue for the current native
-	// thread, we can yield to him easily.
+        jq.Assert(this == Unsafe.getThreadBlock());
+        // if that thread is in the thread queue for the current native
+        // thread, we can yield to him easily.
         this.disableThreadSwitch();
-	// thread switching for this native thread is disabled, so
-	// Java threads cannot move from our local thread queue.
-	if (t.getNativeThread() != this.getNativeThread()) {
-	    // TODO: temporarily increase priority of t (?)
-	    return;
-	}
+        // thread switching for this native thread is disabled, so
+        // Java threads cannot move from our local thread queue.
+        if (t.getNativeThread() != this.getNativeThread()) {
+            // TODO: temporarily increase priority of t (?)
+            return;
+        }
 
         // act like we received a timer tick.
         // store the register state to make it look like we received a timer tick.

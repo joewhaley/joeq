@@ -161,18 +161,18 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
                 if (clazz.isLoaded()) {
                     jq_Member mem = clazz.getDeclaredMember(nd);
                     if (mem == null) {
-			// this constant pool entry refers to a member that doesn't exist in the named class.
-			if (false) {
-			    // throw resolution exception early
-			    String s = ("No such member: "+clazz+"."+nd+", referenced by cp idx "+(int)i);
-			    if (constant_pool_tags[i] == CONSTANT_FieldRef)
-				throw new NoSuchFieldError(s);
-			    else
-				throw new NoSuchMethodError(s);
-			} else {
-			    // NoSuchFieldError/NoSuchMethodError should be thrown when this member is resolved.
-			    constant_pool[i] = new jq_MemberReference(clazz, nd);
-			}
+                        // this constant pool entry refers to a member that doesn't exist in the named class.
+                        if (false) {
+                            // throw resolution exception early
+                            String s = ("No such member: "+clazz+"."+nd+", referenced by cp idx "+(int)i);
+                            if (constant_pool_tags[i] == CONSTANT_FieldRef)
+                                throw new NoSuchFieldError(s);
+                            else
+                                throw new NoSuchMethodError(s);
+                        } else {
+                            // NoSuchFieldError/NoSuchMethodError should be thrown when this member is resolved.
+                            constant_pool[i] = new jq_MemberReference(clazz, nd);
+                        }
                     } else {
                         constant_pool[i] = mem;
                         if (desc.isDescriptor(TC_PARAM)) {
@@ -504,189 +504,189 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
             return this.o == that.o && this.tag == that.tag;
         }
         public boolean equals(Object that) {
-	    if (that instanceof ConstantPoolEntry)
-		return equals((ConstantPoolEntry)that);
-	    return false;
-	}
+            if (that instanceof ConstantPoolEntry)
+                return equals((ConstantPoolEntry)that);
+            return false;
+        }
         public int hashCode() { return o.hashCode(); }
     }
     
     public static class ConstantPoolRebuilder {
-	HashMap new_entries = new HashMap();
+        HashMap new_entries = new HashMap();
 
-	private int renumber() {
-	    int j = 0;
-	    Set entrySet = new_entries.entrySet();
-	    Iterator i = entrySet.iterator();
-	    while (i.hasNext()) {
-		Map.Entry e = (Map.Entry)i.next();
-		jq.Assert(j < Character.MAX_VALUE);
-		e.setValue(new Character((char)(++j)));
-		if ((e.getKey() instanceof Long) ||
-		    (e.getKey() instanceof Double))
-		    ++j;
-	    }
-	    return j+1;
-	}
+        private int renumber() {
+            int j = 0;
+            Set entrySet = new_entries.entrySet();
+            Iterator i = entrySet.iterator();
+            while (i.hasNext()) {
+                Map.Entry e = (Map.Entry)i.next();
+                jq.Assert(j < Character.MAX_VALUE);
+                e.setValue(new Character((char)(++j)));
+                if ((e.getKey() instanceof Long) ||
+                    (e.getKey() instanceof Double))
+                    ++j;
+            }
+            return j+1;
+        }
 
-	jq_ConstantPool finish() {
-	    int cp_size = renumber();
-	    int j = 0;
-	    jq.Assert(cp_size <= Character.MAX_VALUE);
-	    jq_ConstantPool newcp = new jq_ConstantPool(cp_size);
-	    Set entrySet = new_entries.entrySet();
-	    Iterator i = entrySet.iterator();
-	    while (i.hasNext()) {
-		Map.Entry e = (Map.Entry)i.next();
-		Object o = e.getKey();
-		char index = ((Character)e.getValue()).charValue();
-		++j; jq.Assert(index == j, (int)index + "!=" + (int)j);
+        jq_ConstantPool finish() {
+            int cp_size = renumber();
+            int j = 0;
+            jq.Assert(cp_size <= Character.MAX_VALUE);
+            jq_ConstantPool newcp = new jq_ConstantPool(cp_size);
+            Set entrySet = new_entries.entrySet();
+            Iterator i = entrySet.iterator();
+            while (i.hasNext()) {
+                Map.Entry e = (Map.Entry)i.next();
+                Object o = e.getKey();
+                char index = ((Character)e.getValue()).charValue();
+                ++j; jq.Assert(index == j, (int)index + "!=" + (int)j);
                 //System.out.println("CP Entry "+j+": "+o);
-		newcp.constant_pool[j] = o;
-		if (o instanceof Utf8) {
-		    newcp.constant_pool_tags[j] = CONSTANT_Utf8;
-		} else if (o instanceof Integer) {
-		    newcp.constant_pool_tags[j] = CONSTANT_Integer;
-		} else if (o instanceof Float) {
-		    newcp.constant_pool_tags[j] = CONSTANT_Float;
-		} else if (o instanceof Long) {
-		    newcp.constant_pool_tags[j] = CONSTANT_Long;
-		    ++j;
-		} else if (o instanceof Double) {
-		    newcp.constant_pool_tags[j] = CONSTANT_Double;
-		    ++j;
-		} else if (o instanceof jq_Type) {
-		    newcp.constant_pool_tags[j] = CONSTANT_ResolvedClass;
-		} else if (o instanceof String) {
-		    newcp.constant_pool_tags[j] = CONSTANT_String;
-		} else if (o instanceof jq_NameAndDesc) {
-		    newcp.constant_pool_tags[j] = CONSTANT_NameAndType;
-		} else if (o instanceof jq_InstanceMethod) {
-		    newcp.constant_pool_tags[j] = CONSTANT_ResolvedIMethodRef;
-		} else if (o instanceof jq_StaticMethod) {
-		    newcp.constant_pool_tags[j] = CONSTANT_ResolvedSMethodRef;
-		} else if (o instanceof jq_InstanceField) {
-		    newcp.constant_pool_tags[j] = CONSTANT_ResolvedIFieldRef;
-		} else if (o instanceof jq_StaticField) {
-		    newcp.constant_pool_tags[j] = CONSTANT_ResolvedSFieldRef;
-		} else {
-		    jq.UNREACHABLE();
-		}
-	    }
-	    return newcp;
-	}
+                newcp.constant_pool[j] = o;
+                if (o instanceof Utf8) {
+                    newcp.constant_pool_tags[j] = CONSTANT_Utf8;
+                } else if (o instanceof Integer) {
+                    newcp.constant_pool_tags[j] = CONSTANT_Integer;
+                } else if (o instanceof Float) {
+                    newcp.constant_pool_tags[j] = CONSTANT_Float;
+                } else if (o instanceof Long) {
+                    newcp.constant_pool_tags[j] = CONSTANT_Long;
+                    ++j;
+                } else if (o instanceof Double) {
+                    newcp.constant_pool_tags[j] = CONSTANT_Double;
+                    ++j;
+                } else if (o instanceof jq_Type) {
+                    newcp.constant_pool_tags[j] = CONSTANT_ResolvedClass;
+                } else if (o instanceof String) {
+                    newcp.constant_pool_tags[j] = CONSTANT_String;
+                } else if (o instanceof jq_NameAndDesc) {
+                    newcp.constant_pool_tags[j] = CONSTANT_NameAndType;
+                } else if (o instanceof jq_InstanceMethod) {
+                    newcp.constant_pool_tags[j] = CONSTANT_ResolvedIMethodRef;
+                } else if (o instanceof jq_StaticMethod) {
+                    newcp.constant_pool_tags[j] = CONSTANT_ResolvedSMethodRef;
+                } else if (o instanceof jq_InstanceField) {
+                    newcp.constant_pool_tags[j] = CONSTANT_ResolvedIFieldRef;
+                } else if (o instanceof jq_StaticField) {
+                    newcp.constant_pool_tags[j] = CONSTANT_ResolvedSFieldRef;
+                } else {
+                    jq.UNREACHABLE();
+                }
+            }
+            return newcp;
+        }
 
-	public void addCode(jq_Method m) {
-	    byte[] bc = m.getBytecode();
-	    if (bc == null) return;
-	    Bytecodes.InstructionList il = new Bytecodes.InstructionList(m.getDeclaringClass().getCP(), bc);
+        public void addCode(jq_Method m) {
+            byte[] bc = m.getBytecode();
+            if (bc == null) return;
+            Bytecodes.InstructionList il = new Bytecodes.InstructionList(m.getDeclaringClass().getCP(), bc);
             this.addCode(il);
-	}
+        }
 
-	public void addCode(Bytecodes.InstructionList il) {
-	    RebuildCPVisitor v = new RebuildCPVisitor();
-	    il.accept(v);
-	}
+        public void addCode(Bytecodes.InstructionList il) {
+            RebuildCPVisitor v = new RebuildCPVisitor();
+            il.accept(v);
+        }
         
-	public void addExceptions(jq_Method m) {
-	    // TODO
-	}
+        public void addExceptions(jq_Method m) {
+            // TODO
+        }
 
-	public void addAttributeNames(jq_Member f) {
-	    Map m = f.getAttributes();
-	    for (Iterator i = m.entrySet().iterator(); i.hasNext(); ) {
-		Map.Entry e = (Map.Entry)i.next();
-		new_entries.put(e.getKey(), null);
-	    }
-	}
-	
-	public void dump(DataOutput out) throws IOException {
-	    // note: this relies on the fact that the two iterators return the same order
-	    int cp_size = renumber();
-	    int j = 0;
-	    jq.Assert(cp_size <= Character.MAX_VALUE);
-	    out.writeChar(cp_size);
-	    Set entrySet = new_entries.entrySet();
-	    Iterator i = entrySet.iterator();
-	    while (i.hasNext()) {
-		Map.Entry e = (Map.Entry)i.next();
-		Object o = e.getKey();
-		char index = ((Character)e.getValue()).charValue();
-		++j; jq.Assert(index == j);
-		if (o instanceof Utf8) {
-		    out.writeByte(CONSTANT_Utf8);
-		    ((Utf8)o).dump(out);
-		} else if (o instanceof Integer) {
-		    out.writeByte(CONSTANT_Integer);
-		    out.writeInt(((Integer)o).intValue());
-		} else if (o instanceof Float) {
-		    out.writeByte(CONSTANT_Float);
-		    out.writeFloat(((Float)o).floatValue());
-		} else if (o instanceof Long) {
-		    out.writeByte(CONSTANT_Long);
-		    out.writeLong(((Long)o).longValue());
-		    ++j;
-		} else if (o instanceof Double) {
-		    out.writeByte(CONSTANT_Double);
-		    out.writeDouble(((Double)o).doubleValue());
-		    ++j;
-		} else if (o instanceof jq_Type) {
-		    out.writeByte(CONSTANT_Class);
-		    out.writeChar(get(((jq_Type)o).getDesc()));
-		} else if (o instanceof String) {
-		    out.writeByte(CONSTANT_String);
-		    out.writeChar(get(Utf8.get((String)o)));
-		} else if (o instanceof jq_NameAndDesc) {
-		    out.writeByte(CONSTANT_NameAndType);
-		    jq_NameAndDesc f = (jq_NameAndDesc)o;
-		    out.writeChar(get(f.getName()));
-		    out.writeChar(get(f.getDesc()));
-		} else if (o instanceof jq_Member) {
-		    byte b = CONSTANT_MethodRef;
-		    jq_Member f = (jq_Member)o;
-		    if (f instanceof jq_Field) {
-			b = CONSTANT_FieldRef;
-		    } else if (f instanceof jq_InstanceMethod) {
-			f.getDeclaringClass().load();
-			if (f.getDeclaringClass().isInterface()) {
-			    b = CONSTANT_InterfaceMethodRef;
-			}
-		    }
-		    out.writeByte(b);
-		    out.writeChar(get(f.getDeclaringClass()));
-		    out.writeChar(get(f.getNameAndDesc()));
-		} else {
-		    jq.UNREACHABLE();
-		}
-	    }
-	}
+        public void addAttributeNames(jq_Member f) {
+            Map m = f.getAttributes();
+            for (Iterator i = m.entrySet().iterator(); i.hasNext(); ) {
+                Map.Entry e = (Map.Entry)i.next();
+                new_entries.put(e.getKey(), null);
+            }
+        }
+        
+        public void dump(DataOutput out) throws IOException {
+            // note: this relies on the fact that the two iterators return the same order
+            int cp_size = renumber();
+            int j = 0;
+            jq.Assert(cp_size <= Character.MAX_VALUE);
+            out.writeChar(cp_size);
+            Set entrySet = new_entries.entrySet();
+            Iterator i = entrySet.iterator();
+            while (i.hasNext()) {
+                Map.Entry e = (Map.Entry)i.next();
+                Object o = e.getKey();
+                char index = ((Character)e.getValue()).charValue();
+                ++j; jq.Assert(index == j);
+                if (o instanceof Utf8) {
+                    out.writeByte(CONSTANT_Utf8);
+                    ((Utf8)o).dump(out);
+                } else if (o instanceof Integer) {
+                    out.writeByte(CONSTANT_Integer);
+                    out.writeInt(((Integer)o).intValue());
+                } else if (o instanceof Float) {
+                    out.writeByte(CONSTANT_Float);
+                    out.writeFloat(((Float)o).floatValue());
+                } else if (o instanceof Long) {
+                    out.writeByte(CONSTANT_Long);
+                    out.writeLong(((Long)o).longValue());
+                    ++j;
+                } else if (o instanceof Double) {
+                    out.writeByte(CONSTANT_Double);
+                    out.writeDouble(((Double)o).doubleValue());
+                    ++j;
+                } else if (o instanceof jq_Type) {
+                    out.writeByte(CONSTANT_Class);
+                    out.writeChar(get(((jq_Type)o).getDesc()));
+                } else if (o instanceof String) {
+                    out.writeByte(CONSTANT_String);
+                    out.writeChar(get(Utf8.get((String)o)));
+                } else if (o instanceof jq_NameAndDesc) {
+                    out.writeByte(CONSTANT_NameAndType);
+                    jq_NameAndDesc f = (jq_NameAndDesc)o;
+                    out.writeChar(get(f.getName()));
+                    out.writeChar(get(f.getDesc()));
+                } else if (o instanceof jq_Member) {
+                    byte b = CONSTANT_MethodRef;
+                    jq_Member f = (jq_Member)o;
+                    if (f instanceof jq_Field) {
+                        b = CONSTANT_FieldRef;
+                    } else if (f instanceof jq_InstanceMethod) {
+                        f.getDeclaringClass().load();
+                        if (f.getDeclaringClass().isInterface()) {
+                            b = CONSTANT_InterfaceMethodRef;
+                        }
+                    }
+                    out.writeByte(b);
+                    out.writeChar(get(f.getDeclaringClass()));
+                    out.writeChar(get(f.getNameAndDesc()));
+                } else {
+                    jq.UNREACHABLE();
+                }
+            }
+        }
 
-	public char get(Object o) {
+        public char get(Object o) {
             Character c = (Character)new_entries.get(o);
             if (c == null) {
                 jq.UNREACHABLE("No such constant pool entry: type "+o.getClass()+" value "+o);
             }
-	    return c.charValue();
-	}
+            return c.charValue();
+        }
 
-	public void addString(String o) {
-	    new_entries.put(Utf8.get(o), null);
-	    new_entries.put(o, null);
-	}
-	public void addType(jq_Type o) {
-	    new_entries.put(o.getDesc(), null);
-	    new_entries.put(o, null);
-	}
-	public void addMember(jq_Member o) {
-	    new_entries.put(o.getName(), null);
-	    new_entries.put(o.getDesc(), null);
-	    new_entries.put(o.getDeclaringClass(), null);
-	    new_entries.put(o.getDeclaringClass().getDesc(), null);
+        public void addString(String o) {
+            new_entries.put(Utf8.get(o), null);
             new_entries.put(o, null);
-	}
-	public void addOther(Object o) {
-	    new_entries.put(o, null);
-	}
+        }
+        public void addType(jq_Type o) {
+            new_entries.put(o.getDesc(), null);
+            new_entries.put(o, null);
+        }
+        public void addMember(jq_Member o) {
+            new_entries.put(o.getName(), null);
+            new_entries.put(o.getDesc(), null);
+            new_entries.put(o.getDeclaringClass(), null);
+            new_entries.put(o.getDeclaringClass().getDesc(), null);
+            new_entries.put(o, null);
+        }
+        public void addOther(Object o) {
+            new_entries.put(o, null);
+        }
         public void remove(Object o) {
             new_entries.remove(o);
         }
@@ -702,19 +702,19 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
             il.accept(v);
         }
         
-	class RebuildCPVisitor extends Bytecodes.EmptyVisitor {
-	    public void visitCPInstruction(Bytecodes.CPInstruction i) {
-		Object o = i.getObject();
-		if (o instanceof String) {
-		    addString((String)o);
-		} else if (o instanceof jq_Type) {
-		    addType((jq_Type)o);
-		} else if (o instanceof jq_Member) {
-		    addMember((jq_Member)o);
-		} else {
-		    addOther(o);
-		}
-	    }
-	}
+        class RebuildCPVisitor extends Bytecodes.EmptyVisitor {
+            public void visitCPInstruction(Bytecodes.CPInstruction i) {
+                Object o = i.getObject();
+                if (o instanceof String) {
+                    addString((String)o);
+                } else if (o instanceof jq_Type) {
+                    addType((jq_Type)o);
+                } else if (o instanceof jq_Member) {
+                    addMember((jq_Member)o);
+                } else {
+                    addOther(o);
+                }
+            }
+        }
     }
 }

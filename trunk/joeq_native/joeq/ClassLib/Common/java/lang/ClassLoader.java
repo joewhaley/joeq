@@ -50,10 +50,10 @@ public abstract class ClassLoader {
 
     // overridden constructors
     protected ClassLoader(java.lang.ClassLoader parent) {
-	java.lang.SecurityManager security = java.lang.System.getSecurityManager();
-	if (security != null) {
-	    security.checkCreateClassLoader();
-	}
+        java.lang.SecurityManager security = java.lang.System.getSecurityManager();
+        if (security != null) {
+            security.checkCreateClassLoader();
+        }
         jq.Assert(parent != null);
         this.parent = parent;
         Map m = new HashMap();
@@ -61,10 +61,10 @@ public abstract class ClassLoader {
         this.initialized = true;
     }
     protected ClassLoader() {
-	java.lang.SecurityManager security = java.lang.System.getSecurityManager();
-	if (security != null) {
-	    security.checkCreateClassLoader();
-	}
+        java.lang.SecurityManager security = java.lang.System.getSecurityManager();
+        if (security != null) {
+            security.checkCreateClassLoader();
+        }
         java.lang.ClassLoader parent = getSystemClassLoader();
         jq.Assert(parent != null);
         this.parent = parent;
@@ -81,12 +81,12 @@ public abstract class ClassLoader {
     public static java.lang.ClassLoader getSystemClassLoader() {
         java.lang.Object o = PrimordialClassLoader.loader;
         scl = (ClassLoader)o;
-	if (scl == null) {
-	    return null;
-	}
-	java.lang.SecurityManager sm = java.lang.System.getSecurityManager();
-	if (sm != null) {
-	    ClassLoader ccl = getCallerClassLoader();
+        if (scl == null) {
+            return null;
+        }
+        java.lang.SecurityManager sm = java.lang.System.getSecurityManager();
+        if (sm != null) {
+            ClassLoader ccl = getCallerClassLoader();
             if (ccl != null && ccl != scl) {
                 try {
                     if (!scl.isAncestor(ccl)) {
@@ -97,10 +97,10 @@ public abstract class ClassLoader {
                 } catch (java.lang.Throwable x) {
                     jq.UNREACHABLE();
                 }
-	    }
-	}
+            }
+        }
         o = scl;
-	return (java.lang.ClassLoader)o;
+        return (java.lang.ClassLoader)o;
     }
     
     // native method implementations.

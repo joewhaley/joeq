@@ -171,7 +171,7 @@ public interface Bytecodes {
                 obj = (Instruction)clazz.newInstance();
                 
                 if(wide && !((obj instanceof LocalVariableInstruction) || (obj instanceof IINC) ||
-			     (obj instanceof RET)))
+                             (obj instanceof RET)))
                     throw new Exception("Illegal opcode after wide: " + opcode);
                 
                 obj.setOpcode(opcode);
@@ -1508,11 +1508,11 @@ public interface Bytecodes {
                     if (lastReturned == null) throw new IllegalStateException("remove or add called before remove");
                     if (next == lastReturned) next = lastReturned.next;
                     else --nextIndex;
-		    try {
-			delete(lastReturned);
-		    } catch (TargetLostException x) {
-			throw new IllegalStateException("Target lost: "+x);
-		    }
+                    try {
+                        delete(lastReturned);
+                    } catch (TargetLostException x) {
+                        throw new IllegalStateException("Target lost: "+x);
+                    }
                     lastReturned = null;
                 }
                 public void set(Object o) {
@@ -1523,18 +1523,18 @@ public interface Bytecodes {
                     } else if (o instanceof Instruction) {
                         ih = insert(lastReturned, (Instruction)o);
                     } else {
-			InstructionList il = new InstructionList();
-			il.append((InstructionHandle)o);
+                        InstructionList il = new InstructionList();
+                        il.append((InstructionHandle)o);
                         ih = insert(lastReturned, il);
                     }
                     if (lastReturned == next) next = ih;
-		    redirectBranches(lastReturned, ih);
-		    // TODO: what about local var, exception handlers?
-		    try {
-			delete(lastReturned);
-		    } catch (TargetLostException x) {
-			throw new IllegalStateException("Target lost: "+x);
-		    }
+                    redirectBranches(lastReturned, ih);
+                    // TODO: what about local var, exception handlers?
+                    try {
+                        delete(lastReturned);
+                    } catch (TargetLostException x) {
+                        throw new IllegalStateException("Target lost: "+x);
+                    }
                     lastReturned = ih;
                 }
                 public void add(Object o) {
@@ -1545,8 +1545,8 @@ public interface Bytecodes {
                     } else if (o instanceof Instruction) {
                         insert(next, (Instruction)o);
                     } else {
-			InstructionList il = new InstructionList();
-			il.append((InstructionHandle)o);
+                        InstructionList il = new InstructionList();
+                        il.append((InstructionHandle)o);
                         insert(next, il);
                     }
                     lastReturned = null;
@@ -1784,9 +1784,9 @@ public interface Bytecodes {
          * @param v Visitor object
          */
         public void accept(Visitor v) {
-	    for (InstructionHandle p = start; p != null; p = p.next) {
-		p.accept(v);
-	    }
+            for (InstructionHandle p = start; p != null; p = p.next) {
+                p.accept(v);
+            }
         }
 
     }
@@ -1941,11 +1941,11 @@ public interface Bytecodes {
             super(jq_ClassFileConstants.jbc_ALOAD, jq_ClassFileConstants.jbc_ALOAD_0, n);
         }
         
-	/*
+        /*
         public jq_Type getType() {
             return PrimordialClassLoader.loader.getJavaLangObject();
         }
-	*/
+        */
         
         /**
          * Call corresponding visitor method(s). The order is:
@@ -1973,15 +1973,15 @@ public interface Bytecodes {
         }
         
         public Set/*<jq_Class>*/ getExceptions() {
-	    /*
+            /*
             Class[] cs = new Class[1 + ExceptionConstants.EXCS_CLASS_AND_INTERFACE_RESOLUTION.length];
             
             System.arraycopy(ExceptionConstants.EXCS_CLASS_AND_INTERFACE_RESOLUTION, 0,
                              cs, 0, ExceptionConstants.EXCS_CLASS_AND_INTERFACE_RESOLUTION.length);
             cs[ExceptionConstants.EXCS_CLASS_AND_INTERFACE_RESOLUTION.length] = ExceptionConstants.NEGATIVE_ARRAY_SIZE_EXCEPTION;
             return cs;
-	    */
-	    return null;
+            */
+            return null;
         }
         
         /**
@@ -2056,14 +2056,14 @@ public interface Bytecodes {
             super(jq_ClassFileConstants.jbc_ASTORE, jq_ClassFileConstants.jbc_ASTORE_0, n);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             super.accept(v);
             v.visitASTORE(this);
@@ -2071,28 +2071,28 @@ public interface Bytecodes {
     }
     
     public class ATHROW extends Instruction implements UnconditionalBranch, ExceptionThrower {
-	/**
-	 *  Throw exception
-	 */
+        /**
+         *  Throw exception
+         */
         public ATHROW() {
             super(jq_ClassFileConstants.jbc_ATHROW, (short)1);
         }
         
-	/** @return exceptions this instruction may cause
-	 */
+        /** @return exceptions this instruction may cause
+         */
         public Set/*<jq_Class>*/ getExceptions() {
             //return new jq_Class[] { PrimordialClassLoader.loader.getJavaLangThrowable() };
             return null;
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitUnconditionalBranch(this);
             v.visitExceptionThrower(this);
@@ -2101,20 +2101,20 @@ public interface Bytecodes {
     }
     
     public class BALOAD extends ArrayInstruction implements StackProducer, ExceptionThrower, TypedInstruction {
-	/** Load byte or boolean from array
-	 */
+        /** Load byte or boolean from array
+         */
         public BALOAD() {
             super(jq_ClassFileConstants.jbc_BALOAD);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitStackProducer(this);
             v.visitExceptionThrower(this);
@@ -2125,20 +2125,20 @@ public interface Bytecodes {
     }
     
     public class BASTORE extends ArrayInstruction implements StackConsumer, ExceptionThrower, TypedInstruction {
-	/** Store byte or boolean into array
-	 */
+        /** Store byte or boolean into array
+         */
         public BASTORE() {
             super(jq_ClassFileConstants.jbc_BASTORE);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitStackConsumer(this);
             v.visitExceptionThrower(this);
@@ -2195,14 +2195,14 @@ public interface Bytecodes {
             return jq_Primitive.BYTE;
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitPushInstruction(this);
             v.visitStackProducer(this);
@@ -2217,34 +2217,34 @@ public interface Bytecodes {
             super(jq_ClassFileConstants.jbc_BREAKPOINT, (short)1);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitBREAKPOINT(this);
         }
     }
     
     public class CALOAD extends ArrayInstruction implements StackProducer, ExceptionThrower, TypedInstruction {
-	/** Load char from array
-	 */
+        /** Load char from array
+         */
         public CALOAD() {
             super(jq_ClassFileConstants.jbc_CALOAD);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitStackProducer(this);
             v.visitExceptionThrower(this);
@@ -2255,20 +2255,20 @@ public interface Bytecodes {
     }
     
     public class CASTORE extends ArrayInstruction implements StackConsumer, ExceptionThrower, TypedInstruction {
-	/** Store char into array
-	 */
+        /** Store char into array
+         */
         public CASTORE() {
             super(jq_ClassFileConstants.jbc_CASTORE);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitStackConsumer(this);
             v.visitExceptionThrower(this);
@@ -2295,16 +2295,16 @@ public interface Bytecodes {
         /** @return exceptions this instruction may cause
          */
         public Set/*<jq_Class>*/ getExceptions() {
-	    /*
+            /*
             jq_Class[] cs = new Class[1 + ExceptionConstants.EXCS_CLASS_AND_INTERFACE_RESOLUTION.length];
             
             System.arraycopy(ExceptionConstants.EXCS_CLASS_AND_INTERFACE_RESOLUTION, 0,
-			     cs, 0, ExceptionConstants.EXCS_CLASS_AND_INTERFACE_RESOLUTION.length);
+                             cs, 0, ExceptionConstants.EXCS_CLASS_AND_INTERFACE_RESOLUTION.length);
             cs[ExceptionConstants.EXCS_CLASS_AND_INTERFACE_RESOLUTION.length] =
-		ExceptionConstants.CLASS_CAST_EXCEPTION;
+                ExceptionConstants.CLASS_CAST_EXCEPTION;
             return cs;
-	    */
-	    return null;
+            */
+            return null;
         }
         
         public jq_Class getLoadClassType() {
@@ -2316,14 +2316,14 @@ public interface Bytecodes {
             return (t instanceof jq_Class) ? (jq_Class) t : null;
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitLoadClass(this);
             v.visitExceptionThrower(this);
@@ -2336,20 +2336,20 @@ public interface Bytecodes {
     }
     
     public class D2F extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
-	/** Convert double to float
-	 */
+        /** Convert double to float
+         */
         public D2F() {
             super(jq_ClassFileConstants.jbc_D2F);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackProducer(this);
@@ -2360,20 +2360,20 @@ public interface Bytecodes {
     }
     
     public class D2I extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
-	/** Convert double to int
-	 */
+        /** Convert double to int
+         */
         public D2I() {
             super(jq_ClassFileConstants.jbc_D2I);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackProducer(this);
@@ -2384,20 +2384,20 @@ public interface Bytecodes {
     }
     
     public class D2L extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
-	/** Convert double to long
-	 */
+        /** Convert double to long
+         */
         public D2L() {
             super(jq_ClassFileConstants.jbc_D2L);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackProducer(this);
@@ -2408,20 +2408,20 @@ public interface Bytecodes {
     }
     
     public class DADD extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
-	/** Add doubles
-	 */
+        /** Add doubles
+         */
         public DADD() {
             super(jq_ClassFileConstants.jbc_DADD);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackProducer(this);
@@ -2438,14 +2438,14 @@ public interface Bytecodes {
             super(jq_ClassFileConstants.jbc_DALOAD);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitStackProducer(this);
             v.visitExceptionThrower(this);
@@ -2683,20 +2683,20 @@ public interface Bytecodes {
     }
     
     public class DREM extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
-	/** Remainder of doubles
-	 */
+        /** Remainder of doubles
+         */
         public DREM() {
             super(jq_ClassFileConstants.jbc_DREM);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackProducer(this);
@@ -2707,20 +2707,20 @@ public interface Bytecodes {
     }
     
     public class DRETURN extends ReturnInstruction implements TypedInstruction, StackConsumer {
-	/** Return double from method
-	 */
+        /** Return double from method
+         */
         public DRETURN() {
             super(jq_ClassFileConstants.jbc_DRETURN);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             //v.visitExceptionThrower(this);
             v.visitTypedInstruction(this);
@@ -2731,29 +2731,29 @@ public interface Bytecodes {
     }
     
     public class DSTORE extends StoreInstruction {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         DSTORE() {
             super(jq_ClassFileConstants.jbc_DSTORE, jq_ClassFileConstants.jbc_DSTORE_0);
         }
         
-	/** Store double into local variable
-	 * @param n index of local variable
-	 */
+        /** Store double into local variable
+         * @param n index of local variable
+         */
         public DSTORE(int n) {
             super(jq_ClassFileConstants.jbc_DSTORE, jq_ClassFileConstants.jbc_DSTORE_0, n);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             super.accept(v);
             v.visitDSTORE(this);
@@ -2761,20 +2761,20 @@ public interface Bytecodes {
     }
     
     public class DSUB extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
-	/** Substract doubles
-	 */
+        /** Substract doubles
+         */
         public DSUB() {
             super(jq_ClassFileConstants.jbc_DSUB);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackProducer(this);
@@ -2789,14 +2789,14 @@ public interface Bytecodes {
             super(jq_ClassFileConstants.jbc_DUP2);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitStackProducer(this);
             v.visitPushInstruction(this);
@@ -2810,14 +2810,14 @@ public interface Bytecodes {
             super(jq_ClassFileConstants.jbc_DUP2_X1);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitStackInstruction(this);
             v.visitDUP2_X1(this);
@@ -2829,14 +2829,14 @@ public interface Bytecodes {
             super(jq_ClassFileConstants.jbc_DUP2_X2);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitStackInstruction(this);
             v.visitDUP2_X2(this);
@@ -2848,14 +2848,14 @@ public interface Bytecodes {
             super(jq_ClassFileConstants.jbc_DUP);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitStackProducer(this);
             v.visitPushInstruction(this);
@@ -2869,14 +2869,14 @@ public interface Bytecodes {
             super(jq_ClassFileConstants.jbc_DUP_X1);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitStackInstruction(this);
             v.visitDUP_X1(this);
@@ -2888,14 +2888,14 @@ public interface Bytecodes {
             super(jq_ClassFileConstants.jbc_DUP_X2);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitStackInstruction(this);
             v.visitDUP_X2(this);
@@ -2903,20 +2903,20 @@ public interface Bytecodes {
     }
     
     public class F2D extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
-	/** Convert float to double
-	 */
+        /** Convert float to double
+         */
         public F2D() {
             super(jq_ClassFileConstants.jbc_F2D);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackProducer(this);
@@ -2927,20 +2927,20 @@ public interface Bytecodes {
     }
     
     public class F2I extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
-	/** Convert float to int
-	 */
+        /** Convert float to int
+         */
         public F2I() {
             super(jq_ClassFileConstants.jbc_F2I);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackProducer(this);
@@ -2951,20 +2951,20 @@ public interface Bytecodes {
     }
     
     public class F2L extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
-	/** Convert float to long
-	 */
+        /** Convert float to long
+         */
         public F2L() {
             super(jq_ClassFileConstants.jbc_F2L);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackProducer(this);
@@ -2975,20 +2975,20 @@ public interface Bytecodes {
     }
     
     public class FADD extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
-	/** Add floats
-	 */
+        /** Add floats
+         */
         public FADD() {
             super(jq_ClassFileConstants.jbc_FADD);
         }
-	
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackProducer(this);
@@ -2999,20 +2999,20 @@ public interface Bytecodes {
     }
     
     public class FALOAD extends ArrayInstruction implements StackProducer, ExceptionThrower, TypedInstruction {
-	/** Load float from array
-	 */
+        /** Load float from array
+         */
         public FALOAD() {
             super(jq_ClassFileConstants.jbc_FALOAD);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitStackProducer(this);
             v.visitExceptionThrower(this);
@@ -3023,20 +3023,20 @@ public interface Bytecodes {
     }
     
     public class FASTORE extends ArrayInstruction implements StackConsumer, ExceptionThrower, TypedInstruction {
-	/** Store float into array
-	 */
+        /** Store float into array
+         */
         public FASTORE() {
             super(jq_ClassFileConstants.jbc_FASTORE);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitStackConsumer(this);
             v.visitExceptionThrower(this);
@@ -3051,20 +3051,20 @@ public interface Bytecodes {
             super(jq_ClassFileConstants.jbc_FCMPG, (short)1);
         }
         
-	/** @return jq_Primitive.FLOAT
-	 */
+        /** @return jq_Primitive.FLOAT
+         */
         public jq_Type getType() {
             return jq_Primitive.FLOAT;
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackProducer(this);
@@ -3078,20 +3078,20 @@ public interface Bytecodes {
             super(jq_ClassFileConstants.jbc_FCMPL, (short)1);
         }
         
-	/** @return jq_Primitive.FLOAT
-	 */
+        /** @return jq_Primitive.FLOAT
+         */
         public jq_Type getType() {
             return jq_Primitive.FLOAT;
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackProducer(this);
@@ -3103,10 +3103,10 @@ public interface Bytecodes {
     public class FCONST extends Instruction implements PushInstruction, StackProducer, TypedInstruction, ConstantPushInstruction {
         private float value;
         
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         FCONST() {}
         
         public FCONST(float f) {
@@ -3126,20 +3126,20 @@ public interface Bytecodes {
         
         public Number getValue() { return new Float(value); }
         
-	/** @return jq_Primitive.FLOAT
-	 */
+        /** @return jq_Primitive.FLOAT
+         */
         public jq_Type getType() {
             return jq_Primitive.FLOAT;
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitPushInstruction(this);
             v.visitStackProducer(this);
@@ -3150,20 +3150,20 @@ public interface Bytecodes {
     }
     
     public class FDIV extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
-	/** Divide floats
-	 */
+        /** Divide floats
+         */
         public FDIV() {
             super(jq_ClassFileConstants.jbc_FDIV);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackProducer(this);
@@ -3174,29 +3174,29 @@ public interface Bytecodes {
     }
     
     public class FLOAD extends LoadInstruction {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         FLOAD() {
             super(jq_ClassFileConstants.jbc_FLOAD, jq_ClassFileConstants.jbc_FLOAD_0);
         }
         
-	/** Load float from local variable
-	 * @param n index of local variable
-	 */
+        /** Load float from local variable
+         * @param n index of local variable
+         */
         public FLOAD(int n) {
             super(jq_ClassFileConstants.jbc_FLOAD, jq_ClassFileConstants.jbc_FLOAD_0, n);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             super.accept(v);
             v.visitFLOAD(this);
@@ -3204,20 +3204,20 @@ public interface Bytecodes {
     }
     
     public class FMUL extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
-	/** Multiply floats
-	 */
+        /** Multiply floats
+         */
         public FMUL() {
             super(jq_ClassFileConstants.jbc_FMUL);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackProducer(this);
@@ -3232,14 +3232,14 @@ public interface Bytecodes {
             super(jq_ClassFileConstants.jbc_FNEG);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackProducer(this);
@@ -3250,20 +3250,20 @@ public interface Bytecodes {
     }
     
     public class FREM extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
-	/** Remainder of floats
-	 */
+        /** Remainder of floats
+         */
         public FREM() {
             super(jq_ClassFileConstants.jbc_FREM);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackProducer(this);
@@ -3274,20 +3274,20 @@ public interface Bytecodes {
     }
     
     public class FRETURN extends ReturnInstruction implements TypedInstruction, StackConsumer {
-	/** Return float from method
-	 */
+        /** Return float from method
+         */
         public FRETURN() {
             super(jq_ClassFileConstants.jbc_FRETURN);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             //v.visitExceptionThrower(this);
             v.visitTypedInstruction(this);
@@ -3298,29 +3298,29 @@ public interface Bytecodes {
     }
     
     public class FSTORE extends StoreInstruction {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         FSTORE() {
             super(jq_ClassFileConstants.jbc_FSTORE, jq_ClassFileConstants.jbc_FSTORE_0);
         }
         
-	/** Store float into local variable
-	 * @param n index of local variable
-	 */
+        /** Store float into local variable
+         * @param n index of local variable
+         */
         public FSTORE(int n) {
             super(jq_ClassFileConstants.jbc_FSTORE, jq_ClassFileConstants.jbc_FSTORE_0, n);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             super.accept(v);
             v.visitFSTORE(this);
@@ -3328,20 +3328,20 @@ public interface Bytecodes {
     }
     
     public class FSUB extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
-	/** Substract floats
-	 */
+        /** Substract floats
+         */
         public FSUB() {
             super(jq_ClassFileConstants.jbc_FSUB);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackProducer(this);
@@ -3352,10 +3352,10 @@ public interface Bytecodes {
     }
     
     public class GETFIELD extends FieldInstruction implements ExceptionThrower, StackConsumer, StackProducer, TypedInstruction, LoadClass {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         GETFIELD() {}
         
         public GETFIELD(jq_InstanceField f) {
@@ -3364,18 +3364,18 @@ public interface Bytecodes {
         
         public int produceStack() { return getFieldSize(); }
         
-	/**
-	 * Read needed data (i.e., index) from file.
-	 * @param bytes input stream
-	 * @param wide wide prefix?
-	 */
+        /**
+         * Read needed data (i.e., index) from file.
+         * @param bytes input stream
+         * @param wide wide prefix?
+         */
         protected void initFromFile(jq_ConstantPool cp, ByteSequence bytes, boolean wide) throws IOException {
-	    o = cp.getAsInstanceField((char)bytes.readUnsignedShort());
+            o = cp.getAsInstanceField((char)bytes.readUnsignedShort());
             length = 3;
         }
         
         public Set/*<jq_Class>*/ getExceptions() {
-	    /*
+            /*
             Class[] cs = new Class[2 + ExceptionConstants.EXCS_FIELD_AND_METHOD_RESOLUTION.length];
             
             System.arraycopy(ExceptionConstants.EXCS_FIELD_AND_METHOD_RESOLUTION, 0,
@@ -3387,17 +3387,17 @@ public interface Bytecodes {
             ExceptionConstants.NULL_POINTER_EXCEPTION;
             return cs;
             */
-	    return null;
+            return null;
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitExceptionThrower(this);
             v.visitStackConsumer(this);
@@ -3412,10 +3412,10 @@ public interface Bytecodes {
     }
     
     public class GETSTATIC extends FieldInstruction implements ExceptionThrower, StackProducer, PushInstruction, TypedInstruction, LoadClass {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         GETSTATIC() {}
         
         public GETSTATIC(jq_StaticField f) {
@@ -3424,18 +3424,18 @@ public interface Bytecodes {
         
         public int produceStack() { return getFieldSize(); }
         
-	/**
-	 * Read needed data (i.e., index) from file.
-	 * @param bytes input stream
-	 * @param wide wide prefix?
-	 */
+        /**
+         * Read needed data (i.e., index) from file.
+         * @param bytes input stream
+         * @param wide wide prefix?
+         */
         protected void initFromFile(jq_ConstantPool cp, ByteSequence bytes, boolean wide) throws IOException {
-	    o = cp.getAsStaticField((char)bytes.readUnsignedShort());
+            o = cp.getAsStaticField((char)bytes.readUnsignedShort());
             length = 3;
         }
         
         public Set/*<jq_Class>*/ getExceptions() {
-	    /*
+            /*
             Class[] cs = new Class[1 + ExceptionConstants.EXCS_FIELD_AND_METHOD_RESOLUTION.length];
             
             System.arraycopy(ExceptionConstants.EXCS_FIELD_AND_METHOD_RESOLUTION, 0,
@@ -3444,18 +3444,18 @@ public interface Bytecodes {
             ExceptionConstants.INCOMPATIBLE_CLASS_CHANGE_ERROR;
             
             return cs;
-	    */
-	    return null;
+            */
+            return null;
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitExceptionThrower(this);
             v.visitStackProducer(this);
@@ -3470,20 +3470,20 @@ public interface Bytecodes {
     }
     
     public class GOTO extends GotoInstruction implements VariableLengthInstruction, UnconditionalBranch {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         GOTO() {}
         
         public GOTO(InstructionHandle target) {
             super(jq_ClassFileConstants.jbc_GOTO, target);
         }
         
-	/**
-	 * Dump instruction as byte code to stream out.
-	 * @param out Output stream
-	 */
+        /**
+         * Dump instruction as byte code to stream out.
+         * @param out Output stream
+         */
         public void dump(DataOutputStream out) throws IOException {
             index = getTargetOffset();
             if(opcode == jq_ClassFileConstants.jbc_GOTO)
@@ -3495,9 +3495,9 @@ public interface Bytecodes {
             }
         }
         
-	/** Called in pass 2 of InstructionList.setPositions() in order to update
-	 * the branch target, that may shift due to variable length instructions.
-	 */
+        /** Called in pass 2 of InstructionList.setPositions() in order to update
+         * the branch target, that may shift due to variable length instructions.
+         */
         protected int updatePosition(int offset, int max_offset) {
             int i = getTargetOffset(); // Depending on old position value
             
@@ -3512,14 +3512,14 @@ public interface Bytecodes {
             return 0;
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitVariableLengthInstruction(this);
             v.visitUnconditionalBranch(this);
@@ -3530,10 +3530,10 @@ public interface Bytecodes {
     }
     
     public class GOTO_W extends GotoInstruction implements UnconditionalBranch {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         GOTO_W() {}
         
         public GOTO_W(InstructionHandle target) {
@@ -3541,32 +3541,32 @@ public interface Bytecodes {
             length = 5;
         }
         
-	/**
-	 * Dump instruction as byte code to stream out.
-	 * @param out Output stream
-	 */
+        /**
+         * Dump instruction as byte code to stream out.
+         * @param out Output stream
+         */
         public void dump(DataOutputStream out) throws IOException {
             index = getTargetOffset();
             out.writeByte(opcode);
             out.writeInt(index);
         }
         
-	/**
-	 * Read needed data (e.g. index) from file.
-	 */
+        /**
+         * Read needed data (e.g. index) from file.
+         */
         protected void initFromFile(jq_ConstantPool cp, ByteSequence bytes, boolean wide) throws IOException {
             index  = bytes.readInt();
             length = 5;
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitUnconditionalBranch(this);
             v.visitBranchInstruction(this);
@@ -3576,20 +3576,20 @@ public interface Bytecodes {
     }
     
     public class I2B extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
-	/** Convert int to byte
-	 */
+        /** Convert int to byte
+         */
         public I2B() {
             super(jq_ClassFileConstants.jbc_I2B);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackProducer(this);
@@ -3600,20 +3600,20 @@ public interface Bytecodes {
     }
     
     public class I2C extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
-	/** Convert int to char
-	 */
+        /** Convert int to char
+         */
         public I2C() {
             super(jq_ClassFileConstants.jbc_I2C);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackProducer(this);
@@ -3624,20 +3624,20 @@ public interface Bytecodes {
     }
     
     public class I2D extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
-	/** Convert int to double
-	 */
+        /** Convert int to double
+         */
         public I2D() {
             super(jq_ClassFileConstants.jbc_I2D);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackProducer(this);
@@ -3648,20 +3648,20 @@ public interface Bytecodes {
     }
     
     public class I2F extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
-	/** Convert int to float
-	 */
+        /** Convert int to float
+         */
         public I2F() {
             super(jq_ClassFileConstants.jbc_I2F);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackProducer(this);
@@ -3672,20 +3672,20 @@ public interface Bytecodes {
     }
     
     public class I2L extends ConversionInstruction implements TypedInstruction, StackProducer, StackConsumer {
-	/** Convert int to long
-	 */
+        /** Convert int to long
+         */
         public I2L() {
             super(jq_ClassFileConstants.jbc_I2L);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackProducer(this);
@@ -3700,14 +3700,14 @@ public interface Bytecodes {
             super(jq_ClassFileConstants.jbc_I2S);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackProducer(this);
@@ -3718,20 +3718,20 @@ public interface Bytecodes {
     }
     
     public class IADD extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
-	/** Add ints
-	 */
+        /** Add ints
+         */
         public IADD() {
             super(jq_ClassFileConstants.jbc_IADD);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackProducer(this);
@@ -3742,21 +3742,21 @@ public interface Bytecodes {
     }
     
     public class IALOAD extends ArrayInstruction implements StackProducer, ExceptionThrower, TypedInstruction {
-	/**
-	 * Load int from array
-	 */
+        /**
+         * Load int from array
+         */
         public IALOAD() {
             super(jq_ClassFileConstants.jbc_IALOAD);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitStackProducer(this);
             v.visitExceptionThrower(this);
@@ -3771,14 +3771,14 @@ public interface Bytecodes {
             super(jq_ClassFileConstants.jbc_IAND);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackProducer(this);
@@ -3789,21 +3789,21 @@ public interface Bytecodes {
     }
     
     public class IASTORE extends ArrayInstruction implements StackConsumer, ExceptionThrower, TypedInstruction {
-	/**
-	 * Store into int array
-	 */
+        /**
+         * Store into int array
+         */
         public IASTORE() {
             super(jq_ClassFileConstants.jbc_IASTORE);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitStackConsumer(this);
             v.visitExceptionThrower(this);
@@ -3816,10 +3816,10 @@ public interface Bytecodes {
     public class ICONST extends Instruction implements PushInstruction, StackProducer, TypedInstruction, ConstantPushInstruction {
         private int value;
         
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         ICONST() {}
         
         public ICONST(int i) {
@@ -3835,20 +3835,20 @@ public interface Bytecodes {
         
         public Number getValue() { return new Integer(value); }
         
-	/** @return jq_Primitive.INT
-	 */
+        /** @return jq_Primitive.INT
+         */
         public jq_Type getType() {
             return jq_Primitive.INT;
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitPushInstruction(this);
             v.visitStackProducer(this);
@@ -3859,27 +3859,27 @@ public interface Bytecodes {
     }
     
     public class IDIV extends ArithmeticInstruction implements ExceptionThrower, TypedInstruction, StackProducer, StackConsumer {
-	/** Divide ints
-	 */
+        /** Divide ints
+         */
         public IDIV() {
             super(jq_ClassFileConstants.jbc_IDIV);
         }
         
-	/** @return exceptions this instruction may cause
-	 */
+        /** @return exceptions this instruction may cause
+         */
         public Set/*<jq_Class>*/ getExceptions() {
             //return new jq_Class[] { ClassLib.sun13.java.lang.DivideByZeroException._class };
             return null;
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitExceptionThrower(this);
             v.visitTypedInstruction(this);
@@ -3891,31 +3891,31 @@ public interface Bytecodes {
     }
     
     public class IF_ACMPEQ extends IfInstruction implements StackConsumer {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         IF_ACMPEQ() {}
         
         public IF_ACMPEQ(InstructionHandle target) {
             super(jq_ClassFileConstants.jbc_IF_ACMPEQ, target);
         }
         
-	/**
-	 * @return negation of instruction
-	 */
+        /**
+         * @return negation of instruction
+         */
         public IfInstruction negate() {
             return new IF_ACMPNE(target);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitStackConsumer(this);
             v.visitBranchInstruction(this);
@@ -3925,31 +3925,31 @@ public interface Bytecodes {
     }
     
     public class IF_ACMPNE extends IfInstruction implements StackConsumer {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         IF_ACMPNE() {}
         
         public IF_ACMPNE(InstructionHandle target) {
             super(jq_ClassFileConstants.jbc_IF_ACMPNE, target);
         }
         
-	/**
-	 * @return negation of instruction
-	 */
+        /**
+         * @return negation of instruction
+         */
         public IfInstruction negate() {
             return new IF_ACMPEQ(target);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitStackConsumer(this);
             v.visitBranchInstruction(this);
@@ -3959,31 +3959,31 @@ public interface Bytecodes {
     }
     
     public class IFEQ extends IfInstruction implements StackConsumer {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         IFEQ() {}
         
         public IFEQ(InstructionHandle target) {
             super(jq_ClassFileConstants.jbc_IFEQ, target);
         }
         
-	/**
-	 * @return negation of instruction, e.g. IFEQ.negate() == IFNE
-	 */
+        /**
+         * @return negation of instruction, e.g. IFEQ.negate() == IFNE
+         */
         public IfInstruction negate() {
             return new IFNE(target);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitStackConsumer(this);
             v.visitBranchInstruction(this);
@@ -3993,31 +3993,31 @@ public interface Bytecodes {
     }
     
     public class IFGE extends IfInstruction implements StackConsumer {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         IFGE() {}
         
         public IFGE(InstructionHandle target) {
             super(jq_ClassFileConstants.jbc_IFGE, target);
         }
         
-	/**
-	 * @return negation of instruction
-	 */
+        /**
+         * @return negation of instruction
+         */
         public IfInstruction negate() {
             return new IFLT(target);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitStackConsumer(this);
             v.visitBranchInstruction(this);
@@ -4027,31 +4027,31 @@ public interface Bytecodes {
     }
     
     public class IFGT extends IfInstruction implements StackConsumer {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         IFGT() {}
         
         public IFGT(InstructionHandle target) {
             super(jq_ClassFileConstants.jbc_IFGT, target);
         }
         
-	/**
-	 * @return negation of instruction
-	 */
+        /**
+         * @return negation of instruction
+         */
         public IfInstruction negate() {
             return new IFLE(target);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitStackConsumer(this);
             v.visitBranchInstruction(this);
@@ -4061,31 +4061,31 @@ public interface Bytecodes {
     }
     
     public class IF_ICMPEQ extends IfInstruction implements StackConsumer {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         IF_ICMPEQ() {}
         
         public IF_ICMPEQ(InstructionHandle target) {
             super(jq_ClassFileConstants.jbc_IF_ICMPEQ, target);
         }
         
-	/**
-	 * @return negation of instruction
-	 */
+        /**
+         * @return negation of instruction
+         */
         public IfInstruction negate() {
             return new IF_ICMPNE(target);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitStackConsumer(this);
             v.visitBranchInstruction(this);
@@ -4095,31 +4095,31 @@ public interface Bytecodes {
     }
     
     public class IF_ICMPGE extends IfInstruction implements StackConsumer {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         IF_ICMPGE() {}
         
         public IF_ICMPGE(InstructionHandle target) {
             super(jq_ClassFileConstants.jbc_IF_ICMPGE, target);
         }
         
-	/**
-	 * @return negation of instruction
-	 */
+        /**
+         * @return negation of instruction
+         */
         public IfInstruction negate() {
             return new IF_ICMPLT(target);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitStackConsumer(this);
             v.visitBranchInstruction(this);
@@ -4129,31 +4129,31 @@ public interface Bytecodes {
     }
     
     public class IF_ICMPGT extends IfInstruction implements StackConsumer {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         IF_ICMPGT() {}
         
         public IF_ICMPGT(InstructionHandle target) {
             super(jq_ClassFileConstants.jbc_IF_ICMPGT, target);
         }
         
-	/**
-	 * @return negation of instruction
-	 */
+        /**
+         * @return negation of instruction
+         */
         public IfInstruction negate() {
             return new IF_ICMPLE(target);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitStackConsumer(this);
             v.visitBranchInstruction(this);
@@ -4163,31 +4163,31 @@ public interface Bytecodes {
     }
     
     public class IF_ICMPLE extends IfInstruction implements StackConsumer {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         IF_ICMPLE() {}
         
         public IF_ICMPLE(InstructionHandle target) {
             super(jq_ClassFileConstants.jbc_IF_ICMPLE, target);
         }
         
-	/**
-	 * @return negation of instruction
-	 */
+        /**
+         * @return negation of instruction
+         */
         public IfInstruction negate() {
             return new IF_ICMPGT(target);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitStackConsumer(this);
             v.visitBranchInstruction(this);
@@ -4197,31 +4197,31 @@ public interface Bytecodes {
     }
     
     public class IF_ICMPLT extends IfInstruction implements StackConsumer {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         IF_ICMPLT() {}
         
         public IF_ICMPLT(InstructionHandle target) {
             super(jq_ClassFileConstants.jbc_IF_ICMPLT, target);
         }
         
-	/**
-	 * @return negation of instruction
-	 */
+        /**
+         * @return negation of instruction
+         */
         public IfInstruction negate() {
             return new IF_ICMPGE(target);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitStackConsumer(this);
             v.visitBranchInstruction(this);
@@ -4231,31 +4231,31 @@ public interface Bytecodes {
     }
     
     public class IF_ICMPNE extends IfInstruction implements StackConsumer {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         IF_ICMPNE() {}
         
         public IF_ICMPNE(InstructionHandle target) {
             super(jq_ClassFileConstants.jbc_IF_ICMPNE, target);
         }
         
-	/**
-	 * @return negation of instruction
-	 */
+        /**
+         * @return negation of instruction
+         */
         public IfInstruction negate() {
             return new IF_ICMPEQ(target);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitStackConsumer(this);
             v.visitBranchInstruction(this);
@@ -4265,31 +4265,31 @@ public interface Bytecodes {
     }
     
     public class IFLE extends IfInstruction implements StackConsumer {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         IFLE() {}
         
         public IFLE(InstructionHandle target) {
             super(jq_ClassFileConstants.jbc_IFLE, target);
         }
         
-	/**
-	 * @return negation of instruction
-	 */
+        /**
+         * @return negation of instruction
+         */
         public IfInstruction negate() {
             return new IFGT(target);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitStackConsumer(this);
             v.visitBranchInstruction(this);
@@ -4299,31 +4299,31 @@ public interface Bytecodes {
     }
     
     public class IFLT extends IfInstruction implements StackConsumer {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         IFLT() {}
         
         public IFLT(InstructionHandle target) {
             super(jq_ClassFileConstants.jbc_IFLT, target);
         }
         
-	/**
-	 * @return negation of instruction
-	 */
+        /**
+         * @return negation of instruction
+         */
         public IfInstruction negate() {
             return new IFGE(target);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitStackConsumer(this);
             v.visitBranchInstruction(this);
@@ -4333,31 +4333,31 @@ public interface Bytecodes {
     }
     
     public class IFNE extends IfInstruction implements StackConsumer {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         IFNE() {}
         
         public IFNE(InstructionHandle target) {
             super(jq_ClassFileConstants.jbc_IFNE, target);
         }
         
-	/**
-	 * @return negation of instruction
-	 */
+        /**
+         * @return negation of instruction
+         */
         public IfInstruction negate() {
             return new IFEQ(target);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitStackConsumer(this);
             v.visitBranchInstruction(this);
@@ -4367,31 +4367,31 @@ public interface Bytecodes {
     }
     
     public class IFNONNULL extends IfInstruction implements StackConsumer {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         IFNONNULL() {}
         
         public IFNONNULL(InstructionHandle target) {
             super(jq_ClassFileConstants.jbc_IFNONNULL, target);
         }
         
-	/**
-	 * @return negation of instruction
-	 */
+        /**
+         * @return negation of instruction
+         */
         public IfInstruction negate() {
             return new IFNULL(target);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitStackConsumer(this);
             v.visitBranchInstruction(this);
@@ -4401,31 +4401,31 @@ public interface Bytecodes {
     }
     
     public class IFNULL extends IfInstruction implements StackConsumer {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         IFNULL() {}
         
         public IFNULL(InstructionHandle target) {
             super(jq_ClassFileConstants.jbc_IFNULL, target);
         }
         
-	/**
-	 * @return negation of instruction
-	 */
+        /**
+         * @return negation of instruction
+         */
         public IfInstruction negate() {
             return new IFNONNULL(target);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitStackConsumer(this);
             v.visitBranchInstruction(this);
@@ -4438,10 +4438,10 @@ public interface Bytecodes {
         private boolean wide;
         private int     c;
         
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         IINC() {}
         
         public IINC(int n, int c) {
@@ -4454,10 +4454,10 @@ public interface Bytecodes {
             setIncrement(c);
         }
         
-	/**
-	 * Dump instruction as byte code to stream out.
-	 * @param out Output stream
-	 */
+        /**
+         * Dump instruction as byte code to stream out.
+         * @param out Output stream
+         */
         public void dump(DataOutputStream out) throws IOException {
             if(wide) // Need WIDE prefix ?
                 out.writeByte(jq_ClassFileConstants.jbc_WIDE);
@@ -4475,15 +4475,15 @@ public interface Bytecodes {
         
         private final void setWide() {
             if(wide = ((n > Short.MAX_VALUE) ||
-		       (Math.abs(c) > Byte.MAX_VALUE)))
+                       (Math.abs(c) > Byte.MAX_VALUE)))
                 length = 6; // wide byte included
             else
                 length = 3;
         }
         
-	/**
-	 * Read needed data (e.g. index) from file.
-	 */
+        /**
+         * Read needed data (e.g. index) from file.
+         */
         protected void initFromFile(jq_ConstantPool cp, ByteSequence bytes, boolean wide) throws IOException {
             this.wide = wide;
             
@@ -4498,16 +4498,16 @@ public interface Bytecodes {
             }
         }
         
-	/**
-	 * @return mnemonic for instruction
-	 */
+        /**
+         * @return mnemonic for instruction
+         */
         public String toString(boolean verbose) {
             return super.toString(verbose) + " " + c;
         }
         
-	/**
-	 * Set index of local variable.
-	 */
+        /**
+         * Set index of local variable.
+         */
         public final void setIndex(int n) {
             if(n < 0)
                 throw new BytecodeException("Negative index value: " + n);
@@ -4516,35 +4516,35 @@ public interface Bytecodes {
             setWide();
         }
         
-	/**
-	 * @return increment factor
-	 */
+        /**
+         * @return increment factor
+         */
         public final int getIncrement() { return c; }
         
-	/**
-	 * Set increment factor.
-	 */
+        /**
+         * Set increment factor.
+         */
         public final void setIncrement(int c) {
             this.c = c;
             setWide();
         }
         
-	/** @return jq_Primitive.INT
-	 */
-	/*
+        /** @return jq_Primitive.INT
+         */
+        /*
         public jq_Type getType() {
             return jq_Primitive.INT;
         }
-	*/
+        */
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitLocalVariableInstruction(this);
             v.visitIINC(this);
@@ -4552,29 +4552,29 @@ public interface Bytecodes {
     }
     
     public class ILOAD extends LoadInstruction {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         ILOAD() {
             super(jq_ClassFileConstants.jbc_ILOAD, jq_ClassFileConstants.jbc_ILOAD_0);
         }
         
-	/** Load int from local variable
-	 * @param n index of local variable
-	 */
+        /** Load int from local variable
+         * @param n index of local variable
+         */
         public ILOAD(int n) {
             super(jq_ClassFileConstants.jbc_ILOAD, jq_ClassFileConstants.jbc_ILOAD_0, n);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             super.accept(v);
             v.visitILOAD(this);
@@ -4582,20 +4582,20 @@ public interface Bytecodes {
     }
     
     public class IMUL extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
-	/** Multiply ints
-	 */
+        /** Multiply ints
+         */
         public IMUL() {
             super(jq_ClassFileConstants.jbc_IMUL);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackProducer(this);
@@ -4610,14 +4610,14 @@ public interface Bytecodes {
             super(jq_ClassFileConstants.jbc_INEG);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackProducer(this);
@@ -4628,10 +4628,10 @@ public interface Bytecodes {
     }
     
     public class INSTANCEOF extends CPInstruction implements LoadClass, ExceptionThrower, StackProducer, StackConsumer, TypedInstruction {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         INSTANCEOF() {}
         
         public INSTANCEOF(jq_Type f) {
@@ -4639,10 +4639,10 @@ public interface Bytecodes {
         }
         
         public Set/*<jq_Class>*/ getExceptions() {
-	    /*
+            /*
             return de.fub.bytecode.ExceptionConstants.EXCS_CLASS_AND_INTERFACE_RESOLUTION;
-	    */
-	    return null;
+            */
+            return null;
         }
         
         public jq_Class getLoadClassType() {
@@ -4654,14 +4654,14 @@ public interface Bytecodes {
             return (t instanceof jq_Class)? (jq_Class) t : null;
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitLoadClass(this);
             v.visitExceptionThrower(this);
@@ -4676,10 +4676,10 @@ public interface Bytecodes {
     public final class INVOKEINTERFACE extends InvokeInstruction implements ExceptionThrower, TypedInstruction, StackConsumer, StackProducer, LoadClass {
         private int nargs; // Number of arguments on stack (number of stack slots), called "count" in vmspec2
         
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         INVOKEINTERFACE() {}
         
         public INVOKEINTERFACE(jq_Method f, int nargs) {
@@ -4692,10 +4692,10 @@ public interface Bytecodes {
             this.nargs = nargs;
         }
         
-	/**
-	 * Dump instruction as byte code to stream out.
-	 * @param out Output stream
-	 */
+        /**
+         * Dump instruction as byte code to stream out.
+         * @param out Output stream
+         */
         public void dump(DataOutputStream out) throws IOException {
             out.writeByte(opcode);
             out.writeShort(index);
@@ -4703,36 +4703,36 @@ public interface Bytecodes {
             out.writeByte(0);
         }
         
-	/**
-	 * The Java Virtual Machine Specification, First Edition was a little
-	 * bit unprecise about the naming. In the Java Virtual Machine Specification,
-	 * Second Edition, the value returned here is called &quot;count&quot;.
-	 *
-	 * @deprecated Use getCount().
-	 */
+        /**
+         * The Java Virtual Machine Specification, First Edition was a little
+         * bit unprecise about the naming. In the Java Virtual Machine Specification,
+         * Second Edition, the value returned here is called &quot;count&quot;.
+         *
+         * @deprecated Use getCount().
+         */
         public int getNoArguments() { return nargs; }
         
-	/**
-	 * The <B>count</B> argument according to the Java Language Specification,
-	 * Second Edition.
-	 */
+        /**
+         * The <B>count</B> argument according to the Java Language Specification,
+         * Second Edition.
+         */
         public int getCount() { return nargs; }
         
-	/**
-	 * Read needed data (i.e., index) from file.
-	 * @param bytes input stream
-	 * @param wide wide prefix?
-	 */
+        /**
+         * Read needed data (i.e., index) from file.
+         * @param bytes input stream
+         * @param wide wide prefix?
+         */
         protected void initFromFile(jq_ConstantPool cp, ByteSequence bytes, boolean wide) throws IOException {
-	    o = cp.getAsInstanceMethod((char)bytes.readUnsignedShort());
+            o = cp.getAsInstanceMethod((char)bytes.readUnsignedShort());
             length = 5;
             nargs = bytes.readUnsignedByte();
             bytes.readByte(); // Skip 0 byte
         }
         
-	/**
-	 * @return mnemonic for instruction with symbolic references resolved
-	 */
+        /**
+         * @return mnemonic for instruction with symbolic references resolved
+         */
         public String toString() {
             return super.toString() + " " + nargs;
         }
@@ -4742,11 +4742,11 @@ public interface Bytecodes {
         }
         
         public Set/*<jq_Class>*/ getExceptions() {
-	    /*
+            /*
             Class[] cs = new Class[4 + ExceptionConstants.EXCS_INTERFACE_METHOD_RESOLUTION.length];
             
             System.arraycopy(ExceptionConstants.EXCS_INTERFACE_METHOD_RESOLUTION, 0,
-			     cs, 0, ExceptionConstants.EXCS_INTERFACE_METHOD_RESOLUTION.length);
+                             cs, 0, ExceptionConstants.EXCS_INTERFACE_METHOD_RESOLUTION.length);
             
             cs[ExceptionConstants.EXCS_INTERFACE_METHOD_RESOLUTION.length+3] = ExceptionConstants.INCOMPATIBLE_CLASS_CHANGE_ERROR;
             cs[ExceptionConstants.EXCS_INTERFACE_METHOD_RESOLUTION.length+2] = ExceptionConstants.ILLEGAL_ACCESS_ERROR;
@@ -4754,18 +4754,18 @@ public interface Bytecodes {
             cs[ExceptionConstants.EXCS_INTERFACE_METHOD_RESOLUTION.length]   = ExceptionConstants.UNSATISFIED_LINK_ERROR;
             
             return cs;
-	    */
-	    return null;
+            */
+            return null;
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitExceptionThrower(this);
             v.visitTypedInstruction(this);
@@ -4780,28 +4780,28 @@ public interface Bytecodes {
     }
     
     public class INVOKESPECIAL extends InvokeInstruction implements ExceptionThrower, TypedInstruction, StackConsumer, StackProducer, LoadClass {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         INVOKESPECIAL() {}
         
         public INVOKESPECIAL(jq_Method f) {
             super(jq_ClassFileConstants.jbc_INVOKESPECIAL, f);
         }
         
-	/**
-	 * Read needed data (i.e., index) from file.
-	 * @param bytes input stream
-	 * @param wide wide prefix?
-	 */
+        /**
+         * Read needed data (i.e., index) from file.
+         * @param bytes input stream
+         * @param wide wide prefix?
+         */
         protected void initFromFile(jq_ConstantPool cp, ByteSequence bytes, boolean wide) throws IOException {
-	    o = cp.getAsInstanceMethod((char)bytes.readUnsignedShort());
+            o = cp.getAsInstanceMethod((char)bytes.readUnsignedShort());
             length = 3;
         }
         
         public Set/*<jq_Class>*/ getExceptions() {
-	    /*
+            /*
             Class[] cs = new Class[4 + ExceptionConstants.EXCS_FIELD_AND_METHOD_RESOLUTION.length];
             
             System.arraycopy(ExceptionConstants.EXCS_FIELD_AND_METHOD_RESOLUTION, 0,
@@ -4813,18 +4813,18 @@ public interface Bytecodes {
             cs[ExceptionConstants.EXCS_FIELD_AND_METHOD_RESOLUTION.length]   = ExceptionConstants.NULL_POINTER_EXCEPTION;
             
             return cs;
-	    */
-	    return null;
+            */
+            return null;
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitExceptionThrower(this);
             v.visitTypedInstruction(this);
@@ -4839,28 +4839,28 @@ public interface Bytecodes {
     }
     
     public class INVOKESTATIC extends InvokeInstruction implements ExceptionThrower, TypedInstruction, StackConsumer, StackProducer, LoadClass {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         INVOKESTATIC() {}
         
         public INVOKESTATIC(jq_Method f) {
             super(jq_ClassFileConstants.jbc_INVOKESTATIC, f);
         }
         
-	/**
-	 * Read needed data (i.e., index) from file.
-	 * @param bytes input stream
-	 * @param wide wide prefix?
-	 */
+        /**
+         * Read needed data (i.e., index) from file.
+         * @param bytes input stream
+         * @param wide wide prefix?
+         */
         protected void initFromFile(jq_ConstantPool cp, ByteSequence bytes, boolean wide) throws IOException {
-	    o = cp.getAsStaticMethod((char)bytes.readUnsignedShort());
+            o = cp.getAsStaticMethod((char)bytes.readUnsignedShort());
             length = 3;
         }
         
         public Set/*<jq_Class>*/ getExceptions() {
-	    /*
+            /*
             Class[] cs = new Class[2 + ExceptionConstants.EXCS_FIELD_AND_METHOD_RESOLUTION.length];
             
             System.arraycopy(ExceptionConstants.EXCS_FIELD_AND_METHOD_RESOLUTION, 0,
@@ -4870,18 +4870,18 @@ public interface Bytecodes {
             cs[ExceptionConstants.EXCS_FIELD_AND_METHOD_RESOLUTION.length+1] = ExceptionConstants.INCOMPATIBLE_CLASS_CHANGE_ERROR;
             
             return cs;
-	    */
-	    return null;
+            */
+            return null;
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitExceptionThrower(this);
             v.visitTypedInstruction(this);
@@ -4896,28 +4896,28 @@ public interface Bytecodes {
     }
     
     public class INVOKEVIRTUAL extends InvokeInstruction implements ExceptionThrower, TypedInstruction, StackConsumer, StackProducer, LoadClass {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         INVOKEVIRTUAL() {}
         
         public INVOKEVIRTUAL(jq_Method f) {
             super(jq_ClassFileConstants.jbc_INVOKEVIRTUAL, f);
         }
         
-	/**
-	 * Read needed data (i.e., index) from file.
-	 * @param bytes input stream
-	 * @param wide wide prefix?
-	 */
+        /**
+         * Read needed data (i.e., index) from file.
+         * @param bytes input stream
+         * @param wide wide prefix?
+         */
         protected void initFromFile(jq_ConstantPool cp, ByteSequence bytes, boolean wide) throws IOException {
-	    o = cp.getAsInstanceMethod((char)bytes.readUnsignedShort());
+            o = cp.getAsInstanceMethod((char)bytes.readUnsignedShort());
             length = 3;
         }
         
         public Set/*<jq_Class>*/ getExceptions() {
-	    /*
+            /*
             Class[] cs = new Class[4 + ExceptionConstants.EXCS_FIELD_AND_METHOD_RESOLUTION.length];
             
             System.arraycopy(ExceptionConstants.EXCS_FIELD_AND_METHOD_RESOLUTION, 0,
@@ -4929,18 +4929,18 @@ public interface Bytecodes {
             cs[ExceptionConstants.EXCS_FIELD_AND_METHOD_RESOLUTION.length]   = ExceptionConstants.NULL_POINTER_EXCEPTION;
             
             return cs;
-	    */
-	    return null;
+            */
+            return null;
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitExceptionThrower(this);
             v.visitTypedInstruction(this);
@@ -4959,14 +4959,14 @@ public interface Bytecodes {
             super(jq_ClassFileConstants.jbc_IOR);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackProducer(this);
@@ -4977,29 +4977,29 @@ public interface Bytecodes {
     }
     
     public class IREM extends ArithmeticInstruction implements ExceptionThrower, TypedInstruction, StackProducer, StackConsumer {
-	/** Remainder of ints
-	 */
+        /** Remainder of ints
+         */
         public IREM() {
             super(jq_ClassFileConstants.jbc_IREM);
         }
         
-	/** @return exceptions this instruction may cause
-	 */
+        /** @return exceptions this instruction may cause
+         */
         public Set/*<jq_Class>*/ getExceptions() {
-	    /*
+            /*
             return new Class[] { de.fub.bytecode.ExceptionConstants.ARITHMETIC_EXCEPTION };
-	    */
-	    return null;
+            */
+            return null;
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitExceptionThrower(this);
             v.visitTypedInstruction(this);
@@ -5011,20 +5011,20 @@ public interface Bytecodes {
     }
     
     public class IRETURN extends ReturnInstruction implements TypedInstruction, StackConsumer {
-	/** Return int from method
-	 */
+        /** Return int from method
+         */
         public IRETURN() {
             super(jq_ClassFileConstants.jbc_IRETURN);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackConsumer(this);
@@ -5038,14 +5038,14 @@ public interface Bytecodes {
             super(jq_ClassFileConstants.jbc_ISHL);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackProducer(this);
@@ -5060,14 +5060,14 @@ public interface Bytecodes {
             super(jq_ClassFileConstants.jbc_ISHR);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackProducer(this);
@@ -5078,29 +5078,29 @@ public interface Bytecodes {
     }
     
     public class ISTORE extends StoreInstruction {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         ISTORE() {
             super(jq_ClassFileConstants.jbc_ISTORE, jq_ClassFileConstants.jbc_ISTORE_0);
         }
         
-	/** Store int into local variable
-	 * @param n index of local variable
-	 */
+        /** Store int into local variable
+         * @param n index of local variable
+         */
         public ISTORE(int n) {
             super(jq_ClassFileConstants.jbc_ISTORE, jq_ClassFileConstants.jbc_ISTORE_0, n);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             super.accept(v);
             v.visitISTORE(this);
@@ -5108,20 +5108,20 @@ public interface Bytecodes {
     }
     
     public class ISUB extends ArithmeticInstruction implements TypedInstruction, StackProducer, StackConsumer {
-	/** Substract ints
-	 */
+        /** Substract ints
+         */
         public ISUB() {
             super(jq_ClassFileConstants.jbc_ISUB);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackProducer(this);
@@ -5136,14 +5136,14 @@ public interface Bytecodes {
             super(jq_ClassFileConstants.jbc_IUSHR);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackProducer(this);
@@ -5158,14 +5158,14 @@ public interface Bytecodes {
             super(jq_ClassFileConstants.jbc_IXOR);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackProducer(this);
@@ -5176,20 +5176,20 @@ public interface Bytecodes {
     }
     
     public class JSR extends JsrInstruction implements StackProducer, VariableLengthInstruction {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         JSR() {}
         
         public JSR(InstructionHandle target) {
             super(jq_ClassFileConstants.jbc_JSR, target);
         }
         
-	/**
-	 * Dump instruction as byte code to stream out.
-	 * @param out Output stream
-	 */
+        /**
+         * Dump instruction as byte code to stream out.
+         * @param out Output stream
+         */
         public void dump(DataOutputStream out) throws IOException {
             index = getTargetOffset();
             if(opcode == jq_ClassFileConstants.jbc_JSR)
@@ -5215,14 +5215,14 @@ public interface Bytecodes {
             return 0;
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitStackProducer(this);
             v.visitVariableLengthInstruction(this);
@@ -5233,10 +5233,10 @@ public interface Bytecodes {
     }
     
     public class JSR_W extends JsrInstruction implements StackProducer {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         JSR_W() {}
         
         public JSR_W(InstructionHandle target) {
@@ -5244,32 +5244,32 @@ public interface Bytecodes {
             length = 5;
         }
         
-	/**
-	 * Dump instruction as byte code to stream out.
-	 * @param out Output stream
-	 */
+        /**
+         * Dump instruction as byte code to stream out.
+         * @param out Output stream
+         */
         public void dump(DataOutputStream out) throws IOException {
             index = getTargetOffset();
             out.writeByte(opcode);
             out.writeInt(index);
         }
         
-	/**
-	 * Read needed data (e.g. index) from file.
-	 */
+        /**
+         * Read needed data (e.g. index) from file.
+         */
         protected void initFromFile(jq_ConstantPool cp, ByteSequence bytes, boolean wide) throws IOException {
             index = bytes.readInt();
             length = 5;
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitStackProducer(this);
             v.visitBranchInstruction(this);
@@ -5283,14 +5283,14 @@ public interface Bytecodes {
             super(jq_ClassFileConstants.jbc_L2D);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackProducer(this);
@@ -5305,14 +5305,14 @@ public interface Bytecodes {
             super(jq_ClassFileConstants.jbc_L2F);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackProducer(this);
@@ -5327,14 +5327,14 @@ public interface Bytecodes {
             super(jq_ClassFileConstants.jbc_L2I);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackProducer(this);
@@ -5349,14 +5349,14 @@ public interface Bytecodes {
             super(jq_ClassFileConstants.jbc_LADD);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackProducer(this);
@@ -5367,20 +5367,20 @@ public interface Bytecodes {
     }
     
     public class LALOAD extends ArrayInstruction implements StackProducer, ExceptionThrower, TypedInstruction {
-	/** Load long from array
-	 */
+        /** Load long from array
+         */
         public LALOAD() {
             super(jq_ClassFileConstants.jbc_LALOAD);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitStackProducer(this);
             v.visitExceptionThrower(this);
@@ -5395,14 +5395,14 @@ public interface Bytecodes {
             super(jq_ClassFileConstants.jbc_LAND);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackProducer(this);
@@ -5413,20 +5413,20 @@ public interface Bytecodes {
     }
     
     public class LASTORE extends ArrayInstruction implements StackConsumer, ExceptionThrower, TypedInstruction {
-	/** Store long into array
-	 */
+        /** Store long into array
+         */
         public LASTORE() {
             super(jq_ClassFileConstants.jbc_LASTORE);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitStackConsumer(this);
             v.visitExceptionThrower(this);
@@ -5441,24 +5441,24 @@ public interface Bytecodes {
             super(jq_ClassFileConstants.jbc_LCMP, (short)1);
         }
 
-	/** @return jq_Primitive.LONG
-	 */
+        /** @return jq_Primitive.LONG
+         */
         public jq_Type getType() {
             return jq_Primitive.LONG;
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
-	    v.visitTypedInstruction(this);
+            v.visitTypedInstruction(this);
             v.visitStackProducer(this);
-	    v.visitStackConsumer(this);
+            v.visitStackConsumer(this);
             v.visitLCMP(this);
         }
     }
@@ -5466,10 +5466,10 @@ public interface Bytecodes {
     public class LCONST extends Instruction implements PushInstruction, StackProducer, TypedInstruction, ConstantPushInstruction {
         private long value;
         
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         LCONST() {}
         
         public LCONST(long l) {
@@ -5487,20 +5487,20 @@ public interface Bytecodes {
         
         public Number getValue() { return new Long(value); }
         
-	/** @return jq_Primitive.LONG
-	 */
+        /** @return jq_Primitive.LONG
+         */
         public jq_Type getType() {
             return jq_Primitive.LONG;
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitPushInstruction(this);
             v.visitStackProducer(this);
@@ -5511,10 +5511,10 @@ public interface Bytecodes {
     }
     
     public class LDC2_W extends CPInstruction implements StackProducer, PushInstruction, TypedInstruction {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         LDC2_W() {}
         
         public LDC2_W(Object o) {
@@ -5522,23 +5522,23 @@ public interface Bytecodes {
         }
         
         public jq_Type getType() {
-	    if (o instanceof Long) return jq_Primitive.LONG;
-	    if (o instanceof Double) return jq_Primitive.DOUBLE;
-	    throw new RuntimeException("Unknown constant type " + o.getClass());
-	}
-        
-        public Number getValue() {
-	    return (Number)getObject();
+            if (o instanceof Long) return jq_Primitive.LONG;
+            if (o instanceof Double) return jq_Primitive.DOUBLE;
+            throw new RuntimeException("Unknown constant type " + o.getClass());
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        public Number getValue() {
+            return (Number)getObject();
+        }
+        
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitStackProducer(this);
             v.visitPushInstruction(this);
@@ -5549,10 +5549,10 @@ public interface Bytecodes {
     }
     
     public class LDC extends CPInstruction implements PushInstruction, ExceptionThrower, TypedInstruction {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         LDC() {}
         
         public LDC(Object o) {
@@ -5571,10 +5571,10 @@ public interface Bytecodes {
             }
         }
         
-	/**
-	 * Dump instruction as byte code to stream out.
-	 * @param out Output stream
-	 */
+        /**
+         * Dump instruction as byte code to stream out.
+         * @param out Output stream
+         */
         public void dump(DataOutputStream out) throws IOException {
             out.writeByte(opcode);
             
@@ -5584,48 +5584,48 @@ public interface Bytecodes {
                 out.writeShort(index);
         }
         
-	/**
-	 * Set the index to constant pool and adjust size.
-	 */
+        /**
+         * Set the index to constant pool and adjust size.
+         */
         public final void setIndex(jq_ConstantPool.ConstantPoolRebuilder cpr) {
             super.setIndex(cpr);
             setSize();
         }
         
-	/**
-	 * Read needed data (e.g. index) from file.
-	 */
+        /**
+         * Read needed data (e.g. index) from file.
+         */
         protected void initFromFile(jq_ConstantPool cp, ByteSequence bytes, boolean wide) throws IOException {
             length = 2;
-	    o = cp.get((char)bytes.readUnsignedByte());
+            o = cp.get((char)bytes.readUnsignedByte());
         }
         
         public Object getValue() {
-	    return getObject();
+            return getObject();
         }
         
         public jq_Type getType() {
-	    if (o instanceof String) return PrimordialClassLoader.loader.getJavaLangString();
-	    if (o instanceof Float) return jq_Primitive.FLOAT;
-	    if (o instanceof Integer) return jq_Primitive.INT;
-	    throw new RuntimeException("Unknown or invalid constant type "+o.getClass()+" at "+index);
+            if (o instanceof String) return PrimordialClassLoader.loader.getJavaLangString();
+            if (o instanceof Float) return jq_Primitive.FLOAT;
+            if (o instanceof Integer) return jq_Primitive.INT;
+            throw new RuntimeException("Unknown or invalid constant type "+o.getClass()+" at "+index);
         }
         
         public Set/*<jq_Class>*/ getExceptions() {
-	    /*
+            /*
             return de.fub.bytecode.ExceptionConstants.EXCS_STRING_RESOLUTION;
-	    */
-	    return null;
+            */
+            return null;
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitStackProducer(this);
             v.visitPushInstruction(this);
@@ -5637,21 +5637,21 @@ public interface Bytecodes {
     }
     
     public class LDC_W extends LDC {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         LDC_W() {}
         
         public LDC_W(Object o) {
             super(o);
         }
         
-	/**
-	 * Read needed data (i.e., index) from file.
-	 */
+        /**
+         * Read needed data (i.e., index) from file.
+         */
         protected void initFromFile(jq_ConstantPool cp, ByteSequence bytes, boolean wide) throws IOException {
-	    o = cp.get((char)bytes.readUnsignedShort());
+            o = cp.get((char)bytes.readUnsignedShort());
             length = 3;
         }
     }
@@ -5662,20 +5662,20 @@ public interface Bytecodes {
         }
         
         public Set/*<jq_Class>*/ getExceptions() {
-	    /*
+            /*
             return new Class[] { de.fub.bytecode.ExceptionConstants.ARITHMETIC_EXCEPTION };
-	    */
-	    return null;
+            */
+            return null;
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitExceptionThrower(this);
             v.visitTypedInstruction(this);
@@ -5687,10 +5687,10 @@ public interface Bytecodes {
     }
     
     public class LLOAD extends LoadInstruction {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         LLOAD() {
             super(jq_ClassFileConstants.jbc_LLOAD, jq_ClassFileConstants.jbc_LLOAD_0);
         }
@@ -5699,14 +5699,14 @@ public interface Bytecodes {
             super(jq_ClassFileConstants.jbc_LLOAD, jq_ClassFileConstants.jbc_LLOAD_0, n);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             super.accept(v);
             v.visitLLOAD(this);
@@ -5718,14 +5718,14 @@ public interface Bytecodes {
             super(jq_ClassFileConstants.jbc_LMUL);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackProducer(this);
@@ -5740,14 +5740,14 @@ public interface Bytecodes {
             super(jq_ClassFileConstants.jbc_LNEG);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackProducer(this);
@@ -5758,10 +5758,10 @@ public interface Bytecodes {
     }
     
     public class LOOKUPSWITCH extends Select {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         LOOKUPSWITCH() {}
         
         public LOOKUPSWITCH(int[] match, ArrayList/*<InstructionHandle>*/ targets, InstructionHandle target) {
@@ -5772,10 +5772,10 @@ public interface Bytecodes {
             fixed_length = length;
         }
         
-	/**
-	 * Dump instruction as byte code to stream out.
-	 * @param out Output stream
-	 */
+        /**
+         * Dump instruction as byte code to stream out.
+         * @param out Output stream
+         */
         public void dump(DataOutputStream out) throws IOException {
             super.dump(out);
             out.writeInt(match_length);       // npairs
@@ -5786,9 +5786,9 @@ public interface Bytecodes {
             }
         }
         
-	/**
-	 * Read needed data (e.g. index) from file.
-	 */
+        /**
+         * Read needed data (e.g. index) from file.
+         */
         protected void initFromFile(jq_ConstantPool cp, ByteSequence bytes, boolean wide) throws IOException {
             super.initFromFile(cp, bytes, wide); // reads padding
             
@@ -5807,14 +5807,14 @@ public interface Bytecodes {
             }
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitVariableLengthInstruction(this);
             v.visitStackProducer(this);
@@ -5829,14 +5829,14 @@ public interface Bytecodes {
             super(jq_ClassFileConstants.jbc_LOR);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackProducer(this);
@@ -5852,20 +5852,20 @@ public interface Bytecodes {
         }
         
         public Set/*<jq_Class>*/ getExceptions() {
-	    /*
-	    return new Class[] { de.fub.bytecode.ExceptionConstants.ARITHMETIC_EXCEPTION };
-	    */
-	    return null;
-	}
+            /*
+            return new Class[] { de.fub.bytecode.ExceptionConstants.ARITHMETIC_EXCEPTION };
+            */
+            return null;
+        }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitExceptionThrower(this);
             v.visitTypedInstruction(this);
@@ -5881,14 +5881,14 @@ public interface Bytecodes {
             super(jq_ClassFileConstants.jbc_LRETURN);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             //v.visitExceptionThrower(this);
             v.visitTypedInstruction(this);
@@ -5903,14 +5903,14 @@ public interface Bytecodes {
             super(jq_ClassFileConstants.jbc_LSHL);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackProducer(this);
@@ -5925,14 +5925,14 @@ public interface Bytecodes {
             super(jq_ClassFileConstants.jbc_LSHR);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackProducer(this);
@@ -5943,10 +5943,10 @@ public interface Bytecodes {
     }
     
     public class LSTORE extends StoreInstruction {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         LSTORE() {
             super(jq_ClassFileConstants.jbc_LSTORE, jq_ClassFileConstants.jbc_LSTORE_0);
         }
@@ -5955,14 +5955,14 @@ public interface Bytecodes {
             super(jq_ClassFileConstants.jbc_LSTORE, jq_ClassFileConstants.jbc_LSTORE_0, n);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             super.accept(v);
             v.visitLSTORE(this);
@@ -5974,14 +5974,14 @@ public interface Bytecodes {
             super(jq_ClassFileConstants.jbc_LSUB);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackProducer(this);
@@ -5996,14 +5996,14 @@ public interface Bytecodes {
             super(jq_ClassFileConstants.jbc_LUSHR);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackProducer(this);
@@ -6018,14 +6018,14 @@ public interface Bytecodes {
             super(jq_ClassFileConstants.jbc_LXOR);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackProducer(this);
@@ -6041,20 +6041,20 @@ public interface Bytecodes {
         }
         
         public Set/*<jq_Class>*/ getExceptions() {
-	    /*
+            /*
             return new Class[] { de.fub.bytecode.ExceptionConstants.NULL_POINTER_EXCEPTION };
-	    */
-	    return null;
+            */
+            return null;
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitExceptionThrower(this);
             v.visitStackConsumer(this);
@@ -6068,20 +6068,20 @@ public interface Bytecodes {
         }
         
         public Set/*<jq_Class>*/ getExceptions() {
-	    /*
+            /*
             return new Class[] { de.fub.bytecode.ExceptionConstants.NULL_POINTER_EXCEPTION };
-	    */
-	    return null;
+            */
+            return null;
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitExceptionThrower(this);
             v.visitStackConsumer(this);
@@ -6092,10 +6092,10 @@ public interface Bytecodes {
     public class MULTIANEWARRAY extends CPInstruction implements AllocationInstruction, ExceptionThrower, TypedInstruction {
         private short dimensions;
         
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         MULTIANEWARRAY() {}
         
         public MULTIANEWARRAY(jq_Type array, short dimensions) {
@@ -6108,19 +6108,19 @@ public interface Bytecodes {
             length = 4;
         }
         
-	/**
-	 * Dump instruction as byte code to stream out.
-	 * @param out Output stream
-	 */
+        /**
+         * Dump instruction as byte code to stream out.
+         * @param out Output stream
+         */
         public void dump(DataOutputStream out) throws IOException {
             out.writeByte(opcode);
             out.writeShort(index);
             out.writeByte(dimensions);
         }
         
-	/**
-	 * Read needed data (i.e., no. dimension) from file.
-	 */
+        /**
+         * Read needed data (i.e., no. dimension) from file.
+         */
         protected void initFromFile(jq_ConstantPool cp, ByteSequence bytes, boolean wide) throws IOException
         {
             super.initFromFile(cp, bytes, wide);
@@ -6128,34 +6128,34 @@ public interface Bytecodes {
             length     = 4;
         }
         
-	/**
-	 * @return number of dimensions to be created
-	 */
+        /**
+         * @return number of dimensions to be created
+         */
         public final short getDimensions() { return dimensions; }
         
-	/**
-	 * @return mnemonic for instruction
-	 */
+        /**
+         * @return mnemonic for instruction
+         */
         public String toString(boolean verbose) {
             return super.toString(verbose) + " " + index + " " + dimensions;
         }
         
-	/**
-	 * @return mnemonic for instruction with symbolic references resolved
-	 */
+        /**
+         * @return mnemonic for instruction with symbolic references resolved
+         */
         public String toString() {
             return super.toString() + " " + dimensions;
         }
         
-	/**
-	 * Also works for instructions whose stack effect depends on the
-	 * constant pool entry they reference.
-	 * @return Number of words consumed from stack by this instruction
-	 */
+        /**
+         * Also works for instructions whose stack effect depends on the
+         * constant pool entry they reference.
+         * @return Number of words consumed from stack by this instruction
+         */
         public int consumeStack() { return dimensions; }
         
         public Set/*<jq_Class>*/ getExceptions() {
-	    /*
+            /*
             Class[] cs = new Class[2 + ExceptionConstants.EXCS_CLASS_AND_INTERFACE_RESOLUTION.length];
             
             System.arraycopy(ExceptionConstants.EXCS_CLASS_AND_INTERFACE_RESOLUTION, 0,
@@ -6165,11 +6165,11 @@ public interface Bytecodes {
             cs[ExceptionConstants.EXCS_CLASS_AND_INTERFACE_RESOLUTION.length]   = ExceptionConstants.ILLEGAL_ACCESS_ERROR;
             
             return cs;
-	    */
-	    return null;
+            */
+            return null;
         }
         
-	/*
+        /*
         public ObjectType getLoadClassType() {
             Type t = getType(cpg);
             
@@ -6179,16 +6179,16 @@ public interface Bytecodes {
             
             return (t instanceof ObjectType)? (ObjectType) t : null;
         }
-	*/
+        */
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitAllocationInstruction(this);
             v.visitExceptionThrower(this);
@@ -6201,10 +6201,10 @@ public interface Bytecodes {
     public class NEWARRAY extends Instruction implements AllocationInstruction, ExceptionThrower, StackProducer {
         private jq_Array type;
         
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         NEWARRAY() {}
         
         public NEWARRAY(byte type) {
@@ -6214,61 +6214,61 @@ public interface Bytecodes {
         
         public NEWARRAY(jq_Array type) {
             super(jq_ClassFileConstants.jbc_NEWARRAY, (short)2);
-	    jq.Assert(type.getElementType().isPrimitiveType());
+            jq.Assert(type.getElementType().isPrimitiveType());
             this.type = type;
         }
         
-	/**
-	 * Dump instruction as byte code to stream out.
-	 * @param out Output stream
-	 */
+        /**
+         * Dump instruction as byte code to stream out.
+         * @param out Output stream
+         */
         public void dump(DataOutputStream out) throws IOException {
             out.writeByte(opcode);
             out.writeByte(jq_Array.getTypecode(type));
         }
         
-	/**
-	 * @return numeric code for basic element type
-	 */
+        /**
+         * @return numeric code for basic element type
+         */
         public final byte getTypecode() { return jq_Array.getTypecode(type); }
         
-	/**
-	 * @return type of constructed array
-	 */
+        /**
+         * @return type of constructed array
+         */
         public final jq_Type getType() {
             return type;
         }
         
-	/**
-	 * @return mnemonic for instruction
-	 */
+        /**
+         * @return mnemonic for instruction
+         */
         public String toString(boolean verbose) {
             return super.toString(verbose) + " " + type;
         }
-	/**
-	 * Read needed data (e.g. index) from file.
-	 */
+        /**
+         * Read needed data (e.g. index) from file.
+         */
         protected void initFromFile(jq_ConstantPool cp, ByteSequence bytes, boolean wide) throws IOException
         {
-	    type = jq_Array.getPrimitiveArrayType(bytes.readByte());
+            type = jq_Array.getPrimitiveArrayType(bytes.readByte());
             length = 2;
         }
         
         public Set/*<jq_Class>*/ getExceptions() {
-	    /*
+            /*
             return new jq_Class[] { de.fub.bytecode.ExceptionConstants.NEGATIVE_ARRAY_SIZE_EXCEPTION };
-	    */
-	    return null;
+            */
+            return null;
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitAllocationInstruction(this);
             v.visitExceptionThrower(this);
@@ -6278,10 +6278,10 @@ public interface Bytecodes {
     }
     
     public class NEW extends CPInstruction implements LoadClass, AllocationInstruction, ExceptionThrower, StackProducer, TypedInstruction {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         NEW() {}
         
         public NEW(jq_Type f) {
@@ -6289,7 +6289,7 @@ public interface Bytecodes {
         }
         
         public Set/*<jq_Class>*/ getExceptions() {
-	    /*
+            /*
             Class[] cs = new Class[2 + ExceptionConstants.EXCS_CLASS_AND_INTERFACE_RESOLUTION.length];
             
             System.arraycopy(ExceptionConstants.EXCS_CLASS_AND_INTERFACE_RESOLUTION, 0,
@@ -6299,22 +6299,22 @@ public interface Bytecodes {
             cs[ExceptionConstants.EXCS_CLASS_AND_INTERFACE_RESOLUTION.length]   = ExceptionConstants.ILLEGAL_ACCESS_ERROR;
             
             return cs;
-	    */
-	    return null;
+            */
+            return null;
         }
         
         public jq_Class getLoadClassType() {
             return (jq_Class)getObject();
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitLoadClass(this);
             v.visitAllocationInstruction(this);
@@ -6331,14 +6331,14 @@ public interface Bytecodes {
             super(jq_ClassFileConstants.jbc_NOP, (short)1);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitNOP(this);
         }
@@ -6391,12 +6391,12 @@ public interface Bytecodes {
     public final class PUSH implements CompoundInstruction, VariableLengthInstruction {
         private Instruction instruction;
         
-	/**
-	 * This constructor also applies for values of type short, char, byte
-	 *
-	 * @param cp Constant pool
-	 * @param value to be pushed
-	 */
+        /**
+         * This constructor also applies for values of type short, char, byte
+         *
+         * @param cp Constant pool
+         * @param value to be pushed
+         */
         public PUSH(int value) {
             if((value >= -1) && (value <= 5)) // Use ICONST_n
                 instruction = InstructionConstants.INSTRUCTIONS[jq_ClassFileConstants.jbc_ICONST_0 + value];
@@ -6405,24 +6405,24 @@ public interface Bytecodes {
             else if((value >= -32768) && (value <= 32767)) // Use SIPUSH
                 instruction = new SIPUSH((short)value);
             else { // If everything fails create a Constant pool entry
-		Integer i = new Integer(value);
-		//cpr.addOther(i);
+                Integer i = new Integer(value);
+                //cpr.addOther(i);
                 instruction = new LDC(i);
-	    }
+            }
         }
         
-	/**
-	 * @param cp Constant pool
-	 * @param value to be pushed
-	 */
+        /**
+         * @param cp Constant pool
+         * @param value to be pushed
+         */
         public PUSH(boolean value) {
             instruction = InstructionConstants.INSTRUCTIONS[jq_ClassFileConstants.jbc_ICONST_0 + (value? 1 : 0)];
         }
         
-	/**
-	 * @param cp Constant pool
-	 * @param value to be pushed
-	 */
+        /**
+         * @param cp Constant pool
+         * @param value to be pushed
+         */
         public PUSH(float value) {
             if(value == 0.0)
                 instruction = InstructionConstants.FCONST_0;
@@ -6431,61 +6431,61 @@ public interface Bytecodes {
             else if(value == 2.0)
                 instruction = InstructionConstants.FCONST_2;
             else { // If everything fails create a Constant pool entry
-		Float i = new Float(value);
-		//cpr.addOther(i);
+                Float i = new Float(value);
+                //cpr.addOther(i);
                 instruction = new LDC(i);
-	    }
+            }
         }
         
-	/**
-	 * @param cp Constant pool
-	 * @param value to be pushed
-	 */
+        /**
+         * @param cp Constant pool
+         * @param value to be pushed
+         */
         public PUSH(long value) {
             if(value == 0)
                 instruction = InstructionConstants.LCONST_0;
             else if(value == 1)
                 instruction = InstructionConstants.LCONST_1;
             else { // If everything fails create a Constant pool entry
-		Long i = new Long(value);
-		//cpr.addOther(i);
+                Long i = new Long(value);
+                //cpr.addOther(i);
                 instruction = new LDC2_W(i);
-	    }
+            }
         }
         
-	/**
-	 * @param cp Constant pool
-	 * @param value to be pushed
-	 */
+        /**
+         * @param cp Constant pool
+         * @param value to be pushed
+         */
         public PUSH(double value) {
             if(value == 0.0)
                 instruction = InstructionConstants.DCONST_0;
             else if(value == 1.0)
                 instruction = InstructionConstants.DCONST_1;
             else { // If everything fails create a Constant pool entry
-		Double i = new Double(value);
-		//cpr.addOther(i);
+                Double i = new Double(value);
+                //cpr.addOther(i);
                 instruction = new LDC2_W(i);
-	    }
+            }
         }
         
-	/**
-	 * @param cp Constant pool
-	 * @param value to be pushed
-	 */
+        /**
+         * @param cp Constant pool
+         * @param value to be pushed
+         */
         public PUSH(jq_ConstantPool.ConstantPoolRebuilder cpr, String value) {
             if(value == null)
                 instruction = InstructionConstants.ACONST_NULL;
             else { // If everything fails create a Constant pool entry
-		cpr.addOther(value);
+                cpr.addOther(value);
                 instruction = new LDC2_W(value);
-	    }
+            }
         }
         
-	/**
-	 * @param cp Constant pool
-	 * @param value to be pushed
-	 */
+        /**
+         * @param cp Constant pool
+         * @param value to be pushed
+         */
         public PUSH(Number value) {
             if((value instanceof Integer) || (value instanceof Short) || (value instanceof Byte))
                 instruction = new PUSH(value.intValue()).instruction;
@@ -6499,18 +6499,18 @@ public interface Bytecodes {
                 throw new BytecodeException("What's this: " + value);
         }
         
-	/**
-	 * @param cp Constant pool
-	 * @param value to be pushed
-	 */
+        /**
+         * @param cp Constant pool
+         * @param value to be pushed
+         */
         public PUSH(Character value) {
             this((int)value.charValue());
         }
         
-	/**
-	 * @param cp Constant pool
-	 * @param value to be pushed
-	 */
+        /**
+         * @param cp Constant pool
+         * @param value to be pushed
+         */
         public PUSH(Boolean value) {
             this(value.booleanValue());
         }
@@ -6523,19 +6523,19 @@ public interface Bytecodes {
             return instruction;
         }
         
-	/**
-	 * @return mnemonic for instruction
-	 */
+        /**
+         * @return mnemonic for instruction
+         */
         public String toString() {
             return instruction.toString() + " (PUSH)";
         }
     }
     
     public class PUTFIELD extends FieldInstruction implements ExceptionThrower, TypedInstruction, LoadClass {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         PUTFIELD() {}
         
         public PUTFIELD(jq_InstanceField f) {
@@ -6544,18 +6544,18 @@ public interface Bytecodes {
         
         public int consumeStack() { return getFieldSize() + 1; }
         
-	/**
-	 * Read needed data (i.e., index) from file.
-	 * @param bytes input stream
-	 * @param wide wide prefix?
-	 */
+        /**
+         * Read needed data (i.e., index) from file.
+         * @param bytes input stream
+         * @param wide wide prefix?
+         */
         protected void initFromFile(jq_ConstantPool cp, ByteSequence bytes, boolean wide) throws IOException {
-	    o = cp.getAsInstanceField((char)bytes.readUnsignedShort());
+            o = cp.getAsInstanceField((char)bytes.readUnsignedShort());
             length = 3;
         }
         
         public Set/*<jq_Class>*/ getExceptions() {
-	    /*
+            /*
             Class[] cs = new Class[2 + ExceptionConstants.EXCS_FIELD_AND_METHOD_RESOLUTION.length];
             
             System.arraycopy(ExceptionConstants.EXCS_FIELD_AND_METHOD_RESOLUTION, 0,
@@ -6567,18 +6567,18 @@ public interface Bytecodes {
             ExceptionConstants.NULL_POINTER_EXCEPTION;
             
             return cs;
-	    */
-	    return null;
+            */
+            return null;
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitExceptionThrower(this);
             v.visitTypedInstruction(this);
@@ -6591,10 +6591,10 @@ public interface Bytecodes {
     }
     
     public class PUTSTATIC extends FieldInstruction implements ExceptionThrower, StackConsumer, PopInstruction, TypedInstruction, LoadClass {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         PUTSTATIC() {}
         
         public PUTSTATIC(jq_StaticField f) {
@@ -6603,18 +6603,18 @@ public interface Bytecodes {
         
         public int consumeStack() { return getFieldSize(); }
         
-	/**
-	 * Read needed data (i.e., index) from file.
-	 * @param bytes input stream
-	 * @param wide wide prefix?
-	 */
+        /**
+         * Read needed data (i.e., index) from file.
+         * @param bytes input stream
+         * @param wide wide prefix?
+         */
         protected void initFromFile(jq_ConstantPool cp, ByteSequence bytes, boolean wide) throws IOException {
-	    o = cp.getAsStaticField((char)bytes.readUnsignedShort());
+            o = cp.getAsStaticField((char)bytes.readUnsignedShort());
             length = 3;
         }
         
         public Set/*<jq_Class>*/ getExceptions() {
-	    /*
+            /*
             Class[] cs = new Class[1 + ExceptionConstants.EXCS_FIELD_AND_METHOD_RESOLUTION.length];
             
             System.arraycopy(ExceptionConstants.EXCS_FIELD_AND_METHOD_RESOLUTION, 0,
@@ -6623,18 +6623,18 @@ public interface Bytecodes {
             ExceptionConstants.INCOMPATIBLE_CLASS_CHANGE_ERROR;
             
             return cs;
-	    */
-	    return null;
+            */
+            return null;
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitExceptionThrower(this);
             v.visitStackConsumer(this);
@@ -6652,10 +6652,10 @@ public interface Bytecodes {
         private boolean wide;
         private int     index; // index to local variable containg the return address
         
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         RET() {}
         
         public RET(int index) {
@@ -6663,10 +6663,10 @@ public interface Bytecodes {
             setIndex(index);   // May set wide as side effect
         }
         
-	/**
-	 * Dump instruction as byte code to stream out.
-	 * @param out Output stream
-	 */
+        /**
+         * Dump instruction as byte code to stream out.
+         * @param out Output stream
+         */
         public void dump(DataOutputStream out) throws IOException {
             if(wide)
                 out.writeByte(jq_ClassFileConstants.jbc_WIDE);
@@ -6686,9 +6686,9 @@ public interface Bytecodes {
                 length = 2;
         }
         
-	/**
-	 * Read needed data (e.g. index) from file.
-	 */
+        /**
+         * Read needed data (e.g. index) from file.
+         */
         protected void initFromFile(jq_ConstantPool cp, ByteSequence bytes, boolean wide) throws IOException {
             this.wide = wide;
             
@@ -6701,14 +6701,14 @@ public interface Bytecodes {
             }
         }
         
-	/**
-	 * @return index of local variable containg the return address
-	 */
+        /**
+         * @return index of local variable containg the return address
+         */
         public final int getIndex() { return index; }
         
-	/**
-	 * Set index of local variable containg the return address
-	 */
+        /**
+         * Set index of local variable containg the return address
+         */
         public final void setIndex(int n) {
             if(n < 0)
                 throw new BytecodeException("Negative index value: " + n);
@@ -6717,27 +6717,27 @@ public interface Bytecodes {
             setWide();
         }
         
-	/**
-	 * @return mnemonic for instruction
-	 */
+        /**
+         * @return mnemonic for instruction
+         */
         public String toString(boolean verbose) {
             return super.toString(verbose) + " " + index;
         }
         
-	/** @return return address type
-	 */
+        /** @return return address type
+         */
         public jq_Type getType() {
             return jq_ReturnAddressType.NO_TARGET;
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitRET(this);
@@ -6749,14 +6749,14 @@ public interface Bytecodes {
             super(jq_ClassFileConstants.jbc_RETURN);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitTypedInstruction(this);
             v.visitStackConsumer(this);
@@ -6770,14 +6770,14 @@ public interface Bytecodes {
             super(jq_ClassFileConstants.jbc_SALOAD);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitStackProducer(this);
             v.visitExceptionThrower(this);
@@ -6792,14 +6792,14 @@ public interface Bytecodes {
             super(jq_ClassFileConstants.jbc_SASTORE);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitStackConsumer(this);
             v.visitExceptionThrower(this);
@@ -6812,10 +6812,10 @@ public interface Bytecodes {
     public class SIPUSH extends Instruction implements PushInstruction, StackProducer, TypedInstruction, ConstantPushInstruction {
         private short b;
         
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         SIPUSH() {}
         
         public SIPUSH(short b) {
@@ -6823,24 +6823,24 @@ public interface Bytecodes {
             this.b = b;
         }
         
-	/**
-	 * Dump instruction as short code to stream out.
-	 */
+        /**
+         * Dump instruction as short code to stream out.
+         */
         public void dump(DataOutputStream out) throws IOException {
             super.dump(out);
             out.writeShort(b);
         }
         
-	/**
-	 * @return mnemonic for instruction
-	 */
+        /**
+         * @return mnemonic for instruction
+         */
         public String toString(boolean verbose) {
             return super.toString(verbose) + " " + b;
         }
         
-	/**
-	 * Read needed data (e.g. index) from file.
-	 */
+        /**
+         * Read needed data (e.g. index) from file.
+         */
         protected void initFromFile(jq_ConstantPool cp, ByteSequence bytes, boolean wide) throws IOException
         {
             length = 3;
@@ -6849,20 +6849,20 @@ public interface Bytecodes {
         
         public Number getValue() { return new Integer(b); }
         
-	/** @return jq_Primitive.SHORT
-	 */
+        /** @return jq_Primitive.SHORT
+         */
         public jq_Type getType() {
             return jq_Primitive.SHORT;
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitPushInstruction(this);
             v.visitStackProducer(this);
@@ -6877,14 +6877,14 @@ public interface Bytecodes {
             super(jq_ClassFileConstants.jbc_SWAP);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitStackConsumer(this);
             v.visitStackProducer(this);
@@ -6899,21 +6899,21 @@ public interface Bytecodes {
         private Select              instruction;
         private int                 match_length;
         
-	/**
-	 * Template for switch() constructs. If the match array can be
-	 * sorted in ascending order with gaps no larger than max_gap
-	 * between the numbers, a TABLESWITCH instruction is generated, and
-	 * a LOOKUPSWITCH otherwise. The former may be more efficient, but
-	 * needs more space.
-	 *
-	 * Note, that the key array always will be sorted, though we leave
-	 * the original arrays unaltered.
-	 *
-	 * @param match array of match values (case 2: ... case 7: ..., etc.)
-	 * @param targets the instructions to be branched to for each case
-	 * @param target the default target
-	 * @param max_gap maximum gap that may between case branches
-	 */
+        /**
+         * Template for switch() constructs. If the match array can be
+         * sorted in ascending order with gaps no larger than max_gap
+         * between the numbers, a TABLESWITCH instruction is generated, and
+         * a LOOKUPSWITCH otherwise. The former may be more efficient, but
+         * needs more space.
+         *
+         * Note, that the key array always will be sorted, though we leave
+         * the original arrays unaltered.
+         *
+         * @param match array of match values (case 2: ... case 7: ..., etc.)
+         * @param targets the instructions to be branched to for each case
+         * @param target the default target
+         * @param max_gap maximum gap that may between case branches
+         */
         public SWITCH(int[] match, ArrayList/*<InstructionHandle>*/ targets, InstructionHandle target, int max_gap) {
             this.match   = (int[])match.clone();
             this.targets = (ArrayList/*<InstructionHandle>*/)targets.clone();
@@ -6968,9 +6968,9 @@ public interface Bytecodes {
             t_vec.trimToSize();
         }
         
-	/**
-	 * Sort match and targets array with QuickSort.
-	 */
+        /**
+         * Sort match and targets array with QuickSort.
+         */
         private final void sort(int l, int r) {
             int i = l, j = r;
             int h, m = match[(l + r) / 2];
@@ -6991,9 +6991,9 @@ public interface Bytecodes {
             if(i < r) sort(i, r);
         }
         
-	/**
-	 * @return match is sorted in ascending order with no gap bigger than max_gap?
-	 */
+        /**
+         * @return match is sorted in ascending order with no gap bigger than max_gap?
+         */
         private final boolean matchIsOrdered(int max_gap) {
             for(int i=1; i < match_length; i++)
                 if(match[i] - match[i-1] > max_gap)
@@ -7012,18 +7012,18 @@ public interface Bytecodes {
     }
     
     public class TABLESWITCH extends Select implements VariableLengthInstruction, StackProducer {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         TABLESWITCH() {}
         
-	/**
-	 * @param match sorted array of match values, match[0] must be low value,
-	 * match[match_length - 1] high value
-	 * @param targets where to branch for matched values
-	 * @param target default branch
-	 */
+        /**
+         * @param match sorted array of match values, match[0] must be low value,
+         * match[match_length - 1] high value
+         * @param targets where to branch for matched values
+         * @param target default branch
+         */
         public TABLESWITCH(int[] match, ArrayList/*<InstructionHandle>*/ targets, InstructionHandle target) {
             super(jq_ClassFileConstants.jbc_TABLESWITCH, match, targets, target);
             
@@ -7032,10 +7032,10 @@ public interface Bytecodes {
             fixed_length = length;
         }
         
-	/**
-	 * Dump instruction as byte code to stream out.
-	 * @param out Output stream
-	 */
+        /**
+         * Dump instruction as byte code to stream out.
+         * @param out Output stream
+         */
         public void dump(DataOutputStream out) throws IOException {
             super.dump(out);
             
@@ -7049,9 +7049,9 @@ public interface Bytecodes {
                 out.writeInt(indices[i] = getTargetOffset((InstructionHandle)targets.get(i)));
         }
         
-	/**
-	 * Read needed data (e.g. index) from file.
-	 */
+        /**
+         * Read needed data (e.g. index) from file.
+         */
         protected void initFromFile(jq_ConstantPool cp, ByteSequence bytes, boolean wide) throws IOException
         {
             super.initFromFile(cp, bytes, wide);
@@ -7076,14 +7076,14 @@ public interface Bytecodes {
             }
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitVariableLengthInstruction(this);
             v.visitStackProducer(this);
@@ -7137,10 +7137,10 @@ public interface Bytecodes {
     
     public abstract class ArithmeticInstruction extends Instruction
     implements TypedInstruction, StackProducer, StackConsumer {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         ArithmeticInstruction() {}
         
   /**
@@ -7181,28 +7181,28 @@ public interface Bytecodes {
     }
     
     public abstract class ArrayInstruction extends Instruction implements ExceptionThrower, TypedInstruction {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         ArrayInstruction() {}
         
-	/**
-	 * @param opcode of instruction
-	 */
+        /**
+         * @param opcode of instruction
+         */
         protected ArrayInstruction(short opcode) {
             super(opcode, (short)1);
         }
         
         public Set/*<jq_Class>*/ getExceptions() {
-	    /*
+            /*
             return de.fub.bytecode.ExceptionConstants.EXCS_ARRAY_EXCEPTION;
-	    */
-	    return null;
+            */
+            return null;
         }
         
-	/** @return type associated with the instruction
-	 */
+        /** @return type associated with the instruction
+         */
         public jq_Type getType() {
             switch(opcode) {
                 case jq_ClassFileConstants.jbc_IALOAD: case jq_ClassFileConstants.jbc_IASTORE:
@@ -7232,25 +7232,25 @@ public interface Bytecodes {
         protected InstructionHandle target;   // Target object in instruction list
         protected int               position; // Byte code offset
         
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         BranchInstruction() {}
         
-	/** Common super constructor
-	 * @param opcodee Instruction opcode
-	 * @param target instruction to branch to
-	 */
+        /** Common super constructor
+         * @param opcodee Instruction opcode
+         * @param target instruction to branch to
+         */
         protected BranchInstruction(short opcode, InstructionHandle target) {
             super(opcode, (short)3);
             setTarget(target);
         }
         
-	/**
-	 * Dump instruction as byte code to stream out.
-	 * @param out Output stream
-	 */
+        /**
+         * Dump instruction as byte code to stream out.
+         * @param out Output stream
+         */
         public void dump(DataOutputStream out) throws IOException {
             out.writeByte(opcode);
             
@@ -7262,10 +7262,10 @@ public interface Bytecodes {
             out.writeShort(index); // May be negative, i.e., point backwards
         }
         
-	/**
-	 * @param target branch target
-	 * @return the offset to  `target' relative to this instruction
-	 */
+        /**
+         * @param target branch target
+         * @return the offset to  `target' relative to this instruction
+         */
         protected int getTargetOffset(InstructionHandle target) {
             if(target == null)
                 throw new BytecodeException("Target of " + super.toString(true) +
@@ -7280,37 +7280,37 @@ public interface Bytecodes {
             return t - position;
         }
         
-	/**
-	 * @return the offset to this instruction's target
-	 */
+        /**
+         * @return the offset to this instruction's target
+         */
         protected int getTargetOffset() { return getTargetOffset(target); }
         
-	/**
-	 * Called by InstructionList.setPositions when setting the position for every
-	 * instruction. In the presence of variable length instructions `setPositions'
-	 * performs multiple passes over the instruction list to calculate the
-	 * correct (byte) positions and offsets by calling this function.
-	 *
-	 * @param offset additional offset caused by preceding (variable length) instructions
-	 * @param max_offset the maximum offset that may be caused by these instructions
-	 * @return additional offset caused by possible change of this instruction's length
-	 */
+        /**
+         * Called by InstructionList.setPositions when setting the position for every
+         * instruction. In the presence of variable length instructions `setPositions'
+         * performs multiple passes over the instruction list to calculate the
+         * correct (byte) positions and offsets by calling this function.
+         *
+         * @param offset additional offset caused by preceding (variable length) instructions
+         * @param max_offset the maximum offset that may be caused by these instructions
+         * @return additional offset caused by possible change of this instruction's length
+         */
         protected int updatePosition(int offset, int max_offset) {
             position += offset;
             return 0;
         }
         
-	/**
-	 * Long output format:
-	 *
-	 * &lt;position in byte code&gt;
-	 * &lt;name of opcode&gt; "["&lt;opcode number&gt;"]"
-	 * "("&lt;length of instruction&gt;")"
-	 * "&lt;"&lt;target instruction&gt;"&gt;" "@"&lt;branch target offset&gt;
-	 *
-	 * @param verbose long/short format switch
-	 * @return mnemonic for instruction
-	 */
+        /**
+         * Long output format:
+         *
+         * &lt;position in byte code&gt;
+         * &lt;name of opcode&gt; "["&lt;opcode number&gt;"]"
+         * "("&lt;length of instruction&gt;")"
+         * "&lt;"&lt;target instruction&gt;"&gt;" "@"&lt;branch target offset&gt;
+         *
+         * @param verbose long/short format switch
+         * @return mnemonic for instruction
+         */
         public String toString(boolean verbose) {
             String s = super.toString(verbose);
             String t = "null";
@@ -7334,41 +7334,41 @@ public interface Bytecodes {
             return s + " -> " + t;
         }
         
-	/**
-	 * Read needed data (e.g. index) from file. Conversion to a InstructionHandle
-	 * is done in InstructionList(byte[]).
-	 *
-	 * @param bytes input stream
-	 * @param wide wide prefix?
-	 * @see Bytecodes.InstructionList
-	 */
+        /**
+         * Read needed data (e.g. index) from file. Conversion to a InstructionHandle
+         * is done in InstructionList(byte[]).
+         *
+         * @param bytes input stream
+         * @param wide wide prefix?
+         * @see Bytecodes.InstructionList
+         */
         protected void initFromFile(jq_ConstantPool cp, ByteSequence bytes, boolean wide) throws IOException {
             length = 3;
             index  = bytes.readShort();
         }
         
-	/**
-	 * @return target offset in byte code
-	 */
+        /**
+         * @return target offset in byte code
+         */
         public final int getIndex() { return index; }
         
-	/**
-	 * @return target of branch instruction
-	 */
+        /**
+         * @return target of branch instruction
+         */
         public InstructionHandle getTarget() { return target; }
         
-	/**
-	 * Set branch target
-	 * @param target branch target
-	 */
+        /**
+         * Set branch target
+         * @param target branch target
+         */
         public void setTarget(InstructionHandle target) {
             notifyTarget(this.target, target, this);
             this.target = target;
         }
         
-	/**
-	 * Used by BranchInstruction, LocalVariable, CodeException
-	 */
+        /**
+         * Used by BranchInstruction, LocalVariable, CodeException
+         */
         static final void notifyTarget(InstructionHandle old_ih, InstructionHandle new_ih, InstructionTargeter t) {
             if(old_ih != null)
                 old_ih.removeTargeter(t);
@@ -7376,10 +7376,10 @@ public interface Bytecodes {
                 new_ih.addTargeter(t);
         }
         
-	/**
-	 * @param old_ih old target
-	 * @param new_ih new target
-	 */
+        /**
+         * @param old_ih old target
+         * @param new_ih new target
+         */
         public void updateTarget(InstructionHandle old_ih, InstructionHandle new_ih) {
             if(target == old_ih)
                 setTarget(new_ih);
@@ -7387,16 +7387,16 @@ public interface Bytecodes {
                 throw new BytecodeException("Not targeting " + old_ih + ", but " + target);
         }
         
-	/**
-	 * @return true, if ih is target of this instruction
-	 */
+        /**
+         * @return true, if ih is target of this instruction
+         */
         public boolean containsTarget(InstructionHandle ih) {
             return (target == ih);
         }
         
-	/**
-	 * Inform target that it's not targeted anymore.
-	 */
+        /**
+         * Inform target that it's not targeted anymore.
+         */
         void dispose() {
             setTarget(null);
             index=-1;
@@ -7413,21 +7413,21 @@ public interface Bytecodes {
     }
     
     public abstract class ConversionInstruction extends Instruction implements TypedInstruction, StackProducer, StackConsumer {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         ConversionInstruction() {}
         
-	/**
-	 * @param opcode opcode of instruction
-	 */
+        /**
+         * @param opcode opcode of instruction
+         */
         protected ConversionInstruction(short opcode) {
             super(opcode, (short)1);
         }
         
-	/** @return type associated with the instruction
-	 */
+        /** @return type associated with the instruction
+         */
         public jq_Type getType() {
             switch(opcode) {
                 case jq_ClassFileConstants.jbc_D2I: case jq_ClassFileConstants.jbc_F2I: case jq_ClassFileConstants.jbc_L2I:
@@ -7452,92 +7452,92 @@ public interface Bytecodes {
     }
     
     public abstract class CPInstruction extends Instruction implements TypedInstruction {
-	protected Object o;   // constant pool value
-	protected char index; // index into constant pool
+        protected Object o;   // constant pool value
+        protected char index; // index into constant pool
         
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         CPInstruction() {}
         
-	/**
-	 * @param object referred to in constant pool
-	 */
+        /**
+         * @param object referred to in constant pool
+         */
         protected CPInstruction(short opcode, Object o) {
             super(opcode, (short)3);
-	    this.o = o;
+            this.o = o;
         }
         
-	/**
-	 * Dump instruction as byte code to stream out.
-	 * @param out Output stream
-	 */
+        /**
+         * Dump instruction as byte code to stream out.
+         * @param out Output stream
+         */
         public void dump(DataOutputStream out) throws IOException {
-	    jq.Assert(index != 0);
+            jq.Assert(index != 0);
             out.writeByte(opcode);
             out.writeChar(index);
         }
         
-	/**
-	 * Long output format:
-	 *
-	 * &lt;name of opcode&gt; "["&lt;opcode number&gt;"]"
-	 * "("&lt;length of instruction&gt;")" "&lt;"&lt; constant pool index&gt;"&gt;"
-	 *
-	 * @param verbose long/short format switch
-	 * @return mnemonic for instruction
-	 */
+        /**
+         * Long output format:
+         *
+         * &lt;name of opcode&gt; "["&lt;opcode number&gt;"]"
+         * "("&lt;length of instruction&gt;")" "&lt;"&lt; constant pool index&gt;"&gt;"
+         *
+         * @param verbose long/short format switch
+         * @return mnemonic for instruction
+         */
         public String toString(boolean verbose) {
             return super.toString(verbose) + " " + (int)index;
         }
         
-	/**
-	 * @return mnemonic for instruction with symbolic references resolved
-	 */
+        /**
+         * @return mnemonic for instruction with symbolic references resolved
+         */
         public String toString() {
             return jq_ClassFileConstants.OPCODE_NAMES[opcode] + " " + getObject();
         }
         
-	/**
-	 * Read needed data (i.e., index) from file.
-	 * @param bytes input stream
-	 * @param wide wide prefix?
-	 */
+        /**
+         * Read needed data (i.e., index) from file.
+         * @param bytes input stream
+         * @param wide wide prefix?
+         */
         protected void initFromFile(jq_ConstantPool cp, ByteSequence bytes, boolean wide) throws IOException {
-	    o = cp.get((char)bytes.readUnsignedShort());
+            o = cp.get((char)bytes.readUnsignedShort());
             jq.Assert(!(o instanceof jq_MemberReference));
             length = 3;
         }
         
-	/**
-	 * @return index in constant pool referred by this instruction.
-	 */
+        /**
+         * @return index in constant pool referred by this instruction.
+         */
         public final int getIndex() { return index; }
         
-	/**
-	 * Set the index to constant pool.
-	 * @param index in  constant pool.
-	 */
+        /**
+         * Set the index to constant pool.
+         * @param index in  constant pool.
+         */
         public void setIndex(jq_ConstantPool.ConstantPoolRebuilder cpr) {
-	    this.index = cpr.get(o);
-	    
+            this.index = cpr.get(o);
+            
             if(index == 0)
                 throw new BytecodeException("Zero constant pool index");
         }
 
         public Object getObject() {
-	    return o;
-	}
+            return o;
+        }
 
         public void setObject(Object o) {
-	    this.o = o;
-	}
+            this.o = o;
+        }
         
-	/** @return type related with this instruction.
-	 */
+        /** @return type related with this instruction.
+         */
         public jq_Type getType() {
-	    return (jq_Type)getObject();
+            return (jq_Type)getObject();
         }
 
     }
@@ -7547,48 +7547,48 @@ public interface Bytecodes {
     }
     
     public abstract class FieldInstruction extends FieldOrMethod implements TypedInstruction {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         FieldInstruction() {}
         
-	/**
-	 * @param index to constant pool
-	 */
+        /**
+         * @param index to constant pool
+         */
         protected FieldInstruction(short opcode, jq_Field f) {
             super(opcode, f);
         }
         
-	/**
-	 * @return mnemonic for instruction with symbolic references resolved
-	 */
+        /**
+         * @return mnemonic for instruction with symbolic references resolved
+         */
         public String toString() {
             return jq_ClassFileConstants.OPCODE_NAMES[opcode] + " " + getField();
         }
 
         public jq_Field getField() { return (jq_Field)getObject(); }
 
-	/** @return size of field (1 or 2)
-	 */
+        /** @return size of field (1 or 2)
+         */
         protected int getFieldSize() {
             return getField().getWidth() >> 2;
         }
         
-	/** @return return type of referenced field
-	 */
+        /** @return return type of referenced field
+         */
         public jq_Type getType() {
             return getFieldType();
         }
         
-	/** @return type of field
-	 */
+        /** @return type of field
+         */
         public jq_Type getFieldType() {
             return getField().getType();
         }
         
-	/** @return name of referenced field.
-	 */
+        /** @return name of referenced field.
+         */
         public String getFieldName() {
             return getName();
         }
@@ -7611,29 +7611,29 @@ public interface Bytecodes {
         /** @return signature of referenced method/field.
          */
         public String getSignature() {
-	    jq_Member member = (jq_Member)getObject();
-	    return member.getDesc().toString();
+            jq_Member member = (jq_Member)getObject();
+            return member.getDesc().toString();
         }
         
         /** @return name of referenced method/field.
          */
         public String getName() {
-	    jq_Member member = (jq_Member)getObject();
-	    return member.getName().toString();
+            jq_Member member = (jq_Member)getObject();
+            return member.getName().toString();
         }
         
         /** @return name of the referenced class/interface
          */
         public String getClassName() {
-	    jq_Member member = (jq_Member)getObject();
-	    return member.getDeclaringClass().getName().toString();
+            jq_Member member = (jq_Member)getObject();
+            return member.getDeclaringClass().getName().toString();
         }
         
         /** @return type of the referenced class/interface
          */
         public jq_Class getClassType() {
-	    jq_Member member = (jq_Member)getObject();
-	    return member.getDeclaringClass();
+            jq_Member member = (jq_Member)getObject();
+            return member.getDeclaringClass();
         }
         
         /** @return type of the referenced class/interface
@@ -7651,30 +7651,30 @@ public interface Bytecodes {
             super(opcode, target);
         }
         
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         GotoInstruction() {}
     }
     
     public abstract class IfInstruction extends BranchInstruction implements StackConsumer {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         IfInstruction() {}
         
-	/**
-	 * @param instruction Target instruction to branch to
-	 */
+        /**
+         * @param instruction Target instruction to branch to
+         */
         protected IfInstruction(short opcode, InstructionHandle target) {
             super(opcode, target);
         }
         
-	/**
-	 * @return negation of instruction, e.g. IFEQ.negate() == IFNE
-	 */
+        /**
+         * @return negation of instruction, e.g. IFEQ.negate() == IFNE
+         */
         public abstract IfInstruction negate();
     }
     
@@ -7689,48 +7689,48 @@ public interface Bytecodes {
     }
     
     public abstract class InvokeInstruction extends FieldOrMethod implements ExceptionThrower, TypedInstruction, StackConsumer, StackProducer {
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         InvokeInstruction() {}
         
-	/**
-	 * @param index to constant pool
-	 */
+        /**
+         * @param index to constant pool
+         */
         protected InvokeInstruction(short opcode, jq_Method f) {
             super(opcode, f);
         }
         
-	/**
-	 * @return mnemonic for instruction with symbolic references resolved
-	 */
+        /**
+         * @return mnemonic for instruction with symbolic references resolved
+         */
         public String toString() {
             return jq_ClassFileConstants.OPCODE_NAMES[opcode] + " " + getMethod();
         }
 
         public jq_Method getMethod() { return (jq_Method)getObject(); }
 
-	/**
-	 * Also works for instructions whose stack effect depends on the
-	 * constant pool entry they reference.
-	 * @return Number of words consumed from stack by this instruction
-	 */
+        /**
+         * Also works for instructions whose stack effect depends on the
+         * constant pool entry they reference.
+         * @return Number of words consumed from stack by this instruction
+         */
         public int consumeStack() {
-	    return getMethod().getParamWords();
+            return getMethod().getParamWords();
         }
         
-	/**
-	 * Also works for instructions whose stack effect depends on the
-	 * constant pool entry they reference.
-	 * @return Number of words produced onto stack by this instruction
-	 */
+        /**
+         * Also works for instructions whose stack effect depends on the
+         * constant pool entry they reference.
+         * @return Number of words produced onto stack by this instruction
+         */
         public int produceStack() {
-	    return getMethod().getReturnWords();
+            return getMethod().getReturnWords();
         }
         
-	/** @return return type of referenced method.
-	 */
+        /** @return return type of referenced method.
+         */
         public jq_Type getType() {
             return getMethod().getReturnType();
         }
@@ -7747,8 +7747,8 @@ public interface Bytecodes {
             return getMethod().getReturnType();
         }
         
-	/** @return argument types of referenced method.
-	 */
+        /** @return argument types of referenced method.
+         */
         public jq_Type[] getArgumentTypes() {
             return getMethod().getParamTypes();
         }
@@ -7759,14 +7759,14 @@ public interface Bytecodes {
             super(opcode, target);
         }
         
-	/**
-	 * Empty constructor needed for the Class.newInstance() statement in
-	 * Instruction.readInstruction(). Not to be used otherwise.
-	 */
+        /**
+         * Empty constructor needed for the Class.newInstance() statement in
+         * Instruction.readInstruction(). Not to be used otherwise.
+         */
         JsrInstruction(){}
         
-	/** @return return address type
-	 */
+        /** @return return address type
+         */
         public jq_Type getType() {
             return new jq_ReturnAddressType(physicalSuccessor());
         }
@@ -7849,14 +7849,14 @@ public interface Bytecodes {
             super(opcode, c_tag, n);
         }
         
-	/**
-	 * Call corresponding visitor method(s). The order is:
-	 * Call visitor methods of implemented interfaces first, then
-	 * call methods according to the class hierarchy in descending order,
-	 * i.e., the most specific visitXXX() call comes last.
-	 *
-	 * @param v Visitor object
-	 */
+        /**
+         * Call corresponding visitor method(s). The order is:
+         * Call visitor methods of implemented interfaces first, then
+         * call methods according to the class hierarchy in descending order,
+         * i.e., the most specific visitXXX() call comes last.
+         *
+         * @param v Visitor object
+         */
         public void accept(Visitor v) {
             v.visitStackProducer(this);
             v.visitPushInstruction(this);
@@ -7947,9 +7947,9 @@ public interface Bytecodes {
                 n         = bytes.readUnsignedShort();
                 length    = 4;
             } else if(((opcode >= jq_ClassFileConstants.jbc_ILOAD) &&
-		       (opcode <= jq_ClassFileConstants.jbc_ALOAD)) ||
-		      ((opcode >= jq_ClassFileConstants.jbc_ISTORE) &&
-		       (opcode <= jq_ClassFileConstants.jbc_ASTORE))) {
+                       (opcode <= jq_ClassFileConstants.jbc_ALOAD)) ||
+                      ((opcode >= jq_ClassFileConstants.jbc_ISTORE) &&
+                       (opcode <= jq_ClassFileConstants.jbc_ASTORE))) {
                 n      = bytes.readUnsignedByte();
                 length = 2;
             } else if(opcode <= jq_ClassFileConstants.jbc_ALOAD_3) { // compact load instruction such as ILOAD_2
@@ -8015,7 +8015,7 @@ public interface Bytecodes {
                 case jq_ClassFileConstants.jbc_ALOAD: case jq_ClassFileConstants.jbc_ASTORE:
                     return PrimordialClassLoader.loader.getJavaLangObject();
 
-	        default: throw new BytecodeException("Oops: unknown case in switch" + canon_tag);
+                default: throw new BytecodeException("Oops: unknown case in switch" + canon_tag);
             }
         }
     }
@@ -8054,7 +8054,7 @@ public interface Bytecodes {
         
         public Set/*<jq_Class>*/ getExceptions() {
             //return new jq_Class[] { ClassLib.sun13.java.lang.IllegalMonitorState._class };
-	    return null;
+            return null;
         }
         
     }
@@ -8195,7 +8195,7 @@ public interface Bytecodes {
             }
             
             for(int i=0; i<targets.size(); ++i) {
-		if (targets.get(i) == old_ih) {
+                if (targets.get(i) == old_ih) {
                     targeted = true;
                     setTarget(i, new_ih);
                 }
@@ -8322,8 +8322,8 @@ public interface Bytecodes {
     
     
     public static class BytecodeException extends RuntimeException {
-	public BytecodeException() { super(); }
-	public BytecodeException(String s) { super(s); }
+        public BytecodeException() { super(); }
+        public BytecodeException(String s) { super(s); }
     }
 
     
@@ -8367,12 +8367,12 @@ public interface Bytecodes {
         
         public CodeException(InstructionList il, byte[] b, jq_TryCatchBC tc) {
             this.start = il.findHandle(tc.getStartPC());
-	    if (tc.getEndPC() == b.length) {
-		this.end = il.getEnd();
-	    } else {
-		this.end = il.findHandle(tc.getEndPC());
-		this.end = this.end.getPrev();
-	    }
+            if (tc.getEndPC() == b.length) {
+                this.end = il.getEnd();
+            } else {
+                this.end = il.findHandle(tc.getEndPC());
+                this.end = this.end.getPrev();
+            }
             this.handler = il.findHandle(tc.getHandlerPC());
             this.type = tc.getExceptionType();
         }
@@ -8670,365 +8670,365 @@ public interface Bytecodes {
     }
     
     public interface Visitor {
-	public void visitStackInstruction(StackInstruction obj);
-	public void visitLocalVariableInstruction(LocalVariableInstruction obj);
-	public void visitBranchInstruction(BranchInstruction obj);
-	public void visitLoadClass(LoadClass obj);
-	public void visitFieldInstruction(FieldInstruction obj);
-	public void visitIfInstruction(IfInstruction obj);
-	public void visitConversionInstruction(ConversionInstruction obj);
-	public void visitPopInstruction(PopInstruction obj);
-	public void visitStoreInstruction(StoreInstruction obj);
-	public void visitTypedInstruction(TypedInstruction obj);
-	public void visitSelect(Select obj);
-	public void visitJsrInstruction(JsrInstruction obj);
-	public void visitGotoInstruction(GotoInstruction obj);
-	public void visitUnconditionalBranch(UnconditionalBranch obj);
-	public void visitPushInstruction(PushInstruction obj);
-	public void visitArithmeticInstruction(ArithmeticInstruction obj);
-	public void visitCPInstruction(CPInstruction obj);
-	public void visitInvokeInstruction(InvokeInstruction obj);
-	public void visitArrayInstruction(ArrayInstruction obj);
-	public void visitAllocationInstruction(AllocationInstruction obj);
-	public void visitReturnInstruction(ReturnInstruction obj);
-	public void visitFieldOrMethod(FieldOrMethod obj);
-	public void visitConstantPushInstruction(ConstantPushInstruction obj);
-	public void visitExceptionThrower(ExceptionThrower obj);
-	public void visitLoadInstruction(LoadInstruction obj);
-	public void visitVariableLengthInstruction(VariableLengthInstruction obj);
-	public void visitStackProducer(StackProducer obj);
-	public void visitStackConsumer(StackConsumer obj);
-	public void visitACONST_NULL(ACONST_NULL obj);
-	public void visitGETSTATIC(GETSTATIC obj);
-	public void visitIF_ICMPLT(IF_ICMPLT obj);
-	public void visitMONITOREXIT(MONITOREXIT obj);
-	public void visitIFLT(IFLT obj);
-	public void visitLSTORE(LSTORE obj);
-	public void visitPOP2(POP2 obj);
-	public void visitBASTORE(BASTORE obj);
-	public void visitISTORE(ISTORE obj);
-	public void visitCHECKCAST(CHECKCAST obj);
-	public void visitFCMPG(FCMPG obj);
-	public void visitI2F(I2F obj);
-	public void visitATHROW(ATHROW obj);
-	public void visitDCMPL(DCMPL obj);
-	public void visitARRAYLENGTH(ARRAYLENGTH obj);
-	public void visitDUP(DUP obj);
-	public void visitINVOKESTATIC(INVOKESTATIC obj);
-	public void visitLCONST(LCONST obj);
-	public void visitDREM(DREM obj);
-	public void visitIFGE(IFGE obj);
-	public void visitCALOAD(CALOAD obj);
-	public void visitLASTORE(LASTORE obj);
-	public void visitI2D(I2D obj);
-	public void visitDADD(DADD obj);
-	public void visitINVOKESPECIAL(INVOKESPECIAL obj);
-	public void visitIAND(IAND obj);
-	public void visitPUTFIELD(PUTFIELD obj);
-	public void visitILOAD(ILOAD obj);
-	public void visitDLOAD(DLOAD obj);
-	public void visitDCONST(DCONST obj);
-	public void visitNEW(NEW obj);
-	public void visitIFNULL(IFNULL obj);
-	public void visitLSUB(LSUB obj);
-	public void visitL2I(L2I obj);
-	public void visitISHR(ISHR obj);
-	public void visitTABLESWITCH(TABLESWITCH obj);
-	public void visitIINC(IINC obj);
-	public void visitDRETURN(DRETURN obj);
-	public void visitFSTORE(FSTORE obj);
-	public void visitDASTORE(DASTORE obj);
-	public void visitIALOAD(IALOAD obj);
-	public void visitDDIV(DDIV obj);
-	public void visitIF_ICMPGE(IF_ICMPGE obj);
-	public void visitLAND(LAND obj);
-	public void visitIDIV(IDIV obj);
-	public void visitLOR(LOR obj);
-	public void visitCASTORE(CASTORE obj);
-	public void visitFREM(FREM obj);
-	public void visitLDC(LDC obj);
-	public void visitBIPUSH(BIPUSH obj);
-	public void visitDSTORE(DSTORE obj);
-	public void visitF2L(F2L obj);
-	public void visitFMUL(FMUL obj);
-	public void visitLLOAD(LLOAD obj);
-	public void visitJSR(JSR obj);
-	public void visitFSUB(FSUB obj);
-	public void visitSASTORE(SASTORE obj);
-	public void visitALOAD(ALOAD obj);
-	public void visitDUP2_X2(DUP2_X2 obj);
-	public void visitRETURN(RETURN obj);
-	public void visitDALOAD(DALOAD obj);
-	public void visitSIPUSH(SIPUSH obj);
-	public void visitDSUB(DSUB obj);
-	public void visitL2F(L2F obj);
-	public void visitIF_ICMPGT(IF_ICMPGT obj);
-	public void visitF2D(F2D obj);
-	public void visitI2L(I2L obj);
-	public void visitIF_ACMPNE(IF_ACMPNE obj);
-	public void visitPOP(POP obj);
-	public void visitI2S(I2S obj);
-	public void visitIFEQ(IFEQ obj);
-	public void visitSWAP(SWAP obj);
-	public void visitIOR(IOR obj);
-	public void visitIREM(IREM obj);
-	public void visitIASTORE(IASTORE obj);
-	public void visitNEWARRAY(NEWARRAY obj);
-	public void visitINVOKEINTERFACE(INVOKEINTERFACE obj);
-	public void visitINEG(INEG obj);
-	public void visitLCMP(LCMP obj);
-	public void visitJSR_W(JSR_W obj);
-	public void visitMULTIANEWARRAY(MULTIANEWARRAY obj);
-	public void visitDUP_X2(DUP_X2 obj);
-	public void visitSALOAD(SALOAD obj);
-	public void visitIFNONNULL(IFNONNULL obj);
-	public void visitDMUL(DMUL obj);
-	public void visitIFNE(IFNE obj);
-	public void visitIF_ICMPLE(IF_ICMPLE obj);
-	public void visitLDC2_W(LDC2_W obj);
-	public void visitGETFIELD(GETFIELD obj);
-	public void visitLADD(LADD obj);
-	public void visitNOP(NOP obj);
-	public void visitFALOAD(FALOAD obj);
-	public void visitINSTANCEOF(INSTANCEOF obj);
-	public void visitIFLE(IFLE obj);
-	public void visitLXOR(LXOR obj);
-	public void visitLRETURN(LRETURN obj);
-	public void visitFCONST(FCONST obj);
-	public void visitIUSHR(IUSHR obj);
-	public void visitBALOAD(BALOAD obj);
-	public void visitDUP2(DUP2 obj);
-	public void visitIF_ACMPEQ(IF_ACMPEQ obj);
-	public void visitMONITORENTER(MONITORENTER obj);
-	public void visitLSHL(LSHL obj);
-	public void visitDCMPG(DCMPG obj);
-	public void visitD2L(D2L obj);
-	public void visitL2D(L2D obj);
-	public void visitRET(RET obj);
-	public void visitIFGT(IFGT obj);
-	public void visitIXOR(IXOR obj);
-	public void visitINVOKEVIRTUAL(INVOKEVIRTUAL obj);
-	public void visitFASTORE(FASTORE obj);
-	public void visitIRETURN(IRETURN obj);
-	public void visitIF_ICMPNE(IF_ICMPNE obj);
-	public void visitFLOAD(FLOAD obj);
-	public void visitLDIV(LDIV obj);
-	public void visitPUTSTATIC(PUTSTATIC obj);
-	public void visitAALOAD(AALOAD obj);
-	public void visitD2I(D2I obj);
-	public void visitIF_ICMPEQ(IF_ICMPEQ obj);
-	public void visitAASTORE(AASTORE obj);
-	public void visitARETURN(ARETURN obj);
-	public void visitDUP2_X1(DUP2_X1 obj);
-	public void visitFNEG(FNEG obj);
-	public void visitGOTO_W(GOTO_W obj);
-	public void visitD2F(D2F obj);
-	public void visitGOTO(GOTO obj);
-	public void visitISUB(ISUB obj);
-	public void visitF2I(F2I obj);
-	public void visitDNEG(DNEG obj);
-	public void visitICONST(ICONST obj);
-	public void visitFDIV(FDIV obj);
-	public void visitI2B(I2B obj);
-	public void visitLNEG(LNEG obj);
-	public void visitLREM(LREM obj);
-	public void visitIMUL(IMUL obj);
-	public void visitIADD(IADD obj);
-	public void visitLSHR(LSHR obj);
-	public void visitLOOKUPSWITCH(LOOKUPSWITCH obj);
-	public void visitDUP_X1(DUP_X1 obj);
-	public void visitFCMPL(FCMPL obj);
-	public void visitI2C(I2C obj);
-	public void visitLMUL(LMUL obj);
-	public void visitLUSHR(LUSHR obj);
-	public void visitISHL(ISHL obj);
-	public void visitLALOAD(LALOAD obj);
-	public void visitASTORE(ASTORE obj);
-	public void visitANEWARRAY(ANEWARRAY obj);
-	public void visitFRETURN(FRETURN obj);
-	public void visitFADD(FADD obj);
-	public void visitBREAKPOINT(BREAKPOINT obj);
+        public void visitStackInstruction(StackInstruction obj);
+        public void visitLocalVariableInstruction(LocalVariableInstruction obj);
+        public void visitBranchInstruction(BranchInstruction obj);
+        public void visitLoadClass(LoadClass obj);
+        public void visitFieldInstruction(FieldInstruction obj);
+        public void visitIfInstruction(IfInstruction obj);
+        public void visitConversionInstruction(ConversionInstruction obj);
+        public void visitPopInstruction(PopInstruction obj);
+        public void visitStoreInstruction(StoreInstruction obj);
+        public void visitTypedInstruction(TypedInstruction obj);
+        public void visitSelect(Select obj);
+        public void visitJsrInstruction(JsrInstruction obj);
+        public void visitGotoInstruction(GotoInstruction obj);
+        public void visitUnconditionalBranch(UnconditionalBranch obj);
+        public void visitPushInstruction(PushInstruction obj);
+        public void visitArithmeticInstruction(ArithmeticInstruction obj);
+        public void visitCPInstruction(CPInstruction obj);
+        public void visitInvokeInstruction(InvokeInstruction obj);
+        public void visitArrayInstruction(ArrayInstruction obj);
+        public void visitAllocationInstruction(AllocationInstruction obj);
+        public void visitReturnInstruction(ReturnInstruction obj);
+        public void visitFieldOrMethod(FieldOrMethod obj);
+        public void visitConstantPushInstruction(ConstantPushInstruction obj);
+        public void visitExceptionThrower(ExceptionThrower obj);
+        public void visitLoadInstruction(LoadInstruction obj);
+        public void visitVariableLengthInstruction(VariableLengthInstruction obj);
+        public void visitStackProducer(StackProducer obj);
+        public void visitStackConsumer(StackConsumer obj);
+        public void visitACONST_NULL(ACONST_NULL obj);
+        public void visitGETSTATIC(GETSTATIC obj);
+        public void visitIF_ICMPLT(IF_ICMPLT obj);
+        public void visitMONITOREXIT(MONITOREXIT obj);
+        public void visitIFLT(IFLT obj);
+        public void visitLSTORE(LSTORE obj);
+        public void visitPOP2(POP2 obj);
+        public void visitBASTORE(BASTORE obj);
+        public void visitISTORE(ISTORE obj);
+        public void visitCHECKCAST(CHECKCAST obj);
+        public void visitFCMPG(FCMPG obj);
+        public void visitI2F(I2F obj);
+        public void visitATHROW(ATHROW obj);
+        public void visitDCMPL(DCMPL obj);
+        public void visitARRAYLENGTH(ARRAYLENGTH obj);
+        public void visitDUP(DUP obj);
+        public void visitINVOKESTATIC(INVOKESTATIC obj);
+        public void visitLCONST(LCONST obj);
+        public void visitDREM(DREM obj);
+        public void visitIFGE(IFGE obj);
+        public void visitCALOAD(CALOAD obj);
+        public void visitLASTORE(LASTORE obj);
+        public void visitI2D(I2D obj);
+        public void visitDADD(DADD obj);
+        public void visitINVOKESPECIAL(INVOKESPECIAL obj);
+        public void visitIAND(IAND obj);
+        public void visitPUTFIELD(PUTFIELD obj);
+        public void visitILOAD(ILOAD obj);
+        public void visitDLOAD(DLOAD obj);
+        public void visitDCONST(DCONST obj);
+        public void visitNEW(NEW obj);
+        public void visitIFNULL(IFNULL obj);
+        public void visitLSUB(LSUB obj);
+        public void visitL2I(L2I obj);
+        public void visitISHR(ISHR obj);
+        public void visitTABLESWITCH(TABLESWITCH obj);
+        public void visitIINC(IINC obj);
+        public void visitDRETURN(DRETURN obj);
+        public void visitFSTORE(FSTORE obj);
+        public void visitDASTORE(DASTORE obj);
+        public void visitIALOAD(IALOAD obj);
+        public void visitDDIV(DDIV obj);
+        public void visitIF_ICMPGE(IF_ICMPGE obj);
+        public void visitLAND(LAND obj);
+        public void visitIDIV(IDIV obj);
+        public void visitLOR(LOR obj);
+        public void visitCASTORE(CASTORE obj);
+        public void visitFREM(FREM obj);
+        public void visitLDC(LDC obj);
+        public void visitBIPUSH(BIPUSH obj);
+        public void visitDSTORE(DSTORE obj);
+        public void visitF2L(F2L obj);
+        public void visitFMUL(FMUL obj);
+        public void visitLLOAD(LLOAD obj);
+        public void visitJSR(JSR obj);
+        public void visitFSUB(FSUB obj);
+        public void visitSASTORE(SASTORE obj);
+        public void visitALOAD(ALOAD obj);
+        public void visitDUP2_X2(DUP2_X2 obj);
+        public void visitRETURN(RETURN obj);
+        public void visitDALOAD(DALOAD obj);
+        public void visitSIPUSH(SIPUSH obj);
+        public void visitDSUB(DSUB obj);
+        public void visitL2F(L2F obj);
+        public void visitIF_ICMPGT(IF_ICMPGT obj);
+        public void visitF2D(F2D obj);
+        public void visitI2L(I2L obj);
+        public void visitIF_ACMPNE(IF_ACMPNE obj);
+        public void visitPOP(POP obj);
+        public void visitI2S(I2S obj);
+        public void visitIFEQ(IFEQ obj);
+        public void visitSWAP(SWAP obj);
+        public void visitIOR(IOR obj);
+        public void visitIREM(IREM obj);
+        public void visitIASTORE(IASTORE obj);
+        public void visitNEWARRAY(NEWARRAY obj);
+        public void visitINVOKEINTERFACE(INVOKEINTERFACE obj);
+        public void visitINEG(INEG obj);
+        public void visitLCMP(LCMP obj);
+        public void visitJSR_W(JSR_W obj);
+        public void visitMULTIANEWARRAY(MULTIANEWARRAY obj);
+        public void visitDUP_X2(DUP_X2 obj);
+        public void visitSALOAD(SALOAD obj);
+        public void visitIFNONNULL(IFNONNULL obj);
+        public void visitDMUL(DMUL obj);
+        public void visitIFNE(IFNE obj);
+        public void visitIF_ICMPLE(IF_ICMPLE obj);
+        public void visitLDC2_W(LDC2_W obj);
+        public void visitGETFIELD(GETFIELD obj);
+        public void visitLADD(LADD obj);
+        public void visitNOP(NOP obj);
+        public void visitFALOAD(FALOAD obj);
+        public void visitINSTANCEOF(INSTANCEOF obj);
+        public void visitIFLE(IFLE obj);
+        public void visitLXOR(LXOR obj);
+        public void visitLRETURN(LRETURN obj);
+        public void visitFCONST(FCONST obj);
+        public void visitIUSHR(IUSHR obj);
+        public void visitBALOAD(BALOAD obj);
+        public void visitDUP2(DUP2 obj);
+        public void visitIF_ACMPEQ(IF_ACMPEQ obj);
+        public void visitMONITORENTER(MONITORENTER obj);
+        public void visitLSHL(LSHL obj);
+        public void visitDCMPG(DCMPG obj);
+        public void visitD2L(D2L obj);
+        public void visitL2D(L2D obj);
+        public void visitRET(RET obj);
+        public void visitIFGT(IFGT obj);
+        public void visitIXOR(IXOR obj);
+        public void visitINVOKEVIRTUAL(INVOKEVIRTUAL obj);
+        public void visitFASTORE(FASTORE obj);
+        public void visitIRETURN(IRETURN obj);
+        public void visitIF_ICMPNE(IF_ICMPNE obj);
+        public void visitFLOAD(FLOAD obj);
+        public void visitLDIV(LDIV obj);
+        public void visitPUTSTATIC(PUTSTATIC obj);
+        public void visitAALOAD(AALOAD obj);
+        public void visitD2I(D2I obj);
+        public void visitIF_ICMPEQ(IF_ICMPEQ obj);
+        public void visitAASTORE(AASTORE obj);
+        public void visitARETURN(ARETURN obj);
+        public void visitDUP2_X1(DUP2_X1 obj);
+        public void visitFNEG(FNEG obj);
+        public void visitGOTO_W(GOTO_W obj);
+        public void visitD2F(D2F obj);
+        public void visitGOTO(GOTO obj);
+        public void visitISUB(ISUB obj);
+        public void visitF2I(F2I obj);
+        public void visitDNEG(DNEG obj);
+        public void visitICONST(ICONST obj);
+        public void visitFDIV(FDIV obj);
+        public void visitI2B(I2B obj);
+        public void visitLNEG(LNEG obj);
+        public void visitLREM(LREM obj);
+        public void visitIMUL(IMUL obj);
+        public void visitIADD(IADD obj);
+        public void visitLSHR(LSHR obj);
+        public void visitLOOKUPSWITCH(LOOKUPSWITCH obj);
+        public void visitDUP_X1(DUP_X1 obj);
+        public void visitFCMPL(FCMPL obj);
+        public void visitI2C(I2C obj);
+        public void visitLMUL(LMUL obj);
+        public void visitLUSHR(LUSHR obj);
+        public void visitISHL(ISHL obj);
+        public void visitLALOAD(LALOAD obj);
+        public void visitASTORE(ASTORE obj);
+        public void visitANEWARRAY(ANEWARRAY obj);
+        public void visitFRETURN(FRETURN obj);
+        public void visitFADD(FADD obj);
+        public void visitBREAKPOINT(BREAKPOINT obj);
     }
     
     public abstract class EmptyVisitor implements Visitor {
-	public void visitStackInstruction(StackInstruction obj) { }
-	public void visitLocalVariableInstruction(LocalVariableInstruction obj) { }
-	public void visitBranchInstruction(BranchInstruction obj) { }
-	public void visitLoadClass(LoadClass obj) { }
-	public void visitFieldInstruction(FieldInstruction obj) { }
-	public void visitIfInstruction(IfInstruction obj) { }
-	public void visitConversionInstruction(ConversionInstruction obj) { }
-	public void visitPopInstruction(PopInstruction obj) { }
-	public void visitJsrInstruction(JsrInstruction obj) { }
-	public void visitGotoInstruction(GotoInstruction obj) { }
-	public void visitStoreInstruction(StoreInstruction obj) { }
-	public void visitTypedInstruction(TypedInstruction obj) { }
-	public void visitSelect(Select obj) { }
-	public void visitUnconditionalBranch(UnconditionalBranch obj) { }
-	public void visitPushInstruction(PushInstruction obj) { }
-	public void visitArithmeticInstruction(ArithmeticInstruction obj) { }
-	public void visitCPInstruction(CPInstruction obj) { }
-	public void visitInvokeInstruction(InvokeInstruction obj) { }
-	public void visitArrayInstruction(ArrayInstruction obj) { }
-	public void visitAllocationInstruction(AllocationInstruction obj) { }
-	public void visitReturnInstruction(ReturnInstruction obj) { }
-	public void visitFieldOrMethod(FieldOrMethod obj) { }
-	public void visitConstantPushInstruction(ConstantPushInstruction obj) { }
-	public void visitExceptionThrower(ExceptionThrower obj) { }
-	public void visitLoadInstruction(LoadInstruction obj) { }
-	public void visitVariableLengthInstruction(VariableLengthInstruction obj) { }
-	public void visitStackProducer(StackProducer obj) { }
-	public void visitStackConsumer(StackConsumer obj) { }
-	public void visitACONST_NULL(ACONST_NULL obj) { }
-	public void visitGETSTATIC(GETSTATIC obj) { }
-	public void visitIF_ICMPLT(IF_ICMPLT obj) { }
-	public void visitMONITOREXIT(MONITOREXIT obj) { }
-	public void visitIFLT(IFLT obj) { }
-	public void visitLSTORE(LSTORE obj) { }
-	public void visitPOP2(POP2 obj) { }
-	public void visitBASTORE(BASTORE obj) { }
-	public void visitISTORE(ISTORE obj) { }
-	public void visitCHECKCAST(CHECKCAST obj) { }
-	public void visitFCMPG(FCMPG obj) { }
-	public void visitI2F(I2F obj) { }
-	public void visitATHROW(ATHROW obj) { }
-	public void visitDCMPL(DCMPL obj) { }
-	public void visitARRAYLENGTH(ARRAYLENGTH obj) { }
-	public void visitDUP(DUP obj) { }
-	public void visitINVOKESTATIC(INVOKESTATIC obj) { }
-	public void visitLCONST(LCONST obj) { }
-	public void visitDREM(DREM obj) { }
-	public void visitIFGE(IFGE obj) { }
-	public void visitCALOAD(CALOAD obj) { }
-	public void visitLASTORE(LASTORE obj) { }
-	public void visitI2D(I2D obj) { }
-	public void visitDADD(DADD obj) { }
-	public void visitINVOKESPECIAL(INVOKESPECIAL obj) { }
-	public void visitIAND(IAND obj) { }
-	public void visitPUTFIELD(PUTFIELD obj) { }
-	public void visitILOAD(ILOAD obj) { }
-	public void visitDLOAD(DLOAD obj) { }
-	public void visitDCONST(DCONST obj) { }
-	public void visitNEW(NEW obj) { }
-	public void visitIFNULL(IFNULL obj) { }
-	public void visitLSUB(LSUB obj) { }
-	public void visitL2I(L2I obj) { }
-	public void visitISHR(ISHR obj) { }
-	public void visitTABLESWITCH(TABLESWITCH obj) { }
-	public void visitIINC(IINC obj) { }
-	public void visitDRETURN(DRETURN obj) { }
-	public void visitFSTORE(FSTORE obj) { }
-	public void visitDASTORE(DASTORE obj) { }
-	public void visitIALOAD(IALOAD obj) { }
-	public void visitDDIV(DDIV obj) { }
-	public void visitIF_ICMPGE(IF_ICMPGE obj) { }
-	public void visitLAND(LAND obj) { }
-	public void visitIDIV(IDIV obj) { }
-	public void visitLOR(LOR obj) { }
-	public void visitCASTORE(CASTORE obj) { }
-	public void visitFREM(FREM obj) { }
-	public void visitLDC(LDC obj) { }
-	public void visitBIPUSH(BIPUSH obj) { }
-	public void visitDSTORE(DSTORE obj) { }
-	public void visitF2L(F2L obj) { }
-	public void visitFMUL(FMUL obj) { }
-	public void visitLLOAD(LLOAD obj) { }
-	public void visitJSR(JSR obj) { }
-	public void visitFSUB(FSUB obj) { }
-	public void visitSASTORE(SASTORE obj) { }
-	public void visitALOAD(ALOAD obj) { }
-	public void visitDUP2_X2(DUP2_X2 obj) { }
-	public void visitRETURN(RETURN obj) { }
-	public void visitDALOAD(DALOAD obj) { }
-	public void visitSIPUSH(SIPUSH obj) { }
-	public void visitDSUB(DSUB obj) { }
-	public void visitL2F(L2F obj) { }
-	public void visitIF_ICMPGT(IF_ICMPGT obj) { }
-	public void visitF2D(F2D obj) { }
-	public void visitI2L(I2L obj) { }
-	public void visitIF_ACMPNE(IF_ACMPNE obj) { }
-	public void visitPOP(POP obj) { }
-	public void visitI2S(I2S obj) { }
-	public void visitIFEQ(IFEQ obj) { }
-	public void visitSWAP(SWAP obj) { }
-	public void visitIOR(IOR obj) { }
-	public void visitIREM(IREM obj) { }
-	public void visitIASTORE(IASTORE obj) { }
-	public void visitNEWARRAY(NEWARRAY obj) { }
-	public void visitINVOKEINTERFACE(INVOKEINTERFACE obj) { }
-	public void visitINEG(INEG obj) { }
-	public void visitLCMP(LCMP obj) { }
-	public void visitJSR_W(JSR_W obj) { }
-	public void visitMULTIANEWARRAY(MULTIANEWARRAY obj) { }
-	public void visitDUP_X2(DUP_X2 obj) { }
-	public void visitSALOAD(SALOAD obj) { }
-	public void visitIFNONNULL(IFNONNULL obj) { }
-	public void visitDMUL(DMUL obj) { }
-	public void visitIFNE(IFNE obj) { }
-	public void visitIF_ICMPLE(IF_ICMPLE obj) { }
-	public void visitLDC2_W(LDC2_W obj) { }
-	public void visitGETFIELD(GETFIELD obj) { }
-	public void visitLADD(LADD obj) { }
-	public void visitNOP(NOP obj) { }
-	public void visitFALOAD(FALOAD obj) { }
-	public void visitINSTANCEOF(INSTANCEOF obj) { }
-	public void visitIFLE(IFLE obj) { }
-	public void visitLXOR(LXOR obj) { }
-	public void visitLRETURN(LRETURN obj) { }
-	public void visitFCONST(FCONST obj) { }
-	public void visitIUSHR(IUSHR obj) { }
-	public void visitBALOAD(BALOAD obj) { }
-	public void visitDUP2(DUP2 obj) { }
-	public void visitIF_ACMPEQ(IF_ACMPEQ obj) { }
-	public void visitMONITORENTER(MONITORENTER obj) { }
-	public void visitLSHL(LSHL obj) { }
-	public void visitDCMPG(DCMPG obj) { }
-	public void visitD2L(D2L obj) { }
-	public void visitL2D(L2D obj) { }
-	public void visitRET(RET obj) { }
-	public void visitIFGT(IFGT obj) { }
-	public void visitIXOR(IXOR obj) { }
-	public void visitINVOKEVIRTUAL(INVOKEVIRTUAL obj) { }
-	public void visitFASTORE(FASTORE obj) { }
-	public void visitIRETURN(IRETURN obj) { }
-	public void visitIF_ICMPNE(IF_ICMPNE obj) { }
-	public void visitFLOAD(FLOAD obj) { }
-	public void visitLDIV(LDIV obj) { }
-	public void visitPUTSTATIC(PUTSTATIC obj) { }
-	public void visitAALOAD(AALOAD obj) { }
-	public void visitD2I(D2I obj) { }
-	public void visitIF_ICMPEQ(IF_ICMPEQ obj) { }
-	public void visitAASTORE(AASTORE obj) { }
-	public void visitARETURN(ARETURN obj) { }
-	public void visitDUP2_X1(DUP2_X1 obj) { }
-	public void visitFNEG(FNEG obj) { }
-	public void visitGOTO_W(GOTO_W obj) { }
-	public void visitD2F(D2F obj) { }
-	public void visitGOTO(GOTO obj) { }
-	public void visitISUB(ISUB obj) { }
-	public void visitF2I(F2I obj) { }
-	public void visitDNEG(DNEG obj) { }
-	public void visitICONST(ICONST obj) { }
-	public void visitFDIV(FDIV obj) { }
-	public void visitI2B(I2B obj) { }
-	public void visitLNEG(LNEG obj) { }
-	public void visitLREM(LREM obj) { }
-	public void visitIMUL(IMUL obj) { }
-	public void visitIADD(IADD obj) { }
-	public void visitLSHR(LSHR obj) { }
-	public void visitLOOKUPSWITCH(LOOKUPSWITCH obj) { }
-	public void visitDUP_X1(DUP_X1 obj) { }
-	public void visitFCMPL(FCMPL obj) { }
-	public void visitI2C(I2C obj) { }
-	public void visitLMUL(LMUL obj) { }
-	public void visitLUSHR(LUSHR obj) { }
-	public void visitISHL(ISHL obj) { }
-	public void visitLALOAD(LALOAD obj) { }
-	public void visitASTORE(ASTORE obj) { }
-	public void visitANEWARRAY(ANEWARRAY obj) { }
-	public void visitFRETURN(FRETURN obj) { }
-	public void visitFADD(FADD obj) { }
-	public void visitBREAKPOINT(BREAKPOINT obj) { }
+        public void visitStackInstruction(StackInstruction obj) { }
+        public void visitLocalVariableInstruction(LocalVariableInstruction obj) { }
+        public void visitBranchInstruction(BranchInstruction obj) { }
+        public void visitLoadClass(LoadClass obj) { }
+        public void visitFieldInstruction(FieldInstruction obj) { }
+        public void visitIfInstruction(IfInstruction obj) { }
+        public void visitConversionInstruction(ConversionInstruction obj) { }
+        public void visitPopInstruction(PopInstruction obj) { }
+        public void visitJsrInstruction(JsrInstruction obj) { }
+        public void visitGotoInstruction(GotoInstruction obj) { }
+        public void visitStoreInstruction(StoreInstruction obj) { }
+        public void visitTypedInstruction(TypedInstruction obj) { }
+        public void visitSelect(Select obj) { }
+        public void visitUnconditionalBranch(UnconditionalBranch obj) { }
+        public void visitPushInstruction(PushInstruction obj) { }
+        public void visitArithmeticInstruction(ArithmeticInstruction obj) { }
+        public void visitCPInstruction(CPInstruction obj) { }
+        public void visitInvokeInstruction(InvokeInstruction obj) { }
+        public void visitArrayInstruction(ArrayInstruction obj) { }
+        public void visitAllocationInstruction(AllocationInstruction obj) { }
+        public void visitReturnInstruction(ReturnInstruction obj) { }
+        public void visitFieldOrMethod(FieldOrMethod obj) { }
+        public void visitConstantPushInstruction(ConstantPushInstruction obj) { }
+        public void visitExceptionThrower(ExceptionThrower obj) { }
+        public void visitLoadInstruction(LoadInstruction obj) { }
+        public void visitVariableLengthInstruction(VariableLengthInstruction obj) { }
+        public void visitStackProducer(StackProducer obj) { }
+        public void visitStackConsumer(StackConsumer obj) { }
+        public void visitACONST_NULL(ACONST_NULL obj) { }
+        public void visitGETSTATIC(GETSTATIC obj) { }
+        public void visitIF_ICMPLT(IF_ICMPLT obj) { }
+        public void visitMONITOREXIT(MONITOREXIT obj) { }
+        public void visitIFLT(IFLT obj) { }
+        public void visitLSTORE(LSTORE obj) { }
+        public void visitPOP2(POP2 obj) { }
+        public void visitBASTORE(BASTORE obj) { }
+        public void visitISTORE(ISTORE obj) { }
+        public void visitCHECKCAST(CHECKCAST obj) { }
+        public void visitFCMPG(FCMPG obj) { }
+        public void visitI2F(I2F obj) { }
+        public void visitATHROW(ATHROW obj) { }
+        public void visitDCMPL(DCMPL obj) { }
+        public void visitARRAYLENGTH(ARRAYLENGTH obj) { }
+        public void visitDUP(DUP obj) { }
+        public void visitINVOKESTATIC(INVOKESTATIC obj) { }
+        public void visitLCONST(LCONST obj) { }
+        public void visitDREM(DREM obj) { }
+        public void visitIFGE(IFGE obj) { }
+        public void visitCALOAD(CALOAD obj) { }
+        public void visitLASTORE(LASTORE obj) { }
+        public void visitI2D(I2D obj) { }
+        public void visitDADD(DADD obj) { }
+        public void visitINVOKESPECIAL(INVOKESPECIAL obj) { }
+        public void visitIAND(IAND obj) { }
+        public void visitPUTFIELD(PUTFIELD obj) { }
+        public void visitILOAD(ILOAD obj) { }
+        public void visitDLOAD(DLOAD obj) { }
+        public void visitDCONST(DCONST obj) { }
+        public void visitNEW(NEW obj) { }
+        public void visitIFNULL(IFNULL obj) { }
+        public void visitLSUB(LSUB obj) { }
+        public void visitL2I(L2I obj) { }
+        public void visitISHR(ISHR obj) { }
+        public void visitTABLESWITCH(TABLESWITCH obj) { }
+        public void visitIINC(IINC obj) { }
+        public void visitDRETURN(DRETURN obj) { }
+        public void visitFSTORE(FSTORE obj) { }
+        public void visitDASTORE(DASTORE obj) { }
+        public void visitIALOAD(IALOAD obj) { }
+        public void visitDDIV(DDIV obj) { }
+        public void visitIF_ICMPGE(IF_ICMPGE obj) { }
+        public void visitLAND(LAND obj) { }
+        public void visitIDIV(IDIV obj) { }
+        public void visitLOR(LOR obj) { }
+        public void visitCASTORE(CASTORE obj) { }
+        public void visitFREM(FREM obj) { }
+        public void visitLDC(LDC obj) { }
+        public void visitBIPUSH(BIPUSH obj) { }
+        public void visitDSTORE(DSTORE obj) { }
+        public void visitF2L(F2L obj) { }
+        public void visitFMUL(FMUL obj) { }
+        public void visitLLOAD(LLOAD obj) { }
+        public void visitJSR(JSR obj) { }
+        public void visitFSUB(FSUB obj) { }
+        public void visitSASTORE(SASTORE obj) { }
+        public void visitALOAD(ALOAD obj) { }
+        public void visitDUP2_X2(DUP2_X2 obj) { }
+        public void visitRETURN(RETURN obj) { }
+        public void visitDALOAD(DALOAD obj) { }
+        public void visitSIPUSH(SIPUSH obj) { }
+        public void visitDSUB(DSUB obj) { }
+        public void visitL2F(L2F obj) { }
+        public void visitIF_ICMPGT(IF_ICMPGT obj) { }
+        public void visitF2D(F2D obj) { }
+        public void visitI2L(I2L obj) { }
+        public void visitIF_ACMPNE(IF_ACMPNE obj) { }
+        public void visitPOP(POP obj) { }
+        public void visitI2S(I2S obj) { }
+        public void visitIFEQ(IFEQ obj) { }
+        public void visitSWAP(SWAP obj) { }
+        public void visitIOR(IOR obj) { }
+        public void visitIREM(IREM obj) { }
+        public void visitIASTORE(IASTORE obj) { }
+        public void visitNEWARRAY(NEWARRAY obj) { }
+        public void visitINVOKEINTERFACE(INVOKEINTERFACE obj) { }
+        public void visitINEG(INEG obj) { }
+        public void visitLCMP(LCMP obj) { }
+        public void visitJSR_W(JSR_W obj) { }
+        public void visitMULTIANEWARRAY(MULTIANEWARRAY obj) { }
+        public void visitDUP_X2(DUP_X2 obj) { }
+        public void visitSALOAD(SALOAD obj) { }
+        public void visitIFNONNULL(IFNONNULL obj) { }
+        public void visitDMUL(DMUL obj) { }
+        public void visitIFNE(IFNE obj) { }
+        public void visitIF_ICMPLE(IF_ICMPLE obj) { }
+        public void visitLDC2_W(LDC2_W obj) { }
+        public void visitGETFIELD(GETFIELD obj) { }
+        public void visitLADD(LADD obj) { }
+        public void visitNOP(NOP obj) { }
+        public void visitFALOAD(FALOAD obj) { }
+        public void visitINSTANCEOF(INSTANCEOF obj) { }
+        public void visitIFLE(IFLE obj) { }
+        public void visitLXOR(LXOR obj) { }
+        public void visitLRETURN(LRETURN obj) { }
+        public void visitFCONST(FCONST obj) { }
+        public void visitIUSHR(IUSHR obj) { }
+        public void visitBALOAD(BALOAD obj) { }
+        public void visitDUP2(DUP2 obj) { }
+        public void visitIF_ACMPEQ(IF_ACMPEQ obj) { }
+        public void visitMONITORENTER(MONITORENTER obj) { }
+        public void visitLSHL(LSHL obj) { }
+        public void visitDCMPG(DCMPG obj) { }
+        public void visitD2L(D2L obj) { }
+        public void visitL2D(L2D obj) { }
+        public void visitRET(RET obj) { }
+        public void visitIFGT(IFGT obj) { }
+        public void visitIXOR(IXOR obj) { }
+        public void visitINVOKEVIRTUAL(INVOKEVIRTUAL obj) { }
+        public void visitFASTORE(FASTORE obj) { }
+        public void visitIRETURN(IRETURN obj) { }
+        public void visitIF_ICMPNE(IF_ICMPNE obj) { }
+        public void visitFLOAD(FLOAD obj) { }
+        public void visitLDIV(LDIV obj) { }
+        public void visitPUTSTATIC(PUTSTATIC obj) { }
+        public void visitAALOAD(AALOAD obj) { }
+        public void visitD2I(D2I obj) { }
+        public void visitIF_ICMPEQ(IF_ICMPEQ obj) { }
+        public void visitAASTORE(AASTORE obj) { }
+        public void visitARETURN(ARETURN obj) { }
+        public void visitDUP2_X1(DUP2_X1 obj) { }
+        public void visitFNEG(FNEG obj) { }
+        public void visitGOTO_W(GOTO_W obj) { }
+        public void visitD2F(D2F obj) { }
+        public void visitGOTO(GOTO obj) { }
+        public void visitISUB(ISUB obj) { }
+        public void visitF2I(F2I obj) { }
+        public void visitDNEG(DNEG obj) { }
+        public void visitICONST(ICONST obj) { }
+        public void visitFDIV(FDIV obj) { }
+        public void visitI2B(I2B obj) { }
+        public void visitLNEG(LNEG obj) { }
+        public void visitLREM(LREM obj) { }
+        public void visitIMUL(IMUL obj) { }
+        public void visitIADD(IADD obj) { }
+        public void visitLSHR(LSHR obj) { }
+        public void visitLOOKUPSWITCH(LOOKUPSWITCH obj) { }
+        public void visitDUP_X1(DUP_X1 obj) { }
+        public void visitFCMPL(FCMPL obj) { }
+        public void visitI2C(I2C obj) { }
+        public void visitLMUL(LMUL obj) { }
+        public void visitLUSHR(LUSHR obj) { }
+        public void visitISHL(ISHL obj) { }
+        public void visitLALOAD(LALOAD obj) { }
+        public void visitASTORE(ASTORE obj) { }
+        public void visitANEWARRAY(ANEWARRAY obj) { }
+        public void visitFRETURN(FRETURN obj) { }
+        public void visitFADD(FADD obj) { }
+        public void visitBREAKPOINT(BREAKPOINT obj) { }
     }
     
 }

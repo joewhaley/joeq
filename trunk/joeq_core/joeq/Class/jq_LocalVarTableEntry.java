@@ -24,7 +24,7 @@ public class jq_LocalVarTableEntry implements Comparable {
     }
 
     public jq_LocalVarTableEntry(char startPC, char length, 
-				 jq_NameAndDesc nd, char index) {
+                                 jq_NameAndDesc nd, char index) {
         this.startPC = startPC;
         this.length = length;
         this.nd = nd;
@@ -37,7 +37,7 @@ public class jq_LocalVarTableEntry implements Comparable {
     public char getIndex() { return index; }
     
     boolean isInRange(int bci, int index) {
-	return this.index == index && startPC <= bci && bci < startPC + length;
+        return this.index == index && startPC <= bci && bci < startPC + length;
     }
 
     public int compareTo(jq_LocalVarTableEntry that) {
@@ -58,11 +58,11 @@ public class jq_LocalVarTableEntry implements Comparable {
         return equals((jq_LocalVarTableEntry)that);
     }
     public int hashCode() {
-	return (startPC << 8) | index;
+        return (startPC << 8) | index;
     }
 
     public String toString() {
         return "(startPC="+(int)startPC+",length="+(int)length
-	    +",nd="+nd+",index="+(int)index+")";
+            +",nd="+nd+",index="+(int)index+")";
     }
 }

@@ -203,7 +203,7 @@ public class ReflectiveInterpreter extends BytecodeInterpreter {
         ReflectiveVMInterface() {
             ot = new ObjectTraverser(new HashSet(), new HashSet());
         }
-	public static final ReflectiveVMInterface INSTANCE = new ReflectiveVMInterface();
+        public static final ReflectiveVMInterface INSTANCE = new ReflectiveVMInterface();
         public void putField(Object o, jq_Field f, Object v) {
             jq_Class k = f.getDeclaringClass();
             k.load(); k.verify(); k.prepare(); k.sf_initialize(); k.cls_initialize();

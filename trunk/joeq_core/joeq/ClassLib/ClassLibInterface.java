@@ -36,37 +36,37 @@ public abstract class ClassLibInterface {
         if (classlibrary == null) {
             String javaversion = System.getProperty("java.version");
 
-	    String javavmversion = System.getProperty("java.vm.version");
-	    String javavmvendor = System.getProperty("java.vm.vendor");
-	    String javaruntimeversion = System.getProperty("java.runtime.version");
+            String javavmversion = System.getProperty("java.vm.version");
+            String javavmvendor = System.getProperty("java.vm.vendor");
+            String javaruntimeversion = System.getProperty("java.runtime.version");
             String osarch = System.getProperty("os.arch");
             String osname = System.getProperty("os.name");
 
             if (osarch.equals("x86")) {
             } else if (osarch.equals("i386")) {
-	    } else {
+            } else {
                 System.err.println("Warning: architecture "+osarch+" is not yet supported.");
             }
             if (javavmvendor.equals("Sun Microsystems Inc.")) {
-		if (javaruntimeversion.equals("1.3.1_01")) {
-		    classlibrary = "sun13_";
-		} else if (javaruntimeversion.equals("1.4.0-b92")) {
+                if (javaruntimeversion.equals("1.3.1_01")) {
+                    classlibrary = "sun13_";
+                } else if (javaruntimeversion.equals("1.4.0-b92")) {
                     classlibrary = "sun14_";
-		} else {
-		    if (javaruntimeversion.startsWith("1.4")) {
-			classlibrary = "sun14_";
-		    } else {
-			classlibrary = "sun13_";
-		    }
-		    System.err.println("Warning: class library version "+javaruntimeversion+" is not yet supported, trying default "+classlibrary);
-		}
+                } else {
+                    if (javaruntimeversion.startsWith("1.4")) {
+                        classlibrary = "sun14_";
+                    } else {
+                        classlibrary = "sun13_";
+                    }
+                    System.err.println("Warning: class library version "+javaruntimeversion+" is not yet supported, trying default "+classlibrary);
+                }
             } else if (javavmvendor.equals("IBM Corporation")) {
-		if (javaruntimeversion.equals("1.3.0")) {
-		    classlibrary = "ibm13_";
-		} else {
-		    classlibrary = "ibm13_";
-		    System.err.println("Warning: class library version "+javaruntimeversion+" is not yet supported, trying default "+classlibrary);
-		}
+                if (javaruntimeversion.equals("1.3.0")) {
+                    classlibrary = "ibm13_";
+                } else {
+                    classlibrary = "ibm13_";
+                    System.err.println("Warning: class library version "+javaruntimeversion+" is not yet supported, trying default "+classlibrary);
+                }
             } else {
                 classlibrary = "sun13_";
                 System.err.println("Warning: vm vendor "+javavmvendor+" is not yet supported, trying default "+classlibrary);

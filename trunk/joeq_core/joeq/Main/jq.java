@@ -374,7 +374,7 @@ public abstract class jq {
         } catch (Throwable x) {
             SystemInterface.debugmsg("Exception occurred during virtual machine initialization");
             SystemInterface.debugmsg("Exception: "+x);
-	    if (System.err != null) x.printStackTrace(System.err);
+            if (System.err != null) x.printStackTrace(System.err);
             return;
         }
         int numOfArgs = SystemInterface.main_argc();
@@ -415,7 +415,7 @@ public abstract class jq {
                     SystemInterface.debugmsg("Exception occurred during virtual machine initialization");
                     SystemInterface.debugmsg(mi.toString());
                     SystemInterface.debugmsg("Exception: "+x);
-		    x.printStackTrace(System.err);
+                    x.printStackTrace(System.err);
                     return;
                 }
             }
@@ -575,20 +575,20 @@ public abstract class jq {
         return (((long)lo)&0xFFFFFFFFL) | ((long)hi << 32);
     }
     public static void charToTwoBytes(char i, byte[] b, int index) {
-	b[index] = (byte)(i >> 8); b[index+1] = (byte)(i);
+        b[index] = (byte)(i >> 8); b[index+1] = (byte)(i);
     }
     public static void intToFourBytes(int i, byte[] b, int index) {
-	b[index] = (byte)(i >> 24);
+        b[index] = (byte)(i >> 24);
         b[index+1] = (byte)(i >> 16);
         b[index+2] = (byte)(i >> 8);
         b[index+3] = (byte)(i);
     }
     public static void longToEightBytes(long i, byte[] b, int index) {
-	b[index] = (byte)(i >> 56);
+        b[index] = (byte)(i >> 56);
         b[index+1] = (byte)(i >> 48);
         b[index+2] = (byte)(i >> 40);
         b[index+3] = (byte)(i >> 32);
-	b[index+4] = (byte)(i >> 24);
+        b[index+4] = (byte)(i >> 24);
         b[index+5] = (byte)(i >> 16);
         b[index+6] = (byte)(i >> 8);
         b[index+7] = (byte)(i);

@@ -205,15 +205,15 @@ public abstract class CallTargets extends AbstractSet {
             }
         }
 
-	// TEMPORARY HACK: sometimes casts from interface types are
-	// lost in the type analysis, leading to virtual calls on interfaces
-	if (loadClasses) {
-	    rclass.load();
-	    if (rclass.isInterface() && type == BytecodeVisitor.INVOKE_VIRTUAL) {
-		jq.Assert(!imethod.getDeclaringClass().isInterface());
-		receiverType = rclass = imethod.getDeclaringClass();
-	    }
-	}
+        // TEMPORARY HACK: sometimes casts from interface types are
+        // lost in the type analysis, leading to virtual calls on interfaces
+        if (loadClasses) {
+            rclass.load();
+            if (rclass.isInterface() && type == BytecodeVisitor.INVOKE_VIRTUAL) {
+                jq.Assert(!imethod.getDeclaringClass().isInterface());
+                receiverType = rclass = imethod.getDeclaringClass();
+            }
+        }
 
         Set c = new LinearSet();
         boolean complete = true;

@@ -20,24 +20,24 @@ import java.util.Set;
 public interface Relation {
     
     /** Adds the pair <code>&lt;key, value&gt;</code> to the relation.
-	Returns <code>true</code> if the new relation is bigger. */
+        Returns <code>true</code> if the new relation is bigger. */
     public boolean add(Object key, Object value);
 
 
     /** Adds a relation from <code>key</code> to each element of the set
-	<code>values</code>. <code>values</code> should not contain
-	duplicated elements.
-	Returns <code>true</code> if the new relation is bigger. */
+        <code>values</code>. <code>values</code> should not contain
+        duplicated elements.
+        Returns <code>true</code> if the new relation is bigger. */
     public boolean addAll(Object key, Collection values);
 
 
     /** Removes the relation between <code>key</code> and 
-	<code>value</code>. */ 
+        <code>value</code>. */ 
     public void remove(Object key, Object value);
 
 
     /** Removes the relation between <code>key</code> and 
-	any element from <code>values</code>. */
+        any element from <code>values</code>. */
     public void removeAll(Object key, Collection values);
 
 
@@ -54,7 +54,7 @@ public interface Relation {
 
 
     /** Removes all the relations involving at least one object that
-	satisfy <code>predicate.check()</code>. */
+        satisfy <code>predicate.check()</code>. */
     public void removeObjects(PredicateWrapper predicate);
 
 
@@ -71,15 +71,15 @@ public interface Relation {
 
 
     /** Returns the image of <code>key</code> through this relation.
-	The returned collection is guarranted not to contain duplicates.
-	Can return <code>null</code> if no value is attached to key.
-	If the result is non-null, additions and removals on the returned
-	collection take effect on the relation. */
+        The returned collection is guarranted not to contain duplicates.
+        Can return <code>null</code> if no value is attached to key.
+        If the result is non-null, additions and removals on the returned
+        collection take effect on the relation. */
     public Set getValues(Object key);
 
 
     /** Returns all the keys appearing in this relation. The result is
-	guaranted not to contain duplicates. */
+        guaranted not to contain duplicates. */
     public Set keys();
 
 
@@ -88,7 +88,7 @@ public interface Relation {
 
 
     /** Combines <code>this</code> relation with a new one.
-	A <code>null</code> parameter is considered to be an empty relation. */
+        A <code>null</code> parameter is considered to be an empty relation. */
     public void union(Relation rel);
 
 
@@ -97,13 +97,13 @@ public interface Relation {
 
 
     /** Returns the subrelation of this relation that contains
-	only the keys that appear in <code>selected_keys</code>. */
+        only the keys that appear in <code>selected_keys</code>. */
     public Relation select(Collection selected_keys);
 
 
     /** Visits all the entries <code>&lt;key,value&gt;</code> of
-	<code>this</code> relation and calls <code>visitor.visit</code>
-	on each of them. */
+        <code>this</code> relation and calls <code>visitor.visit</code>
+        on each of them. */
     public void forAllEntries(RelationEntryVisitor visitor);
 
 

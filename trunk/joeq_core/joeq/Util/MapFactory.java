@@ -21,11 +21,11 @@ public abstract class MapFactory {
 
     /** Generates a new, mutable, empty <code>Map</code>. */
     public final Map makeMap() {
-	return this.makeMap(Default.EMPTY_MAP);
+        return this.makeMap(Default.EMPTY_MAP);
     }
 
     /** Generates a new <code>Map</code>, using the entries of
-	<code>map</code> as a template for its initial mappings. 
+        <code>map</code> as a template for its initial mappings. 
     */
     public abstract Map makeMap(Map map);
 

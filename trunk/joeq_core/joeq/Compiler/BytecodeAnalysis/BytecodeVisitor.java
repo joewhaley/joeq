@@ -351,42 +351,42 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
                 break;
             }
             case 0x2e: /* --- iaload --- */ {
-		this.visitPEI();
+                this.visitPEI();
                 this.visitIALOAD();
                 break;
             }
             case 0x30: /* --- faload --- */ {
-		this.visitPEI();
+                this.visitPEI();
                 this.visitFALOAD();
                 break;
             }
             case 0x32: /* --- aaload --- */ {
-		this.visitPEI();
+                this.visitPEI();
                 this.visitAALOAD();
                 break;
             }
             case 0x2f: /* --- laload --- */ {
-		this.visitPEI();
+                this.visitPEI();
                 this.visitLALOAD();
                 break;
             }
             case 0x31: /* --- daload --- */ {
-		this.visitPEI();
+                this.visitPEI();
                 this.visitDALOAD();
                 break;
             }
             case 0x33: /* --- baload --- */ {
-		this.visitPEI();
+                this.visitPEI();
                 this.visitBALOAD();
                 break;
             }
             case 0x34: /* --- caload --- */ {
-		this.visitPEI();
+                this.visitPEI();
                 this.visitCALOAD();
                 break;
             }
             case 0x35: /* --- saload --- */ {
-		this.visitPEI();
+                this.visitPEI();
                 this.visitSALOAD();
                 break;
             }
@@ -456,42 +456,42 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
                 break;
             }
             case 0x4f: /* --- iastore --- */ {
-		this.visitPEI();
+                this.visitPEI();
                 this.visitIASTORE();
                 break;
             }
             case 0x51: /* --- fastore --- */ {
-		this.visitPEI();
+                this.visitPEI();
                 this.visitFASTORE();
                 break;
             }
             case 0x50: /* --- lastore --- */ {
-		this.visitPEI();
+                this.visitPEI();
                 this.visitLASTORE();
                 break;
             }
             case 0x52: /* --- dastore --- */ {
-		this.visitPEI();
+                this.visitPEI();
                 this.visitDASTORE();
                 break;
             }
             case 0x53: /* --- aastore --- */ {
-		this.visitPEI();
+                this.visitPEI();
                 this.visitAASTORE();
                 break;
             }
             case 0x54: /* --- bastore --- */ {
-		this.visitPEI();
+                this.visitPEI();
                 this.visitBASTORE();
                 break;
             }
             case 0x55: /* --- castore --- */ {
-		this.visitPEI();
+                this.visitPEI();
                 this.visitCASTORE();
                 break;
             }
             case 0x56: /* --- sastore --- */ {
-		this.visitPEI();
+                this.visitPEI();
                 this.visitSASTORE();
                 break;
             }
@@ -580,12 +580,12 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
                 break;
             }
             case 0x6c: /* --- idiv --- */ {
-		this.visitPEI();
+                this.visitPEI();
                 this.visitIBINOP(BINOP_DIV);
                 break;
             }
             case 0x6d: /* --- ldiv --- */ {
-		this.visitPEI();
+                this.visitPEI();
                 this.visitLBINOP(BINOP_DIV);
                 break;
             }
@@ -598,12 +598,12 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
                 break;
             }
             case 0x70: /* --- irem --- */ {
-		this.visitPEI();
+                this.visitPEI();
                 this.visitIBINOP(BINOP_REM);
                 break;
             }
             case 0x71: /* --- lrem --- */ {
-		this.visitPEI();
+                this.visitPEI();
                 this.visitLBINOP(BINOP_REM);
                 break;
             }
@@ -935,7 +935,7 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
                 break;
             }
             case 0xb2: /* --- getstatic --- */ {
-		this.visitPEI();
+                this.visitPEI();
                 char cpi = getUnsignedWord();
                 jq_StaticField f = clazz.getCPasStaticField(cpi);
                 jq_Type t = f.getType();
@@ -962,7 +962,7 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
                 break;
             }
             case 0xb3: /* --- putstatic --- */ {
-		this.visitPEI();
+                this.visitPEI();
                 char cpi = getUnsignedWord();
                 jq_StaticField f = clazz.getCPasStaticField(cpi);
                 jq_Type t = f.getType();
@@ -989,7 +989,7 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
                 break;
             }
             case 0xb4: /* --- getfield --- */ {
-		this.visitPEI();
+                this.visitPEI();
                 char cpi = getUnsignedWord();
                 jq_InstanceField f = clazz.getCPasInstanceField(cpi);
                 jq_Type t = f.getType();
@@ -1016,7 +1016,7 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
                 break;
             }
             case 0xb5: /* --- putfield --- */ {
-		this.visitPEI();
+                this.visitPEI();
                 char cpi = getUnsignedWord();
                 jq_InstanceField f = clazz.getCPasInstanceField(cpi);
                 jq_Type t = f.getType();
@@ -1043,7 +1043,7 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
                 break;
             }
             case 0xb6: /* --- invokevirtual --- */ {
-		this.visitPEI();
+                this.visitPEI();
                 char cpi = getUnsignedWord();
                 jq_InstanceMethod f = clazz.getCPasInstanceMethod(cpi);
                 jq_Type t = f.getReturnType();
@@ -1062,7 +1062,7 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
                 break;
             }
             case 0xb7: /* --- invokespecial --- */ {
-		this.visitPEI();
+                this.visitPEI();
                 char cpi = getUnsignedWord();
                 jq_InstanceMethod f = clazz.getCPasInstanceMethod(cpi);
                 jq_Type t = f.getReturnType();
@@ -1081,7 +1081,7 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
                 break;
             }
             case 0xb8: /* --- invokestatic --- */ {
-		this.visitPEI();
+                this.visitPEI();
                 char cpi = getUnsignedWord();
                 jq_StaticMethod f = clazz.getCPasStaticMethod(cpi);
                 jq_Type t = f.getReturnType();
@@ -1100,7 +1100,7 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
                 break;
             }
             case 0xb9: /* --- invokeinterface --- */ {
-		this.visitPEI();
+                this.visitPEI();
                 char cpi = getUnsignedWord();
                 jq_InstanceMethod f = clazz.getCPasInstanceMethod(cpi);
                 char nargs = getUnsignedByte();
@@ -1130,7 +1130,7 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
                 break;
             }
             case 0xbc: /* --- newarray --- */ {
-		this.visitPEI();
+                this.visitPEI();
                 byte atype = getSignedByte();
                 jq_Array array = jq_Array.getPrimitiveArrayType(atype);
                 array.load(); array.prepare();
@@ -1138,7 +1138,7 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
                 break;
             }
             case 0xbd: /* --- anewarray --- */ {
-		this.visitPEI();
+                this.visitPEI();
                 char cpi = getUnsignedWord();
                 jq_Type element = clazz.getCPasType(cpi);
                 jq_Array array = element.getArrayTypeForElementType();
@@ -1147,36 +1147,36 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
                 break;
             }
             case 0xbe: /* --- arraylength --- */ {
-		this.visitPEI();
+                this.visitPEI();
                 this.visitARRAYLENGTH();
                 break;
             }
             case 0xbf: /* --- athrow --- */ {
-		this.visitPEI();
+                this.visitPEI();
                 this.visitATHROW();
                 break;
             }
             case 0xc0: /* --- checkcast --- */ {
-		this.visitPEI();
+                this.visitPEI();
                 char cpi = getUnsignedWord();
                 jq_Type f = clazz.getCPasType(cpi);
                 this.visitCHECKCAST(f);
                 break;
             }
             case 0xc1: /* --- instanceof --- */ {
-		this.visitPEI();
+                this.visitPEI();
                 char cpi = getUnsignedWord();
                 jq_Type f = clazz.getCPasType(cpi);
                 this.visitINSTANCEOF(f);
                 break;
             }
             case 0xc2: /* --- monitorenter ---  */ {
-		this.visitPEI();
+                this.visitPEI();
                 this.visitMONITOR(MONITOR_ENTER);
                 break;
             }
             case 0xc3: /* --- monitorexit --- */ {
-		this.visitPEI();
+                this.visitPEI();
                 this.visitMONITOR(MONITOR_EXIT);
                 break;
             }
@@ -1239,7 +1239,7 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
                 break;
             }
             case 0xc5: /* --- multianewarray --- */ {
-		this.visitPEI();
+                this.visitPEI();
                 char cpi = getUnsignedWord();
                 char dim = getUnsignedByte();
                 jq_Type array = clazz.getCPasType(cpi);

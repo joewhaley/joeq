@@ -46,7 +46,7 @@ public class jq_NativeThread implements x86Constants {
      *  Must be the first thing called at virtual machine startup.
      */
     public static void initInitialNativeThread() {
-	initial_native_thread.pid = SystemInterface.init_thread();
+        initial_native_thread.pid = SystemInterface.init_thread();
         Unsafe.setThreadBlock(initial_native_thread.schedulerThread);
         initial_native_thread.thread_handle = SystemInterface.get_current_thread_handle();
         initial_native_thread.myHeapAllocator.init();
@@ -215,12 +215,12 @@ public class jq_NativeThread implements x86Constants {
     public static void endCurrentJavaThread() {
         jq_Thread t = Unsafe.getThreadBlock();
         if (TRACE) SystemInterface.debugmsg("Ending Java thread "+t);
-	t.disableThreadSwitch();
+        t.disableThreadSwitch();
         Unsafe.atomicSub(_num_of_java_threads.getAddress(), 1);
         if (t.isDaemon())
             Unsafe.atomicSub(_num_of_daemon_threads.getAddress(), 1);
         jq_NativeThread nt = t.getNativeThread();
-	Unsafe.setThreadBlock(nt.schedulerThread);
+        Unsafe.setThreadBlock(nt.schedulerThread);
         nt.currentThread = nt.schedulerThread;
         // long jump back to entry of schedulerLoop
         int ip = _schedulerLoop.getDefaultCompiledVersion().getEntrypoint();
@@ -235,18 +235,18 @@ public class jq_NativeThread implements x86Constants {
     /** The entry point for new native threads.
      */
     public void nativeThreadEntry() {
-	if (this != initial_native_thread)
-	    this.pid = SystemInterface.init_thread();
+        if (this != initial_native_thread)
+            this.pid = SystemInterface.init_thread();
         Unsafe.setThreadBlock(this.schedulerThread);
         jq.Assert(this.currentThread == this.schedulerThread);
         
-	if (USE_INTERRUPTER_THREAD) {
-	    // start up another native thread to periodically interrupt this one.
-	    jq_InterrupterThread it = new jq_InterrupterThread(this);
-	} else {
-	    // use setitimer
-	    SystemInterface.set_interval_timer(SystemInterface.ITIMER_VIRTUAL, 10);
-	}
+        if (USE_INTERRUPTER_THREAD) {
+            // start up another native thread to periodically interrupt this one.
+            jq_InterrupterThread it = new jq_InterrupterThread(this);
+        } else {
+            // use setitimer
+            SystemInterface.set_interval_timer(SystemInterface.ITIMER_VIRTUAL, 10);
+        }
         
         // store for longJump
         this.original_esp = Unsafe.ESP();
@@ -262,7 +262,7 @@ public class jq_NativeThread implements x86Constants {
     public void schedulerLoop() {
         // preemption cannot occur in the scheduler loop because the
         // schedulerThread has thread switching disabled.
-	jq.Assert(Unsafe.getThreadBlock() == this.schedulerThread);
+        jq.Assert(Unsafe.getThreadBlock() == this.schedulerThread);
         while (num_of_daemon_threads != num_of_java_threads) {
             jq.Assert(currentThread == schedulerThread);
             jq_Thread t = getNextReadyThread();
@@ -309,7 +309,7 @@ public class jq_NativeThread implements x86Constants {
             // only one thread!
             t2 = t1;
         } else {
-	    ip = t2.getRegisterState().Eip;
+            ip = t2.getRegisterState().Eip;
             if (TRACE) SystemInterface.debugmsg("New ready Java thread: "+t2+" ip: "+jq.hex8(ip)+" cc: "+CodeAllocator.getCodeContaining(ip));
             readyQueue.enqueue(t1);
             jq.Assert(!t2.isThreadSwitchEnabled());
@@ -323,7 +323,7 @@ public class jq_NativeThread implements x86Constants {
     public void threadSwitch(jq_Thread t2) {
         // thread switching for the current thread is disabled on entry.
         jq_Thread t1 = this.currentThread;
-	
+        
         Unsafe.setThreadBlock(this.schedulerThread);
         this.currentThread = this.schedulerThread;
         int/*CodeAddress*/ ip = Unsafe.peek(Unsafe.EBP()+4);
@@ -340,20 +340,20 @@ public class jq_NativeThread implements x86Constants {
         state.Eip = Unsafe.peek(state.Esp);
         state.Esp += 8;
         
-	if (t1 != t2) {
-	    // find given thread in our queue.
-	    boolean exists = readyQueue.remove(t2);
-	    jq.Assert(exists);
-	    transferExtraWork();
-	    ip = t2.getRegisterState().Eip;
-	    if (TRACE) SystemInterface.debugmsg("New ready Java thread: "+t2+" ip: "+jq.hex8(ip)+" cc: "+CodeAllocator.getCodeContaining(ip));
-	    readyQueue.enqueue(t1);
-	    jq.Assert(!t2.isThreadSwitchEnabled());
-	} else {
-	    transferExtraWork();
-	}
-	currentThread = t2;
-	SystemInterface.set_current_context(t2, t2.getRegisterState());
+        if (t1 != t2) {
+            // find given thread in our queue.
+            boolean exists = readyQueue.remove(t2);
+            jq.Assert(exists);
+            transferExtraWork();
+            ip = t2.getRegisterState().Eip;
+            if (TRACE) SystemInterface.debugmsg("New ready Java thread: "+t2+" ip: "+jq.hex8(ip)+" cc: "+CodeAllocator.getCodeContaining(ip));
+            readyQueue.enqueue(t1);
+            jq.Assert(!t2.isThreadSwitchEnabled());
+        } else {
+            transferExtraWork();
+        }
+        currentThread = t2;
+        SystemInterface.set_current_context(t2, t2.getRegisterState());
         jq.UNREACHABLE();
     }
 
@@ -425,7 +425,7 @@ public class jq_NativeThread implements x86Constants {
         break_nthread = new jq_NativeThread(-1);
         Thread t = new Thread("_break_");
         break_jthread = ClassLibInterface.i.getJQThread(t);
-	break_jthread.disableThreadSwitch();
+        break_jthread.disableThreadSwitch();
         break_jthread.setNativeThread(break_nthread);
         if (TRACE) SystemInterface.debugmsg("Break thread initialized");
     }

@@ -1,5 +1,5 @@
 /*
- * @(#)JDK14AbstractMap.java	1.32 01/12/03
+ * @(#)JDK14AbstractMap.java    1.32 01/12/03
  *
  * Copyright 2002 Sun Microsystems, Inc. All rights reserved.
  * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
@@ -61,7 +61,7 @@ public abstract class JDK14AbstractMap implements Map {
      * @return the number of key-value mappings in this map.
      */
     public int size() {
-	return entrySet().size();
+        return entrySet().size();
     }
 
     /**
@@ -72,7 +72,7 @@ public abstract class JDK14AbstractMap implements Map {
      * @return <tt>true</tt> if this map contains no key-value mappings.
      */
     public boolean isEmpty() {
-	return size() == 0;
+        return size() == 0;
     }
 
     /**
@@ -93,21 +93,21 @@ public abstract class JDK14AbstractMap implements Map {
      * @return <tt>true</tt> if this map maps one or more keys to this value.
      */
     public boolean containsValue(Object value) {
-	Iterator i = entrySet().iterator();
-	if (value==null) {
-	    while (i.hasNext()) {
-		Entry e = (Entry) i.next();
-		if (e.getValue()==null)
-		    return true;
-	    }
-	} else {
-	    while (i.hasNext()) {
-		Entry e = (Entry) i.next();
-		if (value.equals(e.getValue()))
-		    return true;
-	    }
-	}
-	return false;
+        Iterator i = entrySet().iterator();
+        if (value==null) {
+            while (i.hasNext()) {
+                Entry e = (Entry) i.next();
+                if (e.getValue()==null)
+                    return true;
+            }
+        } else {
+            while (i.hasNext()) {
+                Entry e = (Entry) i.next();
+                if (value.equals(e.getValue()))
+                    return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -129,21 +129,21 @@ public abstract class JDK14AbstractMap implements Map {
      *            not permit <tt>null</tt> keys.
      */
     public boolean containsKey(Object key) {
-	Iterator i = entrySet().iterator();
-	if (key==null) {
-	    while (i.hasNext()) {
-		Entry e = (Entry) i.next();
-		if (e.getKey()==null)
-		    return true;
-	    }
-	} else {
-	    while (i.hasNext()) {
-		Entry e = (Entry) i.next();
-		if (key.equals(e.getKey()))
-		    return true;
-	    }
-	}
-	return false;
+        Iterator i = entrySet().iterator();
+        if (key==null) {
+            while (i.hasNext()) {
+                Entry e = (Entry) i.next();
+                if (e.getKey()==null)
+                    return true;
+            }
+        } else {
+            while (i.hasNext()) {
+                Entry e = (Entry) i.next();
+                if (key.equals(e.getKey()))
+                    return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -165,26 +165,26 @@ public abstract class JDK14AbstractMap implements Map {
      * @return the value to which this map maps the specified key.
      * 
      * @throws NullPointerException if the key is <tt>null</tt> and this map
-     *		  does not not permit <tt>null</tt> keys.
+     *            does not not permit <tt>null</tt> keys.
      * 
      * @see #containsKey(Object)
      */
     public Object get(Object key) {
-	Iterator i = entrySet().iterator();
-	if (key==null) {
-	    while (i.hasNext()) {
-		Entry e = (Entry) i.next();
-		if (e.getKey()==null)
-		    return e.getValue();
-	    }
-	} else {
-	    while (i.hasNext()) {
-		Entry e = (Entry) i.next();
-		if (key.equals(e.getKey()))
-		    return e.getValue();
-	    }
-	}
-	return null;
+        Iterator i = entrySet().iterator();
+        if (key==null) {
+            while (i.hasNext()) {
+                Entry e = (Entry) i.next();
+                if (e.getKey()==null)
+                    return e.getValue();
+            }
+        } else {
+            while (i.hasNext()) {
+                Entry e = (Entry) i.next();
+                if (key.equals(e.getKey()))
+                    return e.getValue();
+            }
+        }
+        return null;
     }
 
 
@@ -202,16 +202,16 @@ public abstract class JDK14AbstractMap implements Map {
      * @param value value to be associated with the specified key.
      * 
      * @return previous value associated with specified key, or <tt>null</tt>
-     *	       if there was no mapping for key.  (A <tt>null</tt> return can
-     *	       also indicate that the map previously associated <tt>null</tt>
-     *	       with the specified key, if the implementation supports
-     *	       <tt>null</tt> values.)
+     *         if there was no mapping for key.  (A <tt>null</tt> return can
+     *         also indicate that the map previously associated <tt>null</tt>
+     *         with the specified key, if the implementation supports
+     *         <tt>null</tt> values.)
      * 
      * @throws UnsupportedOperationException if the <tt>put</tt> operation is
-     *	          not supported by this map.
+     *            not supported by this map.
      * 
      * @throws ClassCastException if the class of the specified key or value
-     * 	          prevents it from being stored in this map.
+     *            prevents it from being stored in this map.
      * 
      * @throws IllegalArgumentException if some aspect of this key or value *
      *            prevents it from being stored in this map.
@@ -221,7 +221,7 @@ public abstract class JDK14AbstractMap implements Map {
      *            <tt>null</tt>.
      */
     public Object put(Object key, Object value) {
-	throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -244,36 +244,36 @@ public abstract class JDK14AbstractMap implements Map {
      *
      * @param key key whose mapping is to be removed from the map.
      * @return previous value associated with specified key, or <tt>null</tt>
-     *	       if there was no entry for key.  (A <tt>null</tt> return can
-     *	       also indicate that the map previously associated <tt>null</tt>
-     *	       with the specified key, if the implementation supports
-     *	       <tt>null</tt> values.)
+     *         if there was no entry for key.  (A <tt>null</tt> return can
+     *         also indicate that the map previously associated <tt>null</tt>
+     *         with the specified key, if the implementation supports
+     *         <tt>null</tt> values.)
      * @throws UnsupportedOperationException if the <tt>remove</tt> operation
-     * 		  is not supported by this map.
+     *            is not supported by this map.
      */
     public Object remove(Object key) {
-	Iterator i = entrySet().iterator();
-	Entry correctEntry = null;
-	if (key==null) {
-	    while (correctEntry==null && i.hasNext()) {
-		Entry e = (Entry) i.next();
-		if (e.getKey()==null)
-		    correctEntry = e;
-	    }
-	} else {
-	    while (correctEntry==null && i.hasNext()) {
-		Entry e = (Entry) i.next();
-		if (key.equals(e.getKey()))
-		    correctEntry = e;
-	    }
-	}
+        Iterator i = entrySet().iterator();
+        Entry correctEntry = null;
+        if (key==null) {
+            while (correctEntry==null && i.hasNext()) {
+                Entry e = (Entry) i.next();
+                if (e.getKey()==null)
+                    correctEntry = e;
+            }
+        } else {
+            while (correctEntry==null && i.hasNext()) {
+                Entry e = (Entry) i.next();
+                if (key.equals(e.getKey()))
+                    correctEntry = e;
+            }
+        }
 
-	Object oldValue = null;
-	if (correctEntry !=null) {
-	    oldValue = correctEntry.getValue();
-	    i.remove();
-	}
-	return oldValue;
+        Object oldValue = null;
+        if (correctEntry !=null) {
+            oldValue = correctEntry.getValue();
+            i.remove();
+        }
+        return oldValue;
     }
 
 
@@ -295,23 +295,23 @@ public abstract class JDK14AbstractMap implements Map {
      * @param t mappings to be stored in this map.
      * 
      * @throws UnsupportedOperationException if the <tt>putAll</tt> operation
-     * 		  is not supported by this map.
+     *            is not supported by this map.
      * 
      * @throws ClassCastException if the class of a key or value in the
-     * 	          specified map prevents it from being stored in this map.
+     *            specified map prevents it from being stored in this map.
      * 
      * @throws IllegalArgumentException if some aspect of a key or value in
-     *	          the specified map prevents it from being stored in this map.
+     *            the specified map prevents it from being stored in this map.
      * @throws NullPointerException the specified map is <tt>null</tt>, or if
      *         this map does not permit <tt>null</tt> keys or values, and the
      *         specified map contains <tt>null</tt> keys or values.
      */
     public void putAll(Map t) {
-	Iterator i = t.entrySet().iterator();
-	while (i.hasNext()) {
-	    Entry e = (Entry) i.next();
-	    put(e.getKey(), e.getValue());
-	}
+        Iterator i = t.entrySet().iterator();
+        while (i.hasNext()) {
+            Entry e = (Entry) i.next();
+            put(e.getKey(), e.getValue());
+        }
     }
 
     /**
@@ -324,10 +324,10 @@ public abstract class JDK14AbstractMap implements Map {
      * does not support the <tt>clear</tt> operation.
      *
      * @throws    UnsupportedOperationException clear is not supported
-     * 		  by this map.
+     *            by this map.
      */
     public void clear() {
-	entrySet().clear();
+        entrySet().clear();
     }
 
 
@@ -365,36 +365,36 @@ public abstract class JDK14AbstractMap implements Map {
      * @return a Set view of the keys contained in this map.
      */
     public Set keySet() {
-	if (keySet == null) {
-	    keySet = new AbstractSet() {
-		public Iterator iterator() {
-		    return new Iterator() {
-			private Iterator i = entrySet().iterator();
+        if (keySet == null) {
+            keySet = new AbstractSet() {
+                public Iterator iterator() {
+                    return new Iterator() {
+                        private Iterator i = entrySet().iterator();
 
-			public boolean hasNext() {
-			    return i.hasNext();
-			}
+                        public boolean hasNext() {
+                            return i.hasNext();
+                        }
 
-			public Object next() {
-			    return ((Entry)i.next()).getKey();
-			}
+                        public Object next() {
+                            return ((Entry)i.next()).getKey();
+                        }
 
-			public void remove() {
-			    i.remove();
-			}
+                        public void remove() {
+                            i.remove();
+                        }
                     };
-		}
+                }
 
-		public int size() {
-		    return JDK14AbstractMap.this.size();
-		}
+                public int size() {
+                    return JDK14AbstractMap.this.size();
+                }
 
-		public boolean contains(Object k) {
-		    return JDK14AbstractMap.this.containsKey(k);
-		}
-	    };
-	}
-	return keySet;
+                public boolean contains(Object k) {
+                    return JDK14AbstractMap.this.containsKey(k);
+                }
+            };
+        }
+        return keySet;
     }
 
     /**
@@ -422,36 +422,36 @@ public abstract class JDK14AbstractMap implements Map {
      * @return a collection view of the values contained in this map.
      */
     public Collection values() {
-	if (values == null) {
-	    values = new AbstractCollection() {
-		public Iterator iterator() {
-		    return new Iterator() {
-			private Iterator i = entrySet().iterator();
+        if (values == null) {
+            values = new AbstractCollection() {
+                public Iterator iterator() {
+                    return new Iterator() {
+                        private Iterator i = entrySet().iterator();
 
-			public boolean hasNext() {
-			    return i.hasNext();
-			}
+                        public boolean hasNext() {
+                            return i.hasNext();
+                        }
 
-			public Object next() {
-			    return ((Entry)i.next()).getValue();
-			}
+                        public Object next() {
+                            return ((Entry)i.next()).getValue();
+                        }
 
-			public void remove() {
-			    i.remove();
-			}
+                        public void remove() {
+                            i.remove();
+                        }
                     };
                 }
 
-		public int size() {
-		    return JDK14AbstractMap.this.size();
-		}
+                public int size() {
+                    return JDK14AbstractMap.this.size();
+                }
 
-		public boolean contains(Object v) {
-		    return JDK14AbstractMap.this.containsValue(v);
-		}
-	    };
-	}
-	return values;
+                public boolean contains(Object v) {
+                    return JDK14AbstractMap.this.containsValue(v);
+                }
+            };
+        }
+        return values;
     }
 
     /**
@@ -496,14 +496,14 @@ public abstract class JDK14AbstractMap implements Map {
      * @return <tt>true</tt> if the specified object is equal to this map.
      */
     public boolean equals(Object o) {
-	if (o == this)
-	    return true;
+        if (o == this)
+            return true;
 
-	if (!(o instanceof Map))
-	    return false;
-	Map t = (Map) o;
-	if (t.size() != size())
-	    return false;
+        if (!(o instanceof Map))
+            return false;
+        Map t = (Map) o;
+        if (t.size() != size())
+            return false;
 
         try {
             Iterator i = entrySet().iterator();
@@ -525,7 +525,7 @@ public abstract class JDK14AbstractMap implements Map {
             return false;
         }
 
-	return true;
+        return true;
     }
 
     /**
@@ -547,11 +547,11 @@ public abstract class JDK14AbstractMap implements Map {
      * @see Set#equals(Object)
      */
     public int hashCode() {
-	int h = 0;
-	Iterator i = entrySet().iterator();
-	while (i.hasNext())
-	    h += i.next().hashCode();
-	return h;
+        int h = 0;
+        Iterator i = entrySet().iterator();
+        while (i.hasNext())
+            h += i.next().hashCode();
+        return h;
     }
 
     /**
@@ -574,13 +574,13 @@ public abstract class JDK14AbstractMap implements Map {
      * @return a String representation of this map.
      */
     public String toString() {
-	StringBuffer buf = new StringBuffer();
-	buf.append("{");
+        StringBuffer buf = new StringBuffer();
+        buf.append("{");
 
-	Iterator i = entrySet().iterator();
+        Iterator i = entrySet().iterator();
         boolean hasNext = i.hasNext();
         while (hasNext) {
-	    Entry e = (Entry) (i.next());
+            Entry e = (Entry) (i.next());
             Object key = e.getKey();
             Object value = e.getValue();
             buf.append((key == this ?  "(this Map)" : key) + "=" + 
@@ -591,8 +591,8 @@ public abstract class JDK14AbstractMap implements Map {
                 buf.append(", ");
         }
 
-	buf.append("}");
-	return buf.toString();
+        buf.append("}");
+        return buf.toString();
     }
     
     /**
@@ -613,49 +613,49 @@ public abstract class JDK14AbstractMap implements Map {
      * the task of implementing Map.
      */
     static class SimpleEntry implements Entry {
-	Object key;
-	Object value;
+        Object key;
+        Object value;
 
-	public SimpleEntry(Object key, Object value) {
-	    this.key   = key;
+        public SimpleEntry(Object key, Object value) {
+            this.key   = key;
             this.value = value;
-	}
+        }
 
-	public SimpleEntry(Map.Entry e) {
-	    this.key   = e.getKey();
+        public SimpleEntry(Map.Entry e) {
+            this.key   = e.getKey();
             this.value = e.getValue();
-	}
+        }
 
-	public Object getKey() {
-	    return key;
-	}
+        public Object getKey() {
+            return key;
+        }
 
-	public Object getValue() {
-	    return value;
-	}
+        public Object getValue() {
+            return value;
+        }
 
-	public Object setValue(Object value) {
-	    Object oldValue = this.value;
-	    this.value = value;
-	    return oldValue;
-	}
+        public Object setValue(Object value) {
+            Object oldValue = this.value;
+            this.value = value;
+            return oldValue;
+        }
 
-	public boolean equals(Object o) {
-	    if (!(o instanceof Map.Entry))
-		return false;
-	    Map.Entry e = (Map.Entry)o;
-	    return eq(key, e.getKey()) &&  eq(value, e.getValue());
-	}
+        public boolean equals(Object o) {
+            if (!(o instanceof Map.Entry))
+                return false;
+            Map.Entry e = (Map.Entry)o;
+            return eq(key, e.getKey()) &&  eq(value, e.getValue());
+        }
 
-	public int hashCode() {
-	    Object v;
-	    return ((key   == null)   ? 0 :   key.hashCode()) ^
-		   ((value == null)   ? 0 : value.hashCode());
-	}
+        public int hashCode() {
+            Object v;
+            return ((key   == null)   ? 0 :   key.hashCode()) ^
+                   ((value == null)   ? 0 : value.hashCode());
+        }
 
-	public String toString() {
-	    return key + "=" + value;
-	}
+        public String toString() {
+            return key + "=" + value;
+        }
 
         private static boolean eq(Object o1, Object o2) {
             return (o1 == null ? o2 == null : o1.equals(o2));

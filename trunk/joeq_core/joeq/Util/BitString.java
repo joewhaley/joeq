@@ -598,50 +598,50 @@ public final class BitString implements Cloneable, java.io.Serializable {
         private int j, k, t;
         
         BackwardBitStringIterator(int i) {
-	    if (TRACE) System.out.println("BackwardBitStringIterator for "+BitString.this);
+            if (TRACE) System.out.println("BackwardBitStringIterator for "+BitString.this);
             j = subscript(i);
             t = bits[j];
             t &= (1 << ((i+1) & MASK)) - 1;
             k = j << BITS_PER_UNIT;
-	    if (TRACE) System.out.println("BackwardBitStringIterator i="+i+" j="+j+" t="+jq.hex(t)+" k="+k);
+            if (TRACE) System.out.println("BackwardBitStringIterator i="+i+" j="+j+" t="+jq.hex(t)+" k="+k);
         }
         
         BackwardBitStringIterator() {
-	    if (TRACE) System.out.println("BackwardBitStringIterator for "+BitString.this);
+            if (TRACE) System.out.println("BackwardBitStringIterator for "+BitString.this);
             j = bits.length-1;
             t = bits[j];
             k = j << BITS_PER_UNIT;
-	    if (TRACE) System.out.println("BackwardBitStringIterator j="+j+" t="+jq.hex(t)+" k="+k);
+            if (TRACE) System.out.println("BackwardBitStringIterator j="+j+" t="+jq.hex(t)+" k="+k);
         }
         
         public boolean hasNext() {
             while (t == 0) {
-		if (TRACE) System.out.println("BackwardBitStringIterator: t == 0");
+                if (TRACE) System.out.println("BackwardBitStringIterator: t == 0");
                 if (j == 0) {
-		    if (TRACE) System.out.println("BackwardBitStringIterator: j == 0 -> the end");
-		    return false;
-		}
+                    if (TRACE) System.out.println("BackwardBitStringIterator: j == 0 -> the end");
+                    return false;
+                }
                 t = bits[--j];
                 k -= 1 << BITS_PER_UNIT;
-		if (TRACE) System.out.println("BackwardBitStringIterator: t = "+jq.hex(t)+" j = "+j+" k = "+k);
+                if (TRACE) System.out.println("BackwardBitStringIterator: t = "+jq.hex(t)+" j = "+j+" k = "+k);
             }
             return true;
         }
         
         public int nextIndex() {
             while (t == 0) {
-		if (TRACE) System.out.println("BackwardBitStringIterator: t = 0");
+                if (TRACE) System.out.println("BackwardBitStringIterator: t = 0");
                 if (j == 0) throw new java.util.NoSuchElementException();
                 t = bits[--j];
                 k -= 1 << BITS_PER_UNIT;
-		if (TRACE) System.out.println("BackwardBitStringIterator: t = "+jq.hex(t)+" j = "+j+" k = "+k);
+                if (TRACE) System.out.println("BackwardBitStringIterator: t = "+jq.hex(t)+" j = "+j+" k = "+k);
             }
             int index = bsr(t) - 1;
             t &= ~(1 << index);
-	    if (TRACE) System.out.println("BackwardBitStringIterator: t="+jq.hex(t)+" index="+index+" k="+k);
+            if (TRACE) System.out.println("BackwardBitStringIterator: t="+jq.hex(t)+" index="+index+" k="+k);
             return k + index;
         }
         
-	public static final boolean TRACE = false;
+        public static final boolean TRACE = false;
     }
 }

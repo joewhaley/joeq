@@ -164,9 +164,9 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
         IdentityHashCodeWrapper k = IdentityHashCodeWrapper.create(o);
         Entry e = (Entry)hash.get(k);
         if (e == null) {
-	    System.err.println("Unknown object of type: "+o.getClass()+" address: "+jq.hex(System.identityHashCode(o))+" value: "+o);
+            System.err.println("Unknown object of type: "+o.getClass()+" address: "+jq.hex(System.identityHashCode(o))+" value: "+o);
             if (IGNORE_UNKNOWN_OBJECTS) return 0;
-	    throw new UnknownObjectException(o);
+            throw new UnknownObjectException(o);
         }
         Class objType = o.getClass();
         jq_Reference type = (jq_Reference)Reflection.getJQType(objType);
@@ -679,23 +679,23 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
             jq_Type t = (jq_Type)i.next();
             if (t.isReferenceType()) {
                 if (t == Unsafe._class) continue;
-		try {
-		    if (TRACE) System.out.println("Adding vtable relocs for: "+t);
-		    int[] vtable = (int[])((jq_Reference)t).getVTable();
-		    int/*HeapAddress*/ addr = getAddressOf(vtable);
-		    //jq.Assert(vtable[0] != 0, t.toString());
-		    Heap2HeapReference r1 = new Heap2HeapReference(addr, vtable[0]);
-		    list.add(r1);
-		    for (int j=1; j<vtable.length; ++j) {
-			Heap2CodeReference r2 = new Heap2CodeReference(addr+(j*4), vtable[j]);
-			list.add(r2);
-		    }
-		    total += vtable.length;
-		} catch (UnknownObjectException x) {
-		    x.appendMessage("vtable for "+t);
-		    x.setObject(null);
-		    throw x;
-		}
+                try {
+                    if (TRACE) System.out.println("Adding vtable relocs for: "+t);
+                    int[] vtable = (int[])((jq_Reference)t).getVTable();
+                    int/*HeapAddress*/ addr = getAddressOf(vtable);
+                    //jq.Assert(vtable[0] != 0, t.toString());
+                    Heap2HeapReference r1 = new Heap2HeapReference(addr, vtable[0]);
+                    list.add(r1);
+                    for (int j=1; j<vtable.length; ++j) {
+                        Heap2CodeReference r2 = new Heap2CodeReference(addr+(j*4), vtable[j]);
+                        list.add(r2);
+                    }
+                    total += vtable.length;
+                } catch (UnknownObjectException x) {
+                    x.appendMessage("vtable for "+t);
+                    x.setObject(null);
+                    throw x;
+                }
             }
         }
         return total;
@@ -750,14 +750,14 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
         out.flush();
         
         // write data section
-	try {
-	    dumpHeap(out);
-	} catch (UnknownObjectException x) {
-	    Object u = x.getObject();
-	    HashSet visited = new HashSet();
-	    findReferencePath(u, x, visited);
-	    throw x;
-	}
+        try {
+            dumpHeap(out);
+        } catch (UnknownObjectException x) {
+            Object u = x.getObject();
+            HashSet visited = new HashSet();
+            findReferencePath(u, x, visited);
+            throw x;
+        }
         
         // write data relocs
         if (ndatareloc > 65535) {
@@ -793,34 +793,34 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
     }
 
     private jq_StaticField searchStaticVariables(Object p) {
-	Iterator i = PrimordialClassLoader.loader.getAllTypes().iterator();
-	while (i.hasNext()) {
-	    Object o = i.next();
-	    if (!(o instanceof jq_Class)) continue;
-	    jq_Class k = (jq_Class)o;
-	    if (!k.isLoaded()) continue;
-	    jq_StaticField[] fs = k.getDeclaredStaticFields();
-	    for (int j=0; j<fs.length; ++j) {	
-		jq_StaticField f = fs[j];
-		Object val = obj_trav.getStaticFieldValue(f);
-		if (val == p) return f;
-	    }
-	}
-	return null;
+        Iterator i = PrimordialClassLoader.loader.getAllTypes().iterator();
+        while (i.hasNext()) {
+            Object o = i.next();
+            if (!(o instanceof jq_Class)) continue;
+            jq_Class k = (jq_Class)o;
+            if (!k.isLoaded()) continue;
+            jq_StaticField[] fs = k.getDeclaredStaticFields();
+            for (int j=0; j<fs.length; ++j) {   
+                jq_StaticField f = fs[j];
+                Object val = obj_trav.getStaticFieldValue(f);
+                if (val == p) return f;
+            }
+        }
+        return null;
     }
 
     private boolean findReferencePath(Object p, UnknownObjectException x, HashSet visited) {
-	jq_StaticField sf = searchStaticVariables(p);
-	if (sf != null) {
-	    x.appendMessage(sf.getDeclaringClass()+"."+sf.getName());
-	    return true;
-	}
+        jq_StaticField sf = searchStaticVariables(p);
+        if (sf != null) {
+            x.appendMessage(sf.getDeclaringClass()+"."+sf.getName());
+            return true;
+        }
         Iterator i = entries.iterator();
         while (i.hasNext()) {
             Entry e = (Entry)i.next();
             Object o = e.getObject();
-	    IdentityHashCodeWrapper w = IdentityHashCodeWrapper.create(o);
-	    if (visited.contains(w)) continue;
+            IdentityHashCodeWrapper w = IdentityHashCodeWrapper.create(o);
+            if (visited.contains(w)) continue;
             Class objType = o.getClass();
             jq_Reference jqType = (jq_Reference)Reflection.getJQType(objType);
             if (jqType.isArrayType()) {
@@ -830,16 +830,16 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
                     Object[] v = (Object[])o;
                     for (int k=0; k<length; ++k) {
                         Object o2 = obj_trav.mapValue(v[k]);
-			if (o2 == p) {
-			    System.err.println("Possible path: ["+k+"]");
-			    visited.add(w);
-			    if (findReferencePath(o, x, visited)) {
-				x.appendMessage("["+k+"]");
-				return true;
-			    } else {
-				System.err.println("Backtracking ["+k+"]");
-			    }
-			}
+                        if (o2 == p) {
+                            System.err.println("Possible path: ["+k+"]");
+                            visited.add(w);
+                            if (findReferencePath(o, x, visited)) {
+                                x.appendMessage("["+k+"]");
+                                return true;
+                            } else {
+                                System.err.println("Backtracking ["+k+"]");
+                            }
+                        }
                     }
                 }
             } else {
@@ -852,20 +852,20 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
                     if (ftype.isReferenceType()) {
                         Object val = obj_trav.getInstanceFieldValue(o, f);
                         if (val == p) {
-			    System.err.println("Possible path: ."+f.getName());
-			    visited.add(w);
-			    if (findReferencePath(o, x, visited)) {
-				x.appendMessage("."+f.getName());
-				return true;
-			    } else {
-				System.err.println("Backtracking ."+f.getName());
-			    }
+                            System.err.println("Possible path: ."+f.getName());
+                            visited.add(w);
+                            if (findReferencePath(o, x, visited)) {
+                                x.appendMessage("."+f.getName());
+                                return true;
+                            } else {
+                                System.err.println("Backtracking ."+f.getName());
+                            }
                         }
                     }
                 }
             }
-	}
-	return false;
+        }
+        return false;
     }
     
     private void dumpHeap(OutputStream out)
@@ -891,12 +891,12 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
                 return;
             }
             int vtable;
-	    try { vtable = getAddressOf(jqType.getVTable()); }
-	    catch (UnknownObjectException x) {
-		x.appendMessage("vtable for "+jqType);	
-		x.setObject(null);
-		throw x;
-	    }
+            try { vtable = getAddressOf(jqType.getVTable()); }
+            catch (UnknownObjectException x) {
+                x.appendMessage("vtable for "+jqType);  
+                x.setObject(null);
+                throw x;
+            }
             if (jqType.isArrayType()) {
                 while (currentAddr+ARRAY_HEADER_SIZE < addr) {
                     write_char(out, (byte)0); ++currentAddr;
@@ -961,7 +961,7 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
                             //x.setObject(v);
                             throw x;
                         }
-		    }
+                    }
                     currentAddr += length << 2;
                 }
             } else {
@@ -1149,47 +1149,47 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
         SymbolTableEntry textsyment = new SymbolTableEntry("", 0, 0, SymbolTableEntry.STB_LOCAL, SymbolTableEntry.STT_SECTION, text);
         SymbolTableEntry datasyment = new SymbolTableEntry("", 0, 0, SymbolTableEntry.STB_LOCAL, SymbolTableEntry.STT_SECTION, data);
         symtab.addSymbol(textsyment);
-	symtab.addSymbol(datasyment);
+        symtab.addSymbol(datasyment);
 
         Iterator it = exts.iterator();
         while (it.hasNext()) {
             ExternalReference r = (ExternalReference)it.next();
             SymbolTableEntry e = new SymbolTableEntry(r.getName(), 0, 0, SymbolTableEntry.STB_GLOBAL, SymbolTableEntry.STT_FUNC, empty);
             symtab.addSymbol(e);
-	    datarel.addReloc(new RelocEntry(r.getAddress(), e, RelocEntry.R_386_32));
+            datarel.addReloc(new RelocEntry(r.getAddress(), e, RelocEntry.R_386_32));
         }
 
         it = CodeAllocator.getCompiledMethods();
         while (it.hasNext()) {
             jq_CompiledCode cc = (jq_CompiledCode)it.next();
-	    jq_Method m = cc.getMethod();
-	    String name;
-	    if (m == null) {
-		name = "unknown@"+jq.hex8(cc.getEntrypoint());
-	    } else {
-		name = mungeMemberName(m);
-	    }
-	    SymbolTableEntry e = new SymbolTableEntry(name, cc.getEntrypoint(), cc.getLength(), STB_LOCAL, STT_FUNC, text);
-	    symtab.addSymbol(e);
+            jq_Method m = cc.getMethod();
+            String name;
+            if (m == null) {
+                name = "unknown@"+jq.hex8(cc.getEntrypoint());
+            } else {
+                name = mungeMemberName(m);
+            }
+            SymbolTableEntry e = new SymbolTableEntry(name, cc.getEntrypoint(), cc.getLength(), STB_LOCAL, STT_FUNC, text);
+            symtab.addSymbol(e);
         }
 
-	{
-	    jq_CompiledCode cc = rootm.getDefaultCompiledVersion();
-	    SymbolTableEntry e = new SymbolTableEntry("entry", cc.getEntrypoint(), cc.getLength(), STB_GLOBAL, STT_FUNC, text);
-	    symtab.addSymbol(e);
+        {
+            jq_CompiledCode cc = rootm.getDefaultCompiledVersion();
+            SymbolTableEntry e = new SymbolTableEntry("entry", cc.getEntrypoint(), cc.getLength(), STB_GLOBAL, STT_FUNC, text);
+            symtab.addSymbol(e);
 
-	    cc = ExceptionDeliverer._trap_handler.getDefaultCompiledVersion();
-	    e = new SymbolTableEntry("trap_handler", cc.getEntrypoint(), cc.getLength(), STB_GLOBAL, STT_FUNC, text);
-	    symtab.addSymbol(e);
+            cc = ExceptionDeliverer._trap_handler.getDefaultCompiledVersion();
+            e = new SymbolTableEntry("trap_handler", cc.getEntrypoint(), cc.getLength(), STB_GLOBAL, STT_FUNC, text);
+            symtab.addSymbol(e);
 
-	    cc = jq_NativeThread._threadSwitch.getDefaultCompiledVersion();
-	    e = new SymbolTableEntry("threadSwitch", cc.getEntrypoint(), cc.getLength(), STB_GLOBAL, STT_FUNC, text);
-	    symtab.addSymbol(e);
+            cc = jq_NativeThread._threadSwitch.getDefaultCompiledVersion();
+            e = new SymbolTableEntry("threadSwitch", cc.getEntrypoint(), cc.getLength(), STB_GLOBAL, STT_FUNC, text);
+            symtab.addSymbol(e);
 
-	    cc = jq_NativeThread._ctrl_break_handler.getDefaultCompiledVersion();
-	    e = new SymbolTableEntry("ctrl_break_handler", cc.getEntrypoint(), cc.getLength(), STB_GLOBAL, STT_FUNC, text);
-	    symtab.addSymbol(e);
-	}
+            cc = jq_NativeThread._ctrl_break_handler.getDefaultCompiledVersion();
+            e = new SymbolTableEntry("ctrl_break_handler", cc.getEntrypoint(), cc.getLength(), STB_GLOBAL, STT_FUNC, text);
+            symtab.addSymbol(e);
+        }
 
         it = text_relocs.iterator();
         while (it.hasNext()) {
@@ -1212,7 +1212,7 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
                 Heap2CodeReference cr = (Heap2CodeReference)r;
                 datarel.addReloc(new RelocEntry(cr.getFrom(), textsyment, RelocEntry.R_386_32));
             } else if (r instanceof ExternalReference) {
-		// already done.
+                // already done.
             } else {
                 jq.UNREACHABLE(r.toString());
             }
@@ -1264,8 +1264,8 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
 class UnknownObjectException extends RuntimeException {
     Object o; String message;
     UnknownObjectException(Object o) {
-	this.o = o;
-	this.message = "type: "+o.getClass()+" address: "+jq.hex(System.identityHashCode(o))+" ";
+        this.o = o;
+        this.message = "type: "+o.getClass()+" address: "+jq.hex(System.identityHashCode(o))+" ";
     }
     public void setObject(Object o) { this.o = o; }
     public Object getObject() { return o; }

@@ -21,34 +21,34 @@ public abstract class System {
     private native static void setErr0(java.io.PrintStream err);
 
     public static java.lang.String mapLibraryName(java.lang.String libname) {
-	return libname; // TODO.
+        return libname; // TODO.
     }
 
     /***
     public static void initializeSystemClass() {
-	props = new java.util.Properties();
-	initProperties(props);
-	sun.misc.Version.init();
-	java.io.FileInputStream fdIn = new java.io.FileInputStream(java.io.FileDescriptor.in);
-	java.io.FileOutputStream fdOut = new java.io.FileOutputStream(java.io.FileDescriptor.out);
-	java.io.FileOutputStream fdErr = new java.io.FileOutputStream(java.io.FileDescriptor.err);
-	setIn0(new java.io.BufferedInputStream(fdIn));
-	setOut0(new java.io.PrintStream(new java.io.BufferedOutputStream(fdOut, 128), true));
-	setErr0(new java.io.PrintStream(new java.io.BufferedOutputStream(fdErr, 128), true));
+        props = new java.util.Properties();
+        initProperties(props);
+        sun.misc.Version.init();
+        java.io.FileInputStream fdIn = new java.io.FileInputStream(java.io.FileDescriptor.in);
+        java.io.FileOutputStream fdOut = new java.io.FileOutputStream(java.io.FileDescriptor.out);
+        java.io.FileOutputStream fdErr = new java.io.FileOutputStream(java.io.FileDescriptor.err);
+        setIn0(new java.io.BufferedInputStream(fdIn));
+        setOut0(new java.io.PrintStream(new java.io.BufferedOutputStream(fdOut, 128), true));
+        setErr0(new java.io.PrintStream(new java.io.BufferedOutputStream(fdErr, 128), true));
 
-	//try {
-	//    java.util.logging.LogManager.getLogManager().readConfiguration();
-	//} catch (java.lang.Exception ex) {
-	//}
+        //try {
+        //    java.util.logging.LogManager.getLogManager().readConfiguration();
+        //} catch (java.lang.Exception ex) {
+        //}
 
-	//loadLibrary("zip");
+        //loadLibrary("zip");
 
-	//sun.misc.VM.booted();
+        //sun.misc.VM.booted();
     }
     ***/
     public static void loadLibrary(String libname) {
-	if (libname.equals("zip")) return;
-	Runtime.getRuntime().loadLibrary0(getCallerClass(), libname);
+        if (libname.equals("zip")) return;
+        Runtime.getRuntime().loadLibrary0(getCallerClass(), libname);
     }
     native static Class getCallerClass();
 
@@ -92,7 +92,7 @@ public abstract class System {
         props.setProperty("user.name", "jwhaley");
         props.setProperty("user.timezone", "");
 
-	// must be at end: classpathToString() uses some properties from above.
+        // must be at end: classpathToString() uses some properties from above.
         props.setProperty("java.class.path", PrimordialClassLoader.loader.classpathToString());
 
         return props;

@@ -7,12 +7,12 @@ public final class StackTraceElement {
     private int lineNumber;
 
     StackTraceElement(java.lang.String declaringClass,
-		      java.lang.String methodName,
-		      java.lang.String fileName,
-		      int lineNumber) {
-	this.declaringClass = declaringClass;
-	this.methodName = methodName;
-	this.fileName = fileName;
-	this.lineNumber = lineNumber;
+                      java.lang.String methodName,
+                      java.lang.String fileName,
+                      int lineNumber) {
+        this.declaringClass = declaringClass;
+        this.methodName = methodName;
+        this.fileName = fileName;
+        this.lineNumber = lineNumber;
     }
 }

@@ -161,7 +161,7 @@ public abstract class ExceptionDeliverer {
             } else {
                 s = "\tat <unknown addr> (ip:"+jq.hex8(ip)+")";
             }
-	    SystemInterface.debugmsg(s);
+            SystemInterface.debugmsg(s);
             sf = sf.next;
         }
     }
@@ -194,9 +194,9 @@ public abstract class ExceptionDeliverer {
             }
         }
 
-	public StackFrame getNext() { return next; }
-	public int/*StackAddress*/ getFP() { return fp; }
-	public int/*CodeAddress*/ getIP() { return ip; }
+        public StackFrame getNext() { return next; }
+        public int/*StackAddress*/ getFP() { return fp; }
+        public int/*CodeAddress*/ getIP() { return ip; }
     }
     
     public static final jq_StaticMethod _athrow;

@@ -27,6 +27,6 @@ public abstract class UnmodifiableIterator implements Iterator {
      * @exception UnsupportedOperationException always.
      */
     public final void remove() {
-	throw new UnsupportedOperationException("Unmodifiable Iterator");
+        throw new UnsupportedOperationException("Unmodifiable Iterator");
     }
 }

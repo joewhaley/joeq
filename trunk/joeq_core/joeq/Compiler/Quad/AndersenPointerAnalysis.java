@@ -139,7 +139,7 @@ public class AndersenPointerAnalysis {
                 }
                 s = Bootstrap.PrimordialClassLoader.loader.getAllTypes();
                 //if (s.size() == size)
-		    break;
+                    break;
             }
             System.out.println("Number of RTA classes: "+s.size());
             int nMethods = 0;
@@ -149,7 +149,7 @@ public class AndersenPointerAnalysis {
                 jq_Type t = (jq_Type)i.next();
                 if (t instanceof jq_Class) {
                     jq_Class k = (jq_Class)t;
-		    k.load();
+                    k.load();
                     jq_Method[] ms = k.getDeclaredInstanceMethods();
                     for (int j=0; j<ms.length; ++j) {
                         methods.add(ms[j]);
@@ -255,7 +255,7 @@ public class AndersenPointerAnalysis {
         fis_n.recordPassedParameter(mc_bis_init, 1);
         
         jq_Class jls = Bootstrap.PrimordialClassLoader.getJavaLangSystem();
-	jls.load();
+        jls.load();
         jq_StaticField si = jls.getOrCreateStaticField("in", "Ljava/io/InputStream;");
         jq.Assert(si.isLoaded());
         GlobalNode.GLOBAL.addEdge(si, bis_n, null);
@@ -578,7 +578,7 @@ public class AndersenPointerAnalysis {
                 System.err.println(oldChangedFields.size()+" changed fields");
                 newChangedFields = new HashSet();
             }
-	    if (FORCE_GC) System.gc();
+            if (FORCE_GC) System.gc();
             ++count;
         }
     }
@@ -636,22 +636,22 @@ public class AndersenPointerAnalysis {
                     addEdgesFromConcreteNodes(n, f, (Node)o);
                 }
             }
-	    if (HANDLE_ESCAPE) {
-		if (n instanceof OutsideNode && n.getEscapes()) {
-		    Set s = getConcreteNodes(n);
-		    if (TRACE) out.println("Escaping node "+n+" corresponds to concrete nodes "+s);
-		    for (Iterator j=s.iterator(); j.hasNext(); ) {
-			Node n2 = (Node)j.next();
-			if (!n2.getEscapes()) {
-			    n2.setEscapes();
-			    if ((TRACE_CHANGE && !this.change) || TRACE) {
-				out.println("Changed! Concrete node "+n2+" escapes");
-			    }
-			    this.change = true;
-			}
-		    }
-		}
-	    }
+            if (HANDLE_ESCAPE) {
+                if (n instanceof OutsideNode && n.getEscapes()) {
+                    Set s = getConcreteNodes(n);
+                    if (TRACE) out.println("Escaping node "+n+" corresponds to concrete nodes "+s);
+                    for (Iterator j=s.iterator(); j.hasNext(); ) {
+                        Node n2 = (Node)j.next();
+                        if (!n2.getEscapes()) {
+                            n2.setEscapes();
+                            if ((TRACE_CHANGE && !this.change) || TRACE) {
+                                out.println("Changed! Concrete node "+n2+" escapes");
+                            }
+                            this.change = true;
+                        }
+                    }
+                }
+            }
             for (Iterator j=n.getAccessPathEdges().iterator(); j.hasNext(); ) {
                 Map.Entry e = (Map.Entry)j.next();
                 jq_Field f = (jq_Field)e.getKey();

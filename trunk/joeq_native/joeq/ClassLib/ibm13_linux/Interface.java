@@ -27,10 +27,10 @@ public final class Interface extends ClassLib.ClassLibInterface {
         if (USE_JOEQ_CLASSLIB && (desc.toString().startsWith("Ljava/") ||
                                   desc.toString().startsWith("Lcom/ibm/jvm/"))) {
             UTF.Utf8 u = UTF.Utf8.get("LClassLib/Common/"+desc.toString().substring(1));
-	    java.util.LinkedList ll = new java.util.LinkedList();
-	    ll.add(u);
-	    u = UTF.Utf8.get("LClassLib/ibm13_linux/"+desc.toString().substring(1));
-	    ll.add(u);
+            java.util.LinkedList ll = new java.util.LinkedList();
+            ll.add(u);
+            u = UTF.Utf8.get("LClassLib/ibm13_linux/"+desc.toString().substring(1));
+            ll.add(u);
             return ll.iterator();
         }
         return Util.NullIterator.INSTANCE;
@@ -57,33 +57,33 @@ public final class Interface extends ClassLib.ClassLibInterface {
         //nullStaticFields.add(urlclassloader_class.getOrCreateStaticField("extLoader", "Ljava/net/URLClassLoader;"));
         jq_Class zipfile_class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/util/zip/ZipFile;");
         nullStaticFields.add(zipfile_class.getOrCreateStaticField("inflaters", "Ljava/util/Vector;"));
-	jq_Class string_class = PrimordialClassLoader.getJavaLangString();
-	nullStaticFields.add(string_class.getOrCreateStaticField("btcConverter", "Ljava/lang/ThreadLocal;"));
-	nullStaticFields.add(string_class.getOrCreateStaticField("ctbConverter", "Ljava/lang/ThreadLocal;"));
+        jq_Class string_class = PrimordialClassLoader.getJavaLangString();
+        nullStaticFields.add(string_class.getOrCreateStaticField("btcConverter", "Ljava/lang/ThreadLocal;"));
+        nullStaticFields.add(string_class.getOrCreateStaticField("ctbConverter", "Ljava/lang/ThreadLocal;"));
         return nullStaticFields;
     }
     
     public java.util.Set bootstrapNullInstanceFields() {
         java.util.Set nullInstanceFields = new java.util.HashSet();
-	jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/net/URLClassLoader$ClassFinder;");
-	nullInstanceFields.add(k.getOrCreateInstanceField("name", "Ljava/lang/String;"));
+        jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/net/URLClassLoader$ClassFinder;");
+        nullInstanceFields.add(k.getOrCreateInstanceField("name", "Ljava/lang/String;"));
         return nullInstanceFields;
     }
     
     public void initializeDefaults() {
-	// access the ISO-8859-1 character encoding, as it is used during bootstrapping
-	try {
-	    String s = new String(new byte[0], 0, 0, "ISO-8859-1");
-	} catch (java.io.UnsupportedEncodingException x) {}
-	Bootstrap.PrimordialClassLoader.loader.getOrCreateBSType("Lsun/io/CharToByteISO8859_1;");
+        // access the ISO-8859-1 character encoding, as it is used during bootstrapping
+        try {
+            String s = new String(new byte[0], 0, 0, "ISO-8859-1");
+        } catch (java.io.UnsupportedEncodingException x) {}
+        Bootstrap.PrimordialClassLoader.loader.getOrCreateBSType("Lsun/io/CharToByteISO8859_1;");
 
-	// we need to reinitialize the inflaters array on startup.
-	Object[] args = { } ;
+        // we need to reinitialize the inflaters array on startup.
+        Object[] args = { } ;
         jq_Class zipfile_class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/util/zip/ZipFile;");
-	jq_Method init_inflaters = zipfile_class.getOrCreateStaticMethod("init_inflaters", "()V");
-	Bootstrap.MethodInvocation mi = new Bootstrap.MethodInvocation(init_inflaters, args);
-	jq.on_vm_startup.add(mi);
-	System.out.println("Added call to reinitialize java.util.zip.ZipFile.inflaters field on joeq startup: "+mi);
+        jq_Method init_inflaters = zipfile_class.getOrCreateStaticMethod("init_inflaters", "()V");
+        Bootstrap.MethodInvocation mi = new Bootstrap.MethodInvocation(init_inflaters, args);
+        jq.on_vm_startup.add(mi);
+        System.out.println("Added call to reinitialize java.util.zip.ZipFile.inflaters field on joeq startup: "+mi);
     }
     
     public java.lang.Class createNewClass(Clazz.jq_Type f) {

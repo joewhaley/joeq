@@ -59,8 +59,8 @@ public abstract class UnixFileSystem {
     }
 
     public String canonicalize(String s) throws java.io.IOException {
-	// TODO.
-	return s;
+        // TODO.
+        return s;
     }
 
     /*

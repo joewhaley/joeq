@@ -25,25 +25,25 @@ public abstract class AbstrRelationMapBased extends AbstrRelation
     
 
     public void removeKey(Object key) {
-	hashCode = 0;
-	map.remove(key);
+        hashCode = 0;
+        map.remove(key);
     }
 
     
     public Set getValues(Object key) {
-	Set retval = (Set) getValues2(key);
-	if(retval == null)
-	    retval = Collections.EMPTY_SET;
-	return retval;
+        Set retval = (Set) getValues2(key);
+        if(retval == null)
+            retval = Collections.EMPTY_SET;
+        return retval;
     }
 
-    protected Set getValues2(Object key) {	
-	return (Set) map.get(key);
+    protected Set getValues2(Object key) {      
+        return (Set) map.get(key);
     }
 
 
     public Set keys() {
-	return map.keySet();
+        return map.keySet();
     }
     
 }

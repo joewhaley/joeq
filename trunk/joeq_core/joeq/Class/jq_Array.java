@@ -139,15 +139,15 @@ public class jq_Array extends jq_Reference implements jq_ClassFileConstants, Obj
     }
 
     public static byte getTypecode(jq_Array array) {
-	if (array == BOOLEAN_ARRAY) return T_BOOLEAN;
-	if (array == CHAR_ARRAY) return T_CHAR;
-	if (array == FLOAT_ARRAY) return T_FLOAT;
-	if (array == DOUBLE_ARRAY) return T_DOUBLE;
-	if (array == BYTE_ARRAY) return T_BYTE;
-	if (array == SHORT_ARRAY) return T_SHORT;
-	if (array == INT_ARRAY) return T_INT;
-	if (array == LONG_ARRAY) return T_LONG;
-	throw new ClassFormatError();
+        if (array == BOOLEAN_ARRAY) return T_BOOLEAN;
+        if (array == CHAR_ARRAY) return T_CHAR;
+        if (array == FLOAT_ARRAY) return T_FLOAT;
+        if (array == DOUBLE_ARRAY) return T_DOUBLE;
+        if (array == BYTE_ARRAY) return T_BYTE;
+        if (array == SHORT_ARRAY) return T_SHORT;
+        if (array == INT_ARRAY) return T_INT;
+        if (array == LONG_ARRAY) return T_LONG;
+        throw new ClassFormatError();
     }
 
     public final int getInstanceSize(int length) {
