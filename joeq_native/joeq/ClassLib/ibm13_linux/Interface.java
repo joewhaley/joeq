@@ -46,6 +46,11 @@ public final class Interface extends ClassLib.ClassLibInterface {
         return nullStaticFields;
     }
     
+    public java.util.Set bootstrapNullInstanceFields() {
+        java.util.Set nullInstanceFields = new java.util.HashSet();
+        return nullInstanceFields;
+    }
+    
     public java.lang.Class createNewClass(Clazz.jq_Type f) {
         return ClassLib.ibm13_linux.java.lang.Class.createNewClass(ClassLib.ibm13_linux.java.lang.Class._class, f);
     }

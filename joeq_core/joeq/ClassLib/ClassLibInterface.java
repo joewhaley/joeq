@@ -35,6 +35,8 @@ public abstract class ClassLibInterface {
             if (javavmvendor.equals("Sun Microsystems Inc.")) {
 		if (javaruntimeversion.equals("1.3.1_01")) {
 		    classlibrary = "sun13_";
+		} else if (javaruntimeversion.equals("1.4.0-b92")) {
+                    classlibrary = "sun14_";
 		} else {
 		    classlibrary = "sun13_";
 		    System.err.println("Warning: class library version "+javaruntimeversion+" is not yet supported, trying default "+classlibrary);
@@ -117,13 +119,9 @@ public abstract class ClassLibInterface {
         throws java.io.IOException;
 
     public abstract java.util.Set bootstrapNullStaticFields() ;
+    public abstract java.util.Set bootstrapNullInstanceFields() ;
     public abstract java.lang.String getImplementationClassDesc(UTF.Utf8 desc) ;
     
     public static final Clazz.jq_Class _class = (Clazz.jq_Class)Bootstrap.PrimordialClassLoader.loader.getOrCreateBSType("LClassLib/ClassLibInterface;");
     
-    /*
-    public static final jq_InstanceField _target = _class.getOrCreateInstanceField("target", "Ljava/lang/Runnable;");
-    public static final jq_StaticMethod _nextThreadNum = _class.getOrCreateStaticMethod("nextThreadNum", "()I");
-    public static final jq_InstanceMethod _init = _class.getOrCreateInstanceMethod("init", "(Ljava/lang/ThreadGroup;Ljava/lang/Runnable;Ljava/lang/String;)V");
-     */
 }
