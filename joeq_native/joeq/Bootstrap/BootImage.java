@@ -14,13 +14,17 @@ import Clazz.jq_Array;
 import Clazz.jq_Type;
 import Clazz.jq_Primitive;
 import Clazz.jq_Reference;
+import Clazz.jq_Member;
 import Clazz.jq_Method;
 import Clazz.jq_StaticField;
 import Clazz.jq_InstanceField;
+import Clazz.jq_CompiledCode;
 import Allocator.ObjectLayout;
+import Allocator.CodeAllocator;
 import Run_Time.Unsafe;
 import Run_Time.Reflection;
 import Run_Time.SystemInterface;
+import Scheduler.jq_NativeThread;
 import Util.IdentityHashCodeWrapper;
 import Assembler.x86.Heap2HeapReference;
 import Assembler.x86.Heap2CodeReference;
@@ -434,6 +438,7 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout {
         write_uchar(out, (byte)0);
     }
     
+    public static final int NUM_OF_EXTERNAL_SYMS = 3;
     public void dumpEXTSYMENTs(OutputStream out)
     throws IOException {
         write_bytes(out, "_entry@0", 8);  // s_name
@@ -455,12 +460,22 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout {
         write_ushort(out, (char)DT_FCN);
         write_uchar(out, C_EXT);
         write_uchar(out, (byte)0);
+
+        write_ulong(out, 0);    // e_zeroes
+        idx = alloc_string("_threadSwitch@4");
+        write_ulong(out, idx);  // e_offset
+        addr = jq_NativeThread._threadSwitch.getDefaultCompiledVersion().getEntrypoint();
+        write_ulong(out, addr);
+        write_short(out, (short)1);
+        write_ushort(out, (char)DT_FCN);
+        write_uchar(out, C_EXT);
+        write_uchar(out, (byte)0);
     }
     
     public void dumpEXTDEFSYMENTs(OutputStream out, List extrefs)
     throws IOException {
         Iterator i = extrefs.iterator();
-        int k = 4;
+        int k = 2+NUM_OF_EXTERNAL_SYMS;
         while (i.hasNext()) {
             ExternalReference extref = (ExternalReference)i.next();
             jq.assert(extref.getSymbolIndex() == k);
@@ -483,7 +498,8 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout {
     
     public void dumpSFIELDSYMENT(OutputStream out, jq_StaticField sf)
     throws IOException {
-        String name = sf.getName().toString();
+        //String name = sf.getName().toString();
+        String name = mungeMemberName(sf);
         if (name.length() <= 8) {
             write_bytes(out, name, 8);  // s_name
         } else {
@@ -559,9 +575,16 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout {
         write_uchar(out, (byte)0);  // e_numaux
     }
     
-    public void dumpMETHODSYMENT(OutputStream out, jq_Method m)
+    public void dumpMETHODSYMENT(OutputStream out, jq_CompiledCode cc)
     throws IOException {
-        String name = m.getName().toString();
+        jq_Method m = cc.getMethod();
+        String name;
+        if (m == null) {
+            name = "unknown@"+jq.hex8(cc.getEntrypoint());
+        } else { 
+            //name = m.getName().toString();
+            name = mungeMemberName(m);
+        }
         if (name.length() <= 8) {
             write_bytes(out, name, 8);  // s_name
         } else {
@@ -569,17 +592,17 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout {
             int idx = alloc_string(name);
             write_ulong(out, idx);  // e_offset
         }
-        int addr = m.getDefaultCompiledVersion().getEntrypoint();
+        int addr = cc.getEntrypoint();
         write_ulong(out, addr);     // e_value
         write_short(out, (short)1); // e_scnum
-        write_ushort(out, T_NULL);  // e_type
-        write_uchar(out, C_LABEL);  // e_sclass
+        write_ushort(out, (char)DT_FCN); // e_type
+        write_uchar(out, C_EXT);    // e_sclass
         write_uchar(out, (byte)0);  // e_numaux
     }
     
     public void addSystemInterfaceRelocs(List extref, List heap2code) {
         jq_StaticField[] fs = SystemInterface._class.getDeclaredStaticFields();
-        int total = 3;
+        int total = 1+NUM_OF_EXTERNAL_SYMS;
         for (int i=0; i<fs.length; ++i) {
             jq_StaticField f = fs[i];
             if (f.isFinal()) continue;
@@ -632,20 +655,21 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout {
     
     public void dumpCOFF(OutputStream out) throws IOException {
         // calculate sizes/offsets
-        int textsize = bca.size();
-        List text_relocs = bca.getAllDataRelocs();
-        List exts = new LinkedList();
-        int nlinenum = 0;
+        final int textsize = bca.size();
+        final List text_relocs = bca.getAllDataRelocs();
+        final List exts = new LinkedList();
+        final int nlinenum = 0;
         int ntextreloc = text_relocs.size();
         if (ntextreloc > 65535) ++ntextreloc;
-        int datastart = 20+40+40+textsize+(10*ntextreloc);
-        int datasize = heapCurrent;
-        int numOfVTableRelocs = addVTableRelocs(data_relocs);
+        final int datastart = 20+40+40+textsize+(10*ntextreloc);
+        final int datasize = heapCurrent;
+        final int numOfVTableRelocs = addVTableRelocs(data_relocs);
         addSystemInterfaceRelocs(exts, data_relocs);
         int ndatareloc = data_relocs.size();
         if (ndatareloc > 65535) ++ndatareloc;
-        int symtabstart = datastart+datasize+(10*ndatareloc)+(10*nlinenum);
-        int nsyms = 2+2+exts.size();
+        final int symtabstart = datastart+datasize+(10*ndatareloc)+(10*nlinenum);
+        final int num_ccs = CodeAllocator.getNumberOfCompiledMethods();
+        final int nsyms = 2+NUM_OF_EXTERNAL_SYMS+num_ccs+exts.size();
         
         // write file header
         dumpFILHDR(out, symtabstart, nsyms);
@@ -698,6 +722,14 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout {
         dumpSECTIONSYMENTs(out);
         dumpEXTSYMENTs(out);
         dumpEXTDEFSYMENTs(out, exts);
+        it = CodeAllocator.getCompiledMethods();
+        int j=0;
+        while (it.hasNext()) {
+            jq_CompiledCode r = (jq_CompiledCode)it.next();
+            dumpMETHODSYMENT(out, r);
+            ++j;
+        }
+        jq.assert(j == num_ccs);
         
         // write string table
         dump_strings(out);
@@ -894,6 +926,15 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout {
             }
             out.write((byte)s.charAt(i));
         }
+    }
+    
+    private String mungeMemberName(jq_Member m) {
+        String name = m.getDeclaringClass().getName().toString();
+        //name = name.substring(name.lastIndexOf('.')+1);
+        name += "_"+m.getName();
+        //name += "_"+m.getDesc().toString().replace('(','_').replace(')','_').replace(';','_');
+        name += "_"+m.getDesc();
+        return name;
     }
     
     int stringTableOffset = 4;
