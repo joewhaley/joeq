@@ -4683,7 +4683,7 @@ outer:
                 else k = Collections.singleton(e.getValue()).iterator();
                 while (k.hasNext()) {
                     Node n2 = (Node) k.next();
-                    out.writeBytes("n"+n.id+" -> "+n2.id+" [label=\""+fieldName+"\"];\n");
+                    out.writeBytes("n"+n.id+" -> n"+n2.id+" [label=\""+fieldName+"\"];\n");
                 }
             }
             for (Iterator j=n.getAccessPathEdges().iterator(); j.hasNext(); ) {
