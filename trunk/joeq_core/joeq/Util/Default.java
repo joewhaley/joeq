@@ -100,10 +100,10 @@ public abstract class Default  {
 	// serializable.
 	return new PairList(left, right);
     }
-    private static class PairList extends AbstractList
+    public static class PairList extends AbstractList
 	implements java.io.Serializable {
-	private Object left, right;
-	PairList(Object left, Object right) {
+	public Object left, right;
+	public PairList(Object left, Object right) {
 	    this.left = left; this.right = right;
 	}
 	public int size() { return 2; }
