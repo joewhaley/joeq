@@ -39,7 +39,7 @@ public abstract class Bootstrapper implements ObjectLayout {
         String addToClassList = null;
         boolean TrimAllTypes = false;
 	boolean DUMP_COFF = false;
-        boolean USE_BYTECODE_TRIMMER = false;
+        boolean USE_BYTECODE_TRIMMER = true;
 
 	// set bootstrapping flag first - lots of code depends on this flag.
         jq.Bootstrapping = true;
