@@ -4,3 +4,4 @@ bootclasspath
 buddy.dll
 target
 velocity.log
+maven.log
