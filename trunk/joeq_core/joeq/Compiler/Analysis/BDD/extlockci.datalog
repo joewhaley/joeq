@@ -1,0 +1,41 @@
+### Domains
+
+.include "fielddomains.pa"
+
+.bddvarorder N0_F0_I0_M1_M0_V1xV0_VC1xVC0_T0_Z0_T1_H0_H1
+
+### Relations
+
+vP (vc:VC0, v:V0, h:H0) input
+cA (vcdest:VC0, dest:V0, vcsrc:VC1, source:V1) input
+vT (var:V0, type:T0) input
+hT (heap:H0, type:T1) input
+aT (type:T0, type:T1) input
+formal (method:M0, num:Z0, formalparam:V0) input
+IE (ccaller:VC1, invoke:I0, ccallee:VC0, target:M0) input
+
+### Rules
+
+roots (method:M0) input
+#mI0 (method:M0, invoke:I0)
+#IEnum (invoke:I0, target:M0, ccaller:VC1, ccallee:VC0) output
+#mI0(m,i) :- mI(m,i,_).
+#IEnum(i,m,vc2,vc1) :- roots(m), mI0(m,i), IE0(i,m). number
+
+mI (method:M0, invoke:I0, name:N0) input
+mC (method:M0, context:VC0) input
+mSync (method:M0) input
+
+locks (method:M0, type:T0)
+unlocked (method:M0, type:T0)
+calls (callee:M0, caller:M1)
+alwaysLocked (method:M0, type:T0)
+externalLockType (method:M0, type:T0) output outputtuples
+
+locks(m,t) :- mSync(m), formal(m,0,v), vP(_,v,h), hT(h,t).
+unlocked(m,_) :- roots(m).
+calls(caller,callee) :- IE(_,invoke,_,callee), mI(caller,invoke,_).
+unlocked(callee,t) :- unlocked(caller,t), calls(caller,callee), !locks(callee,t).
+alwaysLocked(m,t) :- !unlocked(m,t), mC(m,_).
+externalLockType(m,t) :- alwaysLocked(m,t), formal(m,0,v), vT(v,this), !aT(this,t).
+
