@@ -40,11 +40,11 @@ public class jq_Thread implements ObjectLayout {
     private boolean isDead;
     private volatile int isInterrupted;
     private final int thread_id;
-    
+
     public static final int INITIAL_STACK_SIZE = 65536;
 
     public static AtomicCounter thread_id_factory = new AtomicCounter(1);
-    
+
     public jq_Thread(Thread t) {
         this.thread_object = t;
         this.registers = new jq_RegisterState();
@@ -55,19 +55,19 @@ public class jq_Thread implements ObjectLayout {
     }
 
     public Thread getJavaLangThreadObject() { return thread_object; }
-    public String toString() { return thread_object+" (sus: "+thread_switch_enabled+")"; }
+    public String toString() { return thread_object + " (sus: " + thread_switch_enabled+")"; }
     public jq_RegisterState getRegisterState() { return registers; }
     public jq_NativeThread getNativeThread() { return native_thread; }
     void setNativeThread(jq_NativeThread nt) { native_thread = nt; }
     public boolean isThreadSwitchEnabled() { return thread_switch_enabled == 0; }
     public void disableThreadSwitch() {
-        if (jq.Bootstrapping) 
+        if (jq.Bootstrapping)
             ++thread_switch_enabled;
         else
             Unsafe.atomicAdd(Unsafe.addressOf(this)+_thread_switch_enabled.getOffset(), 1);
     }
     public void enableThreadSwitch() {
-        if (jq.Bootstrapping) 
+        if (jq.Bootstrapping)
             --thread_switch_enabled;
         else
             Unsafe.atomicSub(Unsafe.addressOf(this)+_thread_switch_enabled.getOffset(), 1);
@@ -100,7 +100,7 @@ public class jq_Thread implements ObjectLayout {
     }
     public void yield() {
         if (this != Unsafe.getThreadBlock()) {
-            SystemInterface.debugmsg("Yield called on "+this+" from thread "+Unsafe.getThreadBlock());
+            SystemInterface.debugmsg("Yield called on " + this + " from thread " + Unsafe.getThreadBlock());
             jq.UNREACHABLE();
         }
         // act like we received a timer tick
@@ -166,7 +166,7 @@ public class jq_Thread implements ObjectLayout {
         jq_NativeThread.endCurrentJavaThread();
         jq.UNREACHABLE();
     }
-    
+
     public static final jq_Class _class;
     public static final jq_StaticMethod _destroyCurrentThread;
     public static final jq_InstanceField _thread_switch_enabled;
