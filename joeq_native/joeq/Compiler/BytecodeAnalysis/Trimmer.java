@@ -13,6 +13,7 @@ import java.util.Set;
 import joeq.Allocator.DefaultHeapAllocator;
 import joeq.Allocator.HeapAllocator;
 import joeq.Bootstrap.BootstrapRootSet;
+import joeq.Class.Delegates;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_FieldVisitor;
@@ -445,16 +446,16 @@ public class Trimmer {
             case INVOKE_STATIC:
                 if (f.getDeclaringClass() == Unsafe._class)
                     return;
-                //rs.addNecessaryMethod(x86ReferenceLinker._invokestatic);
+                rs.addNecessaryMethod(Delegates.default_compiler.getInvokestaticLinkMethod());
                 rs.addNecessaryMethod(f);
                 break;
             case INVOKE_SPECIAL:
-                //rs.addNecessaryMethod(x86ReferenceLinker._invokespecial);
+                rs.addNecessaryMethod(Delegates.default_compiler.getInvokespecialLinkMethod());
                 f = jq_Class.getInvokespecialTarget(method.getDeclaringClass(), (jq_InstanceMethod)f);
                 rs.addNecessaryMethod(f);
                 break;
             case INVOKE_INTERFACE:
-                //rs.addNecessaryMethod(x86ReferenceLinker._invokeinterface);
+                rs.addNecessaryMethod(Delegates.default_compiler.getInvokeinterfaceLinkMethod());
                 rs.addAllInterfaceMethodImplementations((jq_InstanceMethod)f);
                 addInvokedInterfaceMethod((jq_InstanceMethod)f);
                 break;

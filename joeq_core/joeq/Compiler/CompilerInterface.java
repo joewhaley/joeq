@@ -5,12 +5,18 @@ package joeq.Compiler;
 
 import joeq.Class.jq_CompiledCode;
 import joeq.Class.jq_Method;
+import joeq.Class.jq_StaticMethod;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public interface CompilerInterface {
+    
     jq_CompiledCode compile(jq_Method m);
     jq_CompiledCode generate_compile_stub(jq_Method m);
+    
+    jq_StaticMethod getInvokestaticLinkMethod();
+    jq_StaticMethod getInvokespecialLinkMethod();
+    jq_StaticMethod getInvokeinterfaceLinkMethod();
 }
