@@ -2,3 +2,5 @@
 bootclasspath
 *.class
 buddy.dll
+target
+velocity.log
