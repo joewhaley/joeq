@@ -142,31 +142,62 @@ public class BDDRelation extends Relation {
         saveTuples(name+".rtuples");
     }
     
-    public void saveTuples(String filename) throws IOException {
-        DataOutputStream dos = new DataOutputStream(new FileOutputStream(filename));
+    public void saveTuples(String fileName) throws IOException {
+        DataOutputStream dos = new DataOutputStream(new FileOutputStream(fileName));
+        int[] a = relation.support().scanSetDomains();
+        BDD allDomains = solver.bdd.one();
+        System.out.print(fileName+" domains {");
+        for (int i = 0; i < a.length; ++i) {
+            BDDDomain d = solver.bdd.getDomain(i);
+            System.out.print(" "+d.toString());
+            allDomains.andWith(d.set());
+        }
+        System.out.println(" ) = "+relation.nodeCount()+" nodes");
         BDDDomain iterDomain = (BDDDomain) domains.get(0);
         BDD foo = quantifyOtherDomains(relation, iterDomain);
+        int lines = 0;
         for (Iterator i = foo.iterator(iterDomain.set()); i.hasNext(); ) {
             BDD q = (BDD) i.next();
             q.andWith(relation.id());
             while (!q.isZero()) {
-                long[] v = q.scanAllVar();
+                BDD sat = q.satOne(allDomains, solver.bdd.zero());
+                BDD sup = q.support();
+                int[] b = sup.scanSetDomains();
+                sup.free();
+                long[] v = sat.scanAllVar();
+                sat.free();
                 BDD t = solver.bdd.one();
-                for (Iterator j = domains.iterator(); j.hasNext(); ) {
-                    BDDDomain d = (BDDDomain) j.next();
-                    if (quantifyOtherDomains(q, d).isOne()) {
+                for (int j = 0, k = 0; j < solver.bdd.numberOfDomains(); ++j) {
+                    BDDDomain d = solver.bdd.getDomain(j);
+                    if (k >= a.length || a[k] != j) {
                         dos.writeBytes("* ");
                         t.andWith(d.domain());
+                        continue;
                     } else {
-                        dos.writeBytes(v[d.getIndex()]+" ");
-                        t.andWith(d.ithVar(v[d.getIndex()]));
+                        ++k;
                     }
+                    if (v[j] == 0) {
+                        BDD qs = q.support();
+                        qs.orWith(d.set());
+                        boolean contains = qs.isOne();
+                        qs.free();
+                        if (!contains) {
+                            dos.writeBytes("* ");
+                            t.andWith(d.domain());
+                            continue;
+                        }
+                    }
+                    dos.writeBytes(v[j]+" ");
+                    t.andWith(d.ithVar(v[j]));
                 }
                 q.applyWith(t, BDDFactory.diff);
                 dos.writeBytes("\n");
+                ++lines;
             }
+            q.free();
         }
         dos.close();
+        System.out.println("Done writing "+lines+" lines.");
     }
     
     BDD quantifyOtherDomains(BDD q, BDDDomain d) {
