@@ -22,7 +22,6 @@ import Run_Time.Unsafe;
 import Run_Time.Reflection;
 import Run_Time.SystemInterface;
 import Util.IdentityHashCodeWrapper;
-import Compil3r.Reference.x86.x86ReferenceCompiler;
 import Assembler.x86.Heap2HeapReference;
 import Assembler.x86.Heap2CodeReference;
 import Assembler.x86.ExternalReference;
@@ -113,7 +112,7 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout {
     public void enableAllocations() { alloc_enabled = true; }
     public void disableAllocations() { alloc_enabled = false; }
     
-    public int/*Address*/ getOrAllocateObject(Object o) {
+    public int/*HeapAddress*/ getOrAllocateObject(Object o) {
         if (o == null) return 0;
         IdentityHashCodeWrapper k = IdentityHashCodeWrapper.create(o);
         Entry e = (Entry)hash.get(k);
@@ -146,7 +145,7 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout {
         return addr;
     }
     
-    public int/*Address*/ getAddressOf(Object o) {
+    public int/*HeapAddress*/ getAddressOf(Object o) {
         if (o == null) return 0;
         IdentityHashCodeWrapper k = IdentityHashCodeWrapper.create(o);
         Entry e = (Entry)hash.get(k);
@@ -159,6 +158,11 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout {
         return e.getAddress();
     }
 
+    public Object getObject(int i) {
+        Entry e = (Entry)entries.get(i);
+        return e.getObject();
+    }
+    
     public void addStaticFieldReloc(jq_StaticField f) {
         if (TRACE) out.println("Initializing static field "+f);
         Object val = obj_trav.getStaticFieldValue(f);
@@ -210,8 +214,10 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout {
         }
     }
     
-    public void find_reachable() {
-        for (int i=0; i<entries.size(); ++i) {
+    public int numOfEntries() { return entries.size(); }
+
+    public void find_reachable(int i) {
+        for (; i<entries.size(); ++i) {
             Entry e = (Entry)entries.get(i);
             Object o = e.getObject();
             int addr = e.getAddress();
@@ -826,6 +832,9 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout {
                 }
             }
             ++j;
+        }
+        while (currentAddr < heapCurrent) {
+            write_char(out, (byte)0); ++currentAddr;
         }
     }
     
