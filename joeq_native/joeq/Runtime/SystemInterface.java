@@ -250,6 +250,7 @@ public abstract class SystemInterface {
     public static CodeAddress init_thread_0;
     public static CodeAddress resume_thread_4;
     public static CodeAddress suspend_thread_4;
+    public static CodeAddress set_thread_priority_8;
     public static CodeAddress allocate_stack_4;
     public static CodeAddress get_current_thread_handle_0;
     public static CodeAddress get_thread_context_8;
@@ -802,6 +803,30 @@ public abstract class SystemInterface {
             Unsafe.pushArg(thread_handle);
             Assert._assert(!Unsafe.getThreadBlock().isThreadSwitchEnabled());
             int v = (int)Unsafe.invoke(suspend_thread_4);
+            return v;
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
+        return 0;
+    }
+    // from winnt.h
+    public static final int THREAD_BASE_PRIORITY_LOWRT = 15;
+    public static final int THREAD_BASE_PRIORITY_MAX = 2;
+    public static final int THREAD_BASE_PRIORITY_MIN = -2;
+    public static final int THREAD_BASE_PRIORITY_IDLE = -15;
+    // from winbase.h
+    public static final int THREAD_PRIORITY_LOWEST = THREAD_BASE_PRIORITY_MIN;
+    public static final int THREAD_PRIORITY_BELOW_NORMAL = THREAD_PRIORITY_LOWEST+1;
+    public static final int THREAD_PRIORITY_NORMAL = 0;
+    public static final int THREAD_PRIORITY_HIGHEST = THREAD_BASE_PRIORITY_MAX;
+    public static final int THREAD_PRIORITY_ABOVE_NORMAL = THREAD_PRIORITY_HIGHEST-1;
+    public static final int THREAD_PRIORITY_TIME_CRITICAL = THREAD_BASE_PRIORITY_LOWRT;
+    public static final int THREAD_PRIORITY_IDLE = THREAD_BASE_PRIORITY_IDLE;
+
+    public static int set_thread_priority(int/*CPointer*/ thread_handle, int level) {
+        try {
+            Unsafe.pushArg(level);
+            Unsafe.pushArg(thread_handle);
+            Assert._assert(!Unsafe.getThreadBlock().isThreadSwitchEnabled());
+            int v = (int)Unsafe.invoke(set_thread_priority_8);
             return v;
         } catch (Throwable t) { Assert.UNREACHABLE(); }
         return 0;
