@@ -15,13 +15,13 @@ import Clazz.jq_StaticField;
 import Clazz.jq_NameAndDesc;
 import UTF.Utf8;
 import Run_Time.Unsafe;
+import Scheduler.jq_Thread;
+import Scheduler.jq_NativeThread;
+import Scheduler.jq_RegisterState;
 import jq;
-
 
 public abstract class SystemInterface {
 
-    // NOTE: the order of the static fields here must match the bootstrap loader.
-    
     public static int/*CodeAddress*/ entry_0;
     public static int/*CodeAddress*/ trap_handler_8;
     public static int/*CodeAddress*/ debugmsg_4;
@@ -56,6 +56,19 @@ public abstract class SystemInterface {
     public static int/*CodeAddress*/ fs_chmod_8;
     public static int/*CodeAddress*/ fs_setfiletime_12;
     public static int/*CodeAddress*/ fs_getlogicaldrives_0;
+    public static int/*CodeAddress*/ yield_0;
+    public static int/*CodeAddress*/ sleep_4;
+    public static int/*CodeAddress*/ create_thread_8;
+    public static int/*CodeAddress*/ resume_thread_4;
+    public static int/*CodeAddress*/ suspend_thread_4;
+    public static int/*CodeAddress*/ allocate_stack_4;
+    public static int/*CodeAddress*/ get_current_thread_handle_0;
+    public static int/*CodeAddress*/ get_thread_context_8;
+    public static int/*CodeAddress*/ set_thread_context_8;
+    public static int/*CodeAddress*/ set_current_context_8;
+    public static int/*CodeAddress*/ init_semaphore_0;
+    public static int/*CodeAddress*/ wait_for_single_object_8;
+    public static int/*CodeAddress*/ release_semaphore_8;
 
     public static final jq_Class _class;
     public static final jq_StaticField _entry;
@@ -362,5 +375,97 @@ public abstract class SystemInterface {
         } catch (Throwable t) { jq.UNREACHABLE(); }
         return 0;
     }
-
+    public static void yield() {
+        try {
+            Unsafe.invoke(yield_0);
+        } catch (Throwable t) { jq.UNREACHABLE(); }
+    }
+    public static void sleep(int ms) {
+        try {
+            Unsafe.pushArg(ms);
+            Unsafe.invoke(sleep_4);
+        } catch (Throwable t) { jq.UNREACHABLE(); }
+    }
+    public static int/*CPointer*/ create_thread(int/*CodeAddress*/ start_address, int/*HeapAddress*/ param) {
+        try {
+            Unsafe.pushArg(param);
+            Unsafe.pushArg(start_address);
+            return (int)Unsafe.invoke(create_thread_8);
+        } catch (Throwable t) { jq.UNREACHABLE(); }
+        return 0;
+    }
+    public static int resume_thread(int/*CPointer*/ thread_handle) {
+        try {
+            Unsafe.pushArg(thread_handle);
+            return (int)Unsafe.invoke(resume_thread_4);
+        } catch (Throwable t) { jq.UNREACHABLE(); }
+        return 0;
+    }
+    public static int suspend_thread(int/*CPointer*/ thread_handle) {
+        try {
+            Unsafe.pushArg(thread_handle);
+            return (int)Unsafe.invoke(suspend_thread_4);
+        } catch (Throwable t) { jq.UNREACHABLE(); }
+        return 0;
+    }
+    public static int/*StackAddress*/ allocate_stack(int size) {
+        try {
+            Unsafe.pushArg(size);
+            return (int)Unsafe.invoke(allocate_stack_4);
+        } catch (Throwable t) { jq.UNREACHABLE(); }
+        return 0;
+    }
+    public static int/*CPointer*/ get_current_thread_handle() {
+        try {
+            return (int)Unsafe.invoke(get_current_thread_handle_0);
+        } catch (Throwable t) { jq.UNREACHABLE(); }
+        return 0;
+    }
+    public static void get_thread_context(int/*HANDLE*/ thread_handle, jq_RegisterState context) {
+        try {
+            Unsafe.pushArg(Unsafe.addressOf(context));
+            Unsafe.pushArg(thread_handle);
+            Unsafe.invoke(get_thread_context_8);
+        } catch (Throwable t) { jq.UNREACHABLE(); }
+    }
+    public static void set_thread_context(int/*HANDLE*/ thread_handle, jq_RegisterState context) {
+        try {
+            Unsafe.pushArg(Unsafe.addressOf(context));
+            Unsafe.pushArg(thread_handle);
+            Unsafe.invoke(set_thread_context_8);
+        } catch (Throwable t) { jq.UNREACHABLE(); }
+    }
+    public static void set_current_context(jq_Thread thread, jq_RegisterState context) {
+        try {
+            Unsafe.pushArg(Unsafe.addressOf(context));
+            Unsafe.pushArg(Unsafe.addressOf(thread));
+            Unsafe.invoke(set_current_context_8);
+        } catch (Throwable t) { jq.UNREACHABLE(); }
+    }
+    public static int/*CPointer*/ init_semaphore() {
+        try {
+            return (int)Unsafe.invoke(init_semaphore_0);
+        } catch (Throwable t) { jq.UNREACHABLE(); }
+        return 0;
+    }
+    public static final int INFINITE = -1;
+    public static final int WAIT_ABANDONED = 0x00000080;
+    public static final int WAIT_OBJECT_0  = 0x00000000;
+    public static final int WAIT_TIMEOUT   = 0x00000102;
+    public static int wait_for_single_object(int/*CPointer*/ obj, int timeout) {
+        try {
+            Unsafe.pushArg(timeout);
+            Unsafe.pushArg(obj);
+            return (int)Unsafe.invoke(wait_for_single_object_8);
+        } catch (Throwable t) { jq.UNREACHABLE(); }
+        return 0;
+    }
+    public static int release_semaphore(int/*CPointer*/ semaphore, int v1) {
+        try {
+            Unsafe.pushArg(v1);
+            Unsafe.pushArg(semaphore);
+            return (int)Unsafe.invoke(release_semaphore_8);
+        } catch (Throwable t) { jq.UNREACHABLE(); }
+        return 0;
+    }
 }
