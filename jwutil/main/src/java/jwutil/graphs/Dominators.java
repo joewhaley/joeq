@@ -405,7 +405,7 @@ public class Dominators {
         return new DomIterator(dom);
     }
 
-    private final class DomIterator implements Iterator {
+    private static final class DomIterator implements Iterator {
         private Object dom[];
         private Object next;
         private int index;

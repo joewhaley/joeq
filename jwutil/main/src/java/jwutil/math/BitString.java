@@ -595,22 +595,6 @@ public final class BitString implements Cloneable, java.io.Serializable {
         return buffer.toString();
     }
 
-    // initialize an array with bit-reversed indices
-    private static int[] bit_reverse(int serSize, int[] newSer) {
-        int iterSerSize = 1;
-        newSer[0] = 0;
-        while (iterSerSize < serSize) {
-            int iterVal = 0;
-            for (int iterPos = 0; iterPos < iterSerSize; iterPos++) {
-                iterVal = newSer[iterPos] * 2;
-                newSer[iterPos] = iterVal;
-                newSer[iterPos + iterSerSize] = iterVal + 1;
-            }
-            iterSerSize = iterSerSize * 2;
-        }
-        return newSer;
-    }
-
     /**
      * Returns an iterator that iterates through the bits in forward order.
      */
