@@ -145,6 +145,9 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
 
         PathElement(String path) {
             this.path = path;
+        }
+        
+        void initializeEntryMap() {
             this.entries = new HashSet();
             buildEntries(null);
             if (TRACE) out.println(this+" contains: "+entries);
@@ -154,6 +157,7 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
         
         InputStream getResourceAsStream(String name) {
             if (TRACE) out.println("Getting resource for "+name+" in path "+path);
+            if (entries == null) initializeEntryMap();
             if (!entries.contains(name))
                 return null;
             if (filesep.charAt(0) != '/') name = name.replace('/', filesep.charAt(0));
@@ -167,11 +171,13 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
         
         boolean containsResource(String name) {
             if (TRACE) out.println("Searching for "+name+" in path "+path);
+            if (entries == null) initializeEntryMap();
             return entries.contains(name);
         }
         
         Iterator listPackage(final String pathn, final boolean recursive) {
             if (TRACE) out.println("Listing package "+pathn+" in path "+path);
+            if (entries == null) initializeEntryMap();
             final String filesep   = "/";
             return new FilterIterator(entries.iterator(),
                 new FilterIterator.Filter() {
