@@ -1758,6 +1758,7 @@ public class MethodSummary {
                 Set result = new LinkedHashSet();
                 if (type instanceof jq_Class) {
                     jq_Class c = (jq_Class) type;
+                    c.prepare();
                     for (Iterator i = Arrays.asList(c.getInstanceFields()).iterator();
                          i.hasNext(); ) {
                         final jq_InstanceField f = (jq_InstanceField) i.next();
