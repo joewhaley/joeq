@@ -48,8 +48,8 @@ public class ANSIColorStream extends PrintStream {
 	this(out, fgColor, WHITE);
     }
 
-    public ANSIColorStream(final PrintStream out, final int fgColor, final int bgColor) {
-	super(new FilterOutputStream(out) {
+    public ANSIColorStream(final PrintStream pout, final int fgColor, final int bgColor) {
+	super(new FilterOutputStream(pout) {
 	    private void setColor() {
 		((PrintStream)out).print("\033[0;" + (30 + fgColor) + ";" + (40 + bgColor) + "m");
 	    }
