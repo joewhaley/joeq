@@ -930,6 +930,8 @@ public class MethodSummary {
         public CallSite(MethodSummary caller, ProgramLocation m) {
             this.caller = caller; this.m = m;
         }
+        public MethodSummary getCaller() { return caller; }
+        public ProgramLocation getLocation() { return m; }
         public int hashCode() { return (caller == null?0x0:caller.hashCode()) ^ m.hashCode(); }
         public boolean equals(CallSite that) { return this.m.equals(that.m) && this.caller == that.caller; }
         public boolean equals(Object o) { if (o instanceof CallSite) return equals((CallSite)o); return false; }
