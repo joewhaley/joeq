@@ -31,7 +31,7 @@ public class RootedCHACallGraph extends CHACallGraph {
     /* (non-Javadoc)
      * @see Compil3r.Quad.CallGraph#getRoots()
      */
-    protected Collection getRoots() {
+    public Collection getRoots() {
         return roots;
     }
 
