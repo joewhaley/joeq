@@ -385,6 +385,10 @@ public class PA {
         BDD bdd1 = M.ithVar(M2_i);
         bdd1.andWith(I_bdd.id());
         if (TRACE_RELATIONS) out.println("Adding to IE: "+bdd1.toStringWithDomains());
+        if (CONTEXT_SENSITIVE) {
+            // Add the context for the new call graph edge.
+            IEcs.orWith(IE.and(IEfilter));
+        }
         IE.orWith(bdd1);
     }
     
@@ -1206,7 +1210,7 @@ public class PA {
         if (TRACE_SOLVER) out.println("Call graph edges after: "+IE.satCount(IMset));
         
         if (CONTEXT_SENSITIVE) {
-            // Add the context for the new edges.
+            // Add the context for the new call graph edges.
             t6.andWith(IEfilter.id());
             IEcs.orWith(t6.id());
         } else if (OBJECT_SENSITIVE) {
@@ -1304,6 +1308,8 @@ public class PA {
         
         BDD my_IE = CONTEXT_SENSITIVE ? IEcs : IE;
         
+        if (TRACE_SOLVER) out.println("Number of call graph edges: "+my_IE.satCount(IMset));
+        
         BDD t1 = my_IE.relprod(actual, Iset); // V2cxIxV1cxM x IxZxV2 = V1cxMxZxV2cxV2
         BDD t2 = t1.relprod(formal, MZset); // V1cxMxZxV2cxV2 x MxZxV1 = V1cxV1xV2cxV2
         t1.free();
@@ -1345,6 +1351,8 @@ public class PA {
         old2_myIE.free();
         old2_visited.free();
         new_visited.free();
+        
+        if (TRACE_SOLVER) out.println("Number of new call graph edges: "+new_myIE.satCount(IMset));
         
         BDD t1 = new_myIE.relprod(actual, Iset); // V2cxIxV1cxM x IxZxV2 = V1cxMxZxV2cxV2
         BDD t2 = t1.relprod(formal, MZset); // V1cxMxZxV2cxV2 x MxZxV1 = V1cxV1xV2cxV2
