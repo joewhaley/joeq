@@ -70,7 +70,7 @@ public class FindBestPermutation extends Thread {
         int nDomains = countDomains(ordering);
         //pg = new PermutationGenerator(nDomains);
         boolean flip = false;
-        boolean updated = false;
+        boolean updated = true;
         for (int i = 0; i < N_ITER; ++i) {
             FindBestPermutation t = new FindBestPermutation(reverse, ordering, filename);
             long time = System.currentTimeMillis();
