@@ -14,8 +14,10 @@ import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -49,6 +51,7 @@ import Util.Collections.IndexMap;
 import Util.Collections.Pair;
 import Util.Graphs.PathNumbering;
 import Util.Graphs.SCComponent;
+import Util.Graphs.Traversals;
 import Util.Graphs.PathNumbering.Range;
 import Util.Graphs.PathNumbering.Selector;
 
@@ -70,6 +73,7 @@ public class PA {
 
     boolean ADD_CLINIT = true;
     boolean ADD_THREADS = true;
+    boolean ADD_FINALIZERS = true;
     boolean FILTER_TYPE = true;
     boolean INCREMENTAL1 = true;
     boolean INCREMENTAL2 = true;
@@ -89,6 +93,7 @@ public class PA {
     
     int V_BITS=16, I_BITS=15, H_BITS=15, Z_BITS=5, F_BITS=12, T_BITS=12, N_BITS=11, M_BITS=14;
     int VC_BITS=1, HC_BITS=1;
+    int MAX_HC_BITS = Integer.parseInt(System.getProperty("pa.maxhc", "6"));
     
     IndexMap/*Node*/ Vmap;
     IndexMap/*ProgramLocation*/ Imap;
@@ -108,12 +113,12 @@ public class PA {
     BDD hT;     // H1xT2, heap type                     (no context)
     BDD aT;     // T1xT2, assignable types              (no context)
     BDD cha;    // T2xNxM, class hierarchy information  (no context)
-    BDD actual; // IxZxV2, actual parameters            (+context)
-    BDD formal; // MxZxV1, formal parameters            (+context)
-    BDD Iret;   // IxV1, invocation return value        (+context)
-    BDD Mret;   // MxV2, method return value            (+context)
-    BDD Ithr;   // IxV1, invocation thrown value        (+context)
-    BDD Mthr;   // MxV2, method thrown value            (+context)
+    BDD actual; // IxZxV2, actual parameters            (no context)
+    BDD formal; // MxZxV1, formal parameters            (no context)
+    BDD Iret;   // IxV1, invocation return value        (no context)
+    BDD Mret;   // MxV2, method return value            (no context)
+    BDD Ithr;   // IxV1, invocation thrown value        (no context)
+    BDD Mthr;   // MxV2, method thrown value            (no context)
     BDD mI;     // MxIxN, method invocations            (no context)
     BDD mV;     // MxV, method variables                (no context)
     
@@ -124,7 +129,7 @@ public class PA {
     
     BDD visited; // M, visited methods
     
-    String varorder = System.getProperty("bddordering", "N_F_Z_I_M_T1_V2xV1_V2cxV1c_H2c_H2_T2_H1c_H1");
+    String varorder = System.getProperty("bddordering", "N_F_Z_I_M_T1_V2xV1_V2cxV1c_H2cxH2_T2_H1cxH1");
     //String varorder = System.getProperty("bddordering", "N_F_Z_I_M_T1_V2xV1_H2_T2_H1");
     boolean reverseLocal = System.getProperty("bddreverse", "true").equals("true");
     
@@ -148,6 +153,7 @@ public class PA {
     
     public void initialize() {
         bdd = BDDFactory.init(bddnodes, bddcache);
+        bdd.setMaxIncrease(bddnodes/4);
         
         V1 = makeDomain("V1", V_BITS);
         V2 = makeDomain("V2", V_BITS);
@@ -166,7 +172,6 @@ public class PA {
         H1c = makeDomain("H1c", HC_BITS);
         H2c = makeDomain("H2c", HC_BITS);
         
-        // IxH1xN x H1xT2
         int[] ordering = bdd.makeVarOrdering(reverseLocal, varorder);
         bdd.setVarOrder(ordering);
         
@@ -359,18 +364,20 @@ public class PA {
         Mthr.orWith(bdd1);
     }
     
-    void addToVP(Node p, int H_i) {
+    void addToVP(BDD V1H1context, Node p, int H_i) {
         int V1_i = Vmap.get(p);
         BDD bdd1 = V1.ithVar(V1_i);
         bdd1.andWith(H1.ithVar(H_i));
+        if (CONTEXT_SENSITIVE) bdd1.andWith(V1H1context.id());
         if (TRACE_RELATIONS) out.println("Adding to vP: "+bdd1.toStringWithDomains());
         vP.orWith(bdd1);
     }
     
-    void addToVP(BDD V_bdd, Node h) {
+    void addToVP(BDD V1H1context, BDD V_bdd, Node h) {
         int H_i = Hmap.get(h);
         BDD bdd1 = H1.ithVar(H_i);
         bdd1.andWith(V_bdd.id());
+        if (CONTEXT_SENSITIVE) bdd1.andWith(V1H1context.id());
         if (TRACE_RELATIONS) out.println("Adding to vP: "+bdd1.toStringWithDomains());
         vP.orWith(bdd1);
     }
@@ -434,7 +441,8 @@ public class PA {
         Range r_edge = vCnumbering.getEdge(p);
         Range r_caller = vCnumbering.getRange(mc.getMethod());
         if (r_edge == null) {
-            System.out.println("Cannot find edge "+p);
+            out.println("Cannot find edge "+p);
+            return bdd.one();
         }
         BDD context = buildContextMap(V2c,
                                       PathNumbering.toBigInt(r_caller.low),
@@ -447,7 +455,6 @@ public class PA {
     
     public static BDD buildContextMap(BDDDomain d1, BigInteger startD1, BigInteger endD1,
                                       BDDDomain d2, BigInteger startD2, BigInteger endD2) {
-        BDDFactory bdd = d1.getFactory();
         BDD r;
         BigInteger sizeD1 = endD1.subtract(startD1);
         BigInteger sizeD2 = endD2.subtract(startD2);
@@ -488,12 +495,13 @@ public class PA {
         BDD M_bdd = M.ithVar(M_i);
         addToVisited(M_bdd);
         
-        BDD V1V2context = null;
+        BDD V1V2context = null, V1H1context = null;
         if (CONTEXT_SENSITIVE) {
             Number n1 = vCnumbering.numberOfPathsTo(m);
             int bits = BigInteger.valueOf(n1.longValue()).bitLength();
             V1V2context = V1c.buildAdd(V2c, bits, 0L);
             V1V2context.andWith(V1c.varRange(0, n1.longValue()-1));
+            V1H1context = (BDD) V1H1correspondence.get(m);
         }
         
         if (m.getBytecode() == null) {
@@ -503,11 +511,12 @@ public class PA {
             if (retType instanceof jq_Reference) {
                 Node node = UnknownTypeNode.get((jq_Reference) retType);
                 addToMret(M_bdd, node);
-                visitNode(V1V2context, node);
+                visitNode(V1V2context, null, node);
             }
             M_bdd.free();
             if (CONTEXT_SENSITIVE) {
                 V1V2context.free();
+                V1H1context.free();
             }
             return;
         }
@@ -597,14 +606,15 @@ public class PA {
                 addToMthr(M_bdd, V_i);
             }
             
-            visitNode(V1V2context, node);
+            visitNode(V1V2context, V1H1context, node);
         }
         if (CONTEXT_SENSITIVE) {
             V1V2context.free();
+            V1H1context.free();
         }
     }
     
-    public void visitNode(BDD V1V2context, Node node) {
+    public void visitNode(BDD V1V2context, BDD V1H1context, Node node) {
         if (TRACE) out.println("Visiting node "+node);
         
         if (node instanceof ConcreteTypeNode ||
@@ -619,14 +629,15 @@ public class PA {
         int V_i = Vmap.get(node);
         BDD V_bdd = V1.ithVar(V_i);
         
-        if (node instanceof ConcreteTypeNode ||
-            node instanceof ConcreteObjectNode ||
-            node instanceof UnknownTypeNode ||
-            node instanceof GlobalNode) {
-            addToVP(V_bdd, node);
-        }
-        
-        if (node instanceof GlobalNode) {
+        if (node instanceof ConcreteTypeNode) {
+            addToVP(V1H1context, V_bdd, node);
+        } else if (node instanceof ConcreteObjectNode ||
+                   node instanceof UnknownTypeNode ||
+                   node == GlobalNode.GLOBAL) {
+            BDD context = bdd.one();
+            addToVP(context, V_bdd, node);
+            context.free();
+        } else if (node instanceof GlobalNode) {
             int V2_i = Vmap.get(GlobalNode.GLOBAL);
             BDD context = bdd.one();
             addToA(context, V_bdd, V2_i);
@@ -705,7 +716,7 @@ public class PA {
             addToVT(V_i, type);
         }
         
-        // build up 'hT', and identify clinit and thread run methods.
+        // build up 'hT', and identify clinit, thread run, finalizers.
         for (int H_i = last_H; H_i < Hmap.size(); ++H_i) {
             Node n = (Node) Hmap.get(H_i);
             jq_Reference type = n.getDeclaredType();
@@ -713,8 +724,10 @@ public class PA {
             addToHT(H_i, type);
             
             if (type != null) {
-                if (n instanceof ConcreteTypeNode && type instanceof jq_Class)
+                if (n instanceof ConcreteTypeNode && type instanceof jq_Class) {
                     addClassInitializer((jq_Class) type);
+                    addFinalizer((jq_Class) type);
+                }
                 if (ADD_THREADS &&
                     (type.isSubtypeOf(PrimordialClassLoader.getJavaLangThread()) ||
                      type.isSubtypeOf(PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/Runnable;")))) {
@@ -781,6 +794,16 @@ public class PA {
         }
     }
     
+    jq_NameAndDesc finalizer_method = new jq_NameAndDesc("finalize", "()V");
+    public void addFinalizer(jq_Class c) {
+        if (!ADD_FINALIZERS) return;
+        jq_Method m = c.getVirtualMethod(finalizer_method);
+        if (m != null) {
+            visitMethod(m);
+            roots.add(m);
+        }
+    }
+    
     jq_NameAndDesc run_method = new jq_NameAndDesc("run", "()V");
     public void addThreadRun(int H_i, jq_Class c) {
         if (!ADD_THREADS) return;
@@ -789,7 +812,9 @@ public class PA {
             visitMethod(m);
             roots.add(m);
             Node p = MethodSummary.getSummary(CodeCache.getCode(m)).getParamNode(0);
-            addToVP(p, H_i);
+            BDD context = bdd.one();
+            addToVP(context, p, H_i);
+            context.free();
         }
     }
     
@@ -1167,7 +1192,7 @@ public class PA {
         for (int major = 1; ; ++major) {
             change = false;
             
-            if (TRACE_SOLVER) out.println("Major iteration "+major);
+            out.println("Discovering call graph, iteration "+major+": "+visitedMethods.size()+" methods.");
             long time = System.currentTimeMillis();
             buildTypes();
             solvePointsTo();
@@ -1254,21 +1279,29 @@ public class PA {
             dis.calculateIEc(cg);
             time = System.currentTimeMillis() - time;
             System.out.println("done. ("+time/1000.+" seconds)");
+            
+            if (dis.CONTEXT_SENSITIVE) {
+                System.out.print("Building var-heap context correspondence...");
+                time = System.currentTimeMillis();
+                dis.buildVarHeapCorrespondence(cg);
+                time = System.currentTimeMillis() - time;
+                System.out.println("done. ("+time/1000.+" seconds)");
+            }
         }
         
         long time = System.currentTimeMillis();
         
         GlobalNode.GLOBAL.addDefaultStatics();
-        BDD V1V2context = null;
+        BDD context = null;
         if (dis.CONTEXT_SENSITIVE) {
-            V1V2context = dis.bdd.one();
+            context = dis.bdd.one();
         }
-        dis.visitNode(V1V2context, GlobalNode.GLOBAL);
+        dis.visitNode(context, context, GlobalNode.GLOBAL);
         for (Iterator i = ConcreteObjectNode.getAll().iterator(); i.hasNext(); ) {
-            dis.visitNode(V1V2context, (ConcreteObjectNode) i.next());
+            dis.visitNode(context, context, (ConcreteObjectNode) i.next());
         }
         if (dis.CONTEXT_SENSITIVE) {
-            V1V2context.free();
+            context.free();
         }
         
         for (Iterator i = roots.iterator(); i.hasNext(); ) {
@@ -1457,18 +1490,18 @@ public class PA {
         Map initialCounts = new ThreadRootMap(thread_runs);
         BigInteger paths = (BigInteger) pn.countPaths(cg.getRoots(), cg.getCallSiteNavigator(), initialCounts);
         System.out.println("Vars="+vars+" Heaps="+heaps+" Classes="+classes.size()+" Fields="+fields.size()+" Paths="+paths);
-        double log2 = Math.log(2);
-        V_BITS = (int) (Math.log(vars+256)/log2 + 1.0);
-        I_BITS = (int) (Math.log(calls)/log2 + 1.0);
-        H_BITS = (int) (Math.log(heaps+256)/log2 + 1.0);
-        F_BITS = (int) (Math.log(fields.size()+64)/log2 + 2.0);
-        T_BITS = (int) (Math.log(classes.size()+64)/log2 + 2.0);
+        V_BITS = BigInteger.valueOf(vars+256).bitLength();
+        I_BITS = BigInteger.valueOf(calls).bitLength();
+        H_BITS = BigInteger.valueOf(heaps+256).bitLength();
+        F_BITS = BigInteger.valueOf(fields.size()+64).bitLength();
+        T_BITS = BigInteger.valueOf(classes.size()+64).bitLength();
         N_BITS = I_BITS;
-        M_BITS = (int) (Math.log(methods)/log2 + 1.0);
+        M_BITS = BigInteger.valueOf(methods).bitLength() + 1;
         VC_BITS = paths.bitLength();
         VC_BITS = Math.min(60, VC_BITS);
-        System.out.println("Var bits="+V_BITS+" Heap bits="+H_BITS+" Class bits="+T_BITS+" Field bits="+F_BITS);
-        System.out.println("Var context bits="+VC_BITS);
+        System.out.println(" V="+V_BITS+" I="+I_BITS+" H="+H_BITS+
+                           " F="+F_BITS+" T="+T_BITS+" N="+N_BITS+
+                           " M="+M_BITS+" VC="+VC_BITS);
         return pn;
     }
 
@@ -1476,11 +1509,18 @@ public class PA {
     
     public class HeapPathSelector implements Selector {
 
+        jq_Class collection_class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljava/util/Collection;");
+        jq_Class map_class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljava/util/Map;");
+        HeapPathSelector() {
+            collection_class.prepare();
+            map_class.prepare();
+        }
+        
         /* (non-Javadoc)
          * @see Util.Graphs.PathNumbering.Selector#isImportant(Util.Graphs.SCComponent, Util.Graphs.SCComponent)
          */
         public boolean isImportant(SCComponent scc1, SCComponent scc2, BigInteger num) {
-            if (num.bitLength() > HC_BITS) return false;
+            if (num.bitLength() > MAX_HC_BITS) return false;
             Set s = scc2.nodeSet();
             Iterator i = s.iterator();
             Object o = i.next();
@@ -1488,6 +1528,20 @@ public class PA {
             if (o instanceof ProgramLocation) return true;
             jq_Method m = (jq_Method) o;
             if (!m.getReturnType().isReferenceType()) return false;
+            if (m.getBytecode() == null) return false;
+            MethodSummary ms = MethodSummary.getSummary(CodeCache.getCode(m));
+            for (i = ms.getReturned().iterator(); i.hasNext(); ) {
+                Node n = (Node) i.next();
+                if (!(n instanceof ConcreteTypeNode))
+                    return false;
+                jq_Reference type = n.getDeclaredType();
+                if (type == null)
+                    return false;
+                type.prepare();
+                if (!type.isSubtypeOf(collection_class) &&
+                    !type.isSubtypeOf(map_class))
+                    return false;
+            }
             return true;
         }
     }
@@ -1497,7 +1551,6 @@ public class PA {
         Map initialCounts = new ThreadRootMap(thread_runs);
         BigInteger paths = (BigInteger) pn.countPaths(cg.getRoots(), cg.getCallSiteNavigator(), initialCounts);
         HC_BITS = paths.bitLength();
-        HC_BITS = Math.min(10, HC_BITS);
         System.out.println("Heap context bits="+HC_BITS);
         return pn;
     }
@@ -1548,5 +1601,92 @@ public class PA {
             callSite = new ProgramLocation.BCProgramLocation(m, bcIndex);
         }
         return callSite;
+    }
+    
+    Map V1H1correspondence;
+    public void buildVarHeapCorrespondence(CallGraph cg) {
+        BDDPairing V2cH2ctoV1cH1c = bdd.makePair();
+        V2cH2ctoV1cH1c.set(new BDDDomain[] {V2c, H2c}, new BDDDomain[] {V1c, H1c});
+        BDDPairing V2ctoV1c = bdd.makePair(V2c, V1c);
+        BDDPairing H2ctoH1c = bdd.makePair(H2c, H1c);
+        BDD V1cset = V1c.set();
+        BDD H1cset = H1c.set();
+        
+        V1H1correspondence = new HashMap();
+        for (Iterator i = cg.getRoots().iterator(); i.hasNext(); ) {
+            jq_Method root = (jq_Method) i.next();
+            Number n1 = vCnumbering.numberOfPathsTo(root);
+            Number n2 = hCnumbering.numberOfPathsTo(root);
+            BDD relation;
+            if (n1.equals(n2)) {
+                relation = V1c.buildAdd(H1c, BigInteger.valueOf(n1.longValue()).bitLength(), 0);
+                relation.andWith(V1c.varRange(0, n1.longValue()-1));
+            } else {
+                // just intermix them all, because we don't know the mapping.
+                relation = V1c.varRange(0, n1.longValue()-1);
+                relation.andWith(H1c.varRange(0, n2.longValue()-1));
+            }
+            V1H1correspondence.put(root, relation);
+        }
+        List rpo = Traversals.reversePostOrder(cg.getMethodNavigator(), cg.getRoots());
+        for (Iterator i = rpo.iterator(); i.hasNext(); ) {
+            jq_Method callee = (jq_Method) i.next();
+            //Assert._assert(!V1H1correspondence.containsKey(callee));
+            BDD calleeRelation;
+            calleeRelation = (BDD) V1H1correspondence.get(callee);
+            if (calleeRelation == null)
+                calleeRelation = bdd.zero();
+            for (Iterator j = cg.getCallers(callee).iterator(); j.hasNext(); ) {
+                ProgramLocation cs = (ProgramLocation) j.next();
+                jq_Method caller = cs.getMethod();
+                BDD callerRelation = (BDD) V1H1correspondence.get(caller);
+                if (callerRelation == null) continue;
+                Range r1_caller = vCnumbering.getRange(caller);
+                Range r1_edge = vCnumbering.getEdge(cs, callee);
+                Range r2_caller = hCnumbering.getRange(caller);
+                Range r2_edge = hCnumbering.getEdge(cs, callee);
+                BDD cm1;
+                BDD tmpRel;
+                boolean r1_same = r1_caller.equals(r1_edge);
+                boolean r2_same = r2_caller.equals(r2_edge);
+                if (!r1_same) {
+                    cm1 = buildContextMap(V1c,
+                                          PathNumbering.toBigInt(r1_caller.low),
+                                          PathNumbering.toBigInt(r1_caller.high),
+                                          V2c,
+                                          PathNumbering.toBigInt(r1_edge.low),
+                                          PathNumbering.toBigInt(r1_edge.high));
+                    tmpRel = callerRelation.relprod(cm1, V1cset);
+                    cm1.free();
+                } else {
+                    tmpRel = callerRelation.id();
+                }
+                BDD tmpRel2;
+                if (!r2_same) {
+                    cm1 = buildContextMap(H1c,
+                                          PathNumbering.toBigInt(r2_caller.low),
+                                          PathNumbering.toBigInt(r2_caller.high),
+                                          H2c,
+                                          PathNumbering.toBigInt(r2_edge.low),
+                                          PathNumbering.toBigInt(r2_edge.high));
+                    tmpRel2 = tmpRel.relprod(cm1, H1cset);
+                    tmpRel.free();
+                    cm1.free();
+                } else {
+                    tmpRel2 = tmpRel;
+                }
+                if (!r1_same) {
+                    if (!r2_same) {
+                        tmpRel2.replaceWith(V2cH2ctoV1cH1c);
+                    } else {
+                        tmpRel2.replaceWith(V2ctoV1c);
+                    }
+                } else if (!r2_same) {
+                    tmpRel2.replaceWith(H2ctoH1c);
+                }
+                calleeRelation.orWith(tmpRel2);
+            }
+            V1H1correspondence.put(callee, calleeRelation);
+        }
     }
 }
