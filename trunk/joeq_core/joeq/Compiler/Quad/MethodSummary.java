@@ -28,6 +28,7 @@ import Clazz.jq_Type;
 import Compil3r.Quad.AndersenInterface.AndersenField;
 import Compil3r.Quad.AndersenInterface.AndersenMethod;
 import Compil3r.Quad.AndersenInterface.AndersenReference;
+import Compil3r.Quad.AndersenInterface.AndersenType;
 import Compil3r.Quad.BytecodeToQuad.jq_ReturnAddressType;
 import Compil3r.Quad.Operand.AConstOperand;
 import Compil3r.Quad.Operand.ParamListOperand;
@@ -1767,7 +1768,9 @@ public class MethodSummary {
         public ReturnValueNode(ProgramLocation m) { super(m); }
         private ReturnValueNode(ReturnValueNode that) { super(that); }
         
-        public AndersenReference getDeclaredType() { return (AndersenReference)m.getMethod().and_getReturnType(); }
+        public AndersenReference getDeclaredType() {
+            return (AndersenReference) m.getTargetMethod().and_getReturnType();
+        }
         
         public final Node copy() { return new ReturnValueNode(this); }
         
