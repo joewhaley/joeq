@@ -3,10 +3,6 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Analysis.FlowInsensitive;
 
-import java.io.DataOutput;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -21,6 +17,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
+
+import java.io.DataOutput;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.PrintStream;
 
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
@@ -66,12 +67,14 @@ import joeq.Compiler.Quad.Operator.Monitor;
 import joeq.Compiler.Quad.Operator.Move;
 import joeq.Compiler.Quad.Operator.New;
 import joeq.Compiler.Quad.Operator.NewArray;
+import joeq.Compiler.Quad.Operator.Phi;
 import joeq.Compiler.Quad.Operator.Putfield;
 import joeq.Compiler.Quad.Operator.Putstatic;
 import joeq.Compiler.Quad.Operator.Return;
 import joeq.Compiler.Quad.Operator.Special;
 import joeq.Compiler.Quad.Operator.Unary;
 import joeq.Compiler.Quad.RegisterFactory.Register;
+import joeq.Compiler.Quad.SSA.EnterSSA;
 import joeq.Main.HostedVM;
 import joeq.Memory.Address;
 import joeq.Memory.StackAddress;
@@ -112,6 +115,8 @@ public class MethodSummary {
     public static final boolean IGNORE_STATIC_FIELDS = false;
     public static final boolean VERIFY_ASSERTIONS = false;
 
+    public static boolean SSA = System.getProperty("ssa") != null;
+    
     public static final boolean USE_IDENTITY_HASHCODE = false;
     public static final boolean DETERMINISTIC = !USE_IDENTITY_HASHCODE && true;
     
@@ -182,7 +187,9 @@ public class MethodSummary {
         if (m.getBytecode() == null)
             return null;
 
-        return getSummary(CodeCache.getCode(m));
+        ControlFlowGraph cfg = CodeCache.getCode(m);
+        if (SSA) new EnterSSA().visitCFG(cfg);
+        return getSummary(cfg);
     }
     
     /**
@@ -875,6 +882,23 @@ public class MethodSummary {
                 }
             }
         }
+        
+        public void visitPhi(Quad obj) {
+            Set set = NodeSet.FACTORY.makeSet();
+            ParamListOperand plo = Phi.getSrcs(obj);
+            for (int i=0; i<plo.length(); ++i) {
+                RegisterOperand rop = plo.get(i);
+                if (rop == null) continue;
+                Register r = rop.getRegister();
+                Object foo = s.registers[r.getNumber()];
+                if (foo instanceof Collection)
+                    set.addAll((Collection) foo);
+                else
+                    set.add(foo);
+            }
+            s.registers[Phi.getDest(obj).getRegister().getNumber()] = set;
+        }
+        
         LoopAnalysis la;
         /** Visit an object allocation instruction. */
         public void visitNew(Quad obj) {
@@ -5079,7 +5103,9 @@ outer:
         for (Iterator i = methods.iterator(); i.hasNext(); ) {
             jq_Method m = (jq_Method) i.next();
             if (m.getBytecode() == null) continue;
-            MethodSummary ms = getSummary(CodeCache.getCode(m));
+            ControlFlowGraph cfg = CodeCache.getCode(m);
+            if (SSA) new EnterSSA().visitCFG(cfg);
+            MethodSummary ms = getSummary(cfg);
             if (DUMP_DOTGRAPH) ms.dotGraph(new DataOutputStream(System.out));
             else System.out.println(ms);
         }

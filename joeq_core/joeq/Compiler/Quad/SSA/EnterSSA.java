@@ -28,6 +28,7 @@ import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.Operator.Move;
 import joeq.Compiler.Quad.Operator.Phi;
+import joeq.Compiler.Quad.Operator.Special;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Runtime.TypeCheck;
 import joeq.Util.Assert;
@@ -105,9 +106,9 @@ public class EnterSSA implements ControlFlowGraphVisitor {
             ExceptionHandlerList ehl = block.getExceptionHandlers();
             if (!ehl.isEmpty()) {
                 Quad pei = block.getLastQuad();
-                if (pei != null && !pei.getThrownExceptions().isEmpty() && Invoke.getDest(pei) != null) {
+                if (pei != null && !pei.getThrownExceptions().isEmpty() && Special.getOp1(pei) instanceof RegisterOperand) {
                     boolean copyNeeded = false;
-                    RegisterOperand v = Invoke.getDest(pei);
+                    RegisterOperand v = (RegisterOperand) Special.getOp1(pei);
                     Register orig = v.getRegister();
                     Iterator out = ehl.mayCatch(pei.getThrownExceptions()).iterator();
                     while (out.hasNext()) {
