@@ -88,7 +88,7 @@ public abstract class TraceFlags {
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceQuadInterpreter")) {
-            Interpreter.QuadInterpreter.State.TRACE = true;
+            Interpreter.QuadInterpreter.TRACE = true;
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceStackWalker")) {
