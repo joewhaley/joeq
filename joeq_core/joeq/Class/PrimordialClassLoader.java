@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -54,9 +55,11 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
         /** Open a stream to read the given resource, or return
          *  <code>null</code> if resource cannot be found. */
         abstract InputStream getResourceAsStream(String resourcename);
+        abstract boolean containsResource(String name);
         /** Iterate over all classes in the given package. */
         Iterator listPackage(String packagename) { return listPackage(packagename, false); }
         abstract Iterator listPackage(String packagename, boolean recursive);
+        abstract Iterator listPackages();
     }
     /** A .zip or .jar file in the CLASSPATH. */
     static class ZipFileElement extends ClasspathElement {
@@ -65,13 +68,18 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
         public String toString() { return zf.getName(); }
         InputStream getResourceAsStream(String name) {
             try { // look for name in zipfile, return null if something goes wrong.
-                if (TRACE) out.println("Searching for "+name+" in zip file "+zf);
+                if (TRACE) out.println("Searching for "+name+" in zip file "+zf.getName());
                 ZipEntry ze = zf.getEntry(name);
                 return (ze==null)?null:zf.getInputStream(ze);
             } catch (UnsatisfiedLinkError e) {
                 System.err.println("UNSATISFIED LINK ERROR: "+name);
                 return null;
             } catch (IOException e) { return null; }
+        }
+        boolean containsResource(String name) {
+            if (TRACE) out.println("Searching for "+name+" in zip file "+zf.getName());
+            ZipEntry ze = zf.getEntry(name);
+            return ze != null;
         }
         Iterator listPackage(final String pathname, final boolean recursive) {
             // look for directory name first
@@ -94,6 +102,21 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
                     return ((ZipEntry)o).getName();
                 }
             });
+        }
+        Iterator listPackages() {
+            if (TRACE) out.println("Listing packages of zip file "+zf.getName());
+            LinkedHashSet result = new LinkedHashSet();
+            for (Iterator i=new EnumerationIterator(zf.entries()); i.hasNext(); ) {
+                ZipEntry zze = (ZipEntry) i.next();
+                if (zze.isDirectory()) continue;
+                String name = zze.getName();
+                if (name.endsWith(".class")) {
+                    int index = name.lastIndexOf('/');
+                    result.add(name.substring(0, index+1));
+                }
+            }
+            if (TRACE) out.println("Result: "+result);
+            return result.iterator();
         }
         /** Close the zipfile when this object is garbage-collected. */
         protected void finalize() throws Throwable {
@@ -121,6 +144,12 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
                 return null; // if anything goes wrong, return null.
             }
         }
+        boolean containsResource(String name) {
+            if (filesep.charAt(0) != '/') name = name.replace('/', filesep.charAt(0));
+            if (TRACE) out.println("Searching for "+name+" in path "+path);
+            File f = new File(path, name);
+            return f.exists();
+        }
         Iterator listPackage(final String pathn, final boolean recursive) {
             String path_name;
             if (filesep.charAt(0) != '/') path_name = pathn.replace('/', filesep.charAt(0));
@@ -146,6 +175,32 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
                 while (dirs.hasNext()) {
                     result = new AppendIterator(result, listPackage((String)dirs.next(), recursive));
                 }
+            }
+            return result;
+        }
+        Iterator listPackages() {
+            if (TRACE) out.println("Listing packages of path "+path);
+            return listPackages(path);
+        }
+        Iterator listPackages(final String dir) {
+            File f = new File(dir);
+            if (!f.exists() || !f.isDirectory()) return Default.nullIterator;
+            Iterator result = new FilterIterator(new ArrayIterator(f.list()),
+                new FilterIterator.Filter() {
+                    public boolean isElement(Object o) {
+                        return new File((String)map(o)).isDirectory();
+                    }
+                    public Object map(Object o) { return dir + ((String)o); }
+                });
+            Iterator dirs = new FilterIterator(new ArrayIterator(f.list()),
+                new FilterIterator.Filter() {
+                    public boolean isElement(Object o) {
+                        return new File((String)map(o)).isDirectory();
+                    }
+                    public Object map(Object o) { return dir + ((String)o); }
+                });
+            while (dirs.hasNext()) {
+                result = new AppendIterator(result, listPackages((String) dirs.next()));
             }
             return result;
         }
@@ -214,6 +269,18 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
         return result;
     }
     
+    public Iterator listPackages() {
+        Iterator result = null;
+        for (Iterator it = classpathList.iterator(); it.hasNext(); ) {
+            ClasspathElement cpe = (ClasspathElement)it.next();
+            Iterator lp = cpe.listPackages();
+            if (lp == Default.nullIterator) continue;
+            result = result==null?lp:new AppendIterator(lp, result);
+        }
+        if (result == null) return Default.nullIterator;
+        return result;
+    }
+
     public String classpathToString() {
         StringBuffer result = new StringBuffer(pathsep);
         for (Iterator it = classpathList.iterator(); it.hasNext(); ) {
@@ -238,6 +305,28 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
         jq.Assert(classname.indexOf('/')==-1); // should have '.' separators.
         // Swap all '.' for '/' & append ".class"
         return classname.replace('.', filesep.charAt(0)) + ".class";
+    }
+
+    public String getResourcePath(String name) {
+        for (Iterator it = classpathList.iterator(); it.hasNext(); ) {
+            ClasspathElement cpe = (ClasspathElement) it.next();
+            if (cpe.containsResource(name))
+                return cpe.toString();
+        }
+        // Couldn't find resource.
+        return null;
+    }
+
+    public String getPackagePath(String name) {
+        for (Iterator it = classpathList.iterator(); it.hasNext(); ) {
+            ClasspathElement cpe = (ClasspathElement) it.next();
+            for (Iterator it2 = cpe.listPackages(); it2.hasNext(); ) {
+                if (name.equals(it2.next()))
+                    return cpe.toString();
+            }
+        }
+        // Couldn't find resource.
+        return null;
     }
 
     /** Open an <code>InputStream</code> on a resource found somewhere
