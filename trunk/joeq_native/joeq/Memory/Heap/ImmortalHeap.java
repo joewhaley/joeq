@@ -92,7 +92,7 @@ public class ImmortalHeap extends Heap {
      */
     public Object allocateAlignedArray(jq_Array type, int numElements, int alignment) {
         int size = type.getInstanceSize(numElements);
-        size = Address.align(size, HeapAddress.logSize());
+        size = Address.alignInt(size, HeapAddress.logSize());
         Object tib = type.getVTable();
         int offset = ObjectLayout.ARRAY_HEADER_SIZE;
         HeapAddress region = allocateZeroedMemory(size, alignment, offset);

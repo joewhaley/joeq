@@ -190,7 +190,7 @@ public class SegregatedListHeap extends Heap implements GCConstants {
         // Use direct addressing to avoid spurious array bounds check on common case allocation path.
         // NOTE: we exploit the fact that all allocations are word aligned to
         //       reduce the size of the index array by 4x....
-        size = Address.align(size, HeapAddress.logSize());
+        size = Address.alignInt(size, HeapAddress.logSize());
         jq_NativeThread nt = Unsafe.getThreadBlock().getNativeThread();
         HeapAddress loc = HeapAddress.addressOf(nt.GC_INDEX_ARRAY);
         loc = (HeapAddress) loc.offset(size);

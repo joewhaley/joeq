@@ -44,7 +44,7 @@ public abstract class Address {
 
     public abstract String stringRep();
 
-    public static final int align(int val, int shift) {
+    public static final int alignInt(int val, int shift) {
         int v = (1 << shift) - 1;
         return (val + v) & ~v;
     }
