@@ -4,37 +4,41 @@
  * Created on January 9, 2002, 9:17 AM
  *
  * @author  John Whaley
- * @version 
+ * @version
  */
 
 package Main;
 
+import Bootstrap.PrimordialClassLoader;
 import Clazz.*;
-import Compil3r.Quad.*;
-import java.io.*;
+import Compil3r.Quad.BasicBlockVisitor;
+import Compil3r.Quad.CodeCache;
+import Compil3r.Quad.ControlFlowGraphVisitor;
+import Compil3r.Quad.QuadVisitor;
+import Run_Time.Reflection;
+import UTF.Utf8;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.*;
-import Main.jq;
-import Run_Time.*;
-import Bootstrap.*;
-import UTF.*;
 
 public abstract class Driver {
 
     public static void main(String[] args) {
         // initialize jq
         jq.initializeForHostJVMExecution();
-        
+
         try {
-            interpreterClass = Class.forName("Interpreter.QuadInterpreter$State",
-                                             false, Driver.class.getClassLoader());
+            interpreterClass = Class.forName("Interpreter.QuadInterpreter$State", false, Driver.class.getClassLoader());
         } catch (ClassNotFoundException x) {
             System.err.println("Warning: interpreter class not found.");
         }
-        
+
         if ((args.length == 0) || args[0].equals("-i")) {
             // interactive mode
             BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
-            for (;;) {
+            for (; ;) {
                 String[] commands;
                 try {
                     System.out.print("joeq> ");
@@ -43,7 +47,7 @@ public abstract class Driver {
                     StringTokenizer st = new StringTokenizer(line);
                     int size = st.countTokens();
                     commands = new String[size];
-                    for (int i=0; i<size; ++i) {
+                    for (int i = 0; i < size; ++i) {
                         commands[i] = st.nextToken();
                     }
                     jq.Assert(!st.hasMoreTokens());
@@ -51,12 +55,12 @@ public abstract class Driver {
                     System.err.println(x.toString());
                     return;
                 }
-                for (int i=0; i<commands.length; ++i) {
+                for (int i = 0; i < commands.length; ++i) {
                     i = processCommand(commands, i);
                 }
             }
         }
-        for (int i=0; i<args.length; ++i) {
+        for (int i = 0; i < args.length; ++i) {
             i = processCommand(args, i);
         }
     }
@@ -67,28 +71,28 @@ public abstract class Driver {
     static boolean trace_cfg = false;
     static boolean trace_method = false;
     static boolean trace_type = false;
-    
+
     static Class interpreterClass;
 
     private static void addClassesInPackage(String pkgName, boolean recursive) {
-	String canonicalPackageName = pkgName.replace('.','/');
-	if (!canonicalPackageName.endsWith("/")) canonicalPackageName += '/';
-	Iterator i = PrimordialClassLoader.loader.listPackage(canonicalPackageName, recursive);
-	if (!i.hasNext()) {
-	    System.err.println("Package "+canonicalPackageName+" not found.");
-	}
-	while (i.hasNext()) {
-	    String canonicalClassName = canonicalizeClassName((String)i.next());
-	    try {
-		jq_Class c = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType(canonicalClassName);
-		c.load();
-		classesToProcess.add(c);
-	    } catch (NoClassDefFoundError x) {
-		System.err.println("Package "+pkgName+": Class not found (canonical name "+canonicalClassName+").");
-	    }
-	}
+        String canonicalPackageName = pkgName.replace('.', '/');
+        if (!canonicalPackageName.endsWith("/")) canonicalPackageName += '/';
+        Iterator i = PrimordialClassLoader.loader.listPackage(canonicalPackageName, recursive);
+        if (!i.hasNext()) {
+            System.err.println("Package " + canonicalPackageName + " not found.");
+        }
+        while (i.hasNext()) {
+            String canonicalClassName = canonicalizeClassName((String) i.next());
+            try {
+                jq_Class c = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType(canonicalClassName);
+                c.load();
+                classesToProcess.add(c);
+            } catch (NoClassDefFoundError x) {
+                System.err.println("Package " + pkgName + ": Class not found (canonical name " + canonicalClassName + ").");
+            }
+        }
     }
-    
+
     public static int processCommand(String[] commandBuffer, int index) {
         try {
             if (commandBuffer[index].equalsIgnoreCase("addtoclasspath")) {
@@ -105,7 +109,7 @@ public abstract class Driver {
                 } else if (which.equalsIgnoreCase("type")) {
                     trace_type = true;
                 } else {
-                    System.err.println("Unknown trace option "+which);
+                    System.err.println("Unknown trace option " + which);
                 }
             } else if (commandBuffer[index].equalsIgnoreCase("method")) {
                 if (methodNamesToProcess == null) methodNamesToProcess = new HashSet();
@@ -113,45 +117,48 @@ public abstract class Driver {
             } else if (commandBuffer[index].equalsIgnoreCase("class")) {
                 String canonicalClassName = canonicalizeClassName(commandBuffer[++index]);
                 try {
-                    jq_Class c = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType(canonicalClassName);
+                    jq_Class c = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType(canonicalClassName);
                     c.load();
                     classesToProcess.add(c);
                 } catch (NoClassDefFoundError x) {
-                    System.err.println("Class "+commandBuffer[index]+" (canonical name "+canonicalClassName+") not found.");
+                    System.err.println("Class " + commandBuffer[index] + " (canonical name " + canonicalClassName + ") not found.");
                 }
             } else if (commandBuffer[index].equalsIgnoreCase("package")) {
-		addClassesInPackage(commandBuffer[++index], /*recursive=*/false);
+                addClassesInPackage(commandBuffer[++index], /*recursive=*/false);
             } else if (commandBuffer[index].equalsIgnoreCase("packages")) {
-		addClassesInPackage(commandBuffer[++index], /*recursive=*/true);
+                addClassesInPackage(commandBuffer[++index], /*recursive=*/true);
             } else if (commandBuffer[index].equalsIgnoreCase("setinterpreter")) {
                 String interpreterClassName = commandBuffer[++index];
                 try {
                     Class cl = Class.forName(interpreterClassName);
                     if (Class.forName("Interpreter.QuadInterpreter$State").isAssignableFrom(cl)) {
                         interpreterClass = cl;
-			System.out.println("Interpreter class changed to "+interpreterClass);
+                        System.out.println("Interpreter class changed to " + interpreterClass);
                     } else {
-                        System.err.println("Class "+interpreterClassName+" does not subclass Interpreter.QuadInterpreter.State.");
+                        System.err.println("Class " + interpreterClassName + " does not subclass Interpreter.QuadInterpreter.State.");
                     }
                 } catch (java.lang.ClassNotFoundException x) {
-                    System.err.println("Cannot find interpreter named "+interpreterClassName+".");
+                    System.err.println("Cannot find interpreter named " + interpreterClassName + ".");
                     System.err.println("Check your classpath and make sure you compiled your interpreter.");
                     return index;
                 }
-                
+
             } else if (commandBuffer[index].equalsIgnoreCase("interpret")) {
                 String fullName = commandBuffer[++index];
-                int b = fullName.lastIndexOf('.')+1;
+                int b = fullName.lastIndexOf('.') + 1;
                 String methodName = fullName.substring(b);
-                String className = canonicalizeClassName(fullName.substring(0, b-1));
+                String className = canonicalizeClassName(fullName.substring(0, b - 1));
                 try {
-                    jq_Class c = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType(className);
-                    c.load(); c.verify(); c.prepare(); c.sf_initialize(); c.cls_initialize();
+                    jq_Class c = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType(className);
+                    c.load();
+                    c.verify();
+                    c.prepare();
+                    c.sf_initialize();
+                    c.cls_initialize();
                     jq_StaticMethod m = null;
                     Utf8 rootm_name = Utf8.get(methodName);
-                    for(Iterator it = java.util.Arrays.asList(c.getDeclaredStaticMethods()).iterator();
-                        it.hasNext(); ) {
-                        jq_StaticMethod sm = (jq_StaticMethod)it.next();
+                    for (Iterator it = java.util.Arrays.asList(c.getDeclaredStaticMethods()).iterator(); it.hasNext();) {
+                        jq_StaticMethod sm = (jq_StaticMethod) it.next();
                         if (sm.getName() == rootm_name) {
                             m = sm;
                             break;
@@ -161,84 +168,89 @@ public abstract class Driver {
                         Object[] args = new Object[m.getParamTypes().length];
                         index = parseMethodArgs(args, m.getParamTypes(), commandBuffer, index);
                         Interpreter.QuadInterpreter.State s = null;
-                        java.lang.reflect.Method im = interpreterClass.getMethod("interpretMethod", new Class[] { Class.forName("Clazz.jq_Method"), new Object[0].getClass()});
-                        s = (Interpreter.QuadInterpreter.State)im.invoke(null, new Object[] {m, args});
+                        java.lang.reflect.Method im = interpreterClass.getMethod("interpretMethod", new Class[]{Class.forName("Clazz.jq_Method"), new Object[0].getClass()});
+                        s = (Interpreter.QuadInterpreter.State) im.invoke(null, new Object[]{m, args});
                         //s = Interpreter.QuadInterpreter.State.interpretMethod(m, args);
                         System.out.flush();
-                        System.out.println("Result of interpretation: "+s);
+                        System.out.println("Result of interpretation: " + s);
                     } else {
-                        System.err.println("Class "+fullName.substring(0, b-1)+" doesn't contain a void static no-argument method with name "+methodName);
+                        System.err.println("Class " + fullName.substring(0, b - 1) + " doesn't contain a void static no-argument method with name " + methodName);
                     }
                 } catch (NoClassDefFoundError x) {
-                    System.err.println("Class "+fullName.substring(0, b-1)+" (canonical name "+className+") not found.");
+                    System.err.println("Class " + fullName.substring(0, b - 1) + " (canonical name " + className + ") not found.");
                     return index;
                 } catch (NoSuchMethodException x) {
-                    System.err.println("Interpreter method in "+interpreterClass+" not found! "+x);
+                    System.err.println("Interpreter method in " + interpreterClass + " not found! " + x);
                     return index;
                 } catch (ClassNotFoundException x) {
-                    System.err.println("Clazz.jq_Method class not found! "+x);
+                    System.err.println("Clazz.jq_Method class not found! " + x);
                     return index;
                 } catch (IllegalAccessException x) {
-                    System.err.println("Cannot access interpreter "+interpreterClass+": "+x);
+                    System.err.println("Cannot access interpreter " + interpreterClass + ": " + x);
                     return index;
                 } catch (java.lang.reflect.InvocationTargetException x) {
-                    System.err.println("Interpreter threw exception: "+x.getTargetException());
+                    System.err.println("Interpreter threw exception: " + x.getTargetException());
                     x.getTargetException().printStackTrace();
                     return index;
                 }
-                
+
             } else if (commandBuffer[index].equalsIgnoreCase("set")) {
                 String fullName = commandBuffer[++index];
-                int b = fullName.lastIndexOf('.')+1;
+                int b = fullName.lastIndexOf('.') + 1;
                 String fieldName = fullName.substring(b);
-                String className = canonicalizeClassName(fullName.substring(0, b-1));
+                String className = canonicalizeClassName(fullName.substring(0, b - 1));
                 try {
-                    jq_Class c = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType(className);
-                    c.load(); c.verify(); c.prepare(); c.sf_initialize(); c.cls_initialize();
+                    jq_Class c = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType(className);
+                    c.load();
+                    c.verify();
+                    c.prepare();
+                    c.sf_initialize();
+                    c.cls_initialize();
                     jq_StaticField m = null;
                     Utf8 sf_name = Utf8.get(fieldName);
-                    for(Iterator it = java.util.Arrays.asList(c.getDeclaredStaticFields()).iterator();
-                        it.hasNext(); ) {
-                        jq_StaticField sm = (jq_StaticField)it.next();
+                    for (Iterator it = java.util.Arrays.asList(c.getDeclaredStaticFields()).iterator(); it.hasNext();) {
+                        jq_StaticField sm = (jq_StaticField) it.next();
                         if (sm.getName() == sf_name) {
                             m = sm;
                             break;
                         }
                     }
                     if (m != null) {
-                        java.lang.reflect.Field f = (java.lang.reflect.Field)Reflection.getJDKMember(m);
+                        java.lang.reflect.Field f = (java.lang.reflect.Field) Reflection.getJDKMember(m);
                         f.setAccessible(true);
                         Object[] o = new Object[1];
                         index = parseArg(o, 0, m.getType(), commandBuffer, index);
                         f.set(null, o[0]);
                     } else {
-                        System.err.println("Class "+fullName.substring(0, b-1)+" doesn't contain a static field with name "+fieldName);
+                        System.err.println("Class " + fullName.substring(0, b - 1) + " doesn't contain a static field with name " + fieldName);
                     }
                 } catch (NoClassDefFoundError x) {
-                    System.err.println("Class "+fullName.substring(0, b-1)+" (canonical name "+className+") not found.");
+                    System.err.println("Class " + fullName.substring(0, b - 1) + " (canonical name " + className + ") not found.");
                     return index;
                 } catch (IllegalAccessException x) {
-                    System.err.println("Cannot access field: "+x);
+                    System.err.println("Cannot access field: " + x);
                     return index;
                 }
-                
+
             } else if (commandBuffer[index].equalsIgnoreCase("addpass")) {
                 String passname = commandBuffer[++index];
-                ControlFlowGraphVisitor mv = null; BasicBlockVisitor bbv = null; QuadVisitor qv = null;
+                ControlFlowGraphVisitor mv = null;
+                BasicBlockVisitor bbv = null;
+                QuadVisitor qv = null;
                 Object o;
                 try {
                     Class c = Class.forName(passname);
                     o = c.newInstance();
                     if (o instanceof ControlFlowGraphVisitor) {
-                        mv = (ControlFlowGraphVisitor)o;
+                        mv = (ControlFlowGraphVisitor) o;
                     } else {
                         if (o instanceof BasicBlockVisitor) {
-                            bbv = (BasicBlockVisitor)o;
+                            bbv = (BasicBlockVisitor) o;
                         } else {
                             if (o instanceof QuadVisitor) {
-                                qv = (QuadVisitor)o;
+                                qv = (QuadVisitor) o;
                             } else {
-                                System.err.println("Unknown pass type "+c);
+                                System.err.println("Unknown pass type " + c);
                                 return index;
                             }
                             bbv = new QuadVisitor.AllQuadVisitor(qv, trace_bb);
@@ -247,40 +259,44 @@ public abstract class Driver {
                     }
                     CodeCache.passes.add(mv);
                 } catch (java.lang.ClassNotFoundException x) {
-                    System.err.println("Cannot find pass named "+passname+".");
+                    System.err.println("Cannot find pass named " + passname + ".");
                     System.err.println("Check your classpath and make sure you compiled your pass.");
                     return index;
                 } catch (java.lang.InstantiationException x) {
-                    System.err.println("Cannot instantiate pass "+passname+": "+x);
+                    System.err.println("Cannot instantiate pass " + passname + ": " + x);
                     return index;
                 } catch (java.lang.IllegalAccessException x) {
-                    System.err.println("Cannot access pass "+passname+": "+x);
+                    System.err.println("Cannot access pass " + passname + ": " + x);
                     System.err.println("Be sure that you made your class public?");
                     return index;
                 }
             } else if (commandBuffer[index].equalsIgnoreCase("runpass")) {
                 String passname = commandBuffer[++index];
-                jq_TypeVisitor cv = null; jq_MethodVisitor mv = null; ControlFlowGraphVisitor cfgv = null; BasicBlockVisitor bbv = null; QuadVisitor qv = null;
+                jq_TypeVisitor cv = null;
+                jq_MethodVisitor mv = null;
+                ControlFlowGraphVisitor cfgv = null;
+                BasicBlockVisitor bbv = null;
+                QuadVisitor qv = null;
                 Object o;
                 try {
                     Class c = Class.forName(passname);
                     o = c.newInstance();
                     if (o instanceof jq_TypeVisitor) {
-                        cv = (jq_TypeVisitor)o;
+                        cv = (jq_TypeVisitor) o;
                     } else {
                         if (o instanceof jq_MethodVisitor) {
-                            mv = (jq_MethodVisitor)o;
+                            mv = (jq_MethodVisitor) o;
                         } else {
                             if (o instanceof ControlFlowGraphVisitor) {
-                                cfgv = (ControlFlowGraphVisitor)o;
+                                cfgv = (ControlFlowGraphVisitor) o;
                             } else {
                                 if (o instanceof BasicBlockVisitor) {
-                                    bbv = (BasicBlockVisitor)o;
+                                    bbv = (BasicBlockVisitor) o;
                                 } else {
                                     if (o instanceof QuadVisitor) {
-                                        qv = (QuadVisitor)o;
+                                        qv = (QuadVisitor) o;
                                     } else {
-                                        System.err.println("Unknown pass type "+c);
+                                        System.err.println("Unknown pass type " + c);
                                         return index;
                                     }
                                     bbv = new QuadVisitor.AllQuadVisitor(qv, trace_bb);
@@ -292,48 +308,85 @@ public abstract class Driver {
                         cv = new jq_MethodVisitor.DeclaredMethodVisitor(mv, methodNamesToProcess, trace_type);
                     }
                 } catch (java.lang.ClassNotFoundException x) {
-                    System.err.println("Cannot find pass named "+passname+".");
+                    System.err.println("Cannot find pass named " + passname + ".");
                     System.err.println("Check your classpath and make sure you compiled your pass.");
                     return index;
                 } catch (java.lang.InstantiationException x) {
-                    System.err.println("Cannot instantiate pass "+passname+": "+x);
+                    System.err.println("Cannot instantiate pass " + passname + ": " + x);
                     return index;
                 } catch (java.lang.IllegalAccessException x) {
-                    System.err.println("Cannot access pass "+passname+": "+x);
+                    System.err.println("Cannot access pass " + passname + ": " + x);
                     System.err.println("Be sure that you made your class public?");
                     return index;
                 }
-                for (Iterator i = classesToProcess.iterator(); i.hasNext(); ) {
-                    jq_Type t = (jq_Type)i.next();
+                for (Iterator i = classesToProcess.iterator(); i.hasNext();) {
+                    jq_Type t = (jq_Type) i.next();
                     try {
                         t.accept(cv);
                     } catch (Exception x) {
-                        System.err.println("Runtime exception occurred while executing pass on "+t+" : "+x);
+                        System.err.println("Runtime exception occurred while executing pass on " + t + " : " + x);
                         x.printStackTrace(System.err);
                     }
                 }
-                System.out.println("Completed pass! "+o);
+                System.out.println("Completed pass! " + o);
             } else if (commandBuffer[index].equalsIgnoreCase("exit") || commandBuffer[index].equalsIgnoreCase("quit")) {
                 System.exit(0);
+            } else if (commandBuffer[index].equalsIgnoreCase("help")) {
+                printHelp();
             } else {
-		int index2 = TraceFlags.setTraceFlag(commandBuffer, index);
-		if (index == index2)
-		    System.err.println("Unknown command "+commandBuffer[index]);
+                int index2 = TraceFlags.setTraceFlag(commandBuffer, index);
+                if (index == index2)
+                    System.err.println("Unknown command " + commandBuffer[index]);
                 else
-                    index = index2-1;
+                    index = index2 - 1;
             }
         } catch (ArrayIndexOutOfBoundsException x) {
             System.err.println("Incomplete command");
         }
         return index;
     }
+
+    public static void printHelp() {
+        String nl = System.getProperty("line.separator");
+        String helpMessage =
+                nl+
+                "Usage: command1 [args...] [command2 [args...]]..."+nl+nl +
+                "1.  addtoclasspath   additional_classpath"+nl +
+                "---->   add to the class path"+nl+nl +
+                "2.  addpass   pass_class_name"+nl +
+                "---->   run compiler pass on all code generated from this point"+nl+nl +
+                "3.  class   class_name"+nl +
+                "---->   add to the list of classes to process"+nl+nl +
+                "4.  exit | quit"+nl +
+                "---->   exit interactive mode"+nl+nl +
+                "5.  help"+nl +
+                "---->   print this message"+nl+nl +
+                "6.  interpret   class_name.static_method_name param_list"+nl +
+                "---->   interpret a static method with the given arguments"+nl+nl +
+                "7.  method   method_name"+nl +
+                "---->   only process methods of the given name"+nl+nl +
+                "8.  package   package_name"+nl +
+                "---->   add all the classes in the specified package to the list of classes to process"+nl+nl +
+                "9.  packages   package_name"+nl +
+                "---->   add all the classes in the specified package and all sub-packages recursively to the list of classes to process"+nl+nl +
+                "10. runpass   pass_class_name"+nl +
+                "---->   run compiler pass on classes in list"+nl+nl +
+                "11. set   class_name.static_field_name value"+nl +
+                "---->   set specified static field to specified value"+nl+nl +
+                "12. trace   bb|cfg|method|type"+nl +
+                "---->   enable tracing options when processing classes"+nl+nl +
+                "Other trace options are available, see Main/TraceFlags.java."+
+                nl;
+        System.out.println(helpMessage);
+    }
+
     public static String canonicalizeClassName(String s) {
-        if (s.endsWith(".class")) s = s.substring(0, s.length()-6);
+        if (s.endsWith(".class")) s = s.substring(0, s.length() - 6);
         s = s.replace('.', '/');
-        String desc = "L"+s+";";
+        String desc = "L" + s + ";";
         return desc;
     }
-    
+
     public static int parseArg(Object[] args, int m, jq_Type type, String[] s_args, int j) {
         if (type == PrimordialClassLoader.loader.getJavaLangString())
             args[m] = s_args[++j];
@@ -354,66 +407,66 @@ public abstract class Driver {
         else if (type == jq_Primitive.DOUBLE) {
             args[m] = Double.valueOf(s_args[++j]);
         } else if (type.isArrayType()) {
-            if (!s_args[++j].equals("{")) 
+            if (!s_args[++j].equals("{"))
                 jq.UNREACHABLE("array parameter doesn't start with {");
-            int count=0;
+            int count = 0;
             while (!s_args[++j].equals("}")) ++count;
-            jq_Type elementType = ((jq_Array)type).getElementType();
+            jq_Type elementType = ((jq_Array) type).getElementType();
             if (elementType == PrimordialClassLoader.loader.getJavaLangString()) {
                 String[] array = new String[count];
-                for (int k=0; k<count; ++k)
-                    array[k] = s_args[j-count+k];
+                for (int k = 0; k < count; ++k)
+                    array[k] = s_args[j - count + k];
                 args[m] = array;
             } else if (elementType == jq_Primitive.BOOLEAN) {
                 boolean[] array = new boolean[count];
-                for (int k=0; k<count; ++k)
-                    array[k] = Boolean.valueOf(s_args[j-count+k]).booleanValue();
+                for (int k = 0; k < count; ++k)
+                    array[k] = Boolean.valueOf(s_args[j - count + k]).booleanValue();
                 args[m] = array;
             } else if (elementType == jq_Primitive.BYTE) {
                 byte[] array = new byte[count];
-                for (int k=0; k<count; ++k)
-                    array[k] = Byte.parseByte(s_args[j-count+k]);
+                for (int k = 0; k < count; ++k)
+                    array[k] = Byte.parseByte(s_args[j - count + k]);
                 args[m] = array;
             } else if (elementType == jq_Primitive.SHORT) {
                 short[] array = new short[count];
-                for (int k=0; k<count; ++k)
-                    array[k] = Short.parseShort(s_args[j-count+k]);
+                for (int k = 0; k < count; ++k)
+                    array[k] = Short.parseShort(s_args[j - count + k]);
                 args[m] = array;
             } else if (elementType == jq_Primitive.CHAR) {
                 char[] array = new char[count];
-                for (int k=0; k<count; ++k)
-                    array[k] = s_args[j-count+k].charAt(0);
+                for (int k = 0; k < count; ++k)
+                    array[k] = s_args[j - count + k].charAt(0);
                 args[m] = array;
             } else if (elementType == jq_Primitive.INT) {
                 int[] array = new int[count];
-                for (int k=0; k<count; ++k)
-                    array[k] = Integer.parseInt(s_args[j-count+k]);
+                for (int k = 0; k < count; ++k)
+                    array[k] = Integer.parseInt(s_args[j - count + k]);
                 args[m] = array;
             } else if (elementType == jq_Primitive.LONG) {
                 long[] array = new long[count];
-                for (int k=0; k<count; ++k)
-                    array[k] = Long.parseLong(s_args[j-count+k]);
+                for (int k = 0; k < count; ++k)
+                    array[k] = Long.parseLong(s_args[j - count + k]);
                 args[m] = array;
             } else if (elementType == jq_Primitive.FLOAT) {
                 float[] array = new float[count];
-                for (int k=0; k<count; ++k)
-                    array[k] = Float.parseFloat(s_args[j-count+k]);
+                for (int k = 0; k < count; ++k)
+                    array[k] = Float.parseFloat(s_args[j - count + k]);
                 args[m] = array;
             } else if (elementType == jq_Primitive.DOUBLE) {
                 double[] array = new double[count];
-                for (int k=0; k<count; ++k)
-                    array[k] = Double.parseDouble(s_args[j-count+k]);
+                for (int k = 0; k < count; ++k)
+                    array[k] = Double.parseDouble(s_args[j - count + k]);
                 args[m] = array;
             } else
-                jq.UNREACHABLE("Parsing of type "+type+" is not implemented");
+                jq.UNREACHABLE("Parsing of type " + type + " is not implemented");
         } else
-            jq.UNREACHABLE("Parsing of type "+type+" is not implemented");
+            jq.UNREACHABLE("Parsing of type " + type + " is not implemented");
         return j;
     }
-    
+
     public static int parseMethodArgs(Object[] args, jq_Type[] paramTypes, String[] s_args, int j) {
         try {
-            for (int i=0, m=0; i<paramTypes.length; ++i, ++m) {
+            for (int i = 0, m = 0; i < paramTypes.length; ++i, ++m) {
                 j = parseArg(args, m, paramTypes[i], s_args, j);
             }
         } catch (ArrayIndexOutOfBoundsException x) {
