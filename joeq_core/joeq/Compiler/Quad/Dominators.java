@@ -28,6 +28,8 @@ public class Dominators extends jq_MethodVisitor.EmptyVisitor implements BasicBl
         this(false);
     }
 
+    public static final boolean TRACE = false;
+
     public final boolean direction;
     public BitString[] dominators;
     protected boolean change;
@@ -56,7 +58,7 @@ public class Dominators extends jq_MethodVisitor.EmptyVisitor implements BasicBl
         else
             rpo = cfg.reversePostOrderOnReverseGraph(cfg.exit());
         for (;;) {
-            //System.out.println("Iterating over "+rpo);
+            if (TRACE) System.out.println("Iterating over "+rpo);
             change = false;
             ListIterator.BasicBlock rpo_i = rpo.basicBlockIterator();
             BasicBlock first = rpo_i.nextBasicBlock(); // skip first node.
@@ -75,14 +77,14 @@ public class Dominators extends jq_MethodVisitor.EmptyVisitor implements BasicBl
     }
 
     public void visitBasicBlock(BasicBlock bb) {
-        //System.out.println("Visiting: "+bb);
+        if (TRACE) System.out.println("Visiting: "+bb);
         bbs[bb.getID()] = bb;
         temp.setAll();
         ListIterator.BasicBlock preds = direction?bb.getPredecessors().basicBlockIterator():
                                                   bb.getSuccessors().basicBlockIterator();
         while (preds.hasNext()) {
             BasicBlock pred = preds.nextBasicBlock();
-            //System.out.println("Visiting pred: "+pred);
+            if (TRACE) System.out.println("Visiting pred: "+pred);
             temp.and(dominators[pred.getID()]);
         }
         if (direction) {
@@ -93,7 +95,7 @@ public class Dominators extends jq_MethodVisitor.EmptyVisitor implements BasicBl
                     preds = eh.getHandledBasicBlocks().basicBlockIterator();
                     while (preds.hasNext()) {
                         BasicBlock pred = preds.nextBasicBlock();
-                        //System.out.println("Visiting ex pred: "+pred);
+                        if (TRACE) System.out.println("Visiting ex pred: "+pred);
                         temp.and(dominators[pred.getID()]);
                     }
                 }
@@ -103,21 +105,19 @@ public class Dominators extends jq_MethodVisitor.EmptyVisitor implements BasicBl
             while (it.hasNext()) {
                 ExceptionHandler eh = (ExceptionHandler)it.next();
                 BasicBlock pred = eh.getEntry();
-                //System.out.println("Visiting ex pred: "+pred);
+                if (TRACE) System.out.println("Visiting ex pred: "+pred);
                 temp.and(dominators[pred.getID()]);
             }
         }
         temp.set(bb.getID());
         if (!temp.equals(dominators[bb.getID()])) {
-            //System.out.println("Changed!");
+            if (TRACE) System.out.println("Changed!");
             //dominators[bb.getID()] <- temp
-            //the BitString.copyBits(Bitstring set) acts the opposite as described in BitString.java  
-            temp.copyBits(dominators[bb.getID()]);
-            //dominators[bb.getID()].copyBits(temp);
+            dominators[bb.getID()].copyBits(temp);
             change = true;
         }
         //reset change to break the loop
-        else change = false; 
+        //else change = false; 
     }
     
     public DominatorNode computeTree() {
@@ -125,12 +125,12 @@ public class Dominators extends jq_MethodVisitor.EmptyVisitor implements BasicBl
         ArrayList list = new ArrayList();
         list.add(new ArrayList());
         for (int depth = 1; ; ++depth) {
-            //System.out.println("depth: "+depth);
+            if (TRACE) System.out.println("depth: "+depth);
             ArrayList list2 = new ArrayList();
             boolean found = false;
             for (int i=0; i<dominators.length; ++i) {
                 if (dominators[i].numberOfOnes() == depth) {
-                    //System.out.println("bb"+i+" matches: "+dominators[i]);
+                    if (TRACE) System.out.println("bb"+i+" matches: "+dominators[i]);
                     found = true;
                     temp.copyBits(dominators[i]);
                     temp.clear(i);
@@ -179,6 +179,20 @@ public class Dominators extends jq_MethodVisitor.EmptyVisitor implements BasicBl
                 ((DominatorNode)i.next()).dumpTree();
             }
             System.out.println("End of children of :"+toString());
+        }
+    }
+    
+    public static void main(String[] args) {
+        Main.HostedVM.initialize();
+        
+        Clazz.jq_Class c = (Clazz.jq_Class) Clazz.jq_Type.parseType(args[0]);
+        c.load();
+        Dominators dom = new Dominators();
+        jq_Method[] ms = c.getDeclaredStaticMethods();
+        for (int i=0; i<ms.length; ++i) {
+            dom.visitMethod(ms[i]);
+            DominatorNode n = dom.computeTree();
+            n.dumpTree();
         }
     }
     
