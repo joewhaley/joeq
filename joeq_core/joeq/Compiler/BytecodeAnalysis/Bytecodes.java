@@ -578,13 +578,14 @@ public interface Bytecodes {
                 int i = (l + r) / 2;
                 int j = pos[i];
                 
-                if(j == target) // target found
+                //System.out.println("i="+i+" l="+l+" r="+r+" j="+j+" target="+target+" ihs[i]="+ihs.get(i));
+                if (j == target) // target found
                     return (InstructionHandle)ihs.get(i);
-                else if(target < j) // else constrain search area
+                else if (target < j) // else constrain search area
                     r = i - 1;
                 else // target > j
                     l = i + 1;
-            } while(l <= r);
+            } while (l <= r);
             
             return null;
         }
@@ -1561,6 +1562,7 @@ public interface Bytecodes {
             
             for(int i=0; i < length; i++) {
                 ihs.add(ih);
+                ih = ih.next;
             }
             
             return ihs;
@@ -1708,10 +1710,9 @@ public interface Bytecodes {
         /**
          * Redirect all references of local variables from old_target to new_target.
          *
-         * @@param lg array of local variables
-         * @@param old_target the old target instruction handle
-         * @@param new_target the new target instruction handle
-         * @@see MethodGen
+         * @param lg array of local variables
+         * @param old_target the old target instruction handle
+         * @param new_target the new target instruction handle
          */
         /*
         public void redirectLocalVariables(LocalVariableGen[] lg, InstructionHandle old_target, InstructionHandle new_target) {
@@ -1731,10 +1732,9 @@ public interface Bytecodes {
         /**
          * Redirect all references of exception handlers from old_target to new_target.
          *
-         * @@param exceptions array of exception handlers
-         * @@param old_target the old target instruction handle
-         * @@param new_target the new target instruction handle
-         * @@see MethodGen
+         * @param exceptions array of exception handlers
+         * @param old_target the old target instruction handle
+         * @param new_target the new target instruction handle
          */
         public void redirectExceptionHandlers(CodeException[] exceptions, InstructionHandle old_target, InstructionHandle new_target) {
             for(int i=0; i < exceptions.length; i++) {
@@ -7365,7 +7365,7 @@ public interface Bytecodes {
         }
         
 	/**
-	 * Used by BranchInstruction, LocalVariableGen, CodeExceptionGen
+	 * Used by BranchInstruction, LocalVariable, CodeException
 	 */
         static final void notifyTarget(InstructionHandle old_ih, InstructionHandle new_ih, InstructionTargeter t) {
             if(old_ih != null)
@@ -8378,8 +8378,11 @@ public interface Bytecodes {
         public void setHandlerPC(InstructionHandle i) { this.handler = i; }
         
         public jq_TryCatchBC finish() {
+            jq.assert(this.start.getPosition() >= 0);
+            jq.assert(this.end.getPosition()+this.end.getInstruction().getLength() > 0);
+            jq.assert(this.handler.getPosition() >= 0);
             return new jq_TryCatchBC((char)this.start.getPosition(),
-                                     (char)this.end.getPosition(),
+                                     (char)(this.end.getPosition()+this.end.getInstruction().getLength()),
                                      (char)this.handler.getPosition(),
                                      this.type);
         }

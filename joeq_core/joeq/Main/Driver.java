@@ -62,6 +62,7 @@ public abstract class Driver {
     }
 
     static List classesToProcess = new LinkedList();
+    static HashSet methodNamesToProcess;
     static boolean trace_bb = false;
     static boolean trace_cfg = false;
     static boolean trace_method = false;
@@ -87,6 +88,9 @@ public abstract class Driver {
                 } else {
                     System.err.println("Unknown trace option "+which);
                 }
+            } else if (commandBuffer[index].equalsIgnoreCase("method")) {
+                if (methodNamesToProcess == null) methodNamesToProcess = new HashSet();
+                methodNamesToProcess.add(commandBuffer[++index]);
             } else if (commandBuffer[index].equalsIgnoreCase("class")) {
                 String canonicalClassName = canonicalizeClassName(commandBuffer[++index]);
                 try {
@@ -279,7 +283,7 @@ public abstract class Driver {
                             }
                             mv = new ControlFlowGraphVisitor.CodeCacheVisitor(cfgv, trace_method);
                         }
-                        cv = new jq_MethodVisitor.DeclaredMethodVisitor(mv, trace_type);
+                        cv = new jq_MethodVisitor.DeclaredMethodVisitor(mv, methodNamesToProcess, trace_type);
                     }
                 } catch (java.lang.ClassNotFoundException x) {
                     System.err.println("Cannot find pass named "+passname+".");

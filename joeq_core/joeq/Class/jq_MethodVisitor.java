@@ -12,6 +12,7 @@ package Clazz;
 import Util.ArrayIterator;
 import Util.AppendIterator;
 import java.util.Iterator;
+import java.util.Set;
 
 public interface jq_MethodVisitor {
 
@@ -30,15 +31,18 @@ public interface jq_MethodVisitor {
     }
     
     public class DeclaredMethodVisitor extends jq_TypeVisitor.EmptyVisitor {
-        final jq_MethodVisitor mv; boolean trace;
-        public DeclaredMethodVisitor(jq_MethodVisitor mv) { this.mv = mv; }
-        public DeclaredMethodVisitor(jq_MethodVisitor mv, boolean trace) { this.mv = mv; this.trace = trace; }
+        final jq_MethodVisitor mv; final Set methodNames; boolean trace;
+        public DeclaredMethodVisitor(jq_MethodVisitor mv) { this.mv = mv; this.methodNames = null; this.trace = false; }
+        public DeclaredMethodVisitor(jq_MethodVisitor mv, boolean trace) { this.mv = mv; this.methodNames = null; this.trace = trace; }
+        public DeclaredMethodVisitor(jq_MethodVisitor mv, Set methodNames, boolean trace) { this.mv = mv; this.methodNames = methodNames; this.trace = trace; }
         public void visitClass(jq_Class k) {
             if (trace) System.out.println(k.toString());
             Iterator it = new AppendIterator(new ArrayIterator(k.getDeclaredStaticMethods()),
                                                 new ArrayIterator(k.getDeclaredInstanceMethods()));
             while (it.hasNext()) {
                 jq_Method m = (jq_Method)it.next();
+                if (methodNames != null && !methodNames.contains(m.getName().toString()))
+                    continue;
                 m.accept(mv);
             }
         }

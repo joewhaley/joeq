@@ -247,45 +247,47 @@ public abstract class jq_Method extends jq_Member {
         state = STATE_SFINITIALIZED;
         return default_compiled_version;
     }
-    public synchronized final jq_CompiledCode compile() {
+    public final jq_CompiledCode compile() {
         if (state == STATE_CLSINITIALIZED) return default_compiled_version;
-        //System.out.println("Compiling: "+this);
-        jq.assert(!jq.DontCompile);
-        chkState(STATE_PREPARED);
-        if (isNative() && getBytecode() == null) {
-            System.out.println("Unimplemented native method! "+this);
-            if (x86ReferenceLinker._nativeMethodError.getState() < STATE_CLSINITIALIZED) {
-                jq_Class k = x86ReferenceLinker._class;
-                k.load(); k.verify(); //k.prepare();
-                if (x86ReferenceLinker._nativeMethodError.getState() != STATE_PREPARED)
-                    x86ReferenceLinker._nativeMethodError.prepare();
-                default_compiled_version = x86ReferenceLinker._nativeMethodError.compile();
-                //if (k != getDeclaringClass() && getDeclaringClass().getSuperclass() != null) { k.sf_initialize(); k.cls_initialize(); }
+        synchronized (this) {
+            //System.out.println("Compiling: "+this);
+            jq.assert(!jq.DontCompile);
+            chkState(STATE_PREPARED);
+            if (isNative() && getBytecode() == null) {
+                System.out.println("Unimplemented native method! "+this);
+                if (x86ReferenceLinker._nativeMethodError.getState() < STATE_CLSINITIALIZED) {
+                    jq_Class k = x86ReferenceLinker._class;
+                    k.load(); k.verify(); //k.prepare();
+                    if (x86ReferenceLinker._nativeMethodError.getState() != STATE_PREPARED)
+                        x86ReferenceLinker._nativeMethodError.prepare();
+                    default_compiled_version = x86ReferenceLinker._nativeMethodError.compile();
+                    //if (k != getDeclaringClass() && getDeclaringClass().getSuperclass() != null) { k.sf_initialize(); k.cls_initialize(); }
+                } else {
+                    default_compiled_version = x86ReferenceLinker._nativeMethodError.getDefaultCompiledVersion();
+                }
+            } else if (isAbstract()) {
+                if (x86ReferenceLinker._abstractMethodError.getState() < STATE_CLSINITIALIZED) {
+                    jq_Class k = x86ReferenceLinker._class;
+                    k.load(); k.verify(); //k.prepare();
+                    //default_compiled_version = x86ReferenceLinker._abstractMethodError.getDefaultCompiledVersion();
+                    if (x86ReferenceLinker._abstractMethodError.getState() != STATE_PREPARED)
+                        x86ReferenceLinker._abstractMethodError.prepare();
+                    default_compiled_version = x86ReferenceLinker._abstractMethodError.compile();
+                    //if (k != getDeclaringClass() && getDeclaringClass().getSuperclass() != null) { k.sf_initialize(); k.cls_initialize(); }
+                } else {
+                    default_compiled_version = x86ReferenceLinker._abstractMethodError.getDefaultCompiledVersion();
+                }
             } else {
-                default_compiled_version = x86ReferenceLinker._nativeMethodError.getDefaultCompiledVersion();
+                Compil3rInterface c;
+                if (true)
+                    c = new x86ReferenceCompiler(this);
+                //else
+                //    c = new x86OpenJITCompiler(this);
+                default_compiled_version = c.compile();
+                if (!jq.Bootstrapping) default_compiled_version.patchDirectBindCalls();
             }
-        } else if (isAbstract()) {
-            if (x86ReferenceLinker._abstractMethodError.getState() < STATE_CLSINITIALIZED) {
-                jq_Class k = x86ReferenceLinker._class;
-                k.load(); k.verify(); //k.prepare();
-                //default_compiled_version = x86ReferenceLinker._abstractMethodError.getDefaultCompiledVersion();
-                if (x86ReferenceLinker._abstractMethodError.getState() != STATE_PREPARED)
-                    x86ReferenceLinker._abstractMethodError.prepare();
-                default_compiled_version = x86ReferenceLinker._abstractMethodError.compile();
-                //if (k != getDeclaringClass() && getDeclaringClass().getSuperclass() != null) { k.sf_initialize(); k.cls_initialize(); }
-            } else {
-                default_compiled_version = x86ReferenceLinker._abstractMethodError.getDefaultCompiledVersion();
-            }
-        } else {
-            Compil3rInterface c;
-            if (true)
-                c = new x86ReferenceCompiler(this);
-            //else
-            //    c = new x86OpenJITCompiler(this);
-            default_compiled_version = c.compile();
-            if (!jq.Bootstrapping) default_compiled_version.patchDirectBindCalls();
+            state = STATE_CLSINITIALIZED;
         }
-        state = STATE_CLSINITIALIZED;
         return default_compiled_version;
     }
     

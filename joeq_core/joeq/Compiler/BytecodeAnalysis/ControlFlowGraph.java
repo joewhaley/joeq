@@ -239,12 +239,13 @@ public class ControlFlowGraph {
         for (int i=exs.length-1; i>=0; --i) {
             jq_TryCatchBC ex = exs[i];
             bb = cfg.getBasicBlockByBytecodeIndex(ex.getStartPC());
-            jq.assert(bb.start < ex.getEndPC());
+            if (bb.start >= ex.getEndPC())
+                throw new VerifyError("Exception handler "+i+" "+ex+": start ("+(int)bb.start+") comes after end ("+(int)ex.getEndPC()+")");
             int numOfProtectedBlocks = (ex.getEndPC()==bc.length?n_bb:cfg.getBasicBlockByBytecodeIndex(ex.getEndPC()).id) - bb.id;
             BasicBlock handler_bb = cfg.getBasicBlockByBytecodeIndex(ex.getHandlerPC());
             ExceptionHandler eh = new ExceptionHandler(ex.getExceptionType(),
-                                                          numOfProtectedBlocks,
-                                                          handler_bb);
+                                                       numOfProtectedBlocks,
+                                                       handler_bb);
             ExceptionHandlerSet ehs = new ExceptionHandlerSet(eh, null);
             bb.addExceptionHandler_first(ehs);
             int start_id = bb.id;
