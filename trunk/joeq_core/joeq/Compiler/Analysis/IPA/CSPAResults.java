@@ -12,8 +12,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -22,6 +24,7 @@ import org.sf.javabdd.BDD;
 import org.sf.javabdd.BDDDomain;
 import org.sf.javabdd.BDDFactory;
 
+import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
 import Clazz.jq_LineNumberBC;
 import Clazz.jq_Method;
@@ -34,6 +37,7 @@ import Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.ParamNode;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.ReturnValueNode;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.ThrownExceptionNode;
+import Compil3r.Analysis.IPA.CSPA.ThreadRootMap;
 import Compil3r.Analysis.IPA.ProgramLocation.BCProgramLocation;
 import Compil3r.BytecodeAnalysis.Bytecodes;
 import Compil3r.Quad.CallGraph;
@@ -137,8 +141,30 @@ public class CSPAResults {
     public void loadCallGraph(String fn) throws IOException {
         cg = new LoadedCallGraph(fn);
         pn = new PathNumbering();
-        Number paths = pn.countPaths(cg.getRoots(), cg.getCallSiteNavigator());
+        Map thread_map = new ThreadRootMap(findThreadRuns(cg));
+        Number paths = pn.countPaths(cg.getRoots(), cg.getCallSiteNavigator(), thread_map);
         System.out.println("Number of paths in call graph="+paths);
+    }
+
+    public static Set findThreadRuns(CallGraph cg) {
+        Set thread_runs = new HashSet();
+        for (Iterator i=cg.getAllMethods().iterator(); i.hasNext(); ) {
+            jq_Method m = (jq_Method) i.next();
+            if (m.getBytecode() == null) continue;
+            if (m.getNameAndDesc().equals(CSPA.run_method)) {
+                jq_Class k = m.getDeclaringClass();
+                k.prepare();
+                PrimordialClassLoader.getJavaLangThread().prepare();
+                jq_Class jlr = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/Runnable;");
+                jlr.prepare();
+                if (k.isSubtypeOf(PrimordialClassLoader.getJavaLangThread()) ||
+                    k.isSubtypeOf(jlr)) {
+                    System.out.println("Thread run method found: "+m);
+                    thread_runs.add(m);
+                }
+            }
+        }
+        return thread_runs;
     }
 
     /** Load points-to results from the given file name prefix.

@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -31,6 +32,7 @@ import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
 import Clazz.jq_Field;
 import Clazz.jq_Method;
+import Clazz.jq_NameAndDesc;
 import Clazz.jq_Reference;
 import Clazz.jq_StaticMethod;
 import Clazz.jq_Type;
@@ -102,7 +104,7 @@ public class CSPA {
     public static boolean BREAK_RECURSION = false;
     
     public static final boolean CONTEXT_SENSITIVE = true;
-    public static final boolean CONTEXT_SENSITIVE_HEAP = true;
+    public static final boolean CONTEXT_SENSITIVE_HEAP = false;
     
     public static boolean NUKE_OLD_FILES = false; // if true, will ignore
                                                   // existing files and always create new ones.
@@ -646,15 +648,47 @@ public class CSPA {
 
     PathNumbering pn;
     
+    static jq_NameAndDesc run_method = new jq_NameAndDesc("run", "()V");
+    
+    static class ThreadRootMap extends AbstractMap {
+        Set roots;
+        ThreadRootMap(Set s) {
+            roots = s;
+        }
+        public Object get(Object o) {
+            if (roots.contains(o)) return new Integer(1);
+            return new Integer(0);
+        }
+        /* (non-Javadoc)
+         * @see java.util.AbstractMap#entrySet()
+         */
+        public Set entrySet() {
+            throw new UnsupportedOperationException();
+        }
+    }
+    
     public static PathNumbering countCallGraph(CallGraph cg) {
         Set fields = new HashSet();
         Set classes = new HashSet();
+        Set thread_runs = new HashSet();
         int vars = 0, heaps = 0, bcodes = 0, methods = 0, calls = 0;
         for (Iterator i=cg.getAllMethods().iterator(); i.hasNext(); ) {
             jq_Method m = (jq_Method) i.next();
             ++methods;
             if (m.getBytecode() == null) continue;
             bcodes += m.getBytecode().length;
+            if (m.getNameAndDesc().equals(run_method)) {
+                jq_Class k = m.getDeclaringClass();
+                k.prepare();
+                PrimordialClassLoader.getJavaLangThread().prepare();
+                jq_Class jlr = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/Runnable;");
+                jlr.prepare();
+                if (k.isSubtypeOf(PrimordialClassLoader.getJavaLangThread()) ||
+                    k.isSubtypeOf(jlr)) {
+                    System.out.println("Thread run method found: "+m);
+                    thread_runs.add(m);
+                }
+            }
             ControlFlowGraph cfg = CodeCache.getCode(m);
             MethodSummary ms = MethodSummary.getSummary(cfg);
             for (Iterator j=ms.nodeIterator(); j.hasNext(); ) {
@@ -675,7 +709,8 @@ public class CSPA {
         System.out.println();
         System.out.println("Methods="+methods+" Bytecodes="+bcodes+" Call sites="+calls);
         PathNumbering pn = new PathNumbering();
-        BigInteger paths = (BigInteger) pn.countPaths(cg.getRoots(), cg.getCallSiteNavigator());
+        Map initialCounts = new ThreadRootMap(thread_runs);
+        BigInteger paths = (BigInteger) pn.countPaths(cg.getRoots(), cg.getCallSiteNavigator(), initialCounts);
         System.out.println("Vars="+vars+" Heaps="+heaps+" Classes="+classes.size()+" Fields="+fields.size()+" Paths="+paths);
         double log2 = Math.log(2);
         VARBITS = (int) (Math.log(vars+256)/log2 + 1.0);

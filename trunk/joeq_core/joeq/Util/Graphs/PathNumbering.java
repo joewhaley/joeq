@@ -100,11 +100,11 @@ public class PathNumbering implements Externalizable {
 
     /** Counts the number of paths in the given graph. */
     public Number countPaths(Graph graph) {
-        return countPaths(graph.getRoots(), graph.getNavigator());
+        return countPaths(graph.getRoots(), graph.getNavigator(), null);
     }
     
     /** Counts the number of paths from the given root set, using the given graph navigator. */
-    public Number countPaths(Collection roots, Navigator navigator) {
+    public Number countPaths(Collection roots, Navigator navigator, Map initialMap) {
         BigInteger max_paths = BigInteger.ZERO;
         
         int max_scc = 0;
@@ -133,18 +133,21 @@ public class PathNumbering implements Externalizable {
             if (TRACE_NUMBERING)
                 System.out.println("Visiting SCC"+scc.getId()+(scc.isLoop()?" (loop)":" (non-loop)"));
             BigInteger total = BigInteger.ZERO;
+            if (initialMap != null && !scc.isLoop())
+                total = toBigInt((Number) initialMap.get(scc.nodes()[0]));
             recordEdgesFromSCC(scc);
             for (Iterator i=Arrays.asList(scc.prev()).iterator(); i.hasNext(); ) {
                 SCComponent pred = (SCComponent) i.next();
                 Pair edge = new Pair(pred, scc);
                 //System.out.println("Visiting edge SCC"+pred.getId()+" to SCC"+scc.getId());
-                int nedges = ((Collection)sccEdges.get(edge)).size();
+                int nedges = ((Collection) sccEdges.get(edge)).size();
                 Range r = (Range) sccNumbering.get(pred);
                 BigInteger t1 = toBigInt(r.high).add(BigInteger.ONE);
                 BigInteger newtotal = total.add(t1.multiply(BigInteger.valueOf(nedges)));
                 total = newtotal;
             }
-            if (total.equals(BigInteger.ZERO)) total = BigInteger.ONE;
+            if (scc.prevLength() == 0)
+                total = total.add(BigInteger.ONE);
             Range r = new Range(fromBigInt(total), fromBigInt(total.subtract(BigInteger.ONE)));
             if (TRACE_NUMBERING || total.compareTo(max_paths) == 1)
                 System.out.println("Paths to SCC"+scc.getId()+(scc.isLoop()?" (loop)":" (non-loop)")+"="+total);
