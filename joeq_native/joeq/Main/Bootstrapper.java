@@ -438,9 +438,6 @@ public abstract class Bootstrapper {
             Reflection.getJDKType(t);
         }
 
-        //Object xxx = joeq.Assembler.x86.ExternalReference._heap_from;
-        //Object yyy = joeq.ClassLib.sun13.java.io.Win32FileSystem._class;
-        
         // get the set of compiled methods, because it is used during bootstrapping.
         CodeAllocator.getCompiledMethods();
         

@@ -46,6 +46,7 @@ import joeq.Runtime.Reflection;
 import joeq.Runtime.SystemInterface;
 import joeq.Runtime.TypeCheck;
 import joeq.Runtime.Unsafe;
+import joeq.Scheduler.jq_x86RegisterState;
 import joeq.UTF.Utf8;
 import joeq.Util.Assert;
 import joeq.Util.Strings;
@@ -56,6 +57,11 @@ import joeq.Util.Strings;
  */
 public class x86ReferenceCompiler extends BytecodeVisitor implements x86Constants, jq_ClassFileConstants {
 
+    static {
+        // we are using x86, so initialize the register state factory.
+        jq_x86RegisterState.initFactory();
+    }
+    
     public static class Factory implements CompilerInterface {
         public static final Factory INSTANCE = new Factory();
         public Factory() {}

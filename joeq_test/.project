@@ -4,6 +4,7 @@
 	<comment></comment>
 	<projects>
 		<project>joeq_core</project>
+		<project>joeq_native</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
