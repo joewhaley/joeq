@@ -321,6 +321,23 @@ public class PAResults implements PointerAnalysisResults {
                         int k = getTypeIndex(c);
                         results.add(r.T1.ithVar(k));
                     }
+                } else if (command.equals("comparecc")) {
+                    jq_Class c = parseClassName(st.nextToken());
+                    if (c == null || !c.isLoaded()) {
+                        System.out.println("Cannot find class");
+                    } else {
+                        String methodname = st.nextToken();
+                        jq_Method m;
+                        if (st.hasMoreTokens()) m = (jq_Method) c.getDeclaredMember(methodname, st.nextToken());
+                        else m = c.getDeclaredMethod(methodname);
+                        if (m == null || !m.isLoaded()) {
+                            System.out.println("Cannot find method");
+                            increaseCount = false;
+                        } else {
+                            compareCallingContexts(m);
+                        }
+                    }
+                    increaseCount = false;
                 } else if (command.equals("method") || command.equals("callsin") || command.equals("summary") || command.equals("params")) {
                     jq_Class c = parseClassName(st.nextToken());
                     if (c == null || !c.isLoaded()) {
@@ -1957,6 +1974,41 @@ public class PAResults implements PointerAnalysisResults {
         System.out.println("#alwaysfail (casts with empty compatible points-to sets)=" + alwaysfails);
     }
 
+    public void compareCallingContexts(jq_Method m) {
+        // find callers
+        int m_i = getMethodIndex(m);
+        System.out.println("Calls to method "+m);
+        BDD m_bdd = r.M.ithVar(m_i);
+        BDD b = r.IEcs.restrict(m_bdd); // V2cxIxV1c
+        BDD c = b.exist(r.V1cV2cset); // I
+        for (Iterator i = c.iterator(r.Iset); i.hasNext(); ) {
+            BDD i_bdd = (BDD) i.next(); // I
+            int i_i = (int) i_bdd.scanVar(r.I);
+            ProgramLocation invoke = getInvoke(i_i);
+            System.out.println(" Call site "+i_i+": "+invoke);
+            BDD d = b.exist(r.Iset); // V2cxV1c
+            BDD e = d.exist(r.V2c.set()); // V1c
+            // check each parameter
+            MethodSummary ms = MethodSummary.getSummary(m);
+            for (int j = 0; j < ms.getNumOfParams(); ++j) {
+                Node pn = ms.getParamNode(j);
+                if (pn == null) continue;
+                int p_i = getVariableIndex(pn);
+                BDD f = r.V1.ithVar(p_i); // V1
+                f.andWith(e.id()); // V1cxV1
+                BDD g = r.vP.relprod(f, r.V1set); // H1cxH1
+                BDD h = g.exist(r.H1c.set());
+                System.out.println("  Param "+j+": ");
+                for (Iterator z = g.iterator(r.H1.set()); z.hasNext(); ) {
+                    BDD x = (BDD) z.next();
+                    int heap_i = (int) x.scanVar(r.H1);
+                    Node heap = getHeapNode(heap_i);
+                    System.out.println("   "+heap);
+                }
+            }
+        }
+    }
+    
     private static double zHelper(Triple t) {
         double compatible = ((Double)t.left).doubleValue();
         double all = ((Double)t.middle).doubleValue();
