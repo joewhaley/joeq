@@ -351,7 +351,8 @@ public class PAResults implements PointerAnalysisResults {
                     BDD r = getEncapsulatedHeapObjects();
                     results.add(r);
                 } else if (command.equals("collectiontypes")) {
-		    TypedBDD r = findCollectionTypes();
+		    CollectionType tfinder = new CollectionType(this);
+		    TypedBDD r = tfinder.findCollectionTypes();
 		    results.add(r);
                 } else if (command.equals("gini")) {
 		    computeGini(r.vCnumbering);
@@ -1351,105 +1352,6 @@ public class PAResults implements PointerAnalysisResults {
         }
     }   
 
-    public static HashMap cmethods = new HashMap();
-    {
-	// just a few for now
-	cmethods.put(new jq_NameAndDesc("add", "(ILjava/lang/Object;)V"), new Integer(2));
-	cmethods.put(new jq_NameAndDesc("set", "(ILjava/lang/Object;)Ljava/lang/Object;"), new Integer(2));
-	cmethods.put(new jq_NameAndDesc("add", "(Ljava/lang/Object;)Z"),  new Integer(1));
-	cmethods.put(new jq_NameAndDesc("addElement", "(Ljava/lang/Object;)V"),  new Integer(1));
-	// don't handle addAll() yet
-    }
-
-    /**
-     * Implements Vladimir's idea of finding out what types go in a collection.
-     *
-     * @return BDD H2 x T1 that maps collection objects to the shared supertypes of their elements.
-     */
-    public TypedBDD findCollectionTypes() {
-	TypedBDD storedin = (TypedBDD)r.bdd.zero(); 		// H1xH1cxH2xH2c
-	if (!r.CONTEXT_SENSITIVE) {
-            System.out.println("Sorry, this analysis has only been debugged in context-sensitivity mode");
-	    return storedin;
-	}
-	BDD V1cset = r.V1c.set();
-	BDD V1set = r.V1.set();
-	BDD H1set = r.H1.set();
-
-	// iterate over all callsites (XXX use a BDD-filter for this instead?)
-	for (int iidx = 0; iidx < r.Imap.size(); iidx++) {
-	    ProgramLocation call = (ProgramLocation)r.Imap.get(iidx);
-
-	    // is this a call that adds to a collection?
-	    // if so, find the parameter index of the item of the add method
-	    jq_Method m = call.getTargetMethod();
-	    if (!m.getDeclaringClass().isSubtypeOf(r.heapPathSelector.collection_class))
-		continue;
-
-	    jq_NameAndDesc nd = m.getNameAndDesc();
-	    Integer pi = (Integer)cmethods.get(nd);
-	    if (pi == null)
-		continue;
-	    int pidx = pi.intValue();
-	    
-	    // System.out.println("adding I(" + iidx + ") Z(" + pidx + ") from " + m);
-	    BDD isite = r.I.ithVar(iidx);
-	    BDDPairing V2toV1 = r.bdd.makePair(r.V2, r.V1);
-	    BDD actuals = r.actual.restrict(isite);		// V2xZ
-	    isite.free();
-	    BDD z0 = r.Z.ithVar(0);
-	    BDD v0 = actuals.restrict(z0);			// V2
-	    z0.free();
-	    v0.replaceWith(V2toV1);				// V1
-	    BDD vp = actuals.restrictWith(r.Z.ithVar(pidx));	// V2
-	    vp.replaceWith(V2toV1);				// V1
-
-	    BDD v0pt = r.vP.relprod(v0, V1set);			// V1cxH1xH1c
-	    v0.free(); 
-	    if (r.NNfilter != null) v0pt.andWith(r.NNfilter.id());
-	    v0pt.replaceWith(r.H1toH2);				// V1cxH2xH2c
-	    BDD vppt = r.vP.relprod(vp, V1set);			// V1cxH1xH1c
-	    vp.free();
-	    if (r.NNfilter != null) vppt.andWith(r.NNfilter.id());
-	    BDD h0hp = v0pt.relprod(vppt, V1cset);		// H1xH1cxH2xH2c
-	    v0pt.free();
-	    vppt.free();
-	    storedin.orWith(h0hp);
-	}
-
-	if (true) {	// does this make sense?
-	    BDD one_to_one = r.H1c.buildEquals(r.H2c);
-	    storedin.andWith(one_to_one);
-	}
-
-	TypedBDD tmp = null;
-	if (r.CONTEXT_SENSITIVE) {	
-	    // project away H1c, H2c
-	    tmp = (TypedBDD)storedin.exist(r.H1cH2cset);
-	    storedin.free();
-	    storedin = tmp;
-	}
-
-	tmp = (TypedBDD)storedin.exist(H1set);
-	if (tmp.isZero()) {
-	    System.out.println("Didn't find any collections");
-	    return tmp;
-	}
-	BDD supertypes = r.bdd.zero();				// H2 x T1
-	for (Iterator collections = tmp.iterator(); collections.hasNext(); ) {
-	    BDD c = (BDD)collections.next();
-	    BDD items = storedin.restrict(c);			// H1xH2 -> H1
-	    BDD itemtypes = items.relprod(r.hT, H1set);		// H1 x H1xT2 -> T2
-	    items.free();
-	    BDD stypes = calculateCommonSupertype(itemtypes);	// T2 -> T1
-	    itemtypes.free();
-	    c.andWith(stypes);					// H2 x T1
-	    supertypes.orWith(c);
-	}
-	tmp.free();
-	return (TypedBDD)supertypes;
-    }
-
     public void computeGini(PathNumbering pn) {
         if (!(pn instanceof SCCPathNumbering)) {
             System.out.println(pn.getClass() + " is not using a SCC numbering");
@@ -1472,6 +1374,7 @@ public class PAResults implements PointerAnalysisResults {
         for (int i = 0; i < n; i++) {
 	    gini += (2*(i+1)-n-1)*x[i];
         }
+	// correct for bias by multiplying by n/(n-1)
         gini = gini / n / (n - 1);
 
         System.out.println("Gini-Coefficient is " + gini);
