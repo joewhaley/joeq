@@ -32,6 +32,7 @@ public class Threads {
         ThreadA t2 = new ThreadA(a);
         
         t1.start(); t2.start();
+        a.foo();
     }
     
     int counter;

@@ -174,7 +174,7 @@ public interface Bytecodes {
              // Byte code offset set in InstructionList
          } catch(Exception e) {
              e.printStackTrace();
-             throw new BytecodeException(e.toString());
+             throw new BytecodeException("Error loading "+clazz+"="+obj+": "+e.toString());
          }
          
          return obj;
