@@ -97,6 +97,10 @@ public final class Interface extends ClassLib.ClassLibInterface {
         ClassLib.sun13_linux.java.util.zip.ZipFile.__init__(o, name);
     }
     
+    public void init_inflater(java.util.zip.Inflater o, boolean nowrap) {
+        ClassLib.sun13_linux.java.util.zip.Inflater.__init__(o, nowrap);
+    }
+    
     public void initializeSystemClass() throws java.lang.Throwable {
         Reflection.invokestatic_V(ClassLib.sun13_linux.java.lang.System._initializeSystemClass);
     }
