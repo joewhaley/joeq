@@ -14,11 +14,14 @@ import java.util.LinkedList;
 import java.util.Set;
 import Util.Assert;
 import Util.Collections.LinearSet;
-
+import Compil3r.Analysis.IPSSA.Utils.*;
 import Compil3r.Analysis.IPA.ContextSet;
 
 /**
  * This is a graph consisting of definitions that uses as much sharing as possible.
+ * 
+ * Provides a dot printer.
+ * 
  *  *  * @author Vladimir Livshits
  */
 public abstract class DefinitionGraph {
@@ -118,7 +121,7 @@ public abstract class DefinitionGraph {
 		
 			g.printDot(out);
 		}
-	}	
+	}
 	
 	/** By default a true predicate edge is added */
 	public void addEdge(SSADefinition def1, SSADefinition def2){

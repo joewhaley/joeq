@@ -1,5 +1,4 @@
 package Compil3r.Analysis.IPSSA;
-import Compil3r.Analysis.IPA.SSALocation;
 import Compil3r.Quad.Quad;
 
 public class SSABinding {
@@ -22,7 +21,14 @@ public class SSABinding {
 		SSADefinition def = SSAProcInfo.Helper.create_ssa_definition(loc, quad);
 		this._destination = def;
 		
-		value.setDestination(def);
+		if(value != null){
+			value.setDestination(def);
+		}
+	}
+	
+	public void setValue(SSAValue value){
+		this._value = value;
+		_value.setDestination(_destination);
 	}
 	
 	/** Tests whether the binding has been completed by filling out it RHS */

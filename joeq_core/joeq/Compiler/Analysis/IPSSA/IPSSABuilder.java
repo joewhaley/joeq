@@ -1,29 +1,35 @@
 package Compil3r.Analysis.IPSSA;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import Clazz.jq_Field;
+import Util.Assert;
+
 import Clazz.jq_Method;
+import Compil3r.Analysis.IPA.PAResults;
 import Compil3r.Analysis.IPA.PointerAnalysisResults;
 import Compil3r.Analysis.IPA.ProgramLocation;
-import Compil3r.Analysis.IPA.SSALocation;
+import Compil3r.Quad.BasicBlock;
 import Compil3r.Quad.ControlFlowGraph;
 import Compil3r.Quad.ControlFlowGraphVisitor;
 import Compil3r.Quad.Quad;
 import Compil3r.Quad.Operator;
-import Compil3r.Quad.Operand;
-import Compil3r.Quad.Operator.Getfield;
-import Compil3r.Quad.Operand.RegisterOperand;
 import Compil3r.Quad.RegisterFactory.Register;
 import Compil3r.Quad.QuadIterator;
 import Compil3r.Quad.QuadVisitor;
 import Compil3r.Quad.CodeCache;
 import Compil3r.Analysis.IPA.ProgramLocation.QuadProgramLocation;
+import Compil3r.Analysis.IPSSA.SSAProcInfo.Helper;
+import Compil3r.Analysis.IPSSA.SSAProcInfo.Query;
 import Compil3r.Analysis.IPSSA.SSAProcInfo.SSABindingAnnote;
+import Compil3r.Analysis.IPSSA.Utils.SSAGraphPrinter;
 import Compil3r.Analysis.IPA.ContextSet;
+import Util.Templates.ListIterator;
 
 /**
  * This is where the main action pertaining to IPSSA construction happens. 
@@ -31,24 +37,38 @@ import Compil3r.Analysis.IPA.ContextSet;
  * construction.
  * */
 public class IPSSABuilder implements ControlFlowGraphVisitor {
-	protected int      			_verbosity;
-	//protected jq_Method 		_method;
-	private static HashMap 		_builderMap = new HashMap();
+	protected int      			   _verbosity;
+	private static HashMap 		   _builderMap = new HashMap();
+	private PointerAnalysisResults _ptr = null;
+	
+	boolean PRINT_CFG 		= !System.getProperty("ipssa.print_cfg", "no").equals("no");
+	boolean PRINT_SSA_GRAPH = !System.getProperty("ipssa.print_ssa", "no").equals("no");
 
 	public IPSSABuilder(int verbosity){
 		CodeCache.AlwaysMap = true;
 		this._verbosity     = verbosity;
+		// get pointer analysis results			
+		try {
+			_ptr = PAResults.loadResults(null, null);
+		} catch (IOException e) {
+			System.err.println("Caught an exception: " + e.toString());
+			e.printStackTrace();
+			System.exit(1);
+		}
 	}
-		
+	
+	/*
+	 * Default constructor with verbosity=2.
+	 **/
 	public IPSSABuilder(){
-		this(1);
+		this(2);
 	}
 
 	// TODO: what's the order in the CFGs are visited? Is there a BU visitor?
 	public void visitCFG(ControlFlowGraph cfg) {
 		jq_Method method = cfg.getMethod();
 	
-		SSABuilder builder = new SSABuilder(method, _verbosity);
+		SSABuilder builder = new SSABuilder(method, _ptr, _verbosity);
 		_builderMap.put(method, builder);		// TODO: do we really need to hash them?
 		builder.run(); 
 	}
@@ -65,12 +85,12 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 		protected SSAProcInfo.Query 	_q;
 		private PointerAnalysisResults 	_ptr;
 		
-		SSABuilder(jq_Method method, int verbosity){
+		SSABuilder(jq_Method method, PointerAnalysisResults ptr, int verbosity){
 			this._method 	= method;
 			this._cfg 		= CodeCache.getCode(_method);
 			this._verbosity = verbosity;
 			this._q         = SSAProcInfo.retrieveQuery(_method); 
-			this._ptr    	= null;		// TODO!
+			this._ptr    	= ptr;
 		}		
 
 		//////////////////////////////////////////////////////////////////////////////////////////////////
@@ -80,11 +100,11 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 			if(_ptr.hasAliases(_method, loc)){
 				// add the binding to potential aliased locations
 				int i = 0;
-				for(Iterator iter = _ptr.getAliases(_method, loc).iterator(); iter.hasNext(); i++){
+				for(Iterator iter = _ptr.getAliases(_method, loc).iterator(); iter.hasNext();){
 					ContextSet.ContextLocationPair clPair = (ContextSet.ContextLocationPair)iter.next();
 						
 					// process aliasedLocation
-					addBinding(quad, clPair.getLocation(), value, clPair.getContext());									
+					i += addBinding(quad, clPair.getLocation(), value, clPair.getContext());									
 				}
 				return i;
 			}else{
@@ -97,26 +117,35 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 		 * This is used by addBinding(Quad quad, SSALocation loc, SSAValue value) and
 		 * should never be called directly.
 		 * */
-		private SSADefinition addBinding(Quad quad, SSALocation loc, SSAValue value, ContextSet context){
+		private int addBinding(Quad quad, SSALocation loc, SSAValue value, ContextSet context){
 			// initialize the location
-			initializeLocation(loc);
+			if(quad != _q.getFirstQuad()){
+				initializeLocation(loc);
+			}
 	
 			SSABindingAnnote ba = (SSABindingAnnote)_q._bindingMap.get(quad);
 			if(ba == null){
 				ba = new SSABindingAnnote();
+				_q._bindingMap.put(quad, ba);
 			}
 			
-			SSADefinition result = null;
+			int result = 0;
 			if(context == null){
-				result = ba.addBinding(loc, value, quad);
-				markIteratedDominanceFrontier(loc, quad);					
+				ba.addBinding(loc, value, quad);
+				result++;
+				if(quad != _q.getFirstQuad()){
+					result += markIteratedDominanceFrontier(loc, quad);					
+				}
 			}else{
+				// TODO: if(quad != _firstQuad)
 				SSADefinition tmpForValue = makeTemporary(value, quad, context);
+				result++;
 				SSADefinition lastDef = _q.getLastDefinitionFor(loc, quad, true);
 				
 				SSAValue.SigmaPhi sigma = new SSAValue.SigmaPhi(context, tmpForValue, lastDef);
-				result = ba.addBinding(loc, sigma, quad);
-				markIteratedDominanceFrontier(loc, quad);
+				ba.addBinding(loc, sigma, quad);
+				result++;
+				result += markIteratedDominanceFrontier(loc, quad);
 			}
 			
 			return result;
@@ -125,10 +154,17 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 		/**
 		 * This is used by addBinding(...) routines and should not be called directly.
 		 * */
-		private void initializeLocation(SSALocation loc) {
-			Quad firstQuad = CodeCache.getCode(_method).entry().getQuad(0);
-			if(_q.getDefinitionFor(loc, firstQuad) == null){
-				addBinding(firstQuad, loc, new SSAValue.FormalIn(), null);
+		private int initializeLocation(SSALocation loc) {			
+			if(_q.getDefinitionFor(loc, _q.getFirstQuad()) == null){
+				if(loc instanceof LocalLocation){
+					// no previous value to speak of for the locals
+					return addBinding(_q.getFirstQuad(), loc, null, null);
+				}else{
+					// the RHS is always a FormalIn
+					return addBinding(_q.getFirstQuad(), loc, new SSAValue.FormalIn(), null);
+				}
+			}else{
+				return 0;
 			}								
 		}
 		
@@ -136,18 +172,31 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 		 * Creates new empty definitions at the dominance frontier of quad for 
 		 * location loc.
 		 */
-		private void markIteratedDominanceFrontier(SSALocation loc, Quad quad) {
+		private int markIteratedDominanceFrontier(SSALocation loc, Quad quad) {
+			if(loc instanceof SSALocation.Unique){
+				// don't create Gamma nodes for unique locations
+				return 0;
+			}
+			int result = 0;
 			HashSet set = new HashSet();
 			_q.getDominatorQuery().getIteratedDominanceFrontier(quad, set);
+			if(_verbosity > 2) System.err.println("There are " + set.size() + " element(s) on the frontier");
 			
 			for(Iterator iter = set.iterator(); iter.hasNext();){
 				Quad dom = (Quad)iter.next();
-				
-				SSAValue.Gamma gamma = new SSAValue.Gamma();
-				
-				// to be filled in later
-				addBinding(dom, loc, gamma, null); 
-			}			
+				//if(dom == quad) continue;
+				if(_q.getDefinitionFor(loc, dom) == null){				
+					SSAValue.Gamma gamma = new SSAValue.Gamma();
+					
+					// to be filled in later
+					result += addBinding(dom, loc, gamma, null);
+					if(_verbosity > 1) System.err.println("Created a gamma function for " + loc + " at " + dom);
+				}else{
+					// TODO: fill the gamma?
+				}
+			}
+			
+			return result;		
 		}
 			
 		/**
@@ -158,8 +207,13 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 			// TODO We need to create a temporary definition at quad
 			SSALocation.Temporary temp = SSALocation.Temporary.FACTORY.get();
 				
-			return addBinding(quad, temp, value, context); 
-		} 
+			addBinding(quad, temp, value, context);
+			
+			SSADefinition def = _q.getDefinitionFor(temp, quad);
+			Assert._assert(def != null);
+			
+			return def; 
+		}
 
 		//////////////////////////////////////////////////////////////////////////////////////////////////
 		/******************************************** Stages ********************************************/
@@ -188,13 +242,18 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 			 *  Stage 3     : Walk over and do all remaining pointer resolution.
 			 *  Invariant 3 : All RHSs are filled in.
 			 * */
-			// 1. 
-			PointerAnalysisResults ptrResults = null;	// TODO: need to add results
+			// 1. 			
 			Stage1Visitor vis1 = new Stage1Visitor(_method);  
 			for (QuadIterator j=new QuadIterator(_cfg, true); j.hasNext(); ) {
 				Quad quad = j.nextQuad();
 				quad.accept(vis1);
+			}			
+			if(_verbosity > 1){
+				System.err.println("Created a total of " + vis1.getBindingCount() + " bindings");
 			}
+			vis1 = null;
+
+/*
 			//	2.
 			Stage2Visitor vis2 = new Stage2Visitor();
 			vis2.visitCFG(_cfg);
@@ -202,7 +261,30 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 			//	3.			
 			Stage3Visitor vis3 = new Stage3Visitor();  
 			vis3.visitCFG(_cfg);
-		} 
+*/			
+			Stage2PrimeVisitor vis2 = new Stage2PrimeVisitor(_method);  
+			for (QuadIterator j=new QuadIterator(_cfg, true); j.hasNext(); ) {
+				Quad quad = j.nextQuad();
+				quad.accept(vis2);
+			}
+						
+			/** Now print the results */
+			if(PRINT_CFG){
+				// print the CFG annotated with SSA information
+				_q.printDot();	
+			}
+			
+			if(PRINT_SSA_GRAPH) {
+				try {
+					FileOutputStream file = new FileOutputStream("ssa.dot");
+					PrintStream out = new PrintStream(file);
+					SSAGraphPrinter.printAllToDot(out);
+				} catch (Exception e) {
+					e.printStackTrace();
+					System.exit(2);
+				}				
+			}
+		}
 		/** 
 		 * Stage 1     : Process all statements in turn and create slots for each modified location. 
 		 * Invariant 1 : All necessary assignments are created by this point and all definitions are numbered.
@@ -211,100 +293,112 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 			jq_Method _method;
 			SSAProcInfo.Helper _h;
 			SSAProcInfo.Query  _q;
+			private int        _bindings;
 			
 			Stage1Visitor(jq_Method method){
-				this._method = method;
-				this._h 	 = SSAProcInfo.retrieveHelper(_method);
-				this._q 	 = SSAProcInfo.retrieveQuery(_method);
+				this._method   = method;
+				this._h 	   = SSAProcInfo.retrieveHelper(_method);
+				this._q 	   = SSAProcInfo.retrieveQuery(_method);
+				this._bindings = 0;
+			}
+			
+			int getBindingCount(){
+				return _bindings;
 			}		
 			
+			/**************************** Begin handlers ****************************/
 			/** A get static field instruction. */
-			public void visitGetstatic(Quad obj) {
-				processLoad(obj);
+			public void visitGetstatic(Quad quad) {
+				processLoad(quad);
 			}
-	
 			/** A get instance field instruction. */
-			public void visitGetfield(Quad obj) {
-				processLoad(obj);
-				
-				/*
-				if (obj.getOperator() instanceof Operator.Getfield.GETFIELD_A
-			     || obj.getOperator() instanceof Operator.Getfield.GETFIELD_P) 
-				{
-					Register r = Getfield.getDest(obj).getRegister();
-					Operand o = Getfield.getBase(obj);
-					Getfield.getField(obj).resolve();
-					jq_Field f = Getfield.getField(obj).getField();
-					//System.out.println("\nField = " + f.toString());
-					
-					if (o instanceof RegisterOperand) {
-						Register b = ((RegisterOperand)o).getRegister();
-						//ProgramLocation pl = new QuadProgramLocation(method, obj);
-						//heapLoad(pl, r, b, f);
-					} else {
-						// base is not a register?!
-						warn("1");
-					}
-				}else{
-					warn("2");
-				}*/				
+			public void visitGetfield(Quad quad) {
+				processLoad(quad);
 			}
 			private void processLoad(Quad quad) {
-				//Set set = _ptr.pointsTo(new QuadProgramLocation(_method, obj));
-				print(quad);				
-			}
-			
-			private void processStore(Quad quad) {
-				//Set set = _ptr.pointsTo(new QuadProgramLocation(_method, quad));
-				// We need to create SSABindings for evere location in the set
-				//for(Iterator iter = set.iterator(); iter.hasNext();){
-				//	SSALocation loc = (SSALocation)iter.next();
-				//	
-				//	/*int count = */
-				//	addBinding(quad, loc, null, null);
-				//} 
-				//
-				//print(quad);
-			}
+				markDestinations(quad);				
+			}			
 			/** A put instance field instruction. */
-			public void visitPutfield(Quad obj) {
-				processStore(obj);
+			public void visitPutfield(Quad quad) {
+				processStore(quad);
 			}
 			/** A put static field instruction. */
-			public void visitPutstatic(Quad obj) {
-				processStore(obj);
+			public void visitPutstatic(Quad quad) {
+				processStore(quad);
 			}
 			/** A register move instruction. */
-			public void visitMove(Quad obj) {
-				//print(obj);
-				//obj.getDefinedRegisters().registerOperandIterator().nextRegisterOperand()
+			public void visitMove(Quad quad) {
+				markDestinations(quad);
 			}
 			/** An array load instruction. */
-			public void visitALoad(Quad obj) {
-				print(obj);
+			public void visitALoad(Quad quad) {
+				processLoad(quad);
 			}
 			/** An array store instruction. */
-			public void visitAStore(Quad obj) {
-				print(obj);
+			public void visitAStore(Quad quad) {
+				print(quad);
 			}
-			/** An object allocation instruction. */
-			public void visitNew(Quad obj) {
-				print(obj);
+			/** An quadect allocation instruction. */
+			public void visitNew(Quad quad) {
+				markDestinations(quad);
 			}
 			/** An array allocation instruction. */
-			public void visitNewArray(Quad obj) {
-				print(obj);
+			public void visitNewArray(Quad quad) {
+				markDestinations(quad);
 			}
 			/** A return from method instruction. */
-			public void visitReturn(Quad obj) {
-				print(obj);
+			public void visitReturn(Quad quad) {
+				// TODO: make up a location for return?
+				print(quad);
+			}			
+			public void visitInvoke(Quad quad) {
+				//printAlways(quad);
+				processDefs(quad);	
+			}
+			/**************************** End of handlers ****************************/ 
+			
+			private void markDestinations(Quad quad) {				
+				Register reg = getOnlyDefinedRegister(quad); 
+				Assert._assert(reg != null);
+				LocalLocation loc = LocalLocation.FACTORY.createLocalLocation(reg);
+
+				addBinding(quad, loc, null, null);
+			}
+			private void processStore(Quad quad) {
+				processDefs(quad);
 			}
 	
+			private void processDefs(Quad quad) {
+				QuadProgramLocation pl = new QuadProgramLocation(_method, quad);
+				Assert._assert(isCall(quad) || isStore(quad));
+				Set mods = _ptr.mod(pl);
+
+				// create bindingins for all modified locations
+				if(mods != null && mods.size() > 0){
+					if(_verbosity > 2) System.out.print("Found " + mods.size() + " mods at " + pl.toString() + ": [ ");
+					Iterator iter = mods.iterator();
+					while(iter.hasNext()){
+						SSALocation loc = (SSALocation)iter.next();
+						if(_verbosity > 2) System.out.print(loc.toString(_ptr.getPAResults()) + " ");
+						if(isCall(quad)){
+							_bindings += addBinding(quad, loc, new SSAValue.ActualOut(), null);
+						}else
+						if(isStore(quad)){
+							_bindings += addBinding(quad, loc, null, null);
+						}else{
+							Assert._assert(false);
+						}
+					}
+					if(_verbosity > 2) System.out.println("]\n");
+				}
+			}
+
 			/** Any quad */
-			public void visitQuad(Quad obj) {print(obj);}
+			public void visitQuad(Quad quad) {print(quad);}
 			
-			protected void print(Quad obj){
-				ProgramLocation loc = new QuadProgramLocation(_method, obj);
+			protected void print(Quad quad, boolean force){
+				if(!force) return;
+				ProgramLocation loc = new QuadProgramLocation(_method, quad);
 				String loc_str = null;
 				
 				try {
@@ -313,8 +407,17 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 					loc_str = "<unknown>";
 				}
 				
-				System.out.println("Visited quad # " + obj.toString() + "\t\t\t at " + loc_str);
+				System.out.println("Visited quad # " + quad.toString() + "\t\t\t at " + loc_str);
 			}
+			
+			protected void printAlways(Quad quad){
+				print(quad, true);
+			}
+			
+			protected void print(Quad quad){
+				print(quad, false);
+			}
+						
 			protected void warn(String s){
 				System.err.println(s);
 			}
@@ -348,7 +451,7 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 		 * Stage 3	   : Walk over and do all remaining pointer resolution. 
 		 * Invariant 3 : All RHSs are filled in.
 		 * */
-		class Stage3Visitor extends SSABindingVisitor {
+		final class Stage3Visitor extends SSABindingVisitor {
 			public void visit(SSABinding b) {
 				Quad quad = b.getQuad();
 				
@@ -369,6 +472,186 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 			private void processLoad(Quad quad) {
 				// TODO Auto-generated method stub				
 			}			
+		}
+	
+		/** 
+		 * Stage 2     : Walk over and fill in all RHSs that don't require dereferencing. 
+		 * Invariant 2 : Update RHSs referring to heap objects to refer to the right locations.
+		 * */
+		class Stage2PrimeVisitor extends QuadVisitor.EmptyVisitor {
+			private jq_Method _method;
+			private Query     _q;
+			private Helper    _h;
+
+			Stage2PrimeVisitor(jq_Method method){
+				this._method   = method;
+				this._h 	   = SSAProcInfo.retrieveHelper(_method);
+				this._q 	   = SSAProcInfo.retrieveQuery(_method);
+			}
+			
+			/**************************** Begin handlers ****************************/
+			/** A get static field instruction. */
+			public void visitGetstatic(Quad quad) {
+				processLoad(quad);
+			}
+			/** A get instance field instruction. */
+			public void visitGetfield(Quad quad) {
+                processLoad(quad);
+			}
+			/** A put instance field instruction. */
+			public void visitPutfield(Quad quad) {
+				processStore(quad);
+			}
+			/** A put static field instruction. */
+			public void visitPutstatic(Quad quad) {
+				processStore(quad);
+			}
+			/** A register move instruction. */
+			public void visitMove(Quad quad) {
+				// there is only one binding at this quad
+				Assert._assert(_q.getBindingCount(quad) == 1);
+				SSABinding b = (SSABinding) _q.getBindingIterator(quad).next();
+				Assert._assert(b.getValue() == null);
+				b.setValue(markUses(quad));
+			}
+			/** An array load instruction. */
+			public void visitALoad(Quad quad) {
+                processLoad(quad);
+			}
+			/** An array store instruction. */
+			public void visitAStore(Quad quad) {
+				processStore(quad);
+			}
+			/** An quadect allocation instruction. */
+			public void visitNew(Quad quad) {
+				 // there is only one binding at this quad
+				 Assert._assert(_q.getBindingCount(quad) == 1);
+				 SSABinding b = (SSABinding) _q.getBindingIterator(quad).next();
+				 Assert._assert(b.getValue() == null);
+				 b.setValue(makeAlloc(quad));
+			}
+			/** An array allocation instruction. */
+			public void visitNewArray(Quad quad) {
+				// there is only one binding at this quad
+				 Assert._assert(_q.getBindingCount(quad) == 1);
+				 SSABinding b = (SSABinding) _q.getBindingIterator(quad).next();
+				 Assert._assert(b.getValue() == null);
+				 b.setValue(makeAlloc(quad));
+			}
+			/** A return from method instruction. */
+			public void visitReturn(Quad quad) {
+				// TODO: make up a location for return?
+			}			
+			public void visitInvoke(Quad quad) {
+				processCall(quad);	
+			}
+			/**************************** End of handlers ****************************/ 
+			private void processStore(Quad quad) {
+				// the destinations have been marked at this point
+				// need to fill in the RHSs
+				for(Iterator iter = _q.getBindingIterator(quad); iter.hasNext();) {  					
+					SSABinding b = (SSABinding) iter.next();
+					Assert._assert(b.getValue() == null);
+					b.setValue(markUses(quad));
+				}
+			}
+			
+			public void visitCFG(ControlFlowGraph cfg) {
+				// fill in all the gammas
+				for(Iterator iter = new QuadIterator(cfg); iter.hasNext();){
+					Quad quad = (Quad)iter.next();
+					
+					Iterator bindingIter = _q.getBindingIterator(quad);
+					while(bindingIter.hasNext()){
+						SSABinding b = (SSABinding) bindingIter.next();
+						SSAValue value = b.getValue();
+						
+						if(value != null && value instanceof SSAValue.Gamma){
+							SSAValue.Gamma gamma = (SSAValue.Gamma)value;
+							fillInGamma(quad, gamma);
+						}
+					}
+				}
+			}
+
+			/**
+			 * Fill in the gamma function with reaching definitions
+			 * */
+			private void fillInGamma(Quad quad, SSAValue.Gamma gamma) {
+				SSALocation loc = gamma.getDestination().getLocation();				
+				
+				BasicBlock basicBlock = _q.getDominatorQuery().getBasicBlock(quad);
+				Assert._assert(basicBlock != null);
+				Assert._assert(basicBlock.size() > 0);
+				Assert._assert(basicBlock.getQuad(0) == quad);
+				ListIterator.BasicBlock predIter = basicBlock.getPredecessors().basicBlockIterator();
+				while(predIter.hasNext()){
+					BasicBlock predBlock = predIter.nextBasicBlock();
+					Quad predQuad = predBlock.isEntry() ? _q.getFirstQuad() : predBlock.getLastQuad();
+					SSADefinition predDef = _q.getLastDefinitionFor(loc, predQuad, false);
+					gamma.add(predDef, null);
+				}
+			}
+
+            /**
+             * This method fills in the RHS of loads.
+             * */
+			private void processLoad(Quad quad) {
+				QuadProgramLocation pl = new QuadProgramLocation(_method, quad);
+				Assert._assert(isLoad(quad));
+				Set refs = _ptr.ref(pl);
+
+                SSAValue.OmegaPhi value = new SSAValue.OmegaPhi(); 
+
+				// create bindingins for all modified locations
+				if(refs != null && refs.size() > 0){
+					if(_verbosity > 2) System.out.print("Found " + refs.size() + " refs at " + pl.toString() + ": [ ");
+					Iterator iter = refs.iterator();
+					while(iter.hasNext()){
+						SSALocation loc = (SSALocation)iter.next();
+						if(_verbosity > 2) System.out.print(loc.toString(_ptr.getPAResults()) + " ");
+						// figure out the reaching definition for loc
+						initializeLocation(loc);
+						SSADefinition def = _q.getLastDefinitionFor(loc, quad, true);
+						Assert._assert(def != null);						
+						if(_verbosity > 1) System.out.println("Using " + def + " at " + quad);
+						value.addUsedDefinition(def);
+					}
+					if(_verbosity > 2) System.out.println("]\n");
+                }
+                
+                Assert._assert(_q.getBindingCount(quad) == 1, "Have " + _q.getBindingCount(quad) + " bindings at " + quad);
+                SSABinding b = (SSABinding) _q.getBindingIterator(quad).next();
+                Assert._assert(b.getValue() == null);
+                Assert._assert(b.getDestination().getLocation() instanceof LocalLocation);
+                LocalLocation loc = (LocalLocation) b.getDestination().getLocation();
+                Assert._assert(loc.getRegister() == getOnlyDefinedRegister(quad));
+                b.setValue(value);
+			}
+            
+            private void processCall(Quad quad) {
+                Assert._assert(isCall(quad));   
+            }
+			
+			private SSAValue.Normal markUses(Quad quad) {
+				SSAValue.UseCollection value = SSAValue.UseCollection.FACTORY.createUseCollection();
+				ListIterator.RegisterOperand iter = quad.getUsedRegisters().registerOperandIterator();
+				while(iter.hasNext()) {
+					Register reg = iter.nextRegisterOperand().getRegister();
+					SSALocation loc = LocalLocation.FACTORY.createLocalLocation(reg);
+					initializeLocation(loc);
+					SSADefinition  def =_q.getLastDefinitionFor(loc, quad, true);
+					Assert._assert(def != null);
+					
+					value.addUsedDefinition(def);
+				}
+								
+				return value;
+			}
+			
+			private SSAValue makeAlloc(Quad quad) {
+				return SSAValue.Alloc.FACTORY.createAlloc(quad);
+			}
 		}
 	} // End of SSABuilder
 	
@@ -391,6 +674,28 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 		
 		return result.toString();
 	}
+	private static Register getOnlyDefinedRegister(Quad quad) {
+		Util.Templates.ListIterator.RegisterOperand iter = quad.getDefinedRegisters().registerOperandIterator();
+		if(!iter.hasNext()){
+			// no definition here
+			return null;
+		}
+		Register reg = iter.nextRegisterOperand().getRegister();
+		Assert._assert(!iter.hasNext(), "More than one defined register");
+			
+		return reg;
+	}
+    private static Register getOnlyUsedRegister(Quad quad) {
+        Util.Templates.ListIterator.RegisterOperand iter = quad.getUsedRegisters().registerOperandIterator();
+        if(!iter.hasNext()){
+            // no definition here
+            return null;
+        }
+        Register reg = iter.nextRegisterOperand().getRegister();
+        Assert._assert(!iter.hasNext(), "More than one used register");
+        
+        return reg;
+    }
 };
 
 			/********************************************************/
