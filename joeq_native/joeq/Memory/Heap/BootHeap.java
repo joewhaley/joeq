@@ -1,6 +1,7 @@
 package Memory.Heap;
 
 import Allocator.ObjectLayout;
+import Allocator.ObjectLayoutMethods;
 import Main.jq;
 import Memory.HeapAddress;
 
@@ -67,7 +68,7 @@ public class BootHeap extends Heap {
      */
     public boolean mark(HeapAddress ref) {
         Object obj = ref.asObject();
-        return ObjectLayout.testAndMark(obj, markValue);
+        return ObjectLayoutMethods.testAndMark(obj, markValue);
     }
 
     /**
@@ -75,7 +76,7 @@ public class BootHeap extends Heap {
      */
     public boolean isLive(HeapAddress ref) {
         Object obj = ref.asObject();
-        return ObjectLayout.testMarkBit(obj, markValue);
+        return ObjectLayoutMethods.testMarkBit(obj, markValue);
     }
 
     /**

@@ -2,6 +2,7 @@ package Memory.Heap;
 
 import Allocator.HeapAllocator;
 import Allocator.ObjectLayout;
+import Allocator.ObjectLayoutMethods;
 import Clazz.jq_Array;
 import Main.jq;
 import Memory.Address;
@@ -518,7 +519,7 @@ public class SegregatedListHeap extends Heap implements GCConstants {
 
         if (alloc_block.mark != null) {
             if (size <= alloc_block.alloc_size) {
-                ObjectLayout.setArrayLength(alloc_block.mark, size);
+                ObjectLayoutMethods.setArrayLength(alloc_block.mark, size);
                 return theblock;
             } else { // free the existing array space
                 mallocHeap.atomicFreeArray(alloc_block.mark);
@@ -584,7 +585,7 @@ public class SegregatedListHeap extends Heap implements GCConstants {
 
         if (alloc_block.mark != null) {
             if (size <= alloc_block.alloc_size) {
-                ObjectLayout.setArrayLength(alloc_block.mark, size);
+                ObjectLayoutMethods.setArrayLength(alloc_block.mark, size);
                 return 0;
             } else { // free the existing make array
                 mallocHeap.atomicFreeArray(alloc_block.mark);
@@ -779,7 +780,7 @@ public class SegregatedListHeap extends Heap implements GCConstants {
         //VM.disableGC();
         HeapAddress region = mallocHeap.allocateZeroedMemory(regionSize);
         st.sizes =
-            (SizeControl[]) ObjectLayout.initializeArray(
+            (SizeControl[]) ObjectLayoutMethods.initializeArray(
                 region,
                 SizeControl._array.getVTable(),
                 GC_SIZES,
@@ -787,7 +788,7 @@ public class SegregatedListHeap extends Heap implements GCConstants {
         region = (HeapAddress) region.offset(scArraySize);
         for (int i = 0; i < GC_SIZES; i++) {
             st.sizes[i] =
-                (SizeControl) ObjectLayout.initializeObject(
+                (SizeControl) ObjectLayoutMethods.initializeObject(
                     region,
                     SizeControl._class.getVTable(),
                     scSize);
@@ -797,7 +798,7 @@ public class SegregatedListHeap extends Heap implements GCConstants {
         regionSize = SizeControl._array.getInstanceSize(GC_MAX_SMALL_SIZE + 1);
         region = mallocHeap.allocateZeroedMemory(regionSize);
         st.GC_INDEX_ARRAY =
-            (SizeControl[]) ObjectLayout.initializeArray(
+            (SizeControl[]) ObjectLayoutMethods.initializeArray(
                 region,
                 SizeControl._array.getVTable(),
                 (GC_MAX_SMALL_SIZE >> 2) + 1,
