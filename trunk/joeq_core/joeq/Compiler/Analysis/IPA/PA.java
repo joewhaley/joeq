@@ -839,8 +839,8 @@ public class PA {
     
     ConcreteTypeNode addPlaceholderObject(jq_Reference type, int depth, String path) {
         ConcreteTypeNode h = ConcreteTypeNode.get(type, null, new Integer(++opn));
+        if(TRACE_PLACEHOLDERS) System.out.println("Initializing " + path + " of type " + type + " at depth " + depth);
         if (depth > 0) {
-            if(TRACE_PLACEHOLDERS) System.out.println("Initializing " + path + " of type " + type + " at depth " + depth);
             if (type.isClassType()) {
                 jq_Class c = (jq_Class) type;
                 c.prepare();
@@ -916,6 +916,10 @@ public class PA {
             return c.andWith(b.id());
         } else if (CONTEXT_SENSITIVE) {
             Range r = vCnumbering.getRange(m);
+            if (r == null) {
+                System.out.println("Warning: "+m+" is not in the call graph. The call graph might not match the code.");
+                return bdd.one();
+            }
             int bits = BigInteger.valueOf(r.high.longValue()).bitLength();
             if (TRACE_CONTEXT) out.println("Range to "+m+" = "+r+" ("+bits+" bits)");
             BDD V1V2context = V1c[0].buildAdd(V2c[0], bits, 0L);
@@ -1274,7 +1278,12 @@ public class PA {
         jq_Method m = c.getVirtualMethod(finalizer_method);
         if (m != null && m.getBytecode() != null) {
             visitMethod(m);
-            rootMethods.add(m);
+            if (rootMethods.add(m)) {
+                // Add placeholder objects for the "this" parameter of the finalizer.
+                if (ADD_ROOT_PLACEHOLDERS > 0) {
+                    addPlaceholdersForParams(m, ADD_ROOT_PLACEHOLDERS);
+                }
+            }
             Node p = MethodSummary.getSummary(m).getParamNode(0);
             int H_i = Hmap.get(h);
             addToVP(p, H_i);
@@ -1291,7 +1300,12 @@ public class PA {
         jq_Method m = c.getVirtualMethod(run_method);
         if (m != null && m.getBytecode() != null) {
             visitMethod(m);
-            rootMethods.add(m);
+            if (rootMethods.add(m)) {
+                // Add placeholder objects for the "this" parameter of the run() method.
+                if (ADD_ROOT_PLACEHOLDERS > 0) {
+                    addPlaceholdersForParams(m, ADD_ROOT_PLACEHOLDERS);
+                }
+            }
             Node p = MethodSummary.getSummary(m).getParamNode(0);
             BDD context = null;
             if (THREAD_SENSITIVE) {
