@@ -1065,7 +1065,9 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                         Bytecodes.InstructionList i_l = (Bytecodes.InstructionList)e.getValue();
                         if (i_l != null) {
                             if (TRACE) Debug.writeln("Rebuilding bytecodes for instance method "+i_m+", entry "+(j+1));
-                            i_m.setCode(i_l, cpr);
+                            Bytecodes.CodeException[] ex_table = i_m.getExceptionTable(i_l);
+                            Bytecodes.LineNumber[] line_num = i_m.getLineNumberTable(i_l);
+                            i_m.setCode(i_l, ex_table, line_num, cpr);
                         } else {
                             if (TRACE) Debug.writeln("No bytecodes for instance method "+i_m+", entry "+(j+1));
                         }
@@ -1080,7 +1082,9 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                         Bytecodes.InstructionList i_l = (Bytecodes.InstructionList)e.getValue();
                         if (i_l != null) {
                             if (TRACE) Debug.writeln("Rebuilding bytecodes for static method "+i_m+", entry "+(j+1));
-                            i_m.setCode(i_l, cpr);
+                            Bytecodes.CodeException[] ex_table = i_m.getExceptionTable(i_l);
+                            Bytecodes.LineNumber[] line_num = i_m.getLineNumberTable(i_l);
+                            i_m.setCode(i_l, ex_table, line_num, cpr);
                         } else {
                             if (TRACE) Debug.writeln("No bytecodes for static method "+i_m+", entry "+(j+1));
                         }
@@ -1195,8 +1199,10 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                                 + new_m);
                     old.rewriteMethodForReplace(cpa, il);
                     cpa.finish();
+                    Bytecodes.CodeException[] ex_table = new_m.getExceptionTable(il);
+                    Bytecodes.LineNumber[] line_num = new_m.getLineNumberTable(il);
                     // as a side-effect cpa will set OLD's cp to its new value.
-                    new_m.setCode(il, cpa);
+                    new_m.setCode(il, ex_table, line_num, cpa);
 
                     old.remakeAttributes(cpa); // reset sourcefile
 
@@ -1280,7 +1286,9 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                     old.rewriteMethodForReplace(cpa, il);
                     //collect new entries for cp
                     cpa.finish(); //side-effect: commit new entries into cp.
-                    new_m.setCode(il, cpa); // update ref. to new entries.
+                    Bytecodes.CodeException[] ex_table = new_m.getExceptionTable(il);
+                    Bytecodes.LineNumber[] line_num = new_m.getLineNumberTable(il);
+                    new_m.setCode(il, ex_table, line_num, cpa); // update ref. to new entries.
 
                     old.remakeAttributes(cpa); // reset sourcefile
                     //old.getSourceFile();
@@ -1746,7 +1754,9 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
             Bytecodes.InstructionList i_l = (Bytecodes.InstructionList)e.getValue();
             if (i_l != null) {
                 if (TRACE) Debug.writeln("Rebuilding bytecodes for instance method "+i_m+".");
-                i_m.setCode(i_l, cpr);
+                Bytecodes.CodeException[] ex_table = i_m.getExceptionTable(i_l);
+                Bytecodes.LineNumber[] line_num = i_m.getLineNumberTable(i_l);
+                i_m.setCode(i_l, ex_table, line_num, cpr);
             } else {
                 if (TRACE) Debug.writeln("No bytecodes for instance method "+i_m+".");
             }
@@ -1761,7 +1771,9 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
             Bytecodes.InstructionList i_l = (Bytecodes.InstructionList)e.getValue();
             if (i_l != null) {
                 if (TRACE) Debug.writeln("Rebuilding bytecodes for static method "+i_m+".");
-                i_m.setCode(i_l, cpr);
+                Bytecodes.CodeException[] ex_table = i_m.getExceptionTable(i_l);
+                Bytecodes.LineNumber[] line_num = i_m.getLineNumberTable(i_l);
+                i_m.setCode(i_l, ex_table, line_num, cpr);
             } else {
                 if (TRACE) Debug.writeln("No bytecodes for static method "+i_m+".");
             }
