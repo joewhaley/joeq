@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -106,7 +107,7 @@ public class PathNumbering implements Externalizable {
         /**
          * Return true if the edge scc1->scc2 is important.
          */
-        boolean isImportant(SCComponent scc1, SCComponent scc2);
+        boolean isImportant(SCComponent scc1, SCComponent scc2, BigInteger num);
     }
     
     /** Select important edges. */
@@ -130,6 +131,8 @@ public class PathNumbering implements Externalizable {
     public Number countPaths(Graph graph) {
         return countPaths(graph.getRoots(), graph.getNavigator(), null);
     }
+    
+    Set unimportant = new HashSet();
     
     /** Counts the number of paths from the given root set, using the given graph navigator. */
     public Number countPaths(Collection roots, Navigator navigator, Map initialMap) {
@@ -168,17 +171,16 @@ public class PathNumbering implements Externalizable {
                 SCComponent pred = (SCComponent) i.next();
                 Pair edge = new Pair(pred, scc);
                 //System.out.println("Visiting edge SCC"+pred.getId()+" to SCC"+scc.getId());
-                if (isImportant(pred, scc)) {
-                    int nedges = ((Collection) sccEdges.get(edge)).size();
-                    Range r = (Range) sccNumbering.get(pred);
-                    // t1 = r.high+1;
-                    BigInteger t1 = toBigInt(r.high).add(BigInteger.ONE);
-                    // newtotal = total + t1*nedges
-                    BigInteger newtotal = total.add(t1.multiply(BigInteger.valueOf(nedges)));
+                int nedges = ((Collection) sccEdges.get(edge)).size();
+                Range r = (Range) sccNumbering.get(pred);
+                // t1 = r.high+1;
+                BigInteger t1 = toBigInt(r.high).add(BigInteger.ONE);
+                // newtotal = total + t1*nedges
+                BigInteger newtotal = total.add(t1.multiply(BigInteger.valueOf(nedges)));
+                if (isImportant(pred, scc, newtotal)) {
                     total = newtotal;
                 } else {
-                    Range r = (Range) sccNumbering.get(pred);
-                    BigInteger t1 = toBigInt(r.high).add(BigInteger.ONE);
+                    unimportant.add(edge);
                     if (total.compareTo(t1) < 0) total = t1;
                 }
             }
@@ -259,9 +261,10 @@ public class PathNumbering implements Externalizable {
         }
         for (Iterator i=Arrays.asList(scc1.next()).iterator(); i.hasNext(); ) {
             SCComponent scc2 = (SCComponent) i.next();
-            boolean important = isImportant(scc1, scc2);
+            Pair e = new Pair(scc1, scc2);
+            boolean important = !unimportant.contains(e);
             Range r2 = (Range) sccNumbering.get(scc2);
-            Collection calls = (Collection) sccEdges.get(new Pair(scc1, scc2));
+            Collection calls = (Collection) sccEdges.get(e);
             for (Iterator k=calls.iterator(); k.hasNext(); ) {
                 Pair edge = (Pair) k.next();
                 Range r3;
@@ -283,9 +286,9 @@ public class PathNumbering implements Externalizable {
         }
     }
     
-    public boolean isImportant(SCComponent scc1, SCComponent scc2) {
+    public boolean isImportant(SCComponent scc1, SCComponent scc2, BigInteger num) {
         if (selector == null) return true;
-        return selector.isImportant(scc1, scc2);
+        return selector.isImportant(scc1, scc2, num);
     }
     
     public Range getRange(Object o) {
