@@ -33,8 +33,13 @@ public class jq_Array extends jq_Reference implements jq_ClassFileConstants, Obj
     public final String shortName() {
         return element_type.shortName()+"[]";
     }
-    public final String getJDKName() { return "["+element_type.getJDKDesc(); }
-    public final String getJDKDesc() { return getJDKName(); }
+    public final String getJDKName() {
+        return desc.toString().replace('/','.');
+        //return "["+element_type.getJDKDesc();
+    }
+    public final String getJDKDesc() {
+        return getJDKName();
+    }
     public final byte getLogElementSize() {
         if (element_type == jq_Primitive.LONG ||
             element_type == jq_Primitive.DOUBLE)

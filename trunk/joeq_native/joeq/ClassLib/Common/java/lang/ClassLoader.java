@@ -173,7 +173,6 @@ public abstract class ClassLoader {
             if (desc.isDescriptor(jq_ClassFileConstants.TC_CLASS)) {
                 java.lang.Object o = this;
                 t = jq_Class.newClass((java.lang.ClassLoader)o, desc);
-                desc2type.put(desc, t);
             } else {
                 if (!desc.isDescriptor(jq_ClassFileConstants.TC_ARRAY))
                     jq.UNREACHABLE("bad descriptor! "+desc);
@@ -182,8 +181,8 @@ public abstract class ClassLoader {
                 elementType = this.getOrCreateType(elementDesc); // recursion
                 java.lang.Object o = this;
                 t = jq_Array.newArray(desc, (java.lang.ClassLoader)o, elementType);
-                desc2type.put(desc, t);
             }
+            desc2type.put(desc, t);
         }
         return t;
     }

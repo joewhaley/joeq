@@ -30,6 +30,16 @@ public class Utf8 implements jq_ClassFileConstants {
     public static int size = -1;
     public static int[][] chains = new int[STARTING_HASH_SIZE][]; // for hashing
     
+    public static final Utf8 BYTE_DESC      = Utf8.get((char)TC_BYTE+"");
+    public static final Utf8 CHAR_DESC      = Utf8.get((char)TC_CHAR+"");
+    public static final Utf8 DOUBLE_DESC    = Utf8.get((char)TC_DOUBLE+"");
+    public static final Utf8 FLOAT_DESC     = Utf8.get((char)TC_FLOAT+"");
+    public static final Utf8 INT_DESC       = Utf8.get((char)TC_INT+"");
+    public static final Utf8 LONG_DESC      = Utf8.get((char)TC_LONG+"");
+    public static final Utf8 SHORT_DESC     = Utf8.get((char)TC_SHORT+"");
+    public static final Utf8 BOOLEAN_DESC   = Utf8.get((char)TC_BOOLEAN+"");
+    public static final Utf8 VOID_DESC      = Utf8.get((char)TC_VOID+"");
+
     public static Utf8 get(String s) {
         return get(toUtf8(s));
     }

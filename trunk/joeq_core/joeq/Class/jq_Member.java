@@ -56,7 +56,7 @@ public abstract class jq_Member implements jq_ClassFileConstants {
 
     protected final Member member_object;  // pointer to our associated java.lang.reflect.Member object
 
-    public static final boolean USE_MEMBER_OBJECT_FIELD = false;
+    public static final boolean USE_MEMBER_OBJECT_FIELD = true;
 
     protected jq_Member(jq_Class clazz, jq_NameAndDesc nd) {
         jq.Assert(clazz != null);
@@ -64,37 +64,31 @@ public abstract class jq_Member implements jq_ClassFileConstants {
         this.clazz = clazz;
         this.nd = nd;
         Member c = null;
-        try {
-            if (this instanceof jq_Field) {
-                if (!jq.Bootstrapping) {
-                    c = ClassLibInterface.DEFAULT.createNewField((jq_Field) this);
-                } else if (USE_MEMBER_OBJECT_FIELD) {
-                    c = Reflection.getJDKField(Class.forName(clazz.getJDKName()), nd.getName().toString());
-                }
-            } else if (this instanceof jq_Initializer) {
-                if (!jq.Bootstrapping) {
-                    c = ClassLibInterface.DEFAULT.createNewConstructor((jq_Initializer) this);
-                } else if (USE_MEMBER_OBJECT_FIELD) {
-                    Class[] args = Reflection.getArgTypesFromDesc(nd.getDesc());
-                    c = Reflection.getJDKConstructor(Class.forName(clazz.getJDKName()), args);
-                }
-            } else {
-                if (!jq.Bootstrapping) {
-                    c = ClassLibInterface.DEFAULT.createNewMethod((jq_Method) this);
-                } else if (USE_MEMBER_OBJECT_FIELD) {
-                    Class[] args = Reflection.getArgTypesFromDesc(nd.getDesc());
-                    c = Reflection.getJDKMethod(Class.forName(clazz.getJDKName()), nd.getName().toString(), args);
-                }
+        if (this instanceof jq_Field) {
+            if (!jq.Bootstrapping) {
+                c = ClassLibInterface.DEFAULT.createNewField((jq_Field) this);
+            } else if (USE_MEMBER_OBJECT_FIELD) {
+                c = Reflection.getJDKField(Reflection.getJDKType(clazz), nd.getName().toString());
             }
-        } catch (ClassNotFoundException x) {
-            System.err.println("Error! Class " + clazz + " not found in host JVM.");
-            x.printStackTrace();
+        } else if (this instanceof jq_Initializer) {
+            if (!jq.Bootstrapping) {
+                c = ClassLibInterface.DEFAULT.createNewConstructor((jq_Initializer) this);
+            } else if (USE_MEMBER_OBJECT_FIELD) {
+                Class[] args = Reflection.getArgTypesFromDesc(nd.getDesc());
+                c = Reflection.getJDKConstructor(Reflection.getJDKType(clazz), args);
+            }
+        } else {
+            if (!jq.Bootstrapping) {
+                c = ClassLibInterface.DEFAULT.createNewMethod((jq_Method) this);
+            } else if (USE_MEMBER_OBJECT_FIELD) {
+                Class[] args = Reflection.getArgTypesFromDesc(nd.getDesc());
+                c = Reflection.getJDKMethod(Reflection.getJDKType(clazz), nd.getName().toString(), args);
+            }
         }
         this.member_object = c;
     }
 
     public final Member getJavaLangReflectMemberObject() {
-        //jq.Assert(!jq.Bootstrapping);
         return member_object;
     }
 

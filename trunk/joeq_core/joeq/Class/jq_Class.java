@@ -87,8 +87,12 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         }
         return true;
     }
-    public final String getJDKName() { return getName(); }
-    public final String getJDKDesc() { return desc.toString().replace('/','.'); }
+    public final String getJDKName() {
+        return getName();
+    }
+    public final String getJDKDesc() {
+        return desc.toString().replace('/','.');
+    }
     public final boolean needsDynamicLink(jq_Method method) {
         if (method.getDeclaringClass() == this) return false;
         if (jq.Bootstrapping && jq.isBootType(this)) return false;

@@ -10,6 +10,7 @@ package Clazz;
 import Bootstrap.PrimordialClassLoader;
 import ClassLib.ClassLibInterface;
 import Main.jq;
+import Run_Time.Reflection;
 import UTF.Utf8;
 
 /*
@@ -21,11 +22,15 @@ public abstract class jq_Type {
     protected final Utf8 desc;
     protected final Class class_object;  // pointer to our associated java.lang.Class object
 
-    protected jq_Type(Utf8 desc) {
+    public static final boolean USE_CLASS_OBJECT_FIELD = true;
+
+    protected jq_Type(Utf8 desc, ClassLoader class_loader) {
         this.desc = desc;
         Class c = null;
         if (!jq.Bootstrapping)
             c = ClassLibInterface.DEFAULT.createNewClass(this);
+        else if (USE_CLASS_OBJECT_FIELD)
+            c = Reflection.getJDKType(this);
         this.class_object = c;
     }
     
@@ -46,7 +51,6 @@ public abstract class jq_Type {
     }
     public boolean needsDynamicLink(jq_Method method) { return false; }
     public final Class getJavaLangClassObject() {
-        jq.Assert(!jq.Bootstrapping);
         return class_object;
     }
 
@@ -70,5 +74,4 @@ public abstract class jq_Type {
     public String toString() { return getName(); }
     
     public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LClazz/jq_Type;");
-    public static final jq_InstanceMethod _getJavaLangClassObject = _class.getOrCreateInstanceMethod("getJavaLangClassObject", "()Ljava/lang/Class;");
 }

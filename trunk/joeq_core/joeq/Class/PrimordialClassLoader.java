@@ -375,33 +375,35 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
         jq_Type t = (jq_Type)bs_desc2type.get(desc);
         if (t == null) {
             if (desc.isDescriptor(jq_ClassFileConstants.TC_CLASS)) {
+                // as a side effect, the class type is registered.
                 if (TRACE) out.println("Adding class type "+desc);
-                bs_desc2type.put(desc, t = jq_Class.newClass(this, desc));
+                t = jq_Class.newClass(this, desc);
             } else if (desc.isDescriptor(jq_ClassFileConstants.TC_ARRAY)) {
                 if (TRACE) out.println("Adding array type "+desc);
                 Utf8 elementDesc = desc.getArrayElementDescriptor();
                 jq_Type elementType = getOrCreateBSType(elementDesc); // recursion
-                bs_desc2type.put(desc, t = jq_Array.newArray(desc, this, elementType));
+                // as a side effect, the array type is registered.
+                t = jq_Array.newArray(desc, this, elementType);
             } else {
                 // this code only gets executed at the very beginning, when creating primitive types.
-                if (desc == Utf8.get((char)TC_BYTE+""))
-                    bs_desc2type.put(desc, t = jq_Primitive.newPrimitive(desc, "byte", 1));
-                else if (desc == Utf8.get((char)TC_CHAR+""))
-                    bs_desc2type.put(desc, t = jq_Primitive.newPrimitive(desc, "char", 2));
-                else if (desc == Utf8.get((char)TC_DOUBLE+""))
-                    bs_desc2type.put(desc, t = jq_Primitive.newPrimitive(desc, "double", 8));
-                else if (desc == Utf8.get((char)TC_FLOAT+""))
-                    bs_desc2type.put(desc, t = jq_Primitive.newPrimitive(desc, "float", 4));
-                else if (desc == Utf8.get((char)TC_INT+""))
-                    bs_desc2type.put(desc, t = jq_Primitive.newPrimitive(desc, "int", 4));
-                else if (desc == Utf8.get((char)TC_LONG+""))
-                    bs_desc2type.put(desc, t = jq_Primitive.newPrimitive(desc, "long", 8));
-                else if (desc == Utf8.get((char)TC_SHORT+""))
-                    bs_desc2type.put(desc, t = jq_Primitive.newPrimitive(desc, "short", 2));
-                else if (desc == Utf8.get((char)TC_BOOLEAN+""))
-                    bs_desc2type.put(desc, t = jq_Primitive.newPrimitive(desc, "boolean", 1));
-                else if (desc == Utf8.get((char)TC_VOID+""))
-                    bs_desc2type.put(desc, t = jq_Primitive.newPrimitive(desc, "void", 0));
+                if (desc == Utf8.BYTE_DESC)
+                    t = jq_Primitive.newPrimitive(desc, "byte", 1);
+                else if (desc == Utf8.CHAR_DESC)
+                    t = jq_Primitive.newPrimitive(desc, "char", 2);
+                else if (desc == Utf8.DOUBLE_DESC)
+                    t = jq_Primitive.newPrimitive(desc, "double", 8);
+                else if (desc == Utf8.FLOAT_DESC)
+                    t = jq_Primitive.newPrimitive(desc, "float", 4);
+                else if (desc == Utf8.INT_DESC)
+                    t = jq_Primitive.newPrimitive(desc, "int", 4);
+                else if (desc == Utf8.LONG_DESC)
+                    t = jq_Primitive.newPrimitive(desc, "long", 8);
+                else if (desc == Utf8.SHORT_DESC)
+                    t = jq_Primitive.newPrimitive(desc, "short", 2);
+                else if (desc == Utf8.BOOLEAN_DESC)
+                    t = jq_Primitive.newPrimitive(desc, "boolean", 1);
+                else if (desc == Utf8.VOID_DESC)
+                    t = jq_Primitive.newPrimitive(desc, "void", 0);
                 /*
                 else if (desc == jq_Array.BYTE_ARRAY.getDesc()) return jq_Array.BYTE_ARRAY;
                 else if (desc == jq_Array.CHAR_ARRAY.getDesc()) return jq_Array.CHAR_ARRAY;
@@ -414,6 +416,8 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
                  */
                 else jq.UNREACHABLE("bad descriptor! "+desc);
             }
+            Object old = bs_desc2type.put(desc, t);
+            jq.Assert(old == null);
         }
         return t;
     }

@@ -53,7 +53,7 @@ public abstract class jq_Reference extends jq_Type implements jq_ClassFileConsta
     }
 
     protected jq_Reference(Utf8 desc, ClassLoader class_loader) {
-        super(desc);
+        super(desc, class_loader);
         jq.Assert(class_loader != null);
         this.class_loader = class_loader;
     }
@@ -64,8 +64,8 @@ public abstract class jq_Reference extends jq_Type implements jq_ClassFileConsta
     public static class jq_NullType extends jq_Reference {
         private jq_NullType() { super(Utf8.get("L&NULL;"), PrimordialClassLoader.loader); }
         public boolean isAddressType() { return false; }
-        public String getJDKName() { jq.UNREACHABLE(); return null; }
-        public String getJDKDesc() { jq.UNREACHABLE(); return null; }
+        public String getJDKName() { return desc.toString(); }
+        public String getJDKDesc() { return getJDKName(); }
         public jq_Class[] getInterfaces() { jq.UNREACHABLE(); return null; }
         public jq_Class getInterface(Utf8 desc) { jq.UNREACHABLE(); return null; }
         public boolean implementsInterface(jq_Class k) { jq.UNREACHABLE(); return false; }

@@ -82,9 +82,11 @@ public abstract class SystemInterface {
     static {
         _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LRun_Time/SystemInterface;");
         _debugmsg = _class.getOrCreateStaticField("debugmsg_4", "LMemory/CodeAddress;");
-        _string_value = PrimordialClassLoader.getJavaLangString().getOrCreateInstanceField("value", "[C");
-        _string_offset = PrimordialClassLoader.getJavaLangString().getOrCreateInstanceField("offset", "I");
-        _string_count = PrimordialClassLoader.getJavaLangString().getOrCreateInstanceField("count", "I");
+        // cannot use getJavaLangString here, as it may not yet have been initialized.
+        jq_Class jls = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/String;");
+        _string_value = jls.getOrCreateInstanceField("value", "[C");
+        _string_offset = jls.getOrCreateInstanceField("offset", "I");
+        _string_count = jls.getOrCreateInstanceField("count", "I");
     }
 
     public static void debugmsg(String msg) {

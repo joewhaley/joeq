@@ -8,6 +8,7 @@
 package Clazz;
 
 import Bootstrap.PrimordialClassLoader;
+import Run_Time.SystemInterface;
 import UTF.Utf8;
 
 /*
@@ -55,7 +56,7 @@ public class jq_Primitive extends jq_Type implements jq_ClassFileConstants {
     
     /** Creates new jq_Primitive */
     private jq_Primitive(Utf8 desc, String name, int size) {
-        super(desc);
+        super(desc, PrimordialClassLoader.loader);
         this.name = name;
         this.size = size;
     }
@@ -64,14 +65,15 @@ public class jq_Primitive extends jq_Type implements jq_ClassFileConstants {
         return new jq_Primitive(desc, name, size);
     }
 
-    public static final jq_Primitive BYTE = (jq_Primitive)PrimordialClassLoader.loader.getOrCreateBSType((char)TC_BYTE+"");
-    public static final jq_Primitive CHAR = (jq_Primitive)PrimordialClassLoader.loader.getOrCreateBSType((char)TC_CHAR+"");
-    public static final jq_Primitive DOUBLE = (jq_Primitive)PrimordialClassLoader.loader.getOrCreateBSType((char)TC_DOUBLE+"");
-    public static final jq_Primitive FLOAT = (jq_Primitive)PrimordialClassLoader.loader.getOrCreateBSType((char)TC_FLOAT+"");
-    public static final jq_Primitive INT = (jq_Primitive)PrimordialClassLoader.loader.getOrCreateBSType((char)TC_INT+"");
-    public static final jq_Primitive LONG = (jq_Primitive)PrimordialClassLoader.loader.getOrCreateBSType((char)TC_LONG+"");
-    public static final jq_Primitive SHORT = (jq_Primitive)PrimordialClassLoader.loader.getOrCreateBSType((char)TC_SHORT+"");
-    public static final jq_Primitive BOOLEAN = (jq_Primitive)PrimordialClassLoader.loader.getOrCreateBSType((char)TC_BOOLEAN+"");
-    public static final jq_Primitive VOID = (jq_Primitive)PrimordialClassLoader.loader.getOrCreateBSType((char)TC_VOID+"");
+    public static final jq_Primitive BYTE   = (jq_Primitive)PrimordialClassLoader.loader.getOrCreateBSType(Utf8.BYTE_DESC);
+    public static final jq_Primitive CHAR   = (jq_Primitive)PrimordialClassLoader.loader.getOrCreateBSType(Utf8.CHAR_DESC);
+    public static final jq_Primitive DOUBLE = (jq_Primitive)PrimordialClassLoader.loader.getOrCreateBSType(Utf8.DOUBLE_DESC);
+    public static final jq_Primitive FLOAT  = (jq_Primitive)PrimordialClassLoader.loader.getOrCreateBSType(Utf8.FLOAT_DESC);
+    public static final jq_Primitive INT    = (jq_Primitive)PrimordialClassLoader.loader.getOrCreateBSType(Utf8.INT_DESC);
+    public static final jq_Primitive LONG   = (jq_Primitive)PrimordialClassLoader.loader.getOrCreateBSType(Utf8.LONG_DESC);
+    public static final jq_Primitive SHORT  = (jq_Primitive)PrimordialClassLoader.loader.getOrCreateBSType(Utf8.SHORT_DESC);
+    public static final jq_Primitive BOOLEAN = (jq_Primitive)PrimordialClassLoader.loader.getOrCreateBSType(Utf8.BOOLEAN_DESC);
+    public static final jq_Primitive VOID   = (jq_Primitive)PrimordialClassLoader.loader.getOrCreateBSType(Utf8.VOID_DESC);
+    
     public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LClazz/jq_Primitive;");
 }
