@@ -36,6 +36,7 @@ import Clazz.jq_Type;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.ConcreteTypeNode;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.FieldNode;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.GlobalNode;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.ParamNode;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.PassedParameter;
@@ -116,6 +117,8 @@ public class CSPAResults {
      */
     BDD pointsTo;
 
+    BDD fieldPt;
+    
     /** Points-to BDD: V1o x H1o.
      * Just cached because it is used often.
      */
@@ -125,7 +128,7 @@ public class CSPAResults {
     Collection returned;
     /** Nodes that are thrown from their methods. */
     Collection thrown;
-
+    /** Multi-map between passed parameters and nodes they operate on. */
     InvertibleMultiMap passedParams;
 
     public TypedBDD getPointsToSet(int var) {
@@ -466,12 +469,18 @@ public class CSPAResults {
         readConfig(di);
         di.close();
         
+        System.out.print("Loading BDDs...");
         this.pointsTo = bdd.load(fn+".bdd");
+        System.out.print("pointsTo "+this.pointsTo.nodeCount()+" nodes");
+        this.fieldPt = bdd.load(fn+".bdd2");
+        System.out.print(", fieldPt "+this.fieldPt.nodeCount()+" nodes, ");
+        System.out.println("done.");
         
         this.returned = new HashSet();
         this.thrown = new HashSet();
         this.passedParams = new GenericInvertibleMultiMap();
         
+        System.out.print("Loading maps...");
         di = new DataInputStream(new FileInputStream(fn+".vars"));
         variableIndexMap = readIndexMap("Variable", di);
         di.close();
@@ -479,6 +488,7 @@ public class CSPAResults {
         di = new DataInputStream(new FileInputStream(fn+".heap"));
         heapobjIndexMap = readIndexMap("Heap", di);
         di.close();
+        System.out.println("done.");
 
         buildContextInsensitive();
 
@@ -544,6 +554,10 @@ public class CSPAResults {
             String s = in.readLine();
             StringTokenizer st = new StringTokenizer(s);
             Node n = MethodSummary.readNode(st);
+            if (n == null && i != 0) {
+                System.out.println("Cannot find node: "+s);
+                n = new GlobalNode();
+            }
             int j = m.get(n);
             //System.out.println(i+" = "+n);
             Assert._assert(i == j);
@@ -598,26 +612,33 @@ public class CSPAResults {
         switch (d.getIndex()) {
             case 0: return "V1o";
             case 1: return "V1c";
+            case 2: return "V2o";
+            case 3: return "V2c";
+            case 4: return "FD";
             case 5: return "H1o";
             case 6: return "H1c";
+            case 7: return "H2o";
+            case 8: return "H2c";
             default: return "???";
         }
     }
 
     public String elementToString(BDDDomain d, int i) {
         StringBuffer sb = new StringBuffer();
+        sb.append(domainName(d)+"("+i+")");
         Node n = null;
         if (d == V1o) {
-            sb.append("V1o("+i+"): ");
+            n = (Node) getVariableNode(i);
+        } else if (d == V2o) {
             n = (Node) getVariableNode(i);
         } else if (d == H1o) {
-            sb.append("H1o("+i+"): ");
+            n = (Node) getHeapNode(i);
+        } else if (d == H2o) {
             n = (Node) getHeapNode(i);
         }
         if (n != null) {
+            sb.append(": ");
             sb.append(n.toString_short());
-        } else {
-            sb.append(domainName(d)+"("+i+")");
         }
         return sb.toString();
     }
@@ -1003,6 +1024,16 @@ public class CSPAResults {
             this.dom.add(d4);
         }
         
+        public TypedBDD(BDD bdd, BDDDomain d1, BDDDomain d2, BDDDomain d3, BDDDomain d4, BDDDomain d5) {
+            this.bdd = bdd;
+            this.dom = SortedArraySet.FACTORY.makeSet(domain_comparator);
+            this.dom.add(d1);
+            this.dom.add(d2);
+            this.dom.add(d3);
+            this.dom.add(d4);
+            this.dom.add(d5);
+        }
+        
         public TypedBDD relprod(TypedBDD bdd1, TypedBDD set) {
             Set newDom = SortedArraySet.FACTORY.makeSet(domain_comparator);
             newDom.addAll(dom);
@@ -1152,16 +1183,46 @@ public class CSPAResults {
 
     TypedBDD parseBDD(List a, String s) {
         if (s.equals("pointsTo")) {
-            return new TypedBDD(pointsTo,
-                                new BDDDomain[] { V1c, V1o, H1c, H1o });
+            return new TypedBDD(pointsTo, V1c, V1o, H1c, H1o );
+        }
+        if (s.equals("fieldPt")) {
+            return new TypedBDD(fieldPt, H1c, H1o, FD, H2c, H2o );
         }
         if (s.startsWith("V1o(")) {
             int x = Integer.parseInt(s.substring(4, s.length()-1));
             return new TypedBDD(V1o.ithVar(x), V1o);
         }
+        if (s.startsWith("V1c(")) {
+            int x = Integer.parseInt(s.substring(4, s.length()-1));
+            return new TypedBDD(V1c.ithVar(x), V1c);
+        }
+        if (s.startsWith("V2o(")) {
+            int x = Integer.parseInt(s.substring(4, s.length()-1));
+            return new TypedBDD(V2o.ithVar(x), V2o);
+        }
+        if (s.startsWith("V2c(")) {
+            int x = Integer.parseInt(s.substring(4, s.length()-1));
+            return new TypedBDD(V2c.ithVar(x), V2c);
+        }
         if (s.startsWith("H1o(")) {
             int x = Integer.parseInt(s.substring(4, s.length()-1));
             return new TypedBDD(H1o.ithVar(x), H1o);
+        }
+        if (s.startsWith("H1c(")) {
+            int x = Integer.parseInt(s.substring(4, s.length()-1));
+            return new TypedBDD(H1c.ithVar(x), H1c);
+        }
+        if (s.startsWith("H2o(")) {
+            int x = Integer.parseInt(s.substring(4, s.length()-1));
+            return new TypedBDD(H2o.ithVar(x), H2o);
+        }
+        if (s.startsWith("H2c(")) {
+            int x = Integer.parseInt(s.substring(4, s.length()-1));
+            return new TypedBDD(H2c.ithVar(x), H2c);
+        }
+        if (s.startsWith("FD(")) {
+            int x = Integer.parseInt(s.substring(3, s.length()-1));
+            return new TypedBDD(FD.ithVar(x), FD);
         }
         BDDDomain d = parseDomain(s);
         if (d != null) {
@@ -1195,8 +1256,13 @@ public class CSPAResults {
     BDDDomain parseDomain(String dom) {
         if (dom.equals("V1c")) return V1c;
         if (dom.equals("V1o")) return V1o;
+        if (dom.equals("V2c")) return V2c;
+        if (dom.equals("V2o")) return V2o;
+        if (dom.equals("FD")) return FD;
         if (dom.equals("H1c")) return H1c;
         if (dom.equals("H1o")) return H1o;
+        if (dom.equals("H2c")) return H2c;
+        if (dom.equals("H2o")) return H2o;
         return null;
     }
 
