@@ -2,6 +2,7 @@ package joeq.Compiler.Analysis.IPA;
 
 import java.util.Iterator;
 
+import joeq.Class.jq_Initializer;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.ParamNode;
@@ -21,6 +22,9 @@ class ParameterAliasing {
         PA _r                       = null;
         private boolean _verbose    = false;
         private boolean _RECURSIVE  = true;
+        private int N               = 1;
+        private boolean _CONSTRUCTORS = false;
+        private int _aliasedCalls   = 0;
          
         public ParamAliasFinder() {
             super(null, null, null);
@@ -50,6 +54,9 @@ class ParameterAliasing {
             MethodSummary ms = MethodSummary.getSummary(m);
             if(ms == null) return;
             if(ms.getNumOfParams() < 2) return;
+            if(!_CONSTRUCTORS && m instanceof jq_Initializer) {
+                return;
+            }
             
             _paResults = getBuilder().getPAResults();
             _r = _paResults.getPAResults();
@@ -72,7 +79,7 @@ class ParameterAliasing {
             ModifiableBoolean printedInfo = new ModifiableBoolean(false);
             long contextSize = (long)contexts.satCount(_r.V1cset);
             boolean foundAliasing = false;
-            for ( Iterator contextIter = contexts.iterator(); contextIter.hasNext() && i < 2; i++ ) {
+            for ( Iterator contextIter = contexts.iterator(); contextIter.hasNext() && i < N; i++ ) {
                 // for this particular context #
                 TypedBDD context = (TypedBDD)contextIter.next();
                 //System.out.println("context: \n" + context.toStringWithDomains());
@@ -95,8 +102,11 @@ class ParameterAliasing {
                 //t: H1xH1cxZ
                 foundAliasing |= processContext(m, ms, pointsTo, context, printedInfo);
             }
-            if ( contextSize > 2 && foundAliasing ) {
-                System.out.println("\t\t(A total of " + contextSize + " contexts) ");  
+            if(foundAliasing) {
+                if ( contextSize > N ) {
+                    System.out.println("\t\t(A total of " + contextSize + " contexts) ");  
+                }
+                _aliasedCalls++;
             }
         }        
         
@@ -138,8 +148,9 @@ class ParameterAliasing {
                     printedInfo.setValue(true);
                 }
                 ProgramLocation loc = new ProgramLocation.BCProgramLocation(m, 0);
-                System.out.println("\tPotential aliasing in context calling " + m.toString() + " at " + 
-                    loc.getSourceFile() + ":" + loc.getLineNumber());
+                
+                System.out.println("\tPotential aliasing in context calling " + 
+                        m.getDeclaringClass().toString() + "." + m.getName().toString() + "(" + loc.getSourceFile() + ":" + loc.getLineNumber() + ")");
                 //System.out.println(pointsTo.toStringWithDomains() + ", " + t.toStringWithDomains());
                 result = true;
                 //b.applyWith(result.id(), BDDFactory.diff);
@@ -166,6 +177,9 @@ class ParameterAliasing {
                 jq_Method m = (jq_Method)iter.next();
             
                 visitMethod(m);
+            }
+            if(_aliasedCalls > 0) {
+                System.out.println("A total of " + _aliasedCalls + " aliased calls");
             }
         }
     }
