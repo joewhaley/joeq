@@ -140,10 +140,20 @@ public class GenerateWebRoots {
                 Class c = Class.forName(listener);
                 Class httpSessionListener = Class.forName("javax.servlet.http.HttpSessionListener");
                 Class servletContextListener = Class.forName("javax.servlet.ServletContextListener");
-                if(httpSessionListener.isAssignableFrom(c) || servletContextListener.isAssignableFrom(c)){
+                if(httpSessionListener.isAssignableFrom(c)){
                     out.println("\t\t// " + ++count + ". " + listener);
                     out.println("\t\ttry {");
-                    out.println("\t\t\t" + listener + " listener = new " + listener + "();");
+                    out.println("\t\t\tHttpSessionListener listener = new " + listener + "();");
+                    out.println("\t\t\tlistener.sessionCreated(null);");
+                    out.println("\t\t\tlistener.sessionDestroyed(null);");
+                    out.println("\t\t} catch (Exception e) {");
+                    out.println("\t\t\te.printStackTrace();");
+                    out.println("\t\t}\n");        
+                }else
+                if(servletContextListener.isAssignableFrom(c)){
+                    out.println("\t\t// " + ++count + ". " + listener);
+                    out.println("\t\ttry {");
+                    out.println("\t\t\tServletContextListener listener = new " + listener + "();");
                     out.println("\t\t\tlistener.contextInitialized(null);");
                     out.println("\t\t\tlistener.contextDestroyed(null);");
                     out.println("\t\t} catch (Exception e) {");
