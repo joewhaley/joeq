@@ -69,12 +69,14 @@ public abstract class SemiConservative {
             Object o = types[i];
             if (o instanceof jq_Class) {
                 jq_Class c = (jq_Class) o;
-                jq_StaticField[] sfs = c.getDeclaredStaticFields();
-                for (int j=0; j<sfs.length; ++j) {
-                    jq_StaticField sf = sfs[j];
-                    if (sf.getType().isReferenceType()) {
-                        HeapAddress a = sf.getAddress();
-                        DefaultHeapAllocator.processPtrField(a, b);
+                if (c.isSFInitialized()) {
+                    jq_StaticField[] sfs = c.getDeclaredStaticFields();
+                    for (int j=0; j<sfs.length; ++j) {
+                        jq_StaticField sf = sfs[j];
+                        if (sf.getType().isReferenceType()) {
+                            HeapAddress a = sf.getAddress();
+                            DefaultHeapAllocator.processPtrField(a, b);
+                        }
                     }
                 }
             }
