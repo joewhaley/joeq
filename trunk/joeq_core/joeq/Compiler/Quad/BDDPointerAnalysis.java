@@ -120,7 +120,7 @@ public class BDDPointerAnalysis {
         int[] varorder = new int[varnum];
         makeVarOrdering(varorder);
         for (int i=0; i<varorder.length; ++i) {
-            System.out.println("varorder["+i+"]="+varorder[i]);
+            //System.out.println("varorder["+i+"]="+varorder[i]);
         }
         bdd.setVarOrder(varorder);
         bdd.enableReorder();
