@@ -3,6 +3,9 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Scheduler;
 
+import java.util.Iterator;
+import java.util.Random;
+
 import Allocator.CodeAllocator;
 import Allocator.HeapAllocator;
 import Allocator.RuntimeCodeAllocator;
@@ -10,6 +13,7 @@ import Allocator.SimpleAllocator;
 import Assembler.x86.x86Constants;
 import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
+import Clazz.jq_DontAlign;
 import Clazz.jq_InstanceMethod;
 import Clazz.jq_StaticField;
 import Clazz.jq_StaticMethod;
@@ -36,7 +40,7 @@ import Util.Strings;
  * @version $Id$
  */
 
-public class jq_NativeThread implements x86Constants {
+public class jq_NativeThread implements x86Constants, jq_DontAlign {
 
     /** Trace flag.  When this is true, prints out debugging information about
      * what is going on in the scheduler.
@@ -63,7 +67,7 @@ public class jq_NativeThread implements x86Constants {
 
     /** An array of all native threads. */
     public static jq_NativeThread[] native_threads;
-
+        
     /** Number of Java threads that are currently active.
      *  When this equals the number of active daemon threads, it is time to shut down.
      */
@@ -85,8 +89,11 @@ public class jq_NativeThread implements x86Constants {
     /** NOTE: C code relies on this field being third. */
     private int pid;
 
+    /** counter for preempted thread */
+    private int preempted_thread_counter;
+    
     /** Queue of ready Java threads. */
-    private final jq_ThreadQueue readyQueue;
+    private final jq_ThreadQueue[] readyQueue;
     /** Queue of idle Java threads. */
     private final jq_ThreadQueue idleQueue;
     /** Queue of Java threads transferred from another native thread. */
@@ -101,9 +108,6 @@ public class jq_NativeThread implements x86Constants {
      *  executing Java thread exits.
      */
     StackAddress original_esp, original_ebp;
-
-    /** This static variable is set to an idle native thread, or null if there are no idle native threads. */
-    private static volatile jq_NativeThread idleThread;
 
     /** The index of this native thread. */
     private final int index;
@@ -149,10 +153,12 @@ public class jq_NativeThread implements x86Constants {
         all_native_threads_started = true;
     }
 
+    /** Returns true iff all native threads are initialized. */
     public static boolean allNativeThreadsInitialized() {
         return all_native_threads_initialized;
     }
     
+    /** Returns the jq_Thread that is currently running on this native thread. */
     public jq_Thread getCurrentThread() {
         return currentThread;
     }
@@ -172,16 +178,22 @@ public class jq_NativeThread implements x86Constants {
         return currentThread;
     }
 
+    public static final int NUM_OF_QUEUES = 10;
+    
     /** Create a new jq_NativeThread (only called from initNativeThreads(),
      *  and during bootstrap initialization of initial_native_thread and
      *  break_nthread field) */
     private jq_NativeThread(int i) {
-        readyQueue = new jq_ThreadQueue();
+        readyQueue = new jq_ThreadQueue[NUM_OF_QUEUES];
+        for (int k = 0; k < NUM_OF_QUEUES; ++k) {
+            readyQueue[k] = new jq_ThreadQueue();
+        }
         idleQueue = new jq_ThreadQueue();
         transferQueue = new jq_SynchThreadQueue();
         myHeapAllocator = new SimpleAllocator();
         myCodeAllocator = new RuntimeCodeAllocator();
         index = i;
+        preempted_thread_counter = 0;
         Thread t = new Thread("_scheduler_" + i);
         currentThread = schedulerThread = ThreadUtils.getJQThread(t);
         if (schedulerThread != null) {
@@ -225,37 +237,43 @@ public class jq_NativeThread implements x86Constants {
         return SystemInterface.set_thread_context(pid, r);
     }
 
-    /** Counter for round-robin scheduling. */
-    private static volatile int round_robin_counter = -1;
-
-    /** Put the given Java thread on the queue of a (preferably idle) native thread. */
+    /** Returns the least-busy native thread. */
+    static jq_NativeThread getLeastBusyThread() {
+        int min_i = 0;
+        int min = native_threads[min_i].preempted_thread_counter +
+                  native_threads[min_i].transferQueue.length();
+        for (int i = 1; i < native_threads.length; ++i) {
+            if (native_threads[i].preempted_thread_counter < min) {
+                min = native_threads[i].preempted_thread_counter +
+                      native_threads[i].transferQueue.length();
+                min_i = i;
+            }
+        }
+        return native_threads[min_i];
+    }
+    
+    /** Put the given Java thread on the queue of the least-busy native thread. */
     public static void startJavaThread(jq_Thread t) {
+        // increment the global Java thread counter, and daemon thread counter if applicable.
         _num_of_java_threads.getAddress().atomicAdd(1);
         if (t.isDaemon())
             _num_of_daemon_threads.getAddress().atomicAdd(1);
-        jq_NativeThread nt = idleThread; // atomic read
-        if (nt == null) {
-            // no idle thread, use round-robin scheduling.
-            int c = round_robin_counter;
-            nt = native_threads[++c];
-            if (TRACE) SystemInterface.debugwriteln("Round-robin: native thread #" + c);
-            if (c + 1 == native_threads.length)
-                round_robin_counter = -1;
-            else
-                round_robin_counter = c;
-        } else {
-            idleThread = null; // go back to round-robin
-        }
-        // threads start off as non-preemptable
-        CodeAddress ip = t.getRegisterState().getEip();
-        if (TRACE) SystemInterface.debugwriteln("Java thread " + t + " enqueued on native thread " + nt + " ip: " + ip.stringRep() + " cc: " + CodeAllocator.getCodeContaining(ip));
+
+        // find the least-busy native thread
+        jq_NativeThread nt = getLeastBusyThread();
+        
         Assert._assert(t.isThreadSwitchEnabled());
         t.disableThreadSwitch(); // threads on queues have thread switch disabled
+        
+        CodeAddress ip = t.getRegisterState().getEip();
+        if (TRACE) SystemInterface.debugwriteln("Java thread " + t + " enqueued on native thread " + nt + " ip: " + ip.stringRep() + " cc: " + CodeAllocator.getCodeContaining(ip));
+        
+        // put the Java thread into the transfer queue of the least-busy native thread
         nt.transferQueue.enqueue(t);
     }
 
     /** End the currently-executing Java thread and go back to the scheduler loop
-     *  to pick up another thread.
+     *  to pick up another thread. 
      */
     public static void endCurrentJavaThread() {
         jq_Thread t = Unsafe.getThreadBlock();
@@ -324,11 +342,11 @@ public class jq_NativeThread implements x86Constants {
                 num_of_daemon_threads == num_of_java_threads)
                 break;
             Assert._assert(currentThread == schedulerThread);
+            // have to choose from which ready queue based on time slicing among 10 queues 
             jq_Thread t = getNextReadyThread();
             if (t == null) {
                 // no ready threads!
                 if (TRACE) SystemInterface.debugwriteln("Native thread " + this + " is idle!");
-                idleThread = this;
                 SystemInterface.yield();
             } else {
                 Assert._assert(!t.isThreadSwitchEnabled());
@@ -342,8 +360,25 @@ public class jq_NativeThread implements x86Constants {
         Assert.UNREACHABLE();
     }
 
-    /** Performs a thread switch based on a timer interrupt. */
+    /** Thread switch based on a timer or poker interrupt. */
     public void threadSwitch() {
+        jq_Thread t1 = this.currentThread;
+        t1.wasPreempted = true;
+        if (TRACE) SystemInterface.debugwriteln("Timer interrupt in native thread: " + this + " Java thread: " + t1);
+        switchThread();
+        Assert.UNREACHABLE();
+    }
+    
+    /** Thread switch based on explicit yield. */
+    public void yieldCurrentThread() {
+        jq_Thread t1 = this.currentThread;
+        t1.wasPreempted = false;
+        if (TRACE) SystemInterface.debugwriteln("Explicit yield in native thread: " + this + " Java thread: " + t1);
+        switchThread();
+        Assert.UNREACHABLE();
+    }
+    
+    private void switchThread() {
         // thread switching for the current thread is disabled on entry.
         jq_Thread t1 = this.currentThread;
         Unsafe.setThreadBlock(this.schedulerThread);
@@ -362,6 +397,7 @@ public class jq_NativeThread implements x86Constants {
         state.Eip = (CodeAddress) state.getEsp().peek();
         state.Esp = (StackAddress) state.getEsp().offset(StackAddress.size() + CodeAddress.size());
 
+        // have to choose one of the 10 ready queue
         jq_Thread t2 = getNextReadyThread();
         transferExtraWork();
         if (t2 == null) {
@@ -370,7 +406,10 @@ public class jq_NativeThread implements x86Constants {
         } else {
             ip = t2.getRegisterState().Eip;
             if (TRACE) SystemInterface.debugwriteln("New ready Java thread: " + t2 + " ip: " + ip.stringRep() + " cc: " + CodeAllocator.getCodeContaining(ip));
-            readyQueue.enqueue(t1);
+            int priority = t1.getPriority();
+            readyQueue[priority].enqueue(t1);
+            if (t1.wasPreempted && !t1.isDaemon())
+                ++preempted_thread_counter;
             Assert._assert(!t2.isThreadSwitchEnabled());
         }
         currentThread = t2;
@@ -378,8 +417,15 @@ public class jq_NativeThread implements x86Constants {
         Assert.UNREACHABLE();
     }
 
+    public void yieldCurrentThreadTo(jq_Thread t) {
+        jq_Thread t1 = this.currentThread;
+        t1.wasPreempted = false;
+        switchThread(t);
+        Assert.UNREACHABLE();
+    }
+    
     /** Performs a thread switch to a specific thread in our local queue. */
-    public void threadSwitch(jq_Thread t2) {
+    private void switchThread(jq_Thread t2) {
         // thread switching for the current thread is disabled on entry.
         jq_Thread t1 = this.currentThread;
 
@@ -401,33 +447,78 @@ public class jq_NativeThread implements x86Constants {
 
         if (t1 != t2) {
             // find given thread in our queue.
-            boolean exists = readyQueue.remove(t2);
-            Assert._assert(exists);
-            transferExtraWork();
+            for (int i = 0; ; ++i) {
+                if (i == readyQueue.length) {
+                    // doesn't exist in our ready queue.
+                    Assert.UNREACHABLE();
+                    return;
+                }
+                boolean exists = readyQueue[i].remove(t2); // which ready queue?
+                if (exists) break;
+            }
+            if (t2.wasPreempted && !t2.isDaemon())
+                --preempted_thread_counter;
+        }
+        transferExtraWork();
+        if (t1 != t2) {
             ip = t2.getRegisterState().Eip;
             if (TRACE) SystemInterface.debugwriteln("New ready Java thread: " + t2 + " ip: " + ip.stringRep() + " cc: " + CodeAllocator.getCodeContaining(ip));
-            readyQueue.enqueue(t1);
+            int priority = t1.getPriority();
+            readyQueue[priority].enqueue(t1);  // specify the queue
+            if (t1.wasPreempted && !t1.isDaemon())
+                ++preempted_thread_counter;
             Assert._assert(!t2.isThreadSwitchEnabled());
-        } else {
-            transferExtraWork();
         }
         currentThread = t2;
         SystemInterface.set_current_context(t2, t2.getRegisterState());
         Assert.UNREACHABLE();
     }
 
-    /** Transfer a Java thread from our ready queue to an idle native thread. */
+    /** Transfer extra work from our ready queue into a less-busy thread's transfer queue. */
     private void transferExtraWork() {
-        // if we have extra work, transfer it to an idle thread
-        jq_NativeThread idle = idleThread; // atomic read
-        if (idle != null && !readyQueue.isEmpty()) {
-            jq_Thread t2 = readyQueue.dequeue();
-            Assert._assert(!t2.isThreadSwitchEnabled());
-            idle.transferQueue.enqueue(t2);
-            idleThread = null;
+        jq_NativeThread that = getLeastBusyThread();
+        if (this == that) return;
+        // if we are much more busy than the other thread.
+        if (this.preempted_thread_counter*2 > (that.preempted_thread_counter+1)) {
+            // find a ready queue where we have more than he does
+            for (int i = readyQueue.length-1; i >= 0; --i) {
+                if (this.readyQueue[i].length() > that.readyQueue[i].length()) {
+                    // transfer one thread to him. 
+                    jq_Thread t2 = this.readyQueue[i].dequeue();
+                    Assert._assert(!t2.isThreadSwitchEnabled());
+                    if (t2.wasPreempted && !t2.isDaemon())
+                        --preempted_thread_counter;
+                    that.transferQueue.enqueue(t2);
+                    break;
+                }
+            }
         }
     }
 
+    Random rng = new Random();
+    static final float[] DISTRIBUTION = {
+                .05f, .11f, .18f, .26f, .35f, .45f, .56f, .68f, .81f, 1.0f
+    };
+    
+    private jq_ThreadQueue chooseNextQueue() {
+        // use monte carlo distribution.
+        float f = rng.nextFloat();
+        for (int i = 0; ; ++i) {
+            if (f < DISTRIBUTION[i]) {
+                if (!readyQueue[i].isEmpty()) return readyQueue[i];
+                int c = rng.nextBoolean() ? 1 : -1;
+                for (int j = i + c; j < DISTRIBUTION.length && j >= 0; j += c) {
+                    if (!readyQueue[j].isEmpty()) return readyQueue[j];
+                }
+                c = -c;
+                for (int j = i + c; j < DISTRIBUTION.length && j >= 0; j += c) {
+                    if (!readyQueue[j].isEmpty()) return readyQueue[j];
+                }
+                return null;
+            }
+        }
+    }
+    
     /** Get the next ready thread from the transfer queue or the ready queue.
      *  Return null if there are no threads ready.
      */
@@ -438,8 +529,11 @@ public class jq_NativeThread implements x86Constants {
             Assert._assert(!t.isThreadSwitchEnabled());
             return t;
         }
-        while (!readyQueue.isEmpty()) {
-            jq_Thread t = readyQueue.dequeue();
+        jq_ThreadQueue q = chooseNextQueue();
+        while (q != null && !q.isEmpty()) {
+            jq_Thread t = q.dequeue();
+            if (t.wasPreempted && !t.isDaemon())
+                --preempted_thread_counter;
             if (!t.isAlive()) continue;
             Assert._assert(t.getNativeThread() == this);
             Assert._assert(!t.isThreadSwitchEnabled());
@@ -448,6 +542,18 @@ public class jq_NativeThread implements x86Constants {
         return null;
     }
 
+    private void verifyCount() {
+        int total = 0;
+        for (int i = 0; i < readyQueue.length; ++i) {
+            for (Iterator j = readyQueue[i].threads(); j.hasNext(); ) {
+                jq_Thread t = (jq_Thread) j.next();
+                if (t.wasPreempted && !t.isDaemon())
+                    ++total;
+            }
+        }
+        Assert._assert(total == preempted_thread_counter);
+    }
+    
     public String toString() {
         return "NT " + index + ":" + thread_handle + "(" + Strings.hex(this) + ")";
     }
@@ -546,13 +652,15 @@ public class jq_NativeThread implements x86Constants {
     public void dump(jq_RegisterState regs) {
         SystemInterface.debugwriteln(this + ": current Java thread = " + currentThread);
         StackCodeWalker.stackDump(regs.Eip, regs.getEbp());
-        SystemInterface.debugwriteln(this + ": ready queue = " + readyQueue);
+        for (int i = 0; i < readyQueue.length; ++i) {
+            SystemInterface.debugwriteln(this + ": ready queue "+i+" = " + readyQueue[i]); 
+        }
         SystemInterface.debugwriteln(this + ": idle queue = " + idleQueue);
         SystemInterface.debugwriteln(this + ": transfer queue = " + transferQueue);
     }
 
-    public jq_ThreadQueue getReadyQueue() {
-        return this.readyQueue;
+    public jq_ThreadQueue getReadyQueue(int i) {
+        return this.readyQueue[i];
     }
     public jq_ThreadQueue getIdleQueue() {
         return this.idleQueue;
