@@ -5,30 +5,30 @@ package Compil3r.Analysis.IPSSA.Apps;
 
 import java.util.Collection;
 import java.util.Iterator;
+
+import org.sf.javabdd.BDD;
+
 import Clazz.jq_Method;
 import Compil3r.Analysis.IPSSA.IPSSABuilder;
 import Compil3r.Analysis.IPSSA.SSADefinition;
+import Compil3r.Analysis.IPSSA.SSALocation;
+import Compil3r.Analysis.IPSSA.SSALocation.LocalLocation;
 import Compil3r.Analysis.IPSSA.Utils.ReachabilityTrace;
+import Util.Assert;
 
 /**
  * @author Vladimir Livshits
  * This is a sample application that prints all paths between two definitions.
+ * Use one of the subclasses that rely on different sources for def-use data.
  */
 public abstract class ReachablityTracerApp extends IPSSABuilder.Application {
     private String _def1_str;
     private String _def2_str;
     private boolean _verbose = false;
 
-    ReachablityTracerApp(String name, String[] args) {
-        super(name, args);
-    }
-    
-    /*
-    public static void main(String[] argv) {
-        if(argv.length < 2) usage(argv);
-        //SimpleReachablityTracer tracer = new SimpleReachablityTracer();
-        //tracer.printPath(argv[0], argv[1]);
-    }*/
+    ReachablityTracerApp(IPSSABuilder builder, String name, String[] args) {
+        super(builder, name, args);
+    }    
     
     private static void usage(String[] argv) {
         System.err.print("Invalid parameters: ");
@@ -78,12 +78,30 @@ public abstract class ReachablityTracerApp extends IPSSABuilder.Application {
      * This one uses PA results directly.
      * */
     public static class PAReachablityTracerApp extends ReachablityTracerApp {
-        PAReachablityTracerApp(String name, String[] args) {
-            super(name, args);
+        public PAReachablityTracerApp(){
+             this(null, null, null);
+        }
+     
+        PAReachablityTracerApp(IPSSABuilder builder, String name, String[] args) {
+            super(builder, name, args);
         }
 
         protected void printPath(SSADefinition def1, SSADefinition def2) {
-            // TODO: add this           
+            Assert._assert(def1.getLocation() instanceof SSALocation.LocalLocation);
+            Assert._assert(def2.getLocation() instanceof SSALocation.LocalLocation);
+                        
+            SSALocation.LocalLocation loc1 = (LocalLocation)def1.getLocation();                        
+            String name1 = loc1.getName(def1.getMethod(), def1.getQuad());
+            
+            SSALocation.LocalLocation loc2 = (LocalLocation)def2.getLocation();
+            String name2 = loc1.getName(def2.getMethod(), def2.getQuad());
+            
+            System.err.println(def1 + " : " + name1 + ", " + def2 + " : " + name2);                        
+            
+            // create the bdd for the variable(s)?
+            BDD defBDD = null;
+                         
+            //_builder.getPAResults().defUseGraph(defBDD, true, System.out);           
         }
     }
     
@@ -92,13 +110,14 @@ public abstract class ReachablityTracerApp extends IPSSABuilder.Application {
      * */
     public static class IPSSAReachablityTracerApp extends ReachablityTracerApp {
         public IPSSAReachablityTracerApp(){
-            this(null, null);
+            this(null, null, null);
         }
-        IPSSAReachablityTracerApp(String name, String[] args) {
-            super(name, args);
+        IPSSAReachablityTracerApp(IPSSABuilder builder, String name, String[] args) {
+            super(builder, name, args);
         }
 
         protected void printPath(SSADefinition def1, SSADefinition def2) {
+            System.err.println("Calculating paths between " + def1 + " and " + def2);
             Collection/*ReachabilityTrace*/ traces = ReachabilityTrace.Algorithms.collectReachabilityTraces(def1, def2);
             for(Iterator iter = traces.iterator(); iter.hasNext(); ) {
                 ReachabilityTrace trace = (ReachabilityTrace)iter.next();
