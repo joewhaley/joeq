@@ -3,6 +3,20 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Analysis.IPA;
 
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.TreeSet;
 import java.io.BufferedReader;
 import java.io.DataInput;
 import java.io.DataInputStream;
@@ -21,29 +35,18 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.TreeSet;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
+import joeq.Class.jq_ClassInitializer;
 import joeq.Class.jq_FakeInstanceMethod;
 import joeq.Class.jq_Field;
+import joeq.Class.jq_Initializer;
 import joeq.Class.jq_InstanceField;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_MethodVisitor;
 import joeq.Class.jq_NameAndDesc;
+import joeq.Class.jq_Primitive;
 import joeq.Class.jq_Reference;
 import joeq.Class.jq_Type;
 import joeq.Class.jq_Reference.jq_NullType;
@@ -77,9 +80,9 @@ import joeq.Util.Graphs.SCComponent;
 import joeq.Util.Graphs.Traversals;
 import joeq.Util.Graphs.PathNumbering.Range;
 import joeq.Util.Graphs.SCCPathNumbering.Selector;
+import joeq.Util.IO.SystemProperties;
 import joeq.Util.IO.Textualizable;
 import joeq.Util.IO.Textualizer;
-import joeq.Util.IO.SystemProperties;
 import org.sf.javabdd.BDD;
 import org.sf.javabdd.BDDBitVector;
 import org.sf.javabdd.BDDDomain;
@@ -133,6 +136,7 @@ public class PA {
     boolean CONTEXT_SENSITIVE = !System.getProperty("pa.cs", "no").equals("no");
     boolean CS_CALLGRAPH = !System.getProperty("pa.cscg", "no").equals("no");
     boolean DISCOVER_CALL_GRAPH = !System.getProperty("pa.discover", "no").equals("no");
+    boolean AUTODISCOVER_CALL_GRAPH = !System.getProperty("pa.autodiscover", "yes").equals("no");
     boolean DUMP_DOTGRAPH = !System.getProperty("pa.dumpdotgraph", "no").equals("no");
     boolean FILTER_NULL = !System.getProperty("pa.filternull", "yes").equals("no");
     boolean LONG_LOCATIONS = !System.getProperty("pa.longlocations", "no").equals("no");
@@ -2323,7 +2327,7 @@ public class PA {
         dis.cg = null;
         if (dis.CONTEXT_SENSITIVE || !dis.DISCOVER_CALL_GRAPH) {
             dis.cg = loadCallGraph(rootMethods);
-            if (dis.cg == null) {
+            if (dis.cg == null && dis.AUTODISCOVER_CALL_GRAPH) {
                 if (dis.CONTEXT_SENSITIVE || dis.OBJECT_SENSITIVE || dis.THREAD_SENSITIVE ||
                         dis.SKIP_SOLVE) {
                     System.out.println("Discovering call graph first...");
@@ -2346,7 +2350,7 @@ public class PA {
                     System.out.println("Call graph doesn't exist yet, so turning on call graph discovery.");
                     dis.DISCOVER_CALL_GRAPH = true;
                 }
-            } else {
+            } else if (dis.cg != null) {
                 rootMethods = dis.cg.getRoots();
             }
         }
@@ -3624,11 +3628,92 @@ public class PA {
     
     BDD getRoots() {
         BDD b = bdd.zero();
+        if (cg == null) {
+            return b;
+        }
         for (Iterator i = cg.getRoots().iterator(); i.hasNext(); ) {
             jq_Method m = (jq_Method) i.next();
             b.orWith(M.ithVar(Mmap.get(m)));
         }
         return b;
+    }
+    
+    // NQueens.<clinit>
+    // java/lang/Math/doublepow(doubledouble)
+    public static String mungeMethodName(jq_Method m) {
+        if (m == null) return "null";
+        StringBuffer sb = new StringBuffer();
+        String className = mungeTypeName(m.getDeclaringClass());
+        String returnType = mungeTypeName(m.getReturnType());
+        
+        if (m instanceof jq_ClassInitializer) {
+            return className+".<clinit>";
+        }
+        sb.append(className);
+        sb.append('/');
+        sb.append(returnType);
+        if (m instanceof jq_Initializer) {
+            
+        } else {
+            sb.append(m.getName());
+        }
+        sb.append('(');
+        jq_Type[] ps = m.getParamTypes();
+        for (int i = 0; i < ps.length; ++i) {
+            if (i == 0 && !m.isStatic()) continue;
+            jq_Type p = ps[i];
+            sb.append(mungeTypeName(p));
+        }
+        sb.append(')');
+        jq_Class[] ex = m.getThrownExceptionsTable();
+        if (ex != null) {
+            for (int i = 0; i < ex.length; ++i) {
+                jq_Class x = ex[i];
+                sb.append(mungeTypeName(x));
+            }
+        }
+        return sb.toString();
+    }
+    
+    // java/lang/String/count
+    // java/lang/String$1/foo
+    // java/lang/String/Iterator/n
+    public static String mungeFieldName(jq_Field t) {
+        if (t == null) return "null";
+        return mungeTypeName(t.getDeclaringClass())+"/"+t.getName();
+    }
+    
+    public static String mungeTypeName2(jq_Type t) {
+        if (t == null) return "null";
+        if (isAnonymousClass(t.toString())) return mungeTypeName(t);
+        String s = t.toString().replace('$','.');
+        return s;
+    }
+    
+    public static String mungeTypeName(jq_Type t) {
+        if (t == null) return "null";
+        if (t instanceof jq_Primitive) {
+            return ((jq_Primitive) t).getName();
+        }
+        if (t instanceof jq_Array) {
+            jq_Array a = (jq_Array) t;
+            int depth = a.getDepth();
+            jq_Type elementType = a.getInnermostElementType();
+            return mungeTypeName(elementType)+depth;
+        }
+        String s = t.toString();
+        s = s.replace('.', '/');
+        if (!isAnonymousClass(s))
+            s = s.replace('$', '/');
+        return s;
+    }
+    
+    public static boolean isAnonymousClass(String s) {
+        int i = s.indexOf('$');
+        if (i == -1) return false;
+        if (i+1 == s.length()) return false;
+        char c = s.charAt(i+1);
+        return Character.isDigit(c);
     }
     
     public void dumpBDDRelations() throws IOException {
@@ -3778,7 +3863,10 @@ public class PA {
         dos = null;
         try {
             dos = new DataOutputStream(new FileOutputStream(dumpPath+"type.map"));
-            Tmap.dumpStrings(dos);
+            for (int j = 0; j < Tmap.size(); ++j) {
+                jq_Type o = (jq_Type) Tmap.get(j);
+                dos.writeBytes(mungeTypeName2(o)+"\n");
+            }
         } finally {
             if (dos != null) dos.close();
         }
@@ -3786,7 +3874,10 @@ public class PA {
         dos = null;
         try {
             dos = new DataOutputStream(new FileOutputStream(dumpPath+"field.map"));
-            Fmap.dumpStrings(dos);
+            for (int j = 0; j < Fmap.size(); ++j) {
+                jq_Field o = (jq_Field) Fmap.get(j);
+                dos.writeBytes(mungeFieldName(o)+"\n");
+            }
         } finally {
             if (dos != null) dos.close();
         }
@@ -3802,7 +3893,10 @@ public class PA {
         dos = null;
         try {
             dos = new DataOutputStream(new FileOutputStream(dumpPath+"name.map"));
-            Nmap.dumpStrings(dos);
+            for (int j = 0; j < Nmap.size(); ++j) {
+                jq_Method o = (jq_Method) Nmap.get(j);
+                dos.writeBytes(mungeMethodName(o)+"\n");
+            }
         } finally {
             if (dos != null) dos.close();
         }
@@ -3810,7 +3904,15 @@ public class PA {
         dos = null;
         try {
             dos = new DataOutputStream(new FileOutputStream(dumpPath+"method.map"));
-            Mmap.dumpStrings(dos);
+            for (int j = 0; j < Mmap.size(); ++j) {
+                Object o = Mmap.get(j);
+                if (o instanceof Dummy) {
+                    dos.writeBytes(o.toString()+"\n");
+                    continue;
+                }
+                jq_Method m = (jq_Method) o;
+                dos.writeBytes(mungeMethodName(m)+"\n");
+            }
         } finally {
             if (dos != null) dos.close();
         }
@@ -3824,6 +3926,9 @@ public class PA {
             t.writeBytes("(dummy object)");
         }
         public void writeEdges(Textualizer t) throws IOException {
+        }
+        public String toString() {
+            return "DummyMethod";
         }
     }
     
