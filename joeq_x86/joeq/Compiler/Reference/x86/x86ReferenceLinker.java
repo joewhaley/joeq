@@ -22,8 +22,6 @@ import Clazz.jq_InstanceMethod;
 import Clazz.jq_StaticMethod;
 import Clazz.jq_NameAndDesc;
 import Run_Time.SystemInterface;
-import Run_Time.ExceptionDeliverer;
-import Run_Time.TypeCheck;
 import Run_Time.Unsafe;
 import UTF.Utf8;
 import jq;
