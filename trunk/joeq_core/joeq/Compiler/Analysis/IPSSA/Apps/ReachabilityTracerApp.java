@@ -19,7 +19,7 @@ import joeq.Compiler.Analysis.IPSSA.Utils.AnalysisObjectSpec.UnknownAnalysisObje
 import joeq.Util.Assert;
 
 /**
- * @author Vladimir Livshits
+ * @author V.Benjamin Livshits
  * This is a sample application that prints all paths between two definitions.
  * Use one of the subclasses that rely on different sources for def-use data.
  * 

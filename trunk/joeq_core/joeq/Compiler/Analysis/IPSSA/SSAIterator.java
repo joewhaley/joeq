@@ -10,7 +10,7 @@ import java.util.Iterator;
 import joeq.Util.Collections.UnmodifiableIterator;
 
 /**
- * @author Vladimir Livshits
+ * @author V.Benjamin Livshits
  * @version $Id$
  */
 public class SSAIterator {

@@ -27,7 +27,7 @@ import joeq.Compiler.Analysis.IPSSA.DominatorQuery;
  * A pretty obvious implementation of DominatorQuery, nothing fancy here. 
  * Needs to be optimized for future use.
  * @see DominatorQuery
- * @author  Vladimir Livshits
+ * @author  V.Benjamin Livshits
  * @version $Id$
  * */
 public class SimpleDominatorQuery implements DominatorQuery {

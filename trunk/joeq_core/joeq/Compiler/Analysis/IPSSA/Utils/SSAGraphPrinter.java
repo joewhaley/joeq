@@ -18,7 +18,7 @@ import joeq.Util.Assert;
 import joeq.Util.Collections.Pair;
 
 /**
- * @author Vladimir Livshits
+ * @author V.Benjamin Livshits
  * @version $Id$
  *
  * This class provides utilities for printing a SSA connectivity graph.

@@ -13,7 +13,7 @@ import joeq.Compiler.Quad.ControlFlowGraph;
 
 /**
  * Goes over all bindings in a method.
- * @author Vladimir Livshits
+ * @author V.Benjamin Livshits
  * @version $Id$
  * */
 public abstract class SSABindingVisitor {
