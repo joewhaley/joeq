@@ -163,6 +163,14 @@ public class BasicBlock {
         return (Quad)instructions.get(instructions.size()-1);
     }
 
+    public void removeQuad(int i) {
+        instructions.remove(i);
+    }
+    
+    public void removeAllQuads() {
+        instructions.clear();
+    }
+    
     /** Add a quad to this basic block at the given location.
      * Cannot add quads to the entry or exit basic blocks.
      * @param index  the index to add the quad
