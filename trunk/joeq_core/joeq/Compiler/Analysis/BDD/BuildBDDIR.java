@@ -78,9 +78,12 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         if (SSA) {
             regBits = 11;
             varargsBits = 5;
+            int index = varOrderDesc.indexOf("xtargetxfallthrough");
+            varOrderDesc = varOrderDesc.substring(0, index) + varOrderDesc.substring(index + "xtargetxfallthrough".length());
         }
         if (USE_SRC12) {
-            varOrderDesc = "method_quadxtargetxfallthrough_member_constant_src2_opc_src1_srcs_dest_srcNum";
+            int index = varOrderDesc.indexOf("_srcs");
+            varOrderDesc = varOrderDesc.substring(0, index) + "_src2_src1" + varOrderDesc.substring(index);
         }
         methodMap = new IndexMap("method");
         loadOpMap();
@@ -110,6 +113,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         methodEntries = bdd.zero();
         nullConstant = bdd.zero();
         nonNullConstants = bdd.zero();
+        System.out.println("Using variable ordering "+varOrderDesc);
         int [] varOrder = bdd.makeVarOrdering(true, varOrderDesc);
         bdd.setVarOrder(varOrder);
         bdd.setMaxIncrease(500000);
