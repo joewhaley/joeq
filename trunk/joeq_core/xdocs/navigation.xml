@@ -10,7 +10,7 @@
             href="http://sourceforge.net" />
     </links>
     <menu name="Documentation">
-      <item name="About joeq" collapse="true">
+      <item name="About joeq" collapse="true" href="overview.html">
         <item name="Overview"
               href="overview.html"/>
         <item name="Bootstrapping"
