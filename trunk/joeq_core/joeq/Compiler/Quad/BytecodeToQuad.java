@@ -1453,7 +1453,15 @@ public class BytecodeToQuad extends BytecodeVisitor {
             q = Unary.create(quad_cfg.getNewQuadID(), Unary.ADDRESS_2INT.INSTANCE, res, loc);
             current_state.push_I(res);
         } else if (name == stringRep) {
-            INVOKEhelper(oper, m, m.getReturnType(), false);
+            Operand loc = current_state.pop_P();
+            RegisterOperand res = getStackRegister(jq_Primitive.INT);
+            q = Unary.create(quad_cfg.getNewQuadID(), Unary.ADDRESS_2INT.INSTANCE, res, loc);
+            current_state.push_I(res);
+            appendQuad(q);
+            
+            jq_Class k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LUtil/Strings;");
+            jq_StaticMethod sm = k.getOrCreateStaticMethod("hex8", "(I)Ljava/lang/String;");
+            INVOKEhelper(Invoke.INVOKESTATIC_A.INSTANCE, sm, sm.getReturnType(), false);
             return;
         } else if (name == getNull) {
             PConstOperand p = new PConstOperand(null);

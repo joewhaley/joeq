@@ -28,6 +28,7 @@ import Run_Time.StackCodeWalker;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
 import Util.Assert;
+import Util.Strings;
 
 /*
  * @author  John Whaley
@@ -256,8 +257,10 @@ public class jq_NativeThread implements x86Constants {
         // long jump back to entry of schedulerLoop
         CodeAddress ip = _schedulerLoop.getDefaultCompiledVersion().getEntrypoint();
         StackAddress fp = nt.original_ebp;
-        // sp includes return address into nativeThreadEntry
-        StackAddress sp = (StackAddress) nt.original_esp.offset(-CodeAddress.size());
+        StackAddress sp = nt.original_esp;
+        if (TRACE) SystemInterface.debugwriteln("Long jumping back to schedulerLoop, ip:" + ip.stringRep() + " fp: " + fp.stringRep() + " sp: " + sp.stringRep());
+        HeapAddress a = (HeapAddress)sp.offset(4).peek();
+        Assert._assert(a.asObject() == nt, "arg to schedulerLoop got corrupted: " + a.stringRep() + " should be " + HeapAddress.addressOf(nt).stringRep());
         Unsafe.longJump(ip, fp, sp, 0);
         Assert.UNREACHABLE();
     }
@@ -281,17 +284,23 @@ public class jq_NativeThread implements x86Constants {
         }
 
         // store for longJump
-        this.original_esp = StackAddress.getStackPointer();
-        this.original_ebp = StackAddress.getBasePointer();
+        StackAddress sp = StackAddress.getStackPointer();
+        StackAddress fp = StackAddress.getBasePointer();
+        // make room for return address and "this" pointer.
+        this.original_esp = (StackAddress) sp.offset(-CodeAddress.size()-HeapAddress.size());
+        this.original_ebp = fp;
 
-        if (TRACE) SystemInterface.debugwriteln("Started native thread: " + this);
+        if (TRACE) SystemInterface.debugwriteln("Started native thread: " + this + " sp: " + this.original_esp.stringRep() + " fp: " + this.original_ebp.stringRep());
 
         // enter the scheduler loop
-        schedulerLoop();
+        this.schedulerLoop();
         Assert.UNREACHABLE();
     }
 
     public void schedulerLoop() {
+        HeapAddress a = (HeapAddress) this.original_esp.offset(4).peek();
+        Assert._assert(a.asObject() == this);
+
         // preemption cannot occur in the scheduler loop because the
         // schedulerThread has thread switching disabled.
         Assert._assert(Unsafe.getThreadBlock() == this.schedulerThread);
@@ -422,8 +431,7 @@ public class jq_NativeThread implements x86Constants {
     }
 
     public String toString() {
-        //return "NT "+index+":"+jq.hex(thread_handle);
-        return "NT " + index + ":" + thread_handle;
+        return "NT " + index + ":" + thread_handle + "(" + Strings.hex(this) + ")";
     }
 
     public int getIndex() { return index; }
