@@ -67,7 +67,7 @@ public class ClasspathWalker {
         Collection result = new LinkedList();
         for(Iterator iter = PrimordialClassLoader.loader.listPackages(); iter.hasNext();){
             String packageName = (String) iter.next();
-            if(packageName.equals(".")){
+            if(packageName.equals(".") || packageName.equals("")){
                 continue;
             }
             if(packageName.endsWith("javabdd.jar") || packageName.endsWith("jwutil-1.0.jar")){
