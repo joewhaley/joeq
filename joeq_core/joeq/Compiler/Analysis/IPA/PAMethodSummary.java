@@ -14,7 +14,6 @@ import org.sf.javabdd.BDD;
 import Clazz.jq_Class;
 import Clazz.jq_Field;
 import Clazz.jq_Method;
-import Clazz.jq_FakeInstanceMethod;
 import Clazz.jq_MethodVisitor;
 import Clazz.jq_Reference;
 import Clazz.jq_Type;
@@ -244,10 +243,17 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
             }
             
             jq_Type[] params = mc.getParamTypes();
-            for (int k = offset; k < params.length; ++k) {
-                if (!params[k].isReferenceType()) continue;
+            int k = offset;
+            for ( ; k < params.length; ++k) {
+                if (!params[k].isReferenceType() && k+1-offset < pa.MAX_PARAMS) {
+                    pa.addEmptyActual(I_bdd, k+1-offset);
+                    continue;
+                }
                 Set s = ms.getNodesThatCall(mc, k);
                 pa.addToActual(I_bdd, k+1-offset, s);
+            }
+            for ( ; k+1-offset < pa.MAX_PARAMS; ++k) {
+                pa.addEmptyActual(I_bdd, k+1-offset);
             }
             Node node = ms.getRVN(mc);
             if (node != null) {
