@@ -80,6 +80,7 @@ public class PA {
     boolean INCREMENTAL3 = true;
     boolean CONTEXT_SENSITIVE = System.getProperty("pa.cs") != null;
     boolean DISCOVER_CALL_GRAPH = System.getProperty("pa.discover") != null;
+    boolean DUMP_DOTGRAPH = System.getProperty("pa.dumpdotgraph") != null;
     
     int bddnodes = Integer.parseInt(System.getProperty("bddnodes", "2500000"));
     int bddcache = Integer.parseInt(System.getProperty("bddcache", "150000"));
@@ -1388,7 +1389,13 @@ public class PA {
             }
         }
     }
-    
+   
+    private void dumpCallGraphAsDot(CallGraph callgraph, String dotFileName) throws IOException {
+	DataOutputStream dos = new DataOutputStream(new FileOutputStream(dotFileName));
+	countCallGraph(callgraph).dotGraph(dos);
+	dos.close();
+    }
+
     public void dumpResults(String dumpfilename) throws IOException {
         
         //CallGraph callgraph = CallGraph.makeCallGraph(roots, new PACallTargetMap());
@@ -1398,6 +1405,9 @@ public class PA {
         dos = new DataOutputStream(new FileOutputStream(callgraphFileName));
         LoadedCallGraph.write(callgraph, dos);
         dos.close();
+
+        if (DUMP_DOTGRAPH)
+            dumpCallGraphAsDot(callgraph, callgraphFileName + ".dot");
         
         bdd.save(dumpfilename+".A", A);
         bdd.save(dumpfilename+".vP", vP);
