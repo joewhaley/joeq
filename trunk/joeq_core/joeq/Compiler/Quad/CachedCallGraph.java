@@ -11,7 +11,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import Clazz.jq_Method;
-import Compil3r.Analysis.IPA.*;
+import Compil3r.Analysis.IPA.ProgramLocation;
 import Util.Collections.GenericInvertibleMultiMap;
 import Util.Collections.GenericMultiMap;
 import Util.Collections.InvertibleMultiMap;
@@ -35,14 +35,17 @@ public class CachedCallGraph extends CallGraph {
 
     public void invalidateCache() {
         this.edges = new GenericInvertibleMultiMap();
+        this.callSites = new GenericMultiMap();
         for (Iterator i = delegate.getAllCallSites().iterator(); i.hasNext(); ) {
             ProgramLocation p = (ProgramLocation) i.next();
             Collection callees = this.edges.getValues(p);
             Collection callees2 = delegate.getTargetMethods(p);
-            callees.addAll(callees2);
+            if (!callees2.isEmpty())
+                callees.addAll(callees2);
+            else
+                callSites.add(p.getMethod(), p);
         }
         this.methods = new HashSet(delegate.getRoots());
-        this.callSites = new GenericMultiMap();
         for (Iterator i = this.edges.keySet().iterator(); i.hasNext(); ) {
             ProgramLocation p = (ProgramLocation) i.next();
             jq_Method m = (jq_Method) p.getMethod();
