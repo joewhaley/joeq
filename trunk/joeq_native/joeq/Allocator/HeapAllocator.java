@@ -139,7 +139,10 @@ public abstract class HeapAllocator implements jq_ClassFileConstants, ObjectLayo
         int/*StackAddress*/ p = Unsafe.EBP() + 16;
         for (int i=dim-1; i>=0; --i) {
             n_elem[i] = Unsafe.peek(p);
-            // NegativeArraySizeException check is in allocateArray
+	    // check for dim < 0 here, because if a dim is zero, later dim's
+	    // are not checked by multinewarray_helper.
+	    if (n_elem[i] < 0)
+		throw new NegativeArraySizeException("dim "+i+": "+n_elem[i]+" < 0");
             p += 4;
         }
         return multinewarray_helper(n_elem, 0, a);
@@ -161,6 +164,7 @@ public abstract class HeapAllocator implements jq_ClassFileConstants, ObjectLayo
         a.chkState(STATE_CLSINITIALIZED);
         int length = dims[ind];
         Object o = a.newInstance(length);
+	jq.assert(length >= 0);
         if (ind == dims.length-1)
             return o;
         Object[] o2 = (Object[])o;
