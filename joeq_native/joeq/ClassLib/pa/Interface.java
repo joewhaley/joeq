@@ -6,7 +6,6 @@ package joeq.ClassLib.pa;
 import java.util.Iterator;
 
 import joeq.ClassLib.ClassLibInterface;
-import joeq.Class.jq_Class;
 import joeq.Class.jq_InstanceField;
 import joeq.Class.jq_StaticField;
 import joeq.Runtime.ObjectTraverser;

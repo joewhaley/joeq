@@ -73,7 +73,7 @@ public class MallocHeap extends Heap {
 
     /**
      * Atomically free an array object.
-     * @param obj the object to free
+     * @param o the object to free
      */
     public void atomicFreeArray(Object o) {
         Unsafe.getThreadBlock().disableThreadSwitch();

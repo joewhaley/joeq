@@ -405,7 +405,7 @@ public final class JMath
          *      precise arithmetic, where [x/p] is the (infinite bit) 
          *      integer nearest x/p (in half way case choose the even one).
          *      @param  x       The dividend.
-         *      @param  y       The divisor.
+         *      @param  p       The divisor.
          *      @return The remainder computed according to the IEEE 754 standard.
          */
         public static double IEEEremainder(double x, double p)

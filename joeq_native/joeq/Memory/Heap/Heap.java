@@ -306,7 +306,7 @@ public abstract class Heap {
      * and set all data fields to zero.
      *
      * @param size         size of object (including header), in bytes
-     * @param tib          type information block for object
+     * @param vtable       vtable for object
      *
      * @return the reference for the allocated object
      */
@@ -325,7 +325,7 @@ public abstract class Heap {
      *
      * @param numElements  number of array elements
      * @param size         size of array object (including header), in bytes
-     * @param tib          type information block for array object
+     * @param vtable       vtable for array object
      *
      * @return the reference for the allocated array object 
      */

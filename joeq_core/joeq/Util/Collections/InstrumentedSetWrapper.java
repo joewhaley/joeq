@@ -174,7 +174,7 @@ public class InstrumentedSetWrapper implements Set {
     }
 
     /**
-     * @see java.util.Collection#toArray(java.lang.Object)
+     * @see java.util.Collection#toArray(java.lang.Object[])
      */
     public Object[] toArray(Object[] arg0) {
         results._toArray(this.wrappedSet, arg0);

@@ -133,7 +133,7 @@ public final class BitString implements Cloneable, java.io.Serializable {
      * Utility function to return the index of the last one bit in the given
      * integer.  Returns zero if the given number is zero.
      * 
-     * @param b value to check
+     * @param v value to check
      * @return byte index of first one bit, or zero if the number is zero
      */
     public static final int bsr(int v) {
@@ -352,7 +352,7 @@ public final class BitString implements Cloneable, java.io.Serializable {
     
     /**
      * Check if the intersection of the two sets is empty
-     * @param set the set to check intersection with
+     * @param other the set to check intersection with
      */
     public boolean intersectionEmpty(BitString other) {
         int n = bits.length;
@@ -364,7 +364,7 @@ public final class BitString implements Cloneable, java.io.Serializable {
 
     /**
      * Check if this set contains all bits of the given set.
-     * @param set the set to check containment with
+     * @param other the set to check containment with
      */
     public boolean contains(BitString other) {
         int n = bits.length;

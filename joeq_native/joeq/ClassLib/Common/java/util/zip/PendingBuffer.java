@@ -144,8 +144,6 @@ class PendingBuffer {
 
   /**
    * Flushes the pending buffer and returns that data in a new array
-   * 
-   * @param output the output stream
    */
 
   public final byte[] toByteArray()

@@ -538,7 +538,7 @@ public class BDDInferenceRule extends InferenceRule {
     }
     
     /**
-     * @param bdd
+     * @param b
      * @return
      */
     private String domainsOf(BDD b) {

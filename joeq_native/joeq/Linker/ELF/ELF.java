@@ -63,13 +63,13 @@ public interface ELF {
     
     /**
      * Adds the given ELF program header to this object.
-     * @param s section to add
+     * @param p program header to add
      */
     void addProgramHeader(ProgramHeader p);
     
     /**
      * Removes the given ELF program header from this object.
-     * @param s section to remove
+     * @param p program header to remove
      */
     void removeProgramHeader(ProgramHeader p);
     

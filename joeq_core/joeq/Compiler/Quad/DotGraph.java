@@ -26,7 +26,7 @@ import joeq.Util.Templates.ListIterator;
  *
  * @see DotGraph#outputDir
  * @see DotGraph#dotFilePrefix
- * @see DotGraph#createMethodName
+ * @see DotGraph#createMethodName(jq_Method)
  *
  * @version $Id$
  */

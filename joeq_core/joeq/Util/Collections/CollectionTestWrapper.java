@@ -127,7 +127,7 @@ public class CollectionTestWrapper implements Set, SortedSet, List {
     }
 
     /**
-     * @see java.util.Collection#toArray(java.lang.Object)
+     * @see java.util.Collection#toArray(java.lang.Object[])
      */
     public Object[] toArray(Object[] arg0) {
         Object[] arg1 = (Object[])java.lang.reflect.Array.newInstance(arg0.getClass(), arg0.length);
