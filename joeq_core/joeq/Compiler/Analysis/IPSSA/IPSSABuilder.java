@@ -172,7 +172,7 @@ public class IPSSABuilder implements Runnable {
     /**
      * A method filter.
      * */
-	private boolean skipMethod(jq_Method method) {
+	public boolean skipMethod(jq_Method method) {
         jq_Class k = method.getDeclaringClass();
         if(!_classes.contains(k)) {
             // unknown, potentially library class -- skip it
@@ -424,7 +424,7 @@ public class IPSSABuilder implements Runnable {
          * This pass adds dummy NOP quads at the first quad of a basic block with more than one predecessors.
          * That quad will later be used by gamma functions.
          * */
-        class LiftMergesVisitor implements BasicBlockVisitor {
+        private class LiftMergesVisitor implements BasicBlockVisitor {
             public void visitBasicBlock(BasicBlock bb) {
                 if(bb.getPredecessors().size() > 1) {
                     // more than one predecessor -- add a padding NOP quad int he beginning of the block
@@ -441,7 +441,7 @@ public class IPSSABuilder implements Runnable {
 		 * Stage 1     : Process all statements in turn and create slots for each modified location. 
 		 * Invariant 1 : All necessary assignments are created by this point and all definitions are numbered.
 		 * */
-		class Stage1Visitor extends QuadVisitor.EmptyVisitor {
+		private class Stage1Visitor extends QuadVisitor.EmptyVisitor {
 			jq_Method _method;
 			SSAProcInfo.Helper _h;
 			SSAProcInfo.Query  _q;
@@ -579,7 +579,7 @@ public class IPSSABuilder implements Runnable {
 		 * Stage 2     : Walk over and fill in all RHSs that don't require dereferencing. 
 		 * Invariant 2 : Update RHSs referring to heap objects to refer to the right locations.
 		 * */
-		class Stage2Visitor extends QuadVisitor.EmptyVisitor {
+		private class Stage2Visitor extends QuadVisitor.EmptyVisitor {
 			private jq_Method _method;
 			private Query     _q;
 			private Helper    _h;
@@ -945,8 +945,11 @@ public class IPSSABuilder implements Runnable {
             _builder = builder;
         }
         public void initialize() {};
-        void setBuilder(IPSSABuilder builder) {
+        protected void setBuilder(IPSSABuilder builder) {            
             _builder = builder;            
+        }
+        protected IPSSABuilder getBuilder() {
+             return _builder;
         }
         public static Application create(IPSSABuilder builder, String line) {
             StringTokenizer tokenizer = new StringTokenizer(line, " ");
@@ -1055,7 +1058,7 @@ public class IPSSABuilder implements Runnable {
                     usage();
                     System.exit(2);                    
                 }else {
-                    int j = args[x].indexOf('.');
+                    int j = args[x].lastIndexOf('.');
                     String classname;
                     if ((j != -1) && !args[x].endsWith(".class")) {
                         classname = args[x].substring(0, j);
@@ -1075,7 +1078,7 @@ public class IPSSABuilder implements Runnable {
                 if (classname.endsWith(".class")) classname = classname.substring(0, classname.length()-6);
                 String classdesc = "L"+classname+";";
                 jq_Class c = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType(classdesc);
-                System.err.println("Preparing " + classdesc + "...");
+                System.err.println("Preparing class [" + classdesc + "] ...");
                 c.prepare();
                 classes.add(c);
             }
