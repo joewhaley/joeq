@@ -734,9 +734,9 @@ public class PathNumbering {
         }
     
         public Range getEdge(Object from, Object to) {
-            if (iMap.containsKey(from)) {
-                return (Range) iMap.get(from);
-            }
+            //if (iMap.containsKey(from)) {
+            //    return (Range) iMap.get(from);
+            //}
             return global;
         }
     
