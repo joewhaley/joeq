@@ -11,6 +11,11 @@ import java.util.Set;
 import Util.Assert;
 
 /**
+ * A worklist with a backing hash set to determine if an item is/was already on the list.
+ * 
+ * Careful: Although this implements java.util.Set, it does not obey the hashCode() and
+ * equals() contract for Set.  It obeys the contract for java.util.List instead.
+ * 
  * @author John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
