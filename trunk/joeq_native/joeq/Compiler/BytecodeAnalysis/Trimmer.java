@@ -50,15 +50,15 @@ public class Trimmer {
     private final Set/*jq_Method*/ invokedVirtualMethods;
     private final Set/*jq_Method*/ invokedInterfaceMethods;
     
-    public Trimmer(jq_Method method, Set initialClassSet) {
-        this(initialClassSet);
+    public Trimmer(jq_Method method, Set initialClassSet, boolean addall) {
+        this(initialClassSet, addall);
         addToWorklist(method);
     }
-    public Trimmer(Set initialClassSet) {
+    public Trimmer(Set initialClassSet, boolean addall) {
         worklist = new LinkedList();
         invokedVirtualMethods = new HashSet();
         invokedInterfaceMethods = new HashSet();
-        rs = new BootstrapRootSet();
+        rs = new BootstrapRootSet(addall);
         rs.registerNecessaryMethodListener(new AddToWorklist());
         rs.registerNecessaryTypeListener(new UpkeepForNewlyDiscoveredClasses());
         

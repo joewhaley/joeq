@@ -41,12 +41,13 @@ public class BootstrapRootSet {
     public boolean AddAllFields;
     
     /** Creates new BootstrapRootSet */
-    public BootstrapRootSet() {
+    public BootstrapRootSet(boolean addall) {
         this.instantiatedTypes = new HashSet();
         this.necessaryTypes = new HashSet();
         this.necessaryFields = new HashSet();
         this.necessaryMethods = new HashSet();
         this.visitedObjects = new LinkedHashSet();
+        this.AddAllFields = addall;
     }
     
     public Set/*jq_Type*/ getInstantiatedTypes() { return instantiatedTypes; }
@@ -88,6 +89,7 @@ public class BootstrapRootSet {
     }
     
     public boolean addInstantiatedType(jq_Type t) {
+        jq.assert(t != null);
         addNecessaryType(t);
         boolean b = instantiatedTypes.add(t);
         if (b) {
