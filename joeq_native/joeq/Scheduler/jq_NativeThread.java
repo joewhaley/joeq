@@ -737,60 +737,6 @@ public class jq_NativeThread implements x86Constants, jq_DontAlign {
         return this.transferQueue;
     }
 
-    /** Initialize the thread switch stub function. */
-    /*
-    public void initializeThreadSwitchStub() {
-        List code_relocs = new LinkedList();
-        List data_relocs = new LinkedList();
-        x86Assembler asm = new x86Assembler(0, 128);
-// pop EAX    (ret addr)
-        asm.emitShort_Reg(x86.POP_r, EAX);
-// pop EAX    (jthread)
-        asm.emitShort_Reg(x86.POP_r, EAX);
-// pop ECX    (context)
-        asm.emitShort_Reg(x86.POP_r, ECX);
-// mov FS:14h, EAX
-        asm.emitprefix(x86.PREFIX_FS);
-        asm.emit2_Reg_Mem(x86.MOV_m_r32, EAX, 0x14);
-// mov EAX, [ECX+20h]
-        asm.emit2_Reg_Mem(x86.MOV_r_m32, EAX, jq_RegisterState._eip.getOffset(), ECX);
-// mov <label>, EAX
-        asm.emit1_Imm32(x86.MOV_mo32_ra, 0x00000000);
-        // TODO: this contains an absolute reference that will break if this code is relocated.
-        int cloc = asm.getCurrentOffset();
-// mov EAX, [ECX+28h]
-        asm.emit2_Reg_Mem(x86.MOV_r_m32, EAX, jq_RegisterState._fp_state.getOffset(), ECX);
-// frstor [EAX]
-        asm.emit2_Mem(x86.FRSTOR, 0, EAX);
-// mov EAX, [ECX+24h]
-        asm.emit2_Reg_Mem(x86.MOV_r_m32, EAX, jq_RegisterState._eflags.getOffset(), ECX);
-// sahf
-        asm.emit1(x86.SAHF);
-// mov EAX, [ECX+00h]
-        asm.emit2_Reg_Mem(x86.MOV_r_m32, EAX, jq_RegisterState._eax.getOffset(), ECX);
-// mov EDX, [ECX+08h]
-        asm.emit2_Reg_Mem(x86.MOV_r_m32, EDX, jq_RegisterState._edx.getOffset(), ECX);
-// mov EBX, [ECX+0Ch]
-        asm.emit2_Reg_Mem(x86.MOV_r_m32, EBX, jq_RegisterState._ebx.getOffset(), ECX);
-// mov ESI, [ECX+10h]
-        asm.emit2_Reg_Mem(x86.MOV_r_m32, ESI, jq_RegisterState._esi.getOffset(), ECX);
-// mov EDI, [ECX+14h]
-        asm.emit2_Reg_Mem(x86.MOV_r_m32, EDI, jq_RegisterState._edi.getOffset(), ECX);
-// mov EBP, [ECX+18h]
-        asm.emit2_Reg_Mem(x86.MOV_r_m32, EBP, jq_RegisterState._ebp.getOffset(), ECX);
-// mov ESP, [ECX+1Ch]
-        asm.emit2_Reg_Mem(x86.MOV_r_m32, ESP, jq_RegisterState._esp.getOffset(), ECX);
-// mov ECX, [ECX+04h]
-        asm.emit2_Reg_Mem(x86.MOV_r_m32, ECX, jq_RegisterState._ecx.getOffset(), ECX);
-// jmp <abs>
-        asm.emit1(x86.JMP_abs);
-        asm.patch4_endian(cloc-4, asm.getCurrentAddress());
-        asm.emitDATA(0);
-        asm.emitDATA(0x0000001b); // 0x1b = ocde segment, 2 xtra bytes here.
-        tswitch_routine = asm.getCodeBuffer().allocateCodeBlock(null, null, null, null, code_relocs, data_relocs);
-    }
-     */
-
     public static final jq_Class _class;
     public static final jq_InstanceMethod _nativeThreadEntry;
     public static final jq_InstanceMethod _schedulerLoop;
