@@ -266,12 +266,15 @@ public class CSPAResults implements PointerAnalysisResults {
      */
     public void loadCallGraph(String fn) throws IOException {
         cg = new LoadedCallGraph(fn);
+    }
+
+    public void numberPaths() {
         pn = new PathNumbering();
         Map thread_map = new ThreadRootMap(findThreadRuns(cg));
         Number paths = pn.countPaths(cg.getRoots(), cg.getCallSiteNavigator(), thread_map);
         System.out.println("Number of paths in call graph="+paths);
     }
-
+    
     public boolean findAliasedParameters2(jq_Method m) {
         Collection s = methodToVariables.getValues(m);
         Collection paramNodes = new LinkedList();
@@ -1170,22 +1173,26 @@ public class CSPAResults implements PointerAnalysisResults {
         return new TypedBDD(capturedHeap, H1);
     }
 
-    static List thread_runs = new LinkedList();
-    public static List findThreadRuns(CallGraph cg) {
+    static Map thread_runs = new HashMap();
+    public Map findThreadRuns(CallGraph cg) {
         thread_runs.clear();
-        for (Iterator i=cg.getAllMethods().iterator(); i.hasNext(); ) {
-            jq_Method m = (jq_Method) i.next();
-            if (m.getBytecode() == null) continue;
-            if (m.getNameAndDesc().equals(PA.run_method)) {
-                jq_Class k = m.getDeclaringClass();
-                k.prepare();
-                PrimordialClassLoader.getJavaLangThread().prepare();
-                jq_Class jlr = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/Runnable;");
-                jlr.prepare();
-                if (k.isSubtypeOf(PrimordialClassLoader.getJavaLangThread()) ||
-                    k.isSubtypeOf(jlr)) {
-                    System.out.println("Thread run method found: "+m);
-                    thread_runs.add(m);
+        
+        PrimordialClassLoader.getJavaLangThread().prepare();
+        jq_Class jlt = PrimordialClassLoader.getJavaLangThread();
+        jq_Class jlr = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/Runnable;");
+        jlr.prepare();
+        
+        for (Iterator i = Hmap.iterator(); i.hasNext(); ) {
+            Node n = (Node) i.next();
+            jq_Reference type = n.getDeclaredType();
+            if (type != null) {
+                type.prepare();
+                if (type.isSubtypeOf(jlt) ||
+                    type.isSubtypeOf(jlr)) {
+                    jq_Method rm = type.getVirtualMethod(PA.run_method);
+                    Set s = (Set) thread_runs.get(rm);
+                    if (s == null) thread_runs.put(rm, s = new HashSet());
+                    s.add(n);
                 }
             }
         }
@@ -1254,16 +1261,6 @@ public class CSPAResults implements PointerAnalysisResults {
         di.close();
         System.out.println("done.");
 
-        buildContextInsensitive();
-
-        initializeMethodMap();
-        
-        buildSCCToVarBDD();
-        
-        buildCallGraphRelation();
-        //buildAccessibleLocations();
-        
-        sanityCheck();
     }
     
     private void sanityCheck() {
@@ -1617,9 +1614,20 @@ public class CSPAResults implements PointerAnalysisResults {
         CSPAResults r = new CSPAResults(bdd);
         r.loadCallGraph(prefix+"callgraph");
         r.load(prefix+fileName);
+        r.numberPaths();
+        r.initializeRelations();
         return r;
     }
 
+    public void initializeRelations() {
+        buildContextInsensitive();
+        initializeMethodMap();
+        buildSCCToVarBDD();
+        buildCallGraphRelation();
+        //buildAccessibleLocations();
+        sanityCheck();
+    }
+    
     public static String domainName(BDDDomain d) {
         return d.getName();
     }
@@ -2528,7 +2536,11 @@ public class CSPAResults implements PointerAnalysisResults {
                     results.add(bdd);
                 } else if (command.equals("thread")) {
                     int k = Integer.parseInt(st.nextToken());
-                    jq_Method run = (jq_Method) thread_runs.get(k);
+                    jq_Method run = null;
+                    Iterator j = thread_runs.keySet().iterator();
+                    while (--k >= 0) {
+                        run = (jq_Method) j.next();
+                    }
                     System.out.println(k+": "+run);
                     BDD m = M.ithVar(getMethodIndex(run));
                     TypedBDD bdd = new TypedBDD(m, M);
@@ -2763,9 +2775,12 @@ public class CSPAResults implements PointerAnalysisResults {
         jq_NameAndDesc main_nd = new jq_NameAndDesc("main", "([Ljava/lang/String;)V");
         jq_Method main = null;
         for (Iterator i = Mmap.iterator(); i.hasNext(); ) {
-            main = (jq_Method) i.next();
-            if (main_nd.equals(main.getNameAndDesc()))
+            jq_Method m = (jq_Method) i.next();
+            if (main_nd.equals(m.getNameAndDesc())) {
+                main = m;
+                System.out.println("Using main() method: "+main);
                 break;
+            }
         }
         BDD result = bdd.zero();
         BDD allObjects = bdd.zero();
@@ -2777,20 +2792,29 @@ public class CSPAResults implements PointerAnalysisResults {
             System.out.println("Main: "+m.toStringWithDomains());
             BDD b = getReachableVars(m);
             m.free();
+            System.out.println("Reachable vars: "+b.satCount(V1set));
             BDD b2 = b.relprod(vP, V1set);
             b.free();
             System.out.println("Reachable objects: "+b2.satCount(H1set));
             allObjects.orWith(b2);
         }
-        for (Iterator i = thread_runs.iterator(); i.hasNext(); ) {
+        for (Iterator i = thread_runs.keySet().iterator(); i.hasNext(); ) {
             jq_Method run = (jq_Method) i.next();
             int M_i = Mmap.get(run);
-            for (int j = 0; j <= 1; ++j) {
+            Set t_runs = (Set) thread_runs.get(run);
+            if (t_runs == null) {
+                System.out.println("Unknown run() method: "+run);
+                continue;
+            }
+            Iterator k = t_runs.iterator();
+            for (int j = 0; k.hasNext(); ++j) {
+                Node q = (Node) k.next();
                 BDD m = M.ithVar(M_i);
                 m.andWith(V1c.ithVar(j));
-                System.out.println("Thread: "+m.toStringWithDomains());
+                System.out.println("Thread: "+m.toStringWithDomains()+" Object: "+q);
                 BDD b = getReachableVars(m);
                 m.free();
+                System.out.println("Reachable vars: "+b.satCount(V1set));
                 BDD b2 = b.relprod(vP, V1set);
                 b.free();
                 System.out.println("Reachable objects: "+b2.satCount(H1set));
