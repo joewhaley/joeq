@@ -2448,6 +2448,8 @@ public abstract class Operator {
             for (int i=0; i<a.length; ++i) a[i] = plo.get(i);
             return new UnmodifiableList.RegisterOperand(a);
         }
+
+        public abstract boolean isVirtual();
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitInvoke(q);
@@ -2498,12 +2500,14 @@ public abstract class Operator {
             public static final INVOKEVIRTUAL_V INSTANCE = new INVOKEVIRTUAL_V();
             private INVOKEVIRTUAL_V() { }
             public String toString() { return "INVOKEVIRTUAL_V"; }
+            public boolean isVirtual() { return true; }
 	    public void interpret(Quad q, State s) { interpret_virtual(q, s); }
         }
         public static class INVOKEVIRTUAL_I extends Invoke {
             public static final INVOKEVIRTUAL_I INSTANCE = new INVOKEVIRTUAL_I();
             private INVOKEVIRTUAL_I() { }
             public String toString() { return "INVOKEVIRTUAL_I"; }
+            public boolean isVirtual() { return true; }
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
 	    public void interpret(Quad q, State s) { interpret_virtual(q, s); }
         }
@@ -2511,6 +2515,7 @@ public abstract class Operator {
             public static final INVOKEVIRTUAL_F INSTANCE = new INVOKEVIRTUAL_F();
             private INVOKEVIRTUAL_F() { }
             public String toString() { return "INVOKEVIRTUAL_F"; }
+            public boolean isVirtual() { return true; }
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
 	    public void interpret(Quad q, State s) { interpret_virtual(q, s); }
         }
@@ -2518,6 +2523,7 @@ public abstract class Operator {
             public static final INVOKEVIRTUAL_L INSTANCE = new INVOKEVIRTUAL_L();
             private INVOKEVIRTUAL_L() { }
             public String toString() { return "INVOKEVIRTUAL_L"; }
+            public boolean isVirtual() { return true; }
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
 	    public void interpret(Quad q, State s) { interpret_virtual(q, s); }
         }
@@ -2525,6 +2531,7 @@ public abstract class Operator {
             public static final INVOKEVIRTUAL_D INSTANCE = new INVOKEVIRTUAL_D();
             private INVOKEVIRTUAL_D() { }
             public String toString() { return "INVOKEVIRTUAL_D"; }
+            public boolean isVirtual() { return true; }
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
 	    public void interpret(Quad q, State s) { interpret_virtual(q, s); }
         }
@@ -2532,6 +2539,7 @@ public abstract class Operator {
             public static final INVOKEVIRTUAL_A INSTANCE = new INVOKEVIRTUAL_A();
             private INVOKEVIRTUAL_A() { }
             public String toString() { return "INVOKEVIRTUAL_A"; }
+            public boolean isVirtual() { return true; }
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
 	    public void interpret(Quad q, State s) { interpret_virtual(q, s); }
         }
@@ -2539,12 +2547,14 @@ public abstract class Operator {
             public static final INVOKESTATIC_V INSTANCE = new INVOKESTATIC_V();
             private INVOKESTATIC_V() { }
             public String toString() { return "INVOKESTATIC_V"; }
+            public boolean isVirtual() { return false; }
 	    public void interpret(Quad q, State s) { interpret_static(q, s); }
         }
         public static class INVOKESTATIC_I extends Invoke {
             public static final INVOKESTATIC_I INSTANCE = new INVOKESTATIC_I();
             private INVOKESTATIC_I() { }
             public String toString() { return "INVOKESTATIC_I"; }
+            public boolean isVirtual() { return false; }
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
 	    public void interpret(Quad q, State s) { interpret_static(q, s); }
         }
@@ -2552,6 +2562,7 @@ public abstract class Operator {
             public static final INVOKESTATIC_F INSTANCE = new INVOKESTATIC_F();
             private INVOKESTATIC_F() { }
             public String toString() { return "INVOKESTATIC_F"; }
+            public boolean isVirtual() { return false; }
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
 	    public void interpret(Quad q, State s) { interpret_static(q, s); }
         }
@@ -2559,6 +2570,7 @@ public abstract class Operator {
             public static final INVOKESTATIC_L INSTANCE = new INVOKESTATIC_L();
             private INVOKESTATIC_L() { }
             public String toString() { return "INVOKESTATIC_L"; }
+            public boolean isVirtual() { return false; }
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
 	    public void interpret(Quad q, State s) { interpret_static(q, s); }
         }
@@ -2566,6 +2578,7 @@ public abstract class Operator {
             public static final INVOKESTATIC_D INSTANCE = new INVOKESTATIC_D();
             private INVOKESTATIC_D() { }
             public String toString() { return "INVOKESTATIC_D"; }
+            public boolean isVirtual() { return false; }
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
 	    public void interpret(Quad q, State s) { interpret_static(q, s); }
         }
@@ -2573,6 +2586,7 @@ public abstract class Operator {
             public static final INVOKESTATIC_A INSTANCE = new INVOKESTATIC_A();
             private INVOKESTATIC_A() { }
             public String toString() { return "INVOKESTATIC_A"; }
+            public boolean isVirtual() { return false; }
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
 	    public void interpret(Quad q, State s) { interpret_static(q, s); }
         }
@@ -2670,12 +2684,14 @@ public abstract class Operator {
             public static final INVOKEINTERFACE_V INSTANCE = new INVOKEINTERFACE_V();
             private INVOKEINTERFACE_V() { }
             public String toString() { return "INVOKEINTERFACE_V"; }
+            public boolean isVirtual() { return true; }
 	    public void interpret(Quad q, State s) { interpret_virtual(q, s); }
         }
         public static class INVOKEINTERFACE_I extends Invoke {
             public static final INVOKEINTERFACE_I INSTANCE = new INVOKEINTERFACE_I();
             private INVOKEINTERFACE_I() { }
             public String toString() { return "INVOKEINTERFACE_I"; }
+            public boolean isVirtual() { return true; }
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
 	    public void interpret(Quad q, State s) { interpret_virtual(q, s); }
         }
@@ -2683,6 +2699,7 @@ public abstract class Operator {
             public static final INVOKEINTERFACE_F INSTANCE = new INVOKEINTERFACE_F();
             private INVOKEINTERFACE_F() { }
             public String toString() { return "INVOKEINTERFACE_F"; }
+            public boolean isVirtual() { return true; }
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
 	    public void interpret(Quad q, State s) { interpret_virtual(q, s); }
         }
@@ -2690,6 +2707,7 @@ public abstract class Operator {
             public static final INVOKEINTERFACE_L INSTANCE = new INVOKEINTERFACE_L();
             private INVOKEINTERFACE_L() { }
             public String toString() { return "INVOKEINTERFACE_L"; }
+            public boolean isVirtual() { return true; }
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
 	    public void interpret(Quad q, State s) { interpret_virtual(q, s); }
         }
@@ -2697,6 +2715,7 @@ public abstract class Operator {
             public static final INVOKEINTERFACE_D INSTANCE = new INVOKEINTERFACE_D();
             private INVOKEINTERFACE_D() { }
             public String toString() { return "INVOKEINTERFACE_D"; }
+            public boolean isVirtual() { return true; }
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
 	    public void interpret(Quad q, State s) { interpret_virtual(q, s); }
         }
@@ -2704,6 +2723,7 @@ public abstract class Operator {
             public static final INVOKEINTERFACE_A INSTANCE = new INVOKEINTERFACE_A();
             private INVOKEINTERFACE_A() { }
             public String toString() { return "INVOKEINTERFACE_A"; }
+            public boolean isVirtual() { return true; }
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
 	    public void interpret(Quad q, State s) { interpret_virtual(q, s); }
         }
