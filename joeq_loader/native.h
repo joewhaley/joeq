@@ -15,8 +15,8 @@ extern "C" int __stdcall console_available(void);
 extern "C" int __stdcall main_argc(void);
 extern "C" int __stdcall main_argv_length(const int i);
 extern "C" void __stdcall main_argv(const int i, char* buf);
-extern int _argc;
-extern char** _argv;
+extern int joeq_argc;
+extern char** joeq_argv;
 #if defined(WIN32)
 struct dirent {
 	char d_name[MAX_PATH];
@@ -44,3 +44,4 @@ extern "C" int __stdcall fs_rename(const char* s, const char* s1);
 extern "C" int __stdcall fs_chmod(const char* s, const int mode);
 extern "C" int __stdcall fs_setfiletime(const char* s, const __int64 time);
 extern "C" int __stdcall fs_getlogicaldrives(void);
+

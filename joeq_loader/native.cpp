@@ -9,7 +9,7 @@ extern "C" void __stdcall debugwmsg(const unsigned short* s)
 {
 	int* length_loc = (int*)((int)s + ARRAY_LENGTH_OFFSET);
 	int length = *length_loc;
-#if defined(WIN32)
+#if defined(WIN32) && defined(_MSC_VER)
 	unsigned short* temp = (unsigned short*)malloc((length+1)*sizeof(unsigned short));
 	memcpy(temp, s, length*sizeof(unsigned short));
 	temp[length] = 0;
@@ -87,19 +87,35 @@ extern "C" void __stdcall mem_cpy(void* to, const void* from, const int size)
 
 extern "C" int __stdcall file_open(const char* s, const int mode, const int smode)
 {
+#if defined(_MSC_VER)
 	return _open(s, mode, smode);
+#else
+	return open(s, mode, smode);
+#endif
 }
 extern "C" int __stdcall file_readbytes(const int fd, char* b, const int len)
 {
+#if defined(_MSC_VER)
 	return _read(fd, b, len);
+#else
+	return read(fd, b, len);
+#endif
 }
 extern "C" int __stdcall file_writebyte(const int fd, const int b)
 {
+#if defined(_MSC_VER)
 	return _write(fd, &b, 1);
+#else
+	return write(fd, &b, 1);
+#endif
 }
 extern "C" int __stdcall file_writebytes(const int fd, const char* b, const int len)
 {
+#if defined(_MSC_VER)
 	return _write(fd, b, len);
+#else
+	return write(fd, b, len);
+#endif
 }
 extern "C" int __stdcall file_sync(const int fd)
 {
@@ -107,11 +123,19 @@ extern "C" int __stdcall file_sync(const int fd)
 }
 extern "C" __int64 __stdcall file_seek(const int fd, const __int64 offset, const int origin)
 {
+#if defined(_MSC_VER)
 	return _lseeki64(fd, offset, origin);
+#else
+	return lseek(fd, offset, origin);
+#endif
 }
 extern "C" int __stdcall file_close(const int fd)
 {
+#if defined(_MSC_VER)
 	return _close(fd);
+#else
+	return close(fd);
+#endif
 }
 #if defined(WIN32)
 extern "C" int __stdcall console_available(void)
@@ -187,15 +211,15 @@ extern "C" int __stdcall console_available(void)
 #endif
 extern "C" int __stdcall main_argc(void)
 {
-	return _argc;
+	return joeq_argc;
 }
 extern "C" int __stdcall main_argv_length(const int i)
 {
-	return strlen(_argv[i]);
+	return strlen(joeq_argv[i]);
 }
 extern "C" void __stdcall main_argv(const int i, char* buf)
 {
-	memcpy(buf, _argv[i], strlen(_argv[i])*sizeof(char));
+	memcpy(buf, joeq_argv[i], strlen(joeq_argv[i])*sizeof(char));
 }
 #if defined(WIN32)
 extern "C" int __stdcall fs_getdcwd(const int i, char* buf, const int buflen)
@@ -233,7 +257,11 @@ extern "C" __int64 __stdcall fs_getfiletime(const char* s)
 }
 extern "C" __int64 __stdcall fs_stat_size(const char* s)
 {
+#if defined(_MSC_VER)
 	struct _stati64 buf;
+#else
+	struct stati64 buf;
+#endif
 	int res = _stati64(s, &buf);
 	if (res != 0) return 0;
 	return buf.st_size;
@@ -389,7 +417,11 @@ extern "C" int __stdcall fs_rename(const char* s, const char* s1)
 }
 extern "C" int __stdcall fs_chmod(const char* s, const int mode)
 {
+#if defined(_MSC_VER)
 	return _chmod(s, mode);
+#else
+	return chmod(s, mode);
+#endif
 }
 extern "C" void __stdcall yield(void)
 {
