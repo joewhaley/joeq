@@ -31,7 +31,7 @@ public abstract class ProgramHeader implements ELFConstants {
     public int getFlags() { return flags; }
     public int getAlign() { return align; }
 
-    public void writeHeader(ELF file) throws IOException {
+    public void writeHeader(ELFImpl file) throws IOException {
         file.write_word(this.getType());
         file.write_off(this.getOffset());
         file.write_addr(this.getVAddr());

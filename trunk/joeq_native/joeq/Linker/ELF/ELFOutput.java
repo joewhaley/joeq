@@ -13,7 +13,7 @@ import java.io.IOException;
  * @author  John Whaley
  * @version $Id$ 
  */
-public class ELFOutput extends ELF {
+public class ELFOutput extends ELFImpl {
     
     protected DataOutput out;
     public ELFOutput(byte data, int type, int machine, int entry, DataOutput out) {
@@ -23,35 +23,35 @@ public class ELFOutput extends ELF {
     
     public DataOutput getOutput() { return out; }
     
-    void write_byte(byte v) throws IOException {
+    public void write_byte(byte v) throws IOException {
         out.write(v);
     }
     
-    void write_bytes(byte[] v) throws IOException {
+    public void write_bytes(byte[] v) throws IOException {
         out.write(v);
     }
     
-    void write_half(int v) throws IOException {
+    public void write_half(int v) throws IOException {
         out.writeShort((short)v);
     }
     
-    void write_word(int v) throws IOException {
+    public void write_word(int v) throws IOException {
         out.writeInt(v);
     }
     
-    void write_sword(int v) throws IOException {
+    public void write_sword(int v) throws IOException {
         out.writeInt(v);
     }
     
-    void write_off(int v) throws IOException {
+    public void write_off(int v) throws IOException {
         out.writeInt(v);
     }
     
-    void write_addr(int v) throws IOException {
+    public void write_addr(int v) throws IOException {
         out.writeInt(v);
     }
     
-    void write_sectionname(String s) throws IOException {
+    public void write_sectionname(String s) throws IOException {
         int value;
         if (section_header_string_table == null)
             value = 0;
@@ -60,12 +60,12 @@ public class ELFOutput extends ELF {
         write_word(value);
     }
     
-    void set_position(int offset) throws IOException { throw new IOException(); }
-    byte read_byte() throws IOException { throw new IOException(); }
-    void read_bytes(byte[] b) throws IOException { throw new IOException(); }
-    int read_half() throws IOException { throw new IOException(); }
-    int read_word() throws IOException { throw new IOException(); }
-    int read_sword() throws IOException { throw new IOException(); }
-    int read_off() throws IOException { throw new IOException(); }
-    int read_addr() throws IOException { throw new IOException(); }
+    public void set_position(int offset) throws IOException { throw new IOException(); }
+    public byte read_byte() throws IOException { throw new IOException(); }
+    public void read_bytes(byte[] b) throws IOException { throw new IOException(); }
+    public int read_half() throws IOException { throw new IOException(); }
+    public int read_word() throws IOException { throw new IOException(); }
+    public int read_sword() throws IOException { throw new IOException(); }
+    public int read_off() throws IOException { throw new IOException(); }
+    public int read_addr() throws IOException { throw new IOException(); }
 }

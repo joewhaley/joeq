@@ -15,10 +15,14 @@ import java.util.List;
  * @author  John Whaley
  * @version $Id$
  */
-public class ELFRandomAccessFile extends ELF {
+public class ELFRandomAccessFile extends ELFImpl {
     
     protected RandomAccessFile file;
     protected List section_headers;
+    public ELFRandomAccessFile(RandomAccessFile file) throws IOException {
+        this.file = file;
+        this.readHeader();
+    }
     public ELFRandomAccessFile(byte data, int type, int machine, int entry, RandomAccessFile file) {
         super(data, type, machine, entry);
         this.file = file;
@@ -50,13 +54,13 @@ public class ELFRandomAccessFile extends ELF {
         int e_shoff = read_off();
         this.e_flags = read_word();
         int headersize = read_half();
-        if (headersize != ELF.getHeaderSize()) throw new IOException();
+        if (headersize != ELFImpl.getHeaderSize()) throw new IOException();
         int programheadersize = read_half();
-        if (programheadersize != ProgramHeader.getSize()) throw new IOException();
         int n_programheaders = read_half();
+        if (n_programheaders > 0 && programheadersize != ProgramHeader.getSize()) throw new IOException();
         int sectionheadersize = read_half();
-        if (sectionheadersize != Section.getHeaderSize()) throw new IOException();
         int n_sectionheaders = read_half();
+        if (n_sectionheaders > 0 && sectionheadersize != Section.getHeaderSize()) throw new IOException();
         int section_header_string_table_index = read_half();
         
         // read and parse section headers
@@ -78,7 +82,7 @@ public class ELFRandomAccessFile extends ELF {
         }
     }
     
-    Section getSection(int i) {
+    public Section getSection(int i) {
         if (i == SHN_ABS) return Section.AbsSection.INSTANCE;
         Section s = (Section)sections.get(i);
         Section.UnloadedSection us = (Section.UnloadedSection)section_headers.get(i);
@@ -93,15 +97,15 @@ public class ELFRandomAccessFile extends ELF {
         return s;
     }
     
-    void write_byte(byte v) throws IOException {
+    public void write_byte(byte v) throws IOException {
         file.write(v);
     }
     
-    void write_bytes(byte[] v) throws IOException {
+    public void write_bytes(byte[] v) throws IOException {
         file.write(v);
     }
     
-    void write_half(int v) throws IOException {
+    public void write_half(int v) throws IOException {
         if (isLittleEndian()) {
             file.write((byte)v);
             file.write((byte)(v>>8));
@@ -111,7 +115,7 @@ public class ELFRandomAccessFile extends ELF {
         }
     }
     
-    void write_word(int v) throws IOException {
+    public void write_word(int v) throws IOException {
         if (isLittleEndian()) {
             file.write((byte)v);
             file.write((byte)(v>>8));
@@ -125,19 +129,19 @@ public class ELFRandomAccessFile extends ELF {
         }
     }
     
-    void write_sword(int v) throws IOException {
+    public void write_sword(int v) throws IOException {
         write_word(v);
     }
     
-    void write_off(int v) throws IOException {
+    public void write_off(int v) throws IOException {
         write_word(v);
     }
     
-    void write_addr(int v) throws IOException {
+    public void write_addr(int v) throws IOException {
         write_word(v);
     }
     
-    void write_sectionname(String s) throws IOException {
+    public void write_sectionname(String s) throws IOException {
         int value;
         if (section_header_string_table == null)
             value = 0;
@@ -146,19 +150,19 @@ public class ELFRandomAccessFile extends ELF {
         write_word(value);
     }
     
-    void set_position(int offset) throws IOException {
+    public void set_position(int offset) throws IOException {
         file.seek(offset);
     }
     
-    byte read_byte() throws IOException {
+    public byte read_byte() throws IOException {
         return file.readByte();
     }
     
-    void read_bytes(byte[] b) throws IOException {
+    public void read_bytes(byte[] b) throws IOException {
         file.readFully(b);
     }
     
-    int read_half() throws IOException {
+    public int read_half() throws IOException {
         int b1 = file.readByte() & 0xFF;
         int b2 = file.readByte() & 0xFF;
         int r;
@@ -170,7 +174,7 @@ public class ELFRandomAccessFile extends ELF {
         return r;
     }
     
-    int read_word() throws IOException {
+    public int read_word() throws IOException {
         int b1 = file.readByte() & 0xFF;
         int b2 = file.readByte() & 0xFF;
         int b3 = file.readByte() & 0xFF;
@@ -184,15 +188,15 @@ public class ELFRandomAccessFile extends ELF {
         return r;
     }
     
-    int read_sword() throws IOException {
+    public int read_sword() throws IOException {
         return read_word();
     }
     
-    int read_off() throws IOException {
+    public int read_off() throws IOException {
         return read_word();
     }
     
-    int read_addr() throws IOException {
+    public int read_addr() throws IOException {
         return read_word();
     }
 }

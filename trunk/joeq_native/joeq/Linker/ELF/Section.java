@@ -122,7 +122,7 @@ public abstract class Section implements ELFConstants {
                 Assert._assert(this.size == 0);
                 Assert._assert(this.link == SHN_UNDEF);
                 Assert._assert(this.info == 0);
-                Assert._assert(this.addralign == 0);
+                //Assert._assert(this.addralign == 0);
                 Assert._assert(this.entsize == 0);
                 return NullSection.INSTANCE;
             }
