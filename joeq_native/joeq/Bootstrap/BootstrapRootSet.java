@@ -223,9 +223,9 @@ public class BootstrapRootSet {
         addNecessaryMethod(i_m);
         
         // created via reflection when loading from a zip file
-        c = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/util/zip/ZipFile$ZipFileInputStream;");
-        i_m = c.getOrCreateInstanceMethod("<init>", "(JJ)V");
-        addNecessaryMethod(i_m);
+        //c = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/util/zip/ZipFile$ZipFileInputStream;");
+        //i_m = c.getOrCreateInstanceMethod("<init>", "(JJ)V");
+        //addNecessaryMethod(i_m);
         
         // the trap handler can be implicitly called from any bytecode than can trigger a hardware exception.
         s_m = ExceptionDeliverer._trap_handler;
