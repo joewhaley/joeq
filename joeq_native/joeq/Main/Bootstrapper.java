@@ -78,7 +78,10 @@ public abstract class Bootstrapper implements ObjectLayout {
             err("unknown command line argument: "+args[i]);
         }
         
-        PrimordialClassLoader.loader.addToClasspath(classpath);
+        for (Iterator it = PrimordialClassLoader.classpaths(classpath); it.hasNext(); ) {
+            String s = (String)it.next();
+            PrimordialClassLoader.loader.addToClasspath(s);
+        }
         
         Set nullStaticFields = new HashSet();
         nullStaticFields.add(Unsafe._remapper_object);
@@ -91,6 +94,9 @@ public abstract class Bootstrapper implements ObjectLayout {
         nullStaticFields.add(ClassLib.sun13.java.lang.ClassLoader._loadedLibraryNames);
         nullStaticFields.add(ClassLib.sun13.java.lang.ClassLoader._systemNativeLibraries);
         nullStaticFields.add(ClassLib.sun13.java.lang.ClassLoader._nativeLibraryContext);
+        jq_Class jq_class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljq;");
+        jq_StaticField _on_vm_startup = jq_class.getOrCreateStaticField("on_vm_startup", "Ljava/util/List;");
+        nullStaticFields.add(_on_vm_startup);
         System.out.println("Null static fields: "+nullStaticFields);
 
         // install bootstrap code allocator
@@ -187,6 +193,9 @@ public abstract class Bootstrapper implements ObjectLayout {
         // initialize the set of boot types
         jq.boot_types = classset;
         
+        // initialize list of methods to invoke on startup
+        jq.on_vm_startup = new LinkedList();
+        
         // enable allocations
         objmap.enableAllocations();
 
@@ -220,7 +229,6 @@ public abstract class Bootstrapper implements ObjectLayout {
             }
         }
         // turn off jq.Bootstrapping flag in image
-        jq_Class jq_class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljq;");
         jq_class.setStaticData(jq_class.getOrCreateStaticField("Bootstrapping","Z"), 0);
 
         // compile versions of all necessary methods.
@@ -246,8 +254,17 @@ public abstract class Bootstrapper implements ObjectLayout {
         
         // add all reachable members.
         System.out.println("Finding all reachable objects...");
-        objmap.find_reachable();
+        objmap.find_reachable(0);
+
+        // now that we have visited all reachable objects, jq.on_vm_startup is built
+        int index = objmap.numOfEntries();
+        int addr = objmap.getOrAllocateObject(jq.on_vm_startup);
+        jq.assert(objmap.numOfEntries() > index);
+        objmap.find_reachable(index);
+        jq_class.setStaticData(_on_vm_startup, addr);
+        objmap.addDataReloc(_on_vm_startup.getAddress(), addr);
         
+        // all done with traversal, no more objects can be added to the image.
         objmap.disableAllocations();
         
         // store entrypoint/trap handler addresses
