@@ -3,8 +3,8 @@
 
 #include "StdAfx.h"
 
-int _argc;
-char **_argv;
+int joeq_argc;
+char **joeq_argv;
 
 extern "C" void __stdcall entry();
 extern void initSemaphoreLock(void);
@@ -16,8 +16,8 @@ int main(int argc, char* argv[])
 	_umask(0);
 
 	// initialize argc and argv
-	_argc = argc-1;
-	_argv = argv+1;
+	joeq_argc = argc-1;
+	joeq_argv = argv+1;
 
 #if defined(WIN32)
 	// install hardware exception handler.

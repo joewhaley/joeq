@@ -25,6 +25,14 @@
 #include <io.h>
 #include <direct.h>
 
+#if defined(__BORLANDC__)
+#include <dos.h>
+#endif
+
+#if !defined(_umask)
+#define _umask umask
+#endif
+
 #else
 
 #if !defined(__stdcall)
