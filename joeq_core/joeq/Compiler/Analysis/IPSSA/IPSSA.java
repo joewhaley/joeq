@@ -11,3 +11,4 @@ import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.Quad;
 */
+public class IPSSA { }
