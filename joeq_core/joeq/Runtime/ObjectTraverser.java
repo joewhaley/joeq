@@ -35,14 +35,6 @@ import Scheduler.jq_Thread;
  */
 public abstract class ObjectTraverser {
 
-	public static class Empty extends ObjectTraverser {
-		public Empty() { }
-        public void initialize() { }
-        public Object mapStaticField(jq_StaticField f) { return NO_OBJECT; }
-        public Object mapInstanceField(Object o, jq_InstanceField f) { return NO_OBJECT; }
-        public Object mapValue(Object o) { return o; }
-    }
-
     public abstract void initialize();
     public abstract Object mapStaticField(jq_StaticField f);
     public abstract Object mapInstanceField(Object o, jq_InstanceField f);
