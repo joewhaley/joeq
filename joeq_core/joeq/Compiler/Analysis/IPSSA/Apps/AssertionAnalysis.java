@@ -11,6 +11,7 @@ import Compil3r.Quad.QuadIterator;
 
 public class AssertionAnalysis implements ControlFlowGraphVisitor {
     public void visitCFG(ControlFlowGraph cfg) {
+        System.out.println("Processing method " + cfg.getMethod().toString());
         for(QuadIterator iter = new QuadIterator(cfg); iter.hasNext(); ) {
             Quad quad = (Quad)iter.next();
             
@@ -24,15 +25,15 @@ public class AssertionAnalysis implements ControlFlowGraphVisitor {
         ProgramLocation loc = new QuadProgramLocation(method, quad);
         
         if(!loc.isSingleTarget()) {
-            System.err.println("Skipping a potentially virtual call");
+            //System.err.println("Skipping a potentially virtual call");
             return;
         }
+        
         jq_Method callee = loc.getTargetMethod();
+        System.out.println("\tProcessing a call to " + callee);
         if(!isAssert(callee)) {
             return;
         }
-        System.out.println("Processing " + quad);
-        
     }
     
     public final static String ASSERT_NAME = "assert";    
