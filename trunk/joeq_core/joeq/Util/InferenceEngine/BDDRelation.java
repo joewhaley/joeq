@@ -159,6 +159,10 @@ public class BDDRelation extends Relation {
     
     public void saveTuples(String fileName) throws IOException {
         DataOutputStream dos = new DataOutputStream(new FileOutputStream(fileName));
+        if (relation.isZero()) {
+            dos.close();
+            return;
+        }
         BDD ss = relation.support();
         int[] a = ss.scanSetDomains();
         ss.free();

@@ -98,13 +98,28 @@ public abstract class InferenceRule {
     
     public abstract void reportStats();
     
-    public static MultiMap getRelationToUsingRule(List/*<InferenceRule>*/ rules) {
+    public static MultiMap getRelationToUsingRule(Collection rules) {
         MultiMap mm = new GenericMultiMap();
         for (Iterator i = rules.iterator(); i.hasNext(); ) {
-            InferenceRule ir = (InferenceRule) i.next();
-            for (Iterator j = ir.top.iterator(); j.hasNext(); ) {
-                RuleTerm rt = (RuleTerm) j.next();
-                mm.add(rt.relation, ir);
+            Object o = i.next();
+            if (o instanceof InferenceRule) {
+                InferenceRule ir = (InferenceRule) o;
+                for (Iterator j = ir.top.iterator(); j.hasNext(); ) {
+                    RuleTerm rt = (RuleTerm) j.next();
+                    mm.add(rt.relation, ir);
+                }
+            }
+        }
+        return mm;
+    }
+    
+    public static MultiMap getRelationToDefiningRule(Collection rules) {
+        MultiMap mm = new GenericMultiMap();
+        for (Iterator i = rules.iterator(); i.hasNext(); ) {
+            Object o = i.next();
+            if (o instanceof InferenceRule) {
+                InferenceRule ir = (InferenceRule) o;
+                mm.add(ir.bottom.relation, ir);
             }
         }
         return mm;
@@ -206,13 +221,20 @@ public abstract class InferenceRule {
         return newRules;
     }
     
-    public static MultiMap getRelationToDefiningRule(List/*<InferenceRule>*/ rules) {
-        MultiMap mm = new GenericMultiMap();
-        for (Iterator i = rules.iterator(); i.hasNext(); ) {
-            InferenceRule ir = (InferenceRule) i.next();
-            mm.add(ir.bottom.relation, ir);
+    static void retainAll(MultiMap mm, Collection c) {
+        for (Iterator i = mm.keySet().iterator(); i.hasNext(); ) {
+            Object o = i.next();
+            if (!c.contains(o)) {
+                i.remove();
+                continue;
+            }
+            for (Iterator j = mm.getValues(o).iterator(); j.hasNext(); ) {
+                Object o2 = j.next();
+                if (!c.contains(o2)) {
+                    j.remove();
+                }
+            }
         }
-        return mm;
     }
     
     public static class DependenceNavigator implements Navigator {
@@ -220,14 +242,37 @@ public abstract class InferenceRule {
         MultiMap relationToUsingRule;
         MultiMap relationToDefiningRule;
         
-        public DependenceNavigator(List/*<InferenceRule>*/ rules) {
+        public DependenceNavigator(Collection/*<InferenceRule>*/ rules) {
             this(getRelationToUsingRule(rules), getRelationToDefiningRule(rules));
         }
+        
+        public void retainAll(Collection c) {
+            InferenceRule.retainAll(relationToUsingRule, c);
+            InferenceRule.retainAll(relationToDefiningRule, c);
+        }
+        
+        public void removeEdge(Object from, Object to) {
+            if (from instanceof InferenceRule) {
+                InferenceRule ir = (InferenceRule) from;
+                Relation r = (Relation) to;
+                relationToDefiningRule.remove(r, ir);
+            } else {
+                Relation r = (Relation) from;
+                InferenceRule ir = (InferenceRule) to;
+                relationToUsingRule.remove(r, ir);
+            }
+        }
+        
+        public DependenceNavigator(DependenceNavigator that) {
+            this(((GenericMultiMap)that.relationToUsingRule).copy(),
+                 ((GenericMultiMap)that.relationToDefiningRule).copy());
+        }
+        
         /**
          * @param relationToUsingRule
          * @param relationToDefiningRule
          */
-        public DependenceNavigator(MultiMap relationToUsingRule,
+        private DependenceNavigator(MultiMap relationToUsingRule,
                                    MultiMap relationToDefiningRule) {
             super();
             this.relationToUsingRule = relationToUsingRule;
@@ -240,7 +285,10 @@ public abstract class InferenceRule {
         public Collection next(Object node) {
             if (node instanceof InferenceRule) {
                 InferenceRule ir = (InferenceRule) node;
-                return Collections.singleton(ir.bottom.relation);
+                if (relationToDefiningRule.contains(ir.bottom.relation, ir))
+                    return Collections.singleton(ir.bottom.relation);
+                else
+                    return Collections.EMPTY_SET;
             } else {
                 Relation r = (Relation) node;
                 Collection c = relationToUsingRule.getValues(r);
@@ -257,7 +305,8 @@ public abstract class InferenceRule {
                 List list = new LinkedList();
                 for (Iterator i = ir.top.iterator(); i.hasNext(); ) {
                     RuleTerm rt = (RuleTerm) i.next();
-                    list.add(rt.relation);
+                    if (relationToUsingRule.contains(rt.relation, ir))
+                        list.add(rt.relation);
                 }
                 return list;
             } else {

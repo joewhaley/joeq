@@ -3,12 +3,6 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Util.InferenceEngine;
 
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
-import java.math.BigInteger;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -16,10 +10,16 @@ import java.util.List;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.math.BigInteger;
+
 import joeq.Util.Assert;
 import joeq.Util.Collections.GenericMultiMap;
 import joeq.Util.Collections.MultiMap;
-import joeq.Util.Graphs.Navigator;
 import joeq.Util.Graphs.SCCTopSortedGraph;
 import joeq.Util.Graphs.SCComponent;
 
@@ -35,6 +35,8 @@ import org.sf.javabdd.BDDFactory;
 public class BDDSolver extends Solver {
     
     public static String bddDomainInfoFileName = System.getProperty("bddinfo", "bddinfo");
+
+    static boolean USE_NESTED_SCCS = true;
     
     BDDFactory bdd;
     MultiMap fielddomainsToBDDdomains;
@@ -107,48 +109,115 @@ public class BDDSolver extends Solver {
         return fielddomainsToBDDdomains.getValues(dom);
     }
     
-    public void solve() {
-        // Build dependence graph.
-        Navigator depNav = new InferenceRule.DependenceNavigator(rules);
-        
+    MultiMap innerSCCs;
+    
+    boolean iterate(SCComponent first, boolean isLoop) {
+        boolean anyChange = false;
+        for (;;) {
+            boolean outerChange = false;
+            SCComponent scc = first;
+            while (scc != null) {
+                Collection c = innerSCCs.getValues(scc);
+                if (!c.isEmpty()) {
+                    if (TRACE) out.println("Going inside SCC"+scc.getId());
+                    for (Iterator i = c.iterator(); i.hasNext(); ) {
+                        SCComponent scc2 = (SCComponent) i.next();
+                        boolean b = iterate(scc2, scc.isLoop());
+                        if (b) {
+                            if (TRACE) out.println("Result changed!");
+                            anyChange = true; outerChange = true;
+                        }
+                    }
+                    if (TRACE) out.println("Coming out from SCC"+scc.getId());
+                } else for (;;) {
+                    boolean innerChange = false;
+                    for (Iterator i = scc.nodeSet().iterator(); i.hasNext(); ) {
+                        Object o = i.next();
+                        if (o instanceof InferenceRule) {
+                            InferenceRule ir = (InferenceRule) o;
+                            if (TRACE) out.println("Visiting inference rule "+ir);
+                            boolean b = ir.update();
+                            if (b) {
+                                if (TRACE) out.println("Result changed!");
+                                anyChange = true; innerChange = true; outerChange = true;
+                            }
+                        }
+                    }
+                    if (!scc.isLoop() || !innerChange) break;
+                }
+                scc = scc.nextTopSort();
+            }
+            if (!isLoop || !outerChange) break;
+        }
+        return anyChange;
+    }
+    
+    void removeABackedge(SCComponent scc, InferenceRule.DependenceNavigator depNav) {
+        Object[] entries = scc.entries();
+        Object entry;
+        if (entries.length > 0) entry = entries[0];
+        else entry = scc.nodes()[0];
+        if (TRACE) out.println("Entry into SCC: "+entry);
+        Collection preds = depNav.prev(entry);
+        if (TRACE) out.println("Predecessors of entry: "+preds);
+        Object pred = preds.iterator().next();
+        if (TRACE) out.println("Removing backedge "+pred+" -> "+entry);
+        depNav.removeEdge(pred, entry);
+    }
+    
+    public SCComponent buildSCCs(InferenceRule.DependenceNavigator depNav, Collection rules) {
         // Break into SCCs.
         Collection/*<SCComponent>*/ sccs = SCComponent.buildSCC(rules, depNav);
-        
-        if (TRACE) out.println("SCCs: "+sccs);
         
         // Find root SCCs.
         Set roots = new HashSet();
         for (Iterator i = sccs.iterator(); i.hasNext(); ) {
             SCComponent scc = (SCComponent) i.next();
-            if (scc.prevLength() == 0) roots.add(scc);
+            if (scc.prevLength() == 0) {
+                if (TRACE) out.println("Root SCC: SCC"+scc.getId()+(scc.isLoop()?" (loop)":""));
+                roots.add(scc);
+            }
         }
         if (roots.isEmpty()) roots.addAll(sccs);
         
-        if (TRACE) out.println("Roots: "+roots);
-        
         // Topologically-sort SCCs.
         SCCTopSortedGraph sccGraph = SCCTopSortedGraph.topSort(roots);
-        SCComponent scc = sccGraph.getFirst();
-        while (scc != null) {
-            if (TRACE) out.println("Visiting SCC "+scc);
-            for (;;) {
-                boolean change = false;
-                for (Iterator i = scc.nodeSet().iterator(); i.hasNext(); ) {
-                    Object o = i.next();
-                    if (o instanceof InferenceRule) {
-                        InferenceRule ir = (InferenceRule) o;
-                        if (TRACE) out.println("Visiting inference rule "+ir);
-                        boolean b = ir.update();
-                        if (b) {
-                            if (TRACE) out.println("Result changed!");
-                            change = true;
-                        }
+        SCComponent first = sccGraph.getFirst();
+        
+        // Find inner SCCs.
+        if (USE_NESTED_SCCS) {
+            for (SCComponent scc = first; scc != null; scc = scc.nextTopSort()) {
+                if (!scc.isLoop()) continue;
+                InferenceRule.DependenceNavigator depNav2 = new InferenceRule.DependenceNavigator(depNav);
+                Set nodeSet = scc.nodeSet();
+                depNav2.retainAll(nodeSet);
+                scc.fillEntriesAndExits(depNav2);
+                // Remove a backedge.
+                removeABackedge(scc, depNav2);
+                SCComponent first2 = buildSCCs(depNav2, nodeSet);
+                if (TRACE) {
+                    out.print("Order for SCC"+scc.getId()+": ");
+                    for (SCComponent scc2 = first2; scc2 != null; scc2 = scc2.nextTopSort()) {
+                        out.print(" SCC"+scc2.getId());
                     }
+                    out.println();
                 }
-                if (!scc.isLoop() || !change) break;
+                innerSCCs.add(scc, first2);
             }
-            scc = scc.nextTopSort();
         }
+        
+        return first;
+    }
+    
+    public void solve() {
+        innerSCCs = new GenericMultiMap();
+        
+        // Build dependence graph.
+        InferenceRule.DependenceNavigator depNav = new InferenceRule.DependenceNavigator(rules);
+        
+        SCComponent first = buildSCCs(depNav, rules);
+        
+        iterate(first, false);
     }
 
     /* (non-Javadoc)
