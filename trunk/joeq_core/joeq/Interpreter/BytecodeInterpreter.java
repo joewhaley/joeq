@@ -18,7 +18,6 @@ import joeq.Compil3r.BytecodeAnalysis.BytecodeVisitor;
 import joeq.Memory.Address;
 import joeq.Memory.HeapAddress;
 import joeq.Run_Time.Reflection;
-import joeq.Run_Time.Unsafe;
 import joeq.Util.Assert;
 
 /*
@@ -37,165 +36,6 @@ public abstract class BytecodeInterpreter {
     // create an Interpreter.State and call invokeMethod(m, istate)
     public abstract Object invokeMethod(jq_Method m) throws Throwable;
     public abstract Object invokeUnsafeMethod(jq_Method m) throws Throwable;
-    
-    // callee == null -> call compiled version
-    public Object invokeMethod(jq_Method m, State callee) throws Throwable {
-        //Run_Time.SystemInterface.debugwriteln("Invoking method "+m);
-        jq_Class k = m.getDeclaringClass();
-        Assert._assert(k.isClsInitialized());
-        Assert._assert(m.getBytecode() != null);
-        jq_Type[] paramTypes = m.getParamTypes();
-        Object[] params = new Object[paramTypes.length];
-        for (int i=paramTypes.length-1; i>=0; --i) {
-            jq_Type t = paramTypes[i];
-            if (t.isPrimitiveType()) {
-                if (t == jq_Primitive.LONG) {
-                    params[i] = new Long(istate.pop_L());
-                } else if (t == jq_Primitive.FLOAT) {
-                    params[i] = new Float(istate.pop_F());
-                } else if (t == jq_Primitive.DOUBLE) {
-                    params[i] = new Double(istate.pop_D());
-                } else {
-                    params[i] = new Integer(istate.pop_I());
-                }
-            } else {
-                params[i] = istate.pop_A();
-            }
-            //System.out.println("Param "+i+": "+params[i]);
-        }
-        for (int i=0, j=0; i<paramTypes.length; ++i, ++j) {
-            jq_Type t = paramTypes[i];
-            if (t.isPrimitiveType()) {
-                if (t == jq_Primitive.LONG) {
-                    long v = ((Long)params[i]).longValue();
-                    if (callee == null) {
-                        Unsafe.pushArg((int)(v>>32)); // hi
-                        Unsafe.pushArg((int)v);       // lo
-                    } else callee.setLocal_L(j, v);
-                    ++j;
-                } else if (t == jq_Primitive.FLOAT) {
-                    float v = ((Float)params[i]).floatValue();
-                    if (callee == null) {
-                        Unsafe.pushArg(Float.floatToRawIntBits(v));
-                    } else callee.setLocal_F(j, v);
-                } else if (t == jq_Primitive.DOUBLE) {
-                    long v = Double.doubleToRawLongBits(((Double)params[i]).doubleValue());
-                    if (callee == null) {
-                        Unsafe.pushArg((int)(v>>32)); // hi
-                        Unsafe.pushArg((int)v);       // lo
-                    } else callee.setLocal_D(j, Double.longBitsToDouble(v));
-                    ++j;
-                } else {
-                    int v = ((Integer)params[i]).intValue();
-                    if (callee == null) {
-                        Unsafe.pushArg(v);
-                    } else callee.setLocal_I(j, v);
-                }
-            } else {
-                Object v = params[i];
-                if (callee == null) {
-                    Unsafe.pushArgA(HeapAddress.addressOf(v));
-                } else callee.setLocal_A(j, v);
-            }
-        }
-        if (callee == null) {
-            jq_Type returnType = m.getReturnType();
-            if (returnType.isReferenceType()) {
-                Address result = Unsafe.invokeA(m.getDefaultCompiledVersion().getEntrypoint());
-                if (returnType.isAddressType()) return result;
-                return ((HeapAddress) result).asObject();
-            }
-            long result = Unsafe.invoke(m.getDefaultCompiledVersion().getEntrypoint());
-            if (returnType == jq_Primitive.VOID)
-                return null;
-            else if (returnType == jq_Primitive.LONG)
-                return new Long(result);
-            else if (returnType == jq_Primitive.FLOAT)
-                return new Float(Float.intBitsToFloat((int)(result)));
-            else if (returnType == jq_Primitive.DOUBLE)
-                return new Double(Double.longBitsToDouble(result));
-            else
-                return new Integer((int)(result));
-        } else {
-            State oldState = this.istate;
-            this.istate = callee;
-            MethodInterpreter mi = new MethodInterpreter(m);
-            Object synchobj = null;
-            try {
-                if (m.isSynchronized()) {
-                    if (!m.isStatic()) {
-                        if (mi.getTraceFlag()) mi.getTraceOut().println("synchronized instance method, locking 'this' object");
-                        vm.monitorenter(synchobj = istate.getLocal_A(0), mi);
-                    } else {
-                        if (mi.getTraceFlag()) mi.getTraceOut().println("synchronized static method, locking class object");
-                        vm.monitorenter(synchobj = Reflection.getJDKType(m.getDeclaringClass()), mi);
-                    }
-                }
-                mi.forwardTraversal();
-                this.istate = oldState;
-                if (m.isSynchronized()) {
-                    if (mi.getTraceFlag()) mi.getTraceOut().println("exiting synchronized method, unlocking object");
-                    vm.monitorexit(synchobj);
-                }
-                jq_Type returnType = m.getReturnType();
-                Object retval;
-                if (returnType.isReferenceType()) {
-                    retval = callee.getReturnVal_A();
-                } else if (returnType == jq_Primitive.VOID) {
-                    retval = null;
-                } else if (returnType == jq_Primitive.LONG) {
-                    retval = new Long(callee.getReturnVal_L());
-                } else if (returnType == jq_Primitive.FLOAT) {
-                    retval = new Float(callee.getReturnVal_F());
-                } else if (returnType == jq_Primitive.DOUBLE) {
-                    retval = new Double(callee.getReturnVal_D());
-                } else {
-                    retval = new Integer(callee.getReturnVal_I());
-                }
-                if (mi.getTraceFlag())
-                    mi.getTraceOut().println("Return value: "+retval);
-                return retval;
-            } catch (WrappedException ix) {
-                this.istate = oldState;
-                if (m.isSynchronized()) {
-                    if (mi.getTraceFlag()) mi.getTraceOut().println("exiting synchronized method, unlocking object");
-                    vm.monitorexit(synchobj);
-                }
-                throw ix.t;
-            }
-        }
-    }
-        /*
-        int j = m.getParamWords();
-        int[] argVals = new int[j];
-        for (int i=paramTypes.length-1; i>=0; --i, --j) {
-            jq_Type t = paramTypes[i];
-            if (t.isPrimitiveType()) {
-                if (t == jq_Primitive.LONG) {
-                    long v = istate.pop_L();
-                    argVals[  j] = (int)v;       // lo
-                    argVals[--j] = (int)(v>>32); // hi
-                } else if (t == jq_Primitive.FLOAT) {
-                    argVals[j] = Float.floatToRawIntBits(istate.pop_F());
-                } else if (t == jq_Primitive.DOUBLE) {
-                    long v = Double.doubleToRawLongBits(istate.pop_D());
-                    argVals[  j] = (int)v;       // lo
-                    argVals[--j] = (int)(v>>32); // hi
-                } else {
-                    argVals[j] = istate.pop_I();
-                }
-            } else {
-                argVals[j] = Unsafe.addressOf(istate.pop_A());
-            }
-        }
-        jq.Assert(j==0);
-        for (int i=0; i<argVals.length; ++i) {
-            if (callee == null) Unsafe.pushArg(argVals[i]);
-            else callee.push_I(argVals[i]);
-        }
-        if (callee == null) return Unsafe.invoke(m.getDefaultCompiledVersion().getEntrypoint());
-        else interpret(m, callee);
-        */
     
     protected State istate;
     protected final VMInterface vm;
@@ -1171,7 +1011,8 @@ public abstract class BytecodeInterpreter {
             f = (jq_Method) tryResolve(f);
             jq_Class k = f.getDeclaringClass();
             k.cls_initialize();
-            if (k == Unsafe._class || k.isAddressType()) {
+            jq_Class _class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LRun_Time/Unsafe;");
+            if (k == _class || k.isAddressType()) {
                 try {
                     // redirect call
                     return invokeUnsafeMethod(f);
