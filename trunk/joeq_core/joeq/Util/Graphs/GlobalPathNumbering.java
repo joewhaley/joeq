@@ -43,8 +43,11 @@ public class GlobalPathNumbering extends PathNumbering {
         while (rpo.hasNext()) {
             Object o = rpo.next();
             BigInteger val = (BigInteger) nodeNumbering.get(o);
-            if (val == null) val = BigInteger.ZERO;
             Collection prev = navigator.prev(o);
+            if (prev.size() == 0 && val == null) {
+                System.out.println("Missing root! "+o);
+            }
+            if (val == null) val = BigInteger.ONE;
             for (Iterator i = prev.iterator(); i.hasNext(); ) {
                 Object p = i.next();
                 BigInteger val2 = (BigInteger) nodeNumbering.get(p);
@@ -52,9 +55,10 @@ public class GlobalPathNumbering extends PathNumbering {
                     nodeNumbering.put(p, val2 = BigInteger.ZERO);
                 }
                 BigInteger val3 = val.add(val2);
-                Object edge = new Pair(o, p);
+                Object edge = new Pair(p, o);
                 Range range = new Range(val, val3.subtract(BigInteger.ONE));
                 edgeNumbering.put(edge, range);
+                //System.out.println("Putting Edge ("+edge+") = "+range);
                 val = val3;
             }
             nodeNumbering.put(o, val);
@@ -68,7 +72,8 @@ public class GlobalPathNumbering extends PathNumbering {
      */
     public Range getRange(Object o) {
         BigInteger b = (BigInteger) nodeNumbering.get(o);
-        if (b == null) b = BigInteger.ZERO;
+        //System.out.println("Node ("+o+") = "+b);
+        //if (b == null) b = BigInteger.ZERO;
         return new Range(BigInteger.ZERO, b.subtract(BigInteger.ONE));
     }
 
@@ -76,7 +81,10 @@ public class GlobalPathNumbering extends PathNumbering {
      * @see joeq.Util.Graphs.PathNumbering#getEdge(java.lang.Object, java.lang.Object)
      */
     public Range getEdge(Object from, Object to) {
-        return (Range) edgeNumbering.get(new Pair(from, to));
+        Object key = new Pair(from, to);
+        Range r = (Range) edgeNumbering.get(key);
+        //System.out.println("Edge ("+key+") = "+r);
+        return r;
     }
     
 }

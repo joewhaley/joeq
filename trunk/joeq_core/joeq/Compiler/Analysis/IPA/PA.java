@@ -2285,11 +2285,10 @@ public class PA {
                     if (DUMP_SSA) dumpSSA();
                 } catch (IOException x) {}
             }
-            if (!SKIP_SOLVE) {
-                time = System.currentTimeMillis();
-                assumeKnownCallGraph();
-                System.out.println("Time spent solving: "+(System.currentTimeMillis()-time)/1000.);
-            }
+            if (SKIP_SOLVE) return;
+            time = System.currentTimeMillis();
+            assumeKnownCallGraph();
+            System.out.println("Time spent solving: "+(System.currentTimeMillis()-time)/1000.);
         }
 
         printSizes();
@@ -2512,12 +2511,15 @@ public class PA {
     }
    
     private void dumpCallGraphAsDot(CallGraph cg, String dotFileName) throws IOException {
-        PathNumbering callgraph = countCallGraph(cg, null, false);
-        if (callgraph != null) {
+        PathNumbering pn = countCallGraph(cg, null, false);
+        dumpCallGraphAsDot(pn, cg, dotFileName);
+    }
+    private void dumpCallGraphAsDot(PathNumbering pn, CallGraph cg, String dotFileName) throws IOException {
+        if (pn != null) {
             BufferedWriter dos = null;
             try {
                 dos = new BufferedWriter(new FileWriter(dotFileName));
-                callgraph.dotGraph(dos, cg.getRoots(), cg.getCallSiteNavigator());
+                pn.dotGraph(dos, cg.getRoots(), cg.getCallSiteNavigator());
             } finally {
                 if (dos != null) dos.close();
             }
@@ -2535,9 +2537,6 @@ public class PA {
         } finally {
             if (dos != null) dos.close();
         }
-        
-        if (DUMP_DOTGRAPH)
-            dumpCallGraphAsDot(callgraph, callgraphFileName + ".dot");
         
     }
     
@@ -3037,6 +3036,14 @@ public class PA {
                                " F="+F_BITS+" T="+T_BITS+" N="+N_BITS+
                                " M="+M_BITS+" VC="+VC_BITS);
         }
+        if (DUMP_DOTGRAPH) {
+            try {
+                dumpCallGraphAsDot(pn, cg, callgraphFileName + ".dot");
+            } catch (IOException x) {
+                x.printStackTrace();
+            }
+        }
+        
         return pn;
     }
 
