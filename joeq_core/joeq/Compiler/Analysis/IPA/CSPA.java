@@ -504,7 +504,7 @@ public class CSPA {
                 out.writeByte('\n');
             }
         }
-        //System.out.println("Unknown range: "+j+"-"+variableIndexMap.size());
+        //System.out.println("Unknown range: "+j+"-"+Vmap.size());
         while (j < variableIndexMap.size()) {
             // UnknownTypeNode
             Variable node = getVariable(j);
@@ -567,7 +567,7 @@ public class CSPA {
             if (size >= histogram.length) index = histogram.length - 1;
             else index = (int) size;
             histogram[index]++;
-            //System.out.println(variableIndexMap.get(i)+" points to "+size+" objects");
+            //System.out.println(Vmap.get(i)+" points to "+size+" objects");
         }
         for (int i=0; i<histogram.length; ++i) {
             if (histogram[i] != 0) {
@@ -1505,7 +1505,7 @@ public class CSPA {
     
     public void dumpContextInsensitive() {
         BDD t = g_pointsTo.exist(V1c.set().and(H1c.set()));
-        report("pointsTo (context-insensitive)", t);
+        report("vP (context-insensitive)", t);
         t.free();
     }
     
@@ -1846,7 +1846,7 @@ public class CSPA {
             oldPointsTo.free();
             // (H1xFD)xH2
             newFieldPt.applyWith(fieldPt.id(), BDDFactory.diff);
-            // cache fieldPt
+            // cache hP
             fieldPt.orWith(newFieldPt.id()); // (H1xFD)xH2
 
             // apply rule (3)
@@ -1863,7 +1863,7 @@ public class CSPA {
             newFieldPt.free();
             // V2xH2
             newLoadPt.orWith(relprod("newLoadAss(H1xFDxV2)", newLoadAss,
-                                     "fieldPt(H1xFDxH2)", fieldPt,
+                                     "hP(H1xFDxH2)", fieldPt,
                                      "H1xFD", H1andFDset));
             // V2xH2
             // cache loadAss
@@ -1933,7 +1933,7 @@ public class CSPA {
         }
         
         void reportSize() {
-            report("pointsTo", m_pointsTo);
+            report("vP", m_pointsTo);
             report("stores", m_stores);
             report("loads", m_loads);
         }
