@@ -20,7 +20,7 @@ import Util.Assert;
  * @version $Id$
  */
 public class HighResolutionTimer {
-	private static boolean native_library_present;
+    private static boolean native_library_present;
 
     static {
         try {

@@ -28,16 +28,16 @@ public abstract class TraceFlags {
 
     public static int setTraceFlag(String[] args, int i) {
         if (args[i].equalsIgnoreCase("-TraceCodeAllocator")) {
-	    makeTrue("Allocator.CodeAllocator", "TRACE");
-	    makeTrue("Allocator.RuntimeCodeAllocator", "TRACE");
+            makeTrue("Allocator.CodeAllocator", "TRACE");
+            makeTrue("Allocator.RuntimeCodeAllocator", "TRACE");
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceAssembler")) {
-	    makeTrue("Assembler.x86.x86Assembler", "TRACE");
+            makeTrue("Assembler.x86.x86Assembler", "TRACE");
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceBC2Quad")) {
-	    makeTrue("Compil3r.Quad.BytecodeToQuad","ALWAYS_TRACE");
+            makeTrue("Compil3r.Quad.BytecodeToQuad","ALWAYS_TRACE");
             makeTrue("Compil3r.Quad.BytecodeToQuad.AbstractState","TRACE");
             return i+1;
         }
@@ -86,7 +86,7 @@ public abstract class TraceFlags {
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceInterpreter")) {
-	    makeTrue("Interpreter.BytecodeInterpreter","ALWAYS_TRACE");
+            makeTrue("Interpreter.BytecodeInterpreter","ALWAYS_TRACE");
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceQuadInterpreter")) {
@@ -110,9 +110,9 @@ public abstract class TraceFlags {
             makeTrue("Run_Time.Monitor","TRACE");
             return i+1;
         }
-	/* ARGH: Fix this. */
+        /* ARGH: Fix this. */
         if (args[i].equalsIgnoreCase("-TraceByMethodName")) {
-	    addReflect("Compil3r.Reference.x86.x86ReferenceCompiler","TraceMethod_MethodNames", args[++i]);
+            addReflect("Compil3r.Reference.x86.x86ReferenceCompiler","TraceMethod_MethodNames", args[++i]);
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceByClassName")) {
@@ -288,24 +288,24 @@ public abstract class TraceFlags {
     }
 
     public static void makeTrue(String classname, String fieldname) {
-	try {
-	    Class c = Class.forName(classname);
-	    Field f = c.getField(fieldname);
-	    f.setBoolean(null, true);
-	} catch (Exception e) {
-	    Debug.writeln("Cannot set the flag "+classname+"."+fieldname);
-	}
+        try {
+            Class c = Class.forName(classname);
+            Field f = c.getField(fieldname);
+            f.setBoolean(null, true);
+        } catch (Exception e) {
+            Debug.writeln("Cannot set the flag "+classname+"."+fieldname);
+        }
     }
 
     public static void addReflect(String classname, String collectionname, Object toadd) {
-	try {
-	    Class c = Class.forName(classname);
-	    Field f = c.getField(collectionname);
-	    Collection col = (Collection)f.get(null);
-	    col.add(toadd);
-	} catch (Exception e) {
-	    Debug.writeln("Cannot add to collection "+classname+"."+collectionname);
-	}
+        try {
+            Class c = Class.forName(classname);
+            Field f = c.getField(collectionname);
+            Collection col = (Collection)f.get(null);
+            col.add(toadd);
+        } catch (Exception e) {
+            Debug.writeln("Cannot add to collection "+classname+"."+collectionname);
+        }
     }
     
     public static Object callMethod(String classname, String methodname, String arg) {

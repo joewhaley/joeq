@@ -23,7 +23,7 @@ import UTF.Utf8;
 public abstract class ClassDump {
     
     public static void main(String[] args) {
-	HostedVM.initialize();
+        HostedVM.initialize();
         
         String classname;
         if (args.length > 0) classname = args[0];

@@ -108,16 +108,16 @@ public class CSPA {
                                                   // existing files and always create new ones.
     
     public static void main(String[] args) throws IOException {
-    	runAnalysis(args, null);
+        runAnalysis(args, null);
     }
     
     public static void runAnalysis(String[] args, String addToClasspath) throws IOException {
         // We use bytecode maps.
         CodeCache.AlwaysMap = true;
-		HostedVM.initialize();
-		
-		if (addToClasspath != null)
-			PrimordialClassLoader.loader.addToClasspath(addToClasspath);
+        HostedVM.initialize();
+        
+        if (addToClasspath != null)
+            PrimordialClassLoader.loader.addToClasspath(addToClasspath);
         
         jq_Class c = (jq_Class) jq_Type.parseType(args[0]);
         c.prepare();

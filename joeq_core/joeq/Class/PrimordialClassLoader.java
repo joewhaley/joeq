@@ -193,9 +193,9 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
 
         Iterator listPackages() {
             if (TRACE) out.println("Listing packages of path "+path);
-	    HashSet hs = new HashSet();
+            HashSet hs = new HashSet();
             listPackages(null, hs);
-	    return hs.iterator();
+            return hs.iterator();
         }
         
         private void listPackages(final String dir, final HashSet pkgs) {
@@ -203,17 +203,17 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
             if (!f.exists() || !f.isDirectory()) return;
 
             String [] subdirs = f.list(new java.io.FilenameFilter() {
-		public boolean accept(File _dir, String name) {
-		    if (dir != null && name.endsWith(".class"))
-			pkgs.add(dir);
-		    return new File(_dir, name).isDirectory();
-		}
-	    });
-	    for (int i = 0; i < subdirs.length; i++) {
-		String dn = (String)subdirs[i];
-		if (dir != null)
-		    dn = dir + filesep + dn;
-		listPackages(dn, pkgs);
+                public boolean accept(File _dir, String name) {
+                    if (dir != null && name.endsWith(".class"))
+                        pkgs.add(dir);
+                    return new File(_dir, name).isDirectory();
+                }
+            });
+            for (int i = 0; i < subdirs.length; i++) {
+                String dn = (String)subdirs[i];
+                if (dir != null)
+                    dn = dir + filesep + dn;
+                listPackages(dn, pkgs);
             }
         }
         
