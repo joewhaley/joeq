@@ -1053,7 +1053,7 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
                 break;
             }
             case 0xc9: /* --- jsr_w --- */ {
-                int offset = getSignedWord();
+                int offset = getSignedDWord();
                 int target = i_start + offset;
                 this.visitJSR(target);
                 break;
