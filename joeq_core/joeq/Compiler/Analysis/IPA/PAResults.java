@@ -37,6 +37,7 @@ import Compil3r.Quad.CallGraph;
 import Compil3r.Quad.CodeCache;
 import Compil3r.Quad.LoadedCallGraph;
 import Main.HostedVM;
+import Run_Time.TypeCheck;
 import Util.Assert;
 import Util.Strings;
 import Util.Collections.HashWorklist;
@@ -803,6 +804,32 @@ public class PAResults {
         }
     }
     
+    public BDD getHashcodeTakenVars() {
+        jq_NameAndDesc nd = new jq_NameAndDesc("hashCode", "()I");
+        jq_Method m = PrimordialClassLoader.getJavaLangObject().getDeclaredInstanceMethod(nd);
+        BDD m_bdd = r.M.ithVar(r.Mmap.get(m));
+        BDD invokes = r.IE.relprod(m_bdd, r.Mset);
+        invokes.andWith(r.Z.ithVar(0));
+        System.out.println("Invokes: "+invokes.toStringWithDomains());
+        BDD bar = r.actual.relprod(invokes, r.Iset.and(r.Zset));
+        System.out.println("Actual: "+bar.toStringWithDomains());
+        bar.replaceWith(r.V2toV1);
+        
+        nd = new jq_NameAndDesc("identityHashCode", "(Ljava/lang/Object;)I");
+        m = PrimordialClassLoader.getJavaLangSystem().getDeclaredStaticMethod(nd);
+        m_bdd = r.M.ithVar(r.Mmap.get(m));
+        invokes = r.IE.relprod(m_bdd, r.Mset);
+        invokes.andWith(r.Z.ithVar(1));
+        System.out.println("Invokes: "+invokes.toStringWithDomains());
+        BDD bar2 = r.actual.relprod(invokes, r.Iset.and(r.Zset));
+        System.out.println("Actual: "+bar2.toStringWithDomains());
+        bar2.replaceWith(r.V2toV1);
+        bar.orWith(bar2);
+        
+        if (r.CONTEXT_SENSITIVE || r.OBJECT_SENSITIVE) bar.andWith(r.V1c.set());
+        return bar;
+    }
+    
     public BDD getEncapsulatedHeapObjects() {
         initializeExtraDomains();
         
@@ -966,6 +993,33 @@ public class PAResults {
         
         if (r.CONTEXT_SENSITIVE) {
             System.out.println("Thread-local objects: "+countThreadLocalObjects());
+        }
+        
+        {
+            BDD h1 = this.getHashcodeTakenVars();
+            BDD h2 = h1.relprod(r.vP, r.V1set);
+            System.out.println("Hashcode taken objects: "+h2.satCount(r.H1set));
+            h2 = h2.exist(r.H1c.set());
+            System.out.println("Hashcode taken objects (no context): "+h2.satCount(r.H1.set()));
+            System.out.println("Hashcode never taken objects (no context): "+(r.Hmap.size()-h2.satCount(r.H1.set())));
+        }
+        
+        {
+            BDD h1 = r.sync;
+            if (r.CONTEXT_SENSITIVE || r.OBJECT_SENSITIVE) h1.andWith(r.H1c.domain());
+            BDD h2 = h1.relprod(r.vP, r.V1set);
+            System.out.println("Locked objects: "+h2.satCount(r.H1set));
+            h2 = h2.exist(r.H1c.set());
+            System.out.println("Locked objects (no context): "+h2.satCount(r.H1.set()));
+            System.out.println("Never locked objects (no context): "+(r.Hmap.size()-h2.satCount(r.H1.set())));
+        }
+        
+        {
+            BDD vCalls = r.mI.exist(r.Mset.and(r.Nset));
+            double d = vCalls.satCount(r.Iset);
+            System.out.println("Virtual call sites: "+d);
+            double e = r.IE.satCount(r.IMset);
+            System.out.println("Average vcall targets = "+e+" / "+d+" = "+e/d);
         }
         
         if (false)
