@@ -55,7 +55,11 @@ public class jq_CompiledCode implements Comparable {
 
     public int/*CodeAddress*/ findCatchBlock(int/*CodeAddress*/ ip, jq_Class extype) {
         int offset = ip - entrypoint;
-        if (TRACE) SystemInterface.debugmsg("checking for handlers for ip "+jq.hex8(ip)+" offset "+jq.hex(offset)+" in "+method);
+        if (TRACE) SystemInterface.debugmsg("checking for handlers for ip "+jq.hex8(ip)+" offset "+jq.hex(offset)+" in "+this);
+        if (handlers == null) {
+            if (TRACE) SystemInterface.debugmsg("no handlers in "+this);
+            return 0;
+        }
         for (int i=0; i<handlers.length; ++i) {
             jq_TryCatch tc = handlers[i];
             if (TRACE) SystemInterface.debugmsg("checking handler: "+tc);
@@ -63,15 +67,24 @@ public class jq_CompiledCode implements Comparable {
                 return tc.getHandlerEntry()+entrypoint;
             if (TRACE) SystemInterface.debugmsg("does not catch");
         }
-        if (TRACE) SystemInterface.debugmsg("no appropriate handler found in "+method);
+        if (TRACE) SystemInterface.debugmsg("no appropriate handler found in "+this);
         return 0;
     }
     
-    public void deliverException(int/*Address*/ entry, int/*Address*/ fp, Throwable x) {
+    public void deliverException(int/*CodeAddress*/ entry, int/*StackAddress*/ fp, Throwable x) {
+        jq.assert(ed != null);
         ed.deliverToStackFrame(this, x, entry, fp);
     }
     
-    public int getBytecodeIndex(int ip) { return bcm.getBytecodeIndex(ip-entrypoint); }
+    public Object getThisPointer(int/*CodeAddress*/ ip, int/*StackAddress*/ fp) {
+        jq.assert(ed != null);
+        return ed.getThisPointer(this, ip, fp);
+    }
+    
+    public int getBytecodeIndex(int ip) {
+        if (bcm == null) return -1;
+        return bcm.getBytecodeIndex(ip-entrypoint);
+    }
     
     public String toString() { return method+" address: ("+jq.hex8(entrypoint)+"-"+jq.hex8(entrypoint+length)+")"; }
 
@@ -81,10 +94,12 @@ public class jq_CompiledCode implements Comparable {
     
     public void patchDirectBindCalls() {
         jq.assert(!jq.Bootstrapping);
-        Iterator i = code_reloc.iterator();
-        while (i.hasNext()) {
-            DirectBindCall r = (DirectBindCall)i.next();
-            r.patch();
+        if (code_reloc != null) {
+            Iterator i = code_reloc.iterator();
+            while (i.hasNext()) {
+                DirectBindCall r = (DirectBindCall)i.next();
+                r.patch();
+            }
         }
     }
     
