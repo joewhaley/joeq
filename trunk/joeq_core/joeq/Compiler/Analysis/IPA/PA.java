@@ -95,7 +95,9 @@ import org.sf.javabdd.TypedBDDFactory.TypedBDD;
  * @version $Id$
  */
 public class PA {
+    // Read in default properties.
     static { SystemProperties.read("pa.properties"); }
+
     public static final boolean VerifyAssertions = false;
 
     static boolean WRITE_PARESULTS_BATCHFILE = !System.getProperty("pa.writeparesults", "yes").equals("no");
