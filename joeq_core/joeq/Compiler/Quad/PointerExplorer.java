@@ -213,7 +213,7 @@ uphere2:
                 System.out.println(indent+onode+" equivalent to "+onode.skip);
                 onode = onode.skip;
             }
-            if (node instanceof MethodSummary.FieldNode) {
+            if (onode instanceof MethodSummary.FieldNode) {
                 MethodSummary.FieldNode fnode = (MethodSummary.FieldNode)onode;
                 jq_Field field = fnode.f;
                 Set inEdges = fnode.getAccessPathPredecessors();
