@@ -15,6 +15,7 @@ import java.util.Set;
 
 import joeq.Util.Assert;
 import joeq.Util.Collections.GenericMultiMap;
+import joeq.Util.Collections.LinearMap;
 import joeq.Util.Collections.MultiMap;
 import joeq.Util.Graphs.Navigator;
 
@@ -147,7 +148,7 @@ public abstract class InferenceRule {
             newTop.add(rt1);
             newTop.add(rt2);
             // Make a new relation for the bottom.
-            Map neededVariables = new HashMap();
+            Map neededVariables = new LinearMap();
             Map variableOptions = new HashMap();
             Iterator i = rt1.variables.iterator();
             Iterator j = rt1.relation.fieldDomains.iterator();
@@ -215,6 +216,7 @@ public abstract class InferenceRule {
             RuleTerm newBottom = new RuleTerm(newVariables, newRelation);
             InferenceRule newRule = s.createInferenceRule(newTop, newBottom);
             if (s.TRACE) s.out.println("New rule: "+newRule);
+            newRule.calculateNecessaryVariables();
             if (s.TRACE) s.out.println("Necessary variables: "+newRule.necessaryVariables);
             //s.rules.add(newRule);
             newRules.add(newRule);
@@ -237,12 +239,14 @@ public abstract class InferenceRule {
                 i.remove();
                 continue;
             }
-            for (Iterator j = mm.getValues(o).iterator(); j.hasNext(); ) {
+            Collection vals = mm.getValues(o);
+            for (Iterator j = vals.iterator(); j.hasNext(); ) {
                 Object o2 = j.next();
                 if (!c.contains(o2)) {
                     j.remove();
                 }
             }
+            if (vals.isEmpty()) i.remove();
         }
     }
     
@@ -253,12 +257,14 @@ public abstract class InferenceRule {
                 i.remove();
                 continue;
             }
-            for (Iterator j = mm.getValues(o).iterator(); j.hasNext(); ) {
+            Collection vals = mm.getValues(o);
+            for (Iterator j = vals.iterator(); j.hasNext(); ) {
                 Object o2 = j.next();
                 if (c.contains(o2)) {
                     j.remove();
                 }
             }
+            if (vals.isEmpty()) i.remove();
         }
     }
     

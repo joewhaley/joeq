@@ -166,7 +166,7 @@ public class BasicBlock {
     }
 
     public int getQuadIndex(Quad q) {
-        return instructions.indexOf(q);
+        return instructions == null ? -1 : instructions.indexOf(q);
     }
     
     public Quad removeQuad(int i) {

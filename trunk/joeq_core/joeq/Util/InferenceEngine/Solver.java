@@ -219,7 +219,7 @@ public abstract class Solver {
             String s2 = in.readLine();
             if (s2 == null) break;
             s2 = s2.trim();
-            s += s2;
+            s = s.substring(0, s.length()-1) + s2;
         }
         return s;
     }
