@@ -54,21 +54,21 @@ public abstract class System {
         props.setProperty("java.class.version", "48.0");
         props.setProperty("java.home", "/usr/java/j2sdk1.4.0_01/jre");
         props.setProperty("java.runtime.name", "Java(TM) 2 Runtime Environment, Standard Edition");
-        props.setProperty("java.runtime.version", "1.4.0");
+        props.setProperty("java.runtime.version", "1.4.0_01-b03");
         props.setProperty("java.specification.name", "Java Platform API Specification");
         props.setProperty("java.specification.vendor", "Sun Microsystems, Inc.");
         props.setProperty("java.specification.version", "1.4");
         props.setProperty("java.vendor", "joeq");
         props.setProperty("java.vendor.url", "http://joeq.sourceforge.net");
         props.setProperty("java.vendor.url.bug", "http://joeq.sourceforge.net");
-        props.setProperty("java.version", "1.4.0");
+        props.setProperty("java.version", "1.4.0_01");
         props.setProperty("java.vm.name", "joeq virtual machine");
         props.setProperty("java.vm.specification.name", "Java Virtual Machine Specification");
         props.setProperty("java.vm.specification.vendor", "Sun Microsystems, Inc.");
         props.setProperty("java.vm.specification.version", "1.0");
         props.setProperty("java.vm.vendor", "joeq");
-        props.setProperty("java.vm.version", "1.4.0");
-        props.setProperty("java.util.prefs.PreferencesFactory", "java.util.prefs.WindowsPreferencesFactory");
+        props.setProperty("java.vm.version", "1.4.0_01-b03");
+        props.setProperty("java.util.prefs.PreferencesFactory", "java.util.prefs.FileSystemPreferencesFactory");
         
         props.setProperty("os.arch", "i386");
         props.setProperty("os.name", "Linux");
