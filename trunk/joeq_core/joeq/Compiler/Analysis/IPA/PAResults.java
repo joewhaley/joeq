@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -28,6 +27,7 @@ import Clazz.jq_Class;
 import Clazz.jq_Field;
 import Clazz.jq_Method;
 import Clazz.jq_NameAndDesc;
+import Clazz.jq_Reference;
 import Clazz.jq_Type;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
 import Compil3r.Quad.CallGraph;
@@ -282,12 +282,25 @@ public class PAResults {
     }
     
     public int getVariableIndex(Node n) {
-        int size = r.Vmap.size();
+        if (!r.Vmap.contains(n)) return -1;
         int v = r.Vmap.get(n);
-        Assert._assert(size == r.Vmap.size());
         return v;
     }
 
+    public ProgramLocation getInvoke(int v) {
+        if (v < 0 || v >= r.Imap.size())
+            return null;
+        ProgramLocation n = (ProgramLocation) r.Imap.get(v);
+        return n;
+    }
+    
+    public int getInvokeIndex(ProgramLocation n) {
+        n = LoadedCallGraph.mapCall(n);
+        if (!r.Imap.contains(n)) return -1;
+        int v = r.Imap.get(n);
+        return v;
+    }
+    
     public Node getHeapNode(int v) {
         if (v < 0 || v >= r.Hmap.size())
             return null;
@@ -296,26 +309,11 @@ public class PAResults {
     }
     
     public int getHeapIndex(Node n) {
-        int size = r.Hmap.size();
+        if (!r.Hmap.contains(n)) return -1;
         int v = r.Hmap.get(n);
-        Assert._assert(size == r.Hmap.size());
         return v;
     }
 
-    public jq_Method getMethod(int v) {
-        if (v < 0 || v >= r.Mmap.size())
-            return null;
-        jq_Method n = (jq_Method) r.Mmap.get(v);
-        return n;
-    }
-    
-    public int getMethodIndex(jq_Method m) {
-        int size = r.Mmap.size();
-        int v = r.Mmap.get(m);
-        Assert._assert(size == r.Mmap.size());
-        return v;
-    }
-    
     public jq_Field getField(int v) {
         if (v < 0 || v >= r.Fmap.size())
             return null;
@@ -324,9 +322,47 @@ public class PAResults {
     }
     
     public int getFieldIndex(jq_Field m) {
-        int size = r.Fmap.size();
+        if (!r.Fmap.contains(m)) return -1;
         int v = r.Fmap.get(m);
-        Assert._assert(size == r.Fmap.size());
+        return v;
+    }
+    
+    public jq_Reference getType(int v) {
+        if (v < 0 || v >= r.Tmap.size())
+            return null;
+        jq_Reference n = (jq_Reference) r.Tmap.get(v);
+        return n;
+    }
+    
+    public int getTypeIndex(jq_Type m) {
+        if (!r.Tmap.contains(m)) return -1;
+        int v = r.Tmap.get(m);
+        return v;
+    }
+    
+    public jq_Method getName(int v) {
+        if (v < 0 || v >= r.Nmap.size())
+            return null;
+        jq_Method n = (jq_Method) r.Nmap.get(v);
+        return n;
+    }
+    
+    public int getNameIndex(jq_Method m) {
+        if (!r.Nmap.contains(m)) return -1;
+        int v = r.Nmap.get(m);
+        return v;
+    }
+    
+    public jq_Method getMethod(int v) {
+        if (v < 0 || v >= r.Mmap.size())
+            return null;
+        jq_Method n = (jq_Method) r.Mmap.get(v);
+        return n;
+    }
+    
+    public int getMethodIndex(jq_Method m) {
+        if (!r.Mmap.contains(m)) return -1;
+        int v = r.Mmap.get(m);
         return v;
     }
     
