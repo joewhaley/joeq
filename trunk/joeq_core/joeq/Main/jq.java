@@ -501,6 +501,9 @@ public abstract class jq {
             public int size() {
                 return 4;
             }
+            public CodeAddress getNull() {
+                return null;
+            }
         };
         HeapAddress.FACTORY = new HeapAddress.HeapAddressFactory() {
             public int size() {

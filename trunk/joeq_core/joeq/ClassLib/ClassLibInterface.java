@@ -164,7 +164,7 @@ public abstract class ClassLibInterface {
                 int k = desc.indexOf(';', j);
                 String t = desc.substring(j+1, k).replace('/','.');
                 try {
-                    Class.forName(t);
+                    Class.forName(t, false, ClassLibInterface.class.getClassLoader());
                     desc = desc.substring(0, i) + desc.substring(j+1);
                 } catch (ClassNotFoundException x) {
                 }

@@ -7,6 +7,8 @@
 
 package Run_Time;
 
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -17,6 +19,7 @@ import Clazz.jq_StaticField;
 import Main.jq;
 import Memory.Address;
 import Memory.CodeAddress;
+import Memory.Debug;
 import Memory.HeapAddress;
 import Memory.StackAddress;
 import Scheduler.jq_RegisterState;
@@ -29,6 +32,185 @@ import UTF.Utf8;
  */
 public abstract class SystemInterface {
 
+    public static class ExternalLink {
+        private final String name;
+        private Library library;
+        private CodeAddress address;
+        
+        public ExternalLink(String name) {
+            this.name = name;
+            this.library = null;
+            this.address = CodeAddress.getNull();
+        }
+        
+        public CodeAddress resolve() {
+            if (!address.isNull())
+                return address;
+            synchronized (libraries) {
+                for (Iterator/*<Library>*/ i=libraries.iterator(); i.hasNext(); ) {
+                    Library lib = (Library) i.next();
+                    address = lib.getProcAddress(name);
+                    if (!address.isNull()) {
+                        library = lib;
+                        lib.registerLink(this);
+                        return address;
+                    }
+                }
+            }
+            Debug.write("Error: cannot resolve external procedure ");
+            Debug.writeln(name);
+            return CodeAddress.getNull();
+        }
+        
+        public CodeAddress resolve(Library lib) {
+            if (!address.isNull())
+                return address;
+            address = lib.getProcAddress(name);
+            if (!address.isNull()) {
+                library = lib;
+                lib.registerLink(this);
+            }
+            return address;
+        }
+        
+        public void unlink() {
+            if (this.library != null) {
+                this.library.unlink(this);
+            }
+            this._unlink();
+        }
+        
+        void _unlink() {
+            this.library = null;
+            this.address = CodeAddress.getNull();
+        }
+        
+    }
+
+    public static class Library {
+        private final String name;
+        private int/*CPointer*/ library_pointer;
+        private boolean opened;
+        private final Collection externals;
+        
+        public Library(String name) {
+            this.name = name;
+            this.opened = false;
+            this.externals = new LinkedList();
+        }
+        
+        public String getName() { return name; }
+        
+        public synchronized boolean open() {
+            if (opened) return true;
+            library_pointer = open_library(toCString(name));
+            if (library_pointer == 0) return false;
+            opened = true; return true;
+        }
+        
+        public CodeAddress getProcAddress(String procName) {
+            if (!opened) open();
+            CodeAddress x = get_proc_address(library_pointer, toCString(procName));
+            //Debug.write(name);
+            //Debug.write(" procedure ");
+            //Debug.write(procName);
+            //Debug.writeln(" = ", x);
+            return x;
+        }
+        
+        public ExternalLink resolve(String procname) {
+            ExternalLink x = new ExternalLink(procname);
+            CodeAddress c = x.resolve(this);
+            if (!c.isNull()) return x;
+            else return null;
+        }
+        
+        public synchronized void registerLink(ExternalLink e) {
+            externals.add(e);
+        }
+        
+        public synchronized void unlink(ExternalLink e) {
+            externals.remove(e);
+        }
+        
+        public synchronized void close() {
+            for (Iterator i=externals.iterator(); i.hasNext(); ) {
+                ExternalLink x = (ExternalLink) i.next();
+                x._unlink();
+                i.remove();
+            }
+            if (opened) {
+                close_library(library_pointer);
+                opened = false;
+            }
+        }
+        
+        protected void finalize() throws Throwable {
+            super.finalize();
+            close();
+        }
+
+    }
+    
+    public static CodeAddress open_library_4;
+    public static CodeAddress get_proc_address_8;
+    public static CodeAddress close_library_4;
+    
+    public static int/*CPointer*/ open_library(byte[] library_name) {
+        Unsafe.pushArgA(HeapAddress.addressOf(library_name));
+        try {
+            Unsafe.getThreadBlock().disableThreadSwitch();
+            int v = (int) Unsafe.invoke(open_library_4);
+            Unsafe.getThreadBlock().enableThreadSwitch();
+            return v;
+        } catch (Throwable t) { jq.UNREACHABLE(); return 0; }
+    }
+
+    public static void close_library(int/*CPointer*/ library) {
+        Unsafe.pushArg(library);
+        try {
+            Unsafe.getThreadBlock().disableThreadSwitch();
+            Unsafe.invoke(close_library_4);
+            Unsafe.getThreadBlock().enableThreadSwitch();
+        } catch (Throwable t) { jq.UNREACHABLE(); }
+    }
+
+    public static CodeAddress get_proc_address(int/*CPointer*/ library, byte[] name) {
+        Unsafe.pushArgA(HeapAddress.addressOf(name));
+        Unsafe.pushArg(library);
+        try {
+            Unsafe.getThreadBlock().disableThreadSwitch();
+            CodeAddress v = (CodeAddress) Unsafe.invokeA(get_proc_address_8);
+            Unsafe.getThreadBlock().enableThreadSwitch();
+            return v;
+        } catch (Throwable t) { jq.UNREACHABLE(); return null; }
+    }
+    
+    public static final Collection/*<Library>*/ libraries = new LinkedList();
+    
+    public static Library registerLibrary(String libraryName) {
+        synchronized (libraries) {
+            for (Iterator i=libraries.iterator(); i.hasNext(); ) {
+                Library lib = (Library) i.next();
+                if (libraryName.equals(lib.getName()))
+                    return lib;
+            }
+            Library lib = new Library(libraryName);
+            if (lib.open()) {
+                libraries.add(lib);
+                return lib;
+            } else {
+                return null;
+            }
+        }
+    }
+    
+    public static ExternalLink tryLink(String name) {
+        ExternalLink x = new ExternalLink(name);
+        if (!x.resolve().isNull()) return x;
+        else return null;
+    }
+    
     public static CodeAddress debugwrite_8;
     public static CodeAddress debugwwrite_8;
     public static CodeAddress debugwriteln_8;
@@ -696,24 +878,6 @@ public abstract class SystemInterface {
             Unsafe.pushArg(semaphore);
             Unsafe.getThreadBlock().disableThreadSwitch();
             int v = (int)Unsafe.invoke(release_semaphore_8);
-            Unsafe.getThreadBlock().enableThreadSwitch();
-            return v;
-        } catch (Throwable t) { jq.UNREACHABLE(); }
-        return 0;
-    }
-    public static long query_performance_counter() {
-        try {
-            Unsafe.getThreadBlock().disableThreadSwitch();
-            long v = Unsafe.invoke(query_performance_counter_0);
-            Unsafe.getThreadBlock().enableThreadSwitch();
-            return v;
-        } catch (Throwable t) { jq.UNREACHABLE(); }
-        return 0;
-    }
-    public static long query_performance_frequency() {
-        try {
-            Unsafe.getThreadBlock().disableThreadSwitch();
-            long v = Unsafe.invoke(query_performance_frequency_0);
             Unsafe.getThreadBlock().enableThreadSwitch();
             return v;
         } catch (Throwable t) { jq.UNREACHABLE(); }
