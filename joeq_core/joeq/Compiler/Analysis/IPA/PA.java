@@ -2207,7 +2207,7 @@ public class PA {
                     long time2 = System.currentTimeMillis();
                     dumpBDDRelations();
                     System.out.println("Dump took "+(System.currentTimeMillis()-time2)/1000.+"s");
-                    dumpSSA();
+                    if (DUMP_SSA) dumpSSA();
                 } catch (IOException x) {}
             }
             if (SKIP_SOLVE) return;
@@ -3581,9 +3581,13 @@ public class PA {
         BDD vP0 = vP.exist(V1cH1cset);
         
         String dumpPath = System.getProperty("pa.dumppath", "");
-        String sep = System.getProperty("file.separator", "/");
-        if (dumpPath.length() > 0 && !dumpPath.endsWith(sep))
-            dumpPath += sep;
+        if (dumpPath.length() > 0) {
+            File f = new File(dumpPath);
+            if (!f.exists()) f.mkdirs();
+            String sep = System.getProperty("file.separator", "/");
+            if (!dumpPath.endsWith(sep))
+                dumpPath += sep;
+        }
         System.out.println("Dumping to path "+dumpPath);
         
         DataOutputStream dos = null;
@@ -3853,9 +3857,11 @@ public class PA {
     }
     
     private void dumpSSA() throws IOException {
+        Assert._assert(DUMP_SSA);
         String dumpPath = System.getProperty("pa.dumppath", "");
         jq_MethodVisitor mv = null;
         ControlFlowGraphVisitor cfgv = null;
+        Assert._assert(bddIRBuilder != null);
         mv = new ControlFlowGraphVisitor.CodeCacheVisitor(bddIRBuilder,
                 true);
         //cv = new jq_MethodVisitor.DeclaredMethodVisitor(mv, methodNamesToProcess, false);
