@@ -589,7 +589,6 @@ public class BDDInferenceRule extends InferenceRule {
             domains = new ArrayList(domainSet);
         }
         String origVarOrder2 = origVarOrder;
-        int[] indices = new int[domains.size()];
         for (int i = 0; i < domains.size(); ++i) {
             BDDDomain d1 = (BDDDomain) domains.get(i);
             int index = origVarOrder2.indexOf(d1.getName());
@@ -603,7 +602,6 @@ public class BDDInferenceRule extends InferenceRule {
         while (g.hasMore()) {
             String varOrder = origVarOrder2;
             int[] p = g.getNext();
-            int diff = 0;
             for (int i = 0; i < p.length; ++i) {
                 BDDDomain d2 = (BDDDomain) domains.get(p[i]);
                 String name = "$"+i+"$";
@@ -670,7 +668,6 @@ public class BDDInferenceRule extends InferenceRule {
     
     static List getDomainOrder(String varorder, List domains, int[] p) {
         List order = new LinkedList();
-        int[] indices = new int[p.length];
         for (int i = 0; i < p.length; ++i) {
             BDDDomain d = (BDDDomain) domains.get(p[i]);
             for (ListIterator j = order.listIterator(); ; ) {
