@@ -139,6 +139,7 @@ public class Trimmer {
     public class AddStaticFieldContents extends jq_FieldVisitor.EmptyVisitor {
         public void visitStaticField(jq_StaticField f) {
             if (f.getType().isPrimitiveType()) return;
+            if (f.getType().isAddressType()) return;
             Object o2 = Reflection.getstatic_A(f);
             rs.addObjectAndSubfields(o2);
         }
