@@ -3,7 +3,7 @@
  *
  * Created on Sep 26, 2002, 8:47:02 PM
  *
- * @author laudney <bin_ren@myrealbox.com>
+ * @author laudney <laudney@acm.org>
  * @version 0.1
  */
 package Run_Time;

@@ -5,7 +5,7 @@
  *
  * PRE-REQUISITE: All the objects and arrays are allocated align8
  *
- * @author laudney <bin_ren@myrealbox.com>
+ * @author laudney <laudney@acm.org>
  * @version 0.1
  */
 package GC;

@@ -3,47 +3,36 @@
  *
  * Created on Nov 26, 2002, 10:07:32 PM
  *
- * @author laudney <bin_ren@myrealbox.com>
+ * @author laudney <laudney@acm.org>
  * @version 0.1
  */
 package Allocator;
 
-import java.util.Collection;
-import java.util.HashSet;
-
-import Memory.HeapAddress;
+import Memory.Address;
 
 public class FreeMemManager {
-    private static FreeMemStrategy defaultStrategy = new BestAdaptionStrategy();
+    private static FreeMemStrategy defaultStrategy = new BestFitStrategy();
+    private static FreeMemStrategy strategy = defaultStrategy;
 
-    private Collection freePool = new HashSet();
-    private FreeMemStrategy stg;
-
-    public FreeMemManager(FreeMemStrategy stg) {
-        this.stg = stg;
-        stg.addCollection(freePool);
+    public static void setFreeMemStrategy(FreeMemStrategy stg) {
+        strategy = stg;
     }
 
-    public FreeMemManager() {
-        this(defaultStrategy);
+    public static void addFreeMem(MemUnit unit) {
+        strategy.addFreeMem(unit);
     }
 
-    public void addFreeMem(MemUnit unit) {
-        freePool.add(unit);
-    }
-
-    public HeapAddress getFreeMem(int size) {
-        if (false) { // JW: crashes...
-            MemUnit unit = stg.next(size);
-            if(unit == null) {
-                return null;
-            } else {
-                HeapAddress addr = unit.getHead();
-                unit.setHead((HeapAddress)addr.offset(size));
-                return addr;
-            }
-        } else {
+    public static Address getFreeMem(int size) {
+        MemUnit unit = strategy.getFreeMem(size);
+        if (unit == null) {
             return null;
+        } else {
+            Address addr = unit.getHead().offset(size);
+            int byteLength = unit.getByteLength() - size;
+            if (byteLength > 0) {
+                strategy.addFreeMem(new MemUnit(addr, byteLength));
+            }
+            return addr;
         }
     }
 }

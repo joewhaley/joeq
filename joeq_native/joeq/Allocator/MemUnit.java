@@ -3,32 +3,31 @@
  *
  * Created on Nov 27, 2002, 12:49:38 AM
  *
- * @author laudney <bin_ren@myrealbox.com>
+ * @author laudney <laudney@acm.org>
  * @version 0.1
  */
 package Allocator;
 
 import Memory.Address;
-import Memory.HeapAddress;
 
 public class MemUnit {
-    private HeapAddress head;
+    private Address head;
     private int byteLength;
 
-    public MemUnit(HeapAddress head, int byteLength) {
+    public MemUnit(Address head, int byteLength) {
         this.head = head;
         this.byteLength = byteLength;
     }
 
-    public MemUnit(HeapAddress head, Address end) {
+    public MemUnit(Address head, Address end) {
         this(head, end.difference(head));
     }
 
-    public HeapAddress getHead() {
+    public Address getHead() {
         return head;
     }
 
-    public void setHead(HeapAddress head) {
+    public void setHead(Address head) {
         this.head = head;
     }
 
