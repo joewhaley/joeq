@@ -1925,16 +1925,19 @@ public class PA {
         BDD t1 = actual.restrict(Z.ithVar(0));          // IxV2
         if (USE_VCONTEXT) t1.andWith(V2cdomain.id());   // IxV2cxV2
         t1.replaceWith(V2toV1);
-        BDD t11 = IE.restrict(M.ithVar(Mmap.get(javaLangClass_newInstance)));
+        BDD t11 = IE.restrict(M.ithVar(Mmap.get(javaLangClass_newInstance)));   // I
         if(t11.isZero()){
             t11.free();
             
             return false;
         }
+        System.out.println("There are " + (int)t11.satCount(Iset) + " calls to Class.newInstance");
         BDD t3  = t1.relprod(t11, bdd.zero());
+        t11.free();
+        t1.free();
         BDD t31 = t3.replace(ItoI2);
         if(TRACE_REFLECTION && TRACE) out.println("t31: " + t31.toStringWithDomains(TS));
-        t1.free();
+        
         
         BDD t4;
         if (CS_CALLGRAPH) {
@@ -2025,7 +2028,11 @@ public class PA {
             }
             constructorIE.orWith(M.ithVar(Mmap.get(constructor)).and(h));
         }
-        if(TRACE_REFLECTION && TRACE) out.println("constructorIE: " + constructorIE.toStringWithDomains(TS) + " of size " + constructorIE.satCount(H1set));
+        //if(TRACE_REFLECTION && TRACE)
+        if(!constructorIE.isZero()){
+            out.println("constructorIE: " + constructorIE.toStringWithDomains(TS) + 
+                " of size " + constructorIE.satCount(I2set.and(H1set).and(Mset)));
+        }
         
         BDD old_reflectiveCalls  = reflectiveCalls.id();
         reflectiveCalls = constructorIE.exist(H1set).replace(I2toI);
