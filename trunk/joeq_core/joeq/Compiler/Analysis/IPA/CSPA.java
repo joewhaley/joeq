@@ -331,6 +331,7 @@ public class CSPA {
     }
     public static interface HeapObject {
         void write(DataOutput out) throws IOException;
+        jq_Reference getDeclaredType();
     }
 
     private void dumpVarIndexMap(DataOutput out) throws IOException {
