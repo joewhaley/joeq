@@ -1040,6 +1040,7 @@ public class PA {
             for (int T_i = 0; T_i < Tmap.size(); ++T_i) {
                 jq_Reference t1 = (jq_Reference) Tmap.get(T_i);
                 if (t1 == null) continue;
+                t1.prepare();
                 jq_Reference t2 = t1.getDirectPrimarySupertype();
                 if (t2 != null) {
                     t2.prepare();
