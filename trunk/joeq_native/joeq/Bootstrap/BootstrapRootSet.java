@@ -127,6 +127,25 @@ public class BootstrapRootSet {
         return b;
     }
     
+    public jq_Type addNecessaryType(String desc) {
+        String className = desc.substring(1, desc.length()-1).replace('/', '.');
+        try {
+            // attempt to load class in host VM first.
+            Class.forName(className);
+            jq_Type t = null;
+            try {
+                t = PrimordialClassLoader.loader.getOrCreateBSType(desc);
+                t.load();
+                addNecessaryType(t);
+                return t;
+            } catch (NoClassDefFoundError x) {
+                System.out.println("Note: Cannot load class "+t+" present in host Jvm");
+                PrimordialClassLoader.unloadType(PrimordialClassLoader.loader, t);
+            }
+        } catch (ClassNotFoundException x) { }
+        return null;
+    }
+        
     public boolean addNecessaryType(jq_Type t) {
         if (t == null) return false;
         t.prepare();
@@ -154,6 +173,20 @@ public class BootstrapRootSet {
         return b;
     }
     
+    public jq_StaticField addNecessaryStaticField(jq_Class c, String name, String desc) {
+        if (c == null) return null;
+        jq_StaticField f = c.getOrCreateStaticField(name, desc);
+        addNecessaryField(f);
+        return f;
+    }
+    
+    public jq_InstanceField addNecessaryInstanceField(jq_Class c, String name, String desc) {
+        if (c == null) return null;
+        jq_InstanceField f = c.getOrCreateInstanceField(name, desc);
+        addNecessaryField(f);
+        return f;
+    }
+        
     public boolean addNecessaryField(jq_Field t) {
         addNecessaryType(t.getDeclaringClass());
         boolean b = necessaryFields.add(t);
@@ -169,6 +202,20 @@ public class BootstrapRootSet {
         return b;
     }
     
+    public jq_StaticMethod addNecessaryStaticMethod(jq_Class c, String name, String desc) {
+        if (c == null) return null;
+        jq_StaticMethod f = c.getOrCreateStaticMethod(name, desc);
+        addNecessaryMethod(f);
+        return f;
+    }
+    
+    public jq_InstanceMethod addNecessaryInstanceMethod(jq_Class c, String name, String desc) {
+        if (c == null) return null;
+        jq_InstanceMethod f = c.getOrCreateInstanceMethod(name, desc);
+        addNecessaryMethod(f);
+        return f;
+    }
+        
     public boolean addNecessaryMethod(jq_Method t) {
         addNecessaryType(t.getDeclaringClass());
         boolean b = necessaryMethods.add(t);
@@ -227,57 +274,34 @@ public class BootstrapRootSet {
         
         // setIn0, setOut0, and setErr0 use these fields, but the trimmer doesn't detect the uses.
         c = PrimordialClassLoader.getJavaLangSystem();
-        s_f = c.getOrCreateStaticField("in", "Ljava/io/InputStream;");
-        addNecessaryField(s_f);
-        s_f = c.getOrCreateStaticField("out", "Ljava/io/PrintStream;");
-        addNecessaryField(s_f);
-        s_f = c.getOrCreateStaticField("err", "Ljava/io/PrintStream;");
-        addNecessaryField(s_f);
+        addNecessaryStaticField(c, "in", "Ljava/io/InputStream;");
+        addNecessaryStaticField(c, "out", "Ljava/io/PrintStream;");
+        addNecessaryStaticField(c, "err", "Ljava/io/PrintStream;");
         
         // private method initializeSystemClass is called reflectively
-        s_m = c.getOrCreateStaticMethod("initializeSystemClass", "()V");
-        addNecessaryMethod(s_m);
+        addNecessaryStaticMethod(c, "initializeSystemClass", "()V");
         
         // an instance of this class is created via reflection during VM initialization.
         c = (jq_Class)Reflection.getJQType(sun.io.CharToByteConverter.getDefault().getClass());
-        i_m = c.getOrCreateInstanceMethod("<init>", "()V");
-        addNecessaryMethod(i_m);
+        addNecessaryInstanceMethod(c, "<init>", "()V");
         
         // an instance of this class is created via reflection during VM initialization.
         c = (jq_Class)Reflection.getJQType(sun.io.ByteToCharConverter.getDefault().getClass());
-        i_m = c.getOrCreateInstanceMethod("<init>", "()V");
-        addNecessaryMethod(i_m);
-        
-        try {
-            // an instance of this class is created via reflection during VM initialization.
-            c = (jq_Class)Reflection.getJQType(sun.io.ByteToCharConverter.getConverter("ISO-8859-1").getClass());
-            i_m = c.getOrCreateInstanceMethod("<init>", "()V");
-            addNecessaryMethod(i_m);
-
-            // an instance of this class is created via reflection during VM initialization.
-            c = (jq_Class)Reflection.getJQType(sun.io.CharToByteConverter.getConverter("ISO-8859-1").getClass());
-            i_m = c.getOrCreateInstanceMethod("<init>", "()V");
-            addNecessaryMethod(i_m);
-        } catch (java.io.UnsupportedEncodingException x) { }
-
-        // created via reflection when loading from a zip file
-        //c = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/util/zip/ZipFile$ZipFileInputStream;");
-        //i_m = c.getOrCreateInstanceMethod("<init>", "(JJ)V");
-        //addNecessaryMethod(i_m);
+        addNecessaryInstanceMethod(c, "<init>", "()V");
         
         // the trap handler can be implicitly called from any bytecode than can trigger a hardware exception.
         s_m = ExceptionDeliverer._trap_handler;
         addNecessaryMethod(s_m);
+        
+        // we want the compiler to be able to run at run time, too.
+        i_m = jq_Method._compile;
+        addNecessaryMethod(i_m);
         
         // debugger is large, so compile it on demand.
         if (false) {
             s_m = ExceptionDeliverer._debug_trap_handler;
             addNecessaryMethod(s_m);
         }
-        
-        // we want the compiler to be able to run at run time, too.
-        i_m = jq_Method._compile;
-        addNecessaryMethod(i_m);
         
         // entrypoint for new threads
         addNecessaryMethod(Scheduler.jq_NativeThread._nativeThreadEntry);
@@ -291,44 +315,26 @@ public class BootstrapRootSet {
         // dunno why this doesn't show up
         addNecessaryType(Assembler.x86.Heap2HeapReference._class);
         
+        try {
+            // an instance of this class is created via reflection during VM initialization.
+            c = (jq_Class)Reflection.getJQType(sun.io.ByteToCharConverter.getConverter("ISO-8859-1").getClass());
+            addNecessaryInstanceMethod(c, "<init>", "()V");
+            // an instance of this class is created via reflection during VM initialization.
+            c = (jq_Class)Reflection.getJQType(sun.io.CharToByteConverter.getConverter("ISO-8859-1").getClass());
+            addNecessaryInstanceMethod(c, "<init>", "()V");
+        } catch (java.io.UnsupportedEncodingException x) { }
+
         // JDK1.4: an instance of this class is created via reflection during VM initialization.
-        try {
-            Class.forName("sun.nio.cs.ISO_8859_1");
-        }
-        catch (java.lang.ClassNotFoundException x) { }
-        try {
-            c = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Lsun/nio/cs/ISO_8859_1;");
-            c.load();
-            i_m = c.getOrCreateInstanceMethod("<init>", "()V");
-            addNecessaryMethod(i_m);
-        }
-        catch (java.lang.NoClassDefFoundError x) {
-            PrimordialClassLoader.loader.unloadBSType(c);
-        }
-        try {
-            c = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Lsun/nio/cs/ISO_8859_1$Encoder;");
-            c.load();
-            addNecessaryType(c);
-        }
-        catch (java.lang.NoClassDefFoundError x) {
-            PrimordialClassLoader.loader.unloadBSType(c);
-        }
-        try {
-            c = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Lsun/nio/cs/ISO_8859_1$Decoder;");
-            c.load();
-            addNecessaryType(c);
-        }
-        catch (java.lang.NoClassDefFoundError x) {
-            PrimordialClassLoader.loader.unloadBSType(c);
-        }
-        try {
-            c = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Lsun/nio/cs/ISO_8859_1$1;");
-            c.load();
-            addNecessaryType(c);
-        }
-        catch (java.lang.NoClassDefFoundError x) {
-            PrimordialClassLoader.loader.unloadBSType(c);
-        }
+        c = (jq_Class) addNecessaryType("Lsun/nio/cs/ISO_8859_1;");
+        addNecessaryInstanceMethod(c, "<init>", "()V");
+        
+        addNecessaryType("Lsun/nio/cs/ISO_8859_1$Encoder;");
+        addNecessaryType("Lsun/nio/cs/ISO_8859_1$Decoder;");
+        addNecessaryType("Lsun/nio/cs/ISO_8859_1$1;");
+        
+        // for JDK1.4.2
+        addNecessaryType("Lsun/net/www/protocol/jar/Handler;");
+        addNecessaryType("Ljava/util/logging/LogManager$Cleaner;");
         
         // tracing in the compiler uses these
         //c = jq._class; c.prepare();
@@ -469,7 +475,7 @@ public class BootstrapRootSet {
     public void trimClass(jq_Class clazz) {
         Assert._assert(clazz.isPrepared());
 
-	jq_Class super_class = clazz.getSuperclass();
+        jq_Class super_class = clazz.getSuperclass();
         if (super_class != null)
             trimClass(super_class);
 
