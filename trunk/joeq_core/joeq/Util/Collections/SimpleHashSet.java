@@ -269,7 +269,12 @@ public class SimpleHashSet extends AbstractMap {
          * @see java.util.Collection#addAll(Collection)
          */
         public boolean addAll(Collection arg0) {
-            return false;
+            boolean change = false;
+            for (Iterator i=arg0.iterator(); i.hasNext(); ) {
+                if (add(i.next()))
+                    change = true;
+            }
+            return change;
         }
 
         /**
