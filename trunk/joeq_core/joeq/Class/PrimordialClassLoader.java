@@ -437,6 +437,7 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
     public static final jq_Class JavaLangString;
     public static final jq_Class JavaLangSystem;
     public static final jq_Class JavaLangThrowable;
+    public static final jq_Array AddressArray;
     static {
         loader = new PrimordialClassLoader();
         initPrimitiveTypes();
@@ -445,6 +446,7 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
         JavaLangString = (jq_Class)loader.getOrCreateBSType("Ljava/lang/String;");
         JavaLangSystem = (jq_Class)loader.getOrCreateBSType("Ljava/lang/System;");
         JavaLangThrowable = (jq_Class)loader.getOrCreateBSType("Ljava/lang/Throwable;");
+        AddressArray = (jq_Array)loader.getOrCreateBSType("[Ljoeq/Memory/Address;");
     }
     
     public static jq_Class getJavaLangObject() { return JavaLangObject; }
@@ -452,6 +454,7 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
     public static jq_Class getJavaLangString() { return JavaLangString; }
     public static jq_Class getJavaLangSystem() { return JavaLangSystem; }
     public static jq_Class getJavaLangThrowable() { return JavaLangThrowable; }
+    public static jq_Class getAddressArray() { return JavaLangThrowable; }
     public static jq_Class getJavaLangException() { return (jq_Class)loader.getOrCreateBSType("Ljava/lang/Exception;"); }
     public static jq_Class getJavaLangError() { return (jq_Class)loader.getOrCreateBSType("Ljava/lang/Error;"); }
     public static jq_Class getJavaLangRuntimeException() { return (jq_Class)loader.getOrCreateBSType("Ljava/lang/RuntimeException;"); }
