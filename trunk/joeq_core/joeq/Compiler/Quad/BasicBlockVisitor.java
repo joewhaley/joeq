@@ -30,10 +30,10 @@ public interface BasicBlockVisitor {
     }
     
     /**
-     * Method visitor that visits all basic blocks in the method with a given
+     * Control flow graph visitor that visits all basic blocks in the CFG with a given
      * basic block visitor.
-     * @see  jq_Method
-     * @see  jq_MethodVisitor
+     * @see  ControlFlowGraph
+     * @see  ControlFlowGraphVisitor
      */
     public static class AllBasicBlockVisitor implements ControlFlowGraphVisitor {
         private final BasicBlockVisitor bbv;

@@ -21,7 +21,7 @@ import Util.Templates.ListWrapper;
  * Note that the type check is a Java "assignable" type check, and therefore
  * inheritance and interface checks may be necessary.
  * 
- * @see  ExceptionHandlerSet
+ * @see  ExceptionHandlerList
  * @see  Run_Time.TypeCheck
  * @author  John Whaley
  * @version  $Id$

@@ -109,15 +109,13 @@ public class ControlFlowGraph {
     public int getNewQuadID() { return ++quad_counter; }
     
     /** Returns an iteration of the basic blocks in this graph in reverse post order.
-     * @see  BasicBlockIterator
      * @return  an iteration of the basic blocks in this graph in reverse post order. */
     public ListIterator.BasicBlock reversePostOrderIterator() {
-	return reversePostOrderIterator(start_node);
+        return reversePostOrderIterator(start_node);
     }
     
     /** Returns an iteration of the basic blocks in the reversed graph in reverse post order.
      * The reversed graph is the graph where all edges are reversed.
-     * @see  BasicBlockIterator
      * @return  an iteration of the basic blocks in the reversed graph in reverse post order. */
     public ListIterator.BasicBlock reversePostOrderOnReverseGraphIterator() {
         return reversePostOrderOnReverseGraph(end_node).basicBlockIterator();
@@ -125,7 +123,6 @@ public class ControlFlowGraph {
     
     /** Returns an iteration of the basic blocks in the reversed graph in post order.
      * The reversed graph is the graph where all edges are reversed.
-     * @see  BasicBlockIterator
      * @return  an iteration of the basic blocks in the reversed graph in post order. */
     public ListIterator.BasicBlock postOrderOnReverseGraphIterator() {
         return postOrderOnReverseGraph(end_node).basicBlockIterator();
