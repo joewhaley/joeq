@@ -7,6 +7,18 @@ int _argc;
 char **_argv;
 
 extern "C" void __stdcall entry();
+extern "C" void __stdcall ctrl_break_handler();
+extern void initSemaphoreLock(void);
+
+BOOL WINAPI windows_break_handler(DWORD dwCtrlType)
+{
+	if (dwCtrlType == CTRL_BREAK_EVENT) {
+		ctrl_break_handler();
+		return 1;
+	}
+	return 0;
+}
+
 
 int main(int argc, char* argv[])
 {
@@ -24,12 +36,21 @@ int main(int argc, char* argv[])
 	_asm mov eax,[erp]
 	_asm mov fs:[0],eax // point first word of thread control block to exception handler registration chain
 
+	// install ctrl-break handler
+	SetConsoleCtrlHandler(windows_break_handler, TRUE);
+
+	initSemaphoreLock();
+
 	printf("branching to entrypoint at location 0x%08x\n", entry);
 	fflush(stdout);
 
-	entry();
+	__asm {
+		// set it up so FP = 0, so we know the stack top.
+		xor EBP, EBP
+		// go there!
+		call entry
+	}
 
-	fflush(stdout);
-	fflush(stderr);
+	// unreachable.
 	return 0;
 }
