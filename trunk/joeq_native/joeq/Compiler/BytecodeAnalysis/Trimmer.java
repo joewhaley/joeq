@@ -565,6 +565,22 @@ public class Trimmer {
             }
             addStaticFieldValue(f);
         }
+        public void visitZGETSTATIC(jq_StaticField f) {
+            super.visitZGETSTATIC(f);
+            GETSTATIChelper(f);
+        }
+        public void visitBGETSTATIC(jq_StaticField f) {
+            super.visitBGETSTATIC(f);
+            GETSTATIChelper(f);
+        }
+        public void visitCGETSTATIC(jq_StaticField f) {
+            super.visitCGETSTATIC(f);
+            GETSTATIChelper(f);
+        }
+        public void visitSGETSTATIC(jq_StaticField f) {
+            super.visitSGETSTATIC(f);
+            GETSTATIChelper(f);
+        }
         private void PUTSTATIChelper(jq_StaticField f) {
             addClassInitializer(f.getDeclaringClass());
             addToNecessarySet(f);
@@ -593,6 +609,22 @@ public class Trimmer {
         }
         public void visitAPUTSTATIC(jq_StaticField f) {
             super.visitAPUTSTATIC(f);
+            PUTSTATIChelper(f);
+        }
+        public void visitZPUTSTATIC(jq_StaticField f) {
+            super.visitZPUTSTATIC(f);
+            PUTSTATIChelper(f);
+        }
+        public void visitBPUTSTATIC(jq_StaticField f) {
+            super.visitBPUTSTATIC(f);
+            PUTSTATIChelper(f);
+        }
+        public void visitCPUTSTATIC(jq_StaticField f) {
+            super.visitCPUTSTATIC(f);
+            PUTSTATIChelper(f);
+        }
+        public void visitSPUTSTATIC(jq_StaticField f) {
+            super.visitSPUTSTATIC(f);
             PUTSTATIChelper(f);
         }
         private void GETFIELDhelper(jq_InstanceField f) {

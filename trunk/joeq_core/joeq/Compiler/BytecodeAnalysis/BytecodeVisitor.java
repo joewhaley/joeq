@@ -797,14 +797,24 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
                 jq_Type t = f.getType();
                 if (t.isReferenceType())
                     this.visitAGETSTATIC(f);
+                else if (t == jq_Primitive.INT)
+                    this.visitIGETSTATIC(f);
                 else if (t == jq_Primitive.FLOAT)
                     this.visitFGETSTATIC(f);
                 else if (t == jq_Primitive.LONG)
                     this.visitLGETSTATIC(f);
                 else if (t == jq_Primitive.DOUBLE)
                     this.visitDGETSTATIC(f);
+                else if (t == jq_Primitive.BOOLEAN)
+                    this.visitZGETSTATIC(f);
+                else if (t == jq_Primitive.BYTE)
+                    this.visitBGETSTATIC(f);
+                else if (t == jq_Primitive.CHAR)
+                    this.visitCGETSTATIC(f);
+                else if (t == jq_Primitive.SHORT)
+                    this.visitSGETSTATIC(f);
                 else
-                    this.visitIGETSTATIC(f);
+                    jq.UNREACHABLE();
                 break;
             }
             case 0xb3: /* --- putstatic --- */ {
@@ -814,14 +824,24 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
                 jq_Type t = f.getType();
                 if (t.isReferenceType())
                     this.visitAPUTSTATIC(f);
+                else if (t == jq_Primitive.INT)
+                    this.visitIPUTSTATIC(f);
                 else if (t == jq_Primitive.FLOAT)
                     this.visitFPUTSTATIC(f);
                 else if (t == jq_Primitive.LONG)
                     this.visitLPUTSTATIC(f);
                 else if (t == jq_Primitive.DOUBLE)
                     this.visitDPUTSTATIC(f);
+                else if (t == jq_Primitive.BOOLEAN)
+                    this.visitZPUTSTATIC(f);
+                else if (t == jq_Primitive.BYTE)
+                    this.visitBPUTSTATIC(f);
+                else if (t == jq_Primitive.CHAR)
+                    this.visitCPUTSTATIC(f);
+                else if (t == jq_Primitive.SHORT)
+                    this.visitSPUTSTATIC(f);
                 else
-                    this.visitIPUTSTATIC(f);
+                    jq.UNREACHABLE();
                 break;
             }
             case 0xb4: /* --- getfield --- */ {
@@ -1418,6 +1438,18 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
     public void visitAGETSTATIC(jq_StaticField f) {
         if (TRACE) out.println(this+": "+i_start+" AGETSTATIC "+f);
     }
+    public void visitZGETSTATIC(jq_StaticField f) {
+        if (TRACE) out.println(this+": "+i_start+" ZGETSTATIC "+f);
+    }
+    public void visitBGETSTATIC(jq_StaticField f) {
+        if (TRACE) out.println(this+": "+i_start+" BGETSTATIC "+f);
+    }
+    public void visitCGETSTATIC(jq_StaticField f) {
+        if (TRACE) out.println(this+": "+i_start+" CGETSTATIC "+f);
+    }
+    public void visitSGETSTATIC(jq_StaticField f) {
+        if (TRACE) out.println(this+": "+i_start+" SGETSTATIC "+f);
+    }
     public void visitIPUTSTATIC(jq_StaticField f) {
         if (TRACE) out.println(this+": "+i_start+" IPUTSTATIC "+f);
     }
@@ -1432,6 +1464,18 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
     }
     public void visitAPUTSTATIC(jq_StaticField f) {
         if (TRACE) out.println(this+": "+i_start+" APUTSTATIC "+f);
+    }
+    public void visitZPUTSTATIC(jq_StaticField f) {
+        if (TRACE) out.println(this+": "+i_start+" ZPUTSTATIC "+f);
+    }
+    public void visitBPUTSTATIC(jq_StaticField f) {
+        if (TRACE) out.println(this+": "+i_start+" BPUTSTATIC "+f);
+    }
+    public void visitCPUTSTATIC(jq_StaticField f) {
+        if (TRACE) out.println(this+": "+i_start+" CPUTSTATIC "+f);
+    }
+    public void visitSPUTSTATIC(jq_StaticField f) {
+        if (TRACE) out.println(this+": "+i_start+" SPUTSTATIC "+f);
     }
     public void visitIGETFIELD(jq_InstanceField f) {
         if (TRACE) out.println(this+": "+i_start+" IGETFIELD "+f);
@@ -1845,6 +1889,18 @@ class BytecodeVisitorTemplate extends BytecodeVisitor {
     public void visitAGETSTATIC(jq_StaticField f) {
         super.visitAGETSTATIC(f);
     }
+    public void visitZGETSTATIC(jq_StaticField f) {
+        super.visitZGETSTATIC(f);
+    }
+    public void visitBGETSTATIC(jq_StaticField f) {
+        super.visitBGETSTATIC(f);
+    }
+    public void visitCGETSTATIC(jq_StaticField f) {
+        super.visitCGETSTATIC(f);
+    }
+    public void visitSGETSTATIC(jq_StaticField f) {
+        super.visitSGETSTATIC(f);
+    }
     public void visitIPUTSTATIC(jq_StaticField f) {
         super.visitIPUTSTATIC(f);
     }
@@ -1859,6 +1915,18 @@ class BytecodeVisitorTemplate extends BytecodeVisitor {
     }
     public void visitAPUTSTATIC(jq_StaticField f) {
         super.visitAPUTSTATIC(f);
+    }
+    public void visitZPUTSTATIC(jq_StaticField f) {
+        super.visitZPUTSTATIC(f);
+    }
+    public void visitBPUTSTATIC(jq_StaticField f) {
+        super.visitBPUTSTATIC(f);
+    }
+    public void visitCPUTSTATIC(jq_StaticField f) {
+        super.visitCPUTSTATIC(f);
+    }
+    public void visitSPUTSTATIC(jq_StaticField f) {
+        super.visitSPUTSTATIC(f);
     }
     public void visitIGETFIELD(jq_InstanceField f) {
         super.visitIGETFIELD(f);

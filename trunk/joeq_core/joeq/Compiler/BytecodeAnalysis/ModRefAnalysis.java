@@ -52,6 +52,22 @@ public class ModRefAnalysis extends BytecodeVisitor {
         super.visitAGETSTATIC(f);
         ref.add(f);
     }
+    public void visitZGETSTATIC(jq_StaticField f) {
+        super.visitZGETSTATIC(f);
+        ref.add(f);
+    }
+    public void visitBGETSTATIC(jq_StaticField f) {
+        super.visitBGETSTATIC(f);
+        ref.add(f);
+    }
+    public void visitCGETSTATIC(jq_StaticField f) {
+        super.visitCGETSTATIC(f);
+        ref.add(f);
+    }
+    public void visitSGETSTATIC(jq_StaticField f) {
+        super.visitSGETSTATIC(f);
+        ref.add(f);
+    }
     public void visitIPUTSTATIC(jq_StaticField f) {
         super.visitIPUTSTATIC(f);
         mod.add(f);
@@ -70,6 +86,22 @@ public class ModRefAnalysis extends BytecodeVisitor {
     }
     public void visitAPUTSTATIC(jq_StaticField f) {
         super.visitAPUTSTATIC(f);
+        mod.add(f);
+    }
+    public void visitZPUTSTATIC(jq_StaticField f) {
+        super.visitZPUTSTATIC(f);
+        mod.add(f);
+    }
+    public void visitBPUTSTATIC(jq_StaticField f) {
+        super.visitBPUTSTATIC(f);
+        mod.add(f);
+    }
+    public void visitCPUTSTATIC(jq_StaticField f) {
+        super.visitCPUTSTATIC(f);
+        mod.add(f);
+    }
+    public void visitSPUTSTATIC(jq_StaticField f) {
+        super.visitSPUTSTATIC(f);
         mod.add(f);
     }
     public void visitIGETFIELD(jq_InstanceField f) {

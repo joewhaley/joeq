@@ -224,11 +224,19 @@ public abstract class Interpreter {
         public abstract float getstatic_F(jq_StaticField f);
         public abstract double getstatic_D(jq_StaticField f);
         public abstract Object getstatic_A(jq_StaticField f);
+        public abstract boolean getstatic_Z(jq_StaticField f);
+        public abstract byte getstatic_B(jq_StaticField f);
+        public abstract char getstatic_C(jq_StaticField f);
+        public abstract short getstatic_S(jq_StaticField f);
         public abstract void putstatic_I(jq_StaticField f, int v);
         public abstract void putstatic_L(jq_StaticField f, long v);
         public abstract void putstatic_F(jq_StaticField f, float v);
         public abstract void putstatic_D(jq_StaticField f, double v);
         public abstract void putstatic_A(jq_StaticField f, Object v);
+        public abstract void putstatic_Z(jq_StaticField f, boolean v);
+        public abstract void putstatic_B(jq_StaticField f, byte v);
+        public abstract void putstatic_C(jq_StaticField f, char v);
+        public abstract void putstatic_S(jq_StaticField f, short v);
         public abstract int getfield_I(Object o, jq_InstanceField f);
         public abstract long getfield_L(Object o, jq_InstanceField f);
         public abstract float getfield_F(Object o, jq_InstanceField f);
@@ -988,6 +996,22 @@ public abstract class Interpreter {
             super.visitAGETSTATIC(f);
             state.push_A(vm.getstatic_A(f));
         }
+        public void visitZGETSTATIC(jq_StaticField f) {
+            super.visitZGETSTATIC(f);
+            state.push_I(vm.getstatic_Z(f)?1:0);
+        }
+        public void visitBGETSTATIC(jq_StaticField f) {
+            super.visitBGETSTATIC(f);
+            state.push_I(vm.getstatic_B(f));
+        }
+        public void visitCGETSTATIC(jq_StaticField f) {
+            super.visitCGETSTATIC(f);
+            state.push_I(vm.getstatic_C(f));
+        }
+        public void visitSGETSTATIC(jq_StaticField f) {
+            super.visitSGETSTATIC(f);
+            state.push_I(vm.getstatic_S(f));
+        }
         public void visitIPUTSTATIC(jq_StaticField f) {
             super.visitIPUTSTATIC(f);
             vm.putstatic_I(f, state.pop_I());
@@ -1007,6 +1031,22 @@ public abstract class Interpreter {
         public void visitAPUTSTATIC(jq_StaticField f) {
             super.visitAPUTSTATIC(f);
             vm.putstatic_A(f, state.pop_A());
+        }
+        public void visitZPUTSTATIC(jq_StaticField f) {
+            super.visitZPUTSTATIC(f);
+            vm.putstatic_Z(f, state.pop_I()!=0);
+        }
+        public void visitBPUTSTATIC(jq_StaticField f) {
+            super.visitBPUTSTATIC(f);
+            vm.putstatic_B(f, (byte)state.pop_I());
+        }
+        public void visitCPUTSTATIC(jq_StaticField f) {
+            super.visitCPUTSTATIC(f);
+            vm.putstatic_C(f, (char)state.pop_I());
+        }
+        public void visitSPUTSTATIC(jq_StaticField f) {
+            super.visitSPUTSTATIC(f);
+            vm.putstatic_S(f, (short)state.pop_I());
         }
         public void visitIGETFIELD(jq_InstanceField f) {
             super.visitIGETFIELD(f);
