@@ -17,7 +17,7 @@ import Clazz.jq_Reference;
 import Clazz.jq_StaticField;
 import Clazz.jq_StaticMethod;
 import Main.jq;
-import Run_Time.SystemInterface;
+import Run_Time.DebugInterface;
 import UTF.Utf8;
 
 /*
@@ -139,7 +139,7 @@ public abstract class ClassLibInterface {
             String s = n.toString();
             if (s.charAt(0) == '_') {
                 n = Utf8.get(s.substring(1));
-                if (TRACE) SystemInterface.debugwriteln("special case for java.lang.Object: "+n+" "+d);
+                if (TRACE) DebugInterface.debugwriteln("special case for java.lang.Object: "+n+" "+d);
                 return new jq_NameAndDesc(n, d);
             }
         }

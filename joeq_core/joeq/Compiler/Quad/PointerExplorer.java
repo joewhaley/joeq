@@ -31,6 +31,7 @@ import Compil3r.Quad.MethodSummary.CallSite;
 import Compil3r.Quad.MethodSummary.PassedParameter;
 import Compil3r.Quad.SelectiveCloning.Specialization;
 import Main.jq;
+import Main.HostedVM;
 import Util.Default;
 import Util.FilterIterator;
 import Compil3r.Quad.AndersenInterface.*;
@@ -79,7 +80,7 @@ public class PointerExplorer {
             System.out.print("Enter the name of the class: ");
             mainClassName = in.readLine();
         }
-        jq_Type t = jq.parseType(mainClassName);
+        jq_Type t = jq_Type.parseType(mainClassName);
         if (!(t instanceof jq_Class)) {
             System.out.println("Error, "+mainClassName+" ("+t+") is not a valid class.");
             System.exit(-1);
@@ -592,7 +593,7 @@ uphere:
     }
     
     public static void main(String[] args) throws IOException {
-        jq.initializeForHostJVMExecution();
+        HostedVM.initialize();
         
         int index = 0; int index0 = -1;
         while (index != index0 && index < args.length) {

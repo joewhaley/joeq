@@ -10,13 +10,12 @@ import java.util.Iterator;
 import java.util.List;
 
 import Allocator.CodeAllocator;
-import Assembler.x86.DirectBindCall;
 import Bootstrap.PrimordialClassLoader;
 import Main.jq;
 import Memory.CodeAddress;
 import Memory.StackAddress;
 import Run_Time.ExceptionDeliverer;
-import Run_Time.SystemInterface;
+import Run_Time.DebugInterface;
 
 /**
  * @author  John Whaley
@@ -67,17 +66,17 @@ public class jq_CompiledCode implements Comparable {
     public CodeAddress findCatchBlock(CodeAddress ip, jq_Class extype) {
         int offset = ip.difference(start);
         if (handlers == null) {
-            if (TRACE) SystemInterface.debugwriteln("no handlers in " + this);
+            if (TRACE) DebugInterface.debugwriteln("no handlers in " + this);
             return null;
         }
         for (int i = 0; i < handlers.length; ++i) {
             jq_TryCatch tc = handlers[i];
-            if (TRACE) SystemInterface.debugwriteln("checking handler: " + tc);
+            if (TRACE) DebugInterface.debugwriteln("checking handler: " + tc);
             if (tc.catches(offset, extype))
                 return (CodeAddress) start.offset(tc.getHandlerEntry());
-            if (TRACE) SystemInterface.debugwriteln("does not catch");
+            if (TRACE) DebugInterface.debugwriteln("does not catch");
         }
-        if (TRACE) SystemInterface.debugwriteln("no appropriate handler found in " + this);
+        if (TRACE) DebugInterface.debugwriteln("no appropriate handler found in " + this);
         return null;
     }
 
@@ -99,9 +98,9 @@ public class jq_CompiledCode implements Comparable {
     /** Rewrite the entrypoint to branch to the given compiled code. */
     public void redirect(jq_CompiledCode that) {
         CodeAddress newEntrypoint = that.getEntrypoint();
-        if (TRACE_REDIRECT) SystemInterface.debugwriteln("redirecting " + this + " to point to " + that);
+        if (TRACE_REDIRECT) DebugInterface.debugwriteln("redirecting " + this + " to point to " + that);
         if (entrypoint.difference(start.offset(5)) >= 0) {
-            if (TRACE_REDIRECT) SystemInterface.debugwriteln("redirecting via trampoline");
+            if (TRACE_REDIRECT) DebugInterface.debugwriteln("redirecting via trampoline");
             // both should start with "push EBP"
             jq.Assert(entrypoint.peek1() == newEntrypoint.peek1());
             // put target address (just after push EBP)
@@ -111,7 +110,7 @@ public class jq_CompiledCode implements Comparable {
             // put backward branch to jump instruction
             entrypoint.offset(1).poke2((short) 0xF8EB); // JMP
         } else {
-            if (TRACE_REDIRECT) SystemInterface.debugwriteln("redirecting by rewriting targets");
+            if (TRACE_REDIRECT) DebugInterface.debugwriteln("redirecting by rewriting targets");
             Iterator it = CodeAllocator.getCompiledMethods();
             while (it.hasNext()) {
                 jq_CompiledCode cc = (jq_CompiledCode) it.next();
@@ -128,28 +127,26 @@ public class jq_CompiledCode implements Comparable {
         return address.difference(start) >= 0 && address.difference(start.offset(length)) < 0;
     }
 
+    static interface Delegate {
+	void patchDirectBindCalls(Iterator i);
+	void patchDirectBindCalls(Iterator i, jq_Method method, jq_CompiledCode cc);
+    }
+    
+    private static Delegate _delegate;
+
     public void patchDirectBindCalls() {
         jq.Assert(jq.RunningNative);
-        if (code_reloc != null) {
-            Iterator i = code_reloc.iterator();
-            while (i.hasNext()) {
-                DirectBindCall r = (DirectBindCall) i.next();
-                r.patch();
-            }
-        }
+	if (code_reloc != null) {
+	    Iterator i = code_reloc.iterator();
+	    _delegate.patchDirectBindCalls(i);
+	}
     }
 
     public void patchDirectBindCalls(jq_Method method, jq_CompiledCode cc) {
         jq.Assert(jq.RunningNative);
         if (code_reloc != null) {
             Iterator i = code_reloc.iterator();
-            while (i.hasNext()) {
-                DirectBindCall r = (DirectBindCall) i.next();
-                if (r.getTarget() == method) {
-                    if (TRACE_REDIRECT) SystemInterface.debugwriteln("patching direct bind call in " + this + " at " + r.getSource().stringRep() + " to refer to " + cc);
-                    r.patchTo(cc);
-                }
-            }
+	    _delegate.patchDirectBindCalls(i, method, cc);
         }
     }
 
@@ -202,5 +199,33 @@ public class jq_CompiledCode implements Comparable {
     static {
         jq_Class k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LClazz/jq_CompiledCode;");
         _entrypoint = k.getOrCreateInstanceField("entrypoint", "LMemory/CodeAddress;");
+	/* Set up delegates. */
+	_delegate = null;
+	boolean nullVM = System.getProperty("joeq.nullvm") != null;
+	if (!nullVM) {
+	    _delegate = attemptDelegate("Clazz.Delegates$CompiledCode");
+	}
+	if (_delegate == null) {
+	    _delegate = attemptDelegate("Clazz.NullDelegates$CompiledCode");
+	}
+	if (_delegate == null) {
+	    System.err.println("FATAL: Cannot load compiled code delegate");
+	    System.exit(-1);
+	}
+    }
+
+    private static Delegate attemptDelegate(String s) {
+	String type = "compiled code delegate";
+        try {
+            Class c = Class.forName(s);
+            return (Delegate)c.newInstance();
+        } catch (java.lang.ClassNotFoundException x) {
+            System.err.println("Cannot find "+type+" "+s+": "+x);
+        } catch (java.lang.InstantiationException x) {
+            System.err.println("Cannot instantiate "+type+" "+s+": "+x);
+        } catch (java.lang.IllegalAccessException x) {
+            System.err.println("Cannot access "+type+" "+s+": "+x);
+        }
+	return null;
     }
 }

@@ -64,7 +64,7 @@ public abstract class Bootstrapper {
         
         String imageName = "jq.obj";
         //int startAddress = 0x00890000;
-        String rootMethodClassName = "Main.jq";
+        String rootMethodClassName = "Main.JoeqVM";
         String rootMethodName = "boot";
         String classList = null;
         String addToClassList = null;

@@ -60,6 +60,31 @@ public abstract class jq_Type implements AndersenType {
         return class_object;
     }
 
+    //// useful functions for parsing class and method names
+    public static jq_Type parseType(String s) {
+        if (s.length() == 1) {
+            jq_Primitive t = (jq_Primitive) PrimordialClassLoader.loader.getBSType(s);
+            if (t != null) return t;
+            s = "L" + s + ";";
+        } else {
+            s = s.replace('.', '/');
+            int arrayDepth = 0;
+            while (s.endsWith("[]")) {
+                ++arrayDepth;
+                s = s.substring(0, s.length() - 2);
+            }
+            if (!s.startsWith("[") && !s.endsWith(";"))
+                s = "L" + s + ";";
+            while (--arrayDepth >= 0)
+                s = "[" + s;
+        }
+        return (jq_Reference) PrimordialClassLoader.loader.getOrCreateBSType(s);
+    }
+
+    public boolean isBootType() {
+        return jq.boot_types.contains(this);
+    }
+
     public abstract boolean isLoaded();
     public abstract boolean isVerified();
     public abstract boolean isPrepared();

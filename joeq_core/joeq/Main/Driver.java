@@ -41,7 +41,7 @@ public abstract class Driver {
 
     public static void main(String[] args) {
         // initialize jq
-        jq.initializeForHostJVMExecution();
+        HostedVM.initialize();
 
         try {
             interpreterClass = Class.forName("Interpreter.QuadInterpreter", false, Driver.class.getClassLoader());
