@@ -30,9 +30,7 @@ import Clazz.jq_Method;
 import Clazz.jq_Reference;
 import Clazz.jq_StaticField;
 import Clazz.jq_Type;
-import Compil3r.Quad.AndersenInterface.AndersenField;
-import Compil3r.Quad.AndersenInterface.AndersenMethod;
-import Compil3r.Quad.AndersenInterface.AndersenReference;
+import Compil3r.Analysis.IPA.*;
 import Compil3r.Quad.BytecodeToQuad.jq_ReturnAddressType;
 import Compil3r.Quad.Operand.AConstOperand;
 import Compil3r.Quad.Operand.PConstOperand;
@@ -406,52 +404,52 @@ public class MethodSummary {
         
         /** Abstractly perform a heap store operation of the given source node on
          *  the given base node and field. */
-        protected void heapStore(Node base, Node src, jq_Field f, Quad q) {
-            base.addEdge(f, src, q);
+        protected void heapStore(Node base, Node src, jq_Field f) {
+            base.addEdge(f, src);
         }
         /** Abstractly perform a heap store operation of the given source nodes on
          *  the given base node and field. */
-        protected void heapStore(Node base, Set src, jq_Field f, Quad q) {
-            base.addEdges(f, NodeSet.FACTORY.makeSet(src), q);
+        protected void heapStore(Node base, Set src, jq_Field f) {
+            base.addEdges(f, NodeSet.FACTORY.makeSet(src));
         }
         /** Abstractly perform a heap store operation of the given source node on
          *  the nodes in the given register in the current state and the given field. */
-        protected void heapStore(Register base_r, Node src_n, jq_Field f, Quad q) {
+        protected void heapStore(Register base_r, Node src_n, jq_Field f) {
             Object base = getRegister(base_r);
             if (base instanceof Set) {
                 for (Iterator i = ((Set)base).iterator(); i.hasNext(); ) {
-                    heapStore((Node)i.next(), src_n, f, q);
+                    heapStore((Node)i.next(), src_n, f);
                 }
             } else {
-                heapStore((Node)base, src_n, f, q);
+                heapStore((Node)base, src_n, f);
             }
         }
         /** Abstractly perform a heap store operation of the nodes in the given register
          *  on the given base node and field. */
-        protected void heapStore(Node base, Register src_r, jq_Field f, Quad q) {
+        protected void heapStore(Node base, Register src_r, jq_Field f) {
             Object src = getRegister(src_r);
             if (src instanceof Node) {
-                heapStore(base, (Node)src, f, q);
+                heapStore(base, (Node)src, f);
             } else {
-                heapStore(base, (Set)src, f, q);
+                heapStore(base, (Set)src, f);
             }
         }
         /** Abstractly perform a heap store operation of the nodes in the given register
          *  on the nodes in the given register in the current state and the given field. */
-        protected void heapStore(Register base_r, Register src_r, jq_Field f, Quad q) {
+        protected void heapStore(Register base_r, Register src_r, jq_Field f) {
             Object base = getRegister(base_r);
             Object src = getRegister(src_r);
             if (src instanceof Node) {
-                heapStore(base_r, (Node)src, f, q);
+                heapStore(base_r, (Node)src, f);
                 return;
             }
             Set src_h = (Set)src;
             if (base instanceof Set) {
                 for (Iterator i = ((Set)base).iterator(); i.hasNext(); ) {
-                    heapStore((Node)i.next(), src_h, f, q);
+                    heapStore((Node)i.next(), src_h, f);
                 }
             } else {
-                heapStore((Node)base, src_h, f, q);
+                heapStore((Node)base, src_h, f);
             }
         }
 
@@ -501,17 +499,17 @@ public class MethodSummary {
                     Register base_r = ((RegisterOperand)base).getRegister();
                     if (val instanceof RegisterOperand) {
                         Register src_r = ((RegisterOperand)val).getRegister();
-                        heapStore(base_r, src_r, null, obj);
+                        heapStore(base_r, src_r, null);
                     } else if (val instanceof AConstOperand) {
                         jq_Reference type = ((AConstOperand)val).getType();
                         Object key = type;
                         ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(key);
                         if (n == null) quadsToNodes.put(key, n = new ConcreteTypeNode(type, obj));
-                        heapStore(base_r, n, null, obj);
+                        heapStore(base_r, n, null);
                     } else {
                         jq_Reference type = ((PConstOperand)val).getType();
                         UnknownTypeNode n = UnknownTypeNode.get(type);
-                        heapStore(base_r, n, null, obj);
+                        heapStore(base_r, n, null);
                     }
                 } else {
                     // base is not a register?!
@@ -701,17 +699,17 @@ public class MethodSummary {
                     Register base_r = ((RegisterOperand)base).getRegister();
                     if (val instanceof RegisterOperand) {
                         Register src_r = ((RegisterOperand)val).getRegister();
-                        heapStore(base_r, src_r, f, obj);
+                        heapStore(base_r, src_r, f);
                     } else if (val instanceof AConstOperand) {
                         jq_Reference type = ((AConstOperand)val).getType();
                         Object key = type;
                         ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(key);
                         if (n == null) quadsToNodes.put(key, n = new ConcreteTypeNode(type, obj));
-                        heapStore(base_r, n, f, obj);
+                        heapStore(base_r, n, f);
                     } else {
                         jq_Reference type = ((PConstOperand)val).getType();
                         UnknownTypeNode n = UnknownTypeNode.get(type);
-                        heapStore(base_r, n, f, obj);
+                        heapStore(base_r, n, f);
                     }
                 } else {
                     // base is not a register?!
@@ -730,17 +728,17 @@ public class MethodSummary {
                 if (IGNORE_STATIC_FIELDS) f = null;
                 if (val instanceof RegisterOperand) {
                     Register src_r = ((RegisterOperand)val).getRegister();
-                    heapStore(my_global, src_r, f, obj);
+                    heapStore(my_global, src_r, f);
                 } else if (val instanceof AConstOperand) {
                     jq_Reference type = ((AConstOperand)val).getType();
                     Object key = type;
                     ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(key);
                     if (n == null) quadsToNodes.put(key, n = new ConcreteTypeNode(type, obj));
-                    heapStore(my_global, n, f, obj);
+                    heapStore(my_global, n, f);
                 } else {
                     jq_Reference type = ((PConstOperand)val).getType();
                     UnknownTypeNode n = UnknownTypeNode.get(type);
-                    heapStore(my_global, n, f, obj);
+                    heapStore(my_global, n, f);
                 }
             }
         }
@@ -776,15 +774,15 @@ public class MethodSummary {
             }
         }
         
-        static void setAsEscapes(Object o) {
-            if (o instanceof Set) {
-                for (Iterator i=((Set)o).iterator(); i.hasNext(); ) {
-                    ((Node)i.next()).escapes = true;
-                }
-            } else {
-                ((Node)o).escapes = true;
-            }
-        }
+        //static void setAsEscapes(Object o) {
+            //if (o instanceof Set) {
+            //    for (Iterator i=((Set)o).iterator(); i.hasNext(); ) {
+            //        ((Node)i.next()).escapes = true;
+            //    }
+            //} else {
+            //    ((Node)o).escapes = true;
+            //}
+        //}
         
         public void visitSpecial(Quad obj) {
             if (obj.getOperator() == Special.GET_THREAD_BLOCK.INSTANCE) {
@@ -793,12 +791,12 @@ public class MethodSummary {
                 jq_Reference type = Scheduler.jq_Thread._class;
                 ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(obj);
                 if (n == null) quadsToNodes.put(obj, n = new ConcreteTypeNode(type, obj));
-                n.setEscapes();
+                //n.setEscapes();
                 setRegister(dest_r, n);
             } else if (obj.getOperator() == Special.SET_THREAD_BLOCK.INSTANCE) {
                 if (TRACE_INTRA) out.println("Visiting: "+obj);
                 Register src_r = ((RegisterOperand)Special.getOp2(obj)).getRegister();
-                setAsEscapes(getRegister(src_r));
+                //setAsEscapes(getRegister(src_r));
                 /*
             } else if (obj.getOperator() == Special.GET_TYPE_OF.INSTANCE) {
                 if (TRACE_INTRA) out.println("Visiting: "+obj);
@@ -912,15 +910,15 @@ public class MethodSummary {
     public static class Edge {
         // Node source;
         Node dest;
-        AndersenField field;
-        public Edge(Node source, Node dest, AndersenField field) {
+        jq_Field field;
+        public Edge(Node source, Node dest, jq_Field field) {
             //this.source = source;
             this.dest = dest; this.field = field;
         }
         
         private static Edge INSTANCE = new Edge(null, null, null);
         
-        private static Edge get(Node source, Node dest, AndersenField field) {
+        private static Edge get(Node source, Node dest, jq_Field field) {
             //INSTANCE.source = source;
             INSTANCE.dest = dest; INSTANCE.field = field;
             return INSTANCE;
@@ -959,13 +957,13 @@ public class MethodSummary {
         /** Unique id number. */
         protected final int id;
         /** Whether or not this node escapes into some unanalyzable code. */
-        private boolean escapes;
+        //private boolean escapes;
         
         public static boolean TRACK_REASONS = false;
         
         /** Maps added edges to the quads that they come from.
             Only used if TRACK_REASONS is true. */
-        HashMap edgesToReasons;
+        //HashMap edgesToReasons;
         
         private static int current_id = 0;
         
@@ -976,8 +974,8 @@ public class MethodSummary {
             this.addedEdges = that.addedEdges;
             this.accessPathEdges = that.accessPathEdges;
             this.id = ++current_id;
-            this.escapes = that.escapes;
-            if (TRACK_REASONS) this.edgesToReasons = that.edgesToReasons;
+            //this.escapes = that.escapes;
+            //if (TRACK_REASONS) this.edgesToReasons = that.edgesToReasons;
         }
         
         public int hashCode() {
@@ -1025,7 +1023,9 @@ public class MethodSummary {
                     if (o == null) continue;
                     if (o instanceof Node) {
                         Node that = (Node)o;
-                        Object q = (TRACK_REASONS && edgesToReasons != null) ? edgesToReasons.get(Edge.get(that, this, f)) : null;
+                        //Object q = null;
+                        //if (TRACK_REASONS && edgesToReasons != null)
+                        //    q = edgesToReasons.get(Edge.get(that, this, f));
                         if (removeSelf)
                             that._removeEdge(f, this);
                         if (that == this) {
@@ -1033,11 +1033,11 @@ public class MethodSummary {
                             if (TRACE_INTRA) out.println("Adding self-cycles on field "+f);
                             for (Iterator j=set.iterator(); j.hasNext(); ) {
                                 Node k = (Node)j.next();
-                                k.addEdge(f, k, q);
+                                k.addEdge(f, k);
                             }
                         } else {
                             for (Iterator j=set.iterator(); j.hasNext(); ) {
-                                that.addEdge(f, (Node)j.next(), q);
+                                that.addEdge(f, (Node)j.next());
                             }
                         }
                     } else {
@@ -1047,17 +1047,19 @@ public class MethodSummary {
                                 k.remove();
                                 that._removeEdge(f, this);
                             }
-                            Object q = (TRACK_REASONS && edgesToReasons != null) ? edgesToReasons.get(Edge.get(that, this, f)) : null;
+                            //Object q = null;
+                            //if (TRACK_REASONS && edgesToReasons != null)
+                            //    q = edgesToReasons.get(Edge.get(that, this, f));
                             if (that == this) {
                                 // add self-cycles on f to all mapped nodes.
                                 if (TRACE_INTRA) out.println("Adding self-cycles on field "+f);
                                 for (Iterator j=set.iterator(); j.hasNext(); ) {
                                     Node k2 = (Node)j.next();
-                                    k2.addEdge(f, k2, q);
+                                    k2.addEdge(f, k2);
                                 }
                             } else {
                                 for (Iterator j=set.iterator(); j.hasNext(); ) {
-                                    that.addEdge(f, (Node)j.next(), q);
+                                    that.addEdge(f, (Node)j.next());
                                 }
                             }
                         }
@@ -1076,7 +1078,7 @@ public class MethodSummary {
                     if (o instanceof Node) {
                         Node that = (Node)o;
                         if (that == this) continue; // cyclic edges handled above.
-                        Object q = (TRACK_REASONS && edgesToReasons != null) ? edgesToReasons.get(Edge.get(this, that, f)) : null;
+                        //Object q = (TRACK_REASONS && edgesToReasons != null) ? edgesToReasons.get(Edge.get(this, that, f)) : null;
                         if (removeSelf) {
                             boolean b = that.removePredecessor(f, this);
                             if (TRACE_INTRA) out.println("Removed "+this+" from predecessor set of "+that+"."+f);
@@ -1084,7 +1086,7 @@ public class MethodSummary {
                         }
                         for (Iterator j=set.iterator(); j.hasNext(); ) {
                             Node node2 = (Node)j.next();
-                            node2.addEdge(f, that, q);
+                            node2.addEdge(f, that);
                         }
                     } else {
                         for (Iterator k=((Set)o).iterator(); k.hasNext(); ) {
@@ -1092,7 +1094,7 @@ public class MethodSummary {
                             if (removeSelf)
                                 k.remove();
                             if (that == this) continue; // cyclic edges handled above.
-                            Object q = (TRACK_REASONS && edgesToReasons != null) ? edgesToReasons.get(Edge.get(this, that, f)) : null;
+                            //Object q = (TRACK_REASONS && edgesToReasons != null) ? edgesToReasons.get(Edge.get(this, that, f)) : null;
                             if (removeSelf) {
                                 boolean b = that.removePredecessor(f, this);
                                 if (TRACE_INTRA) out.println("Removed "+this+" from predecessor set of "+that+"."+f);
@@ -1100,7 +1102,7 @@ public class MethodSummary {
                             }
                             for (Iterator j=set.iterator(); j.hasNext(); ) {
                                 Node node2 = (Node)j.next();
-                                node2.addEdge(f, that, q);
+                                node2.addEdge(f, that);
                             }
                         }
                     }
@@ -1193,19 +1195,19 @@ public class MethodSummary {
                     Object o = e.getValue();
                     if (o == GlobalNode.GLOBAL) {
                         // TODO: propagate reason.
-                        GlobalNode.GLOBAL.addEdge(f, n, null);
+                        GlobalNode.GLOBAL.addEdge(f, n);
                     } else if (o instanceof UnknownTypeNode) {
                         // TODO: propagate reason.
-                        ((UnknownTypeNode)o).addEdge(f, n, null);
+                        ((UnknownTypeNode)o).addEdge(f, n);
                     } else if (o instanceof Set) {
                         for (Iterator j=((Set)o).iterator(); j.hasNext(); ) {
                             Object r = j.next();
                             if (r == GlobalNode.GLOBAL) {
                                 // TODO: propagate reason.
-                                GlobalNode.GLOBAL.addEdge(f, n, null);
+                                GlobalNode.GLOBAL.addEdge(f, n);
                             } else if (r instanceof UnknownTypeNode) {
                                 // TODO: propagate reason.
-                                ((UnknownTypeNode)r).addEdge(f, n, null);
+                                ((UnknownTypeNode)r).addEdge(f, n);
                             }
                         }
                     }
@@ -1218,13 +1220,13 @@ public class MethodSummary {
                     Object o = e.getValue();
                     if (o instanceof UnknownTypeNode) {
                         // TODO: propagate reason.
-                        n.addEdge(f, (UnknownTypeNode)o, null);
+                        n.addEdge(f, (UnknownTypeNode)o);
                     } else if (o instanceof Set) {
                         for (Iterator j=((Set)o).iterator(); j.hasNext(); ) {
                             Object r = j.next();
                             if (r instanceof UnknownTypeNode) {
                                 // TODO: propagate reason.
-                                n.addEdge(f, (UnknownTypeNode)r, null);
+                                n.addEdge(f, (UnknownTypeNode)r);
                             }
                         }
                     }
@@ -1287,7 +1289,7 @@ public class MethodSummary {
         }
         
         /** Return the declared type of this node. */
-        public abstract AndersenReference getDeclaredType();
+        public abstract jq_Reference getDeclaredType();
         
         /** Return true if this node equals another node.
          *  Two nodes are equal if they have all the same edges and equivalent passed
@@ -1321,7 +1323,7 @@ public class MethodSummary {
         /** Return a shallow copy of this node. */
         public abstract Node copy();
         
-        public boolean hasPredecessor(AndersenField f, Node n) {
+        public boolean hasPredecessor(jq_Field f, Node n) {
             Object o = this.predecessors.get(f);
             if (o instanceof Node) {
                 if (n != o) {
@@ -1343,7 +1345,7 @@ public class MethodSummary {
 
         /** Remove the given predecessor node on the given field from the predecessor set.
          *  Returns true if that predecessor existed, false otherwise. */
-        public boolean removePredecessor(AndersenField m, Node n) {
+        public boolean removePredecessor(jq_Field m, Node n) {
             if (predecessors == null) return false;
             Object o = predecessors.get(m);
             if (o instanceof Set) return ((Set)o).remove(n);
@@ -1352,7 +1354,7 @@ public class MethodSummary {
         }
         /** Add the given predecessor node on the given field to the predecessor set.
          *  Returns true if that predecessor didn't already exist, false otherwise. */
-        public boolean addPredecessor(AndersenField m, Node n) {
+        public boolean addPredecessor(jq_Field m, Node n) {
             if (predecessors == null) predecessors = new LinkedHashMap();
             Object o = predecessors.get(m);
             if (o == null) {
@@ -1387,7 +1389,7 @@ public class MethodSummary {
             PassedParameter cm = new PassedParameter(m, paramNum);
             return passedParameters.add(cm);
         }
-        private boolean _removeEdge(AndersenField m, Node n) {
+        private boolean _removeEdge(jq_Field m, Node n) {
             Object o = addedEdges.get(m);
             if (o instanceof Set) return ((Set)o).remove(n);
             else if (o == n) { addedEdges.remove(m); return true; }
@@ -1396,12 +1398,12 @@ public class MethodSummary {
         /** Remove the given successor node on the given field from the inside edge set.
          *  Also removes the predecessor link from the successor node to this node.
          *  Returns true if that edge existed, false otherwise. */
-        public boolean removeEdge(AndersenField m, Node n) {
+        public boolean removeEdge(jq_Field m, Node n) {
             if (addedEdges == null) return false;
             n.removePredecessor(m, this);
             return _removeEdge(m, n);
         }
-        public boolean hasEdge(AndersenField m, Node n) {
+        public boolean hasEdge(jq_Field m, Node n) {
             if (addedEdges == null) return false;
             Object o = addedEdges.get(m);
             if (o == n) return true;
@@ -1413,12 +1415,12 @@ public class MethodSummary {
         /** Add the given successor node on the given field to the inside edge set.
          *  Also adds a predecessor link from the successor node to this node.
          *  Returns true if that edge didn't already exist, false otherwise. */
-        public boolean addEdge(AndersenField m, Node n, Object q) {
-            if (TRACK_REASONS) {
-                if (edgesToReasons == null) edgesToReasons = new HashMap();
+        public boolean addEdge(jq_Field m, Node n) {
+            //if (TRACK_REASONS) {
+            //    if (edgesToReasons == null) edgesToReasons = new HashMap();
                 //if (!edgesToReasons.containsKey(Edge.get(this, n, m)))
-                    edgesToReasons.put(new Edge(this, n, m), q);
-            }
+            //        edgesToReasons.put(new Edge(this, n, m), q);
+            //}
             n.addPredecessor(m, this);
             if (addedEdges == null) addedEdges = new LinkedHashMap();
             Object o = addedEdges.get(m);
@@ -1440,16 +1442,16 @@ public class MethodSummary {
          *  The given set is consumed.
          *  Also adds predecessor links from the successor nodes to this node.
          *  Returns true if the inside edge set changed, false otherwise. */
-        public boolean addEdges(AndersenField m, Set s, Object q) {
-            if (TRACK_REASONS) {
-                if (edgesToReasons == null) edgesToReasons = new HashMap();
-            }
+        public boolean addEdges(jq_Field m, Set s) {
+            //if (TRACK_REASONS) {
+            //    if (edgesToReasons == null) edgesToReasons = new HashMap();
+            //}
             for (Iterator i=s.iterator(); i.hasNext(); ) {
                 Node n = (Node)i.next();
-                if (TRACK_REASONS) {
+                //if (TRACK_REASONS) {
                     //if (!edgesToReasons.containsKey(Edge.get(this, n, m)))
-                        edgesToReasons.put(new Edge(this, n, m), q);
-                }
+                //        edgesToReasons.put(new Edge(this, n, m), q);
+                //}
                 n.addPredecessor(m, this);
             }
             if (addedEdges == null) addedEdges = new LinkedHashMap();
@@ -1467,16 +1469,17 @@ public class MethodSummary {
          *  of all of the given set of nodes.
          *  Also adds predecessor links from the successor node to the given nodes.
          *  Returns true if anything was changed, false otherwise. */
-        public static boolean addEdges(Set s, AndersenField f, Node n, Quad q) {
+        public static boolean addEdges(Set s, jq_Field f, Node n) {
             boolean b = false;
             for (Iterator i=s.iterator(); i.hasNext(); ) {
                 Node a = (Node)i.next();
-                if (a.addEdge(f, n, q)) b = true;
+                if (a.addEdge(f, n))
+                    b = true;
             }
             return b;
         }
         
-        private boolean _removeAccessPathEdge(AndersenField m, FieldNode n) {
+        private boolean _removeAccessPathEdge(jq_Field m, FieldNode n) {
             Object o = accessPathEdges.get(m);
             if (o instanceof Set) return ((Set)o).remove(n);
             else if (o == n) { accessPathEdges.remove(m); return true; }
@@ -1485,12 +1488,12 @@ public class MethodSummary {
         /** Remove the given successor node on the given field from the outside edge set.
          *  Also removes the predecessor link from the successor node to this node.
          *  Returns true if that edge existed, false otherwise. */
-        public boolean removeAccessPathEdge(AndersenField m, FieldNode n) {
+        public boolean removeAccessPathEdge(jq_Field m, FieldNode n) {
             if (accessPathEdges == null) return false;
             if (n.field_predecessors != null) n.field_predecessors.remove(this);
             return _removeAccessPathEdge(m, n);
         }
-        public boolean hasAccessPathEdge(AndersenField m, Node n) {
+        public boolean hasAccessPathEdge(jq_Field m, Node n) {
             if (accessPathEdges == null) return false;
             Object o = accessPathEdges.get(m);
             if (o == n) return true;
@@ -1502,7 +1505,7 @@ public class MethodSummary {
         /** Add the given successor node on the given field to the outside edge set.
          *  Also adds a predecessor link from the successor node to this node.
          *  Returns true if that edge didn't already exist, false otherwise. */
-        public boolean addAccessPathEdge(AndersenField m, FieldNode n) {
+        public boolean addAccessPathEdge(jq_Field m, FieldNode n) {
             if (n.field_predecessors == null) n.field_predecessors = NodeSet.FACTORY.makeSet();
             n.field_predecessors.add(this);
             if (accessPathEdges == null) accessPathEdges = new LinkedHashMap();
@@ -1539,7 +1542,7 @@ public class MethodSummary {
         
         /** Add the nodes that are targets of inside edges on the given field
          *  to the given result set. */
-        public final void getEdges(AndersenField m, Set result) {
+        public final void getEdges(jq_Field m, Set result) {
             if (addedEdges != null) {
                 Object o = addedEdges.get(m);
                 if (o != null) {
@@ -1550,39 +1553,39 @@ public class MethodSummary {
                     }
                 }
             }
-            if (this.escapes)
-                getEdges_escaped(m, result);
+            //if (this.escapes)
+            //    getEdges_escaped(m, result);
         }
         
-        public final Set getEdges(AndersenField m) {
+        public final Set getEdges(jq_Field m) {
             if (addedEdges != null) {
                 Object o = addedEdges.get(m);
                 if (o != null) {
                     if (o instanceof Set) {
                         Set s = (Set)o;
-                        if (this.escapes)
-                            getEdges_escaped(m, s);
+                        //if (this.escapes)
+                        //    getEdges_escaped(m, s);
                         return s;
                     } else {
-                        if (this.escapes) {
-                            Set s = NodeSet.FACTORY.makeSet(2);
-                            s.add(o);
-                            getEdges_escaped(m, s);
-                            return s;
-                        }
+                        //if (this.escapes) {
+                        //    Set s = NodeSet.FACTORY.makeSet(2);
+                        //    s.add(o);
+                        //    getEdges_escaped(m, s);
+                        //    return s;
+                        //}
                         return Collections.singleton(o);
                     }
                 }
             }
-            if (this.escapes) {
-                Set s = NodeSet.FACTORY.makeSet(1);
-                getEdges_escaped(m, s);
-                return s;
-            }
+            //if (this.escapes) {
+            //    Set s = NodeSet.FACTORY.makeSet(1);
+            //    getEdges_escaped(m, s);
+            //    return s;
+            //}
             return Collections.EMPTY_SET;
         }
         
-        public final Set getNonEscapingEdges(AndersenField m) {
+        public final Set getNonEscapingEdges(jq_Field m) {
             if (addedEdges == null) return Collections.EMPTY_SET;
             Object o = addedEdges.get(m);
             if (o == null) return Collections.EMPTY_SET;
@@ -1595,9 +1598,9 @@ public class MethodSummary {
         
         /** Add the nodes that are targets of inside edges on the given field
          *  to the given result set. */
-        public void getEdges_escaped(AndersenField m, Set result) {
+        public void getEdges_escaped(jq_Field m, Set result) {
             if (TRACE_INTER) out.println("Getting escaped edges "+this+"."+m);
-            AndersenReference type = this.getDeclaredType();
+            jq_Reference type = this.getDeclaredType();
             if (m == null) {
                 if (type != null && (type.isArrayType() || type == PrimordialClassLoader.getJavaLangObject()))
                     result.add(UnknownTypeNode.get(PrimordialClassLoader.getJavaLangObject()));
@@ -1605,10 +1608,10 @@ public class MethodSummary {
             }
             if (type != null) {
                 type.prepare();
-                m.and_getDeclaringClass().prepare();
-                if (Run_Time.TypeCheck.isAssignable((jq_Type)type, (jq_Type)m.and_getDeclaringClass()) ||
-                    Run_Time.TypeCheck.isAssignable((jq_Type)m.and_getDeclaringClass(), (jq_Type)type)) {
-                    jq_Reference r = (jq_Reference)m.and_getType();
+                m.getDeclaringClass().prepare();
+                if (Run_Time.TypeCheck.isAssignable((jq_Type)type, (jq_Type)m.getDeclaringClass()) ||
+                    Run_Time.TypeCheck.isAssignable((jq_Type)m.getDeclaringClass(), (jq_Type)type)) {
+                    jq_Reference r = (jq_Reference)m.getType();
                     result.add(UnknownTypeNode.get(r));
                 } else {
                     if (TRACE_INTER) out.println("Object of type "+type+" cannot possibly have field "+m);
@@ -1666,20 +1669,23 @@ public class MethodSummary {
             return accessPathEdges.keySet();
         }
         
-        public Quad getSourceQuad(AndersenField f, Node n) {
+        public Quad getSourceQuad(jq_Field f, Node n) {
             if (false) {
-                if (edgesToReasons == null) return null;
-                return (Quad)edgesToReasons.get(Edge.get(this, n, f));
+                //if (edgesToReasons == null) return null;
+                //return (Quad)edgesToReasons.get(Edge.get(this, n, f));
             }
             return null;
         }
         
-        public void setEscapes() { this.escapes = true; }
-        public boolean getEscapes() { return this.escapes; }
+        //public void setEscapes() { this.escapes = true; }
+        //public boolean getEscapes() { return this.escapes; }
         
         /** Return a string representation of the node in short form. */
         public abstract String toString_short();
-        public String toString() { return toString_short() + (this.escapes?"*":""); }
+        public String toString() {
+            //return toString_short() + (this.escapes?"*":"");
+            return toString_short();
+        }
         /** Return a string representation of the node in long form.
          *  Includes inside and outside edges and passed parameters. */
         public String toString_long() {
@@ -1731,10 +1737,10 @@ public class MethodSummary {
      *  from different quads are not equal.
      */
     public static final class ConcreteTypeNode extends Node {
-        final AndersenReference type; final Quad q;
+        final jq_Reference type; final Quad q;
         
         static final HashMap FACTORY = new HashMap();
-        public static ConcreteTypeNode get(AndersenReference type) {
+        public static ConcreteTypeNode get(jq_Reference type) {
             ConcreteTypeNode n = (ConcreteTypeNode)FACTORY.get(type);
             if (n == null) {
                 FACTORY.put(type, n = new ConcreteTypeNode(type));
@@ -1744,8 +1750,8 @@ public class MethodSummary {
         
         public final Node copy() { return new ConcreteTypeNode(this); }
         
-        public ConcreteTypeNode(AndersenReference type) { this.type = type; this.q = null; }
-        public ConcreteTypeNode(AndersenReference type, Quad q) { this.type = type; this.q = q; }
+        public ConcreteTypeNode(jq_Reference type) { this.type = type; this.q = null; }
+        public ConcreteTypeNode(jq_Reference type, Quad q) { this.type = type; this.q = q; }
 
         private ConcreteTypeNode(ConcreteTypeNode that) {
             super(that);
@@ -1754,7 +1760,7 @@ public class MethodSummary {
         
         public Quad getQuad() { return q; }
         
-        public AndersenReference getDeclaredType() { return type; }
+        public jq_Reference getDeclaredType() { return type; }
         
         public String toString_long() { return Integer.toHexString(this.hashCode())+": "+toString_short()+super.toString_long(); }
         public String toString_short() { return "Concrete: "+type+" q: "+(q==null?-1:q.getID()); }
@@ -1915,7 +1921,7 @@ public class MethodSummary {
                         for (int i=0; i<ifs.length; ++i) {
                             if (ifs[i].getType().isPrimitiveType()) continue;
                             Object p = Reflection.getfield_A(o, ifs[i]);
-                            n.addEdge(ifs[i], get(p), null);
+                            n.addEdge(ifs[i], get(p));
                         }
                     } else {
                         Assert._assert(type.isArrayType());
@@ -1923,7 +1929,7 @@ public class MethodSummary {
                         if (a.getElementType().isReferenceType()) {
                             Object[] oa = (Object[]) o;
                             for (int i=0; i<oa.length; ++i) {
-                                n.addEdge(null, get(oa[i]), null);
+                                n.addEdge(null, get(oa[i]));
                             }
                         }
                     }
@@ -1941,7 +1947,7 @@ public class MethodSummary {
             this.object = that.object;
         }
         
-        public AndersenReference getDeclaredType() {
+        public jq_Reference getDeclaredType() {
             if (object == null) return null;
             return jq_Reference.getTypeOf(object);
         }
@@ -2010,9 +2016,9 @@ public class MethodSummary {
         }
 
         /* (non-Javadoc)
-         * @see Compil3r.Quad.MethodSummary.Node#hasEdge(Compil3r.Quad.AndersenInterface.AndersenField, Compil3r.Quad.MethodSummary.Node)
+         * @see Compil3r.Quad.MethodSummary.Node#hasEdge(Compil3r.Quad.jq_Interface.jq_Field, Compil3r.Quad.MethodSummary.Node)
          */
-        public boolean hasEdge(AndersenField m, Node n) {
+        public boolean hasEdge(jq_Field m, Node n) {
             if (ADD_EDGES)
                 return super.hasEdge(m, n);
             if (object == null)
@@ -2051,9 +2057,9 @@ public class MethodSummary {
         }
 
         /* (non-Javadoc)
-         * @see Compil3r.Quad.MethodSummary.Node#removeEdge(Compil3r.Quad.AndersenInterface.AndersenField, Compil3r.Quad.MethodSummary.Node)
+         * @see Compil3r.Quad.MethodSummary.Node#removeEdge(Compil3r.Quad.jq_Interface.jq_Field, Compil3r.Quad.MethodSummary.Node)
          */
-        public boolean removeEdge(AndersenField m, Node n) {
+        public boolean removeEdge(jq_Field m, Node n) {
             Assert._assert(!(n instanceof ConcreteObjectNode));
             return super.removeEdge(m, n);
         }
@@ -2074,7 +2080,7 @@ public class MethodSummary {
         public static final boolean ADD_DUMMY_EDGES = false;
         
         static final HashMap FACTORY = new HashMap();
-        public static UnknownTypeNode get(AndersenReference type) {
+        public static UnknownTypeNode get(jq_Reference type) {
             UnknownTypeNode n = (UnknownTypeNode)FACTORY.get(type);
             if (n == null) {
                 FACTORY.put(type, n = new UnknownTypeNode(type));
@@ -2087,10 +2093,11 @@ public class MethodSummary {
             return FACTORY.values();
         }
         
-        final AndersenReference type;
+        final jq_Reference type;
         
-        private UnknownTypeNode(AndersenReference type) {
-            this.type = type; this.setEscapes();
+        private UnknownTypeNode(jq_Reference type) {
+            this.type = type;
+            //this.setEscapes();
         }
         
         private void addDummyEdges() {
@@ -2102,14 +2109,14 @@ public class MethodSummary {
                     jq_InstanceField f = fields[i];
                     if (f.getType() instanceof jq_Reference) {
                         UnknownTypeNode n = get((jq_Reference)f.getType());
-                        this.addEdge(f, n, null);
+                        this.addEdge(f, n);
                     }
                 }
             } else {
                 jq_Array array = (jq_Array)type;
                 if (array.getElementType() instanceof jq_Reference) {
                     UnknownTypeNode n = get((jq_Reference)array.getElementType());
-                    this.addEdge(null, n, null);
+                    this.addEdge(null, n);
                 }
             }
         }
@@ -2144,7 +2151,7 @@ public class MethodSummary {
             }
         }
         
-        public AndersenReference getDeclaredType() { return type; }
+        public jq_Reference getDeclaredType() { return type; }
         
         public final Node copy() { return this; }
         
@@ -2164,7 +2171,7 @@ public class MethodSummary {
         OutsideNode() {}
         OutsideNode(Node n) { super(n); }
         
-        public abstract AndersenReference getDeclaredType();
+        public abstract jq_Reference getDeclaredType();
         
         OutsideNode skip;
         boolean visited;
@@ -2181,7 +2188,7 @@ public class MethodSummary {
         private GlobalNode(GlobalNode that) {
             super(that);
         }
-        public AndersenReference getDeclaredType() { Assert.UNREACHABLE(); return null; }
+        public jq_Reference getDeclaredType() { Assert.UNREACHABLE(); return null; }
         public final Node copy() {
             Assert._assert(this != GLOBAL);
             return new GlobalNode(this);
@@ -2200,15 +2207,15 @@ public class MethodSummary {
             f = (jq_StaticField) c.getDeclaredMember("in", "Ljava/io/InputStream;");
             Assert._assert(f != null);
             n = ConcreteObjectNode.get(System.in);
-            addEdge(f, n, null);
+            addEdge(f, n);
             f = (jq_StaticField) c.getDeclaredMember("out", "Ljava/io/PrintStream;");
             Assert._assert(f != null);
             n = ConcreteObjectNode.get(System.out);
-            addEdge(f, n, null);
+            addEdge(f, n);
             f = (jq_StaticField) c.getDeclaredMember("err", "Ljava/io/PrintStream;");
             Assert._assert(f != null);
             n = ConcreteObjectNode.get(System.err);
-            addEdge(f, n, null);
+            addEdge(f, n);
             
             //System.out.println("Edges from global: "+getEdges());
         }
@@ -2235,8 +2242,8 @@ public class MethodSummary {
         public ReturnValueNode(ProgramLocation m) { super(m); }
         private ReturnValueNode(ReturnValueNode that) { super(that); }
         
-        public AndersenReference getDeclaredType() {
-            return (AndersenReference) m.getTargetMethod().and_getReturnType();
+        public jq_Reference getDeclaredType() {
+            return (jq_Reference) m.getTargetMethod().getReturnType();
         }
         
         public final Node copy() { return new ReturnValueNode(this); }
@@ -2269,7 +2276,7 @@ public class MethodSummary {
             return new CaughtExceptionNode(this);
         }
         
-        public AndersenReference getDeclaredType() { return (AndersenReference)eh.getExceptionType(); }
+        public jq_Reference getDeclaredType() { return (jq_Reference)eh.getExceptionType(); }
         
         public String toString_long() { return toString_short()+super.toString_long(); }
         public String toString_short() { return Strings.hex(this)+": "+"Caught exception: "+eh; }
@@ -2282,7 +2289,7 @@ public class MethodSummary {
         public ThrownExceptionNode(ProgramLocation m) { super(m); }
         private ThrownExceptionNode(ThrownExceptionNode that) { super(that); }
         
-        public AndersenReference getDeclaredType() { return Bootstrap.PrimordialClassLoader.getJavaLangObject(); }
+        public jq_Reference getDeclaredType() { return Bootstrap.PrimordialClassLoader.getJavaLangObject(); }
         
         public final Node copy() { return new ThrownExceptionNode(this); }
         
@@ -2301,13 +2308,13 @@ public class MethodSummary {
     /** A ParamNode represents an incoming parameter.
      */
     public static final class ParamNode extends OutsideNode {
-        final AndersenMethod m; final int n; final AndersenReference declaredType;
+        final jq_Method m; final int n; final jq_Reference declaredType;
         
-        public ParamNode(AndersenMethod m, int n, AndersenReference declaredType) { this.m = m; this.n = n; this.declaredType = declaredType; }
+        public ParamNode(jq_Method m, int n, jq_Reference declaredType) { this.m = m; this.n = n; this.declaredType = declaredType; }
         private ParamNode(ParamNode that) {
             this.m = that.m; this.n = that.n; this.declaredType = that.declaredType;
         }
-        public AndersenReference getDeclaredType() { return declaredType; }
+        public jq_Reference getDeclaredType() { return declaredType; }
         
         public final Node copy() { return new ParamNode(this); }
         
@@ -2330,7 +2337,7 @@ public class MethodSummary {
      *  Two nodes are equal if the fields match and they are from the same quad.
      */
     public static final class FieldNode extends OutsideNode {
-        final AndersenField f; final Set quads;
+        final jq_Field f; final Set quads;
         Set field_predecessors;
         
         private static FieldNode findPredecessor(FieldNode base, Quad obj) {
@@ -2361,7 +2368,7 @@ public class MethodSummary {
             return null;
         }
         
-        public static FieldNode get(Node base, AndersenField f, Quad obj) {
+        public static FieldNode get(Node base, jq_Field f, Quad obj) {
             if (TRACE_INTRA) out.println("Getting field node for "+base+(f==null?"[]":("."+f.getName()))+" quad "+(obj==null?-1:obj.getID()));
             Set s = null;
             if (base.accessPathEdges != null) {
@@ -2400,8 +2407,8 @@ public class MethodSummary {
             return fn;
         }
         
-        private FieldNode(AndersenField f, Quad q) { this.f = f; this.quads = SortedArraySet.FACTORY.makeSet(HashCodeComparator.INSTANCE); this.quads.add(q); }
-        private FieldNode(AndersenField f) { this.f = f; this.quads = SortedArraySet.FACTORY.makeSet(HashCodeComparator.INSTANCE); }
+        private FieldNode(jq_Field f, Quad q) { this.f = f; this.quads = SortedArraySet.FACTORY.makeSet(HashCodeComparator.INSTANCE); this.quads.add(q); }
+        private FieldNode(jq_Field f) { this.f = f; this.quads = SortedArraySet.FACTORY.makeSet(HashCodeComparator.INSTANCE); }
 
         private FieldNode(FieldNode that) {
             this.f = that.f;
@@ -2471,7 +2478,7 @@ public class MethodSummary {
         
         static void addGlobalAccessPathEdges(FieldNode n) {
             if (n.field_predecessors == null) return;
-            AndersenField f = n.f;
+            jq_Field f = n.f;
             for (Iterator i=n.field_predecessors.iterator(); i.hasNext(); ) {
                 Object o = i.next();
                 if (o == GlobalNode.GLOBAL) {
@@ -2515,13 +2522,13 @@ public class MethodSummary {
             return new FieldNode(this);
         }
         
-        public AndersenReference getDeclaredType() {
+        public jq_Reference getDeclaredType() {
             if (f != null) {
-                return (AndersenReference)f.and_getType();
+                return (jq_Reference)f.getType();
             }
             if (quads.isEmpty()) return PrimordialClassLoader.getJavaLangObject();
             RegisterOperand r = ALoad.getDest((Quad)quads.iterator().next());
-            return (AndersenReference)r.getType();
+            return (jq_Reference)r.getType();
         }
         
         public String toString_long() {
@@ -3052,7 +3059,7 @@ outer:
      */
     public static class AccessPath {
         /** All incoming transitions have this field. */
-        AndersenField _field;
+        jq_Field _field;
         /** The incoming transitions are associated with this AccessPath object. */
         Node _n;
         /** Whether this is a valid end state. */
@@ -3089,7 +3096,7 @@ outer:
         /** Return an access path that is equivalent to the given access path prepended
          *  with a transition on the given field and node.  The given access path can
          *  be null (empty). */
-        public static AccessPath create(AndersenField f, Node n, AccessPath p) {
+        public static AccessPath create(jq_Field f, Node n, AccessPath p) {
             if (p == null) return new AccessPath(f, n, true);
             AccessPath that = p.findNode(n);
             if (that == null) {
@@ -3105,7 +3112,7 @@ outer:
         /** Return an access path that is equivalent to the given access path appended
          *  with a transition on the given field and node.  The given access path can
          *  be null (empty). */
-        public static AccessPath create(AccessPath p, AndersenField f, Node n) {
+        public static AccessPath create(AccessPath p, jq_Field f, Node n) {
             if (p == null) return new AccessPath(f, n, true);
             p = p.copy();
             AccessPath that = p.findNode(n);
@@ -3227,12 +3234,12 @@ outer:
         }
         
         /** Private constructor.  Use the create() methods above. */
-        private AccessPath(AndersenField f, Node n, boolean last) {
+        private AccessPath(jq_Field f, Node n, boolean last) {
             this._field = f; this._n = n; this._last = last;
             this.succ = SortedArraySet.FACTORY.makeSet(HashCodeComparator.INSTANCE);
         }
         /** Private constructor.  Use the create() methods above. */
-        private AccessPath(AndersenField f, Node n) {
+        private AccessPath(jq_Field f, Node n) {
             this(f, n, false);
         }
         
@@ -3285,7 +3292,7 @@ outer:
             return _field != null ? _field.hashCode() : 0x31337;
         }
         /** Returns the first field of this access path. */
-        public AndersenField first() { return _field; }
+        public jq_Field first() { return _field; }
         /** Returns an iteration of the next AccessPath objects. */
         public Iterator next() {
             return new FilterIterator(succ.iterator(), filter);
@@ -3299,7 +3306,7 @@ outer:
     /** vvvvv   Actual MethodSummary stuff is below.   vvvvv */
     
     /** The method that this is a summary for. */
-    final AndersenMethod method;
+    final jq_Method method;
     /** The parameter nodes. */
     final ParamNode[] params;
     /** All nodes in the summary graph. */
@@ -3332,7 +3339,7 @@ outer:
         this.passedParamToNodes = Collections.EMPTY_MAP;
     }
 
-    public MethodSummary(AndersenMethod method, ParamNode[] param_nodes, GlobalNode my_global, Set methodCalls, HashMap callToRVN, HashMap callToTEN, Set returned, Set thrown, Set passedAsParameters) {
+    public MethodSummary(jq_Method method, ParamNode[] param_nodes, GlobalNode my_global, Set methodCalls, HashMap callToRVN, HashMap callToTEN, Set returned, Set thrown, Set passedAsParameters) {
         this.method = method;
         this.params = param_nodes;
         this.calls = methodCalls;
@@ -3446,7 +3453,7 @@ outer:
 
     public static final boolean UNIFY_ACCESS_PATHS = false;
     
-    private MethodSummary(AndersenMethod method, ParamNode[] params, Set methodCalls, HashMap callToRVN, HashMap callToTEN, Map passedParamToNodes, Set returned, Set thrown, Map nodes) {
+    private MethodSummary(jq_Method method, ParamNode[] params, Set methodCalls, HashMap callToRVN, HashMap callToTEN, Map passedParamToNodes, Set returned, Set thrown, Map nodes) {
         this.method = method;
         this.params = params;
         this.calls = methodCalls;
@@ -3904,7 +3911,7 @@ outer:
         }
     }
 
-    public AndersenMethod getMethod() { return method; }
+    public jq_Method getMethod() { return method; }
     
     public int hashCode() {
         if (DETERMINISTIC)
