@@ -77,7 +77,7 @@ public final class jq_StaticField extends jq_Field {
         state = STATE_LOADED;
     }
     
-    public final void setAddress(int address) { jq.assert(state == STATE_LOADED); state = STATE_SFINITIALIZED; this.address = address; }
+    public final void setAddress(int address) { jq.assert(state == STATE_PREPARED); state = STATE_SFINITIALIZED; this.address = address; }
     public final int getAddress() { chkState(STATE_SFINITIALIZED); return address; }
     public final int getWidth() {
         if (type == jq_Primitive.LONG || type == jq_Primitive.DOUBLE)
@@ -98,6 +98,9 @@ public final class jq_StaticField extends jq_Field {
     public final Object getConstantValue() { return constantValue; }
     public final boolean isStatic() { return true; }
 
+    public final void prepare() { jq.assert(state == STATE_LOADED); state = STATE_PREPARED; }
+    public final void unprepare() { jq.assert(state == STATE_PREPARED); state = STATE_LOADED; }
+    
     public static final jq_Class _class;
     public static final jq_InstanceField _address;
     static {
