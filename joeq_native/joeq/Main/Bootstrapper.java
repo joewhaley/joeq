@@ -38,10 +38,14 @@ public abstract class Bootstrapper implements ObjectLayout {
         String classList = null;
         String addToClassList = null;
         boolean TrimAllTypes = false;
+	boolean DUMP_COFF = false;
 
         jq.Bootstrapping = true;
         ClassLibInterface.i.useJoeqClasslib(true);
         
+	if (ClassLibInterface.i.getClass().toString().indexOf("win32") != -1)
+	    DUMP_COFF = true;
+
         String classpath = System.getProperty("java.class.path")+
                            System.getProperty("path.separator")+
                            System.getProperty("sun.boot.class.path");
@@ -85,6 +89,8 @@ public abstract class Bootstrapper implements ObjectLayout {
             err("unknown command line argument: "+args[i]);
         }
         
+	System.out.println("Bootstrapping into "+imageName+", "+(DUMP_COFF?"COFF":"ELF")+" format, root method "+rootMethodClassName+"."+rootMethodName+(TrimAllTypes?", trimming all types.":"."));
+	
         for (Iterator it = PrimordialClassLoader.classpaths(classpath); it.hasNext(); ) {
             String s = (String)it.next();
             PrimordialClassLoader.loader.addToClasspath(s);
@@ -383,7 +389,10 @@ public abstract class Bootstrapper implements ObjectLayout {
         // dump it!
         FileOutputStream fos = new FileOutputStream(imageName);
         starttime = System.currentTimeMillis();
-        objmap.dumpCOFF(fos, rootm);
+	if (DUMP_COFF)
+	    objmap.dumpCOFF(fos, rootm);
+	else
+	    objmap.dumpELF(fos, rootm);
         long dumptime = System.currentTimeMillis() - starttime;
         System.out.println("Dump time: "+dumptime);
         
