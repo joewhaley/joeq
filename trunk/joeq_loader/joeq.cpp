@@ -9,6 +9,7 @@ char **_argv;
 extern "C" void __stdcall entry();
 extern "C" void __stdcall ctrl_break_handler();
 extern void initSemaphoreLock(void);
+extern "C" int __stdcall init_thread();
 
 #if defined(WIN32)
 BOOL WINAPI windows_break_handler(DWORD dwCtrlType)
@@ -61,13 +62,14 @@ int main(int argc, char* argv[])
 	}
 #else
 	__asm (
-	       "push %%ebp
-		xor %%ebp, %%ebp
+	       "pushl %%ebp
+                xor %%ebp, %%ebp
 		call entry
-		pop %%ebp"
+                popl %%ebp
+	       "
 	       :
 	       :
-	       :"%ebp"
+	       :"%eax","%edx","%ecx","%ebx","%edi","%esi"
 	       );
 #endif
 

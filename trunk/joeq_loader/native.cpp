@@ -25,13 +25,16 @@ extern "C" void __stdcall debugmsg(const char* s)
 
 extern "C" void* __stdcall syscalloc(const int size)
 {
-	return calloc(1, size);
+	void* p = calloc(1, size);
+	//printf("Allocated %d bytes at 0x%08x\n", size, p);
+	return p;
 }
 
 extern "C" void __stdcall die(const int code)
 {
 	fflush(stdout);
 	fflush(stderr);
+	sleep(10);
 	exit(code);
 }
 
@@ -460,39 +463,132 @@ extern "C" void __stdcall set_current_context(Thread* jthread, const CONTEXT* co
 	}
 }
 #else
-extern "C" int __stdcall suspend_thread(const pthread_t handle)
+extern "C" int __stdcall suspend_thread(const int pid)
 {
-  printf("Suspending thread %d.\n", handle);
-  kill( handle, SIGSTOP );
+  //printf("Suspending thread %d.\n", pid);
+#if defined(USE_CLONE)
+  kill(pid, SIGSTOP);
+#else
+  pthread_kill(pid, SIGSTOP);
+#endif
   return 0;
 }
-extern "C" pthread_t __stdcall create_thread(void * (*start)(void *), void* arg)
+
+int thread_start_trampoline(void *t)
 {
-  int code;
-  pthread_t p;
-  code = pthread_create(&p, 0, start, arg); // note: NOT SUSPENDED.
-  if (!code) {
-    // error occurred while creating the thread.
+#if defined(USE_CLONE)
+  const int pid = getpid();
+#else
+  const int pid = pthread_self();
+#endif
+  //printf("Thread %d started, suspending self.\n", pid);
+  void* arg = *((void**)t);
+  int (*start)(void *) = (int (*)(void*)) ((void**)t)[1];
+  ((void**)t)[1] = 0;
+  while (!((void**)t)[1]) sched_yield();
+  free(t);
+  int foo;
+  sigset_t set; sigemptyset(&set); sigaddset(&set, SIGCONT); sigaddset(&set, SIGKILL);
+  sigwait(&set, &foo);
+  if (foo == SIGKILL) {
+    //printf("Thread %d killed.\n", pid);
+    return 0;
   }
-  printf("Created thread %d.\n", p);
-  suspend_thread(p);
-  return p;
+  //printf("Thread %d resumed (signal=%d)\n", pid, foo);
+  //printf("Thread %d calling function at 0x%08x, arg 0x%08x.\n", pid, start, arg);
+  return start(arg);
 }
-extern "C" void __stdcall init_thread(const pthread_t handle)
+
+extern "C" int __stdcall create_thread(int (*start)(void *), void* arg)
 {
-  printf("Thread %d (%d) finished initialization.\n", handle, pthread_self());
+  unsigned long int pid;
+  void** temp = (void**)malloc(sizeof(start) + sizeof(arg));
+  temp[0] = arg;
+  temp[1] = (void*)start;
+#if defined(USE_CLONE)
+  void* child_stack = calloc(1, 65536);
+  pid = clone(thread_start_trampoline, child_stack, CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND, temp);
+#else
+  pthread_create(&pid, 0, (void* (*)(void *))thread_start_trampoline, temp);
+#endif
+  //printf("Created thread %d.\n", pid);
+  while (temp[1]) sched_yield();
+  temp[1] = (void*)start;
+  return pid;
 }
-extern "C" int __stdcall resume_thread(const pthread_t handle)
+
+/* We don't want to include the kernel header.  So duplicate the
+   information.  */
+
+/* Structure passed on `modify_ldt' call.  */
+struct modify_ldt_ldt_s
 {
-  printf("Resuming thread %d (%d).\n", handle, pthread_self());
-  ptrace( PTRACE_CONT, handle, (caddr_t)1, SIGSTOP );
+  unsigned int entry_number;
+  unsigned long int base_addr;
+  unsigned int limit;
+  unsigned int seg_32bit:1;
+  unsigned int contents:2;
+  unsigned int read_exec_only:1;
+  unsigned int limit_in_pages:1;
+  unsigned int seg_not_present:1;
+  unsigned int useable:1;
+  unsigned int empty:25;
+};
+
+_syscall3( int, modify_ldt, int, func, void *, ptr, unsigned long, bytecount )
+
+/* Initialize the thread-unique value.  */
+#define INIT_THREAD_SELF(descr, descrsize, nr) \
+{                                                                             \
+  struct modify_ldt_ldt_s ldt_entry =                                         \
+    { nr, (unsigned long int) descr, descrsize, 1, 0, 0, 0, 0, 1, 0 };        \
+  if (modify_ldt (1, &ldt_entry, sizeof (ldt_entry)) != 0)                    \
+    abort ();                                                                 \
+  __asm__ __volatile__ ("movw %w0, %%fs" : : "q" (nr * 8 + 7));               \
+}
+
+static int current_id = 16;
+
+extern "C" int __stdcall init_thread()
+{
+  int my_id;
+  __asm__ __volatile__
+    (
+     "nop
+uphere:
+      movl %2, %%eax
+      movl %%eax, %%ebx
+      inc %%ebx
+      lock cmpxchgl %%ebx, %1
+      jne uphere
+      movl %%ebx, %0
+      " :"=r"(my_id), "=m"(current_id)
+        :"m"(current_id)
+        :"%eax"
+    );
+  void* descr = calloc(1, 1024);
+  INIT_THREAD_SELF(descr, 1*1024, my_id);
+  //printf("Thread %d finished initialization, id=%d.\n", getpid(), my_id);
+  return getpid();
+}
+extern "C" int __stdcall resume_thread(const int pid)
+{
+  //printf("Resuming thread %d.\n", pid);
+  //ptrace( PTRACE_CONT, pid, (caddr_t)1, SIGSTOP );
+#if defined(USE_CLONE)
+  kill(pid, SIGCONT);
+#else
+  pthread_kill(pid, SIGCONT);
+#endif
   return 0;
 }
 
 extern "C" void* __stdcall allocate_stack(const int size)
 {
   // TODO
-  return calloc(size, 1);
+  void* p = calloc(sizeof(char), size);
+  //printf("Allocating stack at 0x%08x of size %d.\n", p, size);
+  return (char*)p+size;
 }
 
 static inline int get_debug_reg( int pid, int num, DWORD *data )
@@ -507,8 +603,9 @@ static inline int get_debug_reg( int pid, int num, DWORD *data )
     return 0;
 }
 
-extern "C" void __stdcall get_thread_context(pthread_t pid, CONTEXT* context)
+extern "C" void __stdcall get_thread_context(const int pid, CONTEXT* context)
 {
+  //printf("Getting thread context for pid %d.\n", pid);
   int flags = context->ContextFlags;
   if (flags & CONTEXT_FULL) {
     struct kernel_user_regs_struct regs;
@@ -556,8 +653,9 @@ extern "C" void __stdcall get_thread_context(pthread_t pid, CONTEXT* context)
   return;
 }
 
-extern "C" void __stdcall set_thread_context(pthread_t pid, CONTEXT* context)
+extern "C" void __stdcall set_thread_context(int pid, CONTEXT* context)
 {
+  //printf("Getting thread context for pid %d.\n", pid);
   int flags = context->ContextFlags;
   if (flags & CONTEXT_FULL) {
     struct kernel_user_regs_struct regs;
@@ -608,9 +706,13 @@ extern "C" void __stdcall set_thread_context(pthread_t pid, CONTEXT* context)
   return;
 }
 
-extern "C" pthread_t __stdcall get_current_thread_handle(void)
+extern "C" int __stdcall get_current_thread_handle(void)
 {
+#if defined(USE_CLONE)
+  return getpid();
+#else
   return pthread_self();
+#endif
 }
 
 typedef struct _Thread {
@@ -619,7 +721,7 @@ typedef struct _Thread {
 } Thread;
 
 typedef struct _NativeThread {
-	pthread_t thread_handle;
+	int thread_handle;
 	Thread* currentThread;
 } NativeThread;
 
@@ -651,6 +753,12 @@ extern "C" int __stdcall release_semaphore(int semaphore, int a)
 
 extern "C" void __stdcall set_current_context(Thread* jthread, const CONTEXT* context)
 {
+#if defined(USE_CLONE)
+    int pid = getpid();
+#else
+    int pid = pthread_self();
+#endif
+    //printf("Thread %d: switching to jthread 0x%08x, ip=0x%08x, sp=0x%08x\n", pid, jthread, context->Eip, context->Esp);
   __asm ("
 		movl %0, %%edx
 		movl %%edx, %%fs:20

@@ -49,17 +49,12 @@
 #endif
 
 #if defined(linux)
-#include <asm/ldt.h>
 #include <linux/unistd.h>
-
-#include "setup_fs_register.h"
 #include "context.h"
-
 #include <sys/ptrace.h>
 #include <pthread.h>
 #include <signal.h>
 #include <sys/user.h>
-
 #endif
 
 #include "native.h"
