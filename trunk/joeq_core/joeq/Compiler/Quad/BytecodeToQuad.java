@@ -7,6 +7,7 @@
 
 package Compil3r.Quad;
 import java.util.LinkedList;
+import java.util.HashMap;
 
 import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Array;
@@ -95,6 +96,8 @@ public class BytecodeToQuad extends BytecodeVisitor {
     private boolean[] visited;
     private boolean uncond_branch;
     private LinkedList regenerate;
+
+    private HashMap quad2bci = new HashMap();
 
     public static boolean ALWAYS_TRACE = false;
 
@@ -304,6 +307,15 @@ public class BytecodeToQuad extends BytecodeVisitor {
     void appendQuad(Quad q) {
         if (TRACE) out.println(q.toString());
         quad_bb.appendQuad(q);
+        quad2bci.put(q, new Integer(i_end-1));
+    }
+    
+    /**
+     * return quad->bytecode map, may be incomplete
+     * @return Map<Quad, Integer> 
+     */
+    java.util.Map getQuadToBytecodeMap() {
+        return quad2bci;
     }
     
     RegisterOperand getStackRegister(jq_Type type, int i) {
@@ -444,7 +456,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         }
         if (t.isReferenceType()) {
             // refine type.
-            t = getArrayTypeOf(ref).getElementType();
+            t = getArrayElementTypeOf(ref);
         }
         RegisterOperand r = getStackRegister(t);
         Quad q = ALoad.create(quad_cfg.getNewQuadID(), operator, r, ref, index, getCurrentGuard());
@@ -880,12 +892,34 @@ public class BytecodeToQuad extends BytecodeVisitor {
         super.visitJSR(target);
         this.uncond_branch = true;
         saveStackIntoRegisters();
-        BasicBlock target_bb = quad_bbs[bc_cfg.getBasicBlockByBytecodeIndex(target).id];
+        Compil3r.BytecodeAnalysis.BasicBlock target_bcbb = bc_cfg.getBasicBlockByBytecodeIndex(target);
+        BasicBlock target_bb = quad_bbs[target_bcbb.id];
         BasicBlock successor_bb = quad_bbs[bc_bb.id+1];
         RegisterOperand op0 = getStackRegister(jq_ReturnAddressType.INSTANCE);
         Quad q = Jsr.create(quad_cfg.getNewQuadID(), Jsr.JSR.INSTANCE, op0, new TargetOperand(target_bb), new TargetOperand(successor_bb));
         appendQuad(q);
-        setJSRState(bc_cfg.getBasicBlock(bc_bb.id+1), current_state);
+        Compil3r.BytecodeAnalysis.BasicBlock next_bb = bc_cfg.getBasicBlock(bc_bb.id+1);
+        AbstractState existing_state = getJSRState(next_bb);
+        Compil3r.BytecodeAnalysis.JSRInfo jsrinfo = bc_cfg.getJSRInfo(target_bcbb);
+        Compil3r.BytecodeAnalysis.BasicBlock ret_bb = jsrinfo.exit_block;
+        if (existing_state != null) {
+            if (TRACE) out.println("this jsr call has already been visited: incoming jsr state for "+next_bb+" already exists.");
+            if (existing_state.merge(current_state.copyAfterJSR(), rf)) {
+                if (TRACE) out.println("output (jsr) state of "+bc_bb+" changed");
+                // mark the ret bb for regeneration, so that when we revisit its
+                // ret instruction, next_bb will get updated with the new state.
+                if (TRACE) out.println("marking ret bb "+ret_bb+" for regeneration.");
+                if (!regenerate.contains(ret_bb)) regenerate.add(ret_bb);
+            }
+        } else {
+            setJSRState(next_bb, current_state);
+            // we need to revisit the ret block, so that when we revisit its
+            // ret instruction, next_bb will get updated with the new state.
+            if (visited[ret_bb.id]) {
+                if (TRACE) out.println("marking ret bb "+ret_bb+" for regeneration.");
+                if (!regenerate.contains(ret_bb)) regenerate.add(ret_bb);
+            }
+        }
         current_state.push(op0.copy());
     }
     public void visitRET(int i) {
@@ -908,6 +942,9 @@ public class BytecodeToQuad extends BytecodeVisitor {
                 if (!regenerate.contains(caller_next)) regenerate.add(caller_next);
                 continue;
             }
+            // make a copy, so that we don't corrupt the original.
+            // we use the original to check if the state at the end of a jsr block changes.
+            caller_state = caller_state.copyAfterJSR();
             caller_state.mergeAfterJSR(jsrinfo.changedLocals, current_state);
             if (start_states[caller_next.id] == null) {
                 if (TRACE) out.println("Copying jsr state to "+caller_next);
@@ -1723,7 +1760,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
     boolean performCheckStore(RegisterOperand ref, Operand elem) {
         jq_Type type = getTypeOf(elem);
         if (type == jq_Reference.jq_NullType.NULL_TYPE) return false;
-        jq_Type arrayElemType = getArrayTypeOf(ref).getElementType();
+        jq_Type arrayElemType = getArrayElementTypeOf(ref);
         if (ref.isExactType()) {
             if (isAssignable(type, arrayElemType) == YES)
                 return false;
@@ -1825,8 +1862,16 @@ public class BytecodeToQuad extends BytecodeVisitor {
         }
         return ((RegisterOperand)op).getType();
     }
-    static jq_Array getArrayTypeOf(Operand op) {
-        return (jq_Array)((RegisterOperand)op).getType();
+    static jq_Type getArrayElementTypeOf(Operand op) {
+        if (op instanceof RegisterOperand) {
+            return ((jq_Array)((RegisterOperand)op).getType()).getElementType();
+        } else if (op instanceof AConstOperand && ((AConstOperand)op).getValue() == null) {
+            // what is the element type of an array constant 'null'?
+            return PrimordialClassLoader.loader.getJavaLangObject();
+        } else {
+        	jq.UNREACHABLE(op.toString());
+        	return null;
+        }
     }
     
     static final byte YES = 2;
