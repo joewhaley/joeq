@@ -155,7 +155,8 @@ public class PA {
     static boolean ADD_INSTANCE_METHODS = !System.getProperty("pa.addinstancemethods", "no").equals("no");
     static boolean USE_BOGUS_SUMMARIES = !System.getProperty("pa.usebogussummaries", "no").equals("no");
     static boolean USE_REFLECTION_PROVIDER = !System.getProperty("pa.usereflectionprovider", "no").equals("no");
-    static boolean TRACE_BOGUS = !System.getProperty("pa.tracebogus", "no").equals("no");    
+    static boolean TRACE_BOGUS = !System.getProperty("pa.tracebogus", "no").equals("no");
+    static boolean TRACE_REFLECTION = !System.getProperty("pa.tracereflection", "no").equals("no");
     int MAX_PARAMS = Integer.parseInt(System.getProperty("pa.maxparams", "4"));
     
     int bddnodes = Integer.parseInt(System.getProperty("bddnodes", "2500000"));
@@ -1281,6 +1282,8 @@ public class PA {
                     if(targets != null){
                         for(Iterator iter = targets.iterator(); iter.hasNext();){
                             jq_Method target = (jq_Method) iter.next();
+                            if(TRACE_REFLECTION) System.out.println(
+                                "Adding a call to " + target + " instead of "+ m);
                             
                             addToCHA(T_bdd, Nmap.get(target), target);
                         }
