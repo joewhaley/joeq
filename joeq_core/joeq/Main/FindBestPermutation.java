@@ -14,7 +14,7 @@ import joeq.Util.Assert;
 import org.sf.javabdd.BDD;
 import org.sf.javabdd.BDDDomain;
 import org.sf.javabdd.BDDFactory;
-import org.sf.javabdd.JavaFactory;
+import org.sf.javabdd.JFactory;
 
 /**
  * FindBestPermutation
@@ -47,7 +47,7 @@ public class FindBestPermutation extends Thread {
     }
     
     public void run() {
-        BDDFactory bdd = JavaFactory.init(1000000, 50000);
+        BDDFactory bdd = JFactory.init(1000000, 50000);
         bdd.setMaxIncrease(250000);
         readBDDConfig(bdd);
         int[] varorder = bdd.makeVarOrdering(reverse, orderingToTry);
