@@ -189,13 +189,14 @@ public class PA {
     BDD staticCalls; // V1xIxM, statically-bound calls, only used for object-sensitive and cartesian product
     
     String varorder = System.getProperty("bddordering", "N_F_Z_I_M_T1_V2xV1_V2cxV1c_H2xH2c_T2_H1xH1c");
+    //String varorder = System.getProperty("bddordering", "N_F_Z_I_M_T1_V2xV1_T2_H2c_H1c_H2xH1xV2cxV1c");
     //String varorder = System.getProperty("bddordering", "N_F_Z_I_M_T1_V2xV1_H2_T2_H1");
     boolean reverseLocal = System.getProperty("bddreverse", "true").equals("true");
     
     BDDPairing V1toV2, V2toV1, H1toH2, H2toH1, V1H1toV2H2, V2H2toV1H1;
     BDDPairing V1ctoV2c, V1cV2ctoV2cV1c, V1cH1ctoV2cV1c;
     BDDPairing T2toT1, T1toT2;
-    BDDPairing[] H1toV1c;
+    BDDPairing[] H1toV1c; BDDPairing[] V1ctoH1;
     BDD V1set, V2set, H1set, H2set, T1set, T2set, Fset, Mset, Nset, Iset, Zset;
     BDD V1V2set, V1Fset, V2Fset, V1FV2set, V1H1set, H1Fset, H2Fset, H1H2set, H1FH2set;
     BDD IMset, INset, IV1set, INV1set, INH1set, INT2set, T2Nset, MZset;
@@ -374,6 +375,7 @@ public class PA {
         
         if (CARTESIAN_PRODUCT) {
             H1toV1c = new BDDPairing[MAX_PARAMS];
+            V1ctoH1 = new BDDPairing[MAX_PARAMS];
             int[] H1vars = new int[H1.varNum() + H1c.varNum()];
             System.arraycopy(H1.vars(), 0, H1vars, 0, H1.varNum());
             System.arraycopy(H1c.vars(), 0, H1vars, H1.varNum(), H1c.varNum());
@@ -381,6 +383,7 @@ public class PA {
             for (int i=0, k=0; i<H1toV1c.length; ++i) {
                 System.out.println("H1toV1c["+i+"] = ["+k+","+(k+H1vars.length)+") of "+V1cvars.length+" ");
                 H1toV1c[i] = bdd.makePair();
+                V1ctoH1[i] = bdd.makePair();
                 int[] V1c_v = new int[H1vars.length];
                 System.arraycopy(V1cvars, k, V1c_v, 0, V1c_v.length);
                 for (int j=0; j < V1c_v.length; ++j) {
@@ -390,6 +393,7 @@ public class PA {
                 System.out.println();
                 k += V1c_v.length;
                 H1toV1c[i].set(H1vars, V1c_v);
+                V1ctoH1[i].set(V1c_v, H1vars);
             }
         }
         
@@ -398,7 +402,8 @@ public class PA {
         }
     }
     
-    void setH1_V1c_equal(BDD e, int k) {
+    
+    void setH1_V1c_equal2(BDD e, int k) {
         int[] H1vars = H1.vars();
         int[] H1cvars = H1c.vars();
         int[] V1cvars = V1c.vars();
@@ -409,6 +414,24 @@ public class PA {
             BDD b = bdd.ithVar(index2);
             a.biimpWith(b);
             e.andWith(a);
+        }
+    }
+    
+    static BDD[] H1_V1c_equal;
+    void setH1_V1c_equal(BDD e, int k) {
+        if (false) {
+            if (H1_V1c_equal == null) {
+                H1_V1c_equal = new BDD[MAX_PARAMS];
+                for (int i = 0; i < H1_V1c_equal.length; ++i) {
+                    H1_V1c_equal[i] = bdd.one();
+                    setH1_V1c_equal2(H1_V1c_equal[i], i);
+                }
+            }
+            e.andWith(H1_V1c_equal[k].id());
+        } else {
+            // V2cxIxH1cxH1
+            BDD f = e.replace(V1ctoH1[k]);
+            e.andWith(f);
         }
     }
     
@@ -1592,20 +1615,21 @@ public class PA {
             return;
         }
         
-        if (!CARTESIAN_PRODUCT) {
-            if (TRACE_SOLVER) out.println("Binding parameters...");
-            
-            BDD my_IE = USE_CONTEXT ? IEcs : IE;
-            
-            if (TRACE_SOLVER) out.println("Number of call graph edges: "+my_IE.satCount(IMset));
-            
-            BDD t1 = my_IE.relprod(actual, Iset); // V2cxIxV1cxM x IxZxV2 = V1cxMxZxV2cxV2
-            BDD t2 = t1.relprod(formal, MZset); // V1cxMxZxV2cxV2 x MxZxV1 = V1cxV1xV2cxV2
-            t1.free();
-            if (TRACE_SOLVER) out.println("Edges before param bind: "+A.satCount(V1V2set));
-            A.orWith(t2);
-            if (TRACE_SOLVER) out.println("Edges after param bind: "+A.satCount(V1V2set));
-        }
+        if (TRACE_SOLVER) out.println("Binding parameters...");
+        
+        BDD my_IE = USE_CONTEXT ? IEcs : IE;
+        
+        if (TRACE_SOLVER) out.println("Number of call graph edges: "+my_IE.satCount(IMset));
+        
+        BDD my_formal = CARTESIAN_PRODUCT ? formal.and(Z.varRange(0, MAX_PARAMS-1).not()) : formal;
+        BDD my_actual = CARTESIAN_PRODUCT ? actual.and(Z.varRange(0, MAX_PARAMS-1).not()) : actual;
+        
+        BDD t1 = my_IE.relprod(my_actual, Iset); // V2cxIxV1cxM x IxZxV2 = V1cxMxZxV2cxV2
+        BDD t2 = t1.relprod(my_formal, MZset); // V1cxMxZxV2cxV2 x MxZxV1 = V1cxV1xV2cxV2
+        t1.free();
+        if (TRACE_SOLVER) out.println("Edges before param bind: "+A.satCount(V1V2set));
+        A.orWith(t2);
+        if (TRACE_SOLVER) out.println("Edges after param bind: "+A.satCount(V1V2set));
         
         if (TRACE_SOLVER) out.println("Binding return values...");
         BDD my_IEr = USE_CONTEXT ? IEcs.replace(V1cV2ctoV2cV1c) : IE;
@@ -1645,17 +1669,18 @@ public class PA {
         
         if (TRACE_SOLVER) out.println("Number of new call graph edges: "+new_myIE.satCount(IMset));
         
-        if (!CARTESIAN_PRODUCT) {
-            if (TRACE_SOLVER) out.println("Binding parameters...");
-            
-            BDD t1 = new_myIE.relprod(actual, Iset); // V2cxIxV1cxM x IxZxV2 = V1cxMxZxV2cxV2
-            BDD t2 = t1.relprod(formal, MZset); // V1cxMxZxV2cxV2 x MxZxV1 = V1cxV1xV2cxV2
-            t1.free();
-            if (false) out.println("New edges for param binding: "+t2.toStringWithDomains());
-            if (TRACE_SOLVER) out.println("Edges before param bind: "+A.satCount(V1V2set));
-            A.orWith(t2);
-            if (TRACE_SOLVER) out.println("Edges after param bind: "+A.satCount(V1V2set));
-        }
+        BDD my_formal = CARTESIAN_PRODUCT ? formal.and(Z.varRange(0, MAX_PARAMS-1).not()) : formal;
+        BDD my_actual = CARTESIAN_PRODUCT ? actual.and(Z.varRange(0, MAX_PARAMS-1).not()) : actual;
+        
+        if (TRACE_SOLVER) out.println("Binding parameters...");
+        
+        BDD t1 = new_myIE.relprod(my_actual, Iset); // V2cxIxV1cxM x IxZxV2 = V1cxMxZxV2cxV2
+        BDD t2 = t1.relprod(my_formal, MZset); // V1cxMxZxV2cxV2 x MxZxV1 = V1cxV1xV2cxV2
+        t1.free();
+        if (false) out.println("New edges for param binding: "+t2.toStringWithDomains());
+        if (TRACE_SOLVER) out.println("Edges before param bind: "+A.satCount(V1V2set));
+        A.orWith(t2);
+        if (TRACE_SOLVER) out.println("Edges after param bind: "+A.satCount(V1V2set));
         
         if (TRACE_SOLVER) out.println("Binding return values...");
         BDD new_myIEr = USE_CONTEXT ? new_myIE.replace(V1cV2ctoV2cV1c) : new_myIE;
