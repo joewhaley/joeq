@@ -20,8 +20,11 @@ import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
 import Clazz.jq_CompiledCode;
 import Clazz.jq_InstanceMethod;
+import Clazz.jq_StaticMethod;
 import Clazz.jq_StaticField;
+import Clazz.jq_Method;
 import Run_Time.Reflection;
+import Run_Time.StackWalker;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
 import jq;
@@ -101,8 +104,8 @@ public class jq_NativeThread implements x86Constants {
         for (int i=1; i<num; ++i) {
             jq_NativeThread nt2 = native_threads[i] = new jq_NativeThread(i);
             nt2.thread_handle = SystemInterface.create_thread(_nativeThreadEntry.getDefaultCompiledVersion().getEntrypoint(), Unsafe.addressOf(nt2));
-            nt2.myCodeAllocator.init();
             nt2.myHeapAllocator.init();
+            nt2.myCodeAllocator.init();
             if (TRACE) SystemInterface.debugmsg("Native thread "+i+" initialized");
         }
     }
@@ -326,6 +329,49 @@ public class jq_NativeThread implements x86Constants {
         return "NT "+index+":"+jq.hex(thread_handle);
     }
     
+    public static void ctrl_break_handler() {
+        // warning: not reentrant.
+        Unsafe.setThreadBlock(break_jthread);
+        break_nthread.thread_handle = SystemInterface.get_current_thread_handle();
+        if (!has_break_occurred) {
+            break_nthread.myHeapAllocator.init();
+            break_nthread.myCodeAllocator.init();
+            has_break_occurred = true;
+        }
+        SystemInterface.debugmsg("*** BREAK! ***");
+        for (int i=0; i<native_threads.length; ++i) {
+            SystemInterface.suspend_thread(native_threads[i].thread_handle);
+        }
+        jq_RegisterState rs = new jq_RegisterState();
+        rs.ContextFlags = jq_RegisterState.CONTEXT_CONTROL;
+        for (int i=0; i<native_threads.length; ++i) {
+            SystemInterface.get_thread_context(native_threads[i].thread_handle, rs);
+            native_threads[i].dump(rs);
+        }
+        for (int i=0; i<native_threads.length; ++i) {
+            SystemInterface.resume_thread(native_threads[i].thread_handle);
+        }
+    }
+    
+    private static boolean has_break_occurred = false;
+    private static jq_NativeThread break_nthread;
+    private static jq_Thread break_jthread;
+    public static void initBreakThread() {
+        break_nthread = new jq_NativeThread(-1);
+        Thread t = new Thread("_break_");
+        break_jthread = (jq_Thread)Reflection.getfield_A(t, ClassLib.sun13.java.lang.Thread._jq_thread);
+        break_jthread.setNativeThread(break_nthread);
+        if (TRACE) SystemInterface.debugmsg("Break thread initialized");
+    }
+    
+    public void dump(jq_RegisterState regs) {
+        SystemInterface.debugmsg(this+": current Java thread = "+currentThread);
+        StackWalker.stackDump(regs.Eip, regs.Ebp);
+        SystemInterface.debugmsg(this+": ready queue = "+readyQueue);
+        SystemInterface.debugmsg(this+": idle queue = "+idleQueue);
+        SystemInterface.debugmsg(this+": transfer queue = "+transferQueue);
+    }
+    
     /** Initialize the thread switch stub function. */
     /*
     public void initializeThreadSwitchStub() {
@@ -384,12 +430,14 @@ public class jq_NativeThread implements x86Constants {
     public static final jq_InstanceMethod _nativeThreadEntry;
     public static final jq_InstanceMethod _schedulerLoop;
     public static final jq_InstanceMethod _threadSwitch;
+    public static final jq_StaticMethod _ctrl_break_handler;
     public static final jq_StaticField _num_of_java_threads;
     static {
         _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LScheduler/jq_NativeThread;");
         _nativeThreadEntry = _class.getOrCreateInstanceMethod("nativeThreadEntry", "()V");
         _schedulerLoop = _class.getOrCreateInstanceMethod("schedulerLoop", "()V");
         _threadSwitch = _class.getOrCreateInstanceMethod("threadSwitch", "()V");
+        _ctrl_break_handler = _class.getOrCreateStaticMethod("ctrl_break_handler", "()V");
         _num_of_java_threads = _class.getOrCreateStaticField("num_of_java_threads", "I");
     }
 }
