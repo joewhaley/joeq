@@ -470,6 +470,10 @@ extern "C" pthread_t __stdcall create_thread(void * (*start)(void *), void* arg)
   }
   return p;
 }
+extern "C" void __stdcall init_thread(const pthread_t handle)
+{
+  Setup_LDT_Keeper();
+}
 extern "C" int __stdcall resume_thread(const pthread_t handle)
 {
   ptrace( PTRACE_CONT, handle, (caddr_t)1, SIGSTOP );
