@@ -1388,6 +1388,7 @@ public class PA {
     
     public void iterate() {
         BDD vP_old = vP.id();
+        BDD IE_old = IE.id();
         boolean change;
         for (int major = 1; ; ++major) {
             change = false;
@@ -1399,11 +1400,12 @@ public class PA {
             bindInvocations();
             if (handleNewTargets())
                 change = true;
-            if (!change && vP.equals(vP_old)) {
+            if (!change && vP.equals(vP_old) && IE.equals(IE_old)) {
                 if (TRACE_SOLVER) out.println("Finished after "+major+" iterations.");
                 break;
             }
             vP_old.free(); vP_old = vP.id();
+            IE_old.free(); IE_old = IE.id();
             addAllMethods();
             bindParameters();
             if (TRACE_SOLVER)
