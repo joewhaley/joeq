@@ -7,6 +7,7 @@ import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -17,7 +18,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -88,12 +88,13 @@ import joeq.Util.Collections.IndexMap;
 import joeq.Util.Collections.InstrumentedSetWrapper;
 import joeq.Util.Collections.MultiMap;
 import joeq.Util.Collections.Pair;
-import joeq.Util.Collections.Triple;
 import joeq.Util.Collections.SetFactory;
 import joeq.Util.Collections.SortedArraySet;
+import joeq.Util.Collections.Triple;
 import joeq.Util.Graphs.Navigator;
 import joeq.Util.IO.Textualizable;
 import joeq.Util.IO.Textualizer;
+
 
 /**
  * MethodSummary
