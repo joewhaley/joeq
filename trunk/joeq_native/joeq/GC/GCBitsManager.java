@@ -18,16 +18,20 @@ import java.util.*;
 public class GCBitsManager {
 
     public static class SweepUnit {
-        private Address head;
+        private HeapAddress head;
         private int byteLength;
 
-        public SweepUnit(Address head, int byteLength) {
+        public SweepUnit(HeapAddress head, int byteLength) {
             this.head = head;
             this.byteLength = byteLength;
         }
 
-        public SweepUnit(Address head, Address end) {
+        public SweepUnit(HeapAddress head, Address end) {
             this(head, end.difference(head));
+        }
+
+        public HeapAddress getHead() {
+            return head;
         }
     }
 
