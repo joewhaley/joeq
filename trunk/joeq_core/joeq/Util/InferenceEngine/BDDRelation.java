@@ -111,6 +111,10 @@ public class BDDRelation extends Relation {
     public void save(String filename) throws IOException {
         solver.bdd.save(filename, relation);
     }
+
+	public void saveNegated() throws IOException {
+		solver.bdd.save("not"+name+".rbdd", relation.not());
+	}
     
     public void saveTuples() throws IOException {
         saveTuples(name+".rtuples");
