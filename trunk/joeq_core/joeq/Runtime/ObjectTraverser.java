@@ -26,9 +26,10 @@ public class ObjectTraverser {
     public static final boolean SKIP_TRANSIENT_FIELDS = false;
 
     private Set/*jq_StaticField*/ nullStaticFields;
+    private Set/*jq_InstanceField*/ nullInstanceFields;
     
-    public ObjectTraverser(Set/*jq_StaticField*/ nullStaticFields) {
-        this.nullStaticFields = nullStaticFields;
+    public ObjectTraverser(Set/*jq_StaticField*/ nullStaticFields, Set/*jq_InstanceField*/ nullInstanceFields) {
+        this.nullStaticFields = nullStaticFields; this.nullInstanceFields = nullInstanceFields;
     }
     
     public Object getStaticFieldValue(jq_StaticField f) {
@@ -73,6 +74,10 @@ public class ObjectTraverser {
     }
     
     public Object getInstanceFieldValue(Object o, jq_InstanceField f) {
+        if (nullInstanceFields.contains(f)) {
+            if (TRACE) out.println("Skipping null instance field "+f);
+            return null;
+        }
         if (SKIP_TRANSIENT_FIELDS && f.isTransient()) {
             if (TRACE) out.println("Skipping transient instance field "+f);
             return null;
@@ -124,6 +129,10 @@ public class ObjectTraverser {
                 //return ((Class)o).getProtectionDomain();
         }
         if (c == jq_Type.class) {
+            if (o == jq_Reference.jq_NullType.NULL_TYPE)
+                return null;
+            if (o == Compil3r.Quad.BytecodeToQuad.jq_ReturnAddressType.INSTANCE)
+                return null;
             if (fieldName.equals("class_object"))
                 return Reflection.getJDKType((jq_Type)o);
         }
@@ -227,7 +236,8 @@ public class ObjectTraverser {
                 // initialize the fields of the object
                 ClassLibInterface.i.init_zipfile((java.util.zip.ZipFile)o, name);
             } catch (IOException x) {
-                jq.UNREACHABLE("cannot open zip file "+o+": "+x);
+                x.printStackTrace();
+                jq.UNREACHABLE("cannot open zip file "+((java.util.zip.ZipFile)o).getName()+": "+x);
             }
             
             // we need to reopen the RandomAccessFile on VM startup
