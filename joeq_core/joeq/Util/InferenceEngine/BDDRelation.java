@@ -59,20 +59,25 @@ public class BDDRelation extends Relation {
                     if (dom.getName().equals(option)) {
                         if (domains.contains(dom)) {
                             System.out.println("Cannot assign "+dom+" to field "+name+": "+dom+" is already assigned");
+                            option = "";
+                            break;
                         } else {
                             d = dom;
                             break;
                         }
                     }
                 }
-                while (d == null) {
-                    BDDDomain dom = solver.allocateBDDDomain(fd);
-                    if (dom.getName().equals(option)) {
-                        d = dom;
-                        break;
+                if (option != null && option.length() > 0) {
+                    while (d == null) {
+                        BDDDomain dom = solver.allocateBDDDomain(fd);
+                        if (dom.getName().equals(option)) {
+                            d = dom;
+                            break;
+                        }
                     }
                 }
-            } else {
+            }
+            if (d == null) {
                 // find an applicable domain.
                 for (Iterator j = doms.iterator(); j.hasNext(); ) {
                     BDDDomain dom = (BDDDomain) j.next();
