@@ -52,8 +52,8 @@ public class ExceptionHandlerList extends java.util.AbstractList implements List
      * @return  the parent set of exception handlers, or null if this set doesn't have a parent. */
     public ExceptionHandlerList getParent() { return parent; }
     
-    /** Returns the exception handler in the list that MUST catch the given exception type,
-     * or null if there is no handler that must catch it.
+    /** Returns the first exception handler in the list that MUST catch an
+     * exception of the given type, or null if there is no handler that must catch it.
      * @return  the handler that must catch the exception type, or null if there is no such handler
      */
     public ExceptionHandler mustCatch(jq_Class exType) {
