@@ -9,7 +9,6 @@ import Compil3r.Analysis.IPSSA.SSAIterator.DefinitionIterator;
 import Compil3r.Analysis.IPSSA.Utils.DefinitionSet;
 import Compil3r.Analysis.IPSSA.Utils.IteratorHelper;
 import Compil3r.Quad.Quad;
-import Compil3r.Quad.Operator.Invoke;
 import Util.Assert;
 
 public abstract class  SSAValue {

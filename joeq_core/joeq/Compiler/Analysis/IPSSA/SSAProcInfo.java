@@ -106,12 +106,15 @@ public final class SSAProcInfo {
 			return getDefinitionFor(loc, _firstQuad);
 		}
 		
-		public Iterator getBindingIterator(Quad q){
+		public SSAIterator.BindingIterator getBindingIterator(Quad q){
+            Iterator iter = null;
 			if(_bindingMap.containsKey(q)){
-				return ((SSABindingAnnote)_bindingMap.get(q)).getBindingIterator(); 
+				iter = ((SSABindingAnnote)_bindingMap.get(q)).getBindingIterator(); 
 			}else{
-				return emptyIterator();	
+				iter = emptyIterator();	
 			}
+            
+            return new SSAIterator.BindingIterator(iter);
 		}
 		
 		public int getBindingCount(Quad quad) {
@@ -126,14 +129,14 @@ public final class SSAProcInfo {
 		/**
 		 * An iterator for all bindings in method.
 		 * */	
-		public Iterator getBindingIterator(jq_Method method){
-			class BindingIterator implements Iterator {
+		public SSAIterator.BindingIterator getBindingIterator(jq_Method method){
+			class MethodBindingIterator implements Iterator {
 				protected jq_Method _method;
 				protected Iterator 	_bindingIter;
 				protected Iterator 	_quadIter;
 				protected Query 	_query;
 				
-				public BindingIterator(jq_Method method){
+				public MethodBindingIterator(jq_Method method){
 					this._method      = method; 
 					this._quadIter 	  = new QuadIterator(CodeCache.getCode(_method));
 					this._bindingIter = emptyIterator();
@@ -167,7 +170,7 @@ public final class SSAProcInfo {
 					Assert._assert(false, "Don't call this method");
 				}	
 			}
-			return new BindingIterator(method);
+			return new SSAIterator.BindingIterator(new MethodBindingIterator(method));
 		}
 		
 		public void print(PrintStream out){

@@ -651,7 +651,7 @@ public class IPSSABuilder implements Runnable {
 			public void visitMove(Quad quad) {
 				// there is only one binding at this quad
 				Assert._assert(_q.getBindingCount(quad) == 1);
-				SSABinding b = (SSABinding) _q.getBindingIterator(quad).next();
+				SSABinding b = _q.getBindingIterator(quad).nextBinding();
 				Assert._assert(b.getValue() == null);
 				b.setValue(markUses(quad));
 			}
@@ -667,7 +667,7 @@ public class IPSSABuilder implements Runnable {
 			public void visitNew(Quad quad) {
 				 // there is only one binding at this quad
 				 Assert._assert(_q.getBindingCount(quad) == 1);
-				 SSABinding b = (SSABinding) _q.getBindingIterator(quad).next();
+				 SSABinding b =  _q.getBindingIterator(quad).nextBinding();
 				 Assert._assert(b.getValue() == null);
 				 b.setValue(makeAlloc(quad));
 			}
@@ -675,7 +675,7 @@ public class IPSSABuilder implements Runnable {
 			public void visitNewArray(Quad quad) {
 				// there is only one binding at this quad
 				 Assert._assert(_q.getBindingCount(quad) == 1);
-				 SSABinding b = (SSABinding) _q.getBindingIterator(quad).next();
+				 SSABinding b = _q.getBindingIterator(quad).nextBinding();
 				 Assert._assert(b.getValue() == null);
 				 b.setValue(makeAlloc(quad));
 			}
@@ -691,8 +691,8 @@ public class IPSSABuilder implements Runnable {
             private void processStore(Quad quad) {
 				// the destinations have been marked at this point
 				// need to fill in the RHSs
-				for(Iterator iter = _q.getBindingIterator(quad); iter.hasNext();) {  					
-					SSABinding b = (SSABinding) iter.next();
+				for(SSAIterator.BindingIterator iter = _q.getBindingIterator(quad); iter.hasNext();) {  					
+					SSABinding b = iter.nextBinding();
 					Assert._assert(b.getValue() == null);
 					b.setValue(markUses(quad));
 				}
@@ -702,9 +702,9 @@ public class IPSSABuilder implements Runnable {
             /** A special instruction. */
             public void visitSpecial(Quad quad) {
                 if(quad.getOperator() instanceof Operator.Special.NOP) {
-                    Iterator bindingIter = _q.getBindingIterator(quad);
+                    SSAIterator.BindingIterator bindingIter = _q.getBindingIterator(quad);
                     while(bindingIter.hasNext()){
-                        SSABinding b = (SSABinding) bindingIter.next();
+                        SSABinding b = bindingIter.nextBinding();
                         SSAValue value = b.getValue();
                     
                         if(value != null && value instanceof SSAValue.Gamma){
@@ -762,7 +762,7 @@ public class IPSSABuilder implements Runnable {
                 }
                 
                 Assert._assert(_q.getBindingCount(quad) == 1, "Have " + _q.getBindingCount(quad) + " bindings at " + quad);
-                SSABinding b = (SSABinding) _q.getBindingIterator(quad).next();
+                SSABinding b = _q.getBindingIterator(quad).nextBinding();
                 Assert._assert(b.getValue() == null);
                 Assert._assert(b.getDestination().getLocation() instanceof SSALocation.LocalLocation);
                 SSALocation.LocalLocation loc = (SSALocation.LocalLocation) b.getDestination().getLocation();
@@ -781,8 +781,8 @@ public class IPSSABuilder implements Runnable {
                 /**
                  * Fill in the existing rho values at this call site.
                  * */
-                for(Iterator iter = _q.getBindingIterator(quad); iter.hasNext(); ) {
-                    SSABinding b  = (SSABinding)iter.next();                    
+                for(SSAIterator.BindingIterator iter = _q.getBindingIterator(quad); iter.hasNext(); ) {
+                    SSABinding b  = iter.nextBinding();                    
                     Assert._assert(b.getValue() instanceof SSAValue.ActualOut);
                     SSAValue.ActualOut value = (ActualOut)b.getValue();
                     SSALocation loc = b.getDestination().getLocation();                    

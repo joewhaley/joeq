@@ -52,4 +52,24 @@ public class SSAIterator {
 			return (SSAValue) _iter.next();
 		}
 	}
+    
+    public static class BindingIterator extends UnmodifiableIterator {
+        private Iterator _iter;
+    
+        public BindingIterator(Iterator iter) {
+            this._iter = iter;
+        }
+    
+        public boolean hasNext() {
+            return _iter.hasNext();
+        }
+
+        public Object next() {
+            return _iter.next();
+        }
+    
+        public SSABinding nextBinding() {
+            return (SSABinding) _iter.next();
+        }
+    }
 }
