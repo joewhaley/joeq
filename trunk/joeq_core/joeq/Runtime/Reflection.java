@@ -409,43 +409,47 @@ uphere:
         } else {
             offset = 0;
         }
-        jq.assert(params.length == args.length+offset);
-        for (int i=0; i<args.length; ++i) {
-            jq_Type c = params[i+offset];
-            if (c.isReferenceType()) {
-                if (!TypeCheck.isAssignable(Unsafe.getTypeOf(args[i]), c))
-                    throw new IllegalArgumentException(args[i].getClass()+" is not assignable to "+c);
-                Unsafe.pushArg(Unsafe.addressOf(args[i]));
-            } else {
-                if (c == jq_Primitive.BYTE) {
-                    int v = (int)unwrapToByte(args[i]);
-                    Unsafe.pushArg(v);
-                } else if (c == jq_Primitive.CHAR) {
-                    int v = (int)unwrapToChar(args[i]);
-                    Unsafe.pushArg(v);
-                } else if (c == jq_Primitive.DOUBLE) {
-                    long v = Double.doubleToRawLongBits(unwrapToDouble(args[i]));
-                    Unsafe.pushArg((int)(v >> 32)); // hi
-                    Unsafe.pushArg((int)v);         // lo
-                } else if (c == jq_Primitive.FLOAT) {
-                    int v = Float.floatToRawIntBits(unwrapToFloat(args[i]));
-                    Unsafe.pushArg(v);
-                } else if (c == jq_Primitive.INT) {
-                    int v = unwrapToInt(args[i]);
-                    Unsafe.pushArg(v);
-                } else if (c == jq_Primitive.LONG) {
-                    long v = unwrapToLong(args[i]);
-                    Unsafe.pushArg((int)(v >> 32)); // hi
-                    Unsafe.pushArg((int)v);         // lo
-                } else if (c == jq_Primitive.SHORT) {
-                    int v = (int)unwrapToShort(args[i]);
-                    Unsafe.pushArg(v);
-                } else if (c == jq_Primitive.BOOLEAN) {
-                    int v = unwrapToBoolean(args[i])?1:0;
-                    Unsafe.pushArg(v);
-                } else jq.UNREACHABLE(c.toString());
-            }
-        }
+        if (args != null) {
+	    jq.assert(params.length == args.length+offset);
+	    for (int i=0; i<args.length; ++i) {
+		jq_Type c = params[i+offset];
+		if (c.isReferenceType()) {
+		    if (args[i] != null && !TypeCheck.isAssignable(Unsafe.getTypeOf(args[i]), c))
+			throw new IllegalArgumentException(args[i].getClass()+" is not assignable to "+c);
+		    Unsafe.pushArg(Unsafe.addressOf(args[i]));
+		} else {
+		    if (c == jq_Primitive.BYTE) {
+			int v = (int)unwrapToByte(args[i]);
+			Unsafe.pushArg(v);
+		    } else if (c == jq_Primitive.CHAR) {
+			int v = (int)unwrapToChar(args[i]);
+			Unsafe.pushArg(v);
+		    } else if (c == jq_Primitive.DOUBLE) {
+			long v = Double.doubleToRawLongBits(unwrapToDouble(args[i]));
+			Unsafe.pushArg((int)(v >> 32)); // hi
+			Unsafe.pushArg((int)v);         // lo
+		    } else if (c == jq_Primitive.FLOAT) {
+			int v = Float.floatToRawIntBits(unwrapToFloat(args[i]));
+			Unsafe.pushArg(v);
+		    } else if (c == jq_Primitive.INT) {
+			int v = unwrapToInt(args[i]);
+			Unsafe.pushArg(v);
+		    } else if (c == jq_Primitive.LONG) {
+			long v = unwrapToLong(args[i]);
+			Unsafe.pushArg((int)(v >> 32)); // hi
+			Unsafe.pushArg((int)v);         // lo
+		    } else if (c == jq_Primitive.SHORT) {
+			int v = (int)unwrapToShort(args[i]);
+			Unsafe.pushArg(v);
+		    } else if (c == jq_Primitive.BOOLEAN) {
+			int v = unwrapToBoolean(args[i])?1:0;
+			Unsafe.pushArg(v);
+		    } else jq.UNREACHABLE(c.toString());
+		}
+	    }
+	} else {
+	    jq.assert(params.length == offset);
+	}
         try {
             return Unsafe.invoke(m.getDefaultCompiledVersion().getEntrypoint());
         } catch (Throwable t) {
@@ -456,27 +460,27 @@ uphere:
     // unwrap functions
     public static boolean unwrapToBoolean(Object value) throws IllegalArgumentException {
         if (value instanceof Boolean) return ((Boolean)value).booleanValue();
-        else throw new IllegalArgumentException(value.getClass()+" cannot be converted to boolean");
+        else throw new IllegalArgumentException((value==null?null:value.getClass())+" cannot be converted to boolean");
     }
     public static byte unwrapToByte(Object value) throws IllegalArgumentException {
         if (value instanceof Byte) return ((Byte)value).byteValue();
-        else throw new IllegalArgumentException(value.getClass()+" cannot be converted to byte");
+        else throw new IllegalArgumentException((value==null?null:value.getClass())+" cannot be converted to byte");
     }
     public static char unwrapToChar(Object value) throws IllegalArgumentException {
         if (value instanceof Character) return ((Character)value).charValue();
-        else throw new IllegalArgumentException(value.getClass()+" cannot be converted to char");
+        else throw new IllegalArgumentException((value==null?null:value.getClass())+" cannot be converted to char");
     }
     public static short unwrapToShort(Object value) throws IllegalArgumentException {
         if (value instanceof Short) return ((Short)value).shortValue();
         else if (value instanceof Byte) return ((Byte)value).shortValue();
-        else throw new IllegalArgumentException(value.getClass()+" cannot be converted to short");
+        else throw new IllegalArgumentException((value==null?null:value.getClass())+" cannot be converted to short");
     }
     public static int unwrapToInt(Object value) throws IllegalArgumentException {
         if (value instanceof Integer) return ((Integer)value).intValue();
         else if (value instanceof Byte) return ((Byte)value).intValue();
         else if (value instanceof Character) return (int)((Character)value).charValue();
         else if (value instanceof Short) return ((Short)value).intValue();
-        else throw new IllegalArgumentException(value.getClass()+" cannot be converted to int");
+        else throw new IllegalArgumentException((value==null?null:value.getClass())+" cannot be converted to int");
     }
     public static long unwrapToLong(Object value) throws IllegalArgumentException {
         if (value instanceof Long) return ((Long)value).longValue();
@@ -484,7 +488,7 @@ uphere:
         else if (value instanceof Byte) return ((Byte)value).longValue();
         else if (value instanceof Character) return (long)((Character)value).charValue();
         else if (value instanceof Short) return ((Short)value).longValue();
-        else throw new IllegalArgumentException(value.getClass()+" cannot be converted to long");
+        else throw new IllegalArgumentException((value==null?null:value.getClass())+" cannot be converted to long");
     }
     public static float unwrapToFloat(Object value) throws IllegalArgumentException {
         if (value instanceof Float) return ((Float)value).floatValue();
@@ -493,7 +497,7 @@ uphere:
         else if (value instanceof Byte) return ((Byte)value).floatValue();
         else if (value instanceof Character) return (float)((Character)value).charValue();
         else if (value instanceof Short) return ((Short)value).floatValue();
-        else throw new IllegalArgumentException(value.getClass()+" cannot be converted to float");
+        else throw new IllegalArgumentException((value==null?null:value.getClass())+" cannot be converted to float");
     }
     public static double unwrapToDouble(Object value) throws IllegalArgumentException {
         if (value instanceof Double) return ((Double)value).doubleValue();
@@ -503,7 +507,7 @@ uphere:
         else if (value instanceof Byte) return ((Byte)value).doubleValue();
         else if (value instanceof Character) return (double)((Character)value).charValue();
         else if (value instanceof Short) return ((Short)value).doubleValue();
-        else throw new IllegalArgumentException(value.getClass()+" cannot be converted to double");
+        else throw new IllegalArgumentException((value==null?null:value.getClass())+" cannot be converted to double");
     }
 
     public static int getfield_I(Object o, jq_InstanceField f) {
