@@ -1143,16 +1143,23 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
             }
             catch (UTFDataFormatError x) {
                 //state = STATE_LOADERROR;
+                state = STATE_UNLOADED;
                 throw new ClassFormatError(x.toString());
             }
             catch (IOException x) {
                 //state = STATE_LOADERROR;
+                state = STATE_UNLOADED;
                 throw new ClassFormatError(x.toString());
             }
             catch (ArrayIndexOutOfBoundsException x) {
                 //state = STATE_LOADERROR;
+                state = STATE_UNLOADED;
                 x.printStackTrace();
                 throw new ClassFormatError("bad constant pool index");
+            }
+            catch (Error x) {
+                state = STATE_UNLOADED;
+                throw x;
             }
         } // synchronized
     }

@@ -205,6 +205,7 @@ public abstract class ZipFile implements ZipConstants {
     {
         if (TRACE) System.out.println(this+": reading file pos="+pos+" off="+off+" len="+len);
         RandomAccessFile raf = this.raf;
+        if (raf == null) throw new java.io.IOException();
         if (pos != this.pos) {
             raf.seek(pos);
         }
@@ -217,8 +218,9 @@ public abstract class ZipFile implements ZipConstants {
         return n;
     }
     private /*synchronized*/ int read(long pos) throws java.io.IOException {
-        RandomAccessFile raf = this.raf;
         if (TRACE) System.out.println(this+": read pos="+pos);
+        RandomAccessFile raf = this.raf;
+        if (raf == null) throw new java.io.IOException();
         if (pos != this.pos) {
             if (TRACE) System.out.println(this+": seeking to "+pos);
             raf.seek(pos);
@@ -293,6 +295,7 @@ public abstract class ZipFile implements ZipConstants {
     private static final int INBUFSIZ = 64;
 
     private long findEND() throws java.io.IOException {
+        if (raf == null) throw new java.io.IOException();
         // Start searching backwards from end of file
         long len = raf.length();
         if (TRACE) System.out.println(this+": findEND len="+len);

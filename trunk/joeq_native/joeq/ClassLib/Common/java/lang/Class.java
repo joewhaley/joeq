@@ -46,7 +46,7 @@ public class Class {
     private static void registerNatives() { }
     private static Class forName0(java.lang.String name, boolean initialize,
                                   ClassLoader loader)
-        throws ClassNotFoundException
+        throws java.lang.ClassNotFoundException
     {
         Class k = loader.loadClass(name);
         if (initialize) {
@@ -58,7 +58,7 @@ public class Class {
     }
 
     private java.lang.Object newInstance0()
-        throws InstantiationException, IllegalAccessException
+        throws java.lang.InstantiationException, java.lang.IllegalAccessException
     {
         jq_Type jq_type = this.jq_type;
         if (!jq_type.isClassType())
@@ -69,16 +69,16 @@ public class Class {
             throw new java.lang.InstantiationException("cannot instantiate abstract "+this);
         jq_Initializer i = jq_class.getInitializer(new jq_NameAndDesc(Utf8.get("<init>"), Utf8.get("()V")));
         if (i == null)
-            throw new InstantiationException("no empty arg initializer in "+this);
+            throw new java.lang.InstantiationException("no empty arg initializer in "+this);
         ClassUtils.checkCallerAccess(i, 3);
         jq_class.cls_initialize(); 
         java.lang.Object o = jq_class.newInstance();
         try {
             Reflection.invokeinstance_V(i, o);
-        } catch (Error x) {
+        } catch (java.lang.Error x) {
             throw x;
         } catch (java.lang.Throwable x) {
-            throw new ExceptionInInitializerError(x);
+            throw new java.lang.ExceptionInInitializerError(x);
         }
         return o;
     }
@@ -196,7 +196,7 @@ public class Class {
         if (name.equals("char")) return Reflection.getJDKType(jq_Primitive.CHAR);
         if (name.equals("short")) return Reflection.getJDKType(jq_Primitive.SHORT);
         if (name.equals("void")) return Reflection.getJDKType(jq_Primitive.VOID);
-        throw new InternalError("no such primitive type: "+name);
+        throw new java.lang.InternalError("no such primitive type: "+name);
     }
     
     private java.lang.reflect.Field[] getFields0(int which) {

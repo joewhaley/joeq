@@ -93,42 +93,44 @@ public interface jq_ClassFileConstants {
     // A thread has finished loading the class, and is now merging in implementation
     // classes.
     byte STATE_LOADING3     = 3;
+    // An error occurred while loading this class.
+    byte STATE_LOADERROR    = 4;
     // This class has been loaded and all members have been created.
-    byte STATE_LOADED       = 4;
+    byte STATE_LOADED       = 5;
     // A thread is in the process of verifying this class. (Jvm spec 2.17.3)
     // (see verify pass 2 Jvm spec 4.9.1)
     // It checks the code in each declared method in the class.
-    byte STATE_VERIFYING    = 5;
+    byte STATE_VERIFYING    = 6;
     // This class has been successfully verified.
-    byte STATE_VERIFIED     = 6;
+    byte STATE_VERIFIED     = 7;
     // A thread is in the process of preparing this class. (Jvm spec 2.17.3)
     // Preparation lays out the object fields and creates a method table.
     // Static fields are created and initialized in the NEXT step.
-    byte STATE_PREPARING    = 7;
+    byte STATE_PREPARING    = 8;
     // This class has been prepared.
-    byte STATE_PREPARED     = 8;
+    byte STATE_PREPARED     = 9;
     // A thread is creating the static fields for the class, and initializing the
     // ones that have ConstantValue attributes.
-    byte STATE_SFINITIALIZING = 9;
+    byte STATE_SFINITIALIZING = 10;
     // This class has its static fields created and initialized.
-    byte STATE_SFINITIALIZED = 10;
+    byte STATE_SFINITIALIZED  = 11;
     // A thread is in the process of compiling stubs for the methods in this class.
-    byte STATE_COMPILING = 11;
+    byte STATE_COMPILING = 12;
     // The class has stubs compiled for all of its methods.
-    byte STATE_COMPILED = 12;
+    byte STATE_COMPILED  = 13;
     // A thread is in the process of initializing this class. (Jvm spec 2.17.4-5)
     // Initialization is triggered when code is about to execute that will create
     // an instance, execute a static method, or use or assign a nonconstant static
     // field.
-    byte STATE_CLSINITIALIZING = 13;
-    byte STATE_CLSINITRUNNING = 14;
+    byte STATE_CLSINITIALIZING = 14;
+    byte STATE_CLSINITRUNNING  = 15;
     // An error occurred during initialization!  This resulted in a throwing of 
     // a NoClassDefFoundError, ExceptionInInitializerError, or OutOfMemoryError
     // for the initializing thread.  Any further attempts to initialize should
     // result in the throwing of a NoClassDefFoundError. 
-    byte STATE_CLSINITERROR = 15;
+    byte STATE_CLSINITERROR    = 16;
     // This class has been fully initialized!
-    byte STATE_CLSINITIALIZED  = 16;
+    byte STATE_CLSINITIALIZED  = 17;
 
     /**
      * Illegal codes

@@ -102,11 +102,11 @@ public abstract class ClassLoader {
         // define a new class based on given name and class file structure
         DataInputStream in = new DataInputStream(new ByteArrayInputStream(b, off, len));
         // TODO: what should we do about protection domain???  ignore it???
-        if (name == null) throw new ClassFormatError("name cannot be null when defining class");
-        if (name.startsWith("[")) throw new ClassFormatError("cannot define array class with defineClass: "+name);
+        if (name == null) throw new java.lang.ClassFormatError("name cannot be null when defining class");
+        if (name.startsWith("[")) throw new java.lang.ClassFormatError("cannot define array class with defineClass: "+name);
         Utf8 desc = Utf8.get("L"+name.replace('.','/')+";");
         if (this.getType(desc) != null)
-            throw new ClassFormatError("class "+name+" already defined");
+            throw new java.lang.ClassFormatError("class "+name+" already defined");
         java.lang.Object o = this;
         jq_Class c = jq_Class.newClass((java.lang.ClassLoader)o, desc);
         Map desc2type = this.desc2type;
@@ -119,7 +119,7 @@ public abstract class ClassLoader {
         jq_Type t = c.jq_type;
         t.load(); t.verify(); t.prepare();
     }
-    private java.lang.Class findBootstrapClass(java.lang.String name) throws ClassNotFoundException {
+    private java.lang.Class findBootstrapClass(java.lang.String name) throws java.lang.ClassNotFoundException {
         java.lang.Object o = PrimordialClassLoader.loader;
         Assert._assert(this == o);
         if (!name.startsWith("[")) name = "L"+name+";";
@@ -128,9 +128,12 @@ public abstract class ClassLoader {
         k = this.getOrCreateType(desc);
         try {
             k.load();
-        } catch (NoClassDefFoundError x) {
+        } catch (java.lang.ClassFormatError x) {
+            //this.unloadType(k); // ??? should we unload?
+            throw x;
+        } catch (java.lang.NoClassDefFoundError x) {
             this.unloadType(k);
-            throw new ClassNotFoundException(name);
+            throw new java.lang.ClassNotFoundException(name);
         }
         return Reflection.getJDKType(k);
     }
