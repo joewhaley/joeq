@@ -802,6 +802,7 @@ public class CSPAResults {
     }
     
     int[] getIndices(Collection c) {
+        if (c == null) return null;
         int s = c.size();
         if (s == 0) return null;
         int[] r = new int[s];

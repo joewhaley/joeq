@@ -337,6 +337,7 @@ public class CSPA {
         int n = variableIndexMap.size();
         out.writeBytes(n+"\n");
         int j;
+        System.out.println("Global range: 0-"+globalVarHighIndex);
         for (j=0; j<=globalVarHighIndex; ++j) {
             Variable node = getVariable(j); 
             node.write(out);
@@ -344,6 +345,7 @@ public class CSPA {
         }
         for (Iterator i=bddSummaryList.iterator(); i.hasNext(); ) {
             BDDMethodSummary s = (BDDMethodSummary) i.next();
+            System.out.println("Method "+s.ms.getMethod()+" range: "+s.lowVarIndex+"-"+s.highVarIndex);
             Assert._assert(s.lowVarIndex == j);
             for ( ; j<=s.highVarIndex; ++j) {
                 Variable node = getVariable(j);
@@ -365,6 +367,7 @@ public class CSPA {
                 out.writeByte('\n');
             }
         }
+        System.out.println("Unknown range: "+j+"-"+variableIndexMap.size());
         while (j < variableIndexMap.size()) {
             // UnknownTypeNode
             Variable node = getVariable(j);
