@@ -85,7 +85,8 @@ public class AndersenPointerAnalysis {
             System.out.println("Our analysis: "+(time/1000.)+" seconds, "+(mem4-mem2)+" bytes of memory");
             
             System.out.println("Result of Andersen pointer analysis:");
-            System.out.println(computeStats(INSTANCE.callSiteToTargets));
+            System.out.println(INSTANCE.computeStats());
+            System.out.println(computeHistogram(INSTANCE.callSiteToTargets));
             
             calcRTA();
             
@@ -97,7 +98,7 @@ public class AndersenPointerAnalysis {
                 CallTargets ct = cs.m.getCallTargets();
                 cha_rta_callSiteToTargets.put(cs, ct);
             }
-            System.out.println(computeStats(cha_rta_callSiteToTargets));
+            System.out.println(computeHistogram(cha_rta_callSiteToTargets));
         }
         public static void calcRTA() {
             Set/*jq_Type*/ s = Bootstrap.PrimordialClassLoader.loader.getAllTypes();
@@ -177,9 +178,11 @@ public class AndersenPointerAnalysis {
             INSTANCE.iterate();
             System.out.println("Result of Andersen pointer analysis:");
             System.out.println(dumpResults(INSTANCE.callSiteToTargets));
-            System.out.println(computeStats(INSTANCE.callSiteToTargets));
+            System.out.println(INSTANCE.computeStats());
+            System.out.println(computeHistogram(INSTANCE.callSiteToTargets));
 
             System.out.println("Compare to CHA/RTA:");
+            calcRTA();
             HashMap cha_rta_callSiteToTargets = new HashMap();
             for (Iterator i=INSTANCE.callSiteToTargets.entrySet().iterator(); i.hasNext(); ) {
                 Map.Entry e = (Map.Entry)i.next();
@@ -188,7 +191,7 @@ public class AndersenPointerAnalysis {
                 cha_rta_callSiteToTargets.put(cs, ct);
             }
             System.out.println(dumpResults(cha_rta_callSiteToTargets));
-            System.out.println(computeStats(cha_rta_callSiteToTargets));
+            System.out.println(computeHistogram(cha_rta_callSiteToTargets));
         }
     }
     
@@ -394,7 +397,35 @@ public class AndersenPointerAnalysis {
     
     public static final int HISTOGRAM_SIZE = 100;
     
-    public static String computeStats(Map m) {
+    public String computeStats() {
+        StringBuffer sb = new StringBuffer();
+        HashSet classes = new HashSet();
+        long bytecodes = 0;
+        for (Iterator i=methodsToVisit.iterator(); i.hasNext(); ) {
+            ControlFlowGraph ms = (ControlFlowGraph)i.next();
+            bytecodes += ms.getMethod().getBytecode().length;
+            jq_Class c = ms.getMethod().getDeclaringClass();
+            while (c != null) {
+                classes.add(c);
+                c = c.getSuperclass();
+            }
+        }
+        sb.append(" Classes: ");
+        sb.append(classes.size());
+        sb.append(" Methods: ");
+        sb.append(methodsToVisit.size());
+        sb.append(" Calls: ");
+        sb.append(callSiteToTargets.size());
+        sb.append(" Call graph edges: ");
+        sb.append(linkedTargets.size());
+        sb.append(" Bytecodes ");
+        sb.append(bytecodes);
+        sb.append(" Iteration ");
+        sb.append(count);
+        sb.append(lineSep);
+        return sb.toString();
+    }
+    public static String computeHistogram(Map m) {
         StringBuffer sb = new StringBuffer();
         int[] histogram = new int[HISTOGRAM_SIZE];
         for (Iterator i=m.entrySet().iterator(); i.hasNext(); ) {
@@ -436,9 +467,11 @@ public class AndersenPointerAnalysis {
         return sb.toString();
     }
 
+    int count;
+    
     void iterate() {
         methodsToVisit.addAll(rootSet);
-        int count = 1;
+        count = 1;
         for (;;) {
             this.change = false;
             System.err.println("Iteration "+count+": "+methodsToVisit.size()+" methods "+callSiteToTargets.size()+" call sites "+linkedTargets.size()+" call graph edges");
