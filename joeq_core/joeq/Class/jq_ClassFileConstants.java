@@ -11,19 +11,30 @@ package Clazz;
 
 public interface jq_ClassFileConstants {
 
-    public static final char ACC_PUBLIC       = 0x0001;
-    public static final char ACC_PRIVATE      = 0x0002;
-    public static final char ACC_PROTECTED    = 0x0004;
-    public static final char ACC_STATIC       = 0x0008;
-    public static final char ACC_FINAL        = 0x0010;
-    public static final char ACC_SYNCHRONIZED = 0x0020; // same value
-    public static final char ACC_SUPER        = 0x0020; // same value
-    public static final char ACC_VOLATILE     = 0x0040;
-    public static final char ACC_TRANSIENT    = 0x0080;
-    public static final char ACC_NATIVE       = 0x0100;
-    public static final char ACC_INTERFACE    = 0x0200;
-    public static final char ACC_ABSTRACT     = 0x0400;
-    public static final char ACC_STRICT       = 0x0800;
+    /* ClassFile format: common access flags for classes(C), methods(M) and fields(F)
+       (VM Spec Chapter 4.7) */
+    public static final char ACC_PUBLIC       = 0x0001; // C, M, F
+    public static final char ACC_PRIVATE      = 0x0002; // M, F
+    public static final char ACC_PROTECTED    = 0x0004; // M, F
+    public static final char ACC_STATIC       = 0x0008; // M, F
+    public static final char ACC_FINAL        = 0x0010; // C, M, F
+    public static final char ACC_SYNCHRONIZED = 0x0020; // same value M, F
+    public static final char ACC_SUPER        = 0x0020; // same value C
+    public static final char ACC_VOLATILE     = 0x0040; // M  Declared volatile; cannot be cached
+    public static final char ACC_TRANSIENT    = 0x0080; // M
+    public static final char ACC_NATIVE       = 0x0100; // F
+    public static final char ACC_INTERFACE    = 0x0200; // C
+    public static final char ACC_ABSTRACT     = 0x0400; // C, F
+    public static final char ACC_STRICT       = 0x0800; // F  Declared strictfp; floating-point mode is FP-strict
+
+    /* Each item in the constant_pool table must begin with
+       a 1-byte tag indicating the kind of cp_info entry.
+       The contents of the info array vary with the value of tag.
+       Each tag byte must be followed by two or more bytes
+       giving information about the specific constant.
+       The format of the additional information varies with
+       the tag value. Tag values are given below.
+       (VM Spec Chapter 4.4) */
 
     public static final byte CONSTANT_Class              = 7;
     public static final byte CONSTANT_FieldRef           = 9;
@@ -41,21 +52,26 @@ public interface jq_ClassFileConstants {
     public static final byte CONSTANT_ResolvedIFieldRef  = 15; // doesn't exist in class file.
     public static final byte CONSTANT_ResolvedSMethodRef = 16; // doesn't exist in class file.
     public static final byte CONSTANT_ResolvedIMethodRef = 17; // doesn't exist in class file.
-    
-    public static final byte TC_BYTE     = (byte)'B';
-    public static final byte TC_CHAR     = (byte)'C';
-    public static final byte TC_DOUBLE   = (byte)'D';
-    public static final byte TC_FLOAT    = (byte)'F';
-    public static final byte TC_INT      = (byte)'I';
-    public static final byte TC_LONG     = (byte)'J';
-    public static final byte TC_CLASS    = (byte)'L';
-    public static final byte TC_CLASSEND = (byte)';';
-    public static final byte TC_SHORT    = (byte)'S';
-    public static final byte TC_BOOLEAN  = (byte)'Z';
-    public static final byte TC_ARRAY    = (byte)'[';
-    public static final byte TC_PARAM    = (byte)'(';
-    public static final byte TC_PARAMEND = (byte)')';
-    public static final byte TC_VOID     = (byte)'V';
+
+    /* A descriptor is a string representing the type of a field
+       or method. Descriptors are represented in the class file
+       format using UTF-8 strings. Followings are the BaseType
+       characters corresponding to respective types.
+       (VM Spec Chapter 4.3) */
+    public static final byte TC_BYTE     = (byte)'B'; // signed byte
+    public static final byte TC_CHAR     = (byte)'C'; // Unicode character
+    public static final byte TC_DOUBLE   = (byte)'D'; // double-precision floating-point value
+    public static final byte TC_FLOAT    = (byte)'F'; // single-precision floating-point value
+    public static final byte TC_INT      = (byte)'I'; // integer
+    public static final byte TC_LONG     = (byte)'J'; // long integer
+    public static final byte TC_CLASS    = (byte)'L'; // L<classname>; an instance of class <classname>
+    public static final byte TC_CLASSEND = (byte)';'; //
+    public static final byte TC_SHORT    = (byte)'S'; // signed short
+    public static final byte TC_BOOLEAN  = (byte)'Z'; // true or false
+    public static final byte TC_ARRAY    = (byte)'['; // one array dimension
+    public static final byte TC_PARAM    = (byte)'('; //
+    public static final byte TC_PARAMEND = (byte)')'; //
+    public static final byte TC_VOID     = (byte)'V'; // indicates that the method returns no value(void)
 
     public static final byte T_BOOLEAN = 4;
     public static final byte T_CHAR    = 5;
@@ -122,6 +138,7 @@ public interface jq_ClassFileConstants {
     public static final String ILLEGAL_TYPE   = "<illegal type>";
 
     /** Java VM opcodes.
+     *  (VM Spec Chapter 6)
      */
     public static final short jbc_NOP              = 0;
     public static final short jbc_ACONST_NULL      = 1;
