@@ -4,7 +4,10 @@
 package Util.Graphs;
 
 import java.io.DataOutput;
+import java.io.Externalizable;
 import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.math.BigInteger;
 import java.util.AbstractList;
 import java.util.Arrays;
@@ -17,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.StringTokenizer;
 import java.util.TreeSet;
 
 import Util.Assert;
@@ -31,7 +35,7 @@ import Util.Collections.UnmodifiableIterator;
  * @author John Whaley
  * @version $Id$
  */
-public class PathNumbering {
+public class PathNumbering implements Externalizable {
 
     public static final boolean TRACE_NUMBERING = false;
     public static final boolean TRACE_PATH = false;
@@ -403,6 +407,49 @@ public class PathNumbering {
             }
         }
         return result;
+    }
+    
+    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+        Map temp = new HashMap();
+        for (;;) {
+            String line = in.readLine();
+            if (line == null) break;
+            StringTokenizer st = new StringTokenizer(line);
+            String s = st.nextToken();
+            if (s.equals("NODE")) {
+                int index = Integer.parseInt(st.nextToken());
+                Object o = in.readObject();
+                temp.put(new Integer(index), o);
+            } else if (s.equals("EDGE")) {
+                Object from = temp.get(new Integer(Integer.parseInt(st.nextToken())));
+                Object to = temp.get(new Integer(Integer.parseInt(st.nextToken())));
+                BigInteger lo = new BigInteger(st.nextToken(), 10);
+                BigInteger hi = new BigInteger(st.nextToken(), 10);
+                Pair edge = new Pair(from, to);
+                Range r = new Range(lo, hi);
+                edgeNumbering.put(edge, r);
+            } else {
+                // unknown.
+            }
+        }
+    }
+    
+    public void writeExternal(ObjectOutput out) throws IOException {
+        IndexMap m = new IndexMap("NodeMap");
+        for (Iterator i=nodeToScc.keySet().iterator(); i.hasNext(); ) {
+            Object o = i.next();
+            int j = m.get(o);
+            out.writeBytes("NODE "+j+"\n");
+            out.writeObject(o);
+        }
+        for (Iterator i=edgeNumbering.entrySet().iterator(); i.hasNext(); ) {
+            Map.Entry e = (Map.Entry) i.next();
+            Pair edge = (Pair) e.getKey();
+            Range r = (Range) e.getValue();
+            int fromIndex = m.get(edge.left);
+            int toIndex = m.get(edge.right);
+            out.writeBytes("EDGE "+fromIndex+" "+toIndex+" "+r.low+" "+r.high+"\n");
+        }
     }
     
     public void dotGraph(DataOutput out) throws IOException {
