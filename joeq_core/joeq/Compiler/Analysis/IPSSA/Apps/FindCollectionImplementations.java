@@ -6,9 +6,11 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 import java.util.StringTokenizer;
 
@@ -61,6 +63,9 @@ class ClassHierarchy {
         }
         public String toString(){
             return _class.toString();                
+        }
+        public List getChilden() {
+            return Arrays.asList(_children.toArray());
         }
     }
     Set _nodes = new HashSet();     
@@ -168,10 +173,22 @@ class ClassHierarchy {
         return _nodes.size() - 1;
     }
 
+    /**
+     * Compares class names.
+     * */
+    public class ClassComparator implements Comparator {
+        public int compare(Object arg0, Object arg1) {            
+            return arg0.toString().toLowerCase().compareTo(arg1.toString().toLowerCase());
+        }
+    }
+    
     private void printHierarchyAux(ClassHieraryNode node, String string) {        
-        System.out.print(string + node.toLongString());
+        System.out.print(string + node.toString());
         System.out.println(node.getChildCount() == 0 ? "" : (" " + node.getChildCount()));
-        for(Iterator iter = node.getChildIterator(); iter.hasNext();) {
+        List children = node.getChilden();
+        Comparator comparator = new ClassComparator();        
+        Collections.sort(children, comparator);
+        for(Iterator iter = children.iterator(); iter.hasNext();) {
             ClassHieraryNode child = (ClassHieraryNode)iter.next();
 
             Assert._assert(child != node, "Child: " + child + " is the same as " + node);            
