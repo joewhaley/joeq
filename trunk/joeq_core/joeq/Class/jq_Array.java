@@ -252,16 +252,12 @@ public class jq_Array extends jq_Reference implements jq_ClassFileConstants {
         _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LClazz/jq_Array;");
 	/* Set up delegates. */
 	_delegate = null;
-	boolean nullVM = System.getProperty("joeq.nullvm") != null;
+	boolean nullVM = jq.nullVM || System.getProperty("joeq.nullvm") != null;
 	if (!nullVM) {
 	    _delegate = attemptDelegate("Clazz.Delegates$Array");
 	}
 	if (_delegate == null) {
-	    _delegate = attemptDelegate("Clazz.NullDelegates$Array");
-	}
-	if (_delegate == null) {
-	    System.err.println("FATAL: Cannot load Array Delegate");
-	    System.exit(-1);
+	    _delegate = new NullDelegates.Array();
 	}
     }
 

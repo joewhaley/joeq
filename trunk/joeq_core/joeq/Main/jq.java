@@ -367,6 +367,13 @@ public abstract class jq {
      */
     public static List on_vm_startup;
 
+    /**
+     * Whether all joeq-VM specific stuff should be ignored as
+     * non-existent.  Setting this to "true" enables only the analysis
+     * framework.
+     */
+    public static /*final*/ boolean nullVM = false;
+
     public static /*final*/ boolean SMP = true;
 
     public static void Assert(boolean b, String reason) {

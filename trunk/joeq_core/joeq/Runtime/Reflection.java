@@ -416,16 +416,12 @@ public abstract class Reflection {
     static {
 	/* Set up delegates. */
 	_delegate = null;
-	boolean nullVM = System.getProperty("joeq.nullvm") != null;
+	boolean nullVM = Main.jq.nullVM || System.getProperty("joeq.nullvm") != null;
 	if (!nullVM) {
 	    _delegate = attemptDelegate("Run_Time.ReflectionImpl");
 	}
 	if (_delegate == null) {
-	    _delegate = attemptDelegate("Run_Time.BasicReflectionImpl");
-	}
-	if (_delegate == null) {
-	    System.err.println("FATAL: Cannot load reflection Delegate");
-	    System.exit(-1);
+	    _delegate = new Run_Time.BasicReflectionImpl();
 	}
 
 	_class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LRun_Time/Reflection;");

@@ -12,16 +12,12 @@ public abstract class ThreadUtils {
     static {
 	/* Set up delegates. */
 	_delegate = null;
-	boolean nullVM = System.getProperty("joeq.nullvm") != null;
+	boolean nullVM = Main.jq.nullVM || System.getProperty("joeq.nullvm") != null;
 	if (!nullVM) {
 	    _delegate = attemptDelegate("Scheduler.FullThreadUtils");
 	}
 	if (_delegate == null) {
-	    _delegate = attemptDelegate("Scheduler.HostedThreadUtils");
-	}
-	if (_delegate == null) {
-	    System.err.println("FATAL: Cannot load threadutils");
-	    System.exit(-1);
+	    _delegate = new Scheduler.HostedThreadUtils();
 	}
     }
 

@@ -2489,16 +2489,12 @@ uphere2:
     static {
 	/* Set up delegates. */
 	_delegate = null;
-	boolean nullVM = System.getProperty("joeq.nullvm") != null;
+	boolean nullVM = jq.nullVM || System.getProperty("joeq.nullvm") != null;
 	if (!nullVM) {
 	    _delegate = attemptDelegate("Clazz.Delegates$Klass");
 	}
 	if (_delegate == null) {
-	    _delegate = attemptDelegate("Clazz.NullDelegates$Klass");
-	}
-	if (_delegate == null) {
-	    System.err.println("FATAL: Cannot load Class Delegate");
-	    System.exit(-1);
+	    _delegate = new NullDelegates.Klass();
 	}
     }
 

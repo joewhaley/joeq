@@ -3476,16 +3476,12 @@ public abstract class Operator {
     static {
 	/* Set up delegates. */
 	_delegate = null;
-	boolean nullVM = System.getProperty("joeq.nullvm") != null;
+	boolean nullVM = jq.nullVM || System.getProperty("joeq.nullvm") != null;
 	if (!nullVM) {
 	    _delegate = attemptDelegate("Compil3r.Quad.Delegates$Op");
 	}
 	if (_delegate == null) {
-	    _delegate = attemptDelegate("Compil3r.Quad.NullDelegates$Op");
-	}
-	if (_delegate == null) {
-	    System.err.println("FATAL: Cannot load quad-operator delegate");
-	    System.exit(-1);
+	    _delegate = new Compil3r.Quad.NullDelegates.Op();
 	}
     }
 
