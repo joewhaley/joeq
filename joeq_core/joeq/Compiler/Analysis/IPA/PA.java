@@ -3317,6 +3317,7 @@ public class PA {
             // initialize the necessary SCC #
             SCComponent string_buffer_append_scc = null;
             for(SCComponent c = sccGraph.getFirst(); c.nextTopSort() != null; c = c.nextTopSort()) {
+                System.err.println("Component " + c.toString());
                 if(c.contains(string_buffer_append)) {
                     string_buffer_append_scc = c;
                     break;
