@@ -29,7 +29,17 @@ public class Monitor implements ObjectLayout {
     jq_Thread monitor_owner;
     int entry_count = 0;    // 1 means locked once.
     int/*CPointer*/ semaphore;
-  
+    
+    /** Returns the depth of the lock on the given object. */
+    public static int getLockEntryCount(Object k) {
+        int lockword = Unsafe.peek(Unsafe.addressOf(k)+STATUS_WORD_OFFSET);
+        if (lockword < 0) {
+            Monitor m = getMonitor(lockword);
+            return m.entry_count;
+        }
+        return (lockword & LOCK_COUNT_MASK) >> LOCK_COUNT_SHIFT;
+    }
+    
     /** Monitorenter runtime routine.
      *  Checks for thin lock usage, otherwise falls back to inflated locks.
      */

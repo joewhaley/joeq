@@ -36,6 +36,7 @@ public class jq_Thread implements ObjectLayout {
     private jq_CompiledCode entry_point;
     private boolean isDaemon;
     private boolean isDead;
+    private volatile int isInterrupted;
     private final int thread_id;
     
     public static final int INITIAL_STACK_SIZE = 65536;
@@ -89,7 +90,9 @@ public class jq_Thread implements ObjectLayout {
         this.isDead = false;
         jq_NativeThread.startJavaThread(this);
     }
-    public void sleep(long millis) {
+    public void sleep(long millis) throws InterruptedException {
+        if (this.isInterrupted(true))
+            throw new InterruptedException();
         // TODO:  for now, sleep just yields
         yield();
     }
@@ -140,8 +143,15 @@ public class jq_Thread implements ObjectLayout {
     public void stop(Object o) { }
     public void suspend() { }
     public void resume() { }
-    public void interrupt() { }
-    public boolean isInterrupted(boolean clear) { return false; }
+    public void interrupt() { this.isInterrupted = 1; }
+    public boolean isInterrupted(boolean clear) {
+        boolean isInt = this.isInterrupted != 0;
+        if (clear && isInt) {
+            //int res = Unsafe.atomicCas4(_isInterrupted.getAddress(), 1, 0);
+            this.isInterrupted = 0;
+        }
+        return isInt;
+    }
     public boolean isAlive() { return !isDead; }
     public boolean isDaemon() { return isDaemon; }
     public void setDaemon(boolean b) { isDaemon = b; }
@@ -158,9 +168,11 @@ public class jq_Thread implements ObjectLayout {
     public static final jq_Class _class;
     public static final jq_StaticMethod _destroyCurrentThread;
     public static final jq_InstanceField _thread_switch_enabled;
+    public static final jq_InstanceField _isInterrupted;
     static {
         _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LScheduler/jq_Thread;");
         _destroyCurrentThread = _class.getOrCreateStaticMethod("destroyCurrentThread", "()V");
         _thread_switch_enabled = _class.getOrCreateInstanceField("thread_switch_enabled", "I");
+        _isInterrupted = _class.getOrCreateInstanceField("isInterrupted", "I");
     }
 }

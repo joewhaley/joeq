@@ -10,8 +10,10 @@
 package ClassLib.Common.java.lang;
 
 import Allocator.HeapAllocator;
+import Run_Time.Monitor;
 import Run_Time.Reflection;
 import Run_Time.Unsafe;
+import Scheduler.jq_Thread;
 
 public abstract class Object {
 
@@ -33,7 +35,21 @@ public abstract class Object {
         // TODO
     }
     public final void _wait(long timeout) throws java.lang.InterruptedException {
+        if (timeout < 0L)
+            throw new IllegalArgumentException(timeout+" < 0");
         // TODO
+        int count = Monitor.getLockEntryCount(this);
+        int k = count;
+        for (;;) {
+            Monitor.monitorexit(this);
+            if (--k == 0) break;
+        }
+        jq_Thread t = Unsafe.getThreadBlock();
+        t.sleep(timeout);
+        for (;;) {
+            Monitor.monitorenter(this);
+            if (--count == 0) break;
+        }
     }
     
 }
