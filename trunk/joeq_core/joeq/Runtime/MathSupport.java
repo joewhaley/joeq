@@ -223,7 +223,7 @@ public abstract class MathSupport {
     public static long lrem(long uq, long vq) {
 	boolean neg = false;
         if (uq < 0L) { uq = -uq; neg = !neg; }
-        if (vq < 0L) { vq = -vq; neg = !neg; }
+        if (vq < 0L) { vq = -vq; /*neg = !neg;*/ }
 	uq = uldivrem(uq, vq, true);
 	if (neg) uq = -uq;
 	return uq;
