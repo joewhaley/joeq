@@ -50,7 +50,7 @@ public abstract class ExceptionDeliverer {
                 // reached the top!
                 System.out.println("Exception in thread \""+Unsafe.getThreadBlock()+"\" "+x);
                 x.printStackTrace(System.out);
-                SystemInterface.die();
+                SystemInterface.die(-1);
                 jq.UNREACHABLE();
                 return;
             } else {
