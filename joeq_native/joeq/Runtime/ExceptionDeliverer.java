@@ -14,6 +14,7 @@ import Clazz.jq_CompiledCode;
 import Clazz.jq_Method;
 import Clazz.jq_Reference;
 import Clazz.jq_StaticMethod;
+import Clazz.jq_TryCatch;
 import Debugger.OnlineDebugger;
 import Memory.CodeAddress;
 import Memory.StackAddress;
@@ -54,7 +55,7 @@ public abstract class ExceptionDeliverer {
         }
     }
     
-    public abstract void deliverToStackFrame(jq_CompiledCode cc, Throwable x, CodeAddress ip, StackAddress fp);
+    public abstract void deliverToStackFrame(jq_CompiledCode cc, Throwable x, jq_TryCatch tc, CodeAddress ip, StackAddress fp);
     public abstract Object getThisPointer(jq_CompiledCode cc, CodeAddress ip, StackAddress fp);
     
     public static void deliverToCurrentThread(Throwable x, CodeAddress ip, StackAddress fp) {
@@ -71,17 +72,13 @@ public abstract class ExceptionDeliverer {
                 Assert.UNREACHABLE();
                 return;
             } else {
-                CodeAddress address = cc.findCatchBlock(ip, x_type);
-                if (!address.isNull()) {
-                    // TODO: analyze the catch block to see if the backtrace is necessary.
-                    if (true) {
-                        //StackFrame sf = (StackFrame)Reflection.getfield_A(x, ClassLib.sun13.java.lang.Throwable._backtrace);
-                        //sf.fillInStackTrace();
-                    }
+                jq_TryCatch tc = cc.findCatchBlock(ip, x_type);
+                if (tc != null) {
+                    CodeAddress address = (CodeAddress) cc.getStart().offset(tc.getHandlerEntry());
                     
                     // go to this catch block!
                     if (TRACE) SystemInterface.debugwriteln("Jumping to catch block at "+address.stringRep());
-                    cc.deliverException(address, fp, x);
+                    cc.deliverException(tc, fp, x);
                     Assert.UNREACHABLE();
                     return;
                 }

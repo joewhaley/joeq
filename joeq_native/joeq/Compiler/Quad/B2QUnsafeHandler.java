@@ -5,10 +5,12 @@ import Clazz.jq_Primitive;
 import Compil3r.Quad.Operand.RegisterOperand;
 import Compil3r.Quad.Operator.Special;
 import Compil3r.Quad.Operator.Unary;
+import Memory.Address;
 import Memory.CodeAddress;
 import Memory.StackAddress;
 import Run_Time.Unsafe;
 import Scheduler.jq_Thread;
+import Util.Assert;
 
 class B2QUnsafeHandler implements BytecodeToQuad.UnsafeHelper {
     public boolean isUnsafe(jq_Method m) {
@@ -52,7 +54,51 @@ class B2QUnsafeHandler implements BytecodeToQuad.UnsafeHelper {
             Operand fp = current_state.pop(StackAddress._class);
             Operand ip = current_state.pop(CodeAddress._class);
             q = Special.create(quad_cfg.getNewQuadID(), Special.LONG_JUMP.INSTANCE, ip, fp, sp, eax);
+        } else if (m == Unsafe._popFP32) {
+            RegisterOperand res = b2q.getStackRegister(jq_Primitive.FLOAT);
+            q = Special.create(quad_cfg.getNewQuadID(), Special.POP_FP32.INSTANCE, res);
+            current_state.push_F(res);
+        } else if (m == Unsafe._popFP64) {
+            RegisterOperand res = b2q.getStackRegister(jq_Primitive.DOUBLE);
+            q = Special.create(quad_cfg.getNewQuadID(), Special.POP_FP64.INSTANCE, res);
+            current_state.push_D(res);
+        } else if (m == Unsafe._pushFP32) {
+            Operand val = current_state.pop_F();
+            q = Special.create(quad_cfg.getNewQuadID(), Special.PUSH_FP32.INSTANCE, val);
+        } else if (m == Unsafe._pushFP64) {
+            Operand val = current_state.pop_D();
+            q = Special.create(quad_cfg.getNewQuadID(), Special.PUSH_FP64.INSTANCE, val);
+        } else if (m == Unsafe._EAX) {
+            RegisterOperand res = b2q.getStackRegister(jq_Primitive.INT);
+            q = Special.create(quad_cfg.getNewQuadID(), Special.GET_EAX.INSTANCE, res);
+            current_state.push_I(res);
+        } else if (m == Unsafe._pushArg) {
+            Operand val = current_state.pop_I();
+            q = Special.create(quad_cfg.getNewQuadID(), Special.PUSHARG_I.INSTANCE, val);
+        } else if (m == Unsafe._pushArgA) {
+            Operand val = current_state.pop_P();
+            q = Special.create(quad_cfg.getNewQuadID(), Special.PUSHARG_P.INSTANCE, val);
+        } else if (m == Unsafe._invoke) {
+            Operand loc = current_state.pop_P();
+            RegisterOperand res = b2q.getStackRegister(jq_Primitive.LONG);
+            q = Special.create(quad_cfg.getNewQuadID(), Special.INVOKE_L.INSTANCE, res, loc);
+            current_state.push_L(res);
+        } else if (m == Unsafe._invokeA) {
+            Operand loc = current_state.pop_P();
+            RegisterOperand res = b2q.getStackRegister(Address._class);
+            q = Special.create(quad_cfg.getNewQuadID(), Special.INVOKE_P.INSTANCE, res, loc);
+            current_state.push_P(res);
+        } else if (m == Unsafe._isEQ) {
+            RegisterOperand res = b2q.getStackRegister(jq_Primitive.BOOLEAN);
+            q = Special.create(quad_cfg.getNewQuadID(), Special.ISEQ.INSTANCE, res);
+            current_state.push_I(res);
+        } else if (m == Unsafe._isGE) {
+            RegisterOperand res = b2q.getStackRegister(jq_Primitive.BOOLEAN);
+            q = Special.create(quad_cfg.getNewQuadID(), Special.ISGE.INSTANCE, res);
+            current_state.push_I(res);
 	} else {
+            System.err.println(m.toString());
+            Assert.UNREACHABLE();
 	    return false;
 	}
         b2q.appendQuad(q);

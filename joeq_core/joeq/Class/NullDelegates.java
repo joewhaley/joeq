@@ -28,7 +28,7 @@ abstract class NullDelegates {
 	public final Iterator getCompiledMethods () { 
 	    return new java.util.LinkedList().iterator();
 	}
-	public final void deliverToStackFrame(Object ed, jq_CompiledCode t, Throwable x, CodeAddress entry, StackAddress fp) { }
+	public final void deliverToStackFrame(Object ed, jq_CompiledCode t, Throwable x, jq_TryCatch tc, CodeAddress entry, StackAddress fp) { }
 	public final Object getThisPointer(Object ed, jq_CompiledCode t, CodeAddress ip, StackAddress fp) { return null; }
     }
 

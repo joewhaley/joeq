@@ -704,29 +704,49 @@ public abstract class Operator {
             private CMP_L() { }
             public String toString() { return "CMP_L"; }
             public void interpret(Quad q, QuadInterpreter s) {
-                long v2 = getLongOpValue(getSrc1(q), s);
-                long v1 = getLongOpValue(getSrc2(q), s);
-                s.putReg_I(getDest(q).getRegister(), (v2>v1)?1:((v2==v1)?0:-1));
+                long v1 = getLongOpValue(getSrc1(q), s);
+                long v2 = getLongOpValue(getSrc2(q), s);
+                s.putReg_I(getDest(q).getRegister(), (v1<v2)?-1:((v1==v2)?0:1));
             }
         }
-        public static class CMP_F extends Binary {
-            public static final CMP_F INSTANCE = new CMP_F();
-            private CMP_F() { }
-            public String toString() { return "CMP_F"; }
+        public static class CMP_FL extends Binary {
+            public static final CMP_FL INSTANCE = new CMP_FL();
+            private CMP_FL() { }
+            public String toString() { return "CMP_FL"; }
             public void interpret(Quad q, QuadInterpreter s) {
-                float v2 = getFloatOpValue(getSrc1(q), s);
-                float v1 = getFloatOpValue(getSrc2(q), s);
-                s.putReg_I(getDest(q).getRegister(), (v2>v1)?1:((v2==v1)?0:-1));
+                float v1 = getFloatOpValue(getSrc1(q), s);
+                float v2 = getFloatOpValue(getSrc2(q), s);
+                s.putReg_I(getDest(q).getRegister(), (v1<v2)?-1:((v1==v2)?0:1));
             }
         }
-        public static class CMP_D extends Binary {
-            public static final CMP_D INSTANCE = new CMP_D();
-            private CMP_D() { }
-            public String toString() { return "CMP_D"; }
+        public static class CMP_FG extends Binary {
+            public static final CMP_FG INSTANCE = new CMP_FG();
+            private CMP_FG() { }
+            public String toString() { return "CMP_FG"; }
             public void interpret(Quad q, QuadInterpreter s) {
-                double v2 = getDoubleOpValue(getSrc1(q), s);
-                double v1 = getDoubleOpValue(getSrc2(q), s);
-                s.putReg_I(getDest(q).getRegister(), (v2>v1)?1:((v2==v1)?0:-1));
+                float v1 = getFloatOpValue(getSrc1(q), s);
+                float v2 = getFloatOpValue(getSrc2(q), s);
+                s.putReg_I(getDest(q).getRegister(), (v1>v2)?1:((v1==v2)?0:-1));
+            }
+        }
+        public static class CMP_DL extends Binary {
+            public static final CMP_DL INSTANCE = new CMP_DL();
+            private CMP_DL() { }
+            public String toString() { return "CMP_DL"; }
+            public void interpret(Quad q, QuadInterpreter s) {
+                double v1 = getDoubleOpValue(getSrc1(q), s);
+                double v2 = getDoubleOpValue(getSrc2(q), s);
+                s.putReg_I(getDest(q).getRegister(), (v1<v2)?-1:((v1==v2)?0:1));
+            }
+        }
+        public static class CMP_DG extends Binary {
+            public static final CMP_DG INSTANCE = new CMP_DG();
+            private CMP_DG() { }
+            public String toString() { return "CMP_DG"; }
+            public void interpret(Quad q, QuadInterpreter s) {
+                double v1 = getDoubleOpValue(getSrc1(q), s);
+                double v2 = getDoubleOpValue(getSrc2(q), s);
+                s.putReg_I(getDest(q).getRegister(), (v1>v2)?1:((v1==v2)?0:-1));
             }
         }
     }
@@ -970,6 +990,8 @@ public abstract class Operator {
         public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg234(q); }
         
+        public abstract jq_Type getType();
+        
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitALoad(q);
             qv.visitArray(q);
@@ -986,6 +1008,7 @@ public abstract class Operator {
                 int i = getIntOpValue(getIndex(q), s);
                 s.putReg_I(getDest(q).getRegister(), a[i]);
             }
+            public jq_Type getType() { return jq_Primitive.INT; }
         }
         public static class ALOAD_L extends ALoad {
             public static final ALOAD_L INSTANCE = new ALOAD_L();
@@ -996,6 +1019,7 @@ public abstract class Operator {
                 int i = getIntOpValue(getIndex(q), s);
                 s.putReg_L(getDest(q).getRegister(), a[i]);
             }
+            public jq_Type getType() { return jq_Primitive.LONG; }
         }
         public static class ALOAD_F extends ALoad {
             public static final ALOAD_F INSTANCE = new ALOAD_F();
@@ -1006,6 +1030,7 @@ public abstract class Operator {
                 int i = getIntOpValue(getIndex(q), s);
                 s.putReg_F(getDest(q).getRegister(), a[i]);
             }
+            public jq_Type getType() { return jq_Primitive.FLOAT; }
         }
         public static class ALOAD_D extends ALoad {
             public static final ALOAD_D INSTANCE = new ALOAD_D();
@@ -1016,6 +1041,7 @@ public abstract class Operator {
                 int i = getIntOpValue(getIndex(q), s);
                 s.putReg_D(getDest(q).getRegister(), a[i]);
             }
+            public jq_Type getType() { return jq_Primitive.DOUBLE; }
         }
         public static class ALOAD_A extends ALoad {
             public static final ALOAD_A INSTANCE = new ALOAD_A();
@@ -1026,6 +1052,7 @@ public abstract class Operator {
                 int i = getIntOpValue(getIndex(q), s);
                 s.putReg_A(getDest(q).getRegister(), a[i]);
             }
+            public jq_Type getType() { return PrimordialClassLoader.getJavaLangObject(); }
         }
         public static class ALOAD_P extends ALoad {
             public static final ALOAD_P INSTANCE = new ALOAD_P();
@@ -1036,6 +1063,7 @@ public abstract class Operator {
                 int i = getIntOpValue(getIndex(q), s);
                 s.putReg_P(getDest(q).getRegister(), a[i]);
             }
+            public jq_Type getType() { return Address._class; }
         }
         public static class ALOAD_B extends ALoad {
             public static final ALOAD_B INSTANCE = new ALOAD_B();
@@ -1049,6 +1077,7 @@ public abstract class Operator {
                 else v = ((boolean[])a)[i]?1:0;
                 s.putReg_D(getDest(q).getRegister(), v);
             }
+            public jq_Type getType() { return jq_Primitive.BYTE; }
         }
         public static class ALOAD_C extends ALoad {
             public static final ALOAD_C INSTANCE = new ALOAD_C();
@@ -1059,6 +1088,7 @@ public abstract class Operator {
                 int i = getIntOpValue(getIndex(q), s);
                 s.putReg_I(getDest(q).getRegister(), a[i]);
             }
+            public jq_Type getType() { return jq_Primitive.CHAR; }
         }
         public static class ALOAD_S extends ALoad {
             public static final ALOAD_S INSTANCE = new ALOAD_S();
@@ -1069,6 +1099,7 @@ public abstract class Operator {
                 int i = getIntOpValue(getIndex(q), s);
                 s.putReg_I(getDest(q).getRegister(), a[i]);
             }
+            public jq_Type getType() { return jq_Primitive.SHORT; }
         }
     }
     
@@ -1088,6 +1119,8 @@ public abstract class Operator {
         public boolean hasSideEffects() { return true; }
         public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg1234(q); }
         
+        public abstract jq_Type getType();
+        
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitAStore(q);
             qv.visitArray(q);
@@ -1105,6 +1138,7 @@ public abstract class Operator {
                 int v = getIntOpValue(getValue(q), s);
                 a[i] = v;
             }
+            public jq_Type getType() { return jq_Primitive.INT; }
         }
         public static class ASTORE_L extends AStore {
             public static final ASTORE_L INSTANCE = new ASTORE_L();
@@ -1116,6 +1150,7 @@ public abstract class Operator {
                 long v = getLongOpValue(getValue(q), s);
                 a[i] = v;
             }
+            public jq_Type getType() { return jq_Primitive.LONG; }
         }
         public static class ASTORE_F extends AStore {
             public static final ASTORE_F INSTANCE = new ASTORE_F();
@@ -1127,6 +1162,7 @@ public abstract class Operator {
                 float v = getFloatOpValue(getValue(q), s);
                 a[i] = v;
             }
+            public jq_Type getType() { return jq_Primitive.FLOAT; }
         }
         public static class ASTORE_D extends AStore {
             public static final ASTORE_D INSTANCE = new ASTORE_D();
@@ -1138,6 +1174,7 @@ public abstract class Operator {
                 double v = getDoubleOpValue(getValue(q), s);
                 a[i] = v;
             }
+            public jq_Type getType() { return jq_Primitive.DOUBLE; }
         }
         public static class ASTORE_A extends AStore {
             public static final ASTORE_A INSTANCE = new ASTORE_A();
@@ -1149,6 +1186,7 @@ public abstract class Operator {
                 Object v = getObjectOpValue(getValue(q), s);
                 a[i] = v;
             }
+            public jq_Type getType() { return PrimordialClassLoader.getJavaLangObject(); }
         }
         public static class ASTORE_P extends AStore {
             public static final ASTORE_P INSTANCE = new ASTORE_P();
@@ -1160,6 +1198,7 @@ public abstract class Operator {
                 Address v = getAddressOpValue(getValue(q), s);
                 a[i] = v;
             }
+            public jq_Type getType() { return Address._class; }
         }
         public static class ASTORE_B extends AStore {
             public static final ASTORE_B INSTANCE = new ASTORE_B();
@@ -1171,6 +1210,7 @@ public abstract class Operator {
                 if (a instanceof byte[]) ((byte[])a)[i] = (byte)getIntOpValue(getValue(q), s);
                 else ((boolean[])a)[i] = getIntOpValue(getValue(q), s)!=0?true:false;
             }
+            public jq_Type getType() { return jq_Primitive.BYTE; }
         }
         public static class ASTORE_C extends AStore {
             public static final ASTORE_C INSTANCE = new ASTORE_C();
@@ -1182,6 +1222,7 @@ public abstract class Operator {
                 char v = (char)getIntOpValue(getValue(q), s);
                 a[i] = v;
             }
+            public jq_Type getType() { return jq_Primitive.CHAR; }
         }
         public static class ASTORE_S extends AStore {
             public static final ASTORE_S INSTANCE = new ASTORE_S();
@@ -1193,6 +1234,7 @@ public abstract class Operator {
                 short v = (short)getIntOpValue(getValue(q), s);
                 a[i] = v;
             }
+            public jq_Type getType() { return jq_Primitive.SHORT; }
         }
     }
 
@@ -1424,6 +1466,7 @@ public abstract class Operator {
         public static void setDefault(Quad q, TargetOperand o) { q.setOp2(o); }
         public static void setValueTable(Quad q, IntValueTableOperand o) { q.setOp3(o); }
         public static void setTargetTable(Quad q, BasicBlockTableOperand o) { q.setOp4(o); }
+        public static int getSize(Quad q) { return ((IntValueTableOperand)q.getOp3()).size(); }
         public boolean hasSideEffects() { return true; }
         public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg1_check(q); }
         
@@ -2693,6 +2736,8 @@ public abstract class Operator {
         }
 
         public abstract boolean isVirtual();
+        public abstract byte getType();
+        public abstract jq_Type getReturnType();
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitInvoke(q);
@@ -2742,96 +2787,113 @@ public abstract class Operator {
         public abstract static class InvokeVirtual extends Invoke {
             public boolean isVirtual() { return true; }
             public void interpret(Quad q, QuadInterpreter s) { interpret_virtual(q, s); }
+            public byte getType() { return BytecodeVisitor.INVOKE_VIRTUAL; }
         }
         public abstract static class InvokeStatic extends Invoke {
             public boolean isVirtual() { return false; }
             public void interpret(Quad q, QuadInterpreter s) { interpret_static(q, s); }
+            public byte getType() { return BytecodeVisitor.INVOKE_STATIC; }
         }
         public abstract static class InvokeInterface extends Invoke {
             public boolean isVirtual() { return true; }
             public void interpret(Quad q, QuadInterpreter s) { interpret_virtual(q, s); }
+            public byte getType() { return BytecodeVisitor.INVOKE_INTERFACE; }
         }
         public static class INVOKEVIRTUAL_V extends InvokeVirtual {
             public static final INVOKEVIRTUAL_V INSTANCE = new INVOKEVIRTUAL_V();
             private INVOKEVIRTUAL_V() { }
             public String toString() { return "INVOKEVIRTUAL_V"; }
+            public jq_Type getReturnType() { return jq_Primitive.VOID; }
         }
         public static class INVOKEVIRTUAL_I extends InvokeVirtual {
             public static final INVOKEVIRTUAL_I INSTANCE = new INVOKEVIRTUAL_I();
             private INVOKEVIRTUAL_I() { }
             public String toString() { return "INVOKEVIRTUAL_I"; }
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
+            public jq_Type getReturnType() { return jq_Primitive.INT; }
         }
         public static class INVOKEVIRTUAL_F extends InvokeVirtual {
             public static final INVOKEVIRTUAL_F INSTANCE = new INVOKEVIRTUAL_F();
             private INVOKEVIRTUAL_F() { }
             public String toString() { return "INVOKEVIRTUAL_F"; }
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
+            public jq_Type getReturnType() { return jq_Primitive.FLOAT; }
         }
         public static class INVOKEVIRTUAL_L extends InvokeVirtual {
             public static final INVOKEVIRTUAL_L INSTANCE = new INVOKEVIRTUAL_L();
             private INVOKEVIRTUAL_L() { }
             public String toString() { return "INVOKEVIRTUAL_L"; }
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
+            public jq_Type getReturnType() { return jq_Primitive.LONG; }
         }
         public static class INVOKEVIRTUAL_D extends InvokeVirtual {
             public static final INVOKEVIRTUAL_D INSTANCE = new INVOKEVIRTUAL_D();
             private INVOKEVIRTUAL_D() { }
             public String toString() { return "INVOKEVIRTUAL_D"; }
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
+            public jq_Type getReturnType() { return jq_Primitive.DOUBLE; }
         }
         public static class INVOKEVIRTUAL_A extends InvokeVirtual {
             public static final INVOKEVIRTUAL_A INSTANCE = new INVOKEVIRTUAL_A();
             private INVOKEVIRTUAL_A() { }
             public String toString() { return "INVOKEVIRTUAL_A"; }
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
+            public jq_Type getReturnType() { return PrimordialClassLoader.getJavaLangObject(); }
         }
         public static class INVOKEVIRTUAL_P extends InvokeVirtual {
             public static final INVOKEVIRTUAL_P INSTANCE = new INVOKEVIRTUAL_P();
             private INVOKEVIRTUAL_P() { }
             public String toString() { return "INVOKEVIRTUAL_P"; }
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
+            public jq_Type getReturnType() { return Address._class; }
         }
         public static class INVOKESTATIC_V extends InvokeStatic {
             public static final INVOKESTATIC_V INSTANCE = new INVOKESTATIC_V();
             private INVOKESTATIC_V() { }
             public String toString() { return "INVOKESTATIC_V"; }
+            public jq_Type getReturnType() { return jq_Primitive.VOID; }
         }
         public static class INVOKESTATIC_I extends InvokeStatic {
             public static final INVOKESTATIC_I INSTANCE = new INVOKESTATIC_I();
             private INVOKESTATIC_I() { }
             public String toString() { return "INVOKESTATIC_I"; }
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
+            public jq_Type getReturnType() { return jq_Primitive.INT; }
         }
         public static class INVOKESTATIC_F extends InvokeStatic {
             public static final INVOKESTATIC_F INSTANCE = new INVOKESTATIC_F();
             private INVOKESTATIC_F() { }
             public String toString() { return "INVOKESTATIC_F"; }
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
+            public jq_Type getReturnType() { return jq_Primitive.FLOAT; }
         }
         public static class INVOKESTATIC_L extends InvokeStatic {
             public static final INVOKESTATIC_L INSTANCE = new INVOKESTATIC_L();
             private INVOKESTATIC_L() { }
             public String toString() { return "INVOKESTATIC_L"; }
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
+            public jq_Type getReturnType() { return jq_Primitive.LONG; }
         }
         public static class INVOKESTATIC_D extends InvokeStatic {
             public static final INVOKESTATIC_D INSTANCE = new INVOKESTATIC_D();
             private INVOKESTATIC_D() { }
             public String toString() { return "INVOKESTATIC_D"; }
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
+            public jq_Type getReturnType() { return jq_Primitive.DOUBLE; }
         }
         public static class INVOKESTATIC_A extends InvokeStatic {
             public static final INVOKESTATIC_A INSTANCE = new INVOKESTATIC_A();
             private INVOKESTATIC_A() { }
             public String toString() { return "INVOKESTATIC_A"; }
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
+            public jq_Type getReturnType() { return PrimordialClassLoader.getJavaLangObject(); }
         }
         public static class INVOKESTATIC_P extends InvokeStatic {
             public static final INVOKESTATIC_P INSTANCE = new INVOKESTATIC_P();
             private INVOKESTATIC_P() { }
             public String toString() { return "INVOKESTATIC_P"; }
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
+            public jq_Type getReturnType() { return Address._class; }
         }
         public static class INVOKEVIRTUAL_V_DYNLINK extends INVOKEVIRTUAL_V {
             public static final INVOKEVIRTUAL_V_DYNLINK INSTANCE = new INVOKEVIRTUAL_V_DYNLINK();
@@ -2942,42 +3004,49 @@ public abstract class Operator {
             public static final INVOKEINTERFACE_V INSTANCE = new INVOKEINTERFACE_V();
             private INVOKEINTERFACE_V() { }
             public String toString() { return "INVOKEINTERFACE_V"; }
+            public jq_Type getReturnType() { return jq_Primitive.VOID; }
         }
         public static class INVOKEINTERFACE_I extends InvokeInterface {
             public static final INVOKEINTERFACE_I INSTANCE = new INVOKEINTERFACE_I();
             private INVOKEINTERFACE_I() { }
             public String toString() { return "INVOKEINTERFACE_I"; }
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
+            public jq_Type getReturnType() { return jq_Primitive.INT; }
         }
         public static class INVOKEINTERFACE_F extends InvokeInterface {
             public static final INVOKEINTERFACE_F INSTANCE = new INVOKEINTERFACE_F();
             private INVOKEINTERFACE_F() { }
             public String toString() { return "INVOKEINTERFACE_F"; }
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
+            public jq_Type getReturnType() { return jq_Primitive.FLOAT; }
         }
         public static class INVOKEINTERFACE_L extends InvokeInterface {
             public static final INVOKEINTERFACE_L INSTANCE = new INVOKEINTERFACE_L();
             private INVOKEINTERFACE_L() { }
             public String toString() { return "INVOKEINTERFACE_L"; }
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
+            public jq_Type getReturnType() { return jq_Primitive.LONG; }
         }
         public static class INVOKEINTERFACE_D extends InvokeInterface {
             public static final INVOKEINTERFACE_D INSTANCE = new INVOKEINTERFACE_D();
             private INVOKEINTERFACE_D() { }
             public String toString() { return "INVOKEINTERFACE_D"; }
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
+            public jq_Type getReturnType() { return jq_Primitive.DOUBLE; }
         }
         public static class INVOKEINTERFACE_A extends InvokeInterface {
             public static final INVOKEINTERFACE_A INSTANCE = new INVOKEINTERFACE_A();
             private INVOKEINTERFACE_A() { }
             public String toString() { return "INVOKEINTERFACE_A"; }
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
+            public jq_Type getReturnType() { return PrimordialClassLoader.getJavaLangObject(); }
         }
         public static class INVOKEINTERFACE_P extends InvokeInterface {
             public static final INVOKEINTERFACE_P INSTANCE = new INVOKEINTERFACE_P();
             private INVOKEINTERFACE_P() { }
             public String toString() { return "INVOKEINTERFACE_P"; }
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
+            public jq_Type getReturnType() { return Address._class; }
         }
     }
     
@@ -3357,9 +3426,6 @@ public abstract class Operator {
         public static Quad create(int id, GET_THREAD_BLOCK operator, RegisterOperand res) {
             return new Quad(id, operator, res);
         }
-        public static Quad create(int id, GET_TYPE_OF operator, RegisterOperand res, Operand src) {
-            return new Quad(id, operator, res, src);
-        }
         public static Quad create(int id, SET_THREAD_BLOCK operator, Operand val) {
             return new Quad(id, operator, null, val);
         }
@@ -3369,8 +3435,38 @@ public abstract class Operator {
         public static Quad create(int id, LONG_JUMP operator, Operand ip, Operand fp, Operand sp, Operand eax) {
             return new Quad(id, operator, ip, fp, sp, eax);
         }
-        public static Quad create(int id, DIE operator, Operand val) {
-            return new Quad(id, operator, val);
+        public static Quad create(int id, POP_FP32 operator, RegisterOperand res) {
+            return new Quad(id, operator, res);
+        }
+        public static Quad create(int id, POP_FP64 operator, RegisterOperand res) {
+            return new Quad(id, operator, res);
+        }
+        public static Quad create(int id, PUSH_FP32 operator, Operand val) {
+            return new Quad(id, operator, null, val);
+        }
+        public static Quad create(int id, PUSH_FP64 operator, Operand val) {
+            return new Quad(id, operator, null, val);
+        }
+        public static Quad create(int id, GET_EAX operator, RegisterOperand res) {
+            return new Quad(id, operator, res);
+        }
+        public static Quad create(int id, PUSHARG_I operator, Operand val) {
+            return new Quad(id, operator, null, val);
+        }
+        public static Quad create(int id, PUSHARG_P operator, Operand val) {
+            return new Quad(id, operator, null, val);
+        }
+        public static Quad create(int id, INVOKE_L operator, RegisterOperand res, Operand val) {
+            return new Quad(id, operator, res, val);
+        }
+        public static Quad create(int id, INVOKE_P operator, RegisterOperand res, Operand val) {
+            return new Quad(id, operator, res, val);
+        }
+        public static Quad create(int id, ISEQ operator, RegisterOperand res) {
+            return new Quad(id, operator, res);
+        }
+        public static Quad create(int id, ISGE operator, RegisterOperand res) {
+            return new Quad(id, operator, res);
         }
         public static Operand getOp1(Quad q) { return q.getOp1(); }
         public static Operand getOp2(Quad q) { return q.getOp2(); }
@@ -3421,7 +3517,7 @@ public abstract class Operator {
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
             public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg2(q); }
             public void interpret(Quad q, QuadInterpreter s) {
-                // TODO: skip for now.
+                Assert.TODO();
             }
         }
         public static class LONG_JUMP extends Special {
@@ -3441,26 +3537,105 @@ public abstract class Operator {
                 Assert.TODO();
             }
         }
-        public static class DIE extends Special {
-            public static final DIE INSTANCE = new DIE();
-            private DIE() { }
-            public String toString() { return "DIE"; }
-            public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg1_check(q); }
+        public static class POP_FP32 extends Special {
+            public static final POP_FP32 INSTANCE = new POP_FP32();
+            private POP_FP32() { }
+            public String toString() { return "POP_FP32"; }
+            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
             public void interpret(Quad q, QuadInterpreter s) {
-		int a = getIntOpValue(getOp1(q), s);
-		Run_Time.Debug.die(a);
-		Assert.UNREACHABLE();
+                Assert.TODO();
             }
         }
-        public static class GET_TYPE_OF extends Special {
-            public static final GET_TYPE_OF INSTANCE = new GET_TYPE_OF();
-            private GET_TYPE_OF() { }
-            public String toString() { return "GET_TYPE_OF"; }
+        public static class POP_FP64 extends Special {
+            public static final POP_FP64 INSTANCE = new POP_FP64();
+            private POP_FP64() { }
+            public String toString() { return "POP_FP64"; }
+            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
+            public void interpret(Quad q, QuadInterpreter s) {
+                Assert.TODO();
+            }
+        }
+        public static class PUSH_FP32 extends Special {
+            public static final PUSH_FP32 INSTANCE = new PUSH_FP32();
+            private PUSH_FP32() { }
+            public String toString() { return "PUSH_FP32"; }
+            public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg2(q); }
+            public void interpret(Quad q, QuadInterpreter s) {
+                Assert.TODO();
+            }
+        }
+        public static class PUSH_FP64 extends Special {
+            public static final PUSH_FP64 INSTANCE = new PUSH_FP64();
+            private PUSH_FP64() { }
+            public String toString() { return "PUSH_FP64"; }
+            public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg2(q); }
+            public void interpret(Quad q, QuadInterpreter s) {
+                Assert.TODO();
+            }
+        }
+        public static class GET_EAX extends Special {
+            public static final GET_EAX INSTANCE = new GET_EAX();
+            private GET_EAX() { }
+            public String toString() { return "GET_EAX"; }
+            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
+            public void interpret(Quad q, QuadInterpreter s) {
+                _delegate.interpretGetThreadBlock(this, q, s);
+            }
+        }
+        public static class PUSHARG_I extends Special {
+            public static final PUSHARG_I INSTANCE = new PUSHARG_I();
+            private PUSHARG_I() { }
+            public String toString() { return "PUSHARG_I"; }
+            public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg2(q); }
+            public void interpret(Quad q, QuadInterpreter s) {
+                Assert.TODO();
+            }
+        }
+        public static class PUSHARG_P extends Special {
+            public static final PUSHARG_P INSTANCE = new PUSHARG_P();
+            private PUSHARG_P() { }
+            public String toString() { return "PUSHARG_P"; }
+            public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg2(q); }
+            public void interpret(Quad q, QuadInterpreter s) {
+                Assert.TODO();
+            }
+        }
+        public static class INVOKE_L extends Special {
+            public static final INVOKE_L INSTANCE = new INVOKE_L();
+            private INVOKE_L() { }
+            public String toString() { return "INVOKE_L"; }
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
             public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg2(q); }
             public void interpret(Quad q, QuadInterpreter s) {
-                Object o = getObjectOpValue(getOp2(q), s);
-                s.putReg_A(((RegisterOperand)getOp1(q)).getRegister(), Reflection.getTypeOf(o));
+                Assert.TODO();
+            }
+        }
+        public static class INVOKE_P extends Special {
+            public static final INVOKE_P INSTANCE = new INVOKE_P();
+            private INVOKE_P() { }
+            public String toString() { return "INVOKE_P"; }
+            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
+            public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg2(q); }
+            public void interpret(Quad q, QuadInterpreter s) {
+                Assert.TODO();
+            }
+        }
+        public static class ISEQ extends Special {
+            public static final ISEQ INSTANCE = new ISEQ();
+            private ISEQ() { }
+            public String toString() { return "ISEQ"; }
+            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
+            public void interpret(Quad q, QuadInterpreter s) {
+                Assert.TODO();
+            }
+        }
+        public static class ISGE extends Special {
+            public static final ISGE INSTANCE = new ISGE();
+            private ISGE() { }
+            public String toString() { return "ISGE"; }
+            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
+            public void interpret(Quad q, QuadInterpreter s) {
+                Assert.TODO();
             }
         }
     }

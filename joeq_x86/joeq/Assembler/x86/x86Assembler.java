@@ -53,6 +53,27 @@ public class x86Assembler implements x86Constants {
 
     }
 
+    static class AbsPatchInfo extends PatchInfo {
+
+        AbsPatchInfo(int patchLocation, int patchSize) {
+            super(patchLocation, patchSize);
+        }
+        
+        void patchTo(x86CodeBuffer mc, int target) {
+            if (patchSize == 4) {
+                int v = mc.get4_endian(patchLocation - 4);
+                Assert._assert(v == 0x44444444 || v == 0x55555555 || v == 0x66666666 || v == 0x77777777, "Location: "+Strings.hex(patchLocation-4)+" value: "+Strings.hex8(v));
+                mc.put4_endian(patchLocation - 4, target);
+            } else
+                Assert.TODO();
+        }
+        
+        public String toString() {
+            return "loc:"+Strings.hex(patchLocation)+" size:"+patchSize+" (abs)";
+        }
+
+    }
+    
     public x86CodeBuffer getCodeBuffer() {
         if (!branches_to_patch.isEmpty())
             System.out.println("Error: unresolved forward branches!");
@@ -70,6 +91,9 @@ public class x86Assembler implements x86Constants {
         branches_to_patch = new LightRelation();
     }
 
+    public boolean containsTarget(Object target) {
+        return branchtargetmap.containsKey(target);
+    }
     // backward branches
     public void recordBranchTarget(Object target) {
         Assert._assert(ip == mc.getCurrentOffset());

@@ -871,11 +871,13 @@ public class BytecodeToQuad extends BytecodeVisitor {
     }
     public void visitFCMP2(byte op) {
         super.visitFCMP2(op);
-        BINOPhelper(Binary.CMP_F.INSTANCE, jq_Primitive.INT, jq_Primitive.FLOAT, jq_Primitive.FLOAT, false);
+        Binary o = op==CMP_L?(Binary)Binary.CMP_FL.INSTANCE:(Binary)Binary.CMP_FG.INSTANCE;
+        BINOPhelper(o, jq_Primitive.INT, jq_Primitive.FLOAT, jq_Primitive.FLOAT, false);
     }
     public void visitDCMP2(byte op) {
         super.visitDCMP2(op);
-        BINOPhelper(Binary.CMP_D.INSTANCE, jq_Primitive.INT, jq_Primitive.DOUBLE, jq_Primitive.DOUBLE, false);
+        Binary o = op==CMP_L?(Binary)Binary.CMP_DL.INSTANCE:(Binary)Binary.CMP_DG.INSTANCE;
+        BINOPhelper(o, jq_Primitive.INT, jq_Primitive.DOUBLE, jq_Primitive.DOUBLE, false);
     }
     public void visitIF(byte op, int target) {
         super.visitIF(op, target);
@@ -1401,6 +1403,10 @@ public class BytecodeToQuad extends BytecodeVisitor {
             RegisterOperand res = getStackRegister(StackAddress._class);
             q = Special.create(quad_cfg.getNewQuadID(), Special.ALLOCA.INSTANCE, res, amt);
             current_state.push_P(res);
+        } else if (name == getNull) {
+            PConstOperand p = new PConstOperand(null);
+            current_state.push_P(p);
+            return;
         } else {
             // TODO
             INVOKEhelper(oper, m, m.getReturnType(), false);
@@ -1776,12 +1782,12 @@ public class BytecodeToQuad extends BytecodeVisitor {
         Operand op = current_state.pop(); // could be P or A
         RegisterOperand res = getStackRegister(f);
         if (!f.isAddressType()) {
-	        Quad q = CheckCast.create(quad_cfg.getNewQuadID(), CheckCast.CHECKCAST.INSTANCE, res, op, new TypeOperand(f));
-	        appendQuad(q);
-	        mergeStateWithAllExHandlers(false);
-	        current_state.push_A(res);
+            Quad q = CheckCast.create(quad_cfg.getNewQuadID(), CheckCast.CHECKCAST.INSTANCE, res, op, new TypeOperand(f));
+            appendQuad(q);
+            mergeStateWithAllExHandlers(false);
+            current_state.push_A(res);
         } else {
-        	current_state.push_P(res);
+            current_state.push_P(res);
         }
     }
     public void visitINSTANCEOF(jq_Type f) {

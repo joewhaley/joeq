@@ -185,6 +185,7 @@ public abstract class CodeAllocator {
          * @param ex  exception handler table, or null if none
          * @param bcm  bytecode map, or null if none
          * @param x  exception deliverer to use for this code, or null if none
+         * @param stackframesize  size of stack frame in bytes
          * @param codeRelocs  list of code relocations for this code buffer, or
          *                     null if none
          * @param dataRelocs  list of data relocations for this code buffer, or
@@ -195,6 +196,7 @@ public abstract class CodeAllocator {
                                                           jq_TryCatch[] ex,
                                                           jq_BytecodeMap bcm,
                                                           ExceptionDeliverer x,
+                                                          int stackframesize,
                                                           List codeRelocs,
                                                           List dataRelocs);
     }
@@ -215,7 +217,7 @@ public abstract class CodeAllocator {
         lowAddress = (CodeAddress) CodeAddress.getNull().offset(0x7FFFFFFF);
         highAddress = CodeAddress.getNull();
         jq_CompiledCode cc = new jq_CompiledCode(null, highAddress, 0, highAddress,
-                                                 null, null, null, null, null);
+                                                 null, null, null, 0, null, null);
         compiledMethods.put(cc, cc);
     }
     

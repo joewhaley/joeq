@@ -7,7 +7,6 @@
 
 package Clazz;
 
-import Bootstrap.PrimordialClassLoader;
 import Run_Time.Debug;
 import Run_Time.TypeCheck;
 import Util.Strings;
@@ -25,8 +24,10 @@ public class jq_TryCatch {
     // these are CODE OFFSETS.
     private int startPC, endPC, handlerPC;
     private jq_Class exType;
+    // this is the offset from the frame pointer where to put the exception.
+    private int exceptionOffset;
 
-    public jq_TryCatch(int startPC, int endPC, int handlerPC, jq_Class exType) {
+    public jq_TryCatch(int startPC, int endPC, int handlerPC, jq_Class exType, int exceptionOffset) {
         this.startPC = startPC;
         this.endPC = endPC;
         this.handlerPC = handlerPC;
@@ -49,18 +50,10 @@ public class jq_TryCatch {
     public int getEnd() { return endPC; }
     public int getHandlerEntry() { return handlerPC; }
     public jq_Class getExceptionType() { return exType; }
+    public int getExceptionOffset() { return exceptionOffset; }
 
     public String toString() {
-        return "(start="+Strings.hex(startPC)+",end="+Strings.hex(endPC)+",handler="+Strings.hex(handlerPC)+",type="+exType+")";
+        return "(start="+Strings.hex(startPC)+",end="+Strings.hex(endPC)+",handler="+Strings.hex(handlerPC)+",type="+exType+",offset="+Strings.hex(exceptionOffset)+")";
     }
     
-    public static final jq_InstanceField _startPC;
-    public static final jq_InstanceField _endPC;
-    public static final jq_InstanceField _handlerPC;
-    static {
-        jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LClazz/jq_TryCatch;");
-        _startPC = k.getOrCreateInstanceField("startPC", "I");
-        _endPC = k.getOrCreateInstanceField("endPC", "I");
-        _handlerPC = k.getOrCreateInstanceField("handlerPC", "I");
-    }
 }
