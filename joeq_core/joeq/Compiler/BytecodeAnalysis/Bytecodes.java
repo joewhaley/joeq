@@ -106,7 +106,7 @@ public interface Bytecodes {
          * is not copied correctly (only basic types are). This also applies for
          * `Select' instructions with their multiple branch targets.
          *
-         * @see BranchInstruction
+         * @see Bytecodes.BranchInstruction
          * @return (shallow) copy of an instruction
          */
         public Instruction copy() {
@@ -7340,7 +7340,7 @@ public interface Bytecodes {
 	 *
 	 * @param bytes input stream
 	 * @param wide wide prefix?
-	 * @see InstructionList
+	 * @see Bytecodes.InstructionList
 	 */
         protected void initFromFile(jq_ConstantPool cp, ByteSequence bytes, boolean wide) throws IOException {
             length = 3;
