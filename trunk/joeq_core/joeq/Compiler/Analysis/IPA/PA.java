@@ -269,6 +269,9 @@ public class PA {
             H1c = H2c = new BDDDomain[0];
         }
         
+        if (TRACE) out.println("Variable context domains: "+V1c.length);
+        if (TRACE) out.println("Heap context domains: "+H1c.length);
+        
         if (varorder == null) {
             // default variable orderings.
             if (CONTEXT_SENSITIVE || THREAD_SENSITIVE || OBJECT_SENSITIVE) {
