@@ -46,6 +46,9 @@ public abstract class Solver {
                                      List/*<String>*/ names,
                                      List/*<FieldDomain>*/ fieldDomains,
                                      List/*<String>*/ fieldOptions);
+    NumberingRule createNumberingRule(InferenceRule ir) {
+        return new NumberingRule(ir);
+    }
     
     Solver() {
         clear();
@@ -471,16 +474,19 @@ public abstract class Solver {
             }
         }
         InferenceRule ir = createInferenceRule(terms, bottom);
-        parseRuleOptions(lineNum, s, ir, st);
+        ir = parseRuleOptions(lineNum, s, ir, st);
         return ir;
     }
     
-    void parseRuleOptions(int lineNum, String s, InferenceRule ir, MyStringTokenizer st) {
+    InferenceRule parseRuleOptions(int lineNum, String s, InferenceRule ir, MyStringTokenizer st) {
         while (st.hasMoreTokens()) {
             String option = nextToken(st);
             if (option.equals("split")) {
                 if (TRACE) out.println("Splitting rule "+ir);
                 ir.split = true;
+            } else if (option.equals("number")) {
+                if (TRACE) out.println("Rule "+ir+" defines a numbering");
+                ir = createNumberingRule(ir);
             } else if (option.equals("cacheafterrename")) {
                 BDDInferenceRule r = (BDDInferenceRule) ir;
                 r.cache_before_rename = false;
@@ -493,6 +499,7 @@ public abstract class Solver {
                 throw new IllegalArgumentException();
             }
         }
+        return ir;
     }
     
     RuleTerm parseRuleTerm(int lineNum, String s, Map/*<String,Variable>*/ nameToVar, MyStringTokenizer st) {
@@ -563,10 +570,10 @@ public abstract class Solver {
                 outputError(lineNum, st.getPosition(), s, "Too many fields for "+r);
                 throw new IllegalArgumentException();
             }
-            FieldDomain fd = (FieldDomain) r.fieldDomains.get(vars.size()); 
+            FieldDomain fd = (FieldDomain) r.fieldDomains.get(vars.size());
             String varName = nextToken(st);
             Variable var = parseVariable(fd, nameToVar, varName);
-            if (vars.contains(var)) {
+            if (false && vars.contains(var)) { // temporarily disabled to handle "number" rules.
                 outputError(lineNum, st.getPosition(), s, "Duplicate variable "+var);
                 throw new IllegalArgumentException();
             }

@@ -3,8 +3,10 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Util.InferenceEngine;
 
-import java.io.IOException;
+import java.util.Iterator;
 import java.util.List;
+
+import java.io.IOException;
 
 /**
  * Relation
@@ -43,6 +45,32 @@ public abstract class Relation {
     public abstract void saveNegatedTuples() throws IOException;
     
     public abstract double size();
+    
+    /**
+     * Return an iterator over the tuples of this relation.
+     * 
+     * @return iterator of long[]
+     */
+    public abstract TupleIterator iterator();
+    
+    /**
+     * Return an iterator over the values in the kth field of the
+     * relation.  k is zero-based.
+     * 
+     * @param k  zero-based field number
+     * @return iterator of long[]
+     */
+    public abstract TupleIterator iterator(int k);
+    
+    /**
+     * Return an iterator over the tuples where the kth field has value j.
+     * k is zero-based.
+     * 
+     * @param k  zero-based field number
+     * @param j  value
+     * @return iterator of long[]
+     */
+    public abstract TupleIterator iterator(int k, long j);
     
     public Relation getNegated() {
         return negated;
