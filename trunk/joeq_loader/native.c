@@ -109,13 +109,13 @@ __int64 __stdcall filetimeToJavaTime(const FILETIME* fileTime)
 {
     LARGE_INTEGER time;
     time.LowPart = fileTime->dwLowDateTime; time.HighPart = fileTime->dwHighDateTime;
-    return (time.QuadPart / 10000L) - 11644473600000L;
+    return (time.QuadPart / 10000L) - 11644473600000LL;
 }
 
 void __stdcall javaTimeToFiletime(const __int64 javaTime, FILETIME* fileTime)
 {
     LARGE_INTEGER time;
-    time.QuadPart = (javaTime + 11644473600000L) * 10000L;
+    time.QuadPart = (javaTime + 11644473600000LL) * 10000L;
     fileTime->dwLowDateTime = time.LowPart;
     fileTime->dwHighDateTime = time.HighPart;
 }
