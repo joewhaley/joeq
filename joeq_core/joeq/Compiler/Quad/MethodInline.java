@@ -3,11 +3,18 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Quad;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.Collection;
+import java.util.HashMap;
+
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_Primitive;
 import joeq.Class.jq_Type;
+import joeq.Compiler.Analysis.IPA.PA;
 import joeq.Compiler.Analysis.IPA.ProgramLocation;
 import joeq.Compiler.Analysis.IPA.ProgramLocation.QuadProgramLocation;
 import joeq.Compiler.BytecodeAnalysis.BytecodeVisitor;
@@ -34,8 +41,8 @@ import jwutil.util.Assert;
 public class MethodInline implements ControlFlowGraphVisitor {
 
     public static final boolean TRACE = false;
-    public static final boolean TRACE_ORACLE = false;
-    public static final boolean TRACE_DECISIONS = false;
+    public static final boolean TRACE_ORACLE = true;
+    public static final boolean TRACE_DECISIONS = true;
     public static final java.io.PrintStream out = System.out;
 
     Oracle oracle;
@@ -45,11 +52,13 @@ public class MethodInline implements ControlFlowGraphVisitor {
         this.oracle = o;
     }
     public MethodInline(CallGraph cg) {
-        this(new InlineSmallSingleTargetCalls(cg));
+//        this(new InlineSmallSingleTargetCalls(cg));\
+        this(new InlineSelectedCalls(cg));
         this.cg = cg;
     }
     public MethodInline() {
-        this(new InlineSmallSingleTargetCalls(CHACallGraph.INSTANCE));
+//        this(new InlineSmallSingleTargetCalls(CHACallGraph.INSTANCE));
+    	this(new InlineSelectedCalls(CHACallGraph.INSTANCE));
         this.cg = CHACallGraph.INSTANCE;
     }
 
@@ -128,6 +137,7 @@ public class MethodInline implements ControlFlowGraphVisitor {
             } else {
                 target = Invoke.getMethod(callSite).getMethod();
             }
+            target.getDeclaringClass().prepare();
             if (target.getBytecode() == null) {
                 if (TRACE_ORACLE) out.println("Skipping because target method is native.");
                 return null;
@@ -150,6 +160,95 @@ public class MethodInline implements ControlFlowGraphVisitor {
             return new NoCheckInliningDecision(target);
         }
 
+    }
+    
+    public static class InlineSelectedCalls implements Oracle {        
+        protected CallGraph cg;
+        protected HashMap/*<String,null>*/ knownMethods = new HashMap(10);
+          
+        public InlineSelectedCalls(CallGraph cg) {
+            this.cg = cg;
+            initializeNames();
+        }
+    
+        String methodNameFile = "methods.txt";
+        
+		private void initializeNames() {			
+			BufferedReader r = null;
+			try {
+	        	r = new BufferedReader(new FileReader(methodNameFile));
+	            
+	        	String s;
+	            while ((s = r.readLine()) != null) {
+	            	if(s.startsWith("#")) continue;
+	                if(s.trim().length() == 0) continue;
+	                
+	            	if(s.charAt(s.length()-1) == '\n'){
+	                	s = s.substring(s.length()-1);
+	                }
+	                
+	                knownMethods.put(s, null);
+	            }
+	        } catch (FileNotFoundException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			} finally {
+	            if (r != null)
+					try {
+						r.close();
+					} catch (IOException e1) {
+						e1.printStackTrace();
+					}
+	        }
+		}
+
+		public InliningDecision shouldInline(ControlFlowGraph caller, BasicBlock bb, Quad callSite) {
+            if (TRACE_ORACLE) out.println("Oracle evaluating "+callSite);
+//           
+            Invoke i = (Invoke) callSite.getOperator();
+            jq_Method target;
+            if (i.isVirtual()) {
+                ProgramLocation pl = new QuadProgramLocation(caller.getMethod(), callSite);
+                Collection c = cg.getTargetMethods(pl);
+                if (c.size() != 1) {
+                    if (TRACE_ORACLE) out.println("Skipping because call site has multiple targets.");
+                    return null;
+                }
+                target = (jq_Method) c.iterator().next();
+            } else {
+                target = Invoke.getMethod(callSite).getMethod();
+            }
+            target.getDeclaringClass().prepare();
+            if (target.getBytecode() == null) {
+                if (TRACE_ORACLE) out.println("Skipping because target method is native.");
+                return null;
+            }
+
+            if (target == caller.getMethod()) {
+                if (TRACE_ORACLE) out.println("Skipping because method is recursive.");
+                return null;
+            }
+            // HACK: for interpreter.
+            if (!joeq.Interpreter.QuadInterpreter.interpret_filter.isElement(target)) {
+                if (TRACE_ORACLE) out.println("Skipping because the interpreter cannot handle the target method.");
+                return null;
+            }
+            
+            String mungedName = PA.mungeMethodName(target);
+            if(!knownMethods.containsKey(mungedName)){
+            	return null;
+            }
+            
+            if (Invoke.getMethod(callSite).getMethod().needsDynamicLink(caller.getMethod())) {
+              if (TRACE_ORACLE) out.println("Skipping because call site needs dynamic link.");
+              return null;
+            }
+            
+            if (TRACE_ORACLE) out.println("Oracle says to inline!");
+            //return new NoCheckInliningDecision(target);
+            return new TypeCheckInliningDecision(target);
+        }
     }
     
     public void visitCFG(ControlFlowGraph cfg) {
@@ -179,7 +278,7 @@ public class MethodInline implements ControlFlowGraphVisitor {
             BasicBlock bb = (BasicBlock)li1.previous();
             Quad q = (Quad)li2.previous();
             InliningDecision d = (InliningDecision)li3.previous();
-            if (TRACE_DECISIONS) out.println("Performing inlining "+d);
+            if (TRACE_DECISIONS) out.println("Performing inlining "+d + " using " + d.getClass());
             d.inlineCall(cfg, bb, q);
             if (cg instanceof CachedCallGraph && d instanceof NoCheckInliningDecision) {
                 CachedCallGraph ccg = (CachedCallGraph) cg;
