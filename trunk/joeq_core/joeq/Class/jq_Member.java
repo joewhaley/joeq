@@ -277,9 +277,10 @@ public abstract class jq_Member implements jq_ClassFileConstants, Textualizable 
     
     public static jq_Member parseMember(String s) {
         int i = s.indexOf(' ');
+        if (i < 0) return null;
         String desc = s.substring(i+1);
         int j = s.lastIndexOf('.');
-        if (j > i) return null;
+        if (j < 0 || j > i) return null;
         String memberName = s.substring(j+1, i);
         String className = s.substring(0, j);
         jq_Class c = (jq_Class) jq_Type.parseType(className);
