@@ -8,6 +8,9 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import java.io.DataOutputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.math.BigInteger;
 
@@ -32,6 +35,8 @@ public class NumberingRule extends InferenceRule {
     RelationGraph rg;
     PathNumbering pn;
     long totalTime;
+    
+    static boolean DUMP_DOTGRAPH = !System.getProperty("dumpnumberinggraph", "no").equals("no");
     
     NumberingRule(InferenceRule ir) {
         super(ir.top, ir.bottom);
@@ -65,7 +70,7 @@ public class NumberingRule extends InferenceRule {
      */
     public boolean update() {
         if (pn != null) {
-            if (TRACE) out.println("Numbering already calculated, skipping.");
+            Assert.UNREACHABLE("Can't put numbering in a cycle.");
             return false;
         }
         
@@ -128,6 +133,19 @@ public class NumberingRule extends InferenceRule {
         if (TRACE) out.println("Time spent: "+time+" ms");
         
         totalTime += time;
+        
+        if (DUMP_DOTGRAPH) {
+            DataOutputStream dos = null;
+            try {
+                dos = new DataOutputStream(new FileOutputStream(bottom.relation.name+".dot"));
+                pn.dotGraph(dos, rg.getRoots(), rg.getNavigator());
+            } catch (IOException x) {
+                System.err.println("Error while dumping dot graph.");
+                x.printStackTrace();
+            } finally {
+                if (dos != null) try { dos.close(); } catch (IOException x) { }
+            }
+        }
         
         return true;
     }
