@@ -3,6 +3,7 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Util.InferenceEngine;
 
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -24,6 +25,19 @@ public class RuleTerm {
         super();
         this.variables = variables;
         this.relation = relation;
+    }
+    
+    public String toString() {
+        StringBuffer sb = new StringBuffer();
+        sb.append("( ");
+        for (Iterator i = variables.iterator(); i.hasNext(); ) {
+            sb.append(i.next());
+            sb.append(" ");
+            if (i.hasNext()) sb.append(", ");
+        }
+        sb.append(") in ");
+        sb.append(relation);
+        return sb.toString();
     }
     
 }

@@ -49,7 +49,7 @@ public class BDDRelation extends Relation {
             if (d == null) {
                 d = solver.allocateBDDDomain(fd);
             }
-            if (solver.TRACE) solver.out.println("Field "+fieldNames.get(i)+" assigned to BDDDomain "+d);
+            if (solver.TRACE) solver.out.println("Field "+fieldNames.get(i)+" ("+fieldDomains.get(i)+") assigned to BDDDomain "+d);
             domains.add(d);
         }
     }
@@ -67,8 +67,11 @@ public class BDDRelation extends Relation {
     }
     
     public void load(String filename) throws IOException {
-        relation.free();
-        relation = solver.bdd.load(filename);
+        BDD r2 = solver.bdd.load(filename);
+        if (r2 != null) {
+            relation.free();
+            relation = r2;
+        }
     }
     
     public void loadTuples(String filename) throws IOException {
@@ -83,9 +86,15 @@ public class BDDRelation extends Relation {
             for (int i = 0; i < domains.size(); ++i) {
                 BDDDomain d = (BDDDomain) domains.get(i);
                 String v = st.nextToken();
-                if (v.equals("*")) b.andWith(d.domain());
-                else b.andWith(d.ithVar(Long.parseLong(v)));
+                if (v.equals("*")) {
+                    b.andWith(d.domain());
+                } else {
+                    long l = Long.parseLong(v);
+                    b.andWith(d.ithVar(l));
+                    if (solver.TRACE) solver.out.print(fieldNames.get(i)+": "+l+", ");
+                }
             }
+            if (solver.TRACE) solver.out.println();
             relation.orWith(b);
         }
     }
