@@ -17,14 +17,12 @@ abstract class FileOutputStream {
     private FileDescriptor fd;
     
     private void open(String name) throws java.io.FileNotFoundException {
-        byte[] filename = SystemInterface.toCString(name);
-        int fdnum = SystemInterface.file_open(filename, SystemInterface._O_WRONLY | SystemInterface._O_BINARY | SystemInterface._O_CREAT | SystemInterface._O_TRUNC, SystemInterface._S_IREAD | SystemInterface._S_IWRITE);
+        int fdnum = SystemInterface.file_open(name, SystemInterface._O_WRONLY | SystemInterface._O_BINARY | SystemInterface._O_CREAT | SystemInterface._O_TRUNC, SystemInterface._S_IREAD | SystemInterface._S_IWRITE);
         if (fdnum == -1) throw new java.io.FileNotFoundException(name);
         this.fd.fd = fdnum;
     }
     private void openAppend(String name) throws java.io.FileNotFoundException {
-        byte[] filename = SystemInterface.toCString(name);
-        int fdnum = SystemInterface.file_open(filename, SystemInterface._O_WRONLY | SystemInterface._O_BINARY | SystemInterface._O_CREAT | SystemInterface._O_APPEND, SystemInterface._S_IREAD | SystemInterface._S_IWRITE);
+        int fdnum = SystemInterface.file_open(name, SystemInterface._O_WRONLY | SystemInterface._O_BINARY | SystemInterface._O_CREAT | SystemInterface._O_APPEND, SystemInterface._S_IREAD | SystemInterface._S_IWRITE);
         if (fdnum == -1) throw new java.io.FileNotFoundException(name);
         this.fd.fd = fdnum;
     }

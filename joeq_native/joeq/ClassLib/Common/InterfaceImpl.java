@@ -159,13 +159,13 @@ public class InterfaceImpl implements Interface {
                     if (fieldName.equals("parent"))
                         return null;
                     if (fieldName.equals("desc2type"))
-                        return getInstanceFieldValue_reflection(o, PrimordialClassLoader.class, "bs_desc2type");
+                        return getInstanceFieldValue_reflection(o, lookupField(PrimordialClassLoader.class, "bs_desc2type"));
                 } else if (fieldName.equals("desc2type")) {
                     Object o2 = mappedObjects.get(o);
                     if (o2 != null)
                         return o2;
                     Class c2 = Reflection.getJDKType(c);
-                    Vector classes = (Vector) getInstanceFieldValue_reflection(o, c2, "classes");
+                    Vector classes = (Vector) getInstanceFieldValue_reflection(o, lookupField(c2, "classes"));
                     HashMap desc2type = new HashMap();
                     Iterator i = classes.iterator();
                     while (i.hasNext()) {

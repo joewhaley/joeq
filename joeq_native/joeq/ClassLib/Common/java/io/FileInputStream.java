@@ -18,8 +18,7 @@ abstract class FileInputStream {
     
     private void open(String name)
     throws java.io.FileNotFoundException {
-        byte[] filename = SystemInterface.toCString(name);
-        int fdnum = SystemInterface.file_open(filename, SystemInterface._O_RDONLY | SystemInterface._O_BINARY, 0);
+        int fdnum = SystemInterface.file_open(name, SystemInterface._O_RDONLY | SystemInterface._O_BINARY, 0);
         if (fdnum == -1) throw new java.io.FileNotFoundException(name);
         this.fd.fd = fdnum;
     }

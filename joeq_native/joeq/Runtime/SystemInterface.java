@@ -217,6 +217,7 @@ public abstract class SystemInterface {
     public static CodeAddress mem_cpy_12;
     public static CodeAddress mem_set_12;
     public static CodeAddress file_open_12;
+    public static CodeAddress file_stat_8;
     public static CodeAddress file_readbytes_12;
     public static CodeAddress file_writebyte_8;
     public static CodeAddress file_writebytes_12;
@@ -438,13 +439,27 @@ public abstract class SystemInterface {
     public static final int _O_EXCL   = 0x0400;
     public static final int _O_TEXT   = 0x4000;
     public static final int _O_BINARY = 0x8000;
-    public static int file_open(byte[] filename, int mode, int smode) {
+    public static int file_open(String fn, int mode, int smode) {
+        byte[] filename = toCString(fn);
         Unsafe.pushArg(smode);
         Unsafe.pushArg(mode);
         Unsafe.pushArgA(HeapAddress.addressOf(filename));
         try {
             Unsafe.getThreadBlock().disableThreadSwitch();
             int v = (int)Unsafe.invoke(file_open_12);
+            Unsafe.getThreadBlock().enableThreadSwitch();
+            return v;
+        } catch (Throwable t) { Assert.UNREACHABLE(); }
+        return 0;
+    }
+    public abstract static class Stat {}
+    public static int file_stat(String fn, Stat s) {
+        byte[] filename = toCString(fn);
+        Unsafe.pushArgA(HeapAddress.addressOf(s));
+        Unsafe.pushArgA(HeapAddress.addressOf(filename));
+        try {
+            Unsafe.getThreadBlock().disableThreadSwitch();
+            int v = (int)Unsafe.invoke(file_stat_8);
             Unsafe.getThreadBlock().enableThreadSwitch();
             return v;
         } catch (Throwable t) { Assert.UNREACHABLE(); }
@@ -663,6 +678,7 @@ public abstract class SystemInterface {
         } catch (Throwable t) { Assert.UNREACHABLE(); }
         return 0;
     }
+    public static final int readdir_name_offset = 11;
     public static Address fs_readdir(int p) {
         Unsafe.pushArg(p);
         try {

@@ -60,7 +60,7 @@ commit:
 ### RULES FOR BUILDING BOOT IMAGES
 #
 bootstrap:	Main/Bootstrapper.class
-	java -Xbootclasspath/a:$(JDK14SUPPORT_LIB) -mx400M Main.Bootstrapper
+	java -Xbootclasspath/a:$(JDK14SUPPORT_LIB) -mx450M Main.Bootstrapper
 
 bootstrap-sun14-linux:	javac
 	java -ms240M -mx240M Main.Bootstrapper -cl ClassLib/sun14_linux/classlist.txt
