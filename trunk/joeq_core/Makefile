@@ -44,7 +44,7 @@ commit:
 ### RULES FOR BUILDING BOOT IMAGES
 #
 bootstrap:	Main/Bootstrapper.class
-	java -Xbootclasspath/a:. -mx275M Main.Bootstrapper
+	java -Xbootclasspath/a:. -mx320M Main.Bootstrapper
 
 bootstrap-sun14-linux:	javac
 	java -ms240M -mx240M Main.Bootstrapper -cl ClassLib/sun14_linux/classlist.txt
@@ -75,7 +75,8 @@ source_list:
 	@echo $(ALLJAVA) | xargs -n 1 echo > .source_list
 #	find $(PACKAGES) -name "*.java" > .source_list
 
-Main/Bootstrapper.class:	javac
+Main/Bootstrapper.class:
+	$(MAKE) javac
 
 bootclasspath:	Main/GetBootClassPath.class
 	java Main.GetBootClassPath > bootclasspath
