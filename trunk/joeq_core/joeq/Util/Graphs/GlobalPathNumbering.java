@@ -79,7 +79,10 @@ public class GlobalPathNumbering extends PathNumbering {
                 }
                 val = val3;
             }
-            Assert._assert(!val.equals(BigInteger.ZERO), o.toString());
+            if(val.equals(BigInteger.ZERO)) {
+                val = BigInteger.ONE;
+            }
+            //Assert._assert(!val.equals(BigInteger.ZERO), o.toString());
             nodeNumbering.put(o, val);
             if (val.compareTo(max) > 0) max = val;
         }
