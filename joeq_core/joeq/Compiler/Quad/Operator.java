@@ -3169,9 +3169,9 @@ public abstract class Operator {
             public static final SET_THREAD_BLOCK INSTANCE = new SET_THREAD_BLOCK();
             private SET_THREAD_BLOCK() { }
             public String toString() { return "SET_THREAD_BLOCK"; }
-            public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg1_check(q); }
+            public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg2(q); }
 	    public void interpret(Quad q, State s) {
-		Scheduler.jq_Thread o = (Scheduler.jq_Thread)getObjectOpValue(getOp1(q), s);
+		Scheduler.jq_Thread o = (Scheduler.jq_Thread)getObjectOpValue(getOp2(q), s);
                 if (!jq.Bootstrapping)
                     Unsafe.setThreadBlock(o);
 	    }

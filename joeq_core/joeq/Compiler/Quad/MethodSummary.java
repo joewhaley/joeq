@@ -624,7 +624,7 @@ public class MethodSummary {
                 setRegister(dest_r, n);
             } else if (obj.getOperator() == Special.SET_THREAD_BLOCK.INSTANCE) {
                 if (TRACE_INTRA) out.println("Visiting: "+obj);
-                Register src_r = ((RegisterOperand)Special.getOp1(obj)).getRegister();
+                Register src_r = ((RegisterOperand)Special.getOp2(obj)).getRegister();
                 setAsEscapes(getRegister(src_r));
             } else if (obj.getOperator() == Special.GET_TYPE_OF.INSTANCE) {
                 if (TRACE_INTRA) out.println("Visiting: "+obj);
