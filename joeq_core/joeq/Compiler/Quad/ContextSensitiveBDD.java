@@ -28,6 +28,9 @@ import Compil3r.Quad.MethodSummary.Node;
 import Compil3r.Quad.MethodSummary.UnknownTypeNode;
 import Main.HostedVM;
 import Util.Collections.WorkSet;
+import Util.Graphs.Navigator;
+import Util.Graphs.SCCTopSortedGraph;
+import Util.Graphs.SCComponent;
 
 /**
  * @author John Whaley
@@ -182,19 +185,34 @@ public class ContextSensitiveBDD {
         
         initial_cg = CHACallGraph.INSTANCE;
         
-        Collection[] depths = initial_cg.findDepths(roots);
-        for (int i=depths.length; --i >= 0; ) {
-            for (Iterator j=depths[i].iterator(); j.hasNext(); ) {
-                jq_Method m = (jq_Method) j.next();
-                worklist.add(m);
-            }
-        }
+        Navigator navigator = initial_cg.getNavigator(roots);
+        Set sccs = SCComponent.buildSCC(roots.toArray(), navigator);
+        SCCTopSortedGraph graph = SCCTopSortedGraph.topSort(sccs);
+        
+        worklist.add(graph.getLast());
         
         System.out.println("Initial setup:\t\t"+(System.currentTimeMillis()-time)/1000.+" seconds.");
         
         while (!worklist.isEmpty()) {
-            jq_Method m = (jq_Method) worklist.removeFirst();
-            
+            SCComponent scc = (SCComponent) worklist.getFirst();
+            Object[] nodes = scc.nodes();
+            boolean change = false;
+            for (int i=0; i<nodes.length; ++i) {
+                jq_Method m = (jq_Method) nodes[i];
+                BDDMethodSummary s = (BDDMethodSummary) summaries.get(m);
+                if (s == null) {
+                    summaries.put(m, s = new BDDMethodSummary(m));
+                }
+                if (s.visit()) {
+                    change = true;
+                }
+            }
+            if (change) {
+                for (int j=0; j<scc.prevLength(); ++j) {
+                    SCComponent prev = scc.prev(j);
+                    worklist.add(prev);
+                }
+            }
         }
         
         return null;
@@ -333,7 +351,8 @@ public class ContextSensitiveBDD {
             }
         }
 
-        public void visit() {
+        public boolean visit() {
+            boolean change = false;
             // find all methods that we call.
             for (Iterator i=ms.getCalls().iterator(); i.hasNext(); ) {
                 ProgramLocation mc = (ProgramLocation) i.next();
@@ -345,6 +364,7 @@ public class ContextSensitiveBDD {
                         handleMethodCall(s);
                 }
             }
+            return change;
         }
         
         public void init() {
