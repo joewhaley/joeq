@@ -958,6 +958,16 @@ public class MethodSummary {
         public boolean equals(PassedParameter that) { return this.m.equals(that.m) && this.paramNum == that.paramNum; }
         public boolean equals(Object o) { if (o instanceof PassedParameter) return equals((PassedParameter)o); return false; }
         public String toString() { return "Param "+paramNum+" for "+m; }
+        public void write(DataOutput out) throws IOException {
+            writeLocation(out, m);
+            out.writeByte(' ');
+            out.writeBytes(Integer.toString(paramNum));
+        }
+        public static PassedParameter read(StringTokenizer st) {
+            ProgramLocation l = ProgramLocation.read(st);
+            int k = Integer.parseInt(st.nextToken());
+            return new PassedParameter(l, k);
+        }
     }
     
     /** Represents a particular call site in a method. */
