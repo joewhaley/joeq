@@ -53,6 +53,7 @@ import Util.Strings;
 import Util.Collections.HashWorklist;
 import Util.Collections.UnmodifiableIterator;
 import Util.Graphs.PathNumbering;
+import Util.Graphs.PathNumbering.Range;
 import Util.Graphs.SCCPathNumbering;
 import Util.Graphs.SCComponent;
 import Util.Graphs.SCCTopSortedGraph;
@@ -274,20 +275,28 @@ public class PAResults implements PointerAnalysisResults {
                             increaseCount = false;
                         } else {
                             if (command.equals("method")) {
+                                int k = getMethodIndex(m);
                                 int n = getNameIndex(m);
                                 System.out.println("Method: "+m+" N("+n+")");
-                                int k = getMethodIndex(m);
+				if (r.vCnumbering instanceof SCCPathNumbering) {
+				    SCComponent scc = ((SCCPathNumbering)r.vCnumbering).getSCC(m);
+				    Range range = ((SCCPathNumbering)r.vCnumbering).getRange(m);
+				    System.out.println("is located in SCC #" + System.identityHashCode(scc) 
+					+ " of size " + scc.size() + "; context range is " + range);
+				}
                                 results.add(r.M.ithVar(k));
                             } else {
                                 MethodSummary ms = MethodSummary.getSummary(CodeCache.getCode(m));
-                                increaseCount = false;
                                 if (command.equals("callsin")) {
+				    TypedBDD rc = (TypedBDD)r.bdd.zero();
                                     for (Iterator j=ms.getCalls().iterator(); j.hasNext(); ) {
                                         ProgramLocation mc = (ProgramLocation) j.next();
-                                        System.out.println("I("+getInvokeIndex(mc)+") "+mc.toStringLong());
+					rc.orWith(r.I.ithVar(getInvokeIndex(mc)));
                                     }
+				    results.add(rc);
                                 } else {
                                     System.out.println(ms);
+				    increaseCount = false;
                                 }
                             }
                         }
