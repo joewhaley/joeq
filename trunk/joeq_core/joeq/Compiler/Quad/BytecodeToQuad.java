@@ -1481,8 +1481,11 @@ public class BytecodeToQuad extends BytecodeVisitor {
     }
     public void visitMULTINEWARRAY(jq_Type f, char dim) {
         super.visitMULTINEWARRAY(f, dim);
-        // TODO
-        jq.UNREACHABLE();
+        // todo: keep track of args!
+        for (int i=0; i<dim; ++i) current_state.pop_I();
+        current_state.push_I(new IConstOperand(dim));
+        current_state.push_A(new AConstOperand(f));
+        INVOKEhelper(Invoke.INVOKESTATIC_A.INSTANCE, Allocator.HeapAllocator._multinewarray, f);
     }
     
     boolean performNullCheck(Operand op) {
