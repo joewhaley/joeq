@@ -11,6 +11,7 @@ package Run_Time;
 
 import Allocator.CodeAllocator;
 import Clazz.jq_CompiledCode;
+import Clazz.jq_Method;
 import Run_Time.Unsafe;
 import Run_Time.SystemInterface;
 import jq;
@@ -56,4 +57,30 @@ public class StackWalker implements Iterator {
     public void remove() throws UnsupportedOperationException {
         throw new UnsupportedOperationException();
     }
+    
+    public static void stackDump(int/*CodeAddress*/ init_ip, int/*StackAddress*/ init_fp) {
+        StackWalker sw = new StackWalker(init_ip, init_fp);
+        while (sw.hasNext()) {
+            jq_CompiledCode cc = sw.getCode();
+            int/*CodeAddress*/ ip = sw.getIP();
+            String s;
+            if (cc != null) {
+                jq_Method m = cc.getMethod();
+                int code_offset = ip - cc.getEntrypoint();
+                if (m != null) {
+                    String sourcefile = m.getDeclaringClass().getSourceFile();
+                    int bc_index = cc.getBytecodeIndex(ip);
+                    int line_num = m.getLineNumber(bc_index);
+                    s = "\tat "+m+" ("+sourcefile+":"+line_num+" bc:"+bc_index+" off:"+jq.hex(code_offset)+")";
+                } else {
+                    s = "\tat <unknown cc> (start:"+jq.hex8(ip-code_offset)+" off:"+jq.hex(code_offset)+")";
+                }
+            } else {
+                s = "\tat <unknown addr> (ip:"+jq.hex8(ip)+")";
+            }
+            SystemInterface.debugmsg(s);
+            sw.gotoNext();
+        }
+    }
+    
 }
