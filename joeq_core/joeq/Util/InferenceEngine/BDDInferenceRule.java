@@ -582,29 +582,27 @@ public class BDDInferenceRule extends InferenceRule {
             }
             domains = new ArrayList(domainSet);
         }
+        String origVarOrder2 = origVarOrder;
         int[] indices = new int[domains.size()];
-        for (int i = 0; i < indices.length; ++i) {
+        for (int i = 0; i < domains.size(); ++i) {
             BDDDomain d1 = (BDDDomain) domains.get(i);
-            indices[i] = origVarOrder.indexOf(d1.getName());
-            //System.out.println("Domain "+d1+" index "+indices[i]);
+            int index = origVarOrder2.indexOf(d1.getName());
+            String name = "$"+i+"$";
+            origVarOrder2 = origVarOrder2.substring(0, index) + name + origVarOrder2.substring(index+d1.getName().length());
         }
         List listOfDoms = new LinkedList();
         List listOfOrders = new LinkedList();
         PermutationGenerator g = new PermutationGenerator(domains.size());
         String varOrder2 = origVarOrder;
         while (g.hasMore()) {
-            String varOrder = origVarOrder;
+            String varOrder = origVarOrder2;
             int[] p = g.getNext();
             int diff = 0;
             for (int i = 0; i < p.length; ++i) {
-                if (i == p[i]) continue;
-                BDDDomain d1 = (BDDDomain) domains.get(i);
                 BDDDomain d2 = (BDDDomain) domains.get(p[i]);
-                int index = indices[i];
-                System.out.println("Varorder "+varOrder+" index "+index+" diff "+diff);
-                index += diff;
-                varOrder = varOrder.substring(0, index) + d2.getName() + varOrder.substring(index+d1.getName().length());
-                diff += d2.getName().length() - d1.getName().length();
+                String name = "$"+i+"$";
+                int index = varOrder.indexOf(name);
+                varOrder = varOrder.substring(0, index) + d2.getName() + varOrder.substring(index+name.length());
             }
             List order = getDomainOrder(varOrder, domains, p);
             long t = solver.getOrderConstraint(order);
