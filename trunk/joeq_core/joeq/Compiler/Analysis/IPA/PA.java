@@ -68,6 +68,7 @@ import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Main.HostedVM;
 import joeq.Util.Assert;
 import joeq.Util.Collections.IndexMap;
+import joeq.Util.Collections.IndexedMap;
 import joeq.Util.Collections.Pair;
 import joeq.Util.Graphs.Navigator;
 import joeq.Util.Graphs.PathNumbering;
@@ -151,7 +152,7 @@ public class PA {
     
     IndexMap/*Node*/ Vmap;
     IndexMap/*ProgramLocation*/ Imap;
-    IndexMap/*Node*/ Hmap;
+    IndexedMap/*Node*/ Hmap;
     IndexMap/*jq_Field*/ Fmap;
     IndexMap/*jq_Reference*/ Tmap;
     IndexMap/*jq_Method*/ Nmap;
@@ -2207,8 +2208,8 @@ public class PA {
         Properties p = System.getProperties();
         w.print(p.getProperty("java.home") + File.separatorChar + "bin" + File.separatorChar + "java");
         w.print(" -Xmx512M");
-        w.print(" -classpath " + System.getProperty("java.class.path"));
-        w.print(" -Djava.library.path=" + System.getProperty("java.library.path"));
+        w.print(" -classpath \"" + System.getProperty("java.class.path")+"\"");
+        w.print(" -Djava.library.path=\"" + System.getProperty("java.library.path")+"\"");
         for (Iterator i = p.entrySet().iterator(); i.hasNext(); ) {
             Map.Entry e = (Map.Entry)i.next();
             String key = (String)e.getKey();
@@ -2217,7 +2218,7 @@ public class PA {
                 w.print(" -D" + key + "=" + val);
             }
         }
-        w.println(" Compiler.Analysis.IPA.PAResults");
+        w.println(" joeq.Compiler.Analysis.IPA.PAResults");
         w.close();
     }
     
@@ -2279,7 +2280,7 @@ public class PA {
 	return "";
     }
 
-    String findInMap(IndexMap map, int j) {
+    String findInMap(IndexedMap map, int j) {
         String jp = "("+j+")";
         if (j < map.size() && j >= 0) {
             Object o = map.get(j);
