@@ -5,12 +5,11 @@ package joeq.Synchronization;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-
 import joeq.Class.jq_InstanceField;
 import joeq.Main.jq;
 import joeq.Memory.HeapAddress;
 import joeq.Runtime.Reflection;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>

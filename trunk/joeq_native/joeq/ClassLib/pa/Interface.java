@@ -4,12 +4,11 @@
 package joeq.ClassLib.pa;
 
 import java.util.Iterator;
-
-import joeq.ClassLib.ClassLibInterface;
 import joeq.Class.jq_InstanceField;
 import joeq.Class.jq_StaticField;
+import joeq.ClassLib.ClassLibInterface;
 import joeq.Runtime.ObjectTraverser;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
 
 /*
  * Classes we replace for pointer analysis purposes ('pa')

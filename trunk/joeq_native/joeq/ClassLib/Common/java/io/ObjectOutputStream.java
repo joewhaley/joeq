@@ -4,8 +4,8 @@
 package joeq.ClassLib.Common.java.io;
 
 import joeq.Runtime.Unsafe;
-import joeq.Util.Assert;
-import joeq.Util.Convert;
+import jwutil.util.Assert;
+import jwutil.util.Convert;
 
 /**
  * ObjectOutputStream

@@ -17,8 +17,8 @@ import joeq.Class.jq_TryCatch;
 import joeq.Memory.Address;
 import joeq.Memory.CodeAddress;
 import joeq.Runtime.ExceptionDeliverer;
-import joeq.Util.Assert;
-import joeq.Util.Convert;
+import jwutil.util.Assert;
+import jwutil.util.Convert;
 
 /**
  * BootstrapCodeAllocator

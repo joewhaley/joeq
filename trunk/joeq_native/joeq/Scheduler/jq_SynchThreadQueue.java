@@ -4,7 +4,7 @@
 package joeq.Scheduler;
 
 import joeq.Runtime.Unsafe;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>

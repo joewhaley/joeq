@@ -3,7 +3,6 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.ClassLib.Common.java.lang;
 
-import joeq.ClassLib.Common.ClassUtils;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_ClassFileConstants;
@@ -19,10 +18,11 @@ import joeq.Class.jq_Reference;
 import joeq.Class.jq_StaticField;
 import joeq.Class.jq_StaticMethod;
 import joeq.Class.jq_Type;
+import joeq.ClassLib.Common.ClassUtils;
 import joeq.Runtime.Reflection;
 import joeq.Runtime.TypeCheck;
 import joeq.UTF.Utf8;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
 
 /**
  * Class

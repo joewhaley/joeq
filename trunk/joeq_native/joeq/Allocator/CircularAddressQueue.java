@@ -7,7 +7,7 @@ import joeq.Memory.Address;
 import joeq.Memory.HeapAddress;
 import joeq.Runtime.Debug;
 import joeq.Runtime.SystemInterface;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
 
 /**
  * An implementation of an address queue that uses a circular buffer.

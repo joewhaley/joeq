@@ -7,7 +7,7 @@ import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
 import joeq.Memory.Address;
 import joeq.Memory.CodeAddress;
-import joeq.Util.Strings;
+import jwutil.strings.Strings;
 
 /**
  * BootstrapCodeAddress

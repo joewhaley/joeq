@@ -3,15 +3,16 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.ClassLib.sun13_win32;
 
+import java.util.Collections;
 import java.util.Iterator;
-
-import joeq.Runtime.ObjectTraverser;
 import joeq.Class.PrimordialClassLoader;
-import joeq.ClassLib.ClassLibInterface;
 import joeq.Class.jq_Class;
+import joeq.ClassLib.ClassLibInterface;
+import joeq.Runtime.ObjectTraverser;
 import joeq.Runtime.SystemInterface;
 import joeq.Scheduler.jq_NativeThread;
 import joeq.UTF.Utf8;
+import jwutil.collections.AppendIterator;
 
 /**
  * Interface
@@ -27,8 +28,8 @@ public final class Interface extends joeq.ClassLib.Common.InterfaceImpl {
     public Iterator getImplementationClassDescs(joeq.UTF.Utf8 desc) {
         if (ClassLibInterface.USE_JOEQ_CLASSLIB && desc.toString().startsWith("Ljava/")) {
             joeq.UTF.Utf8 u = joeq.UTF.Utf8.get("Ljoeq/ClassLib/sun13_win32/"+desc.toString().substring(1));
-            return new joeq.Util.Collections.AppendIterator(super.getImplementationClassDescs(desc),
-                                            java.util.Collections.singleton(u).iterator());
+            return new AppendIterator(super.getImplementationClassDescs(desc),
+                                      Collections.singleton(u).iterator());
         }
         return super.getImplementationClassDescs(desc);
     }

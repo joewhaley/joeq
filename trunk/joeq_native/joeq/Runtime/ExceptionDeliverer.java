@@ -16,8 +16,8 @@ import joeq.Memory.CodeAddress;
 import joeq.Memory.StackAddress;
 import joeq.Scheduler.jq_Thread;
 import joeq.UTF.Utf8;
-import joeq.Util.Assert;
-import joeq.Util.Strings;
+import jwutil.strings.Strings;
+import jwutil.util.Assert;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>

@@ -5,7 +5,6 @@ package joeq.Assembler;
 
 import java.io.DataOutput;
 import java.io.IOException;
-
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
 import joeq.Memory.HeapAddress;

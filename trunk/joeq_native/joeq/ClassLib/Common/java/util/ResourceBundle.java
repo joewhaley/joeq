@@ -7,7 +7,7 @@ import joeq.Class.jq_CompiledCode;
 import joeq.Memory.StackAddress;
 import joeq.Runtime.Reflection;
 import joeq.Runtime.StackCodeWalker;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
 
 /**
  * ResourceBundle

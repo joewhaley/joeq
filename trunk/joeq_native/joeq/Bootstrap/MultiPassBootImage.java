@@ -3,9 +3,6 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Bootstrap;
 
-import java.io.IOException;
-import java.io.PrintStream;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -14,7 +11,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
+import java.io.IOException;
+import java.io.PrintStream;
+import java.lang.reflect.Array;
 import joeq.Allocator.CodeAllocator;
 import joeq.Allocator.ObjectLayout;
 import joeq.Assembler.Code2CodeReference;
@@ -50,10 +49,10 @@ import joeq.Runtime.Reflection;
 import joeq.Runtime.SystemInterface;
 import joeq.Runtime.Unsafe;
 import joeq.Scheduler.jq_NativeThread;
-import joeq.Util.Assert;
-import joeq.Util.Strings;
-import joeq.Util.Collections.IdentityHashCodeWrapper;
-import joeq.Util.IO.ExtendedDataOutput;
+import jwutil.collections.IdentityHashCodeWrapper;
+import jwutil.io.ExtendedDataOutput;
+import jwutil.strings.Strings;
+import jwutil.util.Assert;
 
 /**
  * BootImage

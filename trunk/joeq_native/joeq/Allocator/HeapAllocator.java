@@ -18,7 +18,7 @@ import joeq.Memory.HeapAddress;
 import joeq.Runtime.Debug;
 import joeq.Runtime.SystemInterface;
 import joeq.Runtime.TypeCheck;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
 
 /**
  * HeapAllocator

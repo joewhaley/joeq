@@ -4,12 +4,13 @@
 package joeq.ClassLib.Common.java.lang.reflect;
 
 import joeq.Allocator.ObjectLayout;
-import joeq.ClassLib.ClassLibInterface;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Primitive;
 import joeq.Class.jq_Reference;
 import joeq.Class.jq_Type;
+import joeq.ClassLib.ClassLibInterface;
 import joeq.Memory.HeapAddress;
+import jwutil.util.Convert;
 
 /**
  * Array
@@ -32,7 +33,7 @@ public abstract class Array {
         if (array instanceof long[]) return new Long(((long[])array)[index]);
         if (array instanceof float[]) return new Float(((float[])array)[index]);
         if (array instanceof double[]) return new Double(((double[])array)[index]);
-        if (array instanceof boolean[]) return Boolean.valueOf(((boolean[])array)[index]);
+        if (array instanceof boolean[]) return Convert.getBoolean(((boolean[])array)[index]);
         if (array instanceof byte[]) return new Byte(((byte[])array)[index]);
         if (array instanceof short[]) return new Short(((short[])array)[index]);
         if (array instanceof char[]) return new Character(((char[])array)[index]);

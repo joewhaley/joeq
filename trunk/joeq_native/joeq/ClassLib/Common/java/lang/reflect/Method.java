@@ -3,8 +3,6 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.ClassLib.Common.java.lang.reflect;
 
-import joeq.ClassLib.ClassLibInterface;
-import joeq.ClassLib.Common.ClassUtils;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_InstanceMethod;
 import joeq.Class.jq_Method;
@@ -12,12 +10,15 @@ import joeq.Class.jq_NameAndDesc;
 import joeq.Class.jq_Primitive;
 import joeq.Class.jq_Reference;
 import joeq.Class.jq_Type;
+import joeq.ClassLib.ClassLibInterface;
+import joeq.ClassLib.Common.ClassUtils;
 import joeq.Main.jq;
 import joeq.Memory.HeapAddress;
 import joeq.Runtime.Reflection;
 import joeq.Runtime.TypeCheck;
 import joeq.UTF.Utf8;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
+import jwutil.util.Convert;
 
 /**
  * Method
@@ -116,7 +117,7 @@ public class Method extends AccessibleObject {
         if (retType == jq_Primitive.LONG) return new Long(result);
         if (retType == jq_Primitive.FLOAT) return new Float(Float.intBitsToFloat((int)result));
         if (retType == jq_Primitive.DOUBLE) return new Double(Double.longBitsToDouble(result));
-        if (retType == jq_Primitive.BOOLEAN) return Boolean.valueOf((int)result!=0);
+        if (retType == jq_Primitive.BOOLEAN) return Convert.getBoolean((int)result!=0);
         if (retType == jq_Primitive.BYTE) return new Byte((byte)result);
         if (retType == jq_Primitive.SHORT) return new Short((short)result);
         if (retType == jq_Primitive.CHAR) return new Character((char)result);

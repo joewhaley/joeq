@@ -5,7 +5,7 @@ package joeq.ClassLib.Common.java.lang;
 
 import joeq.Runtime.Unsafe;
 import joeq.Scheduler.jq_Thread;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
 
 /**
  * Thread

@@ -11,8 +11,8 @@ import joeq.Class.jq_InstanceField;
 import joeq.Class.jq_StaticMethod;
 import joeq.Memory.HeapAddress;
 import joeq.Scheduler.jq_Thread;
-import joeq.Util.Assert;
-import joeq.Util.Strings;
+import jwutil.strings.Strings;
+import jwutil.util.Assert;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>

@@ -3,13 +3,12 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.BytecodeAnalysis;
 
-import java.io.PrintStream;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-
+import java.io.PrintStream;
 import joeq.Allocator.DefaultHeapAllocator;
 import joeq.Allocator.HeapAllocator;
 import joeq.Bootstrap.BootstrapRootSet;
@@ -30,8 +29,8 @@ import joeq.Runtime.Monitor;
 import joeq.Runtime.Reflection;
 import joeq.Runtime.TypeCheck;
 import joeq.Runtime.Unsafe;
-import joeq.Util.Assert;
-import joeq.Util.Strings;
+import jwutil.strings.Strings;
+import jwutil.util.Assert;
 
 /**
  * @author  John Whaley <jwhaley@alum.mit.edu>

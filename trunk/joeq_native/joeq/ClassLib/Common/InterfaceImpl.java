@@ -27,7 +27,8 @@ import joeq.Runtime.ObjectTraverser;
 import joeq.Runtime.Reflection;
 import joeq.Runtime.TypeCheck;
 import joeq.Scheduler.jq_Thread;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
+import jwutil.util.Convert;
 
 /**
  * InterfaceImpl
@@ -234,7 +235,7 @@ public abstract class InterfaceImpl implements Interface {
                 
                 // we need to reinitialize the Inflater on VM startup
                 if (jq.on_vm_startup != null) {
-                    Object[] args = { o, Boolean.valueOf(nowrap) };
+                    Object[] args = { o, Convert.getBoolean(nowrap) };
                     jq_Method zip_open = ClassLibInterface._class.getOrCreateStaticMethod("init_inflater_static", "(Ljava/util/zip/Inflater;Z)V");
                     MethodInvocation mi = new MethodInvocation(zip_open, args);
                     jq.on_vm_startup.add(mi);

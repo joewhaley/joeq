@@ -8,7 +8,7 @@ import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Reference;
 import joeq.Memory.HeapAddress;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>

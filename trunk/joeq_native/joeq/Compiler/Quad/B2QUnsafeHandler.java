@@ -13,7 +13,7 @@ import joeq.Memory.CodeAddress;
 import joeq.Memory.StackAddress;
 import joeq.Runtime.Unsafe;
 import joeq.Scheduler.jq_Thread;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
 
 /*
  * @author  Michael Martin <mcmartin@stanford.edu>

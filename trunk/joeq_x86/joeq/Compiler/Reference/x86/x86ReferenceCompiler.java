@@ -10,7 +10,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import joeq.Allocator.DefaultHeapAllocator;
 import joeq.Allocator.HeapAllocator;
 import joeq.Allocator.ObjectLayout;
@@ -33,8 +32,8 @@ import joeq.Class.jq_StaticMethod;
 import joeq.Class.jq_TryCatch;
 import joeq.Class.jq_TryCatchBC;
 import joeq.Class.jq_Type;
-import joeq.Compiler.CompilerInterface;
 import joeq.Compiler.CompilationState;
+import joeq.Compiler.CompilerInterface;
 import joeq.Compiler.BytecodeAnalysis.BytecodeVisitor;
 import joeq.Main.jq;
 import joeq.Memory.CodeAddress;
@@ -48,8 +47,8 @@ import joeq.Runtime.TypeCheck;
 import joeq.Runtime.Unsafe;
 import joeq.Scheduler.jq_x86RegisterState;
 import joeq.UTF.Utf8;
-import joeq.Util.Assert;
-import joeq.Util.Strings;
+import jwutil.strings.Strings;
+import jwutil.util.Assert;
 
 /**
  * @author  John Whaley <jwhaley@alum.mit.edu>

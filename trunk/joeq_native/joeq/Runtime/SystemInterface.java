@@ -6,7 +6,6 @@ package joeq.Runtime;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
-
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_InstanceField;
@@ -19,7 +18,7 @@ import joeq.Memory.StackAddress;
 import joeq.Scheduler.jq_RegisterState;
 import joeq.Scheduler.jq_Thread;
 import joeq.UTF.Utf8;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
 
 /**
  * @author  John Whaley <jwhaley@alum.mit.edu>

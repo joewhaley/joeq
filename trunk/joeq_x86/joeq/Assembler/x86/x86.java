@@ -4,8 +4,8 @@
 package joeq.Assembler.x86;
 
 import joeq.Allocator.CodeAllocator;
-import joeq.Util.Assert;
-import joeq.Util.Strings;
+import jwutil.strings.Strings;
+import jwutil.util.Assert;
 
 /**
  * x86

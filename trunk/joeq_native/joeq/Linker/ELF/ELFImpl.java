@@ -3,12 +3,11 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Linker.ELF;
 
-import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-
-import joeq.Util.Assert;
+import java.io.IOException;
+import jwutil.util.Assert;
 
 /**
  *

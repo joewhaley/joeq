@@ -5,7 +5,6 @@ package joeq.Assembler;
 
 import java.io.DataOutput;
 import java.io.IOException;
-
 import joeq.Memory.CodeAddress;
 import joeq.Memory.HeapAddress;
 

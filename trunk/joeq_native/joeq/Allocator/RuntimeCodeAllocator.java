@@ -4,7 +4,6 @@
 package joeq.Allocator;
 
 import java.util.List;
-
 import joeq.Class.jq_BytecodeMap;
 import joeq.Class.jq_CompiledCode;
 import joeq.Class.jq_Method;
@@ -13,8 +12,8 @@ import joeq.Memory.Address;
 import joeq.Memory.CodeAddress;
 import joeq.Runtime.ExceptionDeliverer;
 import joeq.Runtime.SystemInterface;
-import joeq.Util.Assert;
-import joeq.Util.Strings;
+import jwutil.strings.Strings;
+import jwutil.util.Assert;
 
 /**
  * RuntimeCodeAllocator

@@ -55,12 +55,12 @@ import joeq.Runtime.Reflection;
 import joeq.Runtime.SystemInterface;
 import joeq.Runtime.Unsafe;
 import joeq.Scheduler.jq_NativeThread;
-import joeq.Util.Assert;
-import joeq.Util.Strings;
-import joeq.Util.Collections.IdentityHashCodeWrapper;
-import joeq.Util.Collections.Pair;
-import joeq.Util.IO.DataOutputByteBuffer;
-import joeq.Util.IO.ExtendedDataOutput;
+import jwutil.collections.IdentityHashCodeWrapper;
+import jwutil.collections.Pair;
+import jwutil.io.DataOutputByteBuffer;
+import jwutil.io.ExtendedDataOutput;
+import jwutil.strings.Strings;
+import jwutil.util.Assert;
 
 /**
  * SinglePassBootImage

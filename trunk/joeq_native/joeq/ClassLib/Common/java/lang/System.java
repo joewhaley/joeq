@@ -5,7 +5,6 @@ package joeq.ClassLib.Common.java.lang;
 
 import java.io.InputStream;
 import java.io.PrintStream;
-
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_CompiledCode;

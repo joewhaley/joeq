@@ -4,8 +4,7 @@
 package joeq.ClassLib.Common.java.util.zip;
 
 import java.io.UnsupportedEncodingException;
-
-import joeq.Util.Assert;
+import jwutil.util.Assert;
 
 /**
  * ZipEntry

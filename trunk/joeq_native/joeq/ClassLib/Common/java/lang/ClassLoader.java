@@ -3,12 +3,11 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.ClassLib.Common.java.lang;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.security.ProtectionDomain;
-import java.util.HashMap;
-import java.util.Map;
-
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
@@ -21,7 +20,7 @@ import joeq.Memory.StackAddress;
 import joeq.Runtime.Reflection;
 import joeq.Runtime.StackCodeWalker;
 import joeq.UTF.Utf8;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
 
 /**
  * ClassLoader

@@ -4,8 +4,7 @@
 package joeq.Scheduler;
 
 import java.util.Iterator;
-
-import joeq.Util.Assert;
+import jwutil.util.Assert;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>

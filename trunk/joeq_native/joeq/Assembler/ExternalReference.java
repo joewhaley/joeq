@@ -5,9 +5,8 @@ package joeq.Assembler;
 
 import java.io.DataOutput;
 import java.io.IOException;
-
 import joeq.Memory.HeapAddress;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
 
 /**
  * ExternalReference

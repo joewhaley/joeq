@@ -4,12 +4,11 @@
 package joeq.ClassLib.Common.java.io;
 
 import java.lang.reflect.Method;
-
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
 import joeq.Main.jq;
 import joeq.Runtime.Reflection;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
 
 /**
  * FileSystem

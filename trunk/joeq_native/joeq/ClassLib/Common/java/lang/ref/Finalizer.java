@@ -8,7 +8,7 @@ import joeq.Class.jq_NameAndDesc;
 import joeq.Class.jq_Reference;
 import joeq.Runtime.Reflection;
 import joeq.UTF.Utf8;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
 
 /**
  * Finalizer

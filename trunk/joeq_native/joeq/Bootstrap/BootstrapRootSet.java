@@ -9,7 +9,6 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
@@ -35,8 +34,8 @@ import joeq.Runtime.ExceptionDeliverer;
 import joeq.Runtime.Reflection;
 import joeq.Runtime.SystemInterface;
 import joeq.Runtime.Unsafe;
-import joeq.Util.Assert;
-import joeq.Util.Collections.IdentityHashCodeWrapper;
+import jwutil.collections.IdentityHashCodeWrapper;
+import jwutil.util.Assert;
 
 /**
  * BootstrapRootSet

@@ -6,15 +6,14 @@ package joeq.Assembler.x86;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-
 import joeq.Allocator.DefaultCodeAllocator;
 import joeq.Allocator.CodeAllocator.x86CodeBuffer;
 import joeq.Main.jq;
 import joeq.Memory.CodeAddress;
-import joeq.Util.Assert;
-import joeq.Util.Strings;
-import joeq.Util.Collections.LightRelation;
-import joeq.Util.Collections.Relation;
+import jwutil.collections.LightRelation;
+import jwutil.collections.Relation;
+import jwutil.strings.Strings;
+import jwutil.util.Assert;
 
 // Referenced classes of package joeq.Assembler.x86:
 //            x86Constants, x86CodeBuffer, x86
