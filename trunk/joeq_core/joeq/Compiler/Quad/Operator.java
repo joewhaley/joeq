@@ -937,6 +937,9 @@ public class Operator {
             private THROW_A() { }
             public String toString() { return "THROW_A"; }
             public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg1_check(q); }
+            public UnmodifiableList.jq_Class getThrownExceptions() {
+                return anyexception;
+            }
         }
     }
 
