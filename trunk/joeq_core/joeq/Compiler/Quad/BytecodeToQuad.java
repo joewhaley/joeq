@@ -58,6 +58,7 @@ import Run_Time.Unsafe;
 import Scheduler.jq_Thread;
 import Bootstrap.PrimordialClassLoader;
 import UTF.Utf8;
+import java.util.LinkedList;
 import jq;
 
 /**
@@ -81,7 +82,9 @@ public class BytecodeToQuad extends BytecodeVisitor {
     private BasicBlock[] quad_bbs;
     private RegisterFactory rf;
     
+    private boolean[] visited;
     private boolean uncond_branch;
+    private LinkedList regenerate;
 
     public static boolean ALWAYS_TRACE = false;
 
@@ -158,19 +161,27 @@ public class BytecodeToQuad extends BytecodeVisitor {
         this.start_states[2] = AbstractState.allocateInitialState(rf, method);
         this.current_state = AbstractState.allocateEmptyState(method);
         
+        regenerate = new LinkedList();
+        visited = new boolean[quad_bbs.length];
         // traverse reverse post-order over basic blocks to generate instructions
         Compil3r.BytecodeAnalysis.ControlFlowGraph.RPOBasicBlockIterator rpo = bc_cfg.reversePostOrderIterator();
         Compil3r.BytecodeAnalysis.BasicBlock first_bb = rpo.nextBB();
         jq.assert(first_bb == bc_cfg.getEntry());
         while (rpo.hasNext()) {
             Compil3r.BytecodeAnalysis.BasicBlock bc_bb = rpo.nextBB();
+            visited[bc_bb.id] = true;
             this.traverseBB(bc_bb);
         }
-        
+        while (!regenerate.isEmpty()) {
+            Compil3r.BytecodeAnalysis.BasicBlock bc_bb =
+                (Compil3r.BytecodeAnalysis.BasicBlock)regenerate.removeFirst();
+            this.traverseBB(bc_bb);
+        }
         return this.quad_cfg;
     }
 
     private boolean endBasicBlock;
+    private boolean endsWithRET;
     
     /**
      * @param  bc_bb  */
@@ -190,13 +201,16 @@ public class BytecodeToQuad extends BytecodeVisitor {
         this.current_state.overwriteWith(start_states[bc_bb.id]);
 	if (TRACE) this.current_state.dumpState();
         this.endBasicBlock = false;
+        this.endsWithRET = false;
         for (i_end=bc_bb.getStart()-1; ; ) {
             i_start = i_end+1;
             if (isEndOfBB()) break;
             this.visitBytecode();
         }
-        for (int i=0; i<bc_bb.getNumberOfSuccessors(); ++i) {
-            this.mergeStateWith(bc_bb.getSuccessor(i));
+        if (!endsWithRET) {
+            for (int i=0; i<bc_bb.getNumberOfSuccessors(); ++i) {
+                this.mergeStateWith(bc_bb.getSuccessor(i));
+            }
         }
     }
     
@@ -206,21 +220,33 @@ public class BytecodeToQuad extends BytecodeVisitor {
     
     private void mergeStateWith(Compil3r.BytecodeAnalysis.BasicBlock bc_bb) {
         if (start_states[bc_bb.id] == null) {
-	    if (TRACE) System.out.println("Copying current state to "+bc_bb);
+	    if (TRACE) out.println("Copying current state to "+bc_bb);
             start_states[bc_bb.id] = current_state.copy();
         } else {
-	    if (TRACE) System.out.println("Merging current state with "+bc_bb);
-            start_states[bc_bb.id].merge(current_state, rf);
+	    if (TRACE) out.println("Merging current state with "+bc_bb);
+            if (start_states[bc_bb.id].merge(current_state, rf)) {
+                if (TRACE) out.println("in set of "+bc_bb+" changed");
+                if (visited[bc_bb.id]) {
+                    if (TRACE) out.println("must regenerate code for "+bc_bb);
+                    if (!regenerate.contains(bc_bb)) regenerate.add(bc_bb);
+                }
+            }
         }
     }
     private void mergeStateWith(Compil3r.BytecodeAnalysis.ExceptionHandler eh) {
 	Compil3r.BytecodeAnalysis.BasicBlock bc_bb = eh.getEntry();
         if (start_states[bc_bb.id] == null) {
-	    if (TRACE) System.out.println("Copying exception state to "+bc_bb);
+	    if (TRACE) out.println("Copying exception state to "+bc_bb);
             start_states[bc_bb.id] = current_state.copyExceptionHandler(eh.getExceptionType(), rf);
         } else {
-	    if (TRACE) System.out.println("Merging exception state with "+bc_bb);
-            start_states[bc_bb.id].mergeExceptionHandler(current_state, eh.getExceptionType(), rf);
+	    if (TRACE) out.println("Merging exception state with "+bc_bb);
+            if (start_states[bc_bb.id].mergeExceptionHandler(current_state, eh.getExceptionType(), rf)) {
+                if (TRACE) out.println("in set of exception handler "+bc_bb+" changed");
+                if (visited[bc_bb.id]) {
+                    if (TRACE) out.println("must regenerate code for "+bc_bb);
+                    if (!regenerate.contains(bc_bb)) regenerate.add(bc_bb);
+                }
+            }
         }
     }
 
@@ -239,7 +265,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
     }
     
     void appendQuad(Quad q) {
-        if (TRACE) System.out.println(q.toString());
+        if (TRACE) out.println(q.toString());
         quad_bb.appendQuad(q);
     }
     
@@ -797,6 +823,13 @@ public class BytecodeToQuad extends BytecodeVisitor {
         Quad q = Goto.create(Goto.GOTO.INSTANCE, new TargetOperand(target_bb));
         appendQuad(q);
     }
+    java.util.Map jsr_states = new java.util.HashMap();
+    void setJSRState(Compil3r.BytecodeAnalysis.BasicBlock bb, AbstractState s) {
+        jsr_states.put(bb, s.copyAfterJSR());
+    }
+    AbstractState getJSRState(Compil3r.BytecodeAnalysis.BasicBlock bb) {
+        return (AbstractState)jsr_states.get(bb);
+    }
     public void visitJSR(int target) {
         super.visitJSR(target);
         this.uncond_branch = true;
@@ -804,6 +837,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         RegisterOperand op0 = getStackRegister(jq_ReturnAddressType.INSTANCE);
         Quad q = Jsr.create(Jsr.JSR.INSTANCE, op0, new TargetOperand(target_bb));
         appendQuad(q);
+        setJSRState(bc_cfg.getBasicBlock(bc_bb.id+1), current_state);
         current_state.push(op0.copy());
     }
     public void visitRET(int i) {
@@ -813,6 +847,37 @@ public class BytecodeToQuad extends BytecodeVisitor {
         Quad q = Ret.create(Ret.RET.INSTANCE, op0);
         appendQuad(q);
         current_state.setLocal(i, null);
+        endsWithRET = true;
+        // get JSR info
+        Compil3r.BytecodeAnalysis.JSRInfo jsrinfo = bc_cfg.getJSRInfo(bc_bb);
+        // find all callers to this subroutine.
+        for (int j=0; j<bc_bb.getNumberOfSuccessors(); ++j) {
+            Compil3r.BytecodeAnalysis.BasicBlock caller_next = bc_bb.getSuccessor(j);
+            AbstractState caller_state = getJSRState(caller_next);
+            if (caller_state == null) {
+                if (TRACE) out.println("haven't seen jsr call from "+caller_next+" yet.");
+                if (!regenerate.contains(caller_next)) regenerate.add(caller_next);
+                continue;
+            }
+            caller_state.mergeAfterJSR(jsrinfo.changedLocals, current_state);
+            if (start_states[caller_next.id] == null) {
+                if (TRACE) out.println("Copying jsr state to "+caller_next);
+                start_states[caller_next.id] = caller_state.copy();
+                if (visited[caller_next.id]) {
+                    if (TRACE) out.println("must regenerate code for "+caller_next);
+                    if (!regenerate.contains(caller_next)) regenerate.add(caller_next);
+                }
+            } else {
+                if (TRACE) out.println("Merging jsr state with "+caller_next);
+                if (start_states[caller_next.id].merge(caller_state, rf)) {
+                    if (TRACE) out.println("in set of "+caller_next+" changed");
+                    if (visited[caller_next.id]) {
+                        if (TRACE) out.println("must regenerate code for "+caller_next);
+                        if (!regenerate.contains(caller_next)) regenerate.add(caller_next);
+                    }
+                }
+            }
+        }
     }
     public void visitTABLESWITCH(int default_target, int low, int high, int[] targets) {
         super.visitTABLESWITCH(default_target, low, high, targets);
@@ -1742,9 +1807,19 @@ public class BytecodeToQuad extends BytecodeVisitor {
                 that.stack[i] = this.stack[i].copy();
             }
             for (int i=0; i<this.locals.length; ++i) {
-                that.locals[i] = this.locals[i].copy();
+                if (this.locals[i] != null)
+                    that.locals[i] = this.locals[i].copy();
             }
             that.stackptr = this.stackptr;
+            return that;
+        }
+        
+        AbstractState copyAfterJSR() {
+            AbstractState that = new AbstractState(this.stack.length, this.locals.length);
+            for (int i=0; i<this.locals.length; ++i) {
+                if (this.locals[i] != null)
+                    that.locals[i] = this.locals[i].copy();
+            }
             return that;
         }
         
@@ -1754,7 +1829,10 @@ public class BytecodeToQuad extends BytecodeVisitor {
 	    that.stackptr = 1;
 	    RegisterOperand ex = new RegisterOperand(rf.getStack(0, exType), exType);
 	    that.stack[0] = ex;
-            System.arraycopy(this.locals, 0, that.locals, 0, this.locals.length);
+            for (int i=0; i<this.locals.length; ++i) {
+                if (this.locals[i] != null)
+                    that.locals[i] = this.locals[i].copy();
+            }
             return that;
         }
 
@@ -1765,27 +1843,51 @@ public class BytecodeToQuad extends BytecodeVisitor {
             System.arraycopy(that.locals, 0, this.locals, 0, that.locals.length);
             this.stackptr = that.stackptr;
         }
-        
-        void merge(AbstractState that, RegisterFactory rf) {
-            if (this.stackptr != that.stackptr) throw new VerifyError(this.stackptr+" != "+that.stackptr);
-            jq.assert(this.locals.length == that.locals.length);
-            for (int i=0; i<this.stackptr; ++i) {
-                this.stack[i] = meet(this.stack[i], that.stack[i], true, i, rf);
+
+        void mergeAfterJSR(boolean[] changedLocals, AbstractState that) {
+            for (int j=0; j<this.locals.length; ++j) {
+                if (!changedLocals[j]) continue;
+                if (TRACE) System.out.println("local "+j+" changed in jsr to "+that.locals[j]);
+                if (that.locals[j] == null) this.locals[j] = null;
+                else this.locals[j] = that.locals[j].copy();
             }
-            for (int i=0; i<this.locals.length; ++i) {
-                this.locals[i] = meet(this.locals[i], that.locals[i], false, i, rf);
+            this.stackptr = that.stackptr;
+            for (int i=0; i<stackptr; ++i) {
+                this.stack[i] = that.stack[i].copy();
             }
         }
+        boolean merge(AbstractState that, RegisterFactory rf) {
+            if (this.stackptr != that.stackptr) throw new VerifyError(this.stackptr+" != "+that.stackptr);
+            jq.assert(this.locals.length == that.locals.length);
+            boolean change = false;
+            for (int i=0; i<this.stackptr; ++i) {
+                Operand o = meet(this.stack[i], that.stack[i], true, i, rf);
+                if (o != this.stack[i] && (o == null || !o.isSimilar(this.stack[i]))) change = true;
+                this.stack[i] = o;
+            }
+            for (int i=0; i<this.locals.length; ++i) {
+                Operand o = meet(this.locals[i], that.locals[i], false, i, rf);
+                if (o != this.locals[i] && (o == null || !o.isSimilar(this.locals[i]))) change = true;
+                this.locals[i] = o;
+            }
+            return change;
+        }
         
-        void mergeExceptionHandler(AbstractState that, jq_Class exType, RegisterFactory rf) {
+        boolean mergeExceptionHandler(AbstractState that, jq_Class exType, RegisterFactory rf) {
             if (exType == null) exType = PrimordialClassLoader.getJavaLangThrowable();
             jq.assert(this.locals.length == that.locals.length);
             jq.assert(this.stackptr == 1);
+            boolean change = false;
 	    RegisterOperand ex = new RegisterOperand(rf.getStack(0, exType), exType);
-	    this.stack[0] = meet(this.stack[0], ex, true, 0, rf);
+            Operand o = meet(this.stack[0], ex, true, 0, rf);
+            if (o != this.stack[0] && (o == null || !o.isSimilar(this.stack[0]))) change = true;
+	    this.stack[0] = o;
             for (int i=0; i<this.locals.length; ++i) {
-                this.locals[i] = meet(this.locals[i], that.locals[i], false, i, rf);
+                 o = meet(this.locals[i], that.locals[i], false, i, rf);
+                 if (o != this.locals[i] && (o == null || !o.isSimilar(this.locals[i]))) change = true;
+                 this.locals[i] = o;
             }
+            return change;
         }
 
         static Operand meet(Operand op1, Operand op2, boolean stack, int index, RegisterFactory rf) {
