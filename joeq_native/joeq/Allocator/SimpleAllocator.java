@@ -17,13 +17,16 @@ import joeq.Runtime.SystemInterface;
 import joeq.Util.Assert;
 
 /**
- * SimpleAllocator
+ * SimpleAllocator is a simple version of a heap allocator.
+ * It is basically a bump-pointer allocator with a free list.
  *
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class SimpleAllocator extends HeapAllocator {
 
+    public static boolean TRACE = false;
+    
     /**
      * Size of blocks allocated from the OS.
      */
@@ -58,7 +61,7 @@ public class SimpleAllocator extends HeapAllocator {
     /**
      * Simple work queue for GC.
      */
-    private SimpleGCWorkQueue gcWorkQueue = new SimpleGCWorkQueue();
+    private AddressQueue gcWorkQueue = new CircularAddressQueue();
     
     /**
      * Are we currently doing a GC?  For debugging purposes.
@@ -75,7 +78,14 @@ public class SimpleAllocator extends HeapAllocator {
      */
     public static final int MIN_SIZE = Math.max(ObjectLayout.OBJ_HEADER_SIZE, 8);
     
-    static final HeapAddress allocNewBlock() {
+    /**
+     * Allocate a new block of memory from the OS and return a pointer to it,
+     * throwing an OutOfMemoryError if we cannot allocate it.
+     * 
+     * @return  pointer to new block of memory
+     * @throws OutOfMemoryError  if cannot allocate from OS
+     */
+    static final HeapAddress allocNewBlock() throws OutOfMemoryError {
         HeapAddress block = (HeapAddress) SystemInterface.syscalloc(BLOCK_SIZE);
         if (block.isNull()) {
             HeapAllocator.outOfMemory();
@@ -83,60 +93,138 @@ public class SimpleAllocator extends HeapAllocator {
         return block;
     }
     
+    /**
+     * Given a block, return its end address.
+     * 
+     * @param block  memory block
+     * @return  end address
+     */
     static final HeapAddress getBlockEnd(HeapAddress block) {
         // At end of memory block:
         //  - one word for pointer to start of next memory block.
         return (HeapAddress) block.offset(BLOCK_SIZE - HeapAddress.size());
     }
     
+    /**
+     * Given a block, return its size in bytes.
+     * 
+     * @param block  memory block
+     * @return  size in bytes
+     */
     static final int getBlockSize(HeapAddress block) {
         return BLOCK_SIZE;
     }
     
-    static final void setBlockNext(HeapAddress block, HeapAddress next) {
-        block.offset(BLOCK_SIZE - HeapAddress.size()).poke(next);
-    }
-    
+    /**
+     * Get the next pointer of a block.
+     * 
+     * @param block  memory block
+     * @return  pointer to next block
+     */
     static final HeapAddress getBlockNext(HeapAddress block) {
         return (HeapAddress) block.offset(BLOCK_SIZE - HeapAddress.size()).peek();
     }
     
-    static final HeapAddress getFreeNext(HeapAddress free) {
-        return (HeapAddress) free.peek();
+    /**
+     * Set the next pointer of a block.
+     * 
+     * @param block  memory block
+     * @param next  new value of pointer
+     */
+    static final void setBlockNext(HeapAddress block, HeapAddress next) {
+        block.offset(BLOCK_SIZE - HeapAddress.size()).poke(next);
     }
     
-    static final void setFreeNext(HeapAddress free, HeapAddress next) {
-        free.poke(next);
-    }
-    
+    /**
+     * Get the size in bytes of a free list entry.
+     * 
+     * @param free  free list entry
+     * @return  size in bytes
+     */
     static final int getFreeSize(HeapAddress free) {
         return free.offset(HeapAddress.size()).peek4();
     }
     
+    /**
+     * Set the size in bytes of a free list entry.
+     * 
+     * @param free  free list entry
+     * @param size  size in bytes
+     */
     static final void setFreeSize(HeapAddress free, int size) {
         free.offset(HeapAddress.size()).poke4(size);
     }
     
+    /**
+     * Given a free list entry, return its end address.
+     * 
+     * @param free  free list entry
+     * @return  end address
+     */
     static final HeapAddress getFreeEnd(HeapAddress free) {
         int size = getFreeSize(free);
         return (HeapAddress) free.offset(size);
     }
     
+    /**
+     * Get the next pointer of a free list entry.
+     * 
+     * @param free  free list entry
+     * @return  pointer to next free list entry
+     */
+    static final HeapAddress getFreeNext(HeapAddress free) {
+        return (HeapAddress) free.peek();
+    }
+    
+    /**
+     * Set the next pointer of a free list entry.
+     * 
+     * @param free  free list entry
+     * @param next  new value of pointer
+     */
+    static final void setFreeNext(HeapAddress free, HeapAddress next) {
+        free.poke(next);
+    }
+    
+    /**
+     * Get the next pointer of a large object entry.
+     * 
+     * @param large  large object entry
+     * @return  pointer to next block
+     */
     static final HeapAddress getLargeNext(HeapAddress large) {
         int size = getLargeSize(large);
         return (HeapAddress) large.offset(size).peek();
     }
     
+    /**
+     * Set the next pointer of a large object entry.
+     * 
+     * @param large  large object entry
+     * @param next  new value of pointer
+     */
     static final void setLargeNext(HeapAddress large, HeapAddress next) {
         int size = getLargeSize(large);
         large.offset(size).poke(next);
     }
     
+    /**
+     * Return the object contained in a large object entry.
+     * 
+     * @param large  large object entry
+     * @return  object
+     */
     static final Object getLargeObject(HeapAddress large) {
         Object o = ((HeapAddress) large.offset(ObjectLayout.ARRAY_HEADER_SIZE)).asObject();
         return o;
     }
     
+    /**
+     * Get the size in bytes of a large object entry.
+     * 
+     * @param large  large object entry
+     * @return  size in bytes
+     */
     static final int getLargeSize(HeapAddress large) {
         Object o = ((HeapAddress) large.offset(ObjectLayout.ARRAY_HEADER_SIZE)).asObject();
         int size = getObjectSize(o);
@@ -157,8 +245,6 @@ public class SimpleAllocator extends HeapAllocator {
         firstFree = firstLarge = currLarge = HeapAddress.getNull();
     }
 
-    static boolean TRACE = false;
-    
     /**
      * Allocates a new block of memory from the OS, sets the current block to
      * point to it, and makes the new block the current block.
@@ -313,6 +399,14 @@ public class SimpleAllocator extends HeapAllocator {
         return addr.asObject();
     }
 
+    /**
+     * Try to allocate a region of memory from the free list.
+     * Returns a pointer to the allocated memory, or null if there is no
+     * block large enough.
+     * 
+     * @param size  size to allocate in bytes
+     * @return  pointer to allocated memory or null
+     */
     private HeapAddress allocFromFreeList(int size) {
         TRACE = true;
         // Search free list to find if there is an area that will fit the object.
@@ -365,12 +459,14 @@ public class SimpleAllocator extends HeapAllocator {
     }
     
     /**
-     * @param size
-     * @param vtable
-     * @return
-     * @throws OutOfMemoryError
+     * Try to allocate an object from the free list.  If there is not enough space, do a
+     * garbage collection and try again.  If there is still not enough space, return null.
+     * 
+     * @param size  size of object in bytes
+     * @param vtable  vtable for object
+     * @return  allocated object, or null 
      */
-    private Object allocObjectFromFreeList(int size, Object vtable) throws OutOfMemoryError {
+    private Object allocObjectFromFreeList(int size, Object vtable) {
         HeapAddress addr = allocFromFreeList(size);
         if (addr.isNull()) {
             // Not enough space in free list, try a GC.
@@ -386,12 +482,15 @@ public class SimpleAllocator extends HeapAllocator {
     }
     
     /**
-     * @param size
-     * @param vtable
-     * @return
-     * @throws OutOfMemoryError
+     * Try to allocate an array from the free list.  If there is not enough space, do a
+     * garbage collection and try again.  If there is still not enough space, return null.
+     * 
+     * @param length  number of elements in array
+     * @param size  size of array in bytes
+     * @param vtable  vtable for array
+     * @return  allocated array, or null 
      */
-    private Object allocArrayFromFreeList(int length, int size, Object vtable) throws OutOfMemoryError {
+    private Object allocArrayFromFreeList(int length, int size, Object vtable) {
         HeapAddress addr = allocFromFreeList(size);
         if (addr.isNull()) {
             // Not enough space in free list, try a GC.
@@ -408,6 +507,8 @@ public class SimpleAllocator extends HeapAllocator {
     }
     
     /**
+     * Try to allocate a large array.
+     * 
      * @param length
      * @param size
      * @param vtable
@@ -556,12 +657,12 @@ public class SimpleAllocator extends HeapAllocator {
         updateLargeObjectList();
     }
 
-    void scanGCQueue(boolean b) {
+    void scanGCQueue() {
         for (;;) {
-            HeapAddress o = gcWorkQueue.pull();
+            HeapAddress o = (HeapAddress) gcWorkQueue.pull();
             if (SimpleAllocator.TRACE) Debug.writeln("Pulled object from queue: ", HeapAddress.addressOf(o));
             if (o.isNull()) break;
-            scanObject(o.asObject(), b);
+            scanObject(o.asObject());
         }
     }
     
@@ -710,7 +811,7 @@ public class SimpleAllocator extends HeapAllocator {
         }
     }
     
-    void scanObject(Object obj, boolean b) {
+    void scanObject(Object obj) {
         jq_Reference type = jq_Reference.getTypeOf(obj);
         if (type.isClassType()) {
             if (SimpleAllocator.TRACE) Debug.writeln("Scanning object ", HeapAddress.addressOf(obj));
@@ -718,7 +819,7 @@ public class SimpleAllocator extends HeapAllocator {
             for (int i = 0, n = referenceOffsets.length; i < n; i++) {
                 HeapAddress objRef = HeapAddress.addressOf(obj);
                 if (SimpleAllocator.TRACE) Debug.writeln("Scanning offset ", referenceOffsets[i]);
-                DefaultHeapAllocator.processPtrField(objRef.offset(referenceOffsets[i]), b);
+                DefaultHeapAllocator.processObjectReference((HeapAddress) objRef.offset(referenceOffsets[i]));
             }
         } else {
             if (SimpleAllocator.TRACE) Debug.writeln("Scanning array ", HeapAddress.addressOf(obj));
@@ -731,7 +832,7 @@ public class SimpleAllocator extends HeapAllocator {
                 HeapAddress end = (HeapAddress) location.offset(numBytes);
                 while (location.difference(end) < 0) {
                     if (SimpleAllocator.TRACE) Debug.writeln("Scanning address ", location);
-                    DefaultHeapAllocator.processPtrField(location, b);
+                    DefaultHeapAllocator.processObjectReference(location);
                     location =
                         (HeapAddress) location.offset(HeapAddress.size());
                 }
@@ -739,19 +840,20 @@ public class SimpleAllocator extends HeapAllocator {
         }
     }
     
-    public void processPtrField(Address a, boolean b) {
-        if (!DefaultHeapAllocator.isValidAddress(a)) {
-            if (SimpleAllocator.TRACE) Debug.writeln("Address not valid, skipping: ", a);
-            return;
-        }
-        a = a.peek();
-        if (SimpleAllocator.TRACE) Debug.writeln("Checking if valid object ref::: ", a);
+    public void processObjectReference(HeapAddress a) {
+        a = (HeapAddress) a.peek();
+        if (SimpleAllocator.TRACE) Debug.writeln("Adding object to queue: ", a);
+        gcWorkQueue.push(a);
+    }
+    
+    public void processConservativeReference(HeapAddress a) {
+        a = (HeapAddress) a.peek();
         if (!isValidObjectRef(a)) {
             if (SimpleAllocator.TRACE) Debug.writeln("Not a valid object, skipping: ", a);
             return;
         }
         if (SimpleAllocator.TRACE) Debug.writeln("Adding object to queue: ", a);
-        gcWorkQueue.addToQueue(a, b);
+        gcWorkQueue.push(a);
     }
     
     public boolean isInHeap(Address a) {

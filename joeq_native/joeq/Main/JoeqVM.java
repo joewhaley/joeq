@@ -38,9 +38,6 @@ public abstract class JoeqVM {
             // init the ctrl-break handler thread.
             jq_NativeThread.initBreakThread();
 
-            // init the garbage collector thread & set it as daemon
-            jq_NativeThread.initGCThread();
-
             // initialize dynamic compiler
             CompilationState.DEFAULT = new DynamicCompilation();
             
