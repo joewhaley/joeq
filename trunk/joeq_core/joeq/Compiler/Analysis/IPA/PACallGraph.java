@@ -28,6 +28,8 @@ import Util.Collections.UnmodifiableIterator;
  */
 public class PACallGraph extends CallGraph {
 
+    public static final boolean TRACE = false;
+    
     final BDDFactory bdd;
     final BDDDomain M, I;
     final Collection roots;
@@ -68,6 +70,7 @@ public class PACallGraph extends CallGraph {
         int I_i = Imap.get(callSite);
         BDD I_bdd = I.ithVar(I_i);
         BDD b = IE.restrict(I_bdd);
+        if (TRACE) System.out.println("Target methods of "+callSite+" = "+b.toStringWithDomains());
         I_bdd.free();
         return new BDDSet(b, M, Mmap);
     }
