@@ -96,11 +96,9 @@ public abstract class Solver {
         time = System.currentTimeMillis() - time;
         if (dis.NOISY) dis.out.println("done. ("+time+" ms)");
         
-        if (dis.SPLIT_ALL_RULES) {
-            if (dis.NOISY) dis.out.println("Splitting rules...");
-            dis.splitRules();
-            if (dis.NOISY) dis.out.println("done.");
-        }
+        if (dis.NOISY) dis.out.println("Splitting rules...");
+        dis.splitRules();
+        if (dis.NOISY) dis.out.println("done.");
         
         dis.out.println("Solving...");
         time = System.currentTimeMillis();
@@ -260,7 +258,10 @@ public abstract class Solver {
             String option = nextToken(st);
             if (option.equals("split")) {
                 if (NOISY) out.println("Splitting rule "+ir);
-                rules.addAll(ir.split(rules.size(), this));
+                ir.split = true;
+            } else if (option.equals("cacheafterrename")) {
+                BDDInferenceRule r = (BDDInferenceRule) ir;
+                r.cache_before_rename = false;
             } else {
                 throw new IllegalArgumentException("Unknown rule option \""+option+"\"");
             }
@@ -341,7 +342,8 @@ public abstract class Solver {
         List newRules = new LinkedList();
         for (Iterator i = rules.iterator(); i.hasNext(); ) {
             InferenceRule r = (InferenceRule) i.next();
-            newRules.addAll(r.split(rules.indexOf(r), this));
+            if (SPLIT_ALL_RULES || r.split)
+                newRules.addAll(r.split(rules.indexOf(r), this));
         }
         rules.addAll(newRules);
     }

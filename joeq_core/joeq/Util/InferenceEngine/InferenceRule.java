@@ -30,6 +30,7 @@ public abstract class InferenceRule {
     RuleTerm bottom;
     Set necessaryVariables;
     Set unnecessaryVariables;
+    boolean split;
     
     /**
      * @param top
