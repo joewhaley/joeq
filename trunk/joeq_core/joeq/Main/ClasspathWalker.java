@@ -32,6 +32,8 @@ public class ClasspathWalker {
     static boolean GC = !System.getProperty("gc", "no").equals("no");
        
     public static void main(String[] args) throws FileNotFoundException {
+        HostedVM.initialize();
+        
         System.out.println("Classpath: " + PrimordialClassLoader.loader.classpathToString() + "\n");
         pw = new PrintWriter(new FileOutputStream("subclasses.txt"));
         processPackages();
