@@ -28,9 +28,9 @@ public abstract class Solver {
     Map predecessors;
     Collection roots;
     
-    public static final boolean TIMINGS = true;
+    public static final boolean TIMINGS = false;
     public static final boolean TRACE = false;
-    public static final boolean TRACE_WORKLIST = true;
+    public static final boolean TRACE_WORKLIST = false;
     
     public abstract boolean visit(jq_Method m, boolean loop);
     
