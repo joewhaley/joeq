@@ -153,10 +153,10 @@ public class PA {
     int ADD_ROOT_PLACEHOLDERS = Integer.parseInt(System.getProperty("pa.addrootplaceholders", "0"));
     boolean FULL_CHA = !System.getProperty("pa.fullcha", "no").equals("no");
     static boolean ADD_INSTANCE_METHODS = !System.getProperty("pa.addinstancemethods", "no").equals("no");
-    static boolean USE_BOGUS_SUMMARIES = !System.getProperty("pa.usebogussummaries", "no").equals("no");
-    static boolean USE_REFLECTION_PROVIDER = !System.getProperty("pa.usereflectionprovider", "no").equals("no");
-    static boolean RESOLVE_REFLECTION = !System.getProperty("pa.resolvereflection", "no").equals("no");
-    static boolean TRACE_BOGUS = !System.getProperty("pa.tracebogus", "no").equals("no");
+    boolean USE_BOGUS_SUMMARIES = !System.getProperty("pa.usebogussummaries", "no").equals("no");
+    boolean USE_REFLECTION_PROVIDER = !System.getProperty("pa.usereflectionprovider", "no").equals("no");
+    boolean RESOLVE_REFLECTION = !System.getProperty("pa.resolvereflection", "no").equals("no");
+    boolean TRACE_BOGUS = !System.getProperty("pa.tracebogus", "no").equals("no");
     public static boolean TRACE_REFLECTION = !System.getProperty("pa.tracereflection", "no").equals("no");
     int MAX_PARAMS = Integer.parseInt(System.getProperty("pa.maxparams", "4"));
     
@@ -545,14 +545,9 @@ public class PA {
     public void addToForNameMap(ConcreteTypeNode h, BDD i_bdd) {
         BDD H_i = H1.ithVar(Hmap.get(h));
         H_i.andWith(i_bdd.id());
-//        System.out.println("H_i: " + H_i.toStringWithDomains(TS));
-//        H_i.relprod(actual, Iset);                      // H1xI x IxZxV2 = H1xZxIxV2
-//        System.out.println("H_i: " + H_i.toStringWithDomains(TS));
-//        H_i.restrict(Z.ithVar(1));                      // H1xIxV2
-        
         forNameMap.orWith(H_i);
          
-        System.out.println("forNameMap: " + forNameMap.toStringWithDomains(TS));
+        //System.out.println("forNameMap: " + forNameMap.toStringWithDomains(TS));
     }
     
     void addToFormal(BDD M_bdd, int z, Node v) {
@@ -1923,16 +1918,21 @@ public class PA {
     Map noConstrClasses = new HashMap();
     Map cantCastTypes   = new HashMap();
     BDD reflectiveCalls;
+    
     /** Updates IE/IEcs with new edges obtained from resolving reflective invocations */
     public boolean bindReflection(){
         BDD t1 = actual.restrict(Z.ithVar(0));          // IxV2
         if (USE_VCONTEXT) t1.andWith(V2cdomain.id());   // IxV2cxV2
         t1.replaceWith(V2toV1);
         BDD t11 = IE.restrict(M.ithVar(Mmap.get(javaLangClass_newInstance)));
-        BDD t3 = t1.relprod(IE, Mset);                  // IxV1cxV1 & IxM = V1xI2
-        if(TRACE_REFLECTION && TRACE) System.out.println("t3: " + t3.toStringWithDomains(TS));
+        if(t11.isZero()){
+            t11.free();
+            
+            return false;
+        }
+        BDD t3  = t1.relprod(t11, bdd.zero());
         BDD t31 = t3.replace(ItoI2);
-        if(TRACE_REFLECTION && TRACE) System.out.println("t31: " + t31.toStringWithDomains(TS));
+        if(TRACE_REFLECTION && TRACE) out.println("t31: " + t31.toStringWithDomains(TS));
         t1.free();
         
         BDD t4;
@@ -1943,31 +1943,31 @@ public class PA {
             // By quantifying out V1c, we merge all contexts.
             t4 = t31.relprod(vP, V1set);                  // IxV1cxV1xN x V1cxV1xH1cxH1 = IxH1cxH1
         }
-        //t4.exist(Iset);
-        if(TRACE_REFLECTION && TRACE) System.out.println("t4: " + t4.toStringWithDomains(TS) + " of size " + t4.satCount(Iset));
+        //t4.exist(Iset); 
+        if(TRACE_REFLECTION && TRACE) out.println("t4: " + t4.toStringWithDomains(TS) + " of size " + t4.satCount(Iset));
         BDD t41 = t4.relprod(forNameMap, Nset);          // H1cxH1xN x H1xI = IxH1cxH1
         t4.free();
-        if(TRACE_REFLECTION && TRACE) System.out.println("t41: " + t41.toStringWithDomains(TS) + " of size " + t41.satCount(Iset));
+        if(TRACE_REFLECTION && TRACE) out.println("t41: " + t41.toStringWithDomains(TS) + " of size " + t41.satCount(Iset));
         
         BDD t6 = t41.relprod(actual, Iset.and(H1set));
         t41.free();
         BDD t7 = t6.restrict(Z.ithVar(1));
         t6.free();
-        if(TRACE_REFLECTION && TRACE) System.out.println("t7: " + t7.toStringWithDomains(TS) + " of size " + t7.satCount(Iset));
+        if(TRACE_REFLECTION && TRACE) out.println("t7: " + t7.toStringWithDomains(TS) + " of size " + t7.satCount(Iset));
         
         BDD t8 = t7.replace(V2toV1);
         t7.free();
         BDD t9 = t8.relprod(vP, V1set);
         t8.free();
         
-        if(TRACE_REFLECTION && TRACE) System.out.println("t9: " + t9.toStringWithDomains(TS) + " of size " + t9.satCount(Iset));
+        if(TRACE_REFLECTION && TRACE) out.println("t9: " + t9.toStringWithDomains(TS) + " of size " + t9.satCount(Iset));
         BDD constructorIE = bdd.zero(); 
         for(Iterator iter = t9.iterator(H1set.and(I2set)); iter.hasNext();){
             BDD h = (BDD) iter.next();
             int h_i = h.scanVar(H1).intValue();
             Object node = Hmap.get(h_i);
             if(!(node instanceof ConcreteTypeNode)) {
-                System.err.println("Can't cast " + node + " to ConcreteTypeNode");
+                //System.err.println("Can't cast " + node + " to ConcreteTypeNode for " + h.toStringWithDomains(TS));
                 continue;
             }
             MethodSummary.ConcreteTypeNode n = (ConcreteTypeNode) node;
@@ -1983,11 +1983,11 @@ public class PA {
             jq_Class c = null;
             try {
 //              if(stringConst.eq)
-                jq_Type clazz = jq_Type.parseType(stringConst);
-                if(clazz instanceof jq_Class && isWellFormed(stringConst)){
+                jq_Type clazz = null;
+                if(isWellFormed(stringConst) && (clazz = jq_Type.parseType(stringConst)) instanceof jq_Class && clazz != null){
                     c = (jq_Class) clazz;
             
-                    if(TRACE_REFLECTION) System.out.println("stringConst: " + stringConst);
+                    if(TRACE_REFLECTION) out.println("Calling class by name: " + stringConst);
                     c.load();
                     c.prepare();
                     Assert._assert(c != null);
@@ -2022,7 +2022,7 @@ public class PA {
             }
             constructorIE.orWith(M.ithVar(Mmap.get(constructor)).and(h));
         }
-        if(TRACE_REFLECTION && TRACE) System.out.println("constructorIE: " + constructorIE.toStringWithDomains(TS) + " of size " + constructorIE.satCount(H1set));
+        if(TRACE_REFLECTION && TRACE) out.println("constructorIE: " + constructorIE.toStringWithDomains(TS) + " of size " + constructorIE.satCount(H1set));
         
         BDD old_reflectiveCalls  = reflectiveCalls.id();
         reflectiveCalls = constructorIE.exist(H1set).replace(I2toI);
@@ -2033,8 +2033,9 @@ public class PA {
         
         if(!new_reflectiveCalls.isZero()){
             if(TRACE_REFLECTION) {
-                System.out.println("Discovered new_reflectiveCalls: " + 
-                    new_reflectiveCalls.toStringWithDomains(TS));
+                out.println("Discovered new_reflectiveCalls: " + 
+                    new_reflectiveCalls.toStringWithDomains(TS) + 
+                    " of size " + new_reflectiveCalls.satCount(Iset.and(H1set)));
             }
             
             if (CS_CALLGRAPH){ 
