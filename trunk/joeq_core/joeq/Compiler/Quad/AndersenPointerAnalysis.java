@@ -417,8 +417,6 @@ public class AndersenPointerAnalysis {
         sb.append(methodsToVisit.size());
         sb.append(" Calls: ");
         sb.append(callSiteToTargets.size());
-        sb.append(" Call graph edges: ");
-        sb.append(linkedTargets.size());
         sb.append(" Bytecodes ");
         sb.append(bytecodes);
         sb.append(" Iteration ");
@@ -429,6 +427,7 @@ public class AndersenPointerAnalysis {
     public static String computeHistogram(Map m) {
         StringBuffer sb = new StringBuffer();
         int[] histogram = new int[HISTOGRAM_SIZE];
+        long total = 0;
         for (Iterator i=m.entrySet().iterator(); i.hasNext(); ) {
             Map.Entry e = (Map.Entry)i.next();
             CallSite cs = (CallSite)e.getKey();
@@ -436,7 +435,13 @@ public class AndersenPointerAnalysis {
             int x = s.size();
             if (x >= HISTOGRAM_SIZE) x = HISTOGRAM_SIZE-1;
             histogram[x]++;
+            total += x;
         }
+        sb.append(" Total # of call graph edges: ");
+        sb.append(total);
+        sb.append('/');
+        sb.append(total+histogram[0]);
+        sb.append(lineSep);
         for (int i=0; i<HISTOGRAM_SIZE; ++i) {
             if (histogram[i] > 0) {
                 if (i == HISTOGRAM_SIZE-1) sb.append(">=");
