@@ -1,30 +1,50 @@
-packages = Allocator Assembler Bootstrap ClassLib Clazz Compil3r GC Interpreter Linker Main Run_Time Scheduler Synchronization UTF Util java
+PACKAGES = Allocator Assembler Bootstrap ClassLib Clazz Compil3r GC Interpreter Linker Main Run_Time Scheduler Synchronization UTF Util java
+
+ALLDIRS = $(shell find $(PACKAGES) -type d | grep -v CVS)
+ALLJAVA = $(foreach d, $(ALLDIRS), $(wildcard $(d)/*.java))
+ALLPKGS = $(sort $(foreach j, $(ALLJAVA), $(dir $(j))))
+ALLCLASS = $(foreach d, $(ALLDIRS), $(wildcard $(d)/*.class))
+
+CLASSFILE_VERSION = 1.3
 
 all:	javac
 
-jikes:	bootclasspath
-	find ${packages} -name "*.java" | xargs jikes -target 1.3 -bootclasspath @bootclasspath
+### RULES TO BUILD SOURCE CODE
+#
+jikes:	bootclasspath source_list
+	jikes -target $(CLASSFILE_VERSION) -bootclasspath @bootclasspath @.source_list
 
-jikes-pedantic:	bootclasspath
-	find ${packages} -name "*.java" | xargs jikes -target 1.3 -bootclasspath @bootclasspath +P
+jikes-pedantic:	bootclasspath source_list
+	jikes -target $(CLASSFILE_VERSION) -bootclasspath @bootclasspath +P @.source_list
 
-javac:
-	find ${packages} -name "*.java" | xargs javac -target 1.3
+javac:	source_list
+	javac -target $(CLASSFILE_VERSION) @.source_list
 
+
+### RULES TO CLEAN
+#
 clean:
-	find ${packages} -name "*.class" | xargs rm -f
+	find . -name "*.class" | xargs rm -f
+#	rm -f $(ALLCLASS)
 
 veryclean:
-	find ${packages} -name "*.class" | xargs rm -f bootclasspath
+	find . -name "*.class" | xargs rm -f bootclasspath .source_list
+#	rm -f bootclasspath .source_list $(ALLCLASS)
 
+
+### RULES TO ACCESS CVS
+#
 update:
 	( export CVS_RSH=ssh ; cvs update -Pd )
 
 commit:
 	( export CVS_RSH=ssh ; cvs commit )
 
-bootstrap:
-	java -Xbootclasspath/a:. -mx250M Main.Bootstrapper
+
+### RULES FOR BUILDING BOOT IMAGES
+#
+bootstrap:	Main/Bootstrapper.class
+	java -Xbootclasspath/a:. -mx275M Main.Bootstrapper
 
 bootstrap-sun14-linux:	javac
 	java -ms240M -mx240M Main.Bootstrapper -cl ClassLib/sun14_linux/classlist.txt
@@ -40,6 +60,22 @@ bootstrap-sun14-win32:	javac
 
 bootstrap-sun13-win32:	javac
 	java -Xbootclasspath/a:. -ms120M -mx120M Main.Bootstrapper -cl ClassLib/sun13_win32/classlist.txt
+
+
+### MISC RULES
+#
+wc:
+	@echo Total, and Top Five files:
+	@wc -l $(ALLJAVA) | sort -rn | head -7
+
+
+### LOCAL RULES (you will never need to make these directly)
+#
+source_list:
+	@echo $(ALLJAVA) | xargs -n 1 echo > .source_list
+#	find $(PACKAGES) -name "*.java" > .source_list
+
+Main/Bootstrapper.class:	javac
 
 bootclasspath:	Main/GetBootClassPath.class
 	java Main.GetBootClassPath > bootclasspath
