@@ -50,7 +50,7 @@ public class IterativeSolver
     protected Collection getSuccessors(Object c) { return graphNavigator.next(c); }
     
     /* (non-Javadoc)
-     * @see Compiler.Dataflow.Solver#initialize(Compiler.Dataflow.Problem, Util.Graphs.Graph)
+     * @see joeq.Compiler.Dataflow.Solver#initialize(Compiler.Dataflow.Problem, Util.Graphs.Graph)
      */
     public void initialize(Problem p, Graph graph) {
         List order = Traversals.reversePostOrder(graph.getNavigator(), graph.getRoots());
@@ -60,7 +60,7 @@ public class IterativeSolver
     /** Initializes this solver with the given dataflow problem, graph, and
      * traversal order.
      * 
-     * @see Compiler.Dataflow.Solver#initialize(joeq.Compiler.Dataflow.Problem, joeq.Util.Graphs.Graph)
+     * @see joeq.Compiler.Dataflow.Solver#initialize(joeq.Compiler.Dataflow.Problem, joeq.Util.Graphs.Graph)
      */
     public void initialize(Problem p, Graph graph, List order) {
         super.initialize(p, graph);
@@ -71,17 +71,17 @@ public class IterativeSolver
     }
     
     /* (non-Javadoc)
-     * @see Compiler.Dataflow.Solver#allLocations()
+     * @see joeq.Compiler.Dataflow.Solver#allLocations()
      */
     public Iterator allLocations() { return traversalOrder.iterator(); }
 
     /* (non-Javadoc)
-     * @see Compiler.Dataflow.Solver#boundaryLocations()
+     * @see joeq.Compiler.Dataflow.Solver#boundaryLocations()
      */
     public Iterator boundaryLocations() { return boundaries.iterator(); }
 
     /* (non-Javadoc)
-     * @see Compiler.Dataflow.Solver#solve()
+     * @see joeq.Compiler.Dataflow.Solver#solve()
      */
     public void solve() {
         initializeDataflowValueMap();

@@ -20,14 +20,14 @@ public class ReverseNavigator implements Navigator {
     }
 
     /* (non-Javadoc)
-     * @see Util.Graphs.Navigator#next(java.lang.Object)
+     * @see joeq.Util.Graphs.Navigator#next(java.lang.Object)
      */
     public Collection next(Object node) {
         return navigator.prev(node);
     }
 
     /* (non-Javadoc)
-     * @see Util.Graphs.Navigator#prev(java.lang.Object)
+     * @see joeq.Util.Graphs.Navigator#prev(java.lang.Object)
      */
     public Collection prev(Object node) {
         return navigator.next(node);

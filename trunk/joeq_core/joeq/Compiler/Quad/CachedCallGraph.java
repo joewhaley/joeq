@@ -57,7 +57,7 @@ public class CachedCallGraph extends CallGraph {
     }
 
     /* (non-Javadoc)
-     * @see Compiler.Quad.CallGraph#setRoots(java.util.Collection)
+     * @see joeq.Compiler.Quad.CallGraph#setRoots(java.util.Collection)
      */
     public void setRoots(Collection roots) {
         delegate.setRoots(roots);
@@ -65,7 +65,7 @@ public class CachedCallGraph extends CallGraph {
     }
 
     /* (non-Javadoc)
-     * @see Compiler.Quad.CallGraph#entrySet()
+     * @see joeq.Compiler.Quad.CallGraph#entrySet()
      */
     public Set entrySet() {
         if (edges == null) invalidateCache();
@@ -73,7 +73,7 @@ public class CachedCallGraph extends CallGraph {
     }
 
     /* (non-Javadoc)
-     * @see Compiler.Quad.CallGraph#getAllCallSites()
+     * @see joeq.Compiler.Quad.CallGraph#getAllCallSites()
      */
     public Collection getAllCallSites() {
         if (edges == null) invalidateCache();
@@ -85,7 +85,7 @@ public class CachedCallGraph extends CallGraph {
     }
 
     /* (non-Javadoc)
-     * @see Compiler.Quad.CallGraph#getAllMethods()
+     * @see joeq.Compiler.Quad.CallGraph#getAllMethods()
      */
     public Collection getAllMethods() {
         if (edges == null) invalidateCache();
@@ -99,14 +99,14 @@ public class CachedCallGraph extends CallGraph {
     }
 
     /* (non-Javadoc)
-     * @see Compiler.Quad.CallGraph#getCallees(Compiler.Quad.ControlFlowGraph)
+     * @see joeq.Compiler.Quad.CallGraph#getCallees(joeq.Compiler.Quad.ControlFlowGraph)
      */
     public Collection getCallees(ControlFlowGraph cfg) {
         return getCallees(cfg.getMethod());
     }
 
     /* (non-Javadoc)
-     * @see Compiler.Quad.CallGraph#getCallees(Class.jq_Method)
+     * @see joeq.Compiler.Quad.CallGraph#getCallees(joeq.Class.jq_Method)
      */
     public Collection getCallees(jq_Method caller) {
         if (edges == null) invalidateCache();
@@ -129,7 +129,7 @@ public class CachedCallGraph extends CallGraph {
     }
     
     /* (non-Javadoc)
-     * @see Compiler.Quad.CallGraph#getCallerMethods(Class.jq_Method)
+     * @see joeq.Compiler.Quad.CallGraph#getCallerMethods(joeq.Class.jq_Method)
      */
     public Collection getCallers(jq_Method callee) {
         if (edges == null) invalidateCache();
@@ -139,7 +139,7 @@ public class CachedCallGraph extends CallGraph {
     }
 
     /* (non-Javadoc)
-     * @see Compiler.Quad.CallGraph#getCallerMethods(Class.jq_Method)
+     * @see joeq.Compiler.Quad.CallGraph#getCallerMethods(joeq.Class.jq_Method)
      */
     public Collection getCallerMethods(jq_Method callee) {
         if (edges == null) invalidateCache();
@@ -159,14 +159,14 @@ public class CachedCallGraph extends CallGraph {
     }
 
     /* (non-Javadoc)
-     * @see Compiler.Quad.CallGraph#getCallSites(Compiler.Quad.ControlFlowGraph)
+     * @see joeq.Compiler.Quad.CallGraph#getCallSites(joeq.Compiler.Quad.ControlFlowGraph)
      */
     public Collection getCallSites(ControlFlowGraph cfg) {
         return getCallSites(cfg.getMethod());
     }
 
     /* (non-Javadoc)
-     * @see Compiler.Quad.CallGraph#getCallSites(Class.jq_Method)
+     * @see joeq.Compiler.Quad.CallGraph#getCallSites(joeq.Class.jq_Method)
      */
     public Collection getCallSites(jq_Method caller) {
         if (callSites == null) invalidateCache();
@@ -200,7 +200,7 @@ public class CachedCallGraph extends CallGraph {
     }
 
     /* (non-Javadoc)
-     * @see Compiler.Quad.CallGraph#getRoots()
+     * @see joeq.Compiler.Quad.CallGraph#getRoots()
      */
     public Collection getRoots() {
         return delegate.getRoots();

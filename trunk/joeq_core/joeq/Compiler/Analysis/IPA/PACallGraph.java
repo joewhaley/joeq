@@ -50,21 +50,21 @@ public class PACallGraph extends CallGraph {
     }
     
     /* (non-Javadoc)
-     * @see Compiler.Quad.CallGraph#setRoots(java.util.Collection)
+     * @see joeq.Compiler.Quad.CallGraph#setRoots(java.util.Collection)
      */
     public void setRoots(Collection roots) {
         Assert.UNREACHABLE();
     }
 
     /* (non-Javadoc)
-     * @see Compiler.Quad.CallGraph#getRoots()
+     * @see joeq.Compiler.Quad.CallGraph#getRoots()
      */
     public Collection getRoots() {
         return roots;
     }
 
     /* (non-Javadoc)
-     * @see Compiler.Quad.CallGraph#getTargetMethods(java.lang.Object, Compiler.Analysis.IPA.ProgramLocation)
+     * @see joeq.Compiler.Quad.CallGraph#getTargetMethods(java.lang.Object, joeq.Compiler.Analysis.IPA.ProgramLocation)
      */
     public Collection getTargetMethods(Object context, ProgramLocation callSite) {
         callSite = LoadedCallGraph.mapCall(callSite);
@@ -77,7 +77,7 @@ public class PACallGraph extends CallGraph {
     }
     
     /* (non-Javadoc)
-     * @see Compiler.Quad.CallGraph#getAllMethods()
+     * @see joeq.Compiler.Quad.CallGraph#getAllMethods()
      */
     public Collection getAllMethods() {
         BDD b = visited.id();

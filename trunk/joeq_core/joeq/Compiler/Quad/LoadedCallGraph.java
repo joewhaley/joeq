@@ -243,7 +243,7 @@ public class LoadedCallGraph extends CallGraph {
     }
 
     /* (non-Javadoc)
-     * @see Compiler.Quad.CallGraph#setRoots(java.util.Collection)
+     * @see joeq.Compiler.Quad.CallGraph#setRoots(java.util.Collection)
      */
     public void setRoots(Collection roots) {
         // Root set should be the same!
@@ -251,14 +251,14 @@ public class LoadedCallGraph extends CallGraph {
     }
 
     /* (non-Javadoc)
-     * @see Compiler.Quad.CallGraph#getRoots()
+     * @see joeq.Compiler.Quad.CallGraph#getRoots()
      */
     public Collection getRoots() {
         return roots;
     }
 
     /* (non-Javadoc)
-     * @see Compiler.Quad.CallGraph#getTargetMethods(java.lang.Object, Compiler.Quad.ProgramLocation)
+     * @see joeq.Compiler.Quad.CallGraph#getTargetMethods(java.lang.Object, Compiler.Quad.ProgramLocation)
      */
     public Collection getTargetMethods(Object context, ProgramLocation callSite) {
         if (callSite instanceof ProgramLocation.QuadProgramLocation) {
@@ -268,28 +268,28 @@ public class LoadedCallGraph extends CallGraph {
     }
 
     /* (non-Javadoc)
-     * @see Compiler.Quad.CallGraph#entrySet()
+     * @see joeq.Compiler.Quad.CallGraph#entrySet()
      */
     public Set entrySet() {
         return edges.entrySet();
     }
 
     /* (non-Javadoc)
-     * @see Compiler.Quad.CallGraph#getAllCallSites()
+     * @see joeq.Compiler.Quad.CallGraph#getAllCallSites()
      */
     public Collection getAllCallSites() {
         return edges.keySet();
     }
 
     /* (non-Javadoc)
-     * @see Compiler.Quad.CallGraph#getAllMethods()
+     * @see joeq.Compiler.Quad.CallGraph#getAllMethods()
      */
     public Collection getAllMethods() {
         return methods;
     }
 
     /* (non-Javadoc)
-     * @see Compiler.Quad.CallGraph#getCallees(Class.jq_Method)
+     * @see joeq.Compiler.Quad.CallGraph#getCallees(joeq.Class.jq_Method)
      */
     public Collection getCallees(jq_Method caller) {
         Collection c = CachedCallGraph.getFromMultiMap(callSites, edges, caller);
@@ -297,7 +297,7 @@ public class LoadedCallGraph extends CallGraph {
     }
     
     /* (non-Javadoc)
-     * @see Compiler.Quad.CallGraph#getCallers(Class.jq_Method)
+     * @see joeq.Compiler.Quad.CallGraph#getCallers(joeq.Class.jq_Method)
      */
     public Collection getCallers(jq_Method callee) {
         MultiMap m1 = edges.invert();
@@ -306,7 +306,7 @@ public class LoadedCallGraph extends CallGraph {
     }
     
     /* (non-Javadoc)
-     * @see Compiler.Quad.CallGraph#getCallerMethods(Class.jq_Method)
+     * @see joeq.Compiler.Quad.CallGraph#getCallerMethods(joeq.Class.jq_Method)
      */
     public Collection getCallerMethods(jq_Method callee) {
         MultiMap m1 = edges.invert();
@@ -329,7 +329,7 @@ public class LoadedCallGraph extends CallGraph {
     }
     
     /* (non-Javadoc)
-     * @see Compiler.Quad.CallGraph#getCallSites(Class.jq_Method)
+     * @see joeq.Compiler.Quad.CallGraph#getCallSites(joeq.Class.jq_Method)
      */
     public Collection getCallSites(jq_Method caller) {
         Collection c = callSites.getValues(caller);

@@ -45,14 +45,14 @@ public abstract class WorklistSolver extends Solver {
     protected abstract void pushAll(Collection c);
 
     /* (non-Javadoc)
-     * @see Compiler.Dataflow.Solver#boundaryLocations()
+     * @see joeq.Compiler.Dataflow.Solver#boundaryLocations()
      */
     public Iterator boundaryLocations() {
         return boundaries.iterator();
     }
     
     /* (non-Javadoc)
-     * @see Compiler.Dataflow.Solver#initialize(Compiler.Dataflow.Problem, Util.Graphs.Graph)
+     * @see joeq.Compiler.Dataflow.Solver#initialize(joeq.Compiler.Dataflow.Problem, Util.Graphs.Graph)
      */
     public void initialize(Problem p, Graph graph) {
         super.initialize(p, graph);
@@ -61,7 +61,7 @@ public abstract class WorklistSolver extends Solver {
     }
 
     /* (non-Javadoc)
-     * @see Compiler.Dataflow.Solver#solve()
+     * @see joeq.Compiler.Dataflow.Solver#solve()
      */
     public void solve() {
         initializeDataflowValueMap();

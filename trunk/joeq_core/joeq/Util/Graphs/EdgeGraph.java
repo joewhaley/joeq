@@ -18,14 +18,14 @@ public class EdgeGraph implements Graph {
     public EdgeGraph(Graph g) { this.g = g; }
 
     /* (non-Javadoc)
-     * @see Util.Graphs.Graph#getRoots()
+     * @see joeq.Util.Graphs.Graph#getRoots()
      */
     public Collection getRoots() {
         return g.getRoots();
     }
 
     /* (non-Javadoc)
-     * @see Util.Graphs.Graph#getNavigator()
+     * @see joeq.Util.Graphs.Graph#getNavigator()
      */
     public Navigator getNavigator() {
         return new EdgeNavigator(g.getNavigator());

@@ -36,7 +36,7 @@ public class PriorityQueueSolver extends WorklistSolver {
     }
 
     /* (non-Javadoc)
-     * @see Compiler.Dataflow.Solver#initialize(Compiler.Dataflow.Problem, Util.Graphs.Graph)
+     * @see joeq.Compiler.Dataflow.Solver#initialize(Compiler.Dataflow.Problem, Util.Graphs.Graph)
      */
     public void initialize(Problem p, Graph graph) {
         this.initialize(p, graph, Traversals.reversePostOrder(graph.getNavigator(), graph.getRoots()));
@@ -45,7 +45,7 @@ public class PriorityQueueSolver extends WorklistSolver {
     /** Initializes this solver with the given dataflow problem, graph, and
      * traversal order.
      * 
-     * @see Compiler.Dataflow.Solver#initialize(joeq.Compiler.Dataflow.Problem, joeq.Util.Graphs.Graph)
+     * @see joeq.Compiler.Dataflow.Solver#initialize(joeq.Compiler.Dataflow.Problem, joeq.Util.Graphs.Graph)
      */
     public void initialize(Problem p, Graph graph, List traversalOrder) {
         super.initialize(p, graph);
@@ -65,14 +65,14 @@ public class PriorityQueueSolver extends WorklistSolver {
     }
 
     /* (non-Javadoc)
-     * @see Compiler.Dataflow.Solver#allLocations()
+     * @see joeq.Compiler.Dataflow.Solver#allLocations()
      */
     public Iterator allLocations() {
         return nodesToPriorities.keySet().iterator();
     }
 
     /* (non-Javadoc)
-     * @see Compiler.Dataflow.WorklistSolver#initializeWorklist()
+     * @see joeq.Compiler.Dataflow.WorklistSolver#initializeWorklist()
      */
     protected void initializeWorklist() {
         worklist = new BinHeapPriorityQueue(nodesToPriorities.size());
@@ -86,21 +86,21 @@ public class PriorityQueueSolver extends WorklistSolver {
     }
 
     /* (non-Javadoc)
-     * @see Compiler.Dataflow.WorklistSolver#hasNext()
+     * @see joeq.Compiler.Dataflow.WorklistSolver#hasNext()
      */
     protected boolean hasNext() {
         return !worklist.isEmpty();
     }
 
     /* (non-Javadoc)
-     * @see Compiler.Dataflow.WorklistSolver#pull()
+     * @see joeq.Compiler.Dataflow.WorklistSolver#pull()
      */
     protected Object pull() {
         return worklist.deleteMax();
     }
 
     /* (non-Javadoc)
-     * @see Compiler.Dataflow.WorklistSolver#pushAll(java.util.Collection)
+     * @see joeq.Compiler.Dataflow.WorklistSolver#pushAll(java.util.Collection)
      */
     protected void pushAll(Collection c) {
         for (Iterator i = c.iterator(); i.hasNext(); ) {

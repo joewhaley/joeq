@@ -848,7 +848,7 @@ public class MethodSummary {
          */
         HashMap jsr_states;
         /**
-         * @see Compiler.Quad.QuadVisitor#visitJsr(Compiler.Quad.Quad)
+         * @see joeq.Compiler.Quad.QuadVisitor#visitJsr(joeq.Compiler.Quad.Quad)
          */
         public void visitJsr(Quad obj) {
             if (TRACE_INTRA) out.println("Visiting: "+obj);
@@ -2416,7 +2416,7 @@ public class MethodSummary {
         public String toString_short() { return "Object "+getDeclaredType(); }
         
         /* (non-Javadoc)
-         * @see Compiler.Quad.MethodSummary.Node#getNonEscapingEdgeFields()
+         * @see joeq.Compiler.Quad.MethodSummary.Node#getNonEscapingEdgeFields()
          */
         public Set getNonEscapingEdgeFields() {
             if (ADD_EDGES)
@@ -2444,7 +2444,7 @@ public class MethodSummary {
         }
 
         /* (non-Javadoc)
-         * @see Compiler.Quad.MethodSummary.Node#getEdges()
+         * @see joeq.Compiler.Quad.MethodSummary.Node#getEdges()
          */
         public Set getEdges() {
             if (ADD_EDGES)
@@ -2505,7 +2505,7 @@ public class MethodSummary {
         }
 
         /* (non-Javadoc)
-         * @see Compiler.Quad.MethodSummary.Node#hasEdges()
+         * @see joeq.Compiler.Quad.MethodSummary.Node#hasEdges()
          */
         public boolean hasEdges() {
             if (ADD_EDGES)
@@ -2859,7 +2859,7 @@ public class MethodSummary {
         }
         
         /* (non-Javadoc)
-         * @see Compiler.Quad.MethodSummary.Node#print(Compiler.Quad.MethodSummary, java.io.PrintWriter)
+         * @see joeq.Compiler.Quad.MethodSummary.Node#print(joeq.Compiler.Quad.MethodSummary, java.io.PrintWriter)
          */
         public void write(Textualizer t) throws IOException {
             m.write(t);
@@ -2906,7 +2906,7 @@ public class MethodSummary {
         }
         
         /* (non-Javadoc)
-         * @see Compiler.Quad.MethodSummary.Node#print(Compiler.Quad.MethodSummary, java.io.PrintWriter)
+         * @see joeq.Compiler.Quad.MethodSummary.Node#print(joeq.Compiler.Quad.MethodSummary, java.io.PrintWriter)
          */
         public void write(Textualizer t) throws IOException {
             m.write(t);
@@ -3214,7 +3214,7 @@ public class MethodSummary {
         }
 
         /* (non-Javadoc)
-         * @see Compiler.Quad.MethodSummary.Node#print
+         * @see joeq.Compiler.Quad.MethodSummary.Node#print
          */
         public void write(Textualizer t) throws IOException {
             t.writeObject(f);

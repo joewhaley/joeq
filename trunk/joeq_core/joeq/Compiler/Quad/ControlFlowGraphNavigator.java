@@ -41,7 +41,7 @@ public class ControlFlowGraphNavigator implements Navigator {
     public static final ControlFlowGraphNavigator INSTANCE = new ControlFlowGraphNavigator();
 
     /* (non-Javadoc)
-     * @see Util.Graphs.Navigator#next(java.lang.Object)
+     * @see joeq.Util.Graphs.Navigator#next(java.lang.Object)
      */
     public Collection next(Object node) {
         BasicBlock bb = (BasicBlock) node;
@@ -52,7 +52,7 @@ public class ControlFlowGraphNavigator implements Navigator {
     }
 
     /* (non-Javadoc)
-     * @see Util.Graphs.Navigator#prev(java.lang.Object)
+     * @see joeq.Util.Graphs.Navigator#prev(java.lang.Object)
      */
     public Collection prev(Object node) {
         BasicBlock bb = (BasicBlock) node;

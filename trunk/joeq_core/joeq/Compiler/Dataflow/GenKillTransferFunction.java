@@ -23,7 +23,7 @@ public class GenKillTransferFunction implements TransferFunction {
     }
 
     /* (non-Javadoc)
-     * @see Compiler.Dataflow.TransferFunction#apply(Compiler.Dataflow.Fact)
+     * @see joeq.Compiler.Dataflow.TransferFunction#apply(joeq.Compiler.Dataflow.Fact)
      */
     public Fact apply(Fact f) {
         BitVectorFact r = (BitVectorFact) f;

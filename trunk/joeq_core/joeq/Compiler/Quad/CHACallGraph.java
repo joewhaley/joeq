@@ -41,7 +41,7 @@ public class CHACallGraph extends CallGraph {
     protected CHACallGraph() { this.classes = null; }
 
     /**
-     * @see Compiler.Quad.CallGraph#getTargetMethods(java.lang.Object, Compiler.Quad.ProgramLocation)
+     * @see joeq.Compiler.Quad.CallGraph#getTargetMethods(java.lang.Object, joeq.Compiler.Quad.ProgramLocation)
      */
     public Collection getTargetMethods(Object context, ProgramLocation callSite) {
         jq_Method method = (jq_Method) callSite.getTargetMethod();
@@ -89,14 +89,14 @@ public class CHACallGraph extends CallGraph {
     }
 
     /* (non-Javadoc)
-     * @see Compiler.Quad.CallGraph#getRoots()
+     * @see joeq.Compiler.Quad.CallGraph#getRoots()
      */
     public Collection getRoots() {
         throw new UnsupportedOperationException();
     }
 
     /* (non-Javadoc)
-     * @see Compiler.Quad.CallGraph#setRoots(java.util.Collection)
+     * @see joeq.Compiler.Quad.CallGraph#setRoots(java.util.Collection)
      */
     public void setRoots(Collection roots) {
         throw new UnsupportedOperationException();

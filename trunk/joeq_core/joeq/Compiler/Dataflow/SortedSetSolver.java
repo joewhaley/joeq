@@ -49,7 +49,7 @@ public class SortedSetSolver extends WorklistSolver {
     }
     
     /* (non-Javadoc)
-     * @see Compiler.Dataflow.Solver#initialize(Compiler.Dataflow.Problem, Util.Graphs.Graph)
+     * @see joeq.Compiler.Dataflow.Solver#initialize(joeq.Compiler.Dataflow.Problem, joeq.Util.Graphs.Graph)
      */
     public void initialize(Problem p, Graph graph) {
         super.initialize(p, graph);
@@ -58,7 +58,7 @@ public class SortedSetSolver extends WorklistSolver {
     }
 
     /* (non-Javadoc)
-     * @see Compiler.Dataflow.Solver#allLocations()
+     * @see joeq.Compiler.Dataflow.Solver#allLocations()
      */
     public Iterator allLocations() {
         return allNodes.iterator();
@@ -74,14 +74,14 @@ public class SortedSetSolver extends WorklistSolver {
     }
     
     /* (non-Javadoc)
-     * @see Compiler.Dataflow.WorklistSolver#hasNext()
+     * @see joeq.Compiler.Dataflow.WorklistSolver#hasNext()
      */
     protected boolean hasNext() {
         return !worklist.isEmpty();
     }
 
     /* (non-Javadoc)
-     * @see Compiler.Dataflow.WorklistSolver#pull()
+     * @see joeq.Compiler.Dataflow.WorklistSolver#pull()
      */
     protected Object pull() {
         Iterator i = worklist.iterator();
@@ -91,7 +91,7 @@ public class SortedSetSolver extends WorklistSolver {
     }
     
     /* (non-Javadoc)
-     * @see Compiler.Dataflow.WorklistSolver#pushAll(java.util.Collection)
+     * @see joeq.Compiler.Dataflow.WorklistSolver#pushAll(java.util.Collection)
      */
     protected void pushAll(Collection c) {
         worklist.addAll(c);

@@ -22,7 +22,7 @@ public class UnionBitVectorFact extends BitVectorFact {
     }
     
     /* (non-Javadoc)
-     * @see Compiler.Dataflow.Fact#merge(Compiler.Dataflow.Fact)
+     * @see joeq.Compiler.Dataflow.Fact#merge(joeq.Compiler.Dataflow.Fact)
      */
     public Fact merge(Fact that) {
         BitVectorFact r = (BitVectorFact) that;

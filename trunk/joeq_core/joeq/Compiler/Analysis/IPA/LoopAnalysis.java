@@ -54,7 +54,7 @@ public class LoopAnalysis implements ControlFlowGraphVisitor {
     }
     
     /* (non-Javadoc)
-     * @see Compiler.Quad.ControlFlowGraphVisitor#visitCFG(Compiler.Quad.ControlFlowGraph)
+     * @see joeq.Compiler.Quad.ControlFlowGraphVisitor#visitCFG(joeq.Compiler.Quad.ControlFlowGraph)
      */
     public void visitCFG(ControlFlowGraph cfg) {
         caller = cfg.getMethod();

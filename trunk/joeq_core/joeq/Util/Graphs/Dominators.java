@@ -441,7 +441,6 @@ public class Dominators {
     /**
      * Push onto the stack all of the nodes that n strictly dominates.
      * The nodes are placed on the stack in ascending order by the node's label.
-     * @see Scribble#labelCFG
      */
     public final void pushDominatees(Object n, LinkedList wl) {
         Object[] dom = (Object[]) domination.get(n);

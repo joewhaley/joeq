@@ -36,19 +36,19 @@ public class Pair extends AbstractList implements Serializable, Textualizable {
         }
     }
     /* (non-Javadoc)
-     * @see Util.IO.Textualizable#write(Util.IO.Textualizer)
+     * @see joeq.Util.IO.Textualizable#write(Util.IO.Textualizer)
      */
     public void write(Textualizer t) throws IOException {
     }
     /* (non-Javadoc)
-     * @see Util.IO.Textualizable#writeEdges(Util.IO.Textualizer)
+     * @see joeq.Util.IO.Textualizable#writeEdges(Util.IO.Textualizer)
      */
     public void writeEdges(Textualizer t) throws IOException {
         t.writeEdge("left", (Textualizable) left);
         t.writeEdge("right", (Textualizable) right);
     }
     /* (non-Javadoc)
-     * @see Util.IO.Textualizable#addEdge(java.lang.String, Util.IO.Textualizable)
+     * @see joeq.Util.IO.Textualizable#addEdge(java.lang.String, Util.IO.Textualizable)
      */
     public void addEdge(String edge, Textualizable t) {
         if (edge.equals("left"))

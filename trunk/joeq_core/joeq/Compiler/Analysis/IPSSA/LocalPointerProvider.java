@@ -81,7 +81,7 @@ class LocalPointerResults implements PointerAnalysisResults {
 
 /**
  * This is a local SSALocation that is part of the Method summary.
- * @see LocalPointerProvider 
+ * @see LocalPointerResults
  * */
 class ParametrizedLocation implements SSALocation {
     Node _node = null;

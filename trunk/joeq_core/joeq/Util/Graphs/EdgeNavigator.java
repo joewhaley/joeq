@@ -47,7 +47,7 @@ public class EdgeNavigator implements Navigator {
     }
 
     /* (non-Javadoc)
-     * @see Util.Graphs.Navigator#next(java.lang.Object)
+     * @see joeq.Util.Graphs.Navigator#next(java.lang.Object)
      */
     public Collection next(Object node) {
         if (node instanceof Pair) {
@@ -59,7 +59,7 @@ public class EdgeNavigator implements Navigator {
     }
 
     /* (non-Javadoc)
-     * @see Util.Graphs.Navigator#prev(java.lang.Object)
+     * @see joeq.Util.Graphs.Navigator#prev(java.lang.Object)
      */
     public Collection prev(Object node) {
         if (node instanceof Pair) {

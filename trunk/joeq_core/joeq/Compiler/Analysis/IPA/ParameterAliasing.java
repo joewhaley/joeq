@@ -12,7 +12,6 @@ import joeq.Util.Assert;
 import org.sf.javabdd.BDD;
 import org.sf.javabdd.BDDDomain;
 import org.sf.javabdd.BDDFactory;
-import org.sf.javabdd.BDDPairing;
 import org.sf.javabdd.TypedBDDFactory.TypedBDD;
 
 class ParameterAliasing {
@@ -183,7 +182,7 @@ class ParameterAliasing {
         }
         
         void printMethodInfo(jq_Method m, MethodSummary ms) {
-            if(_verbose = false) {
+            if(_verbose == false) {
                 System.out.println("Processing method " + m + ":\t[" + ms.getNumOfParams() + "]");
             }
             
