@@ -4,15 +4,19 @@
 package joeq.Compiler.Quad;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
+import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_Primitive;
+import joeq.Class.jq_Reference;
 import joeq.Class.jq_Type;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
+import joeq.Runtime.TypeCheck;
 import joeq.Util.Assert;
-import joeq.Util.Strings;
-import joeq.Util.Collections.AppendIterator;
+import joeq.Util.Collections.Pair;
 
 /**
  * @author  John Whaley <jwhaley@alum.mit.edu>
@@ -20,293 +24,226 @@ import joeq.Util.Collections.AppendIterator;
  */
 public class RegisterFactory {
 
-    private ArrayList/*<Register>*/ local_I;
-    private ArrayList/*<Register>*/ local_F;
-    private ArrayList/*<Register>*/ local_L;
-    private ArrayList/*<Register>*/ local_D;
-    private ArrayList/*<Register>*/ local_A;
-    private ArrayList/*<Register>*/ stack_I;
-    private ArrayList/*<Register>*/ stack_F;
-    private ArrayList/*<Register>*/ stack_L;
-    private ArrayList/*<Register>*/ stack_D;
-    private ArrayList/*<Register>*/ stack_A;
+    private final ArrayList/*<Register>*/ registers;
     
-    private RegisterFactory() { }
+    private final Map/*<Pair<jq_Type,Integer>,Register>*/ stackNumbering;
+    private final Map/*<Pair<jq_Type,Integer>,Register>*/ localNumbering;
+    
+    //private RegisterFactory() { }
 
     /** Creates new RegisterFactory */
     public RegisterFactory(jq_Method m) {
-        int nlocals = m.getMaxLocals();
-        local_I = new ArrayList(nlocals);
-        local_F = new ArrayList(nlocals);
-        local_L = new ArrayList(nlocals);
-        local_D = new ArrayList(nlocals);
-        local_A = new ArrayList(nlocals);
-        for (int i=0; i<nlocals; ++i) {
-            local_I.add(new Register(i, false));
-            local_F.add(new Register(i, false));
-            local_L.add(new Register(i, false));
-            local_D.add(new Register(i, false));
-            local_A.add(new Register(i, false));
-        }
-        int nstack = m.getMaxStack();
-        stack_I = new ArrayList(nstack);
-        stack_F = new ArrayList(nstack);
-        stack_L = new ArrayList(nstack);
-        stack_D = new ArrayList(nstack);
-        stack_A = new ArrayList(nstack);
-        for (int i=0; i<nstack; ++i) {
-            stack_I.add(new Register(i, true));
-            stack_F.add(new Register(i, true));
-            stack_L.add(new Register(i, true));
-            stack_D.add(new Register(i, true));
-            stack_A.add(new Register(i, true));
-        }
+        int capacity = (m.getMaxLocals() + m.getMaxStack()) * 2;
+        registers = new ArrayList(capacity);
+        stackNumbering = new HashMap(m.getMaxStack());
+        localNumbering = new HashMap(m.getMaxLocals());
+    }
+    
+    public RegisterFactory(int capacity) {
+        registers = new ArrayList(capacity);
+        stackNumbering = null;
+        localNumbering = null;
+    }
+    
+    public Register get(int i) {
+        return (Register) registers.get(i);
     }
 
-    public Register getStack(int i, jq_Type t) {
-        if (t.isReferenceType()) return (Register)stack_A.get(i);
-        if (t.isIntLike()) return (Register)stack_I.get(i);
-        if (t == jq_Primitive.FLOAT) return (Register)stack_F.get(i);
-        if (t == jq_Primitive.LONG) return (Register)stack_L.get(i);
-        if (t == jq_Primitive.DOUBLE) return (Register)stack_D.get(i);
-        Assert.UNREACHABLE();
-        return null;
+    private short nextNumber() { return (short) registers.size(); }
+    
+    void skipNumbers(int v) {
+        while (--v >= 0)
+            registers.add(null);
     }
     
-    public Register getNewStack(int i, jq_Type t) {
-        if (t.isReferenceType()) {
-            while (i >= stack_A.size())
-                stack_A.add(new Register(stack_A.size(), true));
-            return (Register)stack_A.get(i);
-        }
-        if (t.isIntLike()) {
-            while (i >= stack_I.size())
-                stack_I.add(new Register(stack_I.size(), true));
-            return (Register)stack_I.get(i);
-        }
-        if (t == jq_Primitive.FLOAT) {
-            while (i >= stack_F.size())
-                stack_F.add(new Register(stack_F.size(), true));
-            return (Register)stack_F.get(i);
-        }
-        if (t == jq_Primitive.LONG) {
-            while (i >= stack_L.size())
-                stack_L.add(new Register(stack_L.size(), true));
-            return (Register)stack_L.get(i);
-        }
-        if (t == jq_Primitive.DOUBLE) {
-            while (i >= stack_D.size())
-                stack_D.add(i, new Register(stack_D.size(), true));
-            return (Register)stack_D.get(i);
-        }
-        Assert.UNREACHABLE();
-        return null;
+    public Register makeReg(jq_Type type) {
+        Register r = new Register(nextNumber(), type, false);
+        registers.add(r);
+        return r;
     }
-    
-    public Register getLocal(int i, jq_Type t) {
-        if (t.isReferenceType()) return (Register)local_A.get(i);
-        if (t.isIntLike()) return (Register)local_I.get(i);
-        if (t == jq_Primitive.FLOAT) return (Register)local_F.get(i);
-        if (t == jq_Primitive.LONG) return (Register)local_L.get(i);
-        if (t == jq_Primitive.DOUBLE) return (Register)local_D.get(i);
-        Assert.UNREACHABLE();
-        return null;
+    public RegisterOperand makeRegOp(jq_Type type) {
+        Register r = makeReg(type);
+        registers.add(r);
+        return new RegisterOperand(r, type);
     }
-    
-    public boolean isLocal(Operand op, int index, jq_Type type) {
-        if (index >= getLocalSize(type)) return false;
-        if (op instanceof RegisterOperand) {
-            Register r = ((RegisterOperand)op).getRegister();
-            if (getLocal(index, type) == r) return true;
-        }
-        return false;
+    public Register makeTempReg(jq_Type type) {
+        Register r = new Register(nextNumber(), type, true);
+        registers.add(r);
+        return r;
     }
-    
-    public Register makeTempReg(jq_Type t) {
-        if (t.isReferenceType()) {
-            int i = stack_A.size();
-            stack_A.add(i, new Register(i, true));
-            return (Register)stack_A.get(i);
-        }
-        if (t.isIntLike()) {
-            int i = stack_I.size();
-            stack_I.add(i, new Register(i, true));
-            return (Register)stack_I.get(i);
-        }
-        if (t == jq_Primitive.FLOAT) {
-            int i = stack_F.size();
-            stack_F.add(i, new Register(i, true));
-            return (Register)stack_F.get(i);
-        }
-        if (t == jq_Primitive.LONG) {
-            int i = stack_L.size();
-            stack_L.add(i, new Register(i, true));
-            return (Register)stack_L.get(i);
-        }
-        if (t == jq_Primitive.DOUBLE) {
-            int i = stack_D.size();
-            stack_D.add(i, new Register(i, true));
-            return (Register)stack_D.get(i);
-        }
-        Assert.UNREACHABLE();
-        return null;
+    public RegisterOperand makeTempRegOp(jq_Type type) {
+        Register r = makeTempReg(type);
+        registers.add(r);
+        return new RegisterOperand(r, type);
     }
-
-    public int getLocalSize(jq_Type t) {
-        if (t.isReferenceType()) return local_A.size();
-        if (t.isIntLike()) return local_I.size();
-        if (t == jq_Primitive.FLOAT) return local_F.size();
-        if (t == jq_Primitive.LONG) return local_L.size();
-        if (t == jq_Primitive.DOUBLE) return local_D.size();
-        Assert.UNREACHABLE();
-        return 0;
-    }
-    public int getStackSize(jq_Type t) {
-        if (t.isReferenceType()) return stack_A.size();
-        if (t.isIntLike()) return stack_I.size();
-        if (t == jq_Primitive.FLOAT) return stack_F.size();
-        if (t == jq_Primitive.LONG) return stack_L.size();
-        if (t == jq_Primitive.DOUBLE) return stack_D.size();
-        Assert.UNREACHABLE();
-        return 0;
-    }
-
     public static RegisterOperand makeGuardReg() {
-        return new RegisterOperand(new Register(-1, true), null);
+        return new RegisterOperand(new Register(), null);
+    }
+    public Register makeReg(Register r2) {
+        Register r = r2.copy();
+        r.index = nextNumber();
+        registers.add(r);
+        return r;
+    }
+    public RegisterOperand makeRegOp(Register r2, jq_Type type) {
+        Register r = r2.copy();
+        r.index = nextNumber();
+        registers.add(r);
+        Assert._assert(TypeCheck.isAssignable(type, r2.getType()));
+        return new RegisterOperand(r, type);
+    }
+    public Register makePairedReg(RegisterFactory that, Register r2) {
+        Assert._assert(this.size() == that.size());
+        Register r = makeReg(r2);
+        that.registers.add(r);
+        return r;
     }
 
-    void renumberRegisterList(ArrayList list, int n) {
-        Iterator i;
-        for (i = list.iterator(); i.hasNext(); ) {
+    public Register getOrCreateStack(int i, jq_Type t) {
+        if (t.isReferenceType()) t = PrimordialClassLoader.getJavaLangObject();
+        if (t.isIntLike()) t = jq_Primitive.INT;
+        Pair p = new Pair(t, new Integer(i));
+        Register r = (Register) stackNumbering.get(p);
+        if (r == null) stackNumbering.put(p, r = makeTempReg(t));
+        return r;
+    }
+    
+    public Register getOrCreateLocal(int i, jq_Type t) {
+        if (t.isReferenceType()) t = PrimordialClassLoader.getJavaLangObject();
+        if (t.isIntLike()) t = jq_Primitive.INT;
+        Pair p = new Pair(t, new Integer(i));
+        Register r = (Register) localNumbering.get(p);
+        if (r == null) localNumbering.put(p, r = makeReg(t));
+        return r;
+    }
+    
+    public void renumberRegisters(short n) {
+        for (Iterator i = registers.iterator(); i.hasNext(); ) {
             Register r = (Register)i.next();
-            r.setNumber(r.getNumber()+n);
+            r.setNumber((short)(r.getNumber()+n));
         }
-    }
-
-    static void fillRegisters(ArrayList list, int offset, int n, boolean t) {
-        Assert._assert(list.size() == 0);
-        for (int i=0; i<n; ++i) {
-            list.add(i, new Register(offset+i, t));
+        int oldSize = registers.size();
+        for (int i = 0; i < n; ++i) {
+            registers.add(null);
+        }
+        for (int i = oldSize - 1; i >= 0; --i) {
+            registers.set(i + n, registers.get(i));
+        }
+        while (--n >= 0) {
+            registers.set(n, null);
         }
     }
 
     public RegisterFactory deep_copy() {
-        RegisterFactory that = new RegisterFactory();
-        fillRegisters(that.local_I = new ArrayList(this.local_I.size()),
-                      0, this.local_I.size(), false);
-        fillRegisters(that.local_F = new ArrayList(this.local_F.size()),
-                      0, this.local_F.size(), false);
-        fillRegisters(that.local_L = new ArrayList(this.local_L.size()),
-                      0, this.local_L.size(), false);
-        fillRegisters(that.local_D = new ArrayList(this.local_D.size()),
-                      0, this.local_D.size(), false);
-        fillRegisters(that.local_A = new ArrayList(this.local_A.size()),
-                      0, this.local_A.size(), false);
-        fillRegisters(that.stack_I = new ArrayList(this.stack_I.size()),
-                      0, this.stack_I.size(), true);
-        fillRegisters(that.stack_F = new ArrayList(this.stack_F.size()),
-                      0, this.stack_F.size(), true);
-        fillRegisters(that.stack_L = new ArrayList(this.stack_L.size()),
-                      0, this.stack_L.size(), true);
-        fillRegisters(that.stack_D = new ArrayList(this.stack_D.size()),
-                      0, this.stack_D.size(), true);
-        fillRegisters(that.stack_A = new ArrayList(this.stack_A.size()),
-                      0, this.stack_A.size(), true);
+        RegisterFactory that = new RegisterFactory(this.registers.size());
+        for (Iterator i = iterator(); i.hasNext(); ) {
+            Register r = (Register) i.next();
+            that.registers.add(r.copy());
+        }
         return that;
     }
 
-    public RegisterFactory merge(RegisterFactory from) {
-        RegisterFactory that = new RegisterFactory();
-        fillRegisters(that.local_I = new ArrayList(from.local_I.size()),
-                      this.local_I.size(), from.local_I.size(), false);
-        fillRegisters(that.local_F = new ArrayList(from.local_F.size()),
-                      this.local_F.size(), from.local_F.size(), false);
-        fillRegisters(that.local_L = new ArrayList(from.local_L.size()),
-                      this.local_L.size(), from.local_L.size(), false);
-        fillRegisters(that.local_D = new ArrayList(from.local_D.size()),
-                      this.local_D.size(), from.local_D.size(), false);
-        fillRegisters(that.local_A = new ArrayList(from.local_A.size()),
-                      this.local_A.size(), from.local_A.size(), false);
-        fillRegisters(that.stack_I = new ArrayList(from.stack_I.size()),
-                      this.stack_I.size(), from.stack_I.size(), true);
-        fillRegisters(that.stack_F = new ArrayList(from.stack_F.size()),
-                      this.stack_I.size(), from.stack_F.size(), true);
-        fillRegisters(that.stack_L = new ArrayList(from.stack_L.size()),
-                      this.stack_I.size(), from.stack_L.size(), true);
-        fillRegisters(that.stack_D = new ArrayList(from.stack_D.size()),
-                      this.stack_I.size(), from.stack_D.size(), true);
-        fillRegisters(that.stack_A = new ArrayList(from.stack_A.size()),
-                      this.stack_I.size(), from.stack_A.size(), true);
-
-        // append lists
-        this.local_I.addAll(that.local_I);
-        this.local_F.addAll(that.local_F);
-        this.local_L.addAll(that.local_L);
-        this.local_D.addAll(that.local_D);
-        this.local_A.addAll(that.local_A);
-        this.stack_I.addAll(that.stack_I);
-        this.stack_F.addAll(that.stack_F);
-        this.stack_L.addAll(that.stack_L);
-        this.stack_D.addAll(that.stack_D);
-        this.stack_A.addAll(that.stack_A);
-
-        return that;
+    public int numberOfStackRegisters() {
+        return stackNumbering.size();
     }
     
-    public int totalSize() {
-        return local_I.size()+local_F.size()+local_L.size()+local_D.size()+local_A.size()+
-               stack_I.size()+stack_F.size()+stack_L.size()+stack_D.size()+stack_A.size();
+    public int numberOfLocalRegisters() {
+        return localNumbering.size();
+    }
+    
+    public int size() {
+        return registers.size();
     }
     
     public Iterator iterator() {
-        Iterator i = new AppendIterator(local_I.iterator(), local_F.iterator());
-        i = new AppendIterator(i, local_L.iterator());
-        i = new AppendIterator(i, local_D.iterator());
-        i = new AppendIterator(i, local_A.iterator());
-        i = new AppendIterator(i, stack_I.iterator());
-        i = new AppendIterator(i, stack_F.iterator());
-        i = new AppendIterator(i, stack_L.iterator());
-        i = new AppendIterator(i, stack_D.iterator());
-        i = new AppendIterator(i, stack_A.iterator());
-        return i;
+        return registers.iterator();
     }
     
     public String toString() {
-        return "Local: (I="+local_I.size()+
-                      ",F="+local_F.size()+
-                      ",L="+local_L.size()+
-                      ",D="+local_D.size()+
-                      ",A="+local_A.size()+
-             ") Stack: (I="+stack_I.size()+
-                      ",F="+stack_F.size()+
-                      ",L="+stack_L.size()+
-                      ",D="+stack_D.size()+
-                      ",A="+stack_A.size()+
-                      ")";
+        return "Registers: "+registers.size();
     }
 
     public String fullDump() {
-        StringBuffer sb = new StringBuffer();
-        sb.append("Local_I: "+local_I);
-        sb.append(Strings.lineSep+"Local_F: "+local_F);
-        sb.append(Strings.lineSep+"Local_L: "+local_L);
-        sb.append(Strings.lineSep+"Local_D: "+local_D);
-        sb.append(Strings.lineSep+"Local_A: "+local_A);
-        sb.append(Strings.lineSep+"Stack_I: "+stack_I);
-        sb.append(Strings.lineSep+"Stack_F: "+stack_F);
-        sb.append(Strings.lineSep+"Stack_L: "+stack_L);
-        sb.append(Strings.lineSep+"Stack_D: "+stack_D);
-        sb.append(Strings.lineSep+"Stack_A: "+stack_A);
-        return sb.toString();
+        return "Registers: "+registers.toString();
     }
 
     public static class Register {
-        private int id; private boolean isTemp;
-        Register(int id, boolean isTemp) { this.id = id; this.isTemp = isTemp; }
-        public int getNumber() { return id; }
-        public void setNumber(int id) { this.id = id; }
-        public boolean isTemp() { return isTemp; }
-        public String toString() { return (isTemp?"T":"R")+id; }
+        private short index;
+        private byte flags;
+        public static final byte TEMP     = (byte)0x20;
+        public static final byte SSA      = (byte)0x40;
+        public static final byte TYPEMASK = (byte)0x07;
+        public static final byte INT      = (byte)0x01;
+        public static final byte FLOAT    = (byte)0x02;
+        public static final byte LONG     = (byte)0x03;
+        public static final byte DOUBLE   = (byte)0x04;
+        public static final byte OBJECT   = (byte)0x05;
+        public static final byte GUARD    = (byte)0x06;
+        public static final byte PHYSICAL = (byte)0x07;
+        private Register() {
+            this.index = -1;
+            this.flags = GUARD | TEMP;
+        }
+        private Register(short id, byte flags) {
+            this.index = id;
+            this.flags = flags;
+        }
+        private Register(short id, jq_Type type, boolean isTemp) {
+            this.index = id;
+            if (isTemp) flags = TEMP;
+            if (type instanceof jq_Reference) flags |= OBJECT;
+            else if (type.isIntLike()) flags |= INT;
+            else if (type == jq_Primitive.FLOAT) flags |= FLOAT;
+            else if (type == jq_Primitive.LONG) flags |= LONG;
+            else if (type == jq_Primitive.DOUBLE) flags |= DOUBLE;
+            else Assert.UNREACHABLE(type.toString());
+        }
+        public int getNumber() {
+            return index;
+        }
+        public void setNumber(short id) {
+            this.index = id;
+        }
+        public boolean isTemp() {
+            return (flags & TEMP) != 0;
+        }
+        public void setSSA() {
+            flags |= SSA;
+        }
+        public void clearSSA() {
+            flags &= ~SSA;
+        }
+        public boolean isSSA() {
+            return (flags & SSA) != 0;
+        }
+        public boolean isGuard() {
+            return (flags & TYPEMASK) == GUARD;
+        }
+        public boolean isPhysical() {
+            return (flags & TYPEMASK) == PHYSICAL;
+        }
+        public jq_Type getType() {
+            int t = flags & TYPEMASK;
+            switch (t) {
+                case INT:
+                    return jq_Primitive.INT;
+                case FLOAT:
+                    return jq_Primitive.FLOAT;
+                case LONG:
+                    return jq_Primitive.LONG;
+                case DOUBLE:
+                    return jq_Primitive.DOUBLE;
+                case OBJECT:
+                    return PrimordialClassLoader.getJavaLangObject();
+            }
+            return null;
+        }
+        public String toString() {
+            return (isTemp()?"T":"R")+index;
+        }
+        public Register copy() {
+            return new Register(this.index, this.flags);
+        }
     }
 
 }

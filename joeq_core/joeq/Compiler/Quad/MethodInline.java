@@ -232,7 +232,7 @@ public class MethodInline implements ControlFlowGraphVisitor {
         jq_Type[] params = callee.getMethod().getParamTypes();
         for (int i=0, j=0; i<params.length; ++i, ++j) {
             Move op = Move.getMoveOp(params[i]);
-            Register dest_r = callee.getRegisterFactory().getLocal(j, params[i]);
+            Register dest_r = callee.getRegisterFactory().getOrCreateLocal(j, params[i]);
             RegisterOperand dest = new RegisterOperand(dest_r, params[i]);
             Register src_r = plo.get(i).getRegister();
             RegisterOperand src = new RegisterOperand(src_r, params[i]);
@@ -356,7 +356,7 @@ outer:
         // add test.
         jq_Type dis_t = Invoke.getParam(q, 0).getType();
         RegisterOperand dis_op = new RegisterOperand(Invoke.getParam(q, 0).getRegister(), dis_t);
-        Register res = caller.getRegisterFactory().getNewStack(0, jq_Primitive.BOOLEAN);
+        Register res = caller.getRegisterFactory().getOrCreateStack(0, jq_Primitive.BOOLEAN);
         RegisterOperand res_op = new RegisterOperand(res, jq_Primitive.BOOLEAN);
         TypeOperand type_op = new TypeOperand(type);
         q2 = InstanceOf.create(caller.getNewQuadID(), InstanceOf.INSTANCEOF.INSTANCE, res_op, dis_op, type_op);
@@ -373,7 +373,7 @@ outer:
         jq_Type[] params = callee.getMethod().getParamTypes();
         for (int i=0, j=0; i<params.length; ++i, ++j) {
             Move op = Move.getMoveOp(params[i]);
-            Register dest_r = callee.getRegisterFactory().getLocal(j, params[i]);
+            Register dest_r = callee.getRegisterFactory().getOrCreateLocal(j, params[i]);
             RegisterOperand dest = new RegisterOperand(dest_r, params[i]);
             Register src_r = plo.get(i).getRegister();
             RegisterOperand src = new RegisterOperand(src_r, params[i]);

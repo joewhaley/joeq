@@ -28,6 +28,7 @@ import joeq.Compiler.Quad.Operand.ParamListOperand;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.Operand.TargetOperand;
 import joeq.Compiler.Quad.Operand.TypeOperand;
+import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Interpreter.QuadInterpreter;
 import joeq.Interpreter.QuadInterpreter.UninitializedReference;
 import joeq.Main.jq;
@@ -316,6 +317,13 @@ public abstract class Operator {
         public static Quad create(int id, Move operator, RegisterOperand dst, Operand src) {
             return new Quad(id, operator, dst, src);
         }
+        public static Quad create(int id, Register r1, Register r2, jq_Type t) {
+            Move mv = getMoveOp(t);
+            RegisterOperand o1 = new RegisterOperand(r1, t);
+            RegisterOperand o2 = new RegisterOperand(r2, t);
+            Quad s = create(id, mv, o1, o2);
+            return s;
+        }
         public static Move getMoveOp(jq_Type type) {
             if (type.isAddressType()) return MOVE_P.INSTANCE;
             if (type.isReferenceType()) return MOVE_A.INSTANCE;
@@ -388,6 +396,43 @@ public abstract class Operator {
         }
     }
 
+    public abstract static class Phi extends Operator {
+        public static Quad create(int id, Phi operator, RegisterOperand res, int length) {
+            return new Quad(id, operator, res, 
+                    new ParamListOperand(new RegisterOperand[length]), 
+                    new BasicBlockTableOperand(new BasicBlock[length]));
+        }
+        public static void setSrc(Quad q, int i, RegisterOperand t) {
+            ((ParamListOperand)q.getOp2()).set(i, t);
+        }
+        public static void setPred(Quad q, int i, BasicBlock o) {
+            ((BasicBlockTableOperand)q.getOp3()).set(i, o);
+        }
+        public static RegisterOperand getDest(Quad q) { return (RegisterOperand)q.getOp1(); }
+        public static RegisterOperand getSrc(Quad q, int i) { return ((ParamListOperand)q.getOp2()).get(i); }
+        public static ParamListOperand getSrcs(Quad q) { return (ParamListOperand)q.getOp2(); }
+        public static BasicBlock getPred(Quad q, int i) { return ((BasicBlockTableOperand)q.getOp3()).get(i); }
+        public static BasicBlockTableOperand getPreds(Quad q) { return (BasicBlockTableOperand)q.getOp3(); }
+        public static void setDest(Quad q, RegisterOperand o) { q.setOp1(o); }
+        public static void setSrcs(Quad q, ParamListOperand o) { q.setOp2(o); }
+        public boolean hasSideEffects() { return false; }
+        public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
+        public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) {
+            ParamListOperand plo = getSrcs(q);
+            RegisterOperand[] a = new RegisterOperand[plo.length()];
+            for (int i=0; i<a.length; ++i) a[i] = plo.get(i);
+            return new UnmodifiableList.RegisterOperand(a);
+        }
+        public static class PHI extends Phi {
+            public static final PHI INSTANCE = new PHI();
+            private PHI() { }
+            public String toString() { return "PHI"; }
+            public void interpret(Quad q, QuadInterpreter s) {
+                Assert.TODO();
+            }
+        }
+    }
+    
     public abstract static class Binary extends Operator {
         
         public static Quad create(int id, Binary operator, RegisterOperand dst, Operand src1, Operand src2) {
@@ -1303,7 +1348,11 @@ public abstract class Operator {
         }
     }
 
-    public abstract static class IntIfCmp extends Operator {
+    public static abstract class Branch extends Operator {
+        public boolean hasSideEffects() { return true; }
+    }
+    
+    public abstract static class IntIfCmp extends Branch {
         public static Quad create(int id, IntIfCmp operator, Operand op0, Operand op1, ConditionOperand cond, TargetOperand target) {
             return new Quad(id, operator, op0, op1, cond, target);
         }
@@ -1315,7 +1364,6 @@ public abstract class Operator {
         public static void setSrc2(Quad q, Operand o) { q.setOp2(o); }
         public static void setCond(Quad q, ConditionOperand o) { q.setOp3(o); }
         public static void setTarget(Quad q, TargetOperand o) { q.setOp4(o); }
-        public boolean hasSideEffects() { return true; }
         public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg12(q); }
         
         public void accept(Quad q, QuadVisitor qv) {
@@ -1386,13 +1434,12 @@ public abstract class Operator {
         }
     }
     
-    public abstract static class Goto extends Operator {
+    public abstract static class Goto extends Branch {
         public static Quad create(int id, Goto operator, TargetOperand target) {
             return new Quad(id, operator, target);
         }
         public static TargetOperand getTarget(Quad q) { return (TargetOperand)q.getOp1(); }
         public static void setTarget(Quad q, TargetOperand o) { q.setOp1(o); }
-        public boolean hasSideEffects() { return true; }
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitGoto(q);
@@ -1410,7 +1457,7 @@ public abstract class Operator {
         }
     }
     
-    public abstract static class Jsr extends Operator {
+    public abstract static class Jsr extends Branch {
         public static Quad create(int id, Jsr operator, RegisterOperand loc, TargetOperand target, TargetOperand successor) {
             return new Quad(id, operator, loc, target, successor);
         }
@@ -1420,7 +1467,6 @@ public abstract class Operator {
         public static void setDest(Quad q, RegisterOperand o) { q.setOp1(o); }
         public static void setTarget(Quad q, TargetOperand o) { q.setOp2(o); }
         public static void setSuccessor(Quad q, TargetOperand o) { q.setOp3(o); }
-        public boolean hasSideEffects() { return true; }
         public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         
         public void accept(Quad q, QuadVisitor qv) {
@@ -1441,13 +1487,12 @@ public abstract class Operator {
         }
     }
     
-    public abstract static class Ret extends Operator {
+    public abstract static class Ret extends Branch {
         public static Quad create(int id, Ret operator, RegisterOperand loc) {
             return new Quad(id, operator, loc);
         }
         public static RegisterOperand getTarget(Quad q) { return (RegisterOperand)q.getOp1(); }
         public static void setTarget(Quad q, RegisterOperand o) { q.setOp1(o); }
-        public boolean hasSideEffects() { return true; }
         public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg1(q); }
         
         public void accept(Quad q, QuadVisitor qv) {
@@ -1467,7 +1512,7 @@ public abstract class Operator {
         }
     }
     
-    public abstract static class TableSwitch extends Operator {
+    public abstract static class TableSwitch extends Branch {
         public static Quad create(int id, TableSwitch operator, Operand val, IConstOperand low, TargetOperand def, int length) {
             return new Quad(id, operator, val, low, def, new BasicBlockTableOperand(new BasicBlock[length]));
         }
@@ -1483,7 +1528,6 @@ public abstract class Operator {
         public static void setLow(Quad q, IConstOperand o) { q.setOp2(o); }
         public static void setDefault(Quad q, TargetOperand o) { q.setOp3(o); }
         public static void setTargetTable(Quad q, BasicBlockTableOperand o) { q.setOp4(o); }
-        public boolean hasSideEffects() { return true; }
         public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg1_check(q); }
         
         public void accept(Quad q, QuadVisitor qv) {
@@ -1511,7 +1555,7 @@ public abstract class Operator {
         }
     }
     
-    public abstract static class LookupSwitch extends Operator {
+    public abstract static class LookupSwitch extends Branch {
         public static Quad create(int id, LookupSwitch operator, Operand val, TargetOperand def, int length) {
             return new Quad(id, operator, val, def, new IntValueTableOperand(new int[length]), new BasicBlockTableOperand(new BasicBlock[length]));
         }
@@ -1532,7 +1576,6 @@ public abstract class Operator {
         public static void setValueTable(Quad q, IntValueTableOperand o) { q.setOp3(o); }
         public static void setTargetTable(Quad q, BasicBlockTableOperand o) { q.setOp4(o); }
         public static int getSize(Quad q) { return ((IntValueTableOperand)q.getOp3()).size(); }
-        public boolean hasSideEffects() { return true; }
         public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg1_check(q); }
         
         public void accept(Quad q, QuadVisitor qv) {
@@ -3503,9 +3546,9 @@ public abstract class Operator {
         public static Quad create(int id, ALLOCA operator, RegisterOperand res, Operand val) {
             return new Quad(id, operator, res, val);
         }
-		public static Quad create(int id, NOP operator) {
-			return new Quad(id, operator, null, null);
-		}
+        public static Quad create(int id, NOP operator) {
+            return new Quad(id, operator, null, null);
+        }
         public static Quad create(int id, ATOMICADD_I operator, Operand loc, Operand val) {
             return new Quad(id, operator, null, loc, val);
         }
@@ -3807,16 +3850,16 @@ public abstract class Operator {
             }
         }
         
-		public static class NOP extends Operator.Special {
-			public static final NOP INSTANCE = new NOP();
-			private NOP() {}
-			public String toString() { return "NOP"; }
-			public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return null; }
-			public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return null; }
-			public void interpret(Quad q, QuadInterpreter s) {
-				Assert.TODO();
-			}
-		}
+        public static class NOP extends Operator.Special {
+            public static final NOP INSTANCE = new NOP();
+            private NOP() {}
+            public String toString() { return "NOP"; }
+            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return null; }
+            public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return null; }
+            public void interpret(Quad q, QuadInterpreter s) {
+                Assert.TODO();
+            }
+        }
     }
 
     static interface Delegate {
