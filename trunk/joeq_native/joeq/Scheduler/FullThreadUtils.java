@@ -11,8 +11,6 @@ public class FullThreadUtils implements ThreadUtils.Delegate {
             Clazz.jq_InstanceField f = k.getOrCreateInstanceField("jq_thread", "LScheduler/jq_Thread;");
             return (Scheduler.jq_Thread)Reflection.getfield_A(t, f);
         }
-        jq.Assert(jq.RunningNative);
-        java.lang.Object o = t;
-        return ((ClassLib.Common.java.lang.Thread)o).jq_thread;
+        return ((ClassLib.Common.InterfaceImpl)ClassLib.ClassLibInterface.DEFAULT).getJQThread(t);
     }    
 }

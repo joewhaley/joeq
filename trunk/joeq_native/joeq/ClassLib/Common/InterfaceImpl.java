@@ -334,6 +334,12 @@ public class InterfaceImpl implements Interface {
         ClassLib.Common.java.lang.System.initializeSystemClass();
     }
     
+    public Scheduler.jq_Thread getJQThread(java.lang.Thread t) {
+        jq.Assert(jq.RunningNative);
+        java.lang.Object o = t;
+        return ((ClassLib.Common.java.lang.Thread)o).jq_thread;
+    }    
+
     /*
     public void open(java.io.RandomAccessFile dis, java.lang.String name, boolean writeable) throws java.io.FileNotFoundException {
         jq.Assert(jq.RunningNative);

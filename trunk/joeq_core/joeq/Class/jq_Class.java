@@ -644,6 +644,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
     }
 
     public final Object newInstance() {
+        this.prepare(); // prepare(): to set instance_size and vtable
 	return _delegate.newInstance(this, instance_size, vtable);
     }
     
