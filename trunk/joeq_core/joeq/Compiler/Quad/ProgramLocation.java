@@ -203,6 +203,8 @@ public abstract class ProgramLocation {
                     return clazz.getCPasInstanceMethod(cpi);
                 case (byte) jq_ClassFileConstants.jbc_INVOKESTATIC:
                     return clazz.getCPasStaticMethod(cpi);
+                case (byte) jq_ClassFileConstants.jbc_MULTIANEWARRAY:
+                    return Run_Time.Arrays._multinewarray;
                 default:
                     return null;
             }
@@ -221,6 +223,7 @@ public abstract class ProgramLocation {
             switch (bc[bcIndex]) {
                 case (byte) jq_ClassFileConstants.jbc_INVOKESPECIAL:
                 case (byte) jq_ClassFileConstants.jbc_INVOKESTATIC:
+                case (byte) jq_ClassFileConstants.jbc_MULTIANEWARRAY:
                     return true;
                 case (byte) jq_ClassFileConstants.jbc_INVOKEVIRTUAL:
                 case (byte) jq_ClassFileConstants.jbc_INVOKEINTERFACE:
@@ -270,6 +273,10 @@ public abstract class ProgramLocation {
                     method = clazz.getCPasStaticMethod(cpi);
                     type = BytecodeVisitor.INVOKE_STATIC;
                     break;
+                case (byte) jq_ClassFileConstants.jbc_MULTIANEWARRAY:
+                    method = Run_Time.Arrays._multinewarray;
+                    type = BytecodeVisitor.INVOKE_STATIC;
+                    break;
                 default:
                     return null;
             }
@@ -297,6 +304,10 @@ public abstract class ProgramLocation {
                     method = clazz.getCPasStaticMethod(cpi);
                     type = BytecodeVisitor.INVOKE_STATIC;
                     break;
+                case (byte) jq_ClassFileConstants.jbc_MULTIANEWARRAY:
+                    method = Run_Time.Arrays._multinewarray;
+                    type = BytecodeVisitor.INVOKE_STATIC;
+                    break;
                 default:
                     return null;
             }
@@ -322,6 +333,10 @@ public abstract class ProgramLocation {
                     break;
                 case (byte) jq_ClassFileConstants.jbc_INVOKESTATIC:
                     method = clazz.getCPasStaticMethod(cpi);
+                    type = BytecodeVisitor.INVOKE_STATIC;
+                    break;
+                case (byte) jq_ClassFileConstants.jbc_MULTIANEWARRAY:
+                    method = Run_Time.Arrays._multinewarray;
                     type = BytecodeVisitor.INVOKE_STATIC;
                     break;
                 default:
