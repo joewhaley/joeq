@@ -122,7 +122,7 @@ public class SimpleHashSet extends AbstractMap {
                 } else if (chain[i]-1 != -1) {
                     throw new UnsupportedOperationException("not at end");
                 }
-                shs.addToTable_helper(o, hash, chain, i);
+                shs.addToTable_helper(o, chain, i);
             }
         }
         
@@ -163,12 +163,12 @@ public class SimpleHashSet extends AbstractMap {
         int[] chain = chains[chain_index];
         if (chain == null) {
             chains[chain_index] = chain = new int[STARTING_CHAIN_SIZE];
-            return addToTable_helper(b, hash, chain, 0);
+            return addToTable_helper(b, chain, 0);
         }
         for (int i=0; i<chain.length; ++i) {
             int id = chain[i]-1;
             if (id == -1) {
-                return addToTable_helper(b, hash, chain, i);
+                return addToTable_helper(b, chain, i);
             }
             if (TRACE) System.out.println("Id="+id);
             Object that = table[id];
@@ -181,14 +181,14 @@ public class SimpleHashSet extends AbstractMap {
         int[] newchain = new int[chain.length<<1];
         System.arraycopy(chain, 0, newchain, 0, chain.length);
         chains[chain_index] = newchain;
-        return addToTable_helper(b, hash, newchain, chain.length);
+        return addToTable_helper(b, newchain, chain.length);
         // free(chain)
         
         // todo: rehash when the table gets too full...
     }
     
     // Helper function.
-    private int addToTable_helper(Object b, int hash, int[] chain, int index) {
+    private int addToTable_helper(Object b, int[] chain, int index) {
         if (++size == table.length) growTable_helper();
         table[size] = b;
         chain[index] = size+1;
