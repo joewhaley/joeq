@@ -292,12 +292,14 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
     }
     
     void initializeRegisterLocations() {
-        int current = 4;
+        int current = -((getStackFrameWords()) << 2);
         RegisterFactory rf = cfg.getRegisterFactory();
         for (Iterator i=rf.iterator(); i.hasNext(); current += 4) {
-            registerLocations.put(i.next(), new Integer(-current));
+            Register r = (Register) i.next();
+            registerLocations.put(r, new Integer(current));
+            if (TRACE) System.out.println("Register: "+r+" offset: "+current);
         }
-        Assert._assert((current >> 2) - 1 == getStackFrameWords());
+        Assert._assert(current == 0);
     }
     
     // Generate code for the given method.
@@ -359,14 +361,21 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
             
             RegisterFactory rf = cfg.getRegisterFactory();
             for (int i=0, j=0; i<params.length; ++i, ++j) {
-                asm.emit2_Reg_Mem(x86.MOV_r_m32, EAX, getParamOffset(j), EBP);
-                int offset = getStackOffset(rf.getLocal(j, params[i]));
-                asm.emit2_Reg_Mem(x86.MOV_m_r32, EAX, offset, EBP);
                 if (params[i].getReferenceSize() == 8) {
+                    int param_offset = getParamOffset(j+1); // lo
+                    int stack_offset = getStackOffset(rf.getLocal(j, params[i])); // lo
+                    asm.emit2_Reg_Mem(x86.MOV_r_m32, EAX, param_offset, EBP);
+                    asm.emit2_Reg_Mem(x86.MOV_m_r32, EAX, stack_offset, EBP);
+                    param_offset = getParamOffset(j); // hi
+                    stack_offset = getStackOffset(rf.getLocal(j+1, params[i])); // hi
+                    asm.emit2_Reg_Mem(x86.MOV_r_m32, EAX, param_offset, EBP);
+                    asm.emit2_Reg_Mem(x86.MOV_m_r32, EAX, stack_offset, EBP);
                     ++j;
-                    asm.emit2_Reg_Mem(x86.MOV_r_m32, EAX, getParamOffset(j), EBP);
-                    offset = getStackOffset(rf.getLocal(j, params[i]));
-                    asm.emit2_Reg_Mem(x86.MOV_m_r32, EAX, offset, EBP);
+                } else {
+                    int param_offset = getParamOffset(j);
+                    int stack_offset = getStackOffset(rf.getLocal(j, params[i]));
+                    asm.emit2_Reg_Mem(x86.MOV_r_m32, EAX, param_offset, EBP);
+                    asm.emit2_Reg_Mem(x86.MOV_m_r32, EAX, stack_offset, EBP);
                 }
             }
             
@@ -692,16 +701,16 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
             asm.emitARITH_Reg_Reg(x86.ADD_r_r32, EDX, ECX); // hi2*lo1 + hi1*lo2 + hi(lo1*lo2)
             asm.patch1(cloc-1, (byte)(asm.getCurrentOffset()-cloc));
         } else if (op instanceof Binary.DIV_L) {
-            asm.emitShort_Reg(x86.PUSH_r, ECX);
-            asm.emitShort_Reg(x86.PUSH_r, EBX);
             asm.emitShort_Reg(x86.PUSH_r, EDX);
             asm.emitShort_Reg(x86.PUSH_r, EAX);
+            asm.emitShort_Reg(x86.PUSH_r, ECX);
+            asm.emitShort_Reg(x86.PUSH_r, EBX);
             emitCallRelative(MathSupport._ldiv);
         } else if (op instanceof Binary.REM_L) {
-            asm.emitShort_Reg(x86.PUSH_r, ECX);
-            asm.emitShort_Reg(x86.PUSH_r, EBX);
             asm.emitShort_Reg(x86.PUSH_r, EDX);
             asm.emitShort_Reg(x86.PUSH_r, EAX);
+            asm.emitShort_Reg(x86.PUSH_r, ECX);
+            asm.emitShort_Reg(x86.PUSH_r, EBX);
             emitCallRelative(MathSupport._lrem);
         } else if (op instanceof Binary.AND_L) {
             asm.emitARITH_Reg_Reg(x86.AND_r_r32, EAX, EBX);
@@ -2043,6 +2052,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         jq_Class c = (jq_Class) jq_Type.parseType(className);
         c.cls_initialize();
         
+        ALWAYS_TRACE = true;
         x86Assembler.TRACE = true;
         
         Iterator i = Arrays.asList(c.getDeclaredStaticMethods()).iterator();

@@ -90,7 +90,7 @@ public class Inet4AddressImpl {
     }
 
     public static void boot() {
-        Library winsock = SystemInterface.registerLibrary("winsock");
+        Library winsock = SystemInterface.registerLibrary("ws2_32");
 
         if (winsock != null) {
             gethostbyname = winsock.resolve("gethostbyname");
