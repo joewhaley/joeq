@@ -373,7 +373,7 @@ public class AndersenPointerAnalysis {
         // add initializations for System.in/out/err
         jq_Class fd = (jq_Class)Bootstrap.PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/FileDescriptor;");
         fd.load();
-        ConcreteTypeNode fd_n1 = new ConcreteTypeNode(fd);
+        ConcreteTypeNode fd_n1 = ConcreteTypeNode.get(fd);
         jq_Initializer fd_init = (jq_Initializer)fd.getOrCreateInstanceMethod("<init>", "(I)V");
         Assert._assert(fd_init.isLoaded());
         ProgramLocation mc_fd_init = new ProgramLocation.QuadProgramLocation(fd_init, null);
@@ -381,7 +381,7 @@ public class AndersenPointerAnalysis {
         
         jq_Class fis = (jq_Class)Bootstrap.PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/FileInputStream;");
         fis.load();
-        ConcreteTypeNode fis_n = new ConcreteTypeNode(fis);
+        ConcreteTypeNode fis_n = ConcreteTypeNode.get(fis);
         jq_Initializer fis_init = (jq_Initializer)fis.getOrCreateInstanceMethod("<init>", "(Ljava/io/FileDescriptor;)V");
         Assert._assert(fis_init.isLoaded());
         ProgramLocation mc_fis_init = new ProgramLocation.QuadProgramLocation(fis_init, null);
@@ -389,7 +389,7 @@ public class AndersenPointerAnalysis {
         fd_n1.recordPassedParameter(mc_fis_init, 1);
         jq_Class bis = (jq_Class)Bootstrap.PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/BufferedInputStream;");
         bis.load();
-        ConcreteTypeNode bis_n = new ConcreteTypeNode(bis);
+        ConcreteTypeNode bis_n = ConcreteTypeNode.get(bis);
         jq_Initializer bis_init = (jq_Initializer)bis.getOrCreateInstanceMethod("<init>", "(Ljava/io/InputStream;)V");
         Assert._assert(bis_init.isLoaded());
         ProgramLocation mc_bis_init = new ProgramLocation.QuadProgramLocation(bis_init, null);
@@ -416,11 +416,11 @@ public class AndersenPointerAnalysis {
         on = bis_init_summary.getParamNode(1);
         addInclusionEdge(on, fis_n, null);
         
-        ConcreteTypeNode fd_n2 = new ConcreteTypeNode(fd);
+        ConcreteTypeNode fd_n2 = ConcreteTypeNode.get(fd);
         fd_n2.recordPassedParameter(mc_fd_init, 0);
         jq_Class fos = (jq_Class)Bootstrap.PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/FileOutputStream;");
         fos.load();
-        ConcreteTypeNode fos_n1 = new ConcreteTypeNode(fos);
+        ConcreteTypeNode fos_n1 = ConcreteTypeNode.get(fos);
         jq_Initializer fos_init = (jq_Initializer)fos.getOrCreateInstanceMethod("<init>", "(Ljava/io/FileDescriptor;)V");
         Assert._assert(fos_init.isLoaded());
         ProgramLocation mc_fos_init = new ProgramLocation.QuadProgramLocation(fos_init, null);
@@ -428,7 +428,7 @@ public class AndersenPointerAnalysis {
         fd_n2.recordPassedParameter(mc_fos_init, 1);
         jq_Class bos = (jq_Class)Bootstrap.PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/BufferedOutputStream;");
         bos.load();
-        ConcreteTypeNode bos_n1 = new ConcreteTypeNode(bos);
+        ConcreteTypeNode bos_n1 = ConcreteTypeNode.get(bos);
         jq_Initializer bos_init = (jq_Initializer)bos.getOrCreateInstanceMethod("<init>", "(Ljava/io/OutputStream;I)V");
         Assert._assert(bos_init.isLoaded());
         ProgramLocation mc_bos_init = new ProgramLocation.QuadProgramLocation(bos_init, null);
@@ -437,7 +437,7 @@ public class AndersenPointerAnalysis {
         
         jq_Class ps = (jq_Class)Bootstrap.PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/PrintStream;");
         ps.load();
-        ConcreteTypeNode ps_n1 = new ConcreteTypeNode(ps);
+        ConcreteTypeNode ps_n1 = ConcreteTypeNode.get(ps);
         jq_Initializer ps_init = (jq_Initializer)ps.getOrCreateInstanceMethod("<init>", "(Ljava/io/OutputStream;Z)V");
         Assert._assert(ps_init.isLoaded());
         ProgramLocation mc_ps_init = new ProgramLocation.QuadProgramLocation(ps_init, null);
@@ -448,15 +448,15 @@ public class AndersenPointerAnalysis {
         Assert._assert(so.isLoaded());
         GlobalNode.GLOBAL.addEdge(so, ps_n1);
         
-        ConcreteTypeNode fd_n3 = new ConcreteTypeNode(fd);
+        ConcreteTypeNode fd_n3 = ConcreteTypeNode.get(fd);
         fd_n3.recordPassedParameter(mc_fd_init, 0);
-        ConcreteTypeNode fos_n2 = new ConcreteTypeNode(fos);
+        ConcreteTypeNode fos_n2 = ConcreteTypeNode.get(fos);
         fos_n2.recordPassedParameter(mc_fos_init, 0);
         fd_n3.recordPassedParameter(mc_fos_init, 1);
-        ConcreteTypeNode bos_n2 = new ConcreteTypeNode(bos);
+        ConcreteTypeNode bos_n2 = ConcreteTypeNode.get(bos);
         bos_n2.recordPassedParameter(mc_bos_init, 0);
         fos_n2.recordPassedParameter(mc_bos_init, 1);
-        ConcreteTypeNode ps_n2 = new ConcreteTypeNode(ps);
+        ConcreteTypeNode ps_n2 = ConcreteTypeNode.get(ps);
         ps_n2.recordPassedParameter(mc_ps_init, 0);
         bos_n2.recordPassedParameter(mc_ps_init, 1);
         
@@ -491,7 +491,7 @@ public class AndersenPointerAnalysis {
         
         jq_Class nt = (jq_Class)Bootstrap.PrimordialClassLoader.loader.getOrCreateBSType("LScheduler/jq_NativeThread;");
         nt.load();
-        ConcreteTypeNode nt_n1 = new ConcreteTypeNode(nt);
+        ConcreteTypeNode nt_n1 = ConcreteTypeNode.get(nt);
         Assert._assert(Scheduler.jq_NativeThread._nativeThreadEntry.isLoaded());
         ProgramLocation mc_nte = new ProgramLocation.QuadProgramLocation(Scheduler.jq_NativeThread._nativeThreadEntry, null);
         nt_n1.recordPassedParameter(mc_nte, 0);

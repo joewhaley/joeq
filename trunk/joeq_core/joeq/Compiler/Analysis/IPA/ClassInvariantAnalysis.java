@@ -61,7 +61,7 @@ public class ClassInvariantAnalysis
                 break;
             }
         }
-        dis = new ParamNode(init, 0, k);
+        dis = ParamNode.get(init, 0, k);
         summary = new MethodSummary(new ParamNode[] { dis });
         returned = new HashMap();
         thrown = new HashMap();

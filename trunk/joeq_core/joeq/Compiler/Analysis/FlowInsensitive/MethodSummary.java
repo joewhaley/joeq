@@ -16,6 +16,8 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -85,6 +87,7 @@ import Util.Collections.IndexMap;
 import Util.Collections.InstrumentedSetWrapper;
 import Util.Collections.MultiMap;
 import Util.Collections.Pair;
+import Util.Collections.Triple;
 import Util.Collections.SetFactory;
 import Util.Collections.SortedArraySet;
 import Util.Graphs.Navigator;
@@ -186,8 +189,14 @@ public class MethodSummary {
     public static void clearSummaryCache() {
         summary_cache.clear();
         ConcreteTypeNode.FACTORY.clear();
+        ConcreteTypeNode.FACTORY2.clear();
+        ConcreteObjectNode.FACTORY.clear();
         UnknownTypeNode.FACTORY.clear();
-        GlobalNode.GLOBAL = new GlobalNode((jq_Method) null);
+        ReturnValueNode.FACTORY.clear();
+        ThrownExceptionNode.FACTORY.clear();
+        FieldNode.FACTORY.clear();
+        GlobalNode.FACTORY.clear();
+        GlobalNode.GLOBAL = GlobalNode.get((jq_Method) null);
     }
     
     /** Cache of cloned method summaries. */
@@ -353,10 +362,10 @@ public class MethodSummary {
                 if (params[i].isReferenceType()
                     /*&& !params[i].isAddressType()*/
                     ) {
-                    setLocal(j, param_nodes[i] = new ParamNode(method, i, (jq_Reference)params[i]));
+                    setLocal(j, param_nodes[i] = ParamNode.get(method, i, (jq_Reference)params[i]));
                 } else if (params[i].getReferenceSize() == 8) ++j;
             }
-            this.my_global = new GlobalNode(this.method);
+            this.my_global = GlobalNode.get(this.method);
             this.sync_ops = new HashMap();
             this.castMap = new LinkedHashMap();
             this.castPredecessors = new LinkedHashSet();
@@ -615,23 +624,19 @@ public class MethodSummary {
         // use a single node for all like constants within a method.
         static final boolean MERGE_LOCAL_CONSTANTS = false;
         Node handleConst(Const4Operand op, ProgramLocation pl) {
+            return handleConst(op, pl, 0);
+        }
+        Node handleConst(Const4Operand op, ProgramLocation pl, int opn) {
             Node n;
             if (op instanceof AConstOperand) {
                 AConstOperand aop = (AConstOperand) op;
                 if (GLOBAL_OBJECT_CONSTANTS) {
-                    n = ConcreteObjectNode.get(aop.getValue());
+                    n = ConcreteObjectNode.get(aop, (ProgramLocation)null);
                 } else if (GLOBAL_TYPE_CONSTANTS) {
                     n = ConcreteTypeNode.get(aop.getType());
                 } else {
-                    Object key;
-                    if (MERGE_LOCAL_CONSTANTS) key = aop.getValue();
-                    else key = op;
-                    n = (Node) nodeCache.get(key);
-                    if (n == null) {
-                        if (MERGE_LOCAL_CONSTANTS) n = new ConcreteObjectNode(aop.getValue());
-                        else n = new ConcreteTypeNode(aop.getType(), pl);
-                        nodeCache.put(key, n);
-                    }
+                    if (MERGE_LOCAL_CONSTANTS) n = ConcreteObjectNode.get(aop, pl);
+                    else n = ConcreteTypeNode.get(aop.getType(), pl, new Integer(opn));
                 }
             } else {
                 jq_Reference type = ((PConstOperand)op).getType();
@@ -673,13 +678,13 @@ public class MethodSummary {
                     base = getRegister(base_r);
                 } else {
                     // base is not a register?!
-                    base = handleConst((AConstOperand) base_op, new QuadProgramLocation(method, obj));
+                    base = handleConst((AConstOperand) base_op, new QuadProgramLocation(method, obj), 0);
                 }
                 if (val_op instanceof RegisterOperand) {
                     Register src_r = ((RegisterOperand)val_op).getRegister();
                     val = getRegister(src_r);
                 } else {
-                    val = handleConst((Const4Operand) val_op, new QuadProgramLocation(method, obj));
+                    val = handleConst((Const4Operand) val_op, new QuadProgramLocation(method, obj), 1);
                 }
                 heapStore(base, val, null);
             }
@@ -713,7 +718,7 @@ public class MethodSummary {
                 }
                 CheckCastNode n = (CheckCastNode)nodeCache.get(obj);
                 if (n == null) {
-                    n = new CheckCastNode((jq_Reference)CheckCast.getType(obj).getType(), 
+                    n = CheckCastNode.get((jq_Reference)CheckCast.getType(obj).getType(), 
                                           new QuadProgramLocation(method, obj));
                     nodeCache.put(obj, n);
                 }
@@ -784,10 +789,7 @@ public class MethodSummary {
                     Register dest_r = dest.getRegister();
                     // todo: get the real type.
                     jq_Reference type = PrimordialClassLoader.getJavaLangObject().getArrayTypeForElementType();
-                    Object key = obj;
-                    ConcreteTypeNode n = (ConcreteTypeNode)nodeCache.get(key);
-                    if (n == null)
-                        nodeCache.put(key, n = new ConcreteTypeNode(type, new QuadProgramLocation(method, obj)));
+                    Node n = ConcreteTypeNode.get(type, new QuadProgramLocation(method, obj));
                     setRegister(dest_r, n);
                 }
                 return;
@@ -887,8 +889,8 @@ public class MethodSummary {
                         Pair p = (Pair) nodeCache.get(key);
                         if (p == null) {
                             System.out.println("Found thread creation in loop: "+obj);
-                            p = new Pair(new ConcreteTypeNode(type, new QuadProgramLocation(method, obj)),
-                                         new ConcreteTypeNode(type, new QuadProgramLocation(method, obj)));
+                            p = new Pair(ConcreteTypeNode.get(type, new QuadProgramLocation(method, obj)),
+                                         ConcreteTypeNode.get(type, new QuadProgramLocation(method, obj)));
                             nodeCache.put(key, p);
                         }
                         setRegister(dest_r, p);
@@ -896,10 +898,7 @@ public class MethodSummary {
                     }
                 }
             }
-            Object key = obj;
-            ConcreteTypeNode n = (ConcreteTypeNode)nodeCache.get(key);
-            if (n == null)
-                nodeCache.put(key, n = new ConcreteTypeNode(type, new QuadProgramLocation(method, obj)));
+            Node n = ConcreteTypeNode.get(type, new QuadProgramLocation(method, obj));
             setRegister(dest_r, n);
         }
         /** Visit an array allocation instruction. */
@@ -907,10 +906,7 @@ public class MethodSummary {
             if (TRACE_INTRA) out.println("Visiting: "+obj);
             Register dest_r = NewArray.getDest(obj).getRegister();
             jq_Reference type = (jq_Reference)NewArray.getType(obj).getType();
-            Object key = obj;
-            ConcreteTypeNode n = (ConcreteTypeNode)nodeCache.get(key);
-            if (n == null)
-                nodeCache.put(key, n = new ConcreteTypeNode(type, new QuadProgramLocation(method, obj)));
+            Node n = ConcreteTypeNode.get(type, new QuadProgramLocation(method, obj));
             setRegister(dest_r, n);
         }
         /** Visit a put instance field instruction. */
@@ -929,13 +925,13 @@ public class MethodSummary {
                     Register src_r = ((RegisterOperand)val_op).getRegister();
                     val = getRegister(src_r);
                 } else {
-                    val = handleConst((Const4Operand) val_op, new QuadProgramLocation(method, obj));
+                    val = handleConst((Const4Operand) val_op, new QuadProgramLocation(method, obj), 0);
                 }
                 if (base_op instanceof RegisterOperand) {
                     Register base_r = ((RegisterOperand)base_op).getRegister();
                     base = getRegister(base_r);
                 } else {
-                    base = handleConst((Const4Operand) base_op, new QuadProgramLocation(method, obj));
+                    base = handleConst((Const4Operand) base_op, new QuadProgramLocation(method, obj), 1);
                 }
                 heapStore(base, val, f);
             }
@@ -954,8 +950,7 @@ public class MethodSummary {
                     Register src_r = ((RegisterOperand)val).getRegister();
                     heapStore(my_global, getRegister(src_r), f);
                 } else {
-                    Node n = handleConst((Const4Operand) val, new QuadProgramLocation(method, obj)
-);
+                    Node n = handleConst((Const4Operand) val, new QuadProgramLocation(method, obj));
                     heapStore(my_global, n, f);
                 }
             }
@@ -1000,10 +995,7 @@ public class MethodSummary {
                 if (TRACE_INTRA) out.println("Visiting: "+obj);
                 Register dest_r = ((RegisterOperand)Special.getOp1(obj)).getRegister();
                 jq_Reference type = Scheduler.jq_Thread._class;
-                ConcreteTypeNode n = (ConcreteTypeNode)nodeCache.get(obj);
-                Object key = obj;
-                if (n == null)
-                    nodeCache.put(key, n = new ConcreteTypeNode(type, new QuadProgramLocation(method, obj)));
+                Node n = ConcreteTypeNode.get(type, new QuadProgramLocation(method, obj));
                 n.setEscapes();
                 setRegister(dest_r, n);
             } else if (obj.getOperator() == Special.SET_THREAD_BLOCK.INSTANCE) {
@@ -1016,10 +1008,7 @@ public class MethodSummary {
                 if (TRACE_INTRA) out.println("Visiting: "+obj);
                 Register dest_r = ((RegisterOperand)Special.getOp1(obj)).getRegister();
                 jq_Reference type = StackAddress._class;
-                ConcreteTypeNode n = (ConcreteTypeNode)nodeCache.get(obj);
-                Object key = obj;
-                if (n == null)
-                    nodeCache.put(key, n = new ConcreteTypeNode(type, new QuadProgramLocation(method, obj)));
+                Node n = ConcreteTypeNode.get(type, new QuadProgramLocation(method, obj));
                 //n.setEscapes();
                 setRegister(dest_r, n);
                 /*
@@ -1061,7 +1050,7 @@ public class MethodSummary {
                 ProgramLocation mc = new ProgramLocation.QuadProgramLocation(method, obj);
                 ThrownExceptionNode n = (ThrownExceptionNode) callToTEN.get(mc);
                 if (n == null) {
-                    callToTEN.put(mc, n = new ThrownExceptionNode(mc));
+                    callToTEN.put(mc, n = ThrownExceptionNode.get(mc));
                     passedAsParameter.add(n);
                 }
                 Util.Templates.ListIterator.ExceptionHandler eh = bb.getExceptionHandlers().exceptionHandlerIterator();
@@ -1226,6 +1215,7 @@ public class MethodSummary {
             Only used if TRACK_REASONS is true. */
         //HashMap edgesToReasons;
         
+        public static int numberOfNodes() { return current_id; }
         private static int current_id = 0;
         
         protected Node() { this.id = ++current_id; }
@@ -2037,8 +2027,7 @@ public class MethodSummary {
                         Node n = (Node) j.next();
                         if (!t.contains(n)) continue;
                         t.writeBytes(" succ ");
-                        if (f == null) t.writeBytes("null");
-                        else f.write(t);
+                        t.writeObject(f);
                         t.writeBytes(" ");
                         t.writeReference(n);
                     }
@@ -2057,8 +2046,7 @@ public class MethodSummary {
                         Node n = (Node) j.next();
                         if (!t.contains(n)) continue;
                         t.writeBytes(" pred ");
-                        if (f == null) t.writeBytes("null");
-                        else f.write(t);
+                        t.writeObject(f);
                         t.writeBytes(" ");
                         t.writeReference(n);
                     }
@@ -2127,9 +2115,18 @@ public class MethodSummary {
         final ProgramLocation q;        
 
         public String toString_short() { return "(" + dstType.shortName() + ") @ "+q; }
-        public CheckCastNode(jq_Reference dstType, ProgramLocation q) {
+        private CheckCastNode(jq_Reference dstType, ProgramLocation q) {
             this.dstType = dstType;
             this.q = q;
+        }
+        private static HashMap/*<Pair<jq_Reference, ProgramLocation>,CheckCastNode>*/ FACTORY = new HashMap();
+        public static CheckCastNode get(jq_Reference dstType, ProgramLocation q) {
+            Pair key = new Pair(dstType, q);
+            CheckCastNode n = (CheckCastNode)FACTORY.get(key);
+            if (n == null) {
+                FACTORY.put(key, n = new CheckCastNode(dstType, q));
+            }
+            return n;
         }
         public CheckCastNode(CheckCastNode that) {
             super(that);
@@ -2151,7 +2148,7 @@ public class MethodSummary {
         public static Node read(StringTokenizer st) {
             jq_Reference type = (jq_Reference) jq_Type.read(st);
             ProgramLocation q = ProgramLocation.read(st);
-            CheckCastNode n = new CheckCastNode(type, q);
+            CheckCastNode n = CheckCastNode.get(type, q);
             //n.readEdges(map, st);
             return n;
         }
@@ -2165,6 +2162,7 @@ public class MethodSummary {
     public static final class ConcreteTypeNode extends Node implements HeapObject {
         final jq_Reference type;
         final ProgramLocation q;
+        final Integer opn;
         
         static final HashMap FACTORY = new HashMap();
         public static ConcreteTypeNode get(jq_Reference type) {
@@ -2177,16 +2175,29 @@ public class MethodSummary {
         
         public final Node copy() { return new ConcreteTypeNode(this); }
         
-        public ConcreteTypeNode(jq_Reference type) {
-            this.type = type; this.q = null;
+        private ConcreteTypeNode(jq_Reference type) {
+            this.type = type; this.q = null; this.opn = null;
         }
-        public ConcreteTypeNode(jq_Reference type, ProgramLocation q) {
-            this.type = type; this.q = q;
+        static final HashMap FACTORY2 = new HashMap();
+        public static ConcreteTypeNode get(jq_Reference type, ProgramLocation q) {
+            return get(type, q, new Integer(0));
+        }
+        public static ConcreteTypeNode get(jq_Reference type, ProgramLocation q, Integer opn) {
+            Triple key = new Triple(type, q, opn);
+            ConcreteTypeNode n = (ConcreteTypeNode)FACTORY2.get(key);
+            if (n == null) {
+                FACTORY2.put(key, n = new ConcreteTypeNode(type, q, opn));
+            }
+            return n;
+        }
+        
+        private ConcreteTypeNode(jq_Reference type, ProgramLocation q, Integer opn) {
+            this.type = type; this.q = q; this.opn = opn;
         }
 
         private ConcreteTypeNode(ConcreteTypeNode that) {
             super(that);
-            this.type = that.type; this.q = that.q;
+            this.type = that.type; this.q = that.q; this.opn = that.opn;
         }
         
         public ProgramLocation getLocation() { return q; }
@@ -2211,15 +2222,18 @@ public class MethodSummary {
                 type.write(t);
                 t.writeBytes(" ");
             }
-            if (q == null) t.writeBytes("null");
-            else q.write(t);
+            if (opn == null) t.writeBytes("null ");
+            else t.writeBytes(opn.toString()+" ");
+            t.writeObject(q);
             super.write(t);
         }
         
         public static ConcreteTypeNode read(StringTokenizer st) {
             jq_Reference type = (jq_Reference) jq_Type.read(st);
+            String opns = st.nextToken();
+            Integer opn = opns.equals("null") ? null : Integer.decode(opns);
             ProgramLocation pl = ProgramLocation.read(st);
-            ConcreteTypeNode n = new ConcreteTypeNode(type, pl);
+            ConcreteTypeNode n = ConcreteTypeNode.get(type, pl, opn);
             //n.readEdges(map, st);
             return n;
         }
@@ -2229,7 +2243,9 @@ public class MethodSummary {
      * It includes a reference to the actual object instance.
      */
     public static final class ConcreteObjectNode extends Node implements HeapObject {
-        final Object object;
+        Object object;          // null for nullconstant, String for stringconstant, Object for object
+        final Object key;       // ProgramLocation for nullconstant, StringConstant for stringconstant, List<jq_Field> for object
+        final ProgramLocation q;
         
         public static Collection getAll() {
             return FACTORY.values();
@@ -2237,15 +2253,36 @@ public class MethodSummary {
         
         public static final boolean ADD_EDGES = true;
         static final HashMap FACTORY = new HashMap();
-        public static ConcreteObjectNode get(Object o) {
-            ConcreteObjectNode n = (ConcreteObjectNode) FACTORY.get(o);
-            if (n == null) {
-                FACTORY.put(o, n = new ConcreteObjectNode(o));
-            } else {
-                return n;
+        public static ConcreteObjectNode get(AConstOperand op, ProgramLocation q) {
+            Object key = q;
+            if (!Operand.Util.isNullConstant(op)) {
+                key = q.getContainingClass().findStringConstant((String)op.getValue());
+                Assert._assert(key != null);
+                jq_Method meth = q == null ? null : q.getMethod();      // one per constant, per method
+                key = new Pair(key, meth);
             }
+            ConcreteObjectNode n = get(key, op.getValue(), q);
+            return n;
+        }
+        private static ConcreteObjectNode get(Object key, Object o, ProgramLocation q) {
+            ConcreteObjectNode n = (ConcreteObjectNode) FACTORY.get(key);
+            if (n == null) {
+                FACTORY.put(key, n = new ConcreteObjectNode(key, o, q));
+            }
+            return n;
+        }
+        public static ConcreteObjectNode get(jq_Field f, Object o) {
+            List path = new ArrayList();
+            path.add(f);
+            return explore(path, o);
+        }
+        static HashSet explored = new HashSet();
+        private static ConcreteObjectNode explore(List/*<jq_Field>*/ path, Object o) {
+            ConcreteObjectNode n = get(/*key=*/path, o, /*ProgramLocation*/null);
+            n.object = o;       // set object if path was read via read()
             if (o != null) {
-                if (ADD_EDGES) {
+                if (ADD_EDGES && !explored.contains(o)) {
+                    explored.add(o);
                     // add edges.
                     jq_Reference type = jq_Reference.getTypeOf(o);
                     if (type.isClassType()) {
@@ -2255,7 +2292,9 @@ public class MethodSummary {
                         for (int i=0; i<ifs.length; ++i) {
                             if (ifs[i].getType().isPrimitiveType()) continue;
                             Object p = Reflection.getfield_A(o, ifs[i]);
-                            n.addEdge(ifs[i], get(p));
+                            ArrayList np = new ArrayList(path);
+                            np.add(ifs[i]);
+                            n.addEdge(ifs[i], explore(np, p));
                         }
                     } else {
                         Assert._assert(type.isArrayType());
@@ -2263,7 +2302,9 @@ public class MethodSummary {
                         if (a.getElementType().isReferenceType()) {
                             Object[] oa = (Object[]) o;
                             for (int i=0; i<oa.length; ++i) {
-                                n.addEdge((jq_Field) null, get(oa[i]));
+                                ArrayList np = new ArrayList(path);
+                                np.add((jq_Field) null);
+                                n.addEdge((jq_Field) null, explore(np, oa[i]));
                             }
                         }
                     }
@@ -2272,15 +2313,19 @@ public class MethodSummary {
             return n;
         }
         
-        public ProgramLocation getLocation() { return null; }
+        public ProgramLocation getLocation() { return q; }
         
         public final Node copy() { return new ConcreteObjectNode(this); }
         
-        public ConcreteObjectNode(Object o) { this.object = o; }
+        private ConcreteObjectNode(Object key, Object o, ProgramLocation q) { 
+            this.key = key; this.object = o; this.q = q; 
+        }
 
         private ConcreteObjectNode(ConcreteObjectNode that) {
             super(that);
             this.object = that.object;
+            this.key = that.key;
+            this.q = that.q;
         }
         
         public jq_Method getDefiningMethod() { return null; }
@@ -2336,7 +2381,7 @@ public class MethodSummary {
                 jq_InstanceField[] ifs = c.getInstanceFields();
                 for (int i=0; i<ifs.length; ++i) {
                     if (ifs[i].getType().isPrimitiveType()) continue;
-                    ll.put(ifs[i], get(Reflection.getfield_A(object, ifs[i])));
+                    ll.put(ifs[i], get(ifs[i], Reflection.getfield_A(object, ifs[i])));
                 }
             } else {
                 Assert._assert(type.isArrayType());
@@ -2344,7 +2389,7 @@ public class MethodSummary {
                 if (a.getElementType().isReferenceType()) {
                     Object[] oa = (Object[]) object;
                     for (int i=0; i<oa.length; ++i) {
-                        ll.put(null, get(oa[i]));
+                        ll.put(null, get((jq_Field)null, oa[i]));
                     }
                 }
             }
@@ -2397,17 +2442,56 @@ public class MethodSummary {
         }
 
         public void write(Textualizer t) throws IOException {
-            jq_Reference type = getDeclaredType();
-            if (type == null) t.writeBytes("null");
-            else type.write(t);
+            if (object == null && q instanceof ProgramLocation) t.writeBytes("nullconstant");
+            else if (key instanceof Pair) {
+                t.writeBytes("stringconstant ");
+                Pair p = (Pair)key;
+                ((jq_Class.StringConstant)p.left).write(t);
+                t.writeBytes(" ");
+                t.writeObject((jq_Method)p.right);
+            } else {
+                t.writeBytes("object");
+                List l = (List)key;
+                t.writeBytes(" " + l.size());
+                for (int i = 0; i < l.size(); i++) {
+                    t.writeBytes(" ");
+                    jq_Field f = ((jq_Field)l.get(i));
+                    t.writeObject(f);
+                }
+            }
+
+            t.writeBytes(" ");
+            t.writeObject(q);
             super.write(t);
         }
 
         public static Node read(StringTokenizer st) {
-            jq_Reference type = (jq_Reference) jq_Type.read(st);
-            // TODO: just use ConcreteTypeNode for now.
+            String what = st.nextToken();
+            Object key, o;
+            ProgramLocation pl;
+            if (what.equals("nullconstant")) {
+                o = null;
+                key = pl = ProgramLocation.read(st);
+            } else if (what.equals("stringconstant")) {
+                jq_Class.StringConstant sc = jq_Class.readStringConstant(st);
+                jq_Method m = (jq_Method)jq_Member.read(st);
+                key = new Pair(sc, m);
+                o = sc.getString();
+                pl = ProgramLocation.read(st);
+            } else if (what.equals("object")) {
+                int n = Integer.parseInt(st.nextToken());
+                ArrayList al = new ArrayList(n);
+                for (int i = 0; i < n; i++) {
+                    al.add(jq_Member.read(st));
+                }
+                key = al;
+                pl = ProgramLocation.read(st);
+                o = null;
+                // o stays null, will be initialized later
+            } else
+                throw new InternalError("bad tag " + what);
             //n.readEdges(map, st);
-            return new ConcreteTypeNode(type);
+            return ConcreteObjectNode.get(key, o, pl);
         }
     }
     
@@ -2532,7 +2616,15 @@ public class MethodSummary {
      */
     public static final class GlobalNode extends OutsideNode {
         jq_Method method;
-        public GlobalNode(jq_Method m) {
+        static final HashMap FACTORY = new HashMap();
+        public static GlobalNode get(jq_Method m) {
+            GlobalNode n = (GlobalNode)FACTORY.get(m);
+            if (n == null) {
+                FACTORY.put(m, n = new GlobalNode(m));
+            }
+            return n;
+        }
+        private GlobalNode(jq_Method m) {
             this.method = m;
             if (TRACE_INTRA) out.println("Created "+this.toString_long());
         }
@@ -2550,7 +2642,7 @@ public class MethodSummary {
         public String toString_short() {
             return "global("+(method==null?null:method.getName())+")";
         }
-        public static GlobalNode GLOBAL = new GlobalNode((jq_Method) null);
+        public static GlobalNode GLOBAL = GlobalNode.get((jq_Method) null);
         
         public void addDefaultStatics() {
             jq_Class c;
@@ -2561,29 +2653,28 @@ public class MethodSummary {
             c.load();
             f = (jq_StaticField) c.getDeclaredMember("in", "Ljava/io/InputStream;");
             Assert._assert(f != null);
-            n = ConcreteObjectNode.get(System.in);
+            n = ConcreteObjectNode.get(f, System.in);
             addEdge(f, n);
             f = (jq_StaticField) c.getDeclaredMember("out", "Ljava/io/PrintStream;");
             Assert._assert(f != null);
-            n = ConcreteObjectNode.get(System.out);
+            n = ConcreteObjectNode.get(f, System.out);
             addEdge(f, n);
             f = (jq_StaticField) c.getDeclaredMember("err", "Ljava/io/PrintStream;");
             Assert._assert(f != null);
-            n = ConcreteObjectNode.get(System.err);
+            n = ConcreteObjectNode.get(f, System.err);
             addEdge(f, n);
             
             //System.out.println("Edges from global: "+getEdges());
         }
         
         public void write(Textualizer t) throws IOException {
-            if (method == null) t.writeBytes("null");
-            else method.write(t);
+            t.writeObject(method);
             super.write(t);
         }
         public static GlobalNode read(StringTokenizer st) {
             jq_Method m = (jq_Method) jq_Member.read(st);
             //n.readEdges(map, st);
-            return new GlobalNode(m);
+            return GlobalNode.get(m);
         }
         
     }
@@ -2604,7 +2695,15 @@ public class MethodSummary {
     /** A ReturnValueNode represents the return value of a method call.
      */
     public static final class ReturnValueNode extends ReturnedNode {
-        public ReturnValueNode(ProgramLocation m) { super(m); }
+        static final HashMap FACTORY = new HashMap();
+        public static ReturnValueNode get(ProgramLocation m) {
+            ReturnValueNode n = (ReturnValueNode)FACTORY.get(m);
+            if (n == null) {
+                FACTORY.put(m, n = new ReturnValueNode(m));
+            }
+            return n;
+        }
+        private ReturnValueNode(ProgramLocation m) { super(m); }
         private ReturnValueNode(ReturnValueNode that) { super(that); }
         
         public jq_Reference getDeclaredType() {
@@ -2627,7 +2726,7 @@ public class MethodSummary {
         public static ReturnValueNode read(StringTokenizer st) {
             ProgramLocation m = ProgramLocation.read(st);
             //n.readEdges(map, st);
-            return new ReturnValueNode(m);
+            return ReturnValueNode.get(m);
         }
     }
     
@@ -2660,7 +2759,15 @@ public class MethodSummary {
     /** A ThrownExceptionNode represents the thrown exception of a method call.
      */
     public static final class ThrownExceptionNode extends ReturnedNode {
-        public ThrownExceptionNode(ProgramLocation m) { super(m); }
+        static final HashMap FACTORY = new HashMap();
+        public static ThrownExceptionNode get(ProgramLocation m) {
+            ThrownExceptionNode n = (ThrownExceptionNode)FACTORY.get(m);
+            if (n == null) {
+                FACTORY.put(m, n = new ThrownExceptionNode(m));
+            }
+            return n;
+        }
+        private ThrownExceptionNode(ProgramLocation m) { super(m); }
         private ThrownExceptionNode(ThrownExceptionNode that) { super(that); }
         
         public jq_Reference getDeclaredType() { return Bootstrap.PrimordialClassLoader.getJavaLangObject(); }
@@ -2684,7 +2791,7 @@ public class MethodSummary {
         public static ThrownExceptionNode read(StringTokenizer st) {
             ProgramLocation m = ProgramLocation.read(st);
             //n.readEdges(map, st);
-            return new ThrownExceptionNode(m);
+            return ThrownExceptionNode.get(m);
         }
     }
     
@@ -2692,8 +2799,17 @@ public class MethodSummary {
      */
     public static class ParamNode extends OutsideNode {
         final jq_Method m; final int n; final jq_Reference declaredType;
+        static HashMap /*<Triple<jq_Method, Integer, jq_Reference>, ParamNode>*/ FACTORY = new HashMap();
         
-        public ParamNode(jq_Method m, int n, jq_Reference declaredType) { this.m = m; this.n = n; this.declaredType = declaredType; }
+        private ParamNode(jq_Method m, int n, jq_Reference declaredType) { this.m = m; this.n = n; this.declaredType = declaredType; }
+        public static ParamNode get(jq_Method m, int n, jq_Reference declaredType) { 
+            Triple key = new Triple(m, new Integer(n), declaredType);
+            ParamNode pnode = (ParamNode)FACTORY.get(key);
+            if (pnode == null) {
+                FACTORY.put(key, pnode = new ParamNode(m, n, declaredType));
+            }
+            return pnode; 
+        }
         private ParamNode(ParamNode that) {
             this.m = that.m; this.n = that.n; this.declaredType = that.declaredType;
         }
@@ -2725,13 +2841,22 @@ public class MethodSummary {
             int k = Integer.parseInt(st.nextToken());
             jq_Reference type = (jq_Reference) m.getParamTypes()[k];
             //n.readEdges(map, st);
-            return new ParamNode(m, k, type);
+            return get(m, k, type);
         }
     }
 
     // fake methods have fake param nodes
     public static final class FakeParamNode extends ParamNode {
-        public FakeParamNode(jq_Method m, int n, jq_Reference declaredType) {
+        static final HashMap FACTORY = new HashMap();
+        public static FakeParamNode getFake(jq_Method m, int n, jq_Reference declaredType) {
+            Triple key = new Triple(m, new Integer(n), declaredType);
+            FakeParamNode fn = (FakeParamNode)FACTORY.get(key);
+            if (fn == null) {
+                FACTORY.put(key, fn = new FakeParamNode(m, n, declaredType));
+            }
+            return fn;
+        }
+        private FakeParamNode(jq_Method m, int n, jq_Reference declaredType) {
             super(m, n, declaredType);
         }
         private FakeParamNode(FakeParamNode that) {
@@ -2744,7 +2869,7 @@ public class MethodSummary {
             int k = Integer.parseInt(st.nextToken());
             jq_Reference type = (jq_Reference) m.getParamTypes()[k];
             //n.readEdges(map, st);
-            return new FakeParamNode(m, k, type);
+            return FakeParamNode.get(m, k, type);
         }
     }
     
@@ -2807,7 +2932,7 @@ public class MethodSummary {
             if (base instanceof FieldNode) fn = findPredecessor((FieldNode)base, obj);
             else fn = null;
             if (fn == null) {
-                fn = new FieldNode(f, obj);
+                fn = FieldNode.get(f, obj);
                 if (TRACE_INTRA) out.println("Created field node: "+fn.toString_long());
             } else {
                 if (TRACE_INTRA) out.println("Using existing field node: "+fn.toString_long());
@@ -2824,18 +2949,23 @@ public class MethodSummary {
             return fn;
         }
         
-        private FieldNode(jq_Field f, ProgramLocation q) {
-            this.f = f;
-            this.locs = SortedArraySet.FACTORY.makeSet(HashCodeComparator.INSTANCE);
-            this.locs.add(q);
+        static final HashMap FACTORY = new HashMap();
+        private static FieldNode get(jq_Field f, ProgramLocation q) {
+            Set locs = SortedArraySet.FACTORY.makeSet(HashCodeComparator.INSTANCE);
+            locs.add(q);
+            return get(f, locs);
+        }
+        private static FieldNode get(jq_Field f, Set s) {
+            Pair key = new Pair(f, s);
+            FieldNode n = (FieldNode)FACTORY.get(key);
+            if (n == null) {
+                FACTORY.put(key, n = new FieldNode(f, s));
+            }
+            return n;
         }
         private FieldNode(jq_Field f, Set s) {
             this.f = f;
             this.locs = s;
-        }
-        private FieldNode(jq_Field f) {
-            this.f = f;
-            this.locs = SortedArraySet.FACTORY.makeSet(HashCodeComparator.INSTANCE);
         }
 
         private FieldNode(FieldNode that) {
@@ -2850,13 +2980,14 @@ public class MethodSummary {
          */
         public static FieldNode unify(jq_Field f, Set s) {
             if (TRACE_INTRA) out.println("Unifying the set of field nodes: "+s);
-            FieldNode dis = new FieldNode(f);
+            Set dislocs = SortedArraySet.FACTORY.makeSet(HashCodeComparator.INSTANCE);
             // go through once to add all instructions, so that the hash code will be stable.
             for (Iterator i=s.iterator(); i.hasNext(); ) {
                 FieldNode dat = (FieldNode)i.next();
                 Assert._assert(f == dat.f);
-                dis.locs.addAll(dat.locs);
+                dislocs.addAll(dat.locs);
             }
+            FieldNode dis = FieldNode.get(f, dislocs);
             // once again to do the replacement.
             for (Iterator i=s.iterator(); i.hasNext(); ) {
                 FieldNode dat = (FieldNode)i.next();
@@ -3009,8 +3140,7 @@ public class MethodSummary {
          * @see Compil3r.Quad.MethodSummary.Node#print
          */
         public void write(Textualizer t) throws IOException {
-            if (f == null) t.writeBytes("null");
-            else f.write(t);
+            t.writeObject(f);
             t.writeBytes(" "+locs.size());
             for (Iterator i = locs.iterator(); i.hasNext(); ) {
                 t.writeBytes(" ");
@@ -3033,7 +3163,7 @@ public class MethodSummary {
                 locs.add(pl);
             }
             //n.readEdges(map, st);
-            return new FieldNode(f, locs);
+            return FieldNode.get(f, locs);
         }
     }
     
@@ -3809,7 +3939,7 @@ outer:
         this.sync_ops = Collections.EMPTY_MAP;
     }
 
-    public static boolean CACHE_BUILDER = false;
+    public static boolean CACHE_BUILDER = true;
 
     public MethodSummary(BuildMethodSummary builder,
                          jq_Method method,
@@ -4905,6 +5035,7 @@ outer:
     
     public static void main(String[] args) throws IOException {
         HostedVM.initialize();
+        ClassLib.ClassLibInterface.useJoeqClasslib(true);
         jq_Class c = (jq_Class) jq_Type.parseType(args[0]);
         c.load();
         String name = null, desc = null;
@@ -4988,12 +5119,12 @@ outer:
      */
     static MethodSummary fakeIdentityMethodSummary(jq_Method method) {
         jq_Class clazz = method.getDeclaringClass();
-        ParamNode []params = new ParamNode[] { new FakeParamNode(method, 0, clazz) };
+        ParamNode []params = new ParamNode[] { FakeParamNode.getFake(method, 0, clazz) };
 
         return new MethodSummary((BuildMethodSummary)null,
                          method,
                          params, 
-                         new GlobalNode(method),
+                         GlobalNode.get(method),
                          /* methodCalls */Collections.EMPTY_SET,
                          /* callToRVN */Collections.EMPTY_MAP,
                          /* callToTEN */Collections.EMPTY_MAP,
@@ -5011,8 +5142,8 @@ outer:
     public static String fakeCloneName = "fake$clone";
     public static MethodSummary fakeCloneMethodSummary(jq_FakeInstanceMethod method) {
         jq_Class clazz = method.getDeclaringClass();
-        ParamNode []params = new ParamNode[] { new FakeParamNode(method, 0, clazz) };
-        ConcreteTypeNode clone = new ConcreteTypeNode(clazz, new FakeProgramLocation(method, "fakedclone"));
+        ParamNode []params = new ParamNode[] { FakeParamNode.getFake(method, 0, clazz) };
+        ConcreteTypeNode clone = ConcreteTypeNode.get(clazz, new FakeProgramLocation(method, "fakedclone"));
 
         clazz.prepare();
         jq_InstanceField [] f = clazz.getInstanceFields();
@@ -5024,7 +5155,7 @@ outer:
         return new MethodSummary((BuildMethodSummary)null,
                          method,
                          params, 
-                         new GlobalNode(method),
+                         GlobalNode.get(method),
                          /* methodCalls */Collections.EMPTY_SET,
                          /* callToRVN */Collections.EMPTY_MAP,
                          /* callToTEN */Collections.EMPTY_MAP,
