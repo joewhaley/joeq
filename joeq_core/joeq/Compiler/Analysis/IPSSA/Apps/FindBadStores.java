@@ -26,10 +26,10 @@ import joeq.Util.Collections.AppendIterator;
 
 public class FindBadStores extends IPSSABuilder.Application {    
     private static CallGraph _cg         = null;
-    private Set _classes 				 = null;
+    private Set _classes                                  = null;
     
     // filter out non-local classes?
-    static final boolean FILTER_LOCAL 	 = false;
+    static final boolean FILTER_LOCAL          = false;
     static jq_Class  _serializableClass  = null;
     private jq_Class _httpSessionClass   = null;
     private PAResultSelector _sel; 
@@ -155,7 +155,7 @@ public class FindBadStores extends IPSSABuilder.Application {
     
     /**
      * @param c
-     * @param instanceFields
+     * @param fields
      */
     private void processFields(jq_Class c, jq_Field[] fields) {
         for(int i = 0; i < fields.length; i++){
@@ -170,8 +170,8 @@ public class FindBadStores extends IPSSABuilder.Application {
      * @param f
      */
     private void processField(jq_Class c, jq_Field f){
-        // 	1. find heap objects it can point to
-        // 	2. get their types
+        //         1. find heap objects it can point to
+        //         2. get their types
         Set types = _sel.getFieldPointeeTypes(f);
         //  3. figure out which ones are *not* serializable
         for(Iterator typeIter = types.iterator(); typeIter.hasNext();){
