@@ -1,5 +1,5 @@
 all:	set_text_writeable
-	g++ -g joeq.cpp native.cpp ../joeq/jq.obj -lpthread -o joeq
+	g++ -g joeq.cpp native.cpp exception.cpp ../joeq/jq.obj -lpthread -o joeq
 	./set_text_writeable joeq
 
 set_text_writeable:	set_text_writeable.c

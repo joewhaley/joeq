@@ -63,6 +63,18 @@
 #include "native.h"
 #include "handler.h"
 
+typedef struct _Thread {
+	CONTEXT* registers;
+	int thread_switch_enabled;
+        struct _NativeThread* native_thread;
+} Thread;
+
+typedef struct _NativeThread {
+	int thread_handle;
+	Thread* currentThread;
+        int pid;
+} NativeThread;
+
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.
 

@@ -224,7 +224,7 @@ public class jq_NativeThread implements x86Constants {
         jq.UNREACHABLE();
     }
 
-    public static /*final*/ boolean USE_INTERRUPTER_THREAD = true;
+    public static /*final*/ boolean USE_INTERRUPTER_THREAD = false;
 
     /** The entry point for new native threads.
      */
@@ -238,9 +238,8 @@ public class jq_NativeThread implements x86Constants {
 	    // start up another native thread to periodically interrupt this one.
 	    jq_InterrupterThread it = new jq_InterrupterThread(this);
 	} else {
-	    // todo: use setitimer
-	    //SystemInterface.setitimer(SystemInterface.ITIMER_VIRTUAL, 10);
-	    jq_InterrupterThread it = new jq_InterrupterThread(this);
+	    // use setitimer
+	    SystemInterface.set_interval_timer(SystemInterface.ITIMER_VIRTUAL, 10);
 	}
         
         // store for longJump
