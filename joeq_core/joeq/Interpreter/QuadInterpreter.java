@@ -49,13 +49,12 @@ public class QuadInterpreter {
         
 	public static boolean TRACE = false;
 
-        public static long num_nullcheck = 0;
+        public static long num_quads = 0;
         
-	public void visitNullCheck(Quad q) { ++num_nullcheck; }
-            
 	public void visitQuad(Quad q) {
 	    if (TRACE) System.out.println("Registers: "+registers);
 	    if (TRACE) System.out.println("Interpreting: "+q);
+            ++num_quads;
 	    current_quad = q;
 	    q.interpret(this);
 	}
@@ -172,8 +171,11 @@ public class QuadInterpreter {
             bad_classes = new HashSet();
             bad_classes.add(Reflection._class);
             bad_methods = new HashSet();
-	    jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/PrintStream;");
-	    jq_Method m2 = k.getOrCreateInstanceMethod("write", "(Ljava/lang/String;)V");
+	    jq_Class k2 = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/PrintStream;");
+	    jq_Method m2 = k2.getOrCreateInstanceMethod("write", "(Ljava/lang/String;)V");
+	    //bad_methods.add(m2);
+	    k2 = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/OutputStreamWriter;");
+	    m2 = k2.getOrCreateInstanceMethod("write", "([CII)V");
 	    bad_methods.add(m2);
 	    bad_methods.add(Allocator.HeapAllocator._multinewarray);
             interpret_filter = new Filter() {
@@ -206,10 +208,53 @@ public class QuadInterpreter {
 	    return s;
 	}
 
+        public void output() {
+            System.out.println("Quad count: "+num_quads);
+        }
+        
+        public void trapOnSystemExit() {
+            SecurityManager sm = new SecurityManager() {
+                public void checkAccept(String host, int port) {}
+                public void checkAccess(Thread t) {}
+                public void checkAccess(ThreadGroup t) {}
+                public void checkAwtEventQueueAccess(ThreadGroup t) {}
+                public void checkConnect(String host, int port) {}
+                public void checkConnect(String host, int port, Object context) {}
+                public void checkCreateClassLoader() {}
+                public void checkDelete() {}
+                public void checkExec(String file) {}
+                public void checkExit(int status) { output(); }
+                public void checkLink(String lib) {}
+                public void checkListen(int port) {}
+                public void checkMemberAccess(Class clazzz, int which) {}
+                public void checkMulticast(java.net.InetAddress maddr) {}
+                public void checkPackageAccess(String pkg) {}
+                public void checkPackageDefinition(String pkg) {}
+                public void checkPermission(java.security.Permission perm) {}
+                public void checkPermission(java.security.Permission perm, Object context) {}
+                public void checkPrintJobAccess() {}
+                public void checkPropertiesAccess() {}
+                public void checkPropertyAccess(String key) {}
+                public void checkRead(java.io.FileDescriptor fd) {}
+                public void checkRead(String file) {}
+                public void checkRead(String file, Object context) {}
+                public void checkSecurityAccess(String target) {}
+                public void checkSetFactory() {}
+                public void checkSystemClipboardAccess() {}
+                public boolean checkTopLevelWindow(Object window) { return true; }
+                public void checkWrite(java.io.FileDescriptor fd) {}
+                public void checkWrite(String file) {}
+            };
+            System.setSecurityManager(sm);
+        }
+        
         public static State interpretMethod(jq_Method f, Object[] params) {
 	    State s = new State(f);
+            s.trapOnSystemExit();
 	    ControlFlowGraph cfg = CodeCache.getCode(f);
-	    s.interpretMethod(f, params, cfg.getRegisterFactory(), cfg);
+            try {
+                s.interpretMethod(f, params, cfg.getRegisterFactory(), cfg);
+            } catch (SecurityException x) {}
 	    return s;
 	}
 
@@ -284,8 +329,8 @@ public class QuadInterpreter {
 
 	public String toString() {
             if (thrown != null)
-                return "Thrown exception: "+thrown+" (null checks: "+num_nullcheck+")";
-	    return "Returned: "+return_value+" (null checks: "+num_nullcheck+")";
+                return "Thrown exception: "+thrown+" (quad count: "+num_quads+")";
+	    return "Returned: "+return_value+" (quad count: "+num_quads+")";
 	}
         
     }
