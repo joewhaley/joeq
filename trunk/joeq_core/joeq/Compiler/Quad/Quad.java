@@ -49,10 +49,10 @@ public class Quad {
     Operand getOp2() { return operand2; }
     Operand getOp3() { return operand3; }
     Operand getOp4() { return operand4; }
-    void setOp1(Operand op) { operand1 = op; }
-    void setOp2(Operand op) { operand2 = op; }
-    void setOp3(Operand op) { operand3 = op; }
-    void setOp4(Operand op) { operand4 = op; }
+    public void setOp1(Operand op) { operand1 = op; }
+    public void setOp2(Operand op) { operand2 = op; }
+    public void setOp3(Operand op) { operand3 = op; }
+    public void setOp4(Operand op) { operand4 = op; }
     
     /** Return the operator for this quad. */
     public Operator getOperator() { return operator; }
