@@ -84,7 +84,7 @@ public class ReaderGobbler extends Thread {
                 // write the chars we just read.
                 if (out != null) {
                     out.write(buffer, 0, i);
-                } else {
+                } else if (out2 != null) {
                     out2.write(buffer, 0, i);
                 }
             }
