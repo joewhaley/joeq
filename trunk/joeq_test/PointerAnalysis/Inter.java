@@ -1,6 +1,7 @@
 // Inter.java, created Oct 14, 2003 5:50:20 PM by John Whaley
 // Copyright (C) 2003 John Whaley
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
+package PointerAnalysis;
 
 /**
  * Inter
