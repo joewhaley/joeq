@@ -1,4 +1,4 @@
-packages = Allocator Assembler Bootstrap ClassLib Clazz Compil3r Interpreter Linker Main Run_Time Scheduler Synchronization UTF Util java
+packages = Allocator Assembler Bootstrap ClassLib Clazz Compil3r GC Interpreter Linker Main Run_Time Scheduler Synchronization UTF Util java
 
 all:	javac
 
