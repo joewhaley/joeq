@@ -24,7 +24,7 @@ public class HighResolutionTimer {
     static {
         try {
             System.loadLibrary("timer");
-        } catch (Exception _) {}
+        } catch (Throwable _) {}
     }
     public static native long ticks();
     public static void main(String[] args) {
