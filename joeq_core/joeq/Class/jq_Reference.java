@@ -86,12 +86,12 @@ public abstract class jq_Reference extends jq_Type implements jq_ClassFileConsta
         public boolean isInstance(Object o) { return o == null; }
         public int getDepth() { Assert.UNREACHABLE(); return 0; }
         public jq_Reference getDirectPrimarySupertype() { Assert.UNREACHABLE(); return null; }
-        public void load() { Assert.UNREACHABLE(); }
-        public void verify() { Assert.UNREACHABLE(); }
-        public void prepare() { Assert.UNREACHABLE(); }
-        public void sf_initialize() { Assert.UNREACHABLE(); }
-        public void compile() { Assert.UNREACHABLE(); }
-        public void cls_initialize() { Assert.UNREACHABLE(); }
+        public void load() { }
+        public void verify() { }
+        public void prepare() { }
+        public void sf_initialize() { }
+        public void compile() { }
+        public void cls_initialize() { }
         public String toString() { return "NULL_TYPE"; }
         public static final jq_NullType NULL_TYPE = new jq_NullType();
     }
