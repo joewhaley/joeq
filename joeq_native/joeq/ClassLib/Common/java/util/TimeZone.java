@@ -7,11 +7,16 @@
 
 package ClassLib.Common.java.util;
 
+import Bootstrap.MethodInvocation;
+import Clazz.jq_Class;
 import Clazz.jq_DontAlign;
+import Clazz.jq_Method;
+import Clazz.jq_NameAndDesc;
 import Main.jq;
 import Memory.CodeAddress;
 import Memory.Debug;
 import Memory.HeapAddress;
+import Run_Time.Reflection;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
 import Run_Time.SystemInterface.ExternalLink;
@@ -218,8 +223,19 @@ abstract class TimeZone {
     public static final int TIME_ZONE_ID_DAYLIGHT = 2;
     public static final int TIME_ZONE_ID_INVALID = 0xFFFFFFFF;
     
-    public static final ExternalLink GetTimeZoneInformation;
+    public static /*final*/ ExternalLink GetTimeZoneInformation;
+
     static {
+        if (jq.RunningNative) boot();
+        else if (jq.on_vm_startup != null) {
+            jq_Class c = (jq_Class) Reflection.getJQType(java.util.TimeZone.class);
+            jq_Method m = c.getDeclaredStaticMethod(new jq_NameAndDesc("boot", "()V"));
+            MethodInvocation mi = new MethodInvocation(m, null);
+            jq.on_vm_startup.add(mi);
+        }
+    }
+
+    public static void boot() {
         Library kernel32 = SystemInterface.registerLibrary("kernel32");
 
         if (kernel32 != null) {

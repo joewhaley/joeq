@@ -263,8 +263,6 @@ public abstract class SystemInterface {
     public static CodeAddress init_semaphore_0;
     public static CodeAddress wait_for_single_object_8;
     public static CodeAddress release_semaphore_8;
-    public static CodeAddress query_performance_counter_0;
-    public static CodeAddress query_performance_frequency_0;
 
     public static final jq_Class _class;
     public static final jq_StaticField _debugwrite;
@@ -380,11 +378,15 @@ public abstract class SystemInterface {
         }
     }
     
+    public static final String DEFAULT_ENCODING = "ISO-8859-1";
+
     public static byte[] toCString(String s) {
-        byte[] b = s.getBytes();
-        byte[] b2 = new byte[b.length+1];
-        System.arraycopy(b, 0, b2, 0, b.length);
-        return b2;
+        try {
+            byte[] b = s.getBytes(DEFAULT_ENCODING);
+            byte[] b2 = new byte[b.length+1];
+            System.arraycopy(b, 0, b2, 0, b.length);
+            return b2;
+        } catch (java.io.UnsupportedEncodingException x) { return null; }
     }
 
     public static String fromCString(Address p) {

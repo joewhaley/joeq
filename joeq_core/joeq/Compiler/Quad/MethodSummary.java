@@ -860,7 +860,7 @@ public class MethodSummary {
         /** Whether or not this node escapes into some unanalyzable code. */
         private boolean escapes;
         
-        public static boolean TRACK_REASONS = true;
+        public static boolean TRACK_REASONS = false;
         
         /** Maps added edges to the quads that they come from.
             Only used if TRACK_REASONS is true. */
