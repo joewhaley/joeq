@@ -127,12 +127,12 @@ public abstract class ClassLibInterface {
     // java.io.RandomAccessFile
     public abstract void open(java.io.RandomAccessFile dis, java.lang.String name, boolean writeable)
         throws java.io.FileNotFoundException;
-    public static final void open_static(java.io.RandomAccessFile dis, java.lang.String name, boolean writeable)
-        throws java.io.FileNotFoundException { ClassLibInterface.i.open(dis, name, writeable); }
     
     // java.util.zip.ZipFile
     public abstract void init_zipfile(java.util.zip.ZipFile o, java.lang.String name)
         throws java.io.IOException;
+    public static final void init_zipfile_static(java.util.zip.ZipFile o, java.lang.String name)
+        throws java.io.IOException { ClassLibInterface.i.init_zipfile(o, name); }
     // java.util.zip.Inflater
     public abstract void init_inflater(java.util.zip.Inflater o, boolean nowrap);
 

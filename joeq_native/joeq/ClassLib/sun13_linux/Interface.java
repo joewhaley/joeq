@@ -126,10 +126,12 @@ public final class Interface extends ClassLib.ClassLibInterface {
     }
     
     public void init_zipfile(java.util.zip.ZipFile dis, java.lang.String name) throws java.io.IOException {
+        /*
         if (jq.Bootstrapping) {
             ClassLib.Common.java.util.zip.ZipFile.bootstrap_init(dis, name);
             return;
         }
+         */
         java.lang.Object o = dis;
         ((ClassLib.Common.java.util.zip.ZipFile)o).__init__(name);
     }
