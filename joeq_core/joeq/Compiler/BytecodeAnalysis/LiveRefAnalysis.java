@@ -376,8 +376,28 @@ public class LiveRefAnalysis {
         }
         public ExactJSRState copyAsJSR() {
             // nested jsr's!
-            // we need a fresh changeLocals for the nested jsr
+        	if (ALWAYS_TRACE) System.out.println("nested jsr's! adding nesting level");
+            // we need a fresh may/mustChangeLocals array for the nested jsr
             return super.copyAsJSR();
+        }
+        public ExactState copyJSR(ExactJSRState jsr_state) {
+            // nested jsr's!
+        	if (ALWAYS_TRACE) System.out.println("nested jsr's! removing nesting level");
+            ExactJSRState that = new ExactJSRState(this.stack.length, this.locals.length);
+            System.arraycopy(jsr_state.stack, 0, that.stack, 0, jsr_state.stackDepth);
+            System.arraycopy(this.locals, 0, that.locals, 0, this.locals.length);
+            that.stackDepth = jsr_state.stackDepth;
+            for (int i=0; i<this.locals.length; ++i) {
+                if (jsr_state.mayChangeLocals[i]) {
+                    if (ALWAYS_TRACE) System.out.println("nested jsr may change local "+i);
+                    this.locals[i] = jsr_state.locals[i];
+                    this.mayChangeLocals[i] = true;
+                    if (jsr_state.mustChangeLocals[i]) {
+                        this.mustChangeLocals[i] = true;
+                    }
+                }
+            }
+            return that;
         }
         public ExactState copyHandler(jq_Type t) {
             ExactJSRState that = new ExactJSRState(this.stack.length, this.locals.length);
@@ -386,6 +406,10 @@ public class LiveRefAnalysis {
             System.arraycopy(this.mustChangeLocals, 0, that.mustChangeLocals, 0, this.mustChangeLocals.length);
             that.stackDepth = 1; that.stack[0] = new SystemType(t);
             return that;
+        }
+        public boolean mergeBeforeJSR(ExactState that) {
+        	// don't merge changedLocals from 'that'
+        	return super.merge(that);
         }
         public boolean merge(ExactState that) {
             jq.Assert(this.stackDepth == that.stackDepth);
@@ -409,6 +433,7 @@ public class LiveRefAnalysis {
                 for (int i=0; i<this.mayChangeLocals.length; ++i) {
                     if (that2.mayChangeLocals[i]) {
                         if (!this.mayChangeLocals[i]) {
+                            if (ALWAYS_TRACE) System.out.println("updated: may change local "+i+" during merge");
                             this.mayChangeLocals[i] = true;
                             change = true;
                         }
@@ -438,6 +463,7 @@ public class LiveRefAnalysis {
                 for (int i=0; i<this.mayChangeLocals.length; ++i) {
                     if (that2.mayChangeLocals[i]) {
                         if (!this.mayChangeLocals[i]) {
+                            if (ALWAYS_TRACE) System.out.println("updated: may change local "+i+" during exception handler merge");
                             this.mayChangeLocals[i] = true;
                             change = true;
                         }
@@ -934,8 +960,10 @@ public class LiveRefAnalysis {
             } else {
                 if (jsr) {
                     jq.Assert(start_states[bb2.id] instanceof ExactJSRState);
+                    return ((ExactJSRState)start_states[bb2.id]).mergeBeforeJSR(current_state);
+                } else {
+                    return start_states[bb2.id].merge(current_state);
                 }
-                return start_states[bb2.id].merge(current_state);
             }
         }
         
