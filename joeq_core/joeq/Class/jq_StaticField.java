@@ -22,7 +22,7 @@ public final class jq_StaticField extends jq_Field {
     // null if not a constant.
     private Object constantValue;
 
-    private int/*Address*/ address;
+    private int/*HeapAddress*/ address;
     
     // clazz, name, desc, access_flags are inherited
     private jq_StaticField(jq_Class clazz, jq_NameAndDesc nd) {
@@ -94,7 +94,9 @@ public final class jq_StaticField extends jq_Field {
     public final boolean isStatic() { return true; }
 
     public static final jq_Class _class;
+    public static final jq_InstanceField _address;
     static {
         _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LClazz/jq_StaticField;");
+        _address = _class.getOrCreateInstanceField("address", "I");
     }
 }
