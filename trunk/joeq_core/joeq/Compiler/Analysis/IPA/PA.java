@@ -3648,6 +3648,7 @@ public class PA {
         bdd.save(dumpPath+"Iret.bdd", Iret);
         bdd.save(dumpPath+"Ithr.bdd", Ithr);
         bdd.save(dumpPath+"IE0.bdd", IE0);
+        bdd.save(dumpPath+"sync.bdd", sync);
         if (threadRuns != null)
             bdd.save(dumpPath+"threadRuns.bdd", threadRuns);
         if (IEfilter != null)
