@@ -790,9 +790,6 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout {
 	    return true;
 	}
         Iterator i = entries.iterator();
-        int currentAddr=0;
-        int j=0;
-	String possible = ".<unknown>";
         while (i.hasNext()) {
             Entry e = (Entry)i.next();
             Object o = e.getObject();
@@ -930,7 +927,13 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout {
                 } else {
                     Object[] v = (Object[])o;
                     for (int k=0; k<length; ++k) {
-			write_ulong(out, getAddressOf(v[k]));
+                        try { write_ulong(out, getAddressOf(v[k])); }
+                        catch (UnknownObjectException x) {
+                            System.err.println("Object array element #"+k);
+                            //x.appendMessage("Object array element #"+k+" in ");
+                            //x.setObject(v);
+                            throw x;
+                        }
 		    }
                     currentAddr += length << 2;
                 }
@@ -973,7 +976,13 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout {
                             write_ushort(out, (val==null)?(char)0:((Character)val).charValue());
                         else jq.UNREACHABLE();
                     } else {
-			write_ulong(out, getAddressOf(val));
+                        try { write_ulong(out, getAddressOf(val)); }
+                        catch (UnknownObjectException x) {
+                            System.err.println("Instance field "+f);
+                            //x.appendMessage("field "+f.getName()+" in ");
+                            //x.setObject(o);
+                            throw x;
+                        }
                     }
                     currentAddr += f.getSize();
                 }

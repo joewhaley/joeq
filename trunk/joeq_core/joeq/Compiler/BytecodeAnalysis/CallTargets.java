@@ -98,9 +98,12 @@ public abstract class CallTargets extends AbstractSet {
                     jq_Class rclass = (jq_Class)rtype;
                     jq_InstanceMethod target;
                     for (;;) {
-                        if (!loadClasses && !rclass.isLoaded()) {
-                            complete = false; // conservative.
-                            continue; 
+                        if (!rclass.isLoaded()) {
+                            if (!loadClasses) {
+                                complete = false; // conservative.
+                                continue; 
+                            }
+                            rclass.load();
                         }
                         target = (jq_InstanceMethod)rclass.getDeclaredMember(imethod.getNameAndDesc());
                         if (target != null) break;
@@ -151,12 +154,18 @@ public abstract class CallTargets extends AbstractSet {
         if (exact) {
             if (!loadClasses) {
                 if (!rclass.isLoaded()) return NoCallTarget.INSTANCE;
+            } else {
                 rclass.load();
             }
             for (;;) {
                 jq_InstanceMethod target = (jq_InstanceMethod)rclass.getDeclaredMember(imethod.getNameAndDesc());
                 if (target != null) return new SingleCallTarget(target, true);
                 jq.assert(rclass != imethod.getDeclaringClass());
+                if (!loadClasses) {
+                    if (!rclass.isLoaded()) return NoCallTarget.INSTANCE;
+                } else {
+                    rclass.load();
+                }
                 rclass = rclass.getSuperclass();
                 jq.assert(rclass != null, imethod+" not found in "+receiverType);
             }
@@ -195,7 +204,7 @@ public abstract class CallTargets extends AbstractSet {
                         }
                         jq.assert(rclass != imethod.getDeclaringClass());
                         rclass = rclass.getSuperclass();
-                        jq.assert(rclass != null);
+                        jq.assert(rclass != null, "method "+imethod.toString()+" receiver type "+receiverType);
                     }
                 }
                 jq_InstanceMethod target;
@@ -439,9 +448,9 @@ public abstract class CallTargets extends AbstractSet {
     {
         // special, non-virtual invocation.
         if (!method.getDeclaringClass().isLoaded()) {
+            if (method.isInitializer()) return new SingleCallTarget(method, true);
             if (callingClass.isLoaded() && !callingClass.isSpecial())
                 return new SingleCallTarget(method, true);
-            if (method.isInitializer()) return new SingleCallTarget(method, true);
             if (!loadClasses) return NoCallTarget.INSTANCE;  // no idea!
             method.getDeclaringClass().load();
         }

@@ -19,6 +19,7 @@ import MethodSummary.ReturnValueNode;
 import MethodSummary.ThrownExceptionNode;
 import Operator.Invoke;
 import Operand.ParamListOperand;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.HashSet;
@@ -26,6 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.LinkedList;
 import Util.LinkedHashSet;
+import jq;
 
 /**
  *
@@ -34,46 +36,71 @@ import Util.LinkedHashSet;
  */
 public class AndersenPointerAnalysis {
 
+    public static java.io.PrintStream out = System.out;
+    public static final boolean TRACE = true;
+
+    public static final class AndersenVisitor implements ControlFlowGraphVisitor {
+        public void visitCFG(ControlFlowGraph cfg) {
+            INSTANCE.visitMethod(cfg);
+            INSTANCE.doWorklist();
+        }
+    }
+    
     /** Maps nodes to their set of corresponding nodes. */
     HashMap nodesToCorrespondingNodes;
     
     /** Worklist of operations to perform. */
     LinkedHashSet worklist;
     
+    HashSet visitedMethods;
+    
     /** Creates new AndersenPointerAnalysis */
-    public AndersenPointerAnalysis(jq_Method main_method) {
-        
+    public AndersenPointerAnalysis() {
+        nodesToCorrespondingNodes = new HashMap();
+        worklist = new LinkedHashSet();
+        visitedMethods = new HashSet();
     }
 
-    public static AndersenPointerAnalysis INSTANCE;
+    public static AndersenPointerAnalysis INSTANCE = new AndersenPointerAnalysis();
     
     void visitMethod(ControlFlowGraph cfg) {
+        if (TRACE) out.println("Visiting method: "+cfg.getMethod());
+        visitedMethods.add(cfg);
         MethodSummary ms = MethodSummary.getSummary(cfg);
         // find all methods that we call.
         for (Iterator i=ms.getCalls().iterator(); i.hasNext(); ) {
             MethodCall mc = (MethodCall)i.next();
+            if (TRACE) out.println("Found call: "+mc);
             CallTargets ct = mc.getCallTargets();
+            if (TRACE) out.println("Possible targets ignoring type information: "+ct);
             HashSet definite_targets = new HashSet();
             if (ct.size() == 1 && ct.isComplete()) {
                 // call can be statically resolved to a single target.
+                if (TRACE) out.println("Call is statically resolved to a single target.");
                 definite_targets.add(ct.iterator().next());
             } else {
                 // use the type information about the receiver object to find targets.
                 HashSet set = new HashSet();
                 PassedParameter pp = new PassedParameter(mc, 0);
                 ms.getNodesThatCall(pp, set);
+                if (TRACE) out.println("Possible nodes for receiver object: "+set);
                 for (Iterator j=set.iterator(); j.hasNext(); ) {
                     Node base = (Node)j.next();
+                    if (TRACE) out.println("Checking base node: "+base);
                     CallTargets ct2 = mc.getCallTargets(base);
                     if (ct2.size() == 1 && ct2.isComplete()) {
+                        if (TRACE) out.println("Using node "+base+", call is statically resolved to a single target.");
                         definite_targets.add(ct2.iterator().next());
                     } else {
                         // TODO: if it is an UnknownTypeNode, need to be notified when
                         // a new subclass is loaded.
                         SetOfNodes son = (SetOfNodes)nodesToCorrespondingNodes.get(base);
+                        if (TRACE) out.println("Node "+base+" corresponds to set "+son);
                         if (son != null) {
                             Set klasses = son.getNodeTypes();
+                            if (TRACE) out.println("Types for node "+base+": "+klasses);
                             CallTargets ct3 = mc.getCallTargets(klasses, true);
+                            if (TRACE) out.println("Targets given those types: "+ct3);
                             definite_targets.addAll(ct3);
                             addToWorklist(base);
                         } else {
@@ -83,16 +110,25 @@ public class AndersenPointerAnalysis {
                         CallTargetListener ctl = new CallTargetListener(ms, mc, definite_targets);
                         son.addTypeListener(ctl);
                         if (base instanceof FieldNode) {
+                            if (TRACE) out.println("Node "+base+" is a field node, adding its predecessors to the worklist.");
                             addPredecessorsToWorklist((FieldNode)base, new HashSet());
                         }
                     }
                 }
             }
+            if (TRACE) out.println("Set of definite targets of "+mc+": "+definite_targets);
             for (Iterator j=definite_targets.iterator(); j.hasNext(); ) {
                 jq_Method callee = (jq_Method)j.next();
+                callee.getDeclaringClass().load();
+                if (callee.getBytecode() == null) {
+                    out.println(callee+" is a native method, skipping analysis...");
+                    continue;
+                }
                 ControlFlowGraph callee_cfg = CodeCache.getCode(callee);
                 MethodSummary callee_summary = MethodSummary.getSummary(callee_cfg);
                 addParameterAndReturnMappings(ms, mc, callee_summary);
+                if (!visitedMethods.contains(callee_cfg))
+                    visitMethod(callee_cfg);
             }
         }
     }
@@ -103,15 +139,25 @@ public class AndersenPointerAnalysis {
             this.ms = ms; this.mc = mc; this.currentResult = currentResult;
         }
         void addType(jq_Reference type) {
+            if (TRACE) out.println("Checking if type "+type+" adds a new target for "+mc);
             CallTargets ct = mc.getCallTargets(type, true);
+            if (TRACE) out.println("Targets: "+ct);
             Iterator i = ct.iterator();
             while (i.hasNext()) {
                 jq_Method callee = (jq_Method)i.next();
                 if (currentResult.contains(callee)) continue;
+                if (TRACE) out.println(callee+" is a new target");
                 currentResult.add(callee);
+                callee.getDeclaringClass().load();
+                if (callee.getBytecode() == null) {
+                    out.println(callee+" is a native method, skipping analysis...");
+                    continue;
+                }
                 ControlFlowGraph callee_cfg = CodeCache.getCode(callee);
                 MethodSummary callee_summary = MethodSummary.getSummary(callee_cfg);
                 INSTANCE.addParameterAndReturnMappings(ms, mc, callee_summary);
+                if (!INSTANCE.visitedMethods.contains(callee_cfg))
+                    INSTANCE.visitMethod(callee_cfg);
             }
         }
     }
@@ -121,6 +167,7 @@ public class AndersenPointerAnalysis {
         visited.add(node);
         for (Iterator i=node.field_predecessors.iterator(); i.hasNext(); ) {
             Node n = (Node)i.next();
+            if (TRACE) out.println("Adding predecessor node "+n);
             SetOfNodes son = (SetOfNodes)nodesToCorrespondingNodes.get(n);
             if (son != null) {
                 addToWorklist(n);
@@ -138,20 +185,26 @@ public class AndersenPointerAnalysis {
             Iterator i = worklist.iterator();
             Node n = (Node)i.next(); i.remove();
             SetOfNodes son = (SetOfNodes)nodesToCorrespondingNodes.get(n);
+            if (TRACE) out.println("Worklist: matching edges of node "+n+" to "+son);
             matchEdges(n, son);
         }
     }
     
-    void addToWorklist(Node n) { worklist.add(n); }
+    void addToWorklist(Node n) {
+        boolean b = worklist.add(n);
+        if (TRACE && b) out.println("Added node "+n+" to worklist.");
+    }
     
     boolean addMapping(Node n, HashSet s) {
         boolean change;
         SetOfNodes son = (SetOfNodes)nodesToCorrespondingNodes.get(n);
-        if (son != null) change = son.addAll(s);
-        else {
+        if (son != null) {
+            change = son.addAll(s);
+        } else {
             nodesToCorrespondingNodes.put(n, son = new SetOfNodes(s));
             change = true;
         }
+        if (TRACE && change) out.println("Node "+n+": Added nodes "+s);
         if (change) addToWorklist(n);
         return change;
     }
@@ -159,12 +212,14 @@ public class AndersenPointerAnalysis {
     boolean addMapping(Node n, SetOfNodes s) {
         boolean change;
         SetOfNodes son = (SetOfNodes)nodesToCorrespondingNodes.get(n);
-        if (son != null) change = son.addAll(s);
-        else {
+        if (son != null) {
+            change = son.addAll(s);
+        } else {
             nodesToCorrespondingNodes.put(n, s);
             change = true;
         }
         if (change) addToWorklist(n);
+        if (TRACE && change) out.println("Node "+n+": Added set of nodes "+s);
         return change;
     }
     
@@ -254,7 +309,7 @@ public class AndersenPointerAnalysis {
                 for (Iterator i=s.iterator(); i.hasNext(); ) {
                     Node n = (Node)i.next();
                     if (n instanceof ConcreteTypeNode) {
-                        if (result.add(n)) change = true;
+                        if (result.add(n.getDeclaredType())) change = true;
                     }
                 }
             }
@@ -381,6 +436,7 @@ public class AndersenPointerAnalysis {
         void addTypes(HashSet types) {
             for (Iterator i=types.iterator(); i.hasNext(); ) {
                 Object o = i.next();
+                jq.assert(o instanceof jq_Reference);
                 if (this.types.contains(o)) {
                     i.remove();
                 } else {
@@ -702,13 +758,32 @@ public class AndersenPointerAnalysis {
             return new SetOfNodes(list);
         }
         
+        public Iterator iterator() { return new Itr(this); }
+        
+        public String toString() {
+            Itr i = new Itr(this);
+            StringBuffer sb = new StringBuffer();
+            sb.append('{');
+            if (i.hasNext()) {
+                sb.append(i.next());
+                while (i.hasNext()) {
+                    sb.append(',');
+                    sb.append(i.next());
+                }
+            }
+            sb.append('}');
+            return sb.toString();
+        }
+        
         static class Itr implements Iterator {
-            LinkedList stack;
-            Iterator it;
+            LinkedList stack;   // stack of Iterators
+            Iterator it;        // current Iterator
             Itr(SetOfNodes sn) {
                 while (sn.skip != null) sn = sn.skip;
                 this.stack = new LinkedList();
-                stack.addLast(sn.contains.iterator());
+                if (sn.contains != null && !sn.contains.isEmpty()) {
+                    this.stack.addLast(sn.contains.iterator());
+                }
                 if (sn.set != null && !sn.set.isEmpty()) {
                     this.it = sn.set.iterator();
                 } else {
@@ -716,13 +791,23 @@ public class AndersenPointerAnalysis {
                 }
             }
             private void nextIterator() {
-                Iterator i = (Iterator)stack.getLast();
                 for (;;) {
+                    if (stack.isEmpty()) {
+                        this.it = Collections.EMPTY_SET.iterator();
+                        return;
+                    }
+                    Iterator i = (Iterator)stack.getLast();
+                    if (!i.hasNext()) {
+                        stack.removeLast();
+                        continue;
+                    }
                     SetOfNodes sn = (SetOfNodes)i.next();
                     while (sn.skip != null) sn = sn.skip;
-                    if (!i.hasNext()) stack.removeLast();
                     if (sn.set != null && !sn.set.isEmpty()) {
                         this.it = sn.set.iterator();
+                        if (sn.contains != null && !sn.contains.isEmpty()) {
+                            stack.addLast(i = sn.contains.iterator());
+                        }
                         return;
                     }
                     if (sn.contains != null && !sn.contains.isEmpty()) {
