@@ -10,7 +10,7 @@ import joeq.Runtime.SystemInterface;
 import joeq.Util.Assert;
 
 /**
- * CircularAddressQueue
+ * An implementation of an address queue that uses a circular buffer.
  * 
  * @author John Whaley
  * @version $Id$

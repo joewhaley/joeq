@@ -8,16 +8,16 @@ import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_ClassFileConstants;
-import joeq.Class.jq_Primitive;
+import joeq.Class.jq_InstanceField;
 import joeq.Class.jq_Reference;
 import joeq.Class.jq_StaticField;
 import joeq.Class.jq_StaticMethod;
 import joeq.Class.jq_Type;
 import joeq.Memory.Address;
 import joeq.Memory.HeapAddress;
-import joeq.Memory.Heap.Heap;
 import joeq.Runtime.Debug;
 import joeq.Runtime.SystemInterface;
+import joeq.Runtime.TypeCheck;
 import joeq.Util.Assert;
 
 /**
@@ -117,9 +117,11 @@ public abstract class HeapAllocator implements jq_ClassFileConstants {
     /**
      * Process a possible reference to a heap object during garbage collection.
      */
-    public abstract void processConservativeReference(HeapAddress a);
+    public abstract void processPossibleObjectReference(HeapAddress a);
     
     //// STATIC, ALLOCATION-RELATED HELPER METHODS.
+    
+    public static final boolean TRACE = false;
     
     /**
      * Initialize class t and return a new uninitialized object of that type.
@@ -165,19 +167,6 @@ public abstract class HeapAllocator implements jq_ClassFileConstants {
         }
     }
     
-    /**
-     * Handle heap exhaustion.
-     * 
-     * @param heap the exhausted heap
-     * @param size number of bytes requested in the failing allocation
-     * @param count the retry count for the failing allocation.
-     */
-    public static void heapExhausted(Heap heap, int size, int count)
-    throws OutOfMemoryError {
-        if (count > 3) outOfMemory();
-        // TODO: trigger joeq.GC.
-    }
-    
     private static boolean isOutOfMemory = false;
     private static final OutOfMemoryError outofmemoryerror = new OutOfMemoryError();
 
@@ -196,6 +185,7 @@ public abstract class HeapAllocator implements jq_ClassFileConstants {
         throw outofmemoryerror;
     }
     
+    /* Both of these addresses are EXCLUSIVE. */
     public static HeapAddress data_segment_start;
     public static HeapAddress data_segment_end;
     
@@ -212,55 +202,154 @@ public abstract class HeapAllocator implements jq_ClassFileConstants {
         return b;
     }
     
-    public static boolean isValidAddress(Address a) {
-        return DefaultHeapAllocator.isValidAddress(a);
+    public static boolean isValidHeapAddress(Address a) {
+        return DefaultHeapAllocator.isValidHeapAddress(a);
     }
     
-    public static final boolean TRACE = false;
+    public static boolean getGCBit(Object o) {
+        int status = HeapAddress.addressOf(o).offset(ObjectLayout.STATUS_WORD_OFFSET).peek4();
+        return (status & ObjectLayout.GC_BIT) != 0;
+    }
     
-    public static boolean isValidObjectRef(Address a) {
+    public static int[] getScalarObjectReferenceOffsets(Object o) {
+        jq_Class t = (jq_Class) jq_Reference.getTypeOf(o);
+        return t.getReferenceOffsets();
+    }
+    
+    /**
+     * Check if the object references are legal up to a given depth.
+     * 
+     * @param o
+     * @param depth
+     * @return
+     */
+    public static boolean checkObjectReferences(Object o, int depth) {
+        jq_Reference t = jq_Reference.getTypeOf(o);
+        if (t instanceof jq_Array) {
+            jq_Type elementType = ((jq_Array) t).getElementType();
+            if (elementType.isReferenceType() && !elementType.isAddressType()) {
+                int length = Array.getLength(o);
+                for (int i = 0; i < length; ++i) {
+                    Address a = HeapAddress.addressOf(o).offset(ObjectLayout.ARRAY_ELEMENT_OFFSET + i * HeapAddress.size()).peek();
+                    if (!isObjectAssignableType(a, (jq_Reference) elementType)) return false;
+                }
+            }
+        } else {
+            jq_InstanceField[] f = ((jq_Class) t).getInstanceFields();
+            for (int i = 0; i < f.length; ++i) {
+                jq_Type ft = f[i].getType();
+                if (ft.isReferenceType() && !ft.isAddressType()) {
+                    Address a = HeapAddress.addressOf(o).offset(f[i].getOffset()).peek();
+                    if (!isObjectAssignableType(a, (jq_Reference) ft)) return false;
+                }
+            }
+        }
+        return true;
+    }
+    
+    /**
+     * Returns true if the given address looks like it points to an object.
+     * 
+     * @param a
+     * @return
+     */
+    public static boolean isValidObject(Address a) {
+        return isValidObject(a, 0);
+    }
+    
+    /**
+     * Returns true if the given address looks like it points to an object.
+     * Checks up to the given depth of object nesting.
+     * 
+     * @param a
+     * @param depth
+     * @return
+     */
+    public static boolean isValidObject(Address a, int depth) {
         if (TRACE) Debug.writeln("Checking if valid object ref: ", a);
-        if (!isValidAddress(a)) {
+        if (!isValidHeapAddress(a)) {
             if (TRACE) Debug.writeln("Cannot be object, invalid address");
             return false;
         }
         Address vt = a.offset(ObjectLayout.VTABLE_OFFSET).peek();
-        boolean b = isValidVTable(vt);
-        if (TRACE) {
-            if (b) Debug.writeln("Valid object: ", a);
-            else Debug.writeln("Cannot be object, invalid vtable: ", vt);
+        if (!isValidVTable(vt)) {
+            if (TRACE) Debug.writeln("Cannot be object, invalid vtable: ", vt);
+            return false;
         }
-        return b;
+        if (depth > 0) {
+            Object o = ((HeapAddress) a).asObject();
+            if (!checkObjectReferences(o, depth)) {
+                return false;
+            }
+        }
+        if (TRACE) Debug.writeln("Valid object: ", a);
+        return true;
     }
     
-    public static boolean isValidArrayRef(Address a) {
-        if (TRACE) Debug.writeln("Checking if valid array ref: ", a);
-        if (!isValidAddress(a)) {
+    /**
+     * Returns true if the given address looks like it points to an object.
+     * 
+     * @param a
+     * @return
+     */
+    public static boolean isValidArray(Address a) {
+        return isValidArray(a, 0);
+    }
+    
+    /**
+     * Returns true if the given address looks like it points to an array.
+     * Checks up to the given depth of object nesting.
+     * 
+     * @param a
+     * @param depth
+     * @return
+     */
+    public static boolean isValidArray(Address a, int depth) {
+        if (TRACE) Debug.writeln("Checking if valid array: ", a);
+        if (!isValidHeapAddress(a)) {
             if (TRACE) Debug.writeln("Cannot be array, invalid address");
             return false;
         }
         Address vt = a.offset(ObjectLayout.VTABLE_OFFSET).peek();
-        boolean b = isValidArrayVTable(vt);
-        if (TRACE) {
-            if (b) Debug.writeln("Valid array: ", a);
-            else Debug.writeln("Cannot be object, invalid array vtable: ", vt);
+        if (!isValidArrayVTable(vt)) {
+            if (TRACE) Debug.writeln("Cannot be object, invalid array vtable: ", vt);
+            return false;
         }
-        return b;
+        if (TRACE) Debug.writeln("Valid array: ", a);
+        if (depth > 0) {
+            Object o = ((HeapAddress) a).asObject();
+            jq_Array t = (jq_Array) jq_Reference.getTypeOf(o);
+            jq_Type elementType = ((jq_Array) t).getElementType();
+            if (elementType.isReferenceType() && !elementType.isAddressType()) {
+                int length = Array.getLength(o);
+                for (int i = 0; i < length; ++i) {
+                    Address a2 = HeapAddress.addressOf(o).offset(ObjectLayout.ARRAY_ELEMENT_OFFSET + i * HeapAddress.size()).peek();
+                    if (!isObjectAssignableType(a2, (jq_Reference) elementType)) return false;
+                }
+            }
+        }
+        return true;
     }
     
+    /**
+     * Return true if the given address looks like it points to a vtable.
+     * 
+     * @param a
+     * @return
+     */
     public static boolean isValidVTable(Address a) {
         if (TRACE) Debug.writeln("Checking if vtable: ", a);
-        if (!isValidAddress(a)) {
+        if (!isValidHeapAddress(a)) {
             if (TRACE) Debug.writeln("Cannot be vtable, invalid address");
             return false;
         }
         Address vtableTypeAddr = a.offset(ObjectLayout.VTABLE_OFFSET).peek();
         jq_Reference r = PrimordialClassLoader.getAddressArray();
-        if (!isType(vtableTypeAddr, r)) {
+        if (!isObjectExactType(vtableTypeAddr, r)) {
             if (TRACE) Debug.writeln("Cannot be vtable, has wrong type: ", vtableTypeAddr);
             return false;
         }
-        boolean b = isValidType((HeapAddress) a.peek());
+        boolean b = isValidReferenceType((HeapAddress) a.peek());
         if (TRACE) {
             if (b) Debug.writeln("Valid vtable: ", a);
             else Debug.writeln("Cannot be vtable, invalid type in vtable[0]: ", a.peek());
@@ -268,15 +357,21 @@ public abstract class HeapAllocator implements jq_ClassFileConstants {
         return b;
     }
     
+    /**
+     * Return true if the given address looks like it points to a vtable for an array object.
+     * 
+     * @param a
+     * @return
+     */
     public static boolean isValidArrayVTable(Address a) {
         if (TRACE) Debug.writeln("Checking if array vtable: ", a);
-        if (!isValidAddress(a)) {
+        if (!isValidHeapAddress(a)) {
             if (TRACE) Debug.writeln("Cannot be array vtable, invalid address");
             return false;
         }
-        Address vtableTypeAddr = a.offset(ObjectLayout.VTABLE_OFFSET);
+        Address vtableTypeAddr = a.offset(ObjectLayout.VTABLE_OFFSET).peek();
         jq_Reference r = PrimordialClassLoader.getAddressArray();
-        if (!isType(vtableTypeAddr, r)) {
+        if (!isObjectExactType(vtableTypeAddr, r)) {
             if (TRACE) Debug.writeln("Cannot be array vtable, has wrong type: ", vtableTypeAddr);
             return false;
         }
@@ -288,18 +383,26 @@ public abstract class HeapAllocator implements jq_ClassFileConstants {
         return b;
     }
     
-    public static boolean isType(Address a, jq_Reference t) {
+    /**
+     * Return true if the given address looks like it points to an object whose type is
+     * exactly the given reference type.
+     * 
+     * @param a
+     * @param t
+     * @return
+     */
+    public static boolean isObjectExactType(Address a, jq_Reference t) {
         if (TRACE) {
             Debug.writeln("Checking if matching type: ", a);
             Debug.writeln(t.getDesc());
         }
-        if (!isValidAddress(a)) {
+        if (!isValidHeapAddress(a)) {
             if (TRACE) Debug.writeln("Cannot be type, invalid address");
             return false;
         }
 
         Address vtable = a.offset(ObjectLayout.VTABLE_OFFSET).peek();
-        if (!isValidAddress(vtable)) {
+        if (!isValidHeapAddress(vtable)) {
             if (TRACE) Debug.writeln("Cannot be type, invalid vtable address: ", vtable);
             return false;
         }
@@ -316,9 +419,53 @@ public abstract class HeapAllocator implements jq_ClassFileConstants {
         return b;
     }
     
-    public static boolean isValidType(Address typeAddress) {
+    /**
+     * Return true if the given address is null or looks like it points to an object
+     * whose type is assignable to the given reference type.
+     * 
+     * @param a
+     * @param t
+     * @return
+     */
+    public static boolean isObjectAssignableType(Address a, jq_Reference t) {
+        if (TRACE) {
+            Debug.writeln("Checking if assignable type: ", a);
+            Debug.writeln(t.getDesc());
+        }
+        if (a.isNull()) return true;
+        if (!isValidHeapAddress(a)) {
+            if (TRACE) Debug.writeln("Cannot be type, invalid address");
+            return false;
+        }
+
+        Address vtable = a.offset(ObjectLayout.VTABLE_OFFSET).peek();
+        if (!isValidHeapAddress(vtable)) {
+            if (TRACE) Debug.writeln("Cannot be type, invalid vtable address: ", vtable);
+            return false;
+        }
+        Address type = vtable.peek();
+        if (!isValidReferenceType(type)) {
+            if (TRACE) Debug.writeln("Cannot be type, invalid type address: ", type);
+            return false;
+        }
+        jq_Reference t2 = (jq_Reference) ((HeapAddress) type).asObject();
+        if (!TypeCheck.isAssignable(t2, t)) {
+            Debug.writeln("Not matching type");
+            Debug.writeln(t2.getDesc());
+        }
+        if (TRACE) Debug.writeln("Matching type: ", type);
+        return true;
+    }
+    
+    /**
+     * Given an address, return true if it looks like it points to a jq_Class or jq_Array object.
+     * 
+     * @param typeAddress
+     * @return
+     */
+    public static boolean isValidReferenceType(Address typeAddress) {
         if (TRACE) Debug.writeln("Checking if valid type: ", typeAddress);
-        if (!isValidAddress(typeAddress)) {
+        if (!isValidHeapAddress(typeAddress)) {
             if (TRACE) Debug.writeln("Cannot be type, invalid address");
             return false;
         }
@@ -326,8 +473,7 @@ public abstract class HeapAllocator implements jq_ClassFileConstants {
         // check if vtable is one of three possible values
         Object vtable = ObjectLayoutMethods.getVTable(((HeapAddress) typeAddress).asObject());
         boolean valid = vtable == jq_Class._class.getVTable() ||
-                        vtable == jq_Array._class.getVTable() ||
-                        vtable == jq_Primitive._class.getVTable();
+                        vtable == jq_Array._class.getVTable();
         if (TRACE) {
             if (valid) Debug.writeln("Matching vtable: ", HeapAddress.addressOf(vtable));
             else Debug.writeln("Not matching vtable: ", HeapAddress.addressOf(vtable));
@@ -335,9 +481,15 @@ public abstract class HeapAllocator implements jq_ClassFileConstants {
         return valid;
     }
     
+    /**
+     * Given an address, return true if it looks like it points to a jq_Array object.
+     * 
+     * @param typeAddress
+     * @return
+     */
     public static boolean isValidArrayType(Address typeAddress) {
         if (TRACE) Debug.writeln("Checking if valid array type: ", typeAddress);
-        if (!isValidAddress(typeAddress)) {
+        if (!isValidHeapAddress(typeAddress)) {
             if (TRACE) Debug.writeln("Cannot be array type, invalid address");
             return false;
         }

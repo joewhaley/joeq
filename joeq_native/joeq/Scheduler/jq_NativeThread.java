@@ -5,7 +5,6 @@ package joeq.Scheduler;
 
 import java.util.Iterator;
 import java.util.Random;
-
 import joeq.Allocator.CodeAllocator;
 import joeq.Allocator.HeapAllocator;
 import joeq.Allocator.RuntimeCodeAllocator;
@@ -20,8 +19,6 @@ import joeq.Main.jq;
 import joeq.Memory.CodeAddress;
 import joeq.Memory.HeapAddress;
 import joeq.Memory.StackAddress;
-import joeq.Memory.Heap.SegregatedListHeap;
-import joeq.Memory.Heap.SizeControl;
 import joeq.Runtime.Debug;
 import joeq.Runtime.StackCodeWalker;
 import joeq.Runtime.SystemInterface;
@@ -116,10 +113,6 @@ public class jq_NativeThread implements jq_DontAlign {
 
     /** The Java thread that is executing while we are in the scheduler. */
     private final jq_Thread schedulerThread;
-
-    public SizeControl[] sizes;
-    public SizeControl[] GC_INDEX_ARRAY;
-    public SegregatedListHeap backingSLHeap;
 
     public static final int MAX_NATIVE_THREADS = 16;
 

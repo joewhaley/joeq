@@ -640,6 +640,9 @@ public class SimpleAllocator extends HeapAllocator {
         return allocateArray(length, size, vtable);
     }
 
+    /* (non-Javadoc)
+     * @see joeq.Allocator.HeapAllocator#collect()
+     */
     public void collect() {
         TRACE = true;
         if (inGC) {
@@ -712,80 +715,59 @@ public class SimpleAllocator extends HeapAllocator {
                 Debug.writeln(",", currFree);
             }
             
+            boolean lastWasFree = false;
+            
             // Walk over current block.
+            outer:
             while (currBlockEnd.difference(p) > 0) {
                 
                 if (TRACE) Debug.writeln("ptr: ", p);
                 
                 if (p.difference(currFree) == 0) {
-                    // Skip over free chunk.
+                    // Skip over known free chunk.
                     p = getFreeEnd(currFree);
                     prevFree = currFree;
                     currFree = getFreeNext(currFree);
                     if (TRACE) Debug.writeln("Skipped over free, next free=", currFree);
+                    lastWasFree = true;
                     continue;
                 }
                 
-                HeapAddress obj;
-                
-                // This is complicated by the fact that there may be a one-word
-                // gap between objects due to 8-byte alignment.
-                HeapAddress p1 = (HeapAddress) p.offset(ObjectLayout.OBJ_HEADER_SIZE);
-                HeapAddress p3 = (HeapAddress) p.offset(ObjectLayout.ARRAY_HEADER_SIZE);
-                
-                Address vt1 = (Address) p1.offset(ObjectLayout.VTABLE_OFFSET).peek();
-                Address vt3 = (Address) p3.offset(ObjectLayout.VTABLE_OFFSET).peek();
-                
-                boolean b1 = isValidVTable(vt1);
-                boolean b3 = isValidArrayVTable(vt3);
-                
-                boolean skipWord;
-                
-                if (b1) {
-                    // Looks like a scalar object at p1.
-                    if (TRACE) Debug.writeln("Looks like scalar object at ", p1);
-                    if (b3) {
-                        // p1 could also be status word of array at p3.
-                        if (TRACE) Debug.writeln("More likely array at ", p3);
-                        obj = p3;
-                        skipWord = false;
-                    } else {
-                        // todo: p1 could also possibly be status word of aligned object.
-                        obj = p1;
-                        skipWord = false;
-                    }
-                } else {
-                    HeapAddress p4 = (HeapAddress) p.offset(4+ObjectLayout.ARRAY_HEADER_SIZE);
-                    Address vt4 = (Address) p4.offset(ObjectLayout.VTABLE_OFFSET).peek();
-                    boolean b4 = isValidArrayVTable(vt4);
-                    if (b3) {
-                        // Looks like array object at p3.
-                        // todo: p3 could also possibly be status word of aligned array.
-                        if (TRACE) Debug.writeln("Looks like array at ", p3);
-                        obj = p3;
-                        skipWord = false;
-                    } else if (b4) {
-                        // Looks like aligned array at p4.
-                        if (TRACE) Debug.writeln("Looks like aligned array at ", p4);
-                        obj = p4;
-                        skipWord = true;
-                    } else {
-                        // Heap is corrupted or we reached the end of this block.
+                HeapAddress obj = HeapAddress.getNull();
+                // Scan forward to find next object reference.
+                while (currBlockEnd.difference(p) > 0) {
+                    HeapAddress p2 = (HeapAddress) p.offset(ObjectLayout.ARRAY_HEADER_SIZE);
+                    boolean b2 = isValidArray(p2);
+                    if (b2) {
+                        obj = p2;
                         break;
                     }
+                    HeapAddress p1 = (HeapAddress) p.offset(ObjectLayout.OBJ_HEADER_SIZE);
+                    boolean b1 = isValidObject(p1);
+                    if (b1) {
+                        obj = p1;
+                        break;
+                    }
+                    p = (HeapAddress) p.offset(HeapAddress.size());
                 }
                 
-                Object o = obj.asObject();
-                int size = getObjectSize(o);
-                
-                HeapAddress next_p = (HeapAddress) p.offset(size + (skipWord?4:0)).align(2);
+                HeapAddress next_p;
+                boolean isFree;
+                if (!obj.isNull()) {
+                    Object o = obj.asObject();
+                    int size = getObjectSize(o);
+                    next_p = (HeapAddress) p.offset(size).align(2);
+                    int status = obj.offset(ObjectLayout.STATUS_WORD_OFFSET).peek4();
+                    isFree = ((status & ObjectLayout.GC_BIT) == 0);
+                } else {
+                    next_p = p;
+                    isFree = true;
+                }
                 if (TRACE) Debug.writeln("Next ptr ", next_p);
                 
-                int status = obj.offset(ObjectLayout.STATUS_WORD_OFFSET).peek4();
-                if ((status & ObjectLayout.GC_BIT) == 0) {
+                if (isFree) {
                     if (TRACE) Debug.writeln("Not marked, adding to free list.");
-                    HeapAddress prevFreeEnd = getFreeEnd(prevFree);
-                    if (p.difference(prevFreeEnd) == 0) {
+                    if (lastWasFree) {
                         // Just extend size of this free area.
                         int newSize = next_p.difference(prevFree);
                         setFreeSize(prevFree, newSize);
@@ -804,10 +786,11 @@ public class SimpleAllocator extends HeapAllocator {
                         }
                     }
                 }
+                lastWasFree = isFree;
                 
                 p = next_p;
             }
-            currBlock = (HeapAddress) currBlock.offset(BLOCK_SIZE - 2 * HeapAddress.size()).peek();
+            currBlock = (HeapAddress) getBlockNext(currBlock);
         }
     }
     
@@ -833,29 +816,47 @@ public class SimpleAllocator extends HeapAllocator {
                 while (location.difference(end) < 0) {
                     if (SimpleAllocator.TRACE) Debug.writeln("Scanning address ", location);
                     DefaultHeapAllocator.processObjectReference(location);
-                    location =
-                        (HeapAddress) location.offset(HeapAddress.size());
+                    location = (HeapAddress) location.offset(HeapAddress.size());
                 }
             }
         }
     }
     
+    /* (non-Javadoc)
+     * @see joeq.Allocator.HeapAllocator#processObjectReference(joeq.Memory.HeapAddress)
+     */
     public void processObjectReference(HeapAddress a) {
+        if (SimpleAllocator.TRACE) Debug.writeln("Processing object reference at ", a);
         a = (HeapAddress) a.peek();
-        if (SimpleAllocator.TRACE) Debug.writeln("Adding object to queue: ", a);
+        if (a.isNull()) {
+            return;
+        }
+        if (getGCBit(a.asObject())) {
+            return;
+        }
         gcWorkQueue.push(a);
     }
     
-    public void processConservativeReference(HeapAddress a) {
+    /* (non-Javadoc)
+     * @see joeq.Allocator.HeapAllocator#processConservativeReference(joeq.Memory.HeapAddress)
+     */
+    public void processPossibleObjectReference(HeapAddress a) {
+        if (SimpleAllocator.TRACE) Debug.writeln("Processing possible object reference at ", a);
+        if (!isValidHeapAddress(a)) {
+            if (SimpleAllocator.TRACE) Debug.writeln("Not a valid address, skipping");
+            return;
+        }
         a = (HeapAddress) a.peek();
-        if (!isValidObjectRef(a)) {
+        if (!isValidObject(a, 1)) {
             if (SimpleAllocator.TRACE) Debug.writeln("Not a valid object, skipping: ", a);
             return;
         }
-        if (SimpleAllocator.TRACE) Debug.writeln("Adding object to queue: ", a);
         gcWorkQueue.push(a);
     }
     
+    /* (non-Javadoc)
+     * @see joeq.Allocator.HeapAllocator#isInHeap(joeq.Memory.Address)
+     */
     public boolean isInHeap(Address a) {
         HeapAddress p = heapFirst;
         while (!p.isNull()) {

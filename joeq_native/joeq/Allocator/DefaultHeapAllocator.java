@@ -107,7 +107,7 @@ public abstract class DefaultHeapAllocator {
         Unsafe.getThreadBlock().enableThreadSwitch();
     }
     
-    public static final boolean isValidAddress(Address a) {
+    public static final boolean isValidHeapAddress(Address a) {
         if (HeapAllocator.isInDataSegment(a)) return true;
         if (jq_NativeThread.allNativeThreadsInitialized()) {
             for (int i = 0; i < jq_NativeThread.native_threads.length; ++i) {
@@ -125,6 +125,10 @@ public abstract class DefaultHeapAllocator {
         def().processObjectReference(a);
     }
 
+    public static final void processPossibleObjectReference(HeapAddress a) {
+        def().processPossibleObjectReference(a);
+    }
+    
     public static final jq_StaticMethod _allocateObject;
     public static final jq_StaticMethod _allocateObjectAlign8;
     public static final jq_StaticMethod _allocateArray;
