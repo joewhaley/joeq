@@ -1,5 +1,6 @@
 package joeq.Compiler.Analysis.FlowInsensitive;
 
+import java.beans.PrimitivePersistenceDelegate;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.LineNumberReader;
@@ -35,7 +36,10 @@ public abstract class ReflectionInformationProvider {
          */
         public NewInstanceTargets(String declaredIn) {
             this.declaredIn = getMethod(declaredIn);
-            if(PA.TRACE_REFLECTION) System.out.println("No method for " + declaredIn + " in NewInstanceTargets");
+            if(PA.TRACE_REFLECTION && this.declaredIn == null) {
+                System.out.println("No method for " + declaredIn + " in NewInstanceTargets. "
+                    + " The classpath is [" + PrimordialClassLoader.loader.classpathToString() + "]");
+            }
         }
         
         public boolean isValid(){
