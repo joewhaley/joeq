@@ -225,7 +225,7 @@ public class PAResultSelector {
      * @param f pointed to 
      * @return Set of types of objects f could point to
      */
-    private Set getFieldPointeeTypes(jq_Field f){
+    public Set getFieldPointeeTypes(jq_Field f){
         // Do the bdd magic to produce the answer
         // 1. project f out of H1xFxH2, get a set of H1xH2 pairs, h1 pointing to h2
         int fieldIndex = r.getResults().getFieldIndex(f);
