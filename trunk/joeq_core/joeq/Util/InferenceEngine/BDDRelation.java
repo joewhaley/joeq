@@ -291,4 +291,68 @@ public class BDDRelation extends Relation {
     public double size() {
         return relation.satCount(domainSet);
     }
+    
+    public TupleIterator iterator() {
+        final Iterator i = relation.iterator(domainSet);
+        return new MyTupleIterator(i, domains);
+    }
+    
+    static class MyTupleIterator extends TupleIterator {
+        Iterator i;
+        List domains;
+        MyTupleIterator(Iterator i, List domains) {
+            this.i = i;
+            this.domains = domains;
+        }
+        public long[] nextTuple() {
+            BDD b = (BDD) i.next();
+            long[] r = new long[domains.size()];
+            long[] q = b.scanAllVar();
+            int j = 0;
+            for (Iterator k = domains.iterator(); k.hasNext(); ++j) {
+                BDDDomain d = (BDDDomain) k.next();
+                r[j] = q[d.getIndex()];
+            }
+            return r;
+        }
+
+        public boolean hasNext() {
+            return i.hasNext();
+        }
+        
+        public void remove() {
+            i.remove();
+        }
+    }
+    
+    public TupleIterator iterator(int k) {
+        final BDDDomain d = (BDDDomain) domains.get(k);
+        BDD s = d.set();
+        final Iterator i = relation.iterator(s);
+        return new TupleIterator() {
+
+            public long[] nextTuple() {
+                BDD b = (BDD) i.next();
+                long v = b.scanVar(d);
+                return new long[] { v };
+            }
+
+            public boolean hasNext() {
+                return i.hasNext();
+            }
+            
+            public void remove() {
+                i.remove();
+            }
+            
+        };
+    }
+
+    public TupleIterator iterator(int k, long j) {
+        final BDDDomain d = (BDDDomain) domains.get(k);
+        BDD val = d.ithVar(j);
+        val.andWith(relation.id());
+        final Iterator i = val.iterator(domainSet);
+        return new MyTupleIterator(i, domains);
+    }
 }
