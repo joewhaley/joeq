@@ -45,6 +45,7 @@ import Compil3r.Quad.QuadVisitor;
 import Compil3r.Quad.RegisterFactory;
 import Compil3r.Quad.BytecodeToQuad.jq_ReturnAddressType;
 import Compil3r.Quad.Operand.AConstOperand;
+import Compil3r.Quad.Operand.Const4Operand;
 import Compil3r.Quad.Operand.PConstOperand;
 import Compil3r.Quad.Operand.ParamListOperand;
 import Compil3r.Quad.Operand.RegisterOperand;
@@ -560,6 +561,38 @@ public class MethodSummary {
             }
         }
         
+        // use a single node for all like constants across all method summaries.
+        static final boolean GLOBAL_OBJECT_CONSTANTS = false;
+        // use a single node for all constants of the same type across all method summaries.
+        static final boolean GLOBAL_TYPE_CONSTANTS = false;
+        // use a single node for all like constants within a method.
+        static final boolean MERGE_LOCAL_CONSTANTS = false;
+        Node handleConst(Const4Operand op) {
+            Node n;
+            if (op instanceof AConstOperand) {
+                AConstOperand aop = (AConstOperand) op;
+                if (GLOBAL_OBJECT_CONSTANTS) {
+                    n = ConcreteObjectNode.get(aop.getValue());
+                } else if (GLOBAL_TYPE_CONSTANTS) {
+                    n = ConcreteTypeNode.get(aop.getType());
+                } else {
+                    Object key;
+                    if (MERGE_LOCAL_CONSTANTS) key = aop.getValue();
+                    else key = op.getQuad();
+                    n = (Node) quadsToNodes.get(key);
+                    if (n == null) {
+                        if (MERGE_LOCAL_CONSTANTS) n = new ConcreteObjectNode(aop.getValue());
+                        else n = new ConcreteTypeNode(aop.getType());
+                        quadsToNodes.put(key, n);
+                    }
+                }
+            } else {
+                jq_Reference type = ((PConstOperand)op).getType();
+                n = UnknownTypeNode.get(type);
+            }
+            return n;
+        }
+        
         /** Visit an array load instruction. */
         public void visitALoad(Quad obj) {
             if (obj.getOperator() instanceof Operator.ALoad.ALOAD_A
@@ -574,11 +607,7 @@ public class MethodSummary {
                     heapLoad(pl, r, b, null);
                 } else {
                     // base is not a register?!
-                    Object value = ((AConstOperand) o).getValue();
-                    Object key = value;
-                    ConcreteObjectNode n = (ConcreteObjectNode) quadsToNodes.get(key);
-                    if (n == null)
-                        quadsToNodes.put(key, n = new ConcreteObjectNode(value));
+                    Node n = handleConst((AConstOperand) o);
                     heapLoad(pl, r, n, null);
                 }
             }
@@ -597,28 +626,13 @@ public class MethodSummary {
                     base = getRegister(base_r);
                 } else {
                     // base is not a register?!
-                    Object value = ((AConstOperand) base_op).getValue();
-                    Object key = value;
-                    ConcreteObjectNode node = (ConcreteObjectNode) quadsToNodes.get(key);
-                    if (node == null)
-                        quadsToNodes.put(key, node = new ConcreteObjectNode(value));
-                    base = node;
+                    base = handleConst((AConstOperand) base_op);
                 }
                 if (val_op instanceof RegisterOperand) {
                     Register src_r = ((RegisterOperand)val_op).getRegister();
                     val = getRegister(src_r);
-                } else if (val_op instanceof AConstOperand) {
-                    //jq_Reference type = ((AConstOperand)val).getType();
-                    Object value = ((AConstOperand)val_op).getValue();
-                    Object key = value;
-                    ConcreteObjectNode n = (ConcreteObjectNode) quadsToNodes.get(key);
-                    if (n == null)
-                        quadsToNodes.put(key, n = new ConcreteObjectNode(value));
-                    val = n;
                 } else {
-                    jq_Reference type = ((PConstOperand)val_op).getType();
-                    UnknownTypeNode n = UnknownTypeNode.get(type);
-                    val = n;
+                    val = handleConst((Const4Operand) val_op);
                 }
                 heapStore(base, val, null);
             }
@@ -632,17 +646,8 @@ public class MethodSummary {
                     RegisterOperand rop = ((RegisterOperand)src);
                     Register src_r = rop.getRegister();
                     setRegister(dest_r, getRegister(src_r));
-                } else if (src instanceof AConstOperand) {
-                    //jq_Reference type = ((AConstOperand)src).getType();
-                    Object value = ((AConstOperand)src).getValue();
-                    Object key = value;
-                    ConcreteObjectNode n = (ConcreteObjectNode) quadsToNodes.get(key);
-                    if (n == null)
-                        quadsToNodes.put(key, n = new ConcreteObjectNode(value));
-                    setRegister(dest_r, n);
                 } else {
-                    jq_Reference type = ((PConstOperand)src).getType();
-                    UnknownTypeNode n = UnknownTypeNode.get(type);
+                    Node n = handleConst((Const4Operand) src);
                     setRegister(dest_r, n);
                 }
             }
@@ -656,17 +661,8 @@ public class MethodSummary {
             if (src instanceof RegisterOperand) {
                 Register src_r = ((RegisterOperand)src).getRegister();
                 setRegister(dest_r, getRegister(src_r));
-            } else if (src instanceof AConstOperand) {
-                //jq_Reference type = ((AConstOperand)src).getType();
-                Object value = ((AConstOperand)src).getValue();
-                Object key = value;
-                ConcreteObjectNode n = (ConcreteObjectNode) quadsToNodes.get(key);
-                if (n == null)
-                    quadsToNodes.put(key, n = new ConcreteObjectNode(value));
-                setRegister(dest_r, n);
             } else {
-                jq_Reference type = ((PConstOperand)src).getType();
-                UnknownTypeNode n = UnknownTypeNode.get(type);
+                Node n = handleConst((Const4Operand) src);
                 setRegister(dest_r, n);
             }
         }
@@ -687,11 +683,7 @@ public class MethodSummary {
                     heapLoad(pl, r, b, f);
                 } else {
                     // base is not a register?!
-                    Object value = ((AConstOperand) o).getValue();
-                    Object key = value;
-                    ConcreteObjectNode n = (ConcreteObjectNode) quadsToNodes.get(key);
-                    if (n == null)
-                        quadsToNodes.put(key, n = new ConcreteObjectNode(value));
+                    Node n = handleConst((Const4Operand) o);
                     heapLoad(pl, r, n, f);
                 }
             }
@@ -787,11 +779,7 @@ public class MethodSummary {
                 Register src_r = rop.getRegister();
                 monitorOp(obj, src_r);
             } else {
-                Object value = ((AConstOperand)src).getValue();
-                Object key = value;
-                ConcreteObjectNode n = (ConcreteObjectNode) quadsToNodes.get(key);
-                if (n == null)
-                    quadsToNodes.put(key, n = new ConcreteObjectNode(value));
+                Node n = handleConst((Const4Operand) src);
                 monitorOp(obj, Collections.singleton(n));
             }
         }
@@ -809,17 +797,8 @@ public class MethodSummary {
                     if (rop.getType() instanceof jq_ReturnAddressType) return;
                     Register src_r = rop.getRegister();
                     setRegister(dest_r, getRegister(src_r));
-                } else if (src instanceof AConstOperand) {
-                    //jq_Reference type = ((AConstOperand)src).getType();
-                    Object value = ((AConstOperand)src).getValue();
-                    Object key = value;
-                    ConcreteObjectNode n = (ConcreteObjectNode) quadsToNodes.get(key);
-                    if (n == null)
-                        quadsToNodes.put(key, n = new ConcreteObjectNode(value));
-                    setRegister(dest_r, n);
                 } else {
-                    jq_Reference type = ((PConstOperand)src).getType();
-                    UnknownTypeNode n = UnknownTypeNode.get(type);
+                    Node n = handleConst((Const4Operand) src);
                     setRegister(dest_r, n);
                 }
             }
@@ -884,31 +863,14 @@ public class MethodSummary {
                 if (val_op instanceof RegisterOperand) {
                     Register src_r = ((RegisterOperand)val_op).getRegister();
                     val = getRegister(src_r);
-                } else if (val_op instanceof AConstOperand) {
-                    //jq_Reference type = ((AConstOperand)val).getType();
-                    Object value = ((AConstOperand)val_op).getValue();
-                    Object key = value;
-                    ConcreteObjectNode n = (ConcreteObjectNode) quadsToNodes.get(key);
-                    if (n == null)
-                        quadsToNodes.put(key, n = new ConcreteObjectNode(value));
-                    val = n;
                 } else {
-                    jq_Reference type = ((PConstOperand)val_op).getType();
-                    UnknownTypeNode n = UnknownTypeNode.get(type);
-                    val = n;
+                    val = handleConst((Const4Operand) val_op);
                 }
                 if (base_op instanceof RegisterOperand) {
                     Register base_r = ((RegisterOperand)base_op).getRegister();
                     base = getRegister(base_r);
                 } else {
-                    // base is not a register?!
-                    //jq_Reference type = ((AConstOperand)val).getType();
-                    Object value = ((AConstOperand)base_op).getValue();
-                    Object key = value;
-                    ConcreteObjectNode n = (ConcreteObjectNode) quadsToNodes.get(key);
-                    if (n == null)
-                        quadsToNodes.put(key, n = new ConcreteObjectNode(value));
-                    base = n;
+                    base = handleConst((Const4Operand) base_op);
                 }
                 heapStore(base, val, f);
             }
@@ -926,17 +888,8 @@ public class MethodSummary {
                 if (val instanceof RegisterOperand) {
                     Register src_r = ((RegisterOperand)val).getRegister();
                     heapStore(my_global, getRegister(src_r), f);
-                } else if (val instanceof AConstOperand) {
-                    //jq_Reference type = ((AConstOperand)val).getType();
-                    Object value = ((AConstOperand)val).getValue();
-                    Object key = value;
-                    ConcreteObjectNode n = (ConcreteObjectNode) quadsToNodes.get(key);
-                    if (n == null)
-                        quadsToNodes.put(key, n = new ConcreteObjectNode(value));
-                    heapStore(my_global, n, f);
                 } else {
-                    jq_Reference type = ((PConstOperand)val).getType();
-                    UnknownTypeNode n = UnknownTypeNode.get(type);
+                    Node n = handleConst((Const4Operand) val);
                     heapStore(my_global, n, f);
                 }
             }
@@ -960,17 +913,8 @@ public class MethodSummary {
             if (src instanceof RegisterOperand) {
                 Register src_r = ((RegisterOperand)src).getRegister();
                 addToSet(r, getRegister(src_r));
-            } else if (src instanceof AConstOperand) {
-                //jq_Reference type = ((AConstOperand)src).getType();
-                Object value = ((AConstOperand)src).getValue();
-                Object key = value;
-                ConcreteObjectNode n = (ConcreteObjectNode) quadsToNodes.get(key);
-                if (n == null)
-                    quadsToNodes.put(key, n = new ConcreteObjectNode(value));
-                r.add(n);
             } else {
-                jq_Reference type = ((PConstOperand)src).getType();
-                UnknownTypeNode n = UnknownTypeNode.get(type);
+                Node n = handleConst((Const4Operand) src);
                 r.add(n);
             }
         }
@@ -1020,17 +964,8 @@ public class MethodSummary {
                     RegisterOperand rop = ((RegisterOperand)src);
                     Register src_r = rop.getRegister();
                     setRegister(dest_r, getRegister(src_r));
-                } else if (src instanceof AConstOperand) {
-                    //jq_Reference type = ((AConstOperand)src).getType();
-                    Object value = ((AConstOperand)src).getValue();
-                    Object key = value;
-                    ConcreteObjectNode n = (ConcreteObjectNode) quadsToNodes.get(key);
-                    if (n == null)
-                        quadsToNodes.put(key, n = new ConcreteObjectNode(value));
-                    setRegister(dest_r, n);
                 } else {
-                    jq_Reference type = ((PConstOperand)src).getType();
-                    UnknownTypeNode n = UnknownTypeNode.get(type);
+                    Node n = handleConst((Const4Operand) src);
                     setRegister(dest_r, n);
                 }
             } else if (obj.getOperator() == Unary.INT_2ADDRESS.INSTANCE) {
@@ -2161,9 +2096,13 @@ public class MethodSummary {
         }
 
         public void write(Textualizer t) throws IOException {
-            type.write(t);
-            t.writeBytes(" ");
-            q.write(t);
+            if (type == null) t.writeBytes("null ");
+            else {
+                type.write(t);
+                t.writeBytes(" ");
+            }
+            if (q == null) t.writeBytes("null");
+            else q.write(t);
             super.write(t);
         }
         
