@@ -200,20 +200,22 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         chkState(STATE_LOADING3);
         jq_StaticField f = (jq_StaticField)findByNameAndDesc(static_fields, nd);
         if (f != null) return f;
-        if (this.isInterface()) {
-            // static fields may be in superinterfaces.
-            for (int i=0; i<declared_interfaces.length; ++i) {
-                jq_Class in = declared_interfaces[i];
-                in.load();
-                f = in.getStaticField(nd);
-                if (f != null) return f;
-            }
-        }
+        
         // check superclasses.
         if (super_class != null) {
             super_class.load();
-            return super_class.getStaticField(nd);
+            f = super_class.getStaticField(nd);
+            if (f != null) return f;
         }
+        
+        // static fields may be in implemented interfaces.
+        for (int i=0; i<declared_interfaces.length; ++i) {
+            jq_Class in = declared_interfaces[i];
+            in.load();
+            f = in.getStaticField(nd);
+            if (f != null) return f;
+        }
+
         return null;
     }
 
