@@ -53,6 +53,7 @@ public abstract class Reflection {
     // Map between our jq_Type objects and JDK Class objects
     public static final jq_Type getJQType(Class c) {
         if (!jq.Bootstrapping) return ClassLibInterface.DEFAULT.getJQType(c);
+        if (c == null) return null;
         if (c.isPrimitive()) {
             if (c == Byte.TYPE) return jq_Primitive.BYTE;
             if (c == Character.TYPE) return jq_Primitive.CHAR;
@@ -73,6 +74,7 @@ public abstract class Reflection {
     }
     public static final Class getJDKType(jq_Type c) {
         if (!jq.Bootstrapping) return c.getJavaLangClassObject();
+        if (c == null) return null;
         if (c.getJavaLangClassObject() != null)
             return c.getJavaLangClassObject();
         if (c.isPrimitiveType()) 
@@ -100,10 +102,12 @@ public abstract class Reflection {
     }
     public static Class getJDKType(jq_Reference c) {
         if (!jq.Bootstrapping) return c.getJavaLangClassObject();
+        if (c == null) return null;
         if (c.getJavaLangClassObject() != null)
             return c.getJavaLangClassObject();
         try {
-            return Class.forName(c.getJDKName(), false, Reflection.class.getClassLoader());
+            //return Class.forName(c.getJDKName(), false, Reflection.class.getClassLoader());
+            return Class.forName(c.getJDKName(), false, c.getClassLoader());
         } catch (ClassNotFoundException x) {
             //if (!c.getJDKName().startsWith("ClassLib"))
             //    SystemInterface.debugmsg("Note: "+c.getJDKName()+" was not found in host jdk");
@@ -115,6 +119,7 @@ public abstract class Reflection {
     public static final jq_Field getJQMember(Field f) {
         if (!jq.Bootstrapping) return ClassLibInterface.DEFAULT.getJQField(f);
         jq_Class c = (jq_Class)getJQType(f.getDeclaringClass());
+        if (c == null) return null;
         jq_NameAndDesc nd = new jq_NameAndDesc(Utf8.get(f.getName()), getJQType(f.getType()).getDesc());
         nd = ClassLib.ClassLibInterface.convertClassLibNameAndDesc(c, nd);
         jq_Field m = (jq_Field)c.getDeclaredMember(nd);
@@ -130,6 +135,7 @@ public abstract class Reflection {
     public static final jq_Method getJQMember(Method f) {
         if (!jq.Bootstrapping) return ClassLibInterface.DEFAULT.getJQMethod(f);
         jq_Class c = (jq_Class)getJQType(f.getDeclaringClass());
+        if (c == null) return null;
         StringBuffer desc = new StringBuffer();
         desc.append('(');
         Class[] param_types = f.getParameterTypes();
@@ -153,6 +159,7 @@ public abstract class Reflection {
     public static final jq_Initializer getJQMember(Constructor f) {
         if (!jq.Bootstrapping) return ClassLibInterface.DEFAULT.getJQInitializer(f);
         jq_Class c = (jq_Class)getJQType(f.getDeclaringClass());
+        if (c == null) return null;
         StringBuffer desc = new StringBuffer();
         desc.append('(');
         Class[] param_types = f.getParameterTypes();
