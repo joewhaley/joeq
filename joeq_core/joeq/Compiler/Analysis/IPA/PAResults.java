@@ -184,8 +184,18 @@ public class PAResults {
                         }
                     }
                     increaseCount = false;
+                } else if (command.equals("type")) {
+                    jq_Class c = parseClassName(st.nextToken());
+                    if (c == null || !c.isLoaded()) {
+                        System.out.println("Cannot find class");
+                        increaseCount = false;
+                    } else {
+                        System.out.println("Class: "+c);
+                        int k = getTypeIndex(c);
+                        results.add(r.T1.ithVar(k));
+                    }
                 } else if (command.equals("method")) {
-                    jq_Class c = (jq_Class) jq_Type.parseType(st.nextToken());
+                    jq_Class c = parseClassName(st.nextToken());
                     if (c == null || !c.isLoaded()) {
                         System.out.println("Cannot find class");
                         increaseCount = false;
@@ -204,7 +214,7 @@ public class PAResults {
                         }
                     }
                 } else if (command.equals("field")) {
-                    jq_Class c = (jq_Class) jq_Type.parseType(st.nextToken());
+                    jq_Class c = parseClassName(st.nextToken());
                     if (c == null || !c.isLoaded()) {
                         System.out.println("Cannot find class");
                         increaseCount = false;
@@ -296,6 +306,20 @@ public class PAResults {
         System.out.println("relprod b1 b2 bs:     relational product of b1 and b2 w.r.t. set bs");
     }
 
+    public jq_Class parseClassName(String className) {
+        jq_Class c = (jq_Class) jq_Type.parseType(className);
+        if (c != null) return c;
+        for (Iterator i = PrimordialClassLoader.loader.getAllTypes().iterator(); i.hasNext(); ) {
+            jq_Type t = (jq_Type) i.next();
+            if (t instanceof jq_Class) {
+                c = (jq_Class) t; 
+                if (c.getJDKName().endsWith(className))
+                    return c;
+            }
+        }
+        return null;
+    }
+    
     public Node getVariableNode(int v) {
         if (v < 0 || v >= r.Vmap.size())
             return null;
