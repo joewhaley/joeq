@@ -1917,6 +1917,7 @@ public class PA {
     Map missingConst    = new HashMap();
     Map noConstrClasses = new HashMap();
     Map cantCastTypes   = new HashMap();
+    Map circularClasses = new HashMap();
     BDD reflectiveCalls;
     
     /** Updates IE/IEcs with new edges obtained from resolving reflective invocations */
@@ -2005,8 +2006,11 @@ public class PA {
                 }
                 continue;
             } catch(java.lang.ClassCircularityError e) {
-                System.err.println("Resolving reflection: circulation error " + stringConst + 
-                    " at " + h.toStringWithDomains(TS));
+                if(circularClasses.get(stringConst) == null){
+                    System.err.println("Resolving reflection: circularity error " + stringConst + 
+                        " at " + h.toStringWithDomains(TS));
+                    circularClasses.put(stringConst, new Integer(0));
+                }                
                 continue;
             }
             Assert._assert(c != null);            
