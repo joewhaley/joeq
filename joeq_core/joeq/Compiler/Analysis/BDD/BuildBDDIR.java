@@ -129,7 +129,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         }
         
         time = System.currentTimeMillis() - time;
-        time += totalTime;
+        totalTime += time;
         System.out.println("Method: " + cfg.getMethod() + " time: " + time);
         int qSize = totalQuads;
         int nodes = allQuads.nodeCount();
