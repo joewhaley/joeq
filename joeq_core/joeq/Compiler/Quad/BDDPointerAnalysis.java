@@ -9,7 +9,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -464,7 +463,7 @@ public class BDDPointerAnalysis {
                 roots.addAll(thread_runs);
         }
         
-        CallGraph cg = new BDDCallGraph(roots);
+        CallGraph cg = CallGraph.makeCallGraph(roots, callSiteToTargets);
         return cg;
     }
     
@@ -551,7 +550,7 @@ public class BDDPointerAnalysis {
                 roots.addAll(thread_runs);
         }
         
-        CallGraph cg = new BDDCallGraph(roots);
+        CallGraph cg = CallGraph.makeCallGraph(roots, callSiteToTargets);
         return cg;
     }
 
@@ -1424,63 +1423,4 @@ public class BDDPointerAnalysis {
         newPointsTo.free();
     }
 
-    public class BDDCallGraph extends CallGraph {
-
-        Collection roots;
-
-        BDDCallGraph(Collection roots) {
-            this.roots = roots;
-        }
-
-        /**
-         * @see Compil3r.Quad.CallGraph#getTargetMethods(java.lang.Object, Compil3r.Quad.ProgramLocation)
-         */
-        public Collection getTargetMethods(Object context, ProgramLocation callSite) {
-            jq_Method method = (jq_Method) callSite.getTargetMethod();
-            if (callSite.isSingleTarget()) {
-                return Collections.singleton(method);
-            }
-            Collection targets = (Collection) callSiteToTargets.get(callSite);
-            if (targets != null) {
-                return targets;
-            } else {
-                return Collections.EMPTY_SET;
-            } 
-        }
-
-        /* (non-Javadoc)
-         * @see Compil3r.Quad.CallGraph#setRoots(java.util.Collection)
-         */
-        public void setRoots(Collection roots) {
-            throw new UnsupportedOperationException();
-        }
-
-        /* (non-Javadoc)
-         * @see Compil3r.Quad.CallGraph#getRoots()
-         */
-        public Collection getRoots() {
-            return roots;
-        }
-        
-        /* (non-Javadoc)
-         * @see Compil3r.Quad.CallGraph#getAllCallSites()
-         */
-        public Collection getAllCallSites() {
-            return callSiteToTargets.keySet();
-        }
-
-        /* (non-Javadoc)
-         * @see Compil3r.Quad.CallGraph#getAllMethods()
-         */
-        public Collection getAllMethods() {
-            LinkedHashSet s = new LinkedHashSet();
-            s.addAll(roots);
-            for (Iterator i=callSiteToTargets.values().iterator(); i.hasNext(); ) {
-                Collection c = (Collection) i.next();
-                s.addAll(c);
-            }
-            return s;
-        }
-
-    }
 }
