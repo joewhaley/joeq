@@ -165,6 +165,11 @@ public class PAResults implements PointerAnalysisResults {
 			r = (TypedBDD) r.exist(set);
 		    }
                     results.add(r);
+                } else if (command.equals("diff")) {
+                    TypedBDD bdd1 = parseBDD(results, st.nextToken());
+                    TypedBDD bdd2 = parseBDD(results, st.nextToken());
+                    TypedBDD r = (TypedBDD) bdd1.apply(bdd2, BDDFactory.diff);
+                    results.add(r);
                 } else if (command.equals("and")) {
                     TypedBDD bdd1 = parseBDD(results, st.nextToken());
                     TypedBDD bdd2 = parseBDD(results, st.nextToken());
@@ -340,6 +345,9 @@ public class PAResults implements PointerAnalysisResults {
                 } else if (command.equals("encapsulation")) {
                     BDD r = getEncapsulatedHeapObjects();
                     results.add(r);
+                } else if (command.equals("collectiontypes")) {
+		    TypedBDD r = findCollectionTypes();
+		    results.add(r);
                 } else if (command.equals("stats")) {
                     printStats();
                     increaseCount = false;
@@ -375,7 +383,7 @@ public class PAResults implements PointerAnalysisResults {
         System.out.println("relprod b1 b2 bs:                 relational product of b1 and b2 w.r.t. set bs");
         System.out.println("restrict b1 b2 (bi)*:             restrict b2 to bi in b1");
         System.out.println("exist b1 bs1 (bsi)*:              exist bs2 to bsi in b1");
-        System.out.println("(and|or) b1 b2:                   compute b1 and|or b2");
+        System.out.println("(and|or|diff) b1 b2:              compute b1 and|or|diff b2");
         System.out.println("(equals|cmp) b1 b2:               compare bdds b1 and b2");
         System.out.println("list b1:                          list elements of bdd b1");
         System.out.println("showdomains b1:                   show domains of bdd b1");
@@ -386,8 +394,8 @@ public class PAResults implements PointerAnalysisResults {
         System.out.println("dumpallconnect <fn>:              dump entire heap connectivity graph to file fn");
         System.out.println("dumpdefuse b1:                    dump def/use graph to defuse.dot, bdd must be in V1xV1c");
         System.out.println("dumpusedef b1:                    dump use/def graph to usedef.dot, bdd must be in V1xV1c");
-        System.out.println("escape:                           run escape analysis");
-        System.out.println("findequiv:                        find equivalent objects");
+        System.out.println("threadlocal:                      run escape analysis");
+        System.out.println("stats:                            print general statistics");
         System.out.println("contextvar #vidx #cidx:           show path in vCnumbering for var #vidx in context #");
         System.out.println("stacktracevar #vidx #cidx:        like contextvar, except print as stacktrace");
         System.out.println("contextheap #hidx #cidx:          show path in hCnumbering for heap obj #hidx in context #");
@@ -1334,4 +1342,92 @@ public class PAResults implements PointerAnalysisResults {
             return n.toString_short()+fname;
         }
     }   
+
+    public static HashMap cmethods = new HashMap();
+    {
+	// just a few for now
+	cmethods.put(new jq_NameAndDesc("add", "(ILjava/lang/Object;)V"), new Integer(2));
+	cmethods.put(new jq_NameAndDesc("set", "(ILjava/lang/Object;)Ljava/lang/Object;"), new Integer(2));
+	cmethods.put(new jq_NameAndDesc("add", "(Ljava/lang/Object;)Z"),  new Integer(1));
+	cmethods.put(new jq_NameAndDesc("addElement", "(Ljava/lang/Object;)V"),  new Integer(1));
+	// don't handle addAll() yet
+    }
+
+    /**
+     * Implements Vladimir's idea of finding out what types go in a collection.
+     *
+     * @return BDD H2 x T1 that maps collection objects to the shared supertypes of their elements.
+     */
+    public TypedBDD findCollectionTypes() {
+	TypedBDD storedin = (TypedBDD)r.bdd.zero(); 		// H1xH1cxH2xH2c
+	BDD V1cset = r.V1c.set();
+	BDD V1set = r.V1.set();
+	BDD H1set = r.H1.set();
+
+	// iterate over all callsites (XXX use a BDD-filter for this instead?)
+	for (int iidx = 0; iidx < r.Imap.size(); iidx++) {
+	    ProgramLocation call = (ProgramLocation)r.Imap.get(iidx);
+
+	    // is this a call that adds to a collection?
+	    // if so, find the parameter index of the item of the add method
+	    jq_Method m = call.getTargetMethod();
+	    if (!m.getDeclaringClass().isSubtypeOf(r.heapPathSelector.collection_class))
+		continue;
+
+	    jq_NameAndDesc nd = m.getNameAndDesc();
+	    Integer pi = (Integer)cmethods.get(nd);
+	    if (pi == null)
+		continue;
+	    int pidx = pi.intValue();
+	    
+	    // System.out.println("adding I(" + iidx + ") Z(" + pidx + ") from " + m);
+	    BDD isite = r.I.ithVar(iidx);
+	    BDDPairing V2toV1 = r.bdd.makePair(r.V2, r.V1);
+	    BDD actuals = r.actual.restrict(isite);		// V2xZ
+	    isite.free();
+	    BDD z0 = r.Z.ithVar(0);
+	    BDD v0 = actuals.restrict(z0);			// V2
+	    z0.free();
+	    v0.replaceWith(V2toV1);				// V1
+	    BDD vp = actuals.restrictWith(r.Z.ithVar(pidx));	// V2
+	    vp.replaceWith(V2toV1);				// V1
+
+	    BDD v0pt = r.vP.relprod(v0, V1set);			// V1cxH1xH1c
+	    v0.free(); 
+	    if (r.NNfilter != null) v0pt.andWith(r.NNfilter.id());
+	    v0pt.replaceWith(r.H1toH2);				// V1cxH2xH2c
+	    BDD vppt = r.vP.relprod(vp, V1set);			// V1cxH1xH1c
+	    vp.free();
+	    if (r.NNfilter != null) vppt.andWith(r.NNfilter.id());
+	    BDD h0hp = v0pt.relprod(vppt, V1cset);		// H1xH1cxH2xH2c
+	    v0pt.free();
+	    vppt.free();
+	    storedin.orWith(h0hp);
+	}
+
+	if (true) {	// does this make sense?
+	    BDD one_to_one = r.H1c.buildEquals(r.H2c);
+	    storedin.andWith(one_to_one);
+	}
+
+	// project away H1c, H2c
+	TypedBDD tmp = (TypedBDD)storedin.exist(r.H1cH2cset);
+	storedin.free();
+	storedin = tmp;
+
+	tmp = (TypedBDD)storedin.exist(H1set);
+	BDD supertypes = r.bdd.zero();				// H2 x T1
+	for (Iterator collections = tmp.iterator(); collections.hasNext(); ) {
+	    BDD c = (BDD)collections.next();
+	    BDD items = storedin.restrict(c);			// H1xH2 -> H1
+	    BDD itemtypes = items.relprod(r.hT, H1set);		// H1 x H1xT2 -> T2
+	    items.free();
+	    BDD stypes = calculateCommonSupertype(itemtypes);	// T2 -> T1
+	    itemtypes.free();
+	    c.andWith(stypes);					// H2 x T1
+	    supertypes.orWith(c);
+	}
+	tmp.free();
+	return (TypedBDD)supertypes;
+    }
 }
