@@ -34,6 +34,7 @@ public abstract class jq_Type {
     public abstract boolean isClassType();
     public abstract boolean isArrayType();
     public abstract boolean isPrimitiveType();
+    public abstract boolean isIntLike();
     public final boolean isReferenceType() { return !isPrimitiveType(); }
     public abstract ClassLoader getClassLoader();
     public abstract int getReferenceSize();

@@ -21,6 +21,10 @@ public class jq_Primitive extends jq_Type implements jq_ClassFileConstants {
     public final String getJDKDesc() { return desc.toString(); }
     public final int getReferenceSize() { return size; }
     public final ClassLoader getClassLoader() { return PrimordialClassLoader.loader; }
+    public final boolean isIntLike() {
+        return this == jq_Primitive.INT || this == jq_Primitive.BOOLEAN || this == jq_Primitive.BYTE ||
+               this == jq_Primitive.CHAR || this == jq_Primitive.SHORT;
+    }
     
     public final boolean isLoaded() { return true; }
     public final boolean isVerified() { return true; }
