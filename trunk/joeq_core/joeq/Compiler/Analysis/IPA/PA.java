@@ -42,10 +42,14 @@ import Compil3r.Quad.CachedCallGraph;
 import Compil3r.Quad.CallGraph;
 import Compil3r.Quad.CodeCache;
 import Compil3r.Quad.LoadedCallGraph;
+import Compil3r.Quad.Quad;
 import Main.HostedVM;
+import Util.Assert;
 import Util.Collections.IndexMap;
+import Util.Collections.Pair;
 import Util.Graphs.PathNumbering;
 import Util.Graphs.SCComponent;
+import Util.Graphs.PathNumbering.Range;
 import Util.Graphs.PathNumbering.Selector;
 
 /**
@@ -70,7 +74,8 @@ public class PA {
     boolean INCREMENTAL1 = true;
     boolean INCREMENTAL2 = true;
     boolean INCREMENTAL3 = true;
-    boolean CONTEXT_SENSITIVE = false;
+    boolean CONTEXT_SENSITIVE = System.getProperty("pa.cs") != null;
+    boolean DISCOVER_CALL_GRAPH = System.getProperty("pa.discover") != null;
     
     int bddnodes = Integer.parseInt(System.getProperty("bddnodes", "2500000"));
     int bddcache = Integer.parseInt(System.getProperty("bddcache", "150000"));
@@ -109,12 +114,13 @@ public class PA {
     BDD Mret;   // MxV2, method return value            (+context)
     BDD Ithr;   // IxV1, invocation thrown value        (+context)
     BDD Mthr;   // MxV2, method thrown value            (+context)
-    BDD mI;     // MxIxN, method invocations            (+context)
-    BDD mV;     // MxV, method variables                (+context)
+    BDD mI;     // MxIxN, method invocations            (no context)
+    BDD mV;     // MxV, method variables                (no context)
     
     BDD hP;     // H1xFxH2, heap points-to              (+context)
-    BDD IE;     // IxM, invocation edges                (+context)
-    BDD filter; // V1xH1, type filter                   (+context)
+    BDD IE;     // IxM, invocation edges                (no context)
+    BDD filter; // V1xH1, type filter                   (no context)
+    BDD IEc;    // V2cxIxV1cxM, context-sensitive edges
     
     BDD visited; // M, visited methods
     
@@ -126,6 +132,7 @@ public class PA {
     BDDPairing V1cV2ctoV2cV1c;
     BDD V1set, V2set, H1set, H2set, T1set, T2set, Fset, Mset, Nset, Iset, Zset;
     BDD V1V2set, V1H1set, IMset, H1Fset, H1FH2set, T2Nset, MZset;
+    BDD V1cV2cset;
     
     Set visitedMethods = new HashSet();
     Set roots = new HashSet();
@@ -185,8 +192,8 @@ public class PA {
             V2H2toV1H1.set(new BDDDomain[] {V2,H2,V2c,H2c},
                            new BDDDomain[] {V1,H1,V1c,H1c});
             V1cV2ctoV2cV1c = bdd.makePair();
-            V2H2toV1H1.set(new BDDDomain[] {V1c,V2c},
-                           new BDDDomain[] {V2c,V1c});
+            V1cV2ctoV2cV1c.set(new BDDDomain[] {V1c,V2c},
+                               new BDDDomain[] {V2c,V1c});
         } else {
             V1toV2 = bdd.makePair(V1, V2);
             V2toV1 = bdd.makePair(V2, V1);
@@ -209,6 +216,7 @@ public class PA {
         Nset = N.set();
         Iset = I.set();
         Zset = Z.set();
+        V1cV2cset = V1c.set(); V1cV2cset.andWith(V2c.set());
         if (CONTEXT_SENSITIVE) {
             V1set.andWith(V1c.set());
             V2set.andWith(V2c.set());
@@ -267,7 +275,7 @@ public class PA {
     }
     
     void addToVisited(BDD M_bdd) {
-        if (TRACE_RELATIONS) out.println("Adding to visited: (M:"+M_bdd.scanVar(M)+")");
+        if (TRACE_RELATIONS) out.println("Adding to visited: "+M_bdd.toStringWithDomains());
         visited.orWith(M_bdd.id());
     }
     
@@ -276,7 +284,7 @@ public class PA {
         int V_i = Vmap.get(v);
         bdd1.andWith(V1.ithVar(V_i));
         bdd1.andWith(M_bdd.id());
-        if (TRACE_RELATIONS) out.println("Adding to formal: (M:"+M_bdd.scanVar(M)+",Z:"+z+",V1:"+V_i+")");
+        if (TRACE_RELATIONS) out.println("Adding to formal: "+bdd1.toStringWithDomains());
         formal.orWith(bdd1);
     }
     
@@ -285,7 +293,7 @@ public class PA {
         BDD bdd1 = M.ithVar(M2_i);
         bdd1.andWith(I_bdd.id());
         if (CONTEXT_SENSITIVE) bdd1.andWith(V1V2context.id());
-        if (TRACE_RELATIONS) out.println("Adding to IE: (I:"+I_bdd.scanVar(I)+",M:"+M2_i+")");
+        if (TRACE_RELATIONS) out.println("Adding to IE: "+bdd1.toStringWithDomains());
         IE.orWith(bdd1);
     }
     
@@ -294,7 +302,7 @@ public class PA {
         BDD bdd1 = N.ithVar(N_i);
         bdd1.andWith(M_bdd.id());
         bdd1.andWith(I_bdd.id());
-        if (TRACE_RELATIONS) out.println("Adding to mI: (M:"+M_bdd.scanVar(M)+",I:"+I_bdd.scanVar(I)+",N:"+N_i+")");
+        if (TRACE_RELATIONS) out.println("Adding to mI: "+bdd1.toStringWithDomains());
         mI.orWith(bdd1);
     }
     
@@ -302,7 +310,7 @@ public class PA {
         BDD bdd1 = bdd.zero();
         for (Iterator j = s.iterator(); j.hasNext(); ) {
             int V_i = Vmap.get(j.next());
-            if (TRACE_RELATIONS) out.println("Adding to actual: (I:"+I_bdd.scanVar(I)+",Z:"+z+",V2:"+V_i+")");
+            if (TRACE_RELATIONS) out.println("Adding to actual: "+bdd1.toStringWithDomains());
             bdd1.orWith(V2.ithVar(V_i));
         }
         bdd1.andWith(Z.ithVar(z));
@@ -314,7 +322,7 @@ public class PA {
         int V_i = Vmap.get(v);
         BDD bdd1 = V1.ithVar(V_i);
         bdd1.andWith(I_bdd.id());
-        if (TRACE_RELATIONS) out.println("Adding to Iret: (I:"+I_bdd.scanVar(I)+",V1:"+V_i+")");
+        if (TRACE_RELATIONS) out.println("Adding to Iret: "+bdd1.toStringWithDomains());
         Iret.orWith(bdd1);
     }
     
@@ -322,15 +330,15 @@ public class PA {
         int V_i = Vmap.get(v);
         BDD bdd1 = V1.ithVar(V_i);
         bdd1.andWith(I_bdd.id());
-        if (TRACE_RELATIONS) out.println("Adding to Ithr: (I:"+I_bdd.scanVar(I)+",V1:"+V_i+")");
+        if (TRACE_RELATIONS) out.println("Adding to Ithr: "+bdd1.toStringWithDomains());
         Ithr.orWith(bdd1);
     }
     
     void addToMV(BDD M_bdd, BDD V_bdd) {
-        BDD bdd = M_bdd.id();
-        bdd.andWith(V_bdd.id());
-        if (TRACE_RELATIONS) out.println("Adding to mV: (M:"+M_bdd.scanVar(M)+",V1:"+V_bdd.scanVar(V1)+")");
-        mV.orWith(bdd);
+        BDD bdd1 = M_bdd.id();
+        bdd1.andWith(V_bdd.id());
+        if (TRACE_RELATIONS) out.println("Adding to mV: "+bdd1.toStringWithDomains());
+        mV.orWith(bdd1);
     }
     
     void addToMret(BDD M_bdd, Node v) {
@@ -338,23 +346,24 @@ public class PA {
     }
     
     void addToMret(BDD M_bdd, int V_i) {
-        BDD bdd = V2.ithVar(V_i);
-        bdd.andWith(M_bdd.id());
-        if (TRACE_RELATIONS) out.println("Adding to Mret: (M:"+M_bdd.scanVar(M)+",V2:"+V_i+")");
-        Mret.orWith(bdd);
+        BDD bdd1 = V2.ithVar(V_i);
+        bdd1.andWith(M_bdd.id());
+        if (TRACE_RELATIONS) out.println("Adding to Mret: "+bdd1.toStringWithDomains());
+        Mret.orWith(bdd1);
     }
     
     void addToMthr(BDD M_bdd, int V_i) {
-        BDD bdd = V2.ithVar(V_i);
-        bdd.andWith(M_bdd.id());
-        if (TRACE_RELATIONS) out.println("Adding to Mthr: (M:"+M_bdd.scanVar(M)+",V2:"+V_i+")");
-        Mthr.orWith(bdd);
+        BDD bdd1 = V2.ithVar(V_i);
+        bdd1.andWith(M_bdd.id());
+        if (TRACE_RELATIONS) out.println("Adding to Mthr: "+bdd1.toStringWithDomains());
+        Mthr.orWith(bdd1);
     }
     
     void addToVP(Node p, int H_i) {
         int V1_i = Vmap.get(p);
         BDD bdd1 = V1.ithVar(V1_i);
         bdd1.andWith(H1.ithVar(H_i));
+        if (TRACE_RELATIONS) out.println("Adding to vP: "+bdd1.toStringWithDomains());
         vP.orWith(bdd1);
     }
     
@@ -362,7 +371,7 @@ public class PA {
         int H_i = Hmap.get(h);
         BDD bdd1 = H1.ithVar(H_i);
         bdd1.andWith(V_bdd.id());
-        if (TRACE_RELATIONS) out.println("Adding to vP: (V1:"+V_bdd.scanVar(V1)+",H1:"+H_i+")");
+        if (TRACE_RELATIONS) out.println("Adding to vP: "+bdd1.toStringWithDomains());
         vP.orWith(bdd1);
     }
     
@@ -376,7 +385,7 @@ public class PA {
         BDD bdd1 = V2.ithVar(V2_i);
         bdd1.andWith(V_bdd.id());
         bdd1.andWith(V1V2context.id());
-        if (TRACE_RELATIONS) out.println("Adding to A: (V1:"+V_bdd.scanVar(V1)+",V2:"+V2_i+")");
+        if (TRACE_RELATIONS) out.println("Adding to A: "+bdd1.toStringWithDomains());
         A.orWith(bdd1);
     }
     
@@ -398,7 +407,7 @@ public class PA {
             bdd1.andWith(F_bdd.id());
             bdd1.andWith(V_bdd.id());
             if (CONTEXT_SENSITIVE) bdd1.andWith(V1V2context.id());
-            if (TRACE_RELATIONS) out.println("Adding to S: (V1:"+V_bdd.scanVar(V1)+",F:"+F_i+",V2:"+V2_i+")");
+            if (TRACE_RELATIONS) out.println("Adding to S: "+bdd1.toStringWithDomains());
             S.orWith(bdd1);
         }
         F_bdd.free();
@@ -414,10 +423,58 @@ public class PA {
             bdd1.andWith(F_bdd.id());
             bdd1.andWith(V_bdd.id());
             if (CONTEXT_SENSITIVE) bdd1.andWith(V1V2context.id());
-            if (TRACE_RELATIONS) out.println("Adding to L: (V1:"+V_bdd.scanVar(V1)+",F:"+F_i+",V2:"+V2_i+")");
+            if (TRACE_RELATIONS) out.println("Adding to L: "+bdd1.toStringWithDomains());
             L.orWith(bdd1);
         }
         F_bdd.free();
+    }
+    
+    BDD getVC(ProgramLocation mc, jq_Method callee) {
+        Pair p = new Pair(mapCall(mc), callee);
+        Range r_edge = vCnumbering.getEdge(p);
+        Range r_caller = vCnumbering.getRange(mc.getMethod());
+        if (r_edge == null) {
+            System.out.println("Cannot find edge "+p);
+        }
+        BDD context = buildContextMap(V2c,
+                                      PathNumbering.toBigInt(r_caller.low),
+                                      PathNumbering.toBigInt(r_caller.high),
+                                      V1c,
+                                      PathNumbering.toBigInt(r_edge.low),
+                                      PathNumbering.toBigInt(r_edge.high));
+        return context;
+    }
+    
+    public static BDD buildContextMap(BDDDomain d1, BigInteger startD1, BigInteger endD1,
+                                      BDDDomain d2, BigInteger startD2, BigInteger endD2) {
+        BDDFactory bdd = d1.getFactory();
+        BDD r;
+        BigInteger sizeD1 = endD1.subtract(startD1);
+        BigInteger sizeD2 = endD2.subtract(startD2);
+        if (sizeD1.signum() == -1) {
+            r = d2.varRange(startD2.longValue(), endD2.longValue());
+            r.andWith(d1.ithVar(0));
+        } else if (sizeD2.signum() == -1) {
+            r = d1.varRange(startD1.longValue(), endD1.longValue());
+            r.andWith(d2.ithVar(0));
+        } else {
+            int bits;
+            if (endD1.compareTo(endD2) != -1) { // >=
+                bits = endD1.bitLength();
+            } else {
+                bits = endD2.bitLength();
+            }
+            long val = startD2.subtract(startD1).longValue();
+            r = d1.buildAdd(d2, bits, val);
+            if (sizeD2.compareTo(sizeD1) != -1) { // >=
+                // D2 is bigger, or they are equal.
+                r.andWith(d1.varRange(startD1.longValue(), endD1.longValue()));
+            } else {
+                // D1 is bigger.
+                r.andWith(d2.varRange(startD2.longValue(), endD2.longValue()));
+            }
+        }
+        return r;
     }
     
     public void visitMethod(jq_Method m) {
@@ -474,13 +531,13 @@ public class PA {
         for (Iterator i = ms.getCalls().iterator(); i.hasNext(); ) {
             ProgramLocation mc = (ProgramLocation) i.next();
             if (TRACE) out.println("Visiting call site "+mc);
-            int I_i = Imap.get(mc);
+            int I_i = Imap.get(mapCall(mc));
             BDD I_bdd = I.ithVar(I_i);
             jq_Method target = mc.getTargetMethod();
             if (mc.isSingleTarget()) {
                 BDD context = null;
                 if (CONTEXT_SENSITIVE) {
-                    context = bdd.one(); //TODO.
+                    context = getVC(mc, target);
                 }
                 addToIE(context, I_bdd, target);
                 if (CONTEXT_SENSITIVE) {
@@ -606,7 +663,7 @@ public class PA {
         BDD bdd1 = V1.ithVar(V_i);
         int T_i = Tmap.get(type);
         bdd1.andWith(T1.ithVar(T_i));
-        if (TRACE_RELATIONS) out.println("Adding to vT: (V1:"+V_i+",T1:"+T_i+")");
+        if (TRACE_RELATIONS) out.println("Adding to vT: "+bdd1.toStringWithDomains());
         vT.orWith(bdd1);
     }
     
@@ -614,14 +671,14 @@ public class PA {
         BDD bdd1 = H1.ithVar(H_i);
         int T_i = Tmap.get(type);
         bdd1.andWith(T2.ithVar(T_i));
-        if (TRACE_RELATIONS) out.println("Adding to hT: (H1:"+H_i+",T2:"+T_i+")");
+        if (TRACE_RELATIONS) out.println("Adding to hT: "+bdd1.toStringWithDomains());
         hT.orWith(bdd1);
     }
     
     void addToAT(BDD T1_bdd, int T2_i) {
         BDD bdd1 = T2.ithVar(T2_i);
         bdd1.andWith(T1_bdd.id());
-        if (TRACE_RELATIONS) out.println("Adding to aT: (T1:"+T1_bdd.scanVar(T1)+",T2:"+T2_i+")");
+        if (TRACE_RELATIONS) out.println("Adding to aT: "+bdd1.toStringWithDomains());
         aT.orWith(bdd1);
     }
     
@@ -630,7 +687,7 @@ public class PA {
         int M_i = Mmap.get(m);
         bdd1.andWith(M.ithVar(M_i));
         bdd1.andWith(T_bdd.id());
-        if (TRACE_RELATIONS) out.println("Adding to cha: (T:"+T_bdd.scanVar(T2)+",N:"+N_i+",M:"+M_i+")");
+        if (TRACE_RELATIONS) out.println("Adding to cha: "+bdd1.toStringWithDomains());
         cha.orWith(bdd1);
     }
     
@@ -782,8 +839,6 @@ public class PA {
             t7.andWith(filter.id());
             vP.orWith(t7);
         }
-        old_vP.free();
-        old_hP.free();
     }
     
     BDD old1_A;
@@ -949,6 +1004,8 @@ public class PA {
         if (TRACE_BIND) out.println("t6: "+t6.satCount(Iset.and(Mset)));
         if (TRACE_BIND) out.println("t6: "+t6.toStringWithDomains(TS));
         t5.free();
+        if (CONTEXT_SENSITIVE)
+            t6.andWith(IEc.id());
         if (TRACE_SOLVER) out.println("Call graph edges before: "+IE.satCount(IMset));
         IE.orWith(t6);
         if (TRACE_SOLVER) out.println("Call graph edges after: "+IE.satCount(IMset));
@@ -983,8 +1040,10 @@ public class PA {
         old3_t4 = t4;
         t5.orWith(new_t4.relprod(hT, H1set));
         new_t4.free();
-        BDD t6 = t5.relprod(cha, T2Nset); // IxT2xN x T2xNxM = IxM
+        BDD t6 = t5.relprod(cha, T2Nset); // IxT2xN x T2xNxM = V2cxIxV1cxM
         t5.free();
+        if (CONTEXT_SENSITIVE)
+            t6.andWith(IEc.id());
         if (TRACE_SOLVER) out.println("Call graph edges before: "+IE.satCount(IMset));
         IE.orWith(t6);
         if (TRACE_SOLVER) out.println("Call graph edges after: "+IE.satCount(IMset));
@@ -994,7 +1053,12 @@ public class PA {
     }
     
     public boolean handleNewTargets() {
+        if (TRACE_SOLVER) out.println("Handling new target methods...");
         BDD targets = IE.exist(Iset);
+        if (CONTEXT_SENSITIVE) {
+            BDD t2 = targets.exist(V1cV2cset);
+            targets.free(); targets = t2;
+        }
         targets.applyWith(visited.id(), BDDFactory.diff);
         if (targets.isZero()) return false;
         if (TRACE) out.println("New target methods: "+targets.satCount(Mset));
@@ -1018,6 +1082,8 @@ public class PA {
             return;
         }
         
+        if (TRACE_SOLVER) out.println("Binding parameters...");
+        
         BDD t1 = IE.relprod(actual, Iset); // V2cxIxV1cxM x IxZxV2 = V1cxMxZxV2cxV2
         BDD t2 = t1.relprod(formal, MZset); // V1cxMxZxV2cxV2 x MxZxV1 = V1cxV1xV2cxV2
         t1.free();
@@ -1025,7 +1091,9 @@ public class PA {
         A.orWith(t2);
         if (TRACE_SOLVER) out.println("Edges after param bind: "+A.satCount(V1V2set));
         
-        BDD IEr = IE.replace(V1cV2ctoV2cV1c);
+        BDD IEr;
+        if (CONTEXT_SENSITIVE) IEr = IE.replace(V1cV2ctoV2cV1c);
+        else IEr = IE;
         BDD t3 = IEr.relprod(Iret, Iset); // V1cxIxV2cxM x IxV1 = V1cxV1xV2cxM
         BDD t4 = t3.relprod(Mret, Mset); // V1cxV1xV2cxM x MxV2 = V1cxV1xV2cxV2
         t3.free();
@@ -1034,6 +1102,7 @@ public class PA {
         if (TRACE_SOLVER) out.println("Edges after return bind: "+A.satCount(V1V2set));
         
         BDD t5 = IEr.relprod(Ithr, Iset); // V1cxIxV2cxM x IxV1 = V1cxV1xV2cxM
+        if (CONTEXT_SENSITIVE) IEr.free();
         BDD t6 = t5.relprod(Mthr, Mset); // V1cxV1xV2cxM x MxV2 = V1cxV1xV2cxV2
         t5.free();
         if (TRACE_SOLVER) out.println("Edges before exception bind: "+A.satCount(V1V2set));
@@ -1043,29 +1112,37 @@ public class PA {
     }
     
     public void bindParameters_incremental() {
+        if (TRACE_SOLVER) out.println("Binding parameters...");
+        
         BDD new_IE = IE.apply(old2_IE, BDDFactory.diff);
         BDD new_visited = visited.apply(old2_visited, BDDFactory.diff);
+        // add in any old edges targetting newly-visited methods, because the
+        // argument/retval binding doesn't occur until the method has been visited.
         new_IE.orWith(old2_IE.and(new_visited));
         old2_IE.free();
         old2_visited.free();
         new_visited.free();
         
-        BDD t1 = new_IE.relprod(actual, Iset); // IxM x IxZxV2 = ZxV2xM
-        BDD t2 = t1.relprod(formal, MZset); // ZxV2xM x ZxMxV1 = V1xV2
+        BDD t1 = new_IE.relprod(actual, Iset); // V2cxIxV1cxM x IxZxV2 = V1cxMxZxV2cxV2
+        BDD t2 = t1.relprod(formal, MZset); // V1cxMxZxV2cxV2 x MxZxV1 = V1cxV1xV2cxV2
         t1.free();
         if (TRACE_SOLVER) out.println("Edges before param bind: "+A.satCount(V1V2set));
         A.orWith(t2);
         if (TRACE_SOLVER) out.println("Edges after param bind: "+A.satCount(V1V2set));
         
-        BDD t3 = new_IE.relprod(Iret, Iset); // IxM x IxV1 = V1xM
-        BDD t4 = t3.relprod(Mret, Mset); // V1xM x MxV2 = V1xV2
+        BDD new_IEr;
+        if (CONTEXT_SENSITIVE) new_IEr = new_IE.replace(V1cV2ctoV2cV1c);
+        else new_IEr = new_IE;
+        BDD t3 = new_IEr.relprod(Iret, Iset); // V1cxIxV2cxM x IxV1 = V1cxV1xV2cxM
+        BDD t4 = t3.relprod(Mret, Mset); // V1cxV1xV2cxM x MxV2 = V1cxV1xV2cxV2
         t3.free();
         if (TRACE_SOLVER) out.println("Edges before return bind: "+A.satCount(V1V2set));
         A.orWith(t4);
         if (TRACE_SOLVER) out.println("Edges after return bind: "+A.satCount(V1V2set));
         
-        BDD t5 = new_IE.relprod(Ithr, Iset); // IxM x IxV1 = V1xM
-        BDD t6 = t5.relprod(Mthr, Mset); // V1xM x MxV2 = V1xV2
+        BDD t5 = new_IEr.relprod(Ithr, Iset); // V1cxIxV2cxM x IxV1 = V1cxV1xV2cxM
+        if (CONTEXT_SENSITIVE) new_IEr.free();
+        BDD t6 = t5.relprod(Mthr, Mset); // V1cxV1xV2cxM x MxV2 = V1cxV1xV2cxV2
         t5.free();
         if (TRACE_SOLVER) out.println("Edges before exception bind: "+A.satCount(V1V2set));
         A.orWith(t6);
@@ -1074,6 +1151,14 @@ public class PA {
         new_IE.free();
         old2_IE = IE.id();
         old2_visited = visited.id();
+    }
+    
+    public void assumeKnownCallGraph() {
+        IE = IEc;
+        handleNewTargets();
+        buildTypes();
+        bindParameters();
+        solvePointsTo();
     }
     
     public void iterate() {
@@ -1142,13 +1227,34 @@ public class PA {
         
         PA dis = new PA();
         
-        if (dis.CONTEXT_SENSITIVE) {
-            CallGraph cg = loadCallGraph(roots);
-            dis.numberPaths(cg);
+        CallGraph cg = null;
+        if (dis.CONTEXT_SENSITIVE || !dis.DISCOVER_CALL_GRAPH) {
+            cg = loadCallGraph(roots);
+            if (cg == null) {
+                if (dis.CONTEXT_SENSITIVE) {
+                    System.out.println("Turning off context sensitivity.");
+                    dis.CONTEXT_SENSITIVE = false;
+                }
+                if (!dis.DISCOVER_CALL_GRAPH) {
+                    System.out.println("Turning on call graph discovery.");
+                    dis.DISCOVER_CALL_GRAPH = true;
+                }
+            } else {
+                roots = cg.getRoots();
+                dis.numberPaths(cg);
+            }
         }
         
         dis.initialize();
         dis.roots.addAll(roots);
+        
+        if (cg != null) {
+            System.out.print("Calculating call graph relation...");
+            long time = System.currentTimeMillis();
+            dis.calculateIEc(cg);
+            time = System.currentTimeMillis() - time;
+            System.out.println("done. ("+time/1000.+" seconds)");
+        }
         
         long time = System.currentTimeMillis();
         
@@ -1170,7 +1276,11 @@ public class PA {
             dis.visitMethod(m);
         }
         
-        dis.iterate();
+        if (dis.DISCOVER_CALL_GRAPH) {
+            dis.iterate();
+        } else {
+            dis.assumeKnownCallGraph();
+        }
         
         System.out.println("Time spent solving: "+(System.currentTimeMillis()-time)/1000.);
 
@@ -1349,9 +1459,12 @@ public class PA {
         System.out.println("Vars="+vars+" Heaps="+heaps+" Classes="+classes.size()+" Fields="+fields.size()+" Paths="+paths);
         double log2 = Math.log(2);
         V_BITS = (int) (Math.log(vars+256)/log2 + 1.0);
+        I_BITS = (int) (Math.log(calls)/log2 + 1.0);
         H_BITS = (int) (Math.log(heaps+256)/log2 + 1.0);
         F_BITS = (int) (Math.log(fields.size()+64)/log2 + 2.0);
         T_BITS = (int) (Math.log(classes.size()+64)/log2 + 2.0);
+        N_BITS = I_BITS;
+        M_BITS = (int) (Math.log(methods)/log2 + 1.0);
         VC_BITS = paths.bitLength();
         VC_BITS = Math.min(60, VC_BITS);
         System.out.println("Var bits="+V_BITS+" Heap bits="+H_BITS+" Class bits="+T_BITS+" Field bits="+F_BITS);
@@ -1389,4 +1502,51 @@ public class PA {
         return pn;
     }
     
+    void calculateIEc(CallGraph cg) {
+        IEc = bdd.zero();
+        for (Iterator i = cg.getAllCallSites().iterator(); i.hasNext(); ) {
+            ProgramLocation mc = (ProgramLocation) i.next();
+            mc = mapCall(mc);
+            int I_i = Imap.get(mc);
+            for (Iterator j = cg.getTargetMethods(mc).iterator(); j.hasNext(); ) {
+                jq_Method callee = (jq_Method) j.next();
+                int M_i = Mmap.get(callee);
+                BDD context;
+                if (CONTEXT_SENSITIVE) {
+                    Pair p = new Pair(mc, callee);
+                    Range r_edge = vCnumbering.getEdge(p);
+                    Range r_caller = vCnumbering.getRange(mc.getMethod());
+                    context = buildContextMap(V2c,
+                                              PathNumbering.toBigInt(r_caller.low),
+                                              PathNumbering.toBigInt(r_caller.high),
+                                              V1c,
+                                              PathNumbering.toBigInt(r_edge.low),
+                                              PathNumbering.toBigInt(r_edge.high));
+                } else {
+                    context = bdd.one();
+                }
+                context.andWith(I.ithVar(I_i));
+                context.andWith(M.ithVar(M_i));
+                IEc.orWith(context);
+            }
+        }
+    }
+    
+    public static ProgramLocation mapCall(ProgramLocation callSite) {
+        if (callSite instanceof ProgramLocation.QuadProgramLocation) {
+            jq_Method m = (jq_Method) callSite.getMethod();
+            Map map = CodeCache.getBCMap(m);
+            Quad q = ((ProgramLocation.QuadProgramLocation) callSite).getQuad();
+            if (q == null) {
+                Assert.UNREACHABLE("Error: cannot find call site "+callSite);
+            }
+            Integer i = (Integer) map.get(q);
+            if (i == null) {
+                Assert.UNREACHABLE("Error: no mapping for quad "+q);
+            }
+            int bcIndex = i.intValue();
+            callSite = new ProgramLocation.BCProgramLocation(m, bcIndex);
+        }
+        return callSite;
+    }
 }
