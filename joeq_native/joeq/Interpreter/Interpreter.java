@@ -112,7 +112,7 @@ public abstract class Interpreter {
                         vm.monitorenter(synchobj = state.getLocal_A(0), mi);
                     } else {
                         if (mi.TRACE) mi.out.println("synchronized static method, locking class object");
-                        vm.monitorenter(synchobj = m.getDeclaringClass().getJavaLangClassObject(), mi);
+                        vm.monitorenter(synchobj = Reflection.getJDKType(m.getDeclaringClass()), mi);
                     }
                 }
                 mi.forwardTraversal();
