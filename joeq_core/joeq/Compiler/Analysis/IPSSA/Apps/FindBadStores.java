@@ -1,0 +1,159 @@
+package joeq.Compiler.Analysis.IPSSA.Apps;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Set;
+
+import joeq.Class.PrimordialClassLoader;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_Field;
+import joeq.Class.jq_InstanceField;
+import joeq.Class.jq_Method;
+import joeq.Class.jq_StaticField;
+import joeq.Class.jq_Type;
+import joeq.Compiler.Quad.CallGraph;
+import joeq.Compiler.Quad.RootedCHACallGraph;
+import joeq.Main.HostedVM;
+import joeq.Util.Collections.AppendIterator;
+
+
+public class FindBadStores {    
+    private static CallGraph _cg;
+    private Set _classes = null;
+    
+    // filter out non-local classes?
+    static final boolean FILTER_LOCAL = false;     
+    
+    public static void main(String[] args) {
+        HostedVM.initialize();
+        
+        Iterator i = null;
+        for (int x=0; x<args.length; ++x) {
+            if (args[x].equals("-file")) {
+                try {
+                    BufferedReader br = new BufferedReader(new FileReader(args[++x]));
+                    LinkedList list = new LinkedList();
+                    for (;;) {
+                        String s = br.readLine();
+                        if (s == null) break;
+                        if (s.length() == 0) continue;
+                        if (s.startsWith("%")) continue;
+                        if (s.startsWith("#")) continue;
+                        list.add(s);
+                    }
+                    i = new AppendIterator(list.iterator(), i);
+                }catch(IOException e) {
+                    e.printStackTrace();
+                    System.exit(2);
+                }
+                
+            } else
+            if (args[x].endsWith("*")) {
+                i = new AppendIterator(PrimordialClassLoader.loader.listPackage(args[x].substring(0, args[x].length()-1)), i);
+            } else 
+            if(args[x].charAt(0) == '-'){
+                System.exit(2);                    
+            }else {
+                String classname = args[x];
+                i = new AppendIterator(Collections.singleton(classname).iterator(), i);
+            }
+        }
+
+        FindBadStores finder = new FindBadStores(i);
+        finder.run(true);
+    }
+    
+    public FindBadStores(Iterator i) {
+        Collection roots = new LinkedList();
+        Collection root_classes = new LinkedList();
+        while(i.hasNext()) {
+            jq_Class c = (jq_Class) jq_Type.parseType((String)i.next());
+            c.load();
+            root_classes.add(c);
+
+            roots.addAll(Arrays.asList(c.getDeclaredStaticMethods()));
+        }
+        
+        //System.out.println("Classes: " + classes);
+        System.out.println("Roots: " + roots);
+        
+        System.out.print("Building call graph...");
+        long time = System.currentTimeMillis();
+        _cg = new RootedCHACallGraph();
+        _cg.setRoots(roots);
+        //_cg = new CachedCallGraph(_cg);
+        
+        time = System.currentTimeMillis() - time;
+        System.out.println("done. ("+(time/1000.)+" seconds)");
+        _classes = getClasses(_cg.getAllMethods());
+        //if(FILTER_LOCAL) _classes = filter(_classes, root_classes);
+        
+        if(FILTER_LOCAL){
+            System.out.println("Considering classes: " + _classes);
+        }        
+    }    
+
+    private Set getClasses(Collection collection) {
+        HashSet result = new HashSet(); 
+        for(Iterator iter = collection.iterator(); iter.hasNext(); ) {
+            jq_Method method = (jq_Method)iter.next();
+            //System.err.println("Saw " + method);
+         
+            jq_Class c = method.getDeclaringClass();
+            if(c != null) {
+                result.add(c);
+            }
+        }
+        
+        return result;
+    }    
+    
+    private void processClasses() {      
+        for(Iterator iter = _classes.iterator(); iter.hasNext(); ) {
+            jq_Class c = (jq_Class)iter.next();
+            
+            System.out.println("Looking at " + c);
+            jq_Field[] instanceFields = c.getDeclaredInstanceFields();
+            jq_Field[] staticFields = c.getStaticFields();
+            
+            processFields(c, instanceFields);
+            processFields(c, staticFields);
+        }        
+    }
+    
+    /**
+     * @param c
+     * @param instanceFields
+     */
+    private void processFields(jq_Class c, jq_Field[] fields) {
+        for(int i = 0; i < fields.length; i++){
+            jq_Field f = fields[i];
+            
+            processField(c, f);
+        }
+    }
+
+    /**
+     * @param c
+     * @param f
+     */
+    private void processField(jq_Class c, jq_Field f) {
+        // TODO: 
+        // 	1. find heap objects it can point to
+        // 	2. 
+    }
+
+    protected void run(boolean verbose){        
+        //System.out.println("Looking for subclasses of " + _collectionClass + " and " + _iteratorClass);
+        
+        // detect the interesting classes
+        processClasses();
+    }
+}
