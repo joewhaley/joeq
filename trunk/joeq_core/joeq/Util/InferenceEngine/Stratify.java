@@ -144,14 +144,16 @@ public class Stratify {
             Collection c = Arrays.asList(o.next());
             for (Iterator i = c.iterator(); i.hasNext(); ) {
                 SCComponent p = (SCComponent) i.next();
+                if (TRACE) out.println("  Successor: "+p);
+                if (TRACE) out.println("    Predecessors: "+Arrays.asList(p.prev()));
                 if (stratum.containsAll(Arrays.asList(p.prev()))) {
-                    if (TRACE) out.println("Adding "+p+" to stratum");
+                    if (TRACE) out.println("  Adding "+p+" to stratum");
                     if (stratum.add(p)) {
-                        if (TRACE) out.println("New element, adding to worklist.");
+                        if (TRACE) out.println("    New element, adding to worklist.");
                         w.add(p);
                     }
                 } else {
-                    if (TRACE) out.println("Not all predecessors of "+p+" (yet)");
+                    if (TRACE) out.println("  Not all predecessors of "+p+" (yet)");
                 }
             }
         }
