@@ -229,7 +229,7 @@ public abstract class HeapAllocator implements jq_ClassFileConstants {
      * 
      * @param o
      * @param depth
-     * @return
+     * @return  true if object refs are legal
      */
     public static boolean checkObjectReferences(Object o, int depth) {
         jq_Reference t = jq_Reference.getTypeOf(o);
@@ -259,7 +259,7 @@ public abstract class HeapAllocator implements jq_ClassFileConstants {
      * Returns true if the given address looks like it points to an object.
      * 
      * @param a
-     * @return
+     * @return  true if it looks like a valid object
      */
     public static boolean isValidObject(Address a) {
         return isValidObject(a, 0);
@@ -271,7 +271,7 @@ public abstract class HeapAllocator implements jq_ClassFileConstants {
      * 
      * @param a
      * @param depth
-     * @return
+     * @return  true if it looks like a valid object
      */
     public static boolean isValidObject(Address a, int depth) {
         if (TRACE) Debug.writeln("Checking if valid object ref: ", a);
@@ -295,10 +295,10 @@ public abstract class HeapAllocator implements jq_ClassFileConstants {
     }
     
     /**
-     * Returns true if the given address looks like it points to an object.
+     * Returns true if the given address looks like it points to an array.
      * 
      * @param a
-     * @return
+     * @return  true if it looks like a valid array
      */
     public static boolean isValidArray(Address a) {
         return isValidArray(a, 0);
@@ -310,7 +310,7 @@ public abstract class HeapAllocator implements jq_ClassFileConstants {
      * 
      * @param a
      * @param depth
-     * @return
+     * @return  true if it looks like a valid array
      */
     public static boolean isValidArray(Address a, int depth) {
         if (TRACE) Debug.writeln("Checking if valid array: ", a);
@@ -343,7 +343,7 @@ public abstract class HeapAllocator implements jq_ClassFileConstants {
      * Return true if the given address looks like it points to a vtable.
      * 
      * @param a
-     * @return
+     * @return  true if it looks like a vtable
      */
     public static boolean isValidVTable(Address a) {
         if (TRACE) Debug.writeln("Checking if vtable: ", a);
@@ -369,7 +369,7 @@ public abstract class HeapAllocator implements jq_ClassFileConstants {
      * Return true if the given address looks like it points to a vtable for an array object.
      * 
      * @param a
-     * @return
+     * @return  true if it looks like a valid array vtable
      */
     public static boolean isValidArrayVTable(Address a) {
         if (TRACE) Debug.writeln("Checking if array vtable: ", a);
@@ -397,7 +397,7 @@ public abstract class HeapAllocator implements jq_ClassFileConstants {
      * 
      * @param a
      * @param t
-     * @return
+     * @return  true if it looks like an object of the correct type
      */
     public static boolean isObjectExactType(Address a, jq_Reference t) {
         if (TRACE) {
@@ -433,7 +433,7 @@ public abstract class HeapAllocator implements jq_ClassFileConstants {
      * 
      * @param a
      * @param t
-     * @return
+     * @return  true if it is null or looks like an object of assignable type
      */
     public static boolean isObjectAssignableType(Address a, jq_Reference t) {
         if (TRACE) {
@@ -469,7 +469,7 @@ public abstract class HeapAllocator implements jq_ClassFileConstants {
      * Given an address, return true if it looks like it points to a jq_Class or jq_Array object.
      * 
      * @param typeAddress
-     * @return
+     * @return  true if it looks like a jq_Class or jq_Array object
      */
     public static boolean isValidReferenceType(Address typeAddress) {
         if (TRACE) Debug.writeln("Checking if valid type: ", typeAddress);
@@ -493,7 +493,7 @@ public abstract class HeapAllocator implements jq_ClassFileConstants {
      * Given an address, return true if it looks like it points to a jq_Array object.
      * 
      * @param typeAddress
-     * @return
+     * @return  true if it looks like a jq_Array object
      */
     public static boolean isValidArrayType(Address typeAddress) {
         if (TRACE) Debug.writeln("Checking if valid array type: ", typeAddress);

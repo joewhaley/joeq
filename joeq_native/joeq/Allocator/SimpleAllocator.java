@@ -550,7 +550,7 @@ public class SimpleAllocator extends HeapAllocator {
      * @param length
      * @param size
      * @param vtable
-     * @return
+     * @return  new array object
      * @throws OutOfMemoryError
      */
     private Object allocLargeArray(int length, int size, Object vtable) throws OutOfMemoryError {
