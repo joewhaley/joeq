@@ -1861,6 +1861,54 @@ public class MethodSummary {
                     }
                 }
             }
+            if (addedEdges != null) {
+                int s = map.size();
+                int index = map.get(this);
+                Assert._assert(s == map.size());
+                for (Iterator i = this.getEdges().iterator(); i.hasNext(); ) {
+                    Map.Entry e = (Map.Entry) i.next();
+                    jq_Field f = (jq_Field) e.getKey();
+                    Collection c;
+                    if (e.getValue() instanceof Collection)
+                        c = (Collection) e.getValue();
+                    else
+                        c = Collections.singleton(e.getValue());
+                    for (Iterator j = c.iterator(); j.hasNext(); ) {
+                        Node n = (Node) j.next();
+                        int index2 = map.get(n);
+                        Assert._assert(s == map.size());
+                        if (index2 <= index) {
+                            out.writeBytes(" succ ");
+                            writeMember(out, f);
+                            out.writeBytes(Integer.toString(index2));
+                        }
+                    }
+                }
+            }
+            if (predecessors != null) {
+                int s = map.size();
+                int index = map.get(this);
+                Assert._assert(s == map.size());
+                for (Iterator i = this.getPredecessors().iterator(); i.hasNext(); ) {
+                    Map.Entry e = (Map.Entry) i.next();
+                    jq_Field f = (jq_Field) e.getKey();
+                    Collection c;
+                    if (e.getValue() instanceof Collection)
+                        c = (Collection) e.getValue();
+                    else
+                        c = Collections.singleton(e.getValue());
+                    for (Iterator j = c.iterator(); j.hasNext(); ) {
+                        Node n = (Node) j.next();
+                        int index2 = map.get(n);
+                        Assert._assert(s == map.size());
+                        if (index2 < index) {
+                            out.writeBytes(" pred ");
+                            writeMember(out, f);
+                            out.writeBytes(Integer.toString(index2));
+                        }
+                    }
+                }
+            }
         }
         
     }
@@ -1918,6 +1966,7 @@ public class MethodSummary {
             writeType(out, (jq_Reference) type);
             out.writeByte(' ');
             writeLocation(out, q);
+            super.write(map, out);
         }
     }
     
@@ -2163,6 +2212,7 @@ public class MethodSummary {
         public void write(IndexedMap map, DataOutput out) throws IOException {
             out.writeBytes("ConcreteObject ");
             writeType(out, (jq_Reference) getDeclaredType());
+            super.write(map, out);
         }
 
     }
@@ -2261,6 +2311,7 @@ public class MethodSummary {
         public void write(IndexedMap map, DataOutput out) throws IOException {
             out.writeBytes("Unknown ");
             writeType(out, (jq_Reference) getDeclaredType());
+            super.write(map, out);
         }
     }
     
@@ -2323,6 +2374,7 @@ public class MethodSummary {
         
         public void write(IndexedMap map, DataOutput out) throws IOException {
             out.writeBytes("Global");
+            super.write(map, out);
         }
         
     }
@@ -2362,6 +2414,7 @@ public class MethodSummary {
         public void write(IndexedMap map, DataOutput out) throws IOException {
             out.writeBytes("ReturnValue ");
             writeLocation(out, m);
+            super.write(map, out);
         }
     }
     
@@ -2414,6 +2467,7 @@ public class MethodSummary {
         public void write(IndexedMap map, DataOutput out) throws IOException {
             out.writeBytes("ThrownException ");
             writeLocation(out, m);
+            super.write(map, out);
         }
     }
     
@@ -2448,6 +2502,7 @@ public class MethodSummary {
             out.writeBytes("Param ");
             writeMember(out, (jq_Method) m);
             out.writeBytes(" "+n);
+            super.write(map, out);
         }
     }
     
@@ -2711,26 +2766,27 @@ public class MethodSummary {
         /* (non-Javadoc)
          * @see Compil3r.Quad.MethodSummary.Node#print
          */
-        public void write(IndexedMap m, DataOutput out) throws IOException {
+        public void write(IndexedMap map, DataOutput out) throws IOException {
             out.writeBytes("Field ");
             writeMember(out, (jq_Field) f);
             out.writeBytes(" "+locs.size());
-            for (Iterator i=locs.iterator(); i.hasNext(); ) {
+            for (Iterator i = locs.iterator(); i.hasNext(); ) {
                 ProgramLocation pl = (ProgramLocation) i.next();
                 out.write(' ');
                 pl.write(out);
             }
-            int s = m.size();
-            int index = m.get(this);
-            Assert._assert(s == m.size());
+            int s = map.size();
+            int index = map.get(this);
+            Assert._assert(s == map.size());
             for (Iterator i = this.field_predecessors.iterator(); i.hasNext(); ) {
                 Node n = (Node) i.next();
-                int index2 = m.get(n);
-                Assert._assert(s == m.size());
+                int index2 = map.get(n);
+                Assert._assert(s == map.size());
                 if (index2 < index) {
                     out.writeBytes(" fpred "+index2);
                 }
             }
+            super.write(map, out);
         }
     }
     

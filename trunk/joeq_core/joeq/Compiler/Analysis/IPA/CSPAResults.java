@@ -1354,6 +1354,20 @@ public class CSPAResults {
                         Node n2 = (Node) m.get(num);
                         n2.addAccessPathEdge(fn.getField(), fn);
                     }
+                } else if (t.equals("succ")) {
+                    jq_Field f = (jq_Field) jq_Member.read(st);
+                    int num = Integer.parseInt(st.nextToken());
+                    if (num <= j) {
+                        Node n2 = (Node) m.get(num);
+                        n.addEdge(f, n2);
+                    }
+                } else if (t.equals("pred")) {
+                    jq_Field f = (jq_Field) jq_Member.read(st);
+                    int num = Integer.parseInt(st.nextToken());
+                    if (num <= j) {
+                        Node n2 = (Node) m.get(num);
+                        n2.addEdge(f, n);
+                    }
                 }
             }
         }
