@@ -41,4 +41,26 @@ public abstract class Atomic {
         }
     }
     
+    public static final long cas8(Object o, jq_InstanceField f, long before, long after) {
+        if (!jq.RunningNative) {
+            Field f2 = (Field)Reflection.getJDKMember(f);
+            f2.setAccessible(true);
+            Assert._assert((f2.getModifiers() & Modifier.STATIC) == 0);
+            try {
+                long v = ((Long)f2.get(o)).intValue();
+                if (v == before) {
+                    f2.set(o, new Long(after));
+                    return after;
+                } else {
+                    return v;
+                }
+            } catch (IllegalAccessException x) {
+                Assert.UNREACHABLE();
+                return 0;
+            }
+        } else {
+            HeapAddress address = (HeapAddress) HeapAddress.addressOf(o).offset(f.getOffset());
+            return address.atomicCas8(before, after);
+        }
+    }
 }
