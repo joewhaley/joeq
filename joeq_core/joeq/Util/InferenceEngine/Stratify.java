@@ -5,6 +5,7 @@ package joeq.Util.InferenceEngine;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -400,11 +401,21 @@ public class Stratify {
     static boolean DUMP_DOTGRAPH = !System.getProperty("dumprulegraph", "no").equals("no");
     
     void buildNodeToSCCMap(Map node2scc, SCComponent scc) {
-        for (Iterator i = scc.nodeSet().iterator(); i.hasNext(); ) {
-            Object o = i.next();
-            if (o instanceof SCComponent) continue;
-            Object old = node2scc.put(o, scc);
-            Assert._assert(old == null);
+        Collection c = innerSCCs.getValues(scc);
+        if (!c.isEmpty()) {
+            for (Iterator i = c.iterator(); i.hasNext(); ) {
+                SCComponent scc2 = (SCComponent) i.next();
+                while (scc2 != null) {
+                    buildNodeToSCCMap(node2scc, scc2);
+                    scc2 = scc2.nextTopSort();
+                }
+            }
+        } else {
+            for (Iterator i = scc.nodeSet().iterator(); i.hasNext(); ) {
+                Object o = i.next();
+                Object old = node2scc.put(o, scc);
+                Assert._assert(old == null);
+            }
         }
     }
     
@@ -417,18 +428,20 @@ public class Stratify {
                 scc = scc.nextTopSort();
             }
         }
-        for (Iterator i = innerSCCs.keySet().iterator(); i.hasNext(); ) {
-            SCComponent scc = (SCComponent) i.next();
-            while (scc != null) {
-                buildNodeToSCCMap(node2scc, scc);
-                scc = scc.nextTopSort();
-            }
-        }
         
         DumpDotGraph ddg = new DumpDotGraph();
         ddg.setNavigator(depNav);
         ddg.setNodeLabels(new Filter() {
             public Object map(Object o) {
+                if (o instanceof InferenceRule) {
+                    String s = o.toString();
+                    for (;;) {
+                        int i = s.indexOf("), ");
+                        if (i == -1) break;
+                        s = s.substring(0, i) + "),\\n"+ s.substring(i+2);
+                    }
+                    return s;
+                }
                 return o.toString();
             }
         });
@@ -439,11 +452,23 @@ public class Stratify {
         });
         ddg.setClusterNesting(new Navigator() {
             public Collection next(Object node) {
-                return innerSCCs.getValues(node);
+                Collection c = new LinkedList();
+                for (Iterator i = innerSCCs.getValues(node).iterator(); i.hasNext(); ) {
+                    SCComponent scc = (SCComponent) i.next();
+                    while (scc != null) {
+                        c.add(scc);
+                        scc = scc.nextTopSort();
+                    }
+                }
+                return c;
             }
             public Collection prev(Object node) {
-                Assert.UNREACHABLE();
-                return null;
+                for (Iterator i = innerSCCs.keySet().iterator(); i.hasNext(); ) {
+                    Object key = i.next();
+                    if (next(key).contains(node))
+                        return Collections.singleton(key);
+                }
+                return Collections.EMPTY_SET;
             }
         });
         
