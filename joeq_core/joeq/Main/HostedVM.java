@@ -7,6 +7,7 @@ import java.util.Iterator;
 
 import joeq.Class.PrimordialClassLoader;
 import joeq.ClassLib.ClassLibInterface;
+import joeq.Memory.Address;
 import joeq.Memory.CodeAddress;
 import joeq.Memory.HeapAddress;
 import joeq.Memory.StackAddress;
@@ -45,15 +46,15 @@ public abstract class HostedVM {
             }
 
             public HeapAddress getNull() {
-                return null;
+                return bogus_heap_address;
             }
 
             public HeapAddress addressOf(Object o) {
-                return null;
+                return bogus_heap_address;
             }
 
             public HeapAddress address32(int val) {
-                return null;
+                return bogus_heap_address;
             }
         };
         StackAddress.FACTORY = new StackAddress.StackAddressFactory() {
@@ -84,4 +85,104 @@ public abstract class HostedVM {
         Reflection.obj_trav = ClassLibInterface.DEFAULT.getObjectTraverser();
         Reflection.obj_trav.initialize();
     }
+    
+    public static final BogusHeapAddress bogus_heap_address = new BogusHeapAddress();
+    
+    public static class BogusHeapAddress extends HeapAddress {
+        
+        private BogusHeapAddress() {}
+        
+        /* (non-Javadoc)
+         * @see joeq.Memory.Address#align(int)
+         */
+        public Address align(int shift) {
+            return this;
+        }
+        /* (non-Javadoc)
+         * @see joeq.Memory.Address#difference(joeq.Memory.Address)
+         */
+        public int difference(Address v) {
+            return 0;
+        }
+        /* (non-Javadoc)
+         * @see joeq.Memory.Address#isNull()
+         */
+        public boolean isNull() {
+            return true;
+        }
+        /* (non-Javadoc)
+         * @see joeq.Memory.Address#offset(int)
+         */
+        public Address offset(int offset) {
+            return this;
+        }
+        /* (non-Javadoc)
+         * @see joeq.Memory.Address#peek()
+         */
+        public Address peek() {
+            return this;
+        }
+        /* (non-Javadoc)
+         * @see joeq.Memory.Address#peek1()
+         */
+        public byte peek1() {
+            return 0;
+        }
+        /* (non-Javadoc)
+         * @see joeq.Memory.Address#peek2()
+         */
+        public short peek2() {
+            return 0;
+        }
+        /* (non-Javadoc)
+         * @see joeq.Memory.Address#peek4()
+         */
+        public int peek4() {
+            return 0;
+        }
+        /* (non-Javadoc)
+         * @see joeq.Memory.Address#peek8()
+         */
+        public long peek8() {
+            return 0;
+        }
+        /* (non-Javadoc)
+         * @see joeq.Memory.Address#poke(joeq.Memory.Address)
+         */
+        public void poke(Address v) {
+        }
+        /* (non-Javadoc)
+         * @see joeq.Memory.Address#poke1(byte)
+         */
+        public void poke1(byte v) {
+        }
+        /* (non-Javadoc)
+         * @see joeq.Memory.Address#poke2(short)
+         */
+        public void poke2(short v) {
+        }
+        /* (non-Javadoc)
+         * @see joeq.Memory.Address#poke4(int)
+         */
+        public void poke4(int v) {
+        }
+        /* (non-Javadoc)
+         * @see joeq.Memory.Address#poke8(long)
+         */
+        public void poke8(long v) {
+        }
+        /* (non-Javadoc)
+         * @see joeq.Memory.Address#stringRep()
+         */
+        public String stringRep() {
+            return "bogus";
+        }
+        /* (non-Javadoc)
+         * @see joeq.Memory.Address#to32BitValue()
+         */
+        public int to32BitValue() {
+            return 0;
+        }
+}
+
 }

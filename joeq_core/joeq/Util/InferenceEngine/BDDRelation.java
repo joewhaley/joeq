@@ -4,6 +4,8 @@
 package joeq.Util.InferenceEngine;
 
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Collection;
@@ -14,6 +16,7 @@ import java.util.StringTokenizer;
 
 import org.sf.javabdd.BDD;
 import org.sf.javabdd.BDDDomain;
+import org.sf.javabdd.BDDFactory;
 
 /**
  * BDDRelation
@@ -108,4 +111,47 @@ public class BDDRelation extends Relation {
     public void save(String filename) throws IOException {
         solver.bdd.save(filename, relation);
     }
+    
+    public void saveTuples() throws IOException {
+        saveTuples(name+".rtuples");
+    }
+    
+    public void saveTuples(String filename) throws IOException {
+        DataOutputStream dos = new DataOutputStream(new FileOutputStream(filename));
+        BDDDomain iterDomain = (BDDDomain) domains.get(0);
+        BDD foo = quantifyOtherDomains(relation, iterDomain);
+        for (Iterator i = foo.iterator(iterDomain.set()); i.hasNext(); ) {
+            BDD q = (BDD) i.next();
+            q.andWith(relation.id());
+            while (!q.isZero()) {
+                long[] v = q.scanAllVar();
+                BDD t = solver.bdd.one();
+                for (int j = 0; j < v.length; ++j) {
+                    BDDDomain d = solver.bdd.getDomain(j);
+                    if (quantifyOtherDomains(q, d).isOne()) {
+                        dos.writeBytes("* ");
+                        t.andWith(d.domain());
+                    } else {
+                        dos.writeBytes(v[j]+" ");
+                        t.andWith(solver.bdd.getDomain(j).ithVar(v[j]));
+                    }
+                }
+                q.applyWith(t, BDDFactory.diff);
+                dos.writeBytes("\n");
+            }
+        }
+        dos.close();
+    }
+    
+    BDD quantifyOtherDomains(BDD q, BDDDomain d) {
+        BDD result = q.id();
+        for (int i = 0; i < solver.bdd.numberOfDomains(); ++i) {
+            if (i == d.getIndex()) continue;
+            BDD r2 = result.exist(solver.bdd.getDomain(i).set());
+            result.free();
+            result = r2;
+        }
+        return result;
+    }
+    
 }

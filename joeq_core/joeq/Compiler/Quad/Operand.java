@@ -96,7 +96,9 @@ public interface Operand {
         public Quad getQuad() { return instruction; }
         public Operand copy() { return new AConstOperand(value); }
         public boolean isSimilar(Operand that) { return that instanceof AConstOperand && ((AConstOperand)that).getValue() == this.getValue(); }
-        public int getBits() { return HeapAddress.addressOf(value).to32BitValue(); }
+        public int getBits() {
+            return HeapAddress.addressOf(value).to32BitValue();
+        }
     }
     
     class PConstOperand implements Const4Operand {
