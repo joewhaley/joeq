@@ -3,6 +3,8 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Quad;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,6 +20,8 @@ import Compil3r.Quad.RegisterFactory.Register;
 import Util.Assert;
 import Util.Strings;
 import Util.Collections.FilterIterator;
+import Util.Graphs.Graph;
+import Util.Graphs.Navigator;
 import Util.Templates.List;
 import Util.Templates.ListIterator;
 import Util.Templates.ListWrapper;
@@ -38,7 +42,7 @@ import Util.Templates.UnmodifiableList;
  * @version $Id$
  */
 
-public class ControlFlowGraph {
+public class ControlFlowGraph implements Graph {
 
     /* Method that this control flow graph represents. May be null for synthetic methods. */
     private final jq_Method method;
@@ -117,6 +121,9 @@ public class ControlFlowGraph {
 
     /** Returns a new id number for a quad. */
     public int getNewQuadID() { return ++quad_counter; }
+    
+    /** Returns the maximum id number for a quad. */
+    public int getMaxQuadID() { return quad_counter; }
     
     Map jsr_map;
     
@@ -428,6 +435,20 @@ public class ControlFlowGraph {
             if (bb.isEntry() || bb.isExit()) continue;
             bb.appendExceptionHandlerList(ehl);
         }
+    }
+
+    /* (non-Javadoc)
+     * @see Util.Graphs.Graph#getRoots()
+     */
+    public Collection getRoots() {
+        return Collections.singleton(start_node);
+    }
+
+    /* (non-Javadoc)
+     * @see Util.Graphs.Graph#getNavigator()
+     */
+    public Navigator getNavigator() {
+        return new ControlFlowGraphNavigator(this);
     }
 
 }
