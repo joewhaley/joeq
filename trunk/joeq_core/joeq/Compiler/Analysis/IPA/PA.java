@@ -2264,6 +2264,10 @@ public class PA {
                     int V_i = Vmap.get(node);
                     BDD V_arg = V1.ithVar(V_i);
                     
+                    if(TRACE_REFLECTION_DOMAINS) {
+                        out.println("V_arg: " + getBDDDomains(V_arg));
+                    }
+                    
                     addToVP(V_arg, h);                    
                 }
             }
