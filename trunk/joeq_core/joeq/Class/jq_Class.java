@@ -30,7 +30,6 @@ import Run_Time.SystemInterface;
 import Run_Time.Reflection;
 import UTF.UTFDataFormatError;
 import UTF.Utf8;
-import Compil3r.Reference.x86.x86ReferenceCompiler;
 import Compil3r.Analysis.Trimmer;
 import Synchronization.Atomic;
 
@@ -184,6 +183,10 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         chkState(STATE_LOADED);
         return (jq_ClassInitializer)getStaticMethod(new jq_NameAndDesc(Utf8.get("<clinit>"), Utf8.get("()V")));
     }
+    public final Object[] getCP() {
+        chkState(STATE_LOADING2);
+        return constant_pool;
+    }
     public final int getCPCount() {
         chkState(STATE_LOADING2);
         return constant_pool.length;
@@ -226,6 +229,14 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         chkState(STATE_LOADING2);
         jq.assert(constant_pool_tags[index] == CONSTANT_ResolvedClass);
         return (jq_Type)constant_pool[index];
+    }
+    public final jq_Member getCPasMember(char index) {
+        chkState(STATE_LOADING2);
+        jq.assert(constant_pool_tags[index] == CONSTANT_ResolvedSFieldRef ||
+                  constant_pool_tags[index] == CONSTANT_ResolvedIFieldRef ||
+                  constant_pool_tags[index] == CONSTANT_ResolvedSMethodRef ||
+                  constant_pool_tags[index] == CONSTANT_ResolvedIMethodRef);
+        return (jq_Member)constant_pool[index];
     }
     public jq_StaticField getOrCreateStaticField(String name, String desc) {
         return getOrCreateStaticField(new jq_NameAndDesc(Utf8.get(name), Utf8.get(desc)));
@@ -507,12 +518,14 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
     public final void setStaticData(jq_StaticField sf, int data) {
         chkState(STATE_SFINITIALIZED);
         jq.assert(sf.getDeclaringClass() == this);
+        jq.assert(sf.getType().getReferenceSize() != 8);
         int index = (sf.getAddress() - Unsafe.addressOf(static_data)) >> 2;
         static_data[index] = data;
     }
     public final void setStaticData(jq_StaticField sf, long data) {
         chkState(STATE_SFINITIALIZED);
         jq.assert(sf.getDeclaringClass() == this);
+        jq.assert(sf.getType().getReferenceSize() == 8);
         int index = (sf.getAddress() - Unsafe.addressOf(static_data)) >> 2;
         static_data[index  ] = (int)(data);
         static_data[index+1] = (int)(data >> 32);
@@ -920,18 +933,25 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                 readAttributes(in, attributes);
 
                 // if this is a class library, look for and load our mirror (implementation) class
-                String impl_desc = "LClassLib/sun13/"+getDesc().toString().substring(1);
-                Utf8 impl_utf = Utf8.get(impl_desc);
-                jq_Class mirrorclass = (jq_Class)ClassLib.sun13.java.lang.ClassLoader.getOrCreateType(class_loader, impl_utf);
-                try {
-                    mirrorclass.load();
-                } catch (NoClassDefFoundError x) {
-                    // no mirror class
-                    ClassLib.sun13.java.lang.ClassLoader.unloadType(class_loader, mirrorclass);
-                    mirrorclass = null;
+                String impl_desc = null;
+                if (getDesc().toString().startsWith("Ljava/")) {
+                    impl_desc = "LClassLib/sun13/"+getDesc().toString().substring(1);
+                //} else if (getDesc().toString().startsWith("Lorg/OpenJIT/")) {
+                //    impl_desc = "LClassLib/openJIT/"+getDesc().toString().substring(1);
                 }
-                if (mirrorclass != null) {
-                    this.merge(mirrorclass);
+                if (impl_desc != null) {
+                    Utf8 impl_utf = Utf8.get(impl_desc);
+                    jq_Class mirrorclass = (jq_Class)ClassLib.sun13.java.lang.ClassLoader.getOrCreateType(class_loader, impl_utf);
+                    try {
+                        mirrorclass.load();
+                    } catch (NoClassDefFoundError x) {
+                        // no mirror class
+                        ClassLib.sun13.java.lang.ClassLoader.unloadType(class_loader, mirrorclass);
+                        mirrorclass = null;
+                    }
+                    if (mirrorclass != null) {
+                        this.merge(mirrorclass);
+                    }
                 }
                 
                 // make sure that all member references from other classes point to actual members.
@@ -1746,4 +1766,5 @@ uphere2:
     }
     
     public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LClazz/jq_Class;");
+    //public static final jq_InstanceField _constant_pool = _class.getOrCreateInstanceField("constant_pool", "[Ljava/lang/Object;");
 }
