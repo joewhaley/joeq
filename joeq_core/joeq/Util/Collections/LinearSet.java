@@ -71,6 +71,11 @@ public class LinearSet extends AbstractSet implements Cloneable,
         this.lf = lf;
     }
 
+    LinearSet(ListFactory lf, List list) {
+        this.list = list;
+        this.lf = lf;
+    }
+    
     public Iterator iterator() {
         return list.iterator();
     }
