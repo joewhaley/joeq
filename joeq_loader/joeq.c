@@ -13,10 +13,26 @@ extern void initSemaphoreLock(void);
 extern void* joeq_code_startaddress;
 extern void* joeq_data_startaddress;
 
+extern int trace_exceptions;
+extern int trap_on_exceptions;
+
 int main(int argc, char* argv[])
 {
     // clear umask
     _umask(0);
+
+    // check for C loader flags.
+    while (argc > 1) {
+        if (!strcmp(argv[1], "--trap_on_exceptions")) {
+            trap_on_exceptions = 1;
+            trace_exceptions = 1;
+            ++argv; --argc;
+        } else if (!strcmp(argv[1], "--trace_exceptions")) {
+            trace_exceptions = 1;
+            ++argv; --argc;
+        } else
+            break;
+    }
 
     // initialize argc and argv
     joeq_argc = argc-1;
