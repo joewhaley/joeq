@@ -1273,44 +1273,6 @@ public class PAResults implements PointerAnalysisResults {
         return (TypedBDD)r.actual.and(isites).replaceWith(r.bdd.makePair(r.V2, r.V1)).and(r.vP);
     }
 
-    /** 
-     * List all callsites where the user calls a.equals(b) on things that can't be equal
-     * because the points-to set of a and b are disjoint and a doesn't implement equals().
-     */
-    public TypedBDD listAppleAndOranges(boolean trace) {
-        jq_NameAndDesc equals_nd = new jq_NameAndDesc("equals", "(Ljava/lang/Object;)Z");
-        jq_Method equals_m = PrimordialClassLoader.getJavaLangObject().getDeclaredInstanceMethod(equals_nd);
-        BDD n_bdd = r.N.ithVar(getNameIndex(equals_m)); 
-        TypedBDD esites = (TypedBDD)r.mI.restrict(n_bdd).exist(r.Mset);         // I
-        BDD haseq = typesThatOverrideEquals();          // T2
-        Iterator it = esites.iterator();
-        TypedBDD rc = (TypedBDD)r.bdd.zero();
-        BDDPairing V2toV1 = r.bdd.makePair(r.V2, r.V1);
-        while (it.hasNext()) {
-            BDD esite = (BDD)it.next();
-            BDD a = r.actual.restrict(esite).relprod(r.Z.ithVar(0), r.Zset);     // V2
-            a.replaceWith(V2toV1);
-            BDD apt = r.vP.relprod(a, r.V1set);
-            BDD aptwt = apt.and(r.hT);                  // H1xH1cxT2
-            apt.free();
-
-            aptwt.applyWith(haseq.and(r.H1set), BDDFactory.diff);
-            apt = aptwt.exist(r.T2set);
-            aptwt.free();
-
-            BDD b = r.actual.restrict(esite).relprod(r.Z.ithVar(1), r.Zset);     // V2
-            b.replaceWith(V2toV1);
-            BDD bpt = r.vP.relprod(b, r.V1set);         // H1xH1c
-
-            if (apt.and(bpt).isZero()) {
-                rc.orWith(esite);
-            }
-            apt.free();
-            bpt.free();
-        }
-        return rc;
-    }
-    
     /***** STATISTICS *****/
     
     public void printStats() throws IOException {
