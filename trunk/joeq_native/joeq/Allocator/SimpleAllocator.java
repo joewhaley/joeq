@@ -25,6 +25,10 @@ public class SimpleAllocator extends HeapAllocator {
      */
     public static final int BLOCK_SIZE = 2097152;
     
+    /** Maximum memory, in bytes, to be allocated from the OS.
+     */
+    public static final int MAX_MEMORY = 33554432;
+    
     /** Threshold for direct OS allocation.  When an array overflows the current block
      * and is larger than this size, it is allocated directly from the OS.
      */
@@ -79,10 +83,12 @@ public class SimpleAllocator extends HeapAllocator {
     public final Object allocateObject(int size, Object vtable)
     throws OutOfMemoryError {
         jq.assert(size >= OBJ_HEADER_SIZE);
+        jq.assert((size & 0x3) == 0);
         int/*HeapAddress*/ addr = heapCurrent + OBJ_HEADER_SIZE;
         heapCurrent += size;
         if (heapCurrent > heapEnd) {
             // not enough space (rare path)
+            if (totalMemory() >= MAX_MEMORY) HeapAllocator.outOfMemory();
             jq.assert(size < BLOCK_SIZE-4);
             if (0 == (heapCurrent = SystemInterface.syscalloc(BLOCK_SIZE)))
                 HeapAllocator.outOfMemory();
@@ -126,8 +132,7 @@ public class SimpleAllocator extends HeapAllocator {
     throws OutOfMemoryError, NegativeArraySizeException {
         if (length < 0) throw new NegativeArraySizeException(length+" < 0");
         jq.assert(size >= ARRAY_HEADER_SIZE);
-        int mask = size & 3;
-        if (mask != 0) size += 3-mask;
+        size = (size+3)&~3; // align size
         int/*HeapAddress*/ addr = heapCurrent + ARRAY_HEADER_SIZE;
         heapCurrent += size;
         if (heapCurrent > heapEnd) {
@@ -138,6 +143,7 @@ public class SimpleAllocator extends HeapAllocator {
                     outOfMemory();
                 addr += ARRAY_HEADER_SIZE;
             } else {
+                if (totalMemory() >= MAX_MEMORY) HeapAllocator.outOfMemory();
                 jq.assert(size < BLOCK_SIZE-4);
                 if (0 == (heapCurrent = SystemInterface.syscalloc(BLOCK_SIZE)))
                     outOfMemory();
@@ -166,8 +172,7 @@ public class SimpleAllocator extends HeapAllocator {
      */
     public final Object allocateArrayAlign8(int length, int size, Object vtable)
     throws OutOfMemoryError, NegativeArraySizeException {
-        int mask = (heapCurrent+ARRAY_HEADER_SIZE) & 7;
-        if (mask != 0) heapCurrent += 8-mask;
+        heapCurrent = ((heapCurrent+ARRAY_HEADER_SIZE+7)&~7)-ARRAY_HEADER_SIZE;
         return allocateArray(length, size, vtable);
     }
 
