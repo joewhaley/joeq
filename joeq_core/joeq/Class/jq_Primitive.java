@@ -47,6 +47,9 @@ public class jq_Primitive extends jq_Type implements jq_ClassFileConstants {
     
     public final boolean isFinal() { return true; }
     
+    public final int getDepth() { return -1; }
+    public final boolean isInstance(Object o) { return false; }
+    
     public void accept(jq_TypeVisitor tv) {
         tv.visitPrimitive(this);
         super.accept(tv);

@@ -18,6 +18,7 @@ public abstract class DebugInterface {
     }
     
     public static void die(int code) {
+        new InternalError().printStackTrace();
 	System.exit(code);
     }    
 }

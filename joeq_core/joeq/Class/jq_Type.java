@@ -53,6 +53,8 @@ public abstract class jq_Type implements AndersenType {
         return (jq_Array)PrimordialClassLoader.getOrCreateType(getClassLoader(), desc.getAsArrayDescriptor());
     }
     public boolean needsDynamicLink(jq_Method method) { return false; }
+    public abstract boolean isInstance(Object o);
+    public abstract int getDepth();
     public final Class getJavaLangClassObject() {
         if (jq.RunningNative && this.class_object == null)
             initializeClassObject();

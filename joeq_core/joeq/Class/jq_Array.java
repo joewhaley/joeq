@@ -51,7 +51,6 @@ public class jq_Array extends jq_Reference implements jq_ClassFileConstants {
     }
 
     public final Object newInstance(int length) {
-        load(); verify(); prepare(); sf_initialize(); compile(); 
 	cls_initialize();
 	return _delegate.newInstance(this, length, vtable);
     }
@@ -169,6 +168,43 @@ public class jq_Array extends jq_Reference implements jq_ClassFileConstants {
             return element_type;
     }
     
+    public final int getDepth() {
+        return 1+element_type.getDepth();
+    }
+    
+    public final jq_Reference getDirectPrimarySupertype() {
+        jq_Type innermost = getInnermostElementType();
+        if (innermost == PrimordialClassLoader.getJavaLangObject()) {
+            return (jq_Reference) element_type;
+        }
+        int dim = getDimensionality();
+        jq_Reference type;
+        if (innermost.isPrimitiveType()) {
+            type = PrimordialClassLoader.getJavaLangObject();
+            --dim;
+        } else {
+            innermost.load();
+            type = ((jq_Class) innermost).getDirectPrimarySupertype();
+        }
+        while (--dim >= 0) {
+            type = type.getArrayTypeForElementType();
+        }
+        return type;
+    }
+    
+    public static jq_Reference[] s_s_array_cache = array_interfaces;
+    
+    private static int getCacheIndexForDim(int dim) {
+        if (dim * 2 > s_s_array_cache.length) {
+            jq_Reference[] t = new jq_Reference[dim*2];
+            System.arraycopy(s_s_array_cache, 0, t, 0, s_s_array_cache.length);
+            t[dim*2-2] = t[dim*2-4].getArrayTypeForElementType();
+            t[dim*2-1] = t[dim*2-3].getArrayTypeForElementType();
+            s_s_array_cache = t;
+        }
+        return dim*2;
+    }
+    
     public final void load() {
         if (isLoaded()) return;
         synchronized (this) {
@@ -190,6 +226,58 @@ public class jq_Array extends jq_Reference implements jq_ClassFileConstants {
         synchronized (this) {
             if (TRACE) System.out.println("Preparing "+this+"...");
             state = STATE_PREPARING;
+            
+            jq_Type innermost = this.getInnermostElementType();
+            innermost.load();
+            this.display = new jq_Reference[DISPLAY_SIZE+2];
+            if (!(innermost instanceof jq_Class) ||
+                !((jq_Class) innermost).isInterface()) {
+                jq_Reference dps = this.getDirectPrimarySupertype();
+                dps.prepare();
+                System.arraycopy(dps.display, 2, this.display, 2, dps.offset-1);
+                this.offset = dps.offset + 1;
+                if (this.offset >= DISPLAY_SIZE+2)
+                    this.offset = 0;
+                this.display[this.offset] = this;
+                // todo: if innermost element type implements some interfaces,
+                // we need to add some more to s_s_array.
+            } else {
+                this.display[2] = PrimordialClassLoader.getJavaLangObject();
+            }
+            this.s_s_array_length = getCacheIndexForDim(this.getDimensionality());
+            // todo: when s_s_array_cache changes, previously prepared types still
+            // refer to the old copy.  this is a waste of memory.
+            this.s_s_array = s_s_array_cache;
+            if (innermost instanceof jq_Class) {
+                jq_Class c = (jq_Class) innermost;
+                c.prepare();
+                jq_Class[] interfaces = c.getInterfaces();
+                if (interfaces.length > 0) {
+                    jq_Reference[] a = new jq_Reference[this.s_s_array_length + interfaces.length];
+                    System.arraycopy(this.s_s_array, 0, a, 0, this.s_s_array_length);
+                    for (int i=0; i<interfaces.length; ++i) {
+                        jq_Reference c2 = interfaces[i];
+                        for (int j=0, n=this.getDimensionality(); j<n; ++j)
+                            c2 = c2.getArrayTypeForElementType();
+                        a[i+this.s_s_array_length] = c2;
+                    }
+                    this.s_s_array_length = a.length;
+                    this.s_s_array = a;
+                }
+            }
+            
+            if (TRACE) {
+                System.out.println(this+" offset="+this.offset);
+                if (this.offset != 0) {
+                    for (int i=0; i<this.display.length; ++i) {
+                        System.out.println(this+" display["+i+"] = "+this.display[i]);
+                    }
+                }
+                for (int i=0; i<this.s_s_array_length; ++i) {
+                    System.out.println(this+" s_s_array["+i+"] = "+this.s_s_array[i]);
+                }
+            }
+            
             // vtable is a copy of Ljava/lang/Object;
             jq_Class jlo = PrimordialClassLoader.getJavaLangObject();
             jlo.prepare();

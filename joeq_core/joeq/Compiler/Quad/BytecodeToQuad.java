@@ -2530,6 +2530,8 @@ public class BytecodeToQuad extends BytecodeVisitor {
         public boolean isClassType() { jq.UNREACHABLE(); return false; }
         public boolean isArrayType() { jq.UNREACHABLE(); return false; }
         public boolean isFinal() { jq.UNREACHABLE(); return false; }
+        public jq_Reference getDirectPrimarySupertype() { jq.UNREACHABLE(); return null; }
+        public int getDepth() { jq.UNREACHABLE(); return 0; }
         public void load() { jq.UNREACHABLE(); }
         public void verify() { jq.UNREACHABLE(); }
         public void prepare() { jq.UNREACHABLE(); }

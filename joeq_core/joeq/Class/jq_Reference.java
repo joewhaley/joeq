@@ -49,6 +49,83 @@ public abstract class jq_Reference extends jq_Type implements jq_ClassFileConsta
 
     public abstract jq_InstanceMethod getVirtualMethod(jq_NameAndDesc nd);
     
+    public static final int DISPLAY_SIZE = 8;
+    
+    /** 
+     * The first two elements are the positive and negative cache,
+     * respectively.  The remainder are the primary supertypes of this type
+     * ordered by the tree relation.  This array should be inlined into the
+     * jq_Reference object, hopefully.
+     * 
+     * See paper "Fast subtype checking in the HotSpot JVM".
+     */
+    protected jq_Reference[] display;
+    
+    /** 
+     * The offset of our type in the display array if this is a primary type, or
+     * 0 or 1 if this is a secondary type.
+     * 
+     * See paper "Fast subtype checking in the HotSpot JVM".
+     */
+    protected int offset;
+    
+    /**
+     * A reference to the secondary subtype array for this type.
+     * 
+     * See paper "Fast subtype checking in the HotSpot JVM".
+     */
+    protected jq_Reference[] s_s_array;
+    
+    /**
+     * The maximum index used in the secondary subtype array.
+     * 
+     * See paper "Fast subtype checking in the HotSpot JVM".
+     */
+    protected int s_s_array_length;
+    
+    public boolean isInstance(Object o) {
+        if (o == null) return false;
+        jq_Reference that = jq_Reference.getTypeOf(o);
+        return that.isSubtypeOf(this);
+    }
+    
+    public static final boolean TRACE = false;
+    
+    public final boolean isSubtypeOf(jq_Reference that) {
+        this.chkState(STATE_PREPARED); that.chkState(STATE_PREPARED);
+        
+        int off = that.offset;
+        if (that == this.display[off]) {
+            // matches cache or depth
+            if (TRACE) System.out.println(this+" matches "+that+" offset="+off);
+            return off != 1;
+        }
+        if (off > 1) {
+            // other class is a primary type that isn't a superclass.
+            if (TRACE) System.out.println(this+" doesn't match "+that+", offset "+off+" is "+this.display[off]);
+            return false;
+        }
+        if (this == that) {
+            // classes are exactly the same.
+            return true;
+        }
+        int n = this.s_s_array_length;
+        for (int i=0; i<n; ++i) {
+            if (this.s_s_array[i] == that) {
+                this.display[0] = that;
+                that.offset = 0;
+                if (TRACE) System.out.println(this+" matches "+that+" in s_s_array");
+                return true;
+            }
+        }
+        this.display[1] = that;
+        that.offset = 1;
+        if (TRACE) System.out.println(this+" doesn't match "+that+" in s_s_array");
+        return false;
+    }
+    
+    public abstract jq_Reference getDirectPrimarySupertype();
+    
     public final void chkState(byte s) {
         if (state >= s) return;
         jq.UNREACHABLE(this+" actual state: "+state+" expected state: "+s);
@@ -77,6 +154,9 @@ public abstract class jq_Reference extends jq_Type implements jq_ClassFileConsta
         public boolean isClassType() { jq.UNREACHABLE(); return false; }
         public boolean isArrayType() { jq.UNREACHABLE(); return false; }
         public boolean isFinal() { jq.UNREACHABLE(); return false; }
+        public boolean isInstance(Object o) { return o == null; }
+        public int getDepth() { jq.UNREACHABLE(); return 0; }
+        public jq_Reference getDirectPrimarySupertype() { jq.UNREACHABLE(); return null; }
         public void load() { jq.UNREACHABLE(); }
         public void verify() { jq.UNREACHABLE(); }
         public void prepare() { jq.UNREACHABLE(); }

@@ -148,6 +148,18 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         chkState(STATE_LOADING3);
         return super_class;
     }
+    public final int getDepth() {
+        chkState(STATE_LOADED);
+        if (super_class == null) return 0;
+        jq_Reference t = getDirectPrimarySupertype();
+        t.load();
+        return 1+getDirectPrimarySupertype().getDepth();
+    }
+    public final jq_Reference getDirectPrimarySupertype() {
+        chkState(STATE_LOADING3);
+        if (this.isInterface()) return PrimordialClassLoader.getJavaLangObject();
+        return super_class;
+    }
     public final jq_Class[] getDeclaredInterfaces() {
         chkState(STATE_LOADING3);
         return declared_interfaces;
@@ -558,11 +570,13 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
             if (interfaces[i] == k)
                 return true;
         }
-        for (int i=0; i<interfaces.length; ++i) {
-            jq_Class k2 = interfaces[i];
-            k2.prepare();
-            if (k2.implementsInterface(k))
-                return true;
+        if (false) {
+            for (int i=0; i<interfaces.length; ++i) {
+                jq_Class k2 = interfaces[i];
+                k2.prepare();
+                if (k2.implementsInterface(k))
+                    return true;
+            }
         }
         return false;
     }
@@ -1944,14 +1958,7 @@ uphere2:
 
     public void verify() {
         if (isVerified()) return; // quick test.
-        /*
-        if (!Atomic.cas4(this, jq_Reference._state, STATE_LOADED, STATE_VERIFYING)) {
-            // contention!  wait until verification completes.
-            while (!isVerified()) Thread.yield();
-            return;
-        }
-        */
-        synchronized(this) {
+        synchronized (this) {
             if (isVerified()) return; // other thread already loaded this type.
             if (!isLoaded()) load();
             if (state == STATE_VERIFYING)
@@ -1969,22 +1976,13 @@ uphere2:
     
     public void prepare() {
         if (isPrepared()) return; // quick test.
-        /*
-        if (!Atomic.cas4(this, jq_Reference._state, STATE_VERIFIED, STATE_PREPARING)) {
-            // contention!  wait until verification completes.
-            while (!isPrepared()) Thread.yield();
-            return;
-        }
-         */
-        synchronized(this) {
+        synchronized (this) {
             if (isPrepared()) return; // other thread already loaded this type.
             if (!isVerified()) verify();
             if (state == STATE_PREPARING)
                 throw new ClassCircularityError(this.toString()); // recursively called prepare (?)
             state = STATE_PREPARING;
             if (TRACE) DebugInterface.debugwriteln("Beginning preparing "+this+"...");
-
-            // TODO: check for inheritance cycles in interfaces
 
             // note: this method is a good candidate for specialization on super_class != null.
             if (super_class != null) {
@@ -2121,6 +2119,11 @@ uphere2:
             // allocate space for vtable
             vtable = new Address[num_virtual_methods+1];
 
+            // prepare declared superinterfaces
+            for (int i=0; i<declared_interfaces.length; ++i) {
+                declared_interfaces[i].prepare();
+            }
+
             // calculate interfaces
             int n_super_interfaces;
             if (super_class != null) {
@@ -2129,15 +2132,57 @@ uphere2:
                     ++n_super_interfaces; // add super_class to the list, too.
             } else
                 n_super_interfaces = 0;
+            for (int i=0; i<declared_interfaces.length; ++i) {
+                n_super_interfaces += declared_interfaces[i].interfaces.length;
+            }
 
             interfaces = new jq_Class[n_super_interfaces + declared_interfaces.length];
+            int n = 0;
             if (n_super_interfaces > 0) {
                 System.arraycopy(super_class.interfaces, 0, this.interfaces, 0, super_class.interfaces.length);
+                n += super_class.interfaces.length;
                 if (super_class.isInterface())
-                    this.interfaces[n_super_interfaces-1] = super_class;
+                    this.interfaces[n++] = super_class;
+                for (int i=0; i<declared_interfaces.length; ++i) {
+                    System.arraycopy(declared_interfaces[i].interfaces, 0, this.interfaces, n, declared_interfaces[i].interfaces.length);
+                    n += declared_interfaces[i].interfaces.length;
+                }
             }
+            jq.Assert (n == n_super_interfaces);
             System.arraycopy(declared_interfaces, 0, this.interfaces, n_super_interfaces, declared_interfaces.length);
 
+            // set up tables for fast type checking.
+            this.display = new jq_Reference[DISPLAY_SIZE+2];
+            if (!this.isInterface()) {
+                jq_Reference dps = this.getDirectPrimarySupertype();
+                if (dps != null) {
+                    jq.Assert(dps.isPrepared());
+                    System.arraycopy(dps.display, 2, this.display, 2, dps.offset-1);
+                    this.offset = dps.offset + 1;
+                    if (this.offset >= DISPLAY_SIZE+2)
+                        this.offset = 0;
+                } else {
+                    this.offset = 2;
+                }
+                this.display[this.offset] = this;
+            } else {
+                this.display[2] = PrimordialClassLoader.getJavaLangObject();
+            }
+            this.s_s_array = interfaces;
+            this.s_s_array_length = interfaces.length;
+
+            if (TRACE) {
+                System.out.println(this+" offset="+this.offset);
+                if (this.offset != 0) {
+                    for (int i=0; i<this.display.length; ++i) {
+                        System.out.println(this+" display["+i+"] = "+this.display[i]);
+                    }
+                }
+                for (int i=0; i<this.s_s_array_length; ++i) {
+                    System.out.println(this+" s_s_array["+i+"] = "+this.s_s_array[i]);
+                }
+            }
+            
             // set prepared flags for static methods
             for (int i=0; i<static_methods.length; ++i) {
                 jq_StaticMethod m = static_methods[i];
@@ -2156,13 +2201,6 @@ uphere2:
     
     public void sf_initialize() {
         if (isSFInitialized()) return; // quick test.
-        /*
-        if (!Atomic.cas4(this, jq_Reference._state, STATE_PREPARED, STATE_SFINITIALIZING)) {
-            // contention!  wait until verification completes.
-            while (!isSFInitialized()) Thread.yield();
-            return;
-        }
-         */
         synchronized (this) {
             if (isSFInitialized()) return;
             if (!isPrepared()) prepare();
