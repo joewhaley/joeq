@@ -8,7 +8,11 @@
       <item name="Author's Homepage" 
             href="http://www.stanford.edu/~jwhaley/" />
     </links>
-    <item name="Acknowledgements"
-          href="ack.html"/>
+    <menu name="Overview">
+      <item name="What is it?"
+            href="index.html"/>
+      <item name="Acknowledgements"
+            href="ack.html"/>
+    </menu>
   </body>
 </project>
