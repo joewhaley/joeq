@@ -694,7 +694,7 @@ public abstract class Solver {
     void saveResults() throws IOException {
         for (Iterator i = relationsToPrintSize.iterator(); i.hasNext(); ) {
             Relation r = (Relation) i.next();
-            double size = r.size();
+            double size = r.dsize();
             DecimalFormat myFormatter = new DecimalFormat("0.");
             String output = myFormatter.format(size); 
             out.println("SIZE OF "+r+": "+output);

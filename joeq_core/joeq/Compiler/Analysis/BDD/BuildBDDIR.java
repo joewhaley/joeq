@@ -466,17 +466,21 @@ public class BuildBDDIR implements ControlFlowGraphVisitor {
         }
     }
     
-    void dumpFieldDomains(String fileName) throws IOException {
+    public void dumpFieldDomains(DataOutputStream dos) throws IOException {
+        dos.writeBytes("method "+(1L<<methodBits)+"\n");
+        dos.writeBytes("quad "+(1L<<quadBits)+"\n");
+        dos.writeBytes("op "+(1L<<opBits)+" op.map\n");
+        dos.writeBytes("reg "+(1L<<regBits)+"\n");
+        dos.writeBytes("constant "+(1L<<constantBits)+" constant.map\n");
+        dos.writeBytes("member "+(1L<<memberBits)+"\n");
+        dos.writeBytes("varargs "+(1L<<varargsBits)+"\n");
+    }
+    
+    public void dumpFieldDomains(String fileName) throws IOException {
         DataOutputStream dos = null;
         try {
             dos = new DataOutputStream(new FileOutputStream(fileName));
-            dos.writeBytes("method "+(1L<<methodBits)+"\n");
-            dos.writeBytes("quad "+(1L<<quadBits)+"\n");
-            dos.writeBytes("op "+(1L<<opBits)+" op.map\n");
-            dos.writeBytes("reg "+(1L<<regBits)+"\n");
-            dos.writeBytes("constant "+(1L<<constantBits)+" constant.map\n");
-            dos.writeBytes("member "+(1L<<memberBits)+"\n");
-            dos.writeBytes("varargs "+(1L<<varargsBits)+"\n");
+            dumpFieldDomains(dos);
         } finally {
             if (dos != null) dos.close();
         }

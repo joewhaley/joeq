@@ -3686,6 +3686,7 @@ public class PA {
             dos.writeBytes("M "+(1L<<M_BITS)+" method.map\n");
             dos.writeBytes("VC "+(1L<<VC_BITS)+"\n");
             dos.writeBytes("HC "+(1L<<HC_BITS)+"\n");
+            bddIRBuilder.dumpFieldDomains(dos);
         } finally {
             if (dos != null) dos.close();
         }

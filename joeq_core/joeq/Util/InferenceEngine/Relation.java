@@ -3,14 +3,9 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Util.InferenceEngine;
 
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import java.io.IOException;
-
-import joeq.Util.Collections.MultiMap;
 
 /**
  * Relation
@@ -79,10 +74,21 @@ public abstract class Relation {
      */
     public abstract TupleIterator iterator(int k, long j);
     
+    /**
+     * Get the negated form of this relation, or null if it does not exist.
+     * 
+     * @return  negated version of this relation, or null
+     */
     public Relation getNegated() {
         return negated;
     }
     
+    /**
+     * Get or create the negated form of this relation.
+     * 
+     * @param solver  solver
+     * @return  negated version of this relation
+     */
     public Relation makeNegated(Solver solver) {
         if (negated != null) return negated;
         negated = solver.createRelation("!"+name, fieldNames, fieldDomains, fieldOptions);
