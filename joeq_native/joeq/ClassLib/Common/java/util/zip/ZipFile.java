@@ -169,6 +169,14 @@ public abstract class ZipFile implements ZipConstants {
             return (int)Math.min(count, Integer.MAX_VALUE);
         }
 
+        private void cleanup() {
+            // nothing to do.
+        }
+
+        public void close() {
+            cleanup();
+        }
+        
         private void readLOC() throws java.io.IOException {
             // Read LOC header and check signature
             byte locbuf[] = new byte[LOCHDR];
