@@ -71,7 +71,10 @@ public abstract class CallTargets extends AbstractSet {
                             target = (jq_InstanceMethod)rclass.getDeclaredMember(imethod.getNameAndDesc());
                             if (target != null) break;
                             rclass = rclass.getSuperclass();
-                            jq.assert(rclass != null);
+                            if (rclass == null) {
+                                // method doesn't exist in this class or any of its superclasses.
+                                return NoCallTarget.INSTANCE;
+                            }
                         }
                         jq.assert(imethod.getNameAndDesc().equals(target.getNameAndDesc()));
                         jq.assert(!target.isAbstract());
@@ -108,7 +111,10 @@ public abstract class CallTargets extends AbstractSet {
                         target = (jq_InstanceMethod)rclass.getDeclaredMember(imethod.getNameAndDesc());
                         if (target != null) break;
                         rclass = rclass.getSuperclass();
-                        jq.assert(rclass != null);
+                        if (rclass == null) {
+                            // method doesn't exist in this class or any of its superclasses.
+                            return NoCallTarget.INSTANCE;
+                        }
                     }
                     jq.assert(imethod.getNameAndDesc().equals(target.getNameAndDesc()));
                     jq.assert(!target.isAbstract());
@@ -167,7 +173,10 @@ public abstract class CallTargets extends AbstractSet {
                     rclass.load();
                 }
                 rclass = rclass.getSuperclass();
-                jq.assert(rclass != null, imethod+" not found in "+receiverType);
+                if (rclass == null) {
+                    // method doesn't exist in this class or any of its superclasses.
+                    return NoCallTarget.INSTANCE;
+                }
             }
         }
 
@@ -204,7 +213,10 @@ public abstract class CallTargets extends AbstractSet {
                         }
                         jq.assert(rclass != imethod.getDeclaringClass());
                         rclass = rclass.getSuperclass();
-                        jq.assert(rclass != null, "method "+imethod.toString()+" receiver type "+receiverType);
+                        if (rclass == null) {
+                            // method doesn't exist in this class or any of its superclasses.
+                            return NoCallTarget.INSTANCE;
+                        }
                     }
                 }
                 jq_InstanceMethod target;
@@ -274,7 +286,10 @@ public abstract class CallTargets extends AbstractSet {
             }
             jq.assert(rclass != imethod.getDeclaringClass());
             rclass = rclass.getSuperclass();
-            jq.assert(rclass != null);
+            if (rclass == null) {
+                // method doesn't exist in this class or any of its superclasses.
+                return NoCallTarget.INSTANCE;
+            }
         }
         Stack subclass = new Stack();
         subclass.push(receiverType);
