@@ -527,7 +527,7 @@ public class BDDPointerAnalysis {
         System.out.print(names[i]+": ");
         int k=0;
         for (;;++k) {
-            int p = b.scanVar(d[i].getIndex());
+            int p = b.scanVar(d[i]);
             if (p < 0) break;
             if (k != 0) System.out.print("/");
             System.out.print(m[i].get(p));
@@ -771,7 +771,7 @@ public class BDDPointerAnalysis {
             }
             Set definite_targets = (Set) callSiteToTargets.get(mc);
             for (;;) {
-                int p = targets.scanVar(T4.getIndex());
+                int p = targets.scanVar(T4);
                 if (p < 0) break;
                 jq_InstanceMethod target = getTarget(p);
                 if (TRACE_VIRTUAL) {
