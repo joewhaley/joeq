@@ -11,7 +11,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import Allocator.HeapAllocator;
 import Allocator.ObjectLayout;
 import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Array;
@@ -66,7 +65,7 @@ public class DirectInterpreter extends BytecodeInterpreter {
         k2 = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/OutputStreamWriter;");
         m2 = k2.getOrCreateInstanceMethod("write", "([CII)V");
         //bad_methods.add(m2);
-        bad_methods.add(Allocator.HeapAllocator._multinewarray);
+        bad_methods.add(Run_Time.Arrays._multinewarray);
         interpret_filter = new FilterIterator.Filter() {
             public boolean isElement(Object o) {
                 jq_Method m = (jq_Method)o;
@@ -369,7 +368,7 @@ public class DirectInterpreter extends BytecodeInterpreter {
         public int arraylength(Object o) { return HeapAddress.addressOf(o).offset(ObjectLayout.ARRAY_LENGTH_OFFSET).peek4(); }
         public void monitorenter(Object o, MethodInterpreter v) { Monitor.monitorenter(o); }
         public void monitorexit(Object o) { Monitor.monitorexit(o); }
-        public Object multinewarray(int[] dims, jq_Type t) { return HeapAllocator.multinewarray_helper(dims, 0, (jq_Array)t); }
+        public Object multinewarray(int[] dims, jq_Type t) { return Run_Time.Arrays.multinewarray_helper(dims, 0, (jq_Array)t); }
         public jq_Reference getJQTypeOf(Object o) { return jq_Reference.getTypeOf(o); }
     }
 

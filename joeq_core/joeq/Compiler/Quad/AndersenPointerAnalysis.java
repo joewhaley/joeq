@@ -969,7 +969,7 @@ public class AndersenPointerAnalysis {
             for (Iterator j=definite_targets.iterator(); j.hasNext(); ) {
                 AndersenMethod callee = (AndersenMethod)j.next();
                 // temporary: skip multinewarray.
-                if (callee == Allocator.HeapAllocator._multinewarray) continue;
+                if (callee == Run_Time.Arrays._multinewarray) continue;
                 callee.and_getDeclaringClass().load();
                 if (!callee.isBodyLoaded()) {
                     CallSite cs2 = new CallSite(null, mc);

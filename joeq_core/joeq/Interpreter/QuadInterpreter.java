@@ -150,7 +150,7 @@ public class QuadInterpreter extends Compil3r.Quad.QuadVisitor.EmptyVisitor {
     }
     public QuadInterpreter invokeStaticReflective(jq_StaticMethod f, ParamListOperand plo) {
         QuadInterpreter s = new QuadInterpreter(f);
-        if (f == Allocator.HeapAllocator._multinewarray) {
+        if (f == Run_Time.Arrays._multinewarray) {
             // special case
             int dim = getReg_I(plo.get(0).getRegister());
             jq_Type t = (jq_Type)getReg_A(plo.get(1).getRegister());
@@ -197,7 +197,7 @@ public class QuadInterpreter extends Compil3r.Quad.QuadVisitor.EmptyVisitor {
         k2 = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/OutputStreamWriter;");
         m2 = k2.getOrCreateInstanceMethod("write", "([CII)V");
         bad_methods.add(m2);
-        bad_methods.add(Allocator.HeapAllocator._multinewarray);
+        bad_methods.add(Run_Time.Arrays._multinewarray);
         interpret_filter = new Filter() {
             public boolean isElement(Object o) {
                 jq_Method m = (jq_Method)o;

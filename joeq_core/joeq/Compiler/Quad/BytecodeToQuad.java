@@ -73,8 +73,6 @@ import Memory.HeapAddress;
 import Memory.StackAddress;
 import Run_Time.Reflection;
 import Run_Time.TypeCheck;
-import Run_Time.Unsafe;
-import Scheduler.jq_Thread;
 import UTF.Utf8;
 import Util.Strings;
 
@@ -1410,47 +1408,15 @@ public class BytecodeToQuad extends BytecodeVisitor {
         appendQuad(q);
     }
     private void UNSAFEhelper(jq_Method m, Invoke oper) {
-        Quad q;
-        if (m == Unsafe._floatToIntBits) {
-            Operand op = current_state.pop_F();
-            RegisterOperand res = getStackRegister(jq_Primitive.INT);
-            q = Unary.create(quad_cfg.getNewQuadID(), Unary.FLOAT_2INTBITS.INSTANCE, res, op);
-            current_state.push_I(res);
-        } else if (m == Unsafe._intBitsToFloat) {
-            Operand op = current_state.pop_I();
-            RegisterOperand res = getStackRegister(jq_Primitive.FLOAT);
-            q = Unary.create(quad_cfg.getNewQuadID(), Unary.INTBITS_2FLOAT.INSTANCE, res, op);
-            current_state.push_F(res);
-        } else if (m == Unsafe._doubleToLongBits) {
-            Operand op = current_state.pop_D();
-            RegisterOperand res = getStackRegister(jq_Primitive.LONG);
-            q = Unary.create(quad_cfg.getNewQuadID(), Unary.DOUBLE_2LONGBITS.INSTANCE, res, op);
-            current_state.push_L(res);
-        } else if (m == Unsafe._longBitsToDouble) {
-            Operand op = current_state.pop_L();
-            RegisterOperand res = getStackRegister(jq_Primitive.DOUBLE);
-            q = Unary.create(quad_cfg.getNewQuadID(), Unary.LONGBITS_2DOUBLE.INSTANCE, res, op);
-            current_state.push_D(res);
-        } else if (m == Unsafe._getThreadBlock) {
-            RegisterOperand res = getStackRegister(jq_Thread._class);
-            q = Special.create(quad_cfg.getNewQuadID(), Special.GET_THREAD_BLOCK.INSTANCE, res);
-            current_state.push_A(res);
-        } else if (m == Unsafe._setThreadBlock) {
-            Operand loc = current_state.pop_A();
-            q = Special.create(quad_cfg.getNewQuadID(), Special.SET_THREAD_BLOCK.INSTANCE, loc);
-        } else if (m == Unsafe._longJump) {
-            Operand eax = current_state.pop_I();
-            Operand sp = current_state.pop(StackAddress._class);
-            Operand fp = current_state.pop(StackAddress._class);
-            Operand ip = current_state.pop(CodeAddress._class);
-            q = Special.create(quad_cfg.getNewQuadID(), Special.LONG_JUMP.INSTANCE, ip, fp, sp, eax);
-            endBasicBlock = true;
-        } else {
+	if (_unsafe.handleMethod(this, quad_cfg, current_state, m, oper)) {
+	    if (_unsafe.endsBB(m)) {
+		endBasicBlock = true;
+	    }
+	} else {
             // TODO
             INVOKEhelper(oper, m, m.getReturnType(), false);
             return;
         }
-        appendQuad(q);
     }
     private void INVOKEhelper(Invoke oper, jq_Method f, jq_Type returnType, boolean instance_call) {
         jq_Type[] paramTypes = f.getParamTypes();
@@ -1482,7 +1448,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
     }
     public void visitIINVOKE(byte op, jq_Method f) {
         super.visitIINVOKE(op, f);
-        if (f.getDeclaringClass() == Unsafe._class) {
+        if (_unsafe.isUnsafe(f)) {
             UNSAFEhelper(f, Invoke.INVOKESTATIC_I.INSTANCE);
             return;
         }
@@ -1534,7 +1500,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
     }
     public void visitLINVOKE(byte op, jq_Method f) {
         super.visitLINVOKE(op, f);
-        if (f.getDeclaringClass() == Unsafe._class) {
+        if (_unsafe.isUnsafe(f)) {
             UNSAFEhelper(f, Invoke.INVOKESTATIC_L.INSTANCE);
             return;
         }
@@ -1584,7 +1550,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
     }
     public void visitFINVOKE(byte op, jq_Method f) {
         super.visitFINVOKE(op, f);
-        if (f.getDeclaringClass() == Unsafe._class) {
+        if (_unsafe.isUnsafe(f)) {
             UNSAFEhelper(f, Invoke.INVOKESTATIC_F.INSTANCE);
             return;
         }
@@ -1634,7 +1600,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
     }
     public void visitDINVOKE(byte op, jq_Method f) {
         super.visitDINVOKE(op, f);
-        if (f.getDeclaringClass() == Unsafe._class) {
+        if (_unsafe.isUnsafe(f)) {
             UNSAFEhelper(f, Invoke.INVOKESTATIC_D.INSTANCE);
             return;
         }
@@ -1684,7 +1650,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
     }
     public void visitAINVOKE(byte op, jq_Method f) {
         super.visitAINVOKE(op, f);
-        if (f.getDeclaringClass() == Unsafe._class) {
+        if (_unsafe.isUnsafe(f)) {
             UNSAFEhelper(f, f.getReturnType().isAddressType()?(Invoke)Invoke.INVOKESTATIC_P.INSTANCE:Invoke.INVOKESTATIC_A.INSTANCE);
             return;
         }
@@ -1740,7 +1706,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
     }
     public void visitVINVOKE(byte op, jq_Method f) {
         super.visitVINVOKE(op, f);
-        if (f.getDeclaringClass() == Unsafe._class) {
+        if (_unsafe.isUnsafe(f)) {
             UNSAFEhelper(f, Invoke.INVOKESTATIC_V.INSTANCE);
             return;
         }
@@ -1858,7 +1824,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
     public void visitMULTINEWARRAY(jq_Type f, char dim) {
         super.visitMULTINEWARRAY(f, dim);
         RegisterOperand result = getStackRegister(f, dim-1);
-        Quad q = Invoke.create(quad_cfg.getNewQuadID(), Invoke.INVOKESTATIC_A.INSTANCE, result, new MethodOperand(Allocator.HeapAllocator._multinewarray), dim+2);
+        Quad q = Invoke.create(quad_cfg.getNewQuadID(), Invoke.INVOKESTATIC_A.INSTANCE, result, new MethodOperand(Run_Time.Arrays._multinewarray), dim+2);
         RegisterOperand rop = new RegisterOperand(rf.getNewStack(current_state.getStackSize(), jq_Primitive.INT), jq_Primitive.INT);
         Quad q2 = Move.create(quad_cfg.getNewQuadID(), Move.MOVE_I.INSTANCE, rop, new IConstOperand(dim));
         appendQuad(q2);
@@ -2580,5 +2546,42 @@ public class BytecodeToQuad extends BytecodeVisitor {
         public int hashCode() {
             return returnTarget.hashCode();
         }
+    }
+    static interface UnsafeHelper {
+	public boolean isUnsafe(jq_Method m);
+	public boolean endsBB(jq_Method m);
+	public boolean handleMethod(BytecodeToQuad b2q, ControlFlowGraph quad_cfg, BytecodeToQuad.AbstractState current_state, jq_Method m, Operator.Invoke oper);
+    }
+
+    private static UnsafeHelper _unsafe;
+    static {
+	/* Set up delegates. */
+	_unsafe = null;
+	boolean nullVM = System.getProperty("joeq.nullvm") != null;
+	if (!nullVM) {
+	    _unsafe = attemptDelegate("Compil3r.Quad.B2QUnsafeHandler");
+	}
+	if (_unsafe == null) {
+	    _unsafe = attemptDelegate("Compil3r.Quad.B2QUnsafeIgnorer");
+	}
+	if (_unsafe == null) {
+	    System.err.println("FATAL: Cannot load BytecodeToQuad Delegate");
+	    System.exit(-1);
+	}
+    }
+
+    private static UnsafeHelper attemptDelegate(String s) {
+	String type = "BC2Q delegate";
+        try {
+            Class c = Class.forName(s);
+            return (UnsafeHelper)c.newInstance();
+        } catch (java.lang.ClassNotFoundException x) {
+            System.err.println("Cannot find "+type+" "+s+": "+x);
+        } catch (java.lang.InstantiationException x) {
+            System.err.println("Cannot instantiate "+type+" "+s+": "+x);
+        } catch (java.lang.IllegalAccessException x) {
+            System.err.println("Cannot access "+type+" "+s+": "+x);
+        }
+	return null;
     }
 }

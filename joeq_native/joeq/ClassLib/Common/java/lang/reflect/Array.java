@@ -7,7 +7,6 @@
 
 package ClassLib.Common.java.lang.reflect;
 
-import Allocator.HeapAllocator;
 import Allocator.ObjectLayout;
 import ClassLib.ClassLibInterface;
 import Clazz.jq_Array;
@@ -224,7 +223,7 @@ public abstract class Array {
             a = a.getArrayTypeForElementType();
             a.cls_initialize();
         }
-        return HeapAllocator.multinewarray_helper(dimensions, 0, (jq_Array)a);
+        return Run_Time.Arrays.multinewarray_helper(dimensions, 0, (jq_Array)a);
     }
     
 }
