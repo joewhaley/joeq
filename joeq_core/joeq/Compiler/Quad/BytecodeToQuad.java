@@ -213,6 +213,16 @@ public class BytecodeToQuad extends BytecodeVisitor {
             start_states[bc_bb.id].merge(current_state, rf);
         }
     }
+    private void mergeStateWith(Compil3r.BytecodeAnalysis.ExceptionHandler eh) {
+	Compil3r.BytecodeAnalysis.BasicBlock bc_bb = eh.getEntry();
+        if (start_states[bc_bb.id] == null) {
+	    if (TRACE) System.out.println("Copying exception state to "+bc_bb);
+            start_states[bc_bb.id] = current_state.copyExceptionHandler(eh.getExceptionType(), rf);
+        } else {
+	    if (TRACE) System.out.println("Merging exception state with "+bc_bb);
+            start_states[bc_bb.id].mergeExceptionHandler(current_state, eh.getExceptionType(), rf);
+        }
+    }
 
     private void replaceLocalsOnStack(int index, jq_Type type) {
         for (int i=0; i<current_state.getStackSize(); ++i) {
@@ -1129,6 +1139,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
             Invoke.setParam(q, i, rop);
         }
         appendQuad(q);
+	mergeStateWithAllExHandlers(false);
         if (result != null) current_state.push(result, returnType);
     }
     public void visitIINVOKE(byte op, jq_Method f) {
@@ -1360,6 +1371,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         RegisterOperand res = getStackRegister(f);
         Quad q = NewArray.create(NewArray.NEWARRAY.INSTANCE, res, size, new TypeOperand(f));
         appendQuad(q);
+	mergeStateWithAllExHandlers(false);
         current_state.push_A(res);
     }
     public void visitCHECKCAST(jq_Type f) {
@@ -1368,6 +1380,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         RegisterOperand res = getStackRegister(f);
         Quad q = CheckCast.create(CheckCast.CHECKCAST.INSTANCE, res, op, new TypeOperand(f));
         appendQuad(q);
+	mergeStateWithAllExHandlers(false);
         current_state.push_A(res);
     }
     public void visitINSTANCEOF(jq_Type f) {
@@ -1544,7 +1557,6 @@ public class BytecodeToQuad extends BytecodeVisitor {
     static final byte MAYBE = 1;
     static final byte NO = 0;
     // returns YES if "T = S;" would be legal. (T is same or supertype of S)
-    // S and T should already be prepared.
     static byte isAssignable(jq_Type S, jq_Type T) {
         if (S == jq_Reference.jq_NullType.NULL_TYPE) {
             if (T.isReferenceType()) return YES;
@@ -1567,17 +1579,74 @@ public class BytecodeToQuad extends BytecodeVisitor {
         else return NO;
     }
     
+    void mergeStateWithAllExHandlers(boolean cfgEdgeToExit) {
+	Compil3r.BytecodeAnalysis.ExceptionHandlerIterator i =
+	    bc_bb.getExceptionHandlers();
+	while (i.hasNext()) {
+	    Compil3r.BytecodeAnalysis.ExceptionHandler eh = i.nextEH();
+	    mergeStateWith(eh);
+	}
+    }
     void mergeStateWithNullPtrExHandler(boolean cfgEdgeToExit) {
-        // TODO.
+	Compil3r.BytecodeAnalysis.ExceptionHandlerIterator i =
+	    bc_bb.getExceptionHandlers();
+	while (i.hasNext()) {
+	    Compil3r.BytecodeAnalysis.ExceptionHandler eh = i.nextEH();
+	    jq_Class k = eh.getExceptionType();
+	    if (k == PrimordialClassLoader.getJavaLangNullPointerException() ||
+		k == PrimordialClassLoader.getJavaLangRuntimeException() ||
+		k == PrimordialClassLoader.getJavaLangException() ||
+		k == PrimordialClassLoader.getJavaLangThrowable()) {
+		mergeStateWith(eh);
+		break;
+	    }
+	}
     }
     void mergeStateWithArithExHandler(boolean cfgEdgeToExit) {
-        // TODO.
+	Compil3r.BytecodeAnalysis.ExceptionHandlerIterator i =
+	    bc_bb.getExceptionHandlers();
+	while (i.hasNext()) {
+	    Compil3r.BytecodeAnalysis.ExceptionHandler eh = i.nextEH();
+	    jq_Class k = eh.getExceptionType();
+	    if (k == PrimordialClassLoader.getJavaLangArithmeticException() ||
+		k == PrimordialClassLoader.getJavaLangRuntimeException() ||
+		k == PrimordialClassLoader.getJavaLangException() ||
+		k == PrimordialClassLoader.getJavaLangThrowable()) {
+		mergeStateWith(eh);
+		break;
+	    }
+	}
     }
     void mergeStateWithArrayBoundsExHandler(boolean cfgEdgeToExit) {
-        // TODO.
+	Compil3r.BytecodeAnalysis.ExceptionHandlerIterator i =
+	    bc_bb.getExceptionHandlers();
+	while (i.hasNext()) {
+	    Compil3r.BytecodeAnalysis.ExceptionHandler eh = i.nextEH();
+	    jq_Class k = eh.getExceptionType();
+	    if (k == PrimordialClassLoader.getJavaLangArrayIndexOutOfBoundsException() ||
+		k == PrimordialClassLoader.getJavaLangIndexOutOfBoundsException() ||
+		k == PrimordialClassLoader.getJavaLangRuntimeException() ||
+		k == PrimordialClassLoader.getJavaLangException() ||
+		k == PrimordialClassLoader.getJavaLangThrowable()) {
+		mergeStateWith(eh);
+		break;
+	    }
+	}
     }
     void mergeStateWithObjArrayStoreExHandler(boolean cfgEdgeToExit) {
-        // TODO.
+	Compil3r.BytecodeAnalysis.ExceptionHandlerIterator i =
+	    bc_bb.getExceptionHandlers();
+	while (i.hasNext()) {
+	    Compil3r.BytecodeAnalysis.ExceptionHandler eh = i.nextEH();
+	    jq_Class k = eh.getExceptionType();
+	    if (k == PrimordialClassLoader.getJavaLangArrayStoreException() ||
+		k == PrimordialClassLoader.getJavaLangRuntimeException() ||
+		k == PrimordialClassLoader.getJavaLangException() ||
+		k == PrimordialClassLoader.getJavaLangThrowable()) {
+		mergeStateWith(eh);
+		break;
+	    }
+	}
     }
     
     RegisterOperand makeGuardReg() {
@@ -1648,6 +1717,15 @@ public class BytecodeToQuad extends BytecodeVisitor {
             return that;
         }
         
+        AbstractState copyExceptionHandler(jq_Class exType, RegisterFactory rf) {
+            AbstractState that = new AbstractState(this.stack.length, this.locals.length);
+	    that.stackptr = 1;
+	    RegisterOperand ex = new RegisterOperand(rf.getStack(0, exType), exType);
+	    that.stack[0] = ex;
+            System.arraycopy(this.locals, 0, that.locals, 0, this.locals.length);
+            return that;
+        }
+
         void overwriteWith(AbstractState that) {
             jq.assert(this.stack.length == that.stack.length);
             jq.assert(this.locals.length == that.locals.length);
@@ -1667,6 +1745,16 @@ public class BytecodeToQuad extends BytecodeVisitor {
             }
         }
         
+        void mergeExceptionHandler(AbstractState that, jq_Class exType, RegisterFactory rf) {
+            jq.assert(this.locals.length == that.locals.length);
+            jq.assert(this.stackptr == 1);
+	    RegisterOperand ex = new RegisterOperand(rf.getStack(0, exType), exType);
+	    this.stack[0] = meet(this.stack[0], ex, true, 0, rf);
+            for (int i=0; i<this.locals.length; ++i) {
+                this.locals[i] = meet(this.locals[i], that.locals[i], false, i, rf);
+            }
+        }
+
         static Operand meet(Operand op1, Operand op2, boolean stack, int index, RegisterFactory rf) {
             if (TRACE) System.out.println("Meeting "+op1+" with "+op2+", "+(stack?"S":"L")+index);
             if (op1 == op2) {
