@@ -24,7 +24,7 @@ import jq;
 public abstract class SystemInterface {
 
     public static int/*CodeAddress*/ debugmsg_4;
-    public static int/*CodeAddress*/ debugwmsg_8;
+    public static int/*CodeAddress*/ debugwmsg_4;
     public static int/*CodeAddress*/ syscalloc_4;
     public static int/*CodeAddress*/ die_4;
     public static int/*CodeAddress*/ currentTimeMillis_0;
@@ -97,7 +97,7 @@ public abstract class SystemInterface {
         Unsafe.pushArg(value + offset*2);
         try {
             Unsafe.getThreadBlock().disableThreadSwitch();
-            Unsafe.invoke(debugwmsg_8);
+            Unsafe.invoke(debugwmsg_4);
             Unsafe.getThreadBlock().enableThreadSwitch();
         } catch (Throwable t) { jq.UNREACHABLE(); }
     }

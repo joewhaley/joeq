@@ -55,14 +55,6 @@ public final class Interface extends ClassLib.ClassLibInterface {
         //nullStaticFields.add(urlclassloader_class.getOrCreateStaticField("extLoader", "Ljava/net/URLClassLoader;"));
         jq_Class zipfile_class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/util/zip/ZipFile;");
         nullStaticFields.add(zipfile_class.getOrCreateStaticField("inflaters", "Ljava/util/Vector;"));
-
-	// we need to reinitialize the inflaters array on startup.
-	Object[] args = { } ;
-	jq_Method init_inflaters = zipfile_class.getOrCreateStaticMethod("init_inflaters", "()V");
-	Bootstrap.MethodInvocation mi = new Bootstrap.MethodInvocation(init_inflaters, args);
-	jq.on_vm_startup.add(mi);
-	System.out.println("Added call to reinitialize java.util.zip.ZipFile.inflaters field on joeq startup: "+mi);
-
         return nullStaticFields;
     }
     
@@ -71,6 +63,16 @@ public final class Interface extends ClassLib.ClassLibInterface {
 	jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/net/URLClassLoader$ClassFinder;");
 	nullInstanceFields.add(k.getOrCreateInstanceField("name", "Ljava/lang/String;"));
         return nullInstanceFields;
+    }
+    
+    public void initializeDefaults() {
+	// we need to reinitialize the inflaters array on startup.
+	Object[] args = { } ;
+        jq_Class zipfile_class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/util/zip/ZipFile;");
+	jq_Method init_inflaters = zipfile_class.getOrCreateStaticMethod("init_inflaters", "()V");
+	Bootstrap.MethodInvocation mi = new Bootstrap.MethodInvocation(init_inflaters, args);
+	jq.on_vm_startup.add(mi);
+	System.out.println("Added call to reinitialize java.util.zip.ZipFile.inflaters field on joeq startup: "+mi);
     }
     
     public java.lang.Class createNewClass(Clazz.jq_Type f) {

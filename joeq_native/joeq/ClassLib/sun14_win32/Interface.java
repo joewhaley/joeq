@@ -14,6 +14,7 @@ import Clazz.*;
 import Run_Time.Unsafe;
 import Run_Time.Reflection;
 import Allocator.DefaultCodeAllocator;
+import Scheduler.jq_NativeThread;
 import jq;
 
 public final class Interface extends ClassLib.ClassLibInterface {
@@ -68,6 +69,10 @@ public final class Interface extends ClassLib.ClassLibInterface {
         jq_class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/reflect/Constructor;");
         nullInstanceFields.add(jq_class.getOrCreateInstanceField("constructorAccessor", "Lsun/reflect/ConstructorAccessor;"));
         return nullInstanceFields;
+    }
+    
+    public void initializeDefaults() {
+        jq_NativeThread.USE_INTERRUPTER_THREAD = true;
     }
     
     public java.lang.Class createNewClass(Clazz.jq_Type f) {
