@@ -280,6 +280,8 @@ public class BDDPointerAnalysis {
     public static void main(String[] args) {
         HostedVM.initialize();
         
+        boolean DUMP = System.getProperty("bdddump") != null;
+        
         BDDPointerAnalysis dis = new BDDPointerAnalysis();
         dis.reset();
         jq_Class c = (jq_Class) jq_Type.parseType(args[0]);
@@ -288,7 +290,7 @@ public class BDDPointerAnalysis {
         if (INCREMENTAL_ITERATION) dis.goIncremental(c);
         else dis.goNonincremental(c);
         
-        if (System.getProperty("bdddump") != null)
+        if (DUMP)
             dis.dumpResults();
     }
     
