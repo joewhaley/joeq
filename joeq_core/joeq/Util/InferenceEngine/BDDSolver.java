@@ -5,10 +5,13 @@ package joeq.Util.InferenceEngine;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
@@ -20,11 +23,14 @@ import java.io.IOException;
 import java.math.BigInteger;
 
 import joeq.Util.Assert;
+import joeq.Util.Collections.AppendIterator;
 import joeq.Util.Collections.GenericMultiMap;
 import joeq.Util.Collections.MultiMap;
+import joeq.Util.Collections.Pair;
 import joeq.Util.Graphs.SCCTopSortedGraph;
 import joeq.Util.Graphs.SCComponent;
 
+import org.sf.javabdd.BDD;
 import org.sf.javabdd.BDDDomain;
 import org.sf.javabdd.BDDFactory;
 
@@ -285,10 +291,10 @@ public class BDDSolver extends Solver {
         String varOrderString = System.getProperty("bddvarorder", null);
         
         if (varOrderString != null) {
-            System.out.print("Setting variable ordering to "+varOrderString);
+            System.out.print("Setting variable ordering to "+varOrderString+", ");
             int [] varOrder = bdd.makeVarOrdering(true, varOrderString);
             bdd.setVarOrder(varOrder);
-            System.out.println(", done.");
+            System.out.println("done.");
         }
         super.readRules(in);
     }
@@ -297,4 +303,148 @@ public class BDDSolver extends Solver {
         super.saveResults();
         bdd.done();
     }
+    
+    void findPhysicalDomainMapping() {
+        BDDFactory my_bdd = BDDFactory.init(100000, 10000);
+        
+        int BITS = BigInteger.valueOf(my_bdd.numberOfDomains()).bitLength();
+        
+        // one BDDDomain for each relation field.
+        Set activeRelations = new HashSet();
+        Map fieldOrVarToFieldDomain = new HashMap();
+        Map fieldOrVarToBDDDomain = new HashMap();
+        for (Iterator i = rules.iterator(); i.hasNext(); ) {
+            InferenceRule ir = (InferenceRule) i.next();
+            for (Iterator j = new AppendIterator(ir.top.iterator(), Collections.singleton(ir.bottom).iterator()); j.hasNext(); ) {
+                RuleTerm rt = (RuleTerm) j.next();
+                if (activeRelations.add(rt.relation)) {
+                    int x = 0;
+                    for (Iterator k = rt.relation.fieldDomains.iterator(); k.hasNext(); ++x) {
+                        Object field = new Pair(rt.relation, new Integer(x));
+                        Assert._assert(!fieldOrVarToFieldDomain.containsKey(field));
+                        Assert._assert(!fieldOrVarToBDDDomain.containsKey(field));
+                        FieldDomain fd = (FieldDomain)k.next();
+                        fieldOrVarToFieldDomain.put(field, fd);
+                        BDDDomain dom = makeDomain(my_bdd, field.toString(), BITS);
+                        fieldOrVarToBDDDomain.put(field, dom);
+                    }
+                }
+            }
+        }
+        
+        // one BDDDomain for each necessary variable.
+        for (Iterator i = rules.iterator(); i.hasNext(); ) {
+            InferenceRule ir = (InferenceRule) i.next();
+            for (Iterator j = new AppendIterator(ir.top.iterator(), Collections.singleton(ir.bottom).iterator()); j.hasNext(); ) {
+                RuleTerm rt = (RuleTerm) j.next();
+                for (int k = 0; k < rt.variables.size(); ++k) {
+                    Variable v = (Variable) rt.variables.get(k);
+                    if (!ir.necessaryVariables.contains(v)) continue;
+                    FieldDomain fd = (FieldDomain) rt.relation.fieldDomains.get(k);
+                    FieldDomain fd2 = (FieldDomain) fieldOrVarToFieldDomain.get(v);
+                    Assert._assert(fd2 == null || fd == fd2);
+                    fieldOrVarToFieldDomain.put(v, fd);
+                    BDDDomain dom = (BDDDomain) fieldOrVarToBDDDomain.get(v);
+                    if (dom == null) {
+                        dom = makeDomain(my_bdd, v.toString(), BITS);
+                        fieldOrVarToBDDDomain.put(v, dom);
+                    }
+                }
+            }
+        }
+        
+        BDD sol = my_bdd.one();
+        
+        // Every field and variable must be assigned to a physical domain
+        // of the appropriate size.
+        for (Iterator i = fieldOrVarToFieldDomain.entrySet().iterator(); i.hasNext(); ) {
+            Map.Entry e = (Map.Entry) i.next();
+            BDDDomain my_d = (BDDDomain) fieldOrVarToBDDDomain.get(e.getKey());
+            FieldDomain fd = (FieldDomain) e.getValue();
+            Collection s = fielddomainsToBDDdomains.getValues(fd);
+            BDD t = bdd.zero();
+            for (Iterator j = s.iterator(); j.hasNext(); ) {
+                BDDDomain d = (BDDDomain) j.next();
+                int index = d.getIndex();
+                t.orWith(my_d.ithVar(index));
+            }
+            sol.andWith(t);
+        }
+        
+        // Every field of a particular relation must be assigned to different
+        // physical domains.
+        for (Iterator i = activeRelations.iterator(); i.hasNext(); ) {
+            Relation r = (Relation) i.next();
+            int x = 0;
+            for (Iterator j = r.fieldDomains.iterator(); j.hasNext(); ++x) {
+                FieldDomain fd1 = (FieldDomain)j.next();
+                Object f1 = new Pair(r, new Integer(x));
+                BDDDomain dom1 = (BDDDomain) fieldOrVarToBDDDomain.get(f1);
+                int y = 0;
+                for (Iterator k = r.fieldDomains.iterator(); k.hasNext(); ++y) {
+                    FieldDomain fd2 = (FieldDomain)j.next();
+                    Object f2 = new Pair(r, new Integer(y));
+                    BDDDomain dom2 = (BDDDomain) fieldOrVarToBDDDomain.get(f2);
+                    BDD not_eq = dom1.buildEquals(dom2).not();
+                    sol.andWith(not_eq);
+                }
+            }
+        }
+        
+        // Every variable of a single rule must be assigned to a different
+        // physical domain.
+        for (Iterator i = rules.iterator(); i.hasNext(); ) {
+            InferenceRule ir = (InferenceRule) i.next();
+            for (Iterator j = ir.necessaryVariables.iterator(); j.hasNext(); ) {
+                Variable v1 = (Variable) j.next();
+                BDDDomain dom1 = (BDDDomain) fieldOrVarToBDDDomain.get(v1);
+                for (Iterator k = ir.necessaryVariables.iterator(); k.hasNext(); ) {
+                    Variable v2 = (Variable) k.next();
+                    BDDDomain dom2 = (BDDDomain) fieldOrVarToBDDDomain.get(v2);
+                    BDD not_eq = dom1.buildEquals(dom2).not();
+                    sol.andWith(not_eq);
+                }
+            }
+        }
+        
+        // Set user-specified domains.
+        for (Iterator i = activeRelations.iterator(); i.hasNext(); ) {
+            BDDRelation r = (BDDRelation) i.next();
+            for (int k = 0; k < r.fieldDomains.size(); ++k) {
+                String name = (String) r.fieldNames.get(k);
+                String option = (String) r.fieldOptions.get(k);
+                FieldDomain fd = (FieldDomain) r.fieldDomains.get(k);
+                if (!option.startsWith(fd.name))
+                    throw new IllegalArgumentException("Field "+name+" has domain "+fd+", but tried to assign "+option);
+                Collection doms = getBDDDomains(fd);
+                BDDDomain d = null;
+                for (Iterator j = doms.iterator(); j.hasNext(); ) {
+                    BDDDomain dom = (BDDDomain) j.next();
+                    if (dom.getName().equals(option)) {
+                        d = dom;
+                        break;
+                    }
+                }
+                if (d == null)
+                    throw new IllegalArgumentException("Unknown BDD domain "+option);
+                int index = d.getIndex();
+                Object field = new Pair(r, new Integer(k));
+                BDDDomain my_dom = (BDDDomain) fieldOrVarToBDDDomain.get(field);
+                sol.andWith(my_dom.ithVar(index));
+            }
+        }
+        
+        System.out.println("Solutions to physical domain assignment constraint problem:\n   "+sol.toStringWithDomains());
+        
+        sol.free();
+        my_bdd.done();
+    }
+    
+    static BDDDomain makeDomain(BDDFactory bdd, String name, int bits) {
+        Assert._assert(bits < 64);
+        BDDDomain d = bdd.extDomain(new long[] { 1L << bits })[0];
+        d.setName(name);
+        return d;
+    }
+    
 }
