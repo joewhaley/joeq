@@ -14,6 +14,7 @@ import Operator.Return;
 import Util.Templates.List;
 import Util.Templates.UnmodifiableList;
 import Clazz.jq_Class;
+import Interpreter.QuadInterpreter.State;
 import jq;
 
 public class Quad {
@@ -81,6 +82,9 @@ public class Quad {
     /** Returns a list of the registers used by this quad. */
     public List.RegisterOperand getUsedRegisters() { return this.operator.getUsedRegisters(this); }
     
+    /** Interprets this quad, modifying the given interpreter state. */
+    public void interpret(State s) { this.operator.interpret(this, s); }
+
     /** Returns a string representation of this quad. */
     public String toString() {
         StringBuffer s = new StringBuffer();
