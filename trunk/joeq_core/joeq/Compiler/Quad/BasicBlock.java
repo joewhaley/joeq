@@ -157,6 +157,11 @@ public class BasicBlock {
     public Quad getQuad(int i) {
         return (Quad)instructions.get(i);
     }
+    
+    public Quad getLastQuad() {
+        if (size() == 0) return null;
+        return (Quad)instructions.get(instructions.size()-1);
+    }
 
     /** Add a quad to this basic block at the given location.
      * Cannot add quads to the entry or exit basic blocks.
