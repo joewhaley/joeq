@@ -155,6 +155,9 @@ public abstract class jq_Type {
             }
             return off != 1;
         }
+        if (this == jq_Reference.jq_NullType.NULL_TYPE) {
+            return that.isReferenceType();
+        }
         if (off > 1) {
             // other class is a primary type that isn't a superclass.
             if (TRACE) {
@@ -175,12 +178,6 @@ public abstract class jq_Type {
             // classes are exactly the same.
             return true;
         }
-        if (this == jq_Reference.jq_NullType.NULL_TYPE) {
-            return that.isReferenceType();
-        }
-        //if (that == jq_Reference.jq_NullType.NULL_TYPE) {
-        //    return false;
-        //}
         int n = this.s_s_array_length;
         for (int i=0; i<n; ++i) {
             if (this.s_s_array[i] == that) {
