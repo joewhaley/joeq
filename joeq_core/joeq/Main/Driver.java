@@ -171,7 +171,6 @@ public abstract class Driver {
                     System.err.println("Be sure that you made your class public?");
                     return index;
                 }
-                CodeCache.passes.add(mv);
             } else if (commandBuffer[index].equalsIgnoreCase("runpass")) {
                 String passname = commandBuffer[++index];
                 jq_TypeVisitor cv = null; jq_MethodVisitor mv = null; ControlFlowGraphVisitor cfgv = null; BasicBlockVisitor bbv = null; QuadVisitor qv = null;
