@@ -47,6 +47,7 @@ public class BDDSolver extends Solver {
     public static int BDDCACHE = Integer.parseInt(System.getProperty("bddcache", "100000"));
     
     public BDDSolver() {
+        System.out.println("Initializing BDD library ("+BDDNODES+" nodes, cache size "+BDDCACHE+")");
         bdd = BDDFactory.init(BDDNODES, BDDCACHE);
         fielddomainsToBDDdomains = new GenericMultiMap();
         bdd.setMaxIncrease(BDDNODES/2);
