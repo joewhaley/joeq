@@ -9,7 +9,11 @@
 
 package Compil3r.Quad;
 
+import Operand.RegisterOperand;
+import Operator.Return;
 import Util.Templates.List;
+import Util.Templates.UnmodifiableList;
+import Clazz.jq_Class;
 import jq;
 
 public class Quad {
@@ -41,7 +45,16 @@ public class Quad {
     
     void accept(QuadVisitor qv) { this.operator.accept(this, qv); }
     
-    public List.jq_Class getThrownExceptions() { return this.operator.getThrownExceptions(); }
+    public List.jq_Class getThrownExceptions() {
+	if (operator == Return.THROW_A.INSTANCE) {
+	    Operand op = Return.getSrc(this);
+	    if (op instanceof RegisterOperand) {
+		// use the operand type.
+		return new UnmodifiableList.jq_Class((jq_Class)((RegisterOperand)op).getType());
+	    }
+	}
+	return this.operator.getThrownExceptions();
+    }
 
     public List.RegisterOperand getDefinedRegisters() { return this.operator.getDefinedRegisters(this); }
     public List.RegisterOperand getUsedRegisters() { return this.operator.getUsedRegisters(this); }
