@@ -22,10 +22,10 @@ All three are subclasses of a single type, <a href="../xref/joeq/Memory/Address.
 <p>
 You can obtain addresses via static methods in the above classes.
 <ul>
-<li><a href="../javadoc/joeq/Memory/HeapAddress.html#getNull()">HeapAddress.getNull()</a> - returns the "null" heap address</li>
-<li><a href="../javadoc/joeq/Memory/HeapAddress.html#addressOf(java.lang.Object)">HeapAddress.addressOf(Object)</a> - returns the heap address of the given object</li>
-<li><a href="../javadoc/joeq/Memory/StackAddress.html#getBasePointer()">StackAddress.getBasePointer()</a> - gets the base pointer in the current stack frame</li>
-<li><a href="../javadoc/joeq/Memory/StackAddress.html#getStackPointer()">StackAddress.getStackPointer()</a> - gets the stack pointer in the current stack frame</li>
+<li><a href="../apidocs/joeq/Memory/HeapAddress.html#getNull()">HeapAddress.getNull()</a> - returns the "null" heap address</li>
+<li><a href="../apidocs/joeq/Memory/HeapAddress.html#addressOf(java.lang.Object)">HeapAddress.addressOf(Object)</a> - returns the heap address of the given object</li>
+<li><a href="../apidocs/joeq/Memory/StackAddress.html#getBasePointer()">StackAddress.getBasePointer()</a> - gets the base pointer in the current stack frame</li>
+<li><a href="../apidocs/joeq/Memory/StackAddress.html#getStackPointer()">StackAddress.getStackPointer()</a> - gets the stack pointer in the current stack frame</li>
 </ul>
 </p>
 <p>
