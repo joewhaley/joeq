@@ -2460,10 +2460,19 @@ public class BytecodeToQuad extends BytecodeVisitor {
                 }
                 RegisterOperand rop1 = (RegisterOperand)op1;
                 jq_Type t1 = rop1.getType();
+                if (t1 == jq_ReturnAddressType.INSTANCE) {
+                    // op1 is a return address.
+                    if (op2 instanceof RegisterOperand &&
+                        ((RegisterOperand)op2).getType() == jq_ReturnAddressType.INSTANCE) {
+                        return op1;
+                    }
+                    return null;
+                }
                 if (op2 instanceof RegisterOperand) {
                     // both are registers.
                     RegisterOperand rop2 = (RegisterOperand)op2;
                     jq_Type t2 = rop2.getType();
+                    
                     if (t1 == t2) {
                         // registers have same type.
                         if (rop1.hasMoreConservativeFlags(rop2)) {
@@ -2488,6 +2497,10 @@ public class BytecodeToQuad extends BytecodeVisitor {
                         res.setFlags(rop1.getFlags());
                         res.meetFlags(rop2.getFlags());
                         return res;
+                    }
+                    if (t2 == jq_ReturnAddressType.INSTANCE) {
+                        // op2 is a return address, while op1 isn't.
+                        return null;
                     }
                     if (state.isSubtype(t2, t1) == YES) {
                         // t2 is a subtype of t1.
@@ -2540,11 +2553,12 @@ public class BytecodeToQuad extends BytecodeVisitor {
                         // null guard matches.
                         return rop1;
                     }
-                    // null guards doesn't match.
+                    // null guard doesn't match.
                     RegisterOperand res = new RegisterOperand(stack?rf.getStack(index, t1):rf.getLocal(index, t1), t1);
                     res.setFlags(rop1.getFlags());
                     return res;
                 }
+                Assert._assert(t2 != jq_ReturnAddressType.INSTANCE);
                 if (state.isSubtype(t2, t1) == YES) {
                     // compatible type.
                     if (!rop1.isExactType()) {
@@ -2722,6 +2736,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
             return ((jq_ReturnAddressType)rat).returnTarget.equals(this.returnTarget);
         }
         public int hashCode() {
+            if (returnTarget == null) return 0;
             return returnTarget.hashCode();
         }
     }
