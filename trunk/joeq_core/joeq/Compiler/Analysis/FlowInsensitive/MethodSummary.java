@@ -1788,6 +1788,17 @@ public class MethodSummary {
             return accessPathEdges != null;
         }
         
+        public final Set getAccessPathEdges(jq_Field m) {
+            if (accessPathEdges == null) return Collections.EMPTY_SET;
+            Object o = accessPathEdges.get(m);
+            if (o == null) return Collections.EMPTY_SET;
+            if (o instanceof Set) {
+                return (Set)o;
+            } else {
+                return Collections.singleton(o);
+            }
+        }
+        
         /** Add the nodes that are targets of outside edges on the given field
          *  to the given result set. */
         public void getAccessPathEdges(jq_Field m, Set result) {
@@ -3751,6 +3762,10 @@ outer:
         }
     }
 
+    public Set getNodesThatCall(ProgramLocation mc, int k) {
+        return getNodesThatCall(new PassedParameter(mc, k));
+    }
+    
     /** Return the set of nodes that are passed as the given parameter. */
     public Set getNodesThatCall(PassedParameter pp) {
         if (USE_PARAMETER_MAP) {
