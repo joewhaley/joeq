@@ -62,6 +62,7 @@ public class ExceptionHandler {
         return TypeCheck.isAssignable(exType, exception_type) ||
               TypeCheck.isAssignable(exception_type, exType);
     }
+    public String toString() { return "Type: "+exception_type+" Entry: "+entry; }
     
     /** Add a handled basic block to the list of handled basic blocks.
      * @param bb  basic block to add. */
