@@ -438,6 +438,8 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         return ("BuildBDDIR, node count: " + allQuads.nodeCount());
     }
     
+    public static boolean ZERO_FIELDS = false;
+    
     void handleQuad(Quad q) {
         int quadID=0, opcID=0, destID=0, src1ID=0, src2ID=0, constantID=0, fallthroughID=0, targetID=0, memberID=0;
         quadID = quadMap.get(q)+1;
@@ -470,15 +472,15 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
                 memberID = memberMap.get(((TypeOperand) op).getType())+1;
             }
         }
-        currentQuad.andWith(quad.ithVar(quadID));
-        currentQuad.andWith(opc.ithVar(opcID));
-        currentQuad.andWith(dest.ithVar(destID));
-        currentQuad.andWith(src1.ithVar(src1ID));
-        currentQuad.andWith(src2.ithVar(src2ID));
-        currentQuad.andWith(constant.ithVar(((long)constantID) & 0xFFFFFFFFL));
+        if (ZERO_FIELDS || quadID != 0) currentQuad.andWith(quad.ithVar(quadID));
+        if (ZERO_FIELDS || opcID != 0) currentQuad.andWith(opc.ithVar(opcID));
+        if (ZERO_FIELDS || destID != 0) currentQuad.andWith(dest.ithVar(destID));
+        if (ZERO_FIELDS || src1ID != 0) currentQuad.andWith(src1.ithVar(src1ID));
+        if (ZERO_FIELDS || src2ID != 0) currentQuad.andWith(src2.ithVar(src2ID));
+        if (ZERO_FIELDS || constantID != 0) currentQuad.andWith(constant.ithVar(((long)constantID) & 0xFFFFFFFFL));
         //currentQuad.andWith(fallthrough.ithVar(fallthroughID));
-        currentQuad.andWith(target.ithVar(targetID));
-        currentQuad.andWith(member.ithVar(memberID));
+        if (ZERO_FIELDS || targetID != 0) currentQuad.andWith(target.ithVar(targetID));
+        if (ZERO_FIELDS || memberID != 0) currentQuad.andWith(member.ithVar(memberID));
     }
     
     public void dump() throws IOException {
