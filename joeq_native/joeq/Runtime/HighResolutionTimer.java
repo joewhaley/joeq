@@ -1,18 +1,18 @@
 // HighResolutionTimer.java, created Tue Dec 10 14:02:07 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Run_Time;
+package joeq.Runtime;
 
 import joeq.Bootstrap.MethodInvocation;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_Method;
-import joeq.Clazz.jq_NameAndDesc;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_Method;
+import joeq.Class.jq_NameAndDesc;
 import joeq.Main.jq;
 import joeq.Memory.CodeAddress;
 import joeq.Memory.HeapAddress;
 import joeq.Memory.StackAddress;
-import joeq.Run_Time.SystemInterface.ExternalLink;
-import joeq.Run_Time.SystemInterface.Library;
+import joeq.Runtime.SystemInterface.ExternalLink;
+import joeq.Runtime.SystemInterface.Library;
 import joeq.Util.Assert;
 
 /**

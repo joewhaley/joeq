@@ -6,8 +6,8 @@ package joeq.Assembler.x86;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import joeq.Clazz.PrimordialClassLoader;
-import joeq.Clazz.jq_Class;
+import joeq.Class.PrimordialClassLoader;
+import joeq.Class.jq_Class;
 import joeq.Memory.HeapAddress;
 
 /**

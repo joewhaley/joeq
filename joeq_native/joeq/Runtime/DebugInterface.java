@@ -1,7 +1,7 @@
 // DebugInterface.java, created Sat Dec 14  2:54:05 2002 by mcmartin
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Run_Time;
+package joeq.Runtime;
 
 /**
  * @author  John Whaley <jwhaley@alum.mit.edu>

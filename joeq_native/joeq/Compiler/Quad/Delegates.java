@@ -1,12 +1,12 @@
 // Delegates.java, created Mon Dec 23 20:00:01 2002 by mcmartin
 // Copyright (C) 2001-3 mcmartin
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Compil3r.Quad;
+package joeq.Compiler.Quad;
 
-import joeq.Compil3r.Quad.Operand.RegisterOperand;
+import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Interpreter.QuadInterpreter;
 import joeq.Main.jq;
-import joeq.Run_Time.Unsafe;
+import joeq.Runtime.Unsafe;
 
 /*
  * @author  Michael Martin <mcmartin@stanford.edu>
@@ -26,12 +26,12 @@ class Delegates {
         public void interpretMonitorEnter(Operator.Monitor op, Quad q, QuadInterpreter s) {
             Object o = Operator.getObjectOpValue(Operator.Monitor.getSrc(q), s);
             if (jq.RunningNative)
-                joeq.Run_Time.Monitor.monitorenter(o);
+                joeq.Runtime.Monitor.monitorenter(o);
         }
         public void interpretMonitorExit(Operator.Monitor op, Quad q, QuadInterpreter s) {
             Object o = Operator.getObjectOpValue(Operator.Monitor.getSrc(q), s);
             if (jq.RunningNative)
-                joeq.Run_Time.Monitor.monitorexit(o);
+                joeq.Runtime.Monitor.monitorexit(o);
         }
     }
 }

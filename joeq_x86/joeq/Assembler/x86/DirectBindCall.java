@@ -7,8 +7,8 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import joeq.Allocator.DefaultCodeAllocator;
-import joeq.Clazz.jq_CompiledCode;
-import joeq.Clazz.jq_Method;
+import joeq.Class.jq_CompiledCode;
+import joeq.Class.jq_Method;
 import joeq.Memory.CodeAddress;
 import joeq.Util.Assert;
 

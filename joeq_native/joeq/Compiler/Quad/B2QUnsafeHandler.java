@@ -1,17 +1,17 @@
 // B2QUnsafeHandler.java, created Mon Dec 23 23:00:34 2002 by mcmartin
 // Copyright (C) 2001-3 mcmartin
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Compil3r.Quad;
+package joeq.Compiler.Quad;
 
-import joeq.Clazz.jq_Method;
-import joeq.Clazz.jq_Primitive;
-import joeq.Compil3r.Quad.Operand.RegisterOperand;
-import joeq.Compil3r.Quad.Operator.Special;
-import joeq.Compil3r.Quad.Operator.Unary;
+import joeq.Class.jq_Method;
+import joeq.Class.jq_Primitive;
+import joeq.Compiler.Quad.Operand.RegisterOperand;
+import joeq.Compiler.Quad.Operator.Special;
+import joeq.Compiler.Quad.Operator.Unary;
 import joeq.Memory.Address;
 import joeq.Memory.CodeAddress;
 import joeq.Memory.StackAddress;
-import joeq.Run_Time.Unsafe;
+import joeq.Runtime.Unsafe;
 import joeq.Scheduler.jq_Thread;
 import joeq.Util.Assert;
 
