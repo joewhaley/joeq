@@ -14,7 +14,7 @@ import java.util.Iterator;
  * @author John Whaley
  * @version $Id$
  */
-public class IndexMap {
+public class IndexMap implements IndexedMap {
     private final String name;
     private final HashMap hash;
     private final ArrayList list;
