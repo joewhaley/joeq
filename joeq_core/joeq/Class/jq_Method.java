@@ -14,14 +14,10 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import Bootstrap.PrimordialClassLoader;
 import ClassLib.ClassLibInterface;
-import Compil3r.Compil3rInterface;
+import Bootstrap.PrimordialClassLoader;
 import Compil3r.BytecodeAnalysis.Bytecodes;
-import Compil3r.Reference.x86.x86ReferenceCompiler;
-import Compil3r.Reference.x86.x86ReferenceLinker;
 import Main.jq;
-import Memory.CodeAddress;
 import UTF.Utf8;
 
 /*
@@ -257,6 +253,13 @@ public abstract class jq_Method extends jq_Member {
 
     public abstract void prepare();
 
+    static interface Delegate {
+	jq_CompiledCode compile_stub(jq_Method m);
+	jq_CompiledCode compile(jq_Method m);
+    }
+
+    private static Delegate _delegate;
+
     public final jq_CompiledCode compile_stub() {
         chkState(STATE_PREPARED);
         if (state >= STATE_SFINITIALIZED) return default_compiled_version;
@@ -265,52 +268,18 @@ public abstract class jq_Method extends jq_Member {
             return default_compiled_version = new jq_CompiledCode(this, null, 0, null, null, null, null, null, null);
         }
         if (_compile.getState() < STATE_CLSINITIALIZED) _compile.compile();
-        default_compiled_version = x86ReferenceCompiler.generate_compile_stub(this);
+        default_compiled_version = _delegate.compile_stub(this);
         state = STATE_SFINITIALIZED;
         return default_compiled_version;
     }
     public final jq_CompiledCode compile() {
         if (state == STATE_CLSINITIALIZED) return default_compiled_version;
-        synchronized (this) {
-            //System.out.println("Compiling: "+this);
+	synchronized (this) {
             jq.Assert(!jq.DontCompile);
             chkState(STATE_PREPARED);
-            if (isNative() && getBytecode() == null) {
-                System.out.println("Unimplemented native method! "+this);
-                if (x86ReferenceLinker._nativeMethodError.getState() < STATE_CLSINITIALIZED) {
-                    jq_Class k = x86ReferenceLinker._class;
-                    k.verify(); //k.prepare();
-                    if (x86ReferenceLinker._nativeMethodError.getState() != STATE_PREPARED)
-                        x86ReferenceLinker._nativeMethodError.prepare();
-                    default_compiled_version = x86ReferenceLinker._nativeMethodError.compile();
-                    //if (k != getDeclaringClass() && getDeclaringClass().getSuperclass() != null) { k.cls_initialize(); }
-                } else {
-                    default_compiled_version = x86ReferenceLinker._nativeMethodError.getDefaultCompiledVersion();
-                }
-            } else if (isAbstract()) {
-                if (x86ReferenceLinker._abstractMethodError.getState() < STATE_CLSINITIALIZED) {
-                    jq_Class k = x86ReferenceLinker._class;
-                    k.verify(); //k.prepare();
-                    //default_compiled_version = x86ReferenceLinker._abstractMethodError.getDefaultCompiledVersion();
-                    if (x86ReferenceLinker._abstractMethodError.getState() != STATE_PREPARED)
-                        x86ReferenceLinker._abstractMethodError.prepare();
-                    default_compiled_version = x86ReferenceLinker._abstractMethodError.compile();
-                    //if (k != getDeclaringClass() && getDeclaringClass().getSuperclass() != null) { k.cls_initialize(); }
-                } else {
-                    default_compiled_version = x86ReferenceLinker._abstractMethodError.getDefaultCompiledVersion();
-                }
-            } else {
-                Compil3rInterface c;
-                if (true)
-                    c = new x86ReferenceCompiler(this);
-                //else
-                //    c = new x86OpenJITCompiler(this);
-                default_compiled_version = c.compile();
-                if (jq.RunningNative)
-                    default_compiled_version.patchDirectBindCalls();
-            }
-            state = STATE_CLSINITIALIZED;
-        }
+	    default_compiled_version = _delegate.compile(this);
+	    state = STATE_CLSINITIALIZED;
+	}
         return default_compiled_version;
     }
     
@@ -388,5 +357,33 @@ public abstract class jq_Method extends jq_Member {
     static {
         _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LClazz/jq_Method;");
         _compile = _class.getOrCreateInstanceMethod("compile", "()LClazz/jq_CompiledCode;");
+	/* Set up delegates. */
+	_delegate = null;
+	boolean nullVM = System.getProperty("joeq.nullvm") != null;
+	if (!nullVM) {
+	    _delegate = attemptDelegate("Clazz.Delegates$Method");
+	}
+	if (_delegate == null) {
+	    _delegate = attemptDelegate("Clazz.NullDelegates$Method");
+	}
+	if (_delegate == null) {
+	    System.err.println("FATAL: Cannot load Method Delegate");
+	    System.exit(-1);
+	}
+    }
+
+    private static Delegate attemptDelegate(String s) {
+	String type = "method delegate";
+        try {
+            Class c = Class.forName(s);
+            return (Delegate)c.newInstance();
+        } catch (java.lang.ClassNotFoundException x) {
+            System.err.println("Cannot find "+type+" "+s+": "+x);
+        } catch (java.lang.InstantiationException x) {
+            System.err.println("Cannot instantiate "+type+" "+s+": "+x);
+        } catch (java.lang.IllegalAccessException x) {
+            System.err.println("Cannot access "+type+" "+s+": "+x);
+        }
+	return null;
     }
 }

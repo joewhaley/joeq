@@ -21,7 +21,7 @@ import UTF.Utf8;
  * @author  John Whaley
  * @version $Id$
  */
-public final class Interface extends ClassLib.Common.Interface {
+public final class Interface extends ClassLib.Common.InterfaceImpl {
 
     /** Creates new Interface */
     public Interface() {}

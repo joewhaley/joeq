@@ -22,7 +22,6 @@ import Memory.StackAddress;
 import Run_Time.Reflection;
 import Run_Time.StackCodeWalker;
 import Run_Time.TypeCheck;
-import Run_Time.Unsafe;
 import UTF.Utf8;
 
 /*

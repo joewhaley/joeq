@@ -31,80 +31,99 @@ public abstract class ClassLibInterface {
     
     public static final ClassLib.Common.Interface DEFAULT;
 
+    /* Try the three current possibilities for the ClassLibInterface.
+       This would probably be rather more general with some kind of
+       iterator, but it does for now. */
     static {
-        String classlibrary = System.getProperty("classlibrary");
-        if (classlibrary == null) {
-            String javaversion = System.getProperty("java.version");
-
-            String javavmversion = System.getProperty("java.vm.version");
-            String javavmvendor = System.getProperty("java.vm.vendor");
-            String javaruntimeversion = System.getProperty("java.runtime.version");
-            String osarch = System.getProperty("os.arch");
-            String osname = System.getProperty("os.name");
-
-            if (osarch.equals("x86")) {
-            } else if (osarch.equals("i386")) {
-            } else {
-                System.err.println("Warning: architecture "+osarch+" is not yet supported.");
-            }
-            if (javavmvendor.equals("Sun Microsystems Inc.")) {
-                if (javaruntimeversion.equals("1.3.1_01")) {
-                    classlibrary = "sun13_";
-                } else if (javaruntimeversion.equals("1.4.0-b92")) {
-                    classlibrary = "sun14_";
-                } else {
-                    if (javaruntimeversion.startsWith("1.4")) {
-                        classlibrary = "sun14_";
-                    } else {
-                        classlibrary = "sun13_";
-                    }
-                    System.err.println("Warning: class library version "+javaruntimeversion+" is not yet supported, trying default "+classlibrary);
-                }
-            } else if (javavmvendor.equals("IBM Corporation")) {
-                if (javaruntimeversion.equals("1.3.0")) {
-                    classlibrary = "ibm13_";
-                } else {
-                    classlibrary = "ibm13_";
-                    System.err.println("Warning: class library version "+javaruntimeversion+" is not yet supported, trying default "+classlibrary);
-                }
-            } else if (javavmvendor.equals("Apple Computer, Inc.")) {
-                if (javaruntimeversion.equals("1.3.1")) {
-                    classlibrary = "apple13_";
-                } else {
-                    classlibrary = "apple13_";
-                    System.err.println("Warning: class library version "+javaruntimeversion+" is not yet supported, trying default "+classlibrary);
-                }
-            } else {
-                classlibrary = "sun13_";
-                System.err.println("Warning: vm vendor "+javavmvendor+" is not yet supported, trying default "+classlibrary);
-            }
-            if (osname.startsWith("Windows")) {
-                classlibrary += "win32";
-            } else if (osname.equals("Linux")) {
-                classlibrary += "linux";
-            } else if (osname.equals("Mac OS X")) {
-                classlibrary += "osx";
-            } else {
-                classlibrary += "win32";
-                System.err.println("Warning: OS "+osname+" is not yet supported, trying "+classlibrary);
-            }
-        }
         ClassLib.Common.Interface f = null;
-        try {
-            Class c = Class.forName("ClassLib."+classlibrary+".Interface");
-            f = (ClassLib.Common.Interface)c.newInstance();
-        } catch (java.lang.ClassNotFoundException x) {
-            System.err.println("Cannot find class library interface "+classlibrary+": "+x);
-            System.err.println("Please check the version of your virtual machine.");
-            System.exit(-1);
-        } catch (java.lang.InstantiationException x) {
-            System.err.println("Cannot instantiate class library interface "+classlibrary+": "+x);
-            System.exit(-1);
-        } catch (java.lang.IllegalAccessException x) {
-            System.err.println("Cannot access class library interface "+classlibrary+": "+x);
-            System.exit(-1);
-        }
+	String classlibinterface = System.getProperty("joeq.classlibinterface");
+	if (classlibinterface != null) {
+	    f = attemptClassLibInterface(classlibinterface);
+	}
+	if (f == null) {
+	    String classlibrary = System.getProperty("classlibrary");
+	    if (classlibrary == null) {
+		String javaversion = System.getProperty("java.version");
+
+		String javavmversion = System.getProperty("java.vm.version");
+		String javavmvendor = System.getProperty("java.vm.vendor");
+		String javaruntimeversion = System.getProperty("java.runtime.version");
+		String osarch = System.getProperty("os.arch");
+		String osname = System.getProperty("os.name");
+
+		if (osarch.equals("x86")) {
+		} else if (osarch.equals("i386")) {
+		} else {
+		    System.err.println("Warning: architecture "+osarch+" is not yet supported.");
+		}
+		if (javavmvendor.equals("Sun Microsystems Inc.")) {
+		    if (javaruntimeversion.equals("1.3.1_01")) {
+			classlibrary = "sun13_";
+		    } else if (javaruntimeversion.equals("1.4.0-b92")) {
+			classlibrary = "sun14_";
+		    } else {
+			if (javaruntimeversion.startsWith("1.4")) {
+			    classlibrary = "sun14_";
+			} else {
+			    classlibrary = "sun13_";
+			}
+			System.err.println("Warning: class library version "+javaruntimeversion+" is not yet supported, trying default "+classlibrary);
+		    }
+		} else if (javavmvendor.equals("IBM Corporation")) {
+		    if (javaruntimeversion.equals("1.3.0")) {
+			classlibrary = "ibm13_";
+		    } else {
+			classlibrary = "ibm13_";
+			System.err.println("Warning: class library version "+javaruntimeversion+" is not yet supported, trying default "+classlibrary);
+		    }
+		} else if (javavmvendor.equals("Apple Computer, Inc.")) {
+		    if (javaruntimeversion.equals("1.3.1")) {
+			classlibrary = "apple13_";
+		    } else {
+			classlibrary = "apple13_";
+			System.err.println("Warning: class library version "+javaruntimeversion+" is not yet supported, trying default "+classlibrary);
+		    }
+		} else {
+		    classlibrary = "sun13_";
+		    System.err.println("Warning: vm vendor "+javavmvendor+" is not yet supported, trying default "+classlibrary);
+		}
+		if (osname.startsWith("Windows")) {
+		    classlibrary += "win32";
+		} else if (osname.equals("Linux")) {
+		    classlibrary += "linux";
+		} else if (osname.equals("Mac OS X")) {
+		    classlibrary += "osx";
+		} else {
+		    classlibrary += "win32";
+		    System.err.println("Warning: OS "+osname+" is not yet supported, trying "+classlibrary);
+		}
+	    }
+	    f = attemptClassLibInterface("ClassLib."+classlibrary+".Interface");
+	}
+	if (f == null) {
+	    f = attemptClassLibInterface("ClassLib.Common.NullInterfaceImpl");
+	}
+	if (f == null) {
+	    System.err.println("Could not load any acceptable ClassLibInterface.");
+	    System.exit (-1);
+	}
+	
         DEFAULT = f;
+    }
+
+    private static ClassLib.Common.Interface attemptClassLibInterface(String s) {
+        try {
+            Class c = Class.forName(s);
+            return (ClassLib.Common.Interface)c.newInstance();
+        } catch (java.lang.ClassNotFoundException x) {
+            System.err.println("Cannot find class library interface "+s+": "+x);
+            System.err.println("Please check the version of your virtual machine.");
+        } catch (java.lang.InstantiationException x) {
+            System.err.println("Cannot instantiate class library interface "+s+": "+x);
+        } catch (java.lang.IllegalAccessException x) {
+            System.err.println("Cannot access class library interface "+s+": "+x);
+        }
+	return null;
     }
 
     public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LClassLib/ClassLibInterface;");
@@ -190,12 +209,12 @@ public abstract class ClassLibInterface {
     }
     
     public static void init_zipfile_static(java.util.zip.ZipFile zf, java.lang.String s)
-    throws java.io.IOException {
+	throws java.io.IOException {
         ClassLibInterface.DEFAULT.init_zipfile(zf, s);
     }
     
     public static void init_inflater_static(java.util.zip.Inflater i, boolean nowrap)
-    throws java.io.IOException {
+	throws java.io.IOException {
         ClassLibInterface.DEFAULT.init_inflater(i, nowrap);
     }
 }

@@ -553,7 +553,7 @@ public abstract class jq {
             PrimordialClassLoader.loader.addToClasspath(s);
         }
 
-        Reflection.obj_trav = ClassLib.Common.Interface.CommonObjectTraverser.INSTANCE;
+        Reflection.obj_trav = ClassLibInterface.DEFAULT.getObjectTraverser();
         Reflection.obj_trav.initialize();
     }
 

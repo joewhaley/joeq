@@ -11,7 +11,6 @@ import java.io.BufferedReader;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -27,28 +26,23 @@ import Allocator.ObjectLayout;
 import Bootstrap.BootImage;
 import Bootstrap.BootstrapCodeAddress;
 import Bootstrap.BootstrapCodeAllocator;
-import Bootstrap.BootstrapHeapAddress;
 import Bootstrap.BootstrapRootSet;
 import Bootstrap.ObjectTraverser;
 import Bootstrap.PrimordialClassLoader;
 import Bootstrap.BootstrapCodeAddress.BootstrapCodeAddressFactory;
-import Bootstrap.BootstrapHeapAddress.BootstrapHeapAddressFactory;
 import ClassLib.ClassLibInterface;
 import Clazz.jq_Array;
 import Clazz.jq_Class;
 import Clazz.jq_Member;
 import Clazz.jq_Method;
-import Clazz.jq_Primitive;
 import Clazz.jq_Reference;
 import Clazz.jq_StaticField;
 import Clazz.jq_StaticMethod;
 import Clazz.jq_Type;
 import Compil3r.BytecodeAnalysis.Trimmer;
 import Compil3r.Reference.x86.x86ReferenceCompiler;
-import Memory.Address;
-import Memory.HeapAddress;
 import Memory.CodeAddress;
-import Memory.StackAddress;
+import Memory.HeapAddress;
 import Run_Time.Reflection;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
@@ -308,7 +302,7 @@ public abstract class Bootstrapper {
                         System.out.println("Trimming type: "+t.getName());
                         jq.Assert(t.isPrepared());
                         if (t.isClassType()) {
-                            ((jq_Class)t).trim(rs);
+                            rs.trimClass((jq_Class)t);
                         }
                     }
                     System.out.println("Number of instance fields kept: "+jq_Class.NumOfIFieldsKept);
