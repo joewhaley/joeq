@@ -112,6 +112,7 @@ public class PA {
     boolean TRACE_OBJECT = !System.getProperty("pa.traceobject", "no").equals("no");
     boolean TRACE_CONTEXT = !System.getProperty("pa.tracecontext", "no").equals("no");
     boolean TRACE_PLACEHOLDERS = !System.getProperty("pa.traceplaceholders", "no").equals("no");
+    boolean TRACE_SELECTORS = !System.getProperty("pa.traceselectors", "no").equals("no");
     PrintStream out = System.out;
     boolean DUMP_INITIAL = !System.getProperty("pa.dumpinitial", "no").equals("no");
     boolean DUMP_RESULTS = !System.getProperty("pa.dumpresults", "yes").equals("no");
@@ -3054,10 +3055,10 @@ public class PA {
   
                 Selector selector = null; 
                 if(USE_STRING_METHOD_SELECTOR) {
-                    System.err.println("Using a StringMethodSelector \n");
+                    System.err.println("Using a StringMethodSelector");
                     selector = new StringMethodSelector(graph);
                 } else {
-                    System.err.println("Using a VarPathSelector \n");
+                    System.err.println("Using a VarPathSelector");
                     selector = varPathSelector; 
                 }
                 System.err.println("Using GlobalPathNumbering");
@@ -3294,7 +3295,6 @@ public class PA {
         SCComponent select;
         
         StringMethodSelector(SCCTopSortedGraph sccGraph){
-            
             this.select = getSelectSCC(sccGraph);
         }
         
@@ -3307,27 +3307,30 @@ public class PA {
             
             for(int i = 0; i < methods.length; i++) {
                 jq_InstanceMethod m = methods[i];
-                if(m.getName().toString().equals("append")) {
+                if(m.getNameAndDesc().toString().equals("append (Ljava/lang/String;)Ljava/lang/StringBuffer;")) {
                     string_buffer_append = m;
                     break;
+                }else{
+                     //System.err.println("Skipping " + m.getNameAndDesc().toString());
                 }
             }
-            Assert._assert(string_buffer_append != null);
+            Assert._assert(string_buffer_append != null, "No append method found in " + string_buffer_class);
                         
             // initialize the necessary SCC #
             SCComponent string_buffer_append_scc = null;
             for(SCComponent c = sccGraph.getFirst(); c.nextTopSort() != null; c = c.nextTopSort()) {
-                System.err.println("Component " + c.toString());
+                //System.err.println("Component " + c.toString());
                 if(c.contains(string_buffer_append)) {
                     string_buffer_append_scc = c;
                     break;
                 }
             }
-            Assert._assert(string_buffer_append_scc != null);
-            System.err.println("SCC # " + string_buffer_append_scc + " contains " + string_buffer_append);
+            Assert._assert(string_buffer_append_scc != null, "Can't find method " + string_buffer_append + " in any SCC");
+            if(TRACE_SELECTORS) System.err.println("SCC # " + string_buffer_append_scc + " contains " + string_buffer_append);
             
             return string_buffer_append_scc;
         }
+
         StringMethodSelector(SCComponent select){
             this.select = select;
         }
@@ -3352,7 +3355,7 @@ public class PA {
                 jq_Method m = (jq_Method) b;               
                 result = select.contains(m);
             }
-            System.err.println("Returning isImportant=" + result);
+            if(TRACE_SELECTORS && result) System.err.println("isImportant(" + a + ", " + b + ") = " + result);
             
             return result;         
         }
