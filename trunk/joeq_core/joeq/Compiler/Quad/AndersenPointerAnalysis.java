@@ -41,7 +41,7 @@ import jq;
 public class AndersenPointerAnalysis {
 
     public static java.io.PrintStream out = System.out;
-    public static final boolean TRACE = true;
+    public static final boolean TRACE = false;
     public static final boolean TRACE_CHANGE = false;
     public static final boolean TRACE_CYCLES = false;
     public static final boolean VerifyAssertions = false;
