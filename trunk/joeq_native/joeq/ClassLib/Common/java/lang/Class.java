@@ -54,9 +54,6 @@ public class Class {
         if (initialize) {
             jq_Type t = k.jq_type;
             jq.Assert(t.isLoaded());
-            t.verify();
-            t.prepare();
-            t.sf_initialize();
             t.cls_initialize();
         }
         return k;
@@ -76,7 +73,7 @@ public class Class {
         if (i == null)
             throw new InstantiationException("no empty arg initializer in "+this);
         i.checkCallerAccess(3);
-        jq_class.verify(); jq_class.prepare(); jq_class.sf_initialize(); jq_class.cls_initialize(); 
+        jq_class.cls_initialize(); 
         java.lang.Object o = jq_class.newInstance();
         try {
             Reflection.invokeinstance_V(i, o);
@@ -92,15 +89,15 @@ public class Class {
         if (obj == null) return false;
         jq_Reference t = jq_Reference.getTypeOf(obj);
         jq_Type jq_type = this.jq_type;
-        jq_type.load(); jq_type.verify(); jq_type.prepare();
+        jq_type.prepare();
         return TypeCheck.isAssignable(t, jq_type);
     }
     
     public boolean isAssignableFrom(Class cls) {
         jq_Type jq_type = this.jq_type;
-        jq_type.load(); jq_type.verify(); jq_type.prepare();
+        jq_type.prepare();
         jq_Type cls_jq_type = cls.jq_type;
-        cls_jq_type.load(); cls_jq_type.verify(); cls_jq_type.prepare();
+        cls_jq_type.prepare();
         return TypeCheck.isAssignable(cls_jq_type, jq_type);
     }
     
@@ -135,7 +132,7 @@ public class Class {
         jq_Type jq_type = this.jq_type;
         if (!jq_type.isClassType()) return null;
         jq_Class k = (jq_Class)jq_type;
-        k.load(); k.verify(); k.prepare();
+        k.prepare();
         if (k.getSuperclass() == null) return null;
         return Reflection.getJDKType(k.getSuperclass());
     }
@@ -223,7 +220,7 @@ public class Class {
             return fs;
         } else {
             jq.Assert(which == java.lang.reflect.Member.PUBLIC);
-            c.verify(); c.prepare();
+            c.prepare();
             int size = 0;
             jq_StaticField[] sfs = c.getStaticFields();
             jq_InstanceField[] ifs = c.getInstanceFields();
@@ -276,7 +273,7 @@ public class Class {
             return fs;
         } else {
             jq.Assert(which == java.lang.reflect.Member.PUBLIC);
-            c.verify(); c.prepare();
+            c.prepare();
             int size = 0;
             jq_StaticMethod[] sfs = c.getStaticMethods();
             jq_InstanceMethod[] ifs = c.getVirtualMethods();
@@ -356,7 +353,7 @@ public class Class {
             sms = c.getDeclaredInstanceFields();
         } else {
             jq.Assert(which == java.lang.reflect.Member.PUBLIC);
-            c.verify(); c.prepare();
+            c.prepare();
             sms = c.getInstanceFields();
         }
         for (int i=0; i<sms.length; ++i) {
@@ -405,7 +402,7 @@ public class Class {
             sms = c.getDeclaredInstanceMethods();
         } else {
             jq.Assert(which == java.lang.reflect.Member.PUBLIC);
-            c.verify(); c.prepare();
+            c.prepare();
             sms = c.getVirtualMethods();
         }
         for (int i=0; i<sms.length; ++i) {

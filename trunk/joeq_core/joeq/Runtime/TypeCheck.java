@@ -72,8 +72,8 @@ public abstract class TypeCheck implements jq_ClassFileConstants {
             if (!s2.isArrayType()) {
                 return false;
             }
-            s2 = ((jq_Array)s2).getElementType(); s2.load(); s2.verify(); s2.prepare();
-            t2 = ((jq_Array)t2).getElementType(); t2.load(); t2.verify(); t2.prepare();
+            s2 = ((jq_Array)s2).getElementType(); s2.prepare();
+            t2 = ((jq_Array)t2).getElementType(); t2.prepare();
         }
         if (s2.isPrimitiveType() || t2.isPrimitiveType()) {
             return false;
@@ -84,7 +84,7 @@ public abstract class TypeCheck implements jq_ClassFileConstants {
         if (s2.isArrayType()) {
             ((jq_Array)s2).chkState(STATE_PREPARED);
             if (((jq_Class)t2).isInterface()) {
-                //s2.load(); s2.verify(); s2.prepare();
+                //s2.prepare();
                 return ((jq_Array)s2).implementsInterface((jq_Class)t2);
             }
             return t2 == PrimordialClassLoader.getJavaLangObject();

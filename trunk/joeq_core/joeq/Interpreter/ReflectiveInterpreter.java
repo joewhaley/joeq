@@ -123,7 +123,7 @@ public class ReflectiveInterpreter extends BytecodeInterpreter {
             }
         }
     }
-    public Object invokeUnsafeMethod(jq_StaticMethod f) throws Throwable {
+    public Object invokeUnsafeMethod(jq_Method f) throws Throwable {
         if (f == Unsafe._floatToIntBits) {
             return new Integer(Float.floatToRawIntBits(state.pop_F()));
         } else if (f == Unsafe._intBitsToFloat) {
@@ -218,11 +218,11 @@ public class ReflectiveInterpreter extends BytecodeInterpreter {
         }
         public static final ReflectiveVMInterface INSTANCE = new ReflectiveVMInterface();
         public Object new_obj(jq_Type t) {
-            t.load(); t.verify(); t.prepare(); t.sf_initialize(); t.cls_initialize();
+            t.cls_initialize();
             return new UninitializedType((jq_Class) t);
         }
         public Object new_array(jq_Type t, int length) {
-            t.load(); t.verify(); t.prepare(); t.sf_initialize(); t.cls_initialize();
+            t.cls_initialize();
             return Array.newInstance(Reflection.getJDKType(((jq_Array)t).getElementType()), length);
         }
         public Object checkcast(Object o, jq_Type t) {
@@ -258,7 +258,7 @@ public class ReflectiveInterpreter extends BytecodeInterpreter {
         }
         public Object multinewarray(int[] dims, jq_Type t) {
             for (int i=0; i<dims.length; ++i) {
-                t.load(); t.verify(); t.prepare(); t.sf_initialize(); t.cls_initialize();
+                t.cls_initialize();
                 t = ((jq_Array)t).getElementType();
             }
             return Array.newInstance(Reflection.getJDKType(t), dims);
@@ -281,7 +281,7 @@ public class ReflectiveInterpreter extends BytecodeInterpreter {
         jq.initializeForHostJVMExecution();
         
         jq_Class c = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("L"+rootMethodClassName.replace('.','/')+";");
-        c.load(); c.verify(); c.prepare(); c.sf_initialize(); c.cls_initialize();
+        c.cls_initialize();
 
         jq_StaticMethod rootm = null;
         Utf8 rootm_name = Utf8.get(rootMethodName);

@@ -21,9 +21,11 @@ import Clazz.jq_Reference;
 import Clazz.jq_StaticMethod;
 import Main.jq;
 import Run_Time.TypeCheck;
+import Util.HashCodeComparator;
 import Util.LinearSet;
 import Util.NullIterator;
 import Util.SingletonIterator;
+import Util.SortedArraySet;
 
 /*
  * @author  John Whaley
@@ -62,8 +64,7 @@ public abstract class CallTargets extends AbstractSet {
             return new MultipleCallTargets(c, complete);
         }
         
-        //Set c = new LinearSet();
-        LinkedHashSet c = new LinkedHashSet();
+        Set c = SortedArraySet.FACTORY.makeSet(HashCodeComparator.INSTANCE);
         boolean complete = true;
         // HACK: some broken class files have invokevirtual on interface methods.
         if (type == BytecodeVisitor.INVOKE_VIRTUAL &&
@@ -247,8 +248,7 @@ public abstract class CallTargets extends AbstractSet {
             type = BytecodeVisitor.INVOKE_INTERFACE;
         }
 
-        //Set c = new LinearSet();
-        LinkedHashSet c = new LinkedHashSet();
+        Set c = SortedArraySet.FACTORY.makeSet(HashCodeComparator.INSTANCE);
         boolean complete = true;
         if (type == BytecodeVisitor.INVOKE_VIRTUAL) {
             if (imethod.getDeclaringClass().isPrepared()) {
@@ -470,7 +470,8 @@ public abstract class CallTargets extends AbstractSet {
 
         // find the set of equivalent interfaces
         jq_Class interf = method.getDeclaringClass();
-        Set interfaces = new LinearSet(); interfaces.add(interf);
+        Set interfaces = SortedArraySet.FACTORY.makeSet(HashCodeComparator.INSTANCE);
+        interfaces.add(interf);
         addAllSubclasses(interf, interfaces, loadClasses);
         boolean again;
         do {
@@ -583,8 +584,7 @@ public abstract class CallTargets extends AbstractSet {
         public boolean isComplete() { return complete; }
         public CallTargets union(CallTargets s) {
             if (s == NoCallTarget.INSTANCE) return this;
-            //Set result = new LinearSet();
-            LinkedHashSet result = new LinkedHashSet();
+            Set result = SortedArraySet.FACTORY.makeSet(HashCodeComparator.INSTANCE);
             boolean is_complete = this.complete;
             result.add(this.method);
             if (!s.isComplete()) is_complete = false;

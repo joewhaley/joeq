@@ -84,6 +84,18 @@ public class jq_RegisterState implements x86Constants, jq_DontAlign {
         return Esp;
     }
 
+    public CodeAddress getEip() {
+        return Eip;
+    }
+    
+    public void setEbp(StackAddress a) {
+        Ebp = a;
+    }
+
+    public void setEip(CodeAddress a) {
+        Eip = a;
+    }
+    
     /*
     public static final jq_Class _class;
     public static final jq_InstanceField _eax, _ecx, _edx, _ebx, _esi, _edi, _ebp, _esp, _eip;

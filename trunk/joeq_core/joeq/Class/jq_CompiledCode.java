@@ -68,17 +68,17 @@ public class jq_CompiledCode implements Comparable {
     public CodeAddress findCatchBlock(CodeAddress ip, jq_Class extype) {
         int offset = ip.difference(start);
         if (handlers == null) {
-            if (TRACE) SystemInterface.debugmsg("no handlers in " + this);
+            if (TRACE) SystemInterface.debugwriteln("no handlers in " + this);
             return null;
         }
         for (int i = 0; i < handlers.length; ++i) {
             jq_TryCatch tc = handlers[i];
-            if (TRACE) SystemInterface.debugmsg("checking handler: " + tc);
+            if (TRACE) SystemInterface.debugwriteln("checking handler: " + tc);
             if (tc.catches(offset, extype))
                 return (CodeAddress) start.offset(tc.getHandlerEntry());
-            if (TRACE) SystemInterface.debugmsg("does not catch");
+            if (TRACE) SystemInterface.debugwriteln("does not catch");
         }
-        if (TRACE) SystemInterface.debugmsg("no appropriate handler found in " + this);
+        if (TRACE) SystemInterface.debugwriteln("no appropriate handler found in " + this);
         return null;
     }
 
@@ -100,9 +100,9 @@ public class jq_CompiledCode implements Comparable {
     /** Rewrite the entrypoint to branch to the given compiled code. */
     public void redirect(jq_CompiledCode that) {
         CodeAddress newEntrypoint = that.getEntrypoint();
-        if (TRACE_REDIRECT) SystemInterface.debugmsg("redirecting " + this + " to point to " + that);
+        if (TRACE_REDIRECT) SystemInterface.debugwriteln("redirecting " + this + " to point to " + that);
         if (entrypoint.difference(start.offset(5)) >= 0) {
-            if (TRACE_REDIRECT) SystemInterface.debugmsg("redirecting via trampoline");
+            if (TRACE_REDIRECT) SystemInterface.debugwriteln("redirecting via trampoline");
             // both should start with "push EBP"
             jq.Assert(entrypoint.peek1() == newEntrypoint.peek1());
             // put target address (just after push EBP)
@@ -112,7 +112,7 @@ public class jq_CompiledCode implements Comparable {
             // put backward branch to jump instruction
             entrypoint.offset(1).poke2((short) 0xF8EB); // JMP
         } else {
-            if (TRACE_REDIRECT) SystemInterface.debugmsg("redirecting by rewriting targets");
+            if (TRACE_REDIRECT) SystemInterface.debugwriteln("redirecting by rewriting targets");
             Iterator it = CodeAllocator.getCompiledMethods();
             while (it.hasNext()) {
                 jq_CompiledCode cc = (jq_CompiledCode) it.next();
@@ -147,7 +147,7 @@ public class jq_CompiledCode implements Comparable {
             while (i.hasNext()) {
                 DirectBindCall r = (DirectBindCall) i.next();
                 if (r.getTarget() == method) {
-                    if (TRACE_REDIRECT) SystemInterface.debugmsg("patching direct bind call in " + this + " at " + r.getSource().stringRep() + " to refer to " + cc);
+                    if (TRACE_REDIRECT) SystemInterface.debugwriteln("patching direct bind call in " + this + " at " + r.getSource().stringRep() + " to refer to " + cc);
                     r.patchTo(cc);
                 }
             }

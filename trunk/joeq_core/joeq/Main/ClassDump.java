@@ -44,6 +44,8 @@ public abstract class ClassDump {
         c.prepare();
         System.out.println("Initializing static fields of "+c+"...");
         c.sf_initialize();
+        //System.out.println("Compiling "+c+"...");
+        //c.compile();
         dumpClass(System.out, c);
         //jq_Class c2 = (jq_Class)PrimordialClassLoader.loader.getOrCreateType("Ljava/lang/Exception;");
         //System.out.println(Run_Time.TypeCheck.isAssignable(c, c2));

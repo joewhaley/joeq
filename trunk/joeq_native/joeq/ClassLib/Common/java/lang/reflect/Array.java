@@ -206,7 +206,7 @@ public abstract class Array {
         if (t == jq_Primitive.VOID)
             throw new IllegalArgumentException("cannot create a void array");
         jq_Array a = t.getArrayTypeForElementType();
-        a.load(); a.verify(); a.prepare(); a.sf_initialize(); a.cls_initialize();
+        a.cls_initialize();
         return a.newInstance(length);
     }
     private static Object multiNewArray(Class componentType, int[] dimensions)
@@ -222,7 +222,7 @@ public abstract class Array {
             if (dimensions[i] < 0)
                 throw new NegativeArraySizeException("dim "+i+": "+dimensions[i]+" < 0");
             a = a.getArrayTypeForElementType();
-            a.load(); a.verify(); a.prepare(); a.sf_initialize(); a.cls_initialize();
+            a.cls_initialize();
         }
         return HeapAllocator.multinewarray_helper(dimensions, 0, (jq_Array)a);
     }

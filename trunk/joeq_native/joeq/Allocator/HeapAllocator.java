@@ -18,9 +18,11 @@ import Bootstrap.PrimordialClassLoader;
 import Run_Time.Unsafe;
 import Run_Time.SystemInterface;
 import Main.jq;
+import Memory.Address;
 import Memory.CodeAddress;
 import Memory.HeapAddress;
 import Memory.StackAddress;
+import Memory.Heap.Heap;
 
 import java.lang.reflect.Array;
 import java.util.Set;
@@ -30,7 +32,7 @@ import java.util.HashSet;
  * @author  John Whaley
  * @version $Id$
  */
-public abstract class HeapAllocator implements jq_ClassFileConstants, ObjectLayout {
+public abstract class HeapAllocator implements jq_ClassFileConstants {
     
     //// ABSTRACT METHODS THAT ALLOCATORS NEED TO IMPLEMENT.
     
@@ -103,9 +105,20 @@ public abstract class HeapAllocator implements jq_ClassFileConstants, ObjectLayo
      */
     public abstract int totalMemory();
     
+    /**
+     * Initiate a garbage collection.
+     */
+    public abstract void collect();
+    
+    /**
+     * Process a reference to a heap object during garbage collection.
+     */
+    public abstract void processPtrField(Address a);
+    
     //// STATIC, ALLOCATION-RELATED HELPER METHODS.
     
-    /** Initialize class t and return a new uninitialized object of that type.
+    /**
+     * Initialize class t and return a new uninitialized object of that type.
      * If t is not a class type, throw a VerifyError.
      *
      * @param t type to initialize and create object of
@@ -117,11 +130,12 @@ public abstract class HeapAllocator implements jq_ClassFileConstants, ObjectLayo
         if (!t.isClassType())
             throw new VerifyError();
         jq_Class k = (jq_Class)t;
-        k.load(); k.verify(); k.prepare(); k.sf_initialize(); k.cls_initialize();
+        k.cls_initialize();
         return k.newInstance();
     }
     
-    /** Allocate a multidimensional array with dim dimensions and array type f.
+    /**
+     * Allocate a multidimensional array with dim dimensions and array type f.
      * dim dimensions are read from the stack frame.  (NOTE: this method does NOT
      * reset the stack pointer for the dimensions arguments!  The caller must handle it!)
      * If f is not an array type, throws VerifyError.
@@ -138,7 +152,7 @@ public abstract class HeapAllocator implements jq_ClassFileConstants, ObjectLayo
         if (!f.isArrayType())
             throw new VerifyError();
         jq_Array a = (jq_Array)f;
-        a.load(); a.verify(); a.prepare(); a.sf_initialize(); a.cls_initialize();
+        a.cls_initialize();
         if (a.getDimensionality() < dim)
             throw new VerifyError();
         int[] n_elem = new int[dim];
@@ -155,7 +169,8 @@ public abstract class HeapAllocator implements jq_ClassFileConstants, ObjectLayo
         return multinewarray_helper(n_elem, 0, a);
     }
     
-    /** Allocates a multidimensional array of type a, with dimensions given in
+    /**
+     * Allocates a multidimensional array of type a, with dimensions given in
      * dims[ind] to dims[dims.length-1].  a must be of dimensionality at least
      * dims.length-ind.
      *
@@ -176,14 +191,15 @@ public abstract class HeapAllocator implements jq_ClassFileConstants, ObjectLayo
             return o;
         Object[] o2 = (Object[])o;
         jq_Array a2 = (jq_Array)a.getElementType();
-        a2.load(); a2.verify(); a2.prepare(); a2.sf_initialize(); a2.cls_initialize();
+        a2.cls_initialize();
         for (int i=0; i<length; ++i) {
             o2[i] = multinewarray_helper(dims, ind+1, a2);
         }
         return o2;
     }
 
-    /** Clone the given object.  NOTE: Does not check if the object implements Cloneable.
+    /**
+     * Clone the given object.  NOTE: Does not check if the object implements Cloneable.
      *
      * @return new clone
      * @param o object to clone
@@ -195,8 +211,8 @@ public abstract class HeapAllocator implements jq_ClassFileConstants, ObjectLayo
         if (t.isClassType()) {
             jq_Class k = (jq_Class)t;
             Object p = k.newInstance();
-            if (k.getInstanceSize()-OBJ_HEADER_SIZE > 0)
-                SystemInterface.mem_cpy(HeapAddress.addressOf(p), HeapAddress.addressOf(o), k.getInstanceSize()-OBJ_HEADER_SIZE);
+            if (k.getInstanceSize()-ObjectLayout.OBJ_HEADER_SIZE > 0)
+                SystemInterface.mem_cpy(HeapAddress.addressOf(p), HeapAddress.addressOf(o), k.getInstanceSize()-ObjectLayout.OBJ_HEADER_SIZE);
             return p;
         } else {
             jq.Assert(t.isArrayType());
@@ -204,15 +220,29 @@ public abstract class HeapAllocator implements jq_ClassFileConstants, ObjectLayo
             int length = Array.getLength(o);
             Object p = k.newInstance(length);
             if (length > 0)
-                SystemInterface.mem_cpy(HeapAddress.addressOf(p), HeapAddress.addressOf(o), k.getInstanceSize(length)-ARRAY_HEADER_SIZE);
+                SystemInterface.mem_cpy(HeapAddress.addressOf(p), HeapAddress.addressOf(o), k.getInstanceSize(length)-ObjectLayout.ARRAY_HEADER_SIZE);
             return p;
         }
+    }
+    
+    /**
+     * Handle heap exhaustion.
+     * 
+     * @param heap the exhausted heap
+     * @param size number of bytes requested in the failing allocation
+     * @param count the retry count for the failing allocation.
+     */
+    public static void heapExhausted(Heap heap, int size, int count)
+    throws OutOfMemoryError {
+        if (count > 3) outOfMemory();
+        // TODO: trigger GC.
     }
     
     private static boolean isOutOfMemory = false;
     private static final OutOfMemoryError outofmemoryerror = new OutOfMemoryError();
 
-    /** Called in an out of memory situation.
+    /**
+     * Called in an out of memory situation.
      *
      * @throws OutOfMemoryError always thrown
      */    
@@ -222,7 +252,7 @@ public abstract class HeapAllocator implements jq_ClassFileConstants, ObjectLayo
             SystemInterface.die(-1);
         }
         isOutOfMemory = true;
-        SystemInterface.debugmsg("Out of memory!");
+        SystemInterface.debugwriteln("Out of memory!");
         throw outofmemoryerror;
     }
     
@@ -288,11 +318,13 @@ public abstract class HeapAllocator implements jq_ClassFileConstants, ObjectLayo
          */
         public int hashCode() { return this.ip.to32BitValue(); }
         
+        /*
         public static final jq_InstanceField _ip;
         static {
             jq_Class k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LAllocator/HeapAllocator$HeapPointer;");
             _ip = k.getOrCreateInstanceField("ip", "I");
         }
+        */
     }
     
     public static final jq_StaticMethod _clsinitAndAllocateObject;

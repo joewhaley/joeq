@@ -2662,7 +2662,7 @@ public abstract class Operator {
                 Object e = getObjectOpValue(getElement(q), s);
                 if (e == null) return;
                 jq_Reference t = Reflection.getTypeOf(e);
-                t.load(); t.verify(); t.prepare(); t.sf_initialize(); t.cls_initialize();
+                t.cls_initialize();
                 jq_Array a = (jq_Array)Reflection.getTypeOf(o);
                 jq_Type t2 = a.getElementType();
                 if (!TypeCheck.isAssignable(t, t2))
@@ -2708,7 +2708,7 @@ public abstract class Operator {
             ParamListOperand plo = getParamList(q);
             jq_Method f = getMethod(q).getMethod();
             jq_Reference t = Reflection.getTypeOf(s.getReg_A(plo.get(0).getRegister()));
-            t.load(); t.verify(); t.prepare(); t.sf_initialize(); t.cls_initialize();
+            t.cls_initialize();
             f = t.getVirtualMethod(f.getNameAndDesc());
             if ((f == null) || f.isAbstract()) {
                 s.handleException(new AbstractMethodError(s.currentLocation()));
@@ -3085,7 +3085,7 @@ public abstract class Operator {
                 Object o = getObjectOpValue(getSrc(q), s);
                 if (o != null) {
                     jq_Type t2 = Reflection.getTypeOf(o);
-                    t2.load(); t2.verify(); t2.prepare(); t2.sf_initialize(); t2.cls_initialize();
+                    t2.cls_initialize();
                     if (!TypeCheck.isAssignable(t2, t)) {
                         s.handleException(new ClassCastException(t2+" cannot be cast into "+t));
                         return;

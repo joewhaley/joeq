@@ -52,7 +52,7 @@ public class RuntimeCodeAllocator extends CodeAllocator {
      */
     private int maxFreePrevious;
     
-    boolean isGenerating = false;
+    volatile boolean isGenerating = false;
     
     public void init()
     throws OutOfMemoryError {
@@ -80,8 +80,9 @@ public class RuntimeCodeAllocator extends CodeAllocator {
                                        int offset,
                                        int alignment) {
         // should not be called recursively.
-        jq.Assert(!isGenerating); isGenerating = true;
-        if (TRACE) SystemInterface.debugmsg("Code generation started: "+this);
+        jq.Assert(!isGenerating);
+        if (TRACE) SystemInterface.debugwriteln("Code generation started: "+this);
+        isGenerating = true;
         // align pointer
         CodeAddress entrypoint = (CodeAddress)heapCurrent.offset(offset);
         if (alignment > 0) entrypoint.align(alignment);
@@ -90,7 +91,7 @@ public class RuntimeCodeAllocator extends CodeAllocator {
         }
         if (estimatedSize < maxFreePrevious) {
             // use a prior block's unused space.
-            if (TRACE) SystemInterface.debugmsg("Estimated size ("+Strings.hex(estimatedSize)+" fits within a prior block: maxfreeprev="+Strings.hex(maxFreePrevious));
+            if (TRACE) SystemInterface.debugwriteln("Estimated size ("+Strings.hex(estimatedSize)+" fits within a prior block: maxfreeprev="+Strings.hex(maxFreePrevious));
             // start searching at the first block
             CodeAddress start_ptr = heapFirst;
             for (;;) {
@@ -225,7 +226,7 @@ public class RuntimeCodeAllocator extends CodeAllocator {
             CodeAddress end = getEnd();
             jq.Assert(current.difference(end) <= 0);
             if (end != heapEnd) {
-                if (TRACE) SystemInterface.debugmsg("Prior block, recalculating maxfreeprevious (was "+Strings.hex(maxFreePrevious)+")");
+                if (TRACE) SystemInterface.debugwriteln("Prior block, recalculating maxfreeprevious (was "+Strings.hex(maxFreePrevious)+")");
                 // prior block
                 end.poke(current);
                 // recalculate max free previous
@@ -238,14 +239,14 @@ public class RuntimeCodeAllocator extends CodeAllocator {
                     maxFreePrevious = Math.max(maxFreePrevious, temp);
                     start_ptr = (CodeAddress)start_ptr.peek();
                 }
-                if (TRACE) SystemInterface.debugmsg("New maxfreeprevious: "+Strings.hex(maxFreePrevious));
+                if (TRACE) SystemInterface.debugwriteln("New maxfreeprevious: "+Strings.hex(maxFreePrevious));
             } else {
                 // current block
                 heapCurrent = current;
                 heapEnd.poke(heapCurrent);
             }
             isGenerating = false;
-            if (TRACE) SystemInterface.debugmsg("Code generation completed: "+this);
+            if (TRACE) SystemInterface.debugwriteln("Code generation completed: "+this);
             jq_CompiledCode cc = new jq_CompiledCode(m, start, current.difference(start), entrypoint, ex, bcm, exd, code_relocs, data_relocs);
             CodeAllocator.registerCode(cc);
             return cc;

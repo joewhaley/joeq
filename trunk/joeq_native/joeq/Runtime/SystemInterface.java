@@ -7,6 +7,9 @@
 
 package Run_Time;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
 import Clazz.jq_InstanceField;
@@ -18,6 +21,7 @@ import Memory.HeapAddress;
 import Memory.StackAddress;
 import Scheduler.jq_RegisterState;
 import Scheduler.jq_Thread;
+import UTF.Utf8;
 
 /**
  * @author  John Whaley
@@ -25,12 +29,16 @@ import Scheduler.jq_Thread;
  */
 public abstract class SystemInterface {
 
-    public static CodeAddress debugmsg_4;
-    public static CodeAddress debugwmsg_4;
+    public static CodeAddress debugwrite_8;
+    public static CodeAddress debugwwrite_8;
+    public static CodeAddress debugwriteln_8;
+    public static CodeAddress debugwwriteln_8;
     public static CodeAddress syscalloc_4;
+    public static CodeAddress sysfree_4;
     public static CodeAddress die_4;
     public static CodeAddress currentTimeMillis_0;
     public static CodeAddress mem_cpy_12;
+    public static CodeAddress mem_set_12;
     public static CodeAddress file_open_12;
     public static CodeAddress file_readbytes_12;
     public static CodeAddress file_writebyte_8;
@@ -73,15 +81,19 @@ public abstract class SystemInterface {
     public static CodeAddress init_semaphore_0;
     public static CodeAddress wait_for_single_object_8;
     public static CodeAddress release_semaphore_8;
+    public static CodeAddress query_performance_counter_0;
+    public static CodeAddress query_performance_frequency_0;
 
     public static final jq_Class _class;
-    public static final jq_StaticField _debugmsg;
+    public static final jq_StaticField _debugwrite;
+    public static final jq_StaticField _debugwriteln;
     public static final jq_InstanceField _string_value;
     public static final jq_InstanceField _string_offset;
     public static final jq_InstanceField _string_count;
     static {
         _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LRun_Time/SystemInterface;");
-        _debugmsg = _class.getOrCreateStaticField("debugmsg_4", "LMemory/CodeAddress;");
+        _debugwrite = _class.getOrCreateStaticField("debugwrite_8", "LMemory/CodeAddress;");
+        _debugwriteln = _class.getOrCreateStaticField("debugwriteln_8", "LMemory/CodeAddress;");
         // cannot use getJavaLangString here, as it may not yet have been initialized.
         jq_Class jls = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/String;");
         _string_value = jls.getOrCreateInstanceField("value", "[C");
@@ -89,7 +101,7 @@ public abstract class SystemInterface {
         _string_count = jls.getOrCreateInstanceField("count", "I");
     }
 
-    public static void debugmsg(String msg) {
+    public static void debugwrite(String msg) {
         if (!jq.RunningNative) {
             System.err.println(msg);
             return;
@@ -101,16 +113,56 @@ public abstract class SystemInterface {
         Unsafe.pushArgA(value.offset(offset*2));
         try {
             Unsafe.getThreadBlock().disableThreadSwitch();
-            Unsafe.invoke(debugwmsg_4);
+            Unsafe.invoke(debugwwrite_8);
             Unsafe.getThreadBlock().enableThreadSwitch();
         } catch (Throwable t) { jq.UNREACHABLE(); }
     }
     
-    public static void debugmsg(byte[] msg) {
+    public static void debugwrite(Utf8 msg) {
+        msg.debugWrite();
+    }
+    
+    public static void debugwrite(byte[] msg) {
+        debugwrite(msg, msg.length);
+    }
+    
+    public static void debugwrite(byte[] msg, int count) {
+        Unsafe.pushArg(count);
         Unsafe.pushArgA(HeapAddress.addressOf(msg));
         try {
             Unsafe.getThreadBlock().disableThreadSwitch();
-            Unsafe.invoke(debugmsg_4);
+            Unsafe.invoke(debugwrite_8);
+            Unsafe.getThreadBlock().enableThreadSwitch();
+        } catch (Throwable t) { jq.UNREACHABLE(); }
+    }
+    
+    public static void debugwriteln(String msg) {
+        if (!jq.RunningNative) {
+            System.err.println(msg);
+            return;
+        }
+        HeapAddress value = (HeapAddress)HeapAddress.addressOf(msg).offset(_string_value.getOffset()).peek();
+        int offset = HeapAddress.addressOf(msg).offset(_string_offset.getOffset()).peek4();
+        int count = HeapAddress.addressOf(msg).offset(_string_count.getOffset()).peek4();
+        Unsafe.pushArg(count);
+        Unsafe.pushArgA(value.offset(offset*2));
+        try {
+            Unsafe.getThreadBlock().disableThreadSwitch();
+            Unsafe.invoke(debugwwriteln_8);
+            Unsafe.getThreadBlock().enableThreadSwitch();
+        } catch (Throwable t) { jq.UNREACHABLE(); }
+    }
+    
+    public static void debugwriteln(byte[] msg) {
+        debugwriteln(msg, msg.length);
+    }
+    
+    public static void debugwriteln(byte[] msg, int count) {
+        Unsafe.pushArg(count);
+        Unsafe.pushArgA(HeapAddress.addressOf(msg));
+        try {
+            Unsafe.getThreadBlock().disableThreadSwitch();
+            Unsafe.invoke(debugwriteln_8);
             Unsafe.getThreadBlock().enableThreadSwitch();
         } catch (Throwable t) { jq.UNREACHABLE(); }
     }
@@ -124,6 +176,15 @@ public abstract class SystemInterface {
             return v;
         } catch (Throwable t) { jq.UNREACHABLE(); }
         return null;
+    }
+    
+    public static void sysfree(Address a) {
+        Unsafe.pushArgA(a);
+        try {
+            Unsafe.getThreadBlock().disableThreadSwitch();
+            Unsafe.invoke(sysfree_4);
+            Unsafe.getThreadBlock().enableThreadSwitch();
+        } catch (Throwable t) { jq.UNREACHABLE(); }
     }
     
     public static void die(int code) {
@@ -176,6 +237,17 @@ public abstract class SystemInterface {
         } catch (Throwable t) { jq.UNREACHABLE(); }
     }
 
+    public static void mem_set(Address to, int size, byte b) {
+        Unsafe.pushArg(b);
+        Unsafe.pushArg(size);
+        Unsafe.pushArgA(to);
+        try {
+            Unsafe.getThreadBlock().disableThreadSwitch();
+            Unsafe.invoke(mem_set_12);
+            Unsafe.getThreadBlock().enableThreadSwitch();
+        } catch (Throwable t) { jq.UNREACHABLE(); }
+    }
+    
     // constants from fcntl.h
     public static final int _O_RDONLY = 0x0000;
     public static final int _O_WRONLY = 0x0001;
@@ -624,6 +696,24 @@ public abstract class SystemInterface {
             Unsafe.pushArg(semaphore);
             Unsafe.getThreadBlock().disableThreadSwitch();
             int v = (int)Unsafe.invoke(release_semaphore_8);
+            Unsafe.getThreadBlock().enableThreadSwitch();
+            return v;
+        } catch (Throwable t) { jq.UNREACHABLE(); }
+        return 0;
+    }
+    public static long query_performance_counter() {
+        try {
+            Unsafe.getThreadBlock().disableThreadSwitch();
+            long v = Unsafe.invoke(query_performance_counter_0);
+            Unsafe.getThreadBlock().enableThreadSwitch();
+            return v;
+        } catch (Throwable t) { jq.UNREACHABLE(); }
+        return 0;
+    }
+    public static long query_performance_frequency() {
+        try {
+            Unsafe.getThreadBlock().disableThreadSwitch();
+            long v = Unsafe.invoke(query_performance_frequency_0);
             Unsafe.getThreadBlock().enableThreadSwitch();
             return v;
         } catch (Throwable t) { jq.UNREACHABLE(); }

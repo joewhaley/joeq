@@ -2570,6 +2570,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         public void verify() { jq.UNREACHABLE(); }
         public void prepare() { jq.UNREACHABLE(); }
         public void sf_initialize() { jq.UNREACHABLE(); }
+        public void compile() { jq.UNREACHABLE(); }
         public void cls_initialize() { jq.UNREACHABLE(); }
         public String toString() { return "<retaddr> (target="+returnTarget+")"; }
         public boolean equals(Object rat) {

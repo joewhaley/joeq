@@ -158,7 +158,7 @@ public class QuadInterpreter extends Compil3r.Quad.QuadVisitor.EmptyVisitor {
             for (int i=0; i<dim; ++i)
                 dims[dim-i-1] = getReg_I(plo.get(i+2).getRegister());
             for (int i=0; i<dims.length; ++i) {
-                t.load(); t.verify(); t.prepare(); t.sf_initialize(); t.cls_initialize();
+                t.cls_initialize();
                 t = ((jq_Array)t).getElementType();
             }
             try {
@@ -214,7 +214,7 @@ public class QuadInterpreter extends Compil3r.Quad.QuadVisitor.EmptyVisitor {
     public QuadInterpreter invokeMethod(jq_Method f, ParamListOperand plo) {
         if (TRACE) System.out.println("Invoking "+f);
         jq_Class c = f.getDeclaringClass();
-        c.load(); c.verify(); c.prepare(); c.sf_initialize(); c.cls_initialize();
+        c.cls_initialize();
         if (!interpret_filter.isElement(f))
             return invokeReflective(f, plo);
         ControlFlowGraph cfg = CodeCache.getCode(f);
@@ -308,7 +308,7 @@ public class QuadInterpreter extends Compil3r.Quad.QuadVisitor.EmptyVisitor {
 
     public void handleException(Throwable x) {
         jq_Class t = (jq_Class)jq_Reference.getTypeOf(x);
-        t.load(); t.verify(); t.prepare();
+        t.prepare();
         ExceptionHandler eh = current_bb.getExceptionHandlers().mustCatch(t);
         if (eh != null) {
             caught = x;

@@ -67,7 +67,7 @@ public abstract class ObjectInputStream {
         if (i == null)
             throw new InstantiationException("no empty arg initializer in "+initclass);
         i.checkCallerAccess(3);
-        c1.verify(); c1.prepare(); c1.sf_initialize(); c1.cls_initialize(); 
+        c1.cls_initialize(); 
         Object o = c1.newInstance();
         try {
             Reflection.invokeinstance_V(i, o);
@@ -84,7 +84,7 @@ public abstract class ObjectInputStream {
         if (!(t instanceof jq_Array))
             throw new java.lang.IllegalArgumentException(aclass+" is not an array type");
         jq_Array a = (jq_Array)t;
-        a.load(); a.verify(); a.prepare(); a.sf_initialize(); a.cls_initialize();
+        a.cls_initialize();
         return a.newInstance(length);
     }
 

@@ -7,55 +7,153 @@
 
 package Interpreter;
 
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+
 import Allocator.HeapAllocator;
 import Allocator.ObjectLayout;
+import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Array;
 import Clazz.jq_Class;
 import Clazz.jq_InstanceField;
 import Clazz.jq_Method;
+import Clazz.jq_Primitive;
 import Clazz.jq_Reference;
 import Clazz.jq_StaticField;
 import Clazz.jq_StaticMethod;
 import Clazz.jq_Type;
+import Main.TraceFlags;
 import Main.jq;
 import Memory.Address;
 import Memory.CodeAddress;
+import Memory.Debug;
 import Memory.HeapAddress;
 import Memory.StackAddress;
+import Run_Time.ExceptionDeliverer;
 import Run_Time.Monitor;
+import Run_Time.Reflection;
+import Run_Time.SystemInterface;
 import Run_Time.TypeCheck;
 import Run_Time.Unsafe;
+import UTF.Utf8;
+import Util.ArrayIterator;
+import Util.FilterIterator;
 
 /*
  * @author  John Whaley
  * @version $Id$
  */
-public class DirectInterpreter extends BytecodeInterpreter implements ObjectLayout {
+public class DirectInterpreter extends BytecodeInterpreter {
 
     /** Creates new DirectInterpreter */
     public DirectInterpreter(State initialState) {
         super(new DirectVMInterface(), initialState);
     }
 
+    public static final Set bad_classes;
+    public static final Set bad_methods;
+    public static final FilterIterator.Filter interpret_filter;
+    static {
+        bad_classes = new HashSet();
+        bad_classes.add(SystemInterface._class);
+        bad_classes.add(Reflection._class);
+        bad_classes.add(PrimordialClassLoader.loader.getOrCreateBSType("LRun_Time/ExceptionDeliverer;"));
+        bad_methods = new HashSet();
+        jq_Class k2 = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/PrintStream;");
+        jq_Method m2 = k2.getOrCreateInstanceMethod("write", "(Ljava/lang/String;)V");
+        //bad_methods.add(m2);
+        k2 = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/OutputStreamWriter;");
+        m2 = k2.getOrCreateInstanceMethod("write", "([CII)V");
+        //bad_methods.add(m2);
+        bad_methods.add(Allocator.HeapAllocator._multinewarray);
+        interpret_filter = new FilterIterator.Filter() {
+            public boolean isElement(Object o) {
+                jq_Method m = (jq_Method)o;
+                if (m.getBytecode() == null) return false;
+                if (bad_classes.contains(m.getDeclaringClass())) return false;
+                if (bad_methods.contains(m)) return false;
+                return true;
+            }
+        };
+    }
+
     public Object invokeMethod(jq_Method m) throws Throwable {
+        //Debug.writeln("Enter: "+m);
         jq_Class k = m.getDeclaringClass();
-        k.load(); k.verify(); k.prepare(); k.sf_initialize(); k.cls_initialize();
+        k.cls_initialize();
+        if (!interpret_filter.isElement(m)) {
+            //Debug.writeln("Native call: "+m);
+            Object result = invokeMethod(m, null);
+            //Debug.writeln("Result: "+result);
+            return result;
+        }
         int localsize = m.getMaxLocals() * HeapAddress.size();
         int stacksize = m.getMaxStack() * HeapAddress.size();
         StackAddress newframe = StackAddress.alloca(localsize+stacksize);
-        DirectState callee = new DirectState(newframe, (StackAddress) newframe.offset(localsize), m.getMaxLocals());
-        return this.invokeMethod(m, callee);
+        DirectState callee = new DirectState((StackAddress) newframe.offset(localsize+stacksize), (StackAddress) newframe.offset(stacksize), m.getMaxLocals());
+        Object result = this.invokeMethod(m, callee);
+        //Debug.writeln("Leave: "+m);
+        return result;
     }
     
-    public Object invokeUnsafeMethod(jq_StaticMethod f) throws Throwable {
+    public Object invokeUnsafeMethod(jq_Method f) throws Throwable {
         if (f == Unsafe._intBitsToFloat) {
             return new Float(state.pop_F());
+        } else if (f == Unsafe._floatToIntBits) {
+            return new Integer(state.pop_I());
         } else if (f == Unsafe._doubleToLongBits) {
             return new Long(state.pop_L());
         } else if (f == Unsafe._longBitsToDouble) {
             return new Double(state.pop_D());
         } else if (f == Unsafe._getThreadBlock) {
             return Unsafe.getThreadBlock();
+        } else if (f.getName() == Utf8.get("to32BitValue")) {
+            return new Integer(((Address) state.pop()).to32BitValue());
+        } else if (f.getName() == Utf8.get("addressOf")) {
+            return HeapAddress.addressOf(state.pop_A());
+        } else if (f.getName() == Utf8.get("asObject")) {
+            return ((HeapAddress)state.pop()).asObject();
+        } else if (f.getName() == Utf8.get("offset")) {
+            int i = state.pop_I();
+            return ((Address)state.pop()).offset(i);
+        } else if (f.getName() == Utf8.get("asReferenceType")) {
+            return (jq_Reference) ((HeapAddress)state.pop()).asObject();
+        } else if (f.getName() == Utf8.get("peek")) {
+            return ((Address)state.pop()).peek();
+        } else if (f.getName() == Utf8.get("peek1")) {
+            return new Integer(((Address)state.pop()).peek1());
+        } else if (f.getName() == Utf8.get("peek2")) {
+            return new Integer(((Address)state.pop()).peek2());
+        } else if (f.getName() == Utf8.get("peek4")) {
+            return new Integer(((Address)state.pop()).peek4());
+        } else if (f.getName() == Utf8.get("peek8")) {
+            return new Long(((Address)state.pop()).peek8());
+        } else if (f.getName() == Utf8.get("poke")) {
+            Address v = (Address) state.pop();
+            Address a = (Address) state.pop();
+            a.poke(v);
+            return null;
+        } else if (f.getName() == Utf8.get("poke1")) {
+            byte v = (byte) state.pop_I();
+            Address a = (Address) state.pop();
+            a.poke1(v);
+            return null;
+        } else if (f.getName() == Utf8.get("poke2")) {
+            short v = (short) state.pop_I();
+            Address a = (Address) state.pop();
+            a.poke2(v);
+            return null;
+        } else if (f.getName() == Utf8.get("poke4")) {
+            int v = state.pop_I();
+            Address a = (Address) state.pop();
+            a.poke4(v);
+            return null;
+        } else if (f.getName() == Utf8.get("poke8")) {
+            long v = state.pop_L();
+            Address a = (Address) state.pop();
+            a.poke8(v);
+            return null;
         } else {
             System.err.println(f.toString());
             jq.UNREACHABLE();
@@ -74,6 +172,27 @@ public class DirectInterpreter extends BytecodeInterpreter implements ObjectLayo
             this.nlocals = nlocals;
         }
 
+        public void fillInParameters(jq_Type[] paramTypes, Object[] incomingArgs) {
+            for (int i=0, j=0; i<paramTypes.length; ++i, ++j) {
+                jq_Type t = paramTypes[i];
+                if (t.isReferenceType()) {
+                    push_A(incomingArgs[j]);
+                } else if (t.isIntLike()) {
+                    push_I(Reflection.unwrapToInt(incomingArgs[j]));
+                } else if (t == jq_Primitive.FLOAT) {
+                    push_F(Reflection.unwrapToFloat(incomingArgs[j]));
+                } else if (t == jq_Primitive.LONG) {
+                    push_L(Reflection.unwrapToLong(incomingArgs[j]));
+                    ++j;
+                } else if (t == jq_Primitive.DOUBLE) {
+                    push_D(Reflection.unwrapToDouble(incomingArgs[j]));
+                    ++j;
+                } else {
+                    jq.UNREACHABLE();
+                }
+            }
+        }
+        
         public void push_I(int v) {
             sp = (StackAddress) sp.offset(-HeapAddress.size());
             sp.poke4(v);
@@ -242,13 +361,54 @@ public class DirectInterpreter extends BytecodeInterpreter implements ObjectLayo
         public void putfield_Z(Object o, jq_InstanceField f, boolean v) { HeapAddress.addressOf(o).offset(f.getOffset()).poke1(v?(byte)1:(byte)0); }
         public Object new_obj(jq_Type t) { return ((jq_Class)t).newInstance(); }
         public Object new_array(jq_Type t, int length) { return ((jq_Array)t).newInstance(length); }
-        public Object checkcast(Object o, jq_Type t) { return TypeCheck.checkcast(o, t); }
+        public Object checkcast(Object o, jq_Type t) {
+            if (t.isAddressType()) return o;
+            return TypeCheck.checkcast(o, t);
+        }
         public boolean instance_of(Object o, jq_Type t) { return TypeCheck.instance_of(o, t); }
-        public int arraylength(Object o) { return HeapAddress.addressOf(o).offset(ARRAY_LENGTH_OFFSET).peek4(); }
+        public int arraylength(Object o) { return HeapAddress.addressOf(o).offset(ObjectLayout.ARRAY_LENGTH_OFFSET).peek4(); }
         public void monitorenter(Object o, MethodInterpreter v) { Monitor.monitorenter(o); }
         public void monitorexit(Object o) { Monitor.monitorexit(o); }
         public Object multinewarray(int[] dims, jq_Type t) { return HeapAllocator.multinewarray_helper(dims, 0, (jq_Array)t); }
         public jq_Reference getJQTypeOf(Object o) { return jq_Reference.getTypeOf(o); }
     }
 
+    // Invoke reflective interpreter from command line.
+    public static void main(String[] s_args) throws Throwable {
+        String s = s_args[0];
+        int dotloc = s.lastIndexOf('.');
+        String rootMethodClassName = s.substring(0, dotloc);
+        String rootMethodName = s.substring(dotloc+1);
+        
+        jq.Assert(jq.RunningNative);
+        
+        jq_Class c = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("L"+rootMethodClassName.replace('.','/')+";");
+        c.cls_initialize();
+
+        jq_StaticMethod rootm = null;
+        Utf8 rootm_name = Utf8.get(rootMethodName);
+        for(Iterator it = new ArrayIterator(c.getDeclaredStaticMethods());
+            it.hasNext(); ) {
+            jq_StaticMethod m = (jq_StaticMethod)it.next();
+            if (m.getName() == rootm_name) {
+                rootm = m;
+                break;
+            }
+        }
+        if (rootm == null)
+            jq.UNREACHABLE("root method not found: "+rootMethodClassName+"."+rootMethodName);
+        Object[] args = new Object[rootm.getParamWords()];
+        jq_Type[] paramTypes = rootm.getParamTypes();
+        for (int i=0, j=0; i<paramTypes.length; ++i) {
+            j = TraceFlags.parseArg(args, i, paramTypes[i], s_args, j);
+        }
+        StackAddress newframe = StackAddress.alloca(args.length * HeapAddress.size());
+        StackAddress fp = (StackAddress) newframe.offset(args.length * HeapAddress.size());
+        StackAddress sp = fp;
+        DirectState initialState = new DirectState(fp, sp, 0);
+        initialState.fillInParameters(paramTypes, args);
+        Object retval = new DirectInterpreter(initialState).invokeMethod(rootm);
+        System.out.println("Return value: "+retval);
+    }
+    
 }

@@ -48,7 +48,7 @@ public abstract class ExceptionDeliverer {
     public static void debug_trap_handler(int code) {
         boolean pass = OnlineDebugger.debuggerEntryPoint();
         if (pass) {
-            SystemInterface.debugmsg(">>> Passing on exception code "+code);
+            SystemInterface.debugwriteln(">>> Passing on exception code "+code);
             trap_handler(code);
             jq.UNREACHABLE();
         }
@@ -59,10 +59,10 @@ public abstract class ExceptionDeliverer {
     
     public static void deliverToCurrentThread(Throwable x, CodeAddress ip, StackAddress fp) {
         jq_Class x_type = (jq_Class) jq_Reference.getTypeOf(x);
-        if (TRACE) SystemInterface.debugmsg("Delivering exception of type "+x_type+" to ip="+ip.stringRep()+" fp="+fp.stringRep());
+        if (TRACE) SystemInterface.debugwriteln("Delivering exception of type "+x_type+" to ip="+ip.stringRep()+" fp="+fp.stringRep());
         for (;;) {
             jq_CompiledCode cc = CodeAllocator.getCodeContaining(ip);
-            if (TRACE) SystemInterface.debugmsg("Checking compiled code "+cc);
+            if (TRACE) SystemInterface.debugwriteln("Checking compiled code "+cc);
             if ((cc == null) || (fp.isNull())) {
                 // reached the top!
                 System.out.println("Exception in thread \""+Unsafe.getThreadBlock()+"\" "+x);
@@ -80,7 +80,7 @@ public abstract class ExceptionDeliverer {
                     }
                     
                     // go to this catch block!
-                    if (TRACE) SystemInterface.debugmsg("Jumping to catch block at "+address.stringRep());
+                    if (TRACE) SystemInterface.debugwriteln("Jumping to catch block at "+address.stringRep());
                     cc.deliverException(address, fp, x);
                     jq.UNREACHABLE();
                     return;
@@ -90,10 +90,10 @@ public abstract class ExceptionDeliverer {
                     Object o;
                     if (cc.getMethod().isStatic()) {
                         o = Reflection.getJDKType(cc.getMethod().getDeclaringClass());
-                        if (TRACE) SystemInterface.debugmsg("Performing monitorexit on static method "+cc.getMethod()+": object "+o);
+                        if (TRACE) SystemInterface.debugwriteln("Performing monitorexit on static method "+cc.getMethod()+": object "+o);
                     } else {
                         o = cc.getThisPointer(ip, fp);
-                        if (TRACE) SystemInterface.debugmsg("Performing monitorexit on instance method "+cc.getMethod()+": object "+o.getClass()+"@"+Strings.hex(System.identityHashCode(o)));
+                        if (TRACE) SystemInterface.debugwriteln("Performing monitorexit on instance method "+cc.getMethod()+": object "+o.getClass()+"@"+Strings.hex(System.identityHashCode(o)));
                     }
                     Monitor.monitorexit(o);
                 }
@@ -173,7 +173,7 @@ public abstract class ExceptionDeliverer {
             } else {
                 s = "\tat <unknown addr> (ip:"+ip.stringRep()+")";
             }
-            SystemInterface.debugmsg(s);
+            SystemInterface.debugwriteln(s);
             sf = sf.next;
         }
     }
@@ -206,9 +206,20 @@ public abstract class ExceptionDeliverer {
             }
         }
 
+        public int getSize() {
+            StackFrame p = this; int s = 0;
+            while (p != null) {
+                p = p.next; ++s;
+            }
+            return s;
+        }
         public StackFrame getNext() { return next; }
         public StackAddress getFP() { return fp; }
         public CodeAddress getIP() { return ip; }
+        
+        public String toString() {
+            return CodeAllocator.getCodeContaining(ip)+" ip="+ip.stringRep()+" fp="+fp.stringRep();
+        }
     }
     
     public static final jq_StaticMethod _athrow;

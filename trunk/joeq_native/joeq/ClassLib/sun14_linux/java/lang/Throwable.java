@@ -12,6 +12,7 @@ import Clazz.jq_CompiledCode;
 import Clazz.jq_Method;
 import Memory.CodeAddress;
 import Run_Time.ExceptionDeliverer;
+import UTF.Utf8;
 
 /**
  * @author  John Whaley
@@ -45,7 +46,8 @@ public abstract class Throwable {
                 methodName = m.getName().toString();
                 int code_offset = ip.difference(cc.getStart());
                 if (m != null) {
-                    fileName = m.getDeclaringClass().getSourceFile().toString();
+                    Utf8 fn = m.getDeclaringClass().getSourceFile();
+                    if (fn != null) fileName = fn.toString();
                     int bc_index = cc.getBytecodeIndex(ip);
                     lineNumber = m.getLineNumber(bc_index);
                 }

@@ -29,6 +29,8 @@ public class BootstrapHeapAddress extends HeapAddress implements BootstrapAddres
             this.bi = bi;
         }
         public int size() { return 4; }
+        public int logSize() { return 2; }
+        public int pageAlign() { return 12; }
         public HeapAddress getNull() { return NULL; }
         public HeapAddress addressOf(Object o) {
             //if (o == null) return NULL;

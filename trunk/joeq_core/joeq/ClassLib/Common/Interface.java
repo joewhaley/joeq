@@ -44,7 +44,8 @@ public class Interface {
     public Interface() {}
 
     public java.util.Iterator getImplementationClassDescs(UTF.Utf8 desc) {
-        if (ClassLibInterface.USE_JOEQ_CLASSLIB && desc.toString().startsWith("Ljava/")) {
+        if (ClassLibInterface.USE_JOEQ_CLASSLIB && (desc.toString().startsWith("Ljava/") ||
+                                                    desc.toString().startsWith("Lsun/misc/"))) {
             UTF.Utf8 u = UTF.Utf8.get("LClassLib/Common/"+desc.toString().substring(1));
             return java.util.Collections.singleton(u).iterator();
         }

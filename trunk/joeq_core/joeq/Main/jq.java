@@ -10,6 +10,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import Allocator.SimpleAllocator;
 import Bootstrap.MethodInvocation;
 import Bootstrap.PrimordialClassLoader;
 import ClassLib.ClassLibInterface;
@@ -373,8 +374,8 @@ public abstract class jq {
             // call java.lang.System.initializeSystemClass()
             ClassLibInterface.DEFAULT.initializeSystemClass();
         } catch (Throwable x) {
-            SystemInterface.debugmsg("Exception occurred during virtual machine initialization");
-            SystemInterface.debugmsg("Exception: " + x);
+            SystemInterface.debugwriteln("Exception occurred during virtual machine initialization");
+            SystemInterface.debugwriteln("Exception: " + x);
             if (System.err != null) x.printStackTrace(System.err);
             return;
         }
@@ -398,8 +399,24 @@ public abstract class jq {
                 ++i;
                 continue;
             }
-            if (args[i].equals("-nt") || args[i].equals("-native_threads")) { // class path
+            if (args[i].equals("-nt") || args[i].equals("-native_threads")) { // number of native threads
                 NumOfNativeThreads = Integer.parseInt(args[++i]);
+                ++i;
+                continue;
+            }
+            if (args[i].startsWith("-mx")) { // max memory
+                String amt = args[i].substring(3);
+                int mult = 1;
+                if (amt.endsWith("m") || amt.endsWith("M")) {
+                    mult = 1048576;
+                    amt = amt.substring(0, amt.length()-1);
+                } else if (amt.endsWith("k") || amt.endsWith("K")) {
+                    mult = 1024;
+                    amt = amt.substring(0, amt.length()-1);
+                }
+                int size = mult * Integer.parseInt(amt);
+                //size = HeapAddress.align(size, 20);
+                SimpleAllocator.MAX_MEMORY = size;
                 ++i;
                 continue;
             }
@@ -418,8 +435,8 @@ public abstract class jq {
                 try {
                     mi.invoke();
                 } catch (Throwable x) {
-                    SystemInterface.debugmsg("Exception occurred while initializing the virtual machine");
-                    SystemInterface.debugmsg(x.toString());
+                    SystemInterface.debugwriteln("Exception occurred while initializing the virtual machine");
+                    SystemInterface.debugwriteln(x.toString());
                     x.printStackTrace(System.err);
                     //return;
                 }
@@ -438,12 +455,12 @@ public abstract class jq {
         jq_NativeThread.initNativeThreads(nt, NumOfNativeThreads);
 
         // Here we start method replacement of classes whose name were given as arguments to -replace on the cmd line.
-        if (Clazz.jq_Class.TRACE_REPLACE_CLASS) SystemInterface.debugmsg(Strings.lineSep+"STARTING REPLACEMENT of classes: " + Clazz.jq_Class.classToReplace);
+        if (Clazz.jq_Class.TRACE_REPLACE_CLASS) SystemInterface.debugwriteln(Strings.lineSep+"STARTING REPLACEMENT of classes: " + Clazz.jq_Class.classToReplace);
         for (Iterator it = Clazz.jq_Class.classToReplace.iterator(); it.hasNext();) {
             String newCName = (String) it.next();
             PrimordialClassLoader.loader.replaceClass(newCName);
         }
-        if (Clazz.jq_Class.TRACE_REPLACE_CLASS) SystemInterface.debugmsg(Strings.lineSep+"DONE with Classes Replacement!");
+        if (Clazz.jq_Class.TRACE_REPLACE_CLASS) SystemInterface.debugwriteln(Strings.lineSep+"DONE with Classes Replacement!");
 
         String className = args[i];
         jq_Class main_class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("L" + className.replace('.', '/') + ";");
@@ -457,9 +474,6 @@ public abstract class jq {
             System.err.println("Method " + main_method + " is not public!");
             return;
         }
-        main_class.verify();
-        main_class.prepare();
-        main_class.sf_initialize();
         main_class.cls_initialize();
         String[] main_args = new String[args.length - i - 1];
         System.arraycopy(args, i + 1, main_args, 0, main_args.length);
@@ -492,10 +506,15 @@ public abstract class jq {
             public int size() {
                 return 4;
             }
+            
+            public int logSize() {
+                return 2;
+            }
+            
+            public int pageAlign() {
+                return 12; // 2**12 = 4096
+            }
 
-            //public HeapAddress getNull() { return new Bootstrap.BootstrapHeapAddress(0); }
-            //public HeapAddress addressOf(Object o) { return new Bootstrap.BootstrapHeapAddress(0); }
-            //public HeapAddress address32(int val) { return new Bootstrap.BootstrapHeapAddress(val); }
             public HeapAddress getNull() {
                 return null;
             }
@@ -574,8 +593,8 @@ public abstract class jq {
 
     public static void Assert(boolean b, String reason) {
         if (!b) {
-            SystemInterface.debugmsg("Assertion Failure!");
-            SystemInterface.debugmsg(reason);
+            SystemInterface.debugwriteln("Assertion Failure!");
+            SystemInterface.debugwriteln(reason);
             if (jq.RunningNative) {
                 Debug.OnlineDebugger.debuggerEntryPoint();
                 //new InternalError().printStackTrace();
@@ -589,7 +608,7 @@ public abstract class jq {
     }
 
     public static void TODO(String s) {
-        SystemInterface.debugmsg("TODO: " + s);
+        SystemInterface.debugwriteln("TODO: " + s);
         if (jq.RunningNative) {
             Debug.OnlineDebugger.debuggerEntryPoint();
             //new InternalError().printStackTrace();
@@ -598,7 +617,7 @@ public abstract class jq {
     }
 
     public static void TODO() {
-        SystemInterface.debugmsg("TODO");
+        SystemInterface.debugwriteln("TODO");
         if (jq.RunningNative) {
             Debug.OnlineDebugger.debuggerEntryPoint();
             //new InternalError().printStackTrace();
@@ -607,7 +626,7 @@ public abstract class jq {
     }
 
     public static void UNREACHABLE(String s) {
-        SystemInterface.debugmsg("UNREACHABLE: " + s);
+        SystemInterface.debugwriteln("UNREACHABLE: " + s);
         if (jq.RunningNative) {
             Debug.OnlineDebugger.debuggerEntryPoint();
             //new InternalError().printStackTrace();
@@ -616,7 +635,7 @@ public abstract class jq {
     }
 
     public static void UNREACHABLE() {
-        SystemInterface.debugmsg("BUG! unreachable code reached!");
+        SystemInterface.debugwriteln("BUG! unreachable code reached!");
         if (jq.RunningNative) {
             Debug.OnlineDebugger.debuggerEntryPoint();
             //new InternalError().printStackTrace();

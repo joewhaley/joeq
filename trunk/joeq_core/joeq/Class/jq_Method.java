@@ -279,23 +279,23 @@ public abstract class jq_Method extends jq_Member {
                 System.out.println("Unimplemented native method! "+this);
                 if (x86ReferenceLinker._nativeMethodError.getState() < STATE_CLSINITIALIZED) {
                     jq_Class k = x86ReferenceLinker._class;
-                    k.load(); k.verify(); //k.prepare();
+                    k.verify(); //k.prepare();
                     if (x86ReferenceLinker._nativeMethodError.getState() != STATE_PREPARED)
                         x86ReferenceLinker._nativeMethodError.prepare();
                     default_compiled_version = x86ReferenceLinker._nativeMethodError.compile();
-                    //if (k != getDeclaringClass() && getDeclaringClass().getSuperclass() != null) { k.sf_initialize(); k.cls_initialize(); }
+                    //if (k != getDeclaringClass() && getDeclaringClass().getSuperclass() != null) { k.cls_initialize(); }
                 } else {
                     default_compiled_version = x86ReferenceLinker._nativeMethodError.getDefaultCompiledVersion();
                 }
             } else if (isAbstract()) {
                 if (x86ReferenceLinker._abstractMethodError.getState() < STATE_CLSINITIALIZED) {
                     jq_Class k = x86ReferenceLinker._class;
-                    k.load(); k.verify(); //k.prepare();
+                    k.verify(); //k.prepare();
                     //default_compiled_version = x86ReferenceLinker._abstractMethodError.getDefaultCompiledVersion();
                     if (x86ReferenceLinker._abstractMethodError.getState() != STATE_PREPARED)
                         x86ReferenceLinker._abstractMethodError.prepare();
                     default_compiled_version = x86ReferenceLinker._abstractMethodError.compile();
-                    //if (k != getDeclaringClass() && getDeclaringClass().getSuperclass() != null) { k.sf_initialize(); k.cls_initialize(); }
+                    //if (k != getDeclaringClass() && getDeclaringClass().getSuperclass() != null) { k.cls_initialize(); }
                 } else {
                     default_compiled_version = x86ReferenceLinker._abstractMethodError.getDefaultCompiledVersion();
                 }

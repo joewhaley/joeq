@@ -150,7 +150,7 @@ public class Trimmer {
         jq_Class[] in = k.getInterfaces();
         for (int i=0; i<in.length; ++i) {
             jq_Class f = in[i];
-            f.load(); f.verify(); f.prepare();
+            f.prepare();
             jq_InstanceMethod[] ims = f.getVirtualMethods();
             for (int j=0; j<ims.length; ++j) {
                 jq_InstanceMethod im = ims[j];
@@ -175,7 +175,7 @@ public class Trimmer {
     
     /*
     private void addClassInitializer(jq_Class c) {
-        c.load(); c.verify(); c.prepare();
+        c.prepare();
         if (ADD_CLASS_INITIALIZERS) {
             jq_Method m = c.getClassInitializer();
             if (m != null) {
@@ -579,7 +579,7 @@ public class Trimmer {
     }
 
     public void addNecessaryInterfaceMethodImplementations(jq_Class c, jq_Class inter) {
-        inter.load(); inter.verify(); inter.prepare();
+        inter.prepare();
         jq.Assert(inter.isInterface());
         jq_InstanceMethod[] ms = inter.getVirtualMethods();
         for (int i=0; i<ms.length; ++i) {

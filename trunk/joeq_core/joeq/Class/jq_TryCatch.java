@@ -36,11 +36,11 @@ public class jq_TryCatch {
 
     // note: offset is the offset of the instruction after the one which threw the exception.
     public boolean catches(int offset, jq_Class t) {
-        if (DEBUG) SystemInterface.debugmsg(this+": checking "+Strings.hex(offset)+" "+t);
+        if (DEBUG) SystemInterface.debugwriteln(this+": checking "+Strings.hex(offset)+" "+t);
         if (offset <= startPC) return false;
         if (offset > endPC) return false;
         if (exType != null) {
-            exType.load(); exType.verify(); exType.prepare();
+            exType.prepare();
             if (!TypeCheck.isAssignable(t, exType)) return false;
         }
         return true;

@@ -62,6 +62,7 @@ public abstract class jq_Type {
     public abstract boolean isVerified();
     public abstract boolean isPrepared();
     public abstract boolean isSFInitialized();
+    public abstract boolean isCompiled();
     public abstract boolean isClsInitRunning();
     public abstract boolean isClsInitialized();
     
@@ -71,6 +72,7 @@ public abstract class jq_Type {
     public abstract void verify();
     public abstract void prepare();
     public abstract void sf_initialize();
+    public abstract void compile();
     public abstract void cls_initialize();
 
     public void accept(jq_TypeVisitor tv) { tv.visitType(this); }
