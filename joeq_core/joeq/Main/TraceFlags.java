@@ -21,6 +21,10 @@ public abstract class TraceFlags {
             Assembler.x86.x86Assembler.TRACE = true;
             return i+1;
         }
+        if (args[i].equalsIgnoreCase("-TraceBC2Quad")) {
+            Compil3r.Quad.BytecodeToQuad.ALWAYS_TRACE = true;
+            return i+1;
+        }
         if (args[i].equalsIgnoreCase("-TraceBootImage")) {
             Bootstrap.BootImage.TRACE = true;
             return i+1;
