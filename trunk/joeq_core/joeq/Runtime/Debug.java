@@ -60,6 +60,13 @@ public abstract class Debug {
         u.debugWrite();
     }
     
+    public static void write(char x) {
+        buffer[0] = (byte) x;
+        buffer[1] = (byte) 0;
+        bufferIndex = 1;
+        _delegate.write(buffer, bufferIndex);
+    }
+    
     public static void write(int x) {
         writeDecimalToBuffer(x);
         _delegate.write(buffer, bufferIndex);
