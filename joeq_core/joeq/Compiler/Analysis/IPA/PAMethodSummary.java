@@ -272,11 +272,13 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
                                     }
                                 }
                             }else{
-                                System.err.println(
-                                    "Operand " + 
-                                    q.getAllOperands().getOperand(base) +
-                                  " of " + mc.toStringLong() +
-                                  " is not of the right type: " + q.getAllOperands().getOperand(base).getClass());                                
+                                if(pa.TRACE_BOGUS){
+                                    System.err.println(
+                                        "Operand " + 
+                                        q.getAllOperands().getOperand(base) +
+                                      " of " + mc.toStringLong() +
+                                      " is not of the right type: " + q.getAllOperands().getOperand(base).getClass());
+                                }
                             }
                         }
                     }
