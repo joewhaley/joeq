@@ -45,13 +45,16 @@ public class DotGraph implements ControlFlowGraphVisitor {
     /**
      * Adapt this method to create filenames the way you want them.
      */
-    String createMethodName(jq_Method mth) {
-	String filename = dotFilePrefix + mth.toString();
-	filename = filename.replace('/', '_');
-	filename = filename.replace(' ', '_');
-	filename = filename.replace('<', '_');
-	filename = filename.replace('>', '_');
-	return filename;
+    protected String createMethodName(jq_Method mth) {
+		String filename = dotFilePrefix + mth.toString();
+		filename = filename.replace('/', '_');
+		filename = filename.replace(' ', '_');
+		filename = filename.replace('<', '_');
+		filename = filename.replace('>', '_');
+		filename = filename.replace('(', '_');
+		filename = filename.replace(')', '_');
+		
+		return filename;
     }
 
     /**
@@ -67,8 +70,12 @@ public class DotGraph implements ControlFlowGraphVisitor {
     public static class dot {
         private static PrintWriter containedgraph = null;
 
-        public static void openGraph(String name) {
+		/**
+		 * 	The first argument specifies what directory to use for output, the second is the file name.
+		 **/
+        public static void openGraph(String the_outputDir, String name) {
             try {
+            	if(the_outputDir != null) outputDir = the_outputDir;
                 String dirname = outputDir;
                 File d = new File(dirname);
                 if (!d.exists()) {
@@ -79,10 +86,15 @@ public class DotGraph implements ControlFlowGraphVisitor {
                 containedgraph.println("digraph contained_in_graph {");
                 containedgraph.println("\tnode[shape=box,fontname = \"Arial\", fontsize=10];");
                 containedgraph.println("\tedge[fontname = \"Arial\", fontcolor=red, fontsize=8];");
+				containedgraph.println("\tlabel = \"" + name + "\";");
             } catch (IOException _) {
                 _.printStackTrace(System.err);
             }
         }
+        
+		public static void openGraph(String name) {
+			openGraph(null, name);		
+		}
 
         public static String escape(String from) {
             from = from.replace('\t', ' ').trim();
