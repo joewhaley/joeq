@@ -111,6 +111,8 @@ public class PA {
     boolean DUMP_DOTGRAPH = !System.getProperty("pa.dumpdotgraph", "no").equals("no");
     boolean FILTER_NULL = !System.getProperty("pa.filternull", "yes").equals("no");
     boolean LONG_LOCATIONS = !System.getProperty("pa.longlocations", "no").equals("no");
+    boolean INCLUDE_UNKNOWN_TYPES = !System.getProperty("pa.unknowntypes", "yes").equals("no");
+    boolean INCLUDE_ALL_UNKNOWN_TYPES = !System.getProperty("pa.allunknowntypes", "no").equals("no");
     
     int bddnodes = Integer.parseInt(System.getProperty("bddnodes", "2500000"));
     int bddcache = Integer.parseInt(System.getProperty("bddcache", "150000"));
@@ -384,9 +386,6 @@ public class PA {
     }
     
     void addSingleTargetCall(Set thisptr, ProgramLocation mc, BDD I_bdd, jq_Method target) {
-        if (target == javaLangObject_clone)      // super.clone()
-            target = fakeCloneIfNeeded(mc.getContainingClass());
-
         addToIE(I_bdd, target);
         if (OBJECT_SENSITIVE) {
             BDD bdd1 = bdd.zero();
@@ -821,21 +820,26 @@ public class PA {
         cha.orWith(bdd1);
     }
     
-    jq_Class jlo = PrimordialClassLoader.getJavaLangObject();
+    jq_Class object_class = PrimordialClassLoader.getJavaLangObject();
     jq_Method javaLangObject_clone;
     {
-        jlo.prepare();
-        javaLangObject_clone = jlo.getDeclaredInstanceMethod(new jq_NameAndDesc("clone", "()Ljava/lang/Object;"));
+        object_class.prepare();
+        javaLangObject_clone = object_class.getDeclaredInstanceMethod(new jq_NameAndDesc("clone", "()Ljava/lang/Object;"));
     }
-    jq_Class jlcloneable = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/Cloneable;");
+    jq_Class cloneable_class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/Cloneable;");
+    jq_Class throwable_class = (jq_Class) PrimordialClassLoader.getJavaLangThrowable();
+    jq_Method javaLangObject_fakeclone = jq_FakeInstanceMethod.fakeMethod(object_class, 
+                                                MethodSummary.fakeCloneName, "()Ljava/lang/Object;");
 
     private jq_Method fakeCloneIfNeeded(jq_Type t) {
         jq_Method m = javaLangObject_clone;
         if (t instanceof jq_Class) {
             jq_Class c = (jq_Class)t;
-            if (!c.isInterface() && c.implementsInterface(jlcloneable)) {
-                m = jq_FakeInstanceMethod.fakeCloneMethod(c);
-                visitMethod(m);
+            if (!c.isInterface() && c.implementsInterface(cloneable_class)) {
+                m = jq_FakeInstanceMethod.fakeMethod(c, MethodSummary.fakeCloneName, "()"+t.getDesc());
+                boolean mustvisit = (cg != null) ? cg.getAllMethods().contains(m) : true;
+                if (mustvisit)
+                    visitMethod(m);
             }
         }
         // TODO: handle cloning of arrays
@@ -926,22 +930,24 @@ public class PA {
         }
         
         // add types for UnknownTypeNodes to 'hT'
-        for (int H_i = last_H; H_i < Hsize; ++H_i) {
-            Node n = (Node) Hmap.get(H_i);
-            if (!(n instanceof UnknownTypeNode))
-                continue;
-            jq_Reference type = n.getDeclaredType();
-            if (type == null)
-                continue;
-            if (type == jlo) {
-                System.out.println("warning: excluding UnknownTypeNode java.lang.Object* from hT: H1("+H_i+")");
-            } else {
-                // conservatively say that it can be any known subtype.
-                BDD T_i = T1.ithVar(Tmap.get(type));
-                BDD Tsub = aT.relprod(T_i, T1set);
-                addToHT(H_i, Tsub);
-                Tsub.free();
-                T_i.free();
+        if (INCLUDE_UNKNOWN_TYPES) {
+            for (int H_i = last_H; H_i < Hsize; ++H_i) {
+                Node n = (Node) Hmap.get(H_i);
+                if (!(n instanceof UnknownTypeNode))
+                    continue;
+                jq_Reference type = n.getDeclaredType();
+                if (type == null)
+                    continue;
+                if (!INCLUDE_ALL_UNKNOWN_TYPES && (type == object_class || type == throwable_class)) {
+                    System.out.println("warning: excluding UnknownTypeNode "+type.getName()+"* from hT: H1("+H_i+")");
+                } else {
+                    // conservatively say that it can be any known subtype.
+                    BDD T_i = T1.ithVar(Tmap.get(type));
+                    BDD Tsub = aT.relprod(T_i, T1set);
+                    addToHT(H_i, Tsub);
+                    Tsub.free();
+                    T_i.free();
+                }
             }
         }
         
@@ -988,8 +994,9 @@ public class PA {
                     if (t == null || !t.isSubtypeOf(n.getDeclaringClass())) continue;
                     m = t.getVirtualMethod(n.getNameAndDesc());
                 }
-                if (m == javaLangObject_clone && t != jlo) {
-                    m = fakeCloneIfNeeded(t);
+                if ((m == javaLangObject_clone && t != object_class) || n == javaLangObject_fakeclone) {
+                    m = fakeCloneIfNeeded(t);                                   // for t.clone()
+                    addToCHA(T_bdd, Nmap.get(javaLangObject_fakeclone), m);     // for super.clone()
                 }
                 if (m == null) continue;
                 addToCHA(T_bdd, N_i, m);
