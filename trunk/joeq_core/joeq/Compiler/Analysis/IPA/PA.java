@@ -111,6 +111,7 @@ public class PA {
     boolean TRACE_RELATIONS = !System.getProperty("pa.tracerelations", "no").equals("no");
     boolean TRACE_OBJECT = !System.getProperty("pa.traceobject", "no").equals("no");
     boolean TRACE_CONTEXT = !System.getProperty("pa.tracecontext", "no").equals("no");
+    boolean TRACE_PLACEHOLDERS = !System.getProperty("pa.traceplaceholders", "no").equals("no");
     PrintStream out = System.out;
     boolean DUMP_INITIAL = !System.getProperty("pa.dumpinitial", "no").equals("no");
     boolean DUMP_RESULTS = !System.getProperty("pa.dumpresults", "yes").equals("no");
@@ -838,7 +839,7 @@ public class PA {
     ConcreteTypeNode addPlaceholderObject(jq_Reference type, int depth, String path) {
         ConcreteTypeNode h = ConcreteTypeNode.get(type, null, new Integer(++opn));
         if (depth > 0) {
-            System.out.println("Initializing " + path + " of type " + type + " at depth " + depth);
+            if(TRACE_PLACEHOLDERS) System.out.println("Initializing " + path + " of type " + type + " at depth " + depth);
             if (type.isClassType()) {
                 jq_Class c = (jq_Class) type;
                 c.prepare();
@@ -877,7 +878,7 @@ public class PA {
             ConcreteTypeNode h = addPlaceholderObject(pn.getDeclaredType(), depth-1, pn.toString_short());
             int H_i = Hmap.get(h);
             addToVP(pn, H_i);
-            System.out.println("Placeholder object for "+pn+": "+h);
+            if(TRACE_PLACEHOLDERS) System.out.println("Placeholder object for "+pn+": "+h);
         }
     }
     
@@ -3050,11 +3051,13 @@ public class PA {
             if(BETTER_CONTEXT_NUMBERING){
                 Set sccs = SCComponent.buildSCC(cg);
                 SCCTopSortedGraph graph = SCCTopSortedGraph.topSort(sccs);
-                
+  
                 Selector selector = null; 
                 if(USE_STRING_METHOD_SELECTOR) {
+                    System.err.println("Using a StringMethodSelector \n");
                     selector = new StringMethodSelector(graph);
                 } else {
+                    System.err.println("Using a VarPathSelector \n");
                     selector = varPathSelector; 
                 }
                 pn = new GlobalPathNumbering(selector);
@@ -3318,6 +3321,7 @@ public class PA {
                 }
             }
             Assert._assert(string_buffer_append_scc != null);
+            System.err.println("SCC # " + string_buffer_append_scc + " contains " + string_buffer_append);
             
             return string_buffer_append_scc;
         }
