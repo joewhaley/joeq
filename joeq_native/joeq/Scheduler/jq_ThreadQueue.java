@@ -14,6 +14,7 @@ import Util.Assert;
 public class jq_ThreadQueue {
 
     private jq_Thread head, tail;
+    private int size;
     
     public boolean isEmpty() {
         return head == null;
@@ -24,6 +25,7 @@ public class jq_ThreadQueue {
         if (head == null) head = t;
         else tail.next = t;
         tail = t;
+        ++size;
     }
     
     public void enqueueFront(jq_Thread t) {
@@ -31,6 +33,7 @@ public class jq_ThreadQueue {
         if (head == null) tail = t;
         else head.next = t;
         head = t;
+        ++size;
     }
     
     public jq_Thread dequeue() {
@@ -39,17 +42,22 @@ public class jq_ThreadQueue {
         head = t.next;
         t.next = null;
         if (head == null) tail = null;
+        --size;
         return t;
     }
     
     public int length() {
+        return size;
+    }
+    
+    public void verifyLength() {
         jq_Thread p = head;
         int i = 0;
         while (p != null) {
             p = p.next;
             ++i;
         }
-        return i;
+        Assert._assert(size == i);
     }
     
     public boolean remove(jq_Thread t2) {
@@ -73,6 +81,7 @@ public class jq_ThreadQueue {
                 p.next = null;
             }
         }
+        --size;
         return true;
     }
 
