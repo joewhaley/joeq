@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.Collection;
 import java.util.StringTokenizer;
 
 import org.sf.javabdd.BDD;
@@ -71,7 +72,7 @@ public class PAResults {
         if (addToClasspath != null)
             PrimordialClassLoader.loader.addToClasspath(addToClasspath);
     }
-    
+
     public static PAResults loadResults(String[] args, String addToClasspath) throws IOException {
         String prefix;
         if (args.length > 0) {
@@ -148,11 +149,15 @@ public class PAResults {
                     TypedBDD bdd2 = parseBDD(results, st.nextToken());
                     TypedBDD r = (TypedBDD) bdd1.or(bdd2);
                     results.add(r);
+                } else if (command.equals("showdomains")) {
+                    TypedBDD r = parseBDDWithCheck(results, st.nextToken());
+		    System.out.println("Domains: " + r.getDomainSet());
+                    increaseCount = false;
                 } else if (command.equals("list")) {
-                    TypedBDD r = parseBDD(results, st.nextToken());
-                    results.add(r);
-                    listAll = true;
-                    System.out.println("Domains: " + r.getDomainSet());
+                    TypedBDD r = parseBDDWithCheck(results, st.nextToken());
+		    results.add(r);
+		    listAll = true;
+		    System.out.println("Domains: " + r.getDomainSet());
                 } else if (command.equals("contextvar")) {
                     int varNum = Integer.parseInt(st.nextToken());
                     Node n = getVariableNode(varNum);
@@ -276,7 +281,7 @@ public class PAResults {
                     printStats();
                     increaseCount = false;
                 } else if (command.equals("help")) {
-                    printHelp();
+                    printHelp(results);
                     increaseCount = false;
                 } else {
                     System.err.println("Unrecognized command");
@@ -302,12 +307,32 @@ public class PAResults {
         }
     }
     
-    public static void printHelp() {
+    public void printHelp(List results) {
         System.out.println("dumpconnect # <fn>:   dump heap connectivity graph for heap object # to file fn");
         System.out.println("dumpallconnect <fn>:  dump entire heap connectivity graph to file fn");
         System.out.println("escape:               run escape analysis");
         System.out.println("findequiv:            find equivalent objects");
         System.out.println("relprod b1 b2 bs:     relational product of b1 and b2 w.r.t. set bs");
+        System.out.println("list b1:              list elements of bdd b1");
+        System.out.println("showdomains b1:       show domains of bdd b1");
+
+	printAvailableBDDs(results);
+    }
+
+    public void printAvailableBDDs(List results) {
+	Collection allbdds = new ArrayList();
+        for (int i = 0; i < r.bdd.numberOfDomains(); ++i)
+	    allbdds.add(r.bdd.getDomain(i));
+	Field []f = PA.class.getDeclaredFields();
+	for (int i = 0; i < f.length; i++) {
+	    try {
+		if (f[i].getType() == BDD.class && f[i].get(r) != null)
+		    allbdds.add(f[i].getName());
+	    } catch (IllegalAccessException _) { }
+	}
+	if (results.size() >= 1)
+	    allbdds.add("and previous results 1.." + (results.size()));
+	System.out.println("\ncurrently known BDDs are " + allbdds);
     }
 
     public jq_Class parseClassName(String className) {
@@ -415,7 +440,7 @@ public class PAResults {
         int v = r.Mmap.get(m);
         return v;
     }
-    
+ 
     BDDDomain parseDomain(String dom) {
         for (int i = 0; i < r.bdd.numberOfDomains(); ++i) {
             if (dom.equals(r.bdd.getDomain(i).getName()))
@@ -423,7 +448,16 @@ public class PAResults {
         }
         return null;
     }
-    
+
+    TypedBDD parseBDDWithCheck(List results, String bddname) throws Exception {
+	TypedBDD r = parseBDD(results, bddname);
+	if (r == null) {
+	    printAvailableBDDs(results);
+	    throw new Exception("No such BDD: " + bddname);
+	}
+	return r;
+    }
+
     TypedBDD parseBDD(List a, String s) {
         int paren_index = s.indexOf('(');
         if (paren_index > 0) {
@@ -468,6 +502,7 @@ public class PAResults {
     public static final int DEFAULT_NUM_TO_PRINT = 10;
     
     public String toString(TypedBDD b, int numToPrint) {
+        if (b == null) return "<you passed 'null' to PAResult.toString>";
         if (b.isZero()) return "<empty>";
         TypedBDD dset = (TypedBDD) b.getFactory().one();
         Set domains = b.getDomainSet();
@@ -820,5 +855,4 @@ public class PAResults {
         double result = b.satCount(r.H1.set());
         return (int) result;
     }
-    
 }
