@@ -2,7 +2,7 @@
 
 .include "fielddomains.pa"
 
-.bddvarorder N0_F0_I0_M1_M0_V1xV0_VC1xVC0_T0_Z0_T1_H0_H1
+.bddvarorder N0_F0_I0_V1xV0_M1xM0xVC1xVC0_T0_Z0_T1_H0_H1
 
 ### Relations
 
@@ -40,12 +40,9 @@ unlockedCi(callee,t) :- unlockedCi(caller,t), callsCi(caller,callee), !locksCi(c
 alwaysLockedCi(m,t) :- !unlockedCi(m,t), mC(m,_).
 externalLockTypeCi(m,t) :- alwaysLockedCi(m,t), formal(m,0,v), vT(v,this), !aT(this,t).
 
-relevantType (type:T0)
-relevantType(t) :- externalLockTypeCi(_,t).
-
-relevantMethod (method:M0)
-relevantMethod(m) :- externalLockTypeCi(m,_).
-relevantMethod(caller) :- relevantMethod(callee), callsCi(caller,callee).
+care(method:M0,type:T1)
+care(m,t) :- externalLockTypeCi(m,t).
+care(caller,t) :- care(callee,t), callsCi(caller,callee).
 
 # context-sensitive
 locked (method:M0, context:VC0, heap:H0)
@@ -55,29 +52,29 @@ unlockedType (method:M0, context:VC, type:T1)
 #sometimesUnlocked (method:M0, heap:H0)
 sometimesUnlockedType (method:M0, type:T1)
 #alwaysLocked (method:M0, heap:H0) output outputtuples
-alwaysLockedType (method:M0, type:T0)
-externalLockType (method:M0, type:T0) output outputtuples
+alwaysLockedType (method:M0, type:T1)
+externalLockType (method:M0, type:T1) output outputtuples
 
 #lockedTypeAnyContext (method:M0, type:T0) output outputtuples
 
 locked(m,c,h) :- mSync(m), formal(m, 0, v), vP(c, v, h).
-lockedType0(m,c,t) :- locked(m,c,h), hT(h,t), relevantType(t), relevantMethod(m).
+lockedType0(m,c,t) :- locked(m,c,h), hT(h,t), care(m,t).
 lockedType(m,c,t) :- lockedType0(m,c,t).
 lockedType(calleem,calleec,t) :- mI(callerm, invoke, _), \
                                  IE(callerc, invoke, calleec, calleem), \
-                                 relevantMethod(calleem), \
+                                 care(calleem,t), \
                                  lockedType(callerm,callerc,t). split
 
-unlockedType(m,c,t) :- !lockedType(m,c,t), relevantType(t), relevantMethod(m).
+unlockedType(m,c,t) :- !lockedType(m,c,t), care(m,t).
 unlockedType(calleem,calleec,t) :- mI(callerm, invoke, _), \
                                    IE(callerc, invoke, calleec, calleem), \
-                                   relevantMethod(calleem), \
+                                   care(calleem,t), \
                                    !lockedType0(calleem,calleec,t), \
                                    unlockedType(callerm,callerc,t). split
 
 sometimesUnlockedType(m,t) :- unlockedType(m,c,t), mC(m,c).
-alwaysLockedType(m,t) :- !sometimesUnlockedType(m,t), mC(m,_), relevantType(t), \
-                         relevantMethod(m).
+alwaysLockedType(m,t) :- !sometimesUnlockedType(m,t), mC(m,_), \
+                         care(m,t).
 externalLockType(m,t) :- alwaysLockedType(m,t), \
                          formal(m,0,v), \
                          vT(v,this), \
