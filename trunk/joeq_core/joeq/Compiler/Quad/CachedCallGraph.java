@@ -24,9 +24,9 @@ public class CachedCallGraph extends CallGraph {
 
     private final CallGraph delegate;
 
-    private Set methods;
-    private MultiMap callSites;
-    private InvertibleMultiMap edges;
+    private Set/*<jq_Method>*/ methods;
+    private MultiMap/*<jq_Method,ProgramLocation>*/ callSites;
+    private InvertibleMultiMap/*<ProgramLocation,jq_Method>*/ edges;
 
     public CachedCallGraph(CallGraph cg) {
         this.delegate = cg;
@@ -167,6 +167,13 @@ public class CachedCallGraph extends CallGraph {
     public Collection getTargetMethods(Object context, ProgramLocation callSite) {
         if (edges == null) invalidateCache();
         return edges.getValues(callSite);
+    }
+    
+    public void inlineEdge(jq_Method caller, ProgramLocation callSite, jq_Method callee) {
+        // remove call site from caller.
+        callSites.remove(caller, callSite);
+        // add all call sites in callee into caller.
+        callSites.addAll(caller, callSites.getValues(callee));
     }
 
     /* (non-Javadoc)

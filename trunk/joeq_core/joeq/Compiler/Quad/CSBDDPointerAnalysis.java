@@ -39,10 +39,12 @@ import Main.HostedVM;
 import Run_Time.TypeCheck;
 import Util.Assert;
 import Util.Strings;
+import Util.Collections.Pair;
 import Util.Collections.Triple;
 import Util.Graphs.Navigator;
 import Util.Graphs.SCCTopSortedGraph;
 import Util.Graphs.SCComponent;
+import Util.Graphs.Traversals;
 
 /**
  * @author John Whaley <jwhaley@alum.mit.edu>
@@ -63,6 +65,7 @@ public class CSBDDPointerAnalysis {
     public static final boolean TRACE_TIMES     = false || TRACE_ALL;
 
     public static final boolean USE_CHA = true;
+    public static final boolean DO_INLINING = true;
 
     public static void main(String[] args) {
         HostedVM.initialize();
@@ -88,6 +91,33 @@ public class CSBDDPointerAnalysis {
         }
         time = System.currentTimeMillis() - time;
         System.out.println("done. ("+time/1000.+" seconds)");
+        
+        if (DO_INLINING) {
+            System.out.print("Doing inlining on call graph...");
+            time = System.currentTimeMillis();
+            // pre-initialize all classes so that we can inline more.
+            for (Iterator i=cg.getAllMethods().iterator(); i.hasNext(); ) {
+                jq_Method m = (jq_Method) i.next();
+                m.getDeclaringClass().cls_initialize();
+            }
+            MethodInline mi = new MethodInline(cg);
+            Navigator navigator = cg.getNavigator();
+            for (Iterator i=Traversals.postOrder(navigator, roots).iterator(); i.hasNext(); ) {
+                jq_Method m = (jq_Method) i.next();
+                if (m.getBytecode() == null) continue;
+                ControlFlowGraph cfg = CodeCache.getCode(m);
+                MethodSummary ms = MethodSummary.getSummary(cfg);
+                mi.visitCFG(cfg);
+            }
+            time = System.currentTimeMillis() - time;
+            System.out.println("done. ("+time/1000.+" seconds)");
+            
+            System.out.print("Rebuilding call graph...");
+            time = System.currentTimeMillis();
+            cg.setRoots(roots);
+            time = System.currentTimeMillis() - time;
+            System.out.println("done. ("+time/1000.+" seconds)");
+        }
         
         System.out.print("Calculating reachable methods...");
         time = System.currentTimeMillis();
@@ -155,10 +185,56 @@ public class CSBDDPointerAnalysis {
             if (scc.isLoop() && change) {
                 if (TRACE_WORKLIST) System.out.println("Loop changed, redoing SCC.");
             } else {
+                if (TRACE_WORKLIST) System.out.println("Finished SCC"+scc.getId());
+                Set entrypoints = scc.getEntrypoints(navigator);
+                for (int i=0; i<nodes.length; ++i) {
+                    jq_Method m = (jq_Method) nodes[i];
+                    if (m.getBytecode() == null) continue;
+                    if (!entrypoints.contains(m)) {
+                        ControlFlowGraph cfg = CodeCache.getCode(m);
+                        MethodSummary ms = MethodSummary.getSummary(cfg);
+                        BDDMethodSummary s = (BDDMethodSummary) bddSummaries.get(ms);
+                        if (TRACE_WORKLIST) System.out.println("Disposing internal summary for "+m.getName()+"()");
+                        s.dispose();
+                        bddSummaries.remove(s);
+                    } else {
+                        int number = 0;
+                        for (Iterator j=navigator.prev(m).iterator(); j.hasNext(); ) {
+                            Object p = j.next();
+                            if (scc.contains(p)) continue;
+                            ++number;
+                        }
+                        Assert._assert(number > 0);
+                        sccEdges.put(m, new Integer(number));
+                        if (TRACE_WORKLIST) System.out.println(m.getName()+" is an entrypoint with "+number+" predecessors.");
+                    }
+                }
+                Set exitedges = scc.getExitEdges(navigator);
+                for (Iterator i=exitedges.iterator(); i.hasNext(); ) {
+                    Pair p = (Pair) i.next();
+                    if (TRACE_WORKLIST) System.out.println("Looking at edge "+p);
+                    jq_Method that = (jq_Method) p.get(1);
+                    if (that.getBytecode() == null) continue;
+                    int v = ((Integer) sccEdges.get(that)).intValue() - 1;
+                    if (v == 0) {
+                        ControlFlowGraph cfg = CodeCache.getCode(that);
+                        MethodSummary ms = MethodSummary.getSummary(cfg);
+                        BDDMethodSummary s = (BDDMethodSummary) bddSummaries.get(ms);
+                        if (TRACE_WORKLIST) System.out.println("Disposing external summary for "+that.getName()+"()");
+                        s.dispose();
+                        bddSummaries.remove(s);
+                        sccEdges.remove(that);
+                    } else {
+                        if (TRACE_WORKLIST) System.out.println("Method "+that.getName()+" still has "+v+" predecessors.");
+                        sccEdges.put(that, new Integer(v));
+                    }
+                }
                 scc = scc.prevTopSort();
             }
         }
     }
+    
+    Map sccEdges = new HashMap();
     
     void dumpResults() {
         // TODO.
@@ -632,6 +708,15 @@ public class CSBDDPointerAnalysis {
             loads = bdd.zero();
             roots = bdd.zero();
             nodes = bdd.zero();
+        }
+        
+        void dispose() {
+            pointsTo.free();
+            edgeSet.free();
+            stores.free();
+            loads.free();
+            roots.free();
+            nodes.free();
         }
         
         void computeInitial() {

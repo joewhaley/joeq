@@ -368,7 +368,7 @@ public class ControlFlowGraph {
     static void addRegistersToMap(HashMap map, RegisterFactory from,
                                   RegisterFactory to, jq_Type type) {
         int n = from.getLocalSize(type);
-        Assert._assert(n == to.getLocalSize(type));
+        Assert._assert(n == to.getLocalSize(type), n+" != "+to.getLocalSize(type));
         for (int i=0; i<n; ++i) {
             map.put(from.getLocal(i, type), to.getLocal(i, type));
         }
