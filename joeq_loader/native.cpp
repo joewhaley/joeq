@@ -194,16 +194,20 @@ extern "C" int __stdcall fs_closedir(DIR *dir) {
     free(dir->path); free(dir);
     return 0;
 }
-extern "C" int __stdcall fs_mkdir(const char* s) {
+extern "C" int __stdcall fs_mkdir(const char* s)
+{
 	return _mkdir(s);
 }
-extern "C" int __stdcall fs_rename(const char* s, const char* s1) {
+extern "C" int __stdcall fs_rename(const char* s, const char* s1)
+{
 	return rename(s, s1);
 }
-extern "C" int __stdcall fs_chmod(const char* s, const int mode) {
+extern "C" int __stdcall fs_chmod(const char* s, const int mode)
+{
 	return _chmod(s, mode);
 }
-extern "C" int __stdcall fs_setfiletime(const char* s, const __int64 time) {
+extern "C" int __stdcall fs_setfiletime(const char* s, const __int64 time)
+{
 	FILETIME fileTime;
 	javaTimeToFiletime(time, &fileTime);
 	HANDLE file = CreateFile(s, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
@@ -211,6 +215,147 @@ extern "C" int __stdcall fs_setfiletime(const char* s, const __int64 time) {
 	CloseHandle(file);
 	return res;
 }
-extern "C" int __stdcall fs_getlogicaldrives(void) {
+extern "C" int __stdcall fs_getlogicaldrives(void)
+{
 	return GetLogicalDrives();
+}
+extern "C" void __stdcall yield(void)
+{
+	Sleep(0);
+}
+extern "C" void __stdcall sleep(int ms)
+{
+	Sleep(ms);
+}
+extern "C" HANDLE __stdcall create_thread(LPTHREAD_START_ROUTINE start, LPVOID arg)
+{
+	DWORD tid;
+	return CreateThread(NULL, 0, start, arg, CREATE_SUSPENDED, &tid);
+}
+extern "C" int __stdcall resume_thread(const HANDLE handle)
+{
+	return ResumeThread(handle);
+}
+extern "C" int __stdcall suspend_thread(const HANDLE handle)
+{
+	return SuspendThread(handle);
+}
+
+extern "C" void* __stdcall allocate_stack(const int size)
+{
+	LPVOID lpvAddr;
+	DWORD dwPageSize;
+	DWORD dwFinalSize;
+	DWORD oldProtect;
+	SYSTEM_INFO sSysInfo;
+	GetSystemInfo(&sSysInfo);     // populate the system information structure
+	
+	dwPageSize = sSysInfo.dwPageSize;
+	dwFinalSize = ((size / dwPageSize) + 2) * dwPageSize;
+	lpvAddr = VirtualAlloc(NULL, dwFinalSize, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+	if (lpvAddr == NULL) {
+		fprintf(stderr, "PANIC! Cannot allocate stack!");
+		return NULL;
+	}
+	if (!VirtualProtect(lpvAddr, dwPageSize, PAGE_GUARD | PAGE_READWRITE, &oldProtect)) {
+		fprintf(stderr, "PANIC! Cannot create stack guard page!");
+	}
+	return (void*)((int)lpvAddr+dwFinalSize);
+}
+
+extern "C" void __stdcall get_thread_context(HANDLE t, CONTEXT* c)
+{
+	GetThreadContext(t, c);
+}
+
+extern "C" void __stdcall set_thread_context(HANDLE t, CONTEXT* c)
+{
+	SetThreadContext(t, c);
+}
+
+extern "C" HANDLE __stdcall get_current_thread_handle(void)
+{
+	HANDLE currentProcess = GetCurrentProcess();
+	HANDLE targetHandle;
+	DuplicateHandle(currentProcess, GetCurrentThread(), currentProcess, &targetHandle, 0, TRUE, DUPLICATE_SAME_ACCESS);
+	return targetHandle;
+}
+
+typedef struct _Thread {
+    CONTEXT registers;
+	int thread_switch_enabled;
+} Thread;
+
+typedef struct _NativeThread {
+	HANDLE thread_handle;
+	Thread* currentThread;
+} NativeThread;
+
+CRITICAL_SECTION semaphore_init;
+CRITICAL_SECTION* p_semaphore_init;
+
+void initSemaphoreLock(void)
+{
+	InitializeCriticalSection(&semaphore_init);
+	p_semaphore_init = &semaphore_init;
+}
+
+extern "C" HANDLE __stdcall init_semaphore(void)
+{
+	HANDLE sema;
+	EnterCriticalSection(p_semaphore_init);
+	sema = CreateSemaphore(0, 0, 1, 0);
+	LeaveCriticalSection(p_semaphore_init);
+	return sema;
+}
+
+extern "C" int __stdcall wait_for_single_object(HANDLE handle, int time)
+{
+	return WaitForSingleObject(handle, time);
+}
+
+extern "C" int __stdcall release_semaphore(HANDLE semaphore, int a)
+{
+	return ReleaseSemaphore(semaphore, a, NULL);
+}
+
+extern "C" void __stdcall set_current_context(Thread* jthread, const CONTEXT* context)
+{
+	__asm {
+		// set thread block
+		mov EDX, jthread
+		mov FS:14h, EDX
+		// load context into ECX
+		mov ECX, context
+		// set stack pointer
+		mov ESP, [ECX+196]
+		// set fp regs
+		frstor [ECX+28]
+		// push return address
+		push [ECX+184]
+		// change stack pointer to include return address
+		mov [ECX+196], ESP
+		// push all GPRs
+		push [ECX+176] // eax
+		push [ECX+172] // ecx
+		push [ECX+168] // edx
+		push [ECX+164] // ebx
+		push [ECX+196] // esp
+		push [ECX+180] // ebp
+		push [ECX+160] // esi
+		push [ECX+156] // edi
+		// restore eflags
+		mov EAX, [ECX+192]
+		sahf
+		// reenable interrupts
+		dec dword ptr [EDX+04h]
+
+		// from this point on, the thread can be preempted again.
+		// but all GPRs and EIP are on the thread's stack, so it is safe.
+
+		// restore all GPRs
+		popad
+		// return to eip
+		ret
+	}
 }
