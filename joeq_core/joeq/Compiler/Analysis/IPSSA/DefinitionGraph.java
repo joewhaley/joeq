@@ -7,7 +7,6 @@
 package Compil3r.Analysis.IPSSA;
 
 import java.io.PrintStream;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -24,16 +23,20 @@ import Compil3r.Analysis.IPA.ContextSet;
  */
 public abstract class DefinitionGraph {
 	private HashSet _nodes;
-	
+	protected int   _edgeCount = 0;
+
 	public DefinitionGraph(){
 		_nodes = new HashSet();		
 	}
 	
 	protected void addNode(SSADefinition def){
-		_nodes.add(def);
+		_nodes.add(def);		// duplicates don't matter
 	}
 	
-	public abstract void addEdge(SSADefinition def1, SSADefinition def2, EdgeInfo ei);
+	public int getEdgeCount(){return _edgeCount;}
+	public int getNodeCount(){return _nodes.size();}
+	
+	public abstract void    addEdge(SSADefinition def1, SSADefinition def2, EdgeInfo ei);
 	public abstract boolean isRootNode(SSADefinition def);
 	public abstract boolean isTerminalNode(SSADefinition def);
 	
@@ -299,6 +302,4 @@ public abstract class DefinitionGraph {
 			return set.iterator();
 		}				
 	}
-
-	protected int _edgeCount = 0;
 }

@@ -17,8 +17,11 @@ import Compil3r.Quad.Dominators;
 import Compil3r.Quad.Quad;
 import Compil3r.Quad.QuadIterator;
 import Compil3r.Quad.Dominators.DominatorNode;
-import Util.Synthetic.Graph;
+import Util.SyntheticGraphs.Graph;
 
+/**
+ * @author Vladimir Livshits
+ *  */
 public interface DominatorQuery {
 	/** The result is null for the top node of the CFG. */
 	public Quad getImmediateDominator(Quad q);
@@ -36,7 +39,7 @@ public interface DominatorQuery {
  * @see DominatorQuery
  * */
 class SimpleDominatorQuery implements DominatorQuery {
-	private jq_Method _m;
+	private jq_Method _m;	
 	private ControlFlowGraph _cfg;
 
 	// Maps we create to answer the queries

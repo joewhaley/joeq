@@ -8,9 +8,11 @@ public class SSADefinition {
 	protected SSALocation	_location;
 	int 					_version;
 	Quad				    _quad;
+	long 					_id;		// this is an absolutely unique definition ID
 	
 	static class Helper {
 		protected static HashMap/*<SSALocation, Integer>*/ _versionMap;
+		protected static long globalID; 
 		
 		static SSADefinition create_ssa_definition(SSALocation location, Quad quad){
 			int version = 0;
@@ -22,14 +24,15 @@ public class SSADefinition {
 				_versionMap.put(location, new Integer(0));
 			}
 			
-			return new SSADefinition(location, version, quad);
+			return new SSADefinition(location, version, quad, globalID++);
 		}
 	};
 	
-	protected SSADefinition(SSALocation location, int version, Quad quad){
+	protected SSADefinition(SSALocation location, int version, Quad quad, long id){
 		this._location = location;
 		this._version  = version;	
 		this._quad 	   = quad;
+		this._id       = id;
 	}
 	
 	public SSALocation getLocation() {return _location;}
@@ -38,5 +41,9 @@ public class SSADefinition {
 	
 	public String toString(){
 		return _location.toString() + "_" + _version;
-	}	
+	}
+
+	public long getID() {
+		return _id;
+	}
 }

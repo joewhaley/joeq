@@ -135,22 +135,25 @@ public abstract class  SSAValue {
 	/**
 	 * 	The representation of predicates is yet to be determined. It's currently pretty lame.
 	 * */
-	public static class SSAPredicate {
+	public static class Predicate {
 		private String _predicate;
 
-		public SSAPredicate(String predicate){
+		public Predicate(String predicate){
 			this._predicate = predicate;
 		}
 		public String toString(){
 			return _predicate;
+		}
+		public static Predicate True() {
+			return null;		// TODO
 		}
 	}
 	
 	public static abstract class Predicated extends Phi {
 		protected Vector/* <SSAPredicate> */ _predicates;			
 		
-		public SSAPredicate getPredicate(int pos){
-			return (SSAPredicate)_predicates.get(pos);
+		public Predicate getPredicate(int pos){
+			return (Predicate)_predicates.get(pos);
 		}
 		
 		public void add(SSADefinition def, String predicate){
@@ -162,7 +165,7 @@ public abstract class  SSAValue {
 			String result = getLetter() + "(";
 			for(int i = 0; i < _definitions.size(); i++){
 				SSADefinition def = getDefinition(i);
-				SSAPredicate pred = getPredicate(i);
+				Predicate pred = getPredicate(i);
 		
 				result += "<" + def.toString() + ", " + pred.toString() + ">, ";
 			}
