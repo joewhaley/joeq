@@ -12,7 +12,6 @@ import java.util.Iterator;
 import Bootstrap.ObjectTraverser;
 import Bootstrap.PrimordialClassLoader;
 import ClassLib.ClassLibInterface;
-import ClassLib.Common.Interface.CommonObjectTraverser;
 import Clazz.jq_Class;
 import Scheduler.jq_NativeThread;
 
@@ -20,7 +19,7 @@ import Scheduler.jq_NativeThread;
  * @author  John Whaley
  * @version $Id$
  */
-public final class Interface extends ClassLib.Common.Interface {
+public final class Interface extends ClassLib.Common.InterfaceImpl {
 
     /** Creates new Interface */
     public Interface() {}

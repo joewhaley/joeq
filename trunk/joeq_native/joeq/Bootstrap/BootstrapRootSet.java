@@ -20,6 +20,7 @@ import Clazz.jq_FieldVisitor;
 import Clazz.jq_Initializer;
 import Clazz.jq_InstanceField;
 import Clazz.jq_InstanceMethod;
+import Clazz.jq_Member;
 import Clazz.jq_Method;
 import Clazz.jq_MethodVisitor;
 import Clazz.jq_Primitive;
@@ -430,5 +431,140 @@ public class BootstrapRootSet {
             addAllVirtualMethodImplementations(subclass, i_m);
         }
     }
-    
+
+    // not thread safe.
+    public void trimClass(jq_Class clazz) {
+        jq.Assert(clazz.isPrepared());
+
+	jq_Class super_class = clazz.getSuperclass();
+        if (super_class != null)
+            trimClass(super_class);
+
+        Set instantiatedTypes = getInstantiatedTypes();
+        Set necessaryFields = getNecessaryFields();
+        Set necessaryMethods = getNecessaryMethods();
+        
+        Iterator it = clazz.getMembers().iterator();
+        while (it.hasNext()) {
+            jq_Member m = (jq_Member)it.next();
+            if (m instanceof jq_Field) {
+                if (!necessaryFields.contains(m)) {
+                    if (TRACE) out.println("Eliminating field: "+m);
+                    it.remove();
+                }
+            } else {
+                jq.Assert(m instanceof jq_Method);
+                if (!necessaryMethods.contains(m)) {
+                    if (TRACE) out.println("Eliminating method: "+m);
+                    it.remove();
+                }
+            }
+        }
+
+        int n;
+        n=0;
+        jq_InstanceField[] declared_instance_fields = clazz.getDeclaredInstanceFields();
+        for (int i=0; i<declared_instance_fields.length; ++i) {
+            jq_InstanceField f = declared_instance_fields[i];
+            f.unprepare();
+            if (necessaryMethods.contains(f)) ++n;
+        }
+        jq_InstanceField[] ifs = new jq_InstanceField[n];
+        for (int i=0, j=-1; j<n-1; ++i) {
+            jq_InstanceField f = declared_instance_fields[i];
+            if (necessaryFields.contains(f)) {
+                ifs[++j] = f;
+                ++jq_Class.NumOfIFieldsKept;
+            } else {
+                if (TRACE) out.println("Eliminating instance field: "+f);
+                ++jq_Class.NumOfIFieldsEliminated;
+            }
+        }
+        clazz.setDeclaredInstanceFields(ifs);
+        
+        jq_StaticField[] static_fields = clazz.getDeclaredStaticFields();
+        int static_data_size=0;
+        n=0; 
+        for (int i=0; i<static_fields.length; ++i) {
+            jq_StaticField f = static_fields[i];
+            f.unprepare();
+            if (necessaryFields.contains(f)) ++n;
+        }
+        jq_StaticField[] sfs = new jq_StaticField[n];
+        for (int i=0, j=-1; j<n-1; ++i) {
+            jq_StaticField f = static_fields[i];
+            if (necessaryFields.contains(f)) {
+                sfs[++j] = f;
+                static_data_size += f.getWidth();
+                ++jq_Class.NumOfSFieldsKept;
+            }
+            else {
+                if (TRACE) out.println("Eliminating static field: "+f);
+                ++jq_Class.NumOfSFieldsEliminated;
+            }
+        }
+        clazz.setDeclaredStaticFields(sfs);
+
+        n=0;
+        jq_InstanceMethod[] declared_instance_methods = clazz.getDeclaredInstanceMethods();
+        for (int i=0; i<declared_instance_methods.length; ++i) {
+            jq_InstanceMethod f = declared_instance_methods[i];
+            f.unprepare();
+            f.clearOverrideFlags();
+            if (necessaryMethods.contains(f)) ++n;
+        }
+        jq_InstanceMethod[] ims = new jq_InstanceMethod[n];
+        for (int i=0, j=-1; j<n-1; ++i) {
+            jq_InstanceMethod f = declared_instance_methods[i];
+            if (necessaryMethods.contains(f)) {
+                ims[++j] = f;
+                ++jq_Class.NumOfIMethodsKept;
+            } else {
+                if (BootstrapRootSet.TRACE) BootstrapRootSet.out.println("Eliminating instance method: "+f);
+                ++jq_Class.NumOfIMethodsEliminated;
+            }
+        }
+        clazz.setDeclaredInstanceMethods(ims);
+        
+        n=0;
+        jq_StaticMethod[] static_methods = clazz.getDeclaredStaticMethods();
+        for (int i=0; i<static_methods.length; ++i) {
+            jq_StaticMethod f = static_methods[i];
+            f.unprepare();
+            if (necessaryMethods.contains(f)) ++n;
+        }
+        jq_StaticMethod[] sms = new jq_StaticMethod[n];
+        for (int i=0, j=-1; j<n-1; ++i) {
+            jq_StaticMethod f = static_methods[i];
+            if (necessaryMethods.contains(f)) {
+                sms[++j] = f;
+                ++jq_Class.NumOfSMethodsKept;
+            } else {
+                if (BootstrapRootSet.TRACE) BootstrapRootSet.out.println("Eliminating static method: "+f);
+                ++jq_Class.NumOfSMethodsEliminated;
+            }
+        }
+        clazz.setDeclaredStaticMethods(sms);
+        
+        /*
+        n=0;
+        for (int i=0; i<declared_interfaces.length; ++i) {
+            jq_Class f = declared_interfaces[i];
+            if (instantiatedTypes.contains(f)) ++n;
+        }
+        jq_Class[] is = new jq_Class[n];
+        for (int i=0, j=-1; j<n-1; ++i) {
+            jq_Class f = declared_interfaces[i];
+            if (instantiatedTypes.contains(f))
+                is[++j] = f;
+            else
+                if (trim.TRACE) trim.out.println("Eliminating interface: "+f);
+        }
+        declared_interfaces = is;
+        */
+        
+        clazz.getCP().trim(necessaryFields, necessaryMethods);
+        
+        clazz.prepare();
+    }
 }

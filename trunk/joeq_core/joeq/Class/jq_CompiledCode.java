@@ -17,7 +17,6 @@ import Memory.CodeAddress;
 import Memory.StackAddress;
 import Run_Time.ExceptionDeliverer;
 import Run_Time.SystemInterface;
-import Run_Time.Unsafe;
 
 /**
  * @author  John Whaley

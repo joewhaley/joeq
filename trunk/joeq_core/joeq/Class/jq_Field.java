@@ -11,16 +11,9 @@ import java.io.DataInput;
 import java.io.IOException;
 import java.util.Map;
 
-import Allocator.CodeAllocator;
-import Allocator.HeapAllocator;
-import Bootstrap.BootstrapCodeAddress;
-import Bootstrap.BootstrapHeapAddress;
 import Bootstrap.PrimordialClassLoader;
 import ClassLib.ClassLibInterface;
 import Main.jq;
-import Memory.CodeAddress;
-import Memory.HeapAddress;
-import Memory.StackAddress;
 
 /*
  * @author  John Whaley
@@ -63,18 +56,57 @@ public abstract class jq_Field extends jq_Member {
     public void accept(jq_FieldVisitor mv) {
         mv.visitField(this);
     }
+
+    static interface Delegate {
+	boolean isCodeAddressType(jq_Field t);
+	boolean isHeapAddressType(jq_Field t);
+	boolean isStackAddressType(jq_Field t);
+    }
     
+    private static Delegate _delegate;
+
     public final boolean isCodeAddressType() {
-        return this.getType() == CodeAddress._class ||
-               this.getType() == BootstrapCodeAddress._class;
+        return _delegate.isCodeAddressType(this);
     }
     public final boolean isHeapAddressType() {
-        return this.getType() == HeapAddress._class ||
-               this.getType() == BootstrapHeapAddress._class;
+        return _delegate.isHeapAddressType(this);
+	
     }
     public final boolean isStackAddressType() {
-        return this.getType() == StackAddress._class;
+        return _delegate.isStackAddressType(this);
     }
     
     public String toString() { return getDeclaringClass()+"."+getName(); }
+
+    static {
+	/* Set up delegates. */
+	_delegate = null;
+	boolean nullVM = System.getProperty("joeq.nullvm") != null;
+	if (!nullVM) {
+	    _delegate = attemptDelegate("Clazz.Delegates$Field");
+	}
+	if (_delegate == null) {
+	    _delegate = attemptDelegate("Clazz.NullDelegates$Field");
+	}
+	if (_delegate == null) {
+	    System.err.println("FATAL: Cannot load Field Delegate");
+	    System.exit(-1);
+	}
+    }
+
+    private static Delegate attemptDelegate(String s) {
+	String type = "field delegate";
+        try {
+            Class c = Class.forName(s);
+            return (Delegate)c.newInstance();
+        } catch (java.lang.ClassNotFoundException x) {
+            System.err.println("Cannot find "+type+" "+s+": "+x);
+        } catch (java.lang.InstantiationException x) {
+            System.err.println("Cannot instantiate "+type+" "+s+": "+x);
+        } catch (java.lang.IllegalAccessException x) {
+            System.err.println("Cannot access "+type+" "+s+": "+x);
+        }
+	return null;
+    }
+
 }

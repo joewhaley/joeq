@@ -12,6 +12,7 @@ import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -35,7 +36,6 @@ import Memory.StackAddress;
 import Run_Time.Reflection;
 import Run_Time.SystemInterface;
 import Run_Time.TypeCheck;
-import Run_Time.Unsafe;
 import UTF.UTFDataFormatError;
 import UTF.Utf8;
 import Util.Strings;
@@ -105,6 +105,9 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
     public jq_Member getDeclaredMember(String name, String desc) {
         return (jq_Member)members.get(new jq_NameAndDesc(Utf8.get(name), Utf8.get(desc)));
     }
+    public Collection getMembers() {
+	return members.values();
+    }
     private void addDeclaredMember(jq_NameAndDesc nd, jq_Member m) {
         Object b = members.put(nd, m);
         if (TRACE) {
@@ -166,6 +169,10 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         chkState(STATE_LOADING3);
         return (jq_InstanceField)findByNameAndDesc(declared_instance_fields, nd);
     }
+    public final void setDeclaredInstanceFields(jq_InstanceField[] dif) {
+	chkState(STATE_LOADED);
+	declared_instance_fields = dif;
+    }
     public final jq_StaticField[] getDeclaredStaticFields() {
         chkState(STATE_LOADING3);
         return static_fields;
@@ -174,6 +181,11 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         chkState(STATE_LOADING3);
         return (jq_StaticField)findByNameAndDesc(static_fields, nd);
     }
+    public final void setDeclaredStaticFields(jq_StaticField[] dsf) {
+	chkState(STATE_LOADED);
+	static_fields = dsf;
+    }
+
     public final jq_StaticField getStaticField(jq_NameAndDesc nd) {
         chkState(STATE_LOADING3);
         jq_StaticField f = (jq_StaticField)findByNameAndDesc(static_fields, nd);
@@ -236,6 +248,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         jq.Assert(current == sfs.length);
         return sfs;
     }
+
     public final jq_InstanceMethod[] getDeclaredInstanceMethods() {
         chkState(STATE_LOADING3);
         return declared_instance_methods;
@@ -244,6 +257,10 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         chkState(STATE_LOADING3);
         return (jq_InstanceMethod)findByNameAndDesc(declared_instance_methods, nd);
     }
+    public final void setDeclaredInstanceMethods(jq_InstanceMethod[] dim) {
+	chkState(STATE_LOADED);
+	declared_instance_methods = dim;
+    }
     public final jq_StaticMethod[] getDeclaredStaticMethods() {
         chkState(STATE_LOADING3);
         return static_methods;
@@ -251,6 +268,10 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
     public final jq_StaticMethod getDeclaredStaticMethod(jq_NameAndDesc nd) {
         chkState(STATE_LOADING3);
         return (jq_StaticMethod)findByNameAndDesc(static_methods, nd);
+    }
+    public final void setDeclaredStaticMethods(jq_StaticMethod[] dsm) {
+	chkState(STATE_LOADED);
+	static_methods = dsm;
     }
     public final jq_StaticMethod getStaticMethod(jq_NameAndDesc nd) {
         chkState(STATE_LOADING3);
@@ -2263,138 +2284,6 @@ uphere2:
     public static int NumOfSFieldsEliminated = 0;
     public static int NumOfIMethodsEliminated = 0;
     public static int NumOfSMethodsEliminated = 0;
-    
-    // not thread safe.
-    public void trim(BootstrapRootSet trim) {
-        jq.Assert(state == STATE_PREPARED);
-        
-        if (super_class != null)
-            super_class.trim(trim);
-
-        Set instantiatedTypes = trim.getInstantiatedTypes();
-        Set necessaryFields = trim.getNecessaryFields();
-        Set necessaryMethods = trim.getNecessaryMethods();
-        
-        Iterator it = members.entrySet().iterator();
-        while (it.hasNext()) {
-            Map.Entry e = (Map.Entry)it.next();
-            jq_Member m = (jq_Member)e.getValue();
-            if (m instanceof jq_Field) {
-                if (!necessaryFields.contains(m)) {
-                    if (BootstrapRootSet.TRACE) BootstrapRootSet.out.println("Eliminating field: "+m);
-                    it.remove();
-                }
-            } else {
-                jq.Assert(m instanceof jq_Method);
-                if (!necessaryMethods.contains(m)) {
-                    if (BootstrapRootSet.TRACE) BootstrapRootSet.out.println("Eliminating method: "+m);
-                    it.remove();
-                }
-            }
-        }
-
-        int n;
-        n=0;
-        for (int i=0; i<declared_instance_fields.length; ++i) {
-            jq_InstanceField f = declared_instance_fields[i];
-            f.unprepare();
-            if (necessaryMethods.contains(f)) ++n;
-        }
-        jq_InstanceField[] ifs = new jq_InstanceField[n];
-        for (int i=0, j=-1; j<n-1; ++i) {
-            jq_InstanceField f = declared_instance_fields[i];
-            if (necessaryFields.contains(f)) {
-                ifs[++j] = f;
-                ++NumOfIFieldsKept;
-            } else {
-                if (BootstrapRootSet.TRACE) BootstrapRootSet.out.println("Eliminating instance field: "+f);
-                ++NumOfIFieldsEliminated;
-            }
-        }
-        declared_instance_fields = ifs;
-        
-        n=0; static_data_size=0;
-        for (int i=0; i<static_fields.length; ++i) {
-            jq_StaticField f = static_fields[i];
-            f.unprepare();
-            if (necessaryFields.contains(f)) ++n;
-        }
-        jq_StaticField[] sfs = new jq_StaticField[n];
-        for (int i=0, j=-1; j<n-1; ++i) {
-            jq_StaticField f = static_fields[i];
-            if (necessaryFields.contains(f)) {
-                sfs[++j] = f;
-                static_data_size += f.getWidth();
-                ++NumOfSFieldsKept;
-            }
-            else {
-                if (BootstrapRootSet.TRACE) BootstrapRootSet.out.println("Eliminating static field: "+f);
-                ++NumOfSFieldsEliminated;
-            }
-        }
-        static_fields = sfs;
-
-        n=0;
-        for (int i=0; i<declared_instance_methods.length; ++i) {
-            jq_InstanceMethod f = declared_instance_methods[i];
-            f.unprepare();
-            f.clearOverrideFlags();
-            if (necessaryMethods.contains(f)) ++n;
-        }
-        jq_InstanceMethod[] ims = new jq_InstanceMethod[n];
-        for (int i=0, j=-1; j<n-1; ++i) {
-            jq_InstanceMethod f = declared_instance_methods[i];
-            if (necessaryMethods.contains(f)) {
-                ims[++j] = f;
-                ++NumOfIMethodsKept;
-            } else {
-                if (BootstrapRootSet.TRACE) BootstrapRootSet.out.println("Eliminating instance method: "+f);
-                ++NumOfIMethodsEliminated;
-            }
-        }
-        declared_instance_methods = ims;
-        
-        n=0;
-        for (int i=0; i<static_methods.length; ++i) {
-            jq_StaticMethod f = static_methods[i];
-            f.unprepare();
-            if (necessaryMethods.contains(f)) ++n;
-        }
-        jq_StaticMethod[] sms = new jq_StaticMethod[n];
-        for (int i=0, j=-1; j<n-1; ++i) {
-            jq_StaticMethod f = static_methods[i];
-            if (necessaryMethods.contains(f)) {
-                sms[++j] = f;
-                ++NumOfSMethodsKept;
-            } else {
-                if (BootstrapRootSet.TRACE) BootstrapRootSet.out.println("Eliminating static method: "+f);
-                ++NumOfSMethodsEliminated;
-            }
-        }
-        static_methods = sms;
-        
-        /*
-        n=0;
-        for (int i=0; i<declared_interfaces.length; ++i) {
-            jq_Class f = declared_interfaces[i];
-            if (instantiatedTypes.contains(f)) ++n;
-        }
-        jq_Class[] is = new jq_Class[n];
-        for (int i=0, j=-1; j<n-1; ++i) {
-            jq_Class f = declared_interfaces[i];
-            if (instantiatedTypes.contains(f))
-                is[++j] = f;
-            else
-                if (trim.TRACE) trim.out.println("Eliminating interface: "+f);
-        }
-        declared_interfaces = is;
-        */
-        
-        const_pool.trim(necessaryFields, necessaryMethods);
-        
-        state = STATE_VERIFIED;
-        this.prepare();
-    }
     
     void readAttributes(DataInput in, Map attribMap) 
     throws IOException {
