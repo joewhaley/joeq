@@ -12,6 +12,11 @@ package joeq.Util.InferenceEngine;
 public class Variable {
     
     String name;
+    FieldDomain fieldDomain;
+    
+    public Variable() {
+        this("_");
+    }
     
     /**
      * @param name
@@ -19,6 +24,15 @@ public class Variable {
     public Variable(String name) {
         super();
         this.name = name;
+    }
+    
+    /**
+     * @param name
+     */
+    public Variable(String name, FieldDomain fd) {
+        super();
+        this.name = name;
+        this.fieldDomain = fd;
     }
     
     /**
@@ -33,6 +47,20 @@ public class Variable {
      */
     public void setName(String name) {
         this.name = name;
+    }
+    
+    /**
+     * @return Returns the fieldDomain.
+     */
+    public FieldDomain getFieldDomain() {
+        return fieldDomain;
+    }
+    
+    /**
+     * @param fieldDomain The fieldDomain to set.
+     */
+    public void setFieldDomain(FieldDomain fieldDomain) {
+        this.fieldDomain = fieldDomain;
     }
     
 }

@@ -13,11 +13,22 @@ import java.util.List;
  */
 public abstract class Relation {
     
+    String name;
     List/*<String>*/ fieldNames;
     List/*<FieldDomain>*/ fieldDomains;
     
-    public abstract static class Factory {
-        public abstract Relation create(String name, List fields);
+    /**
+     * @param name
+     * @param fieldNames
+     * @param fieldDomains
+     */
+    public Relation(String name, List fieldNames, List fieldDomains) {
+        super();
+        this.name = name;
+        this.fieldNames = fieldNames;
+        this.fieldDomains = fieldDomains;
     }
+    
+    public abstract void load();
     
 }
