@@ -573,15 +573,14 @@ public class jq_NativeThread implements jq_DontAlign {
 
     public boolean DETERMINISTIC = false;
     
-    static final int[] DISTRIBUTION = {
-        5, 11, 18, 26, 35, 45, 56, 68, 81, 100
-    };
-    
     /**
      * GCD of relatively_prime_value and the maximum value in
      * DISTRIBUTION should be 1.
      */
-    static final int relatively_prime_value = 37;
+    public static final int relatively_prime_value = 37;
+    public static final int[] DISTRIBUTION = {
+        5, 11, 18, 26, 35, 45, 56, 68, 81, 100
+    };
     /**
      * Keeps track of last value used, so we can compute the next value.
      */
