@@ -8,6 +8,7 @@ import Util.Assert;
 
 import Clazz.jq_Method;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.ParamNode;
 import Compil3r.Analysis.IPSSA.IPSSABuilder;
 
 public class PAQuery {
@@ -27,7 +28,12 @@ public class PAQuery {
             MethodSummary ms = MethodSummary.getSummary(m);
             if(ms == null) return;
             if(ms.getNumOfParams() < 2) return;
-            System.out.println("Processing method " + m + ":\t" + ms.getNumOfParams());
+            System.out.print("Processing method " + m + ":\t[" + ms.getNumOfParams() + "] ");
+            for(int i = 0; i < ms.getNumOfParams(); i++) {
+                ParamNode paramNode = ms.getParamNode(i);
+                System.out.print(paramNode == null ? "<null> " : paramNode.toString_long() + " ");
+            }
+            System.out.print("\n");
             
             PAResults paResults = getBuilder().getPAResults();
             PA r = paResults.getPAResults();
