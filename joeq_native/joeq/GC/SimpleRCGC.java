@@ -9,6 +9,7 @@
 package GC;
 
 import Scheduler.jq_RegisterState;
+import Scheduler.jq_NativeThread;
 
 public class SimpleRCGC implements Runnable, GCVisitor {
 
@@ -20,4 +21,6 @@ public class SimpleRCGC implements Runnable, GCVisitor {
     public void visit(jq_RegisterState state) {
     }
 
+    public void farewell(jq_NativeThread nt) {
+    }
 }

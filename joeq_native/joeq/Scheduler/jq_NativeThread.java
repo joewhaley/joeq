@@ -454,7 +454,15 @@ public class jq_NativeThread implements x86Constants {
 
     // Stop all the native threads and start GC
     public static void stopTheWorld() {
+        jq_Thread t = Unsafe.getThreadBlock();
+        if (TRACE) SystemInterface.debugmsg("Ending Java thread " + t);
+        t.disableThreadSwitch();
+        _num_of_java_threads.getAddress().atomicSub(1);
+        if (t.isDaemon()) {
+            _num_of_daemon_threads.getAddress().atomicSub(1);
+        }
         Unsafe.setThreadBlock(gc_jthread);
+        gc_nthread.currentThread = gc_jthread;
         gc_nthread.thread_handle = SystemInterface.get_current_thread_handle();
         SystemInterface.debugmsg("*** GC Starts! ***");
         for (int i = 0; i < native_threads.length; ++i) {
