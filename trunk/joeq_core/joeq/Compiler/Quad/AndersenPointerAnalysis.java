@@ -51,23 +51,104 @@ import Util.SetRepository;
  */
 public class AndersenPointerAnalysis {
 
+    /**
+     * Output stream for trace information.
+     */
     public static java.io.PrintStream out = System.out;
+    
+    /**
+     * Controls the output of trace information.
+     * This is useful in debugging the analysis, but causes
+     * a LOT of information to be dumped.
+     */
     public static /*final*/ boolean TRACE = false;
+    
+    /**
+     * Output the cause of the *first* change in each iteration.
+     */
     public static final boolean TRACE_CHANGE = false;
+    
+    /**
+     * Output debugging information on the collapsing of cycles.
+     */
     public static final boolean TRACE_CYCLES = false;
+    
+    /**
+     * Enable/disable assertion checking.
+     */
     public static final boolean VerifyAssertions = false;
+    
+    /**
+     * Dump the call graph after analysis has completed.
+     */
     public static boolean FULL_DUMP = false;
+    
+    /**
+     * Compare our result to RTA, and dump the statistics.
+     */
     public static boolean COMPARE_RTA = false;
+    
+    /**
+     * Do the analysis twice, and report timings for each.
+     */
     public static boolean DO_TWICE = false;
+    
+    /**
+     * Don't explicitly model the calling of <clinit> methods.
+     */
     public static boolean IGNORE_CLINIT = true;
     
+    /**
+     * Controls the handling of references that escape to native
+     * methods or threads.
+     * "true" means it takes a pessimistic view of threads and
+     * native methods, assuming that they can update any reference
+     * passed into them in arbitrary ways.
+     * "false" means it takes an optimistic view, assuming that
+     * they make no modifications that will matter to the pointer
+     * analysis.
+     */
     public static final boolean HANDLE_ESCAPE = false;
+    
+    /**
+     * Controls the use of soft references for the lookup cache.
+     */
     public static final boolean USE_SOFT_REFERENCES = false;
+    
+    /**
+     * Force a garbage collection after every iteration of the algorithm.
+     */
     public static boolean FORCE_GC = false;
+    
+    /**
+     * Reuse the lookup cache across multiple iterations of the algorithm.
+     */
     public static final boolean REUSE_CACHES = true;
+    
+    /**
+     * Keep track of whether cache entries change between iterations,
+     * to avoid the reconstruction and reduce the number of set union
+     * operations.
+     */
     public static final boolean TRACK_CHANGES = true;
+    
+    /**
+     * Track which fields have changed between iterations.
+     * ***DOESN'T GIVE CORRECT ANSWERS IN SOME CASES***
+     */
     public static final boolean TRACK_CHANGED_FIELDS = false; // doesn't work.
+    
+    /**
+     * Keep track of the reason why each inclusion edge was
+     * added to the graph.
+     */
     public static boolean TRACK_SOURCE_QUADS = true;
+    
+    /**
+     * Use a set repository, rather than a set factory.
+     * The set repository attempts to reduce memory usage by
+     * reusing set data structures.
+     */
     public static final boolean USE_SET_REPOSITORY = false;
 
     public boolean addToRootSet(ControlFlowGraph cfg) {
