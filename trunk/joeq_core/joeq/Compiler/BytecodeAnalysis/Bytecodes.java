@@ -255,7 +255,9 @@ public interface Bytecodes {
             if(i == null)
                 throw new BytecodeException("Assigning null to handle");
             
-            if((this.getClass() != BranchHandle.class) && (i instanceof BranchInstruction))
+
+            //if((this.getClass() != BranchHandle.class) && (i instanceof BranchInstruction))
+	    if ((!(this instanceof BranchHandle)) && (i instanceof BranchInstruction))
                 throw new BytecodeException("Assigning branch instruction " + i + " to plain handle");
             
             if(instruction != null)

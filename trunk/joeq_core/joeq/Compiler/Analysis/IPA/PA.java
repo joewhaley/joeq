@@ -199,7 +199,7 @@ public class PA {
     BDDPairing V1toV2, V2toV1, H1toH2, H2toH1, V1H1toV2H2, V2H2toV1H1;
     BDDPairing V1ctoV2c, V1cV2ctoV2cV1c, V1cH1ctoV2cV1c;
     BDDPairing T2toT1, T1toT2;
-    BDDPairing[] H1toV1c; BDDPairing[] V1ctoH1; BDD[] V1csets;
+    BDDPairing H1toV1c[], V1ctoH1[]; BDD V1csets[], V1cH1equals[];
     BDD V1set, V2set, H1set, H2set, T1set, T2set, Fset, Mset, Nset, Iset, Zset;
     BDD V1V2set, V1Fset, V2Fset, V1FV2set, V1H1set, H1Fset, H2Fset, H1H2set, H1FH2set;
     BDD IMset, INset, INH1set, INT2set, T2Nset, MZset;
@@ -275,7 +275,7 @@ public class PA {
             } else if (CARTESIAN_PRODUCT) {
                 varorder = "N_F_Z_I_M_T1_V2xV1_T2_H2xH1";
                 for (int i = 0; i < V1c.length; ++i) {
-                    varorder += "xV2c"+i+"xV1c"+i;
+                    varorder += "xV1c"+i+"xV2c"+i;
                 }
             } else {
                 varorder = "N_F_Z_I_M_T1_V2xV1_H2_T2_H1";
@@ -434,16 +434,23 @@ public class PA {
             old3_vP = bdd.zero();
             old3_t4 = bdd.zero();
             old3_hT = bdd.zero();
+            old3_t6 = bdd.zero();
+            old3_t9 = new BDD[MAX_PARAMS];
+            for (int i = 0; i < old3_t9.length; ++i) {
+                old3_t9[i] = bdd.zero();
+            }
         }
         
         if (CARTESIAN_PRODUCT) {
             H1toV1c = new BDDPairing[MAX_PARAMS];
             V1ctoH1 = new BDDPairing[MAX_PARAMS];
             V1csets = new BDD[MAX_PARAMS];
+            V1cH1equals = new BDD[MAX_PARAMS];
             for (int i = 0; i < MAX_PARAMS; ++i) {
                 H1toV1c[i] = bdd.makePair(H1, V1c[i]);
                 V1ctoH1[i] = bdd.makePair(V1c[i], H1);
                 V1csets[i] = V1c[i].set();
+                V1cH1equals[i] = H1.buildEquals(V1c[i]);
             }
         }
         
@@ -501,7 +508,7 @@ public class PA {
         BDD bdd1 = M.ithVar(M2_i);
         bdd1.andWith(I_bdd.id());
         if (TRACE_RELATIONS) out.println("Adding to IE: "+bdd1.toStringWithDomains());
-        if (CONTEXT_SENSITIVE) {
+        if (USE_VCONTEXT && IEfilter != null) {
             // When doing context-sensitive analysis, we need to add to IEcs too.
             // This call edge is true under all contexts for this invocation.
             // "and"-ing with IEfilter achieves this.
@@ -1325,6 +1332,7 @@ public class PA {
                 // Rule 2
                 BDD t3 = S.relprod(new_vP, V1set); // V1xFxV2 x V1xH1 = H1xFxV2
                 if (!FILTER_NULL) t3.andWith(NNfilter.id());
+// 9%
                 BDD t4 = vP.replace(V1H1toV2H2); // V2xH2
                 BDD t5 = t3.relprod(t4, V2set); // H1xFxV2 x V2xH2 = H1xFxH2
                 t3.free(); t4.free();
@@ -1388,11 +1396,11 @@ public class PA {
             if (c.isOne()) {
                 System.out.println("    under all contexts");
             } else {
-                System.out.println("    under context ");
+                System.out.print("    under context ");
                 Assert._assert(!c.isZero());
-                for (int j = 0; j < MAX_PARAMS; ++j) {
+                for (int j = 0; j < V1csets.length; ++j) {
                     BDD d = c.id();
-                    for (int k = 0; k < MAX_PARAMS; ++k) {
+                    for (int k = 0; k < V1csets.length; ++k) {
                         if (k == j) continue;
                         BDD e = d.exist(V1csets[k]);
                         d.free();
@@ -1412,6 +1420,7 @@ public class PA {
                     }
                     if (j < MAX_PARAMS-1) System.out.print("|");
                 }
+                System.out.println();
             }
         }
     }
@@ -1474,19 +1483,41 @@ public class PA {
                     BDD a = r.exist(V1.set().and(H1set));
                     if (a.isOne()) {
                         System.out.println("    under all contexts");
-                    } else if (a.satCount(V1cset) > 100) {
-                        System.out.println("    under many contexts");
                     } else {
-                        for (Iterator k = a.iterator(V1cset); k.hasNext(); ) {
-                            BDD s = (BDD) k.next();
-                            System.out.println("    under context "+s.toStringWithDomains(TS));
+                        System.out.print("    under context ");
+                        for (int m = 0; m < MAX_PARAMS; ++m) {
+                            if (m > 0) System.out.print("|");
+                            BDD b = a.id();
+                            for (int k = 0; k < V1csets.length; ++k) {
+                                if (k == m) continue;
+                                BDD c = b.exist(V1csets[k]);
+                                b.free();
+                                b = c;
+                            }
+                            if (b.isOne()) {
+                                System.out.print("*");
+                            } else if (b.satCount(V1csets[m]) > 100) {
+                                System.out.print("many");
+                            } else for (Iterator k = b.iterator(V1csets[m]); k.hasNext(); ) {
+                                BDD s = (BDD) k.next();
+                                long foo = s.scanVar(V1c[m]);
+                                System.out.print(TS.elementName(H1.getIndex(), foo));
+                                if (k.hasNext()) System.out.print(",");
+                            }
                         }
+                        System.out.println();
                     }
                 }
             }
         }
     }
     
+    // t1 = actual x (z=0)
+    // t3 = t1 x mI
+    // t4 = t3 x vP
+    // t5 = t4 x hT
+    // t6 = t5 x cha
+    // IE |= t6
     /** Uses points-to information to bind virtual call sites.  (Adds to IE/IEcs.) */
     public void bindInvocations() {
         if (INCREMENTAL3 && !OBJECT_SENSITIVE) {
@@ -1506,6 +1537,7 @@ public class PA {
             // By quantifying out V1c, we merge all contexts.
             t4 = t3.relprod(vP, V1set); // IxV1cxV1xN x V1cxV1xH1cxH1 = IxH1cxH1xN
         }
+// 9%
         BDD t5 = t4.relprod(hT, H1set); // (V1cx)IxH1cxH1xN x H1xT2 = (V1cx)IxT2xN
         t4.free();
         BDD t6 = t5.relprod(cha, T2Nset); // (V1cx)IxT2xN x T2xNxM = (V1cx)IxM
@@ -1536,6 +1568,21 @@ public class PA {
             t8.replaceWith(V1cH1ctoV2cV1c); // V2cxIxV1cxM
             IEcs.orWith(t8);
         } else if (CARTESIAN_PRODUCT) {
+            // t6 |= statics
+            // for (i=0..k)
+            //     t8 = actual x (z=i)
+            //     t9 = t8 x vP
+            //     context &= t9
+            //     t9 &= V1cH1equals[i]
+            //     tb = t9 x t6
+            //     tc = tb x formal_i
+            //     newPt |= tc
+            // newPt2 = newPt x context
+            // newPt2 &= vPfilter
+            // vP |= newPt2
+            // context &= t6
+            // IEcs |= context
+            
             // Add all statically-bound calls to t6.
             // They are true under all contexts.
             BDD statics = staticCalls.exist(V1.set()); // IxM
@@ -1548,7 +1595,7 @@ public class PA {
             BDD context = bdd.one();
             // We need to add points-to relations for each of the actual parameters.
             BDD newPt = bdd.zero();
-            for (int i = 0; i < MAX_PARAMS; ++i) {
+            for (int i = MAX_PARAMS - 1; i >= 0; --i) {
                 if (TRACE_BIND) System.out.println("Param "+i+":");
                 BDD t8 = actual.restrict(Z.ithVar(i)).and(V2cdomain); // IxV2
                 t8.replaceWith(V2toV1); // IxV1
@@ -1561,29 +1608,35 @@ public class PA {
                 t8.free();
                 
                 t9.replaceWith(V1ctoV2c); // V2cxIxH1cxH1
-                // Invocation I under context V2c leads to context V1c
                 BDD ta = t9.replace(H1toV1c[i]); // V2cxIxV1c[i]
+                // Invocation I under context V2c leads to context V1c
+// 20%
+                context.andWith(ta); // V2cxIxV1c[i]
                 
                 // Calculate new points-to relations for this actual parameter.
-                t9.andWith(ta.id()); // V2cxIxV1c[i]xH1cxH1
-                BDD tb = t9.relprod(t6, V2cset.and(Iset)); // V2cxIxV1c[i]xH1cxH1 x V2cxIxM = V1c[i]xMxH1cxH1
+                t9.andWith(V1cH1equals[i].id()); // V2cxIxV1c[i]xH1cxH1
+                BDD tb = t9.relprod(t6, V2cset); // V2cxIxV1c[i]xH1cxH1 x (V2cx)IxM = IxV1c[i]xMxH1cxH1
                 t9.free();
                 BDD formal_i = formal.restrict(Z.ithVar(i)); // MxV1
-                BDD tc = tb.relprod(formal_i, Mset); // V1c[i]xMxH1cxH1 x MxV1 = V1c[i]xV1xH1cxH1
-                formal_i.free();
+                BDD tc = tb.relprod(formal_i, Mset); // IxV1c[i]xMxH1cxH1 x MxV1 = IxV1c[i]xV1xH1cxH1
+                formal_i.free(); tb.free();
                 for (int j = 0; j < MAX_PARAMS; ++j) {
                     if (i == j) continue;
                     tc.andWith(V1c[j].domain());
                 }
-                if (TRACE_BIND) dumpVP(tc);
+                if (TRACE_BIND) dumpVP(tc.exist(Iset));
                 newPt.orWith(tc);
-                
-                // Invocation I under context V2c leads to context V1c
-                context.andWith(ta); // V2cxIxV1c[i]
             }
             
-            if (FILTER_VP) newPt.andWith(vPfilter.id());
-            vP.orWith(newPt);
+            // Now, filter out unrealizables.
+            // IxV1c[i]xV1xH1cxH1 x V2cxIxV1c[i] = V1cxV1xH1cxH1
+// 13%
+            BDD newPt2 = newPt.relprod(context, V2cset.and(Iset));
+            newPt.free();
+            if (TRACE_BIND) dumpVP(newPt2);
+            
+            if (FILTER_VP) newPt2.andWith(vPfilter.id());
+            vP.orWith(newPt2);
             
             context.andWith(t6.id()); // V2cxIxV1c[k]xM
             if (TRACE_BIND) System.out.println("context = "+context.toStringWithDomains());
@@ -1597,6 +1650,25 @@ public class PA {
     BDD old3_vP;
     BDD old3_t4;
     BDD old3_hT;
+    BDD old3_t6;
+    BDD old3_t9[];
+    
+    // t1 = actual x (z=0)
+    // t3 = t1 x mI
+    // new_t3 = t3 - old_t3
+    // new_vP = vP - old_vP
+    // t4 = t3 x new_vP
+    // old_t3 = t3
+    // t4 |= new_t3 x vP
+    // new_t4 = t4 - old_t4
+    // new_hT = hT - old_hT
+    // t5 = t4 x new_hT
+    // old_t4 = t4
+    // t5 |= new_t4 x hT
+    // t6 = t5 x cha
+    // IE |= t6
+    // old_vP = vP
+    // old_hT = hT
     
     public void bindInvocations_incremental() {
         BDD t1 = actual.restrict(Z.ithVar(0)); // IxV2
@@ -1614,7 +1686,6 @@ public class PA {
         if (CS_CALLGRAPH) {
             // We keep track of where a call goes under different contexts.
             t4 = t3.relprod(new_vP, V1.set()); // IxV1cxV1xN x V1cxV1xH1cxH1 = V1cxIxH1cxH1xN
-            new_vP.free();
             old3_t3 = t3;
             t4.orWith(new_t3.relprod(vP, V1.set())); // IxV1cxV1xN x V1cxV1xH1cxH1 = V1cxIxH1cxH1xN
             new_t3.free();
@@ -1623,7 +1694,6 @@ public class PA {
         } else {
             // By quantifying out V1c, we merge all contexts.
             t4 = t3.relprod(new_vP, V1set); // IxV1cxV1xN x V1cxV1xH1cxH1 = IxH1cxH1xN
-            new_vP.free();
             old3_t3 = t3;
             t4.orWith(new_t3.relprod(vP, V1set)); // IxV1cxV1xN x V1cxV1xH1cxH1 = IxH1cxH1xN
             new_t3.free();
@@ -1646,19 +1716,100 @@ public class PA {
         else IE.orWith(t6.id());
         if (TRACE_SOLVER) out.println("Call graph edges after: "+IE.satCount(IMset));
         
+        old3_vP = vP.id();
+        old3_hT = hT.id();
+        
         if (CONTEXT_SENSITIVE) {
             if (CS_CALLGRAPH) t6.replaceWith(V1ctoV2c); // V2cxIxM
             t6.andWith(IEfilter.id()); // V2cxIxV1cxM
-            IEcs.orWith(t6.id());
+            IEcs.orWith(t6);
         } else if (OBJECT_SENSITIVE) {
             throw new Error();
         } else if (CARTESIAN_PRODUCT) {
-            throw new Error();
+            // t6 |= statics
+            // new_t6 = t6 - old_t6
+            // for (i=0..k)
+            //     t8[i] = actual x (z=i)
+            //     t9[i] = t8[i] x vP
+            //     new_t9[i] = t9[i] - old_t9[i]
+            //     new_context &= new_t9[i]
+            //     new_t9[i] &= V1cH1equals[i]
+            //     tb[i] = new_t9[i] x t6
+            //     tb[i] |= t9[i] x new_t6
+            //     old_t9[i] = t9[i]
+            //     tc[i] = tb[i] x formal_i
+            //     newPt |= tc[i]
+            // newPt2 = newPt x new_context
+            // newPt2 &= vPfilter
+            // vP |= newPt2
+            // new_context &= t6
+            // IEcs |= new_context
+            
+            // Add all statically-bound calls to t6.
+            // They are true under all contexts.
+            BDD statics = staticCalls.exist(V1.set()); // IxM
+            if (CS_CALLGRAPH) statics.andWith(V1cdomain.id()); // V1cxIxM
+            t6.orWith(statics); // V1cxIxM | V1cxIxM = V1cxIxM
+            
+            // Edges in the call graph.  Invocation I under context V2c has target method M.
+            if (CS_CALLGRAPH) t6.replaceWith(V1ctoV2c); // V2cxIxM
+            
+            BDD new_t6 = t6.apply(old3_t6, BDDFactory.diff);
+            
+            // The context for the new cg edges are based on the points-to set of every parameter.
+            BDD newContext = bdd.one();
+            // We need to add points-to relations for each of the actual parameters.
+            BDD newPt = bdd.zero();
+            for (int i = MAX_PARAMS - 1; i >= 0; --i) {
+                if (TRACE_BIND) System.out.println("Param "+i+":");
+                BDD t8_i = actual.restrict(Z.ithVar(i)).and(V2cdomain); // IxV2
+                t8_i.replaceWith(V2toV1); // IxV1
+                if (TRACE_BIND) System.out.println("t8 = "+t8_i.toStringWithDomains());
+                BDD t9_i = t8_i.relprod(vP, V1.set()); // IxV1 x V1cxV1xH1cxH1 = V1cxIxH1cxH1
+                if (TRACE_BIND) {
+                    System.out.println("t9 =");
+                    dumpWithV1c(t9_i, Iset.and(H1set));
+                }
+                t8_i.free();
+                
+                t9_i.replaceWith(V1ctoV2c); // V2cxIxH1cxH1
+                BDD new_t9_i = t9_i.apply(old3_t9[i], BDDFactory.diff);
+                old3_t9[i] = t9_i.id();
+                // Invocation I under context V2c leads to context V1c
+// 20%
+                newContext.andWith(new_t9_i.replace(H1toV1c[i])); // V2cxIxV1c[i]
+                
+                // Calculate new points-to relations for this actual parameter.
+                new_t9_i.andWith(V1cH1equals[i].id()); // V2cxIxV1c[i]xH1cxH1
+                t9_i.andWith(V1cH1equals[i].id());
+                BDD tb_i = new_t9_i.relprod(t6, V2cset); // V2cxIxV1c[i]xH1cxH1 x (V2cx)IxM = IxV1c[i]xMxH1cxH1
+                tb_i.orWith(t9_i.relprod(new_t6, V2cset));
+                BDD formal_i = formal.restrict(Z.ithVar(i)); // MxV1
+                BDD tc_i = tb_i.relprod(formal_i, Mset); // IxV1c[i]xMxH1cxH1 x MxV1 = IxV1c[i]xV1xH1cxH1
+                formal_i.free(); tb_i.free();
+                for (int j = 0; j < MAX_PARAMS; ++j) {
+                    if (i == j) continue;
+                    tc_i.andWith(V1c[j].domain());
+                }
+                if (TRACE_BIND) dumpVP(tc_i.exist(Iset));
+                newPt.orWith(tc_i);
+            }
+            
+            // Now, filter out unrealizables.
+            // IxV1c[i]xV1xH1cxH1 x V2cxIxV1c[i] = V1cxV1xH1cxH1
+// 13%
+            BDD newPt2 = newPt.relprod(newContext, V2cset.and(Iset));
+            newPt.free();
+            if (TRACE_BIND) dumpVP(newPt2);
+            
+            if (FILTER_VP) newPt2.andWith(vPfilter.id());
+            vP.orWith(newPt2);
+            
+            newContext.andWith(t6.id()); // V2cxIxV1c[k]xM
+            old3_t6 = t6;
+            if (TRACE_BIND) System.out.println("context = "+newContext.toStringWithDomains());
+            IEcs.orWith(newContext);
         }
-        t6.free();
-        
-        old3_vP = vP.id();
-        old3_hT = hT.id();
     }
     
     public boolean handleNewTargets() {
@@ -1855,6 +2006,10 @@ public class PA {
     }
     
     public void addDefaults() {
+        // First, print something because the set of objects reachable via System.out changes
+        // depending on whether something has been printed or not!
+        System.out.println("Adding default static variables.");
+        
         // Add the default static variables (System in/out/err...)
         GlobalNode.GLOBAL.addDefaultStatics();
         
@@ -1914,7 +2069,7 @@ public class PA {
             if (!DISCOVER_CALL_GRAPH) {
                 if (VerifyAssertions)
                     Assert._assert(IEfilter != null);
-                if (CONTEXT_SENSITIVE) {
+                if (USE_VCONTEXT) {
                     IEcs = IEfilter;
                     IE = IEcs.exist(V1cV2cset);
                 } else {
@@ -1957,7 +2112,7 @@ public class PA {
         // Start timing solver.
         time = System.currentTimeMillis();
         
-        if (DISCOVER_CALL_GRAPH || OBJECT_SENSITIVE) {
+        if (DISCOVER_CALL_GRAPH || OBJECT_SENSITIVE || CARTESIAN_PRODUCT) {
             iterate();
         } else {
             assumeKnownCallGraph();
@@ -2036,10 +2191,6 @@ public class PA {
                 }
             } else {
                 rootMethods = dis.cg.getRoots();
-                if (dis.CARTESIAN_PRODUCT) {
-                    System.out.println("Turning on call graph discovery.");
-                    dis.DISCOVER_CALL_GRAPH = true;
-                }
             }
         }
         dis.run(dis.cg, rootMethods);
@@ -2153,32 +2304,12 @@ public class PA {
                 case 8: return findInMap(Tmap, (int)j);
                 case 9: return findInMap(Nmap, (int)j);
                 case 10: return findInMap(Mmap, (int)j);
-                case 11: // fallthrough
-                case 12: return varContextToString(j);
-                case 13: // fallthrough
-                case 14: return Long.toString(j);
                 default: return "("+j+")"+"??";
             }
         }
         public String elementNames(int i, long j, long k) {
             // TODO: don't bother printing out long form of big sets.
             return super.elementNames(i, j, k);
-        }
-        
-        public String varContextToString(long j) {
-            if (CARTESIAN_PRODUCT) {
-                StringBuffer sb = new StringBuffer();
-                long mask = (1L << (H_BITS)) - 1;
-                for (int i = 0; i < MAX_PARAMS; ++i) {
-                    long val = j & mask;
-                    if (val != 0) sb.append(elementName(H1.getIndex(), val));
-                    else sb.append('_');
-                    if (i < MAX_PARAMS-1) sb.append('|');
-                    j = j >>> (H_BITS+HC_BITS);
-                }
-                return sb.toString();
-            }
-            return Long.toString(j);
         }
     }
    
@@ -2598,13 +2729,14 @@ public class PA {
         }
         System.out.println();
         System.out.println("Methods="+methods+" Bytecodes="+bcodes+" Call sites="+calls);
-        PathNumbering pn;
-	if (THREAD_SENSITIVE) pn = new RootPathNumbering();
-        else pn = new SCCPathNumbering(varPathSelector);
-        System.out.println("Thread runs="+thread_runs);
-        Map initialCounts = new ThreadRootMap(thread_runs);
-        BigInteger paths = (BigInteger) pn.countPaths(cg.getRoots(), cg.getCallSiteNavigator(), initialCounts);
-        System.out.println("Vars="+vars+" Heaps="+heaps+" Classes="+classes.size()+" Fields="+fields.size()+" Paths="+paths);
+        System.out.println("Vars="+vars+" Heaps="+heaps+" Classes="+classes.size()+" Fields="+fields.size());
+        PathNumbering pn = null;
+        if (THREAD_SENSITIVE)
+            pn = new RootPathNumbering();
+        else if (CONTEXT_SENSITIVE)
+            pn = new SCCPathNumbering(varPathSelector);
+        else
+            pn = null;
         if (updateBits) {
             V_BITS = BigInteger.valueOf(vars+256).bitLength();
             I_BITS = BigInteger.valueOf(calls).bitLength();
@@ -2614,11 +2746,14 @@ public class PA {
             N_BITS = I_BITS;
             M_BITS = BigInteger.valueOf(methods).bitLength() + 1;
             if (CONTEXT_SENSITIVE || THREAD_SENSITIVE) {
+                System.out.println("Thread runs="+thread_runs);
+                Map initialCounts = new ThreadRootMap(thread_runs);
+                BigInteger paths = (BigInteger) pn.countPaths(cg.getRoots(), cg.getCallSiteNavigator(), initialCounts);
                 VC_BITS = paths.bitLength();
                 if (VC_BITS > MAX_VC_BITS)
                     System.out.println("Trimming var context bits from "+VC_BITS);
                 VC_BITS = Math.min(MAX_VC_BITS, VC_BITS);
-                System.out.println("Var context bits="+VC_BITS);
+                System.out.println("Paths="+paths+", Var context bits="+VC_BITS);
             }
             System.out.println(" V="+V_BITS+" I="+I_BITS+" H="+H_BITS+
                                " F="+F_BITS+" T="+T_BITS+" N="+N_BITS+
@@ -2829,7 +2964,8 @@ public class PA {
                                               PathNumbering.toBigInt(r_edge.low),
                                               PathNumbering.toBigInt(r_edge.high));
                 } else {
-                    context = V1cdomain.and(V2cdomain);
+                    if (USE_VCONTEXT) context = V1cdomain.and(V2cdomain);
+                    else context = bdd.one();
                 }
                 context.andWith(I.ithVar(I_i));
                 context.andWith(M.ithVar(M_i));

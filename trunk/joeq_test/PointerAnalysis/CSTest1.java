@@ -62,6 +62,20 @@ public class CSTest1 {
         return f.recursive();
     }
     
+    public static void main4(String[] args) {
+        CSTest1 x = new CSTest1(); x.f = x;
+        CSTest1 y = new CSTest2(); y.f = y;
+        CSTest1 z = (args.length > 1) ? x : y;
+        
+        z.update2();
+        
+        x.f.virtual(); // should be to CSTest1
+    }
+    
+    void update2() {
+        CSTest1 y = this.f;
+        this.f = y;
+    }
 }
 
 class CSTest2 extends CSTest1 {
