@@ -5,12 +5,12 @@ import java.util.LinkedHashSet;
 import java.util.Vector;
 
 import Clazz.jq_Method;
-import Compil3r.Analysis.IPSSA.ContextSet;
+import Compil3r.Analysis.IPSSA.SSAIterator.DefinitionIterator;
+import Compil3r.Analysis.IPSSA.Utils.DefinitionSet;
+import Compil3r.Analysis.IPSSA.Utils.IteratorHelper;
 import Compil3r.Quad.Quad;
 import Compil3r.Quad.Operator.Invoke;
 import Util.Assert;
-import Compil3r.Analysis.IPSSA.SSAIterator.DefinitionIterator;
-import Compil3r.Analysis.IPSSA.Utils.*;
 
 public abstract class  SSAValue {
 	protected SSADefinition _destination;
@@ -19,13 +19,13 @@ public abstract class  SSAValue {
 		return _destination;
 	}
 	
-	public Quad getQuad(){
-		return _destination.getQuad();
-	}
-	
 	void setDestination(SSADefinition def){
 		_destination = def;
 	}
+    
+    public Quad getQuad() {
+        return getDestination().getQuad();
+    }
 	
 	public abstract SSAIterator.DefinitionIterator getUsedDefinitionIterator();
 	
@@ -196,7 +196,7 @@ public abstract class  SSAValue {
 				result += def.toString() + ", ";
 			}
 			if(_definitions.size()>0){
-				result = result.substring(result.length() - 2);
+				result = result.substring(0, result.length() - 2);
 			}
 			
 			return result + ")";
@@ -307,6 +307,10 @@ public abstract class  SSAValue {
 	public static class FormalIn extends IPPhi {
 		protected Vector/*<Invoke>*/ _callers;
 		
+        FormalIn(){
+            _callers = new Vector();
+        }
+        
 		Invoke getCaller(int pos){
 			return (Invoke)_callers.get(pos); 
 		}
@@ -327,7 +331,7 @@ public abstract class  SSAValue {
 				result += "<" + def.toString() + ", " + caller + ">, ";
 			}
 			if(_definitions.size()>0){
-				result = result.substring(result.length() - 2);
+				result = result.substring(0, result.length() - 2);
 			}
 
 			return result + ")";
@@ -336,6 +340,10 @@ public abstract class  SSAValue {
 	
 	public static class ActualOut extends IPPhi {
 		protected Vector/*<jq_Method>*/ _callees;
+        
+        ActualOut(){
+            _callees = new Vector();
+        }
 		
 		jq_Method getCallee(int pos){
 			return (jq_Method)_callees.get(pos); 
@@ -358,7 +366,7 @@ public abstract class  SSAValue {
 				result += "<" + def.toString() + ", " + method + ">, ";
 			}
 			if(_definitions.size()>0){
-				result = result.substring(result.length() - 2);
+				result = result.substring(0, result.length() - 2);
 			}
 
 			return result + ")";

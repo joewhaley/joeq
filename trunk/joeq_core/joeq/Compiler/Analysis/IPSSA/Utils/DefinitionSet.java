@@ -10,7 +10,7 @@ import java.util.HashSet;
 import Compil3r.Analysis.IPSSA.SSAIterator;
 
 /**
- * @author livshits
+ * @author Vladimir Livshits
  *
  * To change the template for this generated type comment go to
  * Window>Preferences>Java>Code Generation>Code and Comments
