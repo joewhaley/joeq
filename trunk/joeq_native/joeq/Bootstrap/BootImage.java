@@ -1086,7 +1086,7 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
     }
 
     
-    public void writeELF(OutputStream out) throws IOException {
+    public void dumpELF(OutputStream out, jq_StaticMethod rootm) throws IOException {
         final int datasize = heapCurrent;
         ELFOutputStream f = new ELFOutputStream(ELFDATA2LSB, ET_REL, EM_386, 0, out);
         f.setLittleEndian();
@@ -1126,6 +1126,24 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
             symtab.addSymbol(e);
         }
         
+	{
+	    jq_CompiledCode cc = rootm.getDefaultCompiledVersion();
+	    SymbolTableEntry e = new SymbolTableEntry("_entry@0", cc.getEntrypoint(), cc.getLength(), STB_GLOBAL, STT_FUNC, text);
+	    symtab.addSymbol(e);
+
+	    cc = ExceptionDeliverer._trap_handler.getDefaultCompiledVersion();
+	    e = new SymbolTableEntry("_trap_handler@8", cc.getEntrypoint(), cc.getLength(), STB_GLOBAL, STT_FUNC, text);
+	    symtab.addSymbol(e);
+
+	    cc = jq_NativeThread._threadSwitch.getDefaultCompiledVersion();
+	    e = new SymbolTableEntry("_threadSwitch@4", cc.getEntrypoint(), cc.getLength(), STB_GLOBAL, STT_FUNC, text);
+	    symtab.addSymbol(e);
+
+	    cc = jq_NativeThread._ctrl_break_handler.getDefaultCompiledVersion();
+	    e = new SymbolTableEntry("_ctrl_break_handler@0", cc.getEntrypoint(), cc.getLength(), STB_GLOBAL, STT_FUNC, text);
+	    symtab.addSymbol(e);
+	}
+
         it = text_relocs.iterator();
         while (it.hasNext()) {
             Reloc r = (Reloc)it.next();
