@@ -4,8 +4,11 @@
 package Compil3r.Quad;
 
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
+import Clazz.jq_Class;
+import Clazz.jq_ClassFileConstants;
 import Clazz.jq_InstanceMethod;
 import Clazz.jq_Method;
 import Clazz.jq_Reference;
@@ -32,7 +35,7 @@ import Util.Collections.SortedArraySet;
  * @version $Id$
  */
 public abstract class ProgramLocation {
-    private final AndersenMethod m;
+    protected final AndersenMethod m;
     public ProgramLocation(AndersenMethod m) {
         this.m = m;
     }
@@ -41,6 +44,7 @@ public abstract class ProgramLocation {
     public abstract AndersenType getParamType(int i);
     
     public abstract int getID();
+    public abstract int getBytecodeIndex();
     
     public abstract boolean isSingleTarget();
     public abstract boolean isInterfaceCall();
@@ -88,6 +92,11 @@ public abstract class ProgramLocation {
         }
         
         public int getID() { return q.getID(); }
+        public int getBytecodeIndex() {
+            Map map = CodeCache.getBCMap((jq_Method) super.m);
+            Integer i = (Integer) map.get(q);
+            return i.intValue();
+        }
         
         public int getNumParams() { return Invoke.getParamList(q).length(); }
         public AndersenType getParamType(int i) { return Invoke.getParamList(q).get(i).getType(); }
@@ -167,6 +176,159 @@ public abstract class ProgramLocation {
             byte type = getInvocationType();
             return CallTargets.getTargets(target.getDeclaringClass(), target, type, receiverTypes, exact, true);
         }
+        
+        public Quad getQuad() { return q; }
+    }
+    
+    public static class BCProgramLocation extends ProgramLocation {
+        final int bcIndex;
+        
+        public BCProgramLocation(jq_Method m, int bcIndex) {
+            super(m);
+            this.bcIndex = bcIndex;
+        }
+        
+        public int getID() { return bcIndex; }
+        public int getBytecodeIndex() { return bcIndex; }
+        
+        public AndersenMethod getTargetMethod() {
+            jq_Class clazz = ((jq_Method) super.m).getDeclaringClass();
+            byte[] bc = ((jq_Method) super.m).getBytecode();
+            if (bc == null || bcIndex < 0 || bcIndex+2 >= bc.length) return null;
+            char cpi = Util.Convert.twoBytesToChar(bc, bcIndex+1);
+            switch (bc[bcIndex]) {
+                case (byte) jq_ClassFileConstants.jbc_INVOKEVIRTUAL:
+                case (byte) jq_ClassFileConstants.jbc_INVOKESPECIAL:
+                case (byte) jq_ClassFileConstants.jbc_INVOKEINTERFACE:
+                    return clazz.getCPasInstanceMethod(cpi);
+                case (byte) jq_ClassFileConstants.jbc_INVOKESTATIC:
+                    return clazz.getCPasStaticMethod(cpi);
+                default:
+                    return null;
+            }
+        }
+        public int getNumParams() {
+            return ((jq_Method) getTargetMethod()).getParamTypes().length;
+        }
+        public AndersenType getParamType(int i) {
+            return ((jq_Method) getTargetMethod()).getParamTypes()[i];
+        }
+
+        public boolean isSingleTarget() {
+            jq_Class clazz = ((jq_Method) super.m).getDeclaringClass();
+            byte[] bc = ((jq_Method) super.m).getBytecode();
+            if (bc == null || bcIndex < 0 || bcIndex+2 >= bc.length) return false;
+            switch (bc[bcIndex]) {
+                case (byte) jq_ClassFileConstants.jbc_INVOKESPECIAL:
+                case (byte) jq_ClassFileConstants.jbc_INVOKESTATIC:
+                    return true;
+                case (byte) jq_ClassFileConstants.jbc_INVOKEVIRTUAL:
+                case (byte) jq_ClassFileConstants.jbc_INVOKEINTERFACE:
+                default:
+                    return false;
+            }
+        }
+        public boolean isInterfaceCall() {
+            jq_Class clazz = ((jq_Method) super.m).getDeclaringClass();
+            byte[] bc = ((jq_Method) super.m).getBytecode();
+            if (bc == null || bcIndex < 0 || bcIndex+2 >= bc.length) return false;
+            return bc[bcIndex] == jq_ClassFileConstants.jbc_INVOKEINTERFACE;
+        }
+
+        public int hashCode() { return super.m.hashCode() ^ bcIndex; }
+        public boolean equals(BCProgramLocation that) {
+            return this.bcIndex == that.bcIndex && super.m == that.m;
+        }
+        public boolean equals(Object o) {
+            if (o instanceof BCProgramLocation) return equals((BCProgramLocation) o);
+            return false;
+        }
+        public String toString() {
+            String s = super.m.getName()+"() @ "+bcIndex;
+            return s;
+        }
+        
+        public CallTargets getCallTargets() {
+            jq_Class clazz = ((jq_Method) super.m).getDeclaringClass();
+            byte[] bc = ((jq_Method) super.m).getBytecode();
+            if (bc == null || bcIndex < 0 || bcIndex+2 >= bc.length) return null;
+            char cpi = Util.Convert.twoBytesToChar(bc, bcIndex+1);
+            byte type;
+            jq_Method method;
+            switch (bc[bcIndex]) {
+                case (byte) jq_ClassFileConstants.jbc_INVOKEVIRTUAL:
+                    type = BytecodeVisitor.INVOKE_VIRTUAL;
+                    // fallthrough
+                case (byte) jq_ClassFileConstants.jbc_INVOKESPECIAL:
+                    type = BytecodeVisitor.INVOKE_SPECIAL;
+                    // fallthrough
+                case (byte) jq_ClassFileConstants.jbc_INVOKEINTERFACE:
+                    method = clazz.getCPasInstanceMethod(cpi);
+                    type = BytecodeVisitor.INVOKE_INTERFACE;
+                    break;
+                case (byte) jq_ClassFileConstants.jbc_INVOKESTATIC:
+                    method = clazz.getCPasStaticMethod(cpi);
+                    type = BytecodeVisitor.INVOKE_STATIC;
+                    break;
+                default:
+                    return null;
+            }
+            return CallTargets.getTargets(clazz, method, type, true);
+        }
+        public CallTargets getCallTargets(AndersenReference klass, boolean exact) {
+            jq_Class clazz = ((jq_Method) super.m).getDeclaringClass();
+            byte[] bc = ((jq_Method) super.m).getBytecode();
+            if (bc == null || bcIndex < 0 || bcIndex+2 >= bc.length) return null;
+            char cpi = Util.Convert.twoBytesToChar(bc, bcIndex+1);
+            byte type;
+            jq_Method method;
+            switch (bc[bcIndex]) {
+                case (byte) jq_ClassFileConstants.jbc_INVOKEVIRTUAL:
+                    type = BytecodeVisitor.INVOKE_VIRTUAL;
+                    // fallthrough
+                case (byte) jq_ClassFileConstants.jbc_INVOKESPECIAL:
+                    type = BytecodeVisitor.INVOKE_SPECIAL;
+                    // fallthrough
+                case (byte) jq_ClassFileConstants.jbc_INVOKEINTERFACE:
+                    method = clazz.getCPasInstanceMethod(cpi);
+                    type = BytecodeVisitor.INVOKE_INTERFACE;
+                    break;
+                case (byte) jq_ClassFileConstants.jbc_INVOKESTATIC:
+                    method = clazz.getCPasStaticMethod(cpi);
+                    type = BytecodeVisitor.INVOKE_STATIC;
+                    break;
+                default:
+                    return null;
+            }
+            return CallTargets.getTargets(clazz, method, type, (jq_Reference) klass, exact, true);
+        }
+        public CallTargets getCallTargets(java.util.Set receiverTypes, boolean exact) {
+            jq_Class clazz = ((jq_Method) super.m).getDeclaringClass();
+            byte[] bc = ((jq_Method) super.m).getBytecode();
+            if (bc == null || bcIndex < 0 || bcIndex+2 >= bc.length) return null;
+            char cpi = Util.Convert.twoBytesToChar(bc, bcIndex+1);
+            byte type;
+            jq_Method method;
+            switch (bc[bcIndex]) {
+                case (byte) jq_ClassFileConstants.jbc_INVOKEVIRTUAL:
+                    type = BytecodeVisitor.INVOKE_VIRTUAL;
+                    // fallthrough
+                case (byte) jq_ClassFileConstants.jbc_INVOKESPECIAL:
+                    type = BytecodeVisitor.INVOKE_SPECIAL;
+                    // fallthrough
+                case (byte) jq_ClassFileConstants.jbc_INVOKEINTERFACE:
+                    method = clazz.getCPasInstanceMethod(cpi);
+                    type = BytecodeVisitor.INVOKE_INTERFACE;
+                    break;
+                case (byte) jq_ClassFileConstants.jbc_INVOKESTATIC:
+                    method = clazz.getCPasStaticMethod(cpi);
+                    type = BytecodeVisitor.INVOKE_STATIC;
+                    break;
+                default:
+                    return null;
+            }
+            return CallTargets.getTargets(clazz, method, type, receiverTypes, exact, true);
+        }
     }
     
     public static class SSAProgramLocation extends ProgramLocation {
@@ -180,6 +342,10 @@ public abstract class ProgramLocation {
         }
         
         public int getID() { return identifier; }
+        public int getBytecodeIndex() {
+            Assert.UNREACHABLE();
+            return 0;
+        }
         
         public AndersenMethod getTargetMethod() { return targetMethod; }
         public int getNumParams() { return targetMethod.getNumParams(); }
