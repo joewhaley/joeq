@@ -572,6 +572,19 @@ public interface Bytecodes {
                 int i = (l + r) / 2;
                 int j = pos[i];
                 
+                // ignore "-1" indices.
+                while (j == -1 && i >= l && i > 0) {
+                    j = pos[--i];
+                }
+                if (i < l) {
+                    i = (l + r) / 2;
+                    j = pos[i];
+                    while (j == -1 && i <= r && i < pos.length) {
+                        j = pos[++i];
+                    }
+                    if (i > r) return null;
+                }
+                
                 //System.out.println("i="+i+" l="+l+" r="+r+" j="+j+" target="+target+" ihs[i]="+ihs.get(i));
                 if (j == target) // target found
                     return (InstructionHandle)ihs.get(i);
@@ -1552,10 +1565,13 @@ public interface Bytecodes {
          */
         public List/*<InstructionHandle>*/ getInstructionHandles() {
             ArrayList/*<InstructionHandle>*/ ihs = new ArrayList(length);
+            if (byte_positions.length != length)
+                byte_positions = new int[length];
             InstructionHandle   ih  = start;
             
             for(int i=0; i < length; i++) {
                 ihs.add(ih);
+                byte_positions[i] = ih.getPosition();
                 ih = ih.next;
             }
             
@@ -6470,7 +6486,7 @@ public interface Bytecodes {
                 instruction = InstructionConstants.ACONST_NULL;
             else { // If everything fails create a Constant pool entry
                 cpr.addOther(value);
-                instruction = new LDC2_W(value);
+                instruction = new LDC(value);
             }
         }
         
@@ -7459,6 +7475,7 @@ public interface Bytecodes {
         protected CPInstruction(short opcode, Object o) {
             super(opcode, (short)3);
             this.o = o;
+            Assert._assert(o != null);
         }
         
         /**
