@@ -3,6 +3,7 @@ package Compil3r.Analysis.IPA;
 import java.io.DataOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -42,10 +43,21 @@ public class ObjectCreationGraph extends QuadVisitor.EmptyVisitor
     implements ControlFlowGraphVisitor, BasicBlockVisitor, Graph
 {
 
+    boolean TRACE = false;
+    PrintStream out = System.out;
+    boolean MERGE_SITES = false;
+    
     jq_Method currentMethod;
     Set/*jq_Class*/ roots = new HashSet();
     MultiMap succ = new GenericMultiMap(), pred = new GenericMultiMap();
 
+    public Set getAllNodes() {
+        HashSet s = new HashSet();
+        s.addAll(succ.keySet());
+        s.addAll(pred.keySet());
+        return s;
+    }
+    
     class Nav implements Navigator {
 
         /* (non-Javadoc)
@@ -68,7 +80,12 @@ public class ObjectCreationGraph extends QuadVisitor.EmptyVisitor
      * @see Util.Graphs.Graph#getRoots()
      */
     public Collection getRoots() {
-        return roots;
+        HashSet set = new HashSet();
+        set.addAll(succ.keySet());
+        set.removeAll(succ.values());
+        set.addAll(roots);
+        if (TRACE) System.out.println("Roots = "+roots);
+        return set;
     }
 
     /* (non-Javadoc)
@@ -92,7 +109,7 @@ public class ObjectCreationGraph extends QuadVisitor.EmptyVisitor
             jq_Reference type = n.getDeclaredType(); 
             if (type != null) {
                 jq_Class c = currentMethod.isStatic() ? null : currentMethod.getDeclaringClass();
-                addEdge(c, type);
+                addEdge(c, n, type);
             }
         }
         
@@ -125,7 +142,8 @@ public class ObjectCreationGraph extends QuadVisitor.EmptyVisitor
             c1 = currentMethod.getDeclaringClass();
         }
         c2 = (jq_Reference) New.getType(obj).getType();
-        addEdge(c1, c2);
+        ProgramLocation pl = new ProgramLocation.QuadProgramLocation(currentMethod, obj);
+        addEdge(c1, pl, c2);
     }
     
     /* (non-Javadoc)
@@ -139,16 +157,41 @@ public class ObjectCreationGraph extends QuadVisitor.EmptyVisitor
             c1 = currentMethod.getDeclaringClass();
         }
         c2 = (jq_Reference) NewArray.getType(obj).getType();
-        addEdge(c1, c2);
+        ProgramLocation pl = new ProgramLocation.QuadProgramLocation(currentMethod, obj);
+        addEdge(c1, pl, c2);
     }
     
     public void addRoot(jq_Class c) {
+        if (TRACE) out.println("Adding root "+c);
         roots.add(c);
     }
     
-    public void addEdge(jq_Reference c1, jq_Reference c2) {
-        succ.add(c1, c2);
-        pred.add(c2, c1);
+    public void addEdge(jq_Reference c1, Node n, jq_Reference c2) {
+        if (MERGE_SITES || n == null) {
+            if (TRACE) out.println("Adding edge "+c1+" -> "+c2);
+            succ.add(c1, c2);
+            pred.add(c2, c1);
+        } else {
+            if (TRACE) out.println("Adding edge "+c1+" -> "+n+" -> "+c2);
+            succ.add(c1, n);
+            succ.add(n, c2);
+            pred.add(c2, n);
+            pred.add(n, c1);
+        }
+    }
+    
+    public void addEdge(jq_Reference c1, ProgramLocation pl, jq_Reference c2) {
+        if (MERGE_SITES || pl == null) {
+            if (TRACE) out.println("Adding edge "+c1+" -> "+c2);
+            succ.add(c1, c2);
+            pred.add(c2, c1);
+        } else {
+            if (TRACE) out.println("Adding edge "+c1+" -> "+pl+" -> "+c2);
+            succ.add(c1, pl);
+            succ.add(pl, c2);
+            pred.add(c2, pl);
+            pred.add(pl, c1);
+        }
     }
     
     public void handleCallGraph(CallGraph cg) {
