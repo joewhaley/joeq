@@ -115,6 +115,19 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         tv.visitClass(this);
         super.accept(tv);
     }
+    public jq_Method getMethodContainingLine(char lineNum) {
+    	for (int i=0; i<declared_instance_methods.length; ++i) {
+    		jq_Method m = declared_instance_methods[i];
+    		jq_LineNumberBC a = m.getLineNumber(lineNum);
+    		if (a != null) return m;
+    	}
+		for (int i=0; i<static_methods.length; ++i) {
+			jq_Method m = static_methods[i];
+			jq_LineNumberBC a = m.getLineNumber(lineNum);
+			if (a != null) return m;
+		}
+		return null;
+    }
     
     public static final boolean DETERMINISTIC = true;
     
