@@ -2,7 +2,7 @@
 <document>
 
   <properties>
-    <title>Garbage collector</title>
+    <title>Scheduler</title>
     <author email="joewhaley@users.sourceforge.net">John Whaley</author> 
   </properties>
 
@@ -33,8 +33,7 @@ This is used because there are no per-thread timing interrupts available in Wind
 The implementation is still very preliminary. Wait queues, sleeping,
 interrupting, etc. are not yet implemented.
 </p>
-    </section>
-    <section name="Thread switch mechanism">
+    <h2>Thread switch mechanism</h2>
 <p>
 The system uses a small piece of assembly code to quickly switch between Java threads.
 The code is contained in native.cpp/set_current_context. Notice that it currently
@@ -42,8 +41,7 @@ uses the stack of the Java thread to restore the registers and the program count
 Thus, we have to guarantee that the stack pointer is always valid whenever a thread
 switch can occur.
 </p>
-    </section>
-    <section name="Thread-local allocator">
+    <h2>Thread-local allocator</h2>
 <p>
 The system uses jq_NativeThread-local synchronization-free allocators for fast
 allocation. Thus, thread switches are disabled while in the allocator. (Note:
