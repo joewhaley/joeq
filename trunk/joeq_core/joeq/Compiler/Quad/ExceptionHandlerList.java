@@ -10,6 +10,7 @@ import Clazz.jq_Class;
 import Util.ListFactory;
 import Util.Templates.List;
 import Util.Templates.ListIterator;
+import Util.Templates.ListWrapper;
 
 /**
  * Holds a list of exception handlers that protect a basic block.
@@ -51,22 +52,33 @@ public class ExceptionHandlerList extends java.util.AbstractList implements List
      * @return  the parent set of exception handlers, or null if this set doesn't have a parent. */
     public ExceptionHandlerList getParent() { return parent; }
     
-    public boolean mustCatch(jq_Class exType) {
+    /** Returns the exception handler in the list that MUST catch the given exception type,
+     * or null if there is no handler that must catch it.
+     * @return  the handler that must catch the exception type, or null if there is no such handler
+     */
+    public ExceptionHandler mustCatch(jq_Class exType) {
         ExceptionHandlerList p = this;
         while (p != null) {
-            if (p.getHandler().mustCatch(exType)) return true;
+            if (p.getHandler().mustCatch(exType)) return p.getHandler();
             p = p.getParent();
         }
-        return false;
+        return null;
     }
     
-    public boolean mayCatch(jq_Class exType) {
+    /** Returns the list of exception handlers in this list that MAY catch the given exception type.
+     * @return  the list of handlers that may catch the exception type
+     */
+    public List.ExceptionHandler mayCatch(jq_Class exType) {
+        java.util.List list = new java.util.LinkedList();
         ExceptionHandlerList p = this;
         while (p != null) {
-            if (p.getHandler().mayCatch(exType)) return true;
+            if (p.getHandler().mustCatch(exType)) {
+                list.add(p.getHandler()); break;
+            }
+            if (p.getHandler().mayCatch(exType)) list.add(p.getHandler());
             p = p.getParent();
         }
-        return false;
+        return new ListWrapper.ExceptionHandler(list);
     }
     
     /** Return an iteration over the handlers in this set (and the handlers in parent sets).
