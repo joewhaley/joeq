@@ -1476,6 +1476,12 @@ public class CSPAResults implements PointerAnalysisResults {
         V2toV1 = bdd.makePair();
         V2toV1.set(new BDDDomain[] {V2,V2c},
                    new BDDDomain[] {V1,V1c});
+        H1toH2 = bdd.makePair();
+        H1toH2.set(new BDDDomain[] {H1,H1c},
+                   new BDDDomain[] {H2,H2c});
+        H2toH1 = bdd.makePair();
+        H2toH1.set(new BDDDomain[] {H2,H2c},
+                   new BDDDomain[] {H1,H1c});
         V1H1toV2H2 = bdd.makePair();
         V1H1toV2H2.set(new BDDDomain[] {V1,H1,V1c,H1c},
                        new BDDDomain[] {V2,H2,V2c,H2c});
@@ -2281,6 +2287,10 @@ public class CSPAResults implements PointerAnalysisResults {
             int x = Integer.parseInt(s.substring(2, s.length()-1));
             return new TypedBDD(F.ithVar(x), F);
         }
+        if (s.startsWith("M(")) {
+            int x = Integer.parseInt(s.substring(2, s.length()-1));
+            return new TypedBDD(M.ithVar(x), M);
+        }
         BDDDomain d = parseDomain(s);
         if (d != null) {
             return new TypedBDD(d.domain(), d);
@@ -2523,6 +2533,9 @@ public class CSPAResults implements PointerAnalysisResults {
                     BDD m = M.ithVar(getMethodIndex(run));
                     TypedBDD bdd = new TypedBDD(m, M);
                     results.add(bdd);
+                } else if (command.equals("threadlocal")) {
+                    TypedBDD bdd = new TypedBDD(getThreadLocalObjects(), H1c, H1);
+                    results.add(bdd);
                 } else if (command.equals("reachable")) {
                     TypedBDD bdd1 = parseBDD(results, st.nextToken());
                     TypedBDD bdd = new TypedBDD(getReachableVars(bdd1.bdd), V1c, V1);
@@ -2730,12 +2743,14 @@ public class CSPAResults implements PointerAnalysisResults {
         BDD result = bdd.zero();
         BDD allInvokes = mI.exist(Nset);
         BDD new_m = method_plus_context0.id();
-        for (;;) {
+        BDD V2cIset = Iset.and(V2c.set());
+        for (int k=1; ; ++k) {
+            System.out.println("Iteration "+k);
             BDD vars = new_m.relprod(mV, Mset); // V1cxM x MxV1 = V1cxV1
             result.orWith(vars);
             BDD invokes = new_m.relprod(allInvokes, Mset); // V1cxM x MxI = V1cxI
             invokes.replaceWith(V1ctoV2c); // V2cxI
-            BDD methods = invokes.relprod(IEc, Iset); // V2cxI x V2cxIxV1cxM = V1cxM
+            BDD methods = invokes.relprod(IEc, V2cIset); // V2cxI x V2cxIxV1cxM = V1cxM
             new_m.orWith(methods);
             new_m.applyWith(method_plus_context0.id(), BDDFactory.diff);
             if (new_m.isZero()) break;
@@ -2753,40 +2768,44 @@ public class CSPAResults implements PointerAnalysisResults {
                 break;
         }
         BDD result = bdd.zero();
-        int M_i;
-        BDD m, b;
+        BDD allObjects = bdd.zero();
+        BDD sharedObjects = bdd.zero();
         if (main != null) {
-            M_i = Mmap.get(main);
-            m = M.ithVar(M_i);
+            int M_i = Mmap.get(main);
+            BDD m = M.ithVar(M_i);
             m.andWith(V1c.ithVar(0));
-            b = getReachableVars(m);
+            System.out.println("Main: "+m.toStringWithDomains());
+            BDD b = getReachableVars(m);
+            m.free();
             BDD b2 = b.relprod(vP, V1set);
             b.free();
-            b2.andWith(M.ithVar(M_i));
-            b2.andWith(Z.ithVar(0));
-            result.orWith(b2);
-            m.free();
+            System.out.println("Reachable objects: "+b2.satCount(H1set));
+            allObjects.orWith(b2);
         }
         for (Iterator i = thread_runs.iterator(); i.hasNext(); ) {
             jq_Method run = (jq_Method) i.next();
-            M_i = Mmap.get(run);
-            m = M.ithVar(M_i);
+            int M_i = Mmap.get(run);
             for (int j = 0; j <= 1; ++j) {
+                BDD m = M.ithVar(M_i);
                 m.andWith(V1c.ithVar(j));
-                b = getReachableVars(m);
+                System.out.println("Thread: "+m.toStringWithDomains());
+                BDD b = getReachableVars(m);
+                m.free();
                 BDD b2 = b.relprod(vP, V1set);
                 b.free();
-                b2.andWith(M.ithVar(M_i));
-                b2.andWith(Z.ithVar(j));
-                result.orWith(b2);
+                System.out.println("Reachable objects: "+b2.satCount(H1set));
+                BDD b3 = allObjects.and(b2);
+                System.out.println("Shared objects: "+b3.satCount(H1set));
+                sharedObjects.orWith(b3);
+                allObjects.orWith(b2);
             }
-            m.free();
         }
         
-        // find objects for which exactly one thread points to it.
+        System.out.println("All shared objects: "+sharedObjects.satCount(H1set));
+        allObjects.applyWith(sharedObjects, BDDFactory.diff);
+        System.out.println("All local objects: "+allObjects.satCount(H1set));
         
-        
-        return result;
+        return allObjects;
     }
     
     public void countEncapsulation() {
