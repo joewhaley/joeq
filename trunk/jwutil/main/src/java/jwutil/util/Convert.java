@@ -141,4 +141,120 @@ public abstract class Convert {
     public static final Boolean getBoolean(boolean b) {
         return b ? Boolean.TRUE : Boolean.FALSE;
     }
+    
+    /**
+     * Unwraps the given object to a boolean.
+     * 
+     * @param value  object to unwrap
+     * @return  boolean value of object
+     * @throws IllegalArgumentException  if value is not a Boolean object
+     */
+    public static boolean unwrapToBoolean(Object value) throws IllegalArgumentException {
+        if (value instanceof Boolean) return ((Boolean)value).booleanValue();
+        else throw new IllegalArgumentException((value==null?null:value.getClass())+" cannot be converted to boolean");
+    }
+    
+    /**
+     * Unwraps the given object to a byte.
+     * 
+     * @param value  object to unwrap
+     * @return  byte value of object
+     * @throws IllegalArgumentException  if value is not a Byte object
+     */
+    public static byte unwrapToByte(Object value) throws IllegalArgumentException {
+        if (value instanceof Byte) return ((Byte)value).byteValue();
+        else throw new IllegalArgumentException((value==null?null:value.getClass())+" cannot be converted to byte");
+    }
+    
+    /**
+     * Unwraps the given object to a char.
+     * 
+     * @param value  object to unwrap
+     * @return  char value of object
+     * @throws IllegalArgumentException  if value is not a Character object
+     */
+    public static char unwrapToChar(Object value) throws IllegalArgumentException {
+        if (value instanceof Character) return ((Character)value).charValue();
+        else throw new IllegalArgumentException((value==null?null:value.getClass())+" cannot be converted to char");
+    }
+    
+    /**
+     * Unwraps the given object to a short.
+     * 
+     * @param value  object to unwrap
+     * @return  short value of object
+     * @throws IllegalArgumentException  if value is not a Short or Byte object
+     */
+    public static short unwrapToShort(Object value) throws IllegalArgumentException {
+        if (value instanceof Short) return ((Short)value).shortValue();
+        else if (value instanceof Byte) return ((Byte)value).shortValue();
+        else throw new IllegalArgumentException((value==null?null:value.getClass())+" cannot be converted to short");
+    }
+    
+    /**
+     * Unwraps the given object to an int.
+     * 
+     * @param value  object to unwrap
+     * @return  int value of object
+     * @throws IllegalArgumentException  if value is not an Integer, Byte, Character, or Short object
+     */
+    public static int unwrapToInt(Object value) throws IllegalArgumentException {
+        if (value instanceof Integer) return ((Integer)value).intValue();
+        else if (value instanceof Byte) return ((Byte)value).intValue();
+        else if (value instanceof Character) return (int)((Character)value).charValue();
+        else if (value instanceof Short) return ((Short)value).intValue();
+        else throw new IllegalArgumentException((value==null?null:value.getClass())+" cannot be converted to int");
+    }
+    
+    /**
+     * Unwraps the given object to a long.
+     * 
+     * @param value  object to unwrap
+     * @return  long value of object
+     * @throws IllegalArgumentException  if value is not a Long, Integer, Byte, Character, or Short object
+     */
+    public static long unwrapToLong(Object value) throws IllegalArgumentException {
+        if (value instanceof Long) return ((Long)value).longValue();
+        else if (value instanceof Integer) return ((Integer)value).longValue();
+        else if (value instanceof Byte) return ((Byte)value).longValue();
+        else if (value instanceof Character) return (long)((Character)value).charValue();
+        else if (value instanceof Short) return ((Short)value).longValue();
+        else throw new IllegalArgumentException((value==null?null:value.getClass())+" cannot be converted to long");
+    }
+    
+    /**
+     * Unwraps the given object to a float.
+     * 
+     * @param value  object to unwrap
+     * @return  float value of object
+     * @throws IllegalArgumentException  if value is not a Float, Long, Integer, Byte, Character, or Short object
+     */
+    public static float unwrapToFloat(Object value) throws IllegalArgumentException {
+        if (value instanceof Float) return ((Float)value).floatValue();
+        else if (value instanceof Integer) return ((Integer)value).floatValue();
+        else if (value instanceof Long) return ((Long)value).floatValue();
+        else if (value instanceof Byte) return ((Byte)value).floatValue();
+        else if (value instanceof Character) return (float)((Character)value).charValue();
+        else if (value instanceof Short) return ((Short)value).floatValue();
+        else throw new IllegalArgumentException((value==null?null:value.getClass())+" cannot be converted to float");
+    }
+    
+    /**
+     * Unwraps the given object to a double.
+     * 
+     * @param value  object to unwrap
+     * @return  double value of object
+     * @throws IllegalArgumentException  if value is not a Double, Float, Long, Integer, Byte, Character, or Short object
+     */
+    public static double unwrapToDouble(Object value) throws IllegalArgumentException {
+        if (value instanceof Double) return ((Double)value).doubleValue();
+        else if (value instanceof Float) return ((Float)value).doubleValue();
+        else if (value instanceof Integer) return ((Integer)value).doubleValue();
+        else if (value instanceof Long) return ((Long)value).doubleValue();
+        else if (value instanceof Byte) return ((Byte)value).doubleValue();
+        else if (value instanceof Character) return (double)((Character)value).charValue();
+        else if (value instanceof Short) return ((Short)value).doubleValue();
+        else throw new IllegalArgumentException((value==null?null:value.getClass())+" cannot be converted to double");
+    }
+
 }
