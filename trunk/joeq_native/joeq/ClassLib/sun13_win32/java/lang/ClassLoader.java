@@ -183,8 +183,8 @@ public abstract class ClassLoader {
     public static final jq_InstanceField _parent = _class.getOrCreateInstanceField("parent", "Ljava/lang/ClassLoader;");
     public static final jq_InstanceField _initialized = _class.getOrCreateInstanceField("initialized", "Z");
     public static final jq_StaticField _scl = _class.getOrCreateStaticField("scl", "Ljava/lang/ClassLoader;");
-    public static final jq_InstanceMethod _getType = _class.getOrCreateInstanceMethod("getType", "(LUTF/Utf8;)LClazz/jq_Type;");
-    public static final jq_InstanceMethod _getOrCreateType = _class.getOrCreateInstanceMethod("getOrCreateType", "(LUTF/Utf8;)LClazz/jq_Type;");
+    //public static final jq_InstanceMethod _getType = _class.getOrCreateInstanceMethod("getType", "(LUTF/Utf8;)LClazz/jq_Type;");
+    //public static final jq_InstanceMethod _getOrCreateType = _class.getOrCreateInstanceMethod("getOrCreateType", "(LUTF/Utf8;)LClazz/jq_Type;");
     public static final jq_InstanceMethod _isAncestor = _class.getOrCreateInstanceMethod("isAncestor", "(Ljava/lang/ClassLoader;)Z");
     public static final jq_StaticMethod _getGetClassLoaderPerm = _class.getOrCreateStaticMethod("getGetClassLoaderPerm", "()Ljava/lang/RuntimePermission;");
     public static final jq_StaticField _loadedLibraryNames = _class.getOrCreateStaticField("loadedLibraryNames", "Ljava/util/Vector;");

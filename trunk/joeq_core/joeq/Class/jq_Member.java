@@ -32,6 +32,7 @@ public abstract class jq_Member implements jq_ClassFileConstants {
         jq.UNREACHABLE(this+" actual state: "+getState()+" expected state: "+s);
     }
     public final int getState() { return state; }
+    public final boolean isLoaded() { return state >= STATE_LOADED; }
     
     //  Always available
     protected byte state;
