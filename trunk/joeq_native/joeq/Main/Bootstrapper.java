@@ -4,6 +4,7 @@
 package joeq.Main;
 
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
@@ -332,7 +333,7 @@ public abstract class Bootstrapper {
 
                 methodset = rs.getNecessaryMethods();
             } else {
-                joeq.Compiler.Quad.AndersenPointerAnalysis.INSTANCE.addToRootSet(joeq.Compiler.Quad.CodeCache.getCode(rootm));
+                // TODO: use a supplied call graph.
                 BootstrapRootSet rs = null;
                 methodset = rs.getNecessaryMethods();
             }
@@ -340,6 +341,11 @@ public abstract class Bootstrapper {
         loadtime += System.currentTimeMillis() - starttime;
         System.out.println("Load time: "+loadtime/1000f+"s");
         
+        if (classList == null) {
+            dumpClassSet(classset);
+            dumpMethodSet(methodset);
+        }
+            
         // initialize the set of boot types
         objmap.boot_types = classset;
         BootstrapCompilation comp = (BootstrapCompilation) CompilationState.DEFAULT;
@@ -541,6 +547,24 @@ public abstract class Bootstrapper {
         //System.out.println("free memory = "+Runtime.getRuntime().freeMemory());
     }
 
+    public static void dumpClassSet(Set s) throws IOException {
+        DataOutputStream dos = new DataOutputStream(new FileOutputStream("classlist"));
+        for (Iterator i = s.iterator(); i.hasNext(); ) {
+            jq_Type t = (jq_Type) i.next();
+            dos.writeBytes(t + "\n");
+        }
+        dos.close();
+    }
+    
+    public static void dumpMethodSet(Set s) throws IOException {
+        DataOutputStream dos = new DataOutputStream(new FileOutputStream("methodlist"));
+        for (Iterator i = s.iterator(); i.hasNext(); ) {
+            jq_Method t = (jq_Method) i.next();
+            dos.writeBytes(t + "\n");
+        }
+        dos.close();
+    }
+    
     public static void err(String s) {
         System.err.println(s);
         System.exit(0);
