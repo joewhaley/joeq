@@ -27,6 +27,8 @@ public interface QuadVisitor {
     public void visitStaticField(Quad obj);
     /** An instruction.that accesses an instance field. */
     public void visitInstanceField(Quad obj);
+    /** An instruction.that accesses an array. */
+    public void visitArray(Quad obj);
     /** An instruction.that does an allocation. */
     public void visitAllocation(Quad obj);
     /** An instruction.that does a type check. */
@@ -113,6 +115,8 @@ public interface QuadVisitor {
         public void visitStaticField(Quad obj) {}
         /** An instruction.that accesses an instance field. */
         public void visitInstanceField(Quad obj) {}
+        /** An instruction.that accesses an array. */
+        public void visitArray(Quad obj) {}
         /** An instruction.that does an allocation. */
         public void visitAllocation(Quad obj) {}
         /** An instruction.that does a type check. */
