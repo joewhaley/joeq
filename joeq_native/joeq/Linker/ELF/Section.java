@@ -533,8 +533,10 @@ public abstract class Section implements ELFConstants {
                         System.arraycopy(b, 0, table, index, b.length);
                     } catch (UnsupportedEncodingException x) { jq.UNREACHABLE(); }
                 }
+                jq.Assert(((Integer)e.getValue()).intValue() == index, s);
                 index += s.length() + 1;
             }
+            jq.Assert(size == 0 || size == index);
         }
         
         public int getStringIndex(String s) {
