@@ -92,7 +92,11 @@ public class jq_Thread implements jq_DontAlign {
         jq_InstanceMethod m = z.getVirtualMethod(new jq_NameAndDesc(Utf8.get("run"), Utf8.get("()V")));
         entry_point = m.getDefaultCompiledVersion();
         // initialize register state to start at start function
-        this.registers.setEsp(SystemInterface.allocate_stack(INITIAL_STACK_SIZE));
+        StackAddress stack = SystemInterface.allocate_stack(INITIAL_STACK_SIZE);
+        if (stack.isNull()) {
+            throw new OutOfMemoryError("Cannot allocate thread stack of size "+INITIAL_STACK_SIZE);
+        }
+        this.registers.setEsp(stack);
         this.registers.setEip(entry_point.getEntrypoint());
         // bogus return address
         this.registers.setEsp((StackAddress) this.registers.getEsp().offset(-CodeAddress.size()));
