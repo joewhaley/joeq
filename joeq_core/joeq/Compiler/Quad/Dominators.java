@@ -37,7 +37,6 @@ public class Dominators extends jq_MethodVisitor.EmptyVisitor implements BasicBl
     
     public void visitMethod(jq_Method m) {
         if (m.getBytecode() == null) return;
-        //System.out.println("Computing dominators for method "+m);
         cfg = Compil3r.Quad.CodeCache.getCode(m);
         bbs = new BasicBlock[cfg.getNumberOfBasicBlocks()];
         dominators = new BitString[cfg.getNumberOfBasicBlocks()];
@@ -68,10 +67,11 @@ public class Dominators extends jq_MethodVisitor.EmptyVisitor implements BasicBl
             }
             if (!change) break;
         }
-        for (int i=0; i<dominators.length; ++i) {
-            //System.out.println("Dom "+i+": "+dominators[i]);
-        }
+        /*for (int i=0; i<dominators.length; ++i) {
+            System.out.println("Dom "+i+": "+dominators[i]);
+        }*/
         //computeTree();
+        
     }
 
     public void visitBasicBlock(BasicBlock bb) {
@@ -108,12 +108,16 @@ public class Dominators extends jq_MethodVisitor.EmptyVisitor implements BasicBl
             }
         }
         temp.set(bb.getID());
-        //System.out.println("Result: "+temp);
         if (!temp.equals(dominators[bb.getID()])) {
             //System.out.println("Changed!");
-            dominators[bb.getID()].copyBits(temp);
+            //dominators[bb.getID()] <- temp
+            //the BitString.copyBits(Bitstring set) acts the opposite as described in BitString.java  
+            temp.copyBits(dominators[bb.getID()]);
+            //dominators[bb.getID()].copyBits(temp);
             change = true;
         }
+        //reset change to break the loop
+        else change = false; 
     }
     
     public DominatorNode computeTree() {
