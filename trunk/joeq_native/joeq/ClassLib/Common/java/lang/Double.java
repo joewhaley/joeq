@@ -11,7 +11,7 @@ import Run_Time.Unsafe;
 
 /*
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 abstract class Double {
 

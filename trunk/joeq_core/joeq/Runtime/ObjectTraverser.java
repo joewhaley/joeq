@@ -17,8 +17,8 @@ import java.io.*;
 import java.lang.reflect.*;
 
 /*
- * @author  jwhaley
- * @version 
+ * @author  John Whaley
+ * @version $Id$
  */
 public class ObjectTraverser {
 

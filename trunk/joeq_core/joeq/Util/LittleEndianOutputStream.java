@@ -3,8 +3,6 @@
  *
  * Created on February 13, 2001, 10:19 PM
  *
- * @author  John Whaley
- * @version 
  */
 
 package Util;
@@ -15,6 +13,10 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.io.OutputStream;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public class LittleEndianOutputStream implements DataOutput {
 
     private OutputStream out;

@@ -14,8 +14,8 @@ import Clazz.jq_Method;
 import Main.jq;
 
 /*
- * @author  jwhaley
- * @version 
+ * @author  John Whaley
+ * @version $Id$
  */
 public abstract class Throwable {
     

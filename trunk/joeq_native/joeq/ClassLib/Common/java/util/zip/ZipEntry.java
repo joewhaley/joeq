@@ -15,9 +15,9 @@ import Clazz.jq_Initializer;
 import java.io.UnsupportedEncodingException;
 import Main.jq;
 
-/*
+/**
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 class ZipEntry implements ZipConstants {
     

@@ -1,10 +1,8 @@
 /*
- * DirectInterpreter.java
+ * ReflectiveInterpreter.java
  *
  * Created on January 16, 2001, 1:06 AM
  *
- * @author  jwhaley
- * @version
  */
 
 package Interpreter;
@@ -21,6 +19,10 @@ import UTF.Utf8;
 import java.util.HashSet;
 import Main.jq;
 
+/**
+ * @author  John Whaley
+ * @version $Id$
+ */
 public class ReflectiveInterpreter extends BytecodeInterpreter {
 
     /** Creates new ReflectiveInterpreter */

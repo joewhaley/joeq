@@ -3,8 +3,6 @@
  *
  * Created on April 22, 2001, 12:53 AM
  *
- * @author  John Whaley
- * @version 
  */
 
 package Compil3r.BytecodeAnalysis;
@@ -12,6 +10,10 @@ package Compil3r.BytecodeAnalysis;
 import java.util.*;
 import Util.AppendListIterator;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public class ExceptionHandlerIterator implements ListIterator {
 
     private final AppendListIterator iterator;

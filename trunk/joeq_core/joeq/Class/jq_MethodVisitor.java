@@ -3,8 +3,6 @@
  *
  * Created on January 9, 2002, 9:40 AM
  *
- * @author  Administrator
- * @version 
  */
 
 package Clazz;
@@ -14,6 +12,10 @@ import Util.AppendIterator;
 import java.util.Iterator;
 import java.util.Set;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public interface jq_MethodVisitor {
 
     public void visitClassInitializer(jq_ClassInitializer m);

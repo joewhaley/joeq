@@ -21,7 +21,7 @@ import java.util.Iterator;
 
 /**
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 public class jq_CompiledCode implements Comparable {
 

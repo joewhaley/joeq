@@ -2,16 +2,18 @@
  * AppendIterator.java
  *
  * Created on July 10, 2001, 11:14 AM
- *
- * @author  John Whaley
- * @version 
- */
+ * 
+ */ 
 
 package Util;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public class AppendIterator implements Iterator {
 
     private final Iterator iterator1;

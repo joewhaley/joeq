@@ -13,7 +13,7 @@ import Main.jq;
 /**
  *
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 public abstract class ObjectStreamClass {
     private static void initNative() {}

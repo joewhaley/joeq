@@ -3,8 +3,6 @@
  *
  * Created on January 1, 2001, 10:59 AM
  *
- * @author  jwhaley
- * @version 
  */
 
 package Compil3r.BytecodeAnalysis;
@@ -39,6 +37,10 @@ import Util.Relation;
 import Util.LightRelation;
 import Util.IdentityHashCodeWrapper;
 
+/**
+ * @author  John Whaley
+ * @version $Id$
+ */
 public class Trimmer {
 
     public static /*final*/ boolean TRACE = false;

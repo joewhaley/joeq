@@ -18,7 +18,7 @@ import java.io.OutputStream;
 
 /*
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 public class Code2HeapReference extends Reloc {
 

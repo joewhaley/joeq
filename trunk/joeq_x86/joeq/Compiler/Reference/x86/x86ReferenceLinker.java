@@ -3,8 +3,6 @@
  *
  * Created on January 1, 2001, 11:37 AM
  *
- * @author  jwhaley
- * @version 
  */
 
 package Compil3r.Reference.x86;
@@ -26,6 +24,10 @@ import Run_Time.Unsafe;
 import UTF.Utf8;
 import Main.jq;
 
+/**
+ * @author  John Whaley
+ * @version $Id$
+ */
 public abstract class x86ReferenceLinker {
 
     public static /*final*/ boolean TRACE = false;

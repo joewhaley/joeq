@@ -19,7 +19,7 @@ import java.io.IOException;
 
 /*
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 public class ExternalReference extends Reloc {
 

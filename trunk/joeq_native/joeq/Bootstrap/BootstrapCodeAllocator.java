@@ -23,7 +23,7 @@ import java.io.IOException;
 
 /*
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 public class BootstrapCodeAllocator extends CodeAllocator {
 

@@ -15,7 +15,7 @@ import java.util.Iterator;
 /**
  *
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 public class Dominators extends jq_MethodVisitor.EmptyVisitor implements BasicBlockVisitor {
 

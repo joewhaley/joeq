@@ -23,8 +23,8 @@ import java.util.Set;
 import java.util.HashSet;
 
 /*
- * @author  jwhaley
- * @version 
+ * @author  John Whaley
+ * @version $Id$
  */
 public abstract class HeapAllocator implements jq_ClassFileConstants, ObjectLayout {
     

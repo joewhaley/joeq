@@ -3,8 +3,6 @@
  *
  * Created on December 19, 2000, 11:20 AM
  *
- * @author  jwhaley
- * @version 
  */
 
 package Clazz;
@@ -18,6 +16,10 @@ import java.io.DataInput;
 import java.io.IOException;
 import java.util.Map;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public abstract class jq_Field extends jq_Member {
 
     protected jq_Type type;

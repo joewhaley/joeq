@@ -25,7 +25,7 @@ import java.util.Properties;
 
 /*
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 public abstract class System {
     

@@ -17,7 +17,7 @@ import java.io.IOException;
 
 /*
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 public class Heap2HeapReference extends Reloc {
 

@@ -3,8 +3,6 @@
  *
  * Created on January 2, 2001, 4:23 PM
  *
- * @author  jwhaley
- * @version 
  */
 
 package Clazz;
@@ -13,6 +11,10 @@ import Clazz.jq_Class;
 import Run_Time.TypeCheck;
 import Main.jq;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public class jq_TryCatchBC {
 
     // NOTE: startPC is inclusive, endPC is exclusive

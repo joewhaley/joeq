@@ -1,5 +1,5 @@
 /*
- * SymbolTableEntry.java
+ * RelocAEntry.java
  *
  * Created on February 6, 2002, 6:42 PM
  */
@@ -11,7 +11,7 @@ import java.io.*;
 /**
  *
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 public class RelocAEntry extends RelocEntry {
 

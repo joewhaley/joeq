@@ -3,8 +3,6 @@
  *
  * Created on December 19, 2000, 4:47 AM
  *
- * @author  jwhaley
- * @version 
  */
 
 package Clazz;
@@ -39,6 +37,10 @@ import Synchronization.Atomic;
 
 // friend jq_ClassLoader;
 
+/**
+ * @author  John Whaley
+ * @version $Id$
+ */
 public final class jq_Class extends jq_Reference implements jq_ClassFileConstants, ObjectLayout {
     
     public static /*final*/ boolean TRACE = false;

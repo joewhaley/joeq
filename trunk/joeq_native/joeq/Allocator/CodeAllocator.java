@@ -33,7 +33,7 @@ import java.util.TreeMap;
  * It also includes an inner class that provides the interface for code buffers.
  *
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 public abstract class CodeAllocator {
     

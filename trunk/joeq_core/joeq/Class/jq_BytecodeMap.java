@@ -3,8 +3,6 @@
  *
  * Created on January 23, 2001, 9:12 AM
  *
- * @author  John Whaley
- * @version 
  */
 
 package Clazz;
@@ -15,7 +13,7 @@ import Main.jq;
  * This class implements a mapping from code offsets to bytecode indices.
  *
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 public class jq_BytecodeMap {
 

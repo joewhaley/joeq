@@ -3,8 +3,6 @@
  *
  * Created on January 11, 2001, 10:34 PM
  *
- * @author  jwhaley
- * @version 
  */
 
 package Run_Time;
@@ -19,6 +17,10 @@ import UTF.Utf8;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+/**
+ * @author  John Whaley
+ * @version $Id$
+ */
 public class StackWalker implements Iterator {
 
     public static /*final*/ boolean TRACE = false;

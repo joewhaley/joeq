@@ -12,7 +12,7 @@ import Clazz.jq_Class;
 
 /*
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 abstract class AccessController {
 

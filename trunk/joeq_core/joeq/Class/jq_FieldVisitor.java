@@ -3,8 +3,6 @@
  *
  * Created on January 9, 2002, 9:40 AM
  *
- * @author  John Whaley
- * @version 
  */
 
 package Clazz;
@@ -13,6 +11,10 @@ import Util.ArrayIterator;
 import Util.AppendIterator;
 import java.util.Iterator;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public interface jq_FieldVisitor {
 
     public void visitStaticField(jq_StaticField m);

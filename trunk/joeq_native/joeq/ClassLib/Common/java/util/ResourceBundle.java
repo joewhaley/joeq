@@ -13,9 +13,9 @@ import Run_Time.Reflection;
 import Run_Time.StackWalker;
 import Run_Time.Unsafe;
 
-/*
+/**
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 abstract class ResourceBundle {
     

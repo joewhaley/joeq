@@ -3,8 +3,6 @@
  *
  * Created on January 29, 2001, 1:25 PM
  *
- * @author  John Whaley
- * @version 
  */
 
 package ClassLib.Common.java.lang.reflect;
@@ -20,6 +18,10 @@ import Clazz.jq_Type;
 import Clazz.jq_Class;
 import Bootstrap.PrimordialClassLoader;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public abstract class Array {
 
     public static int getLength(Object array) throws IllegalArgumentException {

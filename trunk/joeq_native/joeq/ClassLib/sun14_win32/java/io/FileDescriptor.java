@@ -9,7 +9,7 @@ package ClassLib.sun14_win32.java.io;
 
 /*
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 abstract class FileDescriptor {
     int fd;

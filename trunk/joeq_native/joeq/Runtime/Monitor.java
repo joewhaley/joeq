@@ -3,8 +3,6 @@
  *
  * Created on January 16, 2001, 9:58 PM
  *
- * @author  jwhaley
- * @version 
  */
 
 package Run_Time;
@@ -19,6 +17,10 @@ import Run_Time.Unsafe;
 import Scheduler.jq_Thread;
 import Main.jq;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public class Monitor implements ObjectLayout {
 
     public static /*final*/ boolean TRACE = false;

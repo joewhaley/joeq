@@ -3,8 +3,6 @@
  *
  * Created on March 26, 2001, 10:27 AM
  *
- * @author  John Whaley
- * @version 
  */
 
 package Scheduler;
@@ -12,6 +10,10 @@ package Scheduler;
 import Main.jq;
 import java.util.Iterator;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public class jq_ThreadQueue {
 
     private jq_Thread head, tail;

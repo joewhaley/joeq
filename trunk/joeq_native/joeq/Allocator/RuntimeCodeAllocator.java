@@ -23,7 +23,7 @@ import java.util.List;
 
 /*
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 public class RuntimeCodeAllocator extends CodeAllocator {
 

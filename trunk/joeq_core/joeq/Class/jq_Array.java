@@ -3,8 +3,6 @@
  *
  * Created on December 19, 2000, 8:45 AM
  *
- * @author  jwhaley
- * @version 
  */
 
 package Clazz;
@@ -16,6 +14,10 @@ import Allocator.DefaultHeapAllocator;
 import Bootstrap.PrimordialClassLoader;
 import UTF.Utf8;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public class jq_Array extends jq_Reference implements jq_ClassFileConstants, ObjectLayout {
 
     public static /*final*/ boolean TRACE = false;

@@ -9,8 +9,8 @@ import Clazz.*;
 
 /**
  *
- * @author  Administrator
- * @version 
+ * @author  John Whaley
+ * @version $Id$
  */
 public class CodeCache {
 

@@ -3,8 +3,6 @@
  *
  * Created on January 12, 2001, 8:44 AM
  *
- * @author  jwhaley
- * @version 
  */
 
 package Compil3r.Reference.x86;
@@ -16,6 +14,10 @@ import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
 import Main.jq;
 
+/**
+ * @author  John Whaley
+ * @version $Id$
+ */
 public class x86ReferenceExceptionDeliverer extends ExceptionDeliverer {
 
     public static /*final*/ boolean TRACE = false;

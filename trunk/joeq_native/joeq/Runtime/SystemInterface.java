@@ -3,8 +3,6 @@
  *
  * Created on January 1, 2001, 10:30 PM
  *
- * @author  jwhaley
- * @version 
  */
 
 package Run_Time;
@@ -21,6 +19,10 @@ import Scheduler.jq_NativeThread;
 import Scheduler.jq_RegisterState;
 import Main.jq;
 
+/**
+ * @author  John Whaley
+ * @version $Id$
+ */
 public abstract class SystemInterface {
 
     public static int/*CodeAddress*/ debugmsg_4;

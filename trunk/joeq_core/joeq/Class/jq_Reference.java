@@ -3,8 +3,6 @@
  *
  * Created on December 19, 2000, 8:38 AM
  *
- * @author  jwhaley
- * @version 
  */
 
 package Clazz;
@@ -13,6 +11,10 @@ import Main.jq;
 import UTF.Utf8;
 import Bootstrap.PrimordialClassLoader;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public abstract class jq_Reference extends jq_Type implements jq_ClassFileConstants {
 
     public final int getState() { return state; }

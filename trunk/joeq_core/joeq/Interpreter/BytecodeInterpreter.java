@@ -3,8 +3,6 @@
  *
  * Created on January 15, 2001, 8:34 PM
  *
- * @author  jwhaley
- * @version 
  */
 
 package Interpreter;
@@ -15,6 +13,10 @@ import Bootstrap.PrimordialClassLoader;
 import Compil3r.BytecodeAnalysis.BytecodeVisitor;
 import Main.jq;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public abstract class BytecodeInterpreter {
 
     public static /*final*/ boolean ALWAYS_TRACE = false;

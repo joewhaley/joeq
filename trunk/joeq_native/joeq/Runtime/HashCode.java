@@ -3,8 +3,6 @@
  *
  * Created on January 12, 2001, 12:12 PM
  *
- * @author  jwhaley
- * @version 
  */
 
 package Run_Time;
@@ -16,6 +14,10 @@ import Clazz.jq_Array;
 import Run_Time.Unsafe;
 import Main.jq;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public abstract class HashCode implements ObjectLayout {
 
     public static int identityHashCode(Object x) {

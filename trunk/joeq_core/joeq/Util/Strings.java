@@ -3,8 +3,8 @@
  *
  * Created on October 25, 2001, 12:01 PM
  *
- * @author  jwhaley
- * @version 
+ * @author  John Whaley
+ * @version $Id$
  */
 
 package Util;

@@ -3,8 +3,6 @@
  *
  * Created on January 9, 2002, 9:17 AM
  *
- * @author  John Whaley
- * @version
  */
 
 package Main;
@@ -23,6 +21,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.*;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public abstract class Driver {
 
     public static void main(String[] args) {

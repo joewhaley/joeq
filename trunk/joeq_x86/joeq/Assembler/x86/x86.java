@@ -11,8 +11,8 @@ import Main.jq;
 import Allocator.CodeAllocator;
 
 /*
- * @author  jwhaley
- * @version 
+ * @author  John Whaley
+ * @version $Id$
  */
 public class x86 implements x86Constants {
 

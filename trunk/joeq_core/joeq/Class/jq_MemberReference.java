@@ -13,7 +13,7 @@ import UTF.Utf8;
  * Objects of this class represent unresolved references to class members.
  *
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 public final class jq_MemberReference {
 

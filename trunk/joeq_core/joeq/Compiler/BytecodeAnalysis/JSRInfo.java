@@ -9,7 +9,7 @@ package Compil3r.BytecodeAnalysis;
 /**
  *
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 public class JSRInfo {
 

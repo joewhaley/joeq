@@ -18,9 +18,9 @@ import Clazz.jq_InstanceMethod;
 import Run_Time.Reflection;
 import ClassLib.Common.java.util.zip.InflaterInputStreamWrapper;
 
-/*
+/**
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 public abstract class ZipFile implements ZipConstants {
     public static final boolean TRACE = false;

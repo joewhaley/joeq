@@ -2,9 +2,7 @@
  * DirectInterpreter.java
  *
  * Created on January 16, 2001, 1:06 AM
- *
- * @author  jwhaley
- * @version 
+ * 
  */
 
 package Interpreter;
@@ -15,6 +13,10 @@ import Run_Time.*;
 import Compil3r.Reference.x86.x86ReferenceLinker;
 import Main.jq;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public class DirectInterpreter extends BytecodeInterpreter implements ObjectLayout {
 
     /** Creates new DirectInterpreter */

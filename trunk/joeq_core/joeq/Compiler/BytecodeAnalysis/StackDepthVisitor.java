@@ -3,8 +3,6 @@
  *
  * Created on June 24, 2001, 1:07 AM
  *
- * @author  John Whaley
- * @version 
  */
 
 package Compil3r.BytecodeAnalysis;
@@ -13,6 +11,10 @@ import Clazz.*;
 import java.util.*;
 import Main.jq;
 
+/**
+ * @author  John Whaley
+ * @version $Id$
+ */
 public class StackDepthVisitor extends BytecodeVisitor {
 
     protected int currentStackDepth;

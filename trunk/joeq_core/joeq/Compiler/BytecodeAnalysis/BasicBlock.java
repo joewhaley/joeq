@@ -3,14 +3,16 @@
  *
  * Created on April 22, 2001, 1:11 PM
  *
- * @author  John Whaley
- * @version 
  */
 
 package Compil3r.BytecodeAnalysis;
 
 import Main.jq;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public class BasicBlock {
 
     public final int id;

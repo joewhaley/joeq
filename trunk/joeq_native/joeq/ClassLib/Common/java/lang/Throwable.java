@@ -11,8 +11,8 @@ import Run_Time.ExceptionDeliverer;
 import Main.jq;
 
 /*
- * @author  jwhaley
- * @version 
+ * @author  John Whaley
+ * @version $Id$
  */
 public abstract class Throwable {
     

@@ -10,7 +10,7 @@ package ClassLib.Common.java.util.zip;
 /**
  *
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 class DeflaterEngine implements DeflaterConstants {
 

@@ -3,8 +3,6 @@
  *
  * Created on January 20, 2001, 10:59 PM
  *
- * @author  jwhaley
- * @version 
  */
 
 package Compil3r.BytecodeAnalysis;
@@ -24,6 +22,10 @@ import Clazz.jq_InstanceMethod;
 
 import java.io.PrintStream;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public class BytecodeVisitor implements jq_ClassFileConstants {
 
     protected final jq_Class clazz;

@@ -3,8 +3,6 @@
  *
  * Created on December 19, 2000, 11:23 AM
  *
- * @author  jwhaley
- * @version 
  */
 
 package Clazz;
@@ -16,6 +14,10 @@ import ClassLib.ClassLibInterface;
 import UTF.Utf8;
 import Main.jq;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public class jq_InstanceMethod extends jq_Method {
 
     // available after preparation

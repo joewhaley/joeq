@@ -23,7 +23,7 @@ import Main.jq;
  * Defines a section in an ELF file.
  *
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 public abstract class Section implements ELFConstants {
     

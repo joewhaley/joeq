@@ -10,7 +10,7 @@ import java.io.*;
 /**
  *
  * @author  John Whaley
- * @version 2
+ * @version $Id$
  */
 public abstract class ProgramHeader implements ELFConstants {
 

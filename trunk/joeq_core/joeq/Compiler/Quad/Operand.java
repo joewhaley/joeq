@@ -3,8 +3,6 @@
  *
  * Created on April 22, 2001, 12:33 AM
  *
- * @author  John Whaley
- * @version 
  */
 
 package Compil3r.Quad;
@@ -15,6 +13,10 @@ import Compil3r.BytecodeAnalysis.BytecodeVisitor;
 import Run_Time.Reflection;
 import Main.jq;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public interface Operand {
 
     public Quad getQuad();

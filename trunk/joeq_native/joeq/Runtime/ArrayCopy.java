@@ -3,12 +3,14 @@
  *
  * Created on January 12, 2001, 12:12 PM
  *
- * @author  jwhaley
- * @version 
  */
 
 package Run_Time;
 
+/*
+ * @author  John Whaley
+ * @version $Id$
+ */
 public abstract class ArrayCopy {
 
     public static void arraycopy(Object src, int src_position,

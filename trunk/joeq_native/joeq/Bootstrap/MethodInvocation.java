@@ -13,7 +13,7 @@ import java.lang.reflect.InvocationTargetException;
 
 /*
  * @author  John Whaley
- * @version 
+ * @version $Id$
  */
 public class MethodInvocation {
 
