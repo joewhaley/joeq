@@ -25,7 +25,7 @@ public class ScanThreads {
         int myThreadId = Unsafe.getThreadBlock().getThreadId();
         StackAddress oldstack;
 
-        Iterator i = nt.getReadyQueue().threads();
+        Iterator i = nt.getReadyQueue(0).threads();
         i = new AppendIterator(i, nt.getIdleQueue().threads());
         i = new AppendIterator(i, nt.getTransferQueue().threads());
         while (i.hasNext()) {
