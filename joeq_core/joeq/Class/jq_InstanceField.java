@@ -64,6 +64,11 @@ public final class jq_InstanceField extends jq_Field {
     public final boolean isStatic() { return false; }
     public final void unprepare() { chkState(STATE_PREPARED); offset = INVALID_OFFSET; state = STATE_LOADED; }
 
+    public void accept(jq_FieldVisitor mv) {
+        mv.visitInstanceField(this);
+        super.accept(mv);
+    }
+    
     public static final jq_Class _class;
     static {
         _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LClazz/jq_InstanceField;");

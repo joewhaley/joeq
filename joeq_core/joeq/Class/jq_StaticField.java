@@ -115,6 +115,11 @@ public final class jq_StaticField extends jq_Field {
     public final void prepare() { jq.assert(state == STATE_LOADED); state = STATE_PREPARED; }
     public final void unprepare() { jq.assert(state == STATE_PREPARED); state = STATE_LOADED; }
     
+    public void accept(jq_FieldVisitor mv) {
+        mv.visitStaticField(this);
+        super.accept(mv);
+    }
+    
     public static final jq_Class _class;
     public static final jq_InstanceField _address;
     static {
