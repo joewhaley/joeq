@@ -238,12 +238,14 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
 
             
             Set thisptr;
+            int padding = 0;
             if(replacement != null) {                
                 thisptr = Collections.singleton(GlobalNode.GLOBAL);
                 pa.addToActual(I_bdd, 0, thisptr);
-                pa.addToActual(I_bdd, 1, ms.getNodesThatCall(mc, 0));
+                //pa.addToActual(I_bdd, 1, ms.getNodesThatCall(mc, 0));
                 
-                offset = 1;
+                offset = 0;
+                padding = 1;
             } else {
 	            if (target.isStatic()) {
 	                thisptr = Collections.singleton(GlobalNode.GLOBAL);
@@ -273,14 +275,14 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
             int k = offset;
             for ( ; k < params.length; ++k) {
                 if (!params[k].isReferenceType() && k+1-offset < pa.MAX_PARAMS) {
-                    pa.addEmptyActual(I_bdd, k+1-offset);
+                    pa.addEmptyActual(I_bdd, k+1-offset+padding);
                     continue;
                 }
                 Set s = ms.getNodesThatCall(mc, k);
-                pa.addToActual(I_bdd, k+1-offset, s);
+                pa.addToActual(I_bdd, k+1-offset+padding, s);
             }
             for ( ; k+1-offset < pa.MAX_PARAMS; ++k) {
-                pa.addEmptyActual(I_bdd, k+1-offset);
+                pa.addEmptyActual(I_bdd, k+1-offset+padding);
             }
             Node node = ms.getRVN(mc);
             if (node != null) {
