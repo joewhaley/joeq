@@ -22,12 +22,12 @@ import Run_Time.Unsafe;
 abstract class ResourceBundle {
     
     private static Class[] getClassContext() {
-        StackWalker sw = new StackWalker(CodeAddress.min(), StackAddress.getBasePointer());
+        StackWalker sw = new StackWalker(null, StackAddress.getBasePointer());
         sw.gotoNext();
         int i;
         for (i=0; sw.hasNext(); ++i, sw.gotoNext()) ;
         Class[] classes = new Class[i];
-        sw = new StackWalker(CodeAddress.min(), StackAddress.getBasePointer());
+        sw = new StackWalker(null, StackAddress.getBasePointer());
         sw.gotoNext();
         for (i=0; sw.hasNext(); ++i, sw.gotoNext()) {
             jq_CompiledCode cc = sw.getCode();
