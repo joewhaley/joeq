@@ -852,21 +852,35 @@ public class AndersenPointerAnalysis {
                 // TODO: add edges to escape.
             }
         }
-        ReturnValueNode rvn = (ReturnValueNode)caller.nodes.get(new ReturnValueNode(mc));
-        if (rvn != null) {
-            UnknownTypeNode utn = UnknownTypeNode.get((jq_Reference)targetMethod.getReturnType());
-            if (TRACE) out.println("Adding return mapping "+rvn+" to "+utn);
-            OutsideNode on = rvn;
-            while (on.skip != null) on = on.skip;
-            addInclusionEdge(on, utn, mc);
+        Set rvn_s;
+        Object rvn_o = caller.callToRVN.get(mc);
+        if (rvn_o instanceof Set) rvn_s = (Set) rvn_o;
+        else if (rvn_o != null) rvn_s = Collections.singleton(rvn_o);
+        else rvn_s = Collections.EMPTY_SET;
+        for (Iterator i=rvn_s.iterator(); i.hasNext(); ) {
+            ReturnValueNode rvn = (ReturnValueNode) i.next();
+            if (rvn != null) {
+                UnknownTypeNode utn = UnknownTypeNode.get((jq_Reference)targetMethod.getReturnType());
+                if (TRACE) out.println("Adding return mapping "+rvn+" to "+utn);
+                OutsideNode on = rvn;
+                while (on.skip != null) on = on.skip;
+                addInclusionEdge(on, utn, mc);
+            }
         }
-        ThrownExceptionNode ten = (ThrownExceptionNode)caller.nodes.get(new ThrownExceptionNode(mc));
-        if (ten != null) {
-            UnknownTypeNode utn = UnknownTypeNode.get((jq_Reference)Bootstrap.PrimordialClassLoader.getJavaLangObject());
-            if (TRACE) out.println("Adding thrown mapping "+ten+" to "+utn);
-            OutsideNode on = ten;
-            while (on.skip != null) on = on.skip;
-            addInclusionEdge(on, utn, mc);
+        Set ten_s;
+        Object ten_o = caller.callToTEN.get(mc);
+        if (ten_o instanceof Set) ten_s = (Set) ten_o;
+        else if (ten_o != null) ten_s = Collections.singleton(ten_o);
+        else ten_s = Collections.EMPTY_SET;
+        for (Iterator i=ten_s.iterator(); i.hasNext(); ) {
+            ThrownExceptionNode ten = (ThrownExceptionNode) i.next();
+            if (ten != null) {
+                UnknownTypeNode utn = UnknownTypeNode.get((jq_Reference)Bootstrap.PrimordialClassLoader.getJavaLangObject());
+                if (TRACE) out.println("Adding thrown mapping "+ten+" to "+utn);
+                OutsideNode on = ten;
+                while (on.skip != null) on = on.skip;
+                addInclusionEdge(on, utn, mc);
+            }
         }
     }
     
@@ -886,23 +900,37 @@ public class AndersenPointerAnalysis {
             while (on.skip != null) on = on.skip;
             addInclusionEdges(on, s, mc);
         }
-        ReturnValueNode rvn = (ReturnValueNode)caller.nodes.get(new ReturnValueNode(mc));
-        if (rvn != null) {
-            LinkedHashSet s = (LinkedHashSet)callee.returned.clone();
-            //s.add(rvn);
-            if (TRACE) out.println("Adding return mapping "+rvn+" to set "+s);
-            OutsideNode on = rvn;
-            while (on.skip != null) on = on.skip;
-            addInclusionEdges(on, s, mc);
+        Set rvn_s;
+        Object rvn_o = caller.callToRVN.get(mc);
+        if (rvn_o instanceof Set) rvn_s = (Set) rvn_o;
+        else if (rvn_o != null) rvn_s = Collections.singleton(rvn_o);
+        else rvn_s = Collections.EMPTY_SET;
+        for (Iterator i=rvn_s.iterator(); i.hasNext(); ) {
+            ReturnValueNode rvn = (ReturnValueNode) i.next();
+            if (rvn != null) {
+                LinkedHashSet s = (LinkedHashSet)callee.returned.clone();
+                //s.add(rvn);
+                if (TRACE) out.println("Adding return mapping "+rvn+" to set "+s);
+                OutsideNode on = rvn;
+                while (on.skip != null) on = on.skip;
+                addInclusionEdges(on, s, mc);
+            }
         }
-        ThrownExceptionNode ten = (ThrownExceptionNode)caller.nodes.get(new ThrownExceptionNode(mc));
-        if (ten != null) {
-            LinkedHashSet s = (LinkedHashSet)callee.thrown.clone();
-            //s.add(ten);
-            if (TRACE) out.println("Adding thrown mapping "+ten+" to set "+s);
-            OutsideNode on = ten;
-            while (on.skip != null) on = on.skip;
-            addInclusionEdges(on, s, mc);
+        Set ten_s;
+        Object ten_o = caller.callToTEN.get(mc);
+        if (ten_o instanceof Set) ten_s = (Set) ten_o;
+        else if (ten_o != null) ten_s = Collections.singleton(ten_o);
+        else ten_s = Collections.EMPTY_SET;
+        for (Iterator i=ten_s.iterator(); i.hasNext(); ) {
+            ThrownExceptionNode ten = (ThrownExceptionNode) i.next();
+            if (ten != null) {
+                LinkedHashSet s = (LinkedHashSet)callee.thrown.clone();
+                //s.add(ten);
+                if (TRACE) out.println("Adding thrown mapping "+ten+" to set "+s);
+                OutsideNode on = ten;
+                while (on.skip != null) on = on.skip;
+                addInclusionEdges(on, s, mc);
+            }
         }
     }
     
