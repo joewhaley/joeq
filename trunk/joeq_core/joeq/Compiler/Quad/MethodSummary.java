@@ -4,6 +4,7 @@
 package Compil3r.Quad;
 
 import java.io.DataOutput;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -62,6 +63,7 @@ import Util.Collections.CollectionTestWrapper;
 import Util.Collections.FilterIterator;
 import Util.Collections.HashCodeComparator;
 import Util.Collections.IdentityHashCodeWrapper;
+import Util.Collections.IndexMap;
 import Util.Collections.InstrumentedSetWrapper;
 import Util.Collections.Pair;
 import Util.Collections.SetFactory;
@@ -88,7 +90,13 @@ public class MethodSummary {
     public static final class MethodSummaryBuilder implements ControlFlowGraphVisitor {
         public void visitCFG(ControlFlowGraph cfg) {
             MethodSummary s = getSummary(cfg);
-            System.out.println(s.toString());
+            //System.out.println(s.toString());
+            try {
+                DataOutputStream dos = new DataOutputStream(System.out);
+                s.dotGraph(dos);
+            } catch (IOException x) {
+                x.printStackTrace();
+            }
         }
     }
     
@@ -4361,6 +4369,58 @@ outer:
             list.add(new ProgramLocation.QuadProgramLocation(method, q));
         }
         return list;
+    }
+
+    void dotGraph(DataOutput out) throws IOException {
+        out.writeBytes("digraph \""+this.method+"\" {\n");
+        IndexMap m = new IndexMap("MethodCallMap");
+        for (Iterator i=nodeIterator(); i.hasNext(); ) {
+            Node n = (Node) i.next();
+            out.writeBytes("n"+n.id+" [label=\""+n.toString_short()+"\"];\n");
+        }
+        for (Iterator i=getCalls().iterator(); i.hasNext(); ) {
+            ProgramLocation mc = (ProgramLocation) i.next();
+            int k = m.get(mc);
+            out.writeBytes("mc"+k+" [label=\""+mc+"\"];\n");
+        }
+        for (Iterator i=nodeIterator(); i.hasNext(); ) {
+            Node n = (Node) i.next();
+            for (Iterator j=n.getEdges().iterator(); j.hasNext(); ) {
+                Map.Entry e = (Map.Entry) j.next();
+                String fieldName = ""+e.getKey();
+                Iterator k;
+                if (e.getValue() instanceof Set) k = ((Set)e.getValue()).iterator();
+                else k = Collections.singleton(e.getValue()).iterator();
+                while (k.hasNext()) {
+                    Node n2 = (Node) k.next();
+                    out.writeBytes("n"+n.id+" -> "+n2.id+" [label=\""+fieldName+"\"];\n");
+                }
+            }
+            for (Iterator j=n.getAccessPathEdges().iterator(); j.hasNext(); ) {
+                Map.Entry e = (Map.Entry) j.next();
+                String fieldName = ""+e.getKey();
+                Iterator k;
+                if (e.getValue() instanceof Set) k = ((Set)e.getValue()).iterator();
+                else k = Collections.singleton(e.getValue()).iterator();
+                while (k.hasNext()) {
+                    Node n2 = (Node) k.next();
+                    out.writeBytes("n"+n.id+" -> n"+n2.id+" [label=\""+fieldName+"\",style=dashed];\n");
+                }
+            }
+            if (n.getPassedParameters() != null) {
+                for (Iterator j=n.getPassedParameters().iterator(); j.hasNext(); ) {
+                    PassedParameter pp = (PassedParameter) j.next();
+                    int k = m.get(pp.m);
+                    out.writeBytes("n"+n.id+" -> mc"+k+" [label=\"p"+pp.paramNum+"\",style=dotted];\n");
+                }
+            }
+            if (n instanceof ReturnedNode) {
+                ReturnedNode rn = (ReturnedNode) n;
+                int k = m.get(rn.m);
+                out.writeBytes("mc"+k+" -> n"+n.id+" [label=\"r\",style=dotted];\n");
+            }
+        }
+        out.writeBytes("}\n");
     }
 
 }
