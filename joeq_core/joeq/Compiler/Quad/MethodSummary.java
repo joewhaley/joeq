@@ -107,9 +107,12 @@ public class MethodSummary {
         
         /** Returns the summary. Call this after iteration has completed. */
         public MethodSummary getSummary() {
-            MethodSummary s = new MethodSummary(param_nodes, my_global, methodCalls, returned, thrown, passedAsParameter);
+            MethodSummary s = new MethodSummary(method, param_nodes, my_global, methodCalls, returned, thrown, passedAsParameter);
             // merge global nodes.
             if (my_global.accessPathEdges != null) {
+                HashSet set = new HashSet(); set.add(GlobalNode.GLOBAL);
+                my_global.replaceBy(set);
+                /*
                 for (Iterator i=my_global.accessPathEdges.entrySet().iterator(); i.hasNext(); ) {
                     java.util.Map.Entry e = (java.util.Map.Entry)i.next();
                     jq_Field f = (jq_Field)e.getKey();
@@ -119,6 +122,7 @@ public class MethodSummary {
                     else
                         GlobalNode.GLOBAL.addAccessPathEdges(f, (HashSet)o);
                 }
+                 */
             }
             return s;
         }
@@ -160,7 +164,7 @@ public class MethodSummary {
             this.param_nodes = new ParamNode[params.length];
             for (int i=0, j=0; i<params.length; ++i, ++j) {
                 if (params[i].isReferenceType()) {
-                    setLocal(i, param_nodes[i] = new ParamNode(method, j, (jq_Reference)params[i]));
+                    setLocal(j, param_nodes[i] = new ParamNode(method, i, (jq_Reference)params[i]));
                 } else if (params[i].getReferenceSize() == 8) ++j;
             }
             this.my_global = new GlobalNode();
@@ -704,7 +708,7 @@ public class MethodSummary {
         public int hashCode() { return caller.hashCode() ^ m.hashCode(); }
         public boolean equals(CallSite that) { return this.m.equals(that.m) && this.caller == that.caller; }
         public boolean equals(Object o) { if (o instanceof CallSite) return equals((CallSite)o); return false; }
-        public String toString() { return m.toString(); }
+        public String toString() { return caller.getMethod()+" "+m.toString(); }
     }
     
     public abstract static class Node implements Cloneable {
@@ -737,6 +741,7 @@ public class MethodSummary {
                     java.util.Map.Entry e = (java.util.Map.Entry)i.next();
                     jq_Field f = (jq_Field)e.getKey();
                     Object o = e.getValue();
+                    i.remove();
                     if (o instanceof Node) {
                         Node that = (Node)o;
                         if (that == this) {
@@ -745,26 +750,25 @@ public class MethodSummary {
                                 Node k = (Node)j.next();
                                 k.addEdge(f, k);
                             }
-                            i.remove();
                             continue;
                         }
-                        that.removeEdge(f, this);
+                        that._removeEdge(f, this);
                         for (Iterator j=set.iterator(); j.hasNext(); ) {
                             that.addEdge(f, (Node)j.next());
                         }
                     } else {
                         for (Iterator k=((HashSet)o).iterator(); k.hasNext(); ) {
                             Node that = (Node)k.next();
+                            k.remove();
                             if (that == this) {
                                 // add self-cycles on f to all mapped nodes.
                                 for (Iterator j=set.iterator(); j.hasNext(); ) {
                                     Node k2 = (Node)j.next();
                                     k2.addEdge(f, k2);
                                 }
-                                k.remove();
                                 continue;
                             }
-                            that.removeEdge(f, this);
+                            that._removeEdge(f, this);
                             for (Iterator j=set.iterator(); j.hasNext(); ) {
                                 that.addEdge(f, (Node)j.next());
                             }
@@ -777,20 +781,24 @@ public class MethodSummary {
                     java.util.Map.Entry e = (java.util.Map.Entry)i.next();
                     jq_Field f = (jq_Field)e.getKey();
                     Object o = e.getValue();
+                    i.remove();
                     if (o instanceof Node) {
                         Node that = (Node)o;
                         jq.assert(that != this); // cyclic edges handled above.
-                        i.remove(); that.removePredecessor(f, this);
+                        that.removePredecessor(f, this);
                         for (Iterator j=set.iterator(); j.hasNext(); ) {
-                            that.addEdge(f, (Node)j.next());
+                            Node node2 = (Node)j.next();
+                            node2.addEdge(f, that);
                         }
                     } else {
                         for (Iterator k=((HashSet)o).iterator(); k.hasNext(); ) {
                             Node that = (Node)k.next();
+                            k.remove();
                             jq.assert(that != this); // cyclic edges handled above.
-                            k.remove(); that.removePredecessor(f, this);
+                            that.removePredecessor(f, this);
                             for (Iterator j=set.iterator(); j.hasNext(); ) {
-                                that.addEdge(f, (Node)j.next());
+                                Node node2 = (Node)j.next();
+                                node2.addEdge(f, that);
                             }
                         }
                     }
@@ -801,20 +809,24 @@ public class MethodSummary {
                     java.util.Map.Entry e = (java.util.Map.Entry)i.next();
                     jq_Field f = (jq_Field)e.getKey();
                     Object o = e.getValue();
+                    i.remove();
                     if (o instanceof FieldNode) {
                         FieldNode that = (FieldNode)o;
                         jq.assert(that != this); // cyclic edges handled above.
-                        i.remove(); that.field_predecessors.remove(this);
+                        that.field_predecessors.remove(this);
                         for (Iterator j=set.iterator(); j.hasNext(); ) {
-                            that.addAccessPathEdge(f, (FieldNode)j.next());
+                            Node node2 = (Node)j.next();
+                            node2.addAccessPathEdge(f, that);
                         }
                     } else {
                         for (Iterator k=((HashSet)o).iterator(); k.hasNext(); ) {
                             FieldNode that = (FieldNode)k.next();
+                            k.remove();
                             jq.assert(that != this); // cyclic edges handled above.
-                            k.remove(); that.field_predecessors.remove(this);
+                            that.field_predecessors.remove(this);
                             for (Iterator j=set.iterator(); j.hasNext(); ) {
-                                that.addAccessPathEdge(f, (FieldNode)j.next());
+                                Node node2 = (Node)j.next();
+                                node2.addAccessPathEdge(f, that);
                             }
                         }
                     }
@@ -945,16 +957,19 @@ public class MethodSummary {
             PassedParameter cm = new PassedParameter(m, paramNum);
             return passedParameters.add(cm);
         }
+        private boolean _removeEdge(jq_Field m, Node n) {
+            Object o = addedEdges.get(m);
+            if (o instanceof HashSet) return ((HashSet)o).remove(n);
+            else if (o == n) { addedEdges.remove(m); return true; }
+            else return false;
+        }
         /** Remove the given successor node on the given field from the inside edge set.
          *  Also removes the predecessor link from the successor node to this node.
          *  Returns true if that edge existed, false otherwise. */
         public boolean removeEdge(jq_Field m, Node n) {
             if (addedEdges == null) return false;
             n.removePredecessor(m, this);
-            Object o = addedEdges.get(m);
-            if (o instanceof HashSet) return ((HashSet)o).remove(n);
-            else if (o == n) { addedEdges.remove(m); return true; }
-            else return false;
+            return _removeEdge(m, n);
         }
         /** Add the given successor node on the given field to the inside edge set.
          *  Also adds a predecessor link from the successor node to this node.
@@ -1004,16 +1019,19 @@ public class MethodSummary {
             return b;
         }
         
+        private boolean _removeAccessPathEdge(jq_Field m, FieldNode n) {
+            Object o = accessPathEdges.get(m);
+            if (o instanceof HashSet) return ((HashSet)o).remove(n);
+            else if (o == n) { accessPathEdges.remove(m); return true; }
+            else return false;
+        }
         /** Remove the given successor node on the given field from the outside edge set.
          *  Also removes the predecessor link from the successor node to this node.
          *  Returns true if that edge existed, false otherwise. */
         public boolean removeAccessPathEdge(jq_Field m, FieldNode n) {
             if (accessPathEdges == null) return false;
             if (n.field_predecessors != null) n.field_predecessors.remove(this);
-            Object o = accessPathEdges.get(m);
-            if (o instanceof HashSet) return ((HashSet)o).remove(n);
-            else if (o == n) { accessPathEdges.remove(m); return true; }
-            else return false;
+            return _removeAccessPathEdge(m, n);
         }
         /** Add the given successor node on the given field to the outside edge set.
          *  Also adds a predecessor link from the successor node to this node.
@@ -1127,8 +1145,8 @@ public class MethodSummary {
                            sb.append(((Node)j.next()).toString_short());
                            if (j.hasNext()) sb.append(", ");
                         }
-                    sb.append("}");
                     }
+                    sb.append("}");
                 }
             }
             if (accessPathEdges != null) {
@@ -1167,7 +1185,7 @@ public class MethodSummary {
         
         public Node copy() { return new ConcreteTypeNode(this); }
         
-        public String toString_long() { return toString_short()+super.toString_long(); }
+        public String toString_long() { return jq.hex(this)+": "+toString_short()+super.toString_long(); }
         public String toString_short() { return "Concrete: "+type+" q: "+q.getID(); }
     }
     
@@ -1201,7 +1219,7 @@ public class MethodSummary {
         
         public Node copy() { return new UnknownTypeNode(this); }
         
-        public String toString_long() { return toString_short()+super.toString_long(); }
+        public String toString_long() { return jq.hex(this)+": "+toString_short()+super.toString_long(); }
         public String toString_short() { return "Unknown: "+type; }
     }
     
@@ -1223,7 +1241,7 @@ public class MethodSummary {
         public GlobalNode() {}
         public jq_Reference getDeclaredType() { jq.UNREACHABLE(); return null; }
         public Node copy() { return this; }
-        public String toString_long() { return toString_short()+super.toString_long(); }
+        public String toString_long() { return jq.hex(this)+": "+toString_short()+super.toString_long(); }
         public String toString_short() { return "global"; }
         public static final GlobalNode GLOBAL = new GlobalNode();
     }
@@ -1255,7 +1273,7 @@ public class MethodSummary {
         
         public Node copy() { return new ReturnValueNode(this); }
         
-        public String toString_long() { return toString_short()+super.toString_long(); }
+        public String toString_long() { return jq.hex(this)+": "+toString_short()+super.toString_long(); }
         public String toString_short() { return "Return value of "+m; }
     }
     
@@ -1299,7 +1317,7 @@ public class MethodSummary {
         
         public Node copy() { return new ThrownExceptionNode(this); }
         
-        public String toString_long() { return toString_short()+super.toString_long(); }
+        public String toString_long() { return jq.hex(this)+": "+toString_short()+super.toString_long(); }
         public String toString_short() { return "Thrown exception of "+m; }
     }
     
@@ -1324,7 +1342,7 @@ public class MethodSummary {
         
         public Node copy() { return new ParamNode(this); }
         
-        public String toString_long() { return this.toString_short()+super.toString_long(); }
+        public String toString_long() { return jq.hex(this)+": "+this.toString_short()+super.toString_long(); }
         public String toString_short() { return "Param#"+n+" method "+m.getName(); }
     }
     
@@ -1380,7 +1398,7 @@ public class MethodSummary {
                         i.remove();
                         continue;
                     }
-                    that.removeAccessPathEdge(f, this);
+                    that._removeAccessPathEdge(f, this); i.remove();
                     for (Iterator j=set.iterator(); j.hasNext(); ) {
                         that.addAccessPathEdge(f, (FieldNode)j.next());
                     }
@@ -1423,7 +1441,7 @@ public class MethodSummary {
         
         public Node copy() { return new FieldNode(this); }
         
-        public String toString_long() { return this.toString_short()+super.toString_long(); }
+        public String toString_long() { return jq.hex(this)+": "+this.toString_short()+super.toString_long(); }
         public String toString_short() {
             StringBuffer sb = new StringBuffer();
             sb.append("FieldLoad ");
@@ -1766,6 +1784,8 @@ public class MethodSummary {
     
     /** vvvvv   Actual MethodSummary stuff is below.   vvvvv */
     
+    /** The method that this is a summary for. */
+    final jq_Method method;
     /** The parameter nodes. */
     final ParamNode[] params;
     /** All nodes in the summary graph. */
@@ -1777,7 +1797,8 @@ public class MethodSummary {
     /** The thrown nodes. */
     final HashSet thrown;
 
-    MethodSummary(ParamNode[] param_nodes, GlobalNode my_global, HashSet methodCalls, HashSet returned, HashSet thrown, HashSet passedAsParameters) {
+    MethodSummary(jq_Method method, ParamNode[] param_nodes, GlobalNode my_global, HashSet methodCalls, HashSet returned, HashSet thrown, HashSet passedAsParameters) {
+        this.method = method;
         this.params = param_nodes;
         this.calls = methodCalls;
         this.returned = returned;
@@ -1811,10 +1832,35 @@ public class MethodSummary {
                 }
             }
         }
-        unifyAccessPaths();
+        if (my_global.addedEdges != null) {
+            for (Iterator i=my_global.addedEdges.entrySet().iterator(); i.hasNext(); ) {
+                java.util.Map.Entry e = (java.util.Map.Entry)i.next();
+                Object o = e.getValue();
+                if (o instanceof Node) {
+                    addAsUseful(visited, (Node)o);
+                } else {
+                    for (Iterator j=((HashSet)o).iterator(); j.hasNext(); ) {
+                        addAsUseful(visited, (Node)j.next());
+                    }
+                }
+            }
+        }
+        
+        if (UNIFY_ACCESS_PATHS) {
+            HashSet roots = new HashSet();
+            for (int i=0; i<params.length; ++i) {
+                if (params[i] == null) continue;
+                roots.add(params[i]);
+            }
+            roots.addAll(returned); roots.addAll(thrown); roots.addAll(passedAsParameters);
+            unifyAccessPaths(roots);
+        }
     }
 
-    private MethodSummary(ParamNode[] params, HashSet methodCalls, HashSet returned, HashSet thrown, HashMap nodes) {
+    public static final boolean UNIFY_ACCESS_PATHS = false;
+    
+    private MethodSummary(jq_Method method, ParamNode[] params, HashSet methodCalls, HashSet returned, HashSet thrown, HashMap nodes) {
+        this.method = method;
         this.params = params;
         this.calls = methodCalls;
         this.returned = returned;
@@ -1894,19 +1940,7 @@ public class MethodSummary {
             java.util.Map.Entry e = (java.util.Map.Entry)i.next();
             nodes.put(e.getValue(), e.getValue());
         }
-        return new MethodSummary(params, calls, returned, thrown, nodes);
-    }
-
-    /** Unify similar access paths from the roots.
-     */
-    public void unifyAccessPaths() {
-        HashSet roots = new HashSet();
-        for (int i=0; i<params.length; ++i) {
-            if (params[i] == null) continue;
-            roots.add(params[i]);
-        }
-        roots.addAll(returned); roots.addAll(thrown);
-        unifyAccessPaths(roots);
+        return new MethodSummary(method, params, calls, returned, thrown, nodes);
     }
 
     /** Unify similar access paths from the given roots.
@@ -2050,28 +2084,31 @@ public class MethodSummary {
         caller.unifyAccessPaths(s);
     }
 
+    public jq_Method getMethod() { return method; }
+    
+    public static final String lineSep = System.getProperty("line.separator");
+    
     /** Return a string representation of this summary. */
     public String toString() {
         StringBuffer sb = new StringBuffer();
-        for (int i=0; i<params.length; ++i) {
-            if (params[i] == null) continue;
-            sb.append(params[i].toString_long());
-            sb.append('\n');
+        sb.append("Summary for ");
+        sb.append(method.toString());
+        sb.append(':');
+        sb.append(lineSep);
+        for (Iterator i=nodes.keySet().iterator(); i.hasNext(); ) {
+            Node n = (Node)i.next();
+            sb.append(n.toString_long());
+            sb.append(lineSep);
         }
         if (returned != null && !returned.isEmpty()) {
             sb.append("Returned: ");
             sb.append(returned);
-            sb.append('\n');
+            sb.append(lineSep);
         }
         if (thrown != null && !thrown.isEmpty()) {
             sb.append("Thrown: ");
             sb.append(thrown);
-            sb.append('\n');
-        }
-        sb.append("All nodes:\n");
-        for (Iterator i=nodes.keySet().iterator(); i.hasNext(); ) {
-            sb.append(i.next());
-            sb.append('\n');
+            sb.append(lineSep);
         }
         return sb.toString();
     }
