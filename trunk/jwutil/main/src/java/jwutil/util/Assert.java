@@ -80,9 +80,9 @@ public abstract class Assert {
         _debug.die(-1);
     }
     
-    static DebugDelegate _debug;
+    public static DebugDelegate _debug;
     
-    static interface DebugDelegate {
+    public static interface DebugDelegate {
         void write(byte[] msg, int size);
         void write(String msg);
         void writeln(byte[] msg, int size);
