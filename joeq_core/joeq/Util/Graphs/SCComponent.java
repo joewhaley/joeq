@@ -487,17 +487,21 @@ public final class SCComponent implements Comparable, Serializable, Textualizabl
     public static final boolean DETERMINISTIC = true;
 
     public int hashCode() {
-        if (DETERMINISTIC) {
-            int h = 0;
-            if (nodes_array != null) {
-                for (int i = 0; i < nodes_array.length; ++i) {
-                    Object o = nodes_array[i]; 
-                    if (o != null) h ^= o.hashCode();
+        if (false) {
+            if (DETERMINISTIC) {
+                int h = 0;
+                if (nodes_array != null) {
+                    for (int i = 0; i < nodes_array.length; ++i) {
+                        Object o = nodes_array[i]; 
+                        if (o != null) h ^= o.hashCode();
+                    }
                 }
+                return h;
+            } else {
+                return System.identityHashCode(this);
             }
-            return h;
         } else {
-            return System.identityHashCode(this);
+            return id;
         }
     }
 
