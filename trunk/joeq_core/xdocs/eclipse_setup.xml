@@ -106,7 +106,7 @@ In that case, make sure that the .cdtproject file contains:<br/>
 <code>
 &amp;lt;extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/&amp;gt;<br/>
 &amp;lt;extension id="org.eclipse.cdt.core.PE" point="org.eclipse.cdt.core.BinaryParser"/&amp;gt;<br/>
-<\code>
+</code>
 The ELF line is so that Eclipse can parse Linux binaries; the PE line is for Windows binaries.
 </p>
 
