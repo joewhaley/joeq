@@ -5,9 +5,8 @@ import Compil3r.Analysis.IPA.ProgramLocation;
 import Compil3r.Analysis.IPA.ProgramLocation.QuadProgramLocation;
 import Compil3r.Quad.ControlFlowGraph;
 import Compil3r.Quad.ControlFlowGraphVisitor;
-import Compil3r.Quad.LoadedCallGraph;
-import Compil3r.Quad.Quad;
 import Compil3r.Quad.Operator;
+import Compil3r.Quad.Quad;
 import Compil3r.Quad.QuadIterator;
 
 public class AssertionAnalysis implements ControlFlowGraphVisitor {
@@ -22,7 +21,7 @@ public class AssertionAnalysis implements ControlFlowGraphVisitor {
     }
 
     private void processCall(jq_Method method, Quad quad) {
-        ProgramLocation loc = LoadedCallGraph.mapCall(new QuadProgramLocation(method, quad));
+        ProgramLocation loc = new QuadProgramLocation(method, quad);
         
         if(!loc.isSingleTarget()) {
             System.err.println("Skipping a potentially virtual call");
