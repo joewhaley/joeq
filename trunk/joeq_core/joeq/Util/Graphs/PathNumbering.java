@@ -37,6 +37,7 @@ import Util.Collections.UnmodifiableIterator;
  */
 public class PathNumbering implements Externalizable {
 
+    public static final boolean PRINT_BIGGEST = false;
     public static final boolean TRACE_NUMBERING = false;
     public static final boolean TRACE_PATH = false;
     public static final boolean VERIFY_ASSERTIONS = false;
@@ -58,9 +59,26 @@ public class PathNumbering implements Externalizable {
         public String toString() {
             return "<"+low+','+high+'>';
         }
+        public boolean equals(Range r) {
+            return low.equals(r.low) && high.equals(r.high);
+        }
+        public boolean equals(Object o) {
+            try {
+                return equals((Range) o);
+            } catch (ClassCastException x) {
+                return false;
+            }
+        }
+        public int hashCode() {
+            return low.hashCode() ^ high.hashCode();
+        }
     }
     
     public PathNumbering() {}
+    
+    public PathNumbering(Selector s) {
+        this.selector = s;
+    }
     
     public PathNumbering(Graph g) {
         countPaths(g);
@@ -83,6 +101,16 @@ public class PathNumbering implements Externalizable {
     
     /** Map from edges to ranges. */
     Map edgeNumbering = new HashMap();
+    
+    public interface Selector {
+        /**
+         * Return true if the edge scc1->scc2 is important.
+         */
+        boolean isImportant(SCComponent scc1, SCComponent scc2);
+    }
+    
+    /** Select important edges. */
+    Selector selector;
     
     /** Converts the given Number to BigInteger representation. */
     public static BigInteger toBigInt(Number n) {
@@ -140,16 +168,25 @@ public class PathNumbering implements Externalizable {
                 SCComponent pred = (SCComponent) i.next();
                 Pair edge = new Pair(pred, scc);
                 //System.out.println("Visiting edge SCC"+pred.getId()+" to SCC"+scc.getId());
-                int nedges = ((Collection) sccEdges.get(edge)).size();
-                Range r = (Range) sccNumbering.get(pred);
-                BigInteger t1 = toBigInt(r.high).add(BigInteger.ONE);
-                BigInteger newtotal = total.add(t1.multiply(BigInteger.valueOf(nedges)));
-                total = newtotal;
+                if (isImportant(pred, scc)) {
+                    int nedges = ((Collection) sccEdges.get(edge)).size();
+                    Range r = (Range) sccNumbering.get(pred);
+                    // t1 = r.high+1;
+                    BigInteger t1 = toBigInt(r.high).add(BigInteger.ONE);
+                    // newtotal = total + t1*nedges
+                    BigInteger newtotal = total.add(t1.multiply(BigInteger.valueOf(nedges)));
+                    total = newtotal;
+                } else {
+                    Range r = (Range) sccNumbering.get(pred);
+                    BigInteger t1 = toBigInt(r.high).add(BigInteger.ONE);
+                    if (total.compareTo(t1) < 0) total = t1;
+                }
             }
             if (scc.prevLength() == 0)
                 total = total.add(BigInteger.ONE);
             Range r = new Range(fromBigInt(total), fromBigInt(total.subtract(BigInteger.ONE)));
-            if (TRACE_NUMBERING || total.compareTo(max_paths) == 1)
+            if (TRACE_NUMBERING ||
+                (PRINT_BIGGEST && total.compareTo(max_paths) == 1))
                 System.out.println("Paths to SCC"+scc.getId()+(scc.isLoop()?" (loop)":" (non-loop)")+"="+total);
             sccNumbering.put(scc, r);
             max_paths = max_paths.max(total);
@@ -162,16 +199,14 @@ public class PathNumbering implements Externalizable {
             scc = scc.nextTopSort();
         }
         
-        if (VERIFY_ASSERTIONS) {
-            scc = graph.getFirst();
-            while (scc != null) {
-                Range r = (Range) sccNumbering.get(scc);
-                if (TRACE_NUMBERING) System.out.println("Range for SCC"+scc.getId()+(scc.isLoop()?" (loop)":" (non-loop)")+"="+r);
-                if (r.low.longValue() != 0L) {
-                    if (VERIFY_ASSERTIONS) Assert.UNREACHABLE("SCC"+scc.getId()+" Range="+r);
-                }
-                scc = scc.nextTopSort();
+        scc = graph.getFirst();
+        while (scc != null) {
+            Range r = (Range) sccNumbering.get(scc);
+            if (TRACE_NUMBERING) System.out.println("Range for SCC"+scc.getId()+(scc.isLoop()?" (loop)":" (non-loop)")+"="+r);
+            if (r.low.longValue() != 0L) {
+                r.low = new Integer(0);
             }
+            scc = scc.nextTopSort();
         }
         
         return max_paths;
@@ -224,19 +259,33 @@ public class PathNumbering implements Externalizable {
         }
         for (Iterator i=Arrays.asList(scc1.next()).iterator(); i.hasNext(); ) {
             SCComponent scc2 = (SCComponent) i.next();
+            boolean important = isImportant(scc1, scc2);
             Range r2 = (Range) sccNumbering.get(scc2);
             Collection calls = (Collection) sccEdges.get(new Pair(scc1, scc2));
             for (Iterator k=calls.iterator(); k.hasNext(); ) {
                 Pair edge = (Pair) k.next();
-                // external call. update internal object and make new object.
-                BigInteger newlow = toBigInt(r2.low).subtract(toBigInt(r1.high).add(BigInteger.ONE));
-                r2.low = fromBigInt(newlow);
-                if (TRACE_NUMBERING) System.out.println("External edge!  New range for SCC"+scc2.getId()+" = "+r2);
-                Range r3 = new Range(newlow, newlow.add(toBigInt(r1.high)));
+                Range r3;
+                if (important) {
+                    // external call. update internal object and make new object.
+                    BigInteger newlow = toBigInt(r2.low).subtract(toBigInt(r1.high).add(BigInteger.ONE));
+                    Assert._assert(newlow.signum() != -1);
+                    r2.low = fromBigInt(newlow);
+                    if (TRACE_NUMBERING) System.out.println("External edge!  New range for SCC"+scc2.getId()+" = "+r2);
+                    r3 = new Range(newlow, newlow.add(toBigInt(r1.high)));
+                } else {
+                    // unimportant external call. don't update internal object.
+                    BigInteger newlow = BigInteger.ZERO;
+                    r3 = new Range(newlow, newlow.add(toBigInt(r1.high)));
+                }
                 if (TRACE_NUMBERING) System.out.println("Range for "+edge+" = "+r3+" "+Strings.hex(r3));
                 edgeNumbering.put(edge, r3);
             }
         }
+    }
+    
+    public boolean isImportant(SCComponent scc1, SCComponent scc2) {
+        if (selector == null) return true;
+        return selector.isImportant(scc1, scc2);
     }
     
     public Range getRange(Object o) {
