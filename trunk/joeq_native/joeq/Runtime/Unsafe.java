@@ -67,6 +67,7 @@ public abstract class Unsafe {
         return val;
     }
     public static final native boolean isEQ();
+    public static final native boolean isGE();
 
     public static class Remapper {
         public native int addressOf(Object o);
@@ -105,6 +106,7 @@ public abstract class Unsafe {
     public static final jq_StaticMethod _atomicAnd;
     public static final jq_StaticMethod _atomicCas4;
     public static final jq_StaticMethod _isEQ;
+    public static final jq_StaticMethod _isGE;
     public static final jq_StaticMethod _floatToIntBits;
     public static final jq_StaticMethod _intBitsToFloat;
     public static final jq_StaticMethod _doubleToLongBits;
@@ -139,6 +141,7 @@ public abstract class Unsafe {
         _atomicAnd = _class.getOrCreateStaticMethod("atomicAnd", "(II)V");
         _atomicCas4 = _class.getOrCreateStaticMethod("atomicCas4", "(III)I");
         _isEQ = _class.getOrCreateStaticMethod("isEQ", "()Z");
+        _isGE = _class.getOrCreateStaticMethod("isGE", "()Z");
         _floatToIntBits = _class.getOrCreateStaticMethod("floatToIntBits", "(F)I");
         _intBitsToFloat = _class.getOrCreateStaticMethod("intBitsToFloat", "(I)F");
         _doubleToLongBits = _class.getOrCreateStaticMethod("doubleToLongBits", "(D)J");

@@ -27,6 +27,7 @@ public class jq_InterrupterThread extends Thread {
         this.other_nt = other_nt;
         if (TRACE) SystemInterface.debugmsg("Initialized timer interrupt for native thread "+other_nt);
         myself = ClassLibInterface.i.getJQThread(this);
+	myself.disableThreadSwitch();
         this.tid = SystemInterface.create_thread(_run.getDefaultCompiledVersion().getEntrypoint(), Unsafe.addressOf(this));
         jq_NativeThread my_nt = new jq_NativeThread(myself);
         my_nt.getCodeAllocator().init();
@@ -35,14 +36,15 @@ public class jq_InterrupterThread extends Thread {
         SystemInterface.resume_thread(this.tid);
     }
     
-    private int/*CPointer*/ tid;
+    // C thread handles
+    private int tid, pid;
     private jq_NativeThread other_nt;
     private jq_Thread myself; // for convenience, so we don't have to call Reflection.getfield_A
     
     public static final int QUANTA = 50;
     
     public void run() {
-	SystemInterface.init_thread(this.tid);
+	this.pid = SystemInterface.init_thread();
         Unsafe.setThreadBlock(this.myself);
 	for (;;) {
             SystemInterface.msleep(QUANTA);
@@ -57,18 +59,13 @@ public class jq_InterrupterThread extends Thread {
                                     jq_RegisterState.CONTEXT_FLOATING_POINT;
                 other_nt.getContext(regs);
                 if (TRACE) SystemInterface.debugmsg(other_nt+" : "+javaThread+" ip="+jq.hex8(regs.Eip)+" cc="+CodeAllocator.getCodeContaining(regs.Eip));
-                // kludge: don't thread switch in the kernel, because it does funky stuff with the stack.
-                if (regs.Eip < 0x70000000) {
-                    // simulate a call to threadSwitch method
-                    Unsafe.poke4(regs.Esp -= 4, Unsafe.addressOf(other_nt));
-                    Unsafe.poke4(regs.Esp -= 4, regs.Eip);
-                    regs.Eip = jq_NativeThread._threadSwitch.getDefaultCompiledVersion().getEntrypoint();
-                    regs.ContextFlags = jq_RegisterState.CONTEXT_CONTROL;
-                    other_nt.setContext(regs);
-                } else {
-                    // the current Java thread does not have thread switching enabled.
-                    if (TRACE) SystemInterface.debugmsg(other_nt+" : "+javaThread+" is in kernel");
-                }
+		// simulate a call to threadSwitch method
+		Unsafe.poke4(regs.Esp -= 4, Unsafe.addressOf(other_nt));
+		Unsafe.poke4(regs.Esp -= 4, regs.Eip);
+		regs.Eip = jq_NativeThread._threadSwitch.getDefaultCompiledVersion().getEntrypoint();
+		regs.ContextFlags = jq_RegisterState.CONTEXT_CONTROL;
+		other_nt.setContext(regs);
+		if (TRACE) SystemInterface.debugmsg(other_nt+" : simulating a call to threadSwitch");
             } else {
                 // the current Java thread does not have thread switching enabled.
                 if (TRACE) SystemInterface.debugmsg(other_nt+" : "+javaThread+" Thread switch not enabled");

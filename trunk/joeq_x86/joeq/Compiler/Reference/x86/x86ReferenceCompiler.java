@@ -2629,6 +2629,13 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             asm.emitShort_Reg(x86.INC_r32, ECX);
             asm.patch1(cloc-1, (byte)(asm.getCurrentOffset()-cloc));
             asm.emitShort_Reg(x86.PUSH_r, ECX);
+        } else if (f == Unsafe._isGE) {
+            asm.emitShort_Reg_Imm(x86.MOV_r_i32, ECX, 0);
+            asm.emitCJUMP_Short(x86.JL, (byte)0);
+            int cloc = asm.getCurrentOffset();
+            asm.emitShort_Reg(x86.INC_r32, ECX);
+            asm.patch1(cloc-1, (byte)(asm.getCurrentOffset()-cloc));
+            asm.emitShort_Reg(x86.PUSH_r, ECX);
         } else if (f == Unsafe._installRemapper) {
             INVOKEhelper(INVOKE_STATIC, f);
         } else {
