@@ -688,4 +688,29 @@ public class BDDInferenceRule extends InferenceRule {
         return order;
     }
     
+    public void free() {
+        for (int i = 0; i < oldRelationValues.length; ++i) {
+            if (oldRelationValues[i] != null) {
+                oldRelationValues[i].free();
+                oldRelationValues[i] = null;
+            }
+        }
+        for (int i = 0; i < canQuantifyAfter.length; ++i) {
+            if (canQuantifyAfter[i] != null) {
+                canQuantifyAfter[i].free();
+                canQuantifyAfter[i] = null;
+            }
+        }
+        for (int i = 0; i < renames.length; ++i) {
+            if (renames[i] != null) {
+                renames[i].reset();
+                renames[i] = null;
+            }
+        }
+        if (bottomRename != null) {
+            bottomRename.reset();
+            bottomRename = null;
+        }
+    }
+    
 }

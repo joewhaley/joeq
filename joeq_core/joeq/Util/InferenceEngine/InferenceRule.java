@@ -99,6 +99,9 @@ public abstract class InferenceRule {
     
     public abstract void reportStats();
     
+    public void free() {
+    }
+    
     public static MultiMap getRelationToUsingRule(Collection rules) {
         MultiMap mm = new GenericMultiMap();
         for (Iterator i = rules.iterator(); i.hasNext(); ) {
