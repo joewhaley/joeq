@@ -117,10 +117,11 @@ public abstract class Driver {
                 String interpreterClassName = commandBuffer[++index];
                 try {
                     Class cl = Class.forName(interpreterClassName);
-                    if (Class.forName("Interpreter.QuadInterpreter").isAssignableFrom(cl)) {
+                    if (Class.forName("Interpreter.QuadInterpreter$State").isAssignableFrom(cl)) {
                         interpreterClass = cl;
+			System.out.println("Interpreter class changed to "+interpreterClass);
                     } else {
-                        System.err.println("Class "+interpreterClassName+" does not subclass Interpreter.QuadInterpreter.");
+                        System.err.println("Class "+interpreterClassName+" does not subclass Interpreter.QuadInterpreter.State.");
                     }
                 } catch (java.lang.ClassNotFoundException x) {
                     System.err.println("Cannot find interpreter named "+interpreterClassName+".");
