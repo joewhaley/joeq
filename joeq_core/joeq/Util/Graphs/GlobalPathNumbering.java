@@ -68,7 +68,7 @@ public class GlobalPathNumbering extends PathNumbering {
                 }
                 BigInteger newPathsToNode = pathsToNode.add(pathsToPred);
                 Object edge = new Pair(p, o);
-                if (!selector.isImportant(p, o, newPathsToNode)) {
+                if (!isImportant(p, o, newPathsToNode)) {
                     // Unimportant edge.
                     Range range = new Range(pathsToNode.subtract(BigInteger.ONE),
                                             pathsToNode.subtract(BigInteger.ONE));
@@ -100,8 +100,7 @@ public class GlobalPathNumbering extends PathNumbering {
      */
     public Range getRange(Object o) {
         BigInteger b = (BigInteger) nodeNumbering.get(o);
-        //System.out.println("Node ("+o+") = "+b);
-        //if (b == null) b = BigInteger.ZERO;
+        if (b == null) return null;
         return new Range(BigInteger.ZERO, b.subtract(BigInteger.ONE));
     }
 
