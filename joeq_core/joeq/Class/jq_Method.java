@@ -16,6 +16,7 @@ import java.io.DataInput;
 import java.io.IOException;
 
 import Compil3r.Compil3rInterface;
+//import Compil3r.OpenJIT.x86.x86OpenJITCompiler;
 import Compil3r.Reference.x86.x86ReferenceCompiler;
 import Compil3r.Reference.x86.x86ReferenceLinker;
 import Bootstrap.PrimordialClassLoader;
@@ -180,7 +181,11 @@ public abstract class jq_Method extends jq_Member {
                 default_compiled_version = x86ReferenceLinker._abstractMethodError.getDefaultCompiledVersion();
             }
         } else {
-            Compil3rInterface c = new x86ReferenceCompiler(this);
+            Compil3rInterface c;
+            if (true)
+                c = new x86ReferenceCompiler(this);
+            //else
+            //    c = new x86OpenJITCompiler(this);
             default_compiled_version = c.compile();
             if (!jq.Bootstrapping) default_compiled_version.patchDirectBindCalls();
         }
