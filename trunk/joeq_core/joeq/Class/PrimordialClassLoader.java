@@ -257,7 +257,7 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
 
     /** Vector of ClasspathElements corresponding to CLASSPATH entries. */
     public void addToClasspath(String s) {
-        Assert._assert(s.indexOf(pathsep) == -1);
+        //Assert._assert(s.indexOf(pathsep) == -1);
         Set duplicates = new HashSet(); // don't add duplicates.
         duplicates.addAll(classpathList);
         for (Iterator it = classpaths(s); it.hasNext(); ) {
