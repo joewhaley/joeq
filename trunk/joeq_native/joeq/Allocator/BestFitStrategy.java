@@ -27,7 +27,13 @@ public class BestFitStrategy implements FreeMemStrategy {
     }
 
     public MemUnit getFreeMem(int size) {
-        MemUnit target = new MemUnit(null, size);
-        return (MemUnit) (freePool.tailSet(target).first());
+        if (false) {
+            MemUnit target = new MemUnit(null, size);
+            return (MemUnit) (freePool.tailSet(target).first());
+        } else {
+            // FIXME: circular dependency. the allocation of MemUnit above
+            // calls the allocator which calls getFreeMem.
+            return null;
+        }
     }
 }
