@@ -20,6 +20,7 @@ import ClassLib.ClassLibInterface;
 import Main.jq;
 import Memory.CodeAddress;
 import Memory.HeapAddress;
+import Memory.StackAddress;
 
 /*
  * @author  John Whaley
@@ -70,6 +71,9 @@ public abstract class jq_Field extends jq_Member {
     public final boolean isHeapAddressType() {
         return this.getType() == HeapAddress._class ||
                this.getType() == BootstrapHeapAddress._class;
+    }
+    public final boolean isStackAddressType() {
+        return this.getType() == StackAddress._class;
     }
     
     public String toString() { return getDeclaringClass()+"."+getName(); }
