@@ -107,6 +107,13 @@ public class NumberingRule extends InferenceRule {
                     PathNumbering.Range r1 = pn.getEdge(source, target);
                     if (TRACE) out.println("Edge: "+source+" -> "+target+"\t"+r0+" -> "+r1);
                     
+                    if (r0 == null) {
+                        if (TRACE) out.println("Unreachable edge!");
+                        Assert._assert(r1 == null);
+                        continue;
+                    }
+                    Assert._assert(r1 != null);
+                    
                     // TODO: generalize this to be not BDD-specific
                     BDD result = buildMap(d2, PathNumbering.toBigInt(r0.low), PathNumbering.toBigInt(r0.high),
                                           d3, PathNumbering.toBigInt(r1.low), PathNumbering.toBigInt(r1.high));
