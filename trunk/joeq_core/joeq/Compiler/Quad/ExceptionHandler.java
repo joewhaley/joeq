@@ -19,7 +19,7 @@ import joeq.Util.Templates.ListWrapper;
  * inheritance and interface checks may be necessary.
  * 
  * @see  ExceptionHandlerList
- * @see  Runtime.TypeCheck
+ * @see  joeq.Runtime.TypeCheck
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version  $Id$
  */

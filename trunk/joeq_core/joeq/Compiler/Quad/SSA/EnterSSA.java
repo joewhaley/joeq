@@ -372,8 +372,6 @@ public class EnterSSA implements ControlFlowGraphVisitor {
      *                basic block to search dominator tree from
      * @param S
      *                stack of names for each register
-     * @param ir
-     *                governing IR
      */
     private void search(BasicBlock X, Stack[] S) {
         if (DEBUG)

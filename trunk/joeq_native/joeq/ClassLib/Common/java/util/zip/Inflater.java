@@ -558,7 +558,7 @@ public class Inflater {
     /**
      * Sets the input.  This should only be called, if needsInput()
      * returns true.
-     * @param buffer the input.
+     * @param buf the input.
      * @exception IllegalStateException if no input is needed.
      */
     public void setInput(byte[] buf) {
@@ -568,7 +568,7 @@ public class Inflater {
     /**
      * Sets the input.  This should only be called, if needsInput()
      * returns true.
-     * @param buffer the input.
+     * @param buf the input.
      * @param off the offset into buffer where the input starts.
      * @param len the length of the input.  
      * @exception IllegalStateException if no input is needed.
@@ -584,7 +584,7 @@ public class Inflater {
      * returns 0, you should check, whether needsDictionary(),
      * needsInput() or finished() returns true, to determine why no 
      * further output is produced.
-     * @param buffer the output buffer.
+     * @param buf the output buffer.
      * @return the number of bytes written to the buffer, 0 if no further
      * output can be produced.  
      * @exception DataFormatException if deflated stream is invalid.
@@ -599,7 +599,7 @@ public class Inflater {
      * returns 0, you should check, whether needsDictionary(),
      * needsInput() or finished() returns true, to determine why no 
      * further output is produced.
-     * @param buffer the output buffer.
+     * @param buf the output buffer.
      * @param off the offset into buffer where the output should start.
      * @param len the maximum length of the output.
      * @return the number of bytes written to the buffer, 0 if no further

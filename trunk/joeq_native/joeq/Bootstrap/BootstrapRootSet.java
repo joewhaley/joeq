@@ -35,7 +35,6 @@ import joeq.Runtime.ExceptionDeliverer;
 import joeq.Runtime.Reflection;
 import joeq.Runtime.SystemInterface;
 import joeq.Runtime.Unsafe;
-import joeq.Scheduler.FullThreadUtils;
 import joeq.Util.Assert;
 import joeq.Util.Collections.IdentityHashCodeWrapper;
 

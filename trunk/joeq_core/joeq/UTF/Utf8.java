@@ -389,7 +389,7 @@ here:
      * flags.
      *
      * @param utf8 (pseudo-)utf8 byte array
-     * @throws UTFDataFormatException if the (pseudo-)utf8 byte array is not valid (pseudo-)utf8
+     * @throws UTFDataFormatError if the (pseudo-)utf8 byte array is not valid (pseudo-)utf8
      * @return unicode string
      */
     public static String fromUtf8(byte[] utf8)

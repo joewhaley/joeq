@@ -10,7 +10,6 @@ import joeq.Class.PrimordialClassLoader;
 import joeq.ClassLib.ClassLibInterface;
 import joeq.Class.jq_Class;
 import joeq.Scheduler.jq_NativeThread;
-import joeq.Util.Assert;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>

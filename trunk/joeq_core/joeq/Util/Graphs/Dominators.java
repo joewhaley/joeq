@@ -526,7 +526,7 @@ public class Dominators {
      * Return the set of all nodes strictly dominated by node n and all 
      * nodes dominated by nodes dominated by n, and so on.
      * @param n is the dominator node
-     * @param idom dominated nodes are added to <code>List</code> idom
+     * @param v dominated nodes are added to <code>List</code> v
      */
     public void getIterativeDomination(Object n, List v) {
         int start = v.size();

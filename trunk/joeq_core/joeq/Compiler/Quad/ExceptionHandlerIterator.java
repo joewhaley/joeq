@@ -9,7 +9,7 @@ import joeq.Util.Templates.ListIterator;
 
 /**
  * Iterator for iterating through exception handlers.  Compatible with ListIterator.
- * @see  Util.Templates.ListIterator
+ * @see  joeq.Util.Templates.ListIterator
  * @see  ExceptionHandler
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version  $Id$
@@ -20,7 +20,7 @@ public class ExceptionHandlerIterator implements ListIterator.ExceptionHandler {
     private ExceptionHandlerList current;
     
     /** Creates new ExceptionHandlerIterator.
-     * @param exs  list of exception handlers to iterate through. */
+     * @param ehs  list of exception handlers to iterate through. */
     public ExceptionHandlerIterator(ExceptionHandlerList ehs) {
         root = current = ehs;
     }
@@ -29,11 +29,11 @@ public class ExceptionHandlerIterator implements ListIterator.ExceptionHandler {
      * @return  true if this iterator has a next element. */
     public boolean hasNext() { return current != null; }
     /** Returns the next element of this iterator.  Use nextExceptionHandler to avoid the cast.
-     * @see  #nextExceptionHandler
+     * @see  #nextExceptionHandler()
      * @return  the next element of this iterator. */
     public Object next() { return nextExceptionHandler(); }
     /** Returns the next element of this iterator, avoiding the cast.
-     * @see  #next
+     * @see  #next()
      * @return  the next element of this iterator. */
     public ExceptionHandler nextExceptionHandler() {
         if (current == null) throw new NoSuchElementException();
@@ -55,11 +55,11 @@ public class ExceptionHandlerIterator implements ListIterator.ExceptionHandler {
      * @return  true if this iterator has a previous element. */
     public boolean hasPrevious() { return root != current; }
     /** Returns the previous element of this iterator.  Use previousExceptionHandler to avoid the cast.
-     * @see  #previousExceptionHandler
+     * @see  #previousExceptionHandler()
      * @return  the previous element of this iterator. */
     public Object previous() { return previousExceptionHandler(); }
     /** Returns the previous element of this iterator, avoiding the cast.
-     * @see  #previous
+     * @see  #previous()
      * @return  the previous element of this iterator. */
     public ExceptionHandler previousExceptionHandler() {
         if (root == current) throw new NoSuchElementException();

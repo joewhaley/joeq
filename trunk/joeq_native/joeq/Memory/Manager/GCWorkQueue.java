@@ -466,7 +466,7 @@ public class GCWorkQueue {
      * first look to see if the thread has a saved "extra buffer",
      * if none available, then allocate from the system heap.
      *
-     * @param   CollectorThread needing a new put buffer
+     * @param myThread  CollectorThread needing a new put buffer
      */
     private static void allocatePutBuffer(CollectorThread myThread) {
         HeapAddress bufferAddress;
@@ -494,7 +494,7 @@ public class GCWorkQueue {
      * to save as one of the threads two "extra" buffers, then return
      * buffer to the system heap.
      *
-     * @param   CollectorThread with a get buffer to free
+     * @param myThread  CollectorThread with a get buffer to free
      */
     private static void freeGetBuffer(CollectorThread myThread) {
 

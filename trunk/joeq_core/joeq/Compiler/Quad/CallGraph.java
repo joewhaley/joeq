@@ -634,7 +634,7 @@ public abstract class CallGraph extends UnmodifiableMultiMap implements Graph {
         return new CallGraph() {
 
             /**
-             * @see joeq.Compiler.Quad.CallGraph#getTargetMethods(java.lang.Object, Compiler.Quad.ProgramLocation)
+             * @see joeq.Compiler.Quad.CallGraph#getTargetMethods(java.lang.Object, joeq.Compiler.Analysis.IPA.ProgramLocation)
              */
             public Collection getTargetMethods(Object context, ProgramLocation callSite) {
                 jq_Method method = (jq_Method) callSite.getTargetMethod();
