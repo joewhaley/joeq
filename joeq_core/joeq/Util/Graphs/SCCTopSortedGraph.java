@@ -4,6 +4,8 @@
 package Util.Graphs;
 
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -21,7 +23,7 @@ import Util.Assert;
  * @author  Alexandru SALCIANU <salcianu@alum.mit.edu>
  * @version $Id$
  */
-public class SCCTopSortedGraph implements Serializable {
+public class SCCTopSortedGraph implements Graph, Serializable {
     
     private SCComponent first;
     private SCComponent last;
@@ -121,6 +123,34 @@ public class SCCTopSortedGraph implements Serializable {
 	scc.nextTopSort   = first_scc;
 	first_scc.prevTopSort = scc;
 	first_scc = scc;
+    }
+
+    /* (non-Javadoc)
+     * @see Util.Graphs.Graph#getRoots()
+     */
+    public Collection getRoots() {
+        // Assumes single root.
+        return Collections.singleton(first);
+    }
+
+    /* (non-Javadoc)
+     * @see Util.Graphs.Graph#getNavigator()
+     */
+    public Navigator getNavigator() {
+        return new Navigator() {
+
+            public Collection next(Object node) {
+                SCComponent scc = (SCComponent) node;
+                Collection c = Arrays.asList(scc.next());
+                return c;
+            }
+
+            public Collection prev(Object node) {
+                SCComponent scc = (SCComponent) node;
+                Collection c = Arrays.asList(scc.prev());
+                return c;
+            }
+        };
     }
 
 }
