@@ -91,6 +91,9 @@ public class MethodSummary {
     }
     public static void clearSummaryCache() {
         summary_cache.clear();
+        ConcreteTypeNode.FACTORY.clear();
+        UnknownTypeNode.FACTORY.clear();
+        GlobalNode.GLOBAL = new GlobalNode();
     }
     
     /** Visitor class to build an intramethod summary. */
@@ -1458,7 +1461,7 @@ public class MethodSummary {
         public Node copy() { return this; }
         public String toString_long() { return jq.hex(this)+": "+toString_short()+super.toString_long(); }
         public String toString_short() { return "global"; }
-        public static final GlobalNode GLOBAL = new GlobalNode();
+        public static GlobalNode GLOBAL = new GlobalNode();
     }
     
     /** A ReturnedNode represents a return value or thrown exception from a method call. */
