@@ -296,6 +296,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
             if (m == null) {
                 constant_pool[index] = f = otherclazz.createStaticField(n.getNameAndDesc());
                 constant_pool_tags[index] = CONSTANT_ResolvedSFieldRef;
+                if (TRACE) SystemInterface.debugmsg("Resolved static field "+f+", cp idx "+(int)index);
             } else if (!m.isStatic())
                 throw new VerifyError("field "+m+" referred to as both static and instance");
             else
@@ -325,6 +326,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
             if (m == null) {
                 constant_pool[index] = f = otherclazz.createInstanceField(n.getNameAndDesc());
                 constant_pool_tags[index] = CONSTANT_ResolvedIFieldRef;
+                if (TRACE) SystemInterface.debugmsg("Resolved instance field "+f+", cp idx "+(int)index);
             } else if (m.isStatic())
                 throw new VerifyError("field "+m+" referred to as both static and instance");
             else
@@ -354,6 +356,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
             if (m == null) {
                 constant_pool[index] = f = otherclazz.createStaticMethod(n.getNameAndDesc());
                 constant_pool_tags[index] = CONSTANT_ResolvedSMethodRef;
+                if (TRACE) SystemInterface.debugmsg("Resolved static method "+f+", cp idx "+(int)index);
             } else if (!m.isStatic())
                 throw new VerifyError("method "+m+" referred to as both static and instance");
             else
@@ -384,6 +387,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
             if (m == null) {
                 constant_pool[index] = f = otherclazz.createInstanceMethod(n.getNameAndDesc());
                 constant_pool_tags[index] = CONSTANT_ResolvedIMethodRef;
+                if (TRACE) SystemInterface.debugmsg("Resolved instance method "+f+", cp idx "+(int)index);
             } else if (m.isStatic())
                 throw new VerifyError("method "+m+" referred to as both static and instance");
             else
