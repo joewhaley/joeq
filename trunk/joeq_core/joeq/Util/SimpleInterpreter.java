@@ -18,7 +18,6 @@ package joeq.Util;
 import java.io.*;
 import java.util.*;
 import java.net.*;
-import java.security.*;
 import java.lang.reflect.*;
 
 public class SimpleInterpreter {

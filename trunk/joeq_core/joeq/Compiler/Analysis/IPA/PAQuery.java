@@ -1,7 +1,6 @@
 package joeq.Compiler.Analysis.IPA;
 import java.io.PrintStream;
 import java.util.Iterator;
-import java.util.Set;
 
 import org.sf.javabdd.BDD;
 import org.sf.javabdd.TypedBDDFactory.TypedBDD;
@@ -12,7 +11,6 @@ import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.ParamNode;
 import joeq.Compiler.Analysis.IPSSA.IPSSABuilder;
 import joeq.Compiler.Quad.CodeCache;
 import joeq.Compiler.Quad.Quad;
-import joeq.Compiler.Analysis.IPA.ProgramLocation.*;
 import joeq.Compiler.Quad.QuadIterator;
 import joeq.Util.Assert;
 

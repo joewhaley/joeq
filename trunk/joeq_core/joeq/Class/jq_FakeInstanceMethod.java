@@ -6,9 +6,6 @@ package joeq.Class;
 import joeq.Class.PrimordialClassLoader;
 import java.util.HashMap;
 import java.util.StringTokenizer;
-import java.io.IOException;
-import joeq.Util.IO.Textualizer;
-import joeq.Util.Assert;
 
 /*
  * @author  Godmar Back <gback@stanford.edu>
