@@ -211,7 +211,7 @@ public class BDDInferenceRule extends InferenceRule {
         if (relationValues.length > 0) {
             if (solver.TRACE) solver.out.print(" (relprod nodes: "+topBdd.nodeCount()+"x"+relationValues[0].nodeCount()+"x"+quantify.nodeCount());
             result = topBdd.relprod(relationValues[0], quantify);
-            if (solver.TRACE) solver.out.print("="+result.nodeCount()+")");
+            if (solver.TRACE) solver.out.println("="+result.nodeCount()+")");
             relationValues[0].free();
         } else {
             // special case of rule with nothing on the top

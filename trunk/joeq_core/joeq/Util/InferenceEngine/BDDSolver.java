@@ -153,11 +153,17 @@ public class BDDSolver extends Solver {
     }
     
     void removeABackedge(SCComponent scc, InferenceRule.DependenceNavigator depNav) {
+        if (TRACE) out.println("SCC"+scc.getId()+" contains: "+scc.nodeSet());
         Object[] entries = scc.entries();
+        if (TRACE) out.println("SCC"+scc.getId()+" has "+entries.length+" entries.");
         Object entry;
-        if (entries.length > 0) entry = entries[0];
-        else entry = scc.nodes()[0];
-        if (TRACE) out.println("Entry into SCC: "+entry);
+        if (entries.length > 0) {
+            entry = entries[0];
+        } else {
+            if (TRACE) out.println("No entries, choosing a node.");
+            entry = scc.nodes()[0];
+        }
+        if (TRACE) out.println("Entry into SCC"+scc.getId()+": "+entry);
         Collection preds = depNav.prev(entry);
         if (TRACE) out.println("Predecessors of entry: "+preds);
         Object pred = preds.iterator().next();
@@ -178,7 +184,10 @@ public class BDDSolver extends Solver {
                 roots.add(scc);
             }
         }
-        if (roots.isEmpty()) roots.addAll(sccs);
+        if (roots.isEmpty()) {
+            if (TRACE) out.println("No roots! Everything is a root.");
+            roots.addAll(sccs);
+        }
         
         // Topologically-sort SCCs.
         SCCTopSortedGraph sccGraph = SCCTopSortedGraph.topSort(roots);
@@ -188,10 +197,10 @@ public class BDDSolver extends Solver {
         if (USE_NESTED_SCCS) {
             for (SCComponent scc = first; scc != null; scc = scc.nextTopSort()) {
                 if (!scc.isLoop()) continue;
+                scc.fillEntriesAndExits(depNav);
                 InferenceRule.DependenceNavigator depNav2 = new InferenceRule.DependenceNavigator(depNav);
                 Set nodeSet = scc.nodeSet();
                 depNav2.retainAll(nodeSet);
-                scc.fillEntriesAndExits(depNav2);
                 // Remove a backedge.
                 removeABackedge(scc, depNav2);
                 SCComponent first2 = buildSCCs(depNav2, nodeSet);
