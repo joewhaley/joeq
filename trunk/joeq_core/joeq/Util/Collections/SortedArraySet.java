@@ -17,6 +17,11 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 /**
+ * Set that is stored as a sorted list.  This allows linear-time merge operations,
+ * among other things.
+ * 
+ * Does not handle "null" elements.
+ * 
  * @author John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
