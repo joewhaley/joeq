@@ -1,12 +1,21 @@
 #!/bin/bash
 
+cd $1
+shift
+
 for arg in "$@"
 do
-  if grep -l "	" $arg
+ if [ ".java" == .${arg##*.} ]
+ then
+  if [ -e $arg ]
   then
+   if grep -l "	" $arg
+   then
     echo "Tab characters not allowed!  Use spaces or \\t instead."
     exit 1
+   fi
   fi
+ fi
 done
 
 exit 0
