@@ -138,6 +138,7 @@ public class PA {
     boolean LONG_LOCATIONS = !System.getProperty("pa.longlocations", "no").equals("no");
     boolean INCLUDE_UNKNOWN_TYPES = !System.getProperty("pa.unknowntypes", "yes").equals("no");
     boolean INCLUDE_ALL_UNKNOWN_TYPES = !System.getProperty("pa.allunknowntypes", "no").equals("no");
+    boolean ADD_SUPERTYPES = !System.getProperty("pa.addsupertypes", "no").equals("no");
     int MAX_PARAMS = Integer.parseInt(System.getProperty("pa.maxparams", "4"));
     
     int bddnodes = Integer.parseInt(System.getProperty("bddnodes", "2500000"));
@@ -1035,6 +1036,18 @@ public class PA {
             addToHT(H_i, type);
         }
 
+        if (ADD_SUPERTYPES) {
+            for (int T_i = 0; T_i < Tmap.size(); ++T_i) {
+                jq_Reference t1 = (jq_Reference) Tmap.get(T_i);
+                jq_Reference t2 = t1.getDirectPrimarySupertype();
+                Tmap.get(t2);
+                jq_Class[] c = t2.getInterfaces();
+                for (int i = 0; i < c.length; ++i) {
+                    Tmap.get(c[i]);
+                }
+            }
+        }
+        
         int Fsize = Fmap.size();
         int Tsize = Tmap.size();
         // build up 'aT'
