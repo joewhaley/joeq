@@ -528,6 +528,11 @@ public abstract class Bootstrapper {
         // Turn off Utf8.NO_NEW flag in image.
         utf8_class.setStaticData(utf8_class.getOrCreateStaticField("NO_NEW","Z"), 0);
         
+        // By now we have probably added everything we need for the on_vm_startup list.
+        // Set the "on_vm_startup" field to the current value.
+        HeapAddress addr = HeapAddress.addressOf(jq.on_vm_startup);
+        jq_class.setStaticData(jq_class.getOrCreateStaticField("on_vm_startup", "Ljava/util/List;"), addr);
+        
         // Now actually set the field values in the image and add relocs.
         it = classset.iterator();
         while (it.hasNext()) {

@@ -182,7 +182,9 @@ public class GenRelations {
         System.out.println(" -fly    on-the-fly call graph");
         System.out.println(" -ssa    also dump SSA representation");
         System.out.println("Other system properties:");
-        System.out.println(" -Dpa.dumppath    where to save the relations");
+        System.out.println(" -Dpa.dumppath      where to save the relations");
+        System.out.println(" -Dpa.icallgraph    location to load initial call graph, blank to force callgraph regeneration");
+        System.out.println(" -Dpa.dumpdotgraph  dump the call graph in dot graph format");
     }
     
 }
