@@ -164,6 +164,7 @@ public class PA {
     boolean FIX_NO_DEST = !System.getProperty("pa.fixnodest", "no").equals("no");
     boolean TRACE_NO_DEST = !System.getProperty("pa.tracenodest", "no").equals("no");
     boolean REFLECTION_STAT = !System.getProperty("pa.reflectionstat", "no").equals("no");
+    String REFLECTION_STAT_FILE = System.getProperty("pa.reflectionstatfile", "reflection.txt");
     public static boolean TRACE_REFLECTION = !System.getProperty("pa.tracereflection", "no").equals("no");
     public static boolean TRACE_REFLECTION_DOMAINS = !System.getProperty("pa.tracereflectiondomains", "no").equals("no");
     boolean TRACE_FORNAME = !System.getProperty("pa.traceforname", "no").equals("no");
@@ -3165,7 +3166,7 @@ public class PA {
         if(REFLECTION_STAT){
             PrintWriter w = null;
             try {
-                w = new PrintWriter(new FileWriter("reflection.txt"));
+                w = new PrintWriter(new FileWriter(REFLECTION_STAT_FILE));
                 BDD newInstanceCalls = IE.restrict(M.ithVar(Mmap.get(javaLangClass_newInstance)));   // I
                 w.println("There are " + newInstanceCalls.satCount(Iset) + " calls to Class.newInstance");
                 
