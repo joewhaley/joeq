@@ -2225,7 +2225,7 @@ public class MethodSummary {
         private Node elementData[];
         private int size;
         
-        private NodeSet(int initialCapacity) {
+        public NodeSet(int initialCapacity) {
             super();
             if (initialCapacity < 0)
                 throw new IllegalArgumentException("Illegal Capacity: "+initialCapacity);
@@ -2233,11 +2233,11 @@ public class MethodSummary {
             this.size = 0;
         }
         
-        private NodeSet() {
+        public NodeSet() {
             this(10);
         }
         
-        private NodeSet(Collection c) {
+        public NodeSet(Collection c) {
             this((int) Math.min((c.size()*110L)/100, Integer.MAX_VALUE));
             this.addAll(c);
         }
@@ -2385,8 +2385,11 @@ public class MethodSummary {
         public boolean remove(Object arg0) { return remove((Node)arg0); }
         public boolean remove(Node arg0) {
             int i = whereDoesItGo(arg0);
+            if (i == size) {
+                return false;
+            }
             Object oldValue = elementData[i];
-            if (i == size || arg0 != oldValue) {
+            if (arg0 != oldValue) {
                 return false;
             }
             int numMoved = this.size - i - 1;
@@ -2890,12 +2893,24 @@ outer:
     /** The method calls that this method makes. */
     final Set calls;
     /** Map from a method call that this method makes, and its ReturnValueNode. */
-    final HashMap callToRVN;
+    final Map callToRVN;
     /** Map from a method call that this method makes, and its ThrownExceptionNode. */
-    final HashMap callToTEN;
+    final Map callToTEN;
     
     public static final boolean USE_PARAMETER_MAP = true;
     final Map passedParamToNodes;
+
+    MethodSummary(ParamNode[] param_nodes) {
+        this.method = null;
+        this.params = param_nodes;
+        this.calls = Collections.EMPTY_SET;
+        this.callToRVN = Collections.EMPTY_MAP;
+        this.callToTEN = Collections.EMPTY_MAP;
+        this.nodes = Collections.EMPTY_MAP;
+        this.returned = Collections.EMPTY_SET;
+        this.thrown = Collections.EMPTY_SET;
+        this.passedParamToNodes = Collections.EMPTY_MAP;
+    }
 
     public MethodSummary(AndersenMethod method, ParamNode[] param_nodes, GlobalNode my_global, Set methodCalls, HashMap callToRVN, HashMap callToTEN, Set returned, Set thrown, Set passedAsParameters) {
         this.method = method;
