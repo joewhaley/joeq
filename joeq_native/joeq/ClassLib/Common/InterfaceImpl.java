@@ -36,7 +36,7 @@ import Util.Assert;
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
-public class InterfaceImpl implements Interface {
+public abstract class InterfaceImpl implements Interface {
 
     /** Creates new Interface */
     public InterfaceImpl() {}
@@ -50,12 +50,10 @@ public class InterfaceImpl implements Interface {
         return java.util.Collections.EMPTY_SET.iterator();
     }
     
-    public ObjectTraverser getObjectTraverser() {
-        return CommonObjectTraverser.INSTANCE;
-    }
+    public abstract ObjectTraverser getObjectTraverser();
     
     public static class CommonObjectTraverser extends ObjectTraverser {
-        public static CommonObjectTraverser INSTANCE = new CommonObjectTraverser();
+        //public static CommonObjectTraverser INSTANCE = new CommonObjectTraverser();
         protected CommonObjectTraverser() { }
         protected static final java.util.Set nullStaticFields = new java.util.HashSet();
         protected static final java.util.Set nullInstanceFields = new java.util.HashSet();
