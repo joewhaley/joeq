@@ -23,6 +23,7 @@ import Compil3r.Quad.Operator.Invoke;
 import Compil3r.Quad.SSAReader.SSAClass;
 import Compil3r.Quad.SSAReader.SSAMethod;
 import Compil3r.Quad.SSAReader.SSAType;
+import UTF.Utf8;
 import Util.Assert;
 import Util.Collections.HashCodeComparator;
 import Util.Collections.SortedArraySet;
@@ -42,6 +43,9 @@ public abstract class ProgramLocation {
     public AndersenMethod getMethod() { return m; }
     public abstract int getNumParams();
     public abstract AndersenType getParamType(int i);
+    
+    public abstract Utf8 getSourceFile();
+    public abstract int getLineNumber();
     
     public abstract int getID();
     public abstract int getBytecodeIndex();
@@ -96,6 +100,16 @@ public abstract class ProgramLocation {
             Map map = CodeCache.getBCMap((jq_Method) super.m);
             Integer i = (Integer) map.get(q);
             return i.intValue();
+        }
+        
+        public Utf8 getSourceFile() {
+            jq_Method method = (jq_Method) m;
+            return method.getDeclaringClass().getSourceFile();
+        }
+        public int getLineNumber() {
+            jq_Method method = (jq_Method) m;
+            int bci = getBytecodeIndex();
+            return method.getLineNumber(bci);
         }
         
         public int getNumParams() { return Invoke.getParamList(q).length(); }
@@ -190,6 +204,15 @@ public abstract class ProgramLocation {
         
         public int getID() { return bcIndex; }
         public int getBytecodeIndex() { return bcIndex; }
+        
+        public Utf8 getSourceFile() {
+            jq_Method method = (jq_Method) m;
+            return method.getDeclaringClass().getSourceFile();
+        }
+        public int getLineNumber() {
+            jq_Method method = (jq_Method) m;
+            return method.getLineNumber(bcIndex);
+        }
         
         public AndersenMethod getTargetMethod() {
             jq_Class clazz = ((jq_Method) super.m).getDeclaringClass();
@@ -358,6 +381,15 @@ public abstract class ProgramLocation {
         
         public int getID() { return identifier; }
         public int getBytecodeIndex() {
+            Assert.UNREACHABLE();
+            return 0;
+        }
+        
+        public Utf8 getSourceFile() {
+            Assert.UNREACHABLE();
+            return null;
+        }
+        public int getLineNumber() {
             Assert.UNREACHABLE();
             return 0;
         }
