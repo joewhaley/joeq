@@ -1918,8 +1918,9 @@ public class PA {
         t6.free();
     }
     
-    Map missingClasses = new HashMap();
-    Map missingConst = new HashMap();
+    Map missingClasses  = new HashMap();
+    Map missingConst    = new HashMap();
+    Map noConstrClasses = new HashMap();
     BDD reflectiveCalls;
     /** Updates IE/IEcs with new edges obtained from resolving reflective invocations */
     public boolean bindReflection(){
@@ -1987,7 +1988,7 @@ public class PA {
                     c.prepare();
                     Assert._assert(c != null);
                 }else{
-                    System.err.println("Can't case " + clazz + " to jq_Class");      
+                    System.err.println("Can't cast " + clazz + " to jq_Class");      
                     continue;
                 }
             } catch(NoClassDefFoundError e) {
@@ -2000,11 +2001,17 @@ public class PA {
             } catch(java.lang.ClassCircularityError e) {
                 System.err.println("Resolving reflection: circulation error " + stringConst + 
                     " at " + h.toStringWithDomains(TS));
+                continue;
             }
+            Assert._assert(c != null);            
+            
             jq_Method constructor = c.getClassInitializer();
             if(constructor == null){
-                System.err.println("No constructor in class " + c);
-                continue;
+                if(noConstrClasses.get(c) == null){
+                    System.err.println("No constructor in class " + c);
+                    noConstrClasses.put(c, new Integer(0));
+                    continue;
+                }
             }
             constructorIE.orWith(M.ithVar(Mmap.get(constructor)).and(h));
         }
