@@ -2721,11 +2721,11 @@ public class MethodSummary {
             Assert._assert(s == m.size());
             for (Iterator i = this.field_predecessors.iterator(); i.hasNext(); ) {
                 Node n = (Node) i.next();
-                out.writeBytes(" fpred ");
                 int index2 = m.get(n);
                 Assert._assert(s == m.size());
-                if (index2 < index)
-                    out.writeBytes(Integer.toString(index2));
+                if (index2 < index) {
+                    out.writeBytes(" fpred "+index2);
+                }
             }
         }
     }
