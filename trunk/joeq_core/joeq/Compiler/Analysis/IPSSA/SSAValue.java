@@ -305,16 +305,16 @@ public abstract class  SSAValue {
 	}
 	
 	public static class FormalIn extends IPPhi {
-		protected Vector/*<Invoke>*/ _callers;
+		protected Vector/*<Quad>*/ _callers;
 		
         FormalIn(){
             _callers = new Vector();
         }
         
-		Invoke getCaller(int pos){
-			return (Invoke)_callers.get(pos); 
+		Quad getCaller(int pos){
+			return (Quad)_callers.get(pos); 
 		}
-		void add(SSADefinition def, Invoke caller){
+		void add(SSADefinition def, Quad caller){
 			_definitions.addElement(def);
 			_callers.addElement(caller);
 			
@@ -326,7 +326,7 @@ public abstract class  SSAValue {
 			String result = getLetter() + "(";
 			for(int i = 0; i < _definitions.size(); i++){
 				SSADefinition def = getDefinition(i);
-				Invoke caller = getCaller(i);
+				Quad caller = getCaller(i);
 
 				result += "<" + def.toString() + ", " + caller + ">, ";
 			}
@@ -336,6 +336,10 @@ public abstract class  SSAValue {
 
 			return result + ")";
 		}
+
+        public boolean hasCallSite(Quad quad) {
+            return _callers.contains(quad);
+        }
 	}
 	
 	public static class ActualOut extends IPPhi {

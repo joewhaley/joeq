@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 
 import Clazz.jq_Method;
+import Compil3r.Analysis.IPSSA.SSALocation.LocalLocation;
 import Compil3r.Analysis.IPSSA.Utils.DefinitionSet;
 import Compil3r.Quad.Quad;
 
@@ -82,7 +83,13 @@ public class SSADefinition {
     public Quad getQuad() { return _quad;}
 	
 	public String toString(){
-		return _location.toString() + "_" + _version;
+        String result = _location.toString() + "_" + _version; 
+        if(! (_location instanceof SSALocation.LocalLocation)) {
+    	   return result;
+        }
+        SSALocation.LocalLocation loc = (LocalLocation)_location;
+        String name = loc.getName(_method, _quad);
+        return (name == null) ? result : result + "(" + name + ")";
 	}
 
 	public long getID() {
