@@ -27,23 +27,23 @@ import joeq.Scheduler.jq_ThreadQueue;
 public abstract class SemiConservative {
     
     public static void collect() {
-        if (SimpleAllocator.TRACE) Debug.writeln("Starting collection.");
+        if (true) Debug.writeln("Starting collection.");
         
         jq_Thread t = Unsafe.getThreadBlock();
         t.disableThreadSwitch();
         
         jq_NativeThread.suspendAllThreads();
         
-        if (SimpleAllocator.TRACE) Debug.writeln("Threads suspended.");
+        if (true) Debug.writeln("Threads suspended.");
         SimpleAllocator s = (SimpleAllocator) DefaultHeapAllocator.def();
-        if (SimpleAllocator.TRACE) Debug.writeln("--> Marking roots.");
+        if (true) Debug.writeln("--> Marking roots.");
         scanRoots();
-        if (SimpleAllocator.TRACE) Debug.writeln("--> Marking queue.");
+        if (true) Debug.writeln("--> Marking queue.");
         s.scanGCQueue();
-        if (SimpleAllocator.TRACE) Debug.writeln("--> Sweeping.");
+        if (true) Debug.writeln("--> Sweeping.");
         s.sweep();
         
-        if (SimpleAllocator.TRACE) Debug.writeln("Resuming threads.");
+        if (true) Debug.writeln("Resuming threads.");
         jq_NativeThread.resumeAllThreads();
         
         t.enableThreadSwitch();
@@ -69,7 +69,13 @@ public abstract class SemiConservative {
                     jq_StaticField[] sfs = c.getDeclaredStaticFields();
                     for (int j=0; j<sfs.length; ++j) {
                         jq_StaticField sf = sfs[j];
-                        if (sf.getType().isReferenceType()) {
+                        jq_Type t = sf.getType();
+                        if (t.isReferenceType() && !t.isAddressType()) {
+                            if (SimpleAllocator.TRACE_GC) {
+                                Debug.write(sf.getDeclaringClass().getDesc());
+                                Debug.write(" ");
+                                Debug.writeln(sf.getName());
+                            }
                             HeapAddress a = sf.getAddress();
                             DefaultHeapAllocator.processObjectReference(a);
                         }
@@ -83,11 +89,13 @@ public abstract class SemiConservative {
         if (jq_NativeThread.allNativeThreadsInitialized()) {
             for (int i = 0; i < jq_NativeThread.native_threads.length; ++i) {
                 jq_NativeThread nt = jq_NativeThread.native_threads[i];
+                if (SimpleAllocator.TRACE_GC) Debug.writeln("Scanning native thread ", i);
                 scanQueuedThreads(nt);
                 //addObject(nt, b);
             }
         } else {
             jq_NativeThread nt = Unsafe.getThreadBlock().getNativeThread();
+            if (SimpleAllocator.TRACE_GC) Debug.writeln("Scanning initial native thread");
             scanQueuedThreads(nt);
         }
         scanCurrentThreadStack(3);
@@ -95,9 +103,12 @@ public abstract class SemiConservative {
     
     public static void scanQueuedThreads(jq_NativeThread nt) {
         for (int i = 0; i < jq_NativeThread.NUM_OF_QUEUES; ++i) {
+            if (SimpleAllocator.TRACE_GC) Debug.writeln("Scanning thread queue ", i);
             scanThreadQueue(nt.getReadyQueue(i));
         }
+        if (SimpleAllocator.TRACE_GC) Debug.writeln("Scanning idle queue");
         scanThreadQueue(nt.getIdleQueue());
+        if (SimpleAllocator.TRACE_GC) Debug.writeln("Scanning transfer queue");
         scanThreadQueue(nt.getTransferQueue());
     }
     
@@ -111,6 +122,7 @@ public abstract class SemiConservative {
     }
     
     public static void scanCurrentThreadStack(int skip) {
+        if (SimpleAllocator.TRACE_GC) Debug.writeln("Scanning current thread stack");
         StackAddress fp = StackAddress.getBasePointer();
         StackAddress sp = StackAddress.getStackPointer();
         CodeAddress ip = (CodeAddress) fp.offset(HeapAddress.size()).peek();
@@ -147,9 +159,4 @@ public abstract class SemiConservative {
         DefaultHeapAllocator.processPossibleObjectReference((HeapAddress) a);
     }
     
-    public static boolean isMarked(Object o) {
-        int status = HeapAddress.addressOf(o).offset(ObjectLayout.STATUS_WORD_OFFSET).peek4();
-        return (status & ObjectLayout.GC_BIT) != 0;
-    }
-
 }

@@ -254,7 +254,7 @@ public final class Unsafe {
     
     public void setMemory(long to, long size, byte b) {
         HeapAddress a = HeapAddress.address32((int) to);
-        SystemInterface.mem_set(a, (int) size, b);
+        SystemInterface.mem_set(a, b, (int) size);
     }
     
     public void copyMemory(long to, long from, long size) {

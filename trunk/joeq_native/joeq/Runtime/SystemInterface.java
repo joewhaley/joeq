@@ -419,9 +419,9 @@ public abstract class SystemInterface {
         } catch (Throwable t) { Assert.UNREACHABLE(); }
     }
 
-    public static void mem_set(Address to, int size, byte b) {
-        Unsafe.pushArg(b);
+    public static void mem_set(Address to, byte b, int size) {
         Unsafe.pushArg(size);
+        Unsafe.pushArg(b);
         Unsafe.pushArgA(to);
         try {
             Unsafe.getThreadBlock().disableThreadSwitch();
