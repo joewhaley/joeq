@@ -232,7 +232,6 @@ public class BootstrapRootSet {
     
     public void addDefaultRoots() {
         jq_Class c;
-        jq_StaticField s_f; jq_InstanceField i_f;
         jq_StaticMethod s_m; jq_InstanceMethod i_m;
         
         // some internal vm data structures are necessary for correct execution
@@ -478,7 +477,7 @@ public class BootstrapRootSet {
         if (super_class != null)
             trimClass(super_class);
 
-        Set instantiatedTypes = getInstantiatedTypes();
+        //Set instantiatedTypes = getInstantiatedTypes();
         Set necessaryFields = getNecessaryFields();
         Set necessaryMethods = getNecessaryMethods();
         

@@ -97,17 +97,17 @@ public class CSBDDPointerAnalysis {
             System.out.print("Doing inlining on call graph...");
             time = System.currentTimeMillis();
             // pre-initialize all classes so that we can inline more.
-            for (Iterator i=cg.getAllMethods().iterator(); i.hasNext(); ) {
+            for (Iterator i = cg.getAllMethods().iterator(); i.hasNext(); ) {
                 jq_Method m = (jq_Method) i.next();
                 m.getDeclaringClass().cls_initialize();
             }
             MethodInline mi = new MethodInline(cg);
             Navigator navigator = cg.getNavigator();
-            for (Iterator i=Traversals.postOrder(navigator, roots).iterator(); i.hasNext(); ) {
+            for (Iterator i = Traversals.postOrder(navigator, roots).iterator(); i.hasNext(); ) {
                 jq_Method m = (jq_Method) i.next();
                 if (m.getBytecode() == null) continue;
                 ControlFlowGraph cfg = CodeCache.getCode(m);
-                MethodSummary ms = MethodSummary.getSummary(cfg);
+                MethodSummary.getSummary(cfg);
                 mi.visitCFG(cfg);
             }
             time = System.currentTimeMillis() - time;
@@ -517,7 +517,6 @@ public class CSBDDPointerAnalysis {
     public void addClassType(jq_Reference type) {
         if (type == null) return;
         if (typeIndexMap.contains(type)) return;
-        int type_i = getTypeIndex(type);
         if (type instanceof jq_Class) {
             jq_Class k = (jq_Class) type;
             k.prepare();

@@ -50,17 +50,17 @@ public class Graph {
 	
 	public void addNode(String num, String name){
 		_nodeMap.put(num, name);
-	};
+	}
 	
 	public void addNode(long num, String name){
 		String num_str = new Long(num).toString();
 		_nodeMap.put("n" + num_str, name);
-	};
+	}
 	
 	public void addEdge(String num1, String num2){
 		Edge e = new Edge(num1, num2);
 		_edgeList.add(e);			
-	};
+	}
 	
 	public void addEdge(long num1, long num2){
 		String num1_str = "n" + new Long(num1).toString();
@@ -68,7 +68,7 @@ public class Graph {
 		
 		Edge e = new Edge(num1_str, num2_str);
 		_edgeList.add(e);
-	};
+	}
 	
 	public void printDot(PrintStream out){
 		out.println("digraph \"" + _name + "\" { \n" + "\trankdir=\"" + _dir.toString() + "\";");
@@ -92,7 +92,7 @@ public class Graph {
 		
 		out.println("}; ");
 	} 
-};
+}
 
 class TestGraph {
 	public static void main(String argv[]){
@@ -145,7 +145,6 @@ class TestGraph {
 			}
 		}
 	
-		java.util.Random r = new java.util.Random();
 		for(int i = 11; i < 20; i++){
 			for(int j = 0; j < 10; j++){
 				g.addEdge(i, j);
@@ -153,5 +152,5 @@ class TestGraph {
 		}
 		g.printDot(System.out);
 	}
-};
+}
 

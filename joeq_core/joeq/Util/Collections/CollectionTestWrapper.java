@@ -109,7 +109,7 @@ public class CollectionTestWrapper implements Set, SortedSet, List {
      */
     public Iterator iterator() {
         Iterator i1 = c1.iterator(), i2 = c2.iterator();
-        return new TestIterator(c1, c2, c1.iterator(), c2.iterator(), isStable());
+        return new TestIterator(c1, c2, i1, i2, isStable());
     }
 
     /**

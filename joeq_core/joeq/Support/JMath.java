@@ -282,13 +282,13 @@ public final class JMath
          */
         public static double ceil(double x)
         {
-                int             exp, sign;
+                int     exp;
                 long    ix;
 
                 if (x == 0)  return x;
 
                 ix = Double.doubleToLongBits(x);
-                sign = (int)((ix>>63)&1);
+                //sign = (int)((ix>>63)&1);
                 exp = ((int)(ix>>52)&0x7ff) - 0x3ff;
 
                 if (exp < 0) {
@@ -320,13 +320,13 @@ public final class JMath
          */
         public static double floor(double x)
         {
-                int             exp, sign;
+                int     exp;
                 long    ix;
 
                 if (x == 0)  return x;
 
                 ix = Double.doubleToLongBits(x);
-                sign = (int)((ix>>63)&1);
+                //sign = (int)((ix>>63)&1);
                 exp = ((int)(ix>>52)&0x7ff) - 0x3ff;
 
                 if (exp < 0) {

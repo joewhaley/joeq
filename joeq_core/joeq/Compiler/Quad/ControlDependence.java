@@ -82,7 +82,6 @@ public class ControlDependence extends jq_MethodVisitor.EmptyVisitor {
                 Quad q2 = pred.getQuad(pred.size()-2);
                 //System.out.println("next-to-last quad is "+q2);
                 if (q.getOperator() instanceof IntIfCmp) {
-                    Operand src1 = IntIfCmp.getSrc1(q);
                     Operand src2 = IntIfCmp.getSrc2(q);
                     ConditionOperand cond = IntIfCmp.getCond(q);
                     if ((q.getOperator() == IntIfCmp.IFCMP_A.INSTANCE) &&

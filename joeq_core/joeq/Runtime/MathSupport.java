@@ -72,7 +72,6 @@ public abstract class MathSupport {
     public static long imul(int u, int v) {
         /*unsigned*/int u1, u0, v1, v0, udiff, vdiff, high, mid, low;
         /*unsigned*/int prodh, prodl, was;
-        long prod;
         boolean neg;
 
         u1 = HHALF(u);

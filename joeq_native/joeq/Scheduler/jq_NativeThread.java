@@ -290,7 +290,8 @@ public class jq_NativeThread implements x86Constants {
 
         if (USE_INTERRUPTER_THREAD) {
             // start up another native thread to periodically interrupt this one.
-            jq_InterrupterThread it = new jq_InterrupterThread(this);
+            //jq_InterrupterThread it =
+                new jq_InterrupterThread(this);
         } else {
             // use setitimer
             SystemInterface.set_interval_timer(SystemInterface.ITIMER_VIRTUAL, 10);

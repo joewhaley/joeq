@@ -28,7 +28,6 @@ public class x86QuadExceptionDeliverer extends ExceptionDeliverer {
     private x86QuadExceptionDeliverer() {}
 
     public final void deliverToStackFrame(jq_CompiledCode cc, Throwable x, jq_TryCatch tc, CodeAddress ip, StackAddress fp) {
-        jq_Method m = cc.getMethod();
         
         Assert._assert(tc.getExceptionOffset() != 0);
         StackAddress sp = (StackAddress) fp.offset(tc.getExceptionOffset());

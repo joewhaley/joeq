@@ -230,7 +230,6 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements x86Constant
             asm = new x86Assembler(bcs.length, bcs.length*8, 5, DEFAULT_ALIGNMENT);
             asm.skip(5); // space for jump point
             asm.setEntrypoint();
-            jq_Type[] params = method.getParamTypes();
             n_paramwords = method.getParamWords();
             int n_localwords = method.getMaxLocals();
             Assert._assert(n_paramwords <= n_localwords);

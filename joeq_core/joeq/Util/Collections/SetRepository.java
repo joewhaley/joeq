@@ -293,10 +293,6 @@ uphere:
             }
             return that;
         }
-        private SharedSet(SetRepository repository) {
-            this.repository = repository;
-            this.set = repository.setFactory.makeSet();
-        }
         private SharedSet(SetRepository repository, Collection s) {
             this.repository = repository;
             this.set = repository.setFactory.makeSet(s);

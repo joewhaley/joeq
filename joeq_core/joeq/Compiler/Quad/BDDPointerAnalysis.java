@@ -811,7 +811,7 @@ public class BDDPointerAnalysis {
                 callSiteToTargets.put(mc, definite_targets);
                 jq_InstanceMethod method = (jq_InstanceMethod) mc.getTargetMethod();
                 addClassInit(method.getDeclaringClass());
-                int methodIndex = getMethodIndex(method);
+                //int methodIndex = getMethodIndex(method);
                 PassedParameter pp = new PassedParameter(mc, 0);
                 Set receiverObjects = ms.getNodesThatCall(pp);
                 BDD receiverBDD = bdd.zero();
@@ -1159,7 +1159,6 @@ public class BDDPointerAnalysis {
     public void addClassType(jq_Reference type) {
         if (type == null) return;
         if (typeIndexMap.contains(type)) return;
-        int type_i = getTypeIndex(type);
         if (type instanceof jq_Class) {
             jq_Class k = (jq_Class) type;
             k.prepare();

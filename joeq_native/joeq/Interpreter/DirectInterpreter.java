@@ -54,12 +54,6 @@ public class DirectInterpreter extends BytecodeInterpreter {
         bad_classes.add(Reflection._class);
         bad_classes.add(PrimordialClassLoader.loader.getOrCreateBSType("LRun_Time/ExceptionDeliverer;"));
         bad_methods = new HashSet();
-        jq_Class k2 = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/PrintStream;");
-        jq_Method m2 = k2.getOrCreateInstanceMethod("write", "(Ljava/lang/String;)V");
-        //bad_methods.add(m2);
-        k2 = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/OutputStreamWriter;");
-        m2 = k2.getOrCreateInstanceMethod("write", "([CII)V");
-        //bad_methods.add(m2);
         bad_methods.add(Run_Time.Arrays._multinewarray);
         interpret_filter = new FilterIterator.Filter() {
             public boolean isElement(Object o) {
