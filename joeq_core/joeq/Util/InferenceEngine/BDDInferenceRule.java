@@ -133,6 +133,9 @@ public class BDDInferenceRule extends InferenceRule {
             }
             if (relationValues[i].isZero()) {
                 if (solver.TRACE) solver.out.println("Relation "+r+" is now empty!  Stopping early.");
+                for (int j = 0; j <= i; ++j) {
+                    relationValues[j].free();
+                }
                 return false;
             }
         }
@@ -188,6 +191,10 @@ public class BDDInferenceRule extends InferenceRule {
             topBdd.andWith(relationValues[i]);
             if (topBdd.isZero()) {
                 if (solver.TRACE) solver.out.println("Result became empty!  Stopping early.");
+                for ( ; i < relationValues.length; ++i) {
+                    relationValues[i].free();
+                }
+                relationValues[0].free();
                 return false;
             }
         }
@@ -197,6 +204,7 @@ public class BDDInferenceRule extends InferenceRule {
         }
         BDD result = topBdd.relprod(relationValues[0], quantify);
         topBdd.free();
+        relationValues[0].free();
         quantify.free();
         
         BDDPairing pairing = null;
@@ -275,6 +283,8 @@ public class BDDInferenceRule extends InferenceRule {
             }
             if (allRelationValues[i].isZero()) {
                 if (solver.TRACE) solver.out.println("Relation "+r+" is now empty!  Stopping early.");
+                for (int j = 0; j <= i; ++j)
+                    allRelationValues[i].free();
                 return false;
             }
         }
@@ -335,6 +345,7 @@ public class BDDInferenceRule extends InferenceRule {
         for (int i = 0; i < newRelationValues.length; ++i) {
             if (newRelationValues[i].isZero()) {
                 if (solver.TRACE) solver.out.println("Nothing new for "+(RuleTerm)top.get(i)+", skipping.");
+                newRelationValues[i].free();
                 continue;
             }
             BDD topBdd = solver.bdd.one();
@@ -344,6 +355,8 @@ public class BDDInferenceRule extends InferenceRule {
                 topBdd.andWith(allRelationValues[j].id());
                 if (topBdd.isZero()) {
                     if (solver.TRACE) solver.out.println("Relation "+r+" became empty, skipping.");
+                    topBdd.free();
+                    newRelationValues[i].free();
                     continue outer;
                 }
             }
@@ -353,6 +366,7 @@ public class BDDInferenceRule extends InferenceRule {
             if (solver.TRACE) solver.out.print("="+results[i].nodeCount()+")");
             topBdd.free();
             newRelationValues[i].free();
+            quantify.free();
             if (solver.TRACE_FULL) solver.out.println(" = "+results[i].toStringWithDomains());
             else if (solver.TRACE) solver.out.println(" = ");
         }
@@ -394,7 +408,9 @@ public class BDDInferenceRule extends InferenceRule {
      * @return
      */
     private String domainsOf(BDD b) {
-        int[] a = b.support().scanSetDomains();
+        BDD s = b.support();
+        int[] a = s.scanSetDomains();
+        s.free();
         if (a == null) return "(none)";
         StringBuffer sb = new StringBuffer();
         for (int i = 0; i < a.length; ++i) {
