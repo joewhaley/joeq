@@ -51,7 +51,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
     IndexMap memberMap;
     IndexMap constantMap;
     
-    String varOrderDesc = "method_quadxtargetxfallthrough_member_constant_src2_opc_src1_dest_srcs_srcNum";
+    String varOrderDesc = "method_quadxtargetxfallthrough_member_constant_opc_srcs_dest_srcNum";
     
     int methodBits = 14, quadBits = 18, opBits = 8, regBits = 7, constantBits = 13, memberBits = 14, varargsBits = 4;
 
@@ -69,6 +69,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
     boolean ZERO_FIELDS = !System.getProperty("zerofields", "yes").equals("no");
     boolean GLOBAL_QUAD_NUMBERS = !System.getProperty("globalquadnumber", "yes").equals("no");
     boolean SSA = !System.getProperty("ssa", "no").equals("no");
+    boolean USE_SRC12 = !System.getProperty("src12", "no").equals("no");
     
     public BuildBDDIR() {
         if (!GLOBAL_QUAD_NUMBERS) {
@@ -77,6 +78,9 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         if (SSA) {
             regBits = 11;
             varargsBits = 5;
+        }
+        if (USE_SRC12) {
+            varOrderDesc = "method_quadxtargetxfallthrough_member_constant_src2_opc_src1_srcs_dest_srcNum";
         }
         methodMap = new IndexMap("method");
         loadOpMap();
@@ -89,8 +93,10 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         quad = makeDomain("quad", quadBits);
         opc = makeDomain("opc", opBits);
         dest = makeDomain("dest", regBits);
-        src1 = makeDomain("src1", regBits);
-        src2 = makeDomain("src2", regBits);
+        if (USE_SRC12) {
+            src1 = makeDomain("src1", regBits);
+            src2 = makeDomain("src2", regBits);
+        }
         constant = makeDomain("constant", constantBits);
         fallthrough = makeDomain("fallthrough", quadBits);
         target = makeDomain("target", quadBits);
@@ -245,21 +251,21 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
             Assert._assert(!i.hasNext());
         }
         i = q.getUsedRegisters().iterator();
-        if (i.hasNext()) {
+        if (USE_SRC12 && i.hasNext()) {
             RegisterOperand rop;
             rop = (RegisterOperand) i.next();
             if (rop != null) src1ID = getRegisterID(rop.getRegister());
             if (i.hasNext()) {
                 rop = (RegisterOperand) i.next();
                 if (rop != null) src2ID = getRegisterID(rop.getRegister());
-                if (i.hasNext()) {
-                    srcsID = new LinkedList();
-                    do {
-                        rop = (RegisterOperand) i.next();
-                        if (rop != null) srcsID.add(new Integer(getRegisterID(rop.getRegister())));
-                    } while (i.hasNext());
-                }
             }
+        }
+        if (i.hasNext()) {
+            srcsID = new LinkedList();
+            do {
+                RegisterOperand rop = (RegisterOperand) i.next();
+                if (rop != null) srcsID.add(new Integer(getRegisterID(rop.getRegister())));
+            } while (i.hasNext());
         }
         i = q.getAllOperands().iterator();
         while (i.hasNext()) {
@@ -280,8 +286,10 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         if (ZERO_FIELDS || quadID != 0) currentQuad.andWith(quad.ithVar(quadID));
         if (ZERO_FIELDS || opcID != 0) currentQuad.andWith(opc.ithVar(opcID));
         if (ZERO_FIELDS || destID != 0) currentQuad.andWith(dest.ithVar(destID));
-        if (ZERO_FIELDS || src1ID != 0) currentQuad.andWith(src1.ithVar(src1ID));
-        if (ZERO_FIELDS || src2ID != 0) currentQuad.andWith(src2.ithVar(src2ID));
+        if (USE_SRC12) {
+            if (ZERO_FIELDS || src1ID != 0) currentQuad.andWith(src1.ithVar(src1ID));
+            if (ZERO_FIELDS || src2ID != 0) currentQuad.andWith(src2.ithVar(src2ID));
+        }
         if (ZERO_FIELDS || constantID != 0) currentQuad.andWith(constant.ithVar(((long)constantID) & 0xFFFFFFFFL));
         //currentQuad.andWith(fallthrough.ithVar(fallthroughID));
         if (ZERO_FIELDS || targetID != 0) currentQuad.andWith(target.ithVar(targetID));
@@ -339,8 +347,10 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         dos.writeBytes("quad "+(1L<<quadBits)+"\n");
         dos.writeBytes("opc "+(1L<<opBits)+"\n");
         dos.writeBytes("dest "+(1L<<regBits)+"\n");
-        dos.writeBytes("src1 "+(1L<<regBits)+"\n");
-        dos.writeBytes("src2 "+(1L<<regBits)+"\n");
+        if (USE_SRC12) {
+            dos.writeBytes("src1 "+(1L<<regBits)+"\n");
+            dos.writeBytes("src2 "+(1L<<regBits)+"\n");
+        }
         dos.writeBytes("constant "+(1L<<constantBits)+"\n");
         dos.writeBytes("fallthrough "+(1L<<quadBits)+"\n");
         dos.writeBytes("target "+(1L<<quadBits)+"\n");
@@ -365,9 +375,17 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
     void dumpRelations(String fileName) throws IOException {
         DataOutputStream dos = new DataOutputStream(new FileOutputStream(fileName));
         if (GLOBAL_QUAD_NUMBERS) {
-            dos.writeBytes("cfg ( id : quad , op : op , dest : reg , src1 : reg , src2 : reg , const : constant , fallthrough : quad , target : quad , member : member , srcNum : varargs , srcs : reg )\n");
+            if (USE_SRC12) {
+                dos.writeBytes("cfg ( id : quad , op : op , dest : reg , src1 : reg , src2 : reg , const : constant , fallthrough : quad , target : quad , member : member , srcNum : varargs , srcs : reg )\n");
+            } else {
+                dos.writeBytes("cfg ( id : quad , op : op , dest : reg , const : constant , fallthrough : quad , target : quad , member : member , srcNum : varargs , srcs : reg )\n");
+            }
         } else {
-            dos.writeBytes("cfg ( method : method , id : quad , op : op , dest : reg , src1 : reg , src2 : reg , const : constant , fallthrough : quad , target : quad , member : member , srcNum : varargs , srcs : reg )\n");
+            if (USE_SRC12) {
+                dos.writeBytes("cfg ( method : method , id : quad , op : op , dest : reg , src1 : reg , src2 : reg , const : constant , fallthrough : quad , target : quad , member : member , srcNum : varargs , srcs : reg )\n");
+            } else {
+                dos.writeBytes("cfg ( method : method , id : quad , op : op , dest : reg , const : constant , fallthrough : quad , target : quad , member : member , srcNum : varargs , srcs : reg )\n");
+            }
         }
         dos.writeBytes("m2q ( method : method , id : quad )\n");
         dos.writeBytes("entries ( method : method , entry : quad )\n");
@@ -452,19 +470,6 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         for (int i = 0; i < quadMap.size(); ++i) {
             BDD q = quad.ithVar(i).andWith(allQuads.id());
             printQuad(q);
-        }
-    }
-    
-    void print2() {
-        // quad, opc, dest, src1, src2, constant, fallthrough, target, member;
-        BDD domains = opc.set().andWith(dest.set()).andWith(src1.set()).andWith(src2.set());
-        domains.andWith(constant.set()).andWith(fallthrough.set()).andWith(target.set()).andWith(member.set());
-        BDD quad_ids = allQuads.exist(domains);
-        for (Iterator i = quad_ids.iterator(quad.set()); i.hasNext(); ) {
-            BDD q = (BDD) i.next();
-            q.andWith(allQuads.id());
-            printQuad(q);
-            q.free();
         }
     }
     
