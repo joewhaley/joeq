@@ -2774,11 +2774,11 @@ public class BytecodeToQuad extends BytecodeVisitor {
             Class c = Class.forName(s);
             return (UnsafeHelper)c.newInstance();
         } catch (java.lang.ClassNotFoundException x) {
-            System.err.println("Cannot find "+type+" "+s+": "+x);
+            //System.err.println("Cannot find "+type+" "+s+": "+x);
         } catch (java.lang.InstantiationException x) {
-            System.err.println("Cannot instantiate "+type+" "+s+": "+x);
+            //System.err.println("Cannot instantiate "+type+" "+s+": "+x);
         } catch (java.lang.IllegalAccessException x) {
-            System.err.println("Cannot access "+type+" "+s+": "+x);
+            //System.err.println("Cannot access "+type+" "+s+": "+x);
         }
         return null;
     }
