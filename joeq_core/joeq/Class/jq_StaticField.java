@@ -16,7 +16,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import Bootstrap.PrimordialClassLoader;
-import Main.jq;
 import Memory.Address;
 import Memory.HeapAddress;
 import UTF.Utf8;
