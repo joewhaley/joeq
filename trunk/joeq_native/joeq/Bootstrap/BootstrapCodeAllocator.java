@@ -68,7 +68,6 @@ public class BootstrapCodeAllocator extends CodeAllocator {
         	entrypoint += alignment-1;
 	        entrypoint &= ~(alignment-1);
         }
-        System.out.println("Start: "+jq.hex(entrypoint-offset));
         idx += (entrypoint-offset) - size();
         return new Bootstrapx86CodeBuffer(entrypoint-offset, estimatedSize);
     }
