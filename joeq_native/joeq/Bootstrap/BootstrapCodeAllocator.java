@@ -48,10 +48,16 @@ public class BootstrapCodeAllocator extends CodeAllocator {
     }
     
     public x86CodeBuffer getCodeBuffer(int estimated_size) {
-        return new Bootstrapx86CodeBuffer();
+        return new Bootstrapx86CodeBuffer(estimated_size);
     }
     
     public int size() { return bundle_size*bundle_idx+idx+1; }
+    public void ensureCapacity(int size) {
+        int i = size >> bundle_shift;
+        while (i+1 >= bundles.size()) {
+            bundles.addElement(new byte[bundle_size]);
+        }
+    }
 
     public List getAllCodeRelocs() { return all_code_relocs; }
     public List getAllDataRelocs() { return all_data_relocs; }
@@ -102,8 +108,9 @@ public class BootstrapCodeAllocator extends CodeAllocator {
 
         private int startIndex;
         
-        Bootstrapx86CodeBuffer() {
+        Bootstrapx86CodeBuffer(int est_size) {
             startIndex = size();
+            ensureCapacity(size()+est_size);
         }
         
         public int getStartIndex() { return startIndex; }
@@ -113,8 +120,15 @@ public class BootstrapCodeAllocator extends CodeAllocator {
 
         public void checkSize() {
             if (idx == bundle_size-1) {
-                bundles.addElement(current_bundle = new byte[bundle_size]);
-                ++bundle_idx; idx=-1;
+                if (bundle_idx != bundles.size()-1) {
+                    if (TRACE) System.out.println("getting next bundle idx "+(bundle_idx+1));
+                    current_bundle = (byte[])bundles.get(++bundle_idx);
+                    idx=-1;
+                } else {
+                    if (TRACE) System.out.println("allocing new bundle idx "+(bundle_idx+1));
+                    bundles.addElement(current_bundle = new byte[bundle_size]);
+                    ++bundle_idx; idx=-1;
+                }
             }
         }
 
@@ -143,18 +157,12 @@ public class BootstrapCodeAllocator extends CodeAllocator {
 
         public byte get1(int k) {
             k += startIndex;
-            int i = k >> bundle_shift;
-            int j = k & bundle_mask;
-            byte[] b = (byte[])bundles.elementAt(i);
-            return b[j];
+            return peek1(k);
         }
 
         public int get4_endian (int k) {
-            int b = (int)get1(k) & 0x000000FF;
-            b |= ((int)get1(k+1) << 8) & 0x0000FF00;
-            b |= ((int)get1(k+2) << 16) & 0x00FF0000;
-            b |= ((int)get1(k+3) << 24) & 0xFF000000;
-            return b;
+            k += startIndex;
+            return peek4(k);
         }
 
         public void put1(int k, byte instr) {
@@ -163,10 +171,8 @@ public class BootstrapCodeAllocator extends CodeAllocator {
         }
 
         public void put4_endian(int k, int instr) {
-            put1(k, (byte)(instr));
-            put1(k+1, (byte)(instr>>8));
-            put1(k+2, (byte)(instr>>16));
-            put1(k+3, (byte)(instr>>24));
+            k += startIndex;
+            poke4(k, instr);
         }
 
         public jq_CompiledCode allocateCodeBlock(jq_Method m, jq_TryCatch[] ex, jq_BytecodeMap bcm,
