@@ -127,11 +127,19 @@ public class DirectInterpreter extends Interpreter implements ObjectLayout {
         public float getstatic_F(jq_StaticField f) { return Float.intBitsToFloat(getstatic_I(f)); }
         public double getstatic_D(jq_StaticField f) { return Double.longBitsToDouble(getstatic_L(f)); }
         public Object getstatic_A(jq_StaticField f) { return Unsafe.asObject(Unsafe.peek(f.getAddress())); }
+        public boolean getstatic_Z(jq_StaticField f) { return Unsafe.peek(f.getAddress())!=0; }
+        public byte getstatic_B(jq_StaticField f) { return (byte)Unsafe.peek(f.getAddress()); }
+        public char getstatic_C(jq_StaticField f) { return (char)Unsafe.peek(f.getAddress()); }
+        public short getstatic_S(jq_StaticField f) { return (short)Unsafe.peek(f.getAddress()); }
         public void putstatic_I(jq_StaticField f, int v) { f.getDeclaringClass().setStaticData(f, v); }
         public void putstatic_L(jq_StaticField f, long v) { f.getDeclaringClass().setStaticData(f, v); }
         public void putstatic_F(jq_StaticField f, float v) { f.getDeclaringClass().setStaticData(f, v); }
         public void putstatic_D(jq_StaticField f, double v) { f.getDeclaringClass().setStaticData(f, v); }
         public void putstatic_A(jq_StaticField f, Object v) { f.getDeclaringClass().setStaticData(f, v); }
+        public void putstatic_Z(jq_StaticField f, boolean v) { f.getDeclaringClass().setStaticData(f, v?1:0); }
+        public void putstatic_B(jq_StaticField f, byte v) { f.getDeclaringClass().setStaticData(f, v); }
+        public void putstatic_C(jq_StaticField f, char v) { f.getDeclaringClass().setStaticData(f, v); }
+        public void putstatic_S(jq_StaticField f, short v) { f.getDeclaringClass().setStaticData(f, v); }
         public int getfield_I(Object o, jq_InstanceField f) { return Unsafe.peek(Unsafe.addressOf(o)+f.getOffset()); }
         public long getfield_L(Object o, jq_InstanceField f) { int lo=Unsafe.peek(Unsafe.addressOf(o)+f.getOffset()); int hi=Unsafe.peek(Unsafe.addressOf(o)+f.getOffset()+4); return jq.twoIntsToLong(lo, hi); }
         public float getfield_F(Object o, jq_InstanceField f) { return Float.intBitsToFloat(getfield_I(o, f)); }
