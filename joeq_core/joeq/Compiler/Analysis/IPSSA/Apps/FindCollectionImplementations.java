@@ -16,9 +16,9 @@ import java.util.StringTokenizer;
 
 import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
+import Clazz.jq_Field;
 import Clazz.jq_Method;
 import Clazz.jq_Type;
-import Compil3r.Quad.CachedCallGraph;
 import Compil3r.Quad.CallGraph;
 import Compil3r.Quad.RootedCHACallGraph;
 import Main.HostedVM;
@@ -212,10 +212,12 @@ public class FindCollectionImplementations {
     static jq_Class _collectionClass  = null;
     static jq_Class _iteratorClass    = null;
     static jq_Class _setClass         = null;
+    static jq_Class _mapClass         = null;
     boolean FILTER = false;
 
     static final String COLLECTION_SIGNATURE = "Ljava.util.Collection;";
     static final String SET_SIGNATURE        = "Ljava.util.Set;";
+    static final String MAP_SIGNATURE        = "Ljava.util.Map;";
     static final String ITERATOR_SIGNATURE   = "Ljava.util.Iterator;";    
     
     public static void main(String[] args) {
@@ -259,7 +261,8 @@ public class FindCollectionImplementations {
     private Set _classes;
     private Set _collections;
     private Set _iterators;
-    private Set _sets;    
+    private Set _sets;
+    private Set _maps;    
     
     public FindCollectionImplementations(Iterator i) {
         Collection roots = new LinkedList();
@@ -293,10 +296,12 @@ public class FindCollectionImplementations {
         _collections = new HashSet();
         _iterators   = new HashSet();
         _sets        = new HashSet();
+        _maps        = new HashSet();
         
         _collectionClass  = (jq_Class)jq_Type.parseType(COLLECTION_SIGNATURE);
         _iteratorClass    = (jq_Class)jq_Type.parseType(ITERATOR_SIGNATURE);  
         _setClass         = (jq_Class)jq_Type.parseType(SET_SIGNATURE);
+        _mapClass         = (jq_Class)jq_Type.parseType(MAP_SIGNATURE);
         _collectionClass.load();
         _iteratorClass.load();
         _setClass.load();
@@ -334,7 +339,10 @@ public class FindCollectionImplementations {
         for(Iterator iter = _classes.iterator(); iter.hasNext(); ) {
             jq_Class c = (jq_Class)iter.next();
             
-            if(c.getDeclaredInterface(_collectionClass.getDesc()) != null) {
+            if(
+                    c.getDeclaredInterface(_collectionClass.getDesc()) != null && 
+                    c.getDeclaredInterface(_setClass.getDesc()) == null) 
+            {        
                 _collections.add(c);
             }
         }        
@@ -357,6 +365,15 @@ public class FindCollectionImplementations {
             }
         }        
     }
+    private void findMaps() {
+        for(Iterator iter = _classes.iterator(); iter.hasNext(); ) {
+            jq_Class c = (jq_Class)iter.next();
+            
+            if(c.getDeclaredInterface(_mapClass.getDesc()) != null) {
+                _maps.add(c);
+            }
+        }        
+    }    
 
     private Set getClasses(Collection collection) {
         HashSet result = new HashSet(); 
@@ -382,27 +399,37 @@ public class FindCollectionImplementations {
         }
     }
     
-    private void reportStats() {
-        System.out.println("Found " + _collections.size() + " collections:");
-        //printCollection(_collections);
-        ClassHierarchy h = new ClassHierarchy(_collectionClass, _collections);
-        h.makeHierarchy();
-        h.printHierarchy();
+    private void reportStats(boolean verbose) {
+        if(verbose) {
+            System.out.println("Found " + _collections.size() + " collections:");
+            //printCollection(_collections);
+            ClassHierarchy h = new ClassHierarchy(_collectionClass, _collections);
+            h.makeHierarchy();
+            h.printHierarchy();
+            
+            System.out.println("Found " + _sets.size() + " sets");
+            //printCollection(_iterators);
+            h = new ClassHierarchy(_setClass, _sets);
+            h.makeHierarchy();
+            h.printHierarchy();
+            
+            System.out.println("Found " + _maps.size() + " maps");
+            //printCollection(_iterators);
+            h = new ClassHierarchy(_mapClass, _maps);
+            h.makeHierarchy();
+            h.printHierarchy();
+    
+            System.out.println("Found " + _iterators.size() + " iterators");
+            //printCollection(_iterators);
+            h = new ClassHierarchy(_iteratorClass, _iterators);
+            h.makeHierarchy();
+            h.printHierarchy();
+        }
         
-        System.out.println("Found " + _sets.size() + " sets");
-        //printCollection(_iterators);
-        h = new ClassHierarchy(_setClass, _sets);
-        h.makeHierarchy();
-        h.printHierarchy();
-
-        System.out.println("Found " + _iterators.size() + " iterators");
-        //printCollection(_iterators);
-        h = new ClassHierarchy(_iteratorClass, _iterators);
-        h.makeHierarchy();
-        h.printHierarchy();
-
-	System.out.println("Found " + _collections.size() + " collections, " + 
+        System.out.println("Found " + 
+               _collections.size() + " collections, " + 
 			   _sets.size() + " sets, " +
+               _maps.size() + " maps, " +
 			   _iterators.size() + " iterators "
 			   );
     }
@@ -410,10 +437,106 @@ public class FindCollectionImplementations {
     protected void run() {        
         //System.out.println("Looking for subclasses of " + _collectionClass + " and " + _iteratorClass);
         
+        // detect the interesting classes
         findCollections();
-        findIterators();        
-        findSets();        
+        findSets();
+        findMaps();
+        findIterators();                 
         
-        reportStats();
+        final String LINE = repeat("-", 100);
+        // for each of the classes, mark the variables that are reachable from them
+        System.out.println(LINE);
+        System.out.println("Collections:");
+        findReachable(_collections);
+
+        System.out.println(LINE);
+        System.out.println("Sets:");
+        findReachable(_sets);
+        
+        System.out.println(LINE);
+        System.out.println("Maps:");
+        findReachable(_sets);
+        
+        System.out.println(LINE);
+        System.out.println("Iterators:");
+        findReachable(_iterators);        
+        System.out.println(LINE);
+        
+        // do the statistics
+        reportStats(false);
+    }
+    private void findReachable(Set classes) {
+        for(Iterator iter = classes.iterator(); iter.hasNext();) {
+            jq_Class c = (jq_Class)iter.next();
+            
+            Collection reachable = findReachable(c);
+            if(!reachable.isEmpty()) {
+                System.out.println(cutto(c.toString(), 40) + ": [");
+                for(Iterator iter2 = reachable.iterator(); iter2.hasNext();) {
+                    Object o = iter2.next();
+                    if(o instanceof jq_Field) {
+                        jq_Field field = (jq_Field)o;
+                        jq_Type type = field.getType();
+                        
+                        if(type.isClassType()) {
+                            System.out.println(repeat(" ", 40) + "\t" + 
+                                    cutto(field.getName().toString(), 30) + 
+                                    " : " + type + typeSig(type));
+                        }
+                    } else {
+                        System.out.println(repeat(" ", 40) + "\t" + o + " ");
+                    }
+                }
+                System.out.println(repeat(" ", 40) + "]");
+            } else {
+                System.out.println(cutto(c.toString(), 40) + ": []");
+            }
+        }
+    }
+
+    private String typeSig(jq_Type type) {        
+        if(!(type instanceof jq_Class)) return "";
+        StringBuffer buf = new StringBuffer();
+        jq_Class c = (jq_Class)type;        
+        
+        if(c.implementsInterface(_setClass) || c == _setClass) {        
+            buf.append(" [Set]");
+        } else {
+            if(c.implementsInterface(_collectionClass) || c == _collectionClass) { 
+                buf.append(" [Collection]");
+            }
+        }
+            
+        if(c.implementsInterface(_iteratorClass) || c == _iteratorClass) {
+            buf.append(" [Iterator]");
+        }
+        
+        if(c.implementsInterface(_mapClass) || c == _mapClass) {
+            buf.append(" [Map]");
+        }
+        
+        return buf.toString();
+    }
+
+    private Collection findReachable(jq_Class c) {
+        Collection result = new LinkedList();
+        // add the declared fields
+        result.addAll(Arrays.asList(c.getDeclaredInstanceFields()));
+        
+        return result;        
+    }
+    
+    private static String cutto(String string, int to) {
+        return string.length() < to ? 
+                         string + repeat(" ", to - string.length()) : 
+                         string.substring(0, to - 3) + "..."; 
+    }
+    private static String repeat(String string, int to) {
+        StringBuffer result = new StringBuffer();
+        for(int i = 0; i < to; i++) {
+            result.append(string);  
+        }
+        
+        return result.toString();
     }
 }
