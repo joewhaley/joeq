@@ -82,6 +82,9 @@ public class MethodSummary {
     public static final boolean IGNORE_STATIC_FIELDS = false;
     public static final boolean VERIFY_ASSERTIONS = false;
 
+    public static final boolean USE_IDENTITY_HASHCODE = false;
+    public static final boolean DETERMINISTIC = !USE_IDENTITY_HASHCODE && true;
+    
     public static final class MethodSummaryBuilder implements ControlFlowGraphVisitor {
         public void visitCFG(ControlFlowGraph cfg) {
             MethodSummary s = getSummary(cfg);
@@ -294,7 +297,8 @@ public class MethodSummary {
                 this.start_states[succ.getID()] = this.s.copy();
                 this.change = true;
             } else {
-                if (TRACE_INTRA) out.println("merging out set of "+bb+" "+Strings.hex8(this.s.hashCode())+" into in set of "+succ+" "+Strings.hex8(this.start_states[succ.getID()].hashCode()));
+                //if (TRACE_INTRA) out.println("merging out set of "+bb+" "+Strings.hex8(this.s.hashCode())+" into in set of "+succ+" "+Strings.hex8(this.start_states[succ.getID()].hashCode()));
+                if (TRACE_INTRA) out.println("merging out set of "+bb+" into in set of "+succ);
                 if (this.start_states[succ.getID()].merge(this.s)) {
                     if (TRACE_INTRA) out.println(succ+" in set changed");
                     this.change = true;
@@ -309,7 +313,8 @@ public class MethodSummary {
                 this.start_states[succ.getID()] = state = this.s.copy();
                 this.change = true;
             }
-            if (TRACE_INTRA) out.println("merging out set of jsr "+bb+" "+Strings.hex8(this.s.hashCode())+" into in set of "+succ+" "+Strings.hex8(this.start_states[succ.getID()].hashCode()));
+            //if (TRACE_INTRA) out.println("merging out set of jsr "+bb+" "+Strings.hex8(this.s.hashCode())+" into in set of "+succ+" "+Strings.hex8(this.start_states[succ.getID()].hashCode()));
+            if (TRACE_INTRA) out.println("merging out set of jsr "+bb+" into in set of "+succ);
             for (int i=0; i<changedLocals.length; ++i) {
                 if (changedLocals[i]) {
                     if (state.merge(i, this.s.registers[i])) {
@@ -338,7 +343,8 @@ public class MethodSummary {
                 }
                 this.change = true;
             } else {
-                if (TRACE_INTRA) out.println("merging out set of "+bb+" "+Strings.hex8(this.s.hashCode())+" into in set of ex handler "+succ+" "+Strings.hex8(this.start_states[succ.getID()].hashCode()));
+                //if (TRACE_INTRA) out.println("merging out set of "+bb+" "+Strings.hex8(this.s.hashCode())+" into in set of ex handler "+succ+" "+Strings.hex8(this.start_states[succ.getID()].hashCode()));
+                if (TRACE_INTRA) out.println("merging out set of "+bb+" into in set of ex handler "+succ);
                 for (int i=0; i<nLocals; ++i) {
                     if (this.start_states[succ.getID()].merge(i, this.s.registers[i]))
                         this.change = true;
@@ -876,7 +882,9 @@ public class MethodSummary {
         }
         public ProgramLocation getCall() { return m; }
         public int getParamNum() { return paramNum; }
-        public int hashCode() { return m.hashCode() ^ paramNum; }
+        public int hashCode() {
+            return m.hashCode() ^ paramNum;
+        }
         public boolean equals(PassedParameter that) { return this.m.equals(that.m) && this.paramNum == that.paramNum; }
         public boolean equals(Object o) { if (o instanceof PassedParameter) return equals((PassedParameter)o); return false; }
         public String toString() { return "Param "+paramNum+" for "+m; }
@@ -962,6 +970,13 @@ public class MethodSummary {
             this.id = ++current_id;
             this.escapes = that.escapes;
             if (TRACK_REASONS) this.edgesToReasons = that.edgesToReasons;
+        }
+        
+        public int hashCode() {
+            if (USE_IDENTITY_HASHCODE)
+                return System.identityHashCode(this);
+            else
+                return id;
         }
         
         public final int compareTo(Node that) {
@@ -1733,7 +1748,7 @@ public class MethodSummary {
         
         public AndersenReference getDeclaredType() { return type; }
         
-        public String toString_long() { return Strings.hex(this)+": "+toString_short()+super.toString_long(); }
+        public String toString_long() { return Integer.toHexString(this.hashCode())+": "+toString_short()+super.toString_long(); }
         public String toString_short() { return "Concrete: "+type+" q: "+(q==null?-1:q.getID()); }
 
         /* (non-Javadoc)
@@ -1875,8 +1890,8 @@ public class MethodSummary {
             return jq_Reference.getTypeOf(object);
         }
         
-        public String toString_long() { return Strings.hex(this)+": "+toString_short()+super.toString_long(); }
-        public String toString_short() { return "Object "+Strings.hex(object); }
+        public String toString_long() { return Integer.toHexString(this.hashCode())+": "+toString_short()+super.toString_long(); }
+        public String toString_short() { return "Object "+getDeclaredType(); }
         
         /* (non-Javadoc)
          * @see Compil3r.Quad.MethodSummary.Node#getEdgeFields()
@@ -2080,7 +2095,7 @@ public class MethodSummary {
         
         public final Node copy() { return this; }
         
-        public String toString_long() { return Strings.hex(this)+": "+toString_short()+super.toString_long(); }
+        public String toString_long() { return Integer.toHexString(this.hashCode())+": "+toString_short()+super.toString_long(); }
         public String toString_short() { return "Unknown: "+type; }
 
         /* (non-Javadoc)
@@ -2121,8 +2136,8 @@ public class MethodSummary {
             Assert._assert(this != GLOBAL);
             return new GlobalNode(this);
         }
-        public String toString_long() { return Strings.hex(this)+": "+toString_short()+super.toString_long(); }
-        public String toString_short() { return "global@"+Integer.toHexString(System.identityHashCode(this)); }
+        public String toString_long() { return Integer.toHexString(this.hashCode())+": "+toString_short()+super.toString_long(); }
+        public String toString_short() { return "global@"+Integer.toHexString(this.hashCode()); }
         public static GlobalNode GLOBAL = new GlobalNode();
         
         public void addDefaultStatics() {
@@ -2179,7 +2194,7 @@ public class MethodSummary {
         public final Node copy() { return new ReturnValueNode(this); }
         
         public String toString_long() { return toString_short()+super.toString_long(); }
-        public String toString_short() { return Strings.hex(this)+": "+"Return value of "+m; }
+        public String toString_short() { return Integer.toHexString(this.hashCode())+": "+"Return value of "+m; }
         
         /* (non-Javadoc)
          * @see Compil3r.Quad.MethodSummary.Node#print(Compil3r.Quad.MethodSummary, java.io.PrintWriter)
@@ -2227,7 +2242,7 @@ public class MethodSummary {
         public final Node copy() { return new ThrownExceptionNode(this); }
         
         public String toString_long() { return toString_short()+super.toString_long(); }
-        public String toString_short() { return Strings.hex(this)+": "+"Thrown exception of "+m; }
+        public String toString_short() { return Integer.toHexString(this.hashCode())+": "+"Thrown exception of "+m; }
         
         /* (non-Javadoc)
          * @see Compil3r.Quad.MethodSummary.Node#print(Compil3r.Quad.MethodSummary, java.io.PrintWriter)
@@ -2251,7 +2266,7 @@ public class MethodSummary {
         
         public final Node copy() { return new ParamNode(this); }
         
-        public String toString_long() { return Strings.hex(this)+": "+this.toString_short()+super.toString_long(); }
+        public String toString_long() { return Integer.toHexString(this.hashCode())+": "+this.toString_short()+super.toString_long(); }
         public String toString_short() { return "Param#"+n+" method "+m.getName(); }
         
         /* (non-Javadoc)
@@ -2478,7 +2493,7 @@ public class MethodSummary {
         }
         public String toString_short() {
             StringBuffer sb = new StringBuffer();
-            sb.append(Strings.hex(this));
+            sb.append(Integer.toHexString(this.hashCode()));
             sb.append(": ");
             sb.append("FieldLoad ");
             sb.append(fieldName());
@@ -2795,15 +2810,20 @@ public class MethodSummary {
         public int hashCode() {
             int hash = 0;
             for (int i=0; i<this.size; ++i) {
-                hash += System.identityHashCode(this.elementData[i]);
+                if (USE_IDENTITY_HASHCODE)
+                    hash += System.identityHashCode(this.elementData[i]);
+                else
+                    hash += this.elementData[i].hashCode();
             }
             return hash;
         }
             
         public String toString() {
             StringBuffer sb = new StringBuffer();
-            sb.append(Integer.toHexString(System.identityHashCode(this)));
-            sb.append(':');
+            if (false) {
+                sb.append(Integer.toHexString(System.identityHashCode(this)));
+                sb.append(':');
+            }
             sb.append('{');
             for (int i=0; i<size; ++i) {
                 sb.append(elementData[i]);
@@ -3840,6 +3860,13 @@ outer:
     }
 
     public AndersenMethod getMethod() { return method; }
+    
+    public int hashCode() {
+        if (DETERMINISTIC)
+            return method.hashCode();
+        else
+            return System.identityHashCode(this);
+    }
     
     /** Return a string representation of this summary. */
     public String toString() {
