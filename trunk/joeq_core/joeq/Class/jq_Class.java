@@ -1562,7 +1562,8 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                 if (this_m != null) {
                     if (TRACE) Debug.writeln("Using existing body for instance method "+this_m+".");
                 } else {
-                    System.err.println("Body of method "+that_m+" doesn't already exist!");
+                    if (TRACE)
+                        System.err.println("Body of method "+that_m+" doesn't already exist!");
                 }
                 continue;
             }
@@ -1676,7 +1677,8 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                     if (this_m != null) {
                         if (TRACE) Debug.writeln("Using existing body for static method "+this_m+".");
                     } else {
-                        System.err.println("Body of method "+that_m+" doesn't already exist!");
+                        if (TRACE)
+                            System.err.println("Body of method "+that_m+" doesn't already exist!");
                     }
                     continue;
                 }
