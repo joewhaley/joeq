@@ -6,8 +6,8 @@
  */
 
 package Compil3r.Quad;
-import java.util.*;
-import Util.AppendListIterator;
+import Util.Templates.ListIterator;
+import java.util.NoSuchElementException;
 
 /**
  * Iterator for iterating through exception handlers.  Compatible with ListIterator.
@@ -16,84 +16,84 @@ import Util.AppendListIterator;
  * @author  John Whaley
  * @version  $Id$
  */
+public class ExceptionHandlerIterator implements ListIterator.ExceptionHandler {
 
-public class ExceptionHandlerIterator implements ListIterator {
-
-    private final ListIterator iterator;
+    private final ExceptionHandlerList root;
+    private ExceptionHandlerList current;
     
     /** Creates new ExceptionHandlerIterator.
      * @param exs  list of exception handlers to iterate through. */
-    public ExceptionHandlerIterator(List/*ExceptionHandler*/ exs) {
-        iterator = exs.listIterator();
+    public ExceptionHandlerIterator(ExceptionHandlerList ehs) {
+        root = current = ehs;
     }
-    /** Creates new ExceptionHandlerIterator.
-     * @param exs  list of exception handlers to iterate through.
-     * @param parent  parent set of exception handlers, to be iterated through after the given set. */
-    public ExceptionHandlerIterator(List/*ExceptionHandler*/ exs, ExceptionHandlerSet parent) {
-        ListIterator l2 = parent==null?null:parent.iterator();
-        iterator = new AppendListIterator(exs.listIterator(), l2);
+    
+    /** Returns true if this iterator has a next element.
+     * @return  true if this iterator has a next element. */
+    public boolean hasNext() { return current != null; }
+    /** Returns the next element of this iterator.  Use nextEH to avoid the cast.
+     * @see  nextExceptionHandler
+     * @return  the next element of this iterator. */
+    public Object next() { return nextExceptionHandler(); }
+    /** Returns the next element of this iterator, avoiding the cast.
+     * @see  next
+     * @return  the next element of this iterator. */
+    public ExceptionHandler nextExceptionHandler() {
+        if (current == null) throw new NoSuchElementException();
+        ExceptionHandler x = current.getHandler();
+        current = current.getParent();
+        return x;
+    }
+    /** Returns the index of the next element of this iterator.
+     * @return  the index of the next element of this iterator. */
+    public int nextIndex() {
+        int i=0; ExceptionHandlerList p = root;
+        while (p != current) {
+            ++i; p = p.getParent();
+        }
+        return i;
     }
     
     /** Returns true if this iterator has a previous element.
      * @return  true if this iterator has a previous element. */
-    public boolean hasPrevious() { return iterator.hasPrevious(); }
-    /** Returns true if this iterator has a next element.
-     * @return  true if this iterator has a next element. */
-    public boolean hasNext() { return iterator.hasNext(); }
-    /** Returns the previous element of this iterator.  Use previousEH to avoid the cast.
-     * @see  previousEH
+    public boolean hasPrevious() { return root != current; }
+    /** Returns the previous element of this iterator.  Use previousExceptionHandler to avoid the cast.
+     * @see  previousExceptionHandler
      * @return  the previous element of this iterator. */
-    public Object previous() { return iterator.previous(); }
-    /** Returns the next element of this iterator.  Use nextEH to avoid the cast.
-     * @see  nextEH
-     * @return  the next element of this iterator. */
-    public Object next() { return iterator.next(); }
-    /** Returns the index of the previous element of this iterator.
-     * @return  the index of the previous element of this iterator. */
-    public int previousIndex() { return iterator.previousIndex(); }
-    /** Returns the index of the next element of this iterator.
-     * @return  the index of the next element of this iterator. */
-    public int nextIndex() { return iterator.nextIndex(); }
-    /** Removes from the list the last element returned by this iterator.
-     * @throws  IllegalStateException neither next nor previous have
-                been called, or remove or add have been called after
-                the last call to next or previous.
-     * @throws  UnsupportedOperationException if the remove operation
-                is not supported by the underlying list.
-     */
-    public void remove() { iterator.remove(); }
-    /** Replaces the last element returned by next or previous with the specified element.
-     * @param o  the element with which to replace the last element
-                 returned by next or previous
-     * @throws  IllegalStateException neither next nor previous have
-                been called, or remove or add have been called after
-                the last call to next or previous.
-     * @throws  UnsupportedOperationException if the set operation
-                is not supported by the underlying list.
-     */
-    public void set(Object o) { iterator.set(o); }
-    /** Inserts the specified element into the list.  The element is inserted
-     * immediately before the next element that would be returned by next, if
-     * any, and after the next element that would be returned by previous, if
-     * any.
-     * @param o  the element to insert.
-     * @throws  UnsupportedOperationException if the add operation
-                is not supported by the underlying list.
-     */
-    public void add(Object o) { iterator.add(o); }
-    
+    public Object previous() { return previousExceptionHandler(); }
     /** Returns the previous element of this iterator, avoiding the cast.
      * @see  next
      * @return  the previous element of this iterator. */
-    public ExceptionHandler previousEH() { return (ExceptionHandler)previous(); }
-    /** Returns the next element of this iterator, avoiding the cast.
-     * @see  next
-     * @return  the next element of this iterator. */
-    public ExceptionHandler nextEH() { return (ExceptionHandler)next(); }
+    public ExceptionHandler previousExceptionHandler() {
+        if (root == current) throw new NoSuchElementException();
+        ExceptionHandlerList p = root;
+        ExceptionHandlerList q = p.getParent();
+        while (q != current) {
+            p = q;
+            q = q.getParent();
+        }
+        return p.getHandler();
+    }
+    /** Returns the index of the previous element of this iterator.
+     * @return  the index of the previous element of this iterator. */
+    public int previousIndex() { return nextIndex()-1; }
+    /** Throws UnsupportedOperationException. (Removing is not supported.)
+     * @throws UnsupportedOperationException always
+     */
+    
+    public void remove() { throw new UnsupportedOperationException(); }
+    /** Throws UnsupportedOperationException. (Setting is not supported.)
+     * @throws UnsupportedOperationException always
+     */
+    public void set(Object o) { throw new UnsupportedOperationException(); }
+    /** Throws UnsupportedOperationException. (Adding is not supported.)
+     * @throws UnsupportedOperationException always
+     */
+    public void add(Object o) { throw new UnsupportedOperationException(); }
     
     /** Return an empty, unmodifiable iterator.
      * @return  an empty, unmodifiable iterator */
     public static ExceptionHandlerIterator getEmptyIterator() { return EMPTY; }
+    
     /** The empty basic block iterator.  Immutable. */
-    public static final ExceptionHandlerIterator EMPTY = new ExceptionHandlerIterator(Collections.EMPTY_LIST);
+    public static final ExceptionHandlerIterator EMPTY = new ExceptionHandlerIterator(null);
 }

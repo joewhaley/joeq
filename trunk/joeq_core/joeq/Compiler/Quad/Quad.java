@@ -9,6 +9,7 @@
 
 package Compil3r.Quad;
 
+import Util.Templates.List;
 import jq;
 
 public class Quad {
@@ -38,6 +39,8 @@ public class Quad {
     Operand getOp4() { return operand4; }
     
     void accept(QuadVisitor qv) { this.operator.accept(this, qv); }
+    
+    public List.jq_Class getThrownExceptions() { return this.operator.getThrownExceptions(); }
     
     public String toString() {
         StringBuffer s = new StringBuffer();

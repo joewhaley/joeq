@@ -1,5 +1,5 @@
 /*
- * ExceptionHandlerBasicBlock.java
+ * ExceptionHandler.java
  *
  * Created on January 9, 2002, 5:25 PM
  *
@@ -7,8 +7,9 @@
 
 package Compil3r.Quad;
 import Clazz.jq_Class;
-import java.util.ArrayList;
-import java.util.List;
+import Run_Time.TypeCheck;
+import Util.Templates.List;
+import Util.Templates.ListWrapper;
 
 /**
  * Exception handler for basic blocks.  Each exception handler handles a type of
@@ -30,7 +31,7 @@ public class ExceptionHandler {
     /** Type of exception that this exception handler catches. */
     private jq_Class exception_type;
     /** List of handled basic blocks. */
-    private List/*<BasicBlock>*/ handled_blocks;
+    private java.util.List/*<BasicBlock>*/ handled_blocks;
     /** Exception handler entry point. */
     private BasicBlock entry;
     
@@ -40,7 +41,7 @@ public class ExceptionHandler {
      * @param entry  exception handler entry point. */
     public ExceptionHandler(jq_Class ex_type, int numOfHandledBlocks, BasicBlock entry) {
         this.exception_type = ex_type;
-        this.handled_blocks = new ArrayList(numOfHandledBlocks);
+        this.handled_blocks = new java.util.ArrayList(numOfHandledBlocks);
         this.entry = entry;
     }
 
@@ -49,11 +50,19 @@ public class ExceptionHandler {
     public jq_Class getExceptionType() { return exception_type; }
     /** Returns an iteration of the handled basic blocks.
      * @return  an iteration of the handled basic blocks. */
-    public BasicBlockIterator getHandledBasicBlocks() { return new BasicBlockIterator(handled_blocks); }
+    public List.BasicBlock getHandledBasicBlocks() { return new ListWrapper.BasicBlock(handled_blocks); }
     /** Returns the entry point for this exception handler.
      * @return  the entry point for this exception handler. */
     public BasicBlock getEntry() { return entry; }
 
+    public boolean mustCatch(jq_Class exType) {
+        return TypeCheck.isAssignable(exType, exception_type);
+    }
+    public boolean mayCatch(jq_Class exType) {
+        return TypeCheck.isAssignable(exType, exception_type) ||
+              TypeCheck.isAssignable(exception_type, exType);
+    }
+    
     /** Add a handled basic block to the list of handled basic blocks.
      * @param bb  basic block to add. */
     void addHandledBasicBlock(BasicBlock bb) { handled_blocks.add(bb); }
