@@ -749,6 +749,9 @@ public class PA {
     }
     
     void addToVP(BDD V1H1context, BDD V_bdd, Node h) {
+        if(TRACE_REFLECTION_DOMAINS) {
+            out.println("V_bdd: " + getBDDDomains(V_bdd));
+        }
         int H_i = Hmap.get(h);
         BDD bdd1 = H1.ithVar(H_i);
         bdd1.andWith(V_bdd.id());
