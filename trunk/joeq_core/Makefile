@@ -1,6 +1,6 @@
 #MODULES = $(wildcard ../*)
 MODULES = ../joeq_core ../joeq_native ../joeq_x86
-SUPPORT_LIBS = joeq/Support/javabdd_0.6.jar joeq/Support/jwutil-1.0.jar
+SUPPORT_LIBS = joeq/Support/javabdd.jar joeq/Support/jwutil-1.0.jar
 JDK14SUPPORT_LIB = joeq/Support/java14.jar
 
 ifeq (${OS},Windows_NT)
