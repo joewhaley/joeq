@@ -312,7 +312,7 @@ public class BootstrapRootSet {
         addNecessaryMethod(joeq.Scheduler.jq_InterrupterThread._run);
         
         // dunno why this doesn't show up
-        addNecessaryType(joeq.Assembler.x86.Heap2HeapReference._class);
+        addNecessaryType(joeq.Assembler.Heap2HeapReference._class);
         
         try {
             // an instance of this class is created via reflection during VM initialization.

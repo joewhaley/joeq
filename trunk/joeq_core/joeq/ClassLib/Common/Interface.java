@@ -3,7 +3,7 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.ClassLib.Common;
 
-import joeq.Bootstrap.ObjectTraverser;
+import joeq.Runtime.ObjectTraverser;
 
 /**
  * Interface

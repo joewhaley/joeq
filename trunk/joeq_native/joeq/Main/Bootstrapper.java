@@ -23,7 +23,7 @@ import joeq.Bootstrap.BootImage;
 import joeq.Bootstrap.BootstrapCodeAddress;
 import joeq.Bootstrap.BootstrapCodeAllocator;
 import joeq.Bootstrap.BootstrapRootSet;
-import joeq.Bootstrap.ObjectTraverser;
+import joeq.Runtime.ObjectTraverser;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Bootstrap.BootstrapCodeAddress.BootstrapCodeAddressFactory;
 import joeq.ClassLib.ClassLibInterface;
@@ -38,7 +38,6 @@ import joeq.Class.jq_Type;
 import joeq.Compiler.CompilationState;
 import joeq.Compiler.BytecodeAnalysis.Trimmer;
 import joeq.Compiler.CompilationState.BootstrapCompilation;
-import joeq.Compiler.Reference.x86.x86ReferenceCompiler;
 import joeq.Memory.CodeAddress;
 import joeq.Memory.HeapAddress;
 import joeq.Runtime.Reflection;
@@ -89,12 +88,8 @@ public abstract class Bootstrapper {
         
         if (ClassLibInterface.DEFAULT.getClass().toString().indexOf("win32") != -1) {
             DUMP_COFF = true;
-            x86ReferenceCompiler.THREAD_BLOCK_PREFIX = joeq.Assembler.x86.x86.PREFIX_FS;
-            x86ReferenceCompiler.THREAD_BLOCK_OFFSET = 0x14;
         } else {
             DUMP_COFF = false;
-            //x86ReferenceCompiler.THREAD_BLOCK_PREFIX = joeq.Assembler.x86.x86.PREFIX_GS;
-            //x86ReferenceCompiler.THREAD_BLOCK_OFFSET = 0x4;
         }
 
         String classpath = System.getProperty("sun.boot.class.path")+

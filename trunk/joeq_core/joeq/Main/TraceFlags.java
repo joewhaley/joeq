@@ -50,7 +50,7 @@ public abstract class TraceFlags {
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceObjectTraverser")) {
-            makeTrue("joeq.Bootstrap.ObjectTraverser","TRACE");
+            makeTrue("joeq.Runtime.ObjectTraverser","TRACE");
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceClassLoader")) {

@@ -5,7 +5,7 @@ package joeq.ClassLib.sun142_win32;
 
 import java.util.Iterator;
 
-import joeq.Bootstrap.ObjectTraverser;
+import joeq.Runtime.ObjectTraverser;
 import joeq.Class.PrimordialClassLoader;
 import joeq.ClassLib.ClassLibInterface;
 import joeq.Class.jq_Class;

@@ -76,10 +76,10 @@ public class jq_InterrupterThread extends Thread {
                         "TICK! " + other_nt + " Java Thread = " + javaThread);
                 javaThread.disableThreadSwitch();
                 jq_RegisterState regs = javaThread.getRegisterState();
-                regs.ContextFlags =
+                regs.setContextFlags(
                     jq_RegisterState.CONTEXT_CONTROL
                         | jq_RegisterState.CONTEXT_INTEGER
-                        | jq_RegisterState.CONTEXT_FLOATING_POINT;
+                        | jq_RegisterState.CONTEXT_FLOATING_POINT);
                 boolean b = other_nt.getContext(regs);
                 if (!b) {
                     if (TRACE)
@@ -92,26 +92,26 @@ public class jq_InterrupterThread extends Thread {
                                 + " : "
                                 + javaThread
                                 + " ip="
-                                + regs.Eip.stringRep()
+                                + regs.getEip().stringRep()
                                 + " sp="
                                 + regs.getEsp().stringRep()
                                 + " cc="
-                                + CodeAllocator.getCodeContaining(regs.Eip));
+                                + CodeAllocator.getCodeContaining(regs.getEip()));
                     // simulate a call to threadSwitch method
-                    regs.Esp =
+                    regs.setEsp(
                         (StackAddress) regs.getEsp().offset(
-                            -HeapAddress.size());
+                            -HeapAddress.size()));
                     regs.getEsp().poke(HeapAddress.addressOf(other_nt));
-                    regs.Esp =
+                    regs.setEsp(
                         (StackAddress) regs.getEsp().offset(
-                            -CodeAddress.size());
-                    regs.getEsp().poke(regs.Eip);
-                    regs.Eip =
+                            -CodeAddress.size()));
+                    regs.getEsp().poke(regs.getEip());
+                    regs.setEip(
                         jq_NativeThread
                             ._threadSwitch
                             .getDefaultCompiledVersion()
-                            .getEntrypoint();
-                    regs.ContextFlags = jq_RegisterState.CONTEXT_CONTROL;
+                            .getEntrypoint());
+                    regs.setContextFlags(jq_RegisterState.CONTEXT_CONTROL);
                     b = other_nt.setContext(regs);
                     if (!b) {
                         if (TRACE)

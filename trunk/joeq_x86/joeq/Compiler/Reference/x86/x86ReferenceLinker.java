@@ -219,14 +219,6 @@ public abstract class x86ReferenceLinker {
         }
         return Unsafe.invoke(m.getDefaultCompiledVersion().getEntrypoint());
     }
-    static void abstractMethodError() throws AbstractMethodError {
-        SystemInterface.debugwriteln("Unimplemented abstract method!");
-        throw new AbstractMethodError();
-    }
-    static void nativeMethodError() throws LinkageError {
-        SystemInterface.debugwriteln("Unimplemented native method!");
-        throw new LinkageError();
-    }
     
     public static final jq_Class _class;
     public static final jq_StaticMethod _getstatic4;
@@ -246,8 +238,6 @@ public abstract class x86ReferenceLinker {
     public static final jq_StaticMethod _invokestatic;
     public static final jq_StaticMethod _invokespecial;
     public static final jq_StaticMethod _invokeinterface;
-    public static final jq_StaticMethod _abstractMethodError;
-    public static final jq_StaticMethod _nativeMethodError;
     static {
         _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Compiler/Reference/x86/x86ReferenceLinker;");
         _getstatic4 = _class.getOrCreateStaticMethod("getstatic4", "(Ljoeq/Class/jq_StaticField;)V");
@@ -267,7 +257,5 @@ public abstract class x86ReferenceLinker {
         _invokestatic = _class.getOrCreateStaticMethod("invokestatic", "(Ljoeq/Class/jq_Method;)V");
         _invokespecial = _class.getOrCreateStaticMethod("invokespecial", "(Ljoeq/Class/jq_InstanceMethod;)V");
         _invokeinterface = _class.getOrCreateStaticMethod("invokeinterface", "(Ljoeq/Class/jq_InstanceMethod;)J");
-        _abstractMethodError = _class.getOrCreateStaticMethod("abstractMethodError", "()V");
-        _nativeMethodError = _class.getOrCreateStaticMethod("nativeMethodError", "()V");
     }
 }

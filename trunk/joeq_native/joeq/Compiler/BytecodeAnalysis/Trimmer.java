@@ -23,7 +23,6 @@ import joeq.Class.jq_MethodVisitor;
 import joeq.Class.jq_StaticField;
 import joeq.Class.jq_Type;
 import joeq.Class.jq_TypeVisitor;
-import joeq.Compiler.Reference.x86.x86ReferenceLinker;
 import joeq.Runtime.ExceptionDeliverer;
 import joeq.Runtime.MathSupport;
 import joeq.Runtime.Monitor;
@@ -275,12 +274,6 @@ public class Trimmer {
             f = tryResolve(f);
             //addClassInitializer(f.getDeclaringClass());
             rs.addNecessaryField(f);
-            if (false) {
-                if (f.getWidth() == 8)
-                    INVOKEhelper(INVOKE_STATIC, x86ReferenceLinker._getstatic8);
-                else
-                    INVOKEhelper(INVOKE_STATIC, x86ReferenceLinker._getstatic4);
-            }
         }
         public void visitIGETSTATIC(jq_StaticField f) {
             super.visitIGETSTATIC(f);
@@ -333,12 +326,6 @@ public class Trimmer {
             f = tryResolve(f);
             //addClassInitializer(f.getDeclaringClass());
             rs.addNecessaryField(f);
-            if (false) {
-                if (f.getWidth() == 8)
-                    INVOKEhelper(INVOKE_STATIC, x86ReferenceLinker._putstatic8);
-                else
-                    INVOKEhelper(INVOKE_STATIC, x86ReferenceLinker._putstatic4);
-            }
         }
         public void visitIPUTSTATIC(jq_StaticField f) {
             super.visitIPUTSTATIC(f);
@@ -458,16 +445,16 @@ public class Trimmer {
             case INVOKE_STATIC:
                 if (f.getDeclaringClass() == Unsafe._class)
                     return;
-                rs.addNecessaryMethod(x86ReferenceLinker._invokestatic);
+                //rs.addNecessaryMethod(x86ReferenceLinker._invokestatic);
                 rs.addNecessaryMethod(f);
                 break;
             case INVOKE_SPECIAL:
-                rs.addNecessaryMethod(x86ReferenceLinker._invokespecial);
+                //rs.addNecessaryMethod(x86ReferenceLinker._invokespecial);
                 f = jq_Class.getInvokespecialTarget(method.getDeclaringClass(), (jq_InstanceMethod)f);
                 rs.addNecessaryMethod(f);
                 break;
             case INVOKE_INTERFACE:
-                rs.addNecessaryMethod(x86ReferenceLinker._invokeinterface);
+                //rs.addNecessaryMethod(x86ReferenceLinker._invokeinterface);
                 rs.addAllInterfaceMethodImplementations((jq_InstanceMethod)f);
                 addInvokedInterfaceMethod((jq_InstanceMethod)f);
                 break;

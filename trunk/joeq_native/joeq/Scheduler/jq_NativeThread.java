@@ -10,7 +10,6 @@ import joeq.Allocator.CodeAllocator;
 import joeq.Allocator.HeapAllocator;
 import joeq.Allocator.RuntimeCodeAllocator;
 import joeq.Allocator.SimpleAllocator;
-import joeq.Assembler.x86.x86Constants;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_DontAlign;
@@ -42,7 +41,7 @@ import joeq.Util.Strings;
  * @version $Id$
  */
 
-public class jq_NativeThread implements x86Constants, jq_DontAlign {
+public class jq_NativeThread implements jq_DontAlign {
 
     /** Trace flag.  When this is true, prints out debugging information about
      * what is going on in the scheduler.
@@ -441,8 +440,8 @@ public class jq_NativeThread implements x86Constants, jq_DontAlign {
         // simulate a return in the current register state, so when the thread gets swapped back
         // in, it will continue where it left off.
         jq_RegisterState state = t1.getRegisterState();
-        state.Eip = (CodeAddress) state.getEsp().peek();
-        state.Esp = (StackAddress) state.getEsp().offset(StackAddress.size() + CodeAddress.size());
+        state.setEip((CodeAddress) state.getEsp().peek());
+        state.setEsp((StackAddress) state.getEsp().offset(StackAddress.size() + CodeAddress.size()));
 
         // have to choose one of the 10 ready queue
         jq_Thread t2 = getNextReadyThread();
@@ -451,7 +450,7 @@ public class jq_NativeThread implements x86Constants, jq_DontAlign {
             // only one thread!
             t2 = t1;
         } else {
-            ip = t2.getRegisterState().Eip;
+            ip = t2.getRegisterState().getEip();
             if (TRACE) SystemInterface.debugwriteln("New ready Java thread: " + t2 + " ip: " + ip.stringRep() + " cc: " + CodeAllocator.getCodeContaining(ip));
             int priority = t1.getPriority();
             readyQueue[priority].enqueue(t1);
@@ -489,8 +488,8 @@ public class jq_NativeThread implements x86Constants, jq_DontAlign {
         // simulate a return in the current register state, so when the thread gets swapped back
         // in, it will continue where it left off.
         jq_RegisterState state = t1.getRegisterState();
-        state.Eip = (CodeAddress) state.getEsp().peek();
-        state.Esp = (StackAddress) state.getEsp().offset(StackAddress.size() + CodeAddress.size());
+        state.setEip((CodeAddress) state.getEsp().peek());
+        state.setEsp((StackAddress) state.getEsp().offset(StackAddress.size() + CodeAddress.size()));
 
         if (t1 != t2) {
             // find given thread in our queue.
@@ -508,7 +507,7 @@ public class jq_NativeThread implements x86Constants, jq_DontAlign {
         }
         transferExtraWork();
         if (t1 != t2) {
-            ip = t2.getRegisterState().Eip;
+            ip = t2.getRegisterState().getEip();
             if (TRACE) SystemInterface.debugwriteln("New ready Java thread: " + t2 + " ip: " + ip.stringRep() + " cc: " + CodeAllocator.getCodeContaining(ip));
             int priority = t1.getPriority();
             readyQueue[priority].enqueue(t1);  
@@ -649,8 +648,8 @@ public class jq_NativeThread implements x86Constants, jq_DontAlign {
     }
 
     public static void dumpAllThreads() {
-        jq_RegisterState rs = new jq_RegisterState();
-        rs.ContextFlags = jq_RegisterState.CONTEXT_CONTROL;
+        jq_RegisterState rs = jq_RegisterState.create();
+        rs.setContextFlags(jq_RegisterState.CONTEXT_CONTROL);
         for (int i = 0; i < native_threads.length; ++i) {
             SystemInterface.get_thread_context(native_threads[i].pid, rs);
             native_threads[i].dump(rs);
@@ -690,8 +689,8 @@ public class jq_NativeThread implements x86Constants, jq_DontAlign {
         for (int i = 0; i < native_threads.length; ++i) {
             SystemInterface.suspend_thread(native_threads[i].thread_handle);
         }
-        jq_RegisterState rs = new jq_RegisterState();
-        rs.ContextFlags = jq_RegisterState.CONTEXT_FULL;
+        jq_RegisterState rs = jq_RegisterState.create();
+        rs.setContextFlags(jq_RegisterState.CONTEXT_FULL);
         GCVisitor visitor = (GCVisitor)GCManager.getGC(gcType);
         for (int i = 0; i < native_threads.length; ++i) {
             SystemInterface.get_thread_context(native_threads[i].pid, rs);
@@ -719,7 +718,7 @@ public class jq_NativeThread implements x86Constants, jq_DontAlign {
 
     public void dump(jq_RegisterState regs) {
         SystemInterface.debugwriteln(this + ": current Java thread = " + currentThread);
-        StackCodeWalker.stackDump(regs.Eip, regs.getEbp());
+        StackCodeWalker.stackDump(regs.getEip(), regs.getEbp());
         for (int i = 0; i < readyQueue.length; ++i) {
             SystemInterface.debugwriteln(this + ": ready queue "+i+" = " + readyQueue[i]); 
         }

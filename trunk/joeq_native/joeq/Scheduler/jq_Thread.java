@@ -57,7 +57,7 @@ public class jq_Thread implements jq_DontAlign {
 
     public jq_Thread(Thread t) {
         this.thread_object = t;
-        this.registers = new jq_RegisterState();
+        this.registers = jq_RegisterState.create();
         this.thread_id = thread_id_factory.increment() << ObjectLayout.THREAD_ID_SHIFT;
         Assert._assert(this.thread_id > 0);
         Assert._assert(this.thread_id < ObjectLayout.THREAD_ID_MASK);
@@ -92,15 +92,15 @@ public class jq_Thread implements jq_DontAlign {
         jq_InstanceMethod m = z.getVirtualMethod(new jq_NameAndDesc(Utf8.get("run"), Utf8.get("()V")));
         entry_point = m.getDefaultCompiledVersion();
         // initialize register state to start at start function
-        this.registers.Esp = SystemInterface.allocate_stack(INITIAL_STACK_SIZE);
-        this.registers.Eip = entry_point.getEntrypoint();
+        this.registers.setEsp(SystemInterface.allocate_stack(INITIAL_STACK_SIZE));
+        this.registers.setEip(entry_point.getEntrypoint());
         // bogus return address
-        this.registers.Esp = (StackAddress) this.registers.getEsp().offset(-CodeAddress.size());
+        this.registers.setEsp((StackAddress) this.registers.getEsp().offset(-CodeAddress.size()));
         // arg to run()
-        this.registers.Esp = (StackAddress) this.registers.getEsp().offset(-HeapAddress.size());
+        this.registers.setEsp((StackAddress) this.registers.getEsp().offset(-HeapAddress.size()));
         this.registers.getEsp().poke(HeapAddress.addressOf(t));
         // return from run() directly to destroy()
-        this.registers.Esp = (StackAddress) this.registers.getEsp().offset(-CodeAddress.size());
+        this.registers.setEsp((StackAddress) this.registers.getEsp().offset(-CodeAddress.size()));
         this.registers.getEsp().poke(_destroyCurrentThread.getDefaultCompiledVersion().getEntrypoint());
     }
     public void start() {
@@ -137,11 +137,11 @@ public class jq_Thread implements jq_DontAlign {
         // store the register state to make it look like we received a timer tick.
         StackAddress esp = StackAddress.getStackPointer();
         // leave room for object pointer and return address
-        registers.Esp = (StackAddress) esp.offset(-CodeAddress.size()-HeapAddress.size());
-        registers.Ebp = StackAddress.getBasePointer();
-        registers.ControlWord = 0x027f;
-        registers.StatusWord = 0x4000;
-        registers.TagWord = 0xffff;
+        registers.setEsp((StackAddress) esp.offset(-CodeAddress.size()-HeapAddress.size()));
+        registers.setEbp(StackAddress.getBasePointer());
+        registers.setControlWord(0x027f);
+        registers.setStatusWord(0x4000);
+        registers.setTagWord(0xffff);
         // other registers don't matter.
         this.getNativeThread().yieldCurrentThread();
     }
@@ -161,11 +161,11 @@ public class jq_Thread implements jq_DontAlign {
         // store the register state to make it look like we received a timer tick.
         StackAddress esp = StackAddress.getStackPointer();
         // leave room for object pointer, arg, return address
-        registers.Esp = (StackAddress) esp.offset(-CodeAddress.size()-HeapAddress.size()-HeapAddress.size());
-        registers.Ebp = StackAddress.getBasePointer();
-        registers.ControlWord = 0x027f;
-        registers.StatusWord = 0x4000;
-        registers.TagWord = 0xffff;
+        registers.setEsp((StackAddress) esp.offset(-CodeAddress.size()-HeapAddress.size()-HeapAddress.size()));
+        registers.setEbp(StackAddress.getBasePointer());
+        registers.setControlWord(0x027f);
+        registers.setStatusWord(0x4000);
+        registers.setTagWord(0xffff);
         // other registers don't matter.
         this.getNativeThread().yieldCurrentThreadTo(t);
     }

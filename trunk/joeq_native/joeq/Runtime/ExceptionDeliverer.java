@@ -27,6 +27,16 @@ public abstract class ExceptionDeliverer {
 
     public static /*final*/ boolean TRACE = false;
     
+    public static void abstractMethodError() throws AbstractMethodError {
+        SystemInterface.debugwriteln("Unimplemented abstract method!");
+        throw new AbstractMethodError();
+    }
+    
+    public static void nativeMethodError() throws LinkageError {
+        SystemInterface.debugwriteln("Unimplemented native method!");
+        throw new LinkageError();
+    }
+    
     public static void athrow(Throwable k) {
         CodeAddress ip = (CodeAddress) StackAddress.getBasePointer().offset(StackAddress.size()).peek();
         StackAddress fp = (StackAddress) StackAddress.getBasePointer().peek();
@@ -222,13 +232,18 @@ public abstract class ExceptionDeliverer {
         }
     }
     
+    public static final jq_Class _class;
     public static final jq_StaticMethod _athrow;
     public static final jq_StaticMethod _trap_handler;
     public static final jq_StaticMethod _debug_trap_handler;
+    public static final jq_StaticMethod _abstractMethodError;
+    public static final jq_StaticMethod _nativeMethodError;
     static {
-        jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Runtime/ExceptionDeliverer;");
-        _athrow = k.getOrCreateStaticMethod("athrow", "(Ljava/lang/Throwable;)V");
-        _trap_handler = k.getOrCreateStaticMethod("trap_handler", "(I)V");
-        _debug_trap_handler = k.getOrCreateStaticMethod("debug_trap_handler", "(I)V");
+        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Runtime/ExceptionDeliverer;");
+        _athrow = _class.getOrCreateStaticMethod("athrow", "(Ljava/lang/Throwable;)V");
+        _trap_handler = _class.getOrCreateStaticMethod("trap_handler", "(I)V");
+        _debug_trap_handler = _class.getOrCreateStaticMethod("debug_trap_handler", "(I)V");
+        _abstractMethodError = _class.getOrCreateStaticMethod("abstractMethodError", "()V");
+        _nativeMethodError = _class.getOrCreateStaticMethod("nativeMethodError", "()V");
     }
 }

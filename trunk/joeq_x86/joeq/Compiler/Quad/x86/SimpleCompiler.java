@@ -39,7 +39,7 @@ import joeq.Assembler.x86.x86Assembler;
 import joeq.Assembler.x86.x86Constants;
 import joeq.Bootstrap.BootImage;
 import joeq.Bootstrap.BootstrapCodeAllocator;
-import joeq.Bootstrap.ObjectTraverser;
+import joeq.Runtime.ObjectTraverser;
 import joeq.ClassLib.ClassLibInterface;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
@@ -102,6 +102,7 @@ import joeq.Compiler.Quad.Operator.TableSwitch;
 import joeq.Compiler.Quad.Operator.Unary;
 import joeq.Compiler.Quad.Operator.ZeroCheck;
 import joeq.Compiler.Quad.RegisterFactory.Register;
+import joeq.Compiler.Reference.x86.x86ReferenceCompiler;
 import joeq.Compiler.Reference.x86.x86ReferenceLinker;
 
 /**
@@ -115,6 +116,9 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         public Factory() {}
         public jq_CompiledCode compile(jq_Method m) {
             return new SimpleCompiler(m).compile();
+        }
+        public jq_CompiledCode generate_compile_stub(jq_Method m) {
+            return x86ReferenceCompiler.generate_compile_stub(m);
         }
     }
     
