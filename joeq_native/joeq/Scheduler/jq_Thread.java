@@ -17,6 +17,7 @@ import joeq.Main.jq;
 import joeq.Memory.CodeAddress;
 import joeq.Memory.HeapAddress;
 import joeq.Memory.StackAddress;
+import joeq.Runtime.Debug;
 import joeq.Runtime.SystemInterface;
 import joeq.Runtime.Unsafe;
 import joeq.UTF.Utf8;
@@ -48,15 +49,15 @@ public class jq_Thread implements jq_DontAlign {
     private int priority;
     private volatile int isInterrupted;
     private final int thread_id;
-
+    //  thread is in middle of delivering exception
     public volatile boolean is_delivering_exception;
     
     public static final int INITIAL_STACK_SIZE = 65536;
-
+    // two threads can be created at the same time
     public static AtomicCounter thread_id_factory = new AtomicCounter(1);
 
     public jq_Thread(Thread t) {
-        this.thread_object = t;
+        this.thread_object = t;  // interface to java program
         this.registers = jq_RegisterState.create();
         this.thread_id = thread_id_factory.increment() << ObjectLayout.THREAD_ID_SHIFT;
         Assert._assert(this.thread_id > 0);
@@ -66,14 +67,14 @@ public class jq_Thread implements jq_DontAlign {
     }
 
     public Thread getJavaLangThreadObject() { return thread_object; }
-    public String toString() { return thread_object + " (sus: " + thread_switch_enabled+")"; }
+    public String toString() { return thread_object + " (id="+thread_id+", sus: " + thread_switch_enabled+")"; }  //print out info for debugging
     public jq_RegisterState getRegisterState() { return registers; }
     public jq_NativeThread getNativeThread() { return native_thread; }
     void setNativeThread(jq_NativeThread nt) { native_thread = nt; }
     public boolean isThreadSwitchEnabled() { return thread_switch_enabled == 0; }
     public void disableThreadSwitch() {
         if (!jq.RunningNative) {
-            ++thread_switch_enabled;
+            ++thread_switch_enabled; 
         } else {
             ((HeapAddress)HeapAddress.addressOf(this).offset(_thread_switch_enabled.getOffset())).atomicAdd(1);
         }
@@ -113,7 +114,7 @@ public class jq_Thread implements jq_DontAlign {
             this.init();
         }
         if (this.hasStarted)
-            throw new IllegalThreadStateException();
+            throw new IllegalThreadStateException();  // prevent to start twice
         this.isDead = false;
         this.hasStarted = true;
         jq_NativeThread.startJavaThread(this);
@@ -201,6 +202,8 @@ public class jq_Thread implements jq_DontAlign {
 
     public static void destroyCurrentThread() {
         jq_Thread t = Unsafe.getThreadBlock();
+        Debug.writeln("Destroying thread ", t.getThreadId());
+        t.disableThreadSwitch();
         t.isDead = true;
         jq_NativeThread.endCurrentJavaThread();
         Assert.UNREACHABLE();
