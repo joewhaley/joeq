@@ -17,13 +17,9 @@ import java.util.Map;
 
 import ClassLib.ClassLibInterface;
 import Main.jq;
-import Memory.CodeAddress;
-import Memory.StackAddress;
 import Run_Time.Reflection;
-import Run_Time.TypeCheck;
 import UTF.Utf8;
 
-import Run_Time.StackCodeWalker;
 import Compil3r.Quad.AndersenInterface.AndersenMember;
 import Compil3r.Quad.AndersenInterface.AndersenClass;
 
@@ -238,84 +234,6 @@ public abstract class jq_Member implements jq_ClassFileConstants, AndersenMember
         return getAttribute("Deprecated") != null;
     }
 
-    public void checkCallerAccess(int depth) throws IllegalAccessException {
-	jq_Member m = this;
-	jq_Class field_class = m.getDeclaringClass();
-	if (m.isPublic() && field_class.isPublic()) {
-	    // completely public!
-	    return;
-	}
-	StackCodeWalker sw = new StackCodeWalker(null, StackAddress.getBasePointer());
-	while (--depth >= 0) sw.gotoNext();
-	jq_CompiledCode cc = sw.getCode();
-	if (cc != null) {
-	    jq_Class caller_class = cc.getMethod().getDeclaringClass();
-	    if (caller_class == field_class) {
-		// same class! access allowed!
-		return;
-	    }
-	    if (field_class.isPublic() || caller_class.isInSamePackage(field_class)) {
-		if (m.isPublic()) {
-		    // class is accessible and field is public!
-		    return;
-		}
-		if (m.isProtected()) {
-		    if (TypeCheck.isAssignable(caller_class, field_class)) {
-			// field is protected and field_class is supertype of caller_class!
-			return;
-		    }
-		}
-		if (!m.isPrivate()) {
-		    if (caller_class.isInSamePackage(field_class)) {
-			// field is package-private and field_class and caller_class are in the same package!
-			return;
-		    }
-		}
-	    }
-	}
-	throw new IllegalAccessException();
-	//	_delegate.checkCallerAccess(this, depth);
-    }
-
-    // available after resolution
+    // Available after resolving
     public abstract boolean isStatic();
-
-    static interface Delegate {
-	void checkCallerAccess(jq_Member m, int depth) throws IllegalAccessException;
-    }
-
-    private static Delegate _delegate;
-
-    static {
-	/* Set up delegates. */
-	/*
-	_delegate = null;
-	boolean nullVM = System.getProperty("joeq.nullvm") != null;
-	if (!nullVM) {
-	    _delegate = attemptDelegate("Clazz.Delegates$Member");
-	}
-	if (_delegate == null) {
-	    _delegate = attemptDelegate("Clazz.NullDelegates$Member");
-	}
-	if (_delegate == null) {
-	    System.err.println("FATAL: Cannot load Member Delegate");
-	    System.exit(-1);
-	}
-	*/
-    }
-
-    private static Delegate attemptDelegate(String s) {
-	String type = "member delegate";
-        try {
-            Class c = Class.forName(s);
-            return (Delegate)c.newInstance();
-        } catch (java.lang.ClassNotFoundException x) {
-            System.err.println("Cannot find "+type+" "+s+": "+x);
-        } catch (java.lang.InstantiationException x) {
-            System.err.println("Cannot instantiate "+type+" "+s+": "+x);
-        } catch (java.lang.IllegalAccessException x) {
-            System.err.println("Cannot access "+type+" "+s+": "+x);
-        }
-	return null;
-    }
 }

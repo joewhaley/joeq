@@ -39,16 +39,4 @@ abstract class NullDelegates {
 	    return null;
 	}
     }
-
-    static class Member implements jq_Member.Delegate {
-	public final void checkCallerAccess(jq_Member m, int depth) throws IllegalAccessException {
-	    jq_Class field_class = m.getDeclaringClass();
-	    if (m.isPublic() && field_class.isPublic()) {
-		// completely public!
-		return;
-	    }
-	    /* TODO: Handle the other cases reflectively somehow */
-	    throw new IllegalAccessException();
-	}
-    }
 }
