@@ -1089,7 +1089,7 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout {
         Section.NullSection empty = new Section.NullSection();
         Section.StrTabSection shstrtab = new Section.StrTabSection(".shstrtab", 0);
         Section.StrTabSection strtab = new Section.StrTabSection(".strtab", 0);
-        Section.SymTabSection symtab = new Section.SymTabSection(".symtab", 0, 0, 0);
+        Section.SymTabSection symtab = new Section.SymTabSection(".symtab", 0, strtab);
         Section.ProgBitsSection text = new TextSection();
         Section.ProgBitsSection data = new DataSection();
         Section.RelSection textrel = new Section.RelSection(".textrel", 0, symtab, text);
@@ -1110,13 +1110,13 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout {
         final int numOfVTableRelocs = addVTableRelocs(data_relocs);
         addSystemInterfaceRelocs(exts, data_relocs);
 
-        SymbolTableEntry textsyment = new SymbolTableEntry(".text", 0, 0, (byte)((SymbolTableEntry.STB_LOCAL << 4) | SymbolTableEntry.STT_SECTION), text);
-        SymbolTableEntry datasyment = new SymbolTableEntry(".data", 0, 0, (byte)((SymbolTableEntry.STB_LOCAL << 4) | SymbolTableEntry.STT_SECTION), data);
+        SymbolTableEntry textsyment = new SymbolTableEntry(".text", 0, 0, SymbolTableEntry.STB_LOCAL, SymbolTableEntry.STT_SECTION, text);
+        SymbolTableEntry datasyment = new SymbolTableEntry(".data", 0, 0, SymbolTableEntry.STB_LOCAL, SymbolTableEntry.STT_SECTION, data);
         
         Iterator it = exts.iterator();
         while (it.hasNext()) {
             ExternalReference r = (ExternalReference)it.next();
-            SymbolTableEntry e = new SymbolTableEntry(r.getName(), 0, 0, (byte)((SymbolTableEntry.STB_WEAK << 4) | SymbolTableEntry.STT_FUNC), empty);
+            SymbolTableEntry e = new SymbolTableEntry(r.getName(), 0, 0, SymbolTableEntry.STB_WEAK, SymbolTableEntry.STT_FUNC, empty);
             symtab.addSymbol(e);
         }
         
