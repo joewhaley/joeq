@@ -8391,6 +8391,12 @@ public interface Bytecodes {
             this.handler = il.findHandle(tc.getHandlerPC());
             this.type = tc.getExceptionType();
         }
+        public CodeException(InstructionHandle start, InstructionHandle end, jq_Class type, InstructionHandle handler) {
+            this.start = start;
+            this.end = end;
+            this.type = type;
+            this.handler = handler;
+        }
         
         public InstructionHandle getStartPC() { return start; }
         public void setStartPC(InstructionHandle i) { this.start = i; }
