@@ -39,8 +39,8 @@ public abstract class ZipFile implements ZipConstants {
         //this.readCEN();
     }
     */
-    public native void __init__(String name) ;
-    public ZipFile(String name) throws java.io.IOException {
+    public native void __init__(java.lang.String name) throws java.io.IOException;
+    public ZipFile(java.lang.String name) throws java.io.IOException {
         this.__init__(name);
     }
     public ZipFile(java.io.File file, int mode) throws java.io.IOException {
