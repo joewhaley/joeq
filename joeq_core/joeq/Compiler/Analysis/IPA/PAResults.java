@@ -839,7 +839,7 @@ public class PAResults implements PointerAnalysisResults {
      * transitively-reachable variables (V1xV1c).
      */
     public BDD getReachableVars(BDD method_plus_context0) {
-        System.out.println("Method = "+method_plus_context0.toStringWithDomains());
+        //System.out.println("Method = "+method_plus_context0.toStringWithDomains());
         BDD result = r.bdd.zero();
         BDD allInvokes = r.mI.exist(r.Nset);
         BDD new_m = method_plus_context0.id();
@@ -863,10 +863,10 @@ public class PAResults implements PointerAnalysisResults {
     /** Given a starting method and a context (MxV1c), calculate the transitive mod
      * set (H1xH1cxF). */
     public BDD getTransitiveModSet(BDD method_plus_context0) {
-        BDD reachableVars = getReachableVars(method_plus_context0); // V1xV1c
-        BDD stores = r.S.relprod(reachableVars, r.V2set); // V1xV1c x V1xV1cxFxV2xV2c = V1xV1cxF
-        BDD result = stores.relprod(r.vP, r.V1set); // V1xV1cxF x V1xV1cxH1xH1c = H1xH1cxF
-        return result;
+		BDD reachableVars = getReachableVars(method_plus_context0); // V1xV1c
+		BDD stores = r.S.relprod(reachableVars, r.V2set); // V1xV1c x V1xV1cxFxV2xV2c = V1xV1cxF
+		BDD result = stores.relprod(r.vP, r.V1set); // V1xV1cxF x V1xV1cxH1xH1c = H1xH1cxF
+		return result;
     }
     
     /** Given a starting method and a context (MxV1c), calculate the transitive ref
@@ -1223,12 +1223,20 @@ public class PAResults implements PointerAnalysisResults {
     }
     
     public Set mod(ProgramLocation invoke) {
-        Assert._assert(r.Imap.contains(invoke));
-        BDD i = r.I.ithVar(r.Imap.get(invoke));
+    	invoke = LoadedCallGraph.mapCall(invoke);
+		//Assert._assert(r.Imap.contains(invoke), "No information about " + invoke.toString());
+		if(!r.Imap.contains(invoke)){
+			System.err.println("No information about " + invoke.toString() + "; Imap has " + r.Imap.size() + " elements \n");
+			return null;
+		}
+		BDD i = r.I.ithVar(r.Imap.get(invoke));
         BDD m_c = r.IEcs.relprod(i, r.V2c.set().and(r.Iset));
         BDD s = getTransitiveModSet(m_c);
         BDD q = s.exist(r.H1c.set());
-        return new HeapLocationSet(q);
+        
+        Set set = new HeapLocationSet(q);
+		//System.err.println("Returning information about " + invoke.toString() + ": " + set.size() + " elements \n");
+        return set;
     }
     
     public Set mod(jq_Method m, BasicBlock bb, Quad quad) {
