@@ -1425,6 +1425,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         byte width = f.getLogElementSize();
         loadOperand(NewArray.getSize(obj), EAX);
         asm.emitShort_Reg(x86.PUSH_r, EAX);
+        asm.emitShort_Reg(x86.PUSH_r, EAX);
         if (width != 0) asm.emit2_SHIFT_Mem_Imm8(x86.SHL_m32_i, 0, ESP, width);
         asm.emitARITH_Mem_Imm(x86.ADD_m_i32, 0, ESP, ObjectLayout.ARRAY_HEADER_SIZE);
         emitPushAddressOf(f.getVTable());
