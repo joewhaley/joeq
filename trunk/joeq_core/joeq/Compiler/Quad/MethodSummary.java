@@ -3,6 +3,8 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Quad;
 
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -15,12 +17,14 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Array;
 import Clazz.jq_Class;
 import Clazz.jq_Field;
 import Clazz.jq_InstanceField;
+import Clazz.jq_Member;
 import Clazz.jq_Method;
 import Clazz.jq_Reference;
 import Clazz.jq_StaticField;
@@ -1687,6 +1691,15 @@ public class MethodSummary {
             }
             return sb.toString();
         }
+        
+        /**
+         * Prints an identifier of this node to the given output writer.
+         * 
+         * @param ms method summary that contains this node
+         * @param out print writer to output to
+         */
+        public abstract void print(MethodSummary ms, PrintWriter out) throws IOException;
+        
     }
     
     /** A ConcreteTypeNode refers to an object with a concrete type.
@@ -1722,6 +1735,83 @@ public class MethodSummary {
         
         public String toString_long() { return Strings.hex(this)+": "+toString_short()+super.toString_long(); }
         public String toString_short() { return "Concrete: "+type+" q: "+(q==null?-1:q.getID()); }
+
+        /* (non-Javadoc)
+         * @see Compil3r.Quad.MethodSummary.Node#print(java.io.PrintWriter)
+         */
+        public void print(MethodSummary ms, PrintWriter out) throws IOException {
+            out.print("Concrete ");
+            printType(out, (jq_Reference) type);
+            jq_Method m = (jq_Method) ms.getMethod();
+            printQuad(out, m, q);
+        }
+    }
+    
+    public static void printType(PrintWriter out, jq_Reference type) throws IOException {
+        out.print(type.getDesc());
+    }
+    
+    public static jq_Reference readType(StringTokenizer st) {
+        String desc = st.nextToken();
+        if (desc.equals("null")) return null;
+        jq_Reference r = (jq_Reference) PrimordialClassLoader.loader.getOrCreateBSType(desc);
+        return r;
+    }
+    
+    public static void printMember(PrintWriter out, jq_Member m) throws IOException {
+        printType(out, m.getDeclaringClass());
+        out.print(" "+m.getName()+" "+m.getDesc());
+    }
+    
+    public static jq_Member readMember(StringTokenizer st) {
+        jq_Class c = (jq_Class) readType(st);
+        if (c == null) return null;
+        c.load();
+        String name = st.nextToken();
+        String desc = st.nextToken();
+        return c.getDeclaredMember(name, desc);
+    }
+    
+    public static void printQuad(PrintWriter out, jq_Method m, Quad q) throws IOException {
+        if (q == null) {
+            out.print("null"); 
+        } else {
+            Map map = CodeCache.getBCMap(m);
+            Integer i = (Integer) map.get(q);
+            if (i == null) {
+                Assert.UNREACHABLE("Error: no mapping for quad "+q);
+            }
+            int bcIndex = i.intValue();
+            printMember(out, m);
+            out.print(" "+bcIndex);
+        }
+    }
+    
+    public static Quad readQuad(StringTokenizer st, Operator op) {
+        jq_Method m = (jq_Method) readMember(st);
+        if (m == null) return null;
+        int bcIndex = Integer.parseInt(st.nextToken());
+        Map map = CodeCache.getBCMap(m);
+        for (Iterator i = map.entrySet().iterator(); i.hasNext(); ) {
+            Map.Entry e = (Map.Entry) i.next();
+            int index = ((Integer) e.getValue()).intValue();
+            if (index != bcIndex) continue;
+            Quad q = (Quad) e.getKey();
+            if (q.getOperator() == op) return q;
+        }
+        Assert.UNREACHABLE("Error: no quad of type "+op+" at bytecode index "+bcIndex);
+        return null;
+    }
+    
+    public static void printLocation(PrintWriter out, ProgramLocation l) throws IOException {
+        printMember(out, (jq_Method) l.getMethod());
+        out.print(" "+l.getBytecodeIndex());
+    }
+    
+    public static ProgramLocation readLocation(StringTokenizer st, Operator op) throws IOException {
+        jq_Method m = (jq_Method) readMember(st);
+        int index = Integer.parseInt(st.nextToken());
+        return new ProgramLocation.BCProgramLocation(m, index);
     }
     
     /** A ConcreteObjectNode refers to an object that we discovered through reflection.
@@ -1897,6 +1987,14 @@ public class MethodSummary {
             return super.removeEdge(m, n);
         }
 
+        /* (non-Javadoc)
+         * @see Compil3r.Quad.MethodSummary.Node#print(Compil3r.Quad.MethodSummary, java.io.PrintWriter)
+         */
+        public void print(MethodSummary ms, PrintWriter out) throws IOException {
+            out.print("ConcreteObject ");
+            printType(out, (jq_Reference) getDeclaredType());
+        }
+
     }
     
     /** A UnknownTypeNode refers to an object with an unknown type.  All that is
@@ -1984,6 +2082,14 @@ public class MethodSummary {
         
         public String toString_long() { return Strings.hex(this)+": "+toString_short()+super.toString_long(); }
         public String toString_short() { return "Unknown: "+type; }
+
+        /* (non-Javadoc)
+         * @see Compil3r.Quad.MethodSummary.Node#print(Compil3r.Quad.MethodSummary, java.io.PrintWriter)
+         */
+        public void print(MethodSummary ms, PrintWriter out) throws IOException {
+            out.print("Unknown ");
+            printType(out, (jq_Reference) getDeclaredType());
+        }
     }
     
     /** An outside node is some node that can be mapped to other nodes.
@@ -2041,6 +2147,12 @@ public class MethodSummary {
             
             //System.out.println("Edges from global: "+getEdges());
         }
+        /* (non-Javadoc)
+         * @see Compil3r.Quad.MethodSummary.Node#print(Compil3r.Quad.MethodSummary, java.io.PrintWriter)
+         */
+        public void print(MethodSummary ms, PrintWriter out) throws IOException {
+            out.print("Global");
+        }
         
     }
     
@@ -2068,8 +2180,17 @@ public class MethodSummary {
         
         public String toString_long() { return toString_short()+super.toString_long(); }
         public String toString_short() { return Strings.hex(this)+": "+"Return value of "+m; }
+        
+        /* (non-Javadoc)
+         * @see Compil3r.Quad.MethodSummary.Node#print(Compil3r.Quad.MethodSummary, java.io.PrintWriter)
+         */
+        public void print(MethodSummary ms, PrintWriter out) throws IOException {
+            out.print("ReturnValue ");
+            printLocation(out, m);
+        }
     }
     
+    /*
     public static final class CaughtExceptionNode extends OutsideNode {
         final ExceptionHandler eh;
         Set caughtExceptions;
@@ -2093,6 +2214,7 @@ public class MethodSummary {
         public String toString_long() { return toString_short()+super.toString_long(); }
         public String toString_short() { return Strings.hex(this)+": "+"Caught exception: "+eh; }
     }
+    */
     
     /** A ThrownExceptionNode represents the thrown exception of a method call.
      */
@@ -2106,6 +2228,14 @@ public class MethodSummary {
         
         public String toString_long() { return toString_short()+super.toString_long(); }
         public String toString_short() { return Strings.hex(this)+": "+"Thrown exception of "+m; }
+        
+        /* (non-Javadoc)
+         * @see Compil3r.Quad.MethodSummary.Node#print(Compil3r.Quad.MethodSummary, java.io.PrintWriter)
+         */
+        public void print(MethodSummary ms, PrintWriter out) throws IOException {
+            out.print("ThrownException ");
+            printLocation(out, m);
+        }
     }
     
     /** A ParamNode represents an incoming parameter.
@@ -2123,6 +2253,15 @@ public class MethodSummary {
         
         public String toString_long() { return Strings.hex(this)+": "+this.toString_short()+super.toString_long(); }
         public String toString_short() { return "Param#"+n+" method "+m.getName(); }
+        
+        /* (non-Javadoc)
+         * @see Compil3r.Quad.MethodSummary.Node#print(Compil3r.Quad.MethodSummary, java.io.PrintWriter)
+         */
+        public void print(MethodSummary ms, PrintWriter out) throws IOException {
+            out.print("Param ");
+            printMember(out, (jq_Method) m);
+            out.print(" "+n);
+        }
     }
     
     /** A FieldNode represents the result of a 'load' instruction.
@@ -2360,6 +2499,15 @@ public class MethodSummary {
                 }
             }
             return sb.toString();
+        }
+
+        /* (non-Javadoc)
+         * @see Compil3r.Quad.MethodSummary.Node#print(Compil3r.Quad.MethodSummary, java.io.PrintWriter)
+         */
+        public void print(MethodSummary ms, PrintWriter out) throws IOException {
+            out.print("Field ");
+            printMember(out, (jq_Field) f);
+            // TODO: predecessors 
         }
     }
     
