@@ -4,11 +4,11 @@ JDK14SUPPORT_LIB = joeq/Support/java14.jar
 
 ifeq (${OS},Windows_NT)
 CLASSPATH_SEP = \;
-BUILD_CLASSPATH = ".;$(subst $(space),;,$(SUPPORT_LIBS) $(MODULES))"
+BUILD_CLASSPATH = ".;$(subst $(space),;,$(SUPPORT_LIBS);$(MODULES))"
 JOEQ_DIR = $(shell cygpath -ma .)
 else
 CLASSPATH_SEP = :
-BUILD_CLASSPATH = .:$(subst $(space),:,$(SUPPORT_LIBS) $(MODULES))
+BUILD_CLASSPATH = .:$(subst $(space),:,$(SUPPORT_LIBS):$(MODULES))
 JOEQ_DIR = $(PWD)
 endif
 
@@ -17,6 +17,8 @@ ALLJAVA := $(foreach d, $(ALLDIRS), $(wildcard $(d)/*.java))
 ALLPKGS := $(sort $(foreach j, $(ALLJAVA), $(patsubst %/,%,$(dir $(j)))))
 ALLPKGNAMES := $(subst /,.,$(ALLPKGS))
 ALLCLASS := $(foreach d, $(ALLDIRS), $(wildcard $(d)/*.class))
+
+BOOTSTRAP_CLASSPATH = .$(CLASSPATH_SEP)$(JOEQ_DIR)$(CLASSPATH_SEP)$(BUILD_CLASSPATH)
 
 CLASSFILE_VERSION = 1.3
 
@@ -64,31 +66,31 @@ commit:
 ### RULES FOR BUILDING BOOT IMAGES
 #
 bootstrap:	joeq/Main/Bootstrapper.class
-	java -Xbootclasspath/a:$(JDK14SUPPORT_LIB) -cp .$(CLASSPATH_SEP)$(JOEQ_DIR)$(CLASSPATH_SEP)$(BUILD_CLASSPATH) -mx450M joeq.Main.Bootstrapper
+	java -Xbootclasspath/a:$(JDK14SUPPORT_LIB) -cp $(BOOTSTRAP_CLASSPATH) -mx450M joeq.Main.Bootstrapper
 
 bootstrap-sun142-linux:	javac
-	java -cp .:$(JOEQ_DIR):../joeq -ms260M -mx260M joeq.Main.Bootstrapper -cl ClassLib/sun142_linux/classlist.txt
+	java -cp $(BOOTSTRAP_CLASSPATH) -verbose:gc -ms320M -mx320M joeq.Main.Bootstrapper -cl ../native/joeq/ClassLib/sun142_linux/classlist.txt
 
 bootstrap-sun14-linux:	javac
-	java -cp .:$(JOEQ_DIR):../joeq -ms240M -mx240M joeq.Main.Bootstrapper -cl ClassLib/sun14_linux/classlist.txt
+	java -cp $(BOOTSTRAP_CLASSPATH) -ms240M -mx240M joeq.Main.Bootstrapper -cl ../native/joeq/ClassLib/sun14_linux/classlist.txt
 
 bootstrap-sun13-linux:	javac
-	java -Xbootclasspath/a:$(JDK14SUPPORT_LIB) -cp .:$(JOEQ_DIR):../joeq -ms200M -mx200M joeq.Main.Bootstrapper -cl ClassLib/sun13_linux/classlist.txt
+	java -Xbootclasspath/a:$(JDK14SUPPORT_LIB) -cp $(BOOTSTRAP_CLASSPATH) -ms200M -mx200M joeq.Main.Bootstrapper -cl ../native/joeq/ClassLib/sun13_linux/classlist.txt
 
 bootstrap-ibm13-linux:	javac
-	java -Xbootclasspath/a:$(JDK14SUPPORT_LIB):/opt/IBMJava2-131/jre/lib/ext/ibmjcaprovider.jar -cp .:$(JOEQ_DIR):../joeq -ms240M -mx240M joeq.Main.Bootstrapper -cl ClassLib/ibm13_linux/classlist.txt
+	java -Xbootclasspath/a:$(JDK14SUPPORT_LIB):/opt/IBMJava2-131/jre/lib/ext/ibmjcaprovider.jar -cp $(BOOTSTRAP_CLASSPATH) -ms240M -mx240M joeq.Main.Bootstrapper -cl ../native/joeq/ClassLib/ibm13_linux/classlist.txt
 
 bootstrap-sun142-win32:	javac
-	java -cp .\;$(JOEQ_DIR)\;../joeq -ms185M -mx185M joeq.Main.Bootstrapper -cl ClassLib/sun142_win32/classlist.txt
+	java -cp $(BOOTSTRAP_CLASSPATH) -ms185M -mx185M joeq.Main.Bootstrapper -cl ../native/joeq/ClassLib/sun142_win32/classlist.txt
 
 bootstrap-sun14-win32:	javac
-	java -cp .\;$(JOEQ_DIR)\;../joeq -ms180M -mx180M joeq.Main.Bootstrapper -cl ClassLib/sun14_win32/classlist.txt
+	java -cp $(BOOTSTRAP_CLASSPATH) -ms180M -mx180M joeq.Main.Bootstrapper -cl ../native/joeq/ClassLib/sun14_win32/classlist.txt
 
 bootstrap-sun13-win32:	javac
-	java -cp .\;$(JOEQ_DIR)\;../joeq -Xbootclasspath/a:$(JDK14SUPPORT_LIB) -ms120M -mx120M joeq.Main.Bootstrapper -cl ClassLib/sun13_win32/classlist.txt
+	java -cp $(BOOTSTRAP_CLASSPATH) -Xbootclasspath/a:$(JDK14SUPPORT_LIB) -ms120M -mx120M joeq.Main.Bootstrapper -cl ../native/joeq/ClassLib/sun13_win32/classlist.txt
 
 bootstrap-ibm13-win32:	javac
-	java -cp .\;$(JOEQ_DIR)\;../joeq -Xbootclasspath/a:$(JDK14SUPPORT_LIB)\;C:\\Program\ Files\\IBM\\Java13\\jre\\lib\\ext\\IBMJCEProvider.jar -ms150M -mx150M joeq.Main.Bootstrapper -cl ClassLib/ibm13_win32/classlist.txt
+	java -cp $(BOOTSTRAP_CLASSPATH) -Xbootclasspath/a:$(JDK14SUPPORT_LIB)\;C:\\Program\ Files\\IBM\\Java13\\jre\\lib\\ext\\IBMJCEProvider.jar -ms150M -mx150M joeq.Main.Bootstrapper -cl ../native/joeq/ClassLib/ibm13_win32/classlist.txt
 
 ### RULES FOR BUILDING JAVADOC
 #
