@@ -61,25 +61,27 @@ public abstract class jq_Member implements jq_ClassFileConstants {
     }
 
     private final void initializeMemberObject() {
-        if (this instanceof jq_Field) {
-            if (jq.RunningNative) {
+        if (jq.RunningNative) {
+            if (this instanceof jq_Field) {
                 this.member_object = ClassLibInterface.DEFAULT.createNewField((jq_Field) this);
-            } else if (USE_MEMBER_OBJECT_FIELD) {
-                this.member_object = Reflection.getJDKField(Reflection.getJDKType(clazz), nd.getName().toString());
-            }
-        } else if (this instanceof jq_Initializer) {
-            if (jq.RunningNative) {
+            } else if (this instanceof jq_Initializer) {
                 this.member_object = ClassLibInterface.DEFAULT.createNewConstructor((jq_Initializer) this);
-            } else if (USE_MEMBER_OBJECT_FIELD) {
-                Class[] args = Reflection.getArgTypesFromDesc(nd.getDesc());
-                this.member_object = Reflection.getJDKConstructor(Reflection.getJDKType(clazz), args);
-            }
-        } else {
-            if (jq.RunningNative) {
+            } else {
                 this.member_object = ClassLibInterface.DEFAULT.createNewMethod((jq_Method) this);
-            } else if (USE_MEMBER_OBJECT_FIELD) {
-                Class[] args = Reflection.getArgTypesFromDesc(nd.getDesc());
-                this.member_object = Reflection.getJDKMethod(Reflection.getJDKType(clazz), nd.getName().toString(), args);
+            }
+        } else if (USE_MEMBER_OBJECT_FIELD) {
+            Class jdktype = Reflection.getJDKType(clazz);
+            if (jdktype != null) {
+                if (this instanceof jq_Field) {
+                    this.member_object = Reflection.getJDKField(jdktype, nd.getName().toString());
+                } else {
+                    Class[] args = Reflection.getArgTypesFromDesc(nd.getDesc());
+                    if (this instanceof jq_Initializer) {
+                        this.member_object = Reflection.getJDKConstructor(jdktype, args);
+                    } else {
+                        this.member_object = Reflection.getJDKMethod(jdktype, nd.getName().toString(), args);
+                    }
+                }
             }
         }
     }
