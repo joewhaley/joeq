@@ -219,9 +219,37 @@ public class MethodSummary {
         /** Factory for nodes. */
         protected final HashMap quadsToNodes;
         
+        BuildMethodSummary(BuildMethodSummary that) {
+            this.method = that.method;
+            this.nLocals = that.nLocals;
+            this.nRegisters = that.nRegisters;
+            this.param_nodes = that.param_nodes;
+            this.my_global = that.my_global;
+            this.start_states = that.start_states;
+            this.returned = that.returned;
+            this.thrown = that.thrown;
+            this.methodCalls = that.methodCalls;
+            this.callToRVN = that.callToRVN;
+            this.callToTEN = that.callToTEN;
+            this.passedAsParameter = that.passedAsParameter;
+            this.bb = that.bb;
+            this.s = that.s;
+            this.change = that.change;
+            this.quadsToNodes = that.quadsToNodes;
+        }
+        
         /** Returns the summary. Call this after iteration has completed. */
         public MethodSummary getSummary() {
-            MethodSummary s = new MethodSummary(method, param_nodes, my_global, methodCalls, callToRVN, callToTEN, returned, thrown, passedAsParameter);
+            MethodSummary s = new MethodSummary(this,
+                                                method,
+                                                param_nodes,
+                                                my_global,
+                                                methodCalls,
+                                                callToRVN,
+                                                callToTEN,
+                                                returned,
+                                                thrown,
+                                                passedAsParameter);
             return s;
         }
 
@@ -3538,6 +3566,8 @@ outer:
     /** Map from a method call that this method makes, and its ThrownExceptionNode. */
     final Map callToTEN;
     
+    BuildMethodSummary builder;
+    
     public static final boolean USE_PARAMETER_MAP = true;
     final Map passedParamToNodes;
 
@@ -3553,7 +3583,10 @@ outer:
         this.passedParamToNodes = Collections.EMPTY_MAP;
     }
 
-    public MethodSummary(jq_Method method, ParamNode[] param_nodes, GlobalNode my_global, Set methodCalls, HashMap callToRVN, HashMap callToTEN, Set returned, Set thrown, Set passedAsParameters) {
+    public static boolean CACHE_BUILDER = false;
+
+    public MethodSummary(BuildMethodSummary builder,
+                         jq_Method method, ParamNode[] param_nodes, GlobalNode my_global, Set methodCalls, Map callToRVN, Map callToTEN, Set returned, Set thrown, Set passedAsParameters) {
         this.method = method;
         this.params = param_nodes;
         this.calls = methodCalls;
@@ -3563,6 +3596,8 @@ outer:
         this.returned = returned;
         this.thrown = thrown;
         this.global = my_global;
+        if (CACHE_BUILDER)
+            this.builder = builder;
         this.nodes = new LinkedHashMap();
         
         // build useful node set
@@ -3667,7 +3702,8 @@ outer:
 
     public static final boolean UNIFY_ACCESS_PATHS = false;
     
-    private MethodSummary(jq_Method method, ParamNode[] params, Set methodCalls, HashMap callToRVN, HashMap callToTEN, Map passedParamToNodes, Set returned, Set thrown, Map nodes) {
+    private MethodSummary(BuildMethodSummary builder,
+                          jq_Method method, ParamNode[] params, Set methodCalls, Map callToRVN, Map callToTEN, Map passedParamToNodes, Set returned, Set thrown, Map nodes) {
         this.method = method;
         this.params = params;
         this.calls = methodCalls;
@@ -3677,6 +3713,7 @@ outer:
         this.returned = returned;
         this.thrown = thrown;
         this.nodes = nodes;
+        this.builder = builder;
     }
 
     /** Get the global node for this method. */
@@ -3833,7 +3870,7 @@ outer:
             passedParamToNodes = new HashMap(this.passedParamToNodes);
             Node.updateMap(m, passedParamToNodes.entrySet().iterator(), passedParamToNodes);
         }
-        MethodSummary that = new MethodSummary(method, params, calls, callToRVN, callToTEN, passedParamToNodes, returned, thrown, nodes);
+        MethodSummary that = new MethodSummary(this.builder, method, params, calls, callToRVN, callToTEN, passedParamToNodes, returned, thrown, nodes);
         if (VERIFY_ASSERTIONS) that.verify();
         return that;
     }
