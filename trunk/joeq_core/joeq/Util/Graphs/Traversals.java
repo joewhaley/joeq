@@ -5,16 +5,89 @@ package Util.Graphs;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import Util.Collections.Pair;
 
 /**
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public abstract class Traversals {
+    
+    public static Set getAllEdges(Navigator nav, Collection roots) {
+        HashSet visitedNodes = new HashSet();
+        HashSet visitedEdges = new HashSet();
+        for (Iterator i=roots.iterator(); i.hasNext(); ) {
+            Object o = i.next();
+            getAllEdges_helper(nav, o, visitedNodes, visitedEdges);
+        }
+        return visitedEdges;
+    }
+    private static void getAllEdges_helper(Navigator nav, Object o, HashSet visitedNodes, HashSet visitedEdges) {
+        if (visitedNodes.contains(o)) return;
+        visitedNodes.add(o);
+        for (Iterator j=nav.next(o).iterator(); j.hasNext(); ) {
+            Object p = j.next();
+            visitedEdges.add(new Pair(o, p));
+            getAllEdges_helper(nav, p, visitedNodes, visitedEdges);
+        }
+    }
+    
+    public static Map buildPredecessorMap(Navigator nav, Collection roots) {
+        HashMap m = new HashMap();
+        for (Iterator i=roots.iterator(); i.hasNext(); ) {
+            Object o = i.next();
+            if (m.containsKey(o)) continue; // if "roots" has a repeated element
+            m.put(o, new HashSet());
+            buildPredecessorMap_helper(nav, o, m);
+        }
+        return m;
+    }
+    public static void buildPredecessorMap_helper(Navigator nav, Object o, Map m) {
+        for (Iterator j=nav.next(o).iterator(); j.hasNext(); ) {
+            Object p = j.next();
+            HashSet s = (HashSet) m.get(p);
+            boolean visited;
+            if (s == null) {
+                m.put(p, s = new HashSet());
+                visited = false;
+            } else {
+                visited = true;
+            }
+            s.add(o);
+            if (!visited)
+                buildPredecessorMap_helper(nav, p, m);
+        }
+    }
+    
+    public static Map buildSuccessorMap(Navigator nav, Collection roots) {
+        HashMap m = new HashMap();
+        for (Iterator i=roots.iterator(); i.hasNext(); ) {
+            Object o = i.next();
+            if (m.containsKey(o)) continue; // if "roots" has a repeated element
+            HashSet s;
+            m.put(o, s = new HashSet());
+            buildSuccessorMap_helper(nav, o, s, m);
+        }
+        return m;
+    }
+    public static void buildSuccessorMap_helper(Navigator nav, Object o, HashSet s, Map m) {
+        for (Iterator j=nav.next(o).iterator(); j.hasNext(); ) {
+            Object p = j.next();
+            s.add(p);
+            HashSet s2 = (HashSet) m.get(p);
+            if (s2 != null) continue;
+            m.put(p, s2 = new HashSet());
+            buildSuccessorMap_helper(nav, p, s2, m);
+        }
+    }
     
     public static List preOrder(Navigator nav, Object root) {
         return traversal_helper(nav, Collections.singleton(root), PREORDER);
