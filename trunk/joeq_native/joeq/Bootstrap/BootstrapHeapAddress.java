@@ -41,7 +41,7 @@ public class BootstrapHeapAddress extends HeapAddress implements BootstrapAddres
     
     public final int value;
     
-    BootstrapHeapAddress(int value) { this.value = value; }
+    public BootstrapHeapAddress(int value) { this.value = value; }
     
     public Address peek() { jq.UNREACHABLE(); return null; }
     public byte    peek1() { jq.UNREACHABLE(); return 0; }
