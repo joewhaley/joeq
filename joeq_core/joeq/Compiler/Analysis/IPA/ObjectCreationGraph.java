@@ -224,6 +224,7 @@ public class ObjectCreationGraph extends QuadVisitor.EmptyVisitor
         
         ObjectCreationGraph g = new ObjectCreationGraph();
         String callgraphFile = System.getProperty("callgraph", "callgraph");
+        System.out.println("Loading from callgraph \""+callgraphFile+"\"");
         CallGraph cg = new LoadedCallGraph(callgraphFile);
         
         g.handleCallGraph(cg);
@@ -233,7 +234,7 @@ public class ObjectCreationGraph extends QuadVisitor.EmptyVisitor
         System.out.println("Number of paths: "+paths.longValue());
         
         for (Iterator i = Traversals.reversePostOrder(g.getNavigator(), (Object)null).iterator(); i.hasNext(); ) {
-            jq_Reference c = (jq_Reference) i.next();
+            Object c = i.next();
             long v = n.numberOfPathsTo(c).longValue();
             if (v > 1L) {
                 System.out.println(v+" paths to "+c);
