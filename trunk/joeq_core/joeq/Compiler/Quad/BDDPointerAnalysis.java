@@ -1162,6 +1162,7 @@ public class BDDPointerAnalysis {
             BDD assignableTypes = cC.relprod(aC, T2set);
             // (T1 x H1) * (V1 x T1) => (V1 x H1)
             typeFilter = assignableTypes.relprod(vC, T1set);
+            assignableTypes.free();
             cTypes = aC.replace(T2ToT1);
             //cC.free(); vC.free(); aC.free();
         }
