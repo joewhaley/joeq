@@ -10,6 +10,7 @@ import java.util.StringTokenizer;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_Type;
+import joeq.Compiler.Analysis.IPA.PA;
 import joeq.Compiler.Analysis.IPA.ProgramLocation;
 import joeq.Compiler.Analysis.IPA.ProgramLocation.QuadProgramLocation;
 import joeq.Compiler.Quad.CodeCache;
@@ -266,6 +267,9 @@ public abstract class ReflectionInformationProvider {
                 if(spec.getDeclaredIn() == n){
                     return spec.getTargets();
                 }
+            }
+            if(PA.TRACE_REFLECTION){
+                System.out.println("No information for method " + n);
             }
             return null;            
         }
