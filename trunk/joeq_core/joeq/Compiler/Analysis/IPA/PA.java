@@ -3,20 +3,6 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Analysis.IPA;
 
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.TreeSet;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -31,6 +17,20 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.TreeSet;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
@@ -158,6 +158,7 @@ public class PA {
     boolean USE_REFLECTION_PROVIDER = !System.getProperty("pa.usereflectionprovider", "no").equals("no");
     boolean RESOLVE_REFLECTION = !System.getProperty("pa.resolvereflection", "no").equals("no");
     boolean TRACE_BOGUS = !System.getProperty("pa.tracebogus", "no").equals("no");
+    boolean TRACE_NO_DEST = !System.getProperty("pa.tracenodest", "no").equals("no");
     boolean REFLECTION_STAT = !System.getProperty("pa.reflectionstat", "no").equals("no");
     public static boolean TRACE_REFLECTION = !System.getProperty("pa.tracereflection", "no").equals("no");
     int MAX_PARAMS = Integer.parseInt(System.getProperty("pa.maxparams", "4"));
@@ -573,6 +574,50 @@ public class PA {
             IEcs.orWith(bdd1.and(IEfilter));
         }
         IE.orWith(bdd1);
+    }
+    
+    /**
+     * Finds all invocation sites with no targets and tries to create targets from them.
+     * */
+    void analyzeIE(){
+        int noTargetCalls = 0;
+        for(Iterator iter = Imap.iterator(); iter.hasNext();){
+            ProgramLocation mc = (ProgramLocation) iter.next();
+            int I_i = Imap.get(mc);
+            BDD I_bdd = (BDD) I.ithVar(I_i);
+            BDD t = IE.relprod(I_bdd, Iset); 
+            
+            if(t.isZero()){
+                if(TRACE_NO_DEST) {
+                    System.out.println("No destination for " + mc.toStringLong());                
+                }
+                BDD V_bdd = actual.relprod(I_bdd, Iset).restrictWith(Z.ithVar(0));
+                int V_i = V_bdd.scanVar(V2).intValue();
+                Node n = (Node) Vmap.get(V_i);
+                jq_Reference type = n.getDeclaredType();
+                if (type.isClassType()) {
+                    jq_Class c = (jq_Class) type;
+                    c.prepare();
+                }
+                ConcreteTypeNode h = ConcreteTypeNode.get(type, mc);
+                addToVP(V_bdd, h);
+                noTargetCalls++;
+            }
+            t.free();
+        }
+        iterate();
+        for(Iterator iter = Imap.iterator(); iter.hasNext();){
+            ProgramLocation mc = (ProgramLocation) iter.next();
+            int I_i = Imap.get(mc);
+            BDD I_bdd = (BDD) I.ithVar(I_i);
+            BDD t = IE.relprod(I_bdd, Iset); 
+            
+            if(t.isZero()){
+                if(TRACE_NO_DEST) {
+                    System.out.println("Still no destination for " + mc.toStringLong());
+                }
+            }
+        }
     }
     
     void addToMI(BDD M_bdd, BDD I_bdd, jq_Method target) {
@@ -1822,8 +1867,11 @@ public class PA {
         t5.free();
         
         if (TRACE_SOLVER) out.println("Call graph edges before: "+IE.satCount(IMset));
-        if (CS_CALLGRAPH) IE.orWith(t6.exist(V1cset));
-        else IE.orWith(t6.id());
+        if (CS_CALLGRAPH) {
+            IE.orWith(t6.exist(V1cset));
+        }else {
+            IE.orWith(t6.id());
+        }
         if (TRACE_SOLVER) out.println("Call graph edges after: "+IE.satCount(IMset));
         
         if (CONTEXT_SENSITIVE || THREAD_SENSITIVE) {
@@ -2111,6 +2159,78 @@ public class PA {
             return true;
         } else {
             return false;
+        }
+    }
+    
+    void initializeForNameMapEntries(){
+        for(Iterator iter = forNameMap.iterator(H1set.and(Iset)); iter.hasNext();){
+            BDD h = (BDD) iter.next();
+            int h_i = h.scanVar(H1).intValue();
+            Object node = Hmap.get(h_i);
+            if(!(node instanceof ConcreteTypeNode)) {
+                //System.err.println("Can't cast " + node + " to ConcreteTypeNode for " + h.toStringWithDomains(TS));
+                continue;
+            }
+            MethodSummary.ConcreteTypeNode n = (ConcreteTypeNode) node;
+            String stringConst = (String) MethodSummary.stringNodes2Values.get(n);
+            if(stringConst == null){
+                if(missingConst.get(stringConst) == null){
+                    if(TRACE_REFLECTION) System.err.println("No constant string for " + n + " at " + h.toStringWithDomains(TS));                                    
+                    missingConst.put(stringConst, new Integer(0));
+                }                
+                continue;
+            }
+            
+            jq_Class c = null;
+            try {
+                if(!isWellFormed(stringConst)) {
+                    if(wellFormedClasses.get(stringConst) == null){
+                        if(TRACE_REFLECTION) out.println(stringConst + " is not well-formed.");
+                            wellFormedClasses.put(stringConst, new Integer(0));
+                        }                
+
+                    continue;
+                }
+                jq_Type clazz = jq_Type.parseType(stringConst);
+                if( clazz instanceof jq_Class && clazz != null){
+                    c = (jq_Class) clazz;
+            
+                    if(TRACE_REFLECTION) out.println("Calling class by name: " + stringConst);
+                    c.load();
+                    c.prepare();
+                    Assert._assert(c != null);
+                }else{
+                    if(cantCastTypes.get(clazz) == null){
+                        if(TRACE_REFLECTION) System.err.println("Can't cast " + clazz + " to jq_Class at " + h.toStringWithDomains(TS) + " -- stringConst: " + stringConst);
+                        cantCastTypes.put(clazz, new Integer(0));
+                    }
+                    continue;
+                }
+            } catch(NoClassDefFoundError e) {
+                if(missingClasses.get(stringConst) == null){
+                    if(TRACE_REFLECTION) System.err.println("Resolving reflection: unable to load " + stringConst + 
+                        " at " + h.toStringWithDomains(TS));
+                    missingClasses.put(stringConst, new Integer(0));
+                }
+                continue;
+            } catch(java.lang.ClassCircularityError e) {
+                if(circularClasses.get(stringConst) == null){
+                    if(TRACE_REFLECTION) System.err.println("Resolving reflection: circularity error " + stringConst + 
+                        " at " + h.toStringWithDomains(TS));
+                    circularClasses.put(stringConst, new Integer(0));
+                }                
+                continue;
+            }
+            Assert._assert(c != null);            
+            
+            jq_Method constructor = (jq_Method) c.getDeclaredMember(
+                new jq_NameAndDesc(
+                    Utf8.get("<clinit>"), 
+                    Utf8.get("()V")));
+            
+            if(constructor != null){
+                
+            }
         }
     }
     
@@ -2669,6 +2789,8 @@ public class PA {
             assumeKnownCallGraph();
             System.out.println("Time spent solving: "+(System.currentTimeMillis()-time)/1000.);
         }
+        
+        analyzeIE();
 
         printSizes();
         
