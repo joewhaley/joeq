@@ -1182,20 +1182,21 @@ public class BytecodeToQuad extends BytecodeVisitor {
             endBasicBlock = true;
         } else {
             // TODO
-            INVOKEhelper(Invoke.INVOKESTATIC_V.INSTANCE, m, jq_Primitive.VOID);
+            INVOKEhelper(Invoke.INVOKESTATIC_V.INSTANCE, m, jq_Primitive.VOID, false);
             return;
         }
         appendQuad(q);
     }
-    private void INVOKEhelper(Invoke oper, jq_Method f, jq_Type returnType) {
+    private void INVOKEhelper(Invoke oper, jq_Method f, jq_Type returnType, boolean instance_call) {
         jq_Type[] paramTypes = f.getParamTypes();
         RegisterOperand result;
         if (returnType == jq_Primitive.VOID) result = null;
         else result = getStackRegister(returnType, f.getParamWords()-1);
         Quad q = Invoke.create(quad_cfg.getNewQuadID(), oper, result, new MethodOperand(f), paramTypes.length);
+        Operand op = null;
         for (int i = paramTypes.length; --i >= 0; ) {
             jq_Type ptype = paramTypes[i];
-            Operand op = current_state.pop(ptype);
+            op = current_state.pop(ptype);
             RegisterOperand rop;
             if (op instanceof RegisterOperand) rop = (RegisterOperand)op;
             else {
@@ -1205,6 +1206,10 @@ public class BytecodeToQuad extends BytecodeVisitor {
             }
             Invoke.setParam(q, i, rop);
         }
+        if (instance_call && performNullCheck(op)) {
+	    if (TRACE) System.out.println("Null check triggered on "+op);
+	    return;
+	}
         appendQuad(q);
 	mergeStateWithAllExHandlers(false);
         if (result != null) current_state.push(result, returnType);
@@ -1216,20 +1221,24 @@ public class BytecodeToQuad extends BytecodeVisitor {
             return;
         }
         Invoke oper;
+        boolean instance_call;
         switch (op) {
             case INVOKE_VIRTUAL:
+                instance_call = true;
                 if (!f.getDeclaringClass().isPrepared())
                     oper = Invoke.INVOKEVIRTUAL_I_DYNLINK.INSTANCE;
                 else
                     oper = Invoke.INVOKEVIRTUAL_I.INSTANCE;
                 break;
             case INVOKE_STATIC:
+                instance_call = false;
                 if (f.needsDynamicLink(method))
                     oper = Invoke.INVOKESTATIC_I_DYNLINK.INSTANCE;
                 else
                     oper = Invoke.INVOKESTATIC_I.INSTANCE;
                 break;
             case INVOKE_SPECIAL:
+                instance_call = true;
                 if (f.needsDynamicLink(method))
                     oper = Invoke.INVOKESPECIAL_I_DYNLINK.INSTANCE;
                 else {
@@ -1238,12 +1247,13 @@ public class BytecodeToQuad extends BytecodeVisitor {
                 }
                 break;
             case INVOKE_INTERFACE:
+                instance_call = true;
                 oper = Invoke.INVOKEINTERFACE_I.INSTANCE;
                 break;
             default:
                 throw new InternalError();
         }
-        INVOKEhelper(oper, f, jq_Primitive.INT);
+        INVOKEhelper(oper, f, jq_Primitive.INT, instance_call);
     }
     public void visitLINVOKE(byte op, jq_Method f) {
         super.visitLINVOKE(op, f);
@@ -1252,20 +1262,24 @@ public class BytecodeToQuad extends BytecodeVisitor {
             return;
         }
         Invoke oper;
+        boolean instance_call;
         switch (op) {
             case INVOKE_VIRTUAL:
+                instance_call = true;
                 if (!f.getDeclaringClass().isPrepared())
                     oper = Invoke.INVOKEVIRTUAL_L_DYNLINK.INSTANCE;
                 else
                     oper = Invoke.INVOKEVIRTUAL_L.INSTANCE;
                 break;
             case INVOKE_STATIC:
+                instance_call = false;
                 if (f.needsDynamicLink(method))
                     oper = Invoke.INVOKESTATIC_L_DYNLINK.INSTANCE;
                 else
                     oper = Invoke.INVOKESTATIC_L.INSTANCE;
                 break;
             case INVOKE_SPECIAL:
+                instance_call = true;
                 if (f.needsDynamicLink(method))
                     oper = Invoke.INVOKESPECIAL_L_DYNLINK.INSTANCE;
                 else {
@@ -1274,12 +1288,13 @@ public class BytecodeToQuad extends BytecodeVisitor {
                 }
                 break;
             case INVOKE_INTERFACE:
+                instance_call = true;
                 oper = Invoke.INVOKEINTERFACE_L.INSTANCE;
                 break;
             default:
                 throw new InternalError();
         }
-        INVOKEhelper(oper, f, jq_Primitive.LONG);
+        INVOKEhelper(oper, f, jq_Primitive.LONG, instance_call);
     }
     public void visitFINVOKE(byte op, jq_Method f) {
         super.visitFINVOKE(op, f);
@@ -1288,20 +1303,24 @@ public class BytecodeToQuad extends BytecodeVisitor {
             return;
         }
         Invoke oper;
+        boolean instance_call;
         switch (op) {
             case INVOKE_VIRTUAL:
+                instance_call = true;
                 if (!f.getDeclaringClass().isPrepared())
                     oper = Invoke.INVOKEVIRTUAL_F_DYNLINK.INSTANCE;
                 else
                     oper = Invoke.INVOKEVIRTUAL_F.INSTANCE;
                 break;
             case INVOKE_STATIC:
+                instance_call = false;
                 if (f.needsDynamicLink(method))
                     oper = Invoke.INVOKESTATIC_F_DYNLINK.INSTANCE;
                 else
                     oper = Invoke.INVOKESTATIC_F.INSTANCE;
                 break;
             case INVOKE_SPECIAL:
+                instance_call = true;
                 if (f.needsDynamicLink(method))
                     oper = Invoke.INVOKESPECIAL_F_DYNLINK.INSTANCE;
                 else {
@@ -1310,12 +1329,13 @@ public class BytecodeToQuad extends BytecodeVisitor {
                 }
                 break;
             case INVOKE_INTERFACE:
+                instance_call = true;
                 oper = Invoke.INVOKEINTERFACE_F.INSTANCE;
                 break;
             default:
                 throw new InternalError();
         }
-        INVOKEhelper(oper, f, jq_Primitive.FLOAT);
+        INVOKEhelper(oper, f, jq_Primitive.FLOAT, instance_call);
     }
     public void visitDINVOKE(byte op, jq_Method f) {
         super.visitDINVOKE(op, f);
@@ -1324,20 +1344,24 @@ public class BytecodeToQuad extends BytecodeVisitor {
             return;
         }
         Invoke oper;
+        boolean instance_call;
         switch (op) {
             case INVOKE_VIRTUAL:
+                instance_call = true;
                 if (!f.getDeclaringClass().isPrepared())
                     oper = Invoke.INVOKEVIRTUAL_D_DYNLINK.INSTANCE;
                 else
                     oper = Invoke.INVOKEVIRTUAL_D.INSTANCE;
                 break;
             case INVOKE_STATIC:
+                instance_call = false;
                 if (f.needsDynamicLink(method))
                     oper = Invoke.INVOKESTATIC_D_DYNLINK.INSTANCE;
                 else
                     oper = Invoke.INVOKESTATIC_D.INSTANCE;
                 break;
             case INVOKE_SPECIAL:
+                instance_call = true;
                 if (f.needsDynamicLink(method))
                     oper = Invoke.INVOKESPECIAL_D_DYNLINK.INSTANCE;
                 else {
@@ -1346,12 +1370,13 @@ public class BytecodeToQuad extends BytecodeVisitor {
                 }
                 break;
             case INVOKE_INTERFACE:
+                instance_call = true;
                 oper = Invoke.INVOKEINTERFACE_D.INSTANCE;
                 break;
             default:
                 throw new InternalError();
         }
-        INVOKEhelper(oper, f, jq_Primitive.DOUBLE);
+        INVOKEhelper(oper, f, jq_Primitive.DOUBLE, instance_call);
     }
     public void visitAINVOKE(byte op, jq_Method f) {
         super.visitAINVOKE(op, f);
@@ -1360,20 +1385,24 @@ public class BytecodeToQuad extends BytecodeVisitor {
             return;
         }
         Invoke oper;
+        boolean instance_call;
         switch (op) {
             case INVOKE_VIRTUAL:
+                instance_call = true;
                 if (!f.getDeclaringClass().isPrepared())
                     oper = Invoke.INVOKEVIRTUAL_A_DYNLINK.INSTANCE;
                 else
                     oper = Invoke.INVOKEVIRTUAL_A.INSTANCE;
                 break;
             case INVOKE_STATIC:
+                instance_call = false;
                 if (f.needsDynamicLink(method))
                     oper = Invoke.INVOKESTATIC_A_DYNLINK.INSTANCE;
                 else
                     oper = Invoke.INVOKESTATIC_A.INSTANCE;
                 break;
             case INVOKE_SPECIAL:
+                instance_call = true;
                 if (f.needsDynamicLink(method))
                     oper = Invoke.INVOKESPECIAL_A_DYNLINK.INSTANCE;
                 else {
@@ -1382,12 +1411,13 @@ public class BytecodeToQuad extends BytecodeVisitor {
                 }
                 break;
             case INVOKE_INTERFACE:
+                instance_call = true;
                 oper = Invoke.INVOKEINTERFACE_A.INSTANCE;
                 break;
             default:
                 throw new InternalError();
         }
-        INVOKEhelper(oper, f, f.getReturnType());
+        INVOKEhelper(oper, f, f.getReturnType(), instance_call);
     }
     public void visitVINVOKE(byte op, jq_Method f) {
         super.visitVINVOKE(op, f);
@@ -1396,20 +1426,24 @@ public class BytecodeToQuad extends BytecodeVisitor {
             return;
         }
         Invoke oper;
+        boolean instance_call;
         switch (op) {
             case INVOKE_VIRTUAL:
+                instance_call = true;
                 if (!f.getDeclaringClass().isPrepared())
                     oper = Invoke.INVOKEVIRTUAL_V_DYNLINK.INSTANCE;
                 else
                     oper = Invoke.INVOKEVIRTUAL_V.INSTANCE;
                 break;
             case INVOKE_STATIC:
+                instance_call = false;
                 if (f.needsDynamicLink(method))
                     oper = Invoke.INVOKESTATIC_V_DYNLINK.INSTANCE;
                 else
                     oper = Invoke.INVOKESTATIC_V.INSTANCE;
                 break;
             case INVOKE_SPECIAL:
+                instance_call = true;
                 if (f.needsDynamicLink(method))
                     oper = Invoke.INVOKESPECIAL_V_DYNLINK.INSTANCE;
                 else {
@@ -1418,12 +1452,13 @@ public class BytecodeToQuad extends BytecodeVisitor {
                 }
                 break;
             case INVOKE_INTERFACE:
+                instance_call = true;
                 oper = Invoke.INVOKEINTERFACE_V.INSTANCE;
                 break;
             default:
                 throw new InternalError();
         }
-        INVOKEhelper(oper, f, f.getReturnType());
+        INVOKEhelper(oper, f, f.getReturnType(), instance_call);
     }
     public void visitNEW(jq_Type f) {
         super.visitNEW(f);
@@ -1487,8 +1522,10 @@ public class BytecodeToQuad extends BytecodeVisitor {
         for (int i=0; i<dim; ++i) current_state.pop_I();
         current_state.push_I(new IConstOperand(dim));
         current_state.push_A(new AConstOperand(f));
-        INVOKEhelper(Invoke.INVOKESTATIC_A.INSTANCE, Allocator.HeapAllocator._multinewarray, f);
+        INVOKEhelper(Invoke.INVOKESTATIC_A.INSTANCE, Allocator.HeapAllocator._multinewarray, f, false);
     }
+
+    public static final boolean ELIM_NULL_CHECKS = false;
     
     boolean performNullCheck(Operand op) {
         if (op instanceof AConstOperand) {
@@ -1510,11 +1547,13 @@ public class BytecodeToQuad extends BytecodeVisitor {
             }
         }
         RegisterOperand rop = (RegisterOperand)op;
-	if (hasGuard(rop)) {
-            Operand guard = getGuard(rop);
-            setCurrentGuard(guard);
-            return false;
-	}
+        if (ELIM_NULL_CHECKS) {
+            if (hasGuard(rop)) {
+                Operand guard = getGuard(rop);
+                setCurrentGuard(guard);
+                return false;
+            }
+        }
         RegisterOperand guard = makeGuardReg();
         Quad q = NullCheck.create(quad_cfg.getNewQuadID(), NullCheck.NULL_CHECK.INSTANCE, guard, rop.copy());
         appendQuad(q);
