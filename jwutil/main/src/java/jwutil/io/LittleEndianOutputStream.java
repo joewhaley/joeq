@@ -44,9 +44,6 @@ public class LittleEndianOutputStream implements ExtendedDataOutput {
     public void writeLong(long p1) throws IOException { write_s64(out, p1); }
     public void writeULong(long p1) throws IOException { write_u64(out, p1); }
 
-    private static final void write_s8(OutputStream out, byte b) throws IOException {
-        out.write(b);
-    }
     private static final void write_s16(OutputStream out, short b) throws IOException {
         out.write(b); out.write(b>>8);
     }
