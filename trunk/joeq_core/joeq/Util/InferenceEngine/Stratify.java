@@ -370,7 +370,7 @@ public class Stratify {
         Iterator i = solver.rules.iterator();
         while (i.hasNext()) {
             InferenceRule ir = (InferenceRule) i.next();
-            if (ir.top.size()==0) {
+            if (ir.top.isEmpty()) {
                 inputs.add(ir.bottom.relation);
             }
         }
@@ -382,7 +382,9 @@ public class Stratify {
         outputs.addAll(solver.relationsToDumpNegatedTuples);
         outputs.addAll(solver.relationsToPrintSize);
         i = solver.dotGraphsToDump.iterator();
-        outputs.addAll(((Dot)i.next()).getUsedRelations());
+        while (i.hasNext()) {
+            outputs.addAll(((Dot)i.next()).getUsedRelations());
+        }
         
         stratify(solver.rules, inputs, outputs);
         

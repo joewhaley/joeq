@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -88,10 +89,64 @@ public class BDDSolver extends Solver {
     
     void setVariableOrdering() {
         if (VARORDER != null) {
+            fixVarOrder();
             System.out.print("Setting variable ordering to "+VARORDER+", ");
             int [] varOrder = bdd.makeVarOrdering(true, VARORDER);
             bdd.setVarOrder(varOrder);
             System.out.println("done.");
+        }
+    }
+    
+    void fixVarOrder() {
+        // Verify that variable order is sane.
+        StringTokenizer st = new StringTokenizer(VARORDER, "x_");
+        List domains = new LinkedList();
+        while (st.hasMoreTokens()) {
+            domains.add(st.nextToken());
+        }
+        for (int i = 0; i < bdd.numberOfDomains(); ++i) {
+            String dName = bdd.getDomain(i).getName();
+            if (domains.contains(dName)) {
+                domains.remove(dName);
+                continue;
+            }
+            System.out.println("Adding missing domain \""+dName+"\" from bddvarorder.");
+            String baseName = dName;
+            for (;;) {
+                char c = baseName.charAt(baseName.length()-1);
+                if (c < '0' || c > '9') break;
+                baseName = baseName.substring(0, baseName.length() - 1);
+            }
+            int j = VARORDER.lastIndexOf(baseName);
+            if (j <= 0) {
+                VARORDER = dName+"_"+VARORDER;
+            } else {
+                char c = VARORDER.charAt(j-1);
+                VARORDER = VARORDER.substring(0, j)+dName+c+VARORDER.substring(j);
+            }
+        }
+        for (Iterator i = domains.iterator(); i.hasNext(); ) {
+            String dName = (String) i.next();
+            System.out.println("Eliminating unused domain \""+dName+"\" from bddvarorder.");
+            int index = VARORDER.indexOf(dName);
+            if (index == 0) {
+                if (VARORDER.length() <= dName.length()+1) {
+                    VARORDER = "";
+                } else {
+                    VARORDER = VARORDER.substring(dName.length()+1);
+                }
+            } else {
+                char before = VARORDER.charAt(index-1);
+                int k = index + dName.length();
+                if (before == '_' &&
+                    k < VARORDER.length() &&
+                    VARORDER.charAt(k) == 'x') {
+                    // Case:  H1_V1xV2   delete "V1x" substring
+                    VARORDER = VARORDER.substring(0, index) + VARORDER.substring(k+1);
+                } else {
+                    VARORDER = VARORDER.substring(0, index-1) + VARORDER.substring(k);
+                }
+            }
         }
     }
     
