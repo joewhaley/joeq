@@ -211,9 +211,11 @@ public class FindCollectionImplementations {
     
     static jq_Class _collectionClass  = null;
     static jq_Class _iteratorClass    = null;
+    static jq_Class _setClass         = null;
     boolean FILTER = false;
 
     static final String COLLECTION_SIGNATURE = "Ljava.util.Collection;";
+    static final String SET_SIGNATURE        = "Ljava.util.Set;";
     static final String ITERATOR_SIGNATURE   = "Ljava.util.Iterator;";    
     
     public static void main(String[] args) {
@@ -257,7 +259,7 @@ public class FindCollectionImplementations {
     private Set _classes;
     private Set _collections;
     private Set _iterators;
-    
+    private Set _sets;    
     
     public FindCollectionImplementations(Iterator i) {
         Collection roots = new LinkedList();
@@ -290,14 +292,18 @@ public class FindCollectionImplementations {
         
         _collections = new HashSet();
         _iterators   = new HashSet();
+        _sets        = new HashSet();
         
         _collectionClass  = (jq_Class)jq_Type.parseType(COLLECTION_SIGNATURE);
         _iteratorClass    = (jq_Class)jq_Type.parseType(ITERATOR_SIGNATURE);  
+        _setClass         = (jq_Class)jq_Type.parseType(SET_SIGNATURE);
         _collectionClass.load();
         _iteratorClass.load();
+        _setClass.load();
 
         Assert._assert(_collectionClass != null);
         Assert._assert(_iteratorClass  != null);
+        Assert._assert(_setClass  != null);
     }
     
     private Set filter(Set classes, Collection roots) {
@@ -342,6 +348,15 @@ public class FindCollectionImplementations {
             }
         }        
     }
+    private void findSets() {        
+        for(Iterator iter = _classes.iterator(); iter.hasNext(); ) {
+            jq_Class c = (jq_Class)iter.next();
+            
+            if(c.getDeclaredInterface(_setClass.getDesc()) != null) {
+                _sets.add(c);
+            }
+        }        
+    }
 
     private Set getClasses(Collection collection) {
         HashSet result = new HashSet(); 
@@ -374,20 +389,30 @@ public class FindCollectionImplementations {
         h.makeHierarchy();
         h.printHierarchy();
         
+        System.out.println("Found " + _sets.size() + " sets");
+        //printCollection(_iterators);
+        h = new ClassHierarchy(_setClass, _sets);
+        h.makeHierarchy();
+        h.printHierarchy();
+
         System.out.println("Found " + _iterators.size() + " iterators");
         //printCollection(_iterators);
         h = new ClassHierarchy(_iteratorClass, _iterators);
         h.makeHierarchy();
         h.printHierarchy();
 
-	System.out.println("Found " + _collections.size() + " collections, " + _iterators.size() + " iterators");
+	System.out.println("Found " + _collections.size() + " collections, " + 
+			   _sets.size() + " sets, " +
+			   _iterators.size() + " iterators "
+			   );
     }
     
     protected void run() {        
-        System.out.println("Looking for subclasses of " + _collectionClass + " and " + _iteratorClass);
+        //System.out.println("Looking for subclasses of " + _collectionClass + " and " + _iteratorClass);
         
         findCollections();
         findIterators();        
+        findSets();        
         
         reportStats();
     }
