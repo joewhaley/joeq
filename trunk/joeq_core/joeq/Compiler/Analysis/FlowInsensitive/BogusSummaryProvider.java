@@ -22,26 +22,31 @@ public class BogusSummaryProvider {
     private static jq_Class realString;
     private static jq_Class realStringBuffer;
     private static jq_Class realHashMap;
+    private static jq_Class realVector;
     private static jq_Class fakeString;
     private static jq_Class fakeStringBuffer;
-    private static jq_Class fakeHashMap;    
+    private static jq_Class fakeHashMap;
+    private static jq_Class fakeVector;
     
     public BogusSummaryProvider() {
         realString       = getClassByName("java.lang.String");
         realStringBuffer = getClassByName("java.lang.StringBuffer");
         realHashMap      = getClassByName("java.util.HashMap");
+        realVector       = getClassByName("java.util.Vector");
         Assert._assert(realString != null && realStringBuffer != null && realHashMap != null);
-        realString.prepare(); realStringBuffer.prepare(); realHashMap.prepare();
+        realString.prepare(); realStringBuffer.prepare(); realHashMap.prepare(); realVector.prepare();
         
         fakeString       = getClassByName("MyMockLib.MyString");
         fakeStringBuffer = getClassByName("MyMockLib.MyStringBuffer");        
-        fakeHashMap      = getClassByName("MyMockLib.MyHashMap");               
+        fakeHashMap      = getClassByName("MyMockLib.MyHashMap");
+        fakeVector       = getClassByName("MyMockLib.MyVector");
         Assert._assert(fakeString != null && fakeStringBuffer != null && fakeHashMap != null);        
-        fakeString.prepare(); fakeStringBuffer.prepare(); fakeHashMap.prepare();
+        fakeString.prepare(); fakeStringBuffer.prepare(); fakeHashMap.prepare(); fakeVector.prepare();
         
         classMap.put(realString, fakeString);
         classMap.put(realStringBuffer, fakeStringBuffer);
         classMap.put(realHashMap, fakeHashMap);
+        classMap.put(realVector, fakeVector);
     }
 
     /**
