@@ -4610,6 +4610,10 @@ outer:
         return false;
     }
 
+    public Collection getSyncedVars() {
+        return new FlattenedCollection(this.sync_ops.values());
+    }
+    
     /** Verify that there are no references to the given node in this method summary. */
     void verifyNoReferences(Node n) {
         if (returned.contains(n))

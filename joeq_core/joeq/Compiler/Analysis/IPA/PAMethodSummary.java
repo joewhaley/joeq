@@ -160,10 +160,6 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
         BDD M_bdd = pa.M.ithVar(M_i);
         pa.addToVisited(M_bdd);
         
-        if (m.isSynchronized()) {
-            //pa.addToSync();
-        }
-        
         if (m.getBytecode() == null) {
             // todo: parameters passed into native methods.
             // build up 'Mret'
@@ -179,6 +175,10 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
         
         MethodSummary ms = MethodSummary.getSummary(CodeCache.getCode(m));
         if (TRACE) out.println("Visiting method summary "+ms);
+        
+        if (m.isSynchronized() && !m.isStatic()) {
+            pa.addToSync(ms.getParamNode(0));
+        }
         
         pa.addClassInitializer(ms.getMethod().getDeclaringClass());
         
@@ -198,6 +198,12 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
             Node node = ms.getParamNode(i);
             if (node == null) continue;
             pa.addToFormal(M_bdd, i+1-offset, node);
+        }
+        
+        for (Iterator i = ms.getSyncedVars().iterator(); i.hasNext(); ) {
+            Node node = (Node) i.next();
+            out.println("Sync on: "+node);
+            pa.addToSync(node);
         }
         
         // build up 'mI', 'actual', 'Iret', 'Ithr'
