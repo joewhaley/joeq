@@ -60,7 +60,7 @@ public class GlobalPathNumbering extends PathNumbering {
                 Object p = i.next();
                 BigInteger val2 = (BigInteger) nodeNumbering.get(p);
                 if (val2 == null) {
-                    //System.out.println("Loop edge: "+p+" -> "+o);
+                    System.out.println("Loop edge: "+p+" -> "+o);
                     nodeNumbering.put(p, val2 = BigInteger.ONE);
                 }
                 BigInteger val3;
