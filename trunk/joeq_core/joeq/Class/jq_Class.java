@@ -146,13 +146,15 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         chkState(STATE_LOADED);
         jq_StaticField f = (jq_StaticField)findByNameAndDesc(static_fields, nd);
         if (f != null) return f;
-        // static fields may be in superinterfaces.
-        for (int i=0; i<declared_interfaces.length; ++i) {
-            jq_Class in = interfaces[i];
-            in.load();
-            f = in.getStaticField(nd);
-            if (f != null) return f;
-        }
+	if (this.isInterface()) {
+	    // static fields may be in superinterfaces.
+	    for (int i=0; i<declared_interfaces.length; ++i) {
+		jq_Class in = declared_interfaces[i];
+		in.load();
+		f = in.getStaticField(nd);
+		if (f != null) return f;
+	    }
+	}
         // check superclasses.
         if (super_class != null) {
             super_class.load();
@@ -160,34 +162,45 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         }
         return null;
     }
-    public final jq_StaticField[] getStaticFields() {
+
+    public final int getNumberOfStaticFields() {
         chkState(STATE_LOADED);
         int length = static_fields.length;
-        for (int i=0; i<declared_interfaces.length; ++i) {
-            jq_Class in = interfaces[i];
-            in.load();
-            length += in.static_fields.length;
-        }
-        jq_Class k = super_class;
-        while (k != null) {
-            k.load();
-            length += k.static_fields.length;
-            k = k.getSuperclass();
-        }
+	if (this.isInterface()) {
+	    for (int i=0; i<declared_interfaces.length; ++i) {
+		jq_Class in = declared_interfaces[i];
+		in.load();
+		length += in.getNumberOfStaticFields();
+	    }
+	}
+	if (super_class != null) {
+	    super_class.load();
+	    length += super_class.getNumberOfStaticFields();
+	}
+	return length;
+    }
+
+    private int getStaticFields_helper(jq_StaticField[] sfs, int current) {
+        System.arraycopy(static_fields, 0, sfs, current, static_fields.length);
+	current += static_fields.length;
+	if (this.isInterface()) {
+	    for (int i=0; i<declared_interfaces.length; ++i) {
+		jq_Class in = declared_interfaces[i];
+		current = in.getStaticFields_helper(sfs, current);
+	    }
+	}
+	if (super_class != null) {
+	    current = super_class.getStaticFields_helper(sfs, current);
+	}
+	return current;
+    }
+
+    // NOTE: fields in superinterfaces may appear multiple times.
+    public final jq_StaticField[] getStaticFields() {
+        chkState(STATE_LOADED);
+	int length = this.getNumberOfStaticFields();
         jq_StaticField[] sfs = new jq_StaticField[length];
-        System.arraycopy(static_fields, 0, sfs, 0, static_fields.length);
-        int current = static_fields.length;
-        for (int i=0; i<declared_interfaces.length; ++i) {
-            jq_Class in = interfaces[i];
-            System.arraycopy(in.static_fields, 0, sfs, current, in.static_fields.length);
-            current += in.static_fields.length;
-        }
-        k = super_class;
-        while (k != null) {
-            System.arraycopy(k.static_fields, 0, sfs, current, k.static_fields.length);
-            current += k.static_fields.length;
-            k = k.getSuperclass();
-        }
+	int current = this.getStaticFields_helper(sfs, 0);
         jq.assert(current == sfs.length);
         return sfs;
     }
@@ -226,6 +239,45 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         }
         return null;
     }
+
+    public final int getNumberOfStaticMethods() {
+        chkState(STATE_LOADED);
+        int length = static_methods.length;
+	for (int i=0; i<declared_interfaces.length; ++i) {
+	    jq_Class in = declared_interfaces[i];
+	    in.load();
+	    length += in.getNumberOfStaticMethods();
+	}
+	if (super_class != null) {
+	    super_class.load();
+	    length += super_class.getNumberOfStaticMethods();
+	}
+	return length;
+    }
+
+    private int getStaticMethods_helper(jq_StaticMethod[] sfs, int current) {
+        System.arraycopy(static_methods, 0, sfs, current, static_methods.length);
+	current += static_methods.length;
+	for (int i=0; i<declared_interfaces.length; ++i) {
+	    jq_Class in = declared_interfaces[i];
+	    current = in.getStaticMethods_helper(sfs, current);
+	}
+	if (super_class != null) {
+	    current = super_class.getStaticMethods_helper(sfs, current);
+	}
+	return current;
+    }
+
+    // NOTE: methods in superinterfaces may appear multiple times.
+    public final jq_StaticMethod[] getStaticMethods() {
+        chkState(STATE_LOADED);
+	int length = this.getNumberOfStaticMethods();
+        jq_StaticMethod[] sfs = new jq_StaticMethod[length];
+	int current = this.getStaticMethods_helper(sfs, 0);
+        jq.assert(current == sfs.length);
+        return sfs;
+    }
+
     public final jq_InstanceMethod getInstanceMethod(jq_NameAndDesc nd) {
         chkState(STATE_LOADED);
         jq_InstanceMethod m = (jq_InstanceMethod)findByNameAndDesc(declared_instance_methods, nd);
