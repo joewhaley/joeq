@@ -229,29 +229,29 @@ public class PAResultSelector {
         // Do the bdd magic to produce the answer
         // 1. project f out of H1xFxH2, get a set of H1xH2 pairs, h1 pointing to h2
         int fieldIndex = r.getResults().getFieldIndex(f);
-        BDD fBDD = r.F.ithVar(fieldIndex); 			// F            
+        BDD fBDD = r.F.ithVar(fieldIndex); // F            
         
         // 2. project out H1, get all H2 elements
-        BDD h2 = r.H1FH2set.relprod(fBDD, r.H1set);	// H2
+        BDD h2 = r.H1FH2set.relprod(fBDD, r.H1set); // H2
         
         // 3. get all types of H2 elements
         TypedBDD typesOfH2 = (TypedBDD) h2.replace(r.H2toH1).relprod(r.hT, r.H1set);
 
         // 4. return them as a set             
         Set result = new HashSet();            
-		for(Iterator typeIter = typesOfH2.iterator(); typeIter.hasNext();) {
-		    TypedBDD typeBDD = (TypedBDD)((TypedBDD)typeIter.next());	// T
-		    
-		    long[] indeces = r.T1.getVarIndices(typeBDD);
-	        Assert._assert(indeces.length == 1, "There are " + indeces.length + " indeces in " + typeBDD.toStringWithDomains());
-	        long index = indeces[0];        
-	        jq_Type type = r.getResults().getType((int)index);
-	        Assert._assert(type != null);
-	        
-	        result.add(type);
-		}
-		
-		// TODO: test this
+        for(Iterator typeIter = typesOfH2.iterator(); typeIter.hasNext();) {
+            TypedBDD typeBDD = (TypedBDD)((TypedBDD)typeIter.next()); // T
+            
+            long[] indeces = r.T1.getVarIndices(typeBDD);
+            Assert._assert(indeces.length == 1, "There are " + indeces.length + " indeces in " + typeBDD.toStringWithDomains());
+            long index = indeces[0];        
+            jq_Type type = r.getResults().getType((int)index);
+            Assert._assert(type != null);
+            
+            result.add(type);
+        }
+        
+        // TODO: test this
         return result;
     }
 }

@@ -33,7 +33,7 @@ public class ResidentJava {
         }
         
     }
-	
+    
     public static void trapOnSystemExit() {
         SecurityManager sm = new SecurityManager() {
             public void checkAccept(String host, int port) {}
@@ -75,11 +75,11 @@ public class ResidentJava {
     public static void main(String[] args) throws IOException {
         trapOnSystemExit();
         BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
-	for (;;) {
-	    String commandLine = in.readLine();
-	    if (commandLine == null) break;
-	    executeProgram(commandLine);
-	}
+        for (;;) {
+            String commandLine = in.readLine();
+            if (commandLine == null) break;
+            executeProgram(commandLine);
+        }
     }
     
     public static void executeProgram(String line) {
