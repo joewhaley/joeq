@@ -57,7 +57,7 @@ public abstract class CallTargets extends AbstractSet {
                 jq_Reference rtype = (jq_Reference)i.next();
                 if (rtype.isClassType()) {
                     jq_Class rclass = (jq_Class)rtype;
-                    jq.assert(!rclass.isAbstract());
+                    jq.assert(!rclass.isLoaded() || !rclass.isAbstract());
                     if (!rclass.isPrepared()) {
                         jq_InstanceMethod target;
                         for (;;) {
@@ -81,13 +81,17 @@ public abstract class CallTargets extends AbstractSet {
                         c.add(target);
                         continue;
                     }
+                    if (offset < 1 || offset > rclass.getVirtualMethods().length)
+                        return NoCallTarget.INSTANCE;
                     jq_InstanceMethod target = rclass.getVirtualMethods()[offset-1];
-                    jq.assert(imethod.getNameAndDesc().equals(target.getNameAndDesc()), imethod+" != "+target);
+                    if (!imethod.getNameAndDesc().equals(target.getNameAndDesc()))
+                        return NoCallTarget.INSTANCE;
                     jq.assert(!target.isAbstract());
                     c.add(target);
                 } else {
                     jq.assert(rtype.isArrayType());
-                    jq.assert(imethod.getDeclaringClass() == PrimordialClassLoader.loader.getJavaLangObject());
+                    if (imethod.getDeclaringClass() != PrimordialClassLoader.loader.getJavaLangObject())
+                        return NoCallTarget.INSTANCE;
                     jq.assert(!imethod.isAbstract());
                     c.add(imethod);
                 }
@@ -122,7 +126,8 @@ public abstract class CallTargets extends AbstractSet {
                     continue;
                 } else {
                     jq.assert(rtype.isArrayType());
-                    jq.assert(imethod.getDeclaringClass() == PrimordialClassLoader.loader.getJavaLangObject());
+                    if (imethod.getDeclaringClass() != PrimordialClassLoader.loader.getJavaLangObject())
+                        return NoCallTarget.INSTANCE;
                     jq.assert(!imethod.isAbstract());
                     c.add(imethod);
                 }
@@ -144,7 +149,8 @@ public abstract class CallTargets extends AbstractSet {
         jq.assert(type == BytecodeVisitor.INVOKE_VIRTUAL || type == BytecodeVisitor.INVOKE_INTERFACE);
 
         if (receiverType.isArrayType()) {
-            jq.assert(imethod.getDeclaringClass() == PrimordialClassLoader.loader.getJavaLangObject());
+            if (imethod.getDeclaringClass() != PrimordialClassLoader.loader.getJavaLangObject())
+                return NoCallTarget.INSTANCE;
             return new SingleCallTarget(imethod, true);
         }
         
@@ -206,8 +212,9 @@ public abstract class CallTargets extends AbstractSet {
                             }
                             rclass.load();
                         }
-                        jq_InstanceMethod target = (jq_InstanceMethod)rclass.getDeclaredMember(imethod.getNameAndDesc());
+                        jq_Method target = (jq_Method)rclass.getDeclaredMember(imethod.getNameAndDesc());
                         if (target != null) {
+                            if (target.isStatic()) break;
                             if (!target.isAbstract()) c.add(target);
                             break;
                         }
@@ -235,9 +242,11 @@ public abstract class CallTargets extends AbstractSet {
                         target = (jq_InstanceMethod)rclass.getDeclaredMember(imethod.getNameAndDesc());
                         if ((target != null) && !target.isAbstract()) c.add(target);
                     } else {
-			jq.assert(offset-1 >= 0 && offset-1 < rclass.getVirtualMethods().length, "bad offset "+(offset-1)+" class "+rclass+" method "+imethod);
+                        if (offset < 1 || offset > rclass.getVirtualMethods().length)
+                            return NoCallTarget.INSTANCE;
                         target = rclass.getVirtualMethods()[offset-1];
-                        jq.assert(imethod.getNameAndDesc().equals(target.getNameAndDesc()), imethod+" != "+target);
+                        if (!imethod.getNameAndDesc().equals(target.getNameAndDesc()))
+                            return NoCallTarget.INSTANCE;
                         if (!target.isAbstract()) c.add(target);
                     }
                     if (target != null) {

@@ -55,7 +55,9 @@ public class MethodSummary {
 
     public static java.io.PrintStream out = System.out;
     public static final boolean TRACE_INTRA = false;
-    public static final boolean TRACE_INTER = true;
+    public static final boolean TRACE_INTER = false;
+    public static final boolean IGNORE_INSTANCE_FIELDS = false;
+    public static final boolean IGNORE_STATIC_FIELDS = false;
 
     public static final class MethodSummaryBuilder implements ControlFlowGraphVisitor {
         public void visitCFG(ControlFlowGraph cfg) {
@@ -105,11 +107,14 @@ public class MethodSummary {
         /** Change bit for worklist iteration. */
         protected boolean change;
         
+        /** Factory for nodes. */
+        protected final HashMap quadsToNodes;
+        
         /** Returns the summary. Call this after iteration has completed. */
         public MethodSummary getSummary() {
             MethodSummary s = new MethodSummary(method, param_nodes, my_global, methodCalls, returned, thrown, passedAsParameter);
             // merge global nodes.
-            if (my_global.accessPathEdges != null) {
+            if ((my_global.accessPathEdges != null) || (my_global.addedEdges != null)) {
                 HashSet set = new HashSet(); set.add(GlobalNode.GLOBAL);
                 my_global.replaceBy(set);
                 /*
@@ -159,6 +164,7 @@ public class MethodSummary {
             this.start_states = new State[cfg.getNumberOfBasicBlocks()];
             this.methodCalls = new HashSet();
             this.passedAsParameter = new HashSet();
+            this.quadsToNodes = new HashMap();
             this.s = this.start_states[0] = new State(this.nRegisters);
             jq_Type[] params = this.method.getParamTypes();
             this.param_nodes = new ParamNode[params.length];
@@ -262,7 +268,8 @@ public class MethodSummary {
         /** Abstractly perform a heap load operation on the given base and field
          *  with the given field node, putting the result in the given set. */
         protected void heapLoad(HashSet result, Node base, jq_Field f, FieldNode fn) {
-            base.addAccessPathEdge(f, fn);
+            //base.addAccessPathEdge(f, fn);
+            result.add(fn);
             if (INSIDE_EDGES)
                 base.getEdges(f, result);
         }
@@ -270,31 +277,22 @@ public class MethodSummary {
          *  with the given destination register, bases and field.  The destination
          *  register in the current state is changed to the result. */
         protected void heapLoad(Quad obj, Register dest_r, HashSet base_s, jq_Field f) {
-            FieldNode fn = new FieldNode(f, obj);
             HashSet result = new HashSet();
             for (Iterator i=base_s.iterator(); i.hasNext(); ) {
-                heapLoad(result, (Node)i.next(), f, fn);
+                Node base = (Node)i.next();
+                FieldNode fn = FieldNode.get(base, f, obj);
+                heapLoad(result, base, f, fn);
             }
-            if (result.isEmpty()) {
-                setRegister(dest_r, fn);
-            } else {
-                result.add(fn);
-                setRegister(dest_r, result);
-            }
+            setRegister(dest_r, result);
         }
         /** Abstractly perform a heap load operation corresponding to quad 'obj'
          *  with the given destination register, base and field.  The destination
          *  register in the current state is changed to the result. */
         protected void heapLoad(Quad obj, Register dest_r, Node base_n, jq_Field f) {
-            FieldNode fn = new FieldNode(f, obj);
+            FieldNode fn = FieldNode.get(base_n, f, obj);
             HashSet result = new HashSet();
             heapLoad(result, base_n, f, fn);
-            if (result.isEmpty()) {
-                setRegister(dest_r, fn);
-            } else {
-                result.add(fn);
-                setRegister(dest_r, result);
-            }
+            setRegister(dest_r, result);
         }
         /** Abstractly perform a heap load operation corresponding to quad 'obj'
          *  with the given destination register, base register and field.  The
@@ -405,7 +403,8 @@ public class MethodSummary {
                     } else {
                         jq.assert(val instanceof AConstOperand);
                         jq_Reference type = ((AConstOperand)val).getType();
-                        ConcreteTypeNode n = new ConcreteTypeNode(type, obj);
+                        ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(obj);
+                        if (n == null) quadsToNodes.put(obj, n = new ConcreteTypeNode(type, obj));
                         heapStore(base_r, n, null);
                     }
                 } else {
@@ -425,7 +424,8 @@ public class MethodSummary {
             } else {
                 jq.assert(src instanceof AConstOperand);
                 jq_Reference type = ((AConstOperand)src).getType();
-                ConcreteTypeNode n = new ConcreteTypeNode(type, obj);
+                ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(obj);
+                if (n == null) quadsToNodes.put(obj, n = new ConcreteTypeNode(type, obj));
                 setRegister(dest_r, n);
             }
         }
@@ -437,6 +437,7 @@ public class MethodSummary {
                 Register r = Getfield.getDest(obj).getRegister();
                 Operand o = Getfield.getBase(obj);
                 jq_Field f = Getfield.getField(obj).getField();
+                if (IGNORE_INSTANCE_FIELDS) f = null;
                 if (o instanceof RegisterOperand) {
                     Register b = ((RegisterOperand)o).getRegister();
                     heapLoad(obj, r, b, f);
@@ -452,6 +453,7 @@ public class MethodSummary {
                 if (TRACE_INTRA) out.println("Visiting: "+obj);
                 Register r = Getstatic.getDest(obj).getRegister();
                 jq_Field f = Getstatic.getField(obj).getField();
+                if (IGNORE_STATIC_FIELDS) f = null;
                 heapLoad(obj, r, my_global, f);
             }
         }
@@ -477,7 +479,8 @@ public class MethodSummary {
                 RegisterOperand dest = Invoke.getDest(obj);
                 if (dest != null) {
                     Register dest_r = dest.getRegister();
-                    ReturnValueNode n = new ReturnValueNode(mc);
+                    ReturnValueNode n = (ReturnValueNode)quadsToNodes.get(obj);
+                    if (n == null) quadsToNodes.put(obj, n = new ReturnValueNode(mc));
                     setRegister(dest_r, n);
                 }
             }
@@ -494,7 +497,8 @@ public class MethodSummary {
                 } else {
                     jq.assert(src instanceof AConstOperand);
                     jq_Reference type = ((AConstOperand)src).getType();
-                    ConcreteTypeNode n = new ConcreteTypeNode(type, obj);
+                    ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(obj);
+                    if (n == null) quadsToNodes.put(obj, n = new ConcreteTypeNode(type, obj));
                     setRegister(dest_r, n);
                 }
             }
@@ -504,7 +508,8 @@ public class MethodSummary {
             if (TRACE_INTRA) out.println("Visiting: "+obj);
             Register dest_r = New.getDest(obj).getRegister();
             jq_Reference type = (jq_Reference)New.getType(obj).getType();
-            ConcreteTypeNode n = new ConcreteTypeNode(type, obj);
+            ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(obj);
+            if (n == null) quadsToNodes.put(obj, n = new ConcreteTypeNode(type, obj));
             setRegister(dest_r, n);
         }
         /** Visit an array allocation instruction. */
@@ -512,7 +517,8 @@ public class MethodSummary {
             if (TRACE_INTRA) out.println("Visiting: "+obj);
             Register dest_r = NewArray.getDest(obj).getRegister();
             jq_Reference type = (jq_Reference)NewArray.getType(obj).getType();
-            ConcreteTypeNode n = new ConcreteTypeNode(type, obj);
+            ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(obj);
+            if (n == null) quadsToNodes.put(obj, n = new ConcreteTypeNode(type, obj));
             setRegister(dest_r, n);
         }
         /** Visit a put instance field instruction. */
@@ -523,6 +529,7 @@ public class MethodSummary {
                 Operand base = Putfield.getBase(obj);
                 Operand val = Putfield.getSrc(obj);
                 jq_Field f = Putfield.getField(obj).getField();
+                if (IGNORE_INSTANCE_FIELDS) f = null;
                 if (base instanceof RegisterOperand) {
                     Register base_r = ((RegisterOperand)base).getRegister();
                     if (val instanceof RegisterOperand) {
@@ -531,7 +538,8 @@ public class MethodSummary {
                     } else {
                         jq.assert(val instanceof AConstOperand);
                         jq_Reference type = ((AConstOperand)val).getType();
-                        ConcreteTypeNode n = new ConcreteTypeNode(type, obj);
+                        ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(obj);
+                        if (n == null) quadsToNodes.put(obj, n = new ConcreteTypeNode(type, obj));
                         heapStore(base_r, n, f);
                     }
                 } else {
@@ -546,13 +554,15 @@ public class MethodSummary {
                 if (TRACE_INTRA) out.println("Visiting: "+obj);
                 Operand val = Putstatic.getSrc(obj);
                 jq_Field f = Putstatic.getField(obj).getField();
+                if (IGNORE_STATIC_FIELDS) f = null;
                 if (val instanceof RegisterOperand) {
                     Register src_r = ((RegisterOperand)val).getRegister();
                     heapStore(my_global, src_r, f);
                 } else {
                     jq.assert(val instanceof AConstOperand);
                     jq_Reference type = ((AConstOperand)val).getType();
-                    ConcreteTypeNode n = new ConcreteTypeNode(type, obj);
+                    ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(obj);
+                    if (n == null) quadsToNodes.put(obj, n = new ConcreteTypeNode(type, obj));
                     heapStore(my_global, n, f);
                 }
             }
@@ -560,7 +570,7 @@ public class MethodSummary {
         
         static void addToSet(HashSet s, Object o) {
             if (o instanceof HashSet) s.addAll((HashSet)o);
-            else s.add(o);
+            else if (o != null) s.add(o);
         }
         
         /** Visit a return/throw instruction. */
@@ -577,7 +587,8 @@ public class MethodSummary {
             } else {
                 jq.assert(src instanceof AConstOperand);
                 jq_Reference type = ((AConstOperand)src).getType();
-                ConcreteTypeNode n = new ConcreteTypeNode(type, obj);
+                ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(obj);
+                if (n == null) quadsToNodes.put(obj, n = new ConcreteTypeNode(type, obj));
                 r.add(n);
             }
         }
@@ -586,12 +597,15 @@ public class MethodSummary {
             if (obj.getOperator() == Special.GET_THREAD_BLOCK.INSTANCE) {
                 if (TRACE_INTRA) out.println("Visiting: "+obj);
                 Register dest_r = ((RegisterOperand)Special.getOp1(obj)).getRegister();
-                ConcreteTypeNode n = new ConcreteTypeNode(Scheduler.jq_Thread._class, obj);
+                jq_Reference type = Scheduler.jq_Thread._class;
+                ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(obj);
+                if (n == null) quadsToNodes.put(obj, n = new ConcreteTypeNode(type, obj));
                 setRegister(dest_r, n);
             } else if (obj.getOperator() == Special.GET_TYPE_OF.INSTANCE) {
                 if (TRACE_INTRA) out.println("Visiting: "+obj);
                 Register dest_r = ((RegisterOperand)Special.getOp1(obj)).getRegister();
-                UnknownTypeNode n = new UnknownTypeNode(Clazz.jq_Reference._class, obj);
+                jq_Reference type = Clazz.jq_Reference._class;
+                UnknownTypeNode n = UnknownTypeNode.get(type);
                 setRegister(dest_r, n);
             }
         }
@@ -599,7 +613,8 @@ public class MethodSummary {
             if (obj.getOperator() == Unary.INT_2OBJECT.INSTANCE) {
                 if (TRACE_INTRA) out.println("Visiting: "+obj);
                 Register dest_r = Unary.getDest(obj).getRegister();
-                UnknownTypeNode n = new UnknownTypeNode(PrimordialClassLoader.getJavaLangObject(), obj);
+                jq_Reference type = PrimordialClassLoader.getJavaLangObject();
+                UnknownTypeNode n = (UnknownTypeNode)quadsToNodes.get(type);
                 setRegister(dest_r, n);
             }
         }
@@ -623,7 +638,7 @@ public class MethodSummary {
             ListIterator.jq_Class xs = obj.getThrownExceptions().classIterator();
             while (xs.hasNext()) {
                 jq_Class x = xs.nextClass();
-                UnknownTypeNode n = new UnknownTypeNode(x, obj);
+                UnknownTypeNode n = UnknownTypeNode.get(x);
                 ListIterator.ExceptionHandler eh = bb.getExceptionHandlers().exceptionHandlerIterator();
                 boolean caught = false;
                 while (eh.hasNext()) {
@@ -685,6 +700,19 @@ public class MethodSummary {
         public CallTargets getCallTargets(java.util.Set receiverTypes, boolean exact) {
             byte type = getType();
             return CallTargets.getTargets(m.getDeclaringClass(), m, type, receiverTypes, exact, true);
+        }
+        
+        public CallTargets getCallTargets(java.util.Set nodes) {
+            byte type = getType();
+            boolean exact = true;
+            HashSet types = new HashSet();
+            for (Iterator i=nodes.iterator(); i.hasNext(); ) {
+                Node n = (Node)i.next();
+                if (!(n instanceof ConcreteTypeNode)) exact = false;
+                if (n.getDeclaredType() != null)
+                    types.add(n.getDeclaredType());
+            }
+            return getCallTargets(types, exact);
         }
     }
     
@@ -1169,6 +1197,7 @@ public class MethodSummary {
     public static final class ConcreteTypeNode extends Node {
         final jq_Reference type; final Quad q;
         
+        public ConcreteTypeNode(jq_Reference type) { this.type = type; this.q = null; }
         public ConcreteTypeNode(jq_Reference type, Quad q) { this.type = type; this.q = q; }
         private ConcreteTypeNode(ConcreteTypeNode that) {
             super(that); this.type = that.type; this.q = that.q;
@@ -1176,17 +1205,19 @@ public class MethodSummary {
         
         public jq_Reference getDeclaredType() { return type; }
         
+        /*
         public boolean equals(ConcreteTypeNode that) { return this.q == that.q; }
         public boolean equals(Object o) {
             if (o instanceof ConcreteTypeNode) return equals((ConcreteTypeNode)o);
             else return false;
         }
         public int hashCode() { return q.hashCode(); }
+         */
         
         public Node copy() { return new ConcreteTypeNode(this); }
         
         public String toString_long() { return jq.hex(this)+": "+toString_short()+super.toString_long(); }
-        public String toString_short() { return "Concrete: "+type+" q: "+q.getID(); }
+        public String toString_short() { return "Concrete: "+type+" q: "+(q==null?-1:q.getID()); }
     }
     
     /** A UnknownTypeNode refers to an object with an unknown type.  All that is
@@ -1195,27 +1226,56 @@ public class MethodSummary {
      *  This class includes a factory to get UnknownTypeNode's.
      */
     public static final class UnknownTypeNode extends Node {
+        public static final boolean ADD_DUMMY_EDGES = false;
+        
         static final HashMap FACTORY = new HashMap();
         public static UnknownTypeNode get(jq_Reference type) {
             UnknownTypeNode n = (UnknownTypeNode)FACTORY.get(type);
-            if (n == null) FACTORY.put(type, n = new UnknownTypeNode(type));
+            if (n == null) {
+                FACTORY.put(type, n = new UnknownTypeNode(type));
+                if (ADD_DUMMY_EDGES) n.addDummyEdges();
+            }
             return n;
         }
         
         final jq_Reference type;
         
-        UnknownTypeNode(jq_Reference type, Quad q) { this.type = type; }
-        UnknownTypeNode(jq_Reference type) { this.type = type; }
+        private UnknownTypeNode(jq_Reference type) {
+            this.type = type;
+        }
         private UnknownTypeNode(UnknownTypeNode that) { super(that); this.type = that.type; }
+        
+        private void addDummyEdges() {
+            if (type instanceof jq_Class) {
+                jq_Class klass = (jq_Class)type;
+                klass.load(); klass.verify(); klass.prepare();
+                jq_InstanceField[] fields = klass.getInstanceFields();
+                for (int i=0; i<fields.length; ++i) {
+                    jq_InstanceField f = fields[i];
+                    if (f.getType() instanceof jq_Reference) {
+                        UnknownTypeNode n = get((jq_Reference)f.getType());
+                        this.addEdge(f, n);
+                    }
+                }
+            } else {
+                jq_Array array = (jq_Array)type;
+                if (array.getElementType() instanceof jq_Reference) {
+                    UnknownTypeNode n = get((jq_Reference)array.getElementType());
+                    this.addEdge(null, n);
+                }
+            }
+        }
         
         public jq_Reference getDeclaredType() { return type; }
         
+        /*
         public boolean equals(UnknownTypeNode that) { return this.type == that.type; }
         public boolean equals(Object o) {
             if (o instanceof UnknownTypeNode) return equals((UnknownTypeNode)o);
             else return false;
         }
         public int hashCode() { return type.hashCode(); }
+         */
         
         public Node copy() { return new UnknownTypeNode(this); }
         
@@ -1231,6 +1291,9 @@ public class MethodSummary {
         OutsideNode(Node n) { super(n); }
         
         public abstract jq_Reference getDeclaredType();
+        
+        OutsideNode skip;
+        boolean visited;
         
     }
     
@@ -1331,12 +1394,14 @@ public class MethodSummary {
             super(that); this.m = that.m; this.n = that.n; this.declaredType = that.declaredType;
         }
 
+        /*
         public boolean equals(ParamNode that) { return this.n == that.n && this.m == that.m; }
         public boolean equals(Object o) {
             if (o instanceof ParamNode) return equals((ParamNode)o);
             else return false;
         }
         public int hashCode() { return m.hashCode() ^ n; }
+         */
         
         public jq_Reference getDeclaredType() { return declaredType; }
         
@@ -1355,8 +1420,69 @@ public class MethodSummary {
         final jq_Field f; final HashSet quads;
         HashSet field_predecessors;
         
-        public FieldNode(jq_Field f, Quad q) { this.f = f; this.quads = new HashSet(); this.quads.add(q); }
-        public FieldNode(jq_Field f) { this.f = f; this.quads = new HashSet(); }
+        private static FieldNode findPredecessor(FieldNode base, Quad obj) {
+            if (TRACE_INTRA) out.println("Checking "+base+" for predecessor "+obj.getID());
+            if (base.quads.contains(obj)) {
+                if (TRACE_INTRA) out.println("Success!");
+                return base;
+            }
+            if (base.visited) {
+                if (TRACE_INTRA) out.println(base+" already visited");
+                return null;
+            }
+            base.visited = true;
+            if (base.field_predecessors != null) {
+                for (Iterator i=base.field_predecessors.iterator(); i.hasNext(); ) {
+                    Object o = i.next();
+                    if (o instanceof FieldNode) {
+                        FieldNode fn = (FieldNode)o;
+                        FieldNode fn2 = findPredecessor(fn, obj);
+                        if (fn2 != null) {
+                            base.visited = false;
+                            return fn2;
+                        }
+                    }
+                }
+            }
+            base.visited = false;
+            return null;
+        }
+        
+        public static FieldNode get(Node base, jq_Field f, Quad obj) {
+            if (TRACE_INTRA) out.println("Getting field node for "+base+(f==null?"[]":("."+f.getName()))+" quad "+obj.getID());
+            HashSet s = null;
+            if (base.accessPathEdges != null) {
+                Object o = base.accessPathEdges.get(f);
+                if (o instanceof FieldNode) {
+                    if (TRACE_INTRA) out.println("Field node for "+base+" already exists, reusing: "+o);
+                    return (FieldNode)o;
+                } else if (o != null) {
+                    s = (HashSet)o;
+                    if (!s.isEmpty()) {
+                        if (TRACE_INTRA) out.println("Field node for "+base+" already exists, reusing: "+o);
+                        return (FieldNode)s.iterator().next();
+                    }
+                }
+            } else {
+                base.accessPathEdges = new HashMap();
+            }
+            FieldNode fn;
+            if (base instanceof FieldNode) fn = findPredecessor((FieldNode)base, obj);
+            else fn = null;
+            if (fn == null) fn = new FieldNode(f, obj);
+            if (fn.field_predecessors == null) fn.field_predecessors = new HashSet();
+            fn.field_predecessors.add(base);
+            if (s != null) {
+                jq.assert(base.accessPathEdges.get(f) == s);
+                s.add(fn);
+            } else {
+                base.accessPathEdges.put(f, fn);
+            }
+            return fn;
+        }
+        
+        private FieldNode(jq_Field f, Quad q) { this.f = f; this.quads = new HashSet(); this.quads.add(q); }
+        private FieldNode(jq_Field f) { this.f = f; this.quads = new HashSet(); }
         private FieldNode(FieldNode that) {
             super(that); this.f = that.f; this.quads = that.quads; this.field_predecessors = that.field_predecessors;
         }
@@ -1418,12 +1544,14 @@ public class MethodSummary {
             }
         }
         
+        /*
         public boolean equals(FieldNode that) { return this.f == that.f && this.quads.equals(that.quads); }
         public boolean equals(Object o) {
             if (o instanceof FieldNode) return equals((FieldNode)o);
             else return false;
         }
         public int hashCode() { return ((f != null)?f.hashCode():0x6a953) ^ quads.hashCode(); }
+         */
         
         public String fieldName() {
             if (f != null) return f.getName().toString();
