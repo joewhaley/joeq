@@ -694,7 +694,10 @@ int thread_start_trampoline(void *t)
     // initialization.
     ((void**)t)[1] = 0;
     // wait until parent receives notification and notifies us back.
-    while (!((void**)t)[1]) sched_yield();
+    while (!((void**)t)[1]) {
+      sched_yield();
+      //Sleep(1);
+    }
     // free temp array
     free(t);
 
@@ -727,15 +730,20 @@ pthread_t __stdcall create_thread(int (*start)(void *), void* arg)
     temp[0] = arg;
     temp[1] = (void*)start;
 #if defined(USE_CLONE)
-    void* child_stack = calloc(1, 65536);
-    pid = clone(thread_start_trampoline, child_stack, CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND, temp);
+    {
+        void* child_stack = calloc(1, 65536);
+        pid = clone(thread_start_trampoline, child_stack, CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND, temp);
+    }
 #else
     pthread_create(&pid, 0, (void* (*)(void *))thread_start_trampoline, temp);
 #endif
     //printf("Created thread %d.\n", pid);
 
     // wait for child to start.
-    while (temp[1]) sched_yield();
+    while (temp[1]) {
+      sched_yield();
+      //Sleep(1);
+    }
 
     // child has started, suspend it.
 #if defined(USE_CLONE)
@@ -746,6 +754,7 @@ pthread_t __stdcall create_thread(int (*start)(void *), void* arg)
 
     // mark child to continue, once it is resumed.
     temp[1] = (void*)start;
+    //printf("Child %d marked to continue.\n", pid);
 
     return pid;
 }
@@ -806,6 +815,23 @@ int __stdcall init_thread()
     INIT_THREAD_SELF(descr, 1*1024, my_id);
     //printf("Thread %d finished initialization, pid=%d, id=%d.\n", pthread_self(), getpid(), my_id);
     return getpid();
+}
+#if defined(USE_CLONE)
+int __stdcall set_thread_priority(const int pid, const int level)
+#else
+int __stdcall set_thread_priority(const pthread_t pid, const int level)
+#endif
+{
+#if defined(USE_CLONE)
+  return setpriority(PRIO_PROCESS, pid, level);
+#else
+  struct sched_param param;
+  int a = sched_get_priority_min(SCHED_OTHER);
+  int b = sched_get_priority_max(SCHED_OTHER);
+  memset(&param, 0, sizeof(param));
+  param.sched_priority = (int) ((level+15) / 30. * (b - a) + a);
+  return pthread_setschedparam(pid, SCHED_OTHER, &param);
+#endif
 }
 #if defined(USE_CLONE)
 int __stdcall resume_thread(const int pid)
