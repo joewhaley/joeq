@@ -58,6 +58,7 @@ public class SimpleHashSet extends AbstractMap {
             int chain_index = Math.abs(hash) % shs.chains.length;
             chain = shs.chains[chain_index];
             this.hash = hash;
+            if (TRACE) System.out.println("Initialized chain set: hash="+hash+" index="+chain_index+" length="+(chain==null?-1:chain.length));
         }
         public Iterator iterator() {
             return new Itr();
@@ -67,7 +68,7 @@ public class SimpleHashSet extends AbstractMap {
             for (;;) {
                 if (i == chain.length)
                     return s;
-                int loc = chain[i];
+                int loc = chain[i]-1;
                 if (loc == -1)
                     return s;
                 if (shs.table[loc].hashCode() == hash)
@@ -78,30 +79,33 @@ public class SimpleHashSet extends AbstractMap {
         public class Itr extends UnmodifiableIterator {
             int i;
             public Itr() {
+                i = -1;
                 findNext();
             }
             private int findNext() {
                 if (chain == null) return -1;
                 for (;;) {
+                    ++i;
                     if (i == chain.length)
                         return -1;
-                    int loc = chain[i];
+                    int loc = chain[i]-1;
                     if (loc == -1)
                         return -1;
-                    if (shs.table[loc].hashCode() == hash)
+                    if (shs.table[loc].hashCode() == hash) {
+                        if (TRACE) System.out.println("next matching hash is chain["+i+"]="+loc);
                         return loc;
-                    ++i;
+                    }
                 }
             }
             public Object next() {
-                if (chain == null || i == chain.length || chain[i] == -1)
+                if (chain == null || i == chain.length || chain[i]-1 == -1)
                     throw new NoSuchElementException();
-                Object o = shs.table[chain[i]];
+                Object o = shs.table[chain[i]-1];
                 findNext();
                 return o;
             }
             public boolean hasNext() {
-                return chain != null && i != chain.length && chain[i] != -1;
+                return chain != null && i != chain.length && chain[i]-1 != -1;
             }
             public void addToEnd(Object o) {
                 jq.Assert(o.hashCode() == hash);
@@ -117,7 +121,7 @@ public class SimpleHashSet extends AbstractMap {
                     jq.Assert(shs.chains[chain_index] == chain);
                     shs.chains[chain_index] = newchain;
                     chain = newchain;
-                } else if (chain[i] != -1) {
+                } else if (chain[i]-1 != -1) {
                     throw new UnsupportedOperationException("not at end");
                 }
                 shs.addToTable_helper(o, hash, chain, i);
@@ -168,6 +172,7 @@ public class SimpleHashSet extends AbstractMap {
             if (id == -1) {
                 return addToTable_helper(b, hash, chain, i);
             }
+            if (TRACE) System.out.println("Id="+id);
             Object that = table[id];
             // ??? check hash before calling equals ???
             if (that.equals(b)) {
@@ -188,8 +193,8 @@ public class SimpleHashSet extends AbstractMap {
     private int addToTable_helper(Object b, int hash, int[] chain, int index) {
         if (++size == table.length) growTable_helper();
         table[size] = b;
-        chain[index] = size-1;
-        if (TRACE) System.out.println("added to table: "+table[size]);
+        chain[index] = size+1;
+        if (TRACE) System.out.println("added to table["+size+"]: "+table[size]);
         return size;
     }
     
