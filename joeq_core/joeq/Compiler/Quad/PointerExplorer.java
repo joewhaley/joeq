@@ -635,6 +635,10 @@ uphere:
                 System.out.println(apa.computeStats());
                 continue;
             }
+            if (s.startsWith("callgraph")) {
+                System.out.println(AndersenPointerAnalysis.dumpResults(apa.getCallGraph()));
+                continue;
+            }
             if (s.startsWith("addroot")) {
                 m = getMethod();
                 rootSet.add(m);

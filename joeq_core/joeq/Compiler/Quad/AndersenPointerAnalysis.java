@@ -106,7 +106,7 @@ public class AndersenPointerAnalysis {
     /**
      * Don't explicitly model the calling of <clinit> methods.
      */
-    public static boolean IGNORE_CLINIT = true;
+    public static boolean IGNORE_CLINIT = false;
     
     /**
      * Controls the handling of references that escape to native
