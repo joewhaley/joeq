@@ -284,6 +284,19 @@ public class BDDSolver extends Solver {
         return new BDDRelation(this, name, names, fieldDomains, fieldOptions);
     }
 
+    Relation createEquivalenceRelation(FieldDomain fd) {
+        String name = fd+"_eq";
+        List names = new Pair(fd+"1", fd+"2");
+        List fieldDomains = new Pair(fd, fd);
+        List fieldOptions = new Pair("", "");
+        BDDRelation r = new BDDRelation(this, name, names, fieldDomains, fieldOptions);
+        BDDDomain d1 = (BDDDomain) r.domains.get(0);
+        BDDDomain d2 = (BDDDomain) r.domains.get(1);
+        r.relation.free();
+        r.relation = d1.buildEquals(d2);
+        return r;
+    }
+    
     /* (non-Javadoc)
      * @see joeq.Util.InferenceEngine.Solver#readRules(java.io.BufferedReader)
      */
