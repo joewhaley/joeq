@@ -77,7 +77,7 @@ public abstract class CallTargets extends AbstractSet {
                                 break;
                             }
                             jq_Method mtarget = (jq_Method)rclass.getDeclaredMember(imethod.getNameAndDesc());
-                            if (!(mtarget instanceof jq_InstanceMethod)) break;
+                            if (mtarget instanceof jq_StaticMethod) break;
                             target = (jq_InstanceMethod)mtarget;
                             if (target != null) {
                                 jq.assert(imethod.getNameAndDesc().equals(target.getNameAndDesc()));
@@ -124,7 +124,7 @@ public abstract class CallTargets extends AbstractSet {
                             break;
                         }
                         jq_Method mtarget = (jq_Method)rclass.getDeclaredMember(imethod.getNameAndDesc());
-                        if (!(mtarget instanceof jq_InstanceMethod)) break;
+                        if (mtarget instanceof jq_StaticMethod) break;
                         target = (jq_InstanceMethod)mtarget;
                         if (target != null) {
                             jq.assert(imethod.getNameAndDesc().equals(target.getNameAndDesc()));
@@ -189,7 +189,7 @@ public abstract class CallTargets extends AbstractSet {
             if (!rclass.isLoaded()) return NoCallTarget.INSTANCE;
             for (;;) {
                 jq_Method mtarget = (jq_Method)rclass.getDeclaredMember(imethod.getNameAndDesc());
-                if (!(mtarget instanceof jq_InstanceMethod)) break;
+                if (mtarget instanceof jq_StaticMethod) return NoCallTarget.INSTANCE;
                 jq_InstanceMethod target = (jq_InstanceMethod)mtarget;
                 if (target != null) return new SingleCallTarget(target, true);
                 jq.assert(rclass != imethod.getDeclaringClass());
@@ -255,7 +255,7 @@ public abstract class CallTargets extends AbstractSet {
                     if (TRACE) System.out.println("Class "+rclass+" has "+rclass.getSubClasses().length+" subclasses");
                     if (!rclass.isPrepared()) {
                         jq_Method mtarget = (jq_Method)rclass.getDeclaredMember(imethod.getNameAndDesc());
-                        if (!(mtarget instanceof jq_InstanceMethod)) break;
+                        if (mtarget instanceof jq_StaticMethod) continue;
                         target = (jq_InstanceMethod)mtarget;
                         if (TRACE) System.out.println("Class "+rclass+" target: "+target);
                         if ((target != null) && !target.isAbstract()) c.add(target);
@@ -313,7 +313,7 @@ public abstract class CallTargets extends AbstractSet {
                 break;
             }
             jq_Method mtarget = (jq_Method)rclass.getDeclaredMember(imethod.getNameAndDesc());
-            if (!(mtarget instanceof jq_InstanceMethod)) break;
+            if (mtarget instanceof jq_StaticMethod) break;
             jq_InstanceMethod target = (jq_InstanceMethod)mtarget;
             if (target != null) {
                 if (!target.isAbstract()) c.add(target);
@@ -337,7 +337,7 @@ public abstract class CallTargets extends AbstractSet {
                 continue;
             }
             jq_Method mtarget = (jq_Method)rclass.getDeclaredMember(imethod.getNameAndDesc());
-            if (!(mtarget instanceof jq_InstanceMethod)) break;
+            if (mtarget instanceof jq_StaticMethod) continue;
             jq_InstanceMethod target = (jq_InstanceMethod)mtarget;
             if (target != null) {
                 if (TRACE) System.out.println("Class "+rclass+" target: "+target);
@@ -481,7 +481,7 @@ public abstract class CallTargets extends AbstractSet {
             if (!rclass.isLoaded()) continue;
             jq.assert(!rclass.isInterface());
             jq_Method mtarget = (jq_Method)rclass.getDeclaredMember(imethod.getNameAndDesc());
-            if (!(mtarget instanceof jq_InstanceMethod)) break;
+            if (mtarget instanceof jq_StaticMethod) continue;
             jq_InstanceMethod target = (jq_InstanceMethod)mtarget;
             if (target != null) {
                 if (!target.isAbstract()) c.add(target);
