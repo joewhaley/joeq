@@ -6,6 +6,7 @@ package Compil3r.Analysis.IPA;
 import java.util.Set;
 
 import Clazz.jq_Method;
+import Compil3r.Analysis.IPA.ProgramLocation.QuadProgramLocation;
 import Compil3r.Analysis.IPSSA.ContextSet;
 import Compil3r.Analysis.IPSSA.SSALocation;
 import Compil3r.Quad.BasicBlock;
@@ -38,7 +39,7 @@ public interface PointerAnalysisResults {
      * 
      * loc must be in the basic block
      */
-    Set/*<SSALocation>*/ mod(ProgramLocation loc, BasicBlock bb);
+    Set/*<SSALocation>*/ mod(QuadProgramLocation loc, BasicBlock bb);
     
     /**
      *  Returns the set of potentially-referenced locations of the
@@ -49,7 +50,7 @@ public interface PointerAnalysisResults {
      * 
      * loc must be in the basic block
      */
-    Set/*<SSALocation>*/ ref(ProgramLocation loc, BasicBlock block);
+    Set/*<SSALocation>*/ ref(QuadProgramLocation loc, BasicBlock block);
     
     
     //-------------- 2. Aliasing of parameters                          --------------//
@@ -74,7 +75,7 @@ public interface PointerAnalysisResults {
     
 	PA getPAResults();
 
-    Set/*jq_Method*/ getCallTargets(ProgramLocation loc);
+    Set/*jq_Method*/ getCallTargets(QuadProgramLocation loc);
 
     CallGraph getCallGraph();
 }
