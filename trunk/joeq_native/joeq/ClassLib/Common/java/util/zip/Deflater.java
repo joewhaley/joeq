@@ -226,9 +226,10 @@ public class Deflater {
   /** 
    * Finalizes this object.
    */
-  protected void finalize()
+  protected void finalize() throws Throwable
   {
     /* Exists solely for compatibility.  We don't have any native state. */
+    super.finalize();
   }
 
   /** 

@@ -208,7 +208,7 @@ public abstract class Bootstrapper implements ObjectLayout {
                 String classname = dis.readLine();
                 if (classname == null) break;
                 if (classname.charAt(0) == '#') continue;
-                jq_Type t = (jq_Type)PrimordialClassLoader.loader.getOrCreateBSType(classname);
+                jq_Type t = PrimordialClassLoader.loader.getOrCreateBSType(classname);
                 t.load(); t.verify(); t.prepare();
                 classset.add(t);
             }
@@ -240,7 +240,7 @@ public abstract class Bootstrapper implements ObjectLayout {
                         }
                     }
                 } else {
-                    jq_Type t = (jq_Type)PrimordialClassLoader.loader.getOrCreateBSType(classname);
+                    jq_Type t = PrimordialClassLoader.loader.getOrCreateBSType(classname);
                     t.load(); t.verify(); t.prepare();
                     classset.add(t);
                     if (t instanceof jq_Class) {
@@ -488,11 +488,14 @@ public abstract class Bootstrapper implements ObjectLayout {
         DirectBufferedFileOutputStream dbfos = new DirectBufferedFileOutputStream(fos);
         dbfos.order(ByteOrder.LITTLE_ENDIAN);
         starttime = System.currentTimeMillis();
-        if (DUMP_COFF)
-            objmap.dumpCOFF((ExtendedDataOutput) dbfos, rootm);
-        else
-            objmap.dumpELF((ExtendedDataOutput) dbfos, rootm);
-        dbfos.close();
+        try {
+            if (DUMP_COFF)
+                objmap.dumpCOFF((ExtendedDataOutput) dbfos, rootm);
+            else
+                objmap.dumpELF((ExtendedDataOutput) dbfos, rootm);
+        } finally {
+            dbfos.close();
+        }
         long dumptime = System.currentTimeMillis() - starttime;
         System.out.println("Dump time: "+dumptime/1000f+"s");
         

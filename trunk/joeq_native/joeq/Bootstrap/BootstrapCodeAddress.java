@@ -11,6 +11,7 @@ import Clazz.jq_Class;
 import Main.jq;
 import Memory.Address;
 import Memory.CodeAddress;
+import Util.Strings;
 
 /**
  * @author  John Whaley
@@ -53,7 +54,7 @@ public class BootstrapCodeAddress extends CodeAddress implements BootstrapAddres
     public boolean isNull() { return value == 0; }
     
     public int to32BitValue() { return value; }
-    public String stringRep() { return jq.hex8(value); }
+    public String stringRep() { return Strings.hex8(value); }
     
     public static final jq_Class _class;
     static {

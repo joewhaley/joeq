@@ -207,10 +207,13 @@ public class DirectBufferedFileOutputStream extends OutputStream implements Exte
         return totalBytesWritten;
     }
 
-    public void finalize() {
+    public void finalize() throws Throwable {
         try {
             this.close();
         } catch (IOException x) {}
+        finally {
+            super.finalize();
+        }
     }
 
 }

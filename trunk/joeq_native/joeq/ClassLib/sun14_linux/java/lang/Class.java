@@ -27,12 +27,14 @@ public final class Class {
     private java.lang.reflect.Method[] getDeclaredMethods0(boolean publicOnly) {
         java.lang.reflect.Method[] f = getMethods0(java.lang.reflect.Member.DECLARED);
         if (publicOnly) {
+            // TODO.
         }
         return f;
     }
     private java.lang.reflect.Constructor[] getDeclaredConstructors0(boolean publicOnly) {
         java.lang.reflect.Constructor[] f = getConstructors0(java.lang.reflect.Member.DECLARED);
         if (publicOnly) {
+            // TODO.
         }
         return f;
     }

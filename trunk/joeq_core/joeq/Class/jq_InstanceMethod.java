@@ -46,7 +46,7 @@ public class jq_InstanceMethod extends jq_Method {
         param_types[0] = clazz;
         i = nd.getDesc().getParamDescriptors();
         for (int j=1; j<num; ++j) {
-            Utf8 pd = (Utf8)i.nextUtf8();
+            Utf8 pd = i.nextUtf8();
             param_types[j] = PrimordialClassLoader.getOrCreateType(clazz.getClassLoader(), pd);
             ++words;
             if ((param_types[j] == jq_Primitive.LONG) ||
@@ -57,7 +57,7 @@ public class jq_InstanceMethod extends jq_Method {
         return_type = PrimordialClassLoader.getOrCreateType(clazz.getClassLoader(), rd);
     }
     public final void clearOverrideFlags() { this.isOverridden = false; this.isOverriding = false; }
-    public final void isOverriddenBy(jq_InstanceMethod that) {
+    public final void overriddenBy(jq_InstanceMethod that) {
         this.isOverridden = true; that.isOverriding = true;
     }
     public final boolean isOverriding() { return isOverriding; }

@@ -24,6 +24,7 @@ import Run_Time.TypeCheck;
 import Run_Time.Unsafe;
 import Util.BitString;
 import Util.LinearSet;
+import Util.Strings;
 import Util.BitString.BitStringIterator;
 
 public class LiveRefAnalysis {
@@ -246,7 +247,7 @@ public class LiveRefAnalysis {
             }
             sb.append(" }");
             if (stackDepth > 0) {
-                sb.append("\nStack: {");
+                sb.append(Strings.lineSep+"Stack: {");
                 for (int i=0; i<stackDepth; ++i) {
                     sb.append(i);
                     sb.append('=');
@@ -306,7 +307,7 @@ public class LiveRefAnalysis {
         public static final SystemType FLOAT  = new SystemType(jq_Primitive.FLOAT);
         public static final SystemType LONG   = new SystemType(jq_Primitive.LONG);
         public static final SystemType DOUBLE = new SystemType(jq_Primitive.DOUBLE);
-        public static final SystemType OBJECT = new SystemType(PrimordialClassLoader.loader.getJavaLangObject());
+        public static final SystemType OBJECT = new SystemType(PrimordialClassLoader.getJavaLangObject());
     }
     
     public static class DerivedRef extends Type {
@@ -501,7 +502,8 @@ public class LiveRefAnalysis {
             }
             sb.append(" }");
             if (stackDepth > 0) {
-                sb.append("\nStack: {");
+                sb.append(Strings.lineSep);
+                sb.append("Stack: {");
                 for (int i=0; i<stackDepth; ++i) {
                     sb.append(i);
                     sb.append('=');
@@ -526,7 +528,8 @@ public class LiveRefAnalysis {
             }
             sb.append(" }");
             if (stackDepth > 0) {
-                sb.append("\nStack: {");
+                sb.append(Strings.lineSep);
+                sb.append("Stack: {");
                 for (int i=0; i<stackDepth; ++i) {
                     sb.append(i);
                     sb.append('=');
@@ -822,7 +825,8 @@ public class LiveRefAnalysis {
             }
             sb.append(" }");
             if (stackDepth > 0) {
-                sb.append("\nStack: {");
+                sb.append(Strings.lineSep);
+                sb.append("Stack: {");
                 for (int i=0; i<stackDepth; ++i) {
                     sb.append(i);
                     sb.append('=');
@@ -845,7 +849,8 @@ public class LiveRefAnalysis {
             }
             sb.append(" }");
             if (stackDepth > 0) {
-                sb.append("\nStack: {");
+                sb.append(Strings.lineSep);
+                sb.append("Stack: {");
                 for (int i=0; i<stackDepth; ++i) {
                     sb.append(i);
                     sb.append('=');
@@ -936,7 +941,7 @@ public class LiveRefAnalysis {
                 ExceptionHandler eh = ehi.nextEH();
                 BasicBlock bb2 = eh.getEntry();
                 jq_Type t = eh.getExceptionType();
-                if (t == null) t = PrimordialClassLoader.loader.getJavaLangThrowable();
+                if (t == null) t = PrimordialClassLoader.getJavaLangThrowable();
                 if (TRACE) out.println("Merging with handler "+bb2+" type "+t);
                 if (start_states[bb2.id] == null) {
                     change = true;

@@ -248,14 +248,14 @@ public abstract class AbstrRelation implements Relation, Cloneable,
         Object[] ks = Debug.sortedCollection(keys());
         for(int i = 0 ; i < ks.length ; i++ ){
             Object key = ks[i];
-            buffer.append("\n  ");              
+            buffer.append(Strings.lineSep+"  ");
             buffer.append(key);
             buffer.append(" -> ");
             buffer.append(Debug.stringImg(getValues(key)));
         }
         
         */
-        buffer.append("\n }\n");
+        buffer.append(Strings.lineSep+" }"+Strings.lineSep);
         
         return buffer.toString();
     }

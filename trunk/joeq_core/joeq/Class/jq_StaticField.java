@@ -83,7 +83,7 @@ public final class jq_StaticField extends jq_Field {
                     constantValue = clazz.getCPasDouble(cpidx);
                     break;
                 case CONSTANT_String:
-                    if (type != PrimordialClassLoader.loader.getJavaLangString())
+                    if (type != PrimordialClassLoader.getJavaLangString())
                         throw new ClassFormatError();
                     constantValue = clazz.getCPasString(cpidx);
                     break;

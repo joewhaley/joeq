@@ -28,13 +28,6 @@ public final class BitString implements Cloneable, java.io.Serializable {
     }
 
     /**
-     * Convert a subscript into the bits[] array to a (maximum) bitIndex.
-     */
-    private static int bitIndex(int subscript) {
-        return (subscript << BITS_PER_UNIT) + MASK;
-    }
-
-    /**
      * Creates an empty string with the specified size.
      * @param nbits the size of the string
      */
@@ -101,11 +94,12 @@ public final class BitString implements Cloneable, java.io.Serializable {
     }
 
     public static final int bsr(int v) {
-        if ((v & 0xFFFF0000) != 0)
+        if ((v & 0xFFFF0000) != 0) {
             if ((v & 0xFF000000) != 0)
                 return 24 + bytemsb[(v >> 24) & 0xFF];
             else
                 return 16 + bytemsb[v >> 16];
+        }
         if ((v & 0x0000FF00) != 0)
             return 8 + bytemsb[v >> 8];
         else
@@ -325,9 +319,15 @@ public final class BitString implements Cloneable, java.io.Serializable {
         final int div = amt >> BITS_PER_UNIT;
         final int mod = amt & MASK;
         final int size = bits.length;
-        jq.Assert(amt >= 0);
+        if (amt < 0) {
+            shr(-amt); return;
+        }
         // big moves
         if (div > 0) {
+            System.arraycopy(bits, 0, bits, div, size - div);
+            for (int i = 0; i < div; ++i)
+                bits[i] = 0;
+            /*
             int i;
             for (i = size - 1; i >= div; --i) {
                 bits[i] = bits[i - div];
@@ -335,6 +335,7 @@ public final class BitString implements Cloneable, java.io.Serializable {
             for (; i >= 0; --i) {
                 bits[i] = 0;
             }
+            */
         }
         // small moves
         if (mod > 0) {
@@ -358,6 +359,10 @@ public final class BitString implements Cloneable, java.io.Serializable {
         jq.Assert(amt >= 0);
         // big moves
         if (div > 0) {
+            System.arraycopy(bits, div, bits, 0, size - div);
+            for (int i = size-div; i < size; ++i)
+                bits[i] = 0;
+            /*
             int i;
             for (i = 0; i < size - div; ++i) {
                 bits[i] = bits[i + div];
@@ -365,6 +370,7 @@ public final class BitString implements Cloneable, java.io.Serializable {
             for (; i < size; ++i) {
                 bits[i] = 0;
             }
+            */
         }
         // small moves
         if (mod > 0) {
@@ -381,10 +387,13 @@ public final class BitString implements Cloneable, java.io.Serializable {
      * @param set the bit set to copy the bits from
      */
     public void copyBits(BitString set) {
+        System.arraycopy(bits, 0, set.bits, 0, set.bits.length);
+        /*
         int setLength = set.bits.length;
         for (int i = setLength; i-- > 0;) {
             bits[i] = set.bits[i];
         }
+        */
     }
 
     /**
@@ -613,7 +622,7 @@ public final class BitString implements Cloneable, java.io.Serializable {
             t = bits[j];
             t &= (1 << ((i + 1) & MASK)) - 1;
             k = j << BITS_PER_UNIT;
-            if (TRACE) System.out.println("BackwardBitStringIterator i=" + i + " j=" + j + " t=" + jq.hex(t) + " k=" + k);
+            if (TRACE) System.out.println("BackwardBitStringIterator i=" + i + " j=" + j + " t=" + Strings.hex(t) + " k=" + k);
         }
 
         BackwardBitStringIterator() {
@@ -621,7 +630,7 @@ public final class BitString implements Cloneable, java.io.Serializable {
             j = bits.length - 1;
             t = bits[j];
             k = j << BITS_PER_UNIT;
-            if (TRACE) System.out.println("BackwardBitStringIterator j=" + j + " t=" + jq.hex(t) + " k=" + k);
+            if (TRACE) System.out.println("BackwardBitStringIterator j=" + j + " t=" + Strings.hex(t) + " k=" + k);
         }
 
         public boolean hasNext() {
@@ -633,7 +642,7 @@ public final class BitString implements Cloneable, java.io.Serializable {
                 }
                 t = bits[--j];
                 k -= 1 << BITS_PER_UNIT;
-                if (TRACE) System.out.println("BackwardBitStringIterator: t = " + jq.hex(t) + " j = " + j + " k = " + k);
+                if (TRACE) System.out.println("BackwardBitStringIterator: t = " + Strings.hex(t) + " j = " + j + " k = " + k);
             }
             return true;
         }
@@ -644,11 +653,11 @@ public final class BitString implements Cloneable, java.io.Serializable {
                 if (j == 0) throw new java.util.NoSuchElementException();
                 t = bits[--j];
                 k -= 1 << BITS_PER_UNIT;
-                if (TRACE) System.out.println("BackwardBitStringIterator: t = " + jq.hex(t) + " j = " + j + " k = " + k);
+                if (TRACE) System.out.println("BackwardBitStringIterator: t = " + Strings.hex(t) + " j = " + j + " k = " + k);
             }
             int index = bsr(t) - 1;
             t &= ~(1 << index);
-            if (TRACE) System.out.println("BackwardBitStringIterator: t=" + jq.hex(t) + " index=" + index + " k=" + k);
+            if (TRACE) System.out.println("BackwardBitStringIterator: t=" + Strings.hex(t) + " index=" + index + " k=" + k);
             return k + index;
         }
 

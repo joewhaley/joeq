@@ -20,6 +20,7 @@ import Memory.HeapAddress;
 import Run_Time.ExceptionDeliverer;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
+import Util.Strings;
 
 /*
  * @author  John Whaley
@@ -89,7 +90,7 @@ public class RuntimeCodeAllocator extends CodeAllocator {
         }
         if (estimatedSize < maxFreePrevious) {
             // use a prior block's unused space.
-            if (TRACE) SystemInterface.debugmsg("Estimated size ("+jq.hex(estimatedSize)+" fits within a prior block: maxfreeprev="+jq.hex(maxFreePrevious));
+            if (TRACE) SystemInterface.debugmsg("Estimated size ("+Strings.hex(estimatedSize)+" fits within a prior block: maxfreeprev="+Strings.hex(maxFreePrevious));
             // start searching at the first block
             CodeAddress start_ptr = heapFirst;
             for (;;) {
@@ -224,7 +225,7 @@ public class RuntimeCodeAllocator extends CodeAllocator {
             CodeAddress end = getEnd();
             jq.Assert(current.difference(end) <= 0);
             if (end != heapEnd) {
-                if (TRACE) SystemInterface.debugmsg("Prior block, recalculating maxfreeprevious (was "+jq.hex(maxFreePrevious)+")");
+                if (TRACE) SystemInterface.debugmsg("Prior block, recalculating maxfreeprevious (was "+Strings.hex(maxFreePrevious)+")");
                 // prior block
                 end.poke(current);
                 // recalculate max free previous
@@ -237,7 +238,7 @@ public class RuntimeCodeAllocator extends CodeAllocator {
                     maxFreePrevious = Math.max(maxFreePrevious, temp);
                     start_ptr = (CodeAddress)start_ptr.peek();
                 }
-                if (TRACE) SystemInterface.debugmsg("New maxfreeprevious: "+jq.hex(maxFreePrevious));
+                if (TRACE) SystemInterface.debugmsg("New maxfreeprevious: "+Strings.hex(maxFreePrevious));
             } else {
                 // current block
                 heapCurrent = current;

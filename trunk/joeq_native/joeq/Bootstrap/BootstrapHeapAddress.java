@@ -12,6 +12,7 @@ import Main.jq;
 import Memory.Address;
 import Memory.HeapAddress;
 import Memory.HeapAddress.HeapAddressFactory;
+import Util.Strings;
 
 /**
  * @author  John Whaley
@@ -64,7 +65,7 @@ public class BootstrapHeapAddress extends HeapAddress implements BootstrapAddres
     public boolean isNull() { return value == 0; }
     
     public int to32BitValue() { return value; }
-    public String stringRep() { return jq.hex8(value); }
+    public String stringRep() { return Strings.hex8(value); }
     
     public static final jq_Class _class;
     static {

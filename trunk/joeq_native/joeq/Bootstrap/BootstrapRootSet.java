@@ -225,7 +225,7 @@ public class BootstrapRootSet {
         addNecessaryType(PrimordialClassLoader.loader.getOrCreateBSType("LAllocator/RuntimeCodeAllocator;"));
         
         // setIn0, setOut0, and setErr0 use these fields, but the trimmer doesn't detect the uses.
-        c = PrimordialClassLoader.loader.getJavaLangSystem();
+        c = PrimordialClassLoader.getJavaLangSystem();
         s_f = c.getOrCreateStaticField("in", "Ljava/io/InputStream;");
         addNecessaryField(s_f);
         s_f = c.getOrCreateStaticField("out", "Ljava/io/PrintStream;");

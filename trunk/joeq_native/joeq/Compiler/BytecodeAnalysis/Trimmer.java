@@ -38,6 +38,7 @@ import Run_Time.Monitor;
 import Run_Time.Reflection;
 import Run_Time.TypeCheck;
 import Run_Time.Unsafe;
+import Util.Strings;
 
 /**
  * @author  John Whaley
@@ -227,7 +228,7 @@ public class Trimmer {
         }
 
         public String toString() {
-            return "Trim/"+jq.left(method.getName().toString(), 10);
+            return "Trim/"+Strings.left(method.getName().toString(), 10);
         }
 
         public void forwardTraversal() throws VerifyError {

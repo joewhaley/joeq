@@ -15,7 +15,7 @@ import java.util.SortedSet;
  */
 public class SortedArraySet
     extends AbstractList
-    implements SortedSet, List, Serializable, RandomAccess {
+    implements SortedSet, List, Cloneable, Serializable, RandomAccess {
 
     /**
      * The array buffer into which the elements of the SortedArraySet are stored.
@@ -46,6 +46,7 @@ public class SortedArraySet
         if (initialCapacity < 0)
             throw new IllegalArgumentException("Illegal Capacity: "+initialCapacity);
         this.elementData = new Object[initialCapacity];
+        this.size = 0;
         this.comparator = null;
     }
     
@@ -62,7 +63,13 @@ public class SortedArraySet
     }
     
     public SortedArraySet(Comparator comparator) {
+        this(10, comparator);
+    }
+
+    public SortedArraySet(int initialCapacity, Comparator comparator) {
         super();
+        this.elementData = new Object[initialCapacity];
+        this.size = 0;
         this.comparator = comparator;
     }
 
@@ -507,7 +514,7 @@ public class SortedArraySet
     }
 
     // Set this to true if allocations are more expensive than arraycopy.
-    public static final boolean REDUCE_ALLOCATIONS = true;
+    public static final boolean REDUCE_ALLOCATIONS = false;
 
     public boolean addAll(Collection that) {
         if (that instanceof SortedSet) return addAll((SortedSet)that);
@@ -529,31 +536,27 @@ public class SortedArraySet
             new_e1 = e1;
             i1 = s2; s1 += s2;
         } else {
-            this.elementData = new_e1 = new Object[newSize];
+            new_e1 = new Object[newSize];
+            this.elementData = new_e1;
             i1 = 0;
         }
         Iterator i2 = that.iterator();
         boolean change = false;
         for (;;) {
-            if (i1 == s1) {
-                if (i2.hasNext()) {
-                    change = true;
-                    do
-                        new_e1[new_i1++] = i2.next();
-                    while (i2.hasNext());
-                }
-                this.size = new_i1;
-                return change;
-            }
             if (!i2.hasNext()) {
-                do
-                    new_e1[new_i1++] = e1[i1++];
-                while (i1 != s1);
-                this.size = new_i1;
+                System.arraycopy(e1, i1, new_e1, new_i1, s1-i1);
+                this.size = new_i1 + s1 - i1;
                 return change;
             }
             Object o2 = i2.next();
             for (;;) {
+                if (i1 == s1) {
+                    new_e1[new_i1++] = o2;
+                    while (i2.hasNext())
+                        new_e1[new_i1++] = i2.next();
+                    this.size = new_i1;
+                    return true;
+                }
                 Object o1 = e1[i1];
                 int r = compare(o1, o2);
                 if (r <= 0) {
@@ -575,7 +578,7 @@ public class SortedArraySet
      */
     public int indexOf(Object arg0) {
         int i = whereDoesItGo(arg0);
-        if (!arg0.equals(this.elementData[i])) return -1;
+        if (i == size || !arg0.equals(this.elementData[i])) return -1;
         return i;
     }
 
@@ -626,6 +629,18 @@ public class SortedArraySet
         if (i == -1) return false;
         this.remove(i);
         return true;
+    }
+
+    public Object clone() {
+        try {
+            SortedArraySet s = (SortedArraySet) super.clone();
+            int initialCapacity = this.elementData.length;
+            s.elementData = new Object[initialCapacity];
+            s.size = this.size;
+            //s.comparator = comparator;
+            System.arraycopy(this.elementData, 0, s.elementData, 0, this.size);
+            return s;
+        } catch (CloneNotSupportedException _) { return null; }
     }
 
 }

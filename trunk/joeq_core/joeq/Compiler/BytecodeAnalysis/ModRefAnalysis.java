@@ -6,6 +6,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
+import Util.Strings;
+
 import Clazz.jq_InstanceField;
 import Clazz.jq_Method;
 import Clazz.jq_MethodVisitor;
@@ -269,5 +271,7 @@ public class ModRefAnalysis extends BytecodeVisitor {
         invokeHelper(op, f);
     }
     
-    public String toString() { return "Mod: "+mod+"\nRef: "+ref; }
+    public String toString() {
+        return "Mod: "+mod+Strings.lineSep+"Ref: "+ref;
+    }
 }

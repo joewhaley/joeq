@@ -31,6 +31,7 @@ import Run_Time.TypeCheck;
 import UTF.Utf8;
 import Util.IdentityHashCodeWrapper;
 import Util.LinearSet;
+import Util.Strings;
 
 /**
  * @author  John Whaley
@@ -1724,7 +1725,7 @@ public class TypeAnalysis {
             HashSet visited = new HashSet();
             for (int i=0; i<parameters.length; ++i) {
                 if (parameters[i] != null) {
-                    out_ta.print(jq.left("P"+i+":", 4));
+                    out_ta.print(Strings.left("P"+i+":", 4));
                     String s = parameters[i].toString();
                     out_ta.print(s);
                     AnalysisSummary.dump_recurse(out_ta, visited, 4+s.length(), parameters[i]);
@@ -2185,14 +2186,14 @@ public class TypeAnalysis {
                     out_ta.print(s);
                     dump_recurse(out, visited, indent+s.length(), t2);
                     if (i.hasNext()) 
-                        out_ta.print(jq.left("", indent));
+                        out_ta.print(Strings.left("", indent));
                 }
             }
             if (pl instanceof OutsideProgramLocation) {
                 if (((OutsideProgramLocation)pl).getOutsideEdges() != null) {
                     Iterator i = ((OutsideProgramLocation)pl).getOutsideEdges().entrySet().iterator();
                     if (b && i.hasNext())
-                        out_ta.print(jq.left("", indent));
+                        out_ta.print(Strings.left("", indent));
                     b |= i.hasNext();
                     while (i.hasNext()) {
                         Map.Entry e = (Map.Entry)i.next();
@@ -2202,7 +2203,7 @@ public class TypeAnalysis {
                         out_ta.print(s);
                         dump_recurse(out, visited, indent+s.length(), t2);
                         if (i.hasNext()) 
-                            out_ta.print(jq.left("", indent));
+                            out_ta.print(Strings.left("", indent));
                     }
                 }
             }
@@ -2223,7 +2224,7 @@ public class TypeAnalysis {
             while (j.hasNext()) {
                 ProgramLocation pl = (ProgramLocation)j.next();
                 String s = pl.toString();
-                out_ta.print(jq.left("", indent));
+                out_ta.print(Strings.left("", indent));
                 out_ta.print(s);
                 dump_recurse(out, visited, indent+s.length(), pl);
             }
@@ -2237,7 +2238,7 @@ public class TypeAnalysis {
             if (_params != null) {
                 for (int i=0; i<_params.length; ++i) {
                     if (_params[i] != null) {
-                        out_ta.print(jq.left("P"+i+":", 4));
+                        out_ta.print(Strings.left("P"+i+":", 4));
                         String s = _params[i].toString();
                         out_ta.print(s);
                         dump_recurse(out, visited, 4+s.length(), _params[i]);
@@ -2393,7 +2394,7 @@ public class TypeAnalysis {
             jq_Array arrayType;
             jq_Type basetype = base.getType();
             if (basetype instanceof jq_Array) arrayType = (jq_Array)basetype;
-            else arrayType = PrimordialClassLoader.loader.getJavaLangObject().getArrayTypeForElementType();
+            else arrayType = PrimordialClassLoader.getJavaLangObject().getArrayTypeForElementType();
             ArrayDereference d = new ArrayDereference(arrayType);
             SetOfLocations deref = base.dereference(d, method, i_start);
             currentState.put(nLocals+currentStackDepth-1, deref);
@@ -2407,7 +2408,7 @@ public class TypeAnalysis {
             jq_Array arrayType;
             jq_Type basetype = base.getType();
             if (basetype instanceof jq_Array) arrayType = (jq_Array)basetype;
-            else arrayType = PrimordialClassLoader.loader.getJavaLangObject().getArrayTypeForElementType();
+            else arrayType = PrimordialClassLoader.getJavaLangObject().getArrayTypeForElementType();
             ArrayDereference d = new ArrayDereference(arrayType);
             base.store(d, obj);
         }
@@ -2566,7 +2567,7 @@ public class TypeAnalysis {
                     SetOfLocations seed = SetOfLocations.makeSeed(returnType);
                     currentState.put(nLocals+currentStackDepth-1, seed);
                 }
-                CaughtLocation cl = new CaughtLocation(this.method, this.i_start, PrimordialClassLoader.loader.getJavaLangThrowable());
+                CaughtLocation cl = new CaughtLocation(this.method, this.i_start, PrimordialClassLoader.getJavaLangThrowable());
                 cl.methodSequences = new MethodCallSequences(true);
                 SetOfLocations thrown = new SetOfLocations();
                 thrown.add(cl);
@@ -2599,7 +2600,7 @@ public class TypeAnalysis {
             SetOfLocations thrown = applySummary(currentState, f, final_result, false);
 
             thrown = applySummary(state_copy, f, final_result, true);
-            CaughtLocation cl = new CaughtLocation(this.method, this.i_start, PrimordialClassLoader.loader.getJavaLangThrowable());
+            CaughtLocation cl = new CaughtLocation(this.method, this.i_start, PrimordialClassLoader.getJavaLangThrowable());
             cl.methodSequences = new MethodCallSequences(true);
             if (thrown == null) {
                 thrown = new SetOfLocations();

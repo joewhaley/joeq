@@ -76,6 +76,7 @@ import Run_Time.TypeCheck;
 import Run_Time.Unsafe;
 import Scheduler.jq_Thread;
 import UTF.Utf8;
+import Util.Strings;
 
 /**
  * Converts stack-based Java bytecode to Quad intermediate format.
@@ -116,7 +117,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
     /** Returns a string with the name of the pass and the method being converted.
      * @return  a string with the name of the pass and the method being converted. */
     public String toString() {
-        return "BC2Q/"+jq.left(method.getName().toString(), 10);
+        return "BC2Q/"+Strings.left(method.getName().toString(), 10);
     }
     /** Perform conversion process from bytecode to quad.
      * @return  the control flow graph of the resulting quad representation. */
@@ -2060,7 +2061,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
             return ((jq_Array)((RegisterOperand)op).getType()).getElementType();
         } else if (op instanceof AConstOperand && ((AConstOperand)op).getValue() == null) {
             // what is the element type of an array constant 'null'?
-            return PrimordialClassLoader.loader.getJavaLangObject();
+            return PrimordialClassLoader.getJavaLangObject();
         } else {
             jq.UNREACHABLE(op.toString());
             return null;
@@ -2142,7 +2143,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
     }
     
     RegisterOperand makeGuardReg() {
-        return rf.makeGuardReg();
+        return RegisterFactory.makeGuardReg();
     }
     
     int getLocalNumber(Register r, jq_Type t) {

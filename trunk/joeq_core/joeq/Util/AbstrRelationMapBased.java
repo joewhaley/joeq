@@ -30,7 +30,7 @@ public abstract class AbstrRelationMapBased extends AbstrRelation
 
     
     public Set getValues(Object key) {
-        Set retval = (Set) getValues2(key);
+        Set retval = getValues2(key);
         if(retval == null)
             retval = Collections.EMPTY_SET;
         return retval;

@@ -16,6 +16,7 @@ import Clazz.jq_StaticMethod;
 import Main.jq;
 import Memory.HeapAddress;
 import Scheduler.jq_Thread;
+import Util.Strings;
 
 /*
  * @author  John Whaley
@@ -42,7 +43,7 @@ public class Monitor implements ObjectLayout {
         }
         int c = ((lockword & LOCK_COUNT_MASK) >> LOCK_COUNT_SHIFT);
         if ((lockword & THREAD_ID_MASK) != 0) ++c;
-        if (TRACE) SystemInterface.debugmsg("Getting thin lock entry count, lockword="+jq.hex8(lockword)+", count="+c);
+        if (TRACE) SystemInterface.debugmsg("Getting thin lock entry count, lockword="+Strings.hex8(lockword)+", count="+c);
         return c;
     }
     
@@ -81,7 +82,7 @@ public class Monitor implements ObjectLayout {
                 HeapAddress.addressOf(k).offset(STATUS_WORD_OFFSET).poke4(newlockword);
             } else {
                 // thin lock owned by another thread.
-                if (TRACE) SystemInterface.debugmsg(t+" tid "+jq.hex(tid)+": Lock contention with tid "+jq.hex(oldlockword & THREAD_ID_MASK)+", inflating...");
+                if (TRACE) SystemInterface.debugmsg(t+" tid "+Strings.hex(tid)+": Lock contention with tid "+Strings.hex(oldlockword & THREAD_ID_MASK)+", inflating...");
                 entrycount = 1;
                 Monitor m = allocateInflatedLock();
                 m.monitor_owner = t;
@@ -123,7 +124,7 @@ public class Monitor implements ObjectLayout {
         } else {
             // lock not owned by us!
             //if (TRACE)
-                SystemInterface.debugmsg("Thin lock not owned by us ("+jq.hex8(tid)+")! lockword="+jq.hex8(oldlockword));
+                SystemInterface.debugmsg("Thin lock not owned by us ("+Strings.hex8(tid)+")! lockword="+Strings.hex8(oldlockword));
             throw new IllegalMonitorStateException();
         }
     }
@@ -158,7 +159,7 @@ public class Monitor implements ObjectLayout {
                 jq.Assert(m.entry_count == 1);
                 m.free();
                 Monitor m2 = getMonitor(oldlockword);
-                if (TRACE) SystemInterface.debugmsg("Inflated by another thread! lockword="+jq.hex8(oldlockword)+" lock="+m2);
+                if (TRACE) SystemInterface.debugmsg("Inflated by another thread! lockword="+Strings.hex8(oldlockword)+" lock="+m2);
                 jq.Assert(m != m2);
                 m2.lock(Unsafe.getThreadBlock());
                 return;
@@ -173,10 +174,10 @@ public class Monitor implements ObjectLayout {
             status_address.atomicCas4(status_flags, newlockword);
             if (Unsafe.isEQ()) {
                 // successfully obtained inflated lock.
-                if (TRACE) SystemInterface.debugmsg("Obtained inflated lock! new lockword="+jq.hex8(newlockword));
+                if (TRACE) SystemInterface.debugmsg("Obtained inflated lock! new lockword="+Strings.hex8(newlockword));
                 return;
             } else {
-                if (TRACE) SystemInterface.debugmsg("Failed to obtain inflated lock, lockword was "+jq.hex8(oldlockword));
+                if (TRACE) SystemInterface.debugmsg("Failed to obtain inflated lock, lockword was "+Strings.hex8(oldlockword));
             }
             // another thread has a thin lock on this object.  yield to scheduler.
             Thread.yield();

@@ -8,6 +8,7 @@ package Compil3r.Quad;
 
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.Set;
 
 import Clazz.jq_InstanceMethod;
 import Clazz.jq_Method;
@@ -18,6 +19,8 @@ import Compil3r.Quad.MethodSummary.ConcreteTypeNode;
 import Compil3r.Quad.MethodSummary.Node;
 import Compil3r.Quad.Operator.Invoke;
 import Main.jq;
+import Util.HashCodeComparator;
+import Util.SortedArraySet;
 
 /**
  * This class combines a jq_Method with a Quad to represent a location in the code.
@@ -39,10 +42,16 @@ public class ProgramLocation {
     public boolean equals(ProgramLocation that) { return this.q == that.q; }
     public boolean equals(Object o) { if (o instanceof ProgramLocation) return equals((ProgramLocation)o); return false; }
     public String toString() {
-        String s = m.getName()+"() quad "+((q==null)?-1:q.getID());
-        if (q.getOperator() instanceof Invoke)
-            s += " => "+Invoke.getMethod(q).getMethod().getName()+"()";
-        return s;
+        StringBuffer sb = new StringBuffer();
+        sb.append(m.getName());
+        sb.append("() quad ");
+        sb.append((q==null)?-1:q.getID());
+        if (q.getOperator() instanceof Invoke) {
+            sb.append(" => ");
+            sb.append(Invoke.getMethod(q).getMethod().getName());
+            sb.append("()");
+        }
+        return sb.toString();
     }
 
     private byte getInvocationType() {
@@ -92,11 +101,11 @@ public class ProgramLocation {
 
     public CallTargets getCallTargets(java.util.Set nodes) {
         if (!(q.getOperator() instanceof Invoke)) return null;
-        LinkedHashSet exact_types = new LinkedHashSet();
-        LinkedHashSet notexact_types = new LinkedHashSet();
+        Set exact_types = new SortedArraySet(HashCodeComparator.INSTANCE);
+        Set notexact_types = new SortedArraySet(HashCodeComparator.INSTANCE);
         for (Iterator i=nodes.iterator(); i.hasNext(); ) {
             Node n = (Node)i.next();
-            LinkedHashSet s = (n instanceof ConcreteTypeNode)?exact_types:notexact_types;
+            Set s = (n instanceof ConcreteTypeNode)?exact_types:notexact_types;
             if (n.getDeclaredType() != null)
                 s.add(n.getDeclaredType());
         }

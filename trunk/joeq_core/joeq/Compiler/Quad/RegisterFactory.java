@@ -15,6 +15,7 @@ import Clazz.jq_Primitive;
 import Clazz.jq_Type;
 import Compil3r.Quad.Operand.RegisterOperand;
 import Main.jq;
+import Util.Strings;
 
 /**
  * @author  John Whaley
@@ -272,15 +273,15 @@ public class RegisterFactory {
     public String fullDump() {
         StringBuffer sb = new StringBuffer();
         sb.append("Local_I: "+local_I);
-        sb.append("\nLocal_F: "+local_F);
-        sb.append("\nLocal_L: "+local_L);
-        sb.append("\nLocal_D: "+local_D);
-        sb.append("\nLocal_A: "+local_A);
-        sb.append("\nStack_I: "+stack_I);
-        sb.append("\nStack_F: "+stack_F);
-        sb.append("\nStack_L: "+stack_L);
-        sb.append("\nStack_D: "+stack_D);
-        sb.append("\nStack_A: "+stack_A);
+        sb.append(Strings.lineSep+"Local_F: "+local_F);
+        sb.append(Strings.lineSep+"Local_L: "+local_L);
+        sb.append(Strings.lineSep+"Local_D: "+local_D);
+        sb.append(Strings.lineSep+"Local_A: "+local_A);
+        sb.append(Strings.lineSep+"Stack_I: "+stack_I);
+        sb.append(Strings.lineSep+"Stack_F: "+stack_F);
+        sb.append(Strings.lineSep+"Stack_L: "+stack_L);
+        sb.append(Strings.lineSep+"Stack_D: "+stack_D);
+        sb.append(Strings.lineSep+"Stack_A: "+stack_A);
         return sb.toString();
     }
 

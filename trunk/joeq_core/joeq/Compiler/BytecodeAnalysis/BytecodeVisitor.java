@@ -21,6 +21,7 @@ import Clazz.jq_StaticField;
 import Clazz.jq_StaticMethod;
 import Clazz.jq_Type;
 import Main.jq;
+import Util.Strings;
 
 /*
  * @author  John Whaley
@@ -53,7 +54,7 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
     
     public jq_StaticField resolve(jq_StaticField m) {
         try {
-            jq_StaticField m2 = (jq_StaticField)m.resolve1();
+            jq_StaticField m2 = m.resolve1();
             if (m != m2) updateMemberReference(m2, CONSTANT_ResolvedSFieldRef);
             return m2;
         } catch (Error e) {
@@ -64,7 +65,7 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
     
     public jq_InstanceField resolve(jq_InstanceField m) {
         try {
-            jq_InstanceField m2 = (jq_InstanceField)m.resolve1();
+            jq_InstanceField m2 = m.resolve1();
             if (m != m2) updateMemberReference(m2, CONSTANT_ResolvedIFieldRef);
             return m2;
         } catch (Error e) {
@@ -75,7 +76,7 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
     
     public jq_StaticMethod resolve(jq_StaticMethod m) {
         try {
-            jq_StaticMethod m2 = (jq_StaticMethod)m.resolve1();
+            jq_StaticMethod m2 = m.resolve1();
             if (m != m2) updateMemberReference(m2, CONSTANT_ResolvedSMethodRef);
             return m2;
         } catch (Error e) {
@@ -86,7 +87,7 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
     
     public jq_InstanceMethod resolve(jq_InstanceMethod m) {
         try {
-            jq_InstanceMethod m2 = (jq_InstanceMethod)m.resolve1();
+            jq_InstanceMethod m2 = m.resolve1();
             if (m != m2) updateMemberReference(m2, CONSTANT_ResolvedIMethodRef);
             return m2;
         } catch (Error e) {
@@ -97,7 +98,7 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
     
     public jq_Member resolve(jq_Member m) {
         try {
-            jq_Member m2 = (jq_Member)m.resolve();
+            jq_Member m2 = m.resolve();
             if (m != m2) {
                 byte tag = 0;
                 if (m instanceof jq_InstanceField)
@@ -157,7 +158,7 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
                 bcs[i_end-2] = (byte)index;
                 break;
             default:
-                jq.UNREACHABLE(jq.hex(op));
+                jq.UNREACHABLE(Strings.hex(op));
                 return;
         }
     }
@@ -198,7 +199,7 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
                 i_end-=4; index = getUnsignedWord(); getUnsignedByte(); getSignedByte();
                 break;
             default:
-                jq.UNREACHABLE(jq.hex(op));
+                jq.UNREACHABLE(Strings.hex(op));
                 return;
         }
         clazz.getCP().set(index, m, tag);

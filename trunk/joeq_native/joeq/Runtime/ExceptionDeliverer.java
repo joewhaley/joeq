@@ -19,6 +19,7 @@ import Main.jq;
 import Memory.CodeAddress;
 import Memory.StackAddress;
 import UTF.Utf8;
+import Util.Strings;
 
 /*
  * @author  John Whaley
@@ -92,7 +93,7 @@ public abstract class ExceptionDeliverer {
                         if (TRACE) SystemInterface.debugmsg("Performing monitorexit on static method "+cc.getMethod()+": object "+o);
                     } else {
                         o = cc.getThisPointer(ip, fp);
-                        if (TRACE) SystemInterface.debugmsg("Performing monitorexit on instance method "+cc.getMethod()+": object "+o.getClass()+"@"+jq.hex(System.identityHashCode(o)));
+                        if (TRACE) SystemInterface.debugmsg("Performing monitorexit on instance method "+cc.getMethod()+": object "+o.getClass()+"@"+Strings.hex(System.identityHashCode(o)));
                     }
                     Monitor.monitorexit(o);
                 }
@@ -115,9 +116,9 @@ public abstract class ExceptionDeliverer {
                     Utf8 sourcefile = m.getDeclaringClass().getSourceFile();
                     int bc_index = cc.getBytecodeIndex(ip);
                     int line_num = m.getLineNumber(bc_index);
-                    s = "\tat "+m+" ("+sourcefile+":"+line_num+" bc:"+bc_index+" off:"+jq.hex(code_offset)+")";
+                    s = "\tat "+m+" ("+sourcefile+":"+line_num+" bc:"+bc_index+" off:"+Strings.hex(code_offset)+")";
                 } else {
-                    s = "\tat <unknown cc> (start:"+cc.getStart().stringRep()+" off:"+jq.hex(code_offset)+")";
+                    s = "\tat <unknown cc> (start:"+cc.getStart().stringRep()+" off:"+Strings.hex(code_offset)+")";
                 }
             } else {
                 s = "\tat <unknown addr> (ip:"+ip.stringRep()+")";
@@ -140,9 +141,9 @@ public abstract class ExceptionDeliverer {
                     Utf8 sourcefile = m.getDeclaringClass().getSourceFile();
                     int bc_index = cc.getBytecodeIndex(ip);
                     int line_num = m.getLineNumber(bc_index);
-                    s = "\tat "+m+" ("+sourcefile+":"+line_num+" bc:"+bc_index+" off:"+jq.hex(code_offset)+")";
+                    s = "\tat "+m+" ("+sourcefile+":"+line_num+" bc:"+bc_index+" off:"+Strings.hex(code_offset)+")";
                 } else {
-                    s = "\tat <unknown cc> (start:"+cc.getStart().stringRep()+" off:"+jq.hex(code_offset)+")";
+                    s = "\tat <unknown cc> (start:"+cc.getStart().stringRep()+" off:"+Strings.hex(code_offset)+")";
                 }
             } else {
                 s = "\tat <unknown addr> (ip:"+ip.stringRep()+")";
@@ -165,9 +166,9 @@ public abstract class ExceptionDeliverer {
                     Utf8 sourcefile = m.getDeclaringClass().getSourceFile();
                     int bc_index = cc.getBytecodeIndex(ip);
                     int line_num = m.getLineNumber(bc_index);
-                    s = "\tat "+m+" ("+sourcefile+":"+line_num+" bc:"+bc_index+" off:"+jq.hex(code_offset)+")";
+                    s = "\tat "+m+" ("+sourcefile+":"+line_num+" bc:"+bc_index+" off:"+Strings.hex(code_offset)+")";
                 } else {
-                    s = "\tat <unknown cc> (start:"+cc.getStart().stringRep()+" off:"+jq.hex(code_offset)+")";
+                    s = "\tat <unknown cc> (start:"+cc.getStart().stringRep()+" off:"+Strings.hex(code_offset)+")";
                 }
             } else {
                 s = "\tat <unknown addr> (ip:"+ip.stringRep()+")";

@@ -29,6 +29,7 @@ import Scheduler.jq_MainThread;
 import Scheduler.jq_NativeThread;
 import Scheduler.jq_Thread;
 import UTF.Utf8;
+import Util.Strings;
 
 /**
  *
@@ -437,12 +438,12 @@ public abstract class jq {
         jq_NativeThread.initNativeThreads(nt, NumOfNativeThreads);
 
         // Here we start method replacement of classes whose name were given as arguments to -replace on the cmd line.
-        if (Clazz.jq_Class.TRACE_REPLACE_CLASS) SystemInterface.debugmsg("\nSTARTING REPLACEMENT of classes: " + Clazz.jq_Class.classToReplace);
+        if (Clazz.jq_Class.TRACE_REPLACE_CLASS) SystemInterface.debugmsg(Strings.lineSep+"STARTING REPLACEMENT of classes: " + Clazz.jq_Class.classToReplace);
         for (Iterator it = Clazz.jq_Class.classToReplace.iterator(); it.hasNext();) {
             String newCName = (String) it.next();
             PrimordialClassLoader.loader.replaceClass(newCName);
         }
-        if (Clazz.jq_Class.TRACE_REPLACE_CLASS) SystemInterface.debugmsg("\nDONE with Classes Replacement!");
+        if (Clazz.jq_Class.TRACE_REPLACE_CLASS) SystemInterface.debugmsg(Strings.lineSep+"DONE with Classes Replacement!");
 
         String className = args[i];
         jq_Class main_class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("L" + className.replace('.', '/') + ";");
@@ -689,57 +690,6 @@ public abstract class jq {
         b[index + 7] = (byte) (i);
     }
 
-    //// useful string utility functions
-    public static String hex(int i) {
-        return "0x" + Integer.toHexString(i);
-    }
-
-    public static String hex(Object o) {
-        if (!jq.RunningNative)
-            return hex(System.identityHashCode(o));
-        else
-            return HeapAddress.addressOf(o).stringRep();
-    }
-
-    public static String hex8(int i) {
-        String t = Integer.toHexString(i);
-        return "0x00000000".substring(0, 10 - t.length()) + t;
-    }
-
-    public static String hex16(long i) {
-        String t = Long.toHexString(i);
-        return "0x0000000000000000".substring(0, 18 - t.length()) + t;
-    }
-
-    public static String shex(int i) {
-        if (i < 0)
-            return "-" + hex(-i);
-        else
-            return hex(i);
-    }
-
-    public static String left(String s, int w) {
-        int n = s.length();
-        if (w < n) return s.substring(0, w);
-        StringBuffer b = new StringBuffer(w);
-        b.append(s);
-        for (int i = n; i < w; ++i) {
-            b.append(' ');
-        }
-        return b.toString();
-    }
-
-    public static String right(String s, int w) {
-        int n = s.length();
-        if (w < n) return s.substring(n - w);
-        StringBuffer b = new StringBuffer(w);
-        for (int i = n; i < w; ++i) {
-            b.append(' ');
-        }
-        b.append(s);
-        return b.toString();
-    }
-
     //// useful functions for parsing class and method names
     public static jq_Type parseType(String s) {
         if (s.length() == 1) {
@@ -762,6 +712,4 @@ public abstract class jq {
     }
 
     //public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateType("LMain/jq;");
-    //public static final jq_StaticMethod _hex8 = _class.getOrCreateStaticMethod("hex8", "(I)Ljava/lang/String;");
-    //public static final jq_StaticMethod _hex16 = _class.getOrCreateStaticMethod("hex16", "(J)Ljava/lang/String;");
 }

@@ -37,7 +37,7 @@ public class jq_StaticMethod extends jq_Method {
         param_types = new jq_Type[num];
         i = nd.getDesc().getParamDescriptors();
         for (int j=0; j<num; ++j) {
-            Utf8 pd = (Utf8)i.nextUtf8();
+            Utf8 pd = i.nextUtf8();
             param_types[j] = PrimordialClassLoader.getOrCreateType(clazz.getClassLoader(), pd);
             ++words;
             if ((param_types[j] == jq_Primitive.LONG) ||
