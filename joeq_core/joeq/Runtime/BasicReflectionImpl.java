@@ -179,7 +179,7 @@ public class BasicReflectionImpl implements Reflection.Delegate {
                 try {
                     fields = c.getDeclaredFields();
                 } catch (NoClassDefFoundError x) {
-                    Debug.writeln("Note: "+c+" could not be loaded in host jdk");
+                    if (REPORT_JDK_ERRORS) Debug.writeln("Note: "+c+" could not be loaded in host jdk");
                     return null;
                 }
                 declaredFieldsCache.put(c, fields);
@@ -188,7 +188,7 @@ public class BasicReflectionImpl implements Reflection.Delegate {
             try {
                 fields = c.getDeclaredFields();
             } catch (NoClassDefFoundError x) {
-                Debug.writeln("Note: "+c+" could not be loaded in host jdk");
+                if (REPORT_JDK_ERRORS) Debug.writeln("Note: "+c+" could not be loaded in host jdk");
                 return null;
             }
         }
@@ -207,7 +207,7 @@ public class BasicReflectionImpl implements Reflection.Delegate {
         try {
             methods = c.getDeclaredMethods();
         } catch (NoClassDefFoundError x) {
-            Debug.writeln("Note: "+c+" could not be loaded in host jdk");
+            if (REPORT_JDK_ERRORS) Debug.writeln("Note: "+c+" could not be loaded in host jdk");
             return null;
         }
 uphere:
@@ -231,7 +231,7 @@ uphere:
         try {
             consts = c.getDeclaredConstructors();
         } catch (NoClassDefFoundError x) {
-            Debug.writeln("Note: "+c+" could not be loaded in host jdk");
+            if (REPORT_JDK_ERRORS) Debug.writeln("Note: "+c+" could not be loaded in host jdk");
             return null;
         }
 uphere:
