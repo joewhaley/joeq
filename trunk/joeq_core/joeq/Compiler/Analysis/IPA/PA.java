@@ -172,7 +172,7 @@ public class PA {
     BDD V1set, V2set, H1set, H2set, T1set, T2set, Fset, Mset, Nset, Iset, Zset;
     BDD V1V2set, V1Fset, V1FV2set, V1H1set, H1Fset, H2Fset, H1FH2set;
     BDD IMset, INset, IV1set, INV1set, INH1set, INT2set, T2Nset, MZset;
-    BDD V1cV2cset, V1cH1cset;
+    BDD V1cV2cset, V1cH1cset, H1cH2cset;
     
     BDDDomain makeDomain(String name, int bits) {
         BDDDomain d = bdd.extDomain(new long[] { 1L << bits })[0];
@@ -268,6 +268,7 @@ public class PA {
         Zset = Z.set();
         V1cV2cset = V1c.set(); V1cV2cset.andWith(V2c.set());
         V1cH1cset = V1c.set(); V1cH1cset.andWith(H1c.set());
+        H1cH2cset = H1c.set(); H1cH2cset.andWith(H2c.set());
         if (CONTEXT_SENSITIVE || OBJECT_SENSITIVE) {
             V1set.andWith(V1c.set());
             V2set.andWith(V2c.set());
