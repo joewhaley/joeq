@@ -804,7 +804,7 @@ public class MethodSummary {
         public int hashCode() { return (caller == null?0x0:caller.hashCode()) ^ m.hashCode(); }
         public boolean equals(CallSite that) { return this.m.equals(that.m) && this.caller == that.caller; }
         public boolean equals(Object o) { if (o instanceof CallSite) return equals((CallSite)o); return false; }
-        public String toString() { return (caller!=null?caller.getMethod():null)+" "+m.getTargetMethod(); }
+        public String toString() { return (caller!=null?caller.getMethod():null)+" "+m.getID()+" "+(m.getTargetMethod()!=null?m.getTargetMethod().getName():null); }
     }
     
     public static class Edge {

@@ -41,6 +41,10 @@ public class OnlineDebugger {
     public static BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
 
     public static boolean debuggerEntryPoint() {
+        if (!jq.RunningNative) {
+            new InternalError().printStackTrace();
+            System.exit(-1);
+        }
         SystemInterface.debugwriteln(">>> Entering debugger.");
         StackAddress fp = StackAddress.getBasePointer();
         CodeAddress ip = (CodeAddress) fp.offset(4).peek();

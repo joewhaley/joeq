@@ -148,19 +148,19 @@ public abstract class Debug {
 
     private static Delegate _delegate;
     static {
-	/* Set up delegates. */
-	_delegate = null;
-	boolean nullVM = Main.jq.nullVM || System.getProperty("joeq.nullvm") != null;
-	if (!nullVM) {
-	    _delegate = attemptDelegate("Run_Time.DebugImpl");
-	}
-	if (_delegate == null) {
-	    _delegate = new Run_Time.BasicDebugImpl();
-	}
+        /* Set up delegates. */
+        _delegate = null;
+        boolean nullVM = Main.jq.nullVM || System.getProperty("joeq.nullvm") != null;
+        if (!nullVM) {
+            _delegate = attemptDelegate("Run_Time.DebugImpl");
+        }
+        if (_delegate == null) {
+            _delegate = new Run_Time.BasicDebugImpl();
+        }
     }
 
     private static Delegate attemptDelegate(String s) {
-	String type = "debug delegate";
+        String type = "debug delegate";
         try {
             Class c = Class.forName(s);
             return (Delegate)c.newInstance();
@@ -171,6 +171,6 @@ public abstract class Debug {
         } catch (java.lang.IllegalAccessException x) {
             System.err.println("Cannot access "+type+" "+s+": "+x);
         }
-	return null;
+        return null;
     }
 }

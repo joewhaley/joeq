@@ -43,6 +43,8 @@ public abstract class ProgramLocation {
     public abstract int getNumParams();
     public abstract AndersenType getParamType(int i);
     
+    public abstract int getID();
+    
     public abstract boolean isVirtual();
     
 //    protected abstract byte getInvocationType();
@@ -88,6 +90,8 @@ public abstract class ProgramLocation {
             if (!(q.getOperator() instanceof Invoke)) return null;
             return Invoke.getMethod(q).getMethod();
         }
+        
+        public int getID() { return q.getID(); }
         
         public int getNumParams() { return Invoke.getParamList(q).length(); }
         public AndersenType getParamType(int i) { return Invoke.getParamList(q).get(i).getType(); }
@@ -161,6 +165,8 @@ public abstract class ProgramLocation {
             this.identifier = identifier;
             this.targetMethod = targetMethod;
         }
+        
+        public int getID() { return identifier; }
         
         public AndersenMethod getTargetMethod() { return targetMethod; }
         public int getNumParams() { return targetMethod.getNumParams(); }
