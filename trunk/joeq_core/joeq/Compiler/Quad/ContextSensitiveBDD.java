@@ -24,14 +24,16 @@ import Clazz.jq_InstanceMethod;
 import Clazz.jq_Method;
 import Clazz.jq_Reference;
 import Clazz.jq_Type;
-import Compil3r.Quad.MethodSummary.ConcreteTypeNode;
-import Compil3r.Quad.MethodSummary.FieldNode;
-import Compil3r.Quad.MethodSummary.GlobalNode;
-import Compil3r.Quad.MethodSummary.Node;
-import Compil3r.Quad.MethodSummary.ParamNode;
-import Compil3r.Quad.MethodSummary.PassedParameter;
-import Compil3r.Quad.MethodSummary.ReturnedNode;
-import Compil3r.Quad.MethodSummary.UnknownTypeNode;
+import Compil3r.Analysis.IPA.*;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.ConcreteTypeNode;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.FieldNode;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.GlobalNode;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.ParamNode;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.PassedParameter;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.ReturnedNode;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.UnknownTypeNode;
 import Main.HostedVM;
 import Util.Assert;
 import Util.Collections.HashWorklist;
@@ -439,7 +441,8 @@ public class ContextSensitiveBDD {
             BDD myCallMappings = allCallMappings.restrict(callSite);
             
             /* Add mapping between actual and formal parameters to myCallMappings. */
-            for (int i=0; i<mc.getNumParams(); ++i) {
+            jq_Type[] paramTypes = mc.getParamTypes();
+            for (int i=0; i<paramTypes.length; ++i) {
                 PassedParameter pp = new PassedParameter(mc, i);
                 Set s = this.ms.getNodesThatCall(pp);
                 ParamNode pn = that.ms.getParamNode(i);
@@ -528,13 +531,13 @@ public class ContextSensitiveBDD {
             }
             
             /* Now that mapping is done, add mapping for return nodes. */
-            ReturnedNode rn = (ReturnedNode) this.ms.callToRVN.get(mc);
+            ReturnedNode rn = (ReturnedNode) this.ms.getRVN(mc);
             if (rn != null) {
-                addReturnValue(myCallMappings, rn, that.ms.returned);
+                addReturnValue(myCallMappings, rn, that.ms.getReturned());
             }
-            rn = (ReturnedNode) this.ms.callToTEN.get(mc);
-            if (rn != null && !that.ms.thrown.isEmpty())
-                addReturnValue(myCallMappings, rn, that.ms.thrown);
+            rn = (ReturnedNode) this.ms.getTEN(mc);
+            if (rn != null && !that.ms.getThrown().isEmpty())
+                addReturnValue(myCallMappings, rn, that.ms.getThrown());
             
             if (TRACE) {
                 printSet("final call mappings", myCallMappings, "V2xV4");

@@ -11,6 +11,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import Clazz.jq_Method;
+import Compil3r.Analysis.IPA.*;
 import Util.Collections.GenericInvertibleMultiMap;
 import Util.Collections.GenericMultiMap;
 import Util.Collections.InvertibleMultiMap;

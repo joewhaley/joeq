@@ -23,16 +23,18 @@ import Clazz.jq_Field;
 import Clazz.jq_Method;
 import Clazz.jq_Reference;
 import Clazz.jq_Type;
-import Compil3r.Quad.MethodSummary.ConcreteTypeNode;
-import Compil3r.Quad.MethodSummary.FieldNode;
-import Compil3r.Quad.MethodSummary.GlobalNode;
-import Compil3r.Quad.MethodSummary.Node;
-import Compil3r.Quad.MethodSummary.ParamNode;
-import Compil3r.Quad.MethodSummary.PassedParameter;
-import Compil3r.Quad.MethodSummary.ReturnValueNode;
-import Compil3r.Quad.MethodSummary.ReturnedNode;
-import Compil3r.Quad.MethodSummary.ThrownExceptionNode;
-import Compil3r.Quad.MethodSummary.UnknownTypeNode;
+import Compil3r.Analysis.IPA.*;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.ConcreteTypeNode;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.FieldNode;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.GlobalNode;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.ParamNode;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.PassedParameter;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.ReturnValueNode;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.ReturnedNode;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.ThrownExceptionNode;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.UnknownTypeNode;
 import Main.HostedVM;
 import Util.Assert;
 import Util.Strings;
@@ -409,9 +411,10 @@ public class FullyContextSensitiveBDD {
                 
                 // build up an array of BDD's corresponding to each of the
                 // parameters passed into this method call.
-                BDD[] params = new BDD[mc.getNumParams()];
-                for (int j=0; j<mc.getNumParams(); j++) {
-                    jq_Type t = (jq_Type) mc.getParamType(j);
+                jq_Type[] paramTypes = mc.getParamTypes();
+                BDD[] params = new BDD[paramTypes.length];
+                for (int j=0; j<paramTypes.length; j++) {
+                    jq_Type t = (jq_Type) paramTypes[j];
                     if (!(t instanceof jq_Reference)) continue;
                     PassedParameter pp = new PassedParameter(mc, j);
                     Set s = ms.getNodesThatCall(pp);
@@ -510,12 +513,12 @@ public class FullyContextSensitiveBDD {
                     }
                     
                     // add edges for return value, if one exists.
-                    if (((jq_Method)callee.ms.method).getReturnType().isReferenceType() &&
-                        !callee.ms.returned.isEmpty()) {
-                        ReturnedNode rvn = (ReturnValueNode) ms.callToRVN.get(mc);
+                    if (((jq_Method)callee.ms.getMethod()).getReturnType().isReferenceType() &&
+                        !callee.ms.getReturned().isEmpty()) {
+                        ReturnedNode rvn = (ReturnValueNode) ms.getRVN(mc);
                         if (rvn != null) {
                             BDD retVal = bdd.zero();
-                            for (Iterator k=callee.ms.returned.iterator(); k.hasNext(); ) {
+                            for (Iterator k=callee.ms.getReturned().iterator(); k.hasNext(); ) {
                                 int nIndex = getVariableIndex((Node) k.next());
                                 BDD tmp = V3.ithVar(nIndex);
                                 retVal.orWith(renumber(tmp, renumbering34, V3.set(), V4toV3));
@@ -528,11 +531,11 @@ public class FullyContextSensitiveBDD {
                         }
                     }
                     // add edges for thrown exception, if one exists.
-                    if (!callee.ms.thrown.isEmpty()) {
-                        ReturnedNode rvn = (ThrownExceptionNode) ms.callToTEN.get(mc);
+                    if (!callee.ms.getThrown().isEmpty()) {
+                        ReturnedNode rvn = (ThrownExceptionNode) ms.getTEN(mc);
                         if (rvn != null) {
                             BDD retVal = bdd.zero();
-                            for (Iterator k=callee.ms.returned.iterator(); k.hasNext(); ) {
+                            for (Iterator k=callee.ms.getReturned().iterator(); k.hasNext(); ) {
                                 int nIndex = getVariableIndex((Node) k.next());
                                 BDD tmp = V3.ithVar(nIndex);
                                 retVal.orWith(renumber(tmp, renumbering34, V3.set(), V4toV3));
@@ -551,7 +554,7 @@ public class FullyContextSensitiveBDD {
                         renumbering34.free();
                     }
                 }
-                for (int j=0; j<mc.getNumParams(); ++j) {
+                for (int j=0; j<paramTypes.length; ++j) {
                     if (params[j] != null)
                         params[j].free();
                 }
@@ -640,11 +643,11 @@ public class FullyContextSensitiveBDD {
             }
             if (n instanceof ParamNode ||
                 n instanceof ReturnedNode ||
-                ms.returned.contains(n) ||
-                ms.thrown.contains(n)) {
+                ms.getReturned().contains(n) ||
+                ms.getThrown().contains(n)) {
                 addLocalEscapeNode(n);
             }
-            if (n.passedParameters != null) {
+            if (n.isPassedAsParameter()) {
                 addNode(n);
             }
             addVarType(n, (jq_Reference) n.getDeclaredType());
