@@ -89,14 +89,16 @@ public class RootedCHACallGraph extends CHACallGraph {
             }
             */
             
+            /*
             long paths = 0L;
             for (int i=1; ; ++i) {
-                long paths2 = Util.Graphs.CountPaths.countPaths(cg, i);
+                long paths2 = Util.Graphs.CountPaths.countPaths(g.getNavigator(), s, i);
                 if (paths2 == paths) break;
                 paths = paths2;
                 System.out.println("Number of paths (k="+i+") = "+paths);
             }
-            System.out.println("Number of paths (k=infinity) = "+Util.Graphs.CountPaths.countPaths(cg));
+            */
+            System.out.println("Number of paths (k=infinity) = "+Util.Graphs.CountPaths.countPaths(g.getNavigator(), s));
         }
         
         if (false) {
