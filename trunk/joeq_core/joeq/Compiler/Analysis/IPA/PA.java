@@ -1982,9 +1982,8 @@ public class PA {
             
             jq_Class c = null;
             try {
-//              if(stringConst.eq)
                 jq_Type clazz = null;
-                if(isWellFormed(stringConst) && (clazz = jq_Type.parseType(stringConst)) instanceof jq_Class && clazz != null){
+                if(isWellFormed(stringConst) && ( (clazz = jq_Type.parseType(stringConst)) instanceof jq_Class ) && clazz != null){
                     c = (jq_Class) clazz;
             
                     if(TRACE_REFLECTION) out.println("Calling class by name: " + stringConst);
@@ -2016,9 +2015,9 @@ public class PA {
             if(constructor == null){
                 if(noConstrClasses.get(c) == null){
                     System.err.println("No constructor in class " + c);
-                    noConstrClasses.put(c, new Integer(0));
-                    continue;
+                    noConstrClasses.put(c, new Integer(0));                    
                 }
+                continue;
             }
             constructorIE.orWith(M.ithVar(Mmap.get(constructor)).and(h));
         }
