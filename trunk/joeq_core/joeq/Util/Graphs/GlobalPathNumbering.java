@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.math.BigInteger;
+import joeq.Util.Assert;
 import joeq.Util.Collections.Pair;
 
 /**
@@ -45,14 +46,15 @@ public class GlobalPathNumbering extends PathNumbering {
             BigInteger val = (BigInteger) nodeNumbering.get(o);
             Collection prev = navigator.prev(o);
             if (prev.size() == 0 && val == null) {
-                System.out.println("Missing root! "+o);
+                Assert.UNREACHABLE("Missing root! "+o);
             }
             if (val == null) val = BigInteger.ONE;
             for (Iterator i = prev.iterator(); i.hasNext(); ) {
                 Object p = i.next();
                 BigInteger val2 = (BigInteger) nodeNumbering.get(p);
                 if (val2 == null) {
-                    nodeNumbering.put(p, val2 = BigInteger.ZERO);
+                    //System.out.println("Loop edge: "+p+" -> "+o);
+                    nodeNumbering.put(p, val2 = BigInteger.ONE);
                 }
                 BigInteger val3 = val.add(val2);
                 Object edge = new Pair(p, o);
