@@ -213,6 +213,8 @@ public class MethodSummary {
         protected final HashMap callToRVN;
         /** Map from a method call to its ThrownExceptionNode. */
         protected final HashMap callToTEN;
+        /** Map from a node to where it's cast to. */
+        protected final HashMap castMap;
         /** The set of nodes that were ever passed as a parameter, or returned/thrown from a call site. */
         protected final Set passedAsParameter;
         /** The current basic block. */
@@ -223,6 +225,7 @@ public class MethodSummary {
         protected boolean change;
         
         boolean include_sync_ops = true;
+        boolean include_cast_ops = System.getProperty("ms.withcasts", "yes").equals("yes");
         
         /** Map from sync ops to their nodes. */
         protected final Map sync_ops;
@@ -242,6 +245,7 @@ public class MethodSummary {
             this.methodCalls = that.methodCalls;
             this.callToRVN = that.callToRVN;
             this.callToTEN = that.callToTEN;
+            this.castMap = that.castMap;
             this.passedAsParameter = that.passedAsParameter;
             this.bb = that.bb;
             this.s = that.s;
@@ -259,6 +263,7 @@ public class MethodSummary {
                                                 methodCalls,
                                                 callToRVN,
                                                 callToTEN,
+                                                castMap,
                                                 returned,
                                                 thrown,
                                                 passedAsParameter,
@@ -328,6 +333,7 @@ public class MethodSummary {
             }
             this.my_global = new GlobalNode(this.method);
             this.sync_ops = new HashMap();
+            this.castMap = new HashMap();
             this.returned = NodeSet.FACTORY.makeSet(); this.thrown = NodeSet.FACTORY.makeSet();
             
             if (TRACE_INTRA) out.println("Building summary for "+this.method);
@@ -672,10 +678,27 @@ public class MethodSummary {
             if (TRACE_INTRA) out.println("Visiting: "+obj);
             Register dest_r = CheckCast.getDest(obj).getRegister();
             Operand src = CheckCast.getSrc(obj);
-            // TODO: treat it like a move for now.
             if (src instanceof RegisterOperand) {
                 Register src_r = ((RegisterOperand)src).getRegister();
-                setRegister(dest_r, getRegister(src_r));
+                Object s = getRegister(src_r);
+                if (!include_cast_ops) {
+                    setRegister(dest_r, s);
+                    return;
+                }
+		CheckCastNode n = (CheckCastNode)nodeCache.get(obj);
+		if (n == null) {
+		    n = new CheckCastNode((jq_Reference)CheckCast.getType(obj).getType(), 
+					  new QuadProgramLocation(method, obj));
+		    nodeCache.put(obj, n);
+		}
+                Collection from = (s instanceof Collection) ? (Collection)s : Collections.singleton(s);
+                Iterator i = from.iterator();
+                while (i.hasNext()) {
+                    Node fn = (Node)i.next();
+		    Pair key = new Pair(fn, obj);
+		    castMap.put(key, n);
+                }
+                setRegister(dest_r, n);
             } else {
                 Node n = handleConst((Const4Operand) src, new QuadProgramLocation(method, obj));
                 setRegister(dest_r, n);
@@ -2056,6 +2079,43 @@ public class MethodSummary {
          */
         public void writeEdges(Textualizer t) throws IOException { }
 
+    }
+
+    /** A CheckCastNode refers to the result of a CheckCast instruction
+     */
+    public static final class CheckCastNode extends Node {
+	jq_Reference dstType;
+	final ProgramLocation q;	
+
+	public String toString_short() { return "(" + dstType.shortName() + ") @ "+q; }
+	public CheckCastNode(jq_Reference dstType, ProgramLocation q) {
+	    this.dstType = dstType;
+	    this.q = q;
+	}
+	public CheckCastNode(CheckCastNode that) {
+	    super(that);
+	    this.dstType = that.dstType;
+	    this.q = that.q;
+	}
+	public Node copy() { return new CheckCastNode(this); }
+        public jq_Reference getDeclaredType() { return dstType; }
+        public jq_Method getDefiningMethod() { return q.getMethod(); }
+        public ProgramLocation getLocation() { return q; }
+
+        public void write(Textualizer t) throws IOException {
+            dstType.write(t);
+            t.writeBytes(" ");
+            q.write(t);
+	    super.write(t);
+        }
+
+        public static Node read(StringTokenizer st) {
+            jq_Reference type = (jq_Reference) jq_Type.read(st);
+	    ProgramLocation q = ProgramLocation.read(st);
+            CheckCastNode n = new CheckCastNode(type, q);
+            //n.readEdges(map, st);
+	    return n;
+        }
     }
     
     /** A ConcreteTypeNode refers to an object with a concrete type.
@@ -3664,6 +3724,8 @@ outer:
     final Map callToRVN;
     /** Map from a method call that this method makes, and its ThrownExceptionNode. */
     final Map callToTEN;
+    /** Map from a node to its casts. */
+    final Map castMap;
     /** Map from a sync op to the nodes it operates on. */
     final Map sync_ops;
     
@@ -3681,6 +3743,7 @@ outer:
         this.nodes = Collections.EMPTY_MAP;
         this.returned = Collections.EMPTY_SET;
         this.thrown = Collections.EMPTY_SET;
+        this.castMap = Collections.EMPTY_MAP;
         this.passedParamToNodes = Collections.EMPTY_MAP;
         this.sync_ops = Collections.EMPTY_MAP;
     }
@@ -3694,6 +3757,7 @@ outer:
                          Set methodCalls,
                          Map callToRVN,
                          Map callToTEN,
+                         Map castMap,
                          Set returned,
                          Set thrown,
                          Set passedAsParameters,
@@ -3705,6 +3769,7 @@ outer:
         this.callToTEN = callToTEN;
         this.passedParamToNodes = USE_PARAMETER_MAP?new HashMap():null;
         this.sync_ops = sync_ops;
+        this.castMap = castMap;
         this.returned = returned;
         this.thrown = thrown;
         this.global = my_global;
@@ -3820,6 +3885,7 @@ outer:
                           Set methodCalls,
                           Map callToRVN,
                           Map callToTEN,
+                          Map castMap,
                           Map passedParamToNodes,
                           Map sync_ops,
                           Set returned,
@@ -3830,6 +3896,7 @@ outer:
         this.calls = methodCalls;
         this.callToRVN = callToRVN;
         this.callToTEN = callToTEN;
+        this.castMap = castMap;
         this.passedParamToNodes = passedParamToNodes;
         this.sync_ops = sync_ops;
         this.returned = returned;
@@ -3996,7 +4063,7 @@ outer:
             passedParamToNodes = new HashMap(this.passedParamToNodes);
             Node.updateMap(m, passedParamToNodes.entrySet().iterator(), passedParamToNodes);
         }
-        MethodSummary that = new MethodSummary(builder, method, params, calls, callToRVN, callToTEN, passedParamToNodes, sync_ops, returned, thrown, nodes);
+        MethodSummary that = new MethodSummary(builder, method, params, calls, callToRVN, callToTEN, castMap, passedParamToNodes, sync_ops, returned, thrown, nodes);
         if (VERIFY_ASSERTIONS) that.verify();
         return that;
     }
@@ -4334,6 +4401,14 @@ outer:
                 }
             }
         }
+	for (Iterator i = castMap.entrySet().iterator(); i.hasNext(); ) {
+	    Map.Entry e = (Map.Entry)i.next();
+	    Node goestocast = (Node)((Pair)e.getKey()).left;
+	    CheckCastNode castsucc = (CheckCastNode)e.getValue();
+	    // Call "addIfUseful()" on all successor checkcast nodes, and set the "useful" flag if the call returns true.
+	    if (n == goestocast && addIfUseful(visited, path, castsucc))
+		useful = true;
+	}
         if (n instanceof ReturnedNode) {
             if (TRACE_INTER && !useful) out.println("Useful because ReturnedNode: "+n);
             useful = true;
@@ -4352,6 +4427,17 @@ outer:
                 for (Iterator i = fn.getAccessPathPredecessors().iterator(); i.hasNext(); ) {
                     addAsUseful(visited, path, (Node)i.next());
                 }
+            }
+            if (n instanceof CheckCastNode) {
+		// If the "useful" flag is true and the node is a checkcast node,
+		// call "addAsUseful()" on all predecessors.
+		for (Iterator i = castMap.entrySet().iterator(); i.hasNext(); ) {
+		    Map.Entry e = (Map.Entry)i.next();
+		    Node goestocast = (Node)((Pair)e.getKey()).left;
+		    CheckCastNode castsucc = (CheckCastNode)e.getValue();
+                    if (n == castsucc)
+                       addAsUseful(visited, path, goestocast);
+		}
             }
         }
         if (TRACE_INTER && !useful) out.println("Not useful: "+n);
@@ -4410,6 +4496,17 @@ outer:
                 addAsUseful(visited, path, (Node)i.next());
             }
         }
+	for (Iterator i = castMap.entrySet().iterator(); i.hasNext(); ) {
+	    Map.Entry e = (Map.Entry)i.next();
+	    Node goestocast = (Node)((Pair)e.getKey()).left;
+	    CheckCastNode castsucc = (CheckCastNode)e.getValue();
+	    // Call "addIfUseful()" on all successor checkcast nodes.
+	    if (n == goestocast)
+		addIfUseful(visited, path, castsucc);
+	    // call "addAsUseful()" on all predecessors.
+	    if (n == castsucc)
+		addAsUseful(visited, path, n);
+	}
         path.remove(n);
     }
 
@@ -4424,6 +4521,11 @@ outer:
     /** Get the set of thrown nodes. */
     public Set getThrown() {
         return thrown;
+    }
+
+    /** Get the map of casts. */
+    public Map getCastMap() {
+        return castMap;
     }
 
     /** Get the return value node corresponding to the given method call. */
@@ -4710,6 +4812,13 @@ outer:
                 out.writeBytes("mc"+k+" -> n"+n.id+" [label=\"r\",style=dotted];\n");
             }
         }
+        for (Iterator i=castMap.entrySet().iterator(); i.hasNext(); ) {
+	    Map.Entry e = (Map.Entry) i.next();
+	    Node n = (Node)((Pair)e.getKey()).left;
+	    Node n2 = (Node)e.getValue();
+            if (nodes.containsKey(n2))
+                out.writeBytes("n"+n.id+" -> n"+n2.id+" [label=\"(cast)\"];\n");
+	}
         out.writeBytes("}\n");
     }
 
