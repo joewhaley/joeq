@@ -24,7 +24,7 @@ implementation can correctly compile and bootstrap itself.
 </p>
 <p>
 joeq is designed to live up to its name
-<img border="0" src="/images/small_jyou.gif" width="16" height="18"/><img border="0" src="/images/small_kyuu.gif" width="16" height="18"/>,
+<img border="0" src="../images/small_jyou.gif" width="16" height="18"/><img border="0" src="../images/small_kyuu.gif" width="16" height="18"/>,
 meaning advanced level).  The system is designed with an eye towards
 state-of-the-art program analysis, dynamic compilation and garbage collection
 techniques.
