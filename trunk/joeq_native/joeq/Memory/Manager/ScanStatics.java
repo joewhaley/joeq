@@ -3,8 +3,8 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Memory.Manager;
 
+import java.util.Collection;
 import java.util.Iterator;
-import java.util.Set;
 
 import Allocator.DefaultHeapAllocator;
 import Bootstrap.PrimordialClassLoader;
@@ -24,7 +24,7 @@ public class ScanStatics {
      */
     static void scanStatics() {
         // todo: other classloaders?
-        Set/*<jq_Type>*/ types = PrimordialClassLoader.loader.getAllTypes();
+        Collection/*<jq_Type>*/ types = PrimordialClassLoader.loader.getAllTypes();
         for (Iterator i=types.iterator(); i.hasNext(); ) {
             Object o = i.next();
             if (o instanceof jq_Class) {
@@ -44,7 +44,7 @@ public class ScanStatics {
     static boolean validateRefs() {
         boolean result = true;
         // todo: other classloaders?
-        Set/*<jq_Type>*/ types = PrimordialClassLoader.loader.getAllTypes();
+        Collection/*<jq_Type>*/ types = PrimordialClassLoader.loader.getAllTypes();
         for (Iterator i=types.iterator(); i.hasNext(); ) {
             Object o = i.next();
             if (o instanceof jq_Class) {
@@ -73,7 +73,7 @@ public class ScanStatics {
     static boolean validateRefs(int depth) {
         boolean result = true;
         // todo: other classloaders?
-        Set/*<jq_Type>*/ types = PrimordialClassLoader.loader.getAllTypes();
+        Collection/*<jq_Type>*/ types = PrimordialClassLoader.loader.getAllTypes();
         for (Iterator i=types.iterator(); i.hasNext(); ) {
             Object o = i.next();
             if (o instanceof jq_Class) {
@@ -101,7 +101,7 @@ public class ScanStatics {
 
     static void dumpRefs(int start, int count) {
         // todo: other classloaders?
-        Set/*<jq_Type>*/ types = PrimordialClassLoader.loader.getAllTypes();
+        Collection/*<jq_Type>*/ types = PrimordialClassLoader.loader.getAllTypes();
         for (Iterator i=types.iterator(); i.hasNext(); ) {
             Object o = i.next();
             if (o instanceof jq_Class) {

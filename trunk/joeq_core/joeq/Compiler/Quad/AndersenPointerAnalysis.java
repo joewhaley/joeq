@@ -3,6 +3,7 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Quad;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -273,10 +274,10 @@ public class AndersenPointerAnalysis {
             }
         }
         public static void calcRTA() {
-            Set/*<jq_Type>*/ s = Bootstrap.PrimordialClassLoader.loader.getAllTypes();
+            Collection/*<jq_Type>*/ s = Bootstrap.PrimordialClassLoader.loader.getAllTypes();
             for (;;) {
                 int size = s.size();
-                Iterator i = s.iterator();
+                Iterator i = new ArrayList(s).iterator();
                 while (i.hasNext()) {
                     jq_Type t = (jq_Type)i.next();
                     t.prepare();

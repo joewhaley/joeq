@@ -3,6 +3,7 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Quad;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -49,8 +50,8 @@ public class CHACallGraph extends CallGraph {
         Collection result;
         if (callSite.isInterfaceCall()) {
             result = new LinkedHashSet();
-            Set s = classes!=null?classes:PrimordialClassLoader.loader.getAllTypes();
-            for (Iterator i=s.iterator(); i.hasNext(); ) {
+            Collection s = classes!=null?classes:PrimordialClassLoader.loader.getAllTypes();
+            for (Iterator i=new ArrayList(s).iterator(); i.hasNext(); ) {
                 jq_Type t = (jq_Type) i.next();
                 if (t instanceof jq_Class) {
                     jq_Class c = (jq_Class) t;
