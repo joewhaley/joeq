@@ -2806,7 +2806,7 @@ outer:
     /** Map from a method call that this method makes, and its ThrownExceptionNode. */
     final HashMap callToTEN;
     
-    public static final boolean USE_PARAMETER_MAP = false;
+    public static final boolean USE_PARAMETER_MAP = true;
     final Map passedParamToNodes;
 
     public MethodSummary(AndersenMethod method, ParamNode[] param_nodes, GlobalNode my_global, Set methodCalls, HashMap callToRVN, HashMap callToTEN, Set returned, Set thrown, Set passedAsParameters) {
@@ -2944,6 +2944,7 @@ outer:
             Set s = (Set)passedParamToNodes.get(pp);
             if (s == null) return;
             result.addAll(s);
+            return;
         }
         for (Iterator i = this.nodeIterator(); i.hasNext(); ) {
             Node n = (Node)i.next();
