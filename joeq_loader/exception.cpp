@@ -14,7 +14,9 @@ EXCEPTION_DISPOSITION hardwareExceptionHandler(EXCEPTION_RECORD *exceptionRecord
 	int java_ex_code;
 	switch (ex_code) {
 	case EXCEPTION_ACCESS_VIOLATION: // null pointer exception
-		java_ex_code = 0;
+		// int 5 seems to create an access violation, for some reason.
+		if (*((int*)(((int)eip)-2)) == 0x05cd0272) java_ex_code = 1;
+		else java_ex_code = 0;
 		break;
 	case EXCEPTION_ARRAY_BOUNDS_EXCEEDED: // array bounds exception
 		java_ex_code = 1;
