@@ -385,11 +385,11 @@ public class PA {
         BDD bdd1 = M.ithVar(M2_i);
         bdd1.andWith(I_bdd.id());
         if (TRACE_RELATIONS) out.println("Adding to IE: "+bdd1.toStringWithDomains());
-        IE.orWith(bdd1);
         if (CONTEXT_SENSITIVE) {
             // Add the context for the new call graph edge.
-            IEcs.orWith(IE.and(IEfilter));
+            IEcs.orWith(bdd1.and(IEfilter));
         }
+        IE.orWith(bdd1);
     }
     
     void addToMI(BDD M_bdd, BDD I_bdd, jq_Method target) {
