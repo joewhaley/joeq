@@ -2218,7 +2218,9 @@ uphere2:
                         continue;
                     }
                     if (m.isOverriding()) {
-                        Assert._assert(m.getState() == STATE_PREPARED);
+                        if (m.getState() != STATE_PREPARED) {
+                            Assert.UNREACHABLE("Method "+m+" overrides superclass, but is not prepared");
+                        }
                         int entry = (m.getOffset() >> 2) - 1;
                         virtual_methods[entry] = m;
                         continue;
