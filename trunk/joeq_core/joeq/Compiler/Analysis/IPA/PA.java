@@ -1980,12 +1980,12 @@ public class PA {
                 
                 continue;
             }
-            if(TRACE_REFLECTION && false) System.out.println("stringConst: " + stringConst);
+            if(TRACE_REFLECTION) System.out.println("stringConst: " + stringConst);
             jq_Class c = null;
             try {
 //                if(stringConst.eq)
                 jq_Type clazz = jq_Type.parseType(stringConst);
-                if(clazz instanceof jq_Class && !stringConst.equals(".")){
+                if(clazz instanceof jq_Class && isWellFormed(stringConst)){
                     c = (jq_Class) clazz;
                     
                     c.load();
@@ -2052,6 +2052,22 @@ public class PA {
         }
     }
     
+    private boolean isWellFormed(String stringConst) {
+        if(stringConst.equals(".")) {
+            return false;   
+        }
+        
+        for(int i = 0; i < stringConst.length(); i++){
+            char ch = stringConst.charAt(i);
+            
+            if(!Character.isLetterOrDigit(ch) && ch != '.'){
+                return false;                
+            }            
+        }
+        
+        return true;
+    }
+
     BDD old3_t3;
     BDD old3_vP;
     BDD old3_t4;
