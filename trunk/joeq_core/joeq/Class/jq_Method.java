@@ -35,6 +35,7 @@ public abstract class jq_Method extends jq_Member {
     protected byte[] bytecode;
     protected jq_TryCatchBC[] exception_table;
     protected jq_LineNumberBC[] line_num_table;
+    protected jq_LocalVarTableEntry[] localvar_table;
     protected Map codeattribMap;
     protected jq_Type[] param_types;
     protected jq_Type return_type;
@@ -158,7 +159,27 @@ public abstract class jq_Method extends jq_Member {
             } else {
                 this.line_num_table = new jq_LineNumberBC[0];
             }
-            // TODO: LocalVariableTable
+            a = getCodeAttribute(Utf8.get("LocalVariableTable"));
+	    if (a != null) {
+                char num_of_local_vars = jq.twoBytesToChar(a, 0);
+                if (a.length != (num_of_local_vars*10+2))
+                    throw new ClassFormatError();
+
+                this.localvar_table = new jq_LocalVarTableEntry[num_of_local_vars];
+                for (int i=0; i<num_of_local_vars; ++i) {
+                    char start_pc = jq.twoBytesToChar(a, i*10+2);
+                    char length = jq.twoBytesToChar(a, i*10+4);
+                    char name_index = jq.twoBytesToChar(a, i*10+6);
+		    if (clazz.getCPtag(name_index) != CONSTANT_Utf8)
+			throw new ClassFormatError();
+                    char desc_index = jq.twoBytesToChar(a, i*10+8);
+		    if (clazz.getCPtag(desc_index) != CONSTANT_Utf8)
+			throw new ClassFormatError();
+                    char index = jq.twoBytesToChar(a, i*10+10);
+                    this.localvar_table[i] = new jq_LocalVarTableEntry(start_pc, length, new jq_NameAndDesc(clazz.getCPasUtf8(name_index), clazz.getCPasUtf8(desc_index)), index);
+                }
+                Arrays.sort(this.localvar_table);
+	    } 
         } else {
             if (!isNative() && !isAbstract())
                 throw new ClassFormatError();
@@ -329,13 +350,23 @@ public abstract class jq_Method extends jq_Member {
         jq.assert(getBytecode() != null);
         return exception_table;
     }
+    public jq_LocalVarTableEntry getLocalVarTableEntry(int bci, int index) {
+	int inspoint = Arrays.binarySearch(localvar_table, new jq_LocalVarTableEntry((char)bci, (char)index));
+	if (inspoint >= 0)
+	    return localvar_table[inspoint];
+	inspoint = -inspoint-2;
+	if(inspoint >= 0 && localvar_table[inspoint].isInRange(bci, index))
+	    return localvar_table[inspoint];
+	return null;
+    }
     public int getLineNumber(int bci) {
         // todo: binary search
         for (int i=line_num_table.length-1; i>=0; --i) {
-            if (bci > line_num_table[i].getStartPC()) return line_num_table[i].getLineNum();
+            if (bci >= line_num_table[i].getStartPC()) return line_num_table[i].getLineNum();
         }
         return -1;
     }
+    public jq_LineNumberBC [] getLineNumberTable() { return line_num_table; }
     public jq_Type[] getParamTypes() { return param_types; }
     public int getParamWords() { return param_words; }
     public final jq_Type getReturnType() { return return_type; }
