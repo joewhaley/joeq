@@ -404,9 +404,9 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         DataOutputStream dos = new DataOutputStream(new FileOutputStream(fileName));
         dos.writeBytes("method "+(1L<<methodBits)+"\n");
         dos.writeBytes("quad "+(1L<<quadBits)+"\n");
-        dos.writeBytes("op "+(1L<<opBits)+"\n");
+        dos.writeBytes("op "+(1L<<opBits)+" op.map\n");
         dos.writeBytes("reg "+(1L<<regBits)+"\n");
-        dos.writeBytes("constant "+(1L<<constantBits)+"\n");
+        dos.writeBytes("constant "+(1L<<constantBits)+" constant.map\n");
         dos.writeBytes("member "+(1L<<memberBits)+"\n");
         dos.writeBytes("varargs "+(1L<<varargsBits)+"\n");
         dos.close();
