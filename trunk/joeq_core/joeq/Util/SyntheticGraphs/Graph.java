@@ -8,9 +8,21 @@ import java.util.List;
 import java.util.Map;
 
 public class Graph {
-	protected String  _name;
-	protected HashMap _nodeMap;
-	protected List    _edgeList;
+	public static class Direction {
+		String _dir;
+		public Direction(String dir){
+			_dir = dir;
+		}
+		public String toString(){
+			return _dir;
+		}
+		public static final String LR = "LR";
+		public static final String TB = "TB"; 
+	}
+	protected String  	_name;
+	protected HashMap 	_nodeMap;
+	protected List    	_edgeList;
+	protected Direction _dir;
 	
 	public class Edge{
 		protected String n1, n2;
@@ -22,15 +34,17 @@ public class Graph {
 		}
 	}
 	
-	public Graph(String name){
-		_name = name;
+	public Graph(String name, Direction dir){
+		_name    = name;
 		_nodeMap = new HashMap();
-		_edgeList = new LinkedList(); 
+		_edgeList = new LinkedList();
+		_dir      = dir; 
 	}
 	
 	public Graph(){
-		_name = "none";
-		_nodeMap = new HashMap();
+		_name     = "none";
+		_dir      = new Direction(Direction.LR);
+		_nodeMap  = new HashMap();
 		_edgeList = new LinkedList(); 
 	}
 	
@@ -46,7 +60,7 @@ public class Graph {
 	public void addEdge(String num1, String num2){
 		Edge e = new Edge(num1, num2);
 		_edgeList.add(e);			
-	};	
+	};
 	
 	public void addEdge(long num1, long num2){
 		String num1_str = "n" + new Long(num1).toString();
@@ -57,7 +71,7 @@ public class Graph {
 	};
 	
 	public void printDot(PrintStream out){
-		out.println("digraph \"" + _name + "\" { ");
+		out.println("digraph \"" + _name + "\" { \n" + "\trankdir=\"" + _dir.toString() + "\";");
 		Iterator iter = _nodeMap.entrySet().iterator();
 		while(iter.hasNext()){
 			Map.Entry e = (Map.Entry)iter.next();
@@ -88,7 +102,7 @@ class TestGraph {
 	}
 	
 	static void simpleTest(){
-		Graph g = new Graph("small test");
+		Graph g = new Graph("small test", new Graph.Direction(Graph.Direction.LR));
 		g.addNode("n0", "name0");
 		g.addNode("n1", "name1");
 		g.addEdge("n0", "n1");
