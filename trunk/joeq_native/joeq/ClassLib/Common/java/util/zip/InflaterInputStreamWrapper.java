@@ -24,7 +24,7 @@ public class InflaterInputStreamWrapper extends java.util.zip.InflaterInputStrea
     }
     public void close() throws java.io.IOException {
         if (!this.isClosed) {
-            zf.releaseInflater(inf);
+            zf.releaseInflater0(inf);
             in.close();
             isClosed = true;
         }

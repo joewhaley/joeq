@@ -75,7 +75,7 @@ public class jq_InstanceMethod extends jq_Method {
     public final void prepare(int offset) {
         jq.assert(state == STATE_LOADED); state = STATE_PREPARED; this.offset = offset;
     }
-    public final int getOffset() { chkState(STATE_PREPARED); return offset; }
+    public final int getOffset() { chkState(STATE_PREPARED); jq.assert(offset != INVALID_OFFSET); return offset; }
     public final boolean isVirtual() { chkState(STATE_PREPARED); return offset != INVALID_OFFSET; }
     public final boolean needsDynamicLink(jq_Method method) {
         if (jq.Bootstrapping) return (state < STATE_PREPARED) || getDeclaringClass().needsDynamicLink(method);
