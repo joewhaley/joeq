@@ -110,7 +110,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         
         // copy bytecode cfg to quad cfg
         jq_TryCatchBC[] exs = method.getExceptionTable();
-        this.quad_cfg = new ControlFlowGraph(bc_cfg.getExit().getNumberOfPredecessors(),
+        this.quad_cfg = new ControlFlowGraph(method, bc_cfg.getExit().getNumberOfPredecessors(),
                                                  exs.length, this.rf);
         quad_bbs = new BasicBlock[bc_cfg.getNumberOfBasicBlocks()];
         quad_bbs[0] = this.quad_cfg.entry();
