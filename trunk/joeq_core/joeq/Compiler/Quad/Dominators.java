@@ -56,7 +56,7 @@ public class Dominators extends jq_MethodVisitor.EmptyVisitor implements BasicBl
         if (direction)
             rpo = cfg.reversePostOrder(cfg.entry());
         else
-            rpo = cfg.reverseReversePostOrder(cfg.exit());
+            rpo = cfg.reversePostOrderOnReverseGraph(cfg.exit());
         for (;;) {
             //System.out.println("Iterating over "+rpo);
             change = false;
