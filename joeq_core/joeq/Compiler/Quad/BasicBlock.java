@@ -6,8 +6,8 @@
  */
 
 package Compil3r.Quad;
-import Main.jq;
 import Compil3r.Quad.Operator.Ret;
+import Main.jq;
 import Util.BackwardIterator;
 import Util.Strings;
 import Util.Templates.List;

@@ -1,15 +1,15 @@
 package Run_Time;
 
 import Bootstrap.PrimordialClassLoader;
+import Clazz.jq_Array;
 import Clazz.jq_Class;
 import Clazz.jq_ClassFileConstants;
-import Clazz.jq_Type;
-import Clazz.jq_Array;
 import Clazz.jq_StaticMethod;
+import Clazz.jq_Type;
 import Main.jq;
-import Memory.StackAddress;
 import Memory.CodeAddress;
 import Memory.HeapAddress;
+import Memory.StackAddress;
 
 public class Arrays implements jq_ClassFileConstants {
     /**

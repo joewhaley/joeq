@@ -10,9 +10,9 @@ package Clazz;
 //friend jq_ClassLoader;
 
 import Bootstrap.PrimordialClassLoader;
+import Compil3r.Quad.AndersenInterface.AndersenClassInitializer;
 import Main.jq;
 import UTF.Utf8;
-import Compil3r.Quad.AndersenInterface.AndersenClassInitializer;
 
 /**
  * @author  John Whaley

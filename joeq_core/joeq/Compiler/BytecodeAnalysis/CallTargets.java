@@ -8,8 +8,8 @@
 package Compil3r.BytecodeAnalysis;
 
 import java.util.AbstractSet;
-import java.util.LinkedHashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.Stack;
 
@@ -19,15 +19,13 @@ import Clazz.jq_InstanceMethod;
 import Clazz.jq_Method;
 import Clazz.jq_Reference;
 import Clazz.jq_StaticMethod;
+import Compil3r.Quad.AndersenInterface.AndersenMethod;
 import Main.jq;
 import Run_Time.TypeCheck;
 import Util.HashCodeComparator;
-import Util.LinearSet;
 import Util.NullIterator;
 import Util.SingletonIterator;
 import Util.SortedArraySet;
-
-import Compil3r.Quad.AndersenInterface.AndersenMethod;
 
 /*
  * @author  John Whaley

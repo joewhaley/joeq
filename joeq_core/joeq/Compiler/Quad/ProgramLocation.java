@@ -7,7 +7,6 @@
 package Compil3r.Quad;
 
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.Set;
 
 import Clazz.jq_InstanceMethod;
@@ -15,20 +14,18 @@ import Clazz.jq_Method;
 import Clazz.jq_Reference;
 import Compil3r.BytecodeAnalysis.BytecodeVisitor;
 import Compil3r.BytecodeAnalysis.CallTargets;
+import Compil3r.Quad.AndersenInterface.AndersenMethod;
+import Compil3r.Quad.AndersenInterface.AndersenReference;
+import Compil3r.Quad.AndersenInterface.AndersenType;
 import Compil3r.Quad.MethodSummary.ConcreteTypeNode;
 import Compil3r.Quad.MethodSummary.Node;
 import Compil3r.Quad.Operator.Invoke;
+import Compil3r.Quad.SSAReader.SSAClass;
+import Compil3r.Quad.SSAReader.SSAMethod;
+import Compil3r.Quad.SSAReader.SSAType;
 import Main.jq;
 import Util.HashCodeComparator;
 import Util.SortedArraySet;
-
-import Compil3r.Quad.AndersenInterface.AndersenMethod;
-import Compil3r.Quad.AndersenInterface.AndersenType;
-import Compil3r.Quad.AndersenInterface.AndersenReference;
-
-import Compil3r.Quad.SSAReader.SSAMethod;
-import Compil3r.Quad.SSAReader.SSAType;
-import Compil3r.Quad.SSAReader.SSAClass;
 
 /**
  * This class combines a jq_Method with a Quad to represent a location in the code.

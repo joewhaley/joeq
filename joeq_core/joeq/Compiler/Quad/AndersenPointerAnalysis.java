@@ -6,7 +6,6 @@
 
 package Compil3r.Quad;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -19,7 +18,6 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import Clazz.jq_Class;
-import Clazz.jq_ClassInitializer;
 import Clazz.jq_Field;
 import Clazz.jq_Initializer;
 import Clazz.jq_Method;
@@ -27,7 +25,12 @@ import Clazz.jq_Reference;
 import Clazz.jq_StaticField;
 import Clazz.jq_Type;
 import Compil3r.BytecodeAnalysis.CallTargets;
-import Compil3r.Quad.SelectiveCloning.AccessPath;
+import Compil3r.Quad.AndersenInterface.AndersenClass;
+import Compil3r.Quad.AndersenInterface.AndersenClassInitializer;
+import Compil3r.Quad.AndersenInterface.AndersenField;
+import Compil3r.Quad.AndersenInterface.AndersenMethod;
+import Compil3r.Quad.AndersenInterface.AndersenReference;
+import Compil3r.Quad.AndersenInterface.AndersenType;
 import Compil3r.Quad.MethodSummary.CallSite;
 import Compil3r.Quad.MethodSummary.ConcreteTypeNode;
 import Compil3r.Quad.MethodSummary.FieldNode;
@@ -40,14 +43,11 @@ import Compil3r.Quad.MethodSummary.PassedParameter;
 import Compil3r.Quad.MethodSummary.ReturnValueNode;
 import Compil3r.Quad.MethodSummary.ThrownExceptionNode;
 import Compil3r.Quad.MethodSummary.UnknownTypeNode;
-import Compil3r.Quad.Operand.ParamListOperand;
-import Compil3r.Quad.Operator.Invoke;
-import Compil3r.Quad.AndersenInterface.*;
 import Compil3r.Quad.SSAReader.SSAMethod;
+import Compil3r.Quad.SelectiveCloning.AccessPath;
 import Main.jq;
 import Util.Default;
 import Util.HashCodeComparator;
-import Util.InstrumentedSetWrapper;
 import Util.LinearSet;
 import Util.SetFactory;
 import Util.SetRepository;

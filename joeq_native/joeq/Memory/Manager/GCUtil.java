@@ -1,6 +1,5 @@
 package Memory.Manager;
 
-import Allocator.ObjectLayout;
 import Allocator.ObjectLayoutMethods;
 import Clazz.jq_Array;
 import Clazz.jq_Class;

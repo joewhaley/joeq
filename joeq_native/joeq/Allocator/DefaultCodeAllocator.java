@@ -12,7 +12,6 @@ import Clazz.jq_Class;
 import Clazz.jq_StaticField;
 import Memory.Address;
 import Memory.CodeAddress;
-import Memory.HeapAddress;
 import Run_Time.Unsafe;
 
 /*

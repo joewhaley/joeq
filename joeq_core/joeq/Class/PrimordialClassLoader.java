@@ -1,5 +1,5 @@
 /*
- * BootstrapClassLoader.java
+ * PrimordialClassLoader.java
  *
  * Created on January 15, 2001, 12:59 AM
  *
@@ -122,11 +122,11 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
             }
         }
         Iterator listPackage(final String pathn, final boolean recursive) {
-            final String pathname;
-            if (filesep.charAt(0) != '/') pathname = pathn.replace('/', filesep.charAt(0));
-            else pathname = pathn;
-            File f = new File(path, pathname);
-            if (TRACE) out.println("Attempting to list "+pathname+" in path "+path);
+            String path_name;
+            if (filesep.charAt(0) != '/') path_name = pathn.replace('/', filesep.charAt(0));
+            else path_name = pathn;
+            File f = new File(path, path_name);
+            if (TRACE) out.println("Attempting to list "+path_name+" in path "+path);
             if (!f.exists() || !f.isDirectory()) return Default.nullIterator;
             Iterator result = new FilterIterator(new ArrayIterator(f.list()),
                 new FilterIterator.Filter() {

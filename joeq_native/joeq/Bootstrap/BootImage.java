@@ -8,7 +8,6 @@
 package Bootstrap;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -861,13 +860,13 @@ public class BootImage implements ELFConstants {
         it = data_relocs.iterator();
         while (it.hasNext()) {
             if ((j % UPDATE_PERIOD) == 0) {
-                this.out.print("Written: "+j+"/"+ndatareloc+" relocations\r");
+                BootImage.out.print("Written: "+j+"/"+ndatareloc+" relocations\r");
             }
             Reloc r = (Reloc)it.next();
             r.dumpCOFF(out);
             ++j;
         }
-        this.out.println("Written: "+ndatareloc+" relocations                    \n");
+		BootImage.out.println("Written: "+ndatareloc+" relocations                    \n");
         jq.Assert(j == ndatareloc);
         
         // write line numbers
@@ -1018,7 +1017,7 @@ public class BootImage implements ELFConstants {
             Class objType = o.getClass();
             jq_Reference jqType = (jq_Reference)Reflection.getJQType(objType);
             if (TRACE)
-                this.out.println("Dumping entry "+j+": "+objType+" "+Strings.hex(System.identityHashCode(o))+" addr "+addr.stringRep());
+                BootImage.out.println("Dumping entry "+j+": "+objType+" "+Strings.hex(System.identityHashCode(o))+" addr "+addr.stringRep());
             jq.Assert(!jqType.isAddressType());
             if (!jqType.isClsInitialized()) {
                 jq.UNREACHABLE(jqType.toString());
@@ -1119,7 +1118,7 @@ public class BootImage implements ELFConstants {
                     jq_InstanceField f = fields[k];
                     jq_Type ftype = f.getType();
                     int foffset = f.getOffset();
-                    if (TRACE) this.out.println("Field "+f+" offset "+Strings.shex(foffset)+": "+System.identityHashCode(Reflection.getfield(o, f)));
+                    if (TRACE) BootImage.out.println("Field "+f+" offset "+Strings.shex(foffset)+": "+System.identityHashCode(Reflection.getfield(o, f)));
                     while (currentAddr != addr.offset(foffset).to32BitValue()) {
                         out.writeByte((byte)0); ++currentAddr;
                     }

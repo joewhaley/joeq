@@ -10,14 +10,14 @@
  */
 package GC;
 
-import Util.BitString;
-import Allocator.SimpleAllocator;
+import java.util.HashSet;
+
 import Allocator.MemUnit;
+import Allocator.SimpleAllocator;
 import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
 import Memory.HeapAddress;
-
-import java.util.HashSet;
+import Util.BitString;
 
 public class GCBits {
 

@@ -9,8 +9,6 @@ package Run_Time;
 
 import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
-import Clazz.jq_Reference;
-import Clazz.jq_StaticField;
 import Clazz.jq_StaticMethod;
 import Memory.Address;
 import Memory.CodeAddress;

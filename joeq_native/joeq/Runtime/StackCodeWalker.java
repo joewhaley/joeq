@@ -13,10 +13,8 @@ import java.util.NoSuchElementException;
 import Allocator.CodeAllocator;
 import Clazz.jq_CompiledCode;
 import Clazz.jq_Method;
-import Main.jq;
 import Memory.CodeAddress;
 import Memory.StackAddress;
-import Memory.HeapAddress;
 import UTF.Utf8;
 import Util.Strings;
 

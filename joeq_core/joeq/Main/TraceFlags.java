@@ -8,8 +8,8 @@
 package Main;
 
 import java.lang.reflect.Field;
-import java.util.Iterator;
 import java.util.Collection;
+import java.util.Iterator;
 
 import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Array;

@@ -19,7 +19,6 @@ import Clazz.jq_Primitive;
 import Clazz.jq_StaticField;
 import Clazz.jq_Type;
 import Main.jq;
-import Memory.HeapAddress;
 import Run_Time.TypeCheck;
 import Util.BitString;
 import Util.LinearSet;

@@ -4,17 +4,13 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import Allocator.ObjectLayout;
 import Allocator.ObjectLayoutMethods;
 import Clazz.jq_Array;
 import Clazz.jq_Class;
 import Main.jq;
-import Memory.Address;
 import Memory.Debug;
 import Memory.HeapAddress;
 import Run_Time.SystemInterface;
-import Run_Time.Unsafe;
-import Scheduler.jq_Thread;
 
 /**
  * This is a reference to an abstract memory "heap".

@@ -22,7 +22,6 @@ import java.util.Set;
 
 import Allocator.CodeAllocator;
 import Allocator.DefaultCodeAllocator;
-import Allocator.ObjectLayout;
 import Bootstrap.BootImage;
 import Bootstrap.BootstrapCodeAddress;
 import Bootstrap.BootstrapCodeAllocator;

@@ -8,15 +8,14 @@
  */
 package GC;
 
-import Scheduler.jq_RegisterState;
-import Scheduler.jq_NativeThread;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 
-import Run_Time.StackHeapWalker;
 import Memory.HeapAddress;
+import Run_Time.StackHeapWalker;
+import Scheduler.jq_NativeThread;
+import Scheduler.jq_RegisterState;
 
 public class TraceMSGC implements Runnable, GCVisitor {
 

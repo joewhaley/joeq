@@ -1,18 +1,13 @@
 package Util;
 
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.ConcurrentModificationException;
 import java.util.HashMap;
-import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;

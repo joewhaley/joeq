@@ -11,9 +11,9 @@
  */
 package GC;
 
-import Scheduler.jq_RegisterState;
-
 import java.util.ArrayList;
+
+import Scheduler.jq_RegisterState;
 
 class TraceRootSet {
 

@@ -3,10 +3,10 @@ package Compil3r.Quad;
 import Clazz.jq_Method;
 import Clazz.jq_Primitive;
 import Compil3r.Quad.Operand.RegisterOperand;
-import Compil3r.Quad.Operator.Unary;
 import Compil3r.Quad.Operator.Special;
-import Memory.StackAddress;
+import Compil3r.Quad.Operator.Unary;
 import Memory.CodeAddress;
+import Memory.StackAddress;
 import Run_Time.Unsafe;
 import Scheduler.jq_Thread;
 

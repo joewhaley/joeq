@@ -8,10 +8,7 @@
 package Assembler.x86;
 
 import Allocator.DefaultCodeAllocator;
-import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Class;
 import Clazz.jq_CompiledCode;
-import Clazz.jq_InstanceField;
 import Clazz.jq_Method;
 import Main.jq;
 import Memory.CodeAddress;

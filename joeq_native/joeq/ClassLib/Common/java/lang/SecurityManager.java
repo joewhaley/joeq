@@ -9,11 +9,9 @@ package ClassLib.Common.java.lang;
 
 import Clazz.jq_CompiledCode;
 import Main.jq;
-import Memory.CodeAddress;
 import Memory.StackAddress;
 import Run_Time.Reflection;
 import Run_Time.StackCodeWalker;
-import Run_Time.Unsafe;
 
 /**
  * @author  John Whaley

@@ -10,7 +10,6 @@ package Clazz;
 //friend jq_ClassLoader;
 
 import Bootstrap.PrimordialClassLoader;
-import ClassLib.ClassLibInterface;
 import Main.jq;
 import UTF.Utf8;
 

@@ -9,27 +9,21 @@ package Interpreter;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.Iterator;
 
-import Bootstrap.ObjectTraverser;
 import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Array;
 import Clazz.jq_Class;
-import Clazz.jq_Field;
 import Clazz.jq_Initializer;
-import Clazz.jq_InstanceField;
 import Clazz.jq_Method;
 import Clazz.jq_Primitive;
-import Clazz.jq_Reference;
-import Clazz.jq_StaticField;
 import Clazz.jq_StaticMethod;
 import Clazz.jq_Type;
-import Main.jq;
 import Main.HostedVM;
+import Main.jq;
 import Run_Time.Reflection;
 import Run_Time.Unsafe;
 import UTF.Utf8;
@@ -306,7 +300,7 @@ public class ReflectiveInterpreter extends BytecodeInterpreter {
         Object[] args = new Object[argsSize];
         try {
             for (int i=0, m=0; i<paramTypes.length; ++i, ++m) {
-                if (paramTypes[i] == PrimordialClassLoader.loader.getJavaLangString())
+                if (paramTypes[i] == PrimordialClassLoader.getJavaLangString())
                     args[m] = s_args[++j];
                 else if (paramTypes[i] == jq_Primitive.BOOLEAN)
                     args[m] = Boolean.valueOf(s_args[++j]);
@@ -332,7 +326,7 @@ public class ReflectiveInterpreter extends BytecodeInterpreter {
                     int count=0;
                     while (!s_args[++j].equals("}")) ++count;
                     jq_Type elementType = ((jq_Array)paramTypes[i]).getElementType();
-                    if (elementType == PrimordialClassLoader.loader.getJavaLangString()) {
+                    if (elementType == PrimordialClassLoader.getJavaLangString()) {
                         String[] array = new String[count];
                         for (int k=0; k<count; ++k)
                             array[k] = s_args[j-count+k];

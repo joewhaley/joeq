@@ -17,7 +17,6 @@ import Clazz.jq_Primitive;
 import Clazz.jq_Reference;
 import Clazz.jq_StaticMethod;
 import Clazz.jq_Type;
-import Main.jq;
 import Memory.Address;
 import Memory.HeapAddress;
 

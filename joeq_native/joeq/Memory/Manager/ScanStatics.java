@@ -9,7 +9,6 @@ import Clazz.jq_Class;
 import Clazz.jq_StaticField;
 import Memory.Debug;
 import Memory.HeapAddress;
-import Run_Time.Unsafe;
 
 /**
  * @author John Whaley

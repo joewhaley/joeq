@@ -13,25 +13,21 @@ import Allocator.RuntimeCodeAllocator;
 import Allocator.SimpleAllocator;
 import Assembler.x86.x86Constants;
 import Bootstrap.PrimordialClassLoader;
-import ClassLib.ClassLibInterface;
 import Clazz.jq_Class;
-import Clazz.jq_InstanceField;
 import Clazz.jq_InstanceMethod;
 import Clazz.jq_StaticField;
 import Clazz.jq_StaticMethod;
+import GC.GCManager;
+import GC.GCVisitor;
 import Main.jq;
 import Memory.CodeAddress;
 import Memory.HeapAddress;
 import Memory.StackAddress;
 import Memory.Heap.SegregatedListHeap;
 import Memory.Heap.SizeControl;
-import Run_Time.Reflection;
 import Run_Time.StackCodeWalker;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
-import GC.TraceMSGC;
-import GC.GCManager;
-import GC.GCVisitor;
 
 /*
  * @author  John Whaley

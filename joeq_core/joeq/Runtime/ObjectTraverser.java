@@ -10,23 +10,14 @@ package Bootstrap;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.Vector;
 
 import ClassLib.ClassLibInterface;
 import Clazz.jq_Class;
 import Clazz.jq_InstanceField;
-import Clazz.jq_Member;
-import Clazz.jq_Method;
-import Clazz.jq_Reference;
 import Clazz.jq_StaticField;
-import Clazz.jq_Type;
 import Main.jq;
 import Run_Time.Reflection;
-import Run_Time.TypeCheck;
 
 /*
  * @author  John Whaley

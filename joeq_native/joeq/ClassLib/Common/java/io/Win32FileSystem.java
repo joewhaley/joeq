@@ -10,7 +10,6 @@ package ClassLib.Common.java.io;
 import Memory.Address;
 import Memory.HeapAddress;
 import Run_Time.SystemInterface;
-import Run_Time.Unsafe;
 
 /*
  * @author  John Whaley

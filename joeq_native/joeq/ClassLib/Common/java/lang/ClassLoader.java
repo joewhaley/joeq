@@ -21,11 +21,9 @@ import Clazz.jq_CompiledCode;
 import Clazz.jq_Reference;
 import Clazz.jq_Type;
 import Main.jq;
-import Memory.CodeAddress;
 import Memory.StackAddress;
 import Run_Time.Reflection;
 import Run_Time.StackCodeWalker;
-import Run_Time.Unsafe;
 import UTF.Utf8;
 
 /*

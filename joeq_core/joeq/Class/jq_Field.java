@@ -13,9 +13,9 @@ import java.util.Map;
 
 import Bootstrap.PrimordialClassLoader;
 import ClassLib.ClassLibInterface;
-import Main.jq;
 import Compil3r.Quad.AndersenInterface.AndersenField;
 import Compil3r.Quad.AndersenInterface.AndersenType;
+import Main.jq;
 
 /*
  * @author  John Whaley
