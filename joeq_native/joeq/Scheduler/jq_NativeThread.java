@@ -178,7 +178,7 @@ public class jq_NativeThread implements x86Constants {
         myCodeAllocator = new RuntimeCodeAllocator();
         index = i;
         Thread t = new Thread("_scheduler_" + i);
-        currentThread = schedulerThread = ClassLibInterface.DEFAULT.getJQThread(t);
+        currentThread = schedulerThread = ThreadUtils.getJQThread(t);
         schedulerThread.disableThreadSwitch(); // don't preempt while in the scheduler
         schedulerThread.setNativeThread(this);
     }
@@ -467,7 +467,7 @@ public class jq_NativeThread implements x86Constants {
     public static void initBreakThread() {
         break_nthread = new jq_NativeThread(-1);
         Thread t = new Thread("_break_");
-        break_jthread = ClassLibInterface.DEFAULT.getJQThread(t);
+        break_jthread = ThreadUtils.getJQThread(t);
         break_jthread.disableThreadSwitch();
         break_jthread.setNativeThread(break_nthread);
         if (TRACE) SystemInterface.debugwriteln("Break thread initialized");
@@ -514,7 +514,7 @@ public class jq_NativeThread implements x86Constants {
         // TO DO: select gc from command line
         Thread t = new Thread((Runnable)GCManager.getGC(gcType), "_gc_");
         t.setDaemon(true);
-        gc_jthread = ClassLibInterface.DEFAULT.getJQThread(t);
+        gc_jthread = ThreadUtils.getJQThread(t);
         gc_jthread.disableThreadSwitch();
         gc_jthread.setNativeThread(gc_nthread);
         if (TRACE) SystemInterface.debugwriteln("GC thread initialized");

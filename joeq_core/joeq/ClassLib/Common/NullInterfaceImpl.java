@@ -20,7 +20,6 @@ import Clazz.jq_Reference.jq_NullType;
 import Main.jq;
 import Run_Time.Reflection;
 import Run_Time.TypeCheck;
-import Scheduler.jq_Thread;
 
 /*
  * @author  John Whaley
@@ -86,12 +85,6 @@ public class NullInterfaceImpl implements ClassLib.Common.Interface {
     
     public Clazz.jq_Method getJQMethod(java.lang.reflect.Method f) {
 	throw new UnsupportedOperationException("Using a Null ClassLib Interface!");
-    }
-    
-    public Scheduler.jq_Thread getJQThread(java.lang.Thread t) {
-	jq_Class k = Bootstrap.PrimordialClassLoader.getJavaLangThread();
-	Clazz.jq_InstanceField f = k.getOrCreateInstanceField("jq_thread", "LScheduler/jq_Thread;");
-	return (Scheduler.jq_Thread)Reflection.getfield_A(t, f);
     }
     
     public Clazz.jq_Type getJQType(java.lang.Class k) {

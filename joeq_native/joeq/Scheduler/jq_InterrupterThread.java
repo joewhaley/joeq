@@ -30,7 +30,7 @@ public class jq_InterrupterThread extends Thread {
     jq_InterrupterThread(jq_NativeThread other_nt) {
         this.other_nt = other_nt;
         if (TRACE) SystemInterface.debugwriteln("Initialized timer interrupt for native thread "+other_nt);
-        myself = ClassLibInterface.DEFAULT.getJQThread(this);
+        myself = ThreadUtils.getJQThread(this);
         myself.disableThreadSwitch();
         this.tid = SystemInterface.create_thread(_run.getDefaultCompiledVersion().getEntrypoint(), HeapAddress.addressOf(this));
         jq_NativeThread my_nt = new jq_NativeThread(myself);

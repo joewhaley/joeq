@@ -39,8 +39,6 @@ public interface Interface {
     
     public Clazz.jq_Method getJQMethod(java.lang.reflect.Method f);
     
-    public Scheduler.jq_Thread getJQThread(java.lang.Thread t);
-    
     public Clazz.jq_Type getJQType(java.lang.Class k);
     
     public Clazz.jq_Type getOrCreateType(java.lang.ClassLoader cl, UTF.Utf8 desc);
