@@ -224,7 +224,8 @@ public class jq_NativeThread implements x86Constants {
         // long jump back to entry of schedulerLoop
         CodeAddress ip = _schedulerLoop.getDefaultCompiledVersion().getEntrypoint();
         StackAddress fp = nt.original_ebp;
-        StackAddress sp = (StackAddress)nt.original_esp.offset(-4); // including return address into nativeThreadEntry
+        // sp includes return address into nativeThreadEntry
+        StackAddress sp = (StackAddress)nt.original_esp.offset(-CodeAddress.size()); 
         Unsafe.longJump(ip, fp, sp, 0);
         jq.UNREACHABLE();
     }
@@ -288,7 +289,7 @@ public class jq_NativeThread implements x86Constants {
         jq_Thread t1 = this.currentThread;
         Unsafe.setThreadBlock(this.schedulerThread);
         this.currentThread = this.schedulerThread;
-        CodeAddress ip = (CodeAddress)StackAddress.getBasePointer().offset(4).peek();
+        CodeAddress ip = (CodeAddress)StackAddress.getBasePointer().offset(StackAddress.size()).peek();
         if (TRACE) SystemInterface.debugmsg("Thread switch in native thread: "+this+" Java thread: "+t1+" ip: "+ip.stringRep()+" cc: "+CodeAllocator.getCodeContaining(ip));
         if (t1.isThreadSwitchEnabled()) {
             SystemInterface.debugmsg("Java thread "+t1+" has thread switching enabled on threadSwitch entry!");
@@ -300,7 +301,7 @@ public class jq_NativeThread implements x86Constants {
         // in, it will continue where it left off.
         jq_RegisterState state = t1.getRegisterState();
         state.Eip = (CodeAddress)state.Esp.peek();
-        state.Esp = (StackAddress)state.Esp.offset(8);
+        state.Esp = (StackAddress)state.Esp.offset(StackAddress.size()+CodeAddress.size());
         
         jq_Thread t2 = getNextReadyThread();
         transferExtraWork();
@@ -325,7 +326,7 @@ public class jq_NativeThread implements x86Constants {
         
         Unsafe.setThreadBlock(this.schedulerThread);
         this.currentThread = this.schedulerThread;
-        CodeAddress ip = (CodeAddress)StackAddress.getBasePointer().offset(4).peek();
+        CodeAddress ip = (CodeAddress)StackAddress.getBasePointer().offset(StackAddress.size()).peek();
         if (TRACE) SystemInterface.debugmsg("Thread switch in native thread: "+this+" Java thread: "+t1+" ip: "+ip.stringRep()+" cc: "+CodeAllocator.getCodeContaining(ip));
         if (t1.isThreadSwitchEnabled()) {
             SystemInterface.debugmsg("Java thread "+t1+" has thread switching enabled on threadSwitch entry!");
@@ -337,7 +338,7 @@ public class jq_NativeThread implements x86Constants {
         // in, it will continue where it left off.
         jq_RegisterState state = t1.getRegisterState();
         state.Eip = (CodeAddress)state.Esp.peek();
-        state.Esp = (StackAddress)state.Esp.offset(8);
+        state.Esp = (StackAddress)state.Esp.offset(StackAddress.size()+CodeAddress.size());
         
         if (t1 != t2) {
             // find given thread in our queue.

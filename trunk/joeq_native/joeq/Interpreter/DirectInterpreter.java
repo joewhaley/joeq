@@ -40,8 +40,8 @@ public class DirectInterpreter extends BytecodeInterpreter implements ObjectLayo
     public Object invokeMethod(jq_Method m) throws Throwable {
         jq_Class k = m.getDeclaringClass();
         k.load(); k.verify(); k.prepare(); k.sf_initialize(); k.cls_initialize();
-        int localsize = m.getMaxLocals()<<2;
-        int stacksize = m.getMaxStack()<<2;
+        int localsize = m.getMaxLocals() * HeapAddress.size();
+        int stacksize = m.getMaxStack() * HeapAddress.size();
         StackAddress newframe = StackAddress.alloca(localsize+stacksize);
         DirectState callee = new DirectState(newframe, (StackAddress) newframe.offset(localsize), m.getMaxLocals());
         return this.invokeMethod(m, callee);
@@ -75,7 +75,7 @@ public class DirectInterpreter extends BytecodeInterpreter implements ObjectLayo
         }
 
         public void push_I(int v) {
-            sp = (StackAddress) sp.offset(-4);
+            sp = (StackAddress) sp.offset(-HeapAddress.size());
             sp.poke4(v);
         }
         public void push_L(long v) {
@@ -91,7 +91,7 @@ public class DirectInterpreter extends BytecodeInterpreter implements ObjectLayo
             push_R(HeapAddress.addressOf(v));
         }
         public void push_R(Address v) {
-            sp = (StackAddress) sp.offset(-4);
+            sp = (StackAddress) sp.offset(-HeapAddress.size());
             sp.poke(v);
         }
         public void push(Object v) {
@@ -99,7 +99,7 @@ public class DirectInterpreter extends BytecodeInterpreter implements ObjectLayo
         }
         public int pop_I() {
             int v = sp.peek4();
-            sp = (StackAddress) sp.offset(4);
+            sp = (StackAddress) sp.offset(HeapAddress.size());
             return v;
         }
         public long pop_L() {
@@ -117,21 +117,21 @@ public class DirectInterpreter extends BytecodeInterpreter implements ObjectLayo
         }
         public Address pop_R() {
             Address v = sp.peek();
-            sp = (StackAddress) sp.offset(4);
+            sp = (StackAddress) sp.offset(HeapAddress.size());
             return v;
         }
         public Object pop() {
             return pop_A();
         }
         public void popAll() {
-            sp = (StackAddress) fp.offset(-(nlocals<<2));
+            sp = (StackAddress) fp.offset(-(nlocals * HeapAddress.size()));
         }
         public Object peek_A(int depth) {
-            HeapAddress v = (HeapAddress) sp.offset(depth << 2).peek();
+            HeapAddress v = (HeapAddress) sp.offset(depth * HeapAddress.size()).peek();
             return v.asObject();
         }
         public void setLocal_I(int i, int v) {
-            fp.offset(-(i << 2)).poke4(v);
+            fp.offset(-(i * HeapAddress.size())).poke4(v);
         }
         public void setLocal_L(int i, long v) {
             setLocal_I(i, (int)(v>>32)); setLocal_I(i+1, (int)v); // hi, lo
@@ -146,10 +146,10 @@ public class DirectInterpreter extends BytecodeInterpreter implements ObjectLayo
             setLocal_R(i, HeapAddress.addressOf(v));
         }
         public void setLocal_R(int i, Address v) {
-            fp.offset(-(i << 2)).poke(v);
+            fp.offset(-(i * HeapAddress.size())).poke(v);
         }
         public int getLocal_I(int i) {
-            return fp.offset(-(i << 2)).peek4();
+            return fp.offset(-(i * HeapAddress.size())).peek4();
         }
         public long getLocal_L(int i) {
             int lo=getLocal_I(i+1); int hi=getLocal_I(i); // lo, hi
@@ -165,7 +165,7 @@ public class DirectInterpreter extends BytecodeInterpreter implements ObjectLayo
             return ((HeapAddress) getLocal_R(i)).asObject();
         }
         public Address getLocal_R(int i) {
-            return fp.offset(-(i << 2)).peek();
+            return fp.offset(-(i * HeapAddress.size())).peek();
         }
         public void return_I(int v) {
             loResult = v;

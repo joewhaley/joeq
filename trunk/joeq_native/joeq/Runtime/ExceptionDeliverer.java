@@ -28,7 +28,7 @@ public abstract class ExceptionDeliverer {
     public static /*final*/ boolean TRACE = false;
     
     public static void athrow(Throwable k) {
-        CodeAddress ip = (CodeAddress) StackAddress.getBasePointer().offset(4).peek();
+        CodeAddress ip = (CodeAddress) StackAddress.getBasePointer().offset(StackAddress.size()).peek();
         StackAddress fp = (StackAddress) StackAddress.getBasePointer().peek();
         ExceptionDeliverer.deliverToCurrentThread(k, ip, fp);
         jq.UNREACHABLE();
@@ -87,7 +87,7 @@ public abstract class ExceptionDeliverer {
                     }
                     Monitor.monitorexit(o);
                 }
-                ip = (CodeAddress) fp.offset(4).peek();
+                ip = (CodeAddress) fp.offset(StackAddress.size()).peek();
                 fp = (StackAddress) fp.peek();
             }
         }
@@ -170,7 +170,7 @@ public abstract class ExceptionDeliverer {
     
     public static Object getStackTrace() {
         // stack traces are a linked list.
-        CodeAddress ip = (CodeAddress) StackAddress.getBasePointer().offset(4).peek();
+        CodeAddress ip = (CodeAddress) StackAddress.getBasePointer().offset(StackAddress.size()).peek();
         StackAddress fp = (StackAddress) StackAddress.getBasePointer().peek();
         StackFrame sf = new StackFrame(fp, ip);
         sf.fillInStackTrace();
@@ -189,7 +189,7 @@ public abstract class ExceptionDeliverer {
         public void fillInStackTrace() {
             StackFrame dis = this;
             while (!dis.fp.isNull()) {
-                CodeAddress ip2 = (CodeAddress) dis.fp.offset(4).peek();
+                CodeAddress ip2 = (CodeAddress) dis.fp.offset(StackAddress.size()).peek();
                 StackAddress fp2 = (StackAddress) dis.fp.peek();
                 dis.next = new StackFrame(fp2, ip2);
                 dis = dis.next;

@@ -747,8 +747,6 @@ uphere:
         }
         jq.Assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
         HeapAddress.addressOf(o).offset(f.getOffset()).poke8(v);
-        //Unsafe.poke4(Unsafe.addressOf(o)+f.getOffset(), (int)v);
-        //Unsafe.poke4(Unsafe.addressOf(o)+f.getOffset()+4, (int)(v>>32));
     }
     public static void putfield_F(Object o, jq_InstanceField f, float v) {
         jq.Assert(f.getType() == jq_Primitive.FLOAT);
@@ -839,7 +837,6 @@ uphere:
             if (o == null) return 0L;
             return ((Long)o).longValue();
         }
-        //int lo=Unsafe.peek(f.getAddress()); int hi=Unsafe.peek(f.getAddress()+4);
         return f.getAddress().peek8();
     }
     public static float getstatic_F(jq_StaticField f) {

@@ -13,6 +13,7 @@ import ClassLib.ClassLibInterface;
 import Clazz.jq_Class;
 import Clazz.jq_InstanceMethod;
 import Main.jq;
+import Memory.CodeAddress;
 import Memory.HeapAddress;
 import Memory.StackAddress;
 import Run_Time.SystemInterface;
@@ -67,9 +68,9 @@ public class jq_InterrupterThread extends Thread {
                 } else {
                     if (TRACE) SystemInterface.debugmsg(other_nt+" : "+javaThread+" ip="+regs.Eip.stringRep()+" sp="+regs.Esp.stringRep()+" cc="+CodeAllocator.getCodeContaining(regs.Eip));
                     // simulate a call to threadSwitch method
-                    regs.Esp = (StackAddress) regs.Esp.offset(-4);
+                    regs.Esp = (StackAddress) regs.Esp.offset(-HeapAddress.size());
                     regs.Esp.poke(HeapAddress.addressOf(other_nt));
-                    regs.Esp = (StackAddress) regs.Esp.offset(-4);
+                    regs.Esp = (StackAddress) regs.Esp.offset(-CodeAddress.size());
                     regs.Esp.poke(regs.Eip);
                     regs.Eip = jq_NativeThread._threadSwitch.getDefaultCompiledVersion().getEntrypoint();
                     regs.ContextFlags = jq_RegisterState.CONTEXT_CONTROL;

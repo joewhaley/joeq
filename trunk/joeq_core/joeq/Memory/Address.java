@@ -40,4 +40,21 @@ public abstract class Address {
     static {
         _class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LMemory/Address;");
     }
+    
+    protected final Object clone() throws CloneNotSupportedException {
+        throw new InternalError("cannot call clone on Address types!");
+    }
+
+    public final boolean equals(Object arg0) {
+        throw new InternalError("cannot call equals on Address types!");
+    }
+    
+    public final int hashCode() {
+        throw new InternalError("cannot call hashCode on Address types!");
+    }
+
+    public final String toString() {
+        throw new InternalError("cannot call toString on Address types!  use stringRep instead.");
+    }
+
 }
