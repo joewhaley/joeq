@@ -256,6 +256,34 @@ public class SimpleAllocator extends HeapAllocator {
         firstFree = firstLarge = currLarge = HeapAddress.getNull();
     }
 
+    private void addToFreeList(HeapAddress addr, HeapAddress end) {
+        int size = end.difference(addr);
+        if (size >= MIN_SIZE) {
+            // Add remainder of this block to the free list.
+            setFreeSize(addr, size);
+            HeapAddress curr_p = firstFree;
+            HeapAddress prev_p = HeapAddress.getNull();
+            if (TRACE_FREELIST) Debug.writeln("Adding free block ", addr);
+            for (;;) {
+                if (TRACE_FREELIST) Debug.writeln("Checking ", curr_p);
+                if (curr_p.isNull() || addr.difference(curr_p) < 0) {
+                    if (prev_p.isNull()) {
+                        firstFree = addr;
+                        if (TRACE_FREELIST) Debug.writeln("New head of free list ", firstFree);
+                    } else {
+                        setFreeNext(prev_p, addr);
+                        if (TRACE_FREELIST) Debug.writeln("Inserting after ", prev_p);
+                    }
+                    setFreeNext(addr, curr_p);
+                    break;
+                }
+                HeapAddress next_p = getFreeNext(curr_p);
+                prev_p = curr_p;
+                curr_p = next_p;
+            }
+        }
+    }
+    
     /**
      * Allocates a new block of memory from the OS, sets the current block to
      * point to it, and makes the new block the current block.
@@ -267,37 +295,16 @@ public class SimpleAllocator extends HeapAllocator {
         if (totalMemory() >= MAX_MEMORY) {
             HeapAllocator.outOfMemory();
         }
-        int size = heapEnd.difference(heapCurrent);
-        if (TRACE_ALLOC) Debug.writeln("Size of remaining: ", size);
-        if (size >= MIN_SIZE) {
-            // Add remainder of this block to the free list.
-            setFreeSize(heapCurrent, size);
-            HeapAddress curr_p = firstFree;
-            HeapAddress prev_p = HeapAddress.getNull();
-            if (TRACE_FREELIST) Debug.writeln("Adding free block ", heapCurrent);
-            for (;;) {
-                if (TRACE_FREELIST) Debug.writeln("Checking ", curr_p);
-                if (curr_p.isNull() || heapCurrent.difference(curr_p) < 0) {
-                    if (prev_p.isNull()) {
-                        firstFree = heapCurrent;
-                        if (TRACE_FREELIST) Debug.writeln("New head of free list ", firstFree);
-                    } else {
-                        setFreeNext(prev_p, heapCurrent);
-                        if (TRACE_FREELIST) Debug.writeln("Inserting after ", prev_p);
-                    }
-                    setFreeNext(heapCurrent, curr_p);
-                    break;
-                }
-                HeapAddress next_p = getFreeNext(curr_p);
-                prev_p = curr_p;
-                curr_p = next_p;
-            }
-        }
+        // Add remainder of this block to the free list.
+        addToFreeList(heapCurrent, heapEnd);
+        
+        // Allocate new block.
         heapCurrent = allocNewBlock();
         setBlockNext(heapEnd, heapCurrent);
         heapEnd = getBlockEnd(heapCurrent);
         
         {
+            // Print stack trace, for debugging purposes.
             StackAddress fp = StackAddress.getBasePointer();
             CodeAddress ip = (CodeAddress) fp.offset(4).peek();
             fp = (StackAddress) fp.peek();
@@ -495,6 +502,7 @@ public class SimpleAllocator extends HeapAllocator {
                 return null;
             }
         }
+        addr = (HeapAddress) addr.offset(ObjectLayout.OBJ_HEADER_SIZE);
         addr.offset(ObjectLayout.VTABLE_OFFSET).poke(HeapAddress.addressOf(vtable));
         if (flip) addr.offset(ObjectLayout.STATUS_WORD_OFFSET).poke4(ObjectLayout.GC_BIT);
         return addr.asObject();
@@ -520,6 +528,7 @@ public class SimpleAllocator extends HeapAllocator {
                 return null;
             }
         }
+        addr = (HeapAddress) addr.offset(ObjectLayout.ARRAY_HEADER_SIZE);
         addr.offset(ObjectLayout.ARRAY_LENGTH_OFFSET).poke4(length);
         if (flip) addr.offset(ObjectLayout.STATUS_WORD_OFFSET).poke4(ObjectLayout.GC_BIT);
         addr.offset(ObjectLayout.VTABLE_OFFSET).poke(HeapAddress.addressOf(vtable));
@@ -720,7 +729,6 @@ public class SimpleAllocator extends HeapAllocator {
         while (!currBlock.isNull()) {
             HeapAddress currBlockEnd = getBlockEnd(currBlock);
             HeapAddress p = currBlock;
-            
             HeapAddress currFree, prevFree;
             prevFree = HeapAddress.getNull();
             currFree = firstFree;
@@ -743,18 +751,32 @@ public class SimpleAllocator extends HeapAllocator {
             outer:
             while (currBlockEnd.difference(p) > 0) {
                 
-                if (TRACE_FREELIST) Debug.writeln("ptr: ", p);
+                if (TRACE_FREELIST) Debug.write("ptr=", p);
                 
                 if (p.difference(currFree) == 0) {
-                    // Skip over known free chunk.
+                    if (TRACE_FREELIST) Debug.write(" on free list, ");
                     p = getFreeEnd(currFree);
-                    prevFree = currFree;
-                    currFree = getFreeNext(currFree);
-                    if (TRACE_FREELIST) Debug.writeln("Skipped over free, next free=", currFree);
+                    if (lastWasFree) {
+                        // Extend size of previous free area.
+                        int newSize = p.difference(prevFree);
+                        setFreeSize(prevFree, newSize);
+                        currFree = getFreeNext(currFree);
+                        setFreeNext(prevFree, currFree);
+                        if (TRACE_FREELIST) {
+                            Debug.write("prev free area extended to size ", newSize);
+                            Debug.write(", next free=", currFree);
+                        }
+                    } else {
+                        // Skip over known free chunk.
+                        prevFree = currFree;
+                        currFree = getFreeNext(currFree);
+                        if (TRACE_FREELIST) Debug.writeln(" on free list. Next free=", currFree);
+                    }
                     lastWasFree = true;
                     continue;
                 }
                 
+                HeapAddress lastEnd = p;
                 HeapAddress obj = HeapAddress.getNull();
                 // Scan forward to find next object reference.
                 while (currBlockEnd.difference(p) > 0) {
@@ -762,51 +784,65 @@ public class SimpleAllocator extends HeapAllocator {
                     boolean b2 = isValidArray(p2);
                     if (b2) {
                         obj = p2;
+                        if (TRACE_FREELIST) Debug.write(" array ", obj);
                         break;
                     }
                     HeapAddress p1 = (HeapAddress) p.offset(ObjectLayout.OBJ_HEADER_SIZE);
                     boolean b1 = isValidObject(p1);
                     if (b1) {
                         obj = p1;
+                        if (TRACE_FREELIST) Debug.write(" object ", obj);
                         break;
                     }
                     p = (HeapAddress) p.offset(HeapAddress.size());
                 }
                 
+                if (TRACE_FREELIST) {
+                    Debug.write(" ");
+                }
                 HeapAddress next_p;
                 boolean isFree;
                 if (!obj.isNull()) {
                     Object o = obj.asObject();
+                    if (TRACE_FREELIST) Debug.write(jq_Reference.getTypeOf(o).getDesc());
                     int size = getObjectSize(o);
+                    //if (TRACE_FREELIST) Debug.write(" size ", size);
                     next_p = (HeapAddress) p.offset(size).align(2);
-                    int status = obj.offset(ObjectLayout.STATUS_WORD_OFFSET).peek4();
-                    isFree = ((status & ObjectLayout.GC_BIT) == 0);
+                    isFree = getGCBit(o) != flip;
                 } else {
                     next_p = p;
                     isFree = true;
+                    if (TRACE_FREELIST) Debug.write("<end of block>");
                 }
-                if (TRACE_FREELIST) Debug.writeln("Next ptr ", next_p);
+                
+                if (TRACE_FREELIST) Debug.writeln(isFree?" free":" notfree");
                 
                 if (isFree) {
-                    if (TRACE_FREELIST) Debug.writeln("Not marked, adding to free list.");
                     if (lastWasFree) {
                         // Just extend size of this free area.
                         int newSize = next_p.difference(prevFree);
                         setFreeSize(prevFree, newSize);
-                        if (TRACE_FREELIST) Debug.writeln("Free area extended to size ", newSize);
+                        if (TRACE_FREELIST) {
+                            Debug.write("Free area ", prevFree);
+                            Debug.writeln(" extended to size ", newSize);
+                        }
                     } else {
                         // Insert into free list.
-                        setFreeNext(p, currFree);
-                        int newSize = next_p.difference(p);
-                        setFreeSize(p, newSize);
-                        if (prevFree.isNull()) {
-                            firstFree = p;
-                            if (TRACE_FREELIST) Debug.writeln("New first free area ", p);
-                        } else {
-                            setFreeNext(prevFree, p);
-                            if (TRACE_FREELIST) Debug.writeln("Inserted free area ", p);
+                        setFreeNext(lastEnd, currFree);
+                        int newSize = next_p.difference(lastEnd);
+                        setFreeSize(lastEnd, newSize);
+                        if (TRACE_FREELIST) {
+                            Debug.write("Inserted free area ", prevFree);
+                            Debug.write(", ", lastEnd);
+                            Debug.write(", ", currFree);
+                            Debug.writeln(" size ", newSize);
                         }
-                        prevFree = p;
+                        if (prevFree.isNull()) {
+                            firstFree = lastEnd;
+                        } else {
+                            setFreeNext(prevFree, lastEnd);
+                        }
+                        prevFree = lastEnd;
                     }
                 }
                 lastWasFree = isFree;

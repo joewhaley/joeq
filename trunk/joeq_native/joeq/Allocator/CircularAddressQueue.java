@@ -23,7 +23,7 @@ public class CircularAddressQueue implements AddressQueue {
      * Size of block (in words) to allocate when we need more space
      * in a queue.
      */
-    public static int QUEUE_WORDS = 65536;
+    public static int QUEUE_WORDS = 262144;
     
     /**
      * Queue pointers.
