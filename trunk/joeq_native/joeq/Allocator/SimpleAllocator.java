@@ -14,6 +14,7 @@ import Main.jq;
 import Memory.HeapAddress;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
+import Util.BitArray;
 
 /*
  * @author  John Whaley
@@ -34,6 +35,20 @@ public class SimpleAllocator extends HeapAllocator {
      * and is larger than this size, it is allocated directly from the OS.
      */
     public static final int LARGE_THRESHOLD = 262144;
+
+    /** Each bit in allocbits corresponds to 8 bytes on the heap. When an object
+     * allocated and aligned on 8 byte boundary, the bit in allocbits corresponding
+     * to the starting 8 bytes (excluding HEADER) of the object is set.
+     * Currently, allocbits' size is MAX_MEMORY/64.
+     */
+    private final BitArray allocbits = new BitArray(1048576);
+
+    /** Each bit in markbits corresponds to 8 bytes on the heap. When an object
+     * is reachable from TraceRootSet, the bit in markbits corresponding to the
+     * starting 8 bytes (excluding HEADER) of the object is set.
+     * Currently, markbits' size is MAX_MEMORY/64.
+     */
+    private final BitArray markbits = new BitArray(1048576);
 
     /** Pointers to the start, current, and end of the heap.
      */
@@ -101,6 +116,7 @@ public class SimpleAllocator extends HeapAllocator {
             heapCurrent = (HeapAddress)heapCurrent.offset(size);
         }
         // fast path
+        allocbits.set((addr.to32BitValue() - heapFirst.to32BitValue())/8);
         addr.offset(VTABLE_OFFSET).poke(HeapAddress.addressOf(vtable));
         return addr.asObject();
     }
@@ -159,6 +175,7 @@ public class SimpleAllocator extends HeapAllocator {
             }
         }
         // fast path
+        allocbits.set((addr.to32BitValue() - heapFirst.to32BitValue())/8);
         addr.offset(ARRAY_LENGTH_OFFSET).poke4(length);
         addr.offset(VTABLE_OFFSET).poke(HeapAddress.addressOf(vtable));
         return addr.asObject();
