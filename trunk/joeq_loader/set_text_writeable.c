@@ -144,13 +144,14 @@ void patchELF(unsigned int *p)
     }
 
     my_unmmap();
+    printf("Patched successfully.\n");
 }
 
 void patchPE(unsigned int *p, unsigned short n_sections)
 {
     unsigned short i;
     for (i=0; i<n_sections; ++i) {
-        printf("Section %d name %s flags %x\n", i, p, p[9]);
+        printf("Section %d name %.8s flags %x\n", i, p, p[9]);
         if ((p[9] & 0x00000020) != 0 &&
             (p[9] & 0x20000000) != 0 &&
             (p[9] & 0x40000000) != 0 &&
@@ -162,6 +163,7 @@ void patchPE(unsigned int *p, unsigned short n_sections)
     }
 
     my_unmmap();
+    printf("Patched successfully.\n");
 }
 
 int main(int argc, char** argv)
@@ -199,4 +201,5 @@ int main(int argc, char** argv)
     }
 
     close_file();
+    return 0;
 }
