@@ -120,7 +120,7 @@ public class PA {
     
     int V_BITS=18, I_BITS=16, H_BITS=15, Z_BITS=5, F_BITS=13, T_BITS=12, N_BITS=13, M_BITS=14;
     int VC_BITS=1, HC_BITS=1;
-    int MAX_VC_BITS = Integer.parseInt(System.getProperty("pa.maxvc", "32"));
+    int MAX_VC_BITS = Integer.parseInt(System.getProperty("pa.maxvc", "48"));
     int MAX_HC_BITS = Integer.parseInt(System.getProperty("pa.maxhc", "6"));
     
     IndexMap/*Node*/ Vmap;
@@ -2438,10 +2438,6 @@ public class PA {
             Assert._assert(CONTEXT_SENSITIVE);
         BDDPairing V2cH2ctoV1cH1c = bdd.makePair();
         V2cH2ctoV1cH1c.set(new BDDDomain[] {V2c, H2c}, new BDDDomain[] {V1c, H1c});
-        BDDPairing V2ctoV1c = bdd.makePair(V2c, V1c);
-        BDDPairing H2ctoH1c = bdd.makePair(H2c, H1c);
-        BDD V1cset = V1c.set();
-        BDD H1cset = H1c.set();
         
         V1H1correspondence = new HashMap();
         for (Iterator i = cg.getAllMethods().iterator(); i.hasNext(); ) {
