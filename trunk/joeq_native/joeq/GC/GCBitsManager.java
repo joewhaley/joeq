@@ -35,6 +35,16 @@ public class GCBitsManager {
         }
     }
 
+    public static class SweepUnitComparator implements Comparator {
+        public int compare(Object o1, Object o2) {
+            if(!(o1 instanceof SweepUnit && o2 instanceof SweepUnit)) {
+                throw new ClassCastException();
+            } else {
+                return (((SweepUnit) o1).getHead().difference(((SweepUnit) o2).getHead()));
+            }
+        }
+    }
+
     private static TreeMap pool = new TreeMap();
     private static HashSet units = new HashSet();
 

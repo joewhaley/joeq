@@ -8,25 +8,22 @@
  */
 package Allocator;
 
-import java.util.SortedSet;
 import java.util.Comparator;
-import GC.GCBitsManager.SweepUnit;
+import java.util.TreeSet;
 
-public class FreeMemManager implements Comparator {
-    private SortedSet freePool;
+import GC.GCBitsManager.SweepUnit;
+import GC.GCBitsManager.SweepUnitComparator;
+
+public class FreeMemManager {
+    private TreeSet freePool;
     private FreeMemStrategy stg;
 
     public FreeMemManager(FreeMemStrategy stg) {
-        this stg = stg;
-        freePool
+        this.stg = stg;
+        freePool = new TreeSet(new SweepUnitComparator());
     }
 
-    public int compare(Object o1, Object o2) {
-        if(!o1.instanceof(SweepUnit) || !o2.instanceof(SweepUnit)) {
-            throws new ClassCastException();
-        } else {
-            return ((SweepUnit)o1).getHead().difference(((SweepUnit)o2).getHead());
-        }
+    public FreeMemManager() {
+        this(new FirstAdaptionStrategy());
     }
-
 }
