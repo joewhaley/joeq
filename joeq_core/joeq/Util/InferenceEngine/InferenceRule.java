@@ -184,7 +184,9 @@ public abstract class InferenceRule {
                 }
                 neededVariables.put(v, d);
                 String o2 = (String) variableOptions.get(v);
-                if (o2 != null && !o.equals(o2)) {
+                if (o == null || o.equals("")) o = o2;
+                if (o2 == null || o2.equals("")) o2 = o;
+                if (o != null && o2 != null && !o.equals(o2)) {
                     throw new IllegalArgumentException(v+": "+o+" != "+o2);
                 }
                 variableOptions.put(v, o);
