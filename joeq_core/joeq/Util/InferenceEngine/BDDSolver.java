@@ -54,13 +54,15 @@ public class BDDSolver extends Solver {
     
     public static int BDDNODES = Integer.parseInt(System.getProperty("bddnodes", "1000000"));
     public static int BDDCACHE = Integer.parseInt(System.getProperty("bddcache", "100000"));
+    public static int BDDMINFREE = Integer.parseInt(System.getProperty("bddminfree", "20"));
     
     public BDDSolver() {
-        System.out.println("Initializing BDD library ("+BDDNODES+" nodes, cache size "+BDDCACHE+")");
+        System.out.println("Initializing BDD library ("+BDDNODES+" nodes, cache size "+BDDCACHE+", min free "+BDDMINFREE+"%)");
         bdd = BDDFactory.init(BDDNODES, BDDCACHE);
         fielddomainsToBDDdomains = new GenericMultiMap();
         orderingConstraints = new HashMap();
         bdd.setMaxIncrease(BDDNODES/2);
+        bdd.setMinFreeNodes(BDDMINFREE);
     }
     
     public void initialize() {
