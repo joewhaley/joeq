@@ -50,6 +50,7 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
     BDD vP;
     BDD L;
     BDD S;
+    BDD IE;
     
     public PAMethodSummary(PA pa, jq_Method m) {
         this.pa = pa;
@@ -57,6 +58,7 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
         vP = pa.bdd.zero();
         L = pa.bdd.zero();
         S = pa.bdd.zero();
+        IE = pa.bdd.zero();
         visitMethod(m);
     }
     
@@ -237,7 +239,7 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
             if (mc.isSingleTarget()) {
                 if (target != pa.javaLangObject_clone) {
                     // statically-bound, single target call
-                    pa.addSingleTargetCall(thisptr, mc, I_bdd, target);
+                    addSingleTargetCall(thisptr, mc, I_bdd, target);
                     pa.addToMI(M_bdd, I_bdd, null);
                 } else {
                     // super.clone()
@@ -300,6 +302,29 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
             int V_i = pa.Vmap.get(to);
             BDD V_bdd = pa.V1.ithVar(V_i);
             pa.addToA(V_bdd, pa.Vmap.get(from));
+        }
+    }
+    
+    void addSingleTargetCall(Set thisptr, ProgramLocation mc, BDD I_bdd, jq_Method target) {
+        if (pa.DUMP_FLY) {
+            BDD bdd1 = I_bdd.id();
+            int M2_i = pa.Mmap.get(target);
+            bdd1.andWith(pa.M2.ithVar(M2_i));
+            IE.orWith(bdd1);
+        } else {
+            pa.addToIE(I_bdd, target);
+        }
+        if (pa.OBJECT_SENSITIVE || pa.CARTESIAN_PRODUCT) {
+            BDD bdd1 = pa.bdd.zero();
+            for (Iterator j = thisptr.iterator(); j.hasNext(); ) {
+                int V_i = pa.Vmap.get(j.next());
+                bdd1.orWith(pa.V1.ithVar(V_i));
+            }
+            bdd1.andWith(I_bdd.id());
+            int M_i = pa.Mmap.get(target);
+            bdd1.andWith(pa.M.ithVar(M_i));
+            if (TRACE_RELATIONS) out.println("Adding single-target call: "+bdd1.toStringWithDomains());
+            pa.staticCalls.orWith(bdd1);
         }
     }
     

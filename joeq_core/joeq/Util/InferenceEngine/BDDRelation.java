@@ -88,7 +88,7 @@ public class BDDRelation extends Relation {
     
     public void load() throws IOException {
         load(name+".bdd");
-        if (solver.NOISY) solver.out.println("Loaded BDD from file: "+name+".bdd "+relation.nodeCount()+" nodes.");
+        if (solver.NOISY) solver.out.println("Loaded BDD from file: "+name+".bdd "+relation.nodeCount()+" nodes, "+size()+" elements.");
         if (solver.NOISY) solver.out.println("Domains of loaded relation:"+activeDomains(relation));
     }
     
@@ -157,7 +157,7 @@ public class BDDRelation extends Relation {
     }
     
     public void save(String filename) throws IOException {
-        System.out.println("Relation "+this+": "+relation.nodeCount()+" nodes");
+        System.out.println("Relation "+this+": "+relation.nodeCount()+" nodes, "+size()+" elements");
         solver.bdd.save(filename, relation);
     }
 
@@ -167,7 +167,7 @@ public class BDDRelation extends Relation {
     }
     
     public void saveTuples() throws IOException {
-        System.out.println("Relation "+this+": "+relation.nodeCount()+" nodes");
+        System.out.println("Relation "+this+": "+relation.nodeCount()+" nodes, "+size()+" elements");
         saveTuples(name+".rtuples", relation);
     }
     
@@ -194,7 +194,7 @@ public class BDDRelation extends Relation {
             dos.writeBytes(" "+d.toString()+":"+d.varNum());
         }
         dos.writeBytes("\n");
-        System.out.println(" ) = "+relation.nodeCount()+" nodes");
+        System.out.println(" ) = "+relation.nodeCount()+" nodes, "+size()+" elements");
         for (int i = 0; i < a.length; ++i) {
             BDDDomain d = solver.bdd.getDomain(a[i]);
             allDomains.andWith(d.set());
@@ -245,5 +245,9 @@ public class BDDRelation extends Relation {
             if (i < a.length-1) sb.append(',');
         }
         return sb.toString();
+    }
+    
+    public double size() {
+        return relation.satCount(domainSet);
     }
 }

@@ -107,6 +107,7 @@ public class PA {
     PrintStream out = System.out;
     boolean DUMP_INITIAL = !System.getProperty("pa.dumpinitial", "no").equals("no");
     boolean DUMP_RESULTS = !System.getProperty("pa.dumpresults", "yes").equals("no");
+    boolean DUMP_FLY = !System.getProperty("pa.dumpfly", "no").equals("no");
     boolean DUMP_SSA = !System.getProperty("pa.dumpssa", "no").equals("no");
     static boolean USE_JOEQ_CLASSLIBS = !System.getProperty("pa.usejoeqclasslibs", "no").equals("no");
 
@@ -150,7 +151,7 @@ public class PA {
     
     BDDFactory bdd;
     
-    BDDDomain V1, V2, I, H1, H2, Z, F, T1, T2, N, M;
+    BDDDomain V1, V2, I, H1, H2, Z, F, T1, T2, N, M, M2;
     BDDDomain V1c[], V2c[], H1c[], H2c[];
     
     int V_BITS=18, I_BITS=16, H_BITS=15, Z_BITS=5, F_BITS=13, T_BITS=12, N_BITS=13, M_BITS=14;
@@ -253,6 +254,7 @@ public class PA {
         T2 = makeDomain("T2", T_BITS);
         N = makeDomain("N", N_BITS);
         M = makeDomain("M", M_BITS);
+        M2 = makeDomain("M2", M_BITS);
         
         if (CONTEXT_SENSITIVE || OBJECT_SENSITIVE || THREAD_SENSITIVE) {
             V1c = new BDDDomain[1];
@@ -285,19 +287,19 @@ public class PA {
             // default variable orderings.
             if (CONTEXT_SENSITIVE || THREAD_SENSITIVE || OBJECT_SENSITIVE) {
                 if (HC_BITS > 0) {
-                    varorder = "N_F_Z_I_M_T1_V2xV1_V2cxV1c_H2xH2c_T2_H1xH1c";
+                    varorder = "N_F_Z_I_M2_M_T1_V2xV1_V2cxV1c_H2xH2c_T2_H1xH1c";
                 } else {
-                    //varorder = "N_F_Z_I_M_T1_V2xV1_V2cxV1c_H2_T2_H1";
-                    varorder = "N_F_I_M_Z_V2xV1_V2cxV1c_T1_H2_T2_H1";
+                    //varorder = "N_F_Z_I_M2_M_T1_V2xV1_V2cxV1c_H2_T2_H1";
+                    varorder = "N_F_I_M2_M_Z_V2xV1_V2cxV1c_T1_H2_T2_H1";
                 }
             } else if (CARTESIAN_PRODUCT) {
-                varorder = "N_F_Z_I_M_T1_V2xV1_T2_H2xH1";
+                varorder = "N_F_Z_I_M2_M_T1_V2xV1_T2_H2xH1";
                 for (int i = 0; i < V1c.length; ++i) {
                     varorder += "xV1c"+i+"xV2c"+i;
                 }
             } else {
-                //varorder = "N_F_Z_I_M_T1_V2xV1_H2_T2_H1";
-                varorder = "N_F_I_M_Z_V2xV1_T1_H2_T2_H1";
+                //varorder = "N_F_Z_I_M2_M_T1_V2xV1_H2_T2_H1";
+                varorder = "N_F_I_M2_M_Z_V2xV1_T1_H2_T2_H1";
             }
         }
         
@@ -505,22 +507,6 @@ public class PA {
         bdd1.andWith(M_bdd.id());
         if (TRACE_RELATIONS) out.println("Adding to formal: "+bdd1.toStringWithDomains());
         formal.orWith(bdd1);
-    }
-    
-    void addSingleTargetCall(Set thisptr, ProgramLocation mc, BDD I_bdd, jq_Method target) {
-        addToIE(I_bdd, target);
-        if (OBJECT_SENSITIVE || CARTESIAN_PRODUCT) {
-            BDD bdd1 = bdd.zero();
-            for (Iterator j = thisptr.iterator(); j.hasNext(); ) {
-                int V_i = Vmap.get(j.next());
-                bdd1.orWith(V1.ithVar(V_i));
-            }
-            bdd1.andWith(I_bdd.id());
-            int M_i = Mmap.get(target);
-            bdd1.andWith(M.ithVar(M_i));
-            if (TRACE_RELATIONS) out.println("Adding single-target call: "+bdd1.toStringWithDomains());
-            staticCalls.orWith(bdd1);
-        }
     }
     
     void addToIE(BDD I_bdd, jq_Method target) {
@@ -823,6 +809,7 @@ public class PA {
     }
     
     public void addAllMethods() {
+        if (DUMP_FLY) return;
         for (Iterator i = newMethodSummaries.entrySet().iterator(); i.hasNext(); ) {
             Map.Entry e = (Map.Entry) i.next();
             jq_Method m = (jq_Method) e.getKey();
@@ -3438,6 +3425,37 @@ public class PA {
         return r;
     }
     
+    BDD mS;
+    BDD mL;
+    BDD mvP;
+    BDD mIE;
+    BDD visitedFly;
+    void initFly() {
+        mS = bdd.zero();
+        mL = bdd.zero();
+        mvP = bdd.zero();
+        mIE = bdd.zero();
+        visitedFly = bdd.zero();
+        for (Iterator i = rootMethods.iterator(); i.hasNext(); ) {
+            jq_Method m = (jq_Method) i.next();
+            int m_i = Mmap.get(m);
+            visitedFly.orWith(M.ithVar(m_i));
+        }
+        
+        for (Iterator i = newMethodSummaries.entrySet().iterator(); i.hasNext(); ) {
+            Map.Entry e = (Map.Entry) i.next();
+            jq_Method m = (jq_Method) e.getKey();
+            PAMethodSummary s = (PAMethodSummary) e.getValue();
+            int m_i = Mmap.get(m);
+            BDD b = M.ithVar(m_i);
+            mS.orWith(b.and(s.S));
+            mL.orWith(b.and(s.L));
+            mvP.orWith(b.and(s.vP));
+            mIE.orWith(b.and(s.IE));
+            s.free(); b.free();
+        }
+    }
+    
     public void dumpBDDRelations() throws IOException {
         
         // difference in compatibility
@@ -3469,7 +3487,7 @@ public class PA {
                 dos.writeBytes("Z\n");
             else if (d == N)
                 dos.writeBytes("N\n");
-            else if (d == M)
+            else if (d == M || d == M2)
                 dos.writeBytes("M\n");
             else if (Arrays.asList(V1c).contains(d)
                     || Arrays.asList(V2c).contains(d))
@@ -3530,6 +3548,15 @@ public class PA {
         bdd.save(dumpPath+"Ithr.bdd", Ithr);
         bdd.save(dumpPath+"IE0.bdd", IE0);
         if (IEfilter != null) bdd.save(dumpPath+"IEfilter.bdd", IEfilter);
+        
+        if (DUMP_FLY) {
+            initFly();
+            bdd.save(dumpPath+"visited.bdd", visitedFly);
+            bdd.save(dumpPath+"mS.bdd", mS);
+            bdd.save(dumpPath+"mL.bdd", mL);
+            bdd.save(dumpPath+"mvP.bdd", mvP);
+            bdd.save(dumpPath+"mIE.bdd", mIE);
+        }
         
         dos = new DataOutputStream(new FileOutputStream(dumpPath+"var.map"));
         Vmap.dumpStrings(dos);
