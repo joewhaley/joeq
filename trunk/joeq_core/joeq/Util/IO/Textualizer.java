@@ -87,7 +87,7 @@ public interface Textualizer {
             if (object == null) {
                 out.writeBytes("null");
             } else {
-                out.writeBytes(object.getClass().toString());
+                out.writeBytes(object.getClass().getName());
                 out.writeBytes(" ");
                 object.write(this);
             }
@@ -170,13 +170,16 @@ public interface Textualizer {
         public void writeObject(Textualizable object) throws IOException {
             map.get(object);
             super.writeObject(object);
-            object.writeEdges(this);
+            if (object != null) object.writeEdges(this);
         }
         
         public void writeReference(Textualizable object) throws IOException {
-            Assert._assert(map.contains(object));
-            int id = map.get(object);
-            out.writeBytes(Integer.toString(id));
+            if (!map.contains(object)) {
+                writeObject(object);
+            } else {
+                int id = map.get(object);
+                out.writeBytes(Integer.toString(id));
+            }
         }
 
         public void writeEdge(String edgeName, Textualizable target) throws IOException {
