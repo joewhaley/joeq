@@ -483,6 +483,11 @@ public class BDDInferenceRule extends InferenceRule {
             if (solver.TRACE_FULL) solver.out.println(" = "+results[i].toStringWithDomains());
             else if (solver.TRACE) solver.out.println(" = "+results[i].nodeCount());
         }
+        if (cache_before_rename) {
+            for (int i = 0; i < rallRelationValues.length; ++i) {
+                rallRelationValues[i].free();
+            }
+        }
         BDD result = solver.bdd.zero();
         for (int i = 0; i < results.length; ++i) {
             if (results[i] != null) {
@@ -490,11 +495,6 @@ public class BDDInferenceRule extends InferenceRule {
             }
         }
         if (solver.TRACE) solver.out.println("Result: "+result.nodeCount());
-        if (cache_before_rename) {
-            for (int i = 0; i < rallRelationValues.length; ++i) {
-                rallRelationValues[i].free();
-            }
-        }
         
         if (bottomRename != null) {
             if (solver.TRACE)
