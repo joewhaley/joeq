@@ -368,13 +368,15 @@ public class BDDInferenceRule extends InferenceRule {
             if (solver.TRACE) solver.out.print("="+results[i].nodeCount()+")");
             topBdd.free();
             newRelationValues[i].free();
-            quantify.free();
             if (solver.TRACE_FULL) solver.out.println(" = "+results[i].toStringWithDomains());
             else if (solver.TRACE) solver.out.println(" = ");
         }
+        quantify.free();
         BDD result = solver.bdd.zero();
         for (int i = 0; i < results.length; ++i) {
-            result.orWith(results[i]);
+            if (results[i] != null) {
+                result.orWith(results[i]);
+            }
         }
         
         BDDPairing pairing = null;
