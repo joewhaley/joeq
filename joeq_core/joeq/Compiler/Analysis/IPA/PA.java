@@ -2072,9 +2072,10 @@ public class PA {
                 ProgramLocation mc = (ProgramLocation) Imap.get(I_i);
                 int M_i = new_reflectiveCalls.relprod(i_bdd, Iset).scanVar(M).intValue();
                 jq_Method target = (jq_Method) Mmap.get(M_i);
-                jq_Initializer constructor = (jq_Initializer) target;
-                
+                jq_Initializer constructor = (jq_Initializer) target;                
                 jq_Type type = constructor.getDeclaringClass();
+                
+                visitMethod(target);
             
                 MethodSummary ms = MethodSummary.getSummary(mc.getMethod());
                 Node node = ms.getRVN(mc);
@@ -2084,7 +2085,7 @@ public class PA {
                     int V_i = Vmap.get(node);
                     BDD V_arg = V1.ithVar(V_i);
                     
-                    addToVP(V_arg, h);
+                    addToVP(V_arg, h);                    
                 }
             }
             
