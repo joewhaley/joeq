@@ -29,6 +29,7 @@ import joeq.Class.jq_Type;
 import joeq.Memory.Address;
 import joeq.UTF.Utf8;
 import jwutil.util.Assert;
+import jwutil.util.Convert;
 
 /**
  * @author  John Whaley <jwhaley@alum.mit.edu>
@@ -462,7 +463,7 @@ uphere:
     }
     public void putfield_Z(Object o, jq_InstanceField f, boolean v) {
         Assert._assert(f.getType() == jq_Primitive.BOOLEAN);
-            Reflection.obj_trav.putInstanceFieldValue(o, f, Boolean.valueOf(v));
+            Reflection.obj_trav.putInstanceFieldValue(o, f, Convert.getBoolean(v));
             return;
     }
     
