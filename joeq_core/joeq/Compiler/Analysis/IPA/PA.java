@@ -2099,6 +2099,7 @@ public class PA {
 
     public final VarPathSelector varPathSelector = new VarPathSelector(MAX_VC_BITS);
     
+    public static boolean THREADS_ONLY = false;
     public static class VarPathSelector implements Selector {
 
         int maxBits;
@@ -2112,6 +2113,17 @@ public class PA {
          */
         public boolean isImportant(SCComponent scc1, SCComponent scc2, BigInteger num) {
             if (num.bitLength() > maxBits) return false;
+            if (THREADS_ONLY) {
+                Set s = scc2.nodeSet();
+                Iterator i = s.iterator();
+                Object o = i.next();
+                if (i.hasNext()) return false;
+                if (o instanceof ProgramLocation) return true;
+                jq_Method m = (jq_Method) o;
+                if (m.getNameAndDesc() == main_method) return true;
+                if (m.getNameAndDesc() == run_method) return true;
+                return false;
+            }
             return true;
         }
     }
@@ -2164,11 +2176,11 @@ public class PA {
             if (i.hasNext()) return false;
             if (o instanceof ProgramLocation) return true;
             jq_Method m = (jq_Method) o;
-            if (!m.getReturnType().isReferenceType()) return false;
-            if (m.getBytecode() == null) return false;
             if (m.getNameAndDesc() == main_method) return true;
             if (m.getNameAndDesc() == run_method) return true;
+            if (m.getBytecode() == null) return false;
             if (MATCH_FACTORY) {
+                if (!m.getReturnType().isReferenceType()) return false;
                 MethodSummary ms = MethodSummary.getSummary(CodeCache.getCode(m));
                 for (i = ms.getReturned().iterator(); i.hasNext(); ) {
                     Node n = (Node) i.next();
