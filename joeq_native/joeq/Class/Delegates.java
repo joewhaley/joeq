@@ -93,7 +93,7 @@ class Delegates implements jq_ClassFileConstants {
     }
     static class Klass implements jq_Class.Delegate {
 	public final Object newInstance(jq_Class c, int instance_size, Object vtable) {
-	    c.load(); c.verify(); c.prepare(); c.sf_initialize(); c.compile(); c.cls_initialize();
+	    c.cls_initialize();
 	    return DefaultHeapAllocator.allocateObject(instance_size, vtable);
 	}
     }
