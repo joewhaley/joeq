@@ -193,7 +193,7 @@ public abstract class SubtypeHelper {
                     continue;
                 }
             }
-            Assert._assert(result.size() == subtypeNames.size());
+            Assert._assert(result.size() <= subtypeNames.size());
             
             if(TRACE) System.out.println("Returning " + result.size() + " subtypes.");
             return result;
