@@ -194,6 +194,7 @@ public class jq_NativeThread implements jq_DontAlign {
         if (schedulerThread != null) {
             schedulerThread.disableThreadSwitch(); // don't preempt while in the scheduler
             schedulerThread.setNativeThread(this);
+            schedulerThread.isScheduler = true;
         } else {
             // schedulerThread is null if we are not native/bootstrapping.
             Assert._assert(!jq.IsBootstrapping && !jq.RunningNative);
@@ -210,6 +211,7 @@ public class jq_NativeThread implements jq_DontAlign {
         index = -1;
         currentThread = schedulerThread = t;
         t.setNativeThread(this);
+        t.isScheduler = true;
     }
 
     /** Starts up/resumes this native thread. */
@@ -268,8 +270,17 @@ public class jq_NativeThread implements jq_DontAlign {
         CodeAddress ip = t.getRegisterState().getEip();
         if (TRACE) SystemInterface.debugwriteln("Java thread " + t + " enqueued on native thread " + nt + " ip: " + ip.stringRep() + " cc: " + CodeAllocator.getCodeContaining(ip));
         
-        // put the Java thread into the transfer queue of the least-busy native thread
+        // switch ourselves to be the scheduler thread, because only the scheduler
+        // thread can access the transfer queues.
+        jq_Thread my_t = Unsafe.getThreadBlock();
+        my_t.disableThreadSwitch();
+        jq_NativeThread my_nt = my_t.getNativeThread();
+        Unsafe.setThreadBlock(my_nt.schedulerThread);
+        // put the Java thread into the transfer queue of the least-busy native thread.
         nt.transferQueue.enqueue(t);
+        // switch back to ourselves.
+        Unsafe.setThreadBlock(my_t);
+        my_t.enableThreadSwitch();
     }
 
     /** End the currently-executing Java thread and go back to the scheduler loop
@@ -277,10 +288,10 @@ public class jq_NativeThread implements jq_DontAlign {
      */
     public static void endCurrentJavaThread() {
         jq_Thread t = Unsafe.getThreadBlock();
-        if (true) Debug.writeln("Ending Java thread " + t);
+        if (TRACE) Debug.writeln("Ending Java thread " + t);
         Assert._assert(!t.isThreadSwitchEnabled());
         _num_of_java_threads.getAddress().atomicSub(1);
-        if (true) Debug.writeln("Number of Java threads now: " + num_of_java_threads);
+        if (TRACE) Debug.writeln("Number of Java threads now: " + num_of_java_threads);
         if (t.isDaemon())
             _num_of_daemon_threads.getAddress().atomicSub(1);
         jq_NativeThread nt = t.getNativeThread();
