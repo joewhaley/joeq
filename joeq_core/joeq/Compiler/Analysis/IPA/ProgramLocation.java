@@ -10,6 +10,7 @@ import java.util.StringTokenizer;
 import Clazz.jq_Class;
 import Clazz.jq_ClassFileConstants;
 import Clazz.jq_InstanceMethod;
+import Clazz.jq_FakeInstanceMethod;
 import Clazz.jq_Method;
 import Clazz.jq_Type;
 import Compil3r.BytecodeAnalysis.BytecodeVisitor;
@@ -219,8 +220,8 @@ public abstract class ProgramLocation implements Textualizable {
         */
         
         public void write(Textualizer t) throws IOException {
+            t.writeBytes("quad "+q.getID()+" ");
             t.writeObject(m);
-            t.writeBytes(" quad "+q.getID());
         }
         
     }
@@ -442,17 +443,55 @@ public abstract class ProgramLocation implements Textualizable {
         */
         
         public void write(Textualizer t) throws IOException {
+            t.writeBytes("bc "+bcIndex+" ");
             t.writeObject(m);
-            t.writeBytes(" bc "+bcIndex);
         }
         
     }
     
+    public static class FakeProgramLocation extends ProgramLocation {
+        String label;
+
+        public FakeProgramLocation(jq_Method m, String label) {
+            super(m);
+            this.label = label;
+        }
+
+        public void write(Textualizer t) throws IOException {
+            t.writeBytes("fake "+label.replace(' ', '_') + " ");
+            t.writeObject(m);
+        }
+
+        public String toString() {
+            String s = super.m.getName()+"() '"+label+"'";
+            return s;
+        }
+
+        public int getID() { return -1; }
+        public int getBytecodeIndex() { return -1; }
+        public jq_Type getResultType() { return null; }
+        public boolean isCall() { return false; }
+        public jq_Method getTargetMethod() { return null; }
+        public jq_Type[] getParamTypes() { return null; }
+        public jq_Type getReturnType() { return null; }
+        public boolean isSingleTarget() { return false; }
+        public boolean isInterfaceCall() { return false; }
+        public byte getInvocationType() { return -1; }
+    }
+
     public static ProgramLocation read(StringTokenizer st) {
+        String s = st.nextToken();
+        if (s.equals("null"))
+            return null;
+        if (s.equals("fake")) {
+            String label = st.nextToken().replace('_', ' ');
+            jq_Method m = (jq_Method)jq_FakeInstanceMethod.read(st);
+            if (m == null) return null;
+            return new FakeProgramLocation(m, label);
+        }
+        int id = Integer.parseInt(st.nextToken());
         jq_Method m = (jq_Method) jq_Method.read(st);
         if (m == null) return null;
-        String s = st.nextToken();
-        int id = Integer.parseInt(st.nextToken());
         if (s.equals("bc")) {
             return new BCProgramLocation(m, id);
         }
@@ -466,5 +505,4 @@ public abstract class ProgramLocation implements Textualizable {
         }
         return null;
     }
-    
 }
