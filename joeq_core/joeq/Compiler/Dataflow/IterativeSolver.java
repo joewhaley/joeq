@@ -7,6 +7,8 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
+import joeq.Util.Assert;
+import joeq.Util.Strings;
 import joeq.Util.Collections.MapFactory;
 import joeq.Util.Graphs.Graph;
 import joeq.Util.Graphs.Navigator;
@@ -51,19 +53,21 @@ public class IterativeSolver
      * @see Compiler.Dataflow.Solver#initialize(Compiler.Dataflow.Problem, Util.Graphs.Graph)
      */
     public void initialize(Problem p, Graph graph) {
-        this.initialize(p, graph, Traversals.reversePostOrder(graph.getNavigator(), graph.getRoots()));
+        List order = Traversals.reversePostOrder(graph.getNavigator(), graph.getRoots());
+        this.initialize(p, graph, order);
     }
     
     /** Initializes this solver with the given dataflow problem, graph, and
      * traversal order.
      * 
-     * @see Compiler.Dataflow.Solver#initialize(Compiler.Dataflow.Problem, Util.Graphs.Graph)
+     * @see Compiler.Dataflow.Solver#initialize(joeq.Compiler.Dataflow.Problem, joeq.Util.Graphs.Graph)
      */
     public void initialize(Problem p, Graph graph, List order) {
         super.initialize(p, graph);
         graphNavigator = graph.getNavigator();
         boundaries = graph.getRoots();
         traversalOrder = order;
+        if (TRACE) System.out.println("Traversal order: "+traversalOrder);
     }
     
     /* (non-Javadoc)
@@ -76,8 +80,6 @@ public class IterativeSolver
      */
     public Iterator boundaryLocations() { return boundaries.iterator(); }
 
-    public static final boolean TRACE = false;
-
     /* (non-Javadoc)
      * @see Compiler.Dataflow.Solver#solve()
      */
@@ -87,24 +89,30 @@ public class IterativeSolver
         do {
             change = false; if (TRACE) ++iterationCount;
             Iterator i = getTraversalOrder();
-            i.next(); // skip boundary node.
+            Object o = i.next(); // skip boundary node.
+            Assert._assert(boundaries.contains(o));
             while (i.hasNext()) {
                 Object c = i.next();
-                Iterator j = direction()?
-                             getPredecessors(c).iterator():
-                             getSuccessors(c).iterator();
+                if (TRACE) System.out.println("Node "+c);
+                Iterator j = getPredecessors(c).iterator();
                 Object p = j.next();
+                if (TRACE) System.out.println("  Predecessor "+p);
                 Fact in = (Fact) dataflowValues.get(p);
                 while (j.hasNext()) {
                     p = j.next();
+                    if (TRACE) System.out.println("  Predecessor "+p);
                     Fact in2 = (Fact) dataflowValues.get(p);
                     in = problem.merge(in, in2);
                 }
+                if (TRACE) System.out.println(" In set: "+in);
                 TransferFunction tf = problem.getTransferFunction(c);
+                if (TRACE) System.out.println(" Transfer function:"+Strings.lineSep+tf);
                 Fact out = problem.apply(tf, in);
+                if (TRACE) System.out.println(" Out set: "+out);
                 Fact old = (Fact) dataflowValues.put(c, out);
                 if (!change && !problem.compare(old, out)) {
                     change = true;
+                    if (TRACE) System.out.println("Changed occurred!");
                 }
             }
         } while (change);

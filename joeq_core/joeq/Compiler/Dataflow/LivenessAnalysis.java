@@ -1,9 +1,10 @@
-// ReachingDefs.java, created Jun 15, 2003 2:10:14 PM by joewhaley
+// LivenessAnalysis.java, created Jun 15, 2003 2:10:14 PM by joewhaley
 // Copyright (C) 2003 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Dataflow;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -18,42 +19,45 @@ import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Main.HostedVM;
+import joeq.Util.Assert;
 import joeq.Util.BitString;
-import joeq.Util.Strings;
 import joeq.Util.Collections.Pair;
 import joeq.Util.Graphs.EdgeGraph;
 import joeq.Util.Graphs.Graph;
+import joeq.Util.Graphs.ReverseGraph;
 import joeq.Util.Templates.List;
 import joeq.Util.Templates.ListIterator;
 
 /**
- * ReachingDefs
+ * LivenessAnalysis
  * 
  * @author John Whaley
  * @version $Id$
  */
-public class ReachingDefs extends Problem {
+public class LivenessAnalysis extends Problem {
 
-    Quad[] quads;
     Map transferFunctions;
-    BitVectorFact emptySet;
-    GenKillTransferFunction emptyTF;
+    Fact emptySet;
+    TransferFunction emptyTF;
 
+    Solver mySolver;
+    
     static final boolean TRACE = false;
 
     public void initialize(Graph g) {
-        ControlFlowGraph cfg = (ControlFlowGraph) ((EdgeGraph) g).getGraph();
+        Graph g2 = ((EdgeGraph) g).getGraph();
+        ControlFlowGraph cfg = (ControlFlowGraph) ((ReverseGraph) g2).getGraph();
         
+        if (TRACE) System.out.println("Initializing LivenessAnalysis.");
         if (TRACE) System.out.println(cfg.fullDump());
         
-        // size of bit vector is bounded by the max quad id
-        int bitVectorSize = cfg.getMaxQuadID()+1;
+        // size of bit vector is bounded by the number of registers.
+        int bitVectorSize = cfg.getRegisterFactory().size() + 1;
         
         if (TRACE) System.out.println("Bit vector size: "+bitVectorSize);
         
         Map regToDefs = new HashMap();
         transferFunctions = new HashMap();
-        quads = new Quad[bitVectorSize];
         emptySet = new UnionBitVectorFact(bitVectorSize);
         emptyTF = new GenKillTransferFunction(bitVectorSize);
         
@@ -61,38 +65,29 @@ public class ReachingDefs extends Problem {
         for (ListIterator.BasicBlock i = list.basicBlockIterator(); i.hasNext(); ) {
             BasicBlock bb = i.nextBasicBlock();
             BitString gen = new BitString(bitVectorSize);
-            for (ListIterator.Quad j = bb.iterator(); j.hasNext(); ) {
+            BitString kill = new BitString(bitVectorSize);
+            for (ListIterator.Quad j = bb.backwardIterator(); j.hasNext(); ) {
                 Quad q = j.nextQuad();
-                if (!bb.getExceptionHandlers().isEmpty()) {
-                    handleEdges(bb, bb.getExceptionHandlerEntries(), gen, null);
-                }
-                if (q.getDefinedRegisters().isEmpty()) continue;
-                int a = q.getID();
-                quads[a] = q;
                 for (ListIterator.RegisterOperand k = q.getDefinedRegisters().registerOperandIterator(); k.hasNext(); ) {
                     Register r = k.nextRegisterOperand().getRegister();
-                    BitString kill = (BitString) regToDefs.get(r);
-                    if (kill == null) regToDefs.put(r, kill = new BitString(bitVectorSize));
-                    else gen.minus(kill);
-                    kill.set(a);
+                    int index = r.getNumber() + 1;
+                    kill.set(index);
+                    gen.clear(index);
                 }
-                gen.set(a);
+                for (ListIterator.RegisterOperand k = q.getUsedRegisters().registerOperandIterator(); k.hasNext(); ) {
+                    Register r = k.nextRegisterOperand().getRegister();
+                    int index = r.getNumber() + 1;
+                    gen.set(index);
+                }
+            }
+            if (!bb.getExceptionHandlers().isEmpty()) {
+                handleEdges(bb, bb.getExceptionHandlerEntries(), gen, kill, null);
             }
             GenKillTransferFunction tf = new GenKillTransferFunction(gen, new BitString(bitVectorSize));
-            handleEdges(bb, bb.getSuccessors(), gen, tf);
-        }
-        for (Iterator i = transferFunctions.values().iterator(); i.hasNext(); ) {
-            GenKillTransferFunction f = (GenKillTransferFunction) i.next();
-            for (BitString.BitStringIterator j = f.gen.iterator(); j.hasNext(); ) {
-                int a = j.nextIndex();
-                Quad q = quads[a];
-                for (ListIterator.RegisterOperand k = q.getDefinedRegisters().registerOperandIterator(); k.hasNext(); ) {
-                    Register r = k.nextRegisterOperand().getRegister();
-                    f.kill.or((BitString) regToDefs.get(r));
-                }
-            }
+            handleEdges(bb, bb.getSuccessors(), gen, kill, tf);
         }
         if (TRACE) {
+            System.out.println("Transfer functions:");
             for (Iterator i = transferFunctions.entrySet().iterator(); i.hasNext(); ) {
                 Map.Entry e = (Map.Entry) i.next();
                 System.out.println(e.getKey());
@@ -101,16 +96,19 @@ public class ReachingDefs extends Problem {
         }
     }
 
-    private void handleEdges(BasicBlock bb, List.BasicBlock bbs, BitString gen, GenKillTransferFunction defaultTF) {
+    private void handleEdges(BasicBlock bb, List.BasicBlock bbs, BitString gen, BitString kill, GenKillTransferFunction defaultTF) {
         for (ListIterator.BasicBlock k = bbs.basicBlockIterator(); k.hasNext(); ) {
             BasicBlock bb2 = k.nextBasicBlock();
-            Object edge = new Pair(bb, bb2);
+            Object edge = new Pair(bb2, bb);
             GenKillTransferFunction tf = (GenKillTransferFunction) transferFunctions.get(edge);
             if (tf == null) {
                 tf = (defaultTF != null)? defaultTF : new GenKillTransferFunction(gen.size());
                 transferFunctions.put(edge, tf);
             }
-            tf.gen.or(gen);
+            if (gen != null)
+                tf.gen.or(gen);
+            if (kill != null)
+                tf.kill.or(kill);
         }
     }
 
@@ -118,7 +116,7 @@ public class ReachingDefs extends Problem {
      * @see Compiler.Dataflow.Problem#direction()
      */
     public boolean direction() {
-        return true;
+        return false;
     }
 
     /* (non-Javadoc)
@@ -154,11 +152,11 @@ public class ReachingDefs extends Problem {
             set.addAll(Arrays.asList(c.getDeclaredStaticMethods()));
             set.addAll(Arrays.asList(c.getDeclaredInstanceMethods()));
         }
-        Problem p = new ReachingDefs();
+        Problem p = new LivenessAnalysis();
         Solver s1 = new IterativeSolver();
         Solver s2 = new SortedSetSolver(BBComparator.INSTANCE);
         Solver s3 = new PriorityQueueSolver();
-        for (Iterator i=set.iterator(); i.hasNext(); ) {
+        for (Iterator i = set.iterator(); i.hasNext(); ) {
             jq_Method m = (jq_Method) i.next();
             if (m.getBytecode() == null) continue;
             System.out.println("Method "+m);
@@ -173,9 +171,52 @@ public class ReachingDefs extends Problem {
         }
     }
     
+    public static LivenessAnalysis solve(ControlFlowGraph cfg) {
+        LivenessAnalysis p = new LivenessAnalysis();
+        Solver s1 = new IterativeSolver();
+        p.mySolver = s1;
+        solve(cfg, s1, p);
+        if (TRACE) System.out.println("Finished solving Liveness.");
+        return p;
+    }
+    
     private static void solve(ControlFlowGraph cfg, Solver s, Problem p) {
-        s.initialize(p, new EdgeGraph(cfg));
+        s.initialize(p, new EdgeGraph(new ReverseGraph(cfg, Collections.singleton(cfg.exit()))));
         s.solve();
     }
 
+    public boolean isLiveAtOut(BasicBlock bb, Register r) {
+        BitVectorFact f = (BitVectorFact) mySolver.getDataflowValue(bb);
+        return f.fact.get(r.getNumber()+1);
+    }
+    
+    public boolean isLiveAtIn(BasicBlock bb, Register r) {
+        if (bb.getNumberOfPredecessors() > 0)
+            bb = bb.getPredecessors().getBasicBlock(0);
+        BitVectorFact f = (BitVectorFact) mySolver.getDataflowValue(bb);
+        if (f == null) throw new RuntimeException(bb.toString()+" reg "+r);
+        return f.fact.get(r.getNumber()+1);
+    }
+    
+    public void setLiveAtIn(BasicBlock bb, Register r) {
+        for (ListIterator.BasicBlock k = bb.getPredecessors().basicBlockIterator(); k.hasNext(); ) {
+            BasicBlock bb2 = k.nextBasicBlock();
+            Object edge = new Pair(bb2, bb);
+            GenKillTransferFunction tf = (GenKillTransferFunction) transferFunctions.get(edge);
+            Assert._assert(tf != null);
+            tf.gen.set(r.getNumber()+1);
+            BitVectorFact f = (BitVectorFact) mySolver.getDataflowValue(bb2);
+            f.fact.set(r.getNumber()+1);
+        }
+    }
+    
+    public void setKilledAtIn(BasicBlock bb, Register r) {
+        for (ListIterator.BasicBlock k = bb.getPredecessors().basicBlockIterator(); k.hasNext(); ) {
+            BasicBlock bb2 = k.nextBasicBlock();
+            Object edge = new Pair(bb2, bb);
+            GenKillTransferFunction tf = (GenKillTransferFunction) transferFunctions.get(edge);
+            Assert._assert(tf != null);
+            tf.kill.set(r.getNumber()+1);
+        }
+    }
 }

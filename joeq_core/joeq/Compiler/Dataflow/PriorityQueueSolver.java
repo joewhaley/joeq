@@ -45,7 +45,7 @@ public class PriorityQueueSolver extends WorklistSolver {
     /** Initializes this solver with the given dataflow problem, graph, and
      * traversal order.
      * 
-     * @see Compiler.Dataflow.Solver#initialize(Compiler.Dataflow.Problem, Util.Graphs.Graph)
+     * @see Compiler.Dataflow.Solver#initialize(joeq.Compiler.Dataflow.Problem, joeq.Util.Graphs.Graph)
      */
     public void initialize(Problem p, Graph graph, List traversalOrder) {
         super.initialize(p, graph);
@@ -55,11 +55,13 @@ public class PriorityQueueSolver extends WorklistSolver {
     protected void initializeTraversalOrder(List order) {
         int n = order.size();
         this.nodesToPriorities = new HashMap();
-        for (Iterator i = order.iterator(); i.hasNext(); ) {
+        Iterator i = order.iterator();
+        while (i.hasNext()) {
             Object o = i.next();
             nodesToPriorities.put(o, new Integer(n));
             --n;
         }
+        if (TRACE) System.out.println("Priorities: "+nodesToPriorities);
     }
 
     /* (non-Javadoc)

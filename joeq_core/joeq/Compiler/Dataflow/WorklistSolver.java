@@ -68,13 +68,14 @@ public abstract class WorklistSolver extends Solver {
         initializeWorklist();
         while (hasNext()) {
             Object c = pull();
-            Iterator j = direction()?
-                         getPredecessors(c).iterator():
-                         getSuccessors(c).iterator();
+            if (TRACE) System.out.println("Node "+c);
+            Iterator j = getPredecessors(c).iterator();
             Object p = j.next();
+            if (TRACE) System.out.println("   Predecessor "+p);
             Fact in = (Fact) dataflowValues.get(p);
             while (j.hasNext()) {
                 p = j.next();
+                if (TRACE) System.out.println("   Predecessor "+p);
                 Fact in2 = (Fact) dataflowValues.get(p);
                 in = problem.merge(in, in2);
             }
@@ -82,9 +83,8 @@ public abstract class WorklistSolver extends Solver {
             Fact out = problem.apply(tf, in);
             Fact old = (Fact) dataflowValues.put(c, out);
             if (!problem.compare(old, out)) {
-                Collection next = direction()?
-                                  getSuccessors(c):
-                                  getPredecessors(c);
+                if (TRACE) System.out.println("Changed!");
+                Collection next = getSuccessors(c);
                 pushAll(next);
             }
         }
