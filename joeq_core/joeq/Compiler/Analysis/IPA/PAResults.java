@@ -1,4 +1,4 @@
-// PAResults.java, created Nov 3, 2003 12:34:24 AM by joewhaley
+ // PAResults.java, created Nov 3, 2003 12:34:24 AM by joewhaley
 // Copyright (C) 2003 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Analysis.IPA;
@@ -7,27 +7,27 @@ import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
-import java.io.FileOutputStream;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.math.BigInteger;
-import java.util.Comparator;
 import java.util.AbstractSet;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.Arrays;
-import java.util.Stack;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.Stack;
 import java.util.StringTokenizer;
 
 import org.sf.javabdd.BDD;
@@ -44,8 +44,8 @@ import Clazz.jq_NameAndDesc;
 import Clazz.jq_Reference;
 import Clazz.jq_Type;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.CheckCastNode;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
 import Compil3r.Analysis.IPA.ProgramLocation.QuadProgramLocation;
 import Compil3r.Analysis.IPSSA.ContextSet;
 import Compil3r.Analysis.IPSSA.SSALocation;
@@ -55,27 +55,26 @@ import Compil3r.Quad.CodeCache;
 import Compil3r.Quad.LoadedCallGraph;
 import Compil3r.Quad.Operator;
 import Compil3r.Quad.Quad;
-import Compil3r.Quad.QuadIterator;
 import Compil3r.Quad.Operand.RegisterOperand;
 import Compil3r.Quad.RegisterFactory.Register;
-import Main.HostedVM;
 import Main.Driver;
+import Main.HostedVM;
 import Util.Assert;
 import Util.Strings;
-import Util.IO.SourceLister;
 import Util.Collections.HashWorklist;
+import Util.Collections.IndexMap;
 import Util.Collections.LinearSet;
 import Util.Collections.Pair;
 import Util.Collections.Triple;
-import Util.Collections.IndexMap;
 import Util.Collections.UnmodifiableIterator;
-import Util.Graphs.PathNumbering;
-import Util.Graphs.PathNumbering.Range;
-import Util.Graphs.SCCPathNumbering;
-import Util.Graphs.SCComponent;
-import Util.Graphs.SCCTopSortedGraph;
 import Util.Graphs.Navigator;
+import Util.Graphs.PathNumbering;
+import Util.Graphs.SCCPathNumbering;
+import Util.Graphs.SCCTopSortedGraph;
+import Util.Graphs.SCComponent;
+import Util.Graphs.PathNumbering.Range;
 import Util.Graphs.SCCPathNumbering.Path;
+import Util.IO.SourceLister;
 
 /**
  * Records results for pointer analysis.  The results can be saved and reloaded.
@@ -541,8 +540,14 @@ public class PAResults implements PointerAnalysisResults {
         Field []f = PA.class.getDeclaredFields();
         for (int i = 0; i < f.length; i++) {
             try {
-                if (f[i].getType() == BDD.class && f[i].get(r) != null)
-                    allbdds.add(f[i].getName());
+                if (f[i].getType() == BDD.class && f[i].get(r) != null) {                    
+                    if(i % 12 == 0) {
+                        // add line breaks
+                        allbdds.add("\n" + f[i].getName());
+                    } else {
+                        allbdds.add(f[i].getName());
+                    }
+                }
             } catch (IllegalAccessException _) { }
         }
         f = PAResults.class.getDeclaredFields();
@@ -553,7 +558,7 @@ public class PAResults implements PointerAnalysisResults {
             } catch (IllegalAccessException _) { }
         }
         if (storedBDDs.size() > 0)
-            allbdds.add("stored BDDs " + (storedBDDs.keySet()));
+            allbdds.add("stored BDDs " + (storedBDDs.keySet()) + "\n");
         if (results.size() >= 1)
             allbdds.add("and previous results 1.." + (results.size()));
         System.out.println("\ncurrently known BDDs are " + allbdds);
@@ -1022,6 +1027,35 @@ public class PAResults implements PointerAnalysisResults {
         }
     }
     
+    public void printDefUseChain(BDD vPrelation) {
+        BDD visited = r.bdd.zero();
+        vPrelation = vPrelation.id();
+        for (int k = 1; !vPrelation.isZero(); ++k) {
+            System.out.println("Step "+k+":");
+            System.out.println(vPrelation.toStringWithDomains(r.TS));
+            visited.orWith(vPrelation.id());
+            // A: v2=v1;
+            BDD b = r.A.relprod(vPrelation, r.V2set);
+            //System.out.println("Arguments/Return Values = "+b.satCount(r.V2set));
+            // L: v2=v1.f;
+            vPrelation.replaceWith(r.V2toV1);
+            BDD c = r.L.relprod(vPrelation, r.V1set); // V2xF
+            vPrelation.free();
+            BDD d = r.vP.relprod(c, r.V2set); // H1xF
+            c.free();
+            BDD e = r.hP.relprod(d, r.H2Fset); // H1
+            d.free();
+            e.replaceWith(r.H1toH2);
+            BDD f = r.vP.relprod(e, r.H2set); // V1
+            //System.out.println("Loads/Stores = "+f.satCount(r.V1set));
+            e.free();
+            vPrelation = b;
+            vPrelation.replaceWith(r.V1toV2);
+            vPrelation.orWith(f);
+            vPrelation.applyWith(visited.id(), BDDFactory.diff);
+        }
+    }
+    
     /** Starting from a method with a context (MxV1c), calculate the set of
      * transitively-reachable variables (V1xV1c).
      */
@@ -1468,7 +1502,7 @@ public class PAResults implements PointerAnalysisResults {
      * */
     public Set getCallTargets(ProgramLocation invoke) {
         //Assert._assert(invoke.getOperator() instanceof Operator.Invoke);
-        LoadedCallGraph.mapCall(invoke);
+        invoke = LoadedCallGraph.mapCall(invoke);
         if(invoke.isSingleTarget()) {
             Set result = new LinearSet();
             result.add(invoke.getTargetMethod());
@@ -1495,7 +1529,7 @@ public class PAResults implements PointerAnalysisResults {
         r.IE.orWith(t6.id());
     
         BDD t7;
-        if (false && (r.CONTEXT_SENSITIVE || r.THREAD_SENSITIVE)) {
+        if ((r.CONTEXT_SENSITIVE || r.THREAD_SENSITIVE)) {
             // Add the context for the new call graph edges.
             t6.andWith(r.IEfilter.id());
             r.IEcs.orWith(t6.id());
@@ -1528,8 +1562,7 @@ public class PAResults implements PointerAnalysisResults {
         return new HashSet(c);
     }
     
-    public Set mod(ProgramLocation invoke) {
-        int I_i = 0;
+    public Set mod(ProgramLocation invoke, BasicBlock bb) {
         if (invoke.isCall()) {
             invoke = LoadedCallGraph.mapCall(invoke);
             //Assert._assert(r.Imap.contains(invoke), "No information about " + invoke.toString());
@@ -1537,47 +1570,50 @@ public class PAResults implements PointerAnalysisResults {
                 //System.err.println("No mod information about " + invoke.toString() + "; Imap has " + r.Imap.size() + " elements \n");
                 return null;
             }
-            I_i = r.Imap.get(invoke);
+            int I_i = r.Imap.get(invoke);
+            BDD i   = r.I.ithVar(I_i);
+            BDD m_c = r.IEcs.relprod(i, r.V2c.set().and(r.Iset));
+            // get transitive mod set for this particular method call   
+            BDD s   = getTransitiveModSet(m_c);             
+            BDD q   = s.exist(r.H1c.set());
+
+            return new HeapLocationSet(q);
         } else {
             // in case this is a store, need to get the results for that store
             jq_Method m = invoke.getMethod();
             Quad q = ((QuadProgramLocation) invoke).getQuad();
-            // todo: more efficient if we just passed in the basic block.
-            BasicBlock bb = null;
-            for (QuadIterator i = new QuadIterator(CodeCache.getCode(m)); i.hasNext(); ) {
-                if (i.next() == q) {
-                    bb = i.getCurrentBasicBlock();
-                    break;
-                }
-            }
-            if (bb == null) {
-                System.err.println("Quad not found: "+q);
-            }
+            Assert._assert(bb != null);
+            
             return mod(m, bb, q);
-        }
-        BDD i   = r.I.ithVar(I_i);
-        BDD m_c = r.IEcs.relprod(i, r.V2c.set().and(r.Iset));
-        // get transitive mod set for this particular method call   
-        BDD s   = getTransitiveModSet(m_c);             
-        BDD q   = s.exist(r.H1c.set());
-        
-        return new HeapLocationSet(q);
+        }        
     }
     
-    public Set ref(ProgramLocation invoke) {
-        invoke = LoadedCallGraph.mapCall(invoke);
-        //Assert._assert(r.Imap.contains(invoke), "No information about " + invoke.toString());
-        if(!r.Imap.contains(invoke)){
-            //System.err.println("No ref information about " + invoke.toString() + "; Imap has " + r.Imap.size() + " elements \n");
+    public Set ref(ProgramLocation invoke, BasicBlock bb) {
+        if (invoke.isCall()) {
+            invoke = LoadedCallGraph.mapCall(invoke);
+            //Assert._assert(r.Imap.contains(invoke), "No information about " + invoke.toString());
+            if(!r.Imap.contains(invoke)){
+                //System.err.println("No ref information about " + invoke.toString() + "; Imap has " + r.Imap.size() + " elements \n");
+                return null;
+            }
+            int I_i = r.Imap.get(invoke);
+            BDD i   = r.I.ithVar(I_i);
+            BDD m_c = r.IEcs.relprod(i, r.V2c.set().and(r.Iset));
+            BDD s   = getTransitiveRefSet(m_c);
+            BDD q   = s.exist(r.H1c.set());
+                
+            return new HeapLocationSet(q);
+        }else {
+            /*
+            // in case this is a load, need to get the results for that store
+            jq_Method m = invoke.getMethod();
+            Quad q = ((QuadProgramLocation) invoke).getQuad();
+            Assert._assert(bb != null);
+    
+            return ref(m, bb, q);
+            */
             return null;
         }
-        int I_i = r.Imap.get(invoke);
-        BDD i   = r.I.ithVar(I_i);
-        BDD m_c = r.IEcs.relprod(i, r.V2c.set().and(r.Iset));
-        BDD s   = getTransitiveRefSet(m_c);
-        BDD q   = s.exist(r.H1c.set());
-            
-        return new HeapLocationSet(q);
     }
     
     public Set mod(jq_Method m, BasicBlock bb, Quad quad) {
@@ -1721,7 +1757,7 @@ public class PAResults implements PointerAnalysisResults {
             return r.longForm(n) + fname;
         }
     }   
-
+    
     /**
      * Given a typedbdd that contains variables, callsites, or heap objects,
      * display the source code for each item.
@@ -1942,5 +1978,9 @@ public class PAResults implements PointerAnalysisResults {
 
     public static double zcompute(double e1, double c1) {
         return zcompute(e1, c1, p0);
+    }
+
+    public CallGraph getCallGraph() {
+        return this.cg;
     }
 }
