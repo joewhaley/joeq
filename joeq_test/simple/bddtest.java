@@ -3,14 +3,13 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package simple;
 
+import java.util.Arrays;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Arrays;
-
-import org.sf.javabdd.BDD;
-import org.sf.javabdd.BDDDomain;
-import org.sf.javabdd.BDDFactory;
+import net.sf.javabdd.BDD;
+import net.sf.javabdd.BDDDomain;
+import net.sf.javabdd.BDDFactory;
 
 /**
  * bddtest
