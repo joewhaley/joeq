@@ -15,8 +15,10 @@ import joeq.Class.jq_Type;
 import jwutil.util.Assert;
 
 public class BogusSummaryProvider {
-    HashMap classMap 		  = new HashMap();
-    HashMap methodMap 		  = new HashMap();
+    HashMap classMap              = new HashMap();
+    HashMap methodMap             = new HashMap();
+
+    static boolean INLINE_MAPS = !System.getProperty("inline.maps", "yes").equals("no");
     
     private static final boolean TRACE = !System.getProperty("pa.tracebogus").equals("no");
     private static jq_Class realString;
@@ -36,21 +38,26 @@ public class BogusSummaryProvider {
         realStringBuffer = getClassByName("java.lang.StringBuffer");
         realHashMap      = getClassByName("java.util.HashMap");
         realVector       = getClassByName("java.util.Vector");
-        realVector       = getClassByName("java.util.Hashtable");
-        Assert._assert(realString != null && realStringBuffer != null && realHashMap != null);
+        realHashtable    = getClassByName("java.util.Hashtable");
+        Assert._assert(realString != null && realStringBuffer != null && realHashMap != null && realVector != null && realHashtable != null);
         realString.prepare(); realStringBuffer.prepare(); realHashMap.prepare(); realVector.prepare(); realHashtable.prepare();
         
         fakeString       = getClassByName("MyMockLib.MyString");
         fakeStringBuffer = getClassByName("MyMockLib.MyStringBuffer");        
         fakeHashMap      = getClassByName("MyMockLib.MyHashMap");
         fakeVector       = getClassByName("MyMockLib.MyVector");
-        fakeVector       = getClassByName("MyMockLib.MyHashtable");
-        Assert._assert(fakeString != null && fakeStringBuffer != null && fakeHashMap != null);        
+        fakeHashtable    = getClassByName("MyMockLib.MyHashtable");
+        Assert._assert(fakeString != null && fakeStringBuffer != null && fakeHashMap != null && fakeVector != null && fakeHashtable != null);        
         fakeString.prepare(); fakeStringBuffer.prepare(); fakeHashMap.prepare(); fakeVector.prepare(); fakeHashtable.prepare();
         
         classMap.put(realString, fakeString);
         classMap.put(realStringBuffer, fakeStringBuffer);
-        classMap.put(realHashMap, fakeHashMap);
+        if(INLINE_MAPS){
+            System.out.println("Inlining maps.");
+            classMap.put(realHashMap, fakeHashMap);
+        }else{
+            System.out.println("Not inlining maps.");
+        }
         classMap.put(realVector, fakeVector);
         classMap.put(realHashtable, fakeHashtable);
     }
@@ -64,21 +71,20 @@ public class BogusSummaryProvider {
         jq_Method replacement = (jq_Method) methodMap.get(m);
         
         if(replacement == null) {
-	        jq_Class c = (jq_Class) classMap.get(m.getDeclaringClass());
-	        
-	        if(c != null) {
-	            replacement = findReplacementMethod(c, m);
-	            
-	            if(replacement == null) {
-	                if(TRACE) System.err.println("No replacement for " + m + " found in " + c);
-	                return null;
-	            }
-	            methodMap.put(m, replacement);
-	            if(TRACE) System.out.println("Replaced " + m + " with " + replacement);
-	            return replacement;
-	        } else {
-	            return null;
-	        }
+                jq_Class c = (jq_Class) classMap.get(m.getDeclaringClass());
+                if(c != null) {
+                    replacement = findReplacementMethod(c, m);
+
+                    if(replacement == null) {
+                        if(TRACE) System.err.println("No replacement for " + m + " found in " + c);
+                        return null;
+                    }
+                    methodMap.put(m, replacement);
+                    if(TRACE) System.out.println("Replaced " + m + " with " + replacement);
+                    return replacement;
+                } else {
+                    return null;
+                }
         } else {
             return replacement;
         }
