@@ -263,7 +263,7 @@ public abstract class Solver {
         while (st.hasMoreTokens()) {
             String option = nextToken(st);
             if (option.equals("split")) {
-                if (NOISY) out.println("Splitting rule "+ir);
+                if (TRACE) out.println("Splitting rule "+ir);
                 ir.split = true;
             } else if (option.equals("cacheafterrename")) {
                 BDDInferenceRule r = (BDDInferenceRule) ir;

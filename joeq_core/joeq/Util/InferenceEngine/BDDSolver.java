@@ -3,6 +3,7 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Util.InferenceEngine;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -23,6 +24,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 
 import joeq.Util.Assert;
+import joeq.Util.PermutationGenerator;
 import joeq.Util.Collections.AppendIterator;
 import joeq.Util.Collections.GenericMultiMap;
 import joeq.Util.Collections.MultiMap;
@@ -48,6 +50,7 @@ public class BDDSolver extends Solver {
     
     BDDFactory bdd;
     MultiMap fielddomainsToBDDdomains;
+    Map orderingConstraints;
     
     public static int BDDNODES = Integer.parseInt(System.getProperty("bddnodes", "1000000"));
     public static int BDDCACHE = Integer.parseInt(System.getProperty("bddcache", "100000"));
@@ -56,6 +59,7 @@ public class BDDSolver extends Solver {
         System.out.println("Initializing BDD library ("+BDDNODES+" nodes, cache size "+BDDCACHE+")");
         bdd = BDDFactory.init(BDDNODES, BDDCACHE);
         fielddomainsToBDDdomains = new GenericMultiMap();
+        orderingConstraints = new HashMap();
         bdd.setMaxIncrease(BDDNODES/2);
     }
     
@@ -84,6 +88,78 @@ public class BDDSolver extends Solver {
         try {
             saveBDDDomainInfo();
         } catch (IOException x) {
+        }
+        calcOrderConstraints();
+    }
+    
+    void calcOrderConstraints() {
+        if (orderingConstraints.isEmpty()) return;
+        System.out.println("Ordering constraints: "+orderingConstraints);
+        Set allDomains = new HashSet();
+        for (Iterator i = orderingConstraints.keySet().iterator(); i.hasNext(); ) {
+            List list = (List) i.next();
+            allDomains.addAll(list);
+        }
+        List domains = new ArrayList(allDomains);
+        PermutationGenerator g = new PermutationGenerator(domains.size());
+        int[] best = null;
+        long bestTime = Long.MAX_VALUE;
+        while (g.hasMore()) {
+            int[] p = g.getNext();
+            long totalTime = 0L;
+            for (Iterator i = orderingConstraints.entrySet().iterator(); i.hasNext(); ) {
+                Map.Entry e = (Map.Entry) i.next();
+                // Check if this ordering constraint matches p.
+                boolean match = false;
+                Iterator j = ((List) e.getKey()).iterator();
+                BDDDomain d_j = (BDDDomain) j.next();
+                for (int k = 0; k < p.length; ++k) {
+                    BDDDomain d_k = (BDDDomain) domains.get(p[k]);
+                    if (d_k == d_j) {
+                        if (j.hasNext()) {
+                            //System.out.println(d_k+" index "+k);
+                            d_j = (BDDDomain) j.next();
+                        } else {
+                            match = true;
+                            break;
+                        }
+                    }
+                }
+                if (match) {
+                    //System.out.println(e);
+                    totalTime += ((Long) e.getValue()).longValue();
+                    if (totalTime < 0) totalTime = Long.MAX_VALUE;
+                }
+            }
+            if (false) {
+                System.out.print("Order:");
+                for (int i = 0; i < p.length; ++i) {
+                    BDDDomain d = (BDDDomain) domains.get(p[i]);
+                    System.out.print(" "+d.getName());
+                }
+                System.out.println(" Time: "+totalTime+" ms");
+            }
+            if (totalTime < bestTime) {
+                best = new int[p.length];
+                System.arraycopy(p, 0, best, 0, p.length);
+                bestTime = totalTime;
+            }
+        }
+        System.out.print("Best order:");
+        for (int i = 0; i < best.length; ++i) {
+            BDDDomain d = (BDDDomain) domains.get(best[i]);
+            System.out.print(" "+d.getName());
+        }
+        System.out.println(" Time: "+bestTime+" ms");
+    }
+    
+    void registerOrderConstraint(List doms, long time) {
+        Long t = (Long) orderingConstraints.get(doms);
+        if (t == null) orderingConstraints.put(doms, new Long(time));
+        else {
+            long newValue = t.longValue()+time;
+            if (newValue < 0L) newValue = Long.MAX_VALUE;
+            orderingConstraints.put(doms, new Long(newValue));
         }
     }
     
