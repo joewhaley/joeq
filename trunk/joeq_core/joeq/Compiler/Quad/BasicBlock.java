@@ -163,8 +163,16 @@ public class BasicBlock {
         return (Quad)instructions.get(instructions.size()-1);
     }
 
-    public void removeQuad(int i) {
-        instructions.remove(i);
+    public int getQuadIndex(Quad q) {
+        return instructions.indexOf(q);
+    }
+    
+    public Quad removeQuad(int i) {
+        return (Quad)instructions.remove(i);
+    }
+    
+    public boolean removeQuad(Quad q) {
+        return instructions.remove(q);
     }
     
     public void removeAllQuads() {
