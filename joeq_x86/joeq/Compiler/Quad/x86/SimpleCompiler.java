@@ -1631,7 +1631,8 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
             asm.emit2_Reg_Reg(x86.MOV_r_r32, EAX, EBP);
             storeOperand((RegisterOperand) Special.getOp1(obj), EAX);
         } else if (o instanceof Special.GET_STACK_POINTER) {
-            asm.emit2_Reg_Reg(x86.MOV_r_r32, EAX, ESP);
+            asm.emitShort_Reg(x86.PUSH_r, ESP);
+            asm.emitShort_Reg(x86.POP_r, EAX);
             storeOperand((RegisterOperand) Special.getOp1(obj), EAX);
         } else if (o instanceof Special.GET_THREAD_BLOCK) {
             asm.emitprefix(THREAD_BLOCK_PREFIX);
