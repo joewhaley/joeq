@@ -21,7 +21,7 @@ public abstract class Hello {
         
         Class c = Hello.class;
         
-        File f = new File("\\jdk1.3\\jre\\lib\\classes");
+        File f = new File("\\jdk1.3\\jre\\classes");
         String[] s = f.list();
         for (int i=0; i<s.length; ++i) {
             System.out.println(s[i]);
