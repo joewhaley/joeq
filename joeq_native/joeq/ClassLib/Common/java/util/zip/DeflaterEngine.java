@@ -5,7 +5,7 @@
  */
 
 package ClassLib.Common.java.util.zip;
-import java.util.zip.Adler32;
+//import java.util.zip.Adler32;
 
 /**
  *
