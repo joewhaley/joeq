@@ -8,13 +8,14 @@ EXCEPTION_DISPOSITION hardwareExceptionHandler(EXCEPTION_RECORD *exceptionRecord
 											   CONTEXT *contextRecord,
 											   void *dispatcherContext)
 {
-	void *eip = (void *)contextRecord->Eip;
+	DWORD_PTR eip = contextRecord->Eip;
 	int ex_code = exceptionRecord->ExceptionCode;
 	int java_ex_code;
+	DWORD* esp;
 	switch (ex_code) {
 	case EXCEPTION_ACCESS_VIOLATION: // null pointer exception
 		// int 5 seems to create an access violation, for some reason.
-		if (*((int*)(((int)eip)-2)) == 0x05cd0272) java_ex_code = 1;
+		if (*((int*)(eip-2)) == 0x05cd0272) java_ex_code = 1;
 		else java_ex_code = 0;
 		break;
 	case EXCEPTION_ARRAY_BOUNDS_EXCEEDED: // array bounds exception
@@ -32,13 +33,13 @@ EXCEPTION_DISPOSITION hardwareExceptionHandler(EXCEPTION_RECORD *exceptionRecord
 	}
 
 	// push arguments
-	int *esp = (int *)contextRecord->Esp;
-	*--esp = java_ex_code;
-	*--esp = (int)eip;
-	contextRecord->Esp = (int)esp;
+	esp = (DWORD*)contextRecord->Esp;
+	*--esp = (DWORD)java_ex_code;
+	*--esp = (DWORD)eip;
+	contextRecord->Esp = (DWORD)esp;
 
 	// resume execution at java trap handler
-	contextRecord->Eip = (int)trap_handler;
+	contextRecord->Eip = (DWORD)trap_handler;
 	return ExceptionContinueExecution;
 }
 

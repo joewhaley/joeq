@@ -5,9 +5,9 @@
 
 #define ARRAY_LENGTH_OFFSET -12
 
-extern "C" void __stdcall debugwmsg(const unsigned short* s)
+void __stdcall debugwmsg(const unsigned short* s)
 {
-	int* length_loc = (int*)((int)s + ARRAY_LENGTH_OFFSET);
+	int* length_loc = (int*)((DWORD_PTR)s + ARRAY_LENGTH_OFFSET);
 	int length = *length_loc;
 #if defined(WIN32) && defined(_MSC_VER)
 	unsigned short* temp = (unsigned short*)malloc((length+1)*sizeof(unsigned short));
@@ -27,20 +27,20 @@ extern "C" void __stdcall debugwmsg(const unsigned short* s)
 	fflush(stdout);
 }
 
-extern "C" void __stdcall debugmsg(const char* s)
+void __stdcall debugmsg(const char* s)
 {
 	puts(s);
 	fflush(stdout);
 }
 
-extern "C" void* __stdcall syscalloc(const int size)
+void* __stdcall syscalloc(const int size)
 {
 	void* p = calloc(1, size);
 	//printf("Allocated %d bytes at 0x%08x\n", size, p);
 	return p;
 }
 
-extern "C" void __stdcall die(const int code)
+void __stdcall die(const int code)
 {
 	fflush(stdout);
 	fflush(stderr);
@@ -64,7 +64,7 @@ void __stdcall javaTimeToFiletime(const __int64 javaTime, FILETIME* fileTime)
 	fileTime->dwHighDateTime = time.HighPart;
 }
 
-extern "C" __int64 __stdcall currentTimeMillis(void)
+__int64 __stdcall currentTimeMillis(void)
 {
 	FILETIME fileTime;
 	GetSystemTimeAsFileTime(&fileTime);
@@ -72,7 +72,7 @@ extern "C" __int64 __stdcall currentTimeMillis(void)
 }
 #else
 // Generic unix time functions.
-extern "C" __int64 __stdcall currentTimeMillis(void)
+__int64 __stdcall currentTimeMillis(void)
 {
 	struct timeb t;
 	ftime(&t);
@@ -80,12 +80,12 @@ extern "C" __int64 __stdcall currentTimeMillis(void)
 }
 #endif
 
-extern "C" void __stdcall mem_cpy(void* to, const void* from, const int size)
+void __stdcall mem_cpy(void* to, const void* from, const int size)
 {
 	memcpy(to, from, size);
 }
 
-extern "C" int __stdcall file_open(const char* s, const int mode, const int smode)
+int __stdcall file_open(const char* s, const int mode, const int smode)
 {
 #if defined(_MSC_VER)
 	return _open(s, mode, smode);
@@ -93,7 +93,7 @@ extern "C" int __stdcall file_open(const char* s, const int mode, const int smod
 	return open(s, mode, smode);
 #endif
 }
-extern "C" int __stdcall file_readbytes(const int fd, char* b, const int len)
+int __stdcall file_readbytes(const int fd, char* b, const int len)
 {
 #if defined(_MSC_VER)
 	return _read(fd, b, len);
@@ -101,7 +101,7 @@ extern "C" int __stdcall file_readbytes(const int fd, char* b, const int len)
 	return read(fd, b, len);
 #endif
 }
-extern "C" int __stdcall file_writebyte(const int fd, const int b)
+int __stdcall file_writebyte(const int fd, const int b)
 {
 #if defined(_MSC_VER)
 	return _write(fd, &b, 1);
@@ -109,7 +109,7 @@ extern "C" int __stdcall file_writebyte(const int fd, const int b)
 	return write(fd, &b, 1);
 #endif
 }
-extern "C" int __stdcall file_writebytes(const int fd, const char* b, const int len)
+int __stdcall file_writebytes(const int fd, const char* b, const int len)
 {
 #if defined(_MSC_VER)
 	return _write(fd, b, len);
@@ -117,11 +117,11 @@ extern "C" int __stdcall file_writebytes(const int fd, const char* b, const int 
 	return write(fd, b, len);
 #endif
 }
-extern "C" int __stdcall file_sync(const int fd)
+int __stdcall file_sync(const int fd)
 {
 	return _commit(fd);
 }
-extern "C" __int64 __stdcall file_seek(const int fd, const __int64 offset, const int origin)
+__int64 __stdcall file_seek(const int fd, const __int64 offset, const int origin)
 {
 #if defined(_MSC_VER)
 	return _lseeki64(fd, offset, origin);
@@ -129,7 +129,7 @@ extern "C" __int64 __stdcall file_seek(const int fd, const __int64 offset, const
 	return lseek(fd, offset, origin);
 #endif
 }
-extern "C" int __stdcall file_close(const int fd)
+int __stdcall file_close(const int fd)
 {
 #if defined(_MSC_VER)
 	return _close(fd);
@@ -138,7 +138,7 @@ extern "C" int __stdcall file_close(const int fd)
 #endif
 }
 #if defined(WIN32)
-extern "C" int __stdcall console_available(void)
+int __stdcall console_available(void)
 {
 	HANDLE in = GetStdHandle(STD_INPUT_HANDLE);
 	unsigned long count;
@@ -199,7 +199,7 @@ static int io_charavail(int fd)
   return ret;
 }
 #include <sys/ioctl.h>
-extern "C" int __stdcall console_available(void)
+int __stdcall console_available(void)
 {
   //return io_charavail(0);
   int nbytes;
@@ -209,32 +209,32 @@ extern "C" int __stdcall console_available(void)
 #else
 #error System type not supported.
 #endif
-extern "C" int __stdcall main_argc(void)
+int __stdcall main_argc(void)
 {
 	return joeq_argc;
 }
-extern "C" int __stdcall main_argv_length(const int i)
+int __stdcall main_argv_length(const int i)
 {
-	return strlen(joeq_argv[i]);
+	return (int)strlen(joeq_argv[i]);
 }
-extern "C" void __stdcall main_argv(const int i, char* buf)
+void __stdcall main_argv(const int i, char* buf)
 {
 	memcpy(buf, joeq_argv[i], strlen(joeq_argv[i])*sizeof(char));
 }
 #if defined(WIN32)
-extern "C" int __stdcall fs_getdcwd(const int i, char* buf, const int buflen)
+int __stdcall fs_getdcwd(const int i, char* buf, const int buflen)
 {
 	return _getdcwd(i, buf, buflen)?1:0;
 }
-extern "C" int __stdcall fs_fullpath(char* buf, const char* s, const int buflen)
+int __stdcall fs_fullpath(char* buf, const char* s, const int buflen)
 {
 	return _fullpath(buf, s, buflen)?1:0;
 }
-extern "C" int __stdcall fs_getfileattributes(const char* s)
+int __stdcall fs_getfileattributes(const char* s)
 {
 	return GetFileAttributes(s);
 }
-extern "C" char* __stdcall fs_gettruename(char* s)
+char* __stdcall fs_gettruename(char* s)
 {
 	WIN32_FIND_DATA fd;
 	HANDLE h = FindFirstFile(s, &fd);
@@ -242,11 +242,11 @@ extern "C" char* __stdcall fs_gettruename(char* s)
 	FindClose(h);
 	return fd.cFileName;
 }
-extern "C" int __stdcall fs_access(const char* s, const int mode)
+int __stdcall fs_access(const char* s, const int mode)
 {
 	return _access(s, mode);
 }
-extern "C" __int64 __stdcall fs_getfiletime(const char* s)
+__int64 __stdcall fs_getfiletime(const char* s)
 {
 	FILETIME fileTime;
 	HANDLE file = CreateFile(s, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
@@ -255,7 +255,7 @@ extern "C" __int64 __stdcall fs_getfiletime(const char* s)
 	if (res == 0) return 0;
 	return filetimeToJavaTime(&fileTime);
 }
-extern "C" __int64 __stdcall fs_stat_size(const char* s)
+__int64 __stdcall fs_stat_size(const char* s)
 {
 #if defined(_MSC_VER)
 	struct _stati64 buf;
@@ -267,38 +267,38 @@ extern "C" __int64 __stdcall fs_stat_size(const char* s)
 	return buf.st_size;
 }
 #elif defined(linux)
-extern "C" int __stdcall fs_getdcwd(const int i, char* buf, const int buflen)
+int __stdcall fs_getdcwd(const int i, char* buf, const int buflen)
 {
   // TODO.
   return 0;
 }
-extern "C" int __stdcall fs_fullpath(char* buf, const char* s, const int buflen)
+int __stdcall fs_fullpath(char* buf, const char* s, const int buflen)
 {
   // TODO.
   return 0;
 }
-extern "C" int __stdcall fs_getfileattributes(const char* s)
+int __stdcall fs_getfileattributes(const char* s)
 {
   // TODO.
   return 0;
 }
-extern "C" char* __stdcall fs_gettruename(char* s)
+char* __stdcall fs_gettruename(char* s)
 {
   // TODO.
   return s;
 }
-extern "C" int __stdcall fs_access(const char* s, const int mode)
+int __stdcall fs_access(const char* s, const int mode)
 {
   return access(s, mode);
 }
-extern "C" __int64 __stdcall fs_getfiletime(const char* s)
+__int64 __stdcall fs_getfiletime(const char* s)
 {
   struct stat buf;
   int res = stat(s, &buf);
   if (res != 0) return 0;
   return ((__int64)buf.st_mtime) * 1000L;
 }
-extern "C" __int64 __stdcall fs_stat_size(const char* s)
+__int64 __stdcall fs_stat_size(const char* s)
 {
   struct stat buf;
   int res = stat(s, &buf);
@@ -308,19 +308,24 @@ extern "C" __int64 __stdcall fs_stat_size(const char* s)
 #else
 #error System type not supported.
 #endif
-extern "C" int __stdcall fs_remove(const char* s)
+int __stdcall fs_remove(const char* s)
 {
 	return remove(s);
 }
 #if defined(WIN32)
-extern "C" DIR * __stdcall fs_opendir(const char* s)
+DIR * __stdcall fs_opendir(const char* s)
 {
+  int file_attr;
 	DIR *dir = (DIR *)malloc(sizeof(DIR));
 	if (!dir) return NULL;
 
 	if (s[0] == '\\' && s[1] == 0) {
-		char dirname2[4] = { _getdrive()+'A'-1, ':', '\\', 0 };
-		s = dirname2;
+	  char dirname2[4];
+	  dirname2[0] = _getdrive()+'A'-1;
+	  dirname2[1] = ':';
+	  dirname2[1] = '\\';
+	  dirname2[1] = '\0';
+	  s = dirname2;
 	}
 
 	dir->path = (char *)malloc(strlen(s)+5);
@@ -329,8 +334,8 @@ extern "C" DIR * __stdcall fs_opendir(const char* s)
 	}
 	strcpy(dir->path, s);
 
-	int file_attr = GetFileAttributes(dir->path);
-	if ((file_attr == -1) || (file_attr & FILE_ATTRIBUTE_DIRECTORY == 0)) {
+	file_attr = GetFileAttributes(dir->path);
+	if ((file_attr == -1) || ((file_attr & FILE_ATTRIBUTE_DIRECTORY) == 0)) {
 		free(dir->path); free(dir); return NULL;
 	}
 
@@ -348,7 +353,7 @@ extern "C" DIR * __stdcall fs_opendir(const char* s)
 	}
 	return dir;
 }
-extern "C" struct dirent * __stdcall fs_readdir(DIR *dir)
+struct dirent * __stdcall fs_readdir(DIR *dir)
 {
 	if (dir->handle == INVALID_HANDLE_VALUE) return NULL;
 	strcpy(dir->dirent.d_name, dir->find_data.cFileName);
@@ -359,7 +364,7 @@ extern "C" struct dirent * __stdcall fs_readdir(DIR *dir)
 	}
 	return &dir->dirent;
 }
-extern "C" int __stdcall fs_closedir(DIR *dir)
+int __stdcall fs_closedir(DIR *dir)
 {
 	if (dir->handle != INVALID_HANDLE_VALUE) {
 		if (!FindClose(dir->handle)) return -1;
@@ -368,38 +373,40 @@ extern "C" int __stdcall fs_closedir(DIR *dir)
 	free(dir->path); free(dir);
 	return 0;
 }
-extern "C" int __stdcall fs_setfiletime(const char* s, const __int64 time)
+int __stdcall fs_setfiletime(const char* s, const __int64 time)
 {
 	FILETIME fileTime;
+	HANDLE file;
+	int res;
 	javaTimeToFiletime(time, &fileTime);
-	HANDLE file = CreateFile(s, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
-	int res = SetFileTime(file, NULL, NULL, &fileTime);
+	file = CreateFile(s, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+	res = SetFileTime(file, NULL, NULL, &fileTime);
 	CloseHandle(file);
 	return res;
 }
-extern "C" int __stdcall fs_getlogicaldrives(void)
+int __stdcall fs_getlogicaldrives(void)
 {
 	return GetLogicalDrives();
 }
 #elif defined(linux)
-extern "C" DIR * __stdcall fs_opendir(const char* s)
+DIR * __stdcall fs_opendir(const char* s)
 {
 	return opendir(s);
 }
-extern "C" struct dirent * __stdcall fs_readdir(DIR *dir)
+struct dirent * __stdcall fs_readdir(DIR *dir)
 {
 	return readdir(dir);
 }
-extern "C" int __stdcall fs_closedir(DIR *dir)
+int __stdcall fs_closedir(DIR *dir)
 {
 	return closedir(dir);
 }
-extern "C" int __stdcall fs_setfiletime(const char* s, const __int64 time)
+int __stdcall fs_setfiletime(const char* s, const __int64 time)
 {
   // TODO.
   return 0;
 }
-extern "C" int __stdcall fs_getlogicaldrives(void)
+int __stdcall fs_getlogicaldrives(void)
 {
   // TODO
   return 0;
@@ -407,15 +414,15 @@ extern "C" int __stdcall fs_getlogicaldrives(void)
 #else
 #error System type not supported.
 #endif
-extern "C" int __stdcall fs_mkdir(const char* s)
+int __stdcall fs_mkdir(const char* s)
 {
 	return _mkdir(s);
 }
-extern "C" int __stdcall fs_rename(const char* s, const char* s1)
+int __stdcall fs_rename(const char* s, const char* s1)
 {
 	return rename(s, s1);
 }
-extern "C" int __stdcall fs_chmod(const char* s, const int mode)
+int __stdcall fs_chmod(const char* s, const int mode)
 {
 #if defined(_MSC_VER)
 	return _chmod(s, mode);
@@ -423,42 +430,42 @@ extern "C" int __stdcall fs_chmod(const char* s, const int mode)
 	return chmod(s, mode);
 #endif
 }
-extern "C" void __stdcall yield(void)
+void __stdcall yield(void)
 {
 	Sleep(0);
 }
-extern "C" void __stdcall msleep(int ms)
+void __stdcall msleep(int ms)
 {
 	Sleep(ms);
 }
 #if defined(WIN32)
-extern "C" HANDLE __stdcall get_current_thread_handle(void)
+HANDLE __stdcall get_current_thread_handle(void)
 {
 	HANDLE currentProcess = GetCurrentProcess();
 	HANDLE targetHandle;
 	DuplicateHandle(currentProcess, GetCurrentThread(), currentProcess, &targetHandle, 0, TRUE, DUPLICATE_SAME_ACCESS);
 	return targetHandle;
 }
-extern "C" HANDLE __stdcall create_thread(LPTHREAD_START_ROUTINE start, LPVOID arg)
+HANDLE __stdcall create_thread(LPTHREAD_START_ROUTINE start, LPVOID arg)
 {
 	DWORD tid;
 	return CreateThread(NULL, 0, start, arg, CREATE_SUSPENDED, &tid);
 }
-extern "C" HANDLE __stdcall init_thread(void)
+HANDLE __stdcall init_thread(void)
 {
 	// nothing to do here.
 	return get_current_thread_handle();
 }
-extern "C" int __stdcall resume_thread(const HANDLE handle)
+int __stdcall resume_thread(const HANDLE handle)
 {
 	return ResumeThread(handle);
 }
-extern "C" int __stdcall suspend_thread(const HANDLE handle)
+int __stdcall suspend_thread(const HANDLE handle)
 {
 	return SuspendThread(handle);
 }
 
-extern "C" void* __stdcall allocate_stack(const int size)
+void* __stdcall allocate_stack(const int size)
 {
 	LPVOID lpvAddr;
 	DWORD dwPageSize;
@@ -478,23 +485,23 @@ extern "C" void* __stdcall allocate_stack(const int size)
 		fprintf(stderr, "PANIC! Cannot create stack guard page!");
 	}
 	//printf("Allocated stack of size %d starting at 0x%08x\n", size, (int)lpvAddr+dwFinalSize);
-	return (void*)((int)lpvAddr+dwFinalSize);
+	return (void*)((DWORD_PTR)lpvAddr+dwFinalSize);
 }
 
-extern "C" int __stdcall get_thread_context(HANDLE t, CONTEXT* c)
+int __stdcall get_thread_context(HANDLE t, CONTEXT* c)
 {
 	int result = GetThreadContext(t, c);
 	if (!result) {
-		fprintf(stderr, "PANIC! Cannot get context of thread %x: %d.\n", t, GetLastError());
+		fprintf(stderr, "PANIC! Cannot get context of thread %p: %d.\n", t, GetLastError());
 	}
 	return result;
 }
 
-extern "C" int __stdcall set_thread_context(HANDLE t, CONTEXT* c)
+int __stdcall set_thread_context(HANDLE t, CONTEXT* c)
 {
 	int result = SetThreadContext(t, c);
 	if (!result) {
-		fprintf(stderr, "PANIC! Cannot set context of thread %x: %d.\n", t, GetLastError());
+		fprintf(stderr, "PANIC! Cannot set context of thread %p: %d.\n", t, GetLastError());
 	}
 	return result;
 }
@@ -508,7 +515,7 @@ void initSemaphoreLock(void)
 	p_semaphore_init = &semaphore_init;
 }
 
-extern "C" HANDLE __stdcall init_semaphore(void)
+HANDLE __stdcall init_semaphore(void)
 {
 	HANDLE sema;
 	EnterCriticalSection(p_semaphore_init);
@@ -517,18 +524,19 @@ extern "C" HANDLE __stdcall init_semaphore(void)
 	return sema;
 }
 
-extern "C" int __stdcall wait_for_single_object(HANDLE handle, int time)
+int __stdcall wait_for_single_object(HANDLE handle, int time)
 {
 	return WaitForSingleObject(handle, time);
 }
 
-extern "C" int __stdcall release_semaphore(HANDLE semaphore, int a)
+int __stdcall release_semaphore(HANDLE semaphore, int a)
 {
 	return ReleaseSemaphore(semaphore, a, NULL);
 }
 
-extern "C" void __stdcall timer_tick(LPVOID arg, DWORD lo, DWORD hi)
+void __stdcall timer_tick(LPVOID arg, DWORD lo, DWORD hi)
 {
+  NativeThread* native_thread;
   // get current Java thread
   Thread* java_thread;
 	__asm {
@@ -541,7 +549,7 @@ extern "C" void __stdcall timer_tick(LPVOID arg, DWORD lo, DWORD hi)
     return;
   }
   
-  NativeThread* native_thread = java_thread->native_thread;
+  native_thread = java_thread->native_thread;
 
   // disable thread switch.
   ++java_thread->thread_switch_enabled;
@@ -550,9 +558,9 @@ extern "C" void __stdcall timer_tick(LPVOID arg, DWORD lo, DWORD hi)
   threadSwitch(native_thread);
 }
 
-extern "C" void __stdcall set_interval_timer(int type, int ms)
+void __stdcall set_interval_timer(int type, int ms)
 {
-    HANDLE hTimer = NULL;
+    HANDLE hTimer;
     LARGE_INTEGER liDueTime;
 
     liDueTime.QuadPart=-10000*ms;
@@ -573,7 +581,7 @@ extern "C" void __stdcall set_interval_timer(int type, int ms)
     }
 }
 
-extern "C" void __stdcall set_current_context(Thread* jthread, const CONTEXT* context)
+void __stdcall set_current_context(Thread* jthread, const CONTEXT* context)
 {
     //printf("Thread %d: switching to jthread 0x%08x, ip=0x%08x, sp=0x%08x\n", GetCurrentThreadId(), jthread, context->Eip, context->Esp);
 	__asm {
@@ -616,7 +624,7 @@ extern "C" void __stdcall set_current_context(Thread* jthread, const CONTEXT* co
 	}
 }
 #elif defined(linux)
-extern "C" int __stdcall suspend_thread(const int pid)
+int __stdcall suspend_thread(const int pid)
 {
   //printf("Suspending thread %d.\n", pid);
 #if defined(USE_CLONE)
@@ -661,7 +669,7 @@ int thread_start_trampoline(void *t)
   return start(arg);
 }
 
-extern "C" int __stdcall create_thread(int (*start)(void *), void* arg)
+int __stdcall create_thread(int (*start)(void *), void* arg)
 {
   unsigned long int pid;
   void** temp = (void**)malloc(sizeof(start) + sizeof(arg));
@@ -723,7 +731,7 @@ _syscall3( int, modify_ldt, int, func, void *, ptr, unsigned long, bytecount )
 
 static int current_id = 16;
 
-extern "C" int __stdcall init_thread()
+int __stdcall init_thread()
 {
   int my_id;
   __asm__ __volatile__
@@ -745,7 +753,7 @@ uphere:
   //printf("Thread %d finished initialization, pid=%d, id=%d.\n", pthread_self(), getpid(), my_id);
   return getpid();
 }
-extern "C" int __stdcall resume_thread(const int pid)
+int __stdcall resume_thread(const int pid)
 {
   //printf("Resuming thread %d.\n", pid);
   //ptrace( PTRACE_CONT, pid, (caddr_t)1, SIGSTOP );
@@ -757,7 +765,7 @@ extern "C" int __stdcall resume_thread(const int pid)
   return 0;
 }
 
-extern "C" void* __stdcall allocate_stack(const int size)
+void* __stdcall allocate_stack(const int size)
 {
   // TODO
   void* p = calloc(sizeof(char), size);
@@ -777,7 +785,7 @@ static inline int get_debug_reg( int pid, int num, DWORD *data )
     return 0;
 }
 
-extern "C" int __stdcall get_thread_context(const int pid, CONTEXT* context)
+int __stdcall get_thread_context(const int pid, CONTEXT* context)
 {
   //printf("Getting thread context for pid %d.\n", pid);
   if (ptrace(PTRACE_ATTACH, pid, 0, 0) == -1) {
@@ -846,7 +854,7 @@ extern "C" int __stdcall get_thread_context(const int pid, CONTEXT* context)
   return result;
 }
 
-extern "C" int __stdcall set_thread_context(int pid, CONTEXT* context)
+int __stdcall set_thread_context(int pid, CONTEXT* context)
 {
   //printf("Setting thread context for pid %d, ip=0x%08x, sp=0x%08x\n", pid, context->Eip, context->Esp);
   if (ptrace(PTRACE_ATTACH, pid, 0, 0) == -1) {
@@ -918,7 +926,7 @@ extern "C" int __stdcall set_thread_context(int pid, CONTEXT* context)
   return result;
 }
 
-extern "C" int __stdcall get_current_thread_handle(void)
+int __stdcall get_current_thread_handle(void)
 {
 #if defined(USE_CLONE)
   return getpid();
@@ -936,7 +944,7 @@ void initSemaphoreLock(void)
     p_semaphore_init = &semaphore_init;
 }
 
-extern "C" int __stdcall init_semaphore(void)
+int __stdcall init_semaphore(void)
 {
     sem_t* n_sem = (sem_t*)malloc(sizeof(sem_t));
     sem_wait(p_semaphore_init);
@@ -959,7 +967,7 @@ extern "C" int __stdcall init_semaphore(void)
 #endif
 
 #define WAIT_TIMEOUT 0x00000102
-extern "C" int __stdcall wait_for_single_object(int handle, int time)
+int __stdcall wait_for_single_object(int handle, int time)
 {
     //printf("Thread %d: Waiting on semaphore %x for %d ms.\n", pthread_self(), (int)handle, time);
     if (sem_trywait((sem_t*)handle) == 0) return 0;
@@ -985,7 +993,7 @@ extern "C" int __stdcall wait_for_single_object(int handle, int time)
     }
 }
 
-extern "C" int __stdcall release_semaphore(int semaphore, int a)
+int __stdcall release_semaphore(int semaphore, int a)
 {
     //printf("Thread %d: Releasing semaphore %x %d times.\n", pthread_self(), (int)semaphore, a);
     int v = 0;
@@ -994,7 +1002,7 @@ extern "C" int __stdcall release_semaphore(int semaphore, int a)
     return v;
 }
 
-extern "C" void __stdcall set_interval_timer(int type, int ms)
+void __stdcall set_interval_timer(int type, int ms)
 {
   //printf("Thread %d: Setting interval timer type %d, %d ms.\n", pthread_self(), (int)type, ms);
   struct itimerval v;
@@ -1003,7 +1011,7 @@ extern "C" void __stdcall set_interval_timer(int type, int ms)
   setitimer(type, &v, 0);
 }
 
-extern "C" void __stdcall set_current_context(Thread* jthread, const CONTEXT* context)
+void __stdcall set_current_context(Thread* jthread, const CONTEXT* context)
 {
 #if defined(USE_CLONE)
     int pid = getpid();
