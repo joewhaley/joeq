@@ -98,14 +98,17 @@ public abstract class ClassLibInterface {
     
     // java.lang.reflect.Field
     public abstract java.lang.reflect.Field createNewField(Clazz.jq_Field f) ;
+    public abstract void initNewField(java.lang.reflect.Field o, Clazz.jq_Field f) ;
     public abstract Clazz.jq_Field getJQField(java.lang.reflect.Field f) ;
 
     // java.lang.reflect.Method
     public abstract java.lang.reflect.Method createNewMethod(Clazz.jq_Method f) ;
+    public abstract void initNewMethod(java.lang.reflect.Method o, Clazz.jq_Method f) ;
     public abstract Clazz.jq_Method getJQMethod(java.lang.reflect.Method f) ;
     
     // java.lang.reflect.Constructor
     public abstract java.lang.reflect.Constructor createNewConstructor(Clazz.jq_Initializer f) ;
+    public abstract void initNewConstructor(java.lang.reflect.Constructor o, Clazz.jq_Initializer f) ;
     public abstract Clazz.jq_Initializer getJQInitializer(java.lang.reflect.Constructor f) ;
     
     // java.io.RandomAccessFile
