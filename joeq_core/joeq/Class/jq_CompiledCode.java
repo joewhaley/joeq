@@ -9,7 +9,6 @@ package Clazz;
 import java.util.Iterator;
 import java.util.List;
 
-import Allocator.CodeAllocator;
 import Bootstrap.PrimordialClassLoader;
 import Main.jq;
 import Memory.CodeAddress;
@@ -111,7 +110,7 @@ public class jq_CompiledCode implements Comparable {
             entrypoint.offset(1).poke2((short) 0xF8EB); // JMP
         } else {
             if (TRACE_REDIRECT) DebugInterface.debugwriteln("redirecting by rewriting targets");
-            Iterator it = CodeAllocator.getCompiledMethods();
+            Iterator it = _delegate.getCompiledMethods();
             while (it.hasNext()) {
                 jq_CompiledCode cc = (jq_CompiledCode) it.next();
                 cc.patchDirectBindCalls(this.method, that);
@@ -130,6 +129,7 @@ public class jq_CompiledCode implements Comparable {
     static interface Delegate {
 	void patchDirectBindCalls(Iterator i);
 	void patchDirectBindCalls(Iterator i, jq_Method method, jq_CompiledCode cc);
+	Iterator getCompiledMethods();
     }
     
     private static Delegate _delegate;
@@ -150,13 +150,6 @@ public class jq_CompiledCode implements Comparable {
         }
     }
 
-    public int compareTo(CodeAllocator.InstructionPointer that) {
-        CodeAddress ip = that.getIP();
-        if (this.start.difference(ip) >= 0) return 1;
-        if (this.start.offset(this.length).difference(ip) < 0) return -1;
-        return 0;
-    }
-
     public int compareTo(jq_CompiledCode that) {
         if (this == that) return 0;
         if (this.start.difference(that.start) < 0) return -1;
@@ -170,21 +163,14 @@ public class jq_CompiledCode implements Comparable {
         if (o instanceof jq_CompiledCode)
             return compareTo((jq_CompiledCode) o);
         else
-            return compareTo((CodeAllocator.InstructionPointer) o);
-    }
-
-    public boolean equals(CodeAllocator.InstructionPointer that) {
-        CodeAddress ip = that.getIP();
-        if (ip.difference(start) < 0) return false;
-        if (ip.difference(start.offset(length)) > 0) return false;
-        return true;
+            return -((Comparable)o).compareTo(this);
     }
 
     public boolean equals(Object o) {
         if (o instanceof jq_CompiledCode)
             return this == o;
         else
-            return equals((CodeAllocator.InstructionPointer) o);
+            return o.equals(this);
     }
 
     /**

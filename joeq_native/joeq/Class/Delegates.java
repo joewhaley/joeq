@@ -3,6 +3,7 @@ package Clazz;
 import java.util.Iterator;
 
 import Allocator.DefaultHeapAllocator;
+import Allocator.CodeAllocator;
 import Assembler.x86.DirectBindCall;
 import Bootstrap.BootstrapCodeAddress;
 import Bootstrap.BootstrapHeapAddress;
@@ -90,7 +91,11 @@ class Delegates implements jq_ClassFileConstants {
                 }
             }
 	}
+	public Iterator getCompiledMethods() {
+	    return CodeAllocator.getCompiledMethods();
+	}
     }
+    
     static class Klass implements jq_Class.Delegate {
 	public final Object newInstance(jq_Class c, int instance_size, Object vtable) {
 	    c.cls_initialize();
