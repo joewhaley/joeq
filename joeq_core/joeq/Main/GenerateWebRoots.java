@@ -27,7 +27,7 @@ import org.xml.sax.SAXParseException;
 public class GenerateWebRoots {
     private static boolean TRACE = true;
     private static PrintStream out = System.out;
-    private static final String TAGLIB_BASE = "cls/webapps";
+    private static final String TAGLIB_BASE = "cls/webapp";
 
     public static void main(String[] args) throws FileNotFoundException {
         String inputFile  = null;
@@ -96,10 +96,10 @@ public class GenerateWebRoots {
         for(Iterator iter = tags.iterator(); iter.hasNext();){
             String tag = (String) iter.next();
             
-            out.println("\t\t{");
+            out.println("\t\ttry {");
             out.println("\t\t\tTagSupport tag = new " + tag + "();");
             out.println("\t\t\ttag.doStartTag();");
-            out.println("\t\t}");
+            out.println("\t\t} catch (JspException e){e.printStackTrace();}");
         }
     }
 
