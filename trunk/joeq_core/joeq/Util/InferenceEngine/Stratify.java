@@ -52,6 +52,16 @@ public class Stratify {
         
         if (TRACE) out.println("Necessary: "+necessary);
         
+        Set unnecessary = new HashSet(solver.nameToRelation.values());
+        unnecessary.addAll(solver.rules);
+        unnecessary.removeAll(necessary);
+        if (!unnecessary.isEmpty()) {
+            System.out.println("Note: the following rules/relations are unused:");
+            for (Iterator i = unnecessary.iterator(); i.hasNext(); ) {
+                System.out.println("    "+i.next());
+            }
+        }
+        
         // Ignore all edges to/from unnecessary stuff.
         depNav.retainAll(necessary);
         
