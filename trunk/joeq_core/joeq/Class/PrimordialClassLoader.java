@@ -218,10 +218,12 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
                         return name.endsWith(".class");
                     }
                 });
-
-            for (int i = 0; i < cls.length; ++i) {
-                String s = (pathn==null)?(cls[i]):(pathn+cls[i]);
-                entries.add(s);
+            
+            if (cls != null) {
+                for (int i = 0; i < cls.length; ++i) {
+                    String s = (pathn==null)?(cls[i]):(pathn+cls[i]);
+                    entries.add(s);
+                }
             }
 
             String [] subdirs = f.list(new java.io.FilenameFilter() {
@@ -229,10 +231,12 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
                         return new File(_dir, name).isDirectory();
                     }
                 });
-            for (int i = 0; i < subdirs.length; i++) {
-                String dn = (String)subdirs[i];
-                if (pathn != null) dn = pathn + dn;
-                buildEntries(dn + '/');
+            if (subdirs != null) {
+                for (int i = 0; i < subdirs.length; i++) {
+                    String dn = (String)subdirs[i];
+                    if (pathn != null) dn = pathn + dn;
+                    buildEntries(dn + '/');
+                }
             }
         }
     }

@@ -41,12 +41,17 @@ public abstract class ObjectTraverser {
             if (result != NO_OBJECT) return this.mapValue(result);
         }
         // get the value via real reflection.
-        Class c = Reflection.getJDKType(f.getDeclaringClass());
-        String fieldName = f.getName().toString();
-        return getStaticFieldValue_reflection(c, fieldName);
+        if (TRACE) out.println("Getting value of static field "+f+" via reflection");
+        Field f2 = (Field) f.getJavaLangReflectMemberObject();
+        if (f2 == null) {
+            Class c = Reflection.getJDKType(f.getDeclaringClass());
+            String fieldName = f.getName().toString();
+            f2 = lookupField(c, fieldName);
+        }
+        return getStaticFieldValue_reflection(f2);
     }
-    public Object getStaticFieldValue_reflection(Class c, String fieldName) {
-        if (TRACE) out.println("Getting value of static field "+c+"."+fieldName+" via reflection");
+
+    public static Field lookupField(Class c, String fieldName) {
         Field f2 = Reflection.getJDKField(c, fieldName);
         if (f2 == null) {
             jq_Class klass = (jq_Class)Reflection.getJQType(c);
@@ -64,7 +69,10 @@ public abstract class ObjectTraverser {
                 }
             }
         }
-        Assert._assert(f2 != null, "host jdk does not contain static field "+c.getName()+"."+fieldName);
+        return f2;
+    }
+
+    public Object getStaticFieldValue_reflection(Field f2) {
         f2.setAccessible(true);
         Assert._assert((f2.getModifiers() & Modifier.STATIC) != 0);
         try {
@@ -83,14 +91,16 @@ public abstract class ObjectTraverser {
             if (result != NO_OBJECT) return this.mapValue(result);
         }
         // get the value via real reflection.
-        Class c = Reflection.getJDKType(f.getDeclaringClass());
-        String fieldName = f.getName().toString();
-        return getInstanceFieldValue_reflection(base, c, fieldName);
+        if (TRACE) out.println("Getting value of instance field "+f+" via reflection");
+        Field f2 = (Field) f.getJavaLangReflectMemberObject();
+        if (f2 == null) {
+            Class c = Reflection.getJDKType(f.getDeclaringClass());
+            String fieldName = f.getName().toString();
+            f2 = Reflection.getJDKField(c, fieldName);
+        }
+        return getInstanceFieldValue_reflection(base, f2);
     }
-    public Object getInstanceFieldValue_reflection(Object base, Class c, String fieldName) {
-        if (TRACE) out.println("Getting value of instance field "+c+"."+fieldName+" via reflection");
-        Field f2 = Reflection.getJDKField(c, fieldName);
-        Assert._assert(f2 != null, "host jdk does not contain instance field "+c.getName()+"."+fieldName);
+    public Object getInstanceFieldValue_reflection(Object base, Field f2) {
         f2.setAccessible(true);
         Assert._assert((f2.getModifiers() & Modifier.STATIC) == 0);
         try {
@@ -104,30 +114,16 @@ public abstract class ObjectTraverser {
     }
     
     public void putStaticFieldValue(jq_StaticField f, Object o) {
-        Class c = Reflection.getJDKType(f.getDeclaringClass());
-        String fieldName = f.getName().toString();
-        putStaticFieldValue(c, fieldName, o);
-    }
-    public void putStaticFieldValue(Class c, String fieldName, Object o) {
-        if (TRACE) out.println("Setting value of static field "+c+"."+fieldName+" via reflection");
-        Field f2 = Reflection.getJDKField(c, fieldName);
+        Field f2 = (Field) f.getJavaLangReflectMemberObject();
         if (f2 == null) {
-            jq_Class klass = (jq_Class)Reflection.getJQType(c);
-            for (Iterator i=ClassLibInterface.DEFAULT.getImplementationClassDescs(klass.getDesc()); i.hasNext(); ) {
-                UTF.Utf8 u = (UTF.Utf8)i.next();
-                if (TRACE) out.println("Checking mirror class "+u);
-                String s = u.toString();
-                Assert._assert(s.charAt(0) == 'L');
-                try {
-                    c = Class.forName(s.substring(1, s.length()-1).replace('/', '.'));
-                    f2 = Reflection.getJDKField(c, fieldName);
-                    if (f2 != null) break;
-                } catch (ClassNotFoundException x) {
-                    if (TRACE) out.println("Mirror class "+s+" doesn't exist");
-                }
-            }
+            Class c = Reflection.getJDKType(f.getDeclaringClass());
+            String fieldName = f.getName().toString();
+            f2 = lookupField(c, fieldName);
         }
-        Assert._assert(f2 != null, "host jdk does not contain static field "+c.getName()+"."+fieldName);
+        putStaticFieldValue_reflection(f2, o);
+    }
+    public void putStaticFieldValue_reflection(Field f2, Object o) {
+        if (TRACE) out.println("Setting value of static field "+f2+" via reflection");
         f2.setAccessible(true);
         Assert._assert((f2.getModifiers() & Modifier.STATIC) != 0);
         try {
@@ -138,14 +134,16 @@ public abstract class ObjectTraverser {
     }
     
     public void putInstanceFieldValue(Object base, jq_InstanceField f, Object o) {
-        Class c = Reflection.getJDKType(f.getDeclaringClass());
-        String fieldName = f.getName().toString();
-        putInstanceFieldValue(base, c, fieldName, o);
+        Field f2 = (Field) f.getJavaLangReflectMemberObject();
+        if (f2 == null) {
+            Class c = Reflection.getJDKType(f.getDeclaringClass());
+            String fieldName = f.getName().toString();
+            f2 = lookupField(c, fieldName);
+        }
+        putInstanceFieldValue_reflection(base, f2, o);
     }
-    public void putInstanceFieldValue(Object base, Class c, String fieldName, Object o) {
-        if (TRACE) out.println("Setting value of static field "+c+"."+fieldName+" via reflection");
-        Field f2 = Reflection.getJDKField(c, fieldName);
-        Assert._assert(f2 != null, "host jdk does not contain instance field "+c.getName()+"."+fieldName);
+    public void putInstanceFieldValue_reflection(Object base, Field f2, Object o) {
+        if (TRACE) out.println("Setting value of static field "+f2+" via reflection");
         f2.setAccessible(true);
         Assert._assert((f2.getModifiers() & Modifier.STATIC) == 0);
         try {
