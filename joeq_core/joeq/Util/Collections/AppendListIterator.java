@@ -1,17 +1,13 @@
-/*
- * AppendListIterator.java
- *
- * Created on April 22, 2001, 11:14 AM
- *
- */
-
+// AppendListIterator.java, created Wed Mar  5  0:26:27 2003 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Util.Collections;
 
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
 
 /*
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class AppendListIterator implements ListIterator {

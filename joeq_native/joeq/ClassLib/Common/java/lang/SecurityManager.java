@@ -1,10 +1,6 @@
-/*
- * SecurityManager.java
- *
- * Created on Novemeber 7, 2002, 3:00 PM
- *
- */
-
+// SecurityManager.java, created Sun Nov 17 16:08:31 2002 by asharm2
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package ClassLib.Common.java.lang;
 
 import Clazz.jq_CompiledCode;
@@ -14,7 +10,9 @@ import Run_Time.StackCodeWalker;
 import Util.Assert;
 
 /**
- * @author  John Whaley
+ * SecurityManager
+ *
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class SecurityManager {

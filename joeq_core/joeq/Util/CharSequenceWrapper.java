@@ -1,16 +1,13 @@
-/*
- * CharSequenceWrapper.java
- * 
- * Created on Mar 17, 2003
- *
- */
+// CharSequenceWrapper.java, created Mon Mar 17 16:02:44 2003 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Util;
 
 /**
  * CharSequenceWrapper is a wrapper for JDK 1.3 Strings so that they
  * can implement the JDK 1.4 "CharSequence" interface.
  * 
- * @author John Whaley
+ * @author John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class CharSequenceWrapper implements CharSequence {

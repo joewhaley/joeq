@@ -1,9 +1,6 @@
-/*
- * AndersenPointerAnalysis.java
- *
- * Created on May 2, 2002, 1:03 PM
- */
-
+// AndersenPointerAnalysis.java, created Thu Apr 25 16:32:26 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Quad;
 
 import java.util.Collection;
@@ -55,7 +52,7 @@ import Util.Collections.SortedArraySet;
 
 /**
  *
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class AndersenPointerAnalysis {

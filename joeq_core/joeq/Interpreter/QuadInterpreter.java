@@ -1,10 +1,8 @@
-/*
- * QuadInterpreter.java
- *
- * Created on February 8, 2002, 3:06 PM
- */
-
+// QuadInterpreter.java, created Mon Feb 11  0:00:03 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Interpreter;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -40,7 +38,7 @@ import Util.Templates.ListIterator;
 
 /**
  *
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class QuadInterpreter extends Compil3r.Quad.QuadVisitor.EmptyVisitor {

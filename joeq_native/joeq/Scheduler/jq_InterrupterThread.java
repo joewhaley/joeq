@@ -1,10 +1,6 @@
-/*
- * jq_InterrupterThread.java
- *
- * Created on April 3, 2001, 8:07 PM
- *
- */
-
+// jq_InterrupterThread.java, created Mon Apr  9  1:52:50 2001 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Scheduler;
 
 import Allocator.CodeAllocator;
@@ -18,7 +14,7 @@ import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
 
 /*
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class jq_InterrupterThread extends Thread {

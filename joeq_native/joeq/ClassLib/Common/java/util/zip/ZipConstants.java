@@ -1,14 +1,13 @@
-/*
- * ZipConstants.java
- *
- * Created on January 31, 2001, 1:51 PM
- *
- */
+// ZipConstants.java, created Thu Jul  4  4:50:04 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 
 package ClassLib.Common.java.util.zip;
 
 /**
- * @author  John Whaley
+ * ZipConstants
+ *
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public interface ZipConstants {

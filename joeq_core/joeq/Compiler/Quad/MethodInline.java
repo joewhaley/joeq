@@ -1,4 +1,8 @@
+// MethodInline.java, created Wed Mar 13  1:39:18 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Quad;
+
 import Clazz.jq_Method;
 import Clazz.jq_Type;
 import Compil3r.Quad.Operand.ParamListOperand;
@@ -13,6 +17,10 @@ import Util.Assert;
 import Util.Collections.FilterIterator.Filter;
 import Util.Templates.ListIterator;
 
+/**
+ * @author John Whaley <jwhaley@alum.mit.edu>
+ * @version $Id$
+ */
 public class MethodInline implements ControlFlowGraphVisitor {
 
     public static final boolean TRACE = false;

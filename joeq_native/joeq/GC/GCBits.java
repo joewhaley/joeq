@@ -1,13 +1,6 @@
-/**
- * GCBits
- *
- * Created on Sep 26, 2002, 9:41:32 AM
- *
- * PRE-REQUISITE: All the objects and arrays are allocated align8
- *
- * @author laudney <laudney@acm.org>
- * @version 0.1
- */
+// GCBits.java, created Wed Sep 25 20:04:21 2002 by laudney
+// Copyright (C) 2001-3 laudney <laudney@acm.org>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package GC;
 
 import java.util.HashSet;
@@ -19,6 +12,14 @@ import Clazz.jq_Class;
 import Memory.HeapAddress;
 import Util.BitString;
 
+/**
+ * GCBits
+ *
+ * PRE-REQUISITE: All the objects and arrays are allocated align8
+ *
+ * @author laudney <laudney@acm.org>
+ * @version $Id$
+ */
 public class GCBits {
 
     protected static final int bitLength = SimpleAllocator.BLOCK_SIZE / 8;

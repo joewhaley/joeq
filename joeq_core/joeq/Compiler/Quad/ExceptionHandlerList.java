@@ -1,11 +1,8 @@
-/*
- * ExceptionHandlerList.java
- *
- * Created on April 22, 2001, 12:19 AM
- *
- */
-
+// ExceptionHandlerList.java, created Fri Jan 18 19:33:00 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Quad;
+
 import Clazz.jq_Class;
 import Util.Templates.List;
 import Util.Templates.ListIterator;
@@ -17,7 +14,7 @@ import Util.Templates.ListWrapper;
  * of exception handlers.
  * These form a tree structure where each node has a pointer to its parent.
  *
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @see  ExceptionHandler
  * @see  ExceptionHandlerIterator
  * @version  $Id$

@@ -1,15 +1,14 @@
-/*
- * System.java
- *
- * Created on January 29, 2001, 10:26 AM
- *
- */
-
+// System.java, created Fri Aug 16 18:11:48 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package ClassLib.sun14_linux.java.lang;
+
 import Bootstrap.PrimordialClassLoader;
 
 /**
- * @author  John Whaley
+ * System
+ *
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public abstract class System {

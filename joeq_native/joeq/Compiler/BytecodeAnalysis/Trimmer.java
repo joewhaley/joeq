@@ -1,10 +1,6 @@
-/*
- * Trimmer.java
- *
- * Created on January 1, 2001, 10:59 AM
- *
- */
-
+// Trimmer.java, created Fri Jan 11 16:49:00 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.BytecodeAnalysis;
 
 import java.io.PrintStream;
@@ -38,7 +34,7 @@ import Util.Assert;
 import Util.Strings;
 
 /**
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class Trimmer {

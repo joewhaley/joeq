@@ -1,10 +1,6 @@
-/*
- * MathSupport.java
- *
- * Created on December 22, 2000, 11:27 AM
- * 
- */
-
+// MathSupport.java, created Mon Feb  5 23:23:21 2001 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Run_Time;
 
 import Bootstrap.PrimordialClassLoader;
@@ -13,7 +9,7 @@ import Clazz.jq_StaticField;
 import Clazz.jq_StaticMethod;
 
 /*
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public abstract class MathSupport {

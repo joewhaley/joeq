@@ -1,10 +1,6 @@
-/*
- * ControlFlowGraph.java
- *
- * Created on April 22, 2001, 1:10 PM
- *
- */
-
+// ControlFlowGraph.java, created Fri Jan 11 16:49:00 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.BytecodeAnalysis;
 
 import java.util.ListIterator;
@@ -16,7 +12,7 @@ import Util.BitString;
 import Util.BitString.BitStringIterator;
 
 /*
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class ControlFlowGraph {

@@ -1,3 +1,6 @@
+// JoeqVM.java, created Sat Dec 14  2:52:34 2002 by mcmartin
+// Copyright (C) 2001-3 jwhaley
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Main;
 
 import java.util.Iterator;
@@ -18,6 +21,10 @@ import UTF.Utf8;
 import Util.Assert;
 import Util.Strings;
 
+/**
+ * @author  John Whaley <jwhaley@alum.mit.edu>
+ * @version $Id$
+ */
 public abstract class JoeqVM {
     public static void boot() throws Throwable {
         try {

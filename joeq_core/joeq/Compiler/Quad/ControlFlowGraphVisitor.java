@@ -1,16 +1,14 @@
-/*
- * ControlFlowGraphVisitor.java
- *
- * Created on February 11, 2002, 12:14 AM
- */
-
+// ControlFlowGraphVisitor.java, created Mon Feb 11  0:24:01 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Quad;
+
 import Clazz.jq_Method;
 import Clazz.jq_MethodVisitor;
 
 /**
  *
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public interface ControlFlowGraphVisitor {

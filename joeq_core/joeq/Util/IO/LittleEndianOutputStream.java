@@ -1,10 +1,6 @@
-/*
- * LittleEndianOutputStream.java
- *
- * Created on February 13, 2001, 10:19 PM
- *
- */
-
+// LittleEndianOutputStream.java, created Wed Mar  5  0:26:34 2003 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Util.IO;
 
 import java.io.IOException;
@@ -13,7 +9,7 @@ import java.io.OutputStream;
 import UTF.Utf8;
 
 /*
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class LittleEndianOutputStream implements ExtendedDataOutput {

@@ -1,10 +1,6 @@
-/*
- * StackDepthVisitor.java
- *
- * Created on June 24, 2001, 1:07 AM
- *
- */
-
+// StackDepthVisitor.java, created Fri Jan 11 16:49:00 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.BytecodeAnalysis;
 
 import java.util.Stack;
@@ -16,7 +12,7 @@ import Clazz.jq_Type;
 import Util.Assert;
 
 /**
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class StackDepthVisitor extends BytecodeVisitor {

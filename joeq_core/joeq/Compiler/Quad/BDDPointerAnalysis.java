@@ -1,4 +1,6 @@
-
+// BDDPointerAnalysis.java, created Sun Feb  2  2:22:10 2003 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Quad;
 
 import java.util.ArrayList;
@@ -50,7 +52,7 @@ import Util.Collections.HashCodeComparator;
 import Util.Collections.SortedArraySet;
 
 /**
- * @author John Whaley
+ * @author John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class BDDPointerAnalysis {

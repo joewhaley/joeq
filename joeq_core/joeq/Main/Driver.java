@@ -1,10 +1,6 @@
-/*
- * Driver.java
- *
- * Created on January 9, 2002, 9:17 AM
- *
- */
-
+// Driver.java, created Fri Jan 11 17:13:17 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Main;
 
 import java.io.BufferedReader;
@@ -35,7 +31,7 @@ import Util.Assert;
 import Util.Strings;
 
 /*
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public abstract class Driver {

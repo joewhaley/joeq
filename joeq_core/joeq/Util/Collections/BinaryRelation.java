@@ -1,3 +1,6 @@
+// BinaryRelation.java, created Fri Mar 28 23:58:36 2003 by joewhaley
+// Copyright (C) 2001-3 Felix S. Klock II <pnkfelix@mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Util.Collections;
 
 /**

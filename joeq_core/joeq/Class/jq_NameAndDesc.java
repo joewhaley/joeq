@@ -1,16 +1,12 @@
-/*
- * jq_NameAndDesc.java
- *
- * Created on January 2, 2001, 12:26 AM
- *
- */
-
+// jq_NameAndDesc.java, created Mon Feb  5 23:23:20 2001 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Clazz;
 
 import UTF.Utf8;
 
 /*
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class jq_NameAndDesc {

@@ -1,8 +1,6 @@
-// Decompiled by Jad v1.5.7g. Copyright 2000 Pavel Kouznetsov.
-// Jad home page: http://www.geocities.com/SiliconValley/Bridge/8617/jad.html
-// Decompiler options: packimports(3) 
-// Source File Name:   x86Assembler.java
-
+// x86Assembler.java, created Mon Feb  5 23:23:19 2001 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Assembler.x86;
 
 import java.util.HashMap;
@@ -21,6 +19,12 @@ import Util.Collections.Relation;
 // Referenced classes of package Assembler.x86:
 //            x86Constants, x86CodeBuffer, x86
 
+/**
+ * x86Assembler
+ *
+ * @author John Whaley <jwhaley@alum.mit.edu>
+ * @version $Id$
+ */
 public class x86Assembler implements x86Constants {
 
     static class PatchInfo {

@@ -1,10 +1,6 @@
-/*
- * MethodInvocation.java
- *
- * Created on March 10, 2001, 11:49 AM
- *
- */
-
+// MethodInvocation.java, created Sun Mar 11  2:21:10 2001 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Bootstrap;
 
 import java.lang.reflect.InvocationTargetException;
@@ -12,8 +8,10 @@ import java.lang.reflect.InvocationTargetException;
 import Clazz.jq_Method;
 import Run_Time.Reflection;
 
-/*
- * @author  John Whaley
+/**
+ * MethodInvocation
+ *
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class MethodInvocation {

@@ -1,18 +1,16 @@
-/*
- * Win32FileSystem.java
- *
- * Created on January 29, 2001, 2:29 PM
- *
- */
-
+// Win32FileSystem.java, created Thu Jul  4  4:50:03 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package ClassLib.Common.java.io;
 
 import Memory.Address;
 import Memory.HeapAddress;
 import Run_Time.SystemInterface;
 
-/*
- * @author  John Whaley
+/**
+ * Win32FileSystem
+ *
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public abstract class Win32FileSystem {

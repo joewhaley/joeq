@@ -1,11 +1,8 @@
-/*
- * BasicBlock.java
- *
- * Created on April 21, 2001, 11:04 PM
- *
- */
-
+// BasicBlock.java, created Fri Jan 11 16:42:38 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Quad;
+
 import Compil3r.Quad.Operator.Ret;
 import Util.Assert;
 import Util.Strings;
@@ -29,7 +26,7 @@ import Util.Templates.UnmodifiableList;
  * You should never create a basic block directly.  You should create one via a
  * ControlFlowGraph so that the id number is correct.
  *
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @see  Quad
  * @see  ControlFlowGraph
  * @see  ExceptionHandlerList

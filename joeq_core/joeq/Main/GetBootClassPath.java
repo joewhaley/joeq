@@ -1,5 +1,12 @@
+// GetBootClassPath.java, created Fri Aug 16 16:04:04 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Main;
 
+/*
+ * @author  John Whaley <jwhaley@alum.mit.edu>
+ * @version $Id$
+ */
 public abstract class GetBootClassPath {
     public static void main (String args[]) {
         for (int i=0; i<args.length; ++i) {

@@ -1,3 +1,6 @@
+// Heap.java, created Tue Dec 10 14:02:04 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Memory.Heap;
 
 import java.util.ArrayList;
@@ -17,7 +20,8 @@ import Util.Assert;
  * 
  * This class also includes static methods that operate on all heaps.
  * 
- * @author John Whaley
+ * @author John Whaley <jwhaley@alum.mit.edu>
+ * @version $Id$
  */
 public abstract class Heap {
 

@@ -1,3 +1,6 @@
+// Delegates.java, created Wed Dec 11 12:02:02 2002 by mcmartin
+// Copyright (C) 2001-3 mcmartin
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Clazz;
 
 import java.util.Iterator;
@@ -21,6 +24,12 @@ import Run_Time.ExceptionDeliverer;
 import Util.Collections.FilterIterator;
 import Util.Collections.Pair;
 
+/**
+ * Delegates
+ *
+ * @author Michael Martin <mcmartin@stanford.edu>
+ * @version $Id$
+ */
 public class Delegates implements jq_ClassFileConstants {
     static class Field implements jq_Field.Delegate {
         public final boolean isCodeAddressType(jq_Field f) {

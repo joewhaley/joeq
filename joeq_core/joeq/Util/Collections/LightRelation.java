@@ -1,5 +1,5 @@
 // LightRelation.java, created Fri Jun 30 11:11:17 2000 by salcianu
-// Copyright (C) 2000 Alexandru SALCIANU <salcianu@MIT.EDU>
+// Copyright (C) 2000 Alexandru SALCIANU <salcianu@alum.mit.edu>
 // Licensed under the terms of the GNU GPL; see COPYING for details.
 
 package Util.Collections;
@@ -12,7 +12,7 @@ import java.util.Map;
 /**
  * <code>LightRelation</code>
  * 
- * @author  Alexandru SALCIANU <salcianu@MIT.EDU>
+ * @author  Alexandru SALCIANU <salcianu@alum.mit.edu>
  * @version $Id$
  */
 public class LightRelation extends AbstrRelationMapBased

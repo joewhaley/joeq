@@ -1,10 +1,6 @@
-/*
- * HeapAddress.java
- *
- * Created on September 13, 2002, 12:06 AM
- *
- */
-
+// HeapAddress.java, created Wed Sep 18  1:22:46 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Memory;
 
 import Bootstrap.PrimordialClassLoader;
@@ -13,7 +9,7 @@ import Clazz.jq_Reference;
 import Clazz.jq_StaticField;
 
 /**
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class HeapAddress extends Address {

@@ -1,15 +1,16 @@
-/**
- * MemUnit
- *
- * Created on Nov 27, 2002, 12:49:38 AM
- *
- * @author laudney <laudney@acm.org>
- * @version 0.1
- */
+// MemUnit.java, created Mon Nov 25  9:15:28 2002 by laudney
+// Copyright (C) 2001-3 laudney <laudney@acm.org>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Allocator;
 
 import Memory.Address;
 
+/**
+ * MemUnit
+ *
+ * @author laudney <laudney@acm.org>
+ * @version $Id$
+ */
 public class MemUnit {
     private Address head;
     private int byteLength;

@@ -1,10 +1,6 @@
-/*
- * Reflection.java
- *
- * Created on January 12, 2001, 12:48 PM
- *
- */
-
+// BasicReflectionImpl.java, created Mon Dec 16 20:56:31 2002 by mcmartin
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Run_Time;
 
 import java.lang.reflect.Array;
@@ -36,7 +32,7 @@ import UTF.Utf8;
 import Util.Assert;
 
 /**
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class BasicReflectionImpl implements Reflection.Delegate {

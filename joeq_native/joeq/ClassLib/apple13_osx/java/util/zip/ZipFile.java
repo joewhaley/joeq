@@ -1,14 +1,12 @@
-/*
- * ZipFile.java
- *
- * Created on July 3, 2002, 3:15 PM
- */
-
+// ZipFile.java, created Thu Oct 17  0:30:10 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package ClassLib.apple13_osx.java.util.zip;
 
 /**
+ * ZipFile
  *
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public abstract class ZipFile {

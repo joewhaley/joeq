@@ -1,19 +1,17 @@
-/*
- * NullInterfaceImpl.java
- *
- * Created on December 6, 2002, 3:49 PM
- *
- */
-
+// NullInterfaceImpl.java, created Wed Dec 11 11:59:03 2002 by mcmartin
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package ClassLib.Common;
 
 import Bootstrap.ObjectTraverser;
 import Clazz.jq_InstanceField;
 import Clazz.jq_StaticField;
 
-/*
- * @author  John Whaley
- * @author  Michael Martin
+/**
+ * NullInterfaceImpl
+ *
+ * @author  John Whaley <jwhaley@alum.mit.edu>
+ * @author  Michael Martin <mcmartin@stanford.edu>
  * @version $Id$
  */
 public class NullInterfaceImpl implements ClassLib.Common.Interface {

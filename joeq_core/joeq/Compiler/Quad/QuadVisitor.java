@@ -1,14 +1,10 @@
-/*
- * QuadVisitor.java
- *
- * Created on January 9, 2002, 8:14 AM
- *
- */
-
+// QuadVisitor.java, created Fri Jan 11 16:42:38 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Quad;
 
 /**
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public interface QuadVisitor {

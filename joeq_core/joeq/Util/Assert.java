@@ -1,3 +1,6 @@
+// Assert.java, created Wed Mar  5  0:26:32 2003 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Util;
 
 import Run_Time.Debug;
@@ -6,7 +9,7 @@ import Run_Time.Debug;
  * Includes methods for an assertion mechanism.  When an assertion fails, it
  * drops into the debugger (in native mode) or just exits (in hosted mode).
  * 
- * @author John Whaley
+ * @author John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public abstract class Assert {

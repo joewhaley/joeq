@@ -1,10 +1,6 @@
-/*
- * ExceptionHandlerIterator.java
- *
- * Created on April 22, 2001, 12:53 AM
- *
- */
-
+// ExceptionHandlerIterator.java, created Fri Jan 11 16:49:00 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.BytecodeAnalysis;
 
 import java.util.List;
@@ -14,7 +10,7 @@ import java.util.NoSuchElementException;
 import Util.Collections.AppendListIterator;
 
 /*
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class ExceptionHandlerIterator implements ListIterator {

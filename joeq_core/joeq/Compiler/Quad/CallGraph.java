@@ -1,8 +1,6 @@
-/*
- * CallGraph.java
- * 
- * Created on Mar 3, 2003
- */
+// CallGraph.java, created Mon Mar  3 18:01:32 2003 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Quad;
 
 import java.util.AbstractSet;
@@ -33,7 +31,7 @@ import Util.Graphs.Navigator;
 /**
  * Abstract representation of a call graph.
  * 
- * @author John Whaley
+ * @author John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public abstract class CallGraph extends UnmodifiableMultiMap {

@@ -1,10 +1,6 @@
-/*
- * RuntimeCodeAllocator.java
- *
- * Created on January 11, 2001, 10:55 AM
- *
- */
-
+// RuntimeCodeAllocator.java, created Tue Feb 27  2:53:11 2001 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Allocator;
 
 import java.util.List;
@@ -20,8 +16,10 @@ import Run_Time.SystemInterface;
 import Util.Assert;
 import Util.Strings;
 
-/*
- * @author  John Whaley
+/**
+ * RuntimeCodeAllocator
+ *
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class RuntimeCodeAllocator extends CodeAllocator {

@@ -1,14 +1,10 @@
-/*
- * jq_LocalVarTableEntry.java
- *
- * Created on Mon Jul  1 11:05:19 PDT 2002
- *
- */
-
+// jq_LocalVarTableEntry.java, created Thu Aug  1 12:46:55 2002 by gback
+// Copyright (C) 2001-3 Godmar Back <gback@cs.utah.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Clazz;
 
 /*
- * @author  gback
+ * @author  Godmar Back <gback@cs.utah.edu>
  * @version $Id$
  */
 public class jq_LocalVarTableEntry implements Comparable {

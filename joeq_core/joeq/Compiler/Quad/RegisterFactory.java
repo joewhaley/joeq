@@ -1,10 +1,6 @@
-/*
- * RegisterFactory.java
- *
- * Created on May 10, 2001, 8:34 PM
- *
- */
-
+// RegisterFactory.java, created Fri Jan 11 16:42:38 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Quad;
 
 import java.util.ArrayList;
@@ -19,7 +15,7 @@ import Util.Strings;
 import Util.Collections.AppendIterator;
 
 /**
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class RegisterFactory {

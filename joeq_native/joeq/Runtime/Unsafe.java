@@ -1,10 +1,6 @@
-/*
- * Unsafe.java
- *
- * Created on January 2, 2001, 2:55 AM
- *
- */
-
+// Unsafe.java, created Mon Feb  5 23:23:21 2001 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Run_Time;
 
 import Bootstrap.PrimordialClassLoader;
@@ -16,7 +12,7 @@ import Memory.StackAddress;
 import Scheduler.jq_Thread;
 
 /**
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public abstract class Unsafe {

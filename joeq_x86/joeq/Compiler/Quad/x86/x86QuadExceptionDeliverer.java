@@ -1,10 +1,6 @@
-/*
- * x86QuadExceptionDeliverer.java
- *
- * Created on January 12, 2001, 8:44 AM
- *
- */
-
+// x86QuadExceptionDeliverer.java, created Thu Mar  6  0:42:31 2003 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Quad.x86;
 
 import Clazz.jq_CompiledCode;
@@ -19,7 +15,7 @@ import Run_Time.Unsafe;
 import Util.Assert;
 
 /**
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class x86QuadExceptionDeliverer extends ExceptionDeliverer {

@@ -1,3 +1,6 @@
+// SynchronizationBarrier.java, created Tue Dec 10 14:02:21 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Memory.Manager;
 
 import Run_Time.Debug;
@@ -8,7 +11,8 @@ import Scheduler.jq_NativeThread;
 import Util.Assert;
 
 /**
- * @author John Whaley
+ * @author John Whaley <jwhaley@alum.mit.edu>
+ * @version $Id$
  */
 public class SynchronizationBarrier {
 

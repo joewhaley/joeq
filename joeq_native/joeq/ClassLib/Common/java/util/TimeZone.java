@@ -1,10 +1,6 @@
-/*
- * TimeZone.java
- *
- * Created on March 11, 2001, 2:45 AM
- *
- */
-
+// TimeZone.java, created Thu Jul  4  4:50:04 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package ClassLib.Common.java.util;
 
 import Bootstrap.MethodInvocation;
@@ -23,8 +19,10 @@ import Run_Time.SystemInterface.ExternalLink;
 import Run_Time.SystemInterface.Library;
 import Util.Assert;
 
-/*
- * @author  John Whaley
+/**
+ * TimeZone
+ *
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 abstract class TimeZone {

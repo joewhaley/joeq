@@ -1,9 +1,6 @@
-/**
- * OnlineDebugger.java
- * 
- * Created on October 16, 2002, 2:51 PM
- *
- */
+// OnlineDebugger.java, created Sat Feb 22 13:35:26 2003 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Debugger;
 
 import java.io.BufferedReader;
@@ -34,7 +31,7 @@ import Util.Assert;
 import Util.Strings;
 
 /**
- * @author John Whaley
+ * @author John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class OnlineDebugger {

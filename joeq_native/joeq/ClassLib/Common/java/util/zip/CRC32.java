@@ -1,15 +1,14 @@
-/*
- * CRC32.java
- *
- * Created on July 8, 2002, 2:15 PM
- */
-
+// CRC32.java, created Mon Jul  8 14:17:23 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package ClassLib.Common.java.util.zip;
+
 import java.util.zip.Checksum;
 
 /**
+ * CRC32
  *
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public abstract class CRC32 implements Checksum {

@@ -1,10 +1,6 @@
-/*
- * BootstrapCodeAllocator.java
- *
- * Created on February 8, 2001, 11:23 AM
- *
- */
-
+// BootstrapCodeAllocator.java, created Tue Feb 27  3:00:22 2001 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Bootstrap;
 
 import java.io.DataOutput;
@@ -24,8 +20,10 @@ import Run_Time.ExceptionDeliverer;
 import Util.Assert;
 import Util.Convert;
 
-/*
- * @author  John Whaley
+/**
+ * BootstrapCodeAllocator
+ *
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class BootstrapCodeAllocator extends CodeAllocator {

@@ -1,9 +1,6 @@
-/*
- * QuadIterator.java
- *
- * Created on February 12, 2002, 3:40 PM
- */
-
+// QuadIterator.java, created Fri Jan 11 16:42:38 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Quad;
 import java.util.NoSuchElementException;
 
@@ -14,7 +11,7 @@ import Util.Templates.UnmodifiableList;
 
 /**
  *
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class QuadIterator implements ListIterator.Quad {

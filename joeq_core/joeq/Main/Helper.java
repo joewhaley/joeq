@@ -1,3 +1,6 @@
+// Helper.java, created Thu Jan 16 10:53:32 2003 by mcmartin
+// Copyright (C) 2001-3 mcmartin
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Main;
 
 import java.util.Iterator;
@@ -15,6 +18,10 @@ import Compil3r.Quad.ControlFlowGraphVisitor;
 import Compil3r.Quad.Quad;
 import Compil3r.Quad.QuadVisitor;
 
+/**
+ * @author  Michael Martin <mcmartin@stanford.edu>
+ * @version $Id$
+ */
 public class Helper {
     static {
 	HostedVM.initialize();

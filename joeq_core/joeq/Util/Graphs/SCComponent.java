@@ -1,3 +1,6 @@
+// SCComponent.java, created Thu Mar 27 17:49:37 2003 by joewhaley
+// Copyright (C) 2001-3 Alexandru SALCIANU <salcianu@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Util.Graphs;
 
 import java.io.Serializable;
@@ -30,7 +33,7 @@ import Util.Assert;
  * case, the strongly connected components group together sets of mutually
  * recursive methods).
  * 
- * @author  Alexandru SALCIANU <salcianu@retezat.lcs.mit.edu>
+ * @author  Alexandru SALCIANU <salcianu@alum.mit.edu>
  * @version $Id$
  */
 public final class SCComponent implements Comparable, Serializable {

@@ -1,10 +1,6 @@
-/*
- * Quad.java
- *
- * Created on April 21, 2001, 11:06 PM
- *
- */
-
+// Quad.java, created Fri Jan 11 16:42:38 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Quad;
 
 import Clazz.jq_Class;
@@ -16,7 +12,7 @@ import Util.Templates.List;
 import Util.Templates.UnmodifiableList;
 
 /**
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class Quad {

@@ -1,9 +1,6 @@
-/*
- * DefaultCodeAllocator.java
- *
- * Created on April 1, 2001, 5:59 PM
- */
-
+// DefaultCodeAllocator.java, created Mon Apr  9  1:01:21 2001 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Allocator;
 
 import Allocator.CodeAllocator.x86CodeBuffer;
@@ -14,9 +11,10 @@ import Memory.Address;
 import Memory.CodeAddress;
 import Run_Time.Unsafe;
 
-/*
+/**
+ * DefaultCodeAllocator
  *
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public abstract class DefaultCodeAllocator {

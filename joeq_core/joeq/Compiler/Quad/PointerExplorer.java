@@ -1,9 +1,6 @@
-/*
- * PointerExplorer.java
- *
- * Created on August 18, 2002, 4:18 PM
- */
-
+// PointerExplorer.java, created Tue Aug 27 16:04:29 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Quad;
 
 import java.io.BufferedReader;
@@ -37,7 +34,7 @@ import Util.Collections.FilterIterator;
 import Util.Collections.Pair;
 /**
  *
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class PointerExplorer {

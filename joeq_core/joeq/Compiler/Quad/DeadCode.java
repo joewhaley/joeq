@@ -1,5 +1,12 @@
+// DeadCode.java, created Tue Jun  4 15:58:53 2002 by joewhaley
+// Copyright (C) 2001-3 mcmartin
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Quad;
 
+/**
+ * @author Michael Martin <mcmartin@stanford.edu>
+ * @version $Id$
+ */
 public class DeadCode extends Dataflow.EmptyAnalysis {
     static class TraceFact implements Dataflow.Fact {
         boolean _val;

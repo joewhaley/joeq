@@ -1,14 +1,12 @@
-/*
- * x86Code.java
- *
- * Created on December 22, 2000, 7:13 AM
- *
- */
-
+// x86Constants.java, created Mon Feb  5 23:23:19 2001 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Assembler.x86;
 
-/*
- * @author  John Whaley
+/**
+ * x86Constants
+ *
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public interface x86Constants {

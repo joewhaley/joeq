@@ -1,10 +1,6 @@
-/*
- * Object.java
- *
- * Created on January 29, 2001, 11:07 AM
- *
- */
-
+// Object.java, created Thu Jul  4  4:50:03 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package ClassLib.Common.java.lang;
 
 import Allocator.HeapAllocator;
@@ -14,8 +10,10 @@ import Run_Time.Reflection;
 import Run_Time.Unsafe;
 import Scheduler.jq_Thread;
 
-/*
- * @author  John Whaley
+/**
+ * Object
+ *
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public abstract class Object {

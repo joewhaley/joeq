@@ -1,3 +1,6 @@
+// MarkAndSweep.java, created Tue Dec 10 14:02:32 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Memory.Manager;
 
 import java.lang.reflect.Array;
@@ -27,7 +30,8 @@ import Util.Assert;
  * MarkAndSweep collector, adapted from Jikes RVM version
  * written by Dick Attanasio.
  * 
- * @author John Whaley
+ * @author John Whaley <jwhaley@alum.mit.edu>
+ * @version $Id$
  */
 public class MarkAndSweep implements GCConstants {
 

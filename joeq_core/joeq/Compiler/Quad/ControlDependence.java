@@ -1,10 +1,8 @@
-/*
- * ControlDependence.java
- *
- * Created on January 30, 2002, 8:16 PM
- */
-
+// ControlDependence.java, created Wed Jan 30 22:31:58 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Quad;
+
 import java.util.Iterator;
 
 import Clazz.jq_Method;
@@ -21,7 +19,7 @@ import Util.Templates.ListIterator;
 
 /**
  *
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class ControlDependence extends jq_MethodVisitor.EmptyVisitor {

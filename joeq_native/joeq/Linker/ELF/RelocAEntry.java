@@ -1,16 +1,13 @@
-/*
- * RelocAEntry.java
- *
- * Created on February 6, 2002, 6:42 PM
- */
-
+// RelocAEntry.java, created Wed Mar  6 18:38:47 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Linker.ELF;
 
 import java.io.IOException;
 
 /**
  *
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class RelocAEntry extends RelocEntry {

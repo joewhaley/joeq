@@ -32,9 +32,8 @@
  *
  *--------------------------------------------------------------------------
  */
+package Support;
 
-
-package Run_Time;
 import java.util.Random;
 
 /*

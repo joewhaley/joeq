@@ -1,9 +1,6 @@
-/*
- * ProgramLocation.java
- *
- * Created on August 31, 2002, 12:50 PM
- */
-
+// ProgramLocation.java, created Sun Sep  1 17:38:25 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Quad;
 
 import java.util.Iterator;
@@ -31,7 +28,7 @@ import Util.Collections.SortedArraySet;
  * This class combines a jq_Method with a Quad to represent a location in the code.
  * This is useful for interprocedural analysis.
  *
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public abstract class ProgramLocation {

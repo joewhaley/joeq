@@ -1,10 +1,6 @@
-/*
- * DefaultHeapAllocator.java
- *
- * Created on February 8, 2001, 3:26 PM
- *
- */
-
+// DefaultHeapAllocator.java, created Mon Apr  9  1:01:31 2001 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Allocator;
 
 import Bootstrap.PrimordialClassLoader;
@@ -13,8 +9,10 @@ import Clazz.jq_StaticMethod;
 import Memory.Address;
 import Run_Time.Unsafe;
 
-/*
- * @author  John Whaley
+/**
+ * DefaultHeapAllocator
+ * 
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public abstract class DefaultHeapAllocator {

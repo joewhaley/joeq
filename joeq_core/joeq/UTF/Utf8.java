@@ -1,10 +1,6 @@
-/*
- * Utf8.java
- *
- * Created on December 19, 2000, 10:21 AM
- *
- */
-
+// Utf8.java, created Mon Feb  5 23:23:22 2001 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package UTF;
 
 import java.io.DataOutput;
@@ -16,7 +12,7 @@ import Util.Assert;
 import Util.Collections.UnmodifiableIterator;
 
 /**
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class Utf8 implements jq_ClassFileConstants {

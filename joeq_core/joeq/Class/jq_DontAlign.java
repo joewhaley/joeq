@@ -1,10 +1,6 @@
-/*
- * jq_DontAlign.java
- *
- * Created on April 3, 2001, 8:29 PM
- *
- */
-
+// jq_DontAlign.java, created Mon Apr  9  1:30:26 2001 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Clazz;
 
 import Bootstrap.PrimordialClassLoader;
@@ -16,7 +12,7 @@ import Bootstrap.PrimordialClassLoader;
  * Scheduler.jq_RegisterState.
  * 
  * @see Scheduler.jq_RegisterState
- * @author  John Whaley
+ * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public interface jq_DontAlign {

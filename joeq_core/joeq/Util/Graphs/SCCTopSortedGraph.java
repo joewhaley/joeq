@@ -1,3 +1,6 @@
+// SCCTopSortedGraph.java, created Thu Mar 27 17:49:37 2003 by joewhaley
+// Copyright (C) 2001-3 Alexandru SALCIANU <salcianu@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Util.Graphs;
 
 import java.io.Serializable;
@@ -15,7 +18,7 @@ import Util.Assert;
  * To obtain such a graph, use the <code>topSort</code> static method.
  * It uses a Depth First Search to do the sortting in linear time (see
  * <code>Section 23.4</code> in Cormen and co for the exact algorithm).
- * @author  Alexandru SALCIANU <salcianu@retezat.lcs.mit.edu>
+ * @author  Alexandru SALCIANU <salcianu@alum.mit.edu>
  * @version $Id$
  */
 public class SCCTopSortedGraph implements Serializable {

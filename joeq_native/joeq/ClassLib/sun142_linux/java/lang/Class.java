@@ -1,7 +1,16 @@
+// Class.java, created Thu May  8 13:39:30 2003 by joewhaley
+// Copyright (C) 2001-3 jwhaley
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package ClassLib.sun142_linux.java.lang;
 
 import Clazz.jq_Type;
 
+/**
+ * Class
+ *
+ * @author John Whaley <jwhaley@alum.mit.edu>
+ * @version $Id$
+ */
 public final class Class {
     
 	public jq_Type jq_type;
