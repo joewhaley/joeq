@@ -80,7 +80,7 @@ public class Quad {
                 return new UnmodifiableList.jq_Class((jq_Class)((RegisterOperand)op).getType());
             }
         }
-        return this.operator.getThrownExceptions();
+	return Compil3r.CompilationState.DEFAULT.getThrownExceptions(this);
     }
 
     /** Returns a list of the registers defined by this quad. */
