@@ -110,7 +110,8 @@ public class AndersenPointerAnalysis {
                     t.load(); t.verify(); t.prepare();
                 }
                 s = Bootstrap.PrimordialClassLoader.loader.getAllTypes();
-                if (s.size() == size) break;
+                //if (s.size() == size)
+		    break;
             }
             System.out.println("Number of RTA classes: "+s.size());
             int nMethods = 0;
@@ -120,6 +121,7 @@ public class AndersenPointerAnalysis {
                 jq_Type t = (jq_Type)i.next();
                 if (t instanceof jq_Class) {
                     jq_Class k = (jq_Class)t;
+		    k.load();
                     jq_Method[] ms = k.getDeclaredInstanceMethods();
                     for (int j=0; j<ms.length; ++j) {
                         methods.add(ms[j]);
