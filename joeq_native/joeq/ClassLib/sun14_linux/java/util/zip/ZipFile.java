@@ -4,6 +4,7 @@
 package ClassLib.sun14_linux.java.util.zip;
 
 /**
+ * ZipFile
  *
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
