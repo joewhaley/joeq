@@ -43,7 +43,7 @@ import Main.jq;
 public class AndersenPointerAnalysis {
 
     public static java.io.PrintStream out = System.out;
-    public static final boolean TRACE = false;
+    public static /*final*/ boolean TRACE = false;
     public static final boolean TRACE_CHANGE = false;
     public static final boolean TRACE_CYCLES = false;
     public static final boolean VerifyAssertions = false;
@@ -88,7 +88,7 @@ public class AndersenPointerAnalysis {
             if (DO_TWICE) {
                 long mem1 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
                 System.out.println("Used memory before gc: "+mem1);
-                INSTANCE = new AndersenPointerAnalysis();
+                INSTANCE = new AndersenPointerAnalysis(true);
                 INSTANCE.rootSet.addAll(rootSet);
                 System.gc();
                 long mem2 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
@@ -227,7 +227,7 @@ public class AndersenPointerAnalysis {
         }
     }
     
-    public void initializeStatics() {
+    public void initializeStatics(boolean addMethodsToVisit) {
         // add initializations for System.in/out/err
         jq_Class fd = (jq_Class)Bootstrap.PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/FileDescriptor;");
         fd.load();
@@ -258,7 +258,7 @@ public class AndersenPointerAnalysis {
 	jls.load();
         jq_StaticField si = jls.getOrCreateStaticField("in", "Ljava/io/InputStream;");
         jq.Assert(si.isLoaded());
-        GlobalNode.GLOBAL.addEdge(si, bis_n);
+        GlobalNode.GLOBAL.addEdge(si, bis_n, null);
         
         ControlFlowGraph fd_init_cfg = CodeCache.getCode(fd_init);
         MethodSummary fd_init_summary = MethodSummary.getSummary(fd_init_cfg);
@@ -307,7 +307,7 @@ public class AndersenPointerAnalysis {
         
         jq_StaticField so = jls.getOrCreateStaticField("out", "Ljava/io/PrintStream;");
         jq.Assert(so.isLoaded());
-        GlobalNode.GLOBAL.addEdge(so, ps_n1);
+        GlobalNode.GLOBAL.addEdge(so, ps_n1, null);
         
         ConcreteTypeNode fd_n3 = new ConcreteTypeNode(fd);
         fd_n3.recordPassedParameter(mc_fd_init, 0);
@@ -323,7 +323,7 @@ public class AndersenPointerAnalysis {
         
         so = jls.getOrCreateStaticField("err", "Ljava/io/PrintStream;");
         jq.Assert(so.isLoaded());
-        GlobalNode.GLOBAL.addEdge(so, ps_n2);
+        GlobalNode.GLOBAL.addEdge(so, ps_n2, null);
         
         on = fd_init_summary.getParamNode(0);
         addInclusionEdge(on, fd_n2, null);
@@ -353,13 +353,6 @@ public class AndersenPointerAnalysis {
         addInclusionEdge(on, bos_n1, null);
         addInclusionEdge(on, bos_n2, null);
         
-        methodsToVisit.add(fd_init_cfg);
-        methodsToVisit.add(fis_init_cfg);
-        methodsToVisit.add(bis_init_cfg);
-        methodsToVisit.add(fos_init_cfg);
-        methodsToVisit.add(bos_init_cfg);
-        methodsToVisit.add(ps_init_cfg);
-        
         jq_Class nt = (jq_Class)Bootstrap.PrimordialClassLoader.loader.getOrCreateBSType("LScheduler/jq_NativeThread;");
         nt.load();
         ConcreteTypeNode nt_n1 = new ConcreteTypeNode(nt);
@@ -370,7 +363,6 @@ public class AndersenPointerAnalysis {
         MethodSummary nte_summary = MethodSummary.getSummary(nte_cfg);
         on = nte_summary.getParamNode(0);
         addInclusionEdge(on, nt_n1, null);
-        methodsToVisit.add(nte_cfg);
         jq.Assert(Scheduler.jq_NativeThread._threadSwitch.isLoaded());
         MethodCall mc_ts = new MethodCall(Scheduler.jq_NativeThread._threadSwitch, null);
         nt_n1.recordPassedParameter(mc_ts, 0);
@@ -378,7 +370,17 @@ public class AndersenPointerAnalysis {
         MethodSummary ts_summary = MethodSummary.getSummary(ts_cfg);
         on = ts_summary.getParamNode(0);
         addInclusionEdge(on, nt_n1, null);
-        methodsToVisit.add(ts_cfg);
+        
+        if (addMethodsToVisit) {
+            methodsToVisit.add(fd_init_cfg);
+            methodsToVisit.add(fis_init_cfg);
+            methodsToVisit.add(bis_init_cfg);
+            methodsToVisit.add(fos_init_cfg);
+            methodsToVisit.add(bos_init_cfg);
+            methodsToVisit.add(ps_init_cfg);
+            methodsToVisit.add(nte_cfg);
+            methodsToVisit.add(ts_cfg);
+        }
     }
     
     /** Cache: Maps a node to its set of corresponding concrete nodes. */
@@ -422,7 +424,7 @@ public class AndersenPointerAnalysis {
     boolean change;
     
     /** Creates new AndersenPointerAnalysis */
-    public AndersenPointerAnalysis() {
+    public AndersenPointerAnalysis(boolean addDefaults) {
         nodeToConcreteNodes = new HashMap();
         nodeToInclusionEdges = new HashMap();
         rootSet = new LinkedHashSet();
@@ -448,10 +450,10 @@ public class AndersenPointerAnalysis {
             /*oldChangedFields =*/ newChangedFields = new HashSet();
             changedFields_Methods = new HashSet();
         }
-        this.initializeStatics();
+        this.initializeStatics(addDefaults);
     }
 
-    public static AndersenPointerAnalysis INSTANCE = new AndersenPointerAnalysis();
+    public static AndersenPointerAnalysis INSTANCE = new AndersenPointerAnalysis(true);
     
     public static final String lineSep = System.getProperty("line.separator");
     
@@ -549,9 +551,11 @@ public class AndersenPointerAnalysis {
         return sb.toString();
     }
 
+    public Map getCallGraph() { return callSiteToTargets; }
+    
     int count;
     
-    void iterate() {
+    public void iterate() {
         methodsToVisit.addAll(rootSet);
         count = 1;
         for (;;) {
@@ -633,13 +637,13 @@ public class AndersenPointerAnalysis {
                 }
             }
 	    if (HANDLE_ESCAPE) {
-		if (n instanceof OutsideNode && n.escapes) {
+		if (n instanceof OutsideNode && n.getEscapes()) {
 		    Set s = getConcreteNodes(n);
 		    if (TRACE) out.println("Escaping node "+n+" corresponds to concrete nodes "+s);
 		    for (Iterator j=s.iterator(); j.hasNext(); ) {
 			Node n2 = (Node)j.next();
-			if (!n2.escapes) {
-			    n2.escapes = true;
+			if (!n2.getEscapes()) {
+			    n2.setEscapes();
 			    if ((TRACE_CHANGE && !this.change) || TRACE) {
 				out.println("Changed! Concrete node "+n2+" escapes");
 			    }
@@ -738,8 +742,8 @@ public class AndersenPointerAnalysis {
             caller.getNodesThatCall(pp, s);
             for (Iterator j=s.iterator(); j.hasNext(); ) {
                 Node n = (Node)j.next();
-                if (!n.escapes) {
-                    n.escapes = true;
+                if (!n.getEscapes()) {
+                    n.setEscapes();
                     if ((TRACE_CHANGE && !this.change) || TRACE) {
                         out.println("Changed! Node "+n+" escapes");
                     }
@@ -980,12 +984,26 @@ public class AndersenPointerAnalysis {
         for (Iterator i=s.iterator(); i.hasNext(); ) {
             Node n = (Node)i.next();
             if (checkInvalidFieldAccess(n, f)) continue;
-            if (n.addEdges(f, to)) {
-                if ((TRACE_CHANGE && !this.change) || TRACE) {
-                    out.println("Changed! New edges for concrete node "+n+"."+f+": "+to);
+            if (TRACK_SOURCE_QUADS) {
+                for (Iterator j=to.iterator(); j.hasNext(); ) {
+                    Node o = (Node)j.next();
+                    Quad q = TRACK_SOURCE_QUADS ? from.getSourceQuad(f, o) : (Quad)null;
+                    if (n.addEdge(f, o, q)) {
+                        if ((TRACE_CHANGE && !this.change) || TRACE) {
+                            out.println("Changed! New edge for concrete node "+n+"."+f+": "+o);
+                        }
+                        if (TRACK_CHANGED_FIELDS) newChangedFields.add(f);
+                        this.change = true;
+                    }
                 }
-                if (TRACK_CHANGED_FIELDS) newChangedFields.add(f);
-                this.change = true;
+            } else {
+                if (n.addEdges(f, to, null)) {
+                    if ((TRACE_CHANGE && !this.change) || TRACE) {
+                        out.println("Changed! New edges for concrete node "+n+"."+f+": "+to);
+                    }
+                    if (TRACK_CHANGED_FIELDS) newChangedFields.add(f);
+                    this.change = true;
+                }
             }
         }
     }
@@ -994,10 +1012,11 @@ public class AndersenPointerAnalysis {
     void addEdgesFromConcreteNodes(Node from, jq_Field f, Node to) {
         Set s = getConcreteNodes(from);
         if (TRACE) out.println("Node "+from+" corresponds to concrete nodes "+s);
+        Quad q = TRACK_SOURCE_QUADS ? from.getSourceQuad(f, to) : (Quad)null;
         for (Iterator i=s.iterator(); i.hasNext(); ) {
             Node n = (Node)i.next();
             if (checkInvalidFieldAccess(n, f)) continue;
-            if (n.addEdge(f, to)) {
+            if (n.addEdge(f, to, q)) {
                 if ((TRACE_CHANGE && !this.change) || TRACE) {
                     out.println("Changed! New edge for concrete node "+n+"."+f+": "+to);
                 }

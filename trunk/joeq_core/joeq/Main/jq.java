@@ -13,6 +13,8 @@ import Bootstrap.MethodInvocation;
 import Bootstrap.PrimordialClassLoader;
 import ClassLib.ClassLibInterface;
 import Clazz.jq_Type;
+import Clazz.jq_Primitive;
+import Clazz.jq_Reference;
 import Clazz.jq_Class;
 import Clazz.jq_NameAndDesc;
 import Clazz.jq_StaticField;
@@ -633,6 +635,27 @@ public abstract class jq {
         }
         b.append(s);
         return b.toString();
+    }
+    
+    //// useful functions for parsing class and method names
+    public static jq_Type parseType(String s) {
+        if (s.length() == 1) {
+            jq_Primitive t = (jq_Primitive)PrimordialClassLoader.loader.getBSType(s);
+            if (t != null) return t;
+            s = "L"+s+";";
+        } else {
+            s = s.replace('.','/');
+            int arrayDepth = 0;
+            while (s.endsWith("[]")) {
+                ++arrayDepth;
+                s = s.substring(0, s.length()-2);
+            }
+            if (!s.startsWith("[") && !s.endsWith(";"))
+                s = "L"+s+";";
+            while (--arrayDepth >= 0)
+                s = "["+s;
+        }
+        return (jq_Reference)PrimordialClassLoader.loader.getOrCreateBSType(s);
     }
     
     //public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateType("LMain/jq;");
