@@ -86,10 +86,14 @@ public class Quad {
         StringBuffer s = new StringBuffer();
         s.append(jq.left(Integer.toString(id_number), 4));
         s.append(jq.left(operator.toString(), 24));
-        if (operand1 == null) return s.toString();
-        s.append(operand1.toString());
-        if (operand2 == null) return s.toString();
-        s.append(",\t");
+        if (operand1 == null) {
+            if (operand2 == null) return s.toString();
+            s.append("    \t");
+        } else {
+            s.append(operand1.toString());
+            if (operand2 == null) return s.toString();
+            s.append(",\t");
+        }
         s.append(operand2.toString());
         if (operand3 == null) return s.toString();
         s.append(",\t");
@@ -97,6 +101,14 @@ public class Quad {
         if (operand4 == null) return s.toString();
         s.append(",\t");
         s.append(operand4.toString());
+        return s.toString();
+    }
+    
+    /** Returns a short string representation of this quad, without any operands. */
+    public String toString_short() {
+        StringBuffer s = new StringBuffer();
+        s.append(jq.left(Integer.toString(id_number), 4));
+        s.append(operator.toString());
         return s.toString();
     }
 }
