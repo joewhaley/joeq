@@ -37,7 +37,7 @@ public class Dominators extends jq_MethodVisitor.EmptyVisitor implements BasicBl
     private BitString temp;
     
     public void visitMethod(jq_Method m) {
-        if (m.isNative() || m.isAbstract()) return;
+        if (m.getBytecode() == null) return;
         //System.out.println("Computing dominators for method "+m);
         cfg = Compil3r.Quad.CodeCache.getCode(m);
         bbs = new BasicBlock[cfg.getNumberOfBasicBlocks()];

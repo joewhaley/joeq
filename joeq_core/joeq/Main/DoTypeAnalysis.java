@@ -170,7 +170,7 @@ public abstract class DoTypeAnalysis {
         for(it = new ArrayIterator(c.getDeclaredStaticMethods());
             it.hasNext(); ) {
             jq_StaticMethod m = (jq_StaticMethod)it.next();
-            if (m.isNative()) continue;
+            if (m.getBytecode() == null) continue;
             if (memberName == null || m.getName().toString().equals(memberName))
             {
                 out.println(m.toString());
@@ -181,7 +181,7 @@ public abstract class DoTypeAnalysis {
             it.hasNext(); ) {
             jq_InstanceMethod m = (jq_InstanceMethod)it.next();
             if (m.isAbstract()) continue;
-            if (m.isNative()) continue;
+            if (m.getBytecode() == null) continue;
             if (memberName == null || m.getName().toString().equals(memberName))
             {
                 out.println(m.toString());
