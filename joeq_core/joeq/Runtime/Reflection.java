@@ -15,12 +15,20 @@ import Clazz.jq_Type;
 import Clazz.jq_Class;
 import Clazz.jq_Primitive;
 import Clazz.jq_Reference;
+import Clazz.jq_NameAndDesc;
+import Clazz.jq_Member;
 import Clazz.jq_Method;
 import Clazz.jq_StaticMethod;
 import Clazz.jq_InstanceMethod;
+import Clazz.jq_ClassInitializer;
+import Clazz.jq_Initializer;
+import Clazz.jq_Field;
 import Clazz.jq_StaticField;
 import Clazz.jq_InstanceField;
+import UTF.Utf8;
 import jq;
+
+import java.lang.reflect.*;
 
 public abstract class Reflection {
 
@@ -48,7 +56,6 @@ public abstract class Reflection {
         if (!className.startsWith("[")) className = "L"+className+";";
         return PrimordialClassLoader.loader.getOrCreateBSType(className);
     }
-    
     public static final Class getJDKType(jq_Type c) {
         if (!jq.Bootstrapping) return c.getJavaLangClassObject();
         if (c.isPrimitiveType()) 
@@ -80,6 +87,141 @@ public abstract class Reflection {
         }
     }
     
+    // Map between our jq_Member objects and JDK Member objects
+    public static final jq_Field getJQMember(Field f) {
+        if (!jq.Bootstrapping) return (jq_Field)getfield_A(f, ClassLib.sun13.java.lang.reflect.Field._jq_field);
+        jq_Class c = (jq_Class)getJQType(f.getDeclaringClass());
+        jq_NameAndDesc nd = new jq_NameAndDesc(Utf8.get(f.getName()), getJQType(f.getType()).getDesc());
+        jq_Field m = (jq_Field)c.getDeclaredMember(nd);
+        if (m == null) {
+            jq.UNREACHABLE(f.toString());
+        }
+        return m;
+    }
+    public static final jq_Method getJQMember(Method f) {
+        if (!jq.Bootstrapping) return (jq_Method)getfield_A(f, ClassLib.sun13.java.lang.reflect.Method._jq_method);
+        jq_Class c = (jq_Class)getJQType(f.getDeclaringClass());
+        StringBuffer desc = new StringBuffer();
+        desc.append('(');
+        Class[] param_types = f.getParameterTypes();
+        for (int i=0; i<param_types.length; ++i) {
+            desc.append(getJQType(param_types[i]).getDesc().toString());
+        }
+        desc.append(')');
+        desc.append(getJQType(f.getReturnType()).getDesc().toString());
+        jq_NameAndDesc nd = new jq_NameAndDesc(Utf8.get(f.getName()), Utf8.get(desc.toString()));
+        jq_Method m = (jq_Method)c.getDeclaredMember(nd);
+        if (m == null) {
+            jq.UNREACHABLE(c.toString());
+        }
+        return m;
+    }
+    public static final jq_Initializer getJQMember(Constructor f) {
+        if (!jq.Bootstrapping) return (jq_Initializer)getfield_A(f, ClassLib.sun13.java.lang.reflect.Constructor._jq_init);
+        jq_Class c = (jq_Class)getJQType(f.getDeclaringClass());
+        StringBuffer desc = new StringBuffer();
+        desc.append('(');
+        Class[] param_types = f.getParameterTypes();
+        for (int i=0; i<param_types.length; ++i) {
+            desc.append(getJQType(param_types[i]).getDesc().toString());
+        }
+        desc.append(")V");
+        jq_NameAndDesc nd = new jq_NameAndDesc(Utf8.get("<init>"), Utf8.get(desc.toString()));
+        jq_Initializer m = (jq_Initializer)c.getDeclaredMember(nd);
+        if (m == null) {
+            jq.UNREACHABLE(c.toString());
+        }
+        return m;
+    }
+    public static final Field getJDKField(Class c, String name) {
+        Field[] fields = c.getDeclaredFields();
+        for (int i=0; i<fields.length; ++i) {
+            Field f2 = fields[i];
+            if (f2.getName().equals(name)) {
+                //f2.setAccessible(true);
+                return f2;
+            }
+        }
+        //jq.UNREACHABLE(c+"."+name);
+        return null;
+    }
+    public static final Method getJDKMethod(Class c, String name, Class[] args) {
+        Method[] methods = c.getDeclaredMethods();
+uphere:
+        for (int i=0; i<methods.length; ++i) {
+            Method f2 = methods[i];
+            if (f2.getName().equals(name)) {
+                Class[] args2 = f2.getParameterTypes();
+                if (args.length != args2.length) continue uphere;
+                for (int j=0; j<args.length; ++j) {
+                    if (!args[j].equals(args2[j])) continue uphere;
+                }
+                //f2.setAccessible(true);
+                return f2;
+            }
+        }
+        //jq.UNREACHABLE(c+"."+name+" "+args);
+        return null;
+    }
+    public static final Constructor getJDKConstructor(Class c, Class[] args) {
+        Constructor[] consts = c.getDeclaredConstructors();
+uphere:
+        for (int i=0; i<consts.length; ++i) {
+            Constructor f2 = consts[i];
+            Class[] args2 = f2.getParameterTypes();
+            if (args.length != args2.length) continue uphere;
+            for (int j=0; j<args.length; ++j) {
+                if (!args[j].equals(args2[j])) continue uphere;
+            }
+            //f2.setAccessible(true);
+            return f2;
+        }
+        //jq.UNREACHABLE(c+".<init> "+args);
+        return null;
+    }
+    public static final Member getJDKMember(jq_Member m) {
+        if (!jq.Bootstrapping) return m.getJavaLangReflectMemberObject();
+        Class c = getJDKType(m.getDeclaringClass());
+        if (m instanceof jq_Field) {
+            Member ret = getJDKField(c, m.getName().toString());
+            if (ret == null) {
+                // TODO: a synthetic field, so there is no java.lang.reflect.Field object yet.
+            }
+            return ret;
+        } else if (m instanceof jq_Initializer) {
+            jq_Initializer m2 = (jq_Initializer)m;
+            jq_Type[] param_types = m2.getParamTypes();
+            int num_of_args = param_types.length-1; // -1 for this ptr
+            Class[] args = new Class[num_of_args];
+            for (int i=0; i<num_of_args; ++i) {
+                args[i] = getJDKType(param_types[i+1]);
+            }
+            Member ret = getJDKConstructor(c, args);
+            if (ret == null) {
+                // TODO: a synthetic field, so there is no java.lang.reflect.Field object yet.
+            }
+            return ret;
+        } else if (m instanceof jq_ClassInitializer) {
+            return null; // <clinit> methods have no Method object
+        } else {
+            jq.assert(m instanceof jq_Method);
+            jq_Method m2 = (jq_Method)m;
+            int offset = m2.isStatic()?0:1;
+            jq_Type[] param_types = m2.getParamTypes();
+            int num_of_args = param_types.length-offset;
+            Class[] args = new Class[num_of_args];
+            for (int i=0; i<num_of_args; ++i) {
+                args[i] = getJDKType(param_types[i+offset]);
+            }
+            Member ret = getJDKMethod(c, m.getName().toString(), args);
+            if (ret == null) {
+                // TODO: a synthetic field, so there is no java.lang.reflect.Field object yet.
+            }
+            return ret;
+        }
+    }
+    
+    // reflective invocations.
     public static void invokestatic_V(jq_StaticMethod m) throws Throwable {
         if (!jq.Bootstrapping) {
             jq.assert(m.getDeclaringClass().isClsInitRunning());
@@ -232,46 +374,114 @@ public abstract class Reflection {
             return;
         }
     }
-    public static long invoke(jq_Method m, Object[] args) throws Throwable {
+    public static long invoke(jq_Method m, Object dis, Object[] args)
+        throws IllegalArgumentException, InvocationTargetException
+    {
         jq_Type[] params = m.getParamTypes();
-        jq.assert(params.length == args.length);
-        for (int i=0; i<params.length; ++i) {
-            jq_Type c = params[i];
+        int offset;
+        if (dis != null) {
+            jq.assert(!m.isStatic());
+            Unsafe.pushArg(Unsafe.addressOf(dis));
+            offset = 1;
+        } else {
+            offset = 0;
+        }
+        jq.assert(params.length == args.length+offset);
+        for (int i=0; i<args.length; ++i) {
+            jq_Type c = params[i+offset];
             if (c.isReferenceType()) {
+                if (!TypeCheck.isAssignable(Unsafe.getTypeOf(args[i]), c))
+                    throw new IllegalArgumentException(args[i].getClass()+" is not assignable to "+c);
                 Unsafe.pushArg(Unsafe.addressOf(args[i]));
             } else {
                 if (c == jq_Primitive.BYTE) {
-                    int v = (int)((Byte)args[i]).byteValue();
+                    int v = (int)unwrapToByte(args[i]);
                     Unsafe.pushArg(v);
                 } else if (c == jq_Primitive.CHAR) {
-                    int v = (int)((Character)args[i]).charValue();
+                    int v = (int)unwrapToChar(args[i]);
                     Unsafe.pushArg(v);
                 } else if (c == jq_Primitive.DOUBLE) {
-                    long v = Double.doubleToRawLongBits(((Double)args[i]).doubleValue());
+                    long v = Double.doubleToRawLongBits(unwrapToDouble(args[i]));
                     Unsafe.pushArg((int)(v >> 32)); // hi
                     Unsafe.pushArg((int)v);         // lo
                 } else if (c == jq_Primitive.FLOAT) {
-                    int v = Float.floatToRawIntBits(((Float)args[i]).floatValue());
+                    int v = Float.floatToRawIntBits(unwrapToFloat(args[i]));
                     Unsafe.pushArg(v);
                 } else if (c == jq_Primitive.INT) {
-                    int v = ((Integer)args[i]).intValue();
+                    int v = unwrapToInt(args[i]);
                     Unsafe.pushArg(v);
                 } else if (c == jq_Primitive.LONG) {
-                    long v = ((Long)args[i]).longValue();
+                    long v = unwrapToLong(args[i]);
                     Unsafe.pushArg((int)(v >> 32)); // hi
                     Unsafe.pushArg((int)v);         // lo
                 } else if (c == jq_Primitive.SHORT) {
-                    int v = ((Short)args[i]).shortValue();
+                    int v = (int)unwrapToShort(args[i]);
                     Unsafe.pushArg(v);
                 } else if (c == jq_Primitive.BOOLEAN) {
-                    int v = ((Boolean)args[i]).booleanValue()?1:0;
+                    int v = unwrapToBoolean(args[i])?1:0;
                     Unsafe.pushArg(v);
                 } else jq.UNREACHABLE(c.toString());
             }
         }
-        return Unsafe.invoke(m.getDefaultCompiledVersion().getEntrypoint());
+        try {
+            return Unsafe.invoke(m.getDefaultCompiledVersion().getEntrypoint());
+        } catch (Throwable t) {
+            throw new InvocationTargetException(t);
+        }
     }
     
+    // unwrap functions
+    public static boolean unwrapToBoolean(Object value) throws IllegalArgumentException {
+        if (value instanceof Boolean) return ((Boolean)value).booleanValue();
+        else throw new IllegalArgumentException(value.getClass()+" cannot be converted to boolean");
+    }
+    public static byte unwrapToByte(Object value) throws IllegalArgumentException {
+        if (value instanceof Byte) return ((Byte)value).byteValue();
+        else throw new IllegalArgumentException(value.getClass()+" cannot be converted to byte");
+    }
+    public static char unwrapToChar(Object value) throws IllegalArgumentException {
+        if (value instanceof Character) return ((Character)value).charValue();
+        else throw new IllegalArgumentException(value.getClass()+" cannot be converted to char");
+    }
+    public static short unwrapToShort(Object value) throws IllegalArgumentException {
+        if (value instanceof Short) return ((Short)value).shortValue();
+        else if (value instanceof Byte) return ((Byte)value).shortValue();
+        else throw new IllegalArgumentException(value.getClass()+" cannot be converted to short");
+    }
+    public static int unwrapToInt(Object value) throws IllegalArgumentException {
+        if (value instanceof Integer) return ((Integer)value).intValue();
+        else if (value instanceof Byte) return ((Byte)value).intValue();
+        else if (value instanceof Character) return (int)((Character)value).charValue();
+        else if (value instanceof Short) return ((Short)value).intValue();
+        else throw new IllegalArgumentException(value.getClass()+" cannot be converted to int");
+    }
+    public static long unwrapToLong(Object value) throws IllegalArgumentException {
+        if (value instanceof Long) return ((Long)value).longValue();
+        else if (value instanceof Integer) return ((Integer)value).longValue();
+        else if (value instanceof Byte) return ((Byte)value).longValue();
+        else if (value instanceof Character) return (long)((Character)value).charValue();
+        else if (value instanceof Short) return ((Short)value).longValue();
+        else throw new IllegalArgumentException(value.getClass()+" cannot be converted to long");
+    }
+    public static float unwrapToFloat(Object value) throws IllegalArgumentException {
+        if (value instanceof Float) return ((Float)value).floatValue();
+        else if (value instanceof Integer) return ((Integer)value).floatValue();
+        else if (value instanceof Long) return ((Long)value).floatValue();
+        else if (value instanceof Byte) return ((Byte)value).floatValue();
+        else if (value instanceof Character) return (float)((Character)value).charValue();
+        else if (value instanceof Short) return ((Short)value).floatValue();
+        else throw new IllegalArgumentException(value.getClass()+" cannot be converted to float");
+    }
+    public static double unwrapToDouble(Object value) throws IllegalArgumentException {
+        if (value instanceof Double) return ((Double)value).doubleValue();
+        else if (value instanceof Float) return ((Float)value).doubleValue();
+        else if (value instanceof Integer) return ((Integer)value).doubleValue();
+        else if (value instanceof Long) return ((Long)value).doubleValue();
+        else if (value instanceof Byte) return ((Byte)value).doubleValue();
+        else if (value instanceof Character) return (double)((Character)value).charValue();
+        else if (value instanceof Short) return ((Short)value).doubleValue();
+        else throw new IllegalArgumentException(value.getClass()+" cannot be converted to double");
+    }
 
     public static int getfield_I(Object o, jq_InstanceField f) {
         jq.assert(f.getType() == jq_Primitive.INT || f.getType() == jq_Primitive.FLOAT);
@@ -438,45 +648,61 @@ public abstract class Reflection {
         if (jq.Bootstrapping) return obj_trav.getStaticFieldValue(f);
         return Unsafe.asObject(Unsafe.peek(f.getAddress()));
     }
+    public static boolean getstatic_Z(jq_StaticField f) {
+        jq.assert(f.getType() == jq_Primitive.BOOLEAN);
+        if (jq.Bootstrapping) return ((Boolean)obj_trav.getStaticFieldValue(f)).booleanValue();
+        return Unsafe.peek(f.getAddress())!=0;
+    }
+    public static byte getstatic_B(jq_StaticField f) {
+        jq.assert(f.getType() == jq_Primitive.BYTE);
+        if (jq.Bootstrapping) return ((Byte)obj_trav.getStaticFieldValue(f)).byteValue();
+        return (byte)Unsafe.peek(f.getAddress());
+    }
+    public static short getstatic_S(jq_StaticField f) {
+        jq.assert(f.getType() == jq_Primitive.SHORT);
+        if (jq.Bootstrapping) return ((Short)obj_trav.getStaticFieldValue(f)).shortValue();
+        return (short)Unsafe.peek(f.getAddress());
+    }
+    public static char getstatic_C(jq_StaticField f) {
+        jq.assert(f.getType() == jq_Primitive.CHAR);
+        if (jq.Bootstrapping) return ((Character)obj_trav.getStaticFieldValue(f)).charValue();
+        return (char)Unsafe.peek(f.getAddress());
+    }
     public static void putstatic_I(jq_StaticField f, int v) {
         jq.assert(f.getType() == jq_Primitive.INT);
-        if (jq.Bootstrapping) {
-            f.getDeclaringClass().setStaticData(f, v);
-            return;
-        }
         f.getDeclaringClass().setStaticData(f, v);
     }
     public static void putstatic_L(jq_StaticField f, long v) {
         jq.assert(f.getType() == jq_Primitive.LONG);
-        if (jq.Bootstrapping) {
-            f.getDeclaringClass().setStaticData(f, v);
-            return;
-        }
         f.getDeclaringClass().setStaticData(f, v);
     }
     public static void putstatic_F(jq_StaticField f, float v) {
         jq.assert(f.getType() == jq_Primitive.FLOAT);
-        if (jq.Bootstrapping) {
-            f.getDeclaringClass().setStaticData(f, v);
-            return;
-        }
         f.getDeclaringClass().setStaticData(f, v);
     }
     public static void putstatic_D(jq_StaticField f, double v) {
         jq.assert(f.getType() == jq_Primitive.DOUBLE);
-        if (jq.Bootstrapping) {
-            f.getDeclaringClass().setStaticData(f, v);
-            return;
-        }
         f.getDeclaringClass().setStaticData(f, v);
     }
     public static void putstatic_A(jq_StaticField f, Object v) {
         jq.assert(TypeCheck.isAssignable(Unsafe.getTypeOf(v), f.getType()));
-        if (jq.Bootstrapping) {
-            f.getDeclaringClass().setStaticData(f, v);
-            return;
-        }
         f.getDeclaringClass().setStaticData(f, v);
+    }
+    public static void putstatic_Z(jq_StaticField f, boolean v) {
+        jq.assert(f.getType() == jq_Primitive.BOOLEAN);
+        f.getDeclaringClass().setStaticData(f, v?1:0);
+    }
+    public static void putstatic_B(jq_StaticField f, int v) {
+        jq.assert(f.getType() == jq_Primitive.BYTE);
+        f.getDeclaringClass().setStaticData(f, (int)v);
+    }
+    public static void putstatic_S(jq_StaticField f, short v) {
+        jq.assert(f.getType() == jq_Primitive.SHORT);
+        f.getDeclaringClass().setStaticData(f, (int)v);
+    }
+    public static void putstatic_C(jq_StaticField f, char v) {
+        jq.assert(f.getType() == jq_Primitive.CHAR);
+        f.getDeclaringClass().setStaticData(f, (int)v);
     }
     
     public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LRun_Time/Reflection;");

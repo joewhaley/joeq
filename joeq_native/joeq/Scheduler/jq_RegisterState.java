@@ -41,6 +41,20 @@ public class jq_RegisterState implements x86Constants, jq_DontAlign {
     int Edi, Esi, Ebx, Edx, Ecx, Eax;
     // control registers
     int Ebp, Eip, SegCs, EFlags, Esp, SegSs;
+
+    public static final int EFLAGS_CARRY      = 0x00000001;
+    public static final int EFLAGS_PARITY     = 0x00000004;
+    public static final int EFLAGS_AUXCARRY   = 0x00000010;
+    public static final int EFLAGS_ZERO       = 0x00000040;
+    public static final int EFLAGS_SIGN       = 0x00000080;
+    public static final int EFLAGS_TRAP       = 0x00000100;
+    public static final int EFLAGS_INTERRUPT  = 0x00000200;
+    public static final int EFLAGS_DIRECTION  = 0x00000400;
+    public static final int EFLAGS_OVERFLOW   = 0x00000800;
+    public static final int EFLAGS_NESTEDTASK = 0x00004000;
+    
+    public static final int EFLAGS_IOPRIV_MASK = 0x00003000;
+    public static final int EFLAGS_IOPRIV_SHIFT = 12;
     
     public jq_RegisterState() {
         ControlWord = 0x027f;

@@ -24,7 +24,7 @@ public abstract class jq_Type {
         this.desc = desc;
         Class c = null;
         if (!jq.Bootstrapping)
-            c = ClassLib.sun13.java.lang.Class.createNewClass(_class, this);
+            c = ClassLib.sun13.java.lang.Class.createNewClass(ClassLib.sun13.java.lang.Class._class, this);
         this.class_object = c;
     }
     

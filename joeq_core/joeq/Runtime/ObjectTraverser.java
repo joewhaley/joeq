@@ -179,10 +179,38 @@ public class ObjectTraverser {
         if (c == Class.class) {
             if (fieldName.equals("jq_type"))
                 return Reflection.getJQType((Class)o);
+            if (fieldName.equals("signers"))
+                return null;
+                //return ((Class)o).getSigners();
+            if (fieldName.equals("protection_domain"))
+                return null;
+                //return ((Class)o).getProtectionDomain();
         }
         if (c == jq_Type.class) {
             if (fieldName.equals("class_object"))
                 return Reflection.getJDKType((jq_Type)o);
+        }
+        if (c == java.lang.reflect.Field.class) {
+            if (fieldName.equals("jq_field"))
+                return Reflection.getJQMember((java.lang.reflect.Field)o);
+        }
+        if (c == java.lang.reflect.Method.class) {
+            if (fieldName.equals("jq_method"))
+                return Reflection.getJQMember((java.lang.reflect.Method)o);
+        }
+        if (c == java.lang.reflect.Constructor.class) {
+            if (fieldName.equals("jq_init"))
+                return Reflection.getJQMember((java.lang.reflect.Constructor)o);
+        }
+        if (c == jq_Member.class) {
+            if (fieldName.equals("member_object")) {
+                // reflection returns different objects every time!
+                // cache one and use it from now on.
+                Object o2 = mapped_objects.get(o);
+                if (o2 != null) return o2;
+                mapped_objects.put(o, o2 = Reflection.getJDKMember((jq_Member)o));
+                return o2;
+            }
         }
         if (c == Thread.class) {
             if (fieldName.equals("jq_thread")) {
@@ -320,6 +348,22 @@ public class ObjectTraverser {
         }
         if (c == jq_Type.class) {
             if (fieldName.equals("class_object"))
+                jq.UNREACHABLE();
+        }
+        if (c == java.lang.reflect.Field.class) {
+            if (fieldName.equals("jq_field"))
+                jq.UNREACHABLE();
+        }
+        if (c == java.lang.reflect.Method.class) {
+            if (fieldName.equals("jq_method"))
+                jq.UNREACHABLE();
+        }
+        if (c == java.lang.reflect.Constructor.class) {
+            if (fieldName.equals("jq_init"))
+                jq.UNREACHABLE();
+        }
+        if (c == jq_Member.class) {
+            if (fieldName.equals("member_object"))
                 jq.UNREACHABLE();
         }
         if (c == Thread.class) {
