@@ -277,13 +277,12 @@ public abstract class ReflectionInformationProvider {
         }
         
         public Collection/*<jq_Method>*/ getNewInstanceTargets(jq_Method n) {
+            if(PA.TRACE_REFLECTION) System.out.println("There are " + specs.size() + " to check against.");
             for(Iterator iter = specs.iterator(); iter.hasNext();){
                 NewInstanceTargets spec = (NewInstanceTargets) iter.next();
+                if(PA.TRACE_REFLECTION) System.out.println("\tChecking agains " + spec.getDeclaredIn());                
                 
-                if(spec.getDeclaredIn() == n){
-                    if(PA.TRACE_REFLECTION){
-                        System.out.println("\tChecking agains " + spec.getDeclaredIn());
-                    }        
+                if(spec.getDeclaredIn() == n){                            
                     return spec.getTargets();
                 }
             }
