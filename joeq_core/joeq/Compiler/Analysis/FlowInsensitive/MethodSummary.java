@@ -76,6 +76,7 @@ import Util.Collections.FlattenedCollection;
 import Util.Collections.HashCodeComparator;
 import Util.Collections.IdentityHashCodeWrapper;
 import Util.Collections.IndexMap;
+import Util.Collections.IndexedMap;
 import Util.Collections.InstrumentedSetWrapper;
 import Util.Collections.Pair;
 import Util.Collections.SetFactory;
@@ -1844,12 +1845,23 @@ public class MethodSummary {
         }
         
         /**
-         * Prints an identifier of this node to the given output writer.
-         * 
-         * @param ms method summary that contains this node
-         * @param out print writer to output to
+         * Prints an identifier of this node to the given data output.
          */
-        public abstract void write(DataOutput out) throws IOException;
+        public void write(IndexedMap map, DataOutput out) throws IOException {
+            if (accessPathEdges != null) {
+                int s = map.size();
+                int index = map.get(this);
+                Assert._assert(s == map.size());
+                for (Iterator i = this.getAccessPathEdgeTargets().iterator(); i.hasNext(); ) {
+                    Node n = (Node) i.next();
+                    int index2 = map.get(n);
+                    Assert._assert(s == map.size());
+                    if (index2 <= index) {
+                        out.writeBytes(" fsucc "+index2);
+                    }
+                }
+            }
+        }
         
     }
     
@@ -1901,7 +1913,7 @@ public class MethodSummary {
             return "Concrete: "+(type==null?"null":type.shortName())+" @ "+(q==null?-1:q.getID());
         }
 
-        public void write(DataOutput out) throws IOException {
+        public void write(IndexedMap map, DataOutput out) throws IOException {
             out.writeBytes("Concrete ");
             writeType(out, (jq_Reference) type);
             out.writeByte(' ');
@@ -1911,51 +1923,46 @@ public class MethodSummary {
     
     public static Node readNode(StringTokenizer st) throws IOException {
         String s = st.nextToken();
+        Node n;
         if (s.equals("Global")) {
-            return new GlobalNode();
-        }
-        if (s.equals("Concrete")) {
+            n = new GlobalNode();
+        } else if (s.equals("Concrete")) {
             jq_Reference r = (jq_Reference) jq_Type.read(st);
             ProgramLocation q = ProgramLocation.read(st);
-            return new ConcreteTypeNode(r, q);
-        }
-        if (s.equals("ConcreteObject")) {
+            n = new ConcreteTypeNode(r, q);
+        } else if (s.equals("ConcreteObject")) {
             // TODO.
             jq_Reference r = (jq_Reference) jq_Type.read(st);
-            return new ConcreteTypeNode(r);
-        }
-        if (s.equals("Unknown")) {
+            n = new ConcreteTypeNode(r);
+        } else if (s.equals("Unknown")) {
             jq_Reference r = (jq_Reference) jq_Type.read(st);
-            return new UnknownTypeNode(r);
-        }
-        if (s.equals("ReturnValue")) {
+            n = new UnknownTypeNode(r);
+        } else if (s.equals("ReturnValue")) {
             ProgramLocation pl = ProgramLocation.read(st);
-            return new ReturnValueNode(pl);
-        }
-        if (s.equals("ThrownException")) {
+            n = new ReturnValueNode(pl);
+        } else if (s.equals("ThrownException")) {
             ProgramLocation pl = ProgramLocation.read(st);
-            return new ThrownExceptionNode(pl);
-        }
-        if (s.equals("Param")) {
+            n = new ThrownExceptionNode(pl);
+        } else if (s.equals("Param")) {
             jq_Method m = (jq_Method) jq_Member.read(st);
             if (m == null) return null;
             int i = Integer.parseInt(st.nextToken());
             jq_Reference t = (jq_Reference) m.getParamTypes()[i];
-            return new ParamNode(m, i, t);
-        }
-        if (s.equals("Field")) {
+            n = new ParamNode(m, i, t);
+        } else if (s.equals("Field")) {
             jq_Field m = (jq_Field) jq_Member.read(st);
             int k = Integer.parseInt(st.nextToken());
             Set locs = SortedArraySet.FACTORY.makeSet(HashCodeComparator.INSTANCE);
             while (--k >= 0)
                 locs.add(ProgramLocation.read(st));
-            return new FieldNode(m, locs);
-        }
-        if (s.equals("null")) {
+            n = new FieldNode(m, locs);
+        } else if (s.equals("null")) {
+            return null;
+        } else {
+            Assert.UNREACHABLE(s);
             return null;
         }
-        Assert.UNREACHABLE(s);
-        return null;
+        return n;
     }
     
     public static void writeType(DataOutput out, jq_Reference type) throws IOException {
@@ -2151,7 +2158,7 @@ public class MethodSummary {
             return super.removeEdge(m, n);
         }
 
-        public void write(DataOutput out) throws IOException {
+        public void write(IndexedMap map, DataOutput out) throws IOException {
             out.writeBytes("ConcreteObject ");
             writeType(out, (jq_Reference) getDeclaredType());
         }
@@ -2247,7 +2254,7 @@ public class MethodSummary {
         public String toString_long() { return Integer.toHexString(this.hashCode())+": "+toString_short()+super.toString_long(); }
         public String toString_short() { return "Unknown: "+type; }
 
-        public void write(DataOutput out) throws IOException {
+        public void write(IndexedMap map, DataOutput out) throws IOException {
             out.writeBytes("Unknown ");
             writeType(out, (jq_Reference) getDeclaredType());
         }
@@ -2310,7 +2317,7 @@ public class MethodSummary {
             //System.out.println("Edges from global: "+getEdges());
         }
         
-        public void write(DataOutput out) throws IOException {
+        public void write(IndexedMap map, DataOutput out) throws IOException {
             out.writeBytes("Global");
         }
         
@@ -2348,7 +2355,7 @@ public class MethodSummary {
             return "Return value of "+m;
         }
         
-        public void write(DataOutput out) throws IOException {
+        public void write(IndexedMap map, DataOutput out) throws IOException {
             out.writeBytes("ReturnValue ");
             writeLocation(out, m);
         }
@@ -2400,7 +2407,7 @@ public class MethodSummary {
         /* (non-Javadoc)
          * @see Compil3r.Quad.MethodSummary.Node#print(Compil3r.Quad.MethodSummary, java.io.PrintWriter)
          */
-        public void write(DataOutput out) throws IOException {
+        public void write(IndexedMap map, DataOutput out) throws IOException {
             out.writeBytes("ThrownException ");
             writeLocation(out, m);
         }
@@ -2433,7 +2440,7 @@ public class MethodSummary {
         /* (non-Javadoc)
          * @see Compil3r.Quad.MethodSummary.Node#print(Compil3r.Quad.MethodSummary, java.io.PrintWriter)
          */
-        public void write(DataOutput out) throws IOException {
+        public void write(IndexedMap map, DataOutput out) throws IOException {
             out.writeBytes("Param ");
             writeMember(out, (jq_Method) m);
             out.writeBytes(" "+n);
@@ -2698,9 +2705,9 @@ public class MethodSummary {
         }
 
         /* (non-Javadoc)
-         * @see Compil3r.Quad.MethodSummary.Node#print(Compil3r.Quad.MethodSummary, java.io.PrintWriter)
+         * @see Compil3r.Quad.MethodSummary.Node#print
          */
-        public void write(DataOutput out) throws IOException {
+        public void write(IndexedMap m, DataOutput out) throws IOException {
             out.writeBytes("Field ");
             writeMember(out, (jq_Field) f);
             out.writeBytes(" "+locs.size());
@@ -2709,7 +2716,17 @@ public class MethodSummary {
                 out.write(' ');
                 pl.write(out);
             }
-            // TODO: predecessors 
+            int s = m.size();
+            int index = m.get(this);
+            Assert._assert(s == m.size());
+            for (Iterator i = this.field_predecessors.iterator(); i.hasNext(); ) {
+                Node n = (Node) i.next();
+                out.writeBytes(" fpred ");
+                int index2 = m.get(n);
+                Assert._assert(s == m.size());
+                if (index2 < index)
+                    out.writeBytes(Integer.toString(index2));
+            }
         }
     }
     

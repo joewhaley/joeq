@@ -865,14 +865,27 @@ public class CSPAResults {
             Assert._assert(i == j);
             while (st.hasMoreTokens()) {
                 String t = st.nextToken();
-                if (t.equals("returned"))
+                if (t.equals("returned")) {
                     returned.add(n);
-                else if (t.equals("thrown"))
+                } else if (t.equals("thrown")) {
                     thrown.add(n);
-                else if (t.equals("passed")) {
+                } else if (t.equals("passed")) {
                     PassedParameter pp = PassedParameter.read(st);
                     passedParams.add(pp, n);
                     n.recordPassedParameter(pp);
+                } else if (t.equals("fsucc")) {
+                    int num = Integer.parseInt(st.nextToken());
+                    if (num <= j) {
+                        FieldNode n2 = (FieldNode) m.get(num);
+                        n.addAccessPathEdge(n2.getField(), n2);
+                    }
+                } else if (t.equals("fpred")) {
+                    int num = Integer.parseInt(st.nextToken());
+                    if (num <= j) {
+                        FieldNode fn = (FieldNode) n;
+                        Node n2 = (Node) m.get(num);
+                        n2.addAccessPathEdge(fn.getField(), fn);
+                    }
                 }
             }
         }

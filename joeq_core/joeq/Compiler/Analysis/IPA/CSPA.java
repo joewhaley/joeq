@@ -63,6 +63,7 @@ import Main.HostedVM;
 import Run_Time.TypeCheck;
 import Util.Assert;
 import Util.Strings;
+import Util.Collections.IndexedMap;
 import Util.Collections.Pair;
 import Util.Graphs.Navigator;
 import Util.Graphs.PathNumbering;
@@ -94,7 +95,8 @@ public class CSPA {
     public static final boolean TRACE_VARORDER   = false || TRACE_ALL;
     public static       boolean TRACE_RELATIONS  = false || TRACE_ALL;
     public static       boolean TRACE_CONTEXTMAP = false || TRACE_ALL;
-    public static       boolean TRACE_BDD = false;
+    public static       boolean TRACE_BDD        = false;
+    public static final boolean TRY_ORDERINGS    = false;
     
     public static final boolean USE_CHA     = false;
     public static final boolean DO_INLINING = false;
@@ -301,6 +303,8 @@ public class CSPA {
         time = System.currentTimeMillis() - time;
         System.out.println("done. ("+time/1000.+" seconds)");
         
+        dis.freeVarHeapCorrespondence();
+        
         System.out.print("Solving pointers...");
         time = System.currentTimeMillis();
         dis.g_fieldPt = dis.solveIncremental();
@@ -341,6 +345,14 @@ public class CSPA {
         out.writeBytes(ordering+"\n");
     }
 
+    public void freeVarHeapCorrespondence() {
+        for (Iterator i = V1H1correspondence.entrySet().iterator(); i.hasNext(); ) {
+            Map.Entry e = (Map.Entry) i.next();
+            BDD b = (BDD) e.getValue();
+            b.free();
+            i.remove();
+        }
+    }
     Map V1H1correspondence;
     public void buildVarHeapCorrespondence() {
         BDDPairing V2cH2ctoV1cH1c = bdd.makePair();
@@ -401,7 +413,9 @@ public class CSPA {
                                           V2c,
                                           PathNumbering.toBigInt(r1_edge.low),
                                           PathNumbering.toBigInt(r1_edge.high));
-                    tmpRel = callerRelation.relprod(cm1, V1c.set());
+                    tmpRel = relprod("callerRelation", callerRelation,
+                                     "cm1", cm1,
+                                     "V1c", V1c.set());
                     cm1.free();
                 } else {
                     tmpRel = callerRelation.id();
@@ -414,7 +428,9 @@ public class CSPA {
                                           H2c,
                                           PathNumbering.toBigInt(r2_edge.low),
                                           PathNumbering.toBigInt(r2_edge.high));
-                    tmpRel2 = tmpRel.relprod(cm1, H1c.set());
+                    tmpRel2 = relprod("tmpRel", tmpRel,
+                                      "cm1", cm1,
+                                      "H1c", H1c.set());
                     tmpRel.free();
                     cm1.free();
                 } else {
@@ -422,12 +438,12 @@ public class CSPA {
                 }
                 if (!r1_same) {
                     if (!r2_same) {
-                        tmpRel2.replaceWith(V2cH2ctoV1cH1c);
+                        replaceWith("tmpRel2", tmpRel2, "V2cH2ctoV1cH1c", V2cH2ctoV1cH1c);
                     } else {
-                        tmpRel2.replaceWith(V2ctoV1c);
+                        replaceWith("tmpRel2", tmpRel2, "V2ctoV1c", V2ctoV1c);
                     }
                 } else if (!r2_same) {
-                    tmpRel2.replaceWith(H2ctoH1c);
+                    replaceWith("tmpRel2", tmpRel2, "H2ctoH1c", H2ctoH1c);
                 }
                 if (TRACE_CONTEXTMAP && TRACE_BDD)
                     System.out.println("Relation: "+tmpRel2.toStringWithDomains());
@@ -436,14 +452,16 @@ public class CSPA {
             V1H1correspondence.put(callee, calleeRelation);
             if (TRACE_CONTEXTMAP && TRACE_BDD)
                 System.out.println("Relation for "+callee+":\n"+calleeRelation.toStringWithDomains());
+            if (TRACE_SIZES)
+                System.out.println("Relation for "+callee+": "+calleeRelation.nodeCount()+" nodes");
         }
     }
     
     public static interface Variable {
-        void write(DataOutput out) throws IOException;
+        void write(IndexedMap map, DataOutput out) throws IOException;
     }
     public static interface HeapObject {
-        void write(DataOutput out) throws IOException;
+        void write(IndexedMap map, DataOutput out) throws IOException;
         jq_Reference getDeclaredType();
     }
 
@@ -454,7 +472,7 @@ public class CSPA {
         //System.out.println("Global range: 0-"+globalVarHighIndex);
         for (j=0; j<=globalVarHighIndex; ++j) {
             Variable node = getVariable(j); 
-            node.write(out);
+            node.write(variableIndexMap, out);
             out.writeByte('\n');
         }
         for (Iterator i=bddSummaryList.iterator(); i.hasNext(); ) {
@@ -463,7 +481,7 @@ public class CSPA {
             Assert._assert(s.lowVarIndex == j);
             for ( ; j<=s.highVarIndex; ++j) {
                 Variable node = getVariable(j);
-                node.write(out);
+                node.write(variableIndexMap, out);
                 if (s.ms.getReturned().contains(node)) {
                     out.writeBytes(" returned");
                 }
@@ -485,7 +503,7 @@ public class CSPA {
         while (j < variableIndexMap.size()) {
             // UnknownTypeNode
             Variable node = getVariable(j);
-            node.write(out);
+            node.write(variableIndexMap, out);
             out.writeByte('\n');
             ++j;
         }
@@ -499,7 +517,7 @@ public class CSPA {
             // ConcreteObjectNode
             HeapObject node = getHeapObject(j);
             if (node == null) out.writeBytes("null");
-            else node.write(out);
+            else node.write(heapobjIndexMap, out);
             out.writeByte('\n');
         }
         for (Iterator i=bddSummaryList.iterator(); i.hasNext(); ) {
@@ -507,14 +525,14 @@ public class CSPA {
             Assert._assert(s.lowHeapIndex == j);
             for ( ; j<=s.highHeapIndex; ++j) {
                 HeapObject node = getHeapObject(j);
-                node.write(out);
+                node.write(heapobjIndexMap, out);
                 out.writeByte('\n');
             }
         }
         while (j < heapobjIndexMap.size()) {
             // UnknownTypeNode
             HeapObject node = getHeapObject(j);
-            node.write(out);
+            node.write(heapobjIndexMap, out);
             out.writeByte('\n');
             ++j;
         }
@@ -624,8 +642,7 @@ public class CSPA {
                 System.out.println("Getting context map "+domainName(d1)+" to "+domainName(d2)+": 0.."+range);
             BDD r = myBuildEquals(d1, d2, range);
             if (TRACE_SIZES) {
-                System.out.print("context map size = ");
-                report(r, d1.set().and(d2.set()));
+                report("context map", r);
             }
             return r;
         } else {
@@ -742,12 +759,12 @@ public class CSPA {
      * smaller problems, larger values save the time to grow the node tables
      * on larger problems.
      */
-    public static final int DEFAULT_NODE_COUNT = Integer.parseInt(System.getProperty("bddnodes", "1000000"));
+    public static final int DEFAULT_NODE_COUNT = Integer.parseInt(System.getProperty("bddnodes", "5000000"));
 
     /**
      * The size of the BDD operator cache.
      */
-    public static final int DEFAULT_CACHE_SIZE = Integer.parseInt(System.getProperty("bddcache", "100000"));
+    public static final int DEFAULT_CACHE_SIZE = Integer.parseInt(System.getProperty("bddcache", "250000"));
 
     /**
      * Singleton BDD object that provides access to BDD functions.
@@ -780,6 +797,8 @@ public class CSPA {
     // domain pairs for bdd_replace
     BDDPairing V1ToV2;
     BDDPairing V2ToV1;
+    BDDPairing V2H1ToV1H2;
+    BDDPairing V2H2ToV1H1;
     BDDPairing H1ToH2;
     BDDPairing H2ToH1;
     BDDPairing T2ToT1;
@@ -910,7 +929,18 @@ public class CSPA {
     CallGraph cg;
     Collection roots;
     
-    static String ordering = System.getProperty("bddordering", "FD_H2cxH2o_V2cxV1cxV2oxV1o_H1cxH1o");
+    static String ordering = System.getProperty("bddordering", "FD_V2oxV1o_V2cxV1c_H2c_H2o_H1c_H1o");
+    static boolean reverseLocal = System.getProperty("bddreverse", "true").equals("true");
+
+    static String[] orderings = {
+        "FD_H2c_H2o_V2oxV1o_V2cxV1c_H1c_H1o",
+        "FD_H2c_H2o_V2oxV1oxV2cxV1c_H1c_H1o",
+        "FD_H2cxH2o_V2oxV1o_V2cxV1c_H1cxH1o",
+        "FD_H2cxH2o_V2oxV1oxV2cxV1c_H1cxH1o",
+        "FD_H2o_H2c_V2oxV1oxV2cxV1c_H1o_H1c",
+        "FD_H2o_H2c_V2oxV1o_V2cxV1c_H1o_H1c",
+//      "FD_H2cxH2o_V2cxV1c_V2oxV1o_H1cxH1o",
+    };
 
     public void initializeBDD(int nodeCount, int cacheSize) {
         bdd = BDDFactory.init(nodeCount, cacheSize);
@@ -951,8 +981,6 @@ public class CSPA {
             Assert._assert(bdd_domains[i].varNum() == domainBits[i]);
         }
         
-        boolean reverseLocal = System.getProperty("bddreverse", "true").equals("true");
-        
         int[] varorder = makeVarOrdering(bdd, domainBits, domainSpos, reverseLocal, ordering);
         if (TRACE_VARORDER) {
             for (int i=0; i<varorder.length; ++i) {
@@ -971,6 +999,12 @@ public class CSPA {
         V2ToV1 = bdd.makePair();
         V2ToV1.set(new BDDDomain[] {V2o, V2c},
                    new BDDDomain[] {V1o, V1c});
+        V2H1ToV1H2 = bdd.makePair();
+        V2H1ToV1H2.set(new BDDDomain[] {V2o, V2c, H1o, H1c},
+                       new BDDDomain[] {V1o, V1c, H2o, H2c});
+        V2H2ToV1H1 = bdd.makePair();
+        V2H2ToV1H1.set(new BDDDomain[] {V2o, V2c, H2o, H2c},
+                       new BDDDomain[] {V1o, V1c, H1o, H1c});
         H1ToH2 = bdd.makePair();
         H1ToH2.set(new BDDDomain[] {H1o, H1c},
                    new BDDDomain[] {H2o, H2c});
@@ -1239,9 +1273,11 @@ public class CSPA {
         calculateTypeHierarchy();
         
         // (T1 x T2) * (H1 x T2) => (T1 x H1)
-        BDD assignableTypes = cC.relprod(aC, T2set);
+        BDD assignableTypes = relprod("cC", cC, "aC", aC, "T2", T2set);
         // (T1 x H1) * (V1 x T1) => (V1 x H1)
-        typeFilter = assignableTypes.relprod(vC, T1set);
+        typeFilter = relprod("assignableTypes", assignableTypes,
+                             "vC", vC,
+                             "T1", T1set);
         assignableTypes.free();
         //cC.free(); vC.free(); aC.free();
 
@@ -1466,25 +1502,29 @@ public class CSPA {
     
     public void dumpContextInsensitive() {
         BDD t = g_pointsTo.exist(V1c.set().and(H1c.set()));
-        System.out.print("pointsTo (context-insensitive) = ");
-        report(t, V1o.set().and(H1o.set()));
+        report("pointsTo (context-insensitive)", t);
         t.free();
     }
     
     public void dumpGlobalSizes() {
-        System.out.print("g_pointsTo = ");
-        report(g_pointsTo, V1set.and(H1set));
-        System.out.print("g_edgeSet = ");
-        report(g_edgeSet, V1set.and(V2set));
-        System.out.print("g_loads = ");
-        report(g_loads, V1set.and(V2set).and(FDset));
-        System.out.print("g_stores = ");
-        report(g_stores, V1set.and(V2set).and(FDset));
+        report("g_pointsTo", g_pointsTo);
+        report("g_edgeSet", g_edgeSet);
+        report("g_loads", g_loads);
+        report("g_stores", g_stores);
     }
     
-    static final void report(BDD bdd, BDD d) {
-        System.out.print(bdd.satCount(d));
-        System.out.println(" ("+bdd.nodeCount()+" nodes)");
+    static final void report(String s1, BDD b1) {
+        int n = b1.nodeCount();
+        if (n > 10000)
+            System.out.println(s1+": "+n+" nodes");
+    }
+    static final void report(String s1, BDD b1, String s2, BDD b2) {
+        int n1 = b1.nodeCount();
+        int n2 = b2.nodeCount();
+        if (n1 > 10000 || n2 > 10000) {
+            System.out.println(s1+": "+n1+" nodes");
+            System.out.println(s2+": "+n2+" nodes");
+        }
     }
     
     public static String domainName(BDDDomain d) {
@@ -1534,30 +1574,28 @@ public class CSPA {
         } else {
             if (sizeD1.compareTo(sizeD2) != -1) { // >=
                 int bits = endD2.bitLength();
-                r = d1.buildAdd(d2, bits, startD2.subtract(startD1).longValue());
+                long val = startD2.subtract(startD1).longValue();
+                r = d1.buildAdd(d2, bits, val);
                 if (TRACE_SIZES) {
-                    System.out.print("add = ");
-                    report(r, d1.set().and(d2.set()));
+                    report("add "+val, r);
                 }
                 if (MASK) {
                     r.andWith(d1.varRange(startD1.longValue(), endD1.longValue()));
                     if (TRACE_SIZES) {
-                        System.out.print("after mask = ");
-                        report(r, d1.set().and(d2.set()));
+                        report("after mask", r);
                     }
                 }
             } else {
                 int bits = endD1.bitLength();
-                r = d1.buildAdd(d2, bits, startD2.subtract(startD1).longValue());
+                long val = startD2.subtract(startD1).longValue();
+                r = d1.buildAdd(d2, bits, val);
                 if (TRACE_SIZES) {
-                    System.out.print("add = ");
-                    report(r, d1.set().and(d2.set()));
+                    report("add "+val, r);
                 }
                 if (MASK) {
                     r.andWith(d2.varRange(startD2.longValue(), endD2.longValue()));
                     if (TRACE_SIZES) {
-                        System.out.print("after mask = ");
-                        report(r, d1.set().and(d2.set()));
+                        report("after mask", r);
                     }
                 }
             }
@@ -1604,6 +1642,158 @@ public class CSPA {
         dest_bdd.free();
     }
 
+    void tryOrderings(BDD b) {
+        tryOrderings(new BDD[] {b});
+    }
+    void tryOrderings(BDD b1, BDD b2) {
+        tryOrderings(new BDD[] {b1, b2});
+    }
+    void tryOrderings(BDD[] b) {
+        int[] smallest = new int[b.length];
+        int[] smallestIndex = new int[b.length];
+        long smallestProd = Long.MAX_VALUE;
+        int smallestProdIndex = 0;
+        for (int i=0; i<orderings.length; ++i) {
+            String o = orderings[i];
+            int[] varorder = makeVarOrdering(bdd, domainBits, domainSpos, reverseLocal, o);
+            bdd.setVarOrder(varorder);
+            long prod = 1L;
+            for (int j=0; j<b.length; ++j) {
+                int c = b[j].nodeCount();
+                prod *= c;
+                //System.out.println(o+": "+c);
+                if (i == 0 || c < smallest[j]) {
+                    smallestIndex[j] = i;
+                    smallest[j] = c;
+                }
+            }
+            if (smallestProd > prod) {
+                smallestProdIndex = i;
+                smallestProd = prod;
+            }
+        }
+        for (int j = 0; j < smallestIndex.length; ++j) {
+            System.out.println("Best for BDD"+j+": "+
+                               orderings[smallestIndex[j]]+" = "+smallest[j]);
+        }
+        if (smallestIndex.length > 1) {
+            System.out.println("Best overall: "+
+                               orderings[smallestProdIndex]+" = "+smallestProd);
+        }
+    }
+
+    long[] cumtimes = new long[orderings.length];
+    public void replaceWith(String s, BDD b, String pairing, BDDPairing p) {
+        if (TRY_ORDERINGS && (b.nodeCount() > 100000)) {
+            System.out.println(s+" "+pairing);
+            // warm-up
+            for (int i=0; i<orderings.length; ++i) {
+                String o = orderings[i];
+                int[] varorder = makeVarOrdering(bdd, domainBits, domainSpos, reverseLocal, o);
+                bdd.setVarOrder(varorder);
+                BDD result = b.replace(p);
+                result.free();
+            }
+            
+            int[] sizea = new int[orderings.length];
+            int[] sizer = new int[orderings.length];
+            long[] time = new long[orderings.length];
+            
+            BDD result = null;
+            for (int i=0; i<orderings.length; ++i) {
+                String o = orderings[i];
+                int[] varorder = makeVarOrdering(bdd, domainBits, domainSpos, reverseLocal, o);
+                bdd.setVarOrder(varorder);
+                sizea[i] = b.nodeCount();
+                long t = System.currentTimeMillis();
+                result = b.replace(p);
+                time[i] = System.currentTimeMillis() - t;
+                cumtimes[i] += time[i];
+                sizer[i] = result.nodeCount();
+                result.free();
+            }
+            long[] time2 = new long[orderings.length];
+            System.arraycopy(time, 0, time2, 0, time.length);
+            Arrays.sort(time2);
+            for (int i = 0; i < time2.length; ++i) {
+                long t = time2[i];
+                int j = indexOf(time, t);
+                time[j] = -1;
+                System.out.println(orderings[j]+": "+t+" ms, "+sizea[j]+"->"+sizer[j]+" cum="+cumtimes[j]);
+            }
+            b.replaceWith(p);
+        } else {
+            if (TRACE_SIZES)
+                System.out.print(s+" "+pairing+": "+b.nodeCount());
+            b.replaceWith(p);
+            if (TRACE_SIZES)
+                System.out.println("->"+b.nodeCount());
+        }
+    }
+    public BDD relprod(BDD bdd1, BDD bdd2, BDD dom) {
+        return relprod("1", bdd1, "2", bdd2, "D", dom);
+    }
+    public BDD relprod(String s1, BDD bdd1,
+                       String s2, BDD bdd2,
+                       String domains, BDD dom) {
+        if (TRY_ORDERINGS && (bdd1.nodeCount() > 100000 || bdd2.nodeCount() > 100000)) {
+            System.out.println(s1+" * "+s2+" / "+domains);
+            // warm-up
+            for (int i=0; i<orderings.length; ++i) {
+                String o = orderings[i];
+                int[] varorder = makeVarOrdering(bdd, domainBits, domainSpos, reverseLocal, o);
+                bdd.setVarOrder(varorder);
+                BDD result = bdd1.relprod(bdd2, dom);
+                result.free();
+            }
+
+            int[] sizea = new int[orderings.length];
+            int[] sizeb = new int[orderings.length];
+            int[] sizer = new int[orderings.length];
+            long[] time = new long[orderings.length];
+            
+            BDD result = null;
+            for (int i=0; i<orderings.length; ++i) {
+                String o = orderings[i];
+                int[] varorder = makeVarOrdering(bdd, domainBits, domainSpos, reverseLocal, o);
+                bdd.setVarOrder(varorder);
+                sizea[i] = bdd1.nodeCount();
+                sizeb[i] = bdd2.nodeCount();
+                long t = System.currentTimeMillis();
+                result = bdd1.relprod(bdd2, dom);
+                time[i] = System.currentTimeMillis() - t;
+                cumtimes[i] += time[i];
+                sizer[i] = result.nodeCount();
+                if (i < orderings.length-1) result.free();
+            }
+            long[] time2 = new long[orderings.length];
+            System.arraycopy(time, 0, time2, 0, time.length);
+            Arrays.sort(time2);
+            for (int i = 0; i < time2.length; ++i) {
+                long t = time2[i];
+                int j = indexOf(time, t);
+                time[j] = -1;
+                System.out.println(orderings[j]+": "+t+" ms, "+sizea[j]+"*"+sizeb[j]+"->"+sizer[j]+" cum="+cumtimes[j]);
+            }
+            return result;
+        } else {
+            if (TRACE_SIZES)
+                System.out.print(s1+" * "+s2+" / "+domains+": "+
+                                 bdd1.nodeCount()+"*"+bdd2.nodeCount());
+            BDD result = bdd1.relprod(bdd2, dom);
+            if (TRACE_SIZES)
+                System.out.println("->"+result.nodeCount());
+            return result;
+        }
+    }
+
+    static int indexOf(long[] a, long val) {
+        for (int i=0; i<a.length; ++i) {
+            if (a[i] == val) return i;
+        }
+        return -1;
+    }
+
     public BDD solveIncremental() {
 
         calculateTypeFilter();
@@ -1627,38 +1817,14 @@ public class CSPA {
                 if (TRACE_MATCHING) {
                     System.out.println("Inner iteration "+y+": ");
                 }
-                if (TRACE_SIZES) {
-                    System.out.print("g_pointsTo = ");
-                    report(g_pointsTo, V1set.and(V2set));
-                    dumpContextInsensitive();
-                }
-                BDD newPt1 = g_edgeSet.relprod(newPointsTo, V1set);
+                BDD newPt1 = relprod("g_edgeSet(V1xV2)", g_edgeSet,
+                                     "newPointsTo(V1xH1)", newPointsTo,
+                                     "V1", V1set);
                 newPointsTo.free();
-                if (TRACE_SIZES) {
-                    System.out.print("newPt1 = ");
-                    report(newPt1, V2set.and(H1set));
-                }
-                if (TRACE_BDD) System.out.println(newPt1.toStringWithDomains());
-                BDD newPt2 = newPt1.replace(V2ToV1);
-                newPt1.free();
-                if (TRACE_SIZES) {
-                    System.out.print("newPt2 = ");
-                    report(newPt2, V1set.and(H1set));
-                }
-                if (TRACE_BDD) System.out.println(newPt2.toStringWithDomains());
-                newPt2.applyWith(g_pointsTo.id(), BDDFactory.diff);
-                if (TRACE_SIZES) {
-                    System.out.print("newPt2 (really) = ");
-                    report(newPt2, V1set.and(H1set));
-                }
-                if (TRACE_BDD) System.out.println(newPt2.toStringWithDomains());
-                newPt2.andWith(typeFilter.id());
-                if (TRACE_BDD) System.out.println(newPt2.toStringWithDomains());
-                newPointsTo = newPt2;
-                if (TRACE_SIZES) {
-                    System.out.print("newPointsTo = ");
-                    report(newPointsTo, V1set.and(H1set));
-                }
+                replaceWith("newPt1(V2xH1)", newPt1, "V2ToV1", V2ToV1);
+                newPt1.applyWith(g_pointsTo.id(), BDDFactory.diff);
+                newPt1.andWith(typeFilter.id());
+                newPointsTo = newPt1;
                 if (newPointsTo.isZero()) break;
                 g_pointsTo.orWith(newPointsTo.id());
             }
@@ -1666,77 +1832,67 @@ public class CSPA {
             newPointsTo = g_pointsTo.apply(oldPointsTo, BDDFactory.diff);
 
             // apply rule (2)
-            BDD tmpRel1 = g_stores.relprod(newPointsTo, V1set); // time-consuming!
-            if (TRACE_SIZES) {
-                System.out.print("tmpRel1 = ");
-                report(tmpRel1, V2set.and(FDset).and(H1set));
-            }
+            BDD tmpRel1 = relprod("g_stores(V1xFDxV2)", g_stores,
+                                  "newPointsTo(V1xH1)", newPointsTo,
+                                  "V1", V1set);
             // (V2xFD)xH1
-            BDD tmpRel2 = tmpRel1.replace(V2ToV1);
-            tmpRel1.free();
-            if (TRACE_SIZES) {
-                System.out.print("tmpRel2 = ");
-                report(tmpRel2, V1set.and(FDset).and(H1set));
-            }
-            BDD tmpRel3 = tmpRel2.replace(H1ToH2);
-            tmpRel2.free();
-            if (TRACE_SIZES) {
-                System.out.print("tmpRel3 = ");
-                report(tmpRel3, V1set.and(FDset).and(H2set));
+            if (false) {
+                replaceWith("tmpRel1(V2xFDxH1)", tmpRel1, "V2H1ToV1H2", V2H1ToV1H2);
+            } else {
+                replaceWith("tmpRel1(V2xFDxH1)", tmpRel1, "V2ToV1", V2ToV1);
+                replaceWith("tmpRel1(V1xFDxH1)", tmpRel1, "H1ToH2", H1ToH2);
             }
             // (V1xFD)xH2
-            tmpRel3.applyWith(storePt.id(), BDDFactory.diff);
-            BDD newStorePt = tmpRel3;
-            if (TRACE_SIZES) {
-                System.out.print("newStorePt = ");
-                report(newStorePt, V1set.and(FDset).and(H2set));
-            }
+            tmpRel1.applyWith(storePt.id(), BDDFactory.diff);
+            BDD newStorePt = tmpRel1;
             // cache storePt
             storePt.orWith(newStorePt.id()); // (V1xFD)xH2
-            if (TRACE_SIZES) {
-                System.out.print("storePt = ");
-                report(storePt, V1set.and(FDset).and(H2set));
-            }
 
-            BDD newFieldPt = storePt.relprod(newPointsTo, V1set); // time-consuming!
+            BDD newFieldPt = relprod("storePt(V1xFDxH2)", storePt,
+                                     "newPointsTo(V1xH1)", newPointsTo,
+                                     "V1", V1set);
             // (H1xFD)xH2
-            newFieldPt.orWith(newStorePt.relprod(oldPointsTo, V1set));
+            newFieldPt.orWith(relprod("newStorePt(V1xFDxH2)", newStorePt,
+                                      "oldPointsTo(V1xH1)", oldPointsTo,
+                                      "V1", V1set));
             newStorePt.free();
             oldPointsTo.free();
             // (H1xFD)xH2
             newFieldPt.applyWith(fieldPt.id(), BDDFactory.diff);
             // cache fieldPt
             fieldPt.orWith(newFieldPt.id()); // (H1xFD)xH2
-            if (TRACE_SIZES) {
-                System.out.print("fieldPt = ");
-                report(fieldPt, H1andFDset.and(H2set));
-            }
 
             // apply rule (3)
-            BDD tmpRel4 = g_loads.relprod(newPointsTo, V1set); // time-consuming!
+            BDD tmpRel4 = relprod("g_loads(V1xFDxV2)", g_loads,
+                                  "newPointsTo(V1xH1)", newPointsTo,
+                                  "V1", V1set);
             newPointsTo.free();
             // (H1xFD)xV2
             BDD newLoadAss = tmpRel4.apply(loadAss, BDDFactory.diff);
             tmpRel4.free();
-            BDD newLoadPt = loadAss.relprod(newFieldPt, H1andFDset);
+            BDD newLoadPt = relprod("loadAss(H1xFDxV2)", loadAss,
+                                    "newFieldPt(H1xFDxH2)", newFieldPt,
+                                    "H1xFD", H1andFDset);
             newFieldPt.free();
             // V2xH2
-            newLoadPt.orWith(newLoadAss.relprod(fieldPt, H1andFDset));
+            newLoadPt.orWith(relprod("newLoadAss(H1xFDxV2)", newLoadAss,
+                                     "fieldPt(H1xFDxH2)", fieldPt,
+                                     "H1xFD", H1andFDset));
             // V2xH2
             // cache loadAss
             loadAss.orWith(newLoadAss);
-            if (TRACE_SIZES) {
-                System.out.print("loadAss = ");
-                report(loadAss, V2set.and(H2set));
-            }
 
             // update oldPointsTo
             oldPointsTo = g_pointsTo.id();
 
             // convert new points-to relation to normal type
-            BDD tmpRel5 = newLoadPt.replace(V2ToV1);
-            newPointsTo = tmpRel5.replace(H2ToH1);
-            tmpRel5.free();
+            newPointsTo = newLoadPt;
+            if (false) {
+                replaceWith("newPointsTo(V2xH2)", newPointsTo, "V2H2ToV1H1", V2H2ToV1H1);
+            } else {
+                replaceWith("newPointsTo(V2xH2)", newPointsTo, "V2ToV1", V2ToV1);
+                replaceWith("newPointsTo(V1xH2)", newPointsTo, "H2ToH1", H2ToH1);
+            }
             newPointsTo.applyWith(g_pointsTo.id(), BDDFactory.diff);
 
             // apply typeFilter
@@ -1790,12 +1946,9 @@ public class CSPA {
         }
         
         void reportSize() {
-            System.out.print("pointsTo = ");
-            report(m_pointsTo, V1o.set().and(H1o.set()));
-            System.out.print("stores = ");
-            report(m_stores, V1o.set().and(FDset).and(V2o.set()));
-            System.out.print("loads = ");
-            report(m_loads, V1o.set().and(FDset).and(V2o.set()));
+            report("pointsTo", m_pointsTo);
+            report("stores", m_stores);
+            report("loads", m_loads);
         }
 
         void dispose() {
@@ -1937,7 +2090,7 @@ public class CSPA {
         }
     }
     
-    public static class IndexMap {
+    public static class IndexMap implements IndexedMap {
         private final String name;
         private final HashMap hash;
         private final Object[] list;
@@ -2108,7 +2261,7 @@ public class CSPA {
                 System.out.println(cfg.fullDump());
             }
         }
-        BDD escapingHeap = escapingLocations.relprod(myPointsTo, V1set);
+        BDD escapingHeap = relprod(escapingLocations, myPointsTo, V1set);
         System.out.println("Escaping heap: "+(long)escapingHeap.satCount(H1o.set()));
         //System.out.println("Escaping heap: "+escapingHeap.toStringWithDomains());
         BDD capturedHeap = escapingHeap.not();
