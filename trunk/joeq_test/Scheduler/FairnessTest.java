@@ -30,9 +30,16 @@ public class FairnessTest {
         }
     }
     
-    static int NUMBER = 5; //number of thread for each priority
-    static int PRIME = 0;//amount of time for priming CPU to make CPU stable
-    static int TIME = 20000;
+    // number of thread for each priority
+    static int NUMBER = Integer.parseInt(System.getProperty("fairness.number", "5"));
+    // amount of time for priming CPU to make CPU stable
+    static int PRIME = Integer.parseInt(System.getProperty("fairness.prime", "0"));
+    // amount of time to run experiment
+    static int TIME = Integer.parseInt(System.getProperty("fairness.time", "20000"));
+    // minimum priority to test
+    static int min = Integer.parseInt(System.getProperty("fairness.min", "1"));
+    // maximum priority to test
+    static int max = Integer.parseInt(System.getProperty("fairness.max", "8"));
     
     public static void main(String[] args) throws Exception {
         
@@ -46,9 +53,6 @@ public class FairnessTest {
             prime.stop();
             BusyThread.start = false;
         }
-        
-        int min = Thread.MIN_PRIORITY; //always 1
-        int max = Thread.MAX_PRIORITY-2; //max becomes 8
         
         Thread.currentThread().setPriority(Math.min(max + 1, Thread.MAX_PRIORITY)); //current thread (initial thread) priority becomes 9 because want to execute this most often
         
@@ -112,6 +116,13 @@ public class FairnessTest {
             System.out.println("Standard deviation: "+s2(stddev));  //0 is the best
             System.out.println();
         }
+        
+        for (int i = 0; i < jq_NativeThread.native_threads.length; ++i) {
+            jq_InterrupterThread it = jq_NativeThread.native_threads[i].it;
+            System.err.println("Native thread #"+i+": ");
+            it.dumpStatistics();
+        }
+            
     }
     /** print numbers with 2 decimal places */
     static String s2(double d) {
