@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.io.BufferedWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
@@ -109,6 +110,7 @@ public class MethodSummary {
     public static /*final*/ boolean TRACE_INTRA = System.getProperty("ms.traceintra") != null;
     public static /*final*/ boolean TRACE_INTER = System.getProperty("ms.traceinter") != null;
     public static /*final*/ boolean TRACE_INST = System.getProperty("ms.traceinst") != null;
+    public static /*final*/ boolean TRACE_DOT = System.getProperty("ms.tracedot") != null;
     public static final boolean IGNORE_INSTANCE_FIELDS = false;
     public static final boolean IGNORE_STATIC_FIELDS = false;
     public static final boolean VERIFY_ASSERTIONS = false;
@@ -171,6 +173,18 @@ public class MethodSummary {
             if (TRACE_INTER) out.println("Summary for "+cfg.getMethod()+":");
             if (TRACE_INTER) out.println(s);
             if (TRACE_INTER) out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+            if (TRACE_DOT) {
+                try {
+                    BufferedWriter dos = new BufferedWriter(new OutputStreamWriter(
+                        new FileOutputStream("out.txt", true)));
+                    dos.write("Method summary for " + s.getMethod() + "\n");
+                    s.dotGraph(dos);
+                    dos.flush();
+                    dos.close();
+                } catch (IOException x) {
+                    x.printStackTrace();
+                }
+            }            
         }
         return s;
     }
