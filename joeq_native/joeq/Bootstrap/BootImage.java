@@ -492,9 +492,10 @@ public class BootImage implements ObjectLayout, ELFConstants {
     
     public static boolean USE_MICROSOFT_STYLE_MUNGE = true;
     
-    public static final int NUM_OF_EXTERNAL_SYMS = 6;
+    public static final int NUM_OF_EXTERNAL_SYMS = 7;
     public void dumpEXTSYMENTs(ExtendedDataOutput out, jq_StaticMethod rootm)
     throws IOException {
+        // NOTE!!! If you change anything here, be SURE to change the number above!!!
         String s;
         if (USE_MICROSOFT_STYLE_MUNGE) s = "_entry@0";
         else s = "entry";
@@ -507,7 +508,7 @@ public class BootImage implements ObjectLayout, ELFConstants {
         out.writeUByte(0);
         
         out.writeUInt(0);    // e_zeroes
-        if (USE_MICROSOFT_STYLE_MUNGE) s = "_trap_handler@8";
+        if (USE_MICROSOFT_STYLE_MUNGE) s = "_trap_handler@4";
         else s = "trap_handler";
         int idx = alloc_string(s);
         out.writeUInt(idx);  // e_offset
@@ -518,6 +519,18 @@ public class BootImage implements ObjectLayout, ELFConstants {
         out.writeUByte(C_EXT);
         out.writeUByte(0);
 
+        out.writeUInt(0);    // e_zeroes
+        if (USE_MICROSOFT_STYLE_MUNGE) s = "_debug_trap_handler@4";
+        else s = "debug_trap_handler";
+        idx = alloc_string(s);
+        out.writeUInt(idx);  // e_offset
+        addr = ExceptionDeliverer._debug_trap_handler.getDefaultCompiledVersion().getEntrypoint();
+        out.writeUInt(addr.to32BitValue());
+        out.writeShort((short)1);
+        out.writeUShort((char)DT_FCN);
+        out.writeUByte(C_EXT);
+        out.writeUByte(0);
+        
         out.writeUInt(0);    // e_zeroes
         if (USE_MICROSOFT_STYLE_MUNGE) s = "_threadSwitch@4";
         else s = "threadSwitch";
@@ -1245,6 +1258,10 @@ public class BootImage implements ObjectLayout, ELFConstants {
             e = new SymbolTableEntry("trap_handler", cc.getEntrypoint().to32BitValue(), cc.getLength(), STB_GLOBAL, STT_FUNC, text);
             symtab.addSymbol(e);
 
+            cc = ExceptionDeliverer._debug_trap_handler.getDefaultCompiledVersion();
+            e = new SymbolTableEntry("debug_trap_handler", cc.getEntrypoint().to32BitValue(), cc.getLength(), STB_GLOBAL, STT_FUNC, text);
+            symtab.addSymbol(e);
+            
             cc = jq_NativeThread._threadSwitch.getDefaultCompiledVersion();
             e = new SymbolTableEntry("threadSwitch", cc.getEntrypoint().to32BitValue(), cc.getLength(), STB_GLOBAL, STT_FUNC, text);
             symtab.addSymbol(e);

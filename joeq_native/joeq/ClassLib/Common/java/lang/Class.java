@@ -41,6 +41,7 @@ public class Class {
     
     private Class(jq_Type t) {
         this.jq_type = t;
+        //Run_Time.SystemInterface.debugmsg("Created new Class object for "+t.getName());
     }
     
     // native method implementations.

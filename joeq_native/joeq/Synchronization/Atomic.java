@@ -23,7 +23,7 @@ import Run_Time.Unsafe;
 public abstract class Atomic {
     
     public static final int cas4(Object o, jq_InstanceField f, int before, int after) {
-        if (jq.Bootstrapping) {
+        if (!jq.RunningNative) {
             Field f2 = (Field)Reflection.getJDKMember(f);
             f2.setAccessible(true);
             jq.Assert((f2.getModifiers() & Modifier.STATIC) == 0);

@@ -419,14 +419,19 @@ public class jq_NativeThread implements x86Constants {
         for (int i = 0; i < native_threads.length; ++i) {
             SystemInterface.suspend_thread(native_threads[i].thread_handle);
         }
+        //dumpThreads();
+        Debug.OnlineDebugger.debuggerEntryPoint();
+        for (int i = 0; i < native_threads.length; ++i) {
+            SystemInterface.resume_thread(native_threads[i].thread_handle);
+        }
+    }
+
+    public static void dumpAllThreads() {
         jq_RegisterState rs = new jq_RegisterState();
         rs.ContextFlags = jq_RegisterState.CONTEXT_CONTROL;
         for (int i = 0; i < native_threads.length; ++i) {
             SystemInterface.get_thread_context(native_threads[i].pid, rs);
             native_threads[i].dump(rs);
-        }
-        for (int i = 0; i < native_threads.length; ++i) {
-            SystemInterface.resume_thread(native_threads[i].thread_handle);
         }
     }
 

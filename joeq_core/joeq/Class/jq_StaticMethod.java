@@ -50,7 +50,7 @@ public class jq_StaticMethod extends jq_Method {
     
     public final boolean needsDynamicLink(jq_Method method) {
         if (getDeclaringClass().needsDynamicLink(method)) return true;
-        if (jq.Bootstrapping) return false;
+        if (!jq.RunningNative) return false;
         return (state < STATE_SFINITIALIZED);
     }
 

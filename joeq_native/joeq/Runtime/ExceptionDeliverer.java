@@ -14,6 +14,7 @@ import Clazz.jq_CompiledCode;
 import Clazz.jq_Method;
 import Clazz.jq_Reference;
 import Clazz.jq_StaticMethod;
+import Debug.OnlineDebugger;
 import Main.jq;
 import Memory.CodeAddress;
 import Memory.StackAddress;
@@ -41,6 +42,14 @@ public abstract class ExceptionDeliverer {
             case 2: throw new ArithmeticException();
             case 3: throw new StackOverflowError();
             default: throw new InternalError("unknown hardware exception type: "+code);
+        }
+    }
+    public static void debug_trap_handler(int code) {
+        boolean pass = OnlineDebugger.debuggerEntryPoint();
+        if (pass) {
+            SystemInterface.debugmsg(">>> Passing on exception code "+code);
+            trap_handler(code);
+            jq.UNREACHABLE();
         }
     }
     
@@ -203,9 +212,11 @@ public abstract class ExceptionDeliverer {
     
     public static final jq_StaticMethod _athrow;
     public static final jq_StaticMethod _trap_handler;
+    public static final jq_StaticMethod _debug_trap_handler;
     static {
         jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LRun_Time/ExceptionDeliverer;");
         _athrow = k.getOrCreateStaticMethod("athrow", "(Ljava/lang/Throwable;)V");
         _trap_handler = k.getOrCreateStaticMethod("trap_handler", "(I)V");
+        _debug_trap_handler = k.getOrCreateStaticMethod("debug_trap_handler", "(I)V");
     }
 }

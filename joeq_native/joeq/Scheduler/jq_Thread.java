@@ -64,13 +64,13 @@ public class jq_Thread implements ObjectLayout {
     void setNativeThread(jq_NativeThread nt) { native_thread = nt; }
     public boolean isThreadSwitchEnabled() { return thread_switch_enabled == 0; }
     public void disableThreadSwitch() {
-        if (jq.Bootstrapping)
+        if (!jq.RunningNative)
             ++thread_switch_enabled;
         else
             ((HeapAddress)HeapAddress.addressOf(this).offset(_thread_switch_enabled.getOffset())).atomicAdd(1);
     }
     public void enableThreadSwitch() {
-        if (jq.Bootstrapping)
+        if (!jq.RunningNative)
             --thread_switch_enabled;
         else
             ((HeapAddress)HeapAddress.addressOf(this).offset(_thread_switch_enabled.getOffset())).atomicSub(1);

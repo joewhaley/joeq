@@ -213,7 +213,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         if (TRACE) System.out.println("x86 Reference Compiler: compiling "+method);
         
         // temporary kludge: no switching a thread during compilation.
-        if (!jq.Bootstrapping) Unsafe.getThreadBlock().disableThreadSwitch();
+        if (jq.RunningNative)
+            Unsafe.getThreadBlock().disableThreadSwitch();
         
         // initialize stuff
         asm = new x86Assembler(bcs.length, bcs.length*8, 5, DEFAULT_ALIGNMENT);
@@ -346,7 +347,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
                                                      x86ReferenceExceptionDeliverer.INSTANCE,
                                                      code_relocs, data_relocs);
         // temporary kludge: no switching a thread during compilation.
-        if (!jq.Bootstrapping) Unsafe.getThreadBlock().enableThreadSwitch();
+        if (jq.RunningNative)
+            Unsafe.getThreadBlock().enableThreadSwitch();
         return code;
     }
     
@@ -2324,7 +2326,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         }
         switch(op) {
             case INVOKE_VIRTUAL: {
-                jq.Assert((jq.Bootstrapping && jq.boot_types.contains(f.getDeclaringClass())) ||
+                jq.Assert((!jq.RunningNative && jq.boot_types.contains(f.getDeclaringClass())) ||
                           (f.getState() >= STATE_PREPARED) ||
                           (f.getDeclaringClass() == method.getDeclaringClass()));
                 int objptroffset = (f.getParamWords() << 2) - 4;
@@ -2336,19 +2338,19 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             }
             case INVOKE_SPECIAL:
                 f = jq_Class.getInvokespecialTarget(clazz, (jq_InstanceMethod)f);
-                jq.Assert((jq.Bootstrapping && jq.boot_types.contains(f.getDeclaringClass())) ||
+                jq.Assert((!jq.RunningNative && jq.boot_types.contains(f.getDeclaringClass())) ||
                           (f.getState() >= STATE_PREPARED) ||
                           (f.getDeclaringClass() == method.getDeclaringClass()));
                 emitCallRelative(f);
                 break;
             case INVOKE_STATIC:
-                jq.Assert((jq.Bootstrapping && jq.boot_types.contains(f.getDeclaringClass())) ||
+                jq.Assert((!jq.RunningNative && jq.boot_types.contains(f.getDeclaringClass())) ||
                           (f.getState() >= STATE_SFINITIALIZED) ||
                           (f.getDeclaringClass() == method.getDeclaringClass()));
                 emitCallRelative(f);
                 break;
             case INVOKE_INTERFACE:
-                //jq.Assert(jq.Bootstrapping || f.getDeclaringClass().isInterface());
+                //jq.Assert(!jq.RunningNative || f.getDeclaringClass().isInterface());
                 emitPushAddressOf(f);
                 emitCallRelative(x86ReferenceLinker._invokeinterface);
                 // need to pop args ourselves.
@@ -2480,7 +2482,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitNEWARRAY(jq_Array f) {
         super.visitNEWARRAY(f);
         // initialize type now, to avoid backpatch.
-        if (jq.Bootstrapping) {
+        if (!jq.RunningNative) {
             if (!jq.boot_types.contains(f))
                 System.err.println("Error! Boot type set does not contain "+f+", but an instance is created inside of method "+method);
             //jq.Assert(jq.boot_types.contains(f), f.toString());

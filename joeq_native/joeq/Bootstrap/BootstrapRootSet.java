@@ -263,6 +263,12 @@ public class BootstrapRootSet {
         s_m = ExceptionDeliverer._trap_handler;
         addNecessaryMethod(s_m);
         
+        // debugger is large, so compile it on demand.
+        if (false) {
+            s_m = ExceptionDeliverer._debug_trap_handler;
+            addNecessaryMethod(s_m);
+        }
+        
         // we want the compiler to be able to run at run time, too.
         i_m = jq_Method._compile;
         addNecessaryMethod(i_m);

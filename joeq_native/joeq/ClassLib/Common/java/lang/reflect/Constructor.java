@@ -7,11 +7,14 @@
 
 package ClassLib.Common.java.lang.reflect;
 
+import ClassLib.ClassLibInterface;
 import Clazz.jq_Class;
 import Clazz.jq_Initializer;
+import Clazz.jq_NameAndDesc;
 import Clazz.jq_Type;
 import Main.jq;
 import Run_Time.Reflection;
+import UTF.Utf8;
 
 /*
  * @author  John Whaley
@@ -26,9 +29,41 @@ public class Constructor extends AccessibleObject {
     private java.lang.Class[] parameterTypes;
     private java.lang.Class[] exceptionTypes;
     private int modifiers;
+    private int slot;
+    
+    private Constructor() {
+        jq.UNREACHABLE();
+        this.jq_init = null;
+    }
     
     private Constructor(jq_Initializer i) {
         this.jq_init = i;
+    }
+    private Constructor(java.lang.Class clazz,
+                        java.lang.Class[] parameterTypes,
+                        java.lang.Class[] exceptionTypes,
+                        int modifiers,
+                        int slot) {
+        this.clazz = clazz;
+        this.parameterTypes = parameterTypes;
+        this.exceptionTypes = exceptionTypes;
+        this.modifiers = modifiers;
+        this.slot = slot;
+        jq_Class k = (jq_Class) ClassLibInterface.DEFAULT.getJQType(clazz);
+        
+        StringBuffer desc = new StringBuffer();
+        desc.append('(');
+        for (int i=0; i<parameterTypes.length; ++i) {
+            desc.append(Reflection.getJQType(parameterTypes[i]).getDesc().toString());
+        }
+        desc.append(")V");
+        jq_NameAndDesc nd = new jq_NameAndDesc(Utf8.get("<init>"), Utf8.get(desc.toString()));
+        nd = ClassLib.ClassLibInterface.convertClassLibNameAndDesc(k, nd);
+        jq_Initializer init = (jq_Initializer) k.getDeclaredMember(nd);
+        if (init == null) {
+            init = (jq_Initializer) k.getOrCreateInstanceMethod(nd);
+        }
+        this.jq_init = init;
     }
     
     public java.lang.Object newInstance(java.lang.Object[] initargs)
@@ -52,11 +87,13 @@ public class Constructor extends AccessibleObject {
     // ONLY TO BE CALLED BY jq_Member CONSTRUCTOR!!!
     public static java.lang.reflect.Constructor createNewConstructor(jq_Initializer jq_init) {
         Object o = new Constructor(jq_init);
+        Run_Time.SystemInterface.debugmsg("Created "+jq_init);
         return (java.lang.reflect.Constructor)o;
     }
     
     public static void initNewConstructor(Constructor o, jq_Initializer jq_init) {
-        if (jq.Bootstrapping) return;
+        if (!jq.RunningNative) return;
+        jq.Assert(jq_init == o.jq_init);
         java.lang.Class clazz = jq_init.getDeclaringClass().getJavaLangClassObject();
         o.clazz = clazz;
         jq_Type[] paramTypes = jq_init.getParamTypes();

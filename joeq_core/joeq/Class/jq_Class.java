@@ -95,7 +95,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
     }
     public final boolean needsDynamicLink(jq_Method method) {
         if (method.getDeclaringClass() == this) return false;
-        if (jq.Bootstrapping && jq.isBootType(this)) return false;
+        if (!jq.RunningNative && jq.isBootType(this)) return false;
         return !isClsInitialized();
     }
     public jq_Member getDeclaredMember(jq_NameAndDesc nd) {
@@ -2162,7 +2162,7 @@ uphere2:
                 if (m.getState() == STATE_PREPARED) {
                     if (TRACE) SystemInterface.debugmsg("Compiling stub for: "+m);
                     jq_CompiledCode cc = m.compile_stub();
-                    if (!jq.Bootstrapping) cc.patchDirectBindCalls();
+                    if (jq.RunningNative) cc.patchDirectBindCalls();
                 }
             }
             for (int i=0; i<declared_instance_methods.length; ++i) {
@@ -2170,7 +2170,7 @@ uphere2:
                 if (m.getState() == STATE_PREPARED) {
                     if (TRACE) SystemInterface.debugmsg("Compiling stub for: "+m);
                     jq_CompiledCode cc = m.compile_stub();
-                    if (!jq.Bootstrapping) cc.patchDirectBindCalls();
+                    if (jq.RunningNative) cc.patchDirectBindCalls();
                 }
             }
             Address[] vt = (Address[])vtable;
@@ -2180,7 +2180,7 @@ uphere2:
                 vt[i+1] = virtual_methods[i].getDefaultCompiledVersion().getEntrypoint();
             }
             if (TRACE) SystemInterface.debugmsg(this+": "+vt[0].stringRep()+" vtable "+HeapAddress.addressOf(vt).stringRep());
-            if (!jq.Bootstrapping)
+            if (jq.RunningNative)
                 invokeclinit();
             if (TRACE) SystemInterface.debugmsg("Finished class init "+this);
             state = STATE_CLSINITIALIZED;

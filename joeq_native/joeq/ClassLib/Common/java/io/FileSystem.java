@@ -27,7 +27,7 @@ abstract class FileSystem {
     
     static final Object DEFAULT_FS;
     static {
-        if (jq.Bootstrapping) {
+        if (!jq.RunningNative) {
             Object o;
             try {
                 Class klass = Reflection.getJDKType(_class);

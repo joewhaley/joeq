@@ -40,13 +40,8 @@ public abstract class ZipFile implements ZipConstants {
         Reflection.putfield_A(dis, _raf, raf);
         //this.readCEN();
     }
-     */
-    public void __init__(String name) throws java.io.IOException {
-        this.name = name;
-        RandomAccessFile raf = new RandomAccessFile(name, "r");
-        this.raf = raf;
-        this.readCEN();
-    }
+    */
+    public native void __init__(String name) ;
     public ZipFile(String name) throws java.io.IOException {
         this.__init__(name);
     }

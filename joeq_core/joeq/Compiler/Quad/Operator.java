@@ -3187,7 +3187,7 @@ public abstract class Operator {
             public String toString() { return "MONITORENTER"; }
             public void interpret(Quad q, QuadInterpreter s) {
                 Object o = getObjectOpValue(getSrc(q), s);
-                if (!jq.Bootstrapping)
+                if (jq.RunningNative)
                     Run_Time.Monitor.monitorenter(o);
             }
             public UnmodifiableList.jq_Class getThrownExceptions() {
@@ -3200,7 +3200,7 @@ public abstract class Operator {
             public String toString() { return "MONITOREXIT"; }
             public void interpret(Quad q, QuadInterpreter s) {
                 Object o = getObjectOpValue(getSrc(q), s);
-                if (!jq.Bootstrapping)
+                if (jq.RunningNative)
                     Run_Time.Monitor.monitorexit(o);
             }
             public UnmodifiableList.jq_Class getThrownExceptions() {
@@ -3233,7 +3233,7 @@ public abstract class Operator {
             public String toString() { return "PEEK_P"; }
             public void interpret(Quad q, QuadInterpreter s) {
                 Address o = getAddressOpValue(getAddress(q), s);
-                if (!jq.Bootstrapping)
+                if (jq.RunningNative)
                     s.putReg_P(getDest(q).getRegister(), o.peek());
             }
         }
@@ -3243,7 +3243,7 @@ public abstract class Operator {
             public String toString() { return "PEEK_1"; }
             public void interpret(Quad q, QuadInterpreter s) {
                 Address o = getAddressOpValue(getAddress(q), s);
-                if (!jq.Bootstrapping)
+                if (jq.RunningNative)
                     s.putReg_I(getDest(q).getRegister(), o.peek1());
             }
         }
@@ -3253,7 +3253,7 @@ public abstract class Operator {
             public String toString() { return "PEEK_2"; }
             public void interpret(Quad q, QuadInterpreter s) {
                 Address o = getAddressOpValue(getAddress(q), s);
-                if (!jq.Bootstrapping)
+                if (jq.RunningNative)
                     s.putReg_I(getDest(q).getRegister(), o.peek2());
             }
         }
@@ -3263,7 +3263,7 @@ public abstract class Operator {
             public String toString() { return "PEEK_4"; }
             public void interpret(Quad q, QuadInterpreter s) {
                 Address o = getAddressOpValue(getAddress(q), s);
-                if (!jq.Bootstrapping)
+                if (jq.RunningNative)
                     s.putReg_I(getDest(q).getRegister(), o.peek4());
             }
         }
@@ -3273,7 +3273,7 @@ public abstract class Operator {
             public String toString() { return "PEEK_8"; }
             public void interpret(Quad q, QuadInterpreter s) {
                 Address o = getAddressOpValue(getAddress(q), s);
-                if (!jq.Bootstrapping)
+                if (jq.RunningNative)
                     s.putReg_L(getDest(q).getRegister(), o.peek8());
             }
         }
@@ -3303,7 +3303,7 @@ public abstract class Operator {
             public void interpret(Quad q, QuadInterpreter s) {
                 Address o = getAddressOpValue(getAddress(q), s);
                 Address v = getAddressOpValue(getValue(q), s);
-                if (!jq.Bootstrapping)
+                if (jq.RunningNative)
                     o.poke(v);
             }
         }
@@ -3314,7 +3314,7 @@ public abstract class Operator {
             public void interpret(Quad q, QuadInterpreter s) {
                 Address o = getAddressOpValue(getAddress(q), s);
                 byte v = (byte)getIntOpValue(getValue(q), s);
-                if (!jq.Bootstrapping)
+                if (jq.RunningNative)
                     o.poke1(v);
             }
         }
@@ -3325,7 +3325,7 @@ public abstract class Operator {
             public void interpret(Quad q, QuadInterpreter s) {
                 Address o = getAddressOpValue(getAddress(q), s);
                 short v = (short)getIntOpValue(getValue(q), s);
-                if (!jq.Bootstrapping)
+                if (jq.RunningNative)
                     o.poke2(v);
             }
         }
@@ -3336,7 +3336,7 @@ public abstract class Operator {
             public void interpret(Quad q, QuadInterpreter s) {
                 Address o = getAddressOpValue(getAddress(q), s);
                 int v = (int)getIntOpValue(getValue(q), s);
-                if (!jq.Bootstrapping)
+                if (jq.RunningNative)
                     o.poke4(v);
             }
         }
@@ -3347,7 +3347,7 @@ public abstract class Operator {
             public void interpret(Quad q, QuadInterpreter s) {
                 Address o = getAddressOpValue(getAddress(q), s);
                 long v = (long)getLongOpValue(getValue(q), s);
-                if (!jq.Bootstrapping)
+                if (jq.RunningNative)
                     o.poke8(v);
             }
         }
@@ -3406,7 +3406,7 @@ public abstract class Operator {
             public String toString() { return "GET_THREAD_BLOCK"; }
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
             public void interpret(Quad q, QuadInterpreter s) {
-                if (!jq.Bootstrapping)
+                if (jq.RunningNative)
                     s.putReg_A(((RegisterOperand)getOp1(q)).getRegister(), Unsafe.getThreadBlock());
             }
         }
@@ -3417,7 +3417,7 @@ public abstract class Operator {
             public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg2(q); }
             public void interpret(Quad q, QuadInterpreter s) {
                 Scheduler.jq_Thread o = (Scheduler.jq_Thread)getObjectOpValue(getOp2(q), s);
-                if (!jq.Bootstrapping)
+                if (jq.RunningNative)
                     Unsafe.setThreadBlock(o);
             }
         }
