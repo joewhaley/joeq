@@ -9,13 +9,15 @@
 
 package Compil3r.Reference.x86;
 
-import Allocator.Allocator;
+import Allocator.HeapAllocator;
 import Allocator.ObjectLayout;
-import Allocator.SimpleAllocator;
+import Allocator.DefaultAllocator;
 import Allocator.CodeAllocator;
 import Assembler.x86.x86;
 import Assembler.x86.x86Assembler;
 import Assembler.x86.x86Constants;
+import Assembler.x86.DirectBindCall;
+import Assembler.x86.Code2HeapReference;
 import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Primitive;
 import Clazz.jq_Array;
@@ -47,6 +49,7 @@ import Compil3r.Analysis.BytecodeVisitor;
 import jq;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.LinkedList;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -105,18 +108,101 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         }
     }
     
-    public static final jq_CompiledCode generate_compile_stub(jq_Method method) {
-        if (false) System.out.println("x86 Reference Compiler: generating compile stub for "+method);
-        x86Assembler asm = new x86Assembler(13);
-        if (TRACE_STUBS) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString("Stub compile: "+method)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+    private List code_relocs = new LinkedList();
+    private List data_relocs = new LinkedList();
+    
+    public final void emitCallRelative(jq_Method target) { emitCallRelative(target, asm, code_relocs); }
+    public static final void emitCallRelative(jq_Method target, x86Assembler asm, List code_relocs) {
+        asm.emitCALL_rel32(x86.CALL_rel32, 0);
+        DirectBindCall r = new DirectBindCall(asm.getCurrentAddress()-4, target);
+        code_relocs.add(r);
+        if (ALWAYS_TRACE) System.out.println("Direct bind call: "+r);
+    }
+    public final void emitPushAddressOf(Object o) { emitPushAddressOf(o, asm, data_relocs); }
+    public static final void emitPushAddressOf(Object o, x86Assembler asm, List data_relocs) {
+        if (o != null) {
+            int/*HeapAddress*/ addr = Unsafe.addressOf(o);
+            asm.emit1_Imm32(x86.PUSH_i32, addr);
+            Code2HeapReference r = new Code2HeapReference(asm.getCurrentAddress()-4, addr);
+            data_relocs.add(r);
+            if (ALWAYS_TRACE) System.out.println("Code2Heap reference: "+r);
+        } else {
+            asm.emit1_Imm8(x86.PUSH_i8, (byte)0);
         }
-        asm.emitPUSH_i(Unsafe.addressOf(method));
-        asm.emitCALL_abs(x86.CALL_rel32, getMemberAddress(jq_Method._compile, method, asm));
+    }
+    public final void emitPushMemory(jq_StaticField f) { emitPushMemory(f, asm, data_relocs); }
+    public static final void emitPushMemory(jq_StaticField f, x86Assembler asm, List data_relocs) {
+        int/*HeapAddress*/ addr = f.getAddress();
+        asm.emit2_Mem(x86.PUSH_m, addr);
+        Code2HeapReference r = new Code2HeapReference(asm.getCurrentAddress()-4, addr);
+        data_relocs.add(r);
+        if (ALWAYS_TRACE) System.out.println("Code2Heap reference: "+r);
+    }
+    public final void emitPushMemory8(jq_StaticField f) { emitPushMemory8(f, asm, data_relocs); }
+    public static final void emitPushMemory8(jq_StaticField f, x86Assembler asm, List data_relocs) {
+        int/*HeapAddress*/ addr = f.getAddress();
+        asm.emit2_Mem(x86.PUSH_m, addr+4); // hi
+        Code2HeapReference r = new Code2HeapReference(asm.getCurrentAddress()-4, addr+4);
+        data_relocs.add(r);
+        asm.emit2_Mem(x86.PUSH_m, addr  ); // lo
+        r = new Code2HeapReference(asm.getCurrentAddress()-4, addr);
+        data_relocs.add(r);
+        if (ALWAYS_TRACE) System.out.println("Code2Heap reference: "+r);
+    }
+    public final void emitPopMemory(jq_StaticField f) { emitPopMemory(f, asm, data_relocs); }
+    public static final void emitPopMemory(jq_StaticField f, x86Assembler asm, List data_relocs) {
+        int/*HeapAddress*/ addr = f.getAddress();
+        asm.emit2_Mem(x86.POP_m, addr);
+        Code2HeapReference r = new Code2HeapReference(asm.getCurrentAddress()-4, addr);
+        data_relocs.add(r);
+        if (ALWAYS_TRACE) System.out.println("Code2Heap reference: "+r);
+    }
+    public final void emitPopMemory8(jq_StaticField f) { emitPopMemory8(f, asm, data_relocs); }
+    public static final void emitPopMemory8(jq_StaticField f, x86Assembler asm, List data_relocs) {
+        int/*HeapAddress*/ addr = f.getAddress();
+        asm.emit2_Mem(x86.POP_m, addr  ); // lo
+        Code2HeapReference r = new Code2HeapReference(asm.getCurrentAddress()-4, addr);
+        data_relocs.add(r);
+        if (ALWAYS_TRACE) System.out.println("Code2Heap reference: "+r);
+        asm.emit2_Mem(x86.POP_m, addr+4); // hi
+        r = new Code2HeapReference(asm.getCurrentAddress()-4, addr+4);
+        data_relocs.add(r);
+        if (ALWAYS_TRACE) System.out.println("Code2Heap reference: "+r);
+    }
+    public final void emitCallMemory(jq_StaticField f) { emitCallMemory(f, asm, data_relocs); }
+    public static final void emitCallMemory(jq_StaticField f, x86Assembler asm, List data_relocs) {
+        int/*HeapAddress*/ addr = f.getAddress();
+        asm.emit2_Mem(x86.CALL_m, addr);
+        Code2HeapReference r = new Code2HeapReference(asm.getCurrentAddress()-4, addr);
+        data_relocs.add(r);
+        if (ALWAYS_TRACE) System.out.println("Code2Heap reference: "+r);
+    }
+    public final void emitFLD64(jq_StaticField f) { emitFLD64(f, asm, data_relocs); }
+    public static final void emitFLD64(jq_StaticField f, x86Assembler asm, List data_relocs) {
+        int/*HeapAddress*/ addr = f.getAddress();
+        asm.emit2_Mem(x86.FLD_m64, addr);
+        Code2HeapReference r = new Code2HeapReference(asm.getCurrentAddress()-4, addr);
+        data_relocs.add(r);
+        if (ALWAYS_TRACE) System.out.println("Code2Heap reference: "+r);
+    }
+    
+    public final List getCodeRelocs() { return code_relocs; }
+    public final List getDataRelocs() { return data_relocs; }
+    
+    public static final jq_CompiledCode generate_compile_stub(jq_Method method) {
+        if (TRACE_STUBS) System.out.println("x86 Reference Compiler: generating compile stub for "+method);
+        x86Assembler asm = new x86Assembler(0, 24);
+        List code_relocs = new LinkedList();
+        List data_relocs = new LinkedList();
+        if (TRACE_STUBS) {
+            emitPushAddressOf(SystemInterface.toCString("Stub compile: "+method), asm, data_relocs);
+            emitCallMemory(SystemInterface._debugmsg, asm, data_relocs);
+        }
+        emitPushAddressOf(method, asm, data_relocs);
+        emitCallRelative(jq_Method._compile, asm, code_relocs);
         asm.emit2_Mem(x86.JMP_m, jq_CompiledCode._entrypoint.getOffset(), EAX);
         // return generated code
-        return CodeAllocator.allocateCodeBlock(method, asm.getCodeBuffer(), null, null, null);
+        return asm.getCodeBuffer().allocateCodeBlock(method, null, null, null, code_relocs, data_relocs);
     }
     
     // Generate code for the given method.
@@ -124,7 +210,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         if (TRACE) System.out.println("x86 Reference Compiler: compiling "+method);
         
         // initialize stuff
-        asm = new x86Assembler(bcs.length);
+        asm = new x86Assembler(bcs.length, bcs.length*8);
         jq_Type[] params = method.getParamTypes();
         n_paramwords = method.getParamWords();
         int n_localwords = method.getMaxLocals();
@@ -163,23 +249,23 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
 
         // print a debug message
         if (TraceMethods) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString("Entering: "+method)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString("Entering: "+method));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         /*
         if (TraceArguments) {
             for (int i=0,j=0; i<params.length; ++i,++j) {
-                asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString("Arg"+i+" type "+params[i]+": ")));
-                asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+                emitPushAddressOf(SystemInterface.toCString("Arg"+i+" type "+params[i]+": "));
+                emitCallMemory(SystemInterface._debugmsg);
                 asm.emit2_Mem(x86.PUSH_m, getLocalOffset(j), EBP);
                 if (params[i] == jq_Primitive.LONG) {
                     asm.emit2_Mem(x86.PUSH_m, getLocalOffset(++j), EBP);
-                    asm.emitCALL_abs(x86.CALL_rel32, getMemberAddress(jq._hex16));
+                    emitCallRelative(jq._hex16);
                 } else if (params[i] == jq_Primitive.DOUBLE) {
                     asm.emit2_Mem(x86.PUSH_m, getLocalOffset(++j), EBP);
-                    asm.emitCALL_abs(x86.CALL_rel32, getMemberAddress(jq._hex16));
+                    emitCallRelative(jq._hex16);
                 } else {
-                    asm.emitCALL_abs(x86.CALL_rel32, getMemberAddress(jq._hex8));
+                    emitCallRelative(jq._hex8);
                 }
             }
         }
@@ -220,7 +306,9 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         jq_BytecodeMap bcm = new jq_BytecodeMap(offsets, bcs);
         
         // return generated code
-        return CodeAllocator.allocateCodeBlock(method, asm.getCodeBuffer(), tcs, bcm, x86ReferenceExceptionDeliverer.INSTANCE);
+        return asm.getCodeBuffer().allocateCodeBlock(method, tcs, bcm,
+                                                     x86ReferenceExceptionDeliverer.INSTANCE,
+                                                     code_relocs, data_relocs);
     }
     
     public void visitBytecode() throws VerifyError {
@@ -234,32 +322,32 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitNOP() {
         super.visitNOP();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": NOP")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": NOP"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emit1(x86.NOP);
     }
     public void visitACONST(Object s) {
         super.visitACONST(s);
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": ACONST")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": ACONST"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
-        asm.emitPUSH_i(Unsafe.addressOf(s));
+        emitPushAddressOf(s);
     }
     public void visitICONST(int c) {
         super.visitICONST(c);
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": ICONST "+c)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": ICONST "+c));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emitPUSH_i(c);
     }
     public void visitLCONST(long c) {
         super.visitLCONST(c);
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": LCONST "+c)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": LCONST "+c));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emitPUSH_i((int)(c>>32)); // hi
         asm.emitPUSH_i((int)c);       // lo
@@ -267,16 +355,16 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitFCONST(float c) {
         super.visitFCONST(c);
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": FCONST "+c)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": FCONST "+c));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emitPUSH_i(Float.floatToRawIntBits(c));
     }
     public void visitDCONST(double c) {
         super.visitDCONST(c);
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": DCONST "+c)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": DCONST "+c));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         long v = Double.doubleToRawLongBits(c);
         asm.emitPUSH_i((int)(v>>32)); // hi
@@ -285,16 +373,16 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitILOAD(int i) {
         super.visitILOAD(i);
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": ILOAD "+i)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": ILOAD "+i));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emit2_Mem(x86.PUSH_m, getLocalOffset(i), EBP);
     }
     public void visitLLOAD(int i) {
         super.visitLLOAD(i);
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": LLOAD "+i)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": LLOAD "+i));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emit2_Mem(x86.PUSH_m, getLocalOffset(i), EBP);   // hi
         asm.emit2_Mem(x86.PUSH_m, getLocalOffset(i+1), EBP); // lo
@@ -302,16 +390,16 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitFLOAD(int i) {
         super.visitFLOAD(i);
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": FLOAD "+i)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": FLOAD "+i));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emit2_Mem(x86.PUSH_m, getLocalOffset(i), EBP);
     }
     public void visitDLOAD(int i) {
         super.visitDLOAD(i);
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": DLOAD "+i)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": DLOAD "+i));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emit2_Mem(x86.PUSH_m, getLocalOffset(i), EBP);   // hi
         asm.emit2_Mem(x86.PUSH_m, getLocalOffset(i+1), EBP); // lo
@@ -319,24 +407,24 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitALOAD(int i) {
         super.visitALOAD(i);
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": ALOAD "+i)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": ALOAD "+i));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emit2_Mem(x86.PUSH_m, getLocalOffset(i), EBP);
     }
     public void visitISTORE(int i) {
         super.visitISTORE(i);
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": ISTORE "+i)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": ISTORE "+i));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emit2_Mem(x86.POP_m, getLocalOffset(i), EBP);
     }
     public void visitLSTORE(int i) {
         super.visitLSTORE(i);
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": LSTORE "+i)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": LSTORE "+i));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emit2_Mem(x86.POP_m, getLocalOffset(i+1), EBP); // lo
         asm.emit2_Mem(x86.POP_m, getLocalOffset(i), EBP);   // hi
@@ -344,16 +432,16 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitFSTORE(int i) {
         super.visitFSTORE(i);
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": FSTORE "+i)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": FSTORE "+i));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emit2_Mem(x86.POP_m, getLocalOffset(i), EBP);
     }
     public void visitDSTORE(int i) {
         super.visitDSTORE(i);
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": DSTORE "+i)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": DSTORE "+i));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emit2_Mem(x86.POP_m, getLocalOffset(i+1), EBP); // lo
         asm.emit2_Mem(x86.POP_m, getLocalOffset(i), EBP);   // hi
@@ -361,8 +449,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitASTORE(int i) {
         super.visitASTORE(i);
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": ASTORE "+i)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": ASTORE "+i));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emit2_Mem(x86.POP_m, getLocalOffset(i), EBP);
     }
@@ -384,48 +472,48 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitIALOAD() {
         super.visitIALOAD();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": IALOAD")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": IALOAD"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         ALOAD4helper();
     }
     public void visitLALOAD() {
         super.visitLALOAD();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": LALOAD")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": LALOAD"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         ALOAD8helper();
     }
     public void visitFALOAD() {
         super.visitFALOAD();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": FALOAD")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": FALOAD"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         ALOAD4helper();
     }
     public void visitDALOAD() {
         super.visitDALOAD();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": DALOAD")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": DALOAD"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         ALOAD8helper();
     }
     public void visitAALOAD() {
         super.visitAALOAD();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": AALOAD")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": AALOAD"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         ALOAD4helper();
     }
     public void visitBALOAD() {
         super.visitBALOAD();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": BALOAD")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": BALOAD"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emitShort_Reg(x86.POP_r, EBX);   // array index
         asm.emitShort_Reg(x86.POP_r, EAX);   // array ref
@@ -437,8 +525,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitCALOAD() {
         super.visitCALOAD();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": CALOAD")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": CALOAD"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emitShort_Reg(x86.POP_r, EBX);   // array index
         asm.emitShort_Reg(x86.POP_r, EAX);   // array ref
@@ -450,8 +538,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitSALOAD() {
         super.visitSALOAD();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": SALOAD")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": SALOAD"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emitShort_Reg(x86.POP_r, EBX);   // array index
         asm.emitShort_Reg(x86.POP_r, EAX);   // array ref
@@ -490,52 +578,52 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitIASTORE() {
         super.visitIASTORE();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": IASTORE")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": IASTORE"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         ASTORE4helper();
     }
     public void visitLASTORE() {
         super.visitLASTORE();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": LASTORE")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": LASTORE"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         ASTORE8helper();
     }
     public void visitFASTORE() {
         super.visitFASTORE();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": FASTORE")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": FASTORE"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         ASTORE4helper();
     }
     public void visitDASTORE() {
         super.visitDASTORE();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": DASTORE")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": DASTORE"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         ASTORE8helper();
     }
     public void visitAASTORE() {
         super.visitAASTORE();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": AASTORE")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": AASTORE"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         // call arraystorecheck
         asm.emit2_Mem(x86.PUSH_m, 0, ESP);  // push value
         asm.emit2_Mem(x86.PUSH_m, 12, ESP);  // push arrayref
-        asm.emitCALL_abs(x86.CALL_rel32, getMemberAddress(TypeCheck._arrayStoreCheck));
+        emitCallRelative(TypeCheck._arrayStoreCheck);
         ASTORE4helper();
     }
     public void visitBASTORE() {
         super.visitBASTORE();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": BASTORE")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": BASTORE"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emitShort_Reg(x86.POP_r, ECX);   // value
         asm.emitShort_Reg(x86.POP_r, EBX);   // array index
@@ -547,48 +635,48 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitCASTORE() {
         super.visitCASTORE();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": CASTORE")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": CASTORE"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         ASTORE2helper();
     }
     public void visitSASTORE() {
         super.visitSASTORE();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": SASTORE")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": SASTORE"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         ASTORE2helper();
     }
     public void visitPOP() {
         super.visitPOP();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": POP")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": POP"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emit2_Reg_Mem(x86.LEA, ESP, 4, ESP);
     }
     public void visitPOP2() {
         super.visitPOP2();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": POP2")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": POP2"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emit2_Reg_Mem(x86.LEA, ESP, 8, ESP);
     }
     public void visitDUP() {
         super.visitDUP();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": DUP")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": DUP"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emit2_Mem(x86.PUSH_m, 0, ESP);
     }
     public void visitDUP_x1() {
         super.visitDUP_x1();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": DUP_x1")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": DUP_x1"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emitShort_Reg(x86.POP_r, EAX);
         asm.emitShort_Reg(x86.POP_r, EBX);
@@ -599,8 +687,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitDUP_x2() {
         super.visitDUP_x2();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": DUP_x2")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": DUP_x2"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emitShort_Reg(x86.POP_r, EAX);
         asm.emitShort_Reg(x86.POP_r, EBX);
@@ -613,8 +701,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitDUP2() {
         super.visitDUP2();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": DUP2")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": DUP2"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emitShort_Reg(x86.POP_r, EAX);
         asm.emitShort_Reg(x86.POP_r, EBX);
@@ -626,8 +714,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitDUP2_x1() {
         super.visitDUP2_x1();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": DUP2_x1")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": DUP2_x1"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emitShort_Reg(x86.POP_r, EAX);
         asm.emitShort_Reg(x86.POP_r, EBX);
@@ -641,8 +729,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitDUP2_x2() {
         super.visitDUP2_x2();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": DUP2_x2")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": DUP2_x2"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emitShort_Reg(x86.POP_r, EAX);
         asm.emitShort_Reg(x86.POP_r, EBX);
@@ -658,8 +746,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitSWAP() {
         super.visitSWAP();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": SWAP")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": SWAP"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emitShort_Reg(x86.POP_r, EAX);
         asm.emitShort_Reg(x86.POP_r, EBX);
@@ -669,8 +757,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitIBINOP(byte op) {
         super.visitIBINOP(op);
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": IBINOP "+op)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": IBINOP "+op));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         switch(op) {
             case BINOP_ADD:
@@ -719,8 +807,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitLBINOP(byte op) {
         super.visitLBINOP(op);
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": LBINOP "+op)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": LBINOP "+op));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         switch(op) {
             case BINOP_ADD:
@@ -763,12 +851,12 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
                 asm.emitShort_Reg(x86.PUSH_r, EAX); // res_lo
                 break;
             case BINOP_DIV:
-                asm.emitCALL_abs(x86.CALL_rel32, getMemberAddress(MathSupport._ldiv));
+                emitCallRelative(MathSupport._ldiv);
                 asm.emitShort_Reg(x86.PUSH_r, EDX); // hi
                 asm.emitShort_Reg(x86.PUSH_r, EAX); // lo
                 break;
             case BINOP_REM:
-                asm.emitCALL_abs(x86.CALL_rel32, getMemberAddress(MathSupport._lrem));
+                emitCallRelative(MathSupport._lrem);
                 asm.emitShort_Reg(x86.PUSH_r, EDX); // hi
                 asm.emitShort_Reg(x86.PUSH_r, EAX); // lo
                 break;
@@ -797,8 +885,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitFBINOP(byte op) {
         super.visitFBINOP(op);
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": FBINOP "+op)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": FBINOP "+op));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         switch(op) {
             case BINOP_ADD:
@@ -840,8 +928,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitDBINOP(byte op) {
         super.visitDBINOP(op);
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": DBINOP "+op)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": DBINOP "+op));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         switch(op) {
             case BINOP_ADD:
@@ -883,8 +971,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitIUNOP(byte op) {
         super.visitIUNOP(op);
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": IUNOP "+op)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": IUNOP "+op));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         jq.assert(op == UNOP_NEG);
         asm.emit2_Mem(x86.NEG_m32, 0, ESP);
@@ -892,8 +980,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitLUNOP(byte op) {
         super.visitLUNOP(op);
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": LUNOP "+op)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": LUNOP "+op));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         jq.assert(op == UNOP_NEG);
         asm.emit2_Mem(x86.NEG_m32, 4, ESP);  // hi
@@ -903,8 +991,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitFUNOP(byte op) {
         super.visitFUNOP(op);
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": FUNOP "+op)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": FUNOP "+op));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         jq.assert(op == UNOP_NEG);
         asm.emit2_Mem(x86.FLD_m32, 0, ESP);
@@ -914,8 +1002,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitDUNOP(byte op) {
         super.visitDUNOP(op);
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": DUNOP "+op)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": DUNOP "+op));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emit2_Mem(x86.FLD_m64, 0, ESP);
         asm.emit2(x86.FCHS);
@@ -924,8 +1012,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitISHIFT(byte op) {
         super.visitISHIFT(op);
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": ISHIFT "+op)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": ISHIFT "+op));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         switch(op) {
             case SHIFT_LEFT:
@@ -947,8 +1035,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitLSHIFT(byte op) {
         super.visitLSHIFT(op);
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": LSHIFT"+op)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": LSHIFT"+op));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         switch(op) {
             case SHIFT_LEFT: {
@@ -1021,16 +1109,16 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitIINC(int i, int v) {
         super.visitIINC(i, v);
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": IINC "+i+" "+v)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": IINC "+i+" "+v));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emitARITH_Mem_Imm(x86.ADD_m_i32, getLocalOffset(i), EBP, v);
     }
     public void visitI2L() {
         super.visitI2L();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": I2L")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": I2L"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emitShort_Reg(x86.POP_r, EAX); // lo
         asm.emit1(x86.CWD);
@@ -1040,8 +1128,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitI2F() {
         super.visitI2F();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": I2F")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": I2F"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emit2_Mem(x86.FILD_m32, 0, ESP);
         asm.emit2_Mem(x86.FSTP_m32, 0, ESP);
@@ -1049,8 +1137,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitI2D() {
         super.visitI2D();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": I2D")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": I2D"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emit2_Mem(x86.FILD_m32, 0, ESP);
         asm.emit2_Reg_Mem(x86.LEA, ESP, -4, ESP);
@@ -1059,8 +1147,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitL2I() {
         super.visitL2I();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": L2I")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": L2I"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emitShort_Reg(x86.POP_r, EAX); // lo
         asm.emitShort_Reg(x86.POP_r, ECX); // hi
@@ -1069,8 +1157,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitL2F() {
         super.visitL2F();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": L2F")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": L2F"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emit2_Mem(x86.FILD_m64, 0, ESP);
         asm.emit2_Reg_Mem(x86.LEA, ESP, 4, ESP);
@@ -1079,15 +1167,15 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitL2D() {
         super.visitL2D();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": L2D")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": L2D"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emit2_Mem(x86.FILD_m64, 0, ESP);
         asm.emit2_Mem(x86.FSTP_m64, 0, ESP);
     }
     private void toIntHelper() {
         // check for NaN
-        asm.emit2_Mem(x86.FLD_m64, MathSupport._maxint.getAddress());
+        emitFLD64(MathSupport._maxint);
         asm.emit2_FPReg(x86.FUCOMIP, 1);
         asm.emitCJUMP_Short(x86.JP, (byte)0);
         int cloc1 = asm.getCurrentOffset();
@@ -1095,7 +1183,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         asm.emitCJUMP_Short(x86.JBE, (byte)0);
         int cloc2 = asm.getCurrentOffset();
         // check for <=MIN_INT
-        asm.emit2_Mem(x86.FLD_m64, MathSupport._minint.getAddress());
+        emitFLD64(MathSupport._minint);
         asm.emit2_FPReg(x86.FUCOMIP, 1);
         asm.emitCJUMP_Short(x86.JAE, (byte)0);
         int cloc3 = asm.getCurrentOffset();
@@ -1135,7 +1223,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     }
     private void toLongHelper() {
         // check for NaN
-        asm.emit2_Mem(x86.FLD_m64, MathSupport._maxlong.getAddress());
+        emitFLD64(MathSupport._maxlong);
         asm.emit2_FPReg(x86.FUCOMIP, 1);
         asm.emitCJUMP_Short(x86.JP, (byte)0);
         int cloc1 = asm.getCurrentOffset();
@@ -1143,7 +1231,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         asm.emitCJUMP_Short(x86.JBE, (byte)0);
         int cloc2 = asm.getCurrentOffset();
         // check for <=MIN_LONG
-        asm.emit2_Mem(x86.FLD_m64, MathSupport._minlong.getAddress());
+        emitFLD64(MathSupport._minlong);
         asm.emit2_FPReg(x86.FUCOMIP, 1);
         asm.emitCJUMP_Short(x86.JAE, (byte)0);
         int cloc3 = asm.getCurrentOffset();
@@ -1187,8 +1275,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitF2I() {
         super.visitF2I();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": F2I")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": F2I"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emit2_Mem(x86.FLD_m32, 0, ESP);
         toIntHelper();
@@ -1196,8 +1284,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitF2L() {
         super.visitF2L();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": F2L")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": F2L"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emit2_Mem(x86.FLD_m32, 0, ESP);
         asm.emit2_Reg_Mem(x86.LEA, ESP, -4, ESP);
@@ -1206,8 +1294,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitF2D() {
         super.visitF2D();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": F2D")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": F2D"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emit2_Mem(x86.FLD_m32, 0, ESP);
         asm.emit2_Reg_Mem(x86.LEA, ESP, -4, ESP);
@@ -1216,8 +1304,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitD2I() {
         super.visitD2I();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": D2I")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": D2I"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emit2_Mem(x86.FLD_m64, 0, ESP);
         asm.emit2_Reg_Mem(x86.LEA, ESP, 4, ESP);
@@ -1226,8 +1314,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitD2L() {
         super.visitD2L();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": D2L")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": D2L"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emit2_Mem(x86.FLD_m64, 0, ESP);
         toLongHelper();
@@ -1235,8 +1323,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitD2F() {
         super.visitD2F();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": D2F")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": D2F"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emit2_Mem(x86.FLD_m64, 0, ESP);
         asm.emit2_Reg_Mem(x86.LEA, ESP, 4, ESP);
@@ -1245,8 +1333,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitI2B() {
         super.visitI2B();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": I2B")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": I2B"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emitShort_Reg(x86.POP_r, EAX);
         asm.emit3_Reg_Reg(x86.MOVSX_r_r8, EAX, AL);
@@ -1255,8 +1343,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitI2C() {
         super.visitI2C();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": I2C")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": I2C"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emitShort_Reg(x86.POP_r, EAX);
         asm.emit3_Reg_Reg(x86.MOVZX_r_r16, EAX, AX);
@@ -1265,8 +1353,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitI2S() {
         super.visitI2S();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": I2S")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": I2S"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emitShort_Reg(x86.POP_r, EAX);
         asm.emit3_Reg_Reg(x86.MOVSX_r_r16, EAX, AX);
@@ -1275,8 +1363,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitLCMP2() {
         super.visitLCMP2();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": LCMP2")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": LCMP2"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emitShort_Reg(x86.POP_r, EBX); // lo
         asm.emitShort_Reg(x86.POP_r, ECX); // hi
@@ -1299,8 +1387,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitFCMP2(byte op) {
         super.visitFCMP2(op);
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": FCMP2 "+op)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": FCMP2 "+op));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         if (op == CMP_L) {
             asm.emit2_Mem(x86.FLD_m32, 0, ESP);
@@ -1335,8 +1423,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitDCMP2(byte op) {
         super.visitDCMP2(op);
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": DCMP2 "+op)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": DCMP2 "+op));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         if (op == CMP_L) {
             asm.emit2_Mem(x86.FLD_m64, 0, ESP);
@@ -1396,8 +1484,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitIF(byte op, int target) {
         super.visitIF(op, target);
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": IF "+op+" "+target)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": IF "+op+" "+target));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emitShort_Reg(x86.POP_r, EAX);
         asm.emitARITH_Reg_Imm(x86.CMP_r_i32, EAX, 0);
@@ -1406,8 +1494,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitIFREF(byte op, int target) {
         super.visitIFREF(op, target);
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": IFREF "+op+" "+target)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": IFREF "+op+" "+target));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emitShort_Reg(x86.POP_r, EAX);
         asm.emitARITH_Reg_Imm(x86.CMP_r_i32, EAX, 0);
@@ -1416,8 +1504,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitIFCMP(byte op, int target) {
         super.visitIFCMP(op, target);
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": IFCMP "+op+" "+target)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": IFCMP "+op+" "+target));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emitShort_Reg(x86.POP_r, ECX);
         asm.emitShort_Reg(x86.POP_r, EAX);
@@ -1427,8 +1515,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitIFREFCMP(byte op, int target) {
         super.visitIFREFCMP(op, target);
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": IFREFCMP "+op+" "+target)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": IFREFCMP "+op+" "+target));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emitShort_Reg(x86.POP_r, ECX);
         asm.emitShort_Reg(x86.POP_r, EAX);
@@ -1438,16 +1526,16 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitGOTO(int target) {
         super.visitGOTO(target);
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": GOTO "+target)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": GOTO "+target));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         branchHelper(CMP_UNCOND, target);
     }
     public void visitJSR(int target) {
         super.visitJSR(target);
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": JSR "+target)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": JSR "+target));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         Integer t = new Integer(target);
         if (target <= i_start) {
@@ -1459,16 +1547,16 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitRET(int i) {
         super.visitRET(i);
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": RET "+i)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": RET "+i));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emit2_Mem(x86.JMP_m, getLocalOffset(i), EBP);
     }
     public void visitTABLESWITCH(int default_target, int low, int high, int[] targets) {
         super.visitTABLESWITCH(default_target, low, high, targets);
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": TABLESWITCH "+default_target+" "+low+" "+high)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": TABLESWITCH "+default_target+" "+low+" "+high));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         int count = high-low+1;
         jq.assert(count == targets.length);
@@ -1477,7 +1565,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             asm.emitARITH_Reg_Imm(x86.SUB_r_i32, EAX, low);
         asm.emitARITH_Reg_Imm(x86.CMP_r_i32, EAX, count);
         branchHelper(CMP_AE, default_target);
-        asm.emitCALL_rel(x86.CALL_rel32, 0);
+        asm.emitCALL_rel32(x86.CALL_rel32, 0);
         int cloc = asm.getCurrentOffset();
         asm.emitShort_Reg(x86.POP_r, ECX);
         // val from table + abs position in table
@@ -1501,8 +1589,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitLOOKUPSWITCH(int default_target, int[] values, int[] targets) {
         super.visitLOOKUPSWITCH(default_target, values, targets);
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": LOOKUPSWITCH "+default_target)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": LOOKUPSWITCH "+default_target));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emitShort_Reg(x86.POP_r, EAX);
         for (int i=0; i<values.length; ++i) {
@@ -1515,8 +1603,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     }
     private void RETURN4helper() {
         if (TraceMethods) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString("Leaving: "+method)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString("Leaving: "+method));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         // epilogue
         asm.emitShort_Reg(x86.POP_r, EAX); // store return value
@@ -1525,8 +1613,8 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     }
     private void RETURN8helper() {
         if (TraceMethods) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString("Leaving: "+method)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString("Leaving: "+method));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         // epilogue
         asm.emitShort_Reg(x86.POP_r, EAX); // return value lo
@@ -1537,52 +1625,52 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitIRETURN() {
         super.visitIRETURN();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": IRETURN")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": IRETURN"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         RETURN4helper();
     }
     public void visitLRETURN() {
         super.visitLRETURN();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": LRETURN")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": LRETURN"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         RETURN8helper();
     }
     public void visitFRETURN() {
         super.visitFRETURN();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": FRETURN")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": FRETURN"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         RETURN4helper();
     }
     public void visitDRETURN() {
         super.visitDRETURN();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": DRETURN")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": DRETURN"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         RETURN8helper();
     }
     public void visitARETURN() {
         super.visitARETURN();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": ARETURN")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": ARETURN"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         RETURN4helper();
     }
     public void visitVRETURN() {
         super.visitVRETURN();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": VRETURN")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": VRETURN"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         if (TraceMethods) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString("Leaving: "+method)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString("Leaving: "+method));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emit1(x86.LEAVE);              // esp<-ebp, pop ebp
         asm.emit1_Imm16(x86.RET_i, (char)(n_paramwords<<2));
@@ -1590,23 +1678,24 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void GETSTATIC4helper(jq_StaticField f) {
         if (f.needsDynamicLink(method)) {
             if (TraceBytecodes) {
-                asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": GETSTATIC4 "+f+" (dynpatch)")));
-                asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+                emitPushAddressOf(SystemInterface.toCString(i_start+": GETSTATIC4 "+f+" (dynpatch)"));
+                emitCallMemory(SystemInterface._debugmsg);
             }
             // generate a runtime call, which will be backpatched.
             asm.startDynamicPatch(10); // 6
-            asm.emitPUSH_i(Unsafe.addressOf(f));
-            asm.emitCALL_abs(x86.CALL_rel32, getMemberAddress(x86ReferenceLinker._getstatic4));
+            emitPushAddressOf(f);
+            emitCallRelative(x86ReferenceLinker._getstatic4);
             asm.endDynamicPatch();
         } else {
             if (TraceBytecodes) {
-                asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": GETSTATIC4 "+f)));
-                asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+                emitPushAddressOf(SystemInterface.toCString(i_start+": GETSTATIC4 "+f));
+                emitCallMemory(SystemInterface._debugmsg);
             }
-            asm.emit2_Mem(x86.PUSH_m, f.getAddress());
+            emitPushMemory(f);
         }
     }
     static int patch_getstatic4(int retloc, jq_StaticField f) {
+        // todo: register backpatched reference
         Unsafe.poke2(retloc-10, (short)0xFFEB);
         Unsafe.poke4(retloc-8, 0x35FF9090);
         Unsafe.poke4(retloc-4, f.getAddress());
@@ -1616,24 +1705,24 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void GETSTATIC8helper(jq_StaticField f) {
         if (f.needsDynamicLink(method)) {
             if (TraceBytecodes) {
-                asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": GETSTATIC8 "+f+" (dynpatch)")));
-                asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+                emitPushAddressOf(SystemInterface.toCString(i_start+": GETSTATIC8 "+f+" (dynpatch)"));
+                emitCallMemory(SystemInterface._debugmsg);
             }
             // generate a runtime call, which will be backpatched.
             asm.startDynamicPatch(12);
-            asm.emitPUSH_i(Unsafe.addressOf(f));
-            asm.emitCALL_abs(x86.CALL_rel32, getMemberAddress(x86ReferenceLinker._getstatic8));
+            emitPushAddressOf(f);
+            emitCallRelative(x86ReferenceLinker._getstatic8);
             asm.endDynamicPatch();
         } else {
             if (TraceBytecodes) {
-                asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": GETSTATIC8 "+f)));
-                asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+                emitPushAddressOf(SystemInterface.toCString(i_start+": GETSTATIC8 "+f));
+                emitCallMemory(SystemInterface._debugmsg);
             }
-            asm.emit2_Mem(x86.PUSH_m, f.getAddress()+4); // hi
-            asm.emit2_Mem(x86.PUSH_m, f.getAddress()  ); // lo
+            emitPushMemory8(f);
         }
     }
     static int patch_getstatic8(int retloc, jq_StaticField f) {
+        // todo: register backpatched reference
         Unsafe.poke2(retloc-10, (short)0xFFEB);
         Unsafe.poke4(retloc-8, f.getAddress()+4);
         Unsafe.poke2(retloc-4, (short)0x35FF);
@@ -1664,23 +1753,24 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void PUTSTATIC4helper(jq_StaticField f) {
         if (f.needsDynamicLink(method)) {
             if (TraceBytecodes) {
-                asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": PUTSTATIC4 "+f+" (dynpatch)")));
-                asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+                emitPushAddressOf(SystemInterface.toCString(i_start+": PUTSTATIC4 "+f+" (dynpatch)"));
+                emitCallMemory(SystemInterface._debugmsg);
             }
             // generate a runtime call, which will be backpatched.
             asm.startDynamicPatch(10); // 6
-            asm.emitPUSH_i(Unsafe.addressOf(f));
-            asm.emitCALL_abs(x86.CALL_rel32, getMemberAddress(x86ReferenceLinker._putstatic4));
+            emitPushAddressOf(f);
+            emitCallRelative(x86ReferenceLinker._putstatic4);
             asm.endDynamicPatch();
         } else {
             if (TraceBytecodes) {
-                asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": PUTSTATIC4 "+f)));
-                asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+                emitPushAddressOf(SystemInterface.toCString(i_start+": PUTSTATIC4 "+f));
+                emitCallMemory(SystemInterface._debugmsg);
             }
-            asm.emit2_Mem(x86.POP_m, f.getAddress());
+            emitPopMemory(f);
         }
     }
     static int patch_putstatic4(int retloc, jq_StaticField f) {
+        // todo: register backpatched reference
         Unsafe.poke2(retloc-10, (short)0xFFEB);
         Unsafe.poke4(retloc-8, 0x058F9090);
         Unsafe.poke4(retloc-4, f.getAddress());
@@ -1691,27 +1781,27 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         if (f.needsDynamicLink(method)) {
             // generate a runtime call, which will be backpatched.
             if (TraceBytecodes) {
-                asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": PUTSTATIC8 "+f+" (dynpatch)")));
-                asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+                emitPushAddressOf(SystemInterface.toCString(i_start+": PUTSTATIC8 "+f+" (dynpatch)"));
+                emitCallMemory(SystemInterface._debugmsg);
             }
             asm.startDynamicPatch(12);
-            asm.emitPUSH_i(Unsafe.addressOf(f));
-            asm.emitCALL_abs(x86.CALL_rel32, getMemberAddress(x86ReferenceLinker._putstatic8));
+            emitPushAddressOf(f);
+            emitCallRelative(x86ReferenceLinker._putstatic8);
             asm.endDynamicPatch();
         } else {
             if (TraceBytecodes) {
-                asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": PUTSTATIC8 "+f)));
-                asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+                emitPushAddressOf(SystemInterface.toCString(i_start+": PUTSTATIC8 "+f));
+                emitCallMemory(SystemInterface._debugmsg);
             }
-            asm.emit2_Mem(x86.POP_m, f.getAddress()  ); // lo
-            asm.emit2_Mem(x86.POP_m, f.getAddress()+4); // hi
+            emitPopMemory8(f);
         }
     }
     static int patch_putstatic8(int retloc, jq_StaticField f) {
+        // todo: register backpatched reference
         Unsafe.poke2(retloc-10, (short)0xFFEB);
-        Unsafe.poke4(retloc-8, f.getAddress()+4);
+        Unsafe.poke4(retloc-8, f.getAddress());
         Unsafe.poke2(retloc-4, (short)0x058F);
-        Unsafe.poke4(retloc-2, f.getAddress());
+        Unsafe.poke4(retloc-2, f.getAddress()+4);
         Unsafe.poke2(retloc-10, (short)0x058F);
         return 10;
     }
@@ -1739,17 +1829,17 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         if (!f.getDeclaringClass().isPrepared()) {
             // generate a runtime call, which will be backpatched.
             if (TraceBytecodes) {
-                asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": GETFIELD1 "+f+" (dynpatch)")));
-                asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+                emitPushAddressOf(SystemInterface.toCString(i_start+": GETFIELD1 "+f+" (dynpatch)"));
+                emitCallMemory(SystemInterface._debugmsg);
             }
             asm.startDynamicPatch(10); // 9
-            asm.emitPUSH_i(Unsafe.addressOf(f));
-            asm.emitCALL_abs(x86.CALL_rel32, getMemberAddress(x86ReferenceLinker._getfield1));
+            emitPushAddressOf(f);
+            emitCallRelative(x86ReferenceLinker._getfield1);
             asm.endDynamicPatch();
         } else {
             if (TraceBytecodes) {
-                asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": GETFIELD1 "+f)));
-                asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+                emitPushAddressOf(SystemInterface.toCString(i_start+": GETFIELD1 "+f));
+                emitCallMemory(SystemInterface._debugmsg);
             }
             asm.emitShort_Reg(x86.POP_r, EAX); // obj ref
             asm.emit3_Reg_Mem(x86.MOVSX_r_m8, EBX, f.getOffset(), EAX);
@@ -1768,17 +1858,17 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         if (!f.getDeclaringClass().isPrepared()) {
             // generate a runtime call, which will be backpatched.
             if (TraceBytecodes) {
-                asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": GETFIELD4 "+f+" (dynpatch)")));
-                asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+                emitPushAddressOf(SystemInterface.toCString(i_start+": GETFIELD4 "+f+" (dynpatch)"));
+                emitCallMemory(SystemInterface._debugmsg);
             }
             asm.startDynamicPatch(10); // 7
-            asm.emitPUSH_i(Unsafe.addressOf(f));
-            asm.emitCALL_abs(x86.CALL_rel32, getMemberAddress(x86ReferenceLinker._getfield4));
+            emitPushAddressOf(f);
+            emitCallRelative(x86ReferenceLinker._getfield4);
             asm.endDynamicPatch();
         } else {
             if (TraceBytecodes) {
-                asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": GETFIELD4 "+f)));
-                asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+                emitPushAddressOf(SystemInterface.toCString(i_start+": GETFIELD4 "+f));
+                emitCallMemory(SystemInterface._debugmsg);
             }
             asm.emitShort_Reg(x86.POP_r, EAX); // obj ref
             asm.emit2_Mem(x86.PUSH_m, f.getOffset(), EAX);
@@ -1794,18 +1884,18 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void GETFIELD8helper(jq_InstanceField f) {
         if (!f.getDeclaringClass().isPrepared()) {
             if (TraceBytecodes) {
-                asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": GETFIELD8 "+f+" (dynpatch)")));
-                asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+                emitPushAddressOf(SystemInterface.toCString(i_start+": GETFIELD8 "+f+" (dynpatch)"));
+                emitCallMemory(SystemInterface._debugmsg);
             }
             // generate a runtime call, which will be backpatched.
             asm.startDynamicPatch(13);
-            asm.emitPUSH_i(Unsafe.addressOf(f));
-            asm.emitCALL_abs(x86.CALL_rel32, getMemberAddress(x86ReferenceLinker._getfield8));
+            emitPushAddressOf(f);
+            emitCallRelative(x86ReferenceLinker._getfield8);
             asm.endDynamicPatch();
         } else {
             if (TraceBytecodes) {
-                asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": GETFIELD8 "+f)));
-                asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+                emitPushAddressOf(SystemInterface.toCString(i_start+": GETFIELD8 "+f));
+                emitCallMemory(SystemInterface._debugmsg);
             }
             asm.emitShort_Reg(x86.POP_r, EAX); // obj ref
             asm.emit2_Mem(x86.PUSH_m, f.getOffset()+4, EAX); // hi
@@ -1848,18 +1938,18 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         super.visitCGETFIELD(f);
         if (!f.getDeclaringClass().isPrepared()) {
             if (TraceBytecodes) {
-                asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": CGETFIELD "+f+" (dynpatch)")));
-                asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+                emitPushAddressOf(SystemInterface.toCString(i_start+": CGETFIELD "+f+" (dynpatch)"));
+                emitCallMemory(SystemInterface._debugmsg);
             }
             // generate a runtime call, which will be backpatched.
             asm.startDynamicPatch(10); // 9
-            asm.emitPUSH_i(Unsafe.addressOf(f));
-            asm.emitCALL_abs(x86.CALL_rel32, getMemberAddress(x86ReferenceLinker._cgetfield));
+            emitPushAddressOf(f);
+            emitCallRelative(x86ReferenceLinker._cgetfield);
             asm.endDynamicPatch();
         } else {
             if (TraceBytecodes) {
-                asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": CGETFIELD "+f)));
-                asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+                emitPushAddressOf(SystemInterface.toCString(i_start+": CGETFIELD "+f));
+                emitCallMemory(SystemInterface._debugmsg);
             }
             asm.emitShort_Reg(x86.POP_r, EAX); // obj ref
             asm.emit3_Reg_Mem(x86.MOVZX_r_m16, EBX, f.getOffset(), EAX);
@@ -1878,18 +1968,18 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         super.visitSGETFIELD(f);
         if (!f.getDeclaringClass().isPrepared()) {
             if (TraceBytecodes) {
-                asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": SGETFIELD "+f+" (dynpatch)")));
-                asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+                emitPushAddressOf(SystemInterface.toCString(i_start+": SGETFIELD "+f+" (dynpatch)"));
+                emitCallMemory(SystemInterface._debugmsg);
             }
             // generate a runtime call, which will be backpatched.
             asm.startDynamicPatch(10); // 9
-            asm.emitPUSH_i(Unsafe.addressOf(f));
-            asm.emitCALL_abs(x86.CALL_rel32, getMemberAddress(x86ReferenceLinker._sgetfield));
+            emitPushAddressOf(f);
+            emitCallRelative(x86ReferenceLinker._sgetfield);
             asm.endDynamicPatch();
         } else {
             if (TraceBytecodes) {
-                asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": SGETFIELD "+f)));
-                asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+                emitPushAddressOf(SystemInterface.toCString(i_start+": SGETFIELD "+f));
+                emitCallMemory(SystemInterface._debugmsg);
             }
             asm.emitShort_Reg(x86.POP_r, EAX); // obj ref
             asm.emit3_Reg_Mem(x86.MOVSX_r_m16, EBX, f.getOffset(), EAX);
@@ -1911,18 +2001,18 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void PUTFIELD1helper(jq_InstanceField f) {
         if (!f.getDeclaringClass().isPrepared()) {
             if (TraceBytecodes) {
-                asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": PUTFIELD1 "+f+" (dynpatch)")));
-                asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+                emitPushAddressOf(SystemInterface.toCString(i_start+": PUTFIELD1 "+f+" (dynpatch)"));
+                emitCallMemory(SystemInterface._debugmsg);
             }
             // generate a runtime call, which will be backpatched.
             asm.startDynamicPatch(10); // 8
-            asm.emitPUSH_i(Unsafe.addressOf(f));
-            asm.emitCALL_abs(x86.CALL_rel32, getMemberAddress(x86ReferenceLinker._putfield1));
+            emitPushAddressOf(f);
+            emitCallRelative(x86ReferenceLinker._putfield1);
             asm.endDynamicPatch();
         } else {
             if (TraceBytecodes) {
-                asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": PUTFIELD1 "+f)));
-                asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+                emitPushAddressOf(SystemInterface.toCString(i_start+": PUTFIELD1 "+f));
+                emitCallMemory(SystemInterface._debugmsg);
             }
             // field has already been resolved.
             asm.emitShort_Reg(x86.POP_r, EBX);
@@ -1940,18 +2030,18 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void PUTFIELD2helper(jq_InstanceField f) {
         if (!f.getDeclaringClass().isPrepared()) {
             if (TraceBytecodes) {
-                asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": PUTFIELD2 "+f+" (dynpatch)")));
-                asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+                emitPushAddressOf(SystemInterface.toCString(i_start+": PUTFIELD2 "+f+" (dynpatch)"));
+                emitCallMemory(SystemInterface._debugmsg);
             }
             // generate a runtime call, which will be backpatched.
             asm.startDynamicPatch(10); // 9
-            asm.emitPUSH_i(Unsafe.addressOf(f));
-            asm.emitCALL_abs(x86.CALL_rel32, getMemberAddress(x86ReferenceLinker._putfield2));
+            emitPushAddressOf(f);
+            emitCallRelative(x86ReferenceLinker._putfield2);
             asm.endDynamicPatch();
         } else {
             if (TraceBytecodes) {
-                asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": PUTFIELD2 "+f)));
-                asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+                emitPushAddressOf(SystemInterface.toCString(i_start+": PUTFIELD2 "+f));
+                emitCallMemory(SystemInterface._debugmsg);
             }
             // field has already been resolved.
             asm.emitShort_Reg(x86.POP_r, EBX);
@@ -1970,18 +2060,18 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void PUTFIELD4helper(jq_InstanceField f) {
         if (!f.getDeclaringClass().isPrepared()) {
             if (TraceBytecodes) {
-                asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": PUTFIELD4 "+f+" (dynpatch)")));
-                asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+                emitPushAddressOf(SystemInterface.toCString(i_start+": PUTFIELD4 "+f+" (dynpatch)"));
+                emitCallMemory(SystemInterface._debugmsg);
             }
             // generate a runtime call, which will be backpatched.
             asm.startDynamicPatch(10); // 8
-            asm.emitPUSH_i(Unsafe.addressOf(f));
-            asm.emitCALL_abs(x86.CALL_rel32, getMemberAddress(x86ReferenceLinker._putfield4));
+            emitPushAddressOf(f);
+            emitCallRelative(x86ReferenceLinker._putfield4);
             asm.endDynamicPatch();
         } else {
             if (TraceBytecodes) {
-                asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": PUTFIELD4 "+f)));
-                asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+                emitPushAddressOf(SystemInterface.toCString(i_start+": PUTFIELD4 "+f));
+                emitCallMemory(SystemInterface._debugmsg);
             }
             // field has already been resolved.
             asm.emitShort_Reg(x86.POP_r, EBX);
@@ -1999,18 +2089,18 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void PUTFIELD8helper(jq_InstanceField f) {
         if (!f.getDeclaringClass().isPrepared()) {
             if (TraceBytecodes) {
-                asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": PUTFIELD8 "+f+" (dynpatch)")));
-                asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+                emitPushAddressOf(SystemInterface.toCString(i_start+": PUTFIELD8 "+f+" (dynpatch)"));
+                emitCallMemory(SystemInterface._debugmsg);
             }
             // generate a runtime call, which will be backpatched.
             asm.startDynamicPatch(15);
-            asm.emitPUSH_i(Unsafe.addressOf(f));
-            asm.emitCALL_abs(x86.CALL_rel32, getMemberAddress(x86ReferenceLinker._putfield8));
+            emitPushAddressOf(f);
+            emitCallRelative(x86ReferenceLinker._putfield8);
             asm.endDynamicPatch();
         } else {
             if (TraceBytecodes) {
-                asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": PUTFIELD8 "+f)));
-                asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+                emitPushAddressOf(SystemInterface.toCString(i_start+": PUTFIELD8 "+f));
+                emitCallMemory(SystemInterface._debugmsg);
             }
             // field has already been resolved.
             asm.emitShort_Reg(x86.POP_r, EBX); // lo
@@ -2087,13 +2177,13 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
                 throw new InternalError();
         }
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": INVOKE "+op+" "+f+" (dynpatch)")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": INVOKE "+op+" "+f+" (dynpatch)"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         // generate a runtime call, which will be backpatched.
         asm.startDynamicPatch(dpatchsize);
-        asm.emitPUSH_i(Unsafe.addressOf(f));
-        asm.emitCALL_abs(x86.CALL_rel32, getMemberAddress(dpatchentry));
+        emitPushAddressOf(f);
+        emitCallRelative(dpatchentry);
         asm.endDynamicPatch();
     }
     static int patch_invokevirtual(int retloc, jq_InstanceMethod f) {
@@ -2116,9 +2206,13 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         return 5;
     }
     private void INVOKENODPATCHhelper(byte op, jq_Method f) {
+        jq.assert((jq.Bootstrapping && jq.boot_types.contains(f.getDeclaringClass())) ||
+                  (op == INVOKE_INTERFACE) ||
+                  (f.getState() >= STATE_SFINITIALIZED) ||
+                  (f.getDeclaringClass() == method.getDeclaringClass()));
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": INVOKE "+op+" "+f)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": INVOKE "+op+" "+f));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         switch(op) {
             case INVOKE_VIRTUAL: {
@@ -2133,12 +2227,12 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
                 f = jq_Class.getInvokespecialTarget(clazz, (jq_InstanceMethod)f);
                 // fallthrough
             case INVOKE_STATIC:
-                asm.emitCALL_abs(x86.CALL_rel32, getMemberAddress(f));
+                emitCallRelative(f);
                 break;
             case INVOKE_INTERFACE:
                 //jq.assert(jq.Bootstrapping || f.getDeclaringClass().isInterface());
-                asm.emitPUSH_i(Unsafe.addressOf(f));
-                asm.emitCALL_abs(x86.CALL_rel32, getMemberAddress(x86ReferenceLinker._invokeinterface));
+                emitPushAddressOf(f);
+                emitCallRelative(x86ReferenceLinker._invokeinterface);
                 // need to pop args ourselves.
                 asm.emit2_Reg_Mem(x86.LEA, ESP, f.getParamWords()<<2, ESP);
                 break;
@@ -2227,17 +2321,17 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitNEW(jq_Type f) {
         super.visitNEW(f);
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": NEW "+f)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": NEW "+f));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         if (f.isClassType() && !f.needsDynamicLink(method)) {
             jq_Class k = (jq_Class)f;
             asm.emitPUSH_i(k.getInstanceSize());
-            asm.emitPUSH_i(Unsafe.addressOf(k.getVTable()));
-            asm.emitCALL_abs(x86.CALL_rel32, getMemberAddress(SimpleAllocator._allocateObject));
+            emitPushAddressOf(k.getVTable());
+            emitCallRelative(DefaultAllocator._allocateObject);
         } else {
-            asm.emitPUSH_i(Unsafe.addressOf(f));
-            asm.emitCALL_abs(x86.CALL_rel32, getMemberAddress(Allocator._clsinitAndAllocateObject));
+            emitPushAddressOf(f);
+            emitCallRelative(HeapAllocator._clsinitAndAllocateObject);
         }
         asm.emitShort_Reg(x86.PUSH_r, EAX);
     }
@@ -2248,22 +2342,22 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             f.load(); f.verify(); f.prepare(); f.sf_initialize(); f.cls_initialize();
         }
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": NEWARRAY "+f)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": NEWARRAY "+f));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         byte width = f.getLogElementSize();
         asm.emit2_Mem(x86.PUSH_m, 0, ESP);
         if (width != 0) asm.emit2_SHIFT_Mem_Imm8(x86.SHL_m32_i, 0, ESP, width);
         asm.emitARITH_Mem_Imm(x86.ADD_m_i32, 0, ESP, ObjectLayout.ARRAY_HEADER_SIZE);
-        asm.emitPUSH_i(Unsafe.addressOf(f.getVTable()));
-        asm.emitCALL_abs(x86.CALL_rel32, getMemberAddress(SimpleAllocator._allocateArray));
+        emitPushAddressOf(f.getVTable());
+        emitCallRelative(DefaultAllocator._allocateArray);
         asm.emitShort_Reg(x86.PUSH_r, EAX);
     }
     public void visitARRAYLENGTH() {
         super.visitARRAYLENGTH();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": ARRAYLENGTH")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": ARRAYLENGTH"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emitShort_Reg(x86.POP_r, EAX);
         asm.emit2_Mem(x86.PUSH_m, ARRAY_LENGTH_OFFSET, EAX);
@@ -2271,110 +2365,58 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public void visitATHROW() {
         super.visitATHROW();
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": ATHROW")));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": ATHROW"));
+            emitCallMemory(SystemInterface._debugmsg);
         }
-        asm.emitCALL_abs(x86.CALL_rel32, getMemberAddress(ExceptionDeliverer._athrow));
+        emitCallRelative(ExceptionDeliverer._athrow);
     }
     public void visitCHECKCAST(jq_Type f) {
         super.visitCHECKCAST(f);
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": CHECKCAST "+f)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": CHECKCAST "+f));
+            emitCallMemory(SystemInterface._debugmsg);
         }
-        asm.emitPUSH_i(Unsafe.addressOf(f));
-        asm.emitCALL_abs(x86.CALL_rel32, getMemberAddress(TypeCheck._checkcast));
+        emitPushAddressOf(f);
+        emitCallRelative(TypeCheck._checkcast);
         asm.emitShort_Reg(x86.PUSH_r, EAX);
     }
     public void visitINSTANCEOF(jq_Type f) {
         super.visitINSTANCEOF(f);
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": INSTANCEOF "+f)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": INSTANCEOF "+f));
+            emitCallMemory(SystemInterface._debugmsg);
         }
-        asm.emitPUSH_i(Unsafe.addressOf(f));
-        asm.emitCALL_abs(x86.CALL_rel32, getMemberAddress(TypeCheck._instance_of));
+        emitPushAddressOf(f);
+        emitCallRelative(TypeCheck._instance_of);
         asm.emitShort_Reg(x86.PUSH_r, EAX);
     }
     public void visitMONITOR(byte op) {
         super.visitMONITOR(op);
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": MONITOR "+op)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": MONITOR "+op));
+            emitCallMemory(SystemInterface._debugmsg);
         }
-        int entry = (op == MONITOR_ENTER)?getMemberAddress(Monitor._monitorenter)
-                                         :getMemberAddress(Monitor._monitorexit);
-        asm.emitCALL_abs(x86.CALL_rel32, entry);
+        jq_StaticMethod m = (op==MONITOR_ENTER)?Monitor._monitorenter:Monitor._monitorexit;
+        emitCallRelative(m);
     }
     public void visitMULTINEWARRAY(jq_Type f, char dim) {
         super.visitMULTINEWARRAY(f, dim);
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": MULTINEWARRAY "+f+" "+dim)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": MULTINEWARRAY "+f+" "+dim));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         asm.emitPUSH_i(dim);
-        asm.emitPUSH_i(Unsafe.addressOf(f));
-        asm.emitCALL_abs(x86.CALL_rel32, getMemberAddress(Allocator._multinewarray));
+        emitPushAddressOf(f);
+        emitCallRelative(HeapAllocator._multinewarray);
         // pop dim args, because the callee doesn't do it.
         asm.emit2_Reg_Mem(x86.LEA, ESP, dim<<2, ESP);
         asm.emitShort_Reg(x86.PUSH_r, EAX);
     }
 
-    private static Collection call_patches;
-    static class CallPatch {
-        jq_Method caller;
-        int offset;
-        jq_Member callee;
-        CallPatch(jq_Method caller, int offset, jq_Member callee) {
-            this.caller = caller;
-            this.offset = offset;
-            this.callee = callee;
-        }
-        public String toString() {
-            return caller+" offset "+jq.hex(offset)+"->"+callee;
-        }
-    }
-    public static void initCallPatches() {
-        jq.assert(call_patches == null);
-        call_patches = new LinkedList();
-    }
-    private int getMemberAddress(jq_Member m) {
-        return getMemberAddress(m, method, asm);
-    }
-    private static int getMemberAddress(jq_Member m, jq_Method method, x86Assembler asm) {
-        if (m instanceof jq_StaticField) {
-            jq.assert(m.getDeclaringClass().isSFInitialized());
-            jq_StaticField sf = (jq_StaticField)m;
-            return sf.getAddress();
-        }
-        call_patches.add(new CallPatch(method, asm.getCurrentOffset()+1, m));
-        return 0x66666666;
-    }
-    public static void patchCalls() {
-        Iterator i = call_patches.iterator();
-        while (i.hasNext()) {
-            CallPatch cp = (CallPatch)i.next();
-            jq.assert(cp.caller.getDefaultCompiledVersion() != null);
-            int call_location = cp.caller.getDefaultCompiledVersion().getEntrypoint() + cp.offset;
-            int callee_entry;
-            if (cp.callee instanceof jq_Method) {
-                jq_CompiledCode cc = ((jq_Method)cp.callee).getDefaultCompiledVersion();
-                jq.assert(cc != null, cp.toString());
-                callee_entry = ((jq_Method)cp.callee).getDefaultCompiledVersion().getEntrypoint();
-            } else {
-                jq.UNREACHABLE(); // handled in getMemberAddress. but should work anyway.
-                callee_entry = ((jq_StaticField)cp.callee).getAddress();
-            }
-            //jq.assert(Unsafe.peek(call_location) == 0x66666666);
-            Unsafe.poke4(call_location, callee_entry - call_location - 4);
-        }
-        call_patches = null;
-    }
-    
     private void gen_unsafe(jq_Method f) {
         if (TraceBytecodes) {
-            asm.emitPUSH_i(Unsafe.addressOf(SystemInterface.toCString(i_start+": UNSAFE "+f)));
-            asm.emit2_Mem(x86.CALL_m, SystemInterface._debugmsg.getAddress());
+            emitPushAddressOf(SystemInterface.toCString(i_start+": UNSAFE "+f));
+            emitCallMemory(SystemInterface._debugmsg);
         }
         if ((f == Unsafe._addressOf) || (f == Unsafe._asObject) ||
             (f == Unsafe._floatToIntBits) || (f == Unsafe._intBitsToFloat) ||
@@ -2442,9 +2484,11 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         }
     }
 
+    /*
     public static final jq_StaticField _call_patches;
     static {
         jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LCompil3r/Reference/x86/x86ReferenceCompiler;");
         _call_patches = k.getOrCreateStaticField("call_patches", "Ljava/util/Collection;");
     }
+     */
 }
