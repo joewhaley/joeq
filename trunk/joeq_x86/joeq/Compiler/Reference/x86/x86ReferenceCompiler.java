@@ -2622,7 +2622,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements x86Constant
     public static final Utf8 atomicAdd = Utf8.get("atomicAdd");
     public static final Utf8 atomicSub = Utf8.get("atomicSub");
     public static final Utf8 atomicCas4 = Utf8.get("atomicCas4");
-    public static final Utf8 atomicCas8 = Utf8.get("atomicCas4");
+    public static final Utf8 atomicCas8 = Utf8.get("atomicCas8");
     public static final Utf8 atomicAnd = Utf8.get("atomicAnd");
     public static final Utf8 min = Utf8.get("min");
     public static final Utf8 max = Utf8.get("max");
