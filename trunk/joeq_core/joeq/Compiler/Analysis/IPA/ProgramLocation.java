@@ -533,6 +533,14 @@ public abstract class ProgramLocation implements Textualizable {
         public boolean isSingleTarget() { return false; }
         public boolean isInterfaceCall() { return false; }
         public byte getInvocationType() { return -1; }
+        public String getEmacsName() {
+            Utf8 source = getSourceFile();
+            if (source == null) {
+                return m + ":"+m.getLineNumber(0) + locationLabel;
+            }else{
+                return source+":"+m.getLineNumber(0) + locationLabel;    
+            }
+        }
     }
 
     public static ProgramLocation read(StringTokenizer st) {
