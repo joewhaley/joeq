@@ -1,4 +1,4 @@
-    // PA.java, created Oct 16, 2003 3:39:34 PM by joewhaley
+// PA.java, created Oct 16, 2003 3:39:34 PM by joewhaley
 // Copyright (C) 2003 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Analysis.IPA;
@@ -31,6 +31,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
+import com.sun.corba.se.interceptor.UnknownType;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
@@ -660,7 +661,7 @@ public class PA {
         BDD bdd1 = V1.ithVar(V1_i);
         bdd1.andWith(H1.ithVar(H_i));
         if (V1H1context != null) bdd1.andWith(V1H1context.id());
-        if (TRACE_RELATIONS) out.println("Adding to vP: "+bdd1.toStringWithDomains());
+        if (TRACE_RELATIONS) out.println("Adding to vP: "+bdd1.toStringWithDomains(TS));
         vP.orWith(bdd1);
     }
     
@@ -677,7 +678,7 @@ public class PA {
         BDD bdd1 = H1.ithVar(H_i);
         bdd1.andWith(V_bdd.id());
         if (V1H1context != null) bdd1.andWith(V1H1context.id());
-        if (TRACE_RELATIONS) out.println("Adding to vP: "+bdd1.toStringWithDomains());
+        if (TRACE_RELATIONS) out.println("Adding to vP: "+bdd1.toStringWithDomains(TS));
         vP.orWith(bdd1);
     }
     
@@ -1016,10 +1017,10 @@ public class PA {
     }
 
     public boolean isNullConstant(Node node) {
-        if (node instanceof ConcreteTypeNode || node instanceof ConcreteObjectNode) {
+        if (node instanceof ConcreteTypeNode || node instanceof ConcreteObjectNode || node instanceof GlobalNode) {
             jq_Reference type = node.getDeclaredType();
             if (type == null || type == jq_NullType.NULL_TYPE) {
-                if (TRACE) out.println("Skipping null constant.");
+                if (TRACE) out.println("Skipping null constant");
                 return true;
             }
         }
@@ -1035,6 +1036,11 @@ public class PA {
     }
     
     void addToHT(int H_i, jq_Reference type) {
+        /*Node n = (Node) Hmap.get(H_i);
+        if(!INCLUDE_UNKNOWN_TYPES && n instanceof UnknownTypeNode){
+            System.out.println("Skipped " + n);
+            return;            
+        }*/
         int T_i = Tmap.get(type);
         BDD T_bdd = T2.ithVar(T_i);
         addToHT(H_i, T_bdd);
@@ -1160,6 +1166,10 @@ public class PA {
                     addThreadRun(n.getDefiningMethod(), n, (jq_Class) type);
                 }
             }
+            if (!INCLUDE_UNKNOWN_TYPES && (n instanceof UnknownTypeNode) ) {
+                if(TRACE) out.println("Skipping unknown type node: " + n);
+                continue;                
+            }
             addToHT(H_i, type);
         }
 
@@ -1231,7 +1241,7 @@ public class PA {
                 jq_Reference type = n.getDeclaredType();
                 if (type == null)
                     continue;
-                if (!INCLUDE_ALL_UNKNOWN_TYPES && (type == object_class || type == throwable_class)) {
+                if (!INCLUDE_ALL_UNKNOWN_TYPES && (type == object_class || type == throwable_class || type == class_class)) {
                     System.out.println("warning: excluding UnknownTypeNode "+type.getName()+"* from hT: H1("+H_i+")");
                 } else {
                     // conservatively say that it can be any known subtype.
@@ -1298,7 +1308,7 @@ public class PA {
                 //System.out.println("n = " + n + ", m = " + m);
                 
                 if(USE_BOGUS_SUMMARIES && m != null) {
-                    jq_Method replacement = getBogusSummaryProvider().getReplacementMethod(m);
+                    jq_Method replacement = getBogusSummaryProvider().getReplacementMethod(m, new Integer(0));
                     if(replacement != null) {
                         if(TRACE_BOGUS) System.out.println("Replacing a call to " + m + 
                                         " with a call to "+ replacement);
