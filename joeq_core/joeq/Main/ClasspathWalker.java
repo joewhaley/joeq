@@ -18,6 +18,7 @@ import java.util.List;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Type;
+import jwutil.util.Assert;
 
 /**
  * author: V.Benjamin Livshits
@@ -30,6 +31,7 @@ public class ClasspathWalker {
     static boolean SKIP_ABSTRACT = !System.getProperty("skipabstract", "no").equals("no");
        
     public static void main(String[] args) throws FileNotFoundException {
+        HostedVM.initialize();
         System.out.println("Classpath: " + PrimordialClassLoader.loader.classpathToString() + "\n");
         pw = new PrintWriter(new FileOutputStream("subclasses.txt"));
         processPackages();
@@ -51,6 +53,9 @@ public class ClasspathWalker {
                 loaded.add(canonicalClassName);
                 try {
                     jq_Class c = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType(canonicalClassName);
+                    if (canonicalClassName.equals("Ljava/lang/Object;")) {
+                        Assert._assert(c == PrimordialClassLoader.getJavaLangObject());
+                    }
                     c.load();
                     c.prepare();
                     Collection interfaces = new LinkedList();
@@ -72,15 +77,16 @@ public class ClasspathWalker {
                     classCount++;
                    //if(TRACE) System.out.println("Processing class # " + classCount + ", " + canonicalClassName);
                 } catch (NoClassDefFoundError x) {
-                    if(TRACE) System.err.println("Package " + packageName + ": Class not found (canonical name " + canonicalClassName + ").");
+                    if(TRACE) System.err.println("Package " + packageName + ": Class not found (canonical name " + canonicalClassName + "): "+x);
+                    //x.printStackTrace();
                 } catch (ClassFormatError cfe) {
-                    if(TRACE) System.err.println("Class format error occurred while loading class (" + canonicalClassName + "):" + cfe.toString());
-                    //le.printStackTrace(System.err);
+                    if(TRACE) System.err.println("Class format error occurred while loading class (" + canonicalClassName + "): " + cfe.toString());
+                    //cfe.printStackTrace(System.err);
                 } catch (LinkageError le) {
-                    if(TRACE) System.err.println("Linkage error occurred while loading class (" + canonicalClassName + "):" + le.toString());
+                    if(TRACE) System.err.println("Linkage error occurred while loading class (" + canonicalClassName + "): " + le.toString());
                     //le.printStackTrace(System.err);
                 } catch (RuntimeException e){
-                    if(TRACE) System.err.println("Security error occured: " + e.getMessage());
+                    if(TRACE) System.err.println("Security error occurred: " + e.getMessage());
                 }
             }            
             System.gc();
