@@ -29,7 +29,9 @@ class ZipEntry implements ZipConstants {
     int version;
     long offset;
     
-    ZipEntry() { }
+    ZipEntry() { 
+        this.name = "UNINITIALIZED";
+    }
     
     public int load(byte[] cenbuf, int st_off, long cenpos, int cenlen)
     throws java.util.zip.ZipException {
