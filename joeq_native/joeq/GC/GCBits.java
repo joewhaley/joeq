@@ -71,17 +71,18 @@ public class GCBits {
     }
 
     public HashSet diff() {
-        markbits.xor(allocbits);
-        BitString.ForwardBitStringIterator iter = markbits.iterator();
+        BitString sweepbits = (BitString) markbits.clone();
+        sweepbits.xor(allocbits);
+        BitString.ForwardBitStringIterator iter = sweepbits.iterator();
         HashSet units = new HashSet();
         int i, j;
         while (iter.hasNext()) {
-            i = iter.nextIndex();
-            j = allocbits.firstSet(i);
+            i = iter.nextIndex(); // head of a sweepable object
+            j = allocbits.firstSet(i); // end of a sweepable object
             if (j != -1) {
-                units.add(new GCBitsManager.SweepUnit(blockHead.offset(i*8), (j-i)*8));
+                units.add(new GCBitsManager.SweepUnit(blockHead.offset(i * 8), (j - i) * 8));
             } else {
-                units.add(new GCBitsManager.SweepUnit(blockHead.offset(i*8), blockEnd));
+                units.add(new GCBitsManager.SweepUnit(blockHead.offset(i * 8), blockEnd));
             }
         }
         return units;
