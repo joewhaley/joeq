@@ -17,6 +17,7 @@ import jq;
 import Clazz.jq_Class;
 import Clazz.jq_InstanceField;
 import Clazz.jq_InstanceMethod;
+import Clazz.jq_StaticField;
 import Run_Time.Reflection;
 
 public abstract class ZipFile implements ZipConstants {
@@ -78,6 +79,7 @@ public abstract class ZipFile implements ZipConstants {
             } catch (Error x) {
                 throw x;
             } catch (Throwable x) {
+		x.printStackTrace();
                 jq.UNREACHABLE(); return null;
             }
             if (TRACE) System.out.println(dis+": using inflater "+inflater);
@@ -389,6 +391,10 @@ public abstract class ZipFile implements ZipConstants {
 	return get16(clazz, b, off) | ((long)get16(clazz, b, off+2) << 16);
     }
     
+    static final void init_inflaters(jq_Class clazz) {
+	Reflection.putstatic_A(_inflaters, new java.util.Vector());
+    }
+
     public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/util/zip/ZipFile;");
     public static final jq_InstanceField _raf = _class.getOrCreateInstanceField("raf", "Ljava/io/RandomAccessFile;");
     public static final jq_InstanceField _name = _class.getOrCreateInstanceField("name", "Ljava/lang/String;");
@@ -397,4 +403,5 @@ public abstract class ZipFile implements ZipConstants {
     public static final jq_InstanceField _pos = _class.getOrCreateInstanceField("pos", "J");
     public static final jq_InstanceMethod _getInflater = _class.getOrCreateInstanceMethod("getInflater", "()Ljava/util/zip/Inflater;");
     public static final jq_InstanceMethod _releaseInflater = _class.getOrCreateInstanceMethod("releaseInflater", "(Ljava/util/zip/Inflater;)V");
+    public static final jq_StaticField _inflaters = _class.getOrCreateStaticField("inflaters", "Ljava/util/Vector;");
 }

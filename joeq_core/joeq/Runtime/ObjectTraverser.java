@@ -212,6 +212,51 @@ public class ObjectTraverser {
                 return o2[3];
             }
         }
+        if (c == java.util.zip.Inflater.class) {
+	    if (fieldName.equals("mode")) {
+		return new Integer(0);
+	    }
+	    if (fieldName.equals("readAdler")) {
+		return new Integer(0);
+	    }
+	    if (fieldName.equals("neededBits")) {
+		return new Integer(0);
+	    }
+	    if (fieldName.equals("repLength")) {
+		return new Integer(0);
+	    }
+	    if (fieldName.equals("repDist")) {
+		return new Integer(0);
+	    }
+	    if (fieldName.equals("uncomprLen")) {
+		return new Integer(0);
+	    }
+	    if (fieldName.equals("isLastBlock")) {
+		return new Boolean(false);
+	    }
+	    if (fieldName.equals("totalOut")) {
+		return new Integer(0);
+	    }
+	    if (fieldName.equals("totalIn")) {
+		return new Integer(0);
+	    }
+	    if (fieldName.equals("nowrap")) {
+		return new Boolean(false);
+	    }
+            if (fieldName.equals("adler")) {
+                Object[] o2 = (Object[])mapped_objects.get(o);
+                return o2[0];
+            }
+            if (fieldName.equals("input")) {
+                Object[] o2 = (Object[])mapped_objects.get(o);
+                return o2[1];
+            }
+            if (fieldName.equals("outputWindow")) {
+                Object[] o2 = (Object[])mapped_objects.get(o);
+                return o2[2];
+            }
+	    return null;
+	}
         if (Throwable.class.isAssignableFrom(c)) {
             if (fieldName.equals("backtrace")) {
                 // sun jvm crashes when using reflection on java.lang.Throwable.backtrace
@@ -249,6 +294,15 @@ public class ObjectTraverser {
             
             return o;
         }
+        if (o instanceof java.util.zip.Inflater) {
+            Object o2 = mapped_objects.get(o);
+            if (o2 != null) return o;
+            mapped_objects.put(o, o2 = new Object[3]);
+	    boolean nowrap = false; // how do we know?
+	    // initialize the fields of the object
+	    ClassLibInterface.i.init_inflater((java.util.zip.Inflater)o, nowrap);
+	    return o;
+	}
         return o;
     }
 
@@ -362,6 +416,24 @@ public class ObjectTraverser {
                 return true;
             }
         }
+        if (c == java.util.zip.Inflater.class) {
+            if (fieldName.equals("adler")) {
+                Object[] o2 = (Object[])mapped_objects.get(o);
+                o2[0] = v;
+                return true;
+            }
+            if (fieldName.equals("input")) {
+                Object[] o2 = (Object[])mapped_objects.get(o);
+                o2[1] = v;
+                return true;
+            }
+            if (fieldName.equals("outputWindow")) {
+                Object[] o2 = (Object[])mapped_objects.get(o);
+                o2[2] = v;
+                return true;
+            }
+	    return true;
+	}
         if (Throwable.class.isAssignableFrom(c)) {
             if (fieldName.equals("backtrace"))
                 jq.UNREACHABLE();

@@ -117,6 +117,8 @@ public abstract class ClassLibInterface {
     // java.util.zip.ZipFile
     public abstract void init_zipfile(java.util.zip.ZipFile o, java.lang.String name)
         throws java.io.IOException;
+    // java.util.zip.Inflater
+    public abstract void init_inflater(java.util.zip.Inflater o, boolean nowrap);
 
     public abstract java.util.Set bootstrapNullStaticFields() ;
     public abstract java.util.Set bootstrapNullInstanceFields() ;

@@ -605,7 +605,7 @@ uphere:
             return;
         }
         jq.assert(TypeCheck.isAssignable(Unsafe.getTypeOf(o), f.getDeclaringClass()));
-        jq.assert(TypeCheck.isAssignable(Unsafe.getTypeOf(v), f.getType()));
+        jq.assert(v == null || TypeCheck.isAssignable(Unsafe.getTypeOf(v), f.getType()));
         Unsafe.poke4(Unsafe.addressOf(o)+f.getOffset(), Unsafe.addressOf(v));
     }
     public static void putfield_B(Object o, jq_InstanceField f, byte v) {
@@ -708,7 +708,7 @@ uphere:
         f.getDeclaringClass().setStaticData(f, v);
     }
     public static void putstatic_A(jq_StaticField f, Object v) {
-        jq.assert(TypeCheck.isAssignable(Unsafe.getTypeOf(v), f.getType()));
+        jq.assert(v == null || TypeCheck.isAssignable(Unsafe.getTypeOf(v), f.getType()));
         f.getDeclaringClass().setStaticData(f, v);
     }
     public static void putstatic_Z(jq_StaticField f, boolean v) {
