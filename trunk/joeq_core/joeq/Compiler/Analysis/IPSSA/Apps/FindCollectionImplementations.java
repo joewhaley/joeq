@@ -277,16 +277,16 @@ public class FindCollectionImplementations {
         long time = System.currentTimeMillis();
         _cg = new RootedCHACallGraph();
         _cg.setRoots(roots);
-        _cg = new CachedCallGraph(_cg);
+        //_cg = new CachedCallGraph(_cg);
         
         time = System.currentTimeMillis() - time;
         System.out.println("done. ("+(time/1000.)+" seconds)");
-	_classes = getClasses(_cg.getAllMethods());
+        _classes = getClasses(_cg.getAllMethods());
         if(FILTER) _classes = filter(_classes, root_classes);
         
         if(FILTER){
-	    System.out.println("Considering classes: " + _classes);
-	}
+    	    System.out.println("Considering classes: " + _classes);
+    	}
         
         _collections = new HashSet();
         _iterators   = new HashSet();
