@@ -891,7 +891,6 @@ public class BytecodeToQuad extends BytecodeVisitor {
     public void visitJSR(int target) {
         super.visitJSR(target);
         this.uncond_branch = true;
-        saveStackIntoRegisters();
         Compil3r.BytecodeAnalysis.BasicBlock target_bcbb = bc_cfg.getBasicBlockByBytecodeIndex(target);
         BasicBlock target_bb = quad_bbs[target_bcbb.id];
         BasicBlock successor_bb = quad_bbs[bc_bb.id+1];
@@ -899,11 +898,15 @@ public class BytecodeToQuad extends BytecodeVisitor {
         Compil3r.BytecodeAnalysis.JSRInfo jsrinfo = bc_cfg.getJSRInfo(target_bcbb);
         if (jsrinfo == null) {
             if (TRACE) out.println("jsr with no ret! converting to GOTO.");
+            // push a null constant in place of the return address,
+            // in case the return address is stored into a local variable.
+            current_state.push_A(new AConstOperand(null));
+            saveStackIntoRegisters();
             Quad q = Goto.create(quad_cfg.getNewQuadID(), Goto.GOTO.INSTANCE, new TargetOperand(target_bb));
             appendQuad(q);
-            current_state.push(op0.copy());
             return;
         }
+        saveStackIntoRegisters();
         Quad q = Jsr.create(quad_cfg.getNewQuadID(), Jsr.JSR.INSTANCE, op0, new TargetOperand(target_bb), new TargetOperand(successor_bb));
         appendQuad(q);
         Compil3r.BytecodeAnalysis.BasicBlock next_bb = bc_cfg.getBasicBlock(bc_bb.id+1);

@@ -115,6 +115,14 @@ public abstract class Bootstrapper implements ObjectLayout {
                 TrimAllTypes = true;
                 ++i; continue;
             }
+            if (args[i].equalsIgnoreCase("-borland")) {
+            	BootImage.USE_MICROSOFT_STYLE_MUNGE = false;
+                ++i; continue;
+            }
+            if (args[i].equalsIgnoreCase("-microsoft")) {
+            	BootImage.USE_MICROSOFT_STYLE_MUNGE = true;
+                ++i; continue;
+            }
             /*
             if (args[i].equals("-s")) { // start address
                 startAddress = Integer.parseInt(args[++i], 16);

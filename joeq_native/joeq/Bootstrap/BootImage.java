@@ -461,10 +461,15 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
         write_uchar(out, 0);
     }
     
+    public static boolean USE_MICROSOFT_STYLE_MUNGE = true;
+    
     public static final int NUM_OF_EXTERNAL_SYMS = 4;
     public void dumpEXTSYMENTs(OutputStream out, jq_StaticMethod rootm)
     throws IOException {
-        write_bytes(out, "_entry@0", 8);  // s_name
+    	String s;
+    	if (USE_MICROSOFT_STYLE_MUNGE) s = "_entry@0";
+    	else s = "entry";
+        write_bytes(out, s, 8);  // s_name
         int/*CodeAddress*/ addr = rootm.getDefaultCompiledVersion().getEntrypoint();
         write_ulong(out, addr);
         write_short(out, (short)1);
@@ -473,7 +478,9 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
         write_uchar(out, 0);
         
         write_ulong(out, 0);    // e_zeroes
-        int idx = alloc_string("_trap_handler@8");
+    	if (USE_MICROSOFT_STYLE_MUNGE) s = "_trap_handler@8";
+    	else s = "trap_handler";
+        int idx = alloc_string(s);
         write_ulong(out, idx);  // e_offset
         addr = ExceptionDeliverer._trap_handler.getDefaultCompiledVersion().getEntrypoint();
         write_ulong(out, addr);
@@ -483,7 +490,9 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
         write_uchar(out, 0);
 
         write_ulong(out, 0);    // e_zeroes
-        idx = alloc_string("_threadSwitch@4");
+    	if (USE_MICROSOFT_STYLE_MUNGE) s = "_threadSwitch@4";
+    	else s = "threadSwitch";
+        idx = alloc_string(s);
         write_ulong(out, idx);  // e_offset
         addr = jq_NativeThread._threadSwitch.getDefaultCompiledVersion().getEntrypoint();
         write_ulong(out, addr);
@@ -493,7 +502,9 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
         write_uchar(out, 0);
         
         write_ulong(out, 0);    // e_zeroes
-        idx = alloc_string("_ctrl_break_handler@0");
+    	if (USE_MICROSOFT_STYLE_MUNGE) s = "_ctrl_break_handler@0";
+    	else s = "ctrl_break_handler";
+        idx = alloc_string(s);
         write_ulong(out, idx);  // e_offset
         addr = jq_NativeThread._ctrl_break_handler.getDefaultCompiledVersion().getEntrypoint();
         write_ulong(out, addr);
@@ -641,7 +652,10 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
             {
                 String name = f.getName().toString();
                 int ind = name.lastIndexOf('_');
-                name = "_"+name.substring(0, ind)+"@"+name.substring(ind+1);
+                if (USE_MICROSOFT_STYLE_MUNGE)
+                    name = "_"+name.substring(0, ind)+"@"+name.substring(ind+1);
+                else
+                    name = name.substring(0, ind);
                 System.out.println("External ref="+f+", symndx="+(total+1)+" address="+jq.hex8(f.getAddress()));
                 ExternalReference r = new ExternalReference(f.getAddress(), name);
                 r.setSymbolIndex(++total);
