@@ -712,7 +712,7 @@ public class LiveRefAnalysis {
 		Type t2 = pop();
 		if (t2 instanceof DerivedRef)
 		    System.err.println("WARNING: method takes derived ref as an argument");
-		    else jq.assert(t2.equals(SystemType.INT));
+                else jq.assert(t2.equals(SystemType.INT));
 	    }
             else if (t.isIntLike()) pop_I();
             else if (t == jq_Primitive.FLOAT) pop_F();
