@@ -54,6 +54,7 @@ import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.ConcreteObjectNode;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.ConcreteTypeNode;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.GlobalNode;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.Node;
+import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.ParamNode;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.UnknownTypeNode;
 import joeq.Compiler.Quad.CachedCallGraph;
 import joeq.Compiler.Quad.CallGraph;
@@ -66,10 +67,11 @@ import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Main.HostedVM;
+import joeq.UTF.Utf8;
+import joeq.UTF.Utf8.MethodDescriptorIterator;
 import jwutil.collections.IndexMap;
 import jwutil.collections.IndexedMap;
 import jwutil.collections.Pair;
-import jwutil.collections.Relation;
 import jwutil.graphs.GlobalPathNumbering;
 import jwutil.graphs.Navigator;
 import jwutil.graphs.PathNumbering;
@@ -841,9 +843,9 @@ public class PA {
     
     int opn;
     
-    ConcreteTypeNode addPlaceholderObject(jq_Reference type, int depth, String path) {
-        ConcreteTypeNode h = ConcreteTypeNode.get(type, null, new Integer(++opn));
-        if(TRACE_PLACEHOLDERS) System.out.println("Initializing " + path + " of type " + type + " at depth " + depth);
+    ConcreteTypeNode addPlaceholderObject(jq_Reference type, int depth, ProgramLocation.PlaceholderParameterProgramLocation location) {
+        ConcreteTypeNode h = ConcreteTypeNode.get(type, location, new Integer(++opn));
+        if(TRACE_PLACEHOLDERS) System.out.println("Initializing " + location.getLocationLabel() + " of type " + type + " at depth " + depth);
         if (depth > 0) {
             if (type.isClassType()) {
                 jq_Class c = (jq_Class) type;
@@ -852,7 +854,8 @@ public class PA {
                 for (int i = 0; i < fields.length; ++i) {
                     jq_Type ft = fields[i].getType(); 
                     if (ft.isReferenceType() && !ft.isAddressType()) {
-                        Node h2 = addPlaceholderObject((jq_Reference) ft, depth-1, path + "." + fields[i].getName());
+                        Node h2 = addPlaceholderObject((jq_Reference) ft, depth-1, 
+                            new ProgramLocation.PlaceholderParameterProgramLocation(location, "." + fields[i].getName()));
                         int H_i = Hmap.get(h);
                         int F_i = Fmap.get(fields[i]);
                         int H2_i = Hmap.get(h2);
@@ -862,7 +865,8 @@ public class PA {
             } else if (type.isArrayType()) {
                 jq_Type at = ((jq_Array) type).getElementType();
                 if (at.isReferenceType() && !at.isAddressType()) {
-                    Node h2 = addPlaceholderObject((jq_Reference) at, depth-1, path + "[]");
+                    Node h2 = addPlaceholderObject((jq_Reference) at, depth-1, 
+                        new ProgramLocation.PlaceholderParameterProgramLocation(location, "[]"));
                     int H_i = Hmap.get(h);
                     int F_i = Fmap.get(null);
                     int H2_i = Hmap.get(h2);
@@ -878,9 +882,11 @@ public class PA {
         MethodSummary ms = MethodSummary.getSummary(m);
         opn = 1;
         for (int i = 0; i < ms.getNumOfParams(); ++i) {
-            Node pn = ms.getParamNode(i);
+            ParamNode pn = ms.getParamNode(i);
             if (pn == null) continue;
-            ConcreteTypeNode h = addPlaceholderObject(pn.getDeclaredType(), depth-1, pn.toString_short());
+            
+            ConcreteTypeNode h = addPlaceholderObject(pn.getDeclaredType(), depth-1, 
+                new ProgramLocation.PlaceholderParameterProgramLocation(m, "param#" + i));
             int H_i = Hmap.get(h);
             addToVP(pn, H_i);
             if(TRACE_PLACEHOLDERS) System.out.println("Placeholder object for "+pn+": "+h);
