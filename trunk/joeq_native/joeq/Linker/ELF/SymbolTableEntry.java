@@ -12,24 +12,8 @@ import java.io.*;
  * @author  John Whaley
  * @version 
  */
-public class SymbolTableEntry {
+public class SymbolTableEntry implements ELFConstants {
 
-    // Symbol Binding
-    public static final byte STB_LOCAL   = 0;
-    public static final byte STB_GLOBAL  = 1;
-    public static final byte STB_WEAK    = 2;
-    public static final byte STB_LOPROC  = 13;
-    public static final byte STB_HIPROC  = 15;
-    
-    // Symbol Types
-    public static final byte STT_NOTYPE  = 0;
-    public static final byte STT_OBJECT  = 1;
-    public static final byte STT_FUNC    = 2;
-    public static final byte STT_SECTION = 3;
-    public static final byte STT_FILE    = 4;
-    public static final byte STT_LOPROC  = 13;
-    public static final byte STT_HIPROC  = 15;
-    
     protected int index;
     protected String name;
     protected int value;
@@ -53,13 +37,30 @@ public class SymbolTableEntry {
     public final void setIndex(int index) { this.index = index; }
     public final int getIndex() { return this.index; }
     
-    public void write(ELFFile file, OutputStream out) throws IOException {
-        file.write_symbolname(out, getName());
-        file.write_addr(out, getValue());
-        file.write_word(out, getSize());
-        out.write((byte)getInfo());
-        out.write((byte)getOther());
-        file.write_half(out, getSHndx());
+    public void write(ELF file, Section.StrTabSection sts) throws IOException {
+        file.write_word(sts.getStringIndex(getName()));
+        file.write_addr(getValue());
+        file.write_word(getSize());
+        file.write_byte((byte)getInfo());
+        file.write_byte((byte)getOther());
+        file.write_half(getSHndx());
+    }
+    
+    public static SymbolTableEntry read(ELF file, Section.StrTabSection sts) throws IOException {
+        int symbolname = file.read_word();
+        int value = file.read_addr();
+        int size = file.read_word();
+        byte info = file.read_byte();
+        byte other = file.read_byte();
+        int shndx = file.read_half();
+        String name;
+        if (symbolname != 0) {
+            name = sts.getString(symbolname);
+        } else {
+            name = "";
+        }
+        Section s = file.getSection(shndx);
+        return new SymbolTableEntry(name, value, size, (byte)((info >> 4) & 0xF), (byte)(info & 0xF), s);
     }
     
     public static int getEntrySize() { return 16; }

@@ -24,10 +24,20 @@ public class RelocAEntry extends RelocEntry {
 
     public final int getAddEnd() { return addend; }
     
-    public void write(ELFFile file, OutputStream out) throws IOException {
-        file.write_addr(out, getOffset());
-        file.write_word(out, getInfo());
-        file.write_sword(out, getAddEnd());
+    public void write(ELF file) throws IOException {
+        file.write_addr(getOffset());
+        file.write_word(getInfo());
+        file.write_sword(getAddEnd());
+    }
+    
+    public static RelocEntry read(ELF file, Section.SymTabSection s) throws IOException {
+        int offset = file.read_addr();
+        int info = file.read_word();
+        int addend = file.read_sword();
+        int stindex = (info >>> 8);
+        byte type = (byte)info;
+        SymbolTableEntry e = s.getSymbolTableEntry(stindex);
+        return new RelocAEntry(offset, e, type, addend);
     }
     
     public static int getEntrySize() { return 12; }

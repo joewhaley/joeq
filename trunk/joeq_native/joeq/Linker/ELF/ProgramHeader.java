@@ -10,23 +10,10 @@ import java.io.*;
 /**
  *
  * @author  John Whaley
- * @version 
+ * @version 2
  */
-public abstract class ProgramHeader {
+public abstract class ProgramHeader implements ELFConstants {
 
-    // Segment Types
-    public static final int PT_NULL     = 0;
-    public static final int PT_LOAD     = 1;
-    public static final int PT_DYNAMIC  = 2;
-    public static final int PT_INTERP   = 3;
-    public static final int PT_NOTE     = 4;
-    public static final int PT_SHLIB    = 5;
-    public static final int PT_PHDR     = 6;
-    public static final int PT_LOPROC   = 0x70000000;
-    public static final int PT_HIPROC   = 0x7fffffff;
-
-    protected int index;
-    
     protected int offset;
     protected int vaddr;
     protected int paddr;
@@ -44,18 +31,15 @@ public abstract class ProgramHeader {
     public int getFlags() { return flags; }
     public int getAlign() { return align; }
 
-    public int getIndex() { return index; }
-    public void setIndex(int index) { this.index = index; }
-    
-    public void writeHeader(ELFFile file, OutputStream out) throws IOException {
-        file.write_word(out, this.getType());
-        file.write_off(out, this.getOffset());
-        file.write_addr(out, this.getVAddr());
-        file.write_addr(out, this.getPAddr());
-        file.write_word(out, this.getFileSz());
-        file.write_word(out, this.getMemSz());
-        file.write_word(out, this.getFlags());
-        file.write_word(out, this.getAlign());
+    public void writeHeader(ELF file) throws IOException {
+        file.write_word(this.getType());
+        file.write_off(this.getOffset());
+        file.write_addr(this.getVAddr());
+        file.write_addr(this.getPAddr());
+        file.write_word(this.getFileSz());
+        file.write_word(this.getMemSz());
+        file.write_word(this.getFlags());
+        file.write_word(this.getAlign());
     }
 
     public static class NullProgramHeader extends ProgramHeader {
