@@ -5,8 +5,6 @@ package joeq.Main;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.net.URL;
 import joeq.Compiler.Analysis.IPA.PA;
 import joeq.Compiler.Quad.BasicBlockVisitor;
@@ -14,6 +12,7 @@ import joeq.Compiler.Quad.CodeCache;
 import joeq.Compiler.Quad.ControlFlowGraphVisitor;
 import joeq.Compiler.Quad.QuadVisitor;
 import jwutil.classloader.HijackingClassLoader;
+import jwutil.reflect.Reflect;
 
 /**
  * Generate initial relations for BDD pointer analysis.
@@ -55,67 +54,6 @@ public class GenRelations {
         return new HijackingClassLoader(new URL[] {url, url2});
     }
     
-    public static Object invoke(ClassLoader cl, String className,
-        String methodName, Class[] argTypes, Object[] args) {
-        Class c;
-        try {
-            c = Class.forName(className, true, cl);
-        } catch (ClassNotFoundException e0) {
-            System.err.println("Cannot load "+className);
-            e0.printStackTrace();
-            return null;
-        }
-        Method m;
-        try {
-            if (argTypes != null) {
-                m = c.getMethod(methodName, argTypes);
-            } else {
-                m = null;
-                Method[] ms = c.getDeclaredMethods();
-                for (int i = 0; i < ms.length; ++i) {
-                    if (ms[i].getName().equals(methodName)) {
-                        m = ms[i];
-                        break;
-                    }
-                }
-                if (m == null) {
-                    System.err.println("Can't find "+className+"."+methodName);
-                    return null;
-                }
-            }
-            m.setAccessible(true);
-        } catch (SecurityException e1) {
-            System.err.println("Cannot access "+className+"."+methodName);
-            e1.printStackTrace();
-            return null;
-        } catch (NoSuchMethodException e1) {
-            System.err.println("Can't find "+className+"."+methodName);
-            e1.printStackTrace();
-            return null;
-        }
-        Object result;
-        try {
-            result = m.invoke(null, args);
-        } catch (IllegalArgumentException e2) {
-            System.err.println("Illegal argument exception");
-            e2.printStackTrace();
-            return null;
-        } catch (IllegalAccessException e2) {
-            System.err.println("Illegal access exception");
-            e2.printStackTrace();
-            return null;
-        } catch (InvocationTargetException e2) {
-            if (e2.getTargetException() instanceof RuntimeException)
-                throw (RuntimeException) e2.getTargetException();
-            if (e2.getTargetException() instanceof Error)
-                throw (Error) e2.getTargetException();
-            System.err.println("Unexpected exception thrown!");
-            e2.getTargetException().printStackTrace();
-            return null;
-        }
-        return result;
-    }
-    
     public static void main(String[] args) throws IOException {
         
         // Make sure we have the BDD library in our classpath.
@@ -124,7 +62,7 @@ public class GenRelations {
         } catch (ClassNotFoundException x) {
             ClassLoader cl = addBDDLibraryToClasspath(args);
             // Reflective invocation under the new class loader.
-            invoke(cl, GenRelations.class.getName(), "main2", new Class[] {String[].class}, new Object[] {args});
+            Reflect.invoke(cl, GenRelations.class.getName(), "main2", new Class[] {String[].class}, new Object[] {args});
             return;
         }
         

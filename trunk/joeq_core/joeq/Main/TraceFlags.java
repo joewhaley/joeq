@@ -6,7 +6,6 @@ package joeq.Main;
 import java.util.Collection;
 import java.util.Iterator;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
@@ -18,6 +17,7 @@ import joeq.Runtime.Debug;
 import joeq.Runtime.Reflection;
 import joeq.UTF.Utf8;
 import jwutil.collections.Filter;
+import jwutil.reflect.Reflect;
 import jwutil.util.Assert;
 
 /**
@@ -155,25 +155,25 @@ public abstract class TraceFlags {
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-SetCompiler")) {
-            callMethod("joeq.Class.Delegates", "setDefaultCompiler", args[++i]);
+            Reflect.invoke("joeq.Class.Delegates", "setDefaultCompiler", new Object[] { args[++i] });
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-UseCompilerForClasses")) {
-            Object d = callMethod("joeq.Class.Delegates", "getCompiler", args[++i]);
+            Object d = Reflect.invoke("joeq.Class.Delegates", "getCompiler", new Object[] { args[++i] });
             Object c = new jq_Member.FilterByShortClassName(args[++i]);
-            callMethod("joeq.Class.Delegates", "registerCompiler",
-                       new Class[] { Filter.class, 
-                                     joeq.Compiler.CompilerInterface.class },
-                       new Object[] { c, d });
+            Reflect.invoke("joeq.Class.Delegates", "registerCompiler",
+                           new Class[] { Filter.class, 
+                                         joeq.Compiler.CompilerInterface.class },
+                           new Object[] { c, d });
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-UseCompilerForMethods")) {
-            Object d = callMethod("joeq.Class.Delegates", "getCompiler", args[++i]);
+            Object d = Reflect.invoke("joeq.Class.Delegates", "getCompiler", new Object[] { args[++i] });
             Object c = new jq_Member.FilterByName(args[++i]);
-            callMethod("joeq.Class.Delegates", "registerCompiler",
-                       new Class[] { Filter.class, 
-                                     joeq.Compiler.CompilerInterface.class },
-                       new Object[] { c, d });
+            Reflect.invoke("joeq.Class.Delegates", "registerCompiler",
+                           new Class[] { Filter.class, 
+                                         joeq.Compiler.CompilerInterface.class },
+                           new Object[] { c, d });
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-Set")) {
@@ -291,16 +291,6 @@ public abstract class TraceFlags {
         return j;
     }
 
-    public static void makeTrue(String classname, String fieldname) {
-        try {
-            Class c = Class.forName(classname);
-            Field f = c.getField(fieldname);
-            f.setBoolean(null, true);
-        } catch (Exception e) {
-            Debug.writeln("Cannot set the flag "+classname+"."+fieldname);
-        }
-    }
-
     public static void addReflect(String classname, String collectionname, Object toadd) {
         try {
             Class c = Class.forName(classname);
@@ -312,20 +302,8 @@ public abstract class TraceFlags {
         }
     }
     
-    public static Object callMethod(String classname, String methodname, String arg) {
-        return callMethod(classname, methodname, new Class[] { String.class }, new Object[] { arg });
-    }
-    
-    public static Object callMethod(String classname, String methodname, Class[] argtypes, Object[] args) {
-        try {
-            Class c = Class.forName(classname);
-            Method m = c.getMethod(methodname, argtypes);
-            return m.invoke(null, args);
-        } catch (Exception e) {
-            Debug.writeln("Exception while invoking method "+classname+"."+methodname);
-            e.printStackTrace();
-            return null;
-        }
+    public static void makeTrue(String className, String fieldName) {
+        Reflect.setBooleanField(className, fieldName, true);
     }
     
 }

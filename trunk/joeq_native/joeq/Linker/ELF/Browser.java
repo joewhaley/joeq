@@ -1,3 +1,6 @@
+// Browser.java, created Sat May 25 12:46:16 2002 by joewhaley
+// Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Linker.ELF;
 
 import java.util.Iterator;
@@ -6,6 +9,8 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 
 /**
+ * Browser
+ * 
  * @author John Whaley
  * @version $Id$
  */
