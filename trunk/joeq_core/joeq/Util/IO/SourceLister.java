@@ -51,12 +51,21 @@ public class SourceLister {
         return list(pl, true, defaultLinesBefore, defaultLinesAfter);
     }
 
+    public String list(ProgramLocation pl, String comment) {
+        return list(pl, true, defaultLinesBefore, defaultLinesAfter, comment);
+    }
+
     public String list(ProgramLocation pl, boolean withnumbers, int linesBefore, int linesAfter) {
+        return list(pl, withnumbers, linesBefore, linesAfter, "");
+    }
+
+    public String list(ProgramLocation pl, boolean withnumbers, int linesBefore, int linesAfter, String comment) {
         jq_Class clazz = pl.getContainingClass();
         String clazzName = clazz.getName();
         char fileSep = File.separatorChar;
-        String pathName = clazzName.substring(0, clazzName.lastIndexOf('.'));
-        String pathSuffix = fileSep + pathName.replace('.', fileSep) + fileSep + pl.getSourceFile();
+        int lastdot = clazzName.lastIndexOf('.');
+        String pathName = lastdot != -1 ? fileSep + clazzName.substring(0, lastdot) : "";
+        String pathSuffix = pathName.replace('.', fileSep) + fileSep + pl.getSourceFile();
         DecimalFormat d5 = new DecimalFormat("00000");
         int lno = pl.getLineNumber();
 
@@ -82,7 +91,7 @@ public class SourceLister {
                             res.append(d5.format(l) + ":  ");
                         res.append(s);
                         if (withnumbers && l == lno)
-                            res.append(" <<<====================");
+                            res.append(" <<<==================== " + comment);
                         res.append("\n");
                     }
                 } catch (IOException io) {
