@@ -101,6 +101,7 @@ public class PA {
     boolean DISCOVER_CALL_GRAPH = !System.getProperty("pa.discover", "no").equals("no");
     boolean DUMP_DOTGRAPH = !System.getProperty("pa.dumpdotgraph", "no").equals("no");
     boolean FILTER_NULL = !System.getProperty("pa.filternull", "yes").equals("no");
+    boolean LONG_LOCATIONS = !System.getProperty("pa.longlocations", "no").equals("no");
     
     int bddnodes = Integer.parseInt(System.getProperty("bddnodes", "2500000"));
     int bddcache = Integer.parseInt(System.getProperty("bddcache", "150000"));
@@ -1660,7 +1661,10 @@ public class PA {
         String jp = "("+j+")";
         if (j < map.size()) {
             Object o = map.get(j);
-            return jp+o;
+            if (LONG_LOCATIONS && o instanceof ProgramLocation)
+                return jp+o+" in "+((ProgramLocation)o).toStringLong();
+            else
+                return jp+o;
         } else {
             return jp+"<index not in map>";
         }
