@@ -1,9 +1,9 @@
 // BasicBlock.java, created Fri Jan 11 16:49:00 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Compil3r.BytecodeAnalysis;
+package joeq.Compil3r.BytecodeAnalysis;
 
-import Util.Assert;
+import joeq.Util.Assert;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>

@@ -1,16 +1,16 @@
 // BasicBlock.java, created Fri Jan 11 16:42:38 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Compil3r.Quad;
+package joeq.Compil3r.Quad;
 
-import Compil3r.Quad.Operator.Ret;
-import Util.Assert;
-import Util.Strings;
-import Util.Collections.BackwardIterator;
-import Util.Templates.List;
-import Util.Templates.ListIterator;
-import Util.Templates.ListWrapper;
-import Util.Templates.UnmodifiableList;
+import joeq.Compil3r.Quad.Operator.Ret;
+import joeq.Util.Assert;
+import joeq.Util.Strings;
+import joeq.Util.Collections.BackwardIterator;
+import joeq.Util.Templates.List;
+import joeq.Util.Templates.ListIterator;
+import joeq.Util.Templates.ListWrapper;
+import joeq.Util.Templates.UnmodifiableList;
 
 /**
  * Represents a basic block in the quad intermediate representation.

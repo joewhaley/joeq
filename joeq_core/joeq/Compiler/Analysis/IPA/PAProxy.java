@@ -1,6 +1,6 @@
 // Public proxy class for Compil3r.Analysis.IPA.PA
 // Generated via Util.MakeProxy
-package Compil3r.Analysis.IPA;
+package joeq.Compil3r.Analysis.IPA;
 
 public class PAProxy {
   public PAProxy(PA that) {

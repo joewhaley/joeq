@@ -1,7 +1,7 @@
 // Relation.java, created Tue Jan 11 14:52:48 2000 by salcianu
 // Copyright (C) 2000 Alexandru SALCIANU <salcianu@alum.mit.edu>
 // Licensed under the terms of the GNU GPL; see COPYING for details.
-package Util.Collections;
+package joeq.Util.Collections;
 
 import java.util.Collection;
 import java.util.Set;

@@ -1,13 +1,13 @@
 // LargeHeap.java, created Tue Dec 10 14:02:03 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Memory.Heap;
+package joeq.Memory.Heap;
 
-import Allocator.HeapAllocator;
-import Memory.HeapAddress;
-import Run_Time.Debug;
-import Run_Time.SystemInterface;
-import Util.Assert;
+import joeq.Allocator.HeapAllocator;
+import joeq.Memory.HeapAddress;
+import joeq.Run_Time.Debug;
+import joeq.Run_Time.SystemInterface;
+import joeq.Util.Assert;
 
 /**
  * @author John Whaley <jwhaley@alum.mit.edu>

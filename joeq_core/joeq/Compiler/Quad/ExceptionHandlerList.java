@@ -1,12 +1,12 @@
 // ExceptionHandlerList.java, created Fri Jan 18 19:33:00 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Compil3r.Quad;
+package joeq.Compil3r.Quad;
 
-import Clazz.jq_Class;
-import Util.Templates.List;
-import Util.Templates.ListIterator;
-import Util.Templates.ListWrapper;
+import joeq.Clazz.jq_Class;
+import joeq.Util.Templates.List;
+import joeq.Util.Templates.ListIterator;
+import joeq.Util.Templates.ListWrapper;
 
 /**
  * Holds a list of exception handlers that protect a basic block.

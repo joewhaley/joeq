@@ -1,14 +1,14 @@
 // Pair.java, created Wed Mar  5  0:26:26 2003 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Util.Collections;
+package joeq.Util.Collections;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.AbstractList;
 
-import Util.IO.Textualizable;
-import Util.IO.Textualizer;
+import joeq.Util.IO.Textualizable;
+import joeq.Util.IO.Textualizer;
 
 /**
  * @author John Whaley <jwhaley@alum.mit.edu>

@@ -1,42 +1,42 @@
 // Operator.java, created Fri Jan 11 16:42:38 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Compil3r.Quad;
+package joeq.Compil3r.Quad;
 
-import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Array;
-import Clazz.jq_Class;
-import Clazz.jq_InstanceField;
-import Clazz.jq_Method;
-import Clazz.jq_Primitive;
-import Clazz.jq_Reference;
-import Clazz.jq_StaticField;
-import Clazz.jq_Type;
-import Compil3r.BytecodeAnalysis.BytecodeVisitor;
-import Compil3r.Quad.Operand.AConstOperand;
-import Compil3r.Quad.Operand.BasicBlockTableOperand;
-import Compil3r.Quad.Operand.ConditionOperand;
-import Compil3r.Quad.Operand.DConstOperand;
-import Compil3r.Quad.Operand.FConstOperand;
-import Compil3r.Quad.Operand.FieldOperand;
-import Compil3r.Quad.Operand.IConstOperand;
-import Compil3r.Quad.Operand.IntValueTableOperand;
-import Compil3r.Quad.Operand.LConstOperand;
-import Compil3r.Quad.Operand.MethodOperand;
-import Compil3r.Quad.Operand.PConstOperand;
-import Compil3r.Quad.Operand.ParamListOperand;
-import Compil3r.Quad.Operand.RegisterOperand;
-import Compil3r.Quad.Operand.TargetOperand;
-import Compil3r.Quad.Operand.TypeOperand;
-import Interpreter.QuadInterpreter;
-import Interpreter.QuadInterpreter.UninitializedReference;
-import Main.jq;
-import Memory.Address;
-import Memory.HeapAddress;
-import Run_Time.Reflection;
-import Run_Time.TypeCheck;
-import Util.Assert;
-import Util.Templates.UnmodifiableList;
+import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.jq_Array;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_InstanceField;
+import joeq.Clazz.jq_Method;
+import joeq.Clazz.jq_Primitive;
+import joeq.Clazz.jq_Reference;
+import joeq.Clazz.jq_StaticField;
+import joeq.Clazz.jq_Type;
+import joeq.Compil3r.BytecodeAnalysis.BytecodeVisitor;
+import joeq.Compil3r.Quad.Operand.AConstOperand;
+import joeq.Compil3r.Quad.Operand.BasicBlockTableOperand;
+import joeq.Compil3r.Quad.Operand.ConditionOperand;
+import joeq.Compil3r.Quad.Operand.DConstOperand;
+import joeq.Compil3r.Quad.Operand.FConstOperand;
+import joeq.Compil3r.Quad.Operand.FieldOperand;
+import joeq.Compil3r.Quad.Operand.IConstOperand;
+import joeq.Compil3r.Quad.Operand.IntValueTableOperand;
+import joeq.Compil3r.Quad.Operand.LConstOperand;
+import joeq.Compil3r.Quad.Operand.MethodOperand;
+import joeq.Compil3r.Quad.Operand.PConstOperand;
+import joeq.Compil3r.Quad.Operand.ParamListOperand;
+import joeq.Compil3r.Quad.Operand.RegisterOperand;
+import joeq.Compil3r.Quad.Operand.TargetOperand;
+import joeq.Compil3r.Quad.Operand.TypeOperand;
+import joeq.Interpreter.QuadInterpreter;
+import joeq.Interpreter.QuadInterpreter.UninitializedReference;
+import joeq.Main.jq;
+import joeq.Memory.Address;
+import joeq.Memory.HeapAddress;
+import joeq.Run_Time.Reflection;
+import joeq.Run_Time.TypeCheck;
+import joeq.Util.Assert;
+import joeq.Util.Templates.UnmodifiableList;
 
 /**
  * @author  John Whaley <jwhaley@alum.mit.edu>

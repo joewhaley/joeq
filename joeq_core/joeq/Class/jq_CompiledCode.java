@@ -1,17 +1,17 @@
 // jq_CompiledCode.java, created Mon Feb  5 23:23:20 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Clazz;
+package joeq.Clazz;
 
 import java.util.Iterator;
 import java.util.List;
 
-import Bootstrap.PrimordialClassLoader;
-import Main.jq;
-import Memory.CodeAddress;
-import Memory.StackAddress;
-import Run_Time.Debug;
-import Util.Assert;
+import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Main.jq;
+import joeq.Memory.CodeAddress;
+import joeq.Memory.StackAddress;
+import joeq.Run_Time.Debug;
+import joeq.Util.Assert;
 
 /**
  * @author  John Whaley <jwhaley@alum.mit.edu>

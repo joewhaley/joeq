@@ -1,7 +1,7 @@
 // SimpleHashSet.java, created Wed Mar  5  0:26:27 2003 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Util.Collections;
+package joeq.Util.Collections;
 
 import java.util.AbstractMap;
 import java.util.AbstractSet;
@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-import Util.Assert;
+import joeq.Util.Assert;
 
 /**
  * @author  John Whaley <jwhaley@alum.mit.edu>

@@ -1,14 +1,14 @@
 // EdgeNavigator.java, created Jun 15, 2003 3:55:42 PM by joewhaley
 // Copyright (C) 2003 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Util.Graphs;
+package joeq.Util.Graphs;
 
 import java.util.Collection;
 import java.util.Collections;
 
-import Util.Collections.Pair;
-import Util.Collections.WrappedCollection;
-import Util.Collections.FilterIterator.Filter;
+import joeq.Util.Collections.Pair;
+import joeq.Util.Collections.WrappedCollection;
+import joeq.Util.Collections.FilterIterator.Filter;
 
 /**
  * This navigator is used as a wrapper for another navigator.  It adds an

@@ -1,20 +1,20 @@
 // SegregatedListHeap.java, created Tue Dec 10 14:02:02 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Memory.Heap;
+package joeq.Memory.Heap;
 
-import Allocator.HeapAllocator;
-import Allocator.ObjectLayoutMethods;
-import Clazz.jq_Array;
-import Memory.Address;
-import Memory.HeapAddress;
-import Memory.Manager.CollectorThread;
-import Memory.Manager.GCConstants;
-import Run_Time.Debug;
-import Run_Time.SystemInterface;
-import Run_Time.Unsafe;
-import Scheduler.jq_NativeThread;
-import Util.Assert;
+import joeq.Allocator.HeapAllocator;
+import joeq.Allocator.ObjectLayoutMethods;
+import joeq.Clazz.jq_Array;
+import joeq.Memory.Address;
+import joeq.Memory.HeapAddress;
+import joeq.Memory.Manager.CollectorThread;
+import joeq.Memory.Manager.GCConstants;
+import joeq.Run_Time.Debug;
+import joeq.Run_Time.SystemInterface;
+import joeq.Run_Time.Unsafe;
+import joeq.Scheduler.jq_NativeThread;
+import joeq.Util.Assert;
 
 /**
  * @author John Whaley <jwhaley@alum.mit.edu>

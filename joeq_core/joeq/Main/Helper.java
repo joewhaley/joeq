@@ -1,22 +1,22 @@
 // Helper.java, created Thu Jan 16 10:53:32 2003 by mcmartin
 // Copyright (C) 2001-3 mcmartin
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Main;
+package joeq.Main;
 
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import Clazz.jq_Class;
-import Clazz.jq_Method;
-import Clazz.jq_MethodVisitor;
-import Clazz.jq_Type;
-import Clazz.jq_TypeVisitor;
-import Compil3r.Quad.BasicBlock;
-import Compil3r.Quad.BasicBlockVisitor;
-import Compil3r.Quad.ControlFlowGraph;
-import Compil3r.Quad.ControlFlowGraphVisitor;
-import Compil3r.Quad.Quad;
-import Compil3r.Quad.QuadVisitor;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_Method;
+import joeq.Clazz.jq_MethodVisitor;
+import joeq.Clazz.jq_Type;
+import joeq.Clazz.jq_TypeVisitor;
+import joeq.Compil3r.Quad.BasicBlock;
+import joeq.Compil3r.Quad.BasicBlockVisitor;
+import joeq.Compil3r.Quad.ControlFlowGraph;
+import joeq.Compil3r.Quad.ControlFlowGraphVisitor;
+import joeq.Compil3r.Quad.Quad;
+import joeq.Compil3r.Quad.QuadVisitor;
 
 /**
  * @author  Michael Martin <mcmartin@stanford.edu>

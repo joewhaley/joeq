@@ -1,14 +1,14 @@
 // HashWorklist.java, created Fri Mar 28 23:58:36 2003 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Util.Collections;
+package joeq.Util.Collections;
 
 import java.util.AbstractList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import Util.Assert;
+import joeq.Util.Assert;
 
 /**
  * A worklist with a backing hash set to determine if an item is/was already on the list.

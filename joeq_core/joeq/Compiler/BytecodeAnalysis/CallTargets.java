@@ -1,7 +1,7 @@
 // CallTargets.java, created Fri Jan 11 16:49:00 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Compil3r.BytecodeAnalysis;
+package joeq.Compil3r.BytecodeAnalysis;
 
 import java.util.AbstractSet;
 import java.util.Collections;
@@ -10,18 +10,18 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.Stack;
 
-import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Class;
-import Clazz.jq_InstanceMethod;
-import Clazz.jq_Method;
-import Clazz.jq_Reference;
-import Clazz.jq_StaticMethod;
-import Compil3r.CompilationConstants;
-import Compil3r.CompilationState;
-import Run_Time.TypeCheck;
-import Util.Assert;
-import Util.Collections.HashCodeComparator;
-import Util.Collections.SortedArraySet;
+import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_InstanceMethod;
+import joeq.Clazz.jq_Method;
+import joeq.Clazz.jq_Reference;
+import joeq.Clazz.jq_StaticMethod;
+import joeq.Compil3r.CompilationConstants;
+import joeq.Compil3r.CompilationState;
+import joeq.Run_Time.TypeCheck;
+import joeq.Util.Assert;
+import joeq.Util.Collections.HashCodeComparator;
+import joeq.Util.Collections.SortedArraySet;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>

@@ -1,4 +1,4 @@
-package Compil3r.Analysis.IPSSA.Apps;
+package joeq.Compil3r.Analysis.IPSSA.Apps;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -16,18 +16,18 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Class;
-import Clazz.jq_Field;
-import Clazz.jq_Method;
-import Clazz.jq_Type;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary.ReturnedNode;
-import Compil3r.Quad.CallGraph;
-import Compil3r.Quad.RootedCHACallGraph;
-import Main.HostedVM;
-import Util.Assert;
-import Util.Collections.AppendIterator;
+import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_Field;
+import joeq.Clazz.jq_Method;
+import joeq.Clazz.jq_Type;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.ReturnedNode;
+import joeq.Compil3r.Quad.CallGraph;
+import joeq.Compil3r.Quad.RootedCHACallGraph;
+import joeq.Main.HostedVM;
+import joeq.Util.Assert;
+import joeq.Util.Collections.AppendIterator;
 
 class ClassHierarchy {
     protected class ClassHieraryNode {

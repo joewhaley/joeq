@@ -1,7 +1,7 @@
  // PAResults.java, created Nov 3, 2003 12:34:24 AM by joewhaley
 // Copyright (C) 2003 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Compil3r.Analysis.IPA;
+package joeq.Compil3r.Analysis.IPA;
 
 import java.io.DataInput;
 import java.io.DataInputStream;
@@ -37,46 +37,46 @@ import org.sf.javabdd.BDDFactory;
 import org.sf.javabdd.BDDPairing;
 import org.sf.javabdd.TypedBDDFactory.TypedBDD;
 
-import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Class;
-import Clazz.jq_Field;
-import Clazz.jq_Method;
-import Clazz.jq_NameAndDesc;
-import Clazz.jq_Reference;
-import Clazz.jq_Type;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary.CheckCastNode;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
-import Compil3r.Analysis.IPA.ProgramLocation.QuadProgramLocation;
-import Compil3r.Analysis.IPSSA.ContextSet;
-import Compil3r.Analysis.IPSSA.SSALocation;
-import Compil3r.Quad.BasicBlock;
-import Compil3r.Quad.CallGraph;
-import Compil3r.Quad.CodeCache;
-import Compil3r.Quad.LoadedCallGraph;
-import Compil3r.Quad.Operator;
-import Compil3r.Quad.Quad;
-import Compil3r.Quad.Operand.RegisterOperand;
-import Compil3r.Quad.RegisterFactory.Register;
-import Main.Driver;
-import Main.HostedVM;
-import Util.Assert;
-import Util.Strings;
-import Util.SimpleInterpreter;
-import Util.Collections.HashWorklist;
-import Util.Collections.IndexMap;
-import Util.Collections.LinearSet;
-import Util.Collections.Pair;
-import Util.Collections.Triple;
-import Util.Collections.UnmodifiableIterator;
-import Util.Graphs.Navigator;
-import Util.Graphs.PathNumbering;
-import Util.Graphs.SCCPathNumbering;
-import Util.Graphs.SCCTopSortedGraph;
-import Util.Graphs.SCComponent;
-import Util.Graphs.PathNumbering.Range;
-import Util.Graphs.SCCPathNumbering.Path;
-import Util.IO.SourceLister;
+import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_Field;
+import joeq.Clazz.jq_Method;
+import joeq.Clazz.jq_NameAndDesc;
+import joeq.Clazz.jq_Reference;
+import joeq.Clazz.jq_Type;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.CheckCastNode;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
+import joeq.Compil3r.Analysis.IPA.ProgramLocation.QuadProgramLocation;
+import joeq.Compil3r.Analysis.IPSSA.ContextSet;
+import joeq.Compil3r.Analysis.IPSSA.SSALocation;
+import joeq.Compil3r.Quad.BasicBlock;
+import joeq.Compil3r.Quad.CallGraph;
+import joeq.Compil3r.Quad.CodeCache;
+import joeq.Compil3r.Quad.LoadedCallGraph;
+import joeq.Compil3r.Quad.Operator;
+import joeq.Compil3r.Quad.Quad;
+import joeq.Compil3r.Quad.Operand.RegisterOperand;
+import joeq.Compil3r.Quad.RegisterFactory.Register;
+import joeq.Main.Driver;
+import joeq.Main.HostedVM;
+import joeq.Util.Assert;
+import joeq.Util.Strings;
+import joeq.Util.SimpleInterpreter;
+import joeq.Util.Collections.HashWorklist;
+import joeq.Util.Collections.IndexMap;
+import joeq.Util.Collections.LinearSet;
+import joeq.Util.Collections.Pair;
+import joeq.Util.Collections.Triple;
+import joeq.Util.Collections.UnmodifiableIterator;
+import joeq.Util.Graphs.Navigator;
+import joeq.Util.Graphs.PathNumbering;
+import joeq.Util.Graphs.SCCPathNumbering;
+import joeq.Util.Graphs.SCCTopSortedGraph;
+import joeq.Util.Graphs.SCComponent;
+import joeq.Util.Graphs.PathNumbering.Range;
+import joeq.Util.Graphs.SCCPathNumbering.Path;
+import joeq.Util.IO.SourceLister;
 
 /**
  * Records results for pointer analysis.  The results can be saved and reloaded.

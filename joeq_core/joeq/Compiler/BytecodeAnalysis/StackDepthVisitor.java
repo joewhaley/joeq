@@ -1,15 +1,15 @@
 // StackDepthVisitor.java, created Fri Jan 11 16:49:00 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Compil3r.BytecodeAnalysis;
+package joeq.Compil3r.BytecodeAnalysis;
 
 import java.util.Stack;
 
-import Clazz.jq_InstanceField;
-import Clazz.jq_Method;
-import Clazz.jq_StaticField;
-import Clazz.jq_Type;
-import Util.Assert;
+import joeq.Clazz.jq_InstanceField;
+import joeq.Clazz.jq_Method;
+import joeq.Clazz.jq_StaticField;
+import joeq.Clazz.jq_Type;
+import joeq.Util.Assert;
 
 /**
  * @author  John Whaley <jwhaley@alum.mit.edu>

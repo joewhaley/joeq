@@ -1,7 +1,7 @@
 // DirectBufferedFileOutputStream.java, created Wed Mar  5  0:26:34 2003 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Util.IO;
+package joeq.Util.IO;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -12,9 +12,9 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 
-import UTF.UTFDataFormatError;
-import UTF.Utf8;
-import Util.Assert;
+import joeq.UTF.UTFDataFormatError;
+import joeq.UTF.Utf8;
+import joeq.Util.Assert;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>

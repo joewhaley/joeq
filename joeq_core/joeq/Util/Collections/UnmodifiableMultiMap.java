@@ -1,7 +1,7 @@
 // UnmodifiableMultiMap.java, created Fri Mar 28 23:58:36 2003 by joewhaley
 // Copyright (C) 2001-3 Felix S. Klock II <pnkfelix@mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Util.Collections;
+package joeq.Util.Collections;
 
 import java.util.AbstractSet;
 import java.util.Collection;
@@ -10,7 +10,7 @@ import java.util.Set;
 import java.util.Map;
 import java.util.AbstractMap;
 
-import Util.Strings;
+import joeq.Util.Strings;
 
 /** <code>UnmodifiableMultiMap</code> is an abstract superclass to
     save developers the trouble of implementing the various mutator

@@ -1,7 +1,7 @@
 // ANSIColorStream.java, created Tue Sep 30 14:22:48 PDT 2003 by gback
 // Copyright (C) 2001-3 Godmar Back <gback@cs.utah.edu, @stanford.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Util.IO;
+package joeq.Util.IO;
 import java.io.PrintStream;
 import java.io.FilterOutputStream;
 import java.io.IOException;

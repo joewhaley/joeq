@@ -32,7 +32,7 @@
  *
  *--------------------------------------------------------------------------
  */
-package Support;
+package joeq.Support;
 
 import java.util.Random;
 

@@ -1,17 +1,17 @@
 // HostedVM.java, created Sat Dec 14  2:52:34 2002 by mcmartin
 // Copyright (C) 2001-3 mcmartin
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Main;
+package joeq.Main;
 
 import java.util.Iterator;
 
-import Bootstrap.PrimordialClassLoader;
-import ClassLib.ClassLibInterface;
-import Memory.CodeAddress;
-import Memory.HeapAddress;
-import Memory.StackAddress;
-import Run_Time.Reflection;
-import Util.Assert;
+import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.ClassLib.ClassLibInterface;
+import joeq.Memory.CodeAddress;
+import joeq.Memory.HeapAddress;
+import joeq.Memory.StackAddress;
+import joeq.Run_Time.Reflection;
+import joeq.Util.Assert;
 
 /**
  * @author  Michael Martin <mcmartin@stanford.edu>

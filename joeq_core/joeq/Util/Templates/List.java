@@ -1,7 +1,7 @@
 // List.java, created Wed Mar  5  0:26:32 2003 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Util.Templates;
+package joeq.Util.Templates;
 
 /**
  * @author John Whaley <jwhaley@alum.mit.edu>

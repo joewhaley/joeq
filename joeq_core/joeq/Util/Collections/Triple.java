@@ -1,7 +1,7 @@
 // Triple.java, created Mon Apr 21  2:48:51 2003 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Util.Collections;
+package joeq.Util.Collections;
 
 /**
  * @author John Whaley <jwhaley@alum.mit.edu>

@@ -1,7 +1,7 @@
 // jq_LocalVarTableEntry.java, created Thu Aug  1 12:46:55 2002 by gback
 // Copyright (C) 2001-3 Godmar Back <gback@cs.utah.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Clazz;
+package joeq.Clazz;
 
 /*
  * @author  Godmar Back <gback@cs.utah.edu>

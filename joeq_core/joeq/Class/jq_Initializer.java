@@ -1,13 +1,13 @@
 // jq_Initializer.java, created Mon Feb  5 23:23:20 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Clazz;
+package joeq.Clazz;
 
 //friend jq_ClassLoader;
 
-import Bootstrap.PrimordialClassLoader;
-import UTF.Utf8;
-import Util.Assert;
+import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.UTF.Utf8;
+import joeq.Util.Assert;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>

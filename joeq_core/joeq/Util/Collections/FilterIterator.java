@@ -2,7 +2,7 @@
 // Copyright (C) 1998 C. Scott Ananian <cananian@alumni.princeton.edu>
 // Licensed under the terms of the GNU GPL; see COPYING for details.
 
-package Util.Collections;
+package joeq.Util.Collections;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;

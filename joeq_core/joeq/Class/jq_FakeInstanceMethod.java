@@ -1,14 +1,14 @@
 // jq_FakeInstanceMethod.java, created Tue Dec  9 23:43:51 PST 2003
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Clazz;
+package joeq.Clazz;
 
-import Bootstrap.PrimordialClassLoader;
+import joeq.Bootstrap.PrimordialClassLoader;
 import java.util.HashMap;
 import java.util.StringTokenizer;
 import java.io.IOException;
-import Util.IO.Textualizer;
-import Util.Assert;
+import joeq.Util.IO.Textualizer;
+import joeq.Util.Assert;
 
 /*
  * @author  Godmar Back <gback@stanford.edu>

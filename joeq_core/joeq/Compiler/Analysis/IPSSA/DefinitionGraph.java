@@ -4,7 +4,7 @@
  * To change the template for this generated file go to
  * Window>Preferences>Java>Code Generation>Code and Comments
  */
-package Compil3r.Analysis.IPSSA;
+package joeq.Compil3r.Analysis.IPSSA;
 
 import java.io.PrintStream;
 import java.util.HashMap;
@@ -12,10 +12,10 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Set;
-import Util.Assert;
-import Util.Collections.LinearSet;
-import Compil3r.Analysis.IPSSA.Utils.*;
-import Compil3r.Analysis.IPSSA.ContextSet;
+import joeq.Util.Assert;
+import joeq.Util.Collections.LinearSet;
+import joeq.Compil3r.Analysis.IPSSA.Utils.*;
+import joeq.Compil3r.Analysis.IPSSA.ContextSet;
 
 /**
  * This is a graph consisting of definitions that uses as much sharing as possible.

@@ -1,7 +1,7 @@
 /*
  * Created on Sep 20, 2003
  */
-package Util.Collections;
+package joeq.Util.Collections;
 
 import java.util.Iterator;
 

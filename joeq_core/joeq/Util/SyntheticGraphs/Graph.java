@@ -1,4 +1,4 @@
-package Util.SyntheticGraphs;
+package joeq.Util.SyntheticGraphs;
 
 import java.io.PrintStream;
 import java.util.HashMap;

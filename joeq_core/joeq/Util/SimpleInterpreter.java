@@ -1,7 +1,7 @@
 // SimpleInterpreter.java, created Sun Feb  8 16:38:30 PST 2004 by gback
 // Copyright (C) 2003 John Whaley <jwhaley@alum.mit.edu> and Godmar Back <gback@stanford.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Util;
+package joeq.Util;
 
 /**
  * A simple Java interpreter.

@@ -1,12 +1,12 @@
 // jq_FieldVisitor.java, created Wed Jun 26 12:26:34 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Clazz;
+package joeq.Clazz;
 
 import java.util.Arrays;
 import java.util.Iterator;
 
-import Util.Collections.AppendIterator;
+import joeq.Util.Collections.AppendIterator;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>

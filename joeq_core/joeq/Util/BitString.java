@@ -1,9 +1,9 @@
 // BitString.java, created Wed May 16 17:26:33 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Util;
+package joeq.Util;
 
-import Util.Collections.UnmodifiableIterator;
+import joeq.Util.Collections.UnmodifiableIterator;
 
 /** <code>BitString</code> implements a vector of bits much like <code>java.util.BitSet</code>,
  * except that this implementation actually works.  Also, <code>BitString</code>

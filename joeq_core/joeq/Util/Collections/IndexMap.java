@@ -1,7 +1,7 @@
 // IndexMap.java, created Jun 15, 2003 2:04:05 AM by joewhaley
 // Copyright (C) 2003 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Util.Collections;
+package joeq.Util.Collections;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -11,9 +11,9 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 
-import Util.Assert;
-import Util.IO.Textualizable;
-import Util.IO.Textualizer;
+import joeq.Util.Assert;
+import joeq.Util.IO.Textualizable;
+import joeq.Util.IO.Textualizer;
 
 /**
  * IndexMap

@@ -1,7 +1,7 @@
 // Textualizer.java, created Oct 26, 2003 5:15:38 PM by joewhaley
 // Copyright (C) 2003 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Util.IO;
+package joeq.Util.IO;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -13,10 +13,10 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.StringTokenizer;
 
-import Util.Assert;
-import Util.Collections.IndexMap;
-import Util.Collections.IndexedMap;
-import Util.Collections.Pair;
+import joeq.Util.Assert;
+import joeq.Util.Collections.IndexMap;
+import joeq.Util.Collections.IndexedMap;
+import joeq.Util.Collections.Pair;
 
 /**
  * Textualizer

@@ -1,14 +1,14 @@
 // CodeCache.java, created Wed Jan 30 22:33:28 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Compil3r.Quad;
+package joeq.Compil3r.Quad;
 
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import Clazz.jq_Method;
+import joeq.Clazz.jq_Method;
 
 /**
  *

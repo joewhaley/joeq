@@ -1,7 +1,7 @@
 // Worklist.java, created Sat Sep 12 19:38:31 1998 by cananian
 // Copyright (C) 1998 C. Scott Ananian <cananian@alumni.princeton.edu>
 // Licensed under the terms of the GNU GPL; see COPYING for details.
-package Util.Collections;
+package joeq.Util.Collections;
 
 /**
  * A <code>Worklist</code> is a unique set.

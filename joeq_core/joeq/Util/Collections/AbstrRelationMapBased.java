@@ -1,7 +1,7 @@
 // AbstrRelationMapBased.java, created Fri Jun 30 11:17:10 2000 by salcianu
 // Copyright (C) 2000 Alexandru SALCIANU <salcianu@alum.mit.edu>
 // Licensed under the terms of the GNU GPL; see COPYING for details.
-package Util.Collections;
+package joeq.Util.Collections;
 
 import java.io.Serializable;
 import java.util.Collections;

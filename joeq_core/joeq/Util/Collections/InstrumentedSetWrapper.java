@@ -1,7 +1,7 @@
 // InstrumentedSetWrapper.java, created Wed Mar  5  0:26:26 2003 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Util.Collections;
+package joeq.Util.Collections;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -15,8 +15,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import Util.Assert;
-import Util.Strings;
+import joeq.Util.Assert;
+import joeq.Util.Strings;
 
 /**
  * @author John Whaley <jwhaley@alum.mit.edu>

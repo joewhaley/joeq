@@ -1,7 +1,7 @@
 // DotGraph.java, created Tue Nov  5 14:16:40 2002 by joewhaley
 // Copyright (C) 2001-3 Godmar Back <gback@cs.utah.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Compil3r.Quad;
+package joeq.Compil3r.Quad;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -13,9 +13,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Iterator;
 
-import Clazz.jq_Class;
-import Clazz.jq_Method;
-import Util.Templates.ListIterator;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_Method;
+import joeq.Util.Templates.ListIterator;
 
 /**
  * @author Godmar Back <gback@cs.utah.edu, @stanford.edu> 

@@ -1,9 +1,9 @@
 // NullDelegates.java, created Mon Dec 23 20:00:01 2002 by mcmartin
 // Copyright (C) 2001-3 Michael Martin <mcmartin@stanford.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Compil3r.Quad;
+package joeq.Compil3r.Quad;
 
-import Interpreter.QuadInterpreter;
+import joeq.Interpreter.QuadInterpreter;
 
 /**
  * @author Michael Martin <mcmartin@stanford.edu>

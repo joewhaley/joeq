@@ -1,17 +1,17 @@
 // ScanThreads.java, created Tue Dec 10 14:02:35 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Memory.Manager;
+package joeq.Memory.Manager;
 
 import java.util.Iterator;
 
-import Memory.HeapAddress;
-import Memory.StackAddress;
-import Memory.Heap.Heap;
-import Run_Time.Unsafe;
-import Scheduler.jq_NativeThread;
-import Scheduler.jq_Thread;
-import Util.Collections.AppendIterator;
+import joeq.Memory.HeapAddress;
+import joeq.Memory.StackAddress;
+import joeq.Memory.Heap.Heap;
+import joeq.Run_Time.Unsafe;
+import joeq.Scheduler.jq_NativeThread;
+import joeq.Scheduler.jq_Thread;
+import joeq.Util.Collections.AppendIterator;
 
 /**
  * @author John Whaley <jwhaley@alum.mit.edu>

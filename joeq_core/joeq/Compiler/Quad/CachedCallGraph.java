@@ -1,7 +1,7 @@
 // CachedCallGraph.java, created Sat Mar 29  0:56:01 2003 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Compil3r.Quad;
+package joeq.Compil3r.Quad;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -10,12 +10,12 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import Clazz.jq_Method;
-import Compil3r.Analysis.IPA.ProgramLocation;
-import Util.Collections.GenericInvertibleMultiMap;
-import Util.Collections.GenericMultiMap;
-import Util.Collections.InvertibleMultiMap;
-import Util.Collections.MultiMap;
+import joeq.Clazz.jq_Method;
+import joeq.Compil3r.Analysis.IPA.ProgramLocation;
+import joeq.Util.Collections.GenericInvertibleMultiMap;
+import joeq.Util.Collections.GenericMultiMap;
+import joeq.Util.Collections.InvertibleMultiMap;
+import joeq.Util.Collections.MultiMap;
 
 /**
  * @author John Whaley <jwhaley@alum.mit.edu>

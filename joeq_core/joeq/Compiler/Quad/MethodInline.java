@@ -1,32 +1,32 @@
 // MethodInline.java, created Wed Mar 13  1:39:18 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Compil3r.Quad;
+package joeq.Compil3r.Quad;
 
 import java.util.Collection;
 
-import Clazz.jq_Class;
-import Clazz.jq_Method;
-import Clazz.jq_Primitive;
-import Clazz.jq_Type;
-import Compil3r.Analysis.IPA.*;
-import Compil3r.Analysis.IPA.ProgramLocation.QuadProgramLocation;
-import Compil3r.BytecodeAnalysis.BytecodeVisitor;
-import Compil3r.Quad.Operand.ConditionOperand;
-import Compil3r.Quad.Operand.IConstOperand;
-import Compil3r.Quad.Operand.ParamListOperand;
-import Compil3r.Quad.Operand.RegisterOperand;
-import Compil3r.Quad.Operand.TargetOperand;
-import Compil3r.Quad.Operand.TypeOperand;
-import Compil3r.Quad.Operator.Goto;
-import Compil3r.Quad.Operator.InstanceOf;
-import Compil3r.Quad.Operator.IntIfCmp;
-import Compil3r.Quad.Operator.Invoke;
-import Compil3r.Quad.Operator.Move;
-import Compil3r.Quad.Operator.Return;
-import Compil3r.Quad.RegisterFactory.Register;
-import Util.Assert;
-import Util.Templates.ListIterator;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_Method;
+import joeq.Clazz.jq_Primitive;
+import joeq.Clazz.jq_Type;
+import joeq.Compil3r.Analysis.IPA.*;
+import joeq.Compil3r.Analysis.IPA.ProgramLocation.QuadProgramLocation;
+import joeq.Compil3r.BytecodeAnalysis.BytecodeVisitor;
+import joeq.Compil3r.Quad.Operand.ConditionOperand;
+import joeq.Compil3r.Quad.Operand.IConstOperand;
+import joeq.Compil3r.Quad.Operand.ParamListOperand;
+import joeq.Compil3r.Quad.Operand.RegisterOperand;
+import joeq.Compil3r.Quad.Operand.TargetOperand;
+import joeq.Compil3r.Quad.Operand.TypeOperand;
+import joeq.Compil3r.Quad.Operator.Goto;
+import joeq.Compil3r.Quad.Operator.InstanceOf;
+import joeq.Compil3r.Quad.Operator.IntIfCmp;
+import joeq.Compil3r.Quad.Operator.Invoke;
+import joeq.Compil3r.Quad.Operator.Move;
+import joeq.Compil3r.Quad.Operator.Return;
+import joeq.Compil3r.Quad.RegisterFactory.Register;
+import joeq.Util.Assert;
+import joeq.Util.Templates.ListIterator;
 
 /**
  * @author John Whaley <jwhaley@alum.mit.edu>

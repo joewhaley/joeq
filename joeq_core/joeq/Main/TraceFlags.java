@@ -1,24 +1,24 @@
 // TraceFlags.java, created Mon Feb  5 23:23:21 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Main;
+package joeq.Main;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Iterator;
 
-import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Array;
-import Clazz.jq_Class;
-import Clazz.jq_Member;
-import Clazz.jq_Primitive;
-import Clazz.jq_StaticField;
-import Clazz.jq_Type;
-import Run_Time.Debug;
-import Run_Time.Reflection;
-import UTF.Utf8;
-import Util.Assert;
+import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.jq_Array;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_Member;
+import joeq.Clazz.jq_Primitive;
+import joeq.Clazz.jq_StaticField;
+import joeq.Clazz.jq_Type;
+import joeq.Run_Time.Debug;
+import joeq.Run_Time.Reflection;
+import joeq.UTF.Utf8;
+import joeq.Util.Assert;
 
 /**
  * @author  John Whaley <jwhaley@alum.mit.edu>

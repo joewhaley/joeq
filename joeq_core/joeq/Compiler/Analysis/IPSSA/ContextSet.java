@@ -1,6 +1,6 @@
-package Compil3r.Analysis.IPSSA;
+package joeq.Compil3r.Analysis.IPSSA;
 
-import Compil3r.Analysis.IPSSA.SSALocation;
+import joeq.Compil3r.Analysis.IPSSA.SSALocation;
 
 public class ContextSet {
 	// TODO: fill in the details of the representation

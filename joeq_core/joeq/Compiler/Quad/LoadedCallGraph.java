@@ -1,7 +1,7 @@
 // LoadedCallGraph.java, created Jun 27, 2003 12:46:40 AM by joewhaley
 // Copyright (C) 2003 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Compil3r.Quad;
+package joeq.Compil3r.Quad;
 
 import java.io.DataInput;
 import java.io.DataInputStream;
@@ -18,21 +18,21 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
 
-import Clazz.jq_Class;
-import Clazz.jq_Member;
-import Clazz.jq_Method;
-import Clazz.jq_FakeInstanceMethod;
-import Clazz.jq_Type;
-import Compil3r.Analysis.IPA.ProgramLocation;
-import Compil3r.Analysis.IPA.ProgramLocation.BCProgramLocation;
-import Util.Assert;
-import Util.Collections.GenericInvertibleMultiMap;
-import Util.Collections.GenericMultiMap;
-import Util.Collections.InvertibleMultiMap;
-import Util.Collections.MapFactory;
-import Util.Collections.MultiMap;
-import Util.Collections.SetFactory;
-import Util.Collections.SortedArraySet;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_Member;
+import joeq.Clazz.jq_Method;
+import joeq.Clazz.jq_FakeInstanceMethod;
+import joeq.Clazz.jq_Type;
+import joeq.Compil3r.Analysis.IPA.ProgramLocation;
+import joeq.Compil3r.Analysis.IPA.ProgramLocation.BCProgramLocation;
+import joeq.Util.Assert;
+import joeq.Util.Collections.GenericInvertibleMultiMap;
+import joeq.Util.Collections.GenericMultiMap;
+import joeq.Util.Collections.InvertibleMultiMap;
+import joeq.Util.Collections.MapFactory;
+import joeq.Util.Collections.MultiMap;
+import joeq.Util.Collections.SetFactory;
+import joeq.Util.Collections.SortedArraySet;
 
 /**
  * A call graph that is loaded from a file.

@@ -1,30 +1,30 @@
 // ProgramLocation.java, created Sun Sep  1 17:38:25 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Compil3r.Analysis.IPA;
+package joeq.Compil3r.Analysis.IPA;
 
 import java.io.IOException;
 import java.util.Map;
 import java.util.StringTokenizer;
 
-import Clazz.jq_Class;
-import Clazz.jq_ClassFileConstants;
-import Clazz.jq_InstanceMethod;
-import Clazz.jq_FakeInstanceMethod;
-import Clazz.jq_Method;
-import Clazz.jq_Type;
-import Compil3r.BytecodeAnalysis.BytecodeVisitor;
-import Compil3r.BytecodeAnalysis.Bytecodes;
-import Compil3r.Quad.CodeCache;
-import Compil3r.Quad.ControlFlowGraph;
-import Compil3r.Quad.Quad;
-import Compil3r.Quad.QuadIterator;
-import Compil3r.Quad.Operator.Invoke;
-import UTF.Utf8;
-import Util.Assert;
-import Util.IO.ByteSequence;
-import Util.IO.Textualizable;
-import Util.IO.Textualizer;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_ClassFileConstants;
+import joeq.Clazz.jq_InstanceMethod;
+import joeq.Clazz.jq_FakeInstanceMethod;
+import joeq.Clazz.jq_Method;
+import joeq.Clazz.jq_Type;
+import joeq.Compil3r.BytecodeAnalysis.BytecodeVisitor;
+import joeq.Compil3r.BytecodeAnalysis.Bytecodes;
+import joeq.Compil3r.Quad.CodeCache;
+import joeq.Compil3r.Quad.ControlFlowGraph;
+import joeq.Compil3r.Quad.Quad;
+import joeq.Compil3r.Quad.QuadIterator;
+import joeq.Compil3r.Quad.Operator.Invoke;
+import joeq.UTF.Utf8;
+import joeq.Util.Assert;
+import joeq.Util.IO.ByteSequence;
+import joeq.Util.IO.Textualizable;
+import joeq.Util.IO.Textualizer;
 
 /**
  * This class provides a general mechanism to describe a location in the code,

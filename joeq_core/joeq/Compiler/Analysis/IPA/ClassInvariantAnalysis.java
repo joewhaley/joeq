@@ -1,7 +1,7 @@
 // ClassInvariantAnalysis.java, created Jun 20, 2003 9:22:16 PM by joewhaley
 // Copyright (C) 2003 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Compil3r.Analysis.IPA;
+package joeq.Compil3r.Analysis.IPA;
 
 import java.io.PrintStream;
 import java.util.Arrays;
@@ -13,26 +13,26 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
-import Clazz.jq_Array;
-import Clazz.jq_Class;
-import Clazz.jq_Field;
-import Clazz.jq_Initializer;
-import Clazz.jq_InstanceMethod;
-import Clazz.jq_Method;
-import Clazz.jq_Primitive;
-import Clazz.jq_Type;
-import Clazz.jq_TypeVisitor;
-import Compil3r.Quad.CallGraph;
-import Compil3r.Quad.CodeCache;
-import Compil3r.Quad.ControlFlowGraph;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary.FieldNode;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary.NodeSet;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary.ParamNode;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary.UnknownTypeNode;
-import Util.Assert;
-import Util.Graphs.Navigator;
+import joeq.Clazz.jq_Array;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_Field;
+import joeq.Clazz.jq_Initializer;
+import joeq.Clazz.jq_InstanceMethod;
+import joeq.Clazz.jq_Method;
+import joeq.Clazz.jq_Primitive;
+import joeq.Clazz.jq_Type;
+import joeq.Clazz.jq_TypeVisitor;
+import joeq.Compil3r.Quad.CallGraph;
+import joeq.Compil3r.Quad.CodeCache;
+import joeq.Compil3r.Quad.ControlFlowGraph;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.FieldNode;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.NodeSet;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.ParamNode;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.UnknownTypeNode;
+import joeq.Util.Assert;
+import joeq.Util.Graphs.Navigator;
 
 /**
  * ClassInvariantAnalysis

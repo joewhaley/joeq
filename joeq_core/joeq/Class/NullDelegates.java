@@ -1,13 +1,13 @@
 // NullDelegates.java, created Wed Dec 11 12:02:02 2002 by mcmartin
 // Copyright (C) 2001-3 mcmartin
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Clazz;
+package joeq.Clazz;
 
 import java.util.Iterator;
 
-import Memory.CodeAddress;
-import Memory.StackAddress;
-import Util.Assert;
+import joeq.Memory.CodeAddress;
+import joeq.Memory.StackAddress;
+import joeq.Util.Assert;
 
 /**
  * NullDelegates

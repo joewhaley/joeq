@@ -1,31 +1,31 @@
 // ControlFlowGraph.java, created Fri Jan 11 16:42:38 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Compil3r.Quad;
+package joeq.Compil3r.Quad;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Method;
-import Clazz.jq_Primitive;
-import Clazz.jq_Type;
-import Compil3r.Quad.Operand.BasicBlockTableOperand;
-import Compil3r.Quad.Operand.ParamListOperand;
-import Compil3r.Quad.Operand.RegisterOperand;
-import Compil3r.Quad.Operand.TargetOperand;
-import Compil3r.Quad.RegisterFactory.Register;
-import Util.Assert;
-import Util.Strings;
-import Util.Collections.FilterIterator;
-import Util.Graphs.Graph;
-import Util.Graphs.Navigator;
-import Util.Templates.List;
-import Util.Templates.ListIterator;
-import Util.Templates.ListWrapper;
-import Util.Templates.UnmodifiableList;
+import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.jq_Method;
+import joeq.Clazz.jq_Primitive;
+import joeq.Clazz.jq_Type;
+import joeq.Compil3r.Quad.Operand.BasicBlockTableOperand;
+import joeq.Compil3r.Quad.Operand.ParamListOperand;
+import joeq.Compil3r.Quad.Operand.RegisterOperand;
+import joeq.Compil3r.Quad.Operand.TargetOperand;
+import joeq.Compil3r.Quad.RegisterFactory.Register;
+import joeq.Util.Assert;
+import joeq.Util.Strings;
+import joeq.Util.Collections.FilterIterator;
+import joeq.Util.Graphs.Graph;
+import joeq.Util.Graphs.Navigator;
+import joeq.Util.Templates.List;
+import joeq.Util.Templates.ListIterator;
+import joeq.Util.Templates.ListWrapper;
+import joeq.Util.Templates.UnmodifiableList;
 
 /**
  * Control flow graph for the Quad format.

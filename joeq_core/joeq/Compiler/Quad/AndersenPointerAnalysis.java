@@ -1,7 +1,7 @@
 // AndersenPointerAnalysis.java, created Thu Apr 25 16:32:26 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Compil3r.Quad;
+package joeq.Compil3r.Quad;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -14,37 +14,37 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
-import Clazz.jq_Class;
-import Clazz.jq_ClassInitializer;
-import Clazz.jq_Field;
-import Clazz.jq_Initializer;
-import Clazz.jq_Method;
-import Clazz.jq_Reference;
-import Clazz.jq_StaticField;
-import Clazz.jq_Type;
-import Compil3r.Analysis.IPA.*;
-import Compil3r.BytecodeAnalysis.CallTargets;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary.CallSite;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary.ConcreteTypeNode;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary.FieldNode;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary.GlobalNode;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary.NodeSet;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary.OutsideNode;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary.ParamNode;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary.PassedParameter;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary.ReturnValueNode;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary.ThrownExceptionNode;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary.UnknownTypeNode;
-import Util.Assert;
-import Util.Strings;
-import Util.Collections.HashCodeComparator;
-import Util.Collections.LinearSet;
-import Util.Collections.Pair;
-import Util.Collections.SetFactory;
-import Util.Collections.SetRepository;
-import Util.Collections.SortedArraySet;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_ClassInitializer;
+import joeq.Clazz.jq_Field;
+import joeq.Clazz.jq_Initializer;
+import joeq.Clazz.jq_Method;
+import joeq.Clazz.jq_Reference;
+import joeq.Clazz.jq_StaticField;
+import joeq.Clazz.jq_Type;
+import joeq.Compil3r.Analysis.IPA.*;
+import joeq.Compil3r.BytecodeAnalysis.CallTargets;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.CallSite;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.ConcreteTypeNode;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.FieldNode;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.GlobalNode;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.NodeSet;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.OutsideNode;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.ParamNode;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.PassedParameter;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.ReturnValueNode;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.ThrownExceptionNode;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.UnknownTypeNode;
+import joeq.Util.Assert;
+import joeq.Util.Strings;
+import joeq.Util.Collections.HashCodeComparator;
+import joeq.Util.Collections.LinearSet;
+import joeq.Util.Collections.Pair;
+import joeq.Util.Collections.SetFactory;
+import joeq.Util.Collections.SetRepository;
+import joeq.Util.Collections.SortedArraySet;
 
 /**
  *

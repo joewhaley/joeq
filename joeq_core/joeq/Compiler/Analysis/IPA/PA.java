@@ -1,7 +1,7 @@
 // PA.java, created Oct 16, 2003 3:39:34 PM by joewhaley
 // Copyright (C) 2003 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Compil3r.Analysis.IPA;
+package joeq.Compil3r.Analysis.IPA;
 
 import java.io.DataInput;
 import java.io.DataInputStream;
@@ -42,41 +42,41 @@ import org.sf.javabdd.BDDPairing;
 import org.sf.javabdd.TypedBDDFactory;
 import org.sf.javabdd.TypedBDDFactory.TypedBDD;
 
-import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Array;
-import Clazz.jq_Class;
-import Clazz.jq_Field;
-import Clazz.jq_InstanceField;
-import Clazz.jq_Method;
-import Clazz.jq_FakeInstanceMethod;
-import Clazz.jq_NameAndDesc;
-import Clazz.jq_Reference;
-import Clazz.jq_Type;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary.ConcreteObjectNode;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary.ConcreteTypeNode;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary.GlobalNode;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary.UnknownTypeNode;
-import Compil3r.Quad.CachedCallGraph;
-import Compil3r.Quad.CallGraph;
-import Compil3r.Quad.CodeCache;
-import Compil3r.Quad.LoadedCallGraph;
-import Compil3r.Quad.Quad;
-import Compil3r.Quad.Operand.RegisterOperand;
-import Compil3r.Quad.Operator.Invoke;
-import Main.HostedVM;
-import Util.Assert;
-import Util.Collections.IndexMap;
-import Util.Collections.Pair;
-import Util.Graphs.Navigator;
-import Util.Graphs.PathNumbering;
-import Util.Graphs.RootPathNumbering;
-import Util.Graphs.SCCPathNumbering;
-import Util.Graphs.SCComponent;
-import Util.Graphs.Traversals;
-import Util.Graphs.PathNumbering.Range;
-import Util.Graphs.SCCPathNumbering.Selector;
+import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.jq_Array;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_Field;
+import joeq.Clazz.jq_InstanceField;
+import joeq.Clazz.jq_Method;
+import joeq.Clazz.jq_FakeInstanceMethod;
+import joeq.Clazz.jq_NameAndDesc;
+import joeq.Clazz.jq_Reference;
+import joeq.Clazz.jq_Type;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.ConcreteObjectNode;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.ConcreteTypeNode;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.GlobalNode;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.UnknownTypeNode;
+import joeq.Compil3r.Quad.CachedCallGraph;
+import joeq.Compil3r.Quad.CallGraph;
+import joeq.Compil3r.Quad.CodeCache;
+import joeq.Compil3r.Quad.LoadedCallGraph;
+import joeq.Compil3r.Quad.Quad;
+import joeq.Compil3r.Quad.Operand.RegisterOperand;
+import joeq.Compil3r.Quad.Operator.Invoke;
+import joeq.Main.HostedVM;
+import joeq.Util.Assert;
+import joeq.Util.Collections.IndexMap;
+import joeq.Util.Collections.Pair;
+import joeq.Util.Graphs.Navigator;
+import joeq.Util.Graphs.PathNumbering;
+import joeq.Util.Graphs.RootPathNumbering;
+import joeq.Util.Graphs.SCCPathNumbering;
+import joeq.Util.Graphs.SCComponent;
+import joeq.Util.Graphs.Traversals;
+import joeq.Util.Graphs.PathNumbering.Range;
+import joeq.Util.Graphs.SCCPathNumbering.Selector;
 
 /**
  * Pointer analysis using BDDs.  Includes both context-insensitive and context-sensitive

@@ -1,7 +1,7 @@
 // Comparisons.java, created Sun Feb  8 16:32:41 PST 2004 by gback
 // Copyright (C) 2003 Godmar Back <gback@stanford.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Util;
+package joeq.Util;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;

@@ -1,29 +1,29 @@
 // JoeqVM.java, created Sat Dec 14  2:52:34 2002 by mcmartin
 // Copyright (C) 2001-3 jwhaley
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Main;
+package joeq.Main;
 
 import java.util.Iterator;
 
-import Allocator.SimpleAllocator;
-import Bootstrap.MethodInvocation;
-import Bootstrap.PrimordialClassLoader;
-import ClassLib.ClassLibInterface;
-import Clazz.jq_Class;
-import Clazz.jq_NameAndDesc;
-import Clazz.jq_StaticMethod;
-import Compil3r.CompilationState;
-import Compil3r.CompilationState.DynamicCompilation;
-import Run_Time.Debug;
-import Run_Time.SystemInterface;
-import Run_Time.Unsafe;
-import Scheduler.jq_InterrupterThread;
-import Scheduler.jq_MainThread;
-import Scheduler.jq_NativeThread;
-import Scheduler.jq_Thread;
-import UTF.Utf8;
-import Util.Assert;
-import Util.Strings;
+import joeq.Allocator.SimpleAllocator;
+import joeq.Bootstrap.MethodInvocation;
+import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.ClassLib.ClassLibInterface;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_NameAndDesc;
+import joeq.Clazz.jq_StaticMethod;
+import joeq.Compil3r.CompilationState;
+import joeq.Compil3r.CompilationState.DynamicCompilation;
+import joeq.Run_Time.Debug;
+import joeq.Run_Time.SystemInterface;
+import joeq.Run_Time.Unsafe;
+import joeq.Scheduler.jq_InterrupterThread;
+import joeq.Scheduler.jq_MainThread;
+import joeq.Scheduler.jq_NativeThread;
+import joeq.Scheduler.jq_Thread;
+import joeq.UTF.Utf8;
+import joeq.Util.Assert;
+import joeq.Util.Strings;
 
 /**
  * @author  John Whaley <jwhaley@alum.mit.edu>

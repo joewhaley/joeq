@@ -1,7 +1,7 @@
 // Bytecodes.java, created Fri Jan 11 16:49:00 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Compil3r.BytecodeAnalysis;
+package joeq.Compil3r.BytecodeAnalysis;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -19,27 +19,27 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Array;
-import Clazz.jq_Class;
-import Clazz.jq_ClassFileConstants;
-import Clazz.jq_ConstantPool;
-import Clazz.jq_Field;
-import Clazz.jq_InstanceField;
-import Clazz.jq_LineNumberBC;
-import Clazz.jq_Member;
-import Clazz.jq_MemberReference;
-import Clazz.jq_Method;
-import Clazz.jq_Primitive;
-import Clazz.jq_Reference;
-import Clazz.jq_StaticField;
-import Clazz.jq_TryCatchBC;
-import Clazz.jq_Type;
-import UTF.Utf8;
-import Util.Assert;
-import Util.Strings;
-import Util.Collections.LinearSet;
-import Util.IO.ByteSequence;
+import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.jq_Array;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_ClassFileConstants;
+import joeq.Clazz.jq_ConstantPool;
+import joeq.Clazz.jq_Field;
+import joeq.Clazz.jq_InstanceField;
+import joeq.Clazz.jq_LineNumberBC;
+import joeq.Clazz.jq_Member;
+import joeq.Clazz.jq_MemberReference;
+import joeq.Clazz.jq_Method;
+import joeq.Clazz.jq_Primitive;
+import joeq.Clazz.jq_Reference;
+import joeq.Clazz.jq_StaticField;
+import joeq.Clazz.jq_TryCatchBC;
+import joeq.Clazz.jq_Type;
+import joeq.UTF.Utf8;
+import joeq.Util.Assert;
+import joeq.Util.Strings;
+import joeq.Util.Collections.LinearSet;
+import joeq.Util.IO.ByteSequence;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>
