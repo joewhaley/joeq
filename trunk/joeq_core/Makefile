@@ -2,7 +2,8 @@ PACKAGES = Allocator Assembler Bootstrap ClassLib Clazz Compil3r GC Interpreter 
 
 ALLDIRS = $(shell find $(PACKAGES) -type d | grep -v CVS)
 ALLJAVA = $(foreach d, $(ALLDIRS), $(wildcard $(d)/*.java))
-ALLPKGS = $(sort $(foreach j, $(ALLJAVA), $(dir $(j))))
+ALLPKGS = $(sort $(foreach j, $(ALLJAVA), $(patsubst %/,%,$(dir $(j)))))
+ALLPKGNAMES = $(subst /,.,$(ALLPKGS))
 ALLCLASS = $(foreach d, $(ALLDIRS), $(wildcard $(d)/*.class))
 
 CLASSFILE_VERSION = 1.3
@@ -63,6 +64,12 @@ bootstrap-sun14-win32:	javac
 
 bootstrap-sun13-win32:	javac
 	java -Xbootclasspath/a:. -ms120M -mx120M Main.Bootstrapper -cl ClassLib/sun13_win32/classlist.txt
+
+
+### RULES FOR BUILDING JAVADOC
+#
+javadoc:
+	javadoc -breakiterator -d ../joeq_project/htdocs/javadoc $(ALLPKGNAMES)
 
 
 ### MISC RULES
