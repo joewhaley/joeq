@@ -437,7 +437,7 @@ public abstract class Section implements ELFConstants {
                     jq.assert(s1.length() == in);
                     int index2;
                     for (Iterator k=string_set.iterator(); ; ) {
-                        if (!j.hasNext()) {
+                        if (!k.hasNext()) {
                             index2 = index;
                             index += in + 1;
                             string_set.add(s1);
