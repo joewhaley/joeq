@@ -115,6 +115,15 @@ public class BDDRelation extends Relation {
         }
     }
     
+    public BDD calculateDomainSet() {
+        this.domainSet = solver.bdd.one();
+        for (Iterator i = domains.iterator(); i.hasNext(); ) {
+            BDDDomain d = (BDDDomain) i.next();
+            domainSet.andWith(d.set());
+        }
+        return domainSet;
+    }
+    
     public void load() throws IOException {
         load(name+".bdd");
         if (solver.NOISY) solver.out.println("Loaded BDD from file: "+name+".bdd "+relation.nodeCount()+" nodes, "+dsize()+" elements.");
@@ -144,6 +153,7 @@ public class BDDRelation extends Relation {
                 System.out.println("Warning: "+filename+" is one.");
             } else {
                 BDD s = r2.support();
+                calculateDomainSet();                
                 BDD t = domainSet.and(s);
                 s.free();
                 boolean b = !t.equals(domainSet);
