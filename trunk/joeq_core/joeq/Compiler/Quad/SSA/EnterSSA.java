@@ -23,9 +23,9 @@ import joeq.Compiler.Quad.ExceptionHandlerList;
 import joeq.Compiler.Quad.Operand;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.QuadIterator;
+import joeq.Compiler.Quad.BytecodeToQuad.jq_ReturnAddressType;
 import joeq.Compiler.Quad.Dominators.DominatorNode;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
-import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.Operator.Move;
 import joeq.Compiler.Quad.Operator.Phi;
 import joeq.Compiler.Quad.Operator.Special;
@@ -557,6 +557,12 @@ public class EnterSSA implements ControlFlowGraphVisitor {
                 continue;
             } else if (result == null) {
                 result = t;
+                continue;
+            } else if (result == jq_ReturnAddressType.INSTANCE) {
+                // TODO.
+                continue;
+            } else if (t == jq_ReturnAddressType.INSTANCE) {
+                // TODO.
                 continue;
             } else {
                 jq_Type meet = TypeCheck.findCommonSuperclass(result, t, false);

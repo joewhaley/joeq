@@ -51,6 +51,8 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
     IndexMap memberMap;
     IndexMap constantMap;
     
+    String dumpDir = System.getProperty("bdddumpdir", "");
+    
     String varOrderDesc = "method_quadxtargetxfallthrough_member_constant_opc_srcs_dest_srcNum";
     
     int methodBits = 14, quadBits = 18, opBits = 8, regBits = 7, constantBits = 13, memberBits = 14, varargsBits = 4;
@@ -351,11 +353,11 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
     
     public void dump() throws IOException {
         System.out.println("Var order: "+varOrderDesc);
-        dumpMap(quadMap, "quad.map");
-        dumpMap(opMap, "op.map");
-        //dumpMap(regMap, "reg.map");
-        dumpMap(memberMap, "member.map");
-        dumpMap(constantMap, "constant.map");
+        dumpMap(quadMap, dumpDir+"quad.map");
+        dumpMap(opMap, dumpDir+"op.map");
+        //dumpMap(regMap, dumpDir+"reg.map");
+        dumpMap(memberMap, dumpDir+"member.map");
+        dumpMap(constantMap, dumpDir+"constant.map");
         
         String relationName;
         if (SSA) {
@@ -365,24 +367,24 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
             relationName = "cfg";
         }
         
-        dumpBDDConfig("bdd."+relationName);
-        dumpFieldDomains("fielddomains."+relationName);
-        dumpRelations("relations."+relationName);            
+        dumpBDDConfig(dumpDir+"bdd."+relationName);
+        dumpFieldDomains(dumpDir+"fielddomains."+relationName);
+        dumpRelations(dumpDir+"relations."+relationName);            
         
         System.out.print("Saving BDDs...");
-        bdd.save(relationName+".bdd", allQuads);
-        bdd.save("m2q.bdd", methodToQuad);
-        bdd.save("entries.bdd", methodEntries);
-        bdd.save("nullconstant.bdd", nullConstant);
-        bdd.save("nonnullconstants.bdd", nonNullConstants);
+        bdd.save(dumpDir+relationName+".bdd", allQuads);
+        bdd.save(dumpDir+"m2q.bdd", methodToQuad);
+        bdd.save(dumpDir+"entries.bdd", methodEntries);
+        bdd.save(dumpDir+"nullconstant.bdd", nullConstant);
+        bdd.save(dumpDir+"nonnullconstants.bdd", nonNullConstants);
         System.out.println("done.");
         
         System.out.println("Saving tuples....");
-        dumpTuples(bdd, relationName+".tuples", allQuads);
-        dumpTuples(bdd, "m2q.tuples", methodToQuad);
-        dumpTuples(bdd, "entries.tuples", methodEntries);
-        dumpTuples(bdd, "nullconstant.tuples", nullConstant);
-        dumpTuples(bdd, "nonnullconstants.tuples", nonNullConstants);
+        dumpTuples(bdd, dumpDir+relationName+".tuples", allQuads);
+        dumpTuples(bdd, dumpDir+"m2q.tuples", methodToQuad);
+        dumpTuples(bdd, dumpDir+"entries.tuples", methodEntries);
+        dumpTuples(bdd, dumpDir+"nullconstant.tuples", nullConstant);
+        dumpTuples(bdd, dumpDir+"nonnullconstants.tuples", nonNullConstants);
         System.out.println("done.");
     }
     

@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.Operand.BasicBlockTableOperand;
