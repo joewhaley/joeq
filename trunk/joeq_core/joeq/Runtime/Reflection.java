@@ -72,6 +72,12 @@ public abstract class Reflection {
         return _delegate.getJDKMember(m);
     }
 
+    /**
+     * Utility function to extract the argument types from a method descriptor.
+     * 
+     * @param desc
+     * @return
+     */
     public static Class[] getArgTypesFromDesc(Utf8 desc) {
         Utf8.MethodDescriptorIterator i = desc.getParamDescriptors();
         // count them up
