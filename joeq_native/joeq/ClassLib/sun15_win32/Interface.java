@@ -49,6 +49,11 @@ public class Interface extends joeq.ClassLib.sun142_win32.Interface {
             k = (jq_Class) PrimordialClassLoader.getJavaLangClass();
             nullInstanceFields.add(k.getOrCreateInstanceField("name", "Ljava/lang/String;"));
             
+            // jdk1.5 caches field accessors.
+            k = (jq_Class) PrimordialClassLoader.getJavaLangReflectField();
+            nullInstanceFields.add(k.getOrCreateInstanceField("fieldAccessor", "Lsun/reflect/FieldAccessor;"));
+            nullInstanceFields.add(k.getOrCreateInstanceField("overrideFieldAccessor", "Lsun/reflect/FieldAccessor;"));
+            
             // crashes on reflective access.
             k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Lsun/reflect/UnsafeStaticFieldAccessorImpl;");
             nullInstanceFields.add(k.getOrCreateInstanceField("base", "Ljava/lang/Object;"));
