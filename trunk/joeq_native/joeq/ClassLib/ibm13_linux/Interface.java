@@ -55,6 +55,9 @@ public final class Interface extends ClassLib.ClassLibInterface {
         //nullStaticFields.add(urlclassloader_class.getOrCreateStaticField("extLoader", "Ljava/net/URLClassLoader;"));
         jq_Class zipfile_class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/util/zip/ZipFile;");
         nullStaticFields.add(zipfile_class.getOrCreateStaticField("inflaters", "Ljava/util/Vector;"));
+	jq_Class string_class = PrimordialClassLoader.getJavaLangString();
+	nullStaticFields.add(string_class.getOrCreateStaticField("btcConverter", "Ljava/lang/ThreadLocal;"));
+	nullStaticFields.add(string_class.getOrCreateStaticField("ctbConverter", "Ljava/lang/ThreadLocal;"));
         return nullStaticFields;
     }
     
@@ -66,6 +69,12 @@ public final class Interface extends ClassLib.ClassLibInterface {
     }
     
     public void initializeDefaults() {
+	// access the ISO-8859-1 character encoding, as it is used during bootstrapping
+	try {
+	    String s = new String(new byte[0], 0, 0, "ISO-8859-1");
+	} catch (java.io.UnsupportedEncodingException x) {}
+	Bootstrap.PrimordialClassLoader.loader.getOrCreateBSType("Lsun/io/CharToByteISO8859_1;");
+
 	// we need to reinitialize the inflaters array on startup.
 	Object[] args = { } ;
         jq_Class zipfile_class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/util/zip/ZipFile;");
