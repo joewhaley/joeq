@@ -214,6 +214,9 @@ public abstract class ClassLibInterface {
             ClassLibInterface.DEFAULT.init_zipfile(zf, s);
         } catch (java.io.IOException x) {
             System.err.println("Note: cannot reopen zip file "+s);
+            try {
+                zf.close();
+            } catch (java.io.IOException y) {}
         }
     }
     
