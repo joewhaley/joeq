@@ -34,6 +34,7 @@ import joeq.Runtime.Reflection;
 import joeq.Util.Templates.ListIterator;
 import jwutil.collections.Filter;
 import jwutil.util.Assert;
+import jwutil.util.Convert;
 
 /**
  *
@@ -98,7 +99,7 @@ public class QuadInterpreter extends joeq.Compiler.Quad.QuadVisitor.EmptyVisitor
             } else if (paramTypes[i] == jq_Primitive.SHORT) {
                 param[i-offset] = new Short((short)getReg_I(plo.get(i).getRegister()));
             } else if (paramTypes[i] == jq_Primitive.BOOLEAN) {
-                param[i-offset] = Boolean.valueOf(getReg_I(plo.get(i).getRegister()) != 0);
+                param[i-offset] = Convert.getBoolean(getReg_I(plo.get(i).getRegister()) != 0);
             } else {
                 param[i-offset] = getReg(plo.get(i).getRegister());
             }
