@@ -376,14 +376,14 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
         return f;
     }
 
-    public void trim(Set necessaryMembers) {
+    public void trim(Set/*<jq_Field>*/ necessaryFields, Set/*<jq_Method>*/ necessaryMethods) {
         for (int i=0; i<constant_pool.length; ++i) {
             byte cpt = constant_pool_tags[i];
             Object cpe = constant_pool[i];
             switch (cpt) {
                 case CONSTANT_ResolvedSFieldRef:
                 case CONSTANT_ResolvedIFieldRef:
-                    if (!necessaryMembers.contains(cpe)) {
+                    if (!necessaryFields.contains(cpe)) {
                         jq_MemberReference mr = new jq_MemberReference(((jq_Member)cpe).getDeclaringClass(), ((jq_Member)cpe).getNameAndDesc());
                         constant_pool[i] = mr;
                         constant_pool_tags[i] = CONSTANT_FieldRef;
@@ -391,7 +391,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
                     break;
                 case CONSTANT_ResolvedSMethodRef:
                 case CONSTANT_ResolvedIMethodRef:
-                    if (!necessaryMembers.contains(cpe)) {
+                    if (!necessaryMethods.contains(cpe)) {
                         jq_MemberReference mr = new jq_MemberReference(((jq_Member)cpe).getDeclaringClass(), ((jq_Member)cpe).getNameAndDesc());
                         constant_pool[i] = mr;
                          // MethodRef and InterfaceMethodRef are treated as equivalent.

@@ -24,6 +24,7 @@ import java.util.LinkedList;
 import jq;
 import Allocator.ObjectLayout;
 import Allocator.DefaultHeapAllocator;
+import Bootstrap.BootstrapRootSet;
 import Bootstrap.PrimordialClassLoader;
 import ClassLib.ClassLibInterface;
 import Run_Time.TypeCheck;
@@ -32,7 +33,6 @@ import Run_Time.SystemInterface;
 import Run_Time.Reflection;
 import UTF.UTFDataFormatError;
 import UTF.Utf8;
-import Compil3r.BytecodeAnalysis.Trimmer;
 import Synchronization.Atomic;
 
 // friend jq_ClassLoader;
@@ -1392,22 +1392,31 @@ uphere2:
     public static int NumOfSMethodsEliminated = 0;
     
     // not thread safe.
-    public void trim(Trimmer trim) {
+    public void trim(BootstrapRootSet trim) {
         jq.assert(state == STATE_PREPARED);
         
         if (super_class != null)
             super_class.trim(trim);
 
         Set instantiatedTypes = trim.getInstantiatedTypes();
-        Set necessaryMembers = trim.getNecessaryMembers();
+        Set necessaryFields = trim.getNecessaryFields();
+        Set necessaryMethods = trim.getNecessaryMethods();
         
         Iterator it = members.entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry e = (Map.Entry)it.next();
             jq_Member m = (jq_Member)e.getValue();
-            if (!necessaryMembers.contains(m)) {
-                if (trim.TRACE) trim.out.println("Eliminating member: "+m);
-                it.remove();
+            if (m instanceof jq_Field) {
+                if (!necessaryFields.contains(m)) {
+                    if (trim.TRACE) trim.out.println("Eliminating field: "+m);
+                    it.remove();
+                }
+            } else {
+                jq.assert(m instanceof jq_Method);
+                if (!necessaryMethods.contains(m)) {
+                    if (trim.TRACE) trim.out.println("Eliminating method: "+m);
+                    it.remove();
+                }
             }
         }
 
@@ -1416,12 +1425,12 @@ uphere2:
         for (int i=0; i<declared_instance_fields.length; ++i) {
             jq_InstanceField f = declared_instance_fields[i];
             f.unprepare();
-            if (necessaryMembers.contains(f)) ++n;
+            if (necessaryMethods.contains(f)) ++n;
         }
         jq_InstanceField[] ifs = new jq_InstanceField[n];
         for (int i=0, j=-1; j<n-1; ++i) {
             jq_InstanceField f = declared_instance_fields[i];
-            if (necessaryMembers.contains(f)) {
+            if (necessaryFields.contains(f)) {
                 ifs[++j] = f;
                 ++NumOfIFieldsKept;
             } else {
@@ -1435,12 +1444,12 @@ uphere2:
         for (int i=0; i<static_fields.length; ++i) {
             jq_StaticField f = static_fields[i];
             f.unprepare();
-            if (necessaryMembers.contains(f)) ++n;
+            if (necessaryFields.contains(f)) ++n;
         }
         jq_StaticField[] sfs = new jq_StaticField[n];
         for (int i=0, j=-1; j<n-1; ++i) {
             jq_StaticField f = static_fields[i];
-            if (necessaryMembers.contains(f)) {
+            if (necessaryFields.contains(f)) {
                 sfs[++j] = f;
                 static_data_size += f.getWidth();
                 ++NumOfSFieldsKept;
@@ -1457,12 +1466,12 @@ uphere2:
             jq_InstanceMethod f = declared_instance_methods[i];
             f.unprepare();
             f.clearOverrideFlags();
-            if (necessaryMembers.contains(f)) ++n;
+            if (necessaryMethods.contains(f)) ++n;
         }
         jq_InstanceMethod[] ims = new jq_InstanceMethod[n];
         for (int i=0, j=-1; j<n-1; ++i) {
             jq_InstanceMethod f = declared_instance_methods[i];
-            if (necessaryMembers.contains(f)) {
+            if (necessaryMethods.contains(f)) {
                 ims[++j] = f;
                 ++NumOfIMethodsKept;
             } else {
@@ -1476,12 +1485,12 @@ uphere2:
         for (int i=0; i<static_methods.length; ++i) {
             jq_StaticMethod f = static_methods[i];
             f.unprepare();
-            if (necessaryMembers.contains(f)) ++n;
+            if (necessaryMethods.contains(f)) ++n;
         }
         jq_StaticMethod[] sms = new jq_StaticMethod[n];
         for (int i=0, j=-1; j<n-1; ++i) {
             jq_StaticMethod f = static_methods[i];
-            if (necessaryMembers.contains(f)) {
+            if (necessaryMethods.contains(f)) {
                 sms[++j] = f;
                 ++NumOfSMethodsKept;
             } else {
@@ -1508,7 +1517,7 @@ uphere2:
         declared_interfaces = is;
         */
         
-        const_pool.trim(necessaryMembers);
+        const_pool.trim(necessaryFields, necessaryMethods);
         
         state = STATE_VERIFIED;
         this.prepare();
