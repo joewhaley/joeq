@@ -1,5 +1,5 @@
 /*
- * SystemCall.java
+ * SystemInterface.java
  *
  * Created on January 1, 2001, 10:30 PM
  *
@@ -65,6 +65,7 @@ public abstract class SystemInterface {
     public static int/*CodeAddress*/ get_thread_context_8;
     public static int/*CodeAddress*/ set_thread_context_8;
     public static int/*CodeAddress*/ set_current_context_8;
+    public static int/*CodeAddress*/ set_interval_timer_8;
     public static int/*CodeAddress*/ init_semaphore_0;
     public static int/*CodeAddress*/ wait_for_single_object_8;
     public static int/*CodeAddress*/ release_semaphore_8;
@@ -555,6 +556,16 @@ public abstract class SystemInterface {
             Unsafe.pushArg(Unsafe.addressOf(thread));
 	    jq.assert(!Unsafe.getThreadBlock().isThreadSwitchEnabled());
             Unsafe.invoke(set_current_context_8);
+        } catch (Throwable t) { jq.UNREACHABLE(); }
+    }
+    public static final int ITIMER_VIRTUAL = 1;
+    public static void set_interval_timer(int type, int ms) {
+        try {
+            Unsafe.pushArg(ms);
+            Unsafe.pushArg(type);
+	    Unsafe.getThreadBlock().disableThreadSwitch();
+            Unsafe.invoke(set_interval_timer_8);
+	    Unsafe.getThreadBlock().enableThreadSwitch();
         } catch (Throwable t) { jq.UNREACHABLE(); }
     }
     public static int/*CPointer*/ init_semaphore() {

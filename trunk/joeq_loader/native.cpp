@@ -775,16 +775,6 @@ extern "C" int __stdcall get_current_thread_handle(void)
 #endif
 }
 
-typedef struct _Thread {
-	CONTEXT* registers;
-	int thread_switch_enabled;
-} Thread;
-
-typedef struct _NativeThread {
-	int thread_handle;
-	Thread* currentThread;
-} NativeThread;
-
 sem_t semaphore_init;
 sem_t *p_semaphore_init;
 
@@ -850,6 +840,15 @@ extern "C" int __stdcall release_semaphore(int semaphore, int a)
     while (--a >= 0)
 	v = sem_post((sem_t*)semaphore);
     return v;
+}
+
+extern "C" void __stdcall set_interval_timer(int type, int ms)
+{
+  //printf("Thread %d: Setting interval timer type %d, %d ms.\n", pthread_self(), (int)type, ms);
+  struct itimerval v;
+  v.it_interval.tv_sec = v.it_value.tv_sec = ms / 1000;
+  v.it_interval.tv_usec = v.it_value.tv_usec = (ms % 1000) * 1000;
+  setitimer(type, &v, 0);
 }
 
 extern "C" void __stdcall set_current_context(Thread* jthread, const CONTEXT* context)

@@ -7,20 +7,8 @@ int _argc;
 char **_argv;
 
 extern "C" void __stdcall entry();
-extern "C" void __stdcall ctrl_break_handler();
 extern void initSemaphoreLock(void);
-extern "C" int __stdcall init_thread();
-
-#if defined(WIN32)
-BOOL WINAPI windows_break_handler(DWORD dwCtrlType)
-{
-	if (dwCtrlType == CTRL_BREAK_EVENT) {
-		ctrl_break_handler();
-		return 1;
-	}
-	return 0;
-}
-#endif
+extern void installSignalHandler(void);
 
 int main(int argc, char* argv[])
 {
@@ -31,18 +19,7 @@ int main(int argc, char* argv[])
 	_argc = argc-1;
 	_argv = argv+1;
 
-#if defined(WIN32)
-	// install hardware exception handler.
-	HandlerRegistrationRecord er, *erp = &er;
-	er.previous = NULL;
-	er.handler = hardwareExceptionHandler;
-	_asm mov eax,[erp]
-	_asm mov fs:[0],eax // point first word of thread control block to exception handler registration chain
-
-	// install ctrl-break handler
-	SetConsoleCtrlHandler(windows_break_handler, TRUE);
-#endif
-
+	installSignalHandler();
 	initSemaphoreLock();
 
 	printf("branching to entrypoint at location 0x%08x\n", entry);

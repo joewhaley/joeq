@@ -14,6 +14,7 @@ import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_CompiledCode;
 import Clazz.jq_Reference;
 import Clazz.jq_InstanceMethod;
+import Clazz.jq_InstanceField;
 import Clazz.jq_NameAndDesc;
 import Clazz.jq_Class;
 import Clazz.jq_StaticMethod;
@@ -56,10 +57,16 @@ public class jq_Thread implements ObjectLayout {
     void setNativeThread(jq_NativeThread nt) { native_thread = nt; }
     public boolean isThreadSwitchEnabled() { return thread_switch_enabled == 0; }
     public void disableThreadSwitch() {
-        ++thread_switch_enabled;
+	if (jq.Bootstrapping) 
+	    ++thread_switch_enabled;
+	else
+	    Unsafe.atomicAdd(Unsafe.addressOf(this)+_thread_switch_enabled.getOffset(), 1);
     }
     public void enableThreadSwitch() {
-        --thread_switch_enabled;
+	if (jq.Bootstrapping) 
+	    --thread_switch_enabled;
+	else
+	    Unsafe.atomicSub(Unsafe.addressOf(this)+_thread_switch_enabled.getOffset(), 1);
     }
 
     public void init() {
@@ -146,8 +153,10 @@ public class jq_Thread implements ObjectLayout {
     
     public static final jq_Class _class;
     public static final jq_StaticMethod _destroyCurrentThread;
+    public static final jq_InstanceField _thread_switch_enabled;
     static {
         _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LScheduler/jq_Thread;");
         _destroyCurrentThread = _class.getOrCreateStaticMethod("destroyCurrentThread", "()V");
+        _thread_switch_enabled = _class.getOrCreateInstanceField("thread_switch_enabled", "I");
     }
 }
