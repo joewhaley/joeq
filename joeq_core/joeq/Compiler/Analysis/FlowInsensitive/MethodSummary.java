@@ -2283,6 +2283,9 @@ public class MethodSummary {
         }
         public jq_Reference getDeclaredType() { return declaredType; }
         
+        public jq_Method getMethod() { return m; }
+        public int getIndex() { return n; }
+        
         public final Node copy() { return new ParamNode(this); }
         
         public String toString_long() {
@@ -2492,6 +2495,8 @@ public class MethodSummary {
         }
         
         public jq_Field getField() { return f; }
+        
+        public Set getLocations() { return locs; }
         
         public String fieldName() {
             if (f != null) return f.getName().toString();
