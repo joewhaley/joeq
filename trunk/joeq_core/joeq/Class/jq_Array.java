@@ -12,7 +12,7 @@ package Clazz;
 import jq;
 import Run_Time.Unsafe;
 import Allocator.ObjectLayout;
-import Allocator.DefaultAllocator;
+import Allocator.DefaultHeapAllocator;
 import Bootstrap.PrimordialClassLoader;
 import UTF.Utf8;
 
@@ -41,7 +41,7 @@ public class jq_Array extends jq_Reference implements jq_ClassFileConstants, Obj
 
     public final Object newInstance(int length) {
         load(); verify(); prepare(); sf_initialize(); cls_initialize();
-        return DefaultAllocator.allocateArray(length, getInstanceSize(length), vtable);
+        return DefaultHeapAllocator.allocateArray(length, getInstanceSize(length), vtable);
     }
     
     public final int getDimensionality() {
