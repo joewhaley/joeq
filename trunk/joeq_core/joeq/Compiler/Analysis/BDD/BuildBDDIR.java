@@ -368,7 +368,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         dumpRelations("relations."+relationName);            
         
         System.out.print("Saving BDDs...");
-        bdd.save(relationName+".bdd", allQuads);            
+        bdd.save(relationName+".bdd", allQuads);
         bdd.save("m2q.bdd", methodToQuad);
         bdd.save("entries.bdd", methodEntries);
         bdd.save("nullconstant.bdd", nullConstant);
@@ -376,7 +376,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         System.out.println("done.");
         
         System.out.println("Saving tuples....");
-        dumpTuples(relationName+".tuples", allQuads);            
+        dumpTuples(relationName+".tuples", allQuads);
         dumpTuples("m2q.tuples", methodToQuad);
         dumpTuples("entries.tuples", methodEntries);
         dumpTuples("nullconstant.tuples", nullConstant);

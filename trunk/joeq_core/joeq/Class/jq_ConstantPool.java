@@ -139,11 +139,13 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
                 } else {
                     // already resolved.
                 }
-		// note: javac 1.5 can generate array references here.  yuck.
+                // note: javac 1.5 can generate array references here. yuck.
                 jq_Reference r = (jq_Reference) constant_pool[class_index];
                 jq_Class clazz;
-		if (r instanceof jq_Class) clazz = (jq_Class) r;
-		else clazz = PrimordialClassLoader.getJavaLangObject();
+                if (r instanceof jq_Class)
+                    clazz = (jq_Class) r;
+                else
+                    clazz = PrimordialClassLoader.getJavaLangObject();
                 PairOfChars pair2 = (PairOfChars)constant_pool[name_and_type_index];
                 char name_index = pair2.getFirst();
                 char desc_index = pair2.getSecond();

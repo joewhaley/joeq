@@ -91,12 +91,12 @@ public abstract class jq_Method extends jq_Member {
     }
     
     private final jq_Class getResolvedClassFromCP(char cpidx) {
-	if (clazz.getCPtag(cpidx) != CONSTANT_ResolvedClass)
-	    throw new ClassFormatError();
-	jq_Type class_type = clazz.getCPasType(cpidx);
-	if (!class_type.isClassType())
-	    throw new ClassFormatError();
-	return (jq_Class)class_type;
+    if (clazz.getCPtag(cpidx) != CONSTANT_ResolvedClass)
+        throw new ClassFormatError();
+    jq_Type class_type = clazz.getCPasType(cpidx);
+    if (!class_type.isClassType())
+        throw new ClassFormatError();
+    return (jq_Class)class_type;
     }
 
     private final void parseAttributes() throws ClassFormatError {
@@ -121,7 +121,7 @@ public abstract class jq_Method extends jq_Member {
                 idx += 8;
                 jq_Class catch_class = null;
                 if (catch_cpidx != 0) {
-		    catch_class = getResolvedClassFromCP(catch_cpidx);
+            catch_class = getResolvedClassFromCP(catch_cpidx);
                 }
                 exception_table[i] = new jq_TryCatchBC(start_pc, end_pc, handler_pc, catch_class);
             }
@@ -187,12 +187,12 @@ public abstract class jq_Method extends jq_Member {
         a = getAttribute("Exceptions");
         if (a != null) {
             char number_of_thrown_exceptions = Convert.twoBytesToChar(a, 0);
-	    thrown_exceptions_table = new jq_Class[number_of_thrown_exceptions];
-	    for (int i = 0; i < number_of_thrown_exceptions; i++) {
-		char cpidx = Convert.twoBytesToChar(a, 2 + 2*i);
-		thrown_exceptions_table[i] = getResolvedClassFromCP(cpidx);
-	    }
-	}
+        thrown_exceptions_table = new jq_Class[number_of_thrown_exceptions];
+        for (int i = 0; i < number_of_thrown_exceptions; i++) {
+        char cpidx = Convert.twoBytesToChar(a, 2 + 2*i);
+        thrown_exceptions_table[i] = getResolvedClassFromCP(cpidx);
+        }
+    }
         state = STATE_LOADED;
         if (jq.RunningNative) {
             if (this instanceof jq_Initializer) {
@@ -358,7 +358,7 @@ public abstract class jq_Method extends jq_Member {
     }
     public jq_Class[] getThrownExceptionsTable() { 
         chkState(STATE_LOADED);
-	return thrown_exceptions_table; 
+    return thrown_exceptions_table; 
     }
     public jq_LocalVarTableEntry getLocalVarTableEntry(int bci, int index) {
         if (localvar_table == null)
@@ -373,8 +373,8 @@ public abstract class jq_Method extends jq_Member {
     }
     public int getLineNumber(int bci) {
         // todo: binary search
-	if (line_num_table == null)
-	    return -1;
+        if (line_num_table == null)
+            return -1;
         for (int i=line_num_table.length-1; i>=0; --i) {
             if (bci >= line_num_table[i].getStartPC()) return line_num_table[i].getLineNum();
         }

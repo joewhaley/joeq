@@ -19,7 +19,7 @@ public class DefinitionSet extends HashSet {
     public DefinitionSet(){
         super();
     }
-	public SSAIterator.DefinitionIterator getDefinitionIterator(){
-		return new SSAIterator.DefinitionIterator(iterator());
-	}
+    public SSAIterator.DefinitionIterator getDefinitionIterator(){
+        return new SSAIterator.DefinitionIterator(iterator());
+    }
 }
