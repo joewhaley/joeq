@@ -425,8 +425,8 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         dumpMap(opMap, "op.map");
         dumpMap(regMap, "reg.map");
         dumpMap(memberMap, "member.map");
-        dumpFieldDomains("fielddomains.quads");
-        dumpRelations("relations.quads");
+        dumpFieldDomains("fielddomains.cfg");
+        dumpRelations("relations.cfg");
     }
     
     void dumpFieldDomains(String fileName) throws IOException {
