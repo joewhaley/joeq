@@ -43,7 +43,7 @@ public class BDDInferenceRule extends InferenceRule {
     BDD[] canQuantifyAfter;
     int updateCount;
     long totalTime;
-    boolean find_best_order = true;
+    boolean find_best_order = !System.getProperty("findbestorder", "no").equals("no");
     
     public BDDInferenceRule(BDDSolver solver, List/* <RuleTerm> */ top, RuleTerm bottom) {
         super(top, bottom);

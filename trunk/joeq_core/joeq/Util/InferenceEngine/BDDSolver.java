@@ -143,7 +143,7 @@ public class BDDSolver extends Solver {
             for (Iterator i = orderingConstraints.entrySet().iterator(); i.hasNext(); ) {
                 Map.Entry e = (Map.Entry) i.next();
                 List list = (List) e.getKey();
-                if (doesOrderMatch(doms, list)) {
+                if (doesOrderMatch(list, doms)) {
                     if (!e.getValue().equals(MAX)) {
                         System.out.println("Invalidating "+doms+" also invalidates "+list);
                     }
@@ -171,6 +171,7 @@ public class BDDSolver extends Solver {
         Iterator j = b.iterator();
         for (;;) {
             if (!i.hasNext()) return !j.hasNext();
+            if (!j.hasNext()) return true;
             Object c = i.next();
             Object d = j.next();
             for (;;) {
@@ -190,7 +191,7 @@ public class BDDSolver extends Solver {
                 if (!e.getValue().equals(MAX)) continue;
                 // Check if this ordering constraint matches p.
                 List key = (List) e.getKey();
-                if (doesOrderMatch(key, doms)) {
+                if (doesOrderMatch(doms, key)) {
                     System.out.println("Order "+doms+" invalidated by "+key);
                     return Long.MAX_VALUE;
                 }
