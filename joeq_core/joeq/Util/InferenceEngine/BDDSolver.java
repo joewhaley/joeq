@@ -158,10 +158,10 @@ public class BDDSolver extends Solver {
     }
 
     /* (non-Javadoc)
-     * @see joeq.Util.InferenceEngine.Solver#createRelation(java.lang.String, java.util.List, java.util.List)
+     * @see joeq.Util.InferenceEngine.Solver#createRelation(java.lang.String, java.util.List, java.util.List, java.util.List)
      */
-    Relation createRelation(String name, List names, List fieldDomains) {
-        return new BDDRelation(this, name, names, fieldDomains);
+    Relation createRelation(String name, List names, List fieldDomains, List fieldOptions) {
+        return new BDDRelation(this, name, names, fieldDomains, fieldOptions);
     }
 
 }

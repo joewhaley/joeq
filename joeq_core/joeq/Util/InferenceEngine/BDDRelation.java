@@ -30,10 +30,7 @@ public class BDDRelation extends Relation {
     BDD relation;
     List/*<BDDDomain>*/ domains;
     
-    /**
-     * @param bdd
-     */
-    public BDDRelation(BDDSolver solver, String name, List fieldNames, List fieldDomains) {
+    public BDDRelation(BDDSolver solver, String name, List fieldNames, List fieldDomains, List fieldOptions) {
         super(name, fieldNames, fieldDomains);
         this.solver = solver;
         this.relation = solver.bdd.zero();
@@ -42,15 +39,40 @@ public class BDDRelation extends Relation {
             FieldDomain fd = (FieldDomain) fieldDomains.get(i);
             Collection doms = solver.getBDDDomains(fd);
             BDDDomain d = null;
-            for (Iterator j = doms.iterator(); j.hasNext(); ) {
-                BDDDomain dom = (BDDDomain) j.next();
-                if (!domains.contains(dom)) {
-                    d = dom;
-                    break;
+            String option = (String) fieldOptions.get(i);
+            if (option.length() > 0) {
+                // use the given domain.
+                if (!option.startsWith(fd.name))
+                    throw new IllegalArgumentException("Field "+name+" has domain "+fd+", but tried to assign "+option);
+                int index = Integer.parseInt(option.substring(fd.name.length()));
+                for (Iterator j = doms.iterator(); j.hasNext(); ) {
+                    BDDDomain dom = (BDDDomain) j.next();
+                    if (dom.getName().equals(option)) {
+                        if (domains.contains(dom))
+                            throw new IllegalArgumentException("Cannot assign "+dom+" to field "+name+": "+dom+" is already assigned");
+                        d = dom;
+                        break;
+                    }
                 }
-            }
-            if (d == null) {
-                d = solver.allocateBDDDomain(fd);
+                while (d == null) {
+                    BDDDomain dom = solver.allocateBDDDomain(fd);
+                    if (dom.getName().equals(option)) {
+                        d = dom;
+                        break;
+                    }
+                }
+            } else {
+                // find an applicable domain.
+                for (Iterator j = doms.iterator(); j.hasNext(); ) {
+                    BDDDomain dom = (BDDDomain) j.next();
+                    if (!domains.contains(dom)) {
+                        d = dom;
+                        break;
+                    }
+                }
+                if (d == null) {
+                    d = solver.allocateBDDDomain(fd);
+                }
             }
             if (solver.TRACE) solver.out.println("Field "+fieldNames.get(i)+" ("+fieldDomains.get(i)+") assigned to BDDDomain "+d);
             domains.add(d);
