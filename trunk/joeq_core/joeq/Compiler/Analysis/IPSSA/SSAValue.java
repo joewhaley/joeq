@@ -1,15 +1,15 @@
-package Compil3r.Analysis.IPSSA;
+package joeq.Compil3r.Analysis.IPSSA;
 
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Vector;
 
-import Clazz.jq_Method;
-import Compil3r.Analysis.IPSSA.SSAIterator.DefinitionIterator;
-import Compil3r.Analysis.IPSSA.Utils.DefinitionSet;
-import Compil3r.Analysis.IPSSA.Utils.IteratorHelper;
-import Compil3r.Quad.Quad;
-import Util.Assert;
+import joeq.Clazz.jq_Method;
+import joeq.Compil3r.Analysis.IPSSA.SSAIterator.DefinitionIterator;
+import joeq.Compil3r.Analysis.IPSSA.Utils.DefinitionSet;
+import joeq.Compil3r.Analysis.IPSSA.Utils.IteratorHelper;
+import joeq.Compil3r.Quad.Quad;
+import joeq.Util.Assert;
 
 /**
  * The RHS of a binding. Has multiple subclasses.

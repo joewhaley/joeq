@@ -1,4 +1,4 @@
-package Compil3r.Analysis.IPA;
+package joeq.Compil3r.Analysis.IPA;
 
 import java.io.PrintStream;
 import java.util.Arrays;
@@ -11,24 +11,24 @@ import java.util.Set;
 
 import org.sf.javabdd.BDD;
 
-import Clazz.jq_Class;
-import Clazz.jq_Field;
-import Clazz.jq_Method;
-import Clazz.jq_MethodVisitor;
-import Clazz.jq_Reference;
-import Clazz.jq_Type;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary.ConcreteObjectNode;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary.ConcreteTypeNode;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary.GlobalNode;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary.UnknownTypeNode;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary.CheckCastNode;
-import Compil3r.Quad.CodeCache;
-import Compil3r.Quad.LoadedCallGraph;
-import Main.HostedVM;
-import Util.Assert;
-import Util.Collections.Pair;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_Field;
+import joeq.Clazz.jq_Method;
+import joeq.Clazz.jq_MethodVisitor;
+import joeq.Clazz.jq_Reference;
+import joeq.Clazz.jq_Type;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.ConcreteObjectNode;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.ConcreteTypeNode;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.GlobalNode;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.UnknownTypeNode;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.CheckCastNode;
+import joeq.Compil3r.Quad.CodeCache;
+import joeq.Compil3r.Quad.LoadedCallGraph;
+import joeq.Main.HostedVM;
+import joeq.Util.Assert;
+import joeq.Util.Collections.Pair;
 
 /**
  * @author jwhaley

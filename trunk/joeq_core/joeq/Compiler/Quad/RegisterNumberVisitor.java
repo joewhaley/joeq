@@ -1,10 +1,10 @@
 // RegisterNumberVisitor.java, created Jun 15, 2003 2:00:45 AM by joewhaley
 // Copyright (C) 2003 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Compil3r.Quad;
+package joeq.Compil3r.Quad;
 
-import Util.Collections.IndexMap;
-import Util.Templates.ListIterator;
+import joeq.Util.Collections.IndexMap;
+import joeq.Util.Templates.ListIterator;
 
 /**
  * RegisterNumberVisitor

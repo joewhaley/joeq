@@ -1,6 +1,6 @@
-PACKAGES = Allocator Assembler Bootstrap ClassLib Clazz Compil3r Debugger GC Interpreter Linker Main Memory Run_Time Scheduler Support Synchronization UTF Util
-SUPPORT_LIBS = Support/javabdd_0.6.jar
-JDK14SUPPORT_LIB = Support/java14.jar
+PACKAGES = joeq
+SUPPORT_LIBS = joeq/Support/javabdd_0.6.jar
+JDK14SUPPORT_LIB = joeq/Support/java14.jar
 
 ifeq (${OS},Windows_NT)
 CLASSPATH_SEP = \;
@@ -112,11 +112,11 @@ source_list:
 Main/Bootstrapper.class:
 	$(MAKE) javac
 
-bootclasspath:	Main/GetBootClassPath.class
-	java Main.GetBootClassPath $(JDK14SUPPORT_LIB) > bootclasspath
+bootclasspath:	joeq/Main/GetBootClassPath.class
+	java joeq.Main.GetBootClassPath $(JDK14SUPPORT_LIB) > bootclasspath
 
-Main/GetBootClassPath.class:	Main/GetBootClassPath.java
-	javac Main/GetBootClassPath.java
+joeq/Main/GetBootClassPath.class:	joeq/Main/GetBootClassPath.java
+	javac joeq/Main/GetBootClassPath.java
 
 empty:=
 space:=$(empty) $(empty)

@@ -1,12 +1,12 @@
 // Delegates.java, created Mon Dec 23 20:00:01 2002 by mcmartin
 // Copyright (C) 2001-3 mcmartin
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Compil3r.Quad;
+package joeq.Compil3r.Quad;
 
-import Compil3r.Quad.Operand.RegisterOperand;
-import Interpreter.QuadInterpreter;
-import Main.jq;
-import Run_Time.Unsafe;
+import joeq.Compil3r.Quad.Operand.RegisterOperand;
+import joeq.Interpreter.QuadInterpreter;
+import joeq.Main.jq;
+import joeq.Run_Time.Unsafe;
 
 /*
  * @author  Michael Martin <mcmartin@stanford.edu>

@@ -4,12 +4,12 @@
  * To change the template for this generated file go to
  * Window>Preferences>Java>Code Generation>Code and Comments
  */
-package Compil3r.Analysis.IPSSA;
+package joeq.Compil3r.Analysis.IPSSA;
 
 import java.io.PrintStream;
 
-import Clazz.jq_Method;
-import Compil3r.Quad.ControlFlowGraph;
+import joeq.Clazz.jq_Method;
+import joeq.Compil3r.Quad.ControlFlowGraph;
 
 /**
  * Goes over all bindings in a method.

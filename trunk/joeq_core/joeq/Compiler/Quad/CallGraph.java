@@ -1,7 +1,7 @@
 // CallGraph.java, created Mon Mar  3 18:01:32 2003 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Compil3r.Quad;
+package joeq.Compil3r.Quad;
 
 import java.util.AbstractSet;
 import java.util.Collection;
@@ -16,19 +16,19 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import Clazz.jq_Method;
-import Compil3r.Analysis.IPA.*;
-import Compil3r.Quad.Operator.Invoke;
-import Util.Assert;
-import Util.Strings;
-import Util.Collections.GenericInvertibleMultiMap;
-import Util.Collections.HashWorklist;
-import Util.Collections.InvertibleMultiMap;
-import Util.Collections.MultiMap;
-import Util.Collections.UnmodifiableIterator;
-import Util.Collections.UnmodifiableMultiMap;
-import Util.Graphs.Graph;
-import Util.Graphs.Navigator;
+import joeq.Clazz.jq_Method;
+import joeq.Compil3r.Analysis.IPA.*;
+import joeq.Compil3r.Quad.Operator.Invoke;
+import joeq.Util.Assert;
+import joeq.Util.Strings;
+import joeq.Util.Collections.GenericInvertibleMultiMap;
+import joeq.Util.Collections.HashWorklist;
+import joeq.Util.Collections.InvertibleMultiMap;
+import joeq.Util.Collections.MultiMap;
+import joeq.Util.Collections.UnmodifiableIterator;
+import joeq.Util.Collections.UnmodifiableMultiMap;
+import joeq.Util.Graphs.Graph;
+import joeq.Util.Graphs.Navigator;
 
 /**
  * Abstract representation of a call graph.

@@ -1,13 +1,13 @@
 // WrappedCollection.java, created Jun 15, 2003 3:08:14 PM by joewhaley
 // Copyright (C) 2003 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Util.Collections;
+package joeq.Util.Collections;
 
 import java.util.AbstractCollection;
 import java.util.Collection;
 import java.util.Iterator;
 
-import Util.Collections.FilterIterator.Filter;
+import joeq.Util.Collections.FilterIterator.Filter;
 
 /**
  * WrappedCollection

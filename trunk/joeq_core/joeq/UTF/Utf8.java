@@ -1,15 +1,15 @@
 // Utf8.java, created Mon Feb  5 23:23:22 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package UTF;
+package joeq.UTF;
 
 import java.io.DataOutput;
 import java.io.IOException;
 
-import Clazz.jq_ClassFileConstants;
-import Run_Time.Debug;
-import Util.Assert;
-import Util.Collections.UnmodifiableIterator;
+import joeq.Clazz.jq_ClassFileConstants;
+import joeq.Run_Time.Debug;
+import joeq.Util.Assert;
+import joeq.Util.Collections.UnmodifiableIterator;
 
 /**
  * @author  John Whaley <jwhaley@alum.mit.edu>

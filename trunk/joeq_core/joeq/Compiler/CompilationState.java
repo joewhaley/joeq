@@ -1,25 +1,25 @@
 // CompilationState.java, created Oct 4, 2003 11:09:20 PM by joewhaley
 // Copyright (C) 2003 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Compil3r;
+package joeq.Compil3r;
 
 import java.util.Collection;
 import java.util.Set;
 import java.util.HashMap;
 
-import Bootstrap.PrimordialClassLoader;
-import Compil3r.Quad.Quad;
-import Compil3r.Quad.Operator.CheckCast;
-import Compil3r.Quad.Operator.Invoke;
-import Clazz.jq_Class;
-import Clazz.jq_Member;
-import Clazz.jq_Method;
-import Clazz.jq_Type;
-import Util.Templates.List;
-import Util.Templates.UnmodifiableList;
-import Main.jq;
-import Run_Time.TypeCheck;
-import UTF.Utf8;
+import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Compil3r.Quad.Quad;
+import joeq.Compil3r.Quad.Operator.CheckCast;
+import joeq.Compil3r.Quad.Operator.Invoke;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_Member;
+import joeq.Clazz.jq_Method;
+import joeq.Clazz.jq_Type;
+import joeq.Util.Templates.List;
+import joeq.Util.Templates.UnmodifiableList;
+import joeq.Main.jq;
+import joeq.Run_Time.TypeCheck;
+import joeq.UTF.Utf8;
 
 /**
  * CompilationState

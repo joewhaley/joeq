@@ -1,4 +1,4 @@
-package Compil3r.Analysis.IPA;
+package joeq.Compil3r.Analysis.IPA;
 import java.io.PrintStream;
 import java.util.Iterator;
 import java.util.Set;
@@ -6,15 +6,15 @@ import java.util.Set;
 import org.sf.javabdd.BDD;
 import org.sf.javabdd.TypedBDDFactory.TypedBDD;
 
-import Clazz.jq_Method;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary.ParamNode;
-import Compil3r.Analysis.IPSSA.IPSSABuilder;
-import Compil3r.Quad.CodeCache;
-import Compil3r.Quad.Quad;
-import Compil3r.Analysis.IPA.ProgramLocation.*;
-import Compil3r.Quad.QuadIterator;
-import Util.Assert;
+import joeq.Clazz.jq_Method;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.ParamNode;
+import joeq.Compil3r.Analysis.IPSSA.IPSSABuilder;
+import joeq.Compil3r.Quad.CodeCache;
+import joeq.Compil3r.Quad.Quad;
+import joeq.Compil3r.Analysis.IPA.ProgramLocation.*;
+import joeq.Compil3r.Quad.QuadIterator;
+import joeq.Util.Assert;
 
 /**
  * A query on top of PAResults. Will probably need to move nested classes 

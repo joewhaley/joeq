@@ -1,11 +1,11 @@
 // ExceptionHandlerIterator.java, created Fri Jan 11 16:42:38 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Compil3r.Quad;
+package joeq.Compil3r.Quad;
 
 import java.util.NoSuchElementException;
 
-import Util.Templates.ListIterator;
+import joeq.Util.Templates.ListIterator;
 
 /**
  * Iterator for iterating through exception handlers.  Compatible with ListIterator.

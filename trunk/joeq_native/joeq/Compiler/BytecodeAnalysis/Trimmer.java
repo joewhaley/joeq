@@ -1,7 +1,7 @@
 // Trimmer.java, created Fri Jan 11 16:49:00 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Compil3r.BytecodeAnalysis;
+package joeq.Compil3r.BytecodeAnalysis;
 
 import java.io.PrintStream;
 import java.util.HashSet;
@@ -10,28 +10,28 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import Allocator.DefaultHeapAllocator;
-import Allocator.HeapAllocator;
-import Bootstrap.BootstrapRootSet;
-import Clazz.jq_Array;
-import Clazz.jq_Class;
-import Clazz.jq_FieldVisitor;
-import Clazz.jq_InstanceField;
-import Clazz.jq_InstanceMethod;
-import Clazz.jq_Method;
-import Clazz.jq_MethodVisitor;
-import Clazz.jq_StaticField;
-import Clazz.jq_Type;
-import Clazz.jq_TypeVisitor;
-import Compil3r.Reference.x86.x86ReferenceLinker;
-import Run_Time.ExceptionDeliverer;
-import Run_Time.MathSupport;
-import Run_Time.Monitor;
-import Run_Time.Reflection;
-import Run_Time.TypeCheck;
-import Run_Time.Unsafe;
-import Util.Assert;
-import Util.Strings;
+import joeq.Allocator.DefaultHeapAllocator;
+import joeq.Allocator.HeapAllocator;
+import joeq.Bootstrap.BootstrapRootSet;
+import joeq.Clazz.jq_Array;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_FieldVisitor;
+import joeq.Clazz.jq_InstanceField;
+import joeq.Clazz.jq_InstanceMethod;
+import joeq.Clazz.jq_Method;
+import joeq.Clazz.jq_MethodVisitor;
+import joeq.Clazz.jq_StaticField;
+import joeq.Clazz.jq_Type;
+import joeq.Clazz.jq_TypeVisitor;
+import joeq.Compil3r.Reference.x86.x86ReferenceLinker;
+import joeq.Run_Time.ExceptionDeliverer;
+import joeq.Run_Time.MathSupport;
+import joeq.Run_Time.Monitor;
+import joeq.Run_Time.Reflection;
+import joeq.Run_Time.TypeCheck;
+import joeq.Run_Time.Unsafe;
+import joeq.Util.Assert;
+import joeq.Util.Strings;
 
 /**
  * @author  John Whaley <jwhaley@alum.mit.edu>

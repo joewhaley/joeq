@@ -1,7 +1,7 @@
 // PathNumbering.java, created Aug 16, 2003 1:49:33 AM by joewhaley
 // Copyright (C) 2003 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Util.Graphs;
+package joeq.Util.Graphs;
 
 import java.io.DataOutput;
 import java.io.IOException;
@@ -12,10 +12,10 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.StringTokenizer;
 
-import Util.Collections.IndexMap;
-import Util.Collections.Pair;
-import Util.IO.Textualizable;
-import Util.IO.Textualizer;
+import joeq.Util.Collections.IndexMap;
+import joeq.Util.Collections.Pair;
+import joeq.Util.IO.Textualizable;
+import joeq.Util.IO.Textualizer;
 
 /**
  * PathNumbering

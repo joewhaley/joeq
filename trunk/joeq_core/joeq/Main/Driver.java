@@ -1,7 +1,7 @@
 // Driver.java, created Fri Jan 11 17:13:17 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Main;
+package joeq.Main;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -14,24 +14,24 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.StringTokenizer;
 
-import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Array;
-import Clazz.jq_Class;
-import Clazz.jq_MethodVisitor;
-import Clazz.jq_Primitive;
-import Clazz.jq_StaticField;
-import Clazz.jq_StaticMethod;
-import Clazz.jq_Type;
-import Clazz.jq_TypeVisitor;
-import Compil3r.Quad.BasicBlockVisitor;
-import Compil3r.Quad.CodeCache;
-import Compil3r.Quad.ControlFlowGraphVisitor;
-import Compil3r.Quad.QuadVisitor;
-import Run_Time.Reflection;
-import UTF.Utf8;
-import Util.Assert;
-import Util.Strings;
-import Util.SimpleInterpreter;
+import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.jq_Array;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_MethodVisitor;
+import joeq.Clazz.jq_Primitive;
+import joeq.Clazz.jq_StaticField;
+import joeq.Clazz.jq_StaticMethod;
+import joeq.Clazz.jq_Type;
+import joeq.Clazz.jq_TypeVisitor;
+import joeq.Compil3r.Quad.BasicBlockVisitor;
+import joeq.Compil3r.Quad.CodeCache;
+import joeq.Compil3r.Quad.ControlFlowGraphVisitor;
+import joeq.Compil3r.Quad.QuadVisitor;
+import joeq.Run_Time.Reflection;
+import joeq.UTF.Utf8;
+import joeq.Util.Assert;
+import joeq.Util.Strings;
+import joeq.Util.SimpleInterpreter;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>

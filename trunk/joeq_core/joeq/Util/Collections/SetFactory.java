@@ -1,7 +1,7 @@
 // SetFactory.java, created Tue Oct 19 22:22:44 1999 by pnkfelix
 // Copyright (C) 1999 Felix S. Klock II <pnkfelix@mit.edu>
 // Licensed under the terms of the GNU GPL; see COPYING for details.
-package Util.Collections;
+package joeq.Util.Collections;
 
 import java.util.Collection;
 import java.util.Collections;

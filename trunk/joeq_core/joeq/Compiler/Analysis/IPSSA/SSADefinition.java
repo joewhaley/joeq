@@ -1,12 +1,12 @@
-package Compil3r.Analysis.IPSSA;
+package joeq.Compil3r.Analysis.IPSSA;
 
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 
-import Clazz.jq_Method;
-import Compil3r.Analysis.IPSSA.SSALocation.LocalLocation;
-import Compil3r.Analysis.IPSSA.Utils.DefinitionSet;
-import Compil3r.Quad.Quad;
+import joeq.Clazz.jq_Method;
+import joeq.Compil3r.Analysis.IPSSA.SSALocation.LocalLocation;
+import joeq.Compil3r.Analysis.IPSSA.Utils.DefinitionSet;
+import joeq.Compil3r.Quad.Quad;
 
 /**
  * This is a definition in the SSA sense, meaning it's unique. The meaning of the 

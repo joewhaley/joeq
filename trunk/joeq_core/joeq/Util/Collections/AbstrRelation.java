@@ -1,7 +1,7 @@
 // AbstrRelation.java, created Thu Jun 29 19:13:12 2000 by salcianu
 // Copyright (C) 2000 Alexandru SALCIANU <salcianu@alum.mit.edu>
 // Licensed under the terms of the GNU GPL; see COPYING for details.
-package Util.Collections;
+package joeq.Util.Collections;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -9,7 +9,7 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.Vector;
 
-import Util.Strings;
+import joeq.Util.Strings;
 
 /**
  * <code>AbstrRelation</code>

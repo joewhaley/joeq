@@ -1,7 +1,7 @@
 // MultiMapFactory.java, created Wed Feb 27 13:14:06 2002 by cananian
 // Copyright (C) 2000 C. Scott Ananian <cananian@alumni.princeton.edu>
 // Licensed under the terms of the GNU GPL; see COPYING for details.
-package Util.Collections;
+package joeq.Util.Collections;
 
 import java.util.*;
 /** <code>MultiMapFactory</code> is a <code>MultiMap</code> generator.

@@ -1,7 +1,7 @@
 // DominanceFrontier.java, created Aug 18, 2003 12:27:30 AM by joewhaley
 // Copyright (C) 2003 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Util.Graphs;
+package joeq.Util.Graphs;
 
 import java.util.Collections;
 import java.util.HashMap;

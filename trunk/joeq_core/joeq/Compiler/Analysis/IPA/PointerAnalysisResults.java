@@ -1,16 +1,16 @@
 //PointerAnalysisResults.java, created Mon Sep 22 17:38:25 2003 by joewhaley
 //Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 //Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Compil3r.Analysis.IPA;
+package joeq.Compil3r.Analysis.IPA;
 
 import java.util.Set;
 
-import Clazz.jq_Method;
-import Compil3r.Analysis.IPA.ProgramLocation.QuadProgramLocation;
-import Compil3r.Analysis.IPSSA.ContextSet;
-import Compil3r.Analysis.IPSSA.SSALocation;
-import Compil3r.Quad.BasicBlock;
-import Compil3r.Quad.CallGraph;
+import joeq.Clazz.jq_Method;
+import joeq.Compil3r.Analysis.IPA.ProgramLocation.QuadProgramLocation;
+import joeq.Compil3r.Analysis.IPSSA.ContextSet;
+import joeq.Compil3r.Analysis.IPSSA.SSALocation;
+import joeq.Compil3r.Quad.BasicBlock;
+import joeq.Compil3r.Quad.CallGraph;
 
 /**
  * This interface summarizes all the relevant results of the 

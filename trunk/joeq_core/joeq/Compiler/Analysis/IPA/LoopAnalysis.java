@@ -1,4 +1,4 @@
-package Compil3r.Analysis.IPA;
+package joeq.Compil3r.Analysis.IPA;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -7,21 +7,21 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Set;
 
-import Main.Helper;
-import Util.Assert;
-import Util.Graphs.SCCTopSortedGraph;
-import Util.Graphs.SCComponent;
-import Util.Graphs.Traversals;
-import Clazz.jq_Class;
-import Clazz.jq_Method;
-import Compil3r.Quad.BasicBlock;
-import Compil3r.Quad.CallGraph;
-import Compil3r.Quad.CodeCache;
-import Compil3r.Quad.ControlFlowGraph;
-import Compil3r.Quad.ControlFlowGraphVisitor;
-import Compil3r.Quad.LoadedCallGraph;
-import Compil3r.Quad.Quad;
-import Compil3r.Quad.QuadVisitor;
+import joeq.Main.Helper;
+import joeq.Util.Assert;
+import joeq.Util.Graphs.SCCTopSortedGraph;
+import joeq.Util.Graphs.SCComponent;
+import joeq.Util.Graphs.Traversals;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_Method;
+import joeq.Compil3r.Quad.BasicBlock;
+import joeq.Compil3r.Quad.CallGraph;
+import joeq.Compil3r.Quad.CodeCache;
+import joeq.Compil3r.Quad.ControlFlowGraph;
+import joeq.Compil3r.Quad.ControlFlowGraphVisitor;
+import joeq.Compil3r.Quad.LoadedCallGraph;
+import joeq.Compil3r.Quad.Quad;
+import joeq.Compil3r.Quad.QuadVisitor;
 
 /**
  * @author jwhaley

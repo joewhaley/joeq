@@ -1,7 +1,7 @@
 // MapFactory.java, created Tue Oct 19 22:42:28 1999 by pnkfelix
 // Copyright (C) 1999 Felix S. Klock II <pnkfelix@mit.edu>
 // Licensed under the terms of the GNU GPL; see COPYING for details.
-package Util.Collections;
+package joeq.Util.Collections;
 
 import java.util.Collections;
 import java.util.Map;

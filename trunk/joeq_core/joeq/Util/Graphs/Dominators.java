@@ -1,7 +1,7 @@
 // Dominators.java, created Aug 18, 2003 12:42:07 AM by joewhaley
 // Copyright (C) 2003 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Util.Graphs;
+package joeq.Util.Graphs;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -12,8 +12,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import Util.Collections.HashWorklist;
-import Util.Collections.IndexMap;
+import joeq.Util.Collections.HashWorklist;
+import joeq.Util.Collections.IndexMap;
 
 /**
  * Dominators

@@ -1,4 +1,4 @@
-package Compil3r.Analysis.IPSSA.Apps;
+package joeq.Compil3r.Analysis.IPSSA.Apps;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -11,26 +11,26 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 
-import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Class;
-import Clazz.jq_InstanceMethod;
-import Clazz.jq_Method;
-import Clazz.jq_Type;
-import Compil3r.Analysis.IPSSA.Apps.FindOwnership.SimpleOwnershipFinder.OwnershipValue;
-import Compil3r.Quad.BasicBlock;
-import Compil3r.Quad.CodeCache;
-import Compil3r.Quad.ControlFlowGraph;
-import Compil3r.Quad.Operand;
-import Compil3r.Quad.Operator;
-import Compil3r.Quad.Quad;
-import Compil3r.Quad.RegisterFactory;
-import Main.HostedVM;
-import Util.Assert;
-import Util.Collections.AppendIterator;
-import Util.Collections.HashWorklist;
-import Util.Collections.Worklist;
-import Util.Templates.List;
-import Util.Templates.ListIterator;
+import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_InstanceMethod;
+import joeq.Clazz.jq_Method;
+import joeq.Clazz.jq_Type;
+import joeq.Compil3r.Analysis.IPSSA.Apps.FindOwnership.SimpleOwnershipFinder.OwnershipValue;
+import joeq.Compil3r.Quad.BasicBlock;
+import joeq.Compil3r.Quad.CodeCache;
+import joeq.Compil3r.Quad.ControlFlowGraph;
+import joeq.Compil3r.Quad.Operand;
+import joeq.Compil3r.Quad.Operator;
+import joeq.Compil3r.Quad.Quad;
+import joeq.Compil3r.Quad.RegisterFactory;
+import joeq.Main.HostedVM;
+import joeq.Util.Assert;
+import joeq.Util.Collections.AppendIterator;
+import joeq.Util.Collections.HashWorklist;
+import joeq.Util.Collections.Worklist;
+import joeq.Util.Templates.List;
+import joeq.Util.Templates.ListIterator;
 
 public class FindOwnership {
     static class SimpleOwnershipFinder implements Runnable {

@@ -1,7 +1,7 @@
 // PACallGraph.java, created Oct 21, 2003 12:56:45 AM by joewhaley
 // Copyright (C) 2003 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Compil3r.Analysis.IPA;
+package joeq.Compil3r.Analysis.IPA;
 
 import java.util.AbstractMap;
 import java.util.AbstractSet;
@@ -14,11 +14,11 @@ import org.sf.javabdd.BDD;
 import org.sf.javabdd.BDDDomain;
 import org.sf.javabdd.BDDFactory;
 
-import Compil3r.Quad.CallGraph;
-import Compil3r.Quad.LoadedCallGraph;
-import Util.Assert;
-import Util.Collections.IndexMap;
-import Util.Collections.UnmodifiableIterator;
+import joeq.Compil3r.Quad.CallGraph;
+import joeq.Compil3r.Quad.LoadedCallGraph;
+import joeq.Util.Assert;
+import joeq.Util.Collections.IndexMap;
+import joeq.Util.Collections.UnmodifiableIterator;
 
 /**
  * PACallGraph

@@ -1,17 +1,17 @@
 // ControlFlowGraph.java, created Fri Jan 11 16:49:00 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Compil3r.BytecodeAnalysis;
+package joeq.Compil3r.BytecodeAnalysis;
 
 import java.util.HashMap;
 import java.util.ListIterator;
 import java.util.Map;
 
-import Clazz.jq_Method;
-import Clazz.jq_TryCatchBC;
-import Util.Assert;
-import Util.BitString;
-import Util.BitString.BitStringIterator;
+import joeq.Clazz.jq_Method;
+import joeq.Clazz.jq_TryCatchBC;
+import joeq.Util.Assert;
+import joeq.Util.BitString;
+import joeq.Util.BitString.BitStringIterator;
 
 /**
  * Control flow graph for a bytecode stream.  The data structure is immutable

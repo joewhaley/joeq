@@ -1,14 +1,14 @@
 // CountPaths.java, created Jul 13, 2003 1:23:33 PM by John Whaley
 // Copyright (C) 2003 John Whaley
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Util.Graphs;
+package joeq.Util.Graphs;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
-import Util.Assert;
+import joeq.Util.Assert;
 
 /**
  * CountPaths

@@ -1,7 +1,7 @@
 // InvertibleMultiMap.java, created Sun Jun 17 16:19:35 2001 by cananian
 // Copyright (C) 2001 C. Scott Ananian <cananian@alumni.princeton.edu>
 // Licensed under the terms of the GNU GPL; see COPYING for details.
-package Util.Collections;
+package joeq.Util.Collections;
 
 /**
  * An <code>InvertibleMultiMap</code> is an extension of the

@@ -1,7 +1,7 @@
 // SourceLister.java, created Sun Dec  7 14:20:28 PST 2003
 // Copyright (C) 2003 Godmar Back <gback@cs.utah.edu, @stanford.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Util.IO;
+package joeq.Util.IO;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -9,8 +9,8 @@ import java.io.File;
 import java.util.Arrays;
 import java.text.DecimalFormat;
 
-import Clazz.jq_Class;
-import Compil3r.Analysis.IPA.ProgramLocation;
+import joeq.Clazz.jq_Class;
+import joeq.Compil3r.Analysis.IPA.ProgramLocation;
 
 /**
  * SourceLister

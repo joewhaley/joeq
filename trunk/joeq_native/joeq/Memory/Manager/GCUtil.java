@@ -1,20 +1,20 @@
 // GCUtil.java, created Tue Dec 10 14:02:22 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Memory.Manager;
+package joeq.Memory.Manager;
 
-import Allocator.ObjectLayoutMethods;
-import Clazz.jq_Array;
-import Clazz.jq_Class;
-import Clazz.jq_Primitive;
-import Clazz.jq_Reference;
-import Memory.HeapAddress;
-import Memory.Heap.BootHeap;
-import Memory.Heap.Heap;
-import Run_Time.Debug;
-import Run_Time.SystemInterface;
-import Run_Time.Unsafe;
-import Scheduler.jq_NativeThread;
+import joeq.Allocator.ObjectLayoutMethods;
+import joeq.Clazz.jq_Array;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_Primitive;
+import joeq.Clazz.jq_Reference;
+import joeq.Memory.HeapAddress;
+import joeq.Memory.Heap.BootHeap;
+import joeq.Memory.Heap.Heap;
+import joeq.Run_Time.Debug;
+import joeq.Run_Time.SystemInterface;
+import joeq.Run_Time.Unsafe;
+import joeq.Scheduler.jq_NativeThread;
 
 /**
  * @author John Whaley <jwhaley@alum.mit.edu>

@@ -1,7 +1,7 @@
 // CollectionTestWrapper.java, created Wed Mar  5  0:26:27 2003 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Util.Collections;
+package joeq.Util.Collections;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -11,7 +11,7 @@ import java.util.ListIterator;
 import java.util.Set;
 import java.util.SortedSet;
 
-import Util.Assert;
+import joeq.Util.Assert;
 
 /**
  * @author John Whaley <jwhaley@alum.mit.edu>

@@ -1,16 +1,16 @@
 // MallocHeap.java, created Tue Dec 10 14:02:00 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Memory.Heap;
+package joeq.Memory.Heap;
 
-import Allocator.ObjectLayout;
-import Clazz.jq_Array;
-import Clazz.jq_Class;
-import Memory.HeapAddress;
-import Run_Time.Debug;
-import Run_Time.SystemInterface;
-import Run_Time.Unsafe;
-import Util.Assert;
+import joeq.Allocator.ObjectLayout;
+import joeq.Clazz.jq_Array;
+import joeq.Clazz.jq_Class;
+import joeq.Memory.HeapAddress;
+import joeq.Run_Time.Debug;
+import joeq.Run_Time.SystemInterface;
+import joeq.Run_Time.Unsafe;
+import joeq.Util.Assert;
 
 /**
  * @author John Whaley <jwhaley@alum.mit.edu>

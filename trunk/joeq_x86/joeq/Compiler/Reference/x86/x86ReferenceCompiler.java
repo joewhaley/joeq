@@ -1,7 +1,7 @@
 // x86ReferenceCompiler.java, created Mon Feb  5 23:23:21 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Compil3r.Reference.x86;
+package joeq.Compil3r.Reference.x86;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -11,44 +11,44 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import Allocator.DefaultHeapAllocator;
-import Allocator.HeapAllocator;
-import Allocator.ObjectLayout;
-import Assembler.x86.Code2HeapReference;
-import Assembler.x86.DirectBindCall;
-import Assembler.x86.x86;
-import Assembler.x86.x86Assembler;
-import Assembler.x86.x86Constants;
-import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Array;
-import Clazz.jq_BytecodeMap;
-import Clazz.jq_Class;
-import Clazz.jq_ClassFileConstants;
-import Clazz.jq_CompiledCode;
-import Clazz.jq_InstanceField;
-import Clazz.jq_InstanceMethod;
-import Clazz.jq_Method;
-import Clazz.jq_StaticField;
-import Clazz.jq_StaticMethod;
-import Clazz.jq_TryCatch;
-import Clazz.jq_TryCatchBC;
-import Clazz.jq_Type;
-import Compil3r.Compil3rInterface;
-import Compil3r.CompilationState;
-import Compil3r.BytecodeAnalysis.BytecodeVisitor;
-import Main.jq;
-import Memory.CodeAddress;
-import Memory.HeapAddress;
-import Run_Time.ExceptionDeliverer;
-import Run_Time.MathSupport;
-import Run_Time.Monitor;
-import Run_Time.Reflection;
-import Run_Time.SystemInterface;
-import Run_Time.TypeCheck;
-import Run_Time.Unsafe;
-import UTF.Utf8;
-import Util.Assert;
-import Util.Strings;
+import joeq.Allocator.DefaultHeapAllocator;
+import joeq.Allocator.HeapAllocator;
+import joeq.Allocator.ObjectLayout;
+import joeq.Assembler.x86.Code2HeapReference;
+import joeq.Assembler.x86.DirectBindCall;
+import joeq.Assembler.x86.x86;
+import joeq.Assembler.x86.x86Assembler;
+import joeq.Assembler.x86.x86Constants;
+import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.jq_Array;
+import joeq.Clazz.jq_BytecodeMap;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_ClassFileConstants;
+import joeq.Clazz.jq_CompiledCode;
+import joeq.Clazz.jq_InstanceField;
+import joeq.Clazz.jq_InstanceMethod;
+import joeq.Clazz.jq_Method;
+import joeq.Clazz.jq_StaticField;
+import joeq.Clazz.jq_StaticMethod;
+import joeq.Clazz.jq_TryCatch;
+import joeq.Clazz.jq_TryCatchBC;
+import joeq.Clazz.jq_Type;
+import joeq.Compil3r.Compil3rInterface;
+import joeq.Compil3r.CompilationState;
+import joeq.Compil3r.BytecodeAnalysis.BytecodeVisitor;
+import joeq.Main.jq;
+import joeq.Memory.CodeAddress;
+import joeq.Memory.HeapAddress;
+import joeq.Run_Time.ExceptionDeliverer;
+import joeq.Run_Time.MathSupport;
+import joeq.Run_Time.Monitor;
+import joeq.Run_Time.Reflection;
+import joeq.Run_Time.SystemInterface;
+import joeq.Run_Time.TypeCheck;
+import joeq.Run_Time.Unsafe;
+import joeq.UTF.Utf8;
+import joeq.Util.Assert;
+import joeq.Util.Strings;
 
 /**
  * @author  John Whaley <jwhaley@alum.mit.edu>

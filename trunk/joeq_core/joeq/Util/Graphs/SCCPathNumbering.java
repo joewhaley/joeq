@@ -4,7 +4,7 @@
  * To change the template for this generated file go to
  * Window - Preferences - Java - Code Generation - Code and Comments
  */
-package Util.Graphs;
+package joeq.Util.Graphs;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -25,13 +25,13 @@ import java.util.SortedSet;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
 
-import Util.Assert;
-import Util.Strings;
-import Util.Collections.IndexMap;
-import Util.Collections.Pair;
-import Util.Collections.UnmodifiableIterator;
-import Util.IO.Textualizable;
-import Util.IO.Textualizer;
+import joeq.Util.Assert;
+import joeq.Util.Strings;
+import joeq.Util.Collections.IndexMap;
+import joeq.Util.Collections.Pair;
+import joeq.Util.Collections.UnmodifiableIterator;
+import joeq.Util.IO.Textualizable;
+import joeq.Util.IO.Textualizer;
 
 /**
  * SCCPathNumbering

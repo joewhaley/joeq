@@ -1,28 +1,28 @@
 // Delegates.java, created Wed Dec 11 12:02:02 2002 by mcmartin
 // Copyright (C) 2001-3 mcmartin
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Clazz;
+package joeq.Clazz;
 
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import Allocator.CodeAllocator;
-import Allocator.DefaultHeapAllocator;
-import Assembler.x86.DirectBindCall;
-import Bootstrap.BootstrapCodeAddress;
-import Bootstrap.BootstrapHeapAddress;
-import Compil3r.Compil3rInterface;
-import Compil3r.Reference.x86.x86ReferenceCompiler;
-import Compil3r.Reference.x86.x86ReferenceLinker;
-import Main.jq;
-import Memory.CodeAddress;
-import Memory.HeapAddress;
-import Memory.StackAddress;
-import Run_Time.Debug;
-import Run_Time.ExceptionDeliverer;
-import Util.Collections.FilterIterator;
-import Util.Collections.Pair;
+import joeq.Allocator.CodeAllocator;
+import joeq.Allocator.DefaultHeapAllocator;
+import joeq.Assembler.x86.DirectBindCall;
+import joeq.Bootstrap.BootstrapCodeAddress;
+import joeq.Bootstrap.BootstrapHeapAddress;
+import joeq.Compil3r.Compil3rInterface;
+import joeq.Compil3r.Reference.x86.x86ReferenceCompiler;
+import joeq.Compil3r.Reference.x86.x86ReferenceLinker;
+import joeq.Main.jq;
+import joeq.Memory.CodeAddress;
+import joeq.Memory.HeapAddress;
+import joeq.Memory.StackAddress;
+import joeq.Run_Time.Debug;
+import joeq.Run_Time.ExceptionDeliverer;
+import joeq.Util.Collections.FilterIterator;
+import joeq.Util.Collections.Pair;
 
 /**
  * Delegates

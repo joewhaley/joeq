@@ -1,7 +1,7 @@
 // ReachingDefs.java, created Jun 15, 2003 2:10:14 PM by joewhaley
 // Copyright (C) 2003 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Compil3r.Dataflow;
+package joeq.Compil3r.Dataflow;
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -10,22 +10,22 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 
-import Clazz.jq_Class;
-import Clazz.jq_Method;
-import Clazz.jq_Type;
-import Compil3r.Quad.BasicBlock;
-import Compil3r.Quad.CodeCache;
-import Compil3r.Quad.ControlFlowGraph;
-import Compil3r.Quad.Quad;
-import Compil3r.Quad.RegisterFactory.Register;
-import Main.HostedVM;
-import Util.BitString;
-import Util.Strings;
-import Util.Collections.Pair;
-import Util.Graphs.EdgeGraph;
-import Util.Graphs.Graph;
-import Util.Templates.List;
-import Util.Templates.ListIterator;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_Method;
+import joeq.Clazz.jq_Type;
+import joeq.Compil3r.Quad.BasicBlock;
+import joeq.Compil3r.Quad.CodeCache;
+import joeq.Compil3r.Quad.ControlFlowGraph;
+import joeq.Compil3r.Quad.Quad;
+import joeq.Compil3r.Quad.RegisterFactory.Register;
+import joeq.Main.HostedVM;
+import joeq.Util.BitString;
+import joeq.Util.Strings;
+import joeq.Util.Collections.Pair;
+import joeq.Util.Graphs.EdgeGraph;
+import joeq.Util.Graphs.Graph;
+import joeq.Util.Templates.List;
+import joeq.Util.Templates.ListIterator;
 
 /**
  * ReachingDefs

@@ -3,11 +3,11 @@
  *
  * Define some typed iterators.
  */
-package Compil3r.Analysis.IPSSA;
+package joeq.Compil3r.Analysis.IPSSA;
 
 import java.util.Iterator;
 
-import Util.Collections.UnmodifiableIterator;
+import joeq.Util.Collections.UnmodifiableIterator;
 
 /**
  * @author Vladimir Livshits

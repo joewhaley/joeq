@@ -1,7 +1,7 @@
 // MyFileChannelImpl.java, created Wed Mar  5  0:26:34 2003 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Util.IO;
+package joeq.Util.IO;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -19,7 +19,7 @@ import java.nio.channels.NonWritableChannelException;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 
-import Util.Assert;
+import joeq.Util.Assert;
 
 /**
  * @author John Whaley <jwhaley@alum.mit.edu>

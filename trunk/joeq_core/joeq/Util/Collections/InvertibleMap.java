@@ -1,7 +1,7 @@
 // InvertibleMap.java, created Wed Jun 21  3:22:34 2000 by pnkfelix
 // Copyright (C) 2001 Felix S. Klock II <pnkfelix@mit.edu>
 // Licensed under the terms of the GNU GPL; see COPYING for details.
-package Util.Collections;
+package joeq.Util.Collections;
 
 /** An <code>InvertibleMap</code> is an extension of the
     <code>Map</code> interface to allow users to do reverse lookups on

@@ -1,18 +1,18 @@
 // x86QuadExceptionDeliverer.java, created Thu Mar  6  0:42:31 2003 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Compil3r.Quad.x86;
+package joeq.Compil3r.Quad.x86;
 
-import Clazz.jq_CompiledCode;
-import Clazz.jq_Method;
-import Clazz.jq_TryCatch;
-import Memory.CodeAddress;
-import Memory.HeapAddress;
-import Memory.StackAddress;
-import Run_Time.ExceptionDeliverer;
-import Run_Time.SystemInterface;
-import Run_Time.Unsafe;
-import Util.Assert;
+import joeq.Clazz.jq_CompiledCode;
+import joeq.Clazz.jq_Method;
+import joeq.Clazz.jq_TryCatch;
+import joeq.Memory.CodeAddress;
+import joeq.Memory.HeapAddress;
+import joeq.Memory.StackAddress;
+import joeq.Run_Time.ExceptionDeliverer;
+import joeq.Run_Time.SystemInterface;
+import joeq.Run_Time.Unsafe;
+import joeq.Util.Assert;
 
 /**
  * @author  John Whaley <jwhaley@alum.mit.edu>

@@ -1,15 +1,15 @@
-package Compil3r.Analysis.IPSSA;
+package joeq.Compil3r.Analysis.IPSSA;
 
 import java.util.HashMap;
 
-import Util.Assert;
-import Clazz.jq_LocalVarTableEntry;
-import Clazz.jq_Method;
-import Clazz.jq_NameAndDesc;
-import Compil3r.Analysis.IPA.PA;
-import Compil3r.Quad.CodeCache;
-import Compil3r.Quad.Quad;
-import Compil3r.Quad.RegisterFactory;
+import joeq.Util.Assert;
+import joeq.Clazz.jq_LocalVarTableEntry;
+import joeq.Clazz.jq_Method;
+import joeq.Clazz.jq_NameAndDesc;
+import joeq.Compil3r.Analysis.IPA.PA;
+import joeq.Compil3r.Quad.CodeCache;
+import joeq.Compil3r.Quad.Quad;
+import joeq.Compil3r.Quad.RegisterFactory;
 
 /**
  * @author Vladimir Livshits

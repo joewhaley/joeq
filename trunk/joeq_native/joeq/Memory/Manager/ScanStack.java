@@ -1,23 +1,23 @@
 // ScanStack.java, created Tue Dec 10 14:02:32 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Memory.Manager;
+package joeq.Memory.Manager;
 
 import java.util.Iterator;
 
-import Allocator.CodeAllocator;
-import Allocator.DefaultHeapAllocator;
-import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Class;
-import Clazz.jq_CompiledCode;
-import Clazz.jq_Method;
-import Clazz.jq_StaticField;
-import Memory.Address;
-import Memory.CodeAddress;
-import Memory.HeapAddress;
-import Memory.StackAddress;
-import Run_Time.Unsafe;
-import Scheduler.jq_Thread;
+import joeq.Allocator.CodeAllocator;
+import joeq.Allocator.DefaultHeapAllocator;
+import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_CompiledCode;
+import joeq.Clazz.jq_Method;
+import joeq.Clazz.jq_StaticField;
+import joeq.Memory.Address;
+import joeq.Memory.CodeAddress;
+import joeq.Memory.HeapAddress;
+import joeq.Memory.StackAddress;
+import joeq.Run_Time.Unsafe;
+import joeq.Scheduler.jq_Thread;
 
 /**
  * @author John Whaley <jwhaley@alum.mit.edu>

@@ -1,4 +1,4 @@
-package Compil3r.Analysis.IPA;
+package joeq.Compil3r.Analysis.IPA;
 
 import java.io.DataOutputStream;
 import java.io.FileOutputStream;
@@ -9,32 +9,32 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import Clazz.jq_Class;
-import Clazz.jq_Method;
-import Clazz.jq_Reference;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary.ConcreteObjectNode;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary.ConcreteTypeNode;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary.UnknownTypeNode;
-import Compil3r.Quad.BasicBlock;
-import Compil3r.Quad.BasicBlockVisitor;
-import Compil3r.Quad.CallGraph;
-import Compil3r.Quad.CodeCache;
-import Compil3r.Quad.ControlFlowGraph;
-import Compil3r.Quad.ControlFlowGraphVisitor;
-import Compil3r.Quad.LoadedCallGraph;
-import Compil3r.Quad.Quad;
-import Compil3r.Quad.QuadVisitor;
-import Compil3r.Quad.Operator.New;
-import Compil3r.Quad.Operator.NewArray;
-import Main.HostedVM;
-import Util.Collections.GenericMultiMap;
-import Util.Collections.MultiMap;
-import Util.Graphs.Graph;
-import Util.Graphs.Navigator;
-import Util.Graphs.SCCPathNumbering;
-import Util.Graphs.Traversals;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_Method;
+import joeq.Clazz.jq_Reference;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.ConcreteObjectNode;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.ConcreteTypeNode;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.UnknownTypeNode;
+import joeq.Compil3r.Quad.BasicBlock;
+import joeq.Compil3r.Quad.BasicBlockVisitor;
+import joeq.Compil3r.Quad.CallGraph;
+import joeq.Compil3r.Quad.CodeCache;
+import joeq.Compil3r.Quad.ControlFlowGraph;
+import joeq.Compil3r.Quad.ControlFlowGraphVisitor;
+import joeq.Compil3r.Quad.LoadedCallGraph;
+import joeq.Compil3r.Quad.Quad;
+import joeq.Compil3r.Quad.QuadVisitor;
+import joeq.Compil3r.Quad.Operator.New;
+import joeq.Compil3r.Quad.Operator.NewArray;
+import joeq.Main.HostedVM;
+import joeq.Util.Collections.GenericMultiMap;
+import joeq.Util.Collections.MultiMap;
+import joeq.Util.Graphs.Graph;
+import joeq.Util.Graphs.Navigator;
+import joeq.Util.Graphs.SCCPathNumbering;
+import joeq.Util.Graphs.Traversals;
 
 /**
  * @author jwhaley

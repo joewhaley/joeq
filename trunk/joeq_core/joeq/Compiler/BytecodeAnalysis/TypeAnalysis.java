@@ -1,7 +1,7 @@
 // TypeAnalysis.java, created Fri Jan 11 16:49:00 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Compil3r.BytecodeAnalysis;
+package joeq.Compil3r.BytecodeAnalysis;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -10,24 +10,24 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
-import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Array;
-import Clazz.jq_Class;
-import Clazz.jq_Field;
-import Clazz.jq_InstanceField;
-import Clazz.jq_InstanceMethod;
-import Clazz.jq_Method;
-import Clazz.jq_Reference;
-import Clazz.jq_StaticField;
-import Clazz.jq_StaticMethod;
-import Clazz.jq_Type;
-import Run_Time.Reflection;
-import Run_Time.TypeCheck;
-import UTF.Utf8;
-import Util.Assert;
-import Util.Strings;
-import Util.Collections.IdentityHashCodeWrapper;
-import Util.Collections.LinearSet;
+import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.jq_Array;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_Field;
+import joeq.Clazz.jq_InstanceField;
+import joeq.Clazz.jq_InstanceMethod;
+import joeq.Clazz.jq_Method;
+import joeq.Clazz.jq_Reference;
+import joeq.Clazz.jq_StaticField;
+import joeq.Clazz.jq_StaticMethod;
+import joeq.Clazz.jq_Type;
+import joeq.Run_Time.Reflection;
+import joeq.Run_Time.TypeCheck;
+import joeq.UTF.Utf8;
+import joeq.Util.Assert;
+import joeq.Util.Strings;
+import joeq.Util.Collections.IdentityHashCodeWrapper;
+import joeq.Util.Collections.LinearSet;
 
 /**
  * @author  John Whaley <jwhaley@alum.mit.edu>

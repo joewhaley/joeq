@@ -4,10 +4,10 @@
  * To change the template for this generated file go to
  * Window>Preferences>Java>Code Generation>Code and Comments
  */
-package Compil3r.Analysis.IPSSA.Utils;
+package joeq.Compil3r.Analysis.IPSSA.Utils;
 
 import java.util.HashSet;
-import Compil3r.Analysis.IPSSA.SSAIterator;
+import joeq.Compil3r.Analysis.IPSSA.SSAIterator;
 
 /**
  * @author Vladimir Livshits

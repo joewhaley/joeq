@@ -1,7 +1,7 @@
 // DoTypeAnalysis.java, created Fri Jan 11 17:13:17 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Main;
+package joeq.Main;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -14,12 +14,12 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Set;
 
-import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Class;
-import Clazz.jq_InstanceMethod;
-import Clazz.jq_StaticMethod;
-import Run_Time.TypeCheck;
-import Util.Collections.AppendIterator;
+import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_InstanceMethod;
+import joeq.Clazz.jq_StaticMethod;
+import joeq.Run_Time.TypeCheck;
+import joeq.Util.Collections.AppendIterator;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>

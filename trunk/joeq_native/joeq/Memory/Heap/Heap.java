@@ -1,19 +1,19 @@
 // Heap.java, created Tue Dec 10 14:02:04 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Memory.Heap;
+package joeq.Memory.Heap;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import Allocator.ObjectLayoutMethods;
-import Clazz.jq_Array;
-import Clazz.jq_Class;
-import Memory.HeapAddress;
-import Run_Time.Debug;
-import Run_Time.SystemInterface;
-import Util.Assert;
+import joeq.Allocator.ObjectLayoutMethods;
+import joeq.Clazz.jq_Array;
+import joeq.Clazz.jq_Class;
+import joeq.Memory.HeapAddress;
+import joeq.Run_Time.Debug;
+import joeq.Run_Time.SystemInterface;
+import joeq.Util.Assert;
 
 /**
  * This is a reference to an abstract memory "heap".

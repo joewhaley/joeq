@@ -1,7 +1,7 @@
 // AbstractMapEntry.java, created Tue Feb 23 16:34:46 1999 by cananian
 // Copyright (C) 1999 C. Scott Ananian <cananian@alumni.princeton.edu>
 // Licensed under the terms of the GNU GPL; see COPYING for details.
-package Util.Collections;
+package joeq.Util.Collections;
 
 import java.util.Map;
 /**

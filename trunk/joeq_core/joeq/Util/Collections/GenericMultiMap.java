@@ -1,7 +1,7 @@
 // GenericMultiMap.java, created Tue Nov  9 00:17:02 1999 by pnkfelix
 // Copyright (C) 1999 Felix S. Klock II <pnkfelix@mit.edu>
 // Licensed under the terms of the GNU GPL; see COPYING for details.
-package Util.Collections;
+package joeq.Util.Collections;
 
 import java.util.Map;
 import java.util.Iterator;

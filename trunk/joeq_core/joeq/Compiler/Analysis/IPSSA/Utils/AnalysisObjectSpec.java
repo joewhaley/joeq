@@ -1,18 +1,18 @@
-package Compil3r.Analysis.IPSSA.Utils;
+package joeq.Compil3r.Analysis.IPSSA.Utils;
 
-import Bootstrap.PrimordialClassLoader;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
+import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
 import java.util.StringTokenizer;
 
 import org.sf.javabdd.TypedBDDFactory.TypedBDD;
 
-import Util.Assert;
+import joeq.Util.Assert;
 
-import Clazz.jq_Class;
-import Clazz.jq_Method;
-import Compil3r.Analysis.IPA.PAResultSelector;
-import Compil3r.Analysis.IPSSA.IPSSABuilder;
-import Compil3r.Analysis.IPSSA.SSADefinition;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_Method;
+import joeq.Compil3r.Analysis.IPA.PAResultSelector;
+import joeq.Compil3r.Analysis.IPSSA.IPSSABuilder;
+import joeq.Compil3r.Analysis.IPSSA.SSADefinition;
 
 /**
  * Allows referring to analysis objects in a simple textual fashion.

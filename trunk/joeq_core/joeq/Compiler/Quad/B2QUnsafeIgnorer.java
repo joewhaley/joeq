@@ -1,9 +1,9 @@
 // B2QUnsafeIgnorer.java, created Mon Dec 23 23:00:34 2002 by mcmartin
 // Copyright (C) 2001-3 mcmartin
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Compil3r.Quad;
+package joeq.Compil3r.Quad;
 
-import Clazz.jq_Method;
+import joeq.Clazz.jq_Method;
 
 /*
  * @author  Michael Martin <mcmartin@stanford.edu>

@@ -1,15 +1,15 @@
 // CollectorThread.java, created Tue Dec 10 14:02:30 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Memory.Manager;
+package joeq.Memory.Manager;
 
-import Allocator.DefaultHeapAllocator;
-import Memory.HeapAddress;
-import Run_Time.Debug;
-import Run_Time.HighResolutionTimer;
-import Run_Time.Unsafe;
-import Scheduler.jq_NativeThread;
-import Util.AtomicCounter;
+import joeq.Allocator.DefaultHeapAllocator;
+import joeq.Memory.HeapAddress;
+import joeq.Run_Time.Debug;
+import joeq.Run_Time.HighResolutionTimer;
+import joeq.Run_Time.Unsafe;
+import joeq.Scheduler.jq_NativeThread;
+import joeq.Util.AtomicCounter;
 
 /**
  * @author John Whaley <jwhaley@alum.mit.edu>

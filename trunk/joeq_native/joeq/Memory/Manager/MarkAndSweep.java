@@ -1,30 +1,30 @@
 // MarkAndSweep.java, created Tue Dec 10 14:02:32 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Memory.Manager;
+package joeq.Memory.Manager;
 
 import java.lang.reflect.Array;
 
-import Allocator.ObjectLayoutMethods;
-import Clazz.jq_Array;
-import Clazz.jq_Class;
-import Clazz.jq_Reference;
-import Memory.Address;
-import Memory.CodeAddress;
-import Memory.HeapAddress;
-import Memory.StackAddress;
-import Memory.Heap.BootHeap;
-import Memory.Heap.Heap;
-import Memory.Heap.ImmortalHeap;
-import Memory.Heap.LargeHeap;
-import Memory.Heap.MallocHeap;
-import Memory.Heap.SegregatedListHeap;
-import Run_Time.Debug;
-import Run_Time.SystemInterface;
-import Run_Time.Unsafe;
-import Scheduler.jq_NativeThread;
-import Scheduler.jq_RegisterState;
-import Util.Assert;
+import joeq.Allocator.ObjectLayoutMethods;
+import joeq.Clazz.jq_Array;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_Reference;
+import joeq.Memory.Address;
+import joeq.Memory.CodeAddress;
+import joeq.Memory.HeapAddress;
+import joeq.Memory.StackAddress;
+import joeq.Memory.Heap.BootHeap;
+import joeq.Memory.Heap.Heap;
+import joeq.Memory.Heap.ImmortalHeap;
+import joeq.Memory.Heap.LargeHeap;
+import joeq.Memory.Heap.MallocHeap;
+import joeq.Memory.Heap.SegregatedListHeap;
+import joeq.Run_Time.Debug;
+import joeq.Run_Time.SystemInterface;
+import joeq.Run_Time.Unsafe;
+import joeq.Scheduler.jq_NativeThread;
+import joeq.Scheduler.jq_RegisterState;
+import joeq.Util.Assert;
 
 /**
  * MarkAndSweep collector, adapted from Jikes RVM version

@@ -1,7 +1,7 @@
 // Solver.java, created Jun 15, 2003 1:02:13 AM by joewhaley
 // Copyright (C) 2003 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Compil3r.Dataflow;
+package joeq.Compil3r.Dataflow;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -10,9 +10,9 @@ import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import Util.Collections.MapFactory;
-import Util.Graphs.Graph;
-import Util.Graphs.Traversals;
+import joeq.Util.Collections.MapFactory;
+import joeq.Util.Graphs.Graph;
+import joeq.Util.Graphs.Traversals;
 
 /**
  * SortedSetSolver

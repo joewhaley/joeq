@@ -1,9 +1,9 @@
 // PrintCFG.java, created Thu Jan 16 10:53:32 2003 by mcmartin
 // Copyright (C) 2001-3 jwhaley
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Main;
+package joeq.Main;
 
-import Clazz.jq_Class;
+import joeq.Clazz.jq_Class;
 
 /**
  * @author  John Whaley <jwhaley@alum.mit.edu>

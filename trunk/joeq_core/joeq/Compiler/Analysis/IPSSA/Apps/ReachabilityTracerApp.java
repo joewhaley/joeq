@@ -1,22 +1,22 @@
 /*
  * Created on Dec 8, 2003
  */
-package Compil3r.Analysis.IPSSA.Apps;
+package joeq.Compil3r.Analysis.IPSSA.Apps;
 
 import java.util.Collection;
 import java.util.Iterator;
 
 import org.sf.javabdd.TypedBDDFactory.TypedBDD;
 
-import Clazz.jq_Method;
-import Compil3r.Analysis.IPA.PAResultSelector;
-import Compil3r.Analysis.IPA.PAResults;
-import Compil3r.Analysis.IPSSA.IPSSABuilder;
-import Compil3r.Analysis.IPSSA.SSADefinition;
-import Compil3r.Analysis.IPSSA.Utils.AnalysisObjectSpec;
-import Compil3r.Analysis.IPSSA.Utils.ReachabilityTrace;
-import Compil3r.Analysis.IPSSA.Utils.AnalysisObjectSpec.UnknownAnalysisObjectExeption;
-import Util.Assert;
+import joeq.Clazz.jq_Method;
+import joeq.Compil3r.Analysis.IPA.PAResultSelector;
+import joeq.Compil3r.Analysis.IPA.PAResults;
+import joeq.Compil3r.Analysis.IPSSA.IPSSABuilder;
+import joeq.Compil3r.Analysis.IPSSA.SSADefinition;
+import joeq.Compil3r.Analysis.IPSSA.Utils.AnalysisObjectSpec;
+import joeq.Compil3r.Analysis.IPSSA.Utils.ReachabilityTrace;
+import joeq.Compil3r.Analysis.IPSSA.Utils.AnalysisObjectSpec.UnknownAnalysisObjectExeption;
+import joeq.Util.Assert;
 
 /**
  * @author Vladimir Livshits

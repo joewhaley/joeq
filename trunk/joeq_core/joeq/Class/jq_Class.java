@@ -1,7 +1,7 @@
 // jq_Class.java, created Mon Feb  5 23:23:20 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Clazz;
+package joeq.Clazz;
 
 import java.io.DataInput;
 import java.io.DataInputStream;
@@ -19,25 +19,25 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import Allocator.ObjectLayout;
-import Bootstrap.PrimordialClassLoader;
-import ClassLib.ClassLibInterface;
-import Compil3r.CompilationConstants;
-import Compil3r.BytecodeAnalysis.Bytecodes;
-import Main.jq;
-import Memory.Address;
-import Memory.CodeAddress;
-import Memory.HeapAddress;
-import Memory.StackAddress;
-import Run_Time.Debug;
-import Run_Time.Reflection;
-import Run_Time.TypeCheck;
-import UTF.UTFDataFormatError;
-import UTF.Utf8;
-import Util.Assert;
-import Util.IO.Textualizer;
-import Util.Convert;
-import Util.Strings;
+import joeq.Allocator.ObjectLayout;
+import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.ClassLib.ClassLibInterface;
+import joeq.Compil3r.CompilationConstants;
+import joeq.Compil3r.BytecodeAnalysis.Bytecodes;
+import joeq.Main.jq;
+import joeq.Memory.Address;
+import joeq.Memory.CodeAddress;
+import joeq.Memory.HeapAddress;
+import joeq.Memory.StackAddress;
+import joeq.Run_Time.Debug;
+import joeq.Run_Time.Reflection;
+import joeq.Run_Time.TypeCheck;
+import joeq.UTF.UTFDataFormatError;
+import joeq.UTF.Utf8;
+import joeq.Util.Assert;
+import joeq.Util.IO.Textualizer;
+import joeq.Util.Convert;
+import joeq.Util.Strings;
 
 /**
  * jq_Class

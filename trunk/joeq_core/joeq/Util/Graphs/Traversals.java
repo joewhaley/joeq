@@ -1,7 +1,7 @@
 // Traversals.java, created Thu May 26 23:09:37 2003 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Util.Graphs;
+package joeq.Util.Graphs;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -13,8 +13,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import Util.Assert;
-import Util.Collections.Pair;
+import joeq.Util.Assert;
+import joeq.Util.Collections.Pair;
 
 /**
  * @author  John Whaley <jwhaley@alum.mit.edu>

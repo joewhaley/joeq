@@ -1,7 +1,7 @@
 // PairMapEntry.java, created Wed Aug  4 12:16:20 1999 by pnkfelix
 // Copyright (C) 1999 Felix S. Klock II <pnkfelix@mit.edu>
 // Licensed under the terms of the GNU GPL; see COPYING for details.
-package Util.Collections;
+package joeq.Util.Collections;
 
 /**
  * <code>PairMapEntry</code> is the easiest implementation of a

@@ -1,7 +1,7 @@
 // CollectionWrapper.java, created Fri Nov 12 18:06:32 1999 by pnkfelix
 // Copyright (C) 1999 Felix S. Klock II <pnkfelix@mit.edu>
 // Licensed under the terms of the GNU GPL; see COPYING for details.
-package Util.Collections;
+package joeq.Util.Collections;
 
 import java.util.Collection;
 import java.util.Iterator;

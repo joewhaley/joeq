@@ -1,4 +1,4 @@
-package Compil3r.Analysis.IPA;
+package joeq.Compil3r.Analysis.IPA;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -9,9 +9,9 @@ import org.sf.javabdd.BDD;
 import org.sf.javabdd.BDDDomain;
 import org.sf.javabdd.TypedBDDFactory.TypedBDD;
 
-import Clazz.jq_Method;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
-import Util.Assert;
+import joeq.Clazz.jq_Method;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
+import joeq.Util.Assert;
 
 /**
  * A helper class for PAResults.

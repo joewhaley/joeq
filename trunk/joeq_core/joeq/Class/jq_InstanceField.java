@@ -1,16 +1,16 @@
 // jq_InstanceField.java, created Mon Feb  5 23:23:20 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Clazz;
+package joeq.Clazz;
 
 import java.io.DataInput;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import Bootstrap.PrimordialClassLoader;
-import Main.jq;
-import Util.Assert;
+import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Main.jq;
+import joeq.Util.Assert;
 
 //friend jq_ClassLoader;
 

@@ -1,7 +1,7 @@
 // Navigator.java, created Thu Mar 27 17:49:37 2003 by joewhaley
 // Copyright (C) 2001-3 Alexandru SALCIANU <salcianu@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Util.Graphs;
+package joeq.Util.Graphs;
 
 import java.util.Collection;
 

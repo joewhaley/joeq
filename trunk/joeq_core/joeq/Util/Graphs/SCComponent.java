@@ -1,7 +1,7 @@
 // SCComponent.java, created Thu Mar 27 17:49:37 2003 by joewhaley
 // Copyright (C) 2001-3 Alexandru SALCIANU <salcianu@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Util.Graphs;
+package joeq.Util.Graphs;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -15,11 +15,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import Clazz.jq_Method;
-import Compil3r.Quad.CallGraph;
-import Util.Assert;
-import Util.IO.Textualizable;
-import Util.IO.Textualizer;
+import joeq.Clazz.jq_Method;
+import joeq.Compil3r.Quad.CallGraph;
+import joeq.Util.Assert;
+import joeq.Util.IO.Textualizable;
+import joeq.Util.IO.Textualizer;
 
 /**
  * <code>SCComponent</code> models a <i>Strongly connected component</i> of a graph.

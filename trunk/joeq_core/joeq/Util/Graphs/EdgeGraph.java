@@ -1,7 +1,7 @@
 // EdgeGraph.java, created Jun 15, 2003 7:14:10 PM by joewhaley
 // Copyright (C) 2003 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Util.Graphs;
+package joeq.Util.Graphs;
 
 import java.util.Collection;
 

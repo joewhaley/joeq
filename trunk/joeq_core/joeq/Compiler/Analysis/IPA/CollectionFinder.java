@@ -4,7 +4,7 @@
  * To change the template for this generated file go to
  * Window>Preferences>Java>Code Generation>Code and Comments
  */
-package Compil3r.Analysis.IPA;
+package joeq.Compil3r.Analysis.IPA;
 
 import java.io.DataOutputStream;
 import java.io.FileOutputStream;
@@ -22,18 +22,18 @@ import org.sf.javabdd.BDD;
 import org.sf.javabdd.TypedBDDFactory;
 import org.sf.javabdd.TypedBDDFactory.TypedBDD;
 
-import Clazz.jq_Class;
-import Clazz.jq_Field;
-import Clazz.jq_Initializer;
-import Clazz.jq_InstanceMethod;
-import Clazz.jq_Method;
-import Clazz.jq_Reference;
-import Clazz.jq_Type;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary;
-import Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
-import Compil3r.Analysis.IPSSA.IPSSABuilder;
-import Compil3r.Analysis.IPSSA.IPSSABuilder.Application;
-import Util.Assert;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_Field;
+import joeq.Clazz.jq_Initializer;
+import joeq.Clazz.jq_InstanceMethod;
+import joeq.Clazz.jq_Method;
+import joeq.Clazz.jq_Reference;
+import joeq.Clazz.jq_Type;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary;
+import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
+import joeq.Compil3r.Analysis.IPSSA.IPSSABuilder;
+import joeq.Compil3r.Analysis.IPSSA.IPSSABuilder.Application;
+import joeq.Util.Assert;
 
 /**
  * Finds and outputs information about polymorphic:

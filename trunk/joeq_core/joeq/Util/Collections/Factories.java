@@ -1,7 +1,7 @@
 // Factories.java, created Tue Oct 19 23:21:25 1999 by pnkfelix
 // Copyright (C) 1999 Felix S. Klock II <pnkfelix@mit.edu>
 // Licensed under the terms of the GNU GPL; see COPYING for details.
-package Util.Collections;
+package joeq.Util.Collections;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -9,7 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import Util.Assert;
+import joeq.Util.Assert;
 
 /** <code>Factories</code> consists exclusively of static methods that
     operate on or return <code>CollectionFactory</code>s. 

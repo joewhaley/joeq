@@ -1,13 +1,13 @@
 // ExceptionHandler.java, created Fri Jan 11 16:42:38 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Compil3r.Quad;
+package joeq.Compil3r.Quad;
 
-import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Class;
-import Run_Time.TypeCheck;
-import Util.Templates.List;
-import Util.Templates.ListWrapper;
+import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.jq_Class;
+import joeq.Run_Time.TypeCheck;
+import joeq.Util.Templates.List;
+import joeq.Util.Templates.ListWrapper;
 
 /**
  * Exception handler for basic blocks.  Each exception handler handles a type of

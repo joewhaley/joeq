@@ -1,15 +1,15 @@
 // jq_Field.java, created Mon Feb  5 23:23:20 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Clazz;
+package joeq.Clazz;
 
 import java.io.DataInput;
 import java.io.IOException;
 import java.util.Map;
 
-import Bootstrap.PrimordialClassLoader;
-import ClassLib.ClassLibInterface;
-import Main.jq;
+import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.ClassLib.ClassLibInterface;
+import joeq.Main.jq;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>

@@ -1,20 +1,20 @@
 // jq_Type.java, created Mon Feb  5 23:23:20 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Clazz;
+package joeq.Clazz;
 
 import java.io.IOException;
 import java.util.StringTokenizer;
 
-import Bootstrap.PrimordialClassLoader;
-import ClassLib.ClassLibInterface;
-import Main.jq;
-import Run_Time.Debug;
-import Run_Time.Reflection;
-import UTF.Utf8;
-import Util.Assert;
-import Util.IO.Textualizable;
-import Util.IO.Textualizer;
+import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.ClassLib.ClassLibInterface;
+import joeq.Main.jq;
+import joeq.Run_Time.Debug;
+import joeq.Run_Time.Reflection;
+import joeq.UTF.Utf8;
+import joeq.Util.Assert;
+import joeq.Util.IO.Textualizable;
+import joeq.Util.IO.Textualizer;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>
