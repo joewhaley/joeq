@@ -1427,7 +1427,7 @@ public class CSPAResults implements PointerAnalysisResults {
         } else {
             prefix = "";
         }
-        String fileName = System.getProperty("bddresults", "cspa");
+        String fileName = System.getProperty("bddresults", "pa");
         BDDFactory bdd = initialize(addToClasspath);
         CSPAResults r = runAnalysis(bdd, prefix, fileName);
         return r;
