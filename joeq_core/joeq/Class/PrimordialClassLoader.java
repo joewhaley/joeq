@@ -12,7 +12,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -34,7 +36,6 @@ import Main.jq;
 import UTF.Utf8;
 import Util.Assert;
 import Util.Collections.AppendIterator;
-import Util.Collections.EnumerationIterator;
 import Util.Collections.FilterIterator;
 import Util.Collections.UnmodifiableIterator;
 
@@ -62,34 +63,37 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
     /** A .zip or .jar file in the CLASSPATH. */
     static class ZipFileElement extends ClasspathElement {
         ZipFile zf;
-        ZipFileElement(ZipFile zf) { this.zf = zf; }
+        Map entries;
+        ZipFileElement(ZipFile zf) {
+            this.zf = zf;
+            int size = zf.size();
+            entries = new HashMap(size + (size >> 1));
+            for (Enumeration e = zf.entries(); e.hasMoreElements(); ) {
+                ZipEntry ze = (ZipEntry) e.nextElement();
+                entries.put(ze.getName(), ze);
+            }
+            if (TRACE) out.println(this+" contains: "+entries.keySet());
+        }
         public String toString() { return zf.getName(); }
         InputStream getResourceAsStream(String name) {
+            if (TRACE) out.println("Getting resource for "+name+" in zip file "+zf.getName());
+            ZipEntry ze = (ZipEntry) entries.get(name);
             try { // look for name in zipfile, return null if something goes wrong.
-                if (TRACE) out.println("Searching for "+name+" in zip file "+zf.getName());
-                ZipEntry ze = zf.getEntry(name);
                 return (ze==null)?null:zf.getInputStream(ze);
-            } catch (UnsatisfiedLinkError e) {
-                System.err.println("UNSATISFIED LINK ERROR: "+name);
-                return null;
             } catch (IOException e) { return null; }
         }
         boolean containsResource(String name) {
             if (TRACE) out.println("Searching for "+name+" in zip file "+zf.getName());
-            ZipEntry ze = zf.getEntry(name);
-            return ze != null;
+            return entries.containsKey(name);
         }
         Iterator listPackage(final String pathname, final boolean recursive) {
+            if (TRACE) out.println("Listing package "+pathname+" of zip file "+zf.getName());
             // look for directory name first
             final String filesep   = "/";
-            /* not all .JAR files have entries for directories, unfortunately.
-            ZipEntry ze = zf.getEntry(pathname);
-            if (ze==null) return Default.nullIterator;
-             */
-            return new FilterIterator(new EnumerationIterator(zf.entries()),
+            return new FilterIterator(entries.values().iterator(),
             new FilterIterator.Filter() {
                 public boolean isElement(Object o) {
-                    ZipEntry zze=(ZipEntry) o;
+                    ZipEntry zze = (ZipEntry) o;
                     String name = zze.getName();
                     if (TRACE) out.println("Checking if zipentry "+name+" is in package "+pathname);
                     return (!zze.isDirectory()) && name.startsWith(pathname) &&
@@ -104,7 +108,7 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
         Iterator listPackages() {
             if (TRACE) out.println("Listing packages of zip file "+zf.getName());
             LinkedHashSet result = new LinkedHashSet();
-            for (Iterator i=new EnumerationIterator(zf.entries()); i.hasNext(); ) {
+            for (Iterator i=entries.values().iterator(); i.hasNext(); ) {
                 ZipEntry zze = (ZipEntry) i.next();
                 if (zze.isDirectory()) continue;
                 String name = zze.getName();
@@ -129,68 +133,57 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
     /** A regular path string in the CLASSPATH. */
     static class PathElement extends ClasspathElement {
         String path;
+        Set entries;
 
-        PathElement(String path) { this.path = path; }
+        PathElement(String path) {
+            this.path = path;
+            this.entries = new HashSet();
+            buildEntries(null);
+            if (TRACE) out.println(this+" contains: "+entries);
+        }
+        
         public String toString() { return path; }
+        
         InputStream getResourceAsStream(String name) {
+            if (TRACE) out.println("Getting resource for "+name+" in path "+path);
+            if (!entries.contains(name))
+                return null;
+            if (filesep.charAt(0) != '/') name = name.replace('/', filesep.charAt(0));
             try { // try to open the file, starting from path.
-                if (filesep.charAt(0) != '/') name = name.replace('/', filesep.charAt(0));
-                if (TRACE) out.println("Searching for "+name+" in path "+path);
                 File f = new File(path, name);
                 return new FileInputStream(f);
             } catch (FileNotFoundException e) {
                 return null; // if anything goes wrong, return null.
             }
         }
+        
         boolean containsResource(String name) {
-            if (filesep.charAt(0) != '/') name = name.replace('/', filesep.charAt(0));
             if (TRACE) out.println("Searching for "+name+" in path "+path);
-            File f = new File(path, name);
-            return f.exists();
+            return entries.contains(name);
         }
-
+        
         Iterator listPackage(final String pathn, final boolean recursive) {
-	    HashSet hs = new HashSet();
-            listPackage(pathn, recursive, hs);
-            return hs.iterator();
+            if (TRACE) out.println("Listing package "+pathn+" in path "+path);
+            final String filesep   = "/";
+            return new FilterIterator(entries.iterator(),
+                new FilterIterator.Filter() {
+                    public boolean isElement(Object o) {
+                        String name = (String) o;
+                        if (TRACE) out.println("Checking if file "+name+" is in package "+pathn);
+                        return name.startsWith(pathn) &&
+                               name.endsWith(".class") &&
+                               (recursive || name.lastIndexOf(filesep)==(pathn.length()-1));
+                    }
+                });
         }
 
-        private void listPackage(final String pathn, final boolean recursive, final HashSet classes) {
-            String path_name;
-            if (filesep.charAt(0) != '/') path_name = pathn.replace('/', filesep.charAt(0));
-            else path_name = pathn;
-            File f = new File(path, path_name);
-            if (TRACE) out.println("Attempting to list "+path_name+" in path "+path);
-            if (!f.exists() || !f.isDirectory()) return;
-
-	    String [] cls = f.list(new java.io.FilenameFilter() {
-                public boolean accept(File _dir, String name) {
-                    return name.endsWith(".class");
-                }
-            });
-
-	    for (int i = 0; i < cls.length; i++) {
-		classes.add(pathn + cls[i].substring(0, cls[i].lastIndexOf('.')));
-	    }
-
-            if (recursive) {
-		String [] subdirs = f.list(new java.io.FilenameFilter() {
-		    public boolean accept(File _dir, String name) {
-			return new File(_dir, name).isDirectory();
-		    }
-		});
-		for (int i = 0; i < subdirs.length; i++) {
-		    String dn = (String)subdirs[i];
-		    listPackage(pathn + dn + filesep, true, classes);
-		}
-	    }
-        }
         Iterator listPackages() {
             if (TRACE) out.println("Listing packages of path "+path);
 	    HashSet hs = new HashSet();
             listPackages(null, hs);
 	    return hs.iterator();
         }
+        
         private void listPackages(final String dir, final HashSet pkgs) {
             final File f = dir == null ? new File(path) : new File(path, dir);
             if (!f.exists() || !f.isDirectory()) return;
@@ -207,6 +200,39 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
 		if (dir != null)
 		    dn = dir + filesep + dn;
 		listPackages(dn, pkgs);
+            }
+        }
+        
+        private void buildEntries(final String pathn) {
+            File f;
+            if (pathn == null) {
+                f = new File(path);
+            } else if (filesep.charAt(0) == '/') {
+                f = new File(path, pathn);
+            } else {
+                f = new File(path, pathn.replace('/', filesep.charAt(0)));
+            }
+            if (!f.exists() || !f.isDirectory()) return;
+            String[] cls = f.list(new java.io.FilenameFilter() {
+                    public boolean accept(File _dir, String name) {
+                        return name.endsWith(".class");
+                    }
+                });
+
+            for (int i = 0; i < cls.length; ++i) {
+                String s = (pathn==null)?(cls[i]):(pathn+cls[i]);
+                entries.add(s);
+            }
+
+            String [] subdirs = f.list(new java.io.FilenameFilter() {
+                    public boolean accept(File _dir, String name) {
+                        return new File(_dir, name).isDirectory();
+                    }
+                });
+            for (int i = 0; i < subdirs.length; i++) {
+                String dn = (String)subdirs[i];
+                if (pathn != null) dn = pathn + dn;
+                buildEntries(dn + '/');
             }
         }
     }
@@ -429,14 +455,8 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
     public static jq_Class getJavaLangRefFinalizer() { return (jq_Class)loader.getOrCreateBSType("Ljava/lang/ref/Finalizer;"); }
     private final Map/*<Utf8, jq_Type>*/ bs_desc2type;
 
-    public Set/*jq_Type*/ getAllTypes() {
-        Iterator i = bs_desc2type.entrySet().iterator();
-        HashSet s = new HashSet();
-        while (i.hasNext()) {
-            Map.Entry e = (Map.Entry)i.next();
-            s.add(e.getValue());
-        }
-        return s;
+    public Collection/*jq_Type*/ getAllTypes() {
+        return bs_desc2type.values();
     }
     
     public final Set/*jq_Class*/ getClassesThatReference(jq_Member m) {
