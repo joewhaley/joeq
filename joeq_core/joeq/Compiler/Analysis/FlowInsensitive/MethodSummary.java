@@ -145,7 +145,6 @@ public class MethodSummary {
      * Holds the cache of method summary graphs.
      */
     public static HashMap summary_cache = new HashMap();
-    private static BogusSummaryProvider bogusSummaryProvider = new BogusSummaryProvider();
     
     /**
      * Get the method summary for the given CFG.  Builds and caches it if it doesn't
@@ -867,16 +866,16 @@ public class MethodSummary {
                         setRegister(dest_r, n);
                     }
                 } else {
-	                RegisterOperand dest = Invoke.getDest(obj);
-	                if (dest != null) {
-	                    Register dest_r = dest.getRegister();
-	                    ReturnValueNode n = (ReturnValueNode)callToRVN.get(mc);
-	                    if (n == null) {
-	                        callToRVN.put(mc, n = new ReturnValueNode(mc));
-	                        passedAsParameter.add(n);
-	                    }
-	                    setRegister(dest_r, n);
-	                }
+                    RegisterOperand dest = Invoke.getDest(obj);
+                    if (dest != null) {
+                        Register dest_r = dest.getRegister();
+                        ReturnValueNode n = (ReturnValueNode)callToRVN.get(mc);
+                        if (n == null) {
+                            callToRVN.put(mc, n = new ReturnValueNode(mc));
+                            passedAsParameter.add(n);
+                        }
+                        setRegister(dest_r, n);
+                    }
                 }
             }
             // exceptions are handled by visitExceptionThrower.
