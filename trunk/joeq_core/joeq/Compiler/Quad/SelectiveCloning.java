@@ -3,6 +3,7 @@ package Compil3r.Quad;
 import java.io.PrintStream;
 import java.util.*;
 
+import Clazz.jq_Field;
 import Clazz.jq_Method;
 import Compil3r.Quad.MethodSummary.CallSite;
 import Compil3r.Quad.MethodSummary.ConcreteTypeNode;
@@ -24,7 +25,7 @@ public class SelectiveCloning {
     public static AndersenPointerAnalysis pa;
     
     public static boolean TRACE = false;
-    public static boolean PRINT_INLINE = false;
+    public static boolean PRINT_INLINE = true;
     public static PrintStream out = System.out;
     
     public static boolean FIND_ALL = true;
@@ -479,7 +480,13 @@ outer:
             return equals((Specialization) o);
         }
         public boolean equals(Specialization that) {
-            return this.target == that.target && this.set.equals(that.set);
+            if (this.target != that.target) {
+                return false;
+            }
+            if (!this.set.equals(that.set)) {
+                return false;
+            }
+            return true;
         }
         public int hashCode() { return target.hashCode() ^ set.hashCode(); }
         
@@ -488,25 +495,255 @@ outer:
         }
     }
     
+    public static class AccessPath {
+        jq_Field f;
+        Node node;
+        AccessPath n;
+        
+        public jq_Field first() { return f; }
+        public AccessPath next() { return n; }
+        
+        public String toString() {
+            String s;
+            if (f == null) s = "[]";
+            else s = "."+f.getName().toString();
+            if (n == null) return s;
+            return s+n.toString();
+        }
+        
+        public AccessPath findNode(Node node) {
+            if (this.node == node) return this;
+            else if (this.n == null) return null;
+            else return this.n.findNode(node);
+        }
+        public static AccessPath create(jq_Field f, Node node, AccessPath n) {
+            AccessPath ap;
+            if (n != null) {
+                ap = n.findNode(node);
+                if (ap != null) return ap;
+            }
+            ap = new AccessPath();
+            ap.f = f; ap.node = node; ap.n = n;
+            return ap;
+        }
+    }
+    
     public static class SpecializationParameter {
         int paramNum;
+        AccessPath ap;
         Set types;
-        SpecializationParameter(int paramNum, Set types) {
-            this.paramNum = paramNum; this.types = types;
+        SpecializationParameter(int paramNum, AccessPath ap, Set types) {
+            this.paramNum = paramNum; this.ap = ap; this.types = types;
         }
         public boolean equals(Object o) {
             return equals((SpecializationParameter) o);
         }
         public boolean equals(SpecializationParameter that) {
-            return this.paramNum == that.paramNum && this.types.equals(that.types);
+            if (this.paramNum != that.paramNum || !this.types.equals(that.types)) return false;
+            if (this.ap == that.ap) return true;
+            if (this.ap == null || that.ap == null) return false;
+            return this.ap.equals(that.ap);
         }
-        public int hashCode() { return paramNum ^ types.hashCode(); }
-        public String toString() { return "Param#"+paramNum+" types: "+types; }
+        public int hashCode() {
+            int aphash = ap==null?0:ap.hashCode();
+            return paramNum ^ types.hashCode() ^ aphash;
+        }
+        public String toString() {
+            if (ap == null)
+                return "Param#"+paramNum+" types: "+types;
+            return "Param#"+paramNum+ap.toString()+" types: "+types;
+        }
     }
 
     public static HashMap/*<Specialization,Set<ProgramLocation>>*/ to_clone = new HashMap();
     
     public static HashMap/*<Pair<ProgramLocation,ControlFlowGraph>,Specialization>*/ callSitesToClones = new HashMap();
+
+    public static void searchForCloningOpportunities4(Set/*<CallSite>*/ selectedCallSites) {
+        out.println("Searching for cloning opportunities for "+selectedCallSites.size()+" call sites");
+        LinkedList/*<Pair<Node,AccessPath>>*/ worklist = new LinkedList();
+        HashMap/*<Pair<Node,AccessPath>,Collection<ProgramLocation>>*/ multimap = new HashMap();
+        
+        for (Iterator i=selectedCallSites.iterator(); i.hasNext(); ) {
+            CallSite cs = (CallSite)i.next();
+            ProgramLocation call_site = cs.m;
+            MethodSummary caller_summary = cs.caller;
+            PassedParameter param0 = new PassedParameter(call_site, 0);
+            LinkedHashSet nodes = new LinkedHashSet();
+            caller_summary.getNodesThatCall(param0, nodes);
+            for (Iterator j=nodes.iterator(); j.hasNext(); ) {
+                Node node = (Node) j.next();
+                if (node instanceof OutsideNode) {
+                    while (((OutsideNode)node).skip != null)
+                        node = ((OutsideNode)node).skip;
+                    List pair = Default.pair(node, null);
+                    if (!multimap.containsKey(pair)) {
+                        worklist.add(pair);
+                    }
+                    MethodSummary.addToMultiMap(multimap, pair, call_site);
+                }
+            }
+        }
+        
+        HashMap/*<Pair<Pair<Node,AccessPath>,ProgramLocation>,Set<jq_Method>>*/ chaCache = new HashMap();
+        
+outerloop:
+        while (!worklist.isEmpty()) {
+            List pair = (List) worklist.removeFirst();
+            Set s = (Set) multimap.get(pair);
+            if (s == null || s.isEmpty())
+                continue;
+            
+            if (TRACE) out.println("Worklist ("+worklist.size()+") :"+pair);
+            
+            Node n = (Node) pair.get(0);
+            AccessPath ap = (AccessPath) pair.get(1);
+            
+            Set outEdges = (Set) pa.nodeToInclusionEdges.get(n);
+            if (outEdges == null) continue;
+            
+            Set n_concretenodes = null;
+            TypeSet n_typeset = null;
+            for (Iterator i=outEdges.iterator(); i.hasNext(); ) {
+                Node n2 = (Node) i.next();
+                if (n2 instanceof OutsideNode)
+                    while (((OutsideNode)n2).skip != null)
+                        n2 = ((OutsideNode)n2).skip;
+                Set s2 = s;
+                Object reason = pa.edgesToReasons.get(Default.pair(n, n2));
+                if (TRACE) out.println("Edge: "+n2+" Reason: "+reason);
+                if (outEdges.size() >= 2 &&
+                    n instanceof FieldNode &&
+                    reason instanceof Node) {
+                    jq_Field f = ((FieldNode)n).f;
+                    AccessPath ap2 = AccessPath.create(f, n, ap);
+                    Object key = Default.pair(reason, ap2);
+                    boolean change = MethodSummary.addToMultiMap(multimap, key, s);
+                    if (change && !worklist.contains(key)) {
+                        if (TRACE) out.println("Adding to Worklist :"+key+","+s);
+                        worklist.add(key);
+                    }
+                }
+                if (outEdges.size() >= 2 && 
+                    n instanceof ParamNode &&
+                    reason instanceof ProgramLocation &&
+                    ((ParamNode)n).m.getNameAndDesc().equals(((ProgramLocation)reason).getTargetMethod().getNameAndDesc())) {
+                    if (n_concretenodes == null) {
+                        n_concretenodes = pa.getConcreteNodes(n, ap);
+                        if (n_concretenodes.isEmpty())
+                            continue outerloop;
+                        n_typeset = buildTypeSet(n_concretenodes);
+                    }
+                    Set n2_concretenodes = pa.getConcreteNodes(n2, ap);
+                    if (n2_concretenodes.isEmpty())
+                        continue;
+                    if (n2_concretenodes.size() < n_concretenodes.size()) {
+                        TypeSet n2_typeset = buildTypeSet(n2_concretenodes);
+                        /*
+                        if (n_typeset.isImprecise() && n2_typeset.isPrecise()) {
+                            markForCloning((ParamNode)n, (ProgramLocation)reason);
+                        } else {
+                        */
+                        s2 = new LinkedHashSet();
+                        for (Iterator j=s.iterator(); j.hasNext(); ) {
+                            ProgramLocation mc = (ProgramLocation) j.next();
+                            Object key = Default.pair(pair, mc);
+                            Set n_targets_mc = (Set) chaCache.get(key);
+                            if (n_targets_mc == null)
+                                chaCache.put(key, n_targets_mc = mc.getCallTargets(n_typeset, true));
+                            if (n_targets_mc.isEmpty()) {
+                                j.remove();
+                                continue;
+                            }
+                            Object key2 = Default.pair(Default.pair(n2, ap), mc);
+                            Set n2_targets_mc = (Set) chaCache.get(key2);
+                            if (n2_targets_mc == null)
+                                chaCache.put(key, n2_targets_mc = mc.getCallTargets(n2_typeset, true));
+                            if (n2_targets_mc.isEmpty()) {
+                                continue;
+                            }
+                            s2.add(mc);
+                            if (n2_targets_mc.size() < n_targets_mc.size()) {
+                                markForCloning((ParamNode)n, (ProgramLocation)reason, n2_typeset, ap);
+                            }
+                        }
+                    }
+                }
+                Object key = Default.pair(n2, ap);
+                boolean change = MethodSummary.addToMultiMap(multimap, key, s2);
+                if (change && !worklist.contains(key)) {
+                    if (TRACE) out.println("Adding to Worklist :"+key+","+s2);
+                    worklist.add(key);
+                }
+            }
+        }
+    }
+
+    public static void markForCloning(ParamNode n, ProgramLocation mc2, Set exact_types2, AccessPath ap) {
+        jq_Method targetMethod = ((ParamNode) n).m;
+        int paramNum = ((ParamNode) n).n;
+        if (TRACE) out.println("Cloning call graph edge "+mc2+" to "+targetMethod);
+        SpecializationParameter specialp = new SpecializationParameter(paramNum, ap, exact_types2);
+        ControlFlowGraph target_cfg = CodeCache.getCode(targetMethod);
+        Object pair = Default.pair(mc2, target_cfg);
+        Specialization special = (Specialization) callSitesToClones.get(pair);
+        if (special != null) {
+            TRACE = true;
+            if (TRACE) System.out.println("Specialization already exists for call site! "+special);
+            jq.Assert(special.target == target_cfg);
+            Specialization special2 = new Specialization(target_cfg, specialp);
+            boolean change = special2.set.addAll(special.set);
+            if (change) {
+                if (TRACE) System.out.println("Made new specialization: "+special2);
+                Set set = (Set)to_clone.get(special);
+                jq.Assert(set != null);
+                if (TRACE) System.out.println("Removed call site: "+mc2);
+                set.remove(mc2);
+                if (set.isEmpty()) {
+                    if (TRACE) System.out.println("Removed old unused specialization: "+special);
+                    to_clone.remove(special);
+                }
+                special = special2;
+            }
+            TRACE = false;
+        } else {
+            special = new Specialization(target_cfg, specialp);
+        }
+        Set set = (Set)to_clone.get(special);
+        if (set == null) {
+            to_clone.put(special, set = new LinearSet());
+            out.println("First clone for: "+special);
+        }
+        boolean change = set.add(mc2);
+        if (change && PRINT_INLINE)
+            out.println("Cloning call graph edge "+mc2+" to "+special);
+        
+    }
+
+    public static TypeSet buildTypeSet(Set/*<ConcreteNode>*/ concreteNodes) {
+        LinkedHashSet exact_types = new LinkedHashSet();
+        boolean has_nonexact_types = false;
+        for (Iterator i=concreteNodes.iterator(); i.hasNext(); ) {
+            Node n3 = (Node)i.next();
+            if (n3 instanceof ConcreteTypeNode) {
+                if (n3.getDeclaredType() != null)
+                    exact_types.add(n3.getDeclaredType());
+            } else {
+                has_nonexact_types = true;
+            }
+        }
+        return new TypeSet(exact_types, has_nonexact_types);
+    }
+
+    public static class TypeSet extends AbstractSet {
+        Set/*jq_Type*/ types;
+        boolean is_complete;
+        TypeSet(Set t, boolean b) {
+            this.types = t; this.is_complete = b;
+        }
+        public Iterator iterator() { return types.iterator(); }
+        public int size() { return types.size(); }
+    }
 
     public static void searchForCloningOpportunities3(Set/*<CallSite>*/ selectedCallSites) {
         out.println("Searching for cloning opportunities for "+selectedCallSites.size()+" call sites");
@@ -629,7 +866,7 @@ outer:
                     if (targetMethod.getNameAndDesc().equals(mc2.getTargetMethod().getNameAndDesc())) {
                         int paramNum = ((ParamNode) n).n;
                         if (TRACE) out.println("Cloning call graph edge "+mc2+" to "+targetMethod);
-                        SpecializationParameter specialp = new SpecializationParameter(paramNum, exact_types2);
+                        SpecializationParameter specialp = new SpecializationParameter(paramNum, null, exact_types2);
                         ControlFlowGraph target_cfg = CodeCache.getCode(targetMethod);
                         Object pair = Default.pair(mc2, target_cfg);
                         Specialization special = (Specialization) callSitesToClones.get(pair);
@@ -701,7 +938,7 @@ outer:
                             if (targetMethod.getNameAndDesc().equals(mc2.getTargetMethod().getNameAndDesc())) {
                                 int paramNum = ((ParamNode) n).n;
                                 if (TRACE) out.println("Cloning call graph edge "+mc2+" to "+targetMethod);
-                                SpecializationParameter specialp = new SpecializationParameter(paramNum, exact_types2);
+                                SpecializationParameter specialp = new SpecializationParameter(paramNum, null, exact_types2);
                                 ControlFlowGraph target_cfg = CodeCache.getCode(targetMethod);
                                 Object pair = Default.pair(mc2, target_cfg);
                                 Specialization special = (Specialization) callSitesToClones.get(pair);

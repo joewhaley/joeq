@@ -876,7 +876,7 @@ uphere:
                 
                 SelectiveCloning.pa = apa;
                 time = System.currentTimeMillis();
-                SelectiveCloning.searchForCloningOpportunities3(selectedCallSites);
+                SelectiveCloning.searchForCloningOpportunities4(selectedCallSites);
                 time = System.currentTimeMillis() - time;
                 System.out.println("Time to complete: "+time);
                 MethodSummary.clearSummaryCache();
