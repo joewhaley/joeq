@@ -112,12 +112,19 @@ public abstract class ELF implements ELFConstants {
         Iterator si = sections.iterator();
         Section s = (Section)si.next();
         jq.assert(s instanceof Section.NullSection);
+	int i = 0;
         while (si.hasNext()) {
             s = (Section)si.next();
-            if (s instanceof Section.StrTabSection)
-                ((Section.StrTabSection)s).pack();
+            if (s instanceof Section.StrTabSection) {
+		Section.StrTabSection ss = (Section.StrTabSection)s;
+		if (ss.getNumberOfEntries() < 10000)
+		    ss.super_pack();
+		else
+		    ss.pack();
+	    }
             if (!(s instanceof Section.NoBitsSection))
                 e_shoff += s.getSize();
+	    s.setIndex(++i);
         }
         
         // now, actually do the writing.
