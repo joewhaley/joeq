@@ -4,7 +4,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.Set;
 
 import Clazz.jq_Class;
@@ -19,9 +18,9 @@ import Util.Assert;
 public class FindCollectionImplementations {    
     Collection roots;
     private static CallGraph _cg;
-    private Collection _classes;
-    private Collection _collections;
-    private Collection _iterators;
+    private Set _classes;
+    private Set _collections;
+    private Set _iterators;
 
     static final String COLLECTION_SIGNATURE = "Ljava.util.Collection;";
     static final String ITERATOR_SIGNATURE   = "Ljava.util.Iterator;";    
@@ -33,18 +32,21 @@ public class FindCollectionImplementations {
         jq_Class c = (jq_Class) jq_Type.parseType(startClass);
         c.prepare();
         
+        Collection roots = Arrays.asList(c.getDeclaredStaticMethods());
+        System.out.println("Roots: " + roots);
+        
         System.out.print("Building call graph...");
         long time = System.currentTimeMillis();
         _cg = new RootedCHACallGraph();
-        _cg = new CachedCallGraph(_cg);
-        Collection roots = Arrays.asList(c.getDeclaredStaticMethods());
         _cg.setRoots(roots);
+        _cg = new CachedCallGraph(_cg);
+        
         time = System.currentTimeMillis() - time;
         System.out.println("done. ("+(time/1000.)+" seconds)");
         _classes = getClasses(_cg.getAllMethods());
         
-        _collections = new LinkedList();
-        _iterators   = new LinkedList();
+        _collections = new HashSet();
+        _iterators   = new HashSet();
         
         _collectionClass  = (jq_Class)jq_Type.parseType(COLLECTION_SIGNATURE);
         _iteratorClass    = (jq_Class)jq_Type.parseType(ITERATOR_SIGNATURE);  
@@ -92,10 +94,11 @@ public class FindCollectionImplementations {
         }
     }
 
-    private Collection getClasses(Collection collection) {
-        LinkedList result = new LinkedList(); 
+    private Set getClasses(Collection collection) {
+        HashSet result = new HashSet(); 
         for(Iterator iter = collection.iterator(); iter.hasNext(); ) {
             jq_Method method = (jq_Method)iter.next();
+            //System.err.println("Saw " + method);
          
             jq_Class c = method.getDeclaringClass();
             if(c != null) {
@@ -144,7 +147,10 @@ class ClassHierarchy {
             n.addChild(this);
         }
         private void addChild(ClassHieraryNode n) {
-            _children.add(n);
+            //if(!_children.contains(n)) {
+                // adding twice shouldn't matter
+                _children.add(n);
+            //}
         }
         public void reset() {
             this._parent = null;
@@ -158,6 +164,9 @@ class ClassHierarchy {
         }
         public int getChildCount() {
             return _children.size();
+        }
+        public String toLongString() {
+            return _class.getJDKDesc();
         }
     }
     
@@ -192,12 +201,14 @@ class ClassHierarchy {
     }
 
     void add(jq_Class c) {
-        _nodes.add(new ClassHieraryNode(c));
+        if(!hasClass(c)) {
+            _nodes.add(new ClassHieraryNode(c));
+        }
     }
     
     boolean hasClass(jq_Class c) {
         return getClassNode(c) != null;
-    }    
+    }
 
     private ClassHieraryNode getClassNode(jq_Class c) {
         // lame linear search
@@ -210,9 +221,10 @@ class ClassHierarchy {
         }
         
         return null;
-    }    
+    }
     
     public void makeHierarchy() {
+        if(_nodes.size() == 0) return;
         Assert._assert(_root != null, "Root is not set in the beginning of makeHierarchy");
         // clear potential all data
         resetNodes();
@@ -252,14 +264,15 @@ class ClassHierarchy {
     }
     
     public void printHierarchy() {
+        if(_nodes.size() == 0) return;
         Assert._assert(_root != null);
         
-        System.out.println("Printing a hierarchy rooted at " + _root);
+        System.out.println("Printing a hierarchy of size " + _nodes.size() + " rooted at " + _root);
         printHierarchyAux(_root, "");
     }
     
     private void printHierarchyAux(ClassHieraryNode node, String string) {        
-        System.out.print(string + node);
+        System.out.print(string + node.toLongString());
         System.out.println(node.getChildCount() == 0 ? "" : (" " + node.getChildCount()));
         for(Iterator iter = node.getChildIterator(); iter.hasNext();) {
             ClassHieraryNode child = (ClassHieraryNode)iter.next();
