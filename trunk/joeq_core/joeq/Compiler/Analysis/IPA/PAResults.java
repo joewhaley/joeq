@@ -63,6 +63,7 @@ import joeq.Util.Strings;
 import joeq.Util.SimpleInterpreter;
 import joeq.Util.Collections.HashWorklist;
 import joeq.Util.Collections.IndexMap;
+import joeq.Util.Collections.IndexedMap;
 import joeq.Util.Collections.LinearSet;
 import joeq.Util.Collections.Pair;
 import joeq.Util.Collections.UnmodifiableIterator;
@@ -1843,7 +1844,7 @@ public class PAResults implements PointerAnalysisResults {
         final SourceLister sourceLister = new SourceLister();
 
         BDD.BDDToString ts = new BDD.BDDToString() {
-            String findInMap(IndexMap map, int i) {
+            String findInMap(IndexedMap map, int i) {
                 if (i >= map.size())
                     return "not in map\n";
                 Object o = map.get(i);

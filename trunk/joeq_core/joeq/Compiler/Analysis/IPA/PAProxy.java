@@ -275,7 +275,7 @@ public class PAProxy {
   public int MAX_HC_BITS;
   public joeq.Util.Collections.IndexMap Vmap;
   public joeq.Util.Collections.IndexMap Imap;
-  public joeq.Util.Collections.IndexMap Hmap;
+  public joeq.Util.Collections.IndexedMap Hmap;
   public joeq.Util.Collections.IndexMap Fmap;
   public joeq.Util.Collections.IndexMap Tmap;
   public joeq.Util.Collections.IndexMap Nmap;
