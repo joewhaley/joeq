@@ -27,6 +27,7 @@ import joeq.Runtime.ObjectTraverser;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Bootstrap.BootstrapCodeAddress.BootstrapCodeAddressFactory;
 import joeq.ClassLib.ClassLibInterface;
+import joeq.Class.Delegates;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Member;
@@ -90,6 +91,19 @@ public abstract class Bootstrapper {
             DUMP_COFF = true;
         } else {
             DUMP_COFF = false;
+        }
+        String osarch = System.getProperty("os.arch");
+        if (osarch.equals("i386") || osarch.equals("x86")) {
+            try {
+                Class.forName("joeq.Scheduler.jq_x86RegisterState");
+            } catch (ClassNotFoundException e) {
+                System.err.println("Error: cannot load x86 module");
+            }
+            String default_compiler_name = System.getProperty("joeq.compiler", "joeq.Compiler.Reference.x86.x86ReferenceCompiler$Factory");
+            Delegates.setDefaultCompiler(default_compiler_name);
+        } else {
+            System.err.println("Error: architecture "+osarch+" is not yet supported.");
+            System.exit(-1);
         }
 
         String classpath = System.getProperty("sun.boot.class.path")+

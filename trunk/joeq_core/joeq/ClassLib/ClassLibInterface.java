@@ -57,7 +57,7 @@ public abstract class ClassLibInterface {
                 if (osarch.equals("x86")) {
                 } else if (osarch.equals("i386")) {
                 } else {
-                    System.err.println("Warning: architecture "+osarch+" is not yet supported.");
+                    //System.err.println("Warning: architecture "+osarch+" is not yet supported.");
                 }
                 if (javavmvendor.equals("Sun Microsystems Inc.")) {
                     if (javaruntimeversion.equals("1.3.1_01")) {
