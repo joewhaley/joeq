@@ -264,8 +264,8 @@ class DeflaterEngine implements DeflaterConstants {
      * Fill the window when the lookahead becomes insufficient.
      * Updates strstart and lookahead.
      *
-     * OUT assertions: strstart + lookahead <= 2*WSIZE
-     *    lookahead >= MIN_LOOKAHEAD or inputOff == inputEnd
+     * OUT assertions: strstart + lookahead &lt;= 2*WSIZE
+     *    lookahead &gt;= MIN_LOOKAHEAD or inputOff == inputEnd
      */
     private void fillWindow() {
         /* If the window is almost full and there is insufficient lookahead,
@@ -301,10 +301,9 @@ class DeflaterEngine implements DeflaterConstants {
      * string starting at strstart.
      *
      * Preconditions:
-     *    strstart + MAX_MATCH <= window.length.
+     *    strstart + MAX_MATCH &lt;= window.length.
      *    
-     *
-     * @param curMatch
+     * @param curMatch  current match
      */
     private boolean findLongestMatch(int curMatch) {
         int chainLength = this.max_chain;
