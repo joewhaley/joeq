@@ -201,6 +201,12 @@ public class BytecodeToQuad extends BytecodeVisitor {
         this.bc_bb = bc_bb;
         this.uncond_branch = false;
         this.current_state.overwriteWith(start_states[bc_bb.id]);
+        if (this.quad_bb.isExceptionHandlerEntry()) {
+            // TODO: find non-exceptional branches to exception handler entries and split the basic block.
+            jq_Type type = ((RegisterOperand)this.current_state.peekStack(0)).getType();
+            RegisterOperand t = getStackRegister(type, 0);
+            this.quad_bb.appendQuad(Special.create(quad_cfg.getNewQuadID(), Special.GET_EXCEPTION.INSTANCE, t));
+        }
 	if (TRACE) this.current_state.dumpState();
         this.endBasicBlock = false;
         this.endsWithRET = false;
@@ -1016,6 +1022,22 @@ public class BytecodeToQuad extends BytecodeVisitor {
         super.visitAGETSTATIC(f);
         GETSTATIChelper(f, Getstatic.GETSTATIC_A_DYNLINK.INSTANCE, Getstatic.GETSTATIC_A.INSTANCE);
     }
+    public void visitZGETSTATIC(jq_StaticField f) {
+        super.visitZGETSTATIC(f);
+        GETSTATIChelper(f, Getstatic.GETSTATIC_Z_DYNLINK.INSTANCE, Getstatic.GETSTATIC_Z.INSTANCE);
+    }
+    public void visitBGETSTATIC(jq_StaticField f) {
+        super.visitBGETSTATIC(f);
+        GETSTATIChelper(f, Getstatic.GETSTATIC_B_DYNLINK.INSTANCE, Getstatic.GETSTATIC_B.INSTANCE);
+    }
+    public void visitCGETSTATIC(jq_StaticField f) {
+        super.visitCGETSTATIC(f);
+        GETSTATIChelper(f, Getstatic.GETSTATIC_C_DYNLINK.INSTANCE, Getstatic.GETSTATIC_C.INSTANCE);
+    }
+    public void visitSGETSTATIC(jq_StaticField f) {
+        super.visitSGETSTATIC(f);
+        GETSTATIChelper(f, Getstatic.GETSTATIC_S_DYNLINK.INSTANCE, Getstatic.GETSTATIC_S.INSTANCE);
+    }
     private void PUTSTATIChelper(jq_StaticField f, Putstatic oper1, Putstatic oper2) {
         boolean dynlink = f.needsDynamicLink(method);
         Putstatic operator = dynlink?oper1:oper2;
@@ -1043,6 +1065,22 @@ public class BytecodeToQuad extends BytecodeVisitor {
     public void visitAPUTSTATIC(jq_StaticField f) {
         super.visitAPUTSTATIC(f);
         PUTSTATIChelper(f, Putstatic.PUTSTATIC_A_DYNLINK.INSTANCE, Putstatic.PUTSTATIC_A.INSTANCE);
+    }
+    public void visitZPUTSTATIC(jq_StaticField f) {
+        super.visitZPUTSTATIC(f);
+        PUTSTATIChelper(f, Putstatic.PUTSTATIC_Z_DYNLINK.INSTANCE, Putstatic.PUTSTATIC_Z.INSTANCE);
+    }
+    public void visitBPUTSTATIC(jq_StaticField f) {
+        super.visitBPUTSTATIC(f);
+        PUTSTATIChelper(f, Putstatic.PUTSTATIC_B_DYNLINK.INSTANCE, Putstatic.PUTSTATIC_B.INSTANCE);
+    }
+    public void visitCPUTSTATIC(jq_StaticField f) {
+        super.visitCPUTSTATIC(f);
+        PUTSTATIChelper(f, Putstatic.PUTSTATIC_C_DYNLINK.INSTANCE, Putstatic.PUTSTATIC_C.INSTANCE);
+    }
+    public void visitSPUTSTATIC(jq_StaticField f) {
+        super.visitSPUTSTATIC(f);
+        PUTSTATIChelper(f, Putstatic.PUTSTATIC_S_DYNLINK.INSTANCE, Putstatic.PUTSTATIC_S.INSTANCE);
     }
     private void GETFIELDhelper(jq_InstanceField f, Getfield oper1, Getfield oper2) {
         boolean dynlink = f.needsDynamicLink(method);
