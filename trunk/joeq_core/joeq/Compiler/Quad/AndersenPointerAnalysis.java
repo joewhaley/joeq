@@ -52,7 +52,7 @@ public class AndersenPointerAnalysis {
     public static final class Visitor implements ControlFlowGraphVisitor {
         public static boolean added_hook = true;
         public void visitCFG(ControlFlowGraph cfg) {
-            INSTANCE.methodsToVisit.add(cfg);
+            INSTANCE.rootSet.add(cfg);
             if (!added_hook) {
                 added_hook = true;
                 Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -63,6 +63,41 @@ public class AndersenPointerAnalysis {
             }
         }
         public static void doIt() {
+            Set rootSet = INSTANCE.rootSet;
+            INSTANCE.iterate();
+            long mem1 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+            System.out.println("Used memory before gc: "+mem1);
+            INSTANCE = new AndersenPointerAnalysis();
+            INSTANCE.rootSet.addAll(rootSet);
+            System.gc();
+            long mem2 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+            System.out.println("Used memory after gc: "+mem2);
+            long time = System.currentTimeMillis();
+            INSTANCE.iterate();
+            time = System.currentTimeMillis() - time;
+            
+            long mem3 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+            System.out.println("Used memory before gc: "+mem3);
+            System.gc();
+            long mem4 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+            System.out.println("Used memory after gc: "+mem4);
+            
+            System.out.println("Our analysis: "+(time/1000.)+" seconds, "+(mem4-mem2)+" bytes of memory");
+            
+            System.out.println("Result of Andersen pointer analysis:");
+            System.out.println(computeStats(INSTANCE.callSiteToTargets));
+            
+            System.out.println("Compare to CHA/RTA:");
+            HashMap cha_rta_callSiteToTargets = new HashMap();
+            for (Iterator i=INSTANCE.callSiteToTargets.entrySet().iterator(); i.hasNext(); ) {
+                Map.Entry e = (Map.Entry)i.next();
+                CallSite cs = (CallSite)e.getKey();
+                CallTargets ct = cs.m.getCallTargets();
+                cha_rta_callSiteToTargets.put(cs, ct);
+            }
+            System.out.println(computeStats(cha_rta_callSiteToTargets));
+        }
+        public static void doIt_output() {
             INSTANCE.iterate();
             System.out.println("Result of Andersen pointer analysis:");
             System.out.println(dumpResults(INSTANCE.callSiteToTargets));
@@ -222,6 +257,7 @@ public class AndersenPointerAnalysis {
     final HashMap nodeToInclusionEdges;
     
     /** Set of all MethodSummary's that we care about. */
+    final LinkedHashSet rootSet;
     final LinkedHashSet methodsToVisit;
     
     /** Maps a call site to its set of targets. */
@@ -254,6 +290,7 @@ public class AndersenPointerAnalysis {
     public AndersenPointerAnalysis() {
         nodeToConcreteNodes = new HashMap();
         nodeToInclusionEdges = new HashMap();
+        rootSet = new LinkedHashSet();
         methodsToVisit = new LinkedHashSet();
         callSiteToTargets = new HashMap();
         linkedTargets = new HashSet();
@@ -324,6 +361,7 @@ public class AndersenPointerAnalysis {
     }
 
     void iterate() {
+        methodsToVisit.addAll(rootSet);
         int count = 1;
         for (;;) {
             this.change = false;
