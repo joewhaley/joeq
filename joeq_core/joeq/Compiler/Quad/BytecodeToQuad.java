@@ -654,7 +654,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         Quad q3 = Move.create(quad_cfg.getNewQuadID(), Move.getMoveOp(type3), t3, op3);
         appendQuad(q3);
         RegisterOperand t4 = new RegisterOperand(rf.getNewStack(d, type1), type1);
-        Quad q4 = Move.create(quad_cfg.getNewQuadID(), Move.getMoveOp(type3), t4, t1.copy());
+        Quad q4 = Move.create(quad_cfg.getNewQuadID(), Move.getMoveOp(type1), t4, t1.copy());
         appendQuad(q4);
         current_state.push(t4.copy(), type1);
         current_state.push(t3.copy(), type3);
