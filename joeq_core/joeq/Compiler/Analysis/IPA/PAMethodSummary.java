@@ -168,7 +168,7 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
         pa.addToVisited(M_bdd);
 
         MethodSummary ms = MethodSummary.getSummary(m);
-
+        
         if (m.getBytecode() == null && ms == null) {
             // todo: parameters passed into native methods.
             // build up 'Mret'
@@ -225,18 +225,35 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
             int I_i = pa.Imap.get(LoadedCallGraph.mapCall(mc));
             BDD I_bdd = pa.I.ithVar(I_i);
             jq_Method target = mc.getTargetMethod();
+
+            jq_Method replacement = PA.getBogusSummaryProvider().getReplacementMethod(target);
+            if(replacement != null) {
+				System.out.println("Replacing a call to " + m + 
+				    				" with a call to "+ replacement);					
+				
+				target = replacement;
+            }
             if (target.isStatic())
                 pa.addClassInitializer(target.getDeclaringClass());
+
             
             Set thisptr;
-            if (target.isStatic()) {
+            if(replacement != null) {                
                 thisptr = Collections.singleton(GlobalNode.GLOBAL);
-                offset = 0;
-            } else {
-                thisptr = ms.getNodesThatCall(mc, 0);
+                pa.addToActual(I_bdd, 0, thisptr);
+                pa.addToActual(I_bdd, 1, ms.getNodesThatCall(mc, 0));
+                
                 offset = 1;
-            }
-            pa.addToActual(I_bdd, 0, thisptr);
+            } else {
+	            if (target.isStatic()) {
+	                thisptr = Collections.singleton(GlobalNode.GLOBAL);
+	                offset = 0;
+	            } else {
+	                thisptr = ms.getNodesThatCall(mc, 0);
+	                offset = 1;
+	            }
+	            pa.addToActual(I_bdd, 0, thisptr);
+            }            
             
             if (mc.isSingleTarget()) {
                 if (target != pa.javaLangObject_clone) {
@@ -247,7 +264,7 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
                     // super.clone()
                     pa.addToMI(M_bdd, I_bdd, pa.javaLangObject_fakeclone);
                 }
-            } else {
+            } else {                
                 // virtual call
                 pa.addToMI(M_bdd, I_bdd, target);
             }
