@@ -44,7 +44,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
     
     String varOrderDesc = "method_quadxtargetxfallthrough_constant_member_src2_src1_opc_dest";
     
-    int methodBits = 13, quadBits = 17, opBits = 8, regBits = 8, constantBits = 12, memberBits = 14;
+    int methodBits = 13, quadBits = 18, opBits = 8, regBits = 8, constantBits = 12, memberBits = 14;
 
     BDDFactory bdd;
     BDDDomain method, quad, opc, dest, src1, src2, constant, fallthrough, target, member;
