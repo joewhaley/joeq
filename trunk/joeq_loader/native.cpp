@@ -344,15 +344,16 @@ extern "C" void __stdcall set_current_context(Thread* jthread, const CONTEXT* co
 		push [ECX+180] // ebp
 		push [ECX+160] // esi
 		push [ECX+156] // edi
-		// restore eflags
-		mov EAX, [ECX+192]
-		sahf
+		// push eflags
+		push [ECX+192]
 		// reenable interrupts
 		dec dword ptr [EDX+04h]
 
 		// from this point on, the thread can be preempted again.
 		// but all GPRs and EIP are on the thread's stack, so it is safe.
 
+		// restore eflags
+		popfd
 		// restore all GPRs
 		popad
 		// return to eip
