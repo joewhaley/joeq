@@ -285,13 +285,25 @@ public class MethodSummary {
             if (TRACE_INTRA) out.println("Setting register "+r+" to "+n);
         }
         /** Get the node or set of nodes in the given register in the current state. */
-        protected Object getRegister(Register r) {
+        public Object getRegister(Register r) {
             int i = r.getNumber();
             if (r.isTemp()) i += nLocals;
             Assert._assert(s.registers[i] != null);
             return s.registers[i];
         }
 
+        /** Calculate the register set up to a given point. */
+        public void updateLocation(BasicBlock bb, Quad q) {
+            this.bb = bb;
+            this.s = start_states[bb.getID()];
+            this.s = this.s.copy();
+            for (Util.Templates.ListIterator.Quad i = bb.iterator(); i.hasNext(); ) {
+                Quad q2 = i.nextQuad();
+                q2.accept(this);
+                if (q2 == q) break;
+            }
+        }
+        
         /** Build a summary for the given method. */
         public BuildMethodSummary(ControlFlowGraph cfg) {
             RegisterFactory rf = cfg.getRegisterFactory();
@@ -4736,6 +4748,13 @@ outer:
             if (DUMP_DOTGRAPH) ms.dotGraph(new DataOutputStream(System.out));
             else System.out.println(ms);
         }
+    }
+    
+    public Collection getRegisterAtLocation(BasicBlock bb, Quad q, Register r) {
+        builder.updateLocation(bb, q);
+        Object o = builder.getRegister(r);
+        if (o instanceof Node) return Collections.singleton(o);
+        else return ((Collection) o);
     }
     
 }
