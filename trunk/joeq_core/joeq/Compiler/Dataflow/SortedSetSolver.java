@@ -54,6 +54,7 @@ public class SortedSetSolver extends WorklistSolver {
     public void initialize(Problem p, Graph graph) {
         super.initialize(p, graph);
         allNodes = Traversals.reversePostOrder(graphNavigator, boundaries);
+        if (TRACE) System.out.println("Order: "+allNodes);
     }
 
     /* (non-Javadoc)

@@ -9,6 +9,7 @@ import java.util.Map;
 import joeq.Util.Collections.Factories;
 import joeq.Util.Collections.MapFactory;
 import joeq.Util.Graphs.Graph;
+import joeq.Util.Graphs.Traversals;
 
 /**
  * Solver
@@ -18,6 +19,8 @@ import joeq.Util.Graphs.Graph;
  */
 public abstract class Solver {
 
+    static final boolean TRACE = false;
+    
     /** The dataflow problem to solve. */
     protected Problem problem;
     /** Map factory to create map from locations to dataflow values. */
@@ -73,4 +76,27 @@ public abstract class Solver {
     public Fact getDataflowValue(Object c) {
         return (Fact) dataflowValues.get(c); 
     }
+    
+    public static void dumpResults(Graph g, Solver s) {
+        System.out.println("RESULTS");
+        for (Iterator i = Traversals.reversePostOrder(g.getNavigator(), g.getRoots()).iterator(); i.hasNext(); ) {
+            Object bb = i.next();
+            Fact r = s.getDataflowValue(bb);
+            System.out.println(bb+": "+r);
+       }
+    }
+    
+    public static void compareResults(Graph g, Solver s1, Solver s2) {
+        for (Iterator i = Traversals.reversePostOrder(g.getNavigator(), g.getRoots()).iterator(); i.hasNext(); ) {
+            Object bb = i.next();
+            Fact r1 = s1.getDataflowValue(bb);
+            Fact r2 = s2.getDataflowValue(bb);
+            if (!r1.equals(r2)) {
+                System.out.println("MISMATCH");
+                System.out.println(s1.getClass()+" says "+r1);
+                System.out.println(s2.getClass()+" says "+r2);
+            }
+        }
+    }
+
 }
