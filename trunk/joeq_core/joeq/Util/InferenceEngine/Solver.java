@@ -4,7 +4,6 @@
 package joeq.Util.InferenceEngine;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -322,14 +321,17 @@ public abstract class Solver {
     void saveResults() throws IOException {
         for (Iterator i = relationsToDump.iterator(); i.hasNext(); ) {
             Relation r = (Relation) i.next();
+            if (NOISY) out.println("Dumping BDD for "+r);
             r.save();
         }
         for (Iterator i = relationsToDumpNegated.iterator(); i.hasNext(); ) {
             Relation r = (Relation) i.next();
+            if (NOISY) out.println("Dumping negated BDD for "+r);
             r.saveNegated();
         }
         for (Iterator i = relationsToDumpTuples.iterator(); i.hasNext(); ) {
             Relation r = (Relation) i.next();
+            if (NOISY) out.println("Dumping tuples for "+r);
             r.saveTuples();
         }
     }

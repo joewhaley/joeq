@@ -3,6 +3,20 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Analysis.IPA;
 
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+
+import java.io.BufferedReader;
 import java.io.DataInput;
 import java.io.DataInputStream;
 import java.io.DataOutput;
@@ -11,47 +25,27 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
-import java.util.AbstractMap;
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Properties;
-
-import org.sf.javabdd.BDD;
-import org.sf.javabdd.BDDBitVector;
-import org.sf.javabdd.BDDDomain;
-import org.sf.javabdd.BDDFactory;
-import org.sf.javabdd.BDDPairing;
-import org.sf.javabdd.TypedBDDFactory;
-import org.sf.javabdd.TypedBDDFactory.TypedBDD;
 
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
+import joeq.Class.jq_FakeInstanceMethod;
 import joeq.Class.jq_Field;
 import joeq.Class.jq_InstanceField;
 import joeq.Class.jq_Method;
-import joeq.Class.jq_FakeInstanceMethod;
 import joeq.Class.jq_NameAndDesc;
 import joeq.Class.jq_Reference;
 import joeq.Class.jq_Type;
+import joeq.Compiler.Analysis.BDD.BuildBDDIR;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.ConcreteObjectNode;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.ConcreteTypeNode;
@@ -78,6 +72,14 @@ import joeq.Util.Graphs.SCComponent;
 import joeq.Util.Graphs.Traversals;
 import joeq.Util.Graphs.PathNumbering.Range;
 import joeq.Util.Graphs.SCCPathNumbering.Selector;
+
+import org.sf.javabdd.BDD;
+import org.sf.javabdd.BDDBitVector;
+import org.sf.javabdd.BDDDomain;
+import org.sf.javabdd.BDDFactory;
+import org.sf.javabdd.BDDPairing;
+import org.sf.javabdd.TypedBDDFactory;
+import org.sf.javabdd.TypedBDDFactory.TypedBDD;
 
 /**
  * Pointer analysis using BDDs.  Includes both context-insensitive and context-sensitive
@@ -2131,6 +2133,11 @@ public class PA {
 
         printSizes();
         
+        System.out.println("Writing call graph...");
+        time = System.currentTimeMillis();
+        dumpCallGraph();
+        System.out.println("Time spent writing: "+(System.currentTimeMillis()-time)/1000.);
+        
         if (DUMP_RESULTS) {
             System.out.println("Writing results...");
             time = System.currentTimeMillis();
@@ -2330,8 +2337,7 @@ public class PA {
 	dos.close();
     }
 
-    public void dumpResults(String dumpfilename) throws IOException {
-        
+    public void dumpCallGraph() throws IOException {
         //CallGraph callgraph = CallGraph.makeCallGraph(roots, new PACallTargetMap());
         CallGraph callgraph = new CachedCallGraph(new PACallGraph(this));
         //CallGraph callgraph = callGraph;
@@ -2339,14 +2345,19 @@ public class PA {
         dos = new DataOutputStream(new FileOutputStream(callgraphFileName));
         LoadedCallGraph.write(callgraph, dos);
         dos.close();
-
+        
         if (DUMP_DOTGRAPH)
             dumpCallGraphAsDot(callgraph, callgraphFileName + ".dot");
         
+    }
+    
+    public void dumpResults(String dumpfilename) throws IOException {
+
         System.out.println("A: "+(long) A.satCount(V1V2set)+" relations, "+A.nodeCount()+" nodes");
         bdd.save(dumpfilename+".A", A);
         System.out.println("vP: "+(long) vP.satCount(V1H1set)+" relations, "+vP.nodeCount()+" nodes");
         bdd.save(dumpfilename+".vP", vP);
+        BuildBDDIR.dumpTuples(bdd, dumpfilename+".vP.tuples", vP);
         System.out.println("S: "+(long) S.satCount(V1FV2set)+" relations, "+S.nodeCount()+" nodes");
         bdd.save(dumpfilename+".S", S);
         System.out.println("L: "+(long) L.satCount(V1FV2set)+" relations, "+L.nodeCount()+" nodes");
@@ -2380,8 +2391,10 @@ public class PA {
         
         System.out.println("hP: "+(long) hP.satCount(H1FH2set)+" relations, "+hP.nodeCount()+" nodes");
         bdd.save(dumpfilename+".hP", hP);
+        BuildBDDIR.dumpTuples(bdd, dumpfilename+".hP.tuples", hP);
         System.out.println("IE: "+(long) IE.satCount(IMset)+" relations, "+IE.nodeCount()+" nodes");
         bdd.save(dumpfilename+".IE", IE);
+        BuildBDDIR.dumpTuples(bdd, dumpfilename+".IE.tuples", IE);
         if (IEcs != null) {
             System.out.println("IEcs: "+(long) IEcs.satCount(IMset.and(V1cV2cset))+" relations, "+IEcs.nodeCount()+" nodes");
             bdd.save(dumpfilename+".IEcs", IEcs);
@@ -2405,7 +2418,7 @@ public class PA {
         System.out.println("visited: "+(long) visited.satCount(Mset)+" relations, "+visited.nodeCount()+" nodes");
         bdd.save(dumpfilename+".visited", visited);
         
-        dos = new DataOutputStream(new FileOutputStream(dumpfilename+".config"));
+        DataOutputStream dos = new DataOutputStream(new FileOutputStream(dumpfilename+".config"));
         dumpConfig(dos);
         dos.close();
         
@@ -3306,8 +3319,10 @@ public class PA {
     public void dumpBDDRelations() throws IOException {
         String dumpPath = "";
         bdd.save(dumpPath+"vP0.bdd", vP);
+        bdd.save(dumpPath+"hP0.bdd", hP);
         bdd.save(dumpPath+"L.bdd", L);
         bdd.save(dumpPath+"S.bdd", S);
+        bdd.save(dumpPath+"A.bdd", A);
         bdd.save(dumpPath+"vT.bdd", vT);
         bdd.save(dumpPath+"hT.bdd", hT);
         bdd.save(dumpPath+"aT.bdd", aT);
@@ -3315,6 +3330,10 @@ public class PA {
         bdd.save(dumpPath+"actual.bdd", actual);
         bdd.save(dumpPath+"formal.bdd", formal);
         bdd.save(dumpPath+"mI.bdd", mI);
+        bdd.save(dumpPath+"Mret.bdd", Mret);
+        bdd.save(dumpPath+"Mthr.bdd", Mthr);
+        bdd.save(dumpPath+"Iret.bdd", Iret);
+        bdd.save(dumpPath+"Ithr.bdd", Ithr);
         bdd.save(dumpPath+"IE0.bdd", IE);
         
         DataOutputStream dos = new DataOutputStream(new FileOutputStream(dumpPath+"bddinfo"));
@@ -3340,7 +3359,7 @@ public class PA {
         dos.writeBytes("I "+(1L<<I_BITS)+" invoke.map\n");
         dos.writeBytes("Z "+(1L<<Z_BITS)+"\n");
         dos.writeBytes("N "+(1L<<N_BITS)+" name.map\n");
-        dos.writeBytes("M "+(1L<<N_BITS)+" method.map\n");
+        dos.writeBytes("M "+(1L<<M_BITS)+" method.map\n");
         dos.close();
         
         dos = new DataOutputStream(new FileOutputStream(dumpPath+"var.map"));
