@@ -112,7 +112,9 @@ public abstract class ProgramLocation implements Textualizable {
         
         public int getBytecodeIndex() {
             Map map = CodeCache.getBCMap((jq_Method) super.m);
+            if (map == null) return -1;
             Integer i = (Integer) map.get(q);
+            if (i == null) return -1;
             return i.intValue();
         }
         
