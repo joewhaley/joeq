@@ -339,7 +339,7 @@ public class BDDPointerAnalysis {
         aC.free();
         vC.free();
         cC.free();
-        cTypes.free();
+        if (cTypes != null) cTypes.free();
         pointsTo.free();
         edgeSet.free();
         typeFilter.free();
