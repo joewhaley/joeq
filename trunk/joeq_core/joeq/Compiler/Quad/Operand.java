@@ -46,7 +46,9 @@ public interface Operand {
             this.register = reg; this.type = type; this.flags = flags;
         }
         public Register getRegister() { return register; }
+	public void setRegister(Register r) { this.register = r; }
         public jq_Type getType() { return type; }
+	public void setType(jq_Type t) { this.type = t; }
         public int getFlags() { return flags; }
         public void setFlags(int f) { flags = f; }
         public void meetFlags(int f) { flags &= f; }
@@ -62,12 +64,13 @@ public interface Operand {
     
     public static class AConstOperand implements Operand {
         private Quad instruction;
-        private final Object value;
+        private Object value;
         public AConstOperand(Object v) { this.value = v; }
         //public int hashCode() { return System.identityHashCode(value); }
         //public boolean equals(Object that) { return equals((AConstOperand)that); }
         //public boolean equals(AConstOperand that) { return this.value == that.value; }
         public Object getValue() { return value; }
+        public void setValue(Object o) { this.value = o; }
         public String toString() {
             if (value instanceof String) return "AConst: \""+value+"\"";
             return "AConst: "+value;
@@ -80,12 +83,13 @@ public interface Operand {
     
     public static class IConstOperand implements Operand {
         private Quad instruction;
-        private final int value;
+        private int value;
         public IConstOperand(int v) { this.value = v; }
         //public int hashCode() { return value; }
         //public boolean equals(Object that) { return equals((IConstOperand)that); }
         //public boolean equals(IConstOperand that) { return this.value == that.value; }
         public int getValue() { return value; }
+        public void setValue(int o) { this.value = o; }
         public String toString() { return "IConst: "+value; }
         public void attachToQuad(Quad q) { jq.assert(instruction == null); instruction = q; }
         public Quad getQuad() { return instruction; }
@@ -95,12 +99,13 @@ public interface Operand {
     
     public static class FConstOperand implements Operand {
         private Quad instruction;
-        private final float value;
+        private float value;
         public FConstOperand(float v) { this.value = v; }
         //public int hashCode() { return Float.floatToRawIntBits(value); }
         //public boolean equals(Object that) { return equals((FConstOperand)that); }
         //public boolean equals(FConstOperand that) { return this.value == that.value; }
         public float getValue() { return value; }
+        public void setValue(float o) { this.value = o; }
         public String toString() { return "FConst: "+value; }
         public void attachToQuad(Quad q) { jq.assert(instruction == null); instruction = q; }
         public Quad getQuad() { return instruction; }
@@ -110,12 +115,13 @@ public interface Operand {
 
     public static class LConstOperand implements Operand {
         private Quad instruction;
-        private final long value;
+        private long value;
         public LConstOperand(long v) { this.value = v; }
         //public int hashCode() { return (int)(value>>32) ^ (int)value; }
         //public boolean equals(Object that) { return equals((LConstOperand)that); }
         //public boolean equals(DConstOperand that) { return this.value == that.value; }
         public long getValue() { return value; }
+        public void setValue(long o) { this.value = o; }
         public String toString() { return "LConst: "+value; }
         public void attachToQuad(Quad q) { jq.assert(instruction == null); instruction = q; }
         public Quad getQuad() { return instruction; }
@@ -125,12 +131,13 @@ public interface Operand {
 
     public static class DConstOperand implements Operand {
         private Quad instruction;
-        private final double value;
+        private double value;
         public DConstOperand(double v) { this.value = v; }
         //public int hashCode() { long v = Double.doubleToRawLongBits(value); return (int)(v>>32) ^ (int)v; }
         //public boolean equals(Object that) { return equals((DConstOperand)that); }
         //public boolean equals(DConstOperand that) { return this.value == that.value; }
         public double getValue() { return value; }
+        public void setValue(double o) { this.value = o; }
         public String toString() { return "DConst: "+value; }
         public void attachToQuad(Quad q) { jq.assert(instruction == null); instruction = q; }
         public Quad getQuad() { return instruction; }
@@ -157,6 +164,7 @@ public interface Operand {
         //public boolean equals(Object that) { return this.equals((ConditionOperand)that); }
         //public boolean equals(ConditionOperand that) { return this.condition == that.condition; }
         public byte getCondition() { return condition; }
+        public void setCondition(byte o) { this.condition = o; }
         public String toString() { return BytecodeVisitor.cmpopnames[condition]; }
         public Operand copy() { return new UnnecessaryGuardOperand(); }
         public void attachToQuad(Quad q) { jq.assert(instruction == null); instruction = q; }
@@ -168,6 +176,7 @@ public interface Operand {
         private Quad instruction; jq_Field field;
         public FieldOperand(jq_Field f) { field = f; }
         public jq_Field getField() { return field; }
+        public void setField(jq_Field f) { this.field = f; }
         public String toString() { return "."+field.getName(); }
         public Operand copy() { return new FieldOperand(field); }
         public void attachToQuad(Quad q) { jq.assert(instruction == null); instruction = q; }
@@ -179,6 +188,7 @@ public interface Operand {
         private Quad instruction; jq_Type type;
         TypeOperand(jq_Type f) { type = f; }
         public jq_Type getType() { return type; }
+        public void setType(jq_Type f) { this.type = f; }
         public String toString() { return type.toString(); }
         public Operand copy() { return new TypeOperand(type); }
         public void attachToQuad(Quad q) { jq.assert(instruction == null); instruction = q; }
@@ -190,6 +200,7 @@ public interface Operand {
         private Quad instruction; BasicBlock target;
         public TargetOperand(BasicBlock t) { target = t; }
         public BasicBlock getTarget() { return target; }
+        public void setTarget(BasicBlock f) { this.target = f; }
         public String toString() { return target.toString(); }
         public Operand copy() { return new TargetOperand(target); }
         public void attachToQuad(Quad q) { jq.assert(instruction == null); instruction = q; }
@@ -201,6 +212,7 @@ public interface Operand {
         private Quad instruction; jq_Method target;
         public MethodOperand(jq_Method t) { target = t; }
         public jq_Method getMethod() { return target; }
+        public void setMethod(jq_Method f) { this.target = f; }
         public String toString() { return target.toString(); }
         public Operand copy() { return new MethodOperand(target); }
         public void attachToQuad(Quad q) { jq.assert(instruction == null); instruction = q; }
