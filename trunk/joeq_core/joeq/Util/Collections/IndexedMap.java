@@ -3,6 +3,8 @@
  */
 package joeq.Util.Collections;
 
+import java.io.DataOutput;
+import java.io.IOException;
 import java.util.Iterator;
 
 /**
@@ -15,5 +17,6 @@ public interface IndexedMap {
     boolean contains(Object o);
     Iterator iterator();
     int size();
+    void dump(final DataOutput out) throws IOException;
     
 }
