@@ -421,51 +421,58 @@ public class CSPA {
         globalHeapHighIndex = heapobjIndexMap.size() - 1;
     }
     
-    public void addGlobalV1Context(BDD b) {
-        if (CONTEXT_SENSITIVE)
-            b.andWith(V1c.domain());
-        else
-            b.andWith(V1c.ithVar(0));
+    public void addGlobalV1V2Context(BDD b) {
+        if (CONTEXT_SENSITIVE) {
+            BDD r = V1c.domain();
+            r.andWith(V2c.domain());
+            b.andWith(r);
+        } else {
+            BDD r = V1c.ithVar(0);
+            r.andWith(V2c.ithVar(0));
+            b.andWith(r);
+        }
     }
-    public void addGlobalV2Context(BDD b) {
-        if (CONTEXT_SENSITIVE)
-            b.andWith(V2c.domain());
-        else
-            b.andWith(V2c.ithVar(0));
+    public void addGlobalV1H1Context(BDD b) {
+        if (CONTEXT_SENSITIVE) {
+            BDD r = V1c.domain();
+            r.andWith(H1c.domain());
+            b.andWith(r);
+        } else {
+            BDD r = V1c.ithVar(0);
+            r.andWith(H1c.ithVar(0));
+            b.andWith(r);
+        }
     }
-    public void addGlobalH1Context(BDD b) {
-        if (CONTEXT_SENSITIVE)
-            b.andWith(H1c.domain());
-        else
-            b.andWith(H1c.ithVar(0));
+    public BDD getV1H1Context(BDD range) {
+        if (CONTEXT_SENSITIVE) {
+            BDD r = V1c.buildEquals(H1c);
+            r.andWith(range.id());
+            return r;
+        } else {
+            BDD r = V1c.ithVar(0);
+            r.andWith(H1c.ithVar(0));
+            return r;
+        }
     }
-    public BDD getV1Context(long lo, long hi) {
-        if (CONTEXT_SENSITIVE)
-            return V1c.varRange(lo, hi);
-        else
-            return V1c.ithVar(0);
-    }
-    public BDD getV2Context(long lo, long hi) {
-        if (CONTEXT_SENSITIVE)
-            return V2c.varRange(lo, hi);
-        else
-            return V2c.ithVar(0);
-    }
-    public BDD getH1Context(long lo, long hi) {
-        if (CONTEXT_SENSITIVE)
-            return H1c.varRange(lo, hi);
-        else
-            return H1c.ithVar(0);
+    public BDD getV1V2Context(BDD range) {
+        if (CONTEXT_SENSITIVE) {
+            BDD r = V1c.buildEquals(V2c);
+            r.andWith(range.id());
+            return r;
+        } else {
+            BDD r = V1c.ithVar(0);
+            r.andWith(V2c.ithVar(0));
+            return r;
+        }
     }
     
     public void addGlobalObjectAllocation(Variable dest, HeapObject site) {
         int dest_i = getVariableIndex(dest);
         int site_i = getHeapObjectIndex(site);
         BDD dest_bdd = V1o.ithVar(dest_i);
-        addGlobalV1Context(dest_bdd);
         BDD site_bdd = H1o.ithVar(site_i);
-        addGlobalH1Context(site_bdd);
         dest_bdd.andWith(site_bdd);
+        addGlobalV1H1Context(dest_bdd);
         g_pointsTo.orWith(dest_bdd);
     }
     
@@ -473,16 +480,15 @@ public class CSPA {
         int base_i = getVariableIndex(base);
         int f_i = getFieldIndex(f);
         BDD base_bdd = V1o.ithVar(base_i);
-        addGlobalV1Context(base_bdd);
         BDD f_bdd = FD.ithVar(f_i);
         for (Iterator i=dests.iterator(); i.hasNext(); ) {
             // FieldNode
             Variable dest = (Variable) i.next();
             int dest_i = getVariableIndex(dest);
             BDD dest_bdd = V2o.ithVar(dest_i);
-            addGlobalV2Context(dest_bdd);
             dest_bdd.andWith(f_bdd.id());
             dest_bdd.andWith(base_bdd.id());
+            addGlobalV1V2Context(dest_bdd);
             g_loads.orWith(dest_bdd);
         }
         base_bdd.free(); f_bdd.free();
@@ -492,15 +498,14 @@ public class CSPA {
         int base_i = getVariableIndex(base);
         int f_i = getFieldIndex(f);
         BDD base_bdd = V2o.ithVar(base_i);
-        addGlobalV2Context(base_bdd);
         BDD f_bdd = FD.ithVar(f_i);
         for (Iterator i=srcs.iterator(); i.hasNext(); ) {
             Variable src = (Variable) i.next();
             int src_i = getVariableIndex(src);
             BDD src_bdd = V1o.ithVar(src_i);
-            addGlobalV1Context(src_bdd);
             src_bdd.andWith(f_bdd.id());
             src_bdd.andWith(base_bdd.id());
+            addGlobalV1V2Context(src_bdd);
             g_stores.orWith(src_bdd);
         }
         base_bdd.free(); f_bdd.free();
@@ -510,13 +515,12 @@ public class CSPA {
     public void addGlobalEdge(Variable dest, Collection srcs) {
         int dest_i = getVariableIndex(dest);
         BDD dest_bdd = V2o.ithVar(dest_i);
-        addGlobalV2Context(dest_bdd);
         for (Iterator i=srcs.iterator(); i.hasNext(); ) {
             Variable src = (Variable) i.next();
             int src_i = getVariableIndex(src);
             BDD src_bdd = V1o.ithVar(src_i);
-            addGlobalV1Context(src_bdd);
             src_bdd.andWith(dest_bdd.id());
+            addGlobalV1V2Context(src_bdd);
             g_edgeSet.orWith(src_bdd);
         }
         dest_bdd.free();
@@ -1060,9 +1064,9 @@ public class CSPA {
     BDD g_stores;
     BDD g_loads;
 
-    static boolean USE_REPLACE_V2 = true;
+    static boolean USE_REPLACE_V2 = false;
     static boolean USE_REPLACE_H1 = false;
-    static BDDPairing V1cToV2c, V1cToH1c;
+    static BDDPairing H1cToV2c, V2cToH1c;
 
     public void addRelations(MethodSummary ms) {
         BDDMethodSummary bms = this.getBDDSummary(ms);
@@ -1073,20 +1077,23 @@ public class CSPA {
         
         Number npaths = pn.numberOfPathsTo(ms.getMethod());
         long time = System.currentTimeMillis();
-        BDD v1c, v2c, h1c;
-        v1c = getV1Context(0, npaths.longValue());
+        BDD v1ch1c, v1cv2c;
+        
+        BDD range = V1c.varRange(0, npaths.longValue());
         if (USE_REPLACE_V2) {
-            if (V1cToV2c == null) V1cToV2c = bdd.makePair(V1c, V2c);
-            v2c = v1c.replace(V1cToV2c);
+            v1ch1c = getV1H1Context(range);
+            if (H1cToV2c == null) H1cToV2c = bdd.makePair(H1c, V2c);
+            v1cv2c = v1ch1c.replace(H1cToV2c);
+        } else if (USE_REPLACE_H1) {
+            v1cv2c = getV1V2Context(range);
+            if (V2cToH1c == null) V2cToH1c = bdd.makePair(V2c, H1c);
+            v1ch1c = v1cv2c.replace(V2cToH1c);
         } else {
-            v2c = getV2Context(0, npaths.longValue());
+            v1ch1c = getV1H1Context(range);
+            v1cv2c = getV1V2Context(range);
         }
-        if (USE_REPLACE_H1) {
-            if (V1cToH1c == null) V1cToH1c = bdd.makePair(V1c, H1c);
-            h1c = v1c.replace(V1cToH1c);
-        } else {
-            h1c = getH1Context(0, npaths.longValue());
-        }
+        range.free();
+        
         time = System.currentTimeMillis() - time;
         if (TRACE_TIMES || time > 500)
             System.out.println("Building context BDD: "+(time/1000.));
@@ -1094,37 +1101,26 @@ public class CSPA {
         time = System.currentTimeMillis();
         
         BDD t1 = bms.m_pointsTo.id();
-        t1.andWith(v1c.id());
-        t1.andWith(h1c);
+        t1.andWith(v1ch1c);
         if (TRACE_BDD) {
             System.out.println("Adding to g_pointsTo: "+t1.toStringWithDomains());
         }
         g_pointsTo.orWith(t1);
 
-        if (false) {
-            t1 = bms.m_loads.id();
-            t1.andWith(v1c.id());
-            t1.andWith(v2c.id());
-            g_loads.orWith(t1);
-            t1 = bms.m_stores.id();
-            t1.andWith(v1c);
-            t1.andWith(v2c);
-            g_stores.orWith(t1);
-        } else {
-            v1c.andWith(v2c);
-            t1 = bms.m_loads.id();
-            t1.andWith(v1c.id());
-            if (TRACE_BDD) {
-                System.out.println("Adding to g_loads: "+t1.toStringWithDomains());
-            }
-            g_loads.orWith(t1);
-            t1 = bms.m_stores.id();
-            t1.andWith(v1c);
-            if (TRACE_BDD) {
-                System.out.println("Adding to g_stores: "+t1.toStringWithDomains());
-            }
-            g_stores.orWith(t1);
+        t1 = bms.m_loads.id();
+        t1.andWith(v1cv2c.id());
+        if (TRACE_BDD) {
+            System.out.println("Adding to g_loads: "+t1.toStringWithDomains());
         }
+        g_loads.orWith(t1);
+        
+        t1 = bms.m_stores.id();
+        t1.andWith(v1cv2c);
+        if (TRACE_BDD) {
+            System.out.println("Adding to g_stores: "+t1.toStringWithDomains());
+        }
+        g_stores.orWith(t1);
+        
         time = System.currentTimeMillis() - time;
         if (TRACE_TIMES || time > 500)
             System.out.println("Adding relations to global: "+(time/1000.));
