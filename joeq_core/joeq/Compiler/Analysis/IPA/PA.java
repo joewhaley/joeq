@@ -3639,8 +3639,10 @@ public class PA {
         bdd.save(dumpPath+"Iret.bdd", Iret);
         bdd.save(dumpPath+"Ithr.bdd", Ithr);
         bdd.save(dumpPath+"IE0.bdd", IE0);
-        bdd.save(dumpPath+"threadRuns.bdd", threadRuns);
-        if (IEfilter != null) bdd.save(dumpPath+"IEfilter.bdd", IEfilter);
+        if (threadRuns != null)
+            bdd.save(dumpPath+"threadRuns.bdd", threadRuns);
+        if (IEfilter != null)
+            bdd.save(dumpPath+"IEfilter.bdd", IEfilter);
         
         if (THREAD_SENSITIVE) {
             bdd.save(dumpPath+"eq.bdd", V1c[0].buildEquals(H1c[0]));
