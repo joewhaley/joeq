@@ -162,7 +162,7 @@ public abstract class SubtypeHelper {
             try {
                 initializeSubclasses();         // lazily initialize the subclasses
             } catch (IOException e) {
-                e.printStackTrace();
+                Assert._assert(false, e.toString());
                 return null;
             }
             
@@ -178,9 +178,9 @@ public abstract class SubtypeHelper {
                 jq_Class subtypeClass = (jq_Class) jq_Class.parseType(canonicalName);
                 
                 if(!subtypeClass.isPrepared()){
-                    if(TRACE){
-                        System.out.println("Preparing class " + subtypeClass + " by name " + canonicalName);
-                    }
+//                    if(TRACE){
+//                        System.out.println("Preparing class " + subtypeClass + " by name " + canonicalName);
+//                    }
                     subtypeClass.prepare();
                 }
                 
