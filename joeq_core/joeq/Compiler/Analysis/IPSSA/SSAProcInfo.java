@@ -21,6 +21,11 @@ import Compil3r.Quad.Operator;
 import Compil3r.Quad.Quad;
 import Compil3r.Quad.QuadIterator;
 
+/**
+ * @author Vladimir Livshits
+ * @see SSAProcInfo.Query
+ * @version $Id$
+ * */
 public final class SSAProcInfo {
 	protected static HashMap /*<Query,  SSABindingAnnote>*/ 	_queryMap  = new HashMap();
 	protected static HashMap /*<Helper, SSABindingAnnote>*/ 	_helperMap = new HashMap();
@@ -57,6 +62,7 @@ public final class SSAProcInfo {
 	/**
 	 * This class is used to get information about the IPSSA representation.
 	 * Use SSAProcInfo.retreiveQuery to get an appropriate query.
+     * @see SSAProcInfo.Helper
 	 * */
 	public static class Query {
 		jq_Method 		  		     					_method;
@@ -284,6 +290,7 @@ public final class SSAProcInfo {
 		
 	/**
 	 * This class is used to make modifications to the IPSSA representation.
+     * @see SSAProcInfo.Query
 	 * */
 	public static class Helper {
 		jq_Method _method;

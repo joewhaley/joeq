@@ -12,7 +12,8 @@ import Compil3r.Quad.Quad;
  * This is a definition in the SSA sense, meaning it's unique. The meaning of the 
  * definition is affected by the underlying location.
  * 
- * @see Compil3r.Analysis.IPSSA.SSALocation  
+ * @see Compil3r.Analysis.IPSSA.SSALocation
+ * @version $Id$  
  * */
 public class SSADefinition {
 	protected SSALocation	_location;

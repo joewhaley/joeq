@@ -12,9 +12,7 @@ import Util.Assert;
 
 /**
  * @author livshits
- *
- * To change the template for this generated type comment go to
- * Window>Preferences>Java>Code Generation>Code and Comments
+ * @version $Id$
  */
 public class IteratorHelper {
 	public static class SingleIterator implements Iterator {

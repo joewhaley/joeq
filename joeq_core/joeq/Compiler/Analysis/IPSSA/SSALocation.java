@@ -13,6 +13,9 @@ import Compil3r.Quad.RegisterFactory;
 
 /**
  * @author Vladimir Livshits
+ * @see Compil3r.Analysis.IPSSA.SSADefinition
+ * @see Compil3r.Analysis.IPSSA.SSABinding
+ * @version $Id$
  */
 public interface SSALocation {
 

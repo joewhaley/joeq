@@ -11,6 +11,11 @@ import Compil3r.Analysis.IPSSA.Utils.IteratorHelper;
 import Compil3r.Quad.Quad;
 import Util.Assert;
 
+/**
+ * The RHS of a binding. Has multiple subclasses.
+ * @see Compil3r.Analysis.IPSSA.SSADefinition
+ * @version $Id$
+ * */
 public abstract class  SSAValue {
 	protected SSADefinition _destination;
 	

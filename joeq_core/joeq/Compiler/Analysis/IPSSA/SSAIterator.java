@@ -11,6 +11,7 @@ import Util.Collections.UnmodifiableIterator;
 
 /**
  * @author Vladimir Livshits
+ * @version $Id$
  */
 public class SSAIterator {
 	public static class DefinitionIterator extends UnmodifiableIterator {

@@ -10,6 +10,11 @@ import Compil3r.Analysis.IPSSA.SSADefinition;
 import Compil3r.Analysis.IPSSA.SSAIterator;
 import Compil3r.Analysis.IPSSA.SSAValue;
 
+/**
+ * Implements a trace of SSADefinitions.
+ * @author Vladimir Livshits
+ * @version $Id$
+ * */
 public class ReachabilityTrace implements Cloneable {
     LinkedList _definitions;
     
