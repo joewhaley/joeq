@@ -3310,8 +3310,8 @@ public class PA {
         bdd.save(dumpPath+"S.bdd", S);
         bdd.save(dumpPath+"vT.bdd", vT);
         bdd.save(dumpPath+"hT.bdd", hT);
-        bdd.save(dumpPath+"aT.bdd", hT);
-        bdd.save(dumpPath+"cha.bdd", hT);
+        bdd.save(dumpPath+"aT.bdd", aT);
+        bdd.save(dumpPath+"cha.bdd", cha);
         bdd.save(dumpPath+"actual.bdd", actual);
         bdd.save(dumpPath+"formal.bdd", formal);
         bdd.save(dumpPath+"mI.bdd", mI);
