@@ -282,6 +282,7 @@ public class BootstrapRootSet {
         // JDK1.4: an instance of this class is created via reflection during VM initialization.
         try {
             c = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Lsun/nio/cs/ISO_8859_1;");
+            c.load();
             i_m = c.getOrCreateInstanceMethod("<init>", "()V");
             addNecessaryMethod(i_m);
         } catch (java.lang.NoClassDefFoundError x) { }
