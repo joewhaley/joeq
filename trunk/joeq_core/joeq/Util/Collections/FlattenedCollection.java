@@ -1,6 +1,6 @@
-/*
- * Created on Sep 12, 2003
- */
+// FlattenedCollection.java, created Sep 12, 2003 12:16:03 AM by joewhaley
+// Copyright (C) 2003 John Whaley <jwhaley@alum.mit.edu>
+// Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Util.Collections;
 
 import java.util.AbstractCollection;
@@ -9,7 +9,11 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 /**
+ * Returns a collection view of a flattened collection.  (Elements
+ * that are collections are replaced by their contained elements.)
+ * 
  * @author jwhaley
+ * @version $Id$
  */
 public class FlattenedCollection extends AbstractCollection {
 

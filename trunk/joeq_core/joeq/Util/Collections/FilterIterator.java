@@ -1,7 +1,6 @@
 // FilterIterator.java, created Tue Feb 23 06:17:30 1999 by cananian
 // Copyright (C) 1998 C. Scott Ananian <cananian@alumni.princeton.edu>
 // Licensed under the terms of the GNU GPL; see COPYING for details.
-
 package joeq.Util.Collections;
 
 import java.util.Iterator;
