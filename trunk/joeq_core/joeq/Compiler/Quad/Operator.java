@@ -749,6 +749,45 @@ public abstract class Operator {
                 s.putReg_I(getDest(q).getRegister(), (v1>v2)?1:((v1==v2)?0:-1));
             }
         }
+        public static class ADD_P extends Binary {
+            public static final ADD_P INSTANCE = new ADD_P();
+            private ADD_P() { }
+            public String toString() { return "ADD_P"; }
+            public void interpret(Quad q, QuadInterpreter s) {
+                Address v = getAddressOpValue(getSrc1(q), s).offset(getIntOpValue(getSrc2(q), s));
+                s.putReg_P(getDest(q).getRegister(), v);
+            }
+        }
+        public static class SUB_P extends Binary {
+            public static final SUB_P INSTANCE = new SUB_P();
+            private SUB_P() { }
+            public String toString() { return "SUB_P"; }
+            public void interpret(Quad q, QuadInterpreter s) {
+                Address v1 = getAddressOpValue(getSrc1(q), s);
+                Address v2 = getAddressOpValue(getSrc2(q), s);
+                s.putReg_I(getDest(q).getRegister(), v1.difference(v2));
+            }
+        }
+        public static class ALIGN_P extends Binary {
+            public static final ALIGN_P INSTANCE = new ALIGN_P();
+            private ALIGN_P() { }
+            public String toString() { return "ALIGN_P"; }
+            public void interpret(Quad q, QuadInterpreter s) {
+                Address v = getAddressOpValue(getSrc1(q), s).align(getIntOpValue(getSrc2(q), s));
+                s.putReg_P(getDest(q).getRegister(), v);
+            }
+        }
+        public static class CMP_P extends Binary {
+            public static final CMP_P INSTANCE = new CMP_P();
+            private CMP_P() { }
+            public String toString() { return "CMP_P"; }
+            public void interpret(Quad q, QuadInterpreter s) {
+                Address v1 = getAddressOpValue(getSrc1(q), s);
+                Address v2 = getAddressOpValue(getSrc2(q), s);
+                int d = v1.difference(v2);
+                s.putReg_I(getDest(q).getRegister(), (d<0)?-1:((d==0)?0:1));
+            }
+        }
     }
 
     public abstract static class Unary extends Operator {
@@ -921,24 +960,53 @@ public abstract class Operator {
                 s.putReg_I(getDest(q).getRegister(), (short)getIntOpValue(getSrc(q), s));
             }
         }
-        /*
-        public static class OBJECT_2INT extends Unary {
-            public static final OBJECT_2INT INSTANCE = new OBJECT_2INT();
-            private OBJECT_2INT() { }
-            public String toString() { return "OBJECT_2INT"; }
+        public static class OBJECT_2ADDRESS extends Unary {
+            public static final OBJECT_2ADDRESS INSTANCE = new OBJECT_2ADDRESS();
+            private OBJECT_2ADDRESS() { }
+            public String toString() { return "OBJECT_2ADDRESS"; }
             public void interpret(Quad q, QuadInterpreter s) {
-                s.putReg_I(getDest(q).getRegister(), Unsafe.addressOf(getObjectOpValue(getSrc(q), s)));
+                Object o = getObjectOpValue(getSrc(q), s);
+                Address a = HeapAddress.addressOf(o);
+                s.putReg_P(getDest(q).getRegister(), a);
             }
         }
-        public static class INT_2OBJECT extends Unary {
-            public static final INT_2OBJECT INSTANCE = new INT_2OBJECT();
-            private INT_2OBJECT() { }
-            public String toString() { return "INT_2OBJECT"; }
+        public static class ADDRESS_2OBJECT extends Unary {
+            public static final ADDRESS_2OBJECT INSTANCE = new ADDRESS_2OBJECT();
+            private ADDRESS_2OBJECT() { }
+            public String toString() { return "ADDRESS_2OBJECT"; }
             public void interpret(Quad q, QuadInterpreter s) {
-                s.putReg_A(getDest(q).getRegister(), Unsafe.asObject(getIntOpValue(getSrc(q), s)));
+                HeapAddress a = (HeapAddress) getAddressOpValue(getSrc(q), s);
+                s.putReg_A(getDest(q).getRegister(), a.asObject());
             }
         }
-        */
+        public static class INT_2ADDRESS extends Unary {
+            public static final INT_2ADDRESS INSTANCE = new INT_2ADDRESS();
+            private INT_2ADDRESS() { }
+            public String toString() { return "INT_2ADDRESS"; }
+            public void interpret(Quad q, QuadInterpreter s) {
+                int v = getIntOpValue(getSrc(q), s);
+                Address a = HeapAddress.address32(v);
+                s.putReg_P(getDest(q).getRegister(), a);
+            }
+        }
+        public static class ADDRESS_2INT extends Unary {
+            public static final ADDRESS_2INT INSTANCE = new ADDRESS_2INT();
+            private ADDRESS_2INT() { }
+            public String toString() { return "ADDRESS_2INT"; }
+            public void interpret(Quad q, QuadInterpreter s) {
+                Address a = getAddressOpValue(getSrc(q), s);
+                s.putReg_I(getDest(q).getRegister(), a.to32BitValue());
+            }
+        }
+        public static class ISNULL_P extends Unary {
+            public static final ISNULL_P INSTANCE = new ISNULL_P();
+            private ISNULL_P() { }
+            public String toString() { return "ISNULL_P"; }
+            public void interpret(Quad q, QuadInterpreter s) {
+                Address a = getAddressOpValue(getSrc(q), s);
+                s.putReg_I(getDest(q).getRegister(), a.isNull()?1:0);
+            }
+        }
         public static class FLOAT_2INTBITS extends Unary {
             public static final FLOAT_2INTBITS INSTANCE = new FLOAT_2INTBITS();
             private FLOAT_2INTBITS() { }
@@ -3255,7 +3323,7 @@ public abstract class Operator {
             private MONITORENTER() { }
             public String toString() { return "MONITORENTER"; }
             public void interpret(Quad q, QuadInterpreter s) {
-		_delegate.interpretMonitorEnter(this, q, s);
+                _delegate.interpretMonitorEnter(this, q, s);
             }
             public UnmodifiableList.jq_Class getThrownExceptions() {
                 return nullptrexception;
@@ -3266,7 +3334,7 @@ public abstract class Operator {
             private MONITOREXIT() { }
             public String toString() { return "MONITOREXIT"; }
             public void interpret(Quad q, QuadInterpreter s) {
-		_delegate.interpretMonitorExit(this, q, s);
+                _delegate.interpretMonitorExit(this, q, s);
             }
             public UnmodifiableList.jq_Class getThrownExceptions() {
                 return illegalmonitorstateexception;
@@ -3348,12 +3416,12 @@ public abstract class Operator {
         public static Quad create(int id, MemStore operator, Operand addr, Operand val) {
             return new Quad(id, operator, null, addr, val);
         }
-        public static Operand getAddress(Quad q) { return q.getOp1(); }
-        public static Operand getValue(Quad q) { return q.getOp2(); }
-        public static void setAddress(Quad q, Operand o) { q.setOp1(o); }
-        public static void setValue(Quad q, Operand o) { q.setOp2(o); }
+        public static Operand getAddress(Quad q) { return q.getOp2(); }
+        public static Operand getValue(Quad q) { return q.getOp3(); }
+        public static void setAddress(Quad q, Operand o) { q.setOp2(o); }
+        public static void setValue(Quad q, Operand o) { q.setOp3(o); }
         public boolean hasSideEffects() { return true; }
-        public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg12(q); }
+        public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg23(q); }
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitMemStore(q);
@@ -3423,6 +3491,12 @@ public abstract class Operator {
         public static Quad create(int id, GET_EXCEPTION operator, RegisterOperand res) {
             return new Quad(id, operator, res);
         }
+        public static Quad create(int id, GET_BASE_POINTER operator, RegisterOperand res) {
+            return new Quad(id, operator, res);
+        }
+        public static Quad create(int id, GET_STACK_POINTER operator, RegisterOperand res) {
+            return new Quad(id, operator, res);
+        }
         public static Quad create(int id, GET_THREAD_BLOCK operator, RegisterOperand res) {
             return new Quad(id, operator, res);
         }
@@ -3431,6 +3505,18 @@ public abstract class Operator {
         }
         public static Quad create(int id, ALLOCA operator, RegisterOperand res, Operand val) {
             return new Quad(id, operator, res, val);
+        }
+        public static Quad create(int id, ATOMICADD_I operator, Operand loc, Operand val) {
+            return new Quad(id, operator, null, loc, val);
+        }
+        public static Quad create(int id, ATOMICSUB_I operator, Operand loc, Operand val) {
+            return new Quad(id, operator, null, loc, val);
+        }
+        public static Quad create(int id, ATOMICAND_I operator, Operand loc, Operand val) {
+            return new Quad(id, operator, null, loc, val);
+        }
+        public static Quad create(int id, ATOMICCAS4 operator, RegisterOperand res, Operand loc, Operand val1, Operand val2) {
+            return new Quad(id, operator, res, loc, val1, val2);
         }
         public static Quad create(int id, LONG_JUMP operator, Operand ip, Operand fp, Operand sp, Operand eax) {
             return new Quad(id, operator, ip, fp, sp, eax);
@@ -3492,13 +3578,31 @@ public abstract class Operator {
                 s.putReg_A(((RegisterOperand)getOp1(q)).getRegister(), s.getCaught());
             }
         }
+        public static class GET_BASE_POINTER extends Special {
+            public static final GET_BASE_POINTER INSTANCE = new GET_BASE_POINTER();
+            private GET_BASE_POINTER() { }
+            public String toString() { return "GET_BASE_POINTER"; }
+            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
+            public void interpret(Quad q, QuadInterpreter s) {
+                Assert.TODO();
+            }
+        }
+        public static class GET_STACK_POINTER extends Special {
+            public static final GET_STACK_POINTER INSTANCE = new GET_STACK_POINTER();
+            private GET_STACK_POINTER() { }
+            public String toString() { return "GET_STACK_POINTER"; }
+            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
+            public void interpret(Quad q, QuadInterpreter s) {
+                Assert.TODO();
+            }
+        }
         public static class GET_THREAD_BLOCK extends Special {
             public static final GET_THREAD_BLOCK INSTANCE = new GET_THREAD_BLOCK();
             private GET_THREAD_BLOCK() { }
             public String toString() { return "GET_THREAD_BLOCK"; }
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
             public void interpret(Quad q, QuadInterpreter s) {
-		_delegate.interpretGetThreadBlock(this, q, s);
+                _delegate.interpretGetThreadBlock(this, q, s);
             }
         }
         public static class SET_THREAD_BLOCK extends Special {
@@ -3507,7 +3611,54 @@ public abstract class Operator {
             public String toString() { return "SET_THREAD_BLOCK"; }
             public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg2(q); }
             public void interpret(Quad q, QuadInterpreter s) {
-		_delegate.interpretSetThreadBlock(this, q, s);
+                _delegate.interpretSetThreadBlock(this, q, s);
+            }
+        }
+        public static class ATOMICADD_I extends Special {
+            public static final ATOMICADD_I INSTANCE = new ATOMICADD_I();
+            private ATOMICADD_I() { }
+            public String toString() { return "ATOMICADD_I"; }
+            public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg23(q); }
+            public void interpret(Quad q, QuadInterpreter s) {
+                HeapAddress o = (HeapAddress) getAddressOpValue(getOp2(q), s);
+                int v = getIntOpValue(getOp3(q), s);
+                o.atomicAdd(v);
+            }
+        }
+        public static class ATOMICSUB_I extends Special {
+            public static final ATOMICSUB_I INSTANCE = new ATOMICSUB_I();
+            private ATOMICSUB_I() { }
+            public String toString() { return "ATOMICSUB_I"; }
+            public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg23(q); }
+            public void interpret(Quad q, QuadInterpreter s) {
+                HeapAddress o = (HeapAddress) getAddressOpValue(getOp2(q), s);
+                int v = getIntOpValue(getOp3(q), s);
+                o.atomicSub(v);
+            }
+        }
+        public static class ATOMICAND_I extends Special {
+            public static final ATOMICAND_I INSTANCE = new ATOMICAND_I();
+            private ATOMICAND_I() { }
+            public String toString() { return "ATOMICAND_I"; }
+            public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg23(q); }
+            public void interpret(Quad q, QuadInterpreter s) {
+                HeapAddress o = (HeapAddress) getAddressOpValue(getOp2(q), s);
+                int v = getIntOpValue(getOp3(q), s);
+                o.atomicAnd(v);
+            }
+        }
+        public static class ATOMICCAS4 extends Special {
+            public static final ATOMICCAS4 INSTANCE = new ATOMICCAS4();
+            private ATOMICCAS4() { }
+            public String toString() { return "ATOMICCAS4"; }
+            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
+            public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg234(q); }
+            public void interpret(Quad q, QuadInterpreter s) {
+                HeapAddress o = (HeapAddress) getAddressOpValue(getOp2(q), s);
+                int v1 = getIntOpValue(getOp3(q), s);
+                int v2 = getIntOpValue(getOp4(q), s);
+                int r = o.atomicCas4(v1, v2);
+                s.putReg_I(((RegisterOperand) getOp1(q)).getRegister(), r);
             }
         }
         public static class ALLOCA extends Special {
@@ -3641,28 +3792,28 @@ public abstract class Operator {
     }
 
     static interface Delegate {
-	void interpretGetThreadBlock(Special op, Quad q, QuadInterpreter s);
-	void interpretSetThreadBlock(Special op, Quad q, QuadInterpreter s);
-	void interpretMonitorEnter(Monitor op, Quad q, QuadInterpreter s);
-	void interpretMonitorExit(Monitor op, Quad q, QuadInterpreter s);
+        void interpretGetThreadBlock(Special op, Quad q, QuadInterpreter s);
+        void interpretSetThreadBlock(Special op, Quad q, QuadInterpreter s);
+        void interpretMonitorEnter(Monitor op, Quad q, QuadInterpreter s);
+        void interpretMonitorExit(Monitor op, Quad q, QuadInterpreter s);
     }
 
     protected static Delegate _delegate;
 
     static {
-	/* Set up delegates. */
-	_delegate = null;
-	boolean nullVM = jq.nullVM || System.getProperty("joeq.nullvm") != null;
-	if (!nullVM) {
-	    _delegate = attemptDelegate("Compil3r.Quad.Delegates$Op");
-	}
-	if (_delegate == null) {
-	    _delegate = new Compil3r.Quad.NullDelegates.Op();
-	}
+        /* Set up delegates. */
+        _delegate = null;
+        boolean nullVM = jq.nullVM || System.getProperty("joeq.nullvm") != null;
+        if (!nullVM) {
+            _delegate = attemptDelegate("Compil3r.Quad.Delegates$Op");
+        }
+        if (_delegate == null) {
+            _delegate = new Compil3r.Quad.NullDelegates.Op();
+        }
     }
 
     private static Delegate attemptDelegate(String s) {
-	String type = "quad-operator delegate";
+        String type = "quad-operator delegate";
         try {
             Class c = Class.forName(s);
             return (Delegate)c.newInstance();
@@ -3673,6 +3824,6 @@ public abstract class Operator {
         } catch (java.lang.IllegalAccessException x) {
             System.err.println("Cannot access "+type+" "+s+": "+x);
         }
-	return null;
+        return null;
     }
 }
