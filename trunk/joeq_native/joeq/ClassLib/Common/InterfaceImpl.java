@@ -99,6 +99,8 @@ public class InterfaceImpl implements Interface {
             nullInstanceFields.add(k.getOrCreateInstanceField("pos", "J"));
             k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LBootstrap/PrimordialClassLoader$ZipFileElement;");
             nullInstanceFields.add(k.getOrCreateInstanceField("entries", "Ljava/util/Map;"));
+            k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LBootstrap/PrimordialClassLoader$PathElement;");
+            nullInstanceFields.add(k.getOrCreateInstanceField("entries", "Ljava/util/Set;"));
         }
 
         public java.lang.Object mapStaticField(jq_StaticField f) {
