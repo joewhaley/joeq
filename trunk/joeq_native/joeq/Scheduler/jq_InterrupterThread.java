@@ -45,7 +45,7 @@ public class jq_InterrupterThread extends Thread {
     private jq_Thread myself;
     // for convenience, so we don't have to call Reflection.getfield_A
 
-    public static final int QUANTA = 50;
+    public static int QUANTA = 10;
 
     public void run() {
         this.pid = SystemInterface.init_thread();
