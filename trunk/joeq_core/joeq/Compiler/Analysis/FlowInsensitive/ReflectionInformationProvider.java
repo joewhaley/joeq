@@ -34,6 +34,7 @@ public abstract class ReflectionInformationProvider {
          */
         public NewInstanceTargets(String declaredIn) {
             this.declaredIn = getMethod(declaredIn);
+            if(PA.TRACE_REFLECTION) System.out.println("No method for " + declaredIn);
         }
         
         public boolean isValid(){
@@ -176,7 +177,7 @@ public abstract class ReflectionInformationProvider {
      * reads answers from a file. 
      * */
     public static class CribSheetReflectionInformationProvider extends ReflectionInformationProvider {
-        private static boolean TRACE = false;
+        private static boolean TRACE = true;
         private static final String DEFAULT_CRIB_FILE = "reflection.spec";
 
         public CribSheetReflectionInformationProvider(String cribSheetFileName){
@@ -213,6 +214,9 @@ public abstract class ReflectionInformationProvider {
                 if(!line.startsWith("#") && line.trim().length() > 0){
                     NewInstanceTargets spec = parseSpecLine(line);
                     if(spec.isValid()){
+                        if(PA.TRACE_REFLECTION){
+                            System.out.println("Adding a reflection spec for " + spec.getDeclaredIn());
+                        }
                         specs.add(spec);
                     }
                 }
