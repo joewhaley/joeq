@@ -16,20 +16,32 @@ import joeq.Class.jq_Class;
 import joeq.Class.jq_Field;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_Type;
+import joeq.Compiler.Analysis.IPA.PAResultSelector;
+import joeq.Compiler.Analysis.IPSSA.IPSSABuilder;
 import joeq.Compiler.Quad.CallGraph;
 import joeq.Compiler.Quad.RootedCHACallGraph;
 import joeq.Main.HostedVM;
 import joeq.Util.Assert;
 import joeq.Util.Collections.AppendIterator;
 
-public class FindBadStores {    
+public class FindBadStores extends IPSSABuilder.Application {    
     private static CallGraph _cg         = null;
     private Set _classes 				 = null;
     
     // filter out non-local classes?
     static final boolean FILTER_LOCAL 	 = false;
     static jq_Class  _serializableClass  = null;
-    private jq_Class _httpSessionClass   = null; 
+    private jq_Class _httpSessionClass   = null;
+    private PAResultSelector _sel; 
+    
+
+    FindBadStores(IPSSABuilder builder, String name, String[] args) {
+        super(builder, name, args);
+    }    
+    
+    protected void parseParams(String[] argv) {
+        // TODO    
+    }
     
     public static void main(String[] args) {
         HostedVM.initialize();
@@ -67,7 +79,7 @@ public class FindBadStores {
         }
 
         FindBadStores finder = new FindBadStores(i);
-        finder.run(true);
+        finder.run();
     }
     
     public FindBadStores(Iterator i) {
@@ -107,6 +119,8 @@ public class FindBadStores {
         _httpSessionClass  = (jq_Class)jq_Type.parseType("Ljavax.servlet.HttpSession");        
         Assert._assert(_httpSessionClass != null);
         _httpSessionClass.prepare();
+        
+        _sel = new PAResultSelector(_builder.getPAResults());
     }
 
     private Set getClasses(Collection collection) {
@@ -156,10 +170,9 @@ public class FindBadStores {
      * @param f
      */
     private void processField(jq_Class c, jq_Field f){
-        // TODO: 
         // 	1. find heap objects it can point to
         // 	2. get their types
-        Set types = getFieldPointeeTypes(c, f);
+        Set types = _sel.getFieldPointeeTypes(f);
         //  3. figure out which ones are *not* serializable
         for(Iterator typeIter = types.iterator(); typeIter.hasNext();){
             jq_Type type = (jq_Type) typeIter.next();
@@ -175,17 +188,7 @@ public class FindBadStores {
         }
     }
 
-    /**
-     * @param c
-     * @param f
-     * @return
-     */
-    private Set getFieldPointeeTypes(jq_Class c, jq_Field f){
-        // TODO Do the bdd magic to produce the answer
-        return null;
-    }
-
-    protected void run(boolean verbose){        
+    public void run(){        
         processClasses();
     }
 }
