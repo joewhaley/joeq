@@ -712,17 +712,22 @@ public class MethodSummary {
             return CallTargets.getTargets(m.getDeclaringClass(), m, type, receiverTypes, exact, true);
         }
         
-        public CallTargets getCallTargets(java.util.Set nodes) {
+        public Set getCallTargets(java.util.Set nodes) {
             byte type = getType();
-            boolean exact = true;
-            LinkedHashSet types = new LinkedHashSet();
+            LinkedHashSet exact_types = new LinkedHashSet();
+            LinkedHashSet notexact_types = new LinkedHashSet();
             for (Iterator i=nodes.iterator(); i.hasNext(); ) {
                 Node n = (Node)i.next();
-                if (!(n instanceof ConcreteTypeNode)) exact = false;
+                LinkedHashSet s = (n instanceof ConcreteTypeNode)?exact_types:notexact_types;
                 if (n.getDeclaredType() != null)
-                    types.add(n.getDeclaredType());
+                    s.add(n.getDeclaredType());
             }
-            return getCallTargets(types, exact);
+            if (notexact_types.isEmpty()) return getCallTargets(exact_types, true);
+            if (exact_types.isEmpty()) return getCallTargets(notexact_types, false);
+            LinkedHashSet result = new LinkedHashSet();
+            result.addAll(getCallTargets(exact_types, true));
+            result.addAll(getCallTargets(notexact_types, false));
+            return result;
         }
     }
     
