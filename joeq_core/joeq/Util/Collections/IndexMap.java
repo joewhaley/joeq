@@ -18,17 +18,27 @@ public class IndexMap {
     private final String name;
     private final HashMap hash;
     private final ArrayList list;
+    private final boolean trace;
     
     public IndexMap(String name) {
         this.name = name;
         hash = new HashMap();
         list = new ArrayList();
+        trace = false;
     }
     
     public IndexMap(String name, int size) {
         this.name = name;
         hash = new HashMap(size);
         list = new ArrayList(size);
+        trace = false;
+    }
+    
+    public IndexMap(String name, int size, boolean t) {
+        this.name = name;
+        hash = new HashMap(size);
+        list = new ArrayList(size);
+        trace = t;
     }
     
     public int get(Object o) {
@@ -36,7 +46,7 @@ public class IndexMap {
         if (i == null) {
             hash.put(o, i = new Integer(list.size()));
             list.add(o);
-            if (false) System.out.println(this+"["+i+"] = "+o);
+            if (trace) System.out.println(this+"["+i+"] = "+o);
         }
         return i.intValue();
     }
