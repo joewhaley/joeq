@@ -186,18 +186,37 @@ public class PAResults {
                     increaseCount = false;
                 } else if (command.equals("method")) {
                     jq_Class c = (jq_Class) jq_Type.parseType(st.nextToken());
-                    if (c == null) {
+                    if (c == null || !c.isLoaded()) {
                         System.out.println("Cannot find class");
                         increaseCount = false;
                     } else {
-                        jq_Method m = c.getDeclaredMethod(st.nextToken());
-                        if (m == null) {
+                        String methodname = st.nextToken();
+                        jq_Method m;
+                        if (st.hasMoreTokens()) m = (jq_Method) c.getDeclaredMember(methodname, st.nextToken());
+                        else m = c.getDeclaredMethod(methodname);
+                        if (m == null || !m.isLoaded()) {
                             System.out.println("Cannot find method");
                             increaseCount = false;
                         } else {
                             System.out.println("Method: "+m);
                             int k = getMethodIndex(m);
                             results.add(r.M.ithVar(k));
+                        }
+                    }
+                } else if (command.equals("field")) {
+                    jq_Class c = (jq_Class) jq_Type.parseType(st.nextToken());
+                    if (c == null || !c.isLoaded()) {
+                        System.out.println("Cannot find class");
+                        increaseCount = false;
+                    } else {
+                        jq_Field m = c.getDeclaredField(st.nextToken());
+                        if (m == null) {
+                            System.out.println("Cannot find field");
+                            increaseCount = false;
+                        } else {
+                            System.out.println("Field: "+m);
+                            int k = getFieldIndex(m);
+                            results.add(r.F.ithVar(k));
                         }
                     }
                 } else if (command.equals("thread")) {
