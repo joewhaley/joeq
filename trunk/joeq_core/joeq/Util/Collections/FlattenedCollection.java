@@ -98,6 +98,8 @@ public class FlattenedCollection extends AbstractCollection {
             Iterator last;
             boolean more;
             
+            { forward(); }
+            
             void forward() {
                 for (;;) {
                     if (j == null || !j.hasNext()) {
