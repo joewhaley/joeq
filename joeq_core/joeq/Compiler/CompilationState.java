@@ -5,12 +5,18 @@ package Compil3r;
 
 import java.util.Collection;
 import java.util.Set;
+import java.util.HashMap;
 
 import Bootstrap.PrimordialClassLoader;
+import Compil3r.Quad.Quad;
+import Compil3r.Quad.Operator.CheckCast;
+import Compil3r.Quad.Operator.Invoke;
 import Clazz.jq_Class;
 import Clazz.jq_Member;
 import Clazz.jq_Method;
 import Clazz.jq_Type;
+import Util.Templates.List;
+import Util.Templates.UnmodifiableList;
 import Main.jq;
 import Run_Time.TypeCheck;
 import UTF.Utf8;
@@ -42,6 +48,10 @@ public abstract class CompilationState implements CompilationConstants {
     public abstract byte implementsInterface(jq_Class klass, jq_Class inter);
     
     public abstract jq_Type getOrCreateType(Utf8 desc);
+
+    public List.jq_Class getThrownExceptions(Quad q) {
+	return q.getOperator().getThrownExceptions();
+    }
     
     static {
         if (jq.nullVM) {
@@ -126,9 +136,59 @@ public abstract class CompilationState implements CompilationConstants {
         public jq_Type getOrCreateType(Utf8 desc) {
             return PrimordialClassLoader.loader.getOrCreateBSType(desc);
         }
-        
+
+	/** Assume jq_Method.getThrownExceptions() returns correct information */
+	public static boolean ASSUME_CORRECT_EXCEPTIONS = true;
+
+        /* (non-Javadoc)
+         * @see Compil3r.CompilationState#getThrownExceptions(Quad)
+         */
+	public List.jq_Class getThrownExceptions(Quad q) {
+	    if (q.getOperator() == CheckCast.CHECKCAST.INSTANCE) {
+		return new UnmodifiableList.jq_Class(PrimordialClassLoader.getJavaLangClassCastException());
+	    }
+
+	    if (ASSUME_CORRECT_EXCEPTIONS && q.getOperator() instanceof Invoke) {
+		jq_Method m = (jq_Method)resolve(Invoke.getMethod(q).getMethod());
+
+		UnmodifiableList.jq_Class exclist;
+		exclist = (UnmodifiableList.jq_Class)cachedThrownExcListByMethod.get(m);
+		if (exclist != null) 
+		    return exclist;
+
+		/* Exception lists reflect exactly what was given in the 'throws'
+		 * clause at compile time.  These lists can (and do) contain redundant 
+		 * declarations of various kinds of Errors and RuntimeExceptions.
+		 * It is possible to have entries that are superclasses of other 
+		 * entries in this list.  We always add Error and RuntimeException because 
+		 * every method can throw these.  See also VM Spec Section 4.7.4
+		 */
+		jq_Class [] exc = m.getThrownExceptionsTable();
+		int exclistLength = defaultThrowables.length;
+		if (exc != null)
+		    exclistLength += exc.length;
+
+		jq_Class []tlist = new jq_Class[exclistLength];
+		System.arraycopy(defaultThrowables, 0, tlist, 0, defaultThrowables.length);
+
+		if (exc != null)
+		    System.arraycopy(exc, 0, tlist, defaultThrowables.length, exc.length);
+
+		// potential for memory savings here: could sort and intern identical exclists
+		cachedThrownExcListByMethod.put(m, exclist = new UnmodifiableList.jq_Class(tlist));
+		return exclist;
+	    }
+	    return super.getThrownExceptions(q);
+	}
+
+	private static HashMap/*<jq_Method, UnmodifiableList.jq_Class>*/ cachedThrownExcListByMethod = new HashMap();
+
+	private static final jq_Class []defaultThrowables = new jq_Class[] {
+	    PrimordialClassLoader.getJavaLangRuntimeException(),
+	    PrimordialClassLoader.getJavaLangError() 
+	};
     }
-    
+
     public static class BootstrapCompilation extends CompilationState {
 
         Set/*<jq_Type>*/ boot_types;
