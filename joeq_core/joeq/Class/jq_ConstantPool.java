@@ -30,7 +30,7 @@ import UTF.Utf8;
  */
 public class jq_ConstantPool implements jq_ClassFileConstants {
 
-	public static /*final*/ boolean TRACE = false;
+    public static /*final*/ boolean TRACE = false;
 
     private Object[] constant_pool;
     private byte[] constant_pool_tags;
@@ -185,18 +185,18 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
                         if (desc.isDescriptor(TC_PARAM)) {
                             if (mem.isStatic()) {
                                 constant_pool_tags[i] = CONSTANT_ResolvedSMethodRef;
-		                        if (TRACE) SystemInterface.debugmsg("Resolved static method "+mem+", cp idx "+(int)i);
+                                if (TRACE) SystemInterface.debugmsg("Resolved static method "+mem+", cp idx "+(int)i);
                             } else {
                                 constant_pool_tags[i] = CONSTANT_ResolvedIMethodRef;
-		                        if (TRACE) SystemInterface.debugmsg("Resolved instance method "+mem+", cp idx "+(int)i);
+                                if (TRACE) SystemInterface.debugmsg("Resolved instance method "+mem+", cp idx "+(int)i);
                             }
                         } else {
                             if (mem.isStatic()) {
                                 constant_pool_tags[i] = CONSTANT_ResolvedSFieldRef;
-		                        if (TRACE) SystemInterface.debugmsg("Resolved static field "+mem+", cp idx "+(int)i);
+                                if (TRACE) SystemInterface.debugmsg("Resolved static field "+mem+", cp idx "+(int)i);
                             } else {
                                 constant_pool_tags[i] = CONSTANT_ResolvedIFieldRef;
-		                        if (TRACE) SystemInterface.debugmsg("Resolved instance field "+mem+", cp idx "+(int)i);
+                                if (TRACE) SystemInterface.debugmsg("Resolved instance field "+mem+", cp idx "+(int)i);
                             }
                         }
                     }
@@ -226,8 +226,9 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
         if (TRACE) SystemInterface.debugmsg("Resolved class "+constant_pool[i]+", cp idx "+(int)i);
     }
 
-    public final void set(char index, Object o) {
+    public final void set(char index, Object o, byte tag) {
         constant_pool[index] = o;
+        constant_pool_tags[index] = tag;
     }
 
     public final int getCount() {
@@ -279,6 +280,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
             return (jq_StaticField)constant_pool[index];
         if (constant_pool_tags[index] != CONSTANT_FieldRef)
             throw new VerifyError();
+        if (TRACE) SystemInterface.debugmsg("Attempting to resolve static field "+constant_pool[index]+" cp idx "+(int)index);
         jq_MemberReference n = (jq_MemberReference)constant_pool[index];
         jq_Class otherclazz = n.getReferencedClass();
         jq_StaticField f;
@@ -309,6 +311,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
             return (jq_InstanceField)constant_pool[index];
         if (constant_pool_tags[index] != CONSTANT_FieldRef)
             throw new VerifyError();
+        if (TRACE) SystemInterface.debugmsg("Attempting to resolve instance field "+constant_pool[index]+" cp idx "+(int)index);
         jq_MemberReference n = (jq_MemberReference)constant_pool[index];
         jq_Class otherclazz = n.getReferencedClass();
         jq_InstanceField f;
@@ -339,6 +342,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
             return (jq_StaticMethod)constant_pool[index];
         if (constant_pool_tags[index] != CONSTANT_MethodRef)
             throw new VerifyError();
+        if (TRACE) SystemInterface.debugmsg("Attempting to resolve static method "+constant_pool[index]+" cp idx "+(int)index);
         jq_MemberReference n = (jq_MemberReference)constant_pool[index];
         jq_Class otherclazz = n.getReferencedClass();
         jq_StaticMethod f;
@@ -370,6 +374,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
         if (constant_pool_tags[index] != CONSTANT_MethodRef &&
             constant_pool_tags[index] != CONSTANT_InterfaceMethodRef)
             throw new VerifyError();
+        if (TRACE) SystemInterface.debugmsg("Attempting to resolve instance method "+constant_pool[index]+" cp idx "+(int)index);
         jq_MemberReference n = (jq_MemberReference)constant_pool[index];
         jq_Class otherclazz = n.getReferencedClass();
         jq_InstanceMethod f;

@@ -54,7 +54,7 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
     public jq_StaticField resolve(jq_StaticField m) {
         try {
             jq_StaticField m2 = (jq_StaticField)m.resolve1();
-            if (m != m2) updateMemberReference(m2);
+            if (m != m2) updateMemberReference(m2, CONSTANT_ResolvedSFieldRef);
             return m2;
         } catch (Error e) {
             System.err.println("Method "+method+" bc index "+i_start+": Error when resolving "+m+": "+e);
@@ -65,7 +65,7 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
     public jq_InstanceField resolve(jq_InstanceField m) {
         try {
             jq_InstanceField m2 = (jq_InstanceField)m.resolve1();
-            if (m != m2) updateMemberReference(m2);
+            if (m != m2) updateMemberReference(m2, CONSTANT_ResolvedIFieldRef);
             return m2;
         } catch (Error e) {
             System.err.println("Method "+method+" bc index "+i_start+": Error when resolving "+m+": "+e);
@@ -76,7 +76,7 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
     public jq_StaticMethod resolve(jq_StaticMethod m) {
         try {
             jq_StaticMethod m2 = (jq_StaticMethod)m.resolve1();
-            if (m != m2) updateMemberReference(m2);
+            if (m != m2) updateMemberReference(m2, CONSTANT_ResolvedSMethodRef);
             return m2;
         } catch (Error e) {
             System.err.println("Method "+method+" bc index "+i_start+": Error when resolving "+m+": "+e);
@@ -87,7 +87,7 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
     public jq_InstanceMethod resolve(jq_InstanceMethod m) {
         try {
             jq_InstanceMethod m2 = (jq_InstanceMethod)m.resolve1();
-            if (m != m2) updateMemberReference(m2);
+            if (m != m2) updateMemberReference(m2, CONSTANT_ResolvedIMethodRef);
             return m2;
         } catch (Error e) {
             System.err.println("Method "+method+" bc index "+i_start+": Error when resolving "+m+": "+e);
@@ -98,7 +98,19 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
     public jq_Member resolve(jq_Member m) {
         try {
             jq_Member m2 = (jq_Member)m.resolve();
-            if (m != m2) updateMemberReference(m2);
+            if (m != m2) {
+                byte tag = 0;
+                if (m instanceof jq_InstanceField)
+                   tag = CONSTANT_ResolvedIFieldRef;
+                else if (m instanceof jq_StaticField)
+                    tag = CONSTANT_ResolvedSFieldRef;
+                else if (m instanceof jq_InstanceMethod)
+                    tag = CONSTANT_ResolvedIMethodRef;
+                else if (m instanceof jq_StaticMethod)
+                    tag = CONSTANT_ResolvedSMethodRef;
+                else jq.UNREACHABLE();
+                updateMemberReference(m2, tag);
+            }
             return m2;
         } catch (Error e) {
             System.err.println("Method "+method+" bc index "+i_start+": Error when resolving "+m+": "+e);
@@ -150,7 +162,7 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
         }
     }
     
-    public void updateMemberReference(jq_Member m) {
+    public void updateMemberReference(jq_Member m, byte tag) {
         char index;
         int i_size = i_end - i_start;
         char op = (char)(bcs[i_start] & 0xff);
@@ -189,7 +201,7 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
                 jq.UNREACHABLE(jq.hex(op));
                 return;
         }
-        clazz.getCP().set(index, m);
+        clazz.getCP().set(index, m, tag);
     }
     
     public void visitBytecode() throws VerifyError {

@@ -48,6 +48,8 @@ public final class Interface extends ClassLib.Common.Interface {
             nullStaticFields.add(k.getOrCreateStaticField("theUnsafe", "Lsun/misc/Unsafe;"));
             k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Lsun/reflect/UnsafeFieldAccessorImpl;");
             nullStaticFields.add(k.getOrCreateStaticField("unsafe", "Lsun/misc/Unsafe;"));
+            k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/nio/charset/Charset;");
+            nullStaticFields.add(k.getOrCreateStaticField("cache", "[Ljava/lang/Object;"));
             
             k = PrimordialClassLoader.getJavaLangClass();
             nullInstanceFields.add(k.getOrCreateInstanceField("declaredFields", "Ljava/lang/ref/SoftReference;"));

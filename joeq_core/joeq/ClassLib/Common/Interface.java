@@ -115,7 +115,8 @@ public class Interface {
                     return null;
                 if (o == jq_ReturnAddressType.INSTANCE)
                     return null;
-                if (fieldName.equals("class_object"))
+                if (!Clazz.jq_Class.USE_CLASS_OBJECT_FIELD &&
+                    fieldName.equals("class_object"))
                     return Reflection.getJDKType((jq_Type) o);
             } else if (c == PrimordialClassLoader.getJavaLangReflectField()) {
                 if (fieldName.equals("jq_field"))

@@ -54,4 +54,8 @@ public final class jq_MemberReference {
         return clazz.hashCode() ^ nd.hashCode();
     }
 
+    public String toString() {
+        return "ref to "+clazz+"."+nd;
+    }
+
 }

@@ -105,8 +105,8 @@ public abstract class Reflection {
         try {
             return Class.forName(c.getJDKName(), false, Reflection.class.getClassLoader());
         } catch (ClassNotFoundException x) {
-            if (!c.getJDKName().startsWith("ClassLib"))
-                SystemInterface.debugmsg("Note: "+c.getJDKName()+" was not found in host jdk");
+            //if (!c.getJDKName().startsWith("ClassLib"))
+            //    SystemInterface.debugmsg("Note: "+c.getJDKName()+" was not found in host jdk");
             return null;
         }
     }
@@ -119,7 +119,7 @@ public abstract class Reflection {
         nd = ClassLib.ClassLibInterface.convertClassLibNameAndDesc(c, nd);
         jq_Field m = (jq_Field)c.getDeclaredMember(nd);
         if (m == null) {
-            SystemInterface.debugmsg("Reference to jdk field "+f.toString()+" does not exist, creating "+c+"."+nd);
+            //SystemInterface.debugmsg("Reference to jdk field "+f.toString()+" does not exist, creating "+c+"."+nd);
             if (Modifier.isStatic(f.getModifiers()))
                 m = c.getOrCreateStaticField(nd);
             else
@@ -142,7 +142,7 @@ public abstract class Reflection {
         nd = ClassLib.ClassLibInterface.convertClassLibNameAndDesc(c, nd);
         jq_Method m = (jq_Method)c.getDeclaredMember(nd);
         if (m == null) {
-            SystemInterface.debugmsg("Reference to jdk method "+f.toString()+" does not exist, creating "+c+"."+nd);
+            //SystemInterface.debugmsg("Reference to jdk method "+f.toString()+" does not exist, creating "+c+"."+nd);
             if (Modifier.isStatic(f.getModifiers()))
                 m = c.getOrCreateStaticMethod(nd);
             else
@@ -164,7 +164,7 @@ public abstract class Reflection {
         nd = ClassLib.ClassLibInterface.convertClassLibNameAndDesc(c, nd);
         jq_Initializer m = (jq_Initializer)c.getDeclaredMember(nd);
         if (m == null) {
-            SystemInterface.debugmsg("Reference to jdk constructor "+f.toString()+" does not exist, creating "+c+"."+nd);
+            //SystemInterface.debugmsg("Reference to jdk constructor "+f.toString()+" does not exist, creating "+c+"."+nd);
             m = (jq_Initializer)c.getOrCreateInstanceMethod(nd);
         }
         return m;
