@@ -59,8 +59,8 @@ public abstract class DefaultHeapAllocator {
         Unsafe.getThreadBlock().enableThreadSwitch();
     }
     
-    public static final void processPtrField(Address a) {
-        def().processPtrField(a);
+    public static final void processPtrField(Address a, boolean b) {
+        def().processPtrField(a, b);
     }
 
     public static final jq_StaticMethod _allocateObject;

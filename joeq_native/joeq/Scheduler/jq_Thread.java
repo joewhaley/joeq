@@ -201,6 +201,10 @@ public class jq_Thread implements jq_DontAlign {
         jq_NativeThread.endCurrentJavaThread();
         Assert.UNREACHABLE();
     }
+    
+    public jq_Thread getNext() {
+        return next;
+    }
 
     public static final jq_Class _class;
     public static final jq_StaticMethod _destroyCurrentThread;

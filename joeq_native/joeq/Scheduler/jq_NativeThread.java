@@ -673,6 +673,34 @@ public class jq_NativeThread implements jq_DontAlign {
     private static jq_NativeThread gc_nthread;
     private static jq_Thread gc_jthread;
 
+    // Suspend all threads except for the current one.
+    // The current thread must have thread switch disabled.
+    public static void suspendAllThreads() {
+        jq_Thread t = Unsafe.getThreadBlock();
+        Assert._assert(!t.isThreadSwitchEnabled());
+        for (int i = 0; i < native_threads.length; ++i) {
+            jq_NativeThread nt = native_threads[i];
+            if (nt == t.getNativeThread()) continue;
+            for (;;) {
+                nt.suspend();
+                jq_Thread t2 = nt.getCurrentJavaThread();
+                if (t2.isThreadSwitchEnabled()) break;
+                nt.resume();
+                SystemInterface.msleep(0);
+            }
+        }
+    }
+    
+    public static void resumeAllThreads() {
+        jq_Thread t = Unsafe.getThreadBlock();
+        Assert._assert(!t.isThreadSwitchEnabled());
+        for (int i = 0; i < native_threads.length; ++i) {
+            jq_NativeThread nt = native_threads[i];
+            if (nt == t.getNativeThread()) continue;
+            nt.resume();
+        }
+    }
+    
     // Stop all the native threads and start GC
     public static void stopTheWorld() {
         jq_Thread t = Unsafe.getThreadBlock();

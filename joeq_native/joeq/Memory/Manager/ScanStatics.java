@@ -22,10 +22,10 @@ public class ScanStatics {
     /**
      * Scan static variables for object references.
      */
-    static void scanStatics() {
+    public static void scanStatics() {
         // todo: other classloaders?
         Collection/*<jq_Type>*/ types = PrimordialClassLoader.loader.getAllTypes();
-        for (Iterator i=types.iterator(); i.hasNext(); ) {
+        for (Iterator i = types.iterator(); i.hasNext(); ) {
             Object o = i.next();
             if (o instanceof jq_Class) {
                 jq_Class c = (jq_Class) o;
@@ -34,7 +34,7 @@ public class ScanStatics {
                     jq_StaticField sf = sfs[j];
                     if (sf.getType().isReferenceType()) {
                         HeapAddress a = sf.getAddress();
-                        DefaultHeapAllocator.processPtrField(a);
+                        DefaultHeapAllocator.processPtrField(a, true);
                     }
                 }
             }
