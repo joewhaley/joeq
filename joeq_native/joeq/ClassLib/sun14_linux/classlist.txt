@@ -9,6 +9,7 @@ LBootstrap/PrimordialClassLoader$4;
 LBootstrap/PrimordialClassLoader$PathElement;
 LBootstrap/PrimordialClassLoader$ZipFileElement;
 LClassLib/*
+LClassLib/Common/ClassUtils;
 LClassLib/Common/Interface;
 LClassLib/sun14_linux/Interface;
 LClazz/*

@@ -9,6 +9,7 @@ LBootstrap/PrimordialClassLoader$4;
 LBootstrap/PrimordialClassLoader$PathElement;
 LBootstrap/PrimordialClassLoader$ZipFileElement;
 LClassLib/*
+LClassLib/Common/ClassUtils;
 LClassLib/Common/Interface;
 LClassLib/sun14_win32/Interface;
 LClazz/*
@@ -18,6 +19,7 @@ LCompil3r/BytecodeAnalysis/Bytecodes$EmptyVisitor;
 LCompil3r/Quad/BytecodeToQuad$jq_ReturnAddressType;
 LCompil3r/Reference/x86/*
 LGC/*
+LMain/JoeqVM;
 LMain/jq;
 LMain/TraceFlags;
 LMemory/*
@@ -255,9 +257,10 @@ Lsun/net/www/protocol/file/Handler;
 Lsun/nio/cs/HistoricallyNamedCharset;
 Lsun/nio/cs/ISO_8859_1;
 Lsun/nio/cs/ISO_8859_1$Decoder;
+Lsun/nio/cs/ISO_8859_1$Encoder;
 Lsun/nio/cs/MS1252;
-Lsun/nio/cs/MS1252$Encoder;
 Lsun/nio/cs/MS1252$Decoder;
+Lsun/nio/cs/MS1252$Encoder;
 Lsun/nio/cs/SingleByteEncoder;
 Lsun/nio/cs/StandardCharsets;
 Lsun/nio/cs/StreamDecoder;
