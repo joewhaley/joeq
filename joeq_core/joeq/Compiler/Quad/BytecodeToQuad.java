@@ -213,8 +213,12 @@ public class BytecodeToQuad extends BytecodeVisitor {
         if (TRACE) out.println("Visiting "+bc_bb);
         this.quad_bb = quad_bbs[bc_bb.id];
         for (Iterator i = this.quad_bb.iterator(); i.hasNext(); ) {
-            Object old = this.quad2bci.remove(i.next());
-            Assert._assert(old != null);
+            Object o = i.next();
+            Object old = this.quad2bci.remove(o);
+            if (old == null) {
+                // GET_EXCEPTION has no bytecode index.
+                //System.out.println(o+" was not in bcmap.");
+            }
         }
         this.quad_bb.removeAllQuads();
         this.bc_bb = bc_bb;
