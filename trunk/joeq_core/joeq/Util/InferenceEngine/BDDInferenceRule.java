@@ -144,8 +144,7 @@ public class BDDInferenceRule extends InferenceRule {
         for (int i = 0; i < top.size(); ++i) {
             RuleTerm rt = (RuleTerm) top.get(i);
             BDDRelation r = (BDDRelation) rt.relation;
-            relationValues[i] = r.relation.id();
-            if (solver.TRACE) solver.out.println("Relation "+r);
+            if (solver.TRACE) solver.out.println("Relation "+r+" "+relationValues[i].nodeCount()+" nodes");
             if (solver.TRACE_FULL) solver.out.println("   current value: "+relationValues[i].toStringWithDomains());
             BDDPairing pairing = null;
             for (int j = 0; j < rt.variables.size(); ++j) {
@@ -165,6 +164,8 @@ public class BDDInferenceRule extends InferenceRule {
             if (pairing != null) {
                 System.out.println("Relation "+r+" domains "+domainsOf(relationValues[i]));
                 relationValues[i].replaceWith(pairing);
+                if (solver.TRACE)
+                    System.out.println("Relation "+r+" domains now "+domainsOf(relationValues[i]));
                 pairing.reset();
             }
         }
@@ -199,10 +200,9 @@ public class BDDInferenceRule extends InferenceRule {
             }
         }
         
-        if (solver.TRACE) {
-            solver.out.println("Doing relprod, bdd sizes: "+topBdd.nodeCount()+", "+relationValues[0].nodeCount()+", "+quantify.nodeCount());
-        }
+        if (solver.TRACE) solver.out.print(" (relprod nodes: "+topBdd.nodeCount()+"x"+relationValues[0].nodeCount()+"x"+quantify.nodeCount());
         BDD result = topBdd.relprod(relationValues[0], quantify);
+        if (solver.TRACE) solver.out.print("="+result.nodeCount()+")");
         topBdd.free();
         relationValues[0].free();
         quantify.free();
@@ -228,9 +228,11 @@ public class BDDInferenceRule extends InferenceRule {
         if (solver.TRACE_FULL) solver.out.println("Adding to "+bottom+": "+result.toStringWithDomains());
         BDD oldRelation = r.relation.id();
         r.relation.orWith(result);
+        if (solver.TRACE) solver.out.println("Relation "+r+" is now "+r.relation.nodeCount()+" nodes");
         if (solver.TRACE_FULL) solver.out.println("Relation "+r+" is now: "+r.relation.toStringWithDomains());
         boolean changed = !oldRelation.equals(r.relation);
         oldRelation.free();
+        if (solver.TRACE) solver.out.println("Relation changed: "+changed);
         return changed;
     }
     
@@ -293,7 +295,7 @@ public class BDDInferenceRule extends InferenceRule {
         for (int i = 0; i < top.size(); ++i) {
             RuleTerm rt = (RuleTerm) top.get(i);
             BDDRelation r = (BDDRelation) rt.relation;
-            if (solver.TRACE) solver.out.println("Relation "+r);
+            if (solver.TRACE) solver.out.println("Relation "+r+" "+allRelationValues[i].nodeCount()+" nodes");
             if (solver.TRACE_FULL) solver.out.println("   current value: "+allRelationValues[i].toStringWithDomains());
             BDDPairing pairing = null;
             for (int j = 0; j < rt.variables.size(); ++j) {
@@ -400,6 +402,7 @@ public class BDDInferenceRule extends InferenceRule {
         boolean changed = !oldRelation.equals(r.relation);
         oldRelation.free();
         oldRelationValues = allRelationValues;
+        if (solver.TRACE) solver.out.println("Relation changed: "+changed);
         return changed;
     }
 
