@@ -13,6 +13,8 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.List;
+import java.util.LinkedList;
+import Util.LinkedHashSet;
 
 /**
  *
@@ -44,7 +46,7 @@ public class BootstrapRootSet {
         this.necessaryTypes = new HashSet();
         this.necessaryFields = new HashSet();
         this.necessaryMethods = new HashSet();
-        this.visitedObjects = new HashSet();
+        this.visitedObjects = new LinkedHashSet();
     }
     
     public Set/*jq_Type*/ getInstantiatedTypes() { return instantiatedTypes; }
@@ -53,24 +55,32 @@ public class BootstrapRootSet {
     public Set/*jq_Method*/ getNecessaryMethods() { return necessaryMethods; }
     
     public void registerInstantiatedTypeListener(jq_TypeVisitor tv) {
+        if (instantiatedTypesListeners == null)
+            instantiatedTypesListeners = new LinkedList();
         instantiatedTypesListeners.add(tv);
     }
     public void unregisterInstantiatedTypeListener(jq_TypeVisitor tv) {
         instantiatedTypesListeners.remove(tv);
     }
     public void registerNecessaryTypeListener(jq_TypeVisitor tv) {
+        if (necessaryTypesListeners == null)
+            necessaryTypesListeners = new LinkedList();
         necessaryTypesListeners.add(tv);
     }
     public void unregisterNecessaryTypeListener(jq_TypeVisitor tv) {
         necessaryTypesListeners.remove(tv);
     }
     public void registerNecessaryFieldListener(jq_FieldVisitor tv) {
+        if (necessaryFieldsListeners == null)
+            necessaryFieldsListeners = new LinkedList();
         necessaryFieldsListeners.add(tv);
     }
     public void unregisterNecessaryFieldListener(jq_FieldVisitor tv) {
         necessaryFieldsListeners.remove(tv);
     }
     public void registerNecessaryMethodListener(jq_MethodVisitor tv) {
+        if (necessaryMethodsListeners == null)
+            necessaryMethodsListeners = new LinkedList();
         necessaryMethodsListeners.add(tv);
     }
     public void unregisterNecessaryMethodListener(jq_MethodVisitor tv) {
@@ -93,6 +103,7 @@ public class BootstrapRootSet {
     }
     
     public boolean addNecessaryType(jq_Type t) {
+        if (t == null) return false;
         t.load(); t.verify(); t.prepare();
         boolean b = necessaryTypes.add(t);
         if (b) {
@@ -225,11 +236,11 @@ public class BootstrapRootSet {
         //addToWorklist(jq._hex16);
     }
     
-    public void addObjectAndSubfields(Object o) {
-        if (o == null) return;
+    public boolean addObjectAndSubfields(Object o) {
+        if (o == null) return false;
         IdentityHashCodeWrapper a = IdentityHashCodeWrapper.create(o);
         if (visitedObjects.contains(a))
-            return;
+            return false;
         visitedObjects.add(a);
         Class objType = o.getClass();
         jq_Reference jqType = (jq_Reference)Reflection.getJQType(objType);
@@ -267,17 +278,27 @@ public class BootstrapRootSet {
                 }
             }
         }
+        return true;
     }
     
     public void addSubfieldOfAllVisitedObjects(jq_InstanceField sf) {
         if (!sf.getType().isReferenceType()) return;
         // look for objects with this field.
         Class c = Reflection.getJDKType(sf.getDeclaringClass());
+        int j = 0;
         for (Iterator i = visitedObjects.iterator(); i.hasNext(); ) {
-            Object o = ((IdentityHashCodeWrapper)i.next()).getObject();
-            if (o.getClass().isAssignableFrom(c)) {
+            Object o = ((IdentityHashCodeWrapper)i.next()).getObject(); ++j;
+            if (c.isAssignableFrom(o.getClass())) {
                 Object o2 = Reflection.getfield_A(o, sf);
-                addObjectAndSubfields(o2);
+                boolean change = addObjectAndSubfields(o2);
+                if (change) {
+                    // reset iterator to avoid ConcurrentModificationException
+                    i = visitedObjects.iterator();
+                    Object o3 = null;
+                    for (int k=0; k<j; ++k)
+                        o3 = i.next();
+                    jq.assert(((IdentityHashCodeWrapper)o3).getObject() == o);
+                }
             }
         }
     }
