@@ -31,7 +31,6 @@ public class ClasspathWalker {
     static boolean SKIP_ABSTRACT = !System.getProperty("skipabstract", "no").equals("no");
        
     public static void main(String[] args) throws FileNotFoundException {
-        HostedVM.initialize();
         System.out.println("Classpath: " + PrimordialClassLoader.loader.classpathToString() + "\n");
         pw = new PrintWriter(new FileOutputStream("subclasses.txt"));
         processPackages();
@@ -73,7 +72,7 @@ public class ClasspathWalker {
                     }
                     pw.println();
                     
-                    PrimordialClassLoader.loader.unloadBSType(c);
+                    //PrimordialClassLoader.loader.unloadBSType(c);
                     classCount++;
                    //if(TRACE) System.out.println("Processing class # " + classCount + ", " + canonicalClassName);
                 } catch (NoClassDefFoundError x) {
