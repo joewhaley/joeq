@@ -821,13 +821,13 @@ public class MethodSummary {
     public abstract static class Node implements Cloneable {
         /** Map from fields to sets of predecessors on that field. 
          *  This only includes inside edges; outside edge predecessors are in FieldNode. */
-        private LinkedHashMap predecessors;
+        protected LinkedHashMap predecessors;
         /** Set of passed parameters for this node. */
-        private LinkedHashSet passedParameters;
+        protected LinkedHashSet passedParameters;
         /** Map from fields to sets of inside edges from this node on that field. */
-        private LinkedHashMap addedEdges;
+        protected LinkedHashMap addedEdges;
         /** Map from fields to sets of outside edges from this node on that field. */
-        private LinkedHashMap accessPathEdges;
+        protected LinkedHashMap accessPathEdges;
         /** Whether or not this node escapes into some unanalyzable code. */
         private boolean escapes;
         
@@ -856,6 +856,10 @@ public class MethodSummary {
             if (set.contains(this)) {
                 if (TRACE_INTRA) out.println("Replacing a node with itself, turning off remove self.");
                 set.remove(this);
+                if (set.isEmpty()) {
+                    if (TRACE_INTRA) out.println("Replacing a node with only itself! Nothing to do.");
+                    return;
+                }
                 removeSelf = false;
             }
             if (VERIFY_ASSERTIONS) jq.Assert(!set.contains(this));
@@ -1036,6 +1040,32 @@ public class MethodSummary {
                             // TODO: propagate reason.
                             GlobalNode.GLOBAL.addEdge(f, n, null);
                         }
+                    }
+                }
+            }
+        }
+        
+        static void updateMap_unknown(HashMap um, Iterator i, LinkedHashMap m) {
+            while (i.hasNext()) {
+                java.util.Map.Entry e = (java.util.Map.Entry)i.next();
+                jq_Field f = (jq_Field)e.getKey();
+                Object o = e.getValue();
+                if (o == null) continue;
+                if (o instanceof Node) {
+                    Object q = um.get(o);
+                    if (q == null) q = o;
+                    else if (TRACE_INTRA) out.println("Updated edge "+f+" "+o+" to "+q);
+                    m.put(f, q);
+                } else {
+                    LinkedHashSet lhs = new LinkedHashSet();
+                    m.put(f, lhs);
+                    for (Iterator j=((LinkedHashSet)o).iterator(); j.hasNext(); ) {
+                        Object r = j.next();
+                        jq.Assert(r != null);
+                        Object q = um.get(r);
+                        if (q == null) q = r;
+                        else if (TRACE_INTRA) out.println("Updated edge "+f+" "+r+" to "+q);
+                        lhs.add(q);
                     }
                 }
             }
@@ -1558,6 +1588,32 @@ public class MethodSummary {
             }
         }
         
+        /** Update all predecessor and successor nodes with the given update map.
+         *  Also clones the passed parameter set.
+         */
+        public void update(HashMap um) {
+            if (TRACE_INTRA) out.println("Updating edges for node "+this.toString_long());
+            LinkedHashMap m = this.predecessors;
+            if (m != null) {
+                this.predecessors = new LinkedHashMap();
+                updateMap_unknown(um, m.entrySet().iterator(), this.predecessors);
+            }
+            m = this.addedEdges;
+            if (m != null) {
+                this.addedEdges = new LinkedHashMap();
+                updateMap_unknown(um, m.entrySet().iterator(), this.addedEdges);
+            }
+            m = this.accessPathEdges;
+            if (m != null) {
+                this.accessPathEdges = new LinkedHashMap();
+                updateMap_unknown(um, m.entrySet().iterator(), this.accessPathEdges);
+            }
+            if (this.passedParameters != null) {
+                this.passedParameters = (LinkedHashSet)this.passedParameters.clone();
+            }
+            //addGlobalEdges(this);
+        }
+        
         public jq_Reference getDeclaredType() { return type; }
         
         /*
@@ -1569,8 +1625,8 @@ public class MethodSummary {
         public int hashCode() { return type.hashCode(); }
          */
         
-        public Node copy() { return new UnknownTypeNode(this); }
-        //public Node copy() { return this; }
+        //public Node copy() { return new UnknownTypeNode(this); }
+        public Node copy() { return this; }
         
         public String toString_long() { return jq.hex(this)+": "+toString_short()+super.toString_long(); }
         public String toString_short() { return "Unknown: "+type; }
@@ -1798,6 +1854,10 @@ public class MethodSummary {
             if (set.contains(this)) {
                 if (TRACE_INTRA) out.println("Replacing a node with itself, turning off remove self.");
                 set.remove(this);
+                if (set.isEmpty()) {
+                    if (TRACE_INTRA) out.println("Replacing a node with only itself! Nothing to do.");
+                    return;
+                }
                 removeSelf = false;
             }
             if (VERIFY_ASSERTIONS) jq.Assert(!set.contains(this));
@@ -2797,6 +2857,11 @@ public class MethodSummary {
             if (TRACE_INTER) out.println("Useful: "+n);
             useful = true;
         }
+        if (n instanceof UnknownTypeNode) {
+            if (useful) this.nodes.put(n, n);
+            path.remove(n);
+            return useful;
+        }
         if (n.addedEdges != null) {
             if (TRACE_INTER) out.println("Useful because of added edge: "+n);
             useful = true;
@@ -2885,6 +2950,10 @@ public class MethodSummary {
         }
         visited.add(n); this.nodes.put(n, n);
         if (TRACE_INTER) out.println("Useful: "+n);
+        if (n instanceof UnknownTypeNode) {
+            path.remove(n);
+            return;
+        }
         if (n.addedEdges != null) {
             for (Iterator i=n.addedEdges.entrySet().iterator(); i.hasNext(); ) {
                 java.util.Map.Entry e = (java.util.Map.Entry)i.next();
@@ -3007,6 +3076,7 @@ public class MethodSummary {
         }
         for (Iterator i=nodeIterator(); i.hasNext(); ) {
             Node n = (Node) i.next();
+            if (n instanceof UnknownTypeNode) continue;
             if (n.addedEdges != null) {
                 for (Iterator j=n.addedEdges.entrySet().iterator(); j.hasNext(); ) {
                     Map.Entry e = (Map.Entry) j.next();
@@ -3147,6 +3217,7 @@ public class MethodSummary {
         }
         for (Iterator i=nodeIterator(); i.hasNext(); ) {
             Node n2 = (Node) i.next();
+            if (n2 instanceof UnknownTypeNode) continue;
             if (n2.addedEdges != null) {
                 if (n2.addedEdges.containsValue(n)) {
                     jq.UNREACHABLE("ERROR: "+n2+" contains an edge to "+n);
