@@ -167,6 +167,7 @@ public class PA {
     BDD IEcs;   // V2cxIxV1cxM, context-sensitive invocation edges
     BDD vPfilter; // V1xH1, type filter                 (no context)
     BDD hPfilter; // H1xFxH2, type filter               (no context)
+    BDD NNfilter; // H1, non-null filter                (no context)
     BDD IEfilter; // V2cxIxV1cxM, context-sensitive edge filter
     
     BDD visited; // M, visited methods
@@ -250,11 +251,9 @@ public class PA {
             V2H2toV1H1 = bdd.makePair();
             V2H2toV1H1.set(new BDDDomain[] {V2,H2,V2c,H2c},
                            new BDDDomain[] {V1,H1,V1c,H1c});
-            if (FILTER_HP) {
-                H1toH2 = bdd.makePair();
-                H1toH2.set(new BDDDomain[] {H1,H1c},
-                           new BDDDomain[] {H2,H2c});
-            }
+	    H1toH2 = bdd.makePair();
+	    H1toH2.set(new BDDDomain[] {H1,H1c},
+		       new BDDDomain[] {H2,H2c});
         } else {
             V1toV2 = bdd.makePair(V1, V2);
             V2toV1 = bdd.makePair(V2, V1);
@@ -265,9 +264,7 @@ public class PA {
             V2H2toV1H1 = bdd.makePair();
             V2H2toV1H1.set(new BDDDomain[] {V2,H2},
                            new BDDDomain[] {V1,H1});
-            if (FILTER_HP) {
-                H1toH2 = bdd.makePair(H1, H2);
-            }
+	    H1toH2 = bdd.makePair(H1, H2);
         }
         
         V1set = V1.set();
@@ -833,10 +830,15 @@ public class PA {
             addToVT(V_i, type);
         }
         
-        // build up 'hT', and identify clinit, thread run, finalizers.
+        // build up 'hT', 'NNfilter', and identify clinit, thread run, finalizers.
+        if (!FILTER_NULL && NNfilter == null) NNfilter = bdd.zero();
         int Hsize = Hmap.size();
         for (int H_i = last_H; H_i < Hsize; ++H_i) {
             Node n = (Node) Hmap.get(H_i);
+
+            if (!FILTER_NULL && !isNullConstant(n))
+                NNfilter.orWith(H1.ithVar(H_i));
+
             jq_Reference type = n.getDeclaredType();
             if (type != null) {
                 type.prepare();
@@ -1036,6 +1038,7 @@ public class PA {
             
             // Rule 2
             BDD t3 = S.relprod(vP, V1set); // V1xFxV2 x V1xH1 = H1xFxV2
+            if (!FILTER_NULL) t3.andWith(NNfilter.id());
             BDD t4 = vP.replace(V1H1toV2H2); // V2xH2
             BDD t5 = t3.relprod(t4, V2set); // H1xFxV2 x V2xH2 = H1xFxH2
             t3.free(); t4.free();
@@ -1089,6 +1092,7 @@ public class PA {
             if (TRACE_SOLVER) out.print("Handling new S: "+new_S.satCount(V1FV2set));
             BDD t3 = new_S.relprod(vP, V1set); // V1xFxV2 x V1xH1 = H1xFxV2
             new_S.free();
+            if (!FILTER_NULL) t3.andWith(NNfilter.id());
             BDD t4 = vP.replace(V1H1toV2H2); // V2xH2
             BDD t5 = t3.relprod(t4, V2set); // H1xFxV2 x V2xH2 = H1xFxH2
             t3.free(); t4.free();
@@ -1147,6 +1151,7 @@ public class PA {
             {
                 // Rule 2
                 BDD t3 = S.relprod(new_vP, V1set); // V1xFxV2 x V1xH1 = H1xFxV2
+                if (!FILTER_NULL) t3.andWith(NNfilter.id());
                 BDD t4 = vP.replace(V1H1toV2H2); // V2xH2
                 BDD t5 = t3.relprod(t4, V2set); // H1xFxV2 x V2xH2 = H1xFxH2
                 t3.free(); t4.free();
@@ -1156,6 +1161,7 @@ public class PA {
             {
                 // Rule 2
                 BDD t3 = S.relprod(vP, V1set); // V1xFxV2 x V1xH1 = H1xFxV2
+                if (!FILTER_NULL) t3.andWith(NNfilter.id());
                 BDD t4 = new_vP.replace(V1H1toV2H2); // V2xH2
                 BDD t5 = t3.relprod(t4, V2set); // H1xFxV2 x V2xH2 = H1xFxH2
                 t3.free(); t4.free();
@@ -1809,6 +1815,10 @@ public class PA {
             System.out.println("IEfilter: "+IEfilter.nodeCount()+" nodes");
             bdd.save(dumpfilename+".IEfilter", IEfilter);
         }
+        if (NNfilter != null) {
+            System.out.println("NNfilter: "+NNfilter.nodeCount()+" nodes");
+            bdd.save(dumpfilename+".NNfilter", NNfilter);
+        }
         System.out.println("visited: "+(long) visited.satCount(Mset)+" relations, "+visited.nodeCount()+" nodes");
         bdd.save(dumpfilename+".visited", visited);
         
@@ -1960,6 +1970,8 @@ public class PA {
             ((TypedBDD) pa.hPfilter).setDomains(pa.H1, pa.F, pa.H2);
         if (pa.IEfilter instanceof TypedBDD)
             ((TypedBDD) pa.IEfilter).setDomains(pa.V2c, pa.I, pa.V1c, pa.M);
+        if (pa.NNfilter instanceof TypedBDD)
+            ((TypedBDD) pa.NNfilter).setDomains(pa.H1);
         
         if (pa.visited instanceof TypedBDD)
             ((TypedBDD) pa.visited).setDomains(pa.M);
