@@ -280,7 +280,8 @@ public class PA {
             bdd = BDDFactory.init(bddnodes, bddcache);
         else
             bdd = BDDFactory.init(bddfactory, bddnodes, bddcache);
-        bdd.setMaxIncrease(bddnodes/4);
+        //bdd.setMaxIncrease(bddnodes/4);
+        bdd.setIncreaseFactor(2);
         bdd.setMinFreeNodes(bddminfree);
         
         V1 = makeDomain("V1", V_BITS);

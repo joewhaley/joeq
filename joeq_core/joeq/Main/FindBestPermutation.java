@@ -46,7 +46,8 @@ public class FindBestPermutation extends Thread {
     
     public void run() {
         BDDFactory bdd = JFactory.init(1000000, 50000);
-        bdd.setMaxIncrease(250000);
+        //bdd.setMaxIncrease(250000);
+        bdd.setIncreaseFactor(2);
         readBDDConfig(bdd);
         int[] varorder = bdd.makeVarOrdering(reverse, orderingToTry);
         bdd.setVarOrder(varorder);
