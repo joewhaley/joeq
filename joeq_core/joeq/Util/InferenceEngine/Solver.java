@@ -3,13 +3,6 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Util.InferenceEngine;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
 import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.FileReader;
@@ -18,6 +11,12 @@ import java.io.LineNumberReader;
 import java.io.PrintStream;
 import java.math.BigInteger;
 import java.text.DecimalFormat;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 import joeq.Util.Collections.Pair;
 import joeq.Util.IO.MyStringTokenizer;
@@ -67,6 +66,7 @@ public abstract class Solver {
         relationsToDumpTuples = new LinkedList();
         relationsToDumpNegatedTuples = new LinkedList();
         relationsToPrintSize = new LinkedList();
+        dotGraphsToDump = new LinkedList();
     }
     
     public void initialize() {
@@ -110,6 +110,7 @@ public abstract class Solver {
     Collection/*<Relation>*/ relationsToDumpTuples;
     Collection/*<Relation>*/ relationsToDumpNegatedTuples;
     Collection/*<Relation>*/ relationsToPrintSize;
+    Collection/*<Dot>*/ dotGraphsToDump;
     
     public static void main(String[] args) throws IOException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         
@@ -346,6 +347,18 @@ public abstract class Solver {
             if (s.length() > index)
                 val = s.substring(index).trim();
             System.setProperty("incremental", val);
+        } else if (s.startsWith(".dot")) {
+            int index = ".dot".length()+1;
+            String dotSpec = "";
+            if (s.length() > index)
+                dotSpec = s.substring(index).trim();
+            Dot dot = new Dot();
+            LineNumberReader lnr = new LineNumberReader(new FileReader(dotSpec));
+            if (TRACE) out.println("Parsing dot "+dotSpec);
+            dot.parseInput(this, lnr);
+            if (TRACE) out.println("Done parsing dot "+dotSpec);            
+            lnr.close();
+            dotGraphsToDump.add(dot);
         } else {
             outputError(lineNum, 0, s, "Unknown directive \""+s+"\"");
             throw new IllegalArgumentException();
@@ -718,6 +731,11 @@ public abstract class Solver {
             Relation r = (Relation) i.next();
             if (NOISY) out.println("Dumping negated tuples for "+r);
             r.saveNegatedTuples();
+        }
+        for (Iterator i = dotGraphsToDump.iterator(); i.hasNext(); ) {
+            Dot dot = (Dot) i.next();
+            if (NOISY) out.println("Dumping dot graph");
+            dot.outputGraph();
         }
     }
 
