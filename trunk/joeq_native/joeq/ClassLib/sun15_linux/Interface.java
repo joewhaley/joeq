@@ -27,7 +27,7 @@ public class Interface extends joeq.ClassLib.sun142_linux.Interface {
         if (ClassLibInterface.USE_JOEQ_CLASSLIB &&
                 (desc.toString().startsWith("Ljava/") ||
                  desc.toString().startsWith("Lsun/misc/"))) {
-            joeq.UTF.Utf8 u = joeq.UTF.Utf8.get("LClassLib/sun15_linux/"+desc.toString().substring(1));
+            joeq.UTF.Utf8 u = joeq.UTF.Utf8.get("Ljoeq/ClassLib/sun15_linux/"+desc.toString().substring(1));
             return new AppendIterator(super.getImplementationClassDescs(desc),
                                       Collections.singleton(u).iterator());
         }
