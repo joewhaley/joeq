@@ -3365,25 +3365,10 @@ public class PA {
         BDD vP0 = vP.exist(V1cH1cset);
         
         String dumpPath = System.getProperty("pa.dumppath", "");
-        dumpPath = dumpPath + System.getProperty("file.separator", "/");
-        bdd.save(dumpPath+"vP0.bdd", vP0);
-        bdd.save(dumpPath+"hP0.bdd", hP);
-        bdd.save(dumpPath+"L.bdd", L0);
-        bdd.save(dumpPath+"S.bdd", S0);
-        bdd.save(dumpPath+"A.bdd", A);
-        bdd.save(dumpPath+"vT.bdd", vT);
-        bdd.save(dumpPath+"hT.bdd", hT);
-        bdd.save(dumpPath+"aT.bdd", aT);
-        bdd.save(dumpPath+"cha.bdd", cha);
-        bdd.save(dumpPath+"actual.bdd", actual);
-        bdd.save(dumpPath+"formal.bdd", formal);
-        bdd.save(dumpPath+"mI.bdd", mI);
-        bdd.save(dumpPath+"Mret.bdd", Mret);
-        bdd.save(dumpPath+"Mthr.bdd", Mthr);
-        bdd.save(dumpPath+"Iret.bdd", Iret);
-        bdd.save(dumpPath+"Ithr.bdd", Ithr);
-        bdd.save(dumpPath+"IE0.bdd", IE0);
-        if (IEfilter != null) bdd.save(dumpPath+"IEfilter.bdd", IEfilter);
+        String sep = System.getProperty("file.separator", "/");
+        if (!dumpPath.endsWith(sep))
+            dumpPath += sep;
+        System.out.println("Dumping to path "+dumpPath);
         
         DataOutputStream dos = new DataOutputStream(new FileOutputStream(dumpPath+"bddinfo"));
         for (int i = 0; i < bdd.numberOfDomains(); ++i) {
@@ -3414,6 +3399,25 @@ public class PA {
         dos.writeBytes("VC "+(1L<<VC_BITS)+"\n");
         dos.writeBytes("HC "+(1L<<HC_BITS)+"\n");
         dos.close();
+        
+        bdd.save(dumpPath+"vP0.bdd", vP0);
+        bdd.save(dumpPath+"hP0.bdd", hP);
+        bdd.save(dumpPath+"L.bdd", L0);
+        bdd.save(dumpPath+"S.bdd", S0);
+        bdd.save(dumpPath+"A.bdd", A);
+        bdd.save(dumpPath+"vT.bdd", vT);
+        bdd.save(dumpPath+"hT.bdd", hT);
+        bdd.save(dumpPath+"aT.bdd", aT);
+        bdd.save(dumpPath+"cha.bdd", cha);
+        bdd.save(dumpPath+"actual.bdd", actual);
+        bdd.save(dumpPath+"formal.bdd", formal);
+        bdd.save(dumpPath+"mI.bdd", mI);
+        bdd.save(dumpPath+"Mret.bdd", Mret);
+        bdd.save(dumpPath+"Mthr.bdd", Mthr);
+        bdd.save(dumpPath+"Iret.bdd", Iret);
+        bdd.save(dumpPath+"Ithr.bdd", Ithr);
+        bdd.save(dumpPath+"IE0.bdd", IE0);
+        if (IEfilter != null) bdd.save(dumpPath+"IEfilter.bdd", IEfilter);
         
         dos = new DataOutputStream(new FileOutputStream(dumpPath+"var.map"));
         Vmap.dumpStrings(dos);
