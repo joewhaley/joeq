@@ -59,7 +59,7 @@ public class jq_InterrupterThread extends Thread {
                                     jq_RegisterState.CONTEXT_INTEGER |
                                     jq_RegisterState.CONTEXT_FLOATING_POINT;
                 other_nt.getContext(regs);
-                if (TRACE) SystemInterface.debugmsg(other_nt+" : "+javaThread+" ip="+jq.hex8(regs.Eip)+" cc="+CodeAllocator.getCodeContaining(regs.Eip));
+                if (TRACE) SystemInterface.debugmsg(other_nt+" : "+javaThread+" ip="+jq.hex8(regs.Eip)+" sp="+jq.hex8(regs.Esp)+" cc="+CodeAllocator.getCodeContaining(regs.Eip));
 		// simulate a call to threadSwitch method
 		Unsafe.poke4(regs.Esp -= 4, Unsafe.addressOf(other_nt));
 		Unsafe.poke4(regs.Esp -= 4, regs.Eip);
