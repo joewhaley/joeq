@@ -10,7 +10,7 @@ msvc:	set_text_writeable_msvc
 	set_text_writeable.exe joeq.exe
 
 linux:	set_text_writeable
-	gcc -g joeq.c native.c exception.c ../joeq/jq.obj -lpthread -o joeq
+	gcc -g joeq.c native.c exception.c ../joeq/jq.obj -lpthread -ldl -o joeq
 	./set_text_writeable joeq
 
 set_text_writeable:	set_text_writeable.c

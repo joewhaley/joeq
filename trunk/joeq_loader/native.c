@@ -58,6 +58,7 @@ void __stdcall sysfree(void* p)
     free(p);
 }
 
+#if defined(WIN32)
 HINSTANCE __stdcall open_library(char* name)
 {
     return LoadLibrary(name);
@@ -72,6 +73,23 @@ FARPROC __stdcall get_proc_address(HINSTANCE lib, char* name)
 {
     return GetProcAddress(lib, name);
 }
+#else
+#include <dlfcn.h>
+void* __stdcall open_library(char* name)
+{
+    return dlopen(name, RTLD_LAZY);
+}
+
+int __stdcall close_library(void* lib)
+{
+    return dlclose(lib);
+}
+
+void* __stdcall get_proc_address(void* lib, char* name)
+{
+    return dlsym(lib, name);
+}
+#endif
 
 void __stdcall mem_set(void* p, const int size, const char c)
 {
@@ -1147,18 +1165,4 @@ void __stdcall set_current_context(Thread* jthread, const CONTEXT* context)
         :"r"(jthread), "r"(context)
         );
 #endif
-}
-
-__int64 __stdcall query_performance_counter(void)
-{
-    LARGE_INTEGER result;
-    QueryPerformanceCounter(&result);
-    return result.QuadPart;
-}
-
-__int64 __stdcall query_performance_frequency(void)
-{
-    LARGE_INTEGER result;
-    QueryPerformanceFrequency(&result);
-    return result.QuadPart;
 }
