@@ -531,10 +531,6 @@ int __stdcall resume_thread(const HANDLE handle)
 {
     return ResumeThread(handle);
 }
-int __stdcall resume_thread(const HANDLE handle)
-{
-    return ResumeThread(handle);
-}
 int __stdcall suspend_thread(const HANDLE handle)
 {
     return SuspendThread(handle);
