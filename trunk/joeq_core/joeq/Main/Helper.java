@@ -12,6 +12,8 @@ import Compil3r.Quad.ControlFlowGraphVisitor;
 import Compil3r.Quad.Quad;
 import Compil3r.Quad.QuadVisitor;
 
+import java.util.*;
+
 public class Helper {
     static {
 	HostedVM.initialize();
@@ -21,6 +23,33 @@ public class Helper {
 	jq_Class c = (jq_Class) jq_Type.parseType(classname);
 	c.load(); c.prepare();
 	return c;
+    }
+
+    public static jq_Class[] loadPackage(String packagename) {
+	return loadPackages(packagename, false);
+    }
+
+    public static jq_Class[] loadPackages(String packagename) {
+	return loadPackages(packagename, true);
+    }
+
+    public static jq_Class[] loadPackages(String packagename, boolean recursive) {
+        String canonicalPackageName = packagename.replace('.', '/');
+        if (!canonicalPackageName.endsWith("/")) canonicalPackageName += '/';
+        Iterator i = Bootstrap.PrimordialClassLoader.loader.listPackage(canonicalPackageName, recursive);
+        if (!i.hasNext()) {
+            System.err.println("Package " + canonicalPackageName + " not found.");
+        }
+	LinkedList ll = new LinkedList();
+	
+        while (i.hasNext()) {
+	    String c = (String)i.next();
+	    c = c.substring(0, c.length()-6);
+	    System.out.println("Registering Class: "+c);
+	    ll.add(Helper.load(c));
+        }
+
+	return (jq_Class[])ll.toArray(new jq_Class[0]);
     }
 
     public static void runPass(jq_Class c, jq_TypeVisitor tv) {
