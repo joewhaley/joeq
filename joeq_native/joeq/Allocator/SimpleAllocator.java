@@ -178,15 +178,16 @@ public class SimpleAllocator extends HeapAllocator {
         return allocateArray(length, size, vtable);
     }
 
+    public static final jq_Class _class;
     public static final jq_InstanceMethod _allocateObject;
     public static final jq_InstanceMethod _allocateObjectAlign8;
     public static final jq_InstanceMethod _allocateArray;
     public static final jq_InstanceMethod _allocateArrayAlign8;
     static {
-        jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LAllocator/SimpleAllocator;");
-        _allocateObject = k.getOrCreateInstanceMethod("allocateObject", "(ILjava/lang/Object;)Ljava/lang/Object;");
-        _allocateObjectAlign8 = k.getOrCreateInstanceMethod("allocateObjectAlign8", "(ILjava/lang/Object;)Ljava/lang/Object;");
-        _allocateArray = k.getOrCreateInstanceMethod("allocateArray", "(IILjava/lang/Object;)Ljava/lang/Object;");
-        _allocateArrayAlign8 = k.getOrCreateInstanceMethod("allocateArrayAlign8", "(IILjava/lang/Object;)Ljava/lang/Object;");
+        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LAllocator/SimpleAllocator;");
+        _allocateObject = _class.getOrCreateInstanceMethod("allocateObject", "(ILjava/lang/Object;)Ljava/lang/Object;");
+        _allocateObjectAlign8 = _class.getOrCreateInstanceMethod("allocateObjectAlign8", "(ILjava/lang/Object;)Ljava/lang/Object;");
+        _allocateArray = _class.getOrCreateInstanceMethod("allocateArray", "(IILjava/lang/Object;)Ljava/lang/Object;");
+        _allocateArrayAlign8 = _class.getOrCreateInstanceMethod("allocateArrayAlign8", "(IILjava/lang/Object;)Ljava/lang/Object;");
     }
 }
