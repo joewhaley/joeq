@@ -4,9 +4,9 @@
 # Best order seems to be: N0_F0_I0_M0_Z0_V1xV0_VC1xVC0_T0_H1_T1_H0
 #
 vP0 ( v:V bdd=V0, h:H bdd=H0 ) load
-vP ( vc:VC bdd=VC0, v:V bdd=V0, h:H bdd=H0 ) save
+vP ( vc:VC bdd=VC0, v:V bdd=V0, hc:HC bdd=HC0, h:H bdd=H0 ) save
 A ( vcdest:VC bdd=VC0, dest:V bdd=V0 , vcsrc:VC bdd=VC1, source:V bdd=V1 ) load
-hP ( ha:H bdd=H0, field:F bdd=F0, hb:H bdd=H1 ) save
+hP ( cha:HC bdd=HC0, ha:H bdd=H0, field:F bdd=F0, chb:HC bdd=HC1, hb:H bdd=H1 ) save
 S ( base:V bdd=V0 , field:F bdd=F0 , src:V bdd=V1 ) load
 L ( base:V bdd=V0 , field:F bdd=F0 , dest:V bdd=V1 ) load
 vT ( var:V bdd=V0 , type:T bdd=T0 ) load
@@ -21,6 +21,8 @@ Mthr ( method:M bdd=M0 , v:V bdd=V1 ) load
 Iret ( invoke:I bdd=I0 , v:V bdd=V0 ) load
 Ithr ( invoke:I bdd=I0 , v:V bdd=V0 ) load
 mI ( method:M bdd=M0 , invoke:I bdd=I0 , name:N bdd=N0 ) load
-IE0 ( invoke:I, target:M bdd=M0 ) load
-IEfilter ( ccaller:VC bdd=VC1, invoke:I, ccallee:VC bdd=VC0, target:M bdd=M0 ) load
+IE0 ( invoke:I , target:M bdd=M0 ) load
 IE ( ccaller:VC bdd=VC1, invoke:I, ccallee:VC bdd=VC0, target:M bdd=M0 ) save
+mC ( method:M bdd=M0, context:VC bdd=VC0 ) load
+threadRuns ( vc:VC bdd=VC0, v:V bdd=V0, hc:HC bdd=HC0, h:H bdd=H0 ) load
+eq ( vc:VC bdd=VC0, hc:HC bdd=HC0) load

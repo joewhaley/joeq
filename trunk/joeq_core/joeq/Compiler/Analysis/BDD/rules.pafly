@@ -5,7 +5,7 @@ hP(h1,f,h2) :- vP(v1,h1), S(v1,f,v2), vP(v2,h2). split
 vP(v2,h2) :- vP(v1,h1), L(v1,f,v2), hP(h1,f,h2), vPfilter(v2,h2). split
 A(v1,v2) :- formal(m,z,v1), IE(i,m), actual(i,z,v2).
 A(v2,v1) :- Mret(m,v1), IE(i,m), Iret(i,v2).
-A(v2,v1) :- Mthr(m,v1), IE(i,m), Iret(i,v2).
+A(v2,v1) :- Mthr(m,v1), IE(i,m), Ithr(i,v2).
 
 IE(i,m2) :- mI(m1,i,n), actual(i,0,v), vP(v,h), hT(h,t), cha(t,n,m2). split
 visited(m) :- IE(_,m).
