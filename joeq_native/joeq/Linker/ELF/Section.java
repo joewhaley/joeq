@@ -521,6 +521,10 @@ public abstract class Section implements ELFConstants {
             while (i.hasNext()) {
                 Map.Entry e = (Map.Entry)i.next();
                 String s = (String)e.getKey();
+                if (s.length() == 0) {
+                    jq.Assert(((Integer)e.getValue()).intValue() == 0);
+                    continue;
+                }
                 //System.out.println("Writing "+s.length()+" bytes for \""+s+"\" to table index "+index);
                 
                 if (false) {
