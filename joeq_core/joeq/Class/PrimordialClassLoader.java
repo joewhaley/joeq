@@ -66,17 +66,22 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
         Map entries;
         ZipFileElement(ZipFile zf) {
             this.zf = zf;
+        }
+        void initializeEntryMap() {
             int size = zf.size();
             entries = new HashMap(size + (size >> 1));
-            for (Enumeration e = zf.entries(); e.hasMoreElements(); ) {
-                ZipEntry ze = (ZipEntry) e.nextElement();
-                entries.put(ze.getName(), ze);
+            if (size > 0) {
+                for (Enumeration e = zf.entries(); e.hasMoreElements(); ) {
+                    ZipEntry ze = (ZipEntry) e.nextElement();
+                    entries.put(ze.getName(), ze);
+                }
             }
             if (TRACE) out.println(this+" contains: "+entries.keySet());
         }
         public String toString() { return zf.getName(); }
         InputStream getResourceAsStream(String name) {
             if (TRACE) out.println("Getting resource for "+name+" in zip file "+zf.getName());
+            if (entries == null) initializeEntryMap();
             ZipEntry ze = (ZipEntry) entries.get(name);
             try { // look for name in zipfile, return null if something goes wrong.
                 return (ze==null)?null:zf.getInputStream(ze);
@@ -84,11 +89,13 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
         }
         boolean containsResource(String name) {
             if (TRACE) out.println("Searching for "+name+" in zip file "+zf.getName());
+            if (entries == null) initializeEntryMap();
             return entries.containsKey(name);
         }
         Iterator listPackage(final String pathname, final boolean recursive) {
             if (TRACE) out.println("Listing package "+pathname+" of zip file "+zf.getName());
             // look for directory name first
+            if (entries == null) initializeEntryMap();
             final String filesep   = "/";
             return new FilterIterator(entries.values().iterator(),
             new FilterIterator.Filter() {
@@ -107,6 +114,7 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
         }
         Iterator listPackages() {
             if (TRACE) out.println("Listing packages of zip file "+zf.getName());
+            if (entries == null) initializeEntryMap();
             LinkedHashSet result = new LinkedHashSet();
             for (Iterator i=entries.values().iterator(); i.hasNext(); ) {
                 ZipEntry zze = (ZipEntry) i.next();
