@@ -15,7 +15,7 @@ import Scheduler.jq_NativeThread;
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
-public final class Interface extends ClassLib.Common.InterfaceImpl {
+public class Interface extends ClassLib.Common.InterfaceImpl {
 
     /** Creates new Interface */
     public Interface() {}
