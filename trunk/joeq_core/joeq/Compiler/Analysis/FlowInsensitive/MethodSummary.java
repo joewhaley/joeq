@@ -1777,7 +1777,7 @@ public class MethodSummary {
             return Integer.toHexString(this.hashCode())+": "+toString_short()+super.toString_long();
         }
         public String toString_short() {
-            return "Concrete: "+type.shortName()+" @ "+(q==null?-1:q.getID());
+            return "Concrete: "+(type==null?"null":type.shortName())+" @ "+(q==null?-1:q.getID());
         }
 
         public void write(MethodSummary ms, DataOutput out) throws IOException {
