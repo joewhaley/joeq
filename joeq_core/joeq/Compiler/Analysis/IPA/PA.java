@@ -158,7 +158,7 @@ public class PA {
     
     int bddnodes = Integer.parseInt(System.getProperty("bddnodes", "2500000"));
     int bddcache = Integer.parseInt(System.getProperty("bddcache", "200000"));
-    int bddminfree = Integer.parseInt(System.getProperty("bddminfree", "20"));
+    double bddminfree = Integer.parseInt(System.getProperty("bddminfree", ".20"));
     static String resultsFileName = System.getProperty("pa.results", "pa");
     static String callgraphFileName = System.getProperty("pa.callgraph", "callgraph");
     static String initialCallgraphFileName = System.getProperty("pa.icallgraph", callgraphFileName);
