@@ -496,29 +496,7 @@ public class Dominators {
      */
     public final List getIterativeDomination(Object n) {
         ArrayList v = new ArrayList(20);
-        Object[] dom = (Object[]) domination.get(n);
-        if (dom == null)
-            return v;
-
-        for (int i = 1; i < dom.length; i++)
-            v.add(dom[i]);
-
-        for (int j = 0; j < v.size(); j++) {
-            Object c = v.get(j);
-            if (c == null) {
-                v.remove(j);
-                j--;
-                continue;
-            }
-
-            Object[] d = (Object[]) domination.get(c);
-            if (d == null)
-                continue;
-
-            for (int i = 1; i < d.length; i++)
-                v.add(d[i]);
-        }
-
+        getIterativeDomination(n, v);
         return v;
     }
 
