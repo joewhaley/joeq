@@ -27,7 +27,7 @@ import java.util.AbstractSet;
  * 
  * @author  Felix S. Klock II <pnkfelix@mit.edu>
  * @version $Id$ */
-public class GenericMultiMap/*<K,V>*/ implements MultiMap/*<K,V>*/ {
+public class GenericMultiMap/*<K,V>*/ implements MultiMap/*<K,V>*/, Cloneable {
     
     // internal Map[KeyType -> Collection[ ValueType ]]
     private Map/*<K,Collection<V>>*/ internMap;
@@ -533,5 +533,14 @@ public class GenericMultiMap/*<K,V>*/ implements MultiMap/*<K,V>*/ {
         public void remove() {
             lastit.remove();
         }
+    }
+    
+    public Object clone() {
+        return copy();
+    }
+    public GenericMultiMap copy() {
+        GenericMultiMap that = new GenericMultiMap(this.mf, this.cf);
+        that.addAll(this);
+        return that;
     }
 }
