@@ -2991,14 +2991,15 @@ public class PA {
         if(REFLECTION_STAT){
             BDD newInstanceCalls = IE.restrict(M.ithVar(Mmap.get(javaLangClass_newInstance)));   // I
             
-            for(Iterator iter = newInstanceCalls.iterator(Iset); iter.hasNext();){
+            int pos = 0;
+            for(Iterator iter = newInstanceCalls.iterator(Iset); iter.hasNext(); pos++){
                 BDD i = (BDD)iter.next();
                 int i_i = i.scanVar(I).intValue();
                 ProgramLocation mc = (ProgramLocation)Imap.get(i_i);
                 
                 BDD callees = IE.relprod(i, Iset);
                 if(!callees.isZero()){
-                    System.out.println(mc.toStringLong() + ": ");
+                    System.out.println("[" + pos + "]\t" + mc.toStringLong() + ": ");
                     for(Iterator iter2 = callees.iterator(Mset); iter2.hasNext();){
                         BDD callee = (BDD)iter2.next();
                         
