@@ -109,6 +109,8 @@ public class QuadIterator implements ListIterator.Quad {
 	}
     }
     
+    public BasicBlock getCurrentBasicBlock() { return this.currentBasicBlock; }
+    
     /** Return the next quad in the iteration. */
     public Quad nextQuad() {
         if (!this.quadsInCurrentBasicBlock.hasNext()) {
