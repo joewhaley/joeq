@@ -2232,7 +2232,7 @@ public class PA {
         BDD old_reflectiveCalls  = reflectiveCalls.id();
         reflectiveCalls = constructorIE.exist(H1set).replace(I2toI);
         constructorIE.free();
-        if(REFLECTION_STAT && !reflectiveCalls.isZero()){
+        if(TRACE_REFLECTION && !reflectiveCalls.isZero()){
             out.println("reflectiveCalls: " + reflectiveCalls.toStringWithDomains(TS) + 
                 " of size " + reflectiveCalls.satCount(Iset.and(Mset)));
         }
@@ -2988,7 +2988,7 @@ public class PA {
         if(FIX_NO_DEST){
             analyzeIE();
         }
-        if(TRACE_REFLECTION){
+        if(REFLECTION_STAT){
             BDD newInstanceCalls = IE.restrict(M.ithVar(Mmap.get(javaLangClass_newInstance)));   // I
             
             for(Iterator iter = newInstanceCalls.iterator(Iset); iter.hasNext();){
