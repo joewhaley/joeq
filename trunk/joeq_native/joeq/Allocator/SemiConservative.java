@@ -144,8 +144,7 @@ public abstract class SemiConservative {
     }
     
     public static void addConservativeAddress(Address a) {
-        // todo: check if address falls in heap
-        DefaultHeapAllocator.processObjectReference((HeapAddress) a);
+        DefaultHeapAllocator.processPossibleObjectReference((HeapAddress) a);
     }
     
     public static boolean isMarked(Object o) {
