@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -292,28 +293,31 @@ public class BDDPointerAnalysis {
         Collection roots = Arrays.asList(c.getDeclaredStaticMethods());
         
         CallGraph cg = INCREMENTAL_ITERATION ?
-                       dis.goIncremental(c) :
-                       dis.goNonincremental(c);
+                       dis.goIncremental(roots) :
+                       dis.goNonincremental(roots);
         
-        Collection[] depths = cg.findDepths(roots);
+        cg = new CachedCallGraph(cg);
+        
+        Collection[] depths = cg.findDepths();
         for (int i=0; i<depths.length; ++i) {
             System.out.println(">>>>> Depth "+i+": size "+depths[i].size());
         }
-
+        
+        RootedCHACallGraph.test(cg);
+        
         if (DUMP)
-            dis.dumpResults();
+            dis.dumpResults(cg);
             
     }
     
-    public CallGraph goNonincremental(jq_Class c) {
+    public CallGraph goNonincremental(Collection roots) {
         long time = System.currentTimeMillis();
         
         this.addObjectAllocation(GlobalNode.GLOBAL, null);
         this.addAllocType(null, PrimordialClassLoader.getJavaLangObject());
         this.addVarType(GlobalNode.GLOBAL, PrimordialClassLoader.getJavaLangObject());
         
-        List methods = java.util.Arrays.asList(c.getStaticMethods());
-        for (Iterator i=methods.iterator(); i.hasNext(); ) {
+        for (Iterator i=roots.iterator(); i.hasNext(); ) {
             jq_StaticMethod m = (jq_StaticMethod) i.next();
             if (m.getBytecode() != null) {
                 ControlFlowGraph cfg = CodeCache.getCode(m);
@@ -369,19 +373,18 @@ public class BDDPointerAnalysis {
 
         System.out.println("Total time: "+time/1000.+" seconds.");
         
-        CallGraph cg = new BDDCallGraph();
+        CallGraph cg = new BDDCallGraph(roots);
         return cg;
     }
     
-    public CallGraph goIncremental(jq_Class c) {
+    public CallGraph goIncremental(Collection roots) {
         long time = System.currentTimeMillis();
         
         this.addObjectAllocation(GlobalNode.GLOBAL, null);
         this.addAllocType(null, PrimordialClassLoader.getJavaLangObject());
         this.addVarType(GlobalNode.GLOBAL, PrimordialClassLoader.getJavaLangObject());
         
-        List methods = java.util.Arrays.asList(c.getStaticMethods());
-        for (Iterator i=methods.iterator(); i.hasNext(); ) {
+        for (Iterator i=roots.iterator(); i.hasNext(); ) {
             jq_StaticMethod m = (jq_StaticMethod) i.next();
             if (m.getBytecode() != null) {
                 ControlFlowGraph cfg = CodeCache.getCode(m);
@@ -442,7 +445,7 @@ public class BDDPointerAnalysis {
 
         System.out.println("Total time: "+time/1000.+" seconds.");
         
-        CallGraph cg = new BDDCallGraph();
+        CallGraph cg = new BDDCallGraph(roots);
         return cg;
     }
 
@@ -541,10 +544,10 @@ public class BDDPointerAnalysis {
 
     BDD cTypes; // H1 x T1
 
-    public void dumpResults() {
+    public void dumpResults(CallGraph cg) {
         System.out.println(visitedMethods.size()+" methods");
         
-        System.out.println(AndersenPointerAnalysis.dumpResults(callSiteToTargets));
+        System.out.println(cg);
         
         // (V1xH1) * (H1xT1) => (V1xT1)
         //printSet("Points to", pointsTo, "V1xH1");
@@ -666,13 +669,12 @@ public class BDDPointerAnalysis {
         // find all methods that we call.
         for (Iterator i=ms.getCalls().iterator(); i.hasNext(); ) {
             ProgramLocation mc = (ProgramLocation) i.next();
-            CallSite cs = new CallSite(ms, mc);
-            Assert._assert(!callSiteToTargets.containsKey(cs));
+            Assert._assert(!callSiteToTargets.containsKey(mc));
             if (mc.isSingleTarget()) {
                 jq_Method target = (jq_Method) mc.getTargetMethod();
                 addClassInit(target.getDeclaringClass());
                 Set definite_targets = Collections.singleton(target);
-                callSiteToTargets.put(cs, definite_targets);
+                callSiteToTargets.put(mc, definite_targets);
                 if (target.getBytecode() != null) {
                     ControlFlowGraph cfg2 = CodeCache.getCode(target);
                     MethodSummary ms2 = MethodSummary.getSummary(cfg2);
@@ -683,7 +685,7 @@ public class BDDPointerAnalysis {
                 }
             } else {
                 Set definite_targets = SortedArraySet.FACTORY.makeSet(HashCodeComparator.INSTANCE);
-                callSiteToTargets.put(cs, definite_targets);
+                callSiteToTargets.put(mc, definite_targets);
                 jq_InstanceMethod method = (jq_InstanceMethod) mc.getTargetMethod();
                 addClassInit(method.getDeclaringClass());
                 int methodIndex = getMethodIndex(method);
@@ -700,6 +702,7 @@ public class BDDPointerAnalysis {
                     System.out.println("Virtual call "+method+" receiver vars "+receiverObjects);
                     printSet("receiverBDD", receiverBDD, "V1");
                 }
+                CallSite cs = new CallSite(ms, mc);
                 virtualCallSites.add(cs);
                 virtualCallReceivers.add(receiverBDD);
                 virtualCallMethods.add(method);
@@ -766,7 +769,7 @@ public class BDDPointerAnalysis {
             if (TRACE_VIRTUAL) {
                 System.out.println("# of targets: "+targets.satCount(T4.set()));
             }
-            Set definite_targets = (Set) callSiteToTargets.get(cs);
+            Set definite_targets = (Set) callSiteToTargets.get(mc);
             for (;;) {
                 int p = targets.scanVar(T4.getIndex());
                 if (p < 0) break;
@@ -1397,6 +1400,12 @@ public class BDDPointerAnalysis {
 
     public class BDDCallGraph extends CallGraph {
 
+        Collection roots;
+
+        BDDCallGraph(Collection roots) {
+            this.roots = roots;
+        }
+
         /**
          * @see Compil3r.Quad.CallGraph#getTargetMethods(java.lang.Object, Compil3r.Quad.ProgramLocation)
          */
@@ -1404,14 +1413,44 @@ public class BDDPointerAnalysis {
             jq_Method method = (jq_Method) callSite.getTargetMethod();
             if (callSite.isSingleTarget())
                 return Collections.singleton(method);
-            for (Iterator i=callSiteToTargets.entrySet().iterator(); i.hasNext(); ) {
-                Map.Entry e = (Map.Entry) i.next();
-                CallSite cs = (CallSite) e.getKey();
-                if (callSite.equals(cs.m))
-                    return (Collection) e.getValue();
-            }
-            return Collections.EMPTY_SET;
+            Collection targets = (Collection) callSiteToTargets.get(callSite);
+            if (targets != null) return targets;
+            else return Collections.EMPTY_SET;
+        }
+
+        /* (non-Javadoc)
+         * @see Compil3r.Quad.CallGraph#setRoots(java.util.Collection)
+         */
+        public void setRoots(Collection roots) {
+            throw new UnsupportedOperationException();
+        }
+
+        /* (non-Javadoc)
+         * @see Compil3r.Quad.CallGraph#getRoots()
+         */
+        protected Collection getRoots() {
+            return roots;
         }
         
+        /* (non-Javadoc)
+         * @see Compil3r.Quad.CallGraph#getAllCallSites()
+         */
+        public Collection getAllCallSites() {
+            return callSiteToTargets.keySet();
+        }
+
+        /* (non-Javadoc)
+         * @see Compil3r.Quad.CallGraph#getAllMethods()
+         */
+        public Collection getAllMethods() {
+            LinkedHashSet s = new LinkedHashSet();
+            s.addAll(roots);
+            for (Iterator i=callSiteToTargets.values().iterator(); i.hasNext(); ) {
+                Collection c = (Collection) i.next();
+                s.addAll(c);
+            }
+            return s;
+        }
+
     }
 }
