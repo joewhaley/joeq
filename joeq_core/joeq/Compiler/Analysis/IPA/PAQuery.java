@@ -28,12 +28,6 @@ public class PAQuery {
             MethodSummary ms = MethodSummary.getSummary(m);
             if(ms == null) return;
             if(ms.getNumOfParams() < 2) return;
-            System.out.print("Processing method " + m + ":\t[" + ms.getNumOfParams() + "] ");
-            for(int i = 0; i < ms.getNumOfParams(); i++) {
-                ParamNode paramNode = ms.getParamNode(i);
-                System.out.print(paramNode == null ? "<null> " : paramNode.toString_long() + " ");
-            }
-            System.out.print("\n");
             
             PAResults paResults = getBuilder().getPAResults();
             PA r = paResults.getPAResults();
@@ -63,6 +57,7 @@ public class PAQuery {
             //TypedBDD pointsTo = (TypedBDD)params.relprod(r.vP, r.V1cH1cset);
             //System.out.println("pointsTo: \n" + paResults.toString(pointsTo, -1));
             int i = 0;
+            boolean printedInfo = false;
             long contextSize = (long)contexts.satCount(r.V1c.set());
             for(Iterator contextIter = contexts.iterator(); contextIter.hasNext(); i++) {
                 TypedBDD context = (TypedBDD)contextIter.next();
@@ -83,7 +78,11 @@ public class PAQuery {
                 //System.out.println(t.satCount() + ", " + pointsTo.satCount());
                 int pointsToSize = (int)pointsTo.satCount(r.H1.set().and(r.Zset));
                 int projSize     = (int)t.satCount( r.H1.set() ); 
-                if(projSize < pointsToSize) {                
+                if(projSize < pointsToSize) {
+                    if(!printedInfo) {
+                        printMethodInfo(m, ms);
+                        printedInfo = true;
+                    }                
                     ProgramLocation loc = new ProgramLocation.BCProgramLocation(m, 0);
                     System.out.println("\tPotential aliasing in context #" + i + " calling " + m.toString() + " at " + 
                         loc.getSourceFile() + ":" + loc.getLineNumber());
@@ -100,6 +99,14 @@ public class PAQuery {
             }
         }
         
+        void printMethodInfo(jq_Method m, MethodSummary ms) {
+            System.out.print("Processing method " + m + ":\t[" + ms.getNumOfParams() + "] ");
+            for(int i = 0; i < ms.getNumOfParams(); i++) {
+                ParamNode paramNode = ms.getParamNode(i);
+                System.out.print(paramNode == null ? "<null> " : paramNode.toString_long() + " ");
+            }
+            System.out.print("\n");
+        }
         public void run() {
             for(Iterator iter = getBuilder().getCallGraph().getAllMethods().iterator(); iter.hasNext();) {
                 jq_Method m = (jq_Method)iter.next();
