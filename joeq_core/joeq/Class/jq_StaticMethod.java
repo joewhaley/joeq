@@ -13,6 +13,7 @@ package Clazz;
 
 import Bootstrap.PrimordialClassLoader;
 import UTF.Utf8;
+import jq;
 
 public class jq_StaticMethod extends jq_Method {
 
@@ -51,6 +52,8 @@ public class jq_StaticMethod extends jq_Method {
     public final boolean isStatic() { return true; }
     public boolean isClassInitializer() { return false; }
 
+    public final void unprepare() { jq.assert(state == STATE_PREPARED); state = STATE_LOADED; }
+    
     public static final jq_Class _class;
     static {
         _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LClazz/jq_StaticMethod;");
