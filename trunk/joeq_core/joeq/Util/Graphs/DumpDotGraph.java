@@ -12,6 +12,7 @@ import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 
 import joeq.Util.Collections.HashWorklist;
 import joeq.Util.Collections.IndexMap;
@@ -24,6 +25,9 @@ import joeq.Util.Collections.FilterIterator.Filter;
  * @version $Id$
  */
 public class DumpDotGraph {
+    
+    static boolean TRACE = false;
+    static PrintStream out = System.out;
     
     // Graph nodes/edges
     Set nodes;
@@ -46,7 +50,7 @@ public class DumpDotGraph {
     
     // Clusters
     Filter containingCluster;
-    Set clusters;
+    Set clusterRoots;
     Navigator clusterNavigator;
     
     public DumpDotGraph() {
@@ -118,12 +122,30 @@ public class DumpDotGraph {
     
     void computeClusters() {
         if (containingCluster == null) return;
-        clusters = new HashSet();
+        HashWorklist w = new HashWorklist(true);
         for (Iterator i = nodes.iterator(); i.hasNext(); ) {
             Object o = i.next();
             Object c = containingCluster.map(o);
-            if (c != null) clusters.add(c);
+            if (c != null) w.add(c);
         }
+        if (clusterNavigator != null) {
+            clusterRoots = new HashSet();
+            while (!w.isEmpty()) {
+                Object o = w.pull();
+                if (TRACE) out.println("Cluster: "+o);
+                Collection c;
+                c = clusterNavigator.next(o);
+                if (TRACE) out.println("Successors: "+c);
+                w.addAll(c);
+                c = clusterNavigator.prev(o);
+                if (TRACE) out.println("Predecessors: "+c);
+                w.addAll(c);
+                if (c.isEmpty()) clusterRoots.add(o);
+            }
+        } else {
+            clusterRoots = w.getVisitedSet();
+        }
+        if (TRACE) out.println("Cluster roots: "+clusterRoots);
     }
     
     public void dump(String filename) throws IOException {
@@ -137,11 +159,14 @@ public class DumpDotGraph {
     }
     
     void dumpNodes(DataOutput dos, IndexMap m, Object cluster) throws IOException {
+        if (TRACE) out.println("Dumping nodes for cluster "+cluster);
         for (Iterator i = nodes.iterator(); i.hasNext(); ) {
             Object o = i.next();
             if (containingCluster != null) {
                 Object c = containingCluster.map(o);
-                if (c == cluster || !c.equals(cluster)) continue;
+                if (c != cluster) continue;
+                if (c == null) continue;
+                if (!c.equals(cluster)) continue;
             }
             Object nodeid = (m != null) ? ("n"+m.get(o)) : "\""+o+"\"";
             dos.writeBytes("  "+nodeid);
@@ -178,11 +203,12 @@ public class DumpDotGraph {
     }
     
     void dumpCluster(DataOutput dos, IndexMap m, Set visitedClusters, Object c) throws IOException {
-        if (visitedClusters.add(c)) return;
+        if (!visitedClusters.add(c)) return;
         dos.writeBytes("  subgraph cluster"+visitedClusters.size()+" {\n");
         dumpNodes(dos, m, c);
         if (clusterNavigator != null) {
             Collection subClusters = clusterNavigator.next(c);
+            if (TRACE) out.println("Subclusters: "+subClusters);
             for (Iterator i = subClusters.iterator(); i.hasNext(); ) {
                 Object subC = i.next();
                 dumpCluster(dos, m, visitedClusters, subC);
@@ -209,9 +235,9 @@ public class DumpDotGraph {
             m = null;
         }
         
-        if (clusters != null) {
+        if (clusterRoots != null) {
             Set visitedClusters = new HashSet();
-            for (Iterator i = clusters.iterator(); i.hasNext(); ) {
+            for (Iterator i = clusterRoots.iterator(); i.hasNext(); ) {
                 Object c = i.next();
                 dumpCluster(dos, m, visitedClusters, c);
             }

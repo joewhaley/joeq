@@ -43,7 +43,7 @@ IE(i,m,a0,b0) :- mI(m1,i,0), IE0(i,m), actual(i,0,v0), vP(a0,v0,b0).
 
 # Virtual calls.
 
-IE(i,m,a0,b0) :- mI(m1,i,n), actual(i,0,v0), vP(a0,v0,b0), hT(b0,t), cha(t,n,m). findbestorder
+IE(i,m,a0,b0) :- mI(m1,i,n), actual(i,0,v0), vP(a0,v0,b0), hT(b0,t), cha(t,n,m).
 
 # Return values and exceptions.
 vP(a0,v,h) :- IE(i,m,a0,b0), Iret(i,v), Mret(m,v1), vP(b0,v1,h). split
