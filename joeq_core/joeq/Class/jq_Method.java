@@ -16,6 +16,7 @@ import java.io.DataInput;
 import java.io.IOException;
 import java.io.DataOutput;
 
+import ClassLib.ClassLibInterface;
 import Compil3r.BytecodeAnalysis.Bytecodes;
 import Compil3r.Compil3rInterface;
 //import Compil3r.OpenJIT.x86.x86OpenJITCompiler;
@@ -59,6 +60,13 @@ public abstract class jq_Method extends jq_Member {
         this.line_num_table = line_num_table;
         this.codeattribMap = codeattribMap;
         state = STATE_LOADED;
+	if (!jq.Bootstrapping) {
+	    if (this instanceof jq_Initializer) {
+		ClassLibInterface.i.initNewConstructor((java.lang.reflect.Constructor)this.member_object, (jq_Initializer)this);
+	    } else {
+		ClassLibInterface.i.initNewMethod((java.lang.reflect.Method)this.member_object, this);
+	    }
+	}
     }
 
     public final void load(char access_flags, Map attributes) throws ClassFormatError {
@@ -144,6 +152,13 @@ public abstract class jq_Method extends jq_Member {
         }
         // TODO: Exceptions
         state = STATE_LOADED;
+	if (!jq.Bootstrapping) {
+	    if (this instanceof jq_Initializer) {
+		ClassLibInterface.i.initNewConstructor((java.lang.reflect.Constructor)this.member_object, (jq_Initializer)this);
+	    } else {
+		ClassLibInterface.i.initNewMethod((java.lang.reflect.Method)this.member_object, this);
+	    }
+	}
     }
 
     public void dumpAttributes(DataOutput out, jq_ConstantPool.ConstantPoolRebuilder cpr) throws IOException {
