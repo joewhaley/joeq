@@ -3041,9 +3041,9 @@ public class PA {
         polyClasses = new HashSet();
         File f = new File("polyclasses");
         if (f.exists()) {
-            DataInputStream in = null;
+            BufferedReader in = null;
             try {
-                in = new DataInputStream(new FileInputStream(f));
+                in = new BufferedReader(new FileReader(f));
                 for (;;) {
                     String s = in.readLine();
                     if (s == null) break;
