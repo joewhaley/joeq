@@ -9,6 +9,9 @@
 
 package Clazz;
 
+import Allocator.CodeAllocator;
+import Allocator.HeapAllocator;
+
 import java.io.DataInput;
 import java.io.IOException;
 
@@ -25,6 +28,9 @@ public abstract class jq_Field extends jq_Member {
     public final jq_Type getType() { return type; }
     public boolean isVolatile() { chkState(STATE_LOADING2); return (access_flags & ACC_VOLATILE) != 0; }
     public boolean isTransient() { chkState(STATE_LOADING2); return (access_flags & ACC_TRANSIENT) != 0; }
+    
+    public final boolean isCodeAddressType() { return CodeAllocator.codeAddressFields.contains(this); }
+    public final boolean isHeapAddressType() { return HeapAllocator.heapAddressFields.contains(this); }
     
     public String toString() { return getDeclaringClass()+"."+getName(); }
 }
