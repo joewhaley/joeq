@@ -40,6 +40,7 @@ import Clazz.jq_Reference;
 import Clazz.jq_Type;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
+import Compil3r.Analysis.IPSSA.ContextSet;
 import Compil3r.Analysis.IPSSA.SSALocation;
 import Compil3r.Quad.BasicBlock;
 import Compil3r.Quad.CallGraph;
@@ -49,6 +50,7 @@ import Compil3r.Quad.Operator;
 import Compil3r.Quad.Quad;
 import Compil3r.Quad.Operand.RegisterOperand;
 import Compil3r.Quad.RegisterFactory.Register;
+import Compil3r.Analysis.IPA.ProgramLocation.QuadProgramLocation;
 import Main.HostedVM;
 import Main.Driver;
 import Util.Assert;
@@ -1334,11 +1336,12 @@ public class PAResults implements PointerAnalysisResults {
     /**
      * Compute the set of results based on the BDD results.
      * */
-    public Set getCallTargets(Quad invoke) {
-        Assert._assert(invoke.getOperator() instanceof Operator.Invoke);
+    public Set getCallTargets2(ProgramLocation invoke) {
+        //Assert._assert(invoke.getOperator() instanceof Operator.Invoke);
+        LoadedCallGraph.mapCall(invoke);
         
         BDD t1 = r.actual.restrict(r.Z.ithVar(0));  // IxV2
-        t1.replaceWith(r.V2toV1);                   // IxV1
+        t1.replaceWith(r.bdd.makePair(r.V2, r.V1)); // IxV1
         BDD t2 = r.mI.exist(r.Mset);                // IxN
         BDD t3 = t1.and(t2);                        // IxV1 & IxN = IxV1xN
         t1.free(); t2.free();
@@ -1351,7 +1354,7 @@ public class PAResults implements PointerAnalysisResults {
         r.IE.orWith(t6.id());
     
         BDD t7;
-        if (false && r.CONTEXT_SENSITIVE || r.THREAD_SENSITIVE) {
+        if (false && (r.CONTEXT_SENSITIVE || r.THREAD_SENSITIVE)) {
             // Add the context for the new call graph edges.
             t6.andWith(r.IEfilter.id());
             r.IEcs.orWith(t6.id());
@@ -1362,7 +1365,10 @@ public class PAResults implements PointerAnalysisResults {
         }        
         
         // t7 is the result we need in I X M
+        int oldSize = r.Imap.size();
+
         int I_idx = r.Imap.get(invoke);
+        //Assert._assert(r.Imap.size() == oldSize, "old size: " + oldSize + ", new size: " + r.Imap.size());
         BDD isite = r.I.ithVar(I_idx);
         
         //System.out.println("Site: " + toString((TypedBDD)isite, -1));
@@ -1373,6 +1379,12 @@ public class PAResults implements PointerAnalysisResults {
         //System.out.println("Target methods of " + invoke + " = " + toString((TypedBDD)t6, -1)); //t6.toStringWithDomains());        
         
         return new PACallGraph.BDDSet(t7, r.M, r.Mmap);
+    }
+    
+    public Set getCallTargets(ProgramLocation invoke) {
+        Collection c = this.cg.getTargetMethods(invoke);
+        
+        return new HashSet(c);
     }
     
     public Set mod(ProgramLocation invoke) {
