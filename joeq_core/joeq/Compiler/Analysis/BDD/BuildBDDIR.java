@@ -3,30 +3,36 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Analysis.BDD;
 
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
+import joeq.Class.jq_Field;
 import joeq.Class.jq_Method;
+import joeq.Compiler.Analysis.IPA.ProgramLocation;
+import joeq.Compiler.Quad.CodeCache;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.ControlFlowGraphVisitor;
 import joeq.Compiler.Quad.Operand;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.QuadIterator;
-import joeq.Compiler.Quad.QuadVisitor;
 import joeq.Compiler.Quad.Operand.ConstOperand;
 import joeq.Compiler.Quad.Operand.FieldOperand;
 import joeq.Compiler.Quad.Operand.MethodOperand;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.Operand.TargetOperand;
 import joeq.Compiler.Quad.Operand.TypeOperand;
+import joeq.Compiler.Quad.Operator.Invoke;
+import joeq.Compiler.Quad.Operator.New;
+import joeq.Compiler.Quad.Operator.NewArray;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Compiler.Quad.SSA.EnterSSA;
 import joeq.Util.Assert;
@@ -42,7 +48,7 @@ import org.sf.javabdd.BDDFactory;
  * @author jwhaley
  * @version $Id$
  */
-public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowGraphVisitor {
+public class BuildBDDIR implements ControlFlowGraphVisitor {
     
     IndexMap methodMap;
     IndexMap opMap;
@@ -50,6 +56,9 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
     //IndexMap regMap;
     IndexMap memberMap;
     IndexMap constantMap;
+    
+    Map/*ProgramLocation,Quad*/ invokeMap;
+    Map/*ProgramLocation,Quad*/ allocMap;
     
     String dumpDir = System.getProperty("bdddumpdir", "");
     boolean DUMP_TUPLES = !System.getProperty("dumptuples", "yes").equals("no");
@@ -76,7 +85,37 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
     boolean SSA = !System.getProperty("ssa", "no").equals("no");
     boolean USE_SRC12 = !System.getProperty("src12", "no").equals("no");
     
-    public BuildBDDIR() {
+    boolean ENTER_SSA;
+    
+    public BuildBDDIR()
+    {
+        bdd = BDDFactory.init(1000000, 50000);
+        theDummyObject = new Object();
+        methodMap = new IndexMap("method");
+        methodMap.get(theDummyObject);
+        method = makeDomain("method", methodBits);
+        initialize();
+        System.out.println("Using variable ordering "+varOrderDesc);
+        int [] varOrder = bdd.makeVarOrdering(true, varOrderDesc);
+        bdd.setVarOrder(varOrder);
+        bdd.setMaxIncrease(500000);
+        ENTER_SSA = true;
+    }
+    
+    public BuildBDDIR(BDDFactory bddFactory, BDDDomain methodDomain, IndexMap _methodMap, Object dummy)
+    {
+        bdd = bddFactory;
+        method = methodDomain;
+        methodMap = _methodMap;
+        theDummyObject = dummy;
+        initialize();
+        int index = varOrderDesc.indexOf("method_");
+        varOrderDesc = varOrderDesc.substring(0, index) + varOrderDesc.substring(index + "method_".length());
+        ENTER_SSA = false;
+    }
+    
+    protected void initialize()
+    {
         if (!GLOBAL_QUAD_NUMBERS) {
             quadBits = 13;
         }
@@ -92,9 +131,6 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
             int index = varOrderDesc.indexOf("_srcs");
             varOrderDesc = varOrderDesc.substring(0, index) + "_src2_src1" + varOrderDesc.substring(index);
         }
-        theDummyObject = new Object();
-        methodMap = new IndexMap("method");
-        methodMap.get(theDummyObject);
         loadOpMap();
         quadMap = new IndexMap("quad");
         quadMap.get(theDummyObject);
@@ -103,8 +139,6 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         memberMap.get(theDummyObject);
         constantMap = new IndexMap("constant");
         constantMap.get(theDummyObject);
-        bdd = BDDFactory.init(1000000, 50000);
-        method = makeDomain("method", methodBits);
         quad = makeDomain("quad", quadBits);
         opc = makeDomain("opc", opBits);
         dest = makeDomain("dest", regBits);
@@ -125,10 +159,8 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         methodEntries = bdd.zero();
         nullConstant = bdd.zero();
         nonNullConstants = bdd.zero();
-        System.out.println("Using variable ordering "+varOrderDesc);
-        int [] varOrder = bdd.makeVarOrdering(true, varOrderDesc);
-        bdd.setVarOrder(varOrder);
-        bdd.setMaxIncrease(500000);
+        invokeMap = new HashMap();
+        allocMap = new HashMap();
     }
     
     BDDDomain makeDomain(String name, int bits) {
@@ -155,11 +187,12 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
      * @see joeq.Compiler.Quad.ControlFlowGraphVisitor#visitCFG(joeq.Compiler.Quad.ControlFlowGraph)
      */
     public void visitCFG(ControlFlowGraph cfg) {
-        if (SSA) {
+        if (SSA && ENTER_SSA) {
             new EnterSSA().visitCFG(cfg);
         }
         QuadIterator i = new QuadIterator(cfg);
-        int methodID = getMethodID(cfg.getMethod());
+        jq_Method m = cfg.getMethod();
+        int methodID = getMethodID(m);
         
         if (!GLOBAL_QUAD_NUMBERS) quadMap.clear();
         
@@ -188,7 +221,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
             }
             int opID = getOpID(q.getOperator());
             currentQuad.andWith(opc.ithVar(opID));
-            handleQuad(q);
+            handleQuad(q, m);
             if (!SSA) {
                 BDD succ = bdd.zero();
                 Iterator j = i.successors();
@@ -273,14 +306,18 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         return x;
     }
     
-    void handleQuad(Quad q) {
+    void handleQuad(Quad q, jq_Method m) {
+        System.out.println("handling quad: "+q);
         int quadID=0, opcID=0, destID=0, src1ID=0, src2ID=0, constantID=0, targetID=0, memberID=0;
         List srcsID = null;
         quadID = getQuadID(q);
         opcID = getOpID(q.getOperator());
         Iterator i = q.getDefinedRegisters().iterator();
         if (i.hasNext()) {
-            destID = getRegisterID(((RegisterOperand)i.next()).getRegister());
+            RegisterOperand ro = (RegisterOperand) i.next();
+            System.out.println("destination register is "+ro.getRegister());
+            destID = getRegisterID(ro.getRegister());
+            System.out.println("destination register id "+destID);
             Assert._assert(!i.hasNext());
         }
         i = q.getUsedRegisters().iterator();
@@ -297,7 +334,9 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
             srcsID = new LinkedList();
             do {
                 RegisterOperand rop = (RegisterOperand) i.next();
+                System.out.println("source register is "+rop.getRegister());                
                 if (rop != null) srcsID.add(new Integer(getRegisterID(rop.getRegister())));
+                System.out.println("source register id "+getRegisterID(rop.getRegister()));
             } while (i.hasNext());
         }
         i = q.getAllOperands().iterator();
@@ -317,6 +356,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
                 memberID = getMemberID(((TypeOperand) op).getType());
             }
         }
+        System.out.println("quadID "+quadID+" destID "+destID);
         if (ZERO_FIELDS || quadID != 0) currentQuad.andWith(quad.ithVar(quadID));
         if (ZERO_FIELDS || opcID != 0) currentQuad.andWith(opc.ithVar(opcID));
         if (ZERO_FIELDS || destID != 0) currentQuad.andWith(dest.ithVar(destID));
@@ -334,6 +374,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
             int j = 1;
             for (i = srcsID.iterator(); i.hasNext(); ++j) {
                 int srcID = ((Integer) i.next()).intValue();
+                System.out.println("source "+j+" srcID "+srcID);
                 if (ZERO_FIELDS || srcID != 0) {
                     BDD temp2 = srcNum.ithVar(j);
                     temp2.andWith(srcs.ithVar(srcID));
@@ -348,6 +389,27 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
             BDD temp2 = srcNum.ithVar(0);
             temp2.andWith(srcs.ithVar(0));
             currentQuad.andWith(temp2);
+        }
+        
+        Operator quadOp = q.getOperator();
+        if (quadOp instanceof Invoke ||
+            quadOp instanceof New ||
+            quadOp instanceof NewArray) {
+            ProgramLocation quadLoc;
+            Map map = CodeCache.getBCMap(m);            
+            Integer j = (Integer) map.get(q);
+            if (j == null) {
+                Assert.UNREACHABLE("Error: no mapping for quad "+q);
+            }
+            int bcIndex = j.intValue();
+            quadLoc = new ProgramLocation.BCProgramLocation(m, bcIndex);
+
+            if (quadOp instanceof Invoke) {
+                invokeMap.put(quadLoc, q);
+            }
+            else {
+                allocMap.put(quadLoc, q);
+            }
         }
         ++totalQuads;
     }
@@ -474,7 +536,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
             allDomains.andWith(d.set());
         }
         dos.writeBytes("\n");
-        System.out.println(" ) = "+relation.nodeCount()+" nodes");
+        System.out.println(" } = "+relation.nodeCount()+" nodes");
         BDDDomain primaryDomain = bdd.getDomain(a[0]);
         int lines = 0;
         BDD foo = relation.exist(allDomains.exist(primaryDomain.set()));
@@ -549,5 +611,53 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
                 nonNullConstants.orWith(constant.ithVar(i));                    
             }
         }
+    }
+    
+    public String getVarOrderDesc() {
+        return varOrderDesc;
+    }
+    
+    public BDDDomain getDestDomain() {
+        return dest;
+    }
+    
+    public BDDDomain getQuadDomain() {
+        return quad;
+    }
+    
+    public String getDomainName(BDDDomain d) {
+        if (d == quad || d == fallthrough || d == target) return "quad";
+        else if (d == method) return "method";
+        else if (d == opc) return "op";
+        else if (d == dest || d == srcs || d == src1 || d == src2) return "reg";
+        else if (d == constant) return "constant";
+        else if (d == member) return "member";
+        else if (d == srcNum) return "varargs";
+        else return d.getName();
+    }
+    
+    public int quadIdFromInvokeBCLocation(ProgramLocation.BCProgramLocation bc) {
+        Object o = invokeMap.get(bc);
+        Assert._assert(o != null);
+        return quadMap.get(o);
+    }
+    
+    public int quadIdFromAllocBCLocation(ProgramLocation.BCProgramLocation bc) {
+        Object o = allocMap.get(bc);
+        Assert._assert(o != null);
+        return quadMap.get(o);
+    }
+    
+    public int memberIdFromField(jq_Field f) {
+        if (memberMap.contains(f)) {
+            return memberMap.get(f);
+        }
+        else {
+            return 0;
+        }
+    }
+
+     public BDDDomain getMemberDomain() {
+        return member;
     }
 }
