@@ -880,9 +880,9 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                         if (this_m.getNameAndDesc() != nd) {
                             if (TRACE) SystemInterface.debugmsg("Rewriting field signature from "+this_m.getNameAndDesc()+" to "+nd);
                             jq_InstanceField this_m2 = getOrCreateInstanceField(nd);
-                            this.addDeclaredMember(nd, this_m2);
                             this_m2.load(this_m);
                             this_m.unload(); this.members.remove(this_m.getNameAndDesc()); cpr.remove(this_m);
+                            this.addDeclaredMember(nd, this_m2);
                             this_m = declared_instance_fields[i] = this_m2;
                         }
                     }
@@ -893,9 +893,9 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                         if (this_m.getNameAndDesc() != nd) {
                             if (TRACE) SystemInterface.debugmsg("Rewriting field signature from "+this_m.getNameAndDesc()+" to "+nd);
                             jq_StaticField this_m2 = getOrCreateStaticField(nd);
-                            this.addDeclaredMember(nd, this_m2);
                             this_m2.load(this_m);
                             this_m.unload(); this.members.remove(this_m.getNameAndDesc()); cpr.remove(this_m);
+                            this.addDeclaredMember(nd, this_m2);
                             this_m = static_fields[i] = this_m2;
                         }
                     }
@@ -907,9 +907,9 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                         if (this_m.getNameAndDesc() != nd) {
                             if (TRACE) SystemInterface.debugmsg("Rewriting method signature from "+this_m.getNameAndDesc()+" to "+nd);
                             jq_InstanceMethod this_m2 = getOrCreateInstanceMethod(nd);
-                            this.addDeclaredMember(nd, this_m2);
                             this_m2.load(this_m);
                             this_m.unload(); this.members.remove(this_m.getNameAndDesc()); cpr.remove(this_m);
+                            this.addDeclaredMember(nd, this_m2);
                             this_m = this_m2;
                         }
                         byte[] bc = this_m.getBytecode();
@@ -935,9 +935,9 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                         if (this_m.getNameAndDesc() != nd) {
                             if (TRACE) SystemInterface.debugmsg("Rewriting method signature from "+this_m.getNameAndDesc()+" to "+nd);
                             jq_StaticMethod this_m2 = getOrCreateStaticMethod(nd);
-                            this.addDeclaredMember(nd, this_m2);
                             this_m2.load(this_m);
                             this_m.unload(); this.members.remove(this_m.getNameAndDesc()); cpr.remove(this_m);
+                            this.addDeclaredMember(nd, this_m2);
                             this_m = this_m2;
                         }
                         byte[] bc = this_m.getBytecode();
