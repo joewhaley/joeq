@@ -7,7 +7,6 @@ import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_StaticMethod;
 import joeq.Memory.Address;
-import joeq.Memory.HeapAddress;
 import joeq.Runtime.Unsafe;
 import joeq.Scheduler.jq_NativeThread;
 
@@ -121,11 +120,11 @@ public abstract class DefaultHeapAllocator {
         return false;
     }
     
-    public static final void processObjectReference(HeapAddress a) {
+    public static final void processObjectReference(Address a) {
         def().processObjectReference(a);
     }
 
-    public static final void processPossibleObjectReference(HeapAddress a) {
+    public static final void processPossibleObjectReference(Address a) {
         def().processPossibleObjectReference(a);
     }
     
