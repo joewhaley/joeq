@@ -27,7 +27,10 @@ public class Heap2HeapReference extends Reloc {
         this.from_heaploc = from_heaploc; this.to_heaploc = to_heaploc;
     }
 
-    public void dump(OutputStream out) throws IOException {
+    public int/*HeapAddress*/ getFrom() { return from_heaploc; }
+    public int/*HeapAddress*/ getTo() { return to_heaploc; }
+    
+    public void dumpCOFF(OutputStream out) throws IOException {
         LittleEndianOutputStream.write_s32(out, from_heaploc);      // r_vaddr
         LittleEndianOutputStream.write_s32(out, 1);                 // r_symndx
         LittleEndianOutputStream.write_u16(out, Reloc.RELOC_ADDR32);// r_type

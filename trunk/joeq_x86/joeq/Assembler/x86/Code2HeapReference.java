@@ -28,7 +28,10 @@ public class Code2HeapReference extends Reloc {
         this.from_codeloc = from_codeloc; this.to_heaploc = to_heaploc;
     }
 
-    public void dump(OutputStream out)
+    public int/*CodeAddress*/ getFrom() { return from_codeloc; }
+    public int/*HeapAddress*/ getTo() { return to_heaploc; }
+    
+    public void dumpCOFF(OutputStream out)
     throws IOException {
         LittleEndianOutputStream.write_s32(out, from_codeloc);      // r_vaddr
         LittleEndianOutputStream.write_s32(out, 1);                 // r_symndx
