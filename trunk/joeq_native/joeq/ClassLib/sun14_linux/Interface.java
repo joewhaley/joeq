@@ -77,7 +77,7 @@ public final class Interface extends ClassLib.Common.Interface {
             jq_NativeThread.USE_INTERRUPTER_THREAD = false;
             
             // access the ISO-8859-1 character encoding, as it is used during bootstrapping
-            PrimordialClassLoader.loader.getOrCreateBSType("Lsun/nio/cs/ISO_8859_1;");
+            //PrimordialClassLoader.loader.getOrCreateBSType("Lsun/nio/cs/ISO_8859_1;");
         }
         
         public java.lang.Object mapInstanceField(java.lang.Object o, Clazz.jq_InstanceField f) {
