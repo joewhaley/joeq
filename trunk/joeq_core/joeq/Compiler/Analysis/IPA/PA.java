@@ -976,6 +976,7 @@ public class PA {
         }
     }
     
+    static jq_NameAndDesc main_method = new jq_NameAndDesc("main", "([Ljava/lang/String;)V");
     static jq_NameAndDesc run_method = new jq_NameAndDesc("run", "()V");
     public void addThreadRun(int H_i, jq_Class c) {
         if (!ADD_THREADS) return;
@@ -2163,6 +2164,8 @@ public class PA {
             jq_Method m = (jq_Method) o;
             if (!m.getReturnType().isReferenceType()) return false;
             if (m.getBytecode() == null) return false;
+            if (m.getNameAndDesc() == main_method) return true;
+            if (m.getNameAndDesc() == run_method) return true;
             MethodSummary ms = MethodSummary.getSummary(CodeCache.getCode(m));
             for (i = ms.getReturned().iterator(); i.hasNext(); ) {
                 Node n = (Node) i.next();
