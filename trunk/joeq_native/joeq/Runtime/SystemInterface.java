@@ -26,7 +26,7 @@ public abstract class SystemInterface {
     public static int/*CodeAddress*/ trap_handler_8;
     public static int/*CodeAddress*/ debugmsg_4;
     public static int/*CodeAddress*/ syscalloc_4;
-    public static int/*CodeAddress*/ die_0;
+    public static int/*CodeAddress*/ die_4;
     public static int/*CodeAddress*/ currentTimeMillis_0;
     public static int/*CodeAddress*/ mem_cpy_12;
     public static int/*CodeAddress*/ file_open_12;
@@ -89,8 +89,13 @@ public abstract class SystemInterface {
         return 0;
     }
     
-    public static void die() {
-        try { Unsafe.invoke(die_0); } catch (Throwable t) { throw new InternalError(); }
+    public static void die(int code) {
+        Unsafe.pushArg(code);
+        try {
+            Unsafe.invoke(die_4);
+        } catch (Throwable t) {
+            throw new InternalError();
+        }
     }
     
     public static byte[] toCString(String s) {
