@@ -2993,14 +2993,19 @@ public class PA {
             
             for(Iterator iter = newInstanceCalls.iterator(Iset); iter.hasNext();){
                 BDD i = (BDD)iter.next();
+                int i_i = i.scanVar(I).intValue();
+                ProgramLocation mc = (ProgramLocation)Imap.get(i_i);
                 
                 BDD callees = IE.relprod(i, Iset);
                 if(!callees.isZero()){
-                    System.out.println(i.toStringWithDomains(TS) + ": ");
+                    System.out.println(mc.toStringLong() + ": ");
                     for(Iterator iter2 = callees.iterator(Mset); iter2.hasNext();){
                         BDD callee = (BDD)iter2.next();
                         
-                        System.out.println("\t" + callees.toStringWithDomains(TS));
+                        int m_i = callee.scanVar(M).intValue();
+                        jq_Method m = (jq_Method)Mmap.get(m_i);
+                        
+                        System.out.println("\t" + m.toString());
                     }
                     System.out.println();
                 }
