@@ -12,7 +12,6 @@ import java.util.Map;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Reference;
-import joeq.Class.jq_Type;
 import joeq.Class.jq_Reference.jq_NullType;
 import jwutil.util.Assert;
 import net.sf.javabdd.BDD;
@@ -61,9 +60,10 @@ public abstract class SubtypeHelper {
                 jq_Class c = (jq_Class) subtype;
                 result.add(c);
             }
-            
+        
+            if(TRACE) System.out.println("Returning " + result.size() + " subtypes.");
             return result;
-        }        
+        }
     }
     
     public static class OnlineSubtypeHelper extends SubtypeHelper {    
@@ -115,6 +115,7 @@ public abstract class SubtypeHelper {
             }
          
             type2subtypeCache.put(clazz, result);
+            if(TRACE) System.out.println("Returning " + result.size() + " subtypes.");
             return result;   
         }
     }
@@ -178,6 +179,7 @@ public abstract class SubtypeHelper {
             }
             Assert._assert(result.size() == subtypeNames.size());
             
+            if(TRACE) System.out.println("Returning " + result.size() + " subtypes.");
             return result;
         }
     }
