@@ -3,6 +3,8 @@
 
 .include "fielddomains.pa"
 
+.bddvarorder N0_F0_I0_M1_M0_V1xV0_T0_Z0_T1_H1_H0_VC1_VC0_HC1_HC0
+
 ### Relations
 
 vP0 (v:V0, h:H0) input
