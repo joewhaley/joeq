@@ -18,7 +18,9 @@ import joeq.Runtime.Reflection;
 import joeq.UTF.Utf8;
 import jwutil.util.Assert;
 
-/*
+/**
+ * jq_ConstantPool
+ * 
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
@@ -659,6 +661,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
             Map m = f.getAttributes();
             for (Iterator i = m.entrySet().iterator(); i.hasNext(); ) {
                 Map.Entry e = (Map.Entry)i.next();
+                Assert._assert(e.getKey() instanceof Utf8);
                 new_entries.put(e.getKey(), null);
             }
         }
@@ -729,6 +732,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
 
         public char get(Object o) {
             Assert._assert(o != null);
+            if (o instanceof Class) o = Reflection.getJQType((Class)o);
             Character c = (Character)new_entries.get(o);
             if (c == null) {
                 Assert.UNREACHABLE("No such constant pool entry: type "+o.getClass()+" value "+o);
@@ -757,10 +761,15 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
             addType(o.getDeclaringClass());
             new_entries.put(o, null);
         }
+        public void addUtf8(Utf8 o) {
+            if (TRACE) Debug.writeln("Adding Utf8 "+o);
+            new_entries.put(o, null);
+        }
         public void addOther(Object o) {
             Assert._assert(!(o instanceof String));
+            Assert._assert(!(o instanceof Class));
             if (o == null) return;
-            if (TRACE) Debug.writeln("Adding other "+o);
+            if (TRACE) Debug.writeln("Adding other ("+o.getClass().getName()+") "+o);
             new_entries.put(o, null);
         }
         public void remove(Object o) {
@@ -785,10 +794,14 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
                 Object o = i.getObject();
                 if (o instanceof String) {
                     addString((String)o);
+                } else if (o instanceof Utf8) {
+                    addUtf8((Utf8)o);
                 } else if (o instanceof jq_Type) {
                     addType((jq_Type)o);
                 } else if (o instanceof jq_Member) {
                     addMember((jq_Member)o);
+                } else if (o instanceof Class) {
+                    addType(Reflection.getJQType((Class)o));
                 } else {
                     addOther(o);
                 }
@@ -878,6 +891,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
         }
 
         public char get(Object o) {
+            if (o instanceof Class) o = Reflection.getJQType((Class)o);
             Character c = (Character) new_entries.get(o);
             if (c == null) {
                 new_entries.put(o, null);
