@@ -344,6 +344,28 @@ public abstract class Driver {
                     }
                 }
                 System.out.println("Completed pass! " + o);
+            } else if (commandBuffer[index].equalsIgnoreCase("run")) {
+                String toRun = commandBuffer[++index];
+                Runnable runnable = null;
+                try {
+                    runnable = (Runnable)Class.forName(toRun).newInstance();
+                } catch (InstantiationException e) {
+                    e.printStackTrace();
+                    System.err.println("Can't instantiate a " + toRun);
+                    return index;
+                } catch (IllegalAccessException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                    System.err.println("Can't access a field");
+                    return index;
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
+                    System.err.println("Class can't be found");
+                    return index;
+                }
+                Assert._assert(runnable != null);
+                
+                runnable.run();                
             } else if (commandBuffer[index].equalsIgnoreCase("exit") || commandBuffer[index].equalsIgnoreCase("quit")) {
                 System.exit(0);
             } else if (commandBuffer[index].equalsIgnoreCase("help")) {
