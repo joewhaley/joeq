@@ -3,13 +3,17 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Util.InferenceEngine;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import joeq.Util.Assert;
+import joeq.Util.PermutationGenerator;
 
 import org.sf.javabdd.BDD;
 import org.sf.javabdd.BDDDomain;
@@ -34,6 +38,7 @@ public class BDDInferenceRule extends InferenceRule {
     BDD[] canQuantifyAfter;
     int updateCount;
     long totalTime;
+    boolean test_order = false;
     
     public BDDInferenceRule(BDDSolver solver, List/* <RuleTerm> */ top, RuleTerm bottom) {
         super(top, bottom);
@@ -236,6 +241,10 @@ public class BDDInferenceRule extends InferenceRule {
             BDD canNowQuantify = canQuantifyAfter[j];
             if (solver.TRACE) solver.out.print(" x " + rt.relation);
             BDD b = relationValues[j];
+            if (test_order) {
+                String varOrder = System.getProperty("bddvarorder");
+                findBestDomainOrder(solver.bdd, null, varOrder, result, b, canNowQuantify);
+            }
             if (!canNowQuantify.isOne()) {
                 if (solver.TRACE) solver.out.print(" (relprod "+b.nodeCount()+"x"+canNowQuantify.nodeCount());
                 BDD topBdd = result.relprod(b, canNowQuantify);
@@ -508,6 +517,85 @@ public class BDDInferenceRule extends InferenceRule {
             sb.append(solver.bdd.getDomain(a[i]));
             if (i < a.length-1) sb.append(',');
         }
+        return sb.toString();
+    }
+    
+    static void addDomainsOf(BDD b, Collection domains) {
+        BDD s = b.support();
+        int[] a = s.scanSetDomains();
+        s.free();
+        if (a == null) return;
+        for (int i = 0; i < a.length; ++i) {
+            domains.add(b.getFactory().getDomain(a[i]));
+        }
+    }
+    
+    static String findBestDomainOrder(BDDFactory bdd,
+                                      List domains,
+                                      String origVarOrder,
+                                      BDD b1, BDD b2, BDD b3) {
+        if (domains == null) {
+            Set domainSet = new HashSet();
+            addDomainsOf(b1, domainSet);
+            addDomainsOf(b2, domainSet);
+            addDomainsOf(b3, domainSet);
+            domains = new ArrayList(domainSet);
+        }
+        PermutationGenerator g = new PermutationGenerator(domains.size());
+        int[] best = null;
+        String bestVarOrder = origVarOrder;
+        long bestTime = Long.MAX_VALUE;
+        while (g.hasMore()) {
+            String varOrder = origVarOrder;
+            int[] p = g.getNext();
+            for (int i = 0; i < p.length; ++i) {
+                if (i == p[i]) continue;
+                BDDDomain d1 = (BDDDomain) domains.get(i);
+                BDDDomain d2 = (BDDDomain) domains.get(p[i]);
+                varOrder = swap(varOrder, d1.getName(), d2.getName());
+            }
+            int[] varOrdering = bdd.makeVarOrdering(true, varOrder);
+            System.out.print("Setting variable order to "+varOrder+", ");
+            bdd.setVarOrder(varOrdering);
+            System.out.println("done.");
+            System.out.print(b1.nodeCount()+"x"+b2.nodeCount()+" = ");
+            long time = System.currentTimeMillis();
+            BDD result = b1.relprod(b2, b3);
+            time = System.currentTimeMillis() - time;
+            System.out.println(result.nodeCount());
+            result.free();
+            if (time < bestTime) {
+                bestTime = time;
+                best = p;
+                bestVarOrder = varOrder;
+                System.out.println("New best order: "+bestVarOrder+" time: "+bestTime+" ms");
+            }
+        }
+        System.out.print("Best relative order:");
+        for (int i = 0; i < best.length; ++i) {
+            System.out.print(" "+domains.get(best[i]));
+        }
+        System.out.println();
+        System.out.println("Best variable ordering: "+bestVarOrder);
+        return bestVarOrder;
+    }
+    
+    static String swap(String orig, String s1, String s2) {
+        System.out.println("Swapping "+s1+" and "+s2+" in "+orig);
+        int i = orig.indexOf(s1);
+        int j = orig.indexOf(s2);
+        if (i == -1 || j == -1) return null;
+        if (i == j) return orig;
+        if (i > j) {
+            int t = i; i = j; j = t;
+            String s = s1; s1 = s2; s2 = s;
+        }
+        StringBuffer sb = new StringBuffer();
+        sb.append(orig.substring(0, i));
+        sb.append(s2);
+        sb.append(orig.substring(i+s1.length(), j));
+        sb.append(s1);
+        sb.append(orig.substring(j+s2.length()));
         return sb.toString();
     }
     
