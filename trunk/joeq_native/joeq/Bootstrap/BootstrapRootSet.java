@@ -311,8 +311,6 @@ public class BootstrapRootSet {
         addNecessaryMethod(joeq.Scheduler.jq_NativeThread._ctrl_break_handler);
         // entrypoint for interrupter thread
         addNecessaryMethod(joeq.Scheduler.jq_InterrupterThread._run);
-        // ??? dunno why this is necessary ???
-        addNecessaryMethod(FullThreadUtils._getJQThread);
         
         // dunno why this doesn't show up
         addNecessaryType(joeq.Assembler.Heap2HeapReference._class);
