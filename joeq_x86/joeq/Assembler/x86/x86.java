@@ -782,6 +782,7 @@ public class x86 implements x86Constants {
     final int emitShort_Reg(CodeAllocator.x86CodeBuffer mc, int reg) {
         jq.assert(length == 1);
         jq.assert((opcode & 0x07) == 0);
+        jq.assert(reg >= EAX && reg <= EDI);
         if (mc != null)
             mc.add1((byte)(opcode+reg));
         if (x86Assembler.TRACE) dbg(mc, 1, desc, RegToString(reg));
@@ -791,6 +792,7 @@ public class x86 implements x86Constants {
     final int emitShort_Reg_Imm8(CodeAllocator.x86CodeBuffer mc, int reg, int imm) {
         jq.assert(length == 1);
         jq.assert((opcode & 0x07) == 0);
+        jq.assert(reg >= EAX && reg <= EDI);
         if (mc != null) {
             mc.add1((byte)(opcode+reg));
             mc.add1((byte)imm);
@@ -802,6 +804,7 @@ public class x86 implements x86Constants {
     final int emitShort_Reg_Imm32(CodeAllocator.x86CodeBuffer mc, int reg, int imm) {
         jq.assert(length == 1);
         jq.assert((opcode & 0x07) == 0);
+        jq.assert(reg >= EAX && reg <= EDI);
         if (mc != null) {
             mc.add1((byte)(opcode+reg));
             mc.add4_endian(imm);
@@ -911,6 +914,7 @@ public class x86 implements x86Constants {
     final int emit2_FPReg(CodeAllocator.x86CodeBuffer mc, int r) {
         jq.assert(length == 2);
         jq.assert((opcode & 0x7) == 0);
+        jq.assert(r >= 0 && r <= 7);
         if (mc != null) {
             mc.add2(opcode + r);
         }
@@ -941,6 +945,7 @@ public class x86 implements x86Constants {
     final int emit2_Reg(CodeAllocator.x86CodeBuffer mc, int reg) {
         jq.assert(length == 2);
         jq.assert((opcode & 0xC7) == 0);
+        jq.assert(reg >= EAX && reg <= EDI);
         if (mc != null) {
             mc.add2(opcode | MOD_REG | reg);
         }
@@ -951,6 +956,7 @@ public class x86 implements x86Constants {
     final int emit2_Once_Reg(CodeAllocator.x86CodeBuffer mc, int reg) {
         jq.assert(length == 2);
         jq.assert((opcode & 0xC7) == 0);
+        jq.assert(reg >= EAX && reg <= EDI);
         if (mc != null) {
             mc.add2(opcode | SHIFT_ONCE | MOD_REG | reg);
         }
@@ -961,6 +967,7 @@ public class x86 implements x86Constants {
     final int emit2_Reg_SEImm8(CodeAllocator.x86CodeBuffer mc, int reg, byte imm) {
         jq.assert(length == 2);
         jq.assert((opcode & 0xC7) == 0);
+        jq.assert(reg >= EAX && reg <= EDI);
         if (mc != null) {
             mc.add2(opcode | SEIMM8 | MOD_REG | reg);
             mc.add1(imm);
@@ -972,6 +979,7 @@ public class x86 implements x86Constants {
     final int emit2_Reg_Imm8(CodeAllocator.x86CodeBuffer mc, int reg, int imm) {
         jq.assert(length == 2);
         jq.assert((opcode & 0xC7) == 0);
+        jq.assert(reg >= EAX && reg <= EDI);
         if (mc != null) {
             mc.add2(opcode | MOD_REG | reg);
             mc.add1((byte)imm);
@@ -983,6 +991,7 @@ public class x86 implements x86Constants {
     final int emit2_Reg_Imm32(CodeAllocator.x86CodeBuffer mc, int reg, int imm) {
         jq.assert(length == 2);
         jq.assert((opcode & 0xC7) == 0);
+        jq.assert(reg >= EAX && reg <= EDI);
         if (mc != null) {
             mc.add2(opcode | MOD_REG | reg);
             mc.add4_endian(imm);
@@ -994,6 +1003,8 @@ public class x86 implements x86Constants {
     final int emit2_Reg_Reg(CodeAllocator.x86CodeBuffer mc, int toreg, int fromreg) {
         jq.assert(length == 2);
         jq.assert((opcode & 0xFF) == 0);
+        jq.assert(toreg >= EAX && toreg <= EDI);
+        jq.assert(fromreg >= EAX && fromreg <= EDI);
         if (mc != null) {
             mc.add2(opcode | MOD_REG | (toreg << 3) | fromreg);
         }
@@ -1006,6 +1017,8 @@ public class x86 implements x86Constants {
         jq.assert(base != ESP);
         jq.assert(base != EBP);
         jq.assert((opcode & 0xFF) == 0);
+        jq.assert(r1 >= EAX && r1 <= EDI);
+        jq.assert(base >= EAX && base <= EDI);
         if (mc != null) {
             mc.add2(opcode | MOD_EA | (r1 << 3) | base);
         }
@@ -1017,6 +1030,8 @@ public class x86 implements x86Constants {
         jq.assert(length == 2);
         jq.assert(base != ESP);
         jq.assert((opcode & 0xFF) == 0);
+        jq.assert(r1 >= EAX && r1 <= EDI);
+        jq.assert(base >= EAX && base <= EDI);
         if (mc != null) {
             mc.add2(opcode | MOD_DISP8 | (r1 << 3) | base);
             mc.add1(off);
@@ -1029,6 +1044,8 @@ public class x86 implements x86Constants {
         jq.assert(length == 2);
         jq.assert(base != ESP);
         jq.assert((opcode & 0xFF) == 0);
+        jq.assert(r1 >= EAX && r1 <= EDI);
+        jq.assert(base >= EAX && base <= EDI);
         if (mc != null) {
             mc.add2(opcode | SEIMM8 | MOD_DISP8 | (r1 << 3) | base);
             mc.add1(off);
@@ -1042,6 +1059,8 @@ public class x86 implements x86Constants {
         jq.assert(length == 2);
         jq.assert(base != ESP);
         jq.assert((opcode & 0xFF) == 0);
+        jq.assert(r1 >= EAX && r1 <= EDI);
+        jq.assert(base >= EAX && base <= EDI);
         if (mc != null) {
             mc.add2(opcode | MOD_DISP8 | (r1 << 3) | base);
             mc.add1(off);
@@ -1055,6 +1074,8 @@ public class x86 implements x86Constants {
         jq.assert(length == 2);
         jq.assert(base != ESP);
         jq.assert((opcode & 0xFF) == 0);
+        jq.assert(r1 >= EAX && r1 <= EDI);
+        jq.assert(base >= EAX && base <= EDI);
         if (mc != null) {
             mc.add2(opcode | MOD_DISP8 | (r1 << 3) | base);
             mc.add1(off);
@@ -1067,6 +1088,8 @@ public class x86 implements x86Constants {
     final int emit2_Reg_SIB_EA(CodeAllocator.x86CodeBuffer mc, int r1, int base, int ind, int scale) {
         jq.assert(length == 2);
         jq.assert((opcode & 0xFF) == 0);
+        jq.assert(r1 >= EAX && r1 <= EDI);
+        jq.assert(base >= EAX && base <= EDI);
         if (mc != null) {
             mc.add2(opcode | MOD_EA | (r1 << 3) | RM_SIB);
             mc.add1((byte)(scale | (ind << 3) | base));
@@ -1078,6 +1101,9 @@ public class x86 implements x86Constants {
     final int emit2_Reg_SIB_DISP8(CodeAllocator.x86CodeBuffer mc, int r1, int base, int ind, int scale, byte off) {
         jq.assert(length == 2);
         jq.assert((opcode & 0xFF) == 0);
+        jq.assert(r1 >= EAX && r1 <= EDI);
+        jq.assert(base >= EAX && base <= EDI);
+        jq.assert(ind >= EAX && ind <= EDI);
         if (mc != null) {
             mc.add2(opcode | MOD_DISP8 | (r1 << 3) | RM_SIB);
             mc.add1((byte)(scale | (ind << 3) | base));
@@ -1091,6 +1117,8 @@ public class x86 implements x86Constants {
         jq.assert(length == 2);
         jq.assert(base != ESP);
         jq.assert((opcode & 0xFF) == 0);
+        jq.assert(r1 >= EAX && r1 <= EDI);
+        jq.assert(base >= EAX && base <= EDI);
         if (mc != null) {
             mc.add2(opcode | MOD_DISP32 | (r1 << 3) | base);
             mc.add4_endian(off);
@@ -1103,6 +1131,8 @@ public class x86 implements x86Constants {
         jq.assert(length == 2);
         jq.assert(base != ESP);
         jq.assert((opcode & 0xFF) == 0);
+        jq.assert(r1 >= EAX && r1 <= EDI);
+        jq.assert(base >= EAX && base <= EDI);
         if (mc != null) {
             mc.add2(opcode | SEIMM8 | MOD_DISP32 | (r1 << 3) | base);
             mc.add4_endian(off);
@@ -1116,6 +1146,8 @@ public class x86 implements x86Constants {
         jq.assert(length == 2);
         jq.assert(base != ESP);
         jq.assert((opcode & 0xFF) == 0);
+        jq.assert(r1 >= EAX && r1 <= EDI);
+        jq.assert(base >= EAX && base <= EDI);
         if (mc != null) {
             mc.add2(opcode | MOD_DISP32 | (r1 << 3) | base);
             mc.add4_endian(off);
@@ -1129,6 +1161,8 @@ public class x86 implements x86Constants {
         jq.assert(length == 2);
         jq.assert(base != ESP);
         jq.assert((opcode & 0xFF) == 0);
+        jq.assert(r1 >= EAX && r1 <= EDI);
+        jq.assert(base >= EAX && base <= EDI);
         if (mc != null) {
             mc.add2(opcode | MOD_DISP32 | (r1 << 3) | base);
             mc.add4_endian(off);
@@ -1141,6 +1175,9 @@ public class x86 implements x86Constants {
     final int emit2_Reg_SIB_DISP32(CodeAllocator.x86CodeBuffer mc, int r1, int base, int ind, int scale, int off) {
         jq.assert(length == 2);
         jq.assert((opcode & 0xFF) == 0);
+        jq.assert(r1 >= EAX && r1 <= EDI);
+        jq.assert(base >= EAX && base <= EDI);
+        jq.assert(ind >= EAX && ind <= EDI);
         if (mc != null) {
             mc.add2(opcode | MOD_DISP32 | (r1 << 3) | RM_SIB);
             mc.add1((byte)(scale | (ind << 3) | base));
@@ -1149,12 +1186,25 @@ public class x86 implements x86Constants {
         if (x86Assembler.TRACE) dbg(mc, 7, desc, RegToString(r1), DISP32_SIBToString(base, ind, scale, off));
         return 7;
     }
+    public static final int s_2_Reg_Abs32() { return 6; }
+    final int emit2_Reg_Abs32(CodeAllocator.x86CodeBuffer mc, int r1, int addr) {
+        jq.assert(length == 2);
+        jq.assert((opcode & 0xC7) == 0);
+        jq.assert(r1 >= EAX && r1 <= EDI);
+        if (mc != null) {
+            mc.add2(opcode | MOD_EA | (r1 << 3) | EBP);
+            mc.add4_endian(addr);
+        }
+        if (x86Assembler.TRACE) dbg(mc, 6, desc, RegToString(r1), Abs32ToString(addr));
+        return 6;
+    }
     public static final int s_2_EA() { return 2; }
     final int emit2_EA(CodeAllocator.x86CodeBuffer mc, int base) {
         jq.assert(length == 2);
         jq.assert(base != ESP);
         jq.assert(base != EBP);
         jq.assert((opcode & 0xC7) == 0);
+        jq.assert(base >= EAX && base <= EDI);
         if (mc != null) {
             mc.add2(opcode | MOD_EA | base);
         }
@@ -1167,6 +1217,7 @@ public class x86 implements x86Constants {
         jq.assert(base != ESP);
         jq.assert(base != EBP);
         jq.assert((opcode & 0xC7) == 0);
+        jq.assert(base >= EAX && base <= EDI);
         if (mc != null) {
             mc.add2(opcode | SHIFT_ONCE | MOD_EA | base);
         }
@@ -1179,6 +1230,7 @@ public class x86 implements x86Constants {
         jq.assert(base != ESP);
         jq.assert(base != EBP);
         jq.assert((opcode & 0xC7) == 0);
+        jq.assert(base >= EAX && base <= EDI);
         if (mc != null) {
             mc.add2(opcode | SEIMM8 | MOD_EA | base);
             mc.add1(imm);
@@ -1192,6 +1244,7 @@ public class x86 implements x86Constants {
         jq.assert(base != ESP);
         jq.assert(base != EBP);
         jq.assert((opcode & 0xC7) == 0);
+        jq.assert(base >= EAX && base <= EDI);
         if (mc != null) {
             mc.add2(opcode | MOD_EA | base);
             mc.add1((byte)imm);
@@ -1205,6 +1258,7 @@ public class x86 implements x86Constants {
         jq.assert(base != ESP);
         jq.assert(base != EBP);
         jq.assert((opcode & 0xC7) == 0);
+        jq.assert(base >= EAX && base <= EDI);
         if (mc != null) {
             mc.add2(opcode | MOD_EA | base);
             mc.add4_endian(imm);
@@ -1216,6 +1270,8 @@ public class x86 implements x86Constants {
     final int emit2_SIB_EA(CodeAllocator.x86CodeBuffer mc, int base, int ind, int scale) {
         jq.assert(length == 2);
         jq.assert((opcode & 0xC7) == 0);
+        jq.assert(base >= EAX && base <= EDI);
+        jq.assert(ind >= EAX && ind <= EDI);
         if (mc != null) {
             mc.add2(opcode | MOD_EA | RM_SIB);
             mc.add1((byte)(scale | (ind << 3) | base));
@@ -1227,6 +1283,8 @@ public class x86 implements x86Constants {
     final int emit2_Once_SIB_EA(CodeAllocator.x86CodeBuffer mc, int base, int ind, int scale) {
         jq.assert(length == 2);
         jq.assert((opcode & 0xC7) == 0);
+        jq.assert(base >= EAX && base <= EDI);
+        jq.assert(ind >= EAX && ind <= EDI);
         if (mc != null) {
             mc.add2(opcode | SHIFT_ONCE | MOD_EA | RM_SIB);
             mc.add1((byte)(scale | (ind << 3) | base));
@@ -1238,6 +1296,8 @@ public class x86 implements x86Constants {
     final int emit2_SIB_EA_SEImm8(CodeAllocator.x86CodeBuffer mc, int base, int ind, int scale, byte imm) {
         jq.assert(length == 2);
         jq.assert((opcode & 0xC7) == 0);
+        jq.assert(base >= EAX && base <= EDI);
+        jq.assert(ind >= EAX && ind <= EDI);
         if (mc != null) {
             mc.add2(opcode | SEIMM8 | MOD_EA | RM_SIB);
             mc.add1((byte)(scale | (ind << 3) | base));
@@ -1250,6 +1310,8 @@ public class x86 implements x86Constants {
     final int emit2_SIB_EA_Imm8(CodeAllocator.x86CodeBuffer mc, int base, int ind, int scale, int imm) {
         jq.assert(length == 2);
         jq.assert((opcode & 0xC7) == 0);
+        jq.assert(base >= EAX && base <= EDI);
+        jq.assert(ind >= EAX && ind <= EDI);
         if (mc != null) {
             mc.add2(opcode | MOD_EA | RM_SIB);
             mc.add1((byte)(scale | (ind << 3) | base));
@@ -1262,6 +1324,8 @@ public class x86 implements x86Constants {
     final int emit2_SIB_EA_Imm32(CodeAllocator.x86CodeBuffer mc, int base, int ind, int scale, int imm) {
         jq.assert(length == 2);
         jq.assert((opcode & 0xC7) == 0);
+        jq.assert(base >= EAX && base <= EDI);
+        jq.assert(ind >= EAX && ind <= EDI);
         if (mc != null) {
             mc.add2(opcode | MOD_EA | RM_SIB);
             mc.add1((byte)(scale | (ind << 3) | base));
@@ -1275,6 +1339,7 @@ public class x86 implements x86Constants {
         jq.assert(length == 2);
         jq.assert(base != ESP);
         jq.assert((opcode & 0xC7) == 0);
+        jq.assert(base >= EAX && base <= EDI);
         if (mc != null) {
             mc.add2(opcode | MOD_DISP8 | base);
             mc.add1(off);
@@ -1287,6 +1352,7 @@ public class x86 implements x86Constants {
         jq.assert(length == 2);
         jq.assert(base != ESP);
         jq.assert((opcode & 0xC7) == 0);
+        jq.assert(base >= EAX && base <= EDI);
         if (mc != null) {
             mc.add2(opcode | SHIFT_ONCE | MOD_DISP8 | base);
             mc.add1(off);
@@ -1299,6 +1365,7 @@ public class x86 implements x86Constants {
         jq.assert(length == 2);
         jq.assert(base != ESP);
         jq.assert((opcode & 0xC7) == 0);
+        jq.assert(base >= EAX && base <= EDI);
         if (mc != null) {
             mc.add2(opcode | SEIMM8 | MOD_DISP8 | base);
             mc.add1(off);
@@ -1312,6 +1379,7 @@ public class x86 implements x86Constants {
         jq.assert(length == 2);
         jq.assert(base != ESP);
         jq.assert((opcode & 0xC7) == 0);
+        jq.assert(base >= EAX && base <= EDI);
         if (mc != null) {
             mc.add2(opcode | MOD_DISP8 | base);
             mc.add1(off);
@@ -1325,6 +1393,7 @@ public class x86 implements x86Constants {
         jq.assert(length == 2);
         jq.assert(base != ESP);
         jq.assert((opcode & 0xC7) == 0);
+        jq.assert(base >= EAX && base <= EDI);
         if (mc != null) {
             mc.add2(opcode | MOD_DISP8 | base);
             mc.add1(off);
@@ -1337,6 +1406,8 @@ public class x86 implements x86Constants {
     final int emit2_SIB_DISP8(CodeAllocator.x86CodeBuffer mc, int base, int ind, int scale, byte off) {
         jq.assert(length == 2);
         jq.assert((opcode & 0xC7) == 0);
+        jq.assert(base >= EAX && base <= EDI);
+        jq.assert(ind >= EAX && ind <= EDI);
         if (mc != null) {
             mc.add2(opcode | MOD_DISP8 | RM_SIB);
             mc.add1((byte)(scale | (ind << 3) | base));
@@ -1349,6 +1420,8 @@ public class x86 implements x86Constants {
     final int emit2_Once_SIB_DISP8(CodeAllocator.x86CodeBuffer mc, int base, int ind, int scale, byte off) {
         jq.assert(length == 2);
         jq.assert((opcode & 0xC7) == 0);
+        jq.assert(base >= EAX && base <= EDI);
+        jq.assert(ind >= EAX && ind <= EDI);
         if (mc != null) {
             mc.add2(opcode | SHIFT_ONCE | MOD_DISP8 | RM_SIB);
             mc.add1((byte)(scale | (ind << 3) | base));
@@ -1361,6 +1434,8 @@ public class x86 implements x86Constants {
     final int emit2_SIB_DISP8_Imm8(CodeAllocator.x86CodeBuffer mc, int base, int ind, int scale, byte off, byte imm) {
         jq.assert(length == 2);
         jq.assert((opcode & 0xC7) == 0);
+        jq.assert(base >= EAX && base <= EDI);
+        jq.assert(ind >= EAX && ind <= EDI);
         if (mc != null) {
             mc.add2(opcode | MOD_DISP8 | RM_SIB);
             mc.add1((byte)(scale | (ind << 3) | base));
@@ -1374,6 +1449,8 @@ public class x86 implements x86Constants {
     final int emit2_SIB_DISP8_SEImm8(CodeAllocator.x86CodeBuffer mc, int base, int ind, int scale, byte off, byte imm) {
         jq.assert(length == 2);
         jq.assert((opcode & 0xC7) == 0);
+        jq.assert(base >= EAX && base <= EDI);
+        jq.assert(ind >= EAX && ind <= EDI);
         if (mc != null) {
             mc.add2(opcode | SEIMM8 | MOD_DISP8 | RM_SIB);
             mc.add1((byte)(scale | (ind << 3) | base));
@@ -1387,6 +1464,8 @@ public class x86 implements x86Constants {
     final int emit2_SIB_DISP8_Imm32(CodeAllocator.x86CodeBuffer mc, int base, int ind, int scale, byte off, int imm) {
         jq.assert(length == 2);
         jq.assert((opcode & 0xC7) == 0);
+        jq.assert(base >= EAX && base <= EDI);
+        jq.assert(ind >= EAX && ind <= EDI);
         if (mc != null) {
             mc.add2(opcode | MOD_DISP8 | RM_SIB);
             mc.add1((byte)(scale | (ind << 3) | base));
@@ -1401,6 +1480,7 @@ public class x86 implements x86Constants {
         jq.assert(length == 2);
         jq.assert(base != ESP);
         jq.assert((opcode & 0xC7) == 0);
+        jq.assert(base >= EAX && base <= EDI);
         if (mc != null) {
             mc.add2(opcode | MOD_DISP32 | base);
             mc.add4_endian(off);
@@ -1413,6 +1493,7 @@ public class x86 implements x86Constants {
         jq.assert(length == 2);
         jq.assert(base != ESP);
         jq.assert((opcode & 0xC7) == 0);
+        jq.assert(base >= EAX && base <= EDI);
         if (mc != null) {
             mc.add2(opcode | SHIFT_ONCE | MOD_DISP32 | base);
             mc.add4_endian(off);
@@ -1425,6 +1506,7 @@ public class x86 implements x86Constants {
         jq.assert(length == 2);
         jq.assert(base != ESP);
         jq.assert((opcode & 0xC7) == 0);
+        jq.assert(base >= EAX && base <= EDI);
         if (mc != null) {
             mc.add2(opcode | SEIMM8 | MOD_DISP32 | base);
             mc.add4_endian(off);
@@ -1438,6 +1520,7 @@ public class x86 implements x86Constants {
         jq.assert(length == 2);
         jq.assert(base != ESP);
         jq.assert((opcode & 0xC7) == 0);
+        jq.assert(base >= EAX && base <= EDI);
         if (mc != null) {
             mc.add2(opcode | MOD_DISP32 | base);
             mc.add4_endian(off);
@@ -1451,6 +1534,7 @@ public class x86 implements x86Constants {
         jq.assert(length == 2);
         jq.assert(base != ESP);
         jq.assert((opcode & 0xC7) == 0);
+        jq.assert(base >= EAX && base <= EDI);
         if (mc != null) {
             mc.add2(opcode | MOD_DISP32 | base);
             mc.add4_endian(off);
@@ -1463,6 +1547,7 @@ public class x86 implements x86Constants {
     final int emit2_SIB_DISP32(CodeAllocator.x86CodeBuffer mc, int base, int ind, int scale, int off) {
         jq.assert(length == 2);
         jq.assert((opcode & 0xFF) == 0);
+        jq.assert(base >= EAX && base <= EDI);
         if (mc != null) {
             mc.add2(opcode | MOD_DISP32 | RM_SIB);
             mc.add1((byte)(scale | (ind << 3) | base));
@@ -1475,6 +1560,8 @@ public class x86 implements x86Constants {
     final int emit2_Once_SIB_DISP32(CodeAllocator.x86CodeBuffer mc, int base, int ind, int scale, int off) {
         jq.assert(length == 2);
         jq.assert((opcode & 0xFF) == 0);
+        jq.assert(base >= EAX && base <= EDI);
+        jq.assert(ind >= EAX && ind <= EDI);
         if (mc != null) {
             mc.add2(opcode | SHIFT_ONCE | MOD_DISP32 | RM_SIB);
             mc.add1((byte)(scale | (ind << 3) | base));
@@ -1487,6 +1574,8 @@ public class x86 implements x86Constants {
     final int emit2_SIB_DISP32_SEImm8(CodeAllocator.x86CodeBuffer mc, int base, int ind, int scale, int off, byte imm) {
         jq.assert(length == 2);
         jq.assert((opcode & 0xFF) == 0);
+        jq.assert(base >= EAX && base <= EDI);
+        jq.assert(ind >= EAX && ind <= EDI);
         if (mc != null) {
             mc.add2(opcode | SEIMM8 | MOD_DISP32 | RM_SIB);
             mc.add1((byte)(scale | (ind << 3) | base));
@@ -1500,6 +1589,8 @@ public class x86 implements x86Constants {
     final int emit2_SIB_DISP32_Imm8(CodeAllocator.x86CodeBuffer mc, int base, int ind, int scale, int off, byte imm) {
         jq.assert(length == 2);
         jq.assert((opcode & 0xFF) == 0);
+        jq.assert(base >= EAX && base <= EDI);
+        jq.assert(ind >= EAX && ind <= EDI);
         if (mc != null) {
             mc.add2(opcode | MOD_DISP32 | RM_SIB);
             mc.add1((byte)(scale | (ind << 3) | base));
@@ -1513,6 +1604,8 @@ public class x86 implements x86Constants {
     final int emit2_SIB_DISP32_Imm32(CodeAllocator.x86CodeBuffer mc, int base, int ind, int scale, int off, int imm) {
         jq.assert(length == 2);
         jq.assert((opcode & 0xFF) == 0);
+        jq.assert(base >= EAX && base <= EDI);
+        jq.assert(ind >= EAX && ind <= EDI);
         if (mc != null) {
             mc.add2(opcode | MOD_DISP32 | RM_SIB);
             mc.add1((byte)(scale | (ind << 3) | base));
@@ -1537,6 +1630,8 @@ public class x86 implements x86Constants {
     final int emit3_Reg_Reg(CodeAllocator.x86CodeBuffer mc, int r1, int r2) {
         jq.assert(length == 3);
         jq.assert((opcode & 0xFF) == 0);
+        jq.assert(r1 >= EAX && r1 <= EDI);
+        jq.assert(r2 >= EAX && r2 <= EDI);
         if (mc != null) {
             mc.add3(opcode | MOD_REG | (r1 << 3) | r2);
         }
@@ -1549,6 +1644,8 @@ public class x86 implements x86Constants {
         jq.assert(base != ESP);
         jq.assert(base != EBP);
         jq.assert((opcode & 0xFF) == 0);
+        jq.assert(r1 >= EAX && r1 <= EDI);
+        jq.assert(base >= EAX && base <= EDI);
         if (mc != null) {
             mc.add3(opcode | MOD_EA | (r1 << 3) | base);
         }
@@ -1560,6 +1657,8 @@ public class x86 implements x86Constants {
         jq.assert(length == 3);
         jq.assert(base != ESP);
         jq.assert((opcode & 0xFF) == 0);
+        jq.assert(r1 >= EAX && r1 <= EDI);
+        jq.assert(base >= EAX && base <= EDI);
         if (mc != null) {
             mc.add3(opcode | MOD_DISP8 | (r1 << 3) | base);
             mc.add1(off);
@@ -1572,6 +1671,8 @@ public class x86 implements x86Constants {
         jq.assert(length == 3);
         jq.assert(base != ESP);
         jq.assert((opcode & 0xFF) == 0);
+        jq.assert(r1 >= EAX && r1 <= EDI);
+        jq.assert(base >= EAX && base <= EDI);
         if (mc != null) {
             mc.add3(opcode | MOD_DISP32 | (r1 << 3) | base);
             mc.add4_endian(off);
@@ -1583,6 +1684,9 @@ public class x86 implements x86Constants {
     final int emit3_Reg_SIB_EA(CodeAllocator.x86CodeBuffer mc, int r1, int base, int ind, int scale) {
         jq.assert(length == 3);
         jq.assert((opcode & 0xFF) == 0);
+        jq.assert(r1 >= EAX && r1 <= EDI);
+        jq.assert(ind >= EAX && ind <= EDI);
+        jq.assert(base >= EAX && base <= EDI);
         if (mc != null) {
             mc.add3(opcode | MOD_EA | (r1 << 3) | RM_SIB);
             mc.add1((byte)(scale | (ind << 3) | base));
@@ -1594,6 +1698,9 @@ public class x86 implements x86Constants {
     final int emit3_Reg_SIB_DISP8(CodeAllocator.x86CodeBuffer mc, int r1, int base, int ind, int scale, byte off) {
         jq.assert(length == 3);
         jq.assert((opcode & 0xFF) == 0);
+        jq.assert(r1 >= EAX && r1 <= EDI);
+        jq.assert(ind >= EAX && ind <= EDI);
+        jq.assert(base >= EAX && base <= EDI);
         if (mc != null) {
             mc.add3(opcode | MOD_DISP8 | (r1 << 3) | RM_SIB);
             mc.add1((byte)(scale | (ind << 3) | base));
@@ -1606,6 +1713,9 @@ public class x86 implements x86Constants {
     final int emit3_Reg_SIB_DISP32(CodeAllocator.x86CodeBuffer mc, int r1, int base, int ind, int scale, int off) {
         jq.assert(length == 3);
         jq.assert((opcode & 0xFF) == 0);
+        jq.assert(r1 >= EAX && r1 <= EDI);
+        jq.assert(ind >= EAX && ind <= EDI);
+        jq.assert(base >= EAX && base <= EDI);
         if (mc != null) {
             mc.add3(opcode | MOD_DISP32 | (r1 << 3) | RM_SIB);
             mc.add1((byte)(scale | (ind << 3) | base));
@@ -1618,6 +1728,7 @@ public class x86 implements x86Constants {
     final int emit3_Reg_Abs32(CodeAllocator.x86CodeBuffer mc, int r1, int addr) {
         jq.assert(length == 3);
         jq.assert((opcode & 0xFF) == 0);
+        jq.assert(r1 >= EAX && r1 <= EDI);
         if (mc != null) {
             mc.add3(opcode | MOD_EA | (r1 << 3) | EBP);
             mc.add4_endian(addr);
