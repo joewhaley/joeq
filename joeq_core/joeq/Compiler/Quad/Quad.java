@@ -37,7 +37,7 @@ public class Quad {
     Operand getOp2() { return operand2; }
     Operand getOp3() { return operand3; }
     Operand getOp4() { return operand4; }
-    Operator getOperator() { return operator; }
+    public Operator getOperator() { return operator; }
     
     void accept(QuadVisitor qv) { this.operator.accept(this, qv); }
     
