@@ -44,7 +44,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
     
     String varOrderDesc = "method_quadxtargetxfallthrough_constant_member_src2_src1_opc_dest";
     
-    int methodBits = 13, quadBits = 18, opBits = 8, regBits = 8, constantBits = 12, memberBits = 14;
+    int methodBits = 14, quadBits = 18, opBits = 8, regBits = 7, constantBits = 12, memberBits = 14;
 
     BDDFactory bdd;
     BDDDomain method, quad, opc, dest, src1, src2, constant, fallthrough, target, member;
@@ -204,6 +204,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         dumpMap(regMap, "reg.map");
         dumpMap(memberMap, "member.map");
         dumpMap(constantMap, "constant.map");
+        dumpBDDConfig("bdd.cfg");
         dumpFieldDomains("fielddomains.cfg");
         dumpRelations("relations.cfg");
         System.out.print("Saving BDD...");
@@ -212,6 +213,21 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         System.out.println("done.");
         dumpTuples("cfg.tuples", allQuads);
         dumpTuples("m2q.tuples", methodToQuad);
+    }
+    
+    void dumpBDDConfig(String fileName) throws IOException {
+        DataOutputStream dos = new DataOutputStream(new FileOutputStream(fileName));
+        dos.writeBytes("method "+(1L<<methodBits)+"\n");
+        dos.writeBytes("quad "+(1L<<quadBits)+"\n");
+        dos.writeBytes("opc "+(1L<<opBits)+"\n");
+        dos.writeBytes("dest "+(1L<<regBits)+"\n");
+        dos.writeBytes("src1 "+(1L<<regBits)+"\n");
+        dos.writeBytes("src2 "+(1L<<regBits)+"\n");
+        dos.writeBytes("constant "+(1L<<constantBits)+"\n");
+        dos.writeBytes("fallthrough "+(1L<<quadBits)+"\n");
+        dos.writeBytes("target "+(1L<<quadBits)+"\n");
+        dos.writeBytes("member "+(1L<<memberBits)+"\n");
+        dos.close();
     }
     
     void dumpFieldDomains(String fileName) throws IOException {
