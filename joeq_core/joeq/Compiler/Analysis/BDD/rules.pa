@@ -1,14 +1,15 @@
-# rules format:
-#(v1,_,v3) in r1, (v1,v3) in r2 / (v3,v1) in r3
-(v,h) in vP0 / (v,h) in vP
-(i,m) in IE0 / (i,m) in IE
-(v,tv) in vT, (tv,th) in aT, (h,th) in hT / (v,h) in vPfilter
-(v1,v2) in A, (v2,h) in vP, (v1,h) in vPfilter / (v1,h) in vP
-(v1,h1) in vP, (v1,f,v2) in S, (v2,h2) in vP / (h1,f,h2) in hP split
-(v1,h1) in vP, (v1,f,v2) in L, (h1,f,h2) in hP, (v2,h2) in vPfilter / (v2,h2) in vP split
-(m,z,v1) in formal, (i,m) in IE, (i,z,v2) in actual / (v1,v2) in A
-(m,v1) in Mret, (i,m) in IE, (i,v2) in Iret / (v2,v1) in A
-(m,v1) in Mthr, (i,m) in IE, (i,v2) in Ithr / (v2,v1) in A
+vP(v,h) :- vP0(v,h).
+IE(i,m) :- IE0(i,m).
+vPfilter(v,h) :- vT(v,tv), aT(tv,th), hT(h,th).
+vP(v1,h) :- A(v1,v2), vP(v2,h), vPfilter(v1,h).
+hP(h1,f,h2) :- vP(v1,h1), S(v1,f,v2), vP(v2,h2). split
+vP(v2,h2) :- vP(v1,h1), L(v1,f,v2), hP(h1,f,h2), vPfilter(v2,h2). split
+A(v1,v2) :- formal(m,z,v1), IE(i,m), actual(i,z,v2).
+A(v2,v1) :- Mret(m,v1), IE(i,m), Iret(i,v2).
+A(v2,v1) :- Mthr(m,v1), IE(i,m), Iret(i,v2).
 
-# uncomment the next line to discover call graph edges
-# (m1,i,n) in mI, (i,0,v) in actual, (v,h) in vP, (h,t) in hT, (t,n,m2) in cha / (i,m2) in IE
+# uncomment these lines to discover call graph edges.
+# IE(i,m2) :- mI(m1,i,n), actual(i,0,v), vP(v,h), hT(h,t), cha(t,n,m2). split
+# S(v1,f,v2) :- IE(_,m), mS(m,v1,f,v2).
+# L(v1,f,v2) :- IE(_,m), mL(m,v1,f,v2).
+# vP(v,h) :- IE(_,m), mvP(m,v,h).
