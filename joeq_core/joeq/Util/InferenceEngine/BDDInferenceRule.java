@@ -155,7 +155,8 @@ public class BDDInferenceRule extends InferenceRule {
                 }
             }
             if (pairing != null) {
-                System.out.println("Relation "+r+" domains "+domainsOf(relationValues[i]));
+                if (solver.TRACE)
+                    System.out.println("Relation "+r+" domains "+domainsOf(relationValues[i]));
                 relationValues[i].replaceWith(pairing);
                 if (solver.TRACE)
                     System.out.println("Relation "+r+" domains now "+domainsOf(relationValues[i]));

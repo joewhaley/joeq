@@ -376,11 +376,11 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         System.out.println("done.");
         
         System.out.println("Saving tuples....");
-        dumpTuples(relationName+".tuples", allQuads);
-        dumpTuples("m2q.tuples", methodToQuad);
-        dumpTuples("entries.tuples", methodEntries);
-        dumpTuples("nullconstant.tuples", nullConstant);
-        dumpTuples("nonnullconstants.tuples", nonNullConstants);
+        dumpTuples(bdd, relationName+".tuples", allQuads);
+        dumpTuples(bdd, "m2q.tuples", methodToQuad);
+        dumpTuples(bdd, "entries.tuples", methodEntries);
+        dumpTuples(bdd, "nullconstant.tuples", nullConstant);
+        dumpTuples(bdd, "nonnullconstants.tuples", nonNullConstants);
         System.out.println("done.");
     }
     
@@ -447,7 +447,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         dos.close();
     }
     
-    void dumpTuples(String fileName, BDD relation) throws IOException {
+    public static void dumpTuples(BDDFactory bdd, String fileName, BDD relation) throws IOException {
         DataOutputStream dos = new DataOutputStream(new FileOutputStream(fileName));
         if (relation.isZero()) {
             dos.close();
@@ -459,11 +459,14 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         rsup.free();
         BDD allDomains = bdd.one();
         System.out.print(fileName+" domains {");
+        dos.writeBytes("#");
         for (int i = 0; i < a.length; ++i) {
             BDDDomain d = bdd.getDomain(a[i]);
             System.out.print(" "+d.toString());
+            dos.writeBytes(" "+d.toString()+":"+d.varNum());
             allDomains.andWith(d.set());
         }
+        dos.writeBytes("\n");
         System.out.println(" ) = "+relation.nodeCount()+" nodes");
         BDDDomain primaryDomain = bdd.getDomain(a[0]);
         int lines = 0;

@@ -87,7 +87,7 @@ public class BDDRelation extends Relation {
     
     public void load() throws IOException {
         load(name+".bdd");
-        if (solver.NOISY) solver.out.println("Loaded BDD from file: "+name+".bdd");
+        if (solver.NOISY) solver.out.println("Loaded BDD from file: "+name+".bdd "+relation.nodeCount()+" nodes.");
         if (solver.NOISY) solver.out.println("Domains of loaded relation:"+activeDomains(relation));
     }
     
@@ -100,14 +100,15 @@ public class BDDRelation extends Relation {
     public void load(String filename) throws IOException {
         BDD r2 = solver.bdd.load(filename);
         if (r2 != null) {
-            BDD s = r2.support();
-            if (!s.equals(domainSet)) {
-                solver.out.println("Loaded BDD "+filename+" should be domains "+domains+", but found "+activeDomains(r2)+" instead");
-            }
-            BDD t = domainSet.and(s);
-            s.free();
-            if (!t.equals(domainSet)) {
-                throw new InternalError("Expected domains for loaded BDD "+filename+" to be "+domains+", but found "+activeDomains(r2)+" instead");
+            if (r2.isZero()) {
+                System.out.println("Warning: "+filename+" is zero.");
+            } else {
+                BDD s = r2.support();
+                BDD t = domainSet.and(s);
+                s.free();
+                if (!t.equals(domainSet)) {
+                    throw new IOException("Expected domains for loaded BDD "+filename+" to be "+domains+", but found "+activeDomains(r2)+" instead");
+                }
             }
             
             relation.free();
@@ -158,14 +159,19 @@ public class BDDRelation extends Relation {
     
     public void saveTuples(String fileName) throws IOException {
         DataOutputStream dos = new DataOutputStream(new FileOutputStream(fileName));
-        int[] a = relation.support().scanSetDomains();
+        BDD ss = relation.support();
+        int[] a = ss.scanSetDomains();
+        ss.free();
         BDD allDomains = solver.bdd.one();
+        dos.writeBytes("#");
         System.out.print(fileName+" domains {");
         for (int i = 0; i < a.length; ++i) {
             BDDDomain d = solver.bdd.getDomain(i);
             System.out.print(" "+d.toString());
+            dos.writeBytes(" "+d.toString()+":"+d.varNum());
             allDomains.andWith(d.set());
         }
+        dos.writeBytes("\n");
         System.out.println(" ) = "+relation.nodeCount()+" nodes");
         BDDDomain iterDomain = (BDDDomain) domains.get(0);
         BDD foo = relation.exist(allDomains.exist(iterDomain.set()));
