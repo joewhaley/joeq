@@ -460,7 +460,6 @@ public abstract class Bootstrapper implements ObjectLayout {
         objmap.find_reachable(0);
         
         long traversaltime = System.currentTimeMillis() - starttime;
-        System.out.println("Scan time: "+traversaltime/1000f+"s");
 
         // now that we have visited all reachable objects, jq.on_vm_startup is built
         int index = objmap.numOfEntries();
@@ -475,6 +474,7 @@ public abstract class Bootstrapper implements ObjectLayout {
         objmap.disableAllocations();
         
         System.out.println("Scanned: "+objmap.numOfEntries()+" objects, memory used: "+(Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory())+"                    ");
+        System.out.println("Scan time: "+traversaltime/1000f+"s");
         System.out.println("Image heap size = "+objmap.size());
         System.out.println("Image code size = "+bca.size());
         

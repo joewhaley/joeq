@@ -17,6 +17,7 @@ LCompil3r/BytecodeAnalysis/Bytecodes$EmptyVisitor;
 [LCompil3r/BytecodeAnalysis/Bytecodes$LineNumber;
 LCompil3r/Quad/BytecodeToQuad$jq_ReturnAddressType;
 LCompil3r/Reference/x86/*
+LGC/*
 LMain/jq;
 LMain/TraceFlags;
 LMemory/*
@@ -26,6 +27,7 @@ LUtil/AbstrRelation;
 LUtil/AbstrRelationMapBased;
 LUtil/AppendIterator;
 LUtil/AtomicCounter;
+LUtil/BitString;
 LUtil/Factories;
 LUtil/Factories$1;
 LUtil/Factories$2;
