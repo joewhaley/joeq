@@ -45,6 +45,10 @@ public class GenerateWebRoots {
                 TRACE = true;
             }
         }
+        if(inputFile == null){
+            usage(args[0]);
+            System.exit(1);
+        }
         Document doc = parseFile(inputFile);
         Collection servlets = findMatches(doc, "servlet-class");
         Collection filters  = findMatches(doc, "filter-class");
@@ -59,6 +63,11 @@ public class GenerateWebRoots {
         printFilters(filters);
         printTags();
         printPostamble();
+    }
+
+    private static void usage(String prog) {
+        System.err.println("Usage:");
+        System.err.println("\t" + prog + "input-file [-v] [-o output-file]");
     }
 
     private static void printPostamble() {
