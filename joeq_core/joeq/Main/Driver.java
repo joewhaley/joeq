@@ -24,6 +24,13 @@ public abstract class Driver {
         // initialize jq
         jq.initializeForHostJVMExecution();
         
+        try {
+            interpreterClass = Class.forName("Interpreter.QuadInterpreter$State",
+                                             false, Driver.class.getClassLoader());
+        } catch (ClassNotFoundException x) {
+            System.err.println("Warning: interpreter class not found.");
+        }
+        
         if ((args.length == 0) || args[0].equals("-i")) {
             // interactive mode
             BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
@@ -59,6 +66,8 @@ public abstract class Driver {
     static boolean trace_cfg = false;
     static boolean trace_method = false;
     static boolean trace_type = false;
+    
+    static Class interpreterClass;
     
     public static int processCommand(String[] commandBuffer, int index) {
         try {
@@ -104,6 +113,21 @@ public abstract class Driver {
                         System.err.println("Class "+commandBuffer[index]+" (canonical name "+canonicalClassName+") not found.");
                     }
                 }
+            } else if (commandBuffer[index].equalsIgnoreCase("setinterpreter")) {
+                String interpreterClassName = commandBuffer[++index];
+                try {
+                    Class cl = Class.forName(interpreterClassName);
+                    if (Class.forName("Interpreter.QuadInterpreter").isAssignableFrom(cl)) {
+                        interpreterClass = cl;
+                    } else {
+                        System.err.println("Class "+interpreterClassName+" does not subclass Interpreter.QuadInterpreter.");
+                    }
+                } catch (java.lang.ClassNotFoundException x) {
+                    System.err.println("Cannot find interpreter named "+interpreterClassName+".");
+                    System.err.println("Check your classpath and make sure you compiled your interpreter.");
+                    return index;
+                }
+                
             } else if (commandBuffer[index].equalsIgnoreCase("interpret")) {
                 String fullName = commandBuffer[++index];
                 int b = fullName.lastIndexOf('.')+1;
@@ -125,7 +149,10 @@ public abstract class Driver {
                     if (m != null) {
                         Object[] args = new Object[m.getParamTypes().length];
                         index = parseMethodArgs(args, m.getParamTypes(), commandBuffer, index);
-                        Interpreter.QuadInterpreter.State s = Interpreter.QuadInterpreter.State.interpretMethod(m, args);
+                        Interpreter.QuadInterpreter.State s = null;
+                        java.lang.reflect.Method im = interpreterClass.getMethod("interpretMethod", new Class[] { Class.forName("Clazz.jq_Method"), new Object[0].getClass()});
+                        s = (Interpreter.QuadInterpreter.State)im.invoke(null, new Object[] {m, args});
+                        //s = Interpreter.QuadInterpreter.State.interpretMethod(m, args);
                         System.out.flush();
                         System.out.println("Result of interpretation: "+s);
                     } else {
@@ -133,6 +160,20 @@ public abstract class Driver {
                     }
                 } catch (NoClassDefFoundError x) {
                     System.err.println("Class "+fullName.substring(0, b-1)+" (canonical name "+className+") not found.");
+                    return index;
+                } catch (NoSuchMethodException x) {
+                    System.err.println("Interpreter method in "+interpreterClass+" not found! "+x);
+                    return index;
+                } catch (ClassNotFoundException x) {
+                    System.err.println("Clazz.jq_Method class not found! "+x);
+                    return index;
+                } catch (IllegalAccessException x) {
+                    System.err.println("Cannot access interpreter "+interpreterClass+": "+x);
+                    return index;
+                } catch (java.lang.reflect.InvocationTargetException x) {
+                    System.err.println("Interpreter threw exception: "+x.getTargetException());
+                    x.getTargetException().printStackTrace();
+                    return index;
                 }
                 
             } else if (commandBuffer[index].equalsIgnoreCase("addpass")) {
