@@ -3070,7 +3070,10 @@ public class PA {
             pn = null;
         }
         Map initialCounts = null; //new ThreadRootMap(thread_runs);
-        BigInteger paths = (BigInteger) pn.countPaths(cg.getRoots(), cg.getCallSiteNavigator(), initialCounts);
+        BigInteger paths = null;
+        if (pn != null) {
+            paths = (BigInteger) pn.countPaths(cg.getRoots(), cg.getCallSiteNavigator(), initialCounts);
+        }
         if (updateBits) {
             V_BITS = BigInteger.valueOf(vars+256).bitLength();
             I_BITS = BigInteger.valueOf(calls).bitLength();
