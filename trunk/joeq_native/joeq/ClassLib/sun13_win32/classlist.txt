@@ -27,6 +27,7 @@ LUtil/AbstrRelation;
 LUtil/AbstrRelationMapBased;
 LUtil/AppendIterator;
 LUtil/AtomicCounter;
+LUtil/BitString;
 LUtil/Factories;
 LUtil/Factories$1;
 LUtil/Factories$2;
