@@ -171,7 +171,7 @@ public class ContextSensitiveBDD {
     }
     
     LinkedHashMap summaries = new LinkedHashMap();
-    HashWorklist worklist = new HashWorklist();
+    HashWorklist worklist = new HashWorklist(false);
     CallGraph initial_cg;
     
     public CallGraph go(Collection roots) {
