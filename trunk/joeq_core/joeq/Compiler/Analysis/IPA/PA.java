@@ -2139,6 +2139,8 @@ public class PA {
         }
     }
     
+    public static boolean MATCH_FACTORY = false;
+    
     public class HeapPathSelector implements Selector {
 
         jq_Class collection_class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljava/util/Collection;");
@@ -2166,24 +2168,26 @@ public class PA {
             if (m.getBytecode() == null) return false;
             if (m.getNameAndDesc() == main_method) return true;
             if (m.getNameAndDesc() == run_method) return true;
-            MethodSummary ms = MethodSummary.getSummary(CodeCache.getCode(m));
-            for (i = ms.getReturned().iterator(); i.hasNext(); ) {
-                Node n = (Node) i.next();
-                if (!(n instanceof ConcreteTypeNode)) {
-                    //return false;
+            if (MATCH_FACTORY) {
+                MethodSummary ms = MethodSummary.getSummary(CodeCache.getCode(m));
+                for (i = ms.getReturned().iterator(); i.hasNext(); ) {
+                    Node n = (Node) i.next();
+                    if (!(n instanceof ConcreteTypeNode)) {
+                        //return false;
+                    }
+                    jq_Reference type = n.getDeclaredType();
+                    if (type == null) {
+                        return false;
+                    }
+                    type.prepare();
+                    if (!polyClasses.isEmpty() && !polyClasses.contains(type))
+                        return false;
+                    if (type.isSubtypeOf(throwable_class))
+                        return false;
+                    //if (!type.isSubtypeOf(collection_class) &&
+                    //    !type.isSubtypeOf(map_class))
+                    //    return false;
                 }
-                jq_Reference type = n.getDeclaredType();
-                if (type == null) {
-                    return false;
-                }
-                type.prepare();
-                if (!polyClasses.isEmpty() && !polyClasses.contains(type))
-                    return false;
-                if (type.isSubtypeOf(throwable_class))
-                    return false;
-                //if (!type.isSubtypeOf(collection_class) &&
-                //    !type.isSubtypeOf(map_class))
-                //    return false;
             }
             return true;
         }
