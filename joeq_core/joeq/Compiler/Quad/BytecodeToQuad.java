@@ -68,6 +68,7 @@ import Compil3r.Quad.Operator.ZeroCheck;
 import Compil3r.Quad.RegisterFactory.Register;
 import Main.jq;
 import Memory.Address;
+import Memory.HeapAddress;
 import Memory.StackAddress;
 import Run_Time.Reflection;
 import Run_Time.TypeCheck;
@@ -1398,15 +1399,97 @@ public class BytecodeToQuad extends BytecodeVisitor {
             RegisterOperand res = getStackRegister(jq_Primitive.LONG);
             q = MemLoad.create(quad_cfg.getNewQuadID(), MemLoad.PEEK_8.INSTANCE, res, loc);
             current_state.push_L(res);
+        } else if (name == offset) {
+            Operand val = current_state.pop_I();
+            Operand loc = current_state.pop_P();
+            RegisterOperand res = getStackRegister(Address._class);
+            q = Binary.create(quad_cfg.getNewQuadID(), Binary.ADD_P.INSTANCE, res, loc, val);
+            current_state.push_P(res);
+        } else if (name == align) {
+            Operand val = current_state.pop_I();
+            Operand loc = current_state.pop_P();
+            RegisterOperand res = getStackRegister(Address._class);
+            q = Binary.create(quad_cfg.getNewQuadID(), Binary.ALIGN_P.INSTANCE, res, loc, val);
+            current_state.push_P(res);
+        } else if (name == difference) {
+            Operand val = current_state.pop_P();
+            Operand loc = current_state.pop_P();
+            RegisterOperand res = getStackRegister(jq_Primitive.INT);
+            q = Binary.create(quad_cfg.getNewQuadID(), Binary.SUB_P.INSTANCE, res, loc, val);
+            current_state.push_I(res);
         } else if (name == alloca) {
             Operand amt = current_state.pop_I();
             RegisterOperand res = getStackRegister(StackAddress._class);
             q = Special.create(quad_cfg.getNewQuadID(), Special.ALLOCA.INSTANCE, res, amt);
             current_state.push_P(res);
+        } else if (name == isNull) {
+            Operand loc = current_state.pop_P();
+            RegisterOperand res = getStackRegister(jq_Primitive.BOOLEAN);
+            q = Unary.create(quad_cfg.getNewQuadID(), Unary.ISNULL_P.INSTANCE, res, loc);
+            current_state.push_I(res);
+        } else if (name == addressOf) {
+            Operand loc = current_state.pop_A();
+            RegisterOperand res = getStackRegister(Address._class);
+            q = Unary.create(quad_cfg.getNewQuadID(), Unary.OBJECT_2ADDRESS.INSTANCE, res, loc);
+            current_state.push_P(res);
+        } else if (name == address32) {
+            Operand loc = current_state.pop_I();
+            RegisterOperand res = getStackRegister(Address._class);
+            q = Unary.create(quad_cfg.getNewQuadID(), Unary.INT_2ADDRESS.INSTANCE, res, loc);
+            current_state.push_P(res);
+        } else if (name == asObject) {
+            Operand loc = current_state.pop_P();
+            RegisterOperand res = getStackRegister(PrimordialClassLoader.getJavaLangObject());
+            q = Unary.create(quad_cfg.getNewQuadID(), Unary.ADDRESS_2OBJECT.INSTANCE, res, loc);
+            current_state.push_A(res);
+        } else if (name == asReferenceType) {
+            Operand loc = current_state.pop_P();
+            RegisterOperand res = getStackRegister(jq_Reference._class);
+            q = Unary.create(quad_cfg.getNewQuadID(), Unary.ADDRESS_2OBJECT.INSTANCE, res, loc);
+            current_state.push_A(res);
+        } else if (name == to32BitValue) {
+            Operand loc = current_state.pop_P();
+            RegisterOperand res = getStackRegister(jq_Primitive.INT);
+            q = Unary.create(quad_cfg.getNewQuadID(), Unary.ADDRESS_2INT.INSTANCE, res, loc);
+            current_state.push_I(res);
+        } else if (name == stringRep) {
+            INVOKEhelper(oper, m, m.getReturnType(), false);
+            return;
         } else if (name == getNull) {
             PConstOperand p = new PConstOperand(null);
             current_state.push_P(p);
             return;
+        } else if (name == size) {
+            IConstOperand p = new IConstOperand(HeapAddress.size());
+            current_state.push_I(p);
+            return;
+        } else if (name == getBasePointer) {
+            RegisterOperand res = getStackRegister(StackAddress._class);
+            q = Special.create(quad_cfg.getNewQuadID(), Special.GET_BASE_POINTER.INSTANCE, res);
+            current_state.push_P(res);
+        } else if (name == getStackPointer) {
+            RegisterOperand res = getStackRegister(StackAddress._class);
+            q = Special.create(quad_cfg.getNewQuadID(), Special.GET_STACK_POINTER.INSTANCE, res);
+            current_state.push_P(res);
+        } else if (name == atomicAdd) {
+            Operand val = current_state.pop_I();
+            Operand loc = current_state.pop_P();
+            q = Special.create(quad_cfg.getNewQuadID(), Special.ATOMICADD_I.INSTANCE, loc, val);
+        } else if (name == atomicSub) {
+            Operand val = current_state.pop_I();
+            Operand loc = current_state.pop_P();
+            q = Special.create(quad_cfg.getNewQuadID(), Special.ATOMICSUB_I.INSTANCE, loc, val);
+        } else if (name == atomicAnd) {
+            Operand val = current_state.pop_I();
+            Operand loc = current_state.pop_P();
+            q = Special.create(quad_cfg.getNewQuadID(), Special.ATOMICAND_I.INSTANCE, loc, val);
+        } else if (name == atomicCas4) {
+            Operand val2 = current_state.pop_I();
+            Operand val1 = current_state.pop_I();
+            Operand loc = current_state.pop_P();
+            RegisterOperand res = getStackRegister(jq_Primitive.INT);
+            q = Special.create(quad_cfg.getNewQuadID(), Special.ATOMICCAS4.INSTANCE, res, loc, val1, val2);
+            current_state.push_I(res);
         } else {
             // TODO
             INVOKEhelper(oper, m, m.getReturnType(), false);

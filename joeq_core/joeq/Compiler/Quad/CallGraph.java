@@ -25,7 +25,7 @@ public abstract class CallGraph {
     
     /**
      * Returns the possible target methods of the given call site under the given context.
-     * The interpretation of the context is specific to the type of call graph.
+     * The interpretation of the context object is specific to the type of call graph.
      * 
      * @param context
      * @param callSite

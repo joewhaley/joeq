@@ -21,6 +21,7 @@ import Run_Time.TypeCheck;
 import Run_Time.Unsafe;
 import Util.Assert;
 import Util.Strings;
+import Util.Collections.AppendIterator;
 
 import Allocator.CodeAllocator;
 import Allocator.DefaultCodeAllocator;
@@ -33,10 +34,8 @@ import Assembler.x86.x86;
 import Assembler.x86.x86Assembler;
 import Assembler.x86.x86Constants;
 import Bootstrap.BootImage;
-import Bootstrap.BootstrapCodeAddress;
 import Bootstrap.BootstrapCodeAllocator;
 import Bootstrap.ObjectTraverser;
-import Bootstrap.BootstrapCodeAddress.BootstrapCodeAddressFactory;
 import ClassLib.ClassLibInterface;
 import Clazz.jq_Array;
 import Clazz.jq_Class;
@@ -93,8 +92,10 @@ import Compil3r.Quad.Operator.Putstatic;
 import Compil3r.Quad.Operator.Ret;
 import Compil3r.Quad.Operator.Return;
 import Compil3r.Quad.Operator.Special;
+import Compil3r.Quad.Operator.StoreCheck;
 import Compil3r.Quad.Operator.TableSwitch;
 import Compil3r.Quad.Operator.Unary;
+import Compil3r.Quad.Operator.ZeroCheck;
 import Compil3r.Quad.RegisterFactory.Register;
 import Compil3r.Reference.x86.x86ReferenceLinker;
 
@@ -237,7 +238,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
     public final List getDataRelocs() { return data_relocs; }
     
     public static final jq_CompiledCode generate_compile_stub(jq_Method method) {
-        if (TRACE_STUBS) System.out.println("x86 Reference Compiler: generating compile stub for "+method);
+        if (TRACE_STUBS) System.out.println("x86 Quad Compiler: generating compile stub for "+method);
         x86Assembler asm = new x86Assembler(0, 24, 0, DEFAULT_ALIGNMENT);
         asm.setEntrypoint();
         List code_relocs = new LinkedList();
@@ -418,7 +419,12 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         // resolve forward branches to this block
         asm.resolveForwardBranches(bb);
         // generate code for this block
-        bb.visitQuads(this);
+        for (Util.Templates.ListIterator.Quad i=bb.iterator(); i.hasNext(); ) {
+            this.handled = false;
+            Quad q = i.nextQuad();
+            q.accept(this);
+            Assert._assert(handled, q.toString());
+        }
         // record end of basic block (for exception handler ranges)
         asm.recordBranchTarget(new Integer(bb.getID()));
     }
@@ -451,7 +457,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
             asm.emitShort_Reg_Imm(x86.MOV_r_i32, register, (int)(v));                        // lo
             asm.emitShort_Reg_Imm(x86.MOV_r_i32, getPairedRegister(register), (int)(v>>32)); // hi
         } else {
-            Assert.UNREACHABLE();
+            Assert.UNREACHABLE("x86 register "+register+": "+o);
         }
     }
     
@@ -558,6 +564,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         default: Assert.UNREACHABLE(); break;
         }
         storeOperand(ALoad.getDest(obj), ECX);
+        this.handled = true;
     }
     /**
      * @see Compil3r.Quad.QuadVisitor#visitAStore(Compil3r.Quad.Quad)
@@ -588,6 +595,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
             break;
         default: Assert.UNREACHABLE(); break;
         }
+        this.handled = true;
     }
     /**
      * @see Compil3r.Quad.QuadVisitor#visitALength(Compil3r.Quad.Quad)
@@ -597,6 +605,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         loadOperand(ALength.getSrc(obj), EAX);
         asm.emit2_Reg_Mem(x86.MOV_r_m32, EAX, ObjectLayout.ARRAY_LENGTH_OFFSET, EAX);
         storeOperand(ALength.getDest(obj), EAX);
+        this.handled = true;
     }
     /**
      * @see Compil3r.Quad.QuadVisitor#visitBinary(Compil3r.Quad.Quad)
@@ -606,9 +615,9 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         loadOperand(Binary.getSrc1(obj), EAX);
         loadOperand(Binary.getSrc2(obj), EBX);
         Binary op = (Binary) obj.getOperator();
-        if (op instanceof Binary.ADD_I) {
+        if (op instanceof Binary.ADD_I || op instanceof Binary.ADD_P) {
             asm.emitARITH_Reg_Reg(x86.ADD_r_r32, EAX, EBX);
-        } else if (op instanceof Binary.SUB_I) {
+        } else if (op instanceof Binary.SUB_I || op instanceof Binary.SUB_P) {
             asm.emitARITH_Reg_Reg(x86.SUB_r_r32, EAX, EBX);
         } else if (op instanceof Binary.MUL_I) {
             asm.emit2_Reg(x86.IMUL_rda_r32, EBX);
@@ -915,11 +924,20 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
             asm.patch1(cloc1-1, (byte)(asm.getCurrentOffset()-cloc1));
             asm.patch1(cloc2-1, (byte)(asm.getCurrentOffset()-cloc2));
             asm.emit2_Reg_Reg(x86.MOV_r_r32, EAX, ECX);
+        } else if (op instanceof Binary.ALIGN_P) {
+            asm.emit2_Reg_Reg(x86.MOV_r_r32, ECX, EBX);
+            asm.emitShort_Reg_Imm(x86.MOV_r_i32, EBX, 1);
+            asm.emit2_Reg(x86.SHL_r32_rc, EBX);
+            asm.emitShort_Reg(x86.DEC_r32, EBX);
+            asm.emitARITH_Reg_Reg(x86.ADD_r_r32, EAX, EBX);
+            asm.emit2_Reg(x86.NOT_r32, EBX);
+            asm.emitARITH_Reg_Reg(x86.AND_r_r32, EAX, EBX);
         }
         else {
-            Assert.UNREACHABLE();
+            Assert.UNREACHABLE(obj.toString());
         }
         storeOperand(Binary.getDest(obj), EAX);
+        this.handled = true;
     }
     /**
      * @see Compil3r.Quad.QuadVisitor#visitBoundsCheck(Compil3r.Quad.Quad)
@@ -930,6 +948,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         loadOperand(BoundsCheck.getIndex(obj), EBX);
         asm.emitARITH_Reg_Mem(x86.CMP_r_m32, EBX, ObjectLayout.ARRAY_LENGTH_OFFSET, EAX);
         asm.emitCJUMP_Short(x86.JB, (byte)2); asm.emit1_Imm8(x86.INT_i8, BOUNDS_EX_NUM);
+        this.handled = true;
     }
     /**
      * @see Compil3r.Quad.QuadVisitor#visitCheckCast(Compil3r.Quad.Quad)
@@ -942,6 +961,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         emitPushAddressOf(f);
         emitCallRelative(TypeCheck._checkcast);
         storeOperand(CheckCast.getDest(obj), EAX);
+        this.handled = true;
     }
     /**
      * @see Compil3r.Quad.QuadVisitor#visitGetfield(Compil3r.Quad.Quad)
@@ -1021,6 +1041,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
             Assert.UNREACHABLE();
         }
         storeOperand(Getfield.getDest(obj), EAX);
+        this.handled = true;
     }
     /**
      * @see Compil3r.Quad.QuadVisitor#visitGetstatic(Compil3r.Quad.Quad)
@@ -1053,6 +1074,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
             asm.emitShort_Reg(x86.POP_r, EAX);
         }
         storeOperand(Getstatic.getDest(obj), EAX);
+        this.handled = true;
     }
     /**
      * @see Compil3r.Quad.QuadVisitor#visitGoto(Compil3r.Quad.Quad)
@@ -1060,6 +1082,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
     public void visitGoto(Quad obj) {
         if (TRACE) System.out.println(this+" Goto: "+obj);
         branchHelper(BytecodeVisitor.CMP_UNCOND, Goto.getTarget(obj).getTarget());
+        this.handled = true;
     }
     private void branchHelper(byte op, BasicBlock target) {
         if (op == BytecodeVisitor.CMP_UNCOND) {
@@ -1084,6 +1107,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
             else
                 asm.emitCJUMP_Forw(opc, target);
         }
+        this.handled = true;
     }
     /**
      * @see Compil3r.Quad.QuadVisitor#visitInstanceOf(Compil3r.Quad.Quad)
@@ -1096,6 +1120,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         emitPushAddressOf(f);
         emitCallRelative(TypeCheck._instance_of);
         storeOperand(InstanceOf.getDest(obj), EAX);
+        this.handled = true;
     }
     /**
      * @see Compil3r.Quad.QuadVisitor#visitIntIfCmp(Compil3r.Quad.Quad)
@@ -1106,6 +1131,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         loadOperand(IntIfCmp.getSrc2(obj), ECX);
         asm.emitARITH_Reg_Reg(x86.CMP_r_r32, EAX, ECX);
         branchHelper(IntIfCmp.getCond(obj).getCondition(), IntIfCmp.getTarget(obj).getTarget());
+        this.handled = true;
     }
     private void INVOKEDPATCHhelper(byte op, jq_Method f) {
         int dpatchsize;
@@ -1133,6 +1159,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         emitPushAddressOf(f);
         emitCallRelative(dpatchentry);
         asm.endDynamicPatch();
+        this.handled = true;
     }
     private void INVOKENODPATCHhelper(byte op, jq_Method f) {
         switch(op) {
@@ -1170,6 +1197,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
             default:
                 Assert.UNREACHABLE();
         }
+        this.handled = true;
     }
     private void INVOKEhelper(byte op, jq_Method f) {
         switch (op) {
@@ -1193,6 +1221,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
             default:
                 throw new InternalError();
         }
+        this.handled = true;
     }
     /**
      * @see Compil3r.Quad.QuadVisitor#visitInvoke(Compil3r.Quad.Quad)
@@ -1223,6 +1252,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
                 asm.emitShort_Reg(x86.POP_r, EDX);
             storeOperand(Invoke.getDest(obj), EAX);
         }
+        this.handled = true;
     }
     /**
      * @see Compil3r.Quad.QuadVisitor#visitJsr(Compil3r.Quad.Quad)
@@ -1239,6 +1269,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         }
         storeOperand(Jsr.getDest(obj), EAX);
         branchHelper(BytecodeVisitor.CMP_UNCOND, Jsr.getTarget(obj).getTarget());
+        this.handled = true;
     }
     /**
      * @see Compil3r.Quad.QuadVisitor#visitLookupSwitch(Compil3r.Quad.Quad)
@@ -1254,6 +1285,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
             branchHelper(BytecodeVisitor.CMP_EQ, target);
         }
         branchHelper(BytecodeVisitor.CMP_UNCOND, LookupSwitch.getDefault(obj).getTarget());
+        this.handled = true;
     }
     /**
      * @see Compil3r.Quad.QuadVisitor#visitMemLoad(Compil3r.Quad.Quad)
@@ -1275,9 +1307,10 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
             asm.emit2_Reg_Mem(x86.MOV_r_m32, ECX, 0, EAX);
         }
         else {
-            Assert.UNREACHABLE();
+            Assert.UNREACHABLE(obj.toString());
         }
         storeOperand(MemLoad.getDest(obj), ECX);
+        this.handled = true;
     }
     /**
      * @see Compil3r.Quad.QuadVisitor#visitMemStore(Compil3r.Quad.Quad)
@@ -1301,8 +1334,9 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
             asm.emit2_Reg_Mem(x86.MOV_m_r32, EBX, 0, EAX);
         }
         else {
-            Assert.UNREACHABLE();
+            Assert.UNREACHABLE(obj.toString());
         }
+        this.handled = true;
     }
     /**
      * @see Compil3r.Quad.QuadVisitor#visitMonitor(Compil3r.Quad.Quad)
@@ -1313,6 +1347,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         asm.emitShort_Reg(x86.PUSH_r, EAX);
         jq_StaticMethod m = (obj.getOperator() instanceof Monitor.MONITORENTER)?Run_Time.Monitor._monitorenter:Run_Time.Monitor._monitorexit;
         emitCallRelative(m);
+        this.handled = true;
     }
     /**
      * @see Compil3r.Quad.QuadVisitor#visitMove(Compil3r.Quad.Quad)
@@ -1324,6 +1359,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         Operand src_o = Move.getSrc(obj);
         loadOperand(src_o, EAX);
         storeOperand(dest_o, EAX);
+        this.handled = true;
     }
     /**
      * @see Compil3r.Quad.QuadVisitor#visitNew(Compil3r.Quad.Quad)
@@ -1341,6 +1377,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
             emitCallRelative(HeapAllocator._clsinitAndAllocateObject);
         }
         storeOperand(New.getDest(obj), EAX);
+        this.handled = true;
     }
     /**
      * @see Compil3r.Quad.QuadVisitor#visitNewArray(Compil3r.Quad.Quad)
@@ -1364,6 +1401,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         emitPushAddressOf(f.getVTable());
         emitCallRelative(DefaultHeapAllocator._allocateArray);
         storeOperand(NewArray.getDest(obj), EAX);
+        this.handled = true;
     }
     /**
      * @see Compil3r.Quad.QuadVisitor#visitNullCheck(Compil3r.Quad.Quad)
@@ -1372,6 +1410,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         if (TRACE) System.out.println(this+" NullCheck: "+obj);
         loadOperand(NullCheck.getSrc(obj), EAX);
         asm.emit2_Reg_Mem(x86.MOV_r_m32, EAX, 0, EAX);
+        this.handled = true;
     }
     /**
      * @see Compil3r.Quad.QuadVisitor#visitPutfield(Compil3r.Quad.Quad)
@@ -1442,8 +1481,9 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
             }
         }
         else {
-            Assert.UNREACHABLE();
+            Assert.UNREACHABLE(obj.toString());
         }
+        this.handled = true;
     }
     /**
      * @see Compil3r.Quad.QuadVisitor#visitPutstatic(Compil3r.Quad.Quad)
@@ -1476,6 +1516,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
                 emitPopMemory(f);
             }
         }
+        this.handled = true;
     }
     /**
      * @see Compil3r.Quad.QuadVisitor#visitRet(Compil3r.Quad.Quad)
@@ -1483,6 +1524,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
     public void visitRet(Quad obj) {
         if (TRACE) System.out.println(this+" Ret: "+obj);
         asm.emit2_Mem(x86.JMP_m, getStackOffset(Ret.getTarget(obj)), EBP);
+        this.handled = true;
     }
     /**
      * @see Compil3r.Quad.QuadVisitor#visitReturn(Compil3r.Quad.Quad)
@@ -1505,6 +1547,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         // epilogue
         asm.emit1(x86.LEAVE);              // esp<-ebp, pop ebp
         asm.emit1_Imm16(x86.RET_i, (char)(n_paramwords<<2));
+        this.handled = true;
     }
     private void SYNCHEXIThelper() {
         if (method.isStatic()) {
@@ -1525,6 +1568,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
             asm.emit2_Mem(x86.PUSH_m, getParamOffset(0), EBP);
         }
         emitCallRelative(Run_Time.Monitor._monitorexit);
+        this.handled = true;
     }
     /**
      * @see Compil3r.Quad.QuadVisitor#visitSpecial(Compil3r.Quad.Quad)
@@ -1534,6 +1578,12 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         Special o = (Special) obj.getOperator();
         if (o instanceof Special.GET_EXCEPTION) {
             // already done.
+        } else if (o instanceof Special.GET_BASE_POINTER) {
+            asm.emit2_Reg_Reg(x86.MOV_r_r32, EAX, EBP);
+            storeOperand((RegisterOperand) Special.getOp1(obj), EAX);
+        } else if (o instanceof Special.GET_STACK_POINTER) {
+            asm.emit2_Reg_Reg(x86.MOV_r_r32, EAX, ESP);
+            storeOperand((RegisterOperand) Special.getOp1(obj), EAX);
         } else if (o instanceof Special.GET_THREAD_BLOCK) {
             asm.emitprefix(THREAD_BLOCK_PREFIX);
             asm.emit2_Reg_Mem(x86.MOV_r_m32, EAX, THREAD_BLOCK_OFFSET);
@@ -1547,6 +1597,28 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
             asm.emit2_Reg(x86.NEG_r32, EAX);
             asm.emitARITH_Reg_Reg(x86.ADD_r_r32, EAX, ESP);
             asm.emit2_Reg_Reg(x86.MOV_r_r32, ESP, EAX);
+            storeOperand((RegisterOperand) Special.getOp1(obj), EAX);
+        } else if (o instanceof Special.ATOMICADD_I) {
+            loadOperand(Special.getOp2(obj), EAX);
+            loadOperand(Special.getOp3(obj), EBX);
+            if (jq.SMP) asm.emitprefix(x86.PREFIX_LOCK);
+            asm.emitARITH_Reg_Mem(x86.ADD_m_r32, EBX, 0, EAX);
+        } else if (o instanceof Special.ATOMICSUB_I) {
+            loadOperand(Special.getOp2(obj), EAX);
+            loadOperand(Special.getOp3(obj), EBX);
+            if (jq.SMP) asm.emitprefix(x86.PREFIX_LOCK);
+            asm.emitARITH_Reg_Mem(x86.SUB_m_r32, EBX, 0, EAX);
+        } else if (o instanceof Special.ATOMICAND_I) {
+            loadOperand(Special.getOp2(obj), EAX);
+            loadOperand(Special.getOp3(obj), EBX);
+            if (jq.SMP) asm.emitprefix(x86.PREFIX_LOCK);
+            asm.emitARITH_Reg_Mem(x86.AND_m_r32, EBX, 0, EAX);
+        } else if (o instanceof Special.ATOMICCAS4) {
+            loadOperand(Special.getOp2(obj), ECX);
+            loadOperand(Special.getOp3(obj), EAX);
+            loadOperand(Special.getOp4(obj), EBX);
+            if (jq.SMP) asm.emitprefix(x86.PREFIX_LOCK);
+            asm.emit3_Reg_Mem(x86.CMPXCHG_32, EBX, 0, ECX);
             storeOperand((RegisterOperand) Special.getOp1(obj), EAX);
         } else if (o instanceof Special.LONG_JUMP) {
             loadOperand(Special.getOp1(obj), ECX);
@@ -1602,15 +1674,21 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
             storeOperand((RegisterOperand) Special.getOp1(obj), ECX);
         }
         else {
-            Assert.UNREACHABLE();
+            Assert.UNREACHABLE(obj.toString());
         }
+        this.handled = true;
     }
     /**
      * @see Compil3r.Quad.QuadVisitor#visitStoreCheck(Compil3r.Quad.Quad)
      */
     public void visitStoreCheck(Quad obj) {
         if (TRACE) System.out.println(this+" StoreCheck: "+obj);
-        
+        loadOperand(StoreCheck.getElement(obj), EAX);
+        asm.emitShort_Reg(x86.PUSH_r, EAX);
+        loadOperand(StoreCheck.getRef(obj), EAX);
+        asm.emitShort_Reg(x86.PUSH_r, EAX);
+        emitCallRelative(TypeCheck._arrayStoreCheck);
+        this.handled = true;
     }
     /**
      * @see Compil3r.Quad.QuadVisitor#visitTableSwitch(Compil3r.Quad.Quad)
@@ -1644,6 +1722,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
                 asm.recordForwardBranch(4, target);
             }
         }
+        this.handled = true;
     }
     /**
      * @see Compil3r.Quad.QuadVisitor#visitUnary(Compil3r.Quad.Quad)
@@ -1755,11 +1834,20 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
             // do nothing.
         } else if (op instanceof Unary.LONGBITS_2DOUBLE) {
             // do nothing.
+        } else if (op instanceof Unary.OBJECT_2ADDRESS) {
+            // do nothing.
+        } else if (op instanceof Unary.ADDRESS_2OBJECT) {
+            // do nothing.
+        } else if (op instanceof Unary.INT_2ADDRESS) {
+            // do nothing.
+        } else if (op instanceof Unary.ADDRESS_2INT) {
+            // do nothing.
         }
         else {
-            Assert.UNREACHABLE();
+            Assert.UNREACHABLE(obj.toString());
         }
         storeOperand(Binary.getDest(obj), EAX);
+        this.handled = true;
     }
     private void toIntHelper() {
         // check for NaN
@@ -1810,6 +1898,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         asm.patch1(cloc6-1, (byte)(asm.getCurrentOffset()-cloc6));
         asm.emit2_FPReg(x86.FFREE, 0);
         asm.patch1(cloc4-1, (byte)(asm.getCurrentOffset()-cloc4));
+        this.handled = true;
     }
     private void toLongHelper() {
         // check for NaN
@@ -1863,18 +1952,24 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         asm.patch1(cloc6-1, (byte)(asm.getCurrentOffset()-cloc6));
         asm.emit2_FPReg(x86.FFREE, 0);
         asm.patch1(cloc4-1, (byte)(asm.getCurrentOffset()-cloc4));
+        this.handled = true;
     }
     /**
      * @see Compil3r.Quad.QuadVisitor#visitZeroCheck(Compil3r.Quad.Quad)
      */
     public void visitZeroCheck(Quad obj) {
         if (TRACE) System.out.println(this+" ZeroCheck: "+obj);
+        asm.emitARITH_Reg_Reg(x86.XOR_r_r32, EAX, EAX);
+        asm.emitARITH_Reg_Reg(x86.XOR_r_r32, EDX, EDX);
+        loadOperand(ZeroCheck.getSrc(obj), EBX);
+        asm.emit2_Reg(x86.IDIV_r32, EBX);
     }
+    boolean handled;
     /**
      * @see Compil3r.Quad.QuadVisitor#visitQuad(Compil3r.Quad.Quad)
      */
     public void visitQuad(Quad obj) {
-        if (TRACE) System.out.println(this+" Quad: "+obj);
+        Assert._assert(handled, obj.toString());
     }
 
     public static void main(String[] args) {
@@ -1885,7 +1980,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         CodeAllocator.initializeCompiledMethodMap();
         BootstrapCodeAllocator bca = BootstrapCodeAllocator.DEFAULT;
         DefaultCodeAllocator.default_allocator = bca;
-        CodeAddress.FACTORY = BootstrapCodeAddress.FACTORY = new BootstrapCodeAddressFactory(bca);
+        //CodeAddress.FACTORY = BootstrapCodeAddress.FACTORY = new BootstrapCodeAddressFactory(bca);
         bca.init();
         ObjectTraverser obj_trav = ClassLibInterface.DEFAULT.getObjectTraverser();
         Reflection.obj_trav = obj_trav;
@@ -1901,7 +1996,9 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         
         x86Assembler.TRACE = true;
         
-        for (Iterator i=Arrays.asList(c.getDeclaredStaticMethods()).iterator(); i.hasNext(); ) {
+        Iterator i = Arrays.asList(c.getDeclaredStaticMethods()).iterator();
+        i = new AppendIterator(i, Arrays.asList(c.getDeclaredInstanceMethods()).iterator());
+        while (i.hasNext()) {
             jq_Method m = (jq_Method) i.next();
             if (m.getBytecode() != null) {
                 ControlFlowGraph cfg = CodeCache.getCode(m);
