@@ -41,6 +41,7 @@ import Compil3r.Quad.Operand.ParamListOperand;
 import Compil3r.Quad.Operator.Invoke;
 import Main.jq;
 import Util.Default;
+import Util.LinearSet;
 import Util.SetFactory;
 import Util.SetRepository;
 
@@ -590,13 +591,98 @@ public class AndersenPointerAnalysis {
         sb.append(lineSep);
         return sb.toString();
     }
+    public static Map buildOriginalCallGraph(Map m) {
+        HashMap newCG = new HashMap();
+        for (Iterator i=m.entrySet().iterator(); i.hasNext(); ) {
+            Map.Entry e = (Map.Entry)i.next();
+            CallSite cs = (CallSite)e.getKey();
+            Set s = (Set)e.getValue();
+            ProgramLocation mc = cs.m;
+            Set s2 = (Set) newCG.get(mc);
+            if (s2 == null)
+                newCG.put(mc, s2 = new HashSet());
+            s2.addAll(s);
+        }
+        return newCG;
+    }
+    public static String compareWithOriginal(Map cg, Map original) {
+        HashMap table = new HashMap();
+        for (Iterator i=cg.entrySet().iterator(); i.hasNext(); ) {
+            Map.Entry e = (Map.Entry)i.next();
+            CallSite cs = (CallSite)e.getKey();
+            Set s = (Set)e.getValue();
+            int x = s.size();
+            ProgramLocation mc = cs.m;
+            Set s_orig = (Set)original.get(mc);
+            int y = s_orig.size();
+            Object key = Default.pair(new Integer(y),new Integer(x));
+            HashSet k = (HashSet) table.get(key);
+            if (k == null) table.put(key, k = new HashSet());
+            k.add(mc);
+        }
+        StringBuffer sb = new StringBuffer();
+        for (Iterator i=table.entrySet().iterator(); i.hasNext(); ) {
+            Map.Entry e = (Map.Entry)i.next();
+            sb.append(e.getKey());
+            sb.append(": ");
+            Set s = (Set) e.getValue();
+            sb.append(s.size());
+            sb.append(lineSep);
+        }
+        return sb.toString();
+    }
+    public static String computeHistogram2(Map m) {
+        HashMap table = new HashMap();
+        for (Iterator i=m.entrySet().iterator(); i.hasNext(); ) {
+            Map.Entry e = (Map.Entry)i.next();
+            CallSite cs = (CallSite)e.getKey();
+            ProgramLocation mc = cs.m;
+            Set s = (Set)e.getValue();
+            Set s2 = (Set)table.get(mc);
+            if (s2 == null) table.put(mc, s2 = new LinearSet());
+            s2.add(s);
+        }
+        StringBuffer sb = new StringBuffer();
+        int[] histogram = new int[HISTOGRAM_SIZE];
+        long total = 0;
+        for (Iterator i=table.entrySet().iterator(); i.hasNext(); ) {
+            Map.Entry e = (Map.Entry)i.next();
+            Set s = (Set)e.getValue();
+            int x = s.size();
+            int y = 0;
+            for (Iterator j=s.iterator(); j.hasNext(); ) {
+                y += ((Set)j.next()).size();
+            }
+            int foo = y / x;
+            if (foo >= HISTOGRAM_SIZE) foo = HISTOGRAM_SIZE-1;
+            histogram[foo]++;
+            total += foo;
+        }
+        sb.append(" Total # of call graph edges: ");
+        sb.append(total);
+        sb.append('/');
+        sb.append(total+histogram[0]);
+        sb.append(lineSep);
+        for (int i=0; i<HISTOGRAM_SIZE; ++i) {
+            if (histogram[i] > 0) {
+                if (i == HISTOGRAM_SIZE-1) sb.append(">=");
+                sb.append(i);
+                sb.append(" targets:\t");
+                sb.append(histogram[i]);
+                sb.append(" call site");
+                if (histogram[i] > 1) sb.append('s');
+                sb.append(lineSep);
+            }
+        }
+        return sb.toString();
+    }
     public static String computeHistogram(Map m) {
         StringBuffer sb = new StringBuffer();
         int[] histogram = new int[HISTOGRAM_SIZE];
         long total = 0;
         for (Iterator i=m.entrySet().iterator(); i.hasNext(); ) {
             Map.Entry e = (Map.Entry)i.next();
-            CallSite cs = (CallSite)e.getKey();
+            //CallSite cs = (CallSite)e.getKey();
             Set s = (Set)e.getValue();
             int x = s.size();
             if (x >= HISTOGRAM_SIZE) x = HISTOGRAM_SIZE-1;
@@ -810,6 +896,8 @@ public class AndersenPointerAnalysis {
             if (TRACE) out.println("Set of definite targets of "+mc+": "+definite_targets);
             for (Iterator j=definite_targets.iterator(); j.hasNext(); ) {
                 jq_Method callee = (jq_Method)j.next();
+                // temporary: skip multinewarray.
+                if (callee == Allocator.HeapAllocator._multinewarray) continue;
                 callee.getDeclaringClass().load();
                 if (callee.getBytecode() == null) {
                     CallSite cs2 = new CallSite(null, mc);
@@ -1185,7 +1273,7 @@ public class AndersenPointerAnalysis {
             OutsideNode n2 = (OutsideNode)j.next();
             FieldNode fn = (FieldNode)n2;
             while (n2.skip != null) n2 = n2.skip;
-            if (addInclusionEdges(n2, result, fn)) result = (LinkedHashSet)result.clone();
+            if (addInclusionEdges(n2, result, base)) result = (LinkedHashSet)result.clone();
         }
     }
     
@@ -1201,7 +1289,7 @@ public class AndersenPointerAnalysis {
         if (TRACE) out.println("Edges from "+base+((f==null)?"[]":("."+f.getName()))+" : "+result);
         FieldNode fn = (FieldNode)from;
         while (from.skip != null) from = from.skip;
-        addInclusionEdges(from, result, fn);
+        addInclusionEdges(from, result, base);
     }
     
     Set getConcreteNodes(Node from) {

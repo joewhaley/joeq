@@ -29,6 +29,7 @@ import Clazz.jq_Method;
 import Clazz.jq_Type;
 import Compil3r.Quad.MethodSummary.CallSite;
 import Compil3r.Quad.MethodSummary.PassedParameter;
+import Compil3r.Quad.SelectiveCloning.Specialization;
 import Main.jq;
 import Util.Default;
 import Util.FilterIterator;
@@ -465,6 +466,131 @@ uphere:
         toInline = new LinkedHashMap();
     }
     
+    static int setDepth_clone(HashMap methodToSpecializations,
+                              HashMap to_clone,
+                              LinkedHashSet path,
+                              HashMap visited,
+                              jq_Method m) {
+        if (path.contains(m)) {
+            System.out.println("Attempting to clone recursive cycle: method "+m);
+            return -1;
+        }
+        Integer result = (Integer) visited.get(m);
+        if (result != null) return result.intValue();
+        path.add(m);
+        Set s = (Set) methodToSpecializations.get(m);
+        int current = 0;
+        if (s != null) {
+uphere:
+            for (Iterator i=s.iterator(); i.hasNext(); ) {
+                Specialization s2 = (Specialization) i.next();
+                jq.Assert(s2.target.getMethod() == m);
+                Set s3 = (Set) to_clone.get(s2);
+                for (Iterator j=s3.iterator(); j.hasNext(); ) {
+                    ProgramLocation mc = (ProgramLocation) j.next();
+                    jq_Method source_m = mc.getMethod();
+                    int r = setDepth_clone(methodToSpecializations, to_clone, path, visited, source_m);
+                    if (r == -1) {
+                        //System.out.println("Removing edge "+source_m.getName()+"->"+m.getName()+" from clone set");
+                        //j.remove();
+                        continue;
+                    }
+                    current = Math.max(current, r+1);
+                }
+                if (s3.isEmpty()) {
+                    System.out.println("Removed all specializations for method "+m);
+                    i.remove();
+                }
+            }
+        }
+        visited.put(m, result = new Integer(current));
+        path.remove(m);
+        return current;
+    }
+    
+    public static void buildCloneCache(HashMap/*<Specialization,Set<ProgramLocation>>*/ to_clone) {
+        System.out.println(to_clone.size()+" specializations");
+        HashMap methodToSpecializations = new HashMap();
+        for (Iterator i = to_clone.keySet().iterator(); i.hasNext(); ) {
+            Specialization s = (Specialization) i.next();
+            jq_Method target_m = s.target.getMethod();
+            Set s2 = (Set) methodToSpecializations.get(target_m);
+            if (s2 == null) methodToSpecializations.put(target_m, s2 = new LinkedHashSet());
+            boolean change = s2.add(s);
+            jq.Assert(change, s.toString());
+        }
+        System.out.println(methodToSpecializations.size()+" different methods are to be specialized");
+        
+        LinkedHashSet path = new LinkedHashSet();
+        HashMap visited = new HashMap();
+        int maxdepth = 0;
+        for (Iterator i = methodToSpecializations.keySet().iterator(); i.hasNext(); ) {
+            jq_Method m = (jq_Method) i.next();
+            int depth = setDepth_clone(methodToSpecializations, to_clone, path, visited, m);
+            maxdepth = Math.max(maxdepth, depth);
+        }
+        
+        System.out.println("Max cloning depth: "+maxdepth);
+        Collection[] cloneme = new Collection[maxdepth+1];
+        for (int i=0; i<cloneme.length; ++i) {
+            cloneme[i] = new LinkedList();
+        }
+        for (Iterator i = visited.entrySet().iterator(); i.hasNext(); ) {
+            Map.Entry e = (Map.Entry)i.next();
+            jq_Method m = (jq_Method) e.getKey();
+            Integer ii = (Integer) e.getValue();
+            cloneme[ii.intValue()].add(m);
+        }
+        
+        HashMap specialToMS = new HashMap();
+        for (int i=0; i < cloneme.length; ++i) {
+            Collection c = cloneme[i];
+            //System.out.println("Depth "+i+": "+c);
+            for (Iterator j=c.iterator(); j.hasNext(); ) {
+                jq_Method m = (jq_Method) j.next();
+                Set s2 = (Set) methodToSpecializations.get(m);
+                if (s2 == null) continue;
+                ControlFlowGraph cfg = CodeCache.getCode(m);
+                for (Iterator k=s2.iterator(); k.hasNext(); ) {
+                    Specialization special = (Specialization) k.next();
+                    MethodSummary ms = MethodSummary.getSummary(cfg).copy();
+                    jq.Assert(specialToMS.get(special) == null);
+                    specialToMS.put(special, ms);
+                }
+            }
+        }
+        int totalCallSites = 0;
+        for (Iterator i=specialToMS.entrySet().iterator(); i.hasNext(); ) {
+            Map.Entry e = (Map.Entry)i.next();
+            Specialization s = (Specialization) e.getKey();
+            MethodSummary target_ms = (MethodSummary) e.getValue();
+            Set s2 = (Set) to_clone.get(s);
+            totalCallSites += s2.size();
+            //System.out.println("Method summary "+target_ms.getMethod()+" has "+s2+" to specialize.");
+            for (Iterator j=s2.iterator(); j.hasNext(); ) {
+                ProgramLocation mc = (ProgramLocation) j.next();
+                jq_Method source_m = mc.getMethod();
+                Set s3 = (Set) methodToSpecializations.get(source_m);
+                if (s3 != null) {
+                    for (Iterator k=s3.iterator(); k.hasNext(); ) {
+                        Specialization s4 = (Specialization) k.next();
+                        MethodSummary source_ms = (MethodSummary) specialToMS.get(s4);
+                        CallSite cs = new CallSite(source_ms, mc);
+                        ControlFlowGraph target_cfg = CodeCache.getCode(target_ms.getMethod());
+                        MethodSummary.clone_cache.put(Default.pair(target_cfg, cs), target_ms);
+                        //System.out.println(source_m+" is also specialized, adding special edges to "+target_ms.getMethod());
+                    }
+                }
+                ControlFlowGraph target_cfg = CodeCache.getCode(target_ms.getMethod());
+                ControlFlowGraph source_cfg = CodeCache.getCode(source_m);
+                MethodSummary source_ms = MethodSummary.getSummary(source_cfg);
+                CallSite cs = new CallSite(source_ms, mc);
+                MethodSummary.clone_cache.put(Default.pair(target_cfg, cs), target_ms);
+            }
+        }
+        System.out.println("Specializing a total of "+totalCallSites+" call sites.");
+    }
+    
     public static void main(String[] args) throws IOException {
         jq.initializeForHostJVMExecution();
         
@@ -495,7 +621,13 @@ uphere:
                 System.exit(0);
             }
             if (s.startsWith("histogram")) {
+                System.out.println("Cloned call graph:");
                 System.out.println(AndersenPointerAnalysis.computeHistogram(callGraph));
+                System.out.println("Original call graph:");
+                System.out.println(AndersenPointerAnalysis.computeHistogram2(callGraph));
+                Map original = AndersenPointerAnalysis.buildOriginalCallGraph(callGraph);
+                System.out.println("Comparison:");
+                System.out.println(AndersenPointerAnalysis.compareWithOriginal(callGraph, original));
                 continue;
             }
             if (s.startsWith("addroot")) {
@@ -542,6 +674,7 @@ uphere:
                 continue;
             }
             if (s.startsWith("run")) {
+                MethodSummary.clone_cache = null;
                 MethodSummary.clearSummaryCache();
                 doInlining();
                 selectedCallSites.clear();
@@ -676,7 +809,23 @@ uphere:
                 }
                 continue;
             }
-            if (s.startsWith("selectivecloning")) {
+            if (s.startsWith("selectiveinlining")) {
+                if (selectedCallSites.size() == 0) {
+                    System.out.println("Selecting multi-target methods...");
+                    FilterIterator.Filter f = new FilterIterator.Filter() {
+                            public boolean isElement(Object o) {
+                                Map.Entry e = (Map.Entry)o;
+                                Set set = (Set)e.getValue();
+                                return set.size() > 1;
+                            }
+                    };
+                    FilterIterator it1 = new FilterIterator(sorted.iterator(), f);
+                    while (it1.hasNext()) {
+                        Map.Entry e = (Map.Entry) it1.next();
+                        selectedCallSites.add(e.getKey());
+                    }
+                    System.out.println(selectedCallSites.size()+" call sites selected");
+                }
                 SelectiveCloning.pa = apa;
                 time = System.currentTimeMillis();
                 SelectiveCloning.searchForCloningOpportunities(toInline, selectedCallSites);
@@ -705,6 +854,56 @@ uphere:
                 System.out.println(toInline.size()+" inlining candidates found");
                 */
                 
+                continue;
+            }
+            if (s.startsWith("selectivecloning")) {
+                if (selectedCallSites.size() == 0) {
+                    System.out.println("Selecting multi-target methods...");
+                    FilterIterator.Filter f = new FilterIterator.Filter() {
+                            public boolean isElement(Object o) {
+                                Map.Entry e = (Map.Entry)o;
+                                Set set = (Set)e.getValue();
+                                return set.size() > 1;
+                            }
+                    };
+                    FilterIterator it1 = new FilterIterator(sorted.iterator(), f);
+                    while (it1.hasNext()) {
+                        Map.Entry e = (Map.Entry) it1.next();
+                        selectedCallSites.add(e.getKey());
+                    }
+                    System.out.println(selectedCallSites.size()+" call sites selected");
+                }
+                
+                SelectiveCloning.pa = apa;
+                time = System.currentTimeMillis();
+                SelectiveCloning.searchForCloningOpportunities3(selectedCallSites);
+                time = System.currentTimeMillis() - time;
+                System.out.println("Time to complete: "+time);
+                MethodSummary.clearSummaryCache();
+                System.gc();
+                MethodSummary.clone_cache = new HashMap();
+                buildCloneCache(SelectiveCloning.to_clone);
+                selectedCallSites.clear();
+                System.gc();
+                System.out.println("Number of cloned summaries: "+MethodSummary.clone_cache.size());
+                apa = new AndersenPointerAnalysis(false);
+                for (Iterator it = rootSet.iterator(); it.hasNext(); ) {
+                    m = (jq_Method)it.next();
+                    cfg = CodeCache.getCode(m);
+                    apa.addToRootSet(cfg);
+                }
+                System.out.println("Re-running context-insensitive analysis...");
+                time = System.currentTimeMillis();
+                try {
+                    apa.iterate();
+                } catch (Throwable t) {
+                    System.err.println("EXCEPTION while iterating: "+t);
+                    t.printStackTrace();
+                }
+                time = System.currentTimeMillis() - time;
+                System.out.println("Time to complete: "+time);
+                callGraph = apa.getCallGraph();
+                sorted = sortByNumberOfTargets(callGraph);
                 continue;
             }
             if (s.startsWith("exit") || s.startsWith("quit")) {

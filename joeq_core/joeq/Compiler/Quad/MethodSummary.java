@@ -13,6 +13,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -49,8 +50,6 @@ import Main.jq;
 import Util.Default;
 import Util.FilterIterator;
 import Util.IdentityHashCodeWrapper;
-import Util.Templates.List;
-import Util.Templates.ListIterator;
 
 /**
  *
@@ -103,8 +102,12 @@ public class MethodSummary {
     public static HashMap clone_cache;
     public static MethodSummary getSummary(ControlFlowGraph cfg, CallSite cs) {
         if (clone_cache != null) {
+            //System.out.println("Checking cache for "+Default.pair(cfg, cs));
             MethodSummary ms = (MethodSummary) clone_cache.get(Default.pair(cfg, cs));
-            if (ms != null) return ms;
+            if (ms != null) {
+                //System.out.println("Using specialized version of "+ms.getMethod()+" for call site "+cs);
+                return ms;
+            }
         }
         return getSummary(cfg);
     }
@@ -205,9 +208,9 @@ public class MethodSummary {
             if (TRACE_INTRA) out.println("Building summary for "+this.method);
             
             // iterate until convergence.
-            List.BasicBlock rpo_list = cfg.reversePostOrder(cfg.entry());
+            Util.Templates.List.BasicBlock rpo_list = cfg.reversePostOrder(cfg.entry());
             for (;;) {
-                ListIterator.BasicBlock rpo = rpo_list.basicBlockIterator();
+                Util.Templates.ListIterator.BasicBlock rpo = rpo_list.basicBlockIterator();
                 this.change = false;
                 while (rpo.hasNext()) {
                     this.bb = rpo.nextBasicBlock();
@@ -240,7 +243,7 @@ public class MethodSummary {
                         this.s.dump(out);
                     }
                     this.bb.visitQuads(this);
-                    ListIterator.BasicBlock succs = this.bb.getSuccessors().basicBlockIterator();
+                    Util.Templates.ListIterator.BasicBlock succs = this.bb.getSuccessors().basicBlockIterator();
                     while (succs.hasNext()) {
                         BasicBlock succ = succs.nextBasicBlock();
                         if (this.bb.endsInRet()) {
@@ -734,7 +737,7 @@ public class MethodSummary {
                     callToTEN.put(mc, n = new ThrownExceptionNode(mc));
                     passedAsParameter.add(n);
                 }
-                ListIterator.ExceptionHandler eh = bb.getExceptionHandlers().exceptionHandlerIterator();
+                Util.Templates.ListIterator.ExceptionHandler eh = bb.getExceptionHandlers().exceptionHandlerIterator();
                 while (eh.hasNext()) {
                     ExceptionHandler h = eh.nextExceptionHandler();
                     this.mergeWith(h);
@@ -745,11 +748,11 @@ public class MethodSummary {
                 this.thrown.add(n);
                 return;
             }
-            ListIterator.jq_Class xs = obj.getThrownExceptions().classIterator();
+            Util.Templates.ListIterator.jq_Class xs = obj.getThrownExceptions().classIterator();
             while (xs.hasNext()) {
                 jq_Class x = xs.nextClass();
                 UnknownTypeNode n = UnknownTypeNode.get(x);
-                ListIterator.ExceptionHandler eh = bb.getExceptionHandlers().exceptionHandlerIterator();
+                Util.Templates.ListIterator.ExceptionHandler eh = bb.getExceptionHandlers().exceptionHandlerIterator();
                 boolean caught = false;
                 while (eh.hasNext()) {
                     ExceptionHandler h = eh.nextExceptionHandler();
