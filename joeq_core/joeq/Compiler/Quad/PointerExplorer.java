@@ -678,7 +678,10 @@ uphere:
             }
             if (s.startsWith("selectivecloning")) {
                 SelectiveCloning.pa = apa;
+                time = System.currentTimeMillis();
                 SelectiveCloning.searchForCloningOpportunities(toInline, selectedCallSites);
+                time = System.currentTimeMillis() - time;
+                System.out.println("Time to complete: "+time);
                 System.out.println(toInline.size()+" inlining candidates found");
                 recalculateInliningCompleteness();
                 
