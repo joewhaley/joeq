@@ -15,6 +15,7 @@ import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.QuadIterator;
 import joeq.Compiler.Quad.QuadVisitor;
 import joeq.Compiler.Quad.Operand.Const4Operand;
+import joeq.Compiler.Quad.Operand.ConstOperand;
 import joeq.Compiler.Quad.Operand.FieldOperand;
 import joeq.Compiler.Quad.Operand.MethodOperand;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
@@ -48,7 +49,6 @@ import joeq.Compiler.Quad.Operator.ZeroCheck;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Util.Assert;
 import joeq.Util.Collections.IndexMap;
-import joeq.Util.Templates.UnmodifiableList;
 
 import org.sf.javabdd.BDD;
 import org.sf.javabdd.BDDDomain;
@@ -66,8 +66,9 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
     IndexMap quadMap;
     IndexMap regMap;
     IndexMap memberMap;
+    IndexMap constantMap;
     
-    int quadBits = 18, opBits = 8, regBits = 17, constantBits = 32, memberBits = 13;    
+    int quadBits = 18, opBits = 8, regBits = 10, constantBits = 32, memberBits = 13;    
 
     BDDFactory bdd;
     BDDDomain quad, opc, dest, src1, src2, constant, fallthrough, target, member;
@@ -79,6 +80,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         quadMap = new IndexMap("quad");
         regMap = new IndexMap("reg");
         memberMap = new IndexMap("member");
+        constantMap = new IndexMap("constant");
         bdd = BDDFactory.init(1000000, 50000);
         quad = makeDomain("quad", quadBits);
         opc = makeDomain("opc", opBits);
@@ -420,7 +422,8 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
             allQuads.orWith(currentQuad);
         }
         
-        System.out.println("Method: " + cfg.getMethod() + ", node count: " + allQuads.nodeCount());
+        System.out.println("Method: " + cfg.getMethod());
+        System.out.println("Quads: " + quadMap.size() +", nodes: " + allQuads.nodeCount());
     }
     
     public String toString() {
@@ -447,22 +450,22 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         opcID = opMap.get(q.getOperator())+1;
         Iterator i = q.getDefinedRegisters().iterator();
         if (i.hasNext()) {
-            destID = regMap.get(((RegisterOperand)i.next()).getRegister())+1;
+            destID = regMap.get(((RegisterOperand)i.next()).getRegister().toString())+1;
             Assert._assert(!i.hasNext());
         }
         i = q.getUsedRegisters().iterator();
         if (i.hasNext()) {
-            src1ID = regMap.get(((RegisterOperand)i.next()).getRegister())+1;
+            src1ID = regMap.get(((RegisterOperand)i.next()).getRegister().toString())+1;
             if (i.hasNext()) {
-                src2ID = regMap.get(((RegisterOperand)i.next()).getRegister())+1;
+                src2ID = regMap.get(((RegisterOperand)i.next()).getRegister().toString())+1;
             }
         }
         i = q.getAllOperands().iterator();
         while (i.hasNext()) {
             Operand op = (Operand) i.next();
             if (op instanceof RegisterOperand) continue;
-            else if (op instanceof Const4Operand) {
-                constantID = ((Const4Operand) op).getBits();
+            else if (op instanceof ConstOperand) {
+                constantID = constantMap.get(((ConstOperand) op).getWrapped());
             } else if (op instanceof TargetOperand) {
                 targetID = quadMap.get(((TargetOperand) op).getTarget().getQuad(0))+1;
             } else if (op instanceof FieldOperand) {
@@ -491,6 +494,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         dumpMap(opMap, "op.map");
         dumpMap(regMap, "reg.map");
         dumpMap(memberMap, "member.map");
+        dumpMap(constantMap, "constant.map");
         dumpFieldDomains("fielddomains.cfg");
         dumpRelations("relations.cfg");
     }
@@ -529,17 +533,20 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
                 BDD t = bdd.one();
                 for (int j = 0; j < v.length; ++j) {
                     BDDDomain d = bdd.getDomain(j);
-                    if (quantifyOtherDomains(q, d).isOne()) {
+                    BDD r = quantifyOtherDomains(q, d);
+                    if (r.isOne()) {
                         dos.writeBytes("* ");
                         t.andWith(d.domain());
                     } else {
                         dos.writeBytes(v[j]+" ");
                         t.andWith(bdd.getDomain(j).ithVar(v[j]));
                     }
+                    r.free();
                 }
                 q.applyWith(t, BDDFactory.diff);
                 dos.writeBytes("\n");
             }
+            q.free();
         }
         dos.close();
     }
