@@ -1,5 +1,7 @@
 .include "fielddomains"
 
+.bddvarorder N0_F0_Z0_I0_M0xM1_T0_V1xV0_H1_T1_H0_member0xquad0_quad1_quad2_constant0_op0_reg1xreg0_varargs0
+
 vP (v:V0, h:H0) input
 hP (ha:H0, field:F0, hb:H1) input
 #actual ( invoke:I0, num:Z0, actualparam:V1) input
