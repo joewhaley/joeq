@@ -2036,6 +2036,8 @@ public class MethodSummary {
             return n;
         }
         
+        public ProgramLocation getLocation() { return null; }
+        
         public final Node copy() { return new ConcreteObjectNode(this); }
         
         public ConcreteObjectNode(Object o) { this.object = o; }
@@ -2244,6 +2246,8 @@ public class MethodSummary {
                 addGlobalEdges(this);
             }
         }
+        
+        public ProgramLocation getLocation() { return null; }
         
         public jq_Method getDefiningMethod() { return null; }
         
