@@ -12,6 +12,9 @@ javac:
 	find ${packages} -name "*.java" | xargs javac
 
 clean:
+	find ${packages} -name "*.class" | xargs rm -f jq*.class
+
+veryclean:
 	find ${packages} -name "*.class" | xargs rm -f jq*.class GetBootClassPath.class bootclasspath
 
 update:

@@ -42,6 +42,7 @@ public class AndersenPointerAnalysis {
     public static final boolean TRACE = false;
     public static final boolean TRACE_CHANGE = false;
     public static final boolean TRACE_CYCLES = false;
+    public static boolean FORCE_GC = false;
 
     public static final class Visitor implements ControlFlowGraphVisitor {
         public void visitCFG(ControlFlowGraph cfg) {
@@ -80,6 +81,7 @@ public class AndersenPointerAnalysis {
         fis_n.recordPassedParameter(mc_bis_init, 1);
         
         jq_Class jls = Bootstrap.PrimordialClassLoader.getJavaLangSystem();
+	jls.load();
         jq_StaticField si = jls.getOrCreateStaticField("in", "Ljava/io/InputStream;");
         jq.assert(si.isLoaded());
         GlobalNode.GLOBAL.addEdge(si, bis_n);
@@ -262,7 +264,8 @@ public class AndersenPointerAnalysis {
                 visitMethod(cfg);
             }
             if (!change) break;
-            nodeToConcreteNodes.clear(); System.gc();
+            nodeToConcreteNodes.clear();
+	    if (FORCE_GC) System.gc();
             ++count;
         }
     }
