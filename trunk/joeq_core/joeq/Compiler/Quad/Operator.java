@@ -3503,6 +3503,9 @@ public abstract class Operator {
         public static Quad create(int id, ALLOCA operator, RegisterOperand res, Operand val) {
             return new Quad(id, operator, res, val);
         }
+		public static Quad create(int id, NOP operator) {
+			return new Quad(id, operator, null, null);
+		}
         public static Quad create(int id, ATOMICADD_I operator, Operand loc, Operand val) {
             return new Quad(id, operator, null, loc, val);
         }
@@ -3803,6 +3806,17 @@ public abstract class Operator {
                 Assert.TODO();
             }
         }
+        
+		public static class NOP extends Operator.Special {
+			public static final NOP INSTANCE = new NOP();
+			private NOP() {}
+			public String toString() { return "NOP"; }
+			public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return null; }
+			public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return null; }
+			public void interpret(Quad q, QuadInterpreter s) {
+				Assert.TODO();
+			}
+		}
     }
 
     static interface Delegate {
