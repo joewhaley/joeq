@@ -16,6 +16,7 @@ import Compil3r.Quad.PointerExplorer.InlineSet;
 import Main.jq;
 import Util.Default;
 import Util.LinearSet;
+import Compil3r.Quad.AndersenInterface.*;
 
 /**
  * @author John Whaley
@@ -131,9 +132,9 @@ outer:
                                 Object reason2 = pa.edgesToReasons.get(Default.pair(n4, n5));
                                 if (reason2 instanceof ProgramLocation) {
                                     ProgramLocation mc2 = (ProgramLocation) reason2;
-                                    jq_Method targetMethod = ((ParamNode) n4).m;
+                                    AndersenMethod targetMethod = ((ParamNode) n4).m;
                                     if (targetMethod.getNameAndDesc().equals(mc2.getTargetMethod().getNameAndDesc())) {
-                                        ControlFlowGraph caller_cfg = CodeCache.getCode(mc2.getMethod());
+                                        ControlFlowGraph caller_cfg = CodeCache.getCode((jq_Method)mc2.getMethod());
                                         MethodSummary ms = MethodSummary.getSummary(caller_cfg);
                                         CallSite cs = new CallSite(ms, mc2);
                                         if (TRACE || PRINT_INLINE) out.println("Inlining call graph edge "+cs+" to "+targetMethod);
@@ -209,9 +210,9 @@ outer:
                 }
                 if (has_nonexact_types && !has_nonexact_types2) {
                     if (TRACE) out.println("Edge "+n+"=>"+n2+" : loss of nonexact targets");
-                    jq_Method targetMethod = ((ParamNode) n).m;
+                    AndersenMethod targetMethod = ((ParamNode) n).m;
                     if (targetMethod.getNameAndDesc().equals(mc2.getTargetMethod().getNameAndDesc())) {
-                        ControlFlowGraph caller_cfg = CodeCache.getCode(mc2.getMethod());
+                        ControlFlowGraph caller_cfg = CodeCache.getCode((jq_Method)mc2.getMethod());
                         MethodSummary ms = MethodSummary.getSummary(caller_cfg);
                         CallSite cs = new CallSite(ms, mc2);
                         if (TRACE || PRINT_INLINE) out.println("Inlining call graph edge "+cs+" to "+targetMethod);
@@ -258,9 +259,9 @@ outer:
                         jq.Assert(exact_target_set != null);
                         if (exact_target_set.size() > exact_target_set2.size()) {
                             if (TRACE) out.println("Edge "+n+"=>"+n2+" : "+exact_target_set2.size()+" targets (smaller than "+exact_target_set.size()+")");
-                            jq_Method targetMethod = ((ParamNode) n).m;
+                            AndersenMethod targetMethod = ((ParamNode) n).m;
                             if (targetMethod.getNameAndDesc().equals(mc2.getTargetMethod().getNameAndDesc())) {
-                                ControlFlowGraph caller_cfg = CodeCache.getCode(mc2.getMethod());
+                                ControlFlowGraph caller_cfg = CodeCache.getCode((jq_Method)mc2.getMethod());
                                 MethodSummary ms = MethodSummary.getSummary(caller_cfg);
                                 CallSite cs = new CallSite(ms, mc2);
                                 if (TRACE || PRINT_INLINE) out.println("Inlining call graph edge "+cs+" to "+targetMethod);
@@ -397,9 +398,9 @@ outer:
                 }
                 if (has_nonexact_types && !has_nonexact_types2) {
                     if (TRACE) out.println("Edge "+n+"=>"+n2+" : loss of nonexact targets");
-                    jq_Method targetMethod = ((ParamNode) n).m;
+                    AndersenMethod targetMethod = ((ParamNode) n).m;
                     if (targetMethod.getNameAndDesc().equals(mc2.getTargetMethod().getNameAndDesc())) {
-                        ControlFlowGraph caller_cfg = CodeCache.getCode(mc2.getMethod());
+                        ControlFlowGraph caller_cfg = CodeCache.getCode((jq_Method)mc2.getMethod());
                         MethodSummary ms = MethodSummary.getSummary(caller_cfg);
                         CallSite cs = new CallSite(ms, mc2);
                         if (TRACE || PRINT_INLINE) out.println("Inlining call graph edge "+cs+" to "+targetMethod);
@@ -446,9 +447,9 @@ outer:
                         jq.Assert(exact_target_set != null);
                         if (exact_target_set.size() > exact_target_set2.size()) {
                             if (TRACE) out.println("Edge "+n+"=>"+n2+" : "+exact_target_set2.size()+" targets (smaller than "+exact_target_set.size()+")");
-                            jq_Method targetMethod = ((ParamNode) n).m;
+                            AndersenMethod targetMethod = ((ParamNode) n).m;
                             if (targetMethod.getNameAndDesc().equals(mc2.getTargetMethod().getNameAndDesc())) {
-                                ControlFlowGraph caller_cfg = CodeCache.getCode(mc2.getMethod());
+                                ControlFlowGraph caller_cfg = CodeCache.getCode((jq_Method)mc2.getMethod());
                                 MethodSummary ms = MethodSummary.getSummary(caller_cfg);
                                 CallSite cs = new CallSite(ms, mc2);
                                 if (TRACE || PRINT_INLINE) out.println("Inlining call graph edge "+cs+" to "+targetMethod);
@@ -496,7 +497,7 @@ outer:
     }
     
     public static class AccessPath {
-        jq_Field f;
+        AndersenField f;
         Node node;
         AccessPath n;
         
@@ -505,7 +506,8 @@ outer:
             return 1+n.length();
         }
 
-        public jq_Field first() { return f; }
+        public AndersenField first() { return f; }
+
         public AccessPath next() { return n; }
         
         public String toString() {
@@ -539,7 +541,7 @@ outer:
             else if (this.n == null) return null;
             else return this.n.findNode(node);
         }
-        public static AccessPath create(jq_Field f, Node node, AccessPath n) {
+        public static AccessPath create(AndersenField f, Node node, AccessPath n) {
             AccessPath ap;
             if (n != null) {
                 ap = n.findNode(node);
@@ -642,7 +644,7 @@ outerloop:
                     if (outEdges.size() >= 2 &&
                         n instanceof FieldNode &&
                         reason instanceof Node) {
-                        jq_Field f = ((FieldNode)n).f;
+                        AndersenField f = ((FieldNode)n).f;
                         AccessPath ap2 = AccessPath.create(f, n, ap);
                         if (ap2 != null) {
                             Object key = Default.pair(reason, ap2);
@@ -712,11 +714,11 @@ outerloop:
     }
 
     public static void markForCloning(ParamNode n, ProgramLocation mc2, Set exact_types2, AccessPath ap) {
-        jq_Method targetMethod = ((ParamNode) n).m;
+        AndersenMethod targetMethod = ((ParamNode) n).m;
         int paramNum = ((ParamNode) n).n;
         if (TRACE) out.println("Cloning call graph edge "+mc2+" to "+targetMethod);
         SpecializationParameter specialp = new SpecializationParameter(paramNum, ap, exact_types2);
-        ControlFlowGraph target_cfg = CodeCache.getCode(targetMethod);
+        ControlFlowGraph target_cfg = CodeCache.getCode((jq_Method)targetMethod);
         Object pair = Default.pair(mc2, target_cfg);
         Specialization special = (Specialization) callSitesToClones.get(pair);
         if (special != null) {
@@ -894,12 +896,12 @@ outer:
                 }
                 if (has_nonexact_types && !has_nonexact_types2) {
                     if (TRACE) out.println("Edge "+n+"=>"+n2+" : loss of nonexact targets");
-                    jq_Method targetMethod = ((ParamNode) n).m;
+                    AndersenMethod targetMethod = ((ParamNode) n).m;
                     if (targetMethod.getNameAndDesc().equals(mc2.getTargetMethod().getNameAndDesc())) {
                         int paramNum = ((ParamNode) n).n;
                         if (TRACE) out.println("Cloning call graph edge "+mc2+" to "+targetMethod);
                         SpecializationParameter specialp = new SpecializationParameter(paramNum, null, exact_types2);
-                        ControlFlowGraph target_cfg = CodeCache.getCode(targetMethod);
+                        ControlFlowGraph target_cfg = CodeCache.getCode((jq_Method)targetMethod);
                         Object pair = Default.pair(mc2, target_cfg);
                         Specialization special = (Specialization) callSitesToClones.get(pair);
                         if (special != null) {
@@ -966,12 +968,12 @@ outer:
                         jq.Assert(exact_target_set != null);
                         if (exact_target_set.size() > exact_target_set2.size()) {
                             if (TRACE) out.println("Edge "+n+"=>"+n2+" : "+exact_target_set2.size()+" targets (smaller than "+exact_target_set.size()+")");
-                            jq_Method targetMethod = ((ParamNode) n).m;
+                            AndersenMethod targetMethod = ((ParamNode) n).m;
                             if (targetMethod.getNameAndDesc().equals(mc2.getTargetMethod().getNameAndDesc())) {
                                 int paramNum = ((ParamNode) n).n;
                                 if (TRACE) out.println("Cloning call graph edge "+mc2+" to "+targetMethod);
                                 SpecializationParameter specialp = new SpecializationParameter(paramNum, null, exact_types2);
-                                ControlFlowGraph target_cfg = CodeCache.getCode(targetMethod);
+                                ControlFlowGraph target_cfg = CodeCache.getCode((jq_Method)targetMethod);
                                 Object pair = Default.pair(mc2, target_cfg);
                                 Specialization special = (Specialization) callSitesToClones.get(pair);
                                 if (special != null) {
@@ -1116,9 +1118,9 @@ outer:
                                     }
                                     if (has_nonexact_types && !has_nonexact_types2) {
                                         if (TRACE) out.println("Edge "+n+"=>"+n2+" : loss of nonexact targets");
-                                        jq_Method targetMethod = ((ParamNode) n).m;
+                                        AndersenMethod targetMethod = ((ParamNode) n).m;
                                         if (targetMethod.getNameAndDesc().equals(mc2.getTargetMethod().getNameAndDesc())) {
-                                            ControlFlowGraph caller_cfg = CodeCache.getCode(mc2.getMethod());
+                                            ControlFlowGraph caller_cfg = CodeCache.getCode((jq_Method)mc2.getMethod());
                                             MethodSummary ms = MethodSummary.getSummary(caller_cfg);
                                             CallSite cs = new CallSite(ms, mc2);
                                             if (TRACE) out.println("Inlining call graph edge "+cs+" to "+targetMethod);
@@ -1133,9 +1135,9 @@ outer:
                                         Set exact_targets2 = mc.getCallTargets(exact_types2, true);
                                         if (exact_targets.size() > exact_targets2.size()) {
                                             if (TRACE) out.println("Edge "+n+"=>"+n2+" : "+exact_targets2.size()+" targets (smaller than "+exact_targets.size()+")");
-                                            jq_Method targetMethod = ((ParamNode) n).m;
+                                            AndersenMethod targetMethod = ((ParamNode) n).m;
                                             if (targetMethod.getNameAndDesc().equals(mc2.getTargetMethod().getNameAndDesc())) {
-                                                ControlFlowGraph caller_cfg = CodeCache.getCode(mc2.getMethod());
+                                                ControlFlowGraph caller_cfg = CodeCache.getCode((jq_Method)mc2.getMethod());
                                                 MethodSummary ms = MethodSummary.getSummary(caller_cfg);
                                                 CallSite cs = new CallSite(ms, mc2);
                                                 if (TRACE) out.println("Inlining call graph edge "+cs+" to "+targetMethod);
