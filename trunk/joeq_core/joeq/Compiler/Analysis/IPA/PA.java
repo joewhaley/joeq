@@ -3364,7 +3364,8 @@ public class PA {
         BDD IE0 = IE.exist(V1cV2cset);
         BDD vP0 = vP.exist(V1cH1cset);
         
-        String dumpPath = "";
+        String dumpPath = System.getProperty("pa.dumppath", "");
+        dumpPath = dumpPath + System.getProperty("file.separator", "/");
         bdd.save(dumpPath+"vP0.bdd", vP0);
         bdd.save(dumpPath+"hP0.bdd", hP);
         bdd.save(dumpPath+"L.bdd", L0);
