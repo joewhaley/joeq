@@ -989,6 +989,7 @@ public class PA {
             BDD context = null;
             if (CONTEXT_SENSITIVE && MAX_HC_BITS > 1) {
                 int context_i = getThreadRunIndex(m, h);
+                context_i += vCnumbering.getRange(m).low.intValue();
                 System.out.println("Thread "+h+" index "+context_i);
                 context = H1c.ithVar(context_i);
                 context.andWith(V1c.ithVar(context_i));
