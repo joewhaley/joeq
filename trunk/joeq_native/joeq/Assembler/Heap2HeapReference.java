@@ -43,5 +43,5 @@ public class Heap2HeapReference extends Reloc {
         return "from heap:"+from_heaploc.stringRep()+" to heap:"+to_heaploc.stringRep();
     }
     
-    public static final jq_Class _class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LAssembler/x86/Heap2HeapReference;");
+    public static final jq_Class _class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Assembler/Heap2HeapReference;");
 }

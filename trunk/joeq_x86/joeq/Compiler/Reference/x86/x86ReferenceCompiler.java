@@ -2841,11 +2841,4 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements x86Constant
         }
     }
 
-    /*
-    public static final jq_StaticField _call_patches;
-    static {
-        jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Compiler/Reference/x86/x86ReferenceCompiler;");
-        _call_patches = k.getOrCreateStaticField("call_patches", "Ljava/util/Collection;");
-    }
-     */
 }
