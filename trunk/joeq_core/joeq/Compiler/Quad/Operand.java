@@ -14,6 +14,7 @@ import Clazz.jq_Type;
 import Compil3r.BytecodeAnalysis.BytecodeVisitor;
 import Compil3r.Quad.RegisterFactory.Register;
 import Main.jq;
+import Memory.Address;
 import Run_Time.Reflection;
 
 /*
@@ -33,6 +34,7 @@ public interface Operand {
         }
         public static boolean isConstant(Operand op) {
             return op instanceof AConstOperand ||
+                   op instanceof PConstOperand ||
                    op instanceof IConstOperand ||
                    op instanceof FConstOperand ||
                    op instanceof LConstOperand ||
@@ -89,6 +91,32 @@ public interface Operand {
         public Quad getQuad() { return instruction; }
         public Operand copy() { return new AConstOperand(value); }
         public boolean isSimilar(Operand that) { return that instanceof AConstOperand && ((AConstOperand)that).getValue() == this.getValue(); }
+    }
+    
+    public static class PConstOperand implements Operand {
+        private Quad instruction;
+        private Address value;
+        public PConstOperand(Address v) { this.value = v; }
+        //public int hashCode() { return System.identityHashCode(value); }
+        //public boolean equals(Object that) { return equals((AConstOperand)that); }
+        //public boolean equals(AConstOperand that) { return this.value == that.value; }
+        public Address getValue() { return value; }
+        public void setValue(Address o) { this.value = o; }
+        public String toString() {
+            return "PConst: "+(value==null?"<null>":value.stringRep());
+        }
+        public jq_Reference getType() {
+            return Address._class;
+        }
+        public void attachToQuad(Quad q) { jq.Assert(instruction == null); instruction = q; }
+        public Quad getQuad() { return instruction; }
+        public Operand copy() { return new PConstOperand(value); }
+        public boolean isSimilar(Operand o) {
+            if (!(o instanceof PConstOperand)) return false;
+            PConstOperand that = (PConstOperand)o;
+            return (this.getValue() == null && (that.getValue() == null || that.getValue().isNull())) ||
+                   this.getValue().difference(that.getValue()) == 0;
+        }
     }
     
     public static class IConstOperand implements Operand {

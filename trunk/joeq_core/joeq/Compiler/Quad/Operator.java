@@ -28,6 +28,7 @@ import Compil3r.Quad.Operand.IntValueTableOperand;
 import Compil3r.Quad.Operand.LConstOperand;
 import Compil3r.Quad.Operand.MethodOperand;
 import Compil3r.Quad.Operand.ParamListOperand;
+import Compil3r.Quad.Operand.PConstOperand;
 import Compil3r.Quad.Operand.RegisterOperand;
 import Compil3r.Quad.Operand.TargetOperand;
 import Compil3r.Quad.Operand.TypeOperand;
@@ -103,7 +104,7 @@ public abstract class Operator {
         if (op instanceof RegisterOperand)
             return (Address)s.getReg(((RegisterOperand)op).getRegister());
         else
-            return HeapAddress.addressOf(((AConstOperand)op).getValue());
+            return HeapAddress.addressOf(((PConstOperand)op).getValue());
     }
     
     static Object getWrappedOpValue(Operand op, State s) {
@@ -111,6 +112,8 @@ public abstract class Operator {
             return s.getReg(((RegisterOperand)op).getRegister());
         else if (op instanceof AConstOperand)
             return ((AConstOperand)op).getValue();
+        else if (op instanceof PConstOperand)
+            jq.TODO();
         else if (op instanceof IConstOperand)
             return new Integer(((IConstOperand)op).getValue());
         else if (op instanceof FConstOperand)
@@ -317,6 +320,7 @@ public abstract class Operator {
             return new Quad(id, operator, dst, src);
         }
         public static Move getMoveOp(jq_Type type) {
+            if (type.isAddressType()) return MOVE_P.INSTANCE;
             if (type.isReferenceType()) return MOVE_A.INSTANCE;
             if (type.isIntLike()) return MOVE_I.INSTANCE;
             if (type == jq_Primitive.FLOAT) return MOVE_F.INSTANCE;
@@ -375,6 +379,14 @@ public abstract class Operator {
             public String toString() { return "MOVE_A"; }
             public void interpret(Quad q, State s) {
                 s.putReg_A(getDest(q).getRegister(), getObjectOpValue(getSrc(q), s));
+            }
+        }
+        public static class MOVE_P extends Move {
+            public static final MOVE_P INSTANCE = new MOVE_P();
+            private MOVE_P() { }
+            public String toString() { return "MOVE_P"; }
+            public void interpret(Quad q, State s) {
+                s.putReg_P(getDest(q).getRegister(), getAddressOpValue(getSrc(q), s));
             }
         }
     }
@@ -1015,6 +1027,16 @@ public abstract class Operator {
                 s.putReg_A(getDest(q).getRegister(), a[i]);
             }
         }
+        public static class ALOAD_P extends ALoad {
+            public static final ALOAD_P INSTANCE = new ALOAD_P();
+            private ALOAD_P() { }
+            public String toString() { return "ALOAD_P"; }
+            public void interpret(Quad q, State s) {
+                Address[] a = (Address[])getObjectOpValue(getBase(q), s);
+                int i = getIntOpValue(getIndex(q), s);
+                s.putReg_P(getDest(q).getRegister(), a[i]);
+            }
+        }
         public static class ALOAD_B extends ALoad {
             public static final ALOAD_B INSTANCE = new ALOAD_B();
             private ALOAD_B() { }
@@ -1128,6 +1150,17 @@ public abstract class Operator {
                 a[i] = v;
             }
         }
+        public static class ASTORE_P extends AStore {
+            public static final ASTORE_P INSTANCE = new ASTORE_P();
+            private ASTORE_P() { }
+            public String toString() { return "ASTORE_P"; }
+            public void interpret(Quad q, State s) {
+                Address[] a = (Address[])getObjectOpValue(getBase(q), s);
+                int i = getIntOpValue(getIndex(q), s);
+                Address v = getAddressOpValue(getValue(q), s);
+                a[i] = v;
+            }
+        }
         public static class ASTORE_B extends AStore {
             public static final ASTORE_B INSTANCE = new ASTORE_B();
             private ASTORE_B() { }
@@ -1220,6 +1253,24 @@ public abstract class Operator {
                 switch (c) {
                 case BytecodeVisitor.CMP_EQ: r = s1 == s2; break;
                 case BytecodeVisitor.CMP_NE: r = s1 != s2; break;
+                case BytecodeVisitor.CMP_UNCOND: r = true; break;
+                default: jq.UNREACHABLE(); r = false; break;
+                }
+                if (r) s.branchTo(getTarget(q).getTarget());
+            }
+        }
+        public static class IFCMP_P extends IntIfCmp {
+            public static final IFCMP_P INSTANCE = new IFCMP_P();
+            private IFCMP_P() { }
+            public String toString() { return "IFCMP_P"; }
+            public void interpret(Quad q, State s) {
+                Address s1 = getAddressOpValue(getSrc1(q), s);
+                Address s2 = getAddressOpValue(getSrc2(q), s);
+                byte c = getCond(q).getCondition();
+                boolean r;
+                switch (c) {
+                case BytecodeVisitor.CMP_EQ: r = s1.difference(s2) == 0; break;
+                case BytecodeVisitor.CMP_NE: r = s1.difference(s2) != 0; break;
                 case BytecodeVisitor.CMP_UNCOND: r = true; break;
                 default: jq.UNREACHABLE(); r = false; break;
                 }
@@ -1460,6 +1511,12 @@ public abstract class Operator {
             public String toString() { return "RETURN_A"; }
             public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg1_check(q); }
         }
+        public static class RETURN_P extends Return {
+            public static final RETURN_P INSTANCE = new RETURN_P();
+            private RETURN_P() { }
+            public String toString() { return "RETURN_P"; }
+            public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg1_check(q); }
+        }
         public static class THROW_A extends Return {
             public static final THROW_A INSTANCE = new THROW_A();
             private THROW_A() { }
@@ -1535,6 +1592,15 @@ public abstract class Operator {
             public void interpret(Quad q, State s) {
                 jq_StaticField f = (jq_StaticField)getField(q).getField();
                 s.putReg_A(getDest(q).getRegister(), Reflection.getstatic_A(f));
+            }
+        }
+        public static class GETSTATIC_P extends Getstatic {
+            public static final GETSTATIC_P INSTANCE = new GETSTATIC_P();
+            private GETSTATIC_P() { }
+            public String toString() { return "GETSTATIC_P"; }
+            public void interpret(Quad q, State s) {
+                jq_StaticField f = (jq_StaticField)getField(q).getField();
+                s.putReg_P(getDest(q).getRegister(), Reflection.getstatic_P(f));
             }
         }
         public static class GETSTATIC_Z extends Getstatic {
@@ -1637,6 +1703,19 @@ public abstract class Operator {
             }
             public boolean hasSideEffects() { return true; }
             public String toString() { return "GETSTATIC_A%"; }
+        }
+        public static class GETSTATIC_P_DYNLINK extends GETSTATIC_P {
+            public static final GETSTATIC_P_DYNLINK INSTANCE = new GETSTATIC_P_DYNLINK();
+            private GETSTATIC_P_DYNLINK() { }
+            public void accept(Quad q, QuadVisitor qv) {
+                qv.visitExceptionThrower(q);
+                super.accept(q, qv);
+            }
+            public UnmodifiableList.jq_Class getThrownExceptions() {
+                return resolutionexceptions;
+            }
+            public boolean hasSideEffects() { return true; }
+            public String toString() { return "GETSTATIC_P%"; }
         }
         public static class GETSTATIC_Z_DYNLINK extends GETSTATIC_Z {
             public static final GETSTATIC_Z_DYNLINK INSTANCE = new GETSTATIC_Z_DYNLINK();
@@ -1760,6 +1839,16 @@ public abstract class Operator {
                 Reflection.putstatic_A(f, i);
             }
         }
+        public static class PUTSTATIC_P extends Putstatic {
+            public static final PUTSTATIC_P INSTANCE = new PUTSTATIC_P();
+            private PUTSTATIC_P() { }
+            public String toString() { return "PUTSTATIC_P"; }
+            public void interpret(Quad q, State s) {
+                jq_StaticField f = (jq_StaticField)getField(q).getField();
+                Address i = getAddressOpValue(getSrc(q), s);
+                Reflection.putstatic_P(f, i);
+            }
+        }
         public static class PUTSTATIC_Z extends Putstatic {
             public static final PUTSTATIC_Z INSTANCE = new PUTSTATIC_Z();
             private PUTSTATIC_Z() { }
@@ -1859,6 +1948,18 @@ public abstract class Operator {
                 return resolutionexceptions;
             }
             public String toString() { return "PUTSTATIC_A%"; }
+        }
+        public static class PUTSTATIC_P_DYNLINK extends PUTSTATIC_P {
+            public static final PUTSTATIC_P_DYNLINK INSTANCE = new PUTSTATIC_P_DYNLINK();
+            private PUTSTATIC_P_DYNLINK() { }
+            public void accept(Quad q, QuadVisitor qv) {
+                qv.visitExceptionThrower(q);
+                super.accept(q, qv);
+            }
+            public UnmodifiableList.jq_Class getThrownExceptions() {
+                return resolutionexceptions;
+            }
+            public String toString() { return "PUTSTATIC_P%"; }
         }
         public static class PUTSTATIC_Z_DYNLINK extends PUTSTATIC_Z {
             public static final PUTSTATIC_Z_DYNLINK INSTANCE = new PUTSTATIC_Z_DYNLINK();
@@ -1983,6 +2084,16 @@ public abstract class Operator {
                 s.putReg_A(getDest(q).getRegister(), Reflection.getfield_A(o, f));
             }
         }
+        public static class GETFIELD_P extends Getfield {
+            public static final GETFIELD_P INSTANCE = new GETFIELD_P();
+            private GETFIELD_P() { }
+            public String toString() { return "GETFIELD_P"; }
+            public void interpret(Quad q, State s) {
+                Object o = getObjectOpValue(getBase(q), s);
+                jq_InstanceField f = (jq_InstanceField)getField(q).getField();
+                s.putReg_P(getDest(q).getRegister(), Reflection.getfield_P(o, f));
+            }
+        }
         public static class GETFIELD_B extends Getfield {
             public static final GETFIELD_B INSTANCE = new GETFIELD_B();
             private GETFIELD_B() { }
@@ -2087,6 +2198,19 @@ public abstract class Operator {
             }
             public boolean hasSideEffects() { return true; }
             public String toString() { return "GETFIELD_A%"; }
+        }
+        public static class GETFIELD_P_DYNLINK extends GETFIELD_P {
+            public static final GETFIELD_P_DYNLINK INSTANCE = new GETFIELD_P_DYNLINK();
+            private GETFIELD_P_DYNLINK() { }
+            public void accept(Quad q, QuadVisitor qv) {
+                qv.visitExceptionThrower(q);
+                super.accept(q, qv);
+            }
+            public UnmodifiableList.jq_Class getThrownExceptions() {
+                return resolutionexceptions;
+            }
+            public boolean hasSideEffects() { return true; }
+            public String toString() { return "GETFIELD_P%"; }
         }
         public static class GETFIELD_B_DYNLINK extends GETFIELD_B {
             public static final GETFIELD_B_DYNLINK INSTANCE = new GETFIELD_B_DYNLINK();
@@ -2214,6 +2338,16 @@ public abstract class Operator {
                 Reflection.putfield_A(o, f, getObjectOpValue(getSrc(q), s));
             }
         }
+        public static class PUTFIELD_P extends Putfield {
+            public static final PUTFIELD_P INSTANCE = new PUTFIELD_P();
+            private PUTFIELD_P() { }
+            public String toString() { return "PUTFIELD_P"; }
+            public void interpret(Quad q, State s) {
+                Object o = getObjectOpValue(getBase(q), s);
+                jq_InstanceField f = (jq_InstanceField)getField(q).getField();
+                Reflection.putfield_P(o, f, getAddressOpValue(getSrc(q), s));
+            }
+        }
         public static class PUTFIELD_B extends Putfield {
             public static final PUTFIELD_B INSTANCE = new PUTFIELD_B();
             private PUTFIELD_B() { }
@@ -2313,6 +2447,18 @@ public abstract class Operator {
                 return resolutionexceptions;
             }
             public String toString() { return "PUTFIELD_A%"; }
+        }
+        public static class PUTFIELD_P_DYNLINK extends PUTFIELD_P {
+            public static final PUTFIELD_P_DYNLINK INSTANCE = new PUTFIELD_P_DYNLINK();
+            private PUTFIELD_P_DYNLINK() { }
+            public void accept(Quad q, QuadVisitor qv) {
+                qv.visitExceptionThrower(q);
+                super.accept(q, qv);
+            }
+            public UnmodifiableList.jq_Class getThrownExceptions() {
+                return resolutionexceptions;
+            }
+            public String toString() { return "PUTFIELD_P%"; }
         }
         public static class PUTFIELD_B_DYNLINK extends PUTFIELD_B {
             public static final PUTFIELD_B_DYNLINK INSTANCE = new PUTFIELD_B_DYNLINK();
@@ -2640,6 +2786,12 @@ public abstract class Operator {
             public String toString() { return "INVOKEVIRTUAL_A"; }
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         }
+        public static class INVOKEVIRTUAL_P extends InvokeVirtual {
+            public static final INVOKEVIRTUAL_P INSTANCE = new INVOKEVIRTUAL_P();
+            private INVOKEVIRTUAL_P() { }
+            public String toString() { return "INVOKEVIRTUAL_P"; }
+            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
+        }
         public static class INVOKESTATIC_V extends InvokeStatic {
             public static final INVOKESTATIC_V INSTANCE = new INVOKESTATIC_V();
             private INVOKESTATIC_V() { }
@@ -2675,6 +2827,12 @@ public abstract class Operator {
             public String toString() { return "INVOKESTATIC_A"; }
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         }
+        public static class INVOKESTATIC_P extends InvokeStatic {
+            public static final INVOKESTATIC_P INSTANCE = new INVOKESTATIC_P();
+            private INVOKESTATIC_P() { }
+            public String toString() { return "INVOKESTATIC_P"; }
+            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
+        }
         public static class INVOKEVIRTUAL_V_DYNLINK extends INVOKEVIRTUAL_V {
             public static final INVOKEVIRTUAL_V_DYNLINK INSTANCE = new INVOKEVIRTUAL_V_DYNLINK();
             private INVOKEVIRTUAL_V_DYNLINK() { }
@@ -2704,6 +2862,11 @@ public abstract class Operator {
             public static final INVOKEVIRTUAL_A_DYNLINK INSTANCE = new INVOKEVIRTUAL_A_DYNLINK();
             private INVOKEVIRTUAL_A_DYNLINK() { }
             public String toString() { return "INVOKEVIRTUAL_A%"; }
+        }
+        public static class INVOKEVIRTUAL_P_DYNLINK extends INVOKEVIRTUAL_P {
+            public static final INVOKEVIRTUAL_P_DYNLINK INSTANCE = new INVOKEVIRTUAL_P_DYNLINK();
+            private INVOKEVIRTUAL_P_DYNLINK() { }
+            public String toString() { return "INVOKEVIRTUAL_P%"; }
         }
         public static class INVOKESTATIC_V_DYNLINK extends INVOKESTATIC_V {
             public static final INVOKESTATIC_V_DYNLINK INSTANCE = new INVOKESTATIC_V_DYNLINK();
@@ -2735,6 +2898,11 @@ public abstract class Operator {
             private INVOKESTATIC_A_DYNLINK() { }
             public String toString() { return "INVOKESTATIC_A%"; }
         }
+        public static class INVOKESTATIC_P_DYNLINK extends INVOKESTATIC_P {
+            public static final INVOKESTATIC_P_DYNLINK INSTANCE = new INVOKESTATIC_P_DYNLINK();
+            private INVOKESTATIC_P_DYNLINK() { }
+            public String toString() { return "INVOKESTATIC_P%"; }
+        }
         public static class INVOKESPECIAL_V_DYNLINK extends INVOKESTATIC_V {
             public static final INVOKESPECIAL_V_DYNLINK INSTANCE = new INVOKESPECIAL_V_DYNLINK();
             private INVOKESPECIAL_V_DYNLINK() { }
@@ -2764,6 +2932,11 @@ public abstract class Operator {
             public static final INVOKESPECIAL_A_DYNLINK INSTANCE = new INVOKESPECIAL_A_DYNLINK();
             private INVOKESPECIAL_A_DYNLINK() { }
             public String toString() { return "INVOKESPECIAL_A%"; }
+        }
+        public static class INVOKESPECIAL_P_DYNLINK extends INVOKESTATIC_P {
+            public static final INVOKESPECIAL_P_DYNLINK INSTANCE = new INVOKESPECIAL_P_DYNLINK();
+            private INVOKESPECIAL_P_DYNLINK() { }
+            public String toString() { return "INVOKESPECIAL_P%"; }
         }
         public static class INVOKEINTERFACE_V extends InvokeInterface {
             public static final INVOKEINTERFACE_V INSTANCE = new INVOKEINTERFACE_V();
@@ -2798,6 +2971,12 @@ public abstract class Operator {
             public static final INVOKEINTERFACE_A INSTANCE = new INVOKEINTERFACE_A();
             private INVOKEINTERFACE_A() { }
             public String toString() { return "INVOKEINTERFACE_A"; }
+            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
+        }
+        public static class INVOKEINTERFACE_P extends InvokeInterface {
+            public static final INVOKEINTERFACE_P INSTANCE = new INVOKEINTERFACE_P();
+            private INVOKEINTERFACE_P() { }
+            public String toString() { return "INVOKEINTERFACE_P"; }
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
         }
     }
@@ -2902,6 +3081,7 @@ public abstract class Operator {
             public String toString() { return "CHECKCAST"; }
             public void interpret(Quad q, State s) {
                 jq_Type t = getType(q).getType();
+                jq.Assert(!t.isAddressType());
                 Object o = getObjectOpValue(getSrc(q), s);
                 if (o != null) {
                     jq_Type t2 = Reflection.getTypeOf(o);
@@ -2946,6 +3126,7 @@ public abstract class Operator {
             public String toString() { return "INSTANCEOF"; }
             public void interpret(Quad q, State s) {
                 jq_Type t = getType(q).getType();
+                jq.Assert(!t.isAddressType());
                 Object o = getObjectOpValue(getSrc(q), s);
                 int v;
                 if (o == null) v = 0;
@@ -3046,6 +3227,16 @@ public abstract class Operator {
             super.accept(q, qv);
         }
         
+        public static class PEEK_P extends MemLoad {
+            public static final PEEK_P INSTANCE = new PEEK_P();
+            private PEEK_P() { }
+            public String toString() { return "PEEK_P"; }
+            public void interpret(Quad q, State s) {
+                Address o = getAddressOpValue(getAddress(q), s);
+                if (!jq.Bootstrapping)
+                    s.putReg_P(getDest(q).getRegister(), o.peek());
+            }
+        }
         public static class PEEK_1 extends MemLoad {
             public static final PEEK_1 INSTANCE = new PEEK_1();
             private PEEK_1() { }
@@ -3105,6 +3296,17 @@ public abstract class Operator {
             super.accept(q, qv);
         }
         
+        public static class POKE_P extends MemStore {
+            public static final POKE_P INSTANCE = new POKE_P();
+            private POKE_P() { }
+            public String toString() { return "POKE_P"; }
+            public void interpret(Quad q, State s) {
+                Address o = getAddressOpValue(getAddress(q), s);
+                Address v = getAddressOpValue(getValue(q), s);
+                if (!jq.Bootstrapping)
+                    o.poke(v);
+            }
+        }
         public static class POKE_1 extends MemStore {
             public static final POKE_1 INSTANCE = new POKE_1();
             private POKE_1() { }
