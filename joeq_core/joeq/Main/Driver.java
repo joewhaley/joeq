@@ -6,6 +6,8 @@ package Main;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.File;
+import java.net.URL;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -29,6 +31,7 @@ import Run_Time.Reflection;
 import UTF.Utf8;
 import Util.Assert;
 import Util.Strings;
+import Util.SimpleInterpreter;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>
@@ -46,6 +49,7 @@ public abstract class Driver {
             System.err.println("Warning: interpreter class not found.");
         }
 
+        SimpleInterpreter si = new SimpleInterpreter((URL[])null);
         if ((args.length == 0) || args[0].equals("-i")) {
             // interactive mode
             BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
@@ -67,12 +71,12 @@ public abstract class Driver {
                     return;
                 }
                 for (int i = 0; i < commands.length; ++i) {
-                    i = processCommand(commands, i);
+                    i = processCommand(commands, i, si);
                 }
             }
         }
         for (int i = 0; i < args.length; ++i) {
-            i = processCommand(args, i);
+            i = processCommand(args, i, si);
         }
     }
 
@@ -118,6 +122,10 @@ public abstract class Driver {
     }
 
     public static int processCommand(String[] commandBuffer, int index) {
+        return processCommand(commandBuffer, index, (Util.SimpleInterpreter)null);
+    }
+
+    public static int processCommand(String[] commandBuffer, int index, SimpleInterpreter si) {
         try {
             if (commandBuffer[index].equalsIgnoreCase("addtoclasspath")) {
                 String path = commandBuffer[++index];
@@ -373,6 +381,26 @@ public abstract class Driver {
                 Assert._assert(runnable != null);
                 
                 runnable.run();                
+            } else if (commandBuffer[index].equalsIgnoreCase("store")) {
+                System.out.println(si.getStore());
+            } else if (commandBuffer[index].equalsIgnoreCase("loaderpath")) {
+                try {
+                    si.setClassPath(new URL[] { new File(commandBuffer[++index]).toURL() });
+                } catch (java.net.MalformedURLException e) {
+                    e.printStackTrace(System.err);
+                }
+            } else if (commandBuffer[index].equalsIgnoreCase("new")) {    // new name Type arg0 arg1 arg2
+                String name = commandBuffer[++index];
+                String type = commandBuffer[++index];
+                index = si.newObject(name, type, commandBuffer, index);
+                printObjectInStore(si, name);
+            } else if (commandBuffer[index].indexOf(".") != -1) {              // name.method arg0 arg1 ...
+                String fullName = commandBuffer[index];
+                int b = fullName.lastIndexOf('.') + 1;
+                String objectName = fullName.substring(0, b-1);
+                String methodName = fullName.substring(b);
+                index = si.invokeMethod(objectName, methodName, commandBuffer, index);
+                printObjectInStore(si, "$last");
             } else if (commandBuffer[index].equalsIgnoreCase("exit") || commandBuffer[index].equalsIgnoreCase("quit")) {
                 System.exit(0);
             } else if (commandBuffer[index].equalsIgnoreCase("help")) {
@@ -386,8 +414,20 @@ public abstract class Driver {
             }
         } catch (ArrayIndexOutOfBoundsException x) {
             System.err.println("Incomplete command");
+            x.printStackTrace(System.err);
         }
         return index;
+    }
+
+    private static void printObjectInStore(SimpleInterpreter si, Object name) {
+        Object newobj = si.getStore().get(name);
+        if (newobj != null) {
+            String s = newobj.toString();
+            if (s.length() > 1024) s = s.substring(0, 1024);
+            System.out.println(s);
+        } else {
+            System.err.println("object " + name + " not found - did the operation fail?");
+        }
     }
 
     public static void printHelp() {
