@@ -36,10 +36,13 @@ public class BDDRelation extends Relation {
     public BDDRelation(BDDSolver solver, String name, List fieldNames, List fieldDomains, List fieldOptions) {
         super(name, fieldNames, fieldDomains, fieldOptions);
         this.solver = solver;
+    }
+    
+    public void initialize() {
         this.relation = solver.bdd.zero();
         this.domains = new LinkedList();
         if (solver.TRACE)
-            System.out.println("Constructing BDDRelation "+name+" with domains "+fieldDomains+" names "+fieldNames.size()+" options "+fieldOptions);
+            solver.out.println("Initializing BDDRelation "+name+" with domains "+fieldDomains+" names "+fieldNames.size()+" options "+fieldOptions);
         this.domainSet = solver.bdd.one();
         for (int i = 0; i < fieldDomains.size(); ++i) {
             FieldDomain fd = (FieldDomain) fieldDomains.get(i);

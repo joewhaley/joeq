@@ -206,6 +206,8 @@ public abstract class InferenceRule {
             if (s.TRACE) s.out.println("Field names: "+fieldNames+" Field domains: "+fieldDomains+" Options: "+fieldOptions);
             Relation newRelation = s.createRelation(relationName, fieldNames, fieldDomains, fieldOptions);
             if (s.TRACE) s.out.println("New relation: "+newRelation);
+            Object o = s.nameToRelation.put(newRelation.name, newRelation);
+            Assert._assert(o == null);
             RuleTerm newBottom = new RuleTerm(newVariables, newRelation);
             InferenceRule newRule = s.createInferenceRule(newTop, newBottom);
             if (s.TRACE) s.out.println("New rule: "+newRule);
@@ -215,7 +217,7 @@ public abstract class InferenceRule {
             // Now include the bottom of the new rule on the top of our rule.
             top.add(0, newBottom);
             // Reinitialize this rule because the terms have changed.
-            this.initialize();
+            this.calculateNecessaryVariables();
             if (s.TRACE) s.out.println("Current rule is now: "+this);
             if (s.TRACE) s.out.println("My new necessary variables: "+necessaryVariables);
             Assert._assert(necessaryVariables.equals(myNewNecessaryVariables));

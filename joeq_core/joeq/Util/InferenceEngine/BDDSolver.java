@@ -67,6 +67,8 @@ public class BDDSolver extends Solver {
     
     public void initialize() {
         loadBDDDomainInfo();
+        setVariableOrdering();
+        super.initialize();
     }
     
     void loadBDDDomainInfo() {
@@ -83,6 +85,16 @@ public class BDDSolver extends Solver {
                 BDDDomain d = allocateBDDDomain(fd);
             }
         } catch (IOException x) {
+        }
+    }
+    
+    void setVariableOrdering() {
+        String varOrderString = System.getProperty("bddvarorder", null);
+        if (varOrderString != null) {
+            System.out.print("Setting variable ordering to "+varOrderString+", ");
+            int [] varOrder = bdd.makeVarOrdering(true, varOrderString);
+            bdd.setVarOrder(varOrder);
+            System.out.println("done.");
         }
     }
     
@@ -444,21 +456,6 @@ public class BDDSolver extends Solver {
         BDD b = d1.buildEquals(d2);
         r.relation = b.not(); b.free();
         return r;
-    }
-    
-    /* (non-Javadoc)
-     * @see joeq.Util.InferenceEngine.Solver#readRules(java.io.BufferedReader)
-     */
-    void readRules(BufferedReader in) throws IOException {
-        String varOrderString = System.getProperty("bddvarorder", null);
-        
-        if (varOrderString != null) {
-            System.out.print("Setting variable ordering to "+varOrderString+", ");
-            int [] varOrder = bdd.makeVarOrdering(true, varOrderString);
-            bdd.setVarOrder(varOrder);
-            System.out.println("done.");
-        }
-        super.readRules(in);
     }
     
     void saveResults() throws IOException {
