@@ -837,7 +837,7 @@ public class IPSSABuilder implements Runnable {
 			(quad.getOperator() instanceof Operator.Putfield) ||
 			(quad.getOperator() instanceof Operator.Putstatic);
 	}
-	boolean isCall(Quad quad) {
+	static boolean isCall(Quad quad) {
 		return (quad.getOperator() instanceof Operator.Invoke);
 	}
 	private static String repeat(String string, int n) {
@@ -946,6 +946,9 @@ public class IPSSABuilder implements Runnable {
         private String _name;
         protected IPSSABuilder _builder;
 
+        public Application() {
+            this(null, null);
+        }        
         public Application(IPSSABuilder builder, String name, String[] args){
             parseParams(args);
             _name = name;
