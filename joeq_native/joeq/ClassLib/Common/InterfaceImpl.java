@@ -87,6 +87,18 @@ public class InterfaceImpl implements Interface {
             k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LMain/jq;");
             nullStaticFields.add(k.getOrCreateStaticField("on_vm_startup",
                                                           "Ljava/util/List;"));
+            k = PrimordialClassLoader.getJavaLangClass();
+            // TODO: signers
+            nullInstanceFields.add(k.getOrCreateInstanceField("signers", "[Ljava/lang/Object;"));
+            // TODO: protection_domain
+            nullInstanceFields.add(k.getOrCreateInstanceField("protection_domain", "Ljava/security/ProtectionDomain;"));
+            k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljava/util/zip/ZipFile;");
+            nullInstanceFields.add(k.getOrCreateInstanceField("raf", "Ljava/io/RandomAccessFile;"));
+            nullInstanceFields.add(k.getOrCreateInstanceField("entries", "Ljava/util/Hashtable;"));
+            nullInstanceFields.add(k.getOrCreateInstanceField("cenpos", "J"));
+            nullInstanceFields.add(k.getOrCreateInstanceField("pos", "J"));
+            k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LBootstrap/PrimordialClassLoader$ZipFileElement;");
+            nullInstanceFields.add(k.getOrCreateInstanceField("entries", "Ljava/util/Map;"));
         }
 
         public java.lang.Object mapStaticField(jq_StaticField f) {
@@ -105,12 +117,6 @@ public class InterfaceImpl implements Interface {
             if (c == PrimordialClassLoader.getJavaLangClass()) {
                 if (fieldName.equals("jq_type"))
                     return Reflection.getJQType((java.lang.Class) o);
-                if (fieldName.equals("signers"))
-                    return null;
-                    //return ((java.lang.Class)o).getSigners();
-                if (fieldName.equals("protection_domain"))
-                    return null;
-                    //return ((java.lang.Class)o).getProtectionDomain();
             } else if (c == jq_Type._class) {
                 if (o == jq_NullType.NULL_TYPE)
                     return null;
@@ -190,15 +196,6 @@ public class InterfaceImpl implements Interface {
                     return o2;
                     */
                 }
-            } else if (c == PrimordialClassLoader.loader.getBSType("Ljava/util/zip/ZipFile;")) {
-                if (fieldName.equals("raf"))
-                    return null;
-                if (fieldName.equals("entries"))
-                    return null;
-                if (fieldName.equals("cenpos"))
-                    return null;
-                if (fieldName.equals("pos"))
-                    return null;
             } else if (c == PrimordialClassLoader.loader.getBSType("Ljava/util/zip/Inflater;")) {
                 // Inflater objects are reinitialized on VM startup.
                 return null;
