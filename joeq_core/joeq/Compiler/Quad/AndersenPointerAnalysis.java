@@ -157,7 +157,7 @@ public class AndersenPointerAnalysis {
     /**
      * Keep track of inclusion back edges.
      */
-    public static final boolean INCLUSION_BACK_EDGES = true;
+    public static final boolean INCLUSION_BACK_EDGES = false;
     
     /**
      * Use a set repository, rather than a set factory.
@@ -606,10 +606,11 @@ public class AndersenPointerAnalysis {
             cacheSetFactory = new SetRepository();
         } else {
             //cacheSetFactory = SetRepository.LinkedHashSetFactory.INSTANCE;
-            //cacheSetFactory = SetRepository.SortedArraySetFactory.INSTANCE;
+            //cacheSetFactory = Util.SortedArraySet.FACTORY;
             cacheSetFactory = NodeSet.FACTORY;
         }
         //inclusionEdgeSetFactory = SetRepository.LinkedHashSetFactory.INSTANCE;
+        //inclusionEdgeSetFactory = Util.SortedArraySet.FACTORY;
         inclusionEdgeSetFactory = NodeSet.FACTORY;
         this.initializeStatics(addDefaults);
     }
