@@ -87,6 +87,8 @@ public class AndersenPointerAnalysis {
             System.out.println("Result of Andersen pointer analysis:");
             System.out.println(computeStats(INSTANCE.callSiteToTargets));
             
+            calcRTA();
+            
             System.out.println("Compare to CHA/RTA:");
             HashMap cha_rta_callSiteToTargets = new HashMap();
             for (Iterator i=INSTANCE.callSiteToTargets.entrySet().iterator(); i.hasNext(); ) {
@@ -97,6 +99,80 @@ public class AndersenPointerAnalysis {
             }
             System.out.println(computeStats(cha_rta_callSiteToTargets));
         }
+        public static void calcRTA() {
+            Set/*jq_Type*/ s = Bootstrap.PrimordialClassLoader.loader.getAllTypes();
+            for (;;) {
+                int size = s.size();
+                Iterator i = s.iterator();
+                while (i.hasNext()) {
+                    jq_Type t = (jq_Type)i.next();
+                    t.load(); t.verify(); t.prepare();
+                }
+                s = Bootstrap.PrimordialClassLoader.loader.getAllTypes();
+                if (s.size() == size) break;
+            }
+            System.out.println("Number of RTA classes: "+s.size());
+            int nMethods = 0;
+            Iterator i = s.iterator();
+            HashSet methods = new HashSet();
+            while (i.hasNext()) {
+                jq_Type t = (jq_Type)i.next();
+                if (t instanceof jq_Class) {
+                    jq_Class k = (jq_Class)t;
+                    jq_Method[] ms = k.getDeclaredInstanceMethods();
+                    for (int j=0; j<ms.length; ++j) {
+                        methods.add(ms[j]);
+                    }
+                    ms = k.getDeclaredStaticMethods();
+                    for (int j=0; j<ms.length; ++j) {
+                        methods.add(ms[j]);
+                    }
+                }
+            }
+            System.out.println("Number of RTA methods: "+methods.size());
+            int nInvokes = 0, nTargets = 0; long nBytecodes = 0;
+            Iterator k = methods.iterator();
+            while (k.hasNext()) {
+                jq_Method m = (jq_Method)k.next();
+                if (m.getBytecode() == null) continue;
+                nBytecodes += m.getBytecode().length;
+                InvokeCounter ic = new InvokeCounter(m);
+                ic.forwardTraversal();
+                nInvokes += ic.invokeCount; nTargets += ic.targetCount;
+            }
+            System.out.println("Number of RTA invocations: "+nInvokes);
+            System.out.println("Number of RTA call graph edges: "+nTargets);
+            System.out.println("Number of RTA bytecodes: "+nBytecodes);
+        }
+        
+        static class InvokeCounter extends Compil3r.BytecodeAnalysis.BytecodeVisitor {
+            int invokeCount = 0; int targetCount = 0;
+            InvokeCounter(jq_Method m) { super(m); }
+            void visitInvoke(byte op, jq_Method f) {
+                invokeCount++;
+                CallTargets ct = CallTargets.getTargets(method.getDeclaringClass(), f, op, true);
+                targetCount += ct.size();
+            }
+            public void visitIINVOKE(byte op, jq_Method f) {
+                visitInvoke(op, f);
+            }
+            public void visitLINVOKE(byte op, jq_Method f) {
+                visitInvoke(op, f);
+            }
+            public void visitFINVOKE(byte op, jq_Method f) {
+                visitInvoke(op, f);
+            }
+            public void visitDINVOKE(byte op, jq_Method f) {
+                visitInvoke(op, f);
+            }
+            public void visitAINVOKE(byte op, jq_Method f) {
+                visitInvoke(op, f);
+            }
+            public void visitVINVOKE(byte op, jq_Method f) {
+                visitInvoke(op, f);
+            }
+        }
+        
         public static void doIt_output() {
             INSTANCE.iterate();
             System.out.println("Result of Andersen pointer analysis:");
