@@ -1,2 +1,2 @@
 all:
-	g++ -Xlinker --omagic -g *.cpp ../joeq/jq.obj -lpthread
+	g++ -g joeq.cpp native.cpp ../joeq/jq.obj -lpthread
