@@ -35,10 +35,6 @@ public class BDDInferenceRule extends InferenceRule {
     public BDDInferenceRule(BDDSolver solver, List/*<RuleTerm>*/ top, RuleTerm bottom) {
         super(top, bottom);
         this.solver = solver;
-        this.oldRelationValues = new BDD[top.size()];
-        for (int i = 0; i < oldRelationValues.length; ++i) {
-            oldRelationValues[i] = solver.bdd.zero();
-        }
         this.variableToBDDDomain = new HashMap();
         for (int i = 0; i < top.size(); ++i) {
             RuleTerm rt = (RuleTerm) top.get(i);
@@ -77,9 +73,19 @@ public class BDDInferenceRule extends InferenceRule {
         }
     }
     
+    void initializeOldRelationValues() {
+        this.oldRelationValues = new BDD[top.size()];
+        for (int i = 0; i < oldRelationValues.length; ++i) {
+            oldRelationValues[i] = solver.bdd.zero();
+        }
+    }
+    
     // non-incremental version.
     public boolean update() {
-        if (incrementalize) return updateIncremental();
+        if (incrementalize) {
+            if (oldRelationValues != null) return updateIncremental();
+            else initializeOldRelationValues();
+        }
         
         if (solver.TRACE) solver.out.println("Applying inference rule "+this);
         
@@ -124,6 +130,10 @@ public class BDDInferenceRule extends InferenceRule {
                     relationValues[i].free();
                     relationValues[i] = q;
                 }
+            }
+            if (relationValues[i].isZero()) {
+                if (solver.TRACE) solver.out.println("Relation "+r+" is now empty!  Stopping early.");
+                return false;
             }
         }
         
@@ -176,6 +186,10 @@ public class BDDInferenceRule extends InferenceRule {
         BDD topBdd = solver.bdd.one();
         for (int i = 1; i < relationValues.length; ++i) {
             topBdd.andWith(relationValues[i]);
+            if (topBdd.isZero()) {
+                if (solver.TRACE) solver.out.println("Result became empty!  Stopping early.");
+                return false;
+            }
         }
         
         if (solver.TRACE) {
@@ -214,7 +228,7 @@ public class BDDInferenceRule extends InferenceRule {
     
     // Incremental version.
     public boolean updateIncremental() {
-        if (solver.TRACE) solver.out.println("Applying inference rule "+this);
+        if (solver.TRACE) solver.out.println("Applying inference rule "+this+" (incremental)");
         
         BDD[] allRelationValues = new BDD[top.size()];
         BDD[] newRelationValues = new BDD[top.size()];
@@ -258,6 +272,10 @@ public class BDDInferenceRule extends InferenceRule {
                     allRelationValues[i].free();
                     allRelationValues[i] = q;
                 }
+            }
+            if (allRelationValues[i].isZero()) {
+                if (solver.TRACE) solver.out.println("Relation "+r+" is now empty!  Stopping early.");
+                return false;
             }
         }
         
@@ -313,12 +331,21 @@ public class BDDInferenceRule extends InferenceRule {
             quantify.andWith(d.set());
         }
         BDD[] results = new BDD[newRelationValues.length];
+    outer:
         for (int i = 0; i < newRelationValues.length; ++i) {
+            if (newRelationValues[i].isZero()) {
+                if (solver.TRACE) solver.out.println("Nothing new for "+(RuleTerm)top.get(i)+", skipping.");
+                continue;
+            }
             BDD topBdd = solver.bdd.one();
             for (int j = 0; j < allRelationValues.length; ++j) {
                 if (i == j) continue;
                 if (solver.TRACE) solver.out.print(" & " + ((RuleTerm)top.get(j)).relation);
                 topBdd.andWith(allRelationValues[j].id());
+                if (topBdd.isZero()) {
+                    if (solver.TRACE) solver.out.println("Relation "+r+" became empty, skipping.");
+                    continue outer;
+                }
             }
             if (solver.TRACE) solver.out.print(" x " + ((RuleTerm)top.get(i)).relation+"'");
             if (solver.TRACE) solver.out.print(" (relprod nodes: "+topBdd.nodeCount()+"x"+newRelationValues[i].nodeCount()+"x"+quantify.nodeCount());
