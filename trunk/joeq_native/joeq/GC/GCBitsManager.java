@@ -82,4 +82,8 @@ public class GCBitsManager {
             units.addAll(bits.diff());
         }
     }
+
+    public static HashSet getUnits() {
+        return units;
+    }
 }

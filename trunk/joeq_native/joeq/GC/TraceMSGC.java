@@ -24,6 +24,13 @@ public class TraceMSGC implements Runnable, GCVisitor {
     public void run() {
     }
 
+    public void visit(jq_RegisterState state) {
+        ArrayList validAddrs = new StackHeapWalker(state.getEsp(), state.getEbp()).getValidHeapAddrs();
+        for (int i = 0, size = validAddrs.size(); i < size; ++i) {
+            GCBitsManager.mark((HeapAddress) validAddrs.get(i));
+        }
+    }
+
     public void mark() {
         GCBitsManager.diff();
     }
@@ -32,12 +39,5 @@ public class TraceMSGC implements Runnable, GCVisitor {
     }
 
     public void compact() {
-    }
-
-    public void visit(jq_RegisterState state) {
-        ArrayList validAddrs = new StackHeapWalker(state.getEsp(), state.getEbp()).getValidHeapAddrs();
-        for (int i = 0, size = validAddrs.size(); i < size; ++i) {
-            GCBitsManager.mark((HeapAddress)validAddrs.get(i));
-        }
     }
 }
