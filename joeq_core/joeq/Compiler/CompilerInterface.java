@@ -12,4 +12,5 @@ import joeq.Class.jq_Method;
  */
 public interface CompilerInterface {
     jq_CompiledCode compile(jq_Method m);
+    jq_CompiledCode generate_compile_stub(jq_Method m);
 }

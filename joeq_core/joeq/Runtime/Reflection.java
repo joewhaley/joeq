@@ -10,7 +10,6 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.util.Set;
 
-import joeq.Bootstrap.ObjectTraverser;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Field;
@@ -429,7 +428,7 @@ public abstract class Reflection {
         }
 
         _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Runtime/Reflection;");
-        _obj_trav = _class.getOrCreateStaticField("obj_trav", "Ljoeq/Bootstrap/ObjectTraverser;");
+        _obj_trav = _class.getOrCreateStaticField("obj_trav", "Ljoeq/Runtime/ObjectTraverser;");
         _delegate.initialize();
     }
 

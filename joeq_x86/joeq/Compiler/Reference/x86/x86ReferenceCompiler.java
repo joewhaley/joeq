@@ -62,6 +62,9 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements x86Constant
         public jq_CompiledCode compile(jq_Method m) {
             return new x86ReferenceCompiler(m).compile();
         }
+        public jq_CompiledCode generate_compile_stub(jq_Method m) {
+            return x86ReferenceCompiler.generate_compile_stub(m);
+        }
     }
 
     public static /*final*/ boolean ALWAYS_TRACE = false;

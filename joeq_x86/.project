@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>joeq_test</name>
+	<name>joeq_x86</name>
 	<comment></comment>
 	<projects>
 		<project>joeq_core</project>
+		<project>joeq_native</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

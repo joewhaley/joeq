@@ -9,7 +9,7 @@ import joeq.ClassLib.ClassLibInterface;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_InstanceField;
 import joeq.Class.jq_StaticField;
-import joeq.Bootstrap.ObjectTraverser;
+import joeq.Runtime.ObjectTraverser;
 import joeq.Util.Assert;
 
 /*

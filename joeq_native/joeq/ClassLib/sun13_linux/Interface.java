@@ -3,7 +3,7 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.ClassLib.sun13_linux;
 
-import joeq.Bootstrap.ObjectTraverser;
+import joeq.Runtime.ObjectTraverser;
 import joeq.Class.PrimordialClassLoader;
 import joeq.ClassLib.ClassLibInterface;
 import joeq.Class.jq_Class;
