@@ -60,6 +60,49 @@ public class Quad {
         return new Quad(id_number, operator, op1, op2, op3, op4);
     }
     
+    public UnmodifiableList.Operand getAllOperands() {
+        int k = 0;
+        if (operand1 != null) k += 1;
+        if (operand2 != null) k += 2;
+        if (operand3 != null) k += 4;
+        if (operand4 != null) k += 8;
+        switch (k) {
+            case 0 :
+                return UnmodifiableList.Operand.EMPTY;
+            case 1 :
+                return new UnmodifiableList.Operand(operand1);
+            case 2 :
+                return new UnmodifiableList.Operand(operand2);
+            case 3 :
+                return new UnmodifiableList.Operand(operand1, operand2);
+            case 4 :
+                return new UnmodifiableList.Operand(operand3);
+            case 5 :
+                return new UnmodifiableList.Operand(operand1, operand3);
+            case 6 :
+                return new UnmodifiableList.Operand(operand2, operand3);
+            case 7 :
+                return new UnmodifiableList.Operand(operand1, operand2, operand3);
+            case 8 :
+                return new UnmodifiableList.Operand(operand4);
+            case 9 :
+                return new UnmodifiableList.Operand(operand1, operand4);
+            case 10 :
+                return new UnmodifiableList.Operand(operand2, operand4);
+            case 11 :
+                return new UnmodifiableList.Operand(operand1, operand2, operand4);
+            case 12 :
+                return new UnmodifiableList.Operand(operand3, operand4);
+            case 13 :
+                return new UnmodifiableList.Operand(operand1, operand3, operand4);
+            case 14 :
+                return new UnmodifiableList.Operand(operand2, operand3, operand4);
+            case 15 :
+            default:
+                return new UnmodifiableList.Operand(operand1, operand2, operand3, operand4);
+        }
+    }
+    
     /** Return the operator for this quad. */
     public Operator getOperator() { return operator; }
     
