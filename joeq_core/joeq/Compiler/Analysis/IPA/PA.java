@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -31,6 +32,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Properties;
 
 import org.sf.javabdd.BDD;
 import org.sf.javabdd.BDDBitVector;
@@ -86,6 +88,9 @@ import Util.Graphs.SCCPathNumbering.Selector;
 public class PA {
 
     public static final boolean VerifyAssertions = false;
+
+    static boolean WRITE_PARESULTS_BATCHFILE = !System.getProperty("pa.writeparesults", "yes").equals("no");
+
     boolean TRACE = !System.getProperty("pa.trace", "no").equals("no");
     boolean TRACE_SOLVER = !System.getProperty("pa.tracesolver", "no").equals("no");
     boolean TRACE_BIND = !System.getProperty("pa.tracebind", "no").equals("no");
@@ -1723,6 +1728,31 @@ public class PA {
             }
         }
         dis.run(dis.cg, rootMethods);
+
+        if (WRITE_PARESULTS_BATCHFILE)
+            writePAResultsBatchFile("runparesults");
+    }
+
+    /**
+     * write a file that when executed by shell runs PAResults in proper environment.
+     */
+    static void writePAResultsBatchFile(String batchfilename) throws IOException {
+        PrintWriter w = new PrintWriter(new FileOutputStream(batchfilename));
+        Properties p = System.getProperties();
+        w.print(p.getProperty("java.home") + File.separatorChar + "bin" + File.separatorChar + "java");
+        w.print(" -Xmx512M");
+        w.print(" -classpath " + System.getProperty("java.class.path"));
+        w.print(" -Djava.library.path=" + System.getProperty("java.library.path"));
+        for (Iterator i = p.entrySet().iterator(); i.hasNext(); ) {
+            Map.Entry e = (Map.Entry)i.next();
+            String key = (String)e.getKey();
+            String val = (String)e.getValue();
+            if (key.startsWith("ms.") || key.startsWith("pa.")) {
+                w.print(" -D" + key + "=" + val);
+            }
+        }
+        w.println(" Compil3r.Analysis.IPA.PAResults");
+        w.close();
     }
     
     public void printSizes() {
