@@ -2381,17 +2381,13 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
                 throw new InternalError();
         }
     }
-    boolean isAddressClass(jq_Class c) {
-    	return c == Address._class || c == HeapAddress._class ||
-	    c == CodeAddress._class || c == StackAddress._class;
-    }
     public void visitIINVOKE(byte op, jq_Method f) {
         super.visitIINVOKE(op, f);
         if (f.getDeclaringClass() == Unsafe._class) {
             gen_unsafe(f);
             return;
         }
-        if (isAddressClass(f.getDeclaringClass())) {
+        if (f.getDeclaringClass().isAddressType()) {
             genAddress(f);
             return;
         }
@@ -2404,7 +2400,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             gen_unsafe(f);
             return;
         }
-        if (isAddressClass(f.getDeclaringClass())) {
+        if (f.getDeclaringClass().isAddressType()) {
             genAddress(f);
             return;
         }
@@ -2418,7 +2414,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             gen_unsafe(f);
             return;
         }
-        if (isAddressClass(f.getDeclaringClass())) {
+        if (f.getDeclaringClass().isAddressType()) {
             genAddress(f);
             return;
         }
@@ -2431,7 +2427,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             gen_unsafe(f);
             return;
         }
-        if (isAddressClass(f.getDeclaringClass())) {
+        if (f.getDeclaringClass().isAddressType()) {
             genAddress(f);
             return;
         }
@@ -2445,7 +2441,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             gen_unsafe(f);
             return;
         }
-        if (isAddressClass(f.getDeclaringClass())) {
+        if (f.getDeclaringClass().isAddressType()) {
             genAddress(f);
             return;
         }
@@ -2458,7 +2454,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             gen_unsafe(f);
             return;
         }
-        if (isAddressClass(f.getDeclaringClass())) {
+        if (f.getDeclaringClass().isAddressType()) {
             genAddress(f);
             return;
         }
