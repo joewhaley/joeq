@@ -351,7 +351,7 @@ public abstract class Bootstrapper implements ObjectLayout {
             jq.assert(t.isSFInitialized());
             
             if (t == Unsafe._class) continue;
-            System.out.println("Compiling type: "+t.getName());
+            //System.out.println("Compiling type: "+t.getName());
             t.cls_initialize();
             objmap.getOrAllocateObject(t);
         }
