@@ -25,7 +25,8 @@ public final class Interface extends ClassLib.ClassLibInterface {
     public void useJoeqClasslib(boolean b) { USE_JOEQ_CLASSLIB = b; }
     
     public java.lang.String getImplementationClassDesc(UTF.Utf8 desc) {
-        if (USE_JOEQ_CLASSLIB && desc.toString().startsWith("Ljava/")) {
+        if (USE_JOEQ_CLASSLIB && desc.toString().startsWith("Ljava/") ||
+	                         desc.toString().startsWith("Lcom/ibm/jvm/")) {
             return "LClassLib/ibm13_linux/"+desc.toString().substring(1);
         }
         return null;
