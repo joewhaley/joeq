@@ -11,6 +11,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.math.BigInteger;
+import java.util.AbstractSet;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -37,10 +38,10 @@ import Compil3r.Quad.CallGraph;
 import Compil3r.Quad.CodeCache;
 import Compil3r.Quad.LoadedCallGraph;
 import Main.HostedVM;
-import Run_Time.TypeCheck;
 import Util.Assert;
 import Util.Strings;
 import Util.Collections.HashWorklist;
+import Util.Collections.UnmodifiableIterator;
 import Util.Graphs.PathNumbering.Path;
 
 /**
@@ -732,6 +733,24 @@ public class PAResults {
         return result;
     }
     
+    /** Given a starting method and a context (MxV1c), calculate the transitive mod
+     * set (H1xH1cxF). */
+    public BDD getTransitiveModSet(BDD method_plus_context0) {
+        BDD reachableVars = getReachableVars(method_plus_context0); // V1xV1c
+        BDD stores = r.S.relprod(reachableVars, r.V2set); // V1xV1c x V1xV1cxFxV2xV2c = V1xV1cxF
+        BDD result = stores.relprod(r.vP, r.V1set); // V1xV1cxF x V1xV1cxH1xH1c = H1xH1cxF
+        return result;
+    }
+    
+    /** Given a starting method and a context (MxV1c), calculate the transitive ref
+     * set (H1xH1cxF). */
+    public BDD getTransitiveRefSet(BDD method_plus_context0) {
+        BDD reachableVars = getReachableVars(method_plus_context0); // V1xV1c
+        BDD loads = r.L.relprod(reachableVars, r.V2set); // V1xV1c x V1xV1cxFxV2xV2c = V1xV1cxF
+        BDD result = loads.relprod(r.vP, r.V1set); // V1xV1cxF x V1xV1cxH1xH1c = H1xH1cxF
+        return result;
+    }
+    
     /** Return the set of thread-local objects (H1xH1c).
      */
     public BDD getThreadLocalObjects() {
@@ -1075,4 +1094,87 @@ public class PAResults {
         double result = b.satCount(r.H1set);
         return (int) result;
     }
+    
+    public Set mod(ProgramLocation invoke) {
+        BDD i = r.I.ithVar(r.Imap.get(invoke));
+        BDD m_c = r.IEcs.relprod(i, r.V2c.set().and(r.Iset));
+        BDD s = getTransitiveModSet(m_c);
+        BDD q = s.exist(r.H1c.set());
+        return new HeapLocationSet(q);
+    }
+    
+    public Set ref(ProgramLocation invoke) {
+        BDD i = r.I.ithVar(r.Imap.get(invoke));
+        BDD m_c = r.IEcs.relprod(i, r.V2c.set().and(r.Iset));
+        BDD s = getTransitiveRefSet(m_c);
+        BDD q = s.exist(r.H1c.set());
+        return new HeapLocationSet(q);
+    }
+    
+    public class HeapLocationSet extends AbstractSet {
+
+        BDD heapLocations; // H1 x F
+        
+        HeapLocationSet(BDD b) {
+            this.heapLocations = b;
+        }
+        
+        /* (non-Javadoc)
+         * @see java.util.AbstractCollection#size()
+         */
+        public int size() {
+            return (int) heapLocations.satCount(r.H1.set().and(r.Fset));
+        }
+
+        /* (non-Javadoc)
+         * @see java.util.AbstractCollection#iterator()
+         */
+        public Iterator iterator() {
+            final Iterator i = heapLocations.iterator(r.H1.set().and(r.Fset));
+            return new UnmodifiableIterator() {
+                public boolean hasNext() {
+                    return i.hasNext();
+                }
+                public Object next() {
+                    BDD b = (BDD) i.next();
+                    int h = (int) b.scanVar(r.H1);
+                    int f = (int) b.scanVar(r.F);
+                    Node hn = (Node) r.Hmap.get(h);
+                    jq_Field fn = (jq_Field) r.Fmap.get(f);
+                    return new HeapLocation(hn, fn);
+                }
+            };
+        }
+        
+    }
+    
+    public static class HeapLocation implements SSALocation {
+        Node n;      // allocation site
+        jq_Field f;  // field
+        
+        HeapLocation(Node n, jq_Field f) {
+            this.n = n;
+            this.f = f;
+        }
+        
+        public boolean equals(HeapLocation o) {
+            return n.equals(o.n) && f == o.f;
+        }
+        
+        public boolean equals(Object o) {
+            return equals((HeapLocation) o);
+        }
+        
+        public int hashCode() {
+            int x = n.hashCode();
+            if (f != null) x ^= f.hashCode();
+            return x;
+        }
+        
+        public String toString() {
+            String fname = f == null ? "[]" : "."+f.getName().toString();
+            return n.toString_short()+fname;
+        }
+    }
+    
 }
