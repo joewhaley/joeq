@@ -137,6 +137,7 @@ public class PA {
     
     int bddnodes = Integer.parseInt(System.getProperty("bddnodes", "2500000"));
     int bddcache = Integer.parseInt(System.getProperty("bddcache", "200000"));
+    int bddminfree = Integer.parseInt(System.getProperty("bddminfree", "20"));
     static String resultsFileName = System.getProperty("pa.results", "pa");
     static String callgraphFileName = System.getProperty("pa.callgraph", "callgraph");
     static String initialCallgraphFileName = System.getProperty("pa.icallgraph", callgraphFileName);
@@ -243,6 +244,7 @@ public class PA {
         else
             bdd = BDDFactory.init(bddfactory, bddnodes, bddcache);
         bdd.setMaxIncrease(bddnodes/4);
+        bdd.setMinFreeNodes(bddminfree);
         
         V1 = makeDomain("V1", V_BITS);
         V2 = makeDomain("V2", V_BITS);
