@@ -45,7 +45,7 @@ public interface Operand {
         RegisterOperand(Register reg, jq_Type type, int flags) {
             this.register = reg; this.type = type; this.flags = flags;
         }
-        Register getRegister() { return register; }
+        public Register getRegister() { return register; }
         jq_Type getType() { return type; }
         int getFlags() { return flags; }
         void setFlags(int f) { flags = f; }
