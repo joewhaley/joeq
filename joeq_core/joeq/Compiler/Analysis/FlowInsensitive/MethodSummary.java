@@ -2958,7 +2958,8 @@ public class MethodSummary {
             sb.append(fieldName());
             Iterator i=locs.iterator();
             if (i.hasNext()) {
-                int id = ((ProgramLocation)i.next()).getID();
+                ProgramLocation nloc = (ProgramLocation)i.next();
+                int id = nloc == null ? -1 : nloc.getID();
                 if (!i.hasNext()) {
                     sb.append(" loc ");
                     sb.append(id);
@@ -2967,7 +2968,9 @@ public class MethodSummary {
                     sb.append(id);
                     while (i.hasNext()) {
                         sb.append(',');
-                        sb.append(((ProgramLocation)i.next()).getID());
+                        nloc = (ProgramLocation)i.next();
+                        id = nloc == null ? -1 : nloc.getID();
+                        sb.append(id);
                     }
                     sb.append('}');
                 }
@@ -4881,8 +4884,9 @@ outer:
         if (args.length > 1) {
             name = args[1];
 
-            if (name.equals("#clone")) {
-                MethodSummary ms = fakeCloneMethodSummary((jq_FakeInstanceMethod)jq_FakeInstanceMethod.fakeCloneMethod(c));
+            if (name.equals(fakeCloneName)) {
+                MethodSummary ms = fakeCloneMethodSummary((jq_FakeInstanceMethod)jq_FakeInstanceMethod.fakeMethod(c, 
+                                                                                fakeCloneName, "()"+c.getName()));
                 if (DUMP_DOTGRAPH) ms.dotGraph(new DataOutputStream(System.out));
                 else System.out.println(ms);
                 return;
@@ -4931,7 +4935,7 @@ outer:
         MethodSummary ms = (MethodSummary)fakeCache.get(method);
         if (ms != null)
             return ms;
-        if (method.getName().toString().equals("clone"))
+        if (method.getName().toString().equals(fakeCloneName))
             ms = fakeCloneMethodSummary(method);
         else
             throw new Error("don't know how to fake " + method);
@@ -4942,6 +4946,7 @@ outer:
     /**
      * fake a method summary that simulates the effect of the inherited default clone().
      */
+    public static String fakeCloneName = "fake$clone";
     public static MethodSummary fakeCloneMethodSummary(jq_FakeInstanceMethod method) {
         jq_Class clazz = method.getDeclaringClass();
         ParamNode []params = new ParamNode[] { new FakeParamNode(method, 0, clazz) };
