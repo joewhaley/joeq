@@ -52,7 +52,7 @@ public class ClasspathWalker {
                 String className = (String) classIter.next();
                 String canonicalClassName = canonicalizeClassName(className);
                 if (loaded.contains(canonicalClassName)){
-                    if(TRACE) System.err.println("Skipping " + className);
+                    //if(TRACE) System.err.println("Skipping " + className);
                     continue;
                 }
                 loaded.add(canonicalClassName);
