@@ -3,6 +3,7 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Quad;
 
+import java.awt.event.InvocationEvent;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -20,6 +21,7 @@ import joeq.Compiler.Analysis.IPA.ProgramLocation.QuadProgramLocation;
 import joeq.Compiler.BytecodeAnalysis.BytecodeVisitor;
 import joeq.Compiler.Quad.Operand.ConditionOperand;
 import joeq.Compiler.Quad.Operand.IConstOperand;
+import joeq.Compiler.Quad.Operand.MethodOperand;
 import joeq.Compiler.Quad.Operand.ParamListOperand;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.Operand.TargetOperand;
@@ -41,12 +43,13 @@ import jwutil.util.Assert;
 public class MethodInline implements ControlFlowGraphVisitor {
 
     public static final boolean TRACE = false;
-    public static final boolean TRACE_ORACLE = true;
-    public static final boolean TRACE_DECISIONS = true;
+    public static final boolean TRACE_ORACLE = false;
+    public static final boolean TRACE_DECISIONS = false;
     public static final java.io.PrintStream out = System.out;
 
     Oracle oracle;
     CallGraph cg;
+    private static MethodOperand fakeMethodOperand;
 
     public MethodInline(Oracle o) {
         this.oracle = o;
@@ -427,6 +430,17 @@ outer:
         // split the basic block containing the invoke, and start splicing
         // in the callee's control flow graph.
         BasicBlock successor_bb = caller.createBasicBlock(callee.exit().getNumberOfPredecessors() + 1, bb.getNumberOfSuccessors(), bb.size() - invokeLocation, bb.getExceptionHandlers());
+        
+        Quad fakeCallQuad = q.copy(caller.getNewQuadID());
+        Assert._assert(Invoke.getParamList(q).length() == Invoke.getParamList(fakeCallQuad).length());
+        MethodOperand fakeOperand = getFakeMethodOperand(Invoke.getMethod(q).getMethod());
+        if(fakeOperand != null && true){
+            Invoke.setMethod(fakeCallQuad, fakeOperand);
+//            Invoke.set
+            successor_bb.appendQuad(fakeCallQuad);
+        }
+        successor_bb.appendQuad(fakeCallQuad);
+        
         int bb_size = bb.size();
         for (int i=invokeLocation+1; i<bb_size; ++i) {
             successor_bb.appendQuad(bb.removeQuad(invokeLocation+1));
@@ -546,5 +560,34 @@ outer:
         if (TRACE) out.println("Original code:");
         if (TRACE) out.println(CodeCache.getCode(callee.getMethod()).fullDump());
         if (TRACE) out.println(CodeCache.getCode(callee.getMethod()).getRegisterFactory().fullDump());
+    }
+    
+    /**
+     * Get replacement method for @param originalMethod.
+     * This method caches the result it returns.
+     * */
+    private static MethodOperand getFakeMethodOperand(jq_Method originalMethod) {
+        if(fakeMethodOperand == null){
+            jq_Method newMethod = null;
+            jq_Class fakeString = (jq_Class)jq_Type.parseType("MyMockLib.MyString");
+            jq_Class fakeStringBuffer = (jq_Class)jq_Type.parseType("MyMockLib.MyStringBuffer");
+            fakeString.prepare(); fakeStringBuffer.prepare();
+            
+            if(originalMethod.getDeclaringClass().getName().equals("java.lang.String")){            
+                newMethod = fakeString.getDeclaredMethod(originalMethod.getName().toString());
+                Assert._assert(newMethod != null, "Missing method " + originalMethod.getName() + " in " + fakeString);
+            }else
+            if(originalMethod.getDeclaringClass().getName().equals("java.lang.StringBuffer")){            
+                newMethod = fakeStringBuffer.getDeclaredMethod(originalMethod.getName().toString());
+                Assert._assert(newMethod != null, "Missing method " + originalMethod.getName() + " in " + fakeStringBuffer);
+            }else{
+                System.err.println("Unexpected method " + originalMethod);
+                return null;
+            }
+            System.out.println("Replaced " + originalMethod + " with " + newMethod);
+            fakeMethodOperand = new MethodOperand(newMethod);
+        }
+        
+        return fakeMethodOperand;
     }
 }
