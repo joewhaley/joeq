@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import Bootstrap.BootstrapCodeAddress;
 import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_BytecodeMap;
 import Clazz.jq_Class;
@@ -209,8 +208,8 @@ public abstract class CodeAllocator {
      */
     private static CodeAddress lowAddress, highAddress;
     static {
-        lowAddress = new BootstrapCodeAddress(Integer.MAX_VALUE);
-        highAddress = new BootstrapCodeAddress(0);
+        //lowAddress = (CodeAddress) CodeAddress.getNull().offset(0x7FFFFFFF);
+        //highAddress = CodeAddress.getNull();
         compiledMethods = new TreeMap();
         jq_CompiledCode cc = new jq_CompiledCode(null, highAddress, 0, highAddress,
                                                  null, null, null, null, null);
@@ -225,9 +224,9 @@ public abstract class CodeAllocator {
      */
     public static void registerCode(jq_CompiledCode cc) {
         if (TRACE) System.out.println("Registering code: " + cc);
-        if (cc.getStart().difference(lowAddress) < 0)
+        if (lowAddress == null || cc.getStart().difference(lowAddress) < 0)
             lowAddress = cc.getStart();
-        if (highAddress.difference(cc.getStart().offset(cc.getLength())) < 0)
+        if (highAddress == null || highAddress.difference(cc.getStart().offset(cc.getLength())) < 0)
             highAddress = (CodeAddress)cc.getStart().offset(cc.getLength());
         compiledMethods.put(cc, cc);
     }
