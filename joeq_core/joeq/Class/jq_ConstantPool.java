@@ -210,6 +210,10 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
         constant_pool_tags[i] = CONSTANT_ResolvedClass;
     }
 
+    public final void set(char index, Object o) {
+        constant_pool[index] = o;
+    }
+
     public final int getCount() {
         return constant_pool.length;
     }

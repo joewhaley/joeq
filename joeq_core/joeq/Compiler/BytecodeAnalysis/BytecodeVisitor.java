@@ -15,6 +15,7 @@ import Clazz.jq_Type;
 import Clazz.jq_Array;
 import Clazz.jq_Class;
 import Clazz.jq_Primitive;
+import Clazz.jq_Member;
 import Clazz.jq_StaticField;
 import Clazz.jq_InstanceField;
 import Clazz.jq_Method;
@@ -46,6 +47,66 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
             if (i_start >= bcs.length) break;
             this.visitBytecode();
         }
+    }
+    
+    public jq_Method resolve(jq_Method m) {
+        jq_Method m2 = m.resolve();
+        if (m != m2) updateMemberReference(m2);
+        return m2;
+    }
+    
+    public jq_StaticField resolve(jq_StaticField m) {
+        jq_StaticField m2 = m.resolve();
+        if (m != m2) updateMemberReference(m2);
+        return m2;
+    }
+    
+    public jq_InstanceField resolve(jq_InstanceField m) {
+        jq_InstanceField m2 = m.resolve();
+        if (m != m2) updateMemberReference(m2);
+        return m2;
+    }
+    
+    public void updateMemberReference(jq_Member m) {
+        char index;
+        int i_size = i_end - i_start;
+        char op = (char)(bcs[i_start] & 0xff);
+        switch (i_size) {
+            case 1:
+                // ldc
+                jq.assert(op == 0x12);
+                --i_end; index = getUnsignedByte();
+                break;
+            case 2:
+                // ldc_w, ldc2_w
+                // getstatic, putstatic
+                // getfield, putfield
+                // invokevirtual, invokespecial, invokestatic
+                // new, anewarray
+                // checkcast, instanceof
+                jq.assert(op == 0x13 || op == 0x14 ||
+                          op == 0xb2 || op == 0xb3 ||
+                          op == 0xb4 || op == 0xb5 ||
+                          op == 0xb6 || op == 0xb7 || op == 0xb8 ||
+                          op == 0xbb || op == 0xbd ||
+                          op == 0xc0 || op == 0xc1);
+                i_end-=2; index = getUnsignedWord();
+                break;
+            case 3:
+                // multianewarray
+                jq.assert(op == 0xc5);
+                i_end-=3; index = getUnsignedWord(); getUnsignedByte();
+                break;
+            case 4:
+                // invokeinterface
+                jq.assert(op == 0xb9);
+                i_end-=4; index = getUnsignedWord(); getUnsignedByte(); getSignedByte();
+                break;
+            default:
+                jq.UNREACHABLE(jq.hex(op));
+                return;
+        }
+        clazz.getCP().set(index, m);
     }
     
     public void visitBytecode() throws VerifyError {
