@@ -306,8 +306,10 @@ public class PAResults implements PointerAnalysisResults {
 				if (r.vCnumbering instanceof SCCPathNumbering) {
 				    SCComponent scc = ((SCCPathNumbering)r.vCnumbering).getSCC(m);
 				    Range range = ((SCCPathNumbering)r.vCnumbering).getRange(m);
-				    System.out.println("is located in SCC #" + System.identityHashCode(scc) 
-					+ " of size " + scc.size() + "; context range is " + range);
+				    if (scc != null) {
+					System.out.println("is located in SCC #" + System.identityHashCode(scc) 
+					    + " of size " + scc.size() + "; context range is " + range);
+				    } 
 				}
                                 results.add(r.M.ithVar(k));
                             } else {
