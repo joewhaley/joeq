@@ -461,7 +461,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
             throw new ClassFormatError();
         char cpi = jq.twoBytesToChar(attrib, 0);
         if (getCPtag(cpi) != CONSTANT_Utf8)
-            throw new ClassFormatError();
+            throw new ClassFormatError("cp tag "+(int)cpi+" is "+(int)getCPtag(cpi));
         return getCPasUtf8(cpi);
     }
     public final boolean isSynthetic() {
@@ -986,6 +986,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                     }
                     this.remakeAttributes(cpr);
                     this.const_pool = new_cp;
+                    getSourceFile(); // check for bug.
                     if (TRACE) SystemInterface.debugmsg("Finished rebuilding constant pool.");
                 }
                 
@@ -1414,6 +1415,8 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         }
         this.remakeAttributes(cpr);
         this.const_pool = new_cp;
+        getSourceFile(); // check for bug.
+        if (TRACE) SystemInterface.debugmsg("Finished rebuilding constant pool.");
         that.super_class.removeSubclass(that);
         for (int i=0; i<that.declared_interfaces.length; ++i) {
             jq_Class di = that.declared_interfaces[i];
