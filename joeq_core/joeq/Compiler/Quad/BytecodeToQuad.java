@@ -1453,6 +1453,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
     
     boolean performBoundsCheck(Operand ref, Operand index) {
         Quad q = BoundsCheck.create(BoundsCheck.BOUNDS_CHECK.INSTANCE, ref.copy(), index.copy(), getCurrentGuard());
+        appendQuad(q);
         mergeStateWithArrayBoundsExHandler(false);
         return false;
     }
