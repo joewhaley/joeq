@@ -199,7 +199,7 @@ public abstract class Array {
     }
     private static Object newArray(Class componentType, int length)
     throws NegativeArraySizeException {
-        jq_Type t = ClassLibInterface.i.getJQType(componentType);
+        jq_Type t = ClassLibInterface.DEFAULT.getJQType(componentType);
         if (t == jq_Primitive.VOID)
             throw new IllegalArgumentException("cannot create a void array");
         jq_Array a = t.getArrayTypeForElementType();
@@ -208,7 +208,7 @@ public abstract class Array {
     }
     private static Object multiNewArray(Class componentType, int[] dimensions)
     throws IllegalArgumentException, NegativeArraySizeException {
-        jq_Type a = ClassLibInterface.i.getJQType(componentType);
+        jq_Type a = ClassLibInterface.DEFAULT.getJQType(componentType);
         if (a == jq_Primitive.VOID)
             throw new IllegalArgumentException("cannot create a void array");
         if (dimensions.length == 0)

@@ -215,7 +215,7 @@ public class ReflectiveInterpreter extends BytecodeInterpreter {
     public static class ReflectiveVMInterface extends BytecodeInterpreter.VMInterface {
         ObjectTraverser ot;
         ReflectiveVMInterface() {
-            ot = new ObjectTraverser(new HashSet(), new HashSet());
+            ot = new ObjectTraverser();
         }
         public static final ReflectiveVMInterface INSTANCE = new ReflectiveVMInterface();
         public void putField(Object o, jq_Field f, Object v) {

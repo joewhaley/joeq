@@ -15,10 +15,12 @@ import Assembler.x86.x86Constants;
 import Bootstrap.PrimordialClassLoader;
 import ClassLib.ClassLibInterface;
 import Clazz.jq_Class;
+import Clazz.jq_InstanceField;
 import Clazz.jq_InstanceMethod;
 import Clazz.jq_StaticField;
 import Clazz.jq_StaticMethod;
 import Main.jq;
+import Run_Time.Reflection;
 import Run_Time.StackWalker;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
@@ -134,7 +136,8 @@ public class jq_NativeThread implements x86Constants {
         return currentThread;
     }
     
-    /** Create a new jq_NativeThread (only called from initNativeThreads()) */
+    /** Create a new jq_NativeThread (only called from initNativeThreads(),
+     *  and during bootstrap initialization of initial_native_thread field) */
     private jq_NativeThread(int i) {
         readyQueue = new jq_ThreadQueue();
         idleQueue = new jq_ThreadQueue();
@@ -143,7 +146,7 @@ public class jq_NativeThread implements x86Constants {
         myCodeAllocator = new RuntimeCodeAllocator();
         index = i;
         Thread t = new Thread("_scheduler_"+i);
-        currentThread = schedulerThread = ClassLibInterface.i.getJQThread(t);
+        currentThread = schedulerThread = ClassLibInterface.DEFAULT.getJQThread(t);
         schedulerThread.disableThreadSwitch(); // don't preempt while in the scheduler
         schedulerThread.setNativeThread(this);
     }
@@ -417,7 +420,7 @@ public class jq_NativeThread implements x86Constants {
     public static void initBreakThread() {
         break_nthread = new jq_NativeThread(-1);
         Thread t = new Thread("_break_");
-        break_jthread = ClassLibInterface.i.getJQThread(t);
+        break_jthread = ClassLibInterface.DEFAULT.getJQThread(t);
         break_jthread.disableThreadSwitch();
         break_jthread.setNativeThread(break_nthread);
         if (TRACE) SystemInterface.debugmsg("Break thread initialized");

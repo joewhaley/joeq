@@ -38,14 +38,14 @@ public class jq_StaticMethod extends jq_Method {
         i = nd.getDesc().getParamDescriptors();
         for (int j=0; j<num; ++j) {
             Utf8 pd = (Utf8)i.nextUtf8();
-            param_types[j] = ClassLibInterface.i.getOrCreateType(clazz.getClassLoader(), pd);
+            param_types[j] = PrimordialClassLoader.getOrCreateType(clazz.getClassLoader(), pd);
             ++words;
             if ((param_types[j] == jq_Primitive.LONG) ||
                 (param_types[j] == jq_Primitive.DOUBLE)) ++words;
         }
         param_words = words;
         Utf8 rd = i.getReturnDescriptor();
-        return_type = ClassLibInterface.i.getOrCreateType(clazz.getClassLoader(), rd);
+        return_type = PrimordialClassLoader.getOrCreateType(clazz.getClassLoader(), rd);
     }
     
     public final boolean needsDynamicLink(jq_Method method) {

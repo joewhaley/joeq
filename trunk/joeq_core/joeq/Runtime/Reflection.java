@@ -50,7 +50,7 @@ public abstract class Reflection {
     
     // Map between our jq_Type objects and JDK Class objects
     public static final jq_Type getJQType(Class c) {
-        if (!jq.Bootstrapping) return ClassLibInterface.i.getJQType(c);
+        if (!jq.Bootstrapping) return ClassLibInterface.DEFAULT.getJQType(c);
         if (c.isPrimitive()) {
             if (c == Byte.TYPE) return jq_Primitive.BYTE;
             if (c == Character.TYPE) return jq_Primitive.CHAR;
@@ -64,8 +64,6 @@ public abstract class Reflection {
             jq.UNREACHABLE(c.toString());
             return null;
         }
-        //if (c == org.jos.java.util.zip.ZipFile.class)
-        //    return PrimordialClassLoader.loader.getOrCreateType("Ljava/util/zip/ZipFile;");
         String className = c.getName().replace('.','/');
         if (!className.startsWith("[")) className = "L"+className+";";
         className = ClassLib.ClassLibInterface.convertClassLibDesc(className);
@@ -104,7 +102,7 @@ public abstract class Reflection {
     
     // Map between our jq_Member objects and JDK Member objects
     public static final jq_Field getJQMember(Field f) {
-        if (!jq.Bootstrapping) return ClassLibInterface.i.getJQField(f);
+        if (!jq.Bootstrapping) return ClassLibInterface.DEFAULT.getJQField(f);
         jq_Class c = (jq_Class)getJQType(f.getDeclaringClass());
         jq_NameAndDesc nd = new jq_NameAndDesc(Utf8.get(f.getName()), getJQType(f.getType()).getDesc());
         nd = ClassLib.ClassLibInterface.convertClassLibNameAndDesc(c, nd);
@@ -119,7 +117,7 @@ public abstract class Reflection {
         return m;
     }
     public static final jq_Method getJQMember(Method f) {
-        if (!jq.Bootstrapping) return ClassLibInterface.i.getJQMethod(f);
+        if (!jq.Bootstrapping) return ClassLibInterface.DEFAULT.getJQMethod(f);
         jq_Class c = (jq_Class)getJQType(f.getDeclaringClass());
         StringBuffer desc = new StringBuffer();
         desc.append('(');
@@ -142,7 +140,7 @@ public abstract class Reflection {
         return m;
     }
     public static final jq_Initializer getJQMember(Constructor f) {
-        if (!jq.Bootstrapping) return ClassLibInterface.i.getJQInitializer(f);
+        if (!jq.Bootstrapping) return ClassLibInterface.DEFAULT.getJQInitializer(f);
         jq_Class c = (jq_Class)getJQType(f.getDeclaringClass());
         StringBuffer desc = new StringBuffer();
         desc.append('(');

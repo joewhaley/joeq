@@ -17,6 +17,7 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
+import Bootstrap.PrimordialClassLoader;
 import ClassLib.ClassLibInterface;
 import Compil3r.BytecodeAnalysis.Bytecodes;
 import Main.jq;
@@ -210,7 +211,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
         if (!classname.isDescriptor(TC_ARRAY)) {
             classname = classname.getAsClassDescriptor();
         }
-        constant_pool[i] = ClassLibInterface.i.getOrCreateType(cl, classname);
+        constant_pool[i] = PrimordialClassLoader.getOrCreateType(cl, classname);
         constant_pool_tags[i] = CONSTANT_ResolvedClass;
     }
 

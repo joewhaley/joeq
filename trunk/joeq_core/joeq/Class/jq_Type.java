@@ -25,7 +25,7 @@ public abstract class jq_Type {
         this.desc = desc;
         Class c = null;
         if (!jq.Bootstrapping)
-            c = ClassLibInterface.i.createNewClass(this);
+            c = ClassLibInterface.DEFAULT.createNewClass(this);
         this.class_object = c;
     }
     
@@ -41,7 +41,7 @@ public abstract class jq_Type {
     public abstract ClassLoader getClassLoader();
     public abstract int getReferenceSize();
     public final jq_Array getArrayTypeForElementType() {
-        return (jq_Array)ClassLibInterface.i.getOrCreateType(getClassLoader(), desc.getAsArrayDescriptor());
+        return (jq_Array)PrimordialClassLoader.getOrCreateType(getClassLoader(), desc.getAsArrayDescriptor());
     }
     public boolean needsDynamicLink(jq_Method method) { return false; }
     public final Class getJavaLangClassObject() {

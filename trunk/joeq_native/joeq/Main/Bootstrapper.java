@@ -69,9 +69,9 @@ public abstract class Bootstrapper implements ObjectLayout {
         // initialize list of methods to invoke on joeq startup
         jq.on_vm_startup = new LinkedList();
         
-        ClassLibInterface.i.useJoeqClasslib(true);
+        ClassLibInterface.useJoeqClasslib(true);
         
-        if (ClassLibInterface.i.getClass().toString().indexOf("win32") != -1) {
+        if (ClassLibInterface.DEFAULT.getClass().toString().indexOf("win32") != -1) {
             DUMP_COFF = true;
             x86ReferenceCompiler.THREAD_BLOCK_PREFIX = Assembler.x86.x86.PREFIX_FS;
             x86ReferenceCompiler.THREAD_BLOCK_OFFSET = 0x14;
@@ -133,10 +133,10 @@ public abstract class Bootstrapper implements ObjectLayout {
             PrimordialClassLoader.loader.addToClasspath(s);
         }
         
-        Set nullStaticFields = ClassLibInterface.i.bootstrapNullStaticFields();
-        Set nullInstanceFields = ClassLibInterface.i.bootstrapNullInstanceFields();
-        System.out.println("Null static fields: "+nullStaticFields);
-        System.out.println("Null instance fields: "+nullInstanceFields);
+        //Set nullStaticFields = ClassLibInterface.i.bootstrapNullStaticFields();
+        //Set nullInstanceFields = ClassLibInterface.i.bootstrapNullInstanceFields();
+        //System.out.println("Null static fields: "+nullStaticFields);
+        //System.out.println("Null instance fields: "+nullInstanceFields);
 
         // install bootstrap code allocator
         BootstrapCodeAllocator bca = new BootstrapCodeAllocator();
@@ -144,11 +144,11 @@ public abstract class Bootstrapper implements ObjectLayout {
         bca.init();
         
         // install object mapper
-        ObjectTraverser obj_trav = new ObjectTraverser(nullStaticFields, nullInstanceFields);
+        ClassLibInterface.DEFAULT.initialize();
+        //ObjectTraverser obj_trav = new ObjectTraverser(nullStaticFields, nullInstanceFields);
+        ObjectTraverser obj_trav = ClassLibInterface.DEFAULT;
         Reflection.obj_trav = obj_trav;
         Unsafe.installRemapper(objmap = new BootImage(obj_trav, bca));
-        
-        ClassLibInterface.i.initializeDefaults();
         
         long starttime = System.currentTimeMillis();
         jq_Class c;

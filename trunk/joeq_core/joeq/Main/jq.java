@@ -364,7 +364,7 @@ public abstract class jq {
             jq_NativeThread.initBreakThread();
             
             // call java.lang.System.initializeSystemClass()
-            ClassLibInterface.i.initializeSystemClass();
+            ClassLibInterface.DEFAULT.initializeSystemClass();
         } catch (Throwable x) {
             SystemInterface.debugmsg("Exception occurred during virtual machine initialization");
             SystemInterface.debugmsg("Exception: "+x);
@@ -482,7 +482,7 @@ public abstract class jq {
             PrimordialClassLoader.loader.addToClasspath(s);
         }
 
-        Reflection.obj_trav = new Bootstrap.ObjectTraverser(java.util.Collections.EMPTY_SET, java.util.Collections.EMPTY_SET);
+        Reflection.obj_trav = new Bootstrap.ObjectTraverser();
     }
     
     public static int NumOfNativeThreads = 1;

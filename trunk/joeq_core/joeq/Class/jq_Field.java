@@ -13,6 +13,7 @@ import java.util.Map;
 
 import Allocator.CodeAllocator;
 import Allocator.HeapAllocator;
+import Bootstrap.PrimordialClassLoader;
 import ClassLib.ClassLibInterface;
 import Main.jq;
 
@@ -27,20 +28,20 @@ public abstract class jq_Field extends jq_Member {
     // clazz, name, desc, access_flags are inherited
     protected jq_Field(jq_Class clazz, jq_NameAndDesc nd) {
         super(clazz, nd);
-        type = ClassLibInterface.i.getOrCreateType(clazz.getClassLoader(), nd.getDesc());
+        type = PrimordialClassLoader.getOrCreateType(clazz.getClassLoader(), nd.getDesc());
     }
     
     public void load(char access_flags, DataInput in) 
     throws IOException, ClassFormatError {
         super.load(access_flags, in);
         if (!jq.Bootstrapping)
-            ClassLibInterface.i.initNewField((java.lang.reflect.Field)this.member_object, this);
+            ClassLibInterface.DEFAULT.initNewField((java.lang.reflect.Field)this.member_object, this);
     }
 
     public void load(char access_flags, Map attributes) {
         super.load(access_flags, attributes);
         if (!jq.Bootstrapping)
-            ClassLibInterface.i.initNewField((java.lang.reflect.Field)this.member_object, this);
+            ClassLibInterface.DEFAULT.initNewField((java.lang.reflect.Field)this.member_object, this);
     }
 
     public final jq_Type getType() { return type; }
