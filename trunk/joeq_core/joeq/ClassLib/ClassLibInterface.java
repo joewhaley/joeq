@@ -36,79 +36,78 @@ public abstract class ClassLibInterface {
        iterator, but it does for now. */
     static {
         ClassLib.Common.Interface f = null;
-	String classlibinterface = System.getProperty("joeq.classlibinterface");
-	boolean nullVM = jq.nullVM || System.getProperty("joeq.nullvm") != null;
+        String classlibinterface = System.getProperty("joeq.classlibinterface");
+        boolean nullVM = jq.nullVM || System.getProperty("joeq.nullvm") != null;
 
-	if (classlibinterface != null) {
-	    f = attemptClassLibInterface(classlibinterface);
-	}
-	if (nullVM) {
-	    f = new ClassLib.Common.NullInterfaceImpl();
-	}
-	if (f == null) {
-	    String classlibrary = System.getProperty("classlibrary");
-	    if (classlibrary == null) {
-		String javaversion = System.getProperty("java.version");
+        if (classlibinterface != null) {
+            f = attemptClassLibInterface(classlibinterface);
+        }
+        if (nullVM) {
+            f = new ClassLib.Common.NullInterfaceImpl();
+        }
+        if (f == null) {
+            String classlibrary = System.getProperty("classlibrary");
+            if (classlibrary == null) {
+                String javaversion = System.getProperty("java.version");
+                String javavmversion = System.getProperty("java.vm.version");
+                String javavmvendor = System.getProperty("java.vm.vendor");
+                String javaruntimeversion = System.getProperty("java.runtime.version");
+                String osarch = System.getProperty("os.arch");
+                String osname = System.getProperty("os.name");
 
-		String javavmversion = System.getProperty("java.vm.version");
-		String javavmvendor = System.getProperty("java.vm.vendor");
-		String javaruntimeversion = System.getProperty("java.runtime.version");
-		String osarch = System.getProperty("os.arch");
-		String osname = System.getProperty("os.name");
-
-		if (osarch.equals("x86")) {
-		} else if (osarch.equals("i386")) {
-		} else {
-		    System.err.println("Warning: architecture "+osarch+" is not yet supported.");
-		}
-		if (javavmvendor.equals("Sun Microsystems Inc.")) {
-		    if (javaruntimeversion.equals("1.3.1_01")) {
-			classlibrary = "sun13_";
-		    } else if (javaruntimeversion.equals("1.4.0-b92")) {
-			classlibrary = "sun14_";
-		    } else {
-			if (javaruntimeversion.startsWith("1.4")) {
-			    classlibrary = "sun14_";
-			} else {
-			    classlibrary = "sun13_";
-			}
-			System.err.println("Warning: class library version "+javaruntimeversion+" is not yet supported, trying default "+classlibrary);
-		    }
-		} else if (javavmvendor.equals("IBM Corporation")) {
-		    if (javaruntimeversion.equals("1.3.0")) {
-			classlibrary = "ibm13_";
-		    } else {
-			classlibrary = "ibm13_";
-			System.err.println("Warning: class library version "+javaruntimeversion+" is not yet supported, trying default "+classlibrary);
-		    }
-		} else if (javavmvendor.equals("Apple Computer, Inc.")) {
-		    if (javaruntimeversion.equals("1.3.1")) {
-			classlibrary = "apple13_";
-		    } else {
-			classlibrary = "apple13_";
-			System.err.println("Warning: class library version "+javaruntimeversion+" is not yet supported, trying default "+classlibrary);
-		    }
-		} else {
-		    classlibrary = "sun13_";
-		    System.err.println("Warning: vm vendor "+javavmvendor+" is not yet supported, trying default "+classlibrary);
-		}
-		if (osname.startsWith("Windows")) {
-		    classlibrary += "win32";
-		} else if (osname.equals("Linux")) {
-		    classlibrary += "linux";
-		} else if (osname.equals("Mac OS X")) {
-		    classlibrary += "osx";
-		} else {
-		    classlibrary += "win32";
-		    System.err.println("Warning: OS "+osname+" is not yet supported, trying "+classlibrary);
-		}
-	    }
-	    f = attemptClassLibInterface("ClassLib."+classlibrary+".Interface");
-	}
-	if (f == null) {
-	    f = new ClassLib.Common.NullInterfaceImpl();
-	}
-	
+                if (osarch.equals("x86")) {
+                } else if (osarch.equals("i386")) {
+                } else {
+                    System.err.println("Warning: architecture "+osarch+" is not yet supported.");
+                }
+                if (javavmvendor.equals("Sun Microsystems Inc.")) {
+                    if (javaruntimeversion.equals("1.3.1_01")) {
+                        classlibrary = "sun13_";
+                    } else if (javaruntimeversion.equals("1.4.0-b92")) {
+                        classlibrary = "sun14_";
+                    } else {
+                        if (javaruntimeversion.startsWith("1.4")) {
+                            classlibrary = "sun14_";
+                        } else {
+                            classlibrary = "sun13_";
+                        }
+                        System.err.println("Warning: class library version "+javaruntimeversion+" is not yet supported, trying default "+classlibrary);
+                    }
+                } else if (javavmvendor.equals("IBM Corporation")) {
+                    if (javaruntimeversion.equals("1.3.0")) {
+                        classlibrary = "ibm13_";
+                    } else {
+                        classlibrary = "ibm13_";
+                        System.err.println("Warning: class library version "+javaruntimeversion+" is not yet supported, trying default "+classlibrary);
+                    }
+                } else if (javavmvendor.equals("Apple Computer, Inc.")) {
+                    if (javaruntimeversion.equals("1.3.1")) {
+                        classlibrary = "apple13_";
+                    } else {
+                        classlibrary = "apple13_";
+                        System.err.println("Warning: class library version "+javaruntimeversion+" is not yet supported, trying default "+classlibrary);
+                    }
+                } else {
+                    classlibrary = "sun13_";
+                    System.err.println("Warning: vm vendor "+javavmvendor+" is not yet supported, trying default "+classlibrary);
+                }
+                if (osname.startsWith("Windows")) {
+                    classlibrary += "win32";
+                } else if (osname.equals("Linux")) {
+                    classlibrary += "linux";
+                } else if (osname.equals("Mac OS X")) {
+                    classlibrary += "osx";
+                } else {
+                    classlibrary += "win32";
+                    System.err.println("Warning: OS "+osname+" is not yet supported, trying "+classlibrary);
+                }
+            }
+            f = attemptClassLibInterface("ClassLib."+classlibrary+".Interface");
+        }
+        if (f == null) {
+            f = new ClassLib.Common.NullInterfaceImpl();
+        }
+        
         DEFAULT = f;
     }
 
@@ -124,7 +123,7 @@ public abstract class ClassLibInterface {
         } catch (java.lang.IllegalAccessException x) {
             System.err.println("Cannot access class library interface "+s+": "+x);
         }
-	return null;
+        return null;
     }
 
     public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LClassLib/ClassLibInterface;");
@@ -209,13 +208,16 @@ public abstract class ClassLibInterface {
             return (jq_Reference)PrimordialClassLoader.getOrCreateType(t.getClassLoader(), u);
     }
     
-    public static void init_zipfile_static(java.util.zip.ZipFile zf, java.lang.String s)
-	throws java.io.IOException {
-        ClassLibInterface.DEFAULT.init_zipfile(zf, s);
+    public static void init_zipfile_static(java.util.zip.ZipFile zf, java.lang.String s) {
+        try {
+            ClassLibInterface.DEFAULT.init_zipfile(zf, s);
+        } catch (java.io.IOException x) {
+            System.err.println("Note: cannot reopen zip file "+s);
+        }
     }
     
     public static void init_inflater_static(java.util.zip.Inflater i, boolean nowrap)
-	throws java.io.IOException {
+        throws java.io.IOException {
         ClassLibInterface.DEFAULT.init_inflater(i, nowrap);
     }
 }
