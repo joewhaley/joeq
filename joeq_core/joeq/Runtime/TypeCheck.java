@@ -3,6 +3,7 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Run_Time;
 
+import java.util.Collection;
 import java.util.Stack;
 
 import Bootstrap.PrimordialClassLoader;
@@ -13,15 +14,22 @@ import Clazz.jq_Primitive;
 import Clazz.jq_Reference;
 import Clazz.jq_StaticMethod;
 import Clazz.jq_Type;
+import Compil3r.CompilationConstants;
 import Memory.Address;
 import Memory.HeapAddress;
+import Util.Assert;
 
 /**
+ * Implements Java type checking.
+ * 
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
-public abstract class TypeCheck implements jq_ClassFileConstants {
+public abstract class TypeCheck implements jq_ClassFileConstants, CompilationConstants {
     
+    public static final boolean VerifyAssertions = true;
+    
+    /** Performs a checkcast operation. */
     public static Object checkcast(Object k, jq_Type t) {
         if (k != null) {
             jq_Type t2 = jq_Reference.getTypeOf(k);
@@ -30,6 +38,8 @@ public abstract class TypeCheck implements jq_ClassFileConstants {
         }
         return k;
     }
+    
+    /** Performs an instanceof operation. */
     public static boolean instance_of(Object k, jq_Type t) {
         if (k == null)
             return false;
@@ -38,6 +48,8 @@ public abstract class TypeCheck implements jq_ClassFileConstants {
             return false;
         return true;
     }
+    
+    /** Performs an arrayStoreCheck operation. */
     public static void arrayStoreCheck(HeapAddress value, Object[] arrayref) 
     throws ArrayStoreException {
         if (value.isNull()) return;
@@ -50,9 +62,14 @@ public abstract class TypeCheck implements jq_ClassFileConstants {
             throw new ArrayStoreException(t+" into array "+a);
     }
     
-    // From the algorithm in vm spec under "checkcast"
-    // returns true if "T = S;" would be legal. (T is same or supertype of S)
-    // S should already be prepared.
+    /**
+     * Returns true if "T = S;" would be legal. (T is same or supertype of S)
+     * From the algorithm in vm spec under "checkcast"
+     * 
+     * @param S subtype
+     * @param T type
+     * @return true iff "T = S;" would be legal.
+     */
     public static boolean isAssignable(jq_Type S, jq_Type T) {
         if (S == T)
             return true;
@@ -60,6 +77,13 @@ public abstract class TypeCheck implements jq_ClassFileConstants {
         return S.isSubtypeOf(T);
     }
     
+    /**
+     * Uses (old) graph traversal algorithm for type check.
+     * 
+     * @param S subtype
+     * @param T type
+     * @return true iff "T = S;" would be legal.
+     */
     public static boolean isAssignable_graph(jq_Type S, jq_Type T) {
         if (S == T)
             return true;
@@ -104,13 +128,22 @@ public abstract class TypeCheck implements jq_ClassFileConstants {
         }
         // t2 is not an interface
         if (!is_t2_loaded) return false;
-        return isSuperclassOf((jq_Class)t2, (jq_Class)s2);
+        return isSuperclassOf((jq_Class)t2, (jq_Class)s2, true) == YES;
     }
     
-    public static final byte YES = 2;
-    public static final byte MAYBE = 1;
-    public static final byte NO = 0;
-    // returns YES if "T = S;" would be legal. (T is same or supertype of S)
+    /** Returns YES iff t1 is a superclass of t2. */
+    public static byte isSuperclassOf(jq_Class t1, jq_Class t2, boolean loadClasses) {
+        // doesn't do equality test.
+        for (;;) {
+            if (!t2.isLoaded() && !loadClasses) return MAYBE;
+            t2.load();
+            t2 = t2.getSuperclass();
+            if (t2 == null) return NO;
+            if (t1 == t2) return YES;
+        }
+    }
+    
+    /** Returns YES iff "T = S;" would be legal. (T is same or supertype of S) */
     public static byte isAssignable_noload(jq_Type S, jq_Type T) {
         if (S == jq_Reference.jq_NullType.NULL_TYPE) {
             if (T.isReferenceType()) return YES;
@@ -122,30 +155,48 @@ public abstract class TypeCheck implements jq_ClassFileConstants {
         if (T == PrimordialClassLoader.getJavaLangObject() && S.isReferenceType()) return YES;
         if (!T.isPrepared() || !S.isPrepared()) return MAYBE;
         if (T.isArrayType()) {
-            jq_Type elemType = ((jq_Array)T).getInnermostElementType();
+            jq_Type elemType = ((jq_Array) T).getInnermostElementType();
             if (!elemType.isPrepared()) return MAYBE;
         }
         if (S.isArrayType()) {
-            jq_Type elemType = ((jq_Array)S).getInnermostElementType();
+            jq_Type elemType = ((jq_Array) S).getInnermostElementType();
             if (!elemType.isPrepared()) return MAYBE;
         }
-        if (TypeCheck.isAssignable(S, T)) return YES;
+        if (S.isSubtypeOf(T)) return YES;
         else return NO;
     }
     
-    // Returns true if t1 is a superclass of t2
-    public static boolean isSuperclassOf(jq_Class t1, jq_Class t2) {
-        // doesn't do equality test.
-        for (;;) {
-            t2.load();
-            t2 = t2.getSuperclass();
-            if (t2 == null) return false;
-            if (t1 == t2) return true;
+    /** Returns YES iff T declares one of the given interfaces. */
+    public static byte declaresInterface(jq_Class T, Collection interfaces, boolean loadClasses) {
+        if (VerifyAssertions)
+            Assert._assert(T.isLoaded());
+        jq_Class[] klass_interfaces = T.getDeclaredInterfaces();
+        for (int i=0; i<klass_interfaces.length; ++i) {
+            if (!loadClasses && !klass_interfaces[i].isLoaded()) return MAYBE;
+            if (interfaces.contains(klass_interfaces[i])) return YES;
         }
+        return NO;
     }
     
-    public static jq_Type findCommonSuperclass(jq_Type t1, jq_Type t2) {
-        return findCommonSuperclass(t1, t2, false);
+    /** Returns YES iff T implements the given interface. */
+    public static byte implementsInterface_noload(jq_Class klass, jq_Class inter) {
+        byte res = NO; jq_Class k = klass;
+        if (!klass.isLoaded()) return MAYBE;
+        do {
+            if (k.getDeclaredInterface(inter.getDesc()) == inter) return YES;
+            k = k.getSuperclass();
+            if (!k.isLoaded()) {
+                res = MAYBE; break;
+            }
+        } while (k != null);
+        jq_Class[] interfaces = klass.getDeclaredInterfaces();
+        for (int i=0; i<interfaces.length; ++i) {
+            jq_Class k2 = interfaces[i];
+            byte res2 = implementsInterface_noload(k2, inter);
+            if (res2 == YES) return YES;
+            if (res2 == MAYBE) res = MAYBE;
+        }
+        return res;
     }
     
     public static jq_Type findCommonSuperclass(jq_Type t1, jq_Type t2, boolean load) {

@@ -16,6 +16,7 @@ import Clazz.jq_InstanceField;
 import Clazz.jq_Method;
 import Clazz.jq_Primitive;
 import Clazz.jq_Reference;
+import Compil3r.CompilationState;
 import Compil3r.BytecodeAnalysis.BytecodeVisitor;
 import Main.TraceFlags;
 import Main.jq;
@@ -312,7 +313,7 @@ uphere:
         protected int i_stop;
         
         public BytecodeLister(jq_Method m, int start, int stop, int loc) {
-            super(m);
+            super(CompilationState.DEFAULT, m);
             this.i_end = start-1;
             this.i_start = start;
             this.i_stop = stop;

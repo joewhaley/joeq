@@ -24,6 +24,7 @@ import Clazz.jq_Reference;
 import Clazz.jq_StaticField;
 import Clazz.jq_StaticMethod;
 import Clazz.jq_Type;
+import Main.jq;
 import Memory.Address;
 import UTF.Utf8;
 
@@ -419,7 +420,7 @@ public abstract class Reflection {
     static {
         /* Set up delegates. */
         _delegate = null;
-        boolean nullVM = Main.jq.nullVM || System.getProperty("joeq.nullvm") != null;
+        boolean nullVM = jq.nullVM;
         if (!nullVM) {
             _delegate = attemptDelegate("Run_Time.ReflectionImpl");
         }

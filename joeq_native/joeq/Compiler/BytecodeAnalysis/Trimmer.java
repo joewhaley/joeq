@@ -272,7 +272,7 @@ public class Trimmer {
             rs.addNecessaryField(MathSupport._minlong);
         }
         private void GETSTATIChelper(jq_StaticField f) {
-            f = resolve(f);
+            f = tryResolve(f);
             //addClassInitializer(f.getDeclaringClass());
             rs.addNecessaryField(f);
             if (false) {
@@ -330,7 +330,7 @@ public class Trimmer {
             GETSTATIChelper(f);
         }
         private void PUTSTATIChelper(jq_StaticField f) {
-            f = resolve(f);
+            f = tryResolve(f);
             //addClassInitializer(f.getDeclaringClass());
             rs.addNecessaryField(f);
             if (false) {
@@ -377,7 +377,7 @@ public class Trimmer {
             PUTSTATIChelper(f);
         }
         private void GETFIELDhelper(jq_InstanceField f) {
-            f = resolve(f);
+            f = tryResolve(f);
             rs.addNecessaryField(f);
         }
         public void visitIGETFIELD(jq_InstanceField f) {
@@ -453,7 +453,7 @@ public class Trimmer {
             GETFIELDhelper(f);
         }
         private void INVOKEhelper(byte op, jq_Method f) {
-            f = (jq_Method)resolve(f);
+            f = (jq_Method) tryResolve(f);
             switch (op) {
             case INVOKE_STATIC:
                 if (f.getDeclaringClass() == Unsafe._class)

@@ -1234,9 +1234,9 @@ public class CSPA {
     int last_typeIndex;
     
     void calculateTypeHierarchy() {
-        int n1=typeIndexMap.size();
+        int n1 = typeIndexMap.size();
         if (TRACE_TYPES) System.out.println(n1-last_typeIndex + " new types");
-        for (int i1=0; i1<n1; ++i1) {
+        for (int i1 = 0; i1 < n1; ++i1) {
             jq_Type t1 = (jq_Type) typeIndexMap.get(i1);
             if (t1 == null) {
                 BDD type1_bdd = T1.ithVar(i1);
@@ -1247,7 +1247,7 @@ public class CSPA {
             }
             t1.prepare();
             int i2 = (i1 < last_typeIndex) ? last_typeIndex : 0;
-            for ( ; i2<n1; ++i2) {
+            for ( ; i2 < n1; ++i2) {
                 jq_Type t2 = (jq_Type) typeIndexMap.get(i2);
                 if (t2 == null) {
                     BDD type1_bdd = T1.domain();

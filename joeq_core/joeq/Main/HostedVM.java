@@ -22,7 +22,6 @@ public abstract class HostedVM {
         if (jq.RunningNative) return;
         
         jq.DontCompile = true;
-        jq.boot_types = new java.util.HashSet();
 
         CodeAddress.FACTORY = new CodeAddress.CodeAddressFactory() {
             public int size() {

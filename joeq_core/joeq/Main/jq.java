@@ -4,7 +4,6 @@
 package Main;
 
 import java.util.List;
-import java.util.Set;
 
 /**
  *
@@ -358,11 +357,6 @@ public abstract class jq {
     public static boolean IsBootstrapping = false;
     
     /**
-     * Set of boot types, used during bootstrapping.
-     */
-    public static Set boot_types;
-    
-    /**
      * List of method invocations to perform on joeq startup.
      */
     public static List on_vm_startup;
@@ -372,7 +366,7 @@ public abstract class jq {
      * non-existent.  Setting this to "true" enables only the analysis
      * framework.
      */
-    public static /*final*/ boolean nullVM = false;
+    public static /*final*/ boolean nullVM = System.getProperty("joeq.nullvm") != null;
 
     public static /*final*/ boolean SMP = true;
 

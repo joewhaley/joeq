@@ -12,6 +12,8 @@ import ClassLib.ClassLibInterface;
 import Clazz.jq_Class;
 import Clazz.jq_NameAndDesc;
 import Clazz.jq_StaticMethod;
+import Compil3r.CompilationState;
+import Compil3r.CompilationState.DynamicCompilation;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
 import Scheduler.jq_MainThread;
@@ -37,6 +39,9 @@ public abstract class JoeqVM {
             // init the garbage collector thread & set it as daemon
             jq_NativeThread.initGCThread();
 
+            // initialize dynamic compiler
+            CompilationState.DEFAULT = new DynamicCompilation();
+            
             // call java.lang.System.initializeSystemClass()
             ClassLibInterface.DEFAULT.initializeSystemClass();
 

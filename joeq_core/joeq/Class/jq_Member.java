@@ -38,6 +38,14 @@ public abstract class jq_Member implements jq_ClassFileConstants {
         return state >= STATE_LOADED;
     }
 
+    public final boolean isPrepared() {
+        return state >= STATE_PREPARED;
+    }
+    
+    public final boolean isInitialized() {
+        return state >= STATE_SFINITIALIZED;
+    }
+    
     //  Always available
     protected byte state;
     // pointer to the jq_Class object it's a member of

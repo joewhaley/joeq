@@ -93,59 +93,59 @@ public class DirectInterpreter extends BytecodeInterpreter {
     
     public Object invokeUnsafeMethod(jq_Method f) throws Throwable {
         if (f == Unsafe._intBitsToFloat) {
-            return new Float(state.pop_F());
+            return new Float(istate.pop_F());
         } else if (f == Unsafe._floatToIntBits) {
-            return new Integer(state.pop_I());
+            return new Integer(istate.pop_I());
         } else if (f == Unsafe._doubleToLongBits) {
-            return new Long(state.pop_L());
+            return new Long(istate.pop_L());
         } else if (f == Unsafe._longBitsToDouble) {
-            return new Double(state.pop_D());
+            return new Double(istate.pop_D());
         } else if (f == Unsafe._getThreadBlock) {
             return Unsafe.getThreadBlock();
         } else if (f.getName() == Utf8.get("to32BitValue")) {
-            return new Integer(((Address) state.pop()).to32BitValue());
+            return new Integer(((Address) istate.pop()).to32BitValue());
         } else if (f.getName() == Utf8.get("addressOf")) {
-            return HeapAddress.addressOf(state.pop_A());
+            return HeapAddress.addressOf(istate.pop_A());
         } else if (f.getName() == Utf8.get("asObject")) {
-            return ((HeapAddress)state.pop()).asObject();
+            return ((HeapAddress)istate.pop()).asObject();
         } else if (f.getName() == Utf8.get("offset")) {
-            int i = state.pop_I();
-            return ((Address)state.pop()).offset(i);
+            int i = istate.pop_I();
+            return ((Address)istate.pop()).offset(i);
         } else if (f.getName() == Utf8.get("asReferenceType")) {
-            return (jq_Reference) ((HeapAddress)state.pop()).asObject();
+            return (jq_Reference) ((HeapAddress)istate.pop()).asObject();
         } else if (f.getName() == Utf8.get("peek")) {
-            return ((Address)state.pop()).peek();
+            return ((Address)istate.pop()).peek();
         } else if (f.getName() == Utf8.get("peek1")) {
-            return new Integer(((Address)state.pop()).peek1());
+            return new Integer(((Address)istate.pop()).peek1());
         } else if (f.getName() == Utf8.get("peek2")) {
-            return new Integer(((Address)state.pop()).peek2());
+            return new Integer(((Address)istate.pop()).peek2());
         } else if (f.getName() == Utf8.get("peek4")) {
-            return new Integer(((Address)state.pop()).peek4());
+            return new Integer(((Address)istate.pop()).peek4());
         } else if (f.getName() == Utf8.get("peek8")) {
-            return new Long(((Address)state.pop()).peek8());
+            return new Long(((Address)istate.pop()).peek8());
         } else if (f.getName() == Utf8.get("poke")) {
-            Address v = (Address) state.pop();
-            Address a = (Address) state.pop();
+            Address v = (Address) istate.pop();
+            Address a = (Address) istate.pop();
             a.poke(v);
             return null;
         } else if (f.getName() == Utf8.get("poke1")) {
-            byte v = (byte) state.pop_I();
-            Address a = (Address) state.pop();
+            byte v = (byte) istate.pop_I();
+            Address a = (Address) istate.pop();
             a.poke1(v);
             return null;
         } else if (f.getName() == Utf8.get("poke2")) {
-            short v = (short) state.pop_I();
-            Address a = (Address) state.pop();
+            short v = (short) istate.pop_I();
+            Address a = (Address) istate.pop();
             a.poke2(v);
             return null;
         } else if (f.getName() == Utf8.get("poke4")) {
-            int v = state.pop_I();
-            Address a = (Address) state.pop();
+            int v = istate.pop_I();
+            Address a = (Address) istate.pop();
             a.poke4(v);
             return null;
         } else if (f.getName() == Utf8.get("poke8")) {
-            long v = state.pop_L();
-            Address a = (Address) state.pop();
+            long v = istate.pop_L();
+            Address a = (Address) istate.pop();
             a.poke8(v);
             return null;
         } else {

@@ -1211,9 +1211,6 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
     private void INVOKENODPATCHhelper(byte op, jq_Method f) {
         switch(op) {
             case BytecodeVisitor.INVOKE_VIRTUAL: {
-                Assert._assert((!jq.RunningNative && jq.boot_types.contains(f.getDeclaringClass())) ||
-                          (f.getState() >= jq_ClassFileConstants.STATE_PREPARED) ||
-                          (f.getDeclaringClass() == method.getDeclaringClass()));
                 int objptroffset = (f.getParamWords() << 2) - 4;
                 int m_off = ((jq_InstanceMethod)f).getOffset();
                 asm.emit2_Reg_Mem(x86.MOV_r_m32, EAX, objptroffset, ESP); // 7
@@ -1223,15 +1220,9 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
             }
             case BytecodeVisitor.INVOKE_SPECIAL:
                 f = jq_Class.getInvokespecialTarget(method.getDeclaringClass(), (jq_InstanceMethod)f);
-                Assert._assert((!jq.RunningNative && jq.boot_types.contains(f.getDeclaringClass())) ||
-                          (f.getState() >= jq_ClassFileConstants.STATE_PREPARED) ||
-                          (f.getDeclaringClass() == method.getDeclaringClass()));
                 emitCallRelative(f);
                 break;
             case BytecodeVisitor.INVOKE_STATIC:
-                Assert._assert((!jq.RunningNative && jq.boot_types.contains(f.getDeclaringClass())) ||
-                          (f.getState() >= jq_ClassFileConstants.STATE_SFINITIALIZED) ||
-                          (f.getDeclaringClass() == method.getDeclaringClass()));
                 emitCallRelative(f);
                 break;
             case BytecodeVisitor.INVOKE_INTERFACE:
@@ -1437,8 +1428,6 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         jq_Array f = (jq_Array) NewArray.getType(obj).getType();
         // initialize type now, to avoid backpatch.
         if (!jq.RunningNative) {
-            if (!jq.boot_types.contains(f))
-                System.err.println("Error! Boot type set does not contain "+f+", but an instance is created inside of method "+method);
             //jq.Assert(jq.boot_types.contains(f), f.toString());
         } else {
             f.cls_initialize();

@@ -3,6 +3,8 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Scheduler;
 
+import Main.jq;
+
 /**
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
@@ -19,7 +21,7 @@ public abstract class ThreadUtils {
     static {
         /* Set up delegates. */
         _delegate = null;
-        boolean nullVM = Main.jq.nullVM || System.getProperty("joeq.nullvm") != null;
+        boolean nullVM = jq.nullVM;
         if (!nullVM) {
             _delegate = attemptDelegate("Scheduler.FullThreadUtils");
         }
