@@ -50,6 +50,9 @@ public class QuadInterpreter {
 	public static boolean TRACE = false;
 
         public static long num_quads = 0;
+        public static long num_nullchecks = 0;
+        
+	public void visitNullCheck(Quad q) { ++num_nullchecks; }
         
 	public void visitQuad(Quad q) {
 	    if (TRACE) System.out.println("Registers: "+registers);
@@ -329,8 +332,8 @@ public class QuadInterpreter {
 
 	public String toString() {
             if (thrown != null)
-                return "Thrown exception: "+thrown+" (quad count: "+num_quads+")";
-	    return "Returned: "+return_value+" (quad count: "+num_quads+")";
+                return "Thrown exception: "+thrown+" (null checks: "+num_nullchecks+" quad count: "+num_quads+")";
+	    return "Returned: "+return_value+" (null checks: "+num_nullchecks+" quad count: "+num_quads+")";
 	}
         
     }
