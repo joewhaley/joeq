@@ -9,8 +9,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -78,7 +78,7 @@ public final class SCComponent implements Comparable, Serializable, Textualizabl
     // the set of reached nodes (to avoid reanalyzing them "ad infinitum")
     private static Set analyzed_nodes;  
     // Mapping node (Object) -> Strongly Connected Component (SCComponentInt)
-    private static Hashtable node2scc;
+    private static HashMap node2scc;
     // The vector of the reached nodes, in the order DFS finished them
     private static ArrayList nodes_vector;
     private static SCComponentInt current_scc_int;
@@ -135,7 +135,7 @@ public final class SCComponent implements Comparable, Serializable, Textualizabl
         }
 
         // STEP 2. build the SCCs by doing a DFS in the reverse graph.
-        node2scc = new Hashtable();
+        node2scc = new HashMap();
         // "in reverse" navigator
         nav = new ReverseNavigator(navigator);
 
