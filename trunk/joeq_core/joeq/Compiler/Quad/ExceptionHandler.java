@@ -56,9 +56,12 @@ public class ExceptionHandler {
     public BasicBlock getEntry() { return entry; }
 
     public boolean mustCatch(jq_Class exType) {
+        exType.load(); exType.verify(); exType.prepare();
         return TypeCheck.isAssignable(exType, exception_type);
     }
     public boolean mayCatch(jq_Class exType) {
+        exType.load(); exType.verify(); exType.prepare();
+        exception_type.load(); exception_type.verify(); exception_type.prepare();
         return TypeCheck.isAssignable(exType, exception_type) ||
               TypeCheck.isAssignable(exception_type, exType);
     }
