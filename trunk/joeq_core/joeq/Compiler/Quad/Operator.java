@@ -39,7 +39,6 @@ import Memory.Address;
 import Memory.HeapAddress;
 import Run_Time.Reflection;
 import Run_Time.TypeCheck;
-import Run_Time.Unsafe;
 import Util.Templates.UnmodifiableList;
 
 /**
@@ -3186,9 +3185,7 @@ public abstract class Operator {
             private MONITORENTER() { }
             public String toString() { return "MONITORENTER"; }
             public void interpret(Quad q, QuadInterpreter s) {
-                Object o = getObjectOpValue(getSrc(q), s);
-                if (jq.RunningNative)
-                    Run_Time.Monitor.monitorenter(o);
+		_delegate.interpretMonitorEnter(this, q, s);
             }
             public UnmodifiableList.jq_Class getThrownExceptions() {
                 return nullptrexception;
@@ -3199,9 +3196,7 @@ public abstract class Operator {
             private MONITOREXIT() { }
             public String toString() { return "MONITOREXIT"; }
             public void interpret(Quad q, QuadInterpreter s) {
-                Object o = getObjectOpValue(getSrc(q), s);
-                if (jq.RunningNative)
-                    Run_Time.Monitor.monitorexit(o);
+		_delegate.interpretMonitorExit(this, q, s);
             }
             public UnmodifiableList.jq_Class getThrownExceptions() {
                 return illegalmonitorstateexception;
@@ -3406,8 +3401,7 @@ public abstract class Operator {
             public String toString() { return "GET_THREAD_BLOCK"; }
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
             public void interpret(Quad q, QuadInterpreter s) {
-                if (jq.RunningNative)
-                    s.putReg_A(((RegisterOperand)getOp1(q)).getRegister(), Unsafe.getThreadBlock());
+		_delegate.interpretGetThreadBlock(this, q, s);
             }
         }
         public static class SET_THREAD_BLOCK extends Special {
@@ -3416,9 +3410,7 @@ public abstract class Operator {
             public String toString() { return "SET_THREAD_BLOCK"; }
             public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg2(q); }
             public void interpret(Quad q, QuadInterpreter s) {
-                Scheduler.jq_Thread o = (Scheduler.jq_Thread)getObjectOpValue(getOp2(q), s);
-                if (jq.RunningNative)
-                    Unsafe.setThreadBlock(o);
+		_delegate.interpretSetThreadBlock(this, q, s);
             }
         }
         public static class ALLOCA extends Special {
@@ -3454,9 +3446,9 @@ public abstract class Operator {
             public String toString() { return "DIE"; }
             public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg1_check(q); }
             public void interpret(Quad q, QuadInterpreter s) {
-                int a = getIntOpValue(getOp1(q), s);
-                Run_Time.SystemInterface.die(a);
-                jq.UNREACHABLE();
+		int a = getIntOpValue(getOp1(q), s);
+		Run_Time.DebugInterface.die(a);
+		jq.UNREACHABLE();
             }
         }
         public static class GET_TYPE_OF extends Special {
@@ -3470,5 +3462,45 @@ public abstract class Operator {
                 s.putReg_A(((RegisterOperand)getOp1(q)).getRegister(), Reflection.getTypeOf(o));
             }
         }
+    }
+
+    static interface Delegate {
+	void interpretGetThreadBlock(Special op, Quad q, QuadInterpreter s);
+	void interpretSetThreadBlock(Special op, Quad q, QuadInterpreter s);
+	void interpretMonitorEnter(Monitor op, Quad q, QuadInterpreter s);
+	void interpretMonitorExit(Monitor op, Quad q, QuadInterpreter s);
+    }
+
+    protected static Delegate _delegate;
+
+    static {
+	/* Set up delegates. */
+	_delegate = null;
+	boolean nullVM = System.getProperty("joeq.nullvm") != null;
+	if (!nullVM) {
+	    _delegate = attemptDelegate("Compil3r.Quad.Delegates$Op");
+	}
+	if (_delegate == null) {
+	    _delegate = attemptDelegate("Compil3r.Quad.NullDelegates$Op");
+	}
+	if (_delegate == null) {
+	    System.err.println("FATAL: Cannot load quad-operator delegate");
+	    System.exit(-1);
+	}
+    }
+
+    private static Delegate attemptDelegate(String s) {
+	String type = "quad-operator delegate";
+        try {
+            Class c = Class.forName(s);
+            return (Delegate)c.newInstance();
+        } catch (java.lang.ClassNotFoundException x) {
+            System.err.println("Cannot find "+type+" "+s+": "+x);
+        } catch (java.lang.InstantiationException x) {
+            System.err.println("Cannot instantiate "+type+" "+s+": "+x);
+        } catch (java.lang.IllegalAccessException x) {
+            System.err.println("Cannot access "+type+" "+s+": "+x);
+        }
+	return null;
     }
 }
