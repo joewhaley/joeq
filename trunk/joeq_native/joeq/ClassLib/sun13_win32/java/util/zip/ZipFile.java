@@ -314,10 +314,12 @@ public abstract class ZipFile implements ZipConstants {
             String name = e.getName();
 	    entries.put(name, e);
 	}
-	// Make sure we got the right number of entries
-	if (entries.size() != nent) {
-	    throw new java.util.zip.ZipException("invalid CEN header format");
-	}
+        if (false) { // zip files can have duplicate entries, so we disable this check.
+            // Make sure we got the right number of entries
+            if (entries.size() != nent) {
+                throw new java.util.zip.ZipException("invalid CEN header format");
+            }
+        }
     }
 
     private static final int INBUFSIZ = 64;
