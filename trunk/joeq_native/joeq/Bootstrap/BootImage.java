@@ -270,7 +270,7 @@ public class BootImage implements ObjectLayout, ELFConstants {
     public void find_reachable(int i) {
         for (; i<entries.size(); ++i) {
             if ((i % UPDATE_PERIOD) == 0) {
-                out.print("Scanning: "+i+"/"+entries.size()+" objects, memory used: "+(Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory())+"\r");
+                out.print("Scanning: "+i+"/"+entries.size()+" objects, memory used: "+(Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory())+"   \r");
             }
             Entry e = (Entry)entries.get(i);
             Object o = e.getObject();
