@@ -2327,7 +2327,8 @@ public class PA {
         if (dis.CONTEXT_SENSITIVE || !dis.DISCOVER_CALL_GRAPH) {
             dis.cg = loadCallGraph(rootMethods);
             if (dis.cg == null) {
-                if (dis.CONTEXT_SENSITIVE || dis.OBJECT_SENSITIVE || dis.THREAD_SENSITIVE) {
+                if (dis.CONTEXT_SENSITIVE || dis.OBJECT_SENSITIVE || dis.THREAD_SENSITIVE ||
+                        dis.SKIP_SOLVE) {
                     System.out.println("Discovering call graph first...");
                     dis.CONTEXT_SENSITIVE = false;
                     dis.OBJECT_SENSITIVE = false;
