@@ -18,19 +18,25 @@ class ParameterAliasing {
      * Finds parameter aliases under different constexts.
      * */
     public static class ParamAliasFinder extends IPSSABuilder.Application {
-        PAResults _paResults        = null;
-        PA _r                       = null;
-        private boolean _verbose    = false;
-        private boolean _RECURSIVE  = true;
-        private int N               = 1;
-        private boolean _CONSTRUCTORS = false;
-        private int _aliasedCalls   = 0;
+        PAResults _paResults            = null;
+        PA _r                           = null;
+        private boolean _verbose        = false;
+        private boolean _RECURSIVE      = true;
+        private int MAX_CONTEXT_PRINT   = 1;
+        private boolean _CONSTRUCTORS   = false;
+        private int _aliasedCalls       = 0;
          
         public ParamAliasFinder() {
             super(null, null, null);
         }
         public ParamAliasFinder(IPSSABuilder builder, String name, String[] args) {
             super(builder, name, args);
+        }
+        
+        protected void initialize() {
+            _CONSTRUCTORS = !System.getProperty("paf.constructors", "yes").equals("no");
+            _RECURSIVE    = !System.getProperty("paf.recursive", "yes").equals("no");
+            _verbose      = !System.getProperty("paf.verbose", "yes").equals("no");
         }
     
         protected void parseParams(String[] args) {}
@@ -79,7 +85,7 @@ class ParameterAliasing {
             ModifiableBoolean printedInfo = new ModifiableBoolean(false);
             long contextSize = (long)contexts.satCount(_r.V1cset);
             boolean foundAliasing = false;
-            for ( Iterator contextIter = contexts.iterator(); contextIter.hasNext() && i < N; i++ ) {
+            for ( Iterator contextIter = contexts.iterator(); contextIter.hasNext() && i < MAX_CONTEXT_PRINT; i++ ) {
                 // for this particular context #
                 TypedBDD context = (TypedBDD)contextIter.next();
                 //System.out.println("context: \n" + context.toStringWithDomains());
@@ -103,7 +109,7 @@ class ParameterAliasing {
                 foundAliasing |= processContext(m, ms, pointsTo, context, printedInfo);
             }
             if(foundAliasing) {
-                if ( contextSize > N ) {
+                if ( contextSize > MAX_CONTEXT_PRINT ) {
                     System.out.println("\t\t(A total of " + contextSize + " contexts) ");  
                 }
                 _aliasedCalls++;
