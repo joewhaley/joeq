@@ -82,15 +82,16 @@ public abstract class Reflection {
     
     public static void invokestatic_V(jq_StaticMethod m) throws Throwable {
         if (!jq.Bootstrapping) {
-            jq.assert(m.getDeclaringClass().isClsInitialized());
+            jq.assert(m.getDeclaringClass().isClsInitRunning());
             Unsafe.invoke(m.getDefaultCompiledVersion().getEntrypoint());
             return;
+        } else {
+            jq.UNREACHABLE();
         }
-        
     }
     public static int invokestatic_I(jq_StaticMethod m) throws Throwable {
         if (!jq.Bootstrapping) {
-            jq.assert(m.getDeclaringClass().isClsInitialized());
+            jq.assert(m.getDeclaringClass().isClsInitRunning());
             return (int)Unsafe.invoke(m.getDefaultCompiledVersion().getEntrypoint());
         } else {
             jq.UNREACHABLE();
@@ -99,16 +100,25 @@ public abstract class Reflection {
     }
     public static Object invokestatic_A(jq_StaticMethod m) throws Throwable {
         if (!jq.Bootstrapping) {
-            jq.assert(m.getDeclaringClass().isClsInitialized());
+            jq.assert(m.getDeclaringClass().isClsInitRunning());
             return Unsafe.asObject((int)Unsafe.invoke(m.getDefaultCompiledVersion().getEntrypoint()));
         } else {
             jq.UNREACHABLE();
             return null;
         }
     }
+    public static long invokestatic_J(jq_StaticMethod m) throws Throwable {
+        if (!jq.Bootstrapping) {
+            jq.assert(m.getDeclaringClass().isClsInitRunning());
+            return Unsafe.invoke(m.getDefaultCompiledVersion().getEntrypoint());
+        } else {
+            jq.UNREACHABLE();
+            return 0L;
+        }
+    }
     public static void invokestatic_V(jq_StaticMethod m, Object arg1) throws Throwable {
         if (!jq.Bootstrapping) {
-            jq.assert(m.getDeclaringClass().isClsInitialized());
+            jq.assert(m.getDeclaringClass().isClsInitRunning());
             Unsafe.pushArg(Unsafe.addressOf(arg1));
             Unsafe.invoke(m.getDefaultCompiledVersion().getEntrypoint());
             return;
@@ -120,7 +130,7 @@ public abstract class Reflection {
     public static void invokeinstance_V(jq_InstanceMethod m, Object dis) throws Throwable {
         jq.assert(TypeCheck.isAssignable(Unsafe.getTypeOf(dis), m.getDeclaringClass()));
         if (!jq.Bootstrapping) {
-            jq.assert(m.getDeclaringClass().isClsInitialized());
+            jq.assert(m.getDeclaringClass().isClsInitRunning());
             Unsafe.pushArg(Unsafe.addressOf(dis));
             Unsafe.invoke(m.getDefaultCompiledVersion().getEntrypoint());
         } else {
@@ -131,7 +141,7 @@ public abstract class Reflection {
     public static Object invokeinstance_A(jq_InstanceMethod m, Object dis) throws Throwable {
         jq.assert(TypeCheck.isAssignable(Unsafe.getTypeOf(dis), m.getDeclaringClass()));
         if (!jq.Bootstrapping) {
-            jq.assert(m.getDeclaringClass().isClsInitialized());
+            jq.assert(m.getDeclaringClass().isClsInitRunning());
             Unsafe.pushArg(Unsafe.addressOf(dis));
             return Unsafe.asObject((int)Unsafe.invoke(m.getDefaultCompiledVersion().getEntrypoint()));
         } else {
@@ -142,7 +152,7 @@ public abstract class Reflection {
     public static void invokeinstance_V(jq_InstanceMethod m, Object dis, Object arg1) throws Throwable {
         jq.assert(TypeCheck.isAssignable(Unsafe.getTypeOf(dis), m.getDeclaringClass()));
         if (!jq.Bootstrapping) {
-            jq.assert(m.getDeclaringClass().isClsInitialized());
+            jq.assert(m.getDeclaringClass().isClsInitRunning());
             Unsafe.pushArg(Unsafe.addressOf(dis));
             Unsafe.pushArg(Unsafe.addressOf(arg1));
             Unsafe.invoke(m.getDefaultCompiledVersion().getEntrypoint());
@@ -155,7 +165,7 @@ public abstract class Reflection {
     public static Object invokeinstance_A(jq_InstanceMethod m, Object dis, Object arg1) throws Throwable {
         jq.assert(TypeCheck.isAssignable(Unsafe.getTypeOf(dis), m.getDeclaringClass()));
         if (!jq.Bootstrapping) {
-            jq.assert(m.getDeclaringClass().isClsInitialized());
+            jq.assert(m.getDeclaringClass().isClsInitRunning());
             Unsafe.pushArg(Unsafe.addressOf(dis));
             Unsafe.pushArg(Unsafe.addressOf(arg1));
             return Unsafe.asObject((int)Unsafe.invoke(m.getDefaultCompiledVersion().getEntrypoint()));
@@ -167,7 +177,7 @@ public abstract class Reflection {
     public static boolean invokeinstance_Z(jq_InstanceMethod m, Object dis, Object arg1) throws Throwable {
         jq.assert(TypeCheck.isAssignable(Unsafe.getTypeOf(dis), m.getDeclaringClass()));
         if (!jq.Bootstrapping) {
-            jq.assert(m.getDeclaringClass().isClsInitialized());
+            jq.assert(m.getDeclaringClass().isClsInitRunning());
             Unsafe.pushArg(Unsafe.addressOf(dis));
             Unsafe.pushArg(Unsafe.addressOf(arg1));
             return ((int)Unsafe.invoke(m.getDefaultCompiledVersion().getEntrypoint())) != 0;
@@ -179,7 +189,7 @@ public abstract class Reflection {
     public static void invokeinstance_V(jq_InstanceMethod m, Object dis, Object arg1, Object arg2) throws Throwable {
         jq.assert(TypeCheck.isAssignable(Unsafe.getTypeOf(dis), m.getDeclaringClass()));
         if (!jq.Bootstrapping) {
-            jq.assert(m.getDeclaringClass().isClsInitialized());
+            jq.assert(m.getDeclaringClass().isClsInitRunning());
             Unsafe.pushArg(Unsafe.addressOf(dis));
             Unsafe.pushArg(Unsafe.addressOf(arg1));
             Unsafe.pushArg(Unsafe.addressOf(arg2));
@@ -193,7 +203,7 @@ public abstract class Reflection {
     public static void invokeinstance_V(jq_InstanceMethod m, Object dis, Object arg1, Object arg2, Object arg3) throws Throwable {
         jq.assert(TypeCheck.isAssignable(Unsafe.getTypeOf(dis), m.getDeclaringClass()));
         if (!jq.Bootstrapping) {
-            jq.assert(m.getDeclaringClass().isClsInitialized());
+            jq.assert(m.getDeclaringClass().isClsInitRunning());
             Unsafe.pushArg(Unsafe.addressOf(dis));
             Unsafe.pushArg(Unsafe.addressOf(arg1));
             Unsafe.pushArg(Unsafe.addressOf(arg2));
@@ -208,7 +218,7 @@ public abstract class Reflection {
     public static void invokeinstance_V(jq_InstanceMethod m, Object dis, Object arg1, int arg2, long arg3, int arg4) throws Throwable {
         jq.assert(TypeCheck.isAssignable(Unsafe.getTypeOf(dis), m.getDeclaringClass()));
         if (!jq.Bootstrapping) {
-            jq.assert(m.getDeclaringClass().isClsInitialized());
+            jq.assert(m.getDeclaringClass().isClsInitRunning());
             Unsafe.pushArg(Unsafe.addressOf(dis));
             Unsafe.pushArg(Unsafe.addressOf(arg1));
             Unsafe.pushArg(arg2);
@@ -415,6 +425,7 @@ public abstract class Reflection {
     }
     
     public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LRun_Time/Reflection;");
-    public static final jq_StaticMethod _invokestatic_noargs = _class.getOrCreateStaticMethod("invokestatic", "(LClazz/jq_StaticMethod;)J");
+    public static final jq_StaticMethod _invokestatic_noargs = _class.getOrCreateStaticMethod("invokestatic_J", "(LClazz/jq_StaticMethod;)J");
+    public static final jq_StaticField _obj_trav = _class.getOrCreateStaticField("obj_trav", "LBootstrap/ObjectTraverser;");
 
 }
