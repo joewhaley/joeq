@@ -128,6 +128,7 @@ public class BDDRelation extends Relation {
                 BDD t = solver.bdd.one();
                 for (int j = 0; j < v.length; ++j) {
                     BDDDomain d = solver.bdd.getDomain(j);
+                    if (!domains.contains(d)) continue;
                     if (quantifyOtherDomains(q, d).isOne()) {
                         dos.writeBytes("* ");
                         t.andWith(d.domain());
