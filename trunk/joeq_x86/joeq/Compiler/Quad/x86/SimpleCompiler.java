@@ -692,10 +692,14 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
             asm.emitARITH_Reg_Reg(x86.ADD_r_r32, EDX, ECX); // hi2*lo1 + hi1*lo2 + hi(lo1*lo2)
             asm.patch1(cloc-1, (byte)(asm.getCurrentOffset()-cloc));
         } else if (op instanceof Binary.DIV_L) {
+            asm.emitShort_Reg(x86.PUSH_r, ECX);
+            asm.emitShort_Reg(x86.PUSH_r, EBX);
             asm.emitShort_Reg(x86.PUSH_r, EDX);
             asm.emitShort_Reg(x86.PUSH_r, EAX);
             emitCallRelative(MathSupport._ldiv);
         } else if (op instanceof Binary.REM_L) {
+            asm.emitShort_Reg(x86.PUSH_r, ECX);
+            asm.emitShort_Reg(x86.PUSH_r, EBX);
             asm.emitShort_Reg(x86.PUSH_r, EDX);
             asm.emitShort_Reg(x86.PUSH_r, EAX);
             emitCallRelative(MathSupport._lrem);
