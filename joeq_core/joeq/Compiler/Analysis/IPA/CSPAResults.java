@@ -63,7 +63,9 @@ import Util.Collections.InvertibleMultiMap;
 import Util.Collections.MultiMap;
 import Util.Collections.SortedArraySet;
 import Util.Collections.UnmodifiableIterator;
+import Util.Graphs.Navigator;
 import Util.Graphs.PathNumbering;
+import Util.Graphs.SCCTopSortedGraph;
 import Util.Graphs.SCComponent;
 import Util.Graphs.Traversals;
 import Util.Graphs.PathNumbering.Path;
@@ -111,12 +113,19 @@ public class CSPAResults {
     /** Extra BDD domain for heap object number. */
     public BDDDomain H2o;
     
+    public BDDDomain H3c, H3o;
+    
     /** Points-to BDD: V1c x V1o x H1c x H1o.
      * This contains the result of the points-to analysis.
      * A relation (V,H) is in the BDD if variable V can point to heap object H.
      */
     BDD pointsTo;
 
+    /** Field BDD: H1c x H1o x FD x H2c x H2o.
+     * This contains the result of the points-to analysis.
+     * A relation (H1,F,H2) is in the BDD if the field F of heap object H1 can
+     * point to heap object H2.
+     */
     BDD fieldPt;
     
     /** Points-to BDD: V1o x H1o.
@@ -224,6 +233,115 @@ public class CSPAResults {
         return !result.isZero();
     }
 
+    Map buildTransitiveAccessedLocations() {
+        SCCTopSortedGraph sccgraph = pn.getSCCGraph();
+        List sccroots = new LinkedList();
+        for (Iterator i = cg.getRoots().iterator(); i.hasNext(); ) {
+            SCComponent scc = pn.getSCC(i.next());
+            sccroots.add(scc);
+        }
+        Navigator nav = sccgraph.getNavigator();
+        List sccs = Traversals.postOrder(nav, sccroots);
+        Map sccToVarBDD = new HashMap();
+        for (Iterator i = sccs.iterator(); i.hasNext(); ) {
+            SCComponent scc = (SCComponent) i.next();
+            BDD vars = bdd.zero();
+            for (Iterator j = scc.nodeSet().iterator(); j.hasNext(); ) {
+                jq_Method method = (jq_Method) j.next();
+                Collection method_nodes = methodToVariables.getValues(method);
+                for (Iterator k = method_nodes.iterator(); k.hasNext(); ) {
+                    Node n = (Node) k.next();
+                    int x = getVariableIndex(n);
+                    vars.orWith(V1o.ithVar(x));
+                }
+            }
+            for (int j = 0; j < scc.nextLength(); ++j) {
+                SCComponent scc2 = scc.next(j);
+                BDD vars2 = (BDD) sccToVarBDD.get(scc2);
+                vars.orWith(vars2.id());
+            }
+            sccToVarBDD.put(scc, vars);
+        }
+        return sccToVarBDD;
+    }
+
+    public TypedBDD ci_modRef(jq_Method m) {
+        Map sccToVarBDD = buildTransitiveAccessedLocations();
+        SCComponent scc = pn.getSCC(m);
+        BDD b = (BDD) sccToVarBDD.get(scc);
+        BDD dom = V1c.set();
+        dom.andWith(V1o.set());
+        BDD c = b.relprod(pointsTo, dom);
+        return new TypedBDD(c, H1c, H1o);
+    }
+
+    public TypedBDD findEquivalentObjects_fi() {
+        BDDPairing H2toH3 = bdd.makePair();
+        H2toH3.set(new BDDDomain[] { H2c, H2o }, new BDDDomain[] { H3c, H3o } );
+        BDDPairing H3toH1 = bdd.makePair();
+        H3toH1.set(new BDDDomain[] { H3c, H3o }, new BDDDomain[] { H1c, H1o } );
+        BDD H1set = H1c.set().and(H1o.set());
+        
+        BDD heapPt = fieldPt.exist(FD.set());
+        BDD heapPt2 = heapPt.replace(H2toH3);
+        
+        BDD heapPt3 = heapPt.applyAll(heapPt2, BDDFactory.biimp, H1set);
+        heapPt.free(); heapPt2.free();
+        
+        heapPt3.replaceWith(H3toH1);
+        
+        BDD pointedTo = fieldPt.exist(H1set.and(FD.set()));
+        heapPt3.andWith(pointedTo);
+        return new TypedBDD(heapPt3, H1c, H1o, H2c, H2o);
+    }
+
+    public TypedBDD findEquivalentObjects_fs() {
+        BDDPairing H1toH2 = bdd.makePair();
+        H1toH2.set(new BDDDomain[] { H1c, H1o }, new BDDDomain[] { H2c, H2o } );
+        BDDPairing H2toH1 = bdd.makePair();
+        H2toH1.set(new BDDDomain[] { H2c, H2o }, new BDDDomain[] { H1c, H1o } );
+        BDDPairing H2toH3 = bdd.makePair();
+        H2toH3.set(new BDDDomain[] { H2c, H2o }, new BDDDomain[] { H3c, H3o } );
+        BDDPairing H3toH1 = bdd.makePair();
+        H3toH1.set(new BDDDomain[] { H3c, H3o }, new BDDDomain[] { H1c, H1o } );
+        BDD H1set = H1c.set().and(H1o.set());
+        BDD H2set = H2c.set().and(H2o.set());
+        BDD H1andFDset = H1set.and(FD.set());
+        
+        BDD fieldPt2 = fieldPt.replace(H2toH3);
+        BDD fieldPt3 = fieldPt.applyAll(fieldPt2, BDDFactory.biimp, H1andFDset);
+        fieldPt2.free();
+        
+        fieldPt3.replaceWith(H3toH1);
+        
+        BDD pointedTo = fieldPt.exist(H1andFDset);
+        BDD filter = H1o.buildEquals(H2o);
+        filter.andWith(H1c.buildEquals(H2c));
+        fieldPt3.andWith(filter.not());
+        filter.free();
+        fieldPt3.andWith(pointedTo);
+        
+        BDD iter = fieldPt3.id();
+        int num = 0;
+        while (!iter.isZero()) {
+            ++num;
+            BDD sol = iter.satOne();
+            BDD sol_h2 = sol.exist(H1set);
+            sol.free();
+            BDD sol3 = iter.restrict(sol_h2);
+            sol3.orWith(sol_h2.replace(H2toH1));
+            sol_h2.free();
+            System.out.println("EC "+num+":\n"+new TypedBDD(sol3, H1c, H1o).toString());
+            sol3.andWith(sol3.replace(H1toH2));
+            iter.applyWith(sol3, BDDFactory.diff);
+            //try { System.in.read(); } catch (IOException x) {}
+        }
+        iter.free();
+        System.out.println("There are "+num+" equivalence classes.");
+        
+        return new TypedBDD(fieldPt3, H1c, H1o, H2c, H2o);
+    }
+    
     public boolean findAliasedParameters(jq_Method m) {
         Collection s = methodToVariables.getValues(m);
         Collection paramNodes = new LinkedList();
@@ -540,11 +658,18 @@ public class CSPAResults {
         
         boolean reverseLocal = System.getProperty("bddreverse", "true").equals("true");
         String ordering = System.getProperty("bddordering", "FD_H2cxH2o_V2cxV1cxV2oxV1o_H1cxH1o");
-        
         int[] varorder = CSPA.makeVarOrdering(bdd, domainBits, domainSpos,
                                               reverseLocal, ordering);
         bdd.setVarOrder(varorder);
         bdd.enableReorder();
+        
+        long[] domains2 = new long[2];
+        domains2[0] = 1L << HEAPBITS;
+        domains2[1] = 1L << CONTEXTBITS;
+        BDDDomain[] bdd_domains2 = bdd.extDomain(domains2);
+        
+        H3o = bdd_domains2[0];
+        H3c = bdd_domains2[1];
     }
     
     private IndexMap readIndexMap(String name, DataInput in) throws IOException {
@@ -619,6 +744,8 @@ public class CSPAResults {
             case 6: return "H1c";
             case 7: return "H2o";
             case 8: return "H2c";
+            case 9: return "H3o";
+            case 10: return "H3c";
             default: return "???";
         }
     }
@@ -634,6 +761,8 @@ public class CSPAResults {
         } else if (d == H1o) {
             n = (Node) getHeapNode(i);
         } else if (d == H2o) {
+            n = (Node) getHeapNode(i);
+        } else if (d == H3o) {
             n = (Node) getHeapNode(i);
         }
         if (n != null) {
@@ -926,6 +1055,8 @@ public class CSPAResults {
     }
     
     public Node getVariableNode(int v) {
+        if (v < 0 || v >= variableIndexMap.size())
+            return null;
         Node n = (Node) variableIndexMap.get(v);
         return n;
     }
@@ -938,6 +1069,8 @@ public class CSPAResults {
     }
 
     public Node getHeapNode(int v) {
+        if (v < 0 || v >= heapobjIndexMap.size())
+            return null;
         Node n = (Node) heapobjIndexMap.get(v);
         return n;
     }
@@ -1015,6 +1148,14 @@ public class CSPAResults {
             this.dom.add(d2);
         }
         
+        public TypedBDD(BDD bdd, BDDDomain d1, BDDDomain d2, BDDDomain d3) {
+            this.bdd = bdd;
+            this.dom = SortedArraySet.FACTORY.makeSet(domain_comparator);
+            this.dom.add(d1);
+            this.dom.add(d2);
+            this.dom.add(d3);
+        }
+        
         public TypedBDD(BDD bdd, BDDDomain d1, BDDDomain d2, BDDDomain d3, BDDDomain d4) {
             this.bdd = bdd;
             this.dom = SortedArraySet.FACTORY.makeSet(domain_comparator);
@@ -1032,6 +1173,17 @@ public class CSPAResults {
             this.dom.add(d3);
             this.dom.add(d4);
             this.dom.add(d5);
+        }
+        
+        public TypedBDD(BDD bdd, BDDDomain d1, BDDDomain d2, BDDDomain d3, BDDDomain d4, BDDDomain d5, BDDDomain d6) {
+            this.bdd = bdd;
+            this.dom = SortedArraySet.FACTORY.makeSet(domain_comparator);
+            this.dom.add(d1);
+            this.dom.add(d2);
+            this.dom.add(d3);
+            this.dom.add(d4);
+            this.dom.add(d5);
+            this.dom.add(d6);
         }
         
         public TypedBDD relprod(TypedBDD bdd1, TypedBDD set) {
@@ -1134,6 +1286,7 @@ public class CSPAResults {
                     break;
                 }
                 int[] val = b.scanAllVar();
+                //sb.append((long)b.satCount(dset));
                 sb.append("\t(");
                 BDD temp = b.getFactory().one();
                 for (Iterator i=dom.iterator(); i.hasNext(); ) {
@@ -1359,6 +1512,9 @@ public class CSPAResults {
                 } else if (command.equals("aliasedparams")) {
                     findAliasedParameters();
                     increaseCount = false;
+                } else if (command.equals("findequiv")) {
+                    TypedBDD bdd = findEquivalentObjects_fs();
+                    results.add(bdd);
                 } else if (command.equals("escape")) {
                     escapeAnalysis();
                     increaseCount = false;
