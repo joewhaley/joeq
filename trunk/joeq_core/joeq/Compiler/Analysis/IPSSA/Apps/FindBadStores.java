@@ -14,22 +14,21 @@ import java.util.Set;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Field;
-import joeq.Class.jq_InstanceField;
 import joeq.Class.jq_Method;
-import joeq.Class.jq_StaticField;
 import joeq.Class.jq_Type;
 import joeq.Compiler.Quad.CallGraph;
 import joeq.Compiler.Quad.RootedCHACallGraph;
 import joeq.Main.HostedVM;
+import joeq.Util.Assert;
 import joeq.Util.Collections.AppendIterator;
-
 
 public class FindBadStores {    
     private static CallGraph _cg;
     private Set _classes = null;
     
     // filter out non-local classes?
-    static final boolean FILTER_LOCAL = false;     
+    static final boolean FILTER_LOCAL 	= false;
+    static jq_Class _serializableClass  = null;
     
     public static void main(String[] args) {
         HostedVM.initialize();
@@ -98,7 +97,10 @@ public class FindBadStores {
         if(FILTER_LOCAL){
             System.out.println("Considering classes: " + _classes);
         }        
-    }    
+        
+        _serializableClass = (jq_Class)jq_Type.parseType("Ljava.io.Serializable");
+        Assert._assert(_serializableClass != null);
+    }
 
     private Set getClasses(Collection collection) {
         HashSet result = new HashSet(); 
@@ -113,7 +115,7 @@ public class FindBadStores {
         }
         
         return result;
-    }    
+    }
     
     private void processClasses() {      
         for(Iterator iter = _classes.iterator(); iter.hasNext(); ) {
@@ -144,10 +146,34 @@ public class FindBadStores {
      * @param c
      * @param f
      */
-    private void processField(jq_Class c, jq_Field f) {
+    private void processField(jq_Class c, jq_Field f){
         // TODO: 
         // 	1. find heap objects it can point to
-        // 	2. 
+        // 	2. get their types
+        Set types = getFieldPointeeTypes(c, f);
+        //  3. figure out which ones are *not* serializable
+        for(Iterator typeIter = types.iterator(); typeIter.hasNext();){
+            jq_Type type = (jq_Type) typeIter.next();
+            if(!(type instanceof jq_Class)){
+                // skip basic types
+                continue;
+            }
+            
+            jq_Class typeClass = (jq_Class) type;
+            if(typeClass.getDeclaredInterface(_serializableClass.getDesc()) == null){
+                System.err.println(c + "." + f + "\ttype " + c + " is not serializable");
+            }
+        }
+    }
+
+    /**
+     * @param c
+     * @param f
+     * @return
+     */
+    private Set getFieldPointeeTypes(jq_Class c, jq_Field f) {
+        // TODO Do the bdd magic to produce the answer
+        return null;
     }
 
     protected void run(boolean verbose){        
