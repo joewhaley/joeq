@@ -85,6 +85,11 @@ public final class jq_StaticField extends jq_Field {
         else
             return 4;
     }
+    public final void setValue(int v) { getDeclaringClass().setStaticData(this, v); }
+    public final void setValue(float v) { getDeclaringClass().setStaticData(this, v); }
+    public final void setValue(long v) { getDeclaringClass().setStaticData(this, v); }
+    public final void setValue(double v) { getDeclaringClass().setStaticData(this, v); }
+    public final void setValue(Object v) { getDeclaringClass().setStaticData(this, v); }
     
     public final boolean needsDynamicLink(jq_Method method) {
         return getDeclaringClass().needsDynamicLink(method);
