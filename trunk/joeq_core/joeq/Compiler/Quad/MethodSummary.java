@@ -1047,7 +1047,7 @@ public class MethodSummary {
         static void updateMap(Map um, Iterator i, Map m) {
             while (i.hasNext()) {
                 java.util.Map.Entry e = (java.util.Map.Entry)i.next();
-                jq_Field f = (jq_Field)e.getKey();
+                Object f = e.getKey();
                 Object o = e.getValue();
                 if (o == null) continue;
                 if (o instanceof Node) {
@@ -1168,7 +1168,9 @@ public class MethodSummary {
                 updateMap(um, m.entrySet().iterator(), this.accessPathEdges);
             }
             if (this.passedParameters != null) {
-                this.passedParameters = SortedArraySet.FACTORY.makeSet(this.passedParameters);
+                Set pp = SortedArraySet.FACTORY.makeSet(HashCodeComparator.INSTANCE);
+                pp.addAll(this.passedParameters);
+                this.passedParameters = pp;
             }
             addGlobalEdges(this);
         }
@@ -1703,7 +1705,9 @@ public class MethodSummary {
                     updateMap_unknown(um, m.entrySet().iterator(), this.accessPathEdges);
                 }
                 if (this.passedParameters != null) {
-                    this.passedParameters = SortedArraySet.FACTORY.makeSet(this.passedParameters);
+                    Set pp = SortedArraySet.FACTORY.makeSet(HashCodeComparator.INSTANCE);
+                    pp.addAll(this.passedParameters); 
+                    this.passedParameters = pp;
                 }
                 addGlobalEdges(this);
             }
@@ -3008,7 +3012,8 @@ outer:
             Node b = (Node)m.get(a);
             b.update(m);
         }
-        Set calls = SortedArraySet.FACTORY.makeSet(this.calls);
+        Set calls = SortedArraySet.FACTORY.makeSet(HashCodeComparator.INSTANCE);
+        calls.addAll(this.calls);
         Set returned = NodeSet.FACTORY.makeSet();
         for (Iterator i=this.returned.iterator(); i.hasNext(); ) {
             Node a = (Node)i.next();
@@ -3075,8 +3080,11 @@ outer:
             jq.Assert(!(e.getValue() instanceof UnknownTypeNode));
             nodes.put(e.getValue(), e.getValue());
         }
-        Map passedParamToNodes = new HashMap(this.passedParamToNodes);
-        Node.updateMap(m, passedParamToNodes.entrySet().iterator(), this.passedParamToNodes);
+        Map passedParamToNodes = null;
+        if (USE_PARAMETER_MAP) {
+            passedParamToNodes = new HashMap(this.passedParamToNodes);
+            Node.updateMap(m, passedParamToNodes.entrySet().iterator(), passedParamToNodes);
+        }
         MethodSummary that = new MethodSummary(method, params, calls, callToRVN, callToTEN, passedParamToNodes, returned, thrown, nodes);
         if (VERIFY_ASSERTIONS) that.verify();
         return that;
