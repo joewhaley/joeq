@@ -5,7 +5,10 @@ package Compil3r.Analysis.IPA;
 
 import java.io.DataInput;
 import java.io.DataInputStream;
+import java.io.DataOutput;
+import java.io.DataOutputStream;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -29,7 +32,9 @@ import org.sf.javabdd.BDDPairing;
 
 import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
+import Clazz.jq_Field;
 import Clazz.jq_LineNumberBC;
+import Clazz.jq_Member;
 import Clazz.jq_Method;
 import Clazz.jq_Reference;
 import Clazz.jq_Type;
@@ -42,6 +47,7 @@ import Compil3r.Analysis.FlowInsensitive.MethodSummary.ParamNode;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.PassedParameter;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.ReturnValueNode;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.ThrownExceptionNode;
+import Compil3r.Analysis.IPA.CSPA.HeapObject;
 import Compil3r.Analysis.IPA.CSPA.ThreadRootMap;
 import Compil3r.Analysis.IPA.ProgramLocation.BCProgramLocation;
 import Compil3r.Analysis.IPA.ProgramLocation.QuadProgramLocation;
@@ -93,6 +99,8 @@ public class CSPAResults {
     IndexMap variableIndexMap;
     /** Map between heap objects and indices in the H1o domain. */
     IndexMap heapobjIndexMap;
+    /** Map between fields and indices in the FD domain. */
+    IndexMap fieldIndexMap;
 
     /** BDD domain for context number of variable. */
     public BDDDomain V1c;
@@ -397,6 +405,54 @@ public class CSPAResults {
         System.out.println("Has aliased parameters: "+hasAlias);
     }
 
+    static final boolean FILTER_NULL = true;
+
+    public void dumpObjectConnectivityGraph(DataOutput out) throws IOException {
+        BDD context = H1c.set();
+        context.andWith(H2c.set());
+        BDD ci_fieldPt = fieldPt.exist(context);
+
+        out.writeBytes("digraph \"ObjectConnectivity\" {\n");
+        int j = 0;
+        for (Iterator i = heapobjIndexMap.iterator(); i.hasNext(); ++j) {
+            HeapObject h = (HeapObject) i.next();
+            Assert._assert(j == heapobjIndexMap.get(h));
+            jq_Type t = null;
+            if (h != null) {
+                t = h.getDeclaredType();
+                if (FILTER_NULL && t == null) continue;
+            }
+            String name = null;
+            if (t != null) name = t.shortName();
+            out.writeBytes("n"+j+" [label=\""+name+"\"];\n");
+        }
+        
+        j = 0;
+        for (Iterator i = heapobjIndexMap.iterator(); i.hasNext(); ++j) {
+            HeapObject h = (HeapObject) i.next();
+            Assert._assert(j == heapobjIndexMap.get(h));
+            if (FILTER_NULL && h != null && h.getDeclaredType() == null)
+                continue;
+            BDD pt = ci_fieldPt.restrict(H1o.ithVar(j));
+            while (!pt.isZero()) {
+                BDD s = pt.satOne();
+                int[] val = s.scanAllVar();
+                HeapObject target = (HeapObject) getHeapNode(val[H2o.getIndex()]);
+                if (FILTER_NULL && h != null && h.getDeclaredType() == null)
+                    continue;
+                int fn = val[FD.getIndex()];
+                jq_Field f = getField(fn);
+                String fieldName = "[]";
+                if (f != null) fieldName = f.getName().toString();
+                out.writeBytes("n"+val[H1o.getIndex()]+
+                               " -> n"+val[H2o.getIndex()]+
+                               " [label=\""+fieldName+"\"];\n");
+                pt.applyWith(s, BDDFactory.diff);
+            }
+        }
+        out.writeBytes("}\n");
+    }
+
     public static boolean TRACE_ESCAPE = false;
 
     public Collection getTargetMethods(ProgramLocation callSite) {
@@ -606,6 +662,10 @@ public class CSPAResults {
         di = new DataInputStream(new FileInputStream(fn+".heap"));
         heapobjIndexMap = readIndexMap("Heap", di);
         di.close();
+        
+        di = new DataInputStream(new FileInputStream(fn+".fields"));
+        fieldIndexMap = readFieldIndexMap("Variable", di);
+        di.close();
         System.out.println("done.");
 
         buildContextInsensitive();
@@ -698,6 +758,20 @@ public class CSPAResults {
                     n.recordPassedParameter(pp);
                 }
             }
+        }
+        return m;
+    }
+    
+    private IndexMap readFieldIndexMap(String name, DataInput in) throws IOException {
+        int size = Integer.parseInt(in.readLine());
+        IndexMap m = new IndexMap(name, size);
+        for (int i=0; i<size; ++i) {
+            String s = in.readLine();
+            StringTokenizer st = new StringTokenizer(s);
+            jq_Field f = (jq_Field) jq_Member.read(st);
+            int j = m.get(f);
+            //System.out.println(i+" = "+n);
+            Assert._assert(i == j);
         }
         return m;
     }
@@ -1082,6 +1156,13 @@ public class CSPAResults {
         return v;
     }
 
+    public jq_Field getField(int v) {
+        if (v < 0 || v >= fieldIndexMap.size())
+            return null;
+        jq_Field n = (jq_Field) fieldIndexMap.get(v);
+        return n;
+    }
+    
     public ProgramLocation getHeapProgramLocation(int v) {
         Node n = (Node) getHeapNode(v);
         if (n instanceof ConcreteTypeNode)
@@ -1515,6 +1596,12 @@ public class CSPAResults {
                 } else if (command.equals("findequiv")) {
                     TypedBDD bdd = findEquivalentObjects_fs();
                     results.add(bdd);
+                } else if (command.equals("dumpconnect")) {
+                    String filename = "connect.dot";
+                    if (st.hasMoreTokens()) filename = st.nextToken();
+                    DataOutputStream dos = new DataOutputStream(new FileOutputStream(filename));
+                    dumpObjectConnectivityGraph(dos);
+                    increaseCount = false;
                 } else if (command.equals("escape")) {
                     escapeAnalysis();
                     increaseCount = false;
