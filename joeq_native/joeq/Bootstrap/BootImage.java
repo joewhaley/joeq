@@ -130,7 +130,10 @@ public class BootImage implements ObjectLayout, ELFConstants {
     public HeapAddress getOrAllocateObject(Object o) {
         if (o == null) return HeapAddress.getNull();
         jq.Assert(!(o instanceof Address));
-        if (o instanceof Address) return new BootstrapHeapAddress(((Address)o).to32BitValue());
+        if (o instanceof Address) {
+            jq.UNREACHABLE(((Address)o).stringRep());
+            return new BootstrapHeapAddress(((Address)o).to32BitValue());
+        }
         IdentityHashCodeWrapper k = IdentityHashCodeWrapper.create(o);
         Entry e = (Entry)hash.get(k);
         if (e != null) return e.getAddress();
@@ -261,12 +264,12 @@ public class BootImage implements ObjectLayout, ELFConstants {
     
     public int numOfEntries() { return entries.size(); }
 
-    public static int UPDATE_PERIOD = 5000;
+    public static int UPDATE_PERIOD = 10000;
 
     public void find_reachable(int i) {
         for (; i<entries.size(); ++i) {
 	    if ((i % UPDATE_PERIOD) == 0) {
-		System.out.print("Completed: "+i+"/"+entries.size()+" objects\r");
+		System.out.print("Completed: "+i+"/"+entries.size()+" objects, memory used: "+(Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory())+"\r");
 	    }
             Entry e = (Entry)entries.get(i);
             Object o = e.getObject();
@@ -286,7 +289,7 @@ public class BootImage implements ObjectLayout, ELFConstants {
                     int length = Array.getLength(o);
                     Object[] v = (Object[])o;
                     for (int k=0; k<length; ++k) {
-                        Object o2 = Reflection.obj_trav.mapValue(v[k]);
+                        Object o2 = Reflection.arrayload_A(v, k);
                         if (o2 != null) {
                             addDataReloc((HeapAddress)addr.offset(k<<2), getOrAllocateObject(o2));
                         }
@@ -316,6 +319,7 @@ public class BootImage implements ObjectLayout, ELFConstants {
                 }
             }
         }
+	System.out.println("Completed: "+entries.size()+" objects, memory used: "+(Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory())+"                    ");
     }
 
     public int size() { return heapCurrent-startAddress; }
@@ -486,7 +490,7 @@ public class BootImage implements ObjectLayout, ELFConstants {
     
     public static boolean USE_MICROSOFT_STYLE_MUNGE = true;
     
-    public static final int NUM_OF_EXTERNAL_SYMS = 4;
+    public static final int NUM_OF_EXTERNAL_SYMS = 6;
     public void dumpEXTSYMENTs(OutputStream out, jq_StaticMethod rootm)
     throws IOException {
     	String s;
@@ -535,6 +539,28 @@ public class BootImage implements ObjectLayout, ELFConstants {
         write_ushort(out, (char)DT_FCN);
         write_uchar(out, C_EXT);
         write_uchar(out, 0);
+
+        write_ulong(out, 0);    // e_zeroes
+    	if (USE_MICROSOFT_STYLE_MUNGE) s = "_joeq_code_startaddress";
+    	else s = "joeq_code_startaddress";
+        idx = alloc_string(s);
+        write_ulong(out, idx);  // e_offset
+        write_ulong(out, 0);
+        write_short(out, (short)1);
+        write_ushort(out, (char)(DT_PTR | T_VOID));
+        write_uchar(out, C_EXT);
+        write_uchar(out, 0);
+
+        write_ulong(out, 0);    // e_zeroes
+    	if (USE_MICROSOFT_STYLE_MUNGE) s = "_joeq_data_startaddress";
+    	else s = "joeq_data_startaddress";
+        idx = alloc_string(s);
+        write_ulong(out, idx); // e_offset
+        write_ulong(out, 0); // e_value
+        write_short(out, (short)2); // e_scnum
+        write_ushort(out, (char)(DT_PTR | T_VOID)); // e_type
+        write_uchar(out, C_EXT); // e_sclass
+        write_uchar(out, 0); // e_numaux
     }
     
     public void dumpEXTDEFSYMENTs(OutputStream out, List extrefs)
@@ -583,7 +609,7 @@ public class BootImage implements ObjectLayout, ELFConstants {
         } else if (t.isReferenceType()) {
             type = DT_PTR;
         }
-        if (t.isPrimitiveType()) {
+	if (t.isPrimitiveType()) {
             if (t == jq_Primitive.INT) type |= T_LONG;
             else if (t == jq_Primitive.LONG) type |= T_LNGDBL;
             else if (t == jq_Primitive.FLOAT) type |= T_FLOAT;
@@ -594,11 +620,11 @@ public class BootImage implements ObjectLayout, ELFConstants {
             else if (t == jq_Primitive.CHAR) type |= T_USHORT;
             else jq.UNREACHABLE();
         } else {
-            type |= T_STRUCT;
-        }
-        write_ushort(out, type);    // e_type
-        write_uchar(out, C_STAT);   // e_sclass
-        write_uchar(out, 0);  // e_numaux
+	    type |= T_STRUCT;
+	}
+        write_ushort(out, type);  // e_type
+        write_uchar(out, C_STAT); // e_sclass
+        write_uchar(out, 0);      // e_numaux
     }
 
     public void dumpIFIELDSYMENT(OutputStream out, jq_InstanceField f)
@@ -620,9 +646,9 @@ public class BootImage implements ObjectLayout, ELFConstants {
             t = ((jq_Array)t).getElementType();
             type = DT_ARY;
         } else if (t.isReferenceType()) {
-            type = DT_PTR;
+            type = DT_PTR | T_STRUCT;
         }
-        if (t.isPrimitiveType()) {
+	if (t.isPrimitiveType()) {
             if (t == jq_Primitive.INT) type |= T_LONG;
             else if (t == jq_Primitive.LONG) type |= T_LNGDBL;
             else if (t == jq_Primitive.FLOAT) type |= T_FLOAT;
@@ -633,11 +659,11 @@ public class BootImage implements ObjectLayout, ELFConstants {
             else if (t == jq_Primitive.CHAR) type |= T_USHORT;
             else jq.UNREACHABLE();
         } else {
-            type |= T_STRUCT;
-        }
-        write_ushort(out, type);    // e_type
-        write_uchar(out, C_MOS);    // e_sclass
-        write_uchar(out, 0);  // e_numaux
+	    type |= T_STRUCT;
+	}
+        write_ushort(out, type); // e_type
+        write_uchar(out, C_MOS); // e_sclass
+        write_uchar(out, 0);     // e_numaux
     }
     
     public void dumpMETHODSYMENT(OutputStream out, jq_CompiledCode cc)
@@ -809,16 +835,24 @@ public class BootImage implements ObjectLayout, ELFConstants {
         }
         
         // write data relocs
+	int j=0;
         if (ndatareloc > 65535) {
             write_ulong(out, ndatareloc);
             write_ulong(out, 0);
             write_ushort(out, (char)0);
+	    ++j;
         }
         it = data_relocs.iterator();
         while (it.hasNext()) {
+	    if ((j % UPDATE_PERIOD) == 0) {
+		System.out.print("Completed: "+j+"/"+ndatareloc+" relocations\r");
+	    }
             Reloc r = (Reloc)it.next();
             r.dumpCOFF(out);
+	    ++j;
         }
+	System.out.println("Completed: "+ndatareloc+" relocations                    \n");
+        jq.Assert(j == ndatareloc);
         
         // write line numbers
         
@@ -827,7 +861,7 @@ public class BootImage implements ObjectLayout, ELFConstants {
         dumpEXTSYMENTs(out, rootm);
         dumpEXTDEFSYMENTs(out, exts);
         it = CodeAllocator.getCompiledMethods();
-        int j=0;
+        j=0;
         while (it.hasNext()) {
             jq_CompiledCode r = (jq_CompiledCode)it.next();
             dumpMETHODSYMENT(out, r);
@@ -880,7 +914,7 @@ public class BootImage implements ObjectLayout, ELFConstants {
                     int length = Array.getLength(o);
                     Object[] v = (Object[])o;
                     for (int k=0; k<length; ++k) {
-                        Object o2 = Reflection.obj_trav.mapValue(v[k]);
+                        Object o2 = Reflection.arrayload_A(v, k);
                         if (o2 == p) {
                             System.err.println("Possible path: ["+k+"]");
                             visited.add(w);
@@ -930,6 +964,9 @@ public class BootImage implements ObjectLayout, ELFConstants {
         int currentAddr=0;
         int j=0;
         while (i.hasNext()) {
+	    if ((j % UPDATE_PERIOD) == 0) {
+		System.out.print("Completed: "+j+"/"+entries.size()+" objects, "+currentAddr+"/"+heapCurrent+" bytes\r");
+	    }
             Entry e = (Entry)i.next();
             Object o = e.getObject();
             HeapAddress addr = e.getAddress();
@@ -1011,7 +1048,7 @@ public class BootImage implements ObjectLayout, ELFConstants {
                 } else {
                     Object[] v = (Object[])o;
                     for (int k=0; k<length; ++k) {
-                        Object o2 = Reflection.obj_trav.mapValue(v[k]);
+                        Object o2 = Reflection.arrayload_A(v, k);
                         try { write_ulong(out, getAddressOf(o2).to32BitValue()); }
                         catch (UnknownObjectException x) {
                             System.err.println("Object array element #"+k);
@@ -1079,6 +1116,7 @@ public class BootImage implements ObjectLayout, ELFConstants {
         while (currentAddr < heapCurrent) {
             write_char(out, (byte)0); ++currentAddr;
         }
+	System.out.println("Completed: "+j+" objects, "+heapCurrent+" bytes                    ");
     }
     
     public static void write_uchar(OutputStream out, int v)
@@ -1248,6 +1286,12 @@ public class BootImage implements ObjectLayout, ELFConstants {
 
             cc = jq_NativeThread._ctrl_break_handler.getDefaultCompiledVersion();
             e = new SymbolTableEntry("ctrl_break_handler", cc.getEntrypoint().to32BitValue(), cc.getLength(), STB_GLOBAL, STT_FUNC, text);
+            symtab.addSymbol(e);
+
+            e = new SymbolTableEntry("joeq_code_startaddress", 0, 0, STB_GLOBAL, STT_FUNC, text);
+            symtab.addSymbol(e);
+
+            e = new SymbolTableEntry("joeq_data_startaddress", 0, 0, STB_GLOBAL, STT_FUNC, data);
             symtab.addSymbol(e);
         }
 
