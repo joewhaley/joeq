@@ -1486,8 +1486,9 @@ public class SinglePassBootImage implements ELFConstants {
         SinglePassBootImage.out.println("done. ("+(time/1000.)+" seconds)");
         
         f.write();
-        
+        int pos = bb.position();
         bb.force();
+        fc.truncate(pos);
     }
 
     class TextSection extends Section.ProgBitsSection {
@@ -1497,7 +1498,7 @@ public class SinglePassBootImage implements ELFConstants {
         public int getSize() { return bca.size(); }
         public int getAddrAlign() { return 64; }
         public void writeData(ELF file) throws IOException {
-            ExtendedDataOutput out = (ExtendedDataOutput) ((ELFOutput)file).getOutput();
+            DataOutput out = (DataOutput) ((ELFOutput)file).getOutput();
             bca.dump(out);
         }
         public void load(Section.UnloadedSection s, ELF file) throws IOException {
@@ -1513,7 +1514,7 @@ public class SinglePassBootImage implements ELFConstants {
         public int getAddrAlign() { return 64; }
         public void writeData(ELF file) throws IOException {
             try {
-                ExtendedDataOutput out = (ExtendedDataOutput) ((ELFOutput)file).getOutput();
+                DataOutput out = (DataOutput) ((ELFOutput)file).getOutput();
                 byte[] b;
                 if (heapBuffer.hasArray()) b = heapBuffer.array();
                 else {
