@@ -98,7 +98,7 @@ public class BDDInferenceRule extends InferenceRule {
         }
         
         //if (solver.TRACE)
-            solver.out.println("Applying inference rule "+this+" (update "+updateCount+")");
+            solver.out.println("Applying inference rule:\n   "+this+" ("+updateCount+")");
         
         long time = System.currentTimeMillis();
         
@@ -255,7 +255,7 @@ public class BDDInferenceRule extends InferenceRule {
     // Incremental version.
     public boolean updateIncremental() {
         //if (solver.TRACE)
-        solver.out.println("Applying inference rule "+this+" (incremental)"+" (update "+updateCount+")");
+        solver.out.println("Applying inference rule:\n   "+this+" (inc) ("+updateCount+")");
         
         long time = System.currentTimeMillis();
         
