@@ -48,6 +48,7 @@ public class jq_NativeThread implements x86Constants, jq_DontAlign {
      * what is going on in the scheduler.
      */
     public static /*final*/ boolean TRACE = false;
+    public static /*final*/ boolean CHECK = false;
 
     public static final boolean STATISTICS = true;
     
@@ -594,7 +595,7 @@ public class jq_NativeThread implements x86Constants, jq_DontAlign {
             }
             preemptedThreadsLength += this.preempted_thread_counter;
             ++readyQueueN;
-            verifyCount();
+            if (CHECK) verifyCount();
         }
         jq_ThreadQueue q = chooseNextQueue();
         while (q != null && !q.isEmpty()) {
