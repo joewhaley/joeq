@@ -20,7 +20,7 @@ import Main.jq;
 import Memory.CodeAddress;
 import Memory.StackAddress;
 import Run_Time.Reflection;
-import Run_Time.StackWalker;
+import Run_Time.StackCodeWalker;
 import Run_Time.TypeCheck;
 import Run_Time.Unsafe;
 import UTF.Utf8;
@@ -179,7 +179,7 @@ public abstract class jq_Member implements jq_ClassFileConstants {
     public final void setDeclaringClass(jq_Class k) {
         this.clazz = k;
     }
-    
+
     public final void setNameAndDesc(jq_NameAndDesc nd) {
         this.nd = nd;
     }
@@ -241,7 +241,7 @@ public abstract class jq_Member implements jq_ClassFileConstants {
             // completely public!
             return;
         }
-        StackWalker sw = new StackWalker(null, StackAddress.getBasePointer());
+        StackCodeWalker sw = new StackCodeWalker(null, StackAddress.getBasePointer());
         while (--depth >= 0) sw.gotoNext();
         jq_CompiledCode cc = sw.getCode();
         if (cc != null) {

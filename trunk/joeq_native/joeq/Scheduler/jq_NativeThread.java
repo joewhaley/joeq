@@ -24,11 +24,10 @@ import Memory.CodeAddress;
 import Memory.HeapAddress;
 import Memory.StackAddress;
 import Run_Time.Reflection;
-import Run_Time.StackWalker;
+import Run_Time.StackCodeWalker;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
 import GC.TraceMSGC;
-import GC.TraceRootSet;
 import GC.GCManager;
 import GC.GCVisitor;
 
@@ -479,7 +478,7 @@ public class jq_NativeThread implements x86Constants {
 
     public void dump(jq_RegisterState regs) {
         SystemInterface.debugmsg(this + ": current Java thread = " + currentThread);
-        StackWalker.stackDump(regs.Eip, regs.Ebp);
+        StackCodeWalker.stackDump(regs.Eip, regs.Ebp);
         SystemInterface.debugmsg(this + ": ready queue = " + readyQueue);
         SystemInterface.debugmsg(this + ": idle queue = " + idleQueue);
         SystemInterface.debugmsg(this + ": transfer queue = " + transferQueue);
