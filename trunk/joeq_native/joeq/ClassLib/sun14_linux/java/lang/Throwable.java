@@ -10,6 +10,7 @@ package ClassLib.sun14_linux.java.lang;
 import Allocator.CodeAllocator;
 import Clazz.jq_CompiledCode;
 import Clazz.jq_Method;
+import Memory.CodeAddress;
 import Run_Time.ExceptionDeliverer;
 
 /**
@@ -35,14 +36,14 @@ public abstract class Throwable {
         java.lang.String methodName = "";
         java.lang.String fileName = null;
         int lineNumber = -2;
-        int/*CodeAddress*/ ip = backtrace.getIP();
+        CodeAddress ip = backtrace.getIP();
         jq_CompiledCode cc = CodeAllocator.getCodeContaining(ip);
         if (cc != null) {
             jq_Method m = cc.getMethod();
             if (m != null) {
                 declaringClass = m.getDeclaringClass().getJDKName();
                 methodName = m.getName().toString();
-                int code_offset = ip - cc.getStart();
+                int code_offset = ip.difference(cc.getStart());
                 if (m != null) {
                     fileName = m.getDeclaringClass().getSourceFile().toString();
                     int bc_index = cc.getBytecodeIndex(ip);

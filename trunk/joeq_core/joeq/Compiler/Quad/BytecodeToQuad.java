@@ -66,6 +66,7 @@ import Compil3r.Quad.Operator.Unary;
 import Compil3r.Quad.Operator.ZeroCheck;
 import Compil3r.Quad.RegisterFactory.Register;
 import Main.jq;
+import Memory.HeapAddress;
 import Run_Time.Reflection;
 import Run_Time.TypeCheck;
 import Run_Time.Unsafe;
@@ -1230,19 +1231,91 @@ public class BytecodeToQuad extends BytecodeVisitor {
         super.visitZPUTFIELD(f);
         PUTFIELDhelper(f, Putfield.PUTFIELD_Z_DYNLINK.INSTANCE, Putfield.PUTFIELD_Z.INSTANCE);
     }
+    public static final Utf8 peek = Utf8.get("peek");
+    public static final Utf8 peek1 = Utf8.get("peek1");
+    public static final Utf8 peek2 = Utf8.get("peek2");
+    public static final Utf8 peek4 = Utf8.get("peek4");
+    public static final Utf8 peek8 = Utf8.get("peek8");
+    public static final Utf8 poke = Utf8.get("poke");
+    public static final Utf8 poke1 = Utf8.get("poke1");
+    public static final Utf8 poke2 = Utf8.get("poke2");
+    public static final Utf8 poke4 = Utf8.get("poke4");
+    public static final Utf8 poke8 = Utf8.get("poke8");
+    public static final Utf8 offset = Utf8.get("offset");
+    public static final Utf8 align = Utf8.get("align");
+    public static final Utf8 difference = Utf8.get("difference");
+    public static final Utf8 isNull = Utf8.get("isNull");
+    public static final Utf8 addressOf = Utf8.get("addressOf");
+    public static final Utf8 address32 = Utf8.get("address32");
+    public static final Utf8 asObject = Utf8.get("asObject");
+    public static final Utf8 asReferenceType = Utf8.get("asReferenceType");
+    public static final Utf8 to32BitValue = Utf8.get("to32BitValue");
+    public static final Utf8 stringRep = Utf8.get("stringRep");
+    public static final Utf8 getNull = Utf8.get("getNull");
+    public static final Utf8 size = Utf8.get("size");
+    public static final Utf8 getBasePointer = Utf8.get("getBasePointer");
+    public static final Utf8 getStackPointer = Utf8.get("getStackPointer");
+    public static final Utf8 alloca = Utf8.get("alloca");
+    public static final Utf8 atomicAdd = Utf8.get("atomicAdd");
+    public static final Utf8 atomicSub = Utf8.get("atomicSub");
+    public static final Utf8 atomicCas4 = Utf8.get("atomicCas4");
+    public static final Utf8 atomicAnd = Utf8.get("atomicAnd");
+    public static final Utf8 min = Utf8.get("min");
+    public static final Utf8 max = Utf8.get("max");
+    private void ADDRESShelper(jq_Method m, Invoke oper) {
+        Utf8 name = m.getName();
+        Quad q;
+        if (name == poke1) {
+            Operand val = current_state.pop_I();
+            Operand loc = current_state.pop_R();
+            q = MemStore.create(quad_cfg.getNewQuadID(), MemStore.POKE_1.INSTANCE, loc, val);
+        } else if (name == poke2) {
+            Operand val = current_state.pop_I();
+            Operand loc = current_state.pop_R();
+            q = MemStore.create(quad_cfg.getNewQuadID(), MemStore.POKE_2.INSTANCE, loc, val);
+        } else if (name == poke4) {
+            Operand val = current_state.pop_I();
+            Operand loc = current_state.pop_R();
+            q = MemStore.create(quad_cfg.getNewQuadID(), MemStore.POKE_4.INSTANCE, loc, val);
+        } else if (name == poke8) {
+            Operand val = current_state.pop_L();
+            Operand loc = current_state.pop_R();
+            q = MemStore.create(quad_cfg.getNewQuadID(), MemStore.POKE_8.INSTANCE, loc, val);
+        } else if (name == peek1) {
+            Operand loc = current_state.pop_R();
+            RegisterOperand res = getStackRegister(jq_Primitive.BYTE);
+            q = MemLoad.create(quad_cfg.getNewQuadID(), MemLoad.PEEK_1.INSTANCE, res, loc);
+            current_state.push_I(res);
+        } else if (name == peek2) {
+            Operand loc = current_state.pop_R();
+            RegisterOperand res = getStackRegister(jq_Primitive.SHORT);
+            q = MemLoad.create(quad_cfg.getNewQuadID(), MemLoad.PEEK_2.INSTANCE, res, loc);
+            current_state.push_I(res);
+        } else if (name == peek4) {
+            Operand loc = current_state.pop_R();
+            RegisterOperand res = getStackRegister(jq_Primitive.INT);
+            q = MemLoad.create(quad_cfg.getNewQuadID(), MemLoad.PEEK_4.INSTANCE, res, loc);
+            current_state.push_I(res);
+        } else if (name == peek8) {
+            Operand loc = current_state.pop_R();
+            RegisterOperand res = getStackRegister(jq_Primitive.LONG);
+            q = MemLoad.create(quad_cfg.getNewQuadID(), MemLoad.PEEK_8.INSTANCE, res, loc);
+            current_state.push_L(res);
+        } else if (name == alloca) {
+            Operand amt = current_state.pop_I();
+            RegisterOperand res = getStackRegister(jq_Primitive.INT);
+            q = Special.create(quad_cfg.getNewQuadID(), Special.ALLOCA.INSTANCE, res, amt);
+            current_state.push_I(res);
+        } else {
+            // TODO
+            INVOKEhelper(oper, m, m.getReturnType(), false);
+            return;
+        }
+        appendQuad(q);
+    }
     private void UNSAFEhelper(jq_Method m, Invoke oper) {
         Quad q;
-        if (m == Unsafe._addressOf) {
-            Operand op = current_state.pop_A();
-            RegisterOperand res = getStackRegister(jq_Primitive.INT);
-            q = Unary.create(quad_cfg.getNewQuadID(), Unary.OBJECT_2INT.INSTANCE, res, op);
-            current_state.push_I(res);
-        } else if (m == Unsafe._asObject) {
-            Operand op = current_state.pop_I();
-            RegisterOperand res = getStackRegister(PrimordialClassLoader.loader.getJavaLangObject());
-            q = Unary.create(quad_cfg.getNewQuadID(), Unary.INT_2OBJECT.INSTANCE, res, op);
-            current_state.push_A(res);
-        } else if (m == Unsafe._floatToIntBits) {
+        if (m == Unsafe._floatToIntBits) {
             Operand op = current_state.pop_F();
             RegisterOperand res = getStackRegister(jq_Primitive.INT);
             q = Unary.create(quad_cfg.getNewQuadID(), Unary.FLOAT_2INTBITS.INSTANCE, res, op);
@@ -1262,28 +1335,6 @@ public class BytecodeToQuad extends BytecodeVisitor {
             RegisterOperand res = getStackRegister(jq_Primitive.DOUBLE);
             q = Unary.create(quad_cfg.getNewQuadID(), Unary.LONGBITS_2DOUBLE.INSTANCE, res, op);
             current_state.push_D(res);
-        } else if (m == Unsafe._poke1) {
-            Operand val = current_state.pop_I();
-            Operand loc = current_state.pop_I();
-            q = MemStore.create(quad_cfg.getNewQuadID(), MemStore.POKE_1.INSTANCE, loc, val);
-        } else if (m == Unsafe._poke2) {
-            Operand val = current_state.pop_I();
-            Operand loc = current_state.pop_I();
-            q = MemStore.create(quad_cfg.getNewQuadID(), MemStore.POKE_2.INSTANCE, loc, val);
-        } else if (m == Unsafe._poke4) {
-            Operand val = current_state.pop_I();
-            Operand loc = current_state.pop_I();
-            q = MemStore.create(quad_cfg.getNewQuadID(), MemStore.POKE_4.INSTANCE, loc, val);
-        } else if (m == Unsafe._peek) {
-            Operand loc = current_state.pop_I();
-            RegisterOperand res = getStackRegister(jq_Primitive.INT);
-            q = MemLoad.create(quad_cfg.getNewQuadID(), MemLoad.PEEK_4.INSTANCE, res, loc);
-            current_state.push_I(res);
-        } else if (m == Unsafe._getTypeOf) {
-            Operand loc = current_state.pop_A();
-            RegisterOperand res = getStackRegister(jq_Reference._class);
-            q = Special.create(quad_cfg.getNewQuadID(), Special.GET_TYPE_OF.INSTANCE, res, loc);
-            current_state.push_A(res);
         } else if (m == Unsafe._getThreadBlock) {
             RegisterOperand res = getStackRegister(jq_Thread._class);
             q = Special.create(quad_cfg.getNewQuadID(), Special.GET_THREAD_BLOCK.INSTANCE, res);
@@ -1291,11 +1342,6 @@ public class BytecodeToQuad extends BytecodeVisitor {
         } else if (m == Unsafe._setThreadBlock) {
             Operand loc = current_state.pop_A();
             q = Special.create(quad_cfg.getNewQuadID(), Special.SET_THREAD_BLOCK.INSTANCE, loc);
-        } else if (m == Unsafe._alloca) {
-            Operand amt = current_state.pop_I();
-            RegisterOperand res = getStackRegister(jq_Primitive.INT);
-            q = Special.create(quad_cfg.getNewQuadID(), Special.ALLOCA.INSTANCE, res, amt);
-            current_state.push_I(res);
         } else if (m == Unsafe._longJump) {
             Operand eax = current_state.pop_I();
             Operand sp = current_state.pop_I();
@@ -1758,7 +1804,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         if (type == jq_Reference.jq_NullType.NULL_TYPE) return false;
         jq_Type arrayElemType = getArrayElementTypeOf(ref);
         if (ref.isExactType()) {
-            if (isAssignable(type, arrayElemType) == YES)
+            if (TypeCheck.isAssignable_noload(type, arrayElemType) == TypeCheck.YES)
                 return false;
         }
         jq_Type arrayElemType2 = arrayElemType;
@@ -1868,32 +1914,6 @@ public class BytecodeToQuad extends BytecodeVisitor {
         	jq.UNREACHABLE(op.toString());
         	return null;
         }
-    }
-    
-    static final byte YES = 2;
-    static final byte MAYBE = 1;
-    static final byte NO = 0;
-    // returns YES if "T = S;" would be legal. (T is same or supertype of S)
-    static byte isAssignable(jq_Type S, jq_Type T) {
-        if (S == jq_Reference.jq_NullType.NULL_TYPE) {
-            if (T.isReferenceType()) return YES;
-            else return NO;
-        }
-        if (T == jq_Reference.jq_NullType.NULL_TYPE) return NO;
-        if (T == S) return YES;
-        if (T.isIntLike() && S.isIntLike()) return YES;
-        if (T == PrimordialClassLoader.loader.getJavaLangObject() && S.isReferenceType()) return YES;
-        if (!T.isPrepared() || !S.isPrepared()) return MAYBE;
-        if (T.isArrayType()) {
-            jq_Type elemType = ((jq_Array)T).getInnermostElementType();
-            if (!elemType.isPrepared()) return MAYBE;
-        }
-        if (S.isArrayType()) {
-            jq_Type elemType = ((jq_Array)S).getInnermostElementType();
-            if (!elemType.isPrepared()) return MAYBE;
-        }
-        if (TypeCheck.isAssignable(S, T)) return YES;
-        else return NO;
     }
     
     void mergeStateWithAllExHandlers(boolean cfgEdgeToExit) {
@@ -2178,7 +2198,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
                         res.meetFlags(rop2.getFlags());
                         return res;
                     }
-                    if (isAssignable(t2, t1) == YES) {
+                    if (TypeCheck.isAssignable_noload(t2, t1) == TypeCheck.YES) {
                         // t2 is a subtype of t1.
                         if (!rop1.isExactType() && rop1.hasMoreConservativeFlags(rop2)) {
                             // flags and exact type matches.
@@ -2234,7 +2254,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
                     res.setFlags(rop1.getFlags());
                     return res;
                 }
-                if (isAssignable(t2, t1) == YES) {
+                if (TypeCheck.isAssignable_noload(t2, t1) == TypeCheck.YES) {
                     // compatible type.
                     if (!rop1.isExactType()) {
                         if ((rop1.scratchObject == null) || (t2 != jq_Reference.jq_NullType.NULL_TYPE)) {
@@ -2283,9 +2303,10 @@ public class BytecodeToQuad extends BytecodeVisitor {
         void push_F(Operand op) { jq.Assert(getTypeOf(op) == jq_Primitive.FLOAT); push(op); }
         void push_L(Operand op) { jq.Assert(getTypeOf(op) == jq_Primitive.LONG); push(op); pushDummy(); }
         void push_D(Operand op) { jq.Assert(getTypeOf(op) == jq_Primitive.DOUBLE); push(op); pushDummy(); }
-        void push_A(Operand op) { jq.Assert(getTypeOf(op).isReferenceType()); push(op); }
+        void push_A(Operand op) { jq.Assert(getTypeOf(op).isReferenceType() && !getTypeOf(op).isAddressType()); push(op); }
+        void push_R(Operand op) { jq.Assert(getTypeOf(op).isAddressType()); push(op); }
         void push(Operand op, jq_Type t) {
-            jq.Assert(isAssignable(getTypeOf(op), t) == YES);
+            jq.Assert(TypeCheck.isAssignable_noload(getTypeOf(op), t) == TypeCheck.YES);
             push(op); if (t.getReferenceSize() == 8) pushDummy();
         }
         void pushDummy() { push(DummyOperand.DUMMY); }
@@ -2298,12 +2319,13 @@ public class BytecodeToQuad extends BytecodeVisitor {
         Operand pop_F() { Operand op = pop(); jq.Assert(getTypeOf(op) == jq_Primitive.FLOAT); return op; }
         Operand pop_L() { popDummy(); Operand op = pop(); jq.Assert(getTypeOf(op) == jq_Primitive.LONG); return op; }
         Operand pop_D() { popDummy(); Operand op = pop(); jq.Assert(getTypeOf(op) == jq_Primitive.DOUBLE); return op; }
-        Operand pop_A() { Operand op = pop(); jq.Assert(getTypeOf(op).isReferenceType()); return op; }
+        Operand pop_A() { Operand op = pop(); jq.Assert(getTypeOf(op).isReferenceType() && !getTypeOf(op).isAddressType()); return op; }
+        Operand pop_R() { Operand op = pop(); jq.Assert(getTypeOf(op).isAddressType()); return op; }
         void popDummy() { Operand op = pop(); jq.Assert(op == DummyOperand.DUMMY); }
         Operand pop(jq_Type t) {
             if (t.getReferenceSize() == 8) popDummy();
             Operand op = pop();
-            //jq.Assert(isAssignable(getTypeOf(op), t) != NO);
+            //jq.Assert(TypeCheck.isAssignable_noload(getTypeOf(op), t) != TypeCheck.NO);
             return op;
         }
         Operand pop() {
@@ -2365,6 +2387,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
             super(Utf8.get("L&ReturnAddress;"), Bootstrap.PrimordialClassLoader.loader);
             this.returnTarget = returnTarget;
         }
+        public boolean isAddressType() { return false; }
         public String getJDKName() { jq.UNREACHABLE(); return null; }
         public String getJDKDesc() { jq.UNREACHABLE(); return null; }
         public Clazz.jq_Class[] getInterfaces() { jq.UNREACHABLE(); return null; }

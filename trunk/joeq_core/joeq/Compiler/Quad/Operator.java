@@ -34,6 +34,8 @@ import Compil3r.Quad.Operand.TypeOperand;
 import Interpreter.QuadInterpreter.State;
 import Interpreter.QuadInterpreter.UninitializedReference;
 import Main.jq;
+import Memory.Address;
+import Memory.HeapAddress;
 import Run_Time.Reflection;
 import Run_Time.TypeCheck;
 import Run_Time.Unsafe;
@@ -97,6 +99,13 @@ public abstract class Operator {
             return ((AConstOperand)op).getValue();
     }
 
+    static Address getAddressOpValue(Operand op, State s) {
+        if (op instanceof RegisterOperand)
+            return (Address)s.getReg(((RegisterOperand)op).getRegister());
+        else
+            return HeapAddress.addressOf(((AConstOperand)op).getValue());
+    }
+    
     static Object getWrappedOpValue(Operand op, State s) {
         if (op instanceof RegisterOperand)
             return s.getReg(((RegisterOperand)op).getRegister());
@@ -880,6 +889,7 @@ public abstract class Operator {
                 s.putReg_I(getDest(q).getRegister(), (short)getIntOpValue(getSrc(q), s));
             }
         }
+        /*
         public static class OBJECT_2INT extends Unary {
             public static final OBJECT_2INT INSTANCE = new OBJECT_2INT();
             private OBJECT_2INT() { }
@@ -896,6 +906,7 @@ public abstract class Operator {
                 s.putReg_A(getDest(q).getRegister(), Unsafe.asObject(getIntOpValue(getSrc(q), s)));
             }
         }
+        */
         public static class FLOAT_2INTBITS extends Unary {
             public static final FLOAT_2INTBITS INSTANCE = new FLOAT_2INTBITS();
             private FLOAT_2INTBITS() { }
@@ -3040,9 +3051,9 @@ public abstract class Operator {
             private PEEK_1() { }
             public String toString() { return "PEEK_1"; }
             public void interpret(Quad q, State s) {
-                int o = getIntOpValue(getAddress(q), s);
+                Address o = getAddressOpValue(getAddress(q), s);
                 if (!jq.Bootstrapping)
-                    s.putReg_I(getDest(q).getRegister(), (byte)Unsafe.peek(o));
+                    s.putReg_I(getDest(q).getRegister(), o.peek1());
             }
         }
         public static class PEEK_2 extends MemLoad {
@@ -3050,9 +3061,9 @@ public abstract class Operator {
             private PEEK_2() { }
             public String toString() { return "PEEK_2"; }
             public void interpret(Quad q, State s) {
-                int o = getIntOpValue(getAddress(q), s);
+                Address o = getAddressOpValue(getAddress(q), s);
                 if (!jq.Bootstrapping)
-                    s.putReg_I(getDest(q).getRegister(), (short)Unsafe.peek(o));
+                    s.putReg_I(getDest(q).getRegister(), o.peek2());
             }
         }
         public static class PEEK_4 extends MemLoad {
@@ -3060,9 +3071,19 @@ public abstract class Operator {
             private PEEK_4() { }
             public String toString() { return "PEEK_4"; }
             public void interpret(Quad q, State s) {
-                int o = getIntOpValue(getAddress(q), s);
+                Address o = getAddressOpValue(getAddress(q), s);
                 if (!jq.Bootstrapping)
-                    s.putReg_I(getDest(q).getRegister(), (int)Unsafe.peek(o));
+                    s.putReg_I(getDest(q).getRegister(), o.peek4());
+            }
+        }
+        public static class PEEK_8 extends MemLoad {
+            public static final PEEK_8 INSTANCE = new PEEK_8();
+            private PEEK_8() { }
+            public String toString() { return "PEEK_8"; }
+            public void interpret(Quad q, State s) {
+                Address o = getAddressOpValue(getAddress(q), s);
+                if (!jq.Bootstrapping)
+                    s.putReg_L(getDest(q).getRegister(), o.peek8());
             }
         }
     }
@@ -3089,10 +3110,10 @@ public abstract class Operator {
             private POKE_1() { }
             public String toString() { return "POKE_1"; }
             public void interpret(Quad q, State s) {
-                int o = getIntOpValue(getAddress(q), s);
+                Address o = getAddressOpValue(getAddress(q), s);
                 byte v = (byte)getIntOpValue(getValue(q), s);
                 if (!jq.Bootstrapping)
-                    Unsafe.poke1(o, v);
+                    o.poke1(v);
             }
         }
         public static class POKE_2 extends MemStore {
@@ -3100,10 +3121,10 @@ public abstract class Operator {
             private POKE_2() { }
             public String toString() { return "POKE_2"; }
             public void interpret(Quad q, State s) {
-                int o = getIntOpValue(getAddress(q), s);
+                Address o = getAddressOpValue(getAddress(q), s);
                 short v = (short)getIntOpValue(getValue(q), s);
                 if (!jq.Bootstrapping)
-                    Unsafe.poke2(o, v);
+                    o.poke2(v);
             }
         }
         public static class POKE_4 extends MemStore {
@@ -3111,10 +3132,21 @@ public abstract class Operator {
             private POKE_4() { }
             public String toString() { return "POKE_4"; }
             public void interpret(Quad q, State s) {
-                int o = getIntOpValue(getAddress(q), s);
+                Address o = getAddressOpValue(getAddress(q), s);
                 int v = (int)getIntOpValue(getValue(q), s);
                 if (!jq.Bootstrapping)
-                    Unsafe.poke4(o, v);
+                    o.poke4(v);
+            }
+        }
+        public static class POKE_8 extends MemStore {
+            public static final POKE_8 INSTANCE = new POKE_8();
+            private POKE_8() { }
+            public String toString() { return "POKE_8"; }
+            public void interpret(Quad q, State s) {
+                Address o = getAddressOpValue(getAddress(q), s);
+                long v = (long)getLongOpValue(getValue(q), s);
+                if (!jq.Bootstrapping)
+                    o.poke8(v);
             }
         }
     }
@@ -3203,12 +3235,15 @@ public abstract class Operator {
             public String toString() { return "LONG_JUMP"; }
             public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg1234(q); }
             public void interpret(Quad q, State s) {
+                /*
                 int a = getIntOpValue(getOp1(q), s);
                 int b = getIntOpValue(getOp2(q), s);
                 int c = getIntOpValue(getOp3(q), s);
                 int d = getIntOpValue(getOp4(q), s);
                 Unsafe.longJump(a, b, c, d);
                 jq.UNREACHABLE();
+                */
+                jq.TODO();
             }
         }
         public static class DIE extends Special {

@@ -12,6 +12,10 @@ import Clazz.jq_Class;
 import Clazz.jq_InstanceField;
 import Clazz.jq_StaticField;
 import Main.jq;
+import Memory.Address;
+import Memory.CodeAddress;
+import Memory.HeapAddress;
+import Memory.StackAddress;
 import Scheduler.jq_RegisterState;
 import Scheduler.jq_Thread;
 
@@ -21,54 +25,54 @@ import Scheduler.jq_Thread;
  */
 public abstract class SystemInterface {
 
-    public static int/*CodeAddress*/ debugmsg_4;
-    public static int/*CodeAddress*/ debugwmsg_4;
-    public static int/*CodeAddress*/ syscalloc_4;
-    public static int/*CodeAddress*/ die_4;
-    public static int/*CodeAddress*/ currentTimeMillis_0;
-    public static int/*CodeAddress*/ mem_cpy_12;
-    public static int/*CodeAddress*/ file_open_12;
-    public static int/*CodeAddress*/ file_readbytes_12;
-    public static int/*CodeAddress*/ file_writebyte_8;
-    public static int/*CodeAddress*/ file_writebytes_12;
-    public static int/*CodeAddress*/ file_sync_4;
-    public static int/*CodeAddress*/ file_seek_16;
-    public static int/*CodeAddress*/ file_close_4;
-    public static int/*CodeAddress*/ console_available_0;
-    public static int/*CodeAddress*/ main_argc_0;
-    public static int/*CodeAddress*/ main_argv_length_4;
-    public static int/*CodeAddress*/ main_argv_8;
-    public static int/*CodeAddress*/ fs_getdcwd_12;
-    public static int/*CodeAddress*/ fs_fullpath_12;
-    public static int/*CodeAddress*/ fs_gettruename_4;
-    public static int/*CodeAddress*/ fs_getfileattributes_4;
-    public static int/*CodeAddress*/ fs_access_8;
-    public static int/*CodeAddress*/ fs_getfiletime_4;
-    public static int/*CodeAddress*/ fs_stat_size_4;
-    public static int/*CodeAddress*/ fs_remove_4;
-    public static int/*CodeAddress*/ fs_opendir_4;
-    public static int/*CodeAddress*/ fs_readdir_4;
-    public static int/*CodeAddress*/ fs_closedir_4;
-    public static int/*CodeAddress*/ fs_mkdir_4;
-    public static int/*CodeAddress*/ fs_rename_8;
-    public static int/*CodeAddress*/ fs_chmod_8;
-    public static int/*CodeAddress*/ fs_setfiletime_12;
-    public static int/*CodeAddress*/ fs_getlogicaldrives_0;
-    public static int/*CodeAddress*/ yield_0;
-    public static int/*CodeAddress*/ msleep_4;
-    public static int/*CodeAddress*/ create_thread_8;
-    public static int/*CodeAddress*/ init_thread_0;
-    public static int/*CodeAddress*/ resume_thread_4;
-    public static int/*CodeAddress*/ suspend_thread_4;
-    public static int/*CodeAddress*/ allocate_stack_4;
-    public static int/*CodeAddress*/ get_current_thread_handle_0;
-    public static int/*CodeAddress*/ get_thread_context_8;
-    public static int/*CodeAddress*/ set_thread_context_8;
-    public static int/*CodeAddress*/ set_current_context_8;
-    public static int/*CodeAddress*/ set_interval_timer_8;
-    public static int/*CodeAddress*/ init_semaphore_0;
-    public static int/*CodeAddress*/ wait_for_single_object_8;
-    public static int/*CodeAddress*/ release_semaphore_8;
+    public static CodeAddress debugmsg_4;
+    public static CodeAddress debugwmsg_4;
+    public static CodeAddress syscalloc_4;
+    public static CodeAddress die_4;
+    public static CodeAddress currentTimeMillis_0;
+    public static CodeAddress mem_cpy_12;
+    public static CodeAddress file_open_12;
+    public static CodeAddress file_readbytes_12;
+    public static CodeAddress file_writebyte_8;
+    public static CodeAddress file_writebytes_12;
+    public static CodeAddress file_sync_4;
+    public static CodeAddress file_seek_16;
+    public static CodeAddress file_close_4;
+    public static CodeAddress console_available_0;
+    public static CodeAddress main_argc_0;
+    public static CodeAddress main_argv_length_4;
+    public static CodeAddress main_argv_8;
+    public static CodeAddress fs_getdcwd_12;
+    public static CodeAddress fs_fullpath_12;
+    public static CodeAddress fs_gettruename_4;
+    public static CodeAddress fs_getfileattributes_4;
+    public static CodeAddress fs_access_8;
+    public static CodeAddress fs_getfiletime_4;
+    public static CodeAddress fs_stat_size_4;
+    public static CodeAddress fs_remove_4;
+    public static CodeAddress fs_opendir_4;
+    public static CodeAddress fs_readdir_4;
+    public static CodeAddress fs_closedir_4;
+    public static CodeAddress fs_mkdir_4;
+    public static CodeAddress fs_rename_8;
+    public static CodeAddress fs_chmod_8;
+    public static CodeAddress fs_setfiletime_12;
+    public static CodeAddress fs_getlogicaldrives_0;
+    public static CodeAddress yield_0;
+    public static CodeAddress msleep_4;
+    public static CodeAddress create_thread_8;
+    public static CodeAddress init_thread_0;
+    public static CodeAddress resume_thread_4;
+    public static CodeAddress suspend_thread_4;
+    public static CodeAddress allocate_stack_4;
+    public static CodeAddress get_current_thread_handle_0;
+    public static CodeAddress get_thread_context_8;
+    public static CodeAddress set_thread_context_8;
+    public static CodeAddress set_current_context_8;
+    public static CodeAddress set_interval_timer_8;
+    public static CodeAddress init_semaphore_0;
+    public static CodeAddress wait_for_single_object_8;
+    public static CodeAddress release_semaphore_8;
 
     public static final jq_Class _class;
     public static final jq_StaticField _debugmsg;
@@ -77,7 +81,7 @@ public abstract class SystemInterface {
     public static final jq_InstanceField _string_count;
     static {
         _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LRun_Time/SystemInterface;");
-        _debugmsg = _class.getOrCreateStaticField("debugmsg_4", "I");
+        _debugmsg = _class.getOrCreateStaticField("debugmsg_4", "LMemory/CodeAddress;");
         _string_value = PrimordialClassLoader.getJavaLangString().getOrCreateInstanceField("value", "[C");
         _string_offset = PrimordialClassLoader.getJavaLangString().getOrCreateInstanceField("offset", "I");
         _string_count = PrimordialClassLoader.getJavaLangString().getOrCreateInstanceField("count", "I");
@@ -88,11 +92,11 @@ public abstract class SystemInterface {
             System.err.println(msg);
             return;
         }
-        int/*HeapAddress*/ value = Unsafe.peek(Unsafe.addressOf(msg)+_string_value.getOffset());
-        int offset = Unsafe.peek(Unsafe.addressOf(msg)+_string_offset.getOffset());
-        int count = Unsafe.peek(Unsafe.addressOf(msg)+_string_count.getOffset());
+        HeapAddress value = (HeapAddress)HeapAddress.addressOf(msg).offset(_string_value.getOffset()).peek();
+        int offset = HeapAddress.addressOf(msg).offset(_string_offset.getOffset()).peek4();
+        int count = HeapAddress.addressOf(msg).offset(_string_count.getOffset()).peek4();
         Unsafe.pushArg(count);
-        Unsafe.pushArg(value + offset*2);
+        Unsafe.pushArgA(value.offset(offset*2));
         try {
             Unsafe.getThreadBlock().disableThreadSwitch();
             Unsafe.invoke(debugwmsg_4);
@@ -101,7 +105,7 @@ public abstract class SystemInterface {
     }
     
     public static void debugmsg(byte[] msg) {
-        Unsafe.pushArg(Unsafe.addressOf(msg));
+        Unsafe.pushArgA(HeapAddress.addressOf(msg));
         try {
             Unsafe.getThreadBlock().disableThreadSwitch();
             Unsafe.invoke(debugmsg_4);
@@ -109,15 +113,15 @@ public abstract class SystemInterface {
         } catch (Throwable t) { jq.UNREACHABLE(); }
     }
     
-    public static int syscalloc(int size) {
+    public static Address syscalloc(int size) {
         Unsafe.pushArg(size);
         try {
             Unsafe.getThreadBlock().disableThreadSwitch();
-            int v = (int)Unsafe.invoke(syscalloc_4);
+            Address v = Unsafe.invokeA(syscalloc_4);
             Unsafe.getThreadBlock().enableThreadSwitch();
             return v;
         } catch (Throwable t) { jq.UNREACHABLE(); }
-        return 0;
+        return null;
     }
     
     public static void die(int code) {
@@ -138,11 +142,11 @@ public abstract class SystemInterface {
         return b2;
     }
 
-    public static String fromCString(int p) {
+    public static String fromCString(Address p) {
         int len;
-        for (len=0; (byte)Unsafe.peek(p+len)!=(byte)0; ++len) ;
+        for (len=0; (byte)p.offset(len).peek1()!=(byte)0; ++len) ;
         byte[] b = new byte[len];
-        mem_cpy(Unsafe.addressOf(b), p, len);
+        mem_cpy(HeapAddress.addressOf(b), p, len);
         return new String(b);
     }
     
@@ -159,10 +163,10 @@ public abstract class SystemInterface {
         return 0;
     }
 
-    public static void mem_cpy(int to, int from, int size) {
+    public static void mem_cpy(Address to, Address from, int size) {
         Unsafe.pushArg(size);
-        Unsafe.pushArg(from);
-        Unsafe.pushArg(to);
+        Unsafe.pushArgA(from);
+        Unsafe.pushArgA(to);
         try {
             Unsafe.getThreadBlock().disableThreadSwitch();
             Unsafe.invoke(mem_cpy_12);
@@ -183,7 +187,7 @@ public abstract class SystemInterface {
     public static int file_open(byte[] filename, int mode, int smode) {
         Unsafe.pushArg(smode);
         Unsafe.pushArg(mode);
-        Unsafe.pushArg(Unsafe.addressOf(filename));
+        Unsafe.pushArgA(HeapAddress.addressOf(filename));
         try {
             Unsafe.getThreadBlock().disableThreadSwitch();
             int v = (int)Unsafe.invoke(file_open_12);
@@ -192,9 +196,9 @@ public abstract class SystemInterface {
         } catch (Throwable t) { jq.UNREACHABLE(); }
         return 0;
     }
-    public static int file_readbytes(int fd, int/*Address*/ startAddress, int length) {
+    public static int file_readbytes(int fd, Address startAddress, int length) {
         Unsafe.pushArg(length);
-        Unsafe.pushArg(startAddress);
+        Unsafe.pushArgA(startAddress);
         Unsafe.pushArg(fd);
         try {
             Unsafe.getThreadBlock().disableThreadSwitch();
@@ -215,9 +219,9 @@ public abstract class SystemInterface {
         } catch (Throwable t) { jq.UNREACHABLE(); }
         return 0;
     }
-    public static int file_writebytes(int fd, int/*Address*/ startAddress, int length) {
+    public static int file_writebytes(int fd, Address startAddress, int length) {
         Unsafe.pushArg(length);
-        Unsafe.pushArg(startAddress);
+        Unsafe.pushArgA(startAddress);
         Unsafe.pushArg(fd);
         try {
             Unsafe.getThreadBlock().disableThreadSwitch();
@@ -294,7 +298,7 @@ public abstract class SystemInterface {
         return 0;
     }
     public static void main_argv(int i, byte[] b) {
-        Unsafe.pushArg(Unsafe.addressOf(b));
+        Unsafe.pushArgA(HeapAddress.addressOf(b));
         Unsafe.pushArg(i);
         try {
             Unsafe.getThreadBlock().disableThreadSwitch();
@@ -305,7 +309,7 @@ public abstract class SystemInterface {
     
     public static int fs_getdcwd(int i, byte[] b) {
         Unsafe.pushArg(b.length);
-        Unsafe.pushArg(Unsafe.addressOf(b));
+        Unsafe.pushArgA(HeapAddress.addressOf(b));
         Unsafe.pushArg(i);
         try {
             Unsafe.getThreadBlock().disableThreadSwitch();
@@ -317,8 +321,8 @@ public abstract class SystemInterface {
     }
     public static int fs_fullpath(String s, byte[] b) {
         Unsafe.pushArg(b.length);
-        Unsafe.pushArg(Unsafe.addressOf(toCString(s)));
-        Unsafe.pushArg(Unsafe.addressOf(b));
+        Unsafe.pushArgA(HeapAddress.addressOf(toCString(s)));
+        Unsafe.pushArgA(HeapAddress.addressOf(b));
         try {
             Unsafe.getThreadBlock().disableThreadSwitch();
             int v = (int)Unsafe.invoke(fs_fullpath_12);
@@ -327,15 +331,15 @@ public abstract class SystemInterface {
         } catch (Throwable t) { jq.UNREACHABLE(); }
         return 0;
     }
-    public static int fs_gettruename(String s) {
-        Unsafe.pushArg(Unsafe.addressOf(toCString(s)));
+    public static Address fs_gettruename(String s) {
+        Unsafe.pushArgA(HeapAddress.addressOf(toCString(s)));
         try {
             Unsafe.getThreadBlock().disableThreadSwitch();
-            int v = (int)Unsafe.invoke(fs_gettruename_4);
+            Address v = Unsafe.invokeA(fs_gettruename_4);
             Unsafe.getThreadBlock().enableThreadSwitch();
             return v;
         } catch (Throwable t) { jq.UNREACHABLE(); }
-        return 0;
+        return null;
     }
     public static final int FILE_ATTRIBUTE_READONLY  = 0x001; // in mapiwin.h
     public static final int FILE_ATTRIBUTE_HIDDEN    = 0x002;
@@ -345,7 +349,7 @@ public abstract class SystemInterface {
     public static final int FILE_ATTRIBUTE_NORMAL    = 0x080;
     public static final int FILE_ATTRIBUTE_TEMPORARY = 0x100;
     public static int fs_getfileattributes(String s) {
-        Unsafe.pushArg(Unsafe.addressOf(toCString(s)));
+        Unsafe.pushArgA(HeapAddress.addressOf(toCString(s)));
         try {
             Unsafe.getThreadBlock().disableThreadSwitch();
             int v = (int)Unsafe.invoke(fs_getfileattributes_4);
@@ -356,7 +360,7 @@ public abstract class SystemInterface {
     }
     public static int fs_access(String s, int mode) {
         Unsafe.pushArg(mode);
-        Unsafe.pushArg(Unsafe.addressOf(toCString(s)));
+        Unsafe.pushArgA(HeapAddress.addressOf(toCString(s)));
         try {
             Unsafe.getThreadBlock().disableThreadSwitch();
             int v = (int)Unsafe.invoke(fs_access_8);
@@ -366,7 +370,7 @@ public abstract class SystemInterface {
         return 0;
     }
     public static long fs_getfiletime(String s) {
-        Unsafe.pushArg(Unsafe.addressOf(toCString(s)));
+        Unsafe.pushArgA(HeapAddress.addressOf(toCString(s)));
         try {
             Unsafe.getThreadBlock().disableThreadSwitch();
             long v = Unsafe.invoke(fs_getfiletime_4);
@@ -376,7 +380,7 @@ public abstract class SystemInterface {
         return 0L;
     }
     public static long fs_stat_size(String s) {
-        Unsafe.pushArg(Unsafe.addressOf(toCString(s)));
+        Unsafe.pushArgA(HeapAddress.addressOf(toCString(s)));
         try {
             Unsafe.getThreadBlock().disableThreadSwitch();
             long v = Unsafe.invoke(fs_stat_size_4);
@@ -386,7 +390,7 @@ public abstract class SystemInterface {
         return 0L;
     }
     public static int fs_remove(String s) {
-        Unsafe.pushArg(Unsafe.addressOf(toCString(s)));
+        Unsafe.pushArgA(HeapAddress.addressOf(toCString(s)));
         try {
             Unsafe.getThreadBlock().disableThreadSwitch();
             int v = (int)Unsafe.invoke(fs_remove_4);
@@ -396,7 +400,7 @@ public abstract class SystemInterface {
         return 0;
     }
     public static int fs_opendir(String s) {
-        Unsafe.pushArg(Unsafe.addressOf(toCString(s)));
+        Unsafe.pushArgA(HeapAddress.addressOf(toCString(s)));
         try {
             Unsafe.getThreadBlock().disableThreadSwitch();
             int v = (int)Unsafe.invoke(fs_opendir_4);
@@ -405,15 +409,15 @@ public abstract class SystemInterface {
         } catch (Throwable t) { jq.UNREACHABLE(); }
         return 0;
     }
-    public static int fs_readdir(int p) {
+    public static Address fs_readdir(int p) {
         Unsafe.pushArg(p);
         try {
             Unsafe.getThreadBlock().disableThreadSwitch();
-            int v = (int)Unsafe.invoke(fs_readdir_4);
+            Address v = Unsafe.invokeA(fs_readdir_4);
             Unsafe.getThreadBlock().enableThreadSwitch();
             return v;
         } catch (Throwable t) { jq.UNREACHABLE(); }
-        return 0;
+        return null;
     }
     public static int fs_closedir(int p) {
         Unsafe.pushArg(p);
@@ -426,7 +430,7 @@ public abstract class SystemInterface {
         return 0;
     }
     public static int fs_mkdir(String s) {
-        Unsafe.pushArg(Unsafe.addressOf(toCString(s)));
+        Unsafe.pushArgA(HeapAddress.addressOf(toCString(s)));
         try {
             Unsafe.getThreadBlock().disableThreadSwitch();
             int v = (int)Unsafe.invoke(fs_mkdir_4);
@@ -436,8 +440,8 @@ public abstract class SystemInterface {
         return 0;
     }
     public static int fs_rename(String s, String s1) {
-        Unsafe.pushArg(Unsafe.addressOf(toCString(s1)));
-        Unsafe.pushArg(Unsafe.addressOf(toCString(s)));
+        Unsafe.pushArgA(HeapAddress.addressOf(toCString(s1)));
+        Unsafe.pushArgA(HeapAddress.addressOf(toCString(s)));
         try {
             Unsafe.getThreadBlock().disableThreadSwitch();
             int v = (int)Unsafe.invoke(fs_rename_8);
@@ -451,7 +455,7 @@ public abstract class SystemInterface {
     public static final int _S_IREAD  = 0x0000100;
     public static int fs_chmod(String s, int mode) {
         Unsafe.pushArg(mode);
-        Unsafe.pushArg(Unsafe.addressOf(toCString(s)));
+        Unsafe.pushArgA(HeapAddress.addressOf(toCString(s)));
         try {
             Unsafe.getThreadBlock().disableThreadSwitch();
             int v = (int)Unsafe.invoke(fs_chmod_8);
@@ -463,7 +467,7 @@ public abstract class SystemInterface {
     public static int fs_setfiletime(String s, long time) {
         Unsafe.pushArg((int)(time>>32)); // hi
         Unsafe.pushArg((int)time);       // lo
-        Unsafe.pushArg(Unsafe.addressOf(toCString(s)));
+        Unsafe.pushArgA(HeapAddress.addressOf(toCString(s)));
         try {
             Unsafe.getThreadBlock().disableThreadSwitch();
             int v = (int)Unsafe.invoke(fs_setfiletime_12);
@@ -496,10 +500,10 @@ public abstract class SystemInterface {
             Unsafe.getThreadBlock().enableThreadSwitch();
         } catch (Throwable t) { jq.UNREACHABLE(); }
     }
-    public static int/*CPointer*/ create_thread(int/*CodeAddress*/ start_address, int/*HeapAddress*/ param) {
+    public static int/*CPointer*/ create_thread(CodeAddress start_address, HeapAddress param) {
         try {
-            Unsafe.pushArg(param);
-            Unsafe.pushArg(start_address);
+            Unsafe.pushArgA(param);
+            Unsafe.pushArgA(start_address);
             Unsafe.getThreadBlock().disableThreadSwitch();
             int v = (int)Unsafe.invoke(create_thread_8);
             Unsafe.getThreadBlock().enableThreadSwitch();
@@ -532,15 +536,15 @@ public abstract class SystemInterface {
         } catch (Throwable t) { jq.UNREACHABLE(); }
         return 0;
     }
-    public static int/*StackAddress*/ allocate_stack(int size) {
+    public static StackAddress allocate_stack(int size) {
         try {
             Unsafe.pushArg(size);
             Unsafe.getThreadBlock().disableThreadSwitch();
-            int v = (int)Unsafe.invoke(allocate_stack_4);
+            StackAddress v = (StackAddress)Unsafe.invokeA(allocate_stack_4);
             Unsafe.getThreadBlock().enableThreadSwitch();
             return v;
         } catch (Throwable t) { jq.UNREACHABLE(); }
-        return 0;
+        return null;
     }
     public static int/*CPointer*/ get_current_thread_handle() {
         try {
@@ -552,7 +556,7 @@ public abstract class SystemInterface {
     }
     public static boolean get_thread_context(int pid, jq_RegisterState context) {
         try {
-            Unsafe.pushArg(Unsafe.addressOf(context));
+            Unsafe.pushArgA(HeapAddress.addressOf(context));
             Unsafe.pushArg(pid);
             jq.Assert(!Unsafe.getThreadBlock().isThreadSwitchEnabled());
             int v = (int)Unsafe.invoke(get_thread_context_8);
@@ -562,7 +566,7 @@ public abstract class SystemInterface {
     }
     public static boolean set_thread_context(int pid, jq_RegisterState context) {
         try {
-            Unsafe.pushArg(Unsafe.addressOf(context));
+            Unsafe.pushArgA(HeapAddress.addressOf(context));
             Unsafe.pushArg(pid);
             jq.Assert(!Unsafe.getThreadBlock().isThreadSwitchEnabled());
             int v = (int)Unsafe.invoke(set_thread_context_8);
@@ -572,8 +576,8 @@ public abstract class SystemInterface {
     }
     public static void set_current_context(jq_Thread thread, jq_RegisterState context) {
         try {
-            Unsafe.pushArg(Unsafe.addressOf(context));
-            Unsafe.pushArg(Unsafe.addressOf(thread));
+            Unsafe.pushArgA(HeapAddress.addressOf(context));
+            Unsafe.pushArgA(HeapAddress.addressOf(thread));
             jq.Assert(!Unsafe.getThreadBlock().isThreadSwitchEnabled());
             Unsafe.invoke(set_current_context_8);
         } catch (Throwable t) { jq.UNREACHABLE(); }

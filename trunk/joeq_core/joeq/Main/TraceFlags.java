@@ -127,10 +127,20 @@ public abstract class TraceFlags {
         if (args[i].equalsIgnoreCase("-ReplaceClass")) {
             Clazz.jq_Class.REPLACE_CLASS       = true;
             // collect a list of classes to replace
-            do {
-                Clazz.jq_Class.classToReplace.add(args[++i]);
-            //while not just before the main class or just before another option...
-            } while (i+1 != args.length-1 && !args[i+1].startsWith("-"));
+            String s = args[++i];
+            for (;;) {
+                int index1 = s.indexOf(';');
+                int index2 = s.indexOf(':');
+                int index = (index1 == -1)?index2:((index2 == -1)?index1:Math.min(index1, index2));
+                if (index != -1) {
+                    String className = s.substring(0, index);
+                    Clazz.jq_Class.classToReplace.add(className);
+                    s = s.substring(index+1);
+                } else {
+                    Clazz.jq_Class.classToReplace.add(s);
+                    break;
+                }
+            }
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceReplaceClass")) {

@@ -12,6 +12,7 @@ import java.lang.reflect.Modifier;
 
 import Clazz.jq_InstanceField;
 import Main.jq;
+import Memory.HeapAddress;
 import Run_Time.Reflection;
 import Run_Time.Unsafe;
 
@@ -39,8 +40,8 @@ public abstract class Atomic {
                 return 0;
             }
         } else {
-            int address = Unsafe.addressOf(o)+f.getOffset();
-            return Unsafe.atomicCas4(address, before, after);
+            HeapAddress address = (HeapAddress) HeapAddress.addressOf(o).offset(f.getOffset());
+            return address.atomicCas4(before, after);
         }
     }
     

@@ -17,6 +17,8 @@ import Clazz.jq_NameAndDesc;
 import Clazz.jq_Reference;
 import Clazz.jq_StaticMethod;
 import Main.jq;
+import Memory.HeapAddress;
+import Memory.StackAddress;
 import Run_Time.Reflection;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
@@ -64,13 +66,13 @@ public class jq_Thread implements ObjectLayout {
         if (jq.Bootstrapping)
             ++thread_switch_enabled;
         else
-            Unsafe.atomicAdd(Unsafe.addressOf(this)+_thread_switch_enabled.getOffset(), 1);
+            ((HeapAddress)HeapAddress.addressOf(this).offset(_thread_switch_enabled.getOffset())).atomicAdd(1);
     }
     public void enableThreadSwitch() {
         if (jq.Bootstrapping)
             --thread_switch_enabled;
         else
-            Unsafe.atomicSub(Unsafe.addressOf(this)+_thread_switch_enabled.getOffset(), 1);
+            ((HeapAddress)HeapAddress.addressOf(this).offset(_thread_switch_enabled.getOffset())).atomicSub(1);
     }
 
     public void init() {
@@ -82,11 +84,13 @@ public class jq_Thread implements ObjectLayout {
         this.registers.Esp = SystemInterface.allocate_stack(INITIAL_STACK_SIZE);
         this.registers.Eip = entry_point.getEntrypoint();
         // bogus return address
-        this.registers.Esp -= 4;
+        this.registers.Esp = (StackAddress) this.registers.Esp.offset(-4);
         // arg to run(): t
-        Unsafe.poke4(this.registers.Esp -= 4, Unsafe.addressOf(t));
+        this.registers.Esp = (StackAddress) this.registers.Esp.offset(-4);
+        this.registers.Esp.poke(HeapAddress.addressOf(t));
         // return from run() directly to destroy()
-        Unsafe.poke4(this.registers.Esp -= 4, _destroyCurrentThread.getDefaultCompiledVersion().getEntrypoint());
+        this.registers.Esp = (StackAddress) this.registers.Esp.offset(-4);
+        this.registers.Esp.poke(_destroyCurrentThread.getDefaultCompiledVersion().getEntrypoint());
     }
     public void start() {
         this.isDead = false;
@@ -109,9 +113,9 @@ public class jq_Thread implements ObjectLayout {
         ////registers.Ebp = Unsafe.peek(Unsafe.EBP());
         ////registers.Eip = Unsafe.peek(Unsafe.EBP()+4);
         ////registers.Esp = Unsafe.EBP() + 12; // fp + ret addr + 1 param
-        int esp = Unsafe.ESP();
-        registers.Esp = esp - 8; // room for object pointer and return address
-        registers.Ebp = Unsafe.EBP();
+        StackAddress esp = StackAddress.getStackPointer();
+        registers.Esp = (StackAddress) esp.offset(-8); // room for object pointer and return address
+        registers.Ebp = StackAddress.getBasePointer();
         registers.ControlWord = 0x027f;
         registers.StatusWord = 0x4000;
         registers.TagWord = 0xffff;
@@ -132,9 +136,9 @@ public class jq_Thread implements ObjectLayout {
 
         // act like we received a timer tick.
         // store the register state to make it look like we received a timer tick.
-        int esp = Unsafe.ESP();
-        registers.Esp = esp - 12; // room for object pointer, arg, return address
-        registers.Ebp = Unsafe.EBP();
+        StackAddress esp = StackAddress.getStackPointer();
+        registers.Esp = (StackAddress) esp.offset(-12); // room for object pointer, arg, return address
+        registers.Ebp = StackAddress.getBasePointer();
         registers.ControlWord = 0x027f;
         registers.StatusWord = 0x4000;
         registers.TagWord = 0xffff;

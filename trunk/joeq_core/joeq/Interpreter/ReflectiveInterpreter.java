@@ -24,6 +24,7 @@ import Clazz.jq_Initializer;
 import Clazz.jq_InstanceField;
 import Clazz.jq_Method;
 import Clazz.jq_Primitive;
+import Clazz.jq_Reference;
 import Clazz.jq_StaticField;
 import Clazz.jq_StaticMethod;
 import Clazz.jq_Type;
@@ -131,8 +132,6 @@ public class ReflectiveInterpreter extends BytecodeInterpreter {
             return new Long(Double.doubleToRawLongBits(state.pop_D()));
         } else if (f == Unsafe._longBitsToDouble) {
             return new Double(Double.longBitsToDouble(state.pop_L()));
-        } else if (f == Unsafe._getTypeOf) {
-            return vm.getJQTypeOf(state.pop_A());
         } else {
             return invokeReflective(f);
         }
@@ -218,62 +217,27 @@ public class ReflectiveInterpreter extends BytecodeInterpreter {
             //ot = new ObjectTraverser.Empty();
         }
         public static final ReflectiveVMInterface INSTANCE = new ReflectiveVMInterface();
-        /*
-        public void putField(Object o, jq_Field f, Object v) {
-            jq_Class k = f.getDeclaringClass();
-            k.load(); k.verify(); k.prepare(); k.sf_initialize(); k.cls_initialize();
-            Field f2 = (Field)Reflection.getJDKMember(f);
-            f2.setAccessible(true);
-            try {
-                f2.set(o, v);
-            } catch (IllegalAccessException x) {
-                jq.UNREACHABLE();
-            } catch (IllegalArgumentException x) {
-                jq.UNREACHABLE("object type: "+o.getClass()+" field: "+f2+" value: "+v);
-            }
+        public Object new_obj(jq_Type t) {
+            t.load(); t.verify(); t.prepare(); t.sf_initialize(); t.cls_initialize();
+            return new UninitializedType((jq_Class) t);
         }
-        */
-        public int getstatic_I(jq_StaticField f) { return Reflection.getstatic_I(f); }
-        public long getstatic_L(jq_StaticField f) { return Reflection.getstatic_L(f); }
-        public float getstatic_F(jq_StaticField f) { return Reflection.getstatic_F(f); }
-        public double getstatic_D(jq_StaticField f) { return Reflection.getstatic_D(f); }
-        public Object getstatic_A(jq_StaticField f) { return Reflection.getstatic_A(f); }
-        public byte getstatic_B(jq_StaticField f) { return Reflection.getstatic_B(f); }
-        public char getstatic_C(jq_StaticField f) { return Reflection.getstatic_C(f); }
-        public short getstatic_S(jq_StaticField f) { return Reflection.getstatic_S(f); }
-        public boolean getstatic_Z(jq_StaticField f) { return Reflection.getstatic_Z(f); }
-        public void putstatic_I(jq_StaticField f, int v) { Reflection.putstatic_I(f, v); }
-        public void putstatic_L(jq_StaticField f, long v) { Reflection.putstatic_L(f, v); }
-        public void putstatic_F(jq_StaticField f, float v) { Reflection.putstatic_F(f, v); }
-        public void putstatic_D(jq_StaticField f, double v) { Reflection.putstatic_D(f, v); }
-        public void putstatic_A(jq_StaticField f, Object v) { Reflection.putstatic_A(f, v); }
-        public void putstatic_B(jq_StaticField f, byte v) { Reflection.putstatic_B(f, v); }
-        public void putstatic_C(jq_StaticField f, char v) { Reflection.putstatic_C(f, v); }
-        public void putstatic_S(jq_StaticField f, short v) { Reflection.putstatic_S(f, v); }
-        public void putstatic_Z(jq_StaticField f, boolean v) { Reflection.putstatic_Z(f, v); }
-        public int getfield_I(Object o, jq_InstanceField f) { return Reflection.getfield_I(o, f); }
-        public long getfield_L(Object o, jq_InstanceField f) { return Reflection.getfield_L(o, f); }
-        public float getfield_F(Object o, jq_InstanceField f) { return Reflection.getfield_F(o, f); }
-        public double getfield_D(Object o, jq_InstanceField f) { return Reflection.getfield_D(o, f); }
-        public Object getfield_A(Object o, jq_InstanceField f) { return Reflection.getfield_A(o, f); }
-        public byte getfield_B(Object o, jq_InstanceField f) { return Reflection.getfield_B(o, f); }
-        public char getfield_C(Object o, jq_InstanceField f) { return Reflection.getfield_C(o, f); }
-        public short getfield_S(Object o, jq_InstanceField f) { return Reflection.getfield_S(o, f); }
-        public boolean getfield_Z(Object o, jq_InstanceField f) { return Reflection.getfield_Z(o, f); }
-        public void putfield_I(Object o, jq_InstanceField f, int v) { Reflection.putfield_I(o, f, v); }
-        public void putfield_L(Object o, jq_InstanceField f, long v) { Reflection.putfield_L(o, f, v); }
-        public void putfield_F(Object o, jq_InstanceField f, float v) { Reflection.putfield_F(o, f, v); }
-        public void putfield_D(Object o, jq_InstanceField f, double v) { Reflection.putfield_D(o, f, v); }
-        public void putfield_A(Object o, jq_InstanceField f, Object v) { Reflection.putfield_A(o, f, v); }
-        public void putfield_B(Object o, jq_InstanceField f, byte v) { Reflection.putfield_B(o, f, v); }
-        public void putfield_C(Object o, jq_InstanceField f, char v) { Reflection.putfield_C(o, f, v); }
-        public void putfield_S(Object o, jq_InstanceField f, short v) { Reflection.putfield_S(o, f, v); }
-        public void putfield_Z(Object o, jq_InstanceField f, boolean v) { Reflection.putfield_Z(o, f, v); }
-        public Object new_obj(jq_Type t) { t.load(); t.verify(); t.prepare(); t.sf_initialize(); t.cls_initialize(); return new UninitializedType((jq_Class)t); }
-        public Object new_array(jq_Type t, int length) { t.load(); t.verify(); t.prepare(); t.sf_initialize(); t.cls_initialize(); return Array.newInstance(Reflection.getJDKType(((jq_Array)t).getElementType()), length); }
-        public Object checkcast(Object o, jq_Type t) { if (o == null) return o; if (!Reflection.getJDKType(t).isAssignableFrom(o.getClass())) throw new ClassCastException(); return o; }
-        public boolean instance_of(Object o, jq_Type t) { if (o == null) return false; return Reflection.getJDKType(t).isAssignableFrom(o.getClass()); }
-        public int arraylength(Object o) { return Array.getLength(o); }
+        public Object new_array(jq_Type t, int length) {
+            t.load(); t.verify(); t.prepare(); t.sf_initialize(); t.cls_initialize();
+            return Array.newInstance(Reflection.getJDKType(((jq_Array)t).getElementType()), length);
+        }
+        public Object checkcast(Object o, jq_Type t) {
+            if (o == null) return o;
+            if (!Reflection.getJDKType(t).isAssignableFrom(o.getClass()))
+                throw new ClassCastException();
+            return o;
+        }
+        public boolean instance_of(Object o, jq_Type t) {
+            if (o == null) return false;
+            return Reflection.getJDKType(t).isAssignableFrom(o.getClass());
+        }
+        public int arraylength(Object o) {
+            return Array.getLength(o);
+        }
         public void monitorenter(Object o, MethodInterpreter v) {
             synchronized (o) {
                 try {
@@ -289,7 +253,9 @@ public class ReflectiveInterpreter extends BytecodeInterpreter {
                 // method exit
             }
         }
-        public void monitorexit(Object o) { throw new MonitorExit(o); }
+        public void monitorexit(Object o) {
+            throw new MonitorExit(o);
+        }
         public Object multinewarray(int[] dims, jq_Type t) {
             for (int i=0; i<dims.length; ++i) {
                 t.load(); t.verify(); t.prepare(); t.sf_initialize(); t.cls_initialize();
@@ -297,7 +263,6 @@ public class ReflectiveInterpreter extends BytecodeInterpreter {
             }
             return Array.newInstance(Reflection.getJDKType(t), dims);
         }
-        public jq_Type getJQTypeOf(Object o) { return Reflection.getJQType(o.getClass()); }
         
     }
 

@@ -1,5 +1,6 @@
 package ClassLib.Common.java.io;
 
+import Memory.Address;
 import Run_Time.SystemInterface;
 
 public abstract class UnixFileSystem {
@@ -27,8 +28,9 @@ public abstract class UnixFileSystem {
         int dir = SystemInterface.fs_opendir(file.getPath());
         if (dir == 0) return null;
         String[] s = new String[16];
-        int ptr, i;
-        for (i=0; 0!=(ptr=SystemInterface.fs_readdir(dir)); ++i) {
+        int i;
+        Address ptr;
+        for (i=0; !(ptr=SystemInterface.fs_readdir(dir)).isNull(); ++i) {
             if (i == s.length) {
                 String[] s2 = new String[s.length<<1];
                 System.arraycopy(s, 0, s2, 0, s.length);

@@ -7,6 +7,8 @@
 
 package ClassLib.Common.java.io;
 
+import Memory.Address;
+import Memory.HeapAddress;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
 
@@ -23,7 +25,7 @@ public abstract class Win32FileSystem {
         byte[] b = new byte[256];
         int r = SystemInterface.fs_fullpath(s, b);
         if (r == 0) throw new java.io.IOException("fullpath returned error on: "+s);
-        java.lang.String res = SystemInterface.fromCString(Unsafe.addressOf(b));
+        java.lang.String res = SystemInterface.fromCString(HeapAddress.addressOf(b));
         int strlen = res.length();
         java.lang.StringBuffer result = new java.lang.StringBuffer(strlen);
         int curindex = 0;
@@ -47,8 +49,8 @@ public abstract class Win32FileSystem {
                 return result.toString();
             }
             java.lang.String sub = res.substring(curindex, next_idx);
-            int b3 = SystemInterface.fs_gettruename(sub);
-            if (b3 == 0) {
+            Address b3 = SystemInterface.fs_gettruename(sub);
+            if (b3.isNull()) {
                 // bail out and return what we have.
                 result.append(res.substring(curindex));
                 return result.toString();
@@ -96,8 +98,9 @@ public abstract class Win32FileSystem {
         int dir = SystemInterface.fs_opendir(file.getPath());
         if (dir == 0) return null;
         String[] s = new String[16];
-        int ptr, i;
-        for (i=0; 0!=(ptr=SystemInterface.fs_readdir(dir)); ++i) {
+        int i;
+        Address ptr;
+        for (i=0; !(ptr=SystemInterface.fs_readdir(dir)).isNull(); ++i) {
             if (i == s.length) {
                 String[] s2 = new String[s.length<<1];
                 System.arraycopy(s, 0, s2, 0, s.length);

@@ -20,7 +20,7 @@ import Run_Time.Reflection;
  */
 abstract class FileSystem {
 
-    public static Object getFileSystem() { return DEFAULT_FS; }
+    public static FileSystem getFileSystem() { return (FileSystem) DEFAULT_FS; }
     
     public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/FileSystem;");
     //public static final jq_StaticMethod _getFileSystem = _class.getOrCreateStaticMethod("getFileSystem", "()Ljava/io/FileSystem;");

@@ -27,6 +27,10 @@ import Bootstrap.PrimordialClassLoader;
 import ClassLib.ClassLibInterface;
 import Compil3r.BytecodeAnalysis.Bytecodes;
 import Main.jq;
+import Memory.Address;
+import Memory.CodeAddress;
+import Memory.HeapAddress;
+import Memory.StackAddress;
 import Run_Time.Reflection;
 import Run_Time.SystemInterface;
 import Run_Time.TypeCheck;
@@ -56,6 +60,11 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
     //// Always available
     public final boolean isClassType() { return true; }
     public final boolean isArrayType() { return false; }
+    public final boolean isAddressType() {
+        return this == Address._class || this == HeapAddress._class ||
+               this == CodeAddress._class || this == StackAddress._class;
+        //return TypeCheck.isAssignable_noload(this, Address._class) == TypeCheck.YES;
+    }
     public final String getName() { // fully-qualified name, e.g. java.lang.String
         return className(desc);
     }
@@ -561,7 +570,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         chkState(STATE_SFINITIALIZED);
         jq.Assert(sf.getDeclaringClass() == this);
         jq.Assert(sf.getType().getReferenceSize() != 8);
-        int index = (sf.getAddress() - Unsafe.addressOf(static_data)) >> 2;
+        int index = sf.getAddress().difference(HeapAddress.addressOf(static_data)) >> 2;
         if (index < 0 || index >= static_data.length) {
             jq.UNREACHABLE("sf: "+sf+" index: "+index);
         }
@@ -571,7 +580,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         chkState(STATE_SFINITIALIZED);
         jq.Assert(sf.getDeclaringClass() == this);
         jq.Assert(sf.getType().getReferenceSize() == 8);
-        int index = (sf.getAddress() - Unsafe.addressOf(static_data)) >> 2;
+        int index = sf.getAddress().difference(HeapAddress.addressOf(static_data)) >> 2;
         static_data[index  ] = (int)(data);
         static_data[index+1] = (int)(data >> 32);
     }
@@ -585,8 +594,15 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         chkState(STATE_SFINITIALIZED);
         jq.Assert(sf.getDeclaringClass() == this);
         jq.Assert(sf.getType().getReferenceSize() != 8);
-        int index = (sf.getAddress() - Unsafe.addressOf(static_data)) >> 2;
-        static_data[index] = Unsafe.addressOf(data);
+        int index = sf.getAddress().difference(HeapAddress.addressOf(static_data)) >> 2;
+        static_data[index] = HeapAddress.addressOf(data).to32BitValue();
+    }
+    public final void setStaticData(jq_StaticField sf, Address data) {
+        chkState(STATE_SFINITIALIZED);
+        jq.Assert(sf.getDeclaringClass() == this);
+        jq.Assert(sf.getType().getReferenceSize() != 8);
+        int index = sf.getAddress().difference(HeapAddress.addressOf(static_data)) >> 2;
+        static_data[index] = data.to32BitValue();
     }
 
     public final Object newInstance() {
@@ -1232,9 +1248,9 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                         //old_m index in the array of virtualmethods.
                         jq.Assert(old.virtual_methods[index] == old_m);
                         old.virtual_methods[index] = new_m;
-                        int entryPoint =
+                        CodeAddress entryPoint =
                             new_m.getDefaultCompiledVersion().getEntrypoint();
-                        ((int[]) old.vtable)[index + 1] = entryPoint;
+                        ((Address[]) old.vtable)[index + 1] = entryPoint;
                         //+1 since vt[0] is this
                     }
 
@@ -2031,7 +2047,7 @@ uphere2:
                 m.prepare((j+1)<<2);
             }
             // allocate space for vtable
-            vtable = new int[num_virtual_methods+1];
+            vtable = new Address[num_virtual_methods+1];
 
             // calculate interfaces
             int n_super_interfaces;
@@ -2095,20 +2111,20 @@ uphere2:
                         if (f.getType().isPrimitiveType()) {
                             if (f.getType() == jq_Primitive.LONG) {
                                 long l = ((Long)cv).longValue();
-                                static_data[j>>2  ] = (int)l;
-                                static_data[j>>2+1] = (int)(l >> 32);
+                                static_data[j  ] = (int)l;
+                                static_data[j+1] = (int)(l >> 32);
                             } else if (f.getType() == jq_Primitive.FLOAT) {
-                                static_data[j>>2] = Float.floatToRawIntBits(((Float)cv).floatValue());
+                                static_data[j] = Float.floatToRawIntBits(((Float)cv).floatValue());
                             } else if (f.getType() == jq_Primitive.DOUBLE) {
                                 long l = Double.doubleToRawLongBits(((Double)cv).doubleValue());
-                                static_data[j>>2  ] = (int)l;
-                                static_data[j>>2+1] = (int)(l >> 32);
+                                static_data[j  ] = (int)l;
+                                static_data[j+1] = (int)(l >> 32);
                             } else {
-                                static_data[j>>2] = ((Integer)cv).intValue();
+                                static_data[j] = ((Integer)cv).intValue();
                             }
                         } else {
                             // java/lang/String
-                            static_data[j>>2] = Unsafe.addressOf(cv);
+                            static_data[j] = HeapAddress.addressOf(cv).to32BitValue();
                         }
                     }
                     j += f.getWidth() >> 2;
@@ -2148,13 +2164,13 @@ uphere2:
                     if (!jq.Bootstrapping) cc.patchDirectBindCalls();
                 }
             }
-            int[] vt = (int[])vtable;
+            Address[] vt = (Address[])vtable;
             // 0th entry of vtable is class pointer
-            vt[0] = Unsafe.addressOf(this);
+            vt[0] = HeapAddress.addressOf(this);
             for (int i=0; i<virtual_methods.length; ++i) {
                 vt[i+1] = virtual_methods[i].getDefaultCompiledVersion().getEntrypoint();
             }
-            if (TRACE) SystemInterface.debugmsg(this+": "+jq.hex8(vt[0])+" vtable "+jq.hex8(Unsafe.addressOf(vt)));
+            if (TRACE) SystemInterface.debugmsg(this+": "+vt[0].stringRep()+" vtable "+HeapAddress.addressOf(vt).stringRep());
             if (!jq.Bootstrapping)
                 invokeclinit();
             if (TRACE) SystemInterface.debugmsg("Finished class init "+this);
@@ -2337,6 +2353,8 @@ uphere2:
     
     public static String className(Utf8 desc) {
         String temp = desc.toString();
+        jq.Assert(temp.startsWith("L"), temp);
+        jq.Assert(temp.endsWith(";"), temp);
         return temp.substring(1, temp.length()-1).replace('/','.');
     }
 

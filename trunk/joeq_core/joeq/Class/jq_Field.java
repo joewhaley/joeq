@@ -13,9 +13,13 @@ import java.util.Map;
 
 import Allocator.CodeAllocator;
 import Allocator.HeapAllocator;
+import Bootstrap.BootstrapCodeAddress;
+import Bootstrap.BootstrapHeapAddress;
 import Bootstrap.PrimordialClassLoader;
 import ClassLib.ClassLibInterface;
 import Main.jq;
+import Memory.CodeAddress;
+import Memory.HeapAddress;
 
 /*
  * @author  John Whaley
@@ -59,8 +63,14 @@ public abstract class jq_Field extends jq_Member {
         mv.visitField(this);
     }
     
-    public final boolean isCodeAddressType() { return CodeAllocator.codeAddressFields.contains(this); }
-    public final boolean isHeapAddressType() { return HeapAllocator.heapAddressFields.contains(this); }
+    public final boolean isCodeAddressType() {
+        return this.getType() == CodeAddress._class ||
+               this.getType() == BootstrapCodeAddress._class;
+    }
+    public final boolean isHeapAddressType() {
+        return this.getType() == HeapAddress._class ||
+               this.getType() == BootstrapHeapAddress._class;
+    }
     
     public String toString() { return getDeclaringClass()+"."+getName(); }
 }

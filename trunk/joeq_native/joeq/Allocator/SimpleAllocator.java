@@ -11,6 +11,7 @@ import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
 import Clazz.jq_InstanceMethod;
 import Main.jq;
+import Memory.HeapAddress;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
 
@@ -36,17 +37,18 @@ public class SimpleAllocator extends HeapAllocator {
 
     /** Pointers to the start, current, and end of the heap.
      */
-    private int/*HeapAddress*/ heapFirst, heapCurrent, heapEnd;
-
+    private HeapAddress heapFirst, heapCurrent, heapEnd;
+    
     /** Perform initialization for this allocator.  This will be called before any other methods.
      * This allocates an initial block of memory from the OS and sets up relevant pointers.
      *
      * @throws OutOfMemoryError if there is not enough memory for initialization
      */
     public final void init() throws OutOfMemoryError {
-        if (0 == (heapCurrent = heapFirst = SystemInterface.syscalloc(BLOCK_SIZE)))
+    	heapCurrent = heapFirst = (HeapAddress)SystemInterface.syscalloc(BLOCK_SIZE);
+        if (heapCurrent.isNull())
             HeapAllocator.outOfMemory();
-        heapEnd = heapFirst + BLOCK_SIZE - 4;
+        heapEnd = (HeapAddress)heapFirst.offset(BLOCK_SIZE - HeapAddress.size());
     }
 
     /** Returns an estimate of the amount of free memory available.
@@ -54,7 +56,7 @@ public class SimpleAllocator extends HeapAllocator {
      * @return bytes of free memory
      */
     public final int freeMemory() {
-        return heapEnd - heapCurrent;
+        return heapEnd.difference(heapCurrent);
     }
 
     /** Returns an estimate of the total memory allocated (both used and unused).
@@ -63,10 +65,10 @@ public class SimpleAllocator extends HeapAllocator {
      */
     public final int totalMemory() {
         int total = 0;
-        int/*HeapAddress*/ ptr = heapFirst;
-        while (ptr != 0) {
+        HeapAddress ptr = heapFirst;
+        while (!ptr.isNull()) {
             total += BLOCK_SIZE;
-            ptr = Unsafe.peek(ptr + BLOCK_SIZE - 4);
+            ptr = (HeapAddress)ptr.offset(BLOCK_SIZE-HeapAddress.size()).peek();
         }
         return total;
     }
@@ -84,22 +86,23 @@ public class SimpleAllocator extends HeapAllocator {
             HeapAllocator.outOfMemory();
         //jq.Assert((size & 0x3) == 0);
         size = (size + 3) & ~3; // align size
-        int/*HeapAddress*/ addr = heapCurrent + OBJ_HEADER_SIZE;
-        heapCurrent += size;
-        if (heapCurrent > heapEnd) {
+        HeapAddress addr = (HeapAddress)heapCurrent.offset(OBJ_HEADER_SIZE);
+        heapCurrent = (HeapAddress)heapCurrent.offset(size);
+        if (heapEnd.difference(heapCurrent) < 0) {
             // not enough space (rare path)
             if (totalMemory() >= MAX_MEMORY) HeapAllocator.outOfMemory();
-            jq.Assert(size < BLOCK_SIZE - 4);
-            if (0 == (heapCurrent = SystemInterface.syscalloc(BLOCK_SIZE)))
+            jq.Assert(size < BLOCK_SIZE-HeapAddress.size());
+            heapCurrent = (HeapAddress)SystemInterface.syscalloc(BLOCK_SIZE);
+            if (heapCurrent.isNull())
                 HeapAllocator.outOfMemory();
-            Unsafe.poke4(heapEnd, heapCurrent);
-            heapEnd = heapCurrent + BLOCK_SIZE - 4;
-            addr = heapCurrent + OBJ_HEADER_SIZE;
-            heapCurrent += size;
+            heapEnd.poke(heapCurrent);
+            heapEnd = (HeapAddress)heapCurrent.offset(BLOCK_SIZE - HeapAddress.size());
+            addr = (HeapAddress)heapCurrent.offset(OBJ_HEADER_SIZE);
+            heapCurrent = (HeapAddress)heapCurrent.offset(size);
         }
         // fast path
-        Unsafe.poke4(addr + VTABLE_OFFSET, Unsafe.addressOf(vtable));
-        return Unsafe.asObject(addr);
+        addr.offset(VTABLE_OFFSET).poke(HeapAddress.addressOf(vtable));
+        return addr.asObject();
     }
 
     /** Allocate an object such that the first field is 8-byte aligned.
@@ -110,8 +113,9 @@ public class SimpleAllocator extends HeapAllocator {
      * @return new uninitialized object
      * @throws OutOfMemoryError if there is insufficient memory to perform the operation
      */
-    public final Object allocateObjectAlign8(int size, Object vtable) throws OutOfMemoryError {
-        heapCurrent = ((heapCurrent + OBJ_HEADER_SIZE + 7) & ~7) - OBJ_HEADER_SIZE;
+    public final Object allocateObjectAlign8(int size, Object vtable)
+    throws OutOfMemoryError {
+    	heapCurrent = (HeapAddress)heapCurrent.offset(OBJ_HEADER_SIZE).align(3).offset(-OBJ_HEADER_SIZE);
         return allocateObject(size, vtable);
     }
 
@@ -131,31 +135,33 @@ public class SimpleAllocator extends HeapAllocator {
         if (size < ARRAY_HEADER_SIZE) // size overflow!
             HeapAllocator.outOfMemory();
         size = (size + 3) & ~3; // align size
-        int/*HeapAddress*/ addr = heapCurrent + ARRAY_HEADER_SIZE;
-        heapCurrent += size;
-        if (heapCurrent > heapEnd) {
+        HeapAddress addr = (HeapAddress)heapCurrent.offset(ARRAY_HEADER_SIZE);
+        heapCurrent = (HeapAddress)heapCurrent.offset(size);
+        if (heapEnd.difference(heapCurrent) < 0) {
             // not enough space (rare path)
             if (size > LARGE_THRESHOLD) {
                 // special large-object allocation
-                heapCurrent -= size;
-                if (0 == (addr = SystemInterface.syscalloc(size)))
+                heapCurrent = (HeapAddress)heapCurrent.offset(-size);
+                addr = (HeapAddress)SystemInterface.syscalloc(size);
+                if (addr.isNull())
                     outOfMemory();
-                addr += ARRAY_HEADER_SIZE;
+                addr = (HeapAddress)addr.offset(ARRAY_HEADER_SIZE);
             } else {
                 if (totalMemory() >= MAX_MEMORY) HeapAllocator.outOfMemory();
                 jq.Assert(size < BLOCK_SIZE - 4);
-                if (0 == (heapCurrent = SystemInterface.syscalloc(BLOCK_SIZE)))
+                heapCurrent = (HeapAddress)SystemInterface.syscalloc(BLOCK_SIZE);
+                if (heapCurrent.isNull())
                     outOfMemory();
-                Unsafe.poke4(heapEnd, heapCurrent);
-                heapEnd = heapCurrent + BLOCK_SIZE - 4;
-                addr = heapCurrent + ARRAY_HEADER_SIZE;
-                heapCurrent += size;
+                heapEnd.poke(heapCurrent);
+                heapEnd = (HeapAddress)heapCurrent.offset(BLOCK_SIZE - HeapAddress.size());
+                addr = (HeapAddress)heapCurrent.offset(ARRAY_HEADER_SIZE);
+                heapCurrent = (HeapAddress)heapCurrent.offset(size);
             }
         }
         // fast path
-        Unsafe.poke4(addr + ARRAY_LENGTH_OFFSET, length);
-        Unsafe.poke4(addr + VTABLE_OFFSET, Unsafe.addressOf(vtable));
-        return Unsafe.asObject(addr);
+        addr.offset(ARRAY_LENGTH_OFFSET).poke4(length);
+        addr.offset(VTABLE_OFFSET).poke(HeapAddress.addressOf(vtable));
+        return addr.asObject();
     }
 
     /** Allocate an array such that the elements are 8-byte aligned.
@@ -170,7 +176,7 @@ public class SimpleAllocator extends HeapAllocator {
      * @throws OutOfMemoryError if there is insufficient memory to perform the operation
      */
     public final Object allocateArrayAlign8(int length, int size, Object vtable) throws OutOfMemoryError, NegativeArraySizeException {
-        heapCurrent = ((heapCurrent + ARRAY_HEADER_SIZE + 7) & ~7) - ARRAY_HEADER_SIZE;
+    	heapCurrent = (HeapAddress)heapCurrent.offset(ARRAY_HEADER_SIZE).align(3).offset(-ARRAY_HEADER_SIZE);
         return allocateArray(length, size, vtable);
     }
 

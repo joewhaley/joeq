@@ -23,6 +23,7 @@ import Assembler.x86.DirectBindCall;
 import Assembler.x86.x86;
 import Assembler.x86.x86Assembler;
 import Assembler.x86.x86Constants;
+import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Array;
 import Clazz.jq_BytecodeMap;
 import Clazz.jq_Class;
@@ -39,6 +40,10 @@ import Clazz.jq_Type;
 import Compil3r.Compil3rInterface;
 import Compil3r.BytecodeAnalysis.BytecodeVisitor;
 import Main.jq;
+import Memory.Address;
+import Memory.CodeAddress;
+import Memory.HeapAddress;
+import Memory.StackAddress;
 import Run_Time.ExceptionDeliverer;
 import Run_Time.MathSupport;
 import Run_Time.Monitor;
@@ -46,6 +51,7 @@ import Run_Time.Reflection;
 import Run_Time.SystemInterface;
 import Run_Time.TypeCheck;
 import Run_Time.Unsafe;
+import UTF.Utf8;
 
 /**
  * @author  John Whaley
@@ -110,16 +116,16 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public final void emitCallRelative(jq_Method target) { emitCallRelative(target, asm, code_relocs); }
     public static final void emitCallRelative(jq_Method target, x86Assembler asm, List code_relocs) {
         asm.emitCALL_rel32(x86.CALL_rel32, 0);
-        DirectBindCall r = new DirectBindCall(asm.getCurrentAddress()-4, target);
+        DirectBindCall r = new DirectBindCall((CodeAddress) asm.getCurrentAddress().offset(-4), target);
         code_relocs.add(r);
         if (ALWAYS_TRACE) System.out.println("Direct bind call: "+r);
     }
     public final void emitPushAddressOf(Object o) { emitPushAddressOf(o, asm, data_relocs); }
     public static final void emitPushAddressOf(Object o, x86Assembler asm, List data_relocs) {
         if (o != null) {
-            int/*HeapAddress*/ addr = Unsafe.addressOf(o);
-            asm.emit1_Imm32(x86.PUSH_i32, addr);
-            Code2HeapReference r = new Code2HeapReference(asm.getCurrentAddress()-4, addr);
+            HeapAddress addr = HeapAddress.addressOf(o);
+            asm.emit1_Imm32(x86.PUSH_i32, addr.to32BitValue());
+            Code2HeapReference r = new Code2HeapReference((CodeAddress) asm.getCurrentAddress().offset(-4), addr);
             data_relocs.add(r);
             if (ALWAYS_TRACE) System.out.println("Code2Heap reference: "+r);
         } else {
@@ -128,56 +134,56 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     }
     public final void emitPushMemory(jq_StaticField f) { emitPushMemory(f, asm, data_relocs); }
     public static final void emitPushMemory(jq_StaticField f, x86Assembler asm, List data_relocs) {
-        int/*HeapAddress*/ addr = f.getAddress();
-        asm.emit2_Mem(x86.PUSH_m, addr);
-        Code2HeapReference r = new Code2HeapReference(asm.getCurrentAddress()-4, addr);
+        HeapAddress addr = f.getAddress();
+        asm.emit2_Mem(x86.PUSH_m, addr.to32BitValue());
+        Code2HeapReference r = new Code2HeapReference((CodeAddress) asm.getCurrentAddress().offset(-4), addr);
         data_relocs.add(r);
         if (ALWAYS_TRACE) System.out.println("Code2Heap reference: "+r);
     }
     public final void emitPushMemory8(jq_StaticField f) { emitPushMemory8(f, asm, data_relocs); }
     public static final void emitPushMemory8(jq_StaticField f, x86Assembler asm, List data_relocs) {
-        int/*HeapAddress*/ addr = f.getAddress();
-        asm.emit2_Mem(x86.PUSH_m, addr+4); // hi
-        Code2HeapReference r = new Code2HeapReference(asm.getCurrentAddress()-4, addr+4);
+        HeapAddress addr = f.getAddress();
+        asm.emit2_Mem(x86.PUSH_m, addr.offset(4).to32BitValue()); // hi
+        Code2HeapReference r = new Code2HeapReference((CodeAddress) asm.getCurrentAddress().offset(-4), (HeapAddress) addr.offset(4));
         data_relocs.add(r);
-        asm.emit2_Mem(x86.PUSH_m, addr  ); // lo
-        r = new Code2HeapReference(asm.getCurrentAddress()-4, addr);
+        asm.emit2_Mem(x86.PUSH_m, addr.to32BitValue()); // lo
+        r = new Code2HeapReference((CodeAddress) asm.getCurrentAddress().offset(-4), addr);
         data_relocs.add(r);
         if (ALWAYS_TRACE) System.out.println("Code2Heap reference: "+r);
     }
     public final void emitPopMemory(jq_StaticField f) { emitPopMemory(f, asm, data_relocs); }
     public static final void emitPopMemory(jq_StaticField f, x86Assembler asm, List data_relocs) {
-        int/*HeapAddress*/ addr = f.getAddress();
-        asm.emit2_Mem(x86.POP_m, addr);
-        Code2HeapReference r = new Code2HeapReference(asm.getCurrentAddress()-4, addr);
+        HeapAddress addr = f.getAddress();
+        asm.emit2_Mem(x86.POP_m, addr.to32BitValue());
+        Code2HeapReference r = new Code2HeapReference((CodeAddress) asm.getCurrentAddress().offset(-4), addr);
         data_relocs.add(r);
         if (ALWAYS_TRACE) System.out.println("Code2Heap reference: "+r);
     }
     public final void emitPopMemory8(jq_StaticField f) { emitPopMemory8(f, asm, data_relocs); }
     public static final void emitPopMemory8(jq_StaticField f, x86Assembler asm, List data_relocs) {
-        int/*HeapAddress*/ addr = f.getAddress();
-        asm.emit2_Mem(x86.POP_m, addr  ); // lo
-        Code2HeapReference r = new Code2HeapReference(asm.getCurrentAddress()-4, addr);
+        HeapAddress addr = f.getAddress();
+        asm.emit2_Mem(x86.POP_m, addr.to32BitValue()); // lo
+        Code2HeapReference r = new Code2HeapReference((CodeAddress) asm.getCurrentAddress().offset(-4), addr);
         data_relocs.add(r);
         if (ALWAYS_TRACE) System.out.println("Code2Heap reference: "+r);
-        asm.emit2_Mem(x86.POP_m, addr+4); // hi
-        r = new Code2HeapReference(asm.getCurrentAddress()-4, addr+4);
+        asm.emit2_Mem(x86.POP_m, addr.offset(4).to32BitValue()); // hi
+        r = new Code2HeapReference((CodeAddress) asm.getCurrentAddress().offset(-4), (HeapAddress) addr.offset(4));
         data_relocs.add(r);
         if (ALWAYS_TRACE) System.out.println("Code2Heap reference: "+r);
     }
     public final void emitCallMemory(jq_StaticField f) { emitCallMemory(f, asm, data_relocs); }
     public static final void emitCallMemory(jq_StaticField f, x86Assembler asm, List data_relocs) {
-        int/*HeapAddress*/ addr = f.getAddress();
-        asm.emit2_Mem(x86.CALL_m, addr);
-        Code2HeapReference r = new Code2HeapReference(asm.getCurrentAddress()-4, addr);
+        HeapAddress addr = f.getAddress();
+        asm.emit2_Mem(x86.CALL_m, addr.to32BitValue());
+        Code2HeapReference r = new Code2HeapReference((CodeAddress) asm.getCurrentAddress().offset(-4), addr);
         data_relocs.add(r);
         if (ALWAYS_TRACE) System.out.println("Code2Heap reference: "+r);
     }
     public final void emitFLD64(jq_StaticField f) { emitFLD64(f, asm, data_relocs); }
     public static final void emitFLD64(jq_StaticField f, x86Assembler asm, List data_relocs) {
-        int/*HeapAddress*/ addr = f.getAddress();
-        asm.emit2_Mem(x86.FLD_m64, addr);
-        Code2HeapReference r = new Code2HeapReference(asm.getCurrentAddress()-4, addr);
+        HeapAddress addr = f.getAddress();
+        asm.emit2_Mem(x86.FLD_m64, addr.to32BitValue());
+        Code2HeapReference r = new Code2HeapReference((CodeAddress) asm.getCurrentAddress().offset(-4), addr);
         data_relocs.add(r);
         if (ALWAYS_TRACE) System.out.println("Code2Heap reference: "+r);
     }
@@ -1755,12 +1761,12 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             emitPushMemory(f);
         }
     }
-    static int patch_getstatic4(int retloc, jq_StaticField f) {
+    static int patch_getstatic4(CodeAddress retloc, jq_StaticField f) {
         // todo: register backpatched reference
-        Unsafe.poke2(retloc-10, (short)0xFFEB);
-        Unsafe.poke4(retloc-8, 0x35FF9090);
-        Unsafe.poke4(retloc-4, f.getAddress());
-        Unsafe.poke2(retloc-10, (short)0x9090);
+        retloc.offset(-10).poke2((short)0xFFEB);
+        retloc.offset(-8 ).poke4(0x35FF9090);
+        retloc.offset(-4 ).poke(f.getAddress());
+        retloc.offset(-10).poke2((short)0x9090);
         return 6;
     }
     public void GETSTATIC8helper(jq_StaticField f) {
@@ -1783,13 +1789,13 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             emitPushMemory8(f);
         }
     }
-    static int patch_getstatic8(int retloc, jq_StaticField f) {
+    static int patch_getstatic8(CodeAddress retloc, jq_StaticField f) {
         // todo: register backpatched reference
-        Unsafe.poke2(retloc-10, (short)0xFFEB);
-        Unsafe.poke4(retloc-8, f.getAddress()+4);
-        Unsafe.poke2(retloc-4, (short)0x35FF);
-        Unsafe.poke4(retloc-2, f.getAddress());
-        Unsafe.poke2(retloc-10, (short)0x35FF);
+        retloc.offset(-10).poke2((short)0xFFEB);
+        retloc.offset(-8 ).poke(f.getAddress().offset(4));
+        retloc.offset(-4 ).poke2((short)0x35FF);
+        retloc.offset(-2 ).poke(f.getAddress());
+        retloc.offset(-10).poke2((short)0x35FF);
         return 10;
     }
     public void visitIGETSTATIC(jq_StaticField f) {
@@ -1848,12 +1854,12 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             emitPopMemory(f);
         }
     }
-    static int patch_putstatic4(int retloc, jq_StaticField f) {
+    static int patch_putstatic4(CodeAddress retloc, jq_StaticField f) {
         // todo: register backpatched reference
-        Unsafe.poke2(retloc-10, (short)0xFFEB);
-        Unsafe.poke4(retloc-8, 0x058F9090);
-        Unsafe.poke4(retloc-4, f.getAddress());
-        Unsafe.poke2(retloc-10, (short)0x9090);
+        retloc.offset(-10).poke2((short)0xFFEB);
+        retloc.offset(-8 ).poke4(0x058F9090);
+        retloc.offset(-4 ).poke(f.getAddress());
+        retloc.offset(-10).poke2((short)0x9090);
         return 6;
     }
     public void PUTSTATIC8helper(jq_StaticField f) {
@@ -1876,13 +1882,13 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             emitPopMemory8(f);
         }
     }
-    static int patch_putstatic8(int retloc, jq_StaticField f) {
+    static int patch_putstatic8(CodeAddress retloc, jq_StaticField f) {
         // todo: register backpatched reference
-        Unsafe.poke2(retloc-10, (short)0xFFEB);
-        Unsafe.poke4(retloc-8, f.getAddress());
-        Unsafe.poke2(retloc-4, (short)0x058F);
-        Unsafe.poke4(retloc-2, f.getAddress()+4);
-        Unsafe.poke2(retloc-10, (short)0x058F);
+        retloc.offset(-10).poke2((short)0xFFEB);
+        retloc.offset(-8 ).poke(f.getAddress().offset(4));
+        retloc.offset(-4 ).poke2((short)0x058F);
+        retloc.offset(-2 ).poke(f.getAddress());
+        retloc.offset(-10).poke2((short)0x058F);
         return 10;
     }
     public void visitIPUTSTATIC(jq_StaticField f) {
@@ -1943,12 +1949,12 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             asm.emitShort_Reg(x86.PUSH_r, EBX);
         }
     }
-    static int patch_getfield1(int retloc, jq_InstanceField f) {
-        Unsafe.poke2(retloc-10, (short)0xFFEB);
-        Unsafe.poke4(retloc-8, 0x0098BE0F);
-        Unsafe.poke4(retloc-5, f.getOffset());
-        Unsafe.poke1(retloc-1, (byte)0x53);
-        Unsafe.poke2(retloc-10, (short)0x5890);
+    static int patch_getfield1(CodeAddress retloc, jq_InstanceField f) {
+        retloc.offset(-10).poke2((short)0xFFEB);
+        retloc.offset(-8 ).poke4(0x0098BE0F);
+        retloc.offset(-5 ).poke4(f.getOffset());
+        retloc.offset(-1 ).poke1((byte)0x53);
+        retloc.offset(-10).poke2((short)0x5890);
         return 9;
     }
     public void GETFIELD4helper(jq_InstanceField f) {
@@ -1972,11 +1978,11 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             asm.emit2_Mem(x86.PUSH_m, f.getOffset(), EAX);
         }
     }
-    static int patch_getfield4(int retloc, jq_InstanceField f) {
-        Unsafe.poke2(retloc-10, (short)0xFFEB);
-        Unsafe.poke4(retloc-8, 0xB0FF5890);
-        Unsafe.poke4(retloc-4, f.getOffset());
-        Unsafe.poke2(retloc-10, (short)0x9090);
+    static int patch_getfield4(CodeAddress retloc, jq_InstanceField f) {
+        retloc.offset(-10).poke2((short)0xFFEB);
+        retloc.offset(-8 ).poke4(0xB0FF5890);
+        retloc.offset(-4 ).poke4(f.getOffset());
+        retloc.offset(-10).poke2((short)0x9090);
         return 7;
     }
     public void GETFIELD8helper(jq_InstanceField f) {
@@ -2001,12 +2007,12 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             asm.emit2_Mem(x86.PUSH_m, f.getOffset(), EAX);   // lo
         }
     }
-    static int patch_getfield8(int retloc, jq_InstanceField f) {
-        Unsafe.poke4(retloc-10, 0x00B0FFEB);
-        Unsafe.poke4(retloc-7, f.getOffset()+4);
-        Unsafe.poke2(retloc-3, (short)0xB0FF);
-        Unsafe.poke4(retloc-1, f.getOffset());
-        Unsafe.poke1(retloc-10, (byte)0x58);
+    static int patch_getfield8(CodeAddress retloc, jq_InstanceField f) {
+        retloc.offset(-10).poke4(0x00B0FFEB);
+        retloc.offset(-7 ).poke4(f.getOffset()+4);
+        retloc.offset(-3 ).poke2((short)0xB0FF);
+        retloc.offset(-1 ).poke4(f.getOffset());
+        retloc.offset(-10).poke1((byte)0x58);
         return 10;
     }
     public void visitIGETFIELD(jq_InstanceField f) {
@@ -2056,12 +2062,12 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             asm.emitShort_Reg(x86.PUSH_r, EBX);
         }
     }
-    static int patch_cgetfield(int retloc, jq_InstanceField f) {
-        Unsafe.poke2(retloc-10, (short)0xFFEB);
-        Unsafe.poke4(retloc-8, 0x0098B70F);
-        Unsafe.poke4(retloc-5, f.getOffset());
-        Unsafe.poke1(retloc-1, (byte)0x53);
-        Unsafe.poke2(retloc-10, (short)0x5890);
+    static int patch_cgetfield(CodeAddress retloc, jq_InstanceField f) {
+        retloc.offset(-10).poke2((short)0xFFEB);
+        retloc.offset(-8 ).poke4(0x0098B70F);
+        retloc.offset(-5 ).poke4(f.getOffset());
+        retloc.offset(-1 ).poke1((byte)0x53);
+        retloc.offset(-10).poke2((short)0x5890);
         return 9;
     }
     public void visitSGETFIELD(jq_InstanceField f) {
@@ -2087,12 +2093,12 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             asm.emitShort_Reg(x86.PUSH_r, EBX);
         }
     }
-    static int patch_sgetfield(int retloc, jq_InstanceField f) {
-        Unsafe.poke2(retloc-10, (short)0xFFEB);
-        Unsafe.poke4(retloc-8, 0x0098BF0F);
-        Unsafe.poke4(retloc-5, f.getOffset());
-        Unsafe.poke1(retloc-1, (byte)0x53);
-        Unsafe.poke2(retloc-10, (short)0x5890);
+    static int patch_sgetfield(CodeAddress retloc, jq_InstanceField f) {
+        retloc.offset(-10).poke2((short)0xFFEB);
+        retloc.offset(-8 ).poke4(0x0098BF0F);
+        retloc.offset(-5 ).poke4(f.getOffset());
+        retloc.offset(-1 ).poke1((byte)0x53);
+        retloc.offset(-10).poke2((short)0x5890);
         return 9;
     }
     public void visitZGETFIELD(jq_InstanceField f) {
@@ -2122,11 +2128,11 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             asm.emit2_Reg_Mem(x86.MOV_m_r8, EBX, f.getOffset(), EAX);
         }
     }
-    static int patch_putfield1(int retloc, jq_InstanceField f) {
-        Unsafe.poke2(retloc-10, (short)0xFFEB);
-        Unsafe.poke4(retloc-8, 0x9888585B);
-        Unsafe.poke4(retloc-4, f.getOffset());
-        Unsafe.poke2(retloc-10, (short)0x9090);
+    static int patch_putfield1(CodeAddress retloc, jq_InstanceField f) {
+        retloc.offset(-10).poke2((short)0xFFEB);
+        retloc.offset(-8 ).poke4(0x9888585B);
+        retloc.offset(-4 ).poke4(f.getOffset());
+        retloc.offset(-10).poke2((short)0x9090);
         return 8;
     }
     public void PUTFIELD2helper(jq_InstanceField f) {
@@ -2153,11 +2159,11 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             asm.emit2_Reg_Mem(x86.MOV_m_r32, EBX, f.getOffset(), EAX);
         }
     }
-    static int patch_putfield2(int retloc, jq_InstanceField f) {
-        Unsafe.poke4(retloc-10, 0x6658FFEB);
-        Unsafe.poke2(retloc-6, (short)0x9889);
-        Unsafe.poke4(retloc-4, f.getOffset());
-        Unsafe.poke2(retloc-10, (short)0x5B90);
+    static int patch_putfield2(CodeAddress retloc, jq_InstanceField f) {
+        retloc.offset(-10).poke4(0x6658FFEB);
+        retloc.offset(-6 ).poke2((short)0x9889);
+        retloc.offset(-4 ).poke4(f.getOffset());
+        retloc.offset(-10).poke2((short)0x5B90);
         return 9;
     }
     public void PUTFIELD4helper(jq_InstanceField f) {
@@ -2183,11 +2189,11 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             asm.emit2_Reg_Mem(x86.MOV_m_r32, EBX, f.getOffset(), EAX);
         }
     }
-    static int patch_putfield4(int retloc, jq_InstanceField f) {
-        Unsafe.poke2(retloc-10, (short)0xFFEB);
-        Unsafe.poke4(retloc-8, 0x9889585B);
-        Unsafe.poke4(retloc-4, f.getOffset());
-        Unsafe.poke2(retloc-10, (short)0x9090);
+    static int patch_putfield4(CodeAddress retloc, jq_InstanceField f) {
+        retloc.offset(-10).poke2((short)0xFFEB);
+        retloc.offset(-8 ).poke4(0x9889585B);
+        retloc.offset(-4 ).poke4(f.getOffset());
+        retloc.offset(-10).poke2((short)0x9090);
         return 8;
     }
     public void PUTFIELD8helper(jq_InstanceField f) {
@@ -2215,13 +2221,13 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             asm.emit2_Reg_Mem(x86.MOV_m_r32, EAX, f.getOffset()+4, EDX); // hi
         }
     }
-    static int patch_putfield8(int retloc, jq_InstanceField f) {
-        Unsafe.poke4(retloc-10, 0x895AFFEB);
-        Unsafe.poke1(retloc-6, (byte)0x9A);
-        Unsafe.poke4(retloc-5, f.getOffset());
-        Unsafe.poke2(retloc-1, (short)0x8289);
-        Unsafe.poke4(retloc+1, f.getOffset()+4);
-        Unsafe.poke2(retloc-10, (short)0x585B);
+    static int patch_putfield8(CodeAddress retloc, jq_InstanceField f) {
+        retloc.offset(-10).poke4(0x895AFFEB);
+        retloc.offset(-6 ).poke1((byte)0x9A);
+        retloc.offset(-5 ).poke4(f.getOffset());
+        retloc.offset(-1 ).poke2((short)0x8289);
+        retloc.offset( 1 ).poke4(f.getOffset()+4);
+        retloc.offset(-10).poke2((short)0x585B);
         return 10;
     }
     public void visitIPUTFIELD(jq_InstanceField f) {
@@ -2291,23 +2297,23 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         emitCallRelative(dpatchentry);
         asm.endDynamicPatch();
     }
-    static int patch_invokevirtual(int retloc, jq_InstanceMethod f) {
-        Unsafe.poke2(retloc-10, (short)0xFFEB);
-        Unsafe.poke1(retloc-8, (byte)0x24);
+    static int patch_invokevirtual(CodeAddress retloc, jq_InstanceMethod f) {
+        retloc.offset(-10).poke2((short)0xFFEB);
+        retloc.offset(-8 ).poke1((byte)0x24);
         int objptroffset = (f.getParamWords() << 2) - 4;
-        Unsafe.poke4(retloc-7, objptroffset);
-        Unsafe.poke2(retloc-3, (short)0x588B);
-        Unsafe.poke1(retloc-1, (byte)VTABLE_OFFSET);
-        Unsafe.poke2(retloc, (short)0x93FF);
-        Unsafe.poke4(retloc+2, f.getOffset());
-        Unsafe.poke2(retloc-10, (short)0x848B);
+        retloc.offset(-7 ).poke4(objptroffset);
+        retloc.offset(-3 ).poke2((short)0x588B);
+        retloc.offset(-1 ).poke1((byte)VTABLE_OFFSET);
+        retloc.            poke2((short)0x93FF);
+        retloc.offset( 2 ).poke4(f.getOffset());
+        retloc.offset(-10).poke2((short)0x848B);
         return 10;
     }
-    static int patch_invokestatic(int retloc, jq_Method f) {
-        Unsafe.poke4(retloc-10, 0x9090FFEB);
-        Unsafe.poke2(retloc-6, (short)0xE890);
-        Unsafe.poke4(retloc-4, f.getDefaultCompiledVersion().getEntrypoint()-retloc);
-        Unsafe.poke2(retloc-10, (short)0x9090);
+    static int patch_invokestatic(CodeAddress retloc, jq_Method f) {
+        retloc.offset(-10).poke4(0x9090FFEB);
+        retloc.offset(-6 ).poke2((short)0xE890);
+        retloc.offset(-4 ).poke4(f.getDefaultCompiledVersion().getEntrypoint().difference(retloc));
+        retloc.offset(-10).poke2((short)0x9090);
         return 5;
     }
     private void INVOKENODPATCHhelper(byte op, jq_Method f) {
@@ -2375,10 +2381,18 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
                 throw new InternalError();
         }
     }
+    boolean isAddressClass(jq_Class c) {
+    	return c == Address._class || c == HeapAddress._class ||
+	    c == CodeAddress._class || c == StackAddress._class;
+    }
     public void visitIINVOKE(byte op, jq_Method f) {
         super.visitIINVOKE(op, f);
         if (f.getDeclaringClass() == Unsafe._class) {
             gen_unsafe(f);
+            return;
+        }
+        if (isAddressClass(f.getDeclaringClass())) {
+            genAddress(f);
             return;
         }
         INVOKEhelper(op, f);
@@ -2388,6 +2402,10 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         super.visitLINVOKE(op, f);
         if (f.getDeclaringClass() == Unsafe._class) {
             gen_unsafe(f);
+            return;
+        }
+        if (isAddressClass(f.getDeclaringClass())) {
+            genAddress(f);
             return;
         }
         INVOKEhelper(op, f);
@@ -2400,6 +2418,10 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             gen_unsafe(f);
             return;
         }
+        if (isAddressClass(f.getDeclaringClass())) {
+            genAddress(f);
+            return;
+        }
         INVOKEhelper(op, f);
         asm.emitShort_Reg(x86.PUSH_r, EAX);
     }
@@ -2407,6 +2429,10 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         super.visitDINVOKE(op, f);
         if (f.getDeclaringClass() == Unsafe._class) {
             gen_unsafe(f);
+            return;
+        }
+        if (isAddressClass(f.getDeclaringClass())) {
+            genAddress(f);
             return;
         }
         INVOKEhelper(op, f);
@@ -2419,6 +2445,10 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             gen_unsafe(f);
             return;
         }
+        if (isAddressClass(f.getDeclaringClass())) {
+            genAddress(f);
+            return;
+        }
         INVOKEhelper(op, f);
         asm.emitShort_Reg(x86.PUSH_r, EAX);
     }
@@ -2426,6 +2456,10 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         super.visitVINVOKE(op, f);
         if (f.getDeclaringClass() == Unsafe._class) {
             gen_unsafe(f);
+            return;
+        }
+        if (isAddressClass(f.getDeclaringClass())) {
+            genAddress(f);
             return;
         }
         INVOKEhelper(op, f);
@@ -2449,8 +2483,12 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     }
     public void visitNEWARRAY(jq_Array f) {
         super.visitNEWARRAY(f);
-        if (!jq.Bootstrapping) {
-            // initialize type now, to avoid backpatch.
+        // initialize type now, to avoid backpatch.
+        if (jq.Bootstrapping) {
+	    if (!jq.boot_types.contains(f))
+		System.err.println("Error! Boot type set does not contain "+f+", but an instance is created inside of method "+method);
+            //jq.Assert(jq.boot_types.contains(f), f.toString());
+        } else {
             f.load(); f.verify(); f.prepare(); f.sf_initialize(); f.cls_initialize();
         }
         if (TraceBytecodes) {
@@ -2488,6 +2526,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     }
     public void visitCHECKCAST(jq_Type f) {
         super.visitCHECKCAST(f);
+        if (f.isAddressType()) return;
         if (TraceBytecodes) {
             emitPushAddressOf(SystemInterface.toCString(i_start+": CHECKCAST "+f));
             emitCallMemory(SystemInterface._debugmsg);
@@ -2532,35 +2571,165 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     public static byte THREAD_BLOCK_PREFIX = x86.PREFIX_FS;
     public static int  THREAD_BLOCK_OFFSET = 0x14;
 
+    public static final Utf8 peek = Utf8.get("peek");
+    public static final Utf8 peek1 = Utf8.get("peek1");
+    public static final Utf8 peek2 = Utf8.get("peek2");
+    public static final Utf8 peek4 = Utf8.get("peek4");
+    public static final Utf8 peek8 = Utf8.get("peek8");
+    public static final Utf8 poke = Utf8.get("poke");
+    public static final Utf8 poke1 = Utf8.get("poke1");
+    public static final Utf8 poke2 = Utf8.get("poke2");
+    public static final Utf8 poke4 = Utf8.get("poke4");
+    public static final Utf8 poke8 = Utf8.get("poke8");
+    public static final Utf8 offset = Utf8.get("offset");
+    public static final Utf8 align = Utf8.get("align");
+    public static final Utf8 difference = Utf8.get("difference");
+    public static final Utf8 isNull = Utf8.get("isNull");
+    public static final Utf8 addressOf = Utf8.get("addressOf");
+    public static final Utf8 address32 = Utf8.get("address32");
+    public static final Utf8 asObject = Utf8.get("asObject");
+    public static final Utf8 asReferenceType = Utf8.get("asReferenceType");
+    public static final Utf8 to32BitValue = Utf8.get("to32BitValue");
+    public static final Utf8 stringRep = Utf8.get("stringRep");
+    public static final Utf8 getNull = Utf8.get("getNull");
+    public static final Utf8 size = Utf8.get("size");
+    public static final Utf8 getBasePointer = Utf8.get("getBasePointer");
+    public static final Utf8 getStackPointer = Utf8.get("getStackPointer");
+    public static final Utf8 alloca = Utf8.get("alloca");
+    public static final Utf8 atomicAdd = Utf8.get("atomicAdd");
+    public static final Utf8 atomicSub = Utf8.get("atomicSub");
+    public static final Utf8 atomicCas4 = Utf8.get("atomicCas4");
+    public static final Utf8 atomicAnd = Utf8.get("atomicAnd");
+    public static final Utf8 min = Utf8.get("min");
+    public static final Utf8 max = Utf8.get("max");
+
+    private void genAddress(jq_Method f) {
+        if (TraceBytecodes) {
+            emitPushAddressOf(SystemInterface.toCString(i_start+": ADDRESS "+f));
+            emitCallMemory(SystemInterface._debugmsg);
+        }
+        if (f.getName() == peek1) {
+            asm.emitShort_Reg(x86.POP_r, EAX); // address
+            asm.emit3_Reg_Mem(x86.MOVSX_r_m8, ECX, 0, EAX);
+            asm.emitShort_Reg(x86.PUSH_r, ECX);
+        } else if (f.getName() == peek2) {
+            asm.emitShort_Reg(x86.POP_r, EAX); // address
+            asm.emit3_Reg_Mem(x86.MOVSX_r_m16, ECX, 0, EAX);
+            asm.emitShort_Reg(x86.PUSH_r, ECX);
+        } else if (f.getName() == peek4 || f.getName() == peek) {
+            asm.emitShort_Reg(x86.POP_r, EAX); // address
+            asm.emit2_Mem(x86.PUSH_m, 0, EAX);
+        } else if (f.getName() == peek8) {
+            asm.emitShort_Reg(x86.POP_r, EAX); // address
+            asm.emit2_Mem(x86.PUSH_m, 4, EAX); // hi
+            asm.emit2_Mem(x86.PUSH_m, 0, EAX); // lo
+        } else if (f.getName() == poke1) {
+            asm.emitShort_Reg(x86.POP_r, EBX); // value
+            asm.emitShort_Reg(x86.POP_r, EAX); // address
+            asm.emit2_Reg_Mem(x86.MOV_m_r8, EBX, 0, EAX);
+        } else if (f.getName() == poke2) {
+            asm.emitShort_Reg(x86.POP_r, EBX); // value
+            asm.emitShort_Reg(x86.POP_r, EAX); // address
+            asm.emitprefix(x86.PREFIX_16BIT);
+            asm.emit2_Reg_Mem(x86.MOV_m_r32, EBX, 0, EAX);
+        } else if (f.getName() == poke4 || f.getName() == poke) {
+            asm.emitShort_Reg(x86.POP_r, EBX); // value
+            asm.emitShort_Reg(x86.POP_r, EAX); // address
+            asm.emit2_Reg_Mem(x86.MOV_m_r32, EBX, 0, EAX);
+        } else if (f.getName() == poke8) {
+            asm.emitShort_Reg(x86.POP_r, EBX); // value
+            asm.emitShort_Reg(x86.POP_r, EAX); // address
+            asm.emit2_Reg_Mem(x86.MOV_m_r32, EBX, 0, EAX);
+        } else if (f.getName() == offset) {
+            asm.emitShort_Reg(x86.POP_r, EAX);
+            asm.emitARITH_Reg_Mem(x86.ADD_m_r32, EAX, 0, ESP);
+        } else if (f.getName() == align) {
+            asm.emitShort_Reg(x86.POP_r, ECX); // shift
+            asm.emitShort_Reg(x86.POP_r, EAX); // address
+            asm.emitShort_Reg_Imm(x86.MOV_r_i32, EBX, 1);
+            asm.emit2_Reg(x86.SHL_r32_rc, EBX);
+            asm.emitShort_Reg(x86.DEC_r32, EBX);
+            asm.emitARITH_Reg_Reg(x86.ADD_r_r32, EAX, EBX);
+            asm.emit2_Reg(x86.NOT_r32, EBX);
+            asm.emitARITH_Reg_Reg(x86.AND_r_r32, EAX, EBX);
+            asm.emitShort_Reg(x86.PUSH_r, EAX);
+        } else if (f.getName() == difference) {
+            asm.emitShort_Reg(x86.POP_r, EAX);
+            asm.emitARITH_Reg_Mem(x86.SUB_m_r32, EAX, 0, ESP); // a-b
+        } else if (f.getName() == isNull) {
+            asm.emitShort_Reg_Imm(x86.MOV_r_i32, ECX, 0);
+            asm.emitShort_Reg(x86.POP_r, EAX);
+	    asm.emitARITH_Reg_Imm(x86.CMP_r_i32, EAX, 0);
+            asm.emitCJUMP_Short(x86.JNE, (byte)0);
+            int cloc = asm.getCurrentOffset();
+            asm.emitShort_Reg(x86.INC_r32, ECX);
+            asm.patch1(cloc-1, (byte)(asm.getCurrentOffset()-cloc));
+            asm.emitShort_Reg(x86.PUSH_r, ECX);
+        } else if (f.getName() == addressOf || f.getName() == address32 ||
+                   f.getName() == asObject || f.getName() == asReferenceType ||
+		   f.getName() == to32BitValue) {
+            asm.emit1(x86.NOP);
+        } else if (f.getName() == stringRep) {
+            jq_Class k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LMain/jq;");
+            jq_StaticMethod sm = k.getOrCreateStaticMethod("hex8", "(I)Ljava/lang/String;");
+            emitCallRelative(sm);
+            asm.emitShort_Reg(x86.PUSH_r, EAX);
+        } else if (f.getName() == getNull || f.getName() == min) {
+            asm.emitPUSH_i(0);
+        } else if (f.getName() == max) {
+            asm.emitPUSH_i(Integer.MAX_VALUE);
+        } else if (f.getName() == size) {
+            asm.emitPUSH_i(4);
+        } else if (f.getName() == getBasePointer) {
+            asm.emitShort_Reg(x86.PUSH_r, EBP);
+        } else if (f.getName() == getStackPointer) {
+            asm.emitShort_Reg(x86.PUSH_r, ESP);
+        } else if (f.getName() == alloca) {
+            asm.emitShort_Reg(x86.POP_r, EAX);
+            asm.emitARITH_Reg_Reg(x86.SUB_r_r32, ESP, EAX);
+        } else if (f.getName() == atomicAdd) {
+            asm.emitShort_Reg(x86.POP_r, EBX); // value
+            asm.emitShort_Reg(x86.POP_r, EAX); // address
+            if (jq.SMP) asm.emitprefix(x86.PREFIX_LOCK);
+            asm.emitARITH_Reg_Mem(x86.ADD_m_r32, EBX, 0, EAX);
+        } else if (f.getName() == atomicSub) {
+            asm.emitShort_Reg(x86.POP_r, EBX); // value
+            asm.emitShort_Reg(x86.POP_r, EAX); // address
+            if (jq.SMP) asm.emitprefix(x86.PREFIX_LOCK);
+            asm.emitARITH_Reg_Mem(x86.SUB_m_r32, EBX, 0, EAX);
+        } else if (f.getName() == atomicCas4) {
+            asm.emitShort_Reg(x86.POP_r, EBX); // after
+            asm.emitShort_Reg(x86.POP_r, EAX); // before
+            asm.emitShort_Reg(x86.POP_r, ECX); // address
+            if (jq.SMP) asm.emitprefix(x86.PREFIX_LOCK);
+            asm.emit3_Reg_Mem(x86.CMPXCHG_32, EBX, 0, ECX);
+            asm.emitShort_Reg(x86.PUSH_r, EAX);
+        } else if (f.getName() == atomicAnd) {
+            asm.emitShort_Reg(x86.POP_r, EBX); // value
+            asm.emitShort_Reg(x86.POP_r, EAX); // address
+            if (jq.SMP) asm.emitprefix(x86.PREFIX_LOCK);
+            asm.emitARITH_Reg_Mem(x86.AND_m_r32, EBX, 0, EAX);
+        } else if (f.getName() == Utf8.get("<init>")) {
+            INVOKEhelper(INVOKE_SPECIAL, f);
+        } else {
+            jq.UNREACHABLE(f.toString());
+        }
+    }
+        
     private void gen_unsafe(jq_Method f) {
         if (TraceBytecodes) {
             emitPushAddressOf(SystemInterface.toCString(i_start+": UNSAFE "+f));
             emitCallMemory(SystemInterface._debugmsg);
         }
-        if ((f == Unsafe._addressOf) || (f == Unsafe._asObject) ||
-            (f == Unsafe._floatToIntBits) || (f == Unsafe._intBitsToFloat) ||
+        if ((f == Unsafe._floatToIntBits) || (f == Unsafe._intBitsToFloat) ||
             (f == Unsafe._doubleToLongBits) || (f == Unsafe._longBitsToDouble)) {
             asm.emit1(x86.NOP);
-        } else if (f == Unsafe._peek) {
-            asm.emitShort_Reg(x86.POP_r, EAX); // address
-            asm.emit2_Mem(x86.PUSH_m, 0, EAX);
-        } else if (f == Unsafe._poke1) {
-            asm.emitShort_Reg(x86.POP_r, EBX); // value
-            asm.emitShort_Reg(x86.POP_r, EAX); // address
-            asm.emit2_Reg_Mem(x86.MOV_m_r8, EBX, 0, EAX);
-        } else if (f == Unsafe._poke2) {
-            asm.emitShort_Reg(x86.POP_r, EBX); // value
-            asm.emitShort_Reg(x86.POP_r, EAX); // address
-            asm.emitprefix(x86.PREFIX_16BIT);
-            asm.emit2_Reg_Mem(x86.MOV_m_r32, EBX, 0, EAX);
-        } else if (f == Unsafe._poke4) {
-            asm.emitShort_Reg(x86.POP_r, EBX); // value
-            asm.emitShort_Reg(x86.POP_r, EAX); // address
-            asm.emit2_Reg_Mem(x86.MOV_m_r32, EBX, 0, EAX);
+            /*
         } else if (f == Unsafe._getTypeOf) {
             asm.emitShort_Reg(x86.POP_r, EAX);
             asm.emit2_Reg_Mem(x86.MOV_r_m32, EBX, VTABLE_OFFSET, EAX);
             asm.emit2_Mem(x86.PUSH_m, 0, EBX);
+            */
         } else if (f == Unsafe._popFP32) {
             asm.emit2_Reg_Mem(x86.LEA, ESP, 4, ESP);
             asm.emit2_Mem(x86.FSTP_m32, 0, ESP);
@@ -2575,16 +2744,9 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             asm.emit2_Mem(x86.FLD_m64, 0, ESP);
         } else if (f == Unsafe._EAX) {
             asm.emitShort_Reg(x86.PUSH_r, EAX);
-        } else if (f == Unsafe._EBP) {
-            asm.emitShort_Reg(x86.PUSH_r, EBP);
-        } else if (f == Unsafe._ESP) {
-            asm.emitShort_Reg(x86.PUSH_r, ESP);
-        } else if (f == Unsafe._alloca) {
-            asm.emitShort_Reg(x86.POP_r, EAX);
-            asm.emitARITH_Reg_Reg(x86.SUB_r_r32, ESP, EAX);
-        } else if (f == Unsafe._pushArg) {
+        } else if ((f == Unsafe._pushArg) || (f == Unsafe._pushArgA)) {
             asm.emit1(x86.NOP);
-        } else if (f == Unsafe._invoke) {
+        } else if ((f == Unsafe._invoke) || (f == Unsafe._invokeA)) {
             asm.emitShort_Reg(x86.POP_r, EAX);
             asm.emit2_Reg(x86.CALL_r, EAX);
             asm.emitShort_Reg(x86.PUSH_r, EDX); // hi
@@ -2602,28 +2764,6 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             asm.emitShort_Reg(x86.POP_r, ECX); // ip
             asm.emit2_Reg_Reg(x86.MOV_r_r32, ESP, EBX);
             asm.emit2_Reg(x86.JMP_r, ECX);
-        } else if (f == Unsafe._atomicCas4) {
-            asm.emitShort_Reg(x86.POP_r, EBX); // after
-            asm.emitShort_Reg(x86.POP_r, EAX); // before
-            asm.emitShort_Reg(x86.POP_r, ECX); // address
-            if (jq.SMP) asm.emitprefix(x86.PREFIX_LOCK);
-            asm.emit3_Reg_Mem(x86.CMPXCHG_32, EBX, 0, ECX);
-            asm.emitShort_Reg(x86.PUSH_r, EAX);
-        } else if (f == Unsafe._atomicAdd) {
-            asm.emitShort_Reg(x86.POP_r, EBX); // value
-            asm.emitShort_Reg(x86.POP_r, EAX); // address
-            if (jq.SMP) asm.emitprefix(x86.PREFIX_LOCK);
-            asm.emitARITH_Reg_Mem(x86.ADD_m_r32, EBX, 0, EAX);
-        } else if (f == Unsafe._atomicSub) {
-            asm.emitShort_Reg(x86.POP_r, EBX); // value
-            asm.emitShort_Reg(x86.POP_r, EAX); // address
-            if (jq.SMP) asm.emitprefix(x86.PREFIX_LOCK);
-            asm.emitARITH_Reg_Mem(x86.SUB_m_r32, EBX, 0, EAX);
-        } else if (f == Unsafe._atomicAnd) {
-            asm.emitShort_Reg(x86.POP_r, EBX); // value
-            asm.emitShort_Reg(x86.POP_r, EAX); // address
-            if (jq.SMP) asm.emitprefix(x86.PREFIX_LOCK);
-            asm.emitARITH_Reg_Mem(x86.AND_m_r32, EBX, 0, EAX);
         } else if (f == Unsafe._isEQ) {
             asm.emitShort_Reg_Imm(x86.MOV_r_i32, ECX, 0);
             asm.emitCJUMP_Short(x86.JNE, (byte)0);
@@ -2638,8 +2778,6 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             asm.emitShort_Reg(x86.INC_r32, ECX);
             asm.patch1(cloc-1, (byte)(asm.getCurrentOffset()-cloc));
             asm.emitShort_Reg(x86.PUSH_r, ECX);
-        } else if (f == Unsafe._installRemapper) {
-            INVOKEhelper(INVOKE_STATIC, f);
         } else {
             System.err.println(f.toString());
             jq.UNREACHABLE();

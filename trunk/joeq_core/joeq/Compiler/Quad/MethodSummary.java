@@ -646,6 +646,7 @@ public class MethodSummary {
             }
         }
         public void visitUnary(Quad obj) {
+            /*
             if (obj.getOperator() == Unary.INT_2OBJECT.INSTANCE) {
                 if (TRACE_INTRA) out.println("Visiting: "+obj);
                 Register dest_r = Unary.getDest(obj).getRegister();
@@ -653,6 +654,7 @@ public class MethodSummary {
                 UnknownTypeNode n = UnknownTypeNode.get(type);
                 setRegister(dest_r, n);
             }
+            */
         }
         public void visitExceptionThrower(Quad obj) {
             // special case for method invocation.

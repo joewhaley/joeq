@@ -11,6 +11,8 @@ import Allocator.DefaultHeapAllocator;
 import Allocator.ObjectLayout;
 import Bootstrap.PrimordialClassLoader;
 import Main.jq;
+import Memory.Address;
+import Memory.HeapAddress;
 import Run_Time.Unsafe;
 import UTF.Utf8;
 
@@ -24,6 +26,7 @@ public class jq_Array extends jq_Reference implements jq_ClassFileConstants, Obj
     
     public final boolean isClassType() { return false; }
     public final boolean isArrayType() { return true; }
+    public final boolean isAddressType() { return false; }
     public final String getName() {
         return element_type.getName()+"[]";
     }
@@ -179,8 +182,8 @@ public class jq_Array extends jq_Reference implements jq_ClassFileConstants, Obj
         // vtable is a copy of Ljava/lang/Object;
         jq_Class jlo = PrimordialClassLoader.loader.getJavaLangObject();
         jlo.load(); jlo.verify(); jlo.prepare();
-        int[] jlovtable = (int[])jlo.getVTable();
-        vtable = new int[jlovtable.length];
+        Address[] jlovtable = (Address[])jlo.getVTable();
+        vtable = new Address[jlovtable.length];
         state = STATE_PREPARED;
     }
     public final void sf_initialize() {
@@ -194,10 +197,11 @@ public class jq_Array extends jq_Reference implements jq_ClassFileConstants, Obj
         state = STATE_CLSINITIALIZING;
         jq_Class jlo = PrimordialClassLoader.loader.getJavaLangObject();
         jlo.sf_initialize(); jlo.cls_initialize();
-        int[] jlovtable = (int[])jlo.getVTable();
-        int[] vt = (int[])this.vtable;
-        vt[0] = Unsafe.addressOf(this);
+        Address[] jlovtable = (Address[])jlo.getVTable();
+        Address[] vt = (Address[])this.vtable;
+        vt[0] = HeapAddress.addressOf(this);
         System.arraycopy(jlovtable, 1, vt, 1, jlovtable.length-1);
+        if (TRACE) System.out.println(this+": "+vt[0].stringRep()+" vtable "+HeapAddress.addressOf(vt).stringRep());
         state = STATE_CLSINITIALIZED;
     }
     

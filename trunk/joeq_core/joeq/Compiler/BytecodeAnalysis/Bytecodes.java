@@ -8331,6 +8331,7 @@ public interface Bytecodes {
             super(Utf8.get("L&ReturnAddress;"), Bootstrap.PrimordialClassLoader.loader);
             this.returnTarget = returnTarget;
         }
+        public boolean isAddressType() { return false; }
         public String getJDKName() { jq.UNREACHABLE(); return null; }
         public String getJDKDesc() { jq.UNREACHABLE(); return null; }
         public Clazz.jq_Class[] getInterfaces() { jq.UNREACHABLE(); return null; }

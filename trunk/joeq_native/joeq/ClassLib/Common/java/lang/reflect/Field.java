@@ -76,7 +76,7 @@ public class Field extends AccessibleObject {
             if (t == jq_Primitive.SHORT) return new Short(Reflection.getstatic_S(sf));
             if (t == jq_Primitive.CHAR) return new Character(Reflection.getstatic_C(sf));
         } else {
-            jq_Reference obj_t = Unsafe.getTypeOf(obj);
+            jq_Reference obj_t = jq_Reference.getTypeOf(obj);
             if (!TypeCheck.isAssignable(obj_t, jq_f.getDeclaringClass())) {
                 throw new IllegalArgumentException();
             }
@@ -106,7 +106,7 @@ public class Field extends AccessibleObject {
             jq_StaticField sf = (jq_StaticField)jq_f;
             if (t == jq_Primitive.BOOLEAN) return Reflection.getstatic_Z(sf);
         } else {
-            jq_Reference obj_t = Unsafe.getTypeOf(obj);
+            jq_Reference obj_t = jq_Reference.getTypeOf(obj);
             if (!TypeCheck.isAssignable(obj_t, jq_f.getDeclaringClass())) {
                 throw new IllegalArgumentException();
             }
@@ -128,7 +128,7 @@ public class Field extends AccessibleObject {
             jq_StaticField sf = (jq_StaticField)jq_f;
             if (t == jq_Primitive.BYTE) return Reflection.getstatic_B(sf);
         } else {
-            jq_Reference obj_t = Unsafe.getTypeOf(obj);
+            jq_Reference obj_t = jq_Reference.getTypeOf(obj);
             if (!TypeCheck.isAssignable(obj_t, jq_f.getDeclaringClass())) {
                 throw new IllegalArgumentException();
             }
@@ -150,7 +150,7 @@ public class Field extends AccessibleObject {
             jq_StaticField sf = (jq_StaticField)jq_f;
             if (t == jq_Primitive.CHAR) return Reflection.getstatic_C(sf);
         } else {
-            jq_Reference obj_t = Unsafe.getTypeOf(obj);
+            jq_Reference obj_t = jq_Reference.getTypeOf(obj);
             if (!TypeCheck.isAssignable(obj_t, jq_f.getDeclaringClass())) {
                 throw new IllegalArgumentException();
             }
@@ -174,7 +174,7 @@ public class Field extends AccessibleObject {
             if (t == jq_Primitive.SHORT) return Reflection.getstatic_S(sf);
             if (t == jq_Primitive.BYTE) return (short)Reflection.getstatic_B(sf);
         } else {
-            jq_Reference obj_t = Unsafe.getTypeOf(obj);
+            jq_Reference obj_t = jq_Reference.getTypeOf(obj);
             if (!TypeCheck.isAssignable(obj_t, jq_f.getDeclaringClass())) {
                 throw new IllegalArgumentException();
             }
@@ -203,7 +203,7 @@ public class Field extends AccessibleObject {
             if (t == jq_Primitive.SHORT) return (int)Reflection.getstatic_S(sf);
             if (t == jq_Primitive.CHAR) return (int)Reflection.getstatic_C(sf);
         } else {
-            jq_Reference obj_t = Unsafe.getTypeOf(obj);
+            jq_Reference obj_t = jq_Reference.getTypeOf(obj);
             if (!TypeCheck.isAssignable(obj_t, jq_f.getDeclaringClass())) {
                 throw new IllegalArgumentException();
             }
@@ -236,7 +236,7 @@ public class Field extends AccessibleObject {
             if (t == jq_Primitive.CHAR) return (long)Reflection.getstatic_C(sf);
             if (t == jq_Primitive.INT) return (long)Reflection.getstatic_I(sf);
         } else {
-            jq_Reference obj_t = Unsafe.getTypeOf(obj);
+            jq_Reference obj_t = jq_Reference.getTypeOf(obj);
             if (!TypeCheck.isAssignable(obj_t, jq_f.getDeclaringClass())) {
                 throw new IllegalArgumentException();
             }
@@ -272,7 +272,7 @@ public class Field extends AccessibleObject {
             if (t == jq_Primitive.INT) return (float)Reflection.getstatic_I(sf);
             if (t == jq_Primitive.LONG) return (float)Reflection.getstatic_L(sf);
         } else {
-            jq_Reference obj_t = Unsafe.getTypeOf(obj);
+            jq_Reference obj_t = jq_Reference.getTypeOf(obj);
             if (!TypeCheck.isAssignable(obj_t, jq_f.getDeclaringClass())) {
                 throw new IllegalArgumentException();
             }
@@ -311,7 +311,7 @@ public class Field extends AccessibleObject {
             if (t == jq_Primitive.LONG) return (double)Reflection.getstatic_L(sf);
             if (t == jq_Primitive.FLOAT) return (double)Reflection.getstatic_L(sf);
         } else {
-            jq_Reference obj_t = Unsafe.getTypeOf(obj);
+            jq_Reference obj_t = jq_Reference.getTypeOf(obj);
             if (!TypeCheck.isAssignable(obj_t, jq_f.getDeclaringClass())) {
                 throw new IllegalArgumentException();
             }
@@ -375,7 +375,7 @@ public class Field extends AccessibleObject {
             }
             else jq.UNREACHABLE();
         } else {
-            jq_Reference obj_t = Unsafe.getTypeOf(obj);
+            jq_Reference obj_t = jq_Reference.getTypeOf(obj);
             if (!TypeCheck.isAssignable(obj_t, jq_f.getDeclaringClass())) {
                 throw new IllegalArgumentException();
             }
@@ -438,7 +438,7 @@ public class Field extends AccessibleObject {
             }
             else jq.UNREACHABLE();
         } else {
-            jq_Reference obj_t = Unsafe.getTypeOf(obj);
+            jq_Reference obj_t = jq_Reference.getTypeOf(obj);
             if (!TypeCheck.isAssignable(obj_t, jq_f.getDeclaringClass())) {
                 throw new IllegalArgumentException();
             }
@@ -484,7 +484,7 @@ public class Field extends AccessibleObject {
             }
             else jq.UNREACHABLE();
         } else {
-            jq_Reference obj_t = Unsafe.getTypeOf(obj);
+            jq_Reference obj_t = jq_Reference.getTypeOf(obj);
             if (!TypeCheck.isAssignable(obj_t, jq_f.getDeclaringClass())) {
                 throw new IllegalArgumentException();
             }
@@ -542,7 +542,7 @@ public class Field extends AccessibleObject {
             }
             else jq.UNREACHABLE();
         } else {
-            jq_Reference obj_t = Unsafe.getTypeOf(obj);
+            jq_Reference obj_t = jq_Reference.getTypeOf(obj);
             if (!TypeCheck.isAssignable(obj_t, jq_f.getDeclaringClass())) {
                 throw new IllegalArgumentException();
             }
@@ -597,7 +597,7 @@ public class Field extends AccessibleObject {
             }
             else jq.UNREACHABLE();
         } else {
-            jq_Reference obj_t = Unsafe.getTypeOf(obj);
+            jq_Reference obj_t = jq_Reference.getTypeOf(obj);
             if (!TypeCheck.isAssignable(obj_t, jq_f.getDeclaringClass())) {
                 throw new IllegalArgumentException();
             }
@@ -649,7 +649,7 @@ public class Field extends AccessibleObject {
             }
             else jq.UNREACHABLE();
         } else {
-            jq_Reference obj_t = Unsafe.getTypeOf(obj);
+            jq_Reference obj_t = jq_Reference.getTypeOf(obj);
             if (!TypeCheck.isAssignable(obj_t, jq_f.getDeclaringClass())) {
                 throw new IllegalArgumentException();
             }
@@ -692,7 +692,7 @@ public class Field extends AccessibleObject {
             }
             else jq.UNREACHABLE();
         } else {
-            jq_Reference obj_t = Unsafe.getTypeOf(obj);
+            jq_Reference obj_t = jq_Reference.getTypeOf(obj);
             if (!TypeCheck.isAssignable(obj_t, jq_f.getDeclaringClass())) {
                 throw new IllegalArgumentException();
             }
@@ -732,7 +732,7 @@ public class Field extends AccessibleObject {
             }
             else jq.UNREACHABLE();
         } else {
-            jq_Reference obj_t = Unsafe.getTypeOf(obj);
+            jq_Reference obj_t = jq_Reference.getTypeOf(obj);
             if (!TypeCheck.isAssignable(obj_t, jq_f.getDeclaringClass())) {
                 throw new IllegalArgumentException();
             }
@@ -769,7 +769,7 @@ public class Field extends AccessibleObject {
             }
             else jq.UNREACHABLE();
         } else {
-            jq_Reference obj_t = Unsafe.getTypeOf(obj);
+            jq_Reference obj_t = jq_Reference.getTypeOf(obj);
             if (!TypeCheck.isAssignable(obj_t, jq_f.getDeclaringClass())) {
                 throw new IllegalArgumentException();
             }

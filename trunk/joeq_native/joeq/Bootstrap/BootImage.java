@@ -45,6 +45,9 @@ import Linker.ELF.RelocEntry;
 import Linker.ELF.Section;
 import Linker.ELF.SymbolTableEntry;
 import Main.jq;
+import Memory.Address;
+import Memory.CodeAddress;
+import Memory.HeapAddress;
 import Run_Time.ExceptionDeliverer;
 import Run_Time.Reflection;
 import Run_Time.SystemInterface;
@@ -56,10 +59,12 @@ import Util.IdentityHashCodeWrapper;
  * @author  John Whaley
  * @version $Id$
  */
-public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConstants {
+public class BootImage implements ObjectLayout, ELFConstants {
 
     public static /*final*/ boolean TRACE = false;
     public static final PrintStream out = System.out;
+    
+    public static final BootImage DEFAULT = new BootImage(BootstrapCodeAllocator.DEFAULT);
     
     private final Map/*<IdentityHashCodeWrapper, Entry>*/ hash;
     private final ArrayList/*<Entry>*/ entries;
@@ -69,21 +74,21 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
     private BootstrapCodeAllocator bca;
     private List data_relocs;
     
-    public BootImage(ObjectTraverser obj_trav, BootstrapCodeAllocator bca, int initialCapacity, float loadFactor) {
+    public BootImage(BootstrapCodeAllocator bca, int initialCapacity, float loadFactor) {
         hash = new HashMap(initialCapacity, loadFactor);
         entries = new ArrayList(initialCapacity);
         this.bca = bca;
         this.heapCurrent = this.startAddress = 0;
         this.data_relocs = new LinkedList();
     }
-    public BootImage(ObjectTraverser obj_trav, BootstrapCodeAllocator bca, int initialCapacity) {
+    public BootImage(BootstrapCodeAllocator bca, int initialCapacity) {
         hash = new HashMap(initialCapacity);
         entries = new ArrayList(initialCapacity);
         this.bca = bca;
         this.heapCurrent = this.startAddress = 0;
         this.data_relocs = new LinkedList();
     }
-    public BootImage(ObjectTraverser obj_trav, BootstrapCodeAllocator bca) {
+    public BootImage(BootstrapCodeAllocator bca) {
         hash = new HashMap();
         entries = new ArrayList();
         this.bca = bca;
@@ -91,15 +96,16 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
         this.data_relocs = new LinkedList();
     }
 
-    public final int addressOf(Object o) {
+    public final HeapAddress addressOf(Object o) {
+        jq.Assert(!(o instanceof Address));
         return getOrAllocateObject(o);
     }
     
-    public final void addCodeReloc(int addr, int target) {
+    public final void addCodeReloc(HeapAddress addr, CodeAddress target) {
         Heap2CodeReference r = new Heap2CodeReference(addr, target);
         data_relocs.add(r);
     }
-    public final void addDataReloc(int addr, int target) {
+    public final void addDataReloc(HeapAddress addr, HeapAddress target) {
         Heap2HeapReference r = new Heap2HeapReference(addr, target);
         data_relocs.add(r);
     }
@@ -121,8 +127,10 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
     public void enableAllocations() { alloc_enabled = true; }
     public void disableAllocations() { alloc_enabled = false; }
     
-    public int/*HeapAddress*/ getOrAllocateObject(Object o) {
-        if (o == null) return 0;
+    public HeapAddress getOrAllocateObject(Object o) {
+        if (o == null) return HeapAddress.getNull();
+        jq.Assert(!(o instanceof Address));
+        if (o instanceof Address) return new BootstrapHeapAddress(((Address)o).to32BitValue());
         IdentityHashCodeWrapper k = IdentityHashCodeWrapper.create(o);
         Entry e = (Entry)hash.get(k);
         if (e != null) return e.getAddress();
@@ -132,9 +140,11 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
         jq_Reference type = (jq_Reference)Reflection.getJQType(objType);
         if (!jq.boot_types.contains(type)) {
             System.err.println("--> class "+type+" is not in the set of boot types!");
-            return 0;
+            //new Exception().printStackTrace();
+            return HeapAddress.getNull();
         }
-        int addr, size;
+        int addr;
+        int size;
         if (type.isArrayType()) {
             addr = heapCurrent + ARRAY_HEADER_SIZE;
             size = ((jq_Array)type).getInstanceSize(Array.getLength(o));
@@ -149,21 +159,23 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
                 out.println("Allocating entry "+entries.size()+": "+objType+" size "+size+" "+jq.hex(System.identityHashCode(o))+" at "+jq.hex(addr)+((o instanceof jq_Type)?": "+o:""));
         }
         heapCurrent += size;
-        e = Entry.create(o, addr);
+        BootstrapHeapAddress a = new BootstrapHeapAddress(addr);
+        e = Entry.create(o, a);
         hash.put(k, e);
         entries.add(e);
-        return addr;
+        return a;
     }
     
     public static boolean IGNORE_UNKNOWN_OBJECTS = false;
     
-    public int/*HeapAddress*/ getAddressOf(Object o) {
-        if (o == null) return 0;
+    public HeapAddress getAddressOf(Object o) {
+        jq.Assert(!(o instanceof Address));
+        if (o == null) return HeapAddress.getNull();
         IdentityHashCodeWrapper k = IdentityHashCodeWrapper.create(o);
         Entry e = (Entry)hash.get(k);
         if (e == null) {
             System.err.println("Unknown object of type: "+o.getClass()+" address: "+jq.hex(System.identityHashCode(o))+" value: "+o);
-            if (IGNORE_UNKNOWN_OBJECTS) return 0;
+            if (IGNORE_UNKNOWN_OBJECTS) return HeapAddress.getNull();
             throw new UnknownObjectException(o);
         }
         Class objType = o.getClass();
@@ -179,24 +191,26 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
     
     public void addStaticFieldReloc(jq_StaticField f) {
         jq_Type ftype = f.getType();
-        if (ftype.isPrimitiveType()) {
-            if (ftype == jq_Primitive.INT) {
-                // some "int" fields actually refer to addresses
-                if (f.isCodeAddressType()) {
-                	int val = Reflection.getstatic_I(f);
-                    if (TRACE) out.println("Adding code reloc for "+f+": "+jq.hex8(f.getAddress())+" "+jq.hex8(val));
-                    addCodeReloc(f.getAddress(), val);
-                } else if (f.isHeapAddressType()) {
-                	int val = Reflection.getstatic_I(f);
-                    if (TRACE) out.println("Adding data reloc for "+f+": "+jq.hex8(f.getAddress())+" "+jq.hex8(val));
-                    addDataReloc(f.getAddress(), val);
-                }
+        if (f.isCodeAddressType()) {
+            CodeAddress addr = (CodeAddress)Reflection.getstatic_P(f);
+            if (addr != null && !addr.isNull()) {
+                if (TRACE) out.println("Adding code reloc for "+f+": "+f.getAddress().stringRep()+" "+addr.stringRep());
+                addCodeReloc(f.getAddress(), addr);
             }
-        } else {
+        } else if (f.isHeapAddressType()) {
+            HeapAddress addr = (HeapAddress)Reflection.getstatic_P(f);
+            if (addr != null && !addr.isNull()) {
+                if (TRACE) out.println("Adding data reloc for "+f+": "+f.getAddress().stringRep()+" "+addr.stringRep());
+                addDataReloc(f.getAddress(), addr);
+            }
+        } else if (ftype.isReferenceType()) {
             Object val = Reflection.getstatic_A(f);
             if (val != null) {
-                int addr = Unsafe.addressOf(val);
-                if (TRACE) out.println("Adding data reloc for "+f+": "+jq.hex8(f.getAddress())+" "+jq.hex8(addr));
+                if (val instanceof Address) {
+                    jq.UNREACHABLE("Error: "+f+" contains "+((Address)val).stringRep());
+                }
+                HeapAddress addr = HeapAddress.addressOf(val);
+                if (TRACE) out.println("Adding data reloc for "+f+": "+f.getAddress().stringRep()+" "+addr.stringRep());
                 addDataReloc(f.getAddress(), addr);
             }
         }
@@ -232,37 +246,49 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
                 k.setStaticData(f, v);
             } else
                 jq.UNREACHABLE();
+        } else if (ftype.isAddressType()) {
+            Address addr = Reflection.getstatic_P(f);
+            if (addr == null) addr = HeapAddress.getNull();
+            if (TRACE) out.println("Initializing static field "+f+" to "+addr.stringRep());
+            k.setStaticData(f, addr);
         } else {
             Object val = Reflection.getstatic_A(f);
-            int addr = Unsafe.addressOf(val);
-            if (TRACE) out.println("Initializing static field "+f+" to "+jq.hex8(addr));
+            HeapAddress addr = HeapAddress.addressOf(val);
+            if (TRACE) out.println("Initializing static field "+f+" to "+addr.stringRep());
             k.setStaticData(f, addr);
         }
     }
     
     public int numOfEntries() { return entries.size(); }
 
+    public static int UPDATE_PERIOD = 5000;
+
     public void find_reachable(int i) {
         for (; i<entries.size(); ++i) {
+	    if ((i % UPDATE_PERIOD) == 0) {
+		System.out.print("Completed: "+i+"/"+entries.size()+" objects\r");
+	    }
             Entry e = (Entry)entries.get(i);
             Object o = e.getObject();
-            int addr = e.getAddress();
-            if (addr == 0) continue;
+            if (o == null) continue;
+            HeapAddress addr = e.getAddress();
+            jq.Assert(!addr.isNull());
             Class objType = o.getClass();
             jq_Reference jqType = (jq_Reference)Reflection.getJQType(objType);
             if (TRACE)
                 out.println("Entry "+i+": "+objType+" "+jq.hex(System.identityHashCode(o)));
-            addDataReloc(addr+VTABLE_OFFSET, getOrAllocateObject(jqType));
+            addDataReloc((HeapAddress)addr.offset(VTABLE_OFFSET), getOrAllocateObject(jqType));
             if (jqType.isArrayType()) {
                 jq_Type elemType = ((jq_Array)jqType).getElementType();
-                if (elemType.isReferenceType()) {
+                if (elemType.isAddressType()) {
+                    // probably a vtable.  skip it -- handled separately.
+                } else if (elemType.isReferenceType()) {
                     int length = Array.getLength(o);
                     Object[] v = (Object[])o;
                     for (int k=0; k<length; ++k) {
                         Object o2 = Reflection.obj_trav.mapValue(v[k]);
                         if (o2 != null) {
-                            getOrAllocateObject(o2);
-                            addDataReloc(addr+(k<<2), Unsafe.addressOf(o2));
+                            addDataReloc((HeapAddress)addr.offset(k<<2), getOrAllocateObject(o2));
                         }
                     }
                 }
@@ -273,21 +299,18 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
                 for (int k=0; k<fields.length; ++k) {
                     jq_InstanceField f = fields[k];
                     jq_Type ftype = f.getType();
-                    if (ftype.isReferenceType()) {
+                    if (f.isCodeAddressType()) {
+                        CodeAddress val = (CodeAddress)Reflection.getfield_P(o, f);
+                        if (val != null && !val.isNull())
+                            addCodeReloc((HeapAddress)addr.offset(f.getOffset()), val);
+                    } else if (f.isHeapAddressType()) {
+                        HeapAddress val = (HeapAddress)Reflection.getfield_P(o, f);
+                        if (val != null && !val.isNull())
+                            addDataReloc((HeapAddress)addr.offset(f.getOffset()), val);
+                    } else if (ftype.isReferenceType()) {
                         Object val = Reflection.getfield_A(o, f);
                         if (val != null) {
-                            getOrAllocateObject(val);
-                            addDataReloc(addr+f.getOffset(), Unsafe.addressOf(val));
-                        }
-                    } else if (ftype == jq_Primitive.INT) {
-                        // some "int" fields actually refer to addresses
-                        if (f.isCodeAddressType()) {
-                            int val = Reflection.getfield_I(o, f);
-                            addCodeReloc(addr+f.getOffset(), val);
-                        } else if (f.isHeapAddressType()) {
-                            int val = Reflection.getfield_I(o, f);
-                            if (val != 0)
-                                addDataReloc(addr+f.getOffset(), val);
+                            addDataReloc((HeapAddress)addr.offset(f.getOffset()), getOrAllocateObject(val));
                         }
                     }
                 }
@@ -298,15 +321,15 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
     public int size() { return heapCurrent-startAddress; }
     
     public static class Entry {
-        private Object o;       // object in host vm
-        private int address;    // address in target vm
-        private Entry(Object o, int address) { this.o = o; this.address = address; }
-        public static Entry create(Object o, int address) {
+        private Object o;            // object in host vm
+        private HeapAddress address; // address in target vm
+        private Entry(Object o, HeapAddress address) { this.o = o; this.address = address; }
+        public static Entry create(Object o, HeapAddress address) {
             jq.Assert(o != null);
             return new Entry(o, address);
         }
         public Object getObject() { return o; }
-        public int getAddress() { return address; }
+        public HeapAddress getAddress() { return address; }
     }
     
     public static final char F_RELFLG = (char)0x0001;
@@ -470,8 +493,8 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
     	if (USE_MICROSOFT_STYLE_MUNGE) s = "_entry@0";
     	else s = "entry";
         write_bytes(out, s, 8);  // s_name
-        int/*CodeAddress*/ addr = rootm.getDefaultCompiledVersion().getEntrypoint();
-        write_ulong(out, addr);
+        CodeAddress addr = rootm.getDefaultCompiledVersion().getEntrypoint();
+        write_ulong(out, addr.to32BitValue());
         write_short(out, (short)1);
         write_ushort(out, (char)DT_FCN);
         write_uchar(out, C_EXT);
@@ -483,7 +506,7 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
         int idx = alloc_string(s);
         write_ulong(out, idx);  // e_offset
         addr = ExceptionDeliverer._trap_handler.getDefaultCompiledVersion().getEntrypoint();
-        write_ulong(out, addr);
+        write_ulong(out, addr.to32BitValue());
         write_short(out, (short)1);
         write_ushort(out, (char)DT_FCN);
         write_uchar(out, C_EXT);
@@ -495,7 +518,7 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
         idx = alloc_string(s);
         write_ulong(out, idx);  // e_offset
         addr = jq_NativeThread._threadSwitch.getDefaultCompiledVersion().getEntrypoint();
-        write_ulong(out, addr);
+        write_ulong(out, addr.to32BitValue());
         write_short(out, (short)1);
         write_ushort(out, (char)DT_FCN);
         write_uchar(out, C_EXT);
@@ -507,7 +530,7 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
         idx = alloc_string(s);
         write_ulong(out, idx);  // e_offset
         addr = jq_NativeThread._ctrl_break_handler.getDefaultCompiledVersion().getEntrypoint();
-        write_ulong(out, addr);
+        write_ulong(out, addr.to32BitValue());
         write_short(out, (short)1);
         write_ushort(out, (char)DT_FCN);
         write_uchar(out, C_EXT);
@@ -549,8 +572,8 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
             int idx = alloc_string(name);
             write_ulong(out, idx);  // e_offset
         }
-        int addr = sf.getAddress();
-        write_ulong(out, addr);     // e_value
+        HeapAddress addr = sf.getAddress();
+        write_ulong(out, addr.to32BitValue()); // e_value
         write_short(out, (short)2); // e_scnum
         jq_Type t = sf.getType();
         char type = (char)0;
@@ -622,24 +645,24 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
         jq_Method m = cc.getMethod();
         String name;
         if (m == null) {
-            name = "unknown@"+jq.hex8(cc.getEntrypoint());
+            name = "unknown@"+cc.getEntrypoint().stringRep();
         } else { 
             //name = m.getName().toString();
             name = mungeMemberName(m);
         }
         if (name.length() <= 8) {
-            write_bytes(out, name, 8);  // s_name
+            write_bytes(out, name, 8);    // s_name
         } else {
-            write_ulong(out, 0);    // e_zeroes
+            write_ulong(out, 0);          // e_zeroes
             int idx = alloc_string(name);
-            write_ulong(out, idx);  // e_offset
+            write_ulong(out, idx);        // e_offset
         }
-        int addr = cc.getEntrypoint();
-        write_ulong(out, addr);     // e_value
-        write_short(out, (short)1); // e_scnum
+        CodeAddress addr = cc.getEntrypoint();
+        write_ulong(out, addr.to32BitValue()); // e_value
+        write_short(out, (short)1);      // e_scnum
         write_ushort(out, (char)DT_FCN); // e_type
-        write_uchar(out, C_EXT);    // e_sclass
-        write_uchar(out, 0);  // e_numaux
+        write_uchar(out, C_EXT);         // e_sclass
+        write_uchar(out, 0);             // e_numaux
     }
     
     public void addSystemInterfaceRelocs_COFF(List extref, List heap2code) {
@@ -648,7 +671,7 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
         for (int i=0; i<fs.length; ++i) {
             jq_StaticField f = fs[i];
             if (f.isFinal()) continue;
-            if (f.getType() != jq_Primitive.INT) continue;
+            if (f.getType() != CodeAddress._class) continue;
             {
                 String name = f.getName().toString();
                 int ind = name.lastIndexOf('_');
@@ -656,7 +679,7 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
                     name = "_"+name.substring(0, ind)+"@"+name.substring(ind+1);
                 else
                     name = name.substring(0, ind);
-                System.out.println("External ref="+f+", symndx="+(total+1)+" address="+jq.hex8(f.getAddress()));
+                System.out.println("External ref="+f+", symndx="+(total+1)+" address="+f.getAddress().stringRep());
                 ExternalReference r = new ExternalReference(f.getAddress(), name);
                 r.setSymbolIndex(++total);
                 extref.add(r);
@@ -672,12 +695,12 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
         for (int i=0; i<fs.length; ++i) {
             jq_StaticField f = fs[i];
             if (f.isFinal()) continue;
-            if (f.getType() != jq_Primitive.INT) continue;
+            if (f.getType() != CodeAddress._class) continue;
             {
                 String name = f.getName().toString();
                 int ind = name.lastIndexOf('_');
                 name = name.substring(0, ind);
-                System.out.println("External ref="+f+", symndx="+(total+1)+" address="+jq.hex8(f.getAddress()));
+                System.out.println("External ref="+f+", symndx="+(total+1)+" address="+f.getAddress().stringRep());
                 ExternalReference r = new ExternalReference(f.getAddress(), name);
                 r.setSymbolIndex(++total);
                 extref.add(r);
@@ -695,13 +718,13 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
                 if (t == Unsafe._class) continue;
                 try {
                     if (TRACE) System.out.println("Adding vtable relocs for: "+t);
-                    int[] vtable = (int[])((jq_Reference)t).getVTable();
-                    int/*HeapAddress*/ addr = getAddressOf(vtable);
+                    Address[] vtable = (Address[])((jq_Reference)t).getVTable();
+                    HeapAddress addr = getAddressOf(vtable);
                     //jq.Assert(vtable[0] != 0, t.toString());
-                    Heap2HeapReference r1 = new Heap2HeapReference(addr, vtable[0]);
+                    Heap2HeapReference r1 = new Heap2HeapReference(addr, (HeapAddress) vtable[0]);
                     list.add(r1);
                     for (int j=1; j<vtable.length; ++j) {
-                        Heap2CodeReference r2 = new Heap2CodeReference(addr+(j*4), vtable[j]);
+                        Heap2CodeReference r2 = new Heap2CodeReference((HeapAddress) addr.offset(j*4), (CodeAddress) vtable[j]);
                         list.add(r2);
                     }
                     total += vtable.length;
@@ -716,6 +739,7 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
     }
     
     public void dumpCOFF(OutputStream out, jq_StaticMethod rootm) throws IOException {
+        
         // calculate sizes/offsets
         final int textsize = bca.size();
         final List text_relocs = bca.getAllDataRelocs();
@@ -732,6 +756,17 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
         final int symtabstart = datastart+datasize+(10*ndatareloc)+(10*nlinenum);
         final int num_ccs = CodeAllocator.getNumberOfCompiledMethods();
         final int nsyms = 2+NUM_OF_EXTERNAL_SYMS+num_ccs+exts.size();
+        
+        if (TRACE) {
+            System.out.println("Text size="+textsize);
+            System.out.println("Num text relocs="+ntextreloc);
+            System.out.println("Data start="+datastart);
+            System.out.println("Data size="+datasize);
+            System.out.println("Num of VTable relocs="+numOfVTableRelocs);
+            System.out.println("Num data relocs="+ntextreloc);
+            System.out.println("Sym tab start="+symtabstart);
+            System.out.println("Num syms="+nsyms);
+        }
         
         // write file header
         dumpFILHDR(out, symtabstart, nsyms);
@@ -897,16 +932,17 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
         while (i.hasNext()) {
             Entry e = (Entry)i.next();
             Object o = e.getObject();
-            int addr = e.getAddress();
+            HeapAddress addr = e.getAddress();
             Class objType = o.getClass();
             jq_Reference jqType = (jq_Reference)Reflection.getJQType(objType);
             if (TRACE)
-                this.out.println("Dumping entry "+j+": "+objType+" "+jq.hex(System.identityHashCode(o))+" addr "+jq.hex(addr));
+                this.out.println("Dumping entry "+j+": "+objType+" "+jq.hex(System.identityHashCode(o))+" addr "+addr.stringRep());
+            jq.Assert(!jqType.isAddressType());
             if (!jqType.isClsInitialized()) {
                 jq.UNREACHABLE(jqType.toString());
                 return;
             }
-            int vtable;
+            HeapAddress vtable;
             try { vtable = getAddressOf(jqType.getVTable()); }
             catch (UnknownObjectException x) {
                 x.appendMessage("vtable for "+jqType);  
@@ -914,15 +950,15 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
                 throw x;
             }
             if (jqType.isArrayType()) {
-                while (currentAddr+ARRAY_HEADER_SIZE < addr) {
+                while (currentAddr+ARRAY_HEADER_SIZE < addr.to32BitValue()) {
                     write_char(out, (byte)0); ++currentAddr;
                 }
                 int length = Array.getLength(o);
                 write_ulong(out, length);
                 write_ulong(out, 0);
-                write_ulong(out, vtable);
+                write_ulong(out, vtable.to32BitValue());
                 currentAddr += 12;
-                jq.Assert(addr == currentAddr);
+                jq.Assert(addr.to32BitValue() == currentAddr);
                 jq_Type elemType = ((jq_Array)jqType).getElementType();
                 if (elemType.isPrimitiveType()) {
                     if (elemType == jq_Primitive.INT) {
@@ -966,11 +1002,17 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
                             write_ushort(out, v[k]);
                         currentAddr += length << 1;
                     } else jq.UNREACHABLE();
+                } else if (elemType.isAddressType()) {
+                    Address[] v = (Address[])o;
+                    for (int k=0; k<length; ++k) {
+                        write_ulong(out, v[k]==null?0:v[k].to32BitValue());
+                    }
+                    currentAddr += length << 2;
                 } else {
                     Object[] v = (Object[])o;
                     for (int k=0; k<length; ++k) {
                         Object o2 = Reflection.obj_trav.mapValue(v[k]);
-                        try { write_ulong(out, getAddressOf(o2)); }
+                        try { write_ulong(out, getAddressOf(o2).to32BitValue()); }
                         catch (UnknownObjectException x) {
                             System.err.println("Object array element #"+k);
                             //x.appendMessage("Object array element #"+k+" in ");
@@ -983,20 +1025,20 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
             } else {
                 jq.Assert(jqType.isClassType());
                 jq_Class clazz = (jq_Class)jqType;
-                while (currentAddr+OBJ_HEADER_SIZE < addr) {
+                while (currentAddr+OBJ_HEADER_SIZE < addr.to32BitValue()) {
                     write_char(out, (byte)0); ++currentAddr;
                 }
                 write_ulong(out, 0);
-                write_ulong(out, vtable);
+                write_ulong(out, vtable.to32BitValue());
                 currentAddr += 8;
-                jq.Assert(addr == currentAddr);
+                jq.Assert(addr.to32BitValue() == currentAddr);
                 jq_InstanceField[] fields = clazz.getInstanceFields();
                 for (int k=0; k<fields.length; ++k) {
                     jq_InstanceField f = fields[k];
                     jq_Type ftype = f.getType();
                     int foffset = f.getOffset();
                     if (TRACE) this.out.println("Field "+f+" offset "+jq.shex(foffset)+": "+System.identityHashCode(Reflection.getfield(o, f)));
-                    while (currentAddr != addr+foffset) {
+                    while (currentAddr != addr.offset(foffset).to32BitValue()) {
                         write_char(out, (byte)0); ++currentAddr;
                     }
                     if (ftype.isPrimitiveType()) {
@@ -1017,8 +1059,11 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
                         else if (ftype == jq_Primitive.CHAR)
                             write_ushort(out, Reflection.getfield_C(o, f));
                         else jq.UNREACHABLE();
+                    } else if (ftype.isAddressType()) {
+                        Address a = Reflection.getfield_P(o, f);
+                        write_ulong(out, a==null?0:a.to32BitValue());
                     } else {
-                        try { write_ulong(out, getAddressOf(Reflection.getfield_A(o, f))); }
+                        try { write_ulong(out, getAddressOf(Reflection.getfield_A(o, f)).to32BitValue()); }
                         catch (UnknownObjectException x) {
                             System.err.println("Instance field "+f);
                             //x.appendMessage("field "+f.getName()+" in ");
@@ -1171,7 +1216,7 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
             ExternalReference r = (ExternalReference)it.next();
             SymbolTableEntry e = new SymbolTableEntry(r.getName(), 0, 0, SymbolTableEntry.STB_GLOBAL, SymbolTableEntry.STT_FUNC, empty);
             symtab.addSymbol(e);
-            datarel.addReloc(new RelocEntry(r.getAddress(), e, RelocEntry.R_386_32));
+            datarel.addReloc(new RelocEntry(r.getAddress().to32BitValue(), e, RelocEntry.R_386_32));
         }
 
         it = CodeAllocator.getCompiledMethods();
@@ -1180,29 +1225,29 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
             jq_Method m = cc.getMethod();
             String name;
             if (m == null) {
-                name = "unknown@"+jq.hex8(cc.getEntrypoint());
+                name = "unknown@"+cc.getEntrypoint().stringRep();
             } else {
                 name = mungeMemberName(m);
             }
-            SymbolTableEntry e = new SymbolTableEntry(name, cc.getEntrypoint(), cc.getLength(), STB_LOCAL, STT_FUNC, text);
+            SymbolTableEntry e = new SymbolTableEntry(name, cc.getEntrypoint().to32BitValue(), cc.getLength(), STB_LOCAL, STT_FUNC, text);
             symtab.addSymbol(e);
         }
 
         {
             jq_CompiledCode cc = rootm.getDefaultCompiledVersion();
-            SymbolTableEntry e = new SymbolTableEntry("entry", cc.getEntrypoint(), cc.getLength(), STB_GLOBAL, STT_FUNC, text);
+            SymbolTableEntry e = new SymbolTableEntry("entry", cc.getEntrypoint().to32BitValue(), cc.getLength(), STB_GLOBAL, STT_FUNC, text);
             symtab.addSymbol(e);
 
             cc = ExceptionDeliverer._trap_handler.getDefaultCompiledVersion();
-            e = new SymbolTableEntry("trap_handler", cc.getEntrypoint(), cc.getLength(), STB_GLOBAL, STT_FUNC, text);
+            e = new SymbolTableEntry("trap_handler", cc.getEntrypoint().to32BitValue(), cc.getLength(), STB_GLOBAL, STT_FUNC, text);
             symtab.addSymbol(e);
 
             cc = jq_NativeThread._threadSwitch.getDefaultCompiledVersion();
-            e = new SymbolTableEntry("threadSwitch", cc.getEntrypoint(), cc.getLength(), STB_GLOBAL, STT_FUNC, text);
+            e = new SymbolTableEntry("threadSwitch", cc.getEntrypoint().to32BitValue(), cc.getLength(), STB_GLOBAL, STT_FUNC, text);
             symtab.addSymbol(e);
 
             cc = jq_NativeThread._ctrl_break_handler.getDefaultCompiledVersion();
-            e = new SymbolTableEntry("ctrl_break_handler", cc.getEntrypoint(), cc.getLength(), STB_GLOBAL, STT_FUNC, text);
+            e = new SymbolTableEntry("ctrl_break_handler", cc.getEntrypoint().to32BitValue(), cc.getLength(), STB_GLOBAL, STT_FUNC, text);
             symtab.addSymbol(e);
         }
 
@@ -1211,7 +1256,7 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
             Reloc r = (Reloc)it.next();
             if (r instanceof Code2HeapReference) {
                 Code2HeapReference cr = (Code2HeapReference)r;
-                textrel.addReloc(new RelocEntry(cr.getFrom(), datasyment, RelocEntry.R_386_32));
+                textrel.addReloc(new RelocEntry(cr.getFrom().to32BitValue(), datasyment, RelocEntry.R_386_32));
             } else {
                 jq.UNREACHABLE(r.toString());
             }
@@ -1222,10 +1267,10 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout, ELFConst
             Reloc r = (Reloc)it.next();
             if (r instanceof Heap2HeapReference) {
                 Heap2HeapReference cr = (Heap2HeapReference)r;
-                datarel.addReloc(new RelocEntry(cr.getFrom(), datasyment, RelocEntry.R_386_32));
+                datarel.addReloc(new RelocEntry(cr.getFrom().to32BitValue(), datasyment, RelocEntry.R_386_32));
             } else if (r instanceof Heap2CodeReference) {
                 Heap2CodeReference cr = (Heap2CodeReference)r;
-                datarel.addReloc(new RelocEntry(cr.getFrom(), textsyment, RelocEntry.R_386_32));
+                datarel.addReloc(new RelocEntry(cr.getFrom().to32BitValue(), textsyment, RelocEntry.R_386_32));
             } else if (r instanceof ExternalReference) {
                 // already done.
             } else {

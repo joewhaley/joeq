@@ -14,6 +14,7 @@ import Clazz.jq_Class;
 import Clazz.jq_InstanceField;
 import Clazz.jq_StaticMethod;
 import Main.jq;
+import Memory.HeapAddress;
 import Scheduler.jq_Thread;
 
 /*
@@ -33,7 +34,7 @@ public class Monitor implements ObjectLayout {
     
     /** Returns the depth of the lock on the given object. */
     public static int getLockEntryCount(Object k) {
-        int lockword = Unsafe.peek(Unsafe.addressOf(k)+STATUS_WORD_OFFSET);
+        int lockword = HeapAddress.addressOf(k).offset(STATUS_WORD_OFFSET).peek4();
         if (lockword < 0) {
             Monitor m = getMonitor(lockword);
             if (TRACE) SystemInterface.debugmsg("Getting fat lock entry count: "+m.entry_count);
@@ -53,9 +54,10 @@ public class Monitor implements ObjectLayout {
         int tid = t.getThreadId(); // pre-shifted thread id
         
         // attempt fast path: object is not locked.
-        int status_flags = Unsafe.peek(Unsafe.addressOf(k)+STATUS_WORD_OFFSET) & STATUS_FLAGS_MASK;
+        HeapAddress status_address = (HeapAddress) HeapAddress.addressOf(k).offset(STATUS_WORD_OFFSET);
+        int status_flags = status_address.peek4() & STATUS_FLAGS_MASK;
         int newlockword = status_flags | tid;
-        int oldlockword = Unsafe.atomicCas4(Unsafe.addressOf(k)+STATUS_WORD_OFFSET, status_flags, newlockword);
+        int oldlockword = status_address.atomicCas4(status_flags, newlockword);
         if (Unsafe.isEQ()) {
             // fast path: not locked
             return;
@@ -73,10 +75,10 @@ public class Monitor implements ObjectLayout {
                 Monitor m = allocateInflatedLock();
                 m.monitor_owner = t;
                 m.entry_count = entrycount;
-                newlockword = Unsafe.addressOf(m) | LOCK_EXPANDED | status_flags;
+                newlockword = HeapAddress.addressOf(m).to32BitValue() | LOCK_EXPANDED | status_flags;
                 // we own the lock, so a simple write is sufficient.
-                jq.Assert(Unsafe.peek(Unsafe.addressOf(k)+STATUS_WORD_OFFSET) == oldlockword);
-                Unsafe.poke4(Unsafe.addressOf(k)+STATUS_WORD_OFFSET, newlockword);
+                jq.Assert(HeapAddress.addressOf(k).offset(STATUS_WORD_OFFSET).peek4() == oldlockword);
+                HeapAddress.addressOf(k).offset(STATUS_WORD_OFFSET).poke4(newlockword);
             } else {
                 // thin lock owned by another thread.
                 if (TRACE) SystemInterface.debugmsg(t+" tid "+jq.hex(tid)+": Lock contention with tid "+jq.hex(oldlockword & THREAD_ID_MASK)+", inflating...");
@@ -94,7 +96,7 @@ public class Monitor implements ObjectLayout {
         } else {
             // not-quite-so-fast path: locked by current thread.  increment counter.
             // we own the lock, so a simple write is sufficient.
-            Unsafe.poke4(Unsafe.addressOf(k)+STATUS_WORD_OFFSET, oldlockword+LOCK_COUNT_INC);
+            HeapAddress.addressOf(k).offset(STATUS_WORD_OFFSET).poke4(oldlockword+LOCK_COUNT_INC);
         }
     }
     
@@ -104,7 +106,8 @@ public class Monitor implements ObjectLayout {
     public static void monitorexit(Object k) {
         jq_Thread t = Unsafe.getThreadBlock();
         int tid = t.getThreadId(); // pre-shifted
-        int oldlockword = Unsafe.peek(Unsafe.addressOf(k)+STATUS_WORD_OFFSET);
+        HeapAddress status_address = (HeapAddress) HeapAddress.addressOf(k).offset(STATUS_WORD_OFFSET);
+        int oldlockword = status_address.peek4();
         // if not inflated and tid matches, this contains status flags and counter
         int counter = oldlockword ^ tid;
         if (counter < 0) {
@@ -113,10 +116,10 @@ public class Monitor implements ObjectLayout {
             m.unlock(t);
         } else if (counter <= STATUS_FLAGS_MASK) {
             // owned by us and count is zero.  clear tid field.
-            Unsafe.atomicAnd(Unsafe.addressOf(k)+STATUS_WORD_OFFSET, STATUS_FLAGS_MASK);
+            status_address.atomicAnd(STATUS_FLAGS_MASK);
         } else if (counter <= (LOCK_COUNT_MASK | STATUS_FLAGS_MASK)) {
             // owned by us but count is non-zero.  decrement count.
-            Unsafe.atomicSub(Unsafe.addressOf(k)+STATUS_WORD_OFFSET, LOCK_COUNT_INC);
+            status_address.atomicSub(LOCK_COUNT_INC);
         } else {
             // lock not owned by us!
             //if (TRACE)
@@ -127,7 +130,9 @@ public class Monitor implements ObjectLayout {
     
     /** Get the Monitor object associated with this lockword. */
     public static Monitor getMonitor(int lockword) {
-        return (Monitor)Unsafe.asObject(lockword & (~LOCK_EXPANDED & ~STATUS_FLAGS_MASK));
+        int word = lockword & (~LOCK_EXPANDED & ~STATUS_FLAGS_MASK);
+        HeapAddress a = HeapAddress.address32(word);
+        return (Monitor)a.asObject();
     }
     
     public static Monitor allocateInflatedLock() {
@@ -146,7 +151,8 @@ public class Monitor implements ObjectLayout {
         jq.Assert(m.monitor_owner == Unsafe.getThreadBlock());
         jq.Assert(m.entry_count >= 1);
         for (;;) {
-            int oldlockword = Unsafe.peek(Unsafe.addressOf(k)+STATUS_WORD_OFFSET);
+            HeapAddress status_address = (HeapAddress) HeapAddress.addressOf(k).offset(STATUS_WORD_OFFSET);
+            int oldlockword = status_address.peek4();
             if (oldlockword < 0) {
                 // inflated by another thread!  free our inflated lock and use that one.
                 jq.Assert(m.entry_count == 1);
@@ -158,12 +164,13 @@ public class Monitor implements ObjectLayout {
                 return;
             }
             int status_flags = oldlockword & STATUS_FLAGS_MASK;
-            if ((Unsafe.addressOf(m) & STATUS_FLAGS_MASK) != 0 ||
-                (Unsafe.addressOf(m) & LOCK_EXPANDED) != 0) {
-                jq.UNREACHABLE("Monitor object has address "+jq.hex8(Unsafe.addressOf(m)));
+            HeapAddress m_addr = HeapAddress.addressOf(m);
+            if ((m_addr.to32BitValue() & STATUS_FLAGS_MASK) != 0 ||
+                (m_addr.to32BitValue() & LOCK_EXPANDED) != 0) {
+                jq.UNREACHABLE("Monitor object has address "+m_addr.stringRep());
             }
-            int newlockword = Unsafe.addressOf(m) | LOCK_EXPANDED | status_flags;
-            Unsafe.atomicCas4(Unsafe.addressOf(k)+STATUS_WORD_OFFSET, status_flags, newlockword);
+            int newlockword = m_addr.to32BitValue() | LOCK_EXPANDED | status_flags;
+            status_address.atomicCas4(status_flags, newlockword);
             if (Unsafe.isEQ()) {
                 // successfully obtained inflated lock.
                 if (TRACE) SystemInterface.debugmsg("Obtained inflated lock! new lockword="+jq.hex8(newlockword));
@@ -190,7 +197,8 @@ public class Monitor implements ObjectLayout {
         }
         if (TRACE) SystemInterface.debugmsg("We ("+t+") are attempting to obtain lock "+this);
         // another thread or no thread owns the lock. increase atomic count.
-        Unsafe.atomicAdd(Unsafe.addressOf(this)+_atomic_count.getOffset(), 1);
+        HeapAddress ac_loc = (HeapAddress) HeapAddress.addressOf(this).offset(_atomic_count.getOffset());
+        ac_loc.atomicAdd(1);
         if (!Unsafe.isEQ()) {
             // someone else already owns the lock.
             if (TRACE) SystemInterface.debugmsg("Lock "+this+" cannot be obtained (owned by "+m_t+", or there are other waiters); waiting on semaphore ("+this.atomic_count+" waiters)");
@@ -225,7 +233,8 @@ public class Monitor implements ObjectLayout {
         }
         if (TRACE) SystemInterface.debugmsg("We ("+t+") are unlocking lock "+this+", current waiters="+this.atomic_count);
         this.monitor_owner = null;
-        Unsafe.atomicSub(Unsafe.addressOf(this)+_atomic_count.getOffset(), 1);
+        HeapAddress ac_loc = (HeapAddress) HeapAddress.addressOf(this).offset(_atomic_count.getOffset());
+        ac_loc.atomicSub(1);
         if (Unsafe.isGE()) {
             // threads are waiting on us, release the semaphore.
             if (TRACE) SystemInterface.debugmsg((this.atomic_count+1)+" threads are waiting on released lock "+this+", releasing semaphore.");

@@ -14,6 +14,8 @@ import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
 import Clazz.jq_InstanceField;
 import Main.jq;
+import Memory.CodeAddress;
+import Memory.HeapAddress;
 import Util.LittleEndianOutputStream;
 
 /*
@@ -22,33 +24,25 @@ import Util.LittleEndianOutputStream;
  */
 public class Code2HeapReference extends Reloc {
 
-    private int/*CodeAddress*/ from_codeloc;
-    private int/*HeapAddress*/ to_heaploc;
+    private CodeAddress from_codeloc;
+    private HeapAddress to_heaploc;
     
     /** Creates new Code2HeapReference */
-    public Code2HeapReference(int from_codeloc, int to_heaploc) {
+    public Code2HeapReference(CodeAddress from_codeloc, HeapAddress to_heaploc) {
         this.from_codeloc = from_codeloc; this.to_heaploc = to_heaploc;
     }
 
-    public int/*CodeAddress*/ getFrom() { return from_codeloc; }
-    public int/*HeapAddress*/ getTo() { return to_heaploc; }
+    public CodeAddress getFrom() { return from_codeloc; }
+    public HeapAddress getTo() { return to_heaploc; }
     
-    public void dumpCOFF(OutputStream out)
-    throws IOException {
-        LittleEndianOutputStream.write_s32(out, from_codeloc);      // r_vaddr
+    public void dumpCOFF(OutputStream out) throws IOException {
+        LittleEndianOutputStream.write_s32(out, from_codeloc.to32BitValue()); // r_vaddr
         LittleEndianOutputStream.write_s32(out, 1);                 // r_symndx
         LittleEndianOutputStream.write_u16(out, Reloc.RELOC_ADDR32);// r_type
     }
     
     public String toString() {
-        return "from code:"+jq.hex8(from_codeloc)+" to heap:"+jq.hex8(to_heaploc);
+        return "from code:"+from_codeloc.stringRep()+" to heap:"+to_heaploc.stringRep();
     }
     
-    public static final jq_InstanceField _from_codeloc;
-    public static final jq_InstanceField _to_heaploc;
-    static {
-        jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LAssembler/x86/Code2HeapReference;");
-        _from_codeloc = k.getOrCreateInstanceField("from_codeloc", "I");
-        _to_heaploc = k.getOrCreateInstanceField("to_heaploc", "I");
-    }
 }

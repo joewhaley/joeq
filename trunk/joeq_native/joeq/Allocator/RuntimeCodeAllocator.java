@@ -14,6 +14,9 @@ import Clazz.jq_CompiledCode;
 import Clazz.jq_Method;
 import Clazz.jq_TryCatch;
 import Main.jq;
+import Memory.Address;
+import Memory.CodeAddress;
+import Memory.HeapAddress;
 import Run_Time.ExceptionDeliverer;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
@@ -38,11 +41,11 @@ public class RuntimeCodeAllocator extends CodeAllocator {
     
     /** Pointers to the start, current, and end of the heap.
      */
-    private int/*CodeAddress*/ heapStart, heapCurrent, heapEnd;
+    private CodeAddress heapStart, heapCurrent, heapEnd;
     
     /** Pointer to the first block.
      */
-    private int/*CodeAddress*/ heapFirst;
+    private CodeAddress heapFirst;
     
     /** Max memory free in all allocated blocks.
      */
@@ -52,12 +55,14 @@ public class RuntimeCodeAllocator extends CodeAllocator {
     
     public void init()
     throws OutOfMemoryError {
-        if (0 == (heapStart = heapFirst = SystemInterface.syscalloc(BLOCK_SIZE)))
+    	heapStart = heapFirst = (CodeAddress)SystemInterface.syscalloc(BLOCK_SIZE);
+        if (heapStart.isNull())
             HeapAllocator.outOfMemory();
-        Unsafe.poke4(heapStart, 0);
-        Unsafe.poke4(heapStart + 4, heapEnd = heapStart + BLOCK_SIZE - 4);
-        Unsafe.poke4(heapEnd, heapCurrent = heapStart + 8);
-        if (TRACE) SystemInterface.debugmsg("Initialized run-time code allocator, start="+jq.hex8(heapCurrent)+" end="+jq.hex8(heapEnd));
+        heapStart.poke(null);
+        heapEnd = (CodeAddress)heapStart.offset(BLOCK_SIZE - CodeAddress.size());
+        heapStart.offset(CodeAddress.size()).poke(heapEnd);
+        heapCurrent = (CodeAddress)heapStart.offset(CodeAddress.size() * 2);
+        heapEnd.poke(heapCurrent);
     }
     
     /** Allocate a code buffer of the given estimated size, such that the given
@@ -77,34 +82,29 @@ public class RuntimeCodeAllocator extends CodeAllocator {
         jq.Assert(!isGenerating); isGenerating = true;
         if (TRACE) SystemInterface.debugmsg("Code generation started: "+this);
         // align pointer
-        int entrypoint = heapCurrent+offset;
-        if (alignment > 1) {
-        	entrypoint += alignment-1;
-	        entrypoint &= ~(alignment-1);
-        }
-        if (entrypoint + estimatedSize - offset <= heapEnd) {
-            if (TRACE) SystemInterface.debugmsg("Estimated size ("+jq.hex(estimatedSize)+" fits within free space in current block "+jq.hex8(heapCurrent)+"-"+jq.hex8(heapEnd));
-            return new Runtimex86CodeBuffer(entrypoint-offset, heapEnd);
+        CodeAddress entrypoint = (CodeAddress)heapCurrent.offset(offset);
+        if (alignment > 0) entrypoint.align(alignment);
+        if (entrypoint.offset(estimatedSize - offset).difference(heapEnd) <= 0) {
+            return new Runtimex86CodeBuffer((CodeAddress)entrypoint.offset(-offset), heapEnd);
         }
         if (estimatedSize < maxFreePrevious) {
             // use a prior block's unused space.
             if (TRACE) SystemInterface.debugmsg("Estimated size ("+jq.hex(estimatedSize)+" fits within a prior block: maxfreeprev="+jq.hex(maxFreePrevious));
             // start searching at the first block
-            int start_ptr = heapFirst;
+            CodeAddress start_ptr = heapFirst;
             for (;;) {
-                jq.Assert(start_ptr != 0);                   // points to start of current block
-                int end_ptr     = Unsafe.peek(start_ptr+4);  // points to end of current block
-                int current_ptr = Unsafe.peek(end_ptr);      // current pointer for current block
-                if (TRACE) SystemInterface.debugmsg("Checking block "+jq.hex8(start_ptr)+"-"+jq.hex8(end_ptr)+", current ptr="+jq.hex8(current_ptr));
-                if ((end_ptr-current_ptr) >= estimatedSize) {
-                    if (TRACE) SystemInterface.debugmsg("Estimated size ("+jq.hex(estimatedSize)+") fits within free space "+jq.hex8(current_ptr)+"-"+jq.hex8(end_ptr));
+            	// start_ptr:   points to start of current block
+            	// end_ptr:     points to end of current block
+            	// current_ptr: current pointer for current block
+                jq.Assert(!start_ptr.isNull());
+                CodeAddress end_ptr = (CodeAddress)start_ptr.offset(CodeAddress.size()).peek();
+                CodeAddress current_ptr = (CodeAddress)end_ptr.peek();
+                if (end_ptr.difference(current_ptr) >= estimatedSize) {
                     return new Runtimex86CodeBuffer(current_ptr, end_ptr);
                 }
-                start_ptr = Unsafe.peek(start_ptr); // go to the next block
-                if (TRACE) SystemInterface.debugmsg("Estimated size ("+jq.hex(estimatedSize)+") doesn't fit, trying next block "+jq.hex8(start_ptr));
+                start_ptr = (CodeAddress)start_ptr.peek(); // go to the next block
             }
         }
-        if (TRACE) SystemInterface.debugmsg("Estimated size ("+jq.hex(estimatedSize)+" is too large for current block "+jq.hex8(heapCurrent)+"-"+jq.hex8(heapEnd));
         // allocate new block.
         allocateNewBlock(Math.max(estimatedSize, BLOCK_SIZE));
         return new Runtimex86CodeBuffer(heapCurrent, heapEnd);
@@ -112,145 +112,140 @@ public class RuntimeCodeAllocator extends CodeAllocator {
     
     private void allocateNewBlock(int blockSize)
     throws OutOfMemoryError {
-        if (TRACE) SystemInterface.debugmsg("Allocating new code block (current="+jq.hex8(heapCurrent)+", end="+jq.hex8(heapEnd)+")");
-        Unsafe.poke4(heapStart + 4, heapCurrent);
-        int newBlock;
-        if (0 == (newBlock = SystemInterface.syscalloc(blockSize)))
+    	heapStart.offset(CodeAddress.size()).poke(heapCurrent);
+        CodeAddress newBlock = (CodeAddress)SystemInterface.syscalloc(blockSize);
+        if (newBlock.isNull())
             HeapAllocator.outOfMemory();
-        Unsafe.poke4(heapStart, newBlock);
+        heapStart.poke(newBlock);
         heapStart = newBlock;
-        Unsafe.poke4(heapStart, 0);
-        Unsafe.poke4(heapStart + 4, heapEnd = newBlock + blockSize - 4);
-        Unsafe.poke4(heapEnd, heapCurrent = newBlock + 8);
-        if (TRACE) SystemInterface.debugmsg("Allocated new code block, start="+jq.hex8(heapCurrent)+" end="+jq.hex8(heapEnd));
+        heapStart.poke(null);
+        heapEnd = (CodeAddress)newBlock.offset(blockSize - CodeAddress.size());
+        heapStart.offset(CodeAddress.size()).poke(heapEnd);
+        heapCurrent = (CodeAddress)newBlock.offset(CodeAddress.size() * 2);
+        heapEnd.poke(heapCurrent);
     }
     
-    public void patchAbsolute(int/*CodeAddress*/ code, int/*HeapAddress*/ heap) {
-        Unsafe.poke4(code, heap);
+    public void patchAbsolute(Address addr1, Address addr2) {
+    	addr1.poke(addr2);
     }
-    public void patchRelativeOffset(int/*CodeAddress*/ code, int/*CodeAddress*/ target) {
-        Unsafe.poke4(code, target-code-4);
+    public void patchRelativeOffset(CodeAddress code, CodeAddress target) {
+    	code.poke4(target.difference(code)-4);
     }
     
     public class Runtimex86CodeBuffer extends CodeAllocator.x86CodeBuffer {
 
-        private int/*CodeAddress*/ startAddress;
-        private int/*CodeAddress*/ entrypointAddress;
-        private int/*CodeAddress*/ currentAddress;
-        private int/*CodeAddress*/ endAddress;
+        private CodeAddress startAddress;
+        private CodeAddress entrypointAddress;
+        private CodeAddress currentAddress;
+        private CodeAddress endAddress;
 
-        Runtimex86CodeBuffer(int startAddress, int endAddress) {
+        Runtimex86CodeBuffer(CodeAddress startAddress, CodeAddress endAddress) {
             this.startAddress = startAddress;
             this.endAddress = endAddress;
-            this.currentAddress = startAddress-1;
+            this.currentAddress = (CodeAddress)startAddress.offset(-1);
         }
         
-        public int getCurrentOffset() { return currentAddress - startAddress + 1; }
-        public int getCurrentAddress() { return currentAddress + 1; }
+        public int getCurrentOffset() { return currentAddress.difference(startAddress) + 1; }
+        public CodeAddress getCurrentAddress() { return (CodeAddress)currentAddress.offset(1); }
         
-        public int/*CodeAddress*/ getStart() { return startAddress; }
-        public int/*CodeAddress*/ getCurrent() { return currentAddress+1; }
-        public int/*CodeAddress*/ getEntry() { return entrypointAddress; }
-        public int/*CodeAddress*/ getEnd() { return endAddress; }
+        public CodeAddress getStart() { return startAddress; }
+        public CodeAddress getCurrent() { return (CodeAddress)currentAddress.offset(1); }
+        public CodeAddress getEntry() { return entrypointAddress; }
+        public CodeAddress getEnd() { return endAddress; }
         
         public void setEntrypoint() { this.entrypointAddress = getCurrent(); }
         
         public void checkSize(int size) {
-            if (currentAddress+size < endAddress) return;
+            if (currentAddress.offset(size).difference(endAddress) < 0) return;
             // overflow!
-            int newEstimatedSize = (endAddress - startAddress) << 1;
+            int newEstimatedSize = endAddress.difference(startAddress) << 1;
             allocateNewBlock(Math.max(BLOCK_SIZE, newEstimatedSize));
-            jq.Assert(currentAddress-startAddress+size < heapEnd-heapCurrent);
-            SystemInterface.mem_cpy(heapCurrent, startAddress, currentAddress-startAddress);
-            if (entrypointAddress != 0)
-                entrypointAddress = entrypointAddress - startAddress + heapCurrent;
-            currentAddress = currentAddress - startAddress + heapCurrent;
+            jq.Assert(currentAddress.difference(startAddress)+size < heapEnd.difference(heapCurrent));
+            SystemInterface.mem_cpy(heapCurrent, startAddress, currentAddress.difference(startAddress));
+            if (!entrypointAddress.isNull())
+                entrypointAddress = (CodeAddress)heapCurrent.offset(entrypointAddress.difference(startAddress));
+            currentAddress = (CodeAddress)heapCurrent.offset(currentAddress.difference(startAddress));
             startAddress = heapCurrent;
             endAddress = heapEnd;
         }
         
         public void add1(byte i) {
             checkSize(1);
-            Unsafe.poke1(++currentAddress, i);
+            currentAddress = (CodeAddress)currentAddress.offset(1);
+            currentAddress.poke1(i);
         }
         public void add2_endian(int i) {
             checkSize(2);
-            Unsafe.poke2(++currentAddress, (short)i);
-            ++currentAddress;
+            currentAddress.offset(1).poke2((short)i);
+            currentAddress = (CodeAddress)currentAddress.offset(2);
         }
         public void add2(int i) {
             checkSize(2);
-            Unsafe.poke2(++currentAddress, endian2(i));
-            ++currentAddress;
+            currentAddress.offset(1).poke2(endian2(i));
+            currentAddress = (CodeAddress)currentAddress.offset(2);
         }
         public void add3(int i) {
             checkSize(3);
-            Unsafe.poke1(++currentAddress, (byte)(i >> 16));
-            Unsafe.poke2(++currentAddress, endian2(i));
-            ++currentAddress;
+            currentAddress.offset(1).poke1((byte)(i >> 16));
+            currentAddress.offset(2).poke2(endian2(i));
+            currentAddress = (CodeAddress)currentAddress.offset(3);
         }
         public void add4_endian(int i) {
             checkSize(4);
-            Unsafe.poke4(++currentAddress, i);
-            currentAddress += 3;
+            currentAddress.offset(1).poke4(i);
+            currentAddress = (CodeAddress)currentAddress.offset(4);
         }
 
         public byte get1(int k) {
-            k += startAddress;
-            return (byte)Unsafe.peek(k);
+        	return startAddress.offset(k).peek1();
         }
         public int get4_endian(int k) {
-            k += startAddress;
-            return Unsafe.peek(k);
+        	return startAddress.offset(k).peek4();
         }
 
         public void put1(int k, byte instr) {
-            k += startAddress;
-            Unsafe.poke1(k, instr);
+            startAddress.offset(k).poke1(instr);
         }
         public void put4_endian(int k, int instr) {
-            k += startAddress;
-            Unsafe.poke4(k, instr);
+            startAddress.offset(k).poke4(instr);
         }
 
         public void skip(int nbytes) {
-        	currentAddress += nbytes;
+        	currentAddress = (CodeAddress)currentAddress.offset(nbytes);
         }
         
         public jq_CompiledCode allocateCodeBlock(jq_Method m, jq_TryCatch[] ex,
                                                  jq_BytecodeMap bcm, ExceptionDeliverer exd,
                                                  List code_relocs, List data_relocs) {
             jq.Assert(isGenerating);
-            int start = getStart();
-            int entrypoint = getEntry();
-            int current = getCurrent();
-            int end = getEnd();
-            jq.Assert(current <= end);
-            if (TRACE) SystemInterface.debugmsg("Allocating code block, start="+jq.hex8(start)+" current="+jq.hex8(current)+" end="+jq.hex8(end));
+            CodeAddress start = getStart();
+            CodeAddress entrypoint = getEntry();
+            CodeAddress current = getCurrent();
+            CodeAddress end = getEnd();
+            jq.Assert(current.difference(end) <= 0);
             if (end != heapEnd) {
                 if (TRACE) SystemInterface.debugmsg("Prior block, recalculating maxfreeprevious (was "+jq.hex(maxFreePrevious)+")");
                 // prior block
-                Unsafe.poke4(end, current);
+                end.poke(current);
                 // recalculate max free previous
                 maxFreePrevious = 0;
-                int start_ptr = heapFirst;
-                while (start_ptr != 0) {
-                	int end_ptr = Unsafe.peek(start_ptr+4);
-                    int current_ptr = Unsafe.peek(end_ptr);
-                    int temp = end_ptr = current_ptr;
-                    if (TRACE) SystemInterface.debugmsg("Free space in block "+jq.hex8(start_ptr)+": "+jq.hex(temp)+")");
+                CodeAddress start_ptr = heapFirst;
+                while (!start_ptr.isNull()) {
+                    CodeAddress end_ptr = (CodeAddress)start_ptr.offset(CodeAddress.size());
+                    CodeAddress current_ptr = (CodeAddress)end_ptr.peek();
+                    int temp = end_ptr.difference(current_ptr);
                     maxFreePrevious = Math.max(maxFreePrevious, temp);
-                	start_ptr = Unsafe.peek(start_ptr);
+                	start_ptr = (CodeAddress)start_ptr.peek();
                 }
                 if (TRACE) SystemInterface.debugmsg("New maxfreeprevious: "+jq.hex(maxFreePrevious));
             } else {
                 // current block
                 heapCurrent = current;
-                Unsafe.poke4(heapEnd, heapCurrent);
+                heapEnd.poke(heapCurrent);
             }
             isGenerating = false;
             if (TRACE) SystemInterface.debugmsg("Code generation completed: "+this);
-            jq_CompiledCode cc = new jq_CompiledCode(m, start, current-start, entrypoint, ex, bcm, exd, code_relocs, data_relocs);
+            jq_CompiledCode cc = new jq_CompiledCode(m, start, current.difference(start), entrypoint, ex, bcm, exd, code_relocs, data_relocs);
             CodeAllocator.registerCode(cc);
             return cc;
         }

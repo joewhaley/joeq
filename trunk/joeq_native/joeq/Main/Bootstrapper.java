@@ -23,20 +23,30 @@ import Allocator.CodeAllocator;
 import Allocator.DefaultCodeAllocator;
 import Allocator.ObjectLayout;
 import Bootstrap.BootImage;
+import Bootstrap.BootstrapCodeAddress;
 import Bootstrap.BootstrapCodeAllocator;
+import Bootstrap.BootstrapHeapAddress;
 import Bootstrap.BootstrapRootSet;
 import Bootstrap.ObjectTraverser;
 import Bootstrap.PrimordialClassLoader;
+import Bootstrap.BootstrapCodeAddress.BootstrapCodeAddressFactory;
+import Bootstrap.BootstrapHeapAddress.BootstrapHeapAddressFactory;
 import ClassLib.ClassLibInterface;
+import Clazz.jq_Array;
 import Clazz.jq_Class;
 import Clazz.jq_Member;
 import Clazz.jq_Method;
+import Clazz.jq_Primitive;
 import Clazz.jq_Reference;
 import Clazz.jq_StaticField;
 import Clazz.jq_StaticMethod;
 import Clazz.jq_Type;
 import Compil3r.BytecodeAnalysis.Trimmer;
 import Compil3r.Reference.x86.x86ReferenceCompiler;
+import Memory.Address;
+import Memory.HeapAddress;
+import Memory.CodeAddress;
+import Memory.StackAddress;
 import Run_Time.Reflection;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
@@ -147,8 +157,9 @@ public abstract class Bootstrapper implements ObjectLayout {
         //System.out.println("Null instance fields: "+nullInstanceFields);
 
         // install bootstrap code allocator
-        BootstrapCodeAllocator bca = new BootstrapCodeAllocator();
+        BootstrapCodeAllocator bca = BootstrapCodeAllocator.DEFAULT;
         DefaultCodeAllocator.default_allocator = bca;
+        CodeAddress.FACTORY = BootstrapCodeAddress.FACTORY = new BootstrapCodeAddressFactory(bca);
         bca.init();
         
         // install object mapper
@@ -156,7 +167,9 @@ public abstract class Bootstrapper implements ObjectLayout {
         ObjectTraverser obj_trav = ClassLibInterface.DEFAULT.getObjectTraverser();
         Reflection.obj_trav = obj_trav;
         obj_trav.initialize();
-        Unsafe.installRemapper(objmap = new BootImage(obj_trav, bca));
+        //objmap = new BootImage(bca);
+        objmap = BootImage.DEFAULT;
+        //HeapAddress.FACTORY = BootstrapHeapAddress.FACTORY = new BootstrapHeapAddressFactory(objmap);
         
         long starttime = System.currentTimeMillis();
         jq_Class c;
@@ -197,6 +210,7 @@ public abstract class Bootstrapper implements ObjectLayout {
             for (;;) {
                 String classname = dis.readLine();
                 if (classname == null) break;
+                if (classname.equals("")) continue;
                 if (classname.charAt(0) == '#') continue;
                 if (classname.endsWith("*")) {
                     jq.Assert(classname.startsWith("L"));
@@ -205,14 +219,33 @@ public abstract class Bootstrapper implements ObjectLayout {
                         String s = (String)i.next();
                         jq.Assert(s.endsWith(".class"));
                         s = "L"+s.substring(0, s.length()-6)+";";
-                        jq_Type t = (jq_Type)PrimordialClassLoader.loader.getOrCreateBSType(s);
+                        jq_Class t = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType(s);
                         t.load(); t.verify(); t.prepare();
                         classset.add(t);
+                        for (;;) {
+                            jq_Array q = t.getArrayTypeForElementType();
+                            q.load(); q.verify(); q.prepare();
+                            classset.add(q);
+                            t = t.getSuperclass();
+                            if (t == null) break;
+                            classset.add(t);
+                        }
                     }
                 } else {
                     jq_Type t = (jq_Type)PrimordialClassLoader.loader.getOrCreateBSType(classname);
                     t.load(); t.verify(); t.prepare();
                     classset.add(t);
+                    if (t instanceof jq_Class) {
+                        jq_Class q = (jq_Class) t;
+                        for (;;) {
+                            t = q.getArrayTypeForElementType();
+                            t.load(); t.verify(); t.prepare();
+                            classset.add(t);
+                            q = q.getSuperclass();
+                            if (q == null) break;
+                            classset.add(q);
+                        }
+                    }
                 }
             }
             methodset = new HashSet();
@@ -351,6 +384,7 @@ public abstract class Bootstrapper implements ObjectLayout {
                 jq_StaticField[] sfs = k.getDeclaredStaticFields();
                 for (int j=0; j<sfs.length; ++j) {
                     jq_StaticField sf = sfs[j];
+                    //System.out.println("Initializing static field: "+sf);
                     objmap.initStaticField(sf);
                     objmap.addStaticFieldReloc(sf);
                 }
@@ -371,6 +405,10 @@ public abstract class Bootstrapper implements ObjectLayout {
             if (m instanceof jq_Method) {
                 jq_Method m2 = ((jq_Method)m);
                 if (m2.getDeclaringClass() == Unsafe._class) continue;
+                if (m2.getDeclaringClass() == Address._class) continue;
+                if (m2.getDeclaringClass() == HeapAddress._class) continue;
+                if (m2.getDeclaringClass() == CodeAddress._class) continue;
+                if (m2.getDeclaringClass() == StackAddress._class) continue;
                 m2.compile();
             }
         }
@@ -421,7 +459,7 @@ public abstract class Bootstrapper implements ObjectLayout {
 
         // now that we have visited all reachable objects, jq.on_vm_startup is built
         int index = objmap.numOfEntries();
-        int addr = objmap.getOrAllocateObject(jq.on_vm_startup);
+        HeapAddress addr = objmap.getOrAllocateObject(jq.on_vm_startup);
         jq.Assert(objmap.numOfEntries() > index);
         objmap.find_reachable(index);
         jq_StaticField _on_vm_startup = jq_class.getOrCreateStaticField("on_vm_startup", "Ljava/util/List;");
@@ -455,10 +493,10 @@ public abstract class Bootstrapper implements ObjectLayout {
             jq_Type t = (jq_Type)it.next();
             if (t == Unsafe._class) continue;
             jq.Assert(t.isClsInitialized());
-            System.out.println(t+": "+jq.hex8(objmap.getAddressOf(t)));
+            System.out.println(t+": "+objmap.getAddressOf(t).stringRep());
             if (t.isReferenceType()) {
                 jq_Reference r = (jq_Reference)t;
-                System.out.println("\tninterfaces "+r.getInterfaces().length+" vtable "+jq.hex8(objmap.getAddressOf(r.getVTable())));
+                System.out.println("\tninterfaces "+r.getInterfaces().length+" vtable "+objmap.getAddressOf(r.getVTable()).stringRep());
             }
         }
         

@@ -8,6 +8,7 @@
 package ClassLib.Common.java.lang;
 
 import Allocator.HeapAllocator;
+import Clazz.jq_Reference;
 import Run_Time.Monitor;
 import Run_Time.Reflection;
 import Run_Time.Unsafe;
@@ -22,7 +23,7 @@ public abstract class Object {
     // native method implementations.
     private static void registerNatives() {}
     public final java.lang.Class _getClass() {
-        return Reflection.getJDKType(Unsafe.getTypeOf(this));
+        return Reflection.getJDKType(jq_Reference.getTypeOf(this));
     }
     public int hashCode() { return java.lang.System.identityHashCode(this); }
     protected java.lang.Object clone() throws CloneNotSupportedException {

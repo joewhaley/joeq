@@ -13,6 +13,7 @@ import java.io.OutputStream;
 import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
 import Clazz.jq_InstanceField;
+import Memory.HeapAddress;
 import Util.LittleEndianOutputStream;
 
 /*
@@ -21,28 +22,26 @@ import Util.LittleEndianOutputStream;
  */
 public class Heap2HeapReference extends Reloc {
 
-    private int/*HeapAddress*/ from_heaploc;
-    private int/*HeapAddress*/ to_heaploc;
+    private HeapAddress from_heaploc;
+    private HeapAddress to_heaploc;
     
     /** Creates new Heap2HeapReference */
-    public Heap2HeapReference(int from_heaploc, int to_heaploc) {
+    public Heap2HeapReference(HeapAddress from_heaploc, HeapAddress to_heaploc) {
         this.from_heaploc = from_heaploc; this.to_heaploc = to_heaploc;
     }
 
-    public int/*HeapAddress*/ getFrom() { return from_heaploc; }
-    public int/*HeapAddress*/ getTo() { return to_heaploc; }
+    public HeapAddress getFrom() { return from_heaploc; }
+    public HeapAddress getTo() { return to_heaploc; }
     
     public void dumpCOFF(OutputStream out) throws IOException {
-        LittleEndianOutputStream.write_s32(out, from_heaploc);      // r_vaddr
+        LittleEndianOutputStream.write_s32(out, from_heaploc.to32BitValue()); // r_vaddr
         LittleEndianOutputStream.write_s32(out, 1);                 // r_symndx
         LittleEndianOutputStream.write_u16(out, Reloc.RELOC_ADDR32);// r_type
     }
     
-    public static final jq_InstanceField _from_heaploc;
-    public static final jq_InstanceField _to_heaploc;
-    static {
-        jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LAssembler/x86/Heap2HeapReference;");
-        _from_heaploc = k.getOrCreateInstanceField("from_heaploc", "I");
-        _to_heaploc = k.getOrCreateInstanceField("to_heaploc", "I");
+    public String toString() {
+        return "from heap:"+from_heaploc.stringRep()+" to heap:"+to_heaploc.stringRep();
     }
+    
+    public static final jq_Class _class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LAssembler/x86/Heap2HeapReference;");
 }

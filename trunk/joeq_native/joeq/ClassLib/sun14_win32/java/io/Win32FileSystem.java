@@ -7,6 +7,7 @@
 
 package ClassLib.sun14_win32.java.io;
 
+import Memory.HeapAddress;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
 
@@ -35,7 +36,7 @@ public abstract class Win32FileSystem {
         byte[] b = new byte[256];
         int result = SystemInterface.fs_getdcwd(i, b);
         if (result == 0) throw new InternalError();
-        String res = SystemInterface.fromCString(Unsafe.addressOf(b));
+        String res = SystemInterface.fromCString(HeapAddress.addressOf(b));
         // skip "C:"
         if (res.charAt(1) == ':') return res.substring(2);
         else return res;
