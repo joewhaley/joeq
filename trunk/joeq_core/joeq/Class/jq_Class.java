@@ -2244,7 +2244,10 @@ uphere2:
                             }
                         } else {
                             // java/lang/String
-                            static_data[j] = HeapAddress.addressOf(cv).to32BitValue();
+                            HeapAddress a = HeapAddress.addressOf(cv);
+                            if (a != null) {
+                                static_data[j] = a.to32BitValue();
+                            }
                         }
                     }
                     j += f.getWidth() >> 2;
