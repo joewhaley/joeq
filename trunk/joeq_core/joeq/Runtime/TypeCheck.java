@@ -60,6 +60,14 @@ public abstract class TypeCheck implements jq_ClassFileConstants {
     public static boolean isAssignable(jq_Type S, jq_Type T) {
         if (S == T)
             return true;
+        if (S instanceof jq_Reference && T instanceof jq_Reference)
+            return ((jq_Reference) S).isSubtypeOf((jq_Reference) T);
+        return false;
+    }
+    
+    public static boolean isAssignable_graph(jq_Type S, jq_Type T) {
+        if (S == T)
+            return true;
         jq_Type s2 = S, t2 = T;
         if (false) {
             if (t2 == Address._class)
@@ -91,10 +99,12 @@ public abstract class TypeCheck implements jq_ClassFileConstants {
         // both are classes
         ((jq_Class)s2).chkState(STATE_PREPARED);
         if (((jq_Class)t2).isInterface()) {
+            /*
             if (((jq_Class)s2).isInterface()) {
                 if (!is_t2_loaded) return false;
                 return isSuperclassOf((jq_Class)t2, (jq_Class)s2);
             }
+            */
             return ((jq_Class)s2).implementsInterface((jq_Class)t2);
         }
         // t2 is not an interface
