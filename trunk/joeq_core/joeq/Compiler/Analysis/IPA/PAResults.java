@@ -14,6 +14,7 @@ import java.lang.reflect.Field;
 import java.math.BigInteger;
 import java.util.AbstractSet;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -54,7 +55,7 @@ import Util.Graphs.PathNumbering.Path;
  * @author John Whaley
  * @version $Id$
  */
-public class PAResults {
+public class PAResults implements PointerAnalysisResults {
 
     PA r;
     
@@ -84,7 +85,7 @@ public class PAResults {
 
     public static PAResults loadResults(String[] args, String addToClasspath) throws IOException {
         String prefix;
-        if (args.length > 0) {
+        if (args != null && args.length > 0) {
             prefix = args[0];
             String sep = System.getProperty("file.separator");
             if (!prefix.endsWith(sep))
@@ -1205,6 +1206,33 @@ public class PAResults {
         return new HeapLocationSet(q);
     }
     
+	public boolean isAliased(SSALocation a, SSALocation b) {
+		// (1, .f)   (1, .f)   ==>   true
+		// (1, .f)   (2, .f)   ==>   false
+		return a.equals(b);
+	}
+
+	/* (non-Javadoc)
+	 * @see Compil3r.Analysis.IPA.PointerAnalysisResults#getAliases(Clazz.jq_Method, Compil3r.Analysis.IPA.SSALocation)
+	 */
+	public Set/*<ContextSet.ContextLocationPair>*/ getAliases(jq_Method method, SSALocation loc) {
+		return Collections.EMPTY_SET;
+	}
+
+	/* (non-Javadoc)
+	 * @see Compil3r.Analysis.IPA.PointerAnalysisResults#hasAliases(Clazz.jq_Method, Compil3r.Analysis.IPA.SSALocation, Compil3r.Analysis.IPA.ContextSet)
+	 */
+	public boolean hasAliases(jq_Method method, SSALocation loc, ContextSet contextSet) {
+		return false;
+	}
+
+	/* (non-Javadoc)
+	 * @see Compil3r.Analysis.IPA.PointerAnalysisResults#hasAliases(Clazz.jq_Method, Compil3r.Analysis.IPA.SSALocation)
+	 */
+	public boolean hasAliases(jq_Method method, SSALocation loc) {
+		return false;
+	}
+    
     public class HeapLocationSet extends AbstractSet {
 
         BDD heapLocations; // H1 x F
@@ -1269,6 +1297,5 @@ public class PAResults {
             String fname = f == null ? "[]" : "."+f.getName().toString();
             return n.toString_short()+fname;
         }
-    }
-    
+    }   
 }
