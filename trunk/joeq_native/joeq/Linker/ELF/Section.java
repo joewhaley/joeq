@@ -12,6 +12,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.Iterator;
+import Util.AppendIterator;
+import jq;
 
 /**
  * Defines a section in an ELF file.
@@ -66,9 +68,9 @@ public abstract class Section {
     public int getIndex() { return index; }
     public String getName() { return name; }
     public abstract int getType();
-    public final int getFlags() { return flags; }
-    public final int getAddr() { return addr; }
-    public final int getOffset() { return offset; }
+    public int getFlags() { return flags; }
+    public int getAddr() { return addr; }
+    public int getOffset() { return offset; }
     public abstract int getSize();
     public abstract int getLink();
     public abstract int getInfo();
@@ -87,11 +89,14 @@ public abstract class Section {
     public void clearExecInstr() { this.flags &= ~SHF_EXECINSTR; }
 
     public void writeHeader(ELFFile file, OutputStream out) throws IOException {
+        System.out.println("Writing section header for "+this.getName());
         file.write_sectionname(out, this.getName());
         file.write_word(out, this.getType());
         file.write_word(out, this.getFlags());
         file.write_addr(out, this.getAddr());
+        System.out.println("Offset: "+this.getOffset());
         file.write_off(out, this.getOffset());
+        System.out.println("Size: "+this.getSize());
         file.write_word(out, this.getSize());
         file.write_word(out, this.getLink());
         file.write_word(out, this.getInfo());
@@ -107,6 +112,38 @@ public abstract class Section {
         this.index = SHN_INVALID;
     }
 
+    public static class FakeSection extends Section {
+        
+        FakeSection(String name, int index) { super(name, 0); this.index = index; }
+        public int getEntSize() { jq.UNREACHABLE(); return 0; }
+        public int getInfo() { jq.UNREACHABLE(); return 0; }
+        public int getAddrAlign() { jq.UNREACHABLE(); return 0; }
+        public int getLink() { jq.UNREACHABLE(); return 0; }
+        public int getSize() { jq.UNREACHABLE(); return 0; }
+        public int getType() { jq.UNREACHABLE(); return 0; }
+        public int getFlags() { jq.UNREACHABLE(); return 0; }
+        public int getAddr() { jq.UNREACHABLE(); return 0; }
+        public int getOffset() { jq.UNREACHABLE(); return 0; }
+        public void setIndex(int index) { jq.UNREACHABLE(); }
+        public void setName(String name) { jq.UNREACHABLE(); }
+        public void setAddr(int addr) { jq.UNREACHABLE(); }
+        public void setOffset(int offset) { jq.UNREACHABLE(); }
+        public void setWrite() { jq.UNREACHABLE(); }
+        public void clearWrite() { jq.UNREACHABLE(); }
+        public void setAlloc() { jq.UNREACHABLE(); }
+        public void clearAlloc() { jq.UNREACHABLE(); }
+        public void setExecInstr() { jq.UNREACHABLE(); }
+        public void clearExecInstr() { jq.UNREACHABLE(); }
+        public void writeData(ELFFile file, OutputStream out) throws IOException {
+            jq.UNREACHABLE();
+        }
+    }
+    
+    public static class AbsSection extends FakeSection {
+        public static final AbsSection INSTANCE = new AbsSection();
+        private AbsSection() { super("ABS", SHN_ABS); }
+    }
+        
     public static class NullSection extends Section {
         public NullSection() { super("", 0); }
         public int getIndex() { return 0; }
@@ -137,22 +174,26 @@ public abstract class Section {
     }
     
     public static class SymTabSection extends Section {
-        List/*<SymbolTableEntry>*/ symbols;
-        protected int link, info;
-        public SymTabSection(String name, int flags, int link, int info) {
+        List/*<SymbolTableEntry>*/ localSymbols, globalSymbols;
+        StrTabSection stringTable;
+        public SymTabSection(String name, int flags, StrTabSection stringTable) {
             super(name, flags);
-            this.link = link; this.info = info;
-            this.symbols = new LinkedList();
+            this.stringTable = stringTable;
+            this.localSymbols = new LinkedList(); this.globalSymbols = new LinkedList();
         }
-        public void addSymbol(SymbolTableEntry e) { symbols.add(e); }
-        public int getSize() { return symbols.size() * SymbolTableEntry.getEntrySize(); }
-        public int getAddrAlign() { return 0; }
+        public void addSymbol(SymbolTableEntry e) {
+            stringTable.addString(e.getName());
+            if (e.getBind() == SymbolTableEntry.STB_LOCAL) localSymbols.add(e);
+            else globalSymbols.add(e);
+        }
+        public int getSize() { return (localSymbols.size() + globalSymbols.size()) * SymbolTableEntry.getEntrySize(); }
+        public int getAddrAlign() { return 4; }
         public final int getType() { return SHT_SYMTAB; }
-        public final int getLink() { return link; }
-        public final int getInfo() { return info; }
+        public final int getLink() { return stringTable.getIndex(); }
+        public final int getInfo() { return localSymbols.size(); }
         public final int getEntSize() { return SymbolTableEntry.getEntrySize(); }
         public void writeData(ELFFile file, OutputStream out) throws IOException {
-            Iterator i = symbols.iterator();
+            Iterator i = new AppendIterator(localSymbols.iterator(), globalSymbols.iterator());
             while (i.hasNext()) {
                 SymbolTableEntry e = (SymbolTableEntry)i.next();
                 e.write(file, out);
@@ -204,17 +245,22 @@ public abstract class Section {
             while (i.hasNext()) {
                 Map.Entry e = (Map.Entry)i.next();
                 String s = (String)e.getKey();
-                e.setValue(new Integer(size));
-                size += s.length() + 1;
+                if (s.length() == 0) {
+                    e.setValue(new Integer(0));
+                } else {
+                    e.setValue(new Integer(size));
+                    size += s.length() + 1;
+                }
             }
             if (size == 1) size = 0;
             // todo: combine strings that have the same endings.
             table = new byte[size];
-            int index = 0;
+            int index = 1;
             i = string_map.entrySet().iterator();
             while (i.hasNext()) {
                 Map.Entry e = (Map.Entry)i.next();
                 String s = (String)e.getKey();
+                System.out.println("Writing "+s.length()+" bytes for \""+s+"\" to table index "+index);
                 s.getBytes(0, s.length(), table, index);
                 index += s.length() + 1;
             }
@@ -227,7 +273,7 @@ public abstract class Section {
             return i.intValue();
         }
         public int getSize() { return table.length; }
-        public int getAddrAlign() { return 0; }
+        public int getAddrAlign() { return 1; }
         public void writeData(ELFFile file, OutputStream out) throws IOException {
             out.write(table);
         }
@@ -306,7 +352,7 @@ public abstract class Section {
         public final int getEntSize() { return 0; }
         protected int getNameLength() { return (notename.length()+4)&~3; }
         public int getSize() { return 12 + getNameLength() + notedesc.length; }
-        public int getAddrAlign() { return 0; }
+        public int getAddrAlign() { return 1; }
         public void writeData(ELFFile file, OutputStream out) throws IOException {
             file.write_word(out, getNameLength());
             file.write_word(out, notedesc.length);
@@ -347,7 +393,7 @@ public abstract class Section {
         public final int getInfo() { return targetSection.getIndex(); }
         public final int getEntSize() { return RelocEntry.getEntrySize(); }
         public int getSize() { return relocs.size() * RelocEntry.getEntrySize(); }
-        public int getAddrAlign() { return 0; }
+        public int getAddrAlign() { return 4; }
         public void addReloc(RelocEntry e) { relocs.add(e); }
         public void writeData(ELFFile file, OutputStream out) throws IOException {
             Iterator i = relocs.iterator();
