@@ -96,7 +96,7 @@ public abstract class jq_Member implements jq_ClassFileConstants {
     public final boolean isPublic() { return checkAccessFlag(ACC_PUBLIC); }
     public final boolean isPrivate() { return checkAccessFlag(ACC_PRIVATE); }
     public final boolean isProtected() { return checkAccessFlag(ACC_PROTECTED); }
-    public final boolean isFinal() { return checkAccessFlag(ACC_STATIC); }
+    public final boolean isFinal() { return checkAccessFlag(ACC_FINAL); }
     public final boolean isSynthetic() { return getAttribute("Synthetic") != null; }
     public final boolean isDeprecated() { return getAttribute("Deprecated") != null; }
     
