@@ -2479,8 +2479,8 @@ public class MethodSummary {
     }
 
     /** Utility function to add to a multi map. */
-    static boolean addToMultiMap(HashMap mm, Object from, Object to) {
-        HashSet s = (HashSet)mm.get(from);
+    public static boolean addToMultiMap(HashMap mm, Object from, Object to) {
+        Set s = (Set)mm.get(from);
         if (s == null) {
             mm.put(from, s = new HashSet());
         }
@@ -2488,8 +2488,8 @@ public class MethodSummary {
     }
 
     /** Utility function to add to a multi map. */
-    static boolean addToMultiMap(HashMap mm, Object from, HashSet to) {
-        HashSet s = (HashSet)mm.get(from);
+    public static boolean addToMultiMap(HashMap mm, Object from, Set to) {
+        Set s = (Set)mm.get(from);
         if (s == null) {
             mm.put(from, s = new HashSet());
         }

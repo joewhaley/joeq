@@ -26,6 +26,7 @@ import Clazz.jq_Reference;
 import Clazz.jq_StaticField;
 import Clazz.jq_Type;
 import Compil3r.BytecodeAnalysis.CallTargets;
+import Compil3r.Quad.SelectiveCloning.AccessPath;
 import Compil3r.Quad.MethodSummary.CallSite;
 import Compil3r.Quad.MethodSummary.ConcreteTypeNode;
 import Compil3r.Quad.MethodSummary.FieldNode;
@@ -1292,9 +1293,27 @@ public class AndersenPointerAnalysis {
         addInclusionEdges(from, result, base);
     }
     
+    Set getConcreteNodes(Node from, AccessPath ap) {
+        Set s = getConcreteNodes(from);
+        if (ap == null) return s;
+        jq_Field f = ap.first();
+        LinkedHashSet result = new LinkedHashSet();
+        for (Iterator j=s.iterator(); j.hasNext(); ) {
+            Node n2 = (Node)j.next();
+            n2.getEdges(f, result);
+        }
+        LinkedHashSet result2 = new LinkedHashSet();
+        ap = ap.next();
+        for (Iterator j=result.iterator(); j.hasNext(); ) {
+            Node n2 = (Node)j.next();
+            result2.addAll(getConcreteNodes(n2, ap));
+        }
+        return result2;
+    }
+        
     Set getConcreteNodes(Node from) {
         if (from instanceof OutsideNode) 
-            return getConcreteNodes((OutsideNode)from, null);
+            return getConcreteNodes((OutsideNode)from, (Path)null);
         else
             return Collections.singleton(from);
     }
