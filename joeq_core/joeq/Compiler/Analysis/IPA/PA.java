@@ -14,12 +14,15 @@ import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
 import java.util.AbstractMap;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -1604,15 +1607,33 @@ public class PA {
         dumpResults(resultsFileName);
         System.out.println("Time spent writing: "+(System.currentTimeMillis()-time)/1000.);
     }
-    
+   
+    static Collection readClassesFromFile(String fname) throws IOException {
+        BufferedReader r = new BufferedReader(new FileReader(fname));
+        Collection rootMethods = new ArrayList();
+        String s = null;
+        while ((s = r.readLine()) != null) {
+            jq_Class c = (jq_Class) jq_Type.parseType(s);
+            c.prepare();
+            rootMethods.addAll(Arrays.asList(c.getDeclaredStaticMethods()));
+        }
+        return rootMethods;
+    }
+
     public static void main(String[] args) throws IOException {
         HostedVM.initialize();
         CodeCache.AlwaysMap = true;
         
-        jq_Class c = (jq_Class) jq_Type.parseType(args[0]);
-        c.prepare();
+        Collection rootMethods = null;
+        if (args[0].startsWith("@")) {
+            rootMethods = readClassesFromFile(args[0].substring(1));
+        } else {
+            jq_Class c = (jq_Class) jq_Type.parseType(args[0]);
+            c.prepare();
         
-        Collection rootMethods = Arrays.asList(c.getDeclaredStaticMethods());
+            rootMethods = Arrays.asList(c.getDeclaredStaticMethods());
+        }
+
         if (args.length > 1) {
             for (Iterator i = rootMethods.iterator(); i.hasNext(); ) {
                 jq_Method sm = (jq_Method) i.next();
