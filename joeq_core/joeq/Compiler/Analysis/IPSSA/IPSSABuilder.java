@@ -4,9 +4,13 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -15,8 +19,9 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
+import Bootstrap.PrimordialClassLoader;
+import Clazz.jq_Class;
 import Clazz.jq_Method;
-import Compil3r.Analysis.IPA.PA;
 import Compil3r.Analysis.IPA.PAResults;
 import Compil3r.Analysis.IPA.PointerAnalysisResults;
 import Compil3r.Analysis.IPA.ProgramLocation;
@@ -28,15 +33,20 @@ import Compil3r.Analysis.IPSSA.SSAValue.ActualOut;
 import Compil3r.Analysis.IPSSA.Utils.SSAGraphPrinter;
 import Compil3r.Quad.BasicBlock;
 import Compil3r.Quad.BasicBlockVisitor;
+import Compil3r.Quad.CallGraph;
 import Compil3r.Quad.CodeCache;
 import Compil3r.Quad.ControlFlowGraph;
-import Compil3r.Quad.ControlFlowGraphVisitor;
 import Compil3r.Quad.Operator;
 import Compil3r.Quad.Quad;
 import Compil3r.Quad.QuadIterator;
 import Compil3r.Quad.QuadVisitor;
 import Compil3r.Quad.RegisterFactory.Register;
+import Main.HostedVM;
 import Util.Assert;
+import Util.Collections.AppendIterator;
+import Util.Graphs.SCCTopSortedGraph;
+import Util.Graphs.SCComponent;
+import Util.Graphs.Traversals;
 import Util.Templates.ListIterator;
 
 /**
@@ -44,21 +54,24 @@ import Util.Templates.ListIterator;
  * A subclass is SSABuilder, which is responsible for intraprocedural IPSSA
  * construction.
  * */
-public class IPSSABuilder implements ControlFlowGraphVisitor {
+public class IPSSABuilder implements Runnable {
 	protected int      			                _verbosity;
 	private static HashMap 		                _builderMap = new HashMap();
 	private PointerAnalysisResults              _ptr = null;
     private IPSSABuilder.ApplicationLaunchingPad _appPad = null; 
+    private Collection                          _classes = null;
 	
 	boolean PRINT_CFG 		= !System.getProperty("ipssa.print_cfg", "no").equals("no");
 	boolean PRINT_SSA_GRAPH = !System.getProperty("ipssa.print_ssa", "no").equals("no");
-    boolean RUN_APPS        = !System.getProperty("ipssa.run_apps", "no").equals("no");;
+    boolean RUN_BUILDER     = !System.getProperty("ipssa.run_builder", "no").equals("no");
+    boolean RUN_APPS        = !System.getProperty("ipssa.run_apps", "no").equals("no");       
         
 
-	public IPSSABuilder(int verbosity){
+	public IPSSABuilder(Collection classes, int verbosity){
         //System.err.println("Creating " + this.getClass().toString());
 		CodeCache.AlwaysMap = true;
 		this._verbosity     = verbosity;
+        this._classes = classes;
 		// get pointer analysis results			
 		try {
 			_ptr = PAResults.loadResults(null, null);
@@ -68,43 +81,110 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 			System.exit(1);
 		}
         if(RUN_APPS) {
-            _appPad = new IPSSABuilder.ApplicationLaunchingPad(true);
+            _appPad = new IPSSABuilder.ApplicationLaunchingPad(this, true);
         }
 	}
     
-    public PA getPAResults() {
-        return _ptr.getPAResults();
+    public PAResults getPAResults() {
+        return (PAResults)_ptr;
     }
     
-    /*
-    protected void finalize() {
+    public CallGraph getCallGraph() {
+        return _ptr.getCallGraph();
+    }
+    
+    /**
+     * Handle an SCC in the call graph. Nodes of the SCC are jq_Method's.
+     * */
+    protected void processSCC(SCComponent c) {
+        Set nodes = c.nodeSet();
+        for(Iterator iter = nodes.iterator(); iter.hasNext();) {
+            jq_Method method = (jq_Method)iter.next();
+            if(skipMethod(method)) continue;
+            
+            SSABuilder builder = new SSABuilder(method, _ptr, _verbosity);
+            Assert._assert(_builderMap.get(method ) == null);
+            _builderMap.put(method, builder);       
+
+            // do the first two stages now          
+            builder.run(0);
+            builder.run(1);
+        }
+        
+        for(Iterator iter = nodes.iterator(); iter.hasNext();) {
+            jq_Method method = (jq_Method)iter.next();
+            if(skipMethod((method))) continue;
+            
+            SSABuilder builder = (SSABuilder)_builderMap.get(method);
+            Assert._assert(builder != null);
+            
+            builder.run(2);
+            //builder.run(3);
+        }        
+    }
+
+    /**
+     * Do the whole analysis.
+     * */
+    public void run() {
+        if(RUN_BUILDER){
+            if(_classes.size() == 1) {
+                System.out.println("Analyzing one class...");    
+            }else if(_classes.size() > 1) {
+                System.out.println("Analyzing these " + _classes.size() + " classes...");
+            }
+    
+            Collection rootMethods = new LinkedList();
+            Iterator i = _classes.iterator();
+            while (i.hasNext()) {
+                jq_Class c = (jq_Class)i.next();
+                rootMethods.addAll(Arrays.asList(c.getDeclaredStaticMethods()));
+            }
+    
+            System.out.println("Using " + rootMethods.size() + " root(s)...");
+                    
+            CallGraph cg = this.getCallGraph();
+            for(Iterator iter = cg.getAllMethods().iterator(); iter.hasNext(); ) {
+                jq_Method method = (jq_Method)iter.next();
+                if(skipMethod(method)) continue;
+                
+                System.err.println("Allowing \t" + method);
+            }
+            SCCTopSortedGraph sccGraph = SCCTopSortedGraph.topSort(SCComponent.buildSCC(rootMethods, /*new ReverseNavigator*/(cg.getNavigator())));
+            System.err.println("Found " + sccGraph.list().size() + " components");
+            
+            // We want bottom-up order here...
+            //for (Iterator graphIter = sccGraph.getFirst().listTopSort().iterator(); graphIter.hasNext(); ) {
+            for(Iterator graphIter = Traversals.postOrder(sccGraph.getNavigator(), sccGraph.getFirst()).iterator(); graphIter.hasNext();){            
+                SCComponent d = (SCComponent) graphIter.next();
+                //System.err.println("Processing SCC # " + d.getId() + " with nodes " + d.nodeSet().toString());
+                this.processSCC(d);
+            }
+        }
+        
         if(RUN_APPS) {
             _appPad.run();
+        }        
+    }
+	
+	private boolean skipMethod(jq_Method method) {
+        jq_Class k = method.getDeclaringClass();
+        if(!_classes.contains(k)) {
+            // unknown, potentially library class -- skip it
+            if(_verbosity > 3) {
+                System.err.println("Skipping " +  method);
+            }
+            return true;
         }
-    }*/
-	
-	/*
-	 * Default constructor with verbosity=2.
-	 **/
-	public IPSSABuilder(){
-		this(2);
-	}
+        return false;
+    }
 
-	// TODO: what's the order in the CFGs are visited? Is there a BU visitor?
-	public void visitCFG(ControlFlowGraph cfg) {
-		jq_Method method = cfg.getMethod();
-	
-		SSABuilder builder = new SSABuilder(method, _ptr, _verbosity);
-		_builderMap.put(method, builder);		
-		builder.run(); 
-	}
-	
 	/** The return result may be NULL */
 	public static SSABuilder getBuilder(jq_Method m){
 		return (SSABuilder)_builderMap.get(m);
 	}
 	
-	class SSABuilder implements Runnable {
+	class SSABuilder {
 		protected int      				_verbosity;
 		protected jq_Method 			_method;
 		protected ControlFlowGraph 		_cfg;
@@ -117,6 +197,10 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 			this._q         = null; 
 			this._ptr    	= ptr;
 		}		
+
+        public ControlFlowGraph getCFG() { return _cfg; }
+        public SSAProcInfo.Query getQuery() { return _q; }
+        
 
 		//////////////////////////////////////////////////////////////////////////////////////////////////
 		/***************************************** Auxilary routines ************************************/
@@ -242,24 +326,29 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 
 		//////////////////////////////////////////////////////////////////////////////////////////////////
 		/******************************************** Stages ********************************************/
-		//////////////////////////////////////////////////////////////////////////////////////////////////		
-		public void run(){
-            // lift the merge points
-            _cfg.visitBasicBlocks(new LiftMergesVisitor());
-            
-            // create the query now after the lifting has been done
-			_q = SSAProcInfo.retrieveQuery(_method);
-			if(_verbosity>2) System.out.println("Created query: " + _q.toString());
-			if(_verbosity > 0){
-				String name = _method.toString();
-				if(name.length() > 40){
-					name = name.substring(40);
-				}else{
-					name = repeat(" ", 40-name.length())+name;
-				}
-				System.out.println("============= Processing method " + name + " in IPSSABuilder =============");
-			}
-			
+		//////////////////////////////////////////////////////////////////////////////////////////////////
+        /**
+         * This functions runs one of the analysis stages for the given procedure. 
+         * */		
+		void run(int stage){
+            if(stage == 0) {
+                // lift the merge points
+                _cfg.visitBasicBlocks(new LiftMergesVisitor());
+                // create the query now after the lifting has been done
+                _q = SSAProcInfo.retrieveQuery(_method);                              
+
+    			if(_verbosity>2) System.out.println("Created query: " + _q.toString());
+    			if(_verbosity > 0){
+    				String name = _method.toString();
+    				if(name.length() > 40){
+    					name = name.substring(40);
+    				}else{
+    					name = repeat(" ", 40-name.length())+name;
+    				}
+    				System.out.println("============= Processing method " + name + " in IPSSABuilder =============");
+    			}
+                return;
+            }
             
 			/*
 			 * Stages of intraprocedural processing:
@@ -272,16 +361,18 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 			 *  Stage 3     : Walk over and do all remaining pointer resolution.
 			 *  Invariant 3 : All RHSs are filled in.
 			 * */
-			// 1. 			
-			Stage1Visitor vis1 = new Stage1Visitor(_method);  
-			for (QuadIterator j=new QuadIterator(_cfg, true); j.hasNext(); ) {
-				Quad quad = j.nextQuad();
-				quad.accept(vis1);
-			}			
-			if(_verbosity > 2){
-				System.err.println("Created a total of " + vis1.getBindingCount() + " bindings");
-			}
-			vis1 = null;
+            if(stage == 1) {
+    			// 1. 			
+    			Stage1Visitor vis1 = new Stage1Visitor(_method);  
+    			for (QuadIterator j=new QuadIterator(_cfg, true); j.hasNext(); ) {
+    				Quad quad = j.nextQuad();
+    				quad.accept(vis1);
+    			}			
+    			if(_verbosity > 2){
+    				System.err.println("Created a total of " + vis1.getBindingCount() + " bindings");
+    			}
+    			vis1 = null;
+            }
 
 /*
 			//	2.
@@ -292,30 +383,38 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 			Stage3Visitor vis3 = new Stage3Visitor();  
 			vis3.visitCFG(_cfg);
 */			
-			Stage2Visitor vis2 = new Stage2Visitor(_method);  
-			for (QuadIterator j=new QuadIterator(_cfg, true); j.hasNext(); ) {
-				Quad quad = j.nextQuad();
-				quad.accept(vis2);
-			}
-						
-			/** Now print the results */
-			if(PRINT_CFG){
-				// print the CFG annotated with SSA information
-				_q.printDot();	
-			}
-			
-			if(PRINT_SSA_GRAPH) {
-				try {
-					FileOutputStream file = new FileOutputStream("ssa.dot");
-					PrintStream out = new PrintStream(file);
-					SSAGraphPrinter.printAllToDot(out);
-				} catch (Exception e) {
-					e.printStackTrace();
-					System.exit(2);
-				}				
-			}
+            if(stage == 2) {
+    			Stage2Visitor vis2 = new Stage2Visitor(_method);  
+    			for (QuadIterator j=new QuadIterator(_cfg, true); j.hasNext(); ) {
+    				Quad quad = j.nextQuad();
+    				quad.accept(vis2);
+    			}
+            }
+            
+            if(stage == 3) {    						
+    			/** Now print the results */
+    			if(PRINT_CFG){
+    				// print the CFG annotated with SSA information
+    				_q.printDot();	
+    			}
+    			
+    			if(PRINT_SSA_GRAPH) {
+    				try {
+    					FileOutputStream file = new FileOutputStream("ssa.dot");
+    					PrintStream out = new PrintStream(file);
+    					SSAGraphPrinter.printAllToDot(out);
+    				} catch (Exception e) {
+    					e.printStackTrace();
+    					System.exit(2);
+    				}				
+    			}
+            }
         }
         
+        /**
+         * This pass adds dummy NOP quads at the first quad of a basic block with more than one predecessors.
+         * That quad will later be used by gamma functions.
+         * */
         class LiftMergesVisitor implements BasicBlockVisitor {
             public void visitBasicBlock(BasicBlock bb) {
                 if(bb.getPredecessors().size() > 1) {
@@ -394,7 +493,7 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 			public void visitReturn(Quad quad) {
 				// TODO: make up a location for return?
 				print(quad);
-			}			
+			}
 			public void visitInvoke(Quad quad) {
 				//printAlways(quad);
 				processDefs(quad);	
@@ -531,7 +630,7 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 				this._q 	   = SSAProcInfo.retrieveQuery(_method);
 			}
 			
-			/**************************** Begin handlers ****************************/
+            /**************************** Begin handlers ****************************/
 			/** A get static field instruction. */
 			public void visitGetstatic(Quad quad) {
 				processLoad(quad);
@@ -679,22 +778,63 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
                     System.err.println("No targets of call " + quad);
                     return;
                 }
+                /**
+                 * Fill in the existing rho values at this call site.
+                 * */
                 for(Iterator iter = _q.getBindingIterator(quad); iter.hasNext(); ) {
-                    SSABinding b  = (SSABinding)iter.next();
+                    SSABinding b  = (SSABinding)iter.next();                    
                     Assert._assert(b.getValue() instanceof SSAValue.ActualOut);
-                    
-                    SSAValue.ActualOut value = (ActualOut)b.getValue();                    
+                    SSAValue.ActualOut value = (ActualOut)b.getValue();
+                    SSALocation loc = b.getDestination().getLocation();                    
                 
-                    System.out.print(targets.size() + " targets of " + quad + ": "); 
+                    //System.out.print(targets.size() + " targets of " + quad + ": "); 
                     for(Iterator targetIter = targets.iterator(); targetIter.hasNext();) {
                         jq_Method method = (jq_Method)targetIter.next();
                         //System.out.print(method.toString() + " ");
-                        SSADefinition def = SSADefinition.Helper.create_ssa_definition(
-                            SSALocation.Unique.FACTORY.get(), quad, _method);   // TODO: this is BS
-                        value.add(def, method);
+                        SSABuilder calleeBuilder = getBuilder(method);
+                        if(calleeBuilder == null) {
+                            Assert._assert(false, "Method " + method + " hasn't been processed");
+                        }
+                        calleeBuilder.initializeLocation(loc);
+                        SSADefinition lastDef = calleeBuilder.getQuery().getLastDefinitionFor(loc, 
+                            calleeBuilder.getCFG().exit().getLastQuad(), false);
+  
+                        value.add(lastDef, method);
                     }
                     //System.out.print("\n");                        
-                }               
+                }
+                
+                /**
+                 * Add this call site to FormalIn's at all the callees.
+                 * */               
+                for(Iterator targetIter = targets.iterator(); targetIter.hasNext();) {
+                    jq_Method method = (jq_Method)targetIter.next();
+                    if(skipMethod(method)) continue;
+                    
+                    SSABuilder calleeBuilder = getBuilder(method);
+                    if(calleeBuilder == null) {
+                        Assert._assert(false, "Method " + method + " hasn't been processed yet");
+                    }
+                    
+                    for(Iterator iter = calleeBuilder.getQuery().getBindingIterator(calleeBuilder.getQuery().getFirstQuad()); iter.hasNext();) {
+                        SSABinding b = (SSABinding)iter.next();
+                        if(!(b.getValue() instanceof SSAValue.FormalIn)) continue;
+                        
+                        SSALocation loc = b.getDestination().getLocation();                        
+                        Assert._assert(loc instanceof PAResults.HeapLocation, "Unexpected location " + b.getDestination().getLocation());
+                    
+                        // got the iota function, fill it in
+                        SSAValue.FormalIn value = (SSAValue.FormalIn)b.getValue();
+                        if(!value.hasCallSite(quad)) {
+                            initializeLocation(loc);
+                            SSADefinition lastDef = _q.getLastDefinitionFor(loc, quad, true);
+                            Assert._assert(lastDef != null);  
+                            value.add(lastDef, quad);
+                        } else {
+                            Assert._assert(false, "Already added a definition for " + method + " to " + value + ". Recursion?");
+                        }        
+                    }
+                }                
             }
 			
 			private SSAValue.Normal markUses(Quad quad) {
@@ -768,23 +908,29 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
     public static class ApplicationLaunchingPad implements Runnable {
         LinkedList _applications;
         boolean _verbosity;
+        private IPSSABuilder _builder;
         
-        public ApplicationLaunchingPad(boolean verbosity){
+        public ApplicationLaunchingPad(IPSSABuilder builder, boolean verbosity){
+            _builder = builder;
             _applications = new LinkedList();
             _verbosity = verbosity;
             
             readConfig();
         }
-        public ApplicationLaunchingPad(Application app, boolean verbosity){
-            this(verbosity);
+        public ApplicationLaunchingPad(IPSSABuilder builder, Application app, boolean verbosity){
+            this(builder, verbosity);
+
             addApplication(app);
         }
-        public ApplicationLaunchingPad(){
-            this(false);
+        public ApplicationLaunchingPad(IPSSABuilder builder){
+            this(builder, false);
         }
         public void addApplication(Application app){
             _applications.addLast(app);            
         }
+        public IPSSABuilder getBuilder() {
+            return _builder;
+        }       
         public void run() {
             for(Iterator iter = _applications.iterator(); iter.hasNext(); ) {
                 Application app = (Application)iter.next();
@@ -805,10 +951,14 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
                 BufferedReader r = new BufferedReader(new InputStreamReader(fi));
                 String line = r.readLine();
                 while(line != null){
-                    if(line.charAt(0) == '#') continue;
-                    Application app = Application.create(line);
+                    if(line.charAt(0) == '#') {
+                        line = r.readLine();
+                        continue;
+                    }
+                    Application app = Application.create(_builder, line);
                     if(app != null){
                         addApplication(app);
+                        app.setBuilder(this.getBuilder());
                     }else{
                         System.err.println("Skipped " + line);
                     }
@@ -821,7 +971,7 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
                 e.printStackTrace();
                 return;
             } 
-        }       
+        }
     }
     
     public abstract static class Application implements Runnable {
@@ -833,7 +983,11 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
             _name = name;
             _builder = builder;
         }
-        public static Application create(String line) {
+        public void initialize() {};
+        void setBuilder(IPSSABuilder builder) {
+            _builder = builder;            
+        }
+        public static Application create(IPSSABuilder builder, String line) {
             StringTokenizer tokenizer = new StringTokenizer(line, " ");
             String className = tokenizer.nextToken();
             String appName  = tokenizer.nextToken();
@@ -869,8 +1023,12 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
                 return null;
             }
             
+            app.setBuilder(builder);
             app.setName(appName);
             app.parseParams(argv.toArray());
+            
+            // now that the values are set, call initialize
+            app.initialize();
 
             return app;
         }
@@ -903,6 +1061,70 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
         }       
 
         public abstract void run();
+    }
+    
+    public static class Main {
+        static boolean _verbose = false;
+        
+        public static void main(String[] args) throws IOException {
+            HostedVM.initialize();
+
+            Compil3r.BytecodeAnalysis.TypeAnalysis.classesToAnalyze = new HashSet();
+            Iterator i = null; String memberName = null;
+            for (int x=0; x<args.length; ++x) {
+                if (args[x].equals("-file")) {
+                    BufferedReader br = new BufferedReader(new FileReader(args[++x]));
+                    LinkedList list = new LinkedList();
+                    for (;;) {
+                        String s = br.readLine();
+                        if (s == null) break;
+                        if (s.length() == 0) continue;
+                        if (s.startsWith("%")) continue;
+                        list.add(s);
+                    }
+                    i = new AppendIterator(list.iterator(), i);
+                } else
+                if (args[x].endsWith("*")) {
+                    i = new AppendIterator(PrimordialClassLoader.loader.listPackage(args[x].substring(0, args[x].length()-1)), i);
+                } else 
+                if(args[x].charAt(0) == '-'){
+                    usage();
+                    System.exit(2);                    
+                }else {
+                    int j = args[x].indexOf('.');
+                    String classname;
+                    if ((j != -1) && !args[x].endsWith(".class")) {
+                        classname = args[x].substring(0, j);
+                        memberName = args[x].substring(j+1);
+                    } else {
+                        classname = args[x];
+                    }
+                    i = new AppendIterator(Collections.singleton(classname).iterator(), i);
+                }
+            } // end argument processing
+            if (i == null) i = Collections.singleton("jq.class").iterator();
+        
+            LinkedList classes = new LinkedList();
+            while (i.hasNext()) {
+                String classname = (String)i.next();
+                if (classname.endsWith(".properties")) continue;
+                if (classname.endsWith(".class")) classname = classname.substring(0, classname.length()-6);
+                String classdesc = "L"+classname+";";
+                jq_Class c = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType(classdesc);
+                System.err.println("Preparing " + classdesc + "...");
+                c.prepare();
+                classes.add(c);
+            }
+            
+            // done with preparation, run the builder
+            IPSSABuilder builder = new IPSSABuilder(classes, 2);
+            builder.run();
+        }
+
+        private static void usage() {
+            System.err.println("Usage: ");
+            // TODO: specify usage...
+        }
     }
 };
 

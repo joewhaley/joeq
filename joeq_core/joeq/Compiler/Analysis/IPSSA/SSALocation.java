@@ -113,8 +113,8 @@ public interface SSALocation {
             if(i == null) {
                 return null;
             }
-            int bci1 = i.intValue();            
-            jq_LocalVarTableEntry entry = method.getLocalVarTableEntry(bci1, _reg.getNumber());
+            int bci = i.intValue();            
+            jq_LocalVarTableEntry entry = method.getLocalVarTableEntry(bci, _reg.getNumber());
             if(entry == null) {
                 return null;
             }
