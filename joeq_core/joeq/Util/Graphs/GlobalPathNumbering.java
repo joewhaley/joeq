@@ -66,7 +66,7 @@ public class GlobalPathNumbering extends PathNumbering {
                     //System.out.println("Loop edge: "+p+" -> "+o+" current target num="+val);
                     pathsToPred = BigInteger.ONE;
                 }
-                BigInteger newPathsToNode = pathsToNode.add(pathsToPred).subtract(BigInteger.ONE);
+                BigInteger newPathsToNode = pathsToNode.add(pathsToPred);
                 Object edge = new Pair(p, o);
                 if (!selector.isImportant(p, o, newPathsToNode)) {
                     // Unimportant edge.
@@ -76,13 +76,14 @@ public class GlobalPathNumbering extends PathNumbering {
                     //System.out.println("Putting unimportant Edge ("+edge+") = "+range);
                 } else {
                     Range range = new Range(pathsToNode.subtract(BigInteger.ONE),
-                                            newPathsToNode.subtract(BigInteger.ONE));
+                                            newPathsToNode.subtract(BigInteger.valueOf(2)));
                     edgeNumbering.put(edge, range);
                     //System.out.println("Putting important Edge ("+edge+") = "+range);
                     pathsToNode = newPathsToNode;
                 }
             }
             //Assert._assert(!val.equals(BigInteger.ZERO), o.toString());
+            if (!prev.isEmpty()) pathsToNode = pathsToNode.subtract(BigInteger.ONE);
             nodeNumbering.put(o, pathsToNode);
             if (pathsToNode.compareTo(max) > 0) max = pathsToNode;
         }
