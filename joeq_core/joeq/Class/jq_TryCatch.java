@@ -9,6 +9,7 @@
 
 package Clazz;
 
+import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
 import Run_Time.TypeCheck;
 import Run_Time.SystemInterface;
@@ -19,6 +20,7 @@ public class jq_TryCatch {
     public static final boolean DEBUG = false;
     
     // NOTE: startPC is exclusive, endPC is inclusive (opposite of jq_TryCatchBC)
+    // these are OFFSETS.
     private int startPC, endPC, handlerPC;
     private jq_Class exType;
 
@@ -41,12 +43,22 @@ public class jq_TryCatch {
         return true;
     }
     
-    public int/*Address*/ getStart() { return startPC; }
-    public int/*Address*/ getEnd() { return endPC; }
-    public int/*Address*/ getHandlerEntry() { return handlerPC; }
+    public int getStart() { return startPC; }
+    public int getEnd() { return endPC; }
+    public int getHandlerEntry() { return handlerPC; }
     public jq_Class getExceptionType() { return exType; }
 
     public String toString() {
         return "(start="+jq.hex(startPC)+",end="+jq.hex(endPC)+",handler="+jq.hex(handlerPC)+",type="+exType+")";
+    }
+    
+    public static final jq_InstanceField _startPC;
+    public static final jq_InstanceField _endPC;
+    public static final jq_InstanceField _handlerPC;
+    static {
+        jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LClazz/jq_TryCatch;");
+        _startPC = k.getOrCreateInstanceField("startPC", "I");
+        _endPC = k.getOrCreateInstanceField("endPC", "I");
+        _handlerPC = k.getOrCreateInstanceField("handlerPC", "I");
     }
 }
