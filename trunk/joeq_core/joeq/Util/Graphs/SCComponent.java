@@ -1,10 +1,13 @@
 package Util.Graphs;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.Vector;
 
@@ -74,7 +77,7 @@ public final class SCComponent implements Comparable, Serializable {
 	the set of top level SCCs. */
     public static final SCComponent buildSCC(final Object root,
 					     final Navigator navigator) {
-	Set set = buildSCC(new Object[]{root}, navigator);
+	Set set = buildSCC(Collections.singleton(root), navigator);
 	if((set == null) || set.isEmpty()) return null;
         Assert._assert(set.size() <= 1, "More than one root SCComponent in a call with a a single root");
 	// return the single element of the set of root SCComponents.
@@ -89,7 +92,7 @@ public final class SCComponent implements Comparable, Serializable {
 	that are not pointed by any other component. This constraint is
 	actively used in the topological sorting agorithm (see
 	<code>SCCTopSortedGraph</code>). */
-    public static final Set buildSCC(final Object[] roots,
+    public static final Set buildSCC(final Collection roots,
 				     final Navigator navigator) {
 	scc_vector = new Vector();
 	// STEP 1: compute the finished time of each node in a DFS exploration.
@@ -98,8 +101,8 @@ public final class SCComponent implements Comparable, Serializable {
 	nav = navigator;
 	analyzed_nodes = new HashSet();
 	nodes_vector   = new Vector();
-	for(int i = 0; i < roots.length; i++) {
-	    Object root = roots[i];
+        for(Iterator i=roots.iterator(); i.hasNext(); ) {
+            Object root = i.next();
 	    // avoid reanalyzing nodes
 	    if(!analyzed_nodes.contains(root))
 		DFS_first(root);
@@ -109,10 +112,10 @@ public final class SCComponent implements Comparable, Serializable {
 	node2scc = new Hashtable();
 	// "in reverse" navigator
 	nav = new Navigator() {
-		public Object[] next(Object node) {
+		public Collection next(Object node) {
 		    return navigator.prev(node);
 		}
-		public Object[] prev(Object node) {
+		public Collection prev(Object node) {
 		    return navigator.next(node);
 		}
 	    };
@@ -145,8 +148,8 @@ public final class SCComponent implements Comparable, Serializable {
 	// Save the root SCComponents somewhere before activating the GC.
 	Set root_sccs = new HashSet();
 	Vector root_sccs_vec = new Vector();
-	for(int i = 0; i < roots.length; i++) {
-	    Object root = roots[i];
+        for(Iterator i=roots.iterator(); i.hasNext(); ) {
+            Object root = i.next();
 	    SCComponent root_scc = ((SCComponentInt) node2scc.get(root)).comp;
 	    if(root_scc.prevLength() == 0) {
 		if(root_sccs.add(root_scc)) 
@@ -171,10 +174,9 @@ public final class SCComponent implements Comparable, Serializable {
 
 	analyzed_nodes.add(node);
 
-	Object[] next = nav.next(node);
-	int nb_next = next.length;
-	for(int i = 0 ; i < nb_next ; i++)
-	    DFS_first(next[i]);
+	Collection next = nav.next(node);
+        for (Iterator i=next.iterator(); i.hasNext(); )
+	    DFS_first(i.next());
 
 	nodes_vector.add(node);
     }
@@ -188,10 +190,9 @@ public final class SCComponent implements Comparable, Serializable {
 	node2scc.put(node, current_scc_int);
 	current_scc_int.nodes.add(node);
 
-	Object[] next = nav.next(node);
-	int nb_next = next.length;
-	for(int i = 0 ; i < nb_next ; i++)
-	    DFS_second(next[i]);
+        Collection next = nav.next(node);
+        for (Iterator i=next.iterator(); i.hasNext(); )
+            DFS_second(i.next());
     }
     
     // put the edges between the SCCs: there is an edge from scc1 to scc2 iff
@@ -203,10 +204,9 @@ public final class SCComponent implements Comparable, Serializable {
 	    SCComponentInt compi = (SCComponentInt) scc_vector.elementAt(i);
 	    for(Iterator it = compi.nodes.iterator(); it.hasNext(); ) {
 		Object node = it.next();
-		Object[] edges = navigator.next(node);
-
-		for(int j = 0; j < edges.length; j++){
-		    Object node2 = edges[j];
+                Collection edges = navigator.next(node);
+                for (Iterator j=edges.iterator(); j.hasNext(); ) {
+		    Object node2 = j.next();
 		    SCComponentInt compi2 = 
 			(SCComponentInt) node2scc.get(node2);
 		    
@@ -319,6 +319,20 @@ public final class SCComponent implements Comparable, Serializable {
      * decreasing topological order */
     public final SCComponent prevTopSort() { return prevTopSort; }
 
+    public final List/*<SCComponent>*/ listTopSort() {
+        int n = 1;
+        SCComponent c = this;
+        while ((c = c.nextTopSort()) != null) ++n;
+        SCComponent[] a = new SCComponent[n];
+        c = this;
+        for (int i=0; i<n; ++i) {
+            a[i] = c;
+            c = c.nextTopSort();
+        }
+        Assert._assert(c == null);
+        return Arrays.asList(a);
+    }
+    
     /** Pretty print debug function. */
     public final String toString() {
 	StringBuffer buffer = new StringBuffer();

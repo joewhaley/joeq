@@ -1,5 +1,7 @@
 package Util.Graphs;
 
+import java.util.Collection;
+
 /** The <code>Navigator</code> interface allows graph algorithms to
     detect (and use) the arcs from and to a certain node. This allows
     the use of many graph algorithms (eg construction of strongly
@@ -12,9 +14,9 @@ package Util.Graphs;
 public interface Navigator {
     
     /** Returns the predecessors of <code>node</code>. */
-    public Object[] next(Object node);
+    public Collection next(Object node);
 
     /** Returns the successors of <code>node</code>. */
-    public Object[] prev(Object node);
+    public Collection prev(Object node);
     
 }
