@@ -46,6 +46,7 @@ import Clazz.jq_Type;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.CheckCastNode;
+import Compil3r.Analysis.IPA.ProgramLocation.QuadProgramLocation;
 import Compil3r.Analysis.IPSSA.ContextSet;
 import Compil3r.Analysis.IPSSA.SSALocation;
 import Compil3r.Quad.BasicBlock;
@@ -54,6 +55,7 @@ import Compil3r.Quad.CodeCache;
 import Compil3r.Quad.LoadedCallGraph;
 import Compil3r.Quad.Operator;
 import Compil3r.Quad.Quad;
+import Compil3r.Quad.QuadIterator;
 import Compil3r.Quad.Operand.RegisterOperand;
 import Compil3r.Quad.RegisterFactory.Register;
 import Main.HostedVM;
@@ -1450,7 +1452,7 @@ public class PAResults implements PointerAnalysisResults {
     
     public Set mod(ProgramLocation invoke) {
         int I_i = 0;
-        if(invoke.isCall()) {
+        if (invoke.isCall()) {
             invoke = LoadedCallGraph.mapCall(invoke);
             //Assert._assert(r.Imap.contains(invoke), "No information about " + invoke.toString());
             if(!r.Imap.contains(invoke)){
@@ -1458,10 +1460,22 @@ public class PAResults implements PointerAnalysisResults {
                 return null;
             }
             I_i = r.Imap.get(invoke);
-        }else {
+        } else {
             // in case this is a store, need to get the results for that store
-            // TODO:
-            return null;            
+            jq_Method m = invoke.getMethod();
+            Quad q = ((QuadProgramLocation) invoke).getQuad();
+            // todo: more efficient if we just passed in the basic block.
+            BasicBlock bb = null;
+            for (QuadIterator i = new QuadIterator(CodeCache.getCode(m)); i.hasNext(); ) {
+                if (i.next() == q) {
+                    bb = i.getCurrentBasicBlock();
+                    break;
+                }
+            }
+            if (bb == null) {
+                System.err.println("Quad not found: "+q);
+            }
+            return mod(m, bb, q);
         }
         BDD i   = r.I.ithVar(I_i);
         BDD m_c = r.IEcs.relprod(i, r.V2c.set().and(r.Iset));
@@ -1473,19 +1487,19 @@ public class PAResults implements PointerAnalysisResults {
     }
     
     public Set ref(ProgramLocation invoke) {
-            invoke = LoadedCallGraph.mapCall(invoke);
-            //Assert._assert(r.Imap.contains(invoke), "No information about " + invoke.toString());
-            if(!r.Imap.contains(invoke)){
-                //System.err.println("No ref information about " + invoke.toString() + "; Imap has " + r.Imap.size() + " elements \n");
-                return null;
-            }
-            int I_i = r.Imap.get(invoke);
-            BDD i   = r.I.ithVar(I_i);
-            BDD m_c = r.IEcs.relprod(i, r.V2c.set().and(r.Iset));
-            BDD s   = getTransitiveRefSet(m_c);
-            BDD q   = s.exist(r.H1c.set());
+        invoke = LoadedCallGraph.mapCall(invoke);
+        //Assert._assert(r.Imap.contains(invoke), "No information about " + invoke.toString());
+        if(!r.Imap.contains(invoke)){
+            //System.err.println("No ref information about " + invoke.toString() + "; Imap has " + r.Imap.size() + " elements \n");
+            return null;
+        }
+        int I_i = r.Imap.get(invoke);
+        BDD i   = r.I.ithVar(I_i);
+        BDD m_c = r.IEcs.relprod(i, r.V2c.set().and(r.Iset));
+        BDD s   = getTransitiveRefSet(m_c);
+        BDD q   = s.exist(r.H1c.set());
             
-            return new HeapLocationSet(q);
+        return new HeapLocationSet(q);
     }
     
     public Set mod(jq_Method m, BasicBlock bb, Quad quad) {
@@ -1515,32 +1529,32 @@ public class PAResults implements PointerAnalysisResults {
         return new HeapLocationSet(q);
     }
     
-        public boolean isAliased(SSALocation a, SSALocation b) {
-                // (1, .f)   (1, .f)   ==>   true
-                // (1, .f)   (2, .f)   ==>   false
-                return a.equals(b);
-        }
+    public boolean isAliased(SSALocation a, SSALocation b) {
+        // (1, .f)   (1, .f)   ==>   true
+        // (1, .f)   (2, .f)   ==>   false
+        return a.equals(b);
+    }
 
-        /* (non-Javadoc)
-         * @see Compil3r.Analysis.IPA.PointerAnalysisResults#getAliases(Clazz.jq_Method, Compil3r.Analysis.IPA.SSALocation)
-         */
-        public Set/*<ContextSet.ContextLocationPair>*/ getAliases(jq_Method method, SSALocation loc) {
-                return Collections.EMPTY_SET;
-        }
+    /* (non-Javadoc)
+     * @see Compil3r.Analysis.IPA.PointerAnalysisResults#getAliases(Clazz.jq_Method, Compil3r.Analysis.IPA.SSALocation)
+     */
+    public Set/*<ContextSet.ContextLocationPair>*/ getAliases(jq_Method method, SSALocation loc) {
+        return Collections.EMPTY_SET;
+    }
 
-        /* (non-Javadoc)
-         * @see Compil3r.Analysis.IPA.PointerAnalysisResults#hasAliases(Clazz.jq_Method, Compil3r.Analysis.IPA.SSALocation, Compil3r.Analysis.IPA.ContextSet)
-         */
-        public boolean hasAliases(jq_Method method, SSALocation loc, ContextSet contextSet) {
-                return false;
-        }
+    /* (non-Javadoc)
+     * @see Compil3r.Analysis.IPA.PointerAnalysisResults#hasAliases(Clazz.jq_Method, Compil3r.Analysis.IPA.SSALocation, Compil3r.Analysis.IPA.ContextSet)
+     */
+    public boolean hasAliases(jq_Method method, SSALocation loc, ContextSet contextSet) {
+        return false;
+    }
 
-        /* (non-Javadoc)
-         * @see Compil3r.Analysis.IPA.PointerAnalysisResults#hasAliases(Clazz.jq_Method, Compil3r.Analysis.IPA.SSALocation)
-         */
-        public boolean hasAliases(jq_Method method, SSALocation loc) {
-                return false;
-        }
+    /* (non-Javadoc)
+     * @see Compil3r.Analysis.IPA.PointerAnalysisResults#hasAliases(Clazz.jq_Method, Compil3r.Analysis.IPA.SSALocation)
+     */
+    public boolean hasAliases(jq_Method method, SSALocation loc) {
+        return false;
+    }
     
     public class HeapLocationSet extends AbstractSet {
 
@@ -1584,16 +1598,16 @@ public class PAResults implements PointerAnalysisResults {
         jq_Field f;  // field
         
         public static class FACTORY {
-                static HashMap _locationMap;
-                HeapLocation createHeapLocation(Node n, jq_Field f){
-                                Pair pair = new Pair(n, f); 
-                                HeapLocation loc = (HeapLocation) _locationMap.get(pair); 
-                        if(loc == null){
-                                        loc = new HeapLocation(n, f);
-                                        _locationMap.put(pair, loc);
-                        }
-                                return loc;
+            static HashMap _locationMap;
+            HeapLocation createHeapLocation(Node n, jq_Field f){
+                Pair pair = new Pair(n, f); 
+                HeapLocation loc = (HeapLocation) _locationMap.get(pair); 
+                if(loc == null){
+                    loc = new HeapLocation(n, f);
+                    _locationMap.put(pair, loc);
                 }
+                return loc;
+            }
         }
         
         private HeapLocation(Node n, jq_Field f) {
@@ -1622,12 +1636,12 @@ public class PAResults implements PointerAnalysisResults {
             return n.toString_short()+fname;
         }
         
-                public String toString(PA r) {
-                        String fname = (f == null) ? "[]" : "."+f.getName().toString();
-                        //return n.toString_short()+fname;
-                        //return r.findInMap(r.Vmap, r.getHeapIndex(n)) + fname;
-                        return r.longForm(n) + fname;
-                }
+        public String toString(PA r) {
+            String fname = (f == null) ? "[]" : "."+f.getName().toString();
+            //return n.toString_short()+fname;
+            //return r.findInMap(r.Vmap, r.getHeapIndex(n)) + fname;
+            return r.longForm(n) + fname;
+        }
     }   
 
     /**
