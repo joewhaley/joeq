@@ -71,6 +71,11 @@ public class SCCPathNumbering extends PathNumbering {
          * Return true if the edge scc1->scc2 is important.
          */
         boolean isImportant(SCComponent scc1, SCComponent scc2, BigInteger num);
+        
+        /**
+         * Return true if the edge a->b is important.
+         */
+        boolean isImportant(Object a, Object b, BigInteger num);
     }
     
     /** Select important edges. */
