@@ -797,14 +797,14 @@ public class PA {
             r.andWith(d2.ithVar(0));
         } else {
             int bits;
-            if (endD1.compareTo(endD2) != -1) { // >=
+            if (endD1.compareTo(endD2) >= 0) { // >=
                 bits = endD1.bitLength();
             } else {
                 bits = endD2.bitLength();
             }
             long val = startD2.subtract(startD1).longValue();
             r = d1.buildAdd(d2, bits, val);
-            if (sizeD2.compareTo(sizeD1) != -1) { // >=
+            if (sizeD2.compareTo(sizeD1) >= 0) { // >=
                 // D2 is bigger, or they are equal.
                 r.andWith(d1.varRange(startD1.longValue(), endD1.longValue()));
             } else {
