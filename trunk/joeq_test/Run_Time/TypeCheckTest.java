@@ -4,6 +4,7 @@
 package Run_Time;
 
 import junit.framework.TestCase;
+import Clazz.jq_Reference;
 import Compil3r.CompilationConstants;
 
 /**
@@ -201,6 +202,17 @@ public class TypeCheckTest extends TestCase implements Compil3r.CompilationConst
         assertTrue(Run_Time.TypeCheck.isSuperclassOf(c_jls, c_jnn, true) == CompilationConstants.NO);
     }
 
+    public void testIsSubtypeOf() {
+        assertTrue(jq_Reference.jq_NullType.NULL_TYPE.isSubtypeOf(c_jlo));
+        assertTrue(jq_Reference.jq_NullType.NULL_TYPE.isSubtypeOf(jq_Reference.jq_NullType.NULL_TYPE));
+        assertFalse(c_jlo.isSubtypeOf(jq_Reference.jq_NullType.NULL_TYPE));
+        assertFalse(jq_Reference.jq_NullType.NULL_TYPE.isSubtypeOf(Clazz.jq_Primitive.INT));
+        assertFalse(Clazz.jq_Primitive.INT.isSubtypeOf(jq_Reference.jq_NullType.NULL_TYPE));
+        assertFalse(c_jlo.isSubtypeOf(jq_Reference.jq_NullType.NULL_TYPE));
+        assertFalse(jq_Reference.jq_NullType.NULL_TYPE.isSubtypeOf(Clazz.jq_Primitive.INT));
+        assertFalse(Clazz.jq_Primitive.INT.isSubtypeOf(jq_Reference.jq_NullType.NULL_TYPE));
+    }
+    
     public void testAllTypes() {
         prepareAll();
         checkAll();
