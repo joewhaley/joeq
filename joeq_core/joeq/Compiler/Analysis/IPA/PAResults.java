@@ -8,15 +8,19 @@ import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.FileOutputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
 import java.util.Comparator;
 import java.util.AbstractSet;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Arrays;
+import java.util.Stack;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -57,9 +61,11 @@ import Main.HostedVM;
 import Main.Driver;
 import Util.Assert;
 import Util.Strings;
+import Util.IO.SourceLister;
 import Util.Collections.HashWorklist;
 import Util.Collections.Pair;
 import Util.Collections.Triple;
+import Util.Collections.IndexMap;
 import Util.Collections.UnmodifiableIterator;
 import Util.Graphs.PathNumbering;
 import Util.Graphs.PathNumbering.Range;
@@ -77,7 +83,7 @@ import Util.Graphs.SCCPathNumbering.Path;
  * @version $Id$
  */
 public class PAResults implements PointerAnalysisResults {
-    PA r;
+    final PA r;
     
     CallGraph cg;
     
@@ -86,8 +92,8 @@ public class PAResults implements PointerAnalysisResults {
     }
     
     public PA getPAResults() {
-                return r;
-        }
+        return r;
+    }
     
     public static void main(String[] args) throws IOException {
         initialize(null);
@@ -149,19 +155,33 @@ public class PAResults implements PointerAnalysisResults {
         List results = new ArrayList();
         DataInput in = new DataInputStream(System.in);
         CollectionType tfinder = null;
+        Stack inputs = new Stack();     // stack of DataInputStream to support "include" command
+        boolean prompt = true;          // only prompt when interacting with Stdin, outside of include
         for (;;) {
             boolean increaseCount = true;
             int listHowMany = DEFAULT_NUM_TO_PRINT;
             
             try {
-                System.out.print(i+"> ");
+                if (prompt)
+                    System.out.print(i+"> ");
                 String s = in.readLine();
-                if (s == null) return;
+                if (s == null) {
+                    if (inputs.isEmpty())
+                        return;
+                    in = (DataInput)inputs.pop();
+                    prompt = inputs.isEmpty();
+                    continue;
+                }
                 StringTokenizer st = new StringTokenizer(s);
                 if (!st.hasMoreElements()) continue;
                 String command = st.nextToken();
                 if (command.equals("quit") || command.equals("exit")) {
                     break;
+                } else if (command.equals("include")) {
+                    inputs.push(in);
+                    in = new DataInputStream(new FileInputStream(st.nextToken()));
+                    prompt = false;
+                    continue;
                 } else if (command.equals("relprod")) {
                     TypedBDD bdd1 = parseBDD(results, st.nextToken());
                     TypedBDD bdd2 = parseBDD(results, st.nextToken());
@@ -238,6 +258,12 @@ public class PAResults implements PointerAnalysisResults {
                 } else if (command.equals("showdomains")) {
                     TypedBDD r = parseBDDWithCheck(results, st.nextToken());
                     System.out.println("Domains: " + r.getDomainSet());
+                    increaseCount = false;
+                } else if (command.equals("source")) {
+                    TypedBDD r = parseBDDWithCheck(results, st.nextToken());
+                    int before = st.hasMoreTokens() ? Integer.parseInt(st.nextToken()) : Util.IO.SourceLister.defaultLinesBefore;
+                    int after = st.hasMoreTokens() ? Integer.parseInt(st.nextToken()) : Util.IO.SourceLister.defaultLinesAfter;
+                    showSource(r, before, after);
                     increaseCount = false;
                 } else if (command.equals("list")) {
                     TypedBDD r = parseBDDWithCheck(results, st.nextToken());
@@ -480,6 +506,9 @@ public class PAResults implements PointerAnalysisResults {
         System.out.println("method  class name [signature]:   lookup method in class, shows M and N indices");
         System.out.println("callsin class name [signature]:   list all call sites in a given method");
         System.out.println("summary class name [signature]:   list method summary for a given method");
+        System.out.println("source bdd [#before [#after]]:    show source code surrounding items in bdd");
+        System.out.println("\nHow to use this driver:");
+        System.out.println("include file:                     execute commands in file");
         System.out.println("[driver] arg0 arg1 ...:           pass args to Main.Driver for interpretation");
 
         printAvailableBDDs(results);
@@ -1571,6 +1600,68 @@ public class PAResults implements PointerAnalysisResults {
                 }
     }   
 
+    /**
+     * Given a typedbdd that contains variables, callsites, or heap objects,
+     * display the source code for each item.
+     *
+     * Works for ProgramLocations (callsites), but only for those variable and heap 
+     * nodes that have implemented getLocation() methods.
+     *
+     * @see Util.IO.SourceLister
+     */
+    public void showSource(TypedBDD b, final int before, final int after) {
+        final PA fr = r;
+        // construct a new one every time, uses defaults in Util.IO.
+        final SourceLister sourceLister = new SourceLister();
+
+        BDD.BDDToString ts = new BDD.BDDToString() {
+            String findInMap(IndexMap map, int i) {
+                if (i >= map.size())
+                    return "not in map\n";
+                Object o = map.get(i);
+                if (o instanceof ProgramLocation)
+                    return sourceLister.list((ProgramLocation)o, true, before, after);
+                else {
+                    Class c = o.getClass();
+                    try {
+                        Method m = c.getMethod("getLocation", new Class[] {});
+                        ProgramLocation pl = (ProgramLocation)m.invoke(o, null);
+                        if (pl != null)
+                            return sourceLister.list(pl, true, before, after); 
+                    } catch (NoSuchMethodException _) {
+                    } catch (InvocationTargetException _) {
+                    } catch (IllegalAccessException _) {
+                    }
+                }
+                return "no source available for "+o+"\n";
+            }
+            public String elementName(int i, long j) {
+                String n = j+"\n";
+                switch (i) {
+                    case 0: // fallthrough
+                    case 1: return n+findInMap(fr.Vmap, (int)j);
+                    case 2: return n+findInMap(fr.Imap, (int)j);
+                    case 3: // fallthrough
+                    case 4: return n+findInMap(fr.Hmap, (int)j);
+                    default: return n+"does not implement map index#"+i+"\n";
+                }
+            }
+            public String elementNames(int i, long j, long k) { 
+                return "big sets not implemented"; 
+            }
+        };
+
+        for (Iterator i = b.iterator(); i.hasNext(); ) {
+            TypedBDD bb = (TypedBDD)i.next();
+            System.out.println(bb.toStringWithDomains(ts));
+        }
+    }
+
+    /**
+     * Compute coefficient of concentration of SCC-sizes for given path numbering.
+     * 0 means there is no SCC of size greater than 1.
+     * 1 mean all nodes are in one SCC.
+     */
     public void computeGini(PathNumbering pn) {
         if (!(pn instanceof SCCPathNumbering)) {
             System.out.println(pn.getClass() + " is not using a SCC numbering");
