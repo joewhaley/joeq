@@ -119,8 +119,10 @@ public class FairnessTest {
         
         for (int i = 0; i < jq_NativeThread.native_threads.length; ++i) {
             jq_InterrupterThread it = jq_NativeThread.native_threads[i].it;
-            System.err.println("Native thread #"+i+": ");
-            it.dumpStatistics();
+            if (it != null) {
+                System.err.println("Native thread #"+i+": ");
+                it.dumpStatistics();
+            }
         }
             
     }
