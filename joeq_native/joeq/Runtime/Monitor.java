@@ -35,9 +35,12 @@ public class Monitor implements ObjectLayout {
         int lockword = Unsafe.peek(Unsafe.addressOf(k)+STATUS_WORD_OFFSET);
         if (lockword < 0) {
             Monitor m = getMonitor(lockword);
+            if (TRACE) SystemInterface.debugmsg("Getting fat lock entry count: "+m.entry_count);
             return m.entry_count;
         }
-        return (lockword & LOCK_COUNT_MASK) >> LOCK_COUNT_SHIFT;
+        int c = (lockword & LOCK_COUNT_MASK) >> LOCK_COUNT_SHIFT;
+        if (TRACE) SystemInterface.debugmsg("Getting thin lock entry count, lockword="+jq.hex8(lockword)+", count="+c);
+        return c;
     }
     
     /** Monitorenter runtime routine.

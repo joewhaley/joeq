@@ -36,7 +36,7 @@ public abstract class Object {
     }
     public final void _wait(long timeout) throws java.lang.InterruptedException {
         if (timeout < 0L)
-            throw new IllegalArgumentException(timeout+" < 0");
+            throw new java.lang.IllegalArgumentException(timeout+" < 0");
         // TODO
         int count = Monitor.getLockEntryCount(this);
         int k = count;
@@ -45,11 +45,11 @@ public abstract class Object {
             if (--k == 0) break;
         }
         jq_Thread t = Unsafe.getThreadBlock();
-        InterruptedException rethrow;
+        java.lang.InterruptedException rethrow;
         try {
             t.sleep(timeout);
             rethrow = null;
-        } catch (InterruptedException x) {
+        } catch (java.lang.InterruptedException x) {
             rethrow = x;
         }
         for (;;) {
