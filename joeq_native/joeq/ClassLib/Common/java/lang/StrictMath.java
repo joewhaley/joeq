@@ -7,7 +7,7 @@
 
 package ClassLib.Common.java.lang;
 
-import com.imsl.math.JMath;
+import Run_Time.JMath;
 
 /*
  * @author  John Whaley
