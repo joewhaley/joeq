@@ -319,6 +319,9 @@ public class CSPA {
         dos = new DataOutputStream(new FileOutputStream(dumpfilename+".heap"));
         dumpHeapIndexMap(dos);
         dos.close();
+        dos = new DataOutputStream(new FileOutputStream(dumpfilename+".fields"));
+        dumpFieldIndexMap(dos);
+        dos.close();
     }
 
     private void dumpConfig(DataOutput out) throws IOException {
@@ -407,6 +410,19 @@ public class CSPA {
         }
     }
     
+    private void dumpFieldIndexMap(DataOutput out) throws IOException {
+        int n = fieldIndexMap.size();
+        out.writeBytes(n+"\n");
+        int j = 0;
+        while (j < fieldIndexMap.size()) {
+            jq_Field f = this.getField(j);
+            if (f == null) out.writeBytes("null");
+            else f.writeDesc(out);
+            out.writeByte('\n');
+            ++j;
+        }
+    }
+    
     void printHistogram() {
         BDD pointsTo = g_pointsTo.exist(V1c.set());
         int[] histogram = new int[64];
@@ -468,41 +484,33 @@ public class CSPA {
             b.andWith(r);
         }
     }
-    public BDD getV1H1Context(BDD range) {
+    public BDD getContext(BDDDomain d1, BDDDomain d2, long range) {
         if (CONTEXT_SENSITIVE_HEAP) {
-            BDD r = V1c.buildEquals(H1c);
-            if (TRACE_SIZES) {
-                System.out.print("V1cH1c = ");
-                report(r, V1c.set().and(H1c.set()));
+            int maxBit = BigInteger.valueOf(range).bitLength();
+            int[] v1vars = d1.vars();
+            int[] h1vars = d2.vars();
+            Assert._assert(maxBit <= v1vars.length);
+            Assert._assert(maxBit <= h1vars.length);
+            BDD r = bdd.one();
+            for (int n = 0; n < maxBit; n++) {
+                BDD a = bdd.ithVar(v1vars[n]);
+                BDD b = bdd.ithVar(h1vars[n]);
+                a.applyWith(b, BDDFactory.biimp);
+                r.andWith(a);
             }
-            r.andWith(range.id());
+            if (TRACE_SIZES) {
+                System.out.print("D1 D2 = ");
+                report(r, d1.set().and(d2.set()));
+            }
+            r.andWith(V1c.varRange(0, range));
             if (TRACE_SIZES) {
                 System.out.print("after mask = ");
-                report(r, V1c.set().and(H1c.set()));
+                report(r, d1.set().and(d2.set()));
             }
             return r;
         } else {
-            BDD r = range.id();
-            r.andWith(H1c.ithVar(0));
-            return r;
-        }
-    }
-    public BDD getV1V2Context(BDD range) {
-        if (CONTEXT_SENSITIVE) {
-            BDD r = V1c.buildEquals(V2c);
-            if (TRACE_SIZES) {
-                System.out.print("V1cH1c = ");
-                report(r, V1c.set().and(H1c.set()));
-            }
-            r.andWith(range.id());
-            if (TRACE_SIZES) {
-                System.out.print("after mask = ");
-                report(r, V1c.set().and(H1c.set()));
-            }
-            return r;
-        } else {
-            BDD r = range.id();
-            r.andWith(V2c.ithVar(0));
+            BDD r = d1.varRange(0, range);
+            r.andWith(d2.ithVar(0));
             return r;
         }
     }
@@ -748,7 +756,7 @@ public class CSPA {
     CallGraph cg;
     Collection roots;
     
-    static String ordering = System.getProperty("bddordering", "FD_H2cxH2o_V2cxV1cxV2oxV1oxH1c_H1o");
+    static String ordering = System.getProperty("bddordering", "FD_H2cxH2o_V2cxV1cxV2oxV1o_H1cxH1o");
 
     public void initializeBDD(int nodeCount, int cacheSize) {
         bdd = BDDFactory.init(nodeCount, cacheSize);
@@ -1151,27 +1159,25 @@ public class CSPA {
             System.out.println("Adding relations for "+ms.getMethod());
         Assert._assert(bms != null, ms.getMethod().toString());
         
-        Number npaths = pn.numberOfPathsTo(ms.getMethod());
+        long npaths = pn.numberOfPathsTo(ms.getMethod()).longValue();
         long time = System.currentTimeMillis();
         BDD v1ch1c = null, v1cv2c = null;
         
         if (TRACE_RELATIONS)
             System.out.println("Number of paths to method: "+npaths);
-        BDD range = V1c.varRange(0, npaths.longValue());
         if (USE_REPLACE_V2 && !bms.m_pointsTo.isZero()) {
-            v1ch1c = getV1H1Context(range);
+            v1ch1c = getContext(V1c, H1c, npaths);
             if (H1cToV2c == null) H1cToV2c = bdd.makePair(H1c, V2c);
             v1cv2c = v1ch1c.replace(H1cToV2c);
         } else if (USE_REPLACE_H1) {
-            v1cv2c = getV1V2Context(range);
+            v1cv2c = getContext(V1c, V2c, npaths);
             if (V2cToH1c == null) V2cToH1c = bdd.makePair(V2c, H1c);
             v1ch1c = v1cv2c.replace(V2cToH1c);
         } else {
             if (!bms.m_pointsTo.isZero())
-                v1ch1c = getV1H1Context(range);
-            v1cv2c = getV1V2Context(range);
+                v1ch1c = getContext(V1c, H1c, npaths);
+            v1cv2c = getContext(V1c, V2c, npaths);
         }
-        range.free();
         
         time = System.currentTimeMillis() - time;
         if (TRACE_TIMES || time > 500)
