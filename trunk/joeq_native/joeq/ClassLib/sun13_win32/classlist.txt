@@ -17,6 +17,7 @@ LCompil3r/BytecodeAnalysis/Bytecodes$EmptyVisitor;
 [LCompil3r/BytecodeAnalysis/Bytecodes$LineNumber;
 LCompil3r/Quad/BytecodeToQuad$jq_ReturnAddressType;
 LCompil3r/Reference/x86/*
+LGC/*
 LMain/jq;
 LMain/TraceFlags;
 LMemory/*
