@@ -62,6 +62,7 @@ public abstract class Solver {
     Collection/*<Relation>*/ relationsToDump;
     Collection/*<Relation>*/ relationsToDumpNegated;
     Collection/*<Relation>*/ relationsToDumpTuples;
+    Collection/*<Relation>*/ relationsToDumpNegatedTuples;
     
     public static void main(String[] args) throws IOException, InstantiationException, IllegalAccessException, ClassNotFoundException {
         
@@ -157,6 +158,8 @@ public abstract class Solver {
         relationsToDump = new LinkedList();
         relationsToDumpNegated = new LinkedList();
         relationsToDumpTuples = new LinkedList();
+        relationsToDumpNegatedTuples = new LinkedList();
+        equivalenceRelations = new HashMap();
         for (;;) {
             String s = in.readLine();
             if (s == null) break;
@@ -212,6 +215,8 @@ public abstract class Solver {
                 relationsToDumpNegated.add(r);
             } else if (option.equals("savetuples")) {
                 relationsToDumpTuples.add(r);
+            } else if (option.equals("savenottuples")) {
+                relationsToDumpNegatedTuples.add(r);
             } else if (option.equals("load")) {
                 relationsToLoad.add(r);
             } else if (option.equals("loadtuples")) {
@@ -348,7 +353,7 @@ public abstract class Solver {
     Relation getEquivalenceRelation(FieldDomain fd) {
         Relation r = (Relation) equivalenceRelations.get(fd);
         if (r == null) {
-            equivalenceRelations.put(fd, createEquivalenceRelation(fd));
+            equivalenceRelations.put(fd, r = createEquivalenceRelation(fd));
         }
         return r;
     }
@@ -356,11 +361,19 @@ public abstract class Solver {
     void loadInitialRelations() throws IOException {
         for (Iterator i = relationsToLoad.iterator(); i.hasNext(); ) {
             Relation r = (Relation) i.next();
-            r.load();
+            try {
+                r.load();
+            } catch (IOException x) {
+                System.out.println("WARNING: Cannot load bdd "+r+": "+x.toString());
+            }
         }
         for (Iterator i = relationsToLoadTuples.iterator(); i.hasNext(); ) {
             Relation r = (Relation) i.next();
-            r.loadTuples();
+            try {
+                r.loadTuples();
+            } catch (IOException x) {
+                System.out.println("WARNING: Cannot load tuples "+r+": "+x.toString());
+            }
         }
     }
     
@@ -396,6 +409,11 @@ public abstract class Solver {
             Relation r = (Relation) i.next();
             if (NOISY) out.println("Dumping tuples for "+r);
             r.saveTuples();
+        }
+        for (Iterator i = relationsToDumpNegatedTuples.iterator(); i.hasNext(); ) {
+            Relation r = (Relation) i.next();
+            if (NOISY) out.println("Dumping negated tuples for "+r);
+            r.saveNegatedTuples();
         }
     }
 

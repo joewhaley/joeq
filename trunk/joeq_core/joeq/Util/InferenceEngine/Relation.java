@@ -37,6 +37,7 @@ public abstract class Relation {
     public abstract void save() throws IOException;
     public abstract void saveNegated() throws IOException;
     public abstract void saveTuples() throws IOException;
+    public abstract void saveNegatedTuples() throws IOException;
     
     public String toString() {
         return name;
