@@ -14,6 +14,7 @@ import Clazz.jq_Type;
 import Compil3r.BytecodeAnalysis.BytecodeVisitor;
 import Compil3r.Quad.RegisterFactory.Register;
 import Memory.Address;
+import Memory.HeapAddress;
 import Run_Time.Reflection;
 import Util.Assert;
 
@@ -70,7 +71,15 @@ public interface Operand {
         public String toString() { return register+" "+((type==null)?"<g>":type.shortName()); }
     }
     
-    class AConstOperand implements Operand {
+    interface Const4Operand extends Operand {
+        int getBits();
+    }
+    
+    interface Const8Operand extends Operand {
+        long getBits();
+    }
+    
+    class AConstOperand implements Const4Operand {
         private Quad instruction;
         private Object value;
         public AConstOperand(Object v) { this.value = v; }
@@ -91,9 +100,10 @@ public interface Operand {
         public Quad getQuad() { return instruction; }
         public Operand copy() { return new AConstOperand(value); }
         public boolean isSimilar(Operand that) { return that instanceof AConstOperand && ((AConstOperand)that).getValue() == this.getValue(); }
+        public int getBits() { return HeapAddress.addressOf(value).to32BitValue(); }
     }
     
-    class PConstOperand implements Operand {
+    class PConstOperand implements Const4Operand {
         private Quad instruction;
         private Address value;
         public PConstOperand(Address v) { this.value = v; }
@@ -117,9 +127,10 @@ public interface Operand {
             return (this.getValue() == null && (that.getValue() == null || that.getValue().isNull())) ||
                    this.getValue().difference(that.getValue()) == 0;
         }
+        public int getBits() { return value.to32BitValue(); }
     }
     
-    class IConstOperand implements Operand {
+    class IConstOperand implements Const4Operand {
         private Quad instruction;
         private int value;
         public IConstOperand(int v) { this.value = v; }
@@ -133,9 +144,10 @@ public interface Operand {
         public Quad getQuad() { return instruction; }
         public Operand copy() { return new IConstOperand(value); }
         public boolean isSimilar(Operand that) { return that instanceof IConstOperand && ((IConstOperand)that).getValue() == this.getValue(); }
+        public int getBits() { return value; }
     }
     
-    class FConstOperand implements Operand {
+    class FConstOperand implements Const4Operand {
         private Quad instruction;
         private float value;
         public FConstOperand(float v) { this.value = v; }
@@ -149,9 +161,10 @@ public interface Operand {
         public Quad getQuad() { return instruction; }
         public Operand copy() { return new FConstOperand(value); }
         public boolean isSimilar(Operand that) { return that instanceof FConstOperand && ((FConstOperand)that).getValue() == this.getValue(); }
+        public int getBits() { return Float.floatToRawIntBits(value); }
     }
 
-    class LConstOperand implements Operand {
+    class LConstOperand implements Const8Operand {
         private Quad instruction;
         private long value;
         public LConstOperand(long v) { this.value = v; }
@@ -165,9 +178,10 @@ public interface Operand {
         public Quad getQuad() { return instruction; }
         public Operand copy() { return new LConstOperand(value); }
         public boolean isSimilar(Operand that) { return that instanceof LConstOperand && ((LConstOperand)that).getValue() == this.getValue(); }
+        public long getBits() { return value; }
     }
 
-    class DConstOperand implements Operand {
+    class DConstOperand implements Const8Operand {
         private Quad instruction;
         private double value;
         public DConstOperand(double v) { this.value = v; }
@@ -181,6 +195,7 @@ public interface Operand {
         public Quad getQuad() { return instruction; }
         public Operand copy() { return new DConstOperand(value); }
         public boolean isSimilar(Operand that) { return that instanceof DConstOperand && ((DConstOperand)that).getValue() == this.getValue(); }
+        public long getBits() { return Double.doubleToRawLongBits(value); }
     }
 
     class UnnecessaryGuardOperand implements Operand {
@@ -322,6 +337,15 @@ public interface Operand {
         public void set(int i, RegisterOperand b) { params[i] = b; }
         public RegisterOperand get(int i) { return params[i]; }
         public int length() { return params.length; }
+        public int words() {
+            int total = 0;
+            for (int i=0; i<params.length; ++i) {
+                ++total;
+                if (params[i].getType().getReferenceSize() == 8)
+                    ++total;
+            }
+            return total;
+        }
         public String toString() {
             StringBuffer sb = new StringBuffer("(");
             if (params.length > 0) {

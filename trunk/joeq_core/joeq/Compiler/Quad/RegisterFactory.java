@@ -16,6 +16,7 @@ import Clazz.jq_Type;
 import Compil3r.Quad.Operand.RegisterOperand;
 import Util.Assert;
 import Util.Strings;
+import Util.Collections.AppendIterator;
 
 /**
  * @author  John Whaley
@@ -254,6 +255,24 @@ public class RegisterFactory {
         this.stack_A.addAll(that.stack_A);
 
         return that;
+    }
+    
+    public int totalSize() {
+        return local_I.size()+local_F.size()+local_L.size()+local_D.size()+local_A.size()+
+               stack_I.size()+stack_F.size()+stack_L.size()+stack_D.size()+stack_A.size();
+    }
+    
+    public Iterator iterator() {
+        Iterator i = new AppendIterator(local_I.iterator(), local_F.iterator());
+        i = new AppendIterator(i, local_L.iterator());
+        i = new AppendIterator(i, local_D.iterator());
+        i = new AppendIterator(i, local_A.iterator());
+        i = new AppendIterator(i, stack_I.iterator());
+        i = new AppendIterator(i, stack_F.iterator());
+        i = new AppendIterator(i, stack_L.iterator());
+        i = new AppendIterator(i, stack_D.iterator());
+        i = new AppendIterator(i, stack_A.iterator());
+        return i;
     }
     
     public String toString() {

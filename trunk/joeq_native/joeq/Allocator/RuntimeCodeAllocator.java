@@ -216,6 +216,7 @@ public class RuntimeCodeAllocator extends CodeAllocator {
         
         public jq_CompiledCode allocateCodeBlock(jq_Method m, jq_TryCatch[] ex,
                                                  jq_BytecodeMap bcm, ExceptionDeliverer exd,
+                                                 int stackframesize,
                                                  List code_relocs, List data_relocs) {
             Assert._assert(isGenerating);
             CodeAddress start = getStart();
@@ -245,7 +246,7 @@ public class RuntimeCodeAllocator extends CodeAllocator {
             }
             isGenerating = false;
             if (TRACE) SystemInterface.debugwriteln("Code generation completed: "+this);
-            jq_CompiledCode cc = new jq_CompiledCode(m, start, current.difference(start), entrypoint, ex, bcm, exd, code_relocs, data_relocs);
+            jq_CompiledCode cc = new jq_CompiledCode(m, start, current.difference(start), entrypoint, ex, bcm, exd, stackframesize, code_relocs, data_relocs);
             CodeAllocator.registerCode(cc);
             return cc;
         }

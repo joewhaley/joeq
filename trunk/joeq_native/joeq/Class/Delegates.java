@@ -94,8 +94,8 @@ class Delegates implements jq_ClassFileConstants {
 	public Iterator getCompiledMethods() {
 	    return CodeAllocator.getCompiledMethods();
 	}
-	public final void deliverToStackFrame(Object ed, jq_CompiledCode t, Throwable x, CodeAddress entry, StackAddress fp) {
-	    ((ExceptionDeliverer)ed).deliverToStackFrame(t, x, entry, fp);
+	public final void deliverToStackFrame(Object ed, jq_CompiledCode t, Throwable x, jq_TryCatch tc, CodeAddress entry, StackAddress fp) {
+	    ((ExceptionDeliverer)ed).deliverToStackFrame(t, x, tc, entry, fp);
 	}
 	public final Object getThisPointer(Object ed, jq_CompiledCode t, CodeAddress ip, StackAddress fp) {
 	    return ((ExceptionDeliverer)ed).getThisPointer(t, ip, fp);

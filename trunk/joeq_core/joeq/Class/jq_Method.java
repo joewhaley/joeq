@@ -269,7 +269,7 @@ public abstract class jq_Method extends jq_Member implements AndersenMethod {
         if (state >= STATE_SFINITIALIZED) return default_compiled_version;
         if (jq.DontCompile) {
             state = STATE_SFINITIALIZED;
-            return default_compiled_version = new jq_CompiledCode(this, null, 0, null, null, null, null, null, null);
+            return default_compiled_version = new jq_CompiledCode(this, null, 0, null, null, null, null, 0, null, null);
         }
         if (_compile.getState() < STATE_CLSINITIALIZED) _compile.compile();
         default_compiled_version = _delegate.compile_stub(this);
@@ -285,6 +285,10 @@ public abstract class jq_Method extends jq_Member implements AndersenMethod {
 	    state = STATE_CLSINITIALIZED;
 	}
         return default_compiled_version;
+    }
+    
+    public final void setDefaultCompiledVersion(jq_CompiledCode cc) {
+        default_compiled_version = cc;
     }
     
     public final int getReturnWords() {

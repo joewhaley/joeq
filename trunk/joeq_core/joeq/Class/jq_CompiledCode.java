@@ -32,9 +32,19 @@ public class jq_CompiledCode implements Comparable {
     protected final jq_TryCatch[] handlers;
     protected final jq_BytecodeMap bcm;
     protected final Object /* ExceptionDeliverer */ ed;
+    protected final int stackframesize;
     protected final List code_reloc, data_reloc;
 
-    public jq_CompiledCode(jq_Method method, CodeAddress start, int length, CodeAddress entrypoint, jq_TryCatch[] handlers, jq_BytecodeMap bcm, Object /* ExceptionDeliverer */ ed, List code_reloc, List data_reloc) {
+    public jq_CompiledCode(jq_Method method,
+                           CodeAddress start,
+                           int length,
+                           CodeAddress entrypoint,
+                           jq_TryCatch[] handlers,
+                           jq_BytecodeMap bcm,
+                           Object /*ExceptionDeliverer*/ ed,
+                           int stackframesize,
+                           List code_reloc,
+                           List data_reloc) {
         this.method = method;
         this.entrypoint = entrypoint;
         this.start = start;
@@ -42,6 +52,7 @@ public class jq_CompiledCode implements Comparable {
         this.handlers = handlers;
         this.bcm = bcm;
         this.ed = ed;
+        this.stackframesize = stackframesize;
         this.code_reloc = code_reloc;
         this.data_reloc = data_reloc;
     }
@@ -62,7 +73,11 @@ public class jq_CompiledCode implements Comparable {
         return entrypoint;
     }
 
-    public CodeAddress findCatchBlock(CodeAddress ip, jq_Class extype) {
+    public int getStackFrameSize() {
+        return stackframesize;
+    }
+    
+    public jq_TryCatch findCatchBlock(CodeAddress ip, jq_Class extype) {
         int offset = ip.difference(start);
         if (handlers == null) {
             if (TRACE) Debug.writeln("no handlers in " + this);
@@ -72,16 +87,17 @@ public class jq_CompiledCode implements Comparable {
             jq_TryCatch tc = handlers[i];
             if (TRACE) Debug.writeln("checking handler: " + tc);
             if (tc.catches(offset, extype))
-                return (CodeAddress) start.offset(tc.getHandlerEntry());
+                return tc;
             if (TRACE) Debug.writeln("does not catch");
         }
         if (TRACE) Debug.writeln("no appropriate handler found in " + this);
         return null;
     }
 
-    public void deliverException(CodeAddress entry, StackAddress fp, Throwable x) {
+    public void deliverException(jq_TryCatch tc, StackAddress fp, Throwable x) {
         Assert._assert(ed != null);
-        _delegate.deliverToStackFrame(ed, this, x, entry, fp);
+        CodeAddress entry = (CodeAddress) start.offset(tc.getHandlerEntry());  
+        _delegate.deliverToStackFrame(ed, this, x, tc, entry, fp);
     }
 
     public Object getThisPointer(CodeAddress ip, StackAddress fp) {
@@ -130,7 +146,7 @@ public class jq_CompiledCode implements Comparable {
 	void patchDirectBindCalls(Iterator i);
 	void patchDirectBindCalls(Iterator i, jq_Method method, jq_CompiledCode cc);
 	Iterator getCompiledMethods();
-	void deliverToStackFrame(Object ed, jq_CompiledCode t, Throwable x, CodeAddress entry, StackAddress fp);
+	void deliverToStackFrame(Object ed, jq_CompiledCode t, Throwable x, jq_TryCatch tc, CodeAddress entry, StackAddress fp);
 	Object getThisPointer(Object ed, jq_CompiledCode t, CodeAddress ip, StackAddress fp);
     }
     

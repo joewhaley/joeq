@@ -752,12 +752,14 @@ public class MethodSummary {
                 if (TRACE_INTRA) out.println("Visiting: "+obj);
                 Register src_r = ((RegisterOperand)Special.getOp2(obj)).getRegister();
                 setAsEscapes(getRegister(src_r));
+                /*
             } else if (obj.getOperator() == Special.GET_TYPE_OF.INSTANCE) {
                 if (TRACE_INTRA) out.println("Visiting: "+obj);
                 Register dest_r = ((RegisterOperand)Special.getOp1(obj)).getRegister();
                 jq_Reference type = Clazz.jq_Reference._class;
                 UnknownTypeNode n = UnknownTypeNode.get(type);
                 setRegister(dest_r, n);
+                */
             }
         }
         public void visitUnary(Quad obj) {

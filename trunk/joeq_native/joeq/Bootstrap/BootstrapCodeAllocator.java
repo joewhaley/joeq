@@ -227,7 +227,8 @@ public class BootstrapCodeAllocator extends CodeAllocator {
         }
 
         public jq_CompiledCode allocateCodeBlock(jq_Method m, jq_TryCatch[] ex, jq_BytecodeMap bcm,
-                                                 ExceptionDeliverer exd, List code_relocs, List data_relocs) {
+                                                 ExceptionDeliverer exd, int stackframesize,
+                                                 List code_relocs, List data_relocs) {
             int total = getCurrentOffset();
             int start = getStartIndex();
             int entry = getEntryIndex();
@@ -237,7 +238,8 @@ public class BootstrapCodeAllocator extends CodeAllocator {
                 all_data_relocs.addAll(data_relocs);
             jq_CompiledCode cc = new jq_CompiledCode(m, new BootstrapCodeAddress(start),
                                                      total, new BootstrapCodeAddress(entry),
-                                                     ex, bcm, exd, code_relocs, data_relocs);
+                                                     ex, bcm, exd, stackframesize,
+                                                     code_relocs, data_relocs);
             CodeAllocator.registerCode(cc);
             return cc;
         }

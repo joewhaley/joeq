@@ -1,15 +1,17 @@
 /*
- * x86ReferenceExceptionDeliverer.java
+ * x86QuadExceptionDeliverer.java
  *
  * Created on January 12, 2001, 8:44 AM
  *
  */
 
-package Compil3r.Reference.x86;
+package Compil3r.Quad.x86;
 
 import Clazz.jq_CompiledCode;
 import Clazz.jq_Method;
 import Clazz.jq_TryCatch;
+import Compil3r.Quad.CodeCache;
+import Compil3r.Quad.ControlFlowGraph;
 import Memory.CodeAddress;
 import Memory.HeapAddress;
 import Memory.StackAddress;
@@ -22,24 +24,26 @@ import Util.Assert;
  * @author  John Whaley
  * @version $Id$
  */
-public class x86ReferenceExceptionDeliverer extends ExceptionDeliverer {
+public class x86QuadExceptionDeliverer extends ExceptionDeliverer {
 
     public static /*final*/ boolean TRACE = false;
     
-    public static final x86ReferenceExceptionDeliverer INSTANCE =
-    new x86ReferenceExceptionDeliverer();
+    public static final x86QuadExceptionDeliverer INSTANCE =
+    new x86QuadExceptionDeliverer();
 
-    private x86ReferenceExceptionDeliverer() {}
+    private x86QuadExceptionDeliverer() {}
 
     public final void deliverToStackFrame(jq_CompiledCode cc, Throwable x, jq_TryCatch tc, CodeAddress ip, StackAddress fp) {
         jq_Method m = cc.getMethod();
-        // find new top of stack
-        int n_paramwords = m.getParamWords();
-        int n_localwords = m.getMaxLocals();
-        StackAddress sp = (StackAddress)fp.offset(((n_paramwords-n_localwords)<<2) - 4);
+        ControlFlowGraph cfg = CodeCache.getCode(m);
+        
+        StackAddress sp = (StackAddress) fp.offset(tc.getExceptionOffset());
         if (TRACE) SystemInterface.debugwriteln("poking exception object "+HeapAddress.addressOf(x).stringRep()+" into location "+sp.stringRep());
         // push exception object there
         sp.poke(HeapAddress.addressOf(x));
+        
+        sp = (StackAddress) fp.offset(cc.getStackFrameSize());
+        
         // branch!
         Unsafe.longJump(ip, fp, sp, 0);
     }

@@ -205,7 +205,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         emitCallRelative(jq_Method._compile, asm, code_relocs);
         asm.emit2_Mem(x86.JMP_m, jq_CompiledCode._entrypoint.getOffset(), EAX);
         // return generated code
-        return asm.getCodeBuffer().allocateCodeBlock(null, null, null, null, code_relocs, data_relocs);
+        return asm.getCodeBuffer().allocateCodeBlock(null, null, null, null, 0, code_relocs, data_relocs);
     }
     
     // Generate code for the given method.
@@ -323,8 +323,9 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
                 Integer end = new Integer(tc_bc.getEndPC());
                 Integer handler = new Integer(tc_bc.getHandlerPC());
                 jq_Class extype = tc_bc.getExceptionType();
+                int offset = ((n_paramwords-n_localwords)<<2) - 4;
                 tcs[i] = new jq_TryCatch(asm.getBranchTarget(start), asm.getBranchTarget(end),
-                                         asm.getBranchTarget(handler), extype);
+                                         asm.getBranchTarget(handler), extype, offset);
             }
             
             // generate bytecode map
@@ -346,6 +347,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             jq_CompiledCode code;
             code = asm.getCodeBuffer().allocateCodeBlock(method, tcs, bcm,
                                                          x86ReferenceExceptionDeliverer.INSTANCE,
+                                                         (n_paramwords-n_localwords)<<2,
                                                          code_relocs, data_relocs);
             // temporary kludge: no switching a thread during compilation.
             if (jq.RunningNative)
@@ -2645,9 +2647,11 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             asm.emitShort_Reg(x86.POP_r, EAX); // address
             asm.emit2_Reg_Mem(x86.MOV_m_r32, EBX, 0, EAX);
         } else if (f.getName() == poke8) {
-            asm.emitShort_Reg(x86.POP_r, EBX); // value
+            asm.emitShort_Reg(x86.POP_r, EBX); // lo
+            asm.emitShort_Reg(x86.POP_r, ECX); // hi
             asm.emitShort_Reg(x86.POP_r, EAX); // address
             asm.emit2_Reg_Mem(x86.MOV_m_r32, EBX, 0, EAX);
+            asm.emit2_Reg_Mem(x86.MOV_m_r32, ECX, 4, EAX);
         } else if (f.getName() == offset) {
             asm.emitShort_Reg(x86.POP_r, EAX);
             asm.emitARITH_Reg_Mem(x86.ADD_m_r32, EAX, 0, ESP);
@@ -2746,25 +2750,29 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             asm.emit2_Mem(x86.PUSH_m, 0, EBX);
             */
         } else if (f == Unsafe._popFP32) {
-            asm.emit2_Reg_Mem(x86.LEA, ESP, 4, ESP);
+            asm.emit2_Reg_Mem(x86.LEA, ESP, -4, ESP);
             asm.emit2_Mem(x86.FSTP_m32, 0, ESP);
         } else if (f == Unsafe._popFP64) {
-            asm.emit2_Reg_Mem(x86.LEA, ESP, 8, ESP);
+            asm.emit2_Reg_Mem(x86.LEA, ESP, -8, ESP);
             asm.emit2_Mem(x86.FSTP_m64, 0, ESP);
         } else if (f == Unsafe._pushFP32) {
-            asm.emit2_Reg_Mem(x86.LEA, ESP, -4, ESP);
             asm.emit2_Mem(x86.FLD_m32, 0, ESP);
+            asm.emit2_Reg_Mem(x86.LEA, ESP, 4, ESP);
         } else if (f == Unsafe._pushFP64) {
-            asm.emit2_Reg_Mem(x86.LEA, ESP, -8, ESP);
             asm.emit2_Mem(x86.FLD_m64, 0, ESP);
+            asm.emit2_Reg_Mem(x86.LEA, ESP, 8, ESP);
         } else if (f == Unsafe._EAX) {
             asm.emitShort_Reg(x86.PUSH_r, EAX);
         } else if ((f == Unsafe._pushArg) || (f == Unsafe._pushArgA)) {
             asm.emit1(x86.NOP);
-        } else if ((f == Unsafe._invoke) || (f == Unsafe._invokeA)) {
+        } else if (f == Unsafe._invoke) {
             asm.emitShort_Reg(x86.POP_r, EAX);
             asm.emit2_Reg(x86.CALL_r, EAX);
             asm.emitShort_Reg(x86.PUSH_r, EDX); // hi
+            asm.emitShort_Reg(x86.PUSH_r, EAX); // lo
+        } else if (f == Unsafe._invokeA) {
+            asm.emitShort_Reg(x86.POP_r, EAX);
+            asm.emit2_Reg(x86.CALL_r, EAX);
             asm.emitShort_Reg(x86.PUSH_r, EAX); // lo
         } else if (f == Unsafe._getThreadBlock) {
             asm.emitprefix(THREAD_BLOCK_PREFIX);
