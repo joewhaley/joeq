@@ -13,5 +13,5 @@ import Scheduler.jq_NativeThread;
 
 public interface GCVisitor {
     public void visit(jq_RegisterState state);
-    public void farewell(jq_NativeThread nt);
+    public void farewell(jq_NativeThread[] nt);
 }

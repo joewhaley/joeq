@@ -13,6 +13,7 @@ import Scheduler.jq_NativeThread;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 
 import Run_Time.StackHeapWalker;
 import Memory.HeapAddress;
@@ -45,6 +46,10 @@ public class TraceMSGC implements Runnable, GCVisitor {
     public void compact() {
     }
 
-    public void farewell(jq_NativeThread nt) {
+    public void farewell(jq_NativeThread[] nt) {
+        Iterator iter = dumpool.iterator();
+        for (int i = 0; i < nt.length; ++i) {
+            nt[i].setContext((jq_RegisterState)iter.next());
+        }
     }
 }

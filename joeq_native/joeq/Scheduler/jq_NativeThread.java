@@ -478,6 +478,12 @@ public class jq_NativeThread implements x86Constants {
         }
     }
 
+    public static void resumeTheFeast() {
+        GCVisitor visitor = (GCVisitor)GCManager.getGC(gcType);
+        visitor.farewell(native_threads);
+        startNativeThreads();
+    }
+
     public static void initGCThread() {
         gc_nthread = new jq_NativeThread(-2);
         // TO DO: select gc from command line
