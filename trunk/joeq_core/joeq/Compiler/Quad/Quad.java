@@ -122,4 +122,11 @@ public class Quad {
         return s.toString();
     }
     
+    public static final boolean DETERMINISTIC = true;
+    
+    public int hashCode() {
+        if (DETERMINISTIC) return getID();
+        else return System.identityHashCode(this);
+    }
+    
 }
