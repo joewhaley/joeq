@@ -1,4 +1,5 @@
-MODULES = ../joeq ../native ../x86
+MODULES = $(wildcard ../*)
+#MODULES = ../joeq_core ../joeq_native ../joeq_x86
 SUPPORT_LIBS = joeq/Support/javabdd_0.6.jar
 JDK14SUPPORT_LIB = joeq/Support/java14.jar
 
