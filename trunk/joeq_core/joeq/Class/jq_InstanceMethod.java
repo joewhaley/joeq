@@ -60,6 +60,16 @@ public class jq_InstanceMethod extends jq_Method {
     }
     public final boolean isOverriding() { return isOverriding; }
     public final boolean isOverridden() { return isOverridden; }
+    
+    public jq_Method resolve() {
+        this.clazz.load();
+        if (this.state >= STATE_LOADED) return this;
+        // this reference may be to a superclass or superinterface.
+        jq_InstanceMethod m = this.clazz.getInstanceMethod(nd);
+        if (m != null) return m;
+        throw new NoSuchMethodError(this.toString());
+    }
+    
     public final void prepare() { prepare(INVALID_OFFSET); }
     public final void prepare(int offset) {
         jq.assert(state == STATE_LOADED); state = STATE_PREPARED; this.offset = offset;

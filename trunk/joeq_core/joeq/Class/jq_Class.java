@@ -236,6 +236,13 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
             m = super_class.getInstanceMethod(nd);
             if (m != null) return m;
         }
+        // check superinterfaces.
+        for (int i=0; i<declared_interfaces.length; ++i) {
+            jq_Class in = declared_interfaces[i];
+            in.load();
+            m = in.getInstanceMethod(nd);
+            if (m != null) return m;
+        }
         return null;
     }
     public final jq_Initializer getInitializer(jq_NameAndDesc nd) {
@@ -596,7 +603,8 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                 major_version = (char)in.readUnsignedShort(); // 45 or 46
 		if (((major_version != 45) || (minor_version != 0)) &&
                     ((major_version != 45) || (minor_version != 3)) &&
-                    ((major_version != 46) || (minor_version != 0))) {
+                    ((major_version != 46) || (minor_version != 0)) &&
+                    ((major_version != 48) || (minor_version != 0))) {
                     throw new UnsupportedClassVersionError("unsupported version "+(int)major_version+"."+(int)minor_version);
 		}
 
@@ -794,11 +802,17 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                 }
                 
                 // make sure that all member references from other classes point to actual members.
-                Iterator it = members.values().iterator();
+                Iterator it = members.entrySet().iterator();
                 while (it.hasNext()) {
-                    jq_Member m = (jq_Member)it.next();
+                    Map.Entry e = (Map.Entry)it.next();
+                    jq_Member m = (jq_Member)e.getValue();
                     if (m.getState() < STATE_LOADED) {
-                        throw new ClassFormatError("no such member "+m);
+                        // may be a reference to a member of a superclass or superinterface.
+                        // this can happen when using old class files.
+                        it.remove();
+                        Set s = PrimordialClassLoader.loader.getClassesThatReference(m);
+                        System.err.println("Warning: classes "+s+" refer to member "+m+", which does not exist. This may indicate stale class files.");
+                        //throw new ClassFormatError("no such member "+m+", referenced by "+s);
                     }
                 }
 
@@ -820,6 +834,11 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                 throw new ClassFormatError("bad constant pool index");
             }
         } // synchronized
+    }
+    
+    public boolean doesConstantPoolContain(Object o) {
+        if (const_pool == null) return false;
+        return const_pool.contains(o);
     }
     
     public jq_StaticMethod generateStaticMethodStub(jq_NameAndDesc nd, jq_StaticMethod m, char access_flags, char classfield_idx, char method_idx) {
@@ -868,7 +887,8 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         jq_StaticMethod stub;
         if (stubm == null) stub = jq_StaticMethod.newStaticMethod(this, nd);
         else {
-            jq.assert(stubm.isStatic());
+            // method that we are overwriting must be static.
+            jq.assert(stubm.isStatic(), stubm.toString());
             stub = (jq_StaticMethod)stubm;
         }
         //char access_flags = (char)(m.getAccessFlags() & ~ACC_NATIVE);
@@ -922,7 +942,8 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         jq_InstanceMethod stub;
         if (stubm == null) stub = jq_InstanceMethod.newInstanceMethod(this, nd);
         else {
-            jq.assert(!stubm.isStatic());
+            // method that we are overwriting must be instance.
+            jq.assert(!stubm.isStatic(), stubm.toString());
             stub = (jq_InstanceMethod)stubm;
         }
         //char access_flags = (char)(m.getAccessFlags() & ~ACC_NATIVE);

@@ -165,6 +165,8 @@ public abstract class jq_Method extends jq_Member {
 	super.dumpAttributes(out, cpr);
     }
 
+    public abstract jq_Method resolve();
+    
     public abstract void prepare();
 
     public final jq_CompiledCode compile_stub() {

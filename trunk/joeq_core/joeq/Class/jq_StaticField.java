@@ -80,6 +80,15 @@ public final class jq_StaticField extends jq_Field {
         state = STATE_LOADED;
     }
     
+    public final jq_StaticField resolve() {
+        this.clazz.load();
+        if (this.state >= STATE_LOADED) return this;
+        // this reference may be to a superclass or superinterface.
+        jq_StaticField m = this.clazz.getStaticField(nd);
+        if (m != null) return m;
+        throw new NoSuchFieldError(this.toString());
+    }
+    
     public void dumpAttributes(DataOutput out, jq_ConstantPool.ConstantPoolRebuilder cpr) throws IOException {
 	if (constantValue != null) {
 	    byte[] b = new byte[2]; jq.charToTwoBytes(cpr.get(constantValue), b, 0);

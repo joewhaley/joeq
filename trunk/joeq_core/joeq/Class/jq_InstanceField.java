@@ -44,6 +44,15 @@ public final class jq_InstanceField extends jq_Field {
         state = STATE_LOADED;
     }
     
+    public final jq_InstanceField resolve() {
+        this.clazz.load();
+        if (this.state >= STATE_LOADED) return this;
+        // this reference may be to a superclass.
+        jq_InstanceField m = this.clazz.getInstanceField(nd);
+        if (m != null) return m;
+        throw new NoSuchFieldError(this.toString());
+    }
+    
     public final boolean isUnsignedType() { return type == jq_Primitive.CHAR; }
     public final int getSize() { return type.getReferenceSize(); }
     public final void prepare(int offset) { jq.assert(state == STATE_LOADED); state = STATE_PREPARED; this.offset = offset; }

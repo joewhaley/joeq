@@ -53,6 +53,15 @@ public class jq_StaticMethod extends jq_Method {
     public final boolean isStatic() { return true; }
     public boolean isClassInitializer() { return false; }
 
+    public jq_Method resolve() {
+        this.clazz.load();
+        if (this.state >= STATE_LOADED) return this;
+        // this reference may be to a superclass or superinterface.
+        jq_StaticMethod m = this.clazz.getStaticMethod(nd);
+        if (m != null) return m;
+        throw new NoSuchMethodError(this.toString());
+    }
+    
     public final void prepare() { jq.assert(state == STATE_LOADED); state = STATE_PREPARED; }
 
     public final void unprepare() { jq.assert(state == STATE_PREPARED); state = STATE_LOADED; }
