@@ -11,8 +11,10 @@ import java.io.PrintStream;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
 import org.sf.javabdd.BDD;
@@ -104,6 +106,7 @@ public class PA {
     BDD filter; // V1xH1, type filter
     
     String varorder = System.getProperty("bddordering", "N_F_Z_I_M_T1_V2xV1_H2_T2_H1");
+    boolean reverseLocal = System.getProperty("bddreverse", "true").equals("true");
     
     BDDPairing V1toV2, V2toV1, H1toH2, H2toH1, V1H1toV2H2, V2H2toV1H1;
     BDD V1set, V2set, H1set, H2set, T1set, T2set, Fset, Mset, Nset, Iset, Zset;
@@ -137,7 +140,6 @@ public class PA {
         N = makeDomain("N", N_BITS);
         M = makeDomain("M", M_BITS);
         
-        boolean reverseLocal = System.getProperty("bddreverse", "true") != null;
         // IxH1xN x H1xT2
         int[] ordering = bdd.makeVarOrdering(reverseLocal, varorder);
         bdd.setVarOrder(ordering);
@@ -233,7 +235,21 @@ public class PA {
         if (TRACE_RELATIONS) out.println("Adding to visited: (M:"+M_i+")");
         visited.orWith(M_bdd.id());
         
-        if (m.getBytecode() == null) return;
+        if (m.getBytecode() == null) {
+            // todo: parameters passed into native methods.
+            // build up 'Mret'
+            jq_Type retType = m.getReturnType();
+            if (retType instanceof jq_Reference) {
+                Node node = UnknownTypeNode.get((jq_Reference) retType);
+                int V_i = Vmap.get(node);
+                BDD V2_bdd = V2.ithVar(V_i);
+                if (TRACE_RELATIONS) out.println("Adding to Mret: (M:"+M_i+",V2:"+V_i+")");
+                Mret.orWith(M_bdd.and(V2_bdd));
+                
+                visitNode(node);
+            }
+            return;
+        }
         
         MethodSummary ms = MethodSummary.getSummary(CodeCache.getCode(m));
         if (TRACE) out.println("Visiting method summary "+ms);
@@ -389,11 +405,17 @@ public class PA {
             A.orWith(V1_bdd.and(V2_bdd));
         }
         
-        for (Iterator j = node.getEdgeFields().iterator(); j.hasNext(); ) {
-            jq_Field f = (jq_Field) j.next();
+        for (Iterator j = node.getAllEdges().iterator(); j.hasNext(); ) {
+            Map.Entry e = (Map.Entry) j.next();
+            jq_Field f = (jq_Field) e.getKey();
             int F_i = Fmap.get(f);
             BDD F_bdd = F.ithVar(F_i);
-            for (Iterator k = node.getEdges(f).iterator(); k.hasNext(); ) {
+            Collection c;
+            if (e.getValue() instanceof Collection)
+                c = (Collection) e.getValue();
+            else
+                c = Collections.singleton(e.getValue());
+            for (Iterator k = c.iterator(); k.hasNext(); ) {
                 Node node2 = (Node) k.next();
                 int V2_i = Vmap.get(node2);
                 BDD V2_bdd = V2.ithVar(V2_i);
@@ -901,14 +923,14 @@ public class PA {
         
         dis.iterate();
         
-        System.out.println("Total time spent: "+(System.currentTimeMillis()-time)/1000.);
+        System.out.println("Time spent solving: "+(System.currentTimeMillis()-time)/1000.);
 
         dis.printSizes();
         
         System.out.println("Writing results...");
         time = System.currentTimeMillis();
         dis.dumpResults(resultsFileName);
-        System.out.println("Time spent: "+(System.currentTimeMillis()-time)/1000.);
+        System.out.println("Time spent writing: "+(System.currentTimeMillis()-time)/1000.);
     }
     
     public void printSizes() {
@@ -980,9 +1002,15 @@ public class PA {
 
     private void dumpConfig(DataOutput out) throws IOException {
         out.writeBytes("V="+V_BITS+"\n");
+        out.writeBytes("I="+I_BITS+"\n");
         out.writeBytes("H="+H_BITS+"\n");
+        out.writeBytes("Z="+Z_BITS+"\n");
         out.writeBytes("F="+F_BITS+"\n");
+        out.writeBytes("T="+T_BITS+"\n");
+        out.writeBytes("N="+N_BITS+"\n");
+        out.writeBytes("M="+M_BITS+"\n");
         out.writeBytes("Order="+varorder+"\n");
+        out.writeBytes("Reverse="+reverseLocal+"\n");
     }
     
     private void dumpMap(DataOutput out, IndexMap m) throws IOException {

@@ -32,6 +32,13 @@ public final class Factories {
     };
     public static final MapFactory hashMapFactory() { return hashMapFactory; }
     
+    /** A <code>MapFactory</code> that generates <code>TreeMap</code>s. */
+    public static final MapFactory treeMapFactory = new SerialMapFactory() {
+        public java.util.Map makeMap(java.util.Map map) {
+            return new java.util.TreeMap(map);
+        }
+    };
+    
     /** A <code>SetFactory</code> that generates <code>HashSet</code>s. */
     public static final SetFactory hashSetFactory = new SerialSetFactory() {
             public java.util.Set makeSet(java.util.Collection c) {
