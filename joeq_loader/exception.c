@@ -6,6 +6,13 @@ int trap_on_exceptions = 0;
 
 #if defined(WIN32)
 
+void dump_context_record(CONTEXT *c)
+{
+	printf("Register state at hardware exception:\n");
+	printf("EAX: %08x  EDX: %08x  ECX: %08x  EBX: %08x\n", c->Eax, c->Edx, c->Ecx, c->Ebx);
+	printf("EDI: %08x  ESI: %08x  EBP: %08x  ESP: %08x\n", c->Edi, c->Esi, c->Ebp, c->Esp);
+}
+
 EXCEPTION_DISPOSITION hardwareExceptionHandler(EXCEPTION_RECORD *exceptionRecord,
                                                void *establisherFrame,
                                                CONTEXT *contextRecord,
@@ -34,6 +41,8 @@ EXCEPTION_DISPOSITION hardwareExceptionHandler(EXCEPTION_RECORD *exceptionRecord
             java_ex_code = -1;
             break;
     }
+
+    //dump_context_record(contextRecord);
 
     // push arguments
     esp = (DWORD*)contextRecord->Esp;
