@@ -22,7 +22,9 @@ import UTF.Utf8;
 import Util.Assert;
 import Util.AtomicCounter;
 
-/*
+/**
+ * A jq_Thread corresponds to a Java (lightweight) thread.
+ * 
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
