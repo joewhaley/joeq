@@ -1495,6 +1495,9 @@ public class BDDPointerAnalysis {
         dos = new DataOutputStream(new FileOutputStream(dumpfilename+".heap"));
         dumpHeapIndexMap(dos);
         dos.close();
+        dos = new DataOutputStream(new FileOutputStream(dumpfilename+".fields"));
+        dumpFieldIndexMap(dos);
+        dos.close();
     }
 
     private void dumpConfig(DataOutput out) throws IOException {
@@ -1526,6 +1529,19 @@ public class BDDPointerAnalysis {
             Node node = getHeapobj(j);
             if (node == null) out.writeBytes("null");
             else node.write(out);
+            out.writeByte('\n');
+            ++j;
+        }
+    }
+    
+    private void dumpFieldIndexMap(DataOutput out) throws IOException {
+        int n = fieldIndexMap.size();
+        out.writeBytes(n+"\n");
+        int j = 0;
+        while (j < fieldIndexMap.size()) {
+            jq_Field f = this.getField(j);
+            if (f == null) out.writeBytes("null");
+            else f.writeDesc(out);
             out.writeByte('\n');
             ++j;
         }
