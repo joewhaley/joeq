@@ -354,12 +354,12 @@ public abstract class CodeAllocator {
          * @return  true if the instruction pointer is within, false otherwise
          */
         public boolean equals(jq_CompiledCode that) {
-	    CodeAddress ip = this.getIP();
-	    CodeAddress start = that.getStart();
-	    if (ip.difference(start) < 0) return false;
-	    if (ip.difference(start.offset(that.getLength())) > 0)
-		return false;
-	    return true;
+            CodeAddress ip = this.getIP();
+            CodeAddress start = that.getStart();
+            if (ip.difference(start) < 0) return false;
+            if (ip.difference(start.offset(that.getLength())) > 0)
+                return false;
+            return true;
         }
         
         /**
