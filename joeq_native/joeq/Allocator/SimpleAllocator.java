@@ -73,6 +73,7 @@ public class SimpleAllocator extends HeapAllocator {
      * @throws OutOfMemoryError if there is not enough memory for initialization
      */
     private void allocateNewBlock() {
+        if (totalMemory() >= MAX_MEMORY) HeapAllocator.outOfMemory();
         heapCurrent = (HeapAddress) SystemInterface.syscalloc(BLOCK_SIZE);
         if (heapCurrent.isNull())
             HeapAllocator.outOfMemory();
@@ -136,7 +137,6 @@ public class SimpleAllocator extends HeapAllocator {
         heapCurrent = (HeapAddress) heapCurrent.offset(size);
         if (heapEnd.difference(heapCurrent) < 0) {
             // not enough space (rare path)
-            if (totalMemory() >= MAX_MEMORY) HeapAllocator.outOfMemory();
             jq.Assert(size < BLOCK_SIZE - 2 * HeapAddress.size());
             allocateNewBlock();
             addr = (HeapAddress) heapCurrent.offset(OBJ_HEADER_SIZE);
@@ -197,7 +197,6 @@ public class SimpleAllocator extends HeapAllocator {
                 // TODO: gc ?!?
                 return addr.asObject();
             } else {
-                if (totalMemory() >= MAX_MEMORY) HeapAllocator.outOfMemory();
                 jq.Assert(size < BLOCK_SIZE - 2 * HeapAddress.size());
                 allocateNewBlock();
                 addr = (HeapAddress) heapCurrent.offset(ARRAY_HEADER_SIZE);

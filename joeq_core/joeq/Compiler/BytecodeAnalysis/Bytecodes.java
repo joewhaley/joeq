@@ -8332,8 +8332,8 @@ public interface Bytecodes {
             this.returnTarget = returnTarget;
         }
         public boolean isAddressType() { return false; }
-        public String getJDKName() { jq.UNREACHABLE(); return null; }
-        public String getJDKDesc() { jq.UNREACHABLE(); return null; }
+        public String getJDKName() { return desc.toString(); }
+        public String getJDKDesc() { return getJDKName(); }
         public Clazz.jq_Class[] getInterfaces() { jq.UNREACHABLE(); return null; }
         public Clazz.jq_Class getInterface(Utf8 desc) { jq.UNREACHABLE(); return null; }
         public boolean implementsInterface(Clazz.jq_Class k) { jq.UNREACHABLE(); return false; }

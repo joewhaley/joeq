@@ -299,7 +299,8 @@ public class Interface {
     
     public Scheduler.jq_Thread getJQThread(java.lang.Thread t) {
         if (jq.Bootstrapping) {
-            Clazz.jq_InstanceField f = Bootstrap.PrimordialClassLoader.getJavaLangThread().getOrCreateInstanceField("jq_thread", "LScheduler/jq_Thread;");
+            jq_Class k = Bootstrap.PrimordialClassLoader.getJavaLangThread();
+            Clazz.jq_InstanceField f = k.getOrCreateInstanceField("jq_thread", "LScheduler/jq_Thread;");
             return (Scheduler.jq_Thread)Reflection.getfield_A(t, f);
         }
         jq.Assert(!jq.Bootstrapping);

@@ -47,7 +47,7 @@ public abstract class Reflection {
     
     public static final jq_Reference getTypeOf(Object o) {
         if (!jq.Bootstrapping) return jq_Reference.getTypeOf(o);
-        return (jq_Reference)getJQType(o.getClass());
+        return (jq_Reference) getJQType(o.getClass());
     }
     
     // Map between our jq_Type objects and JDK Class objects
@@ -73,6 +73,8 @@ public abstract class Reflection {
     }
     public static final Class getJDKType(jq_Type c) {
         if (!jq.Bootstrapping) return c.getJavaLangClassObject();
+        if (c.getJavaLangClassObject() != null)
+            return c.getJavaLangClassObject();
         if (c.isPrimitiveType()) 
             return getJDKType((jq_Primitive)c);
         else
@@ -80,24 +82,31 @@ public abstract class Reflection {
     }
     public static final Class getJDKType(jq_Primitive c) {
         if (!jq.Bootstrapping) return c.getJavaLangClassObject();
-        if (c == jq_Primitive.BYTE) return Byte.TYPE;
-        if (c == jq_Primitive.CHAR) return Character.TYPE;
-        if (c == jq_Primitive.DOUBLE) return Double.TYPE;
-        if (c == jq_Primitive.FLOAT) return Float.TYPE;
-        if (c == jq_Primitive.INT) return Integer.TYPE;
-        if (c == jq_Primitive.LONG) return Long.TYPE;
-        if (c == jq_Primitive.SHORT) return Short.TYPE;
-        if (c == jq_Primitive.BOOLEAN) return Boolean.TYPE;
-        if (c == jq_Primitive.VOID) return Void.TYPE;
+        if (c.getJavaLangClassObject() != null)
+            return c.getJavaLangClassObject();
+        // cannot compare to jq_Primitive types here, as they may not
+        // have been initialized yet.  so we compare descriptors instead.
+        if (c.getDesc() == Utf8.BYTE_DESC) return Byte.TYPE;
+        if (c.getDesc() == Utf8.CHAR_DESC) return Character.TYPE;
+        if (c.getDesc() == Utf8.DOUBLE_DESC) return Double.TYPE;
+        if (c.getDesc() == Utf8.FLOAT_DESC) return Float.TYPE;
+        if (c.getDesc() == Utf8.INT_DESC) return Integer.TYPE;
+        if (c.getDesc() == Utf8.LONG_DESC) return Long.TYPE;
+        if (c.getDesc() == Utf8.SHORT_DESC) return Short.TYPE;
+        if (c.getDesc() == Utf8.BOOLEAN_DESC) return Boolean.TYPE;
+        if (c.getDesc() == Utf8.VOID_DESC) return Void.TYPE;
         jq.UNREACHABLE(c.getName());
         return null;
     }
     public static Class getJDKType(jq_Reference c) {
         if (!jq.Bootstrapping) return c.getJavaLangClassObject();
+        if (c.getJavaLangClassObject() != null)
+            return c.getJavaLangClassObject();
         try {
-            return Class.forName(c.getJDKName());
+            return Class.forName(c.getJDKName(), false, Reflection.class.getClassLoader());
         } catch (ClassNotFoundException x) {
-            jq.UNREACHABLE(c.getName());
+            if (!c.getJDKName().startsWith("ClassLib"))
+                SystemInterface.debugmsg("Note: "+c.getJDKName()+" was not found in host jdk");
             return null;
         }
     }
@@ -963,7 +972,6 @@ uphere:
     }
     
     public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LRun_Time/Reflection;");
-    public static final jq_StaticMethod _invokestatic_noargs = _class.getOrCreateStaticMethod("invokestatic_J", "(LClazz/jq_StaticMethod;)J");
     public static final jq_StaticField _obj_trav = _class.getOrCreateStaticField("obj_trav", "LBootstrap/ObjectTraverser;");
     public static final jq_StaticField _declaredFieldsCache = _class.getOrCreateStaticField("declaredFieldsCache", "Ljava/util/HashMap;");
 
