@@ -5,6 +5,7 @@
  */
 
 package ClassLib.Common.java.io;
+import Clazz.*;
 import Run_Time.Reflection;
 import jq;
 
