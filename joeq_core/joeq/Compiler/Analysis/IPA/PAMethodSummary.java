@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Field;
+import joeq.Class.jq_Initializer;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_MethodVisitor;
 import joeq.Class.jq_Reference;
@@ -273,6 +274,21 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
                 
                     for(Iterator iter = targets.iterator(); iter.hasNext();){
                         jq_Method newTarget = (jq_Method) iter.next();
+                        
+                        if(newTarget instanceof jq_Initializer){
+                            jq_Initializer constructor = (jq_Initializer) newTarget;
+                            jq_Type type = constructor.getDeclaringClass();
+                                                        
+                            Node node = ms.getRVN(mc);
+                            if (node != null) {
+                                MethodSummary.ConcreteTypeNode h = ConcreteTypeNode.get((jq_Reference) type);
+                                int H_i = pa.Hmap.get(h);
+                                int V_i = pa.Vmap.get(node);
+                                BDD V_arg = pa.V1.ithVar(V_i);
+                                
+                                pa.addToVP(V_arg, h);
+                            }
+                        }
                         
                         if(pa.TRACE_REFLECTION) {
                             System.out.println("Adding a refective call to " + newTarget);
