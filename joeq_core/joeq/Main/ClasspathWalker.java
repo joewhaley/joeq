@@ -39,6 +39,7 @@ public class ClasspathWalker {
 //                        System.out.println("Initialized a subclass of " + clazz + ", class: " + c);
 //                        result.add(c);
 //                    }
+                    PrimordialClassLoader.loader.unloadBSType(c);
                 } catch (NoClassDefFoundError x) {
                     if(TRACE) System.err.println("Package " + packageName + ": Class not found (canonical name " + canonicalClassName + ").");
                 } catch (LinkageError le) {
