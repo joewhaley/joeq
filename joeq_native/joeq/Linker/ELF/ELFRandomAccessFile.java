@@ -1,5 +1,5 @@
 /*
- * ELFOutputStream.java
+ * ELFRandomAccessFile.java
  *
  * Created on February 6, 2002, 8:00 PM
  */

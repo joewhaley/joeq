@@ -52,12 +52,12 @@ public class Interface {
     }
     
     public ObjectTraverser getObjectTraverser() {
-    	return CommonObjectTraverser.INSTANCE;
+        return CommonObjectTraverser.INSTANCE;
     }
     
     public static class CommonObjectTraverser extends ObjectTraverser {
-    	public static CommonObjectTraverser INSTANCE = new CommonObjectTraverser();
-    	protected CommonObjectTraverser() { }
+        public static CommonObjectTraverser INSTANCE = new CommonObjectTraverser();
+        protected CommonObjectTraverser() { }
         protected static final java.util.Set nullStaticFields = new java.util.HashSet();
         protected static final java.util.Set nullInstanceFields = new java.util.HashSet();
         protected static final java.util.Map mappedObjects = new java.util.HashMap();
@@ -241,39 +241,39 @@ public class Interface {
     }
     
     public java.lang.Class createNewClass(Clazz.jq_Type f) {
-    	jq.Assert(!jq.Bootstrapping);
+        jq.Assert(!jq.Bootstrapping);
         return ClassLib.Common.java.lang.Class.createNewClass(f);
     }
     
     public java.lang.reflect.Constructor createNewConstructor(Clazz.jq_Initializer f) {
-    	jq.Assert(!jq.Bootstrapping);
+        jq.Assert(!jq.Bootstrapping);
         return ClassLib.Common.java.lang.reflect.Constructor.createNewConstructor(f);
     }
     
     public void initNewConstructor(java.lang.reflect.Constructor dis, Clazz.jq_Initializer f) {
-    	jq.Assert(!jq.Bootstrapping);
+        jq.Assert(!jq.Bootstrapping);
         java.lang.Object o = dis;
         ClassLib.Common.java.lang.reflect.Constructor.initNewConstructor((ClassLib.Common.java.lang.reflect.Constructor)o, f);
     }
     
     public java.lang.reflect.Field createNewField(Clazz.jq_Field f) {
-    	jq.Assert(!jq.Bootstrapping);
+        jq.Assert(!jq.Bootstrapping);
         return ClassLib.Common.java.lang.reflect.Field.createNewField(f);
     }
     
     public void initNewField(java.lang.reflect.Field dis, Clazz.jq_Field f) {
-    	jq.Assert(!jq.Bootstrapping);
+        jq.Assert(!jq.Bootstrapping);
         java.lang.Object o = dis;
         ClassLib.Common.java.lang.reflect.Field.initNewField((ClassLib.Common.java.lang.reflect.Field)o, f);
     }
     
     public java.lang.reflect.Method createNewMethod(Clazz.jq_Method f) {
-    	jq.Assert(!jq.Bootstrapping);
+        jq.Assert(!jq.Bootstrapping);
         return ClassLib.Common.java.lang.reflect.Method.createNewMethod(f);
     }
     
     public void initNewMethod(java.lang.reflect.Method dis, Clazz.jq_Method f) {
-    	jq.Assert(!jq.Bootstrapping);
+        jq.Assert(!jq.Bootstrapping);
         java.lang.Object o = dis;
         ClassLib.Common.java.lang.reflect.Method.initNewMethod((ClassLib.Common.java.lang.reflect.Method)o, f);
     }
@@ -297,10 +297,10 @@ public class Interface {
     }
     
     public Scheduler.jq_Thread getJQThread(java.lang.Thread t) {
-    	if (jq.Bootstrapping) {
-	    Clazz.jq_InstanceField f = Bootstrap.PrimordialClassLoader.getJavaLangThread().getOrCreateInstanceField("jq_thread", "LScheduler/jq_Thread;");
-	    return (Scheduler.jq_Thread)Reflection.getfield_A(t, f);
-    	}
+        if (jq.Bootstrapping) {
+            Clazz.jq_InstanceField f = Bootstrap.PrimordialClassLoader.getJavaLangThread().getOrCreateInstanceField("jq_thread", "LScheduler/jq_Thread;");
+            return (Scheduler.jq_Thread)Reflection.getfield_A(t, f);
+        }
         jq.Assert(!jq.Bootstrapping);
         java.lang.Object o = t;
         return ((ClassLib.Common.java.lang.Thread)o).jq_thread;
@@ -313,37 +313,37 @@ public class Interface {
     }
     
     public Clazz.jq_Type getOrCreateType(java.lang.ClassLoader cl, UTF.Utf8 desc) {
-    	jq.Assert(!jq.Bootstrapping);
+        jq.Assert(!jq.Bootstrapping);
         java.lang.Object o = cl;
         return ((ClassLib.Common.java.lang.ClassLoader)o).getOrCreateType(desc);
     }
     
     public void unloadType(java.lang.ClassLoader cl, Clazz.jq_Type t) {
-    	jq.Assert(!jq.Bootstrapping);
+        jq.Assert(!jq.Bootstrapping);
         java.lang.Object o = cl;
         ((ClassLib.Common.java.lang.ClassLoader)o).unloadType(t);
     }
     
     public void init_zipfile(java.util.zip.ZipFile dis, java.lang.String name) throws java.io.IOException {
-    	jq.Assert(!jq.Bootstrapping);
+        jq.Assert(!jq.Bootstrapping);
         java.lang.Object o = dis;
         ((ClassLib.Common.java.util.zip.ZipFile)o).__init__(name);
     }
     
     public void init_inflater(java.util.zip.Inflater dis, boolean nowrap) throws java.io.IOException {
-    	jq.Assert(!jq.Bootstrapping);
+        jq.Assert(!jq.Bootstrapping);
         java.lang.Object o = dis;
         ((ClassLib.Common.java.util.zip.Inflater)o).__init__(nowrap);
     }
     
     public void initializeSystemClass() throws java.lang.Throwable {
-    	jq.Assert(!jq.Bootstrapping);
+        jq.Assert(!jq.Bootstrapping);
         ClassLib.Common.java.lang.System.initializeSystemClass();
     }
     
     /*
     public void open(java.io.RandomAccessFile dis, java.lang.String name, boolean writeable) throws java.io.FileNotFoundException {
-    	jq.Assert(!jq.Bootstrapping);
+        jq.Assert(!jq.Bootstrapping);
         java.lang.Object o = dis;
         ((ClassLib.Common.java.io.RandomAccessFile)o).open(name, writeable);
     }

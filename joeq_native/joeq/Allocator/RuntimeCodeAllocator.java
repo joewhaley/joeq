@@ -27,13 +27,13 @@ import Run_Time.Unsafe;
  */
 public class RuntimeCodeAllocator extends CodeAllocator {
 
-	// Memory layout:
-	//
-	// start:   |   next ptr   |---->
-	//          |   end ptr    |
-	//          |.....data.....|
-	// current: |.....free.....|
-	// end:     | current ptr  |
+    // Memory layout:
+    //
+    // start:   |   next ptr   |---->
+    //          |   end ptr    |
+    //          |.....data.....|
+    // current: |.....free.....|
+    // end:     | current ptr  |
 
     /** Size of blocks allocated from the OS.
      */
@@ -55,7 +55,7 @@ public class RuntimeCodeAllocator extends CodeAllocator {
     
     public void init()
     throws OutOfMemoryError {
-    	heapStart = heapFirst = (CodeAddress)SystemInterface.syscalloc(BLOCK_SIZE);
+        heapStart = heapFirst = (CodeAddress)SystemInterface.syscalloc(BLOCK_SIZE);
         if (heapStart.isNull())
             HeapAllocator.outOfMemory();
         heapStart.poke(null);
@@ -93,9 +93,9 @@ public class RuntimeCodeAllocator extends CodeAllocator {
             // start searching at the first block
             CodeAddress start_ptr = heapFirst;
             for (;;) {
-            	// start_ptr:   points to start of current block
-            	// end_ptr:     points to end of current block
-            	// current_ptr: current pointer for current block
+                // start_ptr:   points to start of current block
+                // end_ptr:     points to end of current block
+                // current_ptr: current pointer for current block
                 jq.Assert(!start_ptr.isNull());
                 CodeAddress end_ptr = (CodeAddress)start_ptr.offset(CodeAddress.size()).peek();
                 CodeAddress current_ptr = (CodeAddress)end_ptr.peek();
@@ -112,7 +112,7 @@ public class RuntimeCodeAllocator extends CodeAllocator {
     
     private void allocateNewBlock(int blockSize)
     throws OutOfMemoryError {
-    	heapStart.offset(CodeAddress.size()).poke(heapCurrent);
+        heapStart.offset(CodeAddress.size()).poke(heapCurrent);
         CodeAddress newBlock = (CodeAddress)SystemInterface.syscalloc(blockSize);
         if (newBlock.isNull())
             HeapAllocator.outOfMemory();
@@ -126,10 +126,10 @@ public class RuntimeCodeAllocator extends CodeAllocator {
     }
     
     public void patchAbsolute(Address addr1, Address addr2) {
-    	addr1.poke(addr2);
+        addr1.poke(addr2);
     }
     public void patchRelativeOffset(CodeAddress code, CodeAddress target) {
-    	code.poke4(target.difference(code)-4);
+        code.poke4(target.difference(code)-4);
     }
     
     public class Runtimex86CodeBuffer extends CodeAllocator.x86CodeBuffer {
@@ -197,10 +197,10 @@ public class RuntimeCodeAllocator extends CodeAllocator {
         }
 
         public byte get1(int k) {
-        	return startAddress.offset(k).peek1();
+            return startAddress.offset(k).peek1();
         }
         public int get4_endian(int k) {
-        	return startAddress.offset(k).peek4();
+            return startAddress.offset(k).peek4();
         }
 
         public void put1(int k, byte instr) {
@@ -211,7 +211,7 @@ public class RuntimeCodeAllocator extends CodeAllocator {
         }
 
         public void skip(int nbytes) {
-        	currentAddress = (CodeAddress)currentAddress.offset(nbytes);
+            currentAddress = (CodeAddress)currentAddress.offset(nbytes);
         }
         
         public jq_CompiledCode allocateCodeBlock(jq_Method m, jq_TryCatch[] ex,
@@ -235,7 +235,7 @@ public class RuntimeCodeAllocator extends CodeAllocator {
                     CodeAddress current_ptr = (CodeAddress)end_ptr.peek();
                     int temp = end_ptr.difference(current_ptr);
                     maxFreePrevious = Math.max(maxFreePrevious, temp);
-                	start_ptr = (CodeAddress)start_ptr.peek();
+                    start_ptr = (CodeAddress)start_ptr.peek();
                 }
                 if (TRACE) SystemInterface.debugmsg("New maxfreeprevious: "+jq.hex(maxFreePrevious));
             } else {

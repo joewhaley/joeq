@@ -22,7 +22,7 @@ public abstract class jq_Reference extends jq_Type implements jq_ClassFileConsta
 
     public static final jq_Reference getTypeOf(Object o) {
         if (jq.Bootstrapping) return Reflection.getTypeOf(o);
-	return ((HeapAddress)HeapAddress.addressOf(o).offset(VTABLE_OFFSET).peek().peek()).asReferenceType();
+        return ((HeapAddress)HeapAddress.addressOf(o).offset(VTABLE_OFFSET).peek().peek()).asReferenceType();
     }
 
     public final int getState() { return state; }

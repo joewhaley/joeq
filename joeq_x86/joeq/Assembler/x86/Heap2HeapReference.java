@@ -8,7 +8,7 @@
 package Assembler.x86;
 
 import java.io.IOException;
-import java.io.OutputStream;
+import java.io.DataOutput;
 
 import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
@@ -33,10 +33,10 @@ public class Heap2HeapReference extends Reloc {
     public HeapAddress getFrom() { return from_heaploc; }
     public HeapAddress getTo() { return to_heaploc; }
     
-    public void dumpCOFF(OutputStream out) throws IOException {
-        LittleEndianOutputStream.write_s32(out, from_heaploc.to32BitValue()); // r_vaddr
-        LittleEndianOutputStream.write_s32(out, 1);                 // r_symndx
-        LittleEndianOutputStream.write_u16(out, Reloc.RELOC_ADDR32);// r_type
+    public void dumpCOFF(DataOutput out) throws IOException {
+        out.writeInt(from_heaploc.to32BitValue()); // r_vaddr
+        out.writeInt(1);                           // r_symndx
+        out.writeChar(Reloc.RELOC_ADDR32);         // r_type
     }
     
     public String toString() {

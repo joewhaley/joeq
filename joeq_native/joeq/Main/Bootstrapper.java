@@ -11,6 +11,8 @@ import java.io.BufferedReader;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -52,6 +54,8 @@ import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
 import UTF.Utf8;
 import Util.ArrayIterator;
+import Util.DirectBufferedFileOutputStream;
+import Util.ExtendedDataOutput;
 import Util.LinearSet;
 
 /*
@@ -95,9 +99,9 @@ public abstract class Bootstrapper implements ObjectLayout {
             //x86ReferenceCompiler.THREAD_BLOCK_OFFSET = 0x4;
         }
 
-        String classpath = System.getProperty("java.class.path")+
+        String classpath = System.getProperty("sun.boot.class.path")+
                            System.getProperty("path.separator")+
-                           System.getProperty("sun.boot.class.path");
+                           System.getProperty("java.class.path");
         
         for (int i=0; i<args.length; ) {
             int j = TraceFlags.setTraceFlag(args, i);
@@ -130,11 +134,11 @@ public abstract class Bootstrapper implements ObjectLayout {
                 ++i; continue;
             }
             if (args[i].equalsIgnoreCase("-borland")) {
-            	BootImage.USE_MICROSOFT_STYLE_MUNGE = false;
+                BootImage.USE_MICROSOFT_STYLE_MUNGE = false;
                 ++i; continue;
             }
             if (args[i].equalsIgnoreCase("-microsoft")) {
-            	BootImage.USE_MICROSOFT_STYLE_MUNGE = true;
+                BootImage.USE_MICROSOFT_STYLE_MUNGE = true;
                 ++i; continue;
             }
             /*
@@ -481,23 +485,28 @@ public abstract class Bootstrapper implements ObjectLayout {
         
         // dump it!
         FileOutputStream fos = new FileOutputStream(imageName);
+        DirectBufferedFileOutputStream dbfos = new DirectBufferedFileOutputStream(fos);
+        dbfos.order(ByteOrder.LITTLE_ENDIAN);
         starttime = System.currentTimeMillis();
         if (DUMP_COFF)
-            objmap.dumpCOFF(fos, rootm);
+            objmap.dumpCOFF((ExtendedDataOutput) dbfos, rootm);
         else
-            objmap.dumpELF(fos, rootm);
+            objmap.dumpELF((ExtendedDataOutput) dbfos, rootm);
+        dbfos.close();
         long dumptime = System.currentTimeMillis() - starttime;
         System.out.println("Dump time: "+dumptime);
         
-        it = classset.iterator();
-        while (it.hasNext()) {
-            jq_Type t = (jq_Type)it.next();
-            if (t == Unsafe._class) continue;
-            jq.Assert(t.isClsInitialized());
-            System.out.println(t+": "+objmap.getAddressOf(t).stringRep());
-            if (t.isReferenceType()) {
-                jq_Reference r = (jq_Reference)t;
-                System.out.println("\tninterfaces "+r.getInterfaces().length+" vtable "+objmap.getAddressOf(r.getVTable()).stringRep());
+        if (false) {
+            it = classset.iterator();
+            while (it.hasNext()) {
+                jq_Type t = (jq_Type)it.next();
+                if (t == Unsafe._class) continue;
+                jq.Assert(t.isClsInitialized());
+                System.out.println(t+": "+objmap.getAddressOf(t).stringRep());
+                if (t.isReferenceType()) {
+                    jq_Reference r = (jq_Reference)t;
+                    System.out.println("\tninterfaces "+r.getInterfaces().length+" vtable "+objmap.getAddressOf(r.getVTable()).stringRep());
+                }
             }
         }
         

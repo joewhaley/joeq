@@ -339,8 +339,8 @@ public abstract class Driver {
                     try {
                         t.accept(cv);
                     } catch (LinkageError le) {
-			if (!ignore_linkage_errors)
-			    throw le;
+                        if (!ignore_linkage_errors)
+                            throw le;
                         System.err.println("Linkage error occurred while executing pass on " + t + " : " + le);
                         le.printStackTrace(System.err);
                     } catch (Exception x) {

@@ -35,12 +35,12 @@ public final class Interface extends ClassLib.Common.Interface {
     }
 
     public ObjectTraverser getObjectTraverser() {
-    	return sun14_linuxObjectTraverser.INSTANCE;
+        return sun14_linuxObjectTraverser.INSTANCE;
     }
     
     public static class sun14_linuxObjectTraverser extends CommonObjectTraverser {
-    	public static sun14_linuxObjectTraverser INSTANCE = new sun14_linuxObjectTraverser();
-    	protected sun14_linuxObjectTraverser() {}
+        public static sun14_linuxObjectTraverser INSTANCE = new sun14_linuxObjectTraverser();
+        protected sun14_linuxObjectTraverser() {}
         public void initialize() {
             super.initialize();
             

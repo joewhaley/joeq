@@ -57,7 +57,7 @@ public abstract class ObjectTraverser {
         if (TRACE) out.println("Getting value of static field "+c+"."+fieldName+" via reflection");
         Field f2 = Reflection.getJDKField(c, fieldName);
         if (f2 == null) {
-        	jq_Class klass = (jq_Class)Reflection.getJQType(c);
+            jq_Class klass = (jq_Class)Reflection.getJQType(c);
             for (Iterator i=ClassLibInterface.DEFAULT.getImplementationClassDescs(klass.getDesc()); i.hasNext(); ) {
                 UTF.Utf8 u = (UTF.Utf8)i.next();
                 if (TRACE) out.println("Checking mirror class "+u);
@@ -114,7 +114,7 @@ public abstract class ObjectTraverser {
         if (TRACE) out.println("Setting value of static field "+c+"."+fieldName+" via reflection");
         Field f2 = Reflection.getJDKField(c, fieldName);
         if (f2 == null) {
-        	jq_Class klass = (jq_Class)Reflection.getJQType(c);
+            jq_Class klass = (jq_Class)Reflection.getJQType(c);
             for (Iterator i=ClassLibInterface.DEFAULT.getImplementationClassDescs(klass.getDesc()); i.hasNext(); ) {
                 UTF.Utf8 u = (UTF.Utf8)i.next();
                 if (TRACE) out.println("Checking mirror class "+u);

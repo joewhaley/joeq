@@ -457,12 +457,12 @@ public class x86Assembler implements x86Constants {
 
     public void skip(int nbytes) {
         if (TRACE) System.out.println("skipping "+nbytes+" bytes");
-    	mc.skip(nbytes);
-    	ip += nbytes;
+        mc.skip(nbytes);
+        ip += nbytes;
     }
     
     public void setEntrypoint() {
-    	mc.setEntrypoint();
+        mc.setEntrypoint();
     }
     
     public static boolean fits(int val, int bits) {

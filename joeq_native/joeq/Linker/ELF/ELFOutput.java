@@ -1,27 +1,27 @@
 /*
- * ELFOutputStream.java
+ * ELFOutput.java
  *
  * Created on February 6, 2002, 8:00 PM
  */
 
 package Linker.ELF;
 import java.io.IOException;
-import java.io.OutputStream;
+import java.io.DataOutput;
 
 /**
  *
  * @author  John Whaley
  * @version $Id$ 
  */
-public class ELFOutputStream extends ELF {
+public class ELFOutput extends ELF {
     
-    protected OutputStream out;
-    public ELFOutputStream(byte data, int type, int machine, int entry, OutputStream out) {
+    protected DataOutput out;
+    public ELFOutput(byte data, int type, int machine, int entry, DataOutput out) {
         super(data, type, machine, entry);
         this.out = out;
     }
     
-    public OutputStream getOutputStream() { return out; }
+    public DataOutput getOutput() { return out; }
     
     void write_byte(byte v) throws IOException {
         out.write(v);
@@ -32,39 +32,23 @@ public class ELFOutputStream extends ELF {
     }
     
     void write_half(int v) throws IOException {
-        if (isLittleEndian()) {
-            out.write((byte)v);
-            out.write((byte)(v>>8));
-        } else {
-            out.write((byte)(v>>8));
-            out.write((byte)v);
-        }
+        out.writeShort((short)v);
     }
     
     void write_word(int v) throws IOException {
-        if (isLittleEndian()) {
-            out.write((byte)v);
-            out.write((byte)(v>>8));
-            out.write((byte)(v>>16));
-            out.write((byte)(v>>24));
-        } else {
-            out.write((byte)(v>>24));
-            out.write((byte)(v>>16));
-            out.write((byte)(v>>8));
-            out.write((byte)v);
-        }
+        out.writeInt(v);
     }
     
     void write_sword(int v) throws IOException {
-        write_word(v);
+        out.writeInt(v);
     }
     
     void write_off(int v) throws IOException {
-        write_word(v);
+        out.writeInt(v);
     }
     
     void write_addr(int v) throws IOException {
-        write_word(v);
+        out.writeInt(v);
     }
     
     void write_sectionname(String s) throws IOException {

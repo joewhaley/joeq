@@ -58,10 +58,10 @@ public abstract class ZipFile implements ZipConstants {
     public java.util.zip.ZipEntry getEntry(String name) {
         if (TRACE) System.out.println(this+": getting entry "+name);
         Hashtable entries = this.entries;
-	if (entries == null) {
-	    // not yet initialized.
-	    return null;
-	}
+        if (entries == null) {
+            // not yet initialized.
+            return null;
+        }
         return (java.util.zip.ZipEntry)entries.get(name);
     }
     public Enumeration entries() {

@@ -626,9 +626,9 @@ uphere:
     public static int getfield_I(Object o, jq_InstanceField f) {
         jq.Assert(f.getType() == jq_Primitive.INT || f.getType() == jq_Primitive.FLOAT);
         if (jq.Bootstrapping) {
-        	Object q = obj_trav.getInstanceFieldValue(o, f);
-        	if (q == null) return 0;
-        	return ((Integer)q).intValue();
+            Object q = obj_trav.getInstanceFieldValue(o, f);
+            if (q == null) return 0;
+            return ((Integer)q).intValue();
         }
         jq.Assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
         return HeapAddress.addressOf(o).offset(f.getOffset()).peek4();
@@ -636,9 +636,9 @@ uphere:
     public static long getfield_L(Object o, jq_InstanceField f) {
         jq.Assert(f.getType() == jq_Primitive.LONG || f.getType() == jq_Primitive.DOUBLE);
         if (jq.Bootstrapping) {
-        	Object q = obj_trav.getInstanceFieldValue(o, f);
-        	if (q == null) return 0L;
-        	return ((Long)q).longValue();
+            Object q = obj_trav.getInstanceFieldValue(o, f);
+            if (q == null) return 0L;
+            return ((Long)q).longValue();
         }
         jq.Assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
         return HeapAddress.addressOf(o).offset(f.getOffset()).peek8();
@@ -646,9 +646,9 @@ uphere:
     public static float getfield_F(Object o, jq_InstanceField f) {
         jq.Assert(f.getType() == jq_Primitive.FLOAT);
         if (jq.Bootstrapping) {
-        	Object q = obj_trav.getInstanceFieldValue(o, f);
-        	if (q == null) return 0f;
-        	return ((Float)q).floatValue();
+            Object q = obj_trav.getInstanceFieldValue(o, f);
+            if (q == null) return 0f;
+            return ((Float)q).floatValue();
         }
         jq.Assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
         return Float.intBitsToFloat(getfield_I(o, f));
@@ -656,9 +656,9 @@ uphere:
     public static double getfield_D(Object o, jq_InstanceField f) {
         jq.Assert(f.getType() == jq_Primitive.DOUBLE);
         if (jq.Bootstrapping) {
-        	Object q = obj_trav.getInstanceFieldValue(o, f);
-        	if (q == null) return 0.;
-        	return ((Double)q).doubleValue();
+            Object q = obj_trav.getInstanceFieldValue(o, f);
+            if (q == null) return 0.;
+            return ((Double)q).doubleValue();
         }
         jq.Assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
         return Double.longBitsToDouble(getfield_L(o, f));
@@ -678,9 +678,9 @@ uphere:
     public static byte getfield_B(Object o, jq_InstanceField f) {
         jq.Assert(f.getType() == jq_Primitive.BYTE);
         if (jq.Bootstrapping) {
-        	Object q = obj_trav.getInstanceFieldValue(o, f);
-        	if (q == null) return 0;
-        	return ((Byte)q).byteValue();
+            Object q = obj_trav.getInstanceFieldValue(o, f);
+            if (q == null) return 0;
+            return ((Byte)q).byteValue();
         }
         jq.Assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
         return HeapAddress.addressOf(o).offset(f.getOffset()).peek1();
@@ -688,9 +688,9 @@ uphere:
     public static char getfield_C(Object o, jq_InstanceField f) {
         jq.Assert(f.getType() == jq_Primitive.CHAR);
         if (jq.Bootstrapping) {
-        	Object q = obj_trav.getInstanceFieldValue(o, f);
-        	if (q == null) return 0;
-        	return ((Character)q).charValue();
+            Object q = obj_trav.getInstanceFieldValue(o, f);
+            if (q == null) return 0;
+            return ((Character)q).charValue();
         }
         jq.Assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
         return (char)HeapAddress.addressOf(o).offset(f.getOffset()).peek4();
@@ -698,9 +698,9 @@ uphere:
     public static short getfield_S(Object o, jq_InstanceField f) {
         jq.Assert(f.getType() == jq_Primitive.SHORT);
         if (jq.Bootstrapping) {
-        	Object q = obj_trav.getInstanceFieldValue(o, f);
-        	if (q == null) return 0;
-        	return ((Short)q).shortValue();
+            Object q = obj_trav.getInstanceFieldValue(o, f);
+            if (q == null) return 0;
+            return ((Short)q).shortValue();
         }
         jq.Assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
         return HeapAddress.addressOf(o).offset(f.getOffset()).peek2();
@@ -708,9 +708,9 @@ uphere:
     public static boolean getfield_Z(Object o, jq_InstanceField f) {
         jq.Assert(f.getType() == jq_Primitive.BOOLEAN);
         if (jq.Bootstrapping) {
-        	Object q = obj_trav.getInstanceFieldValue(o, f);
-        	if (q == null) return false;
-        	return ((Boolean)q).booleanValue();
+            Object q = obj_trav.getInstanceFieldValue(o, f);
+            if (q == null) return false;
+            return ((Boolean)q).booleanValue();
         }
         jq.Assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
         return HeapAddress.addressOf(o).offset(f.getOffset()).peek1()!=0;
@@ -826,18 +826,18 @@ uphere:
     public static int getstatic_I(jq_StaticField f) {
         jq.Assert(f.getType() == jq_Primitive.INT || f.getType() == jq_Primitive.FLOAT);
         if (jq.Bootstrapping) {
-        	Object o = obj_trav.getStaticFieldValue(f);
-        	if (o == null) return 0;
-        	return ((Integer)o).intValue();
+            Object o = obj_trav.getStaticFieldValue(f);
+            if (o == null) return 0;
+            return ((Integer)o).intValue();
         }
         return f.getAddress().peek4();
     }
     public static long getstatic_L(jq_StaticField f) {
         jq.Assert(f.getType() == jq_Primitive.LONG || f.getType() == jq_Primitive.DOUBLE);
         if (jq.Bootstrapping) {
-        	Object o = obj_trav.getStaticFieldValue(f);
-        	if (o == null) return 0L;
-        	return ((Long)o).longValue();
+            Object o = obj_trav.getStaticFieldValue(f);
+            if (o == null) return 0L;
+            return ((Long)o).longValue();
         }
         //int lo=Unsafe.peek(f.getAddress()); int hi=Unsafe.peek(f.getAddress()+4);
         return f.getAddress().peek8();
@@ -904,9 +904,9 @@ uphere:
     public static char getstatic_C(jq_StaticField f) {
         jq.Assert(f.getType() == jq_Primitive.CHAR);
         if (jq.Bootstrapping) {
-        	Object o = obj_trav.getStaticFieldValue(f);
-        	if (o == null) return 0;
-        	return ((Character)o).charValue();
+            Object o = obj_trav.getStaticFieldValue(f);
+            if (o == null) return 0;
+            return ((Character)o).charValue();
         }
         return (char)f.getAddress().peek4();
     }

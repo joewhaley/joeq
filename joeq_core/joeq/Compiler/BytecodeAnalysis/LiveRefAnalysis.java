@@ -379,13 +379,13 @@ public class LiveRefAnalysis {
         }
         public ExactJSRState copyAsJSR() {
             // nested jsr's!
-        	if (ALWAYS_TRACE) System.out.println("nested jsr's! adding nesting level");
+            if (ALWAYS_TRACE) System.out.println("nested jsr's! adding nesting level");
             // we need a fresh may/mustChangeLocals array for the nested jsr
             return super.copyAsJSR();
         }
         public ExactState copyJSR(ExactJSRState jsr_state) {
             // nested jsr's!
-        	if (ALWAYS_TRACE) System.out.println("nested jsr's! removing nesting level");
+            if (ALWAYS_TRACE) System.out.println("nested jsr's! removing nesting level");
             ExactJSRState that = new ExactJSRState(this.stack.length, this.locals.length);
             System.arraycopy(jsr_state.stack, 0, that.stack, 0, jsr_state.stackDepth);
             System.arraycopy(this.locals, 0, that.locals, 0, this.locals.length);
@@ -411,8 +411,8 @@ public class LiveRefAnalysis {
             return that;
         }
         public boolean mergeBeforeJSR(ExactState that) {
-        	// don't merge changedLocals from 'that'
-        	return super.merge(that);
+            // don't merge changedLocals from 'that'
+            return super.merge(that);
         }
         public boolean merge(ExactState that) {
             jq.Assert(this.stackDepth == that.stackDepth);

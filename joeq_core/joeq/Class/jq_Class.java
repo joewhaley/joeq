@@ -1064,7 +1064,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                         if (TRACE_REPLACE_CLASS) SystemInterface.debugmsg("REPLACING Class: " + old.getDesc() + ". This class was not in the original image: doing nothing!");
                         PrimordialClassLoader.unloadType(class_loader , old) ;
                     } else {
-                    	replaceMethodIn((jq_Class) old);
+                        replaceMethodIn((jq_Class) old);
                     }
                 }
             }

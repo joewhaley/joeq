@@ -8,7 +8,7 @@
 package Assembler.x86;
 
 import java.io.IOException;
-import java.io.OutputStream;
+import java.io.DataOutput;
 
 import Allocator.DefaultCodeAllocator;
 import Bootstrap.PrimordialClassLoader;
@@ -39,10 +39,10 @@ public class Heap2CodeReference extends Reloc {
         DefaultCodeAllocator.patchAbsolute(from_heaploc, to_codeloc);
     }
     
-    public void dumpCOFF(OutputStream out) throws IOException {
-        LittleEndianOutputStream.write_s32(out, from_heaploc.to32BitValue()); // r_vaddr
-        LittleEndianOutputStream.write_s32(out, 0);                 // r_symndx
-        LittleEndianOutputStream.write_u16(out, Reloc.RELOC_ADDR32);// r_type
+    public void dumpCOFF(DataOutput out) throws IOException {
+        out.writeInt(from_heaploc.to32BitValue()); // r_vaddr
+        out.writeInt(0);                           // r_symndx
+        out.writeChar(Reloc.RELOC_ADDR32);         // r_type
     }
     
     public String toString() {

@@ -32,12 +32,12 @@ public final class Interface extends ClassLib.Common.Interface {
     }
     
     public ObjectTraverser getObjectTraverser() {
-    	return sun13_win32ObjectTraverser.INSTANCE;
+        return sun13_win32ObjectTraverser.INSTANCE;
     }
     
     public static class sun13_win32ObjectTraverser extends CommonObjectTraverser {
-    	public static sun13_win32ObjectTraverser INSTANCE = new sun13_win32ObjectTraverser();
-    	protected sun13_win32ObjectTraverser() {}
+        public static sun13_win32ObjectTraverser INSTANCE = new sun13_win32ObjectTraverser();
+        protected sun13_win32ObjectTraverser() {}
         public void initialize() {
             super.initialize();
             jq_NativeThread.USE_INTERRUPTER_THREAD = true;

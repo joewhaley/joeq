@@ -35,24 +35,7 @@ import Util.SingletonIterator;
 public abstract class DoTypeAnalysis {
     
     public static void main(String[] args) throws IOException {
-        jq.Bootstrapping = true; // initialize jq
-        jq.DontCompile = true;
-        jq.boot_types = new java.util.HashSet();
-
-        /*
-        Unsafe.installRemapper(new Unsafe.Remapper() {
-            public int addressOf(Object o) { return 0; }
-            public jq_Type getType(Object o) { return Reflection.getJQType(o.getClass()); }
-        });
-        */
-        
-        String classpath = System.getProperty("java.class.path")+
-                           System.getProperty("path.separator")+
-                           System.getProperty("sun.boot.class.path");
-        for (Iterator it = PrimordialClassLoader.classpaths(classpath); it.hasNext(); ) {
-            String s = (String)it.next();
-            PrimordialClassLoader.loader.addToClasspath(s);
-        }
+        jq.initializeForHostJVMExecution();
         
         Compil3r.BytecodeAnalysis.TypeAnalysis.classesToAnalyze = new HashSet();
         Iterator i = null; String memberName = null;

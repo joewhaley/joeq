@@ -35,15 +35,15 @@ public final class Interface extends ClassLib.Common.Interface {
     }
     
     public ObjectTraverser getObjectTraverser() {
-    	return ibm13_linuxObjectTraverser.INSTANCE;
+        return ibm13_linuxObjectTraverser.INSTANCE;
     }
     
     public static class ibm13_linuxObjectTraverser extends CommonObjectTraverser {
-    	public static ibm13_linuxObjectTraverser INSTANCE = new ibm13_linuxObjectTraverser();
-    	protected ibm13_linuxObjectTraverser() {}
+        public static ibm13_linuxObjectTraverser INSTANCE = new ibm13_linuxObjectTraverser();
+        protected ibm13_linuxObjectTraverser() {}
         public void initialize() {
-    	    super.initialize();
-        	
+            super.initialize();
+            
             // access the ISO-8859-1 character encoding, as it is used during bootstrapping
             try {
                 String s = new String(new byte[0], 0, 0, "ISO-8859-1");
@@ -74,7 +74,7 @@ public final class Interface extends ClassLib.Common.Interface {
         public java.lang.Object mapInstanceField(java.lang.Object o, Clazz.jq_InstanceField f) {
             jq_Class c = f.getDeclaringClass();
             if (c == PrimordialClassLoader.getJavaLangThread()) {
-    	        String fieldName = f.getName().toString();
+                String fieldName = f.getName().toString();
                 if (fieldName.equals("threadLocals"))
                     return java.util.Collections.EMPTY_MAP;
                 if (fieldName.equals("inheritableThreadLocals"))

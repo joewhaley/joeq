@@ -45,7 +45,7 @@ public class SimpleAllocator extends HeapAllocator {
      * @throws OutOfMemoryError if there is not enough memory for initialization
      */
     public final void init() throws OutOfMemoryError {
-    	heapCurrent = heapFirst = (HeapAddress)SystemInterface.syscalloc(BLOCK_SIZE);
+        heapCurrent = heapFirst = (HeapAddress)SystemInterface.syscalloc(BLOCK_SIZE);
         if (heapCurrent.isNull())
             HeapAllocator.outOfMemory();
         heapEnd = (HeapAddress)heapFirst.offset(BLOCK_SIZE - HeapAddress.size());
@@ -115,7 +115,7 @@ public class SimpleAllocator extends HeapAllocator {
      */
     public final Object allocateObjectAlign8(int size, Object vtable)
     throws OutOfMemoryError {
-    	heapCurrent = (HeapAddress)heapCurrent.offset(OBJ_HEADER_SIZE).align(3).offset(-OBJ_HEADER_SIZE);
+        heapCurrent = (HeapAddress)heapCurrent.offset(OBJ_HEADER_SIZE).align(3).offset(-OBJ_HEADER_SIZE);
         return allocateObject(size, vtable);
     }
 
@@ -176,7 +176,7 @@ public class SimpleAllocator extends HeapAllocator {
      * @throws OutOfMemoryError if there is insufficient memory to perform the operation
      */
     public final Object allocateArrayAlign8(int length, int size, Object vtable) throws OutOfMemoryError, NegativeArraySizeException {
-    	heapCurrent = (HeapAddress)heapCurrent.offset(ARRAY_HEADER_SIZE).align(3).offset(-ARRAY_HEADER_SIZE);
+        heapCurrent = (HeapAddress)heapCurrent.offset(ARRAY_HEADER_SIZE).align(3).offset(-ARRAY_HEADER_SIZE);
         return allocateArray(length, size, vtable);
     }
 

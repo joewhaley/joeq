@@ -44,7 +44,6 @@ LUtil/Factories$SerialCollectionFactory;
 LUtil/Factories$SerialListFactory;
 LUtil/Factories$SerialMapFactory;
 LUtil/Factories$SerialSetFactory;
-[LUtil/JDK14HashMap$Entry;
 LUtil/LightMap;
 LUtil/LightMap$BinTreeNode;
 LUtil/LightMap$Entry;
