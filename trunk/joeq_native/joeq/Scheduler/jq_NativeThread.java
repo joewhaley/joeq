@@ -478,6 +478,16 @@ public class jq_NativeThread implements jq_DontAlign {
 
     public void yieldCurrentThreadTo(jq_Thread t) {
         jq_Thread t1 = this.currentThread;
+        if (t1 == this.schedulerThread) {
+            // The scheduler thread is trying to yield.
+            // This occurs when there is contention on a monitor that the scheduler
+            // thread uses, e.g. the monitor for the transfer queue.
+            // The scheduler thread doesn't have anyone to yield to, so we just return,
+            // which will cause us to busy-wait.
+            t1.enableThreadSwitch();
+            Assert._assert(!t1.isThreadSwitchEnabled());
+            return;
+        }
         t1.wasPreempted = false;
         switchThread(t);
         Assert.UNREACHABLE();
