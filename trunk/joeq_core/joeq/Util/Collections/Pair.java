@@ -3,12 +3,18 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Util.Collections;
 
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.AbstractList;
+
+import Util.IO.Textualizable;
+import Util.IO.Textualizer;
+
 /**
  * @author John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
-public class Pair extends java.util.AbstractList
-    implements java.io.Serializable {
+public class Pair extends AbstractList implements Serializable, Textualizable {
     public Object left, right;
     public Pair(Object left, Object right) {
         this.left = left; this.right = right;
@@ -28,5 +34,28 @@ public class Pair extends java.util.AbstractList
         case 1: prev=this.right; this.right=element; return prev;
         default: throw new IndexOutOfBoundsException();
         }
+    }
+    /* (non-Javadoc)
+     * @see Util.IO.Textualizable#write(Util.IO.Textualizer)
+     */
+    public void write(Textualizer t) throws IOException {
+    }
+    /* (non-Javadoc)
+     * @see Util.IO.Textualizable#writeEdges(Util.IO.Textualizer)
+     */
+    public void writeEdges(Textualizer t) throws IOException {
+        t.writeEdge("left", (Textualizable) left);
+        t.writeEdge("right", (Textualizable) right);
+    }
+    /* (non-Javadoc)
+     * @see Util.IO.Textualizable#addEdge(java.lang.String, Util.IO.Textualizable)
+     */
+    public void addEdge(String edge, Textualizable t) {
+        if (edge.equals("left"))
+            this.left = t;
+        else if (edge.equals("right"))
+            this.right = t;
+        else
+            throw new InternalError();
     }
 }

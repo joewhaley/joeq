@@ -3,7 +3,6 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Clazz;
 
-import java.io.DataOutput;
 import java.io.IOException;
 import java.util.StringTokenizer;
 
@@ -14,12 +13,14 @@ import Run_Time.Debug;
 import Run_Time.Reflection;
 import UTF.Utf8;
 import Util.Assert;
+import Util.IO.Textualizable;
+import Util.IO.Textualizer;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
-public abstract class jq_Type {
+public abstract class jq_Type implements Textualizable {
     
     protected final Utf8 desc;
     private /*final*/ Class class_object;  // pointer to our associated java.lang.Class object
@@ -230,9 +231,11 @@ public abstract class jq_Type {
     
     public String toString() { return getName(); }
     
-    public void writeDesc(DataOutput out) throws IOException {
-        out.writeBytes(getDesc().toString());
+    public void write(Textualizer t) throws IOException {
+        t.writeBytes(getDesc().toString());
     }
+    public void writeEdges(Textualizer t) throws IOException { }
+    public void addEdge(String edgeName, Textualizable t) { }
     public static jq_Type read(StringTokenizer st) {
         String desc = st.nextToken();
         if (desc.equals("null")) return null;

@@ -29,7 +29,6 @@ import org.sf.javabdd.BDDPairing;
 import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
 import Clazz.jq_Field;
-import Clazz.jq_Member;
 import Clazz.jq_Method;
 import Clazz.jq_NameAndDesc;
 import Clazz.jq_Reference;
@@ -821,7 +820,7 @@ public class PA {
         }
     }
     
-    jq_NameAndDesc run_method = new jq_NameAndDesc("run", "()V");
+    static jq_NameAndDesc run_method = new jq_NameAndDesc("run", "()V");
     public void addThreadRun(int H_i, jq_Class c) {
         if (!ADD_THREADS) return;
         jq_Method m = c.getVirtualMethod(run_method);
@@ -1437,25 +1436,25 @@ public class PA {
         dos.close();
         
         dos = new DataOutputStream(new FileOutputStream(dumpfilename+".Vmap"));
-        dumpMap(dos, Vmap);
+        Vmap.dump(dos);
         dos.close();
         dos = new DataOutputStream(new FileOutputStream(dumpfilename+".Imap"));
-        dumpMap(dos, Imap);
+        Imap.dump(dos);
         dos.close();
         dos = new DataOutputStream(new FileOutputStream(dumpfilename+".Hmap"));
-        dumpMap(dos, Hmap);
+        Hmap.dump(dos);
         dos.close();
         dos = new DataOutputStream(new FileOutputStream(dumpfilename+".Fmap"));
-        dumpMap(dos, Fmap);
+        Fmap.dump(dos);
         dos.close();
         dos = new DataOutputStream(new FileOutputStream(dumpfilename+".Tmap"));
-        dumpMap(dos, Tmap);
+        Tmap.dump(dos);
         dos.close();
         dos = new DataOutputStream(new FileOutputStream(dumpfilename+".Nmap"));
-        dumpMap(dos, Nmap);
+        Nmap.dump(dos);
         dos.close();
         dos = new DataOutputStream(new FileOutputStream(dumpfilename+".Mmap"));
-        dumpMap(dos, Mmap);
+        Mmap.dump(dos);
         dos.close();
     }
 
@@ -1474,32 +1473,7 @@ public class PA {
         out.writeBytes("Reverse="+reverseLocal+"\n");
     }
     
-    private void dumpMap(DataOutput out, IndexMap m) throws IOException {
-        int n = m.size();
-        out.writeBytes(n+"\n");
-        int j = 0;
-        while (j < m.size()) {
-            Object o = m.get(j);
-            if (o == null) {
-                out.writeBytes("null");
-            } else if (o instanceof Node) {
-                ((Node) o).write(m, out);
-            } else if (o instanceof jq_Member) {
-                ((jq_Member) o).writeDesc(out);
-            } else if (o instanceof jq_Type) {
-                ((jq_Type) o).writeDesc(out);
-            } else if (o instanceof ProgramLocation) {
-                ((ProgramLocation) o).write(out);
-            } else {
-                throw new InternalError(o.toString());
-            }
-            out.writeByte('\n');
-            //System.out.println(j+": "+o);
-            ++j;
-        }
-    }
-
-    static class ThreadRootMap extends AbstractMap {
+    public static class ThreadRootMap extends AbstractMap {
         Set roots;
         ThreadRootMap(Set s) {
             roots = s;
