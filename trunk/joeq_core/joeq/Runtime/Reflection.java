@@ -428,8 +428,8 @@ public abstract class Reflection {
             _delegate = new joeq.Run_Time.BasicReflectionImpl();
         }
 
-        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LRun_Time/Reflection;");
-        _obj_trav = _class.getOrCreateStaticField("obj_trav", "LBootstrap/ObjectTraverser;");
+        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Run_Time/Reflection;");
+        _obj_trav = _class.getOrCreateStaticField("obj_trav", "Ljoeq/Bootstrap/ObjectTraverser;");
         _delegate.initialize();
     }
 

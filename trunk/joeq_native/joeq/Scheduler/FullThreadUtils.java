@@ -1,24 +1,24 @@
 // FullThreadUtils.java, created Mon Dec 16 18:57:12 2002 by mcmartin
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Scheduler;
+package joeq.Scheduler;
 
-import Clazz.jq_Class;
-import Main.jq;
-import Run_Time.Reflection;
+import joeq.Clazz.jq_Class;
+import joeq.Main.jq;
+import joeq.Run_Time.Reflection;
 
 /**
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public class FullThreadUtils implements ThreadUtils.Delegate {
-    public Scheduler.jq_Thread getJQThread(java.lang.Thread t) {
+    public joeq.Scheduler.jq_Thread getJQThread(java.lang.Thread t) {
         if (!jq.RunningNative) {
             if (!jq.IsBootstrapping) return null;
-            jq_Class k = Bootstrap.PrimordialClassLoader.getJavaLangThread();
-            Clazz.jq_InstanceField f = k.getOrCreateInstanceField("jq_thread", "LScheduler/jq_Thread;");
-            return (Scheduler.jq_Thread)Reflection.getfield_A(t, f);
+            jq_Class k = joeq.Clazz.PrimordialClassLoader.getJavaLangThread();
+            joeq.Clazz.jq_InstanceField f = k.getOrCreateInstanceField("jq_thread", "Ljoeq/Scheduler/jq_Thread;");
+            return (joeq.Scheduler.jq_Thread)Reflection.getfield_A(t, f);
         }
-        return ((ClassLib.Common.InterfaceImpl)ClassLib.ClassLibInterface.DEFAULT).getJQThread(t);
+        return ((joeq.ClassLib.Common.InterfaceImpl)joeq.ClassLib.ClassLibInterface.DEFAULT).getJQThread(t);
     }    
 }

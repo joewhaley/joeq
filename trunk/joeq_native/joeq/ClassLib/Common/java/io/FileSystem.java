@@ -1,15 +1,15 @@
 // FileSystem.java, created Thu Jul  4  4:50:03 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package ClassLib.Common.java.io;
+package joeq.ClassLib.Common.java.io;
 
 import java.lang.reflect.Method;
 
-import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Class;
-import Main.jq;
-import Run_Time.Reflection;
-import Util.Assert;
+import joeq.Clazz.PrimordialClassLoader;
+import joeq.Clazz.jq_Class;
+import joeq.Main.jq;
+import joeq.Run_Time.Reflection;
+import joeq.Util.Assert;
 
 /**
  * FileSystem

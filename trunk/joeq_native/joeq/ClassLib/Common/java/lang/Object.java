@@ -1,14 +1,14 @@
 // Object.java, created Thu Jul  4  4:50:03 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package ClassLib.Common.java.lang;
+package joeq.ClassLib.Common.java.lang;
 
-import Allocator.HeapAllocator;
-import Clazz.jq_Reference;
-import Run_Time.Monitor;
-import Run_Time.Reflection;
-import Run_Time.Unsafe;
-import Scheduler.jq_Thread;
+import joeq.Allocator.HeapAllocator;
+import joeq.Clazz.jq_Reference;
+import joeq.Run_Time.Monitor;
+import joeq.Run_Time.Reflection;
+import joeq.Run_Time.Unsafe;
+import joeq.Scheduler.jq_Thread;
 
 /**
  * Object

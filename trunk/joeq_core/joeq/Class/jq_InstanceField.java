@@ -82,6 +82,6 @@ public final class jq_InstanceField extends jq_Field {
     
     public static final jq_Class _class;
     static {
-        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LClazz/jq_InstanceField;");
+        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Clazz/jq_InstanceField;");
     }
 }

@@ -1,14 +1,14 @@
 // Throwable.java, created Fri Aug 16 18:11:49 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package ClassLib.sun14_linux.java.lang;
+package joeq.ClassLib.sun14_linux.java.lang;
 
-import Allocator.CodeAllocator;
-import Clazz.jq_CompiledCode;
-import Clazz.jq_Method;
-import Memory.CodeAddress;
-import Run_Time.ExceptionDeliverer;
-import UTF.Utf8;
+import joeq.Allocator.CodeAllocator;
+import joeq.Clazz.jq_CompiledCode;
+import joeq.Clazz.jq_Method;
+import joeq.Memory.CodeAddress;
+import joeq.Run_Time.ExceptionDeliverer;
+import joeq.UTF.Utf8;
 
 /**
  * Throwable

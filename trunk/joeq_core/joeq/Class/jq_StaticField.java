@@ -183,6 +183,6 @@ public final class jq_StaticField extends jq_Field {
     
     public static final jq_Class _class;
     static {
-        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LClazz/jq_StaticField;");
+        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Clazz/jq_StaticField;");
     }
 }

@@ -343,7 +343,7 @@ public class jq_Array extends jq_Reference implements jq_ClassFileConstants {
     private static Delegate _delegate;
 
     static {
-        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LClazz/jq_Array;");
+        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Clazz/jq_Array;");
         /* Set up delegates. */
         _delegate = null;
         boolean nullVM = jq.nullVM;

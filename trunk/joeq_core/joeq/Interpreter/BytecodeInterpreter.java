@@ -1011,7 +1011,7 @@ public abstract class BytecodeInterpreter {
             f = (jq_Method) tryResolve(f);
             jq_Class k = f.getDeclaringClass();
             k.cls_initialize();
-            jq_Class _class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LRun_Time/Unsafe;");
+            jq_Class _class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Run_Time/Unsafe;");
             if (k == _class || k.isAddressType()) {
                 try {
                     // redirect call

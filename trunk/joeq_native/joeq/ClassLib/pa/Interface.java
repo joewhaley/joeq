@@ -1,16 +1,16 @@
 // Interface.java, created Wed Feb  4 12:10:06 PST 2004
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package ClassLib.pa;
+package joeq.ClassLib.pa;
 
 import java.util.Iterator;
 
-import ClassLib.ClassLibInterface;
-import Clazz.jq_Class;
-import Clazz.jq_InstanceField;
-import Clazz.jq_StaticField;
-import Bootstrap.ObjectTraverser;
-import Util.Assert;
+import joeq.ClassLib.ClassLibInterface;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_InstanceField;
+import joeq.Clazz.jq_StaticField;
+import joeq.Bootstrap.ObjectTraverser;
+import joeq.Util.Assert;
 
 /*
  * Classes we replace for pointer analysis purposes ('pa')
@@ -21,14 +21,14 @@ import Util.Assert;
  * @author  Godmar Back <gback@stanford.edu>
  * @version $Id$
  */
-public final class Interface extends ClassLib.Common.InterfaceImpl {
+public final class Interface extends joeq.ClassLib.Common.InterfaceImpl {
 
     /** Creates new Interface */
     public Interface() {}
 
-    public Iterator getImplementationClassDescs(UTF.Utf8 desc) {
+    public Iterator getImplementationClassDescs(joeq.UTF.Utf8 desc) {
         if (ClassLibInterface.USE_JOEQ_CLASSLIB && desc.toString().startsWith("Ljava/")) {
-            UTF.Utf8 u = UTF.Utf8.get("LClassLib/pa/"+desc.toString().substring(1));
+            joeq.UTF.Utf8 u = joeq.UTF.Utf8.get("Ljoeq/ClassLib/pa/"+desc.toString().substring(1));
             return java.util.Collections.singleton(u).iterator();
         }
         return java.util.Collections.EMPTY_SET.iterator();

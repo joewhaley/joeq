@@ -1,12 +1,12 @@
 // ExtendedSystem.java, created Sun Jun  9  6:56:00 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package ClassLib.ibm13_linux.com.ibm.jvm;
+package joeq.ClassLib.ibm13_linux.com.ibm.jvm;
 
-import Clazz.jq_Array;
-import Clazz.jq_Reference;
-import Clazz.jq_Type;
-import Run_Time.Reflection;
+import joeq.Clazz.jq_Array;
+import joeq.Clazz.jq_Reference;
+import joeq.Clazz.jq_Type;
+import joeq.Run_Time.Reflection;
 
 /**
  * ExtendedSystem

@@ -1,13 +1,13 @@
 // StackHeapWalker.java, created Thu Sep 26  7:13:33 2002 by laudney
 // Copyright (C) 2001-3 laudney <laudney@acm.org>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Run_Time;
+package joeq.Run_Time;
 
 import java.util.ArrayList;
 
-import GC.GCBitsManager;
-import Memory.HeapAddress;
-import Memory.StackAddress;
+import joeq.GC.GCBitsManager;
+import joeq.Memory.HeapAddress;
+import joeq.Memory.StackAddress;
 
 /**
  * StackHeapWalker

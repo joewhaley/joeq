@@ -1,34 +1,34 @@
 // InterfaceImpl.java, created Wed Dec 11 11:59:03 2002 by mcmartin
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package ClassLib.Common;
+package joeq.ClassLib.Common;
 
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Vector;
 
-import Bootstrap.BootImage;
-import Bootstrap.MethodInvocation;
-import Bootstrap.ObjectTraverser;
-import Bootstrap.PrimordialClassLoader;
-import ClassLib.ClassLibInterface;
-import Clazz.jq_Class;
-import Clazz.jq_InstanceField;
-import Clazz.jq_Member;
-import Clazz.jq_Method;
-import Clazz.jq_StaticField;
-import Clazz.jq_Type;
-import Clazz.jq_Reference.jq_NullType;
-import Compil3r.Quad.BytecodeToQuad.jq_ReturnAddressType;
-import Main.jq;
-import Memory.CodeAddress;
-import Memory.HeapAddress;
-import Memory.StackAddress;
-import Run_Time.Reflection;
-import Run_Time.TypeCheck;
-import Scheduler.jq_Thread;
-import Util.Assert;
+import joeq.Bootstrap.BootImage;
+import joeq.Bootstrap.MethodInvocation;
+import joeq.Bootstrap.ObjectTraverser;
+import joeq.Clazz.PrimordialClassLoader;
+import joeq.ClassLib.ClassLibInterface;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_InstanceField;
+import joeq.Clazz.jq_Member;
+import joeq.Clazz.jq_Method;
+import joeq.Clazz.jq_StaticField;
+import joeq.Clazz.jq_Type;
+import joeq.Clazz.jq_Reference.jq_NullType;
+import joeq.Compil3r.Quad.BytecodeToQuad.jq_ReturnAddressType;
+import joeq.Main.jq;
+import joeq.Memory.CodeAddress;
+import joeq.Memory.HeapAddress;
+import joeq.Memory.StackAddress;
+import joeq.Run_Time.Reflection;
+import joeq.Run_Time.TypeCheck;
+import joeq.Scheduler.jq_Thread;
+import joeq.Util.Assert;
 
 /**
  * InterfaceImpl
@@ -41,10 +41,10 @@ public abstract class InterfaceImpl implements Interface {
     /** Creates new Interface */
     public InterfaceImpl() {}
 
-    public java.util.Iterator getImplementationClassDescs(UTF.Utf8 desc) {
+    public java.util.Iterator getImplementationClassDescs(joeq.UTF.Utf8 desc) {
         if (ClassLibInterface.USE_JOEQ_CLASSLIB && (desc.toString().startsWith("Ljava/") ||
                                                     desc.toString().startsWith("Lsun/misc/"))) {
-            UTF.Utf8 u = UTF.Utf8.get("LClassLib/Common/"+desc.toString().substring(1));
+            joeq.UTF.Utf8 u = joeq.UTF.Utf8.get("Ljoeq/ClassLib/Common/"+desc.toString().substring(1));
             return java.util.Collections.singleton(u).iterator();
         }
         return java.util.Collections.EMPTY_SET.iterator();
@@ -67,7 +67,7 @@ public abstract class InterfaceImpl implements Interface {
             nullStaticFields.add(BootImage._DEFAULT);
             nullStaticFields.add(Reflection._obj_trav);
             Reflection.registerNullStaticFields(nullStaticFields);
-            nullStaticFields.add(Allocator.DefaultCodeAllocator._default_allocator);
+            nullStaticFields.add(joeq.Allocator.DefaultCodeAllocator._default_allocator);
             jq_Class k = PrimordialClassLoader.getJavaLangSystem();
             nullStaticFields.add(k.getOrCreateStaticField("in", "Ljava/io/InputStream;"));
             nullStaticFields.add(k.getOrCreateStaticField("out", "Ljava/io/PrintStream;"));
@@ -82,7 +82,7 @@ public abstract class InterfaceImpl implements Interface {
                                                           "Ljava/util/Stack;"));
             k = PrimordialClassLoader.getJavaLangRefFinalizer();
             // todo: static fields in "java.lang.ref.Finalizer" need help.
-            k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LMain/jq;");
+            k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Main/jq;");
             nullStaticFields.add(k.getOrCreateStaticField("on_vm_startup",
                                                           "Ljava/util/List;"));
             k = PrimordialClassLoader.getJavaLangClass();
@@ -95,9 +95,9 @@ public abstract class InterfaceImpl implements Interface {
             nullInstanceFields.add(k.getOrCreateInstanceField("entries", "Ljava/util/Hashtable;"));
             nullInstanceFields.add(k.getOrCreateInstanceField("cenpos", "J"));
             nullInstanceFields.add(k.getOrCreateInstanceField("pos", "J"));
-            k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LBootstrap/PrimordialClassLoader$ZipFileElement;");
+            k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LClazz.PrimordialClassLoader$ZipFileElement;");
             nullInstanceFields.add(k.getOrCreateInstanceField("entries", "Ljava/util/Map;"));
-            k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LBootstrap/PrimordialClassLoader$PathElement;");
+            k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LClazz.PrimordialClassLoader$PathElement;");
             nullInstanceFields.add(k.getOrCreateInstanceField("entries", "Ljava/util/Set;"));
         }
 
@@ -122,7 +122,7 @@ public abstract class InterfaceImpl implements Interface {
                     return null;
                 if (o == jq_ReturnAddressType.INSTANCE)
                     return null;
-                if (!Clazz.jq_Class.USE_CLASS_OBJECT_FIELD &&
+                if (!joeq.Clazz.jq_Class.USE_CLASS_OBJECT_FIELD &&
                     fieldName.equals("class_object"))
                     return Reflection.getJDKType((jq_Type) o);
             } else if (c == PrimordialClassLoader.getJavaLangReflectField()) {
@@ -137,8 +137,8 @@ public abstract class InterfaceImpl implements Interface {
                 c == PrimordialClassLoader.getJavaLangReflectConstructor()) {
                 if (fieldName.equals("jq_init"))
                     return Reflection.getJQMember((Constructor) o);
-            } else if (!Clazz.jq_Member.USE_MEMBER_OBJECT_FIELD &&
-                       (c == PrimordialClassLoader.loader.getBSType("LClazz/jq_Member;"))) {
+            } else if (!joeq.Clazz.jq_Member.USE_MEMBER_OBJECT_FIELD &&
+                       (c == PrimordialClassLoader.loader.getBSType("Ljoeq/Clazz/jq_Member;"))) {
                 if (fieldName.equals("member_object")) {
                     // reflection returns different objects every time!
                     // cache one and use it from now on.
@@ -246,108 +246,108 @@ public abstract class InterfaceImpl implements Interface {
         }
     }
     
-    public java.lang.Class createNewClass(Clazz.jq_Type f) {
+    public java.lang.Class createNewClass(joeq.Clazz.jq_Type f) {
         Assert._assert(jq.RunningNative);
-        return ClassLib.Common.java.lang.Class.createNewClass(f);
+        return joeq.ClassLib.Common.java.lang.Class.createNewClass(f);
     }
     
-    public java.lang.reflect.Constructor createNewConstructor(Clazz.jq_Initializer f) {
+    public java.lang.reflect.Constructor createNewConstructor(joeq.Clazz.jq_Initializer f) {
         Assert._assert(jq.RunningNative);
-        return ClassLib.Common.java.lang.reflect.Constructor.createNewConstructor(f);
+        return joeq.ClassLib.Common.java.lang.reflect.Constructor.createNewConstructor(f);
     }
     
-    public void initNewConstructor(java.lang.reflect.Constructor dis, Clazz.jq_Initializer f) {
-        Assert._assert(jq.RunningNative);
-        java.lang.Object o = dis;
-        ClassLib.Common.java.lang.reflect.Constructor.initNewConstructor((ClassLib.Common.java.lang.reflect.Constructor)o, f);
-    }
-    
-    public java.lang.reflect.Field createNewField(Clazz.jq_Field f) {
-        Assert._assert(jq.RunningNative);
-        return ClassLib.Common.java.lang.reflect.Field.createNewField(f);
-    }
-    
-    public void initNewField(java.lang.reflect.Field dis, Clazz.jq_Field f) {
+    public void initNewConstructor(java.lang.reflect.Constructor dis, joeq.Clazz.jq_Initializer f) {
         Assert._assert(jq.RunningNative);
         java.lang.Object o = dis;
-        ClassLib.Common.java.lang.reflect.Field.initNewField((ClassLib.Common.java.lang.reflect.Field)o, f);
+        joeq.ClassLib.Common.java.lang.reflect.Constructor.initNewConstructor((joeq.ClassLib.Common.java.lang.reflect.Constructor)o, f);
     }
     
-    public java.lang.reflect.Method createNewMethod(Clazz.jq_Method f) {
+    public java.lang.reflect.Field createNewField(joeq.Clazz.jq_Field f) {
         Assert._assert(jq.RunningNative);
-        return ClassLib.Common.java.lang.reflect.Method.createNewMethod(f);
+        return joeq.ClassLib.Common.java.lang.reflect.Field.createNewField(f);
     }
     
-    public void initNewMethod(java.lang.reflect.Method dis, Clazz.jq_Method f) {
+    public void initNewField(java.lang.reflect.Field dis, joeq.Clazz.jq_Field f) {
         Assert._assert(jq.RunningNative);
         java.lang.Object o = dis;
-        ClassLib.Common.java.lang.reflect.Method.initNewMethod((ClassLib.Common.java.lang.reflect.Method)o, f);
+        joeq.ClassLib.Common.java.lang.reflect.Field.initNewField((joeq.ClassLib.Common.java.lang.reflect.Field)o, f);
     }
     
-    public Clazz.jq_Field getJQField(java.lang.reflect.Field f) {
+    public java.lang.reflect.Method createNewMethod(joeq.Clazz.jq_Method f) {
+        Assert._assert(jq.RunningNative);
+        return joeq.ClassLib.Common.java.lang.reflect.Method.createNewMethod(f);
+    }
+    
+    public void initNewMethod(java.lang.reflect.Method dis, joeq.Clazz.jq_Method f) {
+        Assert._assert(jq.RunningNative);
+        java.lang.Object o = dis;
+        joeq.ClassLib.Common.java.lang.reflect.Method.initNewMethod((joeq.ClassLib.Common.java.lang.reflect.Method)o, f);
+    }
+    
+    public joeq.Clazz.jq_Field getJQField(java.lang.reflect.Field f) {
         Assert._assert(jq.RunningNative);
         java.lang.Object o = f;
-        return ((ClassLib.Common.java.lang.reflect.Field)o).jq_field;
+        return ((joeq.ClassLib.Common.java.lang.reflect.Field)o).jq_field;
     }
     
-    public Clazz.jq_Initializer getJQInitializer(java.lang.reflect.Constructor f) {
+    public joeq.Clazz.jq_Initializer getJQInitializer(java.lang.reflect.Constructor f) {
         Assert._assert(jq.RunningNative);
         java.lang.Object o = f;
-        return ((ClassLib.Common.java.lang.reflect.Constructor)o).jq_init;
+        return ((joeq.ClassLib.Common.java.lang.reflect.Constructor)o).jq_init;
     }
     
-    public Clazz.jq_Method getJQMethod(java.lang.reflect.Method f) {
+    public joeq.Clazz.jq_Method getJQMethod(java.lang.reflect.Method f) {
         Assert._assert(jq.RunningNative);
         java.lang.Object o = f;
-        return ((ClassLib.Common.java.lang.reflect.Method)o).jq_method;
+        return ((joeq.ClassLib.Common.java.lang.reflect.Method)o).jq_method;
     }
     
-    public Clazz.jq_Type getJQType(java.lang.Class k) {
+    public joeq.Clazz.jq_Type getJQType(java.lang.Class k) {
         Assert._assert(jq.RunningNative);
         java.lang.Object o = k;
-        return ((ClassLib.Common.java.lang.Class)o).jq_type;
+        return ((joeq.ClassLib.Common.java.lang.Class)o).jq_type;
     }
     
-    public Clazz.jq_Type getOrCreateType(java.lang.ClassLoader cl, UTF.Utf8 desc) {
+    public joeq.Clazz.jq_Type getOrCreateType(java.lang.ClassLoader cl, joeq.UTF.Utf8 desc) {
         Assert._assert(jq.RunningNative);
         java.lang.Object o = cl;
-        return ((ClassLib.Common.java.lang.ClassLoader)o).getOrCreateType(desc);
+        return ((joeq.ClassLib.Common.java.lang.ClassLoader)o).getOrCreateType(desc);
     }
     
-    public void unloadType(java.lang.ClassLoader cl, Clazz.jq_Type t) {
+    public void unloadType(java.lang.ClassLoader cl, joeq.Clazz.jq_Type t) {
         Assert._assert(jq.RunningNative);
         java.lang.Object o = cl;
-        ((ClassLib.Common.java.lang.ClassLoader)o).unloadType(t);
+        ((joeq.ClassLib.Common.java.lang.ClassLoader)o).unloadType(t);
     }
     
     public void init_zipfile(java.util.zip.ZipFile dis, java.lang.String name) throws java.io.IOException {
         Assert._assert(jq.RunningNative);
         java.lang.Object o = dis;
-        ((ClassLib.Common.java.util.zip.ZipFile)o).__init__(name);
+        ((joeq.ClassLib.Common.java.util.zip.ZipFile)o).__init__(name);
     }
     
     public void init_inflater(java.util.zip.Inflater dis, boolean nowrap) throws java.io.IOException {
         Assert._assert(jq.RunningNative);
         java.lang.Object o = dis;
-        ((ClassLib.Common.java.util.zip.Inflater)o).__init__(nowrap);
+        ((joeq.ClassLib.Common.java.util.zip.Inflater)o).__init__(nowrap);
     }
     
     public void initializeSystemClass() throws java.lang.Throwable {
         Assert._assert(jq.RunningNative);
-        ClassLib.Common.java.lang.System.initializeSystemClass();
+        joeq.ClassLib.Common.java.lang.System.initializeSystemClass();
     }
     
-    public Scheduler.jq_Thread getJQThread(java.lang.Thread t) {
+    public joeq.Scheduler.jq_Thread getJQThread(java.lang.Thread t) {
         Assert._assert(jq.RunningNative);
         java.lang.Object o = t;
-        return ((ClassLib.Common.java.lang.Thread)o).jq_thread;
+        return ((joeq.ClassLib.Common.java.lang.Thread)o).jq_thread;
     }    
 
     /*
     public void open(java.io.RandomAccessFile dis, java.lang.String name, boolean writeable) throws java.io.FileNotFoundException {
         jq.Assert(jq.RunningNative);
         java.lang.Object o = dis;
-        ((ClassLib.Common.java.io.RandomAccessFile)o).open(name, writeable);
+        ((joeq.ClassLib.Common.java.io.RandomAccessFile)o).open(name, writeable);
     }
     */
     

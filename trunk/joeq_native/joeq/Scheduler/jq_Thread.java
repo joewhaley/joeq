@@ -1,27 +1,27 @@
 // jq_Thread.java, created Mon Feb  5 23:23:21 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Scheduler;
+package joeq.Scheduler;
 
-import Allocator.ObjectLayout;
-import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Class;
-import Clazz.jq_CompiledCode;
-import Clazz.jq_DontAlign;
-import Clazz.jq_InstanceField;
-import Clazz.jq_InstanceMethod;
-import Clazz.jq_NameAndDesc;
-import Clazz.jq_Reference;
-import Clazz.jq_StaticMethod;
-import Main.jq;
-import Memory.CodeAddress;
-import Memory.HeapAddress;
-import Memory.StackAddress;
-import Run_Time.SystemInterface;
-import Run_Time.Unsafe;
-import UTF.Utf8;
-import Util.Assert;
-import Util.AtomicCounter;
+import joeq.Allocator.ObjectLayout;
+import joeq.Clazz.PrimordialClassLoader;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_CompiledCode;
+import joeq.Clazz.jq_DontAlign;
+import joeq.Clazz.jq_InstanceField;
+import joeq.Clazz.jq_InstanceMethod;
+import joeq.Clazz.jq_NameAndDesc;
+import joeq.Clazz.jq_Reference;
+import joeq.Clazz.jq_StaticMethod;
+import joeq.Main.jq;
+import joeq.Memory.CodeAddress;
+import joeq.Memory.HeapAddress;
+import joeq.Memory.StackAddress;
+import joeq.Run_Time.SystemInterface;
+import joeq.Run_Time.Unsafe;
+import joeq.UTF.Utf8;
+import joeq.Util.Assert;
+import joeq.Util.AtomicCounter;
 
 /**
  * A jq_Thread corresponds to a Java (lightweight) thread.
@@ -207,7 +207,7 @@ public class jq_Thread implements jq_DontAlign {
     public static final jq_InstanceField _thread_switch_enabled;
     public static final jq_InstanceField _isInterrupted;
     static {
-        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LScheduler/jq_Thread;");
+        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Scheduler/jq_Thread;");
         _destroyCurrentThread = _class.getOrCreateStaticMethod("destroyCurrentThread", "()V");
         _thread_switch_enabled = _class.getOrCreateInstanceField("thread_switch_enabled", "I");
         _isInterrupted = _class.getOrCreateInstanceField("isInterrupted", "I");

@@ -1,7 +1,7 @@
 // ClassLoader.java, created Thu Jul  4  4:50:03 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package ClassLib.Common.java.lang;
+package joeq.ClassLib.Common.java.lang;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -9,19 +9,19 @@ import java.security.ProtectionDomain;
 import java.util.HashMap;
 import java.util.Map;
 
-import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Array;
-import Clazz.jq_Class;
-import Clazz.jq_ClassFileConstants;
-import Clazz.jq_CompiledCode;
-import Clazz.jq_Reference;
-import Clazz.jq_Type;
-import Main.jq;
-import Memory.StackAddress;
-import Run_Time.Reflection;
-import Run_Time.StackCodeWalker;
-import UTF.Utf8;
-import Util.Assert;
+import joeq.Clazz.PrimordialClassLoader;
+import joeq.Clazz.jq_Array;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_ClassFileConstants;
+import joeq.Clazz.jq_CompiledCode;
+import joeq.Clazz.jq_Reference;
+import joeq.Clazz.jq_Type;
+import joeq.Main.jq;
+import joeq.Memory.StackAddress;
+import joeq.Run_Time.Reflection;
+import joeq.Run_Time.StackCodeWalker;
+import joeq.UTF.Utf8;
+import joeq.Util.Assert;
 
 /**
  * ClassLoader

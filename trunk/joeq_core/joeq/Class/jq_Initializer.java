@@ -60,6 +60,6 @@ public final class jq_Initializer extends jq_InstanceMethod {
     
     public static final jq_Class _class;
     static {
-        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LClazz/jq_Initializer;");
+        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Clazz/jq_Initializer;");
     }
 }

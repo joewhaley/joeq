@@ -1,7 +1,7 @@
 // ClassLoader.java, created Jul 5, 2003 2:04:37 AM by joewhaley
 // Copyright (C) 2003 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package ClassLib.sun142_linux.java.lang;
+package joeq.ClassLib.sun142_linux.java.lang;
 
 /**
  * ClassLoader

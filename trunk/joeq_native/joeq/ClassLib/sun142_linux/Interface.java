@@ -1,28 +1,28 @@
 // Interface.java, created Fri Apr  5 18:36:41 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package ClassLib.sun142_linux;
+package joeq.ClassLib.sun142_linux;
 
 import java.util.Iterator;
 
-import Bootstrap.ObjectTraverser;
-import Bootstrap.PrimordialClassLoader;
-import ClassLib.ClassLibInterface;
-import Clazz.jq_Class;
+import joeq.Bootstrap.ObjectTraverser;
+import joeq.Clazz.PrimordialClassLoader;
+import joeq.ClassLib.ClassLibInterface;
+import joeq.Clazz.jq_Class;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
-public class Interface extends ClassLib.sun14_linux.Interface {
+public class Interface extends joeq.ClassLib.sun14_linux.Interface {
 
     /** Creates new Interface */
     public Interface() {}
 
-    public Iterator getImplementationClassDescs(UTF.Utf8 desc) {
+    public Iterator getImplementationClassDescs(joeq.UTF.Utf8 desc) {
         if (ClassLibInterface.USE_JOEQ_CLASSLIB && desc.toString().startsWith("Ljava/")) {
-            UTF.Utf8 u = UTF.Utf8.get("LClassLib/sun142_linux/"+desc.toString().substring(1));
-            return new Util.Collections.AppendIterator(super.getImplementationClassDescs(desc),
+            joeq.UTF.Utf8 u = joeq.UTF.Utf8.get("Ljoeq/ClassLib/sun142_linux/"+desc.toString().substring(1));
+            return new joeq.Util.Collections.AppendIterator(super.getImplementationClassDescs(desc),
                                             java.util.Collections.singleton(u).iterator());
         }
         return super.getImplementationClassDescs(desc);
@@ -39,7 +39,7 @@ public class Interface extends ClassLib.sun14_linux.Interface {
             super.initialize();
             
             jq_Class k;
-            k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LClassLib/Common/java/util/zip/DeflaterHuffman;");
+            k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/ClassLib/Common/java/util/zip/DeflaterHuffman;");
             k.load();
             
             // used during bootstrapping.

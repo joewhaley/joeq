@@ -1,28 +1,28 @@
 // Class.java, created Thu Jul  4  4:50:03 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package ClassLib.Common.java.lang;
+package joeq.ClassLib.Common.java.lang;
 
-import ClassLib.Common.ClassUtils;
-import Clazz.jq_Array;
-import Clazz.jq_Class;
-import Clazz.jq_ClassFileConstants;
-import Clazz.jq_ClassInitializer;
-import Clazz.jq_Field;
-import Clazz.jq_Initializer;
-import Clazz.jq_InstanceField;
-import Clazz.jq_InstanceMethod;
-import Clazz.jq_Method;
-import Clazz.jq_NameAndDesc;
-import Clazz.jq_Primitive;
-import Clazz.jq_Reference;
-import Clazz.jq_StaticField;
-import Clazz.jq_StaticMethod;
-import Clazz.jq_Type;
-import Run_Time.Reflection;
-import Run_Time.TypeCheck;
-import UTF.Utf8;
-import Util.Assert;
+import joeq.ClassLib.Common.ClassUtils;
+import joeq.Clazz.jq_Array;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_ClassFileConstants;
+import joeq.Clazz.jq_ClassInitializer;
+import joeq.Clazz.jq_Field;
+import joeq.Clazz.jq_Initializer;
+import joeq.Clazz.jq_InstanceField;
+import joeq.Clazz.jq_InstanceMethod;
+import joeq.Clazz.jq_Method;
+import joeq.Clazz.jq_NameAndDesc;
+import joeq.Clazz.jq_Primitive;
+import joeq.Clazz.jq_Reference;
+import joeq.Clazz.jq_StaticField;
+import joeq.Clazz.jq_StaticMethod;
+import joeq.Clazz.jq_Type;
+import joeq.Run_Time.Reflection;
+import joeq.Run_Time.TypeCheck;
+import joeq.UTF.Utf8;
+import joeq.Util.Assert;
 
 /**
  * Class
@@ -39,7 +39,7 @@ public class Class {
     
     private Class(jq_Type t) {
         this.jq_type = t;
-        //Run_Time.SystemInterface.debugmsg("Created new Class object for "+t.getName());
+        //joeq.Run_Time.SystemInterface.debugmsg("Created new Class object for "+t.getName());
     }
     
     // native method implementations.

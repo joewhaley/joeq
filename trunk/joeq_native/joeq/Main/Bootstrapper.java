@@ -1,7 +1,7 @@
 // Bootstrapper.java, created Mon Feb  5 23:23:21 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Main;
+package joeq.Main;
 
 import java.io.BufferedReader;
 import java.io.FileOutputStream;
@@ -17,38 +17,38 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Set;
 
-import Allocator.CodeAllocator;
-import Allocator.DefaultCodeAllocator;
-import Bootstrap.BootImage;
-import Bootstrap.BootstrapCodeAddress;
-import Bootstrap.BootstrapCodeAllocator;
-import Bootstrap.BootstrapRootSet;
-import Bootstrap.ObjectTraverser;
-import Bootstrap.PrimordialClassLoader;
-import Bootstrap.BootstrapCodeAddress.BootstrapCodeAddressFactory;
-import ClassLib.ClassLibInterface;
-import Clazz.jq_Array;
-import Clazz.jq_Class;
-import Clazz.jq_Member;
-import Clazz.jq_Method;
-import Clazz.jq_Reference;
-import Clazz.jq_StaticField;
-import Clazz.jq_StaticMethod;
-import Clazz.jq_Type;
-import Compil3r.CompilationState;
-import Compil3r.BytecodeAnalysis.Trimmer;
-import Compil3r.CompilationState.BootstrapCompilation;
-import Compil3r.Reference.x86.x86ReferenceCompiler;
-import Memory.CodeAddress;
-import Memory.HeapAddress;
-import Run_Time.Reflection;
-import Run_Time.SystemInterface;
-import Run_Time.Unsafe;
-import UTF.Utf8;
-import Util.Assert;
-import Util.Collections.LinearSet;
-import Util.IO.DirectBufferedFileOutputStream;
-import Util.IO.ExtendedDataOutput;
+import joeq.Allocator.CodeAllocator;
+import joeq.Allocator.DefaultCodeAllocator;
+import joeq.Bootstrap.BootImage;
+import joeq.Bootstrap.BootstrapCodeAddress;
+import joeq.Bootstrap.BootstrapCodeAllocator;
+import joeq.Bootstrap.BootstrapRootSet;
+import joeq.Bootstrap.ObjectTraverser;
+import joeq.Clazz.PrimordialClassLoader;
+import joeq.Bootstrap.BootstrapCodeAddress.BootstrapCodeAddressFactory;
+import joeq.ClassLib.ClassLibInterface;
+import joeq.Clazz.jq_Array;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_Member;
+import joeq.Clazz.jq_Method;
+import joeq.Clazz.jq_Reference;
+import joeq.Clazz.jq_StaticField;
+import joeq.Clazz.jq_StaticMethod;
+import joeq.Clazz.jq_Type;
+import joeq.Compil3r.CompilationState;
+import joeq.Compil3r.BytecodeAnalysis.Trimmer;
+import joeq.Compil3r.CompilationState.BootstrapCompilation;
+import joeq.Compil3r.Reference.x86.x86ReferenceCompiler;
+import joeq.Memory.CodeAddress;
+import joeq.Memory.HeapAddress;
+import joeq.Run_Time.Reflection;
+import joeq.Run_Time.SystemInterface;
+import joeq.Run_Time.Unsafe;
+import joeq.UTF.Utf8;
+import joeq.Util.Assert;
+import joeq.Util.Collections.LinearSet;
+import joeq.Util.IO.DirectBufferedFileOutputStream;
+import joeq.Util.IO.ExtendedDataOutput;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>
@@ -67,7 +67,7 @@ public abstract class Bootstrapper {
         
         String imageName = "jq.obj";
         //int startAddress = 0x00890000;
-        String rootMethodClassName = "Main.JoeqVM";
+        String rootMethodClassName = "joeq.Main.JoeqVM";
         String rootMethodName = "boot";
         String classList = null;
         String addToClassList = null;
@@ -78,9 +78,9 @@ public abstract class Bootstrapper {
         // initialize list of methods to invoke on joeq startup
         jq.on_vm_startup = new LinkedList();
         
-        CodeAddress.FACTORY = Bootstrap.BootstrapCodeAddress.FACTORY;
-        HeapAddress.FACTORY = Bootstrap.BootstrapHeapAddress.FACTORY;
-        //StackAddress.FACTORY = Bootstrap.BootstrapStackAddress.FACTORY;
+        CodeAddress.FACTORY = joeq.Bootstrap.BootstrapCodeAddress.FACTORY;
+        HeapAddress.FACTORY = joeq.Bootstrap.BootstrapHeapAddress.FACTORY;
+        //StackAddress.FACTORY = joeq.Bootstrap.BootstrapStackAddress.FACTORY;
         
         ClassLibInterface.useJoeqClasslib(true);
         jq.IsBootstrapping = true;
@@ -89,11 +89,11 @@ public abstract class Bootstrapper {
         
         if (ClassLibInterface.DEFAULT.getClass().toString().indexOf("win32") != -1) {
             DUMP_COFF = true;
-            x86ReferenceCompiler.THREAD_BLOCK_PREFIX = Assembler.x86.x86.PREFIX_FS;
+            x86ReferenceCompiler.THREAD_BLOCK_PREFIX = joeq.Assembler.x86.x86.PREFIX_FS;
             x86ReferenceCompiler.THREAD_BLOCK_OFFSET = 0x14;
         } else {
             DUMP_COFF = false;
-            //x86ReferenceCompiler.THREAD_BLOCK_PREFIX = Assembler.x86.x86.PREFIX_GS;
+            //x86ReferenceCompiler.THREAD_BLOCK_PREFIX = joeq.Assembler.x86.x86.PREFIX_GS;
             //x86ReferenceCompiler.THREAD_BLOCK_OFFSET = 0x4;
         }
 
@@ -322,7 +322,7 @@ public abstract class Bootstrapper {
 
                 methodset = rs.getNecessaryMethods();
             } else {
-                Compil3r.Quad.AndersenPointerAnalysis.INSTANCE.addToRootSet(Compil3r.Quad.CodeCache.getCode(rootm));
+                joeq.Compil3r.Quad.AndersenPointerAnalysis.INSTANCE.addToRootSet(joeq.Compil3r.Quad.CodeCache.getCode(rootm));
                 BootstrapRootSet rs = null;
                 methodset = rs.getNecessaryMethods();
             }
@@ -399,7 +399,7 @@ public abstract class Bootstrapper {
         System.out.println("SF init time: "+sfinittime/1000f+"s");
         
         // turn on jq.RunningNative flag in image
-        jq_Class jq_class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LMain/jq;");
+        jq_Class jq_class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Main/jq;");
         jq_class.setStaticData(jq_class.getOrCreateStaticField("RunningNative","Z"), 1);
         // turn off jq.IsBootstrapping flag in image
         jq_class.setStaticData(jq_class.getOrCreateStaticField("IsBootstrapping","Z"), 0);
@@ -443,8 +443,8 @@ public abstract class Bootstrapper {
             Reflection.getJDKType(t);
         }
 
-        //Object xxx = Assembler.x86.ExternalReference._heap_from;
-        //Object yyy = ClassLib.sun13.java.io.Win32FileSystem._class;
+        //Object xxx = joeq.Assembler.x86.ExternalReference._heap_from;
+        //Object yyy = joeq.ClassLib.sun13.java.io.Win32FileSystem._class;
         
         // get the set of compiled methods, because it is used during bootstrapping.
         CodeAllocator.getCompiledMethods();

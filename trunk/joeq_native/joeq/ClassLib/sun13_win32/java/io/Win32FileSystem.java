@@ -1,10 +1,10 @@
 // Win32FileSystem.java, created Fri Jan 11 17:09:56 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package ClassLib.sun13_win32.java.io;
+package joeq.ClassLib.sun13_win32.java.io;
 
-import Memory.HeapAddress;
-import Run_Time.SystemInterface;
+import joeq.Memory.HeapAddress;
+import joeq.Run_Time.SystemInterface;
 
 /**
  * Win32FileSystem

@@ -1,36 +1,36 @@
 // jq_NativeThread.java, created Mon Apr  9  1:52:50 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Scheduler;
+package joeq.Scheduler;
 
 import java.util.Iterator;
 import java.util.Random;
 
-import Allocator.CodeAllocator;
-import Allocator.HeapAllocator;
-import Allocator.RuntimeCodeAllocator;
-import Allocator.SimpleAllocator;
-import Assembler.x86.x86Constants;
-import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Class;
-import Clazz.jq_DontAlign;
-import Clazz.jq_InstanceMethod;
-import Clazz.jq_StaticField;
-import Clazz.jq_StaticMethod;
-import GC.GCManager;
-import GC.GCVisitor;
-import Main.jq;
-import Memory.CodeAddress;
-import Memory.HeapAddress;
-import Memory.StackAddress;
-import Memory.Heap.SegregatedListHeap;
-import Memory.Heap.SizeControl;
-import Run_Time.Debug;
-import Run_Time.StackCodeWalker;
-import Run_Time.SystemInterface;
-import Run_Time.Unsafe;
-import Util.Assert;
-import Util.Strings;
+import joeq.Allocator.CodeAllocator;
+import joeq.Allocator.HeapAllocator;
+import joeq.Allocator.RuntimeCodeAllocator;
+import joeq.Allocator.SimpleAllocator;
+import joeq.Assembler.x86.x86Constants;
+import joeq.Clazz.PrimordialClassLoader;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_DontAlign;
+import joeq.Clazz.jq_InstanceMethod;
+import joeq.Clazz.jq_StaticField;
+import joeq.Clazz.jq_StaticMethod;
+import joeq.GC.GCManager;
+import joeq.GC.GCVisitor;
+import joeq.Main.jq;
+import joeq.Memory.CodeAddress;
+import joeq.Memory.HeapAddress;
+import joeq.Memory.StackAddress;
+import joeq.Memory.Heap.SegregatedListHeap;
+import joeq.Memory.Heap.SizeControl;
+import joeq.Run_Time.Debug;
+import joeq.Run_Time.StackCodeWalker;
+import joeq.Run_Time.SystemInterface;
+import joeq.Run_Time.Unsafe;
+import joeq.Util.Assert;
+import joeq.Util.Strings;
 
 /**
  * A jq_NativeThread corresponds to a virtual CPU in the scheduler.  There is one
@@ -642,7 +642,7 @@ public class jq_NativeThread implements x86Constants, jq_DontAlign {
             SystemInterface.suspend_thread(native_threads[i].thread_handle);
         }
         //dumpThreads();
-        Debugger.OnlineDebugger.debuggerEntryPoint();
+        joeq.Debugger.OnlineDebugger.debuggerEntryPoint();
         for (int i = 0; i < native_threads.length; ++i) {
             SystemInterface.resume_thread(native_threads[i].thread_handle);
         }
@@ -746,7 +746,7 @@ public class jq_NativeThread implements x86Constants, jq_DontAlign {
     public static final jq_StaticField _num_of_daemon_threads;
 
     static {
-        _class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LScheduler/jq_NativeThread;");
+        _class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Scheduler/jq_NativeThread;");
         _nativeThreadEntry = _class.getOrCreateInstanceMethod("nativeThreadEntry", "()V");
         _schedulerLoop = _class.getOrCreateInstanceMethod("schedulerLoop", "()V");
         _threadSwitch = _class.getOrCreateInstanceMethod("threadSwitch", "()V");

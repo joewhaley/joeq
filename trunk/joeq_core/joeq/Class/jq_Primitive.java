@@ -79,5 +79,5 @@ public class jq_Primitive extends jq_Type implements jq_ClassFileConstants {
     public static final jq_Primitive BOOLEAN = (jq_Primitive)PrimordialClassLoader.loader.getOrCreateBSType(Utf8.BOOLEAN_DESC);
     public static final jq_Primitive VOID   = (jq_Primitive)PrimordialClassLoader.loader.getOrCreateBSType(Utf8.VOID_DESC);
     
-    public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LClazz/jq_Primitive;");
+    public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Clazz/jq_Primitive;");
 }

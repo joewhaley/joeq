@@ -1,7 +1,7 @@
 // BootstrapCodeAllocator.java, created Tue Feb 27  3:00:22 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Bootstrap;
+package joeq.Bootstrap;
 
 import java.io.DataOutput;
 import java.io.IOException;
@@ -9,16 +9,16 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Vector;
 
-import Allocator.CodeAllocator;
-import Clazz.jq_BytecodeMap;
-import Clazz.jq_CompiledCode;
-import Clazz.jq_Method;
-import Clazz.jq_TryCatch;
-import Memory.Address;
-import Memory.CodeAddress;
-import Run_Time.ExceptionDeliverer;
-import Util.Assert;
-import Util.Convert;
+import joeq.Allocator.CodeAllocator;
+import joeq.Clazz.jq_BytecodeMap;
+import joeq.Clazz.jq_CompiledCode;
+import joeq.Clazz.jq_Method;
+import joeq.Clazz.jq_TryCatch;
+import joeq.Memory.Address;
+import joeq.Memory.CodeAddress;
+import joeq.Run_Time.ExceptionDeliverer;
+import joeq.Util.Assert;
+import joeq.Util.Convert;
 
 /**
  * BootstrapCodeAllocator

@@ -19,19 +19,19 @@ class Delegates {
                 s.putReg_A(((RegisterOperand)Operator.Special.getOp1(q)).getRegister(), Unsafe.getThreadBlock());
         }
         public void interpretSetThreadBlock(Operator.Special op, Quad q, QuadInterpreter s) {
-            Scheduler.jq_Thread o = (Scheduler.jq_Thread)Operator.getObjectOpValue(Operator.Special.getOp2(q), s);
+            joeq.Scheduler.jq_Thread o = (joeq.Scheduler.jq_Thread)Operator.getObjectOpValue(Operator.Special.getOp2(q), s);
             if (jq.RunningNative)
                 Unsafe.setThreadBlock(o);
         }
         public void interpretMonitorEnter(Operator.Monitor op, Quad q, QuadInterpreter s) {
             Object o = Operator.getObjectOpValue(Operator.Monitor.getSrc(q), s);
             if (jq.RunningNative)
-                Run_Time.Monitor.monitorenter(o);
+                joeq.Run_Time.Monitor.monitorenter(o);
         }
         public void interpretMonitorExit(Operator.Monitor op, Quad q, QuadInterpreter s) {
             Object o = Operator.getObjectOpValue(Operator.Monitor.getSrc(q), s);
             if (jq.RunningNative)
-                Run_Time.Monitor.monitorexit(o);
+                joeq.Run_Time.Monitor.monitorexit(o);
         }
     }
 }

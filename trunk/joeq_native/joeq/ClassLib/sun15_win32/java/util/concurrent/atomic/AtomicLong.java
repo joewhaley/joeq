@@ -1,11 +1,11 @@
 /*
  * Created on Feb 23, 2004
  */
-package ClassLib.sun15_win32.java.util.concurrent.atomic;
+package joeq.ClassLib.sun15_win32.java.util.concurrent.atomic;
 
-import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Class;
-import Clazz.jq_InstanceField;
+import joeq.Clazz.PrimordialClassLoader;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_InstanceField;
 
 /**
  * @author jwhaley

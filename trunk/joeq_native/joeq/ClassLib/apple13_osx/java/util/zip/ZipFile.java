@@ -1,7 +1,7 @@
 // ZipFile.java, created Thu Oct 17  0:30:10 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package ClassLib.apple13_osx.java.util.zip;
+package joeq.ClassLib.apple13_osx.java.util.zip;
 
 /**
  * ZipFile

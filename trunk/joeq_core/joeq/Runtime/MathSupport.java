@@ -441,7 +441,7 @@ public abstract class MathSupport {
     public static final jq_StaticField _maxlong;
     public static final jq_StaticField _minlong;
     static {
-        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LRun_Time/MathSupport;");
+        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Run_Time/MathSupport;");
         _lmul = _class.getOrCreateStaticMethod("lmul", "(JJ)J");
         _ldiv = _class.getOrCreateStaticMethod("ldiv", "(JJ)J");
         _lrem = _class.getOrCreateStaticMethod("lrem", "(JJ)J");

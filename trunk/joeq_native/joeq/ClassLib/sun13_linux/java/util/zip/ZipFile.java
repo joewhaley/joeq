@@ -1,7 +1,7 @@
 // ZipFile.java, created Sun May  5 17:28:15 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package ClassLib.sun13_linux.java.util.zip;
+package joeq.ClassLib.sun13_linux.java.util.zip;
 
 /**
  * ZipFile

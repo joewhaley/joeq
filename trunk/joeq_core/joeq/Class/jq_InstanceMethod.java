@@ -93,5 +93,5 @@ public class jq_InstanceMethod extends jq_Method {
         super.accept(mv);
     }
     
-    public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LClazz/jq_InstanceMethod;");
+    public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Clazz/jq_InstanceMethod;");
 }

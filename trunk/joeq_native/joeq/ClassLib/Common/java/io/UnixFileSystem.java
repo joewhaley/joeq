@@ -1,23 +1,23 @@
 // UnixFileSystem.java, created Thu Jul  4  4:50:03 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package ClassLib.Common.java.io;
+package joeq.ClassLib.Common.java.io;
 
-import Bootstrap.MethodInvocation;
-import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Class;
-import Clazz.jq_DontAlign;
-import Clazz.jq_Method;
-import Clazz.jq_NameAndDesc;
-import Main.jq;
-import Memory.Address;
-import Memory.CodeAddress;
-import Memory.HeapAddress;
-import Run_Time.SystemInterface;
-import Run_Time.SystemInterface.ExternalLink;
-import Run_Time.SystemInterface.Library;
-import Run_Time.Unsafe;
-import Util.Assert;
+import joeq.Bootstrap.MethodInvocation;
+import joeq.Clazz.PrimordialClassLoader;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_DontAlign;
+import joeq.Clazz.jq_Method;
+import joeq.Clazz.jq_NameAndDesc;
+import joeq.Main.jq;
+import joeq.Memory.Address;
+import joeq.Memory.CodeAddress;
+import joeq.Memory.HeapAddress;
+import joeq.Run_Time.SystemInterface;
+import joeq.Run_Time.SystemInterface.ExternalLink;
+import joeq.Run_Time.SystemInterface.Library;
+import joeq.Run_Time.Unsafe;
+import joeq.Util.Assert;
 
 /**
  * UnixFileSystem

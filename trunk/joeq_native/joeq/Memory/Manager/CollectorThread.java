@@ -67,7 +67,7 @@ public class CollectorThread extends Thread implements GCConstants {
     }
 
     /**
-     * Initialize for boot image. Should be called from VM_Allocator.init() 
+     * Initialize for boot image. Should be called from VM_joeq.Allocator.init() 
      */
     static void init() {
         gcBarrier = new SynchronizationBarrier();
@@ -123,7 +123,7 @@ public class CollectorThread extends Thread implements GCConstants {
      * Run method for collector thread (one per VM_Processor).
      * Enters an infinite loop, waiting for collections to be requested,
      * performing those collections, and then waiting again.
-     * Calls VM_Allocator.collect to perform the collection, which
+     * Calls VM_joeq.Allocator.collect to perform the collection, which
      * will be different for the different allocators/collectors
      * that the RVM can be configured to use.
      */
@@ -143,10 +143,10 @@ public class CollectorThread extends Thread implements GCConstants {
             // the schedulers collectorQueue
             //
             /*
-            VM_Scheduler.collectorMutex.lock();
+            VM_joeq.Scheduler.collectorMutex.lock();
             VM_Thread.getCurrentThread().yield(
-                VM_Scheduler.collectorQueue,
-                VM_Scheduler.collectorMutex);
+                VM_joeq.Scheduler.collectorQueue,
+                VM_joeq.Scheduler.collectorMutex);
             */
 
             // block mutators from running on the current processor
@@ -200,7 +200,7 @@ public class CollectorThread extends Thread implements GCConstants {
             //
             if (gcOrdinal == 1) {
                 // Snip reference to any methods that are still marked obsolete after
-                // we've done stack scans. This allows reclaiming them on next GC.
+                // we've done stack scans. This allows reclaiming them on next joeq.GC.
                 //VM_CompiledMethods.snipObsoleteCompiledMethods();
 
                 collectionCount += 1;
@@ -414,7 +414,7 @@ public class CollectorThread extends Thread implements GCConstants {
     // Record number of processors that will be participating in gc synchronization.
     //
     public static void boot(int numProcessors) {
-        //VM_Allocator.gcSetup(numProcessors);
+        //VM_joeq.Allocator.gcSetup(numProcessors);
     }
 
     void incrementWaitTimeTotals() {

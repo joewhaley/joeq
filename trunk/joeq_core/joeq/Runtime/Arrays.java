@@ -88,7 +88,7 @@ public class Arrays implements jq_ClassFileConstants {
     public static final jq_StaticMethod _multinewarray;
 
     static {
-        jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LRun_Time/Arrays;");
-        _multinewarray = k.getOrCreateStaticMethod("multinewarray", "(CLClazz/jq_Type;)Ljava/lang/Object;");
+        jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Run_Time/Arrays;");
+        _multinewarray = k.getOrCreateStaticMethod("multinewarray", "(CLjoeq/Clazz/jq_Type;)Ljava/lang/Object;");
     }
 }

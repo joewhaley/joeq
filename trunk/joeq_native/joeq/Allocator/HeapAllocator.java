@@ -1,22 +1,22 @@
 // HeapAllocator.java, created Tue Feb 27  2:52:57 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Allocator;
+package joeq.Allocator;
 
 import java.lang.reflect.Array;
 
-import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Array;
-import Clazz.jq_Class;
-import Clazz.jq_ClassFileConstants;
-import Clazz.jq_Reference;
-import Clazz.jq_StaticMethod;
-import Clazz.jq_Type;
-import Memory.Address;
-import Memory.HeapAddress;
-import Memory.Heap.Heap;
-import Run_Time.SystemInterface;
-import Util.Assert;
+import joeq.Clazz.PrimordialClassLoader;
+import joeq.Clazz.jq_Array;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_ClassFileConstants;
+import joeq.Clazz.jq_Reference;
+import joeq.Clazz.jq_StaticMethod;
+import joeq.Clazz.jq_Type;
+import joeq.Memory.Address;
+import joeq.Memory.HeapAddress;
+import joeq.Memory.Heap.Heap;
+import joeq.Run_Time.SystemInterface;
+import joeq.Util.Assert;
 
 /**
  * HeapAllocator
@@ -163,7 +163,7 @@ public abstract class HeapAllocator implements jq_ClassFileConstants {
     public static void heapExhausted(Heap heap, int size, int count)
     throws OutOfMemoryError {
         if (count > 3) outOfMemory();
-        // TODO: trigger GC.
+        // TODO: trigger joeq.GC.
     }
     
     private static boolean isOutOfMemory = false;
@@ -249,7 +249,7 @@ public abstract class HeapAllocator implements jq_ClassFileConstants {
         /*
         public static final jq_InstanceField _ip;
         static {
-            jq_Class k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LAllocator/HeapAllocator$HeapPointer;");
+            jq_Class k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Allocator/HeapAllocator$HeapPointer;");
             _ip = k.getOrCreateInstanceField("ip", "I");
         }
         */
@@ -257,7 +257,7 @@ public abstract class HeapAllocator implements jq_ClassFileConstants {
     
     public static final jq_StaticMethod _clsinitAndAllocateObject;
     static {
-        jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LAllocator/HeapAllocator;");
-        _clsinitAndAllocateObject = k.getOrCreateStaticMethod("clsinitAndAllocateObject", "(LClazz/jq_Type;)Ljava/lang/Object;");
+        jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Allocator/HeapAllocator;");
+        _clsinitAndAllocateObject = k.getOrCreateStaticMethod("clsinitAndAllocateObject", "(Ljoeq/Clazz/jq_Type;)Ljava/lang/Object;");
     }
 }

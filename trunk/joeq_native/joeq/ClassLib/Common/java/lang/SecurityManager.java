@@ -1,13 +1,13 @@
 // SecurityManager.java, created Sun Nov 17 16:08:31 2002 by asharm2
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package ClassLib.Common.java.lang;
+package joeq.ClassLib.Common.java.lang;
 
-import Clazz.jq_CompiledCode;
-import Memory.StackAddress;
-import Run_Time.Reflection;
-import Run_Time.StackCodeWalker;
-import Util.Assert;
+import joeq.Clazz.jq_CompiledCode;
+import joeq.Memory.StackAddress;
+import joeq.Run_Time.Reflection;
+import joeq.Run_Time.StackCodeWalker;
+import joeq.Util.Assert;
 
 /**
  * SecurityManager

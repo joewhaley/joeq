@@ -1527,7 +1527,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
             current_state.push_I(res);
             appendQuad(q);
             
-            jq_Class k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LUtil/Strings;");
+            jq_Class k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Util/Strings;");
             jq_StaticMethod sm = k.getOrCreateStaticMethod("hex8", "(I)Ljava/lang/String;");
             INVOKEhelper(Invoke.INVOKESTATIC_A.INSTANCE, sm, sm.getReturnType(), false);
             return;

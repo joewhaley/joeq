@@ -1,16 +1,16 @@
 // DirectBindCall.java, created Tue Feb 27  2:59:43 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Assembler.x86;
+package joeq.Assembler.x86;
 
 import java.io.DataOutput;
 import java.io.IOException;
 
-import Allocator.DefaultCodeAllocator;
-import Clazz.jq_CompiledCode;
-import Clazz.jq_Method;
-import Memory.CodeAddress;
-import Util.Assert;
+import joeq.Allocator.DefaultCodeAllocator;
+import joeq.Clazz.jq_CompiledCode;
+import joeq.Clazz.jq_Method;
+import joeq.Memory.CodeAddress;
+import joeq.Util.Assert;
 
 /**
  * DirectBindCall

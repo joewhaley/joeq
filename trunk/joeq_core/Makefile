@@ -1,18 +1,18 @@
-PACKAGES = joeq
+MODULES = ../joeq ../native ../x86
 SUPPORT_LIBS = joeq/Support/javabdd_0.6.jar
 JDK14SUPPORT_LIB = joeq/Support/java14.jar
 
 ifeq (${OS},Windows_NT)
 CLASSPATH_SEP = \;
-BUILD_CLASSPATH = ".;$(subst $(space),;,$(SUPPORT_LIBS))"
+BUILD_CLASSPATH = ".;$(subst $(space),;,$(SUPPORT_LIBS) $(MODULES))"
 JOEQ_DIR = $(shell cygpath -ma .)
 else
 CLASSPATH_SEP = :
-BUILD_CLASSPATH = .:$(subst $(space),:,$(SUPPORT_LIBS))
+BUILD_CLASSPATH = .:$(subst $(space),:,$(SUPPORT_LIBS) $(MODULES))
 JOEQ_DIR = $(PWD)
 endif
 
-ALLDIRS := $(shell find $(PACKAGES) -type d | grep -v CVS)
+ALLDIRS := $(shell find $(MODULES) -type d | grep -v CVS)
 ALLJAVA := $(foreach d, $(ALLDIRS), $(wildcard $(d)/*.java))
 ALLPKGS := $(sort $(foreach j, $(ALLJAVA), $(patsubst %/,%,$(dir $(j)))))
 ALLPKGNAMES := $(subst /,.,$(ALLPKGS))

@@ -1,14 +1,14 @@
 // Finalizer.java, created Thu Jul  4  4:50:03 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package ClassLib.Common.java.lang.ref;
+package joeq.ClassLib.Common.java.lang.ref;
 
-import Clazz.jq_InstanceMethod;
-import Clazz.jq_NameAndDesc;
-import Clazz.jq_Reference;
-import Run_Time.Reflection;
-import UTF.Utf8;
-import Util.Assert;
+import joeq.Clazz.jq_InstanceMethod;
+import joeq.Clazz.jq_NameAndDesc;
+import joeq.Clazz.jq_Reference;
+import joeq.Run_Time.Reflection;
+import joeq.UTF.Utf8;
+import joeq.Util.Assert;
 
 /**
  * Finalizer

@@ -1,22 +1,22 @@
 // x86Assembler.java, created Mon Feb  5 23:23:19 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Assembler.x86;
+package joeq.Assembler.x86;
 
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import Allocator.DefaultCodeAllocator;
-import Allocator.CodeAllocator.x86CodeBuffer;
-import Main.jq;
-import Memory.CodeAddress;
-import Util.Assert;
-import Util.Strings;
-import Util.Collections.LightRelation;
-import Util.Collections.Relation;
+import joeq.Allocator.DefaultCodeAllocator;
+import joeq.Allocator.CodeAllocator.x86CodeBuffer;
+import joeq.Main.jq;
+import joeq.Memory.CodeAddress;
+import joeq.Util.Assert;
+import joeq.Util.Strings;
+import joeq.Util.Collections.LightRelation;
+import joeq.Util.Collections.Relation;
 
-// Referenced classes of package Assembler.x86:
+// Referenced classes of package joeq.Assembler.x86:
 //            x86Constants, x86CodeBuffer, x86
 
 /**

@@ -1,16 +1,16 @@
 // GCBits.java, created Wed Sep 25 20:04:21 2002 by laudney
 // Copyright (C) 2001-3 laudney <laudney@acm.org>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package GC;
+package joeq.GC;
 
 import java.util.HashSet;
 
-import Allocator.MemUnit;
-import Allocator.SimpleAllocator;
-import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Class;
-import Memory.HeapAddress;
-import Util.BitString;
+import joeq.Allocator.MemUnit;
+import joeq.Allocator.SimpleAllocator;
+import joeq.Clazz.PrimordialClassLoader;
+import joeq.Clazz.jq_Class;
+import joeq.Memory.HeapAddress;
+import joeq.Util.BitString;
 
 /**
  * GCBits
@@ -90,5 +90,5 @@ public class GCBits {
         return units;
     }
 
-    public static final jq_Class _class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LGC/GCBits;");
+    public static final jq_Class _class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/GC/GCBits;");
 }

@@ -1,7 +1,7 @@
 // BootstrapRootSet.java, created Wed Jun 26 12:27:23 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Bootstrap;
+package joeq.Bootstrap;
 
 import java.util.HashSet;
 import java.util.Iterator;
@@ -10,32 +10,33 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import Clazz.jq_Array;
-import Clazz.jq_Class;
-import Clazz.jq_ClassInitializer;
-import Clazz.jq_Field;
-import Clazz.jq_FieldVisitor;
-import Clazz.jq_Initializer;
-import Clazz.jq_InstanceField;
-import Clazz.jq_InstanceMethod;
-import Clazz.jq_Member;
-import Clazz.jq_Method;
-import Clazz.jq_MethodVisitor;
-import Clazz.jq_Primitive;
-import Clazz.jq_Reference;
-import Clazz.jq_StaticField;
-import Clazz.jq_StaticMethod;
-import Clazz.jq_Type;
-import Clazz.jq_TypeVisitor;
-import Memory.CodeAddress;
-import Memory.HeapAddress;
-import Memory.StackAddress;
-import Run_Time.ExceptionDeliverer;
-import Run_Time.Reflection;
-import Run_Time.SystemInterface;
-import Run_Time.Unsafe;
-import Util.Assert;
-import Util.Collections.IdentityHashCodeWrapper;
+import joeq.Clazz.PrimordialClassLoader;
+import joeq.Clazz.jq_Array;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_ClassInitializer;
+import joeq.Clazz.jq_Field;
+import joeq.Clazz.jq_FieldVisitor;
+import joeq.Clazz.jq_Initializer;
+import joeq.Clazz.jq_InstanceField;
+import joeq.Clazz.jq_InstanceMethod;
+import joeq.Clazz.jq_Member;
+import joeq.Clazz.jq_Method;
+import joeq.Clazz.jq_MethodVisitor;
+import joeq.Clazz.jq_Primitive;
+import joeq.Clazz.jq_Reference;
+import joeq.Clazz.jq_StaticField;
+import joeq.Clazz.jq_StaticMethod;
+import joeq.Clazz.jq_Type;
+import joeq.Clazz.jq_TypeVisitor;
+import joeq.Memory.CodeAddress;
+import joeq.Memory.HeapAddress;
+import joeq.Memory.StackAddress;
+import joeq.Run_Time.ExceptionDeliverer;
+import joeq.Run_Time.Reflection;
+import joeq.Run_Time.SystemInterface;
+import joeq.Run_Time.Unsafe;
+import joeq.Util.Assert;
+import joeq.Util.Collections.IdentityHashCodeWrapper;
 
 /**
  * BootstrapRootSet
@@ -267,8 +268,8 @@ public class BootstrapRootSet {
         //addNecessaryField(Unsafe._remapper_object);
 
         // We need to be able to allocate objects and code.
-        addNecessaryType(Allocator.SimpleAllocator._class);
-        addNecessaryType(PrimordialClassLoader.loader.getOrCreateBSType("LAllocator/RuntimeCodeAllocator;"));
+        addNecessaryType(joeq.Allocator.SimpleAllocator._class);
+        addNecessaryType(PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Allocator/RuntimeCodeAllocator;"));
         
         // setIn0, setOut0, and setErr0 use these fields, but the trimmer doesn't detect the uses.
         c = PrimordialClassLoader.getJavaLangSystem();
@@ -302,16 +303,16 @@ public class BootstrapRootSet {
         }
         
         // entrypoint for new threads
-        addNecessaryMethod(Scheduler.jq_NativeThread._nativeThreadEntry);
+        addNecessaryMethod(joeq.Scheduler.jq_NativeThread._nativeThreadEntry);
         // thread switch interrupt
-        addNecessaryMethod(Scheduler.jq_NativeThread._threadSwitch);
+        addNecessaryMethod(joeq.Scheduler.jq_NativeThread._threadSwitch);
         // ctrl-break handler
-        addNecessaryMethod(Scheduler.jq_NativeThread._ctrl_break_handler);
+        addNecessaryMethod(joeq.Scheduler.jq_NativeThread._ctrl_break_handler);
         // entrypoint for interrupter thread
-        addNecessaryMethod(Scheduler.jq_InterrupterThread._run);
+        addNecessaryMethod(joeq.Scheduler.jq_InterrupterThread._run);
         
         // dunno why this doesn't show up
-        addNecessaryType(Assembler.x86.Heap2HeapReference._class);
+        addNecessaryType(joeq.Assembler.x86.Heap2HeapReference._class);
         
         try {
             // an instance of this class is created via reflection during VM initialization.

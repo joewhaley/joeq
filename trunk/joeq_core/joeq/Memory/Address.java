@@ -52,7 +52,7 @@ public abstract class Address {
     public static final jq_Class _class;
 
     static {
-        _class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LMemory/Address;");
+        _class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Memory/Address;");
     }
 
     protected final Object clone() throws CloneNotSupportedException {

@@ -1,13 +1,13 @@
 // ResourceBundle.java, created Thu Jul  4  4:50:04 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package ClassLib.Common.java.util;
+package joeq.ClassLib.Common.java.util;
 
-import Clazz.jq_CompiledCode;
-import Memory.StackAddress;
-import Run_Time.Reflection;
-import Run_Time.StackCodeWalker;
-import Util.Assert;
+import joeq.Clazz.jq_CompiledCode;
+import joeq.Memory.StackAddress;
+import joeq.Run_Time.Reflection;
+import joeq.Run_Time.StackCodeWalker;
+import joeq.Util.Assert;
 
 /**
  * ResourceBundle

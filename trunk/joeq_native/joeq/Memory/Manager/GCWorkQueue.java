@@ -294,7 +294,7 @@ public class GCWorkQueue {
         if (VALIDATE_BUFFER_PUTS) {
             if (!GCUtil.validRef(ref)) {
                 GCUtil.dumpRef(ref);
-                //VM_Memory.dumpMemory(ref, 64, 64);
+                //VM_joeq.Memory.dumpMemory(ref, 64, 64);
                 // dump 16 words on either side of bad ref
                 Assert.UNREACHABLE();
             }

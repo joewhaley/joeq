@@ -242,5 +242,5 @@ public abstract class jq_Type implements Textualizable {
         jq_Type r = PrimordialClassLoader.loader.getOrCreateBSType(desc);
         return r;
     }    
-    public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LClazz/jq_Type;");
+    public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Clazz/jq_Type;");
 }

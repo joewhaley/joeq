@@ -1,23 +1,23 @@
 // ExceptionDeliverer.java, created Mon Feb  5 23:23:21 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Run_Time;
+package joeq.Run_Time;
 
-import Allocator.CodeAllocator;
-import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Class;
-import Clazz.jq_CompiledCode;
-import Clazz.jq_Method;
-import Clazz.jq_Reference;
-import Clazz.jq_StaticMethod;
-import Clazz.jq_TryCatch;
-import Debugger.OnlineDebugger;
-import Memory.CodeAddress;
-import Memory.StackAddress;
-import Scheduler.jq_Thread;
-import UTF.Utf8;
-import Util.Assert;
-import Util.Strings;
+import joeq.Allocator.CodeAllocator;
+import joeq.Clazz.PrimordialClassLoader;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_CompiledCode;
+import joeq.Clazz.jq_Method;
+import joeq.Clazz.jq_Reference;
+import joeq.Clazz.jq_StaticMethod;
+import joeq.Clazz.jq_TryCatch;
+import joeq.Debugger.OnlineDebugger;
+import joeq.Memory.CodeAddress;
+import joeq.Memory.StackAddress;
+import joeq.Scheduler.jq_Thread;
+import joeq.UTF.Utf8;
+import joeq.Util.Assert;
+import joeq.Util.Strings;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>
@@ -226,7 +226,7 @@ public abstract class ExceptionDeliverer {
     public static final jq_StaticMethod _trap_handler;
     public static final jq_StaticMethod _debug_trap_handler;
     static {
-        jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LRun_Time/ExceptionDeliverer;");
+        jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Run_Time/ExceptionDeliverer;");
         _athrow = k.getOrCreateStaticMethod("athrow", "(Ljava/lang/Throwable;)V");
         _trap_handler = k.getOrCreateStaticMethod("trap_handler", "(I)V");
         _debug_trap_handler = k.getOrCreateStaticMethod("debug_trap_handler", "(I)V");

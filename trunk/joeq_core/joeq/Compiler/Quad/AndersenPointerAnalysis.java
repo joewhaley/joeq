@@ -490,7 +490,7 @@ public class AndersenPointerAnalysis {
         addInclusionEdge(on, bos_n1, null);
         addInclusionEdge(on, bos_n2, null);
         
-        jq_Class nt = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LScheduler/jq_NativeThread;");
+        jq_Class nt = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Scheduler/jq_NativeThread;");
         nt.load();
         ConcreteTypeNode nt_n1 = ConcreteTypeNode.get(nt);
         //Assert._assert(joeq.Scheduler.jq_NativeThread._nativeThreadEntry.isLoaded());

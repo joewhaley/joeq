@@ -1,15 +1,15 @@
 // DefaultCodeAllocator.java, created Mon Apr  9  1:01:21 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Allocator;
+package joeq.Allocator;
 
-import Allocator.CodeAllocator.x86CodeBuffer;
-import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Class;
-import Clazz.jq_StaticField;
-import Memory.Address;
-import Memory.CodeAddress;
-import Run_Time.Unsafe;
+import joeq.Allocator.CodeAllocator.x86CodeBuffer;
+import joeq.Clazz.PrimordialClassLoader;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_StaticField;
+import joeq.Memory.Address;
+import joeq.Memory.CodeAddress;
+import joeq.Run_Time.Unsafe;
 
 /**
  * DefaultCodeAllocator
@@ -42,7 +42,7 @@ public abstract class DefaultCodeAllocator {
     
     public static final jq_StaticField _default_allocator;
     static {
-        jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LAllocator/DefaultCodeAllocator;");
-        _default_allocator = k.getOrCreateStaticField("default_allocator", "LAllocator/CodeAllocator;");
+        jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Allocator/DefaultCodeAllocator;");
+        _default_allocator = k.getOrCreateStaticField("default_allocator", "Ljoeq/Allocator/CodeAllocator;");
     }
 }

@@ -1,35 +1,35 @@
 // OnlineDebugger.java, created Sat Feb 22 13:35:26 2003 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Debugger;
+package joeq.Debugger;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.StringTokenizer;
 
-import Allocator.CodeAllocator;
-import Clazz.jq_Array;
-import Clazz.jq_Class;
-import Clazz.jq_CompiledCode;
-import Clazz.jq_InstanceField;
-import Clazz.jq_Method;
-import Clazz.jq_Primitive;
-import Clazz.jq_Reference;
-import Compil3r.CompilationState;
-import Compil3r.BytecodeAnalysis.BytecodeVisitor;
-import Main.TraceFlags;
-import Main.jq;
-import Memory.Address;
-import Memory.CodeAddress;
-import Memory.HeapAddress;
-import Memory.StackAddress;
-import Run_Time.Reflection;
-import Run_Time.StackCodeWalker;
-import Run_Time.SystemInterface;
-import Scheduler.jq_NativeThread;
-import Util.Assert;
-import Util.Strings;
+import joeq.Allocator.CodeAllocator;
+import joeq.Clazz.jq_Array;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_CompiledCode;
+import joeq.Clazz.jq_InstanceField;
+import joeq.Clazz.jq_Method;
+import joeq.Clazz.jq_Primitive;
+import joeq.Clazz.jq_Reference;
+import joeq.Compil3r.CompilationState;
+import joeq.Compil3r.BytecodeAnalysis.BytecodeVisitor;
+import joeq.Main.TraceFlags;
+import joeq.Main.jq;
+import joeq.Memory.Address;
+import joeq.Memory.CodeAddress;
+import joeq.Memory.HeapAddress;
+import joeq.Memory.StackAddress;
+import joeq.Run_Time.Reflection;
+import joeq.Run_Time.StackCodeWalker;
+import joeq.Run_Time.SystemInterface;
+import joeq.Scheduler.jq_NativeThread;
+import joeq.Util.Assert;
+import joeq.Util.Strings;
 
 /**
  * @author John Whaley <jwhaley@alum.mit.edu>

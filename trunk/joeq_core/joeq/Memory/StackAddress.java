@@ -58,7 +58,7 @@ public class StackAddress extends Address {
     public static final jq_Class _class;
     public static final jq_StaticField _FACTORY;
     static {
-        _class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LMemory/StackAddress;");
-        _FACTORY = _class.getOrCreateStaticField("FACTORY", "LMemory/StackAddress$StackAddressFactory;");
+        _class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Memory/StackAddress;");
+        _FACTORY = _class.getOrCreateStaticField("FACTORY", "Ljoeq/Memory/StackAddress$StackAddressFactory;");
     }
 }

@@ -3,7 +3,7 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Memory.Heap;
 
-import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.PrimordialClassLoader;
 import joeq.Clazz.jq_Array;
 import joeq.Clazz.jq_Class;
 import joeq.Memory.HeapAddress;
@@ -24,6 +24,6 @@ public class BlockControl {
     boolean sticky;
     int alloc_size; // allocated length of mark and alloc arrays
 
-    public static final jq_Class _class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LMemory/Heap/BlockControl;");
+    public static final jq_Class _class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Memory/Heap/BlockControl;");
     public static final jq_Array _array = _class.getArrayTypeForElementType();
 }

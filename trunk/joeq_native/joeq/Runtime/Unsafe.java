@@ -65,23 +65,23 @@ public abstract class Unsafe {
     public static final jq_StaticMethod _isGE;
     
     static {
-        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LRun_Time/Unsafe;");
+        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Run_Time/Unsafe;");
         _floatToIntBits = _class.getOrCreateStaticMethod("floatToIntBits", "(F)I");
         _intBitsToFloat = _class.getOrCreateStaticMethod("intBitsToFloat", "(I)F");
         _doubleToLongBits = _class.getOrCreateStaticMethod("doubleToLongBits", "(D)J");
         _longBitsToDouble = _class.getOrCreateStaticMethod("longBitsToDouble", "(J)D");
         _pushArg = _class.getOrCreateStaticMethod("pushArg", "(I)V");
-        _pushArgA = _class.getOrCreateStaticMethod("pushArgA", "(LMemory/Address;)V");
+        _pushArgA = _class.getOrCreateStaticMethod("pushArgA", "(Ljoeq/Memory/Address;)V");
         _popFP32 = _class.getOrCreateStaticMethod("popFP32", "()F");
         _popFP64 = _class.getOrCreateStaticMethod("popFP64", "()D");
         _pushFP32 = _class.getOrCreateStaticMethod("pushFP32", "(F)V");
         _pushFP64 = _class.getOrCreateStaticMethod("pushFP64", "(D)V");
-        _invoke = _class.getOrCreateStaticMethod("invoke", "(LMemory/CodeAddress;)J");
-        _invokeA = _class.getOrCreateStaticMethod("invokeA", "(LMemory/CodeAddress;)LMemory/Address;");
+        _invoke = _class.getOrCreateStaticMethod("invoke", "(Ljoeq/Memory/CodeAddress;)J");
+        _invokeA = _class.getOrCreateStaticMethod("invokeA", "(Ljoeq/Memory/CodeAddress;)LMemory/Address;");
         _EAX = _class.getOrCreateStaticMethod("EAX", "()I");
-        _getThreadBlock = _class.getOrCreateStaticMethod("getThreadBlock", "()LScheduler/jq_Thread;");
-        _setThreadBlock = _class.getOrCreateStaticMethod("setThreadBlock", "(LScheduler/jq_Thread;)V");
-        _longJump = _class.getOrCreateStaticMethod("longJump", "(LMemory/CodeAddress;LMemory/StackAddress;LMemory/StackAddress;I)V");
+        _getThreadBlock = _class.getOrCreateStaticMethod("getThreadBlock", "()Ljoeq/Scheduler/jq_Thread;");
+        _setThreadBlock = _class.getOrCreateStaticMethod("setThreadBlock", "(Ljoeq/Scheduler/jq_Thread;)V");
+        _longJump = _class.getOrCreateStaticMethod("longJump", "(Ljoeq/Memory/CodeAddress;LMemory/StackAddress;LMemory/StackAddress;I)V");
         _isEQ = _class.getOrCreateStaticMethod("isEQ", "()Z");
         _isGE = _class.getOrCreateStaticMethod("isGE", "()Z");
     }

@@ -1,9 +1,9 @@
 // ThreadUtils.java, created Mon Dec 16 18:57:13 2002 by mcmartin
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Scheduler;
+package joeq.Scheduler;
 
-import Main.jq;
+import joeq.Main.jq;
 
 /**
  * @author  John Whaley <jwhaley@alum.mit.edu>
@@ -23,10 +23,10 @@ public abstract class ThreadUtils {
         _delegate = null;
         boolean nullVM = jq.nullVM;
         if (!nullVM) {
-            _delegate = attemptDelegate("Scheduler.FullThreadUtils");
+            _delegate = attemptDelegate("joeq.Scheduler.FullThreadUtils");
         }
         if (_delegate == null) {
-            _delegate = new Scheduler.HostedThreadUtils();
+            _delegate = new joeq.Scheduler.HostedThreadUtils();
         }
     }
 

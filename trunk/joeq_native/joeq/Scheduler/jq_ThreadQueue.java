@@ -1,11 +1,11 @@
 // jq_ThreadQueue.java, created Mon Apr  9  1:52:50 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Scheduler;
+package joeq.Scheduler;
 
 import java.util.Iterator;
 
-import Util.Assert;
+import joeq.Util.Assert;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>
