@@ -407,6 +407,7 @@ public class AndersenPointerAnalysis {
             jq_Class c = ms.getMethod().getDeclaringClass();
             while (c != null) {
                 classes.add(c);
+                c.load();
                 c = c.getSuperclass();
             }
         }
