@@ -54,6 +54,9 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
     BDDFactory bdd;
     BDDDomain method, quad, opc, dest, src1, src2, constant, fallthrough, target, member, srcNum, srcs;
     BDD methodToQuad;
+    BDD methodEntries;
+    BDD nullConstant;
+    BDD nonNullConstants;
     BDD allQuads;
     BDD currentQuad;
     
@@ -92,6 +95,9 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         srcs = makeDomain("srcs", regBits);
         allQuads = bdd.zero();
         methodToQuad = bdd.zero();
+        methodEntries = bdd.zero();
+        nullConstant = bdd.zero();
+        nonNullConstants = bdd.zero();
         int [] varOrder = bdd.makeVarOrdering(true, varOrderDesc);
         bdd.setVarOrder(varOrder);
         bdd.setMaxIncrease(500000);
@@ -118,11 +124,20 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         
         long time = System.currentTimeMillis();
         
+        boolean firstQuad = true;
+        
         while (i.hasNext()) {
             Quad q = i.nextQuad();
             currentQuad = bdd.one();
             int quadID = getQuadID(q);
             //System.out.println("Quad id: "+quadID);
+            
+            // first quad visited is the entry point
+            if (firstQuad) {
+                methodEntries.orWith(method.ithVar(methodID).and(quad.ithVar(quadID)));
+                firstQuad = false;
+            }
+            
             currentQuad.andWith(quad.ithVar(quadID));
             if (!GLOBAL_QUAD_NUMBERS) {
                 currentQuad.andWith(method.ithVar(methodID));
@@ -158,6 +173,8 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
     long totalTime;
     
     public String toString() {
+        buildNullConstantBdds();
+        
         System.out.println("Total time spent building representation: "+totalTime);
         System.out.println("allQuads, node count: " + allQuads.nodeCount());
         System.out.println("methodToQuad, node count: " + methodToQuad.nodeCount());
@@ -285,9 +302,15 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         System.out.print("Saving BDD...");
         bdd.save("cfg.bdd", allQuads);
         bdd.save("m2q.bdd", methodToQuad);
+        bdd.save("entries.bdd", methodEntries);
+        bdd.save("nullconstant.bdd", nullConstant);
+        bdd.save("nonnullconstants.bdd", nonNullConstants);
         System.out.println("done.");
         dumpTuples("cfg.tuples", allQuads);
         dumpTuples("m2q.tuples", methodToQuad);
+        dumpTuples("entries.tuples", methodEntries);
+        dumpTuples("nullconstant.tuples", nullConstant);
+        dumpTuples("nonnullconstants.tuples", nonNullConstants);
     }
     
     void dumpBDDConfig(String fileName) throws IOException {
@@ -327,6 +350,9 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
             dos.writeBytes("cfg ( method : method , id : quad , op : op , dest : reg , src1 : reg , src2 : reg , const : constant , fallthrough : quad , target : quad , member : member , srcNum : varargs , srcs : reg )\n");
         }
         dos.writeBytes("m2q ( method : method , id : quad )\n");
+        dos.writeBytes("entries ( method : method , entry : quad )\n");
+        dos.writeBytes("nullconstant ( constant : constant )\n");
+        dos.writeBytes("nonnullconstant ( constant : constant )\n");
         dos.close();
     }
     
@@ -421,5 +447,20 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         System.out.println("Quad id "+id);
         System.out.println("        "+quadMap.get((int) id));
         System.out.println(q.toStringWithDomains());
+    }
+    
+    void buildNullConstantBdds() {
+        for (int i = 0; i < constantMap.size(); ++i) {
+            Object c = constantMap.get(i);
+            if (c == null) {
+                nullConstant.orWith(constant.ithVar(i));
+            }
+            else if (!(c instanceof Integer) &&
+                     !(c instanceof Float) &&
+                     !(c instanceof Long) &&
+                     !(c instanceof Double)) {
+                nonNullConstants.orWith(constant.ithVar(i));                    
+            }
+        }
     }
 }
