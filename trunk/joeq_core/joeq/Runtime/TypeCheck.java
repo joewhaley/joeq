@@ -51,6 +51,7 @@ public abstract class TypeCheck implements jq_ClassFileConstants {
     
     // From the algorithm in vm spec under "checkcast"
     // returns true if "T = S;" would be legal. (T is same or supertype of S)
+    // S and T should already be prepared.
     public static boolean isAssignable(jq_Type S, jq_Type T) {
         if (S == T)
             return true;
