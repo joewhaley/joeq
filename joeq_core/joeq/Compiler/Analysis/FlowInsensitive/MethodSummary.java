@@ -866,7 +866,7 @@ public class MethodSummary {
                 /*&& !m.getReturnType().isAddressType()*/
                 )
             {
-                if(PA.getBogusSummaryProvider().getReplacementMethod(m) != null) {
+                if(false /* && PA.getBogusSummaryProvider().getReplacementMethod(m) != null*/) {
 //                  special case: replaced methods.
                     RegisterOperand dest = Invoke.getDest(obj);
                     if (dest != null) {
