@@ -46,6 +46,9 @@ public class FairnessTest {
     
     public static void main(String[] args) throws Exception {
         
+        //int nNative = args.length > 0 ? Integer.parseInt(args[0]) : 1;
+        //calculateTheoretical(nNative, TIME);
+        
         // prime the JIT
         if (PRIME > 0) {
             BusyThread prime = new BusyThread(-1); //make one thread to prime the CPU
@@ -149,5 +152,67 @@ public class FairnessTest {
             s = s.substring(0, Math.min(s.length(), index+3));  // . counts as 1 char
         }
         return s;
+    }
+    
+    static long current = 0L;
+    static long[] count;
+    static long overall;
+    static int quanta;
+    
+    static boolean handleQueue(int q, boolean hasMain) {
+        if (q+1 >= min && q+1 <= max) {
+            count[q+1]++;
+            overall++;
+            current += quanta;
+            return true;
+        }
+        if (hasMain) {
+            int mainPri = Math.min(max + 1, Thread.MAX_PRIORITY);
+            if (q == mainPri-1) {
+                current += 1L;
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    public static void calculateTheoretical(int nativeThreads, int milliseconds) {
+        quanta = jq_InterrupterThread.QUANTA;
+        int[] dist = jq_NativeThread.DISTRIBUTION;
+        int relprime_value = jq_NativeThread.relatively_prime_value;
+        count = new long[dist.length+1];
+        for (int x = 0; x < nativeThreads; ++x) {
+            System.out.println("Simulating native thread "+x+" for "+milliseconds+" ms");
+            int distCounter = 0;
+            current = 0L;
+        outer:
+            while (current < milliseconds) {
+                distCounter += relprime_value;
+                int max = dist[dist.length-1];
+                while (distCounter >= max) {
+                    distCounter -= max;
+                }
+                for (int i = 0; ; ++i) {
+                    if (distCounter < dist[i]) {
+                        if (handleQueue(i, x == 0)) continue outer;
+                        int c = ((distCounter&1)==1) ? 1 : -1;
+                        for (int j = i + c; j < dist.length && j >= 0; j += c) {
+                            if (handleQueue(j, x == 0)) continue outer;
+                        }
+                        c = -c;
+                        for (int j = i + c; j < dist.length && j >= 0; j += c) {
+                            if (handleQueue(j, x == 0)) continue outer;
+                        }
+                        current += 1L;
+                        continue outer;
+                    }
+                }
+            }
+        }
+        
+        for (int i = min; i <= max; ++i) {
+            double average = (double) count[i] / overall; //to give percentage of how much the priority got executed
+            System.out.println("Total for priority "+i+": "+s2(100.*average)+"%");  //. double 
+        }
     }
 }
