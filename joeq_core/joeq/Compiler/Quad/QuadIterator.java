@@ -88,12 +88,12 @@ public class QuadIterator implements ListIterator.Quad {
      * block from the reverse post order, or null if there are no more previous
      * non-empty basic blocks. */
     protected void updatePreviousBB() {
-	// the rpoBasicBlocks iterator points just past nextBasicBlock, so
-	// we need to back up to before previousBasicBlock.
-	for (;;) {
-	    BasicBlock p = this.rpoBasicBlocks.previousBasicBlock();
-	    if (p == this.previousBasicBlock) break;
-	}
+        // the rpoBasicBlocks iterator points just past nextBasicBlock, so
+        // we need to back up to before previousBasicBlock.
+        for (;;) {
+            BasicBlock p = this.rpoBasicBlocks.previousBasicBlock();
+            if (p == this.previousBasicBlock) break;
+        }
         for (;;) {
             if (!this.rpoBasicBlocks.hasPrevious()) {
                 this.previousBasicBlock = null;
@@ -102,11 +102,11 @@ public class QuadIterator implements ListIterator.Quad {
             this.previousBasicBlock = this.rpoBasicBlocks.previousBasicBlock();
             if (this.previousBasicBlock.size() > 0) break;
         }
-	// now reset the rpoBasicBlocks iterator to point just past nextBasicBlock.
-	for (;;) {
-	    BasicBlock p = this.rpoBasicBlocks.nextBasicBlock();
-	    if (p == this.nextBasicBlock) break;
-	}
+        // now reset the rpoBasicBlocks iterator to point just past nextBasicBlock.
+        for (;;) {
+            BasicBlock p = this.rpoBasicBlocks.nextBasicBlock();
+            if (p == this.nextBasicBlock) break;
+        }
     }
     
     public BasicBlock getCurrentBasicBlock() { return this.currentBasicBlock; }
@@ -122,7 +122,7 @@ public class QuadIterator implements ListIterator.Quad {
             this.quadsInCurrentBasicBlock = this.currentBasicBlock.iterator();
             // update nextBasicBlock
             updateNextBB();
-	}
+        }
         ++this.lastIndex;
         return this.lastQuad = this.quadsInCurrentBasicBlock.nextQuad();
     }
@@ -167,15 +167,15 @@ public class QuadIterator implements ListIterator.Quad {
             this.nextBasicBlock = this.currentBasicBlock;
             this.currentBasicBlock = this.previousBasicBlock;
             this.quadsInCurrentBasicBlock = this.currentBasicBlock.iterator();
-	    // go to end of iterator
-	    while (this.quadsInCurrentBasicBlock.hasNext())
-		this.quadsInCurrentBasicBlock.nextQuad();
+            // go to end of iterator
+            while (this.quadsInCurrentBasicBlock.hasNext())
+        	this.quadsInCurrentBasicBlock.nextQuad();
             // update previousBasicBlock
             updatePreviousBB();
         }
-	this.lastQuad = this.quadsInCurrentBasicBlock.previousQuad();
+        this.lastQuad = this.quadsInCurrentBasicBlock.previousQuad();
         --this.lastIndex;
-	return this.lastQuad;
+        return this.lastQuad;
     }
     /** Returns the previous quad in the iteration.  Use previousQuad to avoid the type cast. */
     public Object previous() { return previousQuad(); }
@@ -195,155 +195,152 @@ public class QuadIterator implements ListIterator.Quad {
     /** Adds a quad to the underlying quad list. */
     public void add(Object obj) { this.quadsInCurrentBasicBlock.add(obj); lastQuad = null; ++lastIndex; }
     
-    
-    //// FILL IN THE CODE BELOW.
-    //// CURRENTLY IT RETURNS AN EMPTY ITERATOR 
     /**
      * Return an iterator of the possible successor quads of the most recently returned quad.
      * If a possible successor is the method exit, it includes the "null" value in the iteration.
-     * @throw IllegalStateException  if the nextQuad method has not yet been called.
+     * @throws IllegalStateException  if the nextQuad method has not yet been called.
      */
     public java.util.Iterator/*<Quad>*/ successors() {
-	// if lastQuad is invalid, throw an exception.
+        // if lastQuad is invalid, throw an exception.
         if (lastQuad == null) throw new IllegalStateException();
-	// allocate the result set.
+        // allocate the result set.
         java.util.Set/*<Quad>*/ result = new java.util.HashSet/*<Quad>*/();
 
-	// Start with case 3:
-	// Case 3: Iterate through the types of exceptions that this quad
-	//         may throw.
+        // Start with case 3:
+        // Case 3: Iterate through the types of exceptions that this quad
+        //         may throw.
         ListIterator.jq_Class exceptions = lastQuad.getThrownExceptions().classIterator();
         while (exceptions.hasNext()) {
             jq_Class exception = exceptions.nextClass();
-	    // Iterate over the list of exception handlers that may catch an
-	    // exception of this type.
+            // Iterate over the list of exception handlers that may catch an
+            // exception of this type.
             ListIterator.ExceptionHandler mayCatch = currentBasicBlock.getExceptionHandlers().mayCatch(exception).exceptionHandlerIterator();
             while (mayCatch.hasNext()) {
                 ExceptionHandler exceptionHandler = mayCatch.nextExceptionHandler();
-		// add the first quad of the exception handler entry to the set.
+                // add the first quad of the exception handler entry to the set.
                 result.add(getFirstQuad(exceptionHandler.getEntry()));
             }
-	    // if the exception is not definitely caught, add "null" for the exit.
+            // if the exception is not definitely caught, add "null" for the exit.
             if (currentBasicBlock.getExceptionHandlers().mustCatch(exception) == null) {
                 result.add(null);
             }
         }
 
-	// note: we use next() and previous() rather than using
-	// nextIndex() and getQuad(index), because accessing a linked list
-	// via an index is not a constant time operation.
+        // note: we use next() and previous() rather than using
+        // nextIndex() and getQuad(index), because accessing a linked list
+        // via an index is not a constant time operation.
 
-	// we need to check if we last called previous or next, because
-	// the position of the iterator depends on which was most recently
-	// called.
+        // we need to check if we last called previous or next, because
+        // the position of the iterator depends on which was most recently
+        // called.
         if (this.quadsInCurrentBasicBlock.hasNext()) {
-	    Quad next = this.quadsInCurrentBasicBlock.nextQuad();
-	    if (next != lastQuad) {
-		// We called next() last.
-		// Case 1: if this is not the end of the basic block, add the next
-		//         quad in the basic block.
-		result.add(next); // add next quad.
-		this.quadsInCurrentBasicBlock.previousQuad(); // reset iterator position.
-		// return the result as an iterator.
-		return result.iterator();
-	    } else {
-		// We called previous() last.
-		if (this.quadsInCurrentBasicBlock.hasNext()) {
-		    // Case 1: if this is not the end of the basic block, add the next
-		    //         quad in the basic block.
-		    next = this.quadsInCurrentBasicBlock.nextQuad();
-		    result.add(next); // add next quad.
-		    // reset iterator position.
-		    this.quadsInCurrentBasicBlock.previousQuad();
-		    this.quadsInCurrentBasicBlock.previousQuad();
-		    // return the result as an iterator.
-		    return result.iterator();
-		} else {
-		    // this is the last quad in the basic block.
-		    // reset iterator position and fallthrough to case 2, below.
-		    this.quadsInCurrentBasicBlock.previousQuad();
-		}
-	    }
-	}
-	// Case 2: end of basic block, add the first quad of every
-	//         successor basic block.
-	ListIterator.BasicBlock succs = this.currentBasicBlock.getSuccessors().basicBlockIterator();
-	while (succs.hasNext())
-	    result.add(getFirstQuad(succs.nextBasicBlock()));
-	
-	// return the result as an iterator.
+            Quad next = this.quadsInCurrentBasicBlock.nextQuad();
+            if (next != lastQuad) {
+                // We called next() last.
+                // Case 1: if this is not the end of the basic block, add the next
+                //         quad in the basic block.
+                result.add(next); // add next quad.
+                this.quadsInCurrentBasicBlock.previousQuad(); // reset iterator position.
+                // return the result as an iterator.
+                return result.iterator();
+            } else {
+                // We called previous() last.
+                if (this.quadsInCurrentBasicBlock.hasNext()) {
+                    // Case 1: if this is not the end of the basic block, add the next
+                    //         quad in the basic block.
+                    next = this.quadsInCurrentBasicBlock.nextQuad();
+                    result.add(next); // add next quad.
+                    // reset iterator position.
+                    this.quadsInCurrentBasicBlock.previousQuad();
+                    this.quadsInCurrentBasicBlock.previousQuad();
+                    // return the result as an iterator.
+                    return result.iterator();
+                } else {
+                    // this is the last quad in the basic block.
+                    // reset iterator position and fallthrough to case 2, below.
+                    this.quadsInCurrentBasicBlock.previousQuad();
+                }
+            }
+        }
+        // Case 2: end of basic block, add the first quad of every
+        //         successor basic block.
+        ListIterator.BasicBlock succs = this.currentBasicBlock.getSuccessors().basicBlockIterator();
+        while (succs.hasNext())
+            result.add(getFirstQuad(succs.nextBasicBlock()));
+        
+        // return the result as an iterator.
         return result.iterator();
     }
 
     public java.util.Iterator/*<Quad>*/ predecessors() {
-	// if lastQuad is invalid, throw an exception.
+        // if lastQuad is invalid, throw an exception.
         if (lastQuad == null) throw new IllegalStateException();
 
-	// figure out if we last called previous() or next().
-	Quad previous;
+        // figure out if we last called previous() or next().
+        Quad previous;
         if (this.quadsInCurrentBasicBlock.hasPrevious()) {
-	    previous = this.quadsInCurrentBasicBlock.previousQuad();
-	    if (previous != lastQuad) {
-		// we called previous() last;
-		// Case 1: if this is not the beginning of the basic block, add the previous
-		//         quad in the basic block.
-		this.quadsInCurrentBasicBlock.nextQuad(); // reset iterator position.
-		return new UnmodifiableList.Quad(previous).quadIterator();
-	    } else {
-		// we called next() last.
-		if (this.quadsInCurrentBasicBlock.hasPrevious()) {
-		    // Case 1: if this is not the beginning of the basic block, add the previous
-		    //         quad in the basic block.
-		    previous = this.quadsInCurrentBasicBlock.previousQuad();
-		    // reset iterator position.
-		    this.quadsInCurrentBasicBlock.nextQuad(); 
-		    this.quadsInCurrentBasicBlock.nextQuad(); 
-		    return new UnmodifiableList.Quad(previous).quadIterator();
-		} else {
-		    // this is the first quad in the basic block.
-		    // reset iterator position and fallthrough to case 2 and 3, below.
-		    this.quadsInCurrentBasicBlock.nextQuad();
-		}
-	    }
-	}
+            previous = this.quadsInCurrentBasicBlock.previousQuad();
+            if (previous != lastQuad) {
+                // we called previous() last;
+                // Case 1: if this is not the beginning of the basic block, add the previous
+                //         quad in the basic block.
+                this.quadsInCurrentBasicBlock.nextQuad(); // reset iterator position.
+                return new UnmodifiableList.Quad(previous).quadIterator();
+            } else {
+                // we called next() last.
+                if (this.quadsInCurrentBasicBlock.hasPrevious()) {
+                    // Case 1: if this is not the beginning of the basic block, add the previous
+                    //         quad in the basic block.
+                    previous = this.quadsInCurrentBasicBlock.previousQuad();
+                    // reset iterator position.
+                    this.quadsInCurrentBasicBlock.nextQuad(); 
+                    this.quadsInCurrentBasicBlock.nextQuad(); 
+                    return new UnmodifiableList.Quad(previous).quadIterator();
+                } else {
+                    // this is the first quad in the basic block.
+                    // reset iterator position and fallthrough to case 2 and 3, below.
+                    this.quadsInCurrentBasicBlock.nextQuad();
+                }
+            }
+        }
 
-	// allocate the result set.
+        // allocate the result set.
         java.util.Set/*<Quad>*/ result = new java.util.HashSet/*<Quad>*/();
 
-	// Case 2: beginning of basic block, add the first quad of every
-	//         predecessor basic block.
-	ListIterator.BasicBlock preds = this.currentBasicBlock.getPredecessors().basicBlockIterator();
-	while (preds.hasNext())
-	    result.add(getLastQuad(preds.nextBasicBlock()));
-	// Case 3: if this is the entry point to an exception handler, find
-	//         all quads that can trigger this handler.
-	if (currentBasicBlock.isExceptionHandlerEntry()) {
-	    java.util.Iterator ex_handlers = cfg.getExceptionHandlersMatchingEntry(currentBasicBlock);
-	    while (ex_handlers.hasNext()) {
-		ExceptionHandler eh = (ExceptionHandler)ex_handlers.next();
-		ListIterator.BasicBlock handled = eh.getHandledBasicBlocks().basicBlockIterator();
-		while (handled.hasNext()) {
-		    BasicBlock bb = handled.nextBasicBlock();
-		    addQuadsThatReachHandler(bb, result, eh);
-		}
-	    }
-	}
-	// return the result as an iterator.
-	return result.iterator();
+        // Case 2: beginning of basic block, add the first quad of every
+        //         predecessor basic block.
+        ListIterator.BasicBlock preds = this.currentBasicBlock.getPredecessors().basicBlockIterator();
+        while (preds.hasNext())
+            result.add(getLastQuad(preds.nextBasicBlock()));
+        // Case 3: if this is the entry point to an exception handler, find
+        //         all quads that can trigger this handler.
+        if (currentBasicBlock.isExceptionHandlerEntry()) {
+            java.util.Iterator ex_handlers = cfg.getExceptionHandlersMatchingEntry(currentBasicBlock);
+            while (ex_handlers.hasNext()) {
+                ExceptionHandler eh = (ExceptionHandler)ex_handlers.next();
+                ListIterator.BasicBlock handled = eh.getHandledBasicBlocks().basicBlockIterator();
+                while (handled.hasNext()) {
+                    BasicBlock bb = handled.nextBasicBlock();
+                    addQuadsThatReachHandler(bb, result, eh);
+                }
+            }
+        }
+        // return the result as an iterator.
+        return result.iterator();
     }
 
     private static void addQuadsThatReachHandler(BasicBlock bb, java.util.Set result, ExceptionHandler eh) {
-	ListIterator.Quad quads = bb.iterator();
-	while (quads.hasNext()) {
-	    Quad q = quads.nextQuad();
-	    ListIterator.jq_Class exceptions = q.getThrownExceptions().classIterator();
-	    while (exceptions.hasNext()) {
-		jq_Class exception = (jq_Class)exceptions.next();
-		List.ExceptionHandler mayCatch = bb.getExceptionHandlers().mayCatch(exception);
-		if (mayCatch.contains(eh))
-		    result.add(q);
-	    }
-	}
+        ListIterator.Quad quads = bb.iterator();
+        while (quads.hasNext()) {
+            Quad q = quads.nextQuad();
+            ListIterator.jq_Class exceptions = q.getThrownExceptions().classIterator();
+            while (exceptions.hasNext()) {
+                jq_Class exception = (jq_Class)exceptions.next();
+                List.ExceptionHandler mayCatch = bb.getExceptionHandlers().mayCatch(exception);
+                if (mayCatch.contains(eh))
+                    result.add(q);
+            }
+        }
     }
     
 }
