@@ -276,7 +276,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
     
     void setCurrentGuard(Operand guard) { currentGuard = guard; }
     void clearCurrentGuard() { currentGuard = null; }
-    Operand getCurrentGuard() { return currentGuard.copy(); }
+    Operand getCurrentGuard() { if (currentGuard == null) return null; return currentGuard.copy(); }
     
     private AbstractState[] start_states;
     private AbstractState current_state;
@@ -808,7 +808,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
     }
     public void visitRET(int i) {
         super.visitRET(i);
-        this.uncond_branch = true;	
+        this.uncond_branch = true;
         RegisterOperand op0 = makeLocal(i, jq_ReturnAddressType.INSTANCE);
         Quad q = Ret.create(Ret.RET.INSTANCE, op0);
         appendQuad(q);
@@ -1428,6 +1428,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
                 return false;
             } else {
                 Quad q = NullCheck.create(NullCheck.NULL_CHECK.INSTANCE, null, op);
+                appendQuad(q);
 		if (false) {
 		    endBasicBlock = true;
 		    mergeStateWithNullPtrExHandler(true);
@@ -1501,6 +1502,25 @@ public class BytecodeToQuad extends BytecodeVisitor {
                 return false;
             } else {
                 Quad q = ZeroCheck.create(ZeroCheck.ZERO_CHECK.INSTANCE, null, op);
+                appendQuad(q);
+		if (false) {
+		    endBasicBlock = true;
+		    mergeStateWithArithExHandler(true);
+		    return true;
+		} else {
+		    mergeStateWithArithExHandler(false);
+		    return false;
+		}
+            }
+        }
+        if (op instanceof LConstOperand) {
+            long val = ((LConstOperand)op).getValue();
+            if (val != 0) {
+                setCurrentGuard(new UnnecessaryGuardOperand());
+                return false;
+            } else {
+                Quad q = ZeroCheck.create(ZeroCheck.ZERO_CHECK.INSTANCE, null, op);
+                appendQuad(q);
 		if (false) {
 		    endBasicBlock = true;
 		    mergeStateWithArithExHandler(true);
@@ -1527,7 +1547,12 @@ public class BytecodeToQuad extends BytecodeVisitor {
         jq_Type type = rop.getType();
         int number = getLocalNumber(rop.getRegister(), type);
         if (rf.isLocal(rop, number, type)) {
-            Operand op2 = current_state.getLocal_I(number);
+            Operand op2;
+            if (type == jq_Primitive.INT)
+                op2 = current_state.getLocal_I(number);
+            else
+                op2 = current_state.getLocal_L(number);
+            if (TRACE) System.out.println(rop+" is a local variable of type "+type+": currently "+op2);
             if (op2 instanceof RegisterOperand) {
                 setGuard((RegisterOperand)op2, guard);
             }
@@ -1596,7 +1621,8 @@ public class BytecodeToQuad extends BytecodeVisitor {
 	    if (k == PrimordialClassLoader.getJavaLangNullPointerException() ||
 		k == PrimordialClassLoader.getJavaLangRuntimeException() ||
 		k == PrimordialClassLoader.getJavaLangException() ||
-		k == PrimordialClassLoader.getJavaLangThrowable()) {
+		k == PrimordialClassLoader.getJavaLangThrowable() ||
+                k == null) {
 		mergeStateWith(eh);
 		break;
 	    }
@@ -1611,7 +1637,8 @@ public class BytecodeToQuad extends BytecodeVisitor {
 	    if (k == PrimordialClassLoader.getJavaLangArithmeticException() ||
 		k == PrimordialClassLoader.getJavaLangRuntimeException() ||
 		k == PrimordialClassLoader.getJavaLangException() ||
-		k == PrimordialClassLoader.getJavaLangThrowable()) {
+		k == PrimordialClassLoader.getJavaLangThrowable() ||
+                k == null) {
 		mergeStateWith(eh);
 		break;
 	    }
@@ -1627,7 +1654,8 @@ public class BytecodeToQuad extends BytecodeVisitor {
 		k == PrimordialClassLoader.getJavaLangIndexOutOfBoundsException() ||
 		k == PrimordialClassLoader.getJavaLangRuntimeException() ||
 		k == PrimordialClassLoader.getJavaLangException() ||
-		k == PrimordialClassLoader.getJavaLangThrowable()) {
+		k == PrimordialClassLoader.getJavaLangThrowable() ||
+                k == null) {
 		mergeStateWith(eh);
 		break;
 	    }
@@ -1642,7 +1670,8 @@ public class BytecodeToQuad extends BytecodeVisitor {
 	    if (k == PrimordialClassLoader.getJavaLangArrayStoreException() ||
 		k == PrimordialClassLoader.getJavaLangRuntimeException() ||
 		k == PrimordialClassLoader.getJavaLangException() ||
-		k == PrimordialClassLoader.getJavaLangThrowable()) {
+		k == PrimordialClassLoader.getJavaLangThrowable() ||
+                k == null) {
 		mergeStateWith(eh);
 		break;
 	    }
@@ -1673,6 +1702,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
             public void attachToQuad(Quad q) { jq.UNREACHABLE(); }
             public Operand copy() { return DUMMY; }
             public boolean isSimilar(Operand that) { return that == DUMMY; }
+            public String toString() { return "<dummy>"; }
         }
         
         static AbstractState allocateEmptyState(jq_Method m) {
@@ -1685,7 +1715,8 @@ public class BytecodeToQuad extends BytecodeVisitor {
             jq_Type[] paramTypes = m.getParamTypes();
             for (int i=0, j=-1; i<paramTypes.length; ++i) {
                 jq_Type paramType = paramTypes[i];
-                s.locals[++j] = new RegisterOperand(rf.getLocal(i, paramType), paramType);
+                ++j;
+                s.locals[j] = new RegisterOperand(rf.getLocal(j, paramType), paramType);
                 if (paramType.getReferenceSize() == 8) {
                     s.locals[++j] = DummyOperand.DUMMY;
                 }
@@ -1718,6 +1749,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         }
         
         AbstractState copyExceptionHandler(jq_Class exType, RegisterFactory rf) {
+            if (exType == null) exType = PrimordialClassLoader.getJavaLangThrowable();
             AbstractState that = new AbstractState(this.stack.length, this.locals.length);
 	    that.stackptr = 1;
 	    RegisterOperand ex = new RegisterOperand(rf.getStack(0, exType), exType);
@@ -1746,6 +1778,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         }
         
         void mergeExceptionHandler(AbstractState that, jq_Class exType, RegisterFactory rf) {
+            if (exType == null) exType = PrimordialClassLoader.getJavaLangThrowable();
             jq.assert(this.locals.length == that.locals.length);
             jq.assert(this.stackptr == 1);
 	    RegisterOperand ex = new RegisterOperand(rf.getStack(0, exType), exType);
@@ -1781,6 +1814,10 @@ public class BytecodeToQuad extends BytecodeVisitor {
                 }
             }
             if (op1 instanceof RegisterOperand) {
+                if (op2 instanceof DummyOperand) {
+                    // op1 is a register, op2 is a dummy
+                    return null;
+                }
                 RegisterOperand rop1 = (RegisterOperand)op1;
                 jq_Type t1 = rop1.getType();
                 if (op2 instanceof RegisterOperand) {
@@ -1962,7 +1999,11 @@ public class BytecodeToQuad extends BytecodeVisitor {
             jq.assert(getLocal(i+1) == DummyOperand.DUMMY);
             return op;
         }
-        Operand getLocal_A(int i) { Operand op = getLocal(i); jq.assert(getTypeOf(op).isReferenceType()); return op; }
+        Operand getLocal_A(int i) {
+            Operand op = getLocal(i);
+            jq.assert(getTypeOf(op).isReferenceType(), op.toString());
+            return op;
+        }
         Operand getLocal(int i) {
             return this.locals[i].copy();
         }
@@ -1980,7 +2021,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
 	    }
 	    System.out.print("\nStack: ");
 	    for (int i=0; i<this.stackptr; ++i) {
-		System.out.print(" S"+stackptr+":"+this.locals[i]);
+		System.out.print(" S"+i+":"+this.stack[i]);
 	    }
 	    System.out.println();
 	}
