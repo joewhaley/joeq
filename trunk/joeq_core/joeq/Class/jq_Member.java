@@ -197,6 +197,13 @@ public abstract class jq_Member implements jq_ClassFileConstants, AndersenMember
         return attributes;
     }
 
+    public final void removeAttribute(String name) {
+        removeAttribute(Utf8.get(name));
+    }
+    public final void removeAttribute(Utf8 name) {
+        attributes.remove(name);
+    }
+    
     public final boolean checkAccessFlag(char f) {
         chkState(STATE_LOADING2);
         return (access_flags & f) != 0;
