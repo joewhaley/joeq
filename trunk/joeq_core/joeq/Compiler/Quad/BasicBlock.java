@@ -21,7 +21,7 @@ import Util.Templates.ListWrapper;
  * end a basic block.
  *
  * Each basic block contains a list of quads, a list of predecessors, a list of
- * successors, and a set of exception handlers.  It also has an id number that
+ * successors, and a list of exception handlers.  It also has an id number that
  * is unique within its control flow graph, and some flags.
  *
  * You should never create a basic block directly.  You should create one via a
@@ -30,7 +30,7 @@ import Util.Templates.ListWrapper;
  * @author  John Whaley
  * @see  Quad
  * @see  ControlFlowGraph
- * @see  ExceptionHandlerSet
+ * @see  ExceptionHandlerList
  * @version  $Id$
  */
 
@@ -110,18 +110,16 @@ public class BasicBlock {
     public boolean isExit() { return successors == null; }
     
     /** Returns an iterator over the quads in this basic block in forward order.
-     * @see  QuadIterator
      * @return  an iterator over the quads in this basic block in forward order. */
     public ListIterator.Quad iterator() {
-	if (instructions == null) return ListWrapper.Quad.EmptyIterator.INSTANCE;
+        if (instructions == null) return ListWrapper.Quad.EmptyIterator.INSTANCE;
         return new ListWrapper.Quad.Iterator(instructions.listIterator());
     }
     
     /** Returns an iterator over the quads in this basic block in backward order.
-     * @see  QuadIterator
      * @return  an iterator over the quads in this basic block in backward order. */
     public ListIterator.Quad backwardIterator() {
-	if (instructions == null) return ListWrapper.Quad.EmptyIterator.INSTANCE;
+        if (instructions == null) return ListWrapper.Quad.EmptyIterator.INSTANCE;
         return new ListWrapper.Quad.Iterator(new BackwardIterator(instructions.listIterator()));
     }
 
@@ -261,16 +259,14 @@ public class BasicBlock {
         return (BasicBlock)predecessors.get(0);
     }
 
-    /** Returns an iterator of the successors of this basic block.
-     * @see BasicBlockIterator
-     * @return  an iterator of the successors of this basic block. */
+    /** Returns a list of the successors of this basic block.
+     * @return  a list of the successors of this basic block. */
     public List.BasicBlock getSuccessors() {
 	if (successors == null) return UnmodifiableList.BasicBlock.getEmptyList();
         return new ListWrapper.BasicBlock(successors);
     }
     
-    /** Returns an iterator of the predecessors of this basic block.
-     * @see BasicBlockIterator
+    /** Returns an list of the predecessors of this basic block.
      * @return  an iterator of the predecessors of this basic block. */
     public List.BasicBlock getPredecessors() {
 	if (predecessors == null) return UnmodifiableList.BasicBlock.getEmptyList();
@@ -291,11 +287,11 @@ public class BasicBlock {
             return this.exception_handler_list = new ExceptionHandlerList(eh.getHandler(), this.exception_handler_list);
     }
     void setExceptionHandlerList(ExceptionHandlerList ehl) {
-	this.exception_handler_list = ehl;
+        this.exception_handler_list = ehl;
     }
     
-    /** Returns an iterator of the exception handlers that guard this basic block.
-     * @see ExceptionHandlerIterator
+    /** Returns the list of exception handlers that guard this basic block.
+     * @see ExceptionHandlerList
      * @return  an iterator of the exception handlers that guard this basic block. */
     public ExceptionHandlerList getExceptionHandlers() {
         if (exception_handler_list == null) return ExceptionHandlerList.getEmptyList();
@@ -306,19 +302,19 @@ public class BasicBlock {
      * exception handlers. Doesn't append if it is already there.
      */
     public void appendExceptionHandlerList(ExceptionHandlerList list) {
-	if (list == null || list.size() == 0) return;
-	ExceptionHandlerList p = this.exception_handler_list;
-	if (p == null) {
-	    this.exception_handler_list = list; return;
-	}
-	for (;;) {
-	    if (p == list) return;
-	    ExceptionHandlerList q = p.getParent();
-	    if (q == null) {
-		p.setParent(list); return;
-	    }
-	    p = q;
-	}
+        if (list == null || list.size() == 0) return;
+        ExceptionHandlerList p = this.exception_handler_list;
+        if (p == null) {
+            this.exception_handler_list = list; return;
+        }
+        for (;;) {
+            if (p == list) return;
+            ExceptionHandlerList q = p.getParent();
+            if (q == null) {
+                p.setParent(list); return;
+            }
+            p = q;
+        }
     }
     
     /** Returns the unique id number for this basic block.
