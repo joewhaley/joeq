@@ -38,11 +38,10 @@ public class GCBits {
     private final BitString markbits = new BitString(bitLength);
 
     // Never created normally.  Always created with allocateObject_nogc.
-    private GCBits() {}
-
-    public void init(HeapAddress blockHead, HeapAddress blockEnd) {
+    public GCBits(HeapAddress blockHead, HeapAddress blockEnd) {
         this.blockHead = blockHead;
         this.blockEnd = blockEnd;
+        GCBitsManager.register(this);
     }
 
     public void set(HeapAddress addr) {
