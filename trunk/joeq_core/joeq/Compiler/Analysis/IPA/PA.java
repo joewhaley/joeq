@@ -1474,8 +1474,8 @@ public class PA {
     }
     
     public static class ThreadRootMap extends AbstractMap {
-        Set roots;
-        ThreadRootMap(Set s) {
+        Collection roots;
+        ThreadRootMap(Collection s) {
             roots = s;
         }
         public Object get(Object o) {

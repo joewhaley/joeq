@@ -1171,8 +1171,9 @@ public class CSPAResults implements PointerAnalysisResults {
         return new TypedBDD(capturedHeap, H1);
     }
 
-    public static Set findThreadRuns(CallGraph cg) {
-        Set thread_runs = new HashSet();
+    static List thread_runs = new LinkedList();
+    public static List findThreadRuns(CallGraph cg) {
+        thread_runs.clear();
         for (Iterator i=cg.getAllMethods().iterator(); i.hasNext(); ) {
             jq_Method m = (jq_Method) i.next();
             if (m.getBytecode() == null) continue;
@@ -1406,7 +1407,7 @@ public class CSPAResults implements PointerAnalysisResults {
     }
     
     BDDPairing V1toV2, V2toV1, H1toH2, H2toH1, V1H1toV2H2, V2H2toV1H1;
-    BDDPairing V1cV2ctoV2cV1c;
+    BDDPairing V1cV2ctoV2cV1c, V1ctoV2c;
     BDD V1set, V2set, H1set, H2set, T1set, T2set, Fset, Mset, Nset, Iset, Zset;
     BDD V1V2set, V1H1set, IMset, H1Fset, H2Fset, H1FH2set, T2Nset, MZset, IZset;
     BDD V1cV2cset;
@@ -1479,6 +1480,7 @@ public class CSPAResults implements PointerAnalysisResults {
         V1cV2ctoV2cV1c = bdd.makePair();
         V1cV2ctoV2cV1c.set(new BDDDomain[] {V1c,V2c},
                            new BDDDomain[] {V2c,V1c});
+        V1ctoV2c = bdd.makePair(V1c, V2c);
         
         V1set = V1.set();
         V2set = V2.set();
@@ -2049,6 +2051,13 @@ public class CSPAResults implements PointerAnalysisResults {
         return n;
     }
     
+    public int getMethodIndex(jq_Method m) {
+        int size = Mmap.size();
+        int v = Mmap.get(m);
+        Assert._assert(size == Mmap.size());
+        return v;
+    }
+    
     public jq_Field getField(int v) {
         if (v < 0 || v >= Fmap.size())
             return null;
@@ -2584,6 +2593,12 @@ public class CSPAResults implements PointerAnalysisResults {
                 } else if (command.equals("syncedvars")) {
                     TypedBDD bdd = new TypedBDD(getSyncedVars(), V1);
                     results.add(bdd);
+                } else if (command.equals("thread")) {
+                    int k = Integer.parseInt(st.nextToken());
+                    jq_Method run = (jq_Method) thread_runs.get(k);
+                    BDD m = M.ithVar(getMethodIndex(run));
+                    TypedBDD bdd = new TypedBDD(getReachableVars(m), V1c, V1);
+                    results.add(bdd);
                 } else if (command.equals("comparemods")) {
                     compareMods();
                     increaseCount = false;
@@ -2779,6 +2794,24 @@ public class CSPAResults implements PointerAnalysisResults {
             result.orWith(thispointers);
         }
         caller_callee.free();
+        return result;
+    }
+    
+    public BDD getReachableVars(BDD method_plus_context0) {
+        BDD result = bdd.zero();
+        BDD allInvokes = mI.exist(Nset);
+        BDD new_m = method_plus_context0.id();
+        for (;;) {
+            BDD vars = new_m.relprod(mV, Mset); // V1cxM x MxV1 = V1cxV1
+            result.orWith(vars);
+            BDD invokes = new_m.relprod(allInvokes, Mset); // V1cxM x MxI = V1cxI
+            invokes.replaceWith(V1ctoV2c); // V2cxI
+            BDD methods = invokes.relprod(IEc, Iset); // V2cxI x V2cxIxV1cxM = V1cxM
+            new_m.orWith(methods);
+            new_m.applyWith(method_plus_context0.id(), BDDFactory.diff);
+            if (new_m.isZero()) break;
+            method_plus_context0.orWith(new_m);
+        }
         return result;
     }
     

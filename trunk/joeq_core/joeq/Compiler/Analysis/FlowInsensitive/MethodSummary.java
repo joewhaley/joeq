@@ -1054,7 +1054,7 @@ public class MethodSummary {
         public boolean equals(Object o) { if (o instanceof PassedParameter) return equals((PassedParameter)o); return false; }
         public String toString() { return "Param "+paramNum+" for "+m; }
         public void write(Textualizer t) throws IOException {
-            t.writeReference(m);
+            t.writeObject(m);
             t.writeBytes(" "+paramNum);
         }
         public void writeEdges(Textualizer t) throws IOException { }
@@ -1996,7 +1996,7 @@ public class MethodSummary {
                         Node n = (Node) j.next();
                         if (!t.contains(n)) continue;
                         t.writeBytes(" succ ");
-                        t.writeReference(f);
+                        t.writeObject(f);
                         t.writeReference(n);
                     }
                 }
@@ -2014,7 +2014,7 @@ public class MethodSummary {
                         Node n = (Node) j.next();
                         if (!t.contains(n)) continue;
                         t.writeBytes(" pred ");
-                        t.writeReference(f);
+                        t.writeObject(f);
                         t.writeReference(n);
                     }
                 }
@@ -2073,9 +2073,9 @@ public class MethodSummary {
 
         public void write(Textualizer t) throws IOException {
             t.writeBytes("Concrete ");
-            t.writeReference(type);
+            t.writeObject(type);
             t.writeBytes(" ");
-            t.writeReference(q);
+            t.writeObject(q);
             //super.write(t);
         }
     }
@@ -2299,7 +2299,7 @@ public class MethodSummary {
 
         public void write(Textualizer t) throws IOException {
             t.writeBytes("ConcreteObject ");
-            t.writeReference(getDeclaredType());
+            t.writeObject(getDeclaredType());
             //super.write(t);
         }
 
@@ -2398,7 +2398,7 @@ public class MethodSummary {
 
         public void write(Textualizer t) throws IOException {
             t.writeBytes("Unknown ");
-            t.writeReference(getDeclaredType());
+            t.writeObject(getDeclaredType());
             //super.write(t);
         }
     }
@@ -2467,7 +2467,7 @@ public class MethodSummary {
         
         public void write(Textualizer t) throws IOException {
             t.writeBytes("Global ");
-            t.writeReference(method);
+            t.writeObject(method);
             //super.write(t);
         }
         
@@ -2507,7 +2507,7 @@ public class MethodSummary {
         
         public void write(Textualizer t) throws IOException {
             t.writeBytes("ReturnValue ");
-            t.writeReference(m);
+            t.writeObject(m);
             //super.write(t);
         }
     }
@@ -2560,7 +2560,7 @@ public class MethodSummary {
          */
         public void write(Textualizer t) throws IOException {
             t.writeBytes("ThrownException ");
-            t.writeReference(m);
+            t.writeObject(m);
             //super.write(t);
         }
     }
@@ -2594,7 +2594,7 @@ public class MethodSummary {
          */
         public void write(Textualizer t) throws IOException {
             t.writeBytes("Param ");
-            t.writeReference(m);
+            t.writeObject(m);
             t.writeBytes(" "+n);
             //super.write(t);
         }
@@ -2862,12 +2862,12 @@ public class MethodSummary {
          */
         public void write(Textualizer t) throws IOException {
             t.writeBytes("Field ");
-            t.writeReference(f);
+            t.writeObject(f);
             t.writeBytes(" "+locs.size());
             for (Iterator i = locs.iterator(); i.hasNext(); ) {
                 t.writeBytes(" ");
                 ProgramLocation pl = (ProgramLocation) i.next();
-                t.writeReference(pl);
+                t.writeObject(pl);
             }
             for (Iterator i = this.field_predecessors.iterator(); i.hasNext(); ) {
                 Node n = (Node) i.next();
