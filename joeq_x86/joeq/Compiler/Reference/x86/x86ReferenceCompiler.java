@@ -11,7 +11,7 @@ package Compil3r.Reference.x86;
 
 import Allocator.HeapAllocator;
 import Allocator.ObjectLayout;
-import Allocator.DefaultAllocator;
+import Allocator.DefaultHeapAllocator;
 import Allocator.CodeAllocator;
 import Assembler.x86.x86;
 import Assembler.x86.x86Assembler;
@@ -39,9 +39,11 @@ import Compil3r.Compil3rInterface;
 import Run_Time.ExceptionDeliverer;
 import Run_Time.MathSupport;
 import Run_Time.Monitor;
+import Run_Time.Reflection;
 import Run_Time.TypeCheck;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
+import Scheduler.jq_Thread;
 import UTF.Utf8;
 
 import Compil3r.Analysis.BytecodeVisitor;
@@ -202,12 +204,15 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         emitCallRelative(jq_Method._compile, asm, code_relocs);
         asm.emit2_Mem(x86.JMP_m, jq_CompiledCode._entrypoint.getOffset(), EAX);
         // return generated code
-        return asm.getCodeBuffer().allocateCodeBlock(method, null, null, null, code_relocs, data_relocs);
+        return asm.getCodeBuffer().allocateCodeBlock(null, null, null, null, code_relocs, data_relocs);
     }
     
     // Generate code for the given method.
     public final jq_CompiledCode compile() {
         if (TRACE) System.out.println("x86 Reference Compiler: compiling "+method);
+        
+        // temporary kludge: no switching a thread during compilation.
+        if (!jq.Bootstrapping) Unsafe.getThreadBlock().disableThreadSwitch();
         
         // initialize stuff
         asm = new x86Assembler(bcs.length, bcs.length*8);
@@ -274,6 +279,28 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         // add a sentinel value to the bottom of the opstack
         asm.emitPUSH_i(0x0000d00d);
         
+        // add monitorenter for synchronized methods.
+        if (method.isSynchronized()) {
+            if (method.isStatic()) {
+                if (TraceBytecodes) {
+                    emitPushAddressOf(SystemInterface.toCString("entry: STATIC SYNCH ENTER"));
+                    emitCallMemory(SystemInterface._debugmsg);
+                }
+                // lock the java.lang.Class object
+                Class c = Reflection.getJDKType(method.getDeclaringClass());
+                jq.assert(c != null);
+                emitPushAddressOf(c);
+            } else {
+                if (TraceBytecodes) {
+                    emitPushAddressOf(SystemInterface.toCString("entry: INSTANCE SYNCH ENTER"));
+                    emitCallMemory(SystemInterface._debugmsg);
+                }
+                // lock the this pointer
+                asm.emit2_Mem(x86.PUSH_m, getLocalOffset(0), EBP);
+            }
+            emitCallRelative(Monitor._monitorenter);
+        }
+        
         // generate code for each bytecode in order
         this.forwardTraversal();
         
@@ -306,9 +333,13 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         jq_BytecodeMap bcm = new jq_BytecodeMap(offsets, bcs);
         
         // return generated code
-        return asm.getCodeBuffer().allocateCodeBlock(method, tcs, bcm,
+        jq_CompiledCode code;
+        code = asm.getCodeBuffer().allocateCodeBlock(method, tcs, bcm,
                                                      x86ReferenceExceptionDeliverer.INSTANCE,
                                                      code_relocs, data_relocs);
+        // temporary kludge: no switching a thread during compilation.
+        if (!jq.Bootstrapping) Unsafe.getThreadBlock().enableThreadSwitch();
+        return code;
     }
     
     public void visitBytecode() throws VerifyError {
@@ -1188,19 +1219,21 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         asm.emitCJUMP_Short(x86.JAE, (byte)0);
         int cloc3 = asm.getCurrentOffset();
         // default case
+        asm.emit2_Reg_Mem(x86.LEA, ESP, -8, ESP);
         {   // set rounding mode to round-towards-zero
-            asm.emit2_Mem(x86.FNSTCW, -4, ESP);
-            asm.emit2_Mem(x86.FNSTCW, -8, ESP);
-            asm.emitARITH_Mem_Imm(x86.OR_m_i32, -4, ESP, 0x0c00);
+            asm.emit2_Mem(x86.FNSTCW, 4, ESP);
+            asm.emit2_Mem(x86.FNSTCW, 0, ESP);
+            asm.emitARITH_Mem_Imm(x86.OR_m_i32, 4, ESP, 0x0c00);
             asm.emit2(x86.FNCLEX);
-            asm.emit2_Mem(x86.FLDCW, -4, ESP);
+            asm.emit2_Mem(x86.FLDCW, 4, ESP);
         }
-        asm.emit2_Mem(x86.FISTP_m32, 0, ESP);
+        asm.emit2_Mem(x86.FISTP_m32, 8, ESP);
         {
             // restore fpu control word
             asm.emit2(x86.FNCLEX);
-            asm.emit2_Mem(x86.FLDCW, -8, ESP);
+            asm.emit2_Mem(x86.FLDCW, 0, ESP);
         }
+        asm.emit2_Reg_Mem(x86.LEA, ESP, 8, ESP);
         asm.emitJUMP_Short(x86.JMP, (byte)0);
         int cloc4 = asm.getCurrentOffset();
         asm.patch1(cloc1-1, (byte)(asm.getCurrentOffset()-cloc1));
@@ -1236,19 +1269,21 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         asm.emitCJUMP_Short(x86.JAE, (byte)0);
         int cloc3 = asm.getCurrentOffset();
         // default case
+        asm.emit2_Reg_Mem(x86.LEA, ESP, -8, ESP);
         {   // set rounding mode to round-towards-zero
-            asm.emit2_Mem(x86.FNSTCW, -4, ESP);
-            asm.emit2_Mem(x86.FNSTCW, -8, ESP);
-            asm.emitARITH_Mem_Imm(x86.OR_m_i32, -4, ESP, 0x0c00);
+            asm.emit2_Mem(x86.FNSTCW, 4, ESP);
+            asm.emit2_Mem(x86.FNSTCW, 0, ESP);
+            asm.emitARITH_Mem_Imm(x86.OR_m_i32, 4, ESP, 0x0c00);
             asm.emit2(x86.FNCLEX);
-            asm.emit2_Mem(x86.FLDCW, -4, ESP);
+            asm.emit2_Mem(x86.FLDCW, 4, ESP);
         }
-        asm.emit2_Mem(x86.FISTP_m64, 0, ESP);
+        asm.emit2_Mem(x86.FISTP_m64, 8, ESP);
         {
             // restore fpu control word
             asm.emit2(x86.FNCLEX);
-            asm.emit2_Mem(x86.FLDCW, -8, ESP);
+            asm.emit2_Mem(x86.FLDCW, 0, ESP);
         }
+        asm.emit2_Reg_Mem(x86.LEA, ESP, 8, ESP);
         asm.emitJUMP_Short(x86.JMP, (byte)0);
         int cloc4 = asm.getCurrentOffset();
         asm.patch1(cloc1-1, (byte)(asm.getCurrentOffset()-cloc1));
@@ -1601,7 +1636,28 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         }
         branchHelper(CMP_UNCOND, default_target);
     }
+    private void SYNCHEXIThelper() {
+        if (method.isStatic()) {
+            if (TraceBytecodes) {
+                emitPushAddressOf(SystemInterface.toCString("exit: STATIC SYNCH EXIT"));
+                emitCallMemory(SystemInterface._debugmsg);
+            }
+            // lock the java.lang.Class object
+            Class c = Reflection.getJDKType(method.getDeclaringClass());
+            jq.assert(c != null);
+            emitPushAddressOf(c);
+        } else {
+            if (TraceBytecodes) {
+                emitPushAddressOf(SystemInterface.toCString("exit: INSTANCE SYNCH EXIT"));
+                emitCallMemory(SystemInterface._debugmsg);
+            }
+            // lock the this pointer
+            asm.emit2_Mem(x86.PUSH_m, getLocalOffset(0), EBP);
+        }
+        emitCallRelative(Monitor._monitorexit);
+    }
     private void RETURN4helper() {
+        if (method.isSynchronized()) SYNCHEXIThelper();
         if (TraceMethods) {
             emitPushAddressOf(SystemInterface.toCString("Leaving: "+method));
             emitCallMemory(SystemInterface._debugmsg);
@@ -1612,6 +1668,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         asm.emit1_Imm16(x86.RET_i, (char)(n_paramwords<<2));
     }
     private void RETURN8helper() {
+        if (method.isSynchronized()) SYNCHEXIThelper();
         if (TraceMethods) {
             emitPushAddressOf(SystemInterface.toCString("Leaving: "+method));
             emitCallMemory(SystemInterface._debugmsg);
@@ -1664,6 +1721,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     }
     public void visitVRETURN() {
         super.visitVRETURN();
+        if (method.isSynchronized()) SYNCHEXIThelper();
         if (TraceBytecodes) {
             emitPushAddressOf(SystemInterface.toCString(i_start+": VRETURN"));
             emitCallMemory(SystemInterface._debugmsg);
@@ -2328,7 +2386,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             jq_Class k = (jq_Class)f;
             asm.emitPUSH_i(k.getInstanceSize());
             emitPushAddressOf(k.getVTable());
-            emitCallRelative(DefaultAllocator._allocateObject);
+            emitCallRelative(DefaultHeapAllocator._allocateObject);
         } else {
             emitPushAddressOf(f);
             emitCallRelative(HeapAllocator._clsinitAndAllocateObject);
@@ -2350,7 +2408,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         if (width != 0) asm.emit2_SHIFT_Mem_Imm8(x86.SHL_m32_i, 0, ESP, width);
         asm.emitARITH_Mem_Imm(x86.ADD_m_i32, 0, ESP, ObjectLayout.ARRAY_HEADER_SIZE);
         emitPushAddressOf(f.getVTable());
-        emitCallRelative(DefaultAllocator._allocateArray);
+        emitCallRelative(DefaultHeapAllocator._allocateArray);
         asm.emitShort_Reg(x86.PUSH_r, EAX);
     }
     public void visitARRAYLENGTH() {
@@ -2366,6 +2424,10 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         super.visitATHROW();
         if (TraceBytecodes) {
             emitPushAddressOf(SystemInterface.toCString(i_start+": ATHROW"));
+            emitCallMemory(SystemInterface._debugmsg);
+        }
+        if (TraceMethods) {
+            emitPushAddressOf(SystemInterface.toCString("Leaving: "+method+" (explicit athrow)"));
             emitCallMemory(SystemInterface._debugmsg);
         }
         emitCallRelative(ExceptionDeliverer._athrow);
@@ -2449,15 +2511,17 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             asm.emit2_Reg_Mem(x86.LEA, ESP, 8, ESP);
             asm.emit2_Mem(x86.FSTP_m64, 0, ESP);
         } else if (f == Unsafe._pushFP32) {
-            asm.emit2_Reg_Mem(x86.LEA, ESP, 4, ESP);
+            asm.emit2_Reg_Mem(x86.LEA, ESP, -4, ESP);
             asm.emit2_Mem(x86.FLD_m32, 0, ESP);
         } else if (f == Unsafe._pushFP64) {
-            asm.emit2_Reg_Mem(x86.LEA, ESP, 8, ESP);
+            asm.emit2_Reg_Mem(x86.LEA, ESP, -8, ESP);
             asm.emit2_Mem(x86.FLD_m64, 0, ESP);
         } else if (f == Unsafe._EAX) {
             asm.emitShort_Reg(x86.PUSH_r, EAX);
         } else if (f == Unsafe._EBP) {
             asm.emitShort_Reg(x86.PUSH_r, EBP);
+        } else if (f == Unsafe._ESP) {
+            asm.emitShort_Reg(x86.PUSH_r, ESP);
         } else if (f == Unsafe._alloca) {
             asm.emitShort_Reg(x86.POP_r, EAX);
             asm.emitARITH_Reg_Reg(x86.SUB_r_r32, ESP, EAX);
@@ -2474,23 +2538,42 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         } else if (f == Unsafe._setThreadBlock) {
             asm.emitprefix(x86.PREFIX_FS);
             asm.emit2_Mem(x86.POP_m, 0x14);
-        } else if (f == Unsafe._switchRegisterState) {
+        } else if (f == Unsafe._longJump) {
             asm.emitShort_Reg(x86.POP_r, EAX); // eax
             asm.emitShort_Reg(x86.POP_r, EBX); // sp
             asm.emitShort_Reg(x86.POP_r, EBP); // fp
             asm.emitShort_Reg(x86.POP_r, ECX); // ip
             asm.emit2_Reg_Reg(x86.MOV_r_r32, ESP, EBX);
             asm.emit2_Reg(x86.JMP_r, ECX);
-        } else if (f == Unsafe._cas4) {
+        } else if (f == Unsafe._atomicCas4) {
             asm.emitShort_Reg(x86.POP_r, EBX); // after
             asm.emitShort_Reg(x86.POP_r, EAX); // before
             asm.emitShort_Reg(x86.POP_r, ECX); // address
-            asm.emitShort_Reg_Imm(x86.MOV_r_i32, EDX, 0);
             if (jq.SMP) asm.emitprefix(x86.PREFIX_LOCK);
             asm.emit3_Reg_Mem(x86.CMPXCHG_32, EBX, 0, ECX);
-            asm.emitCJUMP_Short(x86.JNE, (byte)1);
-            asm.emitShort_Reg(x86.INC_r32, EDX);
-            asm.emitShort_Reg(x86.PUSH_r, EDX);
+            asm.emitShort_Reg(x86.PUSH_r, EAX);
+        } else if (f == Unsafe._atomicAdd) {
+            asm.emitShort_Reg(x86.POP_r, EBX); // value
+            asm.emitShort_Reg(x86.POP_r, EAX); // address
+            if (jq.SMP) asm.emitprefix(x86.PREFIX_LOCK);
+            asm.emitARITH_Reg_Mem(x86.ADD_m_r32, EBX, 0, EAX);
+        } else if (f == Unsafe._atomicSub) {
+            asm.emitShort_Reg(x86.POP_r, EBX); // value
+            asm.emitShort_Reg(x86.POP_r, EAX); // address
+            if (jq.SMP) asm.emitprefix(x86.PREFIX_LOCK);
+            asm.emitARITH_Reg_Mem(x86.SUB_m_r32, EBX, 0, EAX);
+        } else if (f == Unsafe._atomicAnd) {
+            asm.emitShort_Reg(x86.POP_r, EBX); // value
+            asm.emitShort_Reg(x86.POP_r, EAX); // address
+            if (jq.SMP) asm.emitprefix(x86.PREFIX_LOCK);
+            asm.emitARITH_Reg_Mem(x86.AND_m_r32, EBX, 0, EAX);
+        } else if (f == Unsafe._isEQ) {
+            asm.emitShort_Reg_Imm(x86.MOV_r_i32, ECX, 0);
+            asm.emitCJUMP_Short(x86.JNE, (byte)0);
+            int cloc = asm.getCurrentOffset();
+            asm.emitShort_Reg(x86.INC_r32, ECX);
+            asm.patch1(cloc-1, (byte)(asm.getCurrentOffset()-cloc));
+            asm.emitShort_Reg(x86.PUSH_r, ECX);
         } else {
             System.err.println(f.toString());
             jq.UNREACHABLE();
