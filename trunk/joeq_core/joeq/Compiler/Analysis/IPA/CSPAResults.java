@@ -140,6 +140,14 @@ public class CSPAResults {
     BDD fieldPt;
     
     /** Accessible locations BDD: V1c x V1o x V2c x V2o.
+     * This contains the call graph relation.
+     * A relation (V1c,V1o,V2c,V2o) is in the BDD if the method containing V1o
+     * under the context V1c calls the method containing V2o under the context
+     * V2c.
+     */
+    BDD callGraphRelation;
+    
+    /** Accessible locations BDD: V1c x V1o x V2c x V2o.
      * This contains the transitive call graph relation.
      * A relation (V1c,V1o,V2c,V2o) is in the BDD if there is a path in the
      * call graph from the method containing V1o under the context V1c to the
@@ -271,6 +279,72 @@ public class CSPAResults {
         return !result.isZero();
     }
 
+    void buildCallGraphRelation() {
+        BDDPairing V1oToV2o = bdd.makePair(V1o, V2o);
+        
+        System.out.print("Building call graph relation...");
+        long time = System.currentTimeMillis();
+        
+        SCCTopSortedGraph sccgraph = pn.getSCCGraph();
+        List sccroots = new LinkedList();
+        for (Iterator i = cg.getRoots().iterator(); i.hasNext(); ) {
+            SCComponent scc = pn.getSCC(i.next());
+            sccroots.add(scc);
+        }
+        Navigator nav = sccgraph.getNavigator();
+        List sccs = Traversals.postOrder(nav, sccroots);
+        Map sccToVars = new HashMap();
+        callGraphRelation = bdd.zero();
+        for (Iterator i = sccs.iterator(); i.hasNext(); ) {
+            SCComponent scc = (SCComponent) i.next();
+            if (TRACE_ACC_LOC) System.out.println("Visiting SCC"+scc.getId());
+            // build the set of local vars in domain V1o
+            BDD localVars = bdd.zero();
+            for (Iterator j = scc.nodeSet().iterator(); j.hasNext(); ) {
+                Object o = j.next();
+                if (!(o instanceof jq_Method)) continue;
+                jq_Method method = (jq_Method) o;
+                if (TRACE_ACC_LOC) System.out.println("Node "+method);
+                Collection method_nodes = methodToVariables.getValues(method);
+                for (Iterator k = method_nodes.iterator(); k.hasNext(); ) {
+                    Node n = (Node) k.next();
+                    int x = getVariableIndex(n);
+                    localVars.orWith(V1o.ithVar(x));
+                }
+            }
+            sccToVars.put(scc, localVars.replace(V1oToV2o));
+            Range r1 = pn.getSCCRange(scc);
+            if (TRACE_ACC_LOC) System.out.println("Local Vars="+localVars.toStringWithDomains()+" Context Range="+r1);
+            for (int j = 0; j < scc.nextLength(); ++j) {
+                SCComponent callee = scc.next(j);
+                Number npaths2 = pn.numberOfPathsToSCC(callee);
+                Collection edges = pn.getSCCEdges(scc, callee);
+                if (TRACE_ACC_LOC) System.out.println("SCC"+scc.getId()+" -> SCC"+callee.getId()+": "+edges.size()+" edges");
+                BDD contextVars_callee = (BDD) sccToVars.get(callee);
+                // build a map to translate callee path numbers into caller path numbers
+                BDD contextMap = contextVars_callee.id();
+                for (Iterator k = edges.iterator(); k.hasNext(); ) {
+                    Pair e = (Pair) k.next();
+                    Range r2 = pn.getEdge(e);
+                    if (TRACE_ACC_LOC) System.out.println("Edge="+e+" Caller range="+r1+" Callee range="+r2);
+                    BDD b2 = CSPA.buildContextMap(V1c, PathNumbering.toBigInt(r2.low), PathNumbering.toBigInt(r2.high),
+                                                  V2c, PathNumbering.toBigInt(r1.low), PathNumbering.toBigInt(r1.high));
+                    contextMap.orWith(b2);
+                }
+                if (TRACE_ACC_LOC) System.out.println("Context map="+contextMap.toStringWithDomains());
+                localVars.andWith(contextMap);
+            }
+            if (TRACE_ACC_LOC) System.out.println("Final map for SCC"+scc.getId()+": "+localVars.toStringWithDomains());
+            callGraphRelation.orWith(localVars);
+        }
+        time = System.currentTimeMillis() - time;
+        System.out.println("done. ("+time/1000.+" seconds, "+callGraphRelation.nodeCount()+" nodes)");
+        for (Iterator i = sccToVars.values().iterator(); i.hasNext(); ) {
+            BDD b = (BDD) i.next();
+            b.free();
+        }
+    }
+    
     void buildAccessibleLocations() {
         System.out.print("Building transitive call graph relation...");
         long time = System.currentTimeMillis();
@@ -983,6 +1057,7 @@ public class CSPAResults {
 
         initializeMethodMap();
         
+        buildCallGraphRelation();
         //buildAccessibleLocations();
     }
 
@@ -1005,14 +1080,12 @@ public class CSPAResults {
         VARCONTEXTBITS = Integer.parseInt(st.nextToken());
         HEAPCONTEXTBITS = Integer.parseInt(st.nextToken());
         int[] domainBits;
-        int[] domainSpos;
         BDDDomain[] bdd_domains;
         domainBits = new int[] {VARBITS, VARCONTEXTBITS,
                                 VARBITS, VARCONTEXTBITS,
                                 FIELDBITS,
                                 HEAPBITS, HEAPCONTEXTBITS,
                                 HEAPBITS, HEAPCONTEXTBITS};
-        domainSpos = new int[domainBits.length];
         
         long[] domains = new long[domainBits.length];
         for (int i=0; i<domainBits.length; ++i) {
@@ -1034,8 +1107,7 @@ public class CSPAResults {
         
         boolean reverseLocal = System.getProperty("bddreverse", "true").equals("true");
         String ordering = System.getProperty("bddordering", "FD_V2oxV1o_V2cxV1c_H2c_H2o_H1c_H1o");
-        int[] varorder = CSPA.makeVarOrdering(bdd, domainBits, domainSpos,
-                                              reverseLocal, ordering);
+        int[] varorder = CSPA.makeVarOrdering(bdd, reverseLocal, ordering);
         bdd.setVarOrder(varorder);
         bdd.enableReorder();
     }
@@ -1066,8 +1138,7 @@ public class CSPAResults {
         
         boolean reverseLocal = System.getProperty("bddreverse", "true").equals("true");
         String ordering = System.getProperty("bddordering", "FD_V3oxV2oxV1o_V3cxV2cxV1c_H3c_H3o_H2c_H2o_H1c_H1o");
-        int[] varorder = CSPA.makeVarOrdering(bdd, domainBits, domainSpos,
-                                              reverseLocal, ordering);
+        int[] varorder = CSPA.makeVarOrdering(bdd, reverseLocal, ordering);
         bdd.setVarOrder(varorder);
         bdd.enableReorder();
     }
