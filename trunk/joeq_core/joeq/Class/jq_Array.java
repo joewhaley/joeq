@@ -138,6 +138,13 @@ public class jq_Array extends jq_Reference implements jq_ClassFileConstants, Obj
         return (size+3) & ~3;
     }
     
+    public final jq_Type getInnermostElementType() {
+        if (element_type.isArrayType())
+            return ((jq_Array)element_type).getInnermostElementType();
+        else
+            return element_type;
+    }
+    
     public final void load() {
         if (isLoaded()) return;
         if (TRACE) System.out.println("Loading "+this+"...");
