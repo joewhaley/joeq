@@ -1854,6 +1854,7 @@ public class MethodSummary {
                 Assert._assert(s == map.size());
                 for (Iterator i = this.getAccessPathEdgeTargets().iterator(); i.hasNext(); ) {
                     Node n = (Node) i.next();
+                    if (!map.contains(n)) continue;
                     int index2 = map.get(n);
                     Assert._assert(s == map.size());
                     if (index2 <= index) {
@@ -2780,6 +2781,7 @@ public class MethodSummary {
             Assert._assert(s == map.size());
             for (Iterator i = this.field_predecessors.iterator(); i.hasNext(); ) {
                 Node n = (Node) i.next();
+                if (!map.contains(n)) continue;
                 int index2 = map.get(n);
                 Assert._assert(s == map.size());
                 if (index2 < index) {
