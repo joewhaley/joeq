@@ -1,4 +1,4 @@
-packages = Allocator Assembler Bootstrap ClassLib Clazz Compil3r Interpreter Linker Main Run_Time Scheduler Synchronization UTF Util
+packages = Allocator Assembler Bootstrap ClassLib Clazz Compil3r Interpreter Linker Main Run_Time Scheduler Synchronization UTF Util java
 
 all:	jikes
 
@@ -24,7 +24,7 @@ commit:
 	( export CVS_RSH=ssh ; cvs commit )
 
 bootstrap:
-	java -mx250M Main.Bootstrapper
+	java -Xbootclasspath/a:. -mx250M Main.Bootstrapper
 
 bootclasspath:	Main/GetBootClassPath.class
 	java Main.GetBootClassPath > bootclasspath
