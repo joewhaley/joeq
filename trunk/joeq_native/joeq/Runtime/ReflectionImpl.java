@@ -40,6 +40,8 @@ import jwutil.util.Convert;
  */
 public class ReflectionImpl implements Reflection.Delegate {
 
+    public static boolean REPORT_JDK_ERRORS = false;
+    
     public final jq_Reference getTypeOf(Object o) {
         if (jq.RunningNative) return jq_Reference.getTypeOf(o);
         return (jq_Reference) getJQType(o.getClass());
@@ -188,7 +190,7 @@ public class ReflectionImpl implements Reflection.Delegate {
                 try {
                     fields = c.getDeclaredFields();
                 } catch (NoClassDefFoundError x) {
-                    SystemInterface.debugwriteln("Note: "+c+" could not be loaded in host jdk");
+                    if (REPORT_JDK_ERRORS) SystemInterface.debugwriteln("Note: "+c+" could not be loaded in host jdk");
                     return null;
                 }
                 declaredFieldsCache.put(c, fields);
@@ -197,7 +199,7 @@ public class ReflectionImpl implements Reflection.Delegate {
             try {
                 fields = c.getDeclaredFields();
             } catch (NoClassDefFoundError x) {
-                SystemInterface.debugwriteln("Note: "+c+" could not be loaded in host jdk");
+                if (REPORT_JDK_ERRORS) SystemInterface.debugwriteln("Note: "+c+" could not be loaded in host jdk");
                 return null;
             }
         }
@@ -222,7 +224,7 @@ public class ReflectionImpl implements Reflection.Delegate {
                 try {
                     methods = c.getDeclaredMethods();
                 } catch (NoClassDefFoundError x) {
-                    SystemInterface.debugwriteln("Note: "+c+" could not be loaded in host jdk");
+                    if (REPORT_JDK_ERRORS) SystemInterface.debugwriteln("Note: "+c+" could not be loaded in host jdk");
                     return null;
                 }
                 declaredMethodsCache.put(c, methods);
@@ -231,7 +233,7 @@ public class ReflectionImpl implements Reflection.Delegate {
             try {
                 methods = c.getDeclaredMethods();
             } catch (NoClassDefFoundError x) {
-                SystemInterface.debugwriteln("Note: "+c+" could not be loaded in host jdk");
+                if (REPORT_JDK_ERRORS) SystemInterface.debugwriteln("Note: "+c+" could not be loaded in host jdk");
                 return null;
             }
         }
@@ -256,7 +258,7 @@ uphere:
         try {
             consts = c.getDeclaredConstructors();
         } catch (NoClassDefFoundError x) {
-            SystemInterface.debugwriteln("Note: "+c+" could not be loaded in host jdk");
+            if (REPORT_JDK_ERRORS) SystemInterface.debugwriteln("Note: "+c+" could not be loaded in host jdk");
             return null;
         }
 uphere:
