@@ -7,6 +7,7 @@
 
 package Allocator;
 
+import Clazz.jq_InstanceField;
 import Clazz.jq_Type;
 import Clazz.jq_Class;
 import Clazz.jq_ClassFileConstants;
@@ -223,6 +224,75 @@ public abstract class HeapAllocator implements jq_ClassFileConstants, ObjectLayo
         isOutOfMemory = true;
         SystemInterface.debugmsg("Out of memory!");
         throw outofmemoryerror;
+    }
+    
+    /**
+     * An object of this class represents a pointer to a heap address.
+     * It is a wrapped version of HeapAddress, so it can be used like
+     * an object.
+     */
+    public static class HeapPointer implements Comparable {
+        
+        /** The (actual) address. */
+        private final HeapAddress ip;
+        
+        /** Create a new heap pointer.
+         * @param ip  heap pointer value
+         */
+        public HeapPointer(HeapAddress ip) { this.ip = ip; }
+        
+        /** Extract the address of this heap pointer.
+         * @return  address of this heap pointer
+         */
+        public HeapAddress get() { return ip; }
+        
+        /** Compare this heap pointer to another heap pointer.
+         * @param that  heap pointer to compare against
+         * @return  -1 if this ip is before the given ip, 0 if it is equal
+         *           to the given ip, 1 if it is after the given ip
+         */
+        public int compareTo(HeapPointer that) {
+            if (this.ip.difference(that.ip) < 0) return -1;
+            if (this.ip.difference(that.ip) > 0) return 1;
+            return 0;
+        }
+        
+        /** Compares this heap pointer to the given object.
+         * @param that  object to compare to
+         * @return  -1 if this is less than, 0 if this is equal, 1 if this
+         *           is greater than
+         */
+        public int compareTo(java.lang.Object that) {
+            return compareTo((HeapPointer) that);
+        }
+        
+        /** Returns true if this heap pointer refers to the same location
+         * as the given heap pointer, false otherwise.
+         * @param that  heap pointer to compare to
+         * @return  true if the heap pointers are equal, false otherwise
+         */
+        public boolean equals(HeapPointer that) {
+            return this.ip.difference(that.ip) == 0;
+        }
+        
+        /** Compares this heap pointer with the given object.
+         * @param that  object to compare with
+         * @return  true if these objects are equal, false otherwise
+         */
+        public boolean equals(Object that) {
+            return equals((HeapPointer) that);
+        }
+        
+        /**  Returns the hash code of this heap pointer.
+         * @return  hash code
+         */
+        public int hashCode() { return this.ip.to32BitValue(); }
+        
+        public static final jq_InstanceField _ip;
+        static {
+            jq_Class k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LAllocator/HeapAllocator$HeapPointer;");
+            _ip = k.getOrCreateInstanceField("ip", "I");
+        }
     }
     
     public static final jq_StaticMethod _clsinitAndAllocateObject;

@@ -8,6 +8,7 @@
  */
 package GC;
 
+import Allocator.HeapAllocator.HeapPointer;
 import Memory.StackAddress;
 import Memory.HeapAddress;
 
@@ -15,26 +16,19 @@ import java.util.Comparator;
 import java.util.TreeMap;
 import java.util.SortedMap;
 
-public class GCBitsManager implements Comparator {
+public class GCBitsManager {
 
-    private static TreeMap pool = new TreeMap(new GCBitsManager());
-
-    public int compare(Object o1, Object o2) {
-        int difference = ((HeapAddress) o1).difference(((HeapAddress) o2));
-        if (difference > 0) return -1;
-        else if (difference < 0) return 1;
-        else return 0;
-    }
+    private static TreeMap pool = new TreeMap();
 
     public static void register(GCBits newcomer) {
-        pool.put(newcomer.blockEnd, newcomer);
+        pool.put(new HeapPointer(newcomer.blockEnd), newcomer);
     }
 
     // In order for addr to be valid, totally 3 conditions must be met
     public static boolean isValidHeapAddr(HeapAddress addr) {
         // First Condition: addr is within a memory block
-        HeapAddress key = (HeapAddress) (pool.tailMap(addr).firstKey());
-        GCBits value = (GCBits) (pool.get(key));
+        HeapPointer key = (HeapPointer) pool.tailMap(addr).firstKey();
+        GCBits value = (GCBits) pool.get(key);
         int difference;
         if ((difference = addr.difference(value.blockHead)) < 0) {
             return false;
