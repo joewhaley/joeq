@@ -25,6 +25,20 @@ public class LinearMap extends AbstractMap {
     protected final List keys;
     protected final List values;
     
+    public LinearMap(List k, List v) {
+        this.keys = k;
+        this.values = v;
+        Assert._assert(k.size() == v.size());
+    }
+    
+    public LinearMap(int size) {
+        this(new ArrayList(size), new ArrayList(size));
+    }
+    
+    public LinearMap() {
+        this(16);
+    }
+    
     /* (non-Javadoc)
      * @see java.util.Map#clear()
      */
@@ -91,25 +105,11 @@ public class LinearMap extends AbstractMap {
         return values;
     }
     
-    public LinearMap(List k, List v) {
-        this.keys = k;
-        this.values = v;
-        Assert._assert(k.size() == v.size());
-    }
-    
-    public LinearMap(int size) {
-        this(new ArrayList(size), new ArrayList(size));
-    }
-    
-    public LinearMap() {
-        this(16);
-    }
-    
     /* (non-Javadoc)
      * @see java.util.AbstractMap#entrySet()
      */
     public Set entrySet() {
-        return null;
+        return new EntrySet();
     }
     
     /*
