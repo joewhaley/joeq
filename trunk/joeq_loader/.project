@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>joeq_c</name>
+	<name>joeq_loader</name>
 	<comment></comment>
 	<projects>
 		<project>joeq</project>
