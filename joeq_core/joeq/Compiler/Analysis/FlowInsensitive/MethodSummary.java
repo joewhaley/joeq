@@ -143,6 +143,7 @@ public class MethodSummary {
      * Holds the cache of method summary graphs.
      */
     public static HashMap summary_cache = new HashMap();
+    private static BogusSummaryProvider bogusSummaryProvider = new BogusSummaryProvider();
     
     /**
      * Get the method summary for the given CFG.  Builds and caches it if it doesn't
@@ -185,8 +186,17 @@ public class MethodSummary {
         if (hasFake != null)
             return hasFake;
 
-        if (m.getBytecode() == null)
+        if (m.getBytecode() == null) {
             return null;
+        }
+        
+        jq_Method replacement = bogusSummaryProvider.getReplacementMethod(m);
+        if(replacement != null) {
+            System.out.println("Replacing a summary of " + m + 
+                " with one for "+ replacement);
+            ControlFlowGraph cfg = CodeCache.getCode(replacement);
+            return getSummary(cfg);
+        }
 
         ControlFlowGraph cfg = CodeCache.getCode(m);
         if (SSA & !ssaEntered.contains(cfg)) {
@@ -810,6 +820,17 @@ public class MethodSummary {
                     // todo: get the real type.
                     jq_Reference type = PrimordialClassLoader.getJavaLangObject().getArrayTypeForElementType();
                     Node n = ConcreteTypeNode.get(type, new QuadProgramLocation(method, obj));
+                    setRegister(dest_r, n);
+                }
+                return;
+            }else
+            if(bogusSummaryProvider.getReplacementMethod(m) != null) {
+//              special case: replaced methods.
+                RegisterOperand dest = Invoke.getDest(obj);
+                if (dest != null) {
+                    Register dest_r = dest.getRegister();
+                    // todo: get the real type.                    
+                    Node n = ConcreteTypeNode.get((jq_Reference) m.getReturnType(), new QuadProgramLocation(method, obj));
                     setRegister(dest_r, n);
                 }
                 return;
