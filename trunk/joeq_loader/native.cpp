@@ -223,7 +223,7 @@ extern "C" void __stdcall yield(void)
 {
 	Sleep(0);
 }
-extern "C" void __stdcall sleep(int ms)
+extern "C" void __stdcall msleep(int ms)
 {
 	Sleep(ms);
 }
