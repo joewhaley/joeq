@@ -535,7 +535,7 @@ public class CSBDDPointerAnalysis {
         BDD site_bdd = H1.ithVar(site_i);
         BDD type_bdd = T2.ithVar(type_i);
         type_bdd.andWith(site_bdd);
-        if (TRACE_TYPES) System.out.println("Adding alloc type: "+type_bdd.toStringWithDomains(bdd));
+        if (TRACE_TYPES) System.out.println("Adding alloc type: "+type_bdd.toStringWithDomains());
         aC.orWith(type_bdd);
     }
 
@@ -546,7 +546,7 @@ public class CSBDDPointerAnalysis {
         BDD var_bdd = V1.ithVar(var_i);
         BDD type_bdd = T1.ithVar(type_i);
         type_bdd.andWith(var_bdd);
-        if (TRACE_TYPES) System.out.println("Adding var type: "+type_bdd.toStringWithDomains(bdd));
+        if (TRACE_TYPES) System.out.println("Adding var type: "+type_bdd.toStringWithDomains());
         vC.orWith(type_bdd);
     }
     
@@ -853,7 +853,7 @@ public class CSBDDPointerAnalysis {
                     // (V1 x H1)
                     BDD newPt3 = newPt2.and(typeFilter);
                     if (TRACE_MATCHING) {
-                        System.out.println("Removed by type filter: "+newPt2.apply(newPt3, BDDFactory.diff).toStringWithDomains(bdd));
+                        System.out.println("Removed by type filter: "+newPt2.apply(newPt3, BDDFactory.diff).toStringWithDomains());
                     }
                     // (V1 x H1)
                     pointsTo = pointsTo.or(newPt3);
@@ -861,7 +861,7 @@ public class CSBDDPointerAnalysis {
                 } while (!oldPt2.equals(pointsTo));
 
                 if (TRACE_MATCHING) {
-                    System.out.println("After transitive closure, points-to is "+pointsTo.toStringWithDomains(bdd));
+                    System.out.println("After transitive closure, points-to is "+pointsTo.toStringWithDomains());
                 }
                 
                 // propagate points-to set over field loads and stores
@@ -894,7 +894,7 @@ public class CSBDDPointerAnalysis {
                 pointsTo = pointsTo.or(newPt6);
 
                 if (TRACE_MATCHING) {
-                    System.out.println("After matching loads/stores, points-to is now "+pointsTo.toStringWithDomains(bdd));
+                    System.out.println("After matching loads/stores, points-to is now "+pointsTo.toStringWithDomains());
                 }
             }
             while (!oldPt1.equals(pointsTo));
@@ -1059,7 +1059,7 @@ public class CSBDDPointerAnalysis {
                         int m = getVariableIndex((Node) k.next());
                         params[j].orWith(V1.ithVar(m));
                     }
-                    if (TRACE_CALLEE) System.out.println("Params["+j+"]="+params[j].toStringWithDomains(bdd));
+                    if (TRACE_CALLEE) System.out.println("Params["+j+"]="+params[j].toStringWithDomains());
                 }
                 
                 // find all targets of this call.
@@ -1086,7 +1086,7 @@ public class CSBDDPointerAnalysis {
                     if (RENUMBER) {
                         BDD overlap = nodes.and(callee.nodes);
                         if (!overlap.equals(bdd.zero())) {
-                            if (TRACE_OVERLAP) System.out.println("... non-zero overlap! "+overlap.toStringWithDomains(bdd));
+                            if (TRACE_OVERLAP) System.out.println("... non-zero overlap! "+overlap.toStringWithDomains());
                             long time = System.currentTimeMillis();
                             BDD callee_used = callee.nodes.id();
                             renumbering13 = bdd.zero();
@@ -1104,7 +1104,7 @@ public class CSBDDPointerAnalysis {
                                     BDD var_bdd = V1.ithVar(q);
                                     BDD type_bdd = T1.ithVar(getTypeIndex(type));
                                     type_bdd.andWith(var_bdd);
-                                    if (TRACE_TYPES) System.out.println("Adding var type: "+type_bdd.toStringWithDomains(bdd));
+                                    if (TRACE_TYPES) System.out.println("Adding var type: "+type_bdd.toStringWithDomains());
                                     vC.orWith(type_bdd);
                                 }
                                 BDD qth = V3.ithVar(q);
@@ -1129,9 +1129,9 @@ public class CSBDDPointerAnalysis {
                     if (TRACE_TIMES || time > 400) System.out.println("Renumbering: "+(time/1000.));
                     
                     if (TRACE_CALLEE) { 
-                        System.out.println("New loads: "+callee_loads.toStringWithDomains(bdd));
-                        System.out.println("New stores: "+callee_stores.toStringWithDomains(bdd));
-                        System.out.println("New edges: "+callee_edges.toStringWithDomains(bdd));
+                        System.out.println("New loads: "+callee_loads.toStringWithDomains());
+                        System.out.println("New stores: "+callee_stores.toStringWithDomains());
+                        System.out.println("New edges: "+callee_edges.toStringWithDomains());
                     }
                     
                     // incorporate callee operations into caller.
@@ -1149,7 +1149,7 @@ public class CSBDDPointerAnalysis {
                         BDD paramEdge = renumber(tmp, renumbering23, V2.set(), V3ToV2);
                         tmp.free();
                         paramEdge.andWith(params[k].id());
-                        if (TRACE_CALLEE) System.out.println("Param#"+k+" edges "+paramEdge.toStringWithDomains(bdd));
+                        if (TRACE_CALLEE) System.out.println("Param#"+k+" edges "+paramEdge.toStringWithDomains());
                         newEdges.orWith(paramEdge);
                     }
                     
@@ -1167,7 +1167,7 @@ public class CSBDDPointerAnalysis {
                             }
                             int rIndex = getVariableIndex(rvn);
                             retVal.andWith(V2.ithVar(rIndex));
-                            if (TRACE_CALLEE) System.out.println("Return value edges "+retVal.toStringWithDomains(bdd));
+                            if (TRACE_CALLEE) System.out.println("Return value edges "+retVal.toStringWithDomains());
                             newEdges.orWith(retVal);
                         }
                     }
@@ -1184,7 +1184,7 @@ public class CSBDDPointerAnalysis {
                             }
                             int rIndex = getVariableIndex(rvn);
                             retVal.andWith(V2.ithVar(rIndex));
-                            if (TRACE_CALLEE) System.out.println("Thrown exception edges "+retVal.toStringWithDomains(bdd));
+                            if (TRACE_CALLEE) System.out.println("Thrown exception edges "+retVal.toStringWithDomains());
                             newEdges.orWith(retVal);
                         }
                     }
@@ -1262,7 +1262,7 @@ public class CSBDDPointerAnalysis {
         
         void trim(BDD set) {
             if (TRACE_TRIMMING) {
-                System.out.println("Trimming edges outside of the set "+set.toStringWithDomains(bdd));
+                System.out.println("Trimming edges outside of the set "+set.toStringWithDomains());
                 System.out.println("Before: edges="+edgeSet.nodeCount()+
                                           " loads="+loads.nodeCount()+
                                          " stores="+stores.nodeCount()+
@@ -1318,23 +1318,23 @@ public class CSBDDPointerAnalysis {
             sb.append(':');
             sb.append(Strings.lineSep);
             sb.append("Roots=");
-            sb.append(roots.toStringWithDomains(bdd));
+            sb.append(roots.toStringWithDomains());
             sb.append(Strings.lineSep);
             sb.append("Nodes=");
-            System.out.println("Nodes: "+nodes.toStringWithDomains(bdd));
-            sb.append(nodes.toStringWithDomains(bdd));
+            System.out.println("Nodes: "+nodes.toStringWithDomains());
+            sb.append(nodes.toStringWithDomains());
             sb.append(Strings.lineSep);
             sb.append("Loads=");
-            sb.append(loads.toStringWithDomains(bdd));
+            sb.append(loads.toStringWithDomains());
             sb.append(Strings.lineSep);
             sb.append("Stores=");
-            sb.append(stores.toStringWithDomains(bdd));
+            sb.append(stores.toStringWithDomains());
             sb.append(Strings.lineSep);
             sb.append("Edges=");
-            sb.append(edgeSet.toStringWithDomains(bdd));
+            sb.append(edgeSet.toStringWithDomains());
             sb.append(Strings.lineSep);
             sb.append("Points-to=");
-            sb.append(pointsTo.toStringWithDomains(bdd));
+            sb.append(pointsTo.toStringWithDomains());
             sb.append(Strings.lineSep);
             return sb.toString();
         }
