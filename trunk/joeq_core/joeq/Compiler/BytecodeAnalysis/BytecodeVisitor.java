@@ -275,8 +275,10 @@ public class BytecodeVisitor implements jq_ClassFileConstants, CompilationConsta
                     this.visitFCONST(clazz.getCPasFloat(index).floatValue());
                 else if (tt == CONSTANT_String)
                     this.visitACONST(clazz.getCPasString(index));
+                else if (tt == CONSTANT_Class || tt == CONSTANT_ResolvedClass) // JDK1.5
+                    this.visitACONST(clazz.getCPasType(index));
                 else
-                    throw new VerifyError();
+                    throw new VerifyError("bad ldc tag: "+tt);
                 break;
             }
             case 0x13: /* --- ldc_w --- */ {
@@ -288,8 +290,10 @@ public class BytecodeVisitor implements jq_ClassFileConstants, CompilationConsta
                     this.visitFCONST(clazz.getCPasFloat(index).floatValue());
                 else if (tt == CONSTANT_String)
                     this.visitACONST(clazz.getCPasString(index));
+                else if (tt == CONSTANT_Class || tt == CONSTANT_ResolvedClass) // JDK1.5
+                    this.visitACONST(clazz.getCPasType(index));
                 else
-                    throw new VerifyError();
+                    throw new VerifyError("bad ldc_w tag: "+tt);
                 break;
             }
             case 0x14: /* --- ldc2_w --- */ {
