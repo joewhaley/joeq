@@ -22,7 +22,7 @@ import Compil3r.Analysis.IPSSA.ContextSet;
  * 
  * Provides a dot printer.
  * 
- *  *  * @author Vladimir Livshits
+ *  @author Vladimir Livshits
  */
 public abstract class DefinitionGraph {
 	private HashSet _nodes;
@@ -69,16 +69,16 @@ public abstract class DefinitionGraph {
 	}
 
 	/// Forward links
-	public abstract Iterator/*<SSADefinition>*/ getReached(SSADefinition def);	
+	public abstract SSAIterator.DefinitionIterator getReached(SSADefinition def);	
 	/** All reaching definitions */
-	public abstract Iterator/*<SSADefinition>*/  getAllReached(SSADefinition def);
+	public abstract SSAIterator.DefinitionIterator getAllReached(SSADefinition def);
 
 	
 	/// Backward links
 	/** One level of pointees */
-	public abstract Iterator/*<SSADefinition>*/ getReaching(SSADefinition def);	
+	public abstract SSAIterator.DefinitionIterator getReaching(SSADefinition def);	
 	/** All reaching definitions */
-	public abstract Iterator/*<SSADefinition>*/  getAllReaching(SSADefinition def);
+	public abstract SSAIterator.DefinitionIterator getAllReaching(SSADefinition def);
 	
 
 	public String toString(){
@@ -244,15 +244,15 @@ public abstract class DefinitionGraph {
 		}
 
 		// Follow the forward links		
-		public Iterator/*<SSADefinition>*/ getReached(SSADefinition def){
+		public SSAIterator.DefinitionIterator getReached(SSADefinition def){
 			LinkedList list = (LinkedList)_reverseAdjacencyLists.get(def);
 			if(list == null){
 				return null;
 			}
 			
-			return list.iterator();
+			return new SSAIterator.DefinitionIterator(list.iterator());
 		}		
-		public Iterator/*<SSADefinition>*/ getAllReached(SSADefinition def){
+		public SSAIterator.DefinitionIterator getAllReached(SSADefinition def){
 			HashSet set = new HashSet();
 	
 			(new Object(){
@@ -271,19 +271,19 @@ public abstract class DefinitionGraph {
 				}
 			}).getReachedAux(def, set);			// fill the set with reaching definitions
 	
-			return set.iterator();
+			return new SSAIterator.DefinitionIterator(set.iterator());
 		}
 		
 		// Follow the backward links		
-		public Iterator/*<SSADefinition>*/ getReaching(SSADefinition def){
+		public SSAIterator.DefinitionIterator getReaching(SSADefinition def){
 			HashMap map = (HashMap)_adjacencyLists.get(def);
 			if(map == null){
 				return null;
 			}
 			
-			return map.values().iterator();
+			return new SSAIterator.DefinitionIterator(map.values().iterator());
 		}
-		public Iterator/*<SSADefinition>*/ getAllReaching(SSADefinition def){
+		public SSAIterator.DefinitionIterator getAllReaching(SSADefinition def){
 			HashSet set = new HashSet();
 			
 			(new Object(){
@@ -302,7 +302,7 @@ public abstract class DefinitionGraph {
 				}
 			}).getReachingAux(def, set);			// fill the set with reaching definitions
 			
-			return set.iterator();
+			return new SSAIterator.DefinitionIterator(set.iterator());
 		}				
 	}
 }

@@ -21,7 +21,6 @@ import Compil3r.Quad.Operator;
 import Compil3r.Quad.Quad;
 import Compil3r.Quad.QuadIterator;
 
-
 public final class SSAProcInfo {
 	protected static HashMap /*<Query,  SSABindingAnnote>*/ 	_queryMap  = new HashMap();
 	protected static HashMap /*<Helper, SSABindingAnnote>*/ 	_helperMap = new HashMap();
@@ -63,7 +62,7 @@ public final class SSAProcInfo {
 		jq_Method 		  		     					_method;
 		protected ControlFlowGraph 	 					_cfg;
 		protected DominatorQuery 	 					_dom_query; 	
-		protected HashMap /*<Quad, SSABindingAnnote>*/  _bindingMap;
+		protected HashMap /*<ProgramStatement, SSABindingAnnote>*/  _bindingMap;
 		private Quad                                    _firstQuad;
 				
 		protected Query(jq_Method method){
@@ -72,10 +71,10 @@ public final class SSAProcInfo {
 			this._bindingMap = new HashMap();
 			this._dom_query  = new SimpleDominatorQuery(_method);
 			
-			makeFirstQuad();		
+			makeFirstStatement();		
 		}
 		
-		private void makeFirstQuad(){
+		private void makeFirstStatement(){
 			_firstQuad = Operator.Special.create(0, Operator.Special.NOP.INSTANCE);
 		}
 		
@@ -292,8 +291,8 @@ public final class SSAProcInfo {
 			this._query  = SSAProcInfo.retrieveQuery(_method);
 		}
 		
-		public static SSADefinition create_ssa_definition(SSALocation loc, Quad quad) {
-			return SSADefinition.Helper.create_ssa_definition(loc, quad);
+		public static SSADefinition create_ssa_definition(SSALocation loc, Quad quad, jq_Method method) {
+			return SSADefinition.Helper.create_ssa_definition(loc, quad, method);
 		}
 	}
 	
@@ -315,9 +314,8 @@ public final class SSAProcInfo {
 			return null;
 		}
 
-		public SSADefinition addBinding(SSALocation loc, SSAValue value, Quad quad) {
-			SSABinding b = new SSABinding(quad, loc, value);
-			Assert._assert(value == null || quad == value.getQuad());
+		public SSADefinition addBinding(SSALocation loc, SSAValue value, Quad quad, jq_Method method) {
+			SSABinding b = new SSABinding(quad, loc, value, method);			
 			Assert._assert(quad == b.getDestination().getQuad());
 			
 			this._bindings.addLast(b);
@@ -351,14 +349,6 @@ public final class SSAProcInfo {
 			locations = null;
 			return true;
 			*/
-		}
-
-		public void addBinding(Quad quad, SSALocation loc, SSAValue value){
-			SSABinding b = new SSABinding(quad, loc, value);
-			Assert._assert(value == null || quad == value.getQuad());
-			Assert._assert(quad == b.getDestination().getQuad());
-						
-			this._bindings.addLast(b);
 		}
 		
 		public Iterator getBindingIterator(){

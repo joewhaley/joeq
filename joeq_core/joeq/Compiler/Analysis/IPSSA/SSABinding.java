@@ -1,24 +1,30 @@
 package Compil3r.Analysis.IPSSA;
+import Clazz.jq_Method;
 import Compil3r.Quad.Quad;
 
+/**
+ * An SSABinding is an assignment of an SSAValue to to an SSADefinition.
+ * @see SSADefinition
+ * @see SSAValue 
+ * */
 public class SSABinding {
-	protected Quad 			_quad;
-	protected SSADefinition _destination;
-	protected SSAValue 		_value;
+	protected Quad             _quad;
+	protected SSADefinition    _destination;
+	protected SSAValue 		   _value;
 	
 	public SSABinding(Quad quad, SSADefinition def, SSAValue value) {
-		this._quad 			= quad;
+		this._quad      	= quad;
 		this._destination 	= def;
 		this._value 		= value;
 		
 		value.setDestination(def);
 	}
 	
-	public SSABinding(Quad quad, SSALocation loc, SSAValue value) {
+	public SSABinding(Quad quad, SSALocation loc, SSAValue value, jq_Method method) {
 		this._quad = quad;		
 		this._value = value;
 		
-		SSADefinition def = SSAProcInfo.Helper.create_ssa_definition(loc, quad);
+		SSADefinition def = SSAProcInfo.Helper.create_ssa_definition(loc, quad, method);
 		this._destination = def;
 		
 		if(value != null){
@@ -44,7 +50,7 @@ public class SSABinding {
 	
 	public SSADefinition getDestination() {return _destination;}
 	public SSAValue getValue() {return _value;}
-	public Quad getQuad(){return _quad;}
+    public Quad getQuad() {return _destination.getQuad();}
 
 	public void accept(SSABindingVisitor vis) {
 		vis.visit(this);		

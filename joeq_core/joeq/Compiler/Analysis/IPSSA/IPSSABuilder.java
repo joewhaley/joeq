@@ -1,35 +1,41 @@
 package Compil3r.Analysis.IPSSA;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Set;
-
-import Util.Assert;
+import java.util.StringTokenizer;
+import java.util.Vector;
 
 import Clazz.jq_Method;
 import Compil3r.Analysis.IPA.PAResults;
 import Compil3r.Analysis.IPA.PointerAnalysisResults;
 import Compil3r.Analysis.IPA.ProgramLocation;
-import Compil3r.Quad.BasicBlock;
-import Compil3r.Quad.BasicBlockVisitor;
-import Compil3r.Quad.ControlFlowGraph;
-import Compil3r.Quad.ControlFlowGraphVisitor;
-import Compil3r.Quad.Quad;
-import Compil3r.Quad.Operator;
-import Compil3r.Quad.RegisterFactory.Register;
-import Compil3r.Quad.QuadIterator;
-import Compil3r.Quad.QuadVisitor;
-import Compil3r.Quad.CodeCache;
 import Compil3r.Analysis.IPA.ProgramLocation.QuadProgramLocation;
 import Compil3r.Analysis.IPSSA.SSAProcInfo.Helper;
 import Compil3r.Analysis.IPSSA.SSAProcInfo.Query;
 import Compil3r.Analysis.IPSSA.SSAProcInfo.SSABindingAnnote;
+import Compil3r.Analysis.IPSSA.SSAValue.ActualOut;
 import Compil3r.Analysis.IPSSA.Utils.SSAGraphPrinter;
-import Compil3r.Analysis.IPSSA.ContextSet;
+import Compil3r.Quad.BasicBlock;
+import Compil3r.Quad.BasicBlockVisitor;
+import Compil3r.Quad.CodeCache;
+import Compil3r.Quad.ControlFlowGraph;
+import Compil3r.Quad.ControlFlowGraphVisitor;
+import Compil3r.Quad.Operator;
+import Compil3r.Quad.Quad;
+import Compil3r.Quad.QuadIterator;
+import Compil3r.Quad.QuadVisitor;
+import Compil3r.Quad.RegisterFactory.Register;
+import Util.Assert;
 import Util.Templates.ListIterator;
 
 /**
@@ -38,14 +44,18 @@ import Util.Templates.ListIterator;
  * construction.
  * */
 public class IPSSABuilder implements ControlFlowGraphVisitor {
-	protected int      			   _verbosity;
-	private static HashMap 		   _builderMap = new HashMap();
-	private PointerAnalysisResults _ptr = null;
+	protected int      			                _verbosity;
+	private static HashMap 		                _builderMap = new HashMap();
+	private PointerAnalysisResults              _ptr = null;
+    private IPSSABuilder.ApplicationLaunchingPad _appPad = null; 
 	
 	boolean PRINT_CFG 		= !System.getProperty("ipssa.print_cfg", "no").equals("no");
 	boolean PRINT_SSA_GRAPH = !System.getProperty("ipssa.print_ssa", "no").equals("no");
+    boolean RUN_APPS        = !System.getProperty("ipssa.run_apps", "no").equals("no");;
+        
 
 	public IPSSABuilder(int verbosity){
+        //System.err.println("Creating " + this.getClass().toString());
 		CodeCache.AlwaysMap = true;
 		this._verbosity     = verbosity;
 		// get pointer analysis results			
@@ -56,7 +66,17 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 			e.printStackTrace();
 			System.exit(1);
 		}
+        if(RUN_APPS) {
+            _appPad = new IPSSABuilder.ApplicationLaunchingPad(true);
+        }
 	}
+    
+    /*
+    protected void finalize() {
+        if(RUN_APPS) {
+            _appPad.run();
+        }
+    }*/
 	
 	/*
 	 * Default constructor with verbosity=2.
@@ -85,7 +105,6 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 		protected ControlFlowGraph 		_cfg;
 		protected SSAProcInfo.Query 	_q;
 		private PointerAnalysisResults 	_ptr;
-		
 		SSABuilder(jq_Method method, PointerAnalysisResults ptr, int verbosity){
 			this._method 	= method;
 			this._cfg 		= CodeCache.getCode(_method);
@@ -132,7 +151,7 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 			
 			int result = 0;
 			if(context == null){
-				ba.addBinding(loc, value, quad);
+				ba.addBinding(loc, value, quad, _method);
 				result++;
 				if(quad != _q.getFirstQuad()){
 					result += markIteratedDominanceFrontier(loc, quad);					
@@ -144,7 +163,7 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 				SSADefinition lastDef = _q.getLastDefinitionFor(loc, quad, true);
 				
 				SSAValue.SigmaPhi sigma = new SSAValue.SigmaPhi(context, tmpForValue, lastDef);
-				ba.addBinding(loc, sigma, quad);
+				ba.addBinding(loc, sigma, quad, _method);
 				result++;
 				result += markIteratedDominanceFrontier(loc, quad);
 			}
@@ -255,7 +274,7 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 				Quad quad = j.nextQuad();
 				quad.accept(vis1);
 			}			
-			if(_verbosity > 1){
+			if(_verbosity > 2){
 				System.err.println("Created a total of " + vis1.getBindingCount() + " bindings");
 			}
 			vis1 = null;
@@ -269,7 +288,7 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 			Stage3Visitor vis3 = new Stage3Visitor();  
 			vis3.visitCFG(_cfg);
 */			
-			Stage2PrimeVisitor vis2 = new Stage2PrimeVisitor(_method);  
+			Stage2Visitor vis2 = new Stage2Visitor(_method);  
 			for (QuadIterator j=new QuadIterator(_cfg, true); j.hasNext(); ) {
 				Quad quad = j.nextQuad();
 				quad.accept(vis2);
@@ -291,7 +310,7 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 					System.exit(2);
 				}				
 			}
-		}
+        }
         
         class LiftMergesVisitor implements BasicBlockVisitor {
             public void visitBasicBlock(BasicBlock bb) {
@@ -448,63 +467,63 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 		 * Stage 2     : Walk over and fill in all RHSs that don't require dereferencing. 
 		 * Invariant 2 : All remaining RHSs that haven't been filled in require dereferencing.		
 		 * */
-		class Stage2Visitor implements ControlFlowGraphVisitor {
-			public void visitCFG(ControlFlowGraph cfg) {
-				SSAProcInfo.Query q = SSAProcInfo.retrieveQuery(cfg.getMethod()); 
-				for(Iterator iter = new QuadIterator(cfg); iter.hasNext();){
-					Quad quad = (Quad)iter.next();
-					for(Iterator bindingIter = q.getBindingIterator(quad); bindingIter.hasNext(); ){
-						SSABinding b = (SSABinding)bindingIter.next();
-						
-						if(!isStore(quad) && !isLoad(quad) && !isCall(quad)){
-							specialize(quad);
-						}
-					} 
-				}
-			}
-
-			void specialize(Quad quad) {
-							
-			}
-		}
-		
-		/** 
-		 * Stage 3	   : Walk over and do all remaining pointer resolution. 
-		 * Invariant 3 : All RHSs are filled in.
-		 * */
-		final class Stage3Visitor extends SSABindingVisitor {
-			public void visit(SSABinding b) {
-				Quad quad = b.getQuad();
-				
-				if(isStore(quad)){
-					// rewrite a store
-					processStore(quad);
-				}else
-				if(isLoad(quad)){
-					// rewrite a load
-					processLoad(quad);
-				}
-			}
-
-			private void processStore(Quad quad) {
-				// TODO Auto-generated method stub				
-			}
-
-			private void processLoad(Quad quad) {
-				// TODO Auto-generated method stub				
-			}			
-		}
+//		class Stage2Visitor implements ControlFlowGraphVisitor {
+//			public void visitCFG(ControlFlowGraph cfg) {
+//				SSAProcInfo.Query q = SSAProcInfo.retrieveQuery(cfg.getMethod()); 
+//				for(Iterator iter = new QuadIterator(cfg); iter.hasNext();){
+//					Quad quad = (Quad)iter.next();
+//					for(Iterator bindingIter = q.getBindingIterator(quad); bindingIter.hasNext(); ){
+//						SSABinding b = (SSABinding)bindingIter.next();
+//						
+//						if(!isStore(quad) && !isLoad(quad) && !isCall(quad)){
+//							specialize(quad);
+//						}
+//					} 
+//				}
+//			}
+//
+//			void specialize(Quad quad) {
+//							
+//			}
+//		}
+//		
+//		/** 
+//		 * Stage 3	   : Walk over and do all remaining pointer resolution. 
+//		 * Invariant 3 : All RHSs are filled in.
+//		 * */
+//		final class Stage3Visitor extends SSABindingVisitor {
+//			public void visit(SSABinding b) {
+//				Quad quad = b.getQuad();
+//				
+//				if(isStore(quad)){
+//					// rewrite a store
+//					processStore(quad);
+//				}else
+//				if(isLoad(quad)){
+//					// rewrite a load
+//					processLoad(quad);
+//				}
+//			}
+//
+//			private void processStore(Quad quad) {
+//				// TODO Auto-generated method stub				
+//			}
+//
+//			private void processLoad(Quad quad) {
+//				// TODO Auto-generated method stub				
+//			}			
+//		}
 	
 		/** 
 		 * Stage 2     : Walk over and fill in all RHSs that don't require dereferencing. 
 		 * Invariant 2 : Update RHSs referring to heap objects to refer to the right locations.
 		 * */
-		class Stage2PrimeVisitor extends QuadVisitor.EmptyVisitor {
+		class Stage2Visitor extends QuadVisitor.EmptyVisitor {
 			private jq_Method _method;
 			private Query     _q;
 			private Helper    _h;
 
-			Stage2PrimeVisitor(jq_Method method){
+			Stage2Visitor(jq_Method method){
 				this._method   = method;
 				this._h 	   = SSAProcInfo.retrieveHelper(_method);
 				this._q 	   = SSAProcInfo.retrieveQuery(_method);
@@ -567,14 +586,27 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 				processCall(quad);
                 QuadProgramLocation pl = new QuadProgramLocation(_method, quad);
                 Set/*jq_Method*/ targets = _ptr.getCallTargets(pl);
-                if(targets.size() > 0) {
-                    System.out.print(targets.size() + " targets of " + quad + ": "); 
-                    for(Iterator iter = targets.iterator(); iter.hasNext();) {
-                        jq_Method method = (jq_Method)iter.next();
-                        System.out.print(method.toString() + " ");
-                    }
-                    System.out.print("\n");
+                if(targets.size() == 0) {
+                    // TODO: warn?
+                    return;
                 }
+                for(Iterator iter = _q.getBindingIterator(quad); iter.hasNext(); ) {
+                    SSABinding b  = (SSABinding)iter.next();
+                    Assert._assert(b.getValue() instanceof SSAValue.ActualOut);
+                    
+                    SSAValue.ActualOut value = (ActualOut)b.getValue();                    
+                
+                    System.out.print(targets.size() + " targets of " + quad + ": "); 
+                    for(Iterator targetIter = targets.iterator(); targetIter.hasNext();) {
+                        jq_Method method = (jq_Method)targetIter.next();
+                        //System.out.print(method.toString() + " ");
+                        SSADefinition def = SSADefinition.Helper.create_ssa_definition(
+                            SSALocation.Unique.FACTORY.get(), quad, _method);   // TODO: this is BS
+                        value.add(def, method);
+                    }
+                    //System.out.print("\n");                        
+                }               
+                
 			}
 			/**************************** End of handlers ****************************/ 
 			
@@ -736,6 +768,145 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
         Assert._assert(!iter.hasNext(), "More than one used register");
         
         return reg;
+    }
+    
+    /**
+     * This class allows to specify applications to be 
+     * run after IPSSA has been constructed.
+     * */
+    public static class ApplicationLaunchingPad implements Runnable {
+        LinkedList _applications;
+        boolean _verbosity;
+        
+        public ApplicationLaunchingPad(boolean verbosity){
+            _applications = new LinkedList();
+            _verbosity = verbosity;
+            
+            readConfig();
+        }
+        public ApplicationLaunchingPad(Application app, boolean verbosity){
+            this(verbosity);
+            addApplication(app);
+        }
+        public ApplicationLaunchingPad(){
+            this(false);
+        }
+        public void addApplication(Application app){
+            _applications.addLast(app);            
+        }
+        public void run() {
+            for(Iterator iter = _applications.iterator(); iter.hasNext(); ) {
+                Application app = (Application)iter.next();
+                
+                if(_verbosity){
+                    System.out.println("Running application " + app.getName());
+                }
+                app.run();
+            }
+        }
+        /**
+            Read the configuration for applications.
+        */
+        private void readConfig(){
+            String filename = "app.config";
+            try {                
+                FileInputStream fi = new FileInputStream(filename);
+                BufferedReader r = new BufferedReader(new InputStreamReader(fi));
+                String line = r.readLine();
+                while(line != null){
+                    Application app = Application.create(line);
+                    if(app != null){
+                        addApplication(app);
+                    }else{
+                        System.err.println("Skipped " + line);
+                    }
+                    line = r.readLine();                    
+                }
+            } catch (FileNotFoundException e) {
+                System.err.println("Couldn't read file " + filename);
+                return;
+            } catch (Exception e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }           
+        }       
+    }
+    
+    public abstract static class Application implements Runnable {
+        private String _name;
+
+        public Application(String name, String[] args){
+            parseParams(args);
+            _name = name;
+        }
+        public static Application create(String line) {
+            StringTokenizer tokenizer = new StringTokenizer(line, " ");
+            String className = tokenizer.nextToken();
+            String appName  = tokenizer.nextToken();
+
+            Vector argv = new Vector(); 
+            while(tokenizer.hasMoreTokens()) {
+                argv.add(tokenizer.nextToken());
+            }
+
+            Application app = null;
+            
+            Class c;
+            try {
+                //className = Main.Driver.canonicalizeClassName(className);
+                //System.err.println("'" + className + "'");
+                c = Class.forName(className);
+                try {
+                    app = (Application)c.newInstance();
+                } catch (InstantiationException e1) {
+                    e1.printStackTrace();
+                } catch (IllegalAccessException e1) {
+                    e1.printStackTrace();
+                }
+            } catch (ClassNotFoundException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }            
+            
+            if(app == null) {
+                System.err.println("Can't create an instance of " + className);
+                return null;
+            }
+            
+            app.setName(appName);
+            app.parseParams(argv.toArray());
+
+            return app;
+        }
+        private void setName(String appName) {
+            _name = appName;
+            
+        }
+        public String getName() {
+            return _name;
+        }
+        Application(String name, String args){
+            _name = name;
+            StringTokenizer tokenizer = new StringTokenizer(args, " ");
+            Vector argv = new Vector(); 
+            while(tokenizer.hasMoreTokens()) {
+                argv.add(tokenizer.nextToken());
+            }
+            parseParams((String[])argv.toArray());
+        }        
+        
+        protected abstract void parseParams(String[] args);
+        
+        private void parseParams(Object[] objects) {
+            String[] argv = new String[objects.length];
+            for(int i = 0; i < objects.length; i++) {
+                argv[i] = (String)objects[i];
+            }             
+            
+            parseParams(argv);                         
+        }       
+
+        public abstract void run();
     }
 };
 
