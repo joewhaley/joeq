@@ -19,15 +19,17 @@
 #if defined(WIN32)
 
 #define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
+#define _WIN32_WINNT 0x0400		// Include SetWaitableTimer
 
 #include "windows.h"
 #include <io.h>
-#include <tchar.h>
 #include <direct.h>
 
 #else
 
+#if !defined(__stdcall)
 #define __stdcall __attribute__((stdcall))
+#endif
 #define _umask umask
 #define __int64 int64_t
 #define _open open
@@ -74,6 +76,10 @@ typedef struct _NativeThread {
 	Thread* currentThread;
         int pid;
 } NativeThread;
+
+extern "C" void __stdcall trap_handler(void*, int);
+extern "C" void __stdcall ctrl_break_handler();
+extern "C" void __stdcall threadSwitch(void*);
 
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.

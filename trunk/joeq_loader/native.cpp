@@ -5,15 +5,25 @@
 
 #define ARRAY_LENGTH_OFFSET -12
 
-extern "C" void __stdcall debugwmsg(const unsigned short* s, int length)
+extern "C" void __stdcall debugwmsg(const unsigned short* s)
 {
-        // TODO: actually write wide characters
+	int* length_loc = (int*)((int)s + ARRAY_LENGTH_OFFSET);
+	int length = *length_loc;
+#if defined(WIN32)
+	unsigned short* temp = (unsigned short*)malloc((length+1)*sizeof(unsigned short));
+	memcpy(temp, s, length*sizeof(unsigned short));
+	temp[length] = 0;
+	_putws(temp);
+	free(temp);
+#else
+    // TODO: actually write wide characters
 	while (--length >= 0) {
 	  unsigned short c = *s;
 	  putchar((char)c);
 	  ++s;
 	}
 	putchar('\n');
+#endif
 	fflush(stdout);
 }
 
@@ -339,6 +349,11 @@ extern "C" HANDLE __stdcall create_thread(LPTHREAD_START_ROUTINE start, LPVOID a
 	DWORD tid;
 	return CreateThread(NULL, 0, start, arg, CREATE_SUSPENDED, &tid);
 }
+extern "C" int __stdcall init_thread(void)
+{
+	// nothing to do here.
+	return GetCurrentThreadId();
+}
 extern "C" int __stdcall resume_thread(const HANDLE handle)
 {
 	return ResumeThread(handle);
@@ -388,16 +403,6 @@ extern "C" HANDLE __stdcall get_current_thread_handle(void)
 	return targetHandle;
 }
 
-typedef struct _Thread {
-	CONTEXT* registers;
-	int thread_switch_enabled;
-} Thread;
-
-typedef struct _NativeThread {
-	HANDLE thread_handle;
-	Thread* currentThread;
-} NativeThread;
-
 CRITICAL_SECTION semaphore_init;
 CRITICAL_SECTION* p_semaphore_init;
 
@@ -424,6 +429,52 @@ extern "C" int __stdcall wait_for_single_object(HANDLE handle, int time)
 extern "C" int __stdcall release_semaphore(HANDLE semaphore, int a)
 {
 	return ReleaseSemaphore(semaphore, a, NULL);
+}
+
+extern "C" void __stdcall timer_tick(LPVOID arg, DWORD lo, DWORD hi)
+{
+  // get current Java thread
+  Thread* java_thread;
+	__asm {
+		// set thread block
+		mov EDX, FS:14h
+		mov java_thread, EDX
+	}
+  // check if thread switch is ok
+  if (java_thread->thread_switch_enabled != 0) {
+    return;
+  }
+  
+  NativeThread* native_thread = java_thread->native_thread;
+
+  // disable thread switch.
+  ++java_thread->thread_switch_enabled;
+
+  // call the threadSwitch method.
+  threadSwitch(native_thread);
+}
+
+extern "C" void __stdcall set_interval_timer(int type, int ms)
+{
+    HANDLE hTimer = NULL;
+    LARGE_INTEGER liDueTime;
+
+    liDueTime.QuadPart=-10000*ms;
+
+    // Create a waitable timer.
+    hTimer = CreateWaitableTimer(NULL, TRUE, "WaitableTimer");
+    if (!hTimer)
+    {
+        printf("CreateWaitableTimer failed (%d)\n", GetLastError());
+        return;
+    }
+
+    // Set a timer to wait.
+    if (!SetWaitableTimer(hTimer, &liDueTime, ms, timer_tick, NULL, 0))
+    {
+        printf("SetWaitableTimer failed (%d)\n", GetLastError());
+        return;
+    }
 }
 
 extern "C" void __stdcall set_current_context(Thread* jthread, const CONTEXT* context)
