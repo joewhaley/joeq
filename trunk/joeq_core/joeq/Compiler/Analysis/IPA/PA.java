@@ -3,6 +3,10 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Analysis.IPA;
 
+import java.io.DataOutput;
+import java.io.DataOutputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -16,9 +20,12 @@ import org.sf.javabdd.BDDDomain;
 import org.sf.javabdd.BDDFactory;
 import org.sf.javabdd.BDDPairing;
 
+import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
 import Clazz.jq_Field;
+import Clazz.jq_Member;
 import Clazz.jq_Method;
+import Clazz.jq_NameAndDesc;
 import Clazz.jq_Reference;
 import Clazz.jq_Type;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary;
@@ -27,7 +34,10 @@ import Compil3r.Analysis.FlowInsensitive.MethodSummary.ConcreteTypeNode;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.GlobalNode;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.UnknownTypeNode;
+import Compil3r.Quad.CachedCallGraph;
+import Compil3r.Quad.CallGraph;
 import Compil3r.Quad.CodeCache;
+import Compil3r.Quad.LoadedCallGraph;
 import Main.HostedVM;
 import Util.Collections.IndexMap;
 
@@ -48,12 +58,15 @@ public class PA {
     PrintStream out = System.out;
 
     boolean ADD_CLINIT = true;
+    boolean ADD_THREADS = true;
     boolean FILTER_TYPE = true;
     boolean INCREMENTAL1 = true;
     boolean INCREMENTAL2 = true;
+    boolean INCREMENTAL3 = true;
     
-    int bddnodes = Integer.parseInt(System.getProperty("bddnodes", "1000000"));
+    int bddnodes = Integer.parseInt(System.getProperty("bddnodes", "1500000"));
     int bddcache = Integer.parseInt(System.getProperty("bddcache", "100000"));
+    static String resultsFileName = System.getProperty("bddresults", "pa");
     
     BDDFactory bdd;
     
@@ -90,11 +103,14 @@ public class PA {
     BDD IE;     // IxM, invocation edges
     BDD filter; // V1xH1, type filter
     
+    String varorder = System.getProperty("bddordering", "N_F_Z_I_M_T1_V2xV1_H2_T2_H1");
+    
     BDDPairing V1toV2, V2toV1, H1toH2, H2toH1, V1H1toV2H2, V2H2toV1H1;
     BDD V1set, V2set, H1set, H2set, T1set, T2set, Fset, Mset, Nset, Iset, Zset;
     BDD V1V2set, V1H1set, IMset, H1Fset, H1FH2set, T2Nset, MZset;
     
     Set visitedMethods = new HashSet();
+    Set roots = new HashSet();
     BDD visited; // M, visited methods
     
     BDDDomain makeDomain(String name, int bits) {
@@ -123,7 +139,6 @@ public class PA {
         
         boolean reverseLocal = System.getProperty("bddreverse", "true") != null;
         // IxH1xN x H1xT2
-        String varorder = System.getProperty("bddordering", "M_N_F_Z_I_T1_V2xV1_H2_T2_H1");
         int[] ordering = bdd.makeVarOrdering(reverseLocal, varorder);
         bdd.setVarOrder(ordering);
         
@@ -184,21 +199,29 @@ public class PA {
         visited = bdd.zero();
         
         if (INCREMENTAL1) {
-            old_A = bdd.zero();
-            old_S = bdd.zero();
-            old_L = bdd.zero();
-            old_vP = bdd.zero();
-            old_hP = bdd.zero();
+            old1_A = bdd.zero();
+            old1_S = bdd.zero();
+            old1_L = bdd.zero();
+            old1_vP = bdd.zero();
+            old1_hP = bdd.zero();
         }
         if (INCREMENTAL2) {
-            old_IE = bdd.zero();
-            old_visited = bdd.zero();
+            old2_IE = bdd.zero();
+            old2_visited = bdd.zero();
         }
-
+        if (INCREMENTAL3) {
+            old3_t3 = bdd.zero();
+            old3_vP = bdd.zero();
+            old3_t4 = bdd.zero();
+            old3_hT = bdd.zero();
+        }
+        if (ADD_THREADS) {
+            PrimordialClassLoader.getJavaLangThread().prepare();
+            PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/Runnable;").prepare();
+        }
     }
     
     public void visitMethod(jq_Method m) {
-        if (m == null) return;
         if (visitedMethods.contains(m)) return;
         visitedMethods.add(m);
         
@@ -215,8 +238,7 @@ public class PA {
         MethodSummary ms = MethodSummary.getSummary(CodeCache.getCode(m));
         if (TRACE) out.println("Visiting method summary "+ms);
         
-        if (ADD_CLINIT)
-            visitMethod(ms.getMethod().getDeclaringClass().getClassInitializer());
+        addClassInitializer(ms.getMethod().getDeclaringClass());
         
         // build up 'formal'
         int nParams = ms.getNumOfParams();
@@ -251,8 +273,8 @@ public class PA {
                 mI.orWith(M_bdd.and(I_bdd).and(N_bdd));
             }
             
-            if (ADD_CLINIT && target.isStatic())
-                visitMethod(target.getDeclaringClass().getClassInitializer());
+            if (target.isStatic())
+                addClassInitializer(target.getDeclaringClass());
             
             if (target.isStatic()) {
                 int Z_i = 0;
@@ -318,6 +340,29 @@ public class PA {
         }
     }
     
+    public void addClassInitializer(jq_Class c) {
+        if (!ADD_CLINIT) return;
+        jq_Method m = c.getClassInitializer();
+        if (m != null) {
+            visitMethod(m);
+            roots.add(m);
+        }
+    }
+    
+    jq_NameAndDesc run_method = new jq_NameAndDesc("run", "()V");
+    public void addThreadRun(BDD H_bdd, jq_Class c) {
+        if (!ADD_THREADS) return;
+        jq_Method m = c.getVirtualMethod(run_method);
+        if (m != null && m.getBytecode() != null) {
+            visitMethod(m);
+            roots.add(m);
+            Node p = MethodSummary.getSummary(CodeCache.getCode(m)).getParamNode(0);
+            int V1_i = Vmap.get(p);
+            BDD V1_bdd = V1.ithVar(V1_i);
+            vP.orWith(V1_bdd.and(H_bdd));
+        }
+    }
+    
     public void visitNode(Node node) {
         if (TRACE) out.println("Visiting node "+node);
         
@@ -368,8 +413,8 @@ public class PA {
                 if (TRACE_RELATIONS) out.println("Adding to L: (V1:"+V_i+",F:"+F_i+",V2:"+V2_i+")");
                 L.orWith(V_bdd.and(F_bdd).and(V2_bdd));
             }
-            if (ADD_CLINIT && node instanceof GlobalNode)
-                visitMethod(f.getDeclaringClass().getClassInitializer());
+            if (node instanceof GlobalNode)
+                addClassInitializer(f.getDeclaringClass());
         }
     }
     
@@ -391,7 +436,7 @@ public class PA {
             vT.orWith(V_bdd.and(T_bdd));
         }
         
-        // build up 'hT'
+        // build up 'hT', and identify clinit and thread run methods.
         for (int H_i = last_H; H_i < Hmap.size(); ++H_i) {
             Node n = (Node) Hmap.get(H_i);
             BDD H_bdd = H1.ithVar(H_i);
@@ -401,18 +446,27 @@ public class PA {
             BDD T_bdd = T2.ithVar(T_i);
             if (TRACE_RELATIONS) out.println("Adding to hT: (H1:"+H_i+",T2:"+T_i+")");
             hT.orWith(H_bdd.and(T_bdd));
+            
+            if (type != null) {
+                if (type instanceof jq_Class)
+                    addClassInitializer((jq_Class) type);
+                if (type.isSubtypeOf(PrimordialClassLoader.getJavaLangThread()) ||
+                    type.isSubtypeOf(PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/Runnable;"))) {
+                    addThreadRun(H_bdd, (jq_Class) type);
+                }
+            }
         }
         
         // build up 'aT'
         for (int T1_i = 0; T1_i < Tmap.size(); ++T1_i) {
             jq_Reference t1 = (jq_Reference) Tmap.get(T1_i);
-            BDD T1_bdd = T1.ithVar(T1_i);
             int start = (T1_i < last_T)?last_T:0;
+            BDD T1_bdd = T1.ithVar(T1_i);
             for (int T2_i = start; T2_i < Tmap.size(); ++T2_i) {
                 jq_Reference t2 = (jq_Reference) Tmap.get(T2_i);
-                BDD T2_bdd = T2.ithVar(T2_i);
                 if (t2 == null || (t1 != null && t2.isSubtypeOf(t1))) {
                     if (TRACE_RELATIONS) out.println("Adding to aT: (T1:"+T1_i+",T2:"+T2_i+")");
+                    BDD T2_bdd = T2.ithVar(T2_i);
                     aT.orWith(T1_bdd.and(T2_bdd));
                 }
             }
@@ -506,16 +560,16 @@ public class PA {
         old_hP.free();
     }
     
-    BDD old_A;
-    BDD old_S;
-    BDD old_L;
-    BDD old_vP;
-    BDD old_hP;
+    BDD old1_A;
+    BDD old1_S;
+    BDD old1_L;
+    BDD old1_vP;
+    BDD old1_hP;
     
     public void solvePointsTo_incremental() {
         // handle new A
-        BDD new_A = A.apply(old_A, BDDFactory.diff);
-        old_A.free();
+        BDD new_A = A.apply(old1_A, BDDFactory.diff);
+        old1_A.free();
         if (!new_A.isZero()) {
             if (TRACE_SOLVER) out.print("Handling new A: "+new_A.satCount(V1V2set));
             BDD t1 = vP.replace(V1toV2);
@@ -526,11 +580,11 @@ public class PA {
             vP.orWith(t2);
             if (TRACE_SOLVER) out.println(" --> "+vP.satCount(V1H1set));
         }
-        old_A = A.id();
+        old1_A = A.id();
         
         // handle new S
-        BDD new_S = S.apply(old_S, BDDFactory.diff);
-        old_S.free();
+        BDD new_S = S.apply(old1_S, BDDFactory.diff);
+        old1_S.free();
         if (!new_S.isZero()) {
             if (TRACE_SOLVER) out.print("Handling new S: "+new_S.satCount(V1V2set.and(Fset)));
             BDD t3 = new_S.relprod(vP, V1set); // V1xFxV2 x V1xH1 = H1xFxV2
@@ -542,11 +596,11 @@ public class PA {
             hP.orWith(t5);
             if (TRACE_SOLVER) out.println(" --> "+hP.satCount(H1FH2set));
         }
-        old_S = S.id();
+        old1_S = S.id();
         
         // handle new L
-        BDD new_L = L.apply(old_L, BDDFactory.diff);
-        old_L.free();
+        BDD new_L = L.apply(old1_L, BDDFactory.diff);
+        old1_L.free();
         if (!new_L.isZero()) {
             if (TRACE_SOLVER) out.print("Handling new L: "+new_L.satCount(V1V2set.and(Fset)));
             BDD t6 = new_L.relprod(vP, V1set); // V1xFxV2 x V1xH1 = H1xFxV2
@@ -558,10 +612,10 @@ public class PA {
             vP.orWith(t7);
             if (TRACE_SOLVER) out.println(" --> "+vP.satCount(V1H1set));
         }
-        old_L = S.id();
+        old1_L = S.id();
         
         for (int outer = 1; ; ++outer) {
-            BDD new_vP_inner = vP.apply(old_vP, BDDFactory.diff);
+            BDD new_vP_inner = vP.apply(old1_vP, BDDFactory.diff);
             for (int inner = 1; !new_vP_inner.isZero(); ++inner) {
                 if (TRACE_SOLVER)
                     out.print("Inner #"+inner+": new vP "+new_vP_inner.satCount(V1H1set));
@@ -582,8 +636,8 @@ public class PA {
                 old_vP_inner.free();
             }
             
-            BDD new_vP = vP.apply(old_vP, BDDFactory.diff);
-            old_vP.free();
+            BDD new_vP = vP.apply(old1_vP, BDDFactory.diff);
+            old1_vP.free();
             
             if (TRACE_SOLVER)
                 out.print("Outer #"+outer+": new vP "+new_vP.satCount(V1H1set));
@@ -606,13 +660,13 @@ public class PA {
             }
 
             if (TRACE_SOLVER)
-                out.println(", hP "+old_hP.satCount(H1FH2set)+" -> "+hP.satCount(H1FH2set));
+                out.println(", hP "+old1_hP.satCount(H1FH2set)+" -> "+hP.satCount(H1FH2set));
             
-            old_vP = vP.id();
+            old1_vP = vP.id();
             
-            BDD new_hP = hP.apply(old_hP, BDDFactory.diff);
+            BDD new_hP = hP.apply(old1_hP, BDDFactory.diff);
             if (new_hP.isZero()) break;
-            old_hP = hP.id();
+            old1_hP = hP.id();
             
             if (TRACE_SOLVER)
                 out.print("        : new hP "+new_hP.satCount(H1FH2set));
@@ -636,12 +690,16 @@ public class PA {
                 vP.orWith(t7);
             }
             if (TRACE_SOLVER)
-                out.println(", vP "+old_vP.satCount(V1H1set)+
+                out.println(", vP "+old1_vP.satCount(V1H1set)+
                             " -> "+vP.satCount(V1H1set));
         }
     }
     
     public void bindInvocations() {
+        if (INCREMENTAL2) {
+            bindInvocations_incremental();
+            return;
+        }
         BDD t1 = actual.restrict(Z.ithVar(0)); // IxV2
         t1.replaceWith(V2toV1); // IxV1
         if (TRACE_BIND) out.println("t1: "+t1.satCount(Iset.and(V1set)));
@@ -670,6 +728,45 @@ public class PA {
         if (TRACE_SOLVER) out.println("Call graph edges after: "+IE.satCount(IMset));
     }
     
+    BDD old3_t3;
+    BDD old3_vP;
+    BDD old3_t4;
+    BDD old3_hT;
+    
+    public void bindInvocations_incremental() {
+        BDD t1 = actual.restrict(Z.ithVar(0)); // IxV2
+        t1.replaceWith(V2toV1); // IxV1
+        BDD t2 = mI.exist(Mset); // IxN
+        BDD t3 = t1.and(t2); // IxV1 & IxN = IxV1xN 
+        t1.free(); t2.free();
+        BDD new_t3 = t3.apply(old3_t3, BDDFactory.diff);
+        old3_t3.free();
+        BDD new_vP = vP.apply(old3_vP, BDDFactory.diff);
+        old3_vP.free();
+        BDD t4 = t3.relprod(new_vP, V1set); // IxV1xN x V1xH1 = IxH1xN
+        new_vP.free();
+        old3_t3 = t3;
+        t4.orWith(new_t3.relprod(vP, V1set));
+        new_t3.free();
+        BDD new_t4 = t4.apply(old3_t4, BDDFactory.diff);
+        old3_t4.free();
+        BDD new_hT = hT.apply(old3_hT, BDDFactory.diff);
+        old3_hT.free();
+        BDD t5 = t4.relprod(new_hT, H1set); // IxH1xN x H1xT2 = IxT2xN
+        new_hT.free();
+        old3_t4 = t4;
+        t5.orWith(new_t4.relprod(hT, H1set));
+        new_t4.free();
+        BDD t6 = t5.relprod(cha, T2Nset); // IxT2xN x T2xNxM = IxM
+        t5.free();
+        if (TRACE_SOLVER) out.println("Call graph edges before: "+IE.satCount(IMset));
+        IE.orWith(t6);
+        if (TRACE_SOLVER) out.println("Call graph edges after: "+IE.satCount(IMset));
+        
+        old3_vP = vP.id();
+        old3_hT = hT.id();
+    }
+    
     public boolean handleNewTargets() {
         BDD targets = IE.exist(Iset);
         targets.applyWith(visited.id(), BDDFactory.diff);
@@ -686,8 +783,8 @@ public class PA {
         return true;
     }
     
-    BDD old_IE;
-    BDD old_visited;
+    BDD old2_IE;
+    BDD old2_visited;
     
     public void bindParameters() {
         if (INCREMENTAL2) {
@@ -719,11 +816,11 @@ public class PA {
     }
     
     public void bindParameters_incremental() {
-        BDD new_IE = IE.apply(old_IE, BDDFactory.diff);
-        BDD new_visited = visited.apply(old_visited, BDDFactory.diff);
-        new_IE.orWith(old_IE.and(new_visited));
-        old_IE.free();
-        old_visited.free();
+        BDD new_IE = IE.apply(old2_IE, BDDFactory.diff);
+        BDD new_visited = visited.apply(old2_visited, BDDFactory.diff);
+        new_IE.orWith(old2_IE.and(new_visited));
+        old2_IE.free();
+        old2_visited.free();
         new_visited.free();
         
         BDD t1 = new_IE.relprod(actual, Iset); // IxM x IxZxV2 = ZxV2xM
@@ -748,8 +845,8 @@ public class PA {
         if (TRACE_SOLVER) out.println("Edges after exception bind: "+A.satCount(V1V2set));
         
         new_IE.free();
-        old_IE = IE.id();
-        old_visited = visited.id();
+        old2_IE = IE.id();
+        old2_visited = visited.id();
     }
     
     public void iterate() {
@@ -776,7 +873,7 @@ public class PA {
         }
     }
     
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         HostedVM.initialize();
         CodeCache.AlwaysMap = true;
         
@@ -786,6 +883,7 @@ public class PA {
         
         PA dis = new PA();
         dis.initialize();
+        dis.roots.addAll(roots);
         
         long time = System.currentTimeMillis();
         
@@ -805,6 +903,11 @@ public class PA {
         System.out.println("Total time spent: "+(System.currentTimeMillis()-time)/1000.);
 
         dis.printSizes();
+        
+        System.out.println("Writing results...");
+        time = System.currentTimeMillis();
+        dis.dumpResults(resultsFileName);
+        System.out.println("Time spent: "+(System.currentTimeMillis()-time)/1000.);
     }
     
     public void printSizes() {
@@ -844,4 +947,61 @@ public class PA {
             }
         }
     }
+    
+    public void dumpResults(String dumpfilename) throws IOException {
+        
+        //CallGraph callgraph = CallGraph.makeCallGraph(roots, new PACallTargetMap());
+        CallGraph callgraph = new CachedCallGraph(new PACallGraph(this));
+        //CallGraph callgraph = callGraph;
+        DataOutputStream dos;
+        dos = new DataOutputStream(new FileOutputStream("callgraph"));
+        LoadedCallGraph.write(callgraph, dos);
+        dos.close();
+        
+        bdd.save(dumpfilename+".vP", vP);
+        bdd.save(dumpfilename+".hP", hP);
+        bdd.save(dumpfilename+".S", S);
+        bdd.save(dumpfilename+".L", L);
+        
+        dos = new DataOutputStream(new FileOutputStream(dumpfilename+".config"));
+        dumpConfig(dos);
+        dos.close();
+        dos = new DataOutputStream(new FileOutputStream(dumpfilename+".Vmap"));
+        dumpMap(dos, Vmap);
+        dos.close();
+        dos = new DataOutputStream(new FileOutputStream(dumpfilename+".Hmap"));
+        dumpMap(dos, Hmap);
+        dos.close();
+        dos = new DataOutputStream(new FileOutputStream(dumpfilename+".Fmap"));
+        dumpMap(dos, Fmap);
+        dos.close();
+    }
+
+    private void dumpConfig(DataOutput out) throws IOException {
+        out.writeBytes("V="+V_BITS+"\n");
+        out.writeBytes("H="+H_BITS+"\n");
+        out.writeBytes("F="+F_BITS+"\n");
+        out.writeBytes("Order="+varorder+"\n");
+    }
+    
+    private void dumpMap(DataOutput out, IndexMap m) throws IOException {
+        int n = m.size();
+        out.writeBytes(n+"\n");
+        int j = 0;
+        while (j < m.size()) {
+            Object o = m.get(j);
+            if (o == null) {
+                out.writeBytes("null");
+            } else if (o instanceof Node) {
+                ((Node) o).write(m, out);
+            } else if (o instanceof jq_Member) {
+                ((jq_Member) o).writeDesc(out);
+            } else {
+                throw new InternalError(o.toString());
+            }
+            out.writeByte('\n');
+            ++j;
+        }
+    }
+
 }
