@@ -1446,6 +1446,11 @@ uphere2:
                 jq_StaticMethod m = static_methods[i];
                 m.prepare();
             }
+            // set prepared flags for static fields
+            for (int i=0; i<static_fields.length; ++i) {
+                jq_StaticField m = static_fields[i];
+                m.prepare();
+            }
             
             if (TRACE) SystemInterface.debugmsg("Finished preparing "+this);
             state = STATE_PREPARED;
@@ -1564,6 +1569,15 @@ uphere2:
         }
     }
 
+    public static int NumOfIFieldsKept = 0;
+    public static int NumOfSFieldsKept = 0;
+    public static int NumOfIMethodsKept = 0;
+    public static int NumOfSMethodsKept = 0;
+    public static int NumOfIFieldsEliminated = 0;
+    public static int NumOfSFieldsEliminated = 0;
+    public static int NumOfIMethodsEliminated = 0;
+    public static int NumOfSMethodsEliminated = 0;
+    
     // not thread safe.
     public void trim(Trimmer trim) {
         jq.assert(state == STATE_PREPARED);
@@ -1594,16 +1608,20 @@ uphere2:
         jq_InstanceField[] ifs = new jq_InstanceField[n];
         for (int i=0, j=-1; j<n-1; ++i) {
             jq_InstanceField f = declared_instance_fields[i];
-            if (necessaryMembers.contains(f))
+            if (necessaryMembers.contains(f)) {
                 ifs[++j] = f;
-            else 
+                ++NumOfIFieldsKept;
+            } else {
                 if (trim.TRACE) trim.out.println("Eliminating instance field: "+f);
+                ++NumOfIFieldsEliminated;
+            }
         }
         declared_instance_fields = ifs;
         
         n=0; static_data_size=0;
         for (int i=0; i<static_fields.length; ++i) {
             jq_StaticField f = static_fields[i];
+            f.unprepare();
             if (necessaryMembers.contains(f)) ++n;
         }
         jq_StaticField[] sfs = new jq_StaticField[n];
@@ -1612,9 +1630,12 @@ uphere2:
             if (necessaryMembers.contains(f)) {
                 sfs[++j] = f;
                 static_data_size += f.getWidth();
+                ++NumOfSFieldsKept;
             }
-            else
+            else {
                 if (trim.TRACE) trim.out.println("Eliminating static field: "+f);
+                ++NumOfSFieldsEliminated;
+            }
         }
         static_fields = sfs;
 
@@ -1628,25 +1649,32 @@ uphere2:
         jq_InstanceMethod[] ims = new jq_InstanceMethod[n];
         for (int i=0, j=-1; j<n-1; ++i) {
             jq_InstanceMethod f = declared_instance_methods[i];
-            if (necessaryMembers.contains(f))
+            if (necessaryMembers.contains(f)) {
                 ims[++j] = f;
-            else
+                ++NumOfIMethodsKept;
+            } else {
                 if (trim.TRACE) trim.out.println("Eliminating instance method: "+f);
+                ++NumOfIMethodsEliminated;
+            }
         }
         declared_instance_methods = ims;
         
         n=0;
         for (int i=0; i<static_methods.length; ++i) {
             jq_StaticMethod f = static_methods[i];
+            f.unprepare();
             if (necessaryMembers.contains(f)) ++n;
         }
         jq_StaticMethod[] sms = new jq_StaticMethod[n];
         for (int i=0, j=-1; j<n-1; ++i) {
             jq_StaticMethod f = static_methods[i];
-            if (necessaryMembers.contains(f))
+            if (necessaryMembers.contains(f)) {
                 sms[++j] = f;
-            else
+                ++NumOfSMethodsKept;
+            } else {
                 if (trim.TRACE) trim.out.println("Eliminating static method: "+f);
+                ++NumOfSMethodsEliminated;
+            }
         }
         static_methods = sms;
         
