@@ -107,7 +107,10 @@ public class LoadedCallGraph extends CallGraph {
                     throw new IOException();
                 String methodDesc = st.nextToken();
                 m = (jq_Method) k.getDeclaredMember(methodName, methodDesc);
-                Assert._assert(m != null, "Cannot find \""+methodName+"\" \""+methodDesc+"\" in "+k);
+                if (m == null) {
+                    System.err.println("Cannot find \""+methodName+"\" \""+methodDesc+"\" in "+k);
+                    continue;
+                }
                 methods.add(m);
                 if (st.hasMoreTokens()) {
                     String arg = st.nextToken();
@@ -135,7 +138,14 @@ public class LoadedCallGraph extends CallGraph {
                 jq_Class targetClass = (jq_Class) jq_Type.parseType(className);
                 targetClass.load();
                 jq_Method targetMethod = (jq_Method) targetClass.getDeclaredMember(methodName, methodDesc);
-                Assert._assert(m != null);
+                if (m == null) {
+                    // reported above.
+                    continue;
+                }
+                if (targetMethod == null) {
+                    System.err.println("Cannot find \""+methodName+"\" \""+methodDesc+"\" in "+targetClass);
+                    continue;
+                }
                 Assert._assert(targetMethod != null);
                 add(m, bcIndex, targetMethod);
                 continue;
