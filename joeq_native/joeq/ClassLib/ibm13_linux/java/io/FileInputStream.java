@@ -28,13 +28,13 @@ abstract class FileInputStream {
     }
     public static int read(java.io.FileInputStream dis) throws java.io.IOException {
         byte[] b = new byte[1];
-        int v = readBytes(dis, b, 0, 1);
+        int v = readBytes(dis, b, 0, 1, (java.io.FileDescriptor)Reflection.getfield_A(dis, _fd));
         if (v == -1) return -1;
         else if (v != 1) throw new java.io.IOException();
         return b[0]&0xFF;
     }
-    private static int readBytes(java.io.FileInputStream dis, byte b[], int off, int len) throws java.io.IOException {
-        int fdnum = Reflection.getfield_I(Reflection.getfield_A(dis, _fd), FileDescriptor._fd);
+    private static int readBytes(java.io.FileInputStream dis, byte b[], int off, int len, java.io.FileDescriptor fd) throws java.io.IOException {
+        int fdnum = Reflection.getfield_I(fd, FileDescriptor._fd);
         // check for index out of bounds/null pointer
         if (len < 0) throw new IndexOutOfBoundsException();
         byte b2 = b[off+len-1];

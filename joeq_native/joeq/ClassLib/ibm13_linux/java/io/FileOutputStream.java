@@ -37,8 +37,8 @@ abstract class FileOutputStream {
         if (result != 1)
             throw new java.io.IOException();
     }
-    private static void writeBytes(java.io.FileOutputStream dis, byte b[], int off, int len) throws java.io.IOException {
-        int fdnum = Reflection.getfield_I(Reflection.getfield_A(dis, _fd), FileDescriptor._fd);
+    private static void writeBytes(java.io.FileOutputStream dis, byte b[], int off, int len, java.io.FileDescriptor fd) throws java.io.IOException {
+        int fdnum = Reflection.getfield_I(fd, FileDescriptor._fd);
         // check for index out of bounds/null pointer
         if (len < 0) throw new IndexOutOfBoundsException();
         byte b2 = b[off+len-1];
