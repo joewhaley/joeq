@@ -8,22 +8,37 @@
  */
 package Allocator;
 
-import java.util.Comparator;
-import java.util.TreeSet;
+import java.util.Collection;
 
-import GC.GCBitsManager.SweepUnit;
-import GC.GCBitsManager.SweepUnitComparator;
+import Memory.HeapAddress;
 
 public class FreeMemManager {
-    private TreeSet freePool;
+    private static FreeMemStrategy defaultStrategy = new BestAdaptionStrategy();
+
+    private Collection freePool;
     private FreeMemStrategy stg;
 
     public FreeMemManager(FreeMemStrategy stg) {
         this.stg = stg;
-        freePool = new TreeSet(new SweepUnitComparator());
+        stg.addCollection(freePool);
     }
 
     public FreeMemManager() {
-        this(new FirstAdaptionStrategy());
+        this(defaultStrategy);
+    }
+
+    public void addFreeMem(MemUnit unit) {
+        freePool.add(unit);
+    }
+
+    public HeapAddress getFreeMem(int size) {
+        MemUnit unit = stg.next(size);
+        if(unit == null) {
+            return null;
+        } else {
+            HeapAddress addr = unit.getHead();
+            unit.setHead((HeapAddress)addr.offset(size));
+            return addr;
+        }
     }
 }

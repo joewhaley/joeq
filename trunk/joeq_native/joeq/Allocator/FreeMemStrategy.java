@@ -8,8 +8,9 @@
  */
 package Allocator;
 
-import GC.GCBitsManager.SweepUnit;
+import java.util.Collection;
 
 public interface FreeMemStrategy {
-    public SweepUnit next();
+    public MemUnit next(int size);
+    public void addCollection(Collection c);
 }
