@@ -90,7 +90,9 @@ public abstract class Bootstrapper implements ObjectLayout {
         }
         
         Set nullStaticFields = ClassLibInterface.i.bootstrapNullStaticFields();
+        Set nullInstanceFields = ClassLibInterface.i.bootstrapNullInstanceFields();
         System.out.println("Null static fields: "+nullStaticFields);
+        System.out.println("Null instance fields: "+nullInstanceFields);
 
         // install bootstrap code allocator
         BootstrapCodeAllocator bca = new BootstrapCodeAllocator();
@@ -98,7 +100,7 @@ public abstract class Bootstrapper implements ObjectLayout {
         bca.init();
         
         // install object mapper
-        ObjectTraverser obj_trav = new ObjectTraverser(nullStaticFields);
+        ObjectTraverser obj_trav = new ObjectTraverser(nullStaticFields, nullInstanceFields);
         Reflection.obj_trav = obj_trav;
         Unsafe.installRemapper(objmap = new BootImage(obj_trav, bca));
         
@@ -319,15 +321,23 @@ public abstract class Bootstrapper implements ObjectLayout {
         while (it.hasNext()) {
             jq_Type t = (jq_Type)it.next();
             jq.assert(t.isSFInitialized());
+            
             if (t == Unsafe._class) continue;
             System.out.println("Compiling type: "+t.getName());
             t.cls_initialize();
             objmap.getOrAllocateObject(t);
         }
         
-        // initialize some classes that are used to write the bootimage and that
-        // include Utf8 references, because those Utf8 references will get added to our table
-        Object xxx = Assembler.x86.ExternalReference._heap_from;
+        // get the JDK type of each of the classes that could be in our image, so
+        // that we can trigger each of their <clinit> methods, because some
+        // <clinit> methods add Utf8 references to our table.
+        it = PrimordialClassLoader.loader.getAllTypes().iterator();
+        while (it.hasNext()) {
+            jq_Type t = (jq_Type)it.next();
+            Reflection.getJDKType(t);
+        }
+
+        //Object xxx = Assembler.x86.ExternalReference._heap_from;
 	//Object yyy = ClassLib.sun13.java.io.Win32FileSystem._class;
         
         // get the set of compiled methods, because it is used during bootstrapping.
