@@ -1227,7 +1227,7 @@ public class CSPAResults implements PointerAnalysisResults {
         boolean bad = false;
         for (int i = 0; i < Vmap.size(); ++i) {
             Node n = (Node) Vmap.get(i);
-            if (n instanceof ConcreteTypeNode) {
+            if (n instanceof ConcreteTypeNode && n.getDeclaredType() != null) {
                 BDD b = vP.restrict(V1.ithVar(i));
                 if (b.satCount(H1.set()) != 1.0) {
                     bad = true;
