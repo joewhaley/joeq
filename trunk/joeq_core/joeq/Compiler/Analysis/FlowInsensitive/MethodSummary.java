@@ -334,7 +334,7 @@ public class MethodSummary {
         protected void setRegister(Register r, Object n) {
             int i = r.getNumber();
             if (n instanceof Collection) n = NodeSet.FACTORY.makeSet((Collection)n);
-            else Assert._assert(n instanceof Node);
+            else if (n != null) Assert._assert(n instanceof Node);
             s.registers[i] = n;
             if (TRACE_INTRA) out.println("Setting register "+r+" to "+n);
         }
@@ -1106,7 +1106,7 @@ public class MethodSummary {
                             Quad q = (Quad) ge.next();
                             if (q.getOperator() instanceof Special.GET_EXCEPTION) {
                                 r = ((RegisterOperand) Special.getOp1(q)).getRegister();
-                                continue;
+                                break;
                             }
                         }
                     }
@@ -1140,7 +1140,7 @@ public class MethodSummary {
                                 Quad q = (Quad) ge.next();
                                 if (q.getOperator() instanceof Special.GET_EXCEPTION) {
                                     r = ((RegisterOperand) Special.getOp1(q)).getRegister();
-                                    continue;
+                                    break;
                                 }
                             }
                         }
