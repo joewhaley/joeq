@@ -88,7 +88,7 @@ public class BDDPointerAnalysis {
     /**
      * Singleton BDD object that provides access to BDD functions.
      */
-    private final BDDFactory bdd;
+    private BDDFactory bdd;
 
     // the size of domains, can be changed to reflect the size of inputs
     int domainBits[] = {18, 18, 13, 14, 14};
@@ -305,7 +305,7 @@ public class BDDPointerAnalysis {
         vtable_bdd = bdd.zero();
     }
     
-    void done() {
+    public void done() {
         aC.free();
         vC.free();
         cC.free();
@@ -320,8 +320,9 @@ public class BDDPointerAnalysis {
         loadAss.free();
         loadPt.free();
         vtable_bdd.free();
-        System.gc(); System.gc();
         bdd.done();
+        bdd = null;
+        System.gc();
     }
 
     public static boolean INCREMENTAL_POINTSTO = true;
