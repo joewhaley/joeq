@@ -7,14 +7,23 @@
 
 package Compil3r.BytecodeAnalysis;
 
+import java.util.AbstractSet;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.Stack;
+
 import Bootstrap.PrimordialClassLoader;
-import Clazz.*;
+import Clazz.jq_Class;
+import Clazz.jq_InstanceMethod;
+import Clazz.jq_Method;
+import Clazz.jq_Reference;
+import Clazz.jq_StaticMethod;
+import Main.jq;
 import Run_Time.TypeCheck;
 import Util.LinearSet;
 import Util.NullIterator;
 import Util.SingletonIterator;
-import Main.jq;
-import java.util.*;
 
 /*
  * @author  John Whaley

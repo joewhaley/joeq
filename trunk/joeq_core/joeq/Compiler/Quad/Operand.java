@@ -7,11 +7,14 @@
 
 package Compil3r.Quad;
 
-import Clazz.*;
-import Compil3r.Quad.RegisterFactory.Register;
+import Clazz.jq_Field;
+import Clazz.jq_Method;
+import Clazz.jq_Reference;
+import Clazz.jq_Type;
 import Compil3r.BytecodeAnalysis.BytecodeVisitor;
-import Run_Time.Reflection;
+import Compil3r.Quad.RegisterFactory.Register;
 import Main.jq;
+import Run_Time.Reflection;
 
 /*
  * @author  John Whaley

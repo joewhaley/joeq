@@ -6,11 +6,11 @@
 
 package Allocator;
 
+import Allocator.CodeAllocator.x86CodeBuffer;
 import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
 import Clazz.jq_StaticField;
 import Run_Time.Unsafe;
-import Allocator.CodeAllocator.x86CodeBuffer;
 
 /*
  *

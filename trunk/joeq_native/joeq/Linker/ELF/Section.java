@@ -6,18 +6,20 @@
 
 package Linker.ELF;
 
-import java.io.*;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.Map;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.List;
-import java.util.LinkedList;
-import java.util.Iterator;
-import Util.AppendIterator;
+
 import Main.jq;
+import Util.AppendIterator;
 
 /**
  * Defines a section in an ELF file.

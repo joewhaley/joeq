@@ -7,15 +7,12 @@
 
 package Allocator;
 
-import Clazz.jq_InstanceMethod;
-import Clazz.jq_Array;
-import Clazz.jq_Class;
-import Clazz.jq_Reference;
 import Bootstrap.PrimordialClassLoader;
+import Clazz.jq_Class;
+import Clazz.jq_InstanceMethod;
 import Main.jq;
-import Run_Time.Unsafe;
 import Run_Time.SystemInterface;
-import java.lang.reflect.Array;
+import Run_Time.Unsafe;
 
 /*
  * @author  John Whaley

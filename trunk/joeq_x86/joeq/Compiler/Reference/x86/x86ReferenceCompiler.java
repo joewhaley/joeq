@@ -7,55 +7,45 @@
 
 package Compil3r.Reference.x86;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import Allocator.DefaultHeapAllocator;
 import Allocator.HeapAllocator;
 import Allocator.ObjectLayout;
-import Allocator.DefaultHeapAllocator;
-import Allocator.CodeAllocator;
+import Assembler.x86.Code2HeapReference;
+import Assembler.x86.DirectBindCall;
 import Assembler.x86.x86;
 import Assembler.x86.x86Assembler;
 import Assembler.x86.x86Constants;
-import Assembler.x86.DirectBindCall;
-import Assembler.x86.Code2HeapReference;
-import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Primitive;
 import Clazz.jq_Array;
+import Clazz.jq_BytecodeMap;
 import Clazz.jq_Class;
 import Clazz.jq_ClassFileConstants;
-import Clazz.jq_Member;
-import Clazz.jq_InstanceField;
-import Clazz.jq_StaticField;
-import Clazz.jq_Method;
-import Clazz.jq_InstanceMethod;
-import Clazz.jq_StaticMethod;
 import Clazz.jq_CompiledCode;
-import Clazz.jq_Type;
-import Clazz.jq_NameAndDesc;
-import Clazz.jq_TryCatchBC;
+import Clazz.jq_InstanceField;
+import Clazz.jq_InstanceMethod;
+import Clazz.jq_Method;
+import Clazz.jq_StaticField;
+import Clazz.jq_StaticMethod;
 import Clazz.jq_TryCatch;
-import Clazz.jq_BytecodeMap;
+import Clazz.jq_TryCatchBC;
+import Clazz.jq_Type;
 import Compil3r.Compil3rInterface;
+import Compil3r.BytecodeAnalysis.BytecodeVisitor;
+import Main.jq;
 import Run_Time.ExceptionDeliverer;
 import Run_Time.MathSupport;
 import Run_Time.Monitor;
 import Run_Time.Reflection;
-import Run_Time.TypeCheck;
 import Run_Time.SystemInterface;
+import Run_Time.TypeCheck;
 import Run_Time.Unsafe;
-import Scheduler.jq_Thread;
-import UTF.Utf8;
-
-import Compil3r.BytecodeAnalysis.BytecodeVisitor;
-
-import Main.jq;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.LinkedList;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.HashSet;
 
 /**
  * @author  John Whaley

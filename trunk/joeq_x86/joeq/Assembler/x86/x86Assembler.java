@@ -5,16 +5,15 @@
 
 package Assembler.x86;
 
-import Allocator.DefaultCodeAllocator;
-import Allocator.CodeAllocator.x86CodeBuffer;
-import Util.LightRelation;
-import Util.Relation;
-
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.HashMap;
 
+import Allocator.DefaultCodeAllocator;
+import Allocator.CodeAllocator.x86CodeBuffer;
 import Main.jq;
+import Util.LightRelation;
+import Util.Relation;
 
 // Referenced classes of package Assembler.x86:
 //            x86Constants, x86CodeBuffer, x86

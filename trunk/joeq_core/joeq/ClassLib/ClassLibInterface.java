@@ -9,16 +9,16 @@ package ClassLib;
 
 import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
-import Clazz.jq_Reference;
-import Clazz.jq_Member;
 import Clazz.jq_InstanceField;
 import Clazz.jq_InstanceMethod;
+import Clazz.jq_Member;
+import Clazz.jq_NameAndDesc;
+import Clazz.jq_Reference;
 import Clazz.jq_StaticField;
 import Clazz.jq_StaticMethod;
-import Clazz.jq_NameAndDesc;
+import Main.jq;
 import Run_Time.SystemInterface;
 import UTF.Utf8;
-import Main.jq;
 
 /*
  * @author  John Whaley

@@ -7,10 +7,13 @@
 
 package Compil3r.Quad;
 
-import Clazz.*;
-import Compil3r.Quad.Operand.RegisterOperand;
-import java.util.Iterator;
 import java.util.ArrayList;
+import java.util.Iterator;
+
+import Clazz.jq_Method;
+import Clazz.jq_Primitive;
+import Clazz.jq_Type;
+import Compil3r.Quad.Operand.RegisterOperand;
 import Main.jq;
 
 /**

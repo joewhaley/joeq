@@ -6,22 +6,23 @@
  */
 
 package Compil3r.Quad;
-import Clazz.jq_Method;
-import Clazz.jq_Type;
-import Clazz.jq_Primitive;
+import java.util.HashMap;
+
 import Bootstrap.PrimordialClassLoader;
+import Clazz.jq_Method;
+import Clazz.jq_Primitive;
+import Clazz.jq_Type;
+import Compil3r.Quad.Operand.BasicBlockTableOperand;
+import Compil3r.Quad.Operand.ParamListOperand;
+import Compil3r.Quad.Operand.RegisterOperand;
+import Compil3r.Quad.Operand.TargetOperand;
+import Compil3r.Quad.RegisterFactory.Register;
+import Main.jq;
 import Util.FilterIterator;
 import Util.Templates.List;
-import Util.Templates.ListWrapper;
 import Util.Templates.ListIterator;
+import Util.Templates.ListWrapper;
 import Util.Templates.UnmodifiableList;
-import Compil3r.Quad.Operand.TargetOperand;
-import Compil3r.Quad.Operand.BasicBlockTableOperand;
-import Compil3r.Quad.Operand.RegisterOperand;
-import Compil3r.Quad.Operand.ParamListOperand;
-import Compil3r.Quad.RegisterFactory.Register;
-import java.util.HashMap;
-import Main.jq;
 
 /**
  * Control flow graph for the Quad format.

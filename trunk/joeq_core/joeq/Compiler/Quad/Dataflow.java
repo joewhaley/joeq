@@ -1,6 +1,9 @@
 package Compil3r.Quad;
-import Clazz.*;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Iterator;
+
+import Clazz.jq_Method;
+import Clazz.jq_MethodVisitor;
 
 public class Dataflow {
     private static final boolean TRACE_DATAFLOW = true;

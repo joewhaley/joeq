@@ -7,20 +7,20 @@
 
 package Compil3r.BytecodeAnalysis;
 
-import Main.jq;
-import Clazz.jq_ClassFileConstants;
-import Clazz.jq_Type;
+import java.io.PrintStream;
+
 import Clazz.jq_Array;
 import Clazz.jq_Class;
-import Clazz.jq_Primitive;
-import Clazz.jq_Member;
-import Clazz.jq_StaticField;
+import Clazz.jq_ClassFileConstants;
 import Clazz.jq_InstanceField;
-import Clazz.jq_Method;
-import Clazz.jq_StaticMethod;
 import Clazz.jq_InstanceMethod;
-
-import java.io.PrintStream;
+import Clazz.jq_Member;
+import Clazz.jq_Method;
+import Clazz.jq_Primitive;
+import Clazz.jq_StaticField;
+import Clazz.jq_StaticMethod;
+import Clazz.jq_Type;
+import Main.jq;
 
 /*
  * @author  John Whaley

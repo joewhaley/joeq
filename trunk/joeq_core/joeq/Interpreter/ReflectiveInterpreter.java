@@ -7,17 +7,31 @@
 
 package Interpreter;
 
-import Clazz.*;
-import Bootstrap.PrimordialClassLoader;
-import Bootstrap.ObjectTraverser;
-import java.lang.reflect.*;
-import java.util.Iterator;
-import Util.ArrayIterator;
-import Run_Time.Unsafe;
-import Run_Time.Reflection;
-import UTF.Utf8;
+import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.HashSet;
+import java.util.Iterator;
+
+import Bootstrap.ObjectTraverser;
+import Bootstrap.PrimordialClassLoader;
+import Clazz.jq_Array;
+import Clazz.jq_Class;
+import Clazz.jq_Field;
+import Clazz.jq_Initializer;
+import Clazz.jq_InstanceField;
+import Clazz.jq_Method;
+import Clazz.jq_Primitive;
+import Clazz.jq_StaticField;
+import Clazz.jq_StaticMethod;
+import Clazz.jq_Type;
 import Main.jq;
+import Run_Time.Reflection;
+import Run_Time.Unsafe;
+import UTF.Utf8;
+import Util.ArrayIterator;
 
 /**
  * @author  John Whaley

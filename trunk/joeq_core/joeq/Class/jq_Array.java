@@ -7,11 +7,11 @@
 
 package Clazz;
 
+import Allocator.DefaultHeapAllocator;
+import Allocator.ObjectLayout;
+import Bootstrap.PrimordialClassLoader;
 import Main.jq;
 import Run_Time.Unsafe;
-import Allocator.ObjectLayout;
-import Allocator.DefaultHeapAllocator;
-import Bootstrap.PrimordialClassLoader;
 import UTF.Utf8;
 
 /*

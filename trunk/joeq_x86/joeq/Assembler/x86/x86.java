@@ -7,8 +7,8 @@
 
 package Assembler.x86;
 
-import Main.jq;
 import Allocator.CodeAllocator;
+import Main.jq;
 
 /*
  * @author  John Whaley

@@ -7,19 +7,30 @@
 
 package Main;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.StringTokenizer;
+
 import Bootstrap.PrimordialClassLoader;
-import Clazz.*;
+import Clazz.jq_Array;
+import Clazz.jq_Class;
+import Clazz.jq_MethodVisitor;
+import Clazz.jq_Primitive;
+import Clazz.jq_StaticField;
+import Clazz.jq_StaticMethod;
+import Clazz.jq_Type;
+import Clazz.jq_TypeVisitor;
 import Compil3r.Quad.BasicBlockVisitor;
 import Compil3r.Quad.CodeCache;
 import Compil3r.Quad.ControlFlowGraphVisitor;
 import Compil3r.Quad.QuadVisitor;
 import Run_Time.Reflection;
 import UTF.Utf8;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.*;
 
 /*
  * @author  John Whaley

@@ -8,10 +8,9 @@
 package Clazz;
 
 import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Class;
-import Run_Time.TypeCheck;
-import Run_Time.SystemInterface;
 import Main.jq;
+import Run_Time.SystemInterface;
+import Run_Time.TypeCheck;
 
 /*
  * @author  John Whaley

@@ -7,13 +7,13 @@
 
 package ClassLib.Common.java.lang.ref;
 
-import Clazz.jq_Reference;
 import Clazz.jq_InstanceMethod;
 import Clazz.jq_NameAndDesc;
+import Clazz.jq_Reference;
+import Main.jq;
 import Run_Time.Reflection;
 import Run_Time.Unsafe;
 import UTF.Utf8;
-import Main.jq;
 
 /*
  * @author  John Whaley

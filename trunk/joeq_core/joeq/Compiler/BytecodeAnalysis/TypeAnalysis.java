@@ -7,15 +7,30 @@
 
 package Compil3r.BytecodeAnalysis;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
+
 import Bootstrap.PrimordialClassLoader;
-import Clazz.*;
-import Run_Time.*;
-import Util.LinearSet;
+import Clazz.jq_Array;
+import Clazz.jq_Class;
+import Clazz.jq_Field;
+import Clazz.jq_InstanceField;
+import Clazz.jq_InstanceMethod;
+import Clazz.jq_Method;
+import Clazz.jq_Reference;
+import Clazz.jq_StaticField;
+import Clazz.jq_StaticMethod;
+import Clazz.jq_Type;
 import Main.jq;
-import Util.Default;
-import Util.IdentityHashCodeWrapper;
+import Run_Time.Reflection;
+import Run_Time.TypeCheck;
 import UTF.Utf8;
-import java.util.*;
+import Util.IdentityHashCodeWrapper;
+import Util.LinearSet;
 
 /**
  * @author  John Whaley

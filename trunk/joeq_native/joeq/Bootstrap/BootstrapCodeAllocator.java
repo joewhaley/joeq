@@ -7,19 +7,19 @@
 
 package Bootstrap;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Vector;
+
 import Allocator.CodeAllocator;
-import Clazz.jq_Method;
-import Clazz.jq_TryCatch;
 import Clazz.jq_BytecodeMap;
 import Clazz.jq_CompiledCode;
-import Run_Time.ExceptionDeliverer;
-import Run_Time.Unsafe;
+import Clazz.jq_Method;
+import Clazz.jq_TryCatch;
 import Main.jq;
-import java.util.Vector;
-import java.util.List;
-import java.util.LinkedList;
-import java.io.OutputStream;
-import java.io.IOException;
+import Run_Time.ExceptionDeliverer;
 
 /*
  * @author  John Whaley

@@ -10,15 +10,15 @@ package Clazz;
 //friend jq_ClassLoader;
 
 import java.io.DataInput;
-import java.io.IOException;
 import java.io.DataOutput;
-import java.util.Map;
+import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
 
 import Bootstrap.PrimordialClassLoader;
+import Main.jq;
 import Run_Time.Unsafe;
 import UTF.Utf8;
-import Main.jq;
 
 /*
  * @author  John Whaley

@@ -1,16 +1,17 @@
 package Compil3r.Quad;
+import Clazz.jq_Method;
+import Clazz.jq_Type;
+import Compil3r.Quad.Operand.ParamListOperand;
+import Compil3r.Quad.Operand.RegisterOperand;
+import Compil3r.Quad.Operand.TargetOperand;
+import Compil3r.Quad.Operator.Goto;
 import Compil3r.Quad.Operator.Invoke;
 import Compil3r.Quad.Operator.Move;
 import Compil3r.Quad.Operator.Return;
-import Compil3r.Quad.Operator.Goto;
-import Compil3r.Quad.Operand.TargetOperand;
-import Compil3r.Quad.Operand.RegisterOperand;
-import Compil3r.Quad.Operand.ParamListOperand;
 import Compil3r.Quad.RegisterFactory.Register;
+import Main.jq;
 import Util.FilterIterator.Filter;
 import Util.Templates.ListIterator;
-import Clazz.*;
-import Main.jq;
 
 public class MethodInline implements ControlFlowGraphVisitor {
 

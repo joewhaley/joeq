@@ -3,11 +3,11 @@
 // Licensed under the terms of the GNU GPL; see COPYING for details.
 package Util;
 
+import java.util.AbstractList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.AbstractList;
-import java.util.Arrays;
 
 /** <code>ListFactory</code> is a <code>List</code> generator.
     Subclasses should implement constructions of specific types of  

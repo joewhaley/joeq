@@ -9,10 +9,10 @@ package Compil3r.Reference.x86;
 
 import Clazz.jq_CompiledCode;
 import Clazz.jq_Method;
+import Main.jq;
 import Run_Time.ExceptionDeliverer;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
-import Main.jq;
 
 /**
  * @author  John Whaley

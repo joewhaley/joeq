@@ -7,14 +7,14 @@
 
 package Clazz;
 
+import java.io.DataInput;
+import java.io.IOException;
+import java.util.Map;
+
 import Allocator.CodeAllocator;
 import Allocator.HeapAllocator;
 import ClassLib.ClassLibInterface;
 import Main.jq;
-
-import java.io.DataInput;
-import java.io.IOException;
-import java.util.Map;
 
 /*
  * @author  John Whaley

@@ -7,11 +7,10 @@
 
 package ClassLib.sun14_win32.java.lang;
 
-import Run_Time.ExceptionDeliverer;
 import Allocator.CodeAllocator;
 import Clazz.jq_CompiledCode;
 import Clazz.jq_Method;
-import Main.jq;
+import Run_Time.ExceptionDeliverer;
 
 /*
  * @author  John Whaley

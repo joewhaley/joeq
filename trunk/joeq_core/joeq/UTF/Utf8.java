@@ -9,9 +9,10 @@ package UTF;
 
 import java.io.DataOutput;
 import java.io.IOException;
+
+import Clazz.jq_ClassFileConstants;
 import Main.jq;
 import Util.UnmodifiableIterator;
-import Clazz.jq_ClassFileConstants;
 
 /**
  * @author  John Whaley

@@ -7,19 +7,16 @@
 
 package Allocator;
 
+import java.util.List;
+
+import Clazz.jq_BytecodeMap;
 import Clazz.jq_CompiledCode;
 import Clazz.jq_Method;
-import Clazz.jq_Class;
-import Clazz.jq_StaticField;
 import Clazz.jq_TryCatch;
-import Clazz.jq_BytecodeMap;
-import Bootstrap.PrimordialClassLoader;
-import Run_Time.ExceptionDeliverer;
-import Run_Time.Unsafe;
-import Run_Time.SystemInterface;
 import Main.jq;
-
-import java.util.List;
+import Run_Time.ExceptionDeliverer;
+import Run_Time.SystemInterface;
+import Run_Time.Unsafe;
 
 /*
  * @author  John Whaley

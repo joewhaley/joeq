@@ -7,15 +7,14 @@
 
 package Run_Time;
 
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+
 import Allocator.CodeAllocator;
 import Clazz.jq_CompiledCode;
 import Clazz.jq_Method;
-import Run_Time.Unsafe;
-import Run_Time.SystemInterface;
 import Main.jq;
 import UTF.Utf8;
-import java.util.Iterator;
-import java.util.NoSuchElementException;
 
 /**
  * @author  John Whaley

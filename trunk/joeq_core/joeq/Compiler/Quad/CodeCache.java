@@ -5,7 +5,7 @@
  */
 
 package Compil3r.Quad;
-import Clazz.*;
+import Clazz.jq_Method;
 
 /**
  *

@@ -7,21 +7,42 @@
 
 package Main;
 
-import Main.jq;
-import Allocator.*;
-import ClassLib.ClassLibInterface;
-import Clazz.*;
-import Util.*;
-import Run_Time.*;
-import UTF.Utf8;
-import Compil3r.BytecodeAnalysis.*;
-import Compil3r.Reference.x86.*;
-import Bootstrap.*;
-import java.io.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Set;
 
-import java.lang.reflect.Array;
-import java.lang.reflect.Field;
+import Allocator.CodeAllocator;
+import Allocator.DefaultCodeAllocator;
+import Allocator.ObjectLayout;
+import Bootstrap.BootImage;
+import Bootstrap.BootstrapCodeAllocator;
+import Bootstrap.BootstrapRootSet;
+import Bootstrap.ObjectTraverser;
+import Bootstrap.PrimordialClassLoader;
+import ClassLib.ClassLibInterface;
+import Clazz.jq_Class;
+import Clazz.jq_Member;
+import Clazz.jq_Method;
+import Clazz.jq_Reference;
+import Clazz.jq_StaticField;
+import Clazz.jq_StaticMethod;
+import Clazz.jq_Type;
+import Compil3r.BytecodeAnalysis.Trimmer;
+import Compil3r.Reference.x86.x86ReferenceCompiler;
+import Run_Time.Reflection;
+import Run_Time.SystemInterface;
+import Run_Time.Unsafe;
+import UTF.Utf8;
+import Util.ArrayIterator;
+import Util.LinearSet;
 
 /*
  * @author  John Whaley

@@ -11,8 +11,8 @@ package Clazz;
 
 import Bootstrap.PrimordialClassLoader;
 import ClassLib.ClassLibInterface;
-import UTF.Utf8;
 import Main.jq;
+import UTF.Utf8;
 
 /*
  * @author  John Whaley

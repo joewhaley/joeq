@@ -5,10 +5,10 @@
 
 package ClassLib.ibm13_linux.com.ibm.jvm;
 
-import Clazz.jq_Type;
 import Clazz.jq_Array;
-import Run_Time.Unsafe;
+import Clazz.jq_Type;
 import Run_Time.Reflection;
+import Run_Time.Unsafe;
 
 /*
  * @author  John Whaley

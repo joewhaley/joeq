@@ -7,16 +7,11 @@
 
 package ClassLib.Common.java.util.zip;
 
-import Bootstrap.PrimordialClassLoader;
 import java.io.RandomAccessFile;
-import java.util.Hashtable;
 import java.util.Enumeration;
+import java.util.Hashtable;
+
 import Main.jq;
-import Clazz.jq_Class;
-import Clazz.jq_InstanceField;
-import Clazz.jq_InstanceMethod;
-import Run_Time.Reflection;
-import ClassLib.Common.java.util.zip.InflaterInputStreamWrapper;
 
 /**
  * @author  John Whaley

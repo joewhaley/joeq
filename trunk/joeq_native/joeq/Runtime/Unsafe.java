@@ -7,20 +7,12 @@
 
 package Run_Time;
 
-import java.lang.reflect.Method;
-import java.lang.reflect.InvocationTargetException;
-
 import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Reference;
 import Clazz.jq_Class;
-import Clazz.jq_ClassInitializer;
-import Clazz.jq_NameAndDesc;
-import Clazz.jq_CompiledCode;
-import Clazz.jq_StaticMethod;
+import Clazz.jq_Reference;
 import Clazz.jq_StaticField;
-import Clazz.jq_InstanceField;
+import Clazz.jq_StaticMethod;
 import Scheduler.jq_Thread;
-import UTF.Utf8;
 
 /**
  * @author  John Whaley

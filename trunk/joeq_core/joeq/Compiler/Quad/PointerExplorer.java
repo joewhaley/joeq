@@ -6,17 +6,29 @@
 
 package Compil3r.Quad;
 
-import Main.jq;
-import Util.FilterIterator;
-import Util.LinkedHashSet;
-import Util.LinkedHashMap;
-import Util.Default;
-import Clazz.*;
-import java.io.*;
-import java.util.*;
-import Compil3r.Quad.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
+
+import Clazz.jq_Class;
+import Clazz.jq_Field;
+import Clazz.jq_Method;
+import Clazz.jq_Type;
 import Compil3r.Quad.MethodSummary.CallSite;
 import Compil3r.Quad.MethodSummary.PassedParameter;
+import Main.jq;
+import Util.Default;
+import Util.FilterIterator;
+import Util.LinkedHashMap;
+import Util.LinkedHashSet;
 
 /**
  *

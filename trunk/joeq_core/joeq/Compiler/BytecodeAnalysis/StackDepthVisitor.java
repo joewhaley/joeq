@@ -7,8 +7,12 @@
 
 package Compil3r.BytecodeAnalysis;
 
-import Clazz.*;
-import java.util.*;
+import java.util.Stack;
+
+import Clazz.jq_InstanceField;
+import Clazz.jq_Method;
+import Clazz.jq_StaticField;
+import Clazz.jq_Type;
 import Main.jq;
 
 /**

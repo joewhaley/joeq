@@ -7,11 +7,11 @@
 
 package Util;
 
-import UTF.Utf8;
-
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.OutputStream;
+
+import UTF.Utf8;
 
 /*
  * @author  John Whaley

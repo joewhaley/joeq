@@ -7,13 +7,13 @@
 
 package ClassLib.sun13_win32;
 
-import Bootstrap.PrimordialClassLoader;
-import Clazz.*;
-import Run_Time.Unsafe;
-import Run_Time.Reflection;
 import Allocator.DefaultCodeAllocator;
-import Scheduler.jq_NativeThread;
+import Bootstrap.PrimordialClassLoader;
+import Clazz.jq_Class;
 import Main.jq;
+import Run_Time.Reflection;
+import Run_Time.Unsafe;
+import Scheduler.jq_NativeThread;
 
 /*
  * @author  John Whaley

@@ -9,15 +9,21 @@
 
 package Compil3r.BytecodeAnalysis;
 
-import Clazz.*;
-import Bootstrap.PrimordialClassLoader;
-import Run_Time.Unsafe;
-import Run_Time.TypeCheck;
-import Util.BitString;
-import Util.BitString.BitStringIterator;
-import Util.LinearSet;
 import java.util.Set;
+
+import Bootstrap.PrimordialClassLoader;
+import Clazz.jq_Array;
+import Clazz.jq_InstanceField;
+import Clazz.jq_Method;
+import Clazz.jq_Primitive;
+import Clazz.jq_StaticField;
+import Clazz.jq_Type;
 import Main.jq;
+import Run_Time.TypeCheck;
+import Run_Time.Unsafe;
+import Util.BitString;
+import Util.LinearSet;
+import Util.BitString.BitStringIterator;
 
 public class LiveRefAnalysis {
 

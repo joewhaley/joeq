@@ -7,35 +7,37 @@
 
 package Compil3r.BytecodeAnalysis;
 
-import Main.jq;
-import Allocator.HeapAllocator;
+import java.io.PrintStream;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+
 import Allocator.DefaultHeapAllocator;
-import Clazz.*;
-import Bootstrap.*;
+import Allocator.HeapAllocator;
+import Bootstrap.BootstrapRootSet;
+import Clazz.jq_Array;
+import Clazz.jq_Class;
+import Clazz.jq_ClassInitializer;
+import Clazz.jq_FieldVisitor;
+import Clazz.jq_Initializer;
+import Clazz.jq_InstanceField;
+import Clazz.jq_InstanceMethod;
+import Clazz.jq_Method;
+import Clazz.jq_MethodVisitor;
+import Clazz.jq_StaticField;
+import Clazz.jq_StaticMethod;
+import Clazz.jq_Type;
+import Clazz.jq_TypeVisitor;
+import Compil3r.Reference.x86.x86ReferenceLinker;
+import Main.jq;
 import Run_Time.ExceptionDeliverer;
 import Run_Time.MathSupport;
 import Run_Time.Monitor;
 import Run_Time.Reflection;
-import Run_Time.SystemInterface;
 import Run_Time.TypeCheck;
 import Run_Time.Unsafe;
-import Scheduler.jq_NativeThread;
-import Scheduler.jq_InterrupterThread;
-import Compil3r.Reference.x86.x86ReferenceLinker;
-
-import java.io.PrintStream;
-import java.lang.reflect.Field;
-import java.lang.reflect.Array;
-
-import java.util.Iterator;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.List;
-import java.util.LinkedList;
-import Util.ArrayIterator;
-import Util.Relation;
-import Util.LightRelation;
-import Util.IdentityHashCodeWrapper;
 
 /**
  * @author  John Whaley

@@ -7,15 +7,7 @@
 
 package ClassLib.sun14_win32.java.lang;
 
-import Clazz.jq_InstanceField;
-import Clazz.jq_InstanceMethod;
-import Clazz.jq_StaticMethod;
-import Clazz.jq_Class;
-import Bootstrap.PrimordialClassLoader;
-import Run_Time.Unsafe;
-import Run_Time.Reflection;
 import Scheduler.jq_Thread;
-import Main.jq;
 
 /*
  * @author  John Whaley

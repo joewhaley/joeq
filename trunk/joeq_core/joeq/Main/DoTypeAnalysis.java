@@ -7,21 +7,26 @@
 
 package Main;
 
-import java.io.PrintStream;
-import java.io.FileReader;
 import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintStream;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.HashSet;
 import java.util.Set;
 
-import Clazz.*;
-import Bootstrap.*;
-import Run_Time.*;
-import Util.*;
-import UTF.Utf8;
-import Main.jq;
+import Bootstrap.PrimordialClassLoader;
+import Clazz.jq_Class;
+import Clazz.jq_InstanceMethod;
+import Clazz.jq_StaticMethod;
+import Clazz.jq_Type;
+import Run_Time.Reflection;
+import Run_Time.TypeCheck;
+import Run_Time.Unsafe;
+import Util.AppendIterator;
+import Util.ArrayIterator;
+import Util.SingletonIterator;
 
 /*
  * @author  John Whaley

@@ -3,8 +3,8 @@
 // Licensed under the terms of the GNU GPL; see COPYING for details.
 package Util;
 
-import java.util.Iterator;
 import java.util.Collection;
+import java.util.Iterator;
 
 /**
  * <code>CollectionWrapper</code> is a class that acts as a wrapper

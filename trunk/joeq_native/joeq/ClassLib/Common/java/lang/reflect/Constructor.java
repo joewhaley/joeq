@@ -7,10 +7,11 @@
 
 package ClassLib.Common.java.lang.reflect;
 
-import Bootstrap.PrimordialClassLoader;
-import Clazz.*;
-import Run_Time.*;
+import Clazz.jq_Class;
+import Clazz.jq_Initializer;
+import Clazz.jq_Type;
 import Main.jq;
+import Run_Time.Reflection;
 
 /*
  * @author  John Whaley

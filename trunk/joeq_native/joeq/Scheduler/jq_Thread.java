@@ -9,19 +9,19 @@ package Scheduler;
 
 import Allocator.ObjectLayout;
 import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_CompiledCode;
-import Clazz.jq_Reference;
-import Clazz.jq_InstanceMethod;
-import Clazz.jq_InstanceField;
-import Clazz.jq_NameAndDesc;
 import Clazz.jq_Class;
+import Clazz.jq_CompiledCode;
+import Clazz.jq_InstanceField;
+import Clazz.jq_InstanceMethod;
+import Clazz.jq_NameAndDesc;
+import Clazz.jq_Reference;
 import Clazz.jq_StaticMethod;
+import Main.jq;
 import Run_Time.Reflection;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
 import UTF.Utf8;
 import Util.AtomicCounter;
-import Main.jq;
 
 /*
  * @author  John Whaley

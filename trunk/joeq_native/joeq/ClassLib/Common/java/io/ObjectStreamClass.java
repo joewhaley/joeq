@@ -6,9 +6,10 @@
 
 package ClassLib.Common.java.io;
 
-import Clazz.*;
-import Run_Time.Reflection;
+import Clazz.jq_Class;
+import Clazz.jq_Type;
 import Main.jq;
+import Run_Time.Reflection;
 
 /**
  *

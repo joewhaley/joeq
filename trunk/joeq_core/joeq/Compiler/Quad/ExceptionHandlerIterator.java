@@ -6,8 +6,9 @@
  */
 
 package Compil3r.Quad;
-import Util.Templates.ListIterator;
 import java.util.NoSuchElementException;
+
+import Util.Templates.ListIterator;
 
 /**
  * Iterator for iterating through exception handlers.  Compatible with ListIterator.
