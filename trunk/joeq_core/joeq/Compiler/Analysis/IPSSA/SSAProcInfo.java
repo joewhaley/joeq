@@ -11,13 +11,13 @@ import Util.Templates.ListIterator;
 
 import Clazz.jq_Class;
 import Clazz.jq_Method;
-import Compil3r.Analysis.IPA.SSALocation;
 import Compil3r.Quad.BasicBlock;
 import Compil3r.Quad.BasicBlockVisitor;
 import Compil3r.Quad.CodeCache;
 import Compil3r.Quad.ControlFlowGraph;
 import Compil3r.Quad.DotGraph;
 import Compil3r.Quad.ExceptionHandler;
+import Compil3r.Quad.Operator;
 import Compil3r.Quad.Quad;
 import Compil3r.Quad.QuadIterator;
 
@@ -25,6 +25,7 @@ import Compil3r.Quad.QuadIterator;
 public final class SSAProcInfo {
 	protected static HashMap /*<Query,  SSABindingAnnote>*/ 	_queryMap  = new HashMap();
 	protected static HashMap /*<Helper, SSABindingAnnote>*/ 	_helperMap = new HashMap();
+	private static Iterator                                     _emptyIterator = null;
 	
 	public static Query retrieveQuery(jq_Method method){
 		if(_queryMap.containsKey(method)){
@@ -47,9 +48,11 @@ public final class SSAProcInfo {
 		}
 	}
 	
-	// TODO: this is pretty lame
 	static Iterator emptyIterator(){
-		return new HashSet().iterator();
+		if(_emptyIterator == null){
+			_emptyIterator = new HashSet().iterator();
+		}
+		return _emptyIterator;
 	}
 	
 	/**
@@ -61,12 +64,19 @@ public final class SSAProcInfo {
 		protected ControlFlowGraph 	 					_cfg;
 		protected DominatorQuery 	 					_dom_query; 	
 		protected HashMap /*<Quad, SSABindingAnnote>*/  _bindingMap;
+		private Quad                                    _firstQuad;
 				
-		protected Query(jq_Method method){			
+		protected Query(jq_Method method){
 			this._method 	 = method;
 			this._cfg    	 = CodeCache.getCode(method);
 			this._bindingMap = new HashMap();
-			this._dom_query  = new SimpleDominatorQuery(_method);		
+			this._dom_query  = new SimpleDominatorQuery(_method);
+			
+			makeFirstQuad();		
+		}
+		
+		private void makeFirstQuad(){
+			_firstQuad = Operator.Special.create(0, Operator.Special.NOP.INSTANCE);
 		}
 		
 		public String toString(){
@@ -90,9 +100,11 @@ public final class SSAProcInfo {
 				if(def != null){
 					return def;
 				}
+				q = _dom_query.getImmediateDominator(q);
 			}
 			
-			return null;
+			// reached the first quad, need to do a special lookup here
+			return getDefinitionFor(loc, _firstQuad);
 		}
 		
 		public Iterator getBindingIterator(Quad q){
@@ -169,48 +181,60 @@ public final class SSAProcInfo {
 			}
 		}
 		
-		public void printDot(PrintStream out){
+		public void printDot(){
 			new DotGraph(){
+			/** Overwrite the CFG traversal method */
 			public void visitCFG(ControlFlowGraph cfg) {
 				try {
-					String filename = "joeq-" + cfg.getMethod().toString() + ".ssa.dot";
-					filename = filename.replace('/', '_');
-					filename = filename.replace(' ', '_');
-					filename = filename.replace('<', '_');
-					filename = filename.replace('>', '_');
-					dot.openGraph(filename);
+					String filename = createMethodName(_method) + ".ssa.dot";
+					//System.err.println("Opening "+filename);
+					dot.openGraph("ssagraphs", filename);
 					
 					cfg.visitBasicBlocks(new BasicBlockVisitor() {
 						public void visitBasicBlock(BasicBlock bb) {
+							SSAProcInfo.Query q = SSAProcInfo.retrieveQuery(_cfg.getMethod());
 							if (bb.isEntry()) {
 								if (bb.getNumberOfSuccessors() != 1)
 									throw new Error("entry bb has != 1 successors " + bb.getNumberOfSuccessors());
 								dot.addEntryEdge(bb.toString(), bb.getSuccessors().iterator().next().toString(), null);
+								
+								StringBuffer l = new StringBuffer("Init:\\l");
+								Quad quad = getFirstQuad();
+								Iterator iter = q.getBindingIterator(quad); 
+									
+								if(iter.hasNext()){
+									do {
+										SSABinding b = (SSABinding)iter.next();
+										l.append("     => " + b.toString() + "\\l");
+									} while(iter.hasNext());
+									dot.userDefined("\t\"" + bb.toString() + "\" [shape=box,label=\"" + l + "\"];\n");
+								}
 							} else
 							if (!bb.isExit()) {
 								ListIterator.Quad qit = bb.iterator();
-								StringBuffer l = new StringBuffer(" " + bb.toString() + "\\l");
+								StringBuffer l = new StringBuffer("Basic Block " + bb.toString() + "\\l");
 								HashSet allExceptions = new HashSet();
 								while (qit.hasNext()) {
 									// This is where the text of the bb is created
 									l.append(" ");
 									Quad quad = qit.nextQuad();
-									//l.append(dot.escape(quad.toString()));
-									
-									SSAProcInfo.Query q = SSAProcInfo.retrieveQuery(_cfg.getMethod());
-									for(Iterator iter = q.getBindingIterator(quad); iter.hasNext();){
-										SSABinding b = (SSABinding)iter.next();
-										l.append(b.toString() + "\\l");
-									}
-									
 									l.append(dot.escape(quad.toString()));
-									l.append("\\l");
+									if(q.getBindingCount(quad) > 0){
+										l.append("(" + q.getBindingCount(quad) + ") \\l");
+										for(Iterator iter = q.getBindingIterator(quad); iter.hasNext();){
+											SSABinding b = (SSABinding)iter.next();
+											l.append("     => " + b.toString() + "\\l");
+										}
+									}else{
+										l.append("\\l");
+									}
+																		
 									ListIterator.jq_Class exceptions = quad.getThrownExceptions().classIterator();
 									while (exceptions.hasNext()) {
 										allExceptions.add(exceptions.nextClass());
 									}
 								}
-								dot.userDefined("\t" + bb.toString() + " [shape=box,label=\"" + l + "\"];\n");
+								dot.userDefined("\t\"" + bb.toString() + "\" [shape=box,label=\"" + l + "\"];\n");
 
 								ListIterator.BasicBlock bit = bb.getSuccessors().basicBlockIterator();
 								while (bit.hasNext()) {
@@ -237,6 +261,10 @@ public final class SSAProcInfo {
 							}
 						}
 					});
+				} catch(Exception e){
+					System.err.println("Error while writing ");
+					e.printStackTrace();
+					System.exit(2);
 				} finally {
 					dot.closeGraph();
 				}
@@ -245,6 +273,10 @@ public final class SSAProcInfo {
 
 		public DominatorQuery getDominatorQuery() {
 			return _dom_query;			
+		}
+
+		public Quad getFirstQuad() {
+			return _firstQuad;
 		}
 	}
 		
@@ -285,17 +317,45 @@ public final class SSAProcInfo {
 
 		public SSADefinition addBinding(SSALocation loc, SSAValue value, Quad quad) {
 			SSABinding b = new SSABinding(quad, loc, value);
-			Assert._assert(quad == value.getQuad());
+			Assert._assert(value == null || quad == value.getQuad());
 			Assert._assert(quad == b.getDestination().getQuad());
 			
 			this._bindings.addLast(b);
+			//System.err.println("Have a total of " + _bindings.size() + " bindings");
+			// TODO: uncomment this
+			//Assert._assert(is_valid(), "Adding " + b + " to the binding annote " + this + " at " + quad + " makes it invalid");
 			
 			return b.getDestination(); 		
 		}
 
+		/**
+		 * Checks for duplicates among defined locations.
+		 * */
+		// TODO: this is an expensive check, make it conditional on a flag
+		public boolean is_valid() {
+			return true;
+			/*					
+			HashSet locations = new HashSet();
+			 
+			Iterator iter = _bindings.iterator();
+			while(iter.hasNext()){
+				SSALocation loc = ((SSABinding)iter.next()).getDestination().getLocation();
+				if(locations.contains(loc)){
+					locations = null;
+					return false;
+				}else{
+					locations.add(loc);
+				}
+			}
+				
+			locations = null;
+			return true;
+			*/
+		}
+
 		public void addBinding(Quad quad, SSALocation loc, SSAValue value){
 			SSABinding b = new SSABinding(quad, loc, value);
-			Assert._assert(quad == value.getQuad());
+			Assert._assert(value == null || quad == value.getQuad());
 			Assert._assert(quad == b.getDestination().getQuad());
 						
 			this._bindings.addLast(b);
@@ -308,13 +368,15 @@ public final class SSAProcInfo {
 		public int size(){return _bindings.size();}
 		
 		public String toString(String prepend){
-			String result = "";
+			StringBuffer result = new StringBuffer();
 			for(Iterator iter = _bindings.iterator(); iter.hasNext();){
 				SSABinding b = (SSABinding)iter.next();
-				result += prepend + b.toString() + "\n";
+				result.append(prepend);
+				result.append(b.toString());
+				result.append("\n");
 			}
 			
-			return result;
+			return result.toString();
 		}
 		
 		public String toString(){return toString("");}

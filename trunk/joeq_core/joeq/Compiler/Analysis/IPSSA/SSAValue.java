@@ -1,14 +1,16 @@
 package Compil3r.Analysis.IPSSA;
 
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Vector;
 
 import Clazz.jq_Method;
 import Compil3r.Analysis.IPA.ContextSet;
 import Compil3r.Quad.Quad;
 import Compil3r.Quad.Operator.Invoke;
-
 import Util.Assert;
+import Compil3r.Analysis.IPSSA.SSAIterator.DefinitionIterator;
+import Compil3r.Analysis.IPSSA.Utils.*;
 
 public abstract class  SSAValue {
 	protected SSADefinition _destination;
@@ -25,7 +27,9 @@ public abstract class  SSAValue {
 		_destination = def;
 	}
 	
-	public abstract Iterator getUsedDefinitionIterator();			
+	public abstract SSAIterator.DefinitionIterator getUsedDefinitionIterator();
+	
+	public abstract String toString();
 		
 	/**
 	 * This value is just a reference to a definition.
@@ -33,28 +37,60 @@ public abstract class  SSAValue {
 	 * */
 	public static class Copy extends SSAValue {
 		SSADefinition _definition;
-		
-		private Copy(SSADefinition def){
-			this._definition = def;
-		}
+
 		public static class FACTORY {
-			Copy create_copy(SSADefinition def){
+			// TODO: maybe add caching of these to increase sharing?..
+			static Copy create_copy(SSADefinition def){
 				return new Copy(def);
 			}
 		}
 		
-		public Iterator/*<SSADefinition>*/ getUsedDefinitionIterator(){
-			return new IteratorHelper.SingleIterator(_definition);
+		private Copy(SSADefinition def){
+			this._definition = def;
+			
+			def.appendUse(this);
 		}
 		
-		public SSADefinition getDefinition(){return _definition;}		
-	}	
+		public SSAIterator.DefinitionIterator getUsedDefinitionIterator(){
+			return new SSAIterator.DefinitionIterator(new IteratorHelper.SingleIterator(_definition));
+		}
+		
+		public SSADefinition getDefinition(){
+			return _definition;
+		}
+
+		public String toString() {
+			return "(" + _definition + ")";
+		}		
+	}
+	
+	public static class Alloc extends SSAValue {
+		Quad _quad;
+		private Alloc(Quad quad) {
+			this._quad = quad;
+		}
+		
+		public static class FACTORY {
+			public static Alloc createAlloc(Quad quad) {
+				return new Alloc(quad);
+			}
+		}
+
+		public DefinitionIterator getUsedDefinitionIterator() {
+			return new SSAIterator.DefinitionIterator(IteratorHelper.EmptyIterator.FACTORY.get());
+		}
+
+		public String toString() {
+			return "Alloc @ " + _quad;
+		}
+	}
+
 
 	public static abstract class Terminal extends SSAValue {}
 	
 	public static abstract class Constant extends Terminal {
-		public Iterator/*<SSADefinition>*/ getUsedDefinitionIterator(){
-			return IteratorHelper.EmptyIterator.FACTORY.get();
+		public SSAIterator.DefinitionIterator getUsedDefinitionIterator(){
+			return new SSAIterator.DefinitionIterator(IteratorHelper.EmptyIterator.FACTORY.get());
 		}
 	}
 	
@@ -91,15 +127,50 @@ public abstract class  SSAValue {
 		public String toString(){return "<Null>";}
 	}
 	
-	public static class Normal extends Terminal {
+	public static abstract class Normal extends Terminal {
 		// TODO: this may contain arbitrary expressions
-		public Iterator/*<SSADefinition>*/ getUsedDefinitionIterator(){
-			return null;	// TODO
-		}
+		public abstract SSAIterator.DefinitionIterator getUsedDefinitionIterator();
 	}
+	
+	
+	public static class UseCollection extends Normal {
+		DefinitionSet _usedDefinitions;
+		
+		private UseCollection() {
+			_usedDefinitions = new DefinitionSet();
+		}
+		
+		public static class FACTORY {
+			static UseCollection createUseCollection() {
+				return new UseCollection();
+			}
+		}
 
+		public DefinitionIterator getUsedDefinitionIterator() {
+			return _usedDefinitions.getDefinitionIterator();
+		}
+
+		public void addUsedDefinition(SSADefinition def) {
+			_usedDefinitions.add(def);
+			def.appendUse(this);			
+		}
+		
+		public String toString() {
+			StringBuffer buf = new StringBuffer("{ ");
+			for(SSAIterator.DefinitionIterator iter = getUsedDefinitionIterator(); iter.hasNext(); ) {
+				SSADefinition def = iter.nextDefinition();
+				buf.append(def.toString());
+				buf.append(" ");
+			}
+			buf.append("}");
+			
+			return buf.toString();			
+		}		
+	}
+	
 	public static abstract class Phi extends  SSAValue {
-		protected Vector/* <SSADefinition> */ _definitions;
+		protected Vector/*<SSADefinition>*/ 	    _definitions 	 	= new Vector();
+		protected LinkedHashSet /*<SSADefinition>*/ _usedDefinitions 	= new LinkedHashSet(); 
 		
 		public int getDefinitionCount(){
 			return _definitions.size();
@@ -111,8 +182,8 @@ public abstract class  SSAValue {
 			return _definitions.iterator();
 		}
 		
-		public Iterator/*<SSADefinition>*/ getUsedDefinitionIterator(){
-			return _definitions.iterator();
+		public SSAIterator.DefinitionIterator getUsedDefinitionIterator(){
+			return new SSAIterator.DefinitionIterator(_usedDefinitions.iterator());
 		}
 		
 		abstract public String getLetter();
@@ -137,6 +208,7 @@ public abstract class  SSAValue {
 	 * */
 	public static class Predicate {
 		private String _predicate;
+		public static String UNKNOWN = "<unknown>";
 
 		public Predicate(String predicate){
 			this._predicate = predicate;
@@ -150,7 +222,7 @@ public abstract class  SSAValue {
 	}
 	
 	public static abstract class Predicated extends Phi {
-		protected Vector/* <SSAPredicate> */ _predicates;			
+		protected Vector/* <SSAPredicate> */ _predicates = new Vector();			
 		
 		public Predicate getPredicate(int pos){
 			return (Predicate)_predicates.get(pos);
@@ -159,27 +231,46 @@ public abstract class  SSAValue {
 		public void add(SSADefinition def, String predicate){
 			_definitions.addElement(def);
 			_predicates.addElement(predicate);
+			
+			def.appendUse(this);
+			_usedDefinitions.add(def);
 		}
 		
 		public String toString(){
+			Assert._assert(_predicates.size() == _definitions.size());
 			String result = getLetter() + "(";
 			for(int i = 0; i < _definitions.size(); i++){
 				SSADefinition def = getDefinition(i);
 				Predicate pred = getPredicate(i);
 		
-				result += "<" + def.toString() + ", " + pred.toString() + ">, ";
+				if(pred == null){ 
+					result += "<" + def + ">, ";
+				}else{
+					result += "<" + def + ", " + pred.toString() + ">, ";
+				}
 			}
-			if(_definitions.size()>0){
-				result = result.substring(result.length() - 2);
+			if(_definitions.size() > 0){
+				result = result.substring(0, result.length() - 2);
 			}
 	
 			return result + ")";
 		}		
 	}
-	
+	    
+    /**
+     * This represents a merge of definitions but without any further 
+     * information such as predicates. 
+     * */
 	public static class OmegaPhi extends Phi {
 		public String getLetter(){return "omega";}
-	}
+        
+        public void addUsedDefinition(SSADefinition def){
+            _definitions.addElement(def);
+            
+            def.appendUse(this);
+            _usedDefinitions.add(def);
+        }
+    }
 	
 	public static class SigmaPhi extends Phi {
 		private ContextSet _context;
@@ -188,6 +279,12 @@ public abstract class  SSAValue {
 			setContext(context);
 			_definitions.add(newDef);
 			_definitions.add(oldDef);
+			
+			_usedDefinitions.add(newDef);
+			_usedDefinitions.add(oldDef);
+			
+			oldDef.appendUse(this);
+			newDef.appendUse(this);
 		}
 		public String getLetter(){return "sigma";}
 
@@ -216,6 +313,9 @@ public abstract class  SSAValue {
 		void add(SSADefinition def, Invoke caller){
 			_definitions.addElement(def);
 			_callers.addElement(caller);
+			
+			_usedDefinitions.add(def);
+			def.appendUse(this);
 		}
 		public String getLetter(){return "iota";}
 		public String toString(){
@@ -243,6 +343,9 @@ public abstract class  SSAValue {
 		void add(SSADefinition def, jq_Method method){
 			_definitions.addElement(def);
 			_callees.addElement(method);
+			
+			_usedDefinitions.add(def);
+			def.appendUse(this);
 		}
 		public String getLetter(){return "rho";}
 		
@@ -260,11 +363,6 @@ public abstract class  SSAValue {
 
 			return result + ")";
 		}
-	}
-	
-	public String toString(){
-		Assert._assert(false, "Don't call this");
-		return "";
 	}
 }
 

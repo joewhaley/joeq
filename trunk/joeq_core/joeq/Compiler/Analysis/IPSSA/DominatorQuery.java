@@ -9,6 +9,7 @@ package Compil3r.Analysis.IPSSA;
 import java.io.PrintStream;
 import java.util.Set;
 
+import Compil3r.Quad.BasicBlock;
 import Compil3r.Quad.Quad;
 
  /**
@@ -24,6 +25,7 @@ public interface DominatorQuery {
     /** Fills set with the iterated dominance frontier of q */
     public void getIteratedDominanceFrontier(Quad q, Set/*<Quad>*/ set);
     /** Prints the dominator tree on Quads in dot format. */    
-    public void printDot(PrintStream out); 
+    public void printDot(PrintStream out);
+	public BasicBlock getBasicBlock(Quad quad); 
 };
 

@@ -4,7 +4,7 @@
  * To change the template for this generated file go to
  * Window>Preferences>Java>Code Generation>Code and Comments
  */
-package Compil3r.Analysis.IPSSA;
+package Compil3r.Analysis.IPSSA.Utils;
 
 import java.util.Iterator;
 
@@ -21,7 +21,7 @@ public class IteratorHelper {
 		boolean _done;
 		Object  _obj;
 		
-		SingleIterator(Object obj){
+		public SingleIterator(Object obj){
 			_done = false;
 			_obj  = obj; 
 		}

@@ -26,6 +26,8 @@ import Compil3r.Analysis.IPA.ProgramLocation.QuadProgramLocation;
  * A pretty obvious implementation of DominatorQuery, nothing fancy here. 
  * Needs to be optimized for future use.
  * @see DominatorQuery
+ * @author  Vladimir Livshits
+ * @version $Id$
  * */
 public class SimpleDominatorQuery implements DominatorQuery {
 	private jq_Method _m;	
@@ -34,6 +36,7 @@ public class SimpleDominatorQuery implements DominatorQuery {
 	// Maps we create to answer the queries
 	private HashMap _bb2nodeMap;	
 	private HashMap _quad2BBMap;
+	private boolean _verbose = false;
 
 	public SimpleDominatorQuery(jq_Method m){
 		this._m = m;
@@ -115,31 +118,66 @@ public class SimpleDominatorQuery implements DominatorQuery {
 		Assert._assert(set != null);	 
 		DominatorNode node = getNode(q);
 		processChildren(node.getBasicBlock(), node, set);
+		if(_verbose){
+			System.err.println("Dominance frontier for " + q.toString_short() + " is: ");
+			Iterator iter = set.iterator();
+			while(iter.hasNext()){
+				Quad dom = (Quad) iter.next();
+				//Assert._assert(q != dom, "Didn't expect " + q.toString() + "@ " + 
+				//	new QuadProgramLocation(this._m, q).toStringLong() + " to be on its own dom. frontier");
+				System.err.print(dom.toString() + " ");
+			}
+			System.err.println("");
+		}
 	}
 	
-	private void processChildren(BasicBlock root, DominatorNode node, Set set) {
+	/**
+	 * Collect nodes on the dominance frontier of root into set. Predecessors of node 
+	 * are considered for the dominance frontier. 
+	 * */
+	private void processChildren(BasicBlock root, DominatorNode node, Set/*<Quad>*/ set) {
 		BasicBlock bb = node.getBasicBlock();
-		Util.Templates.ListIterator.BasicBlock predecessors = bb.getPredecessors().basicBlockIterator();
-		while(predecessors.hasNext()){
-			BasicBlock pred = predecessors.nextBasicBlock();
+		if(bb.size() == 0) return;
+		
+		Util.Templates.ListIterator.BasicBlock successors = bb.getSuccessors().basicBlockIterator();
+		while(successors.hasNext()){
+			BasicBlock succ = successors.nextBasicBlock();
 			
-			if(!dominates(root, pred)){
-				set.add(bb.getQuad(0));
+			Assert._assert(dominates(root, root));
+			Assert._assert(dominates(succ, succ));
+			if(!dominates(root, succ, true)){
+				set.add(succ.getQuad(0));
 				// AT LEAST one predecessor is not dominated -- no need to look at the others
 				break;
 			}
 		}
 		for(Iterator iter = node.getChildren().iterator(); iter.hasNext(); ){
 			DominatorNode child = (DominatorNode)iter.next();
+			Assert._assert(child != node);
 			
 			// only the first node of a BB is suspect
 			processChildren(root, child, set);									
 		}	
 	}
 
+	/**
+	 * The default is non-strict dominance.
+	 **/
 	private boolean dominates(BasicBlock root, BasicBlock pred) {
+		return dominates(root, pred, false);
+	}
+
+	/**
+	 * Check for dominance.
+	 * */
+	private boolean dominates(BasicBlock root, BasicBlock pred, boolean strict) {
 		DominatorNode root_node = (DominatorNode) _bb2nodeMap.get(root);
-		DominatorNode node = (DominatorNode) _bb2nodeMap.get(pred);		
+		DominatorNode node 		= (DominatorNode) _bb2nodeMap.get(pred);	
+		
+		if(!strict && root == pred){
+			// nodes non-strictly dominates itself
+			return true;
+		}
 		
 		while(node != null){
 			node = node.getParent();
@@ -164,10 +202,13 @@ public class SimpleDominatorQuery implements DominatorQuery {
 		getDominanceFrontier(q, set);
 		
 		boolean change = false;
+		int i = 1;
 		do {
 			change = false;
+			//System.err.println("Iteration " + i);
 			for(Iterator iter = set.iterator(); iter.hasNext(); ){
 				Quad domFrontierQuad = (Quad)iter.next();
+				//Assert._assert(q != domFrontierQuad, "Didn't expect " + q + " to be on its own dom. frontier");
 				
 				int oldSetSize = set.size();				
 				getDominanceFrontier(domFrontierQuad, set);				
@@ -178,6 +219,7 @@ public class SimpleDominatorQuery implements DominatorQuery {
 					change = true;
 				}
 			}
+			i++;
 		} while (change);
 	}
 		
@@ -223,6 +265,10 @@ public class SimpleDominatorQuery implements DominatorQuery {
 				}
 			}
 		}
+	}
+
+	public BasicBlock getBasicBlock(Quad quad) {
+		return (BasicBlock) _quad2BBMap.get(quad);
 	}
 };
 
