@@ -20,11 +20,10 @@ public class GCBitsManager implements Comparator {
     private static TreeMap pool = new TreeMap(new GCBitsManager());
 
     public int compare(Object o1, Object o2) {
-        if (o1 instanceof HeapAddress && o2 instanceof HeapAddress) {
-            return ((HeapAddress) o1).difference(((HeapAddress) o2));
-        } else {
-            return -1;
-        }
+        int difference = ((HeapAddress) o1).difference(((HeapAddress) o2));
+        if (difference > 0) return -1;
+        else if (difference < 0) return 1;
+        else return 0;
     }
 
     public static void register(GCBits newcomer) {
