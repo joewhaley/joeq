@@ -134,7 +134,9 @@ public class BDDPointerAnalysis {
     }
     
     public BDDPointerAnalysis(int nodeCount, int cacheSize) {
-        bdd = org.sf.javabdd.BuDDyFactory.init(nodeCount, cacheSize);
+        bdd = org.sf.javabdd.BDDFactory.init(nodeCount, cacheSize);
+        //bdd = org.sf.javabdd.TestBDDFactory.init(nodeCount, cacheSize);
+        //bdd = org.sf.javabdd.BuDDyFactory.init(nodeCount, cacheSize);
         //bdd = org.sf.javabdd.CUDDFactory.init(nodeCount, cacheSize);
         
         bdd.setCacheRatio(8);
@@ -162,7 +164,8 @@ public class BDDPointerAnalysis {
         for (int i=0; i<varorder.length; ++i) {
             //System.out.println("varorder["+i+"]="+varorder[i]);
         }
-        bdd.setVarOrder(varorder);
+        if (true)
+            bdd.setVarOrder(varorder);
         bdd.enableReorder();
         
         V1ToV2 = bdd.makePair(V1, V2);
