@@ -84,6 +84,8 @@ public abstract class Driver {
     static boolean trace_cfg = false;
     static boolean trace_method = false;
     static boolean trace_type = false;
+    // public so that "set Main.Driver.ignore_linkage_errors true" works
+    public static boolean ignore_linkage_errors = false;
 
     static Class interpreterClass;
 
@@ -336,6 +338,11 @@ public abstract class Driver {
                     jq_Type t = (jq_Type) i.next();
                     try {
                         t.accept(cv);
+                    } catch (LinkageError le) {
+			if (!ignore_linkage_errors)
+			    throw le;
+                        System.err.println("Linkage error occurred while executing pass on " + t + " : " + le);
+                        le.printStackTrace(System.err);
                     } catch (Exception x) {
                         System.err.println("Runtime exception occurred while executing pass on " + t + " : " + x);
                         x.printStackTrace(System.err);
