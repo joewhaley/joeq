@@ -322,6 +322,20 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
         return s;
     }
     
+    public final Set/*jq_Class*/ getClassesThatReference(jq_Member m) {
+        Iterator i = bs_desc2type.entrySet().iterator();
+        HashSet s = new HashSet();
+        while (i.hasNext()) {
+            Map.Entry e = (Map.Entry)i.next();
+            if (e.getValue() instanceof jq_Class) {
+                jq_Class k = (jq_Class)e.getValue();
+                if (k.doesConstantPoolContain(m))
+                    s.add(k);
+            }
+        }
+        return s;
+    }
+    
     public final jq_Class getOrCreateClass(String desc, DataInput in) {
 	jq_Class t = (jq_Class)getOrCreateBSType(Utf8.get(desc));
 	t.load(in);
