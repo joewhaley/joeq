@@ -7,7 +7,7 @@
  * @version 
  */
 
-package ClassLib.ibm13_linux.java.io;
+package ClassLib.sun13_linux.java.io;
 
 import Clazz.jq_Class;
 import Clazz.jq_StaticMethod;
