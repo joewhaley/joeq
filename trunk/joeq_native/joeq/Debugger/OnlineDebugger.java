@@ -51,6 +51,7 @@ public class OnlineDebugger {
         StackCodeWalker sw = new StackCodeWalker(ip, fp);
         int frameNum = 0;
         SystemInterface.debugwriteln("> "+frameNum+":"+sw.toString());
+        
         //bsh.Interpreter i = null;
 uphere:
         for (;;) {

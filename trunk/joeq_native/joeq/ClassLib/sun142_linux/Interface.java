@@ -14,7 +14,7 @@ import Clazz.jq_Class;
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
-public final class Interface extends ClassLib.sun14_linux.Interface {
+public class Interface extends ClassLib.sun14_linux.Interface {
 
     /** Creates new Interface */
     public Interface() {}

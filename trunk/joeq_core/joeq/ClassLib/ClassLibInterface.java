@@ -66,8 +66,12 @@ public abstract class ClassLibInterface {
                         classlibrary = "sun14_";
                     } else if (javaruntimeversion.startsWith("1.4.2")) {
                         classlibrary = "sun142_";
+                    } else if (javaruntimeversion.startsWith("1.5.0")) {
+                        classlibrary = "sun15_";
                     } else {
-                        if (javaruntimeversion.startsWith("1.4")) {
+                        if (javaruntimeversion.startsWith("1.5")) {
+                            classlibrary = "sun15_";
+                        } else if (javaruntimeversion.startsWith("1.4")) {
                             classlibrary = "sun14_";
                         } else {
                             classlibrary = "sun13_";

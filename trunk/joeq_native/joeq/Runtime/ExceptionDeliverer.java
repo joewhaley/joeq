@@ -14,6 +14,7 @@ import Clazz.jq_TryCatch;
 import Debugger.OnlineDebugger;
 import Memory.CodeAddress;
 import Memory.StackAddress;
+import Scheduler.jq_Thread;
 import UTF.Utf8;
 import Util.Assert;
 import Util.Strings;
@@ -55,6 +56,10 @@ public abstract class ExceptionDeliverer {
     public abstract Object getThisPointer(jq_CompiledCode cc, CodeAddress ip, StackAddress fp);
     
     public static void deliverToCurrentThread(Throwable x, CodeAddress ip, StackAddress fp) {
+        jq_Thread t = Unsafe.getThreadBlock();
+        Assert._assert(t != null && !t.is_delivering_exception);
+        t.is_delivering_exception = true;
+        
         jq_Class x_type = (jq_Class) jq_Reference.getTypeOf(x);
         if (TRACE) SystemInterface.debugwriteln("Delivering exception of type "+x_type+" to ip="+ip.stringRep()+" fp="+fp.stringRep());
         for (;;) {
@@ -64,6 +69,7 @@ public abstract class ExceptionDeliverer {
                 // reached the top!
                 System.out.println("Exception in thread \""+Unsafe.getThreadBlock()+"\" "+x);
                 x.printStackTrace(System.out);
+                t.is_delivering_exception = false;
                 SystemInterface.die(-1);
                 Assert.UNREACHABLE();
                 return;
@@ -74,6 +80,7 @@ public abstract class ExceptionDeliverer {
                     
                     // go to this catch block!
                     if (TRACE) SystemInterface.debugwriteln("Jumping to catch block at "+address.stringRep());
+                    t.is_delivering_exception = false;
                     cc.deliverException(tc, fp, x);
                     Assert.UNREACHABLE();
                     return;

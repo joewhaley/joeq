@@ -46,13 +46,31 @@ public abstract class JoeqVM {
             
             // call java.lang.System.initializeSystemClass()
             ClassLibInterface.DEFAULT.initializeSystemClass();
-
+            
         } catch (Throwable x) {
             SystemInterface.debugwriteln("Exception occurred during virtual machine initialization");
             SystemInterface.debugwriteln("Exception: " + x);
             if (System.err != null) x.printStackTrace(System.err);
             return;
         }
+        
+        if (jq.on_vm_startup != null) {
+            Iterator it = jq.on_vm_startup.iterator();
+            while (it.hasNext()) {
+                MethodInvocation mi = (MethodInvocation) it.next();
+                try {
+                    mi.invoke();
+                } catch (Throwable x) {
+                    SystemInterface.debugwriteln("Exception occurred while initializing the virtual machine");
+                    SystemInterface.debugwriteln(x.toString());
+                    x.printStackTrace(System.err);
+                    //return;
+                }
+            }
+        }
+        
+        Debug.writeln("Joeq system initialized.");
+
         int numOfArgs = SystemInterface.main_argc();
         String[] args = new String[numOfArgs];
         for (int i = 0; i < numOfArgs; ++i) {
@@ -124,20 +142,6 @@ public abstract class JoeqVM {
                 continue;
             }
             break;
-        }
-        if (jq.on_vm_startup != null) {
-            Iterator it = jq.on_vm_startup.iterator();
-            while (it.hasNext()) {
-                MethodInvocation mi = (MethodInvocation) it.next();
-                try {
-                    mi.invoke();
-                } catch (Throwable x) {
-                    SystemInterface.debugwriteln("Exception occurred while initializing the virtual machine");
-                    SystemInterface.debugwriteln(x.toString());
-                    x.printStackTrace(System.err);
-                    //return;
-                }
-            }
         }
 
         handleSystemProperties();

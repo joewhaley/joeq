@@ -268,6 +268,9 @@ public final class Unsafe {
         SystemInterface.sysfree(a);
     }
     
+    public long objectFieldOffset(java.lang.reflect.Field field) {
+        return (long) fieldOffset(field);
+    }
     public int fieldOffset(java.lang.reflect.Field field) {
         jq_Field f = (jq_Field) ClassLibInterface.DEFAULT.getJQField(field);
         jq_Class c = f.getDeclaringClass();
