@@ -569,6 +569,21 @@ public class BDDPointerAnalysis {
         }
     }
 
+    public Set getPointsTo(Node n) {
+        int i = variableIndexMap.get(n);
+        BDD var = V1.ithVar(i);
+        BDD p = pointsTo.restrict(var);
+        HashSet set = new HashSet();
+        for (;;) {
+            int a = p.scanVar(H1);
+            if (a < 0) break;
+            set.add(heapobjIndexMap.get(a));
+            p.applyWith(H1.ithVar(a), BDDFactory.diff);
+        }
+        p.free();
+        return set;
+    }
+
     public void dumpNode(Node n) {
         int x = getVariableIndex(n);
         printSet(x+": "+n.toString(), pointsTo.restrict(V1.ithVar(x)));
@@ -613,7 +628,13 @@ public class BDDPointerAnalysis {
 
     HashSet visitedMethods = new HashSet();
 
+    public static boolean NO_HEAP = System.getProperty("noheap") != null;
+
     public void handleNode(Node n) {
+        if (NO_HEAP) {
+            addObjectAllocation(n, n);
+        }
+        
         Iterator j;
         j = n.getEdges().iterator();
         while (j.hasNext()) {
@@ -1129,17 +1150,21 @@ public class BDDPointerAnalysis {
         last_typeIndex = n1;
     }
     
+    public static boolean NO_TYPE_FILTERING = NO_HEAP || System.getProperty("notypefilter") != null;
+    
     public void calculateTypeFilter() {
-        calculateTypeHierarchy();
+        if (NO_TYPE_FILTERING) {
+            typeFilter = bdd.one();
+        } else {
+            calculateTypeHierarchy();
         
-        // (T1 x T2) * (H1 x T2) => (T1 x H1)
-        BDD assignableTypes = cC.relprod(aC, T2set);
-        // (T1 x H1) * (V1 x T1) => (V1 x H1)
-        typeFilter = assignableTypes.relprod(vC, T1set);
-        cTypes = aC.replace(T2ToT1);
-        //cC.free(); vC.free(); aC.free();
-
-        if (false) typeFilter = bdd.one();
+            // (T1 x T2) * (H1 x T2) => (T1 x H1)
+            BDD assignableTypes = cC.relprod(aC, T2set);
+            // (T1 x H1) * (V1 x T1) => (V1 x H1)
+            typeFilter = assignableTypes.relprod(vC, T1set);
+            cTypes = aC.replace(T2ToT1);
+            //cC.free(); vC.free(); aC.free();
+        }
     }
     
     BDD vtable_bdd; // H1 x T3 x T4
@@ -1161,6 +1186,7 @@ public class BDDPointerAnalysis {
             for ( ; i2<n2; ++i2) {
                 Node c = (Node) heapobjIndexMap.get(i2);
                 if (c == null) continue;
+                if (c instanceof GlobalNode) continue;
                 jq_Reference r2 = (jq_Reference) c.getDeclaredType();
                 if (r2 == null) continue;
                 r2.prepare(); m.getDeclaringClass().prepare();
