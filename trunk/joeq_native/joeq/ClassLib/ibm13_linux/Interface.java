@@ -64,11 +64,13 @@ public final class Interface extends ClassLib.Common.InterfaceImpl {
             nullStaticFields.add(k.getOrCreateStaticField("inflaters", "Ljava/util/Vector;"));
             
             // we need to reinitialize the inflaters array on startup.
-            Object[] args = { } ;
-            Clazz.jq_Method init_inflaters = k.getOrCreateStaticMethod("init_inflaters", "()V");
-            Bootstrap.MethodInvocation mi = new Bootstrap.MethodInvocation(init_inflaters, args);
-            jq.on_vm_startup.add(mi);
-            System.out.println("Added call to reinitialize java.util.zip.ZipFile.inflaters field on joeq startup: "+mi);
+            if (jq.on_vm_startup != null) {
+                Object[] args = { } ;
+                Clazz.jq_Method init_inflaters = k.getOrCreateStaticMethod("init_inflaters", "()V");
+                Bootstrap.MethodInvocation mi = new Bootstrap.MethodInvocation(init_inflaters, args);
+                jq.on_vm_startup.add(mi);
+                System.out.println("Added call to reinitialize java.util.zip.ZipFile.inflaters field on joeq startup: "+mi);
+            }
         }
         
         public java.lang.Object mapInstanceField(java.lang.Object o, Clazz.jq_InstanceField f) {
