@@ -37,6 +37,7 @@ public class ReachingDefs extends Problem {
     public static class RDVisitor implements ControlFlowGraphVisitor {
 
         public static boolean DUMP = false;
+        public static int SOLVER = 1;
         
         long totalTime;
         
@@ -46,7 +47,19 @@ public class ReachingDefs extends Problem {
         public void visitCFG(ControlFlowGraph cfg) {
             long time = System.currentTimeMillis();
             Problem p = new ReachingDefs();
-            Solver s1 = new IterativeSolver();
+            Solver s1;
+            switch (SOLVER) {
+                case 1:
+                    s1 = new IterativeSolver();
+                    break;
+                case 3:
+                    s1 = new PriorityQueueSolver();
+                    break;
+                case 2:
+                default:
+                    s1 = new SortedSetSolver(BBComparator.INSTANCE);
+                    break;
+            }
             solve(cfg, s1, p);
             time = System.currentTimeMillis() - time;
             totalTime += time;
