@@ -36,6 +36,9 @@ public class Threads {
     
     int counter;
     synchronized void foo() {
-        ++counter;
+        synchronized(this) {
+            ++counter;
+            this.hashCode();
+        }
     }
 }
