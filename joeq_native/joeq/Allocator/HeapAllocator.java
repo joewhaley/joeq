@@ -1,5 +1,5 @@
 /*
- * Allocate.java
+ * HeapAllocator.java
  *
  * Created on January 16, 2001, 9:45 PM
  *

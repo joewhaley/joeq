@@ -3,10 +3,7 @@
  *
  * Created on January 5, 2001, 8:04 PM
  *
- * @author  jwhaley
- * @version 
  */
-
 package Clazz;
 
 import Assembler.x86.DirectBindCall;
@@ -22,7 +19,10 @@ import jq;
 import java.util.List;
 import java.util.Iterator;
 
-// NOTE: doesn't implement hashCode() very well!
+/**
+ * @author  John Whaley
+ * @version 
+ */
 public class jq_CompiledCode implements Comparable {
 
     public static /*final*/ boolean TRACE = false;
@@ -117,7 +117,7 @@ public class jq_CompiledCode implements Comparable {
         }
         return 1;
     }
-    public int compareTo(Object o) {
+    public int compareTo(java.lang.Object o) {
         if (o instanceof jq_CompiledCode)
             return compareTo((jq_CompiledCode)o);
         else
@@ -135,7 +135,10 @@ public class jq_CompiledCode implements Comparable {
         else
             return equals((CodeAllocator.InstructionPointer)o);
     }
-    public int hashCode() { return 0; }
+    /**
+     * NOTE that this violates the contract of hashCode when comparing against InstructionPointer objects!
+     */
+    public int hashCode() { return super.hashCode(); }
     
     public static final jq_InstanceField _entrypoint;
     static {
