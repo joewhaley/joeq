@@ -24,12 +24,7 @@ import jwutil.util.Assert;
  * This class declares methods for resolving reflective calls.
  */
 public abstract class ReflectionInformationProvider {
-    /**
-     * @author Vladimir Livshits
-     * 
-     */
     public class NewInstanceTargets {
-
         private jq_Method declaredIn;
         private Collection targets = new LinkedList();
 
@@ -188,8 +183,7 @@ public abstract class ReflectionInformationProvider {
                 e.printStackTrace();
             }
         }
-        
-      
+              
         public CribSheetReflectionInformationProvider() {
             this(DEFAULT_CRIB_FILE);
         }
@@ -223,12 +217,15 @@ public abstract class ReflectionInformationProvider {
             in.close();
         }
         
-        Collection/*<NewInstanceTargets>*/ specs = new LinkedList();
+        Collection/*<NewInstanceTargets>*/ specs      = new LinkedList();
         private static final Object SUBCLASSES_MARKER = "<";
-        private static final Object ELLIPSES = "...";
-        
+        private static final Object ELLIPSES          = "...";
+
+        /**
+         * Parses one line like this:
+             org.roller.presentation.RollerContext.getAuthenticator org.roller.presentation.DefaultAuthenticator ...
+        */
         private NewInstanceTargets parseSpecLine(String line) {
-            //org.roller.presentation.RollerContext.getAuthenticator org.roller.presentation.DefaultAuthenticator ...
             StringTokenizer tok = new StringTokenizer(line);
             String declaredIn = tok.nextToken();
             NewInstanceTargets targets = new NewInstanceTargets(declaredIn);
@@ -240,6 +237,8 @@ public abstract class ReflectionInformationProvider {
                     }else{
                         targets.addSubclasses(tok.nextToken());
                     }
+                }else{
+                    System.err.println("Specification for " + declaredIn + " is incomplete.");
                 }
             }
             if(TRACE && targets.isValid()){
@@ -252,7 +251,8 @@ public abstract class ReflectionInformationProvider {
         /* (non-Javadoc)
          * @see joeq.Compiler.Analysis.FlowInsensitive.ReflectionInformationProvider#getNewInstanceTargets(joeq.Compiler.Analysis.IPA.ProgramLocation.QuadProgramLocation)
          */
-        public Collection getNewInstanceTargets(QuadProgramLocation mc) {            
+        public Collection getNewInstanceTargets(QuadProgramLocation mc) {
+            // TODO
             return null;
         }
         
