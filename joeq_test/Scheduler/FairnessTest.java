@@ -3,6 +3,9 @@
  */
 package Scheduler;
 
+import joeq.Scheduler.jq_InterrupterThread;
+import joeq.Scheduler.jq_NativeThread;
+
 /**
  * @author jwhaley
  */
