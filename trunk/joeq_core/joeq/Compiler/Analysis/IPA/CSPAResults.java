@@ -153,6 +153,11 @@ public class CSPAResults {
         return new TypedBDD(result, H1o);
     }
 
+    public TypedBDD getPointedToBySet(int heap) {
+        BDD result = ci_pointsTo.restrict(H1o.ithVar(heap));
+        return new TypedBDD(result, V1o);
+    }
+    
     public TypedBDD getAliasedLocations(int var) {
         BDD a = V1o.ithVar(var);
         BDD heapObjs = ci_pointsTo.restrict(a);
