@@ -2435,7 +2435,9 @@ public class PA {
             bindInvocations();
             if(RESOLVE_REFLECTION){
                 /*change |= */
-                bindReflection();
+                if(bindReflection()){
+                    change = true;
+                }
             }
             if (handleNewTargets())
                 change = true;
