@@ -2015,10 +2015,11 @@ public class PA {
         BDDFactory bdd = r.getFactory();
         StringBuffer sb = new StringBuffer();
         int[] set = new int[bdd.varNum()];
+        printed = 0;
         fdd_printset_rec(bdd, sb, r, set);
         return sb.toString();
     }
-    
+    private static int printed = 0;
     private static void fdd_printset_rec(BDDFactory bdd, StringBuffer sb, BDD r, int[] set) {
         int fdvarnum = bdd.numberOfDomains();
         
@@ -2030,6 +2031,7 @@ public class PA {
         if (r.isZero())
             return;
         else if (r.isOne()) {
+            if(printed > 0) return;
             sb.append('<');
             first = true;
             
@@ -2070,14 +2072,11 @@ public class PA {
                             pos = pos.setBit(0);
                         }
                     }
-                    /*if (!hasDontCare) {
-                        sb.append(ts.elementName(n, pos));
-                    } else {
-                    }*/
                 }
             }
             
             sb.append('>');
+            printed = 1;
         } else {
             set[r.var()] = 1;
             BDD lo = r.low();
@@ -2148,7 +2147,7 @@ public class PA {
         BDD constructorIE = bdd.zero(); 
         for(Iterator iter = t9.iterator(H1set.and(I2set)); iter.hasNext();){
             BDD h = (BDD) iter.next();
-            if(TRACE_REFLECTION_DOMAINS) out.println("h: " + getBDDDomains(h));
+            //if(TRACE_REFLECTION_DOMAINS) out.println("h: " + getBDDDomains(h));
             int h_i = h.scanVar(H1).intValue();
             Object node = Hmap.get(h_i);
             if(!(node instanceof ConcreteTypeNode)) {
