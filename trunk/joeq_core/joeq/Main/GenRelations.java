@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
-import java.net.URLClassLoader;
 import joeq.Compiler.Analysis.IPA.PA;
 import joeq.Util.HijackingClassLoader;
 
