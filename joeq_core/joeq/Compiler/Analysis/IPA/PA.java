@@ -619,7 +619,7 @@ public class PA {
                     continue;
                 }
                 ConcreteTypeNode h = ConcreteTypeNode.get(type, mc);
-                addToVP(V_bdd, h);
+                addToVP(V_bdd.replace(V2toV1), h);
                 V_bdd.free();
                 noTargetCalls++;
             }
