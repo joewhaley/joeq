@@ -94,7 +94,7 @@ public class PAResults {
         PAResults r = new PAResults(pa);
         r.loadCallGraph(prefix+"callgraph");
         // todo: load path numbering instead of renumbering.
-        pa.numberPaths(r.cg, false);
+        pa.numberPaths(r.cg, null, false);
         return r;
     }
     
@@ -584,7 +584,7 @@ public class PAResults {
             result.orWith(vars);
             BDD invokes = new_m.relprod(allInvokes, r.Mset); // V1cxM x MxI = V1cxI
             invokes.replaceWith(r.V1ctoV2c); // V2cxI
-            BDD methods = invokes.relprod(r.IEc, V2cIset); // V2cxI x V2cxIxV1cxM = V1cxM
+            BDD methods = invokes.relprod(r.IEcs, V2cIset); // V2cxI x V2cxIxV1cxM = V1cxM
             new_m.orWith(methods);
             new_m.applyWith(method_plus_context0.id(), BDDFactory.diff);
             if (new_m.isZero()) break;

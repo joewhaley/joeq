@@ -39,7 +39,7 @@ public class PACallGraph extends CallGraph {
         this.bdd = pa.bdd;
         this.M = pa.M;
         this.I = pa.I;
-        this.roots = pa.roots;
+        this.roots = pa.rootMethods;
         this.visited = pa.visited;
         this.IE = pa.IE.exist(pa.V1cV2cset);
         this.Mmap = pa.Mmap;
