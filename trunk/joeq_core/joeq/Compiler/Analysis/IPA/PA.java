@@ -385,11 +385,11 @@ public class PA {
         BDD bdd1 = M.ithVar(M2_i);
         bdd1.andWith(I_bdd.id());
         if (TRACE_RELATIONS) out.println("Adding to IE: "+bdd1.toStringWithDomains());
+        IE.orWith(bdd1);
         if (CONTEXT_SENSITIVE) {
             // Add the context for the new call graph edge.
             IEcs.orWith(IE.and(IEfilter));
         }
-        IE.orWith(bdd1);
     }
     
     void addToMI(BDD M_bdd, BDD I_bdd, jq_Method target) {
@@ -1636,20 +1636,30 @@ public class PA {
     
     ToString TS = new ToString();
     
+    String findInMap(IndexMap map, int j) {
+        String jp = "("+j+")";
+        if (j < map.size()) {
+            Object o = map.get(j);
+            return jp+o;
+        } else {
+            return jp+"<index not in map>";
+        }
+    }
+
     public class ToString extends BDD.BDDToString {
         public String elementName(int i, long j) {
             switch (i) {
                 case 0: // fallthrough
-                case 1: return "("+j+")"+Vmap.get((int)j).toString();
-                case 2: return "("+j+")"+Imap.get((int)j).toString();
+                case 1: return findInMap(Vmap, (int)j);
+                case 2: return findInMap(Imap, (int)j);
                 case 3: // fallthrough
-                case 4: return "("+j+")"+Hmap.get((int)j).toString();
+                case 4: return findInMap(Hmap, (int)j);
                 case 5: return Long.toString(j);
-                case 6: return "("+j+")"+Fmap.get((int)j);
+                case 6: return findInMap(Fmap, (int)j);
                 case 7: // fallthrough
-                case 8: return "("+j+")"+Tmap.get((int)j);
-                case 9: return "("+j+")"+Nmap.get((int)j).toString();
-                case 10: return "("+j+")"+Mmap.get((int)j).toString();
+                case 8: return findInMap(Tmap, (int)j);
+                case 9: return findInMap(Nmap, (int)j);
+                case 10: return findInMap(Mmap, (int)j);
                 case 11: return Long.toString(j);
                 case 12: return Long.toString(j);
                 case 13: return Long.toString(j);
