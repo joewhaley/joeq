@@ -173,6 +173,7 @@ public class RegisterFactory {
         private int id; private boolean isTemp;
         Register(int id, boolean isTemp) { this.id = id; this.isTemp = isTemp; }
         public int getNumber() { return id; }
+        public boolean isTemp() { return isTemp; }
         public String toString() { return (isTemp?"T":"R")+id; }
     }
 
