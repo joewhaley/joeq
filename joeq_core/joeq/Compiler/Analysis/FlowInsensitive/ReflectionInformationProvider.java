@@ -35,9 +35,13 @@ public abstract class ReflectionInformationProvider {
          */
         public NewInstanceTargets(String declaredIn) {
             this.declaredIn = getMethod(declaredIn);
-            if(PA.TRACE_REFLECTION && this.declaredIn == null) {
-                System.out.println("No method for " + declaredIn + " in NewInstanceTargets. "
-                    + " The classpath is [" + PrimordialClassLoader.loader.classpathToString() + "]");
+            if(PA.TRACE_REFLECTION){
+                if(this.declaredIn == null) {
+                    System.out.println("No method for " + declaredIn + " in NewInstanceTargets. "
+                        + " The classpath is [" + PrimordialClassLoader.loader.classpathToString() + "]");
+                } else {
+                    System.out.println("Created a NewInstanceTarget object for " + declaredIn);
+                }
             }
         }
         
@@ -252,7 +256,9 @@ public abstract class ReflectionInformationProvider {
                         targets.addSubclasses(tok.nextToken());
                     }
                 }else{
-                    System.err.println("Specification for " + declaredIn + " is incomplete.");
+                    if(PA.TRACE_REFLECTION){
+                        System.err.println("Specification for " + declaredIn + " is incomplete.");
+                    }
                 }
             }
             if(TRACE && targets.isValid()){
