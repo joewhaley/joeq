@@ -882,8 +882,8 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                 }
                 
                 // if this is in the class library, remap method bodies.
-                if (this.getDesc().toString().startsWith("LClassLib/")) {
-                    //(this.super_class != null && this.super_class.getDesc() == Utf8.get("LClassLib/ClassLibInterface;")) {
+                if (this.getDesc().toString().startsWith("LClassLib/") &&
+                    this.getDesc().toString().indexOf('/', 11) != -1) {
                     if (TRACE) SystemInterface.debugmsg(this+" is in the class library, rewriting method bodies.");
                     final jq_ConstantPool.ConstantPoolRebuilder cpr = this.rebuildConstantPool(false);
                     // visit instance fields

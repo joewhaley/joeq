@@ -126,13 +126,17 @@ public abstract class Inflater {
    */
   public Inflater(boolean nowrap) 
   {
-    this.nowrap = nowrap;
-    this.adler = new Adler32();
-    input = new StreamManipulator();
-    outputWindow = new OutputWindow();
-    mode = nowrap ? DECODE_BLOCKS : DECODE_HEADER;
+  	this.__init__(nowrap);
   }
 
+    public void __init__(boolean nowrap) {
+	    this.nowrap = nowrap;
+	    this.adler = new Adler32();
+	    input = new StreamManipulator();
+	    outputWindow = new OutputWindow();
+	    mode = nowrap ? DECODE_BLOCKS : DECODE_HEADER;
+    }
+    
   /**
    * Resets the inflater so that a new stream can be decompressed.  All
    * pending input and output will be discarded.

@@ -139,43 +139,34 @@ public class ObjectTraverser {
             if (fieldName.equals("pos"))
                 return null;
         }
-        /*
-        else if (c == java.util.zip.Inflater.class) {
+        else if (c == PrimordialClassLoader.loader.getBSType("Ljava/util/zip/Inflater;")) {
             if (fieldName.equals("mode"))
-                return new Integer(0);
+                return null;
             if (fieldName.equals("readAdler"))
-                return new Integer(0);
+                return null;
             if (fieldName.equals("neededBits"))
-                return new Integer(0);
+                return null;
             if (fieldName.equals("repLength"))
-                return new Integer(0);
+                return null;
             if (fieldName.equals("repDist"))
-                return new Integer(0);
+                return null;
             if (fieldName.equals("uncomprLen"))
-                return new Integer(0);
+                return null;
             if (fieldName.equals("isLastBlock"))
-                return new Boolean(false);
+                return null;
             if (fieldName.equals("totalOut"))
-                return new Integer(0);
+                return null;
             if (fieldName.equals("totalIn"))
-                return new Integer(0);
+                return null;
             if (fieldName.equals("nowrap"))
-                return new Boolean(false);
-            if (fieldName.equals("adler")) {
-                Object[] o2 = (Object[])mapped_objects.get(o);
-                return o2[0];
-            }
-            if (fieldName.equals("input")) {
-                Object[] o2 = (Object[])mapped_objects.get(o);
-                return o2[1];
-            }
-            if (fieldName.equals("outputWindow")) {
-                Object[] o2 = (Object[])mapped_objects.get(o);
-                return o2[2];
-            }
-            return null;
+                return null;
+            if (fieldName.equals("adler"))
+                return null;
+            if (fieldName.equals("input"))
+                return null;
+            if (fieldName.equals("outputWindow"))
+                return null;
         }
-        */
 
     	return NO_OBJECT;
     }
