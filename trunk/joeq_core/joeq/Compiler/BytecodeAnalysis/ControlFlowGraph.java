@@ -121,6 +121,15 @@ public class ControlFlowGraph {
         public void add(Object o) { throw new UnsupportedOperationException(); }
         public void set(Object o) { throw new UnsupportedOperationException(); }
 	public void jumpToEnd() { index = rpo.length-1; }
+        public String toString() {
+            StringBuffer sb = new StringBuffer();
+            for (int i=0; i<rpo.length; ++i) {
+                sb.append(rpo[i]);
+                if (i == index) sb.append(" * ");
+                else sb.append("   ");
+            }
+            return sb.toString();
+        }
     }
     
     public static ControlFlowGraph computeCFG(jq_Method method) {
