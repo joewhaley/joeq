@@ -88,8 +88,10 @@ public class InstrumentedSetWrapper implements Set {
                             out.write(i.dump());
                             out.write(Strings.lineSep);
                         }
-                    } catch (IOException _) { }
-                    finally {
+                    } catch (IOException x) {
+                        System.err.println("IO Exception occurred while writing set profile data.");
+                        x.printStackTrace();
+                    } finally {
                         try {
                             if (out != null) out.close();
                         } catch (IOException x) { }
@@ -253,6 +255,7 @@ public class InstrumentedSetWrapper implements Set {
                         f.setInt(this, f.getInt(this)+f.getInt(that));
                     } catch (IllegalAccessException x) {
                         // cannot occur.
+                        Assert.UNREACHABLE();
                     }
                 }
             }
@@ -294,6 +297,7 @@ public class InstrumentedSetWrapper implements Set {
                         }
                     } catch (IllegalAccessException x) {
                         // cannot occur.
+                        Assert.UNREACHABLE();
                     }
                 }
             }
