@@ -94,7 +94,6 @@ public class BDDInferenceRule extends InferenceRule {
         ++updateCount;
         if (incrementalize) {
             if (oldRelationValues != null) return updateIncremental();
-            else initializeOldRelationValues();
         }
         
         //if (solver.TRACE)
@@ -180,6 +179,12 @@ public class BDDInferenceRule extends InferenceRule {
         for (Iterator i = domainsToQuantify.iterator(); i.hasNext(); ) {
             BDDDomain d = (BDDDomain) i.next();
             quantify.andWith(d.set());
+        }
+        if (incrementalize) {
+            if (oldRelationValues == null) initializeOldRelationValues();
+            for (int i = 0; i < relationValues.length; ++i) {
+                oldRelationValues[i].orWith(relationValues[i].id());
+            }
         }
         BDD topBdd = solver.bdd.one();
         for (int i = 1; i < relationValues.length; ++i) {
