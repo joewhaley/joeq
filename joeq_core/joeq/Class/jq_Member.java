@@ -271,6 +271,7 @@ public abstract class jq_Member implements jq_ClassFileConstants, Textualizable 
         c.load();
         String name = st.nextToken();
         String desc = st.nextToken();
+        if (name.startsWith("fake$")) return jq_FakeInstanceMethod.fakeMethod(c, name, desc);
         return c.getDeclaredMember(name, desc);
     }
     
