@@ -23,12 +23,13 @@ import joeq.Util.Assert;
 import joeq.Util.Collections.AppendIterator;
 
 public class FindBadStores {    
-    private static CallGraph _cg;
-    private Set _classes = null;
+    private static CallGraph _cg         = null;
+    private Set _classes 				 = null;
     
     // filter out non-local classes?
-    static final boolean FILTER_LOCAL 	= false;
-    static jq_Class _serializableClass  = null;
+    static final boolean FILTER_LOCAL 	 = false;
+    static jq_Class  _serializableClass  = null;
+    private jq_Class _httpSessionClass   = null; 
     
     public static void main(String[] args) {
         HostedVM.initialize();
@@ -98,8 +99,14 @@ public class FindBadStores {
             System.out.println("Considering classes: " + _classes);
         }        
         
+        ////
         _serializableClass = (jq_Class)jq_Type.parseType("Ljava.io.Serializable");
         Assert._assert(_serializableClass != null);
+        _serializableClass.prepare();
+        ////
+        _httpSessionClass  = (jq_Class)jq_Type.parseType("Ljavax.servlet.HttpSession");        
+        Assert._assert(_httpSessionClass != null);
+        _httpSessionClass.prepare();
     }
 
     private Set getClasses(Collection collection) {
@@ -120,6 +127,8 @@ public class FindBadStores {
     private void processClasses() {      
         for(Iterator iter = _classes.iterator(); iter.hasNext(); ) {
             jq_Class c = (jq_Class)iter.next();
+            
+            if(!c.isSubtypeOf(_httpSessionClass)) continue;
             
             System.out.println("Looking at " + c);
             jq_Field[] instanceFields = c.getDeclaredInstanceFields();
@@ -171,15 +180,12 @@ public class FindBadStores {
      * @param f
      * @return
      */
-    private Set getFieldPointeeTypes(jq_Class c, jq_Field f) {
+    private Set getFieldPointeeTypes(jq_Class c, jq_Field f){
         // TODO Do the bdd magic to produce the answer
         return null;
     }
 
     protected void run(boolean verbose){        
-        //System.out.println("Looking for subclasses of " + _collectionClass + " and " + _iteratorClass);
-        
-        // detect the interesting classes
         processClasses();
     }
 }
