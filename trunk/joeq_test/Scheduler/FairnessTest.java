@@ -103,6 +103,8 @@ public class FairnessTest {
             overall += total[i];
         }
         System.out.println(overall+" ticks recorded, time spent "+(endTime-startTime)+" ms");
+        double efficiency = (double)overall / (double)(endTime-startTime);
+        System.out.println("Efficiency: "+efficiency+" ticks per ms");
         
         for (int i = min; i <= max; ++i) {
             double average = (double) total[i] / overall; //to give percentage of how much the priority got executed
@@ -123,6 +125,11 @@ public class FairnessTest {
             stddev = Math.sqrt(stddev);
             System.out.println("Standard deviation: "+stddev);  //0 is the best
             System.out.println();
+        }
+        System.out.println("Overall priority distribution:"); 
+        for (int i = min; i <= max; ++i) {
+            double average = (double) total[i] / overall;
+            System.out.println(s2(100.*average)+"%");
         }
         
         for (int i = 0; i < jq_NativeThread.native_threads.length; ++i) {
