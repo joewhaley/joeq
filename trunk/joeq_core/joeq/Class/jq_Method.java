@@ -57,6 +57,7 @@ public abstract class jq_Method extends jq_Member {
         this.exception_table = that.exception_table;
         this.line_num_table = that.line_num_table;
         this.codeattribMap = that.codeattribMap;
+        this.attributes = new HashMap();
         state = STATE_LOADED;
     }
     
@@ -70,6 +71,7 @@ public abstract class jq_Method extends jq_Member {
         this.exception_table = exception_table;
         this.line_num_table = line_num_table;
         this.codeattribMap = codeattribMap;
+        this.attributes = new HashMap();
         state = STATE_LOADED;
 	if (!jq.Bootstrapping) {
 	    if (this instanceof jq_Initializer) {
