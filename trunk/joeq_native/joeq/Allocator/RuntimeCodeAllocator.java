@@ -31,7 +31,7 @@ public class RuntimeCodeAllocator extends CodeAllocator {
     
     /** Size of blocks allocated from the OS.  No single code buffer can be larger than this.
      */
-    public static final int BLOCK_SIZE = 2097152;
+    public static final int BLOCK_SIZE = 1048576;
     
     /** Pointers to the start, current, and end of the heap.
      */
@@ -75,6 +75,7 @@ public class RuntimeCodeAllocator extends CodeAllocator {
                 if (TRACE) SystemInterface.debugmsg("Estimated size ("+jq.hex(estimated_size)+") doesn't fit, trying next block "+jq.hex8(ptr));
             }
         }
+        if (TRACE) SystemInterface.debugmsg("Estimated size ("+jq.hex(estimated_size)+" is too large for current block "+jq.hex8(heapCurrent)+"-"+jq.hex8(heapEnd));
         // allocate new block.
         allocateNewBlock();
         return new Runtimex86CodeBuffer(heapCurrent, heapEnd);
