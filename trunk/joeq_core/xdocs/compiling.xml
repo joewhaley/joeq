@@ -8,23 +8,26 @@
 
   <body>
     <section name="Building joeq">
-    <h3>Getting the source code</h3>
+
 <p>
 If you don't want to use Eclipse, you can do everything via the command line.
+I typically use Eclipse on Windows and emacs/shell on Linux.
 </p>
+
+    <h3>Getting the source code</h3>
 <p>
 The first step is to get the source code.  The best way is
 to use CVS to get the latest version from the repository.
 (Windows users will need to install <a href="http://www.cygwin.com">Cygwin</a> to run CVS.)
 </p>
-<code> cvs -z3 -d:pserver:anonymous@cvs.sourceforge.net:/cvsroot/joeq co joeq_core</code><br/>
+<code> cvs -d:pserver:anonymous@cvs.sourceforge.net:/cvsroot/joeq co joeq_core</code><br/>
 <p>
 In addition, if you want to bootstrap joeq to run in native mode, you will also need to
 check out the following modules:
 </p>
-<code> cvs -z3 -d:pserver:anonymous@cvs.sourceforge.net:/cvsroot/joeq co joeq_native</code><br/>
-<code> cvs -z3 -d:pserver:anonymous@cvs.sourceforge.net:/cvsroot/joeq co joeq_x86</code><br/>
-<code> cvs -z3 -d:pserver:anonymous@cvs.sourceforge.net:/cvsroot/joeq co joeq_loader</code><br/>
+<code> cvs -d:pserver:anonymous@cvs.sourceforge.net:/cvsroot/joeq co joeq_native</code><br/>
+<code> cvs -d:pserver:anonymous@cvs.sourceforge.net:/cvsroot/joeq co joeq_x86</code><br/>
+<code> cvs -d:pserver:anonymous@cvs.sourceforge.net:/cvsroot/joeq co joeq_loader</code><br/>
     <h3>Building joeq with make</h3>
 <p>
 The easiest way to build joeq is with the Makefile.
