@@ -2143,7 +2143,10 @@ public class PA {
         t8.free();
         
         if(TRACE_REFLECTION && TRACE) out.println("t9: " + t9.toStringWithDomains(TS) + " of size " + t9.satCount(Iset));
-        if(TRACE_REFLECTION_DOMAINS) out.println("t9: " + getBDDDomains(t9));
+        if(TRACE_REFLECTION_DOMAINS) {
+            out.println("vP: " + getBDDDomains(vP));
+            out.println("t9: " + getBDDDomains(t9));
+        }
         BDD constructorIE = bdd.zero(); 
         for(Iterator iter = t9.iterator(H1set.and(I2set)); iter.hasNext();){
             BDD h = (BDD) iter.next();
