@@ -10,8 +10,6 @@ package Compil3r.Quad.x86;
 import Clazz.jq_CompiledCode;
 import Clazz.jq_Method;
 import Clazz.jq_TryCatch;
-import Compil3r.Quad.CodeCache;
-import Compil3r.Quad.ControlFlowGraph;
 import Memory.CodeAddress;
 import Memory.HeapAddress;
 import Memory.StackAddress;
@@ -35,14 +33,14 @@ public class x86QuadExceptionDeliverer extends ExceptionDeliverer {
 
     public final void deliverToStackFrame(jq_CompiledCode cc, Throwable x, jq_TryCatch tc, CodeAddress ip, StackAddress fp) {
         jq_Method m = cc.getMethod();
-        ControlFlowGraph cfg = CodeCache.getCode(m);
         
+        Assert._assert(tc.getExceptionOffset() != 0);
         StackAddress sp = (StackAddress) fp.offset(tc.getExceptionOffset());
         if (TRACE) SystemInterface.debugwriteln("poking exception object "+HeapAddress.addressOf(x).stringRep()+" into location "+sp.stringRep());
         // push exception object there
         sp.poke(HeapAddress.addressOf(x));
         
-        sp = (StackAddress) fp.offset(cc.getStackFrameSize());
+        sp = (StackAddress) fp.offset(-cc.getStackFrameSize());
         
         // branch!
         Unsafe.longJump(ip, fp, sp, 0);
