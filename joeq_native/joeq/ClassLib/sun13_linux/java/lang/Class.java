@@ -13,11 +13,16 @@ import Clazz.jq_Type;
 import Clazz.jq_Array;
 import Clazz.jq_Class;
 import Clazz.jq_ClassFileConstants;
+import Clazz.jq_ClassInitializer;
+import Clazz.jq_Field;
 import Clazz.jq_InstanceField;
+import Clazz.jq_InstanceMethod;
 import Clazz.jq_Initializer;
+import Clazz.jq_Method;
 import Clazz.jq_NameAndDesc;
 import Clazz.jq_Primitive;
 import Clazz.jq_StaticField;
+import Clazz.jq_StaticMethod;
 import Bootstrap.PrimordialClassLoader;
 import UTF.Utf8;
 import jq;
@@ -77,6 +82,7 @@ public class Class {
     }
 
     public static boolean isInstance(java.lang.Class dis, java.lang.Object obj) {
+	if (obj == null) return false;
         jq_Type t = Unsafe.getTypeOf(obj);
         jq_Type jq_type = (jq_Type)Reflection.getfield_A(dis, _jq_type);
         jq_type.load(); jq_type.verify(); jq_type.prepare();
@@ -164,7 +170,10 @@ public class Class {
         Reflection.putfield_A(dis, _signers, signers);
     }
     
-    //public static java.lang.Class getDeclaringClass(java.lang.Class dis) { }
+    public static java.lang.Class getDeclaringClass(java.lang.Class dis) {
+	// TODO: handling of declaring class
+	return null;
+    }
     
     private static java.security.ProtectionDomain getProtectionDomain0(java.lang.Class dis) {
         // TODO: correct handling of ProtectionDomain
@@ -207,6 +216,7 @@ public class Class {
             return fs;
         } else {
             jq.assert(which == java.lang.reflect.Member.PUBLIC);
+	    c.verify(); c.prepare();
             int size = 0;
             jq_StaticField[] sfs = c.getStaticFields();
             jq_InstanceField[] ifs = c.getInstanceFields();
@@ -230,14 +240,182 @@ public class Class {
             return fs;
         }
     }
-    //private static java.lang.reflect.Method[] getMethods0(java.lang.Class dis, int which) {}
-    //private static java.lang.reflect.Constructor[] getConstructors0(java.lang.Class dis, int which) {}
-    private static java.lang.reflect.Field getField0(java.lang.Class dis, java.lang.String name, int which) {
-        return null;
+    private static java.lang.reflect.Method[] getMethods0(java.lang.Class dis, int which) {
+        jq_Type jq_type = (jq_Type)Reflection.getfield_A(dis, _jq_type);
+        if (!jq_type.isClassType()) return new java.lang.reflect.Method[0];
+        jq_Class c = (jq_Class)jq_type;
+        c.load();
+        if (which == java.lang.reflect.Member.DECLARED) {
+            jq_StaticMethod[] sfs = c.getDeclaredStaticMethods();
+            jq_InstanceMethod[] ifs = c.getDeclaredInstanceMethods();
+            int size = sfs.length + ifs.length;
+            for (int j=0; j<sfs.length; ++j) {
+		if (sfs[j] instanceof jq_ClassInitializer) --size;
+            }
+            for (int j=0; j<ifs.length; ++j) {
+		if (ifs[j] instanceof jq_Initializer) --size;
+            }
+            java.lang.reflect.Method[] fs = new java.lang.reflect.Method[size];
+            for (int j=0; j<sfs.length; ++j) {
+		if (sfs[j] instanceof jq_ClassInitializer) continue;
+                fs[j] = (java.lang.reflect.Method)sfs[j].getJavaLangReflectMemberObject();
+            }
+            for (int j=0, k=0; j<ifs.length; ++j) {
+		if (ifs[j] instanceof jq_Initializer) continue;
+                fs[sfs.length+k] = (java.lang.reflect.Method)ifs[j].getJavaLangReflectMemberObject();
+		++k;
+            }
+            return fs;
+        } else {
+            jq.assert(which == java.lang.reflect.Member.PUBLIC);
+	    c.verify(); c.prepare();
+            int size = 0;
+            jq_StaticMethod[] sfs = c.getStaticMethods();
+            jq_InstanceMethod[] ifs = c.getVirtualMethods();
+            for (int j=0; j<sfs.length; ++j) {
+		if (sfs[j] instanceof jq_ClassInitializer) continue;
+                if (sfs[j].isPublic()) ++size;
+            }
+            for (int j=0; j<ifs.length; ++j) {
+		if (ifs[j] instanceof jq_Initializer) continue;
+                if (ifs[j].isPublic()) ++size;
+            }
+            java.lang.reflect.Method[] fs = new java.lang.reflect.Method[size];
+            int current = -1;
+            for (int j=0; j<sfs.length; ++j) {
+		if (sfs[j] instanceof jq_ClassInitializer) continue;
+                if (sfs[j].isPublic())
+                    fs[++current] = (java.lang.reflect.Method)sfs[j].getJavaLangReflectMemberObject();
+            }
+            for (int j=0; j<ifs.length; ++j) {
+		if (ifs[j] instanceof jq_Initializer) continue;
+                if (ifs[j].isPublic())
+                    fs[++current] = (java.lang.reflect.Method)ifs[j].getJavaLangReflectMemberObject();
+            }
+            jq.assert(current+1 == fs.length);
+            return fs;
+        }
     }
-    //private static java.lang.reflect.Method getMethod0(java.lang.Class dis, java.lang.String name, java.lang.Class[] parameterTypes, int which) {}
-    //private static java.lang.reflect.Constructor getConstructor0(java.lang.Class dis, java.lang.Class[] parameterTypes, int which) {
-    //private static java.lang.reflect.Class[] getDeclaredClasses0(java.lang.Class dis) {}
+    private static java.lang.reflect.Constructor[] getConstructors0(java.lang.Class dis, int which) {
+        jq_Type jq_type = (jq_Type)Reflection.getfield_A(dis, _jq_type);
+        if (!jq_type.isClassType()) return new java.lang.reflect.Constructor[0];
+        jq_Class c = (jq_Class)jq_type;
+        c.load();
+	jq_InstanceMethod[] ifs = c.getDeclaredInstanceMethods();
+	int size = 0;
+	for (int j=0; j<ifs.length; ++j) {
+	    if (which == java.lang.reflect.Member.PUBLIC && !ifs[j].isPublic())
+		continue;
+	    if (ifs[j] instanceof jq_Initializer) ++size;
+	}
+	java.lang.reflect.Constructor[] fs = new java.lang.reflect.Constructor[size];
+	int current = -1;
+	for (int j=0; j<ifs.length; ++j) {
+	    if (which == java.lang.reflect.Member.PUBLIC && !ifs[j].isPublic())
+		continue;
+	    if (ifs[j] instanceof jq_Initializer) {
+		fs[++current] = (java.lang.reflect.Constructor)ifs[j].getJavaLangReflectMemberObject();
+	    }
+	}
+	jq.assert(current+1 == fs.length);
+	return fs;
+    }
+    private static java.lang.reflect.Field getField0(java.lang.Class dis, java.lang.String name, int which) throws java.lang.NoSuchFieldException {
+	jq_Type jq_type = (jq_Type)Reflection.getfield_A(dis, _jq_type);
+        if (!jq_type.isClassType())
+	    throw new java.lang.NoSuchFieldException(jq_type.getJDKDesc());
+	jq_Class c = (jq_Class)jq_type;
+	c.load();
+	Utf8 utf8name = Utf8.get(name);
+	jq_Field[] sms;
+	if (which == java.lang.reflect.Member.DECLARED) {
+	    sms = c.getDeclaredStaticFields();
+	} else {
+	    sms = c.getStaticFields();
+	}
+	for (int i=0; i<sms.length; ++i) {
+	    if (sms[i].getName() == utf8name) {
+		if (which == java.lang.reflect.Member.PUBLIC && !sms[i].isPublic()) continue;
+		return (java.lang.reflect.Field)sms[i].getJavaLangReflectMemberObject();
+	    }
+	}
+	if (which == java.lang.reflect.Member.DECLARED) {
+	    sms = c.getDeclaredInstanceFields();
+	} else {
+	    c.verify(); c.prepare();
+	    sms = c.getInstanceFields();
+	}
+	for (int i=0; i<sms.length; ++i) {
+	    if (sms[i].getName() == utf8name) {
+		if (which == java.lang.reflect.Member.PUBLIC && !sms[i].isPublic()) continue;
+		return (java.lang.reflect.Field)sms[i].getJavaLangReflectMemberObject();
+	    }
+	}
+	throw new java.lang.NoSuchFieldException(c.getJDKName()+"."+name);
+    }
+    private static java.lang.reflect.Method getMethod0(java.lang.Class dis, java.lang.String name, java.lang.Class[] parameterTypes, int which) throws java.lang.NoSuchMethodException {
+	jq_Type jq_type = (jq_Type)Reflection.getfield_A(dis, _jq_type);
+        if (!jq_type.isClassType())
+	    throw new java.lang.NoSuchMethodException(jq_type.getJDKDesc());
+	if (name.equals("<init>") || name.equals("<clinit>"))
+	    throw new java.lang.NoSuchMethodException(name+" is illegal method name");
+        jq_Class c = (jq_Class)jq_type;
+	java.lang.StringBuffer sb = new java.lang.StringBuffer();
+	sb.append('(');
+	for (int i=0; i<parameterTypes.length; ++i) {
+	    sb.append(Reflection.getJQType(parameterTypes[i]).getDesc().toString());
+	}
+	sb.append(')');
+	java.lang.String args = sb.toString();
+	c.load();
+	Utf8 utf8name = Utf8.get(name);
+	jq_Method[] sms;
+	if (which == java.lang.reflect.Member.PUBLIC) {
+	    sms = c.getStaticMethods();
+	} else {
+	    jq.assert(which == java.lang.reflect.Member.DECLARED);
+	    sms = c.getDeclaredStaticMethods();
+	}
+	for (int i=0; i<sms.length; ++i) {
+	    if (sms[i].getName() == utf8name) {
+		if (which == java.lang.reflect.Member.PUBLIC && !sms[i].isPublic()) continue;
+		if (sms[i].getDesc().toString().startsWith(args))
+		    return (java.lang.reflect.Method)sms[i].getJavaLangReflectMemberObject();
+	    }
+	}
+	if (which == java.lang.reflect.Member.PUBLIC) {
+	    c.verify(); c.prepare();
+	    sms = c.getVirtualMethods();
+	} else {
+	    jq.assert(which == java.lang.reflect.Member.DECLARED);
+	    sms = c.getDeclaredInstanceMethods();
+	}
+	
+	for (int i=0; i<sms.length; ++i) {
+	    if (sms[i].getName() == utf8name) {
+		if (which == java.lang.reflect.Member.PUBLIC && !sms[i].isPublic()) continue;
+		if (sms[i].getDesc().toString().startsWith(args))
+		    return (java.lang.reflect.Method)sms[i].getJavaLangReflectMemberObject();
+	    }
+	}
+	throw new java.lang.NoSuchMethodException(c.getJDKName()+"."+name+args);
+    }
+    private static java.lang.reflect.Constructor getConstructor0(java.lang.Class dis, java.lang.Class[] parameterTypes, int which) throws java.lang.NoSuchMethodException {
+	jq_Type jq_type = (jq_Type)Reflection.getfield_A(dis, _jq_type);
+        if (!jq_type.isClassType())
+	    throw new java.lang.NoSuchMethodException(jq_type.getJDKDesc());
+        jq_Class c = (jq_Class)jq_type;
+	Utf8 utf8desc = buildMethodDescriptor(dis, parameterTypes, null);
+	jq_NameAndDesc nd = new jq_NameAndDesc(Utf8.get("<init>"), utf8desc);
+	jq_Initializer i = c.getInitializer(nd);
+	if (i == null || (which == java.lang.reflect.Member.PUBLIC && !i.isPublic()))
+	    throw new java.lang.NoSuchMethodException(c.getJDKName()+utf8desc);
+	return (java.lang.reflect.Constructor)i.getJavaLangReflectMemberObject();
+    }
+    private static java.lang.Class[] getDeclaredClasses0(java.lang.Class dis) {
+	// TODO: handle declared classes
+	return new java.lang.Class[0];
+    }
     
     // additional methods.
     // ONLY TO BE CALLED BY jq_Class CONSTRUCTOR!!!
@@ -247,8 +425,21 @@ public class Class {
         return o;
     }
     
+    // utility function
+    private static Utf8 buildMethodDescriptor(java.lang.Class dis, java.lang.Class[] args, java.lang.Class returnType) {
+	java.lang.StringBuffer sb = new java.lang.StringBuffer();
+	sb.append('(');
+	for (int i=0; i<args.length; ++i) {
+	    sb.append(Reflection.getJQType(args[i]).getDesc().toString());
+	}
+	sb.append(')');
+	if (returnType == null) sb.append('V');
+	else sb.append(Reflection.getJQType(returnType).getDesc().toString());
+	return Utf8.get(sb.toString());
+    }
+
     public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/Class;");
     public static final jq_InstanceField _jq_type = _class.getOrCreateInstanceField("jq_type", "LClazz/jq_Type;");
     public static final jq_InstanceField _signers = _class.getOrCreateInstanceField("signers", "[Ljava/lang/Object;");
-    public static final jq_InstanceField _protection_domain = _class.getOrCreateInstanceField("protection_domain", "[Ljava/security/ProtectionDomain;");
+    public static final jq_InstanceField _protection_domain = _class.getOrCreateInstanceField("protection_domain", "Ljava/security/ProtectionDomain;");
 }
