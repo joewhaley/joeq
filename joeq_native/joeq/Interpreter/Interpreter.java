@@ -108,18 +108,18 @@ public abstract class Interpreter {
             try {
                 if (m.isSynchronized()) {
                     if (!m.isStatic()) {
-                        if (mi.TRACE) mi.out.println("synchronized instance method, locking 'this' object");
+                        if (mi.getTraceFlag()) mi.getTraceOut().println("synchronized instance method, locking 'this' object");
                         vm.monitorenter(synchobj = state.getLocal_A(0), mi);
                     } else {
-                        if (mi.TRACE) mi.out.println("synchronized static method, locking class object");
+                        if (mi.getTraceFlag()) mi.getTraceOut().println("synchronized static method, locking class object");
                         vm.monitorenter(synchobj = Reflection.getJDKType(m.getDeclaringClass()), mi);
                     }
                 }
                 mi.forwardTraversal();
-                if (mi.TRACE) mi.out.println("Return value: "+callee.getReturnVal_A());
+                if (mi.getTraceFlag()) mi.getTraceOut().println("Return value: "+callee.getReturnVal_A());
                 this.state = oldState;
                 if (m.isSynchronized()) {
-                    if (mi.TRACE) mi.out.println("exiting synchronized method, unlocking object");
+                    if (mi.getTraceFlag()) mi.getTraceOut().println("exiting synchronized method, unlocking object");
                     vm.monitorexit(synchobj);
                 }
                 jq_Type returnType = m.getReturnType();
@@ -138,7 +138,7 @@ public abstract class Interpreter {
             } catch (WrappedException ix) {
                 this.state = oldState;
                 if (m.isSynchronized()) {
-                    if (mi.TRACE) mi.out.println("exiting synchronized method, unlocking object");
+                    if (mi.getTraceFlag()) mi.getTraceOut().println("exiting synchronized method, unlocking object");
                     vm.monitorexit(synchobj);
                 }
                 throw ix.t;
@@ -279,6 +279,10 @@ public abstract class Interpreter {
         public String toString() {
             return name;
         }
+        
+        // Workaround for javac bug -> cannot access protected members of inner classes.
+        boolean getTraceFlag() { return TRACE; }
+        java.io.PrintStream getTraceOut() { return out; }
         
         public void forwardTraversal() throws VerifyError, WrappedException {
             if (this.TRACE) this.out.println(this+": Starting traversal.");
