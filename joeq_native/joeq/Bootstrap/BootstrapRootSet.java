@@ -261,7 +261,7 @@ public class BootstrapRootSet {
         objs.add(a);
         Class objType = o.getClass();
         jq_Reference jqType = (jq_Reference)Reflection.getJQType(objType);
-        if (TRACE) out.println("Adding object of type "+jqType);
+        if (TRACE) out.println("Adding object of type "+jqType+": "+o);
         addInstantiatedType(jqType);
         /*
                 addClassInitializer((jq_Class)jqType);

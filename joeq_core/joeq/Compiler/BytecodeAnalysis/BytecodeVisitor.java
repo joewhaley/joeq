@@ -49,20 +49,9 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
         }
     }
     
-    public jq_Method resolve(jq_Method m) {
-        try {
-            jq_Method m2 = m.resolve();
-            if (m != m2) updateMemberReference(m2);
-            return m2;
-        } catch (Error e) {
-            System.err.println("Method "+method+" bc index "+i_start+": Error when resolving "+m+": "+e);
-            throw e;
-        }
-    }
-    
     public jq_StaticField resolve(jq_StaticField m) {
         try {
-            jq_StaticField m2 = m.resolve();
+            jq_StaticField m2 = (jq_StaticField)m.resolve1();
             if (m != m2) updateMemberReference(m2);
             return m2;
         } catch (Error e) {
@@ -73,7 +62,40 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
     
     public jq_InstanceField resolve(jq_InstanceField m) {
         try {
-            jq_InstanceField m2 = m.resolve();
+            jq_InstanceField m2 = (jq_InstanceField)m.resolve1();
+            if (m != m2) updateMemberReference(m2);
+            return m2;
+        } catch (Error e) {
+            System.err.println("Method "+method+" bc index "+i_start+": Error when resolving "+m+": "+e);
+            throw e;
+        }
+    }
+    
+    public jq_StaticMethod resolve(jq_StaticMethod m) {
+        try {
+            jq_StaticMethod m2 = (jq_StaticMethod)m.resolve1();
+            if (m != m2) updateMemberReference(m2);
+            return m2;
+        } catch (Error e) {
+            System.err.println("Method "+method+" bc index "+i_start+": Error when resolving "+m+": "+e);
+            throw e;
+        }
+    }
+    
+    public jq_InstanceMethod resolve(jq_InstanceMethod m) {
+        try {
+            jq_InstanceMethod m2 = (jq_InstanceMethod)m.resolve1();
+            if (m != m2) updateMemberReference(m2);
+            return m2;
+        } catch (Error e) {
+            System.err.println("Method "+method+" bc index "+i_start+": Error when resolving "+m+": "+e);
+            throw e;
+        }
+    }
+    
+    public jq_Member resolve(jq_Member m) {
+        try {
+            jq_Member m2 = (jq_Member)m.resolve();
             if (m != m2) updateMemberReference(m2);
             return m2;
         } catch (Error e) {

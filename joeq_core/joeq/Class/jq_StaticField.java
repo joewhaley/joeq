@@ -98,7 +98,8 @@ public final class jq_StaticField extends jq_Field {
         state = STATE_LOADED;
     }
     
-    public final jq_StaticField resolve() {
+    public final jq_Member resolve() { return resolve1(); }
+    public final jq_StaticField resolve1() {
         this.clazz.load();
         if (this.state >= STATE_LOADED) return this;
         // this reference may be to a superclass or superinterface.

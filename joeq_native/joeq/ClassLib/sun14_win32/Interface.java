@@ -37,6 +37,7 @@ public final class Interface extends ClassLib.ClassLibInterface {
         nullStaticFields.add(PrimordialClassLoader.loader.getJavaLangSystem().getOrCreateStaticField("err", "Ljava/io/PrintStream;"));
         nullStaticFields.add(PrimordialClassLoader.loader.getJavaLangSystem().getOrCreateStaticField("props", "Ljava/util/Properties;"));
         nullStaticFields.add(Reflection._obj_trav);
+        nullStaticFields.add(Reflection._declaredFieldsCache);
         nullStaticFields.add(DefaultCodeAllocator._default_allocator);
         nullStaticFields.add(PrimordialClassLoader.loader.getJavaLangClassLoader().getOrCreateStaticField("loadedLibraryNames", "Ljava/util/Vector;"));
         nullStaticFields.add(PrimordialClassLoader.loader.getJavaLangClassLoader().getOrCreateStaticField("systemNativeLibraries", "Ljava/util/Vector;"));

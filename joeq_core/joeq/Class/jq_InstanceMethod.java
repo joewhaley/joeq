@@ -61,7 +61,8 @@ public class jq_InstanceMethod extends jq_Method {
     public final boolean isOverriding() { return isOverriding; }
     public final boolean isOverridden() { return isOverridden; }
     
-    public jq_Method resolve() {
+    public final jq_Member resolve() { return resolve1(); }
+    public jq_InstanceMethod resolve1() {
         this.clazz.load();
         if (this.state >= STATE_LOADED) return this;
         // this reference may be to a superclass or superinterface.

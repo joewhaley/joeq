@@ -60,6 +60,7 @@ public abstract class Reflection {
         //    return PrimordialClassLoader.loader.getOrCreateType("Ljava/util/zip/ZipFile;");
         String className = c.getName().replace('.','/');
         if (!className.startsWith("[")) className = "L"+className+";";
+        className = ClassLib.ClassLibInterface.convertClassLibDesc(className);
         return PrimordialClassLoader.loader.getOrCreateBSType(className);
     }
     public static final Class getJDKType(jq_Type c) {
@@ -98,6 +99,7 @@ public abstract class Reflection {
         if (!jq.Bootstrapping) return ClassLibInterface.i.getJQField(f);
         jq_Class c = (jq_Class)getJQType(f.getDeclaringClass()); c.load();
         jq_NameAndDesc nd = new jq_NameAndDesc(Utf8.get(f.getName()), getJQType(f.getType()).getDesc());
+        nd = ClassLib.ClassLibInterface.convertClassLibNameAndDesc(c, nd);
         jq_Field m = (jq_Field)c.getDeclaredMember(nd);
         if (m == null) {
             jq.UNREACHABLE(c+"."+nd+" jdk: "+f.toString());
@@ -116,9 +118,10 @@ public abstract class Reflection {
         desc.append(')');
         desc.append(getJQType(f.getReturnType()).getDesc().toString());
         jq_NameAndDesc nd = new jq_NameAndDesc(Utf8.get(f.getName()), Utf8.get(desc.toString()));
+        nd = ClassLib.ClassLibInterface.convertClassLibNameAndDesc(c, nd);
         jq_Method m = (jq_Method)c.getDeclaredMember(nd);
         if (m == null) {
-            jq.UNREACHABLE(c.toString());
+            jq.UNREACHABLE(c+"."+nd+" jdk: "+f.toString());
         }
         return m;
     }
@@ -133,9 +136,10 @@ public abstract class Reflection {
         }
         desc.append(")V");
         jq_NameAndDesc nd = new jq_NameAndDesc(Utf8.get("<init>"), Utf8.get(desc.toString()));
+        nd = ClassLib.ClassLibInterface.convertClassLibNameAndDesc(c, nd);
         jq_Initializer m = (jq_Initializer)c.getDeclaredMember(nd);
         if (m == null) {
-            jq.UNREACHABLE(c.toString());
+            jq.UNREACHABLE(c+"."+nd);
         }
         return m;
     }
@@ -197,6 +201,8 @@ uphere:
     }
     public static final Member getJDKMember(jq_Member m) {
         if (!jq.Bootstrapping) return m.getJavaLangReflectMemberObject();
+        if (m.getJavaLangReflectMemberObject() != null)
+            return m.getJavaLangReflectMemberObject();
         Class c = getJDKType(m.getDeclaringClass());
         if (m instanceof jq_Field) {
             Member ret = getJDKField(c, m.getName().toString());
@@ -786,5 +792,6 @@ uphere:
     public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LRun_Time/Reflection;");
     public static final jq_StaticMethod _invokestatic_noargs = _class.getOrCreateStaticMethod("invokestatic_J", "(LClazz/jq_StaticMethod;)J");
     public static final jq_StaticField _obj_trav = _class.getOrCreateStaticField("obj_trav", "LBootstrap/ObjectTraverser;");
+    public static final jq_StaticField _declaredFieldsCache = _class.getOrCreateStaticField("declaredFieldsCache", "Ljava/util/HashMap;");
 
 }

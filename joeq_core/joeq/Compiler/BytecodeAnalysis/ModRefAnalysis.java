@@ -229,7 +229,7 @@ public class ModRefAnalysis extends BytecodeVisitor {
         ref.addAll(s.ref);
     }
     protected void invokeHelper(byte op, jq_Method f) {
-        f = resolve(f);
+        f = (jq_Method)resolve(f);
         Iterator i = CallTargets.getTargets(this.method.getDeclaringClass(), f, op, true).iterator();
         while (i.hasNext()) {
             jq_Method m = (jq_Method)i.next();

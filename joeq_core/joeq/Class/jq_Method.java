@@ -175,14 +175,7 @@ public abstract class jq_Method extends jq_Member {
     }
 
     public void setCode(Bytecodes.InstructionList il, jq_ConstantPool.ConstantPoolRebuilder cpr) {
-        final jq_ConstantPool.ConstantPoolRebuilder my_cpr = cpr;
-        Bytecodes.EmptyVisitor v = new Bytecodes.EmptyVisitor() {
-            public void visitCPInstruction(Bytecodes.CPInstruction i) {
-                i.setIndex(my_cpr);
-                jq.assert(i.getIndex() != 0);
-            }
-        };
-        il.accept(v);
+        cpr.resetIndices(il);
         Bytecodes.CodeException[] ex_table = new Bytecodes.CodeException[exception_table.length];
         for (int i=0; i<ex_table.length; ++i) {
             ex_table[i] = new Bytecodes.CodeException(il, exception_table[i]);
@@ -240,8 +233,6 @@ public abstract class jq_Method extends jq_Member {
 	super.dumpAttributes(out, cpr);
     }
 
-    public abstract jq_Method resolve();
-    
     public abstract void prepare();
 
     public final jq_CompiledCode compile_stub() {
