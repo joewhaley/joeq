@@ -24,11 +24,14 @@ import Run_Time.StackCodeWalker;
 import Run_Time.TypeCheck;
 import UTF.Utf8;
 
+import Compil3r.Quad.AndersenInterface.AndersenMember;
+import Compil3r.Quad.AndersenInterface.AndersenClass;
+
 /*
  * @author  John Whaley
  * @version $Id$
  */
-public abstract class jq_Member implements jq_ClassFileConstants {
+public abstract class jq_Member implements jq_ClassFileConstants, AndersenMember {
 
     protected final void chkState(int s) {
         if (getState() >= s) return;
@@ -157,6 +160,9 @@ public abstract class jq_Member implements jq_ClassFileConstants {
     // Always available
     public final jq_Class getDeclaringClass() {
         return clazz;
+    }
+    public final AndersenClass and_getDeclaringClass() {
+        return getDeclaringClass();
     }
 
     public final jq_NameAndDesc getNameAndDesc() {

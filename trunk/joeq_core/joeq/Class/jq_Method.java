@@ -20,11 +20,14 @@ import Compil3r.BytecodeAnalysis.Bytecodes;
 import Main.jq;
 import UTF.Utf8;
 
+import Compil3r.Quad.AndersenInterface.AndersenMethod;
+import Compil3r.Quad.AndersenInterface.AndersenType;
+
 /*
  * @author  John Whaley
  * @version $Id$
  */
-public abstract class jq_Method extends jq_Member {
+public abstract class jq_Method extends jq_Member implements AndersenMethod {
     
     // Available after loading
     protected char max_stack;
@@ -343,6 +346,7 @@ public abstract class jq_Method extends jq_Member {
     public jq_Type[] getParamTypes() { return param_types; }
     public int getParamWords() { return param_words; }
     public final jq_Type getReturnType() { return return_type; }
+    public final AndersenType and_getReturnType() { return (AndersenType)return_type; }
     public byte[] getCodeAttribute(Utf8 a) { chkState(STATE_LOADING2); return (byte[])codeattribMap.get(a); }
     public final byte[] getCodeAttribute(String name) { return getCodeAttribute(Utf8.get(name)); }
 
@@ -352,6 +356,10 @@ public abstract class jq_Method extends jq_Member {
     
     public String toString() { return getDeclaringClass()+"."+nd; }
 
+    public boolean isBodyLoaded() {
+        return getBytecode()!=null;
+    }
+    
     public static final jq_Class _class;
     public static final jq_InstanceMethod _compile;
     static {
