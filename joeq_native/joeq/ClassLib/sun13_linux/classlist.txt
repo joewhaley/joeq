@@ -54,6 +54,7 @@ LUtil/LightMap$Entry;
 LUtil/LightRelation;
 LUtil/LinearSet;
 LUtil/ListFactory;
+LUtil/Strings;
 LUTF/*
 Ljava/lang/ArithmeticException;
 Ljava/lang/ArrayIndexOutOfBoundsException;
@@ -191,6 +192,7 @@ Ljava/util/Set;
 Ljava/util/TreeMap;
 Ljava/util/TreeMap$1;
 Ljava/util/TreeMap$Entry;
+Ljava/util/TreeSet;
 Ljava/util/Vector;
 Ljava/util/zip/*
 Lsun/io/ByteToCharCp1252;
