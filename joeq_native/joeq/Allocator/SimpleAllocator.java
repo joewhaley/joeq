@@ -55,7 +55,8 @@ public class SimpleAllocator extends HeapAllocator {
         heapCurrent = heapFirst = (HeapAddress) SystemInterface.syscalloc(BLOCK_SIZE);
         if (heapCurrent.isNull())
             HeapAllocator.outOfMemory();
-        heapEnd = (HeapAddress) heapFirst.offset(BLOCK_SIZE - HeapAddress.size());
+        heapEnd = (HeapAddress) heapFirst.offset(BLOCK_SIZE - 2 * HeapAddress.size());
+        heapEnd.poke(HeapAddress.addressOf(new GCBits(heapCurrent, heapEnd)));
     }
 
     /**

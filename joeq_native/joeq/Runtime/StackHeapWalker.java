@@ -14,80 +14,81 @@ import Memory.CodeAddress;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.ArrayList;
 
-public class StackHeapWalker implements Iterator {
+import GC.GCBitsManager;
+
+public class StackHeapWalker {
 
     public static /*final*/ boolean TRACE = false;
 
     // Since not everything on a stack is a reference to an object on the heap,
     // efforts have been taken to make sure hp is either a valid HeapAddress or null.
-    HeapAddress hp;
-    StackAddress fp, sp;
+    private HeapAddress hp;
+    private StackAddress fp, sp;
+    private ArrayList validHeapAddrs = new ArrayList();
 
-    public HeapAddress getHP() {
-        return hp;
+    private boolean gotoNext() {
+        if (sp.difference(fp) != 0) { // sp should alwasys be equal to or smaller than fp
+            sp = (StackAddress) sp.offset(4);
+        }
+
+        if (sp.difference(fp) != 0) {
+            if (TRACE) SystemInterface.debugmsg("StackHeapWalker next: fp=" + fp.stringRep() + " sp=" + sp.stringRep());
+            return true; // successful
+        } else {
+            do {
+                fp = (StackAddress) fp.peek();
+                if (fp.isNull()) return false; // failed
+                sp = (StackAddress) sp.offset(8); // skipping return address
+            } while (sp.difference(fp) == 0);
+            if (TRACE) SystemInterface.debugmsg("StackHeapWalker next: fp=" + fp.stringRep() + " sp=" + sp.stringRep());
+            return true;
+        }
     }
 
-    public StackAddress getFP() {
-        return fp;
+
+    private void scan() {
+        if (sp == null || fp == null) {
+            return;
+        }
+
+        HeapAddress addr;
+        do {
+            addr = (HeapAddress) sp.peek();
+            if (GCBitsManager.isValidHeapAddr(addr)) {
+                validHeapAddrs.add(addr);
+            }
+        } while (gotoNext());
     }
 
-    public StackAddress getSP() {
-        return sp;
-    }
-
-    public StackHeapWalker(StackAddress sp) {
+    public StackHeapWalker(StackAddress sp, StackAddress fp) {
         this.sp = sp;
-        fp = StackAddress.getBasePointer();
+        this.fp = fp;
         hp = null;
+        if (sp == null || fp == null || sp.isNull() || fp.isNull() || sp.difference(fp) > 0) { // invalid passing arguments
+            this.sp = this.fp = null;
+        } else if (sp.difference(fp) == 0) { // to ensure from the very beginning that sp < fp
+            if (!gotoNext()) {
+                sp = fp = null;
+            }
+        }
+        // if reach this point, sp and fp are:
+        // (1) both null if no valid values can be found for them
+        // (2) both valid, i.e. either isNull() returns false and sp < fp
+        // thus, sp.peek4() should return a qualified candidate for HeapAddress verification
+        scan();
+
         if (TRACE) SystemInterface.debugmsg("StackHeapWalker init: fp=" + fp.stringRep() + " sp=" + sp.stringRep());
     }
 
-    //PRE-REQUISITE: method equals() is overridden in class StackAddress
-    public void gotoNext() throws NoSuchElementException {
-        if (!sp.equals(fp)) {
-            sp = (StackAddress)sp.offset(4);
-        }
-
-        if (!sp.equals(fp)) {
-            if (TRACE) SystemInterface.debugmsg("StackHeapWalker next: fp=" + fp.stringRep() + " sp=" + sp.stringRep());
-            return;
-        } else {
-            do {
-                fp = (StackAddress)fp.peek();
-                if (fp.isNull()) throw new NoSuchElementException();
-                sp = (StackAddress)sp.offset(8); // skipping return address
-            } while (sp.equals(fp));
-            if (TRACE) SystemInterface.debugmsg("StackHeapWalker next: fp=" + fp.stringRep() + " sp=" + sp.stringRep());
-            return;
-        }
+    // totally 3 conditions must be met
+    public boolean isValidHeapAddr(HeapAddress addr) {
+        return GCBitsManager.isValidHeapAddr(addr);
     }
 
-    public boolean hasNext() {
-        StackAddress spTemp = sp, fpTemp;
-
-        if (!sp.equals(fp)) {
-            spTemp = (StackAddress)sp.offset(4);
-        }
-
-       if (!spTemp.equals(fp)) {
-           return true;
-       } else {
-            do {
-                fpTemp = (StackAddress)fp.peek();
-                if (fpTemp.isNull()) return false;
-                spTemp = (StackAddress)spTemp.offset(8); // skipping return address
-            } while (spTemp.equals(fpTemp));
-            return true;
-       }
+    public ArrayList getValidHeapAddrs() {
+        return validHeapAddrs;
     }
 
-    public Object next() throws NoSuchElementException {
-        gotoNext();
-        return hp = (HeapAddress)sp.peek();
-    }
-
-    public void remove() throws UnsupportedOperationException {
-        throw new UnsupportedOperationException();
-    }
 }
