@@ -2505,7 +2505,10 @@ uphere2:
         
         out.writeChar(access_flags);
         out.writeChar(cpr.get(this));
-        out.writeChar(cpr.get(super_class));
+        char sc;
+        if (super_class == null) sc = 0;
+        else sc = cpr.get(super_class);
+        out.writeChar(sc);
         
         out.writeChar(declared_interfaces.length);
         for(int i=0; i < declared_interfaces.length; i++)
