@@ -55,7 +55,7 @@ public class MethodSummary {
 
     public static java.io.PrintStream out = System.out;
     public static final boolean TRACE_INTRA = false;
-    public static final boolean TRACE_INTER = false;
+    public static final boolean TRACE_INTER = true;
 
     public static final class MethodSummaryBuilder implements ControlFlowGraphVisitor {
         public void visitCFG(ControlFlowGraph cfg) {
@@ -228,6 +228,28 @@ public class MethodSummary {
                     if (TRACE_INTRA) out.println(succ+" in set changed");
                     this.change = true;
                 }
+            }
+        }
+        
+        /** Merge the current state into the start state for the given basic block.
+         *  If that start state is uninitialized, it is initialized with a copy of
+         *  the current state.  This updates the change flag if anything is changed. */
+        protected void mergeWith(ExceptionHandler eh) {
+            BasicBlock succ = eh.getEntry();
+            if (this.start_states[succ.getID()] == null) {
+                if (TRACE_INTRA) out.println(succ+" not yet visited.");
+                this.start_states[succ.getID()] = this.s.copy();
+                for (int i=nLocals; i<this.s.registers.length; ++i) {
+                    this.start_states[succ.getID()].registers[i] = null;
+                }
+                this.change = true;
+            } else {
+                if (TRACE_INTRA) out.println("merging out set of "+bb+" "+jq.hex8(this.s.hashCode())+" into in set of ex handler "+succ+" "+jq.hex8(this.start_states[succ.getID()].hashCode()));
+                for (int i=0; i<nLocals; ++i) {
+                    if (this.start_states[succ.getID()].merge(i, this.s.registers[i]))
+                        this.change = true;
+                }
+                if (TRACE_INTRA && this.change) out.println(succ+" in set changed");
             }
         }
         
@@ -586,7 +608,7 @@ public class MethodSummary {
                 ListIterator.ExceptionHandler eh = bb.getExceptionHandlers().exceptionHandlerIterator();
                 while (eh.hasNext()) {
                     ExceptionHandler h = eh.nextExceptionHandler();
-                    this.mergeWith(h.getEntry());
+                    this.mergeWith(h);
                     this.start_states[h.getEntry().getID()].merge(nLocals, n);
                     if (h.mustCatch(Bootstrap.PrimordialClassLoader.getJavaLangThrowable()))
                         return;
@@ -603,7 +625,7 @@ public class MethodSummary {
                 while (eh.hasNext()) {
                     ExceptionHandler h = eh.nextExceptionHandler();
                     if (h.mayCatch(x)) {
-                        this.mergeWith(h.getEntry());
+                        this.mergeWith(h);
                         this.start_states[h.getEntry().getID()].merge(nLocals, n);
                     }
                     if (h.mustCatch(x)) {
@@ -632,7 +654,10 @@ public class MethodSummary {
             if (q.getOperator() instanceof InvokeVirtual) {
                 return BytecodeVisitor.INVOKE_VIRTUAL;
             } else if (q.getOperator() instanceof InvokeStatic) {
-                return BytecodeVisitor.INVOKE_STATIC;
+                if (m instanceof jq_InstanceMethod)
+                    return BytecodeVisitor.INVOKE_SPECIAL;
+                else
+                    return BytecodeVisitor.INVOKE_STATIC;
             } else {
                 jq.assert(q.getOperator() instanceof InvokeInterface);
                 return BytecodeVisitor.INVOKE_INTERFACE;
@@ -641,7 +666,7 @@ public class MethodSummary {
         
         public CallTargets getCallTargets() {
             byte type = getType();
-            return CallTargets.getTargets(null, m, type, true);
+            return CallTargets.getTargets(m.getDeclaringClass(), m, type, true);
         }
         
         public CallTargets getCallTargets(Node n) {
@@ -650,12 +675,12 @@ public class MethodSummary {
         
         public CallTargets getCallTargets(jq_Reference klass, boolean exact) {
             byte type = getType();
-            return CallTargets.getTargets(null, m, type, klass, exact, true);
+            return CallTargets.getTargets(m.getDeclaringClass(), m, type, klass, exact, true);
         }
         
         public CallTargets getCallTargets(java.util.Set receiverTypes, boolean exact) {
             byte type = getType();
-            return CallTargets.getTargets(null, m, type, receiverTypes, exact, true);
+            return CallTargets.getTargets(m.getDeclaringClass(), m, type, receiverTypes, exact, true);
         }
     }
     
@@ -706,6 +731,7 @@ public class MethodSummary {
          *  the nodes in the set.  The passed parameter set of this node is also
          *  added to every node in the given set. */
         public void replaceBy(HashSet set) {
+            jq.assert(!set.contains(this));
             if (this.predecessors != null) {
                 for (Iterator i=this.predecessors.entrySet().iterator(); i.hasNext(); ) {
                     java.util.Map.Entry e = (java.util.Map.Entry)i.next();
@@ -754,7 +780,7 @@ public class MethodSummary {
                     if (o instanceof Node) {
                         Node that = (Node)o;
                         jq.assert(that != this); // cyclic edges handled above.
-                        this.removeEdge(f, that);
+                        i.remove(); that.removePredecessor(f, this);
                         for (Iterator j=set.iterator(); j.hasNext(); ) {
                             that.addEdge(f, (Node)j.next());
                         }
@@ -762,7 +788,7 @@ public class MethodSummary {
                         for (Iterator k=((HashSet)o).iterator(); k.hasNext(); ) {
                             Node that = (Node)k.next();
                             jq.assert(that != this); // cyclic edges handled above.
-                            this.removeEdge(f, that);
+                            k.remove(); that.removePredecessor(f, this);
                             for (Iterator j=set.iterator(); j.hasNext(); ) {
                                 that.addEdge(f, (Node)j.next());
                             }
@@ -775,18 +801,18 @@ public class MethodSummary {
                     java.util.Map.Entry e = (java.util.Map.Entry)i.next();
                     jq_Field f = (jq_Field)e.getKey();
                     Object o = e.getValue();
-                    if (o instanceof Node) {
-                        Node that = (Node)o;
+                    if (o instanceof FieldNode) {
+                        FieldNode that = (FieldNode)o;
                         jq.assert(that != this); // cyclic edges handled above.
-                        this.removeEdge(f, that);
+                        i.remove(); that.field_predecessors.remove(this);
                         for (Iterator j=set.iterator(); j.hasNext(); ) {
                             that.addAccessPathEdge(f, (FieldNode)j.next());
                         }
                     } else {
                         for (Iterator k=((HashSet)o).iterator(); k.hasNext(); ) {
-                            Node that = (Node)k.next();
+                            FieldNode that = (FieldNode)k.next();
                             jq.assert(that != this); // cyclic edges handled above.
-                            this.removeEdge(f, that);
+                            k.remove(); that.field_predecessors.remove(this);
                             for (Iterator j=set.iterator(); j.hasNext(); ) {
                                 that.addAccessPathEdge(f, (FieldNode)j.next());
                             }
@@ -1322,6 +1348,7 @@ public class MethodSummary {
          *  The given field nodes must be on the given field.
          */
         public static FieldNode unify(jq_Field f, HashSet s) {
+            if (TRACE_INTRA) out.println("Unifying the set of field nodes: "+s);
             FieldNode dis = new FieldNode(f);
             // go through once to add all quads, so that the hash code will be stable.
             for (Iterator i=s.iterator(); i.hasNext(); ) {
@@ -1335,10 +1362,12 @@ public class MethodSummary {
                 HashSet s2 = new HashSet(); s2.add(dis);
                 dat.replaceBy(s2);
             }
+            if (TRACE_INTRA) out.println("Resulting field node: "+dis);
             return dis;
         }
         
         public void replaceBy(HashSet set) {
+            jq.assert(!set.contains(this));
             if (this.field_predecessors != null) {
                 for (Iterator i=this.field_predecessors.iterator(); i.hasNext(); ) {
                     Node that = (Node)i.next();
@@ -1376,7 +1405,7 @@ public class MethodSummary {
             if (o instanceof FieldNode) return equals((FieldNode)o);
             else return false;
         }
-        public int hashCode() { return f.hashCode() ^ quads.hashCode(); }
+        public int hashCode() { return ((f != null)?f.hashCode():0x6a953) ^ quads.hashCode(); }
         
         public String fieldName() {
             if (f != null) return f.getName().toString();
@@ -1387,6 +1416,7 @@ public class MethodSummary {
             if (f != null) {
                 return (jq_Reference)f.getType();
             }
+            if (quads.isEmpty()) return PrimordialClassLoader.getJavaLangObject();
             RegisterOperand r = ALoad.getDest((Quad)quads.iterator().next());
             return (jq_Reference)r.getType();
         }
@@ -1400,11 +1430,13 @@ public class MethodSummary {
             sb.append(fieldName());
             Iterator i=quads.iterator();
             if (i.hasNext()) {
+                int id = ((Quad)i.next()).getID();
                 if (!i.hasNext()) {
                     sb.append(" quad ");
-                    sb.append(((Quad)i.next()).getID());
+                    sb.append(id);
                 } else {
                     sb.append(" quads {");
+                    sb.append(id);
                     while (i.hasNext()) {
                         sb.append(',');
                         sb.append(((Quad)i.next()).getID());
@@ -1454,7 +1486,7 @@ public class MethodSummary {
             HashSet q;
             if (!(a instanceof HashSet)) {
                 this.registers[i] = q = new HashSet();
-                q.add(a);
+                if (a != null) q.add(a);
             } else {
                 q = (HashSet)a;
             }
@@ -1885,7 +1917,7 @@ public class MethodSummary {
         for (Iterator i=roots.iterator(); i.hasNext(); ) {
             worklist.add(i.next());
         }
-        while (worklist.isEmpty()) {
+        while (!worklist.isEmpty()) {
             Node n = (Node)worklist.removeFirst();
             unifyAccessPathEdges(n);
             if (n.accessPathEdges != null) {
@@ -1899,9 +1931,19 @@ public class MethodSummary {
             if (n.addedEdges != null) {
                 for (Iterator i=n.addedEdges.entrySet().iterator(); i.hasNext(); ) {
                     java.util.Map.Entry e = (java.util.Map.Entry)i.next();
-                    Node n2 = (Node)e.getValue();
-                    if (roots.contains(n2)) continue;
-                    worklist.add(n2); roots.add(n2);
+                    Object o = e.getValue();
+                    if (o instanceof Node) {
+                        Node n2 = (Node)o;
+                        if (roots.contains(n2)) continue;
+                        worklist.add(n2); roots.add(n2);
+                    } else {
+                        HashSet s = (HashSet)o;
+                        s = (HashSet)s.clone();
+                        s.removeAll(roots);
+                        if (!s.isEmpty()) {
+                            worklist.addAll(s); roots.addAll(s);
+                        }
+                    }
                 }
             }
         }
@@ -1910,6 +1952,7 @@ public class MethodSummary {
     /** Unify similar access path edges from the given node.
      */
     public void unifyAccessPathEdges(Node n) {
+        if (TRACE_INTRA) out.println("Unifying access path edges from: "+n);
         if (n.accessPathEdges != null) {
             for (Iterator i=n.accessPathEdges.entrySet().iterator(); i.hasNext(); ) {
                 java.util.Map.Entry e = (java.util.Map.Entry)i.next();
@@ -1917,7 +1960,17 @@ public class MethodSummary {
                 Object o = e.getValue();
                 FieldNode n2;
                 if (o instanceof HashSet) {
-                    HashSet s = (HashSet)o;
+                    HashSet s = (HashSet)((HashSet)o).clone();
+                    if (s.size() == 0) {
+                        i.remove();
+                        continue;
+                    }
+                    if (s.size() == 1) {
+                        n2 = (FieldNode)s.iterator().next();
+                        e.setValue(n2);
+                        continue;
+                    }
+                    if (TRACE_INTRA) out.println("Node "+n+" has duplicate access path edges on field "+f+": "+s);
                     n2 = FieldNode.unify(f, s);
                     for (Iterator j=s.iterator(); j.hasNext(); ) {
                         FieldNode n3 = (FieldNode)j.next();
