@@ -220,6 +220,7 @@ public class jq_NativeThread implements x86Constants {
     /** The entry point for new native threads.
      */
     public void nativeThreadEntry() {
+	SystemInterface.init_thread(this.thread_handle);
         Unsafe.setThreadBlock(this.schedulerThread);
         jq.assert(this.currentThread == this.schedulerThread);
         

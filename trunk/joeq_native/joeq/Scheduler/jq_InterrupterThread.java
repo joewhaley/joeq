@@ -42,6 +42,7 @@ public class jq_InterrupterThread extends Thread {
     public static final int QUANTA = 50;
     
     public void run() {
+	SystemInterface.init_thread(this.tid);
         Unsafe.setThreadBlock(this.myself);
 	for (;;) {
             SystemInterface.msleep(QUANTA);
