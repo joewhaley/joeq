@@ -433,6 +433,10 @@ public class PathNumbering implements Externalizable {
         return result;
     }
     
+    public SCCTopSortedGraph getSCCGraph() {
+        return graph;
+    }
+    
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
         Map temp = new HashMap();
         for (;;) {
