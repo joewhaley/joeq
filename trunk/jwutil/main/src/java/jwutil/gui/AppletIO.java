@@ -188,8 +188,6 @@ public class AppletIO extends JApplet {
         
         System.out.println("Applet started.");
 
-        System.err.println("fubar");
-        
         new Thread() {
             public void run() {
                 DataInputStream in = new DataInputStream(System.in);
