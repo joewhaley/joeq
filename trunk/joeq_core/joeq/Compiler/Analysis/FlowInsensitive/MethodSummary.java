@@ -34,6 +34,7 @@ import Compil3r.Analysis.IPA.LoopAnalysis;
 import Compil3r.Analysis.IPA.ProgramLocation;
 import Compil3r.Analysis.IPA.ProgramLocation.QuadProgramLocation;
 import Compil3r.Quad.BasicBlock;
+import Compil3r.Quad.CodeCache;
 import Compil3r.Quad.ControlFlowGraph;
 import Compil3r.Quad.ControlFlowGraphVisitor;
 import Compil3r.Quad.ExceptionHandler;
@@ -67,6 +68,7 @@ import Compil3r.Quad.Operator.Return;
 import Compil3r.Quad.Operator.Special;
 import Compil3r.Quad.Operator.Unary;
 import Compil3r.Quad.RegisterFactory.Register;
+import Main.HostedVM;
 import Memory.Address;
 import Run_Time.Reflection;
 import Util.Assert;
@@ -94,9 +96,9 @@ import Util.IO.Textualizer;
 public class MethodSummary {
     
     public static PrintStream out = System.out;
-    public static /*final*/ boolean TRACE_INTRA = false;
-    public static /*final*/ boolean TRACE_INTER = false;
-    public static /*final*/ boolean TRACE_INST = false;
+    public static /*final*/ boolean TRACE_INTRA = System.getProperty("ms.traceintra") != null;
+    public static /*final*/ boolean TRACE_INTER = System.getProperty("ms.traceinter") != null;
+    public static /*final*/ boolean TRACE_INST = System.getProperty("ms.traceinst") != null;
     public static final boolean IGNORE_INSTANCE_FIELDS = false;
     public static final boolean IGNORE_STATIC_FIELDS = false;
     public static final boolean VERIFY_ASSERTIONS = false;
@@ -259,7 +261,8 @@ public class MethodSummary {
                                                 callToTEN,
                                                 returned,
                                                 thrown,
-                                                passedAsParameter);
+                                                passedAsParameter,
+                                                sync_ops);
             return s;
         }
 
@@ -1382,19 +1385,15 @@ public class MethodSummary {
                     jq_Field f = (jq_Field)e.getKey();
                     Object o = e.getValue();
                     if (o == GlobalNode.GLOBAL) {
-                        // TODO: propagate reason.
                         GlobalNode.GLOBAL.addEdge(f, n);
                     } else if (o instanceof UnknownTypeNode) {
-                        // TODO: propagate reason.
                         ((UnknownTypeNode)o).addEdge(f, n);
                     } else if (o instanceof Set) {
                         for (Iterator j=((Set)o).iterator(); j.hasNext(); ) {
                             Object r = j.next();
                             if (r == GlobalNode.GLOBAL) {
-                                // TODO: propagate reason.
                                 GlobalNode.GLOBAL.addEdge(f, n);
                             } else if (r instanceof UnknownTypeNode) {
-                                // TODO: propagate reason.
                                 ((UnknownTypeNode)r).addEdge(f, n);
                             }
                         }
@@ -1407,13 +1406,11 @@ public class MethodSummary {
                     jq_Field f = (jq_Field)e.getKey();
                     Object o = e.getValue();
                     if (o instanceof UnknownTypeNode) {
-                        // TODO: propagate reason.
                         n.addEdge(f, (UnknownTypeNode)o);
                     } else if (o instanceof Set) {
                         for (Iterator j=((Set)o).iterator(); j.hasNext(); ) {
                             Object r = j.next();
                             if (r instanceof UnknownTypeNode) {
-                                // TODO: propagate reason.
                                 n.addEdge(f, (UnknownTypeNode)r);
                             }
                         }
@@ -3653,6 +3650,8 @@ outer:
     final Map callToRVN;
     /** Map from a method call that this method makes, and its ThrownExceptionNode. */
     final Map callToTEN;
+    /** Map from a sync op to the nodes it operates on. */
+    final Map sync_ops;
     
     BuildMethodSummary builder;
     
@@ -3669,18 +3668,29 @@ outer:
         this.returned = Collections.EMPTY_SET;
         this.thrown = Collections.EMPTY_SET;
         this.passedParamToNodes = Collections.EMPTY_MAP;
+        this.sync_ops = Collections.EMPTY_MAP;
     }
 
     public static boolean CACHE_BUILDER = false;
 
     public MethodSummary(BuildMethodSummary builder,
-                         jq_Method method, ParamNode[] param_nodes, GlobalNode my_global, Set methodCalls, Map callToRVN, Map callToTEN, Set returned, Set thrown, Set passedAsParameters) {
+                         jq_Method method,
+                         ParamNode[] param_nodes,
+                         GlobalNode my_global,
+                         Set methodCalls,
+                         Map callToRVN,
+                         Map callToTEN,
+                         Set returned,
+                         Set thrown,
+                         Set passedAsParameters,
+                         Map sync_ops) {
         this.method = method;
         this.params = param_nodes;
         this.calls = methodCalls;
         this.callToRVN = callToRVN;
         this.callToTEN = callToTEN;
         this.passedParamToNodes = USE_PARAMETER_MAP?new HashMap():null;
+        this.sync_ops = sync_ops;
         this.returned = returned;
         this.thrown = thrown;
         this.global = my_global;
@@ -3791,13 +3801,23 @@ outer:
     public static final boolean UNIFY_ACCESS_PATHS = false;
     
     private MethodSummary(BuildMethodSummary builder,
-                          jq_Method method, ParamNode[] params, Set methodCalls, Map callToRVN, Map callToTEN, Map passedParamToNodes, Set returned, Set thrown, Map nodes) {
+                          jq_Method method,
+                          ParamNode[] params,
+                          Set methodCalls,
+                          Map callToRVN,
+                          Map callToTEN,
+                          Map passedParamToNodes,
+                          Map sync_ops,
+                          Set returned,
+                          Set thrown,
+                          Map nodes) {
         this.method = method;
         this.params = params;
         this.calls = methodCalls;
         this.callToRVN = callToRVN;
         this.callToTEN = callToTEN;
         this.passedParamToNodes = passedParamToNodes;
+        this.sync_ops = sync_ops;
         this.returned = returned;
         this.thrown = thrown;
         this.nodes = nodes;
@@ -3962,7 +3982,7 @@ outer:
             passedParamToNodes = new HashMap(this.passedParamToNodes);
             Node.updateMap(m, passedParamToNodes.entrySet().iterator(), passedParamToNodes);
         }
-        MethodSummary that = new MethodSummary(this.builder, method, params, calls, callToRVN, callToTEN, passedParamToNodes, returned, thrown, nodes);
+        MethodSummary that = new MethodSummary(builder, method, params, calls, callToRVN, callToTEN, passedParamToNodes, sync_ops, returned, thrown, nodes);
         if (VERIFY_ASSERTIONS) that.verify();
         return that;
     }
@@ -4675,4 +4695,41 @@ outer:
         out.writeBytes("}\n");
     }
 
+    public static final boolean DUMP_DOTGRAPH = System.getProperty("ms.dotgraph") != null;
+    
+    public static void main(String[] args) throws IOException {
+        HostedVM.initialize();
+        jq_Class c = (jq_Class) jq_Type.parseType(args[0]);
+        c.load();
+        String name = null, desc = null;
+        if (args.length > 1) {
+            name = args[1];
+            if (args.length > 2) {
+                desc = args[2];
+            }
+        }
+        Collection methods;
+        if (name != null) {
+            jq_Method m;
+            if (desc != null) {
+                m = (jq_Method) c.getDeclaredMember(name, desc);
+            } else {
+                m = c.getDeclaredMethod(name);
+            }
+            methods = Collections.singleton(m);
+        } else {
+            methods = new LinkedList();
+            methods.addAll(Arrays.asList(c.getDeclaredStaticMethods()));
+            methods.addAll(Arrays.asList(c.getDeclaredInstanceMethods()));
+        }
+        
+        for (Iterator i = methods.iterator(); i.hasNext(); ) {
+            jq_Method m = (jq_Method) i.next();
+            if (m.getBytecode() == null) continue;
+            MethodSummary ms = getSummary(CodeCache.getCode(m));
+            if (DUMP_DOTGRAPH) ms.dotGraph(new DataOutputStream(System.out));
+            else System.out.println(ms);
+        }
+    }
+    
 }
