@@ -88,11 +88,11 @@ public class CSPA {
     public static final boolean TRACE_MAPS      = false || TRACE_ALL;
     public static final boolean TRACE_SIZES     = false || TRACE_ALL;
     public static final boolean TRACE_CALLGRAPH = false || TRACE_ALL;
-    public static final boolean TRACE_EDGES     = false || TRACE_ALL;
+    public static       boolean TRACE_EDGES     = false || TRACE_ALL;
     public static final boolean TRACE_TIMES     = false || TRACE_ALL;
     public static final boolean TRACE_VARORDER  = false || TRACE_ALL;
-    public static final boolean TRACE_RELATIONS = false || TRACE_ALL;
-    public static final boolean TRACE_BDD = false;
+    public static       boolean TRACE_RELATIONS = false || TRACE_ALL;
+    public static       boolean TRACE_BDD = false;
     
     public static final boolean USE_CHA     = false;
     public static final boolean DO_INLINING = false;
@@ -291,7 +291,7 @@ public class CSPA {
         
         System.out.print("Solving pointers...");
         time = System.currentTimeMillis();
-        dis.solveIncremental();
+        dis.g_fieldPt = dis.solveIncremental();
         time = System.currentTimeMillis() - time;
         System.out.println("done. ("+time/1000.+" seconds)");
         
@@ -307,6 +307,7 @@ public class CSPA {
      */
     void dumpResults(String dumpfilename) throws IOException {
         bdd.save(dumpfilename+".bdd", g_pointsTo);
+        bdd.save(dumpfilename+".bdd2", g_fieldPt);
         
         DataOutputStream dos;
         dos = new DataOutputStream(new FileOutputStream(dumpfilename+".config"));
@@ -337,7 +338,7 @@ public class CSPA {
         int n = variableIndexMap.size();
         out.writeBytes(n+"\n");
         int j;
-        System.out.println("Global range: 0-"+globalVarHighIndex);
+        //System.out.println("Global range: 0-"+globalVarHighIndex);
         for (j=0; j<=globalVarHighIndex; ++j) {
             Variable node = getVariable(j); 
             node.write(out);
@@ -345,7 +346,7 @@ public class CSPA {
         }
         for (Iterator i=bddSummaryList.iterator(); i.hasNext(); ) {
             BDDMethodSummary s = (BDDMethodSummary) i.next();
-            System.out.println("Method "+s.ms.getMethod()+" range: "+s.lowVarIndex+"-"+s.highVarIndex);
+            //System.out.println("Method "+s.ms.getMethod()+" range: "+s.lowVarIndex+"-"+s.highVarIndex);
             Assert._assert(s.lowVarIndex == j);
             for ( ; j<=s.highVarIndex; ++j) {
                 Variable node = getVariable(j);
@@ -367,7 +368,7 @@ public class CSPA {
                 out.writeByte('\n');
             }
         }
-        System.out.println("Unknown range: "+j+"-"+variableIndexMap.size());
+        //System.out.println("Unknown range: "+j+"-"+variableIndexMap.size());
         while (j < variableIndexMap.size()) {
             // UnknownTypeNode
             Variable node = getVariable(j);
@@ -481,7 +482,7 @@ public class CSPA {
             }
             return r;
         } else {
-            BDD r = V1c.ithVar(0);
+            BDD r = range.id();
             r.andWith(H1c.ithVar(0));
             return r;
         }
@@ -500,7 +501,7 @@ public class CSPA {
             }
             return r;
         } else {
-            BDD r = V1c.ithVar(0);
+            BDD r = range.id();
             r.andWith(V2c.ithVar(0));
             return r;
         }
@@ -1133,6 +1134,7 @@ public class CSPA {
     }
 
     BDD g_pointsTo;
+    BDD g_fieldPt;
     BDD g_edgeSet;
     BDD g_stores;
     BDD g_loads;
@@ -1152,6 +1154,8 @@ public class CSPA {
         long time = System.currentTimeMillis();
         BDD v1ch1c = null, v1cv2c = null;
         
+        if (TRACE_RELATIONS)
+            System.out.println("Number of paths to method: "+npaths);
         BDD range = V1c.varRange(0, npaths.longValue());
         if (USE_REPLACE_V2 && !bms.m_pointsTo.isZero()) {
             v1ch1c = getV1H1Context(range);
@@ -1424,7 +1428,7 @@ public class CSPA {
         dest_bdd.free();
     }
 
-    public void solveIncremental() {
+    public BDD solveIncremental() {
 
         calculateTypeFilter();
         
@@ -1566,9 +1570,9 @@ public class CSPA {
         }
         
         newPointsTo.free();
-        fieldPt.free();
         storePt.free();
         loadAss.free();
+        return fieldPt;
     }
     
     public void generateBDDSummaries() {
