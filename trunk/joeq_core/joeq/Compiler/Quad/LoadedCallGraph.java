@@ -85,7 +85,7 @@ public class LoadedCallGraph extends CallGraph {
             String s = in.readLine();
             if (s == null)
                 break;
-            s.trim();
+            s = s.trim();
             StringTokenizer st = new StringTokenizer(s, ". ");
             if (!st.hasMoreTokens())
                 break;
