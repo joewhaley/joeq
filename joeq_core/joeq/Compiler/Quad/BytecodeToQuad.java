@@ -265,8 +265,9 @@ public class BytecodeToQuad extends BytecodeVisitor {
 	    if (op instanceof AbstractState.DummyOperand) continue;
 	    if (op instanceof RegisterOperand) {
 		RegisterOperand rop = (RegisterOperand)op;
-		if (!rf.isLocal(rop, rop.getRegister().getNumber(), rop.getType()))
-		    continue;
+                Register r = rf.getStack(current_state.getStackSize()-i-1, rop.getType());
+                if (rop.getRegister() == r)
+                    continue;
 	    }
 	    jq_Type type = getTypeOf(op);
 	    RegisterOperand t = getStackRegister(type, i);
