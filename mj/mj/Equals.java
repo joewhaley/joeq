@@ -60,4 +60,8 @@ public class Equals {
         }
         return rc;
     }
+
+    public String toString() {
+        return "Equals - find calls to a.equals(b) where pts(a) and pts(b) is empty";
+    }
 }
