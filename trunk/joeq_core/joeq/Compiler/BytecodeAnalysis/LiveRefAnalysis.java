@@ -78,6 +78,8 @@ public class LiveRefAnalysis {
             jq.assert(first_bb == bc_cfg.getEntry());
             // initialize start states
             while (rpo.hasNext()) {
+                if (ALWAYS_TRACE)
+                    System.out.println("Iteration : "+rpo.toString());
                 BasicBlock bc_bb = rpo.nextBB();
                 if (ALWAYS_TRACE)
                     System.out.println(bc_bb+" : start state "+this.start_states[bc_bb.id]);
@@ -99,6 +101,8 @@ public class LiveRefAnalysis {
             Compil3r.BytecodeAnalysis.ControlFlowGraph.RPOBasicBlockIterator rpo = bc_cfg.reversePostOrderIterator();
 	    rpo.jumpToEnd();
             while (rpo.hasPrevious()) {
+                if (ALWAYS_TRACE)
+                    System.out.println("Iteration : "+rpo.toString());
                 BasicBlock bc_bb = rpo.previousBB();
                 if (ALWAYS_TRACE)
                     System.out.println(bc_bb+" : end state "+this.end_states[bc_bb.id]);
