@@ -66,7 +66,7 @@ bootstrap-sun14-linux:	javac
 	java -ms240M -mx240M Main.Bootstrapper -cl ClassLib/sun14_linux/classlist.txt
 
 bootstrap-sun13-linux:	javac
-	java -Xbootclasspath/a:$(JDK14SUPPORT_LIB) -ms170M -mx170M Main.Bootstrapper -cl ClassLib/sun13_linux/classlist.txt
+	java -Xbootclasspath/a:$(JDK14SUPPORT_LIB) -ms200M -mx200M Main.Bootstrapper -cl ClassLib/sun13_linux/classlist.txt
 
 bootstrap-ibm13-linux:	javac
 	java -Xbootclasspath/a:$(JDK14SUPPORT_LIB) -ms230M -mx230M Main.Bootstrapper -cl ClassLib/ibm13_linux/classlist.txt
