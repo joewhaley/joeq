@@ -784,8 +784,6 @@ public class CSPA {
     
     // the size of domains, can be changed to reflect the size of inputs
     int domainBits[];
-    // to be computed in sysInit function
-    int domainSpos[]; 
     
     // V1 V2 are domains for variables 
     // H1 H2 are domains for heap objects
@@ -963,7 +961,6 @@ public class CSPA {
                                 FIELDBITS,
                                 HEAPBITS, HEAPCONTEXTBITS,
                                 HEAPBITS, HEAPCONTEXTBITS};
-        domainSpos = new int[domainBits.length];
         
         long[] domains = new long[domainBits.length];
         for (int i=0; i<domainBits.length; ++i) {
@@ -985,7 +982,7 @@ public class CSPA {
             Assert._assert(bdd_domains[i].varNum() == domainBits[i]);
         }
         
-        int[] varorder = makeVarOrdering(bdd, domainBits, domainSpos, reverseLocal, ordering);
+        int[] varorder = makeVarOrdering(bdd, reverseLocal, ordering);
         if (TRACE_VARORDER) {
             for (int i=0; i<varorder.length; ++i) {
                 if (i != 0) 
@@ -1048,37 +1045,40 @@ public class CSPA {
         g_edgeSet = bdd.zero();
     }
 
-    static int[] makeVarOrdering(BDDFactory bdd, int[] domainBits, int[] domainSpos,
+    static int[] makeVarOrdering(BDDFactory bdd,
                                  boolean reverseLocal, String ordering) {
         
         int varnum = bdd.varNum();
         
-        int[][] localOrders = new int[domainBits.length][];
+        int nDomains = bdd.numberOfDomains();
+        int[][] localOrders = new int[nDomains][];
         for (int i=0; i<localOrders.length; ++i) {
-            localOrders[i] = new int[domainBits[i]];
+            localOrders[i] = new int[bdd.getDomain(i).varNum()];
         }
         
-        for (int i=0, pos=0; i<domainBits.length; ++i) {
-            domainSpos[i] = pos;
-            pos += domainBits[i];
-            for (int j=0; j<domainBits[i]; ++j) {
+        for (int i=0, pos=0; i<nDomains; ++i) {
+            BDDDomain d = bdd.getDomain(i);
+            int nVars = d.varNum();
+            for (int j=0; j<nVars; ++j) {
                 if (reverseLocal) {
-                    localOrders[i][j] = domainBits[i] - j - 1;
+                    localOrders[i][j] = nVars - j - 1;
                 } else {
                     localOrders[i][j] = j;
                 }
             }
         }
         
-        BDDDomain[] doms = new BDDDomain[domainBits.length];
+        BDDDomain[] doms = new BDDDomain[nDomains];
         
         int[] varorder = new int[varnum];
         
         System.out.println("Ordering: "+ordering);
         StringTokenizer st = new StringTokenizer(ordering, "x_", true);
         int numberOfDomains = 0, bitIndex = 0;
+        boolean[] done = new boolean[nDomains];
         for (int i=0; ; ++i) {
             String s = st.nextToken();
+            //System.out.println("Token: "+s);
             BDDDomain d;
             if (s.equals("V1o")) d = bdd.getDomain(0);
             else if (s.equals("V1c")) d = bdd.getDomain(1);
@@ -1097,6 +1097,11 @@ public class CSPA {
                 Assert.UNREACHABLE("bad domain: "+s);
                 return null;
             }
+            if (done[d.getIndex()]) {
+                Assert.UNREACHABLE("duplicate domain: "+s);
+                return null;
+            }
+            done[d.getIndex()] = true;
             doms[i] = d;
             if (st.hasMoreTokens()) {
                 s = st.nextToken();
@@ -1105,13 +1110,9 @@ public class CSPA {
                     continue;
                 }
             }
-            bitIndex = fillInVarIndices(domainBits, domainSpos,
-                                        doms, i-numberOfDomains, numberOfDomains+1,
+            bitIndex = fillInVarIndices(doms, i-numberOfDomains, numberOfDomains+1,
                                         localOrders, bitIndex, varorder);
             if (!st.hasMoreTokens()) {
-                //Collection not_done = new ArrayList(Arrays.asList(bdd_domains));
-                //not_done.removeAll(Arrays.asList(doms));
-                //Assert._assert(not_done.isEmpty(), not_done.toString());
                 break;
             }
             if (s.equals("_")) {
@@ -1123,54 +1124,43 @@ public class CSPA {
         }
         
         for (int i=0; i<doms.length; ++i) {
+            if (!done[i]) {
+                Assert.UNREACHABLE("missing domain #"+i);
+            }
             doms[i] = bdd.getDomain(i);
         }
-        int[] outside2inside = new int[varnum];
-        getVariableMap(outside2inside, doms);
         
-        remapping(varorder, outside2inside);
+        int[] test = new int[varorder.length];
+        System.arraycopy(varorder, 0, test, 0, varorder.length);
+        Arrays.sort(test);
+        for (int i=0; i<test.length; ++i) {
+            Assert._assert(test[i] == i, test[i]+" != "+i);
+        }
         
         return varorder;
     }
     
-    static int fillInVarIndices(int[] domainBits, int[] domainSpos,
+    static int fillInVarIndices(
                          BDDDomain[] doms, int domainIndex, int numDomains,
                          int[][] localOrders, int bitIndex, int[] varorder) {
+        // calculate size of largest domain to interleave
         int maxBits = 0;
         for (int i=0; i<numDomains; ++i) {
             BDDDomain d = doms[domainIndex+i];
-            int di = d.getIndex();
-            maxBits = Math.max(maxBits, domainBits[di]);
+            maxBits = Math.max(maxBits, d.varNum());
         }
+        // interleave the domains
         for (int bitNumber=0; bitNumber<maxBits; ++bitNumber) {
             for (int i=0; i<numDomains; ++i) {
                 BDDDomain d = doms[domainIndex+i];
-                int di = d.getIndex();
-                if (bitNumber < domainBits[di]) {
-                    varorder[bitIndex++] = domainSpos[di] + localOrders[di][bitNumber];
+                if (bitNumber < d.varNum()) {
+                    int di = d.getIndex();
+                    int local = localOrders[di][bitNumber];
+                    varorder[bitIndex++] = d.vars()[local];
                 }
             }
         }
         return bitIndex;
-    }
-    
-    static void getVariableMap(int[] map, BDDDomain[] doms) {
-        int idx = 0;
-        for (int var = 0; var < doms.length; var++) {
-            int[] vars = doms[var].vars();
-            for (int i = 0; i < vars.length; i++) {
-                map[idx++] = vars[i];
-            }
-        }
-    }
-    
-    /* remap according to a map */
-    static void remapping(int[] varorder, int[] maps) {
-        int[] varorder2 = new int[varorder.length];
-        for (int i = 0; i < varorder.length; i++) {
-            varorder2[i] = maps[varorder[i]];
-        }
-        System.arraycopy(varorder2, 0, varorder, 0, varorder.length);
     }
     
     IndexMap/* Variable->index */ variableIndexMap;
@@ -1667,7 +1657,7 @@ public class CSPA {
         int smallestProdIndex = 0;
         for (int i=0; i<orderings.length; ++i) {
             String o = orderings[i];
-            int[] varorder = makeVarOrdering(bdd, domainBits, domainSpos, reverseLocal, o);
+            int[] varorder = makeVarOrdering(bdd, reverseLocal, o);
             bdd.setVarOrder(varorder);
             long prod = 1L;
             for (int j=0; j<b.length; ++j) {
@@ -1701,7 +1691,7 @@ public class CSPA {
             // warm-up
             for (int i=0; i<orderings.length; ++i) {
                 String o = orderings[i];
-                int[] varorder = makeVarOrdering(bdd, domainBits, domainSpos, reverseLocal, o);
+                int[] varorder = makeVarOrdering(bdd, reverseLocal, o);
                 bdd.setVarOrder(varorder);
                 BDD result = b.replace(p);
                 result.free();
@@ -1714,7 +1704,7 @@ public class CSPA {
             BDD result = null;
             for (int i=0; i<orderings.length; ++i) {
                 String o = orderings[i];
-                int[] varorder = makeVarOrdering(bdd, domainBits, domainSpos, reverseLocal, o);
+                int[] varorder = makeVarOrdering(bdd, reverseLocal, o);
                 bdd.setVarOrder(varorder);
                 sizea[i] = b.nodeCount();
                 long t = System.currentTimeMillis();
@@ -1753,7 +1743,7 @@ public class CSPA {
             // warm-up
             for (int i=0; i<orderings.length; ++i) {
                 String o = orderings[i];
-                int[] varorder = makeVarOrdering(bdd, domainBits, domainSpos, reverseLocal, o);
+                int[] varorder = makeVarOrdering(bdd, reverseLocal, o);
                 bdd.setVarOrder(varorder);
                 BDD result = bdd1.relprod(bdd2, dom);
                 result.free();
@@ -1767,7 +1757,7 @@ public class CSPA {
             BDD result = null;
             for (int i=0; i<orderings.length; ++i) {
                 String o = orderings[i];
-                int[] varorder = makeVarOrdering(bdd, domainBits, domainSpos, reverseLocal, o);
+                int[] varorder = makeVarOrdering(bdd, reverseLocal, o);
                 bdd.setVarOrder(varorder);
                 sizea[i] = bdd1.nodeCount();
                 sizeb[i] = bdd2.nodeCount();
