@@ -1272,9 +1272,9 @@ public class LiveRefAnalysis {
             Retaddr r = (Retaddr)current_state.getLocal(i);
             endsWithRET = true;
             // add JSR edges, if they don't already exist.
+            BasicBlock jsub_bb = cfg.getBasicBlockByBytecodeIndex(r.location);
             if (current_bb.getNumberOfSuccessors() == 0) {
                 if (TRACE) out.println("Adding jsr subroutine edges to "+current_bb);
-                BasicBlock jsub_bb = cfg.getBasicBlockByBytecodeIndex(r.location);
                 current_bb.setSubroutineRet(cfg, jsub_bb);
                 if (TRACE) {
                     out.println("Number of jsr subroutine edges: "+current_bb.getNumberOfSuccessors());
@@ -1283,6 +1283,7 @@ public class LiveRefAnalysis {
                     }
                 }
             }
+            cfg.addJSRInfo(jsub_bb, current_bb, ((ExactJSRState)current_state).mayChangeLocals);
         }
         public void visitTABLESWITCH(int default_target, int low, int high, int[] targets) {
             super.visitTABLESWITCH(default_target, low, high, targets);
