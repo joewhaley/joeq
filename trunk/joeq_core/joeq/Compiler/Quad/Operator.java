@@ -627,6 +627,8 @@ public class Operator {
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitALoad(q);
+            qv.visitArray(q);
+            qv.visitLoad(q);
             super.accept(q, qv);
         }
         
@@ -685,6 +687,8 @@ public class Operator {
         
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitAStore(q);
+            qv.visitArray(q);
+            qv.visitStore(q);
             super.accept(q, qv);
         }
         
@@ -1944,6 +1948,7 @@ public class Operator {
 
         public void accept(Quad q, QuadVisitor qv) {
             qv.visitALength(q);
+            qv.visitArray(q);
             super.accept(q, qv);
         }
         
