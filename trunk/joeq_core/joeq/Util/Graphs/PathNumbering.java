@@ -293,6 +293,10 @@ public class PathNumbering implements Externalizable {
     
     public Range getRange(Object o) {
         SCComponent scc = (SCComponent) nodeToScc.get(o);
+        return getSCCRange(scc);
+    }
+    
+    public Range getSCCRange(SCComponent scc) {
         Range r = (Range) sccNumbering.get(scc);
         return r;
     }
@@ -315,6 +319,15 @@ public class PathNumbering implements Externalizable {
     public Range getEdge(Pair edge) {
         Range r = (Range) edgeNumbering.get(edge);
         return r;
+    }
+    
+    public Collection/*<Range>*/ getSCCEdges(SCComponent from, SCComponent to) {
+        return getSCCEdges(new Pair(from, to));
+    }
+    
+    public Collection/*<Range>*/ getSCCEdges(Pair edge) {
+        Collection c = (Collection) sccEdges.get(edge);
+        return c;
     }
     
     public SCComponent getSCC(Object node) {
