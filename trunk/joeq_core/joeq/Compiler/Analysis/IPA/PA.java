@@ -145,6 +145,7 @@ public class PA {
     boolean ADD_SUPERTYPES = !System.getProperty("pa.addsupertypes", "no").equals("no");
     boolean ADD_ROOT_PLACEHOLDERS = !System.getProperty("pa.addrootplaceholders", "no").equals("no");
     boolean FULL_CHA = !System.getProperty("pa.fullcha", "no").equals("no");
+    static boolean ADD_INSTANCE_METHODS = !System.getProperty("pa.addinstancemethods", "no").equals("no");
     int MAX_PARAMS = Integer.parseInt(System.getProperty("pa.maxparams", "4"));
     
     int bddnodes = Integer.parseInt(System.getProperty("bddnodes", "2500000"));
@@ -2289,6 +2290,8 @@ public class PA {
                 jq_Class c = (jq_Class) jq_Type.parseType(s);
                 c.prepare();
                 rootMethods.addAll(Arrays.asList(c.getDeclaredStaticMethods()));
+                if (ADD_INSTANCE_METHODS)
+                    rootMethods.addAll(Arrays.asList(c.getDeclaredInstanceMethods()));
             }
             return rootMethods;
         } finally {
@@ -2312,6 +2315,8 @@ public class PA {
             c.prepare();
         
             rootMethods = Arrays.asList(c.getDeclaredStaticMethods());
+            if (ADD_INSTANCE_METHODS)
+                rootMethods.addAll(Arrays.asList(c.getDeclaredInstanceMethods()));
         }
 
         if (args.length > 1) {
