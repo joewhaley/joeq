@@ -468,6 +468,10 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         chkState(STATE_LOADING2);
         return const_pool.getAsString(index);
     }
+    public final Object getCPasObjectConstant(char index) {
+        chkState(STATE_LOADING2);
+        return const_pool.getAsObjectConstant(index);
+    }
     public final Utf8 getCPasUtf8(char index) {
         chkState(STATE_LOADING2);
         return const_pool.getAsUtf8(index);

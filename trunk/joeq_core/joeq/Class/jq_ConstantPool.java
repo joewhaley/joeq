@@ -16,6 +16,7 @@ import java.util.Set;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Compiler.BytecodeAnalysis.Bytecodes;
 import joeq.Runtime.Debug;
+import joeq.Runtime.Reflection;
 import joeq.UTF.Utf8;
 import joeq.Util.Assert;
 
@@ -266,6 +267,15 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
     public final jq_Type getAsType(char index) {
         Assert._assert(constant_pool_tags[index] == CONSTANT_ResolvedClass);
         return (jq_Type)constant_pool[index];
+    }
+    public final Object getAsObjectConstant(char index) {
+        byte c = constant_pool_tags[index];
+        Object o = constant_pool[index];
+        Assert._assert(c == CONSTANT_String || c == CONSTANT_ResolvedClass);
+        if (c == CONSTANT_ResolvedClass) {
+            o = Reflection.getJDKType((jq_Reference) o);
+        }
+        return o;
     }
     public final jq_Member getAsMember(char index) {
         Assert._assert(constant_pool_tags[index] == CONSTANT_ResolvedSFieldRef ||
