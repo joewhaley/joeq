@@ -1586,7 +1586,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         current_state.push(result, f);
     }
 
-    public static final boolean ELIM_NULL_CHECKS = false;
+    public static final boolean ELIM_NULL_CHECKS = true;
     
     boolean performNullCheck(Operand op) {
         if (op instanceof AConstOperand) {
