@@ -529,7 +529,7 @@ public class CSPAResults {
                         System.out.println("No method for node "+n);
                     } else {
                         Path trace = pn.getPath(m, c);
-                        System.out.println(m+" context "+c+": "+trace);
+                        System.out.println(m+" context "+c+":\n"+trace);
                     }
                     increaseCount = false;
                 } else if (command.equals("contextheap")) {
