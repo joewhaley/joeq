@@ -30,4 +30,6 @@ public class IdentityHashCodeWrapper {
         return System.identityHashCode(o);
     }
     
+    public Object getObject() { return o; }
+    
 }
