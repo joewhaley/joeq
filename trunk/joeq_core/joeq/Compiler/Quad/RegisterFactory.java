@@ -39,11 +39,11 @@ public class RegisterFactory {
         local_D = new ArrayList(nlocals);
         local_A = new ArrayList(nlocals);
         for (int i=0; i<nlocals; ++i) {
-            local_I.add(i, new Register(i, false));
-            local_F.add(i, new Register(i, false));
-            local_L.add(i, new Register(i, false));
-            local_D.add(i, new Register(i, false));
-            local_A.add(i, new Register(i, false));
+            local_I.add(new Register(i, false));
+            local_F.add(new Register(i, false));
+            local_L.add(new Register(i, false));
+            local_D.add(new Register(i, false));
+            local_A.add(new Register(i, false));
         }
         int nstack = m.getMaxStack();
         stack_I = new ArrayList(nstack);
@@ -52,11 +52,11 @@ public class RegisterFactory {
         stack_D = new ArrayList(nstack);
         stack_A = new ArrayList(nstack);
         for (int i=0; i<nstack; ++i) {
-            stack_I.add(i, new Register(i, true));
-            stack_F.add(i, new Register(i, true));
-            stack_L.add(i, new Register(i, true));
-            stack_D.add(i, new Register(i, true));
-            stack_A.add(i, new Register(i, true));
+            stack_I.add(new Register(i, true));
+            stack_F.add(new Register(i, true));
+            stack_L.add(new Register(i, true));
+            stack_D.add(new Register(i, true));
+            stack_A.add(new Register(i, true));
         }
     }
 
@@ -73,27 +73,27 @@ public class RegisterFactory {
     public Register getNewStack(int i, jq_Type t) {
         if (t.isReferenceType()) {
 	    while (i >= stack_A.size())
-		stack_A.add(i, new Register(i, true));
+		stack_A.add(new Register(stack_A.size(), true));
 	    return (Register)stack_A.get(i);
 	}
         if (t.isIntLike()) {
 	    while (i >= stack_I.size())
-		stack_I.add(i, new Register(i, true));
+		stack_I.add(new Register(stack_I.size(), true));
 	    return (Register)stack_I.get(i);
 	}
         if (t == jq_Primitive.FLOAT) {
 	    while (i >= stack_F.size())
-		stack_F.add(i, new Register(i, true));
+		stack_F.add(new Register(stack_F.size(), true));
 	    return (Register)stack_F.get(i);
 	}
         if (t == jq_Primitive.LONG) {
 	    while (i >= stack_L.size())
-		stack_L.add(i, new Register(i, true));
+		stack_L.add(new Register(stack_L.size(), true));
 	    return (Register)stack_L.get(i);
 	}
         if (t == jq_Primitive.DOUBLE) {
 	    while (i >= stack_D.size())
-		stack_D.add(i, new Register(i, true));
+		stack_D.add(i, new Register(stack_D.size(), true));
 	    return (Register)stack_D.get(i);
 	}
         jq.UNREACHABLE();
