@@ -83,6 +83,23 @@ public abstract class Driver {
                 } catch (NoClassDefFoundError x) {
                     System.err.println("Class "+commandBuffer[index]+" (canonical name "+canonicalClassName+") not found.");
                 }
+            } else if (commandBuffer[index].equalsIgnoreCase("package")) {
+                String canonicalPackageName = commandBuffer[++index].replace('.','/');
+                if (!canonicalPackageName.endsWith("/")) canonicalPackageName += '/';
+                Iterator i = PrimordialClassLoader.loader.listPackage(canonicalPackageName);
+                if (!i.hasNext()) {
+                    System.err.println("Package "+canonicalPackageName+" not found.");
+                }
+                while (i.hasNext()) {
+                    String canonicalClassName = canonicalizeClassName((String)i.next());
+                    try {
+                        jq_Class c = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType(canonicalClassName);
+                        c.load();
+                        classesToProcess.add(c);
+                    } catch (NoClassDefFoundError x) {
+                        System.err.println("Class "+commandBuffer[index]+" (canonical name "+canonicalClassName+") not found.");
+                    }
+                }
             } else if (commandBuffer[index].equalsIgnoreCase("runpass")) {
                 String passname = commandBuffer[++index];
                 jq_TypeVisitor cv = null; jq_MethodVisitor mv = null; BasicBlockVisitor bbv = null; QuadVisitor qv = null;
@@ -133,7 +150,9 @@ public abstract class Driver {
             } else {
 		int index2 = TraceFlags.setTraceFlag(commandBuffer, index);
 		if (index == index2)
-		    System.err.println("Unknown command "+commandBuffer[index++]);
+		    System.err.println("Unknown command "+commandBuffer[index]);
+                else
+                    index = index2-1;
             }
         } catch (ArrayIndexOutOfBoundsException x) {
             System.err.println("Incomplete command");
