@@ -1675,7 +1675,7 @@ public class PA {
             Object o = map.get(j);
 	    jp += o;
 	    // XXX should we use an interface here for long location printing?
-            if (LONG_LOCATIONS) {
+            if (o != null && LONG_LOCATIONS) {
                 // Node is a ProgramLocation
         	if (o instanceof ProgramLocation) {
         	    jp += " in "+((ProgramLocation)o).toStringLong();
