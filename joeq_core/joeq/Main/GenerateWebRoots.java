@@ -83,7 +83,7 @@ public class GenerateWebRoots {
         out.println("\tpublic static void processTags() {");
         for(Iterator iter = taglibs.iterator(); iter.hasNext();){
             String taglib = (String) iter.next();
-            
+            out.println("\t\t// Processing taglib " + taglib + ":");
             processTaglib(taglib);
         }
         out.println("\t}\n");        
@@ -93,9 +93,11 @@ public class GenerateWebRoots {
         String taglibFileName = TAGLIB_BASE + File.separator + taglib;
         Document doc = parseFile(taglibFileName);
         Collection tags = findMatches(doc, "tag-class");
+        int count = 0;
         for(Iterator iter = tags.iterator(); iter.hasNext();){
             String tag = (String) iter.next();
             
+            out.println("\t\t// " + ++count + ". " + tag);
             out.println("\t\ttry {");
             out.println("\t\t\tTagSupport tag = new " + tag + "();");
             out.println("\t\t\ttag.doStartTag();");
