@@ -77,23 +77,25 @@ public class ClasspathWalker {
                     classCount++;
                    //if(TRACE) System.out.println("Processing class # " + classCount + ", " + canonicalClassName);
                 } catch (NoClassDefFoundError x) {
-                    if(TRACE) System.err.println("Package " + packageName + ": Class not found (canonical name " + canonicalClassName + "): "+x);
+                    if(TRACE) System.err.println("\tPackage " + packageName + ": Class not found (canonical name " + canonicalClassName + "): "+x);
                     //x.printStackTrace();
                 } catch (ClassFormatError cfe) {
-                    if(TRACE) System.err.println("Class format error occurred while loading class (" + canonicalClassName + "): " + cfe.toString());
+                    if(TRACE) System.err.println("\tClass format error occurred while loading class (" + canonicalClassName + "): " + cfe.toString());
                     //cfe.printStackTrace(System.err);
                 } catch (LinkageError le) {
-                    if(TRACE) System.err.println("Linkage error occurred while loading class (" + canonicalClassName + "): " + le.toString());
+                    if(TRACE) System.err.println("\tLinkage error occurred while loading class (" + canonicalClassName + "): " + le.toString());
                     //le.printStackTrace(System.err);
                 } catch (RuntimeException e){
-                    if(TRACE) System.err.println("Security error occurred: " + e.getMessage());
+                    if(TRACE) System.err.println("\tSecurity error occurred: " + e.getMessage());
                 }
-            }            
+            }
             if(GC){
+                if(TRACE) System.err.println("GCing...");
                 System.gc();
                 if(TRACE) System.err.println("Done GCing.");
             }            
-        }        
+        }
+        if(TRACE) System.out.println("Done.");
     }
 
     static void collectSuperclasses(jq_Class c, Collection interfaces, Collection superclasses) {
