@@ -177,7 +177,13 @@ public abstract class SubtypeHelper {
                 String canonicalName = canonicalizeClassName(subtypeName);
                 jq_Class subtypeClass = (jq_Class) jq_Class.parseType(canonicalName);
                 
-                subtypeClass.prepare();
+                if(!subtypeClass.isPrepared()){
+                    if(TRACE){
+                        System.out.println("Preparing class " + subtypeClass + " by name " + canonicalName);
+                    }
+                    subtypeClass.prepare();
+                }
+                
                 result.add(subtypeClass);
             }
             Assert._assert(result.size() == subtypeNames.size());
