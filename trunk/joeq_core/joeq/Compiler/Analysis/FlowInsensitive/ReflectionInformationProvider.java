@@ -1,6 +1,5 @@
 package joeq.Compiler.Analysis.FlowInsensitive;
 
-import java.beans.PrimitivePersistenceDelegate;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.LineNumberReader;
