@@ -58,7 +58,7 @@ public class MethodInline implements ControlFlowGraphVisitor {
     }
     public MethodInline() {
 //        this(new InlineSmallSingleTargetCalls(CHACallGraph.INSTANCE));
-    	this(new InlineSelectedCalls(CHACallGraph.INSTANCE));
+        this(new InlineSelectedCalls(CHACallGraph.INSTANCE));
         this.cg = CHACallGraph.INSTANCE;
     }
 
@@ -163,7 +163,7 @@ public class MethodInline implements ControlFlowGraphVisitor {
     }
     
     /**
-     * 	Inline methods whose munged names are read from file methodNameFile (methods.txt). 
+     *     Inline methods whose munged names are read from file methodNameFile (methods.txt). 
      * */
     public static class InlineSelectedCalls implements Oracle {        
         protected CallGraph cg;
@@ -175,39 +175,38 @@ public class MethodInline implements ControlFlowGraphVisitor {
             initializeNames();
         }
         
-		private void initializeNames() {			
-			BufferedReader r = null;
-			try {
-	        	r = new BufferedReader(new FileReader(methodNameFile));
-	            
-	        	String s;
-	            while ((s = r.readLine()) != null) {
-	            	if(s.startsWith("#")) continue;
-	                if(s.trim().length() == 0) continue;
-	                
-	            	if(s.charAt(s.length()-1) == '\n'){
-	                	s = s.substring(s.length()-1);
-	                }
-	                
-	                knownMethods.put(s, null);
-	            }
-	        } catch (FileNotFoundException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			} finally {
-	            if (r != null)
-					try {
-						r.close();
-					} catch (IOException e1) {
-						e1.printStackTrace();
-					}
-	        }
-		}
+        private void initializeNames() {            
+            BufferedReader r = null;
+            try {
+                r = new BufferedReader(new FileReader(methodNameFile));
+                
+                String s;
+                while ((s = r.readLine()) != null) {
+                    if(s.startsWith("#")) continue;
+                    if(s.trim().length() == 0) continue;
+                    
+                    if(s.charAt(s.length()-1) == '\n'){
+                        s = s.substring(s.length()-1);
+                    }
+                    
+                    knownMethods.put(s, null);
+                }
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                if (r != null)
+                    try {
+                        r.close();
+                    } catch (IOException e1) {
+                        e1.printStackTrace();
+                    }
+            }
+        }
 
-		public InliningDecision shouldInline(ControlFlowGraph caller, BasicBlock bb, Quad callSite) {
+        public InliningDecision shouldInline(ControlFlowGraph caller, BasicBlock bb, Quad callSite) {
             if (TRACE_ORACLE) out.println("Oracle evaluating "+callSite);
-//           
             Invoke i = (Invoke) callSite.getOperator();
             jq_Method target;
             if (i.isVirtual()) {
@@ -238,8 +237,8 @@ public class MethodInline implements ControlFlowGraphVisitor {
             }
             
             String mungedName = PA.mungeMethodName(target);
-            if(!knownMethods.containsKey(mungedName)){
-            	return null;
+            if (!knownMethods.containsKey(mungedName)){
+                return null;
             }
             
             if (Invoke.getMethod(callSite).getMethod().needsDynamicLink(caller.getMethod())) {
@@ -262,6 +261,7 @@ public class MethodInline implements ControlFlowGraphVisitor {
             Quad q = qi.nextQuad();
             if (q.getOperator() instanceof Invoke) {
                 BasicBlock bb = qi.getCurrentBasicBlock();
+                Invoke.getMethod(q).getMethod().getDeclaringClass().load();
                 InliningDecision d = oracle.shouldInline(cfg, bb, q);
                 if (d != null) {
                     if (TRACE_DECISIONS) out.println("Decided to inline "+d);
@@ -367,7 +367,7 @@ outer:
         for (ListIterator.BasicBlock it = callee.exit().getPredecessors().basicBlockIterator();
              it.hasNext(); ) {
             BasicBlock pred_bb = it.nextBasicBlock();
-            while (pred_bb.size() == 0) { 
+            while (pred_bb.size() == 0) {
                 if (TRACE) System.out.println("Predecessor of exit has no quads? "+pred_bb);
                 if (pred_bb.getNumberOfPredecessors() == 0) continue outer;
                 pred_bb = pred_bb.getFallthroughPredecessor();
