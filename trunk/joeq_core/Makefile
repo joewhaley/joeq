@@ -18,7 +18,7 @@ veryclean:
 	find ${packages} -name "*.class" | xargs rm -f jq*.class GetBootClassPath.class bootclasspath
 
 update:
-	( export CVS_RSH=ssh ; cvs update -P )
+	( export CVS_RSH=ssh ; cvs update -Pd )
 
 commit:
 	( export CVS_RSH=ssh ; cvs commit )
