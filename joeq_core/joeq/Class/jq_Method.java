@@ -176,7 +176,7 @@ public abstract class jq_Method extends jq_Member implements AndersenMethod {
                     this.localvar_table[i] = new jq_LocalVarTableEntry(start_pc, length, new jq_NameAndDesc(clazz.getCPasUtf8(name_index), clazz.getCPasUtf8(desc_index)), index);
                 }
                 Arrays.sort(this.localvar_table);
-            } 
+            }
         } else {
             if (!isNative() && !isAbstract())
                 throw new ClassFormatError();
@@ -193,7 +193,6 @@ public abstract class jq_Method extends jq_Member implements AndersenMethod {
     }
 
     public void setCode(Bytecodes.InstructionList il, jq_ConstantPool.ConstantPoolRebuilder cpr) {
-        cpr.resetIndices(il);
         Bytecodes.CodeException[] ex_table = new Bytecodes.CodeException[exception_table.length];
         for (int i=0; i<ex_table.length; ++i) {
             ex_table[i] = new Bytecodes.CodeException(il, bytecode, exception_table[i]);
@@ -202,6 +201,7 @@ public abstract class jq_Method extends jq_Member implements AndersenMethod {
         for (int i=0; i<line_num.length; ++i) {
             line_num[i] = new Bytecodes.LineNumber(il, line_num_table[i]);
         }
+        cpr.resetIndices(il);
         bytecode = il.getByteCode();
         // TODO: recalculate max_stack and max_locals.
         for (int i=0; i<ex_table.length; ++i) {
