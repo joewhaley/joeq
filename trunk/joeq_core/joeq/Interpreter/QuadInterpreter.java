@@ -40,7 +40,7 @@ public class QuadInterpreter {
         ListIterator.Quad current_iterator;
         Quad current_quad;
 	Object return_value;
-	Throwable thrown;
+	Throwable thrown, caught;
 
         public State(jq_Method m) {
             registers = new HashMap();
@@ -66,6 +66,7 @@ public class QuadInterpreter {
 	public Object getReturnValue() { return return_value; }
 	public Throwable getThrown() { return thrown; }
 	public void setThrown(Throwable t) { thrown = t; }
+	public Throwable getCaught() { return caught; }
 
 	public Register getExceptionRegister() { return rf.getStack(0, PrimordialClassLoader.getJavaLangObject()); }
 
@@ -294,12 +295,11 @@ public class QuadInterpreter {
             t.load(); t.verify(); t.prepare();
 	    ExceptionHandler eh = current_bb.getExceptionHandlers().mustCatch(t);
 	    if (eh != null) {
-		Register r = rf.getStack(0, t);
-		registers.put(r, x);
+                caught = x;
 		branchTo(eh.getEntry());
                 if (TRACE) System.out.println("Method "+method+" handler "+eh+" catches "+x);
 	    } else {
-		thrown = x;
+                thrown = x;
 		branchTo(cfg.exit());
                 if (TRACE)
 		    System.out.println("Method "+method+" does not catch "+x);

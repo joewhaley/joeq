@@ -1483,22 +1483,6 @@ public abstract class Operator {
             public static final GETSTATIC_I INSTANCE = new GETSTATIC_I();
             private GETSTATIC_I() { }
             public String toString() { return "GETSTATIC_I"; }
-	    public void interpret(Quad q, State s) {
-		jq_Field f = getField(q).getField();
-		Integer v;
-		if (f.getType() == jq_Primitive.INT)
-		    v = (Integer)ReflectiveVMInterface.INSTANCE.getField(null, f);
-		else if (f.getType() == jq_Primitive.BYTE)
-		    v = new Integer(((Byte)ReflectiveVMInterface.INSTANCE.getField(null, f)).byteValue());
-		else if (f.getType() == jq_Primitive.SHORT)
-		    v = new Integer(((Short)ReflectiveVMInterface.INSTANCE.getField(null, f)).shortValue());
-		else if (f.getType() == jq_Primitive.CHAR)
-		    v = new Integer(((Character)ReflectiveVMInterface.INSTANCE.getField(null, f)).charValue());
-		else if (f.getType() == jq_Primitive.BOOLEAN)
-		    v = new Integer(((Boolean)ReflectiveVMInterface.INSTANCE.getField(null, f)).booleanValue()?1:0);
-		else { jq.UNREACHABLE(f.getType().toString()); v = null; }
-		s.putReg(getDest(q).getRegister(), v);
-	    }
         }
         public static class GETSTATIC_F extends Getstatic {
             public static final GETSTATIC_F INSTANCE = new GETSTATIC_F();
@@ -1520,7 +1504,37 @@ public abstract class Operator {
             private GETSTATIC_A() { }
             public String toString() { return "GETSTATIC_A"; }
         }
-        public static class GETSTATIC_I_DYNLINK extends Getstatic {
+        public static class GETSTATIC_Z extends Getstatic {
+            public static final GETSTATIC_Z INSTANCE = new GETSTATIC_Z();
+            private GETSTATIC_Z() { }
+            public String toString() { return "GETSTATIC_Z"; }
+	    public void interpret(Quad q, State s) {
+		jq_Field f = getField(q).getField();
+		Integer v = new Integer(((Boolean)ReflectiveVMInterface.INSTANCE.getField(null, f)).booleanValue()?1:0);
+		s.putReg(getDest(q).getRegister(), v);
+            }
+        }
+        public static class GETSTATIC_B extends Getstatic {
+            public static final GETSTATIC_B INSTANCE = new GETSTATIC_B();
+            private GETSTATIC_B() { }
+            public String toString() { return "GETSTATIC_B"; }
+        }
+        public static class GETSTATIC_C extends Getstatic {
+            public static final GETSTATIC_C INSTANCE = new GETSTATIC_C();
+            private GETSTATIC_C() { }
+            public String toString() { return "GETSTATIC_C"; }
+	    public void interpret(Quad q, State s) {
+		jq_Field f = getField(q).getField();
+		Integer v = new Integer(((Character)ReflectiveVMInterface.INSTANCE.getField(null, f)).charValue());
+		s.putReg(getDest(q).getRegister(), v);
+            }
+        }
+        public static class GETSTATIC_S extends Getstatic {
+            public static final GETSTATIC_S INSTANCE = new GETSTATIC_S();
+            private GETSTATIC_S() { }
+            public String toString() { return "GETSTATIC_S"; }
+        }
+        public static class GETSTATIC_I_DYNLINK extends GETSTATIC_I {
             public static final GETSTATIC_I_DYNLINK INSTANCE = new GETSTATIC_I_DYNLINK();
             private GETSTATIC_I_DYNLINK() { }
             public void accept(Quad q, QuadVisitor qv) {
@@ -1532,24 +1546,8 @@ public abstract class Operator {
             }
             public boolean hasSideEffects() { return true; }
             public String toString() { return "GETSTATIC_I%"; }
-	    public void interpret(Quad q, State s) {
-		jq_Field f = getField(q).getField();
-		Integer v;
-		if (f.getType() == jq_Primitive.INT)
-		    v = (Integer)ReflectiveVMInterface.INSTANCE.getField(null, f);
-		else if (f.getType() == jq_Primitive.BYTE)
-		    v = new Integer(((Byte)ReflectiveVMInterface.INSTANCE.getField(null, f)).byteValue());
-		else if (f.getType() == jq_Primitive.SHORT)
-		    v = new Integer(((Short)ReflectiveVMInterface.INSTANCE.getField(null, f)).shortValue());
-		else if (f.getType() == jq_Primitive.CHAR)
-		    v = new Integer(((Character)ReflectiveVMInterface.INSTANCE.getField(null, f)).charValue());
-		else if (f.getType() == jq_Primitive.BOOLEAN)
-		    v = new Integer(((Boolean)ReflectiveVMInterface.INSTANCE.getField(null, f)).booleanValue()?1:0);
-		else { jq.UNREACHABLE(f.getType().toString()); v = null; }
-		s.putReg(getDest(q).getRegister(), v);
-	    }
         }
-        public static class GETSTATIC_F_DYNLINK extends Getstatic {
+        public static class GETSTATIC_F_DYNLINK extends GETSTATIC_F {
             public static final GETSTATIC_F_DYNLINK INSTANCE = new GETSTATIC_F_DYNLINK();
             private GETSTATIC_F_DYNLINK() { }
             public void accept(Quad q, QuadVisitor qv) {
@@ -1562,7 +1560,7 @@ public abstract class Operator {
             public boolean hasSideEffects() { return true; }
             public String toString() { return "GETSTATIC_F%"; }
         }
-        public static class GETSTATIC_L_DYNLINK extends Getstatic {
+        public static class GETSTATIC_L_DYNLINK extends GETSTATIC_L {
             public static final GETSTATIC_L_DYNLINK INSTANCE = new GETSTATIC_L_DYNLINK();
             private GETSTATIC_L_DYNLINK() { }
             public void accept(Quad q, QuadVisitor qv) {
@@ -1575,7 +1573,7 @@ public abstract class Operator {
             public boolean hasSideEffects() { return true; }
             public String toString() { return "GETSTATIC_L%"; }
         }
-        public static class GETSTATIC_D_DYNLINK extends Getstatic {
+        public static class GETSTATIC_D_DYNLINK extends GETSTATIC_D {
             public static final GETSTATIC_D_DYNLINK INSTANCE = new GETSTATIC_D_DYNLINK();
             private GETSTATIC_D_DYNLINK() { }
             public void accept(Quad q, QuadVisitor qv) {
@@ -1588,7 +1586,7 @@ public abstract class Operator {
             public boolean hasSideEffects() { return true; }
             public String toString() { return "GETSTATIC_D%"; }
         }
-        public static class GETSTATIC_A_DYNLINK extends Getstatic {
+        public static class GETSTATIC_A_DYNLINK extends GETSTATIC_A {
             public static final GETSTATIC_A_DYNLINK INSTANCE = new GETSTATIC_A_DYNLINK();
             private GETSTATIC_A_DYNLINK() { }
             public void accept(Quad q, QuadVisitor qv) {
@@ -1600,6 +1598,58 @@ public abstract class Operator {
             }
             public boolean hasSideEffects() { return true; }
             public String toString() { return "GETSTATIC_A%"; }
+        }
+        public static class GETSTATIC_Z_DYNLINK extends GETSTATIC_Z {
+            public static final GETSTATIC_Z_DYNLINK INSTANCE = new GETSTATIC_Z_DYNLINK();
+            private GETSTATIC_Z_DYNLINK() { }
+            public void accept(Quad q, QuadVisitor qv) {
+                qv.visitExceptionThrower(q);
+                super.accept(q, qv);
+            }
+            public UnmodifiableList.jq_Class getThrownExceptions() {
+                return resolutionexceptions;
+            }
+            public boolean hasSideEffects() { return true; }
+            public String toString() { return "GETSTATIC_Z%"; }
+        }
+        public static class GETSTATIC_B_DYNLINK extends GETSTATIC_B {
+            public static final GETSTATIC_B_DYNLINK INSTANCE = new GETSTATIC_B_DYNLINK();
+            private GETSTATIC_B_DYNLINK() { }
+            public void accept(Quad q, QuadVisitor qv) {
+                qv.visitExceptionThrower(q);
+                super.accept(q, qv);
+            }
+            public UnmodifiableList.jq_Class getThrownExceptions() {
+                return resolutionexceptions;
+            }
+            public boolean hasSideEffects() { return true; }
+            public String toString() { return "GETSTATIC_B%"; }
+        }
+        public static class GETSTATIC_C_DYNLINK extends GETSTATIC_C {
+            public static final GETSTATIC_C_DYNLINK INSTANCE = new GETSTATIC_C_DYNLINK();
+            private GETSTATIC_C_DYNLINK() { }
+            public void accept(Quad q, QuadVisitor qv) {
+                qv.visitExceptionThrower(q);
+                super.accept(q, qv);
+            }
+            public UnmodifiableList.jq_Class getThrownExceptions() {
+                return resolutionexceptions;
+            }
+            public boolean hasSideEffects() { return true; }
+            public String toString() { return "GETSTATIC_C%"; }
+        }
+        public static class GETSTATIC_S_DYNLINK extends GETSTATIC_S {
+            public static final GETSTATIC_S_DYNLINK INSTANCE = new GETSTATIC_S_DYNLINK();
+            private GETSTATIC_S_DYNLINK() { }
+            public void accept(Quad q, QuadVisitor qv) {
+                qv.visitExceptionThrower(q);
+                super.accept(q, qv);
+            }
+            public UnmodifiableList.jq_Class getThrownExceptions() {
+                return resolutionexceptions;
+            }
+            public boolean hasSideEffects() { return true; }
+            public String toString() { return "GETSTATIC_S%"; }
         }
     }
     
@@ -1631,23 +1681,6 @@ public abstract class Operator {
             public static final PUTSTATIC_I INSTANCE = new PUTSTATIC_I();
             private PUTSTATIC_I() { }
             public String toString() { return "PUTSTATIC_I"; }
-	    public void interpret(Quad q, State s) {
-		jq_Field f = getField(q).getField();
-		int i = getIntOpValue(getSrc(q), s);
-		Object v;
-		if (f.getType() == jq_Primitive.INT)
-		    v = new Integer(i);
-		else if (f.getType() == jq_Primitive.BYTE)
-		    v = new Byte((byte)i);
-		else if (f.getType() == jq_Primitive.SHORT)
-		    v = new Short((short)i);
-		else if (f.getType() == jq_Primitive.CHAR)
-		    v = new Character((char)i);
-		else if (f.getType() == jq_Primitive.BOOLEAN)
-		    v = new Boolean(i!=0);
-		else { jq.UNREACHABLE(f.getType().toString()); v = null; }
-		ReflectiveVMInterface.INSTANCE.putField(null, f, v);
-	    }
         }
         public static class PUTSTATIC_F extends Putstatic {
             public static final PUTSTATIC_F INSTANCE = new PUTSTATIC_F();
@@ -1669,7 +1702,51 @@ public abstract class Operator {
             private PUTSTATIC_A() { }
             public String toString() { return "PUTSTATIC_A"; }
         }
-        public static class PUTSTATIC_I_DYNLINK extends Putstatic {
+        public static class PUTSTATIC_Z extends Putstatic {
+            public static final PUTSTATIC_Z INSTANCE = new PUTSTATIC_Z();
+            private PUTSTATIC_Z() { }
+            public String toString() { return "PUTSTATIC_Z"; }
+	    public void interpret(Quad q, State s) {
+		jq_Field f = getField(q).getField();
+		int i = getIntOpValue(getSrc(q), s);
+		Object v = new Boolean(i!=0);
+		ReflectiveVMInterface.INSTANCE.putField(null, f, v);
+	    }
+        }
+        public static class PUTSTATIC_B extends Putstatic {
+            public static final PUTSTATIC_B INSTANCE = new PUTSTATIC_B();
+            private PUTSTATIC_B() { }
+            public String toString() { return "PUTSTATIC_B"; }
+	    public void interpret(Quad q, State s) {
+		jq_Field f = getField(q).getField();
+		int i = getIntOpValue(getSrc(q), s);
+		Object v = new Byte((byte)i);
+		ReflectiveVMInterface.INSTANCE.putField(null, f, v);
+	    }
+        }
+        public static class PUTSTATIC_S extends Putstatic {
+            public static final PUTSTATIC_S INSTANCE = new PUTSTATIC_S();
+            private PUTSTATIC_S() { }
+            public String toString() { return "PUTSTATIC_S"; }
+	    public void interpret(Quad q, State s) {
+		jq_Field f = getField(q).getField();
+		int i = getIntOpValue(getSrc(q), s);
+		Object v = new Short((short)i);
+		ReflectiveVMInterface.INSTANCE.putField(null, f, v);
+	    }
+        }
+        public static class PUTSTATIC_C extends Putstatic {
+            public static final PUTSTATIC_C INSTANCE = new PUTSTATIC_C();
+            private PUTSTATIC_C() { }
+            public String toString() { return "PUTSTATIC_C"; }
+	    public void interpret(Quad q, State s) {
+		jq_Field f = getField(q).getField();
+		int i = getIntOpValue(getSrc(q), s);
+		Object v = new Character((char)i);
+		ReflectiveVMInterface.INSTANCE.putField(null, f, v);
+	    }
+        }
+        public static class PUTSTATIC_I_DYNLINK extends PUTSTATIC_I {
             public static final PUTSTATIC_I_DYNLINK INSTANCE = new PUTSTATIC_I_DYNLINK();
             private PUTSTATIC_I_DYNLINK() { }
             public void accept(Quad q, QuadVisitor qv) {
@@ -1680,25 +1757,8 @@ public abstract class Operator {
                 return resolutionexceptions;
             }
             public String toString() { return "PUTSTATIC_I%"; }
-	    public void interpret(Quad q, State s) {
-		jq_Field f = getField(q).getField();
-		int i = getIntOpValue(getSrc(q), s);
-		Object v;
-		if (f.getType() == jq_Primitive.INT)
-		    v = new Integer(i);
-		else if (f.getType() == jq_Primitive.BYTE)
-		    v = new Byte((byte)i);
-		else if (f.getType() == jq_Primitive.SHORT)
-		    v = new Short((short)i);
-		else if (f.getType() == jq_Primitive.CHAR)
-		    v = new Character((char)i);
-		else if (f.getType() == jq_Primitive.BOOLEAN)
-		    v = new Boolean(i!=0);
-		else { jq.UNREACHABLE(f.getType().toString()); v = null; }
-		ReflectiveVMInterface.INSTANCE.putField(null, f, v);
-	    }
         }
-        public static class PUTSTATIC_F_DYNLINK extends Putstatic {
+        public static class PUTSTATIC_F_DYNLINK extends PUTSTATIC_F {
             public static final PUTSTATIC_F_DYNLINK INSTANCE = new PUTSTATIC_F_DYNLINK();
             private PUTSTATIC_F_DYNLINK() { }
             public void accept(Quad q, QuadVisitor qv) {
@@ -1710,7 +1770,7 @@ public abstract class Operator {
             }
             public String toString() { return "PUTSTATIC_F%"; }
         }
-        public static class PUTSTATIC_L_DYNLINK extends Putstatic {
+        public static class PUTSTATIC_L_DYNLINK extends PUTSTATIC_L {
             public static final PUTSTATIC_L_DYNLINK INSTANCE = new PUTSTATIC_L_DYNLINK();
             private PUTSTATIC_L_DYNLINK() { }
             public void accept(Quad q, QuadVisitor qv) {
@@ -1722,7 +1782,7 @@ public abstract class Operator {
             }
             public String toString() { return "PUTSTATIC_L%"; }
         }
-        public static class PUTSTATIC_D_DYNLINK extends Putstatic {
+        public static class PUTSTATIC_D_DYNLINK extends PUTSTATIC_D {
             public static final PUTSTATIC_D_DYNLINK INSTANCE = new PUTSTATIC_D_DYNLINK();
             private PUTSTATIC_D_DYNLINK() { }
             public void accept(Quad q, QuadVisitor qv) {
@@ -1734,7 +1794,7 @@ public abstract class Operator {
             }
             public String toString() { return "PUTSTATIC_D%"; }
         }
-        public static class PUTSTATIC_A_DYNLINK extends Putstatic {
+        public static class PUTSTATIC_A_DYNLINK extends PUTSTATIC_A {
             public static final PUTSTATIC_A_DYNLINK INSTANCE = new PUTSTATIC_A_DYNLINK();
             private PUTSTATIC_A_DYNLINK() { }
             public void accept(Quad q, QuadVisitor qv) {
@@ -1745,6 +1805,54 @@ public abstract class Operator {
                 return resolutionexceptions;
             }
             public String toString() { return "PUTSTATIC_A%"; }
+        }
+        public static class PUTSTATIC_Z_DYNLINK extends PUTSTATIC_Z {
+            public static final PUTSTATIC_Z_DYNLINK INSTANCE = new PUTSTATIC_Z_DYNLINK();
+            private PUTSTATIC_Z_DYNLINK() { }
+            public void accept(Quad q, QuadVisitor qv) {
+                qv.visitExceptionThrower(q);
+                super.accept(q, qv);
+            }
+            public UnmodifiableList.jq_Class getThrownExceptions() {
+                return resolutionexceptions;
+            }
+            public String toString() { return "PUTSTATIC_Z%"; }
+        }
+        public static class PUTSTATIC_B_DYNLINK extends PUTSTATIC_B {
+            public static final PUTSTATIC_B_DYNLINK INSTANCE = new PUTSTATIC_B_DYNLINK();
+            private PUTSTATIC_B_DYNLINK() { }
+            public void accept(Quad q, QuadVisitor qv) {
+                qv.visitExceptionThrower(q);
+                super.accept(q, qv);
+            }
+            public UnmodifiableList.jq_Class getThrownExceptions() {
+                return resolutionexceptions;
+            }
+            public String toString() { return "PUTSTATIC_B%"; }
+        }
+        public static class PUTSTATIC_C_DYNLINK extends PUTSTATIC_C {
+            public static final PUTSTATIC_C_DYNLINK INSTANCE = new PUTSTATIC_C_DYNLINK();
+            private PUTSTATIC_C_DYNLINK() { }
+            public void accept(Quad q, QuadVisitor qv) {
+                qv.visitExceptionThrower(q);
+                super.accept(q, qv);
+            }
+            public UnmodifiableList.jq_Class getThrownExceptions() {
+                return resolutionexceptions;
+            }
+            public String toString() { return "PUTSTATIC_C%"; }
+        }
+        public static class PUTSTATIC_S_DYNLINK extends PUTSTATIC_S {
+            public static final PUTSTATIC_S_DYNLINK INSTANCE = new PUTSTATIC_S_DYNLINK();
+            private PUTSTATIC_S_DYNLINK() { }
+            public void accept(Quad q, QuadVisitor qv) {
+                qv.visitExceptionThrower(q);
+                super.accept(q, qv);
+            }
+            public UnmodifiableList.jq_Class getThrownExceptions() {
+                return resolutionexceptions;
+            }
+            public String toString() { return "PUTSTATIC_S%"; }
         }
     }
 
@@ -1832,7 +1940,7 @@ public abstract class Operator {
 		s.putReg_I(getDest(q).getRegister(), ((Boolean)ReflectiveVMInterface.INSTANCE.getField(o, f)).booleanValue()?1:0);
 	    }
         }
-        public static class GETFIELD_I_DYNLINK extends Getfield {
+        public static class GETFIELD_I_DYNLINK extends GETFIELD_I {
             public static final GETFIELD_I_DYNLINK INSTANCE = new GETFIELD_I_DYNLINK();
             private GETFIELD_I_DYNLINK() { }
             public void accept(Quad q, QuadVisitor qv) {
@@ -1845,7 +1953,7 @@ public abstract class Operator {
             public boolean hasSideEffects() { return true; }
             public String toString() { return "GETFIELD_I%"; }
         }
-        public static class GETFIELD_F_DYNLINK extends Getfield {
+        public static class GETFIELD_F_DYNLINK extends GETFIELD_F {
             public static final GETFIELD_F_DYNLINK INSTANCE = new GETFIELD_F_DYNLINK();
             private GETFIELD_F_DYNLINK() { }
             public void accept(Quad q, QuadVisitor qv) {
@@ -1858,7 +1966,7 @@ public abstract class Operator {
             public boolean hasSideEffects() { return true; }
             public String toString() { return "GETFIELD_F%"; }
         }
-        public static class GETFIELD_L_DYNLINK extends Getfield {
+        public static class GETFIELD_L_DYNLINK extends GETFIELD_L {
             public static final GETFIELD_L_DYNLINK INSTANCE = new GETFIELD_L_DYNLINK();
             private GETFIELD_L_DYNLINK() { }
             public void accept(Quad q, QuadVisitor qv) {
@@ -1871,7 +1979,7 @@ public abstract class Operator {
             public boolean hasSideEffects() { return true; }
             public String toString() { return "GETFIELD_L%"; }
         }
-        public static class GETFIELD_D_DYNLINK extends Getfield {
+        public static class GETFIELD_D_DYNLINK extends GETFIELD_D {
             public static final GETFIELD_D_DYNLINK INSTANCE = new GETFIELD_D_DYNLINK();
             private GETFIELD_D_DYNLINK() { }
             public void accept(Quad q, QuadVisitor qv) {
@@ -1884,7 +1992,7 @@ public abstract class Operator {
             public boolean hasSideEffects() { return true; }
             public String toString() { return "GETFIELD_D%"; }
         }
-        public static class GETFIELD_A_DYNLINK extends Getfield {
+        public static class GETFIELD_A_DYNLINK extends GETFIELD_A {
             public static final GETFIELD_A_DYNLINK INSTANCE = new GETFIELD_A_DYNLINK();
             private GETFIELD_A_DYNLINK() { }
             public void accept(Quad q, QuadVisitor qv) {
@@ -1897,7 +2005,7 @@ public abstract class Operator {
             public boolean hasSideEffects() { return true; }
             public String toString() { return "GETFIELD_A%"; }
         }
-        public static class GETFIELD_B_DYNLINK extends Getfield {
+        public static class GETFIELD_B_DYNLINK extends GETFIELD_B {
             public static final GETFIELD_B_DYNLINK INSTANCE = new GETFIELD_B_DYNLINK();
             private GETFIELD_B_DYNLINK() { }
             public void accept(Quad q, QuadVisitor qv) {
@@ -1910,7 +2018,7 @@ public abstract class Operator {
             public boolean hasSideEffects() { return true; }
             public String toString() { return "GETFIELD_B%"; }
         }
-        public static class GETFIELD_C_DYNLINK extends Getfield {
+        public static class GETFIELD_C_DYNLINK extends GETFIELD_C {
             public static final GETFIELD_C_DYNLINK INSTANCE = new GETFIELD_C_DYNLINK();
             private GETFIELD_C_DYNLINK() { }
             public void accept(Quad q, QuadVisitor qv) {
@@ -1922,13 +2030,8 @@ public abstract class Operator {
             }
             public boolean hasSideEffects() { return true; }
             public String toString() { return "GETFIELD_C%"; }
-	    public void interpret(Quad q, State s) {
-		Object o = getObjectOpValue(getBase(q), s);
-		jq_Field f = getField(q).getField();
-		s.putReg_I(getDest(q).getRegister(), ((Character)ReflectiveVMInterface.INSTANCE.getField(o, f)).charValue());
-	    }
         }
-        public static class GETFIELD_S_DYNLINK extends Getfield {
+        public static class GETFIELD_S_DYNLINK extends GETFIELD_S {
             public static final GETFIELD_S_DYNLINK INSTANCE = new GETFIELD_S_DYNLINK();
             private GETFIELD_S_DYNLINK() { }
             public void accept(Quad q, QuadVisitor qv) {
@@ -1941,7 +2044,7 @@ public abstract class Operator {
             public boolean hasSideEffects() { return true; }
             public String toString() { return "GETFIELD_S%"; }
         }
-        public static class GETFIELD_Z_DYNLINK extends Getfield {
+        public static class GETFIELD_Z_DYNLINK extends GETFIELD_Z {
             public static final GETFIELD_Z_DYNLINK INSTANCE = new GETFIELD_Z_DYNLINK();
             private GETFIELD_Z_DYNLINK() { }
             public void accept(Quad q, QuadVisitor qv) {
@@ -1953,11 +2056,6 @@ public abstract class Operator {
             }
             public boolean hasSideEffects() { return true; }
             public String toString() { return "GETFIELD_Z%"; }
-	    public void interpret(Quad q, State s) {
-		Object o = getObjectOpValue(getBase(q), s);
-		jq_Field f = getField(q).getField();
-		s.putReg_I(getDest(q).getRegister(), ((Boolean)ReflectiveVMInterface.INSTANCE.getField(o, f)).booleanValue()?1:0);
-	    }
         }
     }
     
@@ -2059,7 +2157,7 @@ public abstract class Operator {
 		ReflectiveVMInterface.INSTANCE.putField(o, f, new Boolean(v!=0));
 	    }
         }
-        public static class PUTFIELD_I_DYNLINK extends Putfield {
+        public static class PUTFIELD_I_DYNLINK extends PUTFIELD_I {
             public static final PUTFIELD_I_DYNLINK INSTANCE = new PUTFIELD_I_DYNLINK();
             private PUTFIELD_I_DYNLINK() { }
             public void accept(Quad q, QuadVisitor qv) {
@@ -2071,7 +2169,7 @@ public abstract class Operator {
             }
             public String toString() { return "PUTFIELD_I%"; }
         }
-        public static class PUTFIELD_F_DYNLINK extends Putfield {
+        public static class PUTFIELD_F_DYNLINK extends PUTFIELD_F {
             public static final PUTFIELD_F_DYNLINK INSTANCE = new PUTFIELD_F_DYNLINK();
             private PUTFIELD_F_DYNLINK() { }
             public void accept(Quad q, QuadVisitor qv) {
@@ -2083,7 +2181,7 @@ public abstract class Operator {
             }
             public String toString() { return "PUTFIELD_F%"; }
         }
-        public static class PUTFIELD_L_DYNLINK extends Putfield {
+        public static class PUTFIELD_L_DYNLINK extends PUTFIELD_L {
             public static final PUTFIELD_L_DYNLINK INSTANCE = new PUTFIELD_L_DYNLINK();
             private PUTFIELD_L_DYNLINK() { }
             public void accept(Quad q, QuadVisitor qv) {
@@ -2095,7 +2193,7 @@ public abstract class Operator {
             }
             public String toString() { return "PUTFIELD_L%"; }
         }
-        public static class PUTFIELD_D_DYNLINK extends Putfield {
+        public static class PUTFIELD_D_DYNLINK extends PUTFIELD_D {
             public static final PUTFIELD_D_DYNLINK INSTANCE = new PUTFIELD_D_DYNLINK();
             private PUTFIELD_D_DYNLINK() { }
             public void accept(Quad q, QuadVisitor qv) {
@@ -2107,7 +2205,7 @@ public abstract class Operator {
             }
             public String toString() { return "PUTFIELD_D%"; }
         }
-        public static class PUTFIELD_A_DYNLINK extends Putfield {
+        public static class PUTFIELD_A_DYNLINK extends PUTFIELD_A {
             public static final PUTFIELD_A_DYNLINK INSTANCE = new PUTFIELD_A_DYNLINK();
             private PUTFIELD_A_DYNLINK() { }
             public void accept(Quad q, QuadVisitor qv) {
@@ -2119,7 +2217,7 @@ public abstract class Operator {
             }
             public String toString() { return "PUTFIELD_A%"; }
         }
-        public static class PUTFIELD_B_DYNLINK extends Putfield {
+        public static class PUTFIELD_B_DYNLINK extends PUTFIELD_B {
             public static final PUTFIELD_B_DYNLINK INSTANCE = new PUTFIELD_B_DYNLINK();
             private PUTFIELD_B_DYNLINK() { }
             public void accept(Quad q, QuadVisitor qv) {
@@ -2130,14 +2228,8 @@ public abstract class Operator {
                 return resolutionexceptions;
             }
             public String toString() { return "PUTFIELD_B%"; }
-	    public void interpret(Quad q, State s) {
-		Object o = getObjectOpValue(getBase(q), s);
-		jq_Field f = getField(q).getField();
-		int v = getIntOpValue(getSrc(q), s);
-		ReflectiveVMInterface.INSTANCE.putField(o, f, new Byte((byte)v));
-	    }
         }
-        public static class PUTFIELD_C_DYNLINK extends Putfield {
+        public static class PUTFIELD_C_DYNLINK extends PUTFIELD_C {
             public static final PUTFIELD_C_DYNLINK INSTANCE = new PUTFIELD_C_DYNLINK();
             private PUTFIELD_C_DYNLINK() { }
             public void accept(Quad q, QuadVisitor qv) {
@@ -2148,14 +2240,8 @@ public abstract class Operator {
                 return resolutionexceptions;
             }
             public String toString() { return "PUTFIELD_C%"; }
-	    public void interpret(Quad q, State s) {
-		Object o = getObjectOpValue(getBase(q), s);
-		jq_Field f = getField(q).getField();
-		int v = getIntOpValue(getSrc(q), s);
-		ReflectiveVMInterface.INSTANCE.putField(o, f, new Character((char)v));
-	    }
         }
-        public static class PUTFIELD_S_DYNLINK extends Putfield {
+        public static class PUTFIELD_S_DYNLINK extends PUTFIELD_S {
             public static final PUTFIELD_S_DYNLINK INSTANCE = new PUTFIELD_S_DYNLINK();
             private PUTFIELD_S_DYNLINK() { }
             public void accept(Quad q, QuadVisitor qv) {
@@ -2166,14 +2252,8 @@ public abstract class Operator {
                 return resolutionexceptions;
             }
             public String toString() { return "PUTFIELD_S%"; }
-	    public void interpret(Quad q, State s) {
-		Object o = getObjectOpValue(getBase(q), s);
-		jq_Field f = getField(q).getField();
-		int v = getIntOpValue(getSrc(q), s);
-		ReflectiveVMInterface.INSTANCE.putField(o, f, new Short((short)v));
-	    }
         }
-        public static class PUTFIELD_Z_DYNLINK extends Putfield {
+        public static class PUTFIELD_Z_DYNLINK extends PUTFIELD_Z {
             public static final PUTFIELD_Z_DYNLINK INSTANCE = new PUTFIELD_Z_DYNLINK();
             private PUTFIELD_Z_DYNLINK() { }
             public void accept(Quad q, QuadVisitor qv) {
@@ -2184,12 +2264,6 @@ public abstract class Operator {
                 return resolutionexceptions;
             }
             public String toString() { return "PUTFIELD_Z%"; }
-	    public void interpret(Quad q, State s) {
-		Object o = getObjectOpValue(getBase(q), s);
-		jq_Field f = getField(q).getField();
-		int v = getIntOpValue(getSrc(q), s);
-		ReflectiveVMInterface.INSTANCE.putField(o, f, new Boolean(v!=0));
-	    }
         }
     }
 
@@ -2502,127 +2576,95 @@ public abstract class Operator {
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
 	    public void interpret(Quad q, State s) { interpret_static(q, s); }
         }
-        public static class INVOKEVIRTUAL_V_DYNLINK extends Invoke {
+        public static class INVOKEVIRTUAL_V_DYNLINK extends INVOKEVIRTUAL_V {
             public static final INVOKEVIRTUAL_V_DYNLINK INSTANCE = new INVOKEVIRTUAL_V_DYNLINK();
             private INVOKEVIRTUAL_V_DYNLINK() { }
             public String toString() { return "INVOKEVIRTUAL_V%"; }
-	    public void interpret(Quad q, State s) { interpret_virtual(q, s); }
         }
-        public static class INVOKEVIRTUAL_I_DYNLINK extends Invoke {
+        public static class INVOKEVIRTUAL_I_DYNLINK extends INVOKEVIRTUAL_I {
             public static final INVOKEVIRTUAL_I_DYNLINK INSTANCE = new INVOKEVIRTUAL_I_DYNLINK();
             private INVOKEVIRTUAL_I_DYNLINK() { }
             public String toString() { return "INVOKEVIRTUAL_I%"; }
-            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
-	    public void interpret(Quad q, State s) { interpret_virtual(q, s); }
         }
-        public static class INVOKEVIRTUAL_F_DYNLINK extends Invoke {
+        public static class INVOKEVIRTUAL_F_DYNLINK extends INVOKEVIRTUAL_F {
             public static final INVOKEVIRTUAL_F_DYNLINK INSTANCE = new INVOKEVIRTUAL_F_DYNLINK();
             private INVOKEVIRTUAL_F_DYNLINK() { }
             public String toString() { return "INVOKEVIRTUAL_F%"; }
-	    public void interpret(Quad q, State s) { interpret_virtual(q, s); }
         }
-        public static class INVOKEVIRTUAL_L_DYNLINK extends Invoke {
+        public static class INVOKEVIRTUAL_L_DYNLINK extends INVOKEVIRTUAL_L {
             public static final INVOKEVIRTUAL_L_DYNLINK INSTANCE = new INVOKEVIRTUAL_L_DYNLINK();
             private INVOKEVIRTUAL_L_DYNLINK() { }
             public String toString() { return "INVOKEVIRTUAL_L%"; }
-            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
-	    public void interpret(Quad q, State s) { interpret_virtual(q, s); }
         }
-        public static class INVOKEVIRTUAL_D_DYNLINK extends Invoke {
+        public static class INVOKEVIRTUAL_D_DYNLINK extends INVOKEVIRTUAL_D {
             public static final INVOKEVIRTUAL_D_DYNLINK INSTANCE = new INVOKEVIRTUAL_D_DYNLINK();
             private INVOKEVIRTUAL_D_DYNLINK() { }
             public String toString() { return "INVOKEVIRTUAL_D%"; }
-            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
-	    public void interpret(Quad q, State s) { interpret_virtual(q, s); }
         }
-        public static class INVOKEVIRTUAL_A_DYNLINK extends Invoke {
+        public static class INVOKEVIRTUAL_A_DYNLINK extends INVOKEVIRTUAL_A {
             public static final INVOKEVIRTUAL_A_DYNLINK INSTANCE = new INVOKEVIRTUAL_A_DYNLINK();
             private INVOKEVIRTUAL_A_DYNLINK() { }
             public String toString() { return "INVOKEVIRTUAL_A%"; }
-            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
-	    public void interpret(Quad q, State s) { interpret_virtual(q, s); }
         }
-        public static class INVOKESTATIC_V_DYNLINK extends Invoke {
+        public static class INVOKESTATIC_V_DYNLINK extends INVOKESTATIC_V {
             public static final INVOKESTATIC_V_DYNLINK INSTANCE = new INVOKESTATIC_V_DYNLINK();
             private INVOKESTATIC_V_DYNLINK() { }
             public String toString() { return "INVOKESTATIC_V%"; }
-	    public void interpret(Quad q, State s) { interpret_static(q, s); }
         }
-        public static class INVOKESTATIC_I_DYNLINK extends Invoke {
+        public static class INVOKESTATIC_I_DYNLINK extends INVOKESTATIC_I {
             public static final INVOKESTATIC_I_DYNLINK INSTANCE = new INVOKESTATIC_I_DYNLINK();
             private INVOKESTATIC_I_DYNLINK() { }
             public String toString() { return "INVOKESTATIC_I%"; }
-            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
-	    public void interpret(Quad q, State s) { interpret_static(q, s); }
         }
-        public static class INVOKESTATIC_F_DYNLINK extends Invoke {
+        public static class INVOKESTATIC_F_DYNLINK extends INVOKESTATIC_F {
             public static final INVOKESTATIC_F_DYNLINK INSTANCE = new INVOKESTATIC_F_DYNLINK();
             private INVOKESTATIC_F_DYNLINK() { }
             public String toString() { return "INVOKESTATIC_F%"; }
-            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
-	    public void interpret(Quad q, State s) { interpret_static(q, s); }
         }
-        public static class INVOKESTATIC_L_DYNLINK extends Invoke {
+        public static class INVOKESTATIC_L_DYNLINK extends INVOKESTATIC_L {
             public static final INVOKESTATIC_L_DYNLINK INSTANCE = new INVOKESTATIC_L_DYNLINK();
             private INVOKESTATIC_L_DYNLINK() { }
             public String toString() { return "INVOKESTATIC_L%"; }
-            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
-	    public void interpret(Quad q, State s) { interpret_static(q, s); }
         }
-        public static class INVOKESTATIC_D_DYNLINK extends Invoke {
+        public static class INVOKESTATIC_D_DYNLINK extends INVOKESTATIC_D {
             public static final INVOKESTATIC_D_DYNLINK INSTANCE = new INVOKESTATIC_D_DYNLINK();
             private INVOKESTATIC_D_DYNLINK() { }
             public String toString() { return "INVOKESTATIC_D%"; }
-            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
-	    public void interpret(Quad q, State s) { interpret_static(q, s); }
         }
-        public static class INVOKESTATIC_A_DYNLINK extends Invoke {
+        public static class INVOKESTATIC_A_DYNLINK extends INVOKESTATIC_A {
             public static final INVOKESTATIC_A_DYNLINK INSTANCE = new INVOKESTATIC_A_DYNLINK();
             private INVOKESTATIC_A_DYNLINK() { }
             public String toString() { return "INVOKESTATIC_A%"; }
-            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
-	    public void interpret(Quad q, State s) { interpret_static(q, s); }
         }
-        public static class INVOKESPECIAL_V_DYNLINK extends Invoke {
+        public static class INVOKESPECIAL_V_DYNLINK extends INVOKESTATIC_V {
             public static final INVOKESPECIAL_V_DYNLINK INSTANCE = new INVOKESPECIAL_V_DYNLINK();
             private INVOKESPECIAL_V_DYNLINK() { }
             public String toString() { return "INVOKESPECIAL_V%"; }
-	    public void interpret(Quad q, State s) { interpret_static(q, s); }
         }
-        public static class INVOKESPECIAL_I_DYNLINK extends Invoke {
+        public static class INVOKESPECIAL_I_DYNLINK extends INVOKESTATIC_I {
             public static final INVOKESPECIAL_I_DYNLINK INSTANCE = new INVOKESPECIAL_I_DYNLINK();
             private INVOKESPECIAL_I_DYNLINK() { }
             public String toString() { return "INVOKESPECIAL_I%"; }
-            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
-	    public void interpret(Quad q, State s) { interpret_static(q, s); }
         }
-        public static class INVOKESPECIAL_F_DYNLINK extends Invoke {
+        public static class INVOKESPECIAL_F_DYNLINK extends INVOKESTATIC_F {
             public static final INVOKESPECIAL_F_DYNLINK INSTANCE = new INVOKESPECIAL_F_DYNLINK();
             private INVOKESPECIAL_F_DYNLINK() { }
             public String toString() { return "INVOKESPECIAL_F%"; }
-            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
-	    public void interpret(Quad q, State s) { interpret_static(q, s); }
         }
-        public static class INVOKESPECIAL_L_DYNLINK extends Invoke {
+        public static class INVOKESPECIAL_L_DYNLINK extends INVOKESTATIC_L {
             public static final INVOKESPECIAL_L_DYNLINK INSTANCE = new INVOKESPECIAL_L_DYNLINK();
             private INVOKESPECIAL_L_DYNLINK() { }
             public String toString() { return "INVOKESPECIAL_L%"; }
-            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
-	    public void interpret(Quad q, State s) { interpret_static(q, s); }
         }
-        public static class INVOKESPECIAL_D_DYNLINK extends Invoke {
+        public static class INVOKESPECIAL_D_DYNLINK extends INVOKESTATIC_D {
             public static final INVOKESPECIAL_D_DYNLINK INSTANCE = new INVOKESPECIAL_D_DYNLINK();
             private INVOKESPECIAL_D_DYNLINK() { }
             public String toString() { return "INVOKESPECIAL_D%"; }
-            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
-	    public void interpret(Quad q, State s) { interpret_static(q, s); }
         }
-        public static class INVOKESPECIAL_A_DYNLINK extends Invoke {
+        public static class INVOKESPECIAL_A_DYNLINK extends INVOKESTATIC_A {
             public static final INVOKESPECIAL_A_DYNLINK INSTANCE = new INVOKESPECIAL_A_DYNLINK();
             private INVOKESPECIAL_A_DYNLINK() { }
             public String toString() { return "INVOKESPECIAL_A%"; }
-            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
-	    public void interpret(Quad q, State s) { interpret_static(q, s); }
         }
         public static class INVOKEINTERFACE_V extends Invoke {
             public static final INVOKEINTERFACE_V INSTANCE = new INVOKEINTERFACE_V();
@@ -2691,6 +2733,11 @@ public abstract class Operator {
 	    public void interpret(Quad q, State s) {
 		s.putReg_A(getDest(q).getRegister(), new UninitializedReference((jq_Class)getType(q).getType()));
 	    }
+        }
+        public static class NEW_DYNLINK extends NEW {
+            public static final NEW_DYNLINK INSTANCE = new NEW_DYNLINK();
+            private NEW_DYNLINK() { }
+            public String toString() { return "NEW%"; }
         }
     }
     
@@ -2968,6 +3015,9 @@ public abstract class Operator {
     
     public static abstract class Special extends Operator {
         
+        public static Quad create(int id, GET_EXCEPTION operator, RegisterOperand res) {
+            return new Quad(id, operator, res);
+        }
         public static Quad create(int id, GET_THREAD_BLOCK operator, RegisterOperand res) {
             return new Quad(id, operator, res);
         }
@@ -3001,6 +3051,15 @@ public abstract class Operator {
             super.accept(q, qv);
         }
         
+        public static class GET_EXCEPTION extends Special {
+            public static final GET_EXCEPTION INSTANCE = new GET_EXCEPTION();
+            private GET_EXCEPTION() { }
+            public String toString() { return "GET_EXCEPTION"; }
+            public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
+	    public void interpret(Quad q, State s) {
+		s.putReg_A(((RegisterOperand)getOp1(q)).getRegister(), s.getCaught());
+	    }
+        }
         public static class GET_THREAD_BLOCK extends Special {
             public static final GET_THREAD_BLOCK INSTANCE = new GET_THREAD_BLOCK();
             private GET_THREAD_BLOCK() { }

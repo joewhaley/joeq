@@ -256,29 +256,24 @@ public class ReflectiveInterpreter extends Interpreter {
             jq.UNREACHABLE("host jdk does not contain field "+c2.getName()+"."+fieldName);
             return;
         }
-        public int getstatic_I(jq_StaticField f) {
-            if (f.getType() == jq_Primitive.INT)
-                return ((Integer)ot.getStaticFieldValue(f)).intValue();
-            if (f.getType() == jq_Primitive.BYTE)
-                return (int)((Byte)ot.getStaticFieldValue(f)).byteValue();
-            if (f.getType() == jq_Primitive.SHORT)
-                return (int)((Short)ot.getStaticFieldValue(f)).shortValue();
-            if (f.getType() == jq_Primitive.CHAR)
-                return (int)((Character)ot.getStaticFieldValue(f)).charValue();
-            if (f.getType() == jq_Primitive.BOOLEAN)
-                return ((Boolean)ot.getStaticFieldValue(f)).booleanValue()?1:0;
-            jq.UNREACHABLE(f.toString());
-            return 0;
-        }
+        public int getstatic_I(jq_StaticField f) { return ((Integer)ot.getStaticFieldValue(f)).intValue(); }
         public long getstatic_L(jq_StaticField f) { return ((Long)ot.getStaticFieldValue(f)).longValue(); }
         public float getstatic_F(jq_StaticField f) { return ((Float)ot.getStaticFieldValue(f)).floatValue(); }
-        public double getstatic_D(jq_StaticField f) { return ((Double)ot.getStaticFieldValue( f)).doubleValue(); }
+        public double getstatic_D(jq_StaticField f) { return ((Double)ot.getStaticFieldValue(f)).doubleValue(); }
         public Object getstatic_A(jq_StaticField f) { return ot.getStaticFieldValue(f); }
+        public boolean getstatic_Z(jq_StaticField f) { return ((Boolean)ot.getStaticFieldValue(f)).booleanValue(); }
+        public byte getstatic_B(jq_StaticField f) { return ((Byte)ot.getStaticFieldValue(f)).byteValue(); }
+        public char getstatic_C(jq_StaticField f) { return ((Character)ot.getStaticFieldValue(f)).charValue(); }
+        public short getstatic_S(jq_StaticField f) { return ((Short)ot.getStaticFieldValue(f)).shortValue(); }
         public void putstatic_I(jq_StaticField f, int v) { putField(null, f, new Integer(v)); }
         public void putstatic_L(jq_StaticField f, long v) { putField(null, f, new Long(v)); }
         public void putstatic_F(jq_StaticField f, float v) { putField(null, f, new Float(v)); }
         public void putstatic_D(jq_StaticField f, double v) { putField(null, f, new Double(v)); }
         public void putstatic_A(jq_StaticField f, Object v) { putField(null, f, v); }
+        public void putstatic_Z(jq_StaticField f, boolean v) { putField(null, f, new Boolean(v)); }
+        public void putstatic_B(jq_StaticField f, byte v) { putField(null, f, new Byte(v)); }
+        public void putstatic_C(jq_StaticField f, char v) { putField(null, f, new Character(v)); }
+        public void putstatic_S(jq_StaticField f, short v) { putField(null, f, new Short(v)); }
         public int getfield_I(Object o, jq_InstanceField f) { return ((Integer)ot.getInstanceFieldValue(o, f)).intValue(); }
         public long getfield_L(Object o, jq_InstanceField f) { return ((Long)ot.getInstanceFieldValue(o, f)).longValue(); }
         public float getfield_F(Object o, jq_InstanceField f) { return ((Float)ot.getInstanceFieldValue(o, f)).floatValue(); }
@@ -326,6 +321,7 @@ public class ReflectiveInterpreter extends Interpreter {
             return Array.newInstance(Reflection.getJDKType(t), dims);
         }
         public jq_Type getJQTypeOf(Object o) { return Reflection.getJQType(o.getClass()); }
+        
     }
 
     static class MonitorExit extends RuntimeException {
