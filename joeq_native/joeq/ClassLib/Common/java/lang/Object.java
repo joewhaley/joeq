@@ -45,11 +45,19 @@ public abstract class Object {
             if (--k == 0) break;
         }
         jq_Thread t = Unsafe.getThreadBlock();
-        t.sleep(timeout);
+        InterruptedException rethrow;
+        try {
+            t.sleep(timeout);
+            rethrow = null;
+        } catch (InterruptedException x) {
+            rethrow = x;
+        }
         for (;;) {
             Monitor.monitorenter(this);
             if (--count == 0) break;
         }
+        if (rethrow != null)
+            throw rethrow;
     }
     
 }
