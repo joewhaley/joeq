@@ -173,8 +173,8 @@ public class QuadInterpreter {
             bad_classes.add(Reflection._class);
             bad_methods = new HashSet();
 	    jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/PrintStream;");
-	    jq_Method m = k.getOrCreateInstanceMethod("write", "(Ljava/lang/String;)V");
-	    bad_methods.add(m);
+	    jq_Method m2 = k.getOrCreateInstanceMethod("write", "(Ljava/lang/String;)V");
+	    bad_methods.add(m2);
 	    bad_methods.add(Allocator.HeapAllocator._multinewarray);
             interpret_filter = new Filter() {
                 public boolean isElement(Object o) {
