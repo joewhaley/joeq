@@ -65,6 +65,13 @@ public class jq_LineNumberBC implements Comparable {
         return equals((jq_LineNumberBC)that);
     }
     
+    /* (non-Javadoc)
+     * @see java.lang.Object#hashCode()
+     */
+    public int hashCode() {
+        return startPC ^ lineNum;
+    }
+    
     /** Returns a string representation of this jq_LineNumberBC object.
      * @return  string representation
      */
