@@ -32,26 +32,26 @@ class B2QUnsafeHandler implements BytecodeToQuad.UnsafeHelper {
             Operand op = current_state.pop_F();
             RegisterOperand res = b2q.getStackRegister(jq_Primitive.INT);
             q = Unary.create(quad_cfg.getNewQuadID(), Unary.FLOAT_2INTBITS.INSTANCE, res, op);
-            current_state.push_I(res);
+            current_state.push_I(res.copy());
         } else if (m == Unsafe._intBitsToFloat) {
             Operand op = current_state.pop_I();
             RegisterOperand res = b2q.getStackRegister(jq_Primitive.FLOAT);
             q = Unary.create(quad_cfg.getNewQuadID(), Unary.INTBITS_2FLOAT.INSTANCE, res, op);
-            current_state.push_F(res);
+            current_state.push_F(res.copy());
         } else if (m == Unsafe._doubleToLongBits) {
             Operand op = current_state.pop_D();
             RegisterOperand res = b2q.getStackRegister(jq_Primitive.LONG);
             q = Unary.create(quad_cfg.getNewQuadID(), Unary.DOUBLE_2LONGBITS.INSTANCE, res, op);
-            current_state.push_L(res);
+            current_state.push_L(res.copy());
         } else if (m == Unsafe._longBitsToDouble) {
             Operand op = current_state.pop_L();
             RegisterOperand res = b2q.getStackRegister(jq_Primitive.DOUBLE);
             q = Unary.create(quad_cfg.getNewQuadID(), Unary.LONGBITS_2DOUBLE.INSTANCE, res, op);
-            current_state.push_D(res);
+            current_state.push_D(res.copy());
         } else if (m == Unsafe._getThreadBlock) {
             RegisterOperand res = b2q.getStackRegister(jq_Thread._class);
             q = Special.create(quad_cfg.getNewQuadID(), Special.GET_THREAD_BLOCK.INSTANCE, res);
-            current_state.push_A(res);
+            current_state.push_A(res.copy());
         } else if (m == Unsafe._setThreadBlock) {
             Operand loc = current_state.pop_A();
             q = Special.create(quad_cfg.getNewQuadID(), Special.SET_THREAD_BLOCK.INSTANCE, loc);
@@ -64,11 +64,11 @@ class B2QUnsafeHandler implements BytecodeToQuad.UnsafeHelper {
         } else if (m == Unsafe._popFP32) {
             RegisterOperand res = b2q.getStackRegister(jq_Primitive.FLOAT);
             q = Special.create(quad_cfg.getNewQuadID(), Special.POP_FP32.INSTANCE, res);
-            current_state.push_F(res);
+            current_state.push_F(res.copy());
         } else if (m == Unsafe._popFP64) {
             RegisterOperand res = b2q.getStackRegister(jq_Primitive.DOUBLE);
             q = Special.create(quad_cfg.getNewQuadID(), Special.POP_FP64.INSTANCE, res);
-            current_state.push_D(res);
+            current_state.push_D(res.copy());
         } else if (m == Unsafe._pushFP32) {
             Operand val = current_state.pop_F();
             q = Special.create(quad_cfg.getNewQuadID(), Special.PUSH_FP32.INSTANCE, val);
@@ -78,7 +78,7 @@ class B2QUnsafeHandler implements BytecodeToQuad.UnsafeHelper {
         } else if (m == Unsafe._EAX) {
             RegisterOperand res = b2q.getStackRegister(jq_Primitive.INT);
             q = Special.create(quad_cfg.getNewQuadID(), Special.GET_EAX.INSTANCE, res);
-            current_state.push_I(res);
+            current_state.push_I(res.copy());
         } else if (m == Unsafe._pushArg) {
             Operand val = current_state.pop_I();
             q = Special.create(quad_cfg.getNewQuadID(), Special.PUSHARG_I.INSTANCE, val);
@@ -89,20 +89,20 @@ class B2QUnsafeHandler implements BytecodeToQuad.UnsafeHelper {
             Operand loc = current_state.pop_P();
             RegisterOperand res = b2q.getStackRegister(jq_Primitive.LONG);
             q = Special.create(quad_cfg.getNewQuadID(), Special.INVOKE_L.INSTANCE, res, loc);
-            current_state.push_L(res);
+            current_state.push_L(res.copy());
         } else if (m == Unsafe._invokeA) {
             Operand loc = current_state.pop_P();
             RegisterOperand res = b2q.getStackRegister(Address._class);
             q = Special.create(quad_cfg.getNewQuadID(), Special.INVOKE_P.INSTANCE, res, loc);
-            current_state.push_P(res);
+            current_state.push_P(res.copy());
         } else if (m == Unsafe._isEQ) {
             RegisterOperand res = b2q.getStackRegister(jq_Primitive.BOOLEAN);
             q = Special.create(quad_cfg.getNewQuadID(), Special.ISEQ.INSTANCE, res);
-            current_state.push_I(res);
+            current_state.push_I(res.copy());
         } else if (m == Unsafe._isGE) {
             RegisterOperand res = b2q.getStackRegister(jq_Primitive.BOOLEAN);
             q = Special.create(quad_cfg.getNewQuadID(), Special.ISGE.INSTANCE, res);
-            current_state.push_I(res);
+            current_state.push_I(res.copy());
         } else {
             System.err.println(m.toString());
             Assert.UNREACHABLE();
