@@ -277,5 +277,47 @@ public abstract class Templates {
                 public static EmptyIterator INSTANCE = new EmptyIterator();
             }
         }
+        
+        public static class ExceptionHandler extends java.util.AbstractList implements List.ExceptionHandler {
+            private final java.util.List/*<Compil3r.Quad.ExceptionHandler>*/ a;
+            public ExceptionHandler(java.util.List/*<Compil3r.Quad.ExceptionHandler>*/ c) { this.a = c; }
+            public int size() { return a.size(); }
+            public Object get(int index) { return a.get(index); }
+            public Compil3r.Quad.ExceptionHandler getExceptionHandler(int index) { return (Compil3r.Quad.ExceptionHandler)a.get(index); }
+            public void add(int i, Object o) { a.add(i, o); }
+            public Object set(int i, Object o) { return a.set(i, o); }
+            public Object remove(int i) { return a.remove(i); }
+            public ListIterator.ExceptionHandler exceptionHandlerIterator() { return new Iterator(a.listIterator()); }
+            public static class Iterator implements ListIterator.ExceptionHandler {
+                private java.util.ListIterator/*<Compil3r.Quad.ExceptionHandler>*/ i;
+                public Iterator(java.util.ListIterator/*<Compil3r.Quad.ExceptionHandler>*/ l) { this.i = l; }
+                public boolean hasNext() { return i.hasNext(); }
+                public boolean hasPrevious() { return i.hasPrevious(); }
+                public int nextIndex() { return i.nextIndex(); }
+                public int previousIndex() { return i.previousIndex(); }
+                public Object next() { return i.next(); }
+                public Compil3r.Quad.ExceptionHandler nextExceptionHandler() { return (Compil3r.Quad.ExceptionHandler)i.next(); }
+                public Object previous() { return i.previous(); }
+                public Compil3r.Quad.ExceptionHandler previousExceptionHandler() { return (Compil3r.Quad.ExceptionHandler)i.previous(); }
+                public void remove() { i.remove(); }
+                public void set(Object o) { i.set(o); }
+                public void add(Object o) { i.add(o); }
+            }
+            public static class EmptyIterator implements ListIterator.ExceptionHandler {
+                private EmptyIterator() {}
+                public boolean hasNext() { return false; }
+                public boolean hasPrevious() { return false; }
+                public int nextIndex() { return 0; }
+                public int previousIndex() { return -1; }
+                public Object next() { throw new java.util.NoSuchElementException(); }
+                public Compil3r.Quad.ExceptionHandler nextExceptionHandler() { throw new java.util.NoSuchElementException(); }
+                public Object previous() { throw new java.util.NoSuchElementException(); }
+                public Compil3r.Quad.ExceptionHandler previousExceptionHandler() { throw new java.util.NoSuchElementException(); }
+                public void remove() { throw new java.lang.IllegalStateException(); }
+                public void set(Object o) { throw new java.lang.IllegalStateException(); }
+                public void add(Object o) { throw new java.lang.UnsupportedOperationException(); }
+                public static EmptyIterator INSTANCE = new EmptyIterator();
+            }
+        }
     }
 }
