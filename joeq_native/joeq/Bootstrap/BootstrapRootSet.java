@@ -35,6 +35,7 @@ import joeq.Runtime.ExceptionDeliverer;
 import joeq.Runtime.Reflection;
 import joeq.Runtime.SystemInterface;
 import joeq.Runtime.Unsafe;
+import joeq.Scheduler.FullThreadUtils;
 import joeq.Util.Assert;
 import joeq.Util.Collections.IdentityHashCodeWrapper;
 
@@ -310,6 +311,8 @@ public class BootstrapRootSet {
         addNecessaryMethod(joeq.Scheduler.jq_NativeThread._ctrl_break_handler);
         // entrypoint for interrupter thread
         addNecessaryMethod(joeq.Scheduler.jq_InterrupterThread._run);
+        // ??? dunno why this is necessary ???
+        addNecessaryMethod(FullThreadUtils._getJQThread);
         
         // dunno why this doesn't show up
         addNecessaryType(joeq.Assembler.Heap2HeapReference._class);

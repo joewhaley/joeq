@@ -3,7 +3,9 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Scheduler;
 
+import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
+import joeq.Class.jq_InstanceMethod;
 import joeq.Main.jq;
 import joeq.Runtime.Reflection;
 
@@ -20,5 +22,8 @@ public class FullThreadUtils implements ThreadUtils.Delegate {
             return (joeq.Scheduler.jq_Thread)Reflection.getfield_A(t, f);
         }
         return ((joeq.ClassLib.Common.InterfaceImpl)joeq.ClassLib.ClassLibInterface.DEFAULT).getJQThread(t);
-    }    
+    }
+    
+    public static final jq_Class _class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Scheduler/FullThreadUtils;");
+    public static final jq_InstanceMethod _getJQThread = _class.getOrCreateInstanceMethod("getJQThread", "(Ljava/lang/Thread;)Ljoeq/Scheduler/jq_Thread;");
 }
