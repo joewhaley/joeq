@@ -38,8 +38,13 @@ public final class Interface extends ClassLib.sun14_win32.Interface {
         public void initialize() {
             super.initialize();
             
-            jq_Class k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LClassLib/Common/java/util/zip/DeflaterHuffman;");
-            k.load();
+            jq_Class k;
+            try {
+	            k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LClassLib/Common/java/util/zip/DeflaterHuffman;");
+	            k.load();
+            } catch (NoClassDefFoundError _) {
+            	System.err.println("Error preloading DeflaterHuffman class");
+            }
             
             // used during bootstrapping.
             k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/ObjectInputStream$GetFieldImpl;");
