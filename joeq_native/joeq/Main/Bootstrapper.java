@@ -43,8 +43,15 @@ public abstract class Bootstrapper implements ObjectLayout {
         jq.Bootstrapping = true;
         ClassLibInterface.i.useJoeqClasslib(true);
         
-	if (ClassLibInterface.i.getClass().toString().indexOf("win32") != -1)
+	if (ClassLibInterface.i.getClass().toString().indexOf("win32") != -1) {
 	    DUMP_COFF = true;
+	    x86ReferenceCompiler.THREAD_BLOCK_PREFIX = Assembler.x86.x86.PREFIX_FS;
+	    x86ReferenceCompiler.THREAD_BLOCK_OFFSET = 0x14;
+	} else {
+	    DUMP_COFF = false;
+	    x86ReferenceCompiler.THREAD_BLOCK_PREFIX = Assembler.x86.x86.PREFIX_GS;
+	    x86ReferenceCompiler.THREAD_BLOCK_OFFSET = 0x4;
+	}
 
         String classpath = System.getProperty("java.class.path")+
                            System.getProperty("path.separator")+

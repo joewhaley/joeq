@@ -2527,6 +2527,9 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         asm.emitShort_Reg(x86.PUSH_r, EAX);
     }
 
+    public static byte THREAD_BLOCK_PREFIX = x86.PREFIX_FS;
+    public static int  THREAD_BLOCK_OFFSET = 0x14;
+
     private void gen_unsafe(jq_Method f) {
         if (TraceBytecodes) {
             emitPushAddressOf(SystemInterface.toCString(i_start+": UNSAFE "+f));
@@ -2585,11 +2588,11 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             asm.emitShort_Reg(x86.PUSH_r, EDX); // hi
             asm.emitShort_Reg(x86.PUSH_r, EAX); // lo
         } else if (f == Unsafe._getThreadBlock) {
-            asm.emitprefix(x86.PREFIX_FS);
-            asm.emit2_Mem(x86.PUSH_m, 0x14);
+            asm.emitprefix(THREAD_BLOCK_PREFIX);
+            asm.emit2_Mem(x86.PUSH_m, THREAD_BLOCK_OFFSET);
         } else if (f == Unsafe._setThreadBlock) {
-            asm.emitprefix(x86.PREFIX_FS);
-            asm.emit2_Mem(x86.POP_m, 0x14);
+            asm.emitprefix(THREAD_BLOCK_PREFIX);
+            asm.emit2_Mem(x86.POP_m, THREAD_BLOCK_OFFSET);
         } else if (f == Unsafe._longJump) {
             asm.emitShort_Reg(x86.POP_r, EAX); // eax
             asm.emitShort_Reg(x86.POP_r, EBX); // sp
