@@ -1039,9 +1039,10 @@ public class PA {
         if (ADD_SUPERTYPES) {
             for (int T_i = 0; T_i < Tmap.size(); ++T_i) {
                 jq_Reference t1 = (jq_Reference) Tmap.get(T_i);
+                if (t1 == null) continue;
                 jq_Reference t2 = t1.getDirectPrimarySupertype();
                 Tmap.get(t2);
-                jq_Class[] c = t2.getInterfaces();
+                jq_Class[] c = t1.getInterfaces();
                 for (int i = 0; i < c.length; ++i) {
                     Tmap.get(c[i]);
                 }
