@@ -496,6 +496,44 @@ public abstract class ProgramLocation implements Textualizable {
         public boolean isInterfaceCall() { return false; }
         public byte getInvocationType() { return -1; }
     }
+    
+    public static class PlaceholderParameterProgramLocation extends ProgramLocation {
+        String locationLabel;
+
+        public PlaceholderParameterProgramLocation(jq_Method m, String locationLabel) {
+            super(m);
+            this.locationLabel = locationLabel;
+        }
+        
+        public PlaceholderParameterProgramLocation(PlaceholderParameterProgramLocation that, String postfix) {
+            this(that.getMethod(), that.getLocationLabel() + postfix);
+        }
+
+        public String getLocationLabel() {
+            return locationLabel;
+        }
+
+        public void write(Textualizer t) throws IOException {
+            t.writeString("fake "+locationLabel.replace(' ', '_') + " ");
+            t.writeObject(m);
+        }
+
+        public String toString() {
+            String s = locationLabel + " of " + super.m.getName()+"()";
+            return s;
+        }
+
+        public int getID() { return -1; }
+        public int getBytecodeIndex() { return -1; }
+        public jq_Type getResultType() { return null; }
+        public boolean isCall() { return false; }
+        public jq_Method getTargetMethod() { return null; }
+        public jq_Type[] getParamTypes() { return null; }
+        public jq_Type getReturnType() { return null; }
+        public boolean isSingleTarget() { return false; }
+        public boolean isInterfaceCall() { return false; }
+        public byte getInvocationType() { return -1; }
+    }
 
     public static ProgramLocation read(StringTokenizer st) {
         String s = st.nextToken();

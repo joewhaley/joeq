@@ -828,11 +828,14 @@ public class MethodSummary {
             this.methodCalls.add(mc);
             jq_Type[] params = m.getParamTypes();
             ParamListOperand plo = Invoke.getParamList(obj);
-            Assert._assert(m == joeq.Runtime.Arrays._multinewarray || params.length == plo.length());
+            Assert._assert(m == joeq.Runtime.Arrays._multinewarray || params.length == plo.length(),
+                obj + " calling " + m + ": params.length: " + params.length + ", plo: " + plo);
+//            System.out.println("plo: " + plo);
             for (int i=0; i<params.length; ++i) {
                 if (!params[i].isReferenceType()
                     /*|| params[i].isAddressType()*/
                     ) continue;
+                Assert._assert(plo.get(i) != null, "Element " + i + " of plo " + plo + " is bogus");
                 Register r = plo.get(i).getRegister();
                 passParameter(r, mc, i);
             }
@@ -2290,7 +2293,7 @@ public class MethodSummary {
                 FACTORY2.put(key, n = new ConcreteTypeNode(type, q, opn));
             }
             return n;
-        }
+        }    
         
         private ConcreteTypeNode(jq_Reference type, ProgramLocation q, Integer opn) {
             this.type = type; this.q = q; this.opn = opn;
