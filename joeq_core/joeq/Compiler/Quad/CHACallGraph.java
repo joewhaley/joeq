@@ -16,6 +16,7 @@ import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
 import Clazz.jq_Method;
 import Clazz.jq_Type;
+import Compil3r.Analysis.IPA.*;
 
 /**
  * A simple call graph implementation based on class-hierarchy analysis with

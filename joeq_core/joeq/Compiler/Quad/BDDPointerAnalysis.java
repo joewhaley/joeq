@@ -31,20 +31,21 @@ import Clazz.jq_NameAndDesc;
 import Clazz.jq_Reference;
 import Clazz.jq_StaticMethod;
 import Clazz.jq_Type;
+import Compil3r.Analysis.IPA.*;
 import Compil3r.BytecodeAnalysis.BytecodeVisitor;
 import Compil3r.BytecodeAnalysis.CallTargets;
-import Compil3r.Quad.AndersenInterface.AndersenType;
-import Compil3r.Quad.MethodSummary.CallSite;
-import Compil3r.Quad.MethodSummary.ConcreteObjectNode;
-import Compil3r.Quad.MethodSummary.ConcreteTypeNode;
-import Compil3r.Quad.MethodSummary.FieldNode;
-import Compil3r.Quad.MethodSummary.GlobalNode;
-import Compil3r.Quad.MethodSummary.Node;
-import Compil3r.Quad.MethodSummary.ParamNode;
-import Compil3r.Quad.MethodSummary.PassedParameter;
-import Compil3r.Quad.MethodSummary.ReturnValueNode;
-import Compil3r.Quad.MethodSummary.ThrownExceptionNode;
-import Compil3r.Quad.MethodSummary.UnknownTypeNode;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.CallSite;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.ConcreteObjectNode;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.ConcreteTypeNode;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.FieldNode;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.GlobalNode;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.ParamNode;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.PassedParameter;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.ReturnValueNode;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.ThrownExceptionNode;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.UnknownTypeNode;
 import Main.HostedVM;
 import Run_Time.TypeCheck;
 import Util.Assert;
@@ -802,8 +803,8 @@ public class BDDPointerAnalysis {
         if (TRACE) System.out.println("new points-to: "+newPointsTo.toStringWithDomains());
         for (int index=0; h.hasNext(); ++index) {
             CallSite cs = (CallSite) h.next();
-            MethodSummary caller = cs.caller;
-            ProgramLocation mc = cs.m;
+            MethodSummary caller = cs.getCaller();
+            ProgramLocation mc = cs.getLocation();
             BDD receiverVars = (BDD) i.next();
             if (TRACE_VIRTUAL) {
                 System.out.println("Caller: "+caller.getMethod());
@@ -882,7 +883,8 @@ public class BDDPointerAnalysis {
         }
         callGraphEdges.add(key);
         this.change = true;
-        for (int i=0; i<mc.getNumParams(); ++i) {
+        jq_Type[] paramTypes = mc.getParamTypes();
+        for (int i=0; i<paramTypes.length; ++i) {
             if (i >= callee.getNumOfParams()) break;
             ParamNode pn = callee.getParamNode(i);
             if (pn == null) continue;
@@ -890,50 +892,29 @@ public class BDDPointerAnalysis {
             Set s = caller.getNodesThatCall(pp);
             addDirectAssignment(pn, s);
         }
-        Set rvn_s;
-        Object rvn_o = caller.callToRVN.get(mc);
-        if (rvn_o instanceof Set) rvn_s = (Set) rvn_o;
-        else if (rvn_o != null) rvn_s = Collections.singleton(rvn_o);
-        else rvn_s = Collections.EMPTY_SET;
-        for (Iterator i=rvn_s.iterator(); i.hasNext(); ) {
-            ReturnValueNode rvn = (ReturnValueNode) i.next();
-            if (rvn != null) {
-                Set s = callee.returned;
-                addDirectAssignment(rvn, s);
-            }
+        ReturnValueNode rvn = caller.getRVN(mc);
+        if (rvn != null) {
+            Set s = callee.getReturned();
+            addDirectAssignment(rvn, s);
         }
-        Set ten_s;
-        Object ten_o = caller.callToTEN.get(mc);
-        if (ten_o instanceof Set) ten_s = (Set) ten_o;
-        else if (ten_o != null) ten_s = Collections.singleton(ten_o);
-        else ten_s = Collections.EMPTY_SET;
-        for (Iterator i=ten_s.iterator(); i.hasNext(); ) {
-            ThrownExceptionNode ten = (ThrownExceptionNode) i.next();
-            if (ten != null) {
-                Set s = callee.thrown;
-                addDirectAssignment(ten, s);
-            }
+        ThrownExceptionNode ten = caller.getTEN(mc);
+        if (ten != null) {
+            Set s = callee.getThrown();
+            addDirectAssignment(ten, s);
         }
     }
 
     public void bindParameters_native(MethodSummary caller, ProgramLocation mc) {
         // only handle return value for now.
-        AndersenType t = caller.getMethod().and_getReturnType();
+        jq_Type t = caller.getMethod().getReturnType();
         if (t instanceof jq_Reference) {
-            Set rvn_s;
-            Object rvn_o = caller.callToRVN.get(mc);
-            if (rvn_o instanceof Set) rvn_s = (Set) rvn_o;
-            else if (rvn_o != null) rvn_s = Collections.singleton(rvn_o);
-            else rvn_s = Collections.EMPTY_SET;
+            ReturnValueNode rvn = caller.getRVN(mc);
             UnknownTypeNode utn = UnknownTypeNode.get((jq_Reference) t);
             addObjectAllocation(utn, utn);
             addAllocType(utn, (jq_Reference) t);
             addVarType(utn, (jq_Reference) t);
-            for (Iterator i=rvn_s.iterator(); i.hasNext(); ) {
-                ReturnValueNode rvn = (ReturnValueNode) i.next();
-                if (rvn != null) {
-                    addDirectAssignment(rvn, utn);
-                }
+            if (rvn != null) {
+                addDirectAssignment(rvn, utn);
             }
         }
     }

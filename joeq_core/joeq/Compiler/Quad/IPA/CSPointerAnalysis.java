@@ -24,26 +24,25 @@ import Clazz.jq_Field;
 import Clazz.jq_Method;
 import Clazz.jq_Reference;
 import Clazz.jq_Type;
+import Compil3r.Analysis.IPA.ProgramLocation;
 import Compil3r.Quad.CachedCallGraph;
 import Compil3r.Quad.CallGraph;
 import Compil3r.Quad.CodeCache;
 import Compil3r.Quad.ControlFlowGraph;
 import Compil3r.Quad.LoadedCallGraph;
 import Compil3r.Quad.MethodInline;
-import Compil3r.Quad.MethodSummary;
-import Compil3r.Quad.ProgramLocation;
 import Compil3r.Quad.RootedCHACallGraph;
-import Compil3r.Quad.AndersenInterface.AndersenType;
-import Compil3r.Quad.MethodSummary.ConcreteTypeNode;
-import Compil3r.Quad.MethodSummary.FieldNode;
-import Compil3r.Quad.MethodSummary.GlobalNode;
-import Compil3r.Quad.MethodSummary.Node;
-import Compil3r.Quad.MethodSummary.ParamNode;
-import Compil3r.Quad.MethodSummary.PassedParameter;
-import Compil3r.Quad.MethodSummary.ReturnValueNode;
-import Compil3r.Quad.MethodSummary.ReturnedNode;
-import Compil3r.Quad.MethodSummary.ThrownExceptionNode;
-import Compil3r.Quad.MethodSummary.UnknownTypeNode;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.ConcreteTypeNode;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.FieldNode;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.GlobalNode;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.ParamNode;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.PassedParameter;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.ReturnValueNode;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.ReturnedNode;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.ThrownExceptionNode;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.UnknownTypeNode;
 import Main.HostedVM;
 import Run_Time.TypeCheck;
 import Util.Assert;
@@ -1099,9 +1098,10 @@ public class CSPointerAnalysis extends Solver {
                 
                 // build up an array of BDD's corresponding to each of the
                 // parameters passed into this method call.
-                BDD[] params = new BDD[mc.getNumParams()];
-                for (int j=0; j<mc.getNumParams(); j++) {
-                    jq_Type t = (jq_Type) mc.getParamType(j);
+                jq_Type[] paramTypes = mc.getParamTypes();
+                BDD[] params = new BDD[paramTypes.length];
+                for (int j=0; j<paramTypes.length; j++) {
+                    jq_Type t = (jq_Type) paramTypes[j];
                     if (!(t instanceof jq_Reference)) continue;
                     PassedParameter pp = new PassedParameter(mc, j);
                     Set s = ms.getNodesThatCall(pp);
@@ -1245,7 +1245,7 @@ public class CSPointerAnalysis extends Solver {
                         renumbering23.free();
                     }
                 }
-                for (int j=0; j<mc.getNumParams(); ++j) {
+                for (int j=0; j<paramTypes.length; ++j) {
                     if (params[j] != null)
                         params[j].free();
                 }
@@ -1268,7 +1268,7 @@ public class CSPointerAnalysis extends Solver {
         
         public void handleNativeCall(MethodSummary caller, ProgramLocation mc) {
             // only handle return value for now.
-            AndersenType at = mc.getTargetMethod().and_getReturnType();
+            jq_Type at = mc.getTargetMethod().getReturnType();
             if (at instanceof jq_Reference) {
                 jq_Reference t = (jq_Reference) at;
                 ReturnedNode rvn = (ReturnedNode) caller.getRVN(mc);

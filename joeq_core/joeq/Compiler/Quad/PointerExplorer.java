@@ -21,16 +21,18 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import Clazz.jq_Class;
+import Clazz.jq_Field;
 import Clazz.jq_Method;
 import Clazz.jq_Type;
-import Compil3r.Quad.AndersenInterface.AndersenField;
-import Compil3r.Quad.AndersenInterface.AndersenMethod;
-import Compil3r.Quad.MethodSummary.CallSite;
-import Compil3r.Quad.MethodSummary.PassedParameter;
-import Compil3r.Quad.SelectiveCloning.Specialization;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.CallSite;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.PassedParameter;
+import Compil3r.Analysis.IPA.*;
+import Compil3r.Quad.AndersenPointerAnalysis.AccessPath;
 import Main.HostedVM;
 import Util.Assert;
 import Util.Collections.FilterIterator;
+import Util.Collections.LinearSet;
 import Util.Collections.Pair;
 /**
  *
@@ -212,7 +214,7 @@ uphere2:
         }
     }
     
-    static void printAllInclusionEdges(HashSet visited, MethodSummary.Node pnode, MethodSummary.Node node, String indent, boolean all, AndersenField f, boolean verbose) throws IOException {
+    static void printAllInclusionEdges(HashSet visited, MethodSummary.Node pnode, MethodSummary.Node node, String indent, boolean all, jq_Field f, boolean verbose) throws IOException {
         if (verbose) System.out.print(indent+"Node: "+node);
         if (pnode != null) {
             Object q = apa.edgesToReasons.get(new Pair(pnode, node));
@@ -233,7 +235,7 @@ uphere2:
             }
             if (onode instanceof MethodSummary.FieldNode) {
                 MethodSummary.FieldNode fnode = (MethodSummary.FieldNode)onode;
-                AndersenField field = fnode.f;
+                jq_Field field = fnode.getField();
                 Set inEdges = fnode.getAccessPathPredecessors();
                 System.out.println(indent+"Field "+field.getName().toString()+" Parent nodes: "+inEdges);
                 System.out.print(indent+"Type 'w' to find matching writes to parent nodes, 'u' to go up: ");
@@ -275,9 +277,9 @@ uphere2:
                 System.out.println(indent+s.size()+" write edges match field "+((f==null)?"[]":f.getName().toString()));
                 for (Iterator i=s.iterator(); i.hasNext(); ) {
                     MethodSummary.Node node2 = (MethodSummary.Node)i.next();
-                    Quad quad = node.getSourceQuad(f, node2);
-                    if (quad != null)
-                        System.out.println(indent+"From instruction: "+quad);
+                    //Quad quad = node.getSourceQuad(f, node2);
+                    //if (quad != null)
+                    //    System.out.println(indent+"From instruction: "+quad);
                     printAllInclusionEdges(visited, null, node2, indent+">", all, null, verbose);
                 }
             }
@@ -323,8 +325,8 @@ uphere2:
         for (Iterator it = inline.iterator(); it.hasNext(); ) {
             Map.Entry e = (Map.Entry)it.next();
             CallSite cs = (CallSite)e.getKey();
-            MethodSummary caller = MethodSummary.getSummary(CodeCache.getCode((jq_Method)cs.caller.method));
-            ProgramLocation mc = cs.m;
+            MethodSummary caller = MethodSummary.getSummary(CodeCache.getCode((jq_Method)cs.getCaller().getMethod()));
+            ProgramLocation mc = cs.getLocation();
             cs = new CallSite(caller, mc);
             InlineSet targets = (InlineSet)e.getValue();
             Iterator it2 = targets.iterator();
@@ -340,9 +342,9 @@ uphere2:
                         MethodSummary callee = MethodSummary.getSummary(CodeCache.getCode(target_m));
                         MethodSummary caller2 = caller.copy();
                         MethodSummary callee2 = callee.copy();
-                        if (caller == callee || callee.calls.contains(mc)) {
+                        if (caller == callee || callee.getCalls().contains(mc)) {
                             System.out.println("Inlining of recursive call not supported yet: "+cs);
-                        } else if (!caller.calls.contains(mc)) {
+                        } else if (!caller.getCalls().contains(mc)) {
                             System.out.println("Error: cannot find call site "+cs);
                         } else {
                             try {
@@ -405,9 +407,9 @@ uphere:
         methodToCallSites.clear();
         for (Iterator i=toInline.keySet().iterator(); i.hasNext(); ) {
             CallSite cs = (CallSite)i.next();
-            HashSet s = (HashSet)methodToCallSites.get(cs.caller.getMethod());
+            HashSet s = (HashSet)methodToCallSites.get(cs.getCaller().getMethod());
             if (s == null) {
-                methodToCallSites.put(cs.caller.getMethod(), s = new HashSet());
+                methodToCallSites.put(cs.getCaller().getMethod(), s = new HashSet());
             }
             s.add(cs);
         }
@@ -468,7 +470,7 @@ uphere:
                               HashMap to_clone,
                               LinkedHashSet path,
                               HashMap visited,
-                              AndersenMethod m) {
+                              jq_Method m) {
         if (path.contains(m)) {
             System.out.println("Attempting to clone recursive cycle: method "+m);
             return -1;
@@ -486,7 +488,7 @@ uphere:
                 Set s3 = (Set) to_clone.get(s2);
                 for (Iterator j=s3.iterator(); j.hasNext(); ) {
                     ProgramLocation mc = (ProgramLocation) j.next();
-                    AndersenMethod source_m = mc.getMethod();
+                    jq_Method source_m = mc.getMethod();
                     int r = setDepth_clone(methodToSpecializations, to_clone, path, visited, source_m);
                     if (r == -1) {
                         //System.out.println("Removing edge "+source_m.getName()+"->"+m.getName()+" from clone set");
@@ -504,6 +506,61 @@ uphere:
         visited.put(m, result = new Integer(current));
         path.remove(m);
         return current;
+    }
+    
+    public static class Specialization {
+        ControlFlowGraph target;
+        Set/*<SpecializationParameter>*/ set;
+        Specialization(ControlFlowGraph t, SpecializationParameter s) {
+            this.target = t; this.set = new LinearSet(); this.set.add(s);
+        }
+        Specialization(ControlFlowGraph t, Set s) {
+            this.target = t; this.set = s;
+        }
+        public boolean equals(Object o) {
+            return equals((Specialization) o);
+        }
+        public boolean equals(Specialization that) {
+            if (this.target != that.target) {
+                return false;
+            }
+            if (!this.set.equals(that.set)) {
+                return false;
+            }
+            return true;
+        }
+        public int hashCode() { return target.hashCode() ^ set.hashCode(); }
+        
+        public String toString() {
+            return "Specialization of "+target.getMethod()+" on "+set;
+        }
+    }
+    
+    public static class SpecializationParameter {
+        int paramNum;
+        AccessPath ap;
+        Set types;
+        SpecializationParameter(int paramNum, AccessPath ap, Set types) {
+            this.paramNum = paramNum; this.ap = ap; this.types = types;
+        }
+        public boolean equals(Object o) {
+            return equals((SpecializationParameter) o);
+        }
+        public boolean equals(SpecializationParameter that) {
+            if (this.paramNum != that.paramNum || !this.types.equals(that.types)) return false;
+            if (this.ap == that.ap) return true;
+            if (this.ap == null || that.ap == null) return false;
+            return this.ap.equals(that.ap);
+        }
+        public int hashCode() {
+            int aphash = ap==null?0:ap.hashCode();
+            return paramNum ^ types.hashCode() ^ aphash;
+        }
+        public String toString() {
+            if (ap == null)
+                return "Param#"+paramNum+" types: "+types;
+            return "Param#"+paramNum+ap.toString()+" types: "+types;
+        }
     }
     
     public static void buildCloneCache(HashMap/*<Specialization,Set<ProgramLocation>>*/ to_clone) {
@@ -567,7 +624,7 @@ uphere:
             //System.out.println("Method summary "+target_ms.getMethod()+" has "+s2+" to specialize.");
             for (Iterator j=s2.iterator(); j.hasNext(); ) {
                 ProgramLocation mc = (ProgramLocation) j.next();
-                AndersenMethod source_m = mc.getMethod();
+                jq_Method source_m = mc.getMethod();
                 Set s3 = (Set) methodToSpecializations.get(source_m);
                 if (s3 != null) {
                     for (Iterator k=s3.iterator(); k.hasNext(); ) {
@@ -711,7 +768,7 @@ uphere:
                         public boolean isElement(Object o) {
                             Map.Entry e = (Map.Entry)o;
                             CallSite cs = (CallSite)e.getKey();
-                            return (cs.caller.method == m2);
+                            return (cs.getCaller().getMethod() == m2);
                         }
                 };
                 FilterIterator it1 = new FilterIterator(sorted.iterator(), f);
@@ -737,9 +794,9 @@ uphere:
                 for (Iterator it = selectedCallSites.iterator(); it.hasNext(); ) {
                     CallSite cs = (CallSite)it.next();
                     System.out.println("For call site: "+cs);
-                    MethodSummary ms = cs.caller;
+                    MethodSummary ms = cs.getCaller();
                     LinkedHashSet set = new LinkedHashSet();
-                    PassedParameter pp = new PassedParameter(cs.m, 0);
+                    PassedParameter pp = new PassedParameter(cs.getLocation(), 0);
                     ms.getNodesThatCall(pp, set);
                     for (Iterator it2 = set.iterator(); it2.hasNext(); ) {
                         MethodSummary.Node node = (MethodSummary.Node)it2.next();
@@ -815,6 +872,7 @@ uphere:
                 }
                 continue;
             }
+            /*
             if (s.startsWith("selectiveinlining")) {
                 if (selectedCallSites.size() == 0) {
                     System.out.println("Selecting multi-target methods...");
@@ -840,7 +898,6 @@ uphere:
                 System.out.println(toInline.size()+" inlining candidates found");
                 recalculateInliningCompleteness();
                 
-                /*
                 for (Iterator it = selectedCallSites.iterator(); it.hasNext(); ) {
                     CallSite cs = (CallSite)it.next();
                     System.out.println("For call site: "+cs);
@@ -858,7 +915,6 @@ uphere:
                     }
                 }
                 System.out.println(toInline.size()+" inlining candidates found");
-                */
                 
                 continue;
             }
@@ -912,6 +968,7 @@ uphere:
                 sorted = sortByNumberOfTargets(callGraph);
                 continue;
             }
+            */
             if (s.startsWith("exit") || s.startsWith("quit")) {
                 System.exit(0);
             }

@@ -15,33 +15,28 @@ import java.util.Map;
 import java.util.Set;
 
 import Clazz.jq_Class;
+import Clazz.jq_ClassInitializer;
 import Clazz.jq_Field;
 import Clazz.jq_Initializer;
 import Clazz.jq_Method;
 import Clazz.jq_Reference;
 import Clazz.jq_StaticField;
 import Clazz.jq_Type;
+import Compil3r.Analysis.IPA.*;
 import Compil3r.BytecodeAnalysis.CallTargets;
-import Compil3r.Quad.AndersenInterface.AndersenClass;
-import Compil3r.Quad.AndersenInterface.AndersenClassInitializer;
-import Compil3r.Quad.AndersenInterface.AndersenField;
-import Compil3r.Quad.AndersenInterface.AndersenMethod;
-import Compil3r.Quad.AndersenInterface.AndersenReference;
-import Compil3r.Quad.AndersenInterface.AndersenType;
-import Compil3r.Quad.MethodSummary.CallSite;
-import Compil3r.Quad.MethodSummary.ConcreteTypeNode;
-import Compil3r.Quad.MethodSummary.FieldNode;
-import Compil3r.Quad.MethodSummary.GlobalNode;
-import Compil3r.Quad.MethodSummary.Node;
-import Compil3r.Quad.MethodSummary.NodeSet;
-import Compil3r.Quad.MethodSummary.OutsideNode;
-import Compil3r.Quad.MethodSummary.ParamNode;
-import Compil3r.Quad.MethodSummary.PassedParameter;
-import Compil3r.Quad.MethodSummary.ReturnValueNode;
-import Compil3r.Quad.MethodSummary.ThrownExceptionNode;
-import Compil3r.Quad.MethodSummary.UnknownTypeNode;
-import Compil3r.Quad.SSAReader.SSAMethod;
-import Compil3r.Quad.SelectiveCloning.AccessPath;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.CallSite;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.ConcreteTypeNode;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.FieldNode;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.GlobalNode;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.NodeSet;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.OutsideNode;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.ParamNode;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.PassedParameter;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.ReturnValueNode;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.ThrownExceptionNode;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.UnknownTypeNode;
 import Util.Assert;
 import Util.Strings;
 import Util.Collections.HashCodeComparator;
@@ -163,24 +158,24 @@ public class AndersenPointerAnalysis {
      */
     public static final boolean USE_SET_REPOSITORY = false;
 
-    private static MethodSummary getMethodSummary(AndersenMethod method) {
-        if (method instanceof SSAMethod) {
+    private static MethodSummary getMethodSummary(jq_Method method) {
+        //if (method instanceof SSAMethod) {
             // This is for C++ analysis, the method classes are not jq_Methods, but instead
             // SSAMethods
-            return ((SSAMethod)method).getSummary();
-        }
+        //    return ((SSAMethod)method).getSummary();
+        //}
         
         MethodSummary s = MethodSummary.getSummary(CodeCache.getCode((jq_Method)method));
         s.mergeGlobal();
         return s;
     }
 
-    private static MethodSummary getMethodSummary(AndersenMethod method, CallSite cs) {
-        if (method instanceof SSAMethod) {
+    private static MethodSummary getMethodSummary(jq_Method method, CallSite cs) {
+        //if (method instanceof SSAMethod) {
             // This is for C++ analysis, the method classes are not jq_Methods, but instead
             // SSAMethods
-            return ((SSAMethod)method).getSummary();
-        }
+        //    return ((SSAMethod)method).getSummary();
+        //}
         
         MethodSummary s = MethodSummary.getSummary(CodeCache.getCode((jq_Method)method), cs);
         s.mergeGlobal();
@@ -264,7 +259,7 @@ public class AndersenPointerAnalysis {
                 for (Iterator i=INSTANCE.callSiteToTargets.entrySet().iterator(); i.hasNext(); ) {
                     Map.Entry e = (Map.Entry)i.next();
                     CallSite cs = (CallSite)e.getKey();
-                    CallTargets ct = cs.m.getCallTargets();
+                    CallTargets ct = getCallTargets_CHA(cs.getLocation());
                     cha_rta_callSiteToTargets.put(cs, ct);
                 }
                 cg = new AndersenCallGraph(cha_rta_callSiteToTargets, INSTANCE.rootSet);
@@ -364,7 +359,7 @@ public class AndersenPointerAnalysis {
                 for (Iterator i=INSTANCE.callSiteToTargets.entrySet().iterator(); i.hasNext(); ) {
                     Map.Entry e = (Map.Entry)i.next();
                     CallSite cs = (CallSite)e.getKey();
-                    CallTargets ct = cs.m.getCallTargets();
+                    CallTargets ct = getCallTargets_CHA(cs.getLocation());
                     cha_rta_callSiteToTargets.put(cs, ct);
                 }
                 cg = new AndersenCallGraph(cha_rta_callSiteToTargets, INSTANCE.rootSet);
@@ -405,7 +400,7 @@ public class AndersenPointerAnalysis {
         jls.load();
         jq_StaticField si = jls.getOrCreateStaticField("in", "Ljava/io/InputStream;");
         Assert._assert(si.isLoaded());
-        GlobalNode.GLOBAL.addEdge(si, bis_n, null);
+        GlobalNode.GLOBAL.addEdge(si, bis_n);
         
         MethodSummary fd_init_summary = getMethodSummary(fd_init);
         OutsideNode on = fd_init_summary.getParamNode(0);
@@ -451,7 +446,7 @@ public class AndersenPointerAnalysis {
         
         jq_StaticField so = jls.getOrCreateStaticField("out", "Ljava/io/PrintStream;");
         Assert._assert(so.isLoaded());
-        GlobalNode.GLOBAL.addEdge(so, ps_n1, null);
+        GlobalNode.GLOBAL.addEdge(so, ps_n1);
         
         ConcreteTypeNode fd_n3 = new ConcreteTypeNode(fd);
         fd_n3.recordPassedParameter(mc_fd_init, 0);
@@ -467,7 +462,7 @@ public class AndersenPointerAnalysis {
         
         so = jls.getOrCreateStaticField("err", "Ljava/io/PrintStream;");
         Assert._assert(so.isLoaded());
-        GlobalNode.GLOBAL.addEdge(so, ps_n2, null);
+        GlobalNode.GLOBAL.addEdge(so, ps_n2);
         
         on = fd_init_summary.getParamNode(0);
         addInclusionEdge(on, fd_n2, null);
@@ -652,7 +647,7 @@ public class AndersenPointerAnalysis {
             Map.Entry e = (Map.Entry)i.next();
             CallSite cs = (CallSite)e.getKey();
             Set s = (Set)e.getValue();
-            ProgramLocation mc = cs.m;
+            ProgramLocation mc = cs.getLocation();
             Set s2 = (Set) newCG.get(mc);
             if (s2 == null)
                 newCG.put(mc, s2 = new HashSet());
@@ -667,7 +662,7 @@ public class AndersenPointerAnalysis {
             CallSite cs = (CallSite)e.getKey();
             Set s = (Set)e.getValue();
             int x = s.size();
-            ProgramLocation mc = cs.m;
+            ProgramLocation mc = cs.getLocation();
             Set s_orig = (Set)original.get(mc);
             int y = s_orig.size();
             Object key = new Pair(new Integer(y),new Integer(x));
@@ -692,7 +687,7 @@ public class AndersenPointerAnalysis {
         for (Iterator i=m.entrySet().iterator(); i.hasNext(); ) {
             Map.Entry e = (Map.Entry)i.next();
             CallSite cs = (CallSite)e.getKey();
-            ProgramLocation mc = cs.m;
+            ProgramLocation mc = cs.getLocation();
             Set s = (Set)e.getValue();
             Set s2 = (Set)table.get(mc);
             if (s2 == null) table.put(mc, s2 = new LinearSet());
@@ -779,13 +774,13 @@ public class AndersenPointerAnalysis {
         lhs.addAll(GlobalNode.GLOBAL.getAccessPathEdges());
         for (Iterator j=lhs.iterator(); j.hasNext(); ) {
             Map.Entry e = (Map.Entry)j.next();
-            AndersenField f = (AndersenField)e.getKey();
+            jq_Field f = (jq_Field)e.getKey();
             Object o = e.getValue();
             if (!IGNORE_CLINIT && !MethodSummary.IGNORE_STATIC_FIELDS) {
-                AndersenClass c = f.and_getDeclaringClass();
+                jq_Class c = f.getDeclaringClass();
                 if (TRACE) out.println("Visiting edge: "+o+" = "+c+((f==null)?"[]":("."+f.getName())));
                 c.load();
-                AndersenClassInitializer clinit = c.and_getClassInitializer();
+                jq_ClassInitializer clinit = c.getClassInitializer();
                 if (clinit != null) {
                     MethodSummary ms = getMethodSummary(clinit);
                     if (methodSummariesToVisit.add(ms)) {
@@ -875,7 +870,7 @@ public class AndersenPointerAnalysis {
             ProgramLocation mc = (ProgramLocation)i.next();
             CallSite cs = new CallSite(ms, mc);
             if (TRACE) out.println("Found call: "+ms+": "+mc.toString());
-            CallTargets ct = mc.getCallTargets();
+            CallTargets ct = getCallTargets_CHA(mc);
             if (TRACE) out.println("Possible targets ignoring type information: "+ct);
             Set definite_targets = SortedArraySet.FACTORY.makeSet(HashCodeComparator.INSTANCE);
             //Assert._assert(!callSiteToTargets.containsKey(cs));
@@ -893,16 +888,16 @@ public class AndersenPointerAnalysis {
                     Node base = (Node)j.next();
                     if (TRACE) out.println("Checking base node: "+base);
                     Set s_cn = getConcreteNodes(base);
-                    Set targets = mc.getCallTargets(s_cn);
+                    Set targets = getCallTargets(mc, s_cn);
                     definite_targets.addAll(targets);
                 }
             }
             if (TRACE) out.println("Set of definite targets of "+mc+": "+definite_targets);
             for (Iterator j=definite_targets.iterator(); j.hasNext(); ) {
-                AndersenMethod callee = (AndersenMethod)j.next();
+                jq_Method callee = (jq_Method)j.next();
                 // temporary: skip multinewarray.
                 if (callee == Run_Time.Arrays._multinewarray) continue;
-                callee.and_getDeclaringClass().load();
+                callee.getDeclaringClass().load();
                 if (!callee.isBodyLoaded()) {
                     CallSite cs2 = new CallSite(null, mc);
                     if (linkedTargets.contains(cs2)) continue;
@@ -929,14 +924,42 @@ public class AndersenPointerAnalysis {
         }
     }
 
+    public static CallTargets getCallTargets_CHA(ProgramLocation pl) {
+        jq_Method target = pl.getTargetMethod();
+        byte type = pl.getInvocationType();
+        return CallTargets.getTargets(target.getDeclaringClass(), target, type, true);
+    }
+    public static CallTargets getCallTargets(ProgramLocation pl, Set nodes) {
+        byte type = pl.getInvocationType();
+        jq_Method target = pl.getTargetMethod();
+        Set exact_types = SortedArraySet.FACTORY.makeSet(HashCodeComparator.INSTANCE);
+        Set notexact_types = SortedArraySet.FACTORY.makeSet(HashCodeComparator.INSTANCE);
+
+        for (Iterator i=nodes.iterator(); i.hasNext(); ) {
+            Node n = (Node)i.next();
+            Set s = (n instanceof ConcreteTypeNode)?exact_types:notexact_types;
+            if (n.getDeclaredType() != null)
+                s.add(n.getDeclaredType());
+        }
+        if (notexact_types.isEmpty())
+            return CallTargets.getTargets(target.getDeclaringClass(), target, type, exact_types, true, true);
+        if (exact_types.isEmpty())
+            return CallTargets.getTargets(target.getDeclaringClass(), target, type, notexact_types, false, true);
+        CallTargets ct = CallTargets.getTargets(target.getDeclaringClass(), target, type, exact_types, true, true);
+        if (ct==null) return null;
+        ct = ct.union(CallTargets.getTargets(target.getDeclaringClass(), target, type, notexact_types, false, true));
+        return ct;
+    }
+
     void addParameterAndReturnMappings_native(MethodSummary caller, ProgramLocation mc) {
         if (TRACE) out.println("Adding parameter and return mappings for "+mc+" from "+caller.getMethod()+" to an unanalyzable method.");
 //        ParamListOperand plo = Invoke.getParamList(mc.getQuad());
 //        jq_Method targetMethod = Invoke.getMethod(mc.getQuad()).getMethod();
-        AndersenMethod targetMethod = mc.getTargetMethod();
-        for (int i=0; i<mc.getNumParams(); ++i) {
-            AndersenType t = mc.getParamType(i);
-            if (!(t instanceof AndersenReference)) continue;
+        jq_Method targetMethod = mc.getTargetMethod();
+        jq_Type[] types = mc.getParamTypes();
+        for (int i=0; i<types.length; ++i) {
+            jq_Type t = types[i];
+            if (!(t instanceof jq_Reference)) continue;
             // parameters passed into native methods escape.
             PassedParameter pp = new PassedParameter(mc, i);
             Set s = caller.getNodesThatCall(pp);
@@ -953,41 +976,29 @@ public class AndersenPointerAnalysis {
             }
         }
         Set rvn_s;
-        Object rvn_o = caller.callToRVN.get(mc);
-        if (rvn_o instanceof Set) rvn_s = (Set) rvn_o;
-        else if (rvn_o != null) rvn_s = Collections.singleton(rvn_o);
-        else rvn_s = Collections.EMPTY_SET;
-        for (Iterator i=rvn_s.iterator(); i.hasNext(); ) {
-            ReturnValueNode rvn = (ReturnValueNode) i.next();
-            if (rvn != null) {
-                UnknownTypeNode utn = UnknownTypeNode.get((AndersenReference)targetMethod.and_getReturnType());
-                if (TRACE) out.println("Adding return mapping "+rvn+" to "+utn);
-                OutsideNode on = rvn;
-                while (on.skip != null) on = on.skip;
-                addInclusionEdge(on, utn, mc);
-            }
+        ReturnValueNode rvn = caller.getRVN(mc);
+        if (rvn != null) {
+            UnknownTypeNode utn = UnknownTypeNode.get((jq_Reference)targetMethod.getReturnType());
+            if (TRACE) out.println("Adding return mapping "+rvn+" to "+utn);
+            OutsideNode on = rvn;
+            while (on.skip != null) on = on.skip;
+            addInclusionEdge(on, utn, mc);
         }
-        Set ten_s;
-        Object ten_o = caller.callToTEN.get(mc);
-        if (ten_o instanceof Set) ten_s = (Set) ten_o;
-        else if (ten_o != null) ten_s = Collections.singleton(ten_o);
-        else ten_s = Collections.EMPTY_SET;
-        for (Iterator i=ten_s.iterator(); i.hasNext(); ) {
-            ThrownExceptionNode ten = (ThrownExceptionNode) i.next();
-            if (ten != null) {
-                UnknownTypeNode utn = UnknownTypeNode.get((jq_Reference)Bootstrap.PrimordialClassLoader.getJavaLangObject());
-                if (TRACE) out.println("Adding thrown mapping "+ten+" to "+utn);
-                OutsideNode on = ten;
-                while (on.skip != null) on = on.skip;
-                addInclusionEdge(on, utn, mc);
-            }
+        ThrownExceptionNode ten = caller.getTEN(mc);
+        if (ten != null) {
+            UnknownTypeNode utn = UnknownTypeNode.get((jq_Reference)Bootstrap.PrimordialClassLoader.getJavaLangObject());
+            if (TRACE) out.println("Adding thrown mapping "+ten+" to "+utn);
+            OutsideNode on = ten;
+            while (on.skip != null) on = on.skip;
+            addInclusionEdge(on, utn, mc);
         }
     }
     
     void addParameterAndReturnMappings(MethodSummary caller, ProgramLocation mc, MethodSummary callee) {
         if (TRACE) out.println("Adding parameter and return mappings for "+mc+" from "+caller.getMethod()+" to "+callee.getMethod());
 //        ParamListOperand plo = Invoke.getParamList(mc.getQuad());
-        for (int i=0; i<mc.getNumParams(); ++i) {
+        jq_Type[] paramTypes = mc.getParamTypes();
+        for (int i=0; i<paramTypes.length; ++i) {
 //            AndersenType t = mc.getParamType(i);
             if (i >= callee.getNumOfParams()) break;
             ParamNode pn = callee.getParamNode(i);
@@ -999,35 +1010,21 @@ public class AndersenPointerAnalysis {
             while (on.skip != null) on = on.skip;
             addInclusionEdges(on, s, mc);
         }
-        Set rvn_s;
-        Object rvn_o = caller.callToRVN.get(mc);
-        if (rvn_o instanceof Set) rvn_s = (Set) rvn_o;
-        else if (rvn_o != null) rvn_s = Collections.singleton(rvn_o);
-        else rvn_s = Collections.EMPTY_SET;
-        for (Iterator i=rvn_s.iterator(); i.hasNext(); ) {
-            ReturnValueNode rvn = (ReturnValueNode) i.next();
-            if (rvn != null) {
-                Set s = callee.returned;
-                if (TRACE) out.println("Adding return mapping "+rvn+" to set "+s);
-                OutsideNode on = rvn;
-                while (on.skip != null) on = on.skip;
-                addInclusionEdges(on, s, mc);
-            }
+        ReturnValueNode rvn = caller.getRVN(mc);
+        if (rvn != null) {
+            Set s = callee.getReturned();
+            if (TRACE) out.println("Adding return mapping "+rvn+" to set "+s);
+            OutsideNode on = rvn;
+            while (on.skip != null) on = on.skip;
+            addInclusionEdges(on, s, mc);
         }
-        Set ten_s;
-        Object ten_o = caller.callToTEN.get(mc);
-        if (ten_o instanceof Set) ten_s = (Set) ten_o;
-        else if (ten_o != null) ten_s = Collections.singleton(ten_o);
-        else ten_s = Collections.EMPTY_SET;
-        for (Iterator i=ten_s.iterator(); i.hasNext(); ) {
-            ThrownExceptionNode ten = (ThrownExceptionNode) i.next();
-            if (ten != null) {
-                Set s = callee.thrown;
-                if (TRACE) out.println("Adding thrown mapping "+ten+" to set "+s);
-                OutsideNode on = ten;
-                while (on.skip != null) on = on.skip;
-                addInclusionEdges(on, s, mc);
-            }
+        ThrownExceptionNode ten = caller.getTEN(mc);
+        if (ten != null) {
+            Set s = callee.getThrown();
+            if (TRACE) out.println("Adding thrown mapping "+ten+" to set "+s);
+            OutsideNode on = ten;
+            while (on.skip != null) on = on.skip;
+            addInclusionEdges(on, s, mc);
         }
     }
     
@@ -1208,7 +1205,7 @@ public class AndersenPointerAnalysis {
     }
     
     static boolean checkInvalidFieldAccess(Node n, jq_Field f) {
-        AndersenReference rtype = n.getDeclaredType();
+        jq_Reference rtype = n.getDeclaredType();
         if (rtype == null) {
             if (TRACE) out.println("Node "+n+" is null, so cannot hold field access");
             return true;
@@ -1241,7 +1238,7 @@ public class AndersenPointerAnalysis {
         for (Iterator i=s.iterator(); i.hasNext(); ) {
             Node n = (Node)i.next();
             if (checkInvalidFieldAccess(n, f)) continue;
-            if (n.addEdges(f, to, from)) {
+            if (n.addEdges(f, to)) {
                 if ((TRACE_CHANGE && !this.change) || TRACE) {
                     out.println("Changed! New edges for concrete node "+n+"."+f+": "+to);
                 }
@@ -1258,7 +1255,7 @@ public class AndersenPointerAnalysis {
         for (Iterator i=s.iterator(); i.hasNext(); ) {
             Node n = (Node)i.next();
             if (checkInvalidFieldAccess(n, f)) continue;
-            if (n.addEdge(f, to, from)) {
+            if (n.addEdge(f, to)) {
                 if ((TRACE_CHANGE && !this.change) || TRACE) {
                     out.println("Changed! New edge for concrete node "+n+"."+f+": "+to);
                 }
@@ -1269,7 +1266,7 @@ public class AndersenPointerAnalysis {
     }
     
     // from = global.f
-    void addGlobalEdges(OutsideNode from, AndersenField f) {
+    void addGlobalEdges(OutsideNode from, jq_Field f) {
         Set result = GlobalNode.GLOBAL.getEdges(f);
         while (from.skip != null) from = from.skip;
         FieldNode fn = FieldNode.get(GlobalNode.GLOBAL, f, null);
@@ -1277,7 +1274,7 @@ public class AndersenPointerAnalysis {
     }
     
     // from = global.f
-    void addGlobalEdges(Set from, AndersenField f) {
+    void addGlobalEdges(Set from, jq_Field f) {
         Set result = GlobalNode.GLOBAL.getEdges(f);
         FieldNode fn = FieldNode.get(GlobalNode.GLOBAL, f, null);
         for (Iterator j=from.iterator(); j.hasNext(); ) {
@@ -1323,7 +1320,7 @@ public class AndersenPointerAnalysis {
     Set getConcreteNodes(Node from, AccessPath ap) {
         Set s = getConcreteNodes(from);
         if (ap == null) return s;
-        AndersenField f = ap.first();
+        jq_Field f = ap.first();
         Set result = NodeSet.FACTORY.makeSet();
         for (Iterator j=s.iterator(); j.hasNext(); ) {
             Node n2 = (Node)j.next();
@@ -1558,7 +1555,7 @@ public class AndersenPointerAnalysis {
                 Map.Entry e = (Map.Entry) i.next();
                 CallSite cs = (CallSite) e.getKey();
                 Set callees = (Set) e.getValue();
-                Object old = callSiteToTargets.put(cs.m, callees);
+                Object old = callSiteToTargets.put(cs.getLocation(), callees);
                 if (old != null) callees.addAll((Set) old);
             }
         }
@@ -1606,5 +1603,63 @@ public class AndersenPointerAnalysis {
     }
     
     public CallGraph getCallGraph() { return new AndersenCallGraph(callSiteToTargets, rootSet); }
+    
+    public static class AccessPath {
+        jq_Field f;
+        Node node;
+        AccessPath n;
+        
+        public int length() {
+            if (n == null) return 1;
+            return 1+n.length();
+        }
+
+        public jq_Field first() { return f; }
+
+        public AccessPath next() { return n; }
+        
+        public String toString() {
+            String s;
+            if (f == null) s = "[]";
+            else s = "."+f.getName().toString();
+            if (n == null) return s;
+            return s+n.toString();
+        }
+        
+        public boolean equals(Object o) {
+            return equals((AccessPath)o);
+        }
+
+        public boolean equals(AccessPath that) {
+            if (that == null) return false;
+            if (this.f != that.f) return false;
+            if (this.n == that.n) return true;
+            if (this.n == null || that.n == null) return false;
+            return this.n.equals(that.n);
+        }
+
+        public int hashCode() {
+            int hashcode = f==null?0x1337:f.hashCode();
+            if (n != null) hashcode ^= (n.hashCode() << 1);
+            return hashcode;
+        }
+
+        public AccessPath findNode(Node node) {
+            if (this.node == node) return this;
+            else if (this.n == null) return null;
+            else return this.n.findNode(node);
+        }
+        public static AccessPath create(jq_Field f, Node node, AccessPath n) {
+            AccessPath ap;
+            if (n != null) {
+                ap = n.findNode(node);
+                if (ap != null) return null;
+                if (n.length() >= 3) return null;
+            }
+            ap = new AccessPath();
+            ap.f = f; ap.node = node; ap.n = n;
+            return ap;
+        }
+    }
     
 }
