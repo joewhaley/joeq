@@ -9,7 +9,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.Collection;
 import java.util.HashSet;
@@ -89,7 +88,9 @@ public class ClasspathWalker {
 
     static void collectSuperclasses(jq_Class c, Collection interfaces, Collection superclasses) {
         do {
-            superclasses.add(c);
+            if(!c.isAbstract()){
+                superclasses.add(c);
+            }
             if(c.getInterfaces() != null){
                 for(int i = 0; i < c.getInterfaces().length; i++){
                     jq_Class inter = c.getInterfaces()[i];
@@ -111,6 +112,9 @@ public class ClasspathWalker {
                 continue;
             }            
             if(packageName.endsWith("joeq_core")){
+                continue;
+            }
+            if(packageName.startsWith("joeq") || packageName.startsWith("jwutil")){
                 continue;
             }
             
