@@ -64,7 +64,7 @@ public class MethodSummary {
     public static /*final*/ boolean TRACE_INST = false;
     public static final boolean IGNORE_INSTANCE_FIELDS = false;
     public static final boolean IGNORE_STATIC_FIELDS = false;
-    public static final boolean VERIFY_ASSERTIONS = false;
+    public static final boolean VERIFY_ASSERTIONS = true;
 
     public static final class MethodSummaryBuilder implements ControlFlowGraphVisitor {
         public void visitCFG(ControlFlowGraph cfg) {
@@ -961,9 +961,10 @@ public class MethodSummary {
                     if (o instanceof FieldNode) {
                         FieldNode that = (FieldNode)o;
                         if (that == this) continue; // cyclic edges handled above.
-                        if (removeSelf)
+                        if (removeSelf) {
                             that.field_predecessors.remove(this);
-                        if (TRACE_INTRA) out.println("Removed "+this+" from access path predecessor set of "+that);
+                            if (TRACE_INTRA) out.println("Removed "+this+" from access path predecessor set of "+that);
+                        }
                         for (Iterator j=set.iterator(); j.hasNext(); ) {
                             Node node2 = (Node)j.next();
                             if (TRACE_INTRA) out.println("Adding access path edge "+node2+"->"+that);
@@ -1005,6 +1006,8 @@ public class MethodSummary {
                 if (o == null) continue;
                 if (o instanceof Node) {
                     Object q = um.get(o);
+                    if (o instanceof UnknownTypeNode) q = o;
+                    if (o == GlobalNode.GLOBAL) q = o;
                     if (VERIFY_ASSERTIONS) jq.Assert(q != null, o+" is missing from map");
                     if (TRACE_INTRA) out.println("Updated edge "+f+" "+o+" to "+q);
                     m.put(f, q);
@@ -1015,6 +1018,8 @@ public class MethodSummary {
                         Object r = j.next();
                         jq.Assert(r != null);
                         Object q = um.get(r);
+                        if (r instanceof UnknownTypeNode) q = r;
+                        if (r == GlobalNode.GLOBAL) q = o;
                         if (VERIFY_ASSERTIONS) jq.Assert(q != null, r+" is missing from map");
                         if (TRACE_INTRA) out.println("Updated edge "+f+" "+r+" to "+q);
                         lhs.add(q);
@@ -1024,21 +1029,48 @@ public class MethodSummary {
         }
         
         static void addGlobalEdges(Node n) {
-            if (n.predecessors == null) return;
-            for (Iterator i=n.predecessors.entrySet().iterator(); i.hasNext(); ) {
-                java.util.Map.Entry e = (java.util.Map.Entry)i.next();
-                jq_Field f = (jq_Field)e.getKey();
-                Object o = e.getValue();
-                if (o == GlobalNode.GLOBAL) {
-                    // TODO: propagate reason.
-                    GlobalNode.GLOBAL.addEdge(f, n, null);
-                } else if (o instanceof LinkedHashSet) {
-                    LinkedHashSet lhs = (LinkedHashSet) o;
-                    for (Iterator j=((LinkedHashSet)o).iterator(); j.hasNext(); ) {
-                        Object r = j.next();
-                        if (r == GlobalNode.GLOBAL) {
-                            // TODO: propagate reason.
-                            GlobalNode.GLOBAL.addEdge(f, n, null);
+            if (n.predecessors != null) {
+                for (Iterator i=n.predecessors.entrySet().iterator(); i.hasNext(); ) {
+                    java.util.Map.Entry e = (java.util.Map.Entry)i.next();
+                    jq_Field f = (jq_Field)e.getKey();
+                    Object o = e.getValue();
+                    if (o == GlobalNode.GLOBAL) {
+                        // TODO: propagate reason.
+                        GlobalNode.GLOBAL.addEdge(f, n, null);
+                    } else if (o instanceof UnknownTypeNode) {
+                        // TODO: propagate reason.
+                        ((UnknownTypeNode)o).addEdge(f, n, null);
+                    } else if (o instanceof LinkedHashSet) {
+                        LinkedHashSet lhs = (LinkedHashSet) o;
+                        for (Iterator j=((LinkedHashSet)o).iterator(); j.hasNext(); ) {
+                            Object r = j.next();
+                            if (r == GlobalNode.GLOBAL) {
+                                // TODO: propagate reason.
+                                GlobalNode.GLOBAL.addEdge(f, n, null);
+                            } else if (r instanceof UnknownTypeNode) {
+                                // TODO: propagate reason.
+                                ((UnknownTypeNode)r).addEdge(f, n, null);
+                            }
+                        }
+                    }
+                }
+            }
+            if (n.addedEdges != null) {
+                for (Iterator i=n.addedEdges.entrySet().iterator(); i.hasNext(); ) {
+                    java.util.Map.Entry e = (java.util.Map.Entry)i.next();
+                    jq_Field f = (jq_Field)e.getKey();
+                    Object o = e.getValue();
+                    if (o instanceof UnknownTypeNode) {
+                        // TODO: propagate reason.
+                        n.addEdge(f, (UnknownTypeNode)o, null);
+                    } else if (o instanceof LinkedHashSet) {
+                        LinkedHashSet lhs = (LinkedHashSet) o;
+                        for (Iterator j=((LinkedHashSet)o).iterator(); j.hasNext(); ) {
+                            Object r = j.next();
+                            if (r instanceof UnknownTypeNode) {
+                                // TODO: propagate reason.
+                                n.addEdge(f, (UnknownTypeNode)r, null);
+                            }
                         }
                     }
                 }
@@ -1592,38 +1624,31 @@ public class MethodSummary {
          *  Also clones the passed parameter set.
          */
         public void update(HashMap um) {
-            if (TRACE_INTRA) out.println("Updating edges for node "+this.toString_long());
-            LinkedHashMap m = this.predecessors;
-            if (m != null) {
-                this.predecessors = new LinkedHashMap();
-                updateMap_unknown(um, m.entrySet().iterator(), this.predecessors);
+            if (false) {
+                if (TRACE_INTRA) out.println("Updating edges for node "+this.toString_long());
+                LinkedHashMap m = this.predecessors;
+                if (m != null) {
+                    this.predecessors = new LinkedHashMap();
+                    updateMap_unknown(um, m.entrySet().iterator(), this.predecessors);
+                }
+                m = this.addedEdges;
+                if (m != null) {
+                    this.addedEdges = new LinkedHashMap();
+                    updateMap_unknown(um, m.entrySet().iterator(), this.addedEdges);
+                }
+                m = this.accessPathEdges;
+                if (m != null) {
+                    this.accessPathEdges = new LinkedHashMap();
+                    updateMap_unknown(um, m.entrySet().iterator(), this.accessPathEdges);
+                }
+                if (this.passedParameters != null) {
+                    this.passedParameters = (LinkedHashSet)this.passedParameters.clone();
+                }
+                addGlobalEdges(this);
             }
-            m = this.addedEdges;
-            if (m != null) {
-                this.addedEdges = new LinkedHashMap();
-                updateMap_unknown(um, m.entrySet().iterator(), this.addedEdges);
-            }
-            m = this.accessPathEdges;
-            if (m != null) {
-                this.accessPathEdges = new LinkedHashMap();
-                updateMap_unknown(um, m.entrySet().iterator(), this.accessPathEdges);
-            }
-            if (this.passedParameters != null) {
-                this.passedParameters = (LinkedHashSet)this.passedParameters.clone();
-            }
-            //addGlobalEdges(this);
         }
         
         public jq_Reference getDeclaredType() { return type; }
-        
-        /*
-        public boolean equals(UnknownTypeNode that) { return this.type == that.type; }
-        public boolean equals(Object o) {
-            if (o instanceof UnknownTypeNode) return equals((UnknownTypeNode)o);
-            else return false;
-        }
-        public int hashCode() { return type.hashCode(); }
-         */
         
         //public Node copy() { return new UnknownTypeNode(this); }
         public Node copy() { return this; }
@@ -1888,9 +1913,14 @@ public class MethodSummary {
         
         static void addGlobalAccessPathEdges(FieldNode n) {
             if (n.field_predecessors == null) return;
-            if (n.field_predecessors.contains(GlobalNode.GLOBAL)) {
-                jq_Field f = n.f;
-                GlobalNode.GLOBAL.addAccessPathEdge(f, n);
+            jq_Field f = n.f;
+            for (Iterator i=n.field_predecessors.iterator(); i.hasNext(); ) {
+                Object o = i.next();
+                if (o == GlobalNode.GLOBAL) {
+                    GlobalNode.GLOBAL.addAccessPathEdge(f, n);
+                } else if (o instanceof UnknownTypeNode) {
+                    ((UnknownTypeNode)o).addAccessPathEdge(f, n);
+                }
             }
         }
         
@@ -1903,6 +1933,8 @@ public class MethodSummary {
                     Object p = j.next();
                     jq.Assert(p != null);
                     Object o = um.get(p);
+                    if (p instanceof UnknownTypeNode) o = p;
+                    if (p == GlobalNode.GLOBAL) o = p;
                     if (VERIFY_ASSERTIONS) jq.Assert(o != null, ((Node)p).toString_long()+" (field predecessor of "+this.toString_long()+")");
                     this.field_predecessors.add(o);
                 }
@@ -1915,15 +1947,6 @@ public class MethodSummary {
             if (field_predecessors == null) return Collections.EMPTY_SET;
             return field_predecessors;
         }
-        
-        /*
-        public boolean equals(FieldNode that) { return this.f == that.f && this.quads.equals(that.quads); }
-        public boolean equals(Object o) {
-            if (o instanceof FieldNode) return equals((FieldNode)o);
-            else return false;
-        }
-        public int hashCode() { return ((f != null)?f.hashCode():0x6a953) ^ quads.hashCode(); }
-         */
         
         public String fieldName() {
             if (f != null) return f.getName().toString();
@@ -2334,14 +2357,17 @@ public class MethodSummary {
         }
         for (Iterator i=returned.iterator(); i.hasNext(); ) {
             Node n = (Node) i.next();
+            if (n instanceof UnknownTypeNode) continue;
             this.nodes.put(n, n);
         }
         for (Iterator i=thrown.iterator(); i.hasNext(); ) {
             Node n = (Node) i.next();
+            if (n instanceof UnknownTypeNode) continue;
             this.nodes.put(n, n);
         }
         for (Iterator i=passedAsParameters.iterator(); i.hasNext(); ) {
             Node n = (Node) i.next();
+            if (n instanceof UnknownTypeNode) continue;
             this.nodes.put(n, n);
         }
         
@@ -2376,12 +2402,14 @@ public class MethodSummary {
             this.verify();
             for (Iterator i=returned.iterator(); i.hasNext(); ) {
                 Object o = i.next();
+                if (o instanceof UnknownTypeNode) continue;
                 if (!nodes.containsKey(o)) {
                     jq.UNREACHABLE("Returned node "+o+" not in set.");
                 }
             }
             for (Iterator i=thrown.iterator(); i.hasNext(); ) {
                 Object o = i.next();
+                if (o instanceof UnknownTypeNode) continue;
                 if (!nodes.containsKey(o)) {
                     jq.UNREACHABLE("Returned node "+o+" not in set.");
                 }
@@ -2392,12 +2420,14 @@ public class MethodSummary {
                 for (Iterator j=nod.predecessors.values().iterator(); j.hasNext(); ) {
                     Object o = j.next();
                     if (o instanceof Node) {
+                        if (o instanceof UnknownTypeNode) continue;
                         if (!nodes.containsKey(o)) {
                             jq.UNREACHABLE("Predecessor node "+o+" of "+nod+" not in set.");
                         }
                     } else {
                         for (Iterator k=((Set)o).iterator(); k.hasNext(); ) {
                             Node q = (Node)k.next();
+                            if (q instanceof UnknownTypeNode) continue;
                             if (!nodes.containsKey(q)) {
                                 jq.UNREACHABLE("Predecessor node "+q+" of "+nod+" not in set.");
                             }
@@ -2405,7 +2435,7 @@ public class MethodSummary {
                     }
                 }
             }
-            this.copy();
+            //this.copy();
         }
     }
 
@@ -2423,6 +2453,7 @@ public class MethodSummary {
     }
 
     public ParamNode getParamNode(int i) { return params[i]; }
+    public int getNumOfParams() { return params.length; }
     public LinkedHashSet getCalls() { return calls; }
 
     /** Add all nodes that are passed as the given passed parameter to the given result set. */
@@ -2467,7 +2498,7 @@ public class MethodSummary {
         if (TRACE_INTRA) out.println("Copying summary: "+this);
         if (VERIFY_ASSERTIONS) this.verify();
         HashMap m = new HashMap();
-        m.put(GlobalNode.GLOBAL, GlobalNode.GLOBAL);
+        //m.put(GlobalNode.GLOBAL, GlobalNode.GLOBAL);
         for (Iterator i=nodeIterator(); i.hasNext(); ) {
             Node a = (Node)i.next();
             Node b = a.copy();
@@ -2483,6 +2514,7 @@ public class MethodSummary {
         for (Iterator i=this.returned.iterator(); i.hasNext(); ) {
             Node a = (Node)i.next();
             Node b = (Node)m.get(a);
+            if (a instanceof UnknownTypeNode) b = a;
             jq.Assert(b != null);
             returned.add(b);
         }
@@ -2490,6 +2522,7 @@ public class MethodSummary {
         for (Iterator i=this.thrown.iterator(); i.hasNext(); ) {
             Node a = (Node)i.next();
             Node b = (Node)m.get(a);
+            if (a instanceof UnknownTypeNode) b = a;
             jq.Assert(b != null);
             thrown.add(b);
         }
@@ -2539,7 +2572,8 @@ public class MethodSummary {
         LinkedHashMap nodes = new LinkedHashMap();
         for (Iterator i=m.entrySet().iterator(); i.hasNext(); ) {
             java.util.Map.Entry e = (java.util.Map.Entry)i.next();
-            if (e.getValue() == GlobalNode.GLOBAL) continue;
+            jq.Assert(e.getValue() != GlobalNode.GLOBAL);
+            jq.Assert(!(e.getValue() instanceof UnknownTypeNode));
             nodes.put(e.getValue(), e.getValue());
         }
         MethodSummary that = new MethodSummary(method, params, calls, callToRVN, callToTEN, returned, thrown, nodes);
@@ -2557,6 +2591,7 @@ public class MethodSummary {
         }
         while (!worklist.isEmpty()) {
             Node n = (Node)worklist.removeFirst();
+            if (n instanceof UnknownTypeNode) continue;
             unifyAccessPathEdges(n);
             if (n.accessPathEdges != null) {
                 for (Iterator i=n.accessPathEdges.entrySet().iterator(); i.hasNext(); ) {
@@ -2596,6 +2631,7 @@ public class MethodSummary {
     /** Unify similar access path edges from the given node.
      */
     public void unifyAccessPathEdges(Node n) {
+        if (n instanceof UnknownTypeNode) return;
         if (TRACE_INTRA) out.println("Unifying access path edges from: "+n);
         if (n.accessPathEdges != null) {
             for (Iterator i=n.accessPathEdges.entrySet().iterator(); i.hasNext(); ) {
@@ -2646,6 +2682,7 @@ public class MethodSummary {
             callee.verify();
             caller.verify();
         }
+        jq.Assert(caller.calls.contains(mc));
         HashMap callee_to_caller = new HashMap();
         if (TRACE_INST) out.println("Adding global node to map: "+GlobalNode.GLOBAL.toString_long());
         callee_to_caller.put(GlobalNode.GLOBAL, GlobalNode.GLOBAL);
@@ -2722,14 +2759,22 @@ public class MethodSummary {
             pn.replaceBy(s, removeCall);
             if (callee.returned.contains(pn)) {
                 if (TRACE_INST) out.println(pn+" is returned, updating callee returned set");
-                callee.returned.remove(pn); callee.returned.addAll(s);
+                if (removeCall) {
+                    callee.returned.remove(pn);
+                }
+                callee.returned.addAll(s);
             }
             if (callee.thrown.contains(pn)) {
                 if (TRACE_INST) out.println(pn+" is thrown, updating callee thrown set");
-                callee.thrown.remove(pn); callee.thrown.addAll(s);
+                if (removeCall) {
+                    callee.thrown.remove(pn);
+                }
+                callee.thrown.addAll(s);
             }
-            callee.nodes.remove(pn);
-            if (VERIFY_ASSERTIONS) callee.verifyNoReferences(pn);
+            if (removeCall) {
+                callee.nodes.remove(pn);
+                if (VERIFY_ASSERTIONS) callee.verifyNoReferences(pn);
+            }
         }
         
         Set rvn;
@@ -2812,7 +2857,7 @@ public class MethodSummary {
         
         if (VERIFY_ASSERTIONS) {
             caller.verify();
-            caller.copy();
+            //caller.copy();
         }
     }
 
@@ -2842,6 +2887,11 @@ public class MethodSummary {
             sb.append(thrown);
             sb.append(lineSep);
         }
+        if (calls != null && !calls.isEmpty()) {
+            sb.append("Calls: ");
+            sb.append(calls);
+            sb.append(lineSep);
+        }
         return sb.toString();
     }
 
@@ -2858,9 +2908,8 @@ public class MethodSummary {
             useful = true;
         }
         if (n instanceof UnknownTypeNode) {
-            if (useful) this.nodes.put(n, n);
             path.remove(n);
-            return useful;
+            return true;
         }
         if (n.addedEdges != null) {
             if (TRACE_INTER) out.println("Useful because of added edge: "+n);
@@ -2948,12 +2997,12 @@ public class MethodSummary {
             if (VERIFY_ASSERTIONS) jq.Assert(nodes.containsKey(n), n.toString());
             return;
         }
-        visited.add(n); this.nodes.put(n, n);
-        if (TRACE_INTER) out.println("Useful: "+n);
         if (n instanceof UnknownTypeNode) {
             path.remove(n);
             return;
         }
+        visited.add(n); this.nodes.put(n, n);
+        if (TRACE_INTER) out.println("Useful: "+n);
         if (n.addedEdges != null) {
             for (Iterator i=n.addedEdges.entrySet().iterator(); i.hasNext(); ) {
                 java.util.Map.Entry e = (java.util.Map.Entry)i.next();
@@ -3026,12 +3075,14 @@ public class MethodSummary {
         }
         for (Iterator i=returned.iterator(); i.hasNext(); ) {
             Node n = (Node) i.next();
+            if (n instanceof UnknownTypeNode) continue;
             if (!nodes.containsKey(n)) {
                 jq.UNREACHABLE(n.toString_long());
             }
         }
         for (Iterator i=thrown.iterator(); i.hasNext(); ) {
             Node n = (Node) i.next();
+            if (n instanceof UnknownTypeNode) continue;
             if (!nodes.containsKey(n)) {
                 jq.UNREACHABLE(n.toString_long());
             }
@@ -3076,7 +3127,9 @@ public class MethodSummary {
         }
         for (Iterator i=nodeIterator(); i.hasNext(); ) {
             Node n = (Node) i.next();
-            if (n instanceof UnknownTypeNode) continue;
+            if (n instanceof UnknownTypeNode) {
+                jq.UNREACHABLE(n.toString_long());
+            }
             if (n.addedEdges != null) {
                 for (Iterator j=n.addedEdges.entrySet().iterator(); j.hasNext(); ) {
                     Map.Entry e = (Map.Entry) j.next();
@@ -3084,11 +3137,11 @@ public class MethodSummary {
                     Object o = e.getValue();
                     if (o instanceof Node) {
                         Node n2 = (Node) o;
-                        if (!nodes.containsKey(n2)) {
-                            jq.UNREACHABLE();
+                        if (!(n2 instanceof UnknownTypeNode) && !nodes.containsKey(n2)) {
+                            jq.UNREACHABLE(n2.toString_long());
                         }
                         if (!n2.hasPredecessor(f, n)) {
-                            jq.UNREACHABLE();
+                            jq.UNREACHABLE(n2.toString_long()+" has no predecessor "+n.toString_long());
                         }
                     } else if (o == null) {
                         
@@ -3096,11 +3149,11 @@ public class MethodSummary {
                         LinkedHashSet s = (LinkedHashSet) o;
                         for (Iterator k=s.iterator(); k.hasNext(); ) {
                             Node n2 = (Node) k.next();
-                            if (!nodes.containsKey(n2)) {
-                                jq.UNREACHABLE();
+                            if (!(n2 instanceof UnknownTypeNode) && !nodes.containsKey(n2)) {
+                                jq.UNREACHABLE(n2.toString_long());
                             }
                             if (!n2.hasPredecessor(f, n)) {
-                                jq.UNREACHABLE();
+                                jq.UNREACHABLE(n2.toString_long()+" has no predecessor "+n.toString_long());
                             }
                         }
                     }
@@ -3113,8 +3166,8 @@ public class MethodSummary {
                     Object o = e.getValue();
                     if (o instanceof Node) {
                         Node n2 = (Node) o;
-                        if (n2 != GlobalNode.GLOBAL && !nodes.containsKey(n2)) {
-                            jq.UNREACHABLE(this.toString());
+                        if (n2 != GlobalNode.GLOBAL && !(n2 instanceof UnknownTypeNode) && !nodes.containsKey(n2)) {
+                            jq.UNREACHABLE(this.toString()+" ::: "+n2);
                         }
                         if (!n2.hasEdge(f, n)) {
                             jq.UNREACHABLE(this.toString()+" ::: "+n2+" -> "+n);
@@ -3125,11 +3178,11 @@ public class MethodSummary {
                         LinkedHashSet s = (LinkedHashSet) o;
                         for (Iterator k=s.iterator(); k.hasNext(); ) {
                             Node n2 = (Node) k.next();
-                            if (n2 != GlobalNode.GLOBAL && !nodes.containsKey(n2)) {
-                                jq.UNREACHABLE();
+                            if (n2 != GlobalNode.GLOBAL && !(n2 instanceof UnknownTypeNode) && !nodes.containsKey(n2)) {
+                                jq.UNREACHABLE(n2.toString_long());
                             }
                             if (!n2.hasEdge(f, n)) {
-                                jq.UNREACHABLE();
+                                jq.UNREACHABLE(n2.toString_long()+" has no edge "+n.toString_long());
                             }
                         }
                     }
@@ -3143,10 +3196,10 @@ public class MethodSummary {
                     if (o instanceof FieldNode) {
                         FieldNode n2 = (FieldNode) o;
                         if (!nodes.containsKey(n2)) {
-                            jq.UNREACHABLE();
+                            jq.UNREACHABLE(n2.toString_long());
                         }
                         if (!n2.field_predecessors.contains(n)) {
-                            jq.UNREACHABLE();
+                            jq.UNREACHABLE(n2.toString_long()+" has no field pred "+n.toString_long());
                         }
                     } else if (o == null) {
                         
@@ -3155,10 +3208,10 @@ public class MethodSummary {
                         for (Iterator k=s.iterator(); k.hasNext(); ) {
                             FieldNode n2 = (FieldNode) k.next();
                             if (!nodes.containsKey(n2)) {
-                                jq.UNREACHABLE();
+                                jq.UNREACHABLE(n2.toString_long());
                             }
                             if (!n2.field_predecessors.contains(n)) {
-                                jq.UNREACHABLE();
+                                jq.UNREACHABLE(n2.toString_long()+" has no field pred "+n.toString_long());
                             }
                         }
                     }
@@ -3170,8 +3223,8 @@ public class MethodSummary {
                     jq_Field f = (jq_Field) fn.f;
                     for (Iterator j=fn.field_predecessors.iterator(); j.hasNext(); ) {
                         Node n2 = (Node) j.next();
-                        if (n2 != GlobalNode.GLOBAL && !nodes.containsKey(n2)) {
-                            jq.UNREACHABLE(this.toString());
+                        if (n2 != GlobalNode.GLOBAL && !(n2 instanceof UnknownTypeNode) && !nodes.containsKey(n2)) {
+                            jq.UNREACHABLE(this.toString()+" ::: "+n2.toString_long());
                         }
                         if (!n2.hasAccessPathEdge(f, fn)) {
                             jq.UNREACHABLE(this.toString()+" ::: "+n2.toString_long()+" => "+fn.toString_long());

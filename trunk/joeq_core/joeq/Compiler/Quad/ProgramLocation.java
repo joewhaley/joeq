@@ -38,7 +38,12 @@ public class ProgramLocation {
     public int hashCode() { return (q==null)?-1:q.hashCode(); }
     public boolean equals(ProgramLocation that) { return this.q == that.q; }
     public boolean equals(Object o) { if (o instanceof ProgramLocation) return equals((ProgramLocation)o); return false; }
-    public String toString() { return m.getName()+"() quad "+((q==null)?-1:q.getID()); }
+    public String toString() {
+        String s = m.getName()+"() quad "+((q==null)?-1:q.getID());
+        if (q.getOperator() instanceof Invoke)
+            s += " => "+Invoke.getMethod(q).getMethod().getName()+"()";
+        return s;
+    }
 
     private byte getInvocationType() {
         if (q.getOperator() instanceof Invoke.InvokeVirtual) {

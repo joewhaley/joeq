@@ -15,6 +15,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
@@ -66,7 +68,7 @@ public class PointerExplorer {
     public static jq_Method getMethod() throws IOException {
         return getMethod((String[])null, 0);
     }
-        
+    
     public static jq_Method getMethod(String[] args, int start) throws IOException {
         String mainClassName;
         if (args != null && args.length > start) {
@@ -170,6 +172,7 @@ uphere2:
     public static Set selectedCallSites = new LinkedHashSet();
     public static Map methodToCallSites = new HashMap();
     public static Map toInline = new LinkedHashMap();
+    public static List inlineCommands = new LinkedList();
     
     public static void selectCallSites(String desc, Iterator i, Iterator i2) throws IOException {
         System.out.println("Call sites with "+desc+": ");
@@ -284,6 +287,7 @@ uphere2:
             CallSite cs = (CallSite)e.getKey();
             MethodSummary caller = MethodSummary.getSummary(CodeCache.getCode(cs.caller.method));
             ProgramLocation mc = cs.m;
+            cs = new CallSite(caller, mc);
             Set targets = (Set)e.getValue();
             Iterator it2 = targets.iterator();
             if (!it2.hasNext()) {
@@ -291,14 +295,28 @@ uphere2:
             } else {
                 for (;;) {
                     jq_Method target_m = (jq_Method)it2.next();
+                    boolean removeCall = !it2.hasNext();
                     if (target_m.getBytecode() == null) {
                         //System.out.println("Cannot inline target "+target_m+": target has no bytecode");
                     } else {
                         MethodSummary callee = MethodSummary.getSummary(CodeCache.getCode(target_m));
-                        if (caller == callee) {
+                        MethodSummary caller2 = caller.copy();
+                        MethodSummary callee2 = callee.copy();
+                        if (caller == callee || callee.calls.contains(mc)) {
                             System.out.println("Inlining of recursive call not supported yet: "+cs);
+                        } else if (!caller.calls.contains(mc)) {
+                            System.out.println("Error: cannot find call site "+cs);
                         } else {
-                            MethodSummary.instantiate(caller, mc, callee, !it2.hasNext());
+                            try {
+                                MethodSummary.instantiate(caller, mc, callee, removeCall);
+                            } catch (Throwable t) {
+                                System.err.println("EXCEPTION while instantiating "+callee+" into "+caller+" mc="+mc);
+                                t.printStackTrace();
+                                MethodSummary.TRACE_INST = true;
+                                MethodSummary.TRACE_INTRA = true;
+                                MethodSummary.TRACE_INTER = true;
+                                MethodSummary.instantiate(caller2, mc, callee2, removeCall);
+                            }
                         }
                     }
                     if (!it2.hasNext()) break;
@@ -394,11 +412,18 @@ uphere:
     }
     
     public static void doInlining() {
-        System.out.println("Inlining "+toInline.size()+" call sites.");
-        Set[] sitesToInline = reorderInlineSites(toInline);
-        for (int i=0; i<sitesToInline.length; ++i) {
-            doInlining(sitesToInline[i]);
+        if (!toInline.isEmpty()) {
+            inlineCommands.add(toInline);
         }
+        for (Iterator ii=inlineCommands.iterator(); ii.hasNext(); ) {
+            toInline = (LinkedHashMap) ii.next();
+            System.out.println("Inlining "+toInline.size()+" call sites.");
+            Set[] sitesToInline = reorderInlineSites(toInline);
+            for (int i=0; i<sitesToInline.length; ++i) {
+                doInlining(sitesToInline[i]);
+            }
+        }
+        toInline = new LinkedHashMap();
     }
     
     public static void main(String[] args) throws IOException {
@@ -488,7 +513,12 @@ uphere:
                 }
                 System.out.println("Re-running context-insensitive analysis...");
                 time = System.currentTimeMillis();
-                apa.iterate();
+                try {
+                    apa.iterate();
+                } catch (Throwable t) {
+                    System.err.println("EXCEPTION while iterating: "+t);
+                    t.printStackTrace();
+                }
                 time = System.currentTimeMillis() - time;
                 System.out.println("Time to complete: "+time);
                 callGraph = apa.getCallGraph();
@@ -571,6 +601,22 @@ uphere:
                 }
                 continue;
             }
+            if (s.startsWith("selectmultitarget")) {
+                FilterIterator.Filter f = new FilterIterator.Filter() {
+                        public boolean isElement(Object o) {
+                            Map.Entry e = (Map.Entry)o;
+                            Set set = (Set)e.getValue();
+                            return set.size() > 1;
+                        }
+                };
+                FilterIterator it1 = new FilterIterator(sorted.iterator(), f);
+                while (it1.hasNext()) {
+                    Map.Entry e = (Map.Entry) it1.next();
+                    selectedCallSites.add(e.getKey());
+                }
+                System.out.println(selectedCallSites.size()+" call sites selected");
+                continue;
+            }
             if (s.startsWith("size ")) {
                 try {
                     final int size = Integer.parseInt(s.substring(5));
@@ -606,6 +652,7 @@ uphere:
                         }
                     }
                 }
+                System.out.println(toInline.size()+" inlining candidates found");
                 continue;
             }
             if (s.startsWith("exit") || s.startsWith("quit")) {
