@@ -59,10 +59,14 @@ public class CHACallGraph extends CallGraph {
                 jq_Type t = (jq_Type) i.next();
                 if (t instanceof jq_Class) {
                     jq_Class c = (jq_Class) t;
-                    c.prepare();
-                    if (c.implementsInterface(method.getDeclaringClass())) {
-                        jq_Method m2 = c.getVirtualMethod(method.getNameAndDesc());
-                        if (m2 != null && !m2.isAbstract()) result.add(m2);
+                    try {
+                        c.prepare();
+                        if (c.implementsInterface(method.getDeclaringClass())) {
+                            jq_Method m2 = c.getVirtualMethod(method.getNameAndDesc());
+                            if (m2 != null && !m2.isAbstract()) result.add(m2);
+                        }
+                    } catch (NoClassDefFoundError x) {
+                        // Class could not be found!  Skipping.
                     }
                 }
             }
@@ -72,19 +76,23 @@ public class CHACallGraph extends CallGraph {
             worklist.add(method.getDeclaringClass());
             while (!worklist.isEmpty()) {
                 jq_Class c = (jq_Class) worklist.removeFirst();
-                c.load();
-                jq_Method m2 = (jq_Method) c.getDeclaredMember(method.getNameAndDesc());
-                if (m2 != null) {
-                    if (!m2.isAbstract()) {
-                        result.add(m2);
+                try {
+                    c.load();
+                    jq_Method m2 = (jq_Method) c.getDeclaredMember(method.getNameAndDesc());
+                    if (m2 != null) {
+                        if (!m2.isAbstract()) {
+                            result.add(m2);
+                        }
+                        if (m2.isFinal() || m2.isPrivate()) {
+                            continue;
+                        }
                     }
-                    if (m2.isFinal() || m2.isPrivate()) {
-                        continue;
+                    for (Iterator i=Arrays.asList(c.getSubClasses()).iterator(); i.hasNext(); ) {
+                        jq_Class c2 = (jq_Class) i.next();
+                        if (classes == null || classes.contains(c2)) worklist.add(c2);
                     }
-                }
-                for (Iterator i=Arrays.asList(c.getSubClasses()).iterator(); i.hasNext(); ) {
-                    jq_Class c2 = (jq_Class) i.next();
-                    if (classes == null || classes.contains(c2)) worklist.add(c2);
+                } catch (NoClassDefFoundError x) {
+                    // Class could not be found!  Skipping.
                 }
             }
         }

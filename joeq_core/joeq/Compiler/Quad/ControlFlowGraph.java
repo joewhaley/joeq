@@ -40,7 +40,6 @@ import jwutil.util.Assert;
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
-
 public class ControlFlowGraph implements Graph {
 
     /* Method that this control flow graph represents. May be null for synthetic methods. */
@@ -426,12 +425,6 @@ public class ControlFlowGraph implements Graph {
         return that_bb;
     }
 
-    static void addRegistersToMap(Map map,
-                                  int offset,
-                                  RegisterFactory from,
-                                  RegisterFactory to) {
-    }
-
     /**
      * Merges the given control flow graph into this control flow graph.
      * Doesn't modify the given control flow graph.  A copy of the
@@ -439,19 +432,18 @@ public class ControlFlowGraph implements Graph {
      * returned.
      */
     public ControlFlowGraph merge(ControlFlowGraph from) {
-        RegisterFactory that_rf = new RegisterFactory(this.rf.size() + from.rf.size());
+        int nLocal = this.rf.numberOfLocalRegisters() + from.rf.numberOfLocalRegisters();
+        int nStack = this.rf.numberOfStackRegisters() + from.rf.numberOfStackRegisters();
+        RegisterFactory that_rf = new RegisterFactory(nStack, nLocal);
+        Map map = from.rf.deepCopyInto(that_rf);
+        this.rf.addAll(that_rf);
         ControlFlowGraph that = new ControlFlowGraph(from.getMethod(),
-                                                     from.exit().getNumberOfPredecessors(), from.exception_handlers.size(), that_rf);
-        Map map = new HashMap();
+                                                     from.exit().getNumberOfPredecessors(),
+                                                     from.exception_handlers.size(),
+                                                     that_rf);
+        
         map.put(from.entry(), that.entry());
         map.put(from.exit(), that.exit());
-
-        that_rf.skipNumbers(this.rf.size());
-        for (Iterator i = from.rf.iterator(); i.hasNext(); ) {
-            Register r1 = (Register) i.next();
-            Register r2 = this.rf.makePairedReg(that_rf, r1);
-            map.put(r1, r2);
-        }
 
         for (ListIterator.ExceptionHandler exs = from.getExceptionHandlers().exceptionHandlerIterator();
              exs.hasNext(); ) {
