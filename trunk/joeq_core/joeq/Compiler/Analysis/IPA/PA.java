@@ -904,14 +904,14 @@ public class PA {
     }
 
     public boolean isNullConstant(Node node) {
-	if (node instanceof ConcreteTypeNode || node instanceof ConcreteObjectNode) {
+        if (node instanceof ConcreteTypeNode || node instanceof ConcreteObjectNode) {
             jq_Reference type = node.getDeclaredType();
             if (type == null || type == jq_NullType.NULL_TYPE) {
                 if (TRACE) out.println("Skipping null constant.");
                 return true;
             }
         }
-	return false;
+        return false;
     }
     
     void addToVT(int V_i, jq_Reference type) {
@@ -2358,49 +2358,49 @@ public class PA {
     
     // XXX should we use an interface here for long location printing?
     public String longForm(Object o) {
-	if (o == null || !LONG_LOCATIONS)
-	    return "";
+        if (o == null || !LONG_LOCATIONS)
+            return "";
 
-	// Node is a ProgramLocation
-	if (o instanceof ProgramLocation) {
-	    return " in "+((ProgramLocation)o).toStringLong();
-	} else {
-	    try {
-		Class c = o.getClass();
-		try {
-		    // Node has getLocation() 
-		    Method m = c.getMethod("getLocation", new Class[] {});
-		    ProgramLocation pl = (ProgramLocation)m.invoke(o, null);
-		    if (pl == null)
-			throw new NoSuchMethodException();
-		    return " in "+pl.toStringLong();
-		} catch (NoSuchMethodException _1) {
-		    try {
-			// Node has at least a getMethod() 
-			Method m = c.getMethod("getMethod", new Class[] {});
-			return " " + m.invoke(o, null);
-		    } catch (NoSuchMethodException _2) {
-			try {
-			    // or getDefiningMethod() 
-			    Method m = c.getMethod("getDefiningMethod", new Class[] {});
-			    return " " + m.invoke(o, null);
-			} catch (NoSuchMethodException _3) {
-			}
-		    }
-		}
-	    } catch (InvocationTargetException _) {
-	    } catch (IllegalAccessException _) { 
-	    }
-	}
-	return "";
+        // Node is a ProgramLocation
+        if (o instanceof ProgramLocation) {
+            return " in "+((ProgramLocation)o).toStringLong();
+        } else {
+            try {
+                Class c = o.getClass();
+                try {
+                    // Node has getLocation() 
+                    Method m = c.getMethod("getLocation", new Class[] {});
+                    ProgramLocation pl = (ProgramLocation)m.invoke(o, null);
+                    if (pl == null)
+                        throw new NoSuchMethodException();
+                    return " in "+pl.toStringLong();
+                } catch (NoSuchMethodException _1) {
+                    try {
+                        // Node has at least a getMethod() 
+                        Method m = c.getMethod("getMethod", new Class[] {});
+                        return " " + m.invoke(o, null);
+                    } catch (NoSuchMethodException _2) {
+                        try {
+                            // or getDefiningMethod() 
+                            Method m = c.getMethod("getDefiningMethod", new Class[] {});
+                            return " " + m.invoke(o, null);
+                        } catch (NoSuchMethodException _3) {
+                        }
+                    }
+                }
+            } catch (InvocationTargetException _) {
+            } catch (IllegalAccessException _) { 
+            }
+        }
+        return "";
     }
 
     String findInMap(IndexedMap map, int j) {
         String jp = "("+j+")";
         if (j < map.size() && j >= 0) {
             Object o = map.get(j);
-	    jp += o + longForm(o);
-	    return jp;
+            jp += o + longForm(o);
+            return jp;
         } else {
             return jp+"<index not in map>";
         }
@@ -2430,7 +2430,7 @@ public class PA {
     }
    
     private void dumpCallGraphAsDot(CallGraph cg, String dotFileName) throws IOException {
-	PathNumbering callgraph = countCallGraph(cg, null, false);
+        PathNumbering callgraph = countCallGraph(cg, null, false);
         if (callgraph != null) {
             DataOutputStream dos = null;
             try {
@@ -3103,7 +3103,7 @@ public class PA {
         if (VerifyAssertions)
             Assert._assert(CONTEXT_SENSITIVE);
         PathNumbering pn;
-	if (THREAD_SENSITIVE) pn = new RootPathNumbering();
+        if (THREAD_SENSITIVE) pn = new RootPathNumbering();
         else pn = new SCCPathNumbering(heapPathSelector);
         Map initialCounts = null;//new ThreadRootMap(thread_runs);
         BigInteger paths = (BigInteger) pn.countPaths(cg.getRoots(), cg.getCallSiteNavigator(), initialCounts);
