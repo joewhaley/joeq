@@ -3054,6 +3054,7 @@ outer:
     }
     
     public void mergeGlobal() {
+        if (global == null) return;
         // merge global nodes.
         Set set = Collections.singleton(GlobalNode.GLOBAL);
         global.replaceBy(set, true);
