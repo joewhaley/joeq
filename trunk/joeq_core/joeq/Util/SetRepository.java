@@ -7,6 +7,7 @@
 
 package Util;
 
+import java.io.PrintStream;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -25,7 +26,9 @@ public class SetRepository extends SetFactory {
     public static final boolean USE_HASHCODES = true;
     public static final boolean USE_SIZES     = false;
     
-    public static final boolean VerifyAssertions = true;
+    public static final boolean VerifyAssertions = false;
+    public static final boolean TRACE = false;
+    public static final PrintStream out = System.out;
 
     public static class LinkedHashSetFactory extends SetFactory {
         private LinkedHashSetFactory() { }
@@ -73,26 +76,63 @@ public class SetRepository extends SetFactory {
     }
     
     public final Set makeSet(Collection c) {
-        return SharedSet.make(this, c);
+        Set s = SharedSet.make(this, c);
+        if (VerifyAssertions) {
+            if (!s.equals(c))
+                jq.UNREACHABLE(c+" != "+s);
+        }
+        return s;
     }
     
     public SharedSet getUnion(Collection sets, boolean disjoint) {
-        Object setIdentifier;
-        if (disjoint)
-            setIdentifier = calculateSetIdentifier_disjoint(sets);
-        else
-            setIdentifier = calculateSetIdentifier(sets);
-        Map entry = (Map) cache.get(setIdentifier);
-        if (entry == null) {
-            cache.put(setIdentifier, entry = entryFactory.makeMap());
+        Set check;
+        if (VerifyAssertions) {
+            check = new LinkedHashSet();
+            for (Iterator i=sets.iterator(); i.hasNext(); )
+                check.addAll((Collection)i.next());
+            //if (TRACE) out.println("Looking for union set: "+check);
         }
         if (USE_HASHCODES) {
             SharedSet resultSet = SharedSet.makeUnion(this, sets);
+            Object setIdentifier = new Integer(resultSet.hashCode());
+            Map entry = (Map) cache.get(setIdentifier);
+            if (entry == null) {
+                if (TRACE) out.println("Adding new cache entry for "+setIdentifier);
+                cache.put(setIdentifier, entry = entryFactory.makeMap());
+            } else {
+                if (TRACE) out.println("Cache entry for "+setIdentifier+" exists");
+            }
             SharedSet resultSet2 = (SharedSet) entry.get(resultSet);
-            if (resultSet2 != null) return resultSet2;
+            if (resultSet2 != null) {
+                if (TRACE) out.println("Set already exists in cache: "+System.identityHashCode(resultSet2));
+                if (VerifyAssertions) {
+                    if (!check.equals(resultSet2)) {
+                        jq.UNREACHABLE(check+" != "+resultSet2);
+                    }
+                }
+                return resultSet2;
+            }
             entry.put(resultSet, resultSet);
+            if (TRACE) out.println("Set doesn't exist in cache, adding: "+System.identityHashCode(resultSet));
+            if (VerifyAssertions) {
+                if (!check.equals(resultSet)) {
+                    jq.UNREACHABLE(check+" != "+resultSet);
+                }
+            }
             return resultSet;
         } else if (USE_SIZES) {
+            Object setIdentifier;
+            if (disjoint)
+                setIdentifier = calculateSetIdentifier_disjoint(sets);
+            else
+                setIdentifier = calculateSetIdentifier(sets);
+            Map entry = (Map) cache.get(setIdentifier);
+            if (entry == null) {
+                if (TRACE) out.println("Adding new cache entry for "+setIdentifier);
+                cache.put(setIdentifier, entry = entryFactory.makeMap());
+            } else {
+                if (TRACE) out.println("Cache entry for "+setIdentifier+" exists");
+            }
             int newHashCode;
             if (disjoint)
                 newHashCode = calculateHashcode_disjoint(sets);
@@ -103,16 +143,31 @@ public class SetRepository extends SetFactory {
 uphere:
             while (i.hasNext()) {
                 SharedSet hs = (SharedSet) i.next();
+                if (TRACE) out.println("Checking matching hashcode ("+newHashCode+") set: "+System.identityHashCode(hs));
                 Iterator j = sets.iterator();
                 while (j.hasNext()) {
                     Set s1 = (Set) j.next();
-                    if (!hs.containsAll(s1))
+                    if (!hs.containsAll(s1)) {
+                        if (TRACE) out.println("Missing something from set "+System.identityHashCode(s1));
                         continue uphere;
+                    }
+                }
+                if (TRACE) out.println("Set already exists in cache: "+System.identityHashCode(hs));
+                if (VerifyAssertions) {
+                    if (!check.equals(hs)) {
+                        jq.UNREACHABLE(check+" != "+hs);
+                    }
                 }
                 return hs;
             }
             SharedSet resultSet = SharedSet.makeUnion(this, sets);
             s.put(resultSet, resultSet);
+            if (TRACE) out.println("Set doesn't exist in cache, adding: "+System.identityHashCode(resultSet));
+            if (VerifyAssertions) {
+                if (!check.equals(resultSet)) {
+                    jq.UNREACHABLE(check+" != "+resultSet);
+                }
+            }
             return resultSet;
         } else {
             jq.UNREACHABLE(); return null;
@@ -259,6 +314,30 @@ uphere:
         
         public SharedSet copyAndAddAllSets(Collection sets, boolean disjoint) {
             return repository.getUnion(sets, disjoint);
+        }
+        
+        public String toString() {
+            StringBuffer sb = new StringBuffer();
+            sb.append("[shared: ");
+            for (Iterator i=iterator(); i.hasNext(); ) {
+                sb.append(i.next());
+                if (i.hasNext()) sb.append(", ");
+            }
+            sb.append("]");
+            return sb.toString();
+        }
+        
+        public int hashCode() {
+            return this.set.hashCode();
+        }
+        
+        public boolean equals(Collection c) {
+            return this.containsAll(c) && c.containsAll(this);
+        }
+        
+        public boolean equals(Object o) {
+            if (o instanceof Collection) return equals((Collection)o);
+            return false;
         }
         
         /**
