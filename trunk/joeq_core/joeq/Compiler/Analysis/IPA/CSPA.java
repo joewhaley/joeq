@@ -323,7 +323,6 @@ public class CSPA {
 
     private void dumpConfig(DataOutput out) throws IOException {
         out.writeBytes(VARBITS+" "+HEAPBITS+" "+FIELDBITS+" "+CLASSBITS+" "+CONTEXTBITS+"\n");
-        String ordering = System.getProperty("bddordering", "FD_H2cxH2o_V2cxV1cxV2oxV1o_H1cxH1o");
         out.writeBytes(ordering+"\n");
     }
 
@@ -748,6 +747,8 @@ public class CSPA {
     CallGraph cg;
     Collection roots;
     
+    static String ordering = System.getProperty("bddordering", "FD_H2cxH2o_V2cxV1cxV2oxV1oxH1c_H1o");
+
     public void initializeBDD(int nodeCount, int cacheSize) {
         bdd = BDDFactory.init(nodeCount, cacheSize);
         
@@ -788,7 +789,6 @@ public class CSPA {
         }
         
         boolean reverseLocal = System.getProperty("bddreverse", "true").equals("true");
-        String ordering = System.getProperty("bddordering", "FD_H2cxH2o_V2cxV1cxV2oxV1o_H1cxH1o");
         
         int[] varorder = makeVarOrdering(bdd, domainBits, domainSpos, reverseLocal, ordering);
         if (TRACE_VARORDER) {
