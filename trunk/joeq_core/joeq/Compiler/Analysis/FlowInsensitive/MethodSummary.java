@@ -1848,8 +1848,8 @@ public class MethodSummary {
          * Prints an identifier of this node to the given data output.
          */
         public void write(IndexedMap map, DataOutput out) throws IOException {
+            final int s = map.size();
             if (accessPathEdges != null) {
-                int s = map.size();
                 int index = map.get(this);
                 Assert._assert(s == map.size());
                 for (Iterator i = this.getAccessPathEdgeTargets().iterator(); i.hasNext(); ) {
@@ -1862,7 +1862,6 @@ public class MethodSummary {
                 }
             }
             if (addedEdges != null) {
-                int s = map.size();
                 int index = map.get(this);
                 Assert._assert(s == map.size());
                 for (Iterator i = this.getEdges().iterator(); i.hasNext(); ) {
@@ -1875,18 +1874,18 @@ public class MethodSummary {
                         c = Collections.singleton(e.getValue());
                     for (Iterator j = c.iterator(); j.hasNext(); ) {
                         Node n = (Node) j.next();
+                        if (!map.contains(n)) continue;
                         int index2 = map.get(n);
                         Assert._assert(s == map.size());
                         if (index2 <= index) {
                             out.writeBytes(" succ ");
                             writeMember(out, f);
-                            out.writeBytes(Integer.toString(index2));
+                            out.writeBytes(" "+index2);
                         }
                     }
                 }
             }
             if (predecessors != null) {
-                int s = map.size();
                 int index = map.get(this);
                 Assert._assert(s == map.size());
                 for (Iterator i = this.getPredecessors().iterator(); i.hasNext(); ) {
@@ -1899,12 +1898,13 @@ public class MethodSummary {
                         c = Collections.singleton(e.getValue());
                     for (Iterator j = c.iterator(); j.hasNext(); ) {
                         Node n = (Node) j.next();
+                        if (!map.contains(n)) continue;
                         int index2 = map.get(n);
                         Assert._assert(s == map.size());
                         if (index2 < index) {
                             out.writeBytes(" pred ");
                             writeMember(out, f);
-                            out.writeBytes(Integer.toString(index2));
+                            out.writeBytes(" "+index2);
                         }
                     }
                 }
