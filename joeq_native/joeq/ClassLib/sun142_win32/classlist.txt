@@ -16,7 +16,9 @@ LClassLib/Common/Interface;
 LClassLib/sun142_win32/Interface;
 LClazz/*
 LCompil3r/BytecodeAnalysis/Bytecodes$EmptyVisitor;
+LCompil3r/BytecodeAnalysis/Bytecodes$CodeException;
 [LCompil3r/BytecodeAnalysis/Bytecodes$CodeException;
+LCompil3r/BytecodeAnalysis/Bytecodes$LineNumber;
 [LCompil3r/BytecodeAnalysis/Bytecodes$LineNumber;
 LCompil3r/Quad/BytecodeToQuad$jq_ReturnAddressType;
 LCompil3r/Reference/x86/*
@@ -96,6 +98,7 @@ Ljava/lang/NoSuchMethodError;
 Ljava/lang/NullPointerException;
 Ljava/lang/Object;
 Ljava/lang/OutOfMemoryError;
+Ljava/lang/Package;
 [Ljava/lang/Package;
 Ljava/lang/RuntimeException;
 Ljava/lang/RuntimePermission;
@@ -233,6 +236,7 @@ Ljava/util/LinkedList;
 Ljava/util/LinkedList$Entry;
 Ljava/util/LinkedList$ListItr;
 Ljava/util/LinkedHashMap;
+Ljava/util/LinkedHashMap$Entry;
 [Ljava/util/LinkedHashMap$Entry;
 Ljava/util/LinkedHashSet;
 Ljava/util/ListIterator;
