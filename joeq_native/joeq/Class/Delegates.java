@@ -84,10 +84,6 @@ public class Delegates implements jq_ClassFileConstants {
     }
     public static CompilerInterface default_compiler;
     public static List compilers = new LinkedList();
-    static {
-        String default_compiler_name = System.getProperty("joeq.compiler", "joeq.Compiler.Reference.x86.x86ReferenceCompiler$Factory");
-        setDefaultCompiler(default_compiler_name);
-    }
     public static CompilerInterface getCompiler(String name) {
         try {
             Class c = Class.forName(name);
