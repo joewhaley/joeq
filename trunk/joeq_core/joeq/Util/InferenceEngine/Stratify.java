@@ -366,14 +366,22 @@ public class Stratify {
         inputs.addAll(solver.relationsToLoadTuples);
         inputs.addAll(solver.equivalenceRelations.values());
         inputs.addAll(solver.notequivalenceRelations.values());
+        Iterator i = solver.rules.iterator();
+        while (i.hasNext()) {
+            InferenceRule ir = (InferenceRule) i.next();
+            if (ir.top.size()==0) {
+                inputs.add(ir.bottom.relation);
+            }
+        }
+        
         Set outputs = new HashSet();
         outputs.addAll(solver.relationsToDump);
         outputs.addAll(solver.relationsToDumpTuples);
         outputs.addAll(solver.relationsToDumpNegated);
         outputs.addAll(solver.relationsToDumpNegatedTuples);
         outputs.addAll(solver.relationsToPrintSize);
-        Iterator i = solver.dotGraphsToDump.iterator();
-        //outputs.addAll(((Dot)i.next()).getUsedRelations());
+        i = solver.dotGraphsToDump.iterator();
+        outputs.addAll(((Dot)i.next()).getUsedRelations());
         
         stratify(solver.rules, inputs, outputs);
         
