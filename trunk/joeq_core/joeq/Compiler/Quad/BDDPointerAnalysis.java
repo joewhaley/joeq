@@ -276,6 +276,7 @@ public class BDDPointerAnalysis {
 
     public static boolean INCREMENTAL_POINTSTO = true;
     public static boolean INCREMENTAL_ITERATION = true;
+    public static boolean FORCE_GC = false;
 
     public static void main(String[] args) {
         HostedVM.initialize();
@@ -342,7 +343,7 @@ public class BDDPointerAnalysis {
             time3 = System.currentTimeMillis() - time3;
             System.out.println("Handle virtual calls:\t"+time3/1000.+" seconds.");
 
-            if (true) {
+            if (FORCE_GC) {
                 time3 = System.currentTimeMillis();
                 System.gc();
                 time3 = System.currentTimeMillis() - time3;
