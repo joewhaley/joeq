@@ -102,7 +102,7 @@ import UTF.Utf8;
 //  base object was wrong when calling getVirtualMethod when looking up interface methods in Trimmer
 //  calculated address of arguments, but forgot to do a "peek" in invokeinterface
 //  forgot to return value from invokeinterface
-//  fixed typo in Unsafe.getThreadBlock read from FS[14] 
+//  fixed typo in Unsafe.getThreadBlock read from FS[14]
 //  cut-and-paste error: method exits were guarded by TraceBytecodes instead of TraceMethods
 //  arguments pushed to call to arraystorecheck were incorrect
 //  forgot to add System.in/out/err as necessary members
@@ -362,56 +362,64 @@ public abstract class jq {
         try {
             // initialize the thread data structures, allocators, etc.
             jq_NativeThread.initInitialNativeThread();
-            
+
             // init the ctrl-break handler thread.
             jq_NativeThread.initBreakThread();
-            
+
+            // init the garbage collector thread & set it as daemon
+            jq_NativeThread.initGCThread();
+
             // call java.lang.System.initializeSystemClass()
             ClassLibInterface.DEFAULT.initializeSystemClass();
         } catch (Throwable x) {
             SystemInterface.debugmsg("Exception occurred during virtual machine initialization");
-            SystemInterface.debugmsg("Exception: "+x);
+            SystemInterface.debugmsg("Exception: " + x);
             if (System.err != null) x.printStackTrace(System.err);
             return;
         }
         int numOfArgs = SystemInterface.main_argc();
         String[] args = new String[numOfArgs];
-        for (int i=0; i<numOfArgs; ++i) {
+        for (int i = 0; i < numOfArgs; ++i) {
             int len = SystemInterface.main_argv_length(i);
             byte[] b = new byte[len];
             SystemInterface.main_argv(i, b);
             args[i] = new String(b);
         }
         String classpath = ".";
-        int i=0;
-        for (;;) {
+        int i = 0;
+        for (; ;) {
             if (i == args.length) {
                 printUsage();
                 return;
             }
             if (args[i].equals("-cp") || args[i].equals("-classpath")) { // class path
                 classpath = args[++i];
-                ++i; continue;
+                ++i;
+                continue;
             }
             if (args[i].equals("-nt") || args[i].equals("-native_threads")) { // class path
                 NumOfNativeThreads = Integer.parseInt(args[++i]);
-                ++i; continue;
+                ++i;
+                continue;
             }
             // todo: other command line switches to change VM behavior.
             int j = TraceFlags.setTraceFlag(args, i);
-            if (i != j) { i = j; continue; }
+            if (i != j) {
+                i = j;
+                continue;
+            }
             break;
         }
         if (on_vm_startup != null) {
             Iterator it = on_vm_startup.iterator();
             while (it.hasNext()) {
-                MethodInvocation mi = (MethodInvocation)it.next();
+                MethodInvocation mi = (MethodInvocation) it.next();
                 try {
                     mi.invoke();
                 } catch (Throwable x) {
                     SystemInterface.debugmsg("Exception occurred during virtual machine initialization");
                     SystemInterface.debugmsg(mi.toString());
-                    SystemInterface.debugmsg("Exception: "+x);
+                    SystemInterface.debugmsg("Exception: " + x);
                     x.printStackTrace(System.err);
                     return;
                 }
@@ -420,7 +428,7 @@ public abstract class jq {
         if (classpath != null) {
             Iterator it = PrimordialClassLoader.classpaths(classpath);
             while (it.hasNext()) {
-                String s = (String)it.next();
+                String s = (String) it.next();
                 PrimordialClassLoader.loader.addToClasspath(s);
             }
         }
@@ -428,32 +436,35 @@ public abstract class jq {
         jq_Thread tb = Unsafe.getThreadBlock();
         jq_NativeThread nt = tb.getNativeThread();
         jq_NativeThread.initNativeThreads(nt, NumOfNativeThreads);
-        
+
         // Here we start method replacement of classes whose name were given as arguments to -replace on the cmd line.
         if (Clazz.jq_Class.TRACE_REPLACE_CLASS) SystemInterface.debugmsg("\nSTARTING REPLACEMENT of classes: " + Clazz.jq_Class.classToReplace);
 
-        for (Iterator it = Clazz.jq_Class.classToReplace.iterator() ; it.hasNext() ; ) {
-            String newCName = (String)it.next();
+        for (Iterator it = Clazz.jq_Class.classToReplace.iterator(); it.hasNext();) {
+            String newCName = (String) it.next();
             PrimordialClassLoader.loader.replaceClass(newCName);
         }
         if (Clazz.jq_Class.TRACE_REPLACE_CLASS) SystemInterface.debugmsg("\nDONE with Classes Replacement!");
-        
+
         String className = args[i];
-        jq_Class main_class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("L"+className.replace('.', '/')+";");
+        jq_Class main_class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("L" + className.replace('.', '/') + ";");
         main_class.load();
         jq_StaticMethod main_method = main_class.getStaticMethod(new jq_NameAndDesc(Utf8.get("main"), Utf8.get("([Ljava/lang/String;)V")));
         if (main_method == null) {
-            System.err.println("Class "+className+" does not contain a main method!");
+            System.err.println("Class " + className + " does not contain a main method!");
             return;
         }
         if (!main_method.isPublic()) {
-            System.err.println("Method "+main_method+" is not public!");
+            System.err.println("Method " + main_method + " is not public!");
             return;
         }
-        main_class.verify(); main_class.prepare(); main_class.sf_initialize(); main_class.cls_initialize();
-        String[] main_args = new String[args.length-i-1];
-        System.arraycopy(args, i+1, main_args, 0, main_args.length);
-        
+        main_class.verify();
+        main_class.prepare();
+        main_class.sf_initialize();
+        main_class.cls_initialize();
+        String[] main_args = new String[args.length - i - 1];
+        System.arraycopy(args, i + 1, main_args, 0, main_args.length);
+
         //jq_CompiledCode main_cc = main_method.getDefaultCompiledVersion();
         //Reflection.invokestatic_V(main_method, main_args);
         jq_MainThread mt = new jq_MainThread(main_method, main_args);
@@ -462,46 +473,71 @@ public abstract class jq {
         nt.nativeThreadEntry();
         jq.UNREACHABLE();
     }
-    
+
     public static void printUsage() {
         System.out.println("Usage: joeq <classname> <parameters>");
     }
-    
+
     public static void initializeForHostJVMExecution() {
         jq.Bootstrapping = true;
         jq.DontCompile = true;
         jq.boot_types = new java.util.HashSet();
 
         CodeAddress.FACTORY = new CodeAddress.CodeAddressFactory() {
-            public int size() { return 4; }
+            public int size() {
+                return 4;
+            }
         };
         HeapAddress.FACTORY = new HeapAddress.HeapAddressFactory() {
-            public int size() { return 4; }
+            public int size() {
+                return 4;
+            }
+
             //public HeapAddress getNull() { return new Bootstrap.BootstrapHeapAddress(0); }
             //public HeapAddress addressOf(Object o) { return new Bootstrap.BootstrapHeapAddress(0); }
             //public HeapAddress address32(int val) { return new Bootstrap.BootstrapHeapAddress(val); }
-            public HeapAddress getNull() { return null; }
-            public HeapAddress addressOf(Object o) { return null; }
-            public HeapAddress address32(int val) { return null; }
+            public HeapAddress getNull() {
+                return null;
+            }
+
+            public HeapAddress addressOf(Object o) {
+                return null;
+            }
+
+            public HeapAddress address32(int val) {
+                return null;
+            }
         };
         StackAddress.FACTORY = new StackAddress.StackAddressFactory() {
-            public int size() { return 4; }
-            public StackAddress alloca(int a) { jq.UNREACHABLE(); return null; }
-            public StackAddress getBasePointer() { jq.UNREACHABLE(); return null; }
-            public StackAddress getStackPointer() { jq.UNREACHABLE(); return null; }
+            public int size() {
+                return 4;
+            }
+
+            public StackAddress alloca(int a) {
+                jq.UNREACHABLE();
+                return null;
+            }
+
+            public StackAddress getBasePointer() {
+                jq.UNREACHABLE();
+                return null;
+            }
+
+            public StackAddress getStackPointer() {
+                jq.UNREACHABLE();
+                return null;
+            }
         };
-        String classpath = System.getProperty("sun.boot.class.path")+
-                           System.getProperty("path.separator")+
-                           System.getProperty("java.class.path");
-        for (Iterator it = PrimordialClassLoader.classpaths(classpath); it.hasNext(); ) {
-            String s = (String)it.next();
+        String classpath = System.getProperty("sun.boot.class.path") + System.getProperty("path.separator") + System.getProperty("java.class.path");
+        for (Iterator it = PrimordialClassLoader.classpaths(classpath); it.hasNext();) {
+            String s = (String) it.next();
             PrimordialClassLoader.loader.addToClasspath(s);
         }
 
         Reflection.obj_trav = ClassLib.Common.Interface.CommonObjectTraverser.INSTANCE;
         Reflection.obj_trav.initialize();
     }
-    
+
     public static int NumOfNativeThreads = 1;
     public static boolean Bootstrapping;
     public static boolean DontCompile;
@@ -511,9 +547,9 @@ public abstract class jq {
     public static boolean isBootType(jq_Type t) {
         return boot_types.contains(t);
     }
-    
+
     public static /*final*/ boolean SMP = true;
-    
+
     public static void Assert(boolean b, String reason) {
         if (!b) {
             SystemInterface.debugmsg("Assertion Failure!");
@@ -524,17 +560,19 @@ public abstract class jq {
             SystemInterface.die(-1);
         }
     }
+
     public static void Assert(boolean b) {
         Assert(b, "");
     }
-    
+
     public static void TODO(String s) {
-        SystemInterface.debugmsg("TODO: "+s);
+        SystemInterface.debugmsg("TODO: " + s);
         if (!jq.Bootstrapping) {
             new InternalError().printStackTrace();
         }
         SystemInterface.die(-1);
     }
+
     public static void TODO() {
         SystemInterface.debugmsg("TODO");
         if (!jq.Bootstrapping) {
@@ -542,14 +580,15 @@ public abstract class jq {
         }
         SystemInterface.die(-1);
     }
-    
+
     public static void UNREACHABLE(String s) {
-        SystemInterface.debugmsg("UNREACHABLE: "+s);
+        SystemInterface.debugmsg("UNREACHABLE: " + s);
         if (!jq.Bootstrapping) {
             new InternalError().printStackTrace();
         }
         SystemInterface.die(-1);
     }
+
     public static void UNREACHABLE() {
         SystemInterface.debugmsg("BUG! unreachable code reached!");
         if (!jq.Bootstrapping) {
@@ -557,127 +596,145 @@ public abstract class jq {
         }
         SystemInterface.die(-1);
     }
-    
+
     //// converting bytes to other data types
     public static char twoBytesToChar(byte b1, byte b2) {
-        return (char)((b1 << 8) | (b2 & 0xFF));
+        return (char) ((b1 << 8) | (b2 & 0xFF));
     }
+
     public static short twoBytesToShort(byte b1, byte b2) {
-        return (short)((b1 << 8) | (b2 & 0xFF));
+        return (short) ((b1 << 8) | (b2 & 0xFF));
     }
+
     public static int twoCharsToInt(char c1, char c2) {
         return (c1 << 16) | c2;
     }
+
     public static int fourBytesToInt(byte b1, byte b2, byte b3, byte b4) {
-        return (b1 << 24) |
-               ((b2 & 0xFF) << 16) |
-               ((b3 & 0xFF) << 8) |
-               (b4 & 0xFF);
+        return (b1 << 24) | ((b2 & 0xFF) << 16) | ((b3 & 0xFF) << 8) | (b4 & 0xFF);
     }
+
     public static long eightBytesToLong(byte b1, byte b2, byte b3, byte b4, byte b5, byte b6, byte b7, byte b8) {
         int hi = fourBytesToInt(b1, b2, b3, b4);
         int lo = fourBytesToInt(b5, b6, b7, b8);
         return twoIntsToLong(lo, hi);
     }
+
     public static char twoBytesToChar(byte[] b, int i) {
-        return twoBytesToChar(b[i], b[i+1]);
+        return twoBytesToChar(b[i], b[i + 1]);
     }
+
     public static short twoBytesToShort(byte[] b, int i) {
-        return twoBytesToShort(b[i], b[i+1]);
+        return twoBytesToShort(b[i], b[i + 1]);
     }
+
     public static int fourBytesToInt(byte[] b, int i) {
-        return fourBytesToInt(b[i], b[i+1], b[i+2], b[i+3]);
+        return fourBytesToInt(b[i], b[i + 1], b[i + 2], b[i + 3]);
     }
+
     public static long eightBytesToLong(byte[] b, int i) {
-        return eightBytesToLong(b[i], b[i+1], b[i+2], b[i+3], b[i+4], b[i+5], b[i+6], b[i+7]);
+        return eightBytesToLong(b[i], b[i + 1], b[i + 2], b[i + 3], b[i + 4], b[i + 5], b[i + 6], b[i + 7]);
     }
+
     public static long twoIntsToLong(int lo, int hi) {
-        return (((long)lo)&0xFFFFFFFFL) | ((long)hi << 32);
+        return (((long) lo) & 0xFFFFFFFFL) | ((long) hi << 32);
     }
+
     public static void charToTwoBytes(char i, byte[] b, int index) {
-        b[index] = (byte)(i >> 8); b[index+1] = (byte)(i);
+        b[index] = (byte) (i >> 8);
+        b[index + 1] = (byte) (i);
     }
+
     public static void intToFourBytes(int i, byte[] b, int index) {
-        b[index] = (byte)(i >> 24);
-        b[index+1] = (byte)(i >> 16);
-        b[index+2] = (byte)(i >> 8);
-        b[index+3] = (byte)(i);
+        b[index] = (byte) (i >> 24);
+        b[index + 1] = (byte) (i >> 16);
+        b[index + 2] = (byte) (i >> 8);
+        b[index + 3] = (byte) (i);
     }
+
     public static void longToEightBytes(long i, byte[] b, int index) {
-        b[index] = (byte)(i >> 56);
-        b[index+1] = (byte)(i >> 48);
-        b[index+2] = (byte)(i >> 40);
-        b[index+3] = (byte)(i >> 32);
-        b[index+4] = (byte)(i >> 24);
-        b[index+5] = (byte)(i >> 16);
-        b[index+6] = (byte)(i >> 8);
-        b[index+7] = (byte)(i);
+        b[index] = (byte) (i >> 56);
+        b[index + 1] = (byte) (i >> 48);
+        b[index + 2] = (byte) (i >> 40);
+        b[index + 3] = (byte) (i >> 32);
+        b[index + 4] = (byte) (i >> 24);
+        b[index + 5] = (byte) (i >> 16);
+        b[index + 6] = (byte) (i >> 8);
+        b[index + 7] = (byte) (i);
     }
-    
+
     //// useful string utility functions
     public static String hex(int i) {
         return "0x" + Integer.toHexString(i);
     }
+
     public static String hex(Object o) {
         if (jq.Bootstrapping)
             return hex(System.identityHashCode(o));
         else
             return HeapAddress.addressOf(o).stringRep();
     }
+
     public static String hex8(int i) {
         String t = Integer.toHexString(i);
-        return "0x00000000".substring(0, 10-t.length()) + t;
+        return "0x00000000".substring(0, 10 - t.length()) + t;
     }
+
     public static String hex16(long i) {
         String t = Long.toHexString(i);
-        return "0x0000000000000000".substring(0, 18-t.length()) + t;
+        return "0x0000000000000000".substring(0, 18 - t.length()) + t;
     }
+
     public static String shex(int i) {
-        if (i < 0) return "-" + hex(-i);
-        else return hex(i);
+        if (i < 0)
+            return "-" + hex(-i);
+        else
+            return hex(i);
     }
+
     public static String left(String s, int w) {
         int n = s.length();
         if (w < n) return s.substring(0, w);
         StringBuffer b = new StringBuffer(w);
         b.append(s);
-        for (int i=n; i<w; ++i) {
+        for (int i = n; i < w; ++i) {
             b.append(' ');
         }
         return b.toString();
     }
+
     public static String right(String s, int w) {
         int n = s.length();
-        if (w < n) return s.substring(n-w);
+        if (w < n) return s.substring(n - w);
         StringBuffer b = new StringBuffer(w);
-        for (int i=n; i<w; ++i) {
+        for (int i = n; i < w; ++i) {
             b.append(' ');
         }
         b.append(s);
         return b.toString();
     }
-    
+
     //// useful functions for parsing class and method names
     public static jq_Type parseType(String s) {
         if (s.length() == 1) {
-            jq_Primitive t = (jq_Primitive)PrimordialClassLoader.loader.getBSType(s);
+            jq_Primitive t = (jq_Primitive) PrimordialClassLoader.loader.getBSType(s);
             if (t != null) return t;
-            s = "L"+s+";";
+            s = "L" + s + ";";
         } else {
-            s = s.replace('.','/');
+            s = s.replace('.', '/');
             int arrayDepth = 0;
             while (s.endsWith("[]")) {
                 ++arrayDepth;
-                s = s.substring(0, s.length()-2);
+                s = s.substring(0, s.length() - 2);
             }
             if (!s.startsWith("[") && !s.endsWith(";"))
-                s = "L"+s+";";
+                s = "L" + s + ";";
             while (--arrayDepth >= 0)
-                s = "["+s;
+                s = "[" + s;
         }
-        return (jq_Reference)PrimordialClassLoader.loader.getOrCreateBSType(s);
+        return (jq_Reference) PrimordialClassLoader.loader.getOrCreateBSType(s);
     }
-    
+
     //public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateType("LMain/jq;");
     //public static final jq_StaticMethod _hex8 = _class.getOrCreateStaticMethod("hex8", "(I)Ljava/lang/String;");
     //public static final jq_StaticMethod _hex16 = _class.getOrCreateStaticMethod("hex16", "(J)Ljava/lang/String;");
