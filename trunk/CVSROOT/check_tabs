@@ -1,8 +1,7 @@
 #!/bin/bash
 
-echo Changing dir to $1
-cd $1
-ls
+### echo Directory is $1
+ls -al
 shift
 
 for arg in "$@"
