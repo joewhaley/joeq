@@ -3,10 +3,9 @@
 // Licensed under the terms of the GNU GPL; see COPYING for details.
 package Util;
 
-import java.util.Iterator;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Map;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 

@@ -7,36 +7,39 @@
 
 package Bootstrap;
 
+import java.io.DataInput;
+import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.InputStream;
-import java.io.DataInput;
-import java.io.DataInputStream;
-import java.io.PrintStream;
 import java.io.IOException;
-
-import java.util.Set;
-import java.util.List;
-import java.util.Iterator;
-import java.util.HashSet;
+import java.io.InputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.HashMap;
-
-import java.util.zip.ZipFile;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
-import Main.jq;
 import ClassLib.ClassLibInterface;
-import Clazz.*;
+import Clazz.jq_Array;
+import Clazz.jq_Class;
+import Clazz.jq_ClassFileConstants;
+import Clazz.jq_Member;
+import Clazz.jq_Primitive;
+import Clazz.jq_Type;
+import Main.jq;
 import UTF.Utf8;
+import Util.AppendIterator;
 import Util.ArrayIterator;
+import Util.Default;
 import Util.EnumerationIterator;
 import Util.FilterIterator;
 import Util.UnmodifiableIterator;
-import Util.AppendIterator;
-import Util.Default;
 
 /**
  * @author  John Whaley

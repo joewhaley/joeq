@@ -9,7 +9,6 @@ package ClassLib.sun13_win32.java.io;
 
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
-import Main.jq;
 
 /*
  * @author  John Whaley

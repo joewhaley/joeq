@@ -11,11 +11,10 @@ import Allocator.DefaultHeapAllocator;
 import Allocator.ObjectLayout;
 import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
-import Clazz.jq_StaticMethod;
 import Clazz.jq_InstanceField;
-import Run_Time.Unsafe;
-import Scheduler.jq_Thread;
+import Clazz.jq_StaticMethod;
 import Main.jq;
+import Scheduler.jq_Thread;
 
 /*
  * @author  John Whaley

@@ -6,11 +6,15 @@
 
 package ClassLib.Common.java.io;
 
-import Clazz.*;
+import Clazz.jq_Array;
+import Clazz.jq_Class;
+import Clazz.jq_Initializer;
+import Clazz.jq_NameAndDesc;
+import Clazz.jq_Type;
+import Main.jq;
 import Run_Time.Reflection;
 import Run_Time.Unsafe;
 import UTF.Utf8;
-import Main.jq;
 
 /**
  *

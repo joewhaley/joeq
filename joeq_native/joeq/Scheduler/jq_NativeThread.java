@@ -7,28 +7,21 @@
 
 package Scheduler;
 
-import Allocator.HeapAllocator;
-import Allocator.SimpleAllocator;
 import Allocator.CodeAllocator;
+import Allocator.HeapAllocator;
 import Allocator.RuntimeCodeAllocator;
-import Assembler.x86.x86;
-import Assembler.x86.x86Assembler;
+import Allocator.SimpleAllocator;
 import Assembler.x86.x86Constants;
 import Bootstrap.PrimordialClassLoader;
 import ClassLib.ClassLibInterface;
 import Clazz.jq_Class;
-import Clazz.jq_CompiledCode;
 import Clazz.jq_InstanceMethod;
-import Clazz.jq_StaticMethod;
 import Clazz.jq_StaticField;
-import Clazz.jq_Method;
-import Run_Time.Reflection;
+import Clazz.jq_StaticMethod;
+import Main.jq;
 import Run_Time.StackWalker;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
-import Main.jq;
-import java.util.List;
-import java.util.LinkedList;
 
 /*
  * @author  John Whaley

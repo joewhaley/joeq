@@ -6,17 +6,18 @@
 
 package Compil3r.Quad;
 
-import Clazz.jq_Method;
+import java.util.Iterator;
+
 import Clazz.jq_InstanceMethod;
+import Clazz.jq_Method;
 import Clazz.jq_Reference;
 import Compil3r.BytecodeAnalysis.BytecodeVisitor;
 import Compil3r.BytecodeAnalysis.CallTargets;
-import Compil3r.Quad.MethodSummary.Node;
 import Compil3r.Quad.MethodSummary.ConcreteTypeNode;
+import Compil3r.Quad.MethodSummary.Node;
 import Compil3r.Quad.Operator.Invoke;
 import Main.jq;
 import Util.LinkedHashSet;
-import java.util.Iterator;
 
 /**
  * This class combines a jq_Method with a Quad to represent a location in the code.

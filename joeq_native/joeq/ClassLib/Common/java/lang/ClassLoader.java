@@ -7,30 +7,23 @@
 
 package ClassLib.Common.java.lang;
 
-import Clazz.jq_ClassFileConstants;
-import Clazz.jq_Class;
-import Clazz.jq_Type;
-import Clazz.jq_Primitive;
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.security.ProtectionDomain;
+import java.util.HashMap;
+import java.util.Map;
+
+import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Array;
-import Clazz.jq_InstanceMethod;
-import Clazz.jq_StaticMethod;
-import Clazz.jq_InstanceField;
-import Clazz.jq_StaticField;
+import Clazz.jq_Class;
+import Clazz.jq_ClassFileConstants;
 import Clazz.jq_CompiledCode;
+import Clazz.jq_Type;
+import Main.jq;
 import Run_Time.Reflection;
 import Run_Time.StackWalker;
 import Run_Time.Unsafe;
-import Run_Time.SystemInterface;
-import Bootstrap.PrimordialClassLoader;
 import UTF.Utf8;
-import Main.jq;
-import java.io.ByteArrayInputStream;
-import java.io.DataInput;
-import java.io.DataInputStream;
-import java.util.Iterator;
-import java.util.HashMap;
-import java.util.Map;
-import java.security.ProtectionDomain;
 
 /*
  * @author  John Whaley

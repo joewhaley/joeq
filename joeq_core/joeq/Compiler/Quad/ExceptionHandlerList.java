@@ -7,7 +7,6 @@
 
 package Compil3r.Quad;
 import Clazz.jq_Class;
-import Util.ListFactory;
 import Util.Templates.List;
 import Util.Templates.ListIterator;
 import Util.Templates.ListWrapper;

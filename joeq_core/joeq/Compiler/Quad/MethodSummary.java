@@ -6,27 +6,22 @@
 
 package Compil3r.Quad;
 
-import Bootstrap.PrimordialClassLoader;
-import Util.Templates.List;
-import Util.Templates.ListIterator;
-import Util.AppendIterator;
-import Util.SingletonIterator;
-import Util.NullIterator;
-import Util.FilterIterator;
-import Util.IdentityHashCodeWrapper;
-import Clazz.*;
 import java.util.Collections;
-import java.util.Set;
-import java.util.HashSet;
 import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.HashSet;
 import java.util.Iterator;
-import Util.LinkedHashSet;
-import Util.LinkedHashMap;
-import Compil3r.BytecodeAnalysis.BytecodeVisitor;
-import Compil3r.BytecodeAnalysis.CallTargets;
+import java.util.LinkedList;
+import java.util.Set;
+
+import Bootstrap.PrimordialClassLoader;
+import Clazz.jq_Array;
+import Clazz.jq_Class;
+import Clazz.jq_Field;
+import Clazz.jq_InstanceField;
+import Clazz.jq_Method;
+import Clazz.jq_Reference;
+import Clazz.jq_Type;
 import Compil3r.Quad.BytecodeToQuad.jq_ReturnAddressType;
-import Compil3r.Quad.RegisterFactory.Register;
 import Compil3r.Quad.Operand.AConstOperand;
 import Compil3r.Quad.Operand.ParamListOperand;
 import Compil3r.Quad.Operand.RegisterOperand;
@@ -36,9 +31,6 @@ import Compil3r.Quad.Operator.CheckCast;
 import Compil3r.Quad.Operator.Getfield;
 import Compil3r.Quad.Operator.Getstatic;
 import Compil3r.Quad.Operator.Invoke;
-import Compil3r.Quad.Operator.Invoke.InvokeVirtual;
-import Compil3r.Quad.Operator.Invoke.InvokeStatic;
-import Compil3r.Quad.Operator.Invoke.InvokeInterface;
 import Compil3r.Quad.Operator.Move;
 import Compil3r.Quad.Operator.New;
 import Compil3r.Quad.Operator.NewArray;
@@ -47,7 +39,14 @@ import Compil3r.Quad.Operator.Putstatic;
 import Compil3r.Quad.Operator.Return;
 import Compil3r.Quad.Operator.Special;
 import Compil3r.Quad.Operator.Unary;
+import Compil3r.Quad.RegisterFactory.Register;
 import Main.jq;
+import Util.FilterIterator;
+import Util.IdentityHashCodeWrapper;
+import Util.LinkedHashMap;
+import Util.LinkedHashSet;
+import Util.Templates.List;
+import Util.Templates.ListIterator;
 
 /**
  *

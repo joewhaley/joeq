@@ -8,12 +8,9 @@
 package Run_Time;
 
 import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_StaticMethod;
 import Clazz.jq_Class;
 import Clazz.jq_StaticField;
-import Clazz.jq_NameAndDesc;
-import UTF.Utf8;
-import Main.jq;
+import Clazz.jq_StaticMethod;
 
 /*
  * @author  John Whaley

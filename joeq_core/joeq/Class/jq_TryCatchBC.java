@@ -7,9 +7,7 @@
 
 package Clazz;
 
-import Clazz.jq_Class;
 import Run_Time.TypeCheck;
-import Main.jq;
 
 /*
  * @author  John Whaley

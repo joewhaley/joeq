@@ -7,12 +7,13 @@
 
 package Synchronization;
 
-import Clazz.jq_InstanceField;
-import Run_Time.Unsafe;
-import Run_Time.Reflection;
-import Main.jq;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 
-import java.lang.reflect.*;
+import Clazz.jq_InstanceField;
+import Main.jq;
+import Run_Time.Reflection;
+import Run_Time.Unsafe;
 
 /*
  * @author  John Whaley

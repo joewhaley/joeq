@@ -7,7 +7,6 @@
 
 package Compil3r.BytecodeAnalysis;
 
-import Clazz.jq_Class;
 import Util.ListFactory;
 
 /*

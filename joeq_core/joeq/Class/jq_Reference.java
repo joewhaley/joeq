@@ -7,9 +7,9 @@
 
 package Clazz;
 
+import Bootstrap.PrimordialClassLoader;
 import Main.jq;
 import UTF.Utf8;
-import Bootstrap.PrimordialClassLoader;
 
 /*
  * @author  John Whaley

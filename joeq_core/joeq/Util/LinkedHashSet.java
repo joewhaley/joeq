@@ -6,7 +6,8 @@
  */
 
 package Util;
-import java.util.*;
+import java.util.Collection;
+import java.util.Set;
 
 /**
  * <p>Hash table and linked list implementation of the <tt>Set</tt> interface,

@@ -7,21 +7,19 @@
 
 package ClassLib.Common.java.lang;
 
+import java.io.InputStream;
+import java.io.PrintStream;
+
+import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
 import Clazz.jq_CompiledCode;
 import Clazz.jq_StaticField;
-import Clazz.jq_StaticMethod;
 import Run_Time.ArrayCopy;
 import Run_Time.HashCode;
-import Run_Time.SystemInterface;
-import Run_Time.Unsafe;
 import Run_Time.Reflection;
 import Run_Time.StackWalker;
-import Bootstrap.PrimordialClassLoader;
-import Main.jq;
-import java.io.InputStream;
-import java.io.PrintStream;
-import java.util.Properties;
+import Run_Time.SystemInterface;
+import Run_Time.Unsafe;
 
 /*
  * @author  John Whaley

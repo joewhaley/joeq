@@ -7,11 +7,19 @@
 
 package Interpreter;
 
-import Allocator.*;
-import Clazz.*;
-import Run_Time.*;
-import Compil3r.Reference.x86.x86ReferenceLinker;
+import Allocator.HeapAllocator;
+import Allocator.ObjectLayout;
+import Clazz.jq_Array;
+import Clazz.jq_Class;
+import Clazz.jq_InstanceField;
+import Clazz.jq_Method;
+import Clazz.jq_StaticField;
+import Clazz.jq_StaticMethod;
+import Clazz.jq_Type;
 import Main.jq;
+import Run_Time.Monitor;
+import Run_Time.TypeCheck;
+import Run_Time.Unsafe;
 
 /*
  * @author  John Whaley

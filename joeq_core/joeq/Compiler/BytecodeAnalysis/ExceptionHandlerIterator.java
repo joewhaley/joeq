@@ -7,7 +7,10 @@
 
 package Compil3r.BytecodeAnalysis;
 
-import java.util.*;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.NoSuchElementException;
+
 import Util.AppendListIterator;
 
 /*

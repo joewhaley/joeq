@@ -7,11 +7,13 @@
 
 package Compil3r.BytecodeAnalysis;
 
-import Clazz.*;
+import java.util.ListIterator;
+
+import Clazz.jq_Method;
+import Clazz.jq_TryCatchBC;
+import Main.jq;
 import Util.BitString;
 import Util.BitString.BitStringIterator;
-import Main.jq;
-import java.util.ListIterator;
 
 /*
  * @author  John Whaley

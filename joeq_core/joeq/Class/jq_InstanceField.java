@@ -9,11 +9,11 @@ package Clazz;
 
 import java.io.DataInput;
 import java.io.IOException;
-import java.util.Map;
 import java.util.HashMap;
-import Main.jq;
+import java.util.Map;
 
 import Bootstrap.PrimordialClassLoader;
+import Main.jq;
 
 //friend jq_ClassLoader;
 

@@ -7,9 +7,10 @@
 
 package Clazz;
 
-import Util.ArrayIterator;
-import Util.AppendIterator;
 import java.util.Iterator;
+
+import Util.AppendIterator;
+import Util.ArrayIterator;
 
 /*
  * @author  John Whaley

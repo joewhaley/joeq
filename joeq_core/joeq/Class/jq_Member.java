@@ -7,19 +7,18 @@
 
 package Clazz;
 
-import java.lang.reflect.Member;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Set;
-import java.util.Iterator;
 import java.io.DataInput;
-import java.io.IOException;
 import java.io.DataOutput;
+import java.io.IOException;
+import java.lang.reflect.Member;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
-import Main.jq;
 import ClassLib.ClassLibInterface;
-import Run_Time.StackWalker;
+import Main.jq;
 import Run_Time.Reflection;
+import Run_Time.StackWalker;
 import Run_Time.TypeCheck;
 import Run_Time.Unsafe;
 import UTF.Utf8;

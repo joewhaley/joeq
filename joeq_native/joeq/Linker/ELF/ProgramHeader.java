@@ -5,7 +5,7 @@
  */
 
 package Linker.ELF;
-import java.io.*;
+import java.io.IOException;
 
 /**
  *

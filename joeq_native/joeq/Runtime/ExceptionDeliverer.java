@@ -8,14 +8,13 @@
 package Run_Time;
 
 import Allocator.CodeAllocator;
+import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
 import Clazz.jq_CompiledCode;
-import Clazz.jq_StaticMethod;
 import Clazz.jq_Method;
-import Bootstrap.PrimordialClassLoader;
-import Run_Time.Unsafe;
-import UTF.Utf8;
+import Clazz.jq_StaticMethod;
 import Main.jq;
+import UTF.Utf8;
 
 /*
  * @author  John Whaley

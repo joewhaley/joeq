@@ -7,13 +7,13 @@
 
 package Compil3r.Quad;
 
+import Clazz.jq_Class;
 import Compil3r.Quad.Operand.RegisterOperand;
 import Compil3r.Quad.Operator.Return;
-import Util.Templates.List;
-import Util.Templates.UnmodifiableList;
-import Clazz.jq_Class;
 import Interpreter.QuadInterpreter.State;
 import Main.jq;
+import Util.Templates.List;
+import Util.Templates.UnmodifiableList;
 
 /**
  * @author  John Whaley

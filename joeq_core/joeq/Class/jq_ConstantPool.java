@@ -7,22 +7,19 @@
 
 package Clazz;
 
-import UTF.Utf8;
-
-import java.util.Set;
-import java.util.LinkedList;
-import java.util.Iterator;
-import java.util.HashMap;
-import java.util.Map;
-
 import java.io.DataInput;
-import java.io.IOException;
 import java.io.DataOutput;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Set;
 
 import ClassLib.ClassLibInterface;
 import Compil3r.BytecodeAnalysis.Bytecodes;
-
 import Main.jq;
+import UTF.Utf8;
 
 /*
  * @author  John Whaley

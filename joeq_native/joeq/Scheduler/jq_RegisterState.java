@@ -8,9 +8,6 @@
 package Scheduler;
 
 import Assembler.x86.x86Constants;
-import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Class;
-import Clazz.jq_InstanceField;
 import Clazz.jq_DontAlign;
 
 /*

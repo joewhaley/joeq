@@ -6,22 +6,22 @@
  */
 package Allocator;
 
-import Clazz.jq_CompiledCode;
-import Clazz.jq_Method;
-import Clazz.jq_TryCatch;
-import Clazz.jq_BytecodeMap;
-import Clazz.jq_Class;
-import Clazz.jq_InstanceField;
-import Clazz.jq_StaticField;
-import Bootstrap.PrimordialClassLoader;
-import Run_Time.ExceptionDeliverer;
-
-import java.util.Iterator;
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+
+import Bootstrap.PrimordialClassLoader;
+import Clazz.jq_BytecodeMap;
+import Clazz.jq_Class;
+import Clazz.jq_CompiledCode;
+import Clazz.jq_InstanceField;
+import Clazz.jq_Method;
+import Clazz.jq_StaticField;
+import Clazz.jq_TryCatch;
+import Run_Time.ExceptionDeliverer;
 
 /**
  * This class provides the abstract interface for code allocators.  A code allocator

@@ -6,18 +6,15 @@
  */
 package Clazz;
 
-import Assembler.x86.DirectBindCall;
+import java.util.Iterator;
+import java.util.List;
+
 import Allocator.CodeAllocator;
+import Assembler.x86.DirectBindCall;
 import Bootstrap.PrimordialClassLoader;
+import Main.jq;
 import Run_Time.ExceptionDeliverer;
 import Run_Time.SystemInterface;
-import Run_Time.Unsafe;
-import UTF.Utf8;
-
-import Main.jq;
-
-import java.util.List;
-import java.util.Iterator;
 
 /**
  * @author  John Whaley

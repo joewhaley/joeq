@@ -12,10 +12,9 @@ import Bootstrap.PrimordialClassLoader;
 import ClassLib.ClassLibInterface;
 import Clazz.jq_Class;
 import Clazz.jq_InstanceMethod;
-import Run_Time.Reflection;
+import Main.jq;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
-import Main.jq;
 
 /*
  * @author  John Whaley

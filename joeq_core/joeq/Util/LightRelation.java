@@ -4,12 +4,10 @@
 
 package Util;
 
+import java.io.Serializable;
 import java.util.Collection;
-import java.util.Set;
 import java.util.Iterator;
 import java.util.Map;
-
-import java.io.Serializable;
 
 /**
  * <code>LightRelation</code>

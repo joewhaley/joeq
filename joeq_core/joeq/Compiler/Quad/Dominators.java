@@ -5,12 +5,14 @@
  */
 
 package Compil3r.Quad;
-import Clazz.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+
+import Clazz.jq_Method;
+import Clazz.jq_MethodVisitor;
 import Util.BitString;
 import Util.Templates.List;
 import Util.Templates.ListIterator;
-import java.util.ArrayList;
-import java.util.Iterator;
 
 /**
  *

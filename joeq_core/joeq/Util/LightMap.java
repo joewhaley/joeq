@@ -3,13 +3,12 @@
 // Licensed under the terms of the GNU GPL; see COPYING for details.
 package Util;
 
-import java.util.Set;
-import java.util.HashSet;
-import java.util.Map;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * <code>LightMap</code> is a very lightweight implementation of

@@ -7,31 +7,37 @@
 
 package Compil3r.Quad;
 
-import Clazz.*;
-import Main.jq;
 import Bootstrap.PrimordialClassLoader;
-import Compil3r.Quad.Operand.RegisterOperand;
-import Compil3r.Quad.Operand.TargetOperand;
-import Compil3r.Quad.Operand.ConditionOperand;
-import Compil3r.Quad.Operand.IConstOperand;
-import Compil3r.Quad.Operand.FConstOperand;
-import Compil3r.Quad.Operand.LConstOperand;
-import Compil3r.Quad.Operand.DConstOperand;
+import Clazz.jq_Array;
+import Clazz.jq_Class;
+import Clazz.jq_InstanceField;
+import Clazz.jq_Method;
+import Clazz.jq_Primitive;
+import Clazz.jq_Reference;
+import Clazz.jq_StaticField;
+import Clazz.jq_Type;
+import Compil3r.BytecodeAnalysis.BytecodeVisitor;
 import Compil3r.Quad.Operand.AConstOperand;
-import Compil3r.Quad.Operand.TypeOperand;
+import Compil3r.Quad.Operand.BasicBlockTableOperand;
+import Compil3r.Quad.Operand.ConditionOperand;
+import Compil3r.Quad.Operand.DConstOperand;
+import Compil3r.Quad.Operand.FConstOperand;
 import Compil3r.Quad.Operand.FieldOperand;
+import Compil3r.Quad.Operand.IConstOperand;
+import Compil3r.Quad.Operand.IntValueTableOperand;
+import Compil3r.Quad.Operand.LConstOperand;
 import Compil3r.Quad.Operand.MethodOperand;
 import Compil3r.Quad.Operand.ParamListOperand;
-import Compil3r.Quad.Operand.IntValueTableOperand;
-import Compil3r.Quad.Operand.BasicBlockTableOperand;
-import Compil3r.BytecodeAnalysis.BytecodeVisitor;
-import Run_Time.Unsafe;
-import Run_Time.Reflection;
-import Run_Time.TypeCheck;
-import Util.Templates.UnmodifiableList;
+import Compil3r.Quad.Operand.RegisterOperand;
+import Compil3r.Quad.Operand.TargetOperand;
+import Compil3r.Quad.Operand.TypeOperand;
 import Interpreter.QuadInterpreter.State;
 import Interpreter.QuadInterpreter.UninitializedReference;
-import java.util.Set;
+import Main.jq;
+import Run_Time.Reflection;
+import Run_Time.TypeCheck;
+import Run_Time.Unsafe;
+import Util.Templates.UnmodifiableList;
 
 /**
  * @author  John Whaley

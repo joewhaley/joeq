@@ -6,33 +6,41 @@
 
 package Compil3r.Quad;
 
-import Clazz.*;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+
+import Clazz.jq_Class;
+import Clazz.jq_ClassInitializer;
+import Clazz.jq_Field;
+import Clazz.jq_Initializer;
+import Clazz.jq_Method;
+import Clazz.jq_Reference;
+import Clazz.jq_StaticField;
+import Clazz.jq_Type;
 import Compil3r.BytecodeAnalysis.CallTargets;
-import Compil3r.Quad.MethodSummary.PassedParameter;
 import Compil3r.Quad.MethodSummary.CallSite;
-import Compil3r.Quad.MethodSummary.Node;
 import Compil3r.Quad.MethodSummary.ConcreteTypeNode;
-import Compil3r.Quad.MethodSummary.OutsideNode;
-import Compil3r.Quad.MethodSummary.GlobalNode;
 import Compil3r.Quad.MethodSummary.FieldNode;
+import Compil3r.Quad.MethodSummary.GlobalNode;
+import Compil3r.Quad.MethodSummary.Node;
+import Compil3r.Quad.MethodSummary.OutsideNode;
 import Compil3r.Quad.MethodSummary.ParamNode;
+import Compil3r.Quad.MethodSummary.PassedParameter;
 import Compil3r.Quad.MethodSummary.ReturnValueNode;
 import Compil3r.Quad.MethodSummary.ThrownExceptionNode;
 import Compil3r.Quad.MethodSummary.UnknownTypeNode;
-import Compil3r.Quad.Operator.Invoke;
 import Compil3r.Quad.Operand.ParamListOperand;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.HashSet;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.LinkedList;
-import Util.LinkedHashSet;
-import Util.Default;
+import Compil3r.Quad.Operator.Invoke;
 import Main.jq;
+import Util.Default;
+import Util.LinkedHashSet;
 
 /**
  *

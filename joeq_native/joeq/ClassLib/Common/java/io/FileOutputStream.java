@@ -7,13 +7,8 @@
 
 package ClassLib.Common.java.io;
 
-import Clazz.jq_Class;
-import Clazz.jq_InstanceField;
-import Bootstrap.PrimordialClassLoader;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
-import Run_Time.Reflection;
-import Main.jq;
 
 /*
  * @author  John Whaley

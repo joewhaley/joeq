@@ -4,13 +4,11 @@
 package Util;
 
 import java.util.AbstractSet;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Collection;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.NoSuchElementException;
+import java.util.List;
+import java.util.Set;
 
 /**
  * <code>LinearSet</code> is a simplistic light-weight

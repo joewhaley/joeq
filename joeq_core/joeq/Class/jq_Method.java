@@ -7,21 +7,19 @@
 
 package Clazz;
 
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Arrays;
 import java.io.DataInput;
-import java.io.IOException;
 import java.io.DataOutput;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
+import Bootstrap.PrimordialClassLoader;
 import ClassLib.ClassLibInterface;
-import Compil3r.BytecodeAnalysis.Bytecodes;
 import Compil3r.Compil3rInterface;
-//import Compil3r.OpenJIT.x86.x86OpenJITCompiler;
+import Compil3r.BytecodeAnalysis.Bytecodes;
 import Compil3r.Reference.x86.x86ReferenceCompiler;
 import Compil3r.Reference.x86.x86ReferenceLinker;
-import Bootstrap.PrimordialClassLoader;
-import Run_Time.SystemInterface;
 import Main.jq;
 import UTF.Utf8;
 

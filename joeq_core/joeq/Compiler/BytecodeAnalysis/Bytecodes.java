@@ -7,47 +7,43 @@
 
 package Compil3r.BytecodeAnalysis;
 
-import java.io.Serializable;
-import java.io.DataOutputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
-
-import java.util.Set;
-import java.util.Map;
-import java.util.List;
+import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.HashMap;
-import java.util.Enumeration;
-import java.util.Iterator;
-import java.util.ListIterator;
-import java.util.NoSuchElementException;
 import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Set;
 
 import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Type;
-import Clazz.jq_Reference;
-import Clazz.jq_Primitive;
 import Clazz.jq_Array;
 import Clazz.jq_Class;
 import Clazz.jq_ClassFileConstants;
 import Clazz.jq_ConstantPool;
-import Clazz.jq_Member;
-import Clazz.jq_MemberReference;
 import Clazz.jq_Field;
 import Clazz.jq_InstanceField;
-import Clazz.jq_StaticField;
-import Clazz.jq_Method;
-import Clazz.jq_TryCatchBC;
 import Clazz.jq_LineNumberBC;
-
-import UTF.Utf8;
-
-import Util.ByteSequence;
-import Util.Strings;
-import Util.LinearSet;
-
+import Clazz.jq_Member;
+import Clazz.jq_MemberReference;
+import Clazz.jq_Method;
+import Clazz.jq_Primitive;
+import Clazz.jq_Reference;
+import Clazz.jq_StaticField;
+import Clazz.jq_TryCatchBC;
+import Clazz.jq_Type;
 import Main.jq;
+import UTF.Utf8;
+import Util.ByteSequence;
+import Util.LinearSet;
+import Util.Strings;
 
 /*
  * @author  John Whaley

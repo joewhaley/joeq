@@ -7,14 +7,14 @@
 
 package Assembler.x86;
 
+import java.io.IOException;
+import java.io.OutputStream;
+
 import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
 import Clazz.jq_InstanceField;
-import Util.LittleEndianOutputStream;
 import Main.jq;
-
-import java.io.IOException;
-import java.io.OutputStream;
+import Util.LittleEndianOutputStream;
 
 /*
  * @author  John Whaley

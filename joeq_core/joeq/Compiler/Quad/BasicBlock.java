@@ -10,8 +10,8 @@ import Main.jq;
 import Util.BackwardIterator;
 import Util.Templates.List;
 import Util.Templates.ListIterator;
-import Util.Templates.UnmodifiableList;
 import Util.Templates.ListWrapper;
+import Util.Templates.UnmodifiableList;
 
 /**
  * Represents a basic block in the quad intermediate representation.

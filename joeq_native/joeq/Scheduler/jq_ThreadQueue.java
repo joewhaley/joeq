@@ -7,8 +7,9 @@
 
 package Scheduler;
 
-import Main.jq;
 import java.util.Iterator;
+
+import Main.jq;
 
 /*
  * @author  John Whaley

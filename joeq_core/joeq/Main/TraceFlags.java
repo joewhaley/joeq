@@ -7,11 +7,16 @@
 
 package Main;
 
-import Clazz.*;
-import UTF.Utf8;
-import Bootstrap.PrimordialClassLoader;
-import Run_Time.Reflection;
 import java.util.Iterator;
+
+import Bootstrap.PrimordialClassLoader;
+import Clazz.jq_Array;
+import Clazz.jq_Class;
+import Clazz.jq_Primitive;
+import Clazz.jq_StaticField;
+import Clazz.jq_Type;
+import Run_Time.Reflection;
+import UTF.Utf8;
 
 /**
  * @author  John Whaley

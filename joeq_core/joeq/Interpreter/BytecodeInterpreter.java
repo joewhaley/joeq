@@ -7,11 +7,22 @@
 
 package Interpreter;
 
-import Clazz.*;
-import Run_Time.*;
 import Bootstrap.PrimordialClassLoader;
+import Clazz.jq_Array;
+import Clazz.jq_Class;
+import Clazz.jq_InstanceField;
+import Clazz.jq_InstanceMethod;
+import Clazz.jq_Method;
+import Clazz.jq_Primitive;
+import Clazz.jq_Reference;
+import Clazz.jq_StaticField;
+import Clazz.jq_StaticMethod;
+import Clazz.jq_TryCatchBC;
+import Clazz.jq_Type;
 import Compil3r.BytecodeAnalysis.BytecodeVisitor;
 import Main.jq;
+import Run_Time.Reflection;
+import Run_Time.Unsafe;
 
 /*
  * @author  John Whaley

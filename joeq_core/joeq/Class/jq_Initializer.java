@@ -9,9 +9,9 @@ package Clazz;
 
 //friend jq_ClassLoader;
 
-import Main.jq;
 import Bootstrap.PrimordialClassLoader;
 import ClassLib.ClassLibInterface;
+import Main.jq;
 import UTF.Utf8;
 
 /*

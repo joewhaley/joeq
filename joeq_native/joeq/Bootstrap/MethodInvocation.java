@@ -7,9 +7,10 @@
 
 package Bootstrap;
 
+import java.lang.reflect.InvocationTargetException;
+
 import Clazz.jq_Method;
 import Run_Time.Reflection;
-import java.lang.reflect.InvocationTargetException;
 
 /*
  * @author  John Whaley

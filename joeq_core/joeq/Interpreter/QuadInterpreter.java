@@ -5,24 +5,38 @@
  */
 
 package Interpreter;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.lang.reflect.Method;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import Clazz.*;
-import Compil3r.Quad.*;
-import Compil3r.Quad.RegisterFactory.Register;
-import Compil3r.Quad.Operand.ParamListOperand;
-import Run_Time.Reflection;
-import Util.Templates.ListIterator;
-import Interpreter.ReflectiveInterpreter.ReflectiveVMInterface;
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+
 import Bootstrap.PrimordialClassLoader;
-import Util.FilterIterator.Filter;
+import Clazz.jq_Array;
+import Clazz.jq_Class;
+import Clazz.jq_Initializer;
+import Clazz.jq_InstanceMethod;
+import Clazz.jq_Method;
+import Clazz.jq_Primitive;
+import Clazz.jq_StaticMethod;
+import Clazz.jq_Type;
+import Compil3r.Quad.BasicBlock;
+import Compil3r.Quad.CodeCache;
+import Compil3r.Quad.ControlFlowGraph;
+import Compil3r.Quad.ExceptionHandler;
+import Compil3r.Quad.Quad;
+import Compil3r.Quad.QuadVisitor;
+import Compil3r.Quad.RegisterFactory;
+import Compil3r.Quad.Operand.ParamListOperand;
+import Compil3r.Quad.RegisterFactory.Register;
+import Interpreter.ReflectiveInterpreter.ReflectiveVMInterface;
 import Main.jq;
+import Run_Time.Reflection;
+import Util.FilterIterator.Filter;
+import Util.Templates.ListIterator;
 
 /**
  *

@@ -5,17 +5,19 @@
  */
 
 package Compil3r.Quad;
-import Clazz.*;
-import Util.Templates.List;
-import Util.Templates.ListIterator;
 import java.util.Iterator;
-import Compil3r.Quad.Operand.ConditionOperand;
-import Compil3r.Quad.Operand.IConstOperand;
+
+import Clazz.jq_Method;
+import Clazz.jq_MethodVisitor;
 import Compil3r.Quad.Operand.AConstOperand;
+import Compil3r.Quad.Operand.ConditionOperand;
 import Compil3r.Quad.Operand.FieldOperand;
+import Compil3r.Quad.Operand.IConstOperand;
 import Compil3r.Quad.Operator.Getfield;
 import Compil3r.Quad.Operator.IntIfCmp;
 import Compil3r.Quad.Operator.Return;
+import Util.Templates.List;
+import Util.Templates.ListIterator;
 
 /**
  *

@@ -5,11 +5,12 @@
  */
 
 package Compil3r.Quad;
+import java.util.NoSuchElementException;
+
+import Clazz.jq_Class;
 import Util.Templates.List;
 import Util.Templates.ListIterator;
 import Util.Templates.UnmodifiableList;
-import java.util.NoSuchElementException;
-import Clazz.jq_Class;
 
 /**
  *
