@@ -27,6 +27,7 @@ import org.xml.sax.SAXParseException;
 public class GenerateWebRoots {
     private static boolean TRACE = true;
     private static PrintStream out = System.out;
+    private static final String TAGLIB_BASE = "cls/webapps";
 
     public static void main(String[] args) throws FileNotFoundException {
         String inputFile  = null;
@@ -65,8 +66,8 @@ public class GenerateWebRoots {
         printServlets(servlets);
         printFilters(filters);
         printListeners(listeners);
-        printTags();
-        printPostamble();
+        printTags(taglibs);
+        printPostamble();       
     }
 
     private static void usage(String prog) {
@@ -78,11 +79,30 @@ public class GenerateWebRoots {
         out.println("}\n");        
     }
 
-    private static void printTags() {
-        out.println("    public static void processTags() {");
-        out.println("    }\n");        
+    private static void printTags(Collection taglibs) {
+        out.println("\tpublic static void processTags() {");
+        for(Iterator iter = taglibs.iterator(); iter.hasNext();){
+            String taglib = (String) iter.next();
+            
+            processTaglib(taglib);
+        }
+        out.println("\t}\n");        
     }
     
+    static void processTaglib(String taglib) {
+        String taglibFileName = TAGLIB_BASE + File.separator + taglib;
+        Document doc = parseFile(taglibFileName);
+        Collection tags = findMatches(doc, "tag-class");
+        for(Iterator iter = tags.iterator(); iter.hasNext();){
+            String tag = (String) iter.next();
+            
+            out.println("\t\t{");
+            out.println("\t\t\tTagSupport tag = new " + tag + "();");
+            out.println("\t\t\ttag.doStartTag();");
+            out.println("\t\t}");
+        }
+    }
+
     private static void printServlets(Collection servletNames) {
         out.println("\tpublic static void processServlets() {");
         int count = 0;
@@ -127,7 +147,7 @@ public class GenerateWebRoots {
             out.println("\t\t\te.printStackTrace();");
             out.println("\t\t}\n");
         }        
-        out.println("    }\n\n");
+        out.println("\t}\n\n");
     }
     
     private static void printListeners(Collection listenerNames) {
@@ -179,6 +199,7 @@ public class GenerateWebRoots {
         out.println("import javax.servlet.Filter;");
         out.println("import javax.servlet.FilterChain;");
         out.println("import javax.servlet.jsp.JspException;");
+        out.println("import javax.servlet.jsp.tagext.TagSupport;");
         out.println("import MyMockLib.MyHttpServletRequest;");
         out.println("import MyMockLib.MyHttpServletResponse;");
         out.println("import java.io.IOException;\n");
