@@ -14,7 +14,7 @@ import Clazz.jq_CompiledCode;
 import Clazz.jq_Method;
 import Clazz.jq_Reference;
 import Clazz.jq_StaticMethod;
-import Debug.OnlineDebugger;
+import Debugger.OnlineDebugger;
 import Main.jq;
 import Memory.CodeAddress;
 import Memory.StackAddress;

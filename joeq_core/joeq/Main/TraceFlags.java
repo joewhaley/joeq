@@ -17,7 +17,7 @@ import Clazz.jq_Class;
 import Clazz.jq_Primitive;
 import Clazz.jq_StaticField;
 import Clazz.jq_Type;
-import Run_Time.DebugInterface;
+import Run_Time.Debug;
 import Run_Time.Reflection;
 import UTF.Utf8;
 
@@ -273,7 +273,7 @@ public abstract class TraceFlags {
 	    Field f = c.getField(fieldname);
 	    f.setBoolean(null, true);
 	} catch (Exception e) {
-	    DebugInterface.debugwriteln("Cannot set the flag "+classname+"."+fieldname);
+	    Debug.writeln("Cannot set the flag "+classname+"."+fieldname);
 	}
     }
 
@@ -284,7 +284,7 @@ public abstract class TraceFlags {
 	    Collection col = (Collection)f.get(null);
 	    col.add(toadd);
 	} catch (Exception e) {
-	    DebugInterface.debugwriteln("Cannot add to collection "+classname+"."+collectionname);
+	    Debug.writeln("Cannot add to collection "+classname+"."+collectionname);
 	}
     }
 }

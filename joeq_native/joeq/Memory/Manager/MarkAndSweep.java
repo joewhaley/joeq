@@ -9,7 +9,7 @@ import Clazz.jq_Reference;
 import Main.jq;
 import Memory.Address;
 import Memory.CodeAddress;
-import Memory.Debug;
+import Run_Time.Debug;
 import Memory.HeapAddress;
 import Memory.StackAddress;
 import Memory.Heap.BootHeap;

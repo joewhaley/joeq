@@ -8,7 +8,7 @@ import Allocator.ObjectLayoutMethods;
 import Clazz.jq_Array;
 import Clazz.jq_Class;
 import Main.jq;
-import Memory.Debug;
+import Run_Time.Debug;
 import Memory.HeapAddress;
 import Run_Time.SystemInterface;
 

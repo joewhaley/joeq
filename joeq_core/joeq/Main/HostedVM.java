@@ -76,7 +76,5 @@ public abstract class HostedVM {
         }
         Reflection.obj_trav = ClassLibInterface.DEFAULT.getObjectTraverser();
         Reflection.obj_trav.initialize();
-
-	jq._crash = new SimpleCrash();
     }
 }

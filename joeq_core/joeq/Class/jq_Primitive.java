@@ -63,6 +63,10 @@ public class jq_Primitive extends jq_Type implements jq_ClassFileConstants {
         super(desc, PrimordialClassLoader.loader);
         this.name = name;
         this.size = size;
+        this.display = new jq_Type[DISPLAY_SIZE+2];
+        this.display[2] = this;
+        this.s_s_array = null;
+        this.s_s_array_length = 0;
     }
     // ONLY to be called by PrimordialClassLoader!
     public static jq_Primitive newPrimitive(Utf8 desc, String name, int size) {

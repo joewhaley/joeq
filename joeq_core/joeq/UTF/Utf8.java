@@ -12,7 +12,7 @@ import java.io.IOException;
 
 import Clazz.jq_ClassFileConstants;
 import Main.jq;
-import Run_Time.DebugInterface;
+import Run_Time.Debug;
 import Util.UnmodifiableIterator;
 
 /**
@@ -351,7 +351,7 @@ here:
     }
     
     public void debugWrite() {
-        DebugInterface.debugwrite(toString());
+        Debug.write(data, data.length);
     }
     
     //// Utf8 conversion routines

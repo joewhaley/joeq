@@ -8,7 +8,7 @@
 package Clazz;
 
 import Bootstrap.PrimordialClassLoader;
-import Run_Time.DebugInterface;
+import Run_Time.Debug;
 import Run_Time.TypeCheck;
 import Util.Strings;
 
@@ -35,7 +35,7 @@ public class jq_TryCatch {
 
     // note: offset is the offset of the instruction after the one which threw the exception.
     public boolean catches(int offset, jq_Class t) {
-        if (DEBUG) DebugInterface.debugwriteln(this+": checking "+Strings.hex(offset)+" "+t);
+        if (DEBUG) Debug.writeln(this+": checking "+Strings.hex(offset)+" "+t);
         if (offset <= startPC) return false;
         if (offset > endPC) return false;
         if (exType != null) {

@@ -13,7 +13,7 @@ import Bootstrap.PrimordialClassLoader;
 import Main.jq;
 import Memory.CodeAddress;
 import Memory.StackAddress;
-import Run_Time.DebugInterface;
+import Run_Time.Debug;
 
 /**
  * @author  John Whaley
@@ -64,17 +64,17 @@ public class jq_CompiledCode implements Comparable {
     public CodeAddress findCatchBlock(CodeAddress ip, jq_Class extype) {
         int offset = ip.difference(start);
         if (handlers == null) {
-            if (TRACE) DebugInterface.debugwriteln("no handlers in " + this);
+            if (TRACE) Debug.writeln("no handlers in " + this);
             return null;
         }
         for (int i = 0; i < handlers.length; ++i) {
             jq_TryCatch tc = handlers[i];
-            if (TRACE) DebugInterface.debugwriteln("checking handler: " + tc);
+            if (TRACE) Debug.writeln("checking handler: " + tc);
             if (tc.catches(offset, extype))
                 return (CodeAddress) start.offset(tc.getHandlerEntry());
-            if (TRACE) DebugInterface.debugwriteln("does not catch");
+            if (TRACE) Debug.writeln("does not catch");
         }
-        if (TRACE) DebugInterface.debugwriteln("no appropriate handler found in " + this);
+        if (TRACE) Debug.writeln("no appropriate handler found in " + this);
         return null;
     }
 
@@ -96,9 +96,9 @@ public class jq_CompiledCode implements Comparable {
     /** Rewrite the entrypoint to branch to the given compiled code. */
     public void redirect(jq_CompiledCode that) {
         CodeAddress newEntrypoint = that.getEntrypoint();
-        if (TRACE_REDIRECT) DebugInterface.debugwriteln("redirecting " + this + " to point to " + that);
+        if (TRACE_REDIRECT) Debug.writeln("redirecting " + this + " to point to " + that);
         if (entrypoint.difference(start.offset(5)) >= 0) {
-            if (TRACE_REDIRECT) DebugInterface.debugwriteln("redirecting via trampoline");
+            if (TRACE_REDIRECT) Debug.writeln("redirecting via trampoline");
             // both should start with "push EBP"
             jq.Assert(entrypoint.peek1() == newEntrypoint.peek1());
             // put target address (just after push EBP)
@@ -108,7 +108,7 @@ public class jq_CompiledCode implements Comparable {
             // put backward branch to jump instruction
             entrypoint.offset(1).poke2((short) 0xF8EB); // JMP
         } else {
-            if (TRACE_REDIRECT) DebugInterface.debugwriteln("redirecting by rewriting targets");
+            if (TRACE_REDIRECT) Debug.writeln("redirecting by rewriting targets");
             Iterator it = _delegate.getCompiledMethods();
             while (it.hasNext()) {
                 jq_CompiledCode cc = (jq_CompiledCode) it.next();

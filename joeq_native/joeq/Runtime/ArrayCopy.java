@@ -16,7 +16,12 @@ public abstract class ArrayCopy {
     public static void arraycopy(Object src, int src_position,
                                  Object dst, int dst_position,
                                  int length) {
-        if (dst instanceof Object[]) {
+        if (dst instanceof char[]) {
+            if (src instanceof char[]) {
+                ArrayCopy.arraycopy((char[])src, src_position, (char[])dst, dst_position, length);
+                return;
+            }
+        } else if (dst instanceof Object[]) {
             if (src instanceof Object[]) {
                 ArrayCopy.arraycopy((Object[])src, src_position, (Object[])dst, dst_position, length);
                 return;
@@ -24,11 +29,6 @@ public abstract class ArrayCopy {
         } else if (dst instanceof byte[]) {
             if (src instanceof byte[]) {
                 ArrayCopy.arraycopy((byte[])src, src_position, (byte[])dst, dst_position, length);
-                return;
-            }
-        } else if (dst instanceof char[]) {
-            if (src instanceof char[]) {
-                ArrayCopy.arraycopy((char[])src, src_position, (char[])dst, dst_position, length);
                 return;
             }
         } else if (dst instanceof short[]) {

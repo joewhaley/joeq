@@ -4,7 +4,7 @@ import Allocator.ObjectLayout;
 import Clazz.jq_Array;
 import Clazz.jq_Class;
 import Main.jq;
-import Memory.Debug;
+import Run_Time.Debug;
 import Memory.HeapAddress;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;

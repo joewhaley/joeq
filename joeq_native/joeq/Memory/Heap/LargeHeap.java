@@ -2,7 +2,7 @@ package Memory.Heap;
 
 import Allocator.HeapAllocator;
 import Main.jq;
-import Memory.Debug;
+import Run_Time.Debug;
 import Memory.HeapAddress;
 import Run_Time.SystemInterface;
 

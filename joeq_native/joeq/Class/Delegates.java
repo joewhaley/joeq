@@ -14,7 +14,7 @@ import Main.jq;
 import Memory.CodeAddress;
 import Memory.HeapAddress;
 import Memory.StackAddress;
-import Run_Time.DebugInterface;
+import Run_Time.Debug;
 import Run_Time.ExceptionDeliverer;
 
 class Delegates implements jq_ClassFileConstants {
@@ -86,7 +86,7 @@ class Delegates implements jq_ClassFileConstants {
             while (i.hasNext()) {
                 DirectBindCall r = (DirectBindCall) i.next();
                 if (r.getTarget() == method) {
-                    if (jq_CompiledCode.TRACE_REDIRECT) DebugInterface.debugwriteln("patching direct bind call in " + this + " at " + r.getSource().stringRep() + " to refer to " + cc);
+                    if (jq_CompiledCode.TRACE_REDIRECT) Debug.writeln("patching direct bind call in " + this + " at " + r.getSource().stringRep() + " to refer to " + cc);
                     r.patchTo(cc);
                 }
             }
