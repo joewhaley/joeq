@@ -103,7 +103,8 @@ public class PAQuery {
             System.out.print("Processing method " + m + ":\t[" + ms.getNumOfParams() + "] ");
             for(int i = 0; i < ms.getNumOfParams(); i++) {
                 ParamNode paramNode = ms.getParamNode(i);
-                System.out.print(paramNode == null ? "<null> " : paramNode.toString_long() + " ");
+                System.out.print("\t\t"+i+"\t");
+                System.out.println(paramNode == null ? "<null>" : paramNode.toString_long());
             }
             System.out.print("\n");
         }
