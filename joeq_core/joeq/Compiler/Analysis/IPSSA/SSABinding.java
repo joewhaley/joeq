@@ -32,7 +32,7 @@ public class SSABinding {
 	
 	public boolean isValid(){
 		return 
-			(_destination == _value.getDestination()) &&
+			(_value == null || _destination == _value.getDestination()) &&
 			(_quad == _destination.getQuad());
 	}
 	
