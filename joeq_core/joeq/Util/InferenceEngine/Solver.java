@@ -193,8 +193,11 @@ public abstract class Solver {
         List/*<Variable>*/ vars = new LinkedList();
         for (;;) {
             String varName = st.nextToken();
+            char firstChar = varName.charAt(0);
             Variable var;
-            if (!varName.equals("_")) {
+            if (firstChar >= '0' && firstChar <= '9') {
+                var = new Constant(Long.parseLong(varName));
+            } else if (!varName.equals("_")) {
                 var = (Variable) nameToVar.get(varName);
                 if (var == null) nameToVar.put(varName, var = new Variable(varName));
             } else {

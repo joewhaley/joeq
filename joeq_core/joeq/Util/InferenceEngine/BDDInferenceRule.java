@@ -30,7 +30,7 @@ public class BDDInferenceRule extends InferenceRule {
     BDDSolver solver;
     BDD[] oldRelationValues;
     Map variableToBDDDomain;
-    boolean incrementalizable = true;
+    boolean incrementalize = true;
     
     public BDDInferenceRule(BDDSolver solver, List/*<RuleTerm>*/ top, RuleTerm bottom) {
         super(top, bottom);
@@ -45,8 +45,10 @@ public class BDDInferenceRule extends InferenceRule {
             BDDRelation r = (BDDRelation) rt.relation;
             for (int j = 0; j < rt.variables.size(); ++j) {
                 Variable v = (Variable) rt.variables.get(j);
+                // In the relation, this variable uses domain d
                 BDDDomain d = (BDDDomain) r.domains.get(j);
                 Assert._assert(d != null);
+                // In the rule, we use domain d2
                 BDDDomain d2 = (BDDDomain) variableToBDDDomain.get(v);
                 if (d2 == null) {
                     if (!variableToBDDDomain.containsValue(d)) {
@@ -77,7 +79,7 @@ public class BDDInferenceRule extends InferenceRule {
     
     // non-incremental version.
     public boolean update() {
-        if (this.incrementalizable) return updateIncremental();
+        if (incrementalize) return updateIncremental();
         
         if (solver.TRACE) solver.out.println("Applying inference rule "+this);
         
@@ -92,6 +94,10 @@ public class BDDInferenceRule extends InferenceRule {
             for (int j = 0; j < rt.variables.size(); ++j) {
                 Variable v = (Variable) rt.variables.get(j);
                 BDDDomain d = (BDDDomain) r.domains.get(j);
+                if (v instanceof Constant) {
+                    if (solver.TRACE) solver.out.println("Constant: restricting "+d+" = "+v);
+                    relationValues[i].restrictWith(d.ithVar(((Constant)v).value));
+                }
                 BDDDomain d2 = (BDDDomain) variableToBDDDomain.get(v);
                 Assert._assert(d2 != null);
                 if (d != d2) {
@@ -167,6 +173,10 @@ public class BDDInferenceRule extends InferenceRule {
             for (int j = 0; j < rt.variables.size(); ++j) {
                 Variable v = (Variable) rt.variables.get(j);
                 BDDDomain d = (BDDDomain) r.domains.get(j);
+                if (v instanceof Constant) {
+                    if (solver.TRACE) solver.out.println("Constant: restricting "+d+" = "+v);
+                    allRelationValues[i].restrictWith(d.ithVar(((Constant)v).value));
+                }
                 BDDDomain d2 = (BDDDomain) variableToBDDDomain.get(v);
                 Assert._assert(d2 != null);
                 if (d != d2) {
