@@ -10,7 +10,14 @@ package ClassLib.Common.sun.misc;
  * @version $Id$
  */
 abstract class AtomicLongCSImpl {
+    private volatile long value;
     public boolean attemptUpdate(long a, long b) {
-        throw new InternalError();
+        // todo: atomic cas8
+        if (value == a) {
+            value = b;
+            return true;
+        } else {
+            return false;
+        }
     }
 }
