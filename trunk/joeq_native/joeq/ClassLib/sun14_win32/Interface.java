@@ -50,8 +50,20 @@ public final class Interface extends ClassLib.ClassLibInterface {
     
     public java.util.Set bootstrapNullInstanceFields() {
         java.util.Set nullInstanceFields = new java.util.HashSet();
+        nullInstanceFields.add(PrimordialClassLoader.loader.getJavaLangClass().getOrCreateInstanceField("declaredFields", "Ljava/lang/ref/SoftReference;"));
+        nullInstanceFields.add(PrimordialClassLoader.loader.getJavaLangClass().getOrCreateInstanceField("publicFields", "Ljava/lang/ref/SoftReference;"));
+        nullInstanceFields.add(PrimordialClassLoader.loader.getJavaLangClass().getOrCreateInstanceField("declaredMethods", "Ljava/lang/ref/SoftReference;"));
+        nullInstanceFields.add(PrimordialClassLoader.loader.getJavaLangClass().getOrCreateInstanceField("publicMethods", "Ljava/lang/ref/SoftReference;"));
+        nullInstanceFields.add(PrimordialClassLoader.loader.getJavaLangClass().getOrCreateInstanceField("declaredConstructors", "Ljava/lang/ref/SoftReference;"));
+        nullInstanceFields.add(PrimordialClassLoader.loader.getJavaLangClass().getOrCreateInstanceField("publicConstructors", "Ljava/lang/ref/SoftReference;"));
+        nullInstanceFields.add(PrimordialClassLoader.loader.getJavaLangClass().getOrCreateInstanceField("declaredPublicFields", "Ljava/lang/ref/SoftReference;"));
+        nullInstanceFields.add(PrimordialClassLoader.loader.getJavaLangClass().getOrCreateInstanceField("declaredPublicMethods", "Ljava/lang/ref/SoftReference;"));
         jq_Class jq_class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/reflect/Field;");
         nullInstanceFields.add(jq_class.getOrCreateInstanceField("fieldAccessor", "Lsun/reflect/FieldAccessor;"));
+        jq_class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/reflect/Method;");
+        nullInstanceFields.add(jq_class.getOrCreateInstanceField("methodAccessor", "Lsun/reflect/MethodAccessor;"));
+        jq_class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/reflect/Constructor;");
+        nullInstanceFields.add(jq_class.getOrCreateInstanceField("constructorAccessor", "Lsun/reflect/ConstructorAccessor;"));
         return nullInstanceFields;
     }
     
