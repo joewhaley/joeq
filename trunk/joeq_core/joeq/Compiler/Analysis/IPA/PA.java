@@ -3925,7 +3925,7 @@ public class PA {
             dos = new BufferedWriter(new FileWriter(dumpPath+"var.map"));
             for (int j = 0; j < Vmap.size(); ++j) {
                 Node o = (Node)Vmap.get(j);
-                dos.write(o+"\n");
+                dos.write(o.id+": "+o+"\n");
             }
             Vmap.dumpStrings(dos);
         } finally {

@@ -18,7 +18,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.io.BufferedWriter;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
@@ -1281,7 +1280,7 @@ public class MethodSummary {
         /** Map from fields to sets of outside edges from this node on that field. */
         protected Map accessPathEdges;
         /** Unique id number. */
-        protected final int id;
+        public final int id;
         /** Whether or not this node escapes into some unanalyzable code. */
         private boolean escapes;
         
