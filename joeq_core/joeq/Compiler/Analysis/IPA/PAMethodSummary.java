@@ -29,6 +29,7 @@ import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.UnknownTypeNode;
 import joeq.Compiler.Quad.CodeCache;
 import joeq.Compiler.Quad.LoadedCallGraph;
 import joeq.Compiler.Quad.Operand;
+import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operand.MethodOperand;
 import joeq.Compiler.Quad.Operand.ParamListOperand;
@@ -133,6 +134,7 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
     void addToS(BDD V_bdd, jq_Field f, Collection c) {
         int F_i = pa.Fmap.get(f);
         BDD F_bdd = pa.F.ithVar(F_i);
+        // TODO: special case for collection sets
         for (Iterator k = c.iterator(); k.hasNext(); ) {
             Node node2 = (Node) k.next();
             if (pa.FILTER_NULL && pa.isNullConstant(node2))
@@ -247,41 +249,37 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
                     jq_Method oldTarget = target;
                     target = replacement;
                     
-                    if(!PA.getBogusSummaryProvider().hasStaticReplacement(replacement)){
-                        if(mc instanceof ProgramLocation.QuadProgramLocation){
-                            Quad q = ( (ProgramLocation.QuadProgramLocation) mc).getQuad();
-                            int base = 0;
-                            if(oldTarget instanceof jq_Initializer){
-                                base = 0;                                
-                            }else{
-                                base = 1;
-                            }
+                    Quad q = ( (ProgramLocation.QuadProgramLocation) mc).getQuad();
+                    if(!PA.getBogusSummaryProvider().hasStaticReplacement(replacement)){                    
 //                            Assert._assert(q.getAllOperands().getOperand(base) instanceof MethodOperand,
 //                                "Operand " + 
 //                                q.getAllOperands().getOperand(base) +
 //                                " of " + mc.toStringLong() +
 //                                " is not of the right type: " + q.getAllOperands().getOperand(base).getClass());
-                            if(q.getAllOperands().getOperand(base) instanceof MethodOperand){
-                                Operand.MethodOperand methodOp = (MethodOperand) q.getAllOperands().getOperand(base);
-                                Assert._assert(methodOp.getMethod() == oldTarget);
-                                methodOp.setMethod(replacement);
-                                
-                                if(!replacement.isStatic()){
-                                    Operand.ParamListOperand listOp = (ParamListOperand) q.getAllOperands().getOperand(base+1);
-                                    if(listOp.get(0).getType() != oldTarget.getDeclaringClass()){
-                                        listOp.get(0).setType(replacement.getDeclaringClass());
-                                    }
-                                }
-                            }else{
-                                if(pa.TRACE_BOGUS){
-                                    System.err.println(
-                                        "Operand " + 
-                                        q.getAllOperands().getOperand(base) +
-                                      " of " + mc.toStringLong() +
-                                      " is not of the right type: " + q.getAllOperands().getOperand(base).getClass());
+                        
+                        Operand.MethodOperand methodOp = Operator.Invoke.getMethod(q);
+                        //if(q.getAllOperands().getOperand(base) instanceof MethodOperand){
+                            //Operand.MethodOperand methodOp = (MethodOperand) q.getAllOperands().getOperand(base);
+                            Assert._assert(methodOp.getMethod() == oldTarget);
+                            methodOp.setMethod(replacement);
+                            
+                            if(!replacement.isStatic()){
+                                Operand.ParamListOperand listOp = Operator.Invoke.getParamList(q);
+                                if(listOp.get(0).getType() == oldTarget.getDeclaringClass()){
+                                    listOp.get(0).setType(replacement.getDeclaringClass());
                                 }
                             }
-                        }
+                        /*}else{
+                            if(pa.TRACE_BOGUS){
+                                System.err.println(
+                                    "Operand " + 
+                                    q.getAllOperands().getOperand(base) +
+                                  " of " + mc.toStringLong() +
+                                  " is not of the right type: " + q.getAllOperands().getOperand(base).getClass());
+                            }
+                        }*/
+                    }else{
+                        
                     }
                 }
             }            
@@ -473,10 +471,11 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
         BDD V_bdd = pa.V1.ithVar(V_i);
         
         if (node instanceof ConcreteTypeNode) {
-            addToVP(V_bdd, node);
+            addToVP(V_bdd, node);            
         } else if (node instanceof ConcreteObjectNode ||
                    node instanceof UnknownTypeNode ||
-                   node == GlobalNode.GLOBAL) {
+                   node == GlobalNode.GLOBAL) 
+        {
             pa.addToVP(V_bdd, node);
         } else if (node instanceof GlobalNode) {
             int V2_i = pa.Vmap.get(GlobalNode.GLOBAL);
