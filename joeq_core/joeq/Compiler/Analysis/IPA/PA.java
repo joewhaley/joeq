@@ -596,7 +596,7 @@ public class PA {
                 int V_i = V_bdd.scanVar(V2).intValue();
                 Node n = (Node) Vmap.get(V_i);
                 jq_Reference type = n.getDeclaredType();
-                if (type.isClassType()) {
+                if (type instanceof jq_Class) {
                     jq_Class c = (jq_Class) type;
                     c.prepare();
                     if(!provideStubsFor.contains(c)){
