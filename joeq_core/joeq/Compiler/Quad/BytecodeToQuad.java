@@ -995,6 +995,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
     }
     private void GETSTATIChelper(jq_StaticField f, Getstatic oper1, Getstatic oper2) {
         boolean dynlink = f.needsDynamicLink(method);
+        if (!dynlink) f = f.resolve();
         Getstatic operator = dynlink?oper1:oper2;
         jq_Type t = f.getType();
         RegisterOperand op0 = getStackRegister(t);
@@ -1040,6 +1041,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
     }
     private void PUTSTATIChelper(jq_StaticField f, Putstatic oper1, Putstatic oper2) {
         boolean dynlink = f.needsDynamicLink(method);
+        if (!dynlink) f = f.resolve();
         Putstatic operator = dynlink?oper1:oper2;
         jq_Type t = f.getType();
         Operand op0 = current_state.pop(t);
@@ -1084,6 +1086,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
     }
     private void GETFIELDhelper(jq_InstanceField f, Getfield oper1, Getfield oper2) {
         boolean dynlink = f.needsDynamicLink(method);
+        if (!dynlink) f = f.resolve();
         Operand op1 = current_state.pop_A();
         clearCurrentGuard();
         if (performNullCheck(op1)) {
@@ -1135,6 +1138,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
     }
     private void PUTFIELDhelper(jq_InstanceField f, Putfield oper1, Putfield oper2) {
         boolean dynlink = f.needsDynamicLink(method);
+        if (!dynlink) f = f.resolve();
         Operand op0 = current_state.pop(f.getType());
         Operand op1 = current_state.pop_A();
         clearCurrentGuard();
@@ -1303,15 +1307,19 @@ public class BytecodeToQuad extends BytecodeVisitor {
                 instance_call = true;
                 if (!f.getDeclaringClass().isPrepared())
                     oper = Invoke.INVOKEVIRTUAL_I_DYNLINK.INSTANCE;
-                else
+                else {
                     oper = Invoke.INVOKEVIRTUAL_I.INSTANCE;
+                    f = f.resolve();
+                }
                 break;
             case INVOKE_STATIC:
                 instance_call = false;
                 if (f.needsDynamicLink(method))
                     oper = Invoke.INVOKESTATIC_I_DYNLINK.INSTANCE;
-                else
+                else {
                     oper = Invoke.INVOKESTATIC_I.INSTANCE;
+                    f = f.resolve();
+                }
                 break;
             case INVOKE_SPECIAL:
                 instance_call = true;
@@ -1344,15 +1352,19 @@ public class BytecodeToQuad extends BytecodeVisitor {
                 instance_call = true;
                 if (!f.getDeclaringClass().isPrepared())
                     oper = Invoke.INVOKEVIRTUAL_L_DYNLINK.INSTANCE;
-                else
+                else {
                     oper = Invoke.INVOKEVIRTUAL_L.INSTANCE;
+                    f = f.resolve();
+                }
                 break;
             case INVOKE_STATIC:
                 instance_call = false;
                 if (f.needsDynamicLink(method))
                     oper = Invoke.INVOKESTATIC_L_DYNLINK.INSTANCE;
-                else
+                else {
                     oper = Invoke.INVOKESTATIC_L.INSTANCE;
+                    f = f.resolve();
+                }
                 break;
             case INVOKE_SPECIAL:
                 instance_call = true;
@@ -1385,15 +1397,19 @@ public class BytecodeToQuad extends BytecodeVisitor {
                 instance_call = true;
                 if (!f.getDeclaringClass().isPrepared())
                     oper = Invoke.INVOKEVIRTUAL_F_DYNLINK.INSTANCE;
-                else
+                else {
                     oper = Invoke.INVOKEVIRTUAL_F.INSTANCE;
+                    f = f.resolve();
+                }
                 break;
             case INVOKE_STATIC:
                 instance_call = false;
                 if (f.needsDynamicLink(method))
                     oper = Invoke.INVOKESTATIC_F_DYNLINK.INSTANCE;
-                else
+                else {
                     oper = Invoke.INVOKESTATIC_F.INSTANCE;
+                    f = f.resolve();
+                }
                 break;
             case INVOKE_SPECIAL:
                 instance_call = true;
@@ -1426,15 +1442,19 @@ public class BytecodeToQuad extends BytecodeVisitor {
                 instance_call = true;
                 if (!f.getDeclaringClass().isPrepared())
                     oper = Invoke.INVOKEVIRTUAL_D_DYNLINK.INSTANCE;
-                else
+                else {
                     oper = Invoke.INVOKEVIRTUAL_D.INSTANCE;
+                    f = f.resolve();
+                }
                 break;
             case INVOKE_STATIC:
                 instance_call = false;
                 if (f.needsDynamicLink(method))
                     oper = Invoke.INVOKESTATIC_D_DYNLINK.INSTANCE;
-                else
+                else {
                     oper = Invoke.INVOKESTATIC_D.INSTANCE;
+                    f = f.resolve();
+                }
                 break;
             case INVOKE_SPECIAL:
                 instance_call = true;
@@ -1467,15 +1487,19 @@ public class BytecodeToQuad extends BytecodeVisitor {
                 instance_call = true;
                 if (!f.getDeclaringClass().isPrepared())
                     oper = Invoke.INVOKEVIRTUAL_A_DYNLINK.INSTANCE;
-                else
+                else {
                     oper = Invoke.INVOKEVIRTUAL_A.INSTANCE;
+                    f = f.resolve();
+                }
                 break;
             case INVOKE_STATIC:
                 instance_call = false;
                 if (f.needsDynamicLink(method))
                     oper = Invoke.INVOKESTATIC_A_DYNLINK.INSTANCE;
-                else
+                else {
                     oper = Invoke.INVOKESTATIC_A.INSTANCE;
+                    f = f.resolve();
+                }
                 break;
             case INVOKE_SPECIAL:
                 instance_call = true;
@@ -1508,15 +1532,19 @@ public class BytecodeToQuad extends BytecodeVisitor {
                 instance_call = true;
                 if (!f.getDeclaringClass().isPrepared())
                     oper = Invoke.INVOKEVIRTUAL_V_DYNLINK.INSTANCE;
-                else
+                else {
                     oper = Invoke.INVOKEVIRTUAL_V.INSTANCE;
+                    f = f.resolve();
+                }
                 break;
             case INVOKE_STATIC:
                 instance_call = false;
                 if (f.needsDynamicLink(method))
                     oper = Invoke.INVOKESTATIC_V_DYNLINK.INSTANCE;
-                else
+                else {
                     oper = Invoke.INVOKESTATIC_V.INSTANCE;
+                    f = f.resolve();
+                }
                 break;
             case INVOKE_SPECIAL:
                 instance_call = true;

@@ -398,6 +398,14 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
         }
     }
     
+    public boolean contains(Object o) {
+        for (int i=0; i<constant_pool.length; ++i) {
+            if (constant_pool[i] == o)
+                return true;
+        }
+        return false;
+    }
+    
     private int growCPbyOne() {
         int newsize = constant_pool.length+1;
         Object[] newcp = new Object[newsize];
