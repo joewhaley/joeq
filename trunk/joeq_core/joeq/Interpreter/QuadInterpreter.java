@@ -7,6 +7,7 @@
 package Interpreter;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Set;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.lang.reflect.Method;
@@ -20,6 +21,7 @@ import Run_Time.Reflection;
 import Util.Templates.ListIterator;
 import ReflectiveInterpreter.ReflectiveVMInterface;
 import Bootstrap.PrimordialClassLoader;
+import Util.FilterIterator.Filter;
 import jq;
 
 /**
@@ -30,6 +32,7 @@ import jq;
 public class QuadInterpreter {
 
     public static class State extends QuadVisitor.EmptyVisitor {
+	jq_Method method;
         Map/*<Register, Object>*/ registers;
         ControlFlowGraph cfg;
         RegisterFactory rf;
@@ -39,8 +42,9 @@ public class QuadInterpreter {
 	Object return_value;
 	Throwable thrown;
 
-        public State() {
+        public State(jq_Method m) {
             registers = new HashMap();
+	    method = m;
         }
         
 	public static boolean TRACE = false;
@@ -52,6 +56,7 @@ public class QuadInterpreter {
 	public void visitQuad(Quad q) {
 	    if (TRACE) System.out.println("Registers: "+registers);
 	    if (TRACE) System.out.println("Interpreting: "+q);
+	    current_quad = q;
 	    q.interpret(this);
 	}
 
@@ -68,13 +73,29 @@ public class QuadInterpreter {
 	    else
 		return invokeInstanceReflective((jq_InstanceMethod)f, plo);
 	}
-	public State invokeInstanceReflective(jq_InstanceMethod f, ParamListOperand plo) {
-	    State s = new State();
-	    try {
-		Object[] param = new Object[plo.length()-1];
-		for (int i=1; i<plo.length(); ++i) {
-		    param[i-1] = getReg(plo.get(i).getRegister());
+	public Object[] generateParamArray(jq_Method f, ParamListOperand plo) {
+	    int offset = f.isStatic()?0:1;
+	    jq_Type[] paramTypes = f.getParamTypes();
+	    Object[] param = new Object[plo.length()-offset];
+	    for (int i=offset; i<plo.length(); ++i) {
+		if (paramTypes[i] == jq_Primitive.BYTE) {
+		    param[i-offset] = new Byte((byte)getReg_I(plo.get(i).getRegister()));
+		} else if (paramTypes[i] == jq_Primitive.CHAR) {
+		    param[i-offset] = new Character((char)getReg_I(plo.get(i).getRegister()));
+		} else if (paramTypes[i] == jq_Primitive.SHORT) {
+		    param[i-offset] = new Short((short)getReg_I(plo.get(i).getRegister()));
+		} else if (paramTypes[i] == jq_Primitive.BOOLEAN) {
+		    param[i-offset] = new Boolean(getReg_I(plo.get(i).getRegister()) != 0);
+		} else {
+		    param[i-offset] = getReg(plo.get(i).getRegister());
 		}
+	    }
+	    return param;
+	}
+	public State invokeInstanceReflective(jq_InstanceMethod f, ParamListOperand plo) {
+	    State s = new State(f);
+	    try {
+		Object[] param = generateParamArray(f, plo);
 		if (f instanceof jq_Initializer) {
 		    try {
 			Constructor co = (Constructor)Reflection.getJDKMember(f);
@@ -109,12 +130,27 @@ public class QuadInterpreter {
 	    return s;
 	}
 	public State invokeStaticReflective(jq_StaticMethod f, ParamListOperand plo) {
-	    State s = new State();
-	    try {
-		Object[] param = new Object[plo.length()];
-		for (int i=0; i<plo.length(); ++i) {
-		    param[i] = getReg(plo.get(i).getRegister());
+	    State s = new State(f);
+	    if (f == Allocator.HeapAllocator._multinewarray) {
+		// special case
+		int dim = getReg_I(plo.get(0).getRegister());
+		jq_Type t = (jq_Type)getReg_A(plo.get(1).getRegister());
+		int[] dims = new int[dim];
+		for (int i=0; i<dim; ++i)
+		    dims[dim-i-1] = getReg_I(plo.get(i+2).getRegister());
+		for (int i=0; i<dims.length; ++i) {
+		    t.load(); t.verify(); t.prepare(); t.sf_initialize(); t.cls_initialize();
+		    t = ((jq_Array)t).getElementType();
 		}
+		try {
+		    s.return_value = java.lang.reflect.Array.newInstance(Reflection.getJDKType(t), dims);
+		} catch (Throwable x) {
+		    s.setThrown(x);
+		}
+		return s;
+	    }
+	    Object[] param = generateParamArray(f, plo);
+	    try {
 		Method m = (Method)Reflection.getJDKMember(f);
 		m.setAccessible(true);
 		Object result = m.invoke(null, param);
@@ -129,21 +165,38 @@ public class QuadInterpreter {
 	    return s;
 	}
 
-	static HashSet cantInterpret = new HashSet();
+        static Set bad_methods;
+        static Set bad_classes;
+        static Filter interpret_filter;
 	static {
+            bad_classes = new HashSet();
+            bad_classes.add(Reflection._class);
+            bad_methods = new HashSet();
 	    jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/PrintStream;");
 	    jq_Method m = k.getOrCreateInstanceMethod("write", "(Ljava/lang/String;)V");
-	    cantInterpret.add(m);
+	    bad_methods.add(m);
+	    bad_methods.add(Allocator.HeapAllocator._multinewarray);
+            interpret_filter = new Filter() {
+                public boolean isElement(Object o) {
+                    jq_Method m = (jq_Method)o;
+                    if (m.isNative()) return false;
+                    if (m.getBytecode() == null) return false;
+                    if (m instanceof jq_Initializer) return false;
+                    if (bad_classes.contains(m.getDeclaringClass())) return false;
+                    if (bad_methods.contains(m)) return false;
+                    return true;
+                }
+            };
 	}
 
 	public State invokeMethod(jq_Method f, ParamListOperand plo) {
 	    if (TRACE) System.out.println("Invoking "+f);
 	    jq_Class c = f.getDeclaringClass();
 	    c.load(); c.verify(); c.prepare(); c.sf_initialize(); c.cls_initialize();
-	    if (cantInterpret.contains(f) || f.isNative() || f instanceof jq_Initializer)
+	    if (!interpret_filter.isElement(f))
 		return invokeReflective(f, plo);
 	    ControlFlowGraph cfg = CodeCache.getCode(f);
-	    State s = new State();
+	    State s = new State(f);
 	    Object[] param = new Object[plo.length()];
 	    for (int i=0; i<plo.length(); ++i) {
 		param[i] = getReg(plo.get(i).getRegister());
@@ -154,7 +207,7 @@ public class QuadInterpreter {
 	}
 
         public static State interpretMethod(jq_Method f, Object[] params) {
-	    State s = new State();
+	    State s = new State(f);
 	    ControlFlowGraph cfg = CodeCache.getCode(f);
 	    s.interpretMethod(f, params, cfg.getRegisterFactory(), cfg);
 	    return s;
@@ -196,9 +249,12 @@ public class QuadInterpreter {
 		Register r = rf.getStack(0, t);
 		registers.put(r, x);
 		branchTo(eh.getEntry());
+                if (TRACE) System.out.println("Method "+method+" handler "+eh+" catches "+x);
 	    } else {
 		thrown = x;
 		branchTo(cfg.exit());
+                if (TRACE)
+		    System.out.println("Method "+method+" does not catch "+x);
 	    }
 	}
 
@@ -224,10 +280,14 @@ public class QuadInterpreter {
 	    }
 	}
 
+	public String currentLocation() { return method+" "+current_bb+" quad#"+current_quad.getID(); }
+
 	public String toString() {
-	    if (thrown != null) return "Thrown exception: "+thrown+" (null checks: "+num_nullcheck+")";
+            if (thrown != null)
+                return "Thrown exception: "+thrown+" (null checks: "+num_nullcheck+")";
 	    return "Returned: "+return_value+" (null checks: "+num_nullcheck+")";
 	}
+        
     }
     
     public static class UninitializedReference {
