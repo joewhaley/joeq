@@ -1988,6 +1988,10 @@ public class PA {
                 continue;
             }            
             jq_Method constructor = c.getClassInitializer();
+            if(constructor == null){
+                System.err.println("No constructor in class " + c);
+                continue;
+            }
             constructorIE.orWith(M.ithVar(Mmap.get(constructor)).and(h));
         }
         if(TRACE_REFLECTION && TRACE) System.out.println("constructorIE: " + constructorIE.toStringWithDomains(TS) + " of size " + constructorIE.satCount(H1set));
