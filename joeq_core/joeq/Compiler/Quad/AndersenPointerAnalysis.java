@@ -49,10 +49,12 @@ public class AndersenPointerAnalysis {
     public static final boolean TRACK_CHANGES = true;
     public static final boolean TRACK_CHANGED_FIELDS = false;
 
+    public boolean addToRootSet(ControlFlowGraph cfg) { return this.rootSet.add(cfg); }
+    
     public static final class Visitor implements ControlFlowGraphVisitor {
         public static boolean added_hook = true;
         public void visitCFG(ControlFlowGraph cfg) {
-            INSTANCE.rootSet.add(cfg);
+            INSTANCE.addToRootSet(cfg);
             if (!added_hook) {
                 added_hook = true;
                 Runtime.getRuntime().addShutdownHook(new Thread() {
