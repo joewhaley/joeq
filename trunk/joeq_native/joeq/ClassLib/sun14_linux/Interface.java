@@ -86,7 +86,7 @@ public class Interface extends ClassLib.Common.InterfaceImpl {
                     Object o2 = mappedObjects.get(o);
                     if (o2 != null)
                         return o2;
-		    o2 = new java.util.TreeMap(java.lang.String.CASE_INSENSITIVE_ORDER);
+                    o2 = new java.util.TreeMap(java.lang.String.CASE_INSENSITIVE_ORDER);
                     mappedObjects.put(o, o2);
                     return o2;
                 }

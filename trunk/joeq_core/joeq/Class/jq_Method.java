@@ -272,8 +272,8 @@ public abstract class jq_Method extends jq_Member {
     public abstract void prepare();
 
     static interface Delegate {
-	jq_CompiledCode compile_stub(jq_Method m);
-	jq_CompiledCode compile(jq_Method m);
+        jq_CompiledCode compile_stub(jq_Method m);
+        jq_CompiledCode compile(jq_Method m);
     }
 
     private static Delegate _delegate;
@@ -292,12 +292,12 @@ public abstract class jq_Method extends jq_Member {
     }
     public final jq_CompiledCode compile() {
         if (state == STATE_CLSINITIALIZED) return default_compiled_version;
-	synchronized (this) {
+        synchronized (this) {
             Assert._assert(!jq.DontCompile);
             chkState(STATE_PREPARED);
-	    default_compiled_version = _delegate.compile(this);
-	    state = STATE_CLSINITIALIZED;
-	}
+            default_compiled_version = _delegate.compile(this);
+            state = STATE_CLSINITIALIZED;
+        }
         return default_compiled_version;
     }
     
@@ -368,15 +368,17 @@ public abstract class jq_Method extends jq_Member {
     public byte[] getCodeAttribute(Utf8 a) { chkState(STATE_LOADING2); return (byte[])codeattribMap.get(a); }
     public final byte[] getCodeAttribute(String name) { return getCodeAttribute(Utf8.get(name)); }
 
-	public jq_LineNumberBC getLineNumber(char linenum) {
-		// todo: binary search
-		jq_LineNumberBC[] ln = getLineNumberTable();
-		if (ln == null) return null;
-		for (int i=0; i<ln.length; ++i) {
-			if (ln[i].getLineNum() == linenum) return ln[i];
-		}
-		return null;
-	}
+    public jq_LineNumberBC getLineNumber(char linenum) {
+        // todo: binary search
+        jq_LineNumberBC[] ln = getLineNumberTable();
+        if (ln == null)
+            return null;
+        for (int i = 0; i < ln.length; ++i) {
+            if (ln[i].getLineNum() == linenum)
+                return ln[i];
+        }
+        return null;
+    }
 
     public void accept(jq_MethodVisitor mv) {
         mv.visitMethod(this);
@@ -393,19 +395,19 @@ public abstract class jq_Method extends jq_Member {
     static {
         _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LClazz/jq_Method;");
         _compile = _class.getOrCreateInstanceMethod("compile", "()LClazz/jq_CompiledCode;");
-	/* Set up delegates. */
-	_delegate = null;
-	boolean nullVM = jq.nullVM || System.getProperty("joeq.nullvm") != null;
-	if (!nullVM) {
-	    _delegate = attemptDelegate("Clazz.Delegates$Method");
-	}
-	if (_delegate == null) {
-	    _delegate = new NullDelegates.Method();
-	}
+        /* Set up delegates. */
+        _delegate = null;
+        boolean nullVM = jq.nullVM || System.getProperty("joeq.nullvm") != null;
+        if (!nullVM) {
+            _delegate = attemptDelegate("Clazz.Delegates$Method");
+        }
+        if (_delegate == null) {
+            _delegate = new NullDelegates.Method();
+        }
     }
 
     private static Delegate attemptDelegate(String s) {
-	String type = "method delegate";
+        String type = "method delegate";
         try {
             Class c = Class.forName(s);
             return (Delegate)c.newInstance();
@@ -416,6 +418,6 @@ public abstract class jq_Method extends jq_Member {
         } catch (java.lang.IllegalAccessException x) {
             System.err.println("Cannot access "+type+" "+s+": "+x);
         }
-	return null;
+        return null;
     }
 }

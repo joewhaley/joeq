@@ -140,28 +140,28 @@ public class jq_CompiledCode implements Comparable {
     }
 
     static interface Delegate {
-	void patchDirectBindCalls(Iterator i);
-	void patchDirectBindCalls(Iterator i, jq_Method method, jq_CompiledCode cc);
-	Iterator getCompiledMethods();
-	void deliverToStackFrame(Object ed, jq_CompiledCode t, Throwable x, jq_TryCatch tc, CodeAddress entry, StackAddress fp);
-	Object getThisPointer(Object ed, jq_CompiledCode t, CodeAddress ip, StackAddress fp);
+        void patchDirectBindCalls(Iterator i);
+        void patchDirectBindCalls(Iterator i, jq_Method method, jq_CompiledCode cc);
+        Iterator getCompiledMethods();
+        void deliverToStackFrame(Object ed, jq_CompiledCode t, Throwable x, jq_TryCatch tc, CodeAddress entry, StackAddress fp);
+        Object getThisPointer(Object ed, jq_CompiledCode t, CodeAddress ip, StackAddress fp);
     }
     
     private static Delegate _delegate;
 
     public void patchDirectBindCalls() {
         Assert._assert(jq.RunningNative);
-	if (code_reloc != null) {
-	    Iterator i = code_reloc.iterator();
-	    _delegate.patchDirectBindCalls(i);
-	}
+        if (code_reloc != null) {
+            Iterator i = code_reloc.iterator();
+            _delegate.patchDirectBindCalls(i);
+        }
     }
 
     public void patchDirectBindCalls(jq_Method method, jq_CompiledCode cc) {
         Assert._assert(jq.RunningNative);
         if (code_reloc != null) {
             Iterator i = code_reloc.iterator();
-	    _delegate.patchDirectBindCalls(i, method, cc);
+            _delegate.patchDirectBindCalls(i, method, cc);
         }
     }
 
@@ -200,19 +200,19 @@ public class jq_CompiledCode implements Comparable {
     static {
         jq_Class k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LClazz/jq_CompiledCode;");
         _entrypoint = k.getOrCreateInstanceField("entrypoint", "LMemory/CodeAddress;");
-	/* Set up delegates. */
-	_delegate = null;
-	boolean nullVM = jq.nullVM || System.getProperty("joeq.nullvm") != null;
-	if (!nullVM) {
-	    _delegate = attemptDelegate("Clazz.Delegates$CompiledCode");
-	}
-	if (_delegate == null) {
-	    _delegate = new NullDelegates.CompiledCode();
-	}
+        /* Set up delegates. */
+        _delegate = null;
+        boolean nullVM = jq.nullVM || System.getProperty("joeq.nullvm") != null;
+        if (!nullVM) {
+            _delegate = attemptDelegate("Clazz.Delegates$CompiledCode");
+        }
+        if (_delegate == null) {
+            _delegate = new NullDelegates.CompiledCode();
+        }
     }
 
     private static Delegate attemptDelegate(String s) {
-	String type = "compiled code delegate";
+        String type = "compiled code delegate";
         try {
             Class c = Class.forName(s);
             return (Delegate)c.newInstance();
@@ -223,6 +223,6 @@ public class jq_CompiledCode implements Comparable {
         } catch (java.lang.IllegalAccessException x) {
             System.err.println("Cannot access "+type+" "+s+": "+x);
         }
-	return null;
+        return null;
     }
 }

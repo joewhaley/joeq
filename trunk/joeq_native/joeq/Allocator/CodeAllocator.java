@@ -314,11 +314,11 @@ public abstract class CodeAllocator {
          *           inside the given code, 1 if it is after the given code
          */
         public int compareTo(jq_CompiledCode that) {
-	    CodeAddress ip = this.getIP();
-	    CodeAddress start = that.getStart();
-	    if (start.difference(ip) >= 0) return -1;
-	    if (start.offset(that.getLength()).difference(ip) < 0) return 1;
-	    return 0;
+            CodeAddress ip = this.getIP();
+            CodeAddress start = that.getStart();
+            if (start.difference(ip) >= 0) return -1;
+            if (start.offset(that.getLength()).difference(ip) < 0) return 1;
+            return 0;
         }
         
         /**

@@ -48,8 +48,8 @@ public class jq_Array extends jq_Reference implements jq_ClassFileConstants {
     }
 
     public final Object newInstance(int length) {
-	cls_initialize();
-	return _delegate.newInstance(this, length, vtable);
+        cls_initialize();
+        return _delegate.newInstance(this, length, vtable);
     }
     
     public final int getDimensionality() {
@@ -337,26 +337,26 @@ public class jq_Array extends jq_Reference implements jq_ClassFileConstants {
 
     public static final jq_Class _class;
     static interface Delegate {
-	Object newInstance(jq_Array a, int length, Object vtable);
+        Object newInstance(jq_Array a, int length, Object vtable);
     }
 
     private static Delegate _delegate;
 
     static {
         _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LClazz/jq_Array;");
-	/* Set up delegates. */
-	_delegate = null;
-	boolean nullVM = jq.nullVM || System.getProperty("joeq.nullvm") != null;
-	if (!nullVM) {
-	    _delegate = attemptDelegate("Clazz.Delegates$Array");
-	}
-	if (_delegate == null) {
-	    _delegate = new NullDelegates.Array();
-	}
+        /* Set up delegates. */
+        _delegate = null;
+        boolean nullVM = jq.nullVM || System.getProperty("joeq.nullvm") != null;
+        if (!nullVM) {
+            _delegate = attemptDelegate("Clazz.Delegates$Array");
+        }
+        if (_delegate == null) {
+            _delegate = new NullDelegates.Array();
+        }
     }
 
     private static Delegate attemptDelegate(String s) {
-	String type = "array delegate";
+        String type = "array delegate";
         try {
             Class c = Class.forName(s);
             return (Delegate)c.newInstance();
@@ -367,6 +367,6 @@ public class jq_Array extends jq_Reference implements jq_ClassFileConstants {
         } catch (java.lang.IllegalAccessException x) {
             System.err.println("Cannot access "+type+" "+s+": "+x);
         }
-	return null;
+        return null;
     }
 }

@@ -1152,7 +1152,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         jq_Type t = getTypeOf(op0);
         Return operator;
         if (method.getReturnType().isAddressType()) {
-        	operator = Return.RETURN_P.INSTANCE;
+            operator = Return.RETURN_P.INSTANCE;
             Assert._assert(t.isAddressType() ||
                       t == jq_Reference.jq_NullType.NULL_TYPE ||
                       t.isSubtypeOf(Address._class), t.toString());
@@ -2713,26 +2713,26 @@ public class BytecodeToQuad extends BytecodeVisitor {
         }
     }
     static interface UnsafeHelper {
-	public boolean isUnsafe(jq_Method m);
-	public boolean endsBB(jq_Method m);
-	public boolean handleMethod(BytecodeToQuad b2q, ControlFlowGraph quad_cfg, BytecodeToQuad.AbstractState current_state, jq_Method m, Operator.Invoke oper);
+        public boolean isUnsafe(jq_Method m);
+        public boolean endsBB(jq_Method m);
+        public boolean handleMethod(BytecodeToQuad b2q, ControlFlowGraph quad_cfg, BytecodeToQuad.AbstractState current_state, jq_Method m, Operator.Invoke oper);
     }
 
     private static UnsafeHelper _unsafe;
     static {
-	/* Set up delegates. */
-	_unsafe = null;
-	boolean nullVM = jq.nullVM || System.getProperty("joeq.nullvm") != null;
-	if (!nullVM) {
-	    _unsafe = attemptDelegate("Compil3r.Quad.B2QUnsafeHandler");
-	}
-	if (_unsafe == null) {
-	    _unsafe = new Compil3r.Quad.B2QUnsafeIgnorer();
-	}
+        /* Set up delegates. */
+        _unsafe = null;
+        boolean nullVM = jq.nullVM || System.getProperty("joeq.nullvm") != null;
+        if (!nullVM) {
+            _unsafe = attemptDelegate("Compil3r.Quad.B2QUnsafeHandler");
+        }
+        if (_unsafe == null) {
+            _unsafe = new Compil3r.Quad.B2QUnsafeIgnorer();
+        }
     }
 
     private static UnsafeHelper attemptDelegate(String s) {
-	String type = "BC2Q delegate";
+        String type = "BC2Q delegate";
         try {
             Class c = Class.forName(s);
             return (UnsafeHelper)c.newInstance();
@@ -2743,6 +2743,6 @@ public class BytecodeToQuad extends BytecodeVisitor {
         } catch (java.lang.IllegalAccessException x) {
             System.err.println("Cannot access "+type+" "+s+": "+x);
         }
-	return null;
+        return null;
     }
 }

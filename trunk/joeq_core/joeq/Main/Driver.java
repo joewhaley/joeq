@@ -102,11 +102,11 @@ public abstract class Driver {
                 classesToProcess.add(c);
             } catch (NoClassDefFoundError x) {
                 System.err.println("Package " + pkgName + ": Class not found (canonical name " + canonicalClassName + ").");
-	    } catch (LinkageError le) {
-		if (!ignore_linkage_errors)
-		    throw le;
-		System.err.println("Linkage error occurred while loading class (" + canonicalClassName + "):");
-		le.printStackTrace(System.err);
+            } catch (LinkageError le) {
+                if (!ignore_linkage_errors)
+                    throw le;
+                System.err.println("Linkage error occurred while loading class (" + canonicalClassName + "):");
+                le.printStackTrace(System.err);
             }
         }
     }

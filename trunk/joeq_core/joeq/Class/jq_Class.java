@@ -102,7 +102,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         return (jq_Member)members.get(new jq_NameAndDesc(Utf8.get(name), Utf8.get(desc)));
     }
     public Collection getMembers() {
-	return members.values();
+        return members.values();
     }
     private void addDeclaredMember(jq_NameAndDesc nd, jq_Member m) {
         Object b = members.put(nd, m);
@@ -116,17 +116,17 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         super.accept(tv);
     }
     public jq_Method getMethodContainingLine(char lineNum) {
-    	for (int i=0; i<declared_instance_methods.length; ++i) {
-    		jq_Method m = declared_instance_methods[i];
-    		jq_LineNumberBC a = m.getLineNumber(lineNum);
-    		if (a != null) return m;
-    	}
-		for (int i=0; i<static_methods.length; ++i) {
-			jq_Method m = static_methods[i];
-			jq_LineNumberBC a = m.getLineNumber(lineNum);
-			if (a != null) return m;
-		}
-		return null;
+        for (int i=0; i<declared_instance_methods.length; ++i) {
+            jq_Method m = declared_instance_methods[i];
+            jq_LineNumberBC a = m.getLineNumber(lineNum);
+            if (a != null) return m;
+        }
+        for (int i=0; i<static_methods.length; ++i) {
+            jq_Method m = static_methods[i];
+            jq_LineNumberBC a = m.getLineNumber(lineNum);
+            if (a != null) return m;
+        }
+        return null;
     }
     
     public static final boolean DETERMINISTIC = true;
@@ -200,8 +200,8 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         return (jq_InstanceField)findByNameAndDesc(declared_instance_fields, nd);
     }
     public final void setDeclaredInstanceFields(jq_InstanceField[] dif) {
-	chkState(STATE_LOADED);
-	declared_instance_fields = dif;
+        chkState(STATE_LOADED);
+        declared_instance_fields = dif;
     }
     public final jq_StaticField[] getDeclaredStaticFields() {
         chkState(STATE_LOADING3);
@@ -212,8 +212,8 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         return (jq_StaticField)findByNameAndDesc(static_fields, nd);
     }
     public final void setDeclaredStaticFields(jq_StaticField[] dsf) {
-	chkState(STATE_LOADED);
-	static_fields = dsf;
+        chkState(STATE_LOADED);
+        static_fields = dsf;
     }
 
     public final jq_StaticField getStaticField(jq_NameAndDesc nd) {
@@ -290,8 +290,8 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         return (jq_InstanceMethod)findByNameAndDesc(declared_instance_methods, nd);
     }
     public final void setDeclaredInstanceMethods(jq_InstanceMethod[] dim) {
-	chkState(STATE_LOADED);
-	declared_instance_methods = dim;
+        chkState(STATE_LOADED);
+        declared_instance_methods = dim;
     }
     public final jq_StaticMethod[] getDeclaredStaticMethods() {
         chkState(STATE_LOADING3);
@@ -302,8 +302,8 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         return (jq_StaticMethod)findByNameAndDesc(static_methods, nd);
     }
     public final void setDeclaredStaticMethods(jq_StaticMethod[] dsm) {
-	chkState(STATE_LOADED);
-	static_methods = dsm;
+        chkState(STATE_LOADED);
+        static_methods = dsm;
     }
     public final jq_StaticMethod getStaticMethod(jq_NameAndDesc nd) {
         chkState(STATE_LOADING3);
@@ -684,7 +684,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
 
     public final Object newInstance() {
         this.prepare(); // prepare(): to set instance_size and vtable
-	return _delegate.newInstance(this, instance_size, vtable);
+        return _delegate.newInstance(this, instance_size, vtable);
     }
     
     //// Implementation garbage.
@@ -2582,25 +2582,25 @@ uphere2:
     public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LClazz/jq_Class;");
 
     static interface Delegate {
-	Object newInstance(jq_Class c, int instance_size, Object vtable);
+        Object newInstance(jq_Class c, int instance_size, Object vtable);
     }
 
     private static Delegate _delegate;
 
     static {
-	/* Set up delegates. */
-	_delegate = null;
-	boolean nullVM = jq.nullVM || System.getProperty("joeq.nullvm") != null;
-	if (!nullVM) {
-	    _delegate = attemptDelegate("Clazz.Delegates$Klass");
-	}
-	if (_delegate == null) {
-	    _delegate = new NullDelegates.Klass();
-	}
+        /* Set up delegates. */
+        _delegate = null;
+        boolean nullVM = jq.nullVM || System.getProperty("joeq.nullvm") != null;
+        if (!nullVM) {
+            _delegate = attemptDelegate("Clazz.Delegates$Klass");
+        }
+        if (_delegate == null) {
+            _delegate = new NullDelegates.Klass();
+        }
     }
 
     private static Delegate attemptDelegate(String s) {
-	String type = "class delegate";
+        String type = "class delegate";
         try {
             Class c = Class.forName(s);
             return (Delegate)c.newInstance();
@@ -2611,6 +2611,6 @@ uphere2:
         } catch (java.lang.IllegalAccessException x) {
             System.err.println("Cannot access "+type+" "+s+": "+x);
         }
-	return null;
+        return null;
     }
 }

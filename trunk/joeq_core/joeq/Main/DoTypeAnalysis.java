@@ -28,7 +28,7 @@ import Util.Collections.AppendIterator;
 public abstract class DoTypeAnalysis {
     
     public static void main(String[] args) throws IOException {
-	HostedVM.initialize();
+        HostedVM.initialize();
         
         Compil3r.BytecodeAnalysis.TypeAnalysis.classesToAnalyze = new HashSet();
         Iterator i = null; String memberName = null;

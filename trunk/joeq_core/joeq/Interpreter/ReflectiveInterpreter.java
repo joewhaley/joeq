@@ -269,7 +269,7 @@ public class ReflectiveInterpreter extends BytecodeInterpreter {
         String rootMethodClassName = s.substring(0, dotloc);
         String rootMethodName = s.substring(dotloc+1);
         
-	HostedVM.initialize();
+        HostedVM.initialize();
         
         jq_Class c = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("L"+rootMethodClassName.replace('.','/')+";");
         c.cls_initialize();

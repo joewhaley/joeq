@@ -990,13 +990,13 @@ uphere:
     }
 
     public void registerNullStaticFields(Set s) {
-	s.add(_declaredFieldsCache);
+        s.add(_declaredFieldsCache);
         s.add(_declaredMethodsCache);
     }
 
     public void initialize() {
-	_class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LRun_Time/ReflectionImpl;");
-	_declaredFieldsCache = _class.getOrCreateStaticField("declaredFieldsCache", "Ljava/util/HashMap;");
+        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LRun_Time/ReflectionImpl;");
+        _declaredFieldsCache = _class.getOrCreateStaticField("declaredFieldsCache", "Ljava/util/HashMap;");
         _declaredMethodsCache = _class.getOrCreateStaticField("declaredMethodsCache", "Ljava/util/HashMap;");
     }
     

@@ -21,10 +21,10 @@ import Util.Assert;
  */
 class B2QUnsafeHandler implements BytecodeToQuad.UnsafeHelper {
     public boolean isUnsafe(jq_Method m) {
-	return m.getDeclaringClass() == Unsafe._class;
+        return m.getDeclaringClass() == Unsafe._class;
     }
     public boolean endsBB(jq_Method m) {
-	return m == Unsafe._longJump;
+        return m == Unsafe._longJump;
     }
     public boolean handleMethod(BytecodeToQuad b2q, ControlFlowGraph quad_cfg, BytecodeToQuad.AbstractState current_state, jq_Method m, Operator.Invoke oper) {
         Quad q;
@@ -103,12 +103,12 @@ class B2QUnsafeHandler implements BytecodeToQuad.UnsafeHelper {
             RegisterOperand res = b2q.getStackRegister(jq_Primitive.BOOLEAN);
             q = Special.create(quad_cfg.getNewQuadID(), Special.ISGE.INSTANCE, res);
             current_state.push_I(res);
-	} else {
+        } else {
             System.err.println(m.toString());
             Assert.UNREACHABLE();
-	    return false;
-	}
+            return false;
+        }
         b2q.appendQuad(q);
-	return true;
+        return true;
     }
 }

@@ -9,27 +9,27 @@ package Scheduler;
  */
 public abstract class ThreadUtils {
     public static jq_Thread getJQThread(java.lang.Thread t) {
-	return _delegate.getJQThread(t);
+        return _delegate.getJQThread(t);
     }
     static interface Delegate {
-	jq_Thread getJQThread(java.lang.Thread t);
+        jq_Thread getJQThread(java.lang.Thread t);
     }
 
     private static Delegate _delegate;
     static {
-	/* Set up delegates. */
-	_delegate = null;
-	boolean nullVM = Main.jq.nullVM || System.getProperty("joeq.nullvm") != null;
-	if (!nullVM) {
-	    _delegate = attemptDelegate("Scheduler.FullThreadUtils");
-	}
-	if (_delegate == null) {
-	    _delegate = new Scheduler.HostedThreadUtils();
-	}
+        /* Set up delegates. */
+        _delegate = null;
+        boolean nullVM = Main.jq.nullVM || System.getProperty("joeq.nullvm") != null;
+        if (!nullVM) {
+            _delegate = attemptDelegate("Scheduler.FullThreadUtils");
+        }
+        if (_delegate == null) {
+            _delegate = new Scheduler.HostedThreadUtils();
+        }
     }
 
     private static Delegate attemptDelegate(String s) {
-	String type = "thread util delegate";
+        String type = "thread util delegate";
         try {
             Class c = Class.forName(s);
             return (Delegate)c.newInstance();
@@ -40,7 +40,7 @@ public abstract class ThreadUtils {
         } catch (java.lang.IllegalAccessException x) {
             System.err.println("Cannot access "+type+" "+s+": "+x);
         }
-	return null;
+        return null;
     }
 
 }
