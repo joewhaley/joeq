@@ -1101,8 +1101,7 @@ public abstract class Interpreter {
                 } else {
                     jq.assert(op == INVOKE_VIRTUAL);
                 }
-                // TODO: what if it is an array?
-                f = ((jq_Reference)t).getVirtualMethod(f.getNameAndDesc());
+                f = t.getVirtualMethod(f.getNameAndDesc());
                 if (this.TRACE) this.out.println(this+": virtual method target "+f);
                 if ((f == null) || f.isAbstract())
                     throw new AbstractMethodError();

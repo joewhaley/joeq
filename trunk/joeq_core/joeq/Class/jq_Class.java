@@ -47,6 +47,19 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
     public final String getName() { // fully-qualified name, e.g. java.lang.String
         return className(desc);
     }
+    public final boolean isInSamePackage(jq_Class that) {
+        if (this.getClassLoader() != that.getClassLoader()) return false;
+        String s1 = this.getName().toString();
+        String s2 = that.getName().toString();
+        int ind1 = s1.lastIndexOf('.');
+        int ind2 = s2.lastIndexOf('.');
+        if (ind1 != ind2) return false;
+        if (ind1 != -1) {
+            if (s1.substring(0, ind1).equals(s2.substring(0, ind1)))
+                return false;
+        }
+        return true;
+    }
     public final String getJDKName() { return getName(); }
     public final String getJDKDesc() { return desc.toString().replace('/','.'); }
     public final boolean needsDynamicLink(jq_Method method) {
@@ -131,6 +144,37 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
             return super_class.getStaticField(nd);
         }
         return null;
+    }
+    public final jq_StaticField[] getStaticFields() {
+        chkState(STATE_LOADED);
+        int length = static_fields.length;
+        for (int i=0; i<declared_interfaces.length; ++i) {
+            jq_Class in = interfaces[i];
+            in.load();
+            length += in.static_fields.length;
+        }
+        jq_Class k = super_class;
+        while (k != null) {
+            k.load();
+            length += k.static_fields.length;
+            k = k.getSuperclass();
+        }
+        jq_StaticField[] sfs = new jq_StaticField[length];
+        System.arraycopy(static_fields, 0, sfs, 0, static_fields.length);
+        int current = static_fields.length;
+        for (int i=0; i<declared_interfaces.length; ++i) {
+            jq_Class in = interfaces[i];
+            System.arraycopy(in.static_fields, 0, sfs, current, in.static_fields.length);
+            current += in.static_fields.length;
+        }
+        k = super_class;
+        while (k != null) {
+            System.arraycopy(k.static_fields, 0, sfs, current, k.static_fields.length);
+            current += k.static_fields.length;
+            k = k.getSuperclass();
+        }
+        jq.assert(current == sfs.length);
+        return sfs;
     }
     public final jq_InstanceMethod[] getDeclaredInstanceMethods() {
         chkState(STATE_LOADED);

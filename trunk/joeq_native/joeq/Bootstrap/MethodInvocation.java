@@ -11,6 +11,7 @@ package Bootstrap;
 
 import Clazz.jq_Method;
 import Run_Time.Reflection;
+import java.lang.reflect.InvocationTargetException;
 
 public class MethodInvocation {
 
@@ -23,7 +24,11 @@ public class MethodInvocation {
     }
 
     public long invoke() throws Throwable {
-        return Reflection.invoke(method, args);
+        try {
+            return Reflection.invoke(method, null, args);
+        } catch (InvocationTargetException x) {
+            throw x.getTargetException();
+        }
     }
     
     public String toString() {
