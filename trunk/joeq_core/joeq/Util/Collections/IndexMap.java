@@ -5,6 +5,7 @@ package Util.Collections;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 
 /**
  * IndexMap
@@ -54,5 +55,9 @@ public class IndexMap {
     public String toString() {
         return name;
     }
-        
+    
+    public Iterator iterator() {
+        return list.iterator();
+    }
+    
 }
