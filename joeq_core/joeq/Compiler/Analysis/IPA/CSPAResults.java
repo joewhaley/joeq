@@ -17,8 +17,8 @@ import org.sf.javabdd.*;
 
 import Clazz.jq_Reference;
 import Clazz.jq_Type;
-import Compil3r.Analysis.ContextInsensitive.MethodSummary;
-import Compil3r.Analysis.ContextInsensitive.MethodSummary.Node;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
 import Main.HostedVM;
 import Util.Assert;
 import Util.Strings;
