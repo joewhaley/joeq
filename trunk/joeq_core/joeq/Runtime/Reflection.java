@@ -422,7 +422,7 @@ public abstract class Reflection {
         _delegate = null;
         boolean nullVM = jq.nullVM;
         if (!nullVM) {
-            _delegate = attemptDelegate("Run_Time.ReflectionImpl");
+            _delegate = attemptDelegate("joeq.Run_Time.ReflectionImpl");
         }
         if (_delegate == null) {
             _delegate = new joeq.Run_Time.BasicReflectionImpl();

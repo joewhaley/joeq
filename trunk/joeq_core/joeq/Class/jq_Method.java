@@ -418,7 +418,7 @@ public abstract class jq_Method extends jq_Member {
         _delegate = null;
         boolean nullVM = jq.nullVM;
         if (!nullVM) {
-            _delegate = attemptDelegate("Clazz.Delegates$Method");
+            _delegate = attemptDelegate("joeq.Clazz.Delegates$Method");
         }
         if (_delegate == null) {
             _delegate = new NullDelegates.Method();
