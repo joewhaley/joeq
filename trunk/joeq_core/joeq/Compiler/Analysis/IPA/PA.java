@@ -594,6 +594,10 @@ public class PA {
                 }
                 BDD V_bdd = actual.relprod(I_bdd, Iset).restrictWith(Z.ithVar(0));
                 int V_i = V_bdd.scanVar(V2).intValue();
+                if(V_i == -1){
+                    System.out.println("Index " + V_i + " is scanning " + V_bdd.toStringWithDomains(TS));
+                    continue;
+                }
                 if(V_i >= Vmap.size()) {
                     // TODO: this is kind of weird. Why does this happen?
                     System.out.println("Index " + V_i + " is greater than the map size: " + Vmap.size());
