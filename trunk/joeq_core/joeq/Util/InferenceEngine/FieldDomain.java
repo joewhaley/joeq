@@ -32,7 +32,8 @@ public class FieldDomain {
     }
     
     public void loadMap(DataInput in) throws IOException {
-        map = IndexMap.load(name, in);
+        //map = IndexMap.load(name, in);
+        map = IndexMap.loadStringMap(name, in);
     }
     
     public String toString() {
