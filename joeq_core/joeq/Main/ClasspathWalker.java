@@ -19,11 +19,13 @@ public class ClasspathWalker {
     private static final boolean TRACE = true;
     
     public static void main(String[] args){
+        System.out.println("Classpath: " + PrimordialClassLoader.loader.classpathToString() + "\n");
+        int classCount = 0;
         for(Iterator iter = PrimordialClassLoader.loader.listPackages(); iter.hasNext();){
             //System.out.println("\t" + iter.next());
             String packageName = (String) iter.next();
             HashSet loaded = new HashSet();
-            if(TRACE) System.out.println("Processing package " + packageName);
+            if(TRACE) System.out.println("Processing package " + packageName + ", " + classCount + " classes loaded so far.");
             
             for(Iterator classIter = PrimordialClassLoader.loader.listPackage(packageName, true); classIter.hasNext();){
                 String className = (String) classIter.next();
@@ -34,21 +36,25 @@ public class ClasspathWalker {
                 try {
                     jq_Class c = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType(canonicalClassName);
                     c.load();
-                    c.prepare();
+                    //c.prepare();
 //                    if(c.isSubtypeOf(clazz)){                        
 //                        System.out.println("Initialized a subclass of " + clazz + ", class: " + c);
 //                        result.add(c);
 //                    }
                     PrimordialClassLoader.loader.unloadBSType(c);
+                    classCount++;
+                   //if(TRACE) System.out.println("Processing class # " + classCount + ", " + canonicalClassName);
                 } catch (NoClassDefFoundError x) {
                     if(TRACE) System.err.println("Package " + packageName + ": Class not found (canonical name " + canonicalClassName + ").");
-                } catch (LinkageError le) {
+                } /*catch (LinkageError le) {
                     if(TRACE) System.err.println("Linkage error occurred while loading class (" + canonicalClassName + "):" + le.getMessage());
                     //le.printStackTrace(System.err);
-                } catch (RuntimeException e){
+                } */
+                catch (RuntimeException e){
                     if(TRACE) System.err.println("Security error occured: " + e.getMessage());
                 }
             }            
+            System.gc();
         }
     }
     
