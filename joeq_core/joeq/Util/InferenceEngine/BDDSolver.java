@@ -591,4 +591,11 @@ public class BDDSolver extends Solver {
         return d;
     }
     
+    public void reportStats() {
+        int final_node_size = bdd.getNodeNum();
+        int final_table_size = bdd.getAllocNum();
+        System.out.println("MAX_NODES="+final_table_size);
+        System.out.println("FINAL_NODES="+final_node_size);
+    }
+    
 }
