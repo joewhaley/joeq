@@ -87,6 +87,7 @@ public class PA {
     boolean TRACE_BIND = !System.getProperty("pa.tracebind", "no").equals("no");
     boolean TRACE_RELATIONS = !System.getProperty("pa.tracerelations", "no").equals("no");
     boolean TRACE_OBJECT = !System.getProperty("pa.traceobject", "no").equals("no");
+    boolean TRACE_CONTEXT = !System.getProperty("pa.tracecontext", "no").equals("no");
     PrintStream out = System.out;
 
     boolean INCREMENTAL1 = !System.getProperty("pa.inc1", "yes").equals("no"); // incremental points-to
@@ -698,6 +699,7 @@ public class PA {
         if (CONTEXT_SENSITIVE || THREAD_SENSITIVE) {
             Range r = vCnumbering.getRange(m);
             int bits = BigInteger.valueOf(r.high.longValue()).bitLength();
+            if (TRACE_CONTEXT) out.println("Range to "+m+" = "+r+" ("+bits+" bits)");
             BDD V1V2context = V1c.buildAdd(V2c, bits, 0L);
             V1V2context.andWith(V1c.varRange(r.low.longValue(), r.high.longValue()));
             return V1V2context;
@@ -1453,7 +1455,7 @@ public class PA {
                 System.out.print("Object paths="+paths+" ("+VC_BITS+" bits), ");
             }
         }
-        if (CONTEXT_SENSITIVE && MAX_HC_BITS > 1 || THREAD_SENSITIVE) {
+        if ((CONTEXT_SENSITIVE && MAX_HC_BITS > 1) || THREAD_SENSITIVE) {
             hCnumbering = countHeapNumbering(cg, updateBits);
         }
         time = System.currentTimeMillis() - time;
@@ -2142,9 +2144,12 @@ public class PA {
             T_BITS = BigInteger.valueOf(classes.size()+64).bitLength();
             N_BITS = I_BITS;
             M_BITS = BigInteger.valueOf(methods).bitLength() + 1;
-            if (CONTEXT_SENSITIVE) {
+            if (CONTEXT_SENSITIVE || THREAD_SENSITIVE) {
                 VC_BITS = paths.bitLength();
+                if (VC_BITS > MAX_VC_BITS)
+                    System.out.println("Trimming var context bits from "+VC_BITS);
                 VC_BITS = Math.min(MAX_VC_BITS, VC_BITS);
+                System.out.println("Var context bits="+VC_BITS);
             }
             System.out.println(" V="+V_BITS+" I="+I_BITS+" H="+H_BITS+
                                " F="+F_BITS+" T="+T_BITS+" N="+N_BITS+
@@ -2325,6 +2330,9 @@ public class PA {
         System.out.println("Number of paths for heap context sensitivity: "+paths);
         if (updateBits) {
             HC_BITS = paths.bitLength();
+            if (HC_BITS > MAX_HC_BITS)
+                System.out.println("Trimming heap context bits from "+HC_BITS);
+            HC_BITS = Math.min(HC_BITS, MAX_HC_BITS);
             System.out.println("Heap context bits="+HC_BITS);
         }
         return pn;
