@@ -205,7 +205,7 @@ public abstract class Bootstrapper implements ObjectLayout {
             // classes and members.
             
             if (USE_BYTECODE_TRIMMER) {
-                Trimmer trim = new Trimmer(rootm, classset);
+                Trimmer trim = new Trimmer(rootm, classset, !TrimAllTypes);
                 trim.go();
 
                 BootstrapRootSet rs = trim.getRootSet();
