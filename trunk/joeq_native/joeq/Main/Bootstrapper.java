@@ -98,6 +98,7 @@ public abstract class Bootstrapper {
                 Class.forName("joeq.Scheduler.jq_x86RegisterState");
             } catch (ClassNotFoundException e) {
                 System.err.println("Error: cannot load x86 module");
+                System.exit(-1);
             }
             String default_compiler_name = System.getProperty("joeq.compiler", "joeq.Compiler.Reference.x86.x86ReferenceCompiler$Factory");
             Delegates.setDefaultCompiler(default_compiler_name);
