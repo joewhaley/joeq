@@ -143,7 +143,7 @@ public class PA {
     boolean INCLUDE_UNKNOWN_TYPES = !System.getProperty("pa.unknowntypes", "yes").equals("no");
     boolean INCLUDE_ALL_UNKNOWN_TYPES = !System.getProperty("pa.allunknowntypes", "no").equals("no");
     boolean ADD_SUPERTYPES = !System.getProperty("pa.addsupertypes", "no").equals("no");
-    boolean ADD_ROOT_PLACEHOLDERS = !System.getProperty("pa.addrootplaceholders", "no").equals("no");
+    int ADD_ROOT_PLACEHOLDERS = Integer.parseInt(System.getProperty("pa.addrootplaceholders", "0"));
     boolean FULL_CHA = !System.getProperty("pa.fullcha", "no").equals("no");
     static boolean ADD_INSTANCE_METHODS = !System.getProperty("pa.addinstancemethods", "no").equals("no");
     int MAX_PARAMS = Integer.parseInt(System.getProperty("pa.maxparams", "4"));
@@ -649,6 +649,13 @@ public class PA {
         vP.orWith(bdd1);
     }
     
+    void addToHP(int H_i, int F_i, int H2_i) {
+        BDD bdd1 = H1.ithVar(H_i);
+        bdd1.andWith(F.ithVar(F_i));
+        bdd1.andWith(H2.ithVar(H2_i));
+        if (TRACE_RELATIONS) out.println("Adding to hP: "+bdd1.toStringWithDomains());
+        hP.orWith(bdd1);
+    }
     void addToA(int V1_i, int V2_i) {
         BDD context = USE_VCONTEXT ? V1cdomain.and(V2cdomain) : null;
         addToA(context, V1_i, V2_i);
@@ -824,14 +831,47 @@ public class PA {
         return result;
     }
     
-    public void addPlaceholdersForParams(jq_Method m) {
+    int opn;
+    
+    ConcreteTypeNode addPlaceholderObject(jq_Reference type, int depth) {
+        ConcreteTypeNode h = ConcreteTypeNode.get(type, null, new Integer(++opn));
+        if (depth > 0) {
+            if (type.isClassType()) {
+                jq_Class c = (jq_Class) type;
+                c.prepare();
+                jq_InstanceField[] fields = c.getInstanceFields();
+                for (int i = 0; i < fields.length; ++i) {
+                    jq_Type ft = fields[i].getType(); 
+                    if (ft.isReferenceType() && !ft.isAddressType()) {
+                        Node h2 = addPlaceholderObject((jq_Reference) ft, depth-1);
+                        int H_i = Hmap.get(h);
+                        int F_i = Fmap.get(fields[i]);
+                        int H2_i = Hmap.get(h2);
+                        addToHP(H_i, F_i, H2_i);
+                    }
+                }
+            } else if (type.isArrayType()) {
+                jq_Type at = ((jq_Array) type).getElementType();
+                if (at.isReferenceType() && !at.isAddressType()) {
+                    Node h2 = addPlaceholderObject((jq_Reference) at, depth-1);
+                    int H_i = Hmap.get(h);
+                    int F_i = Fmap.get(null);
+                    int H2_i = Hmap.get(h2);
+                    addToHP(H_i, F_i, H2_i);
+                }
+            }
+        }
+        return h;
+    }
+    
+    public void addPlaceholdersForParams(jq_Method m, int depth) {
         if (m.getBytecode() == null) return;
         MethodSummary ms = MethodSummary.getSummary(m);
-        int opn = 1;
+        opn = 1;
         for (int i = 0; i < ms.getNumOfParams(); ++i) {
             Node pn = ms.getParamNode(i);
             if (pn == null) continue;
-            ConcreteTypeNode h = ConcreteTypeNode.get(pn.getDeclaredType(), null, new Integer(++opn));
+            ConcreteTypeNode h = addPlaceholderObject(pn.getDeclaredType(), depth-1);
             int H_i = Hmap.get(h);
             addToVP(pn, H_i);
             System.out.println("Placeholder object for "+pn+": "+h);
@@ -2248,8 +2288,8 @@ public class PA {
             jq_Method m = (jq_Method) i.next();
             
             // Add placeholder objects for each of the parameters of root methods.
-            if (ADD_ROOT_PLACEHOLDERS) {
-                addPlaceholdersForParams(m);
+            if (ADD_ROOT_PLACEHOLDERS > 0) {
+                addPlaceholdersForParams(m, ADD_ROOT_PLACEHOLDERS);
             }
 
             visitMethod(m);
