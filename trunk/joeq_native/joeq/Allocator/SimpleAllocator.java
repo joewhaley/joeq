@@ -192,6 +192,10 @@ public class SimpleAllocator extends HeapAllocator {
                 if (addr.isNull())
                     outOfMemory();
                 addr = (HeapAddress) addr.offset(ARRAY_HEADER_SIZE);
+                addr.offset(ARRAY_LENGTH_OFFSET).poke4(length);
+                addr.offset(VTABLE_OFFSET).poke(HeapAddress.addressOf(vtable));
+                // TODO: gc ?!?
+                return addr.asObject();
             } else {
                 if (totalMemory() >= MAX_MEMORY) HeapAllocator.outOfMemory();
                 jq.Assert(size < BLOCK_SIZE - 2 * HeapAddress.size());
