@@ -1745,6 +1745,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             emitCallRelative(x86ReferenceLinker._getstatic4);
             asm.endDynamicPatch();
         } else {
+            f = resolve(f);
             if (TraceBytecodes) {
                 emitPushAddressOf(SystemInterface.toCString(i_start+": GETSTATIC4 "+f));
                 emitCallMemory(SystemInterface._debugmsg);
@@ -1772,6 +1773,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             emitCallRelative(x86ReferenceLinker._getstatic8);
             asm.endDynamicPatch();
         } else {
+            f = resolve(f);
             if (TraceBytecodes) {
                 emitPushAddressOf(SystemInterface.toCString(i_start+": GETSTATIC8 "+f));
                 emitCallMemory(SystemInterface._debugmsg);
@@ -1808,6 +1810,22 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         super.visitAGETSTATIC(f);
         GETSTATIC4helper(f);
     }
+    public void visitZGETSTATIC(jq_StaticField f) {
+        super.visitZGETSTATIC(f);
+        GETSTATIC4helper(f);
+    }
+    public void visitBGETSTATIC(jq_StaticField f) {
+        super.visitBGETSTATIC(f);
+        GETSTATIC4helper(f);
+    }
+    public void visitCGETSTATIC(jq_StaticField f) {
+        super.visitCGETSTATIC(f);
+        GETSTATIC4helper(f);
+    }
+    public void visitSGETSTATIC(jq_StaticField f) {
+        super.visitSGETSTATIC(f);
+        GETSTATIC4helper(f);
+    }
     public void PUTSTATIC4helper(jq_StaticField f) {
         if (f.needsDynamicLink(method)) {
             if (TraceBytecodes) {
@@ -1820,6 +1838,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             emitCallRelative(x86ReferenceLinker._putstatic4);
             asm.endDynamicPatch();
         } else {
+            f = resolve(f);
             if (TraceBytecodes) {
                 emitPushAddressOf(SystemInterface.toCString(i_start+": PUTSTATIC4 "+f));
                 emitCallMemory(SystemInterface._debugmsg);
@@ -1847,6 +1866,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             emitCallRelative(x86ReferenceLinker._putstatic8);
             asm.endDynamicPatch();
         } else {
+            f = resolve(f);
             if (TraceBytecodes) {
                 emitPushAddressOf(SystemInterface.toCString(i_start+": PUTSTATIC8 "+f));
                 emitCallMemory(SystemInterface._debugmsg);
@@ -1883,8 +1903,24 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         super.visitAPUTSTATIC(f);
         PUTSTATIC4helper(f);
     }
+    public void visitZPUTSTATIC(jq_StaticField f) {
+        super.visitZPUTSTATIC(f);
+        PUTSTATIC4helper(f);
+    }
+    public void visitBPUTSTATIC(jq_StaticField f) {
+        super.visitBPUTSTATIC(f);
+        PUTSTATIC4helper(f);
+    }
+    public void visitCPUTSTATIC(jq_StaticField f) {
+        super.visitCPUTSTATIC(f);
+        PUTSTATIC4helper(f);
+    }
+    public void visitSPUTSTATIC(jq_StaticField f) {
+        super.visitSPUTSTATIC(f);
+        PUTSTATIC4helper(f);
+    }
     public void GETFIELD1helper(jq_InstanceField f) {
-        if (!f.getDeclaringClass().isPrepared()) {
+        if (f.needsDynamicLink(method)) {
             // generate a runtime call, which will be backpatched.
             if (TraceBytecodes) {
                 emitPushAddressOf(SystemInterface.toCString(i_start+": GETFIELD1 "+f+" (dynpatch)"));
@@ -1895,6 +1931,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             emitCallRelative(x86ReferenceLinker._getfield1);
             asm.endDynamicPatch();
         } else {
+            f = resolve(f);
             if (TraceBytecodes) {
                 emitPushAddressOf(SystemInterface.toCString(i_start+": GETFIELD1 "+f));
                 emitCallMemory(SystemInterface._debugmsg);
@@ -1913,7 +1950,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         return 9;
     }
     public void GETFIELD4helper(jq_InstanceField f) {
-        if (!f.getDeclaringClass().isPrepared()) {
+        if (f.needsDynamicLink(method)) {
             // generate a runtime call, which will be backpatched.
             if (TraceBytecodes) {
                 emitPushAddressOf(SystemInterface.toCString(i_start+": GETFIELD4 "+f+" (dynpatch)"));
@@ -1924,6 +1961,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             emitCallRelative(x86ReferenceLinker._getfield4);
             asm.endDynamicPatch();
         } else {
+            f = resolve(f);
             if (TraceBytecodes) {
                 emitPushAddressOf(SystemInterface.toCString(i_start+": GETFIELD4 "+f));
                 emitCallMemory(SystemInterface._debugmsg);
@@ -1940,7 +1978,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         return 7;
     }
     public void GETFIELD8helper(jq_InstanceField f) {
-        if (!f.getDeclaringClass().isPrepared()) {
+        if (f.needsDynamicLink(method)) {
             if (TraceBytecodes) {
                 emitPushAddressOf(SystemInterface.toCString(i_start+": GETFIELD8 "+f+" (dynpatch)"));
                 emitCallMemory(SystemInterface._debugmsg);
@@ -1951,6 +1989,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             emitCallRelative(x86ReferenceLinker._getfield8);
             asm.endDynamicPatch();
         } else {
+            f = resolve(f);
             if (TraceBytecodes) {
                 emitPushAddressOf(SystemInterface.toCString(i_start+": GETFIELD8 "+f));
                 emitCallMemory(SystemInterface._debugmsg);
@@ -1994,7 +2033,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     }
     public void visitCGETFIELD(jq_InstanceField f) {
         super.visitCGETFIELD(f);
-        if (!f.getDeclaringClass().isPrepared()) {
+        if (f.needsDynamicLink(method)) {
             if (TraceBytecodes) {
                 emitPushAddressOf(SystemInterface.toCString(i_start+": CGETFIELD "+f+" (dynpatch)"));
                 emitCallMemory(SystemInterface._debugmsg);
@@ -2005,6 +2044,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             emitCallRelative(x86ReferenceLinker._cgetfield);
             asm.endDynamicPatch();
         } else {
+            f = resolve(f);
             if (TraceBytecodes) {
                 emitPushAddressOf(SystemInterface.toCString(i_start+": CGETFIELD "+f));
                 emitCallMemory(SystemInterface._debugmsg);
@@ -2024,7 +2064,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     }
     public void visitSGETFIELD(jq_InstanceField f) {
         super.visitSGETFIELD(f);
-        if (!f.getDeclaringClass().isPrepared()) {
+        if (f.needsDynamicLink(method)) {
             if (TraceBytecodes) {
                 emitPushAddressOf(SystemInterface.toCString(i_start+": SGETFIELD "+f+" (dynpatch)"));
                 emitCallMemory(SystemInterface._debugmsg);
@@ -2035,6 +2075,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             emitCallRelative(x86ReferenceLinker._sgetfield);
             asm.endDynamicPatch();
         } else {
+            f = resolve(f);
             if (TraceBytecodes) {
                 emitPushAddressOf(SystemInterface.toCString(i_start+": SGETFIELD "+f));
                 emitCallMemory(SystemInterface._debugmsg);
@@ -2057,7 +2098,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         GETFIELD1helper(f);
     }
     public void PUTFIELD1helper(jq_InstanceField f) {
-        if (!f.getDeclaringClass().isPrepared()) {
+        if (f.needsDynamicLink(method)) {
             if (TraceBytecodes) {
                 emitPushAddressOf(SystemInterface.toCString(i_start+": PUTFIELD1 "+f+" (dynpatch)"));
                 emitCallMemory(SystemInterface._debugmsg);
@@ -2068,6 +2109,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             emitCallRelative(x86ReferenceLinker._putfield1);
             asm.endDynamicPatch();
         } else {
+            f = resolve(f);
             if (TraceBytecodes) {
                 emitPushAddressOf(SystemInterface.toCString(i_start+": PUTFIELD1 "+f));
                 emitCallMemory(SystemInterface._debugmsg);
@@ -2086,7 +2128,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         return 8;
     }
     public void PUTFIELD2helper(jq_InstanceField f) {
-        if (!f.getDeclaringClass().isPrepared()) {
+        if (f.needsDynamicLink(method)) {
             if (TraceBytecodes) {
                 emitPushAddressOf(SystemInterface.toCString(i_start+": PUTFIELD2 "+f+" (dynpatch)"));
                 emitCallMemory(SystemInterface._debugmsg);
@@ -2097,6 +2139,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             emitCallRelative(x86ReferenceLinker._putfield2);
             asm.endDynamicPatch();
         } else {
+            f = resolve(f);
             if (TraceBytecodes) {
                 emitPushAddressOf(SystemInterface.toCString(i_start+": PUTFIELD2 "+f));
                 emitCallMemory(SystemInterface._debugmsg);
@@ -2116,7 +2159,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         return 9;
     }
     public void PUTFIELD4helper(jq_InstanceField f) {
-        if (!f.getDeclaringClass().isPrepared()) {
+        if (f.needsDynamicLink(method)) {
             if (TraceBytecodes) {
                 emitPushAddressOf(SystemInterface.toCString(i_start+": PUTFIELD4 "+f+" (dynpatch)"));
                 emitCallMemory(SystemInterface._debugmsg);
@@ -2127,6 +2170,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             emitCallRelative(x86ReferenceLinker._putfield4);
             asm.endDynamicPatch();
         } else {
+            f = resolve(f);
             if (TraceBytecodes) {
                 emitPushAddressOf(SystemInterface.toCString(i_start+": PUTFIELD4 "+f));
                 emitCallMemory(SystemInterface._debugmsg);
@@ -2145,7 +2189,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         return 8;
     }
     public void PUTFIELD8helper(jq_InstanceField f) {
-        if (!f.getDeclaringClass().isPrepared()) {
+        if (f.needsDynamicLink(method)) {
             if (TraceBytecodes) {
                 emitPushAddressOf(SystemInterface.toCString(i_start+": PUTFIELD8 "+f+" (dynpatch)"));
                 emitCallMemory(SystemInterface._debugmsg);
@@ -2156,6 +2200,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
             emitCallRelative(x86ReferenceLinker._putfield8);
             asm.endDynamicPatch();
         } else {
+            f = resolve(f);
             if (TraceBytecodes) {
                 emitPushAddressOf(SystemInterface.toCString(i_start+": PUTFIELD8 "+f));
                 emitCallMemory(SystemInterface._debugmsg);
@@ -2264,6 +2309,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         return 5;
     }
     private void INVOKENODPATCHhelper(byte op, jq_Method f) {
+        f = resolve(f);
         if (TraceBytecodes) {
             emitPushAddressOf(SystemInterface.toCString(i_start+": INVOKE "+op+" "+f));
             emitCallMemory(SystemInterface._debugmsg);
@@ -2307,7 +2353,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
     private void INVOKEhelper(byte op, jq_Method f) {
         switch (op) {
             case INVOKE_VIRTUAL:
-                if (!f.getDeclaringClass().isPrepared())
+                if (f.needsDynamicLink(method))
                     INVOKEDPATCHhelper(op, f);
                 else
                     INVOKENODPATCHhelper(op, f);
