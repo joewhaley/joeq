@@ -30,7 +30,7 @@ public class GenerateWebRoots {
 
     public static void main(String[] args) throws FileNotFoundException {
         String inputFile  = "web.xml";
-        String outputFile = "InvokeServlets.java";
+        String outputFile = null; //"InvokeServlets.java";
         
         for(int i = 0; i < args.length; i++){
             String arg = args[i];
@@ -50,7 +50,9 @@ public class GenerateWebRoots {
         Collection filters  = findMatches(doc, "filter-class");
         Collection taglibs  = findMatches(doc, "taglib-location");
         
-        out = new PrintStream(new FileOutputStream(outputFile));
+        out = (outputFile != null) ? 
+            new PrintStream(new FileOutputStream(outputFile)) : 
+            System.out;
         
         printPreamble();
         printServlets(servlets);
