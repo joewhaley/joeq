@@ -81,7 +81,7 @@ public class jq_InstanceMethod extends jq_Method {
         if (jq.Bootstrapping) return (state < STATE_PREPARED) || getDeclaringClass().needsDynamicLink(method);
         if (method.getDeclaringClass() == this.getDeclaringClass())
             return false;
-        return state < STATE_PREPARED;
+        return state < STATE_SFINITIALIZED;
     }
     public final boolean isStatic() { return false; }
     public final void unprepare() { chkState(STATE_PREPARED); offset = INVALID_OFFSET; state = STATE_LOADED; }
