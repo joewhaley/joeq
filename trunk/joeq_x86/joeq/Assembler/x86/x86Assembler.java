@@ -63,7 +63,7 @@ public class x86Assembler implements x86Constants {
             if (patchSize == 4) {
                 int v = mc.get4_endian(patchLocation - 4);
                 Assert._assert(v == 0x44444444 || v == 0x55555555 || v == 0x66666666 || v == 0x77777777, "Location: "+Strings.hex(patchLocation-4)+" value: "+Strings.hex8(v));
-                mc.put4_endian(patchLocation - 4, target);
+                mc.put4_endian(patchLocation - 4, mc.getStartAddress().offset(target).to32BitValue());
             } else
                 Assert.TODO();
         }
