@@ -320,21 +320,29 @@ public abstract class Solver {
             }
             NOISY = b;
         } else if (s.startsWith(".bddvarorder")) {
-            int index = ".bddvarorder".length()+1;
-            String varOrder = s.substring(index).trim();
-            ((BDDSolver) this).VARORDER = varOrder;
+            if (System.getProperty("bddvarorder") == null) {
+                int index = ".bddvarorder".length()+1;
+                String varOrder = s.substring(index).trim();
+                ((BDDSolver) this).VARORDER = varOrder;
+            }
         } else if (s.startsWith(".bddnodes")) {
-            int index = ".bddnodes".length()+1;
-            int n = Integer.parseInt(s.substring(index).trim());
-            ((BDDSolver) this).BDDNODES = n;
+            if (System.getProperty("bddnodes") == null) {
+                int index = ".bddnodes".length()+1;
+                int n = Integer.parseInt(s.substring(index).trim());
+                ((BDDSolver) this).BDDNODES = n;
+            }
         } else if (s.startsWith(".bddcache")) {
-            int index = ".bddcache".length()+1;
-            int n = Integer.parseInt(s.substring(index).trim());
-            ((BDDSolver) this).BDDCACHE = n;
+            if (System.getProperty("bddcache") == null) {
+                int index = ".bddcache".length()+1;
+                int n = Integer.parseInt(s.substring(index).trim());
+                ((BDDSolver) this).BDDCACHE = n;
+            }
         } else if (s.startsWith(".bddminfree")) {
-            int index = ".bddminfree".length()+1;
-            int n = Integer.parseInt(s.substring(index).trim());
-            ((BDDSolver) this).BDDMINFREE = n;
+            if (System.getProperty("bddminfree") == null) {
+                int index = ".bddminfree".length()+1;
+                int n = Integer.parseInt(s.substring(index).trim());
+                ((BDDSolver) this).BDDMINFREE = n;
+            }
         } else if (s.startsWith(".findbestorder")) {
             int index = ".findbestorder".length()+1;
             String val = "";
