@@ -17,22 +17,14 @@ import Clazz.jq_StaticField;
  */
 public class CodeAddress extends Address {
 
-    public static CodeAddressFactory FACTORY = Bootstrap.BootstrapCodeAddress.FACTORY;
+    public static CodeAddressFactory FACTORY;
     
     public abstract static class CodeAddressFactory {
         public abstract int size();
-        public abstract CodeAddress min();
-        public abstract CodeAddress max();
     }
     
     public static final int size() {
         return FACTORY.size();
-    }
-    public static final CodeAddress min() {
-        return FACTORY.min();
-    }
-    public static final CodeAddress max() {
-        return FACTORY.max();
     }
 
     public native Address peek();
