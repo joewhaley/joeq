@@ -3,9 +3,11 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Util.InferenceEngine;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -164,11 +166,40 @@ public class BDDSolver extends Solver {
             entry = scc.nodes()[0];
         }
         if (TRACE) out.println("Entry into SCC"+scc.getId()+": "+entry);
-        Collection preds = depNav.prev(entry);
-        if (TRACE) out.println("Predecessors of entry: "+preds);
-        Object pred = preds.iterator().next();
-        if (TRACE) out.println("Removing backedge "+pred+" -> "+entry);
-        depNav.removeEdge(pred, entry);
+        
+        if (false) {
+            Collection preds = depNav.prev(entry);
+            if (TRACE) out.println("Predecessors of entry: "+preds);
+            Object pred = preds.iterator().next();
+            if (TRACE) out.println("Removing backedge "+pred+" -> "+entry);
+            depNav.removeEdge(pred, entry);
+        } else {
+            // find longest path.
+            Set visited = new HashSet();
+            List queue = new LinkedList();
+            queue.add(entry);
+            visited.add(entry);
+            Object last = null;
+            while (!queue.isEmpty()) {
+                last = queue.remove(0);
+                for (Iterator i = depNav.next(last).iterator(); i.hasNext(); ) {
+                    Object q = i.next();
+                    if (visited.add(q)) {
+                        queue.add(q);
+                    }
+                }
+            }
+            Object last_next;
+            List possible = new LinkedList(depNav.next(last));
+            if (possible.size() == 1) last_next = possible.iterator().next();
+            else if (possible.contains(entry)) last_next = entry;
+            else {
+                possible.retainAll(Arrays.asList(entries));
+                last_next = possible.iterator().next();
+            }
+            if (TRACE) out.println("Removing backedge "+last+" -> "+last_next);
+            depNav.removeEdge(last, last_next);
+        }
     }
     
     public SCComponent buildSCCs(InferenceRule.DependenceNavigator depNav, Collection rules) {
