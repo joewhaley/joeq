@@ -88,7 +88,7 @@ public abstract class Thread {
     public static java.lang.Thread currentThread() { return Unsafe.getThreadBlock().getJavaLangThreadObject(); }
     public static void yield() { Unsafe.getThreadBlock().yield(); }
     public static void sleep(long millis) throws InterruptedException { Unsafe.getThreadBlock().sleep(millis); }
-    public /*synchronized*/ void start() {
+    public synchronized void start() {
         jq_Thread jq_thread = this.jq_thread;
         jq_thread.start();
     }

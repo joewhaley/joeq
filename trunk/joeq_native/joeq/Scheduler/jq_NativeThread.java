@@ -233,7 +233,8 @@ public class jq_NativeThread implements x86Constants {
             idleThread = null; // go back to round-robin
         }
         // threads start off as non-preemptable
-        if (TRACE) SystemInterface.debugwriteln("Java thread " + t + " enqueued on native thread " + nt);
+        CodeAddress ip = t.getRegisterState().getEip();
+        if (TRACE) SystemInterface.debugwriteln("Java thread " + t + " enqueued on native thread " + nt + " ip: " + ip.stringRep() + " cc: " + CodeAllocator.getCodeContaining(ip));
         jq.Assert(t.isThreadSwitchEnabled());
         t.disableThreadSwitch(); // threads on queues have thread switch disabled
         nt.transferQueue.enqueue(t);

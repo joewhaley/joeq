@@ -40,6 +40,7 @@ public class jq_Thread {
     jq_Thread next;
     private jq_CompiledCode entry_point;
     private boolean isDaemon;
+    private boolean hasStarted;
     private boolean isDead;
     private volatile int isInterrupted;
     private final int thread_id;
@@ -78,7 +79,7 @@ public class jq_Thread {
 
     public void init() {
         Thread t = thread_object;
-        jq_Reference z = (jq_Reference)Reflection.getJQType(t.getClass());
+        jq_Reference z = jq_Reference.getTypeOf(t);
         jq_InstanceMethod m = z.getVirtualMethod(new jq_NameAndDesc(Utf8.get("run"), Utf8.get("()V")));
         entry_point = m.getDefaultCompiledVersion();
         // initialize register state to start at start function
@@ -86,7 +87,7 @@ public class jq_Thread {
         this.registers.Eip = entry_point.getEntrypoint();
         // bogus return address
         this.registers.Esp = (StackAddress) this.registers.getEsp().offset(-CodeAddress.size());
-        // arg to run(): t
+        // arg to run()
         this.registers.Esp = (StackAddress) this.registers.getEsp().offset(-HeapAddress.size());
         this.registers.getEsp().poke(HeapAddress.addressOf(t));
         // return from run() directly to destroy()
@@ -94,7 +95,14 @@ public class jq_Thread {
         this.registers.getEsp().poke(_destroyCurrentThread.getDefaultCompiledVersion().getEntrypoint());
     }
     public void start() {
+        if (entry_point == null) {
+            // java.lang.Thread objects in the boot image may not be initialized.
+            this.init();
+        }
+        if (this.hasStarted)
+            throw new IllegalThreadStateException();
         this.isDead = false;
+        this.hasStarted = true;
         jq_NativeThread.startJavaThread(this);
     }
     public void sleep(long millis) throws InterruptedException {
