@@ -143,7 +143,7 @@ public class GenerateWebRoots {
                 if(httpSessionListener.isAssignableFrom(c) || servletContextListener.isAssignableFrom(c)){
                     out.println("\t\t// " + ++count + ". " + listener);
                     out.println("\t\ttry {");
-                    out.println("\t\t\tHttpSessionListener listener = new " + listener + "();");
+                    out.println("\t\t\t" + listener + " listener = new " + listener + "();");
                     out.println("\t\t\tlistener.contextInitialized(null);");
                     out.println("\t\t\tlistener.contextDestroyed(null);");
                     out.println("\t\t} catch (Exception e) {");
@@ -165,6 +165,7 @@ public class GenerateWebRoots {
         out.println("import javax.servlet.ServletResponse;");        
         out.println("import javax.servlet.http.HttpServlet;");
         out.println("import javax.servlet.ServletContextListener;");
+        out.println("import javax.servlet.http.HttpSessionListener;");
         out.println("import javax.servlet.Filter;");
         out.println("import javax.servlet.FilterChain;");
         out.println("import javax.servlet.jsp.JspException;");
