@@ -124,14 +124,17 @@ public abstract class ReflectionInformationProvider {
                     //System.out.println("\tClass: " + className2);
                     jq_Class c = (jq_Class) jq_Type.parseType(className2);
                     try {
-                        c.prepare();
+                        if(c.isSubtypeOf(clazz)){
+                            c.prepare();
+                            System.out.println(
+                                "Initialized a subclass of " + className + 
+                                ", class: " + c);    
+                        }                        
                     } catch(Throwable e){
                         continue;
                     }
                     
-                    if(c.isSubtypeOf(clazz)){
-                        System.out.println("\tClass: " + c);    
-                    }
+                    
                 }
                 
             }
@@ -248,7 +251,7 @@ public abstract class ReflectionInformationProvider {
          * @param cribSheetFileName
          * @throws IOException
          */
-        private void readSpec(String cribSheetFileName) throws IOException {
+        private void readSpec_old(String cribSheetFileName) throws IOException {
             FileReader fileIn = new FileReader(cribSheetFileName);
             LineNumberReader in = new LineNumberReader(fileIn);
             String line = in.readLine();
@@ -260,6 +263,47 @@ public abstract class ReflectionInformationProvider {
                             System.out.println("Adding a reflection spec for " + spec.getDeclaredIn());
                         }
                         specs.add(spec);
+                    }
+                }
+                line = in.readLine();
+            } while (line != null);
+            in.close();
+            
+            if(PA.TRACE_REFLECTION) {
+                System.out.println(
+                    "There are " + specs.size() +            
+                    " specifications read from " + cribSheetFileName);
+            }
+        }
+        
+        private void readSpec(String cribSheetFileName) throws IOException {
+            FileReader fileIn = new FileReader(cribSheetFileName);
+            LineNumberReader in = new LineNumberReader(fileIn);
+            String line = in.readLine();
+            NewInstanceTargets spec = null;
+            do {
+                if(!line.startsWith("#") && line.trim().length() > 0){                    
+                    if(!Character.isSpace(line.charAt(0))){
+                        int indexBracket = line.indexOf('(');
+                        Assert._assert(indexBracket != -1, "No brackets in " + line);
+                        String declaredIn = line.substring(0, indexBracket);
+
+                        if(spec != null){
+                            if(PA.TRACE_REFLECTION && spec.isValid()){
+                                System.out.println("Read " + spec);
+                            }
+                            if(spec.isValid()){
+                                if(PA.TRACE_REFLECTION){
+                                    System.out.println(
+                                        "Adding a reflection spec for " + spec.getDeclaredIn());
+                                }
+                                specs.add(spec);
+                            }
+                        }
+                        spec = new NewInstanceTargets(declaredIn);                        
+                    }else{
+                        line = line.trim();
+                        spec.addTarget(line);
                     }
                 }
                 line = in.readLine();
