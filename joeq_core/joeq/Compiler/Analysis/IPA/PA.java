@@ -2204,6 +2204,7 @@ public class PA {
                     long time2 = System.currentTimeMillis();
                     dumpBDDRelations();
                     System.out.println("Dump took "+(System.currentTimeMillis()-time2)/1000.+"s");
+                    dumpSSA();
                 } catch (IOException x) {}
             }
             if (SKIP_SOLVE) return;
@@ -2219,62 +2220,7 @@ public class PA {
         dumpCallGraph();
         System.out.println("Time spent writing: "
                 + (System.currentTimeMillis() - time) / 1000.);
-        if (DUMP_SSA) {
-            jq_MethodVisitor mv = null;
-            ControlFlowGraphVisitor cfgv = null;
-            mv = new ControlFlowGraphVisitor.CodeCacheVisitor(bddIRBuilder,
-                    true);
-            //cv = new jq_MethodVisitor.DeclaredMethodVisitor(mv, methodNamesToProcess, false);
-            Collection s = new TreeSet(new Comparator() {
-                public int compare(Object o1, Object o2) {
-                    return o1.toString().compareTo(o2.toString());
-                }
-            });
-            CallGraph callgraph = new CachedCallGraph(new PACallGraph(this));
-            if (callgraph.getAllMethods() == null) {
-                System.out.println("call graph has no methods!");
-            }
-            s.addAll(callgraph.getAllMethods());
-            for (Iterator i = s.iterator(); i.hasNext();) {
-                jq_Method m = (jq_Method) i.next();
-                try {
-                    m.accept(mv);
-                } catch (LinkageError le) {
-                    System.err
-                            .println("Linkage error occurred while executing pass on "
-                                    + m + " : " + le);
-                    le.printStackTrace(System.err);
-                } catch (Exception x) {
-                    System.err
-                            .println("Runtime exception occurred while executing pass on "
-                                    + m + " : " + x);
-                    x.printStackTrace(System.err);
-                }
-            }
-            System.err.println("Completed pass! " + bddIRBuilder);
-            makeVRegbdd(callgraph);
-            makeIQuadbdd();
-            makeFMemberbdd();
-            //makeHQuadbdd();
-            BDDDomain reg = bddIRBuilder.getDestDomain();
-            BDDDomain quad = bddIRBuilder.getQuadDomain();
-            BDDDomain member = bddIRBuilder.getMemberDomain();
-            System.out.println("vReg: "
-                    + (long) vReg.satCount(V1.set().and(reg.set().and(M.set())))
-                    + " relations, " + vReg.nodeCount() + " nodes");
-            bdd.save(resultsFileName + ".vReg", vReg);
-            System.out.println("iQuad: "
-                    + (long) iQuad.satCount(I.set().and(quad.set()))
-                    + " relations, " + iQuad.nodeCount() + " nodes");
-            bdd.save(resultsFileName + ".iQuad", iQuad);
-            System.out.println("fMember: "
-                    + (long) fMember.satCount(F.set().and(member.set()))
-                    + " relations, " + fMember.nodeCount() + " nodes");
-            bdd.save(resultsFileName + ".fMember", fMember);
-            //System.out.println("hQuad: "+(long) sync.satCount(H1.set().and(quad.set()))+" relations, "+hQuad.nodeCount()+" nodes");
-            //bdd.save(resultsFileName+".hQuad", sync);
-            dumpBDDRelations();
-        }
+
         if (DUMP_RESULTS) {
             System.out.println("Writing results...");
             time = System.currentTimeMillis();
@@ -3901,6 +3847,62 @@ public class PA {
                 fMember.orWith(b);
             }
         }
+    }
+    
+    private void dumpSSA() throws IOException {
+        jq_MethodVisitor mv = null;
+        ControlFlowGraphVisitor cfgv = null;
+        mv = new ControlFlowGraphVisitor.CodeCacheVisitor(bddIRBuilder,
+                true);
+        //cv = new jq_MethodVisitor.DeclaredMethodVisitor(mv, methodNamesToProcess, false);
+        Collection s = new TreeSet(new Comparator() {
+            public int compare(Object o1, Object o2) {
+                return o1.toString().compareTo(o2.toString());
+            }
+        });
+        CallGraph callgraph = new CachedCallGraph(new PACallGraph(this));
+        if (callgraph.getAllMethods() == null) {
+            System.out.println("call graph has no methods!");
+        }
+        s.addAll(callgraph.getAllMethods());
+        for (Iterator i = s.iterator(); i.hasNext();) {
+            jq_Method m = (jq_Method) i.next();
+            try {
+                m.accept(mv);
+            } catch (LinkageError le) {
+                System.err
+                        .println("Linkage error occurred while executing pass on "
+                                + m + " : " + le);
+                le.printStackTrace(System.err);
+            } catch (Exception x) {
+                System.err
+                        .println("Runtime exception occurred while executing pass on "
+                                + m + " : " + x);
+                x.printStackTrace(System.err);
+            }
+        }
+        System.err.println("Completed pass! " + bddIRBuilder);
+        makeVRegbdd(callgraph);
+        makeIQuadbdd();
+        makeFMemberbdd();
+        //makeHQuadbdd();
+        BDDDomain reg = bddIRBuilder.getDestDomain();
+        BDDDomain quad = bddIRBuilder.getQuadDomain();
+        BDDDomain member = bddIRBuilder.getMemberDomain();
+        System.out.println("vReg: "
+                + (long) vReg.satCount(V1.set().and(reg.set().and(M.set())))
+                + " relations, " + vReg.nodeCount() + " nodes");
+        bdd.save(resultsFileName + ".vReg", vReg);
+        System.out.println("iQuad: "
+                + (long) iQuad.satCount(I.set().and(quad.set()))
+                + " relations, " + iQuad.nodeCount() + " nodes");
+        bdd.save(resultsFileName + ".iQuad", iQuad);
+        System.out.println("fMember: "
+                + (long) fMember.satCount(F.set().and(member.set()))
+                + " relations, " + fMember.nodeCount() + " nodes");
+        bdd.save(resultsFileName + ".fMember", fMember);
+        //System.out.println("hQuad: "+(long) sync.satCount(H1.set().and(quad.set()))+" relations, "+hQuad.nodeCount()+" nodes");
+        //bdd.save(resultsFileName+".hQuad", sync);
     }
     
 }
