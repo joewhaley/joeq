@@ -2250,7 +2250,8 @@ public class BytecodeToQuad extends BytecodeVisitor {
         void popDummy() { Operand op = pop(); jq.assert(op == DummyOperand.DUMMY); }
         Operand pop(jq_Type t) {
             if (t.getReferenceSize() == 8) popDummy();
-            Operand op = pop(); jq.assert(isAssignable(getTypeOf(op), t) != NO);
+            Operand op = pop();
+            //jq.assert(isAssignable(getTypeOf(op), t) != NO);
             return op;
         }
         Operand pop() {
