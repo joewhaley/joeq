@@ -194,6 +194,7 @@ public abstract class Templates {
         public static class Quad extends java.util.AbstractList implements List.Quad {
             private final Compil3r.Quad.Quad[] a;
             public Quad(Compil3r.Quad.Quad[] c) { a = c; }
+            public Quad(Compil3r.Quad.Quad c) { a = new Compil3r.Quad.Quad[] { c }; }
             public int size() { return a.length; }
             public Object get(int index) { return getQuad(index); }
             public Compil3r.Quad.Quad getQuad(int index) { return a[index]; }
