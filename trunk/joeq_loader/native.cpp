@@ -5,13 +5,13 @@
 
 #define ARRAY_LENGTH_OFFSET -12
 
-extern "C" void __stdcall debugwmsg(const wchar_t* s)
+extern "C" void __stdcall debugwmsg(const unsigned short* s, int length)
 {
-	int* length_loc = (int*)((int)s + ARRAY_LENGTH_OFFSET);
-	int length = *length_loc;
+        // TODO: actually write wide characters
 	while (--length >= 0) {
-		putwchar(*s);
-		++s;
+	  unsigned short c = *s;
+	  putchar((char)c);
+	  ++s;
 	}
 	putchar('\n');
 	fflush(stdout);
