@@ -3,7 +3,9 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Class;
 
-/*
+/**
+ * Visitor interface for jq_Type and its various subclasses.
+ * 
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
@@ -14,6 +16,12 @@ public interface jq_TypeVisitor {
     void visitPrimitive(jq_Primitive m);
     void visitType(jq_Type m);
     
+    /**
+     * Empty jq_TypeVisitor for convenient subclassing.
+     * 
+     * @author jwhaley
+     * @version $Id$
+     */
     class EmptyVisitor implements jq_TypeVisitor {
         public void visitClass(jq_Class m) {}
         public void visitArray(jq_Array m) {}
