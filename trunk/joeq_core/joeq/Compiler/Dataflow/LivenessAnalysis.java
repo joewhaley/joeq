@@ -159,8 +159,10 @@ public class LivenessAnalysis extends Problem {
         Solver s1 = new IterativeSolver();
         p.mySolver = s1;
         solve(cfg, s1, p);
-        if (TRACE) System.out.println("Finished solving Liveness.");
-        Solver.dumpResults(cfg, s1);
+        if (TRACE) {
+            System.out.println("Finished solving Liveness.");
+            //Solver.dumpResults(cfg, s1);
+        }
         return p;
     }
     
