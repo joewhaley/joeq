@@ -27,8 +27,8 @@ public class TypeAnalysis {
     public static int nMethods;
 
     public static void dump() throws java.io.IOException {
-        out.println("Total number of methods analyzed: "+nMethods);
-        out.println("Total number of bytes of code analyzed: "+nBytesAnalyzed);
+        out_ta.println("Total number of methods analyzed: "+nMethods);
+        out_ta.println("Total number of bytes of code analyzed: "+nBytesAnalyzed);
         if (MethodCallSequence.modeler != null) MethodCallSequence.modeler.dump();
     }
     
@@ -43,10 +43,10 @@ public class TypeAnalysis {
     public static boolean TRACE_MAIN = true;
     public static boolean TRACE_ITERATION = false;
     public static boolean DUMP_SUMMARY = false;
-    public static final java.io.PrintStream out = System.out;
+    public static final java.io.PrintStream out_ta = System.out;
     
     static AnalysisSummary analyze(jq_Method m, Stack callStack, Set do_it_again) {
-        if (TRACE_MAIN) out.println("Analyzing "+m+" depth "+callStack.size());
+        if (TRACE_MAIN) out_ta.println("Analyzing "+m+" depth "+callStack.size());
 	nBytesAnalyzed += m.getBytecode().length;
 	++nMethods;
         callStack.push(m);
@@ -69,7 +69,7 @@ public class TypeAnalysis {
         //  --- iterate in RPO
         boolean change;
         do {
-            if (TRACE_ITERATION) out.println("Computing reverse post order");
+            if (TRACE_ITERATION) out_ta.println("Computing reverse post order");
             ControlFlowGraph.RPOBasicBlockIterator rpo = cfg.reversePostOrderIterator();
             BasicBlock first_bb = rpo.nextBB();
             jq.assert(first_bb == cfg.getEntry());
@@ -79,29 +79,29 @@ public class TypeAnalysis {
                 jq.assert(bb.id != 0);
                 if (bb.id == 1) continue;
                 if (in_states[bb.id] == null) {
-                    if (TRACE_ITERATION) out.println("Can't find in set for "+bb);
+                    if (TRACE_ITERATION) out_ta.println("Can't find in set for "+bb);
                     continue;
                 }
                 tav.currentState = in_states[bb.id].copy_deep();
                 tav.change = false;
-                if (TRACE_ITERATION) out.println("Visiting basic block "+bb+" stack depth "+bb.startingStackDepth+" state=");
+                if (TRACE_ITERATION) out_ta.println("Visiting basic block "+bb+" stack depth "+bb.startingStackDepth+" state=");
                 if (TRACE_ITERATION) tav.currentState.dump();
                 tav.currentStackDepth = bb.startingStackDepth;
 		tav.dontMergeWithSuccessors = false;
                 tav.visitBasicBlock(bb);
-                if (TRACE_ITERATION && tav.change) out.println("Change in sets detected within the basic block!");
+                if (TRACE_ITERATION && tav.change) out_ta.println("Change in sets detected within the basic block!");
                 change |= tav.change;
                 if (tav.dontMergeWithSuccessors) {
-		    if (TRACE_ITERATION) out.println("skipping merge with successors of "+bb);
+		    if (TRACE_ITERATION) out_ta.println("skipping merge with successors of "+bb);
 		} else {
                     for (int i=0; i<bb.getNumberOfSuccessors(); ++i) {
                         BasicBlock bb2 = bb.getSuccessor(i);
                         if (in_states[bb2.id] != null) {
                             if (in_states[bb2.id].union_deep(tav.currentState)) {
-                                if (TRACE_ITERATION) out.println("In set for "+bb2+" changed!");
+                                if (TRACE_ITERATION) out_ta.println("In set for "+bb2+" changed!");
                                 change = true;
                             } else {
-                                if (TRACE_ITERATION) out.println("In set for "+bb2+" did not change");
+                                if (TRACE_ITERATION) out_ta.println("In set for "+bb2+" did not change");
                             }
                             if (bb2.id == 1) {
                                 jq.assert(tav.currentStackDepth == 0);
@@ -111,7 +111,7 @@ public class TypeAnalysis {
                                           "Stack depth mismatch: "+bb2+"="+bb2.startingStackDepth+", "+tav+"="+tav.currentStackDepth);
                             }
                         } else {
-                            if (TRACE_ITERATION) out.println("No in set for "+bb2+" yet");
+                            if (TRACE_ITERATION) out_ta.println("No in set for "+bb2+" yet");
                             in_states[bb2.id] = tav.currentState.copy_deep();
                             change = true;
                             bb2.startingStackDepth = tav.currentStackDepth;
@@ -122,12 +122,12 @@ public class TypeAnalysis {
             }
         } while (change);
         //  --- build summary
-        if (TRACE_ITERATION) out.println("Finished iteration of "+m+", building summary.");
+        if (TRACE_ITERATION) out_ta.println("Finished iteration of "+m+", building summary.");
         AnalysisSummary summary = tav.summary;
         summary.finish(in_states[1], in_states[0]);
         Object o = callStack.pop();
         jq.assert(o == m);
-        if (TRACE_MAIN) out.println("Finished "+m+" depth "+callStack.size());
+        if (TRACE_MAIN) out_ta.println("Finished "+m+" depth "+callStack.size());
         if (DUMP_SUMMARY) summary.dump(false);
         return summary;
     }
@@ -152,7 +152,7 @@ public class TypeAnalysis {
         static SetOfLocations makeParamSet(ParamLocation pl) {
             SetOfLocations t = new SetOfLocations();
             t.sources.add(pl);
-            if (TRACE_SET_CREATION) out.println("Made "+t);
+            if (TRACE_SET_CREATION) out_ta.println("Made "+t);
             return t;
         }
         
@@ -161,14 +161,14 @@ public class TypeAnalysis {
             StaticFieldLocation sfl = new StaticFieldLocation(f, f.getType());
             sfl.methodSequences = new MethodCallSequences(true);
             t.sources.add(sfl);
-            if (TRACE_SET_CREATION) out.println("Made "+t);
+            if (TRACE_SET_CREATION) out_ta.println("Made "+t);
             return t;
         }
         
         static SetOfLocations makeDerefSet(DereferenceLocation d) {
             SetOfLocations t = new SetOfLocations();
             t.sources.add(d);
-            if (TRACE_SET_CREATION) out.println("Made deref set "+t);
+            if (TRACE_SET_CREATION) out_ta.println("Made deref set "+t);
             return t;
         }
         
@@ -177,7 +177,7 @@ public class TypeAnalysis {
             AllocationLocation loc = new AllocationLocation(createdType, m, bcindex);
             loc.methodSequences = new MethodCallSequences(false);
             t.sources.add(loc);
-            if (TRACE_SET_CREATION) out.println("Made "+t);
+            if (TRACE_SET_CREATION) out_ta.println("Made "+t);
             return t;
         }
         
@@ -186,7 +186,7 @@ public class TypeAnalysis {
             LoadConstantLocation loc = new LoadConstantLocation(o, createdType, m, bcindex);
             loc.methodSequences = new MethodCallSequences(true);
             t.sources.add(loc);
-            if (TRACE_SET_CREATION) out.println("Made "+t);
+            if (TRACE_SET_CREATION) out_ta.println("Made "+t);
             return t;
         }
         
@@ -194,19 +194,19 @@ public class TypeAnalysis {
             SetOfLocations t = new SetOfLocations();
             JSRSubroutine loc = new JSRSubroutine(bb);
             t.sources.add(loc);
-            if (TRACE_SET_CREATION) out.println("Made jsr subroutine set "+t);
+            if (TRACE_SET_CREATION) out_ta.println("Made jsr subroutine set "+t);
             return t;
         }
         
         static SetOfLocations makeEmptySet() {
             SetOfLocations t = new SetOfLocations();
-            if (TRACE_SET_CREATION) out.println("Made empty set "+t);
+            if (TRACE_SET_CREATION) out_ta.println("Made empty set "+t);
             return t;
         }
         
         static SetOfLocations makeSeed(jq_Type returnedType) {
             SetOfLocations t = new SetOfLocations();
-            if (TRACE_SET_CREATION) out.println("Made seed "+t);
+            if (TRACE_SET_CREATION) out_ta.println("Made seed "+t);
             return t;
         }
         
@@ -223,11 +223,11 @@ public class TypeAnalysis {
 			if (deref_set == null) continue;
 			if (deref_set.size() == 0) continue;
 			DereferenceLocation deref_loc = (DereferenceLocation)deref_set.iterator().next();
-			if (TRACE_DEREFERENCES) out.println("Reusing deref loc "+deref_loc);
+			if (TRACE_DEREFERENCES) out_ta.println("Reusing deref loc "+deref_loc);
 			return dereference(deref_loc);
 		    }
 		}
-		if (TRACE_DEREFERENCES) out.println("No useful deref loc found, creating one.");
+		if (TRACE_DEREFERENCES) out_ta.println("No useful deref loc found, creating one.");
 	    }
 
 	    DereferenceLocation deref_loc = new DereferenceLocation(deref, m, bcindex, deref.getType());
@@ -250,8 +250,8 @@ public class TypeAnalysis {
             if (from_outside) {
                 result.add(deref_loc);
             }
-            if (TRACE_SET_CREATION) out.println("Made deref return set "+result);
-            if (TRACE_DEREFERENCES) out.println("Dereference: "+this+"."+deref+" == "+result);
+            if (TRACE_SET_CREATION) out_ta.println("Made deref return set "+result);
+            if (TRACE_DEREFERENCES) out_ta.println("Dereference: "+this+"."+deref+" == "+result);
             return result;
         }
         
@@ -277,15 +277,15 @@ public class TypeAnalysis {
                     result.add(deref_copy);
                 }
             }
-            if (TRACE_SET_CREATION) out.println("Made deref return set "+result);
-            if (TRACE_DEREFERENCES) out.println("Dereference: "+this+"."+deref+" == "+result);
+            if (TRACE_SET_CREATION) out_ta.println("Made deref return set "+result);
+            if (TRACE_DEREFERENCES) out_ta.println("Dereference: "+this+"."+deref+" == "+result);
             return result;
         }
         
         void store(Dereference deref, SetOfLocations t) {
             for (Iterator i=sources.iterator(); i.hasNext(); ) {
                 ProgramLocation pl = (ProgramLocation)i.next();
-                if (TRACE_DEREFERENCES) out.println("Store: "+pl+"."+deref+" <- "+t);
+                if (TRACE_DEREFERENCES) out_ta.println("Store: "+pl+"."+deref+" <- "+t);
                 pl.store_weak(deref, t);
             }
         }
@@ -301,21 +301,21 @@ public class TypeAnalysis {
         }
         
         SetOfLocations filterByType(jq_Type t) {
-            if (TRACE_FILTER) out.println("Filtering "+this+" by type "+t);
+            if (TRACE_FILTER) out_ta.println("Filtering "+this+" by type "+t);
             SetOfLocations that = new SetOfLocations();
             for (Iterator i=sources.iterator(); i.hasNext(); ) {
                 ProgramLocation pl = (ProgramLocation)i.next();
                 ProgramLocation pl2 = pl.filterByType(t);
                 if (pl2 != null) that.sources.add(pl2);
             }
-            if (TRACE_SET_CREATION) out.println("Made filtered set "+that);
+            if (TRACE_SET_CREATION) out_ta.println("Made filtered set "+that);
             return that;
         }
         
         SetOfLocations copy_shallow() {
             SetOfLocations s = new SetOfLocations();
             s.sources.addAll(this.sources);
-            if (TRACE_SET_CREATION) out.println("Made shallow-copied set "+s);
+            if (TRACE_SET_CREATION) out_ta.println("Made shallow-copied set "+s);
             return s;
         }
         
@@ -329,7 +329,7 @@ public class TypeAnalysis {
                     ProgramLocation pl = (ProgramLocation)i.next();
                     s.sources.add(pl.copy_deep(old_to_new));
                 }
-                if (TRACE_SET_CREATION) out.println("Made deep-copied set "+s);
+                if (TRACE_SET_CREATION) out_ta.println("Made deep-copied set "+s);
             }
             return s;
         }
@@ -339,7 +339,7 @@ public class TypeAnalysis {
             if (m.isEmpty()) return;
             for (Iterator i=sources.iterator(); i.hasNext(); ) {
                 ProgramLocation pl = (ProgramLocation)i.next();
-                if (TRACE_CALLHISTORY) out.println(pl+" must call "+m);
+                if (TRACE_CALLHISTORY) out_ta.println(pl+" must call "+m);
                 pl.mustCall(m, loc);
             }
         }
@@ -348,7 +348,7 @@ public class TypeAnalysis {
         void mustCall(MethodCall m, String loc) {
             for (Iterator i=sources.iterator(); i.hasNext(); ) {
                 ProgramLocation pl = (ProgramLocation)i.next();
-                if (TRACE_CALLHISTORY) out.println(pl+" must call "+m.getName());
+                if (TRACE_CALLHISTORY) out_ta.println(pl+" must call "+m.getName());
                 pl.mustCall(m, loc);
             }
         }
@@ -358,7 +358,7 @@ public class TypeAnalysis {
             if (m.isEmpty()) return;
             for (Iterator i=sources.iterator(); i.hasNext(); ) {
                 ProgramLocation pl = (ProgramLocation)i.next();
-                if (TRACE_CALLHISTORY) out.println(pl+" may call "+m);
+                if (TRACE_CALLHISTORY) out_ta.println(pl+" may call "+m);
                 pl.mayCall(m, loc);
             }
         }
@@ -367,7 +367,7 @@ public class TypeAnalysis {
         void mayCall(MethodCall m, String loc) {
             for (Iterator i=sources.iterator(); i.hasNext(); ) {
                 ProgramLocation pl = (ProgramLocation)i.next();
-                if (TRACE_CALLHISTORY) out.println(pl+" may call "+m.getName());
+                if (TRACE_CALLHISTORY) out_ta.println(pl+" may call "+m.getName());
                 pl.mayCall(m, loc);
             }
         }
@@ -376,17 +376,17 @@ public class TypeAnalysis {
         boolean union_deep(SetOfLocations that, HashMap old_to_new, Stack stack) {
             if (this == that) return false;
             if (stack.contains(this)) {
-                if (TRACE_UNION) out.println("Cycle in set "+this+"!");
+                if (TRACE_UNION) out_ta.println("Cycle in set "+this+"!");
                 return false;
             }
             stack.push(this);
-            if (TRACE_UNION) out.println("Unioning "+this+" and "+that);
+            if (TRACE_UNION) out_ta.println("Unioning "+this+" and "+that);
             boolean change = false;
             for (Iterator i = that.sources.iterator(); i.hasNext(); ) {
                 ProgramLocation that_pl = (ProgramLocation)i.next();
                 ProgramLocation this_pl = (ProgramLocation)this.sources.get(that_pl);
                 if (this_pl == null) {
-                    if (TRACE_UNION) out.println("New source: "+that_pl);
+                    if (TRACE_UNION) out_ta.println("New source: "+that_pl);
                     this.sources.add(this_pl = that_pl.copy_deep(old_to_new));
                     change = true;
                 } else {
@@ -507,14 +507,14 @@ public class TypeAnalysis {
             if (inside_edges == null) {
                 inside_edges = new HashMap();
                 inside_edges.put(d, result);
-                if (TRACE_ADD_EDGE) out.println("Adding first inside edge of "+this+d+" to "+result);
+                if (TRACE_ADD_EDGE) out_ta.println("Adding first inside edge of "+this+d+" to "+result);
             } else {
                 SetOfLocations s = (SetOfLocations)inside_edges.get(d);
                 if (s != null) {
                     result.addAll(s); // weak update -> include all old edges too.
-                    if (TRACE_ADD_EDGE) out.println("Weak update on "+this+d+" to include "+t+", now set contains "+result);
+                    if (TRACE_ADD_EDGE) out_ta.println("Weak update on "+this+d+" to include "+t+", now set contains "+result);
                 } else {
-                    if (TRACE_ADD_EDGE) out.println("Adding first inside edge on "+d+" to "+this+": "+result);
+                    if (TRACE_ADD_EDGE) out_ta.println("Adding first inside edge on "+d+" to "+this+": "+result);
                 }
                 inside_edges.put(d, result);
             }
@@ -525,11 +525,11 @@ public class TypeAnalysis {
         boolean union_deep(ProgramLocation that, HashMap old_to_new, Stack stack) {
             if (this == that) return false;
             if (stack.contains(this)) {
-                if (TRACE_UNION) out.println("Cycle in location "+this+"!");
+                if (TRACE_UNION) out_ta.println("Cycle in location "+this+"!");
                 return false;
             }
             stack.push(this);
-            if (TRACE_UNION) out.println("Unioning "+this+" and "+that);
+            if (TRACE_UNION) out_ta.println("Unioning "+this+" and "+that);
             boolean result = false;
             if (this.methodSequences.union_deep(that.methodSequences)) result = true;
             if (this.unionInsideEdges_deep(that, old_to_new, stack)) result = true;
@@ -542,7 +542,7 @@ public class TypeAnalysis {
             if (this == that) return false;
             boolean change = false;
             if (that.inside_edges != null) {
-                if (TRACE_UNION) out.println("Unioning inside edges in "+this+" and "+that);
+                if (TRACE_UNION) out_ta.println("Unioning inside edges in "+this+" and "+that);
                 if (this.inside_edges == null) this.inside_edges = new HashMap();
                 for (Iterator i=that.inside_edges.entrySet().iterator(); i.hasNext(); ) {
                     Map.Entry e = (Map.Entry)i.next();
@@ -603,15 +603,15 @@ public class TypeAnalysis {
 	public abstract jq_Type getOriginalType();
         public final Map getOutsideEdges() { return outside_edges; }
         public final void addOutsideEdge(DereferenceLocation d) {
-            if (TRACE_ADD_EDGE) out.println("Adding outside edge: "+this+"="+d.deref+"=>"+d);
+            if (TRACE_ADD_EDGE) out_ta.println("Adding outside edge: "+this+"="+d.deref+"=>"+d);
             if (outside_edges == null) outside_edges = new HashMap();
             SetOfLocations s = (SetOfLocations)outside_edges.get(d.deref);
             if (s == null) {
-                if (TRACE_ADD_EDGE) out.println("First outside edge of deref "+d.deref);
+                if (TRACE_ADD_EDGE) out_ta.println("First outside edge of deref "+d.deref);
                 outside_edges.put(d.deref, SetOfLocations.makeDerefSet(d));
             } else {
                 // not the only outside edge on this field!
-                if (TRACE_ADD_EDGE) out.println("Not the first outside edge of deref "+d.deref+"! Others are "+s);
+                if (TRACE_ADD_EDGE) out_ta.println("Not the first outside edge of deref "+d.deref+"! Others are "+s);
                 s.add(d);
             }
         }
@@ -634,14 +634,14 @@ public class TypeAnalysis {
             if (this == that) return false;
             boolean change = false;
             if (that.outside_edges != null) {
-                if (TRACE_UNION) out.println("Unioning outside edges in "+this+" and "+that);
+                if (TRACE_UNION) out_ta.println("Unioning outside edges in "+this+" and "+that);
                 if (this.outside_edges == null) this.outside_edges = new HashMap();
                 for (Iterator i=that.outside_edges.entrySet().iterator(); i.hasNext(); ) {
                     Map.Entry e = (Map.Entry)i.next();
                     SetOfLocations this_s = (SetOfLocations)this.outside_edges.get(e.getKey());
                     SetOfLocations that_s = (SetOfLocations)e.getValue();
                     if (this_s == null) {
-                        if (TRACE_UNION) out.println(this+" doesn't contain outside edge on "+e.getKey()+", adding");
+                        if (TRACE_UNION) out_ta.println(this+" doesn't contain outside edge on "+e.getKey()+", adding");
                         this_s = that_s.copy_deep(old_to_new);
                         for (Iterator j=this_s.iterator(); j.hasNext(); ) {
                             ((ProgramLocation)j.next()).methodSequences.setExposed();
@@ -649,7 +649,7 @@ public class TypeAnalysis {
                         this.outside_edges.put(e.getKey(), this_s);
                         change = true;
                     } else {
-                        if (TRACE_UNION) out.println(this+" already contains outside edge on "+e.getKey()+", unioning");
+                        if (TRACE_UNION) out_ta.println(this+" already contains outside edge on "+e.getKey()+", unioning");
                         if (this_s.union_deep(that_s, old_to_new, stack)) change = true;
                     }
                 }
@@ -660,7 +660,7 @@ public class TypeAnalysis {
             if (this == that) return false;
             boolean b = super.union_deep(that, old_to_new, stack);
             if (stack.contains(this)) {
-                if (TRACE_UNION) out.println("Cycle in outside location "+this+"!");
+                if (TRACE_UNION) out_ta.println("Cycle in outside location "+this+"!");
                 return false;
             }
             stack.push(this);
@@ -681,7 +681,7 @@ public class TypeAnalysis {
         public ProgramLocation copy_deep(HashMap old_to_new) {
             AllocationLocation that = (AllocationLocation)old_to_new.get(IdentityHashCodeWrapper.create(this));
             if (that == null) {
-                if (TRACE_COPY) out.println("New location to copy deep: "+this);
+                if (TRACE_COPY) out_ta.println("New location to copy deep: "+this);
                 that = new AllocationLocation(this.createdType, this.method, this.bcIndex);
                 that.methodSequences = this.methodSequences.copy_deep();
                 old_to_new.put(IdentityHashCodeWrapper.create(this), that);
@@ -692,7 +692,7 @@ public class TypeAnalysis {
         public ProgramLocation copy_shallow(HashMap old_to_new) {
             AllocationLocation that = (AllocationLocation)old_to_new.get(IdentityHashCodeWrapper.create(this));
             if (that == null) {
-                if (TRACE_COPY) out.println("New location to copy shallow: "+this);
+                if (TRACE_COPY) out_ta.println("New location to copy shallow: "+this);
                 that = new AllocationLocation(this.createdType, this.method, this.bcIndex);
                 //that.methodSequences = this.methodSequences.copy_deep();
                 that.methodSequences = new MethodCallSequences(true);
@@ -706,7 +706,7 @@ public class TypeAnalysis {
             createdType.load(); createdType.verify(); createdType.prepare();
             t.load(); t.verify(); t.prepare();
             if (TypeCheck.isAssignable(createdType, t)) return this;
-            if (TRACE_FILTER) out.println("Filtered out "+this+" because it is not a subtype of "+t);
+            if (TRACE_FILTER) out_ta.println("Filtered out "+this+" because it is not a subtype of "+t);
             return null;
         }
         public boolean equals(AllocationLocation that) {
@@ -728,7 +728,7 @@ public class TypeAnalysis {
         public ProgramLocation copy_deep(HashMap old_to_new) {
             LoadConstantLocation that = (LoadConstantLocation)old_to_new.get(IdentityHashCodeWrapper.create(this));
             if (that == null) {
-                if (TRACE_COPY) out.println("New location to copy deep: "+this);
+                if (TRACE_COPY) out_ta.println("New location to copy deep: "+this);
                 that = new LoadConstantLocation(this.constant, this.type, this.method, this.bcIndex);
                 that.methodSequences = this.methodSequences.copy_deep();
                 // no edges from constant object.
@@ -739,7 +739,7 @@ public class TypeAnalysis {
         public ProgramLocation copy_shallow(HashMap old_to_new) {
             LoadConstantLocation that = (LoadConstantLocation)old_to_new.get(IdentityHashCodeWrapper.create(this));
             if (that == null) {
-                if (TRACE_COPY) out.println("New location to copy shallow: "+this);
+                if (TRACE_COPY) out_ta.println("New location to copy shallow: "+this);
                 that = new LoadConstantLocation(this.constant, this.type, this.method, this.bcIndex);
                 //that.methodSequences = this.methodSequences.copy_deep();
                 that.methodSequences = new MethodCallSequences(true);
@@ -753,7 +753,7 @@ public class TypeAnalysis {
             type.load(); type.verify(); type.prepare();
             t.load(); t.verify(); t.prepare();
             if (TypeCheck.isAssignable(type, t)) return this;
-            if (TRACE_FILTER) out.println("Filtered out "+this+" because it is not a subtype of "+t);
+            if (TRACE_FILTER) out_ta.println("Filtered out "+this+" because it is not a subtype of "+t);
             return null;
         }
         public boolean equals(LoadConstantLocation that) {
@@ -775,7 +775,7 @@ public class TypeAnalysis {
         public ProgramLocation copy_deep(HashMap old_to_new) {
             ParamLocation that = (ParamLocation)old_to_new.get(IdentityHashCodeWrapper.create(this));
             if (that == null) {
-                if (TRACE_COPY) out.println("New location to copy deep: "+this);
+                if (TRACE_COPY) out_ta.println("New location to copy deep: "+this);
                 that = new ParamLocation(this.method, this.paramNum, this.declaredType);
                 that.methodSequences = this.methodSequences.copy_deep();
                 old_to_new.put(IdentityHashCodeWrapper.create(this), that);
@@ -787,7 +787,7 @@ public class TypeAnalysis {
         public ProgramLocation copy_shallow(HashMap old_to_new) {
             ParamLocation that = (ParamLocation)old_to_new.get(IdentityHashCodeWrapper.create(this));
             if (that == null) {
-                if (TRACE_COPY) out.println("New location to copy shallow: "+this);
+                if (TRACE_COPY) out_ta.println("New location to copy shallow: "+this);
                 that = new ParamLocation(this.method, this.paramNum, this.declaredType);
                 //that.methodSequences = this.methodSequences.copy_deep();
                 that.methodSequences = new MethodCallSequences(true);
@@ -803,7 +803,7 @@ public class TypeAnalysis {
             if (TypeCheck.isAssignable(declaredType, t)) return this;
             ParamLocation that = new ParamLocation(this.method, this.paramNum, t);
             that.methodSequences = this.methodSequences.copy_deep();
-            if (TRACE_FILTER) out.println("Created subtype of parameter with type "+t+": "+that);
+            if (TRACE_FILTER) out_ta.println("Created subtype of parameter with type "+t+": "+that);
             return that;
         }
         public boolean equals(ParamLocation that) {
@@ -826,7 +826,7 @@ public class TypeAnalysis {
         public ProgramLocation copy_deep(HashMap old_to_new) {
             StaticFieldLocation that = (StaticFieldLocation)old_to_new.get(IdentityHashCodeWrapper.create(this));
             if (that == null) {
-                if (TRACE_COPY) out.println("New location to copy deep: "+this);
+                if (TRACE_COPY) out_ta.println("New location to copy deep: "+this);
                 that = new StaticFieldLocation(this.field, this.type);
                 that.methodSequences = this.methodSequences.copy_deep();
                 old_to_new.put(IdentityHashCodeWrapper.create(this), that);
@@ -838,7 +838,7 @@ public class TypeAnalysis {
         public ProgramLocation copy_shallow(HashMap old_to_new) {
             StaticFieldLocation that = (StaticFieldLocation)old_to_new.get(IdentityHashCodeWrapper.create(this));
             if (that == null) {
-                if (TRACE_COPY) out.println("New location to copy shallow: "+this);
+                if (TRACE_COPY) out_ta.println("New location to copy shallow: "+this);
                 that = new StaticFieldLocation(this.field, this.type);
                 //that.methodSequences = this.methodSequences.copy_deep();
                 that.methodSequences = new MethodCallSequences(true);
@@ -854,7 +854,7 @@ public class TypeAnalysis {
             if (TypeCheck.isAssignable(type, t)) return this;
             StaticFieldLocation that = new StaticFieldLocation(this.field, t);
             that.methodSequences = this.methodSequences.copy_deep();
-            if (TRACE_FILTER) out.println("Created subtype of static field with type "+t+": "+that);
+            if (TRACE_FILTER) out_ta.println("Created subtype of static field with type "+t+": "+that);
             return that;
         }
         public boolean equals(StaticFieldLocation that) {
@@ -877,7 +877,7 @@ public class TypeAnalysis {
         public ProgramLocation copy_deep(HashMap old_to_new) {
             DereferenceLocation that = (DereferenceLocation)old_to_new.get(IdentityHashCodeWrapper.create(this));
             if (that == null) {
-                if (TRACE_COPY) out.println("New location to copy deep: "+this);
+                if (TRACE_COPY) out_ta.println("New location to copy deep: "+this);
                 that = new DereferenceLocation(this.deref, this.method, this.bcIndex, this.type);
                 that.methodSequences = this.methodSequences.copy_deep();
                 old_to_new.put(IdentityHashCodeWrapper.create(this), that);
@@ -889,7 +889,7 @@ public class TypeAnalysis {
         public ProgramLocation copy_shallow(HashMap old_to_new) {
             DereferenceLocation that = (DereferenceLocation)old_to_new.get(IdentityHashCodeWrapper.create(this));
             if (that == null) {
-                if (TRACE_COPY) out.println("New location to copy shallow: "+this);
+                if (TRACE_COPY) out_ta.println("New location to copy shallow: "+this);
                 that = new DereferenceLocation(this.deref, this.method, this.bcIndex, this.type);
                 //that.methodSequences = this.methodSequences.copy_deep();
                 that.methodSequences = new MethodCallSequences(true);
@@ -905,7 +905,7 @@ public class TypeAnalysis {
             if (TypeCheck.isAssignable(type, t)) return this;
             DereferenceLocation that = new DereferenceLocation(this.deref, this.method, this.bcIndex, t);
             that.methodSequences = this.methodSequences.copy_deep();
-            if (TRACE_FILTER) out.println("Created subtype of deref with type "+t+": "+that);
+            if (TRACE_FILTER) out_ta.println("Created subtype of deref with type "+t+": "+that);
             return that;
         }
         public boolean equals(DereferenceLocation that) {
@@ -958,7 +958,7 @@ public class TypeAnalysis {
         public ProgramLocation copy_deep(HashMap old_to_new) {
             CaughtLocation that = (CaughtLocation)old_to_new.get(IdentityHashCodeWrapper.create(this));
             if (that == null) {
-                if (TRACE_COPY) out.println("New location to copy deep: "+this);
+                if (TRACE_COPY) out_ta.println("New location to copy deep: "+this);
                 that = new CaughtLocation(this.method, this.bcIndex, this.type);
                 that.methodSequences = this.methodSequences.copy_deep();
                 old_to_new.put(IdentityHashCodeWrapper.create(this), that);
@@ -970,7 +970,7 @@ public class TypeAnalysis {
         public ProgramLocation copy_shallow(HashMap old_to_new) {
             CaughtLocation that = (CaughtLocation)old_to_new.get(IdentityHashCodeWrapper.create(this));
             if (that == null) {
-                if (TRACE_COPY) out.println("New location to copy shallow: "+this);
+                if (TRACE_COPY) out_ta.println("New location to copy shallow: "+this);
                 that = new CaughtLocation(this.method, this.bcIndex, this.type);
                 //that.methodSequences = this.methodSequences.copy_deep();
                 that.methodSequences = new MethodCallSequences(true);
@@ -986,7 +986,7 @@ public class TypeAnalysis {
             if (TypeCheck.isAssignable(type, t)) return this;
             CaughtLocation that = new CaughtLocation(this.method, this.bcIndex, t);
             that.methodSequences = this.methodSequences.copy_deep();
-            if (TRACE_FILTER) out.println("Created subtype of caught exception with type "+t+": "+that);
+            if (TRACE_FILTER) out_ta.println("Created subtype of caught exception with type "+t+": "+that);
             return that;
         }
         public boolean equals(CaughtLocation that) {
@@ -1141,7 +1141,7 @@ public class TypeAnalysis {
                 if (this_mcs == null) {
                     modelsByType.put(k, this_mcs = new MethodCallSequence(exposed));
                 }
-                //out.println("Adding "+k+" set "+that_mcs.firstCalled+" to may call for "+this_mcs);
+                //out_ta.println("Adding "+k+" set "+that_mcs.firstCalled+" to may call for "+this_mcs);
                 this_mcs.addToMayCall(loc, k, that_mcs.firstCalled);
             }
         }
@@ -1155,9 +1155,9 @@ public class TypeAnalysis {
                 if (this_mcs == null) {
                     modelsByType.put(k, this_mcs = new MethodCallSequence(exposed));
                 }
-                //out.println("Updating "+k+" set "+this_mcs+" with must call from "+that_mcs);
+                //out_ta.println("Updating "+k+" set "+this_mcs+" with must call from "+that_mcs);
                 this_mcs.updateMustCall(that_mcs);
-                //out.println("Result: "+this_mcs);
+                //out_ta.println("Result: "+this_mcs);
             }
         }
         
@@ -1374,7 +1374,7 @@ public class TypeAnalysis {
                     String before = methodToString(before_jq_m);
                     if (TRACE_BUILDMODEL) {
                         if (!g.hasEdge(before, after)) {
-                            out.println("NEW EDGE: model "+klassName+" "+before+"->"+after+", location: "+loc);
+                            out_ta.println("NEW EDGE: model "+klassName+" "+before+"->"+after+", location: "+loc);
                         }
                     }
                     g.bumpEdge(before, after);
@@ -1452,10 +1452,10 @@ public class TypeAnalysis {
                         } else {
                             ++nUnknownToKnown;
                             if (!already_reported) {
-                                out.println("New UNKNOWN->KNOWN: at "+loc+" on class: "+klass+" ==> "+before+"->"+after);
+                                out_ta.println("New UNKNOWN->KNOWN: at "+loc+" on class: "+klass+" ==> "+before+"->"+after);
                                 ++nUniqueUnknownToKnown;
                             } else if (DUMP_ALL) {
-                                out.println("UNKNOWN->KNOWN: at "+loc+" on class: "+klass+" ==> "+before+"->"+after);
+                                out_ta.println("UNKNOWN->KNOWN: at "+loc+" on class: "+klass+" ==> "+before+"->"+after);
                             }
                         }
                         continue;
@@ -1463,20 +1463,20 @@ public class TypeAnalysis {
                     if (!isTargetKnown) {
                         ++nKnownToUnknown;
                         if (!already_reported) {
-                            out.println("New KNOWN->UNKNOWN: at "+loc+" on class: "+klass+" ==> "+before+"->"+after);
+                            out_ta.println("New KNOWN->UNKNOWN: at "+loc+" on class: "+klass+" ==> "+before+"->"+after);
                             ++nUniqueKnownToUnknown;
                         } else if (DUMP_ALL) {
-                            out.println("KNOWN->UNKNOWN: at "+loc+" on class: "+klass+" ==> "+before+"->"+after);
+                            out_ta.println("KNOWN->UNKNOWN: at "+loc+" on class: "+klass+" ==> "+before+"->"+after);
                         }
                         continue;
                     }
                     if (!model.legalCall(klassName, before, after)) {
                         ++nKnownToKnown_illegal;
                         if (!already_reported) {
-                            out.println("New ILLEGAL TRANSITION: at "+loc+" on class: "+klass+" ==> "+before+"->"+after);
+                            out_ta.println("New ILLEGAL TRANSITION: at "+loc+" on class: "+klass+" ==> "+before+"->"+after);
                             ++nUniqueKnownToKnown_illegal;
                         } else if (DUMP_ALL) {
-                            out.println("ILLEGAL TRANSITION: at "+loc+" on class: "+klass+" ==> "+before+"->"+after);
+                            out_ta.println("ILLEGAL TRANSITION: at "+loc+" on class: "+klass+" ==> "+before+"->"+after);
                         }
                     } else {
                         ++nKnownToKnown_legal;
@@ -1502,11 +1502,11 @@ public class TypeAnalysis {
             public static int nUniqueKnownToKnown_illegal;
             
             public void dump() {
-                out.println("unknown->unknown transitions:\t"+nUnknownToUnknown+" ("+nUniqueUnknownToUnknown+" unique)");
-                out.println("unknown->known transitions:\t"+nUnknownToKnown+" ("+nUniqueUnknownToKnown+" unique)");
-                out.println("known->unknown transitions:\t"+nKnownToUnknown+" ("+nUniqueKnownToUnknown+" unique)");
-                out.println("known->known legal transitions: "+nKnownToKnown_legal+" ("+nUniqueKnownToKnown_legal+" unique)");
-                out.println("known->known illegal transitions: "+nKnownToKnown_illegal+" ("+nUniqueKnownToKnown_illegal+" unique)");
+                out_ta.println("unknown->unknown transitions:\t"+nUnknownToUnknown+" ("+nUniqueUnknownToUnknown+" unique)");
+                out_ta.println("unknown->known transitions:\t"+nUnknownToKnown+" ("+nUniqueUnknownToKnown+" unique)");
+                out_ta.println("known->unknown transitions:\t"+nKnownToUnknown+" ("+nUniqueKnownToUnknown+" unique)");
+                out_ta.println("known->known legal transitions: "+nKnownToKnown_legal+" ("+nUniqueKnownToKnown_legal+" unique)");
+                out_ta.println("known->known illegal transitions: "+nKnownToKnown_illegal+" ("+nUniqueKnownToKnown_illegal+" unique)");
             }
 
         }
@@ -1583,30 +1583,30 @@ public class TypeAnalysis {
         }
         
         public SetOfLocations get(int i) {
-            if (TRACE_VARIABLES) out.println("getting "+i+": "+variables[i]);
+            if (TRACE_VARIABLES) out_ta.println("getting "+i+": "+variables[i]);
             return variables[i];
         }
         
         public void put(int i, SetOfLocations t) {
-            if (TRACE_VARIABLES) out.println("putting "+i+": "+t+" old value: "+variables[i]);
+            if (TRACE_VARIABLES) out_ta.println("putting "+i+": "+t+" old value: "+variables[i]);
             if (t != null) t = t.copy_shallow();
             variables[i] = t;
         }
         
         public void move(int to, int from) {
-            if (TRACE_VARIABLES) out.println("moving "+from+" to "+to+": "+variables[from]+" to "+variables[to]);
+            if (TRACE_VARIABLES) out_ta.println("moving "+from+" to "+to+": "+variables[from]+" to "+variables[to]);
             // can be null when storing jsr retaddr
             //variables[to] = (variables[from]==null)?null:variables[from].copy_shallow();
             variables[to] = variables[from].copy_shallow();
         }
         
         public SetOfLocations getStaticField(jq_StaticField f) {
-            if (TRACE_STATIC) out.println("getting static field "+f+": "+static_variables.get(f));
+            if (TRACE_STATIC) out_ta.println("getting static field "+f+": "+static_variables.get(f));
             return (SetOfLocations)static_variables.get(f);
         }
         
         public void putStaticField(jq_StaticField f, SetOfLocations t) {
-            if (TRACE_STATIC) out.println("putting static field "+f+" with "+t+" old value "+static_variables.get(f));
+            if (TRACE_STATIC) out_ta.println("putting static field "+f+" with "+t+" old value "+static_variables.get(f));
             static_variables.put(f, t);
         }
         
@@ -1707,10 +1707,10 @@ public class TypeAnalysis {
             HashSet visited = new HashSet();
             for (int i=0; i<parameters.length; ++i) {
                 if (parameters[i] != null) {
-                    out.print(jq.left("P"+i+":", 4));
+                    out_ta.print(jq.left("P"+i+":", 4));
                     String s = parameters[i].toString();
-                    out.print(s);
-                    AnalysisSummary.dump_recurse(out, visited, 4+s.length(), parameters[i]);
+                    out_ta.print(s);
+                    AnalysisSummary.dump_recurse(out_ta, visited, 4+s.length(), parameters[i]);
                 }
             }
             if (static_variables != null) {
@@ -1720,16 +1720,16 @@ public class TypeAnalysis {
                     jq_StaticField d = (jq_StaticField)e.getKey();
                     SetOfLocations t = (SetOfLocations)e.getValue();
                     String s = d.getName().toString()+":";
-                    out.print(s);
-                    AnalysisSummary.dump_recurse(out, visited, s.length(), t);
+                    out_ta.print(s);
+                    AnalysisSummary.dump_recurse(out_ta, visited, s.length(), t);
                 }
             }
-            out.println();
+            out_ta.println();
             if (variables != null) {
-                out.println("Variables ("+variables.length+" total)");
+                out_ta.println("Variables ("+variables.length+" total)");
                 for (int i=0; i<variables.length; ++i) {
                     if (variables[i] != null) {
-                        out.println("  "+i+": "+variables[i]);
+                        out_ta.println("  "+i+": "+variables[i]);
                     }
                 }
             }
@@ -1797,11 +1797,11 @@ public class TypeAnalysis {
             
             if (TRIM_SUMMARIES) {
                 if (TRACE_TRIM) {
-                    out.println("Summary before trimming:");
+                    out_ta.println("Summary before trimming:");
                     dump(false);
                 }
                 if (this.params != null) {
-                    if (TRACE_TRIM) out.println("Trimming normal exit...");
+                    if (TRACE_TRIM) out_ta.println("Trimming normal exit...");
                     HashSet necessary = new HashSet();
                     HashSet visited = new HashSet();
                     if (returned != null)
@@ -1827,7 +1827,7 @@ public class TypeAnalysis {
                             necessaryHelper(necessary, pl, visited);
                         }
                     }
-                    if (TRACE_TRIM) out.println("Necessary set: "+necessary);
+                    if (TRACE_TRIM) out_ta.println("Necessary set: "+necessary);
                     visited = new HashSet();
                     for (int i=0; i<this.params.length; ++i) {
                         if (this.params[i] == null) continue;
@@ -1842,18 +1842,18 @@ public class TypeAnalysis {
                             OutsideProgramLocation opl = (OutsideProgramLocation)pl;
                             visited.add(opl);
                             if (trimHelper(opl, necessary, visited)) {
-                                if (TRACE_TRIM) out.println("static field node "+opl+" is useless, removing it");
+                                if (TRACE_TRIM) out_ta.println("static field node "+opl+" is useless, removing it");
                                 j.remove();
                             }
                         }
                         if (s.size() == 0) {
-                            if (TRACE_TRIM) out.println("all edges from static field "+e.getKey()+" have been removed");
+                            if (TRACE_TRIM) out_ta.println("all edges from static field "+e.getKey()+" have been removed");
                             i.remove();
                         }
                     }
                 }
                 if (this.params_ex != null) {
-                    if (TRACE_TRIM) out.println("Trimming exceptional exit...");
+                    if (TRACE_TRIM) out_ta.println("Trimming exceptional exit...");
                     HashSet necessary = new HashSet();
                     HashSet visited = new HashSet();
                     if (thrown != null)
@@ -1879,7 +1879,7 @@ public class TypeAnalysis {
                             necessaryHelper(necessary, pl, visited);
                         }
                     }
-                    if (TRACE_TRIM) out.println("Necessary set: "+necessary);
+                    if (TRACE_TRIM) out_ta.println("Necessary set: "+necessary);
                     visited = new HashSet();
                     for (int i=0; i<this.params_ex.length; ++i) {
                         if (this.params_ex[i] == null) continue;
@@ -1894,12 +1894,12 @@ public class TypeAnalysis {
                             OutsideProgramLocation opl = (OutsideProgramLocation)pl;
                             visited.add(opl);
                             if (trimHelper(opl, necessary, visited)) {
-                                if (TRACE_TRIM) out.println("static field node "+opl+" is useless, removing it");
+                                if (TRACE_TRIM) out_ta.println("static field node "+opl+" is useless, removing it");
                                 j.remove();
                             }
                         }
                         if (s.size() == 0) {
-                            if (TRACE_TRIM) out.println("all edges from static field "+e.getKey()+" have been removed");
+                            if (TRACE_TRIM) out_ta.println("all edges from static field "+e.getKey()+" have been removed");
                             i.remove();
                         }
                     }
@@ -1948,7 +1948,7 @@ public class TypeAnalysis {
                         if (!visited.contains(p)) {
                             visited.add(p);
                             if (trimHelper(p, necessary, visited)) {
-                                if (TRACE_TRIM) out.println("node "+p+" is useless, removing it");
+                                if (TRACE_TRIM) out_ta.println("node "+p+" is useless, removing it");
                                 j.remove();
                             } else {
                                 new_mcs.union_deep(p.methodSequences);
@@ -1956,14 +1956,14 @@ public class TypeAnalysis {
                         }
                     }
                     if (s.size() == 0) {
-                        if (TRACE_TRIM) out.println("all outside edges of "+pl+" field "+e.getKey()+" have been removed");
+                        if (TRACE_TRIM) out_ta.println("all outside edges of "+pl+" field "+e.getKey()+" have been removed");
                         i.remove();
                     } else if (s.size() > 1) {
                         Dereference deref = (Dereference)e.getKey();
                         DereferenceLocation dl = new DereferenceLocation(deref, method, -1, deref.getType());
                         dl.methodSequences = new_mcs;
                         e.setValue(SetOfLocations.makeDerefSet(dl));
-                        if (TRACE_TRIM) out.println("made summary deref "+dl);
+                        if (TRACE_TRIM) out_ta.println("made summary deref "+dl);
                     }
                 }
             }
@@ -2165,64 +2165,64 @@ public class TypeAnalysis {
                     Dereference d = (Dereference)e.getKey();
                     SetOfLocations t2 = (SetOfLocations)e.getValue();
                     String s = "-" + d.toString() + "->";
-                    out.print(s);
+                    out_ta.print(s);
                     dump_recurse(out, visited, indent+s.length(), t2);
                     if (i.hasNext()) 
-                        out.print(jq.left("", indent));
+                        out_ta.print(jq.left("", indent));
                 }
             }
             if (pl instanceof OutsideProgramLocation) {
                 if (((OutsideProgramLocation)pl).getOutsideEdges() != null) {
                     Iterator i = ((OutsideProgramLocation)pl).getOutsideEdges().entrySet().iterator();
                     if (b && i.hasNext())
-                        out.print(jq.left("", indent));
+                        out_ta.print(jq.left("", indent));
                     b |= i.hasNext();
                     while (i.hasNext()) {
                         Map.Entry e = (Map.Entry)i.next();
                         Dereference d = (Dereference)e.getKey();
                         SetOfLocations t2 = (SetOfLocations)e.getValue();
                         String s = "=" + d.toString() + "=>";
-                        out.print(s);
+                        out_ta.print(s);
                         dump_recurse(out, visited, indent+s.length(), t2);
                         if (i.hasNext()) 
-                            out.print(jq.left("", indent));
+                            out_ta.print(jq.left("", indent));
                     }
                 }
             }
-            if (!b) out.println();
+            if (!b) out_ta.println();
         }
         
         // Before: Already indented.
         // After:  Ends in newline.
         static void dump_recurse(java.io.PrintStream out, Set visited, int indent, SetOfLocations t) {
             if (visited.contains(t)) {
-                out.println("<backedge to "+Integer.toHexString(t.hashCode())+">");
+                out_ta.println("<backedge to "+Integer.toHexString(t.hashCode())+">");
                 return;
             }
             visited.add(t);
-            //out.println(t.toString());
-            out.println(Integer.toHexString(t.hashCode()));
+            //out_ta.println(t.toString());
+            out_ta.println(Integer.toHexString(t.hashCode()));
             Iterator j = t.sources.iterator();
             while (j.hasNext()) {
                 ProgramLocation pl = (ProgramLocation)j.next();
                 String s = pl.toString();
-                out.print(jq.left("", indent));
-                out.print(s);
+                out_ta.print(jq.left("", indent));
+                out_ta.print(s);
                 dump_recurse(out, visited, indent+s.length(), pl);
             }
         }
         
         void dump(boolean ex) {
             java.io.PrintStream out = System.out;
-            out.println((ex?"Exception":"Regular")+" Summary for method "+method+":");
+            out_ta.println((ex?"Exception":"Regular")+" Summary for method "+method+":");
             HashSet visited = new HashSet();
 	    ParamLocation[] _params = (ex?params_ex:params);
             if (_params != null) {
                 for (int i=0; i<_params.length; ++i) {
                     if (_params[i] != null) {
-                        out.print(jq.left("P"+i+":", 4));
+                        out_ta.print(jq.left("P"+i+":", 4));
                         String s = _params[i].toString();
-                        out.print(s);
+                        out_ta.print(s);
                         dump_recurse(out, visited, 4+s.length(), _params[i]);
                     }
                 }
@@ -2235,22 +2235,22 @@ public class TypeAnalysis {
                     jq_StaticField d = (jq_StaticField)e.getKey();
                     SetOfLocations t = (SetOfLocations)e.getValue();
                     String s = d.getName().toString()+":";
-                    out.print(s);
+                    out_ta.print(s);
                     dump_recurse(out, visited, s.length(), t);
                 }
             }
-            out.println();
+            out_ta.println();
             if (returned != null) {
                 String s = "Returned: ";
-                out.print(s);
+                out_ta.print(s);
                 dump_recurse(out, visited, s.length(), returned);
             }
             if (thrown != null) {
                 String s = "Thrown: ";
-                out.print(s);
+                out_ta.print(s);
                 dump_recurse(out, visited, s.length(), thrown);
             }
-            out.println();
+            out_ta.println();
         }
         
     }
@@ -3057,7 +3057,7 @@ public class TypeAnalysis {
         public ProgramLocation copy_deep(HashMap old_to_new) {
             JSRSubroutine that = (JSRSubroutine)old_to_new.get(IdentityHashCodeWrapper.create(this));
             if (that == null) {
-                if (TRACE_COPY) out.println("New location to copy deep: "+this);
+                if (TRACE_COPY) out_ta.println("New location to copy deep: "+this);
                 that = new JSRSubroutine(this.jsub_bb);
                 old_to_new.put(IdentityHashCodeWrapper.create(this), that);
             }
@@ -3066,7 +3066,7 @@ public class TypeAnalysis {
         public ProgramLocation copy_shallow(HashMap old_to_new) {
             JSRSubroutine that = (JSRSubroutine)old_to_new.get(IdentityHashCodeWrapper.create(this));
             if (that == null) {
-                if (TRACE_COPY) out.println("New location to copy shallow: "+this);
+                if (TRACE_COPY) out_ta.println("New location to copy shallow: "+this);
                 that = new JSRSubroutine(this.jsub_bb);
                 old_to_new.put(IdentityHashCodeWrapper.create(this), that);
             }
