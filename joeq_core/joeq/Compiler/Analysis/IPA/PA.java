@@ -1039,7 +1039,7 @@ public class PA {
         if (ADD_SUPERTYPES) {
             for (int T_i = 0; T_i < Tmap.size(); ++T_i) {
                 jq_Reference t1 = (jq_Reference) Tmap.get(T_i);
-                if (t1 == null) continue;
+                if (t1 == null || t1 instanceof jq_NullType) continue;
                 t1.prepare();
                 jq_Reference t2 = t1.getDirectPrimarySupertype();
                 if (t2 != null) {
@@ -2866,7 +2866,7 @@ public class PA {
         jq_Class jlr = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/Runnable;");
         jlr.prepare();
         Set fields = new HashSet();
-        Set classes = new HashSet();
+        IndexMap classes = new IndexMap("classes");
         int vars = 0, heaps = 0, bcodes = 0, methods = 0, calls = 0;
         int threads = 0;
         for (Iterator i = cg.getAllMethods().iterator(); i.hasNext(); ) {
