@@ -6,19 +6,21 @@ package joeq.Util.InferenceEngine;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import java.io.IOException;
 
 import joeq.Util.Assert;
 import joeq.Util.PermutationGenerator;
 import joeq.Util.Collections.AppendIterator;
+import joeq.Util.Collections.LinearSet;
 
 import org.sf.javabdd.BDD;
 import org.sf.javabdd.BDDDomain;
@@ -566,6 +568,37 @@ public class BDDInferenceRule extends InferenceRule {
         }
     }
     
+    static class PermData implements Comparable {
+        List order;
+        String varOrder;
+        long time;
+        boolean first;
+        
+        PermData(List order, String varOrder, long time) {
+            this.order = order;
+            this.varOrder = varOrder;
+            this.time = time;
+        }
+        
+        public int compareTo(PermData that) {
+            if (this.time < that.time) return -1;
+            if (this.time > that.time) return 1;
+            if (this.first) return -1;
+            if (that.first) return 1;
+            return this.varOrder.compareTo(that.varOrder);
+        }
+        
+        /* (non-Javadoc)
+         * @see java.lang.Comparable#compareTo(java.lang.Object)
+         */
+        public int compareTo(Object arg0) {
+            return this.compareTo((PermData) arg0);
+        }
+        
+    }
+    
+    static int MAX_ORDERS = 25;
+    
     String findBestDomainOrder(BDDFactory bdd,
                                List domains,
                                String origVarOrder,
@@ -577,7 +610,7 @@ public class BDDInferenceRule extends InferenceRule {
             addDomainsOf(b1, domainSet1);
             addDomainsOf(b2, domainSet2);
             addDomainsOf(b3, domainSet3);
-            Set domainSet = new HashSet();
+            Set domainSet = new LinearSet();
             for (Iterator i = domainSet1.iterator(); i.hasNext(); ) {
                 Object o = i.next();
                 if (domainSet2.contains(o) || !domainSet3.contains(o))
@@ -597,10 +630,10 @@ public class BDDInferenceRule extends InferenceRule {
             String name = "$"+i+"$";
             origVarOrder2 = origVarOrder2.substring(0, index) + name + origVarOrder2.substring(index+d1.getName().length());
         }
-        List listOfDoms = new LinkedList();
-        List listOfOrders = new LinkedList();
+        SortedSet ranking = new TreeSet();
         PermutationGenerator g = new PermutationGenerator(domains.size());
         String varOrder2 = origVarOrder;
+        boolean first = true;
         while (g.hasMore()) {
             String varOrder = origVarOrder2;
             int[] p = g.getNext();
@@ -613,16 +646,30 @@ public class BDDInferenceRule extends InferenceRule {
             List order = getDomainOrder(varOrder, domains, p);
             long t = solver.getOrderConstraint(order);
             if (t == Long.MAX_VALUE) continue;
-            listOfDoms.add(order);
-            listOfOrders.add(varOrder);
+            PermData pd = new PermData(order, varOrder, t);
+            pd.first = first;
+            first = false;
+            ranking.add(pd);
             varOrder2 = varOrder;
         }
-        if (listOfDoms.size() <= 1) {
-            if (listOfDoms.size() == 0) System.out.println("Warning: no valid permutations for "+domains);
+        if (ranking.size() <= 1) {
+            if (ranking.size() == 0) System.out.println("Warning: no valid permutations for "+domains);
             return varOrder2;
         }
+        if (ranking.size() > MAX_ORDERS) {
+            System.out.println("Too many orders!  Skipping all but the best "+MAX_ORDERS);
+            Iterator i = ranking.iterator();
+            for (int j = 0; j < MAX_ORDERS; ++j) {
+                i.next();
+            }
+            while (i.hasNext()) {
+                PermData pd = (PermData) i.next();
+                if (pd.time < 50) continue;
+                solver.registerOrderConstraint(pd.order, Long.MAX_VALUE);
+            }
+        }
         FindBestOrder fbo = null;
-        System.out.println("Trying "+listOfDoms.size()+" permutations of "+domains);
+        System.out.println("Trying "+ranking.size()+" permutations of "+domains);
         if (true) {
             try {
                 fbo = new FindBestOrder(b1, b2, b3, BDDFactory.and,
@@ -634,11 +681,11 @@ public class BDDInferenceRule extends InferenceRule {
         String bestVarOrder = origVarOrder;
         List bestOrder = null;
         long bestTime = Long.MAX_VALUE;
-        Iterator i = listOfDoms.iterator();
-        Iterator j = listOfOrders.iterator();
+        Iterator i = ranking.iterator();
         while (i.hasNext()) {
-            List order = (List) i.next();
-            String varOrder = (String) j.next();
+            PermData pd = (PermData) i.next();
+            List order = pd.order;
+            String varOrder = pd.varOrder;
             long time;
             if (fbo != null) {
                 System.out.println("Trying "+order);
