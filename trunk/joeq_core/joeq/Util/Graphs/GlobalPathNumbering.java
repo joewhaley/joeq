@@ -69,6 +69,7 @@ public class GlobalPathNumbering extends PathNumbering {
                 if (!selector.isImportant(p, o, val3)) {
                     Range range = new Range(val, val);
                     edgeNumbering.put(edge, range);
+                    val3 = val;
                     //System.out.println("Putting Edge ("+edge+") = "+range);
                 } else {
                     Range range = new Range(val, val3.subtract(BigInteger.ONE));
