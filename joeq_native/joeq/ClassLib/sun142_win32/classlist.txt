@@ -106,6 +106,7 @@ Ljava/lang/String$CaseInsensitiveComparator;
 Ljava/lang/StringBuffer;
 Ljava/lang/System;
 Ljava/lang/Terminator;
+Ljava/lang/Terminator$1;
 Ljava/lang/Thread;
 Ljava/lang/ThreadLocal;
 Ljava/lang/ThreadLocal$ThreadLocalMap;
