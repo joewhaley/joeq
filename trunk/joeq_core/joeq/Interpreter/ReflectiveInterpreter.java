@@ -374,7 +374,7 @@ public class ReflectiveInterpreter extends Interpreter {
         System.out.println("Return value: "+retval);
     }
     
-    static Object[] parseMethodArgs(int argsSize, jq_Type[] paramTypes, String[] s_args, int j) {
+    public static Object[] parseMethodArgs(int argsSize, jq_Type[] paramTypes, String[] s_args, int j) {
         Object[] args = new Object[argsSize];
         try {
             for (int i=0, m=0; i<paramTypes.length; ++i, ++m) {
