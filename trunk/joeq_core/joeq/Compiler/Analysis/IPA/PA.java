@@ -69,18 +69,19 @@ public class PA {
     boolean TRACE_RELATIONS = false;
     PrintStream out = System.out;
 
-    boolean ADD_CLINIT = true;
-    boolean ADD_THREADS = true;
-    boolean ADD_FINALIZERS = true;
-    boolean FILTER_VP = System.getProperty("pa.novpfilter") == null;
-    boolean FILTER_HP = System.getProperty("pa.nohpfilter") == null;
     boolean INCREMENTAL1 = true; // incremental points-to
     boolean INCREMENTAL2 = true; // incremental parameter binding
     boolean INCREMENTAL3 = true; // incremental invocation binding
-    boolean CONTEXT_SENSITIVE = System.getProperty("pa.cs") != null;
-    boolean DISCOVER_CALL_GRAPH = System.getProperty("pa.discover") != null;
-    boolean DUMP_DOTGRAPH = System.getProperty("pa.dumpdotgraph") != null;
-    boolean FILTER_NULL = System.getProperty("pa.dontfilternull") == null;
+    
+    boolean ADD_CLINIT = !System.getProperty("pa.clinit", "yes").equals("no");
+    boolean ADD_THREADS = !System.getProperty("pa.threads", "yes").equals("no");
+    boolean ADD_FINALIZERS = !System.getProperty("pa.finalizers", "yes").equals("no");
+    boolean FILTER_VP = !System.getProperty("pa.vpfilter", "yes").equals("no");
+    boolean FILTER_HP = !System.getProperty("pa.hpfilter", "no").equals("no");
+    boolean CONTEXT_SENSITIVE = !System.getProperty("pa.cs", "no").equals("no");
+    boolean DISCOVER_CALL_GRAPH = !System.getProperty("pa.discover", "no").equals("no");
+    boolean DUMP_DOTGRAPH = !System.getProperty("pa.dumpdotgraph", "no").equals("no");
+    boolean FILTER_NULL = !System.getProperty("pa.filternull", "yes").equals("no");
     
     int bddnodes = Integer.parseInt(System.getProperty("bddnodes", "2500000"));
     int bddcache = Integer.parseInt(System.getProperty("bddcache", "150000"));
