@@ -1466,15 +1466,13 @@ public class PAResults implements PointerAnalysisResults {
         }
         int x[] = new int[n];
         Arrays.sort(sccs_sizes);
-        System.arraycopy(sccs_sizes, 0, x, 0, sccs_sizes.length);
+        System.arraycopy(sccs_sizes, 0, x, n - sccs_sizes.length, sccs_sizes.length);
         double gini = 0.0;
-        // g=\frac{\sum_{i=1}^n\sum_{j=1}^n |x_i-x_j|}{n^2}
+	// for sorted sets, the gini is g=\sum_{i=1}^n (2*i-n-1)*x_i/n^2
         for (int i = 0; i < n; i++) {
-            for (int j = 0; j < n; j++) {
-	        gini += Math.abs(x[i]-x[j]);
-            }
+	    gini += (2*(i+1)-n-1)*x[i];
         }
-        gini = gini / n / n;
+        gini = gini / n / (n - 1);
 
         System.out.println("Gini-Coefficient is " + gini);
         int PRINTMAX = 10;
