@@ -296,7 +296,7 @@ public class BDDRelation extends Relation {
         return sb.toString();
     }
     
-    public double size() {
+    public double dsize() {
         return relation.satCount(domainSet);
     }
     
@@ -362,5 +362,14 @@ public class BDDRelation extends Relation {
         val.andWith(relation.id());
         final Iterator i = val.iterator(domainSet);
         return new MyTupleIterator(i, domains);
+    }
+    
+    public boolean contains(int k, long j) {
+        final BDDDomain d = (BDDDomain) domains.get(k);
+        BDD b = relation.id();
+        b.restrictWith(d.ithVar(j));
+        boolean result = b.isZero();
+        b.free();
+        return result;
     }
 }

@@ -3,10 +3,14 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Util.InferenceEngine;
 
-import java.util.Iterator;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import java.io.IOException;
+
+import joeq.Util.Collections.MultiMap;
 
 /**
  * Relation
@@ -44,7 +48,10 @@ public abstract class Relation {
     public abstract void saveTuples() throws IOException;
     public abstract void saveNegatedTuples() throws IOException;
     
-    public abstract double size();
+    public int size() {
+        return (int) dsize();
+    }
+    public abstract double dsize();
     
     /**
      * Return an iterator over the tuples of this relation.
@@ -86,5 +93,7 @@ public abstract class Relation {
     public String toString() {
         return name;
     }
+
+    public abstract boolean contains(int k, long v);
     
 }
