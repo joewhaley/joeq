@@ -3,14 +3,14 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Quad;
 
-import java.awt.event.InvocationEvent;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
-
+import java.util.Iterator;
+import java.util.Map;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_Primitive;
@@ -49,7 +49,7 @@ public class MethodInline implements ControlFlowGraphVisitor {
 
     Oracle oracle;
     CallGraph cg;
-    private static MethodOperand fakeMethodOperand;
+    private static Map fakeMethodOperand = new HashMap();
 
     public MethodInline(Oracle o) {
         this.oracle = o;
@@ -245,11 +245,11 @@ public class MethodInline implements ControlFlowGraphVisitor {
             }
             
             if (Invoke.getMethod(callSite).getMethod().needsDynamicLink(caller.getMethod())) {
-              if (TRACE_ORACLE) out.println("Skipping because call site needs dynamic link.");
+              if (TRACE_ORACLE || true) out.println("Skipping because call site needs dynamic link.");
               return null;
             }
             
-            if (TRACE_ORACLE) out.println("Oracle says to inline!");
+            if (TRACE_ORACLE || true) out.println("Oracle says to inline " + target);
             //return new NoCheckInliningDecision(target);
             return new TypeCheckInliningDecision(target);
         }
@@ -447,6 +447,7 @@ outer:
             }
 //            Invoke.setParamList(fakeCallQuad, (ParamListOperand) Invoke.getParamList(q).copy());
             successor_bb.appendQuad(fakeCallQuad);
+            System.out.println("Replaced a call to " + Invoke.getMethod(q) + " with a call to " + fakeOperand.getMethod());
         }
 //        successor_bb.appendQuad(fakeCallQuad);
         
@@ -576,27 +577,63 @@ outer:
      * This method caches the result it returns.
      * */
     private static MethodOperand getFakeMethodOperand(jq_Method originalMethod) {
-        if(fakeMethodOperand == null){
+        if(fakeMethodOperand.get(originalMethod) == null){
             jq_Method newMethod = null;
             jq_Class fakeString = (jq_Class)jq_Type.parseType("MyMockLib.MyString");
             jq_Class fakeStringBuffer = (jq_Class)jq_Type.parseType("MyMockLib.MyStringBuffer");
             fakeString.prepare(); fakeStringBuffer.prepare();
             
-            if(originalMethod.getDeclaringClass().getName().equals("java.lang.String")){            
-                newMethod = fakeString.getDeclaredMethod(originalMethod.getName().toString());
+            if(originalMethod.getDeclaringClass().getName().equals("java.lang.String")){
+                newMethod = findReplacementMethod(fakeString, originalMethod);                
                 Assert._assert(newMethod != null, "Missing method " + originalMethod.getName() + " in " + fakeString);
             }else
-            if(originalMethod.getDeclaringClass().getName().equals("java.lang.StringBuffer")){            
-                newMethod = fakeStringBuffer.getDeclaredMethod(originalMethod.getName().toString());
+            if(originalMethod.getDeclaringClass().getName().equals("java.lang.StringBuffer")){  
+                newMethod = findReplacementMethod(fakeStringBuffer, originalMethod); 
                 Assert._assert(newMethod != null, "Missing method " + originalMethod.getName() + " in " + fakeStringBuffer);
             }else{
                 System.err.println("Unexpected method " + originalMethod);
                 return null;
             }
-            System.out.println("Replaced " + originalMethod + " with " + newMethod);
-            fakeMethodOperand = new MethodOperand(newMethod);
+            System.out.println("Replacing " + originalMethod + " with " + newMethod);
+            fakeMethodOperand.put(originalMethod, new MethodOperand(newMethod));
         }
         
-        return fakeMethodOperand;
+        return (MethodOperand) fakeMethodOperand.get(originalMethod);
+    }
+    /**
+     * @param fakeString
+     * @param originalMethod
+     * @return
+     */
+    private static jq_Method findReplacementMethod(jq_Class fakeString, jq_Method originalMethod) {
+        for(Iterator iter = fakeString.getMembers().iterator(); iter.hasNext();){
+            Object o = iter.next();
+            if(!(o instanceof jq_Method)) continue;
+            jq_Method m = (jq_Method) o;
+            
+            if(!m.getName().toString().equals(originalMethod.getName().toString())){
+                continue;
+            }
+            
+            if(m.getParamTypes().length != originalMethod.getParamTypes().length){
+                continue;            
+            }
+            
+            boolean allMatch = true;
+            for(int i = 0; i < originalMethod.getParamTypes().length; i++){
+                if(m.getParamTypes()[i] != originalMethod.getParamTypes()[i]){
+                    allMatch = false;
+                    break;
+                }
+            }
+            if(!allMatch) {
+                continue;
+            }
+         
+            // done with the tests
+            return m;
+        }
+        
+        return null;
     }
 }
