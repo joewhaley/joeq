@@ -447,7 +447,7 @@ public class Trimmer {
                     addSubclassVirtualMethods(c, (jq_InstanceMethod)m);
                 }
             }
-            if (m.isNative() || m.isAbstract()) {
+            if (m.getBytecode() == null) {
                 // native/abstract method
                 continue;
             }
