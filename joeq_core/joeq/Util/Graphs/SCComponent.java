@@ -418,10 +418,12 @@ public final class SCComponent implements Comparable, Serializable, Textualizabl
     public final String toString() {
         StringBuffer buffer = new StringBuffer();
         buffer.append("SCC" + id + " (size " + size() + ") {");
-        for(int i = 0; i < nodes_array.length; i++) {
-            if (i > 0)
-                buffer.append(", ");
-            buffer.append(nodes_array[i]);
+        if (true) {
+            for(int i = 0; i < nodes_array.length; i++) {
+                if (i > 0)
+                    buffer.append(", ");
+                buffer.append(nodes_array[i]);
+            }
         }
         buffer.append("}");
         //buffer.append(prevStringRepr());
