@@ -547,10 +547,11 @@ public class MethodSummary {
                         heapStore(base_r, src_r, null);
                     } else if (val instanceof AConstOperand) {
                         jq_Reference type = ((AConstOperand)val).getType();
-                        Object key = ((AConstOperand)val).getValue();
-                        ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(key);
+                        Object value = ((AConstOperand)val).getValue();
+                        Object key = value;
+                        ConcreteObjectNode n = (ConcreteObjectNode) quadsToNodes.get(key);
                         if (n == null)
-                            quadsToNodes.put(key, n = new ConcreteTypeNode(type, new QuadProgramLocation(method, obj)));
+                            quadsToNodes.put(key, n = new ConcreteObjectNode(value));
                         heapStore(base_r, n, null);
                     } else {
                         jq_Reference type = ((PConstOperand)val).getType();
@@ -573,10 +574,11 @@ public class MethodSummary {
                     setRegister(dest_r, getRegister(src_r));
                 } else if (src instanceof AConstOperand) {
                     jq_Reference type = ((AConstOperand)src).getType();
-                    Object key = ((AConstOperand)src).getValue();
-                    ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(key);
+                    Object value = ((AConstOperand)src).getValue();
+                    Object key = value;
+                    ConcreteObjectNode n = (ConcreteObjectNode) quadsToNodes.get(key);
                     if (n == null)
-                        quadsToNodes.put(key, n = new ConcreteTypeNode(type, new QuadProgramLocation(method, obj)));
+                        quadsToNodes.put(key, n = new ConcreteObjectNode(value));
                     setRegister(dest_r, n);
                 } else {
                     jq_Reference type = ((PConstOperand)src).getType();
@@ -596,10 +598,11 @@ public class MethodSummary {
                 setRegister(dest_r, getRegister(src_r));
             } else if (src instanceof AConstOperand) {
                 jq_Reference type = ((AConstOperand)src).getType();
-                Object key = ((AConstOperand)src).getValue();
-                ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(key);
+                Object value = ((AConstOperand)src).getValue();
+                Object key = value;
+                ConcreteObjectNode n = (ConcreteObjectNode) quadsToNodes.get(key);
                 if (n == null)
-                    quadsToNodes.put(key, n = new ConcreteTypeNode(type, new QuadProgramLocation(method, obj)));
+                    quadsToNodes.put(key, n = new ConcreteObjectNode(value));
                 setRegister(dest_r, n);
             } else {
                 jq_Reference type = ((PConstOperand)src).getType();
@@ -651,6 +654,21 @@ public class MethodSummary {
             Invoke.getMethod(obj).resolve();
             jq_Method m = Invoke.getMethod(obj).getMethod();
             ProgramLocation mc = new ProgramLocation.QuadProgramLocation(method, obj);
+            if (m == Run_Time.Arrays._multinewarray) {
+                // special case: multi-dimensional array.
+                RegisterOperand dest = Invoke.getDest(obj);
+                if (dest != null) {
+                    Register dest_r = dest.getRegister();
+                    // todo: get the real type.
+                    jq_Reference type = PrimordialClassLoader.getJavaLangObject().getArrayTypeForElementType();
+                    Object key = obj;
+                    ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(key);
+                    if (n == null)
+                        quadsToNodes.put(key, n = new ConcreteTypeNode(type, new QuadProgramLocation(method, obj)));
+                    setRegister(dest_r, n);
+                }
+                return;
+            }
             this.methodCalls.add(mc);
             jq_Type[] params = m.getParamTypes();
             ParamListOperand plo = Invoke.getParamList(obj);
@@ -708,10 +726,11 @@ public class MethodSummary {
                     setRegister(dest_r, getRegister(src_r));
                 } else if (src instanceof AConstOperand) {
                     jq_Reference type = ((AConstOperand)src).getType();
-                    Object key = ((AConstOperand)src).getValue();
-                    ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(key);
+                    Object value = ((AConstOperand)src).getValue();
+                    Object key = value;
+                    ConcreteObjectNode n = (ConcreteObjectNode) quadsToNodes.get(key);
                     if (n == null)
-                        quadsToNodes.put(key, n = new ConcreteTypeNode(type, new QuadProgramLocation(method, obj)));
+                        quadsToNodes.put(key, n = new ConcreteObjectNode(value));
                     setRegister(dest_r, n);
                 } else {
                     jq_Reference type = ((PConstOperand)src).getType();
@@ -760,10 +779,11 @@ public class MethodSummary {
                         heapStore(base_r, src_r, f);
                     } else if (val instanceof AConstOperand) {
                         jq_Reference type = ((AConstOperand)val).getType();
-                        Object key = ((AConstOperand)val).getValue();
-                        ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(key);
+                        Object value = ((AConstOperand)val).getValue();
+                        Object key = value;
+                        ConcreteObjectNode n = (ConcreteObjectNode) quadsToNodes.get(key);
                         if (n == null)
-                            quadsToNodes.put(key, n = new ConcreteTypeNode(type, new QuadProgramLocation(method, obj)));
+                            quadsToNodes.put(key, n = new ConcreteObjectNode(value));
                         heapStore(base_r, n, f);
                     } else {
                         jq_Reference type = ((PConstOperand)val).getType();
@@ -790,10 +810,11 @@ public class MethodSummary {
                     heapStore(my_global, src_r, f);
                 } else if (val instanceof AConstOperand) {
                     jq_Reference type = ((AConstOperand)val).getType();
-                    Object key = ((AConstOperand)val).getValue();
-                    ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(key);
+                    Object value = ((AConstOperand)val).getValue();
+                    Object key = value;
+                    ConcreteObjectNode n = (ConcreteObjectNode) quadsToNodes.get(key);
                     if (n == null)
-                        quadsToNodes.put(key, n = new ConcreteTypeNode(type, new QuadProgramLocation(method, obj)));
+                        quadsToNodes.put(key, n = new ConcreteObjectNode(value));
                     heapStore(my_global, n, f);
                 } else {
                     jq_Reference type = ((PConstOperand)val).getType();
@@ -823,10 +844,11 @@ public class MethodSummary {
                 addToSet(r, getRegister(src_r));
             } else if (src instanceof AConstOperand) {
                 jq_Reference type = ((AConstOperand)src).getType();
-                Object key = ((AConstOperand)src).getValue();
-                ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(key);
+                Object value = ((AConstOperand)src).getValue();
+                Object key = value;
+                ConcreteObjectNode n = (ConcreteObjectNode) quadsToNodes.get(key);
                 if (n == null)
-                    quadsToNodes.put(key, n = new ConcreteTypeNode(type, new QuadProgramLocation(method, obj)));
+                    quadsToNodes.put(key, n = new ConcreteObjectNode(value));
                 r.add(n);
             } else {
                 jq_Reference type = ((PConstOperand)src).getType();
@@ -882,10 +904,11 @@ public class MethodSummary {
                     setRegister(dest_r, getRegister(src_r));
                 } else if (src instanceof AConstOperand) {
                     jq_Reference type = ((AConstOperand)src).getType();
-                    Object key = ((AConstOperand)src).getValue();
-                    ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(key);
+                    Object value = ((AConstOperand)src).getValue();
+                    Object key = value;
+                    ConcreteObjectNode n = (ConcreteObjectNode) quadsToNodes.get(key);
                     if (n == null)
-                        quadsToNodes.put(key, n = new ConcreteTypeNode(type, new QuadProgramLocation(method, obj)));
+                        quadsToNodes.put(key, n = new ConcreteObjectNode(value));
                     setRegister(dest_r, n);
                 } else {
                     jq_Reference type = ((PConstOperand)src).getType();
@@ -1915,6 +1938,7 @@ public class MethodSummary {
         }
         if (s.equals("Param")) {
             jq_Method m = (jq_Method) jq_Member.read(st);
+            if (m == null) return null;
             int i = Integer.parseInt(st.nextToken());
             jq_Reference t = (jq_Reference) m.getParamTypes()[i];
             return new ParamNode(m, i, t);
