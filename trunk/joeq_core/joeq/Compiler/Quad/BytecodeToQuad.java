@@ -894,7 +894,6 @@ public class BytecodeToQuad extends BytecodeVisitor {
         Compil3r.BytecodeAnalysis.BasicBlock target_bcbb = bc_cfg.getBasicBlockByBytecodeIndex(target);
         BasicBlock target_bb = quad_bbs[target_bcbb.id];
         BasicBlock successor_bb = quad_bbs[bc_bb.id+1];
-        RegisterOperand op0 = getStackRegister(jq_ReturnAddressType.INSTANCE);
         Compil3r.BytecodeAnalysis.JSRInfo jsrinfo = bc_cfg.getJSRInfo(target_bcbb);
         if (jsrinfo == null) {
             if (TRACE) out.println("jsr with no ret! converting to GOTO.");
@@ -907,6 +906,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
             return;
         }
         saveStackIntoRegisters();
+        RegisterOperand op0 = getStackRegister(jq_ReturnAddressType.INSTANCE);
         Quad q = Jsr.create(quad_cfg.getNewQuadID(), Jsr.JSR.INSTANCE, op0, new TargetOperand(target_bb), new TargetOperand(successor_bb));
         appendQuad(q);
         Compil3r.BytecodeAnalysis.BasicBlock next_bb = bc_cfg.getBasicBlock(bc_bb.id+1);
