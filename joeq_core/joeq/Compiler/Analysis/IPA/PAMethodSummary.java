@@ -3,6 +3,7 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Analysis.IPA;
 
+import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -10,7 +11,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
-import java.io.PrintStream;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Field;
 import joeq.Class.jq_Method;
@@ -18,6 +18,7 @@ import joeq.Class.jq_MethodVisitor;
 import joeq.Class.jq_Reference;
 import joeq.Class.jq_Type;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary;
+import joeq.Compiler.Analysis.FlowInsensitive.ReflectionInformationProvider;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.CheckCastNode;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.ConcreteObjectNode;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.ConcreteTypeNode;
@@ -226,7 +227,7 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
             BDD I_bdd = pa.I.ithVar(I_i);
             jq_Method target = mc.getTargetMethod();
 
-            jq_Method replacement = null;
+            jq_Method replacement = null;            
             if(PA.USE_BOGUS_SUMMARIES) {
                 replacement = PA.getBogusSummaryProvider().getReplacementMethod(target);
                 if(replacement != null) {
@@ -237,7 +238,7 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
                     
                     target = replacement;
                 }
-            }
+            }            
             if (target.isStatic())
                 pa.addClassInitializer(target.getDeclaringClass());
 
@@ -260,7 +261,26 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
                 pa.addToActual(I_bdd, 0, thisptr);
             }            
             
-            if (mc.isSingleTarget()) {
+            Collection/*<jq_Method>*/ targets = null;
+            if(PA.USE_REFLECTION_PROVIDER && ReflectionInformationProvider.isNewInstance(target)){                
+                targets = pa.getReflectionProvider().getNewInstanceTargets(m);
+                if(targets != null){
+                    if(PA.TRACE_REFLECTION)  {
+                        System.out.println("Replacing a call to " + target + " with " + targets); 
+                    }
+                
+                    for(Iterator iter = targets.iterator(); iter.hasNext();){
+                        jq_Method newTarget = (jq_Method) iter.next();
+                        
+                        if(PA.TRACE_REFLECTION) {
+                            System.out.println("Adding a refective call to " + newTarget);
+                        }
+                        pa.addToMI(M_bdd, I_bdd, newTarget);
+                        pa.addToIE(I_bdd, newTarget);
+                    }
+                }            
+            }
+            if (mc.isSingleTarget()) {                
                 if (target != pa.javaLangObject_clone) {
                     // statically-bound, single target call
                     addSingleTargetCall(thisptr, mc, I_bdd, target);
