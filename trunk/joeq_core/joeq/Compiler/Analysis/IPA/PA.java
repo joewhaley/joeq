@@ -1110,8 +1110,8 @@ public class PA {
         if (targets.isZero()) return false;
         if (TRACE) out.println("New target methods: "+targets.satCount(Mset));
         while (!targets.isZero()) {
-            BDD target = targets.satOneSet(Mset, bdd.zero());
-            int M_i = target.scanVar(M);
+            BDD target = targets.satOne(Mset, bdd.zero());
+            int M_i = (int) target.scanVar(M);
             jq_Method method = (jq_Method) Mmap.get(M_i);
             if (TRACE) out.println("New target method: "+method);
             visitMethod(method);
@@ -1303,7 +1303,7 @@ public class PA {
             context.free();
         }
         
-        for (Iterator i = roots.iterator(); i.hasNext(); ) {
+        for (Iterator i = rootMethods.iterator(); i.hasNext(); ) {
             jq_Method m = (jq_Method) i.next();
             visitMethod(m);
         }

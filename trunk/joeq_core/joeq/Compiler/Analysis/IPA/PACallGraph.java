@@ -103,8 +103,8 @@ public class PACallGraph extends CallGraph {
                     return !b1.isZero();
                 }
                 public Object next() {
-                    BDD b2 = b1.satOneSet(dset, d.getFactory().zero());
-                    final int d_i = b2.scanVar(d);
+                    BDD b2 = b1.satOne(dset, d.getFactory().zero());
+                    final int d_i = (int) b2.scanVar(d);
                     b1.applyWith(b2, BDDFactory.diff);
                     return map.get(d_i);
                 }
@@ -145,8 +145,8 @@ public class PACallGraph extends CallGraph {
                         }
 
                         public Object next() {
-                            BDD bdd2 = bdd1.satOneSet(pa.IMset, pa.bdd.zero());
-                            final int I_i = bdd2.scanVar(pa.I);
+                            BDD bdd2 = bdd1.satOne(pa.IMset, pa.bdd.zero());
+                            final int I_i = (int) bdd2.scanVar(pa.I);
                             BDD bdd3 = pa.IE.restrict(pa.I.ithVar(I_i));
                             final Collection result = new BDDSet(bdd3, pa.M, pa.Mmap);
                             bdd1.applyWith(bdd2, BDDFactory.diff);
