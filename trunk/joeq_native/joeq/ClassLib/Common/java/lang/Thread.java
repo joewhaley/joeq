@@ -24,10 +24,13 @@ public abstract class Thread {
     // additional fields
     public final jq_Thread jq_thread;
     
+    private boolean daemon;
+    
     private Thread(jq_Thread t) {
         this.jq_thread = t;
     }
     
+    private native void checkAccess();
     private static synchronized native int nextThreadNum();
     private native void init(java.lang.ThreadGroup g, java.lang.Runnable target, java.lang.String name);
     
@@ -101,6 +104,15 @@ public abstract class Thread {
     public final boolean isAlive() {
         jq_Thread jq_thread = this.jq_thread;
         return jq_thread.isAlive();
+    }
+    public final void setDaemon(boolean b) {
+        this.checkAccess();
+        if (this.isAlive()) {
+            throw new java.lang.IllegalThreadStateException();
+        }
+        this.daemon = b;
+        jq_Thread jq_thread = this.jq_thread;
+        jq_thread.setDaemon(b);
     }
     public int countStackFrames() {
         jq_Thread jq_thread = this.jq_thread;

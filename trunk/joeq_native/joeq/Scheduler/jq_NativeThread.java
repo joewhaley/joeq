@@ -187,6 +187,8 @@ public class jq_NativeThread implements x86Constants {
     /** Put the given Java thread on the queue of a (preferably idle) native thread. */
     public static void startJavaThread(jq_Thread t) {
         Unsafe.atomicAdd(_num_of_java_threads.getAddress(), 1);
+        if (t.isDaemon())
+            Unsafe.atomicAdd(_num_of_native_threads.getAddress(), 1);
         jq_NativeThread nt = idleThread; // atomic read
         if (nt == null) {
             // no idle thread, use round-robin scheduling.
@@ -491,6 +493,7 @@ public class jq_NativeThread implements x86Constants {
     public static final jq_InstanceMethod _threadSwitch;
     public static final jq_StaticMethod _ctrl_break_handler;
     public static final jq_StaticField _num_of_java_threads;
+    public static final jq_StaticField _num_of_native_threads;
     static {
         _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LScheduler/jq_NativeThread;");
         _nativeThreadEntry = _class.getOrCreateInstanceMethod("nativeThreadEntry", "()V");
@@ -498,5 +501,6 @@ public class jq_NativeThread implements x86Constants {
         _threadSwitch = _class.getOrCreateInstanceMethod("threadSwitch", "()V");
         _ctrl_break_handler = _class.getOrCreateStaticMethod("ctrl_break_handler", "()V");
         _num_of_java_threads = _class.getOrCreateStaticField("num_of_java_threads", "I");
+        _num_of_native_threads = _class.getOrCreateStaticField("num_of_native_threads", "I");
     }
 }
