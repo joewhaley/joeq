@@ -120,7 +120,7 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
         int H_i = pa.Hmap.get(h);
         BDD bdd1 = pa.H1.ithVar(H_i);
         bdd1.andWith(V_bdd.id());
-        if (TRACE_RELATIONS) out.println("Adding to vP: "+bdd1.toStringWithDomains());
+        if (TRACE_RELATIONS) out.println("Adding to vP: "+bdd1.toStringWithDomains(pa.TS));
         vP.orWith(bdd1);
     }
     
@@ -136,7 +136,7 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
             BDD bdd1 = pa.V2.ithVar(V2_i);
             bdd1.andWith(F_bdd.id());
             bdd1.andWith(V_bdd.id());
-            if (TRACE_RELATIONS) out.println("Adding to S: "+bdd1.toStringWithDomains());
+            if (TRACE_RELATIONS) out.println("Adding to S: "+bdd1.toStringWithDomains(pa.TS));
             S.orWith(bdd1);
         }
         F_bdd.free();
@@ -151,7 +151,7 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
             BDD bdd1 = pa.V2.ithVar(V2_i);
             bdd1.andWith(F_bdd.id());
             bdd1.andWith(V_bdd.id());
-            if (TRACE_RELATIONS) out.println("Adding to L: "+bdd1.toStringWithDomains());
+            if (TRACE_RELATIONS) out.println("Adding to L: "+bdd1.toStringWithDomains(pa.TS));
             L.orWith(bdd1);
         }
         F_bdd.free();
