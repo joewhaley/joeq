@@ -144,10 +144,10 @@ public abstract class Bootstrapper implements ObjectLayout {
         bca.init();
         
         // install object mapper
-        ClassLibInterface.DEFAULT.initialize();
         //ObjectTraverser obj_trav = new ObjectTraverser(nullStaticFields, nullInstanceFields);
-        ObjectTraverser obj_trav = ClassLibInterface.DEFAULT;
+        ObjectTraverser obj_trav = ClassLibInterface.DEFAULT.getObjectTraverser();
         Reflection.obj_trav = obj_trav;
+        obj_trav.initialize();
         Unsafe.installRemapper(objmap = new BootImage(obj_trav, bca));
         
         long starttime = System.currentTimeMillis();
