@@ -165,6 +165,10 @@ public class ControlFlowGraph {
 	result.addFirst(b);
     }
 
+    void addExceptionHandler(ExceptionHandler eh) {
+        exception_handlers.add(eh);
+    }
+    
     /** Return an iterator of the exception handlers with the given entry point.
      * @param b  basic block to check exception handlers against.
      * @return  an iterator of the exception handlers with the given entry point. */
@@ -188,6 +192,7 @@ public class ControlFlowGraph {
 	    BasicBlock bb = i.nextBasicBlock();
 	    sb.append(bb.fullDump());
 	}
+        sb.append("Exception handlers: "+exception_handlers);
 	return sb.toString();
     }
 
