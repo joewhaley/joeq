@@ -18,6 +18,11 @@ public final class ByteSequence extends DataInputStream {
         byte_stream = (ByteArrayStream) in;
     }
 
+    public ByteSequence(byte[] bytes, int offset, int length) {
+        super(new ByteArrayStream(bytes, offset, length));
+        byte_stream = (ByteArrayStream) in;
+    }
+
     public final int getIndex() {
         return byte_stream.getPosition();
     }
@@ -28,6 +33,9 @@ public final class ByteSequence extends DataInputStream {
     private static final class ByteArrayStream extends ByteArrayInputStream {
         ByteArrayStream(byte[] bytes) {
             super(bytes);
+        }
+        ByteArrayStream(byte[] bytes, int offset, int length) {
+            super(bytes, offset, length);
         }
         final int getPosition() {
             return pos;
