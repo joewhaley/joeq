@@ -27,27 +27,13 @@
       <p>
       Want to learn more? Check out our overview paper that appeared in ACM SIGPLAN Workshop on 
       Interpreters, Virtual Machines and Emulators 2003 (
-      <a href="http://www.stanford.edu/~jwhaley/ivme03.pdf">PDF</a>,
+      <a href="http://www.stanford.edu/~jwhaley/papers/ivme03.pdf">PDF</a>,
       <a href="http://joeq.sourceforge.net/ivme03/">HTML</a>).
-      More information is available at the <a href="about.html">About joeq</a>
+      More information is available at the <a href="about/index.html">What is joeq?</a>
       link on the left, and on our
       <a href="http://sourceforge.net/projects/joeq">SourceForge project page</a>.
       </p>
      </section>
-
-   <a name="news"/>
-   <section name="Project News">
-     <p>
-       <!--#include virtual="fetched_news.inc"-->
-     </p>
-   </section>
-
-   <a name="status"/>
-   <section name="Project Status">
-   <p>
-     <!--#include virtual="fetched_project.inc"-->
-   </p>
-   </section>
 
    <section name="Thanx">
       <p>

@@ -10,34 +10,36 @@
             href="http://sourceforge.net" />
     </links>
     <menu name="Documentation">
-      <item name="About joeq" href="overview.html">
+      <item name="What is joeq?" href="/about/index.html" collapse="true">
         <item name="Overview"
-              href="overview.html"/>
+              href="/about/index.html"/>
         <item name="Bootstrapping"
-              href="bootstrapping.html"/>
+              href="/about/bootstrapping.html"/>
         <item name="Address types"
-              href="address_types.html"/>
+              href="/about/address_types.html"/>
         <item name="Compilers"
-              href="compiler.html"/>
+              href="/about/compiler.html"/>
         <item name="Garbage collector"
-              href="garbage_collector.html"/>
+              href="/about/garbage_collector.html"/>
         <item name="Scheduler"
-              href="scheduler.html"/>
+              href="/about/scheduler.html"/>
         <item name="Synchronization"
-              href="synchronization.html"/>
+              href="/about/synchronization.html"/>
         <item name="Related work"
-              href="related_work.html"/>
+              href="/about/related_work.html"/>
       </item>
       <item name="API (Javadoc)"
-            href="apidocs/index.html" />
+            href="/apidocs/index.html" />
       <item name="Getting Started"
-            href="getting_started.html"/>
+            href="/getting_started.html"/>
+      <item name="Eclipse Instructions"
+            href="/eclipse_setup.html"/>
       <item name="Build Instructions"
-            href="compiling.html"/>
+            href="/compiling.html"/>
       <item name="Project Members"
-            href="team-list.html"/>
+            href="/team-list.html"/>
       <item name="FAQ"
-            href="faq.html"/>
+            href="/faq.html"/>
     </menu>
     <menu name="Downloads">
       <item name="joeq source code (20030812)"
