@@ -21,7 +21,7 @@ public class WorkSet extends java.util.AbstractSet implements Worklist{
     private /*final*/ HashMap hm;
     private EntryList listhead = EntryList.init(); // header and footer nodes.
     private EntryList listfoot = listhead.next;
-    private final static boolean debug=false; // turn on consistency checks.
+    private static final boolean debug=false; // turn on consistency checks.
     
     /** Creates a new, empty <code>WorkSet</code> with a default capacity
      *  and load factor. */

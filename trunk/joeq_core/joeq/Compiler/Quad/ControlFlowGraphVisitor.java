@@ -14,9 +14,9 @@ import Clazz.jq_MethodVisitor;
  * @version $Id$
  */
 public interface ControlFlowGraphVisitor {
-    public void visitCFG(ControlFlowGraph cfg);
+    void visitCFG(ControlFlowGraph cfg);
     
-    public class CodeCacheVisitor extends jq_MethodVisitor.EmptyVisitor {
+    class CodeCacheVisitor extends jq_MethodVisitor.EmptyVisitor {
         private final ControlFlowGraphVisitor bbv;
         boolean trace;
         public CodeCacheVisitor(ControlFlowGraphVisitor bbv) { this.bbv = bbv; }

@@ -23,12 +23,12 @@ import Run_Time.Reflection;
  */
 public interface Operand {
 
-    public Quad getQuad();
-    public void attachToQuad(Quad q);
-    public Operand copy();
-    public boolean isSimilar(Operand that);
+    Quad getQuad();
+    void attachToQuad(Quad q);
+    Operand copy();
+    boolean isSimilar(Operand that);
 
-    public static abstract class Util {
+    abstract class Util {
         public static boolean isNullConstant(Operand op) {
             return op instanceof AConstOperand && ((AConstOperand)op).getValue() == null;
         }
@@ -42,7 +42,7 @@ public interface Operand {
         }
     }
     
-    public static class RegisterOperand implements Operand {
+    class RegisterOperand implements Operand {
         private Quad instruction;
         private Register register; private jq_Type type; private int flags;
         public static final int PRECISE_TYPE = 0x1;
@@ -70,7 +70,7 @@ public interface Operand {
         public String toString() { return register+" "+((type==null)?"<g>":type.shortName()); }
     }
     
-    public static class AConstOperand implements Operand {
+    class AConstOperand implements Operand {
         private Quad instruction;
         private Object value;
         public AConstOperand(Object v) { this.value = v; }
@@ -93,7 +93,7 @@ public interface Operand {
         public boolean isSimilar(Operand that) { return that instanceof AConstOperand && ((AConstOperand)that).getValue() == this.getValue(); }
     }
     
-    public static class PConstOperand implements Operand {
+    class PConstOperand implements Operand {
         private Quad instruction;
         private Address value;
         public PConstOperand(Address v) { this.value = v; }
@@ -119,7 +119,7 @@ public interface Operand {
         }
     }
     
-    public static class IConstOperand implements Operand {
+    class IConstOperand implements Operand {
         private Quad instruction;
         private int value;
         public IConstOperand(int v) { this.value = v; }
@@ -135,7 +135,7 @@ public interface Operand {
         public boolean isSimilar(Operand that) { return that instanceof IConstOperand && ((IConstOperand)that).getValue() == this.getValue(); }
     }
     
-    public static class FConstOperand implements Operand {
+    class FConstOperand implements Operand {
         private Quad instruction;
         private float value;
         public FConstOperand(float v) { this.value = v; }
@@ -151,7 +151,7 @@ public interface Operand {
         public boolean isSimilar(Operand that) { return that instanceof FConstOperand && ((FConstOperand)that).getValue() == this.getValue(); }
     }
 
-    public static class LConstOperand implements Operand {
+    class LConstOperand implements Operand {
         private Quad instruction;
         private long value;
         public LConstOperand(long v) { this.value = v; }
@@ -167,7 +167,7 @@ public interface Operand {
         public boolean isSimilar(Operand that) { return that instanceof LConstOperand && ((LConstOperand)that).getValue() == this.getValue(); }
     }
 
-    public static class DConstOperand implements Operand {
+    class DConstOperand implements Operand {
         private Quad instruction;
         private double value;
         public DConstOperand(double v) { this.value = v; }
@@ -183,7 +183,7 @@ public interface Operand {
         public boolean isSimilar(Operand that) { return that instanceof DConstOperand && ((DConstOperand)that).getValue() == this.getValue(); }
     }
 
-    public static class UnnecessaryGuardOperand implements Operand {
+    class UnnecessaryGuardOperand implements Operand {
         private Quad instruction;
         public UnnecessaryGuardOperand() {}
         //public int hashCode() { return 67; }
@@ -195,7 +195,7 @@ public interface Operand {
         public boolean isSimilar(Operand that) { return that instanceof UnnecessaryGuardOperand; }
     }
     
-    public static class ConditionOperand implements Operand {
+    class ConditionOperand implements Operand {
         private Quad instruction; byte condition;
         public ConditionOperand(byte c) { condition = c; }
         //public int hashCode() { return condition; }
@@ -210,7 +210,7 @@ public interface Operand {
         public boolean isSimilar(Operand that) { return that instanceof ConditionOperand && ((ConditionOperand)that).getCondition() == this.getCondition(); }
     }
 
-    public static class FieldOperand implements Operand {
+    class FieldOperand implements Operand {
         private Quad instruction; jq_Field field;
         public FieldOperand(jq_Field f) { field = f; }
         public jq_Field getField() { return field; }
@@ -222,7 +222,7 @@ public interface Operand {
         public boolean isSimilar(Operand that) { return that instanceof FieldOperand && ((FieldOperand)that).getField() == this.getField(); }
     }
     
-    public static class TypeOperand implements Operand {
+    class TypeOperand implements Operand {
         private Quad instruction; jq_Type type;
         TypeOperand(jq_Type f) { type = f; }
         public jq_Type getType() { return type; }
@@ -234,7 +234,7 @@ public interface Operand {
         public boolean isSimilar(Operand that) { return that instanceof TypeOperand && ((TypeOperand)that).getType() == this.getType(); }
     }
     
-    public static class TargetOperand implements Operand {
+    class TargetOperand implements Operand {
         private Quad instruction; BasicBlock target;
         public TargetOperand(BasicBlock t) { target = t; }
         public BasicBlock getTarget() { return target; }
@@ -246,7 +246,7 @@ public interface Operand {
         public boolean isSimilar(Operand that) { return that instanceof TargetOperand && ((TargetOperand)that).getTarget() == this.getTarget(); }
     }
     
-    public static class MethodOperand implements Operand {
+    class MethodOperand implements Operand {
         private Quad instruction; jq_Method target;
         public MethodOperand(jq_Method t) { target = t; }
         public jq_Method getMethod() { return target; }
@@ -258,7 +258,7 @@ public interface Operand {
         public boolean isSimilar(Operand that) { return that instanceof MethodOperand && ((MethodOperand)that).getMethod() == this.getMethod(); }
     }
     
-    public static class IntValueTableOperand implements Operand {
+    class IntValueTableOperand implements Operand {
         private Quad instruction; int[] table;
         public IntValueTableOperand(int[] t) { table = t; }
         public void set(int i, int b) { table[i] = b; }
@@ -286,7 +286,7 @@ public interface Operand {
         public boolean isSimilar(Operand that) { return false; }
     }
     
-    public static class BasicBlockTableOperand implements Operand {
+    class BasicBlockTableOperand implements Operand {
         private Quad instruction; BasicBlock[] table;
         public BasicBlockTableOperand(BasicBlock[] t) { table = t; }
         public void set(int i, BasicBlock b) { table[i] = b; }
@@ -314,7 +314,7 @@ public interface Operand {
         public boolean isSimilar(Operand that) { return false; }
     }
     
-    public static class ParamListOperand implements Operand {
+    class ParamListOperand implements Operand {
         private Quad instruction; RegisterOperand[] params;
         public ParamListOperand(RegisterOperand[] t) { params = t; }
         public void set(int i, RegisterOperand b) { params[i] = b; }

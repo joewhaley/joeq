@@ -21,5 +21,5 @@ import Bootstrap.PrimordialClassLoader;
  */
 public interface jq_DontAlign {
 
-    public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LClazz/jq_DontAlign;");
+    jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LClazz/jq_DontAlign;");
 }

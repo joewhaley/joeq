@@ -10,7 +10,7 @@ public class Dataflow {
     private static final boolean TRACE_DATAFLOW_QUADS = false;
     private static final java.io.PrintStream DF_OUT = System.err;
 
-    static interface FactCollection {
+    interface FactCollection {
         Fact getPre(Quad q);
         Fact getPost(Quad q);
         Fact getInitial();
@@ -21,12 +21,12 @@ public class Dataflow {
         void setFinal(Fact dff);
     }
 
-    static interface Fact {
+    interface Fact {
         Fact meetWith(Fact f);
         Fact deepCopy();
     }
 
-    static interface Transfer {
+    interface Transfer {
         void registerFactCollection(FactCollection fc);
         void preprocess(ControlFlowGraph cfg);
         boolean transfer(Quad q);
@@ -162,7 +162,7 @@ public class Dataflow {
 
         public EmptyAnalysis() {
             ccv = new ControlFlowGraphVisitor.CodeCacheVisitor(new Intraprocedural(this));
-    }
+        }
         
         public void visitMethod (jq_Method m) {
             if (TRACE_DATAFLOW) DF_OUT.println("Analyzing method: "+m.getName());

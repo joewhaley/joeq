@@ -175,7 +175,7 @@ public abstract class Section implements ELFConstants {
         
     }
     
-    public static abstract class FakeSection extends Section {
+    public abstract static class FakeSection extends Section {
         
         FakeSection(String name, int index) { super(name, 0, 0); this.index = index; }
         public int getEntSize() { jq.UNREACHABLE(); return 0; }

@@ -50,7 +50,7 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
     public static /*final*/ boolean TRACE = false;
     public static final PrintStream out = System.out;
     
-    static abstract class ClasspathElement {
+    abstract static class ClasspathElement {
         /** Open a stream to read the given resource, or return
          *  <code>null</code> if resource cannot be found. */
         abstract InputStream getResourceAsStream(String resourcename);

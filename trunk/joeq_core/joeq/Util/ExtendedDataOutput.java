@@ -15,8 +15,8 @@ import java.io.IOException;
  * @version $Id$
  */
 public interface ExtendedDataOutput extends DataOutput {
-    public void writeULong(long v) throws IOException;
-    public void writeUInt(int v) throws IOException;
-    public void writeUShort(int v) throws IOException;
-    public void writeUByte(int v) throws IOException;
+    void writeULong(long v) throws IOException;
+    void writeUInt(int v) throws IOException;
+    void writeUShort(int v) throws IOException;
+    void writeUByte(int v) throws IOException;
 }

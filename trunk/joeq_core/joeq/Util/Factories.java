@@ -187,12 +187,12 @@ public final class Factories {
     // private classes to add java.io.Serializable to *Factories.
     // if we could make anonymous types w/ multiple inheritance, we wouldn't
     // need these.
-    private static abstract class SerialMapFactory
+    private abstract static class SerialMapFactory
         extends MapFactory implements java.io.Serializable { }
-    private static abstract class SerialSetFactory
+    private abstract static class SerialSetFactory
         extends SetFactory implements java.io.Serializable { }
-    private static abstract class SerialListFactory
+    private abstract static class SerialListFactory
         extends ListFactory implements java.io.Serializable { }
-    private static abstract class SerialCollectionFactory
+    private abstract static class SerialCollectionFactory
         extends CollectionFactory implements java.io.Serializable { }
 }

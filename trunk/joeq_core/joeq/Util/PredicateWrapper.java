@@ -12,5 +12,5 @@ package Util;
  * @version $Id$
  */
 public interface PredicateWrapper {
-    public boolean check(Object obj);
+    boolean check(Object obj);
 }

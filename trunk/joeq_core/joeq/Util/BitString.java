@@ -16,8 +16,8 @@ import Main.jq;
 
 public final class BitString implements Cloneable, java.io.Serializable {
     /* There are 2^BITS_PER_UNIT bits in each unit (int) */
-    private final static int BITS_PER_UNIT = 5;
-    private final static int MASK = (1 << BITS_PER_UNIT) - 1;
+    private static final int BITS_PER_UNIT = 5;
+    private static final int MASK = (1 << BITS_PER_UNIT) - 1;
     private int[] bits;
 
     /**
@@ -550,7 +550,7 @@ public final class BitString implements Cloneable, java.io.Serializable {
         return new BackwardBitStringIterator(i);
     }
 
-    public static abstract class BitStringIterator implements java.util.Iterator {
+    public abstract static class BitStringIterator implements java.util.Iterator {
 
         public abstract int nextIndex();
 

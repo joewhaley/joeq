@@ -13,12 +13,12 @@ package Clazz;
  */
 public interface jq_TypeVisitor {
 
-    public void visitClass(jq_Class m);
-    public void visitArray(jq_Array m);
-    public void visitPrimitive(jq_Primitive m);
-    public void visitType(jq_Type m);
+    void visitClass(jq_Class m);
+    void visitArray(jq_Array m);
+    void visitPrimitive(jq_Primitive m);
+    void visitType(jq_Type m);
     
-    public class EmptyVisitor implements jq_TypeVisitor {
+    class EmptyVisitor implements jq_TypeVisitor {
         public void visitClass(jq_Class m) {}
         public void visitArray(jq_Array m) {}
         public void visitPrimitive(jq_Primitive m) {}

@@ -16,9 +16,9 @@ import Bootstrap.PrimordialClassLoader;
 public abstract class System {
     
     private static java.util.Properties props;
-    private native static void setIn0(java.io.InputStream in);
-    private native static void setOut0(java.io.PrintStream out);
-    private native static void setErr0(java.io.PrintStream err);
+    private static native void setIn0(java.io.InputStream in);
+    private static native void setOut0(java.io.PrintStream out);
+    private static native void setErr0(java.io.PrintStream err);
 
     public static java.lang.String mapLibraryName(java.lang.String libname) {
         return libname; // TODO.
@@ -50,7 +50,7 @@ public abstract class System {
         if (libname.equals("zip")) return;
         Runtime.getRuntime().loadLibrary0(getCallerClass(), libname);
     }
-    native static Class getCallerClass();
+    static native Class getCallerClass();
 
     private static java.util.Properties initProperties(java.util.Properties props) {
         // TODO: read these properties from environment.

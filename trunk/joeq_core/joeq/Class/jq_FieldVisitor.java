@@ -18,17 +18,17 @@ import Util.ArrayIterator;
  */
 public interface jq_FieldVisitor {
 
-    public void visitStaticField(jq_StaticField m);
-    public void visitInstanceField(jq_InstanceField m);
-    public void visitField(jq_Field m);
+    void visitStaticField(jq_StaticField m);
+    void visitInstanceField(jq_InstanceField m);
+    void visitField(jq_Field m);
     
-    public class EmptyVisitor implements jq_FieldVisitor {
+    class EmptyVisitor implements jq_FieldVisitor {
         public void visitStaticField(jq_StaticField m) {}
         public void visitInstanceField(jq_InstanceField m) {}
         public void visitField(jq_Field m) {}
     }
     
-    public class DeclaredFieldVisitor extends jq_TypeVisitor.EmptyVisitor {
+    class DeclaredFieldVisitor extends jq_TypeVisitor.EmptyVisitor {
         final jq_FieldVisitor mv; boolean trace;
         public DeclaredFieldVisitor(jq_FieldVisitor mv) { this.mv = mv; }
         public DeclaredFieldVisitor(jq_FieldVisitor mv, boolean trace) { this.mv = mv; this.trace = trace; }

@@ -13,5 +13,5 @@ package Util;
  */
 public interface RelationEntryVisitor {
     /** Visits a <code>&lt;key,value&gt;</code> entry of a relation. */
-    public void visit(Object key, Object value);
+    void visit(Object key, Object value);
 }

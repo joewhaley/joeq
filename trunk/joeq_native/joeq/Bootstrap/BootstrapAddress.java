@@ -5,5 +5,5 @@ package Bootstrap;
  * @version $Id$
  */
 public interface BootstrapAddress {
-    public int to32BitValue();
+    int to32BitValue();
 }

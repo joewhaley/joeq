@@ -18,12 +18,12 @@ public interface BasicBlockVisitor {
     
     /** Visit a basic block.
      * @param bb  basic block to visit */
-    public void visitBasicBlock(BasicBlock bb);
+    void visitBasicBlock(BasicBlock bb);
 
     /**
      * Empty basic block visitor for easy subclassing.
      */
-    public static class EmptyVisitor implements BasicBlockVisitor {
+    class EmptyVisitor implements BasicBlockVisitor {
         /** Visit a basic block.
          * @param bb  basic block to visit */
         public void visitBasicBlock(BasicBlock bb) {}
@@ -35,7 +35,7 @@ public interface BasicBlockVisitor {
      * @see  ControlFlowGraph
      * @see  ControlFlowGraphVisitor
      */
-    public static class AllBasicBlockVisitor implements ControlFlowGraphVisitor {
+    class AllBasicBlockVisitor implements ControlFlowGraphVisitor {
         private final BasicBlockVisitor bbv;
         boolean trace;
         /** Construct a new AllBasicBlockVisitor.

@@ -47,10 +47,10 @@ import java.util.Random;
  */
 public final class JMath
 {
-        static public final double PI = Double.longBitsToDouble(0x400921fb54442d18L);  /* 3.14159265358979323846 */
-        static public final double E  = 2.7182818284590452354;
+        public static final double PI = Double.longBitsToDouble(0x400921fb54442d18L);  /* 3.14159265358979323846 */
+        public static final double E  = 2.7182818284590452354;
 
-        static private Random random;
+        private static Random random;
 
 
         /**
@@ -58,7 +58,7 @@ public final class JMath
          *      @param  x       The argument, an integer.
          *      @return Returns |x|.
          */
-        strictfp public static int abs(int x)
+        public static strictfp int abs(int x)
         {
                 return ((x < 0) ? -x : x);
     }
@@ -69,7 +69,7 @@ public final class JMath
          *      @param  x       The argument, a long.
          *      @return Returns |x|.
          */
-        strictfp public static long abs(long x)
+        public static strictfp long abs(long x)
         {
                 return ((x < 0L) ? -x : x);
     }
@@ -80,7 +80,7 @@ public final class JMath
          *      @param  x       The argument, a float.
          *      @return Returns |x|.
          */
-        strictfp public static float abs(float x)
+        public static strictfp float abs(float x)
         {
                 return ((x <= 0.0f) ? 0.0f-x : x);
     }
@@ -91,7 +91,7 @@ public final class JMath
          *      @param  x       The argument, a double.
          *      @return Returns |x|.
          */
-        strictfp public static double abs(double x)
+        public static strictfp double abs(double x)
         {
                 return ((x <= 0.0) ? 0.0-x : x);
     }
@@ -103,7 +103,7 @@ public final class JMath
          *      @param  y       The second argument, an integer.
          *      @return Returns the smaller of x and y.
          */
-        strictfp public static int min(int x, int y)
+        public static strictfp int min(int x, int y)
         {
                 return ((x < y) ? x : y);
     }
@@ -115,7 +115,7 @@ public final class JMath
          *      @param  y       The second argument, a long.
          *      @return Returns the smaller of x and y.
          */
-        strictfp public static long min(long x, long y)
+        public static strictfp long min(long x, long y)
         {
                 return ((x < y) ? x : y);
     }
@@ -129,7 +129,7 @@ public final class JMath
          *                      This function considers -0.0f to
          *                      be less than 0.0f.
          */
-        strictfp public static float min(float x, float y)
+        public static strictfp float min(float x, float y)
         {
                 if (Float.isNaN(x))  return x;
                 float ans = ((x <= y) ? x : y);
@@ -147,7 +147,7 @@ public final class JMath
          *      @return Returns the smaller of x and y.
          *                      This function considers -0.0 to
          *                      be less than 0.0.
-         */     strictfp public static double min(double x, double y)
+         */     public static strictfp double min(double x, double y)
         {
                 if (Double.isNaN(x))  return x;
                 double ans = ((x <= y) ? x : y);
@@ -164,7 +164,7 @@ public final class JMath
          *      @param  y       The second argument, an integer.
          *      @return Returns the larger of x and y.
          */
-        strictfp public static int max(int x, int y)
+        public static strictfp int max(int x, int y)
         {
                 return ((x > y) ? x : y);
     }
@@ -176,7 +176,7 @@ public final class JMath
          *      @param  y       The second argument, a long.
          *      @return Returns the larger of x and y.
          */
-        strictfp public static long max(long x, long y)
+        public static strictfp long max(long x, long y)
         {
                 return ((x > y) ? x : y);
     }
@@ -190,7 +190,7 @@ public final class JMath
          *                      This function considers -0.0f to
          *                      be less than 0.0f.
          */
-        strictfp public static float max(float x, float y)
+        public static strictfp float max(float x, float y)
         {
                 if (Float.isNaN(x))  return x;
                 float ans = ((x >= y) ? x : y);
@@ -208,7 +208,7 @@ public final class JMath
          *                      This function considers -0.0 to
          *                      be less than 0.0.
          */
-        strictfp public static double max(double x, double y)
+        public static strictfp double max(double x, double y)
         {
                 if (Double.isNaN(x))  return x;
                 double ans = ((x >= y) ? x : y);
@@ -223,7 +223,7 @@ public final class JMath
          *      @param  x       The argument, a float.
          *      @return Returns the integer closest to x.
          */
-        strictfp public static int round(float x)
+        public static strictfp int round(float x)
         {
                 return (int)floor(x+0.5f);
     }
@@ -234,7 +234,7 @@ public final class JMath
          *      @param  x       The argument, a double.
          *      @return Returns the long closest to x.
          */
-        strictfp public static long round(double x)
+        public static strictfp long round(double x)
         {
                 return (long)floor(x+0.5);
     }
@@ -244,7 +244,7 @@ public final class JMath
          *      Returns the random number.
          *      @return Returns a random number from a uniform distribution.
          */
-    synchronized strictfp public static double random()
+    public static synchronized strictfp double random()
         {
         if (random == null)  random = new Random();
         return random.nextDouble();
@@ -270,8 +270,8 @@ public final class JMath
          * to produce the hexadecimal values shown.
          */
 
-        static private final double huge   = 1.0e+300;
-        static private final double tiny   = 1.0e-300;
+        private static final double huge   = 1.0e+300;
+        private static final double tiny   = 1.0e-300;
 
 
         /**
@@ -281,7 +281,7 @@ public final class JMath
          *      @return Returns the smallest double, not less than x,
          *                      that is an integral value.
          */
-        static public double ceil(double x)
+        public static double ceil(double x)
         {
                 int             exp, sign;
                 long    ix;
@@ -319,7 +319,7 @@ public final class JMath
          *      @return Returns the smallest double, not greater than x,
          *                      that is an integral value.
          */
-        static public double floor(double x)
+        public static double floor(double x)
         {
                 int             exp, sign;
                 long    ix;
@@ -352,12 +352,12 @@ public final class JMath
 
                 
                 
-        static private final double TWO52[] = {
+        private static final double TWO52[] = {
                 Double.longBitsToDouble(0x4330000000000000L),  /*  4.50359962737049600000e+15 */
                 Double.longBitsToDouble(0xc330000000000000L)   /* -4.50359962737049600000e+15 */
         };
 
-        static private final double NEGATIVE_ZERO = Double.longBitsToDouble(0x8000000000000000L);
+        private static final double NEGATIVE_ZERO = Double.longBitsToDouble(0x8000000000000000L);
 
 
         /**
@@ -367,7 +367,7 @@ public final class JMath
          *      @return Returns the double closest to x
          *                      that is an integral value.
          */
-        static public double rint(double x)
+        public static double rint(double x)
         {
                 int             exp, sign;
                 long    ix;
@@ -409,7 +409,7 @@ public final class JMath
          *      @param  y       The divisor.
          *      @return The remainder computed according to the IEEE 754 standard.
          */
-        static public double IEEEremainder(double x, double p)
+        public static double IEEEremainder(double x, double p)
         {
                 int             hx,hp;
                 int             sx,lx,lp;// unsigned
@@ -530,7 +530,7 @@ public final class JMath
          *      @param  x       The argument, a double.
          *      @return Returns the square root of x.
          */
-        static public double sqrt(double x)
+        public static double sqrt(double x)
         {
                 long ix = Double.doubleToLongBits(x);
                 
@@ -588,24 +588,24 @@ public final class JMath
 
         
 
-        static private final double halF[]      = {0.5, -0.5};
-        static private final double twom1000 =
+        private static final double halF[]      = {0.5, -0.5};
+        private static final double twom1000 =
                 Double.longBitsToDouble(0x0170000000000000L);  /* 2**-1000=9.33263618503218878990e-302 */
 
-        static private final double o_threshold = Double.longBitsToDouble(0x40862e42fefa39efL);  /* 7.09782712893383973096e+02 */
-        static private final double u_threshold = Double.longBitsToDouble(0xc0874910d52d3051L);  /* -7.45133219101941108420e+02 */
-        static private final double ln2HI[] = {
+        private static final double o_threshold = Double.longBitsToDouble(0x40862e42fefa39efL);  /* 7.09782712893383973096e+02 */
+        private static final double u_threshold = Double.longBitsToDouble(0xc0874910d52d3051L);  /* -7.45133219101941108420e+02 */
+        private static final double ln2HI[] = {
                 Double.longBitsToDouble(0x3fe62e42fee00000L),   /*  6.93147180369123816490e-01 */
                 Double.longBitsToDouble(0xbfe62e42fee00000L)};  /* -6.93147180369123816490e-01 */
-        static private final double ln2LO[] = {
+        private static final double ln2LO[] = {
                 Double.longBitsToDouble(0x3dea39ef35793c76L),   /*  1.90821492927058770002e-10 */
                 Double.longBitsToDouble(0xbdea39ef35793c76L)};  /* -1.90821492927058770002e-10 */
-        static private final double invln2 = Double.longBitsToDouble(0x3ff71547652b82feL);  /* 1.44269504088896338700e+00 */
-        static private final double P1 = Double.longBitsToDouble(0x3fc555555555553eL);  /*  1.66666666666666019037e-01 */
-        static private final double P2 = Double.longBitsToDouble(0xbf66c16c16bebd93L);  /* -2.77777777770155933842e-03 */
-        static private final double P3 = Double.longBitsToDouble(0x3f11566aaf25de2cL);  /*  6.61375632143793436117e-05 */
-        static private final double P4 = Double.longBitsToDouble(0xbebbbd41c5d26bf1L);  /* -1.65339022054652515390e-06 */
-        static private final double P5 = Double.longBitsToDouble(0x3e66376972bea4d0L);  /*  4.13813679705723846039e-08 */
+        private static final double invln2 = Double.longBitsToDouble(0x3ff71547652b82feL);  /* 1.44269504088896338700e+00 */
+        private static final double P1 = Double.longBitsToDouble(0x3fc555555555553eL);  /*  1.66666666666666019037e-01 */
+        private static final double P2 = Double.longBitsToDouble(0xbf66c16c16bebd93L);  /* -2.77777777770155933842e-03 */
+        private static final double P3 = Double.longBitsToDouble(0x3f11566aaf25de2cL);  /*  6.61375632143793436117e-05 */
+        private static final double P4 = Double.longBitsToDouble(0xbebbbd41c5d26bf1L);  /* -1.65339022054652515390e-06 */
+        private static final double P5 = Double.longBitsToDouble(0x3e66376972bea4d0L);  /*  4.13813679705723846039e-08 */
 
         /* exp(x)
          * Returns the exponential of x.
@@ -669,7 +669,7 @@ public final class JMath
          *      @param  x       The argument, a double.
          *      @return Returns e to the power x.
          */
-        static public double exp(double x)
+        public static double exp(double x)
         {
                 double  y, hi=0, lo=0, c, t;
                 int             k=0, xsb;
@@ -730,15 +730,15 @@ public final class JMath
                 return Double.longBitsToDouble(iy);
         }
 
-        static private final double ln2_hi  = Double.longBitsToDouble(0x3fe62e42fee00000L);  /* 6.93147180369123816490e-01 */
-        static private final double ln2_lo  = Double.longBitsToDouble(0x3dea39ef35793c76L);  /* 1.90821492927058770002e-10 */
-        static private final double Lg1 = Double.longBitsToDouble(0x3fe5555555555593L);  /* 6.666666666666735130e-01 */
-        static private final double Lg2 = Double.longBitsToDouble(0x3fd999999997fa04L);  /* 3.999999999940941908e-01 */
-        static private final double Lg3 = Double.longBitsToDouble(0x3fd2492494229359L);  /* 2.857142874366239149e-01 */
-        static private final double Lg4 = Double.longBitsToDouble(0x3fcc71c51d8e78afL);  /* 2.222219843214978396e-01 */
-        static private final double Lg5 = Double.longBitsToDouble(0x3fc7466496cb03deL);  /* 1.818357216161805012e-01 */
-        static private final double Lg6 = Double.longBitsToDouble(0x3fc39a09d078c69fL);  /* 1.531383769920937332e-01 */
-        static private final double Lg7 = Double.longBitsToDouble(0x3fc2f112df3e5244L);  /* 1.479819860511658591e-01 */
+        private static final double ln2_hi  = Double.longBitsToDouble(0x3fe62e42fee00000L);  /* 6.93147180369123816490e-01 */
+        private static final double ln2_lo  = Double.longBitsToDouble(0x3dea39ef35793c76L);  /* 1.90821492927058770002e-10 */
+        private static final double Lg1 = Double.longBitsToDouble(0x3fe5555555555593L);  /* 6.666666666666735130e-01 */
+        private static final double Lg2 = Double.longBitsToDouble(0x3fd999999997fa04L);  /* 3.999999999940941908e-01 */
+        private static final double Lg3 = Double.longBitsToDouble(0x3fd2492494229359L);  /* 2.857142874366239149e-01 */
+        private static final double Lg4 = Double.longBitsToDouble(0x3fcc71c51d8e78afL);  /* 2.222219843214978396e-01 */
+        private static final double Lg5 = Double.longBitsToDouble(0x3fc7466496cb03deL);  /* 1.818357216161805012e-01 */
+        private static final double Lg6 = Double.longBitsToDouble(0x3fc39a09d078c69fL);  /* 1.531383769920937332e-01 */
+        private static final double Lg7 = Double.longBitsToDouble(0x3fc2f112df3e5244L);  /* 1.479819860511658591e-01 */
 
         /*
          * Return the logrithm of x
@@ -790,7 +790,7 @@ public final class JMath
          *      @param  x       The argument, a double.
          *      @return Returns the natural (base e) logarithm of x.
          */
-        static public double log(double x)
+        public static double log(double x)
         {
                 double hfsq,f,s,z,R,w,t1,t2,dk;
                 int k,hx,i,j;
@@ -866,7 +866,7 @@ public final class JMath
          *      @param  x       The argument, a double, assumed to be in radians.
          *      @return Returns the sine of x.
          */
-        static public double sin(double x)
+        public static double sin(double x)
         {
                 double  y[] = new double[2];
                 double  z=0.0;
@@ -897,12 +897,12 @@ public final class JMath
         }
 
 
-        static private double S1  = -1.66666666666666324348e-01; /* 0xBFC55555, 0x55555549 */
-        static private double S2  =  8.33333333332248946124e-03; /* 0x3F811111, 0x1110F8A6 */
-        static private double S3  = -1.98412698298579493134e-04; /* 0xBF2A01A0, 0x19C161D5 */
-        static private double S4  =  2.75573137070700676789e-06; /* 0x3EC71DE3, 0x57B1FE7D */
-        static private double S5  = -2.50507602534068634195e-08; /* 0xBE5AE5E6, 0x8A2B9CEB */
-        static private double S6  =  1.58969099521155010221e-10; /* 0x3DE5D93A, 0x5ACFD57C */
+        private static double S1  = -1.66666666666666324348e-01; /* 0xBFC55555, 0x55555549 */
+        private static double S2  =  8.33333333332248946124e-03; /* 0x3F811111, 0x1110F8A6 */
+        private static double S3  = -1.98412698298579493134e-04; /* 0xBF2A01A0, 0x19C161D5 */
+        private static double S4  =  2.75573137070700676789e-06; /* 0x3EC71DE3, 0x57B1FE7D */
+        private static double S5  = -2.50507602534068634195e-08; /* 0xBE5AE5E6, 0x8A2B9CEB */
+        private static double S6  =  1.58969099521155010221e-10; /* 0x3DE5D93A, 0x5ACFD57C */
                                                                                                                          
         /*
          * kernel sin function on [-pi/4, pi/4], pi/4 ~ 0.7854
@@ -953,7 +953,7 @@ public final class JMath
          *      @param  x       The argument, a double, assumed to be in radians.
          *      @return Returns the cosine of x.
          */
-        static public double cos(double x)
+        public static double cos(double x)
         {
                 double z = 0.0;
                 double y[] = new double[2];
@@ -984,13 +984,13 @@ public final class JMath
                 }
         }
 
-        static private final double one = Double.longBitsToDouble(0x3ff0000000000000L);  /*  1.00000000000000000000e+00 */
-        static private final double C1  = Double.longBitsToDouble(0x3fa555555555554cL);  /*  4.16666666666666019037e-02 */
-        static private final double C2  = Double.longBitsToDouble(0xbf56c16c16c15177L);  /* -1.38888888888741095749e-03 */
-        static private final double C3  = Double.longBitsToDouble(0x3efa01a019cb1590L);  /*  2.48015872894767294178e-05 */
-        static private final double C4  = Double.longBitsToDouble(0xbe927e4f809c52adL);  /* -2.75573143513906633035e-07 */
-        static private final double C5  = Double.longBitsToDouble(0x3e21ee9ebdb4b1c4L);  /*  2.08757232129817482790e-09 */
-        static private final double C6  = Double.longBitsToDouble(0xbda8fae9be8838d4L);  /* -1.13596475577881948265e-11 */
+        private static final double one = Double.longBitsToDouble(0x3ff0000000000000L);  /*  1.00000000000000000000e+00 */
+        private static final double C1  = Double.longBitsToDouble(0x3fa555555555554cL);  /*  4.16666666666666019037e-02 */
+        private static final double C2  = Double.longBitsToDouble(0xbf56c16c16c15177L);  /* -1.38888888888741095749e-03 */
+        private static final double C3  = Double.longBitsToDouble(0x3efa01a019cb1590L);  /*  2.48015872894767294178e-05 */
+        private static final double C4  = Double.longBitsToDouble(0xbe927e4f809c52adL);  /* -2.75573143513906633035e-07 */
+        private static final double C5  = Double.longBitsToDouble(0x3e21ee9ebdb4b1c4L);  /*  2.08757232129817482790e-09 */
+        private static final double C6  = Double.longBitsToDouble(0xbda8fae9be8838d4L);  /* -1.13596475577881948265e-11 */
 
         /*
          * kernel cos function on [-pi/4, pi/4], pi/4 ~ 0.785398164
@@ -1025,7 +1025,7 @@ public final class JMath
          *         magnitude of the latter is at least a quarter of x*x/2,
          *         thus, reducing the rounding error in the subtraction.
          */
-        static private double __kernel_cos(double x, double y)
+        private static double __kernel_cos(double x, double y)
         {
                 double  a, hz, z, r, qx=zero;
                 int             ix;
@@ -1056,7 +1056,7 @@ public final class JMath
          *      @param  x       The argument, a double, assumed to be in radians.
          *      @return Returns the tangent of x.
          */     
-        static public double tan(double x)
+        public static double tan(double x)
         {
                 double  z = zero;
                 
@@ -1080,9 +1080,9 @@ public final class JMath
         }
 
 
-        static private final double pio4  = Double.longBitsToDouble(0x3fe921fb54442d18L);  /* 7.85398163397448278999e-01 */
-        static private final double pio4lo= Double.longBitsToDouble(0x3c81a62633145c07L);  /* 3.06161699786838301793e-17 */
-        static private final double T[] =  {
+        private static final double pio4  = Double.longBitsToDouble(0x3fe921fb54442d18L);  /* 7.85398163397448278999e-01 */
+        private static final double pio4lo= Double.longBitsToDouble(0x3c81a62633145c07L);  /* 3.06161699786838301793e-17 */
+        private static final double T[] =  {
                 Double.longBitsToDouble(0x3fd5555555555563L),  /* 3.33333333333334091986e-01 */
                 Double.longBitsToDouble(0x3fc111111110fe7aL),  /* 1.33333333333201242699e-01 */
                 Double.longBitsToDouble(0x3faba1ba1bb341feL),  /* 5.39682539762260521377e-02 */
@@ -1128,7 +1128,7 @@ public final class JMath
          *              tan(x) = tan(pi/4-y) = (1-tan(y))/(1+tan(y))
          *                     = 1 - 2*(tan(y) - (tan(y)^2)/(1+tan(y)))
          */
-        static private double __kernel_tan(double x, double y, int iy)
+        private static double __kernel_tan(double x, double y, int iy)
         {
                 double z, r, v, w, s;
                 int     ix,hx;
@@ -1190,20 +1190,20 @@ public final class JMath
         }
 
 
-        static private final double pio2_hi = Double.longBitsToDouble(0x3FF921FB54442D18L);  /* 1.57079632679489655800e+00 */
-        static private final double pio2_lo = Double.longBitsToDouble(0x3C91A62633145C07L);  /* 6.12323399573676603587e-17 */
-        static private final double pio4_hi = Double.longBitsToDouble(0x3FE921FB54442D18L);  /* 7.85398163397448278999e-01 */
+        private static final double pio2_hi = Double.longBitsToDouble(0x3FF921FB54442D18L);  /* 1.57079632679489655800e+00 */
+        private static final double pio2_lo = Double.longBitsToDouble(0x3C91A62633145C07L);  /* 6.12323399573676603587e-17 */
+        private static final double pio4_hi = Double.longBitsToDouble(0x3FE921FB54442D18L);  /* 7.85398163397448278999e-01 */
         /* coefficient for R(x^2) */
-        static private final double pS0 = Double.longBitsToDouble(0x3fc5555555555555L);  /*  1.66666666666666657415e-01 */
-        static private final double pS1 = Double.longBitsToDouble(0xbfd4d61203eb6f7dL);  /* -3.25565818622400915405e-01 */
-        static private final double pS2 = Double.longBitsToDouble(0x3fc9c1550e884455L);  /*  2.01212532134862925881e-01 */
-        static private final double pS3 = Double.longBitsToDouble(0xbfa48228b5688f3bL);  /* -4.00555345006794114027e-02 */
-        static private final double pS4 = Double.longBitsToDouble(0x3f49efe07501b288L);  /*  7.91534994289814532176e-04 */
-        static private final double pS5 = Double.longBitsToDouble(0x3f023de10dfdf709L);  /*  3.47933107596021167570e-05 */
-        static private final double qS1 = Double.longBitsToDouble(0xc0033a271c8a2d4bL);  /* -2.40339491173441421878e+00 */
-        static private final double qS2 = Double.longBitsToDouble(0x40002ae59c598ac8L);  /*  2.02094576023350569471e+00 */
-        static private final double qS3 = Double.longBitsToDouble(0xbfe6066c1b8d0159L);  /* -6.88283971605453293030e-01 */
-        static private final double qS4 = Double.longBitsToDouble(0x3fb3b8c5b12e9282L);  /*  7.70381505559019352791e-02 */
+        private static final double pS0 = Double.longBitsToDouble(0x3fc5555555555555L);  /*  1.66666666666666657415e-01 */
+        private static final double pS1 = Double.longBitsToDouble(0xbfd4d61203eb6f7dL);  /* -3.25565818622400915405e-01 */
+        private static final double pS2 = Double.longBitsToDouble(0x3fc9c1550e884455L);  /*  2.01212532134862925881e-01 */
+        private static final double pS3 = Double.longBitsToDouble(0xbfa48228b5688f3bL);  /* -4.00555345006794114027e-02 */
+        private static final double pS4 = Double.longBitsToDouble(0x3f49efe07501b288L);  /*  7.91534994289814532176e-04 */
+        private static final double pS5 = Double.longBitsToDouble(0x3f023de10dfdf709L);  /*  3.47933107596021167570e-05 */
+        private static final double qS1 = Double.longBitsToDouble(0xc0033a271c8a2d4bL);  /* -2.40339491173441421878e+00 */
+        private static final double qS2 = Double.longBitsToDouble(0x40002ae59c598ac8L);  /*  2.02094576023350569471e+00 */
+        private static final double qS3 = Double.longBitsToDouble(0xbfe6066c1b8d0159L);  /* -6.88283971605453293030e-01 */
+        private static final double qS4 = Double.longBitsToDouble(0x3fb3b8c5b12e9282L);  /*  7.70381505559019352791e-02 */
 
         /*
          *      asin(x)
@@ -1242,7 +1242,7 @@ public final class JMath
          *      @return Returns the angle, in radians, whose sine is x.
          *                      It is in the range [-pi/2,pi/2].
          */
-        static public double asin(double x)
+        public static double asin(double x)
         {
                 double t=zero,w,p,q,c,r,s;
                 int hx,ix;
@@ -1315,7 +1315,7 @@ public final class JMath
          *      @return Returns the angle, in radians, whose cosine is x.
          *                      It is in the range [0,pi].
          */
-        static public double acos(double x)
+        public static double acos(double x)
         {
                 double z,p,q,r,w,s,c,df;
                 int hx,ix;
@@ -1361,21 +1361,21 @@ public final class JMath
         }
 
 
-        static private final double atanhi[] = {
+        private static final double atanhi[] = {
                 Double.longBitsToDouble(0x3fddac670561bb4fL),  /* 4.63647609000806093515e-01 atan(0.5)hi  */
                 Double.longBitsToDouble(0x3fe921fb54442d18L),  /* 7.85398163397448278999e-01 atan(1.0)hi  */
                 Double.longBitsToDouble(0x3fef730bd281f69bL),  /* 9.82793723247329054082e-01 atan(1.5)hi  */
                 Double.longBitsToDouble(0x3ff921fb54442d18L)   /* 1.57079632679489655800e+00 atan(inf)hi  */
         };
 
-        static private final double atanlo[] = {
+        private static final double atanlo[] = {
                 Double.longBitsToDouble(0x3c7a2b7f222f65e2L),  /* 2.26987774529616870924e-17 atan(0.5)lo  */
                 Double.longBitsToDouble(0x3c81a62633145c07L),  /* 3.06161699786838301793e-17 atan(1.0)lo  */
                 Double.longBitsToDouble(0x3c7007887af0cbbdL),  /* 1.39033110312309984516e-17 atan(1.5)lo  */
                 Double.longBitsToDouble(0x3c91a62633145c07L)   /* 6.12323399573676603587e-17 atan(inf)lo  */
         };
 
-        static private final double aT[] = {
+        private static final double aT[] = {
                 Double.longBitsToDouble(0x3fd555555555550dL),  /*  3.33333333333329318027e-01 */
                 Double.longBitsToDouble(0xbfc999999998ebc4L),  /* -1.99999999998764832476e-01 */
                 Double.longBitsToDouble(0x3fc24924920083ffL),  /*  1.42857142725034663711e-01 */
@@ -1415,7 +1415,7 @@ public final class JMath
          *      @return Returns the angle, in radians, whose tangent is x.
          *                      It is in the range [-pi/2,pi/2].
          */
-        static public double atan(double x)
+        public static double atan(double x)
         {
                 double w,s1,s2,z;
                 int ix,hx,id;
@@ -1463,9 +1463,9 @@ public final class JMath
         }
 
 
-        static private final double pi_o_4 = Double.longBitsToDouble(0x3fe921fb54442d18L);  /* 7.8539816339744827900e-01 */
-        static private final double pi_o_2 = Double.longBitsToDouble(0x3ff921fb54442d18L);  /* 1.5707963267948965580e+00 */
-        static private final double pi_lo  = Double.longBitsToDouble(0x3ca1a62633145c07L);  /* 1.2246467991473531772e-16 */
+        private static final double pi_o_4 = Double.longBitsToDouble(0x3fe921fb54442d18L);  /* 7.8539816339744827900e-01 */
+        private static final double pi_o_2 = Double.longBitsToDouble(0x3ff921fb54442d18L);  /* 1.5707963267948965580e+00 */
+        private static final double pi_lo  = Double.longBitsToDouble(0x3ca1a62633145c07L);  /* 1.2246467991473531772e-16 */
 
         /*
         * Method :
@@ -1502,7 +1502,7 @@ public final class JMath
          *                      from (0,0) to (x,y) makes with the x-axis.
          *                      It is in the range [-pi,pi].
          */
-        static public double atan2(double y, double x)
+        public static double atan2(double y, double x)
         {  
                 double z;
                 int k,m,hx,hy,ix,iy;
@@ -1615,7 +1615,7 @@ public final class JMath
         /*
          * Table of constants for 2/pi, 396 Hex digits (476 decimal) of 2/pi 
          */
-        static private final int two_over_pi[] = {
+        private static final int two_over_pi[] = {
                 0xa2f983, 0x6e4e44, 0x1529fc, 0x2757d1, 0xf534dd, 0xc0db62, 
                 0x95993c, 0x439041, 0xfe5163, 0xabdebb, 0xc561b7, 0x246e3a, 
                 0x424dd2, 0xe00649, 0x2eea09, 0xd1921c, 0xfe1deb, 0x1cb129, 
@@ -1628,7 +1628,7 @@ public final class JMath
                 0x91615e, 0xe61b08, 0x659985, 0x5f14a0, 0x68408d, 0xffd880, 
                 0x4d7327, 0x310606, 0x1556ca, 0x73a8c9, 0x60e27b, 0xc08c6b};
 
-        static private final int  npio2_hw[] = {
+        private static final int  npio2_hw[] = {
                 0x3ff921fb, 0x400921fb, 0x4012d97c, 0x401921fb, 0x401f6a7a, 0x4022d97c,
                 0x4025fdbb, 0x402921fb, 0x402c463a, 0x402f6a7a, 0x4031475c, 0x4032d97c,
                 0x40346b9c, 0x4035fdbb, 0x40378fdb, 0x403921fb, 0x403ab41b, 0x403c463a,
@@ -1636,22 +1636,22 @@ public final class JMath
                 0x4043a28c, 0x40446b9c, 0x404534ac, 0x4045fdbb, 0x4046c6cb, 0x40478fdb,
                 0x404858eb, 0x404921fb};
 
-        static private final double zero =  0.00000000000000000000e+00;  // 0x0000000000000000 
-        static private final double half =    Double.longBitsToDouble(0x3fe0000000000000L);  /* 5.00000000000000000000e-01 */
-        static private final double two24 =   Double.longBitsToDouble(0x4170000000000000L);  /* 1.67772160000000000000e+07 */
-        static private final double invpio2 = Double.longBitsToDouble(0x3fe45f306dc9c883L);  /* 6.36619772367581382433e-01 53 bits of 2/pi */
-        static private final double pio2_1  = Double.longBitsToDouble(0x3ff921fb54400000L);  /* 1.57079632673412561417e+00 first  33 bit of pi/2 */
-        static private final double pio2_1t = Double.longBitsToDouble(0x3dd0b4611a626331L);  /* 6.07710050650619224932e-11 pi/2 - pio2_1 */
-        static private final double pio2_2  = Double.longBitsToDouble(0x3dd0b4611a600000L);  /* 6.07710050630396597660e-11 second 33 bit of pi/2 */
-        static private final double pio2_2t = Double.longBitsToDouble(0x3ba3198a2e037073L);  /* 2.02226624879595063154e-21 pi/2 - (pio2_1+pio2_2) */
-        static private final double pio2_3  = Double.longBitsToDouble(0x3ba3198a2e000000L);  /* 2.02226624871116645580e-21 third  33 bit of pi/2 */
-        static private final double pio2_3t = Double.longBitsToDouble(0x397b839a252049c1L);  /* 8.47842766036889956997e-32 pi/2 - (pio2_1+pio2_2+pio2_3) */
+        private static final double zero =  0.00000000000000000000e+00;  // 0x0000000000000000 
+        private static final double half =    Double.longBitsToDouble(0x3fe0000000000000L);  /* 5.00000000000000000000e-01 */
+        private static final double two24 =   Double.longBitsToDouble(0x4170000000000000L);  /* 1.67772160000000000000e+07 */
+        private static final double invpio2 = Double.longBitsToDouble(0x3fe45f306dc9c883L);  /* 6.36619772367581382433e-01 53 bits of 2/pi */
+        private static final double pio2_1  = Double.longBitsToDouble(0x3ff921fb54400000L);  /* 1.57079632673412561417e+00 first  33 bit of pi/2 */
+        private static final double pio2_1t = Double.longBitsToDouble(0x3dd0b4611a626331L);  /* 6.07710050650619224932e-11 pi/2 - pio2_1 */
+        private static final double pio2_2  = Double.longBitsToDouble(0x3dd0b4611a600000L);  /* 6.07710050630396597660e-11 second 33 bit of pi/2 */
+        private static final double pio2_2t = Double.longBitsToDouble(0x3ba3198a2e037073L);  /* 2.02226624879595063154e-21 pi/2 - (pio2_1+pio2_2) */
+        private static final double pio2_3  = Double.longBitsToDouble(0x3ba3198a2e000000L);  /* 2.02226624871116645580e-21 third  33 bit of pi/2 */
+        private static final double pio2_3t = Double.longBitsToDouble(0x397b839a252049c1L);  /* 8.47842766036889956997e-32 pi/2 - (pio2_1+pio2_2+pio2_3) */
 
 
         /*
          *      Return the remainder of x % pi/2 in y[0]+y[1]
          */
-        static private int __ieee754_rem_pio2(double x, double y[])
+        private static int __ieee754_rem_pio2(double x, double y[])
         {
                 double  z = zero, w, t, r, fn;
                 double  tx[] = new double[3];
@@ -1883,7 +1883,7 @@ public final class JMath
          * to produce the hexadecimal values shown.
          */
 
-        static final private double PIo2[] = {
+        private static final double PIo2[] = {
                 Double.longBitsToDouble(0x3ff921fb40000000L),  /* 1.57079625129699707031e+00 */
                 Double.longBitsToDouble(0x3e74442d00000000L),  /* 7.54978941586159635335e-08 */
                 Double.longBitsToDouble(0x3cf8469880000000L),  /* 5.39030252995776476554e-15 */
@@ -1894,9 +1894,9 @@ public final class JMath
                 Double.longBitsToDouble(0x3569f31d00000000L)   /* 2.16741683877804819444e-51 */
         };
 
-        static final private double twon24 = Double.longBitsToDouble(0x3E70000000000000L);  /* 5.96046447753906250000e-08 */
+        private static final double twon24 = Double.longBitsToDouble(0x3E70000000000000L);  /* 5.96046447753906250000e-08 */
 
-        static private int __kernel_rem_pio2(double x[], double y[], int e0, int nx)
+        private static int __kernel_rem_pio2(double x[], double y[], int e0, int nx)
         {
                 int             jz,jx,jv,jp,jk,carry,n,i,j,k,m,q0,ih;
                 double  z,fw;
@@ -2045,27 +2045,27 @@ public final class JMath
         }
 
 
-        static final private double bp[] = {1.0, 1.5,};
-        static final private double dp_h[] = { 0.0, Double.longBitsToDouble(0x3fe2b80340000000L)};  /* 5.84962487220764160156e-01 */
-        static final private double dp_l[] = { 0.0, Double.longBitsToDouble(0x3e4cfdeb43cfd006L)};  /* 1.35003920212974897128e-08 */
-        static final private double two53  =  Double.longBitsToDouble(0x4340000000000000L);  /* 9007199254740992.0 */
+        private static final double bp[] = {1.0, 1.5,};
+        private static final double dp_h[] = { 0.0, Double.longBitsToDouble(0x3fe2b80340000000L)};  /* 5.84962487220764160156e-01 */
+        private static final double dp_l[] = { 0.0, Double.longBitsToDouble(0x3e4cfdeb43cfd006L)};  /* 1.35003920212974897128e-08 */
+        private static final double two53  =  Double.longBitsToDouble(0x4340000000000000L);  /* 9007199254740992.0 */
         /* poly coefs for (3/2)*(log(x)-2s-2/3*s**3 */
-        static final private double L1  = Double.longBitsToDouble(0x3fe3333333333303L);  /* 5.99999999999994648725e-01 */
-        static final private double L2  = Double.longBitsToDouble(0x3fdb6db6db6fabffL);  /*  4.28571428578550184252e-01 */
-        static final private double L3  = Double.longBitsToDouble(0x3fd55555518f264dL);  /*  3.33333329818377432918e-01 */
-        static final private double L4  = Double.longBitsToDouble(0x3fd17460a91d4101L);  /*  2.72728123808534006489e-01 */
-        static final private double L5  = Double.longBitsToDouble(0x3fcd864a93c9db65L);  /*  2.30660745775561754067e-01 */
-        static final private double L6  = Double.longBitsToDouble(0x3fca7e284a454eefL);  /*  2.06975017800338417784e-01 */
-        static final private double lg2  = Double.longBitsToDouble(0x3fe62e42fefa39efL);  /*  6.93147180559945286227e-01 */
-        static final private double lg2_h = Double.longBitsToDouble(0x3fe62e4300000000L);  /*  6.93147182464599609375e-01 */
-        static final private double lg2_l = -1.90465429995776804525e-09; /* 0xbe205c610ca86c39 */
-        static final private double ovt  = 8.0085662595372944372e-17; /* -(1024-log2(ovfl+.5ulp)) */
-        static final private double cp   = Double.longBitsToDouble(0x3feec709dc3a03fdL);  /*  9.61796693925975554329e-01 = 2/(3ln2) */
-        static final private double cp_h = Double.longBitsToDouble(0x3feec709e0000000L);  /*  9.61796700954437255859e-01 = (float)cp */
-        static final private double cp_l = Double.longBitsToDouble(0xbe3e2fe0145b01f5L);  /* -7.02846165095275826516e-09 = tail of cp_h*/
-        static final private double ivln2   = Double.longBitsToDouble(0x3ff71547652b82feL);  /*  1.44269504088896338700e+00 = 1/ln2 */
-        static final private double ivln2_h = Double.longBitsToDouble(0x3ff7154760000000L);  /*  1.44269502162933349609e+00 = 24b 1/ln2*/
-        static final private double ivln2_l = Double.longBitsToDouble(0x3e54ae0bf85ddf44L);  /*  1.92596299112661746887e-08 = 1/ln2 tail*/
+        private static final double L1  = Double.longBitsToDouble(0x3fe3333333333303L);  /* 5.99999999999994648725e-01 */
+        private static final double L2  = Double.longBitsToDouble(0x3fdb6db6db6fabffL);  /*  4.28571428578550184252e-01 */
+        private static final double L3  = Double.longBitsToDouble(0x3fd55555518f264dL);  /*  3.33333329818377432918e-01 */
+        private static final double L4  = Double.longBitsToDouble(0x3fd17460a91d4101L);  /*  2.72728123808534006489e-01 */
+        private static final double L5  = Double.longBitsToDouble(0x3fcd864a93c9db65L);  /*  2.30660745775561754067e-01 */
+        private static final double L6  = Double.longBitsToDouble(0x3fca7e284a454eefL);  /*  2.06975017800338417784e-01 */
+        private static final double lg2  = Double.longBitsToDouble(0x3fe62e42fefa39efL);  /*  6.93147180559945286227e-01 */
+        private static final double lg2_h = Double.longBitsToDouble(0x3fe62e4300000000L);  /*  6.93147182464599609375e-01 */
+        private static final double lg2_l = -1.90465429995776804525e-09; /* 0xbe205c610ca86c39 */
+        private static final double ovt  = 8.0085662595372944372e-17; /* -(1024-log2(ovfl+.5ulp)) */
+        private static final double cp   = Double.longBitsToDouble(0x3feec709dc3a03fdL);  /*  9.61796693925975554329e-01 = 2/(3ln2) */
+        private static final double cp_h = Double.longBitsToDouble(0x3feec709e0000000L);  /*  9.61796700954437255859e-01 = (float)cp */
+        private static final double cp_l = Double.longBitsToDouble(0xbe3e2fe0145b01f5L);  /* -7.02846165095275826516e-09 = tail of cp_h*/
+        private static final double ivln2   = Double.longBitsToDouble(0x3ff71547652b82feL);  /*  1.44269504088896338700e+00 = 1/ln2 */
+        private static final double ivln2_h = Double.longBitsToDouble(0x3ff7154760000000L);  /*  1.44269502162933349609e+00 = 24b 1/ln2*/
+        private static final double ivln2_l = Double.longBitsToDouble(0x3e54ae0bf85ddf44L);  /*  1.92596299112661746887e-08 = 1/ln2 tail*/
 
 
         /*
@@ -2114,7 +2114,7 @@ public final class JMath
          *      @param  y       The exponent.
          *      @return x to the power y.
          */
-        static public double pow(double x, double y)
+        public static double pow(double x, double y)
         {
                 double  z, ax, z_h, z_l, p_h, p_l;
                 double  y1, t1, t2, r, s, t, u, v, w;
@@ -2356,7 +2356,7 @@ public final class JMath
  * with the sign bit of y.
  */
 
-        static private double copysign(double x, double y)
+        private static double copysign(double x, double y)
         {
                 long ix = Double.doubleToLongBits(x);
                 long iy = Double.doubleToLongBits(y);
@@ -2364,8 +2364,8 @@ public final class JMath
                 return Double.longBitsToDouble(ix);
         }
 
-        static private final double two54  = Double.longBitsToDouble(0x4350000000000000L);  /*  1.80143985094819840000e+16 */
-        static private final double twom54 = Double.longBitsToDouble(0x3c90000000000000L);  /*  5.55111512312578270212e-17 */
+        private static final double two54  = Double.longBitsToDouble(0x4350000000000000L);  /*  1.80143985094819840000e+16 */
+        private static final double twom54 = Double.longBitsToDouble(0x3c90000000000000L);  /*  5.55111512312578270212e-17 */
 
 
         /* 
@@ -2374,7 +2374,7 @@ public final class JMath
          * manipulation rather than by actually performing an 
          * exponentiation or a multiplication.
          */
-        static private double scalbn (double x, int n)
+        private static double scalbn (double x, int n)
         {
                 int  k, hx, lx;
                 hx = __HI(x);
@@ -2405,13 +2405,13 @@ public final class JMath
         }
 
 
-        static private double set(int newHiPart, int newLowPart)
+        private static double set(int newHiPart, int newLowPart)
         {
                 return Double.longBitsToDouble((((long)newHiPart)<<32) | newLowPart);
         }
 
 
-        static private double setLO(double x, int newLowPart)
+        private static double setLO(double x, int newLowPart)
         {
                 long    lx = Double.doubleToLongBits(x);
                 lx &= 0xFFFFFFFF00000000L;
@@ -2420,7 +2420,7 @@ public final class JMath
         }
 
 
-        static private double setHI(double x, int newHiPart)
+        private static double setHI(double x, int newHiPart)
         {
                 long    lx = Double.doubleToLongBits(x);
                 lx &= 0x00000000FFFFFFFFL;
@@ -2428,12 +2428,12 @@ public final class JMath
                 return Double.longBitsToDouble(lx);
         }
 
-        static private int __HI(double x)
+        private static int __HI(double x)
         {
                 return (int)(0xFFFFFFFF&(Double.doubleToLongBits(x)>>32));
         }
 
-        static private int __LO(double x)
+        private static int __LO(double x)
         {
                 return (int)(0xFFFFFFFF&Double.doubleToLongBits(x));
         }
