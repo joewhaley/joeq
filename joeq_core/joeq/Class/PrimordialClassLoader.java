@@ -333,6 +333,9 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
     public static jq_Class getJavaLangClassLoader() { return (jq_Class)loader.getOrCreateBSType("Ljava/lang/ClassLoader;"); }
     public static jq_Class getJavaLangReflectField() { return (jq_Class)loader.getOrCreateBSType("Ljava/lang/reflect/Field;"); }
     public static jq_Class getJavaLangReflectMethod() { return (jq_Class)loader.getOrCreateBSType("Ljava/lang/reflect/Method;"); }
+    public static jq_Class getJavaLangReflectConstructor() { return (jq_Class)loader.getOrCreateBSType("Ljava/lang/reflect/Constructor;"); }
+    public static jq_Class getJavaLangThread() { return (jq_Class)loader.getOrCreateBSType("Ljava/lang/Thread;"); }
+    public static jq_Class getJavaLangRefFinalizer() { return (jq_Class)loader.getOrCreateBSType("Ljava/lang/ref/Finalizer;"); }
     private final Map/*<Utf8, jq_Type>*/ bs_desc2type;
 
     public Set/*jq_Type*/ getAllTypes() {
@@ -371,7 +374,7 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
     }
     public final jq_Type getOrCreateBSType(String desc) { return getOrCreateBSType(Utf8.get(desc)); }
     public final jq_Type getOrCreateBSType(Utf8 desc) {
-        if (!jq.Bootstrapping) return ClassLibInterface.i.getOrCreateType(this, desc);
+        if (!jq.Bootstrapping) return ClassLibInterface.DEFAULT.getOrCreateType(this, desc);
         jq_Type t = (jq_Type)bs_desc2type.get(desc);
         if (t == null) {
             if (desc.isDescriptor(jq_ClassFileConstants.TC_CLASS)) {
@@ -425,7 +428,7 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
     public final void replaceClass(String cName)
     {
         Utf8 oldDesc = Utf8.get("L"+cName.replace('.', '/')+";") ;
-        jq_Type old = ClassLibInterface.i.getOrCreateType(this, oldDesc);
+        jq_Type old = PrimordialClassLoader.getOrCreateType(this, oldDesc);
         jq.Assert(old != null);
         jq.Assert(oldDesc.isDescriptor(jq_ClassFileConstants.TC_CLASS));
 
@@ -448,5 +451,20 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
     
     public void unloadBSType(jq_Type t) {
         bs_desc2type.remove(t.getDesc());
+    }
+    
+    public static final jq_Type getOrCreateType(ClassLoader cl, Utf8 desc) {
+    	if (!jq.Bootstrapping) return ClassLibInterface.DEFAULT.getOrCreateType(cl, desc);
+        jq.Assert(cl == PrimordialClassLoader.loader);
+        return PrimordialClassLoader.loader.getOrCreateBSType(desc);
+    }
+    
+    public static final void unloadType(ClassLoader cl, jq_Type t) {
+    	if (!jq.Bootstrapping) {
+    		ClassLibInterface.DEFAULT.unloadType(cl, t);
+    		return;
+    	}
+        jq.Assert(cl == PrimordialClassLoader.loader);
+        PrimordialClassLoader.loader.unloadBSType(t);
     }
 }

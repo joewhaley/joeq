@@ -76,9 +76,9 @@ public abstract class jq_Method extends jq_Member {
         state = STATE_LOADED;
         if (!jq.Bootstrapping) {
             if (this instanceof jq_Initializer) {
-                ClassLibInterface.i.initNewConstructor((java.lang.reflect.Constructor)this.member_object, (jq_Initializer)this);
+                ClassLibInterface.DEFAULT.initNewConstructor((java.lang.reflect.Constructor)this.member_object, (jq_Initializer)this);
             } else {
-                ClassLibInterface.i.initNewMethod((java.lang.reflect.Method)this.member_object, this);
+                ClassLibInterface.DEFAULT.initNewMethod((java.lang.reflect.Method)this.member_object, this);
             }
         }
     }
@@ -188,9 +188,9 @@ public abstract class jq_Method extends jq_Member {
         state = STATE_LOADED;
         if (!jq.Bootstrapping) {
             if (this instanceof jq_Initializer) {
-                ClassLibInterface.i.initNewConstructor((java.lang.reflect.Constructor)this.member_object, (jq_Initializer)this);
+                ClassLibInterface.DEFAULT.initNewConstructor((java.lang.reflect.Constructor)this.member_object, (jq_Initializer)this);
             } else {
-                ClassLibInterface.i.initNewMethod((java.lang.reflect.Method)this.member_object, this);
+                ClassLibInterface.DEFAULT.initNewMethod((java.lang.reflect.Method)this.member_object, this);
             }
         }
     }

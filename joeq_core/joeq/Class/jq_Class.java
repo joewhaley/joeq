@@ -864,16 +864,16 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                 
                 // if this is a class library, look for and load our mirror (implementation) class
                 // CR: il essaye tous les chemins possibles ou le mirror pourrait se trouver. Ie. ../common/.. ou sun_13/.. par ex.
-                Iterator impls = ClassLibInterface.i.getImplementationClassDescs(getDesc());
+                Iterator impls = ClassLibInterface.DEFAULT.getImplementationClassDescs(getDesc());
                 while (impls.hasNext()) {
                     Utf8 impl_utf = (Utf8)impls.next();
-                    jq_Class mirrorclass = (jq_Class)ClassLibInterface.i.getOrCreateType(class_loader, impl_utf);
+                    jq_Class mirrorclass = (jq_Class)PrimordialClassLoader.getOrCreateType(class_loader, impl_utf);
                     try {
                         if (TRACE) SystemInterface.debugmsg("Attempting to load mirror class "+mirrorclass);
                         mirrorclass.load();
                     } catch (NoClassDefFoundError x) {
                         // no mirror class
-                        ClassLibInterface.i.unloadType(class_loader, mirrorclass);
+                        PrimordialClassLoader.unloadType(class_loader, mirrorclass);
                         mirrorclass = null;
                     }
                     if (mirrorclass != null) {
@@ -1041,12 +1041,12 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                 String thisName = this.getName();
                 if (thisDesc.startsWith("LREPLACE")) {
                     Utf8 oldDesc = Utf8.get("L" + thisDesc.substring( 8 , thisDesc.length() )); // remove the 'LREPLACE' in name and restore 'L'
-                    Clazz.jq_Type old = ClassLibInterface.i.getOrCreateType(class_loader , oldDesc) ;
+                    Clazz.jq_Type old = PrimordialClassLoader.getOrCreateType(class_loader , oldDesc) ;
                     jq.Assert(old instanceof jq_Class);
                     if (((jq_Class)old).getState() < STATE_LOADED) {
                         // old has not been loaded yet, since it was not in the image
                         if (TRACE_REPLACE_CLASS) SystemInterface.debugmsg("REPLACING Class: " + old.getDesc() + ". This class was not in the original image: doing nothing!");
-                        ClassLibInterface.i.unloadType(class_loader , old) ;
+                        PrimordialClassLoader.unloadType(class_loader , old) ;
                     } else {
                     	replaceMethodIn((jq_Class) old);
                     }
@@ -1682,7 +1682,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
             jq_Class di = that.declared_interfaces[i];
             di.removeSubinterface(that);
         }
-        ClassLibInterface.i.unloadType(class_loader, that);
+        PrimordialClassLoader.unloadType(class_loader, that);
         if (TRACE) SystemInterface.debugmsg("Finished merging class "+this+".");
     }
     
