@@ -235,7 +235,15 @@ public abstract class Solver {
             if (s == null) break;
             if (s.length() == 0) continue;
             if (s.startsWith("#")) continue;
-            StringTokenizer st = new StringTokenizer(s, " (,/).", true);
+            while (s.endsWith(" ") || s.endsWith("\n")) s = s.substring(0,s.length()-1);
+            while (s.endsWith("\\")) {
+                s = s.substring(0,s.length()-1);
+                s = s + " " + in.readLine();
+                while (s.endsWith(" ") || s.endsWith("\n")) s = s.substring(0,s.length()-1);                
+            }
+            //out.println("Parsing: "+s);
+            StringTokenizer st = new StringTokenizer(s, " (,/).=", true);
+            if (!st.hasMoreTokens()) continue;
             InferenceRule r = parseRule(st);
             if (TRACE) out.println("Loaded rule(s) "+r);
             else out.print('.');
@@ -248,16 +256,18 @@ public abstract class Solver {
         Map/*<String,Variable>*/ nameToVar = new HashMap();
         RuleTerm bottom = parseRuleTerm(nameToVar, st);
         String sep = nextToken(st);
-        if (!sep.equals(":-"))
-            throw new IllegalArgumentException("Expected \":-\", got \""+sep+"\"");
         List/*<RuleTerm>*/ terms = new LinkedList();
-        for (;;) {
-            RuleTerm rt = parseRuleTerm(nameToVar, st);
-            if (rt == null) break;
-            terms.add(rt);
-            sep = nextToken(st);
-            if (sep.equals(".")) break;
-            if (!sep.equals(",")) throw new IllegalArgumentException();
+        if (!sep.equals(".")) {
+            if (!sep.equals(":-"))
+                throw new IllegalArgumentException("Expected \":-\", got \""+sep+"\"");
+            for (;;) {
+                RuleTerm rt = parseRuleTerm(nameToVar, st);
+                if (rt == null) break;
+                terms.add(rt);
+                sep = nextToken(st);
+                if (sep.equals(".")) break;
+                if (!sep.equals(",")) throw new IllegalArgumentException();
+            }
         }
         InferenceRule ir = createInferenceRule(terms, bottom);
         parseRuleOptions(ir, st);
