@@ -33,13 +33,17 @@ public class FreeMemManager {
     }
 
     public HeapAddress getFreeMem(int size) {
-        MemUnit unit = stg.next(size);
-        if(unit == null) {
-            return null;
+        if (false) { // JW: crashes...
+            MemUnit unit = stg.next(size);
+            if(unit == null) {
+                return null;
+            } else {
+                HeapAddress addr = unit.getHead();
+                unit.setHead((HeapAddress)addr.offset(size));
+                return addr;
+            }
         } else {
-            HeapAddress addr = unit.getHead();
-            unit.setHead((HeapAddress)addr.offset(size));
-            return addr;
+            return null;
         }
     }
 }

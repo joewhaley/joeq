@@ -20,7 +20,7 @@ import UTF.Utf8;
  * @author  John Whaley
  * @version $Id$
  */
-public class jq_Array extends jq_Reference implements jq_ClassFileConstants, ObjectLayout {
+public class jq_Array extends jq_Reference implements jq_ClassFileConstants {
 
     public static /*final*/ boolean TRACE = false;
     
@@ -53,7 +53,7 @@ public class jq_Array extends jq_Reference implements jq_ClassFileConstants, Obj
     }
 
     public final Object newInstance(int length) {
-        load(); verify(); prepare(); sf_initialize(); cls_initialize();
+        load(); verify(); prepare(); sf_initialize(); compile(); cls_initialize();
         return DefaultHeapAllocator.allocateArray(length, getInstanceSize(length), vtable);
     }
     
@@ -159,7 +159,7 @@ public class jq_Array extends jq_Reference implements jq_ClassFileConstants, Obj
     }
 
     public final int getInstanceSize(int length) {
-        int size = ARRAY_HEADER_SIZE+(length<<getLogElementSize());
+        int size = ObjectLayout.ARRAY_HEADER_SIZE+(length<<getLogElementSize());
         return (size+3) & ~3;
     }
     
@@ -172,42 +172,67 @@ public class jq_Array extends jq_Reference implements jq_ClassFileConstants, Obj
     
     public final void load() {
         if (isLoaded()) return;
-        if (TRACE) System.out.println("Loading "+this+"...");
-        state = STATE_LOADED;
+        synchronized (this) {
+            if (TRACE) System.out.println("Loading "+this+"...");
+            state = STATE_LOADED;
+        }
     }
     public final void verify() {
         if (isVerified()) return;
-        if (TRACE) System.out.println("Verifying "+this+"...");
-        state = STATE_VERIFIED;
+        if (!isLoaded()) load();
+        synchronized (this) {
+            if (TRACE) System.out.println("Verifying "+this+"...");
+            state = STATE_VERIFIED;
+        }
     }
     public final void prepare() {
         if (isPrepared()) return;
-        if (TRACE) System.out.println("Preparing "+this+"...");
-        state = STATE_PREPARING;
-        // vtable is a copy of Ljava/lang/Object;
-        jq_Class jlo = PrimordialClassLoader.getJavaLangObject();
-        jlo.load(); jlo.verify(); jlo.prepare();
-        Address[] jlovtable = (Address[])jlo.getVTable();
-        vtable = new Address[jlovtable.length];
-        state = STATE_PREPARED;
+        if (!isVerified()) verify();
+        synchronized (this) {
+            if (TRACE) System.out.println("Preparing "+this+"...");
+            state = STATE_PREPARING;
+            // vtable is a copy of Ljava/lang/Object;
+            jq_Class jlo = PrimordialClassLoader.getJavaLangObject();
+            jlo.prepare();
+            Address[] jlovtable = (Address[])jlo.getVTable();
+            vtable = new Address[jlovtable.length];
+            state = STATE_PREPARED;
+        }
     }
     public final void sf_initialize() {
         if (isSFInitialized()) return;
-        if (TRACE) System.out.println("SF init "+this+"...");
-        state = STATE_SFINITIALIZED;
+        if (!isPrepared()) prepare();
+        synchronized (this) {
+            if (TRACE) System.out.println("SF init "+this+"...");
+            state = STATE_SFINITIALIZED;
+        }
+    }
+    public final void compile() {
+        if (isCompiled()) return;
+        if (!isSFInitialized()) sf_initialize();
+        synchronized (this) {
+            if (TRACE) System.out.println("Compile "+this+"...");
+            state = STATE_COMPILING;
+            jq_Class jlo = PrimordialClassLoader.getJavaLangObject();
+            jlo.compile();
+            Address[] jlovtable = (Address[])jlo.getVTable();
+            Address[] vt = (Address[])this.vtable;
+            vt[0] = HeapAddress.addressOf(this);
+            System.arraycopy(jlovtable, 1, vt, 1, jlovtable.length-1);
+            if (TRACE) System.out.println(this+": "+vt[0].stringRep()+" vtable "+HeapAddress.addressOf(vt).stringRep());
+            state = STATE_COMPILED;
+        }
     }
     public final void cls_initialize() {
         if (isClsInitialized()) return;
-        if (TRACE) System.out.println("Class init "+this+"...");
-        state = STATE_CLSINITIALIZING;
-        jq_Class jlo = PrimordialClassLoader.getJavaLangObject();
-        jlo.sf_initialize(); jlo.cls_initialize();
-        Address[] jlovtable = (Address[])jlo.getVTable();
-        Address[] vt = (Address[])this.vtable;
-        vt[0] = HeapAddress.addressOf(this);
-        System.arraycopy(jlovtable, 1, vt, 1, jlovtable.length-1);
-        if (TRACE) System.out.println(this+": "+vt[0].stringRep()+" vtable "+HeapAddress.addressOf(vt).stringRep());
-        state = STATE_CLSINITIALIZED;
+        if (!isCompiled()) compile();
+        synchronized (this) {
+            if (TRACE) System.out.println("Class init "+this+"...");
+            state = STATE_CLSINITIALIZING;
+            jq_Class jlo = PrimordialClassLoader.getJavaLangObject();
+            jlo.cls_initialize();
+            state = STATE_CLSINITIALIZED;
+        }
     }
     
     public void accept(jq_TypeVisitor tv) {

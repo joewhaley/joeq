@@ -34,7 +34,7 @@ public class StackHeapWalker {
         }
 
         if (sp.difference(fp) != 0) {
-            if (TRACE) SystemInterface.debugmsg("StackHeapWalker next: fp=" + fp.stringRep() + " sp=" + sp.stringRep());
+            if (TRACE) SystemInterface.debugwriteln("StackHeapWalker next: fp=" + fp.stringRep() + " sp=" + sp.stringRep());
             return true; // successful
         } else {
             do {
@@ -42,7 +42,7 @@ public class StackHeapWalker {
                 if (fp.isNull()) return false; // failed
                 sp = (StackAddress) sp.offset(8); // skipping return address
             } while (sp.difference(fp) == 0);
-            if (TRACE) SystemInterface.debugmsg("StackHeapWalker next: fp=" + fp.stringRep() + " sp=" + sp.stringRep());
+            if (TRACE) SystemInterface.debugwriteln("StackHeapWalker next: fp=" + fp.stringRep() + " sp=" + sp.stringRep());
             return true;
         }
     }
@@ -79,7 +79,7 @@ public class StackHeapWalker {
         // thus, sp.peek4() should return a qualified candidate for HeapAddress verification
         scan();
 
-        if (TRACE) SystemInterface.debugmsg("StackHeapWalker init: fp=" + fp.stringRep() + " sp=" + sp.stringRep());
+        if (TRACE) SystemInterface.debugwriteln("StackHeapWalker init: fp=" + fp.stringRep() + " sp=" + sp.stringRep());
     }
 
     // totally 3 conditions must be met

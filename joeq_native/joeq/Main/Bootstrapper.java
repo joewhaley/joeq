@@ -62,7 +62,7 @@ import Util.LinearSet;
  * @author  John Whaley
  * @version $Id$
  */
-public abstract class Bootstrapper implements ObjectLayout {
+public abstract class Bootstrapper {
 
     private static BootImage objmap;
     
@@ -182,7 +182,7 @@ public abstract class Bootstrapper implements ObjectLayout {
         long starttime = System.currentTimeMillis();
         jq_Class c;
         c = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("L"+rootMethodClassName+";");
-        c.load(); c.verify(); c.prepare();
+        c.prepare();
         long loadtime = System.currentTimeMillis() - starttime;
 
         jq_StaticMethod rootm = null;
@@ -209,7 +209,7 @@ public abstract class Bootstrapper implements ObjectLayout {
                 if (classname == null) break;
                 if (classname.charAt(0) == '#') continue;
                 jq_Type t = PrimordialClassLoader.loader.getOrCreateBSType(classname);
-                t.load(); t.verify(); t.prepare();
+                t.prepare();
                 classset.add(t);
             }
         }
@@ -228,11 +228,11 @@ public abstract class Bootstrapper implements ObjectLayout {
                         jq.Assert(s.endsWith(".class"));
                         s = "L"+s.substring(0, s.length()-6)+";";
                         jq_Class t = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType(s);
-                        t.load(); t.verify(); t.prepare();
+                        t.prepare();
                         classset.add(t);
                         for (;;) {
                             jq_Array q = t.getArrayTypeForElementType();
-                            q.load(); q.verify(); q.prepare();
+                            q.prepare();
                             classset.add(q);
                             t = t.getSuperclass();
                             if (t == null) break;
@@ -241,13 +241,13 @@ public abstract class Bootstrapper implements ObjectLayout {
                     }
                 } else {
                     jq_Type t = PrimordialClassLoader.loader.getOrCreateBSType(classname);
-                    t.load(); t.verify(); t.prepare();
+                    t.prepare();
                     classset.add(t);
                     if (t instanceof jq_Class) {
                         jq_Class q = (jq_Class) t;
                         for (;;) {
                             t = q.getArrayTypeForElementType();
-                            t.load(); t.verify(); t.prepare();
+                            t.prepare();
                             classset.add(t);
                             q = q.getSuperclass();
                             if (q == null) break;
@@ -369,13 +369,10 @@ public abstract class Bootstrapper implements ObjectLayout {
 
         // allocate entrypoints first in bootimage.
         // NOTE: will only be first if java.lang.Object doesn't have any static members.
-        SystemInterface._class.load();
-        SystemInterface._class.verify();
-        SystemInterface._class.prepare();
         SystemInterface._class.sf_initialize();
 
         //jq.Assert(SystemInterface._entry.getAddress() == startAddress + ARRAY_HEADER_SIZE,
-        //          "entrypoint is at "+jq.hex8(SystemInterface._entry.getAddress()));
+        //          "entrypoint is at "+Strings.hex8(SystemInterface._entry.getAddress()));
         
         // initialize the static fields for all the necessary types
         starttime = System.currentTimeMillis();
@@ -430,6 +427,7 @@ public abstract class Bootstrapper implements ObjectLayout {
             
             if (t == Unsafe._class) continue;
             //System.out.println("Compiling type: "+t.getName());
+            t.compile();
             t.cls_initialize();
             objmap.getOrAllocateObject(t);
         }

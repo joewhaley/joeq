@@ -110,7 +110,7 @@ public abstract class Reflection {
             //return Class.forName(c.getJDKName(), false, c.getClassLoader());
         } catch (ClassNotFoundException x) {
             if (!c.getJDKName().startsWith("ClassLib") && !c.getJDKName().startsWith("L&"))
-                SystemInterface.debugmsg("Note: "+c.getJDKName()+" was not found in host jdk");
+                SystemInterface.debugwriteln("Note: "+c.getJDKName()+" was not found in host jdk");
             return null;
         }
     }
@@ -125,7 +125,7 @@ public abstract class Reflection {
         jq_Field m = (jq_Field)c.getDeclaredMember(nd);
         if (m == null) {
             if (!Utf8.NO_NEW) {
-                //SystemInterface.debugmsg("Reference to jdk field "+f.toString()+" does not exist, creating "+c+"."+nd);
+                //SystemInterface.debugwriteln("Reference to jdk field "+f.toString()+" does not exist, creating "+c+"."+nd);
                 if (Modifier.isStatic(f.getModifiers()))
                     m = c.getOrCreateStaticField(nd);
                 else
@@ -151,7 +151,7 @@ public abstract class Reflection {
         jq_Method m = (jq_Method)c.getDeclaredMember(nd);
         if (m == null) {
             if (!Utf8.NO_NEW) {
-                //SystemInterface.debugmsg("Reference to jdk method "+f.toString()+" does not exist, creating "+c+"."+nd);
+                //SystemInterface.debugwriteln("Reference to jdk method "+f.toString()+" does not exist, creating "+c+"."+nd);
                 if (Modifier.isStatic(f.getModifiers()))
                     m = c.getOrCreateStaticMethod(nd);
                 else
@@ -176,7 +176,7 @@ public abstract class Reflection {
         jq_Initializer m = (jq_Initializer)c.getDeclaredMember(nd);
         if (m == null) {
             if (!Utf8.NO_NEW) {
-                //SystemInterface.debugmsg("Reference to jdk constructor "+f.toString()+" does not exist, creating "+c+"."+nd);
+                //SystemInterface.debugwriteln("Reference to jdk constructor "+f.toString()+" does not exist, creating "+c+"."+nd);
                 m = (jq_Initializer)c.getOrCreateInstanceMethod(nd);
             }
         }
@@ -193,7 +193,7 @@ public abstract class Reflection {
                 try {
                     fields = c.getDeclaredFields();
                 } catch (NoClassDefFoundError x) {
-                    SystemInterface.debugmsg("Note: "+c+" could not be loaded in host jdk");
+                    SystemInterface.debugwriteln("Note: "+c+" could not be loaded in host jdk");
                     return null;
                 }
                 declaredFieldsCache.put(c, fields);
@@ -202,7 +202,7 @@ public abstract class Reflection {
             try {
                 fields = c.getDeclaredFields();
             } catch (NoClassDefFoundError x) {
-                SystemInterface.debugmsg("Note: "+c+" could not be loaded in host jdk");
+                SystemInterface.debugwriteln("Note: "+c+" could not be loaded in host jdk");
                 return null;
             }
         }
@@ -221,7 +221,7 @@ public abstract class Reflection {
         try {
             methods = c.getDeclaredMethods();
         } catch (NoClassDefFoundError x) {
-            SystemInterface.debugmsg("Note: "+c+" could not be loaded in host jdk");
+            SystemInterface.debugwriteln("Note: "+c+" could not be loaded in host jdk");
             return null;
         }
 uphere:
@@ -245,7 +245,7 @@ uphere:
         try {
             consts = c.getDeclaredConstructors();
         } catch (NoClassDefFoundError x) {
-            SystemInterface.debugmsg("Note: "+c+" could not be loaded in host jdk");
+            SystemInterface.debugwriteln("Note: "+c+" could not be loaded in host jdk");
             return null;
         }
 uphere:

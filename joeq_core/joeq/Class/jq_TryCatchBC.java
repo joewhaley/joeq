@@ -27,7 +27,7 @@ public class jq_TryCatchBC {
     }
 
     public boolean catches(int pc, jq_Class t) {
-        t.load(); t.verify(); t.prepare();
+        t.prepare();
         if (pc < startPC) return false;
         if (pc >= endPC) return false;
         if (exType != null && !TypeCheck.isAssignable(t, exType)) return false;

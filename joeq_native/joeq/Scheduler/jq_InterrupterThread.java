@@ -29,7 +29,7 @@ public class jq_InterrupterThread extends Thread {
 
     jq_InterrupterThread(jq_NativeThread other_nt) {
         this.other_nt = other_nt;
-        if (TRACE) SystemInterface.debugmsg("Initialized timer interrupt for native thread "+other_nt);
+        if (TRACE) SystemInterface.debugwriteln("Initialized timer interrupt for native thread "+other_nt);
         myself = ClassLibInterface.DEFAULT.getJQThread(this);
         myself.disableThreadSwitch();
         this.tid = SystemInterface.create_thread(_run.getDefaultCompiledVersion().getEntrypoint(), HeapAddress.addressOf(this));
@@ -56,7 +56,7 @@ public class jq_InterrupterThread extends Thread {
             // The other thread may hold a system lock, so outputting any debug info here may lead to deadlock
             jq_Thread javaThread = other_nt.getCurrentJavaThread();
             if (javaThread.isThreadSwitchEnabled()) {
-                if (TRACE) SystemInterface.debugmsg("TICK! "+other_nt+" Java Thread = "+javaThread);
+                if (TRACE) SystemInterface.debugwriteln("TICK! "+other_nt+" Java Thread = "+javaThread);
                 javaThread.disableThreadSwitch();
                 jq_RegisterState regs = javaThread.getRegisterState();
                 regs.ContextFlags = jq_RegisterState.CONTEXT_CONTROL |
@@ -64,9 +64,9 @@ public class jq_InterrupterThread extends Thread {
                                     jq_RegisterState.CONTEXT_FLOATING_POINT;
                 boolean b = other_nt.getContext(regs);
                 if (!b) {
-                    if (TRACE) SystemInterface.debugmsg("Failed to get thread context for "+other_nt);
+                    if (TRACE) SystemInterface.debugwriteln("Failed to get thread context for "+other_nt);
                 } else {
-                    if (TRACE) SystemInterface.debugmsg(other_nt+" : "+javaThread+" ip="+regs.Eip.stringRep()+" sp="+regs.getEsp().stringRep()+" cc="+CodeAllocator.getCodeContaining(regs.Eip));
+                    if (TRACE) SystemInterface.debugwriteln(other_nt+" : "+javaThread+" ip="+regs.Eip.stringRep()+" sp="+regs.getEsp().stringRep()+" cc="+CodeAllocator.getCodeContaining(regs.Eip));
                     // simulate a call to threadSwitch method
                     regs.Esp = (StackAddress) regs.getEsp().offset(-HeapAddress.size());
                     regs.getEsp().poke(HeapAddress.addressOf(other_nt));
@@ -76,14 +76,14 @@ public class jq_InterrupterThread extends Thread {
                     regs.ContextFlags = jq_RegisterState.CONTEXT_CONTROL;
                     b = other_nt.setContext(regs);
                     if (!b) {
-                        if (TRACE) SystemInterface.debugmsg("Failed to set thread context for "+other_nt);
+                        if (TRACE) SystemInterface.debugwriteln("Failed to set thread context for "+other_nt);
                     } else {
-                        if (TRACE) SystemInterface.debugmsg(other_nt+" : simulating a call to threadSwitch");
+                        if (TRACE) SystemInterface.debugwriteln(other_nt+" : simulating a call to threadSwitch");
                     }
                 }
             } else {
                 // the current Java thread does not have thread switching enabled.
-                //if (TRACE) SystemInterface.debugmsg(other_nt+" : "+javaThread+" Thread switch not enabled");
+                //if (TRACE) SystemInterface.debugwriteln(other_nt+" : "+javaThread+" Thread switch not enabled");
             }
             other_nt.resume();
         }

@@ -120,7 +120,7 @@ public abstract class ClassLibInterface {
             String s = n.toString();
             if (s.charAt(0) == '_') {
                 n = Utf8.get(s.substring(1));
-                if (TRACE) SystemInterface.debugmsg("special case for java.lang.Object: "+n+" "+d);
+                if (TRACE) SystemInterface.debugwriteln("special case for java.lang.Object: "+n+" "+d);
                 return new jq_NameAndDesc(n, d);
             }
         }

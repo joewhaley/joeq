@@ -36,7 +36,7 @@ public class x86ReferenceExceptionDeliverer extends ExceptionDeliverer {
         int n_paramwords = m.getParamWords();
         int n_localwords = m.getMaxLocals();
         StackAddress sp = (StackAddress)fp.offset(((n_paramwords-n_localwords)<<2) - 4);
-        if (TRACE) SystemInterface.debugmsg("poking exception object "+HeapAddress.addressOf(x).stringRep()+" into location "+sp.stringRep());
+        if (TRACE) SystemInterface.debugwriteln("poking exception object "+HeapAddress.addressOf(x).stringRep()+" into location "+sp.stringRep());
         // push exception object there
         sp.poke(HeapAddress.addressOf(x));
         // branch!

@@ -101,7 +101,7 @@ public class Method extends AccessibleObject {
         if (nargs != argtypes.length-offset) 
             throw new java.lang.IllegalArgumentException(); 
         if (jq_m.isStatic()) {
-            k.verify(); k.prepare(); k.sf_initialize(); k.cls_initialize();
+            k.cls_initialize();
         } else {
             jq_Reference t = jq_Reference.getTypeOf(obj);
             jq_m = t.getVirtualMethod(jq_m.getNameAndDesc());

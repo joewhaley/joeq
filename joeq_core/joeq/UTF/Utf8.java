@@ -12,6 +12,7 @@ import java.io.IOException;
 
 import Clazz.jq_ClassFileConstants;
 import Main.jq;
+import Run_Time.SystemInterface;
 import Util.UnmodifiableIterator;
 
 /**
@@ -347,6 +348,10 @@ here:
         jq.Assert(data.length <= Character.MAX_VALUE);
         out.writeChar(data.length);
         out.write(data);
+    }
+    
+    public void debugWrite() {
+        SystemInterface.debugwrite(data);
     }
     
     //// Utf8 conversion routines

@@ -35,6 +35,7 @@ public class jq_Primitive extends jq_Type implements jq_ClassFileConstants {
     public final boolean isVerified() { return true; }
     public final boolean isPrepared() { return true; }
     public final boolean isSFInitialized() { return true; }
+    public final boolean isCompiled() { return true; }
     public final boolean isClsInitRunning() { return true; }
     public final boolean isClsInitialized() { return true; }
     
@@ -42,6 +43,7 @@ public class jq_Primitive extends jq_Type implements jq_ClassFileConstants {
     public final void verify() { }
     public final void prepare() { }
     public final void sf_initialize() { }
+    public final void compile() { }
     public final void cls_initialize() { }
     
     public final boolean isFinal() { return true; }

@@ -35,14 +35,17 @@ public abstract class BytecodeInterpreter {
     public static /*final*/ boolean ALWAYS_TRACE = false;
     
     /** Creates new Interpreter */
-    public BytecodeInterpreter(VMInterface vm, State state) { this.vm = vm; this.state = state; }
+    public BytecodeInterpreter(VMInterface vm, State state) {
+        this.vm = vm; this.state = state;
+    }
 
     // create an Interpreter.State and call invokeMethod(m, state)
     public abstract Object invokeMethod(jq_Method m) throws Throwable;
-    public abstract Object invokeUnsafeMethod(jq_StaticMethod m) throws Throwable;
+    public abstract Object invokeUnsafeMethod(jq_Method m) throws Throwable;
     
     // callee == null -> call compiled version
     public Object invokeMethod(jq_Method m, State callee) throws Throwable {
+        //Run_Time.SystemInterface.debugwriteln("Invoking method "+m);
         jq_Class k = m.getDeclaringClass();
         jq.Assert(k.isClsInitialized());
         jq.Assert(m.getBytecode() != null);
@@ -113,11 +116,11 @@ public abstract class BytecodeInterpreter {
             else if (returnType == jq_Primitive.LONG)
                 return new Long(result);
             else if (returnType == jq_Primitive.FLOAT)
-                return new Float(Float.intBitsToFloat((int)(result>>32)));
+                return new Float(Float.intBitsToFloat((int)(result)));
             else if (returnType == jq_Primitive.DOUBLE)
                 return new Double(Double.longBitsToDouble(result));
             else
-                return new Integer((int)(result>>32));
+                return new Integer((int)(result));
         } else {
             State oldState = this.state;
             this.state = callee;
@@ -134,25 +137,29 @@ public abstract class BytecodeInterpreter {
                     }
                 }
                 mi.forwardTraversal();
-                if (mi.getTraceFlag()) mi.getTraceOut().println("Return value: "+callee.getReturnVal_A());
                 this.state = oldState;
                 if (m.isSynchronized()) {
                     if (mi.getTraceFlag()) mi.getTraceOut().println("exiting synchronized method, unlocking object");
                     vm.monitorexit(synchobj);
                 }
                 jq_Type returnType = m.getReturnType();
-                if (returnType.isReferenceType())
-                    return callee.getReturnVal_A();
-                else if (returnType == jq_Primitive.VOID)
-                    return null;
-                else if (returnType == jq_Primitive.LONG)
-                    return new Long(callee.getReturnVal_L());
-                else if (returnType == jq_Primitive.FLOAT)
-                    return new Float(callee.getReturnVal_F());
-                else if (returnType == jq_Primitive.DOUBLE)
-                    return new Double(callee.getReturnVal_D());
-                else
-                    return new Integer(callee.getReturnVal_I());
+                Object retval;
+                if (returnType.isReferenceType()) {
+                    retval = callee.getReturnVal_A();
+                } else if (returnType == jq_Primitive.VOID) {
+                    retval = null;
+                } else if (returnType == jq_Primitive.LONG) {
+                    retval = new Long(callee.getReturnVal_L());
+                } else if (returnType == jq_Primitive.FLOAT) {
+                    retval = new Float(callee.getReturnVal_F());
+                } else if (returnType == jq_Primitive.DOUBLE) {
+                    retval = new Double(callee.getReturnVal_D());
+                } else {
+                    retval = new Integer(callee.getReturnVal_I());
+                }
+                if (mi.getTraceFlag())
+                    mi.getTraceOut().println("Return value: "+retval);
+                return retval;
             } catch (WrappedException ix) {
                 this.state = oldState;
                 if (m.isSynchronized()) {
@@ -261,7 +268,8 @@ public abstract class BytecodeInterpreter {
             String s = method.getDeclaringClass().getName().toString();
             int i = s.lastIndexOf('.');
             name = s.substring(i+1)+"/"+method.getName();
-            TRACE = false;
+            TRACE = ALWAYS_TRACE;
+            out = System.err;
         }
 
         final String name;
@@ -323,7 +331,7 @@ public abstract class BytecodeInterpreter {
         
         private void handleException(Throwable x) throws WrappedException {
             jq_Class t = (jq_Class)jq_Reference.getTypeOf(x);
-            t.load(); t.verify(); t.prepare();
+            t.prepare();
             jq_TryCatchBC[] tc = method.getExceptionTable();
             for (int i=0; i<tc.length; ++i) {
                 if (tc[i].catches(i_start, t)) {
@@ -960,91 +968,109 @@ public abstract class BytecodeInterpreter {
         public void visitIGETSTATIC(jq_StaticField f) {
             super.visitIGETSTATIC(f);
             f = resolve(f);
+            f.getDeclaringClass().cls_initialize();
             state.push_I(Reflection.getstatic_I(f));
         }
         public void visitLGETSTATIC(jq_StaticField f) {
             super.visitLGETSTATIC(f);
             f = resolve(f);
+            f.getDeclaringClass().cls_initialize();
             state.push_L(Reflection.getstatic_L(f));
         }
         public void visitFGETSTATIC(jq_StaticField f) {
             super.visitFGETSTATIC(f);
             f = resolve(f);
+            f.getDeclaringClass().cls_initialize();
             state.push_F(Reflection.getstatic_F(f));
         }
         public void visitDGETSTATIC(jq_StaticField f) {
             super.visitDGETSTATIC(f);
             f = resolve(f);
+            f.getDeclaringClass().cls_initialize();
             state.push_D(Reflection.getstatic_D(f));
         }
         public void visitAGETSTATIC(jq_StaticField f) {
             super.visitAGETSTATIC(f);
             f = resolve(f);
+            f.getDeclaringClass().cls_initialize();
             state.push_A(Reflection.getstatic_A(f));
         }
         public void visitZGETSTATIC(jq_StaticField f) {
             super.visitZGETSTATIC(f);
             f = resolve(f);
+            f.getDeclaringClass().cls_initialize();
             state.push_I(Reflection.getstatic_Z(f)?1:0);
         }
         public void visitBGETSTATIC(jq_StaticField f) {
             super.visitBGETSTATIC(f);
             f = resolve(f);
+            f.getDeclaringClass().cls_initialize();
             state.push_I(Reflection.getstatic_B(f));
         }
         public void visitCGETSTATIC(jq_StaticField f) {
             super.visitCGETSTATIC(f);
             f = resolve(f);
+            f.getDeclaringClass().cls_initialize();
             state.push_I(Reflection.getstatic_C(f));
         }
         public void visitSGETSTATIC(jq_StaticField f) {
             super.visitSGETSTATIC(f);
             f = resolve(f);
+            f.getDeclaringClass().cls_initialize();
             state.push_I(Reflection.getstatic_S(f));
         }
         public void visitIPUTSTATIC(jq_StaticField f) {
             super.visitIPUTSTATIC(f);
             f = resolve(f);
+            f.getDeclaringClass().cls_initialize();
             Reflection.putstatic_I(f, state.pop_I());
         }
         public void visitLPUTSTATIC(jq_StaticField f) {
             super.visitLPUTSTATIC(f);
             f = resolve(f);
+            f.getDeclaringClass().cls_initialize();
             Reflection.putstatic_L(f, state.pop_L());
         }
         public void visitFPUTSTATIC(jq_StaticField f) {
             super.visitFPUTSTATIC(f);
             f = resolve(f);
+            f.getDeclaringClass().cls_initialize();
             Reflection.putstatic_F(f, state.pop_F());
         }
         public void visitDPUTSTATIC(jq_StaticField f) {
             super.visitDPUTSTATIC(f);
             f = resolve(f);
+            f.getDeclaringClass().cls_initialize();
             Reflection.putstatic_D(f, state.pop_D());
         }
         public void visitAPUTSTATIC(jq_StaticField f) {
             super.visitAPUTSTATIC(f);
             f = resolve(f);
+            f.getDeclaringClass().cls_initialize();
             Reflection.putstatic_A(f, state.pop_A());
         }
         public void visitZPUTSTATIC(jq_StaticField f) {
             super.visitZPUTSTATIC(f);
             f = resolve(f);
+            f.getDeclaringClass().cls_initialize();
             Reflection.putstatic_Z(f, state.pop_I()!=0);
         }
         public void visitBPUTSTATIC(jq_StaticField f) {
             super.visitBPUTSTATIC(f);
             f = resolve(f);
+            f.getDeclaringClass().cls_initialize();
             Reflection.putstatic_B(f, (byte)state.pop_I());
         }
         public void visitCPUTSTATIC(jq_StaticField f) {
             super.visitCPUTSTATIC(f);
             f = resolve(f);
+            f.getDeclaringClass().cls_initialize();
             Reflection.putstatic_C(f, (char)state.pop_I());
         }
         public void visitSPUTSTATIC(jq_StaticField f) {
             super.visitSPUTSTATIC(f);
             f = resolve(f);
+            f.getDeclaringClass().cls_initialize();
             Reflection.putstatic_S(f, (short)state.pop_I());
         }
         public void visitIGETFIELD(jq_InstanceField f) {
@@ -1149,13 +1175,22 @@ public abstract class BytecodeInterpreter {
         protected Object INVOKEhelper(byte op, jq_Method f) {
             f = (jq_Method)resolve(f);
             jq_Class k = f.getDeclaringClass();
-            k.load(); k.verify(); k.prepare(); k.sf_initialize(); k.cls_initialize();
+            k.cls_initialize();
+            if (k == Unsafe._class || k.isAddressType()) {
+                try {
+                    // redirect call
+                    return invokeUnsafeMethod(f);
+                } catch (Throwable t) {
+                    if (this.TRACE) this.out.println(this+": "+f+" threw "+t);
+                    throw new WrappedException(t);
+                }
+            }
             if (op == INVOKE_SPECIAL) {
                 f = jq_Class.getInvokespecialTarget(clazz, (jq_InstanceMethod)f);
             } else if (op != INVOKE_STATIC) {
                 Object o = state.peek_A(f.getParamWords()-1);
                 jq_Reference t = jq_Reference.getTypeOf(o);
-                t.load(); t.verify(); t.prepare(); t.sf_initialize(); t.cls_initialize();
+                t.cls_initialize();
                 if (op == INVOKE_INTERFACE) {
                     if (!t.implementsInterface(f.getDeclaringClass()))
                         throw new IncompatibleClassChangeError();
@@ -1163,20 +1198,15 @@ public abstract class BytecodeInterpreter {
                 } else {
                     jq.Assert(op == INVOKE_VIRTUAL);
                 }
+                jq_Method f2 = f;
                 f = t.getVirtualMethod(f.getNameAndDesc());
                 if (this.TRACE) this.out.println(this+": virtual method target "+f);
-                if ((f == null) || f.isAbstract())
-                    throw new AbstractMethodError();
+                if (f == null)
+                    throw new AbstractMethodError("no such method "+f2.toString()+" in type "+t);
+                if (f.isAbstract())
+                    throw new AbstractMethodError("method "+f2.toString()+" on type "+t+" is abstract");
             } else {
-                if (k == Unsafe._class) {
-                    try {
-                        // redirect call
-                        return invokeUnsafeMethod((jq_StaticMethod)f);
-                    } catch (Throwable t) {
-                        if (this.TRACE) this.out.println(this+": "+f+" threw "+t);
-                        throw new WrappedException(t);
-                    }
-                }
+                // static call
             }
             try {
                 return invokeMethod(f);

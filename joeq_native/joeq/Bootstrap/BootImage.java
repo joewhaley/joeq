@@ -61,7 +61,7 @@ import Util.Strings;
  * @author  John Whaley
  * @version $Id$
  */
-public class BootImage implements ObjectLayout, ELFConstants {
+public class BootImage implements ELFConstants {
 
     public static /*final*/ boolean TRACE = false;
     public static final PrintStream out = System.out;
@@ -151,14 +151,14 @@ public class BootImage implements ObjectLayout, ELFConstants {
         int addr;
         int size;
         if (type.isArrayType()) {
-            addr = heapCurrent + ARRAY_HEADER_SIZE;
+            addr = heapCurrent + ObjectLayout.ARRAY_HEADER_SIZE;
             size = ((jq_Array)type).getInstanceSize(Array.getLength(o));
             size = (size+3) & ~3;
             if (TRACE)
                 out.println("Allocating entry "+entries.size()+": "+objType+" length "+Array.getLength(o)+" size "+size+" "+Strings.hex(System.identityHashCode(o))+" at "+Strings.hex(addr));
         } else {
             jq.Assert(type.isClassType());
-            addr = heapCurrent + OBJ_HEADER_SIZE;
+            addr = heapCurrent + ObjectLayout.OBJ_HEADER_SIZE;
             size = ((jq_Class)type).getInstanceSize();
             if (TRACE)
                 out.println("Allocating entry "+entries.size()+": "+objType+" size "+size+" "+Strings.hex(System.identityHashCode(o))+" at "+Strings.hex(addr)+((o instanceof jq_Type)?": "+o:""));
@@ -282,7 +282,7 @@ public class BootImage implements ObjectLayout, ELFConstants {
             jq_Reference jqType = (jq_Reference)Reflection.getJQType(objType);
             if (TRACE)
                 out.println("Entry "+i+": "+objType+" "+Strings.hex(System.identityHashCode(o)));
-            addDataReloc((HeapAddress)addr.offset(VTABLE_OFFSET), getOrAllocateObject(jqType));
+            addDataReloc((HeapAddress)addr.offset(ObjectLayout.VTABLE_OFFSET), getOrAllocateObject(jqType));
             if (jqType.isArrayType()) {
                 jq_Type elemType = ((jq_Array)jqType).getElementType();
                 if (elemType.isAddressType()) {
@@ -1000,11 +1000,11 @@ public class BootImage implements ObjectLayout, ELFConstants {
     
     private void dumpHeap(ExtendedDataOutput out)
     throws IOException {
-        jq.Assert(ARRAY_LENGTH_OFFSET == -12);
-        jq.Assert(STATUS_WORD_OFFSET == -8);
-        jq.Assert(VTABLE_OFFSET == -4);
-        jq.Assert(OBJ_HEADER_SIZE == 8);
-        jq.Assert(ARRAY_HEADER_SIZE == 12);
+        jq.Assert(ObjectLayout.ARRAY_LENGTH_OFFSET == -12);
+        jq.Assert(ObjectLayout.STATUS_WORD_OFFSET == -8);
+        jq.Assert(ObjectLayout.VTABLE_OFFSET == -4);
+        jq.Assert(ObjectLayout.OBJ_HEADER_SIZE == 8);
+        jq.Assert(ObjectLayout.ARRAY_HEADER_SIZE == 12);
         Iterator i = entries.iterator();
         int currentAddr=0;
         int j=0;
@@ -1032,14 +1032,14 @@ public class BootImage implements ObjectLayout, ELFConstants {
                 throw x;
             }
             if (jqType.isArrayType()) {
-                while (currentAddr+ARRAY_HEADER_SIZE < addr.to32BitValue()) {
+                while (currentAddr+ObjectLayout.ARRAY_HEADER_SIZE < addr.to32BitValue()) {
                     out.writeByte((byte)0); ++currentAddr;
                 }
                 int length = Array.getLength(o);
                 out.writeUInt(length);
                 out.writeUInt(0);
                 out.writeUInt(vtable.to32BitValue());
-                currentAddr += ARRAY_HEADER_SIZE;
+                currentAddr += ObjectLayout.ARRAY_HEADER_SIZE;
                 jq.Assert(addr.to32BitValue() == currentAddr);
                 jq_Type elemType = ((jq_Array)jqType).getElementType();
                 if (elemType.isPrimitiveType()) {
@@ -1107,7 +1107,7 @@ public class BootImage implements ObjectLayout, ELFConstants {
             } else {
                 jq.Assert(jqType.isClassType());
                 jq_Class clazz = (jq_Class)jqType;
-                while (currentAddr+OBJ_HEADER_SIZE < addr.to32BitValue()) {
+                while (currentAddr+ObjectLayout.OBJ_HEADER_SIZE < addr.to32BitValue()) {
                     out.writeByte((byte)0); ++currentAddr;
                 }
                 out.writeUInt(0);

@@ -81,20 +81,20 @@ public class StackCodeWalker implements Iterator {
     public StackCodeWalker(CodeAddress ip, StackAddress fp) {
         this.ip = ip;
         this.fp = fp;
-        if (TRACE) SystemInterface.debugmsg("StackCodeWalker init: fp=" + fp.stringRep() + " ip=" + ip.stringRep() + " " + getCode());
+        if (TRACE) SystemInterface.debugwriteln("StackCodeWalker init: fp=" + fp.stringRep() + " ip=" + ip.stringRep() + " " + getCode());
     }
 
     public void gotoNext() throws NoSuchElementException {
         if (fp.isNull()) throw new NoSuchElementException();
         ip = (CodeAddress) fp.offset(4).peek();
         fp = (StackAddress) fp.peek();
-        if (TRACE) SystemInterface.debugmsg("StackCodeWalker next: fp=" + fp.stringRep() + " ip=" + ip.stringRep() + " " + getCode());
+        if (TRACE) SystemInterface.debugwriteln("StackCodeWalker next: fp=" + fp.stringRep() + " ip=" + ip.stringRep() + " " + getCode());
     }
 
     public boolean hasNext() {
         if (fp.isNull()) return false;
         CodeAddress addr = (CodeAddress) fp.offset(4).peek();
-        if (TRACE) SystemInterface.debugmsg("StackCodeWalker hasnext: next ip=" + addr.stringRep() + " " + CodeAllocator.getCodeContaining(addr));
+        if (TRACE) SystemInterface.debugwriteln("StackCodeWalker hasnext: next ip=" + addr.stringRep() + " " + CodeAllocator.getCodeContaining(addr));
         return true;
     }
 
@@ -132,7 +132,7 @@ public class StackCodeWalker implements Iterator {
         StackCodeWalker sw = new StackCodeWalker(init_ip, init_fp);
         while (sw.hasNext()) {
             String s = sw.toString();
-            SystemInterface.debugmsg(s);
+            SystemInterface.debugwriteln(s);
             sw.gotoNext();
         }
     }

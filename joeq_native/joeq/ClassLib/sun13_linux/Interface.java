@@ -53,7 +53,7 @@ public final class Interface extends ClassLib.Common.Interface {
                         } else if (f.getType().getDesc() == Utf8.get("Ljava/lang/ThreadLocal$ThreadLocalMap;")) {
                             return null;
                         } else {
-                            SystemInterface.debugmsg("Unknown type for field "+f);
+                            SystemInterface.debugwriteln("Unknown type for field "+f);
                             return null;
                         }
                     }

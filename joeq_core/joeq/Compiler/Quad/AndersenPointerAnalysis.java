@@ -153,12 +153,25 @@ public class AndersenPointerAnalysis {
     public static boolean TRACK_REASONS = true;
     
     /**
+     * Keep track of inclusion back edges.
+     */
+    public static final boolean INCLUSION_BACK_EDGES = true;
+    
+    /**
      * Use a set repository, rather than a set factory.
      * The set repository attempts to reduce memory usage by
      * reusing set data structures.
      */
     public static final boolean USE_SET_REPOSITORY = false;
 
+    /**
+     * Add a control flow graph to the root set.
+     * We get the method summary for the given control flow graph, and add
+     * that to the root set.
+     * 
+     * @param cfg control flow graph to add
+     * @return boolean whether the root set changed
+     */
     public boolean addToRootSet(ControlFlowGraph cfg) {
         if (TRACE) out.println("Adding "+cfg.getMethod()+" to root set.");
         MethodSummary s = MethodSummary.getSummary(cfg);
@@ -236,7 +249,7 @@ public class AndersenPointerAnalysis {
                 Iterator i = s.iterator();
                 while (i.hasNext()) {
                     jq_Type t = (jq_Type)i.next();
-                    t.load(); t.verify(); t.prepare();
+                    t.prepare();
                 }
                 s = Bootstrap.PrimordialClassLoader.loader.getAllTypes();
                 //if (s.size() == size)
@@ -490,6 +503,10 @@ public class AndersenPointerAnalysis {
     /** Maps a node to its set of outgoing inclusion edges. */
     final HashMap nodeToInclusionEdges;
     
+    /** Maps a node to its set of incoming inclusion edges.
+     *  Only used if INCLUSION_BACK_EDGES is set. */
+    final HashMap nodeToIncomingInclusionEdges;
+    
     /** Maps an inclusion edge to the ProgramLocation that caused the edge.
      *  Only used if TRACK_REASONS is set. */
     final HashMap edgesToReasons;
@@ -531,6 +548,10 @@ public class AndersenPointerAnalysis {
     public AndersenPointerAnalysis(boolean addDefaults) {
         nodeToConcreteNodes = new HashMap();
         nodeToInclusionEdges = new HashMap();
+        if (INCLUSION_BACK_EDGES)
+            nodeToIncomingInclusionEdges = new HashMap();
+        else
+            nodeToIncomingInclusionEdges = null;
         rootSet = SortedArraySet.FACTORY.makeSet(HashCodeComparator.INSTANCE);
         methodSummariesToVisit = new LinkedHashSet();
         callSiteToTargets = new HashMap();
@@ -1049,12 +1070,36 @@ public class AndersenPointerAnalysis {
         }
     }
     
+    void addInclusionBackEdge(OutsideNode n, Node n2) {
+        Set s2 = (Set) nodeToIncomingInclusionEdges.get(n2);
+        if (s2 == null) {
+            nodeToIncomingInclusionEdges.put(n2, s2 = inclusionEdgeSetFactory.makeSet());
+        }
+        s2.add(n);
+    }
+    
+    void addInclusionBackEdges(OutsideNode n, Set s) {
+        for (Iterator i=s.iterator(); i.hasNext(); ) {
+            Object o = i.next();
+            if (o instanceof OutsideNode) {
+                OutsideNode on = (OutsideNode) o;
+                while (on.skip != null) {
+                    on = on.skip;
+                }
+                o = on;
+            }
+            addInclusionBackEdge(n, (Node) o);
+        }
+    }
+    
     boolean addInclusionEdges(OutsideNode n, Set s, Object mc) {
         if (VerifyAssertions) jq.Assert(n.skip == null);
         Set s2 = (Set)nodeToInclusionEdges.get(n);
         if (s2 == null) {
             s = inclusionEdgeSetFactory.makeSet(s);
             nodeToInclusionEdges.put(n, s);
+            if (INCLUSION_BACK_EDGES)
+                addInclusionBackEdges(n, s);
             if ((TRACE_CHANGE && !this.change) || TRACE) {
                 out.println("Changed! New set of inclusion edges for node "+n);
             }
@@ -1091,6 +1136,8 @@ public class AndersenPointerAnalysis {
                 }
                 if (n == o) continue;
                 if (s2.add(o)) {
+                    if (INCLUSION_BACK_EDGES)
+                        addInclusionBackEdge(n, (Node) o);
                     if ((TRACE_CHANGE && !this.change) || TRACE) {
                         out.println("Changed! New inclusion edge for node "+n+": "+o);
                     }
@@ -1128,6 +1175,8 @@ public class AndersenPointerAnalysis {
         if (s2 == null) {
             s2 = inclusionEdgeSetFactory.makeSet(); s2.add(s);
             nodeToInclusionEdges.put(n, s2);
+            if (INCLUSION_BACK_EDGES)
+                addInclusionBackEdge(n, s);
             if ((TRACE_CHANGE && !this.change) || TRACE) {
                 out.println("Changed! New set of inclusion edges for node "+n);
             }
@@ -1146,6 +1195,8 @@ public class AndersenPointerAnalysis {
                 edgesToReasons.put(Default.pair(n, s), mc);
             }
         } else if (s2.add(s)) {
+            if (INCLUSION_BACK_EDGES)
+                addInclusionBackEdge(n, s);
             if ((TRACE_CHANGE && !this.change) || TRACE) {
                 out.println("Changed! New inclusion edge for node "+n+": "+s);
             }
@@ -1357,6 +1408,8 @@ public class AndersenPointerAnalysis {
                 if (TRACE) out.println("Set of inclusion edges from node "+n+": "+s2);
                 s.addAll(s2);
                 nodeToInclusionEdges.put(n, s);
+                if (INCLUSION_BACK_EDGES)
+                    addInclusionBackEdges(n, s);
                 last = n;
             }
             //s.remove(last);

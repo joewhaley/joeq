@@ -44,12 +44,14 @@ public abstract class CodeAllocator {
     /** Trace flag. */
     public static /*final*/ boolean TRACE = false;
     
-    /** Initialize this code allocator.  This method is always called before the
-     *  code allocator is actually used.
+    /**
+     * Initialize this code allocator.  This method is always called before the
+     * code allocator is actually used.
      */
     public abstract void init();
     
-    /** Allocate a code buffer of the given estimated size, such that the given
+    /**
+     * Allocate a code buffer of the given estimated size, such that the given
      * offset will have the given alignment.
      * It is legal for code to exceed the estimated size, but the cost may be
      * high (i.e. it may require recopying of the buffer.)
@@ -63,7 +65,8 @@ public abstract class CodeAllocator {
                                                 int offset,
                                                 int alignment);
     
-    /** Patch the given address to refer to the other given address, in
+    /**
+     * Patch the given address to refer to the other given address, in
      * absolute terms.  This is used to patch heap address references in the
      * code, and code references in the heap.
      *
@@ -73,7 +76,8 @@ public abstract class CodeAllocator {
     public abstract void patchAbsolute(Address addr1,
                                          Address addr2);
     
-    /** Patch the given code address to refer to the given code address, in
+    /**
+     * Patch the given code address to refer to the given code address, in
      * relative terms.  This is used to patch branch targets in the code.
      *
      * @param code  code address to patch
@@ -82,77 +86,92 @@ public abstract class CodeAllocator {
     public abstract void patchRelativeOffset(CodeAddress code,
                                                CodeAddress target);
 
-    /** This class provides the interface for x86 code buffers.
-     *  These code buffers are used to store generated x86 code.
-     *  After the code is generated, use the allocateCodeBlock method to obtain
-     *  a jq_CompiledCode object.
+    /**
+     * This class provides the interface for x86 code buffers.
+     * These code buffers are used to store generated x86 code.
+     * After the code is generated, use the allocateCodeBlock method to obtain
+     * a jq_CompiledCode object.
      */
     public abstract static class x86CodeBuffer {
 
-        /** Returns the current offset in this code buffer.
+        /**
+         * Returns the current offset in this code buffer.
          * @return  current offset
          */
         public abstract int getCurrentOffset();
         
-        /** Returns the current address in this code buffer.
+        /**
+         * Returns the current address in this code buffer.
          * @return  current address
          */
         public abstract CodeAddress getCurrentAddress();
 
-        /** Sets the current address as the entrypoint to this code buffer.
+        /**
+         * Sets the current address as the entrypoint to this code buffer.
          */
         public abstract void setEntrypoint();
 
-        /** Adds one byte to the end of this code buffer.  Offset/address
+        /**
+         * Adds one byte to the end of this code buffer.  Offset/address
          * increase by 1.
          * @param i  the byte to add
          */
         public abstract void add1(byte i);
         
-        /** Adds two bytes (little-endian) to the end of this code buffer.
+        /**
+         * Adds two bytes (little-endian) to the end of this code buffer.
          * Offset/address increase by 2.
          * @param i  the little-endian value to add
          */
         public abstract void add2_endian(int i);
         
-        /** Adds two bytes (big-endian) to the end of this code buffer.
+        /**
+         * Adds two bytes (big-endian) to the end of this code buffer.
          * Offset/address increase by 2.
          * @param i  the big-endian value to add
          */
         public abstract void add2(int i);
         
-        /** Adds three bytes (big-endian) to the end of this code buffer.
+        /**
+         * Adds three bytes (big-endian) to the end of this code buffer.
          * Offset/address increase by 3.
          * @param i  the big-endian value to add
          */
         public abstract void add3(int i);
         
-        /** Adds four bytes (little-endian) to the end of this code buffer.
+        /**
+         * Adds four bytes (little-endian) to the end of this code buffer.
          * Offset/address increase by 4.
          * @param i  the little-endian value to add
          */
         public abstract void add4_endian(int i);
         
-        /** Gets the byte at the given offset in this code buffer.
+        /**
+         * Gets the byte at the given offset in this code buffer.
+         * 
          * @param k  offset of byte to return
          * @return  byte at given offset
          */
         public abstract byte get1(int k);
         
-        /** Gets the (little-endian) 4 bytes at the given offset in this
+        /**
+         * Gets the (little-endian) 4 bytes at the given offset in this
          * code buffer.
+         * 
          * @param k  offset of little-endian 4 bytes to return
          * @return  little-endian 4 bytes at given offset
          */
         public abstract int get4_endian(int k);
 
-        /** Sets the byte at the given offset to the given value.
+        /**
+         * Sets the byte at the given offset to the given value.
          * @param k  offset of byte to set
          * @param instr  value to set it to
          */
         public abstract void put1(int k, byte instr);
         
-        /** Sets the 4 bytes at the given offset to the given (little-endian)
+        /**
+         * Sets the 4 bytes at the given offset to the given (little-endian)
          * value.
          * @param k  offset of 4 bytes to set
          * @param instr  little-endian value to set it to
@@ -161,7 +180,8 @@ public abstract class CodeAllocator {
         
         public abstract void skip(int nbytes);
         
-        /** Uses the code in this buffer, along with the arguments, to create
+        /**
+         * Uses the code in this buffer, along with the arguments, to create
          * a jq_CompiledCode object.  Call this method after you are done
          * generating code, and actually want to use it.
          * 
@@ -186,8 +206,10 @@ public abstract class CodeAllocator {
     /** Map of compiled methods, sorted by address. */
     private static final SortedMap compiledMethods;
     
-    /** Address range of compiled code.  Code outside of this range cannot be
-     * generated by us. */
+    /**
+     * Address range of compiled code.  Code outside of this range cannot be
+     * generated by us.
+     */
     private static CodeAddress lowAddress, highAddress;
     static {
         lowAddress = new BootstrapCodeAddress(Integer.MAX_VALUE);
@@ -198,7 +220,8 @@ public abstract class CodeAllocator {
         compiledMethods.put(cc, cc);
     }
     
-    /** Register the given compiled code, so lookups by address will return
+    /**
+     * Register the given compiled code, so lookups by address will return
      * this code.
      *
      * @param cc  compiled code to register
@@ -212,7 +235,8 @@ public abstract class CodeAllocator {
         compiledMethods.put(cc, cc);
     }
     
-    /** Return the compiled code which contains the given code address.
+    /**
+     * Return the compiled code which contains the given code address.
      * Returns null if there is no registered code that contains the
      * given address.
      *
@@ -224,16 +248,19 @@ public abstract class CodeAllocator {
         return (jq_CompiledCode) compiledMethods.get(iptr);
     }
     
-    /** Returns the lowest address of any registered code.
+    /**
+     * Returns the lowest address of any registered code.
      * @return  lowest address of any registered code.
      */
     public static CodeAddress getLowAddress() { return lowAddress; }
-    /** Returns the highest address of any registered code.
+    /**
+     * Returns the highest address of any registered code.
      * @return  highest address of any registered code.
      */
     public static CodeAddress getHighAddress() { return highAddress; }
 
-    /** Returns an iterator of the registered jq_CompiledCode objects, in
+    /**
+     * Returns an iterator of the registered jq_CompiledCode objects, in
      * address order.
      * @return  iterator of jq_CompiledCode objects
      */
@@ -243,14 +270,16 @@ public abstract class CodeAllocator {
         return i;
     }
     
-    /** Returns the number of registered jq_CompiledCode objects.
+    /**
+     * Returns the number of registered jq_CompiledCode objects.
      * @return  number of registered jq_CompiledCode objects
      */
     public static int getNumberOfCompiledMethods() {
         return compiledMethods.keySet().size() - 1;  // skip bogus compiled code
     }
     
-    /** An object of this class represents a code address.
+    /**
+     * An object of this class represents a code address.
      * It can be compared with a jq_CompiledCode object with compareTo and
      * equals.  They are equal if the InstructionPointer points within the
      * range of the compiled code; the InstructionPointer is less if it is
@@ -262,17 +291,20 @@ public abstract class CodeAllocator {
         /** The (actual) address. */
         private final CodeAddress ip;
         
-        /** Create a new instruction pointer.
+        /**
+         * Create a new instruction pointer.
          * @param ip  instruction pointer value
          */
         public InstructionPointer(CodeAddress ip) { this.ip = ip; }
         
-        /** Extract the address of this instruction pointer.
+        /**
+         * Extract the address of this instruction pointer.
          * @return  address of this instruction pointer
          */
         public CodeAddress getIP() { return ip; }
         
-        /** Compare this instruction pointer to a compiled code object.
+        /**
+         * Compare this instruction pointer to a compiled code object.
          * @param that  compiled code to compare against
          * @return  -1 if this ip comes before the given code, 0 if it is
          *           inside the given code, 1 if it is after the given code
@@ -281,7 +313,8 @@ public abstract class CodeAllocator {
             return -that.compareTo(this);
         }
         
-        /** Compare this instruction pointer to another instruction pointer.
+        /**
+         * Compare this instruction pointer to another instruction pointer.
          * @param that  instruction pointer to compare against
          * @return  -1 if this ip is before the given ip, 0 if it is equal
          *           to the given ip, 1 if it is after the given ip
@@ -292,7 +325,8 @@ public abstract class CodeAllocator {
             return 0;
         }
         
-        /** Compares this instruction pointer to the given object
+        /**
+         * Compares this instruction pointer to the given object
          * (InstructionPointer or jq_CompiledCode)
          * @param that  object to compare to
          * @return  -1 if this is less than, 0 if this is equal, 1 if this
@@ -305,7 +339,8 @@ public abstract class CodeAllocator {
                 return compareTo((InstructionPointer) that);
         }
         
-        /** Returns true if this instruction pointer refers to a location
+        /**
+         * Returns true if this instruction pointer refers to a location
          * within the given compiled code, false otherwise.
          * @param that  compiled code to compare to
          * @return  true if the instruction pointer is within, false otherwise
@@ -314,7 +349,8 @@ public abstract class CodeAllocator {
             return that.equals(this);
         }
         
-        /** Returns true if this instruction pointer refers to the same location
+        /**
+         * Returns true if this instruction pointer refers to the same location
          * as the given instruction pointer, false otherwise.
          * @param that  instruction pointer to compare to
          * @return  true if the instruction pointers are equal, false otherwise
@@ -323,7 +359,8 @@ public abstract class CodeAllocator {
             return this.ip.difference(that.ip) == 0;
         }
         
-        /** Compares this instruction pointer with the given object
+        /**
+         * Compares this instruction pointer with the given object
          * (InstructionPointer or jq_CompiledCode).
          * @param that  object to compare with
          * @return  true if these objects are equal, false otherwise
@@ -335,7 +372,8 @@ public abstract class CodeAllocator {
                 return equals((InstructionPointer) that);
         }
         
-        /**  Returns the hash code of this instruction pointer.
+        /**
+         * Returns the hash code of this instruction pointer.
          * This is a really bad implementation (just returns 0), and
          * should not be counted on.
          * @return  hash code

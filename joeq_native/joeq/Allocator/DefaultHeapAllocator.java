@@ -10,6 +10,7 @@ package Allocator;
 import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
 import Clazz.jq_StaticMethod;
+import Memory.Address;
 import Run_Time.Unsafe;
 import Scheduler.jq_Thread;
 
@@ -54,6 +55,16 @@ public abstract class DefaultHeapAllocator {
     }
     public static final int freeMemory() { return def().freeMemory(); }
     public static final int totalMemory() { return def().totalMemory(); }
+
+    public static final void collect() {
+        Unsafe.getThreadBlock().disableThreadSwitch();
+        def().collect();
+        Unsafe.getThreadBlock().enableThreadSwitch();
+    }
+    
+    public static final void processPtrField(Address a) {
+        def().processPtrField(a);
+    }
 
     public static final jq_StaticMethod _allocateObject;
     public static final jq_StaticMethod _allocateObjectAlign8;

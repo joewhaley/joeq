@@ -166,10 +166,6 @@ public abstract class Driver {
                 String className = canonicalizeClassName(fullName.substring(0, b - 1));
                 try {
                     jq_Class c = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType(className);
-                    c.load();
-                    c.verify();
-                    c.prepare();
-                    c.sf_initialize();
                     c.cls_initialize();
                     jq_StaticMethod m = null;
                     Utf8 rootm_name = Utf8.get(methodName);
@@ -217,10 +213,6 @@ public abstract class Driver {
                 String className = canonicalizeClassName(fullName.substring(0, b - 1));
                 try {
                     jq_Class c = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType(className);
-                    c.load();
-                    c.verify();
-                    c.prepare();
-                    c.sf_initialize();
                     c.cls_initialize();
                     jq_StaticField m = null;
                     Utf8 sf_name = Utf8.get(fieldName);

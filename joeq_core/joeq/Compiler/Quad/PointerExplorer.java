@@ -86,7 +86,7 @@ public class PointerExplorer {
         }
         
         jq_Class klass = (jq_Class)t;
-        klass.load(); klass.verify(); klass.prepare();
+        klass.prepare();
         String name = (args != null && args.length > start+1) ? args[start+1] : null;
         return getMethod(klass, name);
     }

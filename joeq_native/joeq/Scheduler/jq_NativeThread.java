@@ -23,6 +23,8 @@ import Main.jq;
 import Memory.CodeAddress;
 import Memory.HeapAddress;
 import Memory.StackAddress;
+import Memory.Heap.SegregatedListHeap;
+import Memory.Heap.SizeControl;
 import Run_Time.Reflection;
 import Run_Time.StackCodeWalker;
 import Run_Time.SystemInterface;
@@ -44,8 +46,9 @@ public class jq_NativeThread implements x86Constants {
     /** Data structure to represent the native thread that exists at virtual machine startup. */
     public static final jq_NativeThread initial_native_thread = new jq_NativeThread(0);
 
-    /** Initialize the initial native thread.
-     *  Must be the first thing called at virtual machine startup.
+    /**
+     * Initialize the initial native thread.
+     * Must be the first thing called at virtual machine startup.
      */
     public static void initInitialNativeThread() {
         initial_native_thread.pid = SystemInterface.init_thread();
@@ -53,7 +56,7 @@ public class jq_NativeThread implements x86Constants {
         initial_native_thread.thread_handle = SystemInterface.get_current_thread_handle();
         initial_native_thread.myHeapAllocator.init();
         initial_native_thread.myCodeAllocator.init();
-        if (TRACE) SystemInterface.debugmsg("Initial native thread initialized");
+        if (TRACE) SystemInterface.debugwriteln("Initial native thread initialized");
     }
 
     /** An array of all native threads. */
@@ -106,9 +109,19 @@ public class jq_NativeThread implements x86Constants {
     /** The Java thread that is executing while we are in the scheduler. */
     private final jq_Thread schedulerThread;
 
+    public SizeControl[] sizes;
+    public SizeControl[] GC_INDEX_ARRAY;
+    public SegregatedListHeap backingSLHeap;
+
+    public static final int MAX_NATIVE_THREADS = 16;
+
+    private static boolean all_native_threads_initialized;
+    private static boolean all_native_threads_started;
+
     /** Initialize the extra native threads.
      */
     public static void initNativeThreads(jq_NativeThread nt, int num) {
+        jq.Assert(num <= MAX_NATIVE_THREADS);
         native_threads = new jq_NativeThread[num];
         native_threads[0] = nt;
         for (int i = 1; i < num; ++i) {
@@ -116,17 +129,27 @@ public class jq_NativeThread implements x86Constants {
             nt2.thread_handle = SystemInterface.create_thread(_nativeThreadEntry.getDefaultCompiledVersion().getEntrypoint(), HeapAddress.addressOf(nt2));
             nt2.myHeapAllocator.init();
             nt2.myCodeAllocator.init();
-            if (TRACE) SystemInterface.debugmsg("Native thread " + i + " initialized");
+            if (TRACE) SystemInterface.debugwriteln("Native thread " + i + " initialized");
         }
+        all_native_threads_initialized = true;
     }
 
     /** Start up the extra native threads.
      */
     public static void startNativeThreads() {
         for (int i = 1; i < native_threads.length; ++i) {
-            if (TRACE) SystemInterface.debugmsg("Native thread " + i + " started");
+            if (TRACE) SystemInterface.debugwriteln("Native thread " + i + " started");
             native_threads[i].resume();
         }
+        all_native_threads_started = true;
+    }
+
+    public static boolean allNativeThreadsInitialized() {
+        return all_native_threads_initialized;
+    }
+    
+    public jq_Thread getCurrentThread() {
+        return currentThread;
     }
 
     /** Get the native thread-local code allocator. */
@@ -205,7 +228,7 @@ public class jq_NativeThread implements x86Constants {
             // no idle thread, use round-robin scheduling.
             int c = round_robin_counter;
             nt = native_threads[++c];
-            if (TRACE) SystemInterface.debugmsg("Round-robin: native thread #" + c);
+            if (TRACE) SystemInterface.debugwriteln("Round-robin: native thread #" + c);
             if (c + 1 == native_threads.length)
                 round_robin_counter = -1;
             else
@@ -214,7 +237,7 @@ public class jq_NativeThread implements x86Constants {
             idleThread = null; // go back to round-robin
         }
         // threads start off as non-preemptable
-        if (TRACE) SystemInterface.debugmsg("Java thread " + t + " enqueued on native thread " + nt);
+        if (TRACE) SystemInterface.debugwriteln("Java thread " + t + " enqueued on native thread " + nt);
         jq.Assert(t.isThreadSwitchEnabled());
         t.disableThreadSwitch(); // threads on queues have thread switch disabled
         nt.transferQueue.enqueue(t);
@@ -225,7 +248,7 @@ public class jq_NativeThread implements x86Constants {
      */
     public static void endCurrentJavaThread() {
         jq_Thread t = Unsafe.getThreadBlock();
-        if (TRACE) SystemInterface.debugmsg("Ending Java thread " + t);
+        if (TRACE) SystemInterface.debugwriteln("Ending Java thread " + t);
         t.disableThreadSwitch();
         _num_of_java_threads.getAddress().atomicSub(1);
         if (t.isDaemon())
@@ -264,7 +287,7 @@ public class jq_NativeThread implements x86Constants {
         this.original_esp = StackAddress.getStackPointer();
         this.original_ebp = StackAddress.getBasePointer();
 
-        if (TRACE) SystemInterface.debugmsg("Started native thread: " + this);
+        if (TRACE) SystemInterface.debugwriteln("Started native thread: " + this);
 
         // enter the scheduler loop
         schedulerLoop();
@@ -280,12 +303,12 @@ public class jq_NativeThread implements x86Constants {
             jq_Thread t = getNextReadyThread();
             if (t == null) {
                 // no ready threads!
-                if (TRACE) SystemInterface.debugmsg("Native thread " + this + " is idle!");
+                if (TRACE) SystemInterface.debugwriteln("Native thread " + this + " is idle!");
                 idleThread = this;
                 SystemInterface.yield();
             } else {
                 jq.Assert(!t.isThreadSwitchEnabled());
-                if (TRACE) SystemInterface.debugmsg("Native thread " + this + " scheduler loop: switching to Java thread " + t);
+                if (TRACE) SystemInterface.debugwriteln("Native thread " + this + " scheduler loop: switching to Java thread " + t);
                 currentThread = t;
                 SystemInterface.set_current_context(t, t.getRegisterState());
                 jq.UNREACHABLE();
@@ -302,9 +325,9 @@ public class jq_NativeThread implements x86Constants {
         Unsafe.setThreadBlock(this.schedulerThread);
         this.currentThread = this.schedulerThread;
         CodeAddress ip = (CodeAddress) StackAddress.getBasePointer().offset(StackAddress.size()).peek();
-        if (TRACE) SystemInterface.debugmsg("Thread switch in native thread: " + this + " Java thread: " + t1 + " ip: " + ip.stringRep() + " cc: " + CodeAllocator.getCodeContaining(ip));
+        if (TRACE) SystemInterface.debugwriteln("Thread switch in native thread: " + this + " Java thread: " + t1 + " ip: " + ip.stringRep() + " cc: " + CodeAllocator.getCodeContaining(ip));
         if (t1.isThreadSwitchEnabled()) {
-            SystemInterface.debugmsg("Java thread " + t1 + " has thread switching enabled on threadSwitch entry!");
+            SystemInterface.debugwriteln("Java thread " + t1 + " has thread switching enabled on threadSwitch entry!");
             SystemInterface.die(-1);
         }
         jq.Assert(t1 != this.schedulerThread);
@@ -322,7 +345,7 @@ public class jq_NativeThread implements x86Constants {
             t2 = t1;
         } else {
             ip = t2.getRegisterState().Eip;
-            if (TRACE) SystemInterface.debugmsg("New ready Java thread: " + t2 + " ip: " + ip.stringRep() + " cc: " + CodeAllocator.getCodeContaining(ip));
+            if (TRACE) SystemInterface.debugwriteln("New ready Java thread: " + t2 + " ip: " + ip.stringRep() + " cc: " + CodeAllocator.getCodeContaining(ip));
             readyQueue.enqueue(t1);
             jq.Assert(!t2.isThreadSwitchEnabled());
         }
@@ -339,9 +362,9 @@ public class jq_NativeThread implements x86Constants {
         Unsafe.setThreadBlock(this.schedulerThread);
         this.currentThread = this.schedulerThread;
         CodeAddress ip = (CodeAddress) StackAddress.getBasePointer().offset(StackAddress.size()).peek();
-        if (TRACE) SystemInterface.debugmsg("Thread switch in native thread: " + this + " Java thread: " + t1 + " ip: " + ip.stringRep() + " cc: " + CodeAllocator.getCodeContaining(ip));
+        if (TRACE) SystemInterface.debugwriteln("Thread switch in native thread: " + this + " Java thread: " + t1 + " ip: " + ip.stringRep() + " cc: " + CodeAllocator.getCodeContaining(ip));
         if (t1.isThreadSwitchEnabled()) {
-            SystemInterface.debugmsg("Java thread " + t1 + " has thread switching enabled on threadSwitch entry!");
+            SystemInterface.debugwriteln("Java thread " + t1 + " has thread switching enabled on threadSwitch entry!");
             SystemInterface.die(-1);
         }
         jq.Assert(t1 != this.schedulerThread);
@@ -358,7 +381,7 @@ public class jq_NativeThread implements x86Constants {
             jq.Assert(exists);
             transferExtraWork();
             ip = t2.getRegisterState().Eip;
-            if (TRACE) SystemInterface.debugmsg("New ready Java thread: " + t2 + " ip: " + ip.stringRep() + " cc: " + CodeAllocator.getCodeContaining(ip));
+            if (TRACE) SystemInterface.debugwriteln("New ready Java thread: " + t2 + " ip: " + ip.stringRep() + " cc: " + CodeAllocator.getCodeContaining(ip));
             readyQueue.enqueue(t1);
             jq.Assert(!t2.isThreadSwitchEnabled());
         } else {
@@ -406,6 +429,8 @@ public class jq_NativeThread implements x86Constants {
         return "NT " + index + ":" + thread_handle;
     }
 
+    public int getIndex() { return index; }
+
     public static void ctrl_break_handler() {
         // warning: not reentrant.
         Unsafe.setThreadBlock(break_jthread);
@@ -415,7 +440,7 @@ public class jq_NativeThread implements x86Constants {
             break_nthread.myCodeAllocator.init();
             has_break_occurred = true;
         }
-        SystemInterface.debugmsg("*** BREAK! ***");
+        SystemInterface.debugwriteln("*** BREAK! ***");
         for (int i = 0; i < native_threads.length; ++i) {
             SystemInterface.suspend_thread(native_threads[i].thread_handle);
         }
@@ -445,7 +470,7 @@ public class jq_NativeThread implements x86Constants {
         break_jthread = ClassLibInterface.DEFAULT.getJQThread(t);
         break_jthread.disableThreadSwitch();
         break_jthread.setNativeThread(break_nthread);
-        if (TRACE) SystemInterface.debugmsg("Break thread initialized");
+        if (TRACE) SystemInterface.debugwriteln("Break thread initialized");
     }
 
     private static int gcType = GCManager.MS_TR_GC;
@@ -455,7 +480,7 @@ public class jq_NativeThread implements x86Constants {
     // Stop all the native threads and start GC
     public static void stopTheWorld() {
         jq_Thread t = Unsafe.getThreadBlock();
-        if (TRACE) SystemInterface.debugmsg("Ending Java thread " + t);
+        if (TRACE) SystemInterface.debugwriteln("Ending Java thread " + t);
         t.disableThreadSwitch();
         _num_of_java_threads.getAddress().atomicSub(1);
         if (t.isDaemon()) {
@@ -464,7 +489,7 @@ public class jq_NativeThread implements x86Constants {
         Unsafe.setThreadBlock(gc_jthread);
         gc_nthread.currentThread = gc_jthread;
         gc_nthread.thread_handle = SystemInterface.get_current_thread_handle();
-        SystemInterface.debugmsg("*** GC Starts! ***");
+        SystemInterface.debugwriteln("*** GC Starts! ***");
         for (int i = 0; i < native_threads.length; ++i) {
             SystemInterface.suspend_thread(native_threads[i].thread_handle);
         }
@@ -492,15 +517,25 @@ public class jq_NativeThread implements x86Constants {
         gc_jthread = ClassLibInterface.DEFAULT.getJQThread(t);
         gc_jthread.disableThreadSwitch();
         gc_jthread.setNativeThread(gc_nthread);
-        if (TRACE) SystemInterface.debugmsg("GC thread initialized");
+        if (TRACE) SystemInterface.debugwriteln("GC thread initialized");
     }
 
     public void dump(jq_RegisterState regs) {
-        SystemInterface.debugmsg(this + ": current Java thread = " + currentThread);
+        SystemInterface.debugwriteln(this + ": current Java thread = " + currentThread);
         StackCodeWalker.stackDump(regs.Eip, regs.getEbp());
-        SystemInterface.debugmsg(this + ": ready queue = " + readyQueue);
-        SystemInterface.debugmsg(this + ": idle queue = " + idleQueue);
-        SystemInterface.debugmsg(this + ": transfer queue = " + transferQueue);
+        SystemInterface.debugwriteln(this + ": ready queue = " + readyQueue);
+        SystemInterface.debugwriteln(this + ": idle queue = " + idleQueue);
+        SystemInterface.debugwriteln(this + ": transfer queue = " + transferQueue);
+    }
+
+    public jq_ThreadQueue getReadyQueue() {
+        return this.readyQueue;
+    }
+    public jq_ThreadQueue getIdleQueue() {
+        return this.idleQueue;
+    }
+    public jq_ThreadQueue getTransferQueue() {
+        return this.transferQueue;
     }
 
     /** Initialize the thread switch stub function. */

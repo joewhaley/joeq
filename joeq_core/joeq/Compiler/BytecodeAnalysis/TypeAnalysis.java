@@ -721,8 +721,8 @@ public class TypeAnalysis {
         public jq_Type getType() { return createdType; }
         public ProgramLocation filterByType(jq_Type t) {
             if (t == null) return this;
-            createdType.load(); createdType.verify(); createdType.prepare();
-            t.load(); t.verify(); t.prepare();
+            createdType.prepare();
+            t.prepare();
             if (TypeCheck.isAssignable(createdType, t)) return this;
             if (TRACE_FILTER) out_ta.println("Filtered out "+this+" because it is not a subtype of "+t);
             return null;
@@ -768,8 +768,8 @@ public class TypeAnalysis {
         public jq_Type getType() { return type; }
         public ProgramLocation filterByType(jq_Type t) {
             if ((type == null) || (t == null)) return this;
-            type.load(); type.verify(); type.prepare();
-            t.load(); t.verify(); t.prepare();
+            type.prepare();
+            t.prepare();
             if (TypeCheck.isAssignable(type, t)) return this;
             if (TRACE_FILTER) out_ta.println("Filtered out "+this+" because it is not a subtype of "+t);
             return null;
@@ -816,8 +816,8 @@ public class TypeAnalysis {
         public jq_Type getType() { return declaredType; }
         public ProgramLocation filterByType(jq_Type t) {
             if (t == null) return this;
-            declaredType.load(); declaredType.verify(); declaredType.prepare();
-            t.load(); t.verify(); t.prepare();
+            declaredType.prepare();
+            t.prepare();
             if (TypeCheck.isAssignable(declaredType, t)) return this;
             ParamLocation that = new ParamLocation(this.method, this.paramNum, t);
             that.methodSequences = this.methodSequences.copy_deep();
@@ -867,8 +867,8 @@ public class TypeAnalysis {
         public jq_Type getType() { return type; }
         public ProgramLocation filterByType(jq_Type t) {
             if (t == null) return this;
-            type.load(); type.verify(); type.prepare();
-            t.load(); t.verify(); t.prepare();
+            type.prepare();
+            t.prepare();
             if (TypeCheck.isAssignable(type, t)) return this;
             StaticFieldLocation that = new StaticFieldLocation(this.field, t);
             that.methodSequences = this.methodSequences.copy_deep();
@@ -918,8 +918,8 @@ public class TypeAnalysis {
         public jq_Type getType() { return type; }
         public ProgramLocation filterByType(jq_Type t) {
             if (t == null) return this;
-            type.load(); type.verify(); type.prepare();
-            t.load(); t.verify(); t.prepare();
+            type.prepare();
+            t.prepare();
             if (TypeCheck.isAssignable(type, t)) return this;
             DereferenceLocation that = new DereferenceLocation(this.deref, this.method, this.bcIndex, t);
             that.methodSequences = this.methodSequences.copy_deep();
@@ -999,8 +999,8 @@ public class TypeAnalysis {
         public jq_Type getType() { return type; }
         public ProgramLocation filterByType(jq_Type t) {
             if (t == null) return this;
-            type.load(); type.verify(); type.prepare();
-            t.load(); t.verify(); t.prepare();
+            type.prepare();
+            t.prepare();
             if (TypeCheck.isAssignable(type, t)) return this;
             CaughtLocation that = new CaughtLocation(this.method, this.bcIndex, t);
             that.methodSequences = this.methodSequences.copy_deep();
@@ -1098,7 +1098,7 @@ public class TypeAnalysis {
         }
         
         private void addAllSuperInterfaces(jq_Class k, jq_Method m, LinearSet s) {
-            k.load(); k.verify(); k.prepare();
+            k.prepare();
             jq_Class[] subs = k.getInterfaces();
             for (int i=0; i<subs.length; ++i) {
                 jq_Class sub = subs[i];
@@ -2505,7 +2505,7 @@ public class TypeAnalysis {
             while (i.hasNext()) {
                 jq_Method target = (jq_Method)i.next();
                 jq_Class klass = target.getDeclaringClass();
-                klass.load(); klass.verify(); klass.prepare();
+                klass.prepare();
                 if (target.isNative()) {
                     if (TRACE) out.println("Native method call! from "+method+":"+(int)i_start+" to "+target);
                     // native method!!

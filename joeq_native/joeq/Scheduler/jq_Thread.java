@@ -30,7 +30,7 @@ import Util.AtomicCounter;
  * @author  John Whaley
  * @version $Id$
  */
-public class jq_Thread implements ObjectLayout {
+public class jq_Thread {
 
     private final jq_RegisterState registers;
     private volatile int thread_switch_enabled;
@@ -51,9 +51,9 @@ public class jq_Thread implements ObjectLayout {
     public jq_Thread(Thread t) {
         this.thread_object = t;
         this.registers = new jq_RegisterState();
-        this.thread_id = thread_id_factory.get() << THREAD_ID_SHIFT;
+        this.thread_id = thread_id_factory.increment() << ObjectLayout.THREAD_ID_SHIFT;
         jq.Assert(this.thread_id > 0);
-        jq.Assert(this.thread_id < THREAD_ID_MASK);
+        jq.Assert(this.thread_id < ObjectLayout.THREAD_ID_MASK);
         this.isDead = true; // threads start as dead.
     }
 
@@ -105,7 +105,7 @@ public class jq_Thread implements ObjectLayout {
     }
     public void yield() {
         if (this != Unsafe.getThreadBlock()) {
-            SystemInterface.debugmsg("Yield called on " + this + " from thread " + Unsafe.getThreadBlock());
+            SystemInterface.debugwriteln("Yield called on " + this + " from thread " + Unsafe.getThreadBlock());
             jq.UNREACHABLE();
         }
         // act like we received a timer tick

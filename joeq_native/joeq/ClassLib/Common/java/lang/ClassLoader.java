@@ -99,7 +99,7 @@ public abstract class ClassLoader {
     }
 
     // native method implementations.
-    private java.lang.Class defineClass0(java.lang.String name, byte[] b, int off, int len,
+    public java.lang.Class defineClass0(java.lang.String name, byte[] b, int off, int len,
                                          ProtectionDomain pd) {
         // define a new class based on given name and class file structure
         DataInputStream in = new DataInputStream(new ByteArrayInputStream(b, off, len));

@@ -1491,8 +1491,8 @@ public class MethodSummary {
                 return;
             }
             if (type != null) {
-                type.load(); type.verify(); type.prepare();
-                m.getDeclaringClass().load(); m.getDeclaringClass().verify(); m.getDeclaringClass().prepare();
+                type.prepare();
+                m.getDeclaringClass().prepare();
                 if (Run_Time.TypeCheck.isAssignable(type, m.getDeclaringClass()) ||
                     Run_Time.TypeCheck.isAssignable(m.getDeclaringClass(), type)) {
                     jq_Reference r = (jq_Reference)m.getType();
@@ -1662,7 +1662,7 @@ public class MethodSummary {
         private void addDummyEdges() {
             if (type instanceof jq_Class) {
                 jq_Class klass = (jq_Class)type;
-                klass.load(); klass.verify(); klass.prepare();
+                klass.prepare();
                 jq_InstanceField[] fields = klass.getInstanceFields();
                 for (int i=0; i<fields.length; ++i) {
                     jq_InstanceField f = fields[i];

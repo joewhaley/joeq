@@ -18,11 +18,11 @@ import UTF.Utf8;
  * @author  John Whaley
  * @version $Id$
  */
-public abstract class jq_Reference extends jq_Type implements jq_ClassFileConstants, ObjectLayout {
+public abstract class jq_Reference extends jq_Type implements jq_ClassFileConstants {
 
     public static final jq_Reference getTypeOf(Object o) {
         if (!jq.RunningNative) return Reflection.getTypeOf(o);
-        return ((HeapAddress)HeapAddress.addressOf(o).offset(VTABLE_OFFSET).peek().peek()).asReferenceType();
+        return ((HeapAddress)HeapAddress.addressOf(o).offset(ObjectLayout.VTABLE_OFFSET).peek().peek()).asReferenceType();
     }
 
     public final int getState() { return state; }
@@ -30,6 +30,7 @@ public abstract class jq_Reference extends jq_Type implements jq_ClassFileConsta
     public final boolean isVerified() { return state >= STATE_VERIFIED; }
     public final boolean isPrepared() { return state >= STATE_PREPARED; }
     public final boolean isSFInitialized() { return state >= STATE_SFINITIALIZED; }
+    public final boolean isCompiled() { return state >= STATE_COMPILED; }
     public final boolean isClsInitRunning() { return state >= STATE_CLSINITRUNNING; }
     public final boolean isClsInitialized() { return state >= STATE_CLSINITIALIZED; }
     
@@ -79,6 +80,7 @@ public abstract class jq_Reference extends jq_Type implements jq_ClassFileConsta
         public void verify() { jq.UNREACHABLE(); }
         public void prepare() { jq.UNREACHABLE(); }
         public void sf_initialize() { jq.UNREACHABLE(); }
+        public void compile() { jq.UNREACHABLE(); }
         public void cls_initialize() { jq.UNREACHABLE(); }
         public String toString() { return "NULL_TYPE"; }
         public static final jq_NullType NULL_TYPE = new jq_NullType();

@@ -11,6 +11,7 @@ import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
 import Clazz.jq_InstanceMethod;
 import Main.jq;
+import Memory.Address;
 import Memory.HeapAddress;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
@@ -33,7 +34,7 @@ public class SimpleAllocator extends HeapAllocator {
     /**
      * Maximum memory, in bytes, to be allocated from the OS.
      */
-    public static final int MAX_MEMORY = 67108864;
+    public static /*final*/ int MAX_MEMORY = 67108864;
 
     /**
      * Threshold for direct OS allocation.  When an array overflows the current block
@@ -131,31 +132,31 @@ public class SimpleAllocator extends HeapAllocator {
      * @throws OutOfMemoryError if there is insufficient memory to perform the operation
      */
     public final Object allocateObject(int size, Object vtable) throws OutOfMemoryError {
-        if (size < OBJ_HEADER_SIZE) // size overflow! become minus!
+        if (size < ObjectLayout.OBJ_HEADER_SIZE) // size overflow! become minus!
             HeapAllocator.outOfMemory();
         //jq.Assert((size & 0x3) == 0);
         size = (size + 3) & ~3; // align size
-        HeapAddress addr = (HeapAddress) heapCurrent.offset(OBJ_HEADER_SIZE);
+        HeapAddress addr = (HeapAddress) heapCurrent.offset(ObjectLayout.OBJ_HEADER_SIZE);
         heapCurrent = (HeapAddress) heapCurrent.offset(size);
         if (heapEnd.difference(heapCurrent) < 0) {
             // not enough space (rare path)
             jq.Assert(size < BLOCK_SIZE - 2 * HeapAddress.size());
             heapCurrent = (HeapAddress) heapCurrent.offset(-size);
             // consult FreeMemManager for free mem in previous blocks
-            addr = fmm.getFreeMem(size + OBJ_HEADER_SIZE);
+            addr = fmm.getFreeMem(size + ObjectLayout.OBJ_HEADER_SIZE);
             if (addr != null) {
-                addr = (HeapAddress) addr.offset(OBJ_HEADER_SIZE);
+                addr = (HeapAddress) addr.offset(ObjectLayout.OBJ_HEADER_SIZE);
             } else { // allocate new block and register left free mem in FMM
-                fmm.addFreeMem(new MemUnit(heapCurrent, heapEnd.difference(heapCurrent)));
+                //fmm.addFreeMem(new MemUnit(heapCurrent, heapEnd.difference(heapCurrent)));
                 allocateNewBlock();
-                addr = (HeapAddress) heapCurrent.offset(OBJ_HEADER_SIZE);
+                addr = (HeapAddress) heapCurrent.offset(ObjectLayout.OBJ_HEADER_SIZE);
                 heapCurrent = (HeapAddress) heapCurrent.offset(size);
             }
         }
         // fast path
-        addr.offset(VTABLE_OFFSET).poke(HeapAddress.addressOf(vtable));
+        addr.offset(ObjectLayout.VTABLE_OFFSET).poke(HeapAddress.addressOf(vtable));
         if (gcBits != null) {
-            gcBits.set((HeapAddress) addr.offset(-OBJ_HEADER_SIZE));
+            gcBits.set((HeapAddress) addr.offset(-ObjectLayout.OBJ_HEADER_SIZE));
         }
         return addr.asObject();
     }
@@ -170,7 +171,7 @@ public class SimpleAllocator extends HeapAllocator {
      * @throws OutOfMemoryError if there is insufficient memory to perform the operation
      */
     public final Object allocateObjectAlign8(int size, Object vtable) throws OutOfMemoryError {
-        heapCurrent = (HeapAddress) heapCurrent.offset(OBJ_HEADER_SIZE).align(3).offset(-OBJ_HEADER_SIZE);
+        heapCurrent = (HeapAddress) heapCurrent.offset(ObjectLayout.OBJ_HEADER_SIZE).align(3).offset(-ObjectLayout.OBJ_HEADER_SIZE);
         return allocateObject(size, vtable);
     }
 
@@ -188,10 +189,10 @@ public class SimpleAllocator extends HeapAllocator {
      */
     public final Object allocateArray(int length, int size, Object vtable) throws OutOfMemoryError, NegativeArraySizeException {
         if (length < 0) throw new NegativeArraySizeException(length + " < 0");
-        if (size < ARRAY_HEADER_SIZE) // size overflow!
+        if (size < ObjectLayout.ARRAY_HEADER_SIZE) // size overflow!
             HeapAllocator.outOfMemory();
         size = (size + 3) & ~3; // align size
-        HeapAddress addr = (HeapAddress) heapCurrent.offset(ARRAY_HEADER_SIZE);
+        HeapAddress addr = (HeapAddress) heapCurrent.offset(ObjectLayout.ARRAY_HEADER_SIZE);
         heapCurrent = (HeapAddress) heapCurrent.offset(size);
         if (heapEnd.difference(heapCurrent) < 0) {
             // not enough space (rare path)
@@ -201,30 +202,30 @@ public class SimpleAllocator extends HeapAllocator {
                 addr = (HeapAddress) SystemInterface.syscalloc(size);
                 if (addr.isNull())
                     outOfMemory();
-                addr = (HeapAddress) addr.offset(ARRAY_HEADER_SIZE);
-                addr.offset(ARRAY_LENGTH_OFFSET).poke4(length);
-                addr.offset(VTABLE_OFFSET).poke(HeapAddress.addressOf(vtable));
+                addr = (HeapAddress) addr.offset(ObjectLayout.ARRAY_HEADER_SIZE);
+                addr.offset(ObjectLayout.ARRAY_LENGTH_OFFSET).poke4(length);
+                addr.offset(ObjectLayout.VTABLE_OFFSET).poke(HeapAddress.addressOf(vtable));
                 // TODO: gc ?!?
                 return addr.asObject();
             } else {
                 jq.Assert(size < BLOCK_SIZE - 2 * HeapAddress.size());
                 // consult FreeMemManager for free mem in previous blocks
-                addr = fmm.getFreeMem(size + OBJ_HEADER_SIZE);
+                addr = fmm.getFreeMem(size + ObjectLayout.OBJ_HEADER_SIZE);
                 if (addr != null) {
-                    addr = (HeapAddress) addr.offset(ARRAY_HEADER_SIZE);
+                    addr = (HeapAddress) addr.offset(ObjectLayout.ARRAY_HEADER_SIZE);
                 } else { // allocate new block and register left free mem in FMM
-                    fmm.addFreeMem(new MemUnit(heapCurrent, heapEnd.difference(heapCurrent)));
+                    //fmm.addFreeMem(new MemUnit(heapCurrent, heapEnd.difference(heapCurrent)));
                     allocateNewBlock();
-                    addr = (HeapAddress) heapCurrent.offset(ARRAY_HEADER_SIZE);
+                    addr = (HeapAddress) heapCurrent.offset(ObjectLayout.ARRAY_HEADER_SIZE);
                     heapCurrent = (HeapAddress) heapCurrent.offset(size);
                 }
             }
         }
         // fast path
-        addr.offset(ARRAY_LENGTH_OFFSET).poke4(length);
-        addr.offset(VTABLE_OFFSET).poke(HeapAddress.addressOf(vtable));
+        addr.offset(ObjectLayout.ARRAY_LENGTH_OFFSET).poke4(length);
+        addr.offset(ObjectLayout.VTABLE_OFFSET).poke(HeapAddress.addressOf(vtable));
         if (gcBits != null) {
-            gcBits.set((HeapAddress) addr.offset(-ARRAY_HEADER_SIZE));
+            gcBits.set((HeapAddress) addr.offset(-ObjectLayout.ARRAY_HEADER_SIZE));
         }
         return addr.asObject();
     }
@@ -242,10 +243,18 @@ public class SimpleAllocator extends HeapAllocator {
      * @throws OutOfMemoryError if there is insufficient memory to perform the operation
      */
     public final Object allocateArrayAlign8(int length, int size, Object vtable) throws OutOfMemoryError, NegativeArraySizeException {
-        heapCurrent = (HeapAddress) heapCurrent.offset(ARRAY_HEADER_SIZE).align(3).offset(-ARRAY_HEADER_SIZE);
+        heapCurrent = (HeapAddress) heapCurrent.offset(ObjectLayout.ARRAY_HEADER_SIZE).align(3).offset(-ObjectLayout.ARRAY_HEADER_SIZE);
         return allocateArray(length, size, vtable);
     }
 
+    public final void collect() {
+        // nothing for now.
+    }
+
+    public final void processPtrField(Address a) {
+        // nothing for now.
+    }
+    
     public static final jq_Class _class;
     public static final jq_InstanceMethod _allocateObject;
     public static final jq_InstanceMethod _allocateObjectAlign8;

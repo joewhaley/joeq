@@ -128,7 +128,7 @@ public class BootstrapRootSet {
     
     public boolean addNecessaryType(jq_Type t) {
         if (t == null) return false;
-        t.load(); t.verify(); t.prepare();
+        t.prepare();
         boolean b = necessaryTypes.add(t);
         if (b) {
             if (TRACE) out.println("New necessary type: "+t);
@@ -297,7 +297,7 @@ public class BootstrapRootSet {
         catch (java.lang.ClassNotFoundException x) { }
         
         // tracing in the compiler uses these
-        //c = jq._class; c.load(); c.verify(); c.prepare();
+        //c = jq._class; c.prepare();
         //addToWorklist(jq._hex8);
         //addToWorklist(jq._hex16);
     }
@@ -422,7 +422,7 @@ public class BootstrapRootSet {
         jq_Class[] subclasses = c.getSubClasses();
         for (int i=0; i<subclasses.length; ++i) {
             jq_Class subclass = subclasses[i];
-            subclass.verify(); subclass.prepare();
+            subclass.prepare();
             jq_Method m2 = (jq_Method)subclass.getDeclaredMember(i_m.getNameAndDesc());
             if (m2 != null && !m2.isStatic()) {
                 addNecessaryMethod(m2);

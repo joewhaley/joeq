@@ -23,6 +23,10 @@ public class HeapAddress extends Address {
     public abstract static class HeapAddressFactory {
         public abstract int size();
 
+        public abstract int logSize();
+        
+        public abstract int pageAlign();
+
         public abstract HeapAddress getNull();
 
         public abstract HeapAddress addressOf(Object o);
@@ -34,6 +38,14 @@ public class HeapAddress extends Address {
         return FACTORY.size();
     }
 
+    public static final int logSize() {
+        return FACTORY.logSize();
+    }
+    
+    public static final int pageAlign() {
+        return FACTORY.pageAlign();
+    }
+    
     public static final HeapAddress getNull() {
         return FACTORY.getNull();
     }

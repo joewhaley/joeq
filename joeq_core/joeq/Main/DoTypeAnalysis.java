@@ -56,7 +56,7 @@ public abstract class DoTypeAnalysis {
                 if (interfaceName.endsWith(".class")) interfaceName = interfaceName.substring(0, interfaceName.length()-6);
                 String interfaceDesc = "L"+interfaceName+";";
                 interfaceCheck = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType(interfaceDesc);
-                interfaceCheck.load(); interfaceCheck.verify(); interfaceCheck.prepare();
+                interfaceCheck.prepare();
             } else
             if (args[x].equals("-bypackage")) {
                 Compil3r.BytecodeAnalysis.TypeAnalysis.TypeAnalysisVisitor.BY_PACKAGE = true;
@@ -122,7 +122,7 @@ public abstract class DoTypeAnalysis {
             if (classname.endsWith(".class")) classname = classname.substring(0, classname.length()-6);
             String classdesc = "L"+classname+";";
             jq_Class c = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType(classdesc);
-            c.load(); c.verify(); c.prepare();
+            c.prepare();
             classes.add(c);
         }
         
@@ -157,6 +157,9 @@ public abstract class DoTypeAnalysis {
         c.prepare();
         System.out.println("Initializing static fields of "+c+"...");
         c.sf_initialize();
+        //System.out.println("Compiling "+c+"...");
+        //c.compile();
+        
         Iterator it;
         for(it = new ArrayIterator(c.getDeclaredStaticMethods());
             it.hasNext(); ) {

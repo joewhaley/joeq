@@ -116,19 +116,23 @@ public interface jq_ClassFileConstants {
     byte STATE_SFINITIALIZING = 9;
     // This class has its static fields created and initialized.
     byte STATE_SFINITIALIZED = 10;
+    // A thread is in the process of compiling stubs for the methods in this class.
+    byte STATE_COMPILING = 11;
+    // The class has stubs compiled for all of its methods.
+    byte STATE_COMPILED = 12;
     // A thread is in the process of initializing this class. (Jvm spec 2.17.4-5)
     // Initialization is triggered when code is about to execute that will create
     // an instance, execute a static method, or use or assign a nonconstant static
     // field.
-    byte STATE_CLSINITIALIZING = 11;
-    byte STATE_CLSINITRUNNING = 12;
+    byte STATE_CLSINITIALIZING = 13;
+    byte STATE_CLSINITRUNNING = 14;
     // An error occurred during initialization!  This resulted in a throwing of 
     // a NoClassDefFoundError, ExceptionInInitializerError, or OutOfMemoryError
     // for the initializing thread.  Any further attempts to initialize should
     // result in the throwing of a NoClassDefFoundError. 
-    byte STATE_CLSINITERROR = 13;
+    byte STATE_CLSINITERROR = 15;
     // This class has been fully initialized!
-    byte STATE_CLSINITIALIZED  = 14;
+    byte STATE_CLSINITIALIZED  = 16;
 
     /**
      * Illegal codes

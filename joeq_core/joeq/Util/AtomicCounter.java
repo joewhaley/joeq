@@ -19,6 +19,8 @@ public class AtomicCounter {
     public AtomicCounter(int initialValue) { current = initialValue-1;}
     public AtomicCounter() { this(0); }
 
-    public synchronized int get() { return ++current; }
+    public synchronized int increment() { return ++current; }
+    public synchronized void reset(int v) { current = v-1; }
     
+    public int value() { return current+1; }
 }

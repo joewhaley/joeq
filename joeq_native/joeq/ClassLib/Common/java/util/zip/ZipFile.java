@@ -351,4 +351,8 @@ public abstract class ZipFile implements ZipConstants {
         return get16(b, off) | ((long)get16(b, off+2) << 16);
     }
     
+    // native method that is not used by this implementation.
+    private static void freeEntry(long a, long b) {
+        jq.UNREACHABLE();
+    }
 }
