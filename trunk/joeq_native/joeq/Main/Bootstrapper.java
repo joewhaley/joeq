@@ -17,6 +17,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import joeq.Allocator.CodeAllocator;
 import joeq.Allocator.DefaultCodeAllocator;
@@ -549,8 +551,13 @@ public abstract class Bootstrapper {
 
     public static void dumpClassSet(Set s) throws IOException {
         DataOutputStream dos = new DataOutputStream(new FileOutputStream("classlist"));
+        SortedSet ss = new TreeSet();
         for (Iterator i = s.iterator(); i.hasNext(); ) {
             jq_Type t = (jq_Type) i.next();
+            ss.add(t.toString());
+        }
+        for (Iterator i = ss.iterator(); i.hasNext(); ) {
+            String t = (String) i.next();
             dos.writeBytes(t + "\n");
         }
         dos.close();
@@ -558,8 +565,13 @@ public abstract class Bootstrapper {
     
     public static void dumpMethodSet(Set s) throws IOException {
         DataOutputStream dos = new DataOutputStream(new FileOutputStream("methodlist"));
+        SortedSet ss = new TreeSet();
         for (Iterator i = s.iterator(); i.hasNext(); ) {
             jq_Method t = (jq_Method) i.next();
+            ss.add(t.toString());
+        }
+        for (Iterator i = ss.iterator(); i.hasNext(); ) {
+            String t = (String) i.next();
             dos.writeBytes(t + "\n");
         }
         dos.close();
