@@ -6,6 +6,7 @@ package joeq.Main;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import joeq.Class.PrimordialClassLoader;
 import joeq.Compiler.Analysis.IPA.PA;
 import joeq.Compiler.Quad.BasicBlockVisitor;
 import joeq.Compiler.Quad.CodeCache;
@@ -51,11 +52,25 @@ public class GenRelations {
             return null;
         }
         URL url2 = new File(".").toURL();
-        return new HijackingClassLoader(new URL[] {url, url2});
+        
+        URL[] urls = new URL[args.length + 2];
+        urls[0] = url; urls[1] = url2;
+        for(int i = 0; i < args.length; i++){
+            urls[2+i] = new File(args[i]).toURL();
+        }
+        
+        return new HijackingClassLoader(urls);
     }
     
-    public static void main(String[] args) throws IOException {
-        
+    public static void addClassesToClasspath(PrimordialClassLoader loader, String[] args) throws IOException {
+        for(int i = 0; i < args.length; i++){
+            String arg = args[i];
+            if(arg.startsWith("-I"))
+            loader.addToClasspath(arg.substring(2, arg.length()));
+        }        
+    }
+    
+    public static void main(String[] args) throws IOException {        
         // Make sure we have the BDD library in our classpath.
         try {
             Class.forName("net.sf.javabdd.BDD");
@@ -63,15 +78,15 @@ public class GenRelations {
             ClassLoader cl = addBDDLibraryToClasspath(args);
             // Reflective invocation under the new class loader.
             Reflect.invoke(cl, GenRelations.class.getName(), "main2", new Class[] {String[].class}, new Object[] {args});
-            return;
+            return;        
         }
         
+        addClassesToClasspath(PrimordialClassLoader.loader, args);
         // Just call it directly.
         main2(args);
     }
     
-    public static void main2(String[] args) throws IOException {
-        
+    public static void main2(String[] args) throws IOException {        
         if (args.length == 0) {
             printUsage();
             return;
