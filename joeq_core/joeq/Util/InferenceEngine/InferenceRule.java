@@ -125,9 +125,8 @@ public abstract class InferenceRule {
         return mm;
     }
     
-    public Collection/*<InferenceRule>*/ split(Solver s) {
+    public Collection/*<InferenceRule>*/ split(int myIndex, Solver s) {
         List newRules = new LinkedList();
-        int myIndex = s.rules.indexOf(this);
         int count = 0;
         while (top.size() > 2) {
             RuleTerm rt1 = (RuleTerm) top.remove(0);

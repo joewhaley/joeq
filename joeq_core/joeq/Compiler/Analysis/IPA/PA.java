@@ -1200,6 +1200,9 @@ public class PA {
     }
     
     public void solvePointsTo() {
+        try {
+            dumpBDDRelations();
+        } catch (IOException x) {}
         if (INCREMENTAL1) {
             solvePointsTo_incremental();
             return;
@@ -1213,11 +1216,15 @@ public class PA {
                 
                 // Rule 1
                 BDD t1 = vP.replace(V1toV2); // V2xH1
+                if (TRACE_SOLVER) out.println("Inner #"+inner+": rename V1toV2: vP "+vP.nodeCount()+" -> "+t1.nodeCount());
                 BDD t2 = A.relprod(t1, V2set); // V1xV2 x V2xH1 = V1xH1
+                if (TRACE_SOLVER) out.println("Inner #"+inner+": relprod A "+A.nodeCount()+" -> "+t2.nodeCount());
                 t1.free();
                 if (FILTER_VP) t2.andWith(vPfilter.id());
+                if (FILTER_VP && TRACE_SOLVER) out.println("Inner #"+inner+": and vPfilter "+vPfilter.nodeCount()+" -> "+t2.nodeCount());
+                if (TRACE_SOLVER) out.print("Inner #"+inner+": or vP "+vP.nodeCount()+" -> ");
                 vP.orWith(t2);
-                if (TRACE_SOLVER) out.println("Inner #"+inner+": vP "+old_vP.satCount(V1H1set)+" -> "+vP.satCount(V1H1set));
+                if (TRACE_SOLVER) out.println(vP.nodeCount());
                 
                 boolean done = vP.equals(old_vP); 
                 old_vP.free();
@@ -1233,7 +1240,7 @@ public class PA {
             if (FILTER_HP) t5.andWith(hPfilter.id());
             hP.orWith(t5);
 
-            if (TRACE_SOLVER) out.println("Outer #"+outer+": hP "+hP.satCount(H1FH2set)+" -> "+hP.satCount(H1FH2set));
+            if (TRACE_SOLVER) out.println("Outer #"+outer+": hP "+hP.nodeCount());
             
             boolean done = hP.equals(old_hP); 
             old_hP.free();
@@ -1247,6 +1254,7 @@ public class PA {
             t7.replaceWith(V2H2toV1H1); // V1xH1
             if (FILTER_VP) t7.andWith(vPfilter.id());
             vP.orWith(t7);
+            if (TRACE_SOLVER) out.println("Outer #"+outer+": vP "+vP.nodeCount());
         }
     }
     
@@ -1262,14 +1270,17 @@ public class PA {
         BDD new_A = A.apply(old1_A, BDDFactory.diff);
         old1_A.free();
         if (!new_A.isZero()) {
-            if (TRACE_SOLVER) out.print("Handling new A: "+new_A.satCount(V1V2set));
+            if (TRACE_SOLVER) out.println("New A: "+new_A.nodeCount());
             BDD t1 = vP.replace(V1toV2); // V2xH1
+            if (TRACE_SOLVER) out.println("New A: rename V1toV2: vP "+vP.nodeCount()+" -> "+t1.nodeCount());
             BDD t2 = new_A.relprod(t1, V2set); // V1xV2 x V2xH1 = V1xH1
+            if (TRACE_SOLVER) out.println("New A: relprod new_A "+new_A.nodeCount()+" -> "+t2.nodeCount());
             new_A.free(); t1.free();
             if (FILTER_VP) t2.andWith(vPfilter.id());
-            if (TRACE_SOLVER) out.print(" vP "+vP.satCount(V1H1set));
+            if (FILTER_VP && TRACE_SOLVER) out.println("New A: and vPfilter "+vPfilter.nodeCount()+" -> "+t2.nodeCount());
+            if (TRACE_SOLVER) out.print("New A: or vP "+vP.nodeCount()+" -> ");
             vP.orWith(t2);
-            if (TRACE_SOLVER) out.println(" --> "+vP.satCount(V1H1set));
+            if (TRACE_SOLVER) out.println(vP.nodeCount());
         }
         old1_A = A.id();
         
@@ -1277,17 +1288,22 @@ public class PA {
         BDD new_S = S.apply(old1_S, BDDFactory.diff);
         old1_S.free();
         if (!new_S.isZero()) {
-            if (TRACE_SOLVER) out.print("Handling new S: "+new_S.satCount(V1FV2set));
+            if (TRACE_SOLVER) out.println("New S: "+new_S.nodeCount());
             BDD t3 = new_S.relprod(vP, V1set); // V1xFxV2 x V1xH1 = H1xFxV2
+            if (TRACE_SOLVER) out.println("New S: relprod: vP "+vP.nodeCount()+" -> "+t3.nodeCount());
             new_S.free();
             if (!FILTER_NULL) t3.andWith(NNfilter.id());
+            if (!FILTER_NULL && TRACE_SOLVER) out.println("New S: and NNfilter "+NNfilter.nodeCount()+" -> "+t3.nodeCount());
             BDD t4 = vP.replace(V1H1toV2H2); // V2xH2
+            if (TRACE_SOLVER) out.println("New S: replace vP "+vP.nodeCount()+" -> "+t4.nodeCount());
             BDD t5 = t3.relprod(t4, V2set); // H1xFxV2 x V2xH2 = H1xFxH2
+            if (TRACE_SOLVER) out.println("New S: relprod -> "+t5.nodeCount());
             t3.free(); t4.free();
             if (FILTER_HP) t5.andWith(hPfilter.id());
-            if (TRACE_SOLVER) out.print(" hP "+hP.satCount(H1FH2set));
+            if (FILTER_HP && TRACE_SOLVER) out.println("New S: and hPfilter "+hPfilter.nodeCount()+" -> "+t5.nodeCount());
+            if (TRACE_SOLVER) out.print("New S: or hP "+hP.nodeCount()+" -> ");
             hP.orWith(t5);
-            if (TRACE_SOLVER) out.println(" --> "+hP.satCount(H1FH2set));
+            if (TRACE_SOLVER) out.println(hP.nodeCount());
         }
         old1_S = S.id();
         
@@ -1295,15 +1311,18 @@ public class PA {
         BDD new_L = L.apply(old1_L, BDDFactory.diff);
         old1_L.free();
         if (!new_L.isZero()) {
-            if (TRACE_SOLVER) out.print("Handling new L: "+new_L.satCount(V1FV2set));
+            if (TRACE_SOLVER) out.println("New L: "+new_L.nodeCount());
             BDD t6 = new_L.relprod(vP, V1set); // V1xFxV2 x V1xH1 = H1xFxV2
+            if (TRACE_SOLVER) out.println("New L: relprod: vP "+vP.nodeCount()+" -> "+t6.nodeCount());
             BDD t7 = t6.relprod(hP, H1Fset); // H1xFxV2 x H1xFxH2 = V2xH2
+            if (TRACE_SOLVER) out.println("New L: relprod: hP "+hP.nodeCount()+" -> "+t7.nodeCount());
             t6.free();
             t7.replaceWith(V2H2toV1H1); // V1xH1
+            if (TRACE_SOLVER) out.println("New L: replace: "+t7.nodeCount());
             if (FILTER_VP) t7.andWith(vPfilter.id());
-            if (TRACE_SOLVER) out.print(" vP "+vP.satCount(V1H1set));
+            if (TRACE_SOLVER) out.print("New L: or vP "+vP.nodeCount()+" -> ");
             vP.orWith(t7);
-            if (TRACE_SOLVER) out.println(" --> "+vP.satCount(V1H1set));
+            if (TRACE_SOLVER) out.println(vP.nodeCount());
         }
         old1_L = L.id();
         
@@ -1312,85 +1331,102 @@ public class PA {
             int inner;
             for (inner = 1; !new_vP_inner.isZero() && inner < 256; ++inner) {
                 if (TRACE_SOLVER)
-                    out.print("Inner #"+inner+": new vP "+new_vP_inner.satCount(V1H1set));
+                    out.println("Inner #"+inner+": new vP "+new_vP_inner.nodeCount());
                 
                 // Rule 1
                 BDD t1 = new_vP_inner.replace(V1toV2); // V2xH1
+                if (TRACE_SOLVER) out.println("Inner #"+inner+": rename V1toV2: "+t1.nodeCount());
                 new_vP_inner.free();
                 BDD t2 = A.relprod(t1, V2set); // V1xV2 x V2xH1 = V1xH1
+                if (TRACE_SOLVER) out.println("Inner #"+inner+": relprod A: "+A.nodeCount()+" -> "+t2.nodeCount());
                 t1.free();
                 if (FILTER_VP) t2.andWith(vPfilter.id());
+                if (FILTER_VP && TRACE_SOLVER) out.println("Inner #"+inner+": and vPfilter "+vPfilter.nodeCount()+" -> "+t2.nodeCount());
                 
                 BDD old_vP_inner = vP.id();
                 vP.orWith(t2);
-                if (TRACE_SOLVER)
-                    out.println(", vP "+old_vP_inner.satCount(V1H1set)+
-                                " -> "+vP.satCount(V1H1set)+" "+vP.nodeCount()+" nodes");
+                if (TRACE_SOLVER) out.println("Inner #"+inner+": or vP "+old_vP_inner.nodeCount()+" -> "+vP.nodeCount());
                 new_vP_inner = vP.apply(old_vP_inner, BDDFactory.diff);
+                if (TRACE_SOLVER) out.println("Inner #"+inner+": diff vP -> "+new_vP_inner.nodeCount());
                 old_vP_inner.free();
             }
             
             BDD new_vP = vP.apply(old1_vP, BDDFactory.diff);
+            if (TRACE_SOLVER) out.println("Outer #"+outer+": diff vP "+vP.nodeCount()+" - "+old1_vP.nodeCount()+" = "+new_vP.nodeCount());
             old1_vP.free();
-            
-            if (TRACE_SOLVER)
-                out.print("Outer #"+outer+": new vP "+new_vP.satCount(V1H1set));
             
             {
                 // Rule 2
                 BDD t3 = S.relprod(new_vP, V1set); // V1xFxV2 x V1xH1 = H1xFxV2
+                if (TRACE_SOLVER) out.println("Outer #"+outer+" S: relprod "+S.nodeCount()+" -> "+t3.nodeCount());
                 if (!FILTER_NULL) t3.andWith(NNfilter.id());
-// 9%
+                if (!FILTER_NULL && TRACE_SOLVER) out.println("Outer #"+outer+" S: and NNfilter "+NNfilter.nodeCount()+" -> "+t3.nodeCount());
                 BDD t4 = vP.replace(V1H1toV2H2); // V2xH2
+                if (TRACE_SOLVER) out.println("Outer #"+outer+" S: replace "+vP.nodeCount()+" -> "+t4.nodeCount());
                 BDD t5 = t3.relprod(t4, V2set); // H1xFxV2 x V2xH2 = H1xFxH2
+                if (TRACE_SOLVER) out.println("Outer #"+outer+" S: relprod -> "+t5.nodeCount());
                 t3.free(); t4.free();
                 if (FILTER_HP) t5.andWith(hPfilter.id());
+                if (FILTER_HP && TRACE_SOLVER) out.println("Outer #"+outer+" S: and hPfilter "+hPfilter.nodeCount()+" -> "+t5.nodeCount());
+                if (TRACE_SOLVER) out.print("Outer #"+outer+" S: or hP "+hP.nodeCount()+" -> ");
                 hP.orWith(t5);
+                if (TRACE_SOLVER) out.println(hP.nodeCount());
             }
             {
                 // Rule 2
                 BDD t3 = S.relprod(vP, V1set); // V1xFxV2 x V1xH1 = H1xFxV2
+                if (TRACE_SOLVER) out.println("Outer #"+outer+" S': relprod "+S.nodeCount()+", "+vP.nodeCount()+" -> "+t3.nodeCount());
                 if (!FILTER_NULL) t3.andWith(NNfilter.id());
+                if (!FILTER_NULL && TRACE_SOLVER) out.println("Outer #"+outer+" S': and NNfilter "+NNfilter.nodeCount()+" -> "+t3.nodeCount());
                 BDD t4 = new_vP.replace(V1H1toV2H2); // V2xH2
+                if (TRACE_SOLVER) out.println("Outer #"+outer+" S': replace "+new_vP.nodeCount()+" -> "+t4.nodeCount());
                 BDD t5 = t3.relprod(t4, V2set); // H1xFxV2 x V2xH2 = H1xFxH2
+                if (TRACE_SOLVER) out.println("Outer #"+outer+" S': relprod -> "+t5.nodeCount());
                 t3.free(); t4.free();
                 if (FILTER_HP) t5.andWith(hPfilter.id());
+                if (FILTER_HP && TRACE_SOLVER) out.println("Outer #"+outer+" S': and hPfilter "+hPfilter.nodeCount()+" -> "+t5.nodeCount());
+                if (TRACE_SOLVER) out.print("Outer #"+outer+" S': or hP "+hP.nodeCount()+" -> ");
                 hP.orWith(t5);
+                if (TRACE_SOLVER) out.println(hP.nodeCount());
             }
 
-            if (TRACE_SOLVER)
-                out.println(", hP "+old1_hP.satCount(H1FH2set)+" -> "+hP.satCount(H1FH2set));
-            
             old1_vP = vP.id();
             
             BDD new_hP = hP.apply(old1_hP, BDDFactory.diff);
+            if (TRACE_SOLVER) out.println("Outer #"+outer+": diff hP "+hP.nodeCount()+" - "+old1_hP.nodeCount()+" = "+new_hP.nodeCount());
             if (new_hP.isZero() && new_vP.isZero() && inner < 256) break;
             old1_hP = hP.id();
-            
-            if (TRACE_SOLVER)
-                out.print("        : new hP "+new_hP.satCount(H1FH2set));
             
             {
                 // Rule 3
                 BDD t6 = L.relprod(new_vP, V1set); // V1xFxV2 x V1xH1 = H1xFxV2
+                if (TRACE_SOLVER) out.println("Outer #"+outer+" L: relprod "+L.nodeCount()+", "+new_vP.nodeCount()+" -> "+t6.nodeCount());
                 BDD t7 = t6.relprod(hP, H1Fset); // H1xFxV2 x H1xFxH2 = V2xH2
+                if (TRACE_SOLVER) out.println("Outer #"+outer+" L: relprod "+hP.nodeCount()+" -> "+t7.nodeCount());
                 t6.free();
                 t7.replaceWith(V2H2toV1H1); // V1xH1
+                if (TRACE_SOLVER) out.println("Outer #"+outer+" L: replace "+t7.nodeCount());
                 if (FILTER_VP) t7.andWith(vPfilter.id());
+                if (FILTER_VP && TRACE_SOLVER) out.println("Outer #"+outer+" L: and vPfilter "+vPfilter.nodeCount()+" -> "+t7.nodeCount());
+                if (TRACE_SOLVER) out.print("Outer #"+outer+" L: or vP "+vP.nodeCount()+" -> ");
                 vP.orWith(t7);
+                if (TRACE_SOLVER) out.println(vP.nodeCount());
             }
             {
                 // Rule 3
                 BDD t6 = L.relprod(vP, V1set); // V1xFxV2 x V1xH1 = H1xFxV2
+                if (TRACE_SOLVER) out.println("Outer #"+outer+" L': relprod "+L.nodeCount()+", "+vP.nodeCount()+" -> "+t6.nodeCount());
                 BDD t7 = t6.relprod(new_hP, H1Fset); // H1xFxV2 x H1xFxH2 = V2xH2
+                if (TRACE_SOLVER) out.println("Outer #"+outer+" L': relprod "+new_hP.nodeCount()+" -> "+t7.nodeCount());
                 t6.free();
                 t7.replaceWith(V2H2toV1H1); // V1xH1
+                if (TRACE_SOLVER) out.println("Outer #"+outer+" L': replace "+t7.nodeCount());
                 if (FILTER_VP) t7.andWith(vPfilter.id());
+                if (FILTER_VP && TRACE_SOLVER) out.println("Outer #"+outer+" L': and vPfilter "+vPfilter.nodeCount()+" -> "+t7.nodeCount());
+                if (TRACE_SOLVER) out.print("Outer #"+outer+" L': or vP "+vP.nodeCount()+" -> ");
                 vP.orWith(t7);
+                if (TRACE_SOLVER) out.println(vP.nodeCount());
             }
-            if (TRACE_SOLVER)
-                out.println(", vP "+old1_vP.satCount(V1H1set)+
-                            " -> "+vP.satCount(V1H1set));
         }
     }
     
@@ -1847,7 +1883,7 @@ public class PA {
         
         BDD my_IE = USE_VCONTEXT ? IEcs : IE;
         
-        if (TRACE_SOLVER) out.println("Number of call graph edges: "+my_IE.satCount(IMset));
+        if (TRACE_SOLVER) out.println("Call graph edges: "+my_IE.nodeCount());
         
         BDD my_formal = CARTESIAN_PRODUCT ? formal.and(Z.varRange(0, MAX_PARAMS-1).not()) : formal;
         BDD my_actual = CARTESIAN_PRODUCT ? actual.and(Z.varRange(0, MAX_PARAMS-1).not()) : actual;
@@ -1855,27 +1891,27 @@ public class PA {
         BDD t1 = my_IE.relprod(my_actual, Iset); // V2cxIxV1cxM x IxZxV2 = V1cxMxZxV2cxV2
         BDD t2 = t1.relprod(my_formal, MZset); // V1cxMxZxV2cxV2 x MxZxV1 = V1cxV1xV2cxV2
         t1.free();
-        if (TRACE_SOLVER) out.println("Edges before param bind: "+A.satCount(V1V2set));
+        if (TRACE_SOLVER) out.println("A before param bind: "+A.nodeCount());
         A.orWith(t2);
-        if (TRACE_SOLVER) out.println("Edges after param bind: "+A.satCount(V1V2set));
+        if (TRACE_SOLVER) out.println("A after param bind: "+A.nodeCount());
         
         if (TRACE_SOLVER) out.println("Binding return values...");
         BDD my_IEr = USE_VCONTEXT ? IEcs.replace(V1cV2ctoV2cV1c) : IE;
         BDD t3 = my_IEr.relprod(Iret, Iset); // V1cxIxV2cxM x IxV1 = V1cxV1xV2cxM
         BDD t4 = t3.relprod(Mret, Mset); // V1cxV1xV2cxM x MxV2 = V1cxV1xV2cxV2
         t3.free();
-        if (TRACE_SOLVER) out.println("Edges before return bind: "+A.satCount(V1V2set));
+        if (TRACE_SOLVER) out.println("A before return bind: "+A.nodeCount());
         A.orWith(t4);
-        if (TRACE_SOLVER) out.println("Edges after return bind: "+A.satCount(V1V2set));
+        if (TRACE_SOLVER) out.println("A after return bind: "+A.nodeCount());
         
         if (TRACE_SOLVER) out.println("Binding exceptions...");
         BDD t5 = my_IEr.relprod(Ithr, Iset); // V1cxIxV2cxM x IxV1 = V1cxV1xV2cxM
         if (USE_VCONTEXT) my_IEr.free();
         BDD t6 = t5.relprod(Mthr, Mset); // V1cxV1xV2cxM x MxV2 = V1cxV1xV2cxV2
         t5.free();
-        if (TRACE_SOLVER) out.println("Edges before exception bind: "+A.satCount(V1V2set));
+        if (TRACE_SOLVER) out.println("A before exception bind: "+A.nodeCount());
         A.orWith(t6);
-        if (TRACE_SOLVER) out.println("Edges after exception bind: "+A.satCount(V1V2set));
+        if (TRACE_SOLVER) out.println("A after exception bind: "+A.nodeCount());
         
     }
     
@@ -1895,7 +1931,7 @@ public class PA {
         old2_visited.free();
         new_visited.free();
         
-        if (TRACE_SOLVER) out.println("Number of new call graph edges: "+new_myIE.satCount(IMset));
+        if (TRACE_SOLVER) out.println("New call graph edges: "+new_myIE.nodeCount());
         
         BDD my_formal = CARTESIAN_PRODUCT ? formal.and(Z.varRange(0, MAX_PARAMS-1).not()) : formal;
         BDD my_actual = CARTESIAN_PRODUCT ? actual.and(Z.varRange(0, MAX_PARAMS-1).not()) : actual;
@@ -1905,29 +1941,27 @@ public class PA {
         BDD t1 = new_myIE.relprod(my_actual, Iset); // V2cxIxV1cxM x IxZxV2 = V1cxMxZxV2cxV2
         BDD t2 = t1.relprod(my_formal, MZset); // V1cxMxZxV2cxV2 x MxZxV1 = V1cxV1xV2cxV2
         t1.free();
-        if (false) out.println("New edges for param binding: "+t2.toStringWithDomains());
-        if (TRACE_SOLVER) out.println("Edges before param bind: "+A.satCount(V1V2set));
+        if (TRACE_SOLVER) out.println("A before param bind: "+A.nodeCount());
         A.orWith(t2);
-        if (TRACE_SOLVER) out.println("Edges after param bind: "+A.satCount(V1V2set));
+        if (TRACE_SOLVER) out.println("A after param bind: "+A.nodeCount());
         
         if (TRACE_SOLVER) out.println("Binding return values...");
         BDD new_myIEr = USE_VCONTEXT ? new_myIE.replace(V1cV2ctoV2cV1c) : new_myIE;
         BDD t3 = new_myIEr.relprod(Iret, Iset); // V1cxIxV2cxM x IxV1 = V1cxV1xV2cxM
         BDD t4 = t3.relprod(Mret, Mset); // V1cxV1xV2cxM x MxV2 = V1cxV1xV2cxV2
         t3.free();
-        if (false) out.println("New edges for return binding: "+t4.toStringWithDomains());
-        if (TRACE_SOLVER) out.println("Edges before return bind: "+A.satCount(V1V2set));
+        if (TRACE_SOLVER) out.println("A before return bind: "+A.nodeCount());
         A.orWith(t4);
-        if (TRACE_SOLVER) out.println("Edges after return bind: "+A.satCount(V1V2set));
+        if (TRACE_SOLVER) out.println("A after return bind: "+A.nodeCount());
         
         if (TRACE_SOLVER) out.println("Binding exceptions...");
         BDD t5 = new_myIEr.relprod(Ithr, Iset); // V1cxIxV2cxM x IxV1 = V1cxV1xV2cxM
         if (USE_VCONTEXT) new_myIEr.free();
         BDD t6 = t5.relprod(Mthr, Mset); // V1cxV1xV2cxM x MxV2 = V1cxV1xV2cxV2
         t5.free();
-        if (TRACE_SOLVER) out.println("Edges before exception bind: "+A.satCount(V1V2set));
+        if (TRACE_SOLVER) out.println("A before exception bind: "+A.nodeCount());
         A.orWith(t6);
-        if (TRACE_SOLVER) out.println("Edges after exception bind: "+A.satCount(V1V2set));
+        if (TRACE_SOLVER) out.println("A after exception bind: "+A.nodeCount());
         
         new_myIE.free();
         old2_myIE = my_IE.id();
@@ -3323,16 +3357,16 @@ public class PA {
     public void dumpBDDRelations() throws IOException {
         
         // difference in compatibility
-        S = S.exist(V1cV2cset);
-        L = L.exist(V1cV2cset);
-        IE = IE.exist(V1cV2cset);
-        vP = vP.exist(V1cH1cset);
+        BDD S0 = S.exist(V1cV2cset);
+        BDD L0 = L.exist(V1cV2cset);
+        BDD IE0 = IE.exist(V1cV2cset);
+        BDD vP0 = vP.exist(V1cH1cset);
         
         String dumpPath = "";
-        bdd.save(dumpPath+"vP0.bdd", vP);
+        bdd.save(dumpPath+"vP0.bdd", vP0);
         bdd.save(dumpPath+"hP0.bdd", hP);
-        bdd.save(dumpPath+"L.bdd", L);
-        bdd.save(dumpPath+"S.bdd", S);
+        bdd.save(dumpPath+"L.bdd", L0);
+        bdd.save(dumpPath+"S.bdd", S0);
         bdd.save(dumpPath+"A.bdd", A);
         bdd.save(dumpPath+"vT.bdd", vT);
         bdd.save(dumpPath+"hT.bdd", hT);
@@ -3345,7 +3379,7 @@ public class PA {
         bdd.save(dumpPath+"Mthr.bdd", Mthr);
         bdd.save(dumpPath+"Iret.bdd", Iret);
         bdd.save(dumpPath+"Ithr.bdd", Ithr);
-        bdd.save(dumpPath+"IE0.bdd", IE);
+        bdd.save(dumpPath+"IE0.bdd", IE0);
         if (IEfilter != null) bdd.save(dumpPath+"IEfilter.bdd", IEfilter);
         
         DataOutputStream dos = new DataOutputStream(new FileOutputStream(dumpPath+"bddinfo"));

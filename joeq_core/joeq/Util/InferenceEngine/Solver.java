@@ -28,7 +28,7 @@ import java.io.PrintStream;
 public abstract class Solver {
     
     boolean NOISY = !System.getProperty("noisy", "yes").equals("no");
-    boolean SPLIT_RULES = true;
+    boolean SPLIT_ALL_RULES = false;
     boolean REPORT_STATS = true;
     boolean TRACE = System.getProperty("tracesolve") != null;
     boolean TRACE_FULL = System.getProperty("fulltracesolve") != null;
@@ -96,7 +96,7 @@ public abstract class Solver {
         time = System.currentTimeMillis() - time;
         if (dis.NOISY) dis.out.println("done. ("+time+" ms)");
         
-        if (dis.SPLIT_RULES) {
+        if (dis.SPLIT_ALL_RULES) {
             if (dis.NOISY) dis.out.println("Splitting rules...");
             dis.splitRules();
             if (dis.NOISY) dis.out.println("done.");
@@ -232,8 +232,10 @@ public abstract class Solver {
             StringTokenizer st = new StringTokenizer(s, " (:,/)", true);
             InferenceRule r = parseRule(st);
             if (TRACE) out.println("Loaded rule(s) "+r);
+            else out.print('.');
             rules.add(r);
         }
+        out.println();
     }
     
     InferenceRule parseRule(StringTokenizer st) {
@@ -249,7 +251,20 @@ public abstract class Solver {
         }
         RuleTerm bottom = parseRuleTerm(nameToVar, st);
         InferenceRule ir = createInferenceRule(terms, bottom);
+        parseRuleOptions(ir, st);
         return ir;
+    }
+    
+    void parseRuleOptions(InferenceRule ir, StringTokenizer st) {
+        while (st.hasMoreTokens()) {
+            String option = nextToken(st);
+            if (option.equals("split")) {
+                if (NOISY) out.println("Splitting rule "+ir);
+                rules.addAll(ir.split(rules.size(), this));
+            } else {
+                throw new IllegalArgumentException("Unknown rule option \""+option+"\"");
+            }
+        }
     }
     
     RuleTerm parseRuleTerm(Map/*<String,Variable>*/ nameToVar, StringTokenizer st) {
@@ -283,7 +298,7 @@ public abstract class Solver {
         String relationName = nextToken(st);
         Relation r = getRelation(relationName);
         if (r == null) throw new IllegalArgumentException("Unknown relation "+relationName);
-        if (r.fieldDomains.size() != vars.size()) throw new IllegalArgumentException();
+        if (r.fieldDomains.size() != vars.size()) throw new IllegalArgumentException("Wrong number of vars in rule term for "+relationName);
         
         int n = 0;
         for (ListIterator li = vars.listIterator(); li.hasNext(); ++n) {
@@ -326,7 +341,7 @@ public abstract class Solver {
         List newRules = new LinkedList();
         for (Iterator i = rules.iterator(); i.hasNext(); ) {
             InferenceRule r = (InferenceRule) i.next();
-            newRules.addAll(r.split(this));
+            newRules.addAll(r.split(rules.indexOf(r), this));
         }
         rules.addAll(newRules);
     }
