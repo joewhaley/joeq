@@ -14,6 +14,7 @@
 <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="joeq_native"/>
 <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-mx512m"/>
 <stringAttribute key="org.eclipse.debug.ui.target_debug_perspective" value="perspective_default"/>
+<stringAttribute key="org.eclipse.jdt.launching.WORKING_DIRECTORY" value="${workspace_loc:joeq_core}"/>
 <booleanAttribute key="org.eclipse.debug.core.appendEnvironmentVariables" value="true"/>
 <booleanAttribute key="org.eclipse.jdt.launching.STOP_IN_MAIN" value="true"/>
 <stringAttribute key="org.eclipse.debug.ui.target_run_perspective" value="perspective_default"/>
