@@ -283,20 +283,23 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
         if (TRACE) SystemInterface.debugmsg("Attempting to resolve static field "+constant_pool[index]+" cp idx "+(int)index);
         jq_MemberReference n = (jq_MemberReference)constant_pool[index];
         jq_Class otherclazz = n.getReferencedClass();
+        jq_NameAndDesc nd = n.getNameAndDesc();
+        if (otherclazz.isInClassLib())
+            nd = ClassLib.ClassLibInterface.convertClassLibNameAndDesc(otherclazz, nd);
         jq_StaticField f;
         if (otherclazz.isLoaded()) {
-            f = otherclazz.getStaticField(n.getNameAndDesc());
+            f = otherclazz.getStaticField(nd);
             if (f == null) 
-                throw new NoSuchFieldError("no such static field "+otherclazz+"."+n.getNameAndDesc());
+                throw new NoSuchFieldError("no such static field "+otherclazz+"."+nd);
         } else {
             // we differ slightly from the vm spec in that when a reference to the member is
             // encountered before the class is loaded, and the member is actually in a
             // superclass/superinterface it will throw a NoSuchFieldError when the member is
             // accessed.
             // Java compilers don't generate such references, unless class files are old.
-            jq_Field m = (jq_Field)otherclazz.getDeclaredMember(n.getNameAndDesc());
+            jq_Field m = (jq_Field)otherclazz.getDeclaredMember(nd);
             if (m == null) {
-                constant_pool[index] = f = otherclazz.createStaticField(n.getNameAndDesc());
+                constant_pool[index] = f = otherclazz.createStaticField(nd);
                 constant_pool_tags[index] = CONSTANT_ResolvedSFieldRef;
                 if (TRACE) SystemInterface.debugmsg("Resolved static field "+f+", cp idx "+(int)index);
             } else if (!m.isStatic())
@@ -314,20 +317,23 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
         if (TRACE) SystemInterface.debugmsg("Attempting to resolve instance field "+constant_pool[index]+" cp idx "+(int)index);
         jq_MemberReference n = (jq_MemberReference)constant_pool[index];
         jq_Class otherclazz = n.getReferencedClass();
+        jq_NameAndDesc nd = n.getNameAndDesc();
+        if (otherclazz.isInClassLib())
+            nd = ClassLib.ClassLibInterface.convertClassLibNameAndDesc(otherclazz, nd);
         jq_InstanceField f;
         if (otherclazz.isLoaded()) {
-            f = otherclazz.getInstanceField(n.getNameAndDesc());
+            f = otherclazz.getInstanceField(nd);
             if (f == null) 
-                throw new NoSuchFieldError("no such instance field "+otherclazz+"."+n.getNameAndDesc());
+                throw new NoSuchFieldError("no such instance field "+otherclazz+"."+nd);
         } else {
             // we differ slightly from the vm spec in that when a reference to the member is
             // encountered before the class is loaded, and the member is actually in a
             // superclass/superinterface it will throw a NoSuchFieldError when the member is
             // accessed.
             // Java compilers don't generate such references, unless class files are old.
-            jq_Field m = (jq_Field)otherclazz.getDeclaredMember(n.getNameAndDesc());
+            jq_Field m = (jq_Field)otherclazz.getDeclaredMember(nd);
             if (m == null) {
-                constant_pool[index] = f = otherclazz.createInstanceField(n.getNameAndDesc());
+                constant_pool[index] = f = otherclazz.createInstanceField(nd);
                 constant_pool_tags[index] = CONSTANT_ResolvedIFieldRef;
                 if (TRACE) SystemInterface.debugmsg("Resolved instance field "+f+", cp idx "+(int)index);
             } else if (m.isStatic())
@@ -345,20 +351,23 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
         if (TRACE) SystemInterface.debugmsg("Attempting to resolve static method "+constant_pool[index]+" cp idx "+(int)index);
         jq_MemberReference n = (jq_MemberReference)constant_pool[index];
         jq_Class otherclazz = n.getReferencedClass();
+        jq_NameAndDesc nd = n.getNameAndDesc();
+        if (otherclazz.isInClassLib())
+            nd = ClassLib.ClassLibInterface.convertClassLibNameAndDesc(otherclazz, nd);
         jq_StaticMethod f;
         if (otherclazz.isLoaded()) {
-            f = otherclazz.getStaticMethod(n.getNameAndDesc());
+            f = otherclazz.getStaticMethod(nd);
             if (f == null) 
-                throw new NoSuchMethodError("no such static method "+otherclazz+"."+n.getNameAndDesc());
+                throw new NoSuchMethodError("no such static method "+otherclazz+"."+nd);
         } else {
             // we differ slightly from the vm spec in that when a reference to the member is
             // encountered before the class is loaded, and the member is actually in a
             // superclass/superinterface it will throw a NoSuchFieldError when the member is
             // accessed.
             // Java compilers don't generate such references, unless class files are old.
-            jq_Method m = (jq_Method)otherclazz.getDeclaredMember(n.getNameAndDesc());
+            jq_Method m = (jq_Method)otherclazz.getDeclaredMember(nd);
             if (m == null) {
-                constant_pool[index] = f = otherclazz.createStaticMethod(n.getNameAndDesc());
+                constant_pool[index] = f = otherclazz.createStaticMethod(nd);
                 constant_pool_tags[index] = CONSTANT_ResolvedSMethodRef;
                 if (TRACE) SystemInterface.debugmsg("Resolved static method "+f+", cp idx "+(int)index);
             } else if (!m.isStatic())
@@ -377,20 +386,23 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
         if (TRACE) SystemInterface.debugmsg("Attempting to resolve instance method "+constant_pool[index]+" cp idx "+(int)index);
         jq_MemberReference n = (jq_MemberReference)constant_pool[index];
         jq_Class otherclazz = n.getReferencedClass();
+        jq_NameAndDesc nd = n.getNameAndDesc();
+        if (otherclazz.isInClassLib())
+            nd = ClassLib.ClassLibInterface.convertClassLibNameAndDesc(otherclazz, nd);
         jq_InstanceMethod f;
         if (otherclazz.isLoaded()) {
-            f = otherclazz.getInstanceMethod(n.getNameAndDesc());
+            f = otherclazz.getInstanceMethod(nd);
             if (f == null) 
-                throw new NoSuchMethodError("no such instance method "+otherclazz+"."+n.getNameAndDesc());
+                throw new NoSuchMethodError("no such instance method "+otherclazz+"."+nd);
         } else {
             // we differ slightly from the vm spec in that when a reference to the member is
             // encountered before the class is loaded, and the member is actually in a
             // superclass/superinterface it will throw a NoSuchFieldError when the member is
             // accessed.
             // Java compilers don't generate such references, unless class files are old.
-            jq_Method m = (jq_Method)otherclazz.getDeclaredMember(n.getNameAndDesc());
+            jq_Method m = (jq_Method)otherclazz.getDeclaredMember(nd);
             if (m == null) {
-                constant_pool[index] = f = otherclazz.createInstanceMethod(n.getNameAndDesc());
+                constant_pool[index] = f = otherclazz.createInstanceMethod(nd);
                 constant_pool_tags[index] = CONSTANT_ResolvedIMethodRef;
                 if (TRACE) SystemInterface.debugmsg("Resolved instance method "+f+", cp idx "+(int)index);
             } else if (m.isStatic())
