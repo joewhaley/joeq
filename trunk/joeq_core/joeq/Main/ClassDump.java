@@ -67,7 +67,7 @@ public abstract class ClassDump {
         for(it = new ArrayIterator(t.getDeclaredStaticMethods());
             it.hasNext(); ) {
             jq_StaticMethod c = (jq_StaticMethod)it.next();
-            if (c.isNative()) continue;
+            if (c.getBytecode() == null) continue;
             //if (c.getName().toString().equals("right"))
             {
                 out.println(c.toString());
@@ -79,7 +79,7 @@ public abstract class ClassDump {
             it.hasNext(); ) {
             jq_InstanceMethod c = (jq_InstanceMethod)it.next();
             if (c.isAbstract()) continue;
-            if (c.isNative()) continue;
+            if (c.getBytecode() == null) continue;
             //if (c.getName().toString().equals("right"))
             {
                 out.println(c.toString());
