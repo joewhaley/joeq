@@ -800,7 +800,7 @@ extern "C" int __stdcall init_semaphore(void)
     sem_wait(p_semaphore_init);
     sem_init(n_sem, 0, 0);
     sem_post(p_semaphore_init);
-    printf("Initialized new semaphore %x.\n", (int)n_sem);
+    //printf("Initialized new semaphore %x.\n", (int)n_sem);
     return (int)n_sem;
 }
 
@@ -821,7 +821,7 @@ extern "C" int __stdcall wait_for_single_object(int handle, int time)
 {
     //printf("Thread %d: Waiting on semaphore %x for %d ms.\n", pthread_self(), (int)handle, time);
     if (sem_trywait((sem_t*)handle) == 0) return 0;
-    printf("Thread %d: Waiting on semaphore %x initially failed, looping.\n", pthread_self(), (int)handle);
+    //printf("Thread %d: Waiting on semaphore %x initially failed, looping.\n", pthread_self(), (int)handle);
     fflush(stdout);
     struct timeval tv1;
     gettimeofday(&tv1, 0);
@@ -830,14 +830,14 @@ extern "C" int __stdcall wait_for_single_object(int handle, int time)
 	long diff;
 	sched_yield();
 	if (sem_trywait((sem_t*)handle) == 0) {
-	  printf("Thread %d: Waiting on semaphore %x succeeded.\n", pthread_self(), (int)handle);
+	    //printf("Thread %d: Waiting on semaphore %x succeeded.\n", pthread_self(), (int)handle);
 	  fflush(stdout);
 	  return 0;
 	}
 	gettimeofday(&tv2, 0);
 	timersub(&tv2, &tv1, &tv2);
 	diff = tv2.tv_sec*1000000+tv2.tv_usec*1000;
-	printf("Thread %d: Waiting on semaphore %x failed again, time passed %d us.\n", pthread_self(), (int)handle, diff);
+	//printf("Thread %d: Waiting on semaphore %x failed again, time passed %d us.\n", pthread_self(), (int)handle, diff);
 	fflush(stdout);
 	if (diff > time*1000) return WAIT_TIMEOUT;
     }
