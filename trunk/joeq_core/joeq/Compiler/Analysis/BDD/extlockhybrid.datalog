@@ -27,57 +27,55 @@ mC (method:M0, context:VC0) input
 mSync (method:M0) input
 
 # context-insensitive analysis
-locksCi (method:M0, type:T0)
-unlockedCi (method:M0, type:T0)
+locksCi (method:M0, h:H0)
+unlockedCi (method:M0, h:H0)
 callsCi (callee:M0, caller:M1)
-alwaysLockedCi (method:M0, type:T0)
-externalLockTypeCi (method:M0, type:T0) output outputtuples
+alwaysLockedCi (method:M0, h:H0)
+externalLockCi (method:M0, h:H0) output outputtuples
 
-locksCi(m,t) :- mSync(m), formal(m,0,v), vP(_,v,h), hT(h,t).
+locksCi(m,h) :- mSync(m), formal(m,0,v), vP(_,v,h).
 unlockedCi(m,_) :- roots(m).
 callsCi(caller,callee) :- IE(_,invoke,_,callee), mI(caller,invoke,_).
-unlockedCi(callee,t) :- unlockedCi(caller,t), callsCi(caller,callee), !locksCi(callee,t).
-alwaysLockedCi(m,t) :- !unlockedCi(m,t), mC(m,_).
-externalLockTypeCi(m,t) :- alwaysLockedCi(m,t), formal(m,0,v), vT(v,this), !aT(this,t).
+unlockedCi(callee,h) :- unlockedCi(caller,h), callsCi(caller,callee), !locksCi(callee,h).
+alwaysLockedCi(m,h) :- !unlockedCi(m,h), mC(m,_).
+externalLockCi(m,h) :- alwaysLockedCi(m,h), hT(h,t), formal(m,0,v), vT(v,this), !aT(this,t).
 
-care(method:M0,type:T1)
-care(m,t) :- externalLockTypeCi(m,t).
-care(caller,t) :- care(callee,t), callsCi(caller,callee).
+care(method:M0,heap:H0)
+care(m,h) :- externalLockCi(m,h).
+care(caller,h) :- care(callee,h), callsCi(caller,callee).
 
 # context-sensitive
-locked (method:M0, context:VC0, heap:H0)
-lockedType (method:M0, context:VC, type:T1) output
-lockedType0 (method:M0, context:VC, type:T1)
-unlockedType (method:M0, context:VC, type:T1)
-#sometimesUnlocked (method:M0, heap:H0)
-sometimesUnlockedType (method:M0, type:T1)
-#alwaysLocked (method:M0, heap:H0) output outputtuples
-alwaysLockedType (method:M0, type:T1)
-externalLockType (method:M0, type:T1) output outputtuples
+locked0 (method:M0, context:VC0, heap:H0)
+locked (method:M0, context:VC, heap:H0) output
+unlocked (method:M0, context:VC, heap:H0)
+sometimesUnlocked (method:M0, heap:H0)
+alwaysLocked (method:M0, heap:H0) output outputtuples
+alwaysLocked (method:M0, heap:H0)
+externalLock (method:M0, heap:H0) output outputtuples
 
 #lockedTypeAnyContext (method:M0, type:T0) output outputtuples
 
-locked(m,c,h) :- mSync(m), formal(m, 0, v), vP(c, v, h).
-lockedType0(m,c,t) :- locked(m,c,h), hT(h,t), care(m,t).
-lockedType(m,c,t) :- lockedType0(m,c,t).
-lockedType(calleem,calleec,t) :- mI(callerm, invoke, _), \
-                                 IE(callerc, invoke, calleec, calleem), \
-                                 care(calleem,t), \
-                                 lockedType(callerm,callerc,t). split
+locked0(m,c,h) :- mSync(m), formal(m, 0, v), vP(c, v, h).
+locked(m,c,h) :- locked0(m,c,h).
+locked(calleem,calleec,h) :- mI(callerm, invoke, _), \
+                             IE(callerc, invoke, calleec, calleem), \
+                             care(calleem,h), \
+                             locked(callerm,callerc,h). split
+                             
+unlocked(m,c,h) :- !locked(m,c,h), care(m,h).
+unlocked(calleem,calleec,h) :- mI(callerm, invoke, _), \
+                               IE(callerc, invoke, calleec, calleem), \
+                               care(calleem,h), \
+                               !locked0(calleem,calleec,h), \
+                               unlocked(callerm,callerc,h). split
 
-unlockedType(m,c,t) :- !lockedType(m,c,t), care(m,t).
-unlockedType(calleem,calleec,t) :- mI(callerm, invoke, _), \
-                                   IE(callerc, invoke, calleec, calleem), \
-                                   care(calleem,t), \
-                                   !lockedType0(calleem,calleec,t), \
-                                   unlockedType(callerm,callerc,t). split
-
-sometimesUnlockedType(m,t) :- unlockedType(m,c,t), mC(m,c).
-alwaysLockedType(m,t) :- !sometimesUnlockedType(m,t), mC(m,_), \
-                         care(m,t).
-externalLockType(m,t) :- alwaysLockedType(m,t), \
-                         formal(m,0,v), \
-                         vT(v,this), \
-                         !aT(this,t).
+sometimesUnlocked(m,h) :- unlocked(m,c,h), mC(m,c).
+alwaysLocked(m,h) :- !sometimesUnlocked(m,h), mC(m,_), \
+                     care(m,h).
+externalLock(m,h) :- alwaysLocked(m,h), \
+                     hT(h,t), \
+                     formal(m,0,v), \
+                     vT(v,this), \
+                     !aT(this,t).
 
 
