@@ -187,8 +187,7 @@ public abstract class JoeqVM {
         if (s != null) {
             try {
                 jq_InterrupterThread.QUANTA = Integer.parseInt(s);
-                Debug.write("Scheduler quanta is ");
-                Debug.writeln(jq_InterrupterThread.QUANTA);
+                Debug.writeln("Scheduler quanta is ", jq_InterrupterThread.QUANTA);
             } catch (NumberFormatException x) {
                 Debug.writeln("Bad scheduler.quanta, ignoring.");
             }
@@ -201,7 +200,17 @@ public abstract class JoeqVM {
                 Debug.write("Scheduler transfer threshold is ");
                 System.err.println(jq_NativeThread.TRANSFER_THRESHOLD);
             } catch (NumberFormatException x) {
-                Debug.writeln("Bad scheduler.quanta, ignoring.");
+                Debug.writeln("Bad scheduler.transfer, ignoring.");
+            }
+        }
+        
+        s = System.getProperty("scheduler.stack");
+        if (s != null) {
+            try {
+                jq_Thread.INITIAL_STACK_SIZE = Integer.parseInt(s);
+                Debug.writeln("Thread stack size is ", jq_Thread.INITIAL_STACK_SIZE);
+            } catch (NumberFormatException x) {
+                Debug.writeln("Bad scheduler.stack, ignoring.");
             }
         }
     }

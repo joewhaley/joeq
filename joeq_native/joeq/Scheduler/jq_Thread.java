@@ -53,7 +53,7 @@ public class jq_Thread implements jq_DontAlign {
     //  thread is in middle of delivering exception
     public volatile boolean is_delivering_exception;
     
-    public static final int INITIAL_STACK_SIZE = 65536;
+    public static int INITIAL_STACK_SIZE = 40960;
     // two threads can be created at the same time
     public static AtomicCounter thread_id_factory = new AtomicCounter(1);
 
