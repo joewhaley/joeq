@@ -75,7 +75,26 @@ public abstract class Relation {
     public abstract TupleIterator iterator(int k, long j);
     
     /**
-     * Get the negated form of this relation, or null if it does not exist.
+     * Return an iterator over the tuples where the fields match the values
+     * in the given array.  A -1 value in the array matches any value.
+     * 
+     * @param j  values
+     * @return iterator of long[]
+     */
+    public abstract TupleIterator iterator(long[] j);
+    
+    /**
+     * Returns true iff this relation contains a tuple where the kth field
+     * is value j.  k is zero-based.
+     * 
+     * @param k  zero-based field number
+     * @param j  value
+     * @return whether the given value appears in the given field
+     */
+    public abstract boolean contains(int k, long j);
+    
+    /**
+     * Return the negated form of this relation, or null if it does not exist.
      * 
      * @return  negated version of this relation, or null
      */
@@ -100,6 +119,4 @@ public abstract class Relation {
         return name;
     }
 
-    public abstract boolean contains(int k, long v);
-    
 }
