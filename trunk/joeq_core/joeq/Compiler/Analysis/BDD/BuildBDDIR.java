@@ -42,9 +42,9 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
     IndexMap memberMap;
     IndexMap constantMap;
     
-    String varOrderDesc = "method_quadxtargetxfallthrough_constant_member_src2_src1_opc_dest";
+    String varOrderDesc = "method_quadxtargetxfallthrough_member_constant_src2_opc_src1_dest";
     
-    int methodBits = 14, quadBits = 18, opBits = 8, regBits = 7, constantBits = 12, memberBits = 14;
+    int methodBits = 14, quadBits = 18, opBits = 8, regBits = 7, constantBits = 13, memberBits = 14;
 
     BDDFactory bdd;
     BDDDomain method, quad, opc, dest, src1, src2, constant, fallthrough, target, member;
@@ -100,6 +100,8 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         
         if (!GLOBAL_QUAD_NUMBERS) quadMap.clear();
         
+        long time = System.currentTimeMillis();
+        
         while (i.hasNext()) {
             Quad q = i.nextQuad();
             currentQuad = bdd.one();
@@ -126,13 +128,18 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
             allQuads.orWith(currentQuad);
         }
         
-        System.out.println("Method: " + cfg.getMethod());
+        time = System.currentTimeMillis() - time;
+        time += totalTime;
+        System.out.println("Method: " + cfg.getMethod() + " time: " + time);
         int qSize = totalQuads;
         int nodes = allQuads.nodeCount();
         System.out.println("Quads: " +qSize+", nodes: "+nodes+", average: "+(float)nodes/qSize);
     }
     
+    long totalTime;
+    
     public String toString() {
+        System.out.println("Total time spent building representation: "+totalTime);
         System.out.println("allQuads, node count: " + allQuads.nodeCount());
         System.out.println("methodToQuad, node count: " + methodToQuad.nodeCount());
         
