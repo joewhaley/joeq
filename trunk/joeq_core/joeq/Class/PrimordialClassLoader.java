@@ -151,59 +151,66 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
             File f = new File(path, name);
             return f.exists();
         }
+
         Iterator listPackage(final String pathn, final boolean recursive) {
+	    HashSet hs = new HashSet();
+            listPackage(pathn, recursive, hs);
+            return hs.iterator();
+        }
+
+        private void listPackage(final String pathn, final boolean recursive, final HashSet classes) {
             String path_name;
             if (filesep.charAt(0) != '/') path_name = pathn.replace('/', filesep.charAt(0));
             else path_name = pathn;
             File f = new File(path, path_name);
             if (TRACE) out.println("Attempting to list "+path_name+" in path "+path);
-            if (!f.exists() || !f.isDirectory()) return Collections.EMPTY_SET.iterator();
-            Iterator result = new FilterIterator(Arrays.asList(f.list()).iterator(),
-                new FilterIterator.Filter() {
-                    public boolean isElement(Object o) {
-                        return ((String)o).endsWith(".class");
-                    }
-                    public Object map(Object o) { return pathn + ((String)o); }
-                });
-            if (recursive) {
-                Iterator dirs = new FilterIterator(Arrays.asList(f.list()).iterator(),
-                    new FilterIterator.Filter() {
-                        public boolean isElement(Object o) {
-                            return new File((String)map(o)).isDirectory();
-                        }
-                        public Object map(Object o) { return pathn + ((String)o) + filesep; }
-                });
-                while (dirs.hasNext()) {
-                    result = new AppendIterator(result, listPackage((String)dirs.next(), recursive));
+            if (!f.exists() || !f.isDirectory()) return;
+
+	    String [] cls = f.list(new java.io.FilenameFilter() {
+                public boolean accept(File _dir, String name) {
+                    return name.endsWith(".class");
                 }
-            }
-            return result;
+            });
+
+	    for (int i = 0; i < cls.length; i++) {
+		classes.add(pathn + cls[i].substring(0, cls[i].lastIndexOf('.')));
+	    }
+
+            if (recursive) {
+		String [] subdirs = f.list(new java.io.FilenameFilter() {
+		    public boolean accept(File _dir, String name) {
+			return new File(_dir, name).isDirectory();
+		    }
+		});
+		for (int i = 0; i < subdirs.length; i++) {
+		    String dn = (String)subdirs[i];
+		    listPackage(pathn + dn + filesep, true, classes);
+		}
+	    }
         }
         Iterator listPackages() {
             if (TRACE) out.println("Listing packages of path "+path);
-            return listPackages(path);
+	    HashSet hs = new HashSet();
+            listPackages(null, hs);
+	    return hs.iterator();
         }
-        Iterator listPackages(final String dir) {
-            File f = new File(dir);
-            if (!f.exists() || !f.isDirectory()) return Collections.EMPTY_SET.iterator();
-            Iterator result = new FilterIterator(Arrays.asList(f.list()).iterator(),
-                new FilterIterator.Filter() {
-                    public boolean isElement(Object o) {
-                        return new File((String)map(o)).isDirectory();
-                    }
-                    public Object map(Object o) { return dir + ((String)o); }
-                });
-            Iterator dirs = new FilterIterator(Arrays.asList(f.list()).iterator(),
-                new FilterIterator.Filter() {
-                    public boolean isElement(Object o) {
-                        return new File((String)map(o)).isDirectory();
-                    }
-                    public Object map(Object o) { return dir + ((String)o); }
-                });
-            while (dirs.hasNext()) {
-                result = new AppendIterator(result, listPackages((String) dirs.next()));
+        private void listPackages(final String dir, final HashSet pkgs) {
+            final File f = dir == null ? new File(path) : new File(path, dir);
+            if (!f.exists() || !f.isDirectory()) return;
+
+            String [] subdirs = f.list(new java.io.FilenameFilter() {
+		public boolean accept(File _dir, String name) {
+		    if (dir != null && name.endsWith(".class"))
+			pkgs.add(dir);
+		    return new File(_dir, name).isDirectory();
+		}
+	    });
+	    for (int i = 0; i < subdirs.length; i++) {
+		String dn = (String)subdirs[i];
+		if (dir != null)
+		    dn = dir + filesep + dn;
+		listPackages(dn, pkgs);
             }
-            return result;
         }
     }
 
