@@ -1054,7 +1054,8 @@ public class PA {
                 System.out.println("Thread "+h+" index "+context_j);
                 //context = H1c.ithVar(context_i);
                 context = H1c.domain();
-                context.andWith(V1c.ithVar(context_j));
+                //context.andWith(V1c.ithVar(context_j));
+                context.andWith(V1c.domain());
                 addToVP(context, p, H_i);
                 context.free();
             } else {
