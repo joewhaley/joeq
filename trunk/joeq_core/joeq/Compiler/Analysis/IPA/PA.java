@@ -134,6 +134,7 @@ public class PA {
     boolean OBJECT_SENSITIVE = !System.getProperty("pa.os", "no").equals("no");
     boolean CONTEXT_SENSITIVE = !System.getProperty("pa.cs", "no").equals("no");
     boolean BETTER_CONTEXT_NUMBERING = !System.getProperty("pa.bettercontextnumbering", "no").equals("no");
+    boolean USE_STRING_METHOD_SELECTOR = !System.getProperty("pa.stringmethodselector", "no").equals("no");
     boolean CS_CALLGRAPH = !System.getProperty("pa.cscg", "no").equals("no");
     boolean DISCOVER_CALL_GRAPH = !System.getProperty("pa.discover", "no").equals("no");
     boolean PRINT_CALL_GRAPH_SCCS = !System.getProperty("pa.printsccs", "no").equals("no");
@@ -3050,8 +3051,13 @@ public class PA {
                 Set sccs = SCComponent.buildSCC(cg);
                 SCCTopSortedGraph graph = SCCTopSortedGraph.topSort(sccs);
                 
-                StringMethodSelector selector = new StringMethodSelector(graph);
-                pn = new GlobalPathNumbering(varPathSelector);
+                Selector selector = null; 
+                if(USE_STRING_METHOD_SELECTOR) {
+                    selector = new StringMethodSelector(graph);
+                } else {
+                    selector = varPathSelector; 
+                }
+                pn = new GlobalPathNumbering(selector);
             } else {
                 pn = new SCCPathNumbering(varPathSelector);
             }
