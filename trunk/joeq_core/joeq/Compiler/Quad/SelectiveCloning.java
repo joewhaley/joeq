@@ -500,6 +500,11 @@ outer:
         Node node;
         AccessPath n;
         
+        public int length() {
+            if (n == null) return 1;
+            return 1+n.length();
+        }
+
         public jq_Field first() { return f; }
         public AccessPath next() { return n; }
         
@@ -511,6 +516,24 @@ outer:
             return s+n.toString();
         }
         
+        public boolean equals(Object o) {
+            return equals((AccessPath)o);
+        }
+
+        public boolean equals(AccessPath that) {
+            if (that == null) return false;
+            if (this.f != that.f) return false;
+            if (this.n == that.n) return true;
+            if (this.n == null || that.n == null) return false;
+            return this.n.equals(that.n);
+        }
+
+        public int hashCode() {
+            int hashcode = f==null?0x1337:f.hashCode();
+            if (n != null) hashcode ^= (n.hashCode() << 1);
+            return hashcode;
+        }
+
         public AccessPath findNode(Node node) {
             if (this.node == node) return this;
             else if (this.n == null) return null;
@@ -520,7 +543,8 @@ outer:
             AccessPath ap;
             if (n != null) {
                 ap = n.findNode(node);
-                if (ap != null) return ap;
+                if (ap != null) return null;
+                if (n.length() >= 3) return null;
             }
             ap = new AccessPath();
             ap.f = f; ap.node = node; ap.n = n;
@@ -564,6 +588,8 @@ outer:
         LinkedList/*<Pair<Node,AccessPath>>*/ worklist = new LinkedList();
         HashMap/*<Pair<Node,AccessPath>,Collection<ProgramLocation>>*/ multimap = new HashMap();
         
+        //TRACE =true;
+
         for (Iterator i=selectedCallSites.iterator(); i.hasNext(); ) {
             CallSite cs = (CallSite)i.next();
             ProgramLocation call_site = cs.m;
@@ -612,16 +638,21 @@ outerloop:
                 Set s2 = s;
                 Object reason = pa.edgesToReasons.get(Default.pair(n, n2));
                 if (TRACE) out.println("Edge: "+n2+" Reason: "+reason);
-                if (outEdges.size() >= 2 &&
-                    n instanceof FieldNode &&
-                    reason instanceof Node) {
-                    jq_Field f = ((FieldNode)n).f;
-                    AccessPath ap2 = AccessPath.create(f, n, ap);
-                    Object key = Default.pair(reason, ap2);
-                    boolean change = MethodSummary.addToMultiMap(multimap, key, s);
-                    if (change && !worklist.contains(key)) {
-                        if (TRACE) out.println("Adding to Worklist :"+key+","+s);
-                        worklist.add(key);
+                if (false) {
+                    if (outEdges.size() >= 2 &&
+                        n instanceof FieldNode &&
+                        reason instanceof Node) {
+                        jq_Field f = ((FieldNode)n).f;
+                        AccessPath ap2 = AccessPath.create(f, n, ap);
+                        if (ap2 != null) {
+                            Object key = Default.pair(reason, ap2);
+                            boolean change = multimap.containsKey(key);
+                            MethodSummary.addToMultiMap(multimap, key, s);
+                            if (change) {
+                                if (TRACE) out.println("Adding to Worklist :"+key+","+s);
+                                worklist.add(key);
+                            }
+                        }
                     }
                 }
                 if (outEdges.size() >= 2 && 
@@ -670,8 +701,9 @@ outerloop:
                     }
                 }
                 Object key = Default.pair(n2, ap);
-                boolean change = MethodSummary.addToMultiMap(multimap, key, s2);
-                if (change && !worklist.contains(key)) {
+                boolean change = multimap.containsKey(key);
+                MethodSummary.addToMultiMap(multimap, key, s2);
+                if (change) {
                     if (TRACE) out.println("Adding to Worklist :"+key+","+s2);
                     worklist.add(key);
                 }
