@@ -256,18 +256,20 @@ public class PAQuery {
             for(QuadIterator iter = new QuadIterator(CodeCache.getCode(m)); iter.hasNext(); ) {
                 Quad quad = iter.nextQuad();
                 
+                /*  // doesn't compile.
                 if(IPSSABuilder.isLoad(quad)) {
-                    Set refs = this.getBuilder().ref(m, quad);
+                    Set refs = this.getBuilder().getPAResults().ref(m, iter.getCurrentBasicBlock(), quad);
                     System.out.println("Quad: " + quad + refs);
                     _loads++;
                     _refs += refs.size();
                 }else
                 if(IPSSABuilder.isStore(quad)) {
-                    Set mods = this.getBuilder().mod(m, quad);
+                    Set mods = this.getBuilder().getPAResults().mod(m, iter.getCurrentBasicBlock(), quad);
                     System.out.println("Quad: " + quad + mods);
                     _stores++;
                     _mods += mods.size();
-                }                  
+                }
+                */
             }                                               
         }    
     }

@@ -828,17 +828,17 @@ public class IPSSABuilder implements Runnable {
 	} // End of SSABuilder
 	
     // ----------------------------- Auxilary procedures ----------------------------- // 
-	static boolean isLoad(Quad quad) {
+	public static boolean isLoad(Quad quad) {
 		return 
 			(quad.getOperator() instanceof Operator.Getfield) ||
 			(quad.getOperator() instanceof Operator.Getstatic);
 	}
-	static boolean isStore(Quad quad) {
+    public static boolean isStore(Quad quad) {
 		return
 			(quad.getOperator() instanceof Operator.Putfield) ||
 			(quad.getOperator() instanceof Operator.Putstatic);
 	}
-	static boolean isCall(Quad quad) {
+    public static boolean isCall(Quad quad) {
 		return (quad.getOperator() instanceof Operator.Invoke);
 	}
 	private static String repeat(String string, int n) {
