@@ -2,6 +2,7 @@
 // Copyright (C) 2003 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Analysis.IPA;
+
 import java.io.BufferedReader;
 import java.io.DataInput;
 import java.io.DataInputStream;
@@ -879,7 +880,7 @@ public class PA {
         if (TRACE) out.println("Visiting node "+node);
         
         if (FILTER_NULL && isNullConstant(node))    
-	    return; // this line has a tab!
+            return;
         
         int V_i = Vmap.get(node);
         BDD V_bdd = V1.ithVar(V_i);
