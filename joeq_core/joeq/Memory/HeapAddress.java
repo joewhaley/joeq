@@ -18,7 +18,7 @@ import Clazz.jq_StaticField;
  */
 public class HeapAddress extends Address {
 
-    public static HeapAddressFactory FACTORY = Bootstrap.BootstrapHeapAddress.FACTORY;
+    public static HeapAddressFactory FACTORY;
     
     public abstract static class HeapAddressFactory {
         public abstract int size();
