@@ -43,7 +43,7 @@ public class BDDInferenceRule extends InferenceRule {
     BDD[] canQuantifyAfter;
     int updateCount;
     long totalTime;
-    boolean find_best_order = false;
+    boolean find_best_order = true;
     
     public BDDInferenceRule(BDDSolver solver, List/* <RuleTerm> */ top, RuleTerm bottom) {
         super(top, bottom);
@@ -590,13 +590,17 @@ public class BDDInferenceRule extends InferenceRule {
             listOfOrders.add(varOrder);
             varOrder2 = varOrder;
         }
-        if (listOfDoms.size() <= 1) return varOrder2;
+        if (listOfDoms.size() <= 1) {
+            if (listOfDoms.size() == 0) System.out.println("Warning: no valid permutations for "+domains);
+            return varOrder2;
+        }
         FindBestOrder fbo = null;
         System.out.println("Trying "+listOfDoms.size()+" permutations of "+domains);
         if (true) {
             try {
                 fbo = new FindBestOrder(b1, b2, b3, BDDFactory.and,
-                        BDDSolver.BDDCACHE, BDDSolver.BDDNODES/2, Long.MAX_VALUE);
+                        BDDSolver.BDDCACHE, BDDSolver.BDDNODES/2,
+                        Long.MAX_VALUE, 5000);
             } catch (IOException x) {
             }
         }
