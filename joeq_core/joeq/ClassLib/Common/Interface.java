@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Vector;
 
+import Bootstrap.BootImage;
 import Bootstrap.MethodInvocation;
 import Bootstrap.ObjectTraverser;
 import Bootstrap.PrimordialClassLoader;
@@ -65,6 +66,7 @@ public class Interface {
             nullStaticFields.add(CodeAddress._FACTORY);
             nullStaticFields.add(HeapAddress._FACTORY);
             nullStaticFields.add(StackAddress._FACTORY);
+            nullStaticFields.add(BootImage._DEFAULT);
             nullStaticFields.add(Reflection._obj_trav);
             nullStaticFields.add(Reflection._declaredFieldsCache);
             nullStaticFields.add(Allocator.DefaultCodeAllocator._default_allocator);

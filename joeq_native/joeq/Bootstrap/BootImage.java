@@ -1365,6 +1365,13 @@ public class BootImage implements ObjectLayout, ELFConstants {
             jq.UNREACHABLE();
         }
     }
+    
+    public static final jq_StaticField _DEFAULT;
+    static {
+        jq_Class k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LBootstrap/BootImage;");
+        _DEFAULT = k.getOrCreateStaticField("DEFAULT", "LBootstrap/BootImage;");
+    }
+
 }
 
 class UnknownObjectException extends RuntimeException {
