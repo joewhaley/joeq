@@ -3850,6 +3850,7 @@ public class PA {
     }
     
     private void dumpSSA() throws IOException {
+	String dumpPath = System.getProperty("pa.dumppath", "");
         jq_MethodVisitor mv = null;
         ControlFlowGraphVisitor cfgv = null;
         mv = new ControlFlowGraphVisitor.CodeCacheVisitor(bddIRBuilder,
@@ -3892,15 +3893,15 @@ public class PA {
         System.out.println("vReg: "
                 + (long) vReg.satCount(V1.set().and(reg.set().and(M.set())))
                 + " relations, " + vReg.nodeCount() + " nodes");
-        bdd.save(resultsFileName + ".vReg", vReg);
+        bdd.save(dumpPath + "/vReg.bdd", vReg);
         System.out.println("iQuad: "
                 + (long) iQuad.satCount(I.set().and(quad.set()))
                 + " relations, " + iQuad.nodeCount() + " nodes");
-        bdd.save(resultsFileName + ".iQuad", iQuad);
+        bdd.save(dumpPath + "/iQuad.bdd", iQuad);
         System.out.println("fMember: "
                 + (long) fMember.satCount(F.set().and(member.set()))
                 + " relations, " + fMember.nodeCount() + " nodes");
-        bdd.save(resultsFileName + ".fMember", fMember);
+        bdd.save(dumpPath + "/fMember.bdd", fMember);
         //System.out.println("hQuad: "+(long) sync.satCount(H1.set().and(quad.set()))+" relations, "+hQuad.nodeCount()+" nodes");
         //bdd.save(resultsFileName+".hQuad", sync);
     }
