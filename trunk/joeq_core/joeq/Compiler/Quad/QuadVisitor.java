@@ -74,6 +74,8 @@ public interface QuadVisitor {
     void visitNewArray(Quad obj);
     /** A null pointer check instruction. */
     void visitNullCheck(Quad obj);
+    /** A phi instruction. (For SSA.) */
+    void visitPhi(Quad obj);
     /** A put instance field instruction. */
     void visitPutfield(Quad obj);
     /** A put static field instruction. */
@@ -162,6 +164,8 @@ public interface QuadVisitor {
         public void visitNewArray(Quad obj) {}
         /** A null pointer check instruction. */
         public void visitNullCheck(Quad obj) {}
+        /** A phi instruction. (For SSA.) */
+        public void visitPhi(Quad obj) {}
         /** A put instance field instruction. */
         public void visitPutfield(Quad obj) {}
         /** A put static field instruction. */

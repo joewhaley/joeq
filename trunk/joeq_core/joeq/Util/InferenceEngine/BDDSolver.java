@@ -43,10 +43,13 @@ public class BDDSolver extends Solver {
     BDDFactory bdd;
     MultiMap fielddomainsToBDDdomains;
     
+    public static int BDDNODES = Integer.parseInt(System.getProperty("bddnodes", "1000000"));
+    public static int BDDCACHE = Integer.parseInt(System.getProperty("bddcache", "100000"));
+    
     public BDDSolver() {
-        bdd = BDDFactory.init(1000000, 100000);
+        bdd = BDDFactory.init(BDDNODES, BDDCACHE);
         fielddomainsToBDDdomains = new GenericMultiMap();
-        bdd.setMaxIncrease(500000);
+        bdd.setMaxIncrease(BDDNODES/2);
     }
     
     public void initialize() {

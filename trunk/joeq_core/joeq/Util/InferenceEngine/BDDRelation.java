@@ -38,7 +38,8 @@ public class BDDRelation extends Relation {
         this.solver = solver;
         this.relation = solver.bdd.zero();
         this.domains = new LinkedList();
-        System.out.println("Constructing BDDRelation "+name+" with "+fieldDomains.size()+" domains "+fieldNames.size()+" names.");
+        if (solver.TRACE)
+            System.out.println("Constructing BDDRelation "+name+" with domains "+fieldDomains+" names "+fieldNames.size()+" options "+fieldOptions);
         this.domainSet = solver.bdd.one();
         for (int i = 0; i < fieldDomains.size(); ++i) {
             FieldDomain fd = (FieldDomain) fieldDomains.get(i);
@@ -170,7 +171,7 @@ public class BDDRelation extends Relation {
         dos.writeBytes("#");
         System.out.print(fileName+" domains {");
         for (int i = 0; i < a.length; ++i) {
-            BDDDomain d = solver.bdd.getDomain(i);
+            BDDDomain d = solver.bdd.getDomain(a[i]);
             System.out.print(" "+d.toString());
             dos.writeBytes(" "+d.toString()+":"+d.varNum());
             allDomains.andWith(d.set());

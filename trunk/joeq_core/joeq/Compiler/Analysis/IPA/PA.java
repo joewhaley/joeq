@@ -3004,7 +3004,8 @@ public class PA {
                 return (BDD) V1H1correspondence.get(m);
             Range r1 = vCnumbering.getRange(m);
             BDD b = V1c[0].varRange(r1.low.longValue(), r1.high.longValue());
-            b.andWith(H1c[0].ithVar(0));
+            if (USE_HCONTEXT)
+                b.andWith(H1c[0].ithVar(0));
             return b;
         } else if (OBJECT_SENSITIVE) {
             jq_Class c = m.isStatic() ? null : m.getDeclaringClass(); 
@@ -3317,6 +3318,13 @@ public class PA {
     }
     
     public void dumpBDDRelations() throws IOException {
+        
+        // difference in compatibility
+        S = S.exist(V1cV2cset);
+        L = L.exist(V1cV2cset);
+        IE = IE.exist(V1cV2cset);
+        vP = vP.exist(V1cH1cset);
+        
         String dumpPath = "";
         bdd.save(dumpPath+"vP0.bdd", vP);
         bdd.save(dumpPath+"hP0.bdd", hP);
@@ -3335,6 +3343,7 @@ public class PA {
         bdd.save(dumpPath+"Iret.bdd", Iret);
         bdd.save(dumpPath+"Ithr.bdd", Ithr);
         bdd.save(dumpPath+"IE0.bdd", IE);
+        if (IEfilter != null) bdd.save(dumpPath+"IEfilter.bdd", IEfilter);
         
         DataOutputStream dos = new DataOutputStream(new FileOutputStream(dumpPath+"bddinfo"));
         for (int i = 0; i < bdd.numberOfDomains(); ++i) {
@@ -3347,6 +3356,8 @@ public class PA {
             else if (d == Z) dos.writeBytes("Z\n");
             else if (d == N) dos.writeBytes("N\n");
             else if (d == M) dos.writeBytes("M\n");
+            else if (Arrays.asList(V1c).contains(d) || Arrays.asList(V2c).contains(d)) dos.writeBytes("VC\n");
+            else if (Arrays.asList(H1c).contains(d) || Arrays.asList(H2c).contains(d)) dos.writeBytes("HC\n");
             else dos.writeBytes(d.toString()+"\n");
         }
         dos.close();
@@ -3360,6 +3371,8 @@ public class PA {
         dos.writeBytes("Z "+(1L<<Z_BITS)+"\n");
         dos.writeBytes("N "+(1L<<N_BITS)+" name.map\n");
         dos.writeBytes("M "+(1L<<M_BITS)+" method.map\n");
+        dos.writeBytes("VC "+(1L<<VC_BITS)+"\n");
+        dos.writeBytes("HC "+(1L<<HC_BITS)+"\n");
         dos.close();
         
         dos = new DataOutputStream(new FileOutputStream(dumpPath+"var.map"));
