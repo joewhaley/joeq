@@ -8,13 +8,12 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
-
 import joeq.Compiler.Analysis.IPA.PA;
 import joeq.Compiler.Quad.BasicBlockVisitor;
 import joeq.Compiler.Quad.CodeCache;
 import joeq.Compiler.Quad.ControlFlowGraphVisitor;
 import joeq.Compiler.Quad.QuadVisitor;
-import joeq.Util.HijackingClassLoader;
+import jwutil.classloader.HijackingClassLoader;
 
 /**
  * Generate initial relations for BDD pointer analysis.
@@ -146,7 +145,7 @@ public class GenRelations {
         
         int i;
         for (i = 0; i < args.length; ++i) {
-        	if (args[i].equalsIgnoreCase("addpass")) {
+            if (args[i].equalsIgnoreCase("addpass")) {
                 String passname = args[++i];
                 ControlFlowGraphVisitor mv = null;
                 BasicBlockVisitor bbv = null;
