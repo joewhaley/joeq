@@ -595,12 +595,15 @@ public class BDDInferenceRule extends InferenceRule {
         while (g.hasMore()) {
             String varOrder = origVarOrder;
             int[] p = g.getNext();
+            int diff = 0;
             for (int i = 0; i < p.length; ++i) {
                 if (i == p[i]) continue;
                 BDDDomain d1 = (BDDDomain) domains.get(i);
                 BDDDomain d2 = (BDDDomain) domains.get(p[i]);
                 int index = indices[i];
+                index += diff;
                 varOrder = varOrder.substring(0, index) + d2.getName() + varOrder.substring(index+d1.getName().length());
+                diff += d2.getName().length() - d1.getName().length();
             }
             List order = getDomainOrder(varOrder, domains, p);
             long t = solver.getOrderConstraint(order);
