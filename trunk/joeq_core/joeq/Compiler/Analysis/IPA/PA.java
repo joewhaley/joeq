@@ -109,6 +109,7 @@ public class PA {
     boolean DUMP_RESULTS = !System.getProperty("pa.dumpresults", "yes").equals("no");
     boolean DUMP_FLY = !System.getProperty("pa.dumpfly", "no").equals("no");
     boolean DUMP_SSA = !System.getProperty("pa.dumpssa", "no").equals("no");
+    boolean SKIP_SOLVE = !System.getProperty("pa.skipsolve", "no").equals("no");
     static boolean USE_JOEQ_CLASSLIBS = !System.getProperty("pa.usejoeqclasslibs", "no").equals("no");
 
     boolean INCREMENTAL1 = !System.getProperty("pa.inc1", "yes").equals("no"); // incremental points-to
@@ -2176,6 +2177,7 @@ public class PA {
                     System.out.println("Dump took "+(System.currentTimeMillis()-time2)/1000.+"s");
                 } catch (IOException x) {}
             }
+            if (SKIP_SOLVE) return;
             time = System.currentTimeMillis();
             assumeKnownCallGraph();
             System.out.println("Time spent solving: "+(System.currentTimeMillis()-time)/1000.);
