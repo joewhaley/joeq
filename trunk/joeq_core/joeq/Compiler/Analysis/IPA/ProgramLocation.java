@@ -4,6 +4,7 @@
 package joeq.Compiler.Analysis.IPA;
 
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.StringTokenizer;
 
@@ -11,12 +12,14 @@ import joeq.Class.jq_Class;
 import joeq.Class.jq_ClassFileConstants;
 import joeq.Class.jq_InstanceMethod;
 import joeq.Class.jq_FakeInstanceMethod;
+import joeq.Class.jq_LineNumberBC;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_Type;
 import joeq.Compiler.BytecodeAnalysis.BytecodeVisitor;
 import joeq.Compiler.BytecodeAnalysis.Bytecodes;
 import joeq.Compiler.Quad.CodeCache;
 import joeq.Compiler.Quad.ControlFlowGraph;
+import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.QuadIterator;
 import joeq.Compiler.Quad.Operator.Invoke;
@@ -502,6 +505,108 @@ public abstract class ProgramLocation implements Textualizable {
                 Quad q = i.nextQuad();
                 if (q.getID() == id) return new QuadProgramLocation(m, q);
             }
+        }
+        return null;
+    }
+    
+    public static ProgramLocation getLoadLocation(jq_Class klass, int lineNum) {
+        if (true)
+            return getBCProgramLocation(klass, lineNum, Bytecodes.LoadInstruction.class, 0);
+        else {
+            ProgramLocation pl;
+            pl = getQuadProgramLocation(klass, lineNum, Operator.ALoad.ALOAD_A.class, 0);
+            if (pl != null) return pl;
+            pl = getQuadProgramLocation(klass, lineNum, Operator.ALoad.ALOAD_P.class, 0);
+            if (pl != null) return pl;
+            pl = getQuadProgramLocation(klass, lineNum, Operator.Getfield.GETFIELD_A.class, 0);
+            if (pl != null) return pl;
+            return getQuadProgramLocation(klass, lineNum, Operator.Getfield.GETFIELD_P.class, 0);
+        }
+    }
+    
+    public static ProgramLocation getAllocLocation(jq_Class klass, int lineNum) {
+        if (true)
+            return getBCProgramLocation(klass, lineNum, Bytecodes.AllocationInstruction.class, 0);
+        else {
+            ProgramLocation pl;
+            pl = getQuadProgramLocation(klass, lineNum, Operator.New.class, 0);
+            if (pl != null) return pl;
+            return getQuadProgramLocation(klass, lineNum, Operator.NewArray.class, 0);
+        }
+    }
+    
+    public static ProgramLocation getConstLocation(jq_Class klass, int lineNum) {
+        if (true) {
+            ProgramLocation pl = getBCProgramLocation(klass, lineNum, Bytecodes.LDC.class, 0);
+            if (pl != null) return pl;
+            return getBCProgramLocation(klass, lineNum, Bytecodes.LDC2_W.class, 0);
+        } else {
+            return getQuadProgramLocation(klass, lineNum, Operator.Move.class, 0);
+        }
+    }
+    
+    public static ProgramLocation getInvokeLocation(jq_Class klass, int lineNum) {
+        if (true)
+            return getBCProgramLocation(klass, lineNum, Bytecodes.InvokeInstruction.class, 0);
+        else {
+            return getQuadProgramLocation(klass, lineNum, Operator.Invoke.class, 0);
+        }
+    }
+    
+    public static ProgramLocation getBCProgramLocation(jq_Class klass, int lineNum, Class instructionType, int k) {
+        klass.load();
+        jq_Method m = klass.getMethodContainingLine((char) lineNum);
+        if (m == null) return null;
+        jq_LineNumberBC[] ln = m.getLineNumberTable();
+        if (ln == null) return null;
+        int i = 0;
+        for ( ; i<ln.length; ++i) {
+            if (ln[i].getLineNum() == lineNum) break;
+        }
+        if (i == ln.length) return null;
+        int loIndex = ln[i].getStartPC();
+        int hiIndex = m.getBytecode().length;
+        if (i < ln.length-1) hiIndex = ln[i+1].getStartPC();
+        ByteSequence bs = new ByteSequence(m.getBytecode(), loIndex, hiIndex-loIndex);
+        try {
+            while (bs.available() > 0) {
+                int off = bs.getIndex();
+                Bytecodes.Instruction in = Bytecodes.Instruction.readInstruction(klass.getCP(), bs);
+                if (instructionType.isInstance(in)) {
+                    if (k == 0)
+                        return new BCProgramLocation(m, off);
+                    --k;
+                }
+            }
+        } catch (IOException x) {
+            Assert.UNREACHABLE();
+        }
+        return null;
+    }
+    
+    public static ProgramLocation getQuadProgramLocation(jq_Class klass, int lineNum, Class instructionType, int k) {
+        klass.load();
+        jq_Method m = klass.getMethodContainingLine((char) lineNum);
+        if (m == null) return null;
+        jq_LineNumberBC[] ln = m.getLineNumberTable();
+        if (ln == null) return null;
+        int i = 0;
+        for ( ; i<ln.length; ++i) {
+            if (ln[i].getLineNum() == lineNum) break;
+        }
+        if (i == ln.length) return null;
+        int loIndex = ln[i].getStartPC();
+        int hiIndex = m.getBytecode().length;
+        if (i < ln.length-1) hiIndex = ln[i+1].getStartPC();
+        Map bc_map = CodeCache.getBCMap(m);
+        for (Iterator j = bc_map.entrySet().iterator(); j.hasNext(); ) {
+            Map.Entry e = (Map.Entry) j.next();
+            Quad q = (Quad) e.getKey();
+            if (!instructionType.isInstance(q.getOperator()))
+                continue;
+            int index = ((Integer) e.getValue()).intValue();
+            if (index >= loIndex && index < hiIndex)
+                return new QuadProgramLocation(m, q);
         }
         return null;
     }
