@@ -65,7 +65,7 @@ public class Stratify {
         // Ignore all edges to/from unnecessary stuff.
         depNav.retainAll(necessary);
         
-        for (int i = 1; !inputs.isEmpty(); ++i) {
+        for (int i = 1; ; ++i) {
             // Discover current stratum.
             Set stratumSccs = discoverStratum(depNav, inputs);
             
@@ -83,7 +83,9 @@ public class Stratify {
             
             // Any relations that have been totally computed are inputs to the
             // next stratum.
-            inputs = findNewInputs(depNav2, stratumNodes);
+            again = inputs.addAll(findNewInputs(depNav2, stratumNodes));
+            
+            if (!again) break;
             
             // Remove edges for this stratum from navigator.
             depNav.removeAll(stratumNodes);
@@ -318,7 +320,19 @@ public class Stratify {
     
     public void solve() {
         
-        stratify(solver.rules, solver.relationsToLoad, solver.relationsToDump);
+        Collection inputs = new LinkedList();
+        inputs.addAll(solver.relationsToLoad);
+        inputs.addAll(solver.relationsToLoadTuples);
+        inputs.addAll(solver.equivalenceRelations.values());
+        inputs.addAll(solver.notequivalenceRelations.values());
+        Collection outputs = new LinkedList();
+        outputs.addAll(solver.relationsToDump);
+        outputs.addAll(solver.relationsToDumpTuples);
+        outputs.addAll(solver.relationsToDumpNegated);
+        outputs.addAll(solver.relationsToDumpNegatedTuples);
+        outputs.addAll(solver.relationsToPrintSize);
+        
+        stratify(solver.rules, inputs, outputs);
         
         Iterator i = firstSCCs.iterator();
         for (int a = 1; i.hasNext(); ++a) {

@@ -291,6 +291,46 @@ public abstract class Solver {
                 fileName = fileName.substring(1, fileName.length()-1);
             }
             in.registerReader(new LineNumberReader(new FileReader(fileName)));
+        } else if (s.startsWith(".split_all_rules")) {
+            boolean b = true;
+            int index = ".split_all_rules".length()+1;
+            if (s.length() > index) {
+                String option = s.substring(index).trim();
+                b = !option.equals("false");
+            }
+            SPLIT_ALL_RULES = b;
+        } else if (s.startsWith(".report_stats")) {
+            boolean b = true;
+            int index = ".report_stats".length()+1;
+            if (s.length() > index) {
+                String option = s.substring(index).trim();
+                b = !option.equals("false");
+            }
+            REPORT_STATS = b;
+        } else if (s.startsWith(".noisy")) {
+            boolean b = true;
+            int index = ".noisy".length()+1;
+            if (s.length() > index) {
+                String option = s.substring(index).trim();
+                b = !option.equals("false");
+            }
+            NOISY = b;
+        } else if (s.startsWith(".bddvarorder")) {
+            int index = ".bddvarorder".length()+1;
+            String varOrder = s.substring(index).trim();
+            ((BDDSolver) this).VARORDER = varOrder;
+        } else if (s.startsWith(".bddnodes")) {
+            int index = ".bddnodes".length()+1;
+            int n = Integer.parseInt(s.substring(index).trim());
+            ((BDDSolver) this).BDDNODES = n;
+        } else if (s.startsWith(".bddcache")) {
+            int index = ".bddcache".length()+1;
+            int n = Integer.parseInt(s.substring(index).trim());
+            ((BDDSolver) this).BDDCACHE = n;
+        } else if (s.startsWith(".bddminfree")) {
+            int index = ".bddminfree".length()+1;
+            int n = Integer.parseInt(s.substring(index).trim());
+            ((BDDSolver) this).BDDMINFREE = n;
         } else {
             outputError(lineNum, 0, s, "Unknown directive \""+s+"\"");
             throw new IllegalArgumentException();
@@ -321,6 +361,10 @@ public abstract class Solver {
     Relation parseRelation(int lineNum, String s) {
         MyStringTokenizer st = new MyStringTokenizer(s, " (:,)", true);
         String name = nextToken(st);
+        if (name.indexOf('!') >= 0) {
+            outputError(lineNum, st.getPosition(), s, "Relation name cannot contain '!'");
+            throw new IllegalArgumentException();
+        }
         String openParen = nextToken(st);
         if (!openParen.equals("(")) {
             outputError(lineNum, st.getPosition(), s, "Expected \"(\", got \""+openParen+"\"");
@@ -452,13 +496,23 @@ public abstract class Solver {
     }
     
     RuleTerm parseRuleTerm(int lineNum, String s, Map/*<String,Variable>*/ nameToVar, MyStringTokenizer st) {
+        boolean negated = false;
         String relationName = nextToken(st);
+        if (relationName.equals("!")) {
+            negated = true;
+            relationName = nextToken(st);
+        }
         String openParen = nextToken(st);
         boolean flip = false;
         if (openParen.equals("!")) {
             flip = true; openParen = nextToken(st);
         }
         if (openParen.equals("=")) {
+            if (negated) {
+                outputError(lineNum, st.getPosition(), s, "Unexpected \"!\"");
+                throw new IllegalArgumentException();
+            }
+            
             // "a = b".
             String varName1 = relationName;
             String varName2 = nextToken(st);
@@ -502,6 +556,7 @@ public abstract class Solver {
             outputError(lineNum, st.getPosition(), s, "Unknown relation "+relationName);
             throw new IllegalArgumentException();
         }
+        if (negated) r = r.makeNegated(this);
         List/*<Variable>*/ vars = new LinkedList();
         for (;;) {
             if (r.fieldDomains.size() <= vars.size()) {

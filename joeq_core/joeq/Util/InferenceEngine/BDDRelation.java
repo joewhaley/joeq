@@ -107,6 +107,12 @@ public class BDDRelation extends Relation {
                 relation = b;
             }
         }
+        if (negated != null) {
+            BDDRelation bddn = (BDDRelation) negated;
+            bddn.relation = solver.bdd.one();
+            bddn.domains = this.domains;
+            bddn.domainSet = this.domainSet;
+        }
     }
     
     public void load() throws IOException {
@@ -119,6 +125,14 @@ public class BDDRelation extends Relation {
         loadTuples(name+".tuples");
         if (solver.NOISY) solver.out.println("Loaded tuples from file: "+name+".tuples");
         if (solver.NOISY) solver.out.println("Domains of loaded relation:"+activeDomains(relation));
+    }
+    
+    void updateNegated() {
+        if (negated != null) {
+            BDDRelation bddn = (BDDRelation) negated;
+            bddn.relation.free();
+            bddn.relation = relation.not();
+        }
     }
     
     public void load(String filename) throws IOException {
@@ -142,6 +156,7 @@ public class BDDRelation extends Relation {
             relation.free();
             relation = r2;
         }
+        updateNegated();
     }
     
     public void loadTuples(String filename) throws IOException {
@@ -175,6 +190,7 @@ public class BDDRelation extends Relation {
             if (solver.TRACE_FULL) solver.out.println();
             relation.orWith(b);
         }
+        updateNegated();
     }
     
     public void save() throws IOException {

@@ -48,6 +48,13 @@ public abstract class Relation {
         return negated;
     }
     
+    public Relation makeNegated(Solver solver) {
+        if (negated != null) return negated;
+        negated = solver.createRelation("!"+name, fieldNames, fieldDomains, fieldOptions);
+        negated.negated = this;
+        return negated;
+    }
+    
     public String toString() {
         return name;
     }

@@ -48,9 +48,10 @@ public class BDDSolver extends Solver {
     MultiMap fielddomainsToBDDdomains;
     Map orderingConstraints;
     
-    public static int BDDNODES = Integer.parseInt(System.getProperty("bddnodes", "1000000"));
-    public static int BDDCACHE = Integer.parseInt(System.getProperty("bddcache", "100000"));
-    public static int BDDMINFREE = Integer.parseInt(System.getProperty("bddminfree", "20"));
+    int BDDNODES = Integer.parseInt(System.getProperty("bddnodes", "1000000"));
+    int BDDCACHE = Integer.parseInt(System.getProperty("bddcache", "100000"));
+    int BDDMINFREE = Integer.parseInt(System.getProperty("bddminfree", "20"));
+    String VARORDER = System.getProperty("bddvarorder", null);
     
     public BDDSolver() {
         System.out.println("Initializing BDD library ("+BDDNODES+" nodes, cache size "+BDDCACHE+", min free "+BDDMINFREE+"%)");
@@ -85,10 +86,9 @@ public class BDDSolver extends Solver {
     }
     
     void setVariableOrdering() {
-        String varOrderString = System.getProperty("bddvarorder", null);
-        if (varOrderString != null) {
-            System.out.print("Setting variable ordering to "+varOrderString+", ");
-            int [] varOrder = bdd.makeVarOrdering(true, varOrderString);
+        if (VARORDER != null) {
+            System.out.print("Setting variable ordering to "+VARORDER+", ");
+            int [] varOrder = bdd.makeVarOrdering(true, VARORDER);
             bdd.setVarOrder(varOrder);
             System.out.println("done.");
         }

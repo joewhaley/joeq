@@ -305,6 +305,7 @@ public class BDDInferenceRule extends InferenceRule {
             totalTime += System.currentTimeMillis() - time;
         if (solver.TRACE)
             solver.out.println("Time spent: "+(System.currentTimeMillis()-time));
+        r.updateNegated();
         return changed;
     }
     
@@ -528,6 +529,7 @@ public class BDDInferenceRule extends InferenceRule {
         if (solver.REPORT_STATS) totalTime += System.currentTimeMillis() - time;
         if (solver.TRACE)
             solver.out.println("Time spent: "+(System.currentTimeMillis()-time));
+        r.updateNegated();
         return changed;
     }
 
@@ -624,7 +626,7 @@ public class BDDInferenceRule extends InferenceRule {
         if (true) {
             try {
                 fbo = new FindBestOrder(b1, b2, b3, BDDFactory.and,
-                        BDDSolver.BDDCACHE, BDDSolver.BDDNODES/2,
+                        solver.BDDCACHE, solver.BDDNODES/2,
                         Long.MAX_VALUE, 5000);
             } catch (IOException x) {
             }
