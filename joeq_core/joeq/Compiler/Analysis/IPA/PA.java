@@ -3624,7 +3624,11 @@ public class PA {
         bdd.save(dumpPath+"hP0.bdd", hP);
         bdd.save(dumpPath+"L.bdd", L0);
         bdd.save(dumpPath+"S.bdd", S0);
-        bdd.save(dumpPath+"A.bdd", A);
+        if (CONTEXT_SENSITIVE) {
+            bdd.save(dumpPath+"A.bdd", A);
+        } else {
+            bdd.save(dumpPath+"cA.bdd", A);
+        }
         bdd.save(dumpPath+"vT.bdd", vT);
         bdd.save(dumpPath+"hT.bdd", hT);
         bdd.save(dumpPath+"aT.bdd", aT);
