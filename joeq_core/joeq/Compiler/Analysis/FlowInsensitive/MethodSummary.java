@@ -495,44 +495,33 @@ public class MethodSummary {
         protected void heapStore(Node base, Set src, jq_Field f) {
             base.addEdges(f, NodeSet.FACTORY.makeSet(src));
         }
+        protected void heapStore(Node base, Object src, jq_Field f) {
+            if (src instanceof Node) {
+                heapStore(base, (Node) src, f);
+            } else {
+                heapStore(base, (Set) src, f);
+            }
+        }
         /** Abstractly perform a heap store operation of the given source node on
          *  the nodes in the given register in the current state and the given field. */
-        protected void heapStore(Register base_r, Node src_n, jq_Field f) {
-            Object base = getRegister(base_r);
-            if (base instanceof Set) {
-                for (Iterator i = ((Set)base).iterator(); i.hasNext(); ) {
-                    heapStore((Node)i.next(), src_n, f);
+        protected void heapStore(Object base, Object src, jq_Field f) {
+            if (base instanceof Node) {
+                if (src instanceof Node) {
+                    heapStore((Node) base, (Node) src, f);
+                } else {
+                    heapStore((Node) base, (Set) src, f);
                 }
             } else {
-                heapStore((Node)base, src_n, f);
-            }
-        }
-        /** Abstractly perform a heap store operation of the nodes in the given register
-         *  on the given base node and field. */
-        protected void heapStore(Node base, Register src_r, jq_Field f) {
-            Object src = getRegister(src_r);
-            if (src instanceof Node) {
-                heapStore(base, (Node)src, f);
-            } else {
-                heapStore(base, (Set)src, f);
-            }
-        }
-        /** Abstractly perform a heap store operation of the nodes in the given register
-         *  on the nodes in the given register in the current state and the given field. */
-        protected void heapStore(Register base_r, Register src_r, jq_Field f) {
-            Object base = getRegister(base_r);
-            Object src = getRegister(src_r);
-            if (src instanceof Node) {
-                heapStore(base_r, (Node)src, f);
-                return;
-            }
-            Set src_h = (Set)src;
-            if (base instanceof Set) {
-                for (Iterator i = ((Set)base).iterator(); i.hasNext(); ) {
-                    heapStore((Node)i.next(), src_h, f);
+                Set s = (Set) base;
+                if (src instanceof Node) {
+                    for (Iterator i = s.iterator(); i.hasNext(); ) {
+                        heapStore((Node)i.next(), (Node) src, f);
+                    }
+                } else {
+                    for (Iterator i = s.iterator(); i.hasNext(); ) {
+                        heapStore((Node)i.next(), (Set) src, f);
+                    }
                 }
-            } else {
-                heapStore((Node)base, src_h, f);
             }
         }
 
@@ -579,12 +568,18 @@ public class MethodSummary {
                 if (TRACE_INTRA) out.println("Visiting: "+obj);
                 Register r = ALoad.getDest(obj).getRegister();
                 Operand o = ALoad.getBase(obj);
+                ProgramLocation pl = new QuadProgramLocation(method, obj);
                 if (o instanceof RegisterOperand) {
                     Register b = ((RegisterOperand)o).getRegister();
-                    ProgramLocation pl = new QuadProgramLocation(method, obj);
                     heapLoad(pl, r, b, null);
                 } else {
                     // base is not a register?!
+                    Object value = ((AConstOperand) o).getValue();
+                    Object key = value;
+                    ConcreteObjectNode n = (ConcreteObjectNode) quadsToNodes.get(key);
+                    if (n == null)
+                        quadsToNodes.put(key, n = new ConcreteObjectNode(value));
+                    heapLoad(pl, r, n, null);
                 }
             }
         }
@@ -594,29 +589,38 @@ public class MethodSummary {
                 || obj.getOperator() instanceof Operator.AStore.ASTORE_P
                 ) {
                 if (TRACE_INTRA) out.println("Visiting: "+obj);
-                Operand val = AStore.getValue(obj);
-                Operand base = AStore.getBase(obj);
-                if (base instanceof RegisterOperand) {
-                    Register base_r = ((RegisterOperand)base).getRegister();
-                    if (val instanceof RegisterOperand) {
-                        Register src_r = ((RegisterOperand)val).getRegister();
-                        heapStore(base_r, src_r, null);
-                    } else if (val instanceof AConstOperand) {
-                        //jq_Reference type = ((AConstOperand)val).getType();
-                        Object value = ((AConstOperand)val).getValue();
-                        Object key = value;
-                        ConcreteObjectNode n = (ConcreteObjectNode) quadsToNodes.get(key);
-                        if (n == null)
-                            quadsToNodes.put(key, n = new ConcreteObjectNode(value));
-                        heapStore(base_r, n, null);
-                    } else {
-                        jq_Reference type = ((PConstOperand)val).getType();
-                        UnknownTypeNode n = UnknownTypeNode.get(type);
-                        heapStore(base_r, n, null);
-                    }
+                Operand val_op = AStore.getValue(obj);
+                Operand base_op = AStore.getBase(obj);
+                Object val, base;
+                if (base_op instanceof RegisterOperand) {
+                    Register base_r = ((RegisterOperand)base_op).getRegister();
+                    base = getRegister(base_r);
                 } else {
                     // base is not a register?!
+                    Object value = ((AConstOperand) base_op).getValue();
+                    Object key = value;
+                    ConcreteObjectNode node = (ConcreteObjectNode) quadsToNodes.get(key);
+                    if (node == null)
+                        quadsToNodes.put(key, node = new ConcreteObjectNode(value));
+                    base = node;
                 }
+                if (val_op instanceof RegisterOperand) {
+                    Register src_r = ((RegisterOperand)val_op).getRegister();
+                    val = getRegister(src_r);
+                } else if (val_op instanceof AConstOperand) {
+                    //jq_Reference type = ((AConstOperand)val).getType();
+                    Object value = ((AConstOperand)val_op).getValue();
+                    Object key = value;
+                    ConcreteObjectNode n = (ConcreteObjectNode) quadsToNodes.get(key);
+                    if (n == null)
+                        quadsToNodes.put(key, n = new ConcreteObjectNode(value));
+                    val = n;
+                } else {
+                    jq_Reference type = ((PConstOperand)val_op).getType();
+                    UnknownTypeNode n = UnknownTypeNode.get(type);
+                    val = n;
+                }
+                heapStore(base, val, null);
             }
         }
         public void visitBinary(Quad obj) {
@@ -677,12 +681,18 @@ public class MethodSummary {
                 Getfield.getField(obj).resolve();
                 jq_Field f = Getfield.getField(obj).getField();
                 if (IGNORE_INSTANCE_FIELDS) f = null;
+                ProgramLocation pl = new QuadProgramLocation(method, obj);
                 if (o instanceof RegisterOperand) {
                     Register b = ((RegisterOperand)o).getRegister();
-                    ProgramLocation pl = new QuadProgramLocation(method, obj);
                     heapLoad(pl, r, b, f);
                 } else {
                     // base is not a register?!
+                    Object value = ((AConstOperand) o).getValue();
+                    Object key = value;
+                    ConcreteObjectNode n = (ConcreteObjectNode) quadsToNodes.get(key);
+                    if (n == null)
+                        quadsToNodes.put(key, n = new ConcreteObjectNode(value));
+                    heapLoad(pl, r, n, f);
                 }
             }
         }
@@ -865,32 +875,42 @@ public class MethodSummary {
                 || obj.getOperator() instanceof Operator.Putfield.PUTFIELD_P
                 ) {
                 if (TRACE_INTRA) out.println("Visiting: "+obj);
-                Operand base = Putfield.getBase(obj);
-                Operand val = Putfield.getSrc(obj);
+                Operand base_op = Putfield.getBase(obj);
+                Operand val_op = Putfield.getSrc(obj);
                 Putfield.getField(obj).resolve();
                 jq_Field f = Putfield.getField(obj).getField();
                 if (IGNORE_INSTANCE_FIELDS) f = null;
-                if (base instanceof RegisterOperand) {
-                    Register base_r = ((RegisterOperand)base).getRegister();
-                    if (val instanceof RegisterOperand) {
-                        Register src_r = ((RegisterOperand)val).getRegister();
-                        heapStore(base_r, src_r, f);
-                    } else if (val instanceof AConstOperand) {
-                        //jq_Reference type = ((AConstOperand)val).getType();
-                        Object value = ((AConstOperand)val).getValue();
-                        Object key = value;
-                        ConcreteObjectNode n = (ConcreteObjectNode) quadsToNodes.get(key);
-                        if (n == null)
-                            quadsToNodes.put(key, n = new ConcreteObjectNode(value));
-                        heapStore(base_r, n, f);
-                    } else {
-                        jq_Reference type = ((PConstOperand)val).getType();
-                        UnknownTypeNode n = UnknownTypeNode.get(type);
-                        heapStore(base_r, n, f);
-                    }
+                Object base, val;
+                if (val_op instanceof RegisterOperand) {
+                    Register src_r = ((RegisterOperand)val_op).getRegister();
+                    val = getRegister(src_r);
+                } else if (val_op instanceof AConstOperand) {
+                    //jq_Reference type = ((AConstOperand)val).getType();
+                    Object value = ((AConstOperand)val_op).getValue();
+                    Object key = value;
+                    ConcreteObjectNode n = (ConcreteObjectNode) quadsToNodes.get(key);
+                    if (n == null)
+                        quadsToNodes.put(key, n = new ConcreteObjectNode(value));
+                    val = n;
+                } else {
+                    jq_Reference type = ((PConstOperand)val_op).getType();
+                    UnknownTypeNode n = UnknownTypeNode.get(type);
+                    val = n;
+                }
+                if (base_op instanceof RegisterOperand) {
+                    Register base_r = ((RegisterOperand)base_op).getRegister();
+                    base = getRegister(base_r);
                 } else {
                     // base is not a register?!
+                    //jq_Reference type = ((AConstOperand)val).getType();
+                    Object value = ((AConstOperand)base_op).getValue();
+                    Object key = value;
+                    ConcreteObjectNode n = (ConcreteObjectNode) quadsToNodes.get(key);
+                    if (n == null)
+                        quadsToNodes.put(key, n = new ConcreteObjectNode(value));
+                    base = n;
                 }
+                heapStore(base, val, f);
             }
         }
         /** Visit a put static field instruction. */
@@ -905,7 +925,7 @@ public class MethodSummary {
                 if (IGNORE_STATIC_FIELDS) f = null;
                 if (val instanceof RegisterOperand) {
                     Register src_r = ((RegisterOperand)val).getRegister();
-                    heapStore(my_global, src_r, f);
+                    heapStore(my_global, getRegister(src_r), f);
                 } else if (val instanceof AConstOperand) {
                     //jq_Reference type = ((AConstOperand)val).getType();
                     Object value = ((AConstOperand)val).getValue();
