@@ -121,8 +121,10 @@ public abstract class ClassLibInterface {
             Class c = Class.forName(s);
             return (joeq.ClassLib.Common.Interface)c.newInstance();
         } catch (java.lang.ClassNotFoundException x) {
-            System.err.println("Cannot find class library interface "+s+": "+x);
-            System.err.println("Please check the version of your virtual machine.");
+            if (jq.IsBootstrapping) {
+                System.err.println("Cannot find class library interface "+s+": "+x);
+                System.err.println("Please check the version of your virtual machine.");
+            }
         } catch (java.lang.InstantiationException x) {
             System.err.println("Cannot instantiate class library interface "+s+": "+x);
         } catch (java.lang.IllegalAccessException x) {

@@ -81,8 +81,8 @@ public abstract class Bootstrapper {
         HeapAddress.FACTORY = joeq.Bootstrap.BootstrapHeapAddress.FACTORY;
         //StackAddress.FACTORY = joeq.Bootstrap.BootstrapStackAddress.FACTORY;
         
-        ClassLibInterface.useJoeqClasslib(true);
         jq.IsBootstrapping = true;
+        ClassLibInterface.useJoeqClasslib(true);
         
         CodeAllocator.initializeCompiledMethodMap();
         
