@@ -71,6 +71,14 @@ public abstract class Solver {
             Relation r = (Relation) i.next();
             r.initialize();
         }
+        for (Iterator i = equivalenceRelations.values().iterator(); i.hasNext(); ) {
+            Relation r = (Relation) i.next();
+            r.initialize();
+        }
+        for (Iterator i = notequivalenceRelations.values().iterator(); i.hasNext(); ) {
+            Relation r = (Relation) i.next();
+            r.initialize();
+        }
         for (Iterator i = rules.iterator(); i.hasNext(); ) {
             InferenceRule r = (InferenceRule) i.next();
             r.initialize();
