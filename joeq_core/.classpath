@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-    <classpathentry exported="true" kind="var" path="JRE_LIB" sourcepath="JRE_SRC"/>
+    <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
     <classpathentry kind="src" path=""/>
-    <classpathentry exported="true" kind="lib" path="Support/java14.jar"/>
-    <classpathentry exported="true" kind="lib" path="Support/javabdd_0.3.jar"/>
+    <classpathentry kind="lib" path="Support/java14.jar"/>
+    <classpathentry kind="lib" path="Support/javabdd_0.3.jar"/>
     <classpathentry kind="output" path=""/>
 </classpath>
