@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.StringTokenizer;
 
@@ -482,15 +483,21 @@ public class CSPAResults {
 	                    results.add(r);
 	                }
 	            } else {
-	            	System.out.println("Unrecognized command");
+	            	System.err.println("Unrecognized command");
 	            	increaseCount = false;
 	                //results.add(new TypedBDD(bdd.zero(), Collections.EMPTY_SET));
 	            }
-			} catch (IOException x) {
-				x.printStackTrace();
+			} catch (IOException e) {
+				System.err.println("Error: IOException");
 				increaseCount = false;
-			} catch (NumberFormatException n) {
-				System.err.println("NumberFormatException");
+			} catch (NumberFormatException e) {
+				System.err.println("Parse error: NumberFormatException");
+				increaseCount = false;
+			} catch (NoSuchElementException e) {
+				System.err.println("Parse error: NoSuchElementException");
+				increaseCount = false;
+			} catch (IndexOutOfBoundsException e) {
+				System.err.println("Parse error: IndexOutOfBoundsException");
 				increaseCount = false;
 			}
 
