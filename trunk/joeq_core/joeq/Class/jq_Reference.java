@@ -12,7 +12,6 @@ package Clazz;
 import jq;
 import UTF.Utf8;
 import Bootstrap.PrimordialClassLoader;
-import Bootstrap.ClassLoaderInterface;
 
 public abstract class jq_Reference extends jq_Type implements jq_ClassFileConstants {
 
@@ -21,6 +20,7 @@ public abstract class jq_Reference extends jq_Type implements jq_ClassFileConsta
     public final boolean isVerified() { return state >= STATE_VERIFIED; }
     public final boolean isPrepared() { return state >= STATE_PREPARED; }
     public final boolean isSFInitialized() { return state >= STATE_SFINITIALIZED; }
+    public final boolean isClsInitRunning() { return state >= STATE_CLSINITRUNNING; }
     public final boolean isClsInitialized() { return state >= STATE_CLSINITIALIZED; }
     
     public final boolean isPrimitiveType() { return false; }
