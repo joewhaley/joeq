@@ -88,11 +88,15 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
             varOrderDesc = varOrderDesc.substring(0, index) + "_src2_src1" + varOrderDesc.substring(index);
         }
         methodMap = new IndexMap("method");
+        methodMap.get(new Object());
         loadOpMap();
         quadMap = new IndexMap("quad");
+        quadMap.get(new Object());
         //regMap = new IndexMap("reg");
         memberMap = new IndexMap("member");
+        memberMap.get(new Object());
         constantMap = new IndexMap("constant");
+        constantMap.get(new Object());
         bdd = BDDFactory.init(1000000, 50000);
         method = makeDomain("method", methodBits);
         quad = makeDomain("quad", quadBits);
@@ -137,6 +141,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         } catch (IOException x) {
             System.out.println("Cannot load op map "+fileName);
             opMap = new IndexMap("op");
+            opMap.get(new Object());
         }
     }
     
@@ -227,27 +232,39 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
     }
     
     public int getMethodID(jq_Method m) {
-        return methodMap.get(m)+1;
+        int x = methodMap.get(m);
+        Assert._assert(x > 0);
+        return x;
     }
     
     public int getRegisterID(Register r) {
-        return r.getNumber()+1;
+        int x = r.getNumber();
+        Assert._assert(x > 0);
+        return x;
     }
     
     public int getConstantID(Object c) {
-        return constantMap.get(c)+1;
+        int x = constantMap.get(c);
+        Assert._assert(x > 0);
+        return x;
     }
     
     public int getQuadID(Quad r) {
-        return quadMap.get(r)+1;
+        int x = quadMap.get(r);
+        Assert._assert(x > 0);
+        return x;
     }
     
     public int getMemberID(Object r) {
-        return memberMap.get(r)+1;
+        int x = memberMap.get(r);
+        Assert._assert(x > 0);
+        return x;
     }
     
     public int getOpID(Operator r) {
-        return opMap.get(r.toString())+1;
+        int x = opMap.get(r.toString());
+        Assert._assert(x > 0);
+        return x;
     }
     
     void handleQuad(Quad q) {

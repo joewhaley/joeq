@@ -103,6 +103,13 @@ public class IndexMap implements IndexedMap {
         }
     }
     
+    public void dumpStrings(final DataOutput out) throws IOException {
+        for (int j = 0; j < size(); ++j) {
+            Object o = get(j);
+            out.writeBytes(o+"\n");
+        }
+    }
+    
     public static IndexMap load(String name, DataInput in) throws IOException {
         String s = in.readLine();
         int size = Integer.parseInt(s);

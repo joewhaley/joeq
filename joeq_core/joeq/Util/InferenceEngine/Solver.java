@@ -50,6 +50,8 @@ public abstract class Solver {
     Map/*<String,FieldDomain>*/ nameToFieldDomain;
     Map/*<String,Relation>*/ nameToRelation;
     List/*<InferenceRule>*/ rules;
+    Collection/*<Relation>*/ relationsToLoad;
+    Collection/*<Relation>*/ relationsToLoadTuples;
     Collection/*<Relation>*/ relationsToDump;
     Collection/*<Relation>*/ relationsToDumpNegated;
     Collection/*<Relation>*/ relationsToDumpTuples;
@@ -135,6 +137,8 @@ public abstract class Solver {
     
     void readRelations(BufferedReader in) throws IOException {
         nameToRelation = new HashMap();
+        relationsToLoad = new LinkedList();
+        relationsToLoadTuples = new LinkedList();
         relationsToDump = new LinkedList();
         relationsToDumpNegated = new LinkedList();
         relationsToDumpTuples = new LinkedList();
@@ -186,6 +190,10 @@ public abstract class Solver {
             	relationsToDumpNegated.add(r);
             } else if (option.equals("savetuples")) {
             	relationsToDumpTuples.add(r);
+            } else if (option.equals("load")) {
+                relationsToLoad.add(r);
+            } else if (option.equals("loadtuples")) {
+                relationsToLoadTuples.add(r);
             } else {
             	throw new IllegalArgumentException("Unexpected option '"+option+"'");
             }
@@ -266,10 +274,14 @@ public abstract class Solver {
 //        return r;
 //    }
     
-    void loadInitialRelations() {
-        for (Iterator i = nameToRelation.values().iterator(); i.hasNext(); ) {
+    void loadInitialRelations() throws IOException {
+        for (Iterator i = relationsToLoad.iterator(); i.hasNext(); ) {
             Relation r = (Relation) i.next();
             r.load();
+        }
+        for (Iterator i = relationsToLoadTuples.iterator(); i.hasNext(); ) {
+            Relation r = (Relation) i.next();
+            r.loadTuples();
         }
     }
     
@@ -279,12 +291,12 @@ public abstract class Solver {
             r.save();
         }
         for (Iterator i = relationsToDumpNegated.iterator(); i.hasNext(); ) {
-        	Relation r = (Relation) i.next();
-        	r.saveNegated();
+            Relation r = (Relation) i.next();
+            r.saveNegated();
         }
         for (Iterator i = relationsToDumpTuples.iterator(); i.hasNext(); ) {
-        	Relation r = (Relation) i.next();
-        	r.saveTuples();
+            Relation r = (Relation) i.next();
+            r.saveTuples();
         }
     }
 
