@@ -76,7 +76,7 @@ bootstrap-sun13-linux:	javac
 	java -Xbootclasspath/a:$(JDK14SUPPORT_LIB) -cp .:$(JOEQ_DIR):../joeq -ms200M -mx200M Main.Bootstrapper -cl ClassLib/sun13_linux/classlist.txt
 
 bootstrap-ibm13-linux:	javac
-	java -Xbootclasspath/a:$(JDK14SUPPORT_LIB):/opt/IBMJava2-131/jre/lib/ext/ibmjcaprovider.jar -cp .:$(JOEQ_DIR):../joeq -ms230M -mx230M Main.Bootstrapper -cl ClassLib/ibm13_linux/classlist.txt
+	java -Xbootclasspath/a:$(JDK14SUPPORT_LIB):/opt/IBMJava2-131/jre/lib/ext/ibmjcaprovider.jar -cp .:$(JOEQ_DIR):../joeq -ms240M -mx240M Main.Bootstrapper -cl ClassLib/ibm13_linux/classlist.txt
 
 bootstrap-sun142-win32:	javac
 	java -cp .\;$(JOEQ_DIR)\;../joeq -ms185M -mx185M Main.Bootstrapper -cl ClassLib/sun142_win32/classlist.txt

@@ -262,7 +262,7 @@ public class AppendList implements List {
         }
 
         public Iterator iterator() {
-            return listIterator();
+            return SubList.this.listIterator();
         }
 
         public ListIterator listIterator(final int index) {
