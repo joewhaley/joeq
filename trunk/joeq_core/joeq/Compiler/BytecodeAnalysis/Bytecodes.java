@@ -5614,7 +5614,9 @@ public interface Bytecodes {
      protected void initFromFile(jq_ConstantPool cp, ByteSequence bytes, boolean wide) throws IOException {
          char c = (char) bytes.readUnsignedByte();
          o = cp.get(c);
-         Assert._assert(c != jq_ClassFileConstants.CONSTANT_Class);
+         if (c == (char) jq_ClassFileConstants.CONSTANT_Class) {
+             Assert.UNREACHABLE("ldc of unresolved class: "+o);
+         }
          if (c == (char) jq_ClassFileConstants.CONSTANT_ResolvedClass)
              o = Reflection.getJDKType((jq_Type) o);
          else 
