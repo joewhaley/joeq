@@ -100,7 +100,7 @@ public class BootImage implements ELFConstants {
     }
 
     public final HeapAddress addressOf(Object o) {
-        Assert._assert(!(o instanceof Address));
+        Assert._assert(!(o instanceof BootstrapAddress));
         return getOrAllocateObject(o);
     }
     
@@ -132,7 +132,7 @@ public class BootImage implements ELFConstants {
     
     public HeapAddress getOrAllocateObject(Object o) {
         if (o == null) return HeapAddress.getNull();
-        //jq.Assert(!(o instanceof Address));
+        //jq.Assert(!(o instanceof BootstrapAddress));
         IdentityHashCodeWrapper k = IdentityHashCodeWrapper.create(o);
         Entry e = (Entry)hash.get(k);
         if (e != null) return e.getAddress();
@@ -171,7 +171,7 @@ public class BootImage implements ELFConstants {
     public static boolean IGNORE_UNKNOWN_OBJECTS = false;
     
     public HeapAddress getAddressOf(Object o) {
-        Assert._assert(!(o instanceof Address));
+        Assert._assert(!(o instanceof BootstrapAddress));
         if (o == null) return HeapAddress.getNull();
         IdentityHashCodeWrapper k = IdentityHashCodeWrapper.create(o);
         Entry e = (Entry)hash.get(k);
@@ -208,7 +208,7 @@ public class BootImage implements ELFConstants {
         } else if (ftype.isReferenceType()) {
             Object val = Reflection.getstatic_A(f);
             if (val != null) {
-                if (val instanceof Address) {
+                if (val instanceof BootstrapAddress) {
                     Assert.UNREACHABLE("Error: "+f+" contains "+((Address)val).stringRep());
                 }
                 HeapAddress addr = HeapAddress.addressOf(val);
