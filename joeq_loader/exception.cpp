@@ -1,10 +1,6 @@
 
 #include "StdAfx.h"
 
-extern "C" void __stdcall trap_handler(void*, int);
-extern "C" void __stdcall ctrl_break_handler();
-extern "C" void __stdcall threadSwitch(void*);
-
 #if defined(WIN32)
 
 EXCEPTION_DISPOSITION hardwareExceptionHandler(EXCEPTION_RECORD *exceptionRecord,
