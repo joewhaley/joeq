@@ -57,6 +57,7 @@ public abstract class SystemInterface {
     public static int/*CodeAddress*/ yield_0;
     public static int/*CodeAddress*/ msleep_4;
     public static int/*CodeAddress*/ create_thread_8;
+    public static int/*CodeAddress*/ init_thread_4;
     public static int/*CodeAddress*/ resume_thread_4;
     public static int/*CodeAddress*/ suspend_thread_4;
     public static int/*CodeAddress*/ allocate_stack_4;
@@ -387,6 +388,12 @@ public abstract class SystemInterface {
             return (int)Unsafe.invoke(create_thread_8);
         } catch (Throwable t) { jq.UNREACHABLE(); }
         return 0;
+    }
+    public static void init_thread(int/*CPointer*/ thread_handle) {
+        try {
+            Unsafe.pushArg(thread_handle);
+            Unsafe.invoke(init_thread_4);
+        } catch (Throwable t) { jq.UNREACHABLE(); }
     }
     public static int resume_thread(int/*CPointer*/ thread_handle) {
         try {
