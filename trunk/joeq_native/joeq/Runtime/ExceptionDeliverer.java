@@ -72,7 +72,7 @@ public abstract class ExceptionDeliverer {
     }
     
     public static void printStackTrace(Object backtrace, java.io.PrintWriter pw) {
-        int/*Address*/[] ips = (int[])backtrace;
+        int/*CodeAddress*/[] ips = (int[])backtrace;
         for (int i=0; i<ips.length; ++i) {
             jq_CompiledCode cc = CodeAllocator.getCodeContaining(ips[i]);
             if (cc != null) {
@@ -110,8 +110,8 @@ public abstract class ExceptionDeliverer {
     }
     
     public static Object getStackTrace() {
-        int/*Address*/ ip = Unsafe.peek(Unsafe.EBP()+4);
-        int/*Address*/ fp = Unsafe.peek(Unsafe.EBP());
+        int/*CodeAddress*/ ip = Unsafe.peek(Unsafe.EBP()+4);
+        int/*StackAddress*/ fp = Unsafe.peek(Unsafe.EBP());
         StackWalker sw = new StackWalker(ip, fp);
         // once to count
         int size = 0;
@@ -119,7 +119,7 @@ public abstract class ExceptionDeliverer {
             sw.next();
             ++size;
         }
-        int[] ips = new int[size];
+        int/*CodeAddress*/[] ips = new int[size];
         sw = new StackWalker(ip, fp);
         for (int i=0; i<ips.length; ++i) {
             ips[i] = sw.getIP();
