@@ -170,10 +170,10 @@ public class Monitor {
             status_address.atomicCas4(status_flags, newlockword);
             if (Unsafe.isEQ()) {
                 // successfully obtained inflated lock.
-                if (TRACE) SystemInterface.debugwriteln("Obtained inflated lock! new lockword="+Strings.hex8(newlockword));
+                if (TRACE) SystemInterface.debugwriteln("Thread "+m.monitor_owner.getThreadId()+" obtained inflated lock! new lockword="+Strings.hex8(newlockword));
                 return;
             } else {
-                if (TRACE) SystemInterface.debugwriteln("Failed to obtain inflated lock, lockword was "+Strings.hex8(oldlockword));
+                if (TRACE) SystemInterface.debugwriteln("Thread "+m.monitor_owner.getThreadId()+" failed to obtain inflated lock, lockword was "+Strings.hex8(oldlockword));
             }
             // another thread has a thin lock on this object.  yield to scheduler.
             Thread.yield();
