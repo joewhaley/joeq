@@ -1235,6 +1235,11 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                 }
                 continue;
             }
+            if (bc.length == 5 && that_m instanceof jq_Initializer && that_m.getDesc() == Utf8.get("()V")) {
+                if (TRACE) SystemInterface.debugmsg("Skipping default initializer "+that_m+".");
+                continue;
+            }
+            
             // extract instructions of method.
             Bytecodes.InstructionList il = new Bytecodes.InstructionList(that_m);
             
