@@ -465,7 +465,7 @@ public class ControlFlowGraph implements Graph {
             System.out.println("Infinite loop discovered in "+this.getMethod()+", linking "+bb+" to exit.");
             bb.addSuccessor(exit());
             exit().addPredecessor(bb);
-            allBasicBlocks = reversePostOrder(entry());
+            allBasicBlocks = new HashSet(reversePostOrder(entry()));
         }
     }
     
