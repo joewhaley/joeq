@@ -982,6 +982,7 @@ uphere1:
                                 (that_param[k+1] != PrimordialClassLoader.loader.getJavaLangObject())) continue uphere1;
                         }
                         jq_NameAndDesc nd = f.getNameAndDesc();
+                        access_flags = f.getAccessFlags();
                         jq_StaticMethod stub = generateStaticMethodStub(nd, sm, access_flags, (char)classfield_index, (char)method_idx);
                         if (TRACE) SystemInterface.debugmsg("Replacing static method: "+stub);
                         this.static_methods[j] = stub;
@@ -1017,6 +1018,7 @@ uphere2:
                             (that_param[k] != PrimordialClassLoader.loader.getJavaLangObject())) continue uphere2;
                         }
                         jq_NameAndDesc nd = f.getNameAndDesc();
+                        access_flags = f.getAccessFlags();
                         jq_InstanceMethod stub = generateInstanceMethodStub(nd, sm, access_flags, (char)method_idx);
                         if (TRACE) SystemInterface.debugmsg("Replacing instance method: "+stub);
                         this.declared_instance_methods[j] = stub;
