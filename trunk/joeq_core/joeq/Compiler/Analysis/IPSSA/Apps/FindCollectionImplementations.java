@@ -213,11 +213,15 @@ public class FindCollectionImplementations {
     static jq_Class _iteratorClass    = null;
     static jq_Class _setClass         = null;
     static jq_Class _mapClass         = null;
-    boolean FILTER = false;
+    static jq_Class _enumerationClass = null;
+    // filter out non-local classes?
+    static final boolean FILTER_LOCAL = false; 
+            //System.getProperty("collections.filterNonLocal").equals("yes");
 
     static final String COLLECTION_SIGNATURE = "Ljava.util.Collection;";
     static final String SET_SIGNATURE        = "Ljava.util.Set;";
     static final String MAP_SIGNATURE        = "Ljava.util.Map;";
+    static final String ENUMERATION_SIGNATURE= "Ljava.util.Enumeration;";
     static final String ITERATOR_SIGNATURE   = "Ljava.util.Iterator;";    
     
     public static void main(String[] args) {
@@ -262,7 +266,8 @@ public class FindCollectionImplementations {
     private Set _collections;
     private Set _iterators;
     private Set _sets;
-    private Set _maps;    
+    private Set _maps;
+    private Set _enumerations;
     
     public FindCollectionImplementations(Iterator i) {
         Collection roots = new LinkedList();
@@ -287,30 +292,39 @@ public class FindCollectionImplementations {
         time = System.currentTimeMillis() - time;
         System.out.println("done. ("+(time/1000.)+" seconds)");
         _classes = getClasses(_cg.getAllMethods());
-        if(FILTER) _classes = filter(_classes, root_classes);
+        if(FILTER_LOCAL) _classes = filter(_classes, root_classes);
         
-        if(FILTER){
+        if(FILTER_LOCAL){
     	    System.out.println("Considering classes: " + _classes);
     	}
         
-        _collections = new HashSet();
-        _iterators   = new HashSet();
-        _sets        = new HashSet();
-        _maps        = new HashSet();
-        
-        _collectionClass  = (jq_Class)jq_Type.parseType(COLLECTION_SIGNATURE);
-        _iteratorClass    = (jq_Class)jq_Type.parseType(ITERATOR_SIGNATURE);  
-        _setClass         = (jq_Class)jq_Type.parseType(SET_SIGNATURE);
-        _mapClass         = (jq_Class)jq_Type.parseType(MAP_SIGNATURE);
-        _collectionClass.load();
-        _iteratorClass.load();
-        _setClass.load();
+        initPredefinedClasses();
 
         Assert._assert(_collectionClass != null);
         Assert._assert(_iteratorClass  != null);
         Assert._assert(_setClass  != null);
     }
     
+    private void initPredefinedClasses() {
+        _collections    = new HashSet();
+        _iterators      = new HashSet();
+        _sets           = new HashSet();
+        _maps           = new HashSet();
+        _enumerations   = new HashSet();
+        
+        _collectionClass  = (jq_Class)jq_Type.parseType(COLLECTION_SIGNATURE);
+        _iteratorClass    = (jq_Class)jq_Type.parseType(ITERATOR_SIGNATURE);  
+        _setClass         = (jq_Class)jq_Type.parseType(SET_SIGNATURE);
+        _mapClass         = (jq_Class)jq_Type.parseType(MAP_SIGNATURE);
+        _enumerationClass = (jq_Class)jq_Type.parseType(ENUMERATION_SIGNATURE);
+        
+        _collectionClass.load();
+        _iteratorClass.load();
+        _setClass.load();
+        _mapClass.load();
+        _enumerationClass.load();
+    }
+
     private Set filter(Set classes, Collection roots) {
         Set prefixes = new HashSet();
         for(Iterator iter = roots.iterator(); iter.hasNext();) {
@@ -373,7 +387,16 @@ public class FindCollectionImplementations {
                 _maps.add(c);
             }
         }        
-    }    
+    }
+    private void findEnumerations() {
+        for(Iterator iter = _classes.iterator(); iter.hasNext(); ) {
+            jq_Class c = (jq_Class)iter.next();
+            
+            if(c.getDeclaredInterface(_enumerationClass.getDesc()) != null) {
+                _enumerations.add(c);
+            }
+        }        
+    }
 
     private Set getClasses(Collection collection) {
         HashSet result = new HashSet(); 
@@ -418,6 +441,12 @@ public class FindCollectionImplementations {
             h = new ClassHierarchy(_mapClass, _maps);
             h.makeHierarchy();
             h.printHierarchy();
+            
+            System.out.println("Found " + _enumerations.size() + " enumerations");
+            //printCollection(_iterators);
+            h = new ClassHierarchy(_enumerationClass, _enumerations);
+            h.makeHierarchy();
+            h.printHierarchy();
     
             System.out.println("Found " + _iterators.size() + " iterators");
             //printCollection(_iterators);
@@ -430,6 +459,7 @@ public class FindCollectionImplementations {
                _collections.size() + " collections, " + 
 			   _sets.size() + " sets, " +
                _maps.size() + " maps, " +
+               _maps.size() + " enumerations, " +
 			   _iterators.size() + " iterators "
 			   );
     }
@@ -441,6 +471,7 @@ public class FindCollectionImplementations {
         findCollections();
         findSets();
         findMaps();
+        findEnumerations();
         findIterators();                 
         
         final String LINE = repeat("-", 100);
@@ -456,6 +487,10 @@ public class FindCollectionImplementations {
         System.out.println(LINE);
         System.out.println("Maps:");
         findReachable(_sets);
+        
+        System.out.println(LINE);
+        System.out.println("Enumerations:");
+        findReachable(_enumerations);
         
         System.out.println(LINE);
         System.out.println("Iterators:");
@@ -513,6 +548,9 @@ public class FindCollectionImplementations {
         
         if(c.implementsInterface(_mapClass) || c == _mapClass) {
             buf.append(" [Map]");
+        }
+        if(c.implementsInterface(_enumerationClass) || c == _enumerationClass) {
+            buf.append(" [Enumeration]");
         }
         
         return buf.toString();
