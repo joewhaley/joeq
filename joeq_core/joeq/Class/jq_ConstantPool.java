@@ -434,6 +434,14 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
         }
     }
     
+    public char findEqual(Object o, byte tag) {
+        for (char i=1; i<constant_pool.length; ++i) {
+            if (constant_pool_tags[i] == tag && constant_pool[i].equals(o))
+                return i;
+        }
+        return 0;
+    }
+
     public boolean contains(Object o) {
         for (int i=0; i<constant_pool.length; ++i) {
             if (constant_pool[i] == o)
