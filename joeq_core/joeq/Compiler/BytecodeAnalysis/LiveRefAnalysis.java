@@ -935,6 +935,10 @@ public class LiveRefAnalysis {
         
         private boolean mergeJSRStateWith(BasicBlock before, BasicBlock after) {
             jq.assert(current_state instanceof ExactJSRState);
+            if (end_states[before.id] == null) {
+                System.err.println("Warning! Successor of JSR block has not yet been visited.");
+                return false;
+            }
             ExactJSRState jsr_state = (ExactJSRState)current_state;
             if (start_states[after.id] == null) {
                 start_states[after.id] = end_states[before.id].copyJSR(jsr_state);
