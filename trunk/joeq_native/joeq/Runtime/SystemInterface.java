@@ -93,8 +93,8 @@ public abstract class SystemInterface {
         int/*HeapAddress*/ value = Unsafe.peek(Unsafe.addressOf(msg)+_string_value.getOffset());
         int offset = Unsafe.peek(Unsafe.addressOf(msg)+_string_offset.getOffset());
         int count = Unsafe.peek(Unsafe.addressOf(msg)+_string_count.getOffset());
-        Unsafe.pushArg(value + offset*2);
         Unsafe.pushArg(count);
+        Unsafe.pushArg(value + offset*2);
         try {
             Unsafe.getThreadBlock().disableThreadSwitch();
             Unsafe.invoke(debugwmsg_8);
