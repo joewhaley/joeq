@@ -1,4 +1,4 @@
-// Directjoeq.Interpreter.java, created Mon Feb  5 23:23:21 2001 by joewhaley
+// DirectInterpreter.java, created Mon Feb  5 23:23:21 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Interpreter;
@@ -33,7 +33,9 @@ import jwutil.collections.Filter;
 import jwutil.util.Assert;
 import jwutil.util.Convert;
 
-/*
+/**
+ * DirectInterpreter
+ * 
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
@@ -293,14 +295,14 @@ public class DirectInterpreter extends BytecodeInterpreter {
                 if (t.isReferenceType()) {
                     push_A(incomingArgs[j]);
                 } else if (t.isIntLike()) {
-                    push_I(Reflection.unwrapToInt(incomingArgs[j]));
+                    push_I(Convert.unwrapToInt(incomingArgs[j]));
                 } else if (t == jq_Primitive.FLOAT) {
-                    push_F(Reflection.unwrapToFloat(incomingArgs[j]));
+                    push_F(Convert.unwrapToFloat(incomingArgs[j]));
                 } else if (t == jq_Primitive.LONG) {
-                    push_L(Reflection.unwrapToLong(incomingArgs[j]));
+                    push_L(Convert.unwrapToLong(incomingArgs[j]));
                     ++j;
                 } else if (t == jq_Primitive.DOUBLE) {
-                    push_D(Reflection.unwrapToDouble(incomingArgs[j]));
+                    push_D(Convert.unwrapToDouble(incomingArgs[j]));
                     ++j;
                 } else {
                     Assert.UNREACHABLE();

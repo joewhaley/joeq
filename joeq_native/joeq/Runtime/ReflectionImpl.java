@@ -511,30 +511,30 @@ uphere:
                     Unsafe.pushArgA(HeapAddress.addressOf(args[i]));
                 } else {
                     if (c == jq_Primitive.BYTE) {
-                        int v = (int)Reflection.unwrapToByte(args[i]);
+                        int v = (int)Convert.unwrapToByte(args[i]);
                         Unsafe.pushArg(v);
                     } else if (c == jq_Primitive.CHAR) {
-                        int v = (int)Reflection.unwrapToChar(args[i]);
+                        int v = (int)Convert.unwrapToChar(args[i]);
                         Unsafe.pushArg(v);
                     } else if (c == jq_Primitive.DOUBLE) {
-                        long v = Double.doubleToRawLongBits(Reflection.unwrapToDouble(args[i]));
+                        long v = Double.doubleToRawLongBits(Convert.unwrapToDouble(args[i]));
                         Unsafe.pushArg((int)(v >> 32)); // hi
                         Unsafe.pushArg((int)v);         // lo
                     } else if (c == jq_Primitive.FLOAT) {
-                        int v = Float.floatToRawIntBits(Reflection.unwrapToFloat(args[i]));
+                        int v = Float.floatToRawIntBits(Convert.unwrapToFloat(args[i]));
                         Unsafe.pushArg(v);
                     } else if (c == jq_Primitive.INT) {
-                        int v = Reflection.unwrapToInt(args[i]);
+                        int v = Convert.unwrapToInt(args[i]);
                         Unsafe.pushArg(v);
                     } else if (c == jq_Primitive.LONG) {
-                        long v = Reflection.unwrapToLong(args[i]);
+                        long v = Convert.unwrapToLong(args[i]);
                         Unsafe.pushArg((int)(v >> 32)); // hi
                         Unsafe.pushArg((int)v);         // lo
                     } else if (c == jq_Primitive.SHORT) {
-                        int v = (int)Reflection.unwrapToShort(args[i]);
+                        int v = (int)Convert.unwrapToShort(args[i]);
                         Unsafe.pushArg(v);
                     } else if (c == jq_Primitive.BOOLEAN) {
-                        int v = Reflection.unwrapToBoolean(args[i])?1:0;
+                        int v = Convert.unwrapToBoolean(args[i])?1:0;
                         Unsafe.pushArg(v);
                     } else Assert.UNREACHABLE(c.toString());
                 }
@@ -572,30 +572,30 @@ uphere:
                     Unsafe.pushArgA(HeapAddress.addressOf(args[i]));
                 } else {
                     if (c == jq_Primitive.BYTE) {
-                        int v = (int)Reflection.unwrapToByte(args[i]);
+                        int v = (int)Convert.unwrapToByte(args[i]);
                         Unsafe.pushArg(v);
                     } else if (c == jq_Primitive.CHAR) {
-                        int v = (int)Reflection.unwrapToChar(args[i]);
+                        int v = (int)Convert.unwrapToChar(args[i]);
                         Unsafe.pushArg(v);
                     } else if (c == jq_Primitive.DOUBLE) {
-                        long v = Double.doubleToRawLongBits(Reflection.unwrapToDouble(args[i]));
+                        long v = Double.doubleToRawLongBits(Convert.unwrapToDouble(args[i]));
                         Unsafe.pushArg((int)(v >> 32)); // hi
                         Unsafe.pushArg((int)v);         // lo
                     } else if (c == jq_Primitive.FLOAT) {
-                        int v = Float.floatToRawIntBits(Reflection.unwrapToFloat(args[i]));
+                        int v = Float.floatToRawIntBits(Convert.unwrapToFloat(args[i]));
                         Unsafe.pushArg(v);
                     } else if (c == jq_Primitive.INT) {
-                        int v = Reflection.unwrapToInt(args[i]);
+                        int v = Convert.unwrapToInt(args[i]);
                         Unsafe.pushArg(v);
                     } else if (c == jq_Primitive.LONG) {
-                        long v = Reflection.unwrapToLong(args[i]);
+                        long v = Convert.unwrapToLong(args[i]);
                         Unsafe.pushArg((int)(v >> 32)); // hi
                         Unsafe.pushArg((int)v);         // lo
                     } else if (c == jq_Primitive.SHORT) {
-                        int v = (int)Reflection.unwrapToShort(args[i]);
+                        int v = (int)Convert.unwrapToShort(args[i]);
                         Unsafe.pushArg(v);
                     } else if (c == jq_Primitive.BOOLEAN) {
-                        int v = Reflection.unwrapToBoolean(args[i])?1:0;
+                        int v = Convert.unwrapToBoolean(args[i])?1:0;
                         Unsafe.pushArg(v);
                     } else Assert.UNREACHABLE(c.toString());
                 }

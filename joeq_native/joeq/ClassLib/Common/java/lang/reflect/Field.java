@@ -371,35 +371,35 @@ public class Field extends AccessibleObject {
             jq_StaticField sf = (jq_StaticField)jq_f;
             if (t.isReferenceType()) Reflection.putstatic_A(sf, value);
             else if (t == jq_Primitive.INT) {
-                int val = Reflection.unwrapToInt(value);
+                int val = Convert.unwrapToInt(value);
                 Reflection.putstatic_I(sf, val);
             }
             else if (t == jq_Primitive.FLOAT) {
-                float val = Reflection.unwrapToFloat(value);
+                float val = Convert.unwrapToFloat(value);
                 Reflection.putstatic_F(sf, val);
             }
             else if (t == jq_Primitive.LONG) {
-                long val = Reflection.unwrapToLong(value);
+                long val = Convert.unwrapToLong(value);
                 Reflection.putstatic_L(sf, val);
             }
             else if (t == jq_Primitive.DOUBLE) {
-                double val = Reflection.unwrapToDouble(value);
+                double val = Convert.unwrapToDouble(value);
                 Reflection.putstatic_D(sf, val);
             }
             else if (t == jq_Primitive.BOOLEAN) {
-                boolean val = Reflection.unwrapToBoolean(value);
+                boolean val = Convert.unwrapToBoolean(value);
                 Reflection.putstatic_Z(sf, val);
             }
             else if (t == jq_Primitive.BYTE) {
-                byte val = Reflection.unwrapToByte(value);
+                byte val = Convert.unwrapToByte(value);
                 Reflection.putstatic_B(sf, val);
             }
             else if (t == jq_Primitive.SHORT) {
-                short val = Reflection.unwrapToShort(value);
+                short val = Convert.unwrapToShort(value);
                 Reflection.putstatic_S(sf, val);
             }
             else if (t == jq_Primitive.CHAR) {
-                char val = Reflection.unwrapToChar(value);
+                char val = Convert.unwrapToChar(value);
                 Reflection.putstatic_C(sf, val);
             }
             else Assert.UNREACHABLE();
@@ -417,35 +417,35 @@ public class Field extends AccessibleObject {
                 Reflection.getfield_A(obj, f);
             }
             else if (t == jq_Primitive.INT) {
-                int val = Reflection.unwrapToInt(value);
+                int val = Convert.unwrapToInt(value);
                 Reflection.putfield_I(obj, f, val);
             }
             else if (t == jq_Primitive.FLOAT) {
-                float val = Reflection.unwrapToFloat(value);
+                float val = Convert.unwrapToFloat(value);
                 Reflection.putfield_F(obj, f, val);
             }
             else if (t == jq_Primitive.LONG) {
-                long val = Reflection.unwrapToLong(value);
+                long val = Convert.unwrapToLong(value);
                 Reflection.putfield_L(obj, f, val);
             }
             else if (t == jq_Primitive.DOUBLE) {
-                double val = Reflection.unwrapToDouble(value);
+                double val = Convert.unwrapToDouble(value);
                 Reflection.putfield_D(obj, f, val);
             }
             else if (t == jq_Primitive.BOOLEAN) {
-                boolean val = Reflection.unwrapToBoolean(value);
+                boolean val = Convert.unwrapToBoolean(value);
                 Reflection.putfield_Z(obj, f, val);
             }
             else if (t == jq_Primitive.BYTE) {
-                byte val = Reflection.unwrapToByte(value);
+                byte val = Convert.unwrapToByte(value);
                 Reflection.putfield_B(obj, f, val);
             }
             else if (t == jq_Primitive.SHORT) {
-                short val = Reflection.unwrapToShort(value);
+                short val = Convert.unwrapToShort(value);
                 Reflection.putfield_S(obj, f, val);
             }
             else if (t == jq_Primitive.CHAR) {
-                char val = Reflection.unwrapToChar(value);
+                char val = Convert.unwrapToChar(value);
                 Reflection.putfield_C(obj, f, val);
             }
             else Assert.UNREACHABLE();
