@@ -15,7 +15,6 @@ import Clazz.*;
 import java.io.*;
 import java.util.*;
 import Compil3r.Quad.*;
-import Compil3r.Quad.MethodSummary.MethodCall;
 import Compil3r.Quad.MethodSummary.CallSite;
 import Compil3r.Quad.MethodSummary.PassedParameter;
 
@@ -157,6 +156,7 @@ uphere2:
     public static Map callGraph;
     public static Set rootSet = new LinkedHashSet();
     public static Set selectedCallSites = new LinkedHashSet();
+    public static Map methodToCallSites = new HashMap();
     public static Map toInline = new LinkedHashMap();
     
     public static void selectCallSites(String desc, Iterator i, Iterator i2) throws IOException {
@@ -264,13 +264,12 @@ uphere2:
         }
     }
     
-    public static void doInlining() {
-        System.out.println("Inlining "+toInline.size()+" call sites.");
-        for (Iterator it = toInline.entrySet().iterator(); it.hasNext(); ) {
+    public static void doInlining(Set inline) {
+        for (Iterator it = inline.iterator(); it.hasNext(); ) {
             Map.Entry e = (Map.Entry)it.next();
             CallSite cs = (CallSite)e.getKey();
             MethodSummary caller = MethodSummary.getSummary(CodeCache.getCode(cs.caller.method));
-            MethodCall mc = cs.m;
+            ProgramLocation mc = cs.m;
             Set targets = (Set)e.getValue();
             Iterator it2 = targets.iterator();
             if (!it2.hasNext()) {
@@ -279,7 +278,7 @@ uphere2:
                 for (;;) {
                     jq_Method target_m = (jq_Method)it2.next();
                     if (target_m.getBytecode() == null) {
-                        System.out.println("Cannot inline target "+target_m+": target has no bytecode");
+                        //System.out.println("Cannot inline target "+target_m+": target has no bytecode");
                     } else {
                         MethodSummary callee = MethodSummary.getSummary(CodeCache.getCode(target_m));
                         if (caller == callee) {
@@ -291,6 +290,100 @@ uphere2:
                     if (!it2.hasNext()) break;
                 }
             }
+        }
+    }
+    
+    static int setDepth(LinkedHashSet path, HashMap visited, jq_Method m) {
+        if (path.contains(m)) {
+            System.out.println("Attempting to inline recursive cycle: method "+m);
+            return -1;
+        }
+        Integer result = (Integer)visited.get(m);
+        if (result != null) return result.intValue();
+        path.add(m);
+        HashSet s = (HashSet)methodToCallSites.get(m);
+        int current = 0;
+        if (s != null) {
+uphere:
+            for (Iterator i=s.iterator(); i.hasNext(); ) {
+                CallSite cs = (CallSite)i.next();
+                Set t = (Set)toInline.get(cs);
+                for (Iterator j=t.iterator(); j.hasNext(); ) {
+                    jq_Method m2 = (jq_Method)j.next();
+                    int r = setDepth(path, visited, m2);
+                    if (r == -1) {
+                        System.out.println("Removing call site "+cs+" from inline set");
+                        i.remove();
+                        toInline.remove(cs);
+                        continue uphere;
+                    }
+                    current = Math.max(current, r+1);
+                }
+            }
+        }
+        visited.put(m, result = new Integer(current));
+        path.remove(m);
+        return current;
+    }
+    
+    public static Set[] reorderInlineSites(Map toInline) {
+        if (toInline.isEmpty()) return new Set[0];
+        
+        System.out.println("Reordering call sites to inline...");
+        
+        // build a multimap from a method to the inlined call sites it contains.
+        methodToCallSites.clear();
+        for (Iterator i=toInline.keySet().iterator(); i.hasNext(); ) {
+            CallSite cs = (CallSite)i.next();
+            HashSet s = (HashSet)methodToCallSites.get(cs.caller.getMethod());
+            if (s == null) {
+                methodToCallSites.put(cs.caller.getMethod(), s = new HashSet());
+            }
+            s.add(cs);
+        }
+        
+        System.out.println(methodToCallSites.size()+" methods contain sites to inline");
+        
+        HashMap depths = new HashMap();
+        LinkedHashSet path = new LinkedHashSet();
+        int maxDepth = 0;
+        for (Iterator j=methodToCallSites.keySet().iterator(); j.hasNext(); ) {
+            jq_Method m = (jq_Method)j.next();
+            if (depths.containsKey(m)) continue;
+            int depth = setDepth(path, depths, m);
+            //System.out.println("Method "+m+": depth "+(depth+1));
+            maxDepth = Math.max(maxDepth, depth+1);
+        }
+        System.out.println("Longest inlining chain: "+maxDepth);
+        Set[] result = new Set[maxDepth];
+        for (int i=0; i<maxDepth; ++i) {
+            result[i] = new LinkedHashSet();
+        }
+        for (Iterator i=depths.entrySet().iterator(); i.hasNext(); ) {
+            Map.Entry e = (Map.Entry)i.next();
+            jq_Method m = (jq_Method)e.getKey();
+            Integer j = (Integer)e.getValue();
+            Set s = (Set)methodToCallSites.get(m);
+            if (s != null) {
+                for (Iterator k = s.iterator(); k.hasNext(); ) {
+                    final CallSite cs = (CallSite)k.next();
+                    final Set targets = (Set)toInline.get(cs);
+                    result[j.intValue()].add(new Map.Entry() {
+                        public Object getKey() { return cs; }
+                        public Object getValue() { return targets; }
+                        public Object setValue(Object x) { throw new UnsupportedOperationException(); }
+                    });
+                }
+            }
+        }
+        return result;
+    }
+    
+    public static void doInlining() {
+        System.out.println("Inlining "+toInline.size()+" call sites.");
+        Set[] sitesToInline = reorderInlineSites(toInline);
+        for (int i=0; i<sitesToInline.length; ++i) {
+            doInlining(sitesToInline[i]);
         }
     }
     
