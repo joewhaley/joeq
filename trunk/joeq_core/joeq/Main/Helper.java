@@ -27,22 +27,22 @@ public class Helper {
 		HostedVM.initialize();
 	}
 
-	public static jq_Class load(String classname) {
-		jq_Class c = (jq_Class) jq_Type.parseType(classname);
+	public static jq_Type load(String classname) {
+		jq_Type c = jq_Type.parseType(classname);
 		c.load();
 		c.prepare();
 		return c;
 	}
 
-	public static jq_Class[] loadPackage(String packagename) {
+	public static jq_Type[] loadPackage(String packagename) {
 		return loadPackages(packagename, false);
 	}
 
-	public static jq_Class[] loadPackages(String packagename) {
+	public static jq_Type[] loadPackages(String packagename) {
 		return loadPackages(packagename, true);
 	}
 
-	public static jq_Class[] loadPackages(
+	public static jq_Type[] loadPackages(
 		String packagename,
 		boolean recursive) {
 		String canonicalPackageName = packagename.replace('.', '/');

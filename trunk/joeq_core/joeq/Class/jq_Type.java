@@ -94,7 +94,22 @@ public abstract class jq_Type implements AndersenType {
     protected int s_s_array_length;
     
     //// useful functions for parsing class and method names
+    
+    public static String convertPrimitive(String s) {
+    	if (s.equals("byte")) return "B";
+    	if (s.equals("char")) return "C";
+    	if (s.equals("double")) return "D";
+    	if (s.equals("float")) return "F";
+    	if (s.equals("int")) return "I";
+    	if (s.equals("long")) return "J";
+    	if (s.equals("short")) return "S";
+    	if (s.equals("void")) return "V";
+    	if (s.equals("boolean")) return "Z";
+    	return s;
+    }
+    
     public static jq_Type parseType(String s) {
+    	s = convertPrimitive (s);
         if (s.length() == 1) {
             jq_Primitive t = (jq_Primitive) PrimordialClassLoader.loader.getBSType(s);
             if (t != null) return t;
@@ -106,7 +121,12 @@ public abstract class jq_Type implements AndersenType {
                 ++arrayDepth;
                 s = s.substring(0, s.length() - 2);
             }
-            if (!s.startsWith("[") && !s.endsWith(";"))
+            s = convertPrimitive (s);
+        	if (s.length() == 1) {
+        		jq_Primitive t = (jq_Primitive) PrimordialClassLoader.loader.getBSType(s);
+        		if (t == null)
+        			s = "L" + s + ";";
+        	} else if (!s.startsWith("[") && !s.endsWith(";"))
                 s = "L" + s + ";";
             while (--arrayDepth >= 0)
                 s = "[" + s;
