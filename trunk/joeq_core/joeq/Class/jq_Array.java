@@ -14,7 +14,7 @@ import Main.jq;
 import Run_Time.Unsafe;
 import UTF.Utf8;
 
-/*
+/**
  * @author  John Whaley
  * @version $Id$
  */

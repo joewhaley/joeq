@@ -42,7 +42,7 @@ public abstract class Throwable {
             if (m != null) {
                 declaringClass = m.getDeclaringClass().getJDKName();
                 methodName = m.getName().toString();
-                int code_offset = ip - cc.getEntrypoint();
+                int code_offset = ip - cc.getStart();
                 if (m != null) {
                     fileName = m.getDeclaringClass().getSourceFile().toString();
                     int bc_index = cc.getBytecodeIndex(ip);

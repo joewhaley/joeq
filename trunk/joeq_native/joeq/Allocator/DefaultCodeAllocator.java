@@ -29,8 +29,8 @@ public abstract class DefaultCodeAllocator {
     public static final void init() {
         def().init();
     }
-    public static final x86CodeBuffer getCodeBuffer(int estimated_size) {
-        x86CodeBuffer o = def().getCodeBuffer(estimated_size);
+    public static final x86CodeBuffer getCodeBuffer(int estimatedSize, int offset, int alignment) {
+        x86CodeBuffer o = def().getCodeBuffer(estimatedSize, offset, alignment);
         return o;
     }
     public static final void patchAbsolute(int/*CodeAddress*/ code, int/*HeapAddress*/ heap) {

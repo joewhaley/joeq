@@ -32,7 +32,7 @@ public class x86Assembler implements x86Constants {
         void patchTo(x86CodeBuffer mc, int target) {
             if (patchSize == 4) {
                 int v = mc.get4_endian(patchLocation - 4);
-                jq.Assert(v == 0x44444444 || v == 0x55555555 || v == 0x66666666 || v == 0x77777777, jq.hex8(v));
+                jq.Assert(v == 0x44444444 || v == 0x55555555 || v == 0x66666666 || v == 0x77777777, "Location: "+jq.hex(patchLocation-4)+" value: "+jq.hex8(v));
                 mc.put4_endian(patchLocation - 4, target - patchLocation);
             } else if (patchSize == 1) {
                 byte v = mc.get1(patchLocation - 1);
@@ -60,8 +60,8 @@ public class x86Assembler implements x86Constants {
     public void patch1(int offset, byte value) { mc.put1(offset, value); }
     public void patch4_endian(int offset, int value) { mc.put4_endian(offset, value); }
 
-    public x86Assembler(int num_targets, int est_size) {
-        mc = DefaultCodeAllocator.getCodeBuffer(est_size);
+    public x86Assembler(int num_targets, int est_size, int offset, int alignment) {
+        mc = DefaultCodeAllocator.getCodeBuffer(est_size, offset, alignment);
         if (TRACE) System.out.println("Assembler start address: "+jq.hex8(mc.getCurrentAddress()));
         branchtargetmap = new HashMap();
         branches_to_patch = new LightRelation();
@@ -454,6 +454,16 @@ public class x86Assembler implements x86Constants {
         ip += 4;
     }
 
+    public void skip(int nbytes) {
+        if (TRACE) System.out.println("skipping "+nbytes+" bytes");
+    	mc.skip(nbytes);
+    	ip += nbytes;
+    }
+    
+    public void setEntrypoint() {
+    	mc.setEntrypoint();
+    }
+    
     public static boolean fits(int val, int bits) {
         val >>= bits - 1;
         return val == 0;

@@ -16,6 +16,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -45,6 +46,11 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
     public static /*final*/ boolean TRACE = false;
     public static /*final*/ boolean WARN_STALE_CLASS_FILES = false;
     
+    //CR: used when trying to replace class contents.
+    public static boolean REPLACE_CLASS = false;
+    public static boolean TRACE_REPLACE_CLASS = false;
+    public static List classToReplace = new java.util.LinkedList(); // a set of Strings
+
     /**** INTERFACE ****/
     
     //// Always available
@@ -698,7 +704,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                     throw new ClassFormatError("constant pool entry "+(int)selfindex+", referred to by field this_class" +
                                                ", is wrong type tag (expected="+CONSTANT_Class+", actual="+getCPtag(selfindex)+")");
                 }
-                if (getCP(selfindex) != this) {
+                if (getCP(selfindex) != this && !this.getDesc().toString().startsWith("LREPLACE")) {
                     throw new ClassFormatError("expected class "+this+" but found class "+getCP(selfindex));
                 }
                 char superindex = (char)in.readUnsignedShort();
@@ -857,6 +863,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                 state = STATE_LOADING3;
                 
                 // if this is a class library, look for and load our mirror (implementation) class
+                // CR: il essaye tous les chemins possibles ou le mirror pourrait se trouver. Ie. ../common/.. ou sun_13/.. par ex.
                 Iterator impls = ClassLibInterface.i.getImplementationClassDescs(getDesc());
                 while (impls.hasNext()) {
                     Utf8 impl_utf = (Utf8)impls.next();
@@ -1025,6 +1032,25 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                 // all done!
                 if (TRACE) SystemInterface.debugmsg("Finished loading "+this);
                 state = STATE_LOADED;
+                
+                // classes to be replaced see the system loading a clone which contains the new implementation and
+                // whose name is set to "REPLACE<originalclassName>".
+                // If the currently loading class is a Replacing one, do the replacement.
+                // Old below refers to the class being replaced.
+                String thisDesc = this.getDesc().toString();
+                String thisName = this.getName();
+                if (thisDesc.startsWith("LREPLACE")) {
+                    Utf8 oldDesc = Utf8.get("L" + thisDesc.substring( 8 , thisDesc.length() )); // remove the 'LREPLACE' in name and restore 'L'
+                    Clazz.jq_Type old = ClassLibInterface.i.getOrCreateType(class_loader , oldDesc) ;
+                    jq.Assert(old instanceof jq_Class);
+                    if (((jq_Class)old).getState() < STATE_LOADED) {
+                        // old has not been loaded yet, since it was not in the image
+                        if (TRACE_REPLACE_CLASS) SystemInterface.debugmsg("REPLACING Class: " + old.getDesc() + ". This class was not in the original image: doing nothing!");
+                        ClassLibInterface.i.unloadType(class_loader , old) ;
+                    } else {
+                    	replaceMethodIn((jq_Class) old);
+                    }
+                }
             }
             catch (UTFDataFormatError x) {
                 //state = STATE_LOADERROR;
@@ -1040,6 +1066,201 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                 throw new ClassFormatError("bad constant pool index");
             }
         } // synchronized
+    }
+    
+    // old : the class already present in the system whose members have to be replaced
+    // this: the substitute, ie. the new version that contains the members to be added to OLD.
+    private void replaceMethodIn(jq_Class old) {
+        // cpa will manipulate and add elements to old.const_pool
+        jq_ConstantPool.ConstantPoolAdder cpa =
+            new jq_ConstantPool.ConstantPoolAdder(old.const_pool);
+
+        // visit all STATIC methods of OLD to see
+        // whether they have changed compared to those of NEW
+        for (int i = 0;
+            (old.static_methods != null) && i < old.static_methods.length;
+            ++i) {
+            jq_StaticMethod old_m = old.static_methods[i];
+            jq_NameAndDesc nd = old_m.getNameAndDesc();
+            jq_StaticMethod new_m = this.getDeclaredStaticMethod(nd);
+            if (new_m != null) {
+                // verify if method has changed from NEW to OLD
+                byte[] new_bc = new_m.getBytecode();
+                byte[] old_bc = old_m.getBytecode();
+                //good enough to check whether a method has changed.
+                // Comparing both byte arrays byte by byte does not work!
+                if (new_bc.length == old_bc.length)
+                    continue;
+
+                // update OLD according to NEW
+                if (TRACE_REPLACE_CLASS)
+                    Run_Time.SystemInterface.debugmsg(
+                        "\n\nIn REPLACE: STARTING REPLACEMENT of:\t" + old_m);
+
+                jq_NameAndDesc old_m_nd = old_m.getNameAndDesc();
+
+                Bytecodes.InstructionList il;
+                if (new_bc == null) {
+                    jq.UNREACHABLE("Method with empty bytecode !?");
+                } else {
+                    il = new Bytecodes.InstructionList(new_m);
+
+                    // update constant pool references in instructions, and add them to our constant pool.
+                    if (TRACE_REPLACE_CLASS)
+                        SystemInterface.debugmsg(
+                            "\tIn Replace: Rebuilding CP for static method "
+                                + new_m);
+                    old.rewriteMethodForReplace(cpa, il);
+                    cpa.finish();
+                    // as a side-effect cpa will set OLD's cp to its new value.
+                    new_m.setCode(il, cpa);
+
+                    old.remakeAttributes(cpa); // reset sourcefile
+
+                    if (TRACE_REPLACE_CLASS)
+                        SystemInterface.debugmsg(
+                            "\tIn Replace: Finished Rebuilding CP for static method "
+                                + new_m);
+
+                    // rename and rattach new_m to old
+                    new_m.setNameAndDesc(old_m_nd);
+                    old.addDeclaredMember(old_m_nd, new_m);
+                    new_m.setDeclaringClass(old);
+
+                    //preparing new method
+                    new_m.prepare(); //state = prepared.
+
+                    //compile
+                    if (TRACE_REPLACE_CLASS)
+                        SystemInterface.debugmsg(
+                            "\tIn REPLACE: Compiling stub for: " + new_m);
+                    new_m.compile();
+
+                    old.static_methods[i] = new_m;
+                    old_m.default_compiled_version.redirect(new_m.default_compiled_version);
+                    old_m.default_compiled_version =
+                        new_m.default_compiled_version;
+
+                    if (TRACE_REPLACE_CLASS)
+                        SystemInterface.debugmsg(
+                            "\n\nIn Replace: DONE REPLACEMENT for STATIC method "
+                                + old_m);
+                }
+            } else {
+                //TODO:
+                // user wants to remove a method from OLD
+                // not handled.
+            }
+        } // end static_methods
+
+        // visit all INSTANCE methods of OLD to see whether they have changed compared to those of NEW
+        for (int i = 0;
+            (old.declared_instance_methods != null)
+                && i < old.declared_instance_methods.length;
+            ++i) {
+            jq_InstanceMethod old_m = old.declared_instance_methods[i];
+            jq_NameAndDesc nd = old_m.getNameAndDesc();
+            jq_InstanceMethod new_m = this.getDeclaredInstanceMethod(nd);
+            if (new_m != null) {
+                // verify if method has changed from NEW to OLD
+                byte[] new_bc = new_m.getBytecode();
+                byte[] old_bc = old_m.getBytecode();
+                //good enough to check whether a method has changed.
+                // Comparing both byte arrays byte by byte does not work!
+                if (new_bc.length == old_bc.length)
+                    continue;
+                // take next method
+
+                if (TRACE_REPLACE_CLASS)
+                    Run_Time.SystemInterface.debugmsg(
+                        "\n\nIn REPLACE: STARTING REPLACEMENT of:\t" + old_m);
+
+                //info useful for new_m
+                jq_NameAndDesc old_m_nd = old_m.getNameAndDesc();
+
+                Bytecodes.InstructionList il;
+                if (new_bc == null) {
+                    jq.UNREACHABLE("Method with empty bytecode !?");
+                } else {
+                    // extract new instructions.
+                    il = new Bytecodes.InstructionList(new_m);
+
+                    // update constant pool references in the instructions, and add them to our constant pool.
+                    if (TRACE_REPLACE_CLASS)
+                        SystemInterface.debugmsg(
+                            "\tIn Replace: Rebuilding CP for instance method "
+                                + new_m);
+                    old.rewriteMethodForReplace(cpa, il);
+                    //collect new entries for cp
+                    cpa.finish(); //side-effect: commit new entries into cp.
+                    new_m.setCode(il, cpa); // update ref. to new entries.
+
+                    old.remakeAttributes(cpa); // reset sourcefile
+                    //old.getSourceFile();
+
+                    if (TRACE_REPLACE_CLASS)
+                        SystemInterface.debugmsg(
+                            "\tIn Replace: Finished Rebuilding CP for instance method "
+                                + new_m);
+
+                    //make new appear as old.
+                    new_m.setNameAndDesc(old_m_nd);
+                    old.addDeclaredMember(old_m_nd, new_m);
+                    new_m.setDeclaringClass(old);
+
+                    if (new_m.isInitializer() || new_m.isPrivate()) {
+                        new_m.prepare();
+                        //compile
+                        if (TRACE_REPLACE_CLASS)
+                            SystemInterface.debugmsg(
+                                "\tIn REPLACE: Compiling stub for: " + new_m);
+                        new_m.compile();
+                    } else //ovverridable methods.
+                        {
+                        //prepare new_m to really become old_m.
+                        //get old_m position and  get new entrypoint in vtable
+                        int old_m_offset = old_m.getOffset();
+                        new_m.prepare(old_m_offset);
+                        //keep old_m offset and set state = prepared.
+                        //compile
+                        if (TRACE_REPLACE_CLASS)
+                            SystemInterface.debugmsg(
+                                "\tIn REPLACE: Compiling stub for: " + new_m);
+                        new_m.compile();
+
+                        int index = (old_m_offset >> 2) - 1;
+                        //old_m index in the array of virtualmethods.
+                        jq.Assert(old.virtual_methods[index] == old_m);
+                        old.virtual_methods[index] = new_m;
+                        int entryPoint =
+                            new_m.getDefaultCompiledVersion().getEntrypoint();
+                        ((int[]) old.vtable)[index + 1] = entryPoint;
+                        //+1 since vt[0] is this
+                    }
+
+                    old.declared_instance_methods[i] = new_m;
+
+                    old_m.default_compiled_version.redirect(new_m.default_compiled_version);
+                    old_m.default_compiled_version =
+                        new_m.default_compiled_version;
+
+                    if (TRACE_REPLACE_CLASS)
+                        SystemInterface.debugmsg(
+                            "\n\nIn Replace: DONE REPLACING instance method "
+                                + old_m);
+                }
+            } else {
+                //TODO:
+                // user wants to remove a method from OLD
+                // not handled yet
+            }
+        } // end declared_instances_methods
+
+        {
+            //TODO:
+            // visit all methods in new to see whether there are completely new methods
+            // that were NOT present before in old.
+        }
     }
     
     public boolean doesConstantPoolContain(Object o) {
@@ -1159,6 +1380,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         return stub;
     }
     
+    // that: mirror
     public void merge(jq_Class that) {
         // initialize constant pool rebuilder
         final jq_ConstantPool.ConstantPoolRebuilder cpr = rebuildConstantPool(true);
@@ -1238,6 +1460,9 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         }
         
         // visit all instance methods.
+        //
+        // CR: visite toutes les methodes du mirror, dans le but de trouver celles qui sont a ajouter
+        // a this. Une fois trouvees, ces methodes sont stockees dans newInstancesMethods.
         LinkedHashMap newInstanceMethods = new LinkedHashMap();
         for (int i=0; i<that.declared_instance_methods.length; ++i) {
             jq_InstanceMethod that_m = that.declared_instance_methods[i];
@@ -1276,11 +1501,14 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                 that_m.unload(); Object b = that.members.remove(that_m.getNameAndDesc());
                 if (TRACE) SystemInterface.debugmsg("Removed member "+that_m.getNameAndDesc()+" from member set of "+that+": "+b);
             }
+            //CR: load porte mal son nom ici, car en fait il fait des choses tres basiques comme mettre le correct access code,
+            // stack depth etc...
             this_m.load(that_m);
             
             // cache the instruction list for later.
             newInstanceMethods.put(this_m, il);
         }
+        // CR: se contente de ramasser les instructions des methodes declarees dans la lib java sans celles qui viennent de Classlib.
         for (int i=0; i<this.declared_instance_methods.length; ++i) {
             jq_InstanceMethod this_m = this.declared_instance_methods[i];
             jq_Member this_m2 = this.getDeclaredMember(this_m.getNameAndDesc());
@@ -1448,6 +1676,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         this.const_pool = new_cp;
         getSourceFile(); // check for bug.
         if (TRACE) SystemInterface.debugmsg("Finished rebuilding constant pool.");
+        //CR: ??? pourquoi faire ce qui suit a that?
         that.super_class.removeSubclass(that);
         for (int i=0; i<that.declared_interfaces.length; ++i) {
             jq_Class di = that.declared_interfaces[i];
@@ -1481,6 +1710,26 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                 } else if (o instanceof jq_Member) {
                     x.setObject(o = ClassLib.ClassLibInterface.convertClassLibCPEntry((jq_Member)o));
                     cpr.addMember((jq_Member)o);
+                } else {
+                    cpr.addOther(o);
+                }
+            }
+        });
+    }
+    
+    private void rewriteMethodForReplace(jq_ConstantPool.ConstantPoolRebuilder cp,
+                                         Bytecodes.InstructionList il) {
+        final jq_ConstantPool.ConstantPoolRebuilder cpr = cp;
+        il.accept(new Bytecodes.EmptyVisitor() {
+            public void visitCPInstruction(Bytecodes.CPInstruction x) {
+                Object o = x.getObject();
+                if (o instanceof String) {
+                    cpr.addString((String) o);
+                } else if (o instanceof jq_Type) {
+                    if (o instanceof jq_Reference)
+                        cpr.addType((jq_Type) o);
+                } else if (o instanceof jq_Member) {
+                    cpr.addMember((jq_Member) o);
                 } else {
                     cpr.addOther(o);
                 }

@@ -98,7 +98,7 @@ public abstract class ExceptionDeliverer {
             String s;
             if (cc != null) {
                 jq_Method m = cc.getMethod();
-                int code_offset = ip - cc.getEntrypoint();
+                int code_offset = ip - cc.getStart();
                 if (m != null) {
                     Utf8 sourcefile = m.getDeclaringClass().getSourceFile();
                     int bc_index = cc.getBytecodeIndex(ip);
@@ -123,7 +123,7 @@ public abstract class ExceptionDeliverer {
             String s;
             if (cc != null) {
                 jq_Method m = cc.getMethod();
-                int code_offset = ip - cc.getEntrypoint();
+                int code_offset = ip - cc.getStart();
                 if (m != null) {
                     Utf8 sourcefile = m.getDeclaringClass().getSourceFile();
                     int bc_index = cc.getBytecodeIndex(ip);
@@ -148,7 +148,7 @@ public abstract class ExceptionDeliverer {
             String s;
             if (cc != null) {
                 jq_Method m = cc.getMethod();
-                int code_offset = ip - cc.getEntrypoint();
+                int code_offset = ip - cc.getStart();
                 if (m != null) {
                     Utf8 sourcefile = m.getDeclaringClass().getSourceFile();
                     int bc_index = cc.getBytecodeIndex(ip);
