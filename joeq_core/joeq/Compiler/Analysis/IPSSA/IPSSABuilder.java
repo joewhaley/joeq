@@ -1033,23 +1033,30 @@ public class IPSSABuilder implements Runnable {
     public static class Main {
         static boolean _verbose = false;
         
-        public static void main(String[] args) throws IOException {
+        public static void main(String[] args) {
             HostedVM.initialize();
 
             Compil3r.BytecodeAnalysis.TypeAnalysis.classesToAnalyze = new HashSet();
             Iterator i = null; String memberName = null;
             for (int x=0; x<args.length; ++x) {
                 if (args[x].equals("-file")) {
-                    BufferedReader br = new BufferedReader(new FileReader(args[++x]));
-                    LinkedList list = new LinkedList();
-                    for (;;) {
-                        String s = br.readLine();
-                        if (s == null) break;
-                        if (s.length() == 0) continue;
-                        if (s.startsWith("%")) continue;
-                        list.add(s);
+                    try {
+                        BufferedReader br = new BufferedReader(new FileReader(args[++x]));
+                        LinkedList list = new LinkedList();
+                        for (;;) {
+                            String s = br.readLine();
+                            if (s == null) break;
+                            if (s.length() == 0) continue;
+                            if (s.startsWith("%")) continue;
+                            if (s.startsWith("#")) continue;
+                            list.add(s);
+                        }
+                        i = new AppendIterator(list.iterator(), i);
+                    }catch(IOException e) {
+                        e.printStackTrace();
+                        System.exit(2);
                     }
-                    i = new AppendIterator(list.iterator(), i);
+                    
                 } else
                 if (args[x].endsWith("*")) {
                     i = new AppendIterator(PrimordialClassLoader.loader.listPackage(args[x].substring(0, args[x].length()-1)), i);
@@ -1058,25 +1065,21 @@ public class IPSSABuilder implements Runnable {
                     usage();
                     System.exit(2);                    
                 }else {
-                    int j = args[x].lastIndexOf('.');
-                    String classname;
-                    if ((j != -1) && !args[x].endsWith(".class")) {
-                        classname = args[x].substring(0, j);
-                        memberName = args[x].substring(j+1);
-                    } else {
-                        classname = args[x];
-                    }
+                    String classname = args[x];
                     i = new AppendIterator(Collections.singleton(classname).iterator(), i);
                 }
             } // end argument processing
-            if (i == null) i = Collections.singleton("jq.class").iterator();
+            if (i == null) {
+                System.err.println("At least one class is requred for execution");
+                System.exit(2);
+            }
         
             LinkedList classes = new LinkedList();
             while (i.hasNext()) {
                 String classname = (String)i.next();
                 if (classname.endsWith(".properties")) continue;
                 if (classname.endsWith(".class")) classname = classname.substring(0, classname.length()-6);
-                String classdesc = "L"+classname+";";
+                String classdesc = "L" + classname.replace('.', '/') + ";";
                 jq_Class c = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType(classdesc);
                 System.err.println("Preparing class [" + classdesc + "] ...");
                 c.prepare();
