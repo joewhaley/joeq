@@ -3722,8 +3722,10 @@ public class PA {
         Assert._assert(!m.isPrivate());
         Nmap.get(m);
         jq_Class c = m.getDeclaringClass().getSuperclass();
-        jq_Method m2 = c.getVirtualMethod(m.getNameAndDesc());
-        if (m2 != null) addToNmap(m2);
+        if (c != null) {
+            jq_Method m2 = c.getVirtualMethod(m.getNameAndDesc());
+            if (m2 != null) addToNmap(m2);
+        }
         jq_Class[] cs = m.getDeclaringClass().getDeclaredInterfaces();
         for (int i = 0; i < cs.length; ++i) {
             jq_Class interf = cs[i];
