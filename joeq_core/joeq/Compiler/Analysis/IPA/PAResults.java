@@ -792,6 +792,24 @@ public class PAResults {
     /***** STATISTICS *****/
     
     public void printStats() {
+        System.out.println("Number of types="+r.Tmap.size());
+        System.out.println("Number of methods="+r.Mmap.size());
+        int bytecodes = 0;
+        for (Iterator i = r.Mmap.iterator(); i.hasNext(); ) {
+            jq_Method m = (jq_Method) i.next();
+            if (m.getBytecode() != null)
+                bytecodes += m.getBytecode().length;
+        }
+        System.out.println("Number of bytecodes="+bytecodes);
+        System.out.println("Number of virtual call sites="+r.Imap.size());
+        System.out.println("Number of virtual call names="+r.Nmap.size());
+        System.out.println("Number of variables="+r.Vmap.size());
+        System.out.println("Number of heap objects="+r.Hmap.size());
+        System.out.println("Number of fields="+r.Fmap.size());
+        //System.out.println("Number of stores="+r.S.satCount(r.V1.set().andWith(r.F.set()).andWith(r.V2.set())));
+        //System.out.println("Number of loads="+r.L.satCount(r.V1.set().andWith(r.F.set()).andWith(r.V2.set())));
+        System.out.println("Number of callgraph edges="+r.IE.satCount(r.Iset.and(r.Mset)));
+        
         System.out.println("Thread-local objects: "+countThreadLocalObjects());
         {
             long sum = 0L; int n = 0;
