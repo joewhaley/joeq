@@ -94,7 +94,7 @@ public class BogusSummaryProvider {
             
             boolean allMatch = true;
             int base = 0;
-            if(clazz == fakeHashMap){
+            if(clazz == fakeHashMap || clazz == fakeVector){
                 base = 1;                
             }
             if(originalMethod instanceof jq_Initializer){                
