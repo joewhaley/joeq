@@ -3,12 +3,12 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Util.Collections;
 
-import joeq.Util.Collections.SortedArraySet;
-import junit.framework.TestCase;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Vector;
+import junit.framework.TestCase;
+import jwutil.collections.SortedArraySet;
 
 /**
  * The <code>SetTest</code> class tests a <code>Set</code>

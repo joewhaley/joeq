@@ -29,8 +29,8 @@ import joeq.Runtime.Reflection;
 import joeq.Runtime.StackCodeWalker;
 import joeq.Runtime.SystemInterface;
 import joeq.Scheduler.jq_NativeThread;
-import joeq.Util.Assert;
-import joeq.Util.Strings;
+import jwutil.strings.Strings;
+import jwutil.util.Assert;
 
 /**
  * @author John Whaley <jwhaley@alum.mit.edu>

@@ -17,7 +17,7 @@ import joeq.Memory.StackAddress;
 import joeq.Runtime.Debug;
 import joeq.Runtime.StackCodeWalker;
 import joeq.Runtime.SystemInterface;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
 
 /**
  * SimpleAllocator is a simple version of a heap allocator.

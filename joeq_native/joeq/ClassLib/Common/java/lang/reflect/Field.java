@@ -3,7 +3,6 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.ClassLib.Common.java.lang.reflect;
 
-import joeq.ClassLib.Common.ClassUtils;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Field;
 import joeq.Class.jq_InstanceField;
@@ -12,11 +11,13 @@ import joeq.Class.jq_Primitive;
 import joeq.Class.jq_Reference;
 import joeq.Class.jq_StaticField;
 import joeq.Class.jq_Type;
+import joeq.ClassLib.Common.ClassUtils;
 import joeq.Main.jq;
 import joeq.Runtime.Reflection;
 import joeq.Runtime.TypeCheck;
 import joeq.UTF.Utf8;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
+import jwutil.util.Convert;
 
 /**
  * Field
@@ -99,7 +100,7 @@ public class Field extends AccessibleObject {
             if (t == jq_Primitive.FLOAT) return new Float(Reflection.getstatic_F(sf));
             if (t == jq_Primitive.LONG) return new Long(Reflection.getstatic_L(sf));
             if (t == jq_Primitive.DOUBLE) return new Double(Reflection.getstatic_D(sf));
-            if (t == jq_Primitive.BOOLEAN) return Boolean.valueOf(Reflection.getstatic_Z(sf));
+            if (t == jq_Primitive.BOOLEAN) return Convert.getBoolean(Reflection.getstatic_Z(sf));
             if (t == jq_Primitive.BYTE) return new Byte(Reflection.getstatic_B(sf));
             if (t == jq_Primitive.SHORT) return new Short(Reflection.getstatic_S(sf));
             if (t == jq_Primitive.CHAR) return new Character(Reflection.getstatic_C(sf));
@@ -115,7 +116,7 @@ public class Field extends AccessibleObject {
             if (t == jq_Primitive.FLOAT) return new Float(Reflection.getfield_F(obj, f));
             if (t == jq_Primitive.LONG) return new Long(Reflection.getfield_L(obj, f));
             if (t == jq_Primitive.DOUBLE) return new Double(Reflection.getfield_D(obj, f));
-            if (t == jq_Primitive.BOOLEAN) return new Boolean(Reflection.getfield_Z(obj, f));
+            if (t == jq_Primitive.BOOLEAN) return Convert.getBoolean(Reflection.getfield_Z(obj, f));
             if (t == jq_Primitive.BYTE) return new Byte(Reflection.getfield_B(obj, f));
             if (t == jq_Primitive.SHORT) return new Short(Reflection.getfield_S(obj, f));
             if (t == jq_Primitive.CHAR) return new Character(Reflection.getfield_C(obj, f));

@@ -14,10 +14,10 @@ import joeq.Memory.Address;
 import joeq.Memory.CodeAddress;
 import joeq.Memory.HeapAddress;
 import joeq.Runtime.SystemInterface;
+import joeq.Runtime.Unsafe;
 import joeq.Runtime.SystemInterface.ExternalLink;
 import joeq.Runtime.SystemInterface.Library;
-import joeq.Runtime.Unsafe;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
 
 /**
  * UnixFileSystem

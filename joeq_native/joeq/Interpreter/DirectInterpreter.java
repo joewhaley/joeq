@@ -7,7 +7,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-
 import joeq.Allocator.ObjectLayout;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
@@ -30,9 +29,9 @@ import joeq.Runtime.SystemInterface;
 import joeq.Runtime.TypeCheck;
 import joeq.Runtime.Unsafe;
 import joeq.UTF.Utf8;
-import joeq.Util.Assert;
-import joeq.Util.Convert;
-import joeq.Util.Collections.FilterIterator;
+import jwutil.collections.Filter;
+import jwutil.util.Assert;
+import jwutil.util.Convert;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>
@@ -47,7 +46,7 @@ public class DirectInterpreter extends BytecodeInterpreter {
 
     public static final Set bad_classes;
     public static final Set bad_methods;
-    public static final FilterIterator.Filter interpret_filter;
+    public static final Filter interpret_filter;
     static {
         bad_classes = new HashSet();
         bad_classes.add(SystemInterface._class);
@@ -55,7 +54,7 @@ public class DirectInterpreter extends BytecodeInterpreter {
         bad_classes.add(PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Runtime/ExceptionDeliverer;"));
         bad_methods = new HashSet();
         bad_methods.add(joeq.Runtime.Arrays._multinewarray);
-        interpret_filter = new FilterIterator.Filter() {
+        interpret_filter = new Filter() {
             public boolean isElement(Object o) {
                 jq_Method m = (jq_Method)o;
                 if (m.getBytecode() == null) return false;

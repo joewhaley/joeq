@@ -3,10 +3,10 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Linker.ELF;
 
-import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.List;
+import java.io.IOException;
+import java.io.RandomAccessFile;
 
 /**
  *

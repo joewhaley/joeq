@@ -4,8 +4,7 @@
 package joeq.Linker.ELF;
 
 import java.io.IOException;
-
-import joeq.Util.Assert;
+import jwutil.util.Assert;
 
 /**
  *

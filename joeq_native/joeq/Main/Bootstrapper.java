@@ -5,7 +5,6 @@ package joeq.Main;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -35,8 +34,6 @@ import joeq.Class.Delegates;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
-import joeq.Class.jq_ClassFileConstants;
-import joeq.Class.jq_CompiledCode;
 import joeq.Class.jq_Member;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_Reference;
@@ -54,8 +51,8 @@ import joeq.Runtime.Reflection;
 import joeq.Runtime.SystemInterface;
 import joeq.Runtime.Unsafe;
 import joeq.UTF.Utf8;
-import joeq.Util.Assert;
-import joeq.Util.Collections.LinearSet;
+import jwutil.collections.LinearSet;
+import jwutil.util.Assert;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>

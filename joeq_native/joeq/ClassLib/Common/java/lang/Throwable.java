@@ -4,7 +4,7 @@
 package joeq.ClassLib.Common.java.lang;
 
 import joeq.Runtime.ExceptionDeliverer;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
 
 /**
  * Throwable

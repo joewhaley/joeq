@@ -3,13 +3,14 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.ClassLib.ibm13_linux;
 
+import java.util.Collections;
 import java.util.Iterator;
-
-import joeq.Runtime.ObjectTraverser;
 import joeq.Class.PrimordialClassLoader;
-import joeq.ClassLib.ClassLibInterface;
 import joeq.Class.jq_Class;
+import joeq.ClassLib.ClassLibInterface;
 import joeq.Main.jq;
+import joeq.Runtime.ObjectTraverser;
+import jwutil.collections.AppendIterator;
 
 /**
  * Interface
@@ -26,8 +27,8 @@ public final class Interface extends joeq.ClassLib.Common.InterfaceImpl {
         if (ClassLibInterface.USE_JOEQ_CLASSLIB && (desc.toString().startsWith("Ljava/") ||
                                                     desc.toString().startsWith("Lcom/ibm/jvm/"))) {
             joeq.UTF.Utf8 u = joeq.UTF.Utf8.get("Ljoeq/ClassLib/ibm13_linux/"+desc.toString().substring(1));
-            return new joeq.Util.Collections.AppendIterator(super.getImplementationClassDescs(desc),
-                                            java.util.Collections.singleton(u).iterator());
+            return new AppendIterator(super.getImplementationClassDescs(desc),
+                                      Collections.singleton(u).iterator());
         }
         return super.getImplementationClassDescs(desc);
     }

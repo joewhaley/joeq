@@ -3,8 +3,6 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Linker.ELF;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -14,10 +12,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
-
-import joeq.Util.Assert;
-import joeq.Util.Strings;
-import joeq.Util.Collections.AppendIterator;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import jwutil.collections.AppendIterator;
+import jwutil.strings.Strings;
+import jwutil.util.Assert;
 
 /**
  * Defines a section in an ELF file.

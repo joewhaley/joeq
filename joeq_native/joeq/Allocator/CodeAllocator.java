@@ -7,7 +7,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
-
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_BytecodeMap;
 import joeq.Class.jq_Class;

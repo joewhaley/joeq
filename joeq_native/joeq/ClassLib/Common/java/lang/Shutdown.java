@@ -4,7 +4,7 @@
 package joeq.ClassLib.Common.java.lang;
 
 import joeq.Runtime.SystemInterface;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
 
 /**
  * Shutdown

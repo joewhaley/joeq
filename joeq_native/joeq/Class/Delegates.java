@@ -6,7 +6,6 @@ package joeq.Class;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-
 import joeq.Allocator.CodeAllocator;
 import joeq.Allocator.DefaultHeapAllocator;
 import joeq.Assembler.DirectBindCall;
@@ -19,8 +18,8 @@ import joeq.Memory.HeapAddress;
 import joeq.Memory.StackAddress;
 import joeq.Runtime.Debug;
 import joeq.Runtime.ExceptionDeliverer;
-import joeq.Util.Collections.FilterIterator;
-import joeq.Util.Collections.Pair;
+import jwutil.collections.Filter;
+import jwutil.collections.Pair;
 
 /**
  * Delegates
@@ -99,13 +98,13 @@ public class Delegates implements jq_ClassFileConstants {
         if (c == null) c = getCompiler("joeq.Compiler.Reference.x86.x86ReferenceCompiler.Factory");
         default_compiler = c;
     }
-    public static void registerCompiler(FilterIterator.Filter f, CompilerInterface c) {
+    public static void registerCompiler(Filter f, CompilerInterface c) {
         compilers.add(0, new Pair(f, c));
     }
     public static CompilerInterface getCompiler(jq_Method m) {
         for (Iterator i=compilers.iterator(); i.hasNext(); ) {
             Pair p = (Pair) i.next();
-            FilterIterator.Filter f = (FilterIterator.Filter) p.get(0);
+            Filter f = (Filter) p.get(0);
             if (f.isElement(m))
                 return (CompilerInterface) p.get(1);
         }

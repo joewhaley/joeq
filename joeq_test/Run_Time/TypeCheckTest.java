@@ -12,8 +12,8 @@ import joeq.Class.jq_Type;
 import joeq.Compiler.CompilationConstants;
 import joeq.Main.HostedVM;
 import joeq.Runtime.TypeCheck;
-import joeq.Util.Collections.SizedArrayList;
 import junit.framework.TestCase;
+import jwutil.collections.SizedArrayList;
 
 /**
  * Tests for TypeCheck 

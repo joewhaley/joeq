@@ -7,8 +7,8 @@ import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
 import joeq.Memory.Address;
 import joeq.Memory.HeapAddress;
-import joeq.Util.Assert;
-import joeq.Util.Strings;
+import jwutil.strings.Strings;
+import jwutil.util.Assert;
 
 /**
  * BootstrapHeapAddress

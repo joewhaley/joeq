@@ -17,7 +17,7 @@ import joeq.Runtime.SystemInterface;
 import joeq.Runtime.Unsafe;
 import joeq.Runtime.SystemInterface.ExternalLink;
 import joeq.Runtime.SystemInterface.Library;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
 
 /**
  * TimeZone

@@ -6,7 +6,7 @@ package joeq.ClassLib.Common.java.io;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Type;
 import joeq.Runtime.Reflection;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
 
 /**
  * ObjectStreamClass

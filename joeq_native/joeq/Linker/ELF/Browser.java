@@ -1,9 +1,9 @@
 package joeq.Linker.ELF;
 
-import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.util.Iterator;
 import java.util.List;
+import java.io.IOException;
+import java.io.RandomAccessFile;
 
 /**
  * @author John Whaley

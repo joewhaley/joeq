@@ -3,16 +3,16 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.ClassLib.Common.java.lang.reflect;
 
-import joeq.ClassLib.ClassLibInterface;
-import joeq.ClassLib.Common.ClassUtils;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Initializer;
 import joeq.Class.jq_NameAndDesc;
 import joeq.Class.jq_Type;
+import joeq.ClassLib.ClassLibInterface;
+import joeq.ClassLib.Common.ClassUtils;
 import joeq.Main.jq;
 import joeq.Runtime.Reflection;
 import joeq.UTF.Utf8;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
 
 /**
  * Constructor

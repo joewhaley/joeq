@@ -12,7 +12,7 @@ import joeq.Memory.StackAddress;
 import joeq.Runtime.ExceptionDeliverer;
 import joeq.Runtime.SystemInterface;
 import joeq.Runtime.Unsafe;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
 
 /**
  * @author  John Whaley <jwhaley@alum.mit.edu>

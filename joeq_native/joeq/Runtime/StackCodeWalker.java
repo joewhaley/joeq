@@ -5,14 +5,13 @@ package joeq.Runtime;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-
 import joeq.Allocator.CodeAllocator;
 import joeq.Class.jq_CompiledCode;
 import joeq.Class.jq_Method;
 import joeq.Memory.CodeAddress;
 import joeq.Memory.StackAddress;
 import joeq.UTF.Utf8;
-import joeq.Util.Strings;
+import jwutil.strings.Strings;
 
 /**
  * @author  John Whaley <jwhaley@alum.mit.edu>

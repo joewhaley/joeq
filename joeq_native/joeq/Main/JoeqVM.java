@@ -4,14 +4,13 @@
 package joeq.Main;
 
 import java.util.Iterator;
-
 import joeq.Allocator.SimpleAllocator;
 import joeq.Bootstrap.MethodInvocation;
 import joeq.Class.PrimordialClassLoader;
-import joeq.ClassLib.ClassLibInterface;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_NameAndDesc;
 import joeq.Class.jq_StaticMethod;
+import joeq.ClassLib.ClassLibInterface;
 import joeq.Compiler.CompilationState;
 import joeq.Compiler.CompilationState.DynamicCompilation;
 import joeq.Runtime.Debug;
@@ -22,8 +21,8 @@ import joeq.Scheduler.jq_MainThread;
 import joeq.Scheduler.jq_NativeThread;
 import joeq.Scheduler.jq_Thread;
 import joeq.UTF.Utf8;
-import joeq.Util.Assert;
-import joeq.Util.Strings;
+import jwutil.strings.Strings;
+import jwutil.util.Assert;
 
 /**
  * @author  John Whaley <jwhaley@alum.mit.edu>

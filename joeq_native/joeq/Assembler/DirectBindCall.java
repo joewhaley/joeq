@@ -5,12 +5,11 @@ package joeq.Assembler;
 
 import java.io.DataOutput;
 import java.io.IOException;
-
 import joeq.Allocator.DefaultCodeAllocator;
 import joeq.Class.jq_CompiledCode;
 import joeq.Class.jq_Method;
 import joeq.Memory.CodeAddress;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
 
 /**
  * DirectBindCall

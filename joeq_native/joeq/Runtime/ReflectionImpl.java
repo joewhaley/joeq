@@ -3,6 +3,7 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Runtime;
 
+import java.util.Set;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -10,10 +11,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.Set;
-
 import joeq.Class.PrimordialClassLoader;
-import joeq.ClassLib.ClassLibInterface;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_ClassInitializer;
 import joeq.Class.jq_Field;
@@ -28,11 +26,13 @@ import joeq.Class.jq_Reference;
 import joeq.Class.jq_StaticField;
 import joeq.Class.jq_StaticMethod;
 import joeq.Class.jq_Type;
+import joeq.ClassLib.ClassLibInterface;
 import joeq.Main.jq;
 import joeq.Memory.Address;
 import joeq.Memory.HeapAddress;
 import joeq.UTF.Utf8;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
+import jwutil.util.Convert;
 
 /**
  * @author  John Whaley <jwhaley@alum.mit.edu>
@@ -714,7 +714,7 @@ uphere:
         if (t == jq_Primitive.BYTE) return new Byte(getfield_B(o, f));
         if (t == jq_Primitive.CHAR) return new Character(getfield_C(o, f));
         if (t == jq_Primitive.SHORT) return new Short(getfield_S(o, f));
-        if (t == jq_Primitive.BOOLEAN) return Boolean.valueOf(getfield_Z(o, f));
+        if (t == jq_Primitive.BOOLEAN) return Convert.getBoolean(getfield_Z(o, f));
         Assert.UNREACHABLE();
         return null;
     }
@@ -802,7 +802,7 @@ uphere:
     public void putfield_Z(Object o, jq_InstanceField f, boolean v) {
         Assert._assert(f.getType() == jq_Primitive.BOOLEAN);
         if (!jq.RunningNative) {
-            Reflection.obj_trav.putInstanceFieldValue(o, f, Boolean.valueOf(v));
+            Reflection.obj_trav.putInstanceFieldValue(o, f, Convert.getBoolean(v));
             return;
         }
         Assert._assert(TypeCheck.isAssignable(jq_Reference.getTypeOf(o), f.getDeclaringClass()));
@@ -947,7 +947,7 @@ uphere:
     public void putstatic_Z(jq_StaticField f, boolean v) {
         Assert._assert(f.getType() == jq_Primitive.BOOLEAN);
         if (!jq.RunningNative) {
-            Reflection.obj_trav.putStaticFieldValue(f, Boolean.valueOf(v));
+            Reflection.obj_trav.putStaticFieldValue(f, Convert.getBoolean(v));
             return;
         }
         f.getDeclaringClass().setStaticData(f, v?1:0);

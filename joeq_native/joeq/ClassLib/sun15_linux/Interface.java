@@ -3,15 +3,16 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.ClassLib.sun15_linux;
 
+import java.util.Collections;
 import java.util.Iterator;
-
-import joeq.Runtime.ObjectTraverser;
 import joeq.Class.PrimordialClassLoader;
-import joeq.ClassLib.ClassLibInterface;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_InstanceField;
 import joeq.Class.jq_StaticField;
+import joeq.ClassLib.ClassLibInterface;
 import joeq.Main.jq;
+import joeq.Runtime.ObjectTraverser;
+import jwutil.collections.AppendIterator;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>
@@ -27,8 +28,8 @@ public class Interface extends joeq.ClassLib.sun142_linux.Interface {
                 (desc.toString().startsWith("Ljava/") ||
                  desc.toString().startsWith("Lsun/misc/"))) {
             joeq.UTF.Utf8 u = joeq.UTF.Utf8.get("LClassLib/sun15_linux/"+desc.toString().substring(1));
-            return new joeq.Util.Collections.AppendIterator(super.getImplementationClassDescs(desc),
-                                            java.util.Collections.singleton(u).iterator());
+            return new AppendIterator(super.getImplementationClassDescs(desc),
+                                      Collections.singleton(u).iterator());
         }
         return super.getImplementationClassDescs(desc);
     }

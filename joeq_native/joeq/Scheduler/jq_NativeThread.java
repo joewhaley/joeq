@@ -23,8 +23,8 @@ import joeq.Runtime.Debug;
 import joeq.Runtime.StackCodeWalker;
 import joeq.Runtime.SystemInterface;
 import joeq.Runtime.Unsafe;
-import joeq.Util.Assert;
-import joeq.Util.Strings;
+import jwutil.strings.Strings;
+import jwutil.util.Assert;
 
 /**
  * A jq_NativeThread corresponds to a virtual CPU in the scheduler.  There is one

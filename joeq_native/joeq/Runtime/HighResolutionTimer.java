@@ -13,7 +13,7 @@ import joeq.Memory.HeapAddress;
 import joeq.Memory.StackAddress;
 import joeq.Runtime.SystemInterface.ExternalLink;
 import joeq.Runtime.SystemInterface.Library;
-import joeq.Util.Assert;
+import jwutil.util.Assert;
 
 /**
  * @author John Whaley <jwhaley@alum.mit.edu>

@@ -4,7 +4,6 @@
 package joeq.Bootstrap;
 
 import java.lang.reflect.InvocationTargetException;
-
 import joeq.Class.jq_Method;
 import joeq.Runtime.Reflection;
 

@@ -100,9 +100,9 @@ import joeq.Runtime.SystemInterface;
 import joeq.Runtime.TypeCheck;
 import joeq.Runtime.Unsafe;
 import joeq.Scheduler.jq_x86RegisterState;
-import joeq.Util.Assert;
-import joeq.Util.Strings;
-import joeq.Util.Collections.AppendIterator;
+import jwutil.collections.AppendIterator;
+import jwutil.strings.Strings;
+import jwutil.util.Assert;
 
 /**
  * @author John Whaley <jwhaley@alum.mit.edu>

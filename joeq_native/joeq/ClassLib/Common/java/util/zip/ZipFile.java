@@ -3,11 +3,10 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.ClassLib.Common.java.util.zip;
 
-import java.io.RandomAccessFile;
 import java.util.Enumeration;
 import java.util.Hashtable;
-
-import joeq.Util.Assert;
+import java.io.RandomAccessFile;
+import jwutil.util.Assert;
 
 /**
  * ZipFile

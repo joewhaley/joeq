@@ -20,8 +20,8 @@ import joeq.Memory.StackAddress;
 import joeq.Runtime.SystemInterface;
 import joeq.Runtime.Unsafe;
 import joeq.UTF.Utf8;
-import joeq.Util.Assert;
-import joeq.Util.AtomicCounter;
+import jwutil.sync.AtomicCounter;
+import jwutil.util.Assert;
 
 /**
  * A jq_Thread corresponds to a Java (lightweight) thread.

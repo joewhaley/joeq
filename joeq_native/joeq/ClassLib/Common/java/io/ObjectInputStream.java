@@ -3,17 +3,17 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.ClassLib.Common.java.io;
 
-import joeq.ClassLib.Common.ClassUtils;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Initializer;
 import joeq.Class.jq_NameAndDesc;
 import joeq.Class.jq_Type;
+import joeq.ClassLib.Common.ClassUtils;
 import joeq.Runtime.Reflection;
 import joeq.Runtime.Unsafe;
 import joeq.UTF.Utf8;
-import joeq.Util.Assert;
-import joeq.Util.Convert;
+import jwutil.util.Assert;
+import jwutil.util.Convert;
 
 /**
  * ObjectInputStream
