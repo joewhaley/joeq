@@ -17,6 +17,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import Clazz.jq_Method;
+import Compil3r.Analysis.IPA.*;
 import Compil3r.Quad.Operator.Invoke;
 import Util.Assert;
 import Util.Strings;
