@@ -238,10 +238,15 @@ public class BDDSolver extends Solver {
     }
     
     MultiMap innerSCCs;
+    boolean again;
+    int MAX_ITERATIONS = 128;
     
     boolean iterate(SCComponent first, boolean isLoop) {
         boolean anyChange = false;
+        int iterations = 0;
+        again = false;
         for (;;) {
+            ++iterations;
             boolean outerChange = false;
             SCComponent scc = first;
             while (scc != null) {
@@ -276,6 +281,11 @@ public class BDDSolver extends Solver {
                 scc = scc.nextTopSort();
             }
             if (!isLoop || !outerChange) break;
+            if (iterations == MAX_ITERATIONS) {
+                if (TRACE) out.println("Hit max iterations, trying different rules...");
+                again = true;
+                break;
+            }
         }
         return anyChange;
     }
@@ -383,7 +393,10 @@ public class BDDSolver extends Solver {
         
         SCComponent first = buildSCCs(depNav, rules);
         
-        iterate(first, false);
+        for (;;) {
+            iterate(first, false);
+            if (!again) break;
+        }
     }
 
     /* (non-Javadoc)
