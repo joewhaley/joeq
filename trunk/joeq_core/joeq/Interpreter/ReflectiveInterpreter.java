@@ -23,7 +23,7 @@ import jq;
 
 public class ReflectiveInterpreter extends Interpreter {
 
-    /** Creates new DirectInterpreter */
+    /** Creates new ReflectiveInterpreter */
     public ReflectiveInterpreter(State initialState) {
         super(new ReflectiveVMInterface(), initialState);
     }
@@ -201,7 +201,8 @@ public class ReflectiveInterpreter extends Interpreter {
         ReflectiveVMInterface() {
             ot = new ObjectTraverser(new HashSet());
         }
-        Object getField(Object o, jq_Field f) {
+	public static final ReflectiveVMInterface INSTANCE = new ReflectiveVMInterface();
+        public Object getField(Object o, jq_Field f) {
             jq_Class k = f.getDeclaringClass();
             k.load(); k.verify(); k.prepare(); k.sf_initialize(); k.cls_initialize();
             Class c = Reflection.getJDKType(f.getDeclaringClass());
@@ -226,7 +227,7 @@ public class ReflectiveInterpreter extends Interpreter {
             jq.UNREACHABLE("host jdk does not contain field "+c2.getName()+"."+fieldName);
             return null;
         }
-        void putField(Object o, jq_Field f, Object v) {
+        public void putField(Object o, jq_Field f, Object v) {
             jq_Class k = f.getDeclaringClass();
             k.load(); k.verify(); k.prepare(); k.sf_initialize(); k.cls_initialize();
             Class c = Reflection.getJDKType(f.getDeclaringClass());
@@ -245,7 +246,7 @@ public class ReflectiveInterpreter extends Interpreter {
                             jq.UNREACHABLE();
                             return;
                         } catch (IllegalArgumentException x) {
-                            jq.UNREACHABLE();
+                            jq.UNREACHABLE("object type: "+o.getClass()+" field: "+f2+" value: "+v);
                             return;
                         }
                     }
