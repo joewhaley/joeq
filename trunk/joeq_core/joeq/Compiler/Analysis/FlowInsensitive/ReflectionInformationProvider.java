@@ -281,6 +281,9 @@ public abstract class ReflectionInformationProvider {
                 NewInstanceTargets spec = (NewInstanceTargets) iter.next();
                 
                 if(spec.getDeclaredIn() == n){
+                    if(PA.TRACE_REFLECTION){
+                        System.out.println("\tChecking agains " + spec.getDeclaredIn());
+                    }        
                     return spec.getTargets();
                 }
             }
