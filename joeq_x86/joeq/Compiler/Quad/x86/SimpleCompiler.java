@@ -309,7 +309,7 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
     }
     
     int getStackFrameWords() {
-        return cfg.getRegisterFactory().totalSize();
+        return cfg.getRegisterFactory().size();
     }
     
     void initializeRegisterLocations() {
@@ -384,17 +384,17 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
             for (int i=0, j=0; i<params.length; ++i, ++j) {
                 if (params[i].getReferenceSize() == 8) {
                     int param_offset = getParamOffset(j+1); // lo
-                    int stack_offset = getStackOffset(rf.getLocal(j, params[i])); // lo
+                    int stack_offset = getStackOffset(rf.getOrCreateLocal(j, params[i])); // lo
                     asm.emit2_Reg_Mem(x86.MOV_r_m32, EAX, param_offset, EBP);
                     asm.emit2_Reg_Mem(x86.MOV_m_r32, EAX, stack_offset, EBP);
                     param_offset = getParamOffset(j); // hi
-                    stack_offset = getStackOffset(rf.getLocal(j+1, params[i])); // hi
+                    stack_offset = getStackOffset(rf.getOrCreateLocal(j+1, params[i])); // hi
                     asm.emit2_Reg_Mem(x86.MOV_r_m32, EAX, param_offset, EBP);
                     asm.emit2_Reg_Mem(x86.MOV_m_r32, EAX, stack_offset, EBP);
                     ++j;
                 } else {
                     int param_offset = getParamOffset(j);
-                    int stack_offset = getStackOffset(rf.getLocal(j, params[i]));
+                    int stack_offset = getStackOffset(rf.getOrCreateLocal(j, params[i]));
                     asm.emit2_Reg_Mem(x86.MOV_r_m32, EAX, param_offset, EBP);
                     asm.emit2_Reg_Mem(x86.MOV_m_r32, EAX, stack_offset, EBP);
                 }
