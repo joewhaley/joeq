@@ -5,6 +5,7 @@ void __stdcall die(const int code);
 __int64 __stdcall currentTimeMillis(void);
 void __stdcall mem_cpy(void* to, const void* from, const int size);
 int __stdcall file_open(const char* s, const int mode, const int smode);
+int __stdcall file_stat(const char* s, struct stat *buf);
 int __stdcall file_readbytes(const int fd, char* b, const int len);
 int __stdcall file_writebyte(const int fd, const int b);
 int __stdcall file_writebytes(const int fd, const char* b, const int len);
@@ -19,7 +20,11 @@ extern int joeq_argc;
 extern char** joeq_argv;
 #if defined(WIN32)
 struct dirent {
-	char d_name[MAX_PATH];
+    long d_ino;              /* inode number */
+    unsigned long d_off;     /* offset to this dirent */
+    unsigned short d_reclen; /* length of this d_name */
+    unsigned char d_type;    /* type of file */
+    char d_name[MAX_PATH];   /* file name (null-terminated) */
 };
 typedef struct {
     struct dirent dirent;

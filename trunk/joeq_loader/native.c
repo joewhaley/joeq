@@ -149,6 +149,10 @@ int __stdcall file_open(const char* s, const int mode, const int smode)
     return open(s, mode, smode);
 #endif
 }
+int __stdcall file_stat(const char* s, struct stat *buf)
+{
+    return stat(s, buf);
+}
 int __stdcall file_readbytes(const int fd, char* b, const int len)
 {
 #if defined(_MSC_VER)
