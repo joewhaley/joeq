@@ -805,6 +805,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
     public void load(DataInput in)
     throws ClassFormatError, UnsupportedClassVersionError, ClassCircularityError {
         if (isLoaded()) return; // quick test.
+        if (state == STATE_LOADERROR) throw new ClassFormatError();
         synchronized (this) {
             if (isLoaded()) return; // other thread already loaded this type.
             if ((state == STATE_LOADING1) || (state == STATE_LOADING2) || (state == STATE_LOADING3))
@@ -1199,23 +1200,24 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                 }
             }
             catch (UTFDataFormatError x) {
-                //state = STATE_LOADERROR;
-                state = STATE_UNLOADED;
+                state = STATE_LOADERROR;
+                //state = STATE_UNLOADED;
                 throw new ClassFormatError(x.toString());
             }
             catch (IOException x) {
-                //state = STATE_LOADERROR;
-                state = STATE_UNLOADED;
+                state = STATE_LOADERROR;
+                //state = STATE_UNLOADED;
                 throw new ClassFormatError(x.toString());
             }
             catch (ArrayIndexOutOfBoundsException x) {
-                //state = STATE_LOADERROR;
-                state = STATE_UNLOADED;
+                state = STATE_LOADERROR;
+                //state = STATE_UNLOADED;
                 x.printStackTrace();
                 throw new ClassFormatError("bad constant pool index");
             }
             catch (Error x) {
-                state = STATE_UNLOADED;
+                state = STATE_LOADERROR;
+                //state = STATE_UNLOADED;
                 throw x;
             }
         } // synchronized
@@ -2063,14 +2065,21 @@ uphere2:
             if (!isLoaded()) load();
             if (state == STATE_VERIFYING)
                 throw new ClassCircularityError(this.toString()); // recursively called verify
+            if (state == STATE_VERIFYERROR)
+                throw new VerifyError();
             state = STATE_VERIFYING;
-            if (TRACE) Debug.writeln("Beginning verifying "+this+"...");
-            if (super_class != null) {
-                super_class.verify();
+            try {
+                if (TRACE) Debug.writeln("Beginning verifying "+this+"...");
+                if (super_class != null) {
+                    super_class.verify();
+                }
+                // TODO: classfile verification
+                if (TRACE) Debug.writeln("Finished verifying "+this);
+                state = STATE_VERIFIED;
+            } catch (Error x) {
+                state = STATE_VERIFYERROR;
+                throw x;
             }
-            // TODO: classfile verification
-            if (TRACE) Debug.writeln("Finished verifying "+this);
-            state = STATE_VERIFIED;
         }
     }
     
@@ -2081,223 +2090,230 @@ uphere2:
             if (!isVerified()) verify();
             if (state == STATE_PREPARING)
                 throw new ClassCircularityError(this.toString()); // recursively called prepare (?)
+            if (state == STATE_PREPAREERROR)
+                throw new ClassFormatError();
             state = STATE_PREPARING;
-            if (TRACE) Debug.writeln("Beginning preparing "+this+"...");
-
-            // note: this method is a good candidate for specialization on super_class != null.
-            if (super_class != null) {
-                super_class.prepare();
-            }
-
-            int superfields;
-            if (super_class != null) superfields = super_class.instance_fields.length;
-            else superfields = 0;
-            int numOfInstanceFields = superfields + this.declared_instance_fields.length;
-            this.instance_fields = new jq_InstanceField[numOfInstanceFields];
-            if (superfields > 0)
-                System.arraycopy(super_class.instance_fields, 0, this.instance_fields, 0, superfields);
-
-            int superreferencefields;
-            if (super_class != null) superreferencefields = super_class.reference_offsets.length;
-            else superreferencefields = 0;
-            int numOfReferenceFields = superreferencefields;
-            
-            // lay out instance fields
-            int currentInstanceField = superfields-1;
-            int size;
-            if (super_class != null) size = super_class.instance_size;
-            else size = ObjectLayout.OBJ_HEADER_SIZE;
-            if (declared_instance_fields.length > 0) {
-                if (!dont_align) {
-                    // align on the largest data type
-                    int largestDataType = declared_instance_fields[0].getSize();
-                    int align = size & largestDataType-1;
-                    if (align != 0) {
-                        if (TRACE) Debug.writeln("Gap of size "+align+" has been filled.");
-                        // fill in the gap with smaller fields
-                        for (int i=1; i<declared_instance_fields.length; ++i) {
-                            jq_InstanceField f = declared_instance_fields[i];
-                            int fsize = f.getSize();
-                            if (fsize <= largestDataType-align) {
-                                instance_fields[++currentInstanceField] = f;
-                                if (TRACE) Debug.writeln("Filling in field #"+currentInstanceField+" "+f+" at offset "+Strings.shex(size - ObjectLayout.OBJ_HEADER_SIZE));
-                                f.prepare(size - ObjectLayout.OBJ_HEADER_SIZE);
-                                if (f.getType().isReferenceType() && !f.getType().isAddressType())
-                                    ++numOfReferenceFields;
-                                size += fsize;
-                                align += fsize;
-                            }
-                            if (align == largestDataType) {
-                                if (TRACE) Debug.writeln("Gap of size "+align+" has been filled.");
-                                break;
-                            }
-                        }
-                    }
-                } else {
-                    if (TRACE) Debug.writeln("Skipping field alignment for class "+this);
-                }
-                for (int i=0; i<declared_instance_fields.length; ++i) {
-                    jq_InstanceField f = declared_instance_fields[i];
-                    if (f.getState() == STATE_LOADED) {
-                        instance_fields[++currentInstanceField] = f;
-                        if (TRACE) Debug.writeln("Laying out field #"+currentInstanceField+" "+f+" at offset "+Strings.shex(size - ObjectLayout.OBJ_HEADER_SIZE));
-                        f.prepare(size - ObjectLayout.OBJ_HEADER_SIZE);
-                        if (f.getType().isReferenceType() && !f.getType().isAddressType())
-                            ++numOfReferenceFields;
-                        size += f.getSize();
-                    }
-                }
-            }
-            this.instance_size = (size+3) & ~3;
-
-            this.reference_offsets = new int[numOfReferenceFields];
-            int k = -1;
-            for (int i=0; i < instance_fields.length; ++i) {
-                jq_InstanceField f = instance_fields[i];
-                if (f.getType().isReferenceType() && !f.getType().isAddressType()) {
-                    reference_offsets[++k] = f.getOffset(); 
-                }
-            }
-            Assert._assert(k+1 == this.reference_offsets.length);
-
-            // lay out virtual method table
-            int numOfNewVirtualMethods = 0;
-            for (int i=0; i<declared_instance_methods.length; ++i) {
-                jq_InstanceMethod m = declared_instance_methods[i];
-                Assert._assert(m.getState() == STATE_LOADED);
-                if (m.isInitializer()) {
-                    // initializers cannot override or be overridden
-                    continue;
-                }
+            try {
+                if (TRACE) Debug.writeln("Beginning preparing "+this+"...");
+    
+                // note: this method is a good candidate for specialization on super_class != null.
                 if (super_class != null) {
-                    jq_InstanceMethod m2 = super_class.getVirtualMethod(m.getNameAndDesc());
-                    if (m2 != null) {
-                        if (m.isPrivate() ||
-                            m2.isPrivate() || m2.isFinal()) {// should not be overridden
-                            System.out.println("error: method "+m+" overrides method "+m2);
+                    super_class.prepare();
+                }
+    
+                int superfields;
+                if (super_class != null) superfields = super_class.instance_fields.length;
+                else superfields = 0;
+                int numOfInstanceFields = superfields + this.declared_instance_fields.length;
+                this.instance_fields = new jq_InstanceField[numOfInstanceFields];
+                if (superfields > 0)
+                    System.arraycopy(super_class.instance_fields, 0, this.instance_fields, 0, superfields);
+    
+                int superreferencefields;
+                if (super_class != null) superreferencefields = super_class.reference_offsets.length;
+                else superreferencefields = 0;
+                int numOfReferenceFields = superreferencefields;
+                
+                // lay out instance fields
+                int currentInstanceField = superfields-1;
+                int size;
+                if (super_class != null) size = super_class.instance_size;
+                else size = ObjectLayout.OBJ_HEADER_SIZE;
+                if (declared_instance_fields.length > 0) {
+                    if (!dont_align) {
+                        // align on the largest data type
+                        int largestDataType = declared_instance_fields[0].getSize();
+                        int align = size & largestDataType-1;
+                        if (align != 0) {
+                            if (TRACE) Debug.writeln("Gap of size "+align+" has been filled.");
+                            // fill in the gap with smaller fields
+                            for (int i=1; i<declared_instance_fields.length; ++i) {
+                                jq_InstanceField f = declared_instance_fields[i];
+                                int fsize = f.getSize();
+                                if (fsize <= largestDataType-align) {
+                                    instance_fields[++currentInstanceField] = f;
+                                    if (TRACE) Debug.writeln("Filling in field #"+currentInstanceField+" "+f+" at offset "+Strings.shex(size - ObjectLayout.OBJ_HEADER_SIZE));
+                                    f.prepare(size - ObjectLayout.OBJ_HEADER_SIZE);
+                                    if (f.getType().isReferenceType() && !f.getType().isAddressType())
+                                        ++numOfReferenceFields;
+                                    size += fsize;
+                                    align += fsize;
+                                }
+                                if (align == largestDataType) {
+                                    if (TRACE) Debug.writeln("Gap of size "+align+" has been filled.");
+                                    break;
+                                }
+                            }
                         }
-                        m2.overriddenBy(m);
-                        if (TRACE) Debug.writeln("Virtual method "+m+" overrides method "+m2+" offset "+Strings.shex(m2.getOffset()));
-                        m.prepare(m2.getOffset());
+                    } else {
+                        if (TRACE) Debug.writeln("Skipping field alignment for class "+this);
+                    }
+                    for (int i=0; i<declared_instance_fields.length; ++i) {
+                        jq_InstanceField f = declared_instance_fields[i];
+                        if (f.getState() == STATE_LOADED) {
+                            instance_fields[++currentInstanceField] = f;
+                            if (TRACE) Debug.writeln("Laying out field #"+currentInstanceField+" "+f+" at offset "+Strings.shex(size - ObjectLayout.OBJ_HEADER_SIZE));
+                            f.prepare(size - ObjectLayout.OBJ_HEADER_SIZE);
+                            if (f.getType().isReferenceType() && !f.getType().isAddressType())
+                                ++numOfReferenceFields;
+                            size += f.getSize();
+                        }
+                    }
+                }
+                this.instance_size = (size+3) & ~3;
+    
+                this.reference_offsets = new int[numOfReferenceFields];
+                int k = -1;
+                for (int i=0; i < instance_fields.length; ++i) {
+                    jq_InstanceField f = instance_fields[i];
+                    if (f.getType().isReferenceType() && !f.getType().isAddressType()) {
+                        reference_offsets[++k] = f.getOffset(); 
+                    }
+                }
+                Assert._assert(k+1 == this.reference_offsets.length);
+    
+                // lay out virtual method table
+                int numOfNewVirtualMethods = 0;
+                for (int i=0; i<declared_instance_methods.length; ++i) {
+                    jq_InstanceMethod m = declared_instance_methods[i];
+                    Assert._assert(m.getState() == STATE_LOADED);
+                    if (m.isInitializer()) {
+                        // initializers cannot override or be overridden
                         continue;
                     }
+                    if (super_class != null) {
+                        jq_InstanceMethod m2 = super_class.getVirtualMethod(m.getNameAndDesc());
+                        if (m2 != null) {
+                            if (m.isPrivate() ||
+                                m2.isPrivate() || m2.isFinal()) {// should not be overridden
+                                System.out.println("error: method "+m+" overrides method "+m2);
+                            }
+                            m2.overriddenBy(m);
+                            if (TRACE) Debug.writeln("Virtual method "+m+" overrides method "+m2+" offset "+Strings.shex(m2.getOffset()));
+                            m.prepare(m2.getOffset());
+                            continue;
+                        }
+                    }
+                    if (m.isPrivate()) {
+                        // private methods cannot override or be overridden
+                        continue;
+                    }
+                    ++numOfNewVirtualMethods;
                 }
-                if (m.isPrivate()) {
-                    // private methods cannot override or be overridden
-                    continue;
+                int super_virtual_methods;
+                if (super_class != null)
+                    super_virtual_methods = super_class.virtual_methods.length;
+                else
+                    super_virtual_methods = 0;
+                int num_virtual_methods = super_virtual_methods + numOfNewVirtualMethods;
+                virtual_methods = new jq_InstanceMethod[num_virtual_methods];
+                if (super_virtual_methods > 0)
+                    System.arraycopy(super_class.virtual_methods, 0, this.virtual_methods, 0, super_virtual_methods);
+                for (int i=0, j=super_virtual_methods-1; i<declared_instance_methods.length; ++i) {
+                    jq_InstanceMethod m = declared_instance_methods[i];
+                    if (m.isInitializer() || m.isPrivate()) {
+                        // not in vtable
+                        if (TRACE) Debug.writeln("Skipping "+m+" in virtual method table.");
+                        m.prepare();
+                        continue;
+                    }
+                    if (m.isOverriding()) {
+                        Assert._assert(m.getState() == STATE_PREPARED);
+                        int entry = (m.getOffset() >> 2) - 1;
+                        virtual_methods[entry] = m;
+                        continue;
+                    }
+                    Assert._assert(m.getState() == STATE_LOADED);
+                    virtual_methods[++j] = m;
+                    if (TRACE) Debug.writeln("Virtual method "+m+" is new, offset "+Strings.shex((j+1)*CodeAddress.size()));
+                    m.prepare((j+1)*CodeAddress.size());
                 }
-                ++numOfNewVirtualMethods;
-            }
-            int super_virtual_methods;
-            if (super_class != null)
-                super_virtual_methods = super_class.virtual_methods.length;
-            else
-                super_virtual_methods = 0;
-            int num_virtual_methods = super_virtual_methods + numOfNewVirtualMethods;
-            virtual_methods = new jq_InstanceMethod[num_virtual_methods];
-            if (super_virtual_methods > 0)
-                System.arraycopy(super_class.virtual_methods, 0, this.virtual_methods, 0, super_virtual_methods);
-            for (int i=0, j=super_virtual_methods-1; i<declared_instance_methods.length; ++i) {
-                jq_InstanceMethod m = declared_instance_methods[i];
-                if (m.isInitializer() || m.isPrivate()) {
-                    // not in vtable
-                    if (TRACE) Debug.writeln("Skipping "+m+" in virtual method table.");
-                    m.prepare();
-                    continue;
-                }
-                if (m.isOverriding()) {
-                    Assert._assert(m.getState() == STATE_PREPARED);
-                    int entry = (m.getOffset() >> 2) - 1;
-                    virtual_methods[entry] = m;
-                    continue;
-                }
-                Assert._assert(m.getState() == STATE_LOADED);
-                virtual_methods[++j] = m;
-                if (TRACE) Debug.writeln("Virtual method "+m+" is new, offset "+Strings.shex((j+1)*CodeAddress.size()));
-                m.prepare((j+1)*CodeAddress.size());
-            }
-            // allocate space for vtable
-            vtable = new Address[num_virtual_methods+1];
-
-            // prepare declared superinterfaces
-            for (int i=0; i<declared_interfaces.length; ++i) {
-                declared_interfaces[i].prepare();
-            }
-
-            // calculate interfaces
-            int n_super_interfaces;
-            if (super_class != null) {
-                n_super_interfaces = super_class.interfaces.length;
-                if (super_class.isInterface())
-                    ++n_super_interfaces; // add super_class to the list, too.
-            } else
-                n_super_interfaces = 0;
-            for (int i=0; i<declared_interfaces.length; ++i) {
-                n_super_interfaces += declared_interfaces[i].interfaces.length;
-            }
-
-            interfaces = new jq_Class[n_super_interfaces + declared_interfaces.length];
-            int n = 0;
-            if (n_super_interfaces > 0) {
-                System.arraycopy(super_class.interfaces, 0, this.interfaces, 0, super_class.interfaces.length);
-                n += super_class.interfaces.length;
-                if (super_class.isInterface())
-                    this.interfaces[n++] = super_class;
+                // allocate space for vtable
+                vtable = new Address[num_virtual_methods+1];
+    
+                // prepare declared superinterfaces
                 for (int i=0; i<declared_interfaces.length; ++i) {
-                    System.arraycopy(declared_interfaces[i].interfaces, 0, this.interfaces, n, declared_interfaces[i].interfaces.length);
-                    n += declared_interfaces[i].interfaces.length;
+                    declared_interfaces[i].prepare();
                 }
-            }
-            Assert._assert (n == n_super_interfaces);
-            System.arraycopy(declared_interfaces, 0, this.interfaces, n_super_interfaces, declared_interfaces.length);
-
-            // set up tables for fast type checking.
-            this.display = new jq_Type[DISPLAY_SIZE+2];
-            if (!this.isInterface()) {
-                jq_Reference dps = this.getDirectPrimarySupertype();
-                if (dps != null) {
-                    Assert._assert(dps.isPrepared());
-                    int num = dps.offset;
-                    if (num < 2) num = DISPLAY_SIZE+1;
-                    System.arraycopy(dps.display, 2, this.display, 2, num-1);
-                    this.offset = num + 1;
-                    if (this.offset >= DISPLAY_SIZE+2)
-                        this.offset = 0;
-                } else {
-                    this.offset = 2;
+    
+                // calculate interfaces
+                int n_super_interfaces;
+                if (super_class != null) {
+                    n_super_interfaces = super_class.interfaces.length;
+                    if (super_class.isInterface())
+                        ++n_super_interfaces; // add super_class to the list, too.
+                } else
+                    n_super_interfaces = 0;
+                for (int i=0; i<declared_interfaces.length; ++i) {
+                    n_super_interfaces += declared_interfaces[i].interfaces.length;
                 }
-                this.display[this.offset] = this;
-            } else {
-                this.display[2] = PrimordialClassLoader.getJavaLangObject();
-            }
-            this.s_s_array = interfaces;
-            this.s_s_array_length = interfaces.length;
-
-            if (TRACE) {
-                System.out.println(this+" offset="+this.offset);
-                if (this.offset != 0) {
-                    for (int i=0; i<this.display.length; ++i) {
-                        System.out.println(this+" display["+i+"] = "+this.display[i]);
+    
+                interfaces = new jq_Class[n_super_interfaces + declared_interfaces.length];
+                int n = 0;
+                if (n_super_interfaces > 0) {
+                    System.arraycopy(super_class.interfaces, 0, this.interfaces, 0, super_class.interfaces.length);
+                    n += super_class.interfaces.length;
+                    if (super_class.isInterface())
+                        this.interfaces[n++] = super_class;
+                    for (int i=0; i<declared_interfaces.length; ++i) {
+                        System.arraycopy(declared_interfaces[i].interfaces, 0, this.interfaces, n, declared_interfaces[i].interfaces.length);
+                        n += declared_interfaces[i].interfaces.length;
                     }
                 }
-                for (int i=0; i<this.s_s_array_length; ++i) {
-                    System.out.println(this+" s_s_array["+i+"] = "+this.s_s_array[i]);
+                Assert._assert (n == n_super_interfaces);
+                System.arraycopy(declared_interfaces, 0, this.interfaces, n_super_interfaces, declared_interfaces.length);
+    
+                // set up tables for fast type checking.
+                this.display = new jq_Type[DISPLAY_SIZE+2];
+                if (!this.isInterface()) {
+                    jq_Reference dps = this.getDirectPrimarySupertype();
+                    if (dps != null) {
+                        Assert._assert(dps.isPrepared());
+                        int num = dps.offset;
+                        if (num < 2) num = DISPLAY_SIZE+1;
+                        System.arraycopy(dps.display, 2, this.display, 2, num-1);
+                        this.offset = num + 1;
+                        if (this.offset >= DISPLAY_SIZE+2)
+                            this.offset = 0;
+                    } else {
+                        this.offset = 2;
+                    }
+                    this.display[this.offset] = this;
+                } else {
+                    this.display[2] = PrimordialClassLoader.getJavaLangObject();
                 }
+                this.s_s_array = interfaces;
+                this.s_s_array_length = interfaces.length;
+    
+                if (TRACE) {
+                    System.out.println(this+" offset="+this.offset);
+                    if (this.offset != 0) {
+                        for (int i=0; i<this.display.length; ++i) {
+                            System.out.println(this+" display["+i+"] = "+this.display[i]);
+                        }
+                    }
+                    for (int i=0; i<this.s_s_array_length; ++i) {
+                        System.out.println(this+" s_s_array["+i+"] = "+this.s_s_array[i]);
+                    }
+                }
+                
+                // set prepared flags for static methods
+                for (int i=0; i<static_methods.length; ++i) {
+                    jq_StaticMethod m = static_methods[i];
+                    m.prepare();
+                }
+                // set prepared flags for static fields
+                for (int i=0; i<static_fields.length; ++i) {
+                    jq_StaticField m = static_fields[i];
+                    m.prepare();
+                }
+                
+                if (TRACE) Debug.writeln("Finished preparing "+this);
+                state = STATE_PREPARED;
+            } catch (Error x) {
+                state = STATE_PREPAREERROR;
+                throw x;
             }
-            
-            // set prepared flags for static methods
-            for (int i=0; i<static_methods.length; ++i) {
-                jq_StaticMethod m = static_methods[i];
-                m.prepare();
-            }
-            // set prepared flags for static fields
-            for (int i=0; i<static_fields.length; ++i) {
-                jq_StaticField m = static_fields[i];
-                m.prepare();
-            }
-            
-            if (TRACE) Debug.writeln("Finished preparing "+this);
-            state = STATE_PREPARED;
         }
     }
     
@@ -2308,46 +2324,53 @@ uphere2:
             if (!isPrepared()) prepare();
             if (state == STATE_SFINITIALIZING)
                 throw new ClassCircularityError(this.toString()); // recursively called sf_initialize (?)
+            if (state == STATE_SFINITERROR)
+                throw new NoClassDefFoundError();
             state = STATE_SFINITIALIZING;
-            if (TRACE) Debug.writeln("Beginning SF init "+this+"...");
-            if (super_class != null) {
-                super_class.sf_initialize();
-            }
-            // lay out static fields and set their constant values
-            if (static_data_size > 0) {
-                static_data = new int[static_data_size>>2];
-                for (int i=0, j=0; i<static_fields.length; ++i) {
-                    jq_StaticField f = static_fields[i];
-                    f.sf_initialize(static_data, j << 2);
-                    if (f.isConstant()) {
-                        Object cv = f.getConstantValue();
-                        if (f.getType().isPrimitiveType()) {
-                            if (f.getType() == jq_Primitive.LONG) {
-                                long l = ((Long)cv).longValue();
-                                static_data[j  ] = (int)l;
-                                static_data[j+1] = (int)(l >> 32);
-                            } else if (f.getType() == jq_Primitive.FLOAT) {
-                                static_data[j] = Float.floatToRawIntBits(((Float)cv).floatValue());
-                            } else if (f.getType() == jq_Primitive.DOUBLE) {
-                                long l = Double.doubleToRawLongBits(((Double)cv).doubleValue());
-                                static_data[j  ] = (int)l;
-                                static_data[j+1] = (int)(l >> 32);
+            try {
+                if (TRACE) Debug.writeln("Beginning SF init "+this+"...");
+                if (super_class != null) {
+                    super_class.sf_initialize();
+                }
+                // lay out static fields and set their constant values
+                if (static_data_size > 0) {
+                    static_data = new int[static_data_size>>2];
+                    for (int i=0, j=0; i<static_fields.length; ++i) {
+                        jq_StaticField f = static_fields[i];
+                        f.sf_initialize(static_data, j << 2);
+                        if (f.isConstant()) {
+                            Object cv = f.getConstantValue();
+                            if (f.getType().isPrimitiveType()) {
+                                if (f.getType() == jq_Primitive.LONG) {
+                                    long l = ((Long)cv).longValue();
+                                    static_data[j  ] = (int)l;
+                                    static_data[j+1] = (int)(l >> 32);
+                                } else if (f.getType() == jq_Primitive.FLOAT) {
+                                    static_data[j] = Float.floatToRawIntBits(((Float)cv).floatValue());
+                                } else if (f.getType() == jq_Primitive.DOUBLE) {
+                                    long l = Double.doubleToRawLongBits(((Double)cv).doubleValue());
+                                    static_data[j  ] = (int)l;
+                                    static_data[j+1] = (int)(l >> 32);
+                                } else {
+                                    static_data[j] = ((Integer)cv).intValue();
+                                }
                             } else {
-                                static_data[j] = ((Integer)cv).intValue();
-                            }
-                        } else {
-                            // java/lang/String
-                            HeapAddress a = HeapAddress.addressOf(cv);
-                            if (a != null) {
-                                static_data[j] = a.to32BitValue();
+                                // java/lang/String
+                                HeapAddress a = HeapAddress.addressOf(cv);
+                                if (a != null) {
+                                    static_data[j] = a.to32BitValue();
+                                }
                             }
                         }
+                        j += f.getWidth() >> 2;
                     }
-                    j += f.getWidth() >> 2;
                 }
+                if (TRACE) Debug.writeln("Finished SF init "+this);
+                state = STATE_SFINITIALIZED;
+            } catch (Error x) {
+                state = STATE_SFINITERROR;
+                throw x;
             }
-            if (TRACE) Debug.writeln("Finished SF init "+this);
-            state = STATE_SFINITIALIZED;
         }
     }
     
