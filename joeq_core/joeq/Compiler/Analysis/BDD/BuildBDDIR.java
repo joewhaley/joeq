@@ -68,7 +68,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
     IndexMap memberMap;
     IndexMap constantMap;
     
-    int quadBits = 18, opBits = 8, regBits = 8, constantBits = 11, memberBits = 13;    
+    int quadBits = 18, opBits = 8, regBits = 8, constantBits = 12, memberBits = 13;    
 
     BDDFactory bdd;
     BDDDomain quad, opc, dest, src1, src2, constant, fallthrough, target, member;
@@ -92,7 +92,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         target = makeDomain("target", quadBits);
         member = makeDomain("member", memberBits);
         allQuads = bdd.zero();
-        int [] varOrder = bdd.makeVarOrdering(true, "constant_quadxtargetxfallthrough_destxsrc1xsrc2_member_opc");
+        int [] varOrder = bdd.makeVarOrdering(true, "quadxtargetxfallthrough_destxsrc1xsrc2_member_constant_opc");
         bdd.setVarOrder(varOrder);
         bdd.setMaxIncrease(500000);
     }
@@ -398,6 +398,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
      */
     public void visitCFG(ControlFlowGraph cfg) {
         QuadIterator i = new QuadIterator(cfg);
+        
         while (i.hasNext()) {
             Quad q = i.nextQuad();
             currentQuad = bdd.one();
