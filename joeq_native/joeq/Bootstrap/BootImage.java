@@ -1202,6 +1202,19 @@ public class BootImage implements ELFConstants {
         String name = m.getDeclaringClass().getName().toString() +
                       "_"+m.getName()+
                       "_"+m.getDesc();
+        int index;
+        while ((index = name.indexOf('.')) >= 0) {
+            name = name.substring(0, index) + name.substring(index+1);
+        }
+        while ((index = name.indexOf('/')) >= 0) {
+            name = name.substring(0, index) + name.substring(index+1);
+        }
+        while ((index = name.indexOf('(')) >= 0) {
+            name = name.substring(0, index) + name.substring(index+1);
+        }
+        while ((index = name.indexOf(')')) >= 0) {
+            name = name.substring(0, index) + name.substring(index+1);
+        }
         return name;
     }
     

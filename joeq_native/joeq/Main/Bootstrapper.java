@@ -452,6 +452,19 @@ public abstract class Bootstrapper {
         System.out.println("number of classes seen = "+PrimordialClassLoader.loader.getAllTypes().size());
         System.out.println("number of classes in image = "+objmap.boot_types.size());
         
+        // During the process of initialization, etc., Utf8 objects could
+        // have been allocated, causing the Utf8 table to grow.  We update
+        // the static fields of the Utf8 class to catch these.
+        // (Hopefully no other static fields have changed!?)
+        jq_Class utf8_class = (jq_Class) PrimordialClassLoader.loader.getBSType("Ljoeq/UTF/Utf8;");
+        jq_StaticField[] sfs = utf8_class.getDeclaredStaticFields();
+        for (int j=0; j<sfs.length; ++j) {
+            jq_StaticField sf = sfs[j];
+            //System.out.println("Initializing static field: "+sf);
+            objmap.initStaticField(sf);
+        }
+        System.out.println("Total number of Utf8 = "+(Utf8.size+1));
+
         // we shouldn't encounter any new Utf8 from this point
         Utf8.NO_NEW = true;
 

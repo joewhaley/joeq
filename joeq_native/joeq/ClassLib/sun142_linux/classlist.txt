@@ -13,7 +13,7 @@ Ljoeq/Compiler/BytecodeAnalysis/Bytecodes$CodeException;
 [Ljoeq/Compiler/BytecodeAnalysis/Bytecodes$LineNumber;
 Ljoeq/Compiler/BytecodeAnalysis/Bytecodes$LineNumber;
 Ljoeq/Compiler/CompilationState;
-Ljoeq/Compiler/CompilationState$BootstrapCompilation;
+Ljoeq/Compiler/CompilationState$DynamicCompilation;
 Ljoeq/Compiler/Quad/BytecodeToQuad$jq_ReturnAddressType;
 Ljoeq/Compiler/Reference/x86/*
 Ljoeq/GC/*
