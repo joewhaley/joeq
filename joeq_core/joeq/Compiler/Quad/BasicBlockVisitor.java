@@ -23,16 +23,30 @@ public interface BasicBlockVisitor {
     public void visitBasicBlock(BasicBlock bb);
 
     /**
+     * Empty basic block visitor for easy subclassing.
+     */
+    public static class EmptyVisitor implements BasicBlockVisitor {
+        /** Visit a basic block.
+         * @param bb  basic block to visit */
+        public void visitBasicBlock(BasicBlock bb) {}
+    }
+    
+    /**
      * Method visitor that visits all basic blocks in the method with a given
      * basic block visitor.
      * @see  jq_Method
      * @see  jq_MethodVisitor
      */
-    public class AllBasicBlockVisitor extends jq_MethodVisitor.EmptyVisitor {
+    public static class AllBasicBlockVisitor extends jq_MethodVisitor.EmptyVisitor {
         private final BasicBlockVisitor bbv;
+        boolean trace;
         /** Construct a new AllBasicBlockVisitor.
          * @param bbv  basic block visitor to visit each basic block with. */
         public AllBasicBlockVisitor(BasicBlockVisitor bbv) { this.bbv = bbv; }
+        /** Construct a new AllBasicBlockVisitor and set the trace flag to be the specified value.
+         * @param bbv  basic block visitor to visit each basic block with.
+         * @param trace  value of the trace flag */
+        public AllBasicBlockVisitor(BasicBlockVisitor bbv, boolean trace) { this.bbv = bbv; this.trace = trace; }
         /** Convert the given method to quad format and visit each of its basic blocks
          * with the basic block visitor specified in the constructor.
          * Skips native and abstract methods.
@@ -41,6 +55,7 @@ public interface BasicBlockVisitor {
          */
         public void visitMethod(jq_Method m) {
             if (m.isNative() || m.isAbstract()) return;
+            if (trace) System.out.println(m.toString());
             BytecodeToQuad b2q = new BytecodeToQuad(m);
             ControlFlowGraph cfg = b2q.convert();
             cfg.visitBasicBlocks(bbv);
