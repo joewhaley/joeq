@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
             "movl %0, %%eax\n\t"\
             "movl %%eax, %%fs:0\n\t"
             :
-	    :"r"(erp)
+            :"r"(erp)
             :"%eax"
             );
 #endif
