@@ -11,32 +11,60 @@ import joeq.Runtime.Unsafe;
 import joeq.Scheduler.jq_NativeThread;
 
 /**
- * DefaultHeapAllocator
+ * Provides access functions to the default heap allocator for the current thread.
  * 
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public abstract class DefaultHeapAllocator {
 
+    /**
+     * The default heap allocator for the current thread.
+     * 
+     * @return default heap allocator for the current thread
+     */
     public static final HeapAllocator def() {
         return Unsafe.getThreadBlock().getNativeThread().getHeapAllocator();
     }
     
+    /**
+     * Initialize the default heap allocator for the current thread.
+     * 
+     * @throws OutOfMemoryError
+     */
     public static final void init() throws OutOfMemoryError {
         def().init();
     }
+    
+    /**
+     * Allocate an object with the default heap allocator for the current thread.
+     * 
+     * @throws OutOfMemoryError
+     */
     public static final Object allocateObject(int size, Object vtable) throws OutOfMemoryError {
         Unsafe.getThreadBlock().disableThreadSwitch();
         Object o = def().allocateObject(size, vtable);
         Unsafe.getThreadBlock().enableThreadSwitch();
         return o;
     }
+    
+    /**
+     * Allocate an aligned object with the default heap allocator for the current thread.
+     * 
+     * @throws OutOfMemoryError
+     */
     public static final Object allocateObjectAlign8(int size, Object vtable) throws OutOfMemoryError {
         Unsafe.getThreadBlock().disableThreadSwitch();
         Object o = def().allocateObjectAlign8(size, vtable);
         Unsafe.getThreadBlock().enableThreadSwitch();
         return o;
     }
+    
+    /**
+     * Allocate an array with the default heap allocator for the current thread.
+     * 
+     * @throws OutOfMemoryError
+     */
     public static final Object allocateArray(int length, int size, Object vtable)
     throws OutOfMemoryError, NegativeArraySizeException {
         Unsafe.getThreadBlock().disableThreadSwitch();
@@ -44,6 +72,12 @@ public abstract class DefaultHeapAllocator {
         Unsafe.getThreadBlock().enableThreadSwitch();
         return o;
     }
+    
+    /**
+     * Allocate an aligned array with the default heap allocator for the current thread.
+     * 
+     * @throws OutOfMemoryError
+     */
     public static final Object allocateArrayAlign8(int length, int size, Object vtable)
     throws OutOfMemoryError, NegativeArraySizeException {
         Unsafe.getThreadBlock().disableThreadSwitch();
@@ -51,7 +85,19 @@ public abstract class DefaultHeapAllocator {
         Unsafe.getThreadBlock().enableThreadSwitch();
         return o;
     }
+    
+    /**
+     * Return the amount of free memory in the default heap allocator for the current thread.
+     * 
+     * @throws OutOfMemoryError
+     */
     public static final int freeMemory() { return def().freeMemory(); }
+    
+    /**
+     * Return the total amount of memory us the default heap allocator for the current thread.
+     * 
+     * @throws OutOfMemoryError
+     */
     public static final int totalMemory() { return def().totalMemory(); }
 
     public static final void collect() {
