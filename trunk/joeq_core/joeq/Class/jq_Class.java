@@ -1,7 +1,7 @@
 // jq_Class.java, created Mon Feb  5 23:23:20 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Clazz;
+package joeq.Class;
 
 import java.io.DataInput;
 import java.io.DataInputStream;
@@ -20,18 +20,18 @@ import java.util.Set;
 import java.util.StringTokenizer;
 
 import joeq.Allocator.ObjectLayout;
-import joeq.Clazz.PrimordialClassLoader;
+import joeq.Class.PrimordialClassLoader;
 import joeq.ClassLib.ClassLibInterface;
-import joeq.Compil3r.CompilationConstants;
-import joeq.Compil3r.BytecodeAnalysis.Bytecodes;
+import joeq.Compiler.CompilationConstants;
+import joeq.Compiler.BytecodeAnalysis.Bytecodes;
 import joeq.Main.jq;
 import joeq.Memory.Address;
 import joeq.Memory.CodeAddress;
 import joeq.Memory.HeapAddress;
 import joeq.Memory.StackAddress;
-import joeq.Run_Time.Debug;
-import joeq.Run_Time.Reflection;
-import joeq.Run_Time.TypeCheck;
+import joeq.Runtime.Debug;
+import joeq.Runtime.Reflection;
+import joeq.Runtime.TypeCheck;
 import joeq.UTF.UTFDataFormatError;
 import joeq.UTF.Utf8;
 import joeq.Util.Assert;
@@ -1243,7 +1243,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
 
                 // update OLD according to NEW
                 if (TRACE_REPLACE_CLASS)
-                    joeq.Run_Time.Debug.writeln(
+                    joeq.Runtime.Debug.writeln(
                         Strings.lineSep+Strings.lineSep+"In REPLACE: STARTING REPLACEMENT of:\t" + old_m);
 
                 jq_NameAndDesc old_m_nd = old_m.getNameAndDesc();
@@ -1327,7 +1327,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                 // take next method
 
                 if (TRACE_REPLACE_CLASS)
-                    joeq.Run_Time.Debug.writeln(
+                    joeq.Runtime.Debug.writeln(
                         Strings.lineSep+Strings.lineSep+"In REPLACE: STARTING REPLACEMENT of:\t" + old_m);
 
                 //info useful for new_m
@@ -1928,7 +1928,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                 // overridden static method
                 char access_flags = sm.getAccessFlags();
                 if (classfield_index == 0) {
-                    jq_StaticField that_sf = that.getDeclaredStaticField(new jq_NameAndDesc(Utf8.get("_class"), Utf8.get("Ljoeq/Clazz/jq_Class;")));
+                    jq_StaticField that_sf = that.getDeclaredStaticField(new jq_NameAndDesc(Utf8.get("_class"), Utf8.get("Ljoeq/Class/jq_Class;")));
                     Assert._assert(that_sf != null);
                     classfield_index = cp_adder.add(that_sf, CONSTANT_ResolvedSFieldRef);
                 }
@@ -2615,7 +2615,7 @@ uphere2:
         }
     }
 
-    public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Clazz/jq_Class;");
+    public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Class/jq_Class;");
 
     static interface Delegate {
         Object newInstance(jq_Class c, int instance_size, Object vtable);
@@ -2628,7 +2628,7 @@ uphere2:
         _delegate = null;
         boolean nullVM = jq.nullVM;
         if (!nullVM) {
-            _delegate = attemptDelegate("joeq.Clazz.Delegates$Klass");
+            _delegate = attemptDelegate("joeq.Class.Delegates$Klass");
         }
         if (_delegate == null) {
             _delegate = new NullDelegates.Klass();

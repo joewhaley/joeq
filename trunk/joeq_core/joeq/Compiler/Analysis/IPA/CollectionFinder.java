@@ -4,7 +4,7 @@
  * To change the template for this generated file go to
  * Window>Preferences>Java>Code Generation>Code and Comments
  */
-package joeq.Compil3r.Analysis.IPA;
+package joeq.Compiler.Analysis.IPA;
 
 import java.io.DataOutputStream;
 import java.io.FileOutputStream;
@@ -22,17 +22,17 @@ import org.sf.javabdd.BDD;
 import org.sf.javabdd.TypedBDDFactory;
 import org.sf.javabdd.TypedBDDFactory.TypedBDD;
 
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_Field;
-import joeq.Clazz.jq_Initializer;
-import joeq.Clazz.jq_InstanceMethod;
-import joeq.Clazz.jq_Method;
-import joeq.Clazz.jq_Reference;
-import joeq.Clazz.jq_Type;
-import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary;
-import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
-import joeq.Compil3r.Analysis.IPSSA.IPSSABuilder;
-import joeq.Compil3r.Analysis.IPSSA.IPSSABuilder.Application;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_Field;
+import joeq.Class.jq_Initializer;
+import joeq.Class.jq_InstanceMethod;
+import joeq.Class.jq_Method;
+import joeq.Class.jq_Reference;
+import joeq.Class.jq_Type;
+import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary;
+import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.Node;
+import joeq.Compiler.Analysis.IPSSA.IPSSABuilder;
+import joeq.Compiler.Analysis.IPSSA.IPSSABuilder.Application;
 import joeq.Util.Assert;
 
 /**

@@ -4,16 +4,16 @@
 package joeq.Memory.Manager;
 
 import joeq.Allocator.ObjectLayoutMethods;
-import joeq.Clazz.jq_Array;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_Primitive;
-import joeq.Clazz.jq_Reference;
+import joeq.Class.jq_Array;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_Primitive;
+import joeq.Class.jq_Reference;
 import joeq.Memory.HeapAddress;
 import joeq.Memory.Heap.BootHeap;
 import joeq.Memory.Heap.Heap;
-import joeq.Run_Time.Debug;
-import joeq.Run_Time.SystemInterface;
-import joeq.Run_Time.Unsafe;
+import joeq.Runtime.Debug;
+import joeq.Runtime.SystemInterface;
+import joeq.Runtime.Unsafe;
 import joeq.Scheduler.jq_NativeThread;
 
 /**

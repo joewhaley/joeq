@@ -3,13 +3,13 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Allocator;
 
-import joeq.Clazz.PrimordialClassLoader;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_InstanceMethod;
+import joeq.Class.PrimordialClassLoader;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_InstanceMethod;
 import joeq.GC.GCBits;
 import joeq.Memory.Address;
 import joeq.Memory.HeapAddress;
-import joeq.Run_Time.SystemInterface;
+import joeq.Runtime.SystemInterface;
 import joeq.Util.Assert;
 
 /**

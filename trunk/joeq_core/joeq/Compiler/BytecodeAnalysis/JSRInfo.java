@@ -1,7 +1,7 @@
 // JSRInfo.java, created Thu Jan 31 23:05:20 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Compil3r.BytecodeAnalysis;
+package joeq.Compiler.BytecodeAnalysis;
 
 /**
  *

@@ -1,17 +1,17 @@
 // Operand.java, created Fri Jan 11 16:42:38 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Compil3r.Quad;
+package joeq.Compiler.Quad;
 
-import joeq.Clazz.jq_Field;
-import joeq.Clazz.jq_Method;
-import joeq.Clazz.jq_Reference;
-import joeq.Clazz.jq_Type;
-import joeq.Compil3r.BytecodeAnalysis.BytecodeVisitor;
-import joeq.Compil3r.Quad.RegisterFactory.Register;
+import joeq.Class.jq_Field;
+import joeq.Class.jq_Method;
+import joeq.Class.jq_Reference;
+import joeq.Class.jq_Type;
+import joeq.Compiler.BytecodeAnalysis.BytecodeVisitor;
+import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Memory.Address;
 import joeq.Memory.HeapAddress;
-import joeq.Run_Time.Reflection;
+import joeq.Runtime.Reflection;
 import joeq.Util.Assert;
 
 /*

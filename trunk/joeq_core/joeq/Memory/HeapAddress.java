@@ -3,10 +3,10 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Memory;
 
-import joeq.Clazz.PrimordialClassLoader;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_Reference;
-import joeq.Clazz.jq_StaticField;
+import joeq.Class.PrimordialClassLoader;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_Reference;
+import joeq.Class.jq_StaticField;
 
 /**
  * @author  John Whaley <jwhaley@alum.mit.edu>

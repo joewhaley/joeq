@@ -7,11 +7,11 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import joeq.Allocator.DefaultHeapAllocator;
-import joeq.Clazz.PrimordialClassLoader;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_StaticField;
+import joeq.Class.PrimordialClassLoader;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_StaticField;
 import joeq.Memory.HeapAddress;
-import joeq.Run_Time.Debug;
+import joeq.Runtime.Debug;
 
 /**
  * @author John Whaley <jwhaley@alum.mit.edu>

@@ -8,17 +8,17 @@ import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import joeq.Clazz.PrimordialClassLoader;
-import joeq.Clazz.jq_BytecodeMap;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_CompiledCode;
-import joeq.Clazz.jq_InstanceField;
-import joeq.Clazz.jq_Method;
-import joeq.Clazz.jq_StaticField;
-import joeq.Clazz.jq_TryCatch;
+import joeq.Class.PrimordialClassLoader;
+import joeq.Class.jq_BytecodeMap;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_CompiledCode;
+import joeq.Class.jq_InstanceField;
+import joeq.Class.jq_Method;
+import joeq.Class.jq_StaticField;
+import joeq.Class.jq_TryCatch;
 import joeq.Memory.Address;
 import joeq.Memory.CodeAddress;
-import joeq.Run_Time.ExceptionDeliverer;
+import joeq.Runtime.ExceptionDeliverer;
 
 /**
  * This class provides the abstract interface for code allocators.  A code

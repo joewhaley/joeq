@@ -3,10 +3,10 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.ClassLib.Common.java.lang.ref;
 
-import joeq.Clazz.jq_InstanceMethod;
-import joeq.Clazz.jq_NameAndDesc;
-import joeq.Clazz.jq_Reference;
-import joeq.Run_Time.Reflection;
+import joeq.Class.jq_InstanceMethod;
+import joeq.Class.jq_NameAndDesc;
+import joeq.Class.jq_Reference;
+import joeq.Runtime.Reflection;
 import joeq.UTF.Utf8;
 import joeq.Util.Assert;
 

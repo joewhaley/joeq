@@ -3,21 +3,21 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Interpreter;
 
-import joeq.Clazz.PrimordialClassLoader;
-import joeq.Clazz.jq_Array;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_InstanceField;
-import joeq.Clazz.jq_InstanceMethod;
-import joeq.Clazz.jq_Method;
-import joeq.Clazz.jq_Primitive;
-import joeq.Clazz.jq_Reference;
-import joeq.Clazz.jq_StaticField;
-import joeq.Clazz.jq_TryCatchBC;
-import joeq.Clazz.jq_Type;
-import joeq.Compil3r.BytecodeAnalysis.BytecodeVisitor;
+import joeq.Class.PrimordialClassLoader;
+import joeq.Class.jq_Array;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_InstanceField;
+import joeq.Class.jq_InstanceMethod;
+import joeq.Class.jq_Method;
+import joeq.Class.jq_Primitive;
+import joeq.Class.jq_Reference;
+import joeq.Class.jq_StaticField;
+import joeq.Class.jq_TryCatchBC;
+import joeq.Class.jq_Type;
+import joeq.Compiler.BytecodeAnalysis.BytecodeVisitor;
 import joeq.Memory.Address;
 import joeq.Memory.HeapAddress;
-import joeq.Run_Time.Reflection;
+import joeq.Runtime.Reflection;
 import joeq.Util.Assert;
 
 /*
@@ -1011,7 +1011,7 @@ public abstract class BytecodeInterpreter {
             f = (jq_Method) tryResolve(f);
             jq_Class k = f.getDeclaringClass();
             k.cls_initialize();
-            jq_Class _class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Run_Time/Unsafe;");
+            jq_Class _class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Runtime/Unsafe;");
             if (k == _class || k.isAddressType()) {
                 try {
                     // redirect call

@@ -1,7 +1,7 @@
 // Solver.java, created Thu Apr 25 16:32:26 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Compil3r.Dataflow;
+package joeq.Compiler.Dataflow;
 
 import java.util.Iterator;
 import java.util.Map;

@@ -1,4 +1,4 @@
-package joeq.Compil3r.Analysis.IPSSA.Utils;
+package joeq.Compiler.Analysis.IPSSA.Utils;
 
 import java.io.PrintStream;
 import java.util.HashMap;
@@ -8,20 +8,20 @@ import java.util.Set;
 
 import joeq.Util.Assert;
 
-import joeq.Clazz.jq_Method;
-import joeq.Compil3r.Quad.BasicBlock;
-import joeq.Compil3r.Quad.BasicBlockVisitor;
-import joeq.Compil3r.Quad.CodeCache;
-import joeq.Compil3r.Quad.ControlFlowGraph;
-import joeq.Compil3r.Quad.ControlFlowGraphVisitor;
-import joeq.Compil3r.Quad.Dominators;
-import joeq.Compil3r.Quad.Quad;
-import joeq.Compil3r.Quad.QuadIterator;
-import joeq.Compil3r.Quad.Dominators.DominatorNode;
+import joeq.Class.jq_Method;
+import joeq.Compiler.Quad.BasicBlock;
+import joeq.Compiler.Quad.BasicBlockVisitor;
+import joeq.Compiler.Quad.CodeCache;
+import joeq.Compiler.Quad.ControlFlowGraph;
+import joeq.Compiler.Quad.ControlFlowGraphVisitor;
+import joeq.Compiler.Quad.Dominators;
+import joeq.Compiler.Quad.Quad;
+import joeq.Compiler.Quad.QuadIterator;
+import joeq.Compiler.Quad.Dominators.DominatorNode;
 import joeq.Util.SyntheticGraphs.Graph;
-import joeq.Compil3r.Analysis.IPA.ProgramLocation;
-import joeq.Compil3r.Analysis.IPA.ProgramLocation.QuadProgramLocation;
-import joeq.Compil3r.Analysis.IPSSA.DominatorQuery;
+import joeq.Compiler.Analysis.IPA.ProgramLocation;
+import joeq.Compiler.Analysis.IPA.ProgramLocation.QuadProgramLocation;
+import joeq.Compiler.Analysis.IPSSA.DominatorQuery;
 
 /**
  * A pretty obvious implementation of DominatorQuery, nothing fancy here. 

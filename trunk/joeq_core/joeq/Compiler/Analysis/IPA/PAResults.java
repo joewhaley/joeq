@@ -1,7 +1,7 @@
  // PAResults.java, created Nov 3, 2003 12:34:24 AM by joewhaley
 // Copyright (C) 2003 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Compil3r.Analysis.IPA;
+package joeq.Compiler.Analysis.IPA;
 
 import java.io.DataInput;
 import java.io.DataInputStream;
@@ -37,27 +37,27 @@ import org.sf.javabdd.BDDFactory;
 import org.sf.javabdd.BDDPairing;
 import org.sf.javabdd.TypedBDDFactory.TypedBDD;
 
-import joeq.Clazz.PrimordialClassLoader;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_Field;
-import joeq.Clazz.jq_Method;
-import joeq.Clazz.jq_NameAndDesc;
-import joeq.Clazz.jq_Reference;
-import joeq.Clazz.jq_Type;
-import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary;
-import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.CheckCastNode;
-import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
-import joeq.Compil3r.Analysis.IPA.ProgramLocation.QuadProgramLocation;
-import joeq.Compil3r.Analysis.IPSSA.ContextSet;
-import joeq.Compil3r.Analysis.IPSSA.SSALocation;
-import joeq.Compil3r.Quad.BasicBlock;
-import joeq.Compil3r.Quad.CallGraph;
-import joeq.Compil3r.Quad.CodeCache;
-import joeq.Compil3r.Quad.LoadedCallGraph;
-import joeq.Compil3r.Quad.Operator;
-import joeq.Compil3r.Quad.Quad;
-import joeq.Compil3r.Quad.Operand.RegisterOperand;
-import joeq.Compil3r.Quad.RegisterFactory.Register;
+import joeq.Class.PrimordialClassLoader;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_Field;
+import joeq.Class.jq_Method;
+import joeq.Class.jq_NameAndDesc;
+import joeq.Class.jq_Reference;
+import joeq.Class.jq_Type;
+import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary;
+import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.CheckCastNode;
+import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.Node;
+import joeq.Compiler.Analysis.IPA.ProgramLocation.QuadProgramLocation;
+import joeq.Compiler.Analysis.IPSSA.ContextSet;
+import joeq.Compiler.Analysis.IPSSA.SSALocation;
+import joeq.Compiler.Quad.BasicBlock;
+import joeq.Compiler.Quad.CallGraph;
+import joeq.Compiler.Quad.CodeCache;
+import joeq.Compiler.Quad.LoadedCallGraph;
+import joeq.Compiler.Quad.Operator;
+import joeq.Compiler.Quad.Quad;
+import joeq.Compiler.Quad.Operand.RegisterOperand;
+import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Main.Driver;
 import joeq.Main.HostedVM;
 import joeq.Util.Assert;
@@ -1631,21 +1631,21 @@ public class PAResults implements PointerAnalysisResults {
     }
 
     /* (non-Javadoc)
-     * @see Compil3r.Analysis.IPA.PointerAnalysisResults#getAliases(Clazz.jq_Method, Compil3r.Analysis.IPA.SSALocation)
+     * @see Compiler.Analysis.IPA.PointerAnalysisResults#getAliases(Class.jq_Method, Compiler.Analysis.IPA.SSALocation)
      */
     public Set/*<ContextSet.ContextLocationPair>*/ getAliases(jq_Method method, SSALocation loc) {
         return Collections.EMPTY_SET;
     }
 
     /* (non-Javadoc)
-     * @see Compil3r.Analysis.IPA.PointerAnalysisResults#hasAliases(Clazz.jq_Method, Compil3r.Analysis.IPA.SSALocation, Compil3r.Analysis.IPA.ContextSet)
+     * @see Compiler.Analysis.IPA.PointerAnalysisResults#hasAliases(Class.jq_Method, Compiler.Analysis.IPA.SSALocation, Compiler.Analysis.IPA.ContextSet)
      */
     public boolean hasAliases(jq_Method method, SSALocation loc, ContextSet contextSet) {
         return false;
     }
 
     /* (non-Javadoc)
-     * @see Compil3r.Analysis.IPA.PointerAnalysisResults#hasAliases(Clazz.jq_Method, Compil3r.Analysis.IPA.SSALocation)
+     * @see Compiler.Analysis.IPA.PointerAnalysisResults#hasAliases(Class.jq_Method, Compiler.Analysis.IPA.SSALocation)
      */
     public boolean hasAliases(jq_Method method, SSALocation loc) {
         return false;
@@ -1872,7 +1872,7 @@ public class PAResults implements PointerAnalysisResults {
 
     /**
      * Generic z-statistic stuff.
-     * Default p0. Set with set Compil3r.Analysis.PAResults.p0 0.5
+     * Default p0. Set with set Compiler.Analysis.PAResults.p0 0.5
      */
     public static double p0 = 0.85;
 

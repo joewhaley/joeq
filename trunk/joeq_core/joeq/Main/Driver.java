@@ -14,20 +14,20 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.StringTokenizer;
 
-import joeq.Clazz.PrimordialClassLoader;
-import joeq.Clazz.jq_Array;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_MethodVisitor;
-import joeq.Clazz.jq_Primitive;
-import joeq.Clazz.jq_StaticField;
-import joeq.Clazz.jq_StaticMethod;
-import joeq.Clazz.jq_Type;
-import joeq.Clazz.jq_TypeVisitor;
-import joeq.Compil3r.Quad.BasicBlockVisitor;
-import joeq.Compil3r.Quad.CodeCache;
-import joeq.Compil3r.Quad.ControlFlowGraphVisitor;
-import joeq.Compil3r.Quad.QuadVisitor;
-import joeq.Run_Time.Reflection;
+import joeq.Class.PrimordialClassLoader;
+import joeq.Class.jq_Array;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_MethodVisitor;
+import joeq.Class.jq_Primitive;
+import joeq.Class.jq_StaticField;
+import joeq.Class.jq_StaticMethod;
+import joeq.Class.jq_Type;
+import joeq.Class.jq_TypeVisitor;
+import joeq.Compiler.Quad.BasicBlockVisitor;
+import joeq.Compiler.Quad.CodeCache;
+import joeq.Compiler.Quad.ControlFlowGraphVisitor;
+import joeq.Compiler.Quad.QuadVisitor;
+import joeq.Runtime.Reflection;
 import joeq.UTF.Utf8;
 import joeq.Util.Assert;
 import joeq.Util.Strings;
@@ -196,7 +196,7 @@ public abstract class Driver {
                         Object[] args = new Object[m.getParamTypes().length];
                         index = parseMethodArgs(args, m.getParamTypes(), commandBuffer, index);
                         joeq.Interpreter.QuadInterpreter s = null;
-                        java.lang.reflect.Method im = interpreterClass.getMethod("interpretMethod", new Class[]{Class.forName("Clazz.jq_Method"), new Object[0].getClass()});
+                        java.lang.reflect.Method im = interpreterClass.getMethod("interpretMethod", new Class[]{Class.forName("Class.jq_Method"), new Object[0].getClass()});
                         s = (joeq.Interpreter.QuadInterpreter) im.invoke(null, new Object[]{m, args});
                         //s = joeq.Interpreter.QuadInterpreter.interpretMethod(m, args);
                         System.out.flush();
@@ -211,7 +211,7 @@ public abstract class Driver {
                     System.err.println("Interpreter method in " + interpreterClass + " not found! " + x);
                     return index;
                 } catch (ClassNotFoundException x) {
-                    System.err.println("Clazz.jq_Method class not found! " + x);
+                    System.err.println("Class.jq_Method class not found! " + x);
                     return index;
                 } catch (IllegalAccessException x) {
                     System.err.println("Cannot access interpreter " + interpreterClass + ": " + x);

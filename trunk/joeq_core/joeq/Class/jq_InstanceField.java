@@ -1,14 +1,14 @@
 // jq_InstanceField.java, created Mon Feb  5 23:23:20 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Clazz;
+package joeq.Class;
 
 import java.io.DataInput;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import joeq.Clazz.PrimordialClassLoader;
+import joeq.Class.PrimordialClassLoader;
 import joeq.Main.jq;
 import joeq.Util.Assert;
 
@@ -82,6 +82,6 @@ public final class jq_InstanceField extends jq_Field {
     
     public static final jq_Class _class;
     static {
-        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Clazz/jq_InstanceField;");
+        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Class/jq_InstanceField;");
     }
 }

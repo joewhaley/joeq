@@ -3,7 +3,7 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Main;
 
-import joeq.Clazz.jq_Class;
+import joeq.Class.jq_Class;
 
 /**
  * @author  John Whaley <jwhaley@alum.mit.edu>
@@ -16,7 +16,7 @@ public class PrintCFG {
             c[i] = (jq_Class)Helper.load(args[i]);
         }
 
-        joeq.Compil3r.Quad.PrintCFG pass = new joeq.Compil3r.Quad.PrintCFG();
+        joeq.Compiler.Quad.PrintCFG pass = new joeq.Compiler.Quad.PrintCFG();
 
         for (int i = 0; i < args.length; i++) {
             Helper.runPass(c[i], pass);

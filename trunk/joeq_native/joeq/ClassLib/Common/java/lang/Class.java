@@ -4,23 +4,23 @@
 package joeq.ClassLib.Common.java.lang;
 
 import joeq.ClassLib.Common.ClassUtils;
-import joeq.Clazz.jq_Array;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_ClassFileConstants;
-import joeq.Clazz.jq_ClassInitializer;
-import joeq.Clazz.jq_Field;
-import joeq.Clazz.jq_Initializer;
-import joeq.Clazz.jq_InstanceField;
-import joeq.Clazz.jq_InstanceMethod;
-import joeq.Clazz.jq_Method;
-import joeq.Clazz.jq_NameAndDesc;
-import joeq.Clazz.jq_Primitive;
-import joeq.Clazz.jq_Reference;
-import joeq.Clazz.jq_StaticField;
-import joeq.Clazz.jq_StaticMethod;
-import joeq.Clazz.jq_Type;
-import joeq.Run_Time.Reflection;
-import joeq.Run_Time.TypeCheck;
+import joeq.Class.jq_Array;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_ClassFileConstants;
+import joeq.Class.jq_ClassInitializer;
+import joeq.Class.jq_Field;
+import joeq.Class.jq_Initializer;
+import joeq.Class.jq_InstanceField;
+import joeq.Class.jq_InstanceMethod;
+import joeq.Class.jq_Method;
+import joeq.Class.jq_NameAndDesc;
+import joeq.Class.jq_Primitive;
+import joeq.Class.jq_Reference;
+import joeq.Class.jq_StaticField;
+import joeq.Class.jq_StaticMethod;
+import joeq.Class.jq_Type;
+import joeq.Runtime.Reflection;
+import joeq.Runtime.TypeCheck;
 import joeq.UTF.Utf8;
 import joeq.Util.Assert;
 
@@ -39,7 +39,7 @@ public class Class {
     
     private Class(jq_Type t) {
         this.jq_type = t;
-        //joeq.Run_Time.SystemInterface.debugmsg("Created new Class object for "+t.getName());
+        //joeq.Runtime.SystemInterface.debugmsg("Created new Class object for "+t.getName());
     }
     
     // native method implementations.

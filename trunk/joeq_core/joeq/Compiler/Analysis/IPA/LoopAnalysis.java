@@ -1,4 +1,4 @@
-package joeq.Compil3r.Analysis.IPA;
+package joeq.Compiler.Analysis.IPA;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -12,16 +12,16 @@ import joeq.Util.Assert;
 import joeq.Util.Graphs.SCCTopSortedGraph;
 import joeq.Util.Graphs.SCComponent;
 import joeq.Util.Graphs.Traversals;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_Method;
-import joeq.Compil3r.Quad.BasicBlock;
-import joeq.Compil3r.Quad.CallGraph;
-import joeq.Compil3r.Quad.CodeCache;
-import joeq.Compil3r.Quad.ControlFlowGraph;
-import joeq.Compil3r.Quad.ControlFlowGraphVisitor;
-import joeq.Compil3r.Quad.LoadedCallGraph;
-import joeq.Compil3r.Quad.Quad;
-import joeq.Compil3r.Quad.QuadVisitor;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_Method;
+import joeq.Compiler.Quad.BasicBlock;
+import joeq.Compiler.Quad.CallGraph;
+import joeq.Compiler.Quad.CodeCache;
+import joeq.Compiler.Quad.ControlFlowGraph;
+import joeq.Compiler.Quad.ControlFlowGraphVisitor;
+import joeq.Compiler.Quad.LoadedCallGraph;
+import joeq.Compiler.Quad.Quad;
+import joeq.Compiler.Quad.QuadVisitor;
 
 /**
  * @author jwhaley
@@ -54,7 +54,7 @@ public class LoopAnalysis implements ControlFlowGraphVisitor {
     }
     
     /* (non-Javadoc)
-     * @see Compil3r.Quad.ControlFlowGraphVisitor#visitCFG(Compil3r.Quad.ControlFlowGraph)
+     * @see Compiler.Quad.ControlFlowGraphVisitor#visitCFG(Compiler.Quad.ControlFlowGraph)
      */
     public void visitCFG(ControlFlowGraph cfg) {
         caller = cfg.getMethod();

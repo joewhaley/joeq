@@ -1,7 +1,7 @@
 // Debug.java, created Sat Feb 22 13:35:27 2003 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Run_Time;
+package joeq.Runtime;
 
 import joeq.Main.jq;
 import joeq.Memory.Address;
@@ -163,10 +163,10 @@ public abstract class Debug {
         _delegate = null;
         boolean nullVM = jq.nullVM;
         if (!nullVM) {
-            _delegate = attemptDelegate("joeq.Run_Time.DebugImpl");
+            _delegate = attemptDelegate("joeq.Runtime.DebugImpl");
         }
         if (_delegate == null) {
-            _delegate = new joeq.Run_Time.BasicDebugImpl();
+            _delegate = new joeq.Runtime.BasicDebugImpl();
         }
     }
 

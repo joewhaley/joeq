@@ -9,7 +9,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 
 import joeq.Memory.HeapAddress;
-import joeq.Run_Time.StackHeapWalker;
+import joeq.Runtime.StackHeapWalker;
 import joeq.Scheduler.jq_NativeThread;
 import joeq.Scheduler.jq_RegisterState;
 

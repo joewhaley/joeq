@@ -1,17 +1,17 @@
-package joeq.Compil3r.Analysis.IPSSA;
+package joeq.Compiler.Analysis.IPSSA;
 
 import java.util.Set;
 
 import joeq.Util.Assert;
 
-import joeq.Clazz.jq_Method;
-import joeq.Compil3r.Analysis.IPA.PA;
-import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
-import joeq.Compil3r.Analysis.IPA.PAResults;
-import joeq.Compil3r.Analysis.IPA.PointerAnalysisResults;
-import joeq.Compil3r.Analysis.IPA.ProgramLocation.QuadProgramLocation;
-import joeq.Compil3r.Quad.BasicBlock;
-import joeq.Compil3r.Quad.CallGraph;
+import joeq.Class.jq_Method;
+import joeq.Compiler.Analysis.IPA.PA;
+import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.Node;
+import joeq.Compiler.Analysis.IPA.PAResults;
+import joeq.Compiler.Analysis.IPA.PointerAnalysisResults;
+import joeq.Compiler.Analysis.IPA.ProgramLocation.QuadProgramLocation;
+import joeq.Compiler.Quad.BasicBlock;
+import joeq.Compiler.Quad.CallGraph;
 
 /**
  * This class returns pointer information in terms of ParametrizedLocation's.

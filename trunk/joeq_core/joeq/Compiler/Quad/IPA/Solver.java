@@ -1,15 +1,15 @@
 // Solver.java, created Jun 14, 2003 10:20:27 PM by joewhaley
 // Copyright (C) 2003 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Compil3r.Quad.IPA;
+package joeq.Compiler.Quad.IPA;
 
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import joeq.Clazz.jq_Method;
-import joeq.Compil3r.Quad.CallGraph;
+import joeq.Class.jq_Method;
+import joeq.Compiler.Quad.CallGraph;
 import joeq.Util.Assert;
 import joeq.Util.Graphs.Navigator;
 import joeq.Util.Graphs.SCCTopSortedGraph;

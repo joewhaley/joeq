@@ -1,4 +1,4 @@
-package joeq.Compil3r.Analysis.IPSSA;
+package joeq.Compiler.Analysis.IPSSA;
 
 import java.io.PrintStream;
 import java.util.HashMap;
@@ -9,18 +9,18 @@ import java.util.LinkedList;
 import joeq.Util.Assert;
 import joeq.Util.Templates.ListIterator;
 
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_Method;
-import joeq.Compil3r.Analysis.IPSSA.Utils.*;
-import joeq.Compil3r.Quad.BasicBlock;
-import joeq.Compil3r.Quad.BasicBlockVisitor;
-import joeq.Compil3r.Quad.CodeCache;
-import joeq.Compil3r.Quad.ControlFlowGraph;
-import joeq.Compil3r.Quad.DotGraph;
-import joeq.Compil3r.Quad.ExceptionHandler;
-import joeq.Compil3r.Quad.Operator;
-import joeq.Compil3r.Quad.Quad;
-import joeq.Compil3r.Quad.QuadIterator;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_Method;
+import joeq.Compiler.Analysis.IPSSA.Utils.*;
+import joeq.Compiler.Quad.BasicBlock;
+import joeq.Compiler.Quad.BasicBlockVisitor;
+import joeq.Compiler.Quad.CodeCache;
+import joeq.Compiler.Quad.ControlFlowGraph;
+import joeq.Compiler.Quad.DotGraph;
+import joeq.Compiler.Quad.ExceptionHandler;
+import joeq.Compiler.Quad.Operator;
+import joeq.Compiler.Quad.Quad;
+import joeq.Compiler.Quad.QuadIterator;
 
 /**
  * @author Vladimir Livshits

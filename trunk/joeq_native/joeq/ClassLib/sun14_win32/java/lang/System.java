@@ -3,7 +3,7 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.ClassLib.sun14_win32.java.lang;
 
-import joeq.Clazz.PrimordialClassLoader;
+import joeq.Class.PrimordialClassLoader;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>

@@ -1,7 +1,7 @@
 // LoadedCallGraph.java, created Jun 27, 2003 12:46:40 AM by joewhaley
 // Copyright (C) 2003 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Compil3r.Quad;
+package joeq.Compiler.Quad;
 
 import java.io.DataInput;
 import java.io.DataInputStream;
@@ -18,13 +18,13 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
 
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_Member;
-import joeq.Clazz.jq_Method;
-import joeq.Clazz.jq_FakeInstanceMethod;
-import joeq.Clazz.jq_Type;
-import joeq.Compil3r.Analysis.IPA.ProgramLocation;
-import joeq.Compil3r.Analysis.IPA.ProgramLocation.BCProgramLocation;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_Member;
+import joeq.Class.jq_Method;
+import joeq.Class.jq_FakeInstanceMethod;
+import joeq.Class.jq_Type;
+import joeq.Compiler.Analysis.IPA.ProgramLocation;
+import joeq.Compiler.Analysis.IPA.ProgramLocation.BCProgramLocation;
 import joeq.Util.Assert;
 import joeq.Util.Collections.GenericInvertibleMultiMap;
 import joeq.Util.Collections.GenericMultiMap;
@@ -243,7 +243,7 @@ public class LoadedCallGraph extends CallGraph {
     }
 
     /* (non-Javadoc)
-     * @see Compil3r.Quad.CallGraph#setRoots(java.util.Collection)
+     * @see Compiler.Quad.CallGraph#setRoots(java.util.Collection)
      */
     public void setRoots(Collection roots) {
         // Root set should be the same!
@@ -251,14 +251,14 @@ public class LoadedCallGraph extends CallGraph {
     }
 
     /* (non-Javadoc)
-     * @see Compil3r.Quad.CallGraph#getRoots()
+     * @see Compiler.Quad.CallGraph#getRoots()
      */
     public Collection getRoots() {
         return roots;
     }
 
     /* (non-Javadoc)
-     * @see Compil3r.Quad.CallGraph#getTargetMethods(java.lang.Object, Compil3r.Quad.ProgramLocation)
+     * @see Compiler.Quad.CallGraph#getTargetMethods(java.lang.Object, Compiler.Quad.ProgramLocation)
      */
     public Collection getTargetMethods(Object context, ProgramLocation callSite) {
         if (callSite instanceof ProgramLocation.QuadProgramLocation) {
@@ -268,28 +268,28 @@ public class LoadedCallGraph extends CallGraph {
     }
 
     /* (non-Javadoc)
-     * @see Compil3r.Quad.CallGraph#entrySet()
+     * @see Compiler.Quad.CallGraph#entrySet()
      */
     public Set entrySet() {
         return edges.entrySet();
     }
 
     /* (non-Javadoc)
-     * @see Compil3r.Quad.CallGraph#getAllCallSites()
+     * @see Compiler.Quad.CallGraph#getAllCallSites()
      */
     public Collection getAllCallSites() {
         return edges.keySet();
     }
 
     /* (non-Javadoc)
-     * @see Compil3r.Quad.CallGraph#getAllMethods()
+     * @see Compiler.Quad.CallGraph#getAllMethods()
      */
     public Collection getAllMethods() {
         return methods;
     }
 
     /* (non-Javadoc)
-     * @see Compil3r.Quad.CallGraph#getCallees(Clazz.jq_Method)
+     * @see Compiler.Quad.CallGraph#getCallees(Class.jq_Method)
      */
     public Collection getCallees(jq_Method caller) {
         Collection c = CachedCallGraph.getFromMultiMap(callSites, edges, caller);
@@ -297,7 +297,7 @@ public class LoadedCallGraph extends CallGraph {
     }
     
     /* (non-Javadoc)
-     * @see Compil3r.Quad.CallGraph#getCallers(Clazz.jq_Method)
+     * @see Compiler.Quad.CallGraph#getCallers(Class.jq_Method)
      */
     public Collection getCallers(jq_Method callee) {
         MultiMap m1 = edges.invert();
@@ -306,7 +306,7 @@ public class LoadedCallGraph extends CallGraph {
     }
     
     /* (non-Javadoc)
-     * @see Compil3r.Quad.CallGraph#getCallerMethods(Clazz.jq_Method)
+     * @see Compiler.Quad.CallGraph#getCallerMethods(Class.jq_Method)
      */
     public Collection getCallerMethods(jq_Method callee) {
         MultiMap m1 = edges.invert();
@@ -329,7 +329,7 @@ public class LoadedCallGraph extends CallGraph {
     }
     
     /* (non-Javadoc)
-     * @see Compil3r.Quad.CallGraph#getCallSites(Clazz.jq_Method)
+     * @see Compiler.Quad.CallGraph#getCallSites(Class.jq_Method)
      */
     public Collection getCallSites(jq_Method caller) {
         Collection c = callSites.getValues(caller);

@@ -1,19 +1,19 @@
 // ControlDependence.java, created Wed Jan 30 22:31:58 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Compil3r.Quad;
+package joeq.Compiler.Quad;
 
 import java.util.Iterator;
 
-import joeq.Clazz.jq_Method;
-import joeq.Clazz.jq_MethodVisitor;
-import joeq.Compil3r.Quad.Operand.AConstOperand;
-import joeq.Compil3r.Quad.Operand.ConditionOperand;
-import joeq.Compil3r.Quad.Operand.FieldOperand;
-import joeq.Compil3r.Quad.Operand.IConstOperand;
-import joeq.Compil3r.Quad.Operator.Getfield;
-import joeq.Compil3r.Quad.Operator.IntIfCmp;
-import joeq.Compil3r.Quad.Operator.Return;
+import joeq.Class.jq_Method;
+import joeq.Class.jq_MethodVisitor;
+import joeq.Compiler.Quad.Operand.AConstOperand;
+import joeq.Compiler.Quad.Operand.ConditionOperand;
+import joeq.Compiler.Quad.Operand.FieldOperand;
+import joeq.Compiler.Quad.Operand.IConstOperand;
+import joeq.Compiler.Quad.Operator.Getfield;
+import joeq.Compiler.Quad.Operator.IntIfCmp;
+import joeq.Compiler.Quad.Operator.Return;
 import joeq.Util.Templates.List;
 import joeq.Util.Templates.ListIterator;
 
@@ -30,7 +30,7 @@ public class ControlDependence extends jq_MethodVisitor.EmptyVisitor {
         if (m.getBytecode() == null) return;
         System.out.println("Visiting method "+m);
         current_method = m;
-        ControlFlowGraph cfg = joeq.Compil3r.Quad.CodeCache.getCode(m);
+        ControlFlowGraph cfg = joeq.Compiler.Quad.CodeCache.getCode(m);
         Dominators dom = new Dominators(false);
         dom.visitMethod(m);
         Dominators.DominatorNode root = dom.computeTree();

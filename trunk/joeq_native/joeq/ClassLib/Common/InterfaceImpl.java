@@ -11,22 +11,22 @@ import java.util.Vector;
 import joeq.Bootstrap.BootImage;
 import joeq.Bootstrap.MethodInvocation;
 import joeq.Bootstrap.ObjectTraverser;
-import joeq.Clazz.PrimordialClassLoader;
+import joeq.Class.PrimordialClassLoader;
 import joeq.ClassLib.ClassLibInterface;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_InstanceField;
-import joeq.Clazz.jq_Member;
-import joeq.Clazz.jq_Method;
-import joeq.Clazz.jq_StaticField;
-import joeq.Clazz.jq_Type;
-import joeq.Clazz.jq_Reference.jq_NullType;
-import joeq.Compil3r.Quad.BytecodeToQuad.jq_ReturnAddressType;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_InstanceField;
+import joeq.Class.jq_Member;
+import joeq.Class.jq_Method;
+import joeq.Class.jq_StaticField;
+import joeq.Class.jq_Type;
+import joeq.Class.jq_Reference.jq_NullType;
+import joeq.Compiler.Quad.BytecodeToQuad.jq_ReturnAddressType;
 import joeq.Main.jq;
 import joeq.Memory.CodeAddress;
 import joeq.Memory.HeapAddress;
 import joeq.Memory.StackAddress;
-import joeq.Run_Time.Reflection;
-import joeq.Run_Time.TypeCheck;
+import joeq.Runtime.Reflection;
+import joeq.Runtime.TypeCheck;
 import joeq.Scheduler.jq_Thread;
 import joeq.Util.Assert;
 
@@ -95,9 +95,9 @@ public abstract class InterfaceImpl implements Interface {
             nullInstanceFields.add(k.getOrCreateInstanceField("entries", "Ljava/util/Hashtable;"));
             nullInstanceFields.add(k.getOrCreateInstanceField("cenpos", "J"));
             nullInstanceFields.add(k.getOrCreateInstanceField("pos", "J"));
-            k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Clazz/PrimordialClassLoader$ZipFileElement;");
+            k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Class/PrimordialClassLoader$ZipFileElement;");
             nullInstanceFields.add(k.getOrCreateInstanceField("entries", "Ljava/util/Map;"));
-            k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Clazz/PrimordialClassLoader$PathElement;");
+            k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Class/PrimordialClassLoader$PathElement;");
             nullInstanceFields.add(k.getOrCreateInstanceField("entries", "Ljava/util/Set;"));
         }
 
@@ -122,7 +122,7 @@ public abstract class InterfaceImpl implements Interface {
                     return null;
                 if (o == jq_ReturnAddressType.INSTANCE)
                     return null;
-                if (!joeq.Clazz.jq_Class.USE_CLASS_OBJECT_FIELD &&
+                if (!joeq.Class.jq_Class.USE_CLASS_OBJECT_FIELD &&
                     fieldName.equals("class_object"))
                     return Reflection.getJDKType((jq_Type) o);
             } else if (c == PrimordialClassLoader.getJavaLangReflectField()) {
@@ -137,8 +137,8 @@ public abstract class InterfaceImpl implements Interface {
                 c == PrimordialClassLoader.getJavaLangReflectConstructor()) {
                 if (fieldName.equals("jq_init"))
                     return Reflection.getJQMember((Constructor) o);
-            } else if (!joeq.Clazz.jq_Member.USE_MEMBER_OBJECT_FIELD &&
-                       (c == PrimordialClassLoader.loader.getBSType("Ljoeq/Clazz/jq_Member;"))) {
+            } else if (!joeq.Class.jq_Member.USE_MEMBER_OBJECT_FIELD &&
+                       (c == PrimordialClassLoader.loader.getBSType("Ljoeq/Class/jq_Member;"))) {
                 if (fieldName.equals("member_object")) {
                     // reflection returns different objects every time!
                     // cache one and use it from now on.
@@ -246,75 +246,75 @@ public abstract class InterfaceImpl implements Interface {
         }
     }
     
-    public java.lang.Class createNewClass(joeq.Clazz.jq_Type f) {
+    public java.lang.Class createNewClass(joeq.Class.jq_Type f) {
         Assert._assert(jq.RunningNative);
         return joeq.ClassLib.Common.java.lang.Class.createNewClass(f);
     }
     
-    public java.lang.reflect.Constructor createNewConstructor(joeq.Clazz.jq_Initializer f) {
+    public java.lang.reflect.Constructor createNewConstructor(joeq.Class.jq_Initializer f) {
         Assert._assert(jq.RunningNative);
         return joeq.ClassLib.Common.java.lang.reflect.Constructor.createNewConstructor(f);
     }
     
-    public void initNewConstructor(java.lang.reflect.Constructor dis, joeq.Clazz.jq_Initializer f) {
+    public void initNewConstructor(java.lang.reflect.Constructor dis, joeq.Class.jq_Initializer f) {
         Assert._assert(jq.RunningNative);
         java.lang.Object o = dis;
         joeq.ClassLib.Common.java.lang.reflect.Constructor.initNewConstructor((joeq.ClassLib.Common.java.lang.reflect.Constructor)o, f);
     }
     
-    public java.lang.reflect.Field createNewField(joeq.Clazz.jq_Field f) {
+    public java.lang.reflect.Field createNewField(joeq.Class.jq_Field f) {
         Assert._assert(jq.RunningNative);
         return joeq.ClassLib.Common.java.lang.reflect.Field.createNewField(f);
     }
     
-    public void initNewField(java.lang.reflect.Field dis, joeq.Clazz.jq_Field f) {
+    public void initNewField(java.lang.reflect.Field dis, joeq.Class.jq_Field f) {
         Assert._assert(jq.RunningNative);
         java.lang.Object o = dis;
         joeq.ClassLib.Common.java.lang.reflect.Field.initNewField((joeq.ClassLib.Common.java.lang.reflect.Field)o, f);
     }
     
-    public java.lang.reflect.Method createNewMethod(joeq.Clazz.jq_Method f) {
+    public java.lang.reflect.Method createNewMethod(joeq.Class.jq_Method f) {
         Assert._assert(jq.RunningNative);
         return joeq.ClassLib.Common.java.lang.reflect.Method.createNewMethod(f);
     }
     
-    public void initNewMethod(java.lang.reflect.Method dis, joeq.Clazz.jq_Method f) {
+    public void initNewMethod(java.lang.reflect.Method dis, joeq.Class.jq_Method f) {
         Assert._assert(jq.RunningNative);
         java.lang.Object o = dis;
         joeq.ClassLib.Common.java.lang.reflect.Method.initNewMethod((joeq.ClassLib.Common.java.lang.reflect.Method)o, f);
     }
     
-    public joeq.Clazz.jq_Field getJQField(java.lang.reflect.Field f) {
+    public joeq.Class.jq_Field getJQField(java.lang.reflect.Field f) {
         Assert._assert(jq.RunningNative);
         java.lang.Object o = f;
         return ((joeq.ClassLib.Common.java.lang.reflect.Field)o).jq_field;
     }
     
-    public joeq.Clazz.jq_Initializer getJQInitializer(java.lang.reflect.Constructor f) {
+    public joeq.Class.jq_Initializer getJQInitializer(java.lang.reflect.Constructor f) {
         Assert._assert(jq.RunningNative);
         java.lang.Object o = f;
         return ((joeq.ClassLib.Common.java.lang.reflect.Constructor)o).jq_init;
     }
     
-    public joeq.Clazz.jq_Method getJQMethod(java.lang.reflect.Method f) {
+    public joeq.Class.jq_Method getJQMethod(java.lang.reflect.Method f) {
         Assert._assert(jq.RunningNative);
         java.lang.Object o = f;
         return ((joeq.ClassLib.Common.java.lang.reflect.Method)o).jq_method;
     }
     
-    public joeq.Clazz.jq_Type getJQType(java.lang.Class k) {
+    public joeq.Class.jq_Type getJQType(java.lang.Class k) {
         Assert._assert(jq.RunningNative);
         java.lang.Object o = k;
         return ((joeq.ClassLib.Common.java.lang.Class)o).jq_type;
     }
     
-    public joeq.Clazz.jq_Type getOrCreateType(java.lang.ClassLoader cl, joeq.UTF.Utf8 desc) {
+    public joeq.Class.jq_Type getOrCreateType(java.lang.ClassLoader cl, joeq.UTF.Utf8 desc) {
         Assert._assert(jq.RunningNative);
         java.lang.Object o = cl;
         return ((joeq.ClassLib.Common.java.lang.ClassLoader)o).getOrCreateType(desc);
     }
     
-    public void unloadType(java.lang.ClassLoader cl, joeq.Clazz.jq_Type t) {
+    public void unloadType(java.lang.ClassLoader cl, joeq.Class.jq_Type t) {
         Assert._assert(jq.RunningNative);
         java.lang.Object o = cl;
         ((joeq.ClassLib.Common.java.lang.ClassLoader)o).unloadType(t);

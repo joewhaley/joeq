@@ -1,25 +1,25 @@
 // ProgramLocation.java, created Sun Sep  1 17:38:25 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Compil3r.Analysis.IPA;
+package joeq.Compiler.Analysis.IPA;
 
 import java.io.IOException;
 import java.util.Map;
 import java.util.StringTokenizer;
 
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_ClassFileConstants;
-import joeq.Clazz.jq_InstanceMethod;
-import joeq.Clazz.jq_FakeInstanceMethod;
-import joeq.Clazz.jq_Method;
-import joeq.Clazz.jq_Type;
-import joeq.Compil3r.BytecodeAnalysis.BytecodeVisitor;
-import joeq.Compil3r.BytecodeAnalysis.Bytecodes;
-import joeq.Compil3r.Quad.CodeCache;
-import joeq.Compil3r.Quad.ControlFlowGraph;
-import joeq.Compil3r.Quad.Quad;
-import joeq.Compil3r.Quad.QuadIterator;
-import joeq.Compil3r.Quad.Operator.Invoke;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_ClassFileConstants;
+import joeq.Class.jq_InstanceMethod;
+import joeq.Class.jq_FakeInstanceMethod;
+import joeq.Class.jq_Method;
+import joeq.Class.jq_Type;
+import joeq.Compiler.BytecodeAnalysis.BytecodeVisitor;
+import joeq.Compiler.BytecodeAnalysis.Bytecodes;
+import joeq.Compiler.Quad.CodeCache;
+import joeq.Compiler.Quad.ControlFlowGraph;
+import joeq.Compiler.Quad.Quad;
+import joeq.Compiler.Quad.QuadIterator;
+import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.UTF.Utf8;
 import joeq.Util.Assert;
 import joeq.Util.IO.ByteSequence;
@@ -284,7 +284,7 @@ public abstract class ProgramLocation implements Textualizable {
                 case (byte) jq_ClassFileConstants.jbc_INVOKESTATIC:
                     return clazz.getCPasStaticMethod(cpi);
                 case (byte) jq_ClassFileConstants.jbc_MULTIANEWARRAY:
-                    return joeq.Run_Time.Arrays._multinewarray;
+                    return joeq.Runtime.Arrays._multinewarray;
                 default:
                     return null;
             }
@@ -370,7 +370,7 @@ public abstract class ProgramLocation implements Textualizable {
                     type = BytecodeVisitor.INVOKE_STATIC;
                     break;
                 case (byte) jq_ClassFileConstants.jbc_MULTIANEWARRAY:
-                    method = joeq.Run_Time.Arrays._multinewarray;
+                    method = joeq.Runtime.Arrays._multinewarray;
                     type = BytecodeVisitor.INVOKE_STATIC;
                     break;
                 default:
@@ -401,7 +401,7 @@ public abstract class ProgramLocation implements Textualizable {
                     type = BytecodeVisitor.INVOKE_STATIC;
                     break;
                 case (byte) jq_ClassFileConstants.jbc_MULTIANEWARRAY:
-                    method = joeq.Run_Time.Arrays._multinewarray;
+                    method = joeq.Runtime.Arrays._multinewarray;
                     type = BytecodeVisitor.INVOKE_STATIC;
                     break;
                 default:
@@ -432,7 +432,7 @@ public abstract class ProgramLocation implements Textualizable {
                     type = BytecodeVisitor.INVOKE_STATIC;
                     break;
                 case (byte) jq_ClassFileConstants.jbc_MULTIANEWARRAY:
-                    method = joeq.Run_Time.Arrays._multinewarray;
+                    method = joeq.Runtime.Arrays._multinewarray;
                     type = BytecodeVisitor.INVOKE_STATIC;
                     break;
                 default:

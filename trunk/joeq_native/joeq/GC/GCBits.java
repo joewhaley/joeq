@@ -7,8 +7,8 @@ import java.util.HashSet;
 
 import joeq.Allocator.MemUnit;
 import joeq.Allocator.SimpleAllocator;
-import joeq.Clazz.PrimordialClassLoader;
-import joeq.Clazz.jq_Class;
+import joeq.Class.PrimordialClassLoader;
+import joeq.Class.jq_Class;
 import joeq.Memory.HeapAddress;
 import joeq.Util.BitString;
 

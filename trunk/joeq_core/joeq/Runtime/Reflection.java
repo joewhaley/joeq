@@ -1,7 +1,7 @@
 // Reflection.java, created Mon Feb  5 23:23:21 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Run_Time;
+package joeq.Runtime;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -11,19 +11,19 @@ import java.lang.reflect.Method;
 import java.util.Set;
 
 import joeq.Bootstrap.ObjectTraverser;
-import joeq.Clazz.PrimordialClassLoader;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_Field;
-import joeq.Clazz.jq_Initializer;
-import joeq.Clazz.jq_InstanceField;
-import joeq.Clazz.jq_InstanceMethod;
-import joeq.Clazz.jq_Member;
-import joeq.Clazz.jq_Method;
-import joeq.Clazz.jq_Primitive;
-import joeq.Clazz.jq_Reference;
-import joeq.Clazz.jq_StaticField;
-import joeq.Clazz.jq_StaticMethod;
-import joeq.Clazz.jq_Type;
+import joeq.Class.PrimordialClassLoader;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_Field;
+import joeq.Class.jq_Initializer;
+import joeq.Class.jq_InstanceField;
+import joeq.Class.jq_InstanceMethod;
+import joeq.Class.jq_Member;
+import joeq.Class.jq_Method;
+import joeq.Class.jq_Primitive;
+import joeq.Class.jq_Reference;
+import joeq.Class.jq_StaticField;
+import joeq.Class.jq_StaticMethod;
+import joeq.Class.jq_Type;
 import joeq.Main.jq;
 import joeq.Memory.Address;
 import joeq.UTF.Utf8;
@@ -422,13 +422,13 @@ public abstract class Reflection {
         _delegate = null;
         boolean nullVM = jq.nullVM;
         if (!nullVM) {
-            _delegate = attemptDelegate("joeq.Run_Time.ReflectionImpl");
+            _delegate = attemptDelegate("joeq.Runtime.ReflectionImpl");
         }
         if (_delegate == null) {
-            _delegate = new joeq.Run_Time.BasicReflectionImpl();
+            _delegate = new joeq.Runtime.BasicReflectionImpl();
         }
 
-        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Run_Time/Reflection;");
+        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Runtime/Reflection;");
         _obj_trav = _class.getOrCreateStaticField("obj_trav", "Ljoeq/Bootstrap/ObjectTraverser;");
         _delegate.initialize();
     }

@@ -3,9 +3,9 @@
  */
 package joeq.ClassLib.sun15_win32.java.util.concurrent.atomic;
 
-import joeq.Clazz.PrimordialClassLoader;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_InstanceField;
+import joeq.Class.PrimordialClassLoader;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_InstanceField;
 
 /**
  * @author jwhaley

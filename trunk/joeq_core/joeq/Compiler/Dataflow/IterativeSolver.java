@@ -1,7 +1,7 @@
 // IterativeSolver.java, created Thu Apr 25 16:32:26 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Compil3r.Dataflow;
+package joeq.Compiler.Dataflow;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -48,7 +48,7 @@ public class IterativeSolver
     protected Collection getSuccessors(Object c) { return graphNavigator.next(c); }
     
     /* (non-Javadoc)
-     * @see Compil3r.Dataflow.Solver#initialize(Compil3r.Dataflow.Problem, Util.Graphs.Graph)
+     * @see Compiler.Dataflow.Solver#initialize(Compiler.Dataflow.Problem, Util.Graphs.Graph)
      */
     public void initialize(Problem p, Graph graph) {
         this.initialize(p, graph, Traversals.reversePostOrder(graph.getNavigator(), graph.getRoots()));
@@ -57,7 +57,7 @@ public class IterativeSolver
     /** Initializes this solver with the given dataflow problem, graph, and
      * traversal order.
      * 
-     * @see Compil3r.Dataflow.Solver#initialize(Compil3r.Dataflow.Problem, Util.Graphs.Graph)
+     * @see Compiler.Dataflow.Solver#initialize(Compiler.Dataflow.Problem, Util.Graphs.Graph)
      */
     public void initialize(Problem p, Graph graph, List order) {
         super.initialize(p, graph);
@@ -67,19 +67,19 @@ public class IterativeSolver
     }
     
     /* (non-Javadoc)
-     * @see Compil3r.Dataflow.Solver#allLocations()
+     * @see Compiler.Dataflow.Solver#allLocations()
      */
     public Iterator allLocations() { return traversalOrder.iterator(); }
 
     /* (non-Javadoc)
-     * @see Compil3r.Dataflow.Solver#boundaryLocations()
+     * @see Compiler.Dataflow.Solver#boundaryLocations()
      */
     public Iterator boundaryLocations() { return boundaries.iterator(); }
 
     public static final boolean TRACE = false;
 
     /* (non-Javadoc)
-     * @see Compil3r.Dataflow.Solver#solve()
+     * @see Compiler.Dataflow.Solver#solve()
      */
     public void solve() {
         initializeDataflowValueMap();

@@ -1,7 +1,7 @@
 // AndersenPointerAnalysis.java, created Thu Apr 25 16:32:26 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Compil3r.Quad;
+package joeq.Compiler.Quad;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -14,30 +14,30 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_ClassInitializer;
-import joeq.Clazz.jq_Field;
-import joeq.Clazz.jq_Initializer;
-import joeq.Clazz.jq_Method;
-import joeq.Clazz.jq_Reference;
-import joeq.Clazz.jq_StaticField;
-import joeq.Clazz.jq_Type;
-import joeq.Clazz.PrimordialClassLoader;
-import joeq.Compil3r.Analysis.IPA.*;
-import joeq.Compil3r.BytecodeAnalysis.CallTargets;
-import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary;
-import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.CallSite;
-import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.ConcreteTypeNode;
-import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.FieldNode;
-import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.GlobalNode;
-import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
-import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.NodeSet;
-import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.OutsideNode;
-import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.ParamNode;
-import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.PassedParameter;
-import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.ReturnValueNode;
-import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.ThrownExceptionNode;
-import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.UnknownTypeNode;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_ClassInitializer;
+import joeq.Class.jq_Field;
+import joeq.Class.jq_Initializer;
+import joeq.Class.jq_Method;
+import joeq.Class.jq_Reference;
+import joeq.Class.jq_StaticField;
+import joeq.Class.jq_Type;
+import joeq.Class.PrimordialClassLoader;
+import joeq.Compiler.Analysis.IPA.*;
+import joeq.Compiler.BytecodeAnalysis.CallTargets;
+import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary;
+import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.CallSite;
+import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.ConcreteTypeNode;
+import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.FieldNode;
+import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.GlobalNode;
+import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.Node;
+import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.NodeSet;
+import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.OutsideNode;
+import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.ParamNode;
+import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.PassedParameter;
+import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.ReturnValueNode;
+import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.ThrownExceptionNode;
+import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.UnknownTypeNode;
 import joeq.Util.Assert;
 import joeq.Util.Strings;
 import joeq.Util.Collections.HashCodeComparator;
@@ -317,7 +317,7 @@ public class AndersenPointerAnalysis {
             System.out.println("Number of RTA bytecodes: "+nBytecodes);
         }
         
-        static class InvokeCounter extends joeq.Compil3r.BytecodeAnalysis.BytecodeVisitor {
+        static class InvokeCounter extends joeq.Compiler.BytecodeAnalysis.BytecodeVisitor {
             int invokeCount = 0; int targetCount = 0;
             InvokeCounter(jq_Method m) { super(m); }
             void visitInvoke(byte op, jq_Method f) {
@@ -897,7 +897,7 @@ public class AndersenPointerAnalysis {
             for (Iterator j=definite_targets.iterator(); j.hasNext(); ) {
                 jq_Method callee = (jq_Method)j.next();
                 // temporary: skip multinewarray.
-                if (callee == joeq.Run_Time.Arrays._multinewarray) continue;
+                if (callee == joeq.Runtime.Arrays._multinewarray) continue;
                 callee.getDeclaringClass().load();
                 if (!callee.isBodyLoaded()) {
                     CallSite cs2 = new CallSite(null, mc);

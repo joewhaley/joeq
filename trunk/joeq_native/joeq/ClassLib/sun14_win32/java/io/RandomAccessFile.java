@@ -3,7 +3,7 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.ClassLib.sun14_win32.java.io;
 
-import joeq.Run_Time.SystemInterface;
+import joeq.Runtime.SystemInterface;
 
 /**
  * RandomAccessFile

@@ -1,9 +1,9 @@
 // jq_Primitive.java, created Mon Feb  5 23:23:20 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Clazz;
+package joeq.Class;
 
-import joeq.Clazz.PrimordialClassLoader;
+import joeq.Class.PrimordialClassLoader;
 import joeq.UTF.Utf8;
 
 /*
@@ -79,5 +79,5 @@ public class jq_Primitive extends jq_Type implements jq_ClassFileConstants {
     public static final jq_Primitive BOOLEAN = (jq_Primitive)PrimordialClassLoader.loader.getOrCreateBSType(Utf8.BOOLEAN_DESC);
     public static final jq_Primitive VOID   = (jq_Primitive)PrimordialClassLoader.loader.getOrCreateBSType(Utf8.VOID_DESC);
     
-    public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Clazz/jq_Primitive;");
+    public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Class/jq_Primitive;");
 }

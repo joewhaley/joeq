@@ -4,12 +4,12 @@
 package joeq.Memory.Heap;
 
 import joeq.Allocator.ObjectLayout;
-import joeq.Clazz.jq_Array;
-import joeq.Clazz.jq_Class;
+import joeq.Class.jq_Array;
+import joeq.Class.jq_Class;
 import joeq.Memory.HeapAddress;
-import joeq.Run_Time.Debug;
-import joeq.Run_Time.SystemInterface;
-import joeq.Run_Time.Unsafe;
+import joeq.Runtime.Debug;
+import joeq.Runtime.SystemInterface;
+import joeq.Runtime.Unsafe;
 import joeq.Util.Assert;
 
 /**

@@ -5,11 +5,11 @@ package joeq.Memory.Heap;
 
 import joeq.Allocator.ObjectLayout;
 import joeq.Allocator.ObjectLayoutMethods;
-import joeq.Clazz.jq_Array;
+import joeq.Class.jq_Array;
 import joeq.Memory.Address;
 import joeq.Memory.HeapAddress;
-import joeq.Run_Time.Debug;
-import joeq.Run_Time.SystemInterface;
+import joeq.Runtime.Debug;
+import joeq.Runtime.SystemInterface;
 import joeq.Util.Assert;
 
 /**

@@ -1,4 +1,4 @@
-package joeq.Compil3r.Analysis.IPA;
+package joeq.Compiler.Analysis.IPA;
 
 import java.io.DataOutputStream;
 import java.io.FileOutputStream;
@@ -9,25 +9,25 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_Method;
-import joeq.Clazz.jq_Reference;
-import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary;
-import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.ConcreteObjectNode;
-import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.ConcreteTypeNode;
-import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
-import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.UnknownTypeNode;
-import joeq.Compil3r.Quad.BasicBlock;
-import joeq.Compil3r.Quad.BasicBlockVisitor;
-import joeq.Compil3r.Quad.CallGraph;
-import joeq.Compil3r.Quad.CodeCache;
-import joeq.Compil3r.Quad.ControlFlowGraph;
-import joeq.Compil3r.Quad.ControlFlowGraphVisitor;
-import joeq.Compil3r.Quad.LoadedCallGraph;
-import joeq.Compil3r.Quad.Quad;
-import joeq.Compil3r.Quad.QuadVisitor;
-import joeq.Compil3r.Quad.Operator.New;
-import joeq.Compil3r.Quad.Operator.NewArray;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_Method;
+import joeq.Class.jq_Reference;
+import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary;
+import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.ConcreteObjectNode;
+import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.ConcreteTypeNode;
+import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.Node;
+import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.UnknownTypeNode;
+import joeq.Compiler.Quad.BasicBlock;
+import joeq.Compiler.Quad.BasicBlockVisitor;
+import joeq.Compiler.Quad.CallGraph;
+import joeq.Compiler.Quad.CodeCache;
+import joeq.Compiler.Quad.ControlFlowGraph;
+import joeq.Compiler.Quad.ControlFlowGraphVisitor;
+import joeq.Compiler.Quad.LoadedCallGraph;
+import joeq.Compiler.Quad.Quad;
+import joeq.Compiler.Quad.QuadVisitor;
+import joeq.Compiler.Quad.Operator.New;
+import joeq.Compiler.Quad.Operator.NewArray;
 import joeq.Main.HostedVM;
 import joeq.Util.Collections.GenericMultiMap;
 import joeq.Util.Collections.MultiMap;
@@ -126,7 +126,7 @@ public class ObjectCreationGraph extends QuadVisitor.EmptyVisitor
     }
     
     /* (non-Javadoc)
-     * @see Compil3r.Quad.ControlFlowGraphVisitor#visitCFG(Compil3r.Quad.ControlFlowGraph)
+     * @see Compiler.Quad.ControlFlowGraphVisitor#visitCFG(Compiler.Quad.ControlFlowGraph)
      */
     public void visitCFG(ControlFlowGraph cfg) {
         currentMethod = cfg.getMethod();
@@ -135,14 +135,14 @@ public class ObjectCreationGraph extends QuadVisitor.EmptyVisitor
     
 
     /* (non-Javadoc)
-     * @see Compil3r.Quad.BasicBlockVisitor#visitBasicBlock(Compil3r.Quad.BasicBlock)
+     * @see Compiler.Quad.BasicBlockVisitor#visitBasicBlock(Compiler.Quad.BasicBlock)
      */
     public void visitBasicBlock(BasicBlock bb) {
         bb.visitQuads(this);
     }
     
     /* (non-Javadoc)
-     * @see Compil3r.Quad.QuadVisitor#visitNew(Compil3r.Quad.Quad)
+     * @see Compiler.Quad.QuadVisitor#visitNew(Compiler.Quad.Quad)
      */
     public void visitNew(Quad obj) {
         jq_Reference c1, c2;
@@ -157,7 +157,7 @@ public class ObjectCreationGraph extends QuadVisitor.EmptyVisitor
     }
     
     /* (non-Javadoc)
-     * @see Compil3r.Quad.QuadVisitor#visitNew(Compil3r.Quad.Quad)
+     * @see Compiler.Quad.QuadVisitor#visitNew(Compiler.Quad.Quad)
      */
     public void visitNewArray(Quad obj) {
         jq_Reference c1, c2;

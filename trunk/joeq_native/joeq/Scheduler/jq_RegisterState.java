@@ -4,7 +4,7 @@
 package joeq.Scheduler;
 
 import joeq.Assembler.x86.x86Constants;
-import joeq.Clazz.jq_DontAlign;
+import joeq.Class.jq_DontAlign;
 import joeq.Memory.CodeAddress;
 import joeq.Memory.StackAddress;
 

@@ -3,10 +3,10 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.ClassLib.Common.java.util;
 
-import joeq.Clazz.jq_CompiledCode;
+import joeq.Class.jq_CompiledCode;
 import joeq.Memory.StackAddress;
-import joeq.Run_Time.Reflection;
-import joeq.Run_Time.StackCodeWalker;
+import joeq.Runtime.Reflection;
+import joeq.Runtime.StackCodeWalker;
 import joeq.Util.Assert;
 
 /**

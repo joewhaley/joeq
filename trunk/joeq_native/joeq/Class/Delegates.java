@@ -1,7 +1,7 @@
 // Delegates.java, created Wed Dec 11 12:02:02 2002 by mcmartin
 // Copyright (C) 2001-3 mcmartin
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Clazz;
+package joeq.Class;
 
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -12,15 +12,15 @@ import joeq.Allocator.DefaultHeapAllocator;
 import joeq.Assembler.x86.DirectBindCall;
 import joeq.Bootstrap.BootstrapCodeAddress;
 import joeq.Bootstrap.BootstrapHeapAddress;
-import joeq.Compil3r.Compil3rInterface;
-import joeq.Compil3r.Reference.x86.x86ReferenceCompiler;
-import joeq.Compil3r.Reference.x86.x86ReferenceLinker;
+import joeq.Compiler.CompilerInterface;
+import joeq.Compiler.Reference.x86.x86ReferenceCompiler;
+import joeq.Compiler.Reference.x86.x86ReferenceLinker;
 import joeq.Main.jq;
 import joeq.Memory.CodeAddress;
 import joeq.Memory.HeapAddress;
 import joeq.Memory.StackAddress;
-import joeq.Run_Time.Debug;
-import joeq.Run_Time.ExceptionDeliverer;
+import joeq.Runtime.Debug;
+import joeq.Runtime.ExceptionDeliverer;
 import joeq.Util.Collections.FilterIterator;
 import joeq.Util.Collections.Pair;
 
@@ -76,7 +76,7 @@ public class Delegates implements jq_ClassFileConstants {
                     default_compiled_version = x86ReferenceLinker._abstractMethodError.getDefaultCompiledVersion();
                 }
             } else {
-                Compil3rInterface compiler = getCompiler(m);
+                CompilerInterface compiler = getCompiler(m);
                 default_compiled_version = compiler.compile(m);
                 if (jq.RunningNative)
                     default_compiled_version.patchDirectBindCalls();
@@ -84,16 +84,16 @@ public class Delegates implements jq_ClassFileConstants {
             return default_compiled_version;
         }
     }
-    public static Compil3rInterface default_compiler;
+    public static CompilerInterface default_compiler;
     public static List compilers = new LinkedList();
     static {
-        String default_compiler_name = System.getProperty("joeq.compiler", "joeq.Compil3r.Reference.x86.x86ReferenceCompiler$Factory");
+        String default_compiler_name = System.getProperty("joeq.compiler", "joeq.Compiler.Reference.x86.x86ReferenceCompiler$Factory");
         setDefaultCompiler(default_compiler_name);
     }
-    public static Compil3rInterface getCompiler(String name) {
+    public static CompilerInterface getCompiler(String name) {
         try {
             Class c = Class.forName(name);
-            return (Compil3rInterface) c.newInstance();
+            return (CompilerInterface) c.newInstance();
         } catch (Exception x) {
             System.err.println("Error occurred while instantiating compiler "+name);
             x.printStackTrace();
@@ -101,19 +101,19 @@ public class Delegates implements jq_ClassFileConstants {
         }
     }
     public static void setDefaultCompiler(String name) {
-        Compil3rInterface c = getCompiler(name);
-        if (c == null) c = new joeq.Compil3r.Reference.x86.x86ReferenceCompiler.Factory();
+        CompilerInterface c = getCompiler(name);
+        if (c == null) c = new joeq.Compiler.Reference.x86.x86ReferenceCompiler.Factory();
         default_compiler = c;
     }
-    public static void registerCompiler(FilterIterator.Filter f, Compil3rInterface c) {
+    public static void registerCompiler(FilterIterator.Filter f, CompilerInterface c) {
         compilers.add(0, new Pair(f, c));
     }
-    public static Compil3rInterface getCompiler(jq_Method m) {
+    public static CompilerInterface getCompiler(jq_Method m) {
         for (Iterator i=compilers.iterator(); i.hasNext(); ) {
             Pair p = (Pair) i.next();
             FilterIterator.Filter f = (FilterIterator.Filter) p.get(0);
             if (f.isElement(m))
-                return (Compil3rInterface) p.get(1);
+                return (CompilerInterface) p.get(1);
         }
         return default_compiler;
     }

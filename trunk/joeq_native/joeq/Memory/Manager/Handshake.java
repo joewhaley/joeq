@@ -3,9 +3,9 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Memory.Manager;
 
-import joeq.Run_Time.Debug;
-import joeq.Run_Time.HighResolutionTimer;
-import joeq.Run_Time.SystemInterface;
+import joeq.Runtime.Debug;
+import joeq.Runtime.HighResolutionTimer;
+import joeq.Runtime.SystemInterface;
 import joeq.Scheduler.jq_NativeThread;
 
 /**

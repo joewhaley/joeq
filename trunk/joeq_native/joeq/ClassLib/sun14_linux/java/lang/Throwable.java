@@ -4,10 +4,10 @@
 package joeq.ClassLib.sun14_linux.java.lang;
 
 import joeq.Allocator.CodeAllocator;
-import joeq.Clazz.jq_CompiledCode;
-import joeq.Clazz.jq_Method;
+import joeq.Class.jq_CompiledCode;
+import joeq.Class.jq_Method;
 import joeq.Memory.CodeAddress;
-import joeq.Run_Time.ExceptionDeliverer;
+import joeq.Runtime.ExceptionDeliverer;
 import joeq.UTF.Utf8;
 
 /**

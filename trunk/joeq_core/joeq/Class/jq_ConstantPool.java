@@ -1,7 +1,7 @@
 // jq_ConstantPool.java, created Fri Jan 11 17:29:36 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Clazz;
+package joeq.Class;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -13,9 +13,9 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
-import joeq.Clazz.PrimordialClassLoader;
-import joeq.Compil3r.BytecodeAnalysis.Bytecodes;
-import joeq.Run_Time.Debug;
+import joeq.Class.PrimordialClassLoader;
+import joeq.Compiler.BytecodeAnalysis.Bytecodes;
+import joeq.Runtime.Debug;
 import joeq.UTF.Utf8;
 import joeq.Util.Assert;
 

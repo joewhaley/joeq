@@ -6,9 +6,9 @@ package joeq.ClassLib.pa;
 import java.util.Iterator;
 
 import joeq.ClassLib.ClassLibInterface;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_InstanceField;
-import joeq.Clazz.jq_StaticField;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_InstanceField;
+import joeq.Class.jq_StaticField;
 import joeq.Bootstrap.ObjectTraverser;
 import joeq.Util.Assert;
 

@@ -1,11 +1,11 @@
 // Quad.java, created Fri Jan 11 16:42:38 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Compil3r.Quad;
+package joeq.Compiler.Quad;
 
-import joeq.Clazz.jq_Class;
-import joeq.Compil3r.Quad.Operand.RegisterOperand;
-import joeq.Compil3r.Quad.Operator.Return;
+import joeq.Class.jq_Class;
+import joeq.Compiler.Quad.Operand.RegisterOperand;
+import joeq.Compiler.Quad.Operator.Return;
 import joeq.Interpreter.QuadInterpreter;
 import joeq.Util.Strings;
 import joeq.Util.Templates.List;
@@ -40,7 +40,7 @@ public class Quad {
     Quad(int id, Operator operator, Operand operand1, Operand operand2, Operand operand3, Operand operand4) {
         this.id_number = id; this.operator = operator; this.operand1 = operand1; this.operand2 = operand2; this.operand3 = operand3; this.operand4 = operand4;
     }
-    /** These are not intended to be used outside of the joeq.Compil3r.Quad package.
+    /** These are not intended to be used outside of the joeq.Compiler.Quad package.
      * Instead, use the static accessor methods for each operator, e.g. Move.getDest(quad).
      */
     Operand getOp1() { return operand1; }
@@ -123,7 +123,7 @@ public class Quad {
                 return new UnmodifiableList.jq_Class((jq_Class)((RegisterOperand)op).getType());
             }
         }
-	return joeq.Compil3r.CompilationState.DEFAULT.getThrownExceptions(this);
+	return joeq.Compiler.CompilationState.DEFAULT.getThrownExceptions(this);
     }
 
     /** Returns a list of the registers defined by this quad. */

@@ -3,9 +3,9 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.ClassLib.Common.java.io;
 
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_Type;
-import joeq.Run_Time.Reflection;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_Type;
+import joeq.Runtime.Reflection;
 import joeq.Util.Assert;
 
 /**

@@ -11,16 +11,16 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 
-import joeq.Clazz.PrimordialClassLoader;
-import joeq.Clazz.jq_Array;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_Initializer;
-import joeq.Clazz.jq_Method;
-import joeq.Clazz.jq_Primitive;
-import joeq.Clazz.jq_StaticMethod;
-import joeq.Clazz.jq_Type;
+import joeq.Class.PrimordialClassLoader;
+import joeq.Class.jq_Array;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_Initializer;
+import joeq.Class.jq_Method;
+import joeq.Class.jq_Primitive;
+import joeq.Class.jq_StaticMethod;
+import joeq.Class.jq_Type;
 import joeq.Main.HostedVM;
-import joeq.Run_Time.Reflection;
+import joeq.Runtime.Reflection;
 import joeq.UTF.Utf8;
 import joeq.Util.Assert;
 
@@ -98,7 +98,7 @@ public class ReflectiveInterpreter extends BytecodeInterpreter {
     }
 
     public Object invokeMethod(jq_Method m, State callee) throws Throwable {
-        //Run_Time.SystemInterface.debugwriteln("Invoking method "+m);
+        //Runtime.SystemInterface.debugwriteln("Invoking method "+m);
         jq_Class k = m.getDeclaringClass();
         Assert._assert(k.isClsInitialized());
         Assert._assert(m.getBytecode() != null);
@@ -210,7 +210,7 @@ public class ReflectiveInterpreter extends BytecodeInterpreter {
         }
     }
     public Object invokeUnsafeMethod(jq_Method f) throws Throwable {
-        jq_Class _class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Run_Time/Unsafe;");
+        jq_Class _class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Runtime/Unsafe;");
         jq_StaticMethod _floatToIntBits = _class.getOrCreateStaticMethod("floatToIntBits", "(F)I");
         jq_StaticMethod _intBitsToFloat = _class.getOrCreateStaticMethod("intBitsToFloat", "(I)F");
         jq_StaticMethod _doubleToLongBits = _class.getOrCreateStaticMethod("doubleToLongBits", "(D)J");

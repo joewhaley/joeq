@@ -4,7 +4,7 @@
  * To change the template for this generated file go to
  * Window>Preferences>Java>Code Generation>Code and Comments
  */
-package joeq.Compil3r.Analysis.IPSSA.Utils;
+package joeq.Compiler.Analysis.IPSSA.Utils;
 
 import java.util.Iterator;
 

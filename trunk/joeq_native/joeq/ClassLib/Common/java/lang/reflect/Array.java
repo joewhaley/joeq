@@ -5,10 +5,10 @@ package joeq.ClassLib.Common.java.lang.reflect;
 
 import joeq.Allocator.ObjectLayout;
 import joeq.ClassLib.ClassLibInterface;
-import joeq.Clazz.jq_Array;
-import joeq.Clazz.jq_Primitive;
-import joeq.Clazz.jq_Reference;
-import joeq.Clazz.jq_Type;
+import joeq.Class.jq_Array;
+import joeq.Class.jq_Primitive;
+import joeq.Class.jq_Reference;
+import joeq.Class.jq_Type;
 import joeq.Memory.HeapAddress;
 
 /**
@@ -220,7 +220,7 @@ public abstract class Array {
             a = a.getArrayTypeForElementType();
             a.cls_initialize();
         }
-        return joeq.Run_Time.Arrays.multinewarray_helper(dimensions, 0, (jq_Array)a);
+        return joeq.Runtime.Arrays.multinewarray_helper(dimensions, 0, (jq_Array)a);
     }
     
 }

@@ -1,7 +1,7 @@
 // CallGraph.java, created Mon Mar  3 18:01:32 2003 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Compil3r.Quad;
+package joeq.Compiler.Quad;
 
 import java.util.AbstractSet;
 import java.util.Collection;
@@ -16,9 +16,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import joeq.Clazz.jq_Method;
-import joeq.Compil3r.Analysis.IPA.*;
-import joeq.Compil3r.Quad.Operator.Invoke;
+import joeq.Class.jq_Method;
+import joeq.Compiler.Analysis.IPA.*;
+import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Util.Assert;
 import joeq.Util.Strings;
 import joeq.Util.Collections.GenericInvertibleMultiMap;
@@ -635,7 +635,7 @@ public abstract class CallGraph extends UnmodifiableMultiMap implements Graph {
         return new CallGraph() {
 
             /**
-             * @see Compil3r.Quad.CallGraph#getTargetMethods(java.lang.Object, Compil3r.Quad.ProgramLocation)
+             * @see Compiler.Quad.CallGraph#getTargetMethods(java.lang.Object, Compiler.Quad.ProgramLocation)
              */
             public Collection getTargetMethods(Object context, ProgramLocation callSite) {
                 jq_Method method = (jq_Method) callSite.getTargetMethod();
@@ -651,28 +651,28 @@ public abstract class CallGraph extends UnmodifiableMultiMap implements Graph {
             }
 
             /* (non-Javadoc)
-             * @see Compil3r.Quad.CallGraph#setRoots(java.util.Collection)
+             * @see Compiler.Quad.CallGraph#setRoots(java.util.Collection)
              */
             public void setRoots(Collection newRoots) {
                 Assert._assert(roots.equals(newRoots));
             }
 
             /* (non-Javadoc)
-             * @see Compil3r.Quad.CallGraph#getRoots()
+             * @see Compiler.Quad.CallGraph#getRoots()
              */
             public Collection getRoots() {
                 return roots;
             }
         
             /* (non-Javadoc)
-             * @see Compil3r.Quad.CallGraph#getAllCallSites()
+             * @see Compiler.Quad.CallGraph#getAllCallSites()
              */
             public Collection getAllCallSites() {
                 return callSiteToTargets.keySet();
             }
 
             /* (non-Javadoc)
-             * @see Compil3r.Quad.CallGraph#getAllMethods()
+             * @see Compiler.Quad.CallGraph#getAllMethods()
              */
             public Collection getAllMethods() {
                 LinkedHashSet s = new LinkedHashSet();

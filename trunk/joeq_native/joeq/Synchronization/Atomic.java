@@ -6,10 +6,10 @@ package joeq.Synchronization;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
-import joeq.Clazz.jq_InstanceField;
+import joeq.Class.jq_InstanceField;
 import joeq.Main.jq;
 import joeq.Memory.HeapAddress;
-import joeq.Run_Time.Reflection;
+import joeq.Runtime.Reflection;
 import joeq.Util.Assert;
 
 /*

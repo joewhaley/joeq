@@ -9,17 +9,17 @@ import java.security.ProtectionDomain;
 import java.util.HashMap;
 import java.util.Map;
 
-import joeq.Clazz.PrimordialClassLoader;
-import joeq.Clazz.jq_Array;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_ClassFileConstants;
-import joeq.Clazz.jq_CompiledCode;
-import joeq.Clazz.jq_Reference;
-import joeq.Clazz.jq_Type;
+import joeq.Class.PrimordialClassLoader;
+import joeq.Class.jq_Array;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_ClassFileConstants;
+import joeq.Class.jq_CompiledCode;
+import joeq.Class.jq_Reference;
+import joeq.Class.jq_Type;
 import joeq.Main.jq;
 import joeq.Memory.StackAddress;
-import joeq.Run_Time.Reflection;
-import joeq.Run_Time.StackCodeWalker;
+import joeq.Runtime.Reflection;
+import joeq.Runtime.StackCodeWalker;
 import joeq.UTF.Utf8;
 import joeq.Util.Assert;
 

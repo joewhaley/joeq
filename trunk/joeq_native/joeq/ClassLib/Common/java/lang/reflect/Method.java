@@ -5,17 +5,17 @@ package joeq.ClassLib.Common.java.lang.reflect;
 
 import joeq.ClassLib.ClassLibInterface;
 import joeq.ClassLib.Common.ClassUtils;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_InstanceMethod;
-import joeq.Clazz.jq_Method;
-import joeq.Clazz.jq_NameAndDesc;
-import joeq.Clazz.jq_Primitive;
-import joeq.Clazz.jq_Reference;
-import joeq.Clazz.jq_Type;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_InstanceMethod;
+import joeq.Class.jq_Method;
+import joeq.Class.jq_NameAndDesc;
+import joeq.Class.jq_Primitive;
+import joeq.Class.jq_Reference;
+import joeq.Class.jq_Type;
 import joeq.Main.jq;
 import joeq.Memory.HeapAddress;
-import joeq.Run_Time.Reflection;
-import joeq.Run_Time.TypeCheck;
+import joeq.Runtime.Reflection;
+import joeq.Runtime.TypeCheck;
 import joeq.UTF.Utf8;
 import joeq.Util.Assert;
 

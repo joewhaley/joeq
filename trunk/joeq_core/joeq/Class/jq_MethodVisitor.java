@@ -1,7 +1,7 @@
 // jq_MethodVisitor.java, created Fri Jan 11 17:28:36 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Clazz;
+package joeq.Class;
 
 import java.util.Arrays;
 import java.util.Iterator;

@@ -1,18 +1,18 @@
-package joeq.Compil3r.Analysis.IPSSA;
+package joeq.Compiler.Analysis.IPSSA;
 
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 
-import joeq.Clazz.jq_Method;
-import joeq.Compil3r.Analysis.IPSSA.SSALocation.LocalLocation;
-import joeq.Compil3r.Analysis.IPSSA.Utils.DefinitionSet;
-import joeq.Compil3r.Quad.Quad;
+import joeq.Class.jq_Method;
+import joeq.Compiler.Analysis.IPSSA.SSALocation.LocalLocation;
+import joeq.Compiler.Analysis.IPSSA.Utils.DefinitionSet;
+import joeq.Compiler.Quad.Quad;
 
 /**
  * This is a definition in the SSA sense, meaning it's unique. The meaning of the 
  * definition is affected by the underlying location.
  * 
- * @see Compil3r.Analysis.IPSSA.SSALocation
+ * @see Compiler.Analysis.IPSSA.SSALocation
  * @version $Id$  
  * */
 public class SSADefinition {

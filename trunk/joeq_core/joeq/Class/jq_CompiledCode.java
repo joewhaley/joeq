@@ -1,16 +1,16 @@
 // jq_CompiledCode.java, created Mon Feb  5 23:23:20 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Clazz;
+package joeq.Class;
 
 import java.util.Iterator;
 import java.util.List;
 
-import joeq.Clazz.PrimordialClassLoader;
+import joeq.Class.PrimordialClassLoader;
 import joeq.Main.jq;
 import joeq.Memory.CodeAddress;
 import joeq.Memory.StackAddress;
-import joeq.Run_Time.Debug;
+import joeq.Runtime.Debug;
 import joeq.Util.Assert;
 
 /**
@@ -198,13 +198,13 @@ public class jq_CompiledCode implements Comparable {
     public static final jq_InstanceField _entrypoint;
 
     static {
-        jq_Class k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Clazz/jq_CompiledCode;");
+        jq_Class k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Class/jq_CompiledCode;");
         _entrypoint = k.getOrCreateInstanceField("entrypoint", "Ljoeq/Memory/CodeAddress;");
         /* Set up delegates. */
         _delegate = null;
         boolean nullVM = jq.nullVM;
         if (!nullVM) {
-            _delegate = attemptDelegate("joeq.Clazz.Delegates$CompiledCode");
+            _delegate = attemptDelegate("joeq.Class.Delegates$CompiledCode");
         }
         if (_delegate == null) {
             _delegate = new NullDelegates.CompiledCode();

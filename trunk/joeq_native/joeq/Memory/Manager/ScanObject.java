@@ -7,12 +7,12 @@ import java.lang.reflect.Array;
 
 import joeq.Allocator.DefaultHeapAllocator;
 import joeq.Allocator.ObjectLayout;
-import joeq.Clazz.jq_Array;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_Reference;
-import joeq.Clazz.jq_Type;
+import joeq.Class.jq_Array;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_Reference;
+import joeq.Class.jq_Type;
 import joeq.Memory.HeapAddress;
-import joeq.Run_Time.Debug;
+import joeq.Runtime.Debug;
 
 /**
  * @author John Whaley <jwhaley@alum.mit.edu>

@@ -9,7 +9,7 @@ import java.lang.reflect.Modifier;
 /**
  * Helper application to create proxy classes that encapsulate an object's
  * package-accessible fields and make them public fields. 
- * Currently used to create for Compil3r.Analysis.IPA.PAProxy.
+ * Currently used to create for Compiler.Analysis.IPA.PAProxy.
  */
 public class MakeProxy {
     public static final String suffix = "Proxy";

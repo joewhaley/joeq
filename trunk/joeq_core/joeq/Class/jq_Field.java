@@ -1,13 +1,13 @@
 // jq_Field.java, created Mon Feb  5 23:23:20 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Clazz;
+package joeq.Class;
 
 import java.io.DataInput;
 import java.io.IOException;
 import java.util.Map;
 
-import joeq.Clazz.PrimordialClassLoader;
+import joeq.Class.PrimordialClassLoader;
 import joeq.ClassLib.ClassLibInterface;
 import joeq.Main.jq;
 
@@ -73,7 +73,7 @@ public abstract class jq_Field extends jq_Member {
         _delegate = null;
         boolean nullVM = jq.nullVM;
         if (!nullVM) {
-            _delegate = attemptDelegate("joeq.Clazz.Delegates$Field");
+            _delegate = attemptDelegate("joeq.Class.Delegates$Field");
         }
         if (_delegate == null) {
             _delegate = new NullDelegates.Field();

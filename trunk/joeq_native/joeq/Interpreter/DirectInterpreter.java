@@ -9,26 +9,26 @@ import java.util.Iterator;
 import java.util.Set;
 
 import joeq.Allocator.ObjectLayout;
-import joeq.Clazz.PrimordialClassLoader;
-import joeq.Clazz.jq_Array;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_InstanceField;
-import joeq.Clazz.jq_Method;
-import joeq.Clazz.jq_Primitive;
-import joeq.Clazz.jq_Reference;
-import joeq.Clazz.jq_StaticField;
-import joeq.Clazz.jq_StaticMethod;
-import joeq.Clazz.jq_Type;
+import joeq.Class.PrimordialClassLoader;
+import joeq.Class.jq_Array;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_InstanceField;
+import joeq.Class.jq_Method;
+import joeq.Class.jq_Primitive;
+import joeq.Class.jq_Reference;
+import joeq.Class.jq_StaticField;
+import joeq.Class.jq_StaticMethod;
+import joeq.Class.jq_Type;
 import joeq.Main.TraceFlags;
 import joeq.Main.jq;
 import joeq.Memory.Address;
 import joeq.Memory.HeapAddress;
 import joeq.Memory.StackAddress;
-import joeq.Run_Time.Monitor;
-import joeq.Run_Time.Reflection;
-import joeq.Run_Time.SystemInterface;
-import joeq.Run_Time.TypeCheck;
-import joeq.Run_Time.Unsafe;
+import joeq.Runtime.Monitor;
+import joeq.Runtime.Reflection;
+import joeq.Runtime.SystemInterface;
+import joeq.Runtime.TypeCheck;
+import joeq.Runtime.Unsafe;
 import joeq.UTF.Utf8;
 import joeq.Util.Assert;
 import joeq.Util.Convert;
@@ -52,9 +52,9 @@ public class DirectInterpreter extends BytecodeInterpreter {
         bad_classes = new HashSet();
         bad_classes.add(SystemInterface._class);
         bad_classes.add(Reflection._class);
-        bad_classes.add(PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Run_Time/ExceptionDeliverer;"));
+        bad_classes.add(PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Runtime/ExceptionDeliverer;"));
         bad_methods = new HashSet();
-        bad_methods.add(joeq.Run_Time.Arrays._multinewarray);
+        bad_methods.add(joeq.Runtime.Arrays._multinewarray);
         interpret_filter = new FilterIterator.Filter() {
             public boolean isElement(Object o) {
                 jq_Method m = (jq_Method)o;
@@ -87,7 +87,7 @@ public class DirectInterpreter extends BytecodeInterpreter {
     
     // callee == null -> call compiled version
     public Object invokeMethod(jq_Method m, State callee) throws Throwable {
-        //Run_Time.SystemInterface.debugwriteln("Invoking method "+m);
+        //Runtime.SystemInterface.debugwriteln("Invoking method "+m);
         jq_Class k = m.getDeclaringClass();
         Assert._assert(k.isClsInitialized());
         Assert._assert(m.getBytecode() != null);
@@ -485,7 +485,7 @@ public class DirectInterpreter extends BytecodeInterpreter {
         public int arraylength(Object o) { return HeapAddress.addressOf(o).offset(ObjectLayout.ARRAY_LENGTH_OFFSET).peek4(); }
         public void monitorenter(Object o, MethodInterpreter v) { Monitor.monitorenter(o); }
         public void monitorexit(Object o) { Monitor.monitorexit(o); }
-        public Object multinewarray(int[] dims, jq_Type t) { return joeq.Run_Time.Arrays.multinewarray_helper(dims, 0, (jq_Array)t); }
+        public Object multinewarray(int[] dims, jq_Type t) { return joeq.Runtime.Arrays.multinewarray_helper(dims, 0, (jq_Array)t); }
         public jq_Reference getJQTypeOf(Object o) { return jq_Reference.getTypeOf(o); }
     }
 

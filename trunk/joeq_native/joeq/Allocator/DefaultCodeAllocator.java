@@ -4,12 +4,12 @@
 package joeq.Allocator;
 
 import joeq.Allocator.CodeAllocator.x86CodeBuffer;
-import joeq.Clazz.PrimordialClassLoader;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_StaticField;
+import joeq.Class.PrimordialClassLoader;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_StaticField;
 import joeq.Memory.Address;
 import joeq.Memory.CodeAddress;
-import joeq.Run_Time.Unsafe;
+import joeq.Runtime.Unsafe;
 
 /**
  * DefaultCodeAllocator

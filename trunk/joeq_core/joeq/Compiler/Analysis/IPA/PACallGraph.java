@@ -1,7 +1,7 @@
 // PACallGraph.java, created Oct 21, 2003 12:56:45 AM by joewhaley
 // Copyright (C) 2003 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Compil3r.Analysis.IPA;
+package joeq.Compiler.Analysis.IPA;
 
 import java.util.AbstractMap;
 import java.util.AbstractSet;
@@ -14,8 +14,8 @@ import org.sf.javabdd.BDD;
 import org.sf.javabdd.BDDDomain;
 import org.sf.javabdd.BDDFactory;
 
-import joeq.Compil3r.Quad.CallGraph;
-import joeq.Compil3r.Quad.LoadedCallGraph;
+import joeq.Compiler.Quad.CallGraph;
+import joeq.Compiler.Quad.LoadedCallGraph;
 import joeq.Util.Assert;
 import joeq.Util.Collections.IndexMap;
 import joeq.Util.Collections.UnmodifiableIterator;
@@ -50,21 +50,21 @@ public class PACallGraph extends CallGraph {
     }
     
     /* (non-Javadoc)
-     * @see Compil3r.Quad.CallGraph#setRoots(java.util.Collection)
+     * @see Compiler.Quad.CallGraph#setRoots(java.util.Collection)
      */
     public void setRoots(Collection roots) {
         Assert.UNREACHABLE();
     }
 
     /* (non-Javadoc)
-     * @see Compil3r.Quad.CallGraph#getRoots()
+     * @see Compiler.Quad.CallGraph#getRoots()
      */
     public Collection getRoots() {
         return roots;
     }
 
     /* (non-Javadoc)
-     * @see Compil3r.Quad.CallGraph#getTargetMethods(java.lang.Object, Compil3r.Analysis.IPA.ProgramLocation)
+     * @see Compiler.Quad.CallGraph#getTargetMethods(java.lang.Object, Compiler.Analysis.IPA.ProgramLocation)
      */
     public Collection getTargetMethods(Object context, ProgramLocation callSite) {
         callSite = LoadedCallGraph.mapCall(callSite);
@@ -77,7 +77,7 @@ public class PACallGraph extends CallGraph {
     }
     
     /* (non-Javadoc)
-     * @see Compil3r.Quad.CallGraph#getAllMethods()
+     * @see Compiler.Quad.CallGraph#getAllMethods()
      */
     public Collection getAllMethods() {
         BDD b = visited.id();

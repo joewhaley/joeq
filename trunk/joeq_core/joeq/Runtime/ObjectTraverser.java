@@ -9,11 +9,11 @@ import java.lang.reflect.Modifier;
 import java.util.Iterator;
 
 import joeq.ClassLib.ClassLibInterface;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_InstanceField;
-import joeq.Clazz.jq_StaticField;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_InstanceField;
+import joeq.Class.jq_StaticField;
 import joeq.Main.jq;
-import joeq.Run_Time.Reflection;
+import joeq.Runtime.Reflection;
 import joeq.Util.Assert;
 import joeq.UTF.Utf8;
 

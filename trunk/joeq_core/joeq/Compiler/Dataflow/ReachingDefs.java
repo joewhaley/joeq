@@ -1,7 +1,7 @@
 // ReachingDefs.java, created Jun 15, 2003 2:10:14 PM by joewhaley
 // Copyright (C) 2003 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Compil3r.Dataflow;
+package joeq.Compiler.Dataflow;
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -10,14 +10,14 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_Method;
-import joeq.Clazz.jq_Type;
-import joeq.Compil3r.Quad.BasicBlock;
-import joeq.Compil3r.Quad.CodeCache;
-import joeq.Compil3r.Quad.ControlFlowGraph;
-import joeq.Compil3r.Quad.Quad;
-import joeq.Compil3r.Quad.RegisterFactory.Register;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_Method;
+import joeq.Class.jq_Type;
+import joeq.Compiler.Quad.BasicBlock;
+import joeq.Compiler.Quad.CodeCache;
+import joeq.Compiler.Quad.ControlFlowGraph;
+import joeq.Compiler.Quad.Quad;
+import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Main.HostedVM;
 import joeq.Util.BitString;
 import joeq.Util.Strings;
@@ -132,7 +132,7 @@ public class ReachingDefs extends Problem {
         }
 
         /* (non-Javadoc)
-         * @see Compil3r.Dataflow.TransferFunction#apply(Compil3r.Dataflow.Fact)
+         * @see Compiler.Dataflow.TransferFunction#apply(Compiler.Dataflow.Fact)
          */
         public Fact apply(Fact f) {
             RDSet r = (RDSet) f;
@@ -158,7 +158,7 @@ public class ReachingDefs extends Problem {
         }
 
         /* (non-Javadoc)
-         * @see Compil3r.Dataflow.Fact#merge(Compil3r.Dataflow.Fact)
+         * @see Compiler.Dataflow.Fact#merge(Compiler.Dataflow.Fact)
          */
         public Fact merge(Fact that) {
             RDSet r = (RDSet) that;
@@ -170,7 +170,7 @@ public class ReachingDefs extends Problem {
         }
 
         /* (non-Javadoc)
-         * @see Compil3r.Dataflow.Fact#equals(Compil3r.Dataflow.Fact)
+         * @see Compiler.Dataflow.Fact#equals(Compiler.Dataflow.Fact)
          */
         public boolean equals(Fact that) {
             return this.reachingDefs.equals(((RDSet) that).reachingDefs);
@@ -183,28 +183,28 @@ public class ReachingDefs extends Problem {
     }
     
     /* (non-Javadoc)
-     * @see Compil3r.Dataflow.Problem#direction()
+     * @see Compiler.Dataflow.Problem#direction()
      */
     public boolean direction() {
         return true;
     }
 
     /* (non-Javadoc)
-     * @see Compil3r.Dataflow.Problem#boundary()
+     * @see Compiler.Dataflow.Problem#boundary()
      */
     public Fact boundary() {
         return emptySet;
     }
 
     /* (non-Javadoc)
-     * @see Compil3r.Dataflow.Problem#interior()
+     * @see Compiler.Dataflow.Problem#interior()
      */
     public Fact interior() {
         return emptySet;
     }
 
     /* (non-Javadoc)
-     * @see Compil3r.Dataflow.Problem#getTransferFunction(java.lang.Object)
+     * @see Compiler.Dataflow.Problem#getTransferFunction(java.lang.Object)
      */
     public TransferFunction getTransferFunction(Object e) {
         RDTransferFunction tf = (RDTransferFunction) transferFunctions.get(e);

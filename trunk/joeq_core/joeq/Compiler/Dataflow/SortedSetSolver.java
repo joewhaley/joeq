@@ -1,7 +1,7 @@
 // Solver.java, created Jun 15, 2003 1:02:13 AM by joewhaley
 // Copyright (C) 2003 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Compil3r.Dataflow;
+package joeq.Compiler.Dataflow;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -49,7 +49,7 @@ public class SortedSetSolver extends WorklistSolver {
     }
     
     /* (non-Javadoc)
-     * @see Compil3r.Dataflow.Solver#initialize(Compil3r.Dataflow.Problem, Util.Graphs.Graph)
+     * @see Compiler.Dataflow.Solver#initialize(Compiler.Dataflow.Problem, Util.Graphs.Graph)
      */
     public void initialize(Problem p, Graph graph) {
         super.initialize(p, graph);
@@ -57,14 +57,14 @@ public class SortedSetSolver extends WorklistSolver {
     }
 
     /* (non-Javadoc)
-     * @see Compil3r.Dataflow.Solver#allLocations()
+     * @see Compiler.Dataflow.Solver#allLocations()
      */
     public Iterator allLocations() {
         return allNodes.iterator();
     }
 
     /* (non-Javadoc)
-     * @see Compil3r.Dataflow.WorklistSolver#initializeWorklist()
+     * @see Compiler.Dataflow.WorklistSolver#initializeWorklist()
      */
     protected void initializeWorklist() {
         worklist = new TreeSet(ordering);
@@ -73,14 +73,14 @@ public class SortedSetSolver extends WorklistSolver {
     }
     
     /* (non-Javadoc)
-     * @see Compil3r.Dataflow.WorklistSolver#hasNext()
+     * @see Compiler.Dataflow.WorklistSolver#hasNext()
      */
     protected boolean hasNext() {
         return !worklist.isEmpty();
     }
 
     /* (non-Javadoc)
-     * @see Compil3r.Dataflow.WorklistSolver#pull()
+     * @see Compiler.Dataflow.WorklistSolver#pull()
      */
     protected Object pull() {
         Iterator i = worklist.iterator();
@@ -90,7 +90,7 @@ public class SortedSetSolver extends WorklistSolver {
     }
     
     /* (non-Javadoc)
-     * @see Compil3r.Dataflow.WorklistSolver#pushAll(java.util.Collection)
+     * @see Compiler.Dataflow.WorklistSolver#pushAll(java.util.Collection)
      */
     protected void pushAll(Collection c) {
         worklist.addAll(c);

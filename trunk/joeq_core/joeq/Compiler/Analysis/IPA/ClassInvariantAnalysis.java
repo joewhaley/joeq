@@ -1,7 +1,7 @@
 // ClassInvariantAnalysis.java, created Jun 20, 2003 9:22:16 PM by joewhaley
 // Copyright (C) 2003 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Compil3r.Analysis.IPA;
+package joeq.Compiler.Analysis.IPA;
 
 import java.io.PrintStream;
 import java.util.Arrays;
@@ -13,24 +13,24 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
-import joeq.Clazz.jq_Array;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_Field;
-import joeq.Clazz.jq_Initializer;
-import joeq.Clazz.jq_InstanceMethod;
-import joeq.Clazz.jq_Method;
-import joeq.Clazz.jq_Primitive;
-import joeq.Clazz.jq_Type;
-import joeq.Clazz.jq_TypeVisitor;
-import joeq.Compil3r.Quad.CallGraph;
-import joeq.Compil3r.Quad.CodeCache;
-import joeq.Compil3r.Quad.ControlFlowGraph;
-import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary;
-import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.FieldNode;
-import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
-import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.NodeSet;
-import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.ParamNode;
-import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.UnknownTypeNode;
+import joeq.Class.jq_Array;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_Field;
+import joeq.Class.jq_Initializer;
+import joeq.Class.jq_InstanceMethod;
+import joeq.Class.jq_Method;
+import joeq.Class.jq_Primitive;
+import joeq.Class.jq_Type;
+import joeq.Class.jq_TypeVisitor;
+import joeq.Compiler.Quad.CallGraph;
+import joeq.Compiler.Quad.CodeCache;
+import joeq.Compiler.Quad.ControlFlowGraph;
+import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary;
+import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.FieldNode;
+import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.Node;
+import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.NodeSet;
+import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.ParamNode;
+import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.UnknownTypeNode;
 import joeq.Util.Assert;
 import joeq.Util.Graphs.Navigator;
 
@@ -209,7 +209,7 @@ public class ClassInvariantAnalysis
     }
 
     /* (non-Javadoc)
-     * @see Clazz.jq_TypeVisitor#visitClass(Clazz.jq_Class)
+     * @see Class.jq_TypeVisitor#visitClass(Class.jq_Class)
      */
     public void visitClass(jq_Class c) {
         this.initialize(c);
@@ -221,17 +221,17 @@ public class ClassInvariantAnalysis
     }
 
     /* (non-Javadoc)
-     * @see Clazz.jq_TypeVisitor#visitArray(Clazz.jq_Array)
+     * @see Class.jq_TypeVisitor#visitArray(Class.jq_Array)
      */
     public void visitArray(jq_Array m) {}
 
     /* (non-Javadoc)
-     * @see Clazz.jq_TypeVisitor#visitPrimitive(Clazz.jq_Primitive)
+     * @see Class.jq_TypeVisitor#visitPrimitive(Class.jq_Primitive)
      */
     public void visitPrimitive(jq_Primitive m) {}
 
     /* (non-Javadoc)
-     * @see Clazz.jq_TypeVisitor#visitType(Clazz.jq_Type)
+     * @see Class.jq_TypeVisitor#visitType(Class.jq_Type)
      */
     public void visitType(jq_Type m) {}
 

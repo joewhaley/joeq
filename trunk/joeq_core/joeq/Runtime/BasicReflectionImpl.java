@@ -1,7 +1,7 @@
 // BasicReflectionImpl.java, created Mon Dec 16 20:56:31 2002 by mcmartin
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Run_Time;
+package joeq.Runtime;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
@@ -12,21 +12,21 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Set;
 
-import joeq.Clazz.PrimordialClassLoader;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_ClassInitializer;
-import joeq.Clazz.jq_Field;
-import joeq.Clazz.jq_Initializer;
-import joeq.Clazz.jq_InstanceField;
-import joeq.Clazz.jq_InstanceMethod;
-import joeq.Clazz.jq_Member;
-import joeq.Clazz.jq_Method;
-import joeq.Clazz.jq_NameAndDesc;
-import joeq.Clazz.jq_Primitive;
-import joeq.Clazz.jq_Reference;
-import joeq.Clazz.jq_StaticField;
-import joeq.Clazz.jq_StaticMethod;
-import joeq.Clazz.jq_Type;
+import joeq.Class.PrimordialClassLoader;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_ClassInitializer;
+import joeq.Class.jq_Field;
+import joeq.Class.jq_Initializer;
+import joeq.Class.jq_InstanceField;
+import joeq.Class.jq_InstanceMethod;
+import joeq.Class.jq_Member;
+import joeq.Class.jq_Method;
+import joeq.Class.jq_NameAndDesc;
+import joeq.Class.jq_Primitive;
+import joeq.Class.jq_Reference;
+import joeq.Class.jq_StaticField;
+import joeq.Class.jq_StaticMethod;
+import joeq.Class.jq_Type;
 import joeq.Memory.Address;
 import joeq.UTF.Utf8;
 import joeq.Util.Assert;
@@ -582,7 +582,7 @@ uphere:
     }
 
     public void initialize() {
-        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Run_Time/BasicReflectionImpl;");
+        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Runtime/BasicReflectionImpl;");
         _declaredFieldsCache = _class.getOrCreateStaticField("declaredFieldsCache", "Ljava/util/HashMap;");
     }
     

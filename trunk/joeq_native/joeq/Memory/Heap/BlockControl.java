@@ -3,9 +3,9 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Memory.Heap;
 
-import joeq.Clazz.PrimordialClassLoader;
-import joeq.Clazz.jq_Array;
-import joeq.Clazz.jq_Class;
+import joeq.Class.PrimordialClassLoader;
+import joeq.Class.jq_Array;
+import joeq.Class.jq_Class;
 import joeq.Memory.HeapAddress;
 
 /**

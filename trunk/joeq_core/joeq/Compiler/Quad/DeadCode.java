@@ -1,7 +1,7 @@
 // DeadCode.java, created Tue Jun  4 15:58:53 2002 by joewhaley
 // Copyright (C) 2001-3 mcmartin
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Compil3r.Quad;
+package joeq.Compiler.Quad;
 
 /**
  * @author Michael Martin <mcmartin@stanford.edu>

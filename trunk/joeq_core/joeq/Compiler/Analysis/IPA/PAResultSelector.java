@@ -1,4 +1,4 @@
-package joeq.Compil3r.Analysis.IPA;
+package joeq.Compiler.Analysis.IPA;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -9,8 +9,8 @@ import org.sf.javabdd.BDD;
 import org.sf.javabdd.BDDDomain;
 import org.sf.javabdd.TypedBDDFactory.TypedBDD;
 
-import joeq.Clazz.jq_Method;
-import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
+import joeq.Class.jq_Method;
+import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.Node;
 import joeq.Util.Assert;
 
 /**

@@ -3,7 +3,7 @@
  *
  * Define some typed iterators.
  */
-package joeq.Compil3r.Analysis.IPSSA;
+package joeq.Compiler.Analysis.IPSSA;
 
 import java.util.Iterator;
 

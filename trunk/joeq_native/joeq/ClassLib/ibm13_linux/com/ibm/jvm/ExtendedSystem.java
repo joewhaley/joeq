@@ -3,10 +3,10 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.ClassLib.ibm13_linux.com.ibm.jvm;
 
-import joeq.Clazz.jq_Array;
-import joeq.Clazz.jq_Reference;
-import joeq.Clazz.jq_Type;
-import joeq.Run_Time.Reflection;
+import joeq.Class.jq_Array;
+import joeq.Class.jq_Reference;
+import joeq.Class.jq_Type;
+import joeq.Runtime.Reflection;
 
 /**
  * ExtendedSystem

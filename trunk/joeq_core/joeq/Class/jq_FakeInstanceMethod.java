@@ -1,9 +1,9 @@
 // jq_FakeInstanceMethod.java, created Tue Dec  9 23:43:51 PST 2003
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Clazz;
+package joeq.Class;
 
-import joeq.Clazz.PrimordialClassLoader;
+import joeq.Class.PrimordialClassLoader;
 import java.util.HashMap;
 import java.util.StringTokenizer;
 import java.io.IOException;
@@ -49,5 +49,5 @@ public class jq_FakeInstanceMethod extends jq_InstanceMethod {
         return fakeMethod(clazz, new jq_NameAndDesc(name, desc));
     }
 
-    public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Clazz/jq_FakeInstanceMethod;");
+    public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Class/jq_FakeInstanceMethod;");
 }

@@ -3,11 +3,11 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Allocator;
 
-import joeq.Clazz.PrimordialClassLoader;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_StaticMethod;
+import joeq.Class.PrimordialClassLoader;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_StaticMethod;
 import joeq.Memory.Address;
-import joeq.Run_Time.Unsafe;
+import joeq.Runtime.Unsafe;
 
 /**
  * DefaultHeapAllocator
