@@ -1531,20 +1531,7 @@ public class CSPA {
     }
     
     public static String domainName(BDDDomain d) {
-        switch (d.getIndex()) {
-            case 0: return "V1o";
-            case 1: return "V1c";
-            case 2: return "V2o";
-            case 3: return "V2c";
-            case 4: return "FD";
-            case 5: return "H1o";
-            case 6: return "H1c";
-            case 7: return "H2o";
-            case 8: return "H2c";
-            case 9: return "H3o";
-            case 10: return "H3c";
-            default: return "???";
-        }
+        return d.getName();
     }
     
     public static final boolean MASK = true;
