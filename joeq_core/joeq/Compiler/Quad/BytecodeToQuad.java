@@ -899,26 +899,15 @@ public class BytecodeToQuad extends BytecodeVisitor {
         Quad q = Jsr.create(quad_cfg.getNewQuadID(), Jsr.JSR.INSTANCE, op0, new TargetOperand(target_bb), new TargetOperand(successor_bb));
         appendQuad(q);
         Compil3r.BytecodeAnalysis.BasicBlock next_bb = bc_cfg.getBasicBlock(bc_bb.id+1);
-        AbstractState existing_state = getJSRState(next_bb);
         Compil3r.BytecodeAnalysis.JSRInfo jsrinfo = bc_cfg.getJSRInfo(target_bcbb);
         Compil3r.BytecodeAnalysis.BasicBlock ret_bb = jsrinfo.exit_block;
-        if (existing_state != null) {
-            if (TRACE) out.println("this jsr call has already been visited: incoming jsr state for "+next_bb+" already exists.");
-            if (existing_state.merge(current_state.copyAfterJSR(), rf)) {
-                if (TRACE) out.println("output (jsr) state of "+bc_bb+" changed");
-                // mark the ret bb for regeneration, so that when we revisit its
-                // ret instruction, next_bb will get updated with the new state.
-                if (TRACE) out.println("marking ret bb "+ret_bb+" for regeneration.");
-                if (!regenerate.contains(ret_bb)) regenerate.add(ret_bb);
-            }
-        } else {
-            setJSRState(next_bb, current_state);
-            // we need to revisit the ret block, so that when we revisit its
-            // ret instruction, next_bb will get updated with the new state.
-            if (visited[ret_bb.id]) {
-                if (TRACE) out.println("marking ret bb "+ret_bb+" for regeneration.");
-                if (!regenerate.contains(ret_bb)) regenerate.add(ret_bb);
-            }
+        setJSRState(next_bb, current_state);
+        // we need to visit the ret block even when it has been visited before,
+        // so that when we visit its ret instruction, next_bb will get updated
+        // with the new jsr state
+        if (visited[ret_bb.id]) {
+            if (TRACE) out.println("marking ret bb "+ret_bb+" for regeneration.");
+            if (!regenerate.contains(ret_bb)) regenerate.add(ret_bb);
         }
         current_state.push(op0.copy());
     }
@@ -942,9 +931,6 @@ public class BytecodeToQuad extends BytecodeVisitor {
                 if (!regenerate.contains(caller_next)) regenerate.add(caller_next);
                 continue;
             }
-            // make a copy, so that we don't corrupt the original.
-            // we use the original to check if the state at the end of a jsr block changes.
-            caller_state = caller_state.copyAfterJSR();
             caller_state.mergeAfterJSR(jsrinfo.changedLocals, current_state);
             if (start_states[caller_next.id] == null) {
                 if (TRACE) out.println("Copying jsr state to "+caller_next);
