@@ -45,7 +45,7 @@ public abstract class ProgramLocation {
     
     public abstract int getID();
     
-    public abstract boolean isVirtual();
+    public abstract boolean isSingleTarget();
     
 //    protected abstract byte getInvocationType();
     
@@ -113,10 +113,14 @@ public abstract class ProgramLocation {
             return sb.toString();
         }
         
-        public boolean isVirtual() {
-            byte b = getInvocationType();
-            return b == BytecodeVisitor.INVOKE_VIRTUAL ||
-                    b == BytecodeVisitor.INVOKE_INTERFACE;
+        public boolean isSingleTarget() {
+            if (!((Invoke) q.getOperator()).isVirtual()) return true;
+            jq_InstanceMethod target = (jq_InstanceMethod) Invoke.getMethod(q).getMethod();
+            target.getDeclaringClass().load();
+            if (target.getDeclaringClass().isFinal()) return true;
+            target.getDeclaringClass().prepare();
+            if (!target.isVirtual()) return true;
+            return false;
         }
         
         private byte getInvocationType() {
@@ -172,7 +176,7 @@ public abstract class ProgramLocation {
         public int getNumParams() { return targetMethod.getNumParams(); }
         public AndersenType getParamType(int i) { return targetMethod.getParamType(i); }
 
-        public boolean isVirtual() { return false; } // todo.
+        public boolean isSingleTarget() { return false; } // todo.
 
         public int hashCode() { return identifier; }
         public boolean equals(SSAProgramLocation that) { return this.identifier == that.identifier; }

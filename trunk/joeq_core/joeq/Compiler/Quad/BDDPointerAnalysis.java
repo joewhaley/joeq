@@ -651,7 +651,7 @@ public class BDDPointerAnalysis {
             ProgramLocation mc = (ProgramLocation) i.next();
             CallSite cs = new CallSite(ms, mc);
             jq.Assert(!callSiteToTargets.containsKey(cs));
-            if (!mc.isVirtual()) {
+            if (mc.isSingleTarget()) {
                 jq_Method target = (jq_Method) mc.getTargetMethod();
                 addClassInit(target.getDeclaringClass());
                 Set definite_targets = Collections.singleton(target);
@@ -784,7 +784,7 @@ public class BDDPointerAnalysis {
     public void bindParameters(MethodSummary caller, ProgramLocation mc, MethodSummary callee) {
         Object key = new CallSite(callee, mc);
         if (callGraphEdges.contains(key)) return;
-        if (TRACE && !this.change) {
+        if (true && !this.change) {
             System.out.println("Adding call graph edge "+caller.getMethod()+"->"+callee.getMethod());
         }
         callGraphEdges.add(key);
