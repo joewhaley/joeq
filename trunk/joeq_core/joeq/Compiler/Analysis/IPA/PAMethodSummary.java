@@ -253,6 +253,10 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
                             }else{
                                 base = 1;
                             }
+                            Assert._assert(q.getAllOperands().getOperand(base) instanceof MethodOperand,
+                                "Operand " + 
+                                q.getAllOperands().getOperand(base) + 
+                                " is not of the right type");
                             Operand.MethodOperand methodOp = (MethodOperand) q.getAllOperands().getOperand(base);
                             Assert._assert(methodOp.getMethod() == oldTarget);
                             methodOp.setMethod(replacement);
