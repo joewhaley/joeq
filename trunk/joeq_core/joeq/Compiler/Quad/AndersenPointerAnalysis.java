@@ -45,7 +45,7 @@ public class AndersenPointerAnalysis {
     public static /*final*/ boolean TRACE = false;
     public static final boolean TRACE_CHANGE = false;
     public static final boolean TRACE_CYCLES = false;
-    public static final boolean VerifyAssertions = false;
+    public static final boolean VerifyAssertions = true;
     public static boolean FULL_DUMP = false;
     public static boolean COMPARE_RTA = false;
     public static boolean DO_TWICE = false;
