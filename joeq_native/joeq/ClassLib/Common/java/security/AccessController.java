@@ -46,11 +46,11 @@ abstract class AccessController {
             throw new java.security.PrivilegedActionException(x);
         }
     }
-    private static java.security.AccessControlContext getStackAccessControlContext(jq_Class clazz) {
+    private static java.security.AccessControlContext getStackAccessControlContext() {
         // TODO
         return null;
     }
-    static java.security.AccessControlContext getInheritedAccessControlContext(jq_Class clazz) {
+    static java.security.AccessControlContext getInheritedAccessControlContext() {
         // TODO
         return null;
     }
