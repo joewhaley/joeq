@@ -33,9 +33,13 @@ public abstract class ObjectTraverser {
     
     public static final java.lang.Object NO_OBJECT = new java.lang.Object();
     
+    public static boolean IsBootstrapping;
+
     public Object getStaticFieldValue(jq_StaticField f) {
-        java.lang.Object result = this.mapStaticField(f);
-        if (result != NO_OBJECT) return this.mapValue(result);
+        if (IsBootstrapping) {
+            java.lang.Object result = this.mapStaticField(f);
+            if (result != NO_OBJECT) return this.mapValue(result);
+        }
         // get the value via real reflection.
         Class c = Reflection.getJDKType(f.getDeclaringClass());
         String fieldName = f.getName().toString();
@@ -64,7 +68,9 @@ public abstract class ObjectTraverser {
         f2.setAccessible(true);
         Assert._assert((f2.getModifiers() & Modifier.STATIC) != 0);
         try {
-            return this.mapValue(f2.get(null));
+            Object o = f2.get(null);
+            if (IsBootstrapping) o = this.mapValue(o);
+            return o;
         } catch (IllegalAccessException x) {
             Assert.UNREACHABLE();
             return null;
@@ -72,8 +78,10 @@ public abstract class ObjectTraverser {
     }
     
     public Object getInstanceFieldValue(Object base, jq_InstanceField f) {
-        java.lang.Object result = this.mapInstanceField(base, f);
-        if (result != NO_OBJECT) return this.mapValue(result);
+        if (IsBootstrapping) {
+            java.lang.Object result = this.mapInstanceField(base, f);
+            if (result != NO_OBJECT) return this.mapValue(result);
+        }
         // get the value via real reflection.
         Class c = Reflection.getJDKType(f.getDeclaringClass());
         String fieldName = f.getName().toString();
@@ -86,7 +94,9 @@ public abstract class ObjectTraverser {
         f2.setAccessible(true);
         Assert._assert((f2.getModifiers() & Modifier.STATIC) == 0);
         try {
-            return this.mapValue(f2.get(base));
+            Object o = f2.get(base);
+            if (IsBootstrapping) o = this.mapValue(o);
+            return o;
         } catch (IllegalAccessException x) {
             Assert.UNREACHABLE();
             return null;
