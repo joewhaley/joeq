@@ -53,13 +53,13 @@ public class PointerExplorer {
     }
     
     public static jq_Method getMethod() throws IOException {
-        return getMethod((String[])null);
+        return getMethod((String[])null, 0);
     }
         
-    public static jq_Method getMethod(String[] args) throws IOException {
+    public static jq_Method getMethod(String[] args, int start) throws IOException {
         String mainClassName;
-        if (args != null && args.length > 0) {
-            mainClassName = args[0];
+        if (args != null && args.length > start) {
+            mainClassName = args[start];
         } else {
             System.out.print("Enter the name of the class: ");
             mainClassName = in.readLine();
@@ -72,7 +72,7 @@ public class PointerExplorer {
         
         jq_Class klass = (jq_Class)t;
         klass.load(); klass.verify(); klass.prepare();
-        String name = (args != null && args.length > 1) ? args[1] : null;
+        String name = (args != null && args.length > start+1) ? args[start+1] : null;
         return getMethod(klass, name);
     }
     
@@ -217,7 +217,7 @@ uphere2:
                 MethodSummary.FieldNode fnode = (MethodSummary.FieldNode)onode;
                 jq_Field field = fnode.f;
                 Set inEdges = fnode.getAccessPathPredecessors();
-                System.out.println(indent+"Field "+field+" Parent nodes: "+inEdges);
+                System.out.println(indent+"Field "+field.getName().toString()+" Parent nodes: "+inEdges);
                 System.out.print(indent+"Type 'w' to find matching writes to parent nodes, 'u' to go up: ");
                 String s = in.readLine();
                 if (s.equalsIgnoreCase("u")) {
@@ -297,8 +297,13 @@ uphere2:
     public static void main(String[] args) throws IOException {
         jq.initializeForHostJVMExecution();
         
+        int index = 0; int index0 = -1;
+        while (index != index0 && index < args.length) {
+            index = Main.TraceFlags.setTraceFlag(args, index0 = index);
+        }
+        
         System.out.println("Select the root method.");
-        jq_Method m = getMethod(args);
+        jq_Method m = getMethod(args, index);
         rootSet.add(m);
         ControlFlowGraph cfg = CodeCache.getCode(m);
         apa = new AndersenPointerAnalysis(false);

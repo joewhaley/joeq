@@ -110,7 +110,7 @@ public class MethodSummary {
         protected final LinkedHashSet returned, thrown;
         /** The set of method calls made. */
         protected final LinkedHashSet methodCalls;
-        /** The set of nodes that were ever passed as a parameter. */
+        /** The set of nodes that were ever passed as a parameter, or returned/thrown from a call site. */
         protected final LinkedHashSet passedAsParameter;
         /** The current basic block. */
         protected BasicBlock bb;
@@ -494,7 +494,10 @@ public class MethodSummary {
                 if (dest != null) {
                     Register dest_r = dest.getRegister();
                     ReturnValueNode n = (ReturnValueNode)quadsToNodes.get(obj);
-                    if (n == null) quadsToNodes.put(obj, n = new ReturnValueNode(mc));
+                    if (n == null) {
+                        quadsToNodes.put(obj, n = new ReturnValueNode(mc));
+                        passedAsParameter.add(n);
+                    }
                     setRegister(dest_r, n);
                 }
             }
@@ -656,6 +659,7 @@ public class MethodSummary {
                 m = (jq_Method)m.resolve();
                 MethodCall mc = new MethodCall(m, obj);
                 ThrownExceptionNode n = new ThrownExceptionNode(mc);
+                passedAsParameter.add(n);
                 ListIterator.ExceptionHandler eh = bb.getExceptionHandlers().exceptionHandlerIterator();
                 while (eh.hasNext()) {
                     ExceptionHandler h = eh.nextExceptionHandler();
@@ -866,6 +870,8 @@ public class MethodSummary {
                     if (o instanceof Node) {
                         Node that = (Node)o;
                         Quad q = (TRACK_SOURCE_QUADS && edgesToQuads != null) ? (Quad)edgesToQuads.get(Edge.get(that, this, f)) : (Quad)null;
+                        if (removeSelf)
+                            that._removeEdge(f, this);
                         if (that == this) {
                             // add self-cycles on f to all nodes in set.
                             if (TRACE_INTRA) out.println("Adding self-cycles on field "+f);
@@ -873,18 +879,18 @@ public class MethodSummary {
                                 Node k = (Node)j.next();
                                 k.addEdge(f, k, q);
                             }
-                            continue;
-                        }
-                        if (removeSelf)
-                            that._removeEdge(f, this);
-                        for (Iterator j=set.iterator(); j.hasNext(); ) {
-                            that.addEdge(f, (Node)j.next(), q);
+                        } else {
+                            for (Iterator j=set.iterator(); j.hasNext(); ) {
+                                that.addEdge(f, (Node)j.next(), q);
+                            }
                         }
                     } else {
                         for (Iterator k=((LinkedHashSet)o).iterator(); k.hasNext(); ) {
                             Node that = (Node)k.next();
-                            if (removeSelf)
+                            if (removeSelf) {
                                 k.remove();
+                                that._removeEdge(f, this);
+                            }
                             Quad q = (TRACK_SOURCE_QUADS && edgesToQuads != null) ? (Quad)edgesToQuads.get(Edge.get(that, this, f)) : (Quad)null;
                             if (that == this) {
                                 // add self-cycles on f to all mapped nodes.
@@ -893,12 +899,10 @@ public class MethodSummary {
                                     Node k2 = (Node)j.next();
                                     k2.addEdge(f, k2, q);
                                 }
-                                continue;
-                            }
-                            if (removeSelf)
-                                that._removeEdge(f, this);
-                            for (Iterator j=set.iterator(); j.hasNext(); ) {
-                                that.addEdge(f, (Node)j.next(), q);
+                            } else {
+                                for (Iterator j=set.iterator(); j.hasNext(); ) {
+                                    that.addEdge(f, (Node)j.next(), q);
+                                }
                             }
                         }
                     }
@@ -914,7 +918,7 @@ public class MethodSummary {
                     if (o == null) continue;
                     if (o instanceof Node) {
                         Node that = (Node)o;
-                        jq.Assert(that != this); // cyclic edges handled above.
+                        if (that == this) continue; // cyclic edges handled above.
                         Quad q = (TRACK_SOURCE_QUADS && edgesToQuads != null) ? (Quad)edgesToQuads.get(Edge.get(this, that, f)) : (Quad)null;
                         if (removeSelf)
                             that.removePredecessor(f, this);
@@ -927,7 +931,7 @@ public class MethodSummary {
                             Node that = (Node)k.next();
                             if (removeSelf)
                                 k.remove();
-                            jq.Assert(that != this); // cyclic edges handled above.
+                            if (that == this) continue; // cyclic edges handled above.
                             Quad q = (TRACK_SOURCE_QUADS && edgesToQuads != null) ? (Quad)edgesToQuads.get(Edge.get(this, that, f)) : (Quad)null;
                             if (removeSelf)
                                 that.removePredecessor(f, this);
@@ -949,7 +953,7 @@ public class MethodSummary {
                     if (o == null) continue;
                     if (o instanceof FieldNode) {
                         FieldNode that = (FieldNode)o;
-                        jq.Assert(that != this); // cyclic edges handled above.
+                        if (that == this) continue; // cyclic edges handled above.
                         if (removeSelf)
                             that.field_predecessors.remove(this);
                         for (Iterator j=set.iterator(); j.hasNext(); ) {
@@ -961,7 +965,7 @@ public class MethodSummary {
                             FieldNode that = (FieldNode)k.next();
                             if (removeSelf)
                                 k.remove();
-                            jq.Assert(that != this); // cyclic edges handled above.
+                            if (that == this) continue; // cyclic edges handled above.
                             if (removeSelf)
                                 that.field_predecessors.remove(this);
                             for (Iterator j=set.iterator(); j.hasNext(); ) {
@@ -989,11 +993,20 @@ public class MethodSummary {
                 java.util.Map.Entry e = (java.util.Map.Entry)i.next();
                 jq_Field f = (jq_Field)e.getKey();
                 Object o = e.getValue();
+                if (o == null) continue;
                 if (o instanceof Node) {
-                    m.put(f, um.get(o));
+                    Object q = um.get(o);
+                    jq.Assert(q != null);
+                    m.put(f, q);
                 } else {
+                    LinkedHashSet lhs = new LinkedHashSet();
+                    m.put(f, lhs);
                     for (Iterator j=((LinkedHashSet)o).iterator(); j.hasNext(); ) {
-                        m.put(f, um.get(j.next()));
+                        Object r = j.next();
+                        jq.Assert(r != null);
+                        Object q = um.get(r);
+                        jq.Assert(q != null, r+" is missing from map");
+                        lhs.add(q);
                     }
                 }
             }
@@ -1003,6 +1016,7 @@ public class MethodSummary {
          *  Also clones the passed parameter set.
          */
         public void update(HashMap um) {
+            if (TRACE_INTRA) out.println("Updating edges for node "+this);
             LinkedHashMap m = this.predecessors;
             if (m != null) {
                 this.predecessors = new LinkedHashMap();
@@ -1729,20 +1743,20 @@ public class MethodSummary {
                 for (Iterator i=this.field_predecessors.iterator(); i.hasNext(); ) {
                     Node that = (Node)i.next();
                     jq.Assert(that != null);
-                    if (removeSelf)
+                    if (removeSelf) {
                         i.remove();
+                        that._removeAccessPathEdge(f, this);
+                    }
                     if (that == this) {
                         // add self-cycles on f to all nodes in set.
                         for (Iterator j=set.iterator(); j.hasNext(); ) {
                             FieldNode k = (FieldNode)j.next();
                             k.addAccessPathEdge(f, k);
                         }
-                        continue;
-                    }
-                    if (removeSelf)
-                        that._removeAccessPathEdge(f, this);
-                    for (Iterator j=set.iterator(); j.hasNext(); ) {
-                        that.addAccessPathEdge(f, (FieldNode)j.next());
+                    } else {
+                        for (Iterator j=set.iterator(); j.hasNext(); ) {
+                            that.addAccessPathEdge(f, (FieldNode)j.next());
+                        }
                     }
                 }
             }
@@ -2225,6 +2239,25 @@ public class MethodSummary {
                     jq.UNREACHABLE("Returned node "+o+" not in set.");
                 }
             }
+            for (Iterator i=nodes.keySet().iterator(); i.hasNext(); ) {
+                Node nod = (Node)i.next();
+                if (nod.predecessors == null) continue;
+                for (Iterator j=nod.predecessors.values().iterator(); j.hasNext(); ) {
+                    Object o = j.next();
+                    if (o instanceof Node) {
+                        if (o != my_global && !(o instanceof UnknownTypeNode) && !nodes.containsKey(o)) {
+                            jq.UNREACHABLE("Predecessor node "+o+" of "+nod+" not in set.");
+                        }
+                    } else {
+                        for (Iterator k=((Set)o).iterator(); k.hasNext(); ) {
+                            Node q = (Node)k.next();
+                            if (q != my_global && !(q instanceof UnknownTypeNode) && !nodes.containsKey(q)) {
+                                jq.UNREACHABLE("Predecessor node "+q+" of "+nod+" not in set.");
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -2281,6 +2314,7 @@ public class MethodSummary {
      *  Nodes, edges, everything is copied.
      */
     public MethodSummary copy() {
+        if (TRACE_INTRA) out.println("Copying summary: "+this);
         HashMap m = new HashMap();
         for (Iterator i=nodeIterator(); i.hasNext(); ) {
             Node a = (Node)i.next();
@@ -2316,6 +2350,7 @@ public class MethodSummary {
         LinkedHashMap nodes = new LinkedHashMap();
         for (Iterator i=m.entrySet().iterator(); i.hasNext(); ) {
             java.util.Map.Entry e = (java.util.Map.Entry)i.next();
+            if (e.getValue() == GlobalNode.GLOBAL) continue;
             nodes.put(e.getValue(), e.getValue());
         }
         return new MethodSummary(method, params, calls, returned, thrown, nodes);
@@ -2495,6 +2530,7 @@ public class MethodSummary {
             s.addAll(t);
         }
         caller.unifyAccessPaths(s);
+        caller.calls.addAll(callee.calls);
         if (removeCall)
             caller.calls.remove(mc);
     }
@@ -2571,11 +2607,14 @@ public class MethodSummary {
                 }
             }
         }
+        if (n.predecessors != null) useful = true;
         if (n.passedParameters != null) useful = true;
         if (returned.contains(n)) useful = true;
         if (thrown.contains(n)) useful = true;
+        if (n instanceof ReturnedNode) useful = true;
         if (useful)
             this.nodes.put(n, n);
+        if (TRACE_INTER && !useful) out.println("Not useful: "+n);
         return useful;
     }
     /** Utility function to add the given node to the node set as useful,
