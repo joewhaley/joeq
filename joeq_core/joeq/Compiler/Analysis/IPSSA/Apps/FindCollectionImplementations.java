@@ -1,11 +1,17 @@
 package Compil3r.Analysis.IPSSA.Apps;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Set;
 
+import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
 import Clazz.jq_Method;
 import Clazz.jq_Type;
@@ -14,137 +20,16 @@ import Compil3r.Quad.CallGraph;
 import Compil3r.Quad.RootedCHACallGraph;
 import Main.HostedVM;
 import Util.Assert;
-
-public class FindCollectionImplementations {    
-    Collection roots;
-    private static CallGraph _cg;
-    private Set _classes;
-    private Set _collections;
-    private Set _iterators;
-
-    static final String COLLECTION_SIGNATURE = "Ljava.util.Collection;";
-    static final String ITERATOR_SIGNATURE   = "Ljava.util.Iterator;";    
-    
-    static jq_Class _collectionClass  = null;
-    static jq_Class _iteratorClass    = null;
-    
-    public FindCollectionImplementations(String startClass) {
-        jq_Class c = (jq_Class) jq_Type.parseType(startClass);
-        c.prepare();
-        
-        Collection roots = Arrays.asList(c.getDeclaredStaticMethods());
-        System.out.println("Roots: " + roots);
-        
-        System.out.print("Building call graph...");
-        long time = System.currentTimeMillis();
-        _cg = new RootedCHACallGraph();
-        _cg.setRoots(roots);
-        _cg = new CachedCallGraph(_cg);
-        
-        time = System.currentTimeMillis() - time;
-        System.out.println("done. ("+(time/1000.)+" seconds)");
-        _classes = getClasses(_cg.getAllMethods());
-        
-        _collections = new HashSet();
-        _iterators   = new HashSet();
-        
-        _collectionClass  = (jq_Class)jq_Type.parseType(COLLECTION_SIGNATURE);
-        _iteratorClass    = (jq_Class)jq_Type.parseType(ITERATOR_SIGNATURE);  
-
-        Assert._assert(_collectionClass != null);
-        Assert._assert(_iteratorClass  != null);
-    }
-    
-    public static void main(String[] args) {
-        HostedVM.initialize();
-
-        FindCollectionImplementations finder = new FindCollectionImplementations(args[0]);
-        finder.run();
-    }
-    
-    protected void run() {        
-        System.err.println("Looking for subclasses of " + _collectionClass + " and " + _iteratorClass);
-        
-        findCollections();
-        findIterators();        
-        
-        reportStats();
-    }
-    
-    private void reportStats() {
-        System.out.println("Found " + _collections.size() + " collections:");
-        //printCollection(_collections);
-        ClassHierarchy h = new ClassHierarchy(_collectionClass, _collections);
-        h.makeHierarchy();
-        h.printHierarchy();
-        
-        System.out.println("Found " + _iterators.size() + " iterators");
-        //printCollection(_iterators);
-        h = new ClassHierarchy(_iteratorClass, _iterators);
-        h.makeHierarchy();
-        h.printHierarchy();
-    }
-
-    private void printCollection(Collection collection) {
-        Iterator iter = collection.iterator();
-        while(iter.hasNext()) {
-            jq_Class c = (jq_Class)iter.next();
-            
-            System.out.println("\t" + c);
-        }
-    }
-
-    private Set getClasses(Collection collection) {
-        HashSet result = new HashSet(); 
-        for(Iterator iter = collection.iterator(); iter.hasNext(); ) {
-            jq_Method method = (jq_Method)iter.next();
-            //System.err.println("Saw " + method);
-         
-            jq_Class c = method.getDeclaringClass();
-            if(c != null) {
-                result.add(c);
-            }
-        }
-        
-        return result;
-    }
-    
-    private void findCollections() {      
-        for(Iterator iter = _classes.iterator(); iter.hasNext(); ) {
-            jq_Class c = (jq_Class)iter.next();
-            
-            if(c.getDeclaredInterface(_collectionClass.getDesc()) != null) {
-                _collections.add(c);
-            }
-        }        
-    }
-    private void findIterators() {        
-        for(Iterator iter = _classes.iterator(); iter.hasNext(); ) {
-            jq_Class c = (jq_Class)iter.next();
-            
-            if(c.getDeclaredInterface(_iteratorClass.getDesc()) != null) {
-                _iterators.add(c);
-            }
-        }        
-    }
-}
+import Util.Collections.AppendIterator;
 
 class ClassHierarchy {
     protected class ClassHieraryNode {
-        ClassHieraryNode _parent    = null;
-        jq_Class         _class     = null;
         Set              _children  = new HashSet();
+        jq_Class         _class     = null;
+        ClassHieraryNode _parent    = null;
         
         ClassHieraryNode(jq_Class c){
             this._class = c;
-        }
-        public jq_Class getClazz() {
-            return _class;
-        }
-        public void setRoot(ClassHieraryNode n) {
-            //System.err.println("Connecting " + this + " and " + n);
-            this._parent = n;
-            n.addChild(this);
         }
         private void addChild(ClassHieraryNode n) {
             //if(!_children.contains(n)) {
@@ -152,34 +37,38 @@ class ClassHierarchy {
                 _children.add(n);
             //}
         }
-        public void reset() {
-            this._parent = null;
-            _children = new HashSet();            
+        public int getChildCount() {
+            return _children.size();
         }
         public Iterator getChildIterator() {
             return _children.iterator();
         }
-        public String toString(){
-            return _class.toString();                
+        public jq_Class getClazz() {
+            return _class;
         }
-        public int getChildCount() {
-            return _children.size();
+        public void reset() {
+            this._parent = null;
+            _children = new HashSet();            
+        }
+        public void setRoot(ClassHieraryNode n) {
+            //System.err.println("Connecting " + this + " and " + n);
+            this._parent = n;
+            n.addChild(this);
         }
         public String toLongString() {
             return _class.getJDKDesc();
         }
+        public String toString(){
+            return _class.toString();                
+        }
     }
+    Set              _nodes = new HashSet();  
     
     ClassHieraryNode _root  = null;
-    Set              _nodes = new HashSet();  
     
     ClassHierarchy(ClassHieraryNode root){
         this._root = root;
         add(_root);
-    }
-    
-    private void add(ClassHieraryNode node) {
-        _nodes.add(node);
     }
 
     ClassHierarchy(jq_Class root){
@@ -199,15 +88,15 @@ class ClassHierarchy {
             add(c2);
         }
     }
+    
+    private void add(ClassHieraryNode node) {
+        _nodes.add(node);
+    }
 
     void add(jq_Class c) {
         if(!hasClass(c)) {
             _nodes.add(new ClassHieraryNode(c));
         }
-    }
-    
-    boolean hasClass(jq_Class c) {
-        return getClassNode(c) != null;
     }
 
     private ClassHieraryNode getClassNode(jq_Class c) {
@@ -223,8 +112,12 @@ class ClassHierarchy {
         return null;
     }
     
+    boolean hasClass(jq_Class c) {
+        return getClassNode(c) != null;
+    }
+    
     public void makeHierarchy() {
-        if(_nodes.size() == 0) return;
+        if(_nodes.size() <= 1) return;
         Assert._assert(_root != null, "Root is not set in the beginning of makeHierarchy");
         // clear potential all data
         resetNodes();
@@ -289,5 +182,160 @@ class ClassHierarchy {
             node.reset();
         }
         Assert._assert(_root != null, "Root is not set at the end of resetNodes");
+    }
+}
+
+public class FindCollectionImplementations {    
+    private static CallGraph _cg;
+    
+    static jq_Class _collectionClass  = null;
+    static jq_Class _iteratorClass    = null;
+
+    static final String COLLECTION_SIGNATURE = "Ljava.util.Collection;";
+    static final String ITERATOR_SIGNATURE   = "Ljava.util.Iterator;";    
+    
+    public static void main(String[] args) {
+        HostedVM.initialize();
+        
+        Iterator i = null;
+        for (int x=0; x<args.length; ++x) {
+            if (args[x].equals("-file")) {
+                try {
+                    BufferedReader br = new BufferedReader(new FileReader(args[++x]));
+                    LinkedList list = new LinkedList();
+                    for (;;) {
+                        String s = br.readLine();
+                        if (s == null) break;
+                        if (s.length() == 0) continue;
+                        if (s.startsWith("%")) continue;
+                        if (s.startsWith("#")) continue;
+                        list.add(s);
+                    }
+                    i = new AppendIterator(list.iterator(), i);
+                }catch(IOException e) {
+                    e.printStackTrace();
+                    System.exit(2);
+                }
+                
+            } else
+            if (args[x].endsWith("*")) {
+                i = new AppendIterator(PrimordialClassLoader.loader.listPackage(args[x].substring(0, args[x].length()-1)), i);
+            } else 
+            if(args[x].charAt(0) == '-'){
+                System.exit(2);                    
+            }else {
+                String classname = args[x];
+                i = new AppendIterator(Collections.singleton(classname).iterator(), i);
+            }
+        }
+
+        FindCollectionImplementations finder = new FindCollectionImplementations(i);
+        finder.run();
+    }
+    private Set _classes;
+    private Set _collections;
+    private Set _iterators;
+    
+    
+    public FindCollectionImplementations(Iterator i) {
+        Set classes = new HashSet();
+        Collection roots = new LinkedList();
+        while(i.hasNext()) {
+            jq_Class c = (jq_Class) jq_Type.parseType((String)i.next());
+            c.load();
+
+            classes.add(c);
+            roots.addAll(Arrays.asList(c.getDeclaredStaticMethods()));
+        }
+        
+        System.out.println("Classes: " + classes);
+        System.out.println("Roots: " + roots);
+        
+        System.out.print("Building call graph...");
+        long time = System.currentTimeMillis();
+        _cg = new RootedCHACallGraph(classes);
+        _cg.setRoots(roots);
+        _cg = new CachedCallGraph(_cg);
+        
+        time = System.currentTimeMillis() - time;
+        System.out.println("done. ("+(time/1000.)+" seconds)");
+        _classes = getClasses(_cg.getAllMethods());
+        
+        _collections = new HashSet();
+        _iterators   = new HashSet();
+        
+        _collectionClass  = (jq_Class)jq_Type.parseType(COLLECTION_SIGNATURE);
+        _iteratorClass    = (jq_Class)jq_Type.parseType(ITERATOR_SIGNATURE);  
+        _collectionClass.load();
+        _iteratorClass.load();
+
+        Assert._assert(_collectionClass != null);
+        Assert._assert(_iteratorClass  != null);
+    }
+    
+    private void findCollections() {      
+        for(Iterator iter = _classes.iterator(); iter.hasNext(); ) {
+            jq_Class c = (jq_Class)iter.next();
+            
+            if(c.getDeclaredInterface(_collectionClass.getDesc()) != null) {
+                _collections.add(c);
+            }
+        }        
+    }
+    private void findIterators() {        
+        for(Iterator iter = _classes.iterator(); iter.hasNext(); ) {
+            jq_Class c = (jq_Class)iter.next();
+            
+            if(c.getDeclaredInterface(_iteratorClass.getDesc()) != null) {
+                _iterators.add(c);
+            }
+        }        
+    }
+
+    private Set getClasses(Collection collection) {
+        HashSet result = new HashSet(); 
+        for(Iterator iter = collection.iterator(); iter.hasNext(); ) {
+            jq_Method method = (jq_Method)iter.next();
+            //System.err.println("Saw " + method);
+         
+            jq_Class c = method.getDeclaringClass();
+            if(c != null) {
+                result.add(c);
+            }
+        }
+        
+        return result;
+    }
+
+    private void printCollection(Collection collection) {
+        Iterator iter = collection.iterator();
+        while(iter.hasNext()) {
+            jq_Class c = (jq_Class)iter.next();
+            
+            System.out.println("\t" + c);
+        }
+    }
+    
+    private void reportStats() {
+        System.out.println("Found " + _collections.size() + " collections:");
+        //printCollection(_collections);
+        ClassHierarchy h = new ClassHierarchy(_collectionClass, _collections);
+        h.makeHierarchy();
+        h.printHierarchy();
+        
+        System.out.println("Found " + _iterators.size() + " iterators");
+        //printCollection(_iterators);
+        h = new ClassHierarchy(_iteratorClass, _iterators);
+        h.makeHierarchy();
+        h.printHierarchy();
+    }
+    
+    protected void run() {        
+        System.err.println("Looking for subclasses of " + _collectionClass + " and " + _iteratorClass);
+        
+        findCollections();
+        findIterators();        
+        
+        reportStats();
     }
 }
