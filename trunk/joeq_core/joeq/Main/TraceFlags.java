@@ -68,6 +68,10 @@ public abstract class TraceFlags {
             Run_Time.StackWalker.TRACE = true;
             return i+1;
         }
+        if (args[i].equalsIgnoreCase("-TraceUtf8")) {
+            UTF.Utf8.TRACE = true;
+            return i+1;
+        }
         if (args[i].equalsIgnoreCase("-TraceByMethodName")) {
             Compil3r.Reference.x86.x86ReferenceCompiler.TraceMethod_MethodNames.add(args[++i]);
             return i+1;
