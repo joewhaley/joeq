@@ -7,6 +7,7 @@ import Allocator.ObjectLayout;
 import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
 import Clazz.jq_CompiledCode;
+import Clazz.jq_DontAlign;
 import Clazz.jq_InstanceField;
 import Clazz.jq_InstanceMethod;
 import Clazz.jq_NameAndDesc;
@@ -28,10 +29,13 @@ import Util.AtomicCounter;
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
-public class jq_Thread {
+public class jq_Thread implements jq_DontAlign {
 
+    // C code relies on this field being first.
     private final jq_RegisterState registers;
+    // C code relies on this field being second.
     private volatile int thread_switch_enabled;
+    // C code relies on this field being third.
     private jq_NativeThread native_thread;
     private Throwable exception_object;
     private final Thread thread_object;
@@ -40,6 +44,8 @@ public class jq_Thread {
     private boolean isDaemon;
     private boolean hasStarted;
     private boolean isDead;
+    boolean wasPreempted;
+    private int priority;
     private volatile int isInterrupted;
     private final int thread_id;
 
@@ -54,6 +60,7 @@ public class jq_Thread {
         Assert._assert(this.thread_id > 0);
         Assert._assert(this.thread_id < ObjectLayout.THREAD_ID_MASK);
         this.isDead = true; // threads start as dead.
+        this.priority = 5;
     }
 
     public Thread getJavaLangThreadObject() { return thread_object; }
@@ -63,18 +70,20 @@ public class jq_Thread {
     void setNativeThread(jq_NativeThread nt) { native_thread = nt; }
     public boolean isThreadSwitchEnabled() { return thread_switch_enabled == 0; }
     public void disableThreadSwitch() {
-        if (!jq.RunningNative)
+        if (!jq.RunningNative) {
             ++thread_switch_enabled;
-        else
+        } else {
             ((HeapAddress)HeapAddress.addressOf(this).offset(_thread_switch_enabled.getOffset())).atomicAdd(1);
+        }
     }
     public void enableThreadSwitch() {
-        if (!jq.RunningNative)
+        if (!jq.RunningNative) {
             --thread_switch_enabled;
-        else
+        } else {
             ((HeapAddress)HeapAddress.addressOf(this).offset(_thread_switch_enabled.getOffset())).atomicSub(1);
+        }
     }
-
+    
     public void init() {
         Thread t = thread_object;
         jq_Reference z = jq_Reference.getTypeOf(t);
@@ -103,11 +112,18 @@ public class jq_Thread {
         this.hasStarted = true;
         jq_NativeThread.startJavaThread(this);
     }
+    long sleepUntil;
     public void sleep(long millis) throws InterruptedException {
-        if (this.isInterrupted(true))
-            throw new InterruptedException();
-        // TODO:  for now, sleep just yields
-        yield();
+        sleepUntil = System.currentTimeMillis() + millis;
+        for (;;) {
+            if (this.isInterrupted(true)) {
+                throw new InterruptedException();
+            }
+            yield();
+            if (System.currentTimeMillis() >= sleepUntil) {
+                break;
+            }
+        }
     }
     public void yield() {
         if (this != Unsafe.getThreadBlock()) {
@@ -125,7 +141,7 @@ public class jq_Thread {
         registers.StatusWord = 0x4000;
         registers.TagWord = 0xffff;
         // other registers don't matter.
-        this.getNativeThread().threadSwitch();
+        this.getNativeThread().yieldCurrentThread();
     }
     public void yieldTo(jq_Thread t) {
         Assert._assert(this == Unsafe.getThreadBlock());
@@ -149,9 +165,14 @@ public class jq_Thread {
         registers.StatusWord = 0x4000;
         registers.TagWord = 0xffff;
         // other registers don't matter.
-        this.getNativeThread().threadSwitch(t);
+        this.getNativeThread().yieldCurrentThreadTo(t);
     }
-    public void setPriority(int newPriority) { }
+    public void setPriority(int newPriority) {
+        this.priority = newPriority;
+    }
+    public int getPriority() {
+        return this.priority;
+    }
     public void stop(Object o) { }
     public void suspend() { }
     public void resume() { }
