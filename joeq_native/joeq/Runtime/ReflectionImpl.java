@@ -883,43 +883,83 @@ uphere:
     }
     public void putstatic_I(jq_StaticField f, int v) {
         jq.Assert(f.getType() == jq_Primitive.INT);
+        if (!jq.RunningNative) {
+            Reflection.obj_trav.putStaticFieldValue(f, new Integer(v));
+            return;
+        }
         f.getDeclaringClass().setStaticData(f, v);
     }
     public void putstatic_L(jq_StaticField f, long v) {
         jq.Assert(f.getType() == jq_Primitive.LONG);
+        if (!jq.RunningNative) {
+            Reflection.obj_trav.putStaticFieldValue(f, new Long(v));
+            return;
+        }
         f.getDeclaringClass().setStaticData(f, v);
     }
     public void putstatic_F(jq_StaticField f, float v) {
         jq.Assert(f.getType() == jq_Primitive.FLOAT);
+        if (!jq.RunningNative) {
+            Reflection.obj_trav.putStaticFieldValue(f, new Float(v));
+            return;
+        }
         f.getDeclaringClass().setStaticData(f, v);
     }
     public void putstatic_D(jq_StaticField f, double v) {
         jq.Assert(f.getType() == jq_Primitive.DOUBLE);
+        if (!jq.RunningNative) {
+            Reflection.obj_trav.putStaticFieldValue(f, new Double(v));
+            return;
+        }
         f.getDeclaringClass().setStaticData(f, v);
     }
     public void putstatic_A(jq_StaticField f, Object v) {
         jq.Assert(v == null || TypeCheck.isAssignable(jq_Reference.getTypeOf(v), f.getType()));
         jq.Assert(!f.getType().isAddressType());
+        if (!jq.RunningNative) {
+            Reflection.obj_trav.putStaticFieldValue(f, v);
+            return;
+        }
         f.getDeclaringClass().setStaticData(f, v);
     }
     public void putstatic_P(jq_StaticField f, Address v) {
         jq.Assert(f.getType().isAddressType());
+        if (!jq.RunningNative) {
+            Reflection.obj_trav.putStaticFieldValue(f, v);
+            return;
+        }
         f.getDeclaringClass().setStaticData(f, v);
     }
     public void putstatic_Z(jq_StaticField f, boolean v) {
         jq.Assert(f.getType() == jq_Primitive.BOOLEAN);
+        if (!jq.RunningNative) {
+            Reflection.obj_trav.putStaticFieldValue(f, new Boolean(v));
+            return;
+        }
         f.getDeclaringClass().setStaticData(f, v?1:0);
     }
-    public void putstatic_B(jq_StaticField f, int v) {
+    public void putstatic_B(jq_StaticField f, byte v) {
         jq.Assert(f.getType() == jq_Primitive.BYTE);
+        if (!jq.RunningNative) {
+            Reflection.obj_trav.putStaticFieldValue(f, new Byte(v));
+            return;
+        }
         f.getDeclaringClass().setStaticData(f, (int)v);
     }
     public void putstatic_S(jq_StaticField f, short v) {
         jq.Assert(f.getType() == jq_Primitive.SHORT);
+        if (!jq.RunningNative) {
+            Reflection.obj_trav.putStaticFieldValue(f, new Short(v));
+            return;
+        }
         f.getDeclaringClass().setStaticData(f, (int)v);
     }
     public void putstatic_C(jq_StaticField f, char v) {
         jq.Assert(f.getType() == jq_Primitive.CHAR);
+        if (!jq.RunningNative) {
+            Reflection.obj_trav.putStaticFieldValue(f, new Character(v));
+            return;
+        }
         f.getDeclaringClass().setStaticData(f, (int)v);
     }
     

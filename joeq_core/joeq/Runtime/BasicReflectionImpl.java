@@ -554,7 +554,7 @@ uphere:
         jq.Assert(f.getType() == jq_Primitive.BOOLEAN);
         f.getDeclaringClass().setStaticData(f, v?1:0);
     }
-    public void putstatic_B(jq_StaticField f, int v) {
+    public void putstatic_B(jq_StaticField f, byte v) {
         jq.Assert(f.getType() == jq_Primitive.BYTE);
         f.getDeclaringClass().setStaticData(f, (int)v);
     }
