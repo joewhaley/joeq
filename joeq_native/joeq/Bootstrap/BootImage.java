@@ -1225,6 +1225,8 @@ public class BootImage implements ELFConstants {
                 i.remove();
         }
 
+        System.out.print("Initializing ELF data structures...");
+        long time = System.currentTimeMillis();
         final int datasize = heapCurrent;
         ELFOutput f = new ELFOutput(ELFDATA2LSB, ET_REL, EM_386, 0, out);
         f.setLittleEndian();
@@ -1345,6 +1347,9 @@ public class BootImage implements ELFConstants {
                 Assert.UNREACHABLE(r.toString());
             }
         }
+        
+        time = System.currentTimeMillis() - time;
+        System.out.println("done. ("+(time/1000.)+" seconds)");
         
         f.write();
         
