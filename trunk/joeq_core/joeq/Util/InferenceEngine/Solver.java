@@ -20,6 +20,7 @@ import java.io.PrintStream;
 import java.text.DecimalFormat;
 
 import joeq.Util.Collections.Pair;
+import joeq.Util.IO.SystemProperties;
 
 /**
  * Solver
@@ -28,6 +29,7 @@ import joeq.Util.Collections.Pair;
  * @version $Id$
  */
 public abstract class Solver {
+    static { SystemProperties.read("solver.properties"); }
     
     boolean NOISY = !System.getProperty("noisy", "yes").equals("no");
     boolean SPLIT_ALL_RULES = false;

@@ -78,6 +78,7 @@ import joeq.Util.Graphs.PathNumbering.Range;
 import joeq.Util.Graphs.SCCPathNumbering.Selector;
 import joeq.Util.IO.Textualizable;
 import joeq.Util.IO.Textualizer;
+import joeq.Util.IO.SystemProperties;
 import org.sf.javabdd.BDD;
 import org.sf.javabdd.BDDBitVector;
 import org.sf.javabdd.BDDDomain;
@@ -94,6 +95,7 @@ import org.sf.javabdd.TypedBDDFactory.TypedBDD;
  * @version $Id$
  */
 public class PA {
+    static { SystemProperties.read("pa.properties"); }
     public static final boolean VerifyAssertions = false;
 
     static boolean WRITE_PARESULTS_BATCHFILE = !System.getProperty("pa.writeparesults", "yes").equals("no");
@@ -2470,9 +2472,12 @@ public class PA {
     }
    
     private void dumpCallGraphAsDot(CallGraph cg, String dotFileName) throws IOException {
-	DataOutputStream dos = new DataOutputStream(new FileOutputStream(dotFileName));
-	countCallGraph(cg, null, false).dotGraph(dos, cg.getRoots(), cg.getCallSiteNavigator());
-	dos.close();
+	PathNumbering callgraph = countCallGraph(cg, null, false);
+        if (callgraph != null) {
+            DataOutputStream dos = new DataOutputStream(new FileOutputStream(dotFileName));
+            callgraph.dotGraph(dos, cg.getRoots(), cg.getCallSiteNavigator());
+            dos.close();
+        }
     }
 
     public void dumpCallGraph() throws IOException {
