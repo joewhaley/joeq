@@ -54,8 +54,10 @@ import Compil3r.Quad.QuadIterator;
 import Main.HostedVM;
 import Util.Assert;
 import Util.Strings;
+import Util.Collections.GenericInvertibleMultiMap;
 import Util.Collections.GenericMultiMap;
 import Util.Collections.IndexMap;
+import Util.Collections.InvertibleMultiMap;
 import Util.Collections.MultiMap;
 import Util.Collections.SortedArraySet;
 import Util.Collections.UnmodifiableIterator;
@@ -107,6 +109,13 @@ public class CSPAResults {
      * Just cached because it is used often.
      */
     BDD ci_pointsTo;
+
+    /** Nodes that are returned from their methods. */
+    Collection returned;
+    /** Nodes that are thrown from their methods. */
+    Collection thrown;
+
+    InvertibleMultiMap passedParams;
 
     public TypedBDD getPointsToSet(int var) {
         BDD result = ci_pointsTo.restrict(V1o.ithVar(var));
@@ -234,6 +243,14 @@ public class CSPAResults {
         return cg.getTargetMethods(mapCall(callSite));
     }
     
+    public boolean isReturned(Node n) {
+        return returned.contains(n);
+    }
+    
+    public boolean isThrown(Node n) {
+        return thrown.contains(n);
+    }
+    
     public void escapeAnalysis() {
         
         BDD escapingLocations = bdd.zero();
@@ -272,9 +289,9 @@ public class CSPAResults {
                 if (o.getEscapes()) {
                     if (TRACE_ESCAPE) System.out.println(o+" escapes, bad");
                     bad = true;
-                //} else if (cg.getRoots().contains(m) && ms.getThrown().contains(o)) {
-                //    if (TRACE_ESCAPE) System.out.println(o+" is thrown from root set, bad");
-                //    bad = true;
+                } else if (cg.getRoots().contains(m) && isThrown(o)) {
+                    if (TRACE_ESCAPE) System.out.println(o+" is thrown from root set, bad");
+                    bad = true;
                 } else {
                     Set passedParams = o.getPassedParameters();
                     if (passedParams != null) {
@@ -412,6 +429,10 @@ public class CSPAResults {
         
         this.pointsTo = bdd.load(fn+".bdd");
         
+        this.returned = new HashSet();
+        this.thrown = new HashSet();
+        this.passedParams = new GenericInvertibleMultiMap();
+        
         di = new DataInputStream(new FileInputStream(fn+".vars"));
         variableIndexMap = readIndexMap("Variable", di);
         di.close();
@@ -482,6 +503,18 @@ public class CSPAResults {
             int j = m.get(n);
             //System.out.println(i+" = "+n);
             Assert._assert(i == j);
+            while (st.hasMoreTokens()) {
+                String t = st.nextToken();
+                if (t.equals("returned"))
+                    returned.add(n);
+                else if (t.equals("thrown"))
+                    thrown.add(n);
+                else if (t.equals("passed")) {
+                    PassedParameter pp = PassedParameter.read(st);
+                    passedParams.add(pp, n);
+                    n.recordPassedParameter(pp);
+                }
+            }
         }
         return m;
     }
@@ -724,11 +757,50 @@ public class CSPAResults {
         return -1;
     }
     
-    public int getInvokeParamIndex(ProgramLocation pl, int k) {
-        // todo!
-        return -1;
+    int[] getIndices(Collection c) {
+        int s = c.size();
+        if (s == 0) return null;
+        int[] r = new int[s];
+        int j = -1;
+        for (Iterator i = c.iterator(); i.hasNext(); ) {
+            Node n = (Node) i.next();
+            r[++j] = getVariableIndex(n);
+        }
+        Assert._assert(j == r.length-1);
+        return r;
     }
     
+    public int[] getInvokeParamIndices(ProgramLocation pl, int k) {
+        return getInvokeParamIndices(new PassedParameter(pl, k));
+    }
+    public int[] getInvokeParamIndices(PassedParameter pp) {
+        Collection c = passedParams.getValues(pp);
+        return getIndices(c);
+    }
+    
+    public int[] getReturnValueIndices(jq_Method m) {
+        Collection c = methodToVariables.getValues(m);
+        LinkedList result = new LinkedList();
+        for (Iterator i = c.iterator(); i.hasNext(); ) {
+            Node o = (Node) i.next();
+            if (returned.contains(o))
+                result.add(o);
+        }
+        return getIndices(result);
+    }
+    
+    public int[] getThrownValueIndices(jq_Method m) {
+        Collection c = methodToVariables.getValues(m);
+        LinkedList result = new LinkedList();
+        for (Iterator i = c.iterator(); i.hasNext(); ) {
+            Node o = (Node) i.next();
+            if (thrown.contains(o))
+                result.add(o);
+        }
+        return getIndices(result);
+    }
+    
+    /** Multimap between methods and their variables. */ 
     MultiMap methodToVariables;
     
     public void initializeMethodMap() {
