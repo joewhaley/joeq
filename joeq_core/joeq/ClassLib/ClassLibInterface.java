@@ -67,6 +67,13 @@ public abstract class ClassLibInterface {
                     classlibrary = "ibm13_";
                     System.err.println("Warning: class library version "+javaruntimeversion+" is not yet supported, trying default "+classlibrary);
                 }
+            } else if (javavmvendor.equals("Apple Computer, Inc.")) {
+                if (javaruntimeversion.equals("1.3.1")) {
+                    classlibrary = "apple13_";
+                } else {
+                    classlibrary = "apple13_";
+                    System.err.println("Warning: class library version "+javaruntimeversion+" is not yet supported, trying default "+classlibrary);
+                }
             } else {
                 classlibrary = "sun13_";
                 System.err.println("Warning: vm vendor "+javavmvendor+" is not yet supported, trying default "+classlibrary);
@@ -75,6 +82,8 @@ public abstract class ClassLibInterface {
                 classlibrary += "win32";
             } else if (osname.equals("Linux")) {
                 classlibrary += "linux";
+            } else if (osname.equals("Mac OS X")) {
+                classlibrary += "osx";
             } else {
                 classlibrary += "win32";
                 System.err.println("Warning: OS "+osname+" is not yet supported, trying "+classlibrary);
