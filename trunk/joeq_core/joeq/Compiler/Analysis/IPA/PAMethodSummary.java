@@ -230,8 +230,10 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
             if(PA.USE_BOGUS_SUMMARIES) {
 	            replacement = PA.getBogusSummaryProvider().getReplacementMethod(target);
 	            if(replacement != null) {
-					System.out.println("Replacing a call to " + target + 
-					    				" with a call to "+ replacement);					
+					if(PA.TRACE_BOGUS){
+                        System.out.println("Replacing a call to " + target + 
+					    				" with a call to "+ replacement);
+                    }
 					
 					target = replacement;
 	            }

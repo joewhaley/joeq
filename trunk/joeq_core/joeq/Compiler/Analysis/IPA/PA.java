@@ -153,6 +153,7 @@ public class PA {
     boolean FULL_CHA = !System.getProperty("pa.fullcha", "no").equals("no");
     static boolean ADD_INSTANCE_METHODS = !System.getProperty("pa.addinstancemethods", "no").equals("no");
     static boolean USE_BOGUS_SUMMARIES = !System.getProperty("pa.usebogussummaries", "no").equals("no");
+    static boolean TRACE_BOGUS = !System.getProperty("pa.tracebogus", "no").equals("no");    
     int MAX_PARAMS = Integer.parseInt(System.getProperty("pa.maxparams", "4"));
     
     int bddnodes = Integer.parseInt(System.getProperty("bddnodes", "2500000"));
@@ -1261,7 +1262,7 @@ public class PA {
                 if(USE_BOGUS_SUMMARIES && m != null) {
 	                jq_Method replacement = getBogusSummaryProvider().getReplacementMethod(m);
 	                if(replacement != null) {
-						System.out.println("Replacing a call to " + m + 
+						if(TRACE_BOGUS) System.out.println("Replacing a call to " + m + 
 						    				" with a call to "+ replacement);
 						
 						addToCHA(T_bdd, Nmap.get(replacement), replacement);     // for replacement methods
@@ -3124,7 +3125,7 @@ public class PA {
                 jq_Reference r = (jq_Reference) n.getDeclaredType();
                 classes.get(r);
             }
-            calls += ms.getCalls().size();
+            calls += ms.getCalls().size()*8;
         }
         if (ADD_SUPERTYPES) {
             for (int i = 0; i < classes.size(); ++i) {
