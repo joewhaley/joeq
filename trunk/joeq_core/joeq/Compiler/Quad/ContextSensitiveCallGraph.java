@@ -115,6 +115,7 @@ public class ContextSensitiveCallGraph {
         public String toString() { return "Thrown value for quad "+q.getID(); }
     }
         
+    /*
     public static class TopCallingContext extends CallingContext {
         public static final TopCallingContext TOP = new TopCallingContext();
         
@@ -138,7 +139,6 @@ public class ContextSensitiveCallGraph {
             }
         }
         
-        /*
         public void getTypesOfParameter(PassedParameter pp, HashSet result, QueryResult qwery) {
             if (TRACE_INTER) out.println(this+"Getting possible types for param "+pp+" from top calling context");
             jq_Method m = pp.m.m;
@@ -149,8 +149,8 @@ public class ContextSensitiveCallGraph {
                 helper(result, (jq_Class)r);
             }
         }
-         */
     }
+     */
     
     public static class SpecificMethodTarget {
         final MethodCall mc;
@@ -186,6 +186,7 @@ public class ContextSensitiveCallGraph {
         public String toString() { return n+" access path "+ap; }
     }
     
+    /*
     public static class CallingContext {
         final MethodCall call_site;
         final AnalysisSummary s;
@@ -232,7 +233,6 @@ public class ContextSensitiveCallGraph {
         HashMap local_memoizer = new HashMap();
         
         // Get the set of types that can be passed as the given parameter.
-        /*
         public void getTypesOfParameter(PassedParameter pp, HashSet result, QueryResult qwery) {
             HashSet memo = (HashSet)local_memoizer.get(pp);
             if (memo != null) {
@@ -251,10 +251,8 @@ public class ContextSensitiveCallGraph {
             result.addAll(memo);
             //if (TRACE_INTER) out.println(this+"Memoizer now contains "+local_memoizer);
         }
-         */
         
         // Get the set of types that the given node can be.
-        /*
         public void getTypesOfNode(Node n, HashSet result, QueryResult qwery) {
             if (TRACE_INTER) out.println(this+"Getting types for "+n);
             if (n instanceof ConcreteTypeNode) {
@@ -301,9 +299,7 @@ public class ContextSensitiveCallGraph {
                 jq.UNREACHABLE(n.toString());
             }
         }
-         */
-        
-        /*
+
         public void getPointerWrites(FieldNode n, HashSet result, QueryResult qwery) {
             HashSet memo = (HashSet)local_memoizer.get(n);
             if (memo != null) {
@@ -651,9 +647,9 @@ public class ContextSensitiveCallGraph {
                 }
             }
         }
-         */
     
     }
+         */
     
     public static class AccessPath {
         
@@ -831,7 +827,7 @@ public class ContextSensitiveCallGraph {
             return x;
         }
         private int local_hashCode() {
-            return _field != null ? _field.hashCode() : 0x13117;
+            return _field != null ? _field.hashCode() : 0x31337;
         }
         public jq_Field first() { return _field; }
         public Iterator next() {
@@ -968,6 +964,14 @@ public class ContextSensitiveCallGraph {
                                 that.addAccessPathEdge(f, (FieldNode)j.next());
                             }
                         }
+                    }
+                }
+            }
+            if (this.passedParameters != null) {
+                for (Iterator i=this.passedParameters.iterator(); i.hasNext(); ) {
+                    PassedParameter pp = (PassedParameter)i.next();
+                    for (Iterator j=set.iterator(); j.hasNext(); ) {
+                        ((Node)j.next()).recordPassedParameter(pp);
                     }
                 }
             }
@@ -1361,6 +1365,13 @@ public class ContextSensitiveCallGraph {
             super(that); this.f = that.f; this.q = that.q; this.field_predecessors = that.field_predecessors;
         }
 
+        void unify(FieldNode that) {
+            jq.assert(this.f == that.f);
+            this.q = null; that.q = null;
+            HashSet s = new HashSet(); s.add(this);
+            that.replaceBy(s);
+        }
+        
         void replaceBy(HashSet set) {
             if (this.field_predecessors != null) {
                 for (Iterator i=this.field_predecessors.iterator(); i.hasNext(); ) {
@@ -1394,12 +1405,12 @@ public class ContextSensitiveCallGraph {
             }
         }
         
-        public boolean equals(FieldNode that) { return this.q == that.q; }
+        public boolean equals(FieldNode that) { return this.q == that.q && this.f == that.f; }
         public boolean equals(Object o) {
             if (o instanceof FieldNode) return equals((FieldNode)o);
             else return false;
         }
-        public int hashCode() { return q.hashCode(); }
+        public int hashCode() { return f.hashCode(); }
         
         public String fieldName() {
             if (f != null) return f.getName().toString();
@@ -1943,6 +1954,7 @@ public class ContextSensitiveCallGraph {
         
     }
     
+    /*
     public static class CallingContextAndNode {
         CallingContext cc; Node n;
         CallingContextAndNode(CallingContext cc, Node n) { this.cc = cc; this.n = n; }
@@ -1955,26 +1967,9 @@ public class ContextSensitiveCallGraph {
         }
         public int hashCode() { return cc.hashCode() ^ n.hashCode(); }
     }
+     */
 
-    public static class Dependence {
-        Query from;
-        DependentQuery to;
-        
-        Dependence(Query from, DependentQuery to) {
-            this.from = from; this.to = to;
-        }
-        
-        public boolean equals(Dependence that) {
-            return this.from == that.from && this.to == that.to;
-        }
-        public boolean equals(Object o) {
-            if (o instanceof Dependence) return equals((Dependence)o);
-            return false;
-        }
-        public int hashCode() { return from.hashCode() ^ to.hashCode(); }
-        public String toString() { return "q"+from.id+"->q"+to.id; }
-    }
-    
+    // Solves queries using a worklist algorithm.
     public static class QuerySolver {
         HashMap all_queries;
         HashSet open_queries;
@@ -2043,6 +2038,28 @@ public class ContextSensitiveCallGraph {
         public static final QuerySolver GLOBAL = new QuerySolver();
     }
     
+    // Records a dependence edge.  When the result of the 'from' query changes, the
+    // 'to' query must be recalculated.
+    public static class Dependence {
+        Query from;
+        DependentQuery to;
+        
+        Dependence(Query from, DependentQuery to) {
+            this.from = from; this.to = to;
+        }
+        
+        public boolean equals(Dependence that) {
+            return this.from == that.from && this.to == that.to;
+        }
+        public boolean equals(Object o) {
+            if (o instanceof Dependence) return equals((Dependence)o);
+            return false;
+        }
+        public int hashCode() { return from.hashCode() ^ to.hashCode(); }
+        public String toString() { return "q"+from.id+"->q"+to.id; }
+    }
+    
+    // The base type for all queries.
     public abstract static class Query {
         abstract boolean performQuery();
         
@@ -2051,16 +2068,19 @@ public class ContextSensitiveCallGraph {
         
         Query() { this.id = ++current_id; }
         
+        // Set of queries that depend on our result.
         HashSet dependentQueries;
         public final HashSet getResult(DependentQuery who) {
             jq.assert(who == null || dependentQueries == null || dependentQueries.contains(who));
             return _getResult();
         }
         abstract HashSet _getResult();
+        // Add a query that depends on our result.
         final void addSuccessor(DependentQuery who) {
             if (dependentQueries == null) dependentQueries = new HashSet();
             dependentQueries.add(who);
         }
+        // Add the queries that depend on our result to the worklist.
         final void updateSuccessors() {
             if (dependentQueries == null) return;
             for (Iterator i=dependentQueries.iterator(); i.hasNext(); ) {
@@ -2138,7 +2158,7 @@ public class ContextSensitiveCallGraph {
         abstract boolean receiveResult(CallTargetsQuery ctq);
         
         // can spawn a NodesQuery.
-        final boolean spawnTypesQuery(CallingContext c, Node n) {
+        final boolean spawnTypesQuery(AnalysisSummary as, Node n) {
             if (n instanceof ConcreteTypeNode) {
                 jq_Reference r = ((ConcreteTypeNode)n).type;
                 ConcreteTypeQuery ctq = new ConcreteTypeQuery(r);
@@ -2550,10 +2570,16 @@ public class ContextSensitiveCallGraph {
         HashSet getSet(AnalysisSummary s_callee) { return s_callee.thrown; }
     }
     
+    /** Intra-method summary graph. */
     public static class AnalysisSummary {
+        /** The parameter nodes. */
         final ParamNode[] params;
-        final HashSet nodes;
-        final HashSet returned; final HashSet thrown;
+        /** All nodes in the summary graph. */
+        final HashMap nodes;
+        /** The returned nodes. */
+        final HashSet returned;
+        /** The thrown nodes. */
+        final HashSet thrown;
         
         final HashMap instantiated_callees;
         
@@ -2620,60 +2646,71 @@ public class ContextSensitiveCallGraph {
                 if (this.params[i] == null) continue;
                 params[i] = (ParamNode)m.get(this.params[i]);
             }
-            HashSet nodes = new HashSet();
+            HashMap nodes = new HashMap();
             for (Iterator i=m.entrySet().iterator(); i.hasNext(); ) {
                 java.util.Map.Entry e = (java.util.Map.Entry)i.next();
-                nodes.add(e.getValue());
+                nodes.put(e.getValue(), e.getValue());
             }
             return new AnalysisSummary(params, returned, thrown, nodes);
         }
         
-        /*
-        public void unify(Node n) {
+        public void unifyAccessPaths() {
+            HashSet roots = new HashSet();
+            for (int i=0; i<params.length; ++i) {
+                if (params[i] == null) continue;
+                roots.add(params[i]);
+            }
+            roots.addAll(returned); roots.addAll(thrown);
+            unifyAccessPaths(roots);
+        }
+        
+        public void unifyAccessPaths(HashSet roots) {
+            LinkedList worklist = new LinkedList();
+            for (Iterator i=roots.iterator(); i.hasNext(); ) {
+                worklist.add(i.next());
+            }
+            while (worklist.isEmpty()) {
+                Node n = (Node)worklist.removeFirst();
+                unifyAccessPathEdges(n);
+                if (n.accessPathEdges != null) {
+                    for (Iterator i=n.accessPathEdges.entrySet().iterator(); i.hasNext(); ) {
+                        java.util.Map.Entry e = (java.util.Map.Entry)i.next();
+                        FieldNode n2 = (FieldNode)e.getValue();
+                        if (roots.contains(n2)) continue;
+                        worklist.add(n2); roots.add(n2);
+                    }
+                }
+            }
+        }
+        
+        public void unifyAccessPathEdges(Node n) {
             if (n.accessPathEdges != null) {
                 for (Iterator i=n.accessPathEdges.entrySet().iterator(); i.hasNext(); ) {
                     java.util.Map.Entry e = (java.util.Map.Entry)i.next();
                     jq_Field f = (jq_Field)e.getKey();
                     Object o = e.getValue();
-                    Node n2;
+                    FieldNode n2;
                     if (o instanceof HashSet) {
                         Iterator j=((HashSet)o).iterator();
-                        n2 = (Node)j.next();
+                        n2 = (FieldNode)j.next();
                         while (j.hasNext()) {
-                            Node n3 = (Node)j.next();
+                            FieldNode n3 = (FieldNode)j.next();
                             n2.unify(n3);
+                            if (returned.contains(n3)) {
+                                returned.remove(n3); returned.add(n2);
+                            }
+                            if (thrown.contains(n3)) {
+                                thrown.remove(n3); thrown.add(n2);
+                            }
+                            nodes.remove(n3);
                         }
+                        e.setValue(n2);
                     } else {
-                        n2 = (Node)o;
-                    }
-                    if (n.addedEdges != null) {
-                        Object p = (HashSet)n.addedEdges.get(f);
-                        if (p == null) continue;
-                        if (p instanceof Node) {
-                            n2.unify((Node)p);
-                        } else {
-                            n2.unify((HashSet)p);
-                        }
-                    }
-                }
-            }
-            if (n.addedEdges != null) {
-                useful = true;
-                for (Iterator i=n.addedEdges.entrySet().iterator(); i.hasNext(); ) {
-                    java.util.Map.Entry e = (java.util.Map.Entry)i.next();
-                    jq_Field f = (jq_Field)e.getKey();
-                    Object o = e.getValue();
-                    if (o instanceof Node) {
-                        addAsUseful(visited, (Node)o);
-                    } else {
-                        for (Iterator j=((HashSet)o).iterator(); j.hasNext(); ) {
-                            addAsUseful(visited, (Node)j.next());
-                        }
+                        n2 = (FieldNode)o;
                     }
                 }
             }
         }
-         */
         
         public static void instantiate(AnalysisSummary caller, MethodCall mc, AnalysisSummary callee) {
             callee = callee.copy();
@@ -2691,24 +2728,21 @@ public class ContextSensitiveCallGraph {
             for (int ii=0; ii<callee.params.length; ++ii) {
                 ParamNode pn = callee.params[ii];
                 if (pn == null) continue;
+                HashSet s = (HashSet)callee_to_caller.get(pn);
+                pn.replaceBy(s);
+                if (callee.returned.contains(pn)) {
+                    callee.returned.remove(pn); callee.returned.add(s);
+                }
             }
+            ReturnValueNode rvn = new ReturnValueNode(mc);
+            rvn = (ReturnValueNode)caller.nodes.get(rvn);
+            rvn.replaceBy(callee.returned);
+            caller.unifyAccessPaths(callee.returned);
             for (int ii=0; ii<callee.params.length; ++ii) {
                 ParamNode pn = callee.params[ii];
                 if (pn == null) continue;
                 HashSet s = (HashSet)callee_to_caller.get(pn);
-                pn.replaceBy(s);
-                
-                /*
-                if (pn.passedParameters != null) {
-                    for (Iterator i=pn.passedParameters.iterator(); i.hasNext(); ) {
-                        PassedParameter pp = (PassedParameter)i.next();
-                        HashSet s2 = get_mapping(callee_to_caller, pn);
-                        for (Iterator j=s2.iterator(); j.hasNext(); ) {
-                            ((Node)j.next()).recordPassedParameter(pp);
-                        }
-                    }
-                }
-                 */
+                caller.unifyAccessPaths(s);
             }
         }
         
@@ -2730,14 +2764,14 @@ public class ContextSensitiveCallGraph {
                 sb.append('\n');
             }
             sb.append("All nodes:\n");
-            for (Iterator i=nodes.iterator(); i.hasNext(); ) {
+            for (Iterator i=nodes.keySet().iterator(); i.hasNext(); ) {
                 sb.append(i.next());
                 sb.append('\n');
             }
             return sb.toString();
         }
         
-        AnalysisSummary(ParamNode[] params, HashSet returned, HashSet thrown, HashSet nodes) {
+        AnalysisSummary(ParamNode[] params, HashSet returned, HashSet thrown, HashMap nodes) {
             this.params = params;
             this.returned = returned;
             this.thrown = thrown;
@@ -2749,7 +2783,7 @@ public class ContextSensitiveCallGraph {
             this.returned = returned;
             this.thrown = thrown;
             this.instantiated_callees = new HashMap();
-            this.nodes = new HashSet();
+            this.nodes = new HashMap();
             // build useful node set
             HashSet visited = new HashSet();
             for (int i=0; i<params.length; ++i) {
@@ -2778,9 +2812,10 @@ public class ContextSensitiveCallGraph {
                     }
                 }
             }
+            unifyAccessPaths();
         }
         boolean addIfUseful(HashSet visited, Node n) {
-            if (visited.contains(n)) return nodes.contains(n);
+            if (visited.contains(n)) return nodes.containsKey(n);
             visited.add(n);
             boolean useful = false;
             if (n.addedEdges != null) {
@@ -2822,12 +2857,12 @@ public class ContextSensitiveCallGraph {
             }
             if (n.passedParameters != null) useful = true;
             if (useful)
-                this.nodes.add(n);
+                this.nodes.put(n, n);
             return useful;
         }
         void addAsUseful(HashSet visited, Node n) {
             if (visited.contains(n)) return;
-            visited.add(n); this.nodes.add(n);
+            visited.add(n); this.nodes.put(n, n);
             if (n.addedEdges != null) {
                 for (Iterator i=n.addedEdges.entrySet().iterator(); i.hasNext(); ) {
                     java.util.Map.Entry e = (java.util.Map.Entry)i.next();
@@ -2863,7 +2898,7 @@ public class ContextSensitiveCallGraph {
             }
         }
         
-        Iterator nodeIterator() { return nodes.iterator(); }
+        Iterator nodeIterator() { return nodes.keySet().iterator(); }
     }
     
 }
