@@ -292,7 +292,7 @@ public class BootImage implements ObjectLayout, ELFConstants {
                     for (int k=0; k<length; ++k) {
                         Object o2 = Reflection.arrayload_A(v, k);
                         if (o2 != null) {
-                            addDataReloc((HeapAddress)addr.offset(k<<2), getOrAllocateObject(o2));
+                            addDataReloc((HeapAddress)addr.offset(k*HeapAddress.size()), getOrAllocateObject(o2));
                         }
                     }
                 }
@@ -753,7 +753,7 @@ public class BootImage implements ObjectLayout, ELFConstants {
                     Heap2HeapReference r1 = new Heap2HeapReference(addr, (HeapAddress) vtable[0]);
                     list.add(r1);
                     for (int j=1; j<vtable.length; ++j) {
-                        Heap2CodeReference r2 = new Heap2CodeReference((HeapAddress) addr.offset(j*4), (CodeAddress) vtable[j]);
+                        Heap2CodeReference r2 = new Heap2CodeReference((HeapAddress) addr.offset(CodeAddress.size()*j), (CodeAddress) vtable[j]);
                         list.add(r2);
                     }
                     total += vtable.length;
@@ -997,7 +997,7 @@ public class BootImage implements ObjectLayout, ELFConstants {
                 out.writeUInt(length);
                 out.writeUInt(0);
                 out.writeUInt(vtable.to32BitValue());
-                currentAddr += 12;
+                currentAddr += ARRAY_HEADER_SIZE;
                 jq.Assert(addr.to32BitValue() == currentAddr);
                 jq_Type elemType = ((jq_Array)jqType).getElementType();
                 if (elemType.isPrimitiveType()) {

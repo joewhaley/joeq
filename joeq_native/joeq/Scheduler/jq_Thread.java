@@ -17,6 +17,7 @@ import Clazz.jq_NameAndDesc;
 import Clazz.jq_Reference;
 import Clazz.jq_StaticMethod;
 import Main.jq;
+import Memory.CodeAddress;
 import Memory.HeapAddress;
 import Memory.StackAddress;
 import Run_Time.Reflection;
@@ -84,12 +85,12 @@ public class jq_Thread implements ObjectLayout {
         this.registers.Esp = SystemInterface.allocate_stack(INITIAL_STACK_SIZE);
         this.registers.Eip = entry_point.getEntrypoint();
         // bogus return address
-        this.registers.Esp = (StackAddress) this.registers.Esp.offset(-4);
+        this.registers.Esp = (StackAddress) this.registers.Esp.offset(-CodeAddress.size());
         // arg to run(): t
-        this.registers.Esp = (StackAddress) this.registers.Esp.offset(-4);
+        this.registers.Esp = (StackAddress) this.registers.Esp.offset(-HeapAddress.size());
         this.registers.Esp.poke(HeapAddress.addressOf(t));
         // return from run() directly to destroy()
-        this.registers.Esp = (StackAddress) this.registers.Esp.offset(-4);
+        this.registers.Esp = (StackAddress) this.registers.Esp.offset(-CodeAddress.size());
         this.registers.Esp.poke(_destroyCurrentThread.getDefaultCompiledVersion().getEntrypoint());
     }
     public void start() {
@@ -110,11 +111,9 @@ public class jq_Thread implements ObjectLayout {
         // act like we received a timer tick
         this.disableThreadSwitch();
         // store the register state to make it look like we received a timer tick.
-        ////registers.Ebp = Unsafe.peek(Unsafe.EBP());
-        ////registers.Eip = Unsafe.peek(Unsafe.EBP()+4);
-        ////registers.Esp = Unsafe.EBP() + 12; // fp + ret addr + 1 param
         StackAddress esp = StackAddress.getStackPointer();
-        registers.Esp = (StackAddress) esp.offset(-8); // room for object pointer and return address
+        // leave room for object pointer and return address
+        registers.Esp = (StackAddress) esp.offset(-CodeAddress.size()-HeapAddress.size());
         registers.Ebp = StackAddress.getBasePointer();
         registers.ControlWord = 0x027f;
         registers.StatusWord = 0x4000;
@@ -137,7 +136,8 @@ public class jq_Thread implements ObjectLayout {
         // act like we received a timer tick.
         // store the register state to make it look like we received a timer tick.
         StackAddress esp = StackAddress.getStackPointer();
-        registers.Esp = (StackAddress) esp.offset(-12); // room for object pointer, arg, return address
+        // leave room for object pointer, arg, return address
+        registers.Esp = (StackAddress) esp.offset(-CodeAddress.size()-HeapAddress.size()-HeapAddress.size());
         registers.Ebp = StackAddress.getBasePointer();
         registers.ControlWord = 0x027f;
         registers.StatusWord = 0x4000;

@@ -17,6 +17,7 @@ import Bootstrap.PrimordialClassLoader;
 import Run_Time.Unsafe;
 import Run_Time.SystemInterface;
 import Main.jq;
+import Memory.CodeAddress;
 import Memory.HeapAddress;
 import Memory.StackAddress;
 
@@ -140,14 +141,15 @@ public abstract class HeapAllocator implements jq_ClassFileConstants, ObjectLayo
         if (a.getDimensionality() < dim)
             throw new VerifyError();
         int[] n_elem = new int[dim];
-        StackAddress p = (StackAddress) StackAddress.getBasePointer().offset(16);
+        int offset = StackAddress.size() + CodeAddress.size() + HeapAddress.size() + HeapAddress.size();
+        StackAddress p = (StackAddress) StackAddress.getBasePointer().offset(offset);
         for (int i=dim-1; i>=0; --i) {
             n_elem[i] = p.peek4();
             // check for dim < 0 here, because if a dim is zero, later dim's
             // are not checked by multinewarray_helper.
             if (n_elem[i] < 0)
                 throw new NegativeArraySizeException("dim "+i+": "+n_elem[i]+" < 0");
-            p = (StackAddress) p.offset(4);
+            p = (StackAddress) p.offset(HeapAddress.size());
         }
         return multinewarray_helper(n_elem, 0, a);
     }

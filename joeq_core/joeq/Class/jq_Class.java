@@ -2043,8 +2043,8 @@ uphere2:
                 }
                 jq.Assert(m.getState() == STATE_LOADED);
                 virtual_methods[++j] = m;
-                if (TRACE) SystemInterface.debugmsg("Virtual method "+m+" is new, offset "+jq.hex((j+1)<<2));
-                m.prepare((j+1)<<2);
+                if (TRACE) SystemInterface.debugmsg("Virtual method "+m+" is new, offset "+jq.hex((j+1)*CodeAddress.size()));
+                m.prepare((j+1)*CodeAddress.size());
             }
             // allocate space for vtable
             vtable = new Address[num_virtual_methods+1];
