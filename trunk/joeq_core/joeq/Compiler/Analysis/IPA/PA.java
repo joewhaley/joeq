@@ -1981,9 +1981,14 @@ public class PA {
             if(TRACE_REFLECTION && false) System.out.println("stringConst: " + stringConst);
             jq_Class c = null;
             try {
-                c = (jq_Class) jq_Type.parseType(stringConst);
-                c.prepare();
-                Assert._assert(c != null);
+                jq_Type clazz = jq_Type.parseType(stringConst);
+                if(clazz instanceof jq_Class){
+                    c = (jq_Class) clazz;
+                    c.prepare();
+                    Assert._assert(c != null);
+                }else{
+                    System.err.println("Can't case " + clazz + " to jq_Class");                    
+                }
             } catch(NoClassDefFoundError e) {
                 if(missingClasses.get(stringConst) == null){
                     System.err.println("Resolving reflection: unable to load " + stringConst + 
