@@ -16,8 +16,10 @@ import java.util.Set;
 import java.util.Iterator;
 import java.io.DataInput;
 import java.io.IOException;
+import java.io.DataOutput;
 
 import jq;
+import ClassLib.ClassLibInterface;
 import Run_Time.StackWalker;
 import Run_Time.TypeCheck;
 import Run_Time.Unsafe;
@@ -49,11 +51,11 @@ public abstract class jq_Member implements jq_ClassFileConstants {
         Member c = null;
         if (!jq.Bootstrapping) {
             if (this instanceof jq_Field) {
-                c = ClassLib.sun13.java.lang.reflect.Field.createNewField(ClassLib.sun13.java.lang.reflect.Field._class, (jq_Field)this);
+                c = ClassLibInterface.i.createNewField((jq_Field)this);
             } else if (this instanceof jq_Initializer) {
-                c = ClassLib.sun13.java.lang.reflect.Constructor.createNewConstructor(ClassLib.sun13.java.lang.reflect.Constructor._class, (jq_Initializer)this);
+                c = ClassLibInterface.i.createNewConstructor((jq_Initializer)this);
             } else {
-                c = ClassLib.sun13.java.lang.reflect.Method.createNewMethod(ClassLib.sun13.java.lang.reflect.Method._class, (jq_Method)this);
+                c = ClassLibInterface.i.createNewMethod((jq_Method)this);
             }
         }
         this.member_object = c;
@@ -89,6 +91,27 @@ public abstract class jq_Member implements jq_ClassFileConstants {
         this.access_flags = access_flags;
         this.attributes = attributes;
         state = STATE_LOADING2;
+    }
+
+    public final void dump(DataOutput out, jq_ConstantPool.ConstantPoolRebuilder cpr) throws IOException {
+	out.writeChar(access_flags);
+	out.writeChar(cpr.get(getName()));
+	out.writeChar(cpr.get(getDesc()));
+	dumpAttributes(out, cpr);
+    }
+    
+    public void dumpAttributes(DataOutput out, jq_ConstantPool.ConstantPoolRebuilder cpr) throws IOException {
+	int nattributes = attributes.size();
+	jq.assert(nattributes <= Character.MAX_VALUE);
+	out.writeChar(nattributes);
+	for (Iterator i = attributes.entrySet().iterator(); i.hasNext(); ) {
+	    Map.Entry e = (Map.Entry)i.next();
+	    Utf8 name = (Utf8)e.getKey();
+	    out.writeChar(cpr.get(name));
+	    byte[] value = (byte[])e.getValue();
+	    out.writeInt(value.length);
+	    out.write(value);
+	}
     }
 
     // Always available

@@ -11,6 +11,7 @@ package Scheduler;
 
 import Allocator.CodeAllocator;
 import Bootstrap.PrimordialClassLoader;
+import ClassLib.ClassLibInterface;
 import Clazz.jq_Class;
 import Clazz.jq_InstanceMethod;
 import Run_Time.Reflection;
@@ -25,7 +26,7 @@ public class jq_InterrupterThread extends Thread {
     jq_InterrupterThread(jq_NativeThread other_nt) {
         this.other_nt = other_nt;
         if (TRACE) SystemInterface.debugmsg("Initialized timer interrupt for native thread "+other_nt);
-        myself = (jq_Thread)Reflection.getfield_A(this, ClassLib.sun13.java.lang.Thread._jq_thread);
+        myself = ClassLibInterface.i.getJQThread(this);
         this.tid = SystemInterface.create_thread(_run.getDefaultCompiledVersion().getEntrypoint(), Unsafe.addressOf(this));
         jq_NativeThread my_nt = new jq_NativeThread(myself);
         my_nt.getCodeAllocator().init();
@@ -43,7 +44,7 @@ public class jq_InterrupterThread extends Thread {
     public void run() {
         Unsafe.setThreadBlock(this.myself);
 	for (;;) {
-            SystemInterface.sleep(QUANTA);
+            SystemInterface.msleep(QUANTA);
             other_nt.suspend();
             jq_Thread javaThread = other_nt.getCurrentJavaThread();
             if (TRACE) SystemInterface.debugmsg("TICK! "+other_nt+" Java Thread = "+javaThread);

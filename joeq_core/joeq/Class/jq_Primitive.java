@@ -18,6 +18,7 @@ public class jq_Primitive extends jq_Type implements jq_ClassFileConstants {
     public final boolean isArrayType() { return false; }
     public final boolean isPrimitiveType() { return true; }
     public final String getName() { return name; }
+    public final String shortName() { return name; }
     public final String getJDKDesc() { return desc.toString(); }
     public final int getReferenceSize() { return size; }
     public final ClassLoader getClassLoader() { return PrimordialClassLoader.loader; }
@@ -40,6 +41,11 @@ public class jq_Primitive extends jq_Type implements jq_ClassFileConstants {
     public final void cls_initialize() { }
     
     public final boolean isFinal() { return true; }
+    
+    public void accept(jq_TypeVisitor tv) {
+        tv.visitPrimitive(this);
+        super.accept(tv);
+    }
     
     private final String name;
     private final int size;

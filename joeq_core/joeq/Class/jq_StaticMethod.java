@@ -12,6 +12,7 @@ package Clazz;
 //friend jq_ClassLoader;
 
 import Bootstrap.PrimordialClassLoader;
+import ClassLib.ClassLibInterface;
 import UTF.Utf8;
 import jq;
 
@@ -35,14 +36,14 @@ public class jq_StaticMethod extends jq_Method {
         i = nd.getDesc().getParamDescriptors();
         for (int j=0; j<num; ++j) {
             Utf8 pd = (Utf8)i.nextUtf8();
-            param_types[j] = ClassLib.sun13.java.lang.ClassLoader.getOrCreateType(clazz.getClassLoader(), pd);
+            param_types[j] = ClassLibInterface.i.getOrCreateType(clazz.getClassLoader(), pd);
             ++words;
             if ((param_types[j] == jq_Primitive.LONG) ||
                 (param_types[j] == jq_Primitive.DOUBLE)) ++words;
         }
         param_words = words;
         Utf8 rd = i.getReturnDescriptor();
-        return_type = ClassLib.sun13.java.lang.ClassLoader.getOrCreateType(clazz.getClassLoader(), rd);
+        return_type = ClassLibInterface.i.getOrCreateType(clazz.getClassLoader(), rd);
     }
     
     public final boolean needsDynamicLink(jq_Method method) {
@@ -52,7 +53,14 @@ public class jq_StaticMethod extends jq_Method {
     public final boolean isStatic() { return true; }
     public boolean isClassInitializer() { return false; }
 
+    public final void prepare() { jq.assert(state == STATE_LOADED); state = STATE_PREPARED; }
+
     public final void unprepare() { jq.assert(state == STATE_PREPARED); state = STATE_LOADED; }
+    
+    public void accept(jq_MethodVisitor mv) {
+        mv.visitStaticMethod(this);
+        super.accept(mv);
+    }
     
     public static final jq_Class _class;
     static {

@@ -17,7 +17,7 @@ import UTF.Utf8;
 
 public final class jq_ClassInitializer extends jq_StaticMethod {
 
-    // clazz, name, desc are inherited
+    // clazz, nd are inherited
     
     private jq_ClassInitializer(jq_Class clazz, jq_NameAndDesc nd) {
         super(clazz, nd);
@@ -37,6 +37,11 @@ public final class jq_ClassInitializer extends jq_StaticMethod {
     
     public final boolean isClassInitializer() { return true; }
 
+    public final void accept(jq_MethodVisitor mv) {
+        mv.visitClassInitializer(this);
+        super.accept(mv);
+    }
+    
     public static final jq_Class _class;
     static {
         _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LClazz/jq_ClassInitializer;");

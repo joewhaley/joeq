@@ -14,7 +14,9 @@ import java.util.HashMap;
 import java.util.Arrays;
 import java.io.DataInput;
 import java.io.IOException;
+import java.io.DataOutput;
 
+import Compil3r.BytecodeAnalysis.Bytecodes;
 import Compil3r.Compil3rInterface;
 //import Compil3r.OpenJIT.x86.x86OpenJITCompiler;
 import Compil3r.Reference.x86.x86ReferenceCompiler;
@@ -144,7 +146,26 @@ public abstract class jq_Method extends jq_Member {
         state = STATE_LOADED;
     }
 
-    public final void prepare() { jq.assert(state == STATE_LOADED); state = STATE_PREPARED; }
+    public void dumpAttributes(DataOutput out, jq_ConstantPool.ConstantPoolRebuilder cpr) throws IOException {
+	if (bytecode != null) {
+	    Bytecodes.InstructionList il = new Bytecodes.InstructionList(getDeclaringClass().getCP(), bytecode);
+	    final jq_ConstantPool.ConstantPoolRebuilder my_cpr = cpr;
+	    Bytecodes.EmptyVisitor v = new Bytecodes.EmptyVisitor() {
+		public void visitCPInstruction(Bytecodes.CPInstruction i) {
+		    i.setIndex(my_cpr);
+		    jq.assert(i.getIndex() != 0);
+		}
+	    };
+	    il.accept(v);
+	    bytecode = il.getByteCode();
+	    attributes.put(Utf8.get("Code"), bytecode);
+	    // TODO: LocalVariableTable
+	}
+        // TODO: Exceptions
+	super.dumpAttributes(out, cpr);
+    }
+
+    public abstract void prepare();
 
     public final jq_CompiledCode compile_stub() {
         chkState(STATE_PREPARED);
@@ -247,6 +268,10 @@ public abstract class jq_Method extends jq_Member {
     public byte[] getCodeAttribute(Utf8 a) { chkState(STATE_LOADING2); return (byte[])codeattribMap.get(a); }
     public final byte[] getCodeAttribute(String name) { return getCodeAttribute(Utf8.get(name)); }
 
+    public void accept(jq_MethodVisitor mv) {
+        mv.visitMethod(this);
+    }
+    
     public String toString() { return getDeclaringClass()+"."+nd; }
 
     public static final jq_Class _class;

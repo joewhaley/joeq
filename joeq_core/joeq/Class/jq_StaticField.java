@@ -13,8 +13,11 @@ package Clazz;
 
 import java.io.DataInput;
 import java.io.IOException;
+import java.io.DataOutput;
 
 import Bootstrap.PrimordialClassLoader;
+import Run_Time.Unsafe;
+import UTF.Utf8;
 import jq;
 
 public final class jq_StaticField extends jq_Field {
@@ -77,14 +80,16 @@ public final class jq_StaticField extends jq_Field {
         state = STATE_LOADED;
     }
     
-    public final void setAddress(int address) { jq.assert(state == STATE_PREPARED); state = STATE_SFINITIALIZED; this.address = address; }
-    public final int getAddress() { chkState(STATE_SFINITIALIZED); return address; }
-    public final int getWidth() {
-        if (type == jq_Primitive.LONG || type == jq_Primitive.DOUBLE)
-            return 8;
-        else
-            return 4;
+    public void dumpAttributes(DataOutput out, jq_ConstantPool.ConstantPoolRebuilder cpr) throws IOException {
+	if (constantValue != null) {
+	    byte[] b = new byte[2]; jq.charToTwoBytes(cpr.get(constantValue), b, 0);
+	    attributes.put(Utf8.get("ConstantValue"), b);
+	}
+	super.dumpAttributes(out, cpr);
     }
+
+    public final void sf_initialize(int[] static_data, int offset) { jq.assert(state == STATE_PREPARED); state = STATE_SFINITIALIZED; this.address = Unsafe.addressOf(static_data) + offset; }
+    public final int getAddress() { chkState(STATE_SFINITIALIZED); return address; }
     public final void setValue(int v) { getDeclaringClass().setStaticData(this, v); }
     public final void setValue(float v) { getDeclaringClass().setStaticData(this, v); }
     public final void setValue(long v) { getDeclaringClass().setStaticData(this, v); }
