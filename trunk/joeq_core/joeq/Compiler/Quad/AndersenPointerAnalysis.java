@@ -44,15 +44,20 @@ public class AndersenPointerAnalysis {
     public static final boolean TRACE_CHANGE = false;
     public static final boolean TRACE_CYCLES = false;
     public static final boolean VerifyAssertions = false;
+    
+    public static final boolean USE_SOFT_REFERENCES = true;
     public static boolean FORCE_GC = false;
     public static final boolean REUSE_CACHES = true;
     public static final boolean TRACK_CHANGES = true;
     public static final boolean TRACK_CHANGED_FIELDS = false;
 
-    public boolean addToRootSet(ControlFlowGraph cfg) { return this.rootSet.add(cfg); }
+    public boolean addToRootSet(ControlFlowGraph cfg) {
+        if (TRACE) out.println("Adding "+cfg.getMethod()+" to root set.");
+        return this.rootSet.add(cfg);
+    }
     
     public static final class Visitor implements ControlFlowGraphVisitor {
-        public static boolean added_hook = true;
+        public static boolean added_hook = false;
         public void visitCFG(ControlFlowGraph cfg) {
             INSTANCE.addToRootSet(cfg);
             if (!added_hook) {
@@ -62,6 +67,7 @@ public class AndersenPointerAnalysis {
                         doIt();
                     }
                 });
+                if (TRACE) out.println("Added Andersen shutdown hook.");
             }
         }
         public static void doIt() {
@@ -678,7 +684,7 @@ public class AndersenPointerAnalysis {
             if (TRACK_CHANGES) {
                 // we need to mark these edges so that they will be propagated
                 // regardless of whether or not the target set has changed.
-                if (nodeToConcreteNodes.containsKey(n)) {
+                if (cacheContains(n)) {
                     for (Iterator i=s.iterator(); i.hasNext(); ) {
                         Object o = i.next();
                         if (o instanceof OutsideNode) {
@@ -709,7 +715,7 @@ public class AndersenPointerAnalysis {
                         if (o instanceof OutsideNode) {
                             // we need to mark this edge so that it will be propagated
                             // regardless of whether or not the target set has changed.
-                            if (nodeToConcreteNodes.containsKey(n)) {
+                            if (cacheContains(n)) {
                                 if (TRACE) out.println("Adding "+n+"->"+o+" as an unpropagated edge...");
                                 recordUnpropagatedEdge(n, (OutsideNode)o);
                             }
@@ -742,7 +748,7 @@ public class AndersenPointerAnalysis {
                 if (s instanceof OutsideNode) {
                     // we need to mark this edge so that it will be propagated
                     // regardless of whether or not the target set has changed.
-                    if (nodeToConcreteNodes.containsKey(n)) {
+                    if (cacheContains(n)) {
                         if (TRACE) out.println("Adding "+n+"->"+s+" as an unpropagated edge...");
                         recordUnpropagatedEdge(n, (OutsideNode)s);
                     }
@@ -757,7 +763,7 @@ public class AndersenPointerAnalysis {
                 if (s instanceof OutsideNode) {
                     // we need to mark this edge so that it will be propagated
                     // regardless of whether or not the target set has changed.
-                    if (nodeToConcreteNodes.containsKey(n)) {
+                    if (cacheContains(n)) {
                         if (TRACE) out.println("Adding "+n+"->"+s+" as an unpropagated edge...");
                         recordUnpropagatedEdge(n, (OutsideNode)s);
                     }
@@ -767,6 +773,32 @@ public class AndersenPointerAnalysis {
     }
     
     Set getInclusionEdges(Node n) { return (Set)nodeToInclusionEdges.get(n); }
+    
+    LinkedHashSet getFromCache(OutsideNode n) {
+        if (USE_SOFT_REFERENCES) {
+            java.lang.ref.SoftReference r = (java.lang.ref.SoftReference)nodeToConcreteNodes.get(n);
+            return r != null ? (LinkedHashSet)r.get() : null;
+        } else {
+            return (LinkedHashSet)nodeToConcreteNodes.get(n);
+        }
+    }
+    
+    void addToCache(OutsideNode n, LinkedHashSet s) {
+        if (USE_SOFT_REFERENCES) {
+            nodeToConcreteNodes.put(n, new java.lang.ref.SoftReference(s));
+        } else {
+            nodeToConcreteNodes.put(n, s);
+        }
+    }
+    
+    boolean cacheContains(OutsideNode n) {
+        if (USE_SOFT_REFERENCES) {
+            java.lang.ref.SoftReference r = (java.lang.ref.SoftReference)nodeToConcreteNodes.get(n);
+            return r == null || r.get() == null;
+        } else {
+            return nodeToConcreteNodes.containsKey(n);
+        }
+    }
     
     static boolean checkInvalidFieldAccess(Node n, jq_Field f) {
         jq_Reference rtype = n.getDeclaredType();
@@ -926,12 +958,12 @@ public class AndersenPointerAnalysis {
             if (TRACE) out.println("Final set of inclusion edges from node "+from+": "+s);
             return null;
         }
-        LinkedHashSet result = (LinkedHashSet)nodeToConcreteNodes.get(from);
+        LinkedHashSet result = getFromCache(from);
         boolean brand_new = false;
         if (REUSE_CACHES) {
             if (result == null) {
                 if (TRACE) out.println("No cache for "+from+" yet, creating.");
-                nodeToConcreteNodes.put(from, result = new LinkedHashSet());
+                addToCache(from, result = new LinkedHashSet());
                 brand_new = true;
             } else {
                 Object b = cacheIsCurrent.get(from);
@@ -948,7 +980,7 @@ public class AndersenPointerAnalysis {
                 if (TRACE) out.println("Using cached result for "+from+".");
                 return result;
             }
-            nodeToConcreteNodes.put(from, result = new LinkedHashSet());
+            addToCache(from, result = new LinkedHashSet());
         }
         LinkedHashSet s = (LinkedHashSet)nodeToInclusionEdges.get(from);
         if (s == null) {
