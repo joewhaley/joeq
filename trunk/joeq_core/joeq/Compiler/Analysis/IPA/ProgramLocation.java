@@ -151,7 +151,9 @@ public abstract class ProgramLocation implements Textualizable {
         public boolean isSingleTarget() {
             if (isInterfaceCall()) return false;
             if (!((Invoke) q.getOperator()).isVirtual()) return true;
-            jq_InstanceMethod target = (jq_InstanceMethod) Invoke.getMethod(q).getMethod();
+            Object trg = Invoke.getMethod(q).getMethod();
+            Assert._assert(trg instanceof jq_InstanceMethod, "Unexpected " + trg + " of type " + trg.getClass());
+            jq_InstanceMethod target = (jq_InstanceMethod) trg;
             target.getDeclaringClass().load();
             if (target.getDeclaringClass().isFinal()) return true;
             target.getDeclaringClass().prepare();
