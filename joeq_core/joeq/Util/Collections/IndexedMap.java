@@ -12,6 +12,7 @@ public interface IndexedMap {
 
     int get(Object o);
     Object get(int i);
+    boolean contains(Object o);
     Iterator iterator();
     int size();
     
