@@ -127,7 +127,7 @@ public interface Operand {
             return (this.getValue() == null && (that.getValue() == null || that.getValue().isNull())) ||
                    this.getValue().difference(that.getValue()) == 0;
         }
-        public int getBits() { return value.to32BitValue(); }
+        public int getBits() { return value==null?0:value.to32BitValue(); }
     }
     
     class IConstOperand implements Const4Operand {

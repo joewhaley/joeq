@@ -49,21 +49,16 @@ public abstract class jq_Field extends jq_Member implements AndersenField {
     public boolean isVolatile() { chkState(STATE_LOADING2); return (access_flags & ACC_VOLATILE) != 0; }
     public boolean isTransient() { chkState(STATE_LOADING2); return (access_flags & ACC_TRANSIENT) != 0; }
     
-    public final int getWidth() {
-        if (type == jq_Primitive.LONG || type == jq_Primitive.DOUBLE)
-            return 8;
-        else
-            return 4;
-    }
+    public abstract int getWidth();
 
     public void accept(jq_FieldVisitor mv) {
         mv.visitField(this);
     }
 
     static interface Delegate {
-	boolean isCodeAddressType(jq_Field t);
-	boolean isHeapAddressType(jq_Field t);
-	boolean isStackAddressType(jq_Field t);
+        boolean isCodeAddressType(jq_Field t);
+        boolean isHeapAddressType(jq_Field t);
+        boolean isStackAddressType(jq_Field t);
     }
     
     private static Delegate _delegate;
@@ -73,7 +68,6 @@ public abstract class jq_Field extends jq_Member implements AndersenField {
     }
     public final boolean isHeapAddressType() {
         return _delegate.isHeapAddressType(this);
-	
     }
     public final boolean isStackAddressType() {
         return _delegate.isStackAddressType(this);
@@ -82,19 +76,19 @@ public abstract class jq_Field extends jq_Member implements AndersenField {
     public String toString() { return getDeclaringClass()+"."+getName(); }
 
     static {
-	/* Set up delegates. */
-	_delegate = null;
-	boolean nullVM = jq.nullVM || System.getProperty("joeq.nullvm") != null;
-	if (!nullVM) {
-	    _delegate = attemptDelegate("Clazz.Delegates$Field");
-	}
-	if (_delegate == null) {
-	    _delegate = new NullDelegates.Field();
-	}
+        /* Set up delegates. */
+        _delegate = null;
+        boolean nullVM = jq.nullVM || System.getProperty("joeq.nullvm") != null;
+        if (!nullVM) {
+            _delegate = attemptDelegate("Clazz.Delegates$Field");
+        }
+        if (_delegate == null) {
+            _delegate = new NullDelegates.Field();
+        }
     }
 
     private static Delegate attemptDelegate(String s) {
-	String type = "field delegate";
+        String type = "field delegate";
         try {
             Class c = Class.forName(s);
             return (Delegate)c.newInstance();
@@ -105,7 +99,7 @@ public abstract class jq_Field extends jq_Member implements AndersenField {
         } catch (java.lang.IllegalAccessException x) {
             System.err.println("Cannot access "+type+" "+s+": "+x);
         }
-	return null;
+        return null;
     }
 
 }

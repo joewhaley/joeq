@@ -1496,13 +1496,15 @@ public class BytecodeToQuad extends BytecodeVisitor {
             return;
         }
         appendQuad(q);
+        mergeStateWithAllExHandlers(false);
     }
     private void UNSAFEhelper(jq_Method m, Invoke oper) {
-	if (_unsafe.handleMethod(this, quad_cfg, current_state, m, oper)) {
-	    if (_unsafe.endsBB(m)) {
-		endBasicBlock = true;
-	    }
-	} else {
+        if (_unsafe.handleMethod(this, quad_cfg, current_state, m, oper)) {
+            mergeStateWithAllExHandlers(false);
+            if (_unsafe.endsBB(m)) {
+                endBasicBlock = true;
+            }
+        } else {
             // TODO
             INVOKEhelper(oper, m, m.getReturnType(), false);
             return;
