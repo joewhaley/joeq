@@ -50,7 +50,7 @@ public class MethodInline implements ControlFlowGraphVisitor {
                 if (Invoke.getMethod(q).getMethod().needsDynamicLink(cfg.getMethod())) continue;
                 if (Invoke.getMethod(q).getMethod().getBytecode() == null) continue;
                 // HACK: for interpreter.
-                if (!Interpreter.QuadInterpreter.State.interpret_filter.isElement(Invoke.getMethod(q).getMethod())) continue;
+                if (!Interpreter.QuadInterpreter.interpret_filter.isElement(Invoke.getMethod(q).getMethod())) continue;
                 inline_quads.add(q);
                 inline_blocks.add(qi.getCurrentBasicBlock());
             }

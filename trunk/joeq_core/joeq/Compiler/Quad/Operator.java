@@ -32,7 +32,7 @@ import Compil3r.Quad.Operand.PConstOperand;
 import Compil3r.Quad.Operand.RegisterOperand;
 import Compil3r.Quad.Operand.TargetOperand;
 import Compil3r.Quad.Operand.TypeOperand;
-import Interpreter.QuadInterpreter.State;
+import Interpreter.QuadInterpreter;
 import Interpreter.QuadInterpreter.UninitializedReference;
 import Main.jq;
 import Memory.Address;
@@ -63,51 +63,51 @@ public abstract class Operator {
 
     public abstract boolean hasSideEffects();
     
-    public abstract void interpret(Quad q, State s);
+    public abstract void interpret(Quad q, QuadInterpreter s);
     
-    static int getIntOpValue(Operand op, State s) {
+    static int getIntOpValue(Operand op, QuadInterpreter s) {
         if (op instanceof RegisterOperand)
             return ((Number)s.getReg(((RegisterOperand)op).getRegister())).intValue();
         else
             return ((IConstOperand)op).getValue();
     }
     
-    static float getFloatOpValue(Operand op, State s) {
+    static float getFloatOpValue(Operand op, QuadInterpreter s) {
         if (op instanceof RegisterOperand)
             return ((Float)s.getReg(((RegisterOperand)op).getRegister())).floatValue();
         else
             return ((FConstOperand)op).getValue();
     }
     
-    static long getLongOpValue(Operand op, State s) {
+    static long getLongOpValue(Operand op, QuadInterpreter s) {
         if (op instanceof RegisterOperand)
             return ((Long)s.getReg(((RegisterOperand)op).getRegister())).longValue();
         else
             return ((LConstOperand)op).getValue();
     }
     
-    static double getDoubleOpValue(Operand op, State s) {
+    static double getDoubleOpValue(Operand op, QuadInterpreter s) {
         if (op instanceof RegisterOperand)
             return ((Double)s.getReg(((RegisterOperand)op).getRegister())).doubleValue();
         else
             return ((DConstOperand)op).getValue();
     }
     
-    static Object getObjectOpValue(Operand op, State s) {
+    static Object getObjectOpValue(Operand op, QuadInterpreter s) {
         if (op instanceof RegisterOperand)
             return s.getReg(((RegisterOperand)op).getRegister());
         else
             return ((AConstOperand)op).getValue();
     }
 
-    static Address getAddressOpValue(Operand op, State s) {
+    static Address getAddressOpValue(Operand op, QuadInterpreter s) {
         if (op instanceof RegisterOperand)
             return (Address)s.getReg(((RegisterOperand)op).getRegister());
         else
             return HeapAddress.addressOf(((PConstOperand)op).getValue());
     }
     
-    static Object getWrappedOpValue(Operand op, State s) {
+    static Object getWrappedOpValue(Operand op, QuadInterpreter s) {
         if (op instanceof RegisterOperand)
             return s.getReg(((RegisterOperand)op).getRegister());
         else if (op instanceof AConstOperand)
@@ -345,7 +345,7 @@ public abstract class Operator {
             public static final MOVE_I INSTANCE = new MOVE_I();
             private MOVE_I() { }
             public String toString() { return "MOVE_I"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 s.putReg_I(getDest(q).getRegister(), getIntOpValue(getSrc(q), s));
             }
         }
@@ -353,7 +353,7 @@ public abstract class Operator {
             public static final MOVE_F INSTANCE = new MOVE_F();
             private MOVE_F() { }
             public String toString() { return "MOVE_F"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 s.putReg_F(getDest(q).getRegister(), getFloatOpValue(getSrc(q), s));
             }
         }
@@ -361,7 +361,7 @@ public abstract class Operator {
             public static final MOVE_L INSTANCE = new MOVE_L();
             private MOVE_L() { }
             public String toString() { return "MOVE_L"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 s.putReg_L(getDest(q).getRegister(), getLongOpValue(getSrc(q), s));
             }
         }
@@ -369,7 +369,7 @@ public abstract class Operator {
             public static final MOVE_D INSTANCE = new MOVE_D();
             private MOVE_D() { }
             public String toString() { return "MOVE_D"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 s.putReg_D(getDest(q).getRegister(), getDoubleOpValue(getSrc(q), s));
             }
         }
@@ -377,7 +377,7 @@ public abstract class Operator {
             public static final MOVE_A INSTANCE = new MOVE_A();
             private MOVE_A() { }
             public String toString() { return "MOVE_A"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 s.putReg_A(getDest(q).getRegister(), getObjectOpValue(getSrc(q), s));
             }
         }
@@ -385,7 +385,7 @@ public abstract class Operator {
             public static final MOVE_P INSTANCE = new MOVE_P();
             private MOVE_P() { }
             public String toString() { return "MOVE_P"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 s.putReg_P(getDest(q).getRegister(), getAddressOpValue(getSrc(q), s));
             }
         }
@@ -415,7 +415,7 @@ public abstract class Operator {
             public static final ADD_I INSTANCE = new ADD_I();
             private ADD_I() { }
             public String toString() { return "ADD_I"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 int v = getIntOpValue(getSrc1(q), s) + getIntOpValue(getSrc2(q), s);
                 s.putReg_I(getDest(q).getRegister(), v);
             }
@@ -424,7 +424,7 @@ public abstract class Operator {
             public static final SUB_I INSTANCE = new SUB_I();
             private SUB_I() { }
             public String toString() { return "SUB_I"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 int v = getIntOpValue(getSrc1(q), s) - getIntOpValue(getSrc2(q), s);
                 s.putReg_I(getDest(q).getRegister(), v);
             }
@@ -433,7 +433,7 @@ public abstract class Operator {
             public static final MUL_I INSTANCE = new MUL_I();
             private MUL_I() { }
             public String toString() { return "MUL_I"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 int v = getIntOpValue(getSrc1(q), s) * getIntOpValue(getSrc2(q), s);
                 s.putReg_I(getDest(q).getRegister(), v);
             }
@@ -442,7 +442,7 @@ public abstract class Operator {
             public static final DIV_I INSTANCE = new DIV_I();
             private DIV_I() { }
             public String toString() { return "DIV_I"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 int v = getIntOpValue(getSrc1(q), s) / getIntOpValue(getSrc2(q), s);
                 s.putReg_I(getDest(q).getRegister(), v);
             }
@@ -451,7 +451,7 @@ public abstract class Operator {
             public static final REM_I INSTANCE = new REM_I();
             private REM_I() { }
             public String toString() { return "REM_I"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 int v = getIntOpValue(getSrc1(q), s) % getIntOpValue(getSrc2(q), s);
                 s.putReg_I(getDest(q).getRegister(), v);
             }
@@ -460,7 +460,7 @@ public abstract class Operator {
             public static final AND_I INSTANCE = new AND_I();
             private AND_I() { }
             public String toString() { return "AND_I"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 int v = getIntOpValue(getSrc1(q), s) & getIntOpValue(getSrc2(q), s);
                 s.putReg_I(getDest(q).getRegister(), v);
             }
@@ -469,7 +469,7 @@ public abstract class Operator {
             public static final OR_I INSTANCE = new OR_I();
             private OR_I() { }
             public String toString() { return "OR_I"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 int v = getIntOpValue(getSrc1(q), s) | getIntOpValue(getSrc2(q), s);
                 s.putReg_I(getDest(q).getRegister(), v);
             }
@@ -478,7 +478,7 @@ public abstract class Operator {
             public static final XOR_I INSTANCE = new XOR_I();
             private XOR_I() { }
             public String toString() { return "XOR_I"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 int v = getIntOpValue(getSrc1(q), s) ^ getIntOpValue(getSrc2(q), s);
                 s.putReg_I(getDest(q).getRegister(), v);
             }
@@ -487,7 +487,7 @@ public abstract class Operator {
             public static final SHL_I INSTANCE = new SHL_I();
             private SHL_I() { }
             public String toString() { return "SHL_I"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 int v = getIntOpValue(getSrc1(q), s) << getIntOpValue(getSrc2(q), s);
                 s.putReg_I(getDest(q).getRegister(), v);
             }
@@ -496,7 +496,7 @@ public abstract class Operator {
             public static final SHR_I INSTANCE = new SHR_I();
             private SHR_I() { }
             public String toString() { return "SHR_I"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 int v = getIntOpValue(getSrc1(q), s) >> getIntOpValue(getSrc2(q), s);
                 s.putReg_I(getDest(q).getRegister(), v);
             }
@@ -505,7 +505,7 @@ public abstract class Operator {
             public static final USHR_I INSTANCE = new USHR_I();
             private USHR_I() { }
             public String toString() { return "USHR_I"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 int v = getIntOpValue(getSrc1(q), s) >>> getIntOpValue(getSrc2(q), s);
                 s.putReg_I(getDest(q).getRegister(), v);
             }
@@ -514,7 +514,7 @@ public abstract class Operator {
             public static final SHL_L INSTANCE = new SHL_L();
             private SHL_L() { }
             public String toString() { return "SHL_L"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 long v = getLongOpValue(getSrc1(q), s) << getIntOpValue(getSrc2(q), s);
                 s.putReg_L(getDest(q).getRegister(), v);
             }
@@ -523,7 +523,7 @@ public abstract class Operator {
             public static final SHR_L INSTANCE = new SHR_L();
             private SHR_L() { }
             public String toString() { return "SHR_L"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 long v = getLongOpValue(getSrc1(q), s) >> getIntOpValue(getSrc2(q), s);
                 s.putReg_L(getDest(q).getRegister(), v);
             }
@@ -532,7 +532,7 @@ public abstract class Operator {
             public static final USHR_L INSTANCE = new USHR_L();
             private USHR_L() { }
             public String toString() { return "USHR_L"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 long v = getLongOpValue(getSrc1(q), s) >>> getIntOpValue(getSrc2(q), s);
                 s.putReg_L(getDest(q).getRegister(), v);
             }
@@ -541,7 +541,7 @@ public abstract class Operator {
             public static final ADD_L INSTANCE = new ADD_L();
             private ADD_L() { }
             public String toString() { return "ADD_L"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 long v = getLongOpValue(getSrc1(q), s) + getLongOpValue(getSrc2(q), s);
                 s.putReg_L(getDest(q).getRegister(), v);
             }
@@ -550,7 +550,7 @@ public abstract class Operator {
             public static final SUB_L INSTANCE = new SUB_L();
             private SUB_L() { }
             public String toString() { return "SUB_L"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 long v = getLongOpValue(getSrc1(q), s) - getLongOpValue(getSrc2(q), s);
                 s.putReg_L(getDest(q).getRegister(), v);
             }
@@ -559,7 +559,7 @@ public abstract class Operator {
             public static final MUL_L INSTANCE = new MUL_L();
             private MUL_L() { }
             public String toString() { return "MUL_L"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 long v = getLongOpValue(getSrc1(q), s) * getLongOpValue(getSrc2(q), s);
                 s.putReg_L(getDest(q).getRegister(), v);
             }
@@ -568,7 +568,7 @@ public abstract class Operator {
             public static final DIV_L INSTANCE = new DIV_L();
             private DIV_L() { }
             public String toString() { return "DIV_L"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 long v = getLongOpValue(getSrc1(q), s) / getLongOpValue(getSrc2(q), s);
                 s.putReg_L(getDest(q).getRegister(), v);
             }
@@ -577,7 +577,7 @@ public abstract class Operator {
             public static final REM_L INSTANCE = new REM_L();
             private REM_L() { }
             public String toString() { return "REM_L"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 long v = getLongOpValue(getSrc1(q), s) % getLongOpValue(getSrc2(q), s);
                 s.putReg_L(getDest(q).getRegister(), v);
             }
@@ -586,7 +586,7 @@ public abstract class Operator {
             public static final AND_L INSTANCE = new AND_L();
             private AND_L() { }
             public String toString() { return "AND_L"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 long v = getLongOpValue(getSrc1(q), s) & getLongOpValue(getSrc2(q), s);
                 s.putReg_L(getDest(q).getRegister(), v);
             }
@@ -595,7 +595,7 @@ public abstract class Operator {
             public static final OR_L INSTANCE = new OR_L();
             private OR_L() { }
             public String toString() { return "OR_L"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 long v = getLongOpValue(getSrc1(q), s) | getLongOpValue(getSrc2(q), s);
                 s.putReg_L(getDest(q).getRegister(), v);
             }
@@ -604,7 +604,7 @@ public abstract class Operator {
             public static final XOR_L INSTANCE = new XOR_L();
             private XOR_L() { }
             public String toString() { return "XOR_L"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 long v = getLongOpValue(getSrc1(q), s) ^ getLongOpValue(getSrc2(q), s);
                 s.putReg_L(getDest(q).getRegister(), v);
             }
@@ -613,7 +613,7 @@ public abstract class Operator {
             public static final ADD_F INSTANCE = new ADD_F();
             private ADD_F() { }
             public String toString() { return "ADD_F"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 float v = getFloatOpValue(getSrc1(q), s) + getFloatOpValue(getSrc2(q), s);
                 s.putReg_F(getDest(q).getRegister(), v);
             }
@@ -622,7 +622,7 @@ public abstract class Operator {
             public static final SUB_F INSTANCE = new SUB_F();
             private SUB_F() { }
             public String toString() { return "SUB_F"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 float v = getFloatOpValue(getSrc1(q), s) - getFloatOpValue(getSrc2(q), s);
                 s.putReg_F(getDest(q).getRegister(), v);
             }
@@ -631,7 +631,7 @@ public abstract class Operator {
             public static final MUL_F INSTANCE = new MUL_F();
             private MUL_F() { }
             public String toString() { return "MUL_F"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 float v = getFloatOpValue(getSrc1(q), s) * getFloatOpValue(getSrc2(q), s);
                 s.putReg_F(getDest(q).getRegister(), v);
             }
@@ -640,7 +640,7 @@ public abstract class Operator {
             public static final DIV_F INSTANCE = new DIV_F();
             private DIV_F() { }
             public String toString() { return "DIV_F"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 float v = getFloatOpValue(getSrc1(q), s) / getFloatOpValue(getSrc2(q), s);
                 s.putReg_F(getDest(q).getRegister(), v);
             }
@@ -649,7 +649,7 @@ public abstract class Operator {
             public static final REM_F INSTANCE = new REM_F();
             private REM_F() { }
             public String toString() { return "REM_F"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 float v = getFloatOpValue(getSrc1(q), s) % getFloatOpValue(getSrc2(q), s);
                 s.putReg_F(getDest(q).getRegister(), v);
             }
@@ -658,7 +658,7 @@ public abstract class Operator {
             public static final ADD_D INSTANCE = new ADD_D();
             private ADD_D() { }
             public String toString() { return "ADD_D"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 double v = getDoubleOpValue(getSrc1(q), s) + getDoubleOpValue(getSrc2(q), s);
                 s.putReg_D(getDest(q).getRegister(), v);
             }
@@ -667,7 +667,7 @@ public abstract class Operator {
             public static final SUB_D INSTANCE = new SUB_D();
             private SUB_D() { }
             public String toString() { return "SUB_D"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 double v = getDoubleOpValue(getSrc1(q), s) - getDoubleOpValue(getSrc2(q), s);
                 s.putReg_D(getDest(q).getRegister(), v);
             }
@@ -676,7 +676,7 @@ public abstract class Operator {
             public static final MUL_D INSTANCE = new MUL_D();
             private MUL_D() { }
             public String toString() { return "MUL_D"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 double v = getDoubleOpValue(getSrc1(q), s) * getDoubleOpValue(getSrc2(q), s);
                 s.putReg_D(getDest(q).getRegister(), v);
             }
@@ -685,7 +685,7 @@ public abstract class Operator {
             public static final DIV_D INSTANCE = new DIV_D();
             private DIV_D() { }
             public String toString() { return "DIV_D"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 double v = getDoubleOpValue(getSrc1(q), s) / getDoubleOpValue(getSrc2(q), s);
                 s.putReg_D(getDest(q).getRegister(), v);
             }
@@ -694,7 +694,7 @@ public abstract class Operator {
             public static final REM_D INSTANCE = new REM_D();
             private REM_D() { }
             public String toString() { return "REM_D"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 double v = getDoubleOpValue(getSrc1(q), s) % getDoubleOpValue(getSrc2(q), s);
                 s.putReg_D(getDest(q).getRegister(), v);
             }
@@ -703,7 +703,7 @@ public abstract class Operator {
             public static final CMP_L INSTANCE = new CMP_L();
             private CMP_L() { }
             public String toString() { return "CMP_L"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 long v2 = getLongOpValue(getSrc1(q), s);
                 long v1 = getLongOpValue(getSrc2(q), s);
                 s.putReg_I(getDest(q).getRegister(), (v2>v1)?1:((v2==v1)?0:-1));
@@ -713,7 +713,7 @@ public abstract class Operator {
             public static final CMP_F INSTANCE = new CMP_F();
             private CMP_F() { }
             public String toString() { return "CMP_F"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 float v2 = getFloatOpValue(getSrc1(q), s);
                 float v1 = getFloatOpValue(getSrc2(q), s);
                 s.putReg_I(getDest(q).getRegister(), (v2>v1)?1:((v2==v1)?0:-1));
@@ -723,7 +723,7 @@ public abstract class Operator {
             public static final CMP_D INSTANCE = new CMP_D();
             private CMP_D() { }
             public String toString() { return "CMP_D"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 double v2 = getDoubleOpValue(getSrc1(q), s);
                 double v1 = getDoubleOpValue(getSrc2(q), s);
                 s.putReg_I(getDest(q).getRegister(), (v2>v1)?1:((v2==v1)?0:-1));
@@ -753,7 +753,7 @@ public abstract class Operator {
             public static final NEG_I INSTANCE = new NEG_I();
             private NEG_I() { }
             public String toString() { return "NEG_I"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 s.putReg_I(getDest(q).getRegister(), -getIntOpValue(getSrc(q), s));
             }
         }
@@ -761,7 +761,7 @@ public abstract class Operator {
             public static final NEG_F INSTANCE = new NEG_F();
             private NEG_F() { }
             public String toString() { return "NEG_F"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 s.putReg_F(getDest(q).getRegister(), -getFloatOpValue(getSrc(q), s));
             }
         }
@@ -769,7 +769,7 @@ public abstract class Operator {
             public static final NEG_L INSTANCE = new NEG_L();
             private NEG_L() { }
             public String toString() { return "NEG_L"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 s.putReg_L(getDest(q).getRegister(), -getLongOpValue(getSrc(q), s));
             }
         }
@@ -777,7 +777,7 @@ public abstract class Operator {
             public static final NEG_D INSTANCE = new NEG_D();
             private NEG_D() { }
             public String toString() { return "NEG_D"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 s.putReg_D(getDest(q).getRegister(), -getDoubleOpValue(getSrc(q), s));
             }
         }
@@ -785,7 +785,7 @@ public abstract class Operator {
             public static final INT_2LONG INSTANCE = new INT_2LONG();
             private INT_2LONG() { }
             public String toString() { return "INT_2LONG"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 s.putReg_L(getDest(q).getRegister(), (long)getIntOpValue(getSrc(q), s));
             }
         }
@@ -793,7 +793,7 @@ public abstract class Operator {
             public static final INT_2FLOAT INSTANCE = new INT_2FLOAT();
             private INT_2FLOAT() { }
             public String toString() { return "INT_2FLOAT"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 s.putReg_F(getDest(q).getRegister(), (float)getIntOpValue(getSrc(q), s));
             }
         }
@@ -801,7 +801,7 @@ public abstract class Operator {
             public static final INT_2DOUBLE INSTANCE = new INT_2DOUBLE();
             private INT_2DOUBLE() { }
             public String toString() { return "INT_2DOUBLE"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 s.putReg_D(getDest(q).getRegister(), (double)getIntOpValue(getSrc(q), s));
             }
         }
@@ -809,7 +809,7 @@ public abstract class Operator {
             public static final LONG_2INT INSTANCE = new LONG_2INT();
             private LONG_2INT() { }
             public String toString() { return "LONG_2INT"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 s.putReg_I(getDest(q).getRegister(), (int)getLongOpValue(getSrc(q), s));
             }
         }
@@ -817,7 +817,7 @@ public abstract class Operator {
             public static final LONG_2FLOAT INSTANCE = new LONG_2FLOAT();
             private LONG_2FLOAT() { }
             public String toString() { return "LONG_2FLOAT"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 s.putReg_F(getDest(q).getRegister(), (float)getLongOpValue(getSrc(q), s));
             }
         }
@@ -825,7 +825,7 @@ public abstract class Operator {
             public static final LONG_2DOUBLE INSTANCE = new LONG_2DOUBLE();
             private LONG_2DOUBLE() { }
             public String toString() { return "LONG_2DOUBLE"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 s.putReg_D(getDest(q).getRegister(), (double)getLongOpValue(getSrc(q), s));
             }
         }
@@ -833,7 +833,7 @@ public abstract class Operator {
             public static final FLOAT_2INT INSTANCE = new FLOAT_2INT();
             private FLOAT_2INT() { }
             public String toString() { return "FLOAT_2INT"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 s.putReg_I(getDest(q).getRegister(), (int)getFloatOpValue(getSrc(q), s));
             }
         }
@@ -841,7 +841,7 @@ public abstract class Operator {
             public static final FLOAT_2LONG INSTANCE = new FLOAT_2LONG();
             private FLOAT_2LONG() { }
             public String toString() { return "FLOAT_2LONG"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 s.putReg_L(getDest(q).getRegister(), (long)getFloatOpValue(getSrc(q), s));
             }
         }
@@ -849,7 +849,7 @@ public abstract class Operator {
             public static final FLOAT_2DOUBLE INSTANCE = new FLOAT_2DOUBLE();
             private FLOAT_2DOUBLE() { }
             public String toString() { return "FLOAT_2DOUBLE"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 s.putReg_D(getDest(q).getRegister(), (double)getFloatOpValue(getSrc(q), s));
             }
         }
@@ -857,7 +857,7 @@ public abstract class Operator {
             public static final DOUBLE_2INT INSTANCE = new DOUBLE_2INT();
             private DOUBLE_2INT() { }
             public String toString() { return "DOUBLE_2INT"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 s.putReg_I(getDest(q).getRegister(), (int)getDoubleOpValue(getSrc(q), s));
             }
         }
@@ -865,7 +865,7 @@ public abstract class Operator {
             public static final DOUBLE_2LONG INSTANCE = new DOUBLE_2LONG();
             private DOUBLE_2LONG() { }
             public String toString() { return "DOUBLE_2LONG"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 s.putReg_L(getDest(q).getRegister(), (long)getDoubleOpValue(getSrc(q), s));
             }
         }
@@ -873,7 +873,7 @@ public abstract class Operator {
             public static final DOUBLE_2FLOAT INSTANCE = new DOUBLE_2FLOAT();
             private DOUBLE_2FLOAT() { }
             public String toString() { return "DOUBLE_2FLOAT"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 s.putReg_F(getDest(q).getRegister(), (float)getDoubleOpValue(getSrc(q), s));
             }
         }
@@ -881,7 +881,7 @@ public abstract class Operator {
             public static final INT_2BYTE INSTANCE = new INT_2BYTE();
             private INT_2BYTE() { }
             public String toString() { return "INT_2BYTE"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 s.putReg_I(getDest(q).getRegister(), (byte)getIntOpValue(getSrc(q), s));
             }
         }
@@ -889,7 +889,7 @@ public abstract class Operator {
             public static final INT_2CHAR INSTANCE = new INT_2CHAR();
             private INT_2CHAR() { }
             public String toString() { return "INT_2CHAR"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 s.putReg_I(getDest(q).getRegister(), (char)getIntOpValue(getSrc(q), s));
             }
         }
@@ -897,7 +897,7 @@ public abstract class Operator {
             public static final INT_2SHORT INSTANCE = new INT_2SHORT();
             private INT_2SHORT() { }
             public String toString() { return "INT_2SHORT"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 s.putReg_I(getDest(q).getRegister(), (short)getIntOpValue(getSrc(q), s));
             }
         }
@@ -906,7 +906,7 @@ public abstract class Operator {
             public static final OBJECT_2INT INSTANCE = new OBJECT_2INT();
             private OBJECT_2INT() { }
             public String toString() { return "OBJECT_2INT"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 s.putReg_I(getDest(q).getRegister(), Unsafe.addressOf(getObjectOpValue(getSrc(q), s)));
             }
         }
@@ -914,7 +914,7 @@ public abstract class Operator {
             public static final INT_2OBJECT INSTANCE = new INT_2OBJECT();
             private INT_2OBJECT() { }
             public String toString() { return "INT_2OBJECT"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 s.putReg_A(getDest(q).getRegister(), Unsafe.asObject(getIntOpValue(getSrc(q), s)));
             }
         }
@@ -923,7 +923,7 @@ public abstract class Operator {
             public static final FLOAT_2INTBITS INSTANCE = new FLOAT_2INTBITS();
             private FLOAT_2INTBITS() { }
             public String toString() { return "FLOAT_2INTBITS"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 s.putReg_I(getDest(q).getRegister(), Float.floatToRawIntBits(getFloatOpValue(getSrc(q), s)));
             }
         }
@@ -931,7 +931,7 @@ public abstract class Operator {
             public static final INTBITS_2FLOAT INSTANCE = new INTBITS_2FLOAT();
             private INTBITS_2FLOAT() { }
             public String toString() { return "INTBITS_2FLOAT"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 s.putReg_F(getDest(q).getRegister(), Float.intBitsToFloat(getIntOpValue(getSrc(q), s)));
             }
         }
@@ -939,7 +939,7 @@ public abstract class Operator {
             public static final DOUBLE_2LONGBITS INSTANCE = new DOUBLE_2LONGBITS();
             private DOUBLE_2LONGBITS() { }
             public String toString() { return "DOUBLE_2LONGBITS"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 s.putReg_L(getDest(q).getRegister(), Double.doubleToRawLongBits(getDoubleOpValue(getSrc(q), s)));
             }
         }
@@ -947,7 +947,7 @@ public abstract class Operator {
             public static final LONGBITS_2DOUBLE INSTANCE = new LONGBITS_2DOUBLE();
             private LONGBITS_2DOUBLE() { }
             public String toString() { return "LONGBITS_2DOUBLE"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 s.putReg_D(getDest(q).getRegister(), Double.longBitsToDouble(getLongOpValue(getSrc(q), s)));
             }
         }
@@ -981,7 +981,7 @@ public abstract class Operator {
             public static final ALOAD_I INSTANCE = new ALOAD_I();
             private ALOAD_I() { }
             public String toString() { return "ALOAD_I"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 int[] a = (int[])getObjectOpValue(getBase(q), s);
                 int i = getIntOpValue(getIndex(q), s);
                 s.putReg_I(getDest(q).getRegister(), a[i]);
@@ -991,7 +991,7 @@ public abstract class Operator {
             public static final ALOAD_L INSTANCE = new ALOAD_L();
             private ALOAD_L() { }
             public String toString() { return "ALOAD_L"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 long[] a = (long[])getObjectOpValue(getBase(q), s);
                 int i = getIntOpValue(getIndex(q), s);
                 s.putReg_L(getDest(q).getRegister(), a[i]);
@@ -1001,7 +1001,7 @@ public abstract class Operator {
             public static final ALOAD_F INSTANCE = new ALOAD_F();
             private ALOAD_F() { }
             public String toString() { return "ALOAD_F"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 float[] a = (float[])getObjectOpValue(getBase(q), s);
                 int i = getIntOpValue(getIndex(q), s);
                 s.putReg_F(getDest(q).getRegister(), a[i]);
@@ -1011,7 +1011,7 @@ public abstract class Operator {
             public static final ALOAD_D INSTANCE = new ALOAD_D();
             private ALOAD_D() { }
             public String toString() { return "ALOAD_D"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 double[] a = (double[])getObjectOpValue(getBase(q), s);
                 int i = getIntOpValue(getIndex(q), s);
                 s.putReg_D(getDest(q).getRegister(), a[i]);
@@ -1021,7 +1021,7 @@ public abstract class Operator {
             public static final ALOAD_A INSTANCE = new ALOAD_A();
             private ALOAD_A() { }
             public String toString() { return "ALOAD_A"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 Object[] a = (Object[])getObjectOpValue(getBase(q), s);
                 int i = getIntOpValue(getIndex(q), s);
                 s.putReg_A(getDest(q).getRegister(), a[i]);
@@ -1031,7 +1031,7 @@ public abstract class Operator {
             public static final ALOAD_P INSTANCE = new ALOAD_P();
             private ALOAD_P() { }
             public String toString() { return "ALOAD_P"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 Address[] a = (Address[])getObjectOpValue(getBase(q), s);
                 int i = getIntOpValue(getIndex(q), s);
                 s.putReg_P(getDest(q).getRegister(), a[i]);
@@ -1041,7 +1041,7 @@ public abstract class Operator {
             public static final ALOAD_B INSTANCE = new ALOAD_B();
             private ALOAD_B() { }
             public String toString() { return "ALOAD_B"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 Object a = getObjectOpValue(getBase(q), s);
                 int i = getIntOpValue(getIndex(q), s);
                 int v;
@@ -1054,7 +1054,7 @@ public abstract class Operator {
             public static final ALOAD_C INSTANCE = new ALOAD_C();
             private ALOAD_C() { }
             public String toString() { return "ALOAD_C"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 char[] a = (char[])getObjectOpValue(getBase(q), s);
                 int i = getIntOpValue(getIndex(q), s);
                 s.putReg_I(getDest(q).getRegister(), a[i]);
@@ -1064,7 +1064,7 @@ public abstract class Operator {
             public static final ALOAD_S INSTANCE = new ALOAD_S();
             private ALOAD_S() { }
             public String toString() { return "ALOAD_S"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 short[] a = (short[])getObjectOpValue(getBase(q), s);
                 int i = getIntOpValue(getIndex(q), s);
                 s.putReg_I(getDest(q).getRegister(), a[i]);
@@ -1099,7 +1099,7 @@ public abstract class Operator {
             public static final ASTORE_I INSTANCE = new ASTORE_I();
             private ASTORE_I() { }
             public String toString() { return "ASTORE_I"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 int[] a = (int[])getObjectOpValue(getBase(q), s);
                 int i = getIntOpValue(getIndex(q), s);
                 int v = getIntOpValue(getValue(q), s);
@@ -1110,7 +1110,7 @@ public abstract class Operator {
             public static final ASTORE_L INSTANCE = new ASTORE_L();
             private ASTORE_L() { }
             public String toString() { return "ASTORE_L"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 long[] a = (long[])getObjectOpValue(getBase(q), s);
                 int i = getIntOpValue(getIndex(q), s);
                 long v = getLongOpValue(getValue(q), s);
@@ -1121,7 +1121,7 @@ public abstract class Operator {
             public static final ASTORE_F INSTANCE = new ASTORE_F();
             private ASTORE_F() { }
             public String toString() { return "ASTORE_F"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 float[] a = (float[])getObjectOpValue(getBase(q), s);
                 int i = getIntOpValue(getIndex(q), s);
                 float v = getFloatOpValue(getValue(q), s);
@@ -1132,7 +1132,7 @@ public abstract class Operator {
             public static final ASTORE_D INSTANCE = new ASTORE_D();
             private ASTORE_D() { }
             public String toString() { return "ASTORE_D"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 double[] a = (double[])getObjectOpValue(getBase(q), s);
                 int i = getIntOpValue(getIndex(q), s);
                 double v = getDoubleOpValue(getValue(q), s);
@@ -1143,7 +1143,7 @@ public abstract class Operator {
             public static final ASTORE_A INSTANCE = new ASTORE_A();
             private ASTORE_A() { }
             public String toString() { return "ASTORE_A"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 Object[] a = (Object[])getObjectOpValue(getBase(q), s);
                 int i = getIntOpValue(getIndex(q), s);
                 Object v = getObjectOpValue(getValue(q), s);
@@ -1154,7 +1154,7 @@ public abstract class Operator {
             public static final ASTORE_P INSTANCE = new ASTORE_P();
             private ASTORE_P() { }
             public String toString() { return "ASTORE_P"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 Address[] a = (Address[])getObjectOpValue(getBase(q), s);
                 int i = getIntOpValue(getIndex(q), s);
                 Address v = getAddressOpValue(getValue(q), s);
@@ -1165,7 +1165,7 @@ public abstract class Operator {
             public static final ASTORE_B INSTANCE = new ASTORE_B();
             private ASTORE_B() { }
             public String toString() { return "ASTORE_B"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 Object a = getObjectOpValue(getBase(q), s);
                 int i = getIntOpValue(getIndex(q), s);
                 if (a instanceof byte[]) ((byte[])a)[i] = (byte)getIntOpValue(getValue(q), s);
@@ -1176,7 +1176,7 @@ public abstract class Operator {
             public static final ASTORE_C INSTANCE = new ASTORE_C();
             private ASTORE_C() { }
             public String toString() { return "ASTORE_C"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 char[] a = (char[])getObjectOpValue(getBase(q), s);
                 int i = getIntOpValue(getIndex(q), s);
                 char v = (char)getIntOpValue(getValue(q), s);
@@ -1187,7 +1187,7 @@ public abstract class Operator {
             public static final ASTORE_S INSTANCE = new ASTORE_S();
             private ASTORE_S() { }
             public String toString() { return "ASTORE_S"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 short[] a = (short[])getObjectOpValue(getBase(q), s);
                 int i = getIntOpValue(getIndex(q), s);
                 short v = (short)getIntOpValue(getValue(q), s);
@@ -1222,7 +1222,7 @@ public abstract class Operator {
             public static final IFCMP_I INSTANCE = new IFCMP_I();
             private IFCMP_I() { }
             public String toString() { return "IFCMP_I"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 int s1 = getIntOpValue(getSrc1(q), s);
                 int s2 = getIntOpValue(getSrc2(q), s);
                 byte c = getCond(q).getCondition();
@@ -1245,7 +1245,7 @@ public abstract class Operator {
             public static final IFCMP_A INSTANCE = new IFCMP_A();
             private IFCMP_A() { }
             public String toString() { return "IFCMP_A"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 Object s1 = getObjectOpValue(getSrc1(q), s);
                 Object s2 = getObjectOpValue(getSrc2(q), s);
                 byte c = getCond(q).getCondition();
@@ -1263,7 +1263,7 @@ public abstract class Operator {
             public static final IFCMP_P INSTANCE = new IFCMP_P();
             private IFCMP_P() { }
             public String toString() { return "IFCMP_P"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 Address s1 = getAddressOpValue(getSrc1(q), s);
                 Address s2 = getAddressOpValue(getSrc2(q), s);
                 byte c = getCond(q).getCondition();
@@ -1297,7 +1297,7 @@ public abstract class Operator {
             public static final GOTO INSTANCE = new GOTO();
             private GOTO() { }
             public String toString() { return "GOTO"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 s.branchTo(getTarget(q).getTarget());
             }
         }
@@ -1326,7 +1326,7 @@ public abstract class Operator {
             public static final JSR INSTANCE = new JSR();
             private JSR() { }
             public String toString() { return "JSR"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 BasicBlock bb = getSuccessor(q).getTarget();
                 s.putReg(getDest(q).getRegister(), bb);
                 s.branchTo(getTarget(q).getTarget());
@@ -1353,7 +1353,7 @@ public abstract class Operator {
             public static final RET INSTANCE = new RET();
             private RET() { }
             public String toString() { return "RET"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 BasicBlock bb = (BasicBlock)s.getReg(getTarget(q).getRegister());
                 s.branchTo(bb);
             }
@@ -1390,7 +1390,7 @@ public abstract class Operator {
             public static final TABLESWITCH INSTANCE = new TABLESWITCH();
             private TABLESWITCH() { }
             public String toString() { return "TABLESWITCH"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 int v = getIntOpValue(getSrc(q), s);
                 int lo = getLow(q).getValue();
                 int hi = getTargetTable(q).size() + lo - 1;
@@ -1438,7 +1438,7 @@ public abstract class Operator {
             public static final LOOKUPSWITCH INSTANCE = new LOOKUPSWITCH();
             private LOOKUPSWITCH() { }
             public String toString() { return "LOOKUPSWITCH"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 int v = getIntOpValue(getSrc(q), s);
                 IntValueTableOperand t = getValueTable(q);
                 BasicBlock bb = getDefault(q).getTarget();
@@ -1469,7 +1469,7 @@ public abstract class Operator {
             super.accept(q, qv);
         }
         
-        public void interpret(Quad q, State s) {
+        public void interpret(Quad q, QuadInterpreter s) {
             s.setReturnValue(getWrappedOpValue(getSrc(q), s));
         }
 
@@ -1477,7 +1477,7 @@ public abstract class Operator {
             public static final RETURN_V INSTANCE = new RETURN_V();
             private RETURN_V() { }
             public String toString() { return "RETURN_V"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 s.setReturnValue(null);
             }
         }
@@ -1525,7 +1525,7 @@ public abstract class Operator {
             public UnmodifiableList.jq_Class getThrownExceptions() {
                 return anyexception;
             }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 s.handleException((Throwable)getObjectOpValue(getSrc(q), s));
             }
         }
@@ -1553,7 +1553,7 @@ public abstract class Operator {
             public static final GETSTATIC_I INSTANCE = new GETSTATIC_I();
             private GETSTATIC_I() { }
             public String toString() { return "GETSTATIC_I"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 jq_StaticField f = (jq_StaticField)getField(q).getField();
                 s.putReg_I(getDest(q).getRegister(), Reflection.getstatic_I(f));
             }
@@ -1562,7 +1562,7 @@ public abstract class Operator {
             public static final GETSTATIC_F INSTANCE = new GETSTATIC_F();
             private GETSTATIC_F() { }
             public String toString() { return "GETSTATIC_F"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 jq_StaticField f = (jq_StaticField)getField(q).getField();
                 s.putReg_F(getDest(q).getRegister(), Reflection.getstatic_F(f));
             }
@@ -1571,7 +1571,7 @@ public abstract class Operator {
             public static final GETSTATIC_L INSTANCE = new GETSTATIC_L();
             private GETSTATIC_L() { }
             public String toString() { return "GETSTATIC_L"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 jq_StaticField f = (jq_StaticField)getField(q).getField();
                 s.putReg_L(getDest(q).getRegister(), Reflection.getstatic_L(f));
             }
@@ -1580,7 +1580,7 @@ public abstract class Operator {
             public static final GETSTATIC_D INSTANCE = new GETSTATIC_D();
             private GETSTATIC_D() { }
             public String toString() { return "GETSTATIC_D"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 jq_StaticField f = (jq_StaticField)getField(q).getField();
                 s.putReg_D(getDest(q).getRegister(), Reflection.getstatic_D(f));
             }
@@ -1589,7 +1589,7 @@ public abstract class Operator {
             public static final GETSTATIC_A INSTANCE = new GETSTATIC_A();
             private GETSTATIC_A() { }
             public String toString() { return "GETSTATIC_A"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 jq_StaticField f = (jq_StaticField)getField(q).getField();
                 s.putReg_A(getDest(q).getRegister(), Reflection.getstatic_A(f));
             }
@@ -1598,7 +1598,7 @@ public abstract class Operator {
             public static final GETSTATIC_P INSTANCE = new GETSTATIC_P();
             private GETSTATIC_P() { }
             public String toString() { return "GETSTATIC_P"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 jq_StaticField f = (jq_StaticField)getField(q).getField();
                 s.putReg_P(getDest(q).getRegister(), Reflection.getstatic_P(f));
             }
@@ -1607,7 +1607,7 @@ public abstract class Operator {
             public static final GETSTATIC_Z INSTANCE = new GETSTATIC_Z();
             private GETSTATIC_Z() { }
             public String toString() { return "GETSTATIC_Z"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 jq_StaticField f = (jq_StaticField)getField(q).getField();
                 s.putReg_I(getDest(q).getRegister(), Reflection.getstatic_Z(f)?1:0);
             }
@@ -1616,7 +1616,7 @@ public abstract class Operator {
             public static final GETSTATIC_B INSTANCE = new GETSTATIC_B();
             private GETSTATIC_B() { }
             public String toString() { return "GETSTATIC_B"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 jq_StaticField f = (jq_StaticField)getField(q).getField();
                 s.putReg_I(getDest(q).getRegister(), (int)Reflection.getstatic_B(f));
             }
@@ -1625,7 +1625,7 @@ public abstract class Operator {
             public static final GETSTATIC_C INSTANCE = new GETSTATIC_C();
             private GETSTATIC_C() { }
             public String toString() { return "GETSTATIC_C"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 jq_StaticField f = (jq_StaticField)getField(q).getField();
                 s.putReg_I(getDest(q).getRegister(), (int)Reflection.getstatic_C(f));
             }
@@ -1634,7 +1634,7 @@ public abstract class Operator {
             public static final GETSTATIC_S INSTANCE = new GETSTATIC_S();
             private GETSTATIC_S() { }
             public String toString() { return "GETSTATIC_S"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 jq_StaticField f = (jq_StaticField)getField(q).getField();
                 s.putReg_I(getDest(q).getRegister(), (int)Reflection.getstatic_S(f));
             }
@@ -1793,7 +1793,7 @@ public abstract class Operator {
             public static final PUTSTATIC_I INSTANCE = new PUTSTATIC_I();
             private PUTSTATIC_I() { }
             public String toString() { return "PUTSTATIC_I"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 jq_StaticField f = (jq_StaticField)getField(q).getField();
                 int i = getIntOpValue(getSrc(q), s);
                 Reflection.putstatic_I(f, i);
@@ -1803,7 +1803,7 @@ public abstract class Operator {
             public static final PUTSTATIC_F INSTANCE = new PUTSTATIC_F();
             private PUTSTATIC_F() { }
             public String toString() { return "PUTSTATIC_F"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 jq_StaticField f = (jq_StaticField)getField(q).getField();
                 float i = getFloatOpValue(getSrc(q), s);
                 Reflection.putstatic_F(f, i);
@@ -1813,7 +1813,7 @@ public abstract class Operator {
             public static final PUTSTATIC_L INSTANCE = new PUTSTATIC_L();
             private PUTSTATIC_L() { }
             public String toString() { return "PUTSTATIC_L"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 jq_StaticField f = (jq_StaticField)getField(q).getField();
                 long i = getLongOpValue(getSrc(q), s);
                 Reflection.putstatic_L(f, i);
@@ -1823,7 +1823,7 @@ public abstract class Operator {
             public static final PUTSTATIC_D INSTANCE = new PUTSTATIC_D();
             private PUTSTATIC_D() { }
             public String toString() { return "PUTSTATIC_D"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 jq_StaticField f = (jq_StaticField)getField(q).getField();
                 double i = getDoubleOpValue(getSrc(q), s);
                 Reflection.putstatic_D(f, i);
@@ -1833,7 +1833,7 @@ public abstract class Operator {
             public static final PUTSTATIC_A INSTANCE = new PUTSTATIC_A();
             private PUTSTATIC_A() { }
             public String toString() { return "PUTSTATIC_A"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 jq_StaticField f = (jq_StaticField)getField(q).getField();
                 Object i = getObjectOpValue(getSrc(q), s);
                 Reflection.putstatic_A(f, i);
@@ -1843,7 +1843,7 @@ public abstract class Operator {
             public static final PUTSTATIC_P INSTANCE = new PUTSTATIC_P();
             private PUTSTATIC_P() { }
             public String toString() { return "PUTSTATIC_P"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 jq_StaticField f = (jq_StaticField)getField(q).getField();
                 Address i = getAddressOpValue(getSrc(q), s);
                 Reflection.putstatic_P(f, i);
@@ -1853,7 +1853,7 @@ public abstract class Operator {
             public static final PUTSTATIC_Z INSTANCE = new PUTSTATIC_Z();
             private PUTSTATIC_Z() { }
             public String toString() { return "PUTSTATIC_Z"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 jq_StaticField f = (jq_StaticField)getField(q).getField();
                 int i = getIntOpValue(getSrc(q), s);
                 Reflection.putstatic_Z(f, i!=0);
@@ -1863,7 +1863,7 @@ public abstract class Operator {
             public static final PUTSTATIC_B INSTANCE = new PUTSTATIC_B();
             private PUTSTATIC_B() { }
             public String toString() { return "PUTSTATIC_B"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 jq_StaticField f = (jq_StaticField)getField(q).getField();
                 int i = getIntOpValue(getSrc(q), s);
                 Reflection.putstatic_B(f, (byte)i);
@@ -1873,7 +1873,7 @@ public abstract class Operator {
             public static final PUTSTATIC_S INSTANCE = new PUTSTATIC_S();
             private PUTSTATIC_S() { }
             public String toString() { return "PUTSTATIC_S"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 jq_StaticField f = (jq_StaticField)getField(q).getField();
                 int i = getIntOpValue(getSrc(q), s);
                 Reflection.putstatic_S(f, (short)i);
@@ -1883,7 +1883,7 @@ public abstract class Operator {
             public static final PUTSTATIC_C INSTANCE = new PUTSTATIC_C();
             private PUTSTATIC_C() { }
             public String toString() { return "PUTSTATIC_C"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 jq_StaticField f = (jq_StaticField)getField(q).getField();
                 int i = getIntOpValue(getSrc(q), s);
                 Reflection.putstatic_C(f, (char)i);
@@ -2038,7 +2038,7 @@ public abstract class Operator {
             public static final GETFIELD_I INSTANCE = new GETFIELD_I();
             private GETFIELD_I() { }
             public String toString() { return "GETFIELD_I"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 Object o = getObjectOpValue(getBase(q), s);
                 jq_InstanceField f = (jq_InstanceField)getField(q).getField();
                 s.putReg_I(getDest(q).getRegister(), Reflection.getfield_I(o, f));
@@ -2048,7 +2048,7 @@ public abstract class Operator {
             public static final GETFIELD_F INSTANCE = new GETFIELD_F();
             private GETFIELD_F() { }
             public String toString() { return "GETFIELD_F"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 Object o = getObjectOpValue(getBase(q), s);
                 jq_InstanceField f = (jq_InstanceField)getField(q).getField();
                 s.putReg_F(getDest(q).getRegister(), Reflection.getfield_F(o, f));
@@ -2058,7 +2058,7 @@ public abstract class Operator {
             public static final GETFIELD_L INSTANCE = new GETFIELD_L();
             private GETFIELD_L() { }
             public String toString() { return "GETFIELD_L"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 Object o = getObjectOpValue(getBase(q), s);
                 jq_InstanceField f = (jq_InstanceField)getField(q).getField();
                 s.putReg_L(getDest(q).getRegister(), Reflection.getfield_L(o, f));
@@ -2068,7 +2068,7 @@ public abstract class Operator {
             public static final GETFIELD_D INSTANCE = new GETFIELD_D();
             private GETFIELD_D() { }
             public String toString() { return "GETFIELD_D"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 Object o = getObjectOpValue(getBase(q), s);
                 jq_InstanceField f = (jq_InstanceField)getField(q).getField();
                 s.putReg_D(getDest(q).getRegister(), Reflection.getfield_D(o, f));
@@ -2078,7 +2078,7 @@ public abstract class Operator {
             public static final GETFIELD_A INSTANCE = new GETFIELD_A();
             private GETFIELD_A() { }
             public String toString() { return "GETFIELD_A"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 Object o = getObjectOpValue(getBase(q), s);
                 jq_InstanceField f = (jq_InstanceField)getField(q).getField();
                 s.putReg_A(getDest(q).getRegister(), Reflection.getfield_A(o, f));
@@ -2088,7 +2088,7 @@ public abstract class Operator {
             public static final GETFIELD_P INSTANCE = new GETFIELD_P();
             private GETFIELD_P() { }
             public String toString() { return "GETFIELD_P"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 Object o = getObjectOpValue(getBase(q), s);
                 jq_InstanceField f = (jq_InstanceField)getField(q).getField();
                 s.putReg_P(getDest(q).getRegister(), Reflection.getfield_P(o, f));
@@ -2098,7 +2098,7 @@ public abstract class Operator {
             public static final GETFIELD_B INSTANCE = new GETFIELD_B();
             private GETFIELD_B() { }
             public String toString() { return "GETFIELD_B"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 Object o = getObjectOpValue(getBase(q), s);
                 jq_InstanceField f = (jq_InstanceField)getField(q).getField();
                 s.putReg_I(getDest(q).getRegister(), (int)Reflection.getfield_B(o, f));
@@ -2108,7 +2108,7 @@ public abstract class Operator {
             public static final GETFIELD_C INSTANCE = new GETFIELD_C();
             private GETFIELD_C() { }
             public String toString() { return "GETFIELD_C"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 Object o = getObjectOpValue(getBase(q), s);
                 jq_InstanceField f = (jq_InstanceField)getField(q).getField();
                 s.putReg_I(getDest(q).getRegister(), (int)Reflection.getfield_C(o, f));
@@ -2118,7 +2118,7 @@ public abstract class Operator {
             public static final GETFIELD_S INSTANCE = new GETFIELD_S();
             private GETFIELD_S() { }
             public String toString() { return "GETFIELD_S"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 Object o = getObjectOpValue(getBase(q), s);
                 jq_InstanceField f = (jq_InstanceField)getField(q).getField();
                 s.putReg_I(getDest(q).getRegister(), (int)Reflection.getfield_S(o, f));
@@ -2128,7 +2128,7 @@ public abstract class Operator {
             public static final GETFIELD_Z INSTANCE = new GETFIELD_Z();
             private GETFIELD_Z() { }
             public String toString() { return "GETFIELD_Z"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 Object o = getObjectOpValue(getBase(q), s);
                 jq_InstanceField f = (jq_InstanceField)getField(q).getField();
                 s.putReg_I(getDest(q).getRegister(), Reflection.getfield_Z(o, f)?1:0);
@@ -2292,7 +2292,7 @@ public abstract class Operator {
             public static final PUTFIELD_I INSTANCE = new PUTFIELD_I();
             private PUTFIELD_I() { }
             public String toString() { return "PUTFIELD_I"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 Object o = getObjectOpValue(getBase(q), s);
                 jq_InstanceField f = (jq_InstanceField)getField(q).getField();
                 Reflection.putfield_I(o, f, getIntOpValue(getSrc(q), s));
@@ -2302,7 +2302,7 @@ public abstract class Operator {
             public static final PUTFIELD_F INSTANCE = new PUTFIELD_F();
             private PUTFIELD_F() { }
             public String toString() { return "PUTFIELD_F"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 Object o = getObjectOpValue(getBase(q), s);
                 jq_InstanceField f = (jq_InstanceField)getField(q).getField();
                 Reflection.putfield_F(o, f, getFloatOpValue(getSrc(q), s));
@@ -2312,7 +2312,7 @@ public abstract class Operator {
             public static final PUTFIELD_L INSTANCE = new PUTFIELD_L();
             private PUTFIELD_L() { }
             public String toString() { return "PUTFIELD_L"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 Object o = getObjectOpValue(getBase(q), s);
                 jq_InstanceField f = (jq_InstanceField)getField(q).getField();
                 Reflection.putfield_L(o, f, getLongOpValue(getSrc(q), s));
@@ -2322,7 +2322,7 @@ public abstract class Operator {
             public static final PUTFIELD_D INSTANCE = new PUTFIELD_D();
             private PUTFIELD_D() { }
             public String toString() { return "PUTFIELD_D"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 Object o = getObjectOpValue(getBase(q), s);
                 jq_InstanceField f = (jq_InstanceField)getField(q).getField();
                 Reflection.putfield_D(o, f, getDoubleOpValue(getSrc(q), s));
@@ -2332,7 +2332,7 @@ public abstract class Operator {
             public static final PUTFIELD_A INSTANCE = new PUTFIELD_A();
             private PUTFIELD_A() { }
             public String toString() { return "PUTFIELD_A"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 Object o = getObjectOpValue(getBase(q), s);
                 jq_InstanceField f = (jq_InstanceField)getField(q).getField();
                 Reflection.putfield_A(o, f, getObjectOpValue(getSrc(q), s));
@@ -2342,7 +2342,7 @@ public abstract class Operator {
             public static final PUTFIELD_P INSTANCE = new PUTFIELD_P();
             private PUTFIELD_P() { }
             public String toString() { return "PUTFIELD_P"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 Object o = getObjectOpValue(getBase(q), s);
                 jq_InstanceField f = (jq_InstanceField)getField(q).getField();
                 Reflection.putfield_P(o, f, getAddressOpValue(getSrc(q), s));
@@ -2352,7 +2352,7 @@ public abstract class Operator {
             public static final PUTFIELD_B INSTANCE = new PUTFIELD_B();
             private PUTFIELD_B() { }
             public String toString() { return "PUTFIELD_B"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 Object o = getObjectOpValue(getBase(q), s);
                 jq_InstanceField f = (jq_InstanceField)getField(q).getField();
                 Reflection.putfield_B(o, f, (byte)getIntOpValue(getSrc(q), s));
@@ -2362,7 +2362,7 @@ public abstract class Operator {
             public static final PUTFIELD_C INSTANCE = new PUTFIELD_C();
             private PUTFIELD_C() { }
             public String toString() { return "PUTFIELD_C"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 Object o = getObjectOpValue(getBase(q), s);
                 jq_InstanceField f = (jq_InstanceField)getField(q).getField();
                 Reflection.putfield_C(o, f, (char)getIntOpValue(getSrc(q), s));
@@ -2372,7 +2372,7 @@ public abstract class Operator {
             public static final PUTFIELD_S INSTANCE = new PUTFIELD_S();
             private PUTFIELD_S() { }
             public String toString() { return "PUTFIELD_S"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 Object o = getObjectOpValue(getBase(q), s);
                 jq_InstanceField f = (jq_InstanceField)getField(q).getField();
                 Reflection.putfield_S(o, f, (short)getIntOpValue(getSrc(q), s));
@@ -2382,7 +2382,7 @@ public abstract class Operator {
             public static final PUTFIELD_Z INSTANCE = new PUTFIELD_Z();
             private PUTFIELD_Z() { }
             public String toString() { return "PUTFIELD_Z"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 Object o = getObjectOpValue(getBase(q), s);
                 jq_InstanceField f = (jq_InstanceField)getField(q).getField();
                 Reflection.putfield_Z(o, f, getIntOpValue(getSrc(q), s)!=0);
@@ -2536,7 +2536,7 @@ public abstract class Operator {
             public static final NULL_CHECK INSTANCE = new NULL_CHECK();
             private NULL_CHECK() { }
             public String toString() { return "NULL_CHECK"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 if (getObjectOpValue(getSrc(q), s) == null) {
                     s.handleException(new NullPointerException(s.currentLocation()));
                 }
@@ -2570,7 +2570,7 @@ public abstract class Operator {
             public static final ZERO_CHECK_I INSTANCE = new ZERO_CHECK_I();
             private ZERO_CHECK_I() { }
             public String toString() { return "ZERO_CHECK_I"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 if (getIntOpValue(getSrc(q), s) == 0) {
                     s.handleException(new ArithmeticException(s.currentLocation()));
                 }
@@ -2581,7 +2581,7 @@ public abstract class Operator {
             public static final ZERO_CHECK_L INSTANCE = new ZERO_CHECK_L();
             private ZERO_CHECK_L() { }
             public String toString() { return "ZERO_CHECK_L"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 if (getLongOpValue(getSrc(q), s) == 0L) {
                     s.handleException(new ArithmeticException(s.currentLocation()));
                 }
@@ -2617,7 +2617,7 @@ public abstract class Operator {
             public static final BOUNDS_CHECK INSTANCE = new BOUNDS_CHECK();
             private BOUNDS_CHECK() { }
             public String toString() { return "BOUNDS_CHECK"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 int i = getIntOpValue(getIndex(q), s);
                 Object o = getObjectOpValue(getRef(q), s);
                 int length = Reflection.arraylength(o);
@@ -2657,7 +2657,7 @@ public abstract class Operator {
             public static final ASTORE_CHECK INSTANCE = new ASTORE_CHECK();
             private ASTORE_CHECK() { }
             public String toString() { return "ASTORE_CHECK"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 Object[] o = (Object[])getObjectOpValue(getRef(q), s);
                 Object e = getObjectOpValue(getElement(q), s);
                 if (e == null) return;
@@ -2704,7 +2704,7 @@ public abstract class Operator {
         }
         public boolean hasSideEffects() { return true; }
         
-        public void interpret_virtual(Quad q, State s) {
+        public void interpret_virtual(Quad q, QuadInterpreter s) {
             ParamListOperand plo = getParamList(q);
             jq_Method f = getMethod(q).getMethod();
             jq_Reference t = Reflection.getTypeOf(s.getReg_A(plo.get(0).getRegister()));
@@ -2714,7 +2714,7 @@ public abstract class Operator {
                 s.handleException(new AbstractMethodError(s.currentLocation()));
                 return;
             }
-            State result = s.invokeMethod(f, plo);
+            QuadInterpreter result = s.invokeMethod(f, plo);
             if (result.getThrown() != null)
                 s.handleException(result.getThrown());
             else if (getDest(q) != null) {
@@ -2725,10 +2725,10 @@ public abstract class Operator {
             }
         }
 
-        public void interpret_static(Quad q, State s) {
+        public void interpret_static(Quad q, QuadInterpreter s) {
             ParamListOperand plo = getParamList(q);
             jq_Method f = getMethod(q).getMethod();
-            State result = s.invokeMethod(f, plo);
+            QuadInterpreter result = s.invokeMethod(f, plo);
             if (result.getThrown() != null)
                 s.handleException(result.getThrown());
             else if (getDest(q) != null) {
@@ -2741,15 +2741,15 @@ public abstract class Operator {
 
         public static abstract class InvokeVirtual extends Invoke {
             public boolean isVirtual() { return true; }
-            public void interpret(Quad q, State s) { interpret_virtual(q, s); }
+            public void interpret(Quad q, QuadInterpreter s) { interpret_virtual(q, s); }
         }
         public static abstract class InvokeStatic extends Invoke {
             public boolean isVirtual() { return false; }
-            public void interpret(Quad q, State s) { interpret_static(q, s); }
+            public void interpret(Quad q, QuadInterpreter s) { interpret_static(q, s); }
         }
         public static abstract class InvokeInterface extends Invoke {
             public boolean isVirtual() { return true; }
-            public void interpret(Quad q, State s) { interpret_virtual(q, s); }
+            public void interpret(Quad q, QuadInterpreter s) { interpret_virtual(q, s); }
         }
         public static class INVOKEVIRTUAL_V extends InvokeVirtual {
             public static final INVOKEVIRTUAL_V INSTANCE = new INVOKEVIRTUAL_V();
@@ -3002,7 +3002,7 @@ public abstract class Operator {
             public static final NEW INSTANCE = new NEW();
             private NEW() { }
             public String toString() { return "NEW"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 s.putReg_A(getDest(q).getRegister(), new UninitializedReference((jq_Class)getType(q).getType()));
             }
         }
@@ -3041,7 +3041,7 @@ public abstract class Operator {
             public static final NEWARRAY INSTANCE = new NEWARRAY();
             private NEWARRAY() { }
             public String toString() { return "NEWARRAY"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 jq_Type t = getType(q).getType();
                 int v = getIntOpValue(getSize(q), s);
                 Object o = java.lang.reflect.Array.newInstance(Reflection.getJDKType(((jq_Array)t).getElementType()), v);
@@ -3079,7 +3079,7 @@ public abstract class Operator {
             public static final CHECKCAST INSTANCE = new CHECKCAST();
             private CHECKCAST() { }
             public String toString() { return "CHECKCAST"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 jq_Type t = getType(q).getType();
                 jq.Assert(!t.isAddressType());
                 Object o = getObjectOpValue(getSrc(q), s);
@@ -3124,7 +3124,7 @@ public abstract class Operator {
             public static final INSTANCEOF INSTANCE = new INSTANCEOF();
             private INSTANCEOF() { }
             public String toString() { return "INSTANCEOF"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 jq_Type t = getType(q).getType();
                 jq.Assert(!t.isAddressType());
                 Object o = getObjectOpValue(getSrc(q), s);
@@ -3158,7 +3158,7 @@ public abstract class Operator {
             public static final ARRAYLENGTH INSTANCE = new ARRAYLENGTH();
             private ARRAYLENGTH() { }
             public String toString() { return "ARRAYLENGTH"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 Object o = getObjectOpValue(getSrc(q), s);
                 int v = Reflection.arraylength(o);
                 s.putReg_I(getDest(q).getRegister(), v);
@@ -3185,7 +3185,7 @@ public abstract class Operator {
             public static final MONITORENTER INSTANCE = new MONITORENTER();
             private MONITORENTER() { }
             public String toString() { return "MONITORENTER"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 Object o = getObjectOpValue(getSrc(q), s);
                 if (!jq.Bootstrapping)
                     Run_Time.Monitor.monitorenter(o);
@@ -3198,7 +3198,7 @@ public abstract class Operator {
             public static final MONITOREXIT INSTANCE = new MONITOREXIT();
             private MONITOREXIT() { }
             public String toString() { return "MONITOREXIT"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 Object o = getObjectOpValue(getSrc(q), s);
                 if (!jq.Bootstrapping)
                     Run_Time.Monitor.monitorexit(o);
@@ -3231,7 +3231,7 @@ public abstract class Operator {
             public static final PEEK_P INSTANCE = new PEEK_P();
             private PEEK_P() { }
             public String toString() { return "PEEK_P"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 Address o = getAddressOpValue(getAddress(q), s);
                 if (!jq.Bootstrapping)
                     s.putReg_P(getDest(q).getRegister(), o.peek());
@@ -3241,7 +3241,7 @@ public abstract class Operator {
             public static final PEEK_1 INSTANCE = new PEEK_1();
             private PEEK_1() { }
             public String toString() { return "PEEK_1"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 Address o = getAddressOpValue(getAddress(q), s);
                 if (!jq.Bootstrapping)
                     s.putReg_I(getDest(q).getRegister(), o.peek1());
@@ -3251,7 +3251,7 @@ public abstract class Operator {
             public static final PEEK_2 INSTANCE = new PEEK_2();
             private PEEK_2() { }
             public String toString() { return "PEEK_2"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 Address o = getAddressOpValue(getAddress(q), s);
                 if (!jq.Bootstrapping)
                     s.putReg_I(getDest(q).getRegister(), o.peek2());
@@ -3261,7 +3261,7 @@ public abstract class Operator {
             public static final PEEK_4 INSTANCE = new PEEK_4();
             private PEEK_4() { }
             public String toString() { return "PEEK_4"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 Address o = getAddressOpValue(getAddress(q), s);
                 if (!jq.Bootstrapping)
                     s.putReg_I(getDest(q).getRegister(), o.peek4());
@@ -3271,7 +3271,7 @@ public abstract class Operator {
             public static final PEEK_8 INSTANCE = new PEEK_8();
             private PEEK_8() { }
             public String toString() { return "PEEK_8"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 Address o = getAddressOpValue(getAddress(q), s);
                 if (!jq.Bootstrapping)
                     s.putReg_L(getDest(q).getRegister(), o.peek8());
@@ -3300,7 +3300,7 @@ public abstract class Operator {
             public static final POKE_P INSTANCE = new POKE_P();
             private POKE_P() { }
             public String toString() { return "POKE_P"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 Address o = getAddressOpValue(getAddress(q), s);
                 Address v = getAddressOpValue(getValue(q), s);
                 if (!jq.Bootstrapping)
@@ -3311,7 +3311,7 @@ public abstract class Operator {
             public static final POKE_1 INSTANCE = new POKE_1();
             private POKE_1() { }
             public String toString() { return "POKE_1"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 Address o = getAddressOpValue(getAddress(q), s);
                 byte v = (byte)getIntOpValue(getValue(q), s);
                 if (!jq.Bootstrapping)
@@ -3322,7 +3322,7 @@ public abstract class Operator {
             public static final POKE_2 INSTANCE = new POKE_2();
             private POKE_2() { }
             public String toString() { return "POKE_2"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 Address o = getAddressOpValue(getAddress(q), s);
                 short v = (short)getIntOpValue(getValue(q), s);
                 if (!jq.Bootstrapping)
@@ -3333,7 +3333,7 @@ public abstract class Operator {
             public static final POKE_4 INSTANCE = new POKE_4();
             private POKE_4() { }
             public String toString() { return "POKE_4"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 Address o = getAddressOpValue(getAddress(q), s);
                 int v = (int)getIntOpValue(getValue(q), s);
                 if (!jq.Bootstrapping)
@@ -3344,7 +3344,7 @@ public abstract class Operator {
             public static final POKE_8 INSTANCE = new POKE_8();
             private POKE_8() { }
             public String toString() { return "POKE_8"; }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 Address o = getAddressOpValue(getAddress(q), s);
                 long v = (long)getLongOpValue(getValue(q), s);
                 if (!jq.Bootstrapping)
@@ -3396,7 +3396,7 @@ public abstract class Operator {
             private GET_EXCEPTION() { }
             public String toString() { return "GET_EXCEPTION"; }
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 s.putReg_A(((RegisterOperand)getOp1(q)).getRegister(), s.getCaught());
             }
         }
@@ -3405,7 +3405,7 @@ public abstract class Operator {
             private GET_THREAD_BLOCK() { }
             public String toString() { return "GET_THREAD_BLOCK"; }
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 if (!jq.Bootstrapping)
                     s.putReg_A(((RegisterOperand)getOp1(q)).getRegister(), Unsafe.getThreadBlock());
             }
@@ -3415,7 +3415,7 @@ public abstract class Operator {
             private SET_THREAD_BLOCK() { }
             public String toString() { return "SET_THREAD_BLOCK"; }
             public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg2(q); }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 Scheduler.jq_Thread o = (Scheduler.jq_Thread)getObjectOpValue(getOp2(q), s);
                 if (!jq.Bootstrapping)
                     Unsafe.setThreadBlock(o);
@@ -3427,7 +3427,7 @@ public abstract class Operator {
             public String toString() { return "ALLOCA"; }
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
             public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg2(q); }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 // TODO: skip for now.
             }
         }
@@ -3436,7 +3436,7 @@ public abstract class Operator {
             private LONG_JUMP() { }
             public String toString() { return "LONG_JUMP"; }
             public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg1234(q); }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 /*
                 int a = getIntOpValue(getOp1(q), s);
                 int b = getIntOpValue(getOp2(q), s);
@@ -3453,7 +3453,7 @@ public abstract class Operator {
             private DIE() { }
             public String toString() { return "DIE"; }
             public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg1_check(q); }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 int a = getIntOpValue(getOp1(q), s);
                 Run_Time.SystemInterface.die(a);
                 jq.UNREACHABLE();
@@ -3465,7 +3465,7 @@ public abstract class Operator {
             public String toString() { return "GET_TYPE_OF"; }
             public UnmodifiableList.RegisterOperand getDefinedRegisters(Quad q) { return getReg1(q); }
             public UnmodifiableList.RegisterOperand getUsedRegisters(Quad q) { return getReg2(q); }
-            public void interpret(Quad q, State s) {
+            public void interpret(Quad q, QuadInterpreter s) {
                 Object o = getObjectOpValue(getOp2(q), s);
                 s.putReg_A(((RegisterOperand)getOp1(q)).getRegister(), Reflection.getTypeOf(o));
             }

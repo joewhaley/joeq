@@ -10,7 +10,7 @@ package Compil3r.Quad;
 import Clazz.jq_Class;
 import Compil3r.Quad.Operand.RegisterOperand;
 import Compil3r.Quad.Operator.Return;
-import Interpreter.QuadInterpreter.State;
+import Interpreter.QuadInterpreter;
 import Main.jq;
 import Util.Templates.List;
 import Util.Templates.UnmodifiableList;
@@ -93,7 +93,7 @@ public class Quad {
     public List.RegisterOperand getUsedRegisters() { return this.operator.getUsedRegisters(this); }
     
     /** Interprets this quad, modifying the given interpreter state. */
-    public void interpret(State s) { this.operator.interpret(this, s); }
+    public void interpret(QuadInterpreter s) { this.operator.interpret(this, s); }
 
     /** Returns a string representation of this quad. */
     public String toString() {

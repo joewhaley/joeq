@@ -43,7 +43,7 @@ public abstract class Driver {
         jq.initializeForHostJVMExecution();
 
         try {
-            interpreterClass = Class.forName("Interpreter.QuadInterpreter$State", false, Driver.class.getClassLoader());
+            interpreterClass = Class.forName("Interpreter.QuadInterpreter", false, Driver.class.getClassLoader());
         } catch (ClassNotFoundException x) {
             System.err.println("Warning: interpreter class not found.");
         }
@@ -146,11 +146,11 @@ public abstract class Driver {
                 String interpreterClassName = commandBuffer[++index];
                 try {
                     Class cl = Class.forName(interpreterClassName);
-                    if (Class.forName("Interpreter.QuadInterpreter$State").isAssignableFrom(cl)) {
+                    if (Class.forName("Interpreter.QuadInterpreter").isAssignableFrom(cl)) {
                         interpreterClass = cl;
                         System.out.println("Interpreter class changed to " + interpreterClass);
                     } else {
-                        System.err.println("Class " + interpreterClassName + " does not subclass Interpreter.QuadInterpreter.State.");
+                        System.err.println("Class " + interpreterClassName + " does not subclass Interpreter.QuadInterpreter.");
                     }
                 } catch (java.lang.ClassNotFoundException x) {
                     System.err.println("Cannot find interpreter named " + interpreterClassName + ".");
@@ -182,10 +182,10 @@ public abstract class Driver {
                     if (m != null) {
                         Object[] args = new Object[m.getParamTypes().length];
                         index = parseMethodArgs(args, m.getParamTypes(), commandBuffer, index);
-                        Interpreter.QuadInterpreter.State s = null;
+                        Interpreter.QuadInterpreter s = null;
                         java.lang.reflect.Method im = interpreterClass.getMethod("interpretMethod", new Class[]{Class.forName("Clazz.jq_Method"), new Object[0].getClass()});
-                        s = (Interpreter.QuadInterpreter.State) im.invoke(null, new Object[]{m, args});
-                        //s = Interpreter.QuadInterpreter.State.interpretMethod(m, args);
+                        s = (Interpreter.QuadInterpreter) im.invoke(null, new Object[]{m, args});
+                        //s = Interpreter.QuadInterpreter.interpretMethod(m, args);
                         System.out.flush();
                         System.out.println("Result of interpretation: " + s);
                     } else {
