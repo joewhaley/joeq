@@ -23,30 +23,36 @@ public class BogusSummaryProvider {
     private static jq_Class realStringBuffer;
     private static jq_Class realHashMap;
     private static jq_Class realVector;
+    private static jq_Class realHashtable;
+    
     private static jq_Class fakeString;
     private static jq_Class fakeStringBuffer;
     private static jq_Class fakeHashMap;
     private static jq_Class fakeVector;
+    private static jq_Class fakeHashtable;
     
     public BogusSummaryProvider() {
         realString       = getClassByName("java.lang.String");
         realStringBuffer = getClassByName("java.lang.StringBuffer");
         realHashMap      = getClassByName("java.util.HashMap");
         realVector       = getClassByName("java.util.Vector");
+        realVector       = getClassByName("java.util.Hashtable");
         Assert._assert(realString != null && realStringBuffer != null && realHashMap != null);
-        realString.prepare(); realStringBuffer.prepare(); realHashMap.prepare(); realVector.prepare();
+        realString.prepare(); realStringBuffer.prepare(); realHashMap.prepare(); realVector.prepare(); realHashtable.prepare();
         
         fakeString       = getClassByName("MyMockLib.MyString");
         fakeStringBuffer = getClassByName("MyMockLib.MyStringBuffer");        
         fakeHashMap      = getClassByName("MyMockLib.MyHashMap");
         fakeVector       = getClassByName("MyMockLib.MyVector");
+        fakeVector       = getClassByName("MyMockLib.MyHashtable");
         Assert._assert(fakeString != null && fakeStringBuffer != null && fakeHashMap != null);        
-        fakeString.prepare(); fakeStringBuffer.prepare(); fakeHashMap.prepare(); fakeVector.prepare();
+        fakeString.prepare(); fakeStringBuffer.prepare(); fakeHashMap.prepare(); fakeVector.prepare(); fakeHashtable.prepare();
         
         classMap.put(realString, fakeString);
         classMap.put(realStringBuffer, fakeStringBuffer);
         classMap.put(realHashMap, fakeHashMap);
         classMap.put(realVector, fakeVector);
+        classMap.put(realHashtable, fakeHashtable);
     }
 
     /**
@@ -94,8 +100,8 @@ public class BogusSummaryProvider {
             
             boolean allMatch = true;
             int base = 0;
-            if(clazz == fakeHashMap || clazz == fakeVector){
-                base = 1;                
+            if(clazz != fakeString && clazz != fakeStringBuffer){
+                base = 1;
             }
             if(originalMethod instanceof jq_Initializer){                
                 base = 1;
