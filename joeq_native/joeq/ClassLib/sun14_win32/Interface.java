@@ -115,6 +115,10 @@ public final class Interface extends ClassLib.ClassLibInterface {
         ClassLib.sun14_win32.java.util.zip.ZipFile.__init__(o, name);
     }
     
+    public void init_inflater(java.util.zip.Inflater o, boolean nowrap) {
+        ClassLib.sun14_win32.java.util.zip.Inflater.__init__(o, nowrap);
+    }
+    
     public void initializeSystemClass() throws java.lang.Throwable {
         Reflection.invokestatic_V(ClassLib.sun14_win32.java.lang.System._initializeSystemClass);
     }
