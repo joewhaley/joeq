@@ -4,6 +4,7 @@
 package joeq.Compiler.Analysis.IPA;
 
 import java.io.PrintStream;
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -378,7 +379,7 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
             I_bdd.free();
         }
        
-        if(pa.USE_REFLECTION_PROVIDER){
+        if(pa.RESOLVE_REFLECTION){
             for (Iterator i = ms.getCalls().iterator(); i.hasNext(); ) {
                 ProgramLocation mc = (ProgramLocation) i.next();
                 if (TRACE) out.println("Visiting call site "+mc);
@@ -396,9 +397,9 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
                         System.out.println("Processing a call to forName: " + mc.getEmacsName());
                     }
                     int H_i = pa.Hmap.get(h);
-                    pa.addToVP(ms.getRVN(mc), H_i);
+                    pa.addToVP(ms.getRVN(mc), H_i);                    
                     
-                    //continue;
+                    //continue;  
                 }
             }
         }
@@ -459,7 +460,8 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
     }
     
     public void visitNode(Node node) {
-        if (TRACE) out.println("Visiting node "+node);
+        if (TRACE) 
+            out.println("Visiting node "+node);
        
         if (pa.FILTER_NULL && pa.isNullConstant(node))
             return;

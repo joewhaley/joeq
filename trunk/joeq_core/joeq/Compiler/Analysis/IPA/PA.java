@@ -157,11 +157,13 @@ public class PA {
     boolean USE_BOGUS_SUMMARIES = !System.getProperty("pa.usebogussummaries", "no").equals("no");
     boolean USE_REFLECTION_PROVIDER = !System.getProperty("pa.usereflectionprovider", "no").equals("no");
     boolean RESOLVE_REFLECTION = !System.getProperty("pa.resolvereflection", "no").equals("no");
+    boolean RESOLVE_FORNAME = !System.getProperty("pa.resolveforname", "no").equals("no");
     boolean TRACE_BOGUS = !System.getProperty("pa.tracebogus", "no").equals("no");
     boolean FIX_NO_DEST = !System.getProperty("pa.fixnodest", "no").equals("no");
     boolean TRACE_NO_DEST = !System.getProperty("pa.tracenodest", "no").equals("no");
     boolean REFLECTION_STAT = !System.getProperty("pa.reflectionstat", "no").equals("no");
     public static boolean TRACE_REFLECTION = !System.getProperty("pa.tracereflection", "no").equals("no");
+    boolean TRACE_FORNAME = !System.getProperty("pa.traceforname", "no").equals("no");
     int MAX_PARAMS = Integer.parseInt(System.getProperty("pa.maxparams", "4"));
     
     int bddnodes = Integer.parseInt(System.getProperty("bddnodes", "2500000"));
@@ -232,8 +234,8 @@ public class PA {
     BDD IEfilter; // V2cxIxV1cxM, context-sensitive edge filter
     
     BDD visited; // M, visited methods
-    BDD forNameMap; // IXH1, heap allocation sites for forClass.Name
     // maps to SSA form
+    BDD forNameMap; // IXH1, heap allocation sites for forClass.Name
     BuildBDDIR bddIRBuilder;
     BDD vReg; // Vxreg
     BDD iQuad; // Ixquad
@@ -749,7 +751,8 @@ public class PA {
         BDD bdd1 = H1.ithVar(H_i);
         bdd1.andWith(V_bdd.id());
         if (V1H1context != null) bdd1.andWith(V1H1context.id());
-        if (TRACE_RELATIONS) out.println("Adding to vP: "+bdd1.toStringWithDomains(TS));
+        if (TRACE_RELATIONS) 
+            out.println("Adding to vP: "+bdd1.toStringWithDomains(TS));
         vP.orWith(bdd1);
     }
     
@@ -2118,7 +2121,7 @@ public class PA {
                 new jq_NameAndDesc(
                     Utf8.get("<init>"), 
                     Utf8.get("()V")));
-            Assert._assert(constructor != null);
+            Assert._assert(constructor != null, "No default constructor in class " + c);
             if(constructor == null){
                 if(noConstrClasses.get(c) == null){
                     if(TRACE_REFLECTION) System.err.println("No constructor in class " + c);
@@ -2189,7 +2192,122 @@ public class PA {
         }
     }
     
+    boolean bindForName(){
+        jq_Method forNameMethod = class_class.getDeclaredMethod("forName");
+        Assert._assert(forNameMethod != null);
+        int M_i = Mmap.get(forNameMethod);
+        BDD M_bdd = M.ithVar(M_i);
+        BDD I = IE.relprod(M_bdd, Mset);
+        boolean change = false;
+        for(Iterator iter = I.iterator(Iset); iter.hasNext();){
+            BDD I_bdd = (BDD) iter.next();
+                        
+            BDD t = actual.relprod(I_bdd, Iset);
+//            System.out.println("t: " + t.toStringWithDomains(TS));            
+            BDD t1 = t.restrictWith(Z.ithVar(1)).replace(V2toV1);
+            t.free();
+//            System.out.println("t1: " + t1.toStringWithDomains(TS));
+            BDD t2 = vP.relprod(t1, V1set);
+            t1.free();
+            
+            if(!t2.isZero()){
+//                System.out.println("t2: " + t2.toStringWithDomains(TS));
+                for(Iterator iter2 = t2.iterator(H1set); iter2.hasNext();){
+                    int h_i = ((BDD) iter2.next()).scanVar(H1).intValue();
+                    Node n = (Node) Hmap.get(h_i);
+                    if(n instanceof MethodSummary.ConcreteTypeNode){
+                        ConcreteTypeNode cn = (ConcreteTypeNode) n;
+                        String stringConst = (String) MethodSummary.stringNodes2Values.get(n);
+                        if(stringConst != null){
+                            //System.out.println(I_bdd.toStringWithDomains(TS) + " -> " + stringConst);
+                            if(stringConst == null){
+                                if(missingConst.get(stringConst) == null){
+                                    if(TRACE_REFLECTION) System.err.println("No constant string for " + n + " at " + n);                                    
+                                    missingConst.put(stringConst, new Integer(0));
+                                }                
+                                continue;
+                            }
+                            
+                            jq_Class c = null;
+                            try {
+                                if(!isWellFormed(stringConst)) {
+                                    if(wellFormedClasses.get(stringConst) == null){
+                                        if(TRACE_REFLECTION) out.println(stringConst + " is not well-formed.");
+                                            wellFormedClasses.put(stringConst, new Integer(0));
+                                        }                
+
+                                    continue;
+                                }
+                                jq_Type clazz = jq_Type.parseType(stringConst);
+                                if( clazz instanceof jq_Class && clazz != null){
+                                    c = (jq_Class) clazz;
+                            
+//                                    if(TRACE_REFLECTION) out.println("Calling class by name: " + stringConst);
+                                    c.load();
+                                    c.prepare();
+                                    Assert._assert(c != null);
+                                }else{
+                                    if(cantCastTypes.get(clazz) == null){
+                                        if(TRACE_REFLECTION) System.err.println("Can't cast " + clazz + " to jq_Class at " + I_bdd.toStringWithDomains(TS) + " -- stringConst: " + stringConst);
+                                        cantCastTypes.put(clazz, new Integer(0));
+                                    }
+                                    continue;
+                                }
+                            } catch(NoClassDefFoundError e) {
+                                if(missingClasses.get(stringConst) == null){
+                                    if(TRACE_REFLECTION) System.err.println("Resolving reflection: unable to load " + stringConst + 
+                                        " at " + I_bdd.toStringWithDomains(TS));
+                                    missingClasses.put(stringConst, new Integer(0));
+                                }
+                                continue;
+                            } catch(java.lang.ClassCircularityError e) {
+                                if(circularClasses.get(stringConst) == null){
+                                    if(TRACE_REFLECTION) System.err.println("Resolving reflection: circularity error " + stringConst + 
+                                        " at " + I_bdd.toStringWithDomains(TS));
+                                    circularClasses.put(stringConst, new Integer(0));
+                                }                
+                                continue;
+                            }
+                            Assert._assert(c != null);            
+                            
+                            jq_Method constructor = c.getClassInitializer();
+                            
+                            if(constructor != null){
+                                int M2_i = Mmap.get(constructor);
+                                BDD t11 = M.ithVar(M2_i);
+                                BDD t22 = t11.andWith(I_bdd.id());
+                                
+                                if(IE.and(t22).isZero()){                                
+                                    IE.orWith(t22);
+                                    if(TRACE_FORNAME) {
+                                        System.out.println("Calling " + constructor + " as a side-effect of Class.forName at " + 
+                                            I_bdd.toStringWithDomains(TS));
+                                    }                                                                 
+                                    change = true;
+                                }else{
+                                    t22.free();
+                                }
+                            }else{
+                                if(TRACE_FORNAME) {
+                                    System.out.println("No class constructor in " + c);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            I_bdd.free();
+            t2.free();
+        }
+        M_bdd.free();
+        I.free();
+        
+        return change;        
+    }
+    
     void initializeForNameMapEntries(){
+        System.err.println(forNameMap.toStringWithDomains(TS));
+        
         for(Iterator iter = forNameMap.iterator(H1set.and(Iset)); iter.hasNext();){
             BDD h = (BDD) iter.next();
             int h_i = h.scanVar(H1).intValue();
@@ -2197,7 +2315,7 @@ public class PA {
             if(!(node instanceof ConcreteTypeNode)) {
                 //System.err.println("Can't cast " + node + " to ConcreteTypeNode for " + h.toStringWithDomains(TS));
                 continue;
-            }
+            }            
             MethodSummary.ConcreteTypeNode n = (ConcreteTypeNode) node;
             String stringConst = (String) MethodSummary.stringNodes2Values.get(n);
             if(stringConst == null){
@@ -2595,6 +2713,11 @@ public class PA {
                     change = true;
                 }
             }
+            if(RESOLVE_FORNAME){
+                if(bindForName()){
+                    change = true;
+                }
+            }
             if (handleNewTargets())
                 change = true;
             if (!change && vP.equals(vP_old) && IE.equals(IE_old)) {
@@ -2821,6 +2944,7 @@ public class PA {
         if(FIX_NO_DEST){
             analyzeIE();
         }
+        //initializeForNameMapEntries();
 
         printSizes();
         
