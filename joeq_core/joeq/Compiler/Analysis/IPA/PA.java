@@ -1973,15 +1973,15 @@ public class PA {
         handleNewTargets();
         addAllMethods();
         buildTypes();
-        bindParameters();
         try {
             long time = System.currentTimeMillis();
             dumpBDDRelations();
-            System.out.println("Dump took "+(System.currentTimeMillis()-time)/1000);
+            System.out.println("Dump took "+(System.currentTimeMillis()-time)/1000.+"s");
         } catch (IOException x) {}
+        bindParameters();
         long time = System.currentTimeMillis();
         solvePointsTo();
-        System.out.println("Solve points-to took "+(System.currentTimeMillis()-time)/1000);
+        System.out.println("Solve points-to alone took "+(System.currentTimeMillis()-time)/1000.+"s");
     }
     
     public void iterate() {
