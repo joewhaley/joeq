@@ -37,6 +37,13 @@ public class BDDInferenceRule extends InferenceRule {
         super(top, bottom);
         updateCount = 0;
         this.solver = solver;
+        initialize();
+    }
+    
+    void initialize() {
+        super.initialize();
+        updateCount = 0;
+        this.oldRelationValues = null;
         this.variableToBDDDomain = new HashMap();
         for (int i = 0; i < top.size(); ++i) {
             RuleTerm rt = (RuleTerm) top.get(i);
@@ -96,33 +103,6 @@ public class BDDInferenceRule extends InferenceRule {
         BDD[] relationValues = new BDD[top.size()];
         
         // Quantify out unnecessary fields in input relations.
-        Set necessaryVariables = new HashSet();
-        Set unnecessaryVariables = new HashSet();
-        for (int i = 0; i < top.size(); ++i) {
-            RuleTerm rt = (RuleTerm) top.get(i);
-            for (int j = 0; j < rt.variables.size(); ++j) {
-                Variable v = (Variable) rt.variables.get(j);
-                if (necessaryVariables.contains(v)) continue;
-                if (unnecessaryVariables.contains(v)) {
-                    necessaryVariables.add(v);
-                    unnecessaryVariables.remove(v);
-                } else {
-                    unnecessaryVariables.add(v);
-                }
-            }
-        }
-        
-        for (int j = 0; j < bottom.variables.size(); ++j) {
-            Variable v = (Variable) bottom.variables.get(j);
-            if (necessaryVariables.contains(v)) continue;
-            if (unnecessaryVariables.contains(v)) {
-               necessaryVariables.add(v);
-               unnecessaryVariables.remove(v);
-            } else {
-                    unnecessaryVariables.add(v);
-            }
-        }
-
         if (solver.TRACE) solver.out.println("Necessary variables: "+necessaryVariables);
         if (solver.TRACE) solver.out.println("Unnecessary variables: "+unnecessaryVariables);
         for (int i = 0; i < top.size(); ++i) {
@@ -269,33 +249,6 @@ public class BDDInferenceRule extends InferenceRule {
         BDD[] newRelationValues = new BDD[top.size()];
         
         // Quantify out unnecessary fields in input relations.
-        Set necessaryVariables = new HashSet();
-        Set unnecessaryVariables = new HashSet();
-        for (int i = 0; i < top.size(); ++i) {
-            RuleTerm rt = (RuleTerm) top.get(i);
-            for (int j = 0; j < rt.variables.size(); ++j) {
-                Variable v = (Variable) rt.variables.get(j);
-                if (necessaryVariables.contains(v)) continue;
-                if (unnecessaryVariables.contains(v)) {
-                    necessaryVariables.add(v);
-                    unnecessaryVariables.remove(v);
-                } else {
-                    unnecessaryVariables.add(v);
-                }
-            }
-        }
-        
-        for (int j = 0; j < bottom.variables.size(); ++j) {
-            Variable v = (Variable) bottom.variables.get(j);
-            if (necessaryVariables.contains(v)) continue;
-            if (unnecessaryVariables.contains(v)) {
-               necessaryVariables.add(v);
-               unnecessaryVariables.remove(v);
-            } else {
-                    unnecessaryVariables.add(v);
-            }
-        }
-
         if (solver.TRACE) solver.out.println("Necessary variables: "+necessaryVariables);
         if (solver.TRACE) solver.out.println("Unnecessary variables: "+unnecessaryVariables);
         for (int i = 0; i < top.size(); ++i) {
