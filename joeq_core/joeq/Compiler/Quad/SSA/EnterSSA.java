@@ -13,6 +13,7 @@ import java.util.Stack;
 
 import joeq.Class.jq_Primitive;
 import joeq.Class.jq_Type;
+import joeq.Class.jq_Reference.jq_NullType;
 import joeq.Compiler.Dataflow.LivenessAnalysis;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
@@ -480,7 +481,6 @@ public class EnterSSA implements ControlFlowGraphVisitor {
             boolean didSomething = false;
             for (Iterator i = scalarPhis.iterator(); i.hasNext(); ) {
                 Quad phi = (Quad) i.next();
-                found_null_type = false;
                 if (DEBUG)
                     System.out.println("PHI: " + phi);
                 jq_Type meet = meetPhiType(phi);
@@ -488,8 +488,7 @@ public class EnterSSA implements ControlFlowGraphVisitor {
                     System.out.println("MEET: " + meet);
                 if (meet != null) {
                     didSomething = true;
-                    if (!found_null_type)
-                        i.remove();
+                    i.remove();
                     RegisterOperand result = (RegisterOperand) Phi.getDest(phi);
                     result.setType(meet);
                     for (Iterator e = register_uses.getValues(result.getRegister()).iterator(); e.hasNext();) {
@@ -545,44 +544,42 @@ public class EnterSSA implements ControlFlowGraphVisitor {
     /**
      * Return the meet of the types on the rhs of a phi instruction
      */
-    boolean found_null_type;
     private jq_Type meetPhiType(Quad s) {
         jq_Type result = null;
         for (int i = 0; i < Phi.getSrcs(s).length(); i++) {
             Operand val = Phi.getSrc(s, i);
             if (val == null) continue;
             jq_Type t = ((RegisterOperand)val).getType();
-            if (t == null) {
-                found_null_type = true;
+            if (t == jq_NullType.NULL_TYPE) {
                 continue;
-            } else if (result == null) {
+            }
+            if (result == null) {
                 result = t;
                 continue;
-            } else if (result == jq_ReturnAddressType.INSTANCE) {
-                // TODO.
-                continue;
-            } else if (t == jq_ReturnAddressType.INSTANCE) {
-                // TODO.
-                continue;
-            } else {
-                jq_Type meet = TypeCheck.findCommonSuperclass(result, t, false);
-                if (meet == null) {
-                    // TODO: This horrific kludge should go away once we get
-                    // rid of VM_Address.toInt()
-                    if ((result.isIntLike() && (t.isReferenceType() || t.getReferenceSize() == 4))
-                            || ((result.isReferenceType() || result.getReferenceSize() == 4) && t.isIntLike())) {
-                        meet = jq_Primitive.INT;
-                    } else if (result.isReferenceType() && t.getReferenceSize() == 4) {
-                        meet = t;
-                    } else if (result.getReferenceSize() == 4 && t.isReferenceType()) {
-                        meet = result;
-                    }
-                }
-                if (meet == null) {
-                    Assert.UNREACHABLE(result + " and " + t + " meet to null");
-                }
-                result = meet;
             }
+            if (t == null) {
+                continue;
+            }
+            if (result == jq_ReturnAddressType.INSTANCE ||
+                    t == jq_ReturnAddressType.INSTANCE) {
+                // TODO.
+                continue;
+            }
+            jq_Type meet = TypeCheck.findCommonSuperclass(result, t, false);
+            if (meet == null) {
+                if ((result.isIntLike() && (t.isReferenceType() || t.getReferenceSize() == 4))
+                        || ((result.isReferenceType() || result.getReferenceSize() == 4) && t.isIntLike())) {
+                    meet = jq_Primitive.INT;
+                } else if (result.isReferenceType() && t.getReferenceSize() == 4) {
+                    meet = t;
+                } else if (result.getReferenceSize() == 4 && t.isReferenceType()) {
+                    meet = result;
+                }
+            }
+            if (meet == null) {
+                Assert.UNREACHABLE(result + " and " + t + " meet to null");
+            }
+            result = meet;
         }
         return result;
     }
