@@ -1,10 +1,11 @@
-// Public proxy class for Compil3r.Analysis.IPA.PA
-// Generated via Util.MakeProxy
+// Public proxy class for joeq.Compil3r.Analysis.IPA.PA
+// Generated via joeq.Util.MakeProxy
 package joeq.Compil3r.Analysis.IPA;
 
 public class PAProxy {
   public PAProxy(PA that) {
     this.VerifyAssertions = that.VerifyAssertions;
+    this.WRITE_PARESULTS_BATCHFILE = that.WRITE_PARESULTS_BATCHFILE;
     this.TRACE = that.TRACE;
     this.TRACE_SOLVER = that.TRACE_SOLVER;
     this.TRACE_BIND = that.TRACE_BIND;
@@ -22,20 +23,25 @@ public class PAProxy {
     this.IGNORE_EXCEPTIONS = that.IGNORE_EXCEPTIONS;
     this.FILTER_VP = that.FILTER_VP;
     this.FILTER_HP = that.FILTER_HP;
+    this.CARTESIAN_PRODUCT = that.CARTESIAN_PRODUCT;
     this.THREAD_SENSITIVE = that.THREAD_SENSITIVE;
     this.OBJECT_SENSITIVE = that.OBJECT_SENSITIVE;
     this.CONTEXT_SENSITIVE = that.CONTEXT_SENSITIVE;
+    this.CS_CALLGRAPH = that.CS_CALLGRAPH;
     this.DISCOVER_CALL_GRAPH = that.DISCOVER_CALL_GRAPH;
     this.DUMP_DOTGRAPH = that.DUMP_DOTGRAPH;
     this.FILTER_NULL = that.FILTER_NULL;
     this.LONG_LOCATIONS = that.LONG_LOCATIONS;
     this.INCLUDE_UNKNOWN_TYPES = that.INCLUDE_UNKNOWN_TYPES;
     this.INCLUDE_ALL_UNKNOWN_TYPES = that.INCLUDE_ALL_UNKNOWN_TYPES;
+    this.MAX_PARAMS = that.MAX_PARAMS;
     this.bddnodes = that.bddnodes;
     this.bddcache = that.bddcache;
     this.resultsFileName = that.resultsFileName;
     this.callgraphFileName = that.callgraphFileName;
     this.initialCallgraphFileName = that.initialCallgraphFileName;
+    this.USE_VCONTEXT = that.USE_VCONTEXT;
+    this.USE_HCONTEXT = that.USE_HCONTEXT;
     this.newMethodSummaries = that.newMethodSummaries;
     this.rootMethods = that.rootMethods;
     this.cg = that.cg;
@@ -106,8 +112,8 @@ public class PAProxy {
     this.IEfilter = that.IEfilter;
     this.visited = that.visited;
     this.staticCalls = that.staticCalls;
-    this.varorder = that.varorder;
     this.reverseLocal = that.reverseLocal;
+    this.varorder = that.varorder;
     this.V1toV2 = that.V1toV2;
     this.V2toV1 = that.V2toV1;
     this.H1toH2 = that.H1toH2;
@@ -119,6 +125,10 @@ public class PAProxy {
     this.V1cH1ctoV2cV1c = that.V1cH1ctoV2cV1c;
     this.T2toT1 = that.T2toT1;
     this.T1toT2 = that.T1toT2;
+    this.H1toV1c = that.H1toV1c;
+    this.V1ctoH1 = that.V1ctoH1;
+    this.V1csets = that.V1csets;
+    this.V1cH1equals = that.V1cH1equals;
     this.V1set = that.V1set;
     this.V2set = that.V2set;
     this.H1set = that.H1set;
@@ -152,6 +162,10 @@ public class PAProxy {
     this.V1cV2cset = that.V1cV2cset;
     this.V1cH1cset = that.V1cH1cset;
     this.H1cH2cset = that.H1cH2cset;
+    this.V1cdomain = that.V1cdomain;
+    this.V2cdomain = that.V2cdomain;
+    this.H1cdomain = that.H1cdomain;
+    this.H2cdomain = that.H2cdomain;
     this.rangeMap = that.rangeMap;
     this.object_class = that.object_class;
     this.javaLangObject_clone = that.javaLangObject_clone;
@@ -175,6 +189,8 @@ public class PAProxy {
     this.old3_vP = that.old3_vP;
     this.old3_t4 = that.old3_t4;
     this.old3_hT = that.old3_hT;
+    this.old3_t6 = that.old3_t6;
+    this.old3_t9 = that.old3_t9;
     this.old2_myIE = that.old2_myIE;
     this.old2_visited = that.old2_visited;
     this.TS = that.TS;
@@ -188,6 +204,7 @@ public class PAProxy {
     this.V1H1correspondence = that.V1H1correspondence;
   }
   public static boolean VerifyAssertions;
+  public static boolean WRITE_PARESULTS_BATCHFILE;
   public boolean TRACE;
   public boolean TRACE_SOLVER;
   public boolean TRACE_BIND;
@@ -205,24 +222,29 @@ public class PAProxy {
   public boolean IGNORE_EXCEPTIONS;
   public boolean FILTER_VP;
   public boolean FILTER_HP;
+  public boolean CARTESIAN_PRODUCT;
   public boolean THREAD_SENSITIVE;
   public boolean OBJECT_SENSITIVE;
   public boolean CONTEXT_SENSITIVE;
+  public boolean CS_CALLGRAPH;
   public boolean DISCOVER_CALL_GRAPH;
   public boolean DUMP_DOTGRAPH;
   public boolean FILTER_NULL;
   public boolean LONG_LOCATIONS;
   public boolean INCLUDE_UNKNOWN_TYPES;
   public boolean INCLUDE_ALL_UNKNOWN_TYPES;
+  public int MAX_PARAMS;
   public int bddnodes;
   public int bddcache;
   public static java.lang.String resultsFileName;
   public static java.lang.String callgraphFileName;
   public static java.lang.String initialCallgraphFileName;
+  public boolean USE_VCONTEXT;
+  public boolean USE_HCONTEXT;
   public java.util.Map newMethodSummaries;
   public java.util.Set rootMethods;
-  public Compil3r.Quad.CallGraph cg;
-  public Compil3r.Analysis.IPA.ObjectCreationGraph ocg;
+  public joeq.Compil3r.Quad.CallGraph cg;
+  public joeq.Compil3r.Analysis.IPA.ObjectCreationGraph ocg;
   public org.sf.javabdd.BDDFactory bdd;
   public org.sf.javabdd.BDDDomain V1;
   public org.sf.javabdd.BDDDomain V2;
@@ -251,16 +273,16 @@ public class PAProxy {
   public int HC_BITS;
   public int MAX_VC_BITS;
   public int MAX_HC_BITS;
-  public Util.Collections.IndexMap Vmap;
-  public Util.Collections.IndexMap Imap;
-  public Util.Collections.IndexMap Hmap;
-  public Util.Collections.IndexMap Fmap;
-  public Util.Collections.IndexMap Tmap;
-  public Util.Collections.IndexMap Nmap;
-  public Util.Collections.IndexMap Mmap;
-  public Util.Graphs.PathNumbering vCnumbering;
-  public Util.Graphs.PathNumbering hCnumbering;
-  public Util.Graphs.PathNumbering oCnumbering;
+  public joeq.Util.Collections.IndexMap Vmap;
+  public joeq.Util.Collections.IndexMap Imap;
+  public joeq.Util.Collections.IndexMap Hmap;
+  public joeq.Util.Collections.IndexMap Fmap;
+  public joeq.Util.Collections.IndexMap Tmap;
+  public joeq.Util.Collections.IndexMap Nmap;
+  public joeq.Util.Collections.IndexMap Mmap;
+  public joeq.Util.Graphs.PathNumbering vCnumbering;
+  public joeq.Util.Graphs.PathNumbering hCnumbering;
+  public joeq.Util.Graphs.PathNumbering oCnumbering;
   public org.sf.javabdd.BDD A;
   public org.sf.javabdd.BDD vP;
   public org.sf.javabdd.BDD S;
@@ -289,8 +311,8 @@ public class PAProxy {
   public org.sf.javabdd.BDD IEfilter;
   public org.sf.javabdd.BDD visited;
   public org.sf.javabdd.BDD staticCalls;
-  public java.lang.String varorder;
   public boolean reverseLocal;
+  public java.lang.String varorder;
   public org.sf.javabdd.BDDPairing V1toV2;
   public org.sf.javabdd.BDDPairing V2toV1;
   public org.sf.javabdd.BDDPairing H1toH2;
@@ -302,6 +324,10 @@ public class PAProxy {
   public org.sf.javabdd.BDDPairing V1cH1ctoV2cV1c;
   public org.sf.javabdd.BDDPairing T2toT1;
   public org.sf.javabdd.BDDPairing T1toT2;
+  public org.sf.javabdd.BDDPairing[] H1toV1c;
+  public org.sf.javabdd.BDDPairing[] V1ctoH1;
+  public org.sf.javabdd.BDD[] V1csets;
+  public org.sf.javabdd.BDD[] V1cH1equals;
   public org.sf.javabdd.BDD V1set;
   public org.sf.javabdd.BDD V2set;
   public org.sf.javabdd.BDD H1set;
@@ -335,20 +361,24 @@ public class PAProxy {
   public org.sf.javabdd.BDD V1cV2cset;
   public org.sf.javabdd.BDD V1cH1cset;
   public org.sf.javabdd.BDD H1cH2cset;
+  public org.sf.javabdd.BDD V1cdomain;
+  public org.sf.javabdd.BDD V2cdomain;
+  public org.sf.javabdd.BDD H1cdomain;
+  public org.sf.javabdd.BDD H2cdomain;
   public java.util.Map rangeMap;
-  public Clazz.jq_Class object_class;
-  public Clazz.jq_Method javaLangObject_clone;
-  public Clazz.jq_Class cloneable_class;
-  public Clazz.jq_Class throwable_class;
-  public Clazz.jq_Method javaLangObject_fakeclone;
+  public joeq.Clazz.jq_Class object_class;
+  public joeq.Clazz.jq_Method javaLangObject_clone;
+  public joeq.Clazz.jq_Class cloneable_class;
+  public joeq.Clazz.jq_Class throwable_class;
+  public joeq.Clazz.jq_Method javaLangObject_fakeclone;
   public int last_V;
   public int last_H;
   public int last_T;
   public int last_N;
   public int last_F;
-  public Clazz.jq_NameAndDesc finalizer_method;
-  public static Clazz.jq_NameAndDesc main_method;
-  public static Clazz.jq_NameAndDesc run_method;
+  public joeq.Clazz.jq_NameAndDesc finalizer_method;
+  public static joeq.Clazz.jq_NameAndDesc main_method;
+  public static joeq.Clazz.jq_NameAndDesc run_method;
   public org.sf.javabdd.BDD old1_A;
   public org.sf.javabdd.BDD old1_S;
   public org.sf.javabdd.BDD old1_L;
@@ -358,15 +388,17 @@ public class PAProxy {
   public org.sf.javabdd.BDD old3_vP;
   public org.sf.javabdd.BDD old3_t4;
   public org.sf.javabdd.BDD old3_hT;
+  public org.sf.javabdd.BDD old3_t6;
+  public org.sf.javabdd.BDD[] old3_t9;
   public org.sf.javabdd.BDD old2_myIE;
   public org.sf.javabdd.BDD old2_visited;
-  public Compil3r.Analysis.IPA.PA.ToString TS;
+  public joeq.Compil3r.Analysis.IPA.PA.ToString TS;
   public static java.util.Map thread_runs;
-  public Compil3r.Analysis.IPA.PA.VarPathSelector varPathSelector;
+  public joeq.Compil3r.Analysis.IPA.PA.VarPathSelector varPathSelector;
   public static boolean THREADS_ONLY;
-  public Compil3r.Analysis.IPA.PA.HeapPathSelector heapPathSelector;
+  public joeq.Compil3r.Analysis.IPA.PA.HeapPathSelector heapPathSelector;
   public static java.util.Set polyClasses;
   public static boolean MATCH_FACTORY;
-  public Compil3r.Analysis.IPA.PA.ObjectPathSelector objectPathSelector;
+  public joeq.Compil3r.Analysis.IPA.PA.ObjectPathSelector objectPathSelector;
   public java.util.Map V1H1correspondence;
 }

@@ -21,7 +21,6 @@ import joeq.Clazz.jq_StaticMethod;
 import joeq.Clazz.jq_Type;
 import joeq.Main.HostedVM;
 import joeq.Run_Time.Reflection;
-import joeq.Run_Time.Unsafe;
 import joeq.UTF.Utf8;
 import joeq.Util.Assert;
 
@@ -97,6 +96,102 @@ public class ReflectiveInterpreter extends BytecodeInterpreter {
         jq_Method m = k.getOrCreateInstanceMethod("write", "(Ljava/lang/String;)V");
         cantInterpret.add(m);
     }
+
+    public Object invokeMethod(jq_Method m, State callee) throws Throwable {
+        //Run_Time.SystemInterface.debugwriteln("Invoking method "+m);
+        jq_Class k = m.getDeclaringClass();
+        Assert._assert(k.isClsInitialized());
+        Assert._assert(m.getBytecode() != null);
+        jq_Type[] paramTypes = m.getParamTypes();
+        Object[] params = new Object[paramTypes.length];
+        for (int i=paramTypes.length-1; i>=0; --i) {
+            jq_Type t = paramTypes[i];
+            if (t.isPrimitiveType()) {
+                if (t == jq_Primitive.LONG) {
+                    params[i] = new Long(istate.pop_L());
+                } else if (t == jq_Primitive.FLOAT) {
+                    params[i] = new Float(istate.pop_F());
+                } else if (t == jq_Primitive.DOUBLE) {
+                    params[i] = new Double(istate.pop_D());
+                } else {
+                    params[i] = new Integer(istate.pop_I());
+                }
+            } else {
+                params[i] = istate.pop_A();
+            }
+            //System.out.println("Param "+i+": "+params[i]);
+        }
+        for (int i=0, j=0; i<paramTypes.length; ++i, ++j) {
+            jq_Type t = paramTypes[i];
+            if (t.isPrimitiveType()) {
+                if (t == jq_Primitive.LONG) {
+                    long v = ((Long)params[i]).longValue();
+                    callee.setLocal_L(j, v);
+                    ++j;
+                } else if (t == jq_Primitive.FLOAT) {
+                    float v = ((Float)params[i]).floatValue();
+                    callee.setLocal_F(j, v);
+                } else if (t == jq_Primitive.DOUBLE) {
+                    long v = Double.doubleToRawLongBits(((Double)params[i]).doubleValue());
+                    callee.setLocal_D(j, Double.longBitsToDouble(v));
+                    ++j;
+                } else {
+                    int v = ((Integer)params[i]).intValue();
+                    callee.setLocal_I(j, v);
+                }
+            } else {
+                Object v = params[i];
+                callee.setLocal_A(j, v);
+            }
+        }
+        State oldState = this.istate;
+        this.istate = callee;
+        MethodInterpreter mi = new MethodInterpreter(m);
+        Object synchobj = null;
+        try {
+            if (m.isSynchronized()) {
+                if (!m.isStatic()) {
+                    if (mi.getTraceFlag()) mi.getTraceOut().println("synchronized instance method, locking 'this' object");
+                    vm.monitorenter(synchobj = istate.getLocal_A(0), mi);
+                } else {
+                    if (mi.getTraceFlag()) mi.getTraceOut().println("synchronized static method, locking class object");
+                    vm.monitorenter(synchobj = Reflection.getJDKType(m.getDeclaringClass()), mi);
+                }
+            }
+            mi.forwardTraversal();
+            this.istate = oldState;
+            if (m.isSynchronized()) {
+                if (mi.getTraceFlag()) mi.getTraceOut().println("exiting synchronized method, unlocking object");
+                vm.monitorexit(synchobj);
+            }
+            jq_Type returnType = m.getReturnType();
+            Object retval;
+            if (returnType.isReferenceType()) {
+                retval = callee.getReturnVal_A();
+            } else if (returnType == jq_Primitive.VOID) {
+                retval = null;
+            } else if (returnType == jq_Primitive.LONG) {
+                retval = new Long(callee.getReturnVal_L());
+            } else if (returnType == jq_Primitive.FLOAT) {
+                retval = new Float(callee.getReturnVal_F());
+            } else if (returnType == jq_Primitive.DOUBLE) {
+                retval = new Double(callee.getReturnVal_D());
+            } else {
+                retval = new Integer(callee.getReturnVal_I());
+            }
+            if (mi.getTraceFlag())
+                mi.getTraceOut().println("Return value: "+retval);
+            return retval;
+        } catch (WrappedException ix) {
+            this.istate = oldState;
+            if (m.isSynchronized()) {
+                if (mi.getTraceFlag()) mi.getTraceOut().println("exiting synchronized method, unlocking object");
+                vm.monitorexit(synchobj);
+            }
+            throw ix.t;
+        }
+    }
+
     public Object invokeMethod(jq_Method m) throws Throwable {
         if (cantInterpret.contains(m)) {
             return invokeReflective(m);
@@ -115,13 +210,19 @@ public class ReflectiveInterpreter extends BytecodeInterpreter {
         }
     }
     public Object invokeUnsafeMethod(jq_Method f) throws Throwable {
-        if (f == Unsafe._floatToIntBits) {
+        jq_Class _class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LRun_Time/Unsafe;");
+        jq_StaticMethod _floatToIntBits = _class.getOrCreateStaticMethod("floatToIntBits", "(F)I");
+        jq_StaticMethod _intBitsToFloat = _class.getOrCreateStaticMethod("intBitsToFloat", "(I)F");
+        jq_StaticMethod _doubleToLongBits = _class.getOrCreateStaticMethod("doubleToLongBits", "(D)J");
+        jq_StaticMethod _longBitsToDouble = _class.getOrCreateStaticMethod("longBitsToDouble", "(J)D");
+
+        if (f == _floatToIntBits) {
             return new Integer(Float.floatToRawIntBits(istate.pop_F()));
-        } else if (f == Unsafe._intBitsToFloat) {
+        } else if (f == _intBitsToFloat) {
             return new Float(Float.intBitsToFloat(istate.pop_I()));
-        } else if (f == Unsafe._doubleToLongBits) {
+        } else if (f == _doubleToLongBits) {
             return new Long(Double.doubleToRawLongBits(istate.pop_D()));
-        } else if (f == Unsafe._longBitsToDouble) {
+        } else if (f == _longBitsToDouble) {
             return new Double(Double.longBitsToDouble(istate.pop_L()));
         } else {
             return invokeReflective(f);

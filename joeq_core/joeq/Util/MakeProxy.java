@@ -38,7 +38,19 @@ public class MakeProxy {
                     continue;
                 System.out.println("    this." + f.getName() + " = that." + f.getName() + ";");
                 boolean isStatic = (f.getModifiers() & Modifier.STATIC) != 0;
-                sb.append("  public " + (isStatic ? "static " : "") + f.getType().getName().replace('$', '.') 
+                String typeName;
+                Class c = f.getType();
+                if (f.getType().isArray()) {
+                    StringBuffer sb2 = new StringBuffer();
+                    while (c.isArray()) {
+                        sb2.append("[]");
+                        c = c.getComponentType();
+                    }
+                    typeName = c.getName() + sb2.toString();
+                } else {
+                    typeName = c.getName();
+                }
+                sb.append("  public " + (isStatic ? "static " : "") + typeName.replace('$', '.') 
                         + " " + f.getName() + ";\n");
             }
             clazz = clazz.getSuperclass();
