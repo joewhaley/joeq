@@ -3,7 +3,6 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Quad;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -49,6 +48,7 @@ import Main.HostedVM;
 import Run_Time.TypeCheck;
 import Util.Assert;
 import Util.Collections.HashCodeComparator;
+import Util.Collections.IndexMap;
 import Util.Collections.SortedArraySet;
 
 /**
@@ -1379,45 +1379,6 @@ public class BDDPointerAnalysis {
         newPointsTo.free();
         empty.free();
         V1set.free(); H1andFDset.free();
-    }
-
-    public static class IndexMap {
-        private final String name;
-        private final HashMap hash;
-        private final ArrayList list;
-        
-        public IndexMap(String name) {
-            this.name = name;
-            hash = new HashMap();
-            list = new ArrayList();
-        }
-        
-        public int get(Object o) {
-            Integer i = (Integer) hash.get(o);
-            if (i == null) {
-                hash.put(o, i = new Integer(list.size()));
-                list.add(o);
-                if (false) System.out.println(this+"["+i+"] = "+o);
-            }
-            return i.intValue();
-        }
-        
-        public Object get(int i) {
-            return list.get(i);
-        }
-        
-        public boolean contains(Object o) {
-            return hash.containsKey(o);
-        }
-        
-        public int size() {
-            return list.size();
-        }
-        
-        public String toString() {
-            return name;
-        }
-        
     }
 
     public class BDDCallGraph extends CallGraph {
