@@ -37,6 +37,10 @@ public abstract class jq_Field extends jq_Member {
 	    return 4;
     }
 
+    public void accept(jq_FieldVisitor mv) {
+        mv.visitField(this);
+    }
+    
     public final boolean isCodeAddressType() { return CodeAllocator.codeAddressFields.contains(this); }
     public final boolean isHeapAddressType() { return HeapAllocator.heapAddressFields.contains(this); }
     
