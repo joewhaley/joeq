@@ -34,7 +34,7 @@ public class BitArray {
             if (currentIndex == bits.length*32-1) {
                 throw new java.util.NoSuchElementException();
             } else {
-                return currentIndex + 1;
+                return currentIndex;
             }
         }
 
