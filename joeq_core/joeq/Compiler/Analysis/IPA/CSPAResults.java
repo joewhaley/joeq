@@ -25,6 +25,7 @@ import java.util.StringTokenizer;
 import org.sf.javabdd.BDD;
 import org.sf.javabdd.BDDDomain;
 import org.sf.javabdd.BDDFactory;
+import org.sf.javabdd.BDDPairing;
 
 import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
@@ -98,6 +99,16 @@ public class CSPAResults {
     public BDDDomain H1c;
     /** BDD domain for heap object number. */
     public BDDDomain H1o;
+    /** BDD domain for field descriptor. */
+    public BDDDomain FD;
+    /** Extra BDD domain for context number of variable. */
+    public BDDDomain V2c;
+    /** Extra BDD domain for variable number. */
+    public BDDDomain V2o;
+    /** Extra BDD domain for context number of heap object. */
+    public BDDDomain H2c;
+    /** Extra BDD domain for heap object number. */
+    public BDDDomain H2o;
     
     /** Points-to BDD: V1c x V1o x H1c x H1o.
      * This contains the result of the points-to analysis.
@@ -180,6 +191,34 @@ public class CSPAResults {
         Map thread_map = new ThreadRootMap(findThreadRuns(cg));
         Number paths = pn.countPaths(cg.getRoots(), cg.getCallSiteNavigator(), thread_map);
         System.out.println("Number of paths in call graph="+paths);
+    }
+
+    public boolean findAliasedParameters2(jq_Method m) {
+        Collection s = methodToVariables.getValues(m);
+        Collection paramNodes = new LinkedList();
+        BDD vars = bdd.zero();
+        for (Iterator j = s.iterator(); j.hasNext(); ) {
+            Object o = j.next();
+            if (o instanceof ParamNode || o instanceof FieldNode) {
+            //if (!(o instanceof ThrownExceptionNode) && !(o instanceof GlobalNode))
+                paramNodes.add(o);
+                int v1 = getVariableIndex((Node) o);
+                vars.orWith(V1o.ithVar(v1));
+            }
+        }
+        BDD mpointsTo = pointsTo.and(vars);
+        BDDPairing V1toV2 = bdd.makePair();
+        V1toV2.set(new BDDDomain[] {V1c, V1o}, new BDDDomain[] {V2c, V2o});
+        BDD v2_mpointsTo = mpointsTo.replace(V1toV2);
+        BDD dom = H1c.set();
+        dom.andWith(H1o.set());
+        BDD result = mpointsTo.relprod(v2_mpointsTo, dom);
+        v2_mpointsTo.free();
+        dom.free();
+        if (false) {
+            TypedBDD r = new TypedBDD(result, V1c, V1o, V2c, V2o);
+        }
+        return !result.isZero();
     }
 
     public boolean findAliasedParameters(jq_Method m) {
@@ -481,8 +520,13 @@ public class CSPAResults {
         }
         V1o = bdd_domains[0];
         V1c = bdd_domains[1];
+        V2o = bdd_domains[2];
+        V2c = bdd_domains[3];
+        FD = bdd_domains[4];
         H1o = bdd_domains[5];
         H1c = bdd_domains[6];
+        H2o = bdd_domains[7];
+        H2c = bdd_domains[8];
         
         boolean reverseLocal = System.getProperty("bddreverse", "true").equals("true");
         String ordering = System.getProperty("bddordering", "FD_H2cxH2o_V2cxV1cxV2oxV1o_H1cxH1o");
@@ -947,6 +991,15 @@ public class CSPAResults {
             this.dom = SortedArraySet.FACTORY.makeSet(domain_comparator);
             this.dom.add(d1);
             this.dom.add(d2);
+        }
+        
+        public TypedBDD(BDD bdd, BDDDomain d1, BDDDomain d2, BDDDomain d3, BDDDomain d4) {
+            this.bdd = bdd;
+            this.dom = SortedArraySet.FACTORY.makeSet(domain_comparator);
+            this.dom.add(d1);
+            this.dom.add(d2);
+            this.dom.add(d3);
+            this.dom.add(d4);
         }
         
         public TypedBDD relprod(TypedBDD bdd1, TypedBDD set) {
