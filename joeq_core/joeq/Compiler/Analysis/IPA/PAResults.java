@@ -48,6 +48,7 @@ import Compil3r.Quad.Quad;
 import Compil3r.Quad.Operand.RegisterOperand;
 import Compil3r.Quad.RegisterFactory.Register;
 import Main.HostedVM;
+import Main.Driver;
 import Util.Assert;
 import Util.Strings;
 import Util.Collections.HashWorklist;
@@ -373,9 +374,13 @@ public class PAResults implements PointerAnalysisResults {
                     printHelp(results);
                     increaseCount = false;
                 } else {
-                    System.err.println("Unrecognized command");
                     increaseCount = false;
-                    //results.add(new TypedBDD(bdd.zero(), Collections.EMPTY_SET));
+		    String []cmds = new String[st.countTokens()+1];
+		    cmds[0] = command;
+		    for (int j = 1; j < cmds.length; j++)
+			cmds[j] = st.nextToken();
+		    for (int j = 0; j < cmds.length; j++)
+			j = Driver.processCommand(cmds, j);
                 }
             } catch (Exception e) {
                 System.err.println("Error: "+e);
