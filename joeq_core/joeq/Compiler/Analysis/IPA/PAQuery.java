@@ -116,4 +116,80 @@ public class PAQuery {
             }
         }
     }
+    
+    /**
+     * Application for finding and printing const-parameters.
+     * */
+    public static class ConstParameterFinder extends IPSSABuilder.Application {
+        static final String NON_CONST_QUALIFIER = "non_const ";
+        static final String CONST_QUALIFIER     = "const ";
+        PAResults _paResults;
+        PA _r;
+
+        public ConstParameterFinder() {
+            this(null, "ConstParameterFinder", null);
+        }
+        public ConstParameterFinder(IPSSABuilder builder, String name, String[] args) {
+            super(builder, name, args);
+        }
+
+        void visitMethod(jq_Method m){            
+            if(getBuilder().skipMethod(m)) return;
+    
+            MethodSummary ms = MethodSummary.getSummary(m);
+            if(ms == null) return;
+    
+            _paResults = getBuilder().getPAResults();
+            _r = _paResults.getPAResults();
+            
+            TypedBDD params = (TypedBDD)_r.formal.relprod(_r.M.ithVar(_paResults.getMethodIndex(m)), _r.Mset);
+            
+            System.out.print(m.toString() + "( ");
+            for(Iterator paramIter = params.iterator(); paramIter.hasNext();) {
+                TypedBDD param = (TypedBDD)((TypedBDD)paramIter.next()).exist(_r.Zset);                
+                
+                boolean isConst = isConst(param, m, true);
+                
+                System.out.print(isConst ? CONST_QUALIFIER : NON_CONST_QUALIFIER);
+                System.out.print(param.toStringWithDomains() /*_paResults.toString(param, -1) */ + " ");
+            }
+            System.out.print(") \n");
+        }
+
+        boolean isConst(BDD param, jq_Method m, boolean recursive) {                                   
+            // pointsTo is what this particular parameter may point to
+            BDD pointsTo = _r.vP.restrict(param);                               // H1xH1cxF
+            BDD methodBDD = _r.M.ithVar(_paResults.getMethodIndex(m));          // M
+            
+            BDD mods = null;
+            if (!recursive) {               
+                // these are the modified heap locations
+                mods = _r.S.relprod(param, _r.V1set);                           // H1xH1cxFxV2xV1cxV2c
+            } else {
+                BDD method_plus_context0 = methodBDD.andWith(_r.V1c.set());
+                BDD reachableVars = _paResults.getReachableVars(method_plus_context0); // V1xV1c
+                reachableVars = reachableVars.exist(_r.V1c.set());
+                reachableVars.or(param);
+                System.err.println("reachableVars: " + _paResults.toString((TypedBDD)reachableVars, -1));
+                
+                BDD stores = _r.S.relprod(reachableVars, _r.V2set);             // V1xV1c x V1xV1cxFxV2xV2c = V1xV1cxF
+                mods = stores.relprod(_r.vP, _r.V1set);                         // V1xV1cxF x V1xV1cxH1xH1c = H1xH1cxF
+            }
+            
+            boolean result = mods.isZero();
+            mods.free();
+            
+            return result;
+        }
+
+        protected void parseParams(String[] args) {}
+
+        public void run() {
+            for(Iterator iter = getBuilder().getCallGraph().getAllMethods().iterator(); iter.hasNext();) {
+                jq_Method m = (jq_Method)iter.next();
+
+                visitMethod(m);
+            }
+        }
+    }
 }
