@@ -43,7 +43,6 @@ import Bootstrap.ObjectTraverser;
 import ClassLib.ClassLibInterface;
 import Clazz.jq_Array;
 import Clazz.jq_Class;
-import Clazz.jq_ClassFileConstants;
 import Clazz.jq_CompiledCode;
 import Clazz.jq_InstanceField;
 import Clazz.jq_InstanceMethod;
