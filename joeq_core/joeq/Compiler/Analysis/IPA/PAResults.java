@@ -1000,14 +1000,14 @@ public class PAResults implements PointerAnalysisResults {
                     }
                 }
                 BDD q = r.V1.ithVar(k2);
-                q.andWith(r.V1c.domain());
+                q.andWith(r.V1cdomain);
                 c.applyWith(q, BDDFactory.diff);
             }
             if (w.isEmpty()) break;
             n = (Node) w.pull();
             k = getVariableIndex(n);
             BDD b = r.V1.ithVar(k);
-            b.andWith(r.V1c.domain());
+            b.andWith(r.V1cdomain);
             c = direction?calculateDefUse(b):calculateUseDef(b);
         }
         out.writeBytes("}\n");
@@ -1081,7 +1081,7 @@ public class PAResults implements PointerAnalysisResults {
         BDD result = r.bdd.zero();
         BDD allInvokes = r.mI.exist(r.Nset);
         BDD new_m = method_plus_context0.id();
-        BDD V2cIset = r.Iset.and(r.V2c.set());
+        BDD V2cIset = r.Iset.and(r.V2cset);
         BDD IEcs = (r.CONTEXT_SENSITIVE || r.OBJECT_SENSITIVE) ? r.IEcs : r.IE;
         for (int k=1; ; ++k) {
             //System.out.println("Iteration "+k);
@@ -1135,7 +1135,7 @@ public class PAResults implements PointerAnalysisResults {
         if (main != null) {
             int M_i = r.Mmap.get(main);
             BDD m = r.M.ithVar(M_i);
-            m.andWith(r.V1c.ithVar(0));
+            m.andWith(r.V1c[0].ithVar(0));
             System.out.println("Main: "+m.toStringWithDomains());
             BDD b = getReachableVars(m);
             m.free();
@@ -1157,7 +1157,7 @@ public class PAResults implements PointerAnalysisResults {
             for (int j = 0; k.hasNext(); ++j) {
                 Node q = (Node) k.next();
                 BDD m = r.M.ithVar(M_i);
-                m.andWith(r.V1c.ithVar(j));
+                m.andWith(r.V1c[0].ithVar(j));
                 System.out.println("Thread: "+m.toStringWithDomains()+" Object: "+q);
                 BDD b = getReachableVars(m);
                 m.free();
@@ -1211,7 +1211,7 @@ public class PAResults implements PointerAnalysisResults {
         bar2.replaceWith(r.V2toV1);
         bar.orWith(bar2);
         
-        if (r.CONTEXT_SENSITIVE || r.OBJECT_SENSITIVE) bar.andWith(r.V1c.set());
+        if (r.CONTEXT_SENSITIVE || r.OBJECT_SENSITIVE) bar.andWith(r.V1cset);
         return bar;
     }
     
@@ -1319,7 +1319,7 @@ public class PAResults implements PointerAnalysisResults {
             long heapPointsToSum = 0L; long heapPointsTo = 0L;
             for (int i = 0; i < r.Hmap.size() && i < 4000; ++i) {
                 BDD b = r.H1.ithVar(i);
-                if (r.CONTEXT_SENSITIVE) b.andWith(r.H1c.domain());
+                if (r.CONTEXT_SENSITIVE) b.andWith(r.H1cdomain);
                 BDD c = calculateHeapConnectivity(b);
                 heapConnectSum += c.satCount(r.H1set);
                 ++heapConnect;
@@ -1400,17 +1400,17 @@ public class PAResults implements PointerAnalysisResults {
             BDD h1 = this.getHashcodeTakenVars();
             BDD h2 = h1.relprod(r.vP, r.V1set);
             System.out.println("Hashcode taken objects: "+h2.satCount(r.H1set));
-            h2 = h2.exist(r.H1c.set());
+            h2 = h2.exist(r.H1cset);
             System.out.println("Hashcode taken objects (no context): "+h2.satCount(r.H1.set()));
             System.out.println("Hashcode never taken objects (no context): "+(r.Hmap.size()-h2.satCount(r.H1.set())));
         }
         
         {
             BDD h1 = r.sync;
-            if (r.CONTEXT_SENSITIVE || r.OBJECT_SENSITIVE) h1.andWith(r.H1c.domain());
+            if (r.CONTEXT_SENSITIVE || r.OBJECT_SENSITIVE) h1.andWith(r.H1cdomain);
             BDD h2 = h1.relprod(r.vP, r.V1set);
             System.out.println("Locked objects: "+h2.satCount(r.H1set));
-            h2 = h2.exist(r.H1c.set());
+            h2 = h2.exist(r.H1cset);
             System.out.println("Locked objects (no context): "+h2.satCount(r.H1.set()));
             System.out.println("Never locked objects (no context): "+(r.Hmap.size()-h2.satCount(r.H1.set())));
         }
@@ -1428,7 +1428,7 @@ public class PAResults implements PointerAnalysisResults {
             long sum = 0L; int n = 0;
             for (int i = 0; i < r.Vmap.size(); ++i) {
                 BDD b = r.V1.ithVar(i);
-                if (r.CONTEXT_SENSITIVE || r.OBJECT_SENSITIVE) b.andWith(r.V1c.domain());
+                if (r.CONTEXT_SENSITIVE || r.OBJECT_SENSITIVE) b.andWith(r.V1cdomain);
                 int result = countTransitiveReachingDefs(b);
                 sum += result;
                 ++n;
@@ -1553,10 +1553,10 @@ public class PAResults implements PointerAnalysisResults {
             }
             int I_i = r.Imap.get(loc);
             BDD i   = r.I.ithVar(I_i);
-            BDD m_c = r.IEcs.relprod(i, r.V2c.set().and(r.Iset));
+            BDD m_c = r.IEcs.relprod(i, r.V2cset.and(r.Iset));
             // get transitive mod set for this particular method call   
             BDD s   = getTransitiveModSet(m_c);             
-            BDD q   = s.exist(r.H1c.set());
+            BDD q   = s.exist(r.H1cset);
 
             return new HeapLocationSet(q);
         } else {
@@ -1579,9 +1579,9 @@ public class PAResults implements PointerAnalysisResults {
             }
             int I_i = r.Imap.get(invoke);
             BDD i   = r.I.ithVar(I_i);
-            BDD m_c = r.IEcs.relprod(i, r.V2c.set().and(r.Iset));
+            BDD m_c = r.IEcs.relprod(i, r.V2cset.and(r.Iset));
             BDD s   = getTransitiveRefSet(m_c);
-            BDD q   = s.exist(r.H1c.set());
+            BDD q   = s.exist(r.H1cset);
                 
             return new HeapLocationSet(q);
         }else {
@@ -1617,9 +1617,9 @@ public class PAResults implements PointerAnalysisResults {
             int V_i = r.Vmap.get(n);
             b.orWith(r.V1.ithVar(V_i));
         }
-        b.andWith(r.V1c.domain());
+        b.andWith(r.V1cdomain);
         BDD s = r.vP.relprod(b, r.V1set);
-        BDD q = s.exist(r.H1c.set());
+        BDD q = s.exist(r.H1cset);
         q.andWith(r.F.ithVar(r.Fmap.get(f)));
         return new HeapLocationSet(q);
     }
@@ -1848,7 +1848,7 @@ public class PAResults implements PointerAnalysisResults {
             ProgramLocation invoke = getInvoke(i_i);
             System.out.println(" Call site "+i_i+": "+invoke);
             BDD d = b.exist(r.Iset); // V2cxV1c
-            BDD e = d.exist(r.V2c.set()); // V1c
+            BDD e = d.exist(r.V2cset); // V1c
             // check each parameter
             MethodSummary ms = MethodSummary.getSummary(m);
             for (int j = 0; j < ms.getNumOfParams(); ++j) {
@@ -1858,7 +1858,7 @@ public class PAResults implements PointerAnalysisResults {
                 BDD f = r.V1.ithVar(p_i); // V1
                 f.andWith(e.id()); // V1cxV1
                 BDD g = r.vP.relprod(f, r.V1set); // H1cxH1
-                BDD h = g.exist(r.H1c.set());
+                BDD h = g.exist(r.H1cset);
                 System.out.println("  Param "+j+": ");
                 for (Iterator z = g.iterator(r.H1.set()); z.hasNext(); ) {
                     BDD x = (BDD) z.next();

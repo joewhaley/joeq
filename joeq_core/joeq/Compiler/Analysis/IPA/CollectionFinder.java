@@ -119,7 +119,7 @@ public class CollectionFinder extends Application {
     public BDD calculateConcreteTypes(BDD types, boolean removeNull) {
         TypedBDD tb = (TypedBDD)types;
         BDD t = tb.getDomainSet().contains(_r.H1c) ? 
-                types.relprod(_r.hT, _r.H1set.and(_r.H1c.set())) :
+                types.relprod(_r.hT, _r.H1set.and(_r.H1cset)) :
                 types.relprod(_r.hT, _r.H1set);
         
         // Remove NULL if it's present
