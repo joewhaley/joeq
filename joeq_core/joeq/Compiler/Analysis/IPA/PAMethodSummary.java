@@ -163,10 +163,8 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
         BDD M_bdd = pa.M.ithVar(M_i);
         pa.addToVisited(M_bdd);
 
-        MethodSummary ms = null;
-        if (m instanceof jq_FakeInstanceMethod) 
-            ms = MethodSummary.fakeMethodSummary((jq_FakeInstanceMethod)m);
-        
+        MethodSummary ms = MethodSummary.getSummary(m);
+
         if (m.getBytecode() == null && ms == null) {
             // todo: parameters passed into native methods.
             // build up 'Mret'
@@ -180,9 +178,6 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
             return;
         }
         
-        if (ms == null) {
-            ms = MethodSummary.getSummary(CodeCache.getCode(m));
-        }
         if (TRACE) out.println("Visiting method summary "+ms);
         
         if (m.isSynchronized() && !m.isStatic()) {
