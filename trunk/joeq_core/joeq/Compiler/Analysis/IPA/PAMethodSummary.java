@@ -280,6 +280,7 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
                     }
                 }            
             }
+            
             if (mc.isSingleTarget()) {                
                 if (target != pa.javaLangObject_clone) {
                     // statically-bound, single target call
@@ -317,6 +318,28 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
             }
             I_bdd.free();
         }
+       
+        for (Iterator i = ms.getCalls().iterator(); i.hasNext(); ) {
+            ProgramLocation mc = (ProgramLocation) i.next();
+            if (TRACE) out.println("Visiting call site "+mc);
+            int I_i = pa.Imap.get(LoadedCallGraph.mapCall(mc));
+            BDD I_bdd = pa.I.ithVar(I_i);
+            jq_Method target = mc.getTargetMethod();
+
+            if(ReflectionInformationProvider.isForName(target)){
+                ConcreteTypeNode h = ConcreteTypeNode.get(
+                    pa.class_class, 
+                    /*new ProgramLocation.PlaceholderParameterProgramLocation(m, "forName @" + mc.getEmacsName())*/ mc, 
+                    new Integer(++pa.opn));
+                pa.addToForNameMap(h, I_bdd);
+                System.out.println("Processing a call to forName: " + mc.getEmacsName());
+                int H_i = pa.Hmap.get(h);
+                pa.addToVP(ms.getRVN(mc), H_i);
+                
+                //continue;
+            }
+        }
+        
         // build up 'mV', 'vP', 'S', 'L', 'Mret', 'Mthr'
         for (Iterator i = ms.nodeIterator(); i.hasNext(); ) {
             Node node = (Node) i.next();

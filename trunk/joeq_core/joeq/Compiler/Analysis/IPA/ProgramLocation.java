@@ -513,7 +513,7 @@ public abstract class ProgramLocation implements Textualizable {
         }
 
         public void write(Textualizer t) throws IOException {
-            t.writeString("fake "+locationLabel.replace(' ', '_') + " ");
+            t.writeString("placeholder "+locationLabel.replace(' ', '_') + " ");
             t.writeObject(m);
         }
 
