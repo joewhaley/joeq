@@ -3167,8 +3167,15 @@ public class PA {
         if(REFLECTION_STAT){
             PrintWriter w = null;
             try {
-                w = new PrintWriter(new FileWriter(REFLECTION_STAT_FILE));
+                out.println("Saving reflection statistics in " + REFLECTION_STAT_FILE);
+                w = new PrintWriter(new FileWriter(REFLECTION_STAT_FILE));                
                 BDD newInstanceCalls = IE.restrict(M.ithVar(Mmap.get(javaLangClass_newInstance)));   // I
+                
+                if(RESOLVE_REFLECTION){
+                    w.println("Used " + (USE_CASTS_FOR_REFLECTION ? "casts" : "strings") + " for reflection resolution.");
+                }else{
+                    w.println("Reflection wasn't resolved.");
+                }
                 w.println("There are " + newInstanceCalls.satCount(Iset) + " calls to Class.newInstance");
                 
                 int pos = 1;
