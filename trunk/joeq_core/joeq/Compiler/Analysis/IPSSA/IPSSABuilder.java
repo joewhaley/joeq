@@ -76,7 +76,13 @@ public class IPSSABuilder implements Runnable {
         this._classes = classes;
 		// get pointer analysis results			
 		try {
-			_ptr = PAResults.loadResults(null, null);
+            String resdir = System.getProperty("pa.resultdir");
+            String[] args = null;
+            if(resdir != null) {
+                args = new String[1];
+                args[0] = resdir;
+            }
+			_ptr = PAResults.loadResults(args, null);
 		} catch (IOException e) {
 			System.err.println("Caught an exception: " + e.toString());
 			e.printStackTrace();
