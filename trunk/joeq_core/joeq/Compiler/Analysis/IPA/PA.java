@@ -3698,7 +3698,7 @@ public class PA {
         }
         if (t instanceof jq_Array) {
             jq_Array a = (jq_Array) t;
-            int depth = a.getDepth();
+            int depth = a.getDimensionality();
             jq_Type elementType = a.getInnermostElementType();
             return mungeTypeName(elementType)+depth;
         }
