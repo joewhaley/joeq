@@ -865,7 +865,7 @@ public class MethodSummary {
                     if (o == null) continue;
                     if (o instanceof Node) {
                         Node that = (Node)o;
-                        Quad q = TRACK_SOURCE_QUADS ? (Quad)edgesToQuads.get(Edge.get(that, this, f)) : (Quad)null;
+                        Quad q = (TRACK_SOURCE_QUADS && edgesToQuads != null) ? (Quad)edgesToQuads.get(Edge.get(that, this, f)) : (Quad)null;
                         if (that == this) {
                             // add self-cycles on f to all nodes in set.
                             if (TRACE_INTRA) out.println("Adding self-cycles on field "+f);
@@ -885,7 +885,7 @@ public class MethodSummary {
                             Node that = (Node)k.next();
                             if (removeSelf)
                                 k.remove();
-                            Quad q = TRACK_SOURCE_QUADS ? (Quad)edgesToQuads.get(Edge.get(that, this, f)) : (Quad)null;
+                            Quad q = (TRACK_SOURCE_QUADS && edgesToQuads != null) ? (Quad)edgesToQuads.get(Edge.get(that, this, f)) : (Quad)null;
                             if (that == this) {
                                 // add self-cycles on f to all mapped nodes.
                                 if (TRACE_INTRA) out.println("Adding self-cycles on field "+f);
@@ -915,7 +915,7 @@ public class MethodSummary {
                     if (o instanceof Node) {
                         Node that = (Node)o;
                         jq.Assert(that != this); // cyclic edges handled above.
-                        Quad q = TRACK_SOURCE_QUADS ? (Quad)edgesToQuads.get(Edge.get(this, that, f)) : (Quad)null;
+                        Quad q = (TRACK_SOURCE_QUADS && edgesToQuads != null) ? (Quad)edgesToQuads.get(Edge.get(this, that, f)) : (Quad)null;
                         if (removeSelf)
                             that.removePredecessor(f, this);
                         for (Iterator j=set.iterator(); j.hasNext(); ) {
@@ -928,7 +928,7 @@ public class MethodSummary {
                             if (removeSelf)
                                 k.remove();
                             jq.Assert(that != this); // cyclic edges handled above.
-                            Quad q = TRACK_SOURCE_QUADS ? (Quad)edgesToQuads.get(Edge.get(this, that, f)) : (Quad)null;
+                            Quad q = (TRACK_SOURCE_QUADS && edgesToQuads != null) ? (Quad)edgesToQuads.get(Edge.get(this, that, f)) : (Quad)null;
                             if (removeSelf)
                                 that.removePredecessor(f, this);
                             for (Iterator j=set.iterator(); j.hasNext(); ) {
@@ -1086,6 +1086,13 @@ public class MethodSummary {
             return true;
         }
         
+        /** Return a set of Map.Entry objects corresponding to the incoming inside edges
+         *  of this node. */
+        public Set getPredecessors() {
+            if (predecessors == null) return Collections.EMPTY_SET;
+            return predecessors.entrySet();
+        }
+        
         /** Record the given passed parameter in the set for this node.
          *  Returns true if that passed parameter didn't already exist, false otherwise. */
         public boolean recordPassedParameter(PassedParameter cm) {
@@ -1120,7 +1127,7 @@ public class MethodSummary {
         public boolean addEdge(jq_Field m, Node n, Quad q) {
             if (TRACK_SOURCE_QUADS) {
                 if (edgesToQuads == null) edgesToQuads = new HashMap();
-                if (edgesToQuads.containsKey(Edge.get(this, n, m)))
+                //if (!edgesToQuads.containsKey(Edge.get(this, n, m)))
                     edgesToQuads.put(new Edge(this, n, m), q);
             }
             n.addPredecessor(m, this);
@@ -1147,7 +1154,7 @@ public class MethodSummary {
             for (Iterator i=s.iterator(); i.hasNext(); ) {
                 Node n = (Node)i.next();
                 if (TRACK_SOURCE_QUADS) {
-                    if (edgesToQuads.containsKey(Edge.get(this, n, m)))
+                    //if (!edgesToQuads.containsKey(Edge.get(this, n, m)))
                         edgesToQuads.put(new Edge(this, n, m), q);
                 }
                 n.addPredecessor(m, this);
@@ -1241,6 +1248,17 @@ public class MethodSummary {
             }
             if (this.escapes)
                 getEdges_escaped(m, result);
+        }
+        
+        public final Set getNonEscapingEdges(jq_Field m) {
+            if (addedEdges == null) return Collections.EMPTY_SET;
+            Object o = addedEdges.get(m);
+            if (o == null) return Collections.EMPTY_SET;
+            if (o instanceof LinkedHashSet) {
+                return (LinkedHashSet)o;
+            } else {
+                return Collections.singleton(o);
+            }
         }
         
         /** Add the nodes that are targets of inside edges on the given field
@@ -1348,7 +1366,7 @@ public class MethodSummary {
                            if (j.hasNext()) sb.append(", ");
                         }
                     }
-                    sb.append("}");
+                    sb.append("} ");
                 }
             }
             if (accessPathEdges != null) {
@@ -1744,6 +1762,12 @@ public class MethodSummary {
                     this.field_predecessors.add(o);
                 }
             }
+        }
+        
+        /** Return the set of outside edge predecessors of this node. */
+        public Set getAccessPathPredecessors() {
+            if (field_predecessors == null) return Collections.EMPTY_SET;
+            return field_predecessors;
         }
         
         /*

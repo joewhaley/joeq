@@ -50,6 +50,7 @@ public class AndersenPointerAnalysis {
     public static boolean FULL_DUMP = false;
     public static boolean COMPARE_RTA = false;
     public static boolean DO_TWICE = false;
+    public static boolean IGNORE_CLINIT = true;
     
     public static final boolean HANDLE_ESCAPE = true;
     public static final boolean USE_SOFT_REFERENCES = true;
@@ -589,7 +590,7 @@ public class AndersenPointerAnalysis {
             Map.Entry e = (Map.Entry)j.next();
             jq_Field f = (jq_Field)e.getKey();
             Object o = e.getValue();
-            if (!MethodSummary.IGNORE_STATIC_FIELDS) {
+            if (!IGNORE_CLINIT && !MethodSummary.IGNORE_STATIC_FIELDS) {
                 jq_Class c = f.getDeclaringClass();
                 if (TRACE) out.println("Visiting edge: "+o+" = "+c+((f==null)?"[]":("."+f.getName())));
                 c.load();
