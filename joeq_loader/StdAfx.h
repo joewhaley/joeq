@@ -51,6 +51,10 @@
 #define _umask umask
 #endif
 
+#if !defined(DWORD_PTR)
+#define DWORD_PTR int
+#endif
+
 #if defined(linux)
 #include <linux/unistd.h>
 #include "context.h"
