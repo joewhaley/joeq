@@ -12,30 +12,68 @@ import joeq.Memory.CodeAddress;
 import joeq.Runtime.Unsafe;
 
 /**
- * DefaultCodeAllocator
+ * Provides access functions to the default code allocator.
+ * If the default_allocator is set, it is used as the default global code allocator.
+ * Otherwise, the code allocator of the current thread is used.
  *
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
 public abstract class DefaultCodeAllocator {
 
+    /**
+     * The default global code allocator.  If this is set, all threads use this
+     * allocator instead of their thread-local allocators.
+     */
     public static CodeAllocator default_allocator;
 
+    /**
+     * Gets the default code allocator for the current thread.
+     * 
+     * @return default code allocator for the current thread
+     */
     public static final CodeAllocator def() {
         if (default_allocator != null) return default_allocator;
         return Unsafe.getThreadBlock().getNativeThread().getCodeAllocator();
     }
     
+    /**
+     * Initialize the default code allocator.
+     */
     public static final void init() {
         def().init();
     }
+    
+    /**
+     * Get a code buffer from the default code allocator.
+     * 
+     * @param estimatedSize
+     * @param offset
+     * @param alignment
+     * @return
+     */
     public static final x86CodeBuffer getCodeBuffer(int estimatedSize, int offset, int alignment) {
         x86CodeBuffer o = def().getCodeBuffer(estimatedSize, offset, alignment);
         return o;
     }
+    
+    /**
+     * Patch the code address to point to the given heap address in the default
+     * code allocator.
+     * 
+     * @param code
+     * @param heap
+     */
     public static final void patchAbsolute(Address code, Address heap) {
         def().patchAbsolute(code, heap);
     }
+    
+    /**
+     * Patch the code address to be a relative offset to another code address.
+     * 
+     * @param code
+     * @param target
+     */
     public static final void patchRelativeOffset(CodeAddress code, CodeAddress target) {
         def().patchRelativeOffset(code, target);
     }

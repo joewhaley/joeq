@@ -558,10 +558,10 @@ public class SimpleAllocator extends HeapAllocator {
 
     void scanGCQueue(boolean b) {
         for (;;) {
-            Object o = gcWorkQueue.pull();
+            HeapAddress o = gcWorkQueue.pull();
             if (SimpleAllocator.TRACE) Debug.writeln("Pulled object from queue: ", HeapAddress.addressOf(o));
-            if (o == null) break;
-            scanObject(o, b);
+            if (o.isNull()) break;
+            scanObject(o.asObject(), b);
         }
     }
     

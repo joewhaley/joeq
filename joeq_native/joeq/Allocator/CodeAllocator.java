@@ -67,7 +67,7 @@ public abstract class CodeAllocator {
      * @param addr2  address to patch to
      */
     public abstract void patchAbsolute(Address addr1,
-                                         Address addr2);
+                                       Address addr2);
     
     /**
      * Patch the given code address to refer to the given code address, in
@@ -77,7 +77,7 @@ public abstract class CodeAllocator {
      * @param target  code address to patch to
      */
     public abstract void patchRelativeOffset(CodeAddress code,
-                                               CodeAddress target);
+                                             CodeAddress target);
 
     /**
      * This class provides the interface for x86 code buffers.
