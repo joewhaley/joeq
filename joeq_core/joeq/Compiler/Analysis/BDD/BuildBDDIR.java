@@ -1,4 +1,3 @@
-// BuildBDDIR.java, created Mar 17, 2004 2:43:55 PM 2004 by jwhaley
 // Copyright (C) 2004 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Analysis.BDD;
@@ -53,6 +52,7 @@ public class BuildBDDIR implements ControlFlowGraphVisitor {
     IndexMap methodMap;
     IndexMap opMap;
     IndexMap quadMap;
+    IndexMap quadLineMap;
     //IndexMap regMap;
     IndexMap memberMap;
     IndexMap constantMap;
@@ -133,14 +133,16 @@ public class BuildBDDIR implements ControlFlowGraphVisitor {
         }
         loadOpMap();
         quadMap = new IndexMap("quad");
+        quadLineMap = new IndexMap("quadloc");
         quadMap.get(theDummyObject);
+        quadLineMap.get(theDummyObject);
         //regMap = new IndexMap("reg");
         memberMap = new IndexMap("member");
         memberMap.get(theDummyObject);
         constantMap = new IndexMap("constant");
         constantMap.get(theDummyObject);
-        quad = makeDomain("quad", quadBits);
         opc = makeDomain("opc", opBits);
+        quad = makeDomain("quad", quadBits);
         dest = makeDomain("dest", regBits);
         if (USE_SRC12) {
             src1 = makeDomain("src1", regBits);
@@ -204,6 +206,7 @@ public class BuildBDDIR implements ControlFlowGraphVisitor {
             Quad q = i.nextQuad();
             currentQuad = bdd.one();
             int quadID = getQuadID(q);
+            addQuadLoc(q);
             //System.out.println("Quad id: "+quadID);
             
             // first quad visited is the entry point
@@ -259,6 +262,7 @@ public class BuildBDDIR implements ControlFlowGraphVisitor {
         System.out.println("methodMap size: " + methodMap.size());
         System.out.println("opMap size: " + opMap.size());
         System.out.println("quadMap size: " + quadMap.size());
+        System.out.println("quadLineMap size: " + quadLineMap.size());
         //System.out.println("regMap size: " + regMap.size());
         System.out.println("memberMap size: " + memberMap.size());
         System.out.println("constantMap size: " + constantMap.size());
@@ -292,6 +296,17 @@ public class BuildBDDIR implements ControlFlowGraphVisitor {
         int x = quadMap.get(r);
         Assert._assert(x > 0);
         return x;
+    }
+    
+    public void addQuadLoc(jq_Method m, Quad q) {        
+        Map map = CodeCache.getBCMap(m);            
+        Integer j = (Integer) map.get(q);
+        if (j == null) {
+            Assert.UNREACHABLE("Error: no mapping for quad "+q);
+        }
+        int bcIndex = j.intValue();
+        ProgramLocation quadLoc = new ProgramLocation.BCProgramLocation(m, bcIndex);
+        quadLineMap.get(q + " @ " + quadLoc);
     }
     
     public int getMemberID(Object r) {
@@ -417,6 +432,7 @@ public class BuildBDDIR implements ControlFlowGraphVisitor {
     public void dump() throws IOException {
         System.out.println("Var order: "+varOrderDesc);
         dumpMap(quadMap, dumpDir+"quad.map");
+        dumpMap(quadLineMap, dumpDir+"quadloc.map");
         dumpMap(opMap, dumpDir+"op.map");
         //dumpMap(regMap, dumpDir+"reg.map");
         dumpMap(memberMap, dumpDir+"member.map");
