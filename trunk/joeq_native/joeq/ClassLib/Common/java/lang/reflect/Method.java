@@ -8,6 +8,7 @@
 package ClassLib.Common.java.lang.reflect;
 
 import ClassLib.ClassLibInterface;
+import ClassLib.Common.ClassUtils;
 import Clazz.jq_Class;
 import Clazz.jq_InstanceMethod;
 import Clazz.jq_Method;
@@ -89,7 +90,7 @@ public class Method extends AccessibleObject {
             if (!TypeCheck.isAssignable(t, k))
                 throw new java.lang.IllegalArgumentException(t+" is not assignable to "+k);
         }
-        if (!this.isAccessible()) jq_m.checkCallerAccess(2);
+        if (!this.isAccessible()) ClassUtils.checkCallerAccess(jq_m, 2);
         int offset;
         if (jq_m.isStatic()) {
             obj = null; offset = 0;

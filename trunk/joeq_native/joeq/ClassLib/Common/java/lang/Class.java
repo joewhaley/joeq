@@ -7,6 +7,8 @@
 
 package ClassLib.Common.java.lang;
 
+import ClassLib.Common.ClassUtils;
+
 import Clazz.jq_Array;
 import Clazz.jq_Class;
 import Clazz.jq_ClassFileConstants;
@@ -72,7 +74,7 @@ public class Class {
         jq_Initializer i = jq_class.getInitializer(new jq_NameAndDesc(Utf8.get("<init>"), Utf8.get("()V")));
         if (i == null)
             throw new InstantiationException("no empty arg initializer in "+this);
-        i.checkCallerAccess(3);
+        ClassUtils.checkCallerAccess(i, 3);
         jq_class.cls_initialize(); 
         java.lang.Object o = jq_class.newInstance();
         try {

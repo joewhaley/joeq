@@ -8,6 +8,7 @@
 package ClassLib.Common.java.lang.reflect;
 
 import ClassLib.ClassLibInterface;
+import ClassLib.Common.ClassUtils;
 import Clazz.jq_Class;
 import Clazz.jq_Initializer;
 import Clazz.jq_NameAndDesc;
@@ -73,7 +74,7 @@ public class Constructor extends AccessibleObject {
         jq_Initializer jq_i = this.jq_init;
         jq_Class k = jq_i.getDeclaringClass();
         if (k.isAbstract()) throw new InstantiationException();
-        if (!this.isAccessible()) jq_i.checkCallerAccess(2);
+        if (!this.isAccessible()) ClassUtils.checkCallerAccess(jq_i, 2);
         jq_Type[] argtypes = jq_i.getParamTypes();
         int nargs = initargs == null ? 0 : initargs.length;
         if (nargs != argtypes.length-1)

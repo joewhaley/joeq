@@ -6,6 +6,7 @@
 
 package ClassLib.Common.java.io;
 
+import ClassLib.Common.ClassUtils;
 import Clazz.jq_Array;
 import Clazz.jq_Class;
 import Clazz.jq_Initializer;
@@ -66,7 +67,7 @@ public abstract class ObjectInputStream {
         jq_Initializer i = c2.getInitializer(new jq_NameAndDesc(Utf8.get("<init>"), Utf8.get("()V")));
         if (i == null)
             throw new InstantiationException("no empty arg initializer in "+initclass);
-        i.checkCallerAccess(3);
+        ClassUtils.checkCallerAccess(i, 3);
         c1.cls_initialize(); 
         Object o = c1.newInstance();
         try {
