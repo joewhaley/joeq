@@ -20,12 +20,12 @@ public class Class {
     private native java.lang.Object newInstance0()
         throws InstantiationException, IllegalAccessException;
 
-    private static Class forName1(java.lang.String name, boolean initialize)
+    private static Class forName1(java.lang.String name)
         throws ClassNotFoundException
     {
         // TODO: is this the correct classloader to use?
         java.lang.ClassLoader loader = PrimordialClassLoader.loader;
-        return forName0(name, initialize, loader);
+        return forName0(name, true, loader);
     }
     
     private java.lang.Object newInstance2(java.lang.Class ccls)
