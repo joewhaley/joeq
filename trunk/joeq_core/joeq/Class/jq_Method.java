@@ -356,6 +356,8 @@ public abstract class jq_Method extends jq_Member {
     }
     public int getLineNumber(int bci) {
         // todo: binary search
+	if (line_num_table == null)
+	    return -1;
         for (int i=line_num_table.length-1; i>=0; --i) {
             if (bci >= line_num_table[i].getStartPC()) return line_num_table[i].getLineNum();
         }
