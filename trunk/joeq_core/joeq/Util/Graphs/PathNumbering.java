@@ -45,6 +45,9 @@ public class PathNumbering {
 
     public static class Range implements Textualizable {
         public Number low, high;
+        public Range(int l, int h) {
+            this.low = new Integer(l); this.high = new Integer(h);
+        }
         public Range(Number l, Number h) {
             this.low = l; this.high = h;
         }
@@ -225,7 +228,7 @@ public class PathNumbering {
     }
 
     /** Initialize the mapping from nodes to their SCCs. */
-    private void initializeSccMap(SCComponent scc1) {
+    protected void initializeSccMap(SCComponent scc1) {
         Object[] nodes1 = scc1.nodes();
         for (int i=0; i<nodes1.length; ++i) {
             Object node = nodes1[i];
@@ -668,6 +671,94 @@ public class PathNumbering {
             out.writeBytes("n"+fromIndex+" -> n"+toIndex+" [label=\""+r+"\"];\n");
         }
         out.writeBytes("}\n");
+    }
+    
+    public static class RootNumbering extends PathNumbering {
+        
+        Range global;
+        Map iMap;
+        
+        public Number countPaths(Collection roots, Navigator navigator, Map initialMap) {
+            this.iMap = new HashMap();
+            int num_roots = 1;
+            for (Iterator i = initialMap.entrySet().iterator(); i.hasNext(); ) {
+                Object o = i.next();
+                Map.Entry e = (Map.Entry) o;
+                Number a = (Number) e.getValue();
+                int val = a.intValue();
+                Range r = new Range(num_roots, num_roots + val);
+                this.iMap.put(e.getKey(), r);
+                System.out.println(e.getKey()+" has range "+r);
+                num_roots += val+1;
+            }
+            
+            this.global = new Range(0, num_roots-1);
+            System.out.println("Others have range "+global);
+            
+            BigInteger max_paths = BigInteger.valueOf(num_roots);
+        
+            if (TRACE_NUMBERING) System.out.print("Building and sorting SCCs...");
+            Set sccs = SCComponent.buildSCC(roots, navigator);
+            this.navigator = navigator;
+            graph = SCCTopSortedGraph.topSort(sccs);
+            if (TRACE_NUMBERING) System.out.print("done.");
+        
+            SCComponent scc = graph.getFirst();
+            while (scc != null) {
+                initializeSccMap(scc);
+                scc = scc.nextTopSort();
+            }
+            return max_paths;
+        }
+        
+        public Range getRange(Object o) {
+            if (iMap.containsKey(o)) {
+                return (Range) iMap.get(o);
+            }
+            return global;
+        }
+    
+        public Range getSCCRange(SCComponent scc) {
+            Assert.UNREACHABLE();
+            return null;
+        }
+    
+        public Number numberOfPathsTo(Object o) {
+            Assert.UNREACHABLE();
+            return null;
+        }
+    
+        public Number numberOfPathsToSCC(SCComponent scc) {
+            Assert.UNREACHABLE();
+            return null;
+        }
+    
+        public Range getEdge(Object from, Object to) {
+            if (iMap.containsKey(from)) {
+                return (Range) iMap.get(from);
+            }
+            return global;
+        }
+    
+        public Range getEdge(Pair edge) {
+            return getEdge(edge.left, edge.right);
+        }
+    
+        public Collection/*<Range>*/ getSCCEdges(SCComponent from, SCComponent to) {
+            Assert.UNREACHABLE();
+            return null;
+        }
+    
+        public Collection/*<Range>*/ getSCCEdges(Pair edge) {
+            Assert.UNREACHABLE();
+            return null;
+        }
+    
+        public SCComponent getSCC(Object node) {
+            Assert.UNREACHABLE();
+            return null;
+        }
+    
     }
     
 }
