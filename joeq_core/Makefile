@@ -82,7 +82,7 @@ bootstrap-ibm13-linux:	javac
 	java -Xbootclasspath/a:$(JDK14SUPPORT_LIB):/opt/IBMJava2-131/jre/lib/ext/ibmjcaprovider.jar -cp $(BOOTSTRAP_CLASSPATH) -ms240M -mx240M joeq.Main.Bootstrapper -cl ../native/joeq/ClassLib/ibm13_linux/classlist.txt
 
 bootstrap-sun142-win32:	javac
-	java -cp $(BOOTSTRAP_CLASSPATH) -ms185M -mx185M joeq.Main.Bootstrapper -cl ../native/joeq/ClassLib/sun142_win32/classlist.txt
+	java -cp $(BOOTSTRAP_CLASSPATH) -ms200M -mx200M joeq.Main.Bootstrapper -cl ../native/joeq/ClassLib/sun142_win32/classlist.txt
 
 bootstrap-sun14-win32:	javac
 	java -cp $(BOOTSTRAP_CLASSPATH) -ms180M -mx180M joeq.Main.Bootstrapper -cl ../native/joeq/ClassLib/sun14_win32/classlist.txt

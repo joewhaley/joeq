@@ -238,6 +238,7 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
                 if (target != pa.javaLangObject_clone) {
                     // statically-bound, single target call
                     pa.addSingleTargetCall(thisptr, mc, I_bdd, target);
+                    pa.addToMI(M_bdd, I_bdd, null);
                 } else {
                     // super.clone()
                     pa.addToMI(M_bdd, I_bdd, pa.javaLangObject_fakeclone);

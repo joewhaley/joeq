@@ -1421,6 +1421,13 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
         this.handled = true;
     }
     /**
+     * @see joeq.Compiler.Quad.QuadVisitor#visitPhi(Compiler.Quad.Quad)
+     */
+    public void visitPhi(Quad obj) {
+        if (TRACE) System.out.println(this+" Phi: "+obj);
+        Assert.UNREACHABLE();
+    }
+    /**
      * @see joeq.Compiler.Quad.QuadVisitor#visitNew(Compiler.Quad.Quad)
      */
     public void visitNew(Quad obj) {

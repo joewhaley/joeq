@@ -131,7 +131,7 @@ public class PA {
     int MAX_PARAMS = Integer.parseInt(System.getProperty("pa.maxparams", "4"));
     
     int bddnodes = Integer.parseInt(System.getProperty("bddnodes", "2500000"));
-    int bddcache = Integer.parseInt(System.getProperty("bddcache", "150000"));
+    int bddcache = Integer.parseInt(System.getProperty("bddcache", "200000"));
     static String resultsFileName = System.getProperty("pa.results", "pa");
     static String callgraphFileName = System.getProperty("pa.callgraph", "callgraph");
     static String initialCallgraphFileName = System.getProperty("pa.icallgraph", callgraphFileName);
@@ -153,7 +153,7 @@ public class PA {
     int V_BITS=18, I_BITS=16, H_BITS=15, Z_BITS=5, F_BITS=13, T_BITS=12, N_BITS=13, M_BITS=14;
     int VC_BITS=0, HC_BITS=0;
     int MAX_VC_BITS = Integer.parseInt(System.getProperty("pa.maxvc", "48"));
-    int MAX_HC_BITS = Integer.parseInt(System.getProperty("pa.maxhc", "6"));
+    int MAX_HC_BITS = Integer.parseInt(System.getProperty("pa.maxhc", "0"));
     
     IndexMap/*Node*/ Vmap;
     IndexMap/*ProgramLocation*/ Imap;
@@ -899,7 +899,7 @@ public class PA {
     public boolean isNullConstant(Node node) {
 	if (node instanceof ConcreteTypeNode || node instanceof ConcreteObjectNode) {
             jq_Reference type = node.getDeclaredType();
-            if (type == null) {
+            if (type == null || type == jq_NullType.NULL_TYPE) {
                 if (TRACE) out.println("Skipping null constant.");
                 return true;
             }
@@ -1123,6 +1123,7 @@ public class PA {
             int start = (T_i < last_T)?last_N:0;
             for (int N_i = start; N_i < Nsize; ++N_i) {
                 jq_Method n = (jq_Method) Nmap.get(N_i);
+                if (n == null) continue;
                 n.getDeclaringClass().prepare();
                 jq_Method m;
                 if (n.isStatic()) {
@@ -1976,11 +1977,6 @@ public class PA {
         handleNewTargets();
         addAllMethods();
         buildTypes();
-        try {
-            long time = System.currentTimeMillis();
-            dumpBDDRelations();
-            System.out.println("Dump took "+(System.currentTimeMillis()-time)/1000.+"s");
-        } catch (IOException x) {}
         bindParameters();
         long time = System.currentTimeMillis();
         solvePointsTo();
@@ -2160,22 +2156,23 @@ public class PA {
         
         System.out.println("Time spent initializing: "+(System.currentTimeMillis()-time)/1000.);
         
-        if (DUMP_INITIAL) {
-            buildTypes();
-            dumpBDDRelations();
-            return;
-        }
-        
-        // Start timing solver.
-        time = System.currentTimeMillis();
-        
         if (DISCOVER_CALL_GRAPH || OBJECT_SENSITIVE || CARTESIAN_PRODUCT) {
+            time = System.currentTimeMillis();
             iterate();
+            System.out.println("Time spent solving: "+(System.currentTimeMillis()-time)/1000.);
         } else {
+            if (DUMP_INITIAL) {
+                buildTypes();
+                try {
+                    long time2 = System.currentTimeMillis();
+                    dumpBDDRelations();
+                    System.out.println("Dump took "+(System.currentTimeMillis()-time2)/1000.+"s");
+                } catch (IOException x) {}
+            }
+            time = System.currentTimeMillis();
             assumeKnownCallGraph();
+            System.out.println("Time spent solving: "+(System.currentTimeMillis()-time)/1000.);
         }
-        
-        System.out.println("Time spent solving: "+(System.currentTimeMillis()-time)/1000.);
 
         printSizes();
         
@@ -2244,6 +2241,8 @@ public class PA {
                     dis.THREAD_SENSITIVE = false;
                     dis.DISCOVER_CALL_GRAPH = true;
                     dis.CS_CALLGRAPH = false;
+                    dis.DUMP_INITIAL = false;
+                    dis.DUMP_RESULTS = false;
                     dis.run("java", dis.cg, rootMethods);
                     System.out.println("Finished discovering call graph.");
                     dis = new PA();
@@ -3407,6 +3406,19 @@ public class PA {
         dos.writeBytes("HC "+(1L<<HC_BITS)+"\n");
         dos.close();
         
+        BDD mC = bdd.zero();
+        for (Iterator i = visited.iterator(Mset); i.hasNext(); ) {
+            BDD m = (BDD) i.next();
+            int m_i = (int) m.scanVar(M);
+            jq_Method method = (jq_Method) Mmap.get(m_i);
+            BDD c = getV1V2Context(method);
+            if (c != null) {
+                BDD d = c.exist(V2cset); c.free();
+                m.andWith(d);
+            }
+            mC.orWith(m);
+        }
+        
         bdd.save(dumpPath+"vP0.bdd", vP0);
         bdd.save(dumpPath+"hP0.bdd", hP);
         bdd.save(dumpPath+"L.bdd", L0);
@@ -3419,6 +3431,7 @@ public class PA {
         bdd.save(dumpPath+"actual.bdd", actual);
         bdd.save(dumpPath+"formal.bdd", formal);
         bdd.save(dumpPath+"mV.bdd", mV);
+        bdd.save(dumpPath+"mC.bdd", mC);
         bdd.save(dumpPath+"mI.bdd", mI);
         bdd.save(dumpPath+"Mret.bdd", Mret);
         bdd.save(dumpPath+"Mthr.bdd", Mthr);
