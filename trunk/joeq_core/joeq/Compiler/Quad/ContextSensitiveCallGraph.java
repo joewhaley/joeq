@@ -27,6 +27,8 @@ import Operator.New;
 import Operator.NewArray;
 import Operator.Putfield;
 import Operator.Putstatic;
+import Operator.Special;
+import Operator.Unary;
 import jq;
 
 /**
@@ -133,12 +135,28 @@ public class ContextSensitiveCallGraph {
                 result.add(o);
             }
         }
-        
+
+        public abstract String toString_short();
         public String toString() {
             StringBuffer sb = new StringBuffer();
             if (addedEdges != null) {
                 sb.append(" writes: ");
-                sb.append(addedEdges);
+                for (Iterator i=addedEdges.entrySet().iterator(); i.hasNext(); ) {
+                    java.util.Map.Entry e = (java.util.Map.Entry)i.next();
+                    jq_Field f = (jq_Field)e.getKey();
+                    Object o = e.getValue();
+                    sb.append(f);
+                    sb.append("={");
+                    if (o instanceof Node)
+                        sb.append(((Node)o).toString_short());
+                    else {
+                        for (Iterator j=((HashSet)o).iterator(); j.hasNext(); ) {
+                           sb.append(((Node)j.next()).toString_short());
+                           if (j.hasNext()) sb.append(", ");
+                        }
+                    sb.append("}");
+                    }
+                }
             }
             if (accessPathEdges != null) {
                 sb.append(" reads: ");
@@ -167,7 +185,27 @@ public class ContextSensitiveCallGraph {
         
         Node copy() { return new ConcreteTypeNode(this); }
         
-        public String toString() { return "Concrete: "+type+" q: "+q.getID()+super.toString(); }
+        public String toString() { return toString_short()+super.toString(); }
+        public String toString_short() { return "Concrete: "+type+" q: "+q.getID(); }
+    }
+    
+    public static final class UnknownTypeNode extends Node {
+        jq_Reference type; Quad q;
+        
+        UnknownTypeNode(jq_Reference type, Quad q) { this.type = type; this.q = q; }
+        UnknownTypeNode(UnknownTypeNode that) { super(that); this.type = that.type; this.q = that.q; }
+        
+        public boolean equals(UnknownTypeNode that) { return this.q == that.q; }
+        public boolean equals(Object o) {
+            if (o instanceof UnknownTypeNode) return equals((UnknownTypeNode)o);
+            else return false;
+        }
+        public int hashCode() { return q.hashCode(); }
+        
+        Node copy() { return new UnknownTypeNode(this); }
+        
+        public String toString() { return toString_short()+super.toString(); }
+        public String toString_short() { return "Unknown: "+type+" q: "+q.getID(); }
     }
     
     public abstract static class OutsideNode extends Node {
@@ -178,7 +216,8 @@ public class ContextSensitiveCallGraph {
     public static final class GlobalNode extends OutsideNode {
         private GlobalNode() {}
         Node copy() { return this; }
-        public String toString() { return "global"; }
+        public String toString() { return toString_short()+super.toString(); }
+        public String toString_short() { return "global"; }
         public static final GlobalNode INSTANCE = new GlobalNode();
     }
     
@@ -195,7 +234,25 @@ public class ContextSensitiveCallGraph {
         
         Node copy() { return new ReturnValueNode(this); }
         
-        public String toString() { return "Return value of "+m; }
+        public String toString() { return toString_short()+super.toString(); }
+        public String toString_short() { return "Return value of "+m; }
+    }
+    
+    public static final class CaughtExceptionNode extends OutsideNode {
+        ExceptionHandler eh;
+        CaughtExceptionNode(ExceptionHandler eh) { this.eh = eh; }
+        CaughtExceptionNode(CaughtExceptionNode that) { super(that); this.eh = that.eh; }
+        public boolean equals(CaughtExceptionNode that) { return this.eh.equals(that.eh); }
+        public boolean equals(Object o) {
+            if (o instanceof CaughtExceptionNode) return equals((CaughtExceptionNode)o);
+            else return false;
+        }
+        public int hashCode() { return eh.hashCode(); }
+        
+        Node copy() { return new CaughtExceptionNode(this); }
+        
+        public String toString() { return toString_short()+super.toString(); }
+        public String toString_short() { return "Caught exception: "+eh; }
     }
     
     public static final class ThrownExceptionNode extends OutsideNode {
@@ -211,7 +268,8 @@ public class ContextSensitiveCallGraph {
         
         Node copy() { return new ThrownExceptionNode(this); }
         
-        public String toString() { return "Thrown exception of "+m; }
+        public String toString() { return toString_short()+super.toString(); }
+        public String toString_short() { return "Thrown exception of "+m; }
     }
     
     public static final class ParamNode extends OutsideNode {
@@ -229,7 +287,8 @@ public class ContextSensitiveCallGraph {
         
         Node copy() { return new ParamNode(this); }
         
-        public String toString() { return "Param#"+n+" method "+m.getName()+super.toString(); }
+        public String toString() { return this.toString_short()+super.toString(); }
+        public String toString_short() { return "Param#"+n+" method "+m.getName(); }
     }
     
     public static final class FieldNode extends OutsideNode {
@@ -247,7 +306,8 @@ public class ContextSensitiveCallGraph {
         
         Node copy() { return new FieldNode(this); }
         
-        public String toString() { return "FieldLoad "+f+" quad "+q.getID()+super.toString(); }
+        public String toString() { return this.toString_short()+super.toString(); }
+        public String toString_short() { return "FieldLoad "+f+" quad "+q.getID(); }
     }
     
     public static final class State implements Cloneable {
@@ -367,6 +427,23 @@ public class ContextSensitiveCallGraph {
                         continue;
                     }
                     this.s = this.s.copy();
+                    if (this.bb.isExceptionHandlerEntry()) {
+                        java.util.Iterator i = cfg.getExceptionHandlersMatchingEntry(this.bb);
+                        jq.assert(i.hasNext());
+                        ExceptionHandler eh = (ExceptionHandler)i.next();
+                        CaughtExceptionNode n = new CaughtExceptionNode(eh);
+                        if (i.hasNext()) {
+                            HashSet set = new HashSet(); set.add(n);
+                            while (i.hasNext()) {
+                                eh = (ExceptionHandler)i.next();
+                                n = new CaughtExceptionNode(eh);
+                                set.add(n);
+                            }
+                            s.registers[nLocals] = set;
+                        } else {
+                            s.registers[nLocals] = n;
+                        }
+                    }
                     if (TRACE) {
                         out.println("State at beginning of "+this.bb+":");
                         this.s.dump(out);
@@ -575,7 +652,7 @@ public class ContextSensitiveCallGraph {
             methodCalls.add(mc);
             jq_Type[] params = m.getParamTypes();
             ParamListOperand plo = Invoke.getParamList(obj);
-            jq.assert(params.length == plo.length());
+            jq.assert(m == Allocator.HeapAllocator._multinewarray || params.length == plo.length());
             for (int i=0; i<params.length; ++i) {
                 if (!params[i].isReferenceType()) continue;
                 Register r = plo.get(i).getRegister();
@@ -667,6 +744,27 @@ public class ContextSensitiveCallGraph {
             }
         }
         
+        public void visitSpecial(Quad obj) {
+            if (obj.getOperator() == Special.GET_THREAD_BLOCK.INSTANCE) {
+                if (TRACE) out.println("Visiting: "+obj);
+                Register dest_r = ((RegisterOperand)Special.getOp1(obj)).getRegister();
+                ConcreteTypeNode n = new ConcreteTypeNode(Scheduler.jq_Thread._class, obj);
+                setRegister(dest_r, n);
+            } else if (obj.getOperator() == Special.GET_TYPE_OF.INSTANCE) {
+                if (TRACE) out.println("Visiting: "+obj);
+                Register dest_r = ((RegisterOperand)Special.getOp1(obj)).getRegister();
+                UnknownTypeNode n = new UnknownTypeNode(Clazz.jq_Reference._class, obj);
+                setRegister(dest_r, n);
+            }
+        }
+        public void visitUnary(Quad obj) {
+            if (obj.getOperator() == Unary.INT_2OBJECT.INSTANCE) {
+                if (TRACE) out.println("Visiting: "+obj);
+                Register dest_r = Unary.getDest(obj).getRegister();
+                UnknownTypeNode n = new UnknownTypeNode(PrimordialClassLoader.getJavaLangObject(), obj);
+                setRegister(dest_r, n);
+            }
+        }
         public void visitExceptionThrower(Quad obj) {
             ListIterator.jq_Class xs = obj.getThrownExceptions().classIterator();
             while (xs.hasNext()) {
