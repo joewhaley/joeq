@@ -3,11 +3,6 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Main;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URL;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -17,9 +12,16 @@ import java.util.List;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
+
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
+import joeq.Class.jq_Method;
 import joeq.Class.jq_MethodVisitor;
 import joeq.Class.jq_Primitive;
 import joeq.Class.jq_StaticField;
@@ -27,8 +29,10 @@ import joeq.Class.jq_StaticMethod;
 import joeq.Class.jq_Type;
 import joeq.Class.jq_TypeVisitor;
 import joeq.Compiler.Quad.BasicBlockVisitor;
+import joeq.Compiler.Quad.CallGraph;
 import joeq.Compiler.Quad.CodeCache;
 import joeq.Compiler.Quad.ControlFlowGraphVisitor;
+import joeq.Compiler.Quad.LoadedCallGraph;
 import joeq.Compiler.Quad.QuadVisitor;
 import joeq.Runtime.Reflection;
 import joeq.UTF.Utf8;
@@ -162,6 +166,18 @@ public abstract class Driver {
                 addClassesInPackage(commandBuffer[++index], /*recursive=*/false);
             } else if (commandBuffer[index].equalsIgnoreCase("packages")) {
                 addClassesInPackage(commandBuffer[++index], /*recursive=*/true);
+            } else if (commandBuffer[index].equalsIgnoreCase("callgraph")) {
+                String callgraphFile = commandBuffer[++index];
+                try {
+                    CallGraph cg = new LoadedCallGraph(callgraphFile);
+                    HashSet set = new HashSet();
+                    for (Iterator i = cg.getAllMethods().iterator(); i.hasNext(); ) {
+                        jq_Method m = (jq_Method) i.next();
+                        set.add(m.getDeclaringClass());
+                    }
+                    classesToProcess.addAll(set);
+                } catch (IOException x) {
+                }
             } else if (commandBuffer[index].equalsIgnoreCase("setinterpreter")) {
                 String interpreterClassName = commandBuffer[++index];
                 try {
