@@ -6,7 +6,7 @@ msvc:	set_text_writeable_msvc
 	set_text_writeable.exe joeq.exe
 
 SOURCES = joeq.c native.c exception.c
-OBJECT = ../joeq/jq.obj
+OBJECT = ../joeq_core/jq.obj
 
 ifeq (${OS},Windows_NT)
 GCC_ARGS = -mno-cygwin -g
