@@ -1812,7 +1812,7 @@ public class CSPAResults implements PointerAnalysisResults {
             Node o = (Node) i.next();
             if (o instanceof ReturnValueNode) {
                 ReturnValueNode ctn = (ReturnValueNode) o;
-                ProgramLocation pl2 = ctn.getMethodCall();
+                ProgramLocation pl2 = ctn.getLocation();
                 Assert._assert(pl2.getMethod() == pl.getMethod());
                 Assert._assert(pl.getClass() == pl2.getClass());
                 if (pl2 != null && pl.equals(pl2)) {
@@ -1829,7 +1829,7 @@ public class CSPAResults implements PointerAnalysisResults {
             Node o = (Node) i.next();
             if (o instanceof ThrownExceptionNode) {
                 ThrownExceptionNode ctn = (ThrownExceptionNode) o;
-                ProgramLocation pl2 = ctn.getMethodCall();
+                ProgramLocation pl2 = ctn.getLocation();
                 Assert._assert(pl2.getMethod() == pl.getMethod());
                 Assert._assert(pl.getClass() == pl2.getClass());
                 if (pl2 != null && pl.equals(pl2)) {

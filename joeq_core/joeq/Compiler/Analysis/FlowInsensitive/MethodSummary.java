@@ -2487,7 +2487,7 @@ public class MethodSummary {
         public jq_Method getDefiningMethod() {
             return m.getMethod();
         }
-        public final ProgramLocation getMethodCall() { return m; }
+        public final ProgramLocation getLocation() { return m; }
     }
     
     /** A ReturnValueNode represents the return value of a method call.

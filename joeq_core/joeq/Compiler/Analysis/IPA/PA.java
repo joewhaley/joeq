@@ -15,6 +15,8 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
 import java.util.AbstractMap;
 import java.util.Arrays;
@@ -1127,7 +1129,7 @@ public class PA {
                 vP.orWith(t2);
                 if (TRACE_SOLVER)
                     out.println(", vP "+old_vP_inner.satCount(V1H1set)+
-                                " -> "+vP.satCount(V1H1set));
+                                " -> "+vP.satCount(V1H1set)+" "+vP.nodeCount()+" nodes");
                 new_vP_inner = vP.apply(old_vP_inner, BDDFactory.diff);
                 old_vP_inner.free();
             }
@@ -1661,10 +1663,42 @@ public class PA {
         String jp = "("+j+")";
         if (j < map.size()) {
             Object o = map.get(j);
-            if (LONG_LOCATIONS && o instanceof ProgramLocation)
-                return jp+o+" in "+((ProgramLocation)o).toStringLong();
-            else
-                return jp+o;
+	    jp += o;
+	    // XXX should we use an interface here for long location printing?
+            if (LONG_LOCATIONS) {
+                // Node is a ProgramLocation
+        	if (o instanceof ProgramLocation) {
+        	    jp += " in "+((ProgramLocation)o).toStringLong();
+        	} else {
+        	    try {
+        		Class c = o.getClass();
+        		try {
+                            // Node has getLocation() 
+        		    Method m = c.getMethod("getLocation", new Class[] {});
+        		    ProgramLocation pl = (ProgramLocation)m.invoke(o, null);
+                            if (pl == null)
+                                throw new NoSuchMethodException();
+                            jp += " in "+pl.toStringLong();
+        		} catch (NoSuchMethodException _1) {
+        		    try {
+        			// Node has at least a getMethod() 
+        			Method m = c.getMethod("getMethod", new Class[] {});
+        			jp += " " + m.invoke(o, null);
+        		    } catch (NoSuchMethodException _2) {
+        			try {
+        			    // or getDefiningMethod() 
+                                    Method m = c.getMethod("getDefiningMethod", new Class[] {});
+                                    jp += " " + m.invoke(o, null);
+                                } catch (NoSuchMethodException _3) {
+                                }
+                            }
+			}
+                    } catch (InvocationTargetException _) {
+                    } catch (IllegalAccessException _) { 
+                    }
+		}
+            }
+	    return jp;
         } else {
             return jp+"<index not in map>";
         }
