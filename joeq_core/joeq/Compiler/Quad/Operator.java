@@ -11,6 +11,7 @@ package Compil3r.Quad;
 
 import Clazz.*;
 import jq;
+import Bootstrap.PrimordialClassLoader;
 import Compil3r.Quad.Operand.RegisterOperand;
 import Compil3r.Quad.Operand.TargetOperand;
 import Compil3r.Quad.Operand.ConditionOperand;
@@ -21,11 +22,55 @@ import Compil3r.Quad.Operand.MethodOperand;
 import Compil3r.Quad.Operand.ParamListOperand;
 import Compil3r.Quad.Operand.IntValueTableOperand;
 import Compil3r.Quad.Operand.BasicBlockTableOperand;
+import Util.Templates.UnmodifiableList;
+import java.util.Set;
 
 public class Operator {
 
     public void accept(Quad q, QuadVisitor qv) {
         qv.visitQuad(q);
+    }
+    public UnmodifiableList.jq_Class getThrownExceptions() {
+        return noexceptions;
+    }
+    
+    public static final UnmodifiableList.jq_Class noexceptions;
+    public static final UnmodifiableList.jq_Class anyexception;
+    public static final UnmodifiableList.jq_Class resolutionexceptions;
+    public static final UnmodifiableList.jq_Class nullptrexception;
+    public static final UnmodifiableList.jq_Class arrayboundsexception;
+    public static final UnmodifiableList.jq_Class arithexception;
+    public static final UnmodifiableList.jq_Class arraystoreexception;
+    public static final UnmodifiableList.jq_Class negativesizeexception;
+    public static final UnmodifiableList.jq_Class classcastexceptions;
+    public static final UnmodifiableList.jq_Class illegalmonitorstateexception;
+    static {
+        noexceptions = new UnmodifiableList.jq_Class( new jq_Class[0] );
+        anyexception = new UnmodifiableList.jq_Class(
+            PrimordialClassLoader.getJavaLangThrowable()
+            );
+        resolutionexceptions = anyexception; // a little conservative
+        nullptrexception = new UnmodifiableList.jq_Class(
+            PrimordialClassLoader.getJavaLangNullPointerException()
+            );
+        arrayboundsexception = new UnmodifiableList.jq_Class(
+            PrimordialClassLoader.getJavaLangArrayIndexOutOfBoundsException()
+            );
+        arraystoreexception = new UnmodifiableList.jq_Class(
+            PrimordialClassLoader.getJavaLangArrayStoreException()
+            );
+        negativesizeexception = new UnmodifiableList.jq_Class(
+            PrimordialClassLoader.getJavaLangNegativeArraySizeException()
+            );
+        arithexception = new UnmodifiableList.jq_Class(
+            PrimordialClassLoader.getJavaLangArithmeticException()
+            );
+        classcastexceptions = new UnmodifiableList.jq_Class(
+            PrimordialClassLoader.getJavaLangThrowable()
+            );
+        illegalmonitorstateexception = new UnmodifiableList.jq_Class(
+            PrimordialClassLoader.getJavaLangIllegalMonitorStateException()
+            );
     }
     
     public static abstract class Move extends Operator {
@@ -762,6 +807,9 @@ public class Operator {
                 qv.visitExceptionThrower(q);
                 super.accept(q, qv);
             }
+            public UnmodifiableList.jq_Class getThrownExceptions() {
+                return resolutionexceptions;
+            }
             public String toString() { return "GETSTATIC_I%"; }
         }
         public static class GETSTATIC_F_DYNLINK extends Getstatic {
@@ -770,6 +818,9 @@ public class Operator {
             public void accept(Quad q, QuadVisitor qv) {
                 qv.visitExceptionThrower(q);
                 super.accept(q, qv);
+            }
+            public UnmodifiableList.jq_Class getThrownExceptions() {
+                return resolutionexceptions;
             }
             public String toString() { return "GETSTATIC_F%"; }
         }
@@ -780,6 +831,9 @@ public class Operator {
                 qv.visitExceptionThrower(q);
                 super.accept(q, qv);
             }
+            public UnmodifiableList.jq_Class getThrownExceptions() {
+                return resolutionexceptions;
+            }
             public String toString() { return "GETSTATIC_L%"; }
         }
         public static class GETSTATIC_D_DYNLINK extends Getstatic {
@@ -789,6 +843,9 @@ public class Operator {
                 qv.visitExceptionThrower(q);
                 super.accept(q, qv);
             }
+            public UnmodifiableList.jq_Class getThrownExceptions() {
+                return resolutionexceptions;
+            }
             public String toString() { return "GETSTATIC_D%"; }
         }
         public static class GETSTATIC_A_DYNLINK extends Getstatic {
@@ -797,6 +854,9 @@ public class Operator {
             public void accept(Quad q, QuadVisitor qv) {
                 qv.visitExceptionThrower(q);
                 super.accept(q, qv);
+            }
+            public UnmodifiableList.jq_Class getThrownExceptions() {
+                return resolutionexceptions;
             }
             public String toString() { return "GETSTATIC_A%"; }
         }
@@ -848,6 +908,9 @@ public class Operator {
                 qv.visitExceptionThrower(q);
                 super.accept(q, qv);
             }
+            public UnmodifiableList.jq_Class getThrownExceptions() {
+                return resolutionexceptions;
+            }
             public String toString() { return "PUTSTATIC_I%"; }
         }
         public static class PUTSTATIC_F_DYNLINK extends Putstatic {
@@ -856,6 +919,9 @@ public class Operator {
             public void accept(Quad q, QuadVisitor qv) {
                 qv.visitExceptionThrower(q);
                 super.accept(q, qv);
+            }
+            public UnmodifiableList.jq_Class getThrownExceptions() {
+                return resolutionexceptions;
             }
             public String toString() { return "PUTSTATIC_F%"; }
         }
@@ -866,6 +932,9 @@ public class Operator {
                 qv.visitExceptionThrower(q);
                 super.accept(q, qv);
             }
+            public UnmodifiableList.jq_Class getThrownExceptions() {
+                return resolutionexceptions;
+            }
             public String toString() { return "PUTSTATIC_L%"; }
         }
         public static class PUTSTATIC_D_DYNLINK extends Putstatic {
@@ -875,6 +944,9 @@ public class Operator {
                 qv.visitExceptionThrower(q);
                 super.accept(q, qv);
             }
+            public UnmodifiableList.jq_Class getThrownExceptions() {
+                return resolutionexceptions;
+            }
             public String toString() { return "PUTSTATIC_D%"; }
         }
         public static class PUTSTATIC_A_DYNLINK extends Putstatic {
@@ -883,6 +955,9 @@ public class Operator {
             public void accept(Quad q, QuadVisitor qv) {
                 qv.visitExceptionThrower(q);
                 super.accept(q, qv);
+            }
+            public UnmodifiableList.jq_Class getThrownExceptions() {
+                return resolutionexceptions;
             }
             public String toString() { return "PUTSTATIC_A%"; }
         }
@@ -956,6 +1031,9 @@ public class Operator {
                 qv.visitExceptionThrower(q);
                 super.accept(q, qv);
             }
+            public UnmodifiableList.jq_Class getThrownExceptions() {
+                return resolutionexceptions;
+            }
             public String toString() { return "GETFIELD_I%"; }
         }
         public static class GETFIELD_F_DYNLINK extends Getfield {
@@ -964,6 +1042,9 @@ public class Operator {
             public void accept(Quad q, QuadVisitor qv) {
                 qv.visitExceptionThrower(q);
                 super.accept(q, qv);
+            }
+            public UnmodifiableList.jq_Class getThrownExceptions() {
+                return resolutionexceptions;
             }
             public String toString() { return "GETFIELD_F%"; }
         }
@@ -974,6 +1055,9 @@ public class Operator {
                 qv.visitExceptionThrower(q);
                 super.accept(q, qv);
             }
+            public UnmodifiableList.jq_Class getThrownExceptions() {
+                return resolutionexceptions;
+            }
             public String toString() { return "GETFIELD_L%"; }
         }
         public static class GETFIELD_D_DYNLINK extends Getfield {
@@ -982,6 +1066,9 @@ public class Operator {
             public void accept(Quad q, QuadVisitor qv) {
                 qv.visitExceptionThrower(q);
                 super.accept(q, qv);
+            }
+            public UnmodifiableList.jq_Class getThrownExceptions() {
+                return resolutionexceptions;
             }
             public String toString() { return "GETFIELD_D%"; }
         }
@@ -992,6 +1079,9 @@ public class Operator {
                 qv.visitExceptionThrower(q);
                 super.accept(q, qv);
             }
+            public UnmodifiableList.jq_Class getThrownExceptions() {
+                return resolutionexceptions;
+            }
             public String toString() { return "GETFIELD_A%"; }
         }
         public static class GETFIELD_B_DYNLINK extends Getfield {
@@ -1000,6 +1090,9 @@ public class Operator {
             public void accept(Quad q, QuadVisitor qv) {
                 qv.visitExceptionThrower(q);
                 super.accept(q, qv);
+            }
+            public UnmodifiableList.jq_Class getThrownExceptions() {
+                return resolutionexceptions;
             }
             public String toString() { return "GETFIELD_B%"; }
         }
@@ -1010,6 +1103,9 @@ public class Operator {
                 qv.visitExceptionThrower(q);
                 super.accept(q, qv);
             }
+            public UnmodifiableList.jq_Class getThrownExceptions() {
+                return resolutionexceptions;
+            }
             public String toString() { return "GETFIELD_C%"; }
         }
         public static class GETFIELD_S_DYNLINK extends Getfield {
@@ -1019,6 +1115,9 @@ public class Operator {
                 qv.visitExceptionThrower(q);
                 super.accept(q, qv);
             }
+            public UnmodifiableList.jq_Class getThrownExceptions() {
+                return resolutionexceptions;
+            }
             public String toString() { return "GETFIELD_S%"; }
         }
         public static class GETFIELD_Z_DYNLINK extends Getfield {
@@ -1027,6 +1126,9 @@ public class Operator {
             public void accept(Quad q, QuadVisitor qv) {
                 qv.visitExceptionThrower(q);
                 super.accept(q, qv);
+            }
+            public UnmodifiableList.jq_Class getThrownExceptions() {
+                return resolutionexceptions;
             }
             public String toString() { return "GETFIELD_Z%"; }
         }
@@ -1100,6 +1202,9 @@ public class Operator {
                 qv.visitExceptionThrower(q);
                 super.accept(q, qv);
             }
+            public UnmodifiableList.jq_Class getThrownExceptions() {
+                return resolutionexceptions;
+            }
             public String toString() { return "PUTFIELD_I%"; }
         }
         public static class PUTFIELD_F_DYNLINK extends Putfield {
@@ -1108,6 +1213,9 @@ public class Operator {
             public void accept(Quad q, QuadVisitor qv) {
                 qv.visitExceptionThrower(q);
                 super.accept(q, qv);
+            }
+            public UnmodifiableList.jq_Class getThrownExceptions() {
+                return resolutionexceptions;
             }
             public String toString() { return "PUTFIELD_F%"; }
         }
@@ -1118,6 +1226,9 @@ public class Operator {
                 qv.visitExceptionThrower(q);
                 super.accept(q, qv);
             }
+            public UnmodifiableList.jq_Class getThrownExceptions() {
+                return resolutionexceptions;
+            }
             public String toString() { return "PUTFIELD_L%"; }
         }
         public static class PUTFIELD_D_DYNLINK extends Putfield {
@@ -1126,6 +1237,9 @@ public class Operator {
             public void accept(Quad q, QuadVisitor qv) {
                 qv.visitExceptionThrower(q);
                 super.accept(q, qv);
+            }
+            public UnmodifiableList.jq_Class getThrownExceptions() {
+                return resolutionexceptions;
             }
             public String toString() { return "PUTFIELD_D%"; }
         }
@@ -1136,6 +1250,9 @@ public class Operator {
                 qv.visitExceptionThrower(q);
                 super.accept(q, qv);
             }
+            public UnmodifiableList.jq_Class getThrownExceptions() {
+                return resolutionexceptions;
+            }
             public String toString() { return "PUTFIELD_A%"; }
         }
         public static class PUTFIELD_B_DYNLINK extends Putfield {
@@ -1144,6 +1261,9 @@ public class Operator {
             public void accept(Quad q, QuadVisitor qv) {
                 qv.visitExceptionThrower(q);
                 super.accept(q, qv);
+            }
+            public UnmodifiableList.jq_Class getThrownExceptions() {
+                return resolutionexceptions;
             }
             public String toString() { return "PUTFIELD_B%"; }
         }
@@ -1154,6 +1274,9 @@ public class Operator {
                 qv.visitExceptionThrower(q);
                 super.accept(q, qv);
             }
+            public UnmodifiableList.jq_Class getThrownExceptions() {
+                return resolutionexceptions;
+            }
             public String toString() { return "PUTFIELD_C%"; }
         }
         public static class PUTFIELD_S_DYNLINK extends Putfield {
@@ -1163,6 +1286,9 @@ public class Operator {
                 qv.visitExceptionThrower(q);
                 super.accept(q, qv);
             }
+            public UnmodifiableList.jq_Class getThrownExceptions() {
+                return resolutionexceptions;
+            }
             public String toString() { return "PUTFIELD_S%"; }
         }
         public static class PUTFIELD_Z_DYNLINK extends Putfield {
@@ -1171,6 +1297,9 @@ public class Operator {
             public void accept(Quad q, QuadVisitor qv) {
                 qv.visitExceptionThrower(q);
                 super.accept(q, qv);
+            }
+            public UnmodifiableList.jq_Class getThrownExceptions() {
+                return resolutionexceptions;
             }
             public String toString() { return "PUTFIELD_Z%"; }
         }
@@ -1188,6 +1317,9 @@ public class Operator {
             qv.visitCheck(q);
             qv.visitExceptionThrower(q);
             super.accept(q, qv);
+        }
+        public UnmodifiableList.jq_Class getThrownExceptions() {
+            return nullptrexception;
         }
         
         public static class NULL_CHECK extends NullCheck {
@@ -1209,6 +1341,9 @@ public class Operator {
             qv.visitCheck(q);
             qv.visitExceptionThrower(q);
             super.accept(q, qv);
+        }
+        public UnmodifiableList.jq_Class getThrownExceptions() {
+            return arithexception;
         }
         
         public static class ZERO_CHECK extends ZeroCheck {
@@ -1232,6 +1367,9 @@ public class Operator {
             qv.visitExceptionThrower(q);
             super.accept(q, qv);
         }
+        public UnmodifiableList.jq_Class getThrownExceptions() {
+            return arrayboundsexception;
+        }
         
         public static class BOUNDS_CHECK extends BoundsCheck {
             public static final BOUNDS_CHECK INSTANCE = new BOUNDS_CHECK();
@@ -1254,6 +1392,9 @@ public class Operator {
             qv.visitCheck(q);
             qv.visitExceptionThrower(q);
             super.accept(q, qv);
+        }
+        public UnmodifiableList.jq_Class getThrownExceptions() {
+            return arraystoreexception;
         }
         
         public static class ASTORE_CHECK extends StoreCheck {
@@ -1279,6 +1420,9 @@ public class Operator {
             qv.visitInvoke(q);
             qv.visitExceptionThrower(q);
             super.accept(q, qv);
+        }
+        public UnmodifiableList.jq_Class getThrownExceptions() {
+            return anyexception;
         }
         
         public static class INVOKEVIRTUAL_V extends Invoke {
@@ -1497,6 +1641,9 @@ public class Operator {
             qv.visitExceptionThrower(q);
             super.accept(q, qv);
         }
+        public UnmodifiableList.jq_Class getThrownExceptions() {
+            return negativesizeexception;
+        }
         
         public static class NEWARRAY extends NewArray {
             public static final NEWARRAY INSTANCE = new NEWARRAY();
@@ -1520,6 +1667,9 @@ public class Operator {
             qv.visitExceptionThrower(q);
             super.accept(q, qv);
         }
+        public UnmodifiableList.jq_Class getThrownExceptions() {
+            return classcastexceptions;
+        }
         
         public static class CHECKCAST extends CheckCast {
             public static final CHECKCAST INSTANCE = new CHECKCAST();
@@ -1541,6 +1691,9 @@ public class Operator {
             qv.visitTypeCheck(q);
             qv.visitExceptionThrower(q);
             super.accept(q, qv);
+        }
+        public UnmodifiableList.jq_Class getThrownExceptions() {
+            return resolutionexceptions;
         }
         
         public static class INSTANCEOF extends InstanceOf {
@@ -1579,6 +1732,9 @@ public class Operator {
             qv.visitMonitor(q);
             qv.visitExceptionThrower(q);
             super.accept(q, qv);
+        }
+        public UnmodifiableList.jq_Class getThrownExceptions() {
+            return illegalmonitorstateexception;
         }
         
         public static class MONITORENTER extends Monitor {
