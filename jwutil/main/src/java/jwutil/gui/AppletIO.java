@@ -265,7 +265,7 @@ public class AppletIO extends JApplet {
             System.arraycopy(s, 1, s2, 0, s2.length);
             applet.methodArgs = new Object[]{s2};
         }
-        System.out.println("Starting " + applet.method.getDeclaringClass().getSimpleName()+
+        System.out.println("Starting " + applet.method.getDeclaringClass().getName()+
             "."+applet.method.getName()+"()");
         launch(applet.method, applet.methodArgs);
     }
