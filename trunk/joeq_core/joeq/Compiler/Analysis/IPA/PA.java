@@ -77,7 +77,7 @@ import Util.Graphs.PathNumbering.Selector;
  */
 public class PA {
 
-    public static final boolean VerifyAssertions = true;
+    public static final boolean VerifyAssertions = false;
     boolean TRACE = !System.getProperty("pa.trace", "no").equals("no");
     boolean TRACE_SOLVER = !System.getProperty("pa.tracesolver", "no").equals("no");
     boolean TRACE_BIND = !System.getProperty("pa.tracebind", "no").equals("no");
@@ -1707,60 +1707,60 @@ public class PA {
         if (DUMP_DOTGRAPH)
             dumpCallGraphAsDot(callgraph, callgraphFileName + ".dot");
         
-        System.out.println("A: "+(int) A.satCount(V1V2set)+" relations, "+A.nodeCount()+" nodes");
+        System.out.println("A: "+(long) A.satCount(V1V2set)+" relations, "+A.nodeCount()+" nodes");
         bdd.save(dumpfilename+".A", A);
-        System.out.println("vP: "+(int) vP.satCount(V1H1set)+" relations, "+vP.nodeCount()+" nodes");
+        System.out.println("vP: "+(long) vP.satCount(V1H1set)+" relations, "+vP.nodeCount()+" nodes");
         bdd.save(dumpfilename+".vP", vP);
-        System.out.println("S: "+(int) S.satCount(V1FV2set)+" relations, "+S.nodeCount()+" nodes");
+        System.out.println("S: "+(long) S.satCount(V1FV2set)+" relations, "+S.nodeCount()+" nodes");
         bdd.save(dumpfilename+".S", S);
-        System.out.println("L: "+(int) L.satCount(V1FV2set)+" relations, "+L.nodeCount()+" nodes");
+        System.out.println("L: "+(long) L.satCount(V1FV2set)+" relations, "+L.nodeCount()+" nodes");
         bdd.save(dumpfilename+".L", L);
-        System.out.println("vT: "+(int) vT.satCount(V1.set().and(T1set))+" relations, "+vT.nodeCount()+" nodes");
+        System.out.println("vT: "+(long) vT.satCount(V1.set().and(T1set))+" relations, "+vT.nodeCount()+" nodes");
         bdd.save(dumpfilename+".vT", vT);
-        System.out.println("hT: "+(int) hT.satCount(H1.set().and(T2set))+" relations, "+hT.nodeCount()+" nodes");
+        System.out.println("hT: "+(long) hT.satCount(H1.set().and(T2set))+" relations, "+hT.nodeCount()+" nodes");
         bdd.save(dumpfilename+".hT", hT);
-        System.out.println("aT: "+(int) aT.satCount(T1set.and(T2set))+" relations, "+aT.nodeCount()+" nodes");
+        System.out.println("aT: "+(long) aT.satCount(T1set.and(T2set))+" relations, "+aT.nodeCount()+" nodes");
         bdd.save(dumpfilename+".aT", aT);
-        System.out.println("cha: "+(int) cha.satCount(T2Nset.and(Mset))+" relations, "+cha.nodeCount()+" nodes");
+        System.out.println("cha: "+(long) cha.satCount(T2Nset.and(Mset))+" relations, "+cha.nodeCount()+" nodes");
         bdd.save(dumpfilename+".cha", cha);
-        System.out.println("actual: "+(int) actual.satCount(Iset.and(Zset).and(V2.set()))+" relations, "+actual.nodeCount()+" nodes");
+        System.out.println("actual: "+(long) actual.satCount(Iset.and(Zset).and(V2.set()))+" relations, "+actual.nodeCount()+" nodes");
         bdd.save(dumpfilename+".actual", actual);
-        System.out.println("formal: "+(int) formal.satCount(this.MZset.and(V2.set()))+" relations, "+formal.nodeCount()+" nodes");
+        System.out.println("formal: "+(long) formal.satCount(this.MZset.and(V2.set()))+" relations, "+formal.nodeCount()+" nodes");
         bdd.save(dumpfilename+".formal", formal);
-        System.out.println("Iret: "+(int) Iret.satCount(IV1set)+" relations, "+Iret.nodeCount()+" nodes");
+        System.out.println("Iret: "+(long) Iret.satCount(IV1set)+" relations, "+Iret.nodeCount()+" nodes");
         bdd.save(dumpfilename+".Iret", Iret);
-        System.out.println("Mret: "+(int) Mret.satCount(Mset.and(V2.set()))+" relations, "+Mret.nodeCount()+" nodes");
+        System.out.println("Mret: "+(long) Mret.satCount(Mset.and(V2.set()))+" relations, "+Mret.nodeCount()+" nodes");
         bdd.save(dumpfilename+".Mret", Mret);
-        System.out.println("Ithr: "+(int) Ithr.satCount(IV1set)+" relations, "+Ithr.nodeCount()+" nodes");
+        System.out.println("Ithr: "+(long) Ithr.satCount(IV1set)+" relations, "+Ithr.nodeCount()+" nodes");
         bdd.save(dumpfilename+".Ithr", Ithr);
-        System.out.println("Mthr: "+(int) Mthr.satCount(Mset.and(V2.set()))+" relations, "+Mthr.nodeCount()+" nodes");
+        System.out.println("Mthr: "+(long) Mthr.satCount(Mset.and(V2.set()))+" relations, "+Mthr.nodeCount()+" nodes");
         bdd.save(dumpfilename+".Mthr", Mthr);
-        System.out.println("mI: "+(int) mI.satCount(INset.and(Mset))+" relations, "+mI.nodeCount()+" nodes");
+        System.out.println("mI: "+(long) mI.satCount(INset.and(Mset))+" relations, "+mI.nodeCount()+" nodes");
         bdd.save(dumpfilename+".mI", mI);
-        System.out.println("mV: "+(int) mV.satCount(Mset.and(V1.set()))+" relations, "+mV.nodeCount()+" nodes");
+        System.out.println("mV: "+(long) mV.satCount(Mset.and(V1.set()))+" relations, "+mV.nodeCount()+" nodes");
         bdd.save(dumpfilename+".mV", mV);
         
-        System.out.println("hP: "+(int) hP.satCount(H1FH2set)+" relations, "+hP.nodeCount()+" nodes");
+        System.out.println("hP: "+(long) hP.satCount(H1FH2set)+" relations, "+hP.nodeCount()+" nodes");
         bdd.save(dumpfilename+".hP", hP);
-        System.out.println("IE: "+(int) IE.satCount(IMset)+" relations, "+IE.nodeCount()+" nodes");
+        System.out.println("IE: "+(long) IE.satCount(IMset)+" relations, "+IE.nodeCount()+" nodes");
         bdd.save(dumpfilename+".IE", IE);
         if (IEcs != null) {
-            System.out.println("IEcs: "+(int) IEcs.satCount(IMset.and(V1cV2cset))+" relations, "+IEcs.nodeCount()+" nodes");
+            System.out.println("IEcs: "+(long) IEcs.satCount(IMset.and(V1cV2cset))+" relations, "+IEcs.nodeCount()+" nodes");
             bdd.save(dumpfilename+".IEcs", IEcs);
         }
         if (vPfilter != null) {
-            System.out.println("vPfilter: "+(int) vPfilter.satCount(V1.set().and(H1.set()))+" relations, "+vPfilter.nodeCount()+" nodes");
+            System.out.println("vPfilter: "+(long) vPfilter.satCount(V1.set().and(H1.set()))+" relations, "+vPfilter.nodeCount()+" nodes");
             bdd.save(dumpfilename+".vPfilter", vPfilter);
         }
         if (hPfilter != null) {
-            System.out.println("hPfilter: "+(int) hPfilter.satCount(H1.set().and(Fset).and(H1.set()))+" relations, "+hPfilter.nodeCount()+" nodes");
+            System.out.println("hPfilter: "+(long) hPfilter.satCount(H1.set().and(Fset).and(H1.set()))+" relations, "+hPfilter.nodeCount()+" nodes");
             bdd.save(dumpfilename+".hPfilter", hPfilter);
         }
         if (IEfilter != null) {
             System.out.println("IEfilter: "+IEfilter.nodeCount()+" nodes");
             bdd.save(dumpfilename+".IEfilter", IEfilter);
         }
-        System.out.println("visited: "+(int) visited.satCount(Mset)+" relations, "+visited.nodeCount()+" nodes");
+        System.out.println("visited: "+(long) visited.satCount(Mset)+" relations, "+visited.nodeCount()+" nodes");
         bdd.save(dumpfilename+".visited", visited);
         
         dos = new DataOutputStream(new FileOutputStream(dumpfilename+".config"));
