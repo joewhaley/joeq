@@ -310,6 +310,8 @@ public class BootImage implements ObjectLayout, ELFConstants {
                         HeapAddress val = (HeapAddress)Reflection.getfield_P(o, f);
                         if (val != null && !val.isNull())
                             addDataReloc((HeapAddress)addr.offset(f.getOffset()), val);
+                    } else if (f.isStackAddressType()) {
+                        // no reloc necessary.
                     } else if (ftype.isReferenceType()) {
                         Object val = Reflection.getfield_A(o, f);
                         if (val != null) {
@@ -324,16 +326,16 @@ public class BootImage implements ObjectLayout, ELFConstants {
 
     public int size() { return heapCurrent-startAddress; }
     
-    public static class Entry {
+    private static class Entry {
         private Object o;            // object in host vm
         private HeapAddress address; // address in target vm
         private Entry(Object o, HeapAddress address) { this.o = o; this.address = address; }
-        public static Entry create(Object o, HeapAddress address) {
+        static Entry create(Object o, HeapAddress address) {
             jq.Assert(o != null);
             return new Entry(o, address);
         }
-        public Object getObject() { return o; }
-        public HeapAddress getAddress() { return address; }
+        Object getObject() { return o; }
+        HeapAddress getAddress() { return address; }
     }
     
     public static final char F_RELFLG = (char)0x0001;
