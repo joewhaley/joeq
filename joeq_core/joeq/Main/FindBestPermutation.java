@@ -58,7 +58,7 @@ public class FindBestPermutation extends Thread {
             myNodeCount = foo.nodeCount();
         } catch (IOException x) {
         }
-        System.out.println("Ordering: "+orderingToTry+" node count: "+myNodeCount);
+        System.out.println("Ordering: "+orderingToTry+" node count: "+myNodeCount+" vs. best "+bestNodeCount);
         bdd.done();
     }
     
@@ -86,7 +86,7 @@ public class FindBestPermutation extends Thread {
                     t.stop();
                     System.gc();
                     System.out.println("Thread killed.");
-                    Thread.sleep(1000);
+                    Thread.sleep(100);
                 } catch (InterruptedException e2) { }
             } else if (t.myNodeCount < bestNodeCount) {
                 bestNodeCount = t.myNodeCount;
