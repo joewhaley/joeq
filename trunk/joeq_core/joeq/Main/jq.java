@@ -373,11 +373,7 @@ public abstract class jq {
         if (!b) {
             DebugInterface.debugwriteln("Assertion Failure!");
             DebugInterface.debugwriteln(reason);
-            if (jq.RunningNative) {
-                Debug.OnlineDebugger.debuggerEntryPoint();
-                //new InternalError().printStackTrace();
-            }
-            DebugInterface.die(-1);
+	    _crash.die();
         }
     }
 
@@ -387,38 +383,22 @@ public abstract class jq {
 
     public static void TODO(String s) {
         DebugInterface.debugwriteln("TODO: " + s);
-        if (jq.RunningNative) {
-            Debug.OnlineDebugger.debuggerEntryPoint();
-            //new InternalError().printStackTrace();
-        }
-        DebugInterface.die(-1);
+	_crash.die();
     }
 
     public static void TODO() {
         DebugInterface.debugwriteln("TODO");
-        if (jq.RunningNative) {
-            Debug.OnlineDebugger.debuggerEntryPoint();
-            //new InternalError().printStackTrace();
-        }
-        DebugInterface.die(-1);
+	_crash.die();
     }
 
     public static void UNREACHABLE(String s) {
         DebugInterface.debugwriteln("UNREACHABLE: " + s);
-        if (jq.RunningNative) {
-            Debug.OnlineDebugger.debuggerEntryPoint();
-            //new InternalError().printStackTrace();
-        }
-        DebugInterface.die(-1);
+	_crash.die();
     }
 
     public static void UNREACHABLE() {
         DebugInterface.debugwriteln("BUG! unreachable code reached!");
-        if (jq.RunningNative) {
-            Debug.OnlineDebugger.debuggerEntryPoint();
-            //new InternalError().printStackTrace();
-        }
-        DebugInterface.die(-1);
+	_crash.die();
     }
 
     //// converting bytes to other data types
@@ -488,4 +468,10 @@ public abstract class jq {
     }
 
     //public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateType("LMain/jq;");
+
+    static interface CrashInterface {
+        void die();
+    }
+
+    static CrashInterface _crash;
 }

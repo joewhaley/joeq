@@ -37,6 +37,7 @@ public abstract class JoeqVM {
 
             // call java.lang.System.initializeSystemClass()
             ClassLibInterface.DEFAULT.initializeSystemClass();
+	    jq._crash = new DebuggerCrash();
         } catch (Throwable x) {
             SystemInterface.debugwriteln("Exception occurred during virtual machine initialization");
             SystemInterface.debugwriteln("Exception: " + x);
