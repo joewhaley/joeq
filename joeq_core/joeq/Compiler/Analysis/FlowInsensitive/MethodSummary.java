@@ -31,8 +31,6 @@ import Clazz.jq_Reference;
 import Clazz.jq_StaticField;
 import Clazz.jq_Type;
 import Compil3r.Analysis.IPA.ProgramLocation;
-import Compil3r.Analysis.IPA.CSPA.HeapObject;
-import Compil3r.Analysis.IPA.CSPA.Variable;
 import Compil3r.Analysis.IPA.ProgramLocation.QuadProgramLocation;
 import Compil3r.Quad.BasicBlock;
 import Compil3r.Quad.ControlFlowGraph;
@@ -77,13 +75,13 @@ import Util.Collections.FlattenedCollection;
 import Util.Collections.HashCodeComparator;
 import Util.Collections.IdentityHashCodeWrapper;
 import Util.Collections.IndexMap;
-import Util.Collections.IndexedMap;
 import Util.Collections.InstrumentedSetWrapper;
-import Util.Collections.MultiMap;
 import Util.Collections.Pair;
 import Util.Collections.SetFactory;
 import Util.Collections.SortedArraySet;
 import Util.Graphs.Navigator;
+import Util.IO.Textualizable;
+import Util.IO.Textualizer;
 
 /**
  * MethodSummary
@@ -1042,7 +1040,7 @@ public class MethodSummary {
     }
     
     /** Represents a particular parameter passed to a particular method call. */
-    public static class PassedParameter {
+    public static class PassedParameter implements Textualizable {
         final ProgramLocation m; final int paramNum;
         public PassedParameter(ProgramLocation m, int paramNum) {
             this.m = m; this.paramNum = paramNum;
@@ -1055,11 +1053,12 @@ public class MethodSummary {
         public boolean equals(PassedParameter that) { return this.m.equals(that.m) && this.paramNum == that.paramNum; }
         public boolean equals(Object o) { if (o instanceof PassedParameter) return equals((PassedParameter)o); return false; }
         public String toString() { return "Param "+paramNum+" for "+m; }
-        public void write(DataOutput out) throws IOException {
-            writeLocation(out, m);
-            out.writeByte(' ');
-            out.writeBytes(Integer.toString(paramNum));
+        public void write(Textualizer t) throws IOException {
+            t.writeReference(m);
+            t.writeBytes(" "+paramNum);
         }
+        public void writeEdges(Textualizer t) throws IOException { }
+        public void addEdge(String edgeName, Textualizable t) { }
         public static PassedParameter read(StringTokenizer st) {
             ProgramLocation l = ProgramLocation.read(st);
             int k = Integer.parseInt(st.nextToken());
@@ -1141,7 +1140,13 @@ public class MethodSummary {
         
     }
     
-    public abstract static class Node implements Comparable, Variable {
+    public static interface Variable {}
+    public static interface HeapObject {
+        ProgramLocation getLocation();
+        jq_Reference getDeclaredType();
+    }
+    
+    public abstract static class Node implements Textualizable, Comparable, Variable {
         /** Map from fields to sets of predecessors on that field. 
          *  This only includes inside edges; outside edge predecessors are in FieldNode. */
         protected Map predecessors;
@@ -1964,27 +1969,21 @@ public class MethodSummary {
             return sb.toString();
         }
         
-        /**
-         * Prints an identifier of this node to the given data output.
-         */
-        public void write(IndexedMap map, DataOutput out) throws IOException {
-            final int s = map.size();
+        public void addEdge(String edgeName, Textualizable t) {
+            if (edgeName.equals("fsucc")) {
+                
+            }
+        }
+        
+        public void writeEdges(Textualizer t) throws IOException {
             if (accessPathEdges != null) {
-                int index = map.get(this);
-                Assert._assert(s == map.size());
                 for (Iterator i = this.getAccessPathEdgeTargets().iterator(); i.hasNext(); ) {
                     Node n = (Node) i.next();
-                    if (!map.contains(n)) continue;
-                    int index2 = map.get(n);
-                    Assert._assert(s == map.size());
-                    if (index2 <= index) {
-                        out.writeBytes(" fsucc "+index2);
-                    }
+                    if (!t.contains(n)) continue;
+                    t.writeEdge("fsucc", n);
                 }
             }
             if (addedEdges != null) {
-                int index = map.get(this);
-                Assert._assert(s == map.size());
                 for (Iterator i = this.getNonEscapingEdges().iterator(); i.hasNext(); ) {
                     Map.Entry e = (Map.Entry) i.next();
                     jq_Field f = (jq_Field) e.getKey();
@@ -1995,20 +1994,14 @@ public class MethodSummary {
                         c = Collections.singleton(e.getValue());
                     for (Iterator j = c.iterator(); j.hasNext(); ) {
                         Node n = (Node) j.next();
-                        if (!map.contains(n)) continue;
-                        int index2 = map.get(n);
-                        Assert._assert(s == map.size());
-                        if (index2 <= index) {
-                            out.writeBytes(" succ ");
-                            writeMember(out, f);
-                            out.writeBytes(" "+index2);
-                        }
+                        if (!t.contains(n)) continue;
+                        t.writeBytes(" succ ");
+                        t.writeReference(f);
+                        t.writeReference(n);
                     }
                 }
             }
             if (predecessors != null) {
-                int index = map.get(this);
-                Assert._assert(s == map.size());
                 for (Iterator i = this.getPredecessors().iterator(); i.hasNext(); ) {
                     Map.Entry e = (Map.Entry) i.next();
                     jq_Field f = (jq_Field) e.getKey();
@@ -2019,14 +2012,10 @@ public class MethodSummary {
                         c = Collections.singleton(e.getValue());
                     for (Iterator j = c.iterator(); j.hasNext(); ) {
                         Node n = (Node) j.next();
-                        if (!map.contains(n)) continue;
-                        int index2 = map.get(n);
-                        Assert._assert(s == map.size());
-                        if (index2 < index) {
-                            out.writeBytes(" pred ");
-                            writeMember(out, f);
-                            out.writeBytes(" "+index2);
-                        }
+                        if (!t.contains(n)) continue;
+                        t.writeBytes(" pred ");
+                        t.writeReference(f);
+                        t.writeReference(n);
                     }
                 }
             }
@@ -2082,12 +2071,12 @@ public class MethodSummary {
             return "Concrete: "+(type==null?"null":type.shortName())+" @ "+(q==null?-1:q.getID());
         }
 
-        public void write(IndexedMap map, DataOutput out) throws IOException {
-            out.writeBytes("Concrete ");
-            writeType(out, (jq_Reference) type);
-            out.writeByte(' ');
-            writeLocation(out, q);
-            super.write(map, out);
+        public void write(Textualizer t) throws IOException {
+            t.writeBytes("Concrete ");
+            t.writeReference(type);
+            t.writeBytes(" ");
+            t.writeReference(q);
+            //super.write(t);
         }
     }
     
@@ -2137,30 +2126,6 @@ public class MethodSummary {
         return n;
     }
     
-    public static void writeType(DataOutput out, jq_Reference type) throws IOException {
-        if (type == null) {
-            out.writeBytes("null");
-        } else {
-            type.writeDesc(out);
-        } 
-    }
-    
-    public static void writeMember(DataOutput out, jq_Member m) throws IOException {
-        if (m == null) {
-            out.writeBytes("null");
-        } else {
-            m.writeDesc(out);
-        }
-    }
-    
-    public static void writeLocation(DataOutput out, ProgramLocation q) throws IOException {
-        if (q == null) {
-            out.writeBytes("null"); 
-        } else {
-            q.write(out);
-        }
-    }
-    
     /** A ConcreteObjectNode refers to an object that we discovered through reflection.
      * It includes a reference to the actual object instance.
      */
@@ -2199,7 +2164,7 @@ public class MethodSummary {
                         if (a.getElementType().isReferenceType()) {
                             Object[] oa = (Object[]) o;
                             for (int i=0; i<oa.length; ++i) {
-                                n.addEdge(null, get(oa[i]));
+                                n.addEdge((jq_Field) null, get(oa[i]));
                             }
                         }
                     }
@@ -2332,10 +2297,10 @@ public class MethodSummary {
             return super.removeEdge(m, n);
         }
 
-        public void write(IndexedMap map, DataOutput out) throws IOException {
-            out.writeBytes("ConcreteObject ");
-            writeType(out, (jq_Reference) getDeclaredType());
-            super.write(map, out);
+        public void write(Textualizer t) throws IOException {
+            t.writeBytes("ConcreteObject ");
+            t.writeReference(getDeclaredType());
+            //super.write(t);
         }
 
     }
@@ -2385,7 +2350,7 @@ public class MethodSummary {
                 jq_Array array = (jq_Array)type;
                 if (array.getElementType() instanceof jq_Reference) {
                     UnknownTypeNode n = get((jq_Reference)array.getElementType());
-                    this.addEdge(null, n);
+                    this.addEdge((jq_Field) null, n);
                 }
             }
         }
@@ -2431,10 +2396,10 @@ public class MethodSummary {
         public String toString_long() { return Integer.toHexString(this.hashCode())+": "+toString_short()+super.toString_long(); }
         public String toString_short() { return "Unknown: "+type; }
 
-        public void write(IndexedMap map, DataOutput out) throws IOException {
-            out.writeBytes("Unknown ");
-            writeType(out, (jq_Reference) getDeclaredType());
-            super.write(map, out);
+        public void write(Textualizer t) throws IOException {
+            t.writeBytes("Unknown ");
+            t.writeReference(getDeclaredType());
+            //super.write(t);
         }
     }
     
@@ -2500,10 +2465,10 @@ public class MethodSummary {
             //System.out.println("Edges from global: "+getEdges());
         }
         
-        public void write(IndexedMap map, DataOutput out) throws IOException {
-            out.writeBytes("Global ");
-            writeMember(out, method);
-            super.write(map, out);
+        public void write(Textualizer t) throws IOException {
+            t.writeBytes("Global ");
+            t.writeReference(method);
+            //super.write(t);
         }
         
     }
@@ -2540,10 +2505,10 @@ public class MethodSummary {
             return "Return value of "+m;
         }
         
-        public void write(IndexedMap map, DataOutput out) throws IOException {
-            out.writeBytes("ReturnValue ");
-            writeLocation(out, m);
-            super.write(map, out);
+        public void write(Textualizer t) throws IOException {
+            t.writeBytes("ReturnValue ");
+            t.writeReference(m);
+            //super.write(t);
         }
     }
     
@@ -2593,10 +2558,10 @@ public class MethodSummary {
         /* (non-Javadoc)
          * @see Compil3r.Quad.MethodSummary.Node#print(Compil3r.Quad.MethodSummary, java.io.PrintWriter)
          */
-        public void write(IndexedMap map, DataOutput out) throws IOException {
-            out.writeBytes("ThrownException ");
-            writeLocation(out, m);
-            super.write(map, out);
+        public void write(Textualizer t) throws IOException {
+            t.writeBytes("ThrownException ");
+            t.writeReference(m);
+            //super.write(t);
         }
     }
     
@@ -2627,11 +2592,11 @@ public class MethodSummary {
         /* (non-Javadoc)
          * @see Compil3r.Quad.MethodSummary.Node#print(Compil3r.Quad.MethodSummary, java.io.PrintWriter)
          */
-        public void write(IndexedMap map, DataOutput out) throws IOException {
-            out.writeBytes("Param ");
-            writeMember(out, (jq_Method) m);
-            out.writeBytes(" "+n);
-            super.write(map, out);
+        public void write(Textualizer t) throws IOException {
+            t.writeBytes("Param ");
+            t.writeReference(m);
+            t.writeBytes(" "+n);
+            //super.write(t);
         }
     }
     
@@ -2895,28 +2860,21 @@ public class MethodSummary {
         /* (non-Javadoc)
          * @see Compil3r.Quad.MethodSummary.Node#print
          */
-        public void write(IndexedMap map, DataOutput out) throws IOException {
-            out.writeBytes("Field ");
-            writeMember(out, (jq_Field) f);
-            out.writeBytes(" "+locs.size());
+        public void write(Textualizer t) throws IOException {
+            t.writeBytes("Field ");
+            t.writeReference(f);
+            t.writeBytes(" "+locs.size());
             for (Iterator i = locs.iterator(); i.hasNext(); ) {
+                t.writeBytes(" ");
                 ProgramLocation pl = (ProgramLocation) i.next();
-                out.write(' ');
-                pl.write(out);
+                t.writeReference(pl);
             }
-            int s = map.size();
-            int index = map.get(this);
-            Assert._assert(s == map.size());
             for (Iterator i = this.field_predecessors.iterator(); i.hasNext(); ) {
                 Node n = (Node) i.next();
-                if (!map.contains(n)) continue;
-                int index2 = map.get(n);
-                Assert._assert(s == map.size());
-                if (index2 < index) {
-                    out.writeBytes(" fpred "+index2);
-                }
+                if (!t.contains(n)) continue;
+                t.writeEdge("fpred", n);
             }
-            super.write(map, out);
+            //super.write(t);
         }
     }
     

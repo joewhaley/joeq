@@ -18,12 +18,14 @@ import Run_Time.Reflection;
 import UTF.Utf8;
 import Util.Assert;
 import Util.Collections.FilterIterator;
+import Util.IO.Textualizable;
+import Util.IO.Textualizer;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
-public abstract class jq_Member implements jq_ClassFileConstants {
+public abstract class jq_Member implements jq_ClassFileConstants, Textualizable {
 
     protected final void chkState(int s) {
         if (getState() >= s) return;
@@ -256,10 +258,12 @@ public abstract class jq_Member implements jq_ClassFileConstants {
     // Available after resolving
     public abstract boolean isStatic();
     
-    public void writeDesc(DataOutput out) throws IOException {
-        getDeclaringClass().writeDesc(out);
-        out.writeBytes(" "+getName()+" "+getDesc());
+    public void write(Textualizer t) throws IOException {
+        t.writeReference(getDeclaringClass());
+        t.writeBytes(" "+getName()+" "+getDesc());
     }
+    public void writeEdges(Textualizer t) throws IOException { }
+    public void addEdge(String edgeName, Textualizable t) { }
     
     public static jq_Member read(StringTokenizer st) {
         jq_Class c = (jq_Class) jq_Type.read(st);

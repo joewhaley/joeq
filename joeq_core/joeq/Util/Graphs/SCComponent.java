@@ -3,6 +3,7 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Util.Graphs;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,6 +18,8 @@ import java.util.Set;
 import Clazz.jq_Method;
 import Compil3r.Quad.CallGraph;
 import Util.Assert;
+import Util.IO.Textualizable;
+import Util.IO.Textualizer;
 
 /**
  * <code>SCComponent</code> models a <i>Strongly connected component</i> of a graph.
@@ -35,7 +38,7 @@ import Util.Assert;
  * @author  Alexandru SALCIANU <salcianu@alum.mit.edu>
  * @version $Id$
  */
-public final class SCComponent implements Comparable, Serializable {
+public final class SCComponent implements Comparable, Serializable, Textualizable {
 
     /** Default navigator through a component graph (a dag of strongly
         connected components).  */
@@ -328,8 +331,9 @@ public final class SCComponent implements Comparable, Serializable {
         itself. */
     public final boolean isLoop() { return loop; }
 
-    //The only way to produce SCCs is through SCComponent.buildSSC !
+    //The only way to produce SCCs is through SCComponent.buildSCC !
     SCComponent() { id = count++; }
+    SCComponent(int id) { this.id = id; }
 
     public int compareTo(Object o) {
         SCComponent scc2 = (SCComponent) o;
@@ -493,6 +497,45 @@ public final class SCComponent implements Comparable, Serializable {
         } else {
             return System.identityHashCode(this);
         }
+    }
+
+    public void write(Textualizer t) throws IOException {
+        t.writeBytes(id+" "+nodes_array.length);
+        for (int i = 0; i < nodes_array.length; ++i) {
+            t.writeBytes(" ");
+            Textualizable o = (Textualizable) nodes_array[i];
+            t.writeReference(o);
+        }
+        t.writeBytes(" "+next.length);
+        for (int i = 0; i < next.length; ++i) {
+            t.writeBytes(" ");
+            t.writeReference(next[i]);
+        }
+        t.writeBytes(" "+prev.length);
+        for (int i = 0; i < prev.length; ++i) {
+            t.writeBytes(" ");
+            t.writeReference(prev[i]);
+        }
+        t.writeBytes(" "+entries.length);
+        for (int i = 0; i < entries.length; ++i) {
+            t.writeBytes(" ");
+            t.writeReference((Textualizable) entries[i]);
+        }
+        t.writeBytes(" "+exits.length);
+        for (int i = 0; i < exits.length; ++i) {
+            t.writeBytes(" ");
+            t.writeReference((Textualizable) exits[i]);
+        }
+        t.writeBytes(" "+loop);
+    }
+    
+    public void writeEdges(Textualizer t) throws IOException {
+    }
+
+    /* (non-Javadoc)
+     * @see Util.IO.Textualizable#addEdge(java.lang.String, Util.IO.Textualizable)
+     */
+    public void addEdge(String edge, Textualizable t) {
     }
 
 }

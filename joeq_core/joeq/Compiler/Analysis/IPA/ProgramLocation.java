@@ -3,7 +3,6 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Analysis.IPA;
 
-import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Map;
 import java.util.StringTokenizer;
@@ -23,6 +22,8 @@ import Compil3r.Quad.Operator.Invoke;
 import UTF.Utf8;
 import Util.Assert;
 import Util.IO.ByteSequence;
+import Util.IO.Textualizable;
+import Util.IO.Textualizer;
 
 /**
  * This class provides a general mechanism to describe a location in the code,
@@ -32,7 +33,7 @@ import Util.IO.ByteSequence;
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
-public abstract class ProgramLocation {
+public abstract class ProgramLocation implements Textualizable {
     
     /** The method of this location. **/
     protected final jq_Method m;
@@ -61,7 +62,9 @@ public abstract class ProgramLocation {
     public abstract int getBytecodeIndex();
     public abstract jq_Type getResultType();
     
-    public abstract void write(DataOutput out) throws IOException;
+    public abstract void write(Textualizer t) throws IOException;
+    public void writeEdges(Textualizer t) throws IOException {}
+    public void addEdge(String edgeName, Textualizable t) {}
     
     public abstract boolean isCall();
     public abstract jq_Method getTargetMethod();
@@ -208,9 +211,9 @@ public abstract class ProgramLocation {
         }
         */
         
-        public void write(DataOutput out) throws IOException {
-            m.writeDesc(out);
-            out.writeBytes(" quad "+q.getID());
+        public void write(Textualizer t) throws IOException {
+            t.writeReference(m);
+            t.writeBytes(" quad "+q.getID());
         }
         
     }
@@ -431,9 +434,9 @@ public abstract class ProgramLocation {
         }
         */
         
-        public void write(DataOutput out) throws IOException {
-            m.writeDesc(out);
-            out.writeBytes(" bc "+bcIndex);
+        public void write(Textualizer t) throws IOException {
+            t.writeReference(m);
+            t.writeBytes(" bc "+bcIndex);
         }
         
     }

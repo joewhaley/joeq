@@ -3,11 +3,9 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Util.Graphs;
 
+import java.io.DataInput;
 import java.io.DataOutput;
-import java.io.Externalizable;
 import java.io.IOException;
-import java.io.ObjectInput;
-import java.io.ObjectOutput;
 import java.math.BigInteger;
 import java.util.AbstractList;
 import java.util.Arrays;
@@ -29,6 +27,8 @@ import Util.Strings;
 import Util.Collections.IndexMap;
 import Util.Collections.Pair;
 import Util.Collections.UnmodifiableIterator;
+import Util.IO.Textualizable;
+import Util.IO.Textualizer;
 
 /**
  * PathNumbering
@@ -36,14 +36,14 @@ import Util.Collections.UnmodifiableIterator;
  * @author John Whaley
  * @version $Id$
  */
-public class PathNumbering implements Externalizable {
+public class PathNumbering {
 
     public static final boolean PRINT_BIGGEST = false;
     public static final boolean TRACE_NUMBERING = false;
     public static final boolean TRACE_PATH = false;
     public static final boolean VERIFY_ASSERTIONS = false;
 
-    public static class Range {
+    public static class Range implements Textualizable {
         public Number low, high;
         public Range(Number l, Number h) {
             this.low = l; this.high = h;
@@ -72,6 +72,16 @@ public class PathNumbering implements Externalizable {
         }
         public int hashCode() {
             return low.hashCode() ^ high.hashCode();
+        }
+        public void write(Textualizer t) throws IOException {
+            t.writeBytes(low+" "+high);
+        }
+        public void writeEdges(Textualizer t) throws IOException { }
+        public void addEdge(String s, Textualizable t) { }
+        public static Range read(StringTokenizer st) {
+            long lo = Long.parseLong(st.nextToken());
+            long hi = Long.parseLong(st.nextToken());
+            return new Range(new Long(lo), new Long(hi));
         }
     }
     
@@ -497,46 +507,145 @@ public class PathNumbering implements Externalizable {
         return graph;
     }
     
-    public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-        Map temp = new HashMap();
-        for (;;) {
-            String line = in.readLine();
-            if (line == null) break;
-            StringTokenizer st = new StringTokenizer(line);
-            String s = st.nextToken();
-            if (s.equals("NODE")) {
-                int index = Integer.parseInt(st.nextToken());
-                Object o = in.readObject();
-                temp.put(new Integer(index), o);
-            } else if (s.equals("EDGE")) {
-                Object from = temp.get(new Integer(Integer.parseInt(st.nextToken())));
-                Object to = temp.get(new Integer(Integer.parseInt(st.nextToken())));
-                BigInteger lo = new BigInteger(st.nextToken(), 10);
-                BigInteger hi = new BigInteger(st.nextToken(), 10);
-                Pair edge = new Pair(from, to);
-                Range r = new Range(lo, hi);
-                edgeNumbering.put(edge, r);
-            } else {
-                // unknown.
-            }
+    public static PathNumbering read(DataInput in) throws IOException {
+        HashMap idToSCC = new HashMap();
+        PathNumbering p = new PathNumbering();
+        String s;
+        StringTokenizer st;
+        s = in.readLine();
+        Textualizer t = new Textualizer.Map(in);
+        int nodeToScc_size = Integer.parseInt(s);
+        for (int i = 0; i < nodeToScc_size; ++i) {
+            s = in.readLine();
+            st = new StringTokenizer(s);
+            Textualizable t2 = t.readObject();
+            s = st.nextToken();
+            Assert._assert(s.equals("->"));
+            s = st.nextToken();
+            Assert._assert(s.startsWith("SCC"));
+            int id = Integer.parseInt(s.substring(3));
+            Integer key = new Integer(id);
+            SCComponent scc = (SCComponent) idToSCC.get(key);
+            if (scc == null) { idToSCC.put(key, scc = new SCComponent()); }
+            Object result = p.nodeToScc.put(t2, scc);
+            Assert._assert(result == null);
         }
+        
+        s = in.readLine();
+        int sccNumbering_size = Integer.parseInt(s);
+        for (int i = 0; i < sccNumbering_size; ++i) {
+            s = in.readLine();
+            st = new StringTokenizer(s);
+            s = st.nextToken();
+            Assert._assert(s.startsWith("SCC"));
+            int id = Integer.parseInt(s.substring(3));
+            Integer key = new Integer(id);
+            SCComponent scc = (SCComponent) idToSCC.get(key);
+            Assert._assert(scc != null);
+            s = st.nextToken();
+            Assert._assert(s.equals("Range"));
+            Range r = Range.read(st);
+            Object result = p.sccNumbering.put(scc, r);
+            Assert._assert(result == null);
+        }
+        
+        s = in.readLine();
+        int sccEdges_size = Integer.parseInt(s);
+        for (int i = 0; i < sccEdges_size; ++i) {
+            s = in.readLine();
+            st = new StringTokenizer(s);
+            s = st.nextToken();
+            Assert._assert(s.startsWith("SCC"));
+            int id1 = Integer.parseInt(s.substring(3));
+            Integer key1 = new Integer(id1);
+            SCComponent scc1 = (SCComponent) idToSCC.get(key1);
+            Assert._assert(scc1 != null);
+            s = st.nextToken();
+            Assert._assert(s.startsWith("SCC"));
+            int id2 = Integer.parseInt(s.substring(3));
+            Integer key2 = new Integer(id2);
+            SCComponent scc2 = (SCComponent) idToSCC.get(key2);
+            Assert._assert(scc2 != null);
+            Pair p1 = new Pair(scc1, scc2);
+            s = st.nextToken();
+            int edges_size = Integer.parseInt(s);
+            HashSet set = new HashSet();
+            for (int j = 0; j < edges_size; ++j) {
+                Textualizable t1 = t.readObject();
+                Textualizable t2 = t.readObject();
+                Pair p2 = new Pair(t1, t2);
+                set.add(p2);
+            }
+            p.sccEdges.put(p1, set);
+        }
+        
+        s = in.readLine();
+        int edgeNumbering_size = Integer.parseInt(s);
+        for (int i = 0; i < edgeNumbering_size; ++i) {
+            s = in.readLine();
+            st = new StringTokenizer(s);
+            Textualizable t1 = t.readObject();
+            Textualizable t2 = t.readObject();
+            Pair p1 = new Pair(t1, t2);
+            Range r = Range.read(st);
+            p.edgeNumbering.put(p1, r);
+        }
+        return p;
     }
     
-    public void writeExternal(ObjectOutput out) throws IOException {
-        IndexMap m = new IndexMap("NodeMap");
-        for (Iterator i=nodeToScc.keySet().iterator(); i.hasNext(); ) {
-            Object o = i.next();
-            int j = m.get(o);
-            out.writeBytes("NODE "+j+"\n");
-            out.writeObject(o);
-        }
-        for (Iterator i=edgeNumbering.entrySet().iterator(); i.hasNext(); ) {
+    public void dump(DataOutput ou) throws IOException {
+        IndexMap sccs = new IndexMap("SCCs");
+        sccs.addAll(nodeToScc.values());
+        Textualizer t = new Textualizer.Map(ou, sccs);
+        t.writeBytes(nodeToScc.size()+"\n");
+        for (Iterator i = nodeToScc.entrySet().iterator(); i.hasNext(); ) {
             Map.Entry e = (Map.Entry) i.next();
-            Pair edge = (Pair) e.getKey();
+            Textualizable o = (Textualizable) e.getKey();
+            o.write(t);
+            SCComponent scc = (SCComponent) e.getValue();
+            t.writeBytes(" -> SCC"+scc.getId()+"\n");
+        }
+        t.writeBytes(sccNumbering.size()+"\n");
+        for (Iterator i = sccNumbering.entrySet().iterator(); i.hasNext(); ) {
+            Map.Entry e = (Map.Entry) i.next();
+            SCComponent scc = (SCComponent) e.getKey();
             Range r = (Range) e.getValue();
-            int fromIndex = m.get(edge.left);
-            int toIndex = m.get(edge.right);
-            out.writeBytes("EDGE "+fromIndex+" "+toIndex+" "+r.low+" "+r.high+"\n");
+            t.writeBytes("SCC"+scc.getId()+" Range ");
+            r.write(t);
+            t.writeBytes("\n");
+        }
+        t.writeBytes(sccEdges.size()+"\n");
+        for (Iterator i = sccEdges.entrySet().iterator(); i.hasNext(); ) {
+            Map.Entry e = (Map.Entry) i.next();
+            Pair p = (Pair) e.getKey();
+            SCComponent scc1 = (SCComponent) p.left;
+            SCComponent scc2 = (SCComponent) p.right;
+            Collection edges = (Collection) e.getValue();
+            t.writeBytes("SCC"+scc1.getId()+" SCC"+scc2.getId()+" "+edges.size());
+            for (Iterator j = edges.iterator(); j.hasNext(); ) {
+                Pair p2 = (Pair) j.next();
+                t.writeBytes(" ");
+                Textualizable t1 = (Textualizable) p2.left;
+                t1.write(t);
+                t.writeBytes(" ");
+                Textualizable t2 = (Textualizable) p2.right;
+                t2.write(t);
+            }
+            t.writeBytes("\n");
+        }
+        t.writeBytes(edgeNumbering.size()+"\n");
+        for (Iterator i = sccEdges.entrySet().iterator(); i.hasNext(); ) {
+            Map.Entry e = (Map.Entry) i.next();
+            Pair p = (Pair) e.getKey();
+            Textualizable t1 = (Textualizable) p.left;
+            t1.write(t);
+            t.writeBytes(" ");
+            Textualizable t2 = (Textualizable) p.right;
+            t2.write(t);
+            t.writeBytes(" ");
+            Range r = (Range) e.getValue();
+            r.write(t);
+            t.writeBytes("\n");
         }
     }
     

@@ -3,10 +3,15 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Util.Collections;
 
+import java.io.DataOutput;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+
+import Util.IO.Textualizable;
+import Util.IO.Textualizer;
 
 /**
  * IndexMap
@@ -79,4 +84,18 @@ public class IndexMap implements IndexedMap {
         return before != size();
     }
     
+    public void dump(final DataOutput out) throws IOException {
+        Textualizer t = new Textualizer.Map(out, this);
+        t.writeBytes(size()+"\n");
+        for (int j = 0; j < size(); ++j) {
+            Textualizable o = (Textualizable) get(j);
+            if (o == null) {
+                t.writeBytes("null");
+            } else {
+                t.writeObject(o);
+            }
+            t.writeBytes("\n");
+            ++j;
+        }
+    }
 }

@@ -43,13 +43,13 @@ import Compil3r.Analysis.FlowInsensitive.MethodSummary;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.ConcreteTypeNode;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.FieldNode;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.GlobalNode;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.HeapObject;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.ParamNode;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.PassedParameter;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.ReturnValueNode;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.ThrownExceptionNode;
-import Compil3r.Analysis.IPA.CSPA.HeapObject;
-import Compil3r.Analysis.IPA.CSPA.ThreadRootMap;
+import Compil3r.Analysis.IPA.PA.ThreadRootMap;
 import Compil3r.Analysis.IPA.ProgramLocation.BCProgramLocation;
 import Compil3r.Analysis.IPA.ProgramLocation.QuadProgramLocation;
 import Compil3r.BytecodeAnalysis.Bytecodes;
@@ -417,8 +417,8 @@ public class CSPAResults implements PointerAnalysisResults {
                                                " match callee vars "+contextVars_callee.toStringWithDomains()+"\n"+
                                                " contexts "+r2+" Edge: "+e);
                         }
-                        BDD b2 = CSPA.buildContextMap(V1c, PathNumbering.toBigInt(r1.low), PathNumbering.toBigInt(r1.high),
-                                                      V2c, PathNumbering.toBigInt(r2.low), PathNumbering.toBigInt(r2.high));
+                        BDD b2 = PA.buildContextMap(V1c, PathNumbering.toBigInt(r1.low), PathNumbering.toBigInt(r1.high),
+                                                    V2c, PathNumbering.toBigInt(r2.low), PathNumbering.toBigInt(r2.high));
                         contextMap.orWith(b2);
                     }
                     contextMap.andWith(contextVars_callee.id());
@@ -511,8 +511,8 @@ public class CSPAResults implements PointerAnalysisResults {
             }
             Range r1 = pn.getSCCRange(scc);
             if (TRACE_ACC_LOC) System.out.println("Local Vars="+localVars.toStringWithDomains()+" Context Range="+r1);
-            BDD b = CSPA.buildContextMap(V1c, PathNumbering.toBigInt(r1.low), PathNumbering.toBigInt(r1.high),
-                                         V2c, PathNumbering.toBigInt(r1.low), PathNumbering.toBigInt(r1.high));
+            BDD b = PA.buildContextMap(V1c, PathNumbering.toBigInt(r1.low), PathNumbering.toBigInt(r1.high),
+                                       V2c, PathNumbering.toBigInt(r1.low), PathNumbering.toBigInt(r1.high));
             BDD contextVars = b.and(localVars);
             b.free();
             if (TRACE_ACC_LOC) System.out.println("With context="+contextVars.toStringWithDomains());
@@ -527,8 +527,8 @@ public class CSPAResults implements PointerAnalysisResults {
                     Pair e = (Pair) k.next();
                     Range r2 = pn.getEdge(e);
                     if (TRACE_ACC_LOC) System.out.println("Edge="+e+" Caller range="+r1+" Callee range="+r2);
-                    BDD b2 = CSPA.buildContextMap(V1c, PathNumbering.toBigInt(r2.low), PathNumbering.toBigInt(r2.high),
-                                                  V3c, PathNumbering.toBigInt(r1.low), PathNumbering.toBigInt(r1.high));
+                    BDD b2 = PA.buildContextMap(V1c, PathNumbering.toBigInt(r2.low), PathNumbering.toBigInt(r2.high),
+                                                V3c, PathNumbering.toBigInt(r1.low), PathNumbering.toBigInt(r1.high));
                     contextMap.orWith(b2);
                 }
                 if (TRACE_ACC_LOC) System.out.println("Context map="+contextMap.toStringWithDomains());
@@ -1176,7 +1176,7 @@ public class CSPAResults implements PointerAnalysisResults {
         for (Iterator i=cg.getAllMethods().iterator(); i.hasNext(); ) {
             jq_Method m = (jq_Method) i.next();
             if (m.getBytecode() == null) continue;
-            if (m.getNameAndDesc().equals(CSPA.run_method)) {
+            if (m.getNameAndDesc().equals(PA.run_method)) {
                 jq_Class k = m.getDeclaringClass();
                 k.prepare();
                 PrimordialClassLoader.getJavaLangThread().prepare();
