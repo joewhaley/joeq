@@ -1,4 +1,4 @@
-// Interface.java, created Thu May  8 13:39:30 2003 by joewhaley
+// Interface.java, created Fri Apr  5 18:36:41 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package ClassLib.sun142_linux;
@@ -9,15 +9,12 @@ import Bootstrap.ObjectTraverser;
 import Bootstrap.PrimordialClassLoader;
 import ClassLib.ClassLibInterface;
 import Clazz.jq_Class;
-import Scheduler.jq_NativeThread;
 
-/**
- * Interface
- *
+/*
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
-public final class Interface extends ClassLib.Common.InterfaceImpl {
+public final class Interface extends ClassLib.sun14_linux.Interface {
 
     /** Creates new Interface */
     public Interface() {}
@@ -30,72 +27,25 @@ public final class Interface extends ClassLib.Common.InterfaceImpl {
         }
         return super.getImplementationClassDescs(desc);
     }
-
+    
     public ObjectTraverser getObjectTraverser() {
         return sun142_linuxObjectTraverser.INSTANCE;
     }
     
-    public static class sun142_linuxObjectTraverser extends CommonObjectTraverser {
+    public static class sun142_linuxObjectTraverser extends sun14_linuxObjectTraverser {
         public static sun142_linuxObjectTraverser INSTANCE = new sun142_linuxObjectTraverser();
         protected sun142_linuxObjectTraverser() {}
         public void initialize() {
             super.initialize();
             
-            jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Lsun/misc/Unsafe;");
-            nullStaticFields.add(k.getOrCreateStaticField("theUnsafe", "Lsun/misc/Unsafe;"));
-            k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Lsun/reflect/UnsafeFieldAccessorImpl;");
-            nullStaticFields.add(k.getOrCreateStaticField("unsafe", "Lsun/misc/Unsafe;"));
-            k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/nio/charset/Charset;");
-            nullStaticFields.add(k.getOrCreateStaticField("cache", "[Ljava/lang/Object;"));
+            jq_Class k;
+            k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("LClassLib/Common/java/util/zip/DeflaterHuffman;");
+            k.load();
             
-            k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Lsun/net/www/protocol/jar/Handler;");
+            // used during bootstrapping.
+            k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/ObjectInputStream$GetFieldImpl;");
+            k.load();
             
-
-            k = PrimordialClassLoader.getJavaLangClass();
-            nullInstanceFields.add(k.getOrCreateInstanceField("declaredFields", "Ljava/lang/ref/SoftReference;"));
-            nullInstanceFields.add(k.getOrCreateInstanceField("publicFields", "Ljava/lang/ref/SoftReference;"));
-            nullInstanceFields.add(k.getOrCreateInstanceField("declaredMethods", "Ljava/lang/ref/SoftReference;"));
-            nullInstanceFields.add(k.getOrCreateInstanceField("publicMethods", "Ljava/lang/ref/SoftReference;"));
-            nullInstanceFields.add(k.getOrCreateInstanceField("declaredConstructors", "Ljava/lang/ref/SoftReference;"));
-            nullInstanceFields.add(k.getOrCreateInstanceField("publicConstructors", "Ljava/lang/ref/SoftReference;"));
-            nullInstanceFields.add(k.getOrCreateInstanceField("declaredPublicFields", "Ljava/lang/ref/SoftReference;"));
-            nullInstanceFields.add(k.getOrCreateInstanceField("declaredPublicMethods", "Ljava/lang/ref/SoftReference;"));
-            k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/reflect/Field;");
-            nullInstanceFields.add(k.getOrCreateInstanceField("fieldAccessor", "Lsun/reflect/FieldAccessor;"));
-            k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/reflect/Method;");
-            nullInstanceFields.add(k.getOrCreateInstanceField("methodAccessor", "Lsun/reflect/MethodAccessor;"));
-            k = (Clazz.jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/reflect/Constructor;");
-            nullInstanceFields.add(k.getOrCreateInstanceField("constructorAccessor", "Lsun/reflect/ConstructorAccessor;"));
-            
-            if (IGNORE_THREAD_LOCALS) {
-                // for some reason, thread local gets created during bootstrapping. (SoftReference)
-                // for now, just kill all thread locals.
-                k = (Clazz.jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/Thread;");
-                nullInstanceFields.add(k.getOrCreateInstanceField("threadLocals", "Ljava/lang/ThreadLocal$ThreadLocalMap;"));
-                nullInstanceFields.add(k.getOrCreateInstanceField("inheritableThreadLocals", "Ljava/lang/ThreadLocal$ThreadLocalMap;"));
-            }
-            
-            jq_NativeThread.USE_INTERRUPTER_THREAD = false;
-            
-            // access the ISO-8859-1 character encoding, as it is used during bootstrapping
-            //PrimordialClassLoader.loader.getOrCreateBSType("Lsun/nio/cs/ISO_8859_1;");
-        }
-        
-        public java.lang.Object mapInstanceField(java.lang.Object o, Clazz.jq_InstanceField f) {
-            jq_Class c = f.getDeclaringClass();
-            if (c == PrimordialClassLoader.loader.getBSType("Lsun/nio/cs/AbstractCharsetProvider;")) {
-                String fieldName = f.getName().toString();
-                if (fieldName.equals("cache")) {
-                    Object o2 = mappedObjects.get(o);
-                    if (o2 != null)
-                        return o2;
-                    o2 = new java.util.TreeMap(java.lang.String.CASE_INSENSITIVE_ORDER);
-                    mappedObjects.put(o, o2);
-                    return o2;
-                }
-            }
-            return super.mapInstanceField(o, f);
         }
     }
-    
 }
