@@ -224,6 +224,12 @@ public class PathNumbering {
         }
     }
     
+    public Range getRange(Object o) {
+        SCComponent scc = (SCComponent) nodeToScc.get(o);
+        Range r = (Range) sccNumbering.get(scc);
+        return r;
+    }
+    
     public Number numberOfPathsTo(Object o) {
         SCComponent scc = (SCComponent) nodeToScc.get(o);
         return numberOfPathsToSCC(scc);
@@ -333,11 +339,11 @@ public class PathNumbering {
             sb.append(o);
             Path p = next;
             while (p != null) {
+                sb.append(',');
                 sb.append(Strings.lineSep);
                 sb.append('\t');
                 sb.append(p.o);
                 p = p.next;
-                if (p != null) sb.append(',');
             }
             sb.append('>');
             return sb.toString();
