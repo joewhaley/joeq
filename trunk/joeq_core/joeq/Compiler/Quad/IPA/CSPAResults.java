@@ -16,6 +16,7 @@ import java.util.StringTokenizer;
 import org.sf.javabdd.*;
 
 import Clazz.jq_Reference;
+import Clazz.jq_Type;
 import Compil3r.Quad.MethodSummary;
 import Compil3r.Quad.MethodSummary.Node;
 import Main.HostedVM;
@@ -80,8 +81,8 @@ public class CSPAResults {
         for (Iterator i=heapobjIndexMap.iterator(); i.hasNext(); ++j) {
             Node n = (Node) i.next();
             Assert._assert(this.heapobjIndexMap.get(n) == j);
-            if (n.getDeclaredType() == type)
-                result.orWith(V1o.ithVar(j));
+            if (n != null && n.getDeclaredType() == type)
+                result.orWith(H1o.ithVar(j));
         }
         return result;
         /*
@@ -363,11 +364,11 @@ public class CSPAResults {
             return new TypedBDD(pointsTo,
                                 new BDDDomain[] { V1c, V1o, H1c, H1o });
         }
-        if (s.startsWith("V1(")) {
+        if (s.startsWith("V1o(")) {
             int x = Integer.parseInt(s.substring(3, s.length()-1));
             return new TypedBDD(V1o.ithVar(x), V1o);
         }
-        if (s.startsWith("H1(")) {
+        if (s.startsWith("H1o(")) {
             int x = Integer.parseInt(s.substring(3, s.length()-1));
             return new TypedBDD(H1o.ithVar(x), H1o);
         }
@@ -453,6 +454,19 @@ public class CSPAResults {
                     int z = Integer.parseInt(st.nextToken());
                     TypedBDD r = new TypedBDD(H1o.ithVar(z), H1o);
                     results.add(r);
+                } else if (command.equals("quit")) {
+                	break;
+                } else if (command.equals("aliased")) {
+					int z = Integer.parseInt(st.nextToken());
+					Node node = (Node) variableIndexMap.get(z);
+					TypedBDD r = new TypedBDD(getAliasedLocations(node), V1o);
+					results.add(r);
+                } else if (command.equals("heapType")) {
+                	jq_Reference typeRef = (jq_Reference) jq_Type.parseType(st.nextToken());
+					if (typeRef != null) {
+						TypedBDD r = new TypedBDD(getAllHeapOfType(typeRef), H1o);
+						results.add(r);
+					}
                 } else {
                     results.add(new TypedBDD(bdd.zero(), Collections.EMPTY_SET));
                 }
@@ -469,5 +483,61 @@ public class CSPAResults {
     public CSPAResults(BDDFactory bdd) {
         this.bdd = bdd;
     }
+
+	/**
+	 * @return
+	 */
+	public BDDFactory getBdd() {
+		return bdd;
+	}
+
+	/**
+	 * @return
+	 */
+	public BDDDomain getH1c() {
+		return H1c;
+	}
+
+	/**
+	 * @return
+	 */
+	public BDDDomain getH1o() {
+		return H1o;
+	}
+
+	/**
+	 * @return
+	 */
+	public IndexMap getHeapobjIndexMap() {
+		return heapobjIndexMap;
+	}
+
+	/**
+	 * @return
+	 */
+	public BDD getPointsTo() {
+		return pointsTo;
+	}
+
+	/**
+	 * @return
+	 */
+	public BDDDomain getV1c() {
+		return V1c;
+	}
+
+	/**
+	 * @return
+	 */
+	public BDDDomain getV1o() {
+		return V1o;
+	}
+
+	/**
+	 * @return
+	 */
+	public IndexMap getVariableIndexMap() {
+		return variableIndexMap;
+	}
 
 }
