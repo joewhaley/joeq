@@ -833,10 +833,10 @@ public class PA {
     
     int opn;
     
-    ConcreteTypeNode addPlaceholderObject(jq_Reference type, int depth) {
+    ConcreteTypeNode addPlaceholderObject(jq_Reference type, int depth, String path) {
         ConcreteTypeNode h = ConcreteTypeNode.get(type, null, new Integer(++opn));
         if (depth > 0) {
-        	System.out.println("Initializing class " + type + " at depth " + depth);
+        	System.out.println("Initializing " + path + " of type " + type + " at depth " + depth);
             if (type.isClassType()) {
                 jq_Class c = (jq_Class) type;
                 c.prepare();
@@ -844,7 +844,7 @@ public class PA {
                 for (int i = 0; i < fields.length; ++i) {
                     jq_Type ft = fields[i].getType(); 
                     if (ft.isReferenceType() && !ft.isAddressType()) {
-                        Node h2 = addPlaceholderObject((jq_Reference) ft, depth-1);
+                        Node h2 = addPlaceholderObject((jq_Reference) ft, depth-1, path + "." + fields[i].getName());
                         int H_i = Hmap.get(h);
                         int F_i = Fmap.get(fields[i]);
                         int H2_i = Hmap.get(h2);
@@ -854,7 +854,7 @@ public class PA {
             } else if (type.isArrayType()) {
                 jq_Type at = ((jq_Array) type).getElementType();
                 if (at.isReferenceType() && !at.isAddressType()) {
-                    Node h2 = addPlaceholderObject((jq_Reference) at, depth-1);
+                    Node h2 = addPlaceholderObject((jq_Reference) at, depth-1, path + "[]");
                     int H_i = Hmap.get(h);
                     int F_i = Fmap.get(null);
                     int H2_i = Hmap.get(h2);
@@ -872,7 +872,7 @@ public class PA {
         for (int i = 0; i < ms.getNumOfParams(); ++i) {
             Node pn = ms.getParamNode(i);
             if (pn == null) continue;
-            ConcreteTypeNode h = addPlaceholderObject(pn.getDeclaredType(), depth-1);
+            ConcreteTypeNode h = addPlaceholderObject(pn.getDeclaredType(), depth-1, pn.toString_short());
             int H_i = Hmap.get(h);
             addToVP(pn, H_i);
             System.out.println("Placeholder object for "+pn+": "+h);
