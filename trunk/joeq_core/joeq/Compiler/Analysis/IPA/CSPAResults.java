@@ -892,7 +892,7 @@ public class CSPAResults {
             int target_i = val[H1o.getIndex()];
             s.andWith(H1o.ithVar(target_i));
             HeapObject h = (HeapObject) getHeapNode(target_i);
-            ProgramLocation l = h.getLocation();
+            ProgramLocation l = (h != null) ? h.getLocation() : null;
             jq_Type t = null;
             if (h != null) {
                 t = h.getDeclaredType();
