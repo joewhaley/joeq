@@ -27,6 +27,7 @@ import Clazz.jq_ClassInitializer;
 import Clazz.jq_Field;
 import Clazz.jq_InstanceMethod;
 import Clazz.jq_Method;
+import Clazz.jq_NameAndDesc;
 import Clazz.jq_Reference;
 import Clazz.jq_StaticMethod;
 import Clazz.jq_Type;
@@ -75,7 +76,7 @@ public class BDDPointerAnalysis {
      * smaller problems, larger values save the time to grow the node tables
      * on larger problems.
      */
-    public static final int DEFAULT_NODE_COUNT = 1000000;
+    public static final int DEFAULT_NODE_COUNT = Integer.parseInt(System.getProperty("bddnodes", "1000000"));
 
     /**
      * The absolute maximum number of variables that we will ever use
@@ -136,8 +137,9 @@ public class BDDPointerAnalysis {
         bdd = org.sf.javabdd.BuDDyFactory.init(nodeCount, cacheSize);
         //bdd = org.sf.javabdd.CUDDFactory.init(nodeCount, cacheSize);
         
-        bdd.setCacheRatio(4);
-        bdd.setMaxIncrease(nodeCount / 4);
+        bdd.setCacheRatio(8);
+        bdd.setMaxIncrease(Math.min(2500000, nodeCount / 4));
+        bdd.setMinFreeNodes(10);
         
         int[] domains = new int[domainBits.length];
         for (int i=0; i<domainBits.length; ++i) {
@@ -174,6 +176,8 @@ public class BDDPointerAnalysis {
         T2set = T2.set();
         H1andFDset = H1.set(); H1andFDset.andWith(FD.set());
         H1andT3set = H1.set(); H1andT3set.andWith(T3.set());
+        
+        reset();
     }
 
     int[][] localOrders;
@@ -332,7 +336,6 @@ public class BDDPointerAnalysis {
         boolean DUMP = System.getProperty("bdddump") != null;
         
         BDDPointerAnalysis dis = new BDDPointerAnalysis();
-        dis.reset();
         jq_Class c = (jq_Class) jq_Type.parseType(args[0]);
         c.prepare();
         Collection roots = Arrays.asList(c.getDeclaredStaticMethods());
@@ -354,8 +357,16 @@ public class BDDPointerAnalysis {
         System.out.println("Heap objects: "+dis.heapobjIndexMap.size());
         System.out.println("Fields: "+dis.fieldIndexMap.size());
         System.out.println("Types: "+dis.typeIndexMap.size());
-        System.out.println("Methods: "+dis.methodIndexMap.size());
-        System.out.println("Targets: "+dis.targetIndexMap.size());
+        System.out.println("Virtual Method Names: "+dis.methodIndexMap.size());
+        System.out.println("Virtual Method Targets: "+dis.targetIndexMap.size());
+
+        int bc = 0;
+        for (Iterator i=dis.visitedMethods.iterator(); i.hasNext(); ) {
+            MethodSummary ms = (MethodSummary) i.next();
+            jq_Method m = (jq_Method) ms.getMethod();
+            bc += m.getBytecode().length;
+        }
+        System.out.println("Bytecodes: "+bc);
         
         try {
             java.io.FileWriter fw = new java.io.FileWriter("callgraph");
@@ -391,20 +402,25 @@ public class BDDPointerAnalysis {
                 this.handleMethodSummary(ms);
             }
         }
+        boolean first = true;
+        
         System.out.println("Initial setup:\t\t"+(System.currentTimeMillis()-time)/1000.+" seconds.");
         int iteration = 1;
         do {
             long time2 = System.currentTimeMillis();
 
             System.out.println("--> Iteration "+iteration+" Methods: "+this.visitedMethods.size()+" Call graph edges: "+this.callGraphEdges.size());
-            this.change = false;
+            this.change = first;
+            first = false;
             this.calculateTypeFilter();
 
             long time3 = System.currentTimeMillis();
             System.out.println("Calculate type filter:\t"+(time3-time2)/1000.+" seconds.");
 
+            oldPointsTo = bdd.zero();
             if (INCREMENTAL_POINTSTO) this.solveIncremental();
             else this.solveNonincremental();
+            oldPointsTo.free();
 
             time3 = System.currentTimeMillis() - time3;
             System.out.println("Solve pointers:\t\t"+time3/1000.+" seconds.");
@@ -439,9 +455,12 @@ public class BDDPointerAnalysis {
 
         System.out.println("Total time: "+time/1000.+" seconds.");
         
-        if (!IGNORE_CLINIT) {
+        if (!IGNORE_CLINIT || !IGNORE_THREADS) {
             roots = new HashSet(roots);
-            roots.addAll(class_initializers);
+            if (!IGNORE_CLINIT)
+                roots.addAll(class_initializers);
+            if (!IGNORE_THREADS)
+                roots.addAll(thread_runs);
         }
         
         CallGraph cg = new BDDCallGraph(roots);
@@ -469,13 +488,15 @@ public class BDDPointerAnalysis {
             }
         }
         System.out.println("Initial setup:\t\t"+(System.currentTimeMillis()-time)/1000.+" seconds.");
+        boolean first = true;
         int iteration = 1;
-        BDD oldPointsTo = this.bdd.zero();
+        oldPointsTo = this.bdd.zero();
         do {
             long time2 = System.currentTimeMillis();
 
             System.out.println("--> Iteration "+iteration+" Methods: "+this.visitedMethods.size()+" Call graph edges: "+this.callGraphEdges.size());
-            this.change = false;
+            this.change = first;
+            first = false;
             this.calculateTypeFilter();
 
             long time3 = System.currentTimeMillis();
@@ -521,9 +542,12 @@ public class BDDPointerAnalysis {
 
         System.out.println("Total time: "+time/1000.+" seconds.");
         
-        if (!IGNORE_CLINIT) {
+        if (!IGNORE_CLINIT || !IGNORE_THREADS) {
             roots = new HashSet(roots);
-            roots.addAll(class_initializers);
+            if (!IGNORE_CLINIT)
+                roots.addAll(class_initializers);
+            if (!IGNORE_THREADS)
+                roots.addAll(thread_runs);
         }
         
         CallGraph cg = new BDDCallGraph(roots);
@@ -626,11 +650,31 @@ public class BDDPointerAnalysis {
         }
     }
 
+    public static final boolean IGNORE_THREADS = false;
+    Set thread_runs = new HashSet();
+    public void addThreadRun(Node n, jq_Class c) {
+        if (IGNORE_THREADS) return;
+        c.prepare();
+        jq_NameAndDesc nd = new jq_NameAndDesc("run", "()V");
+        jq_InstanceMethod i = c.getVirtualMethod(nd);
+        if (i != null && i.getBytecode() != null) {
+            thread_runs.add(i);
+            ControlFlowGraph cfg = CodeCache.getCode(i);
+            MethodSummary ms = MethodSummary.getSummary(cfg);
+            handleMethodSummary(ms);
+            ParamNode p = ms.getParamNode(0);
+            addDirectAssignment(p, n);
+            this.change = true;
+        }
+    }
+    
     HashSet visitedMethods = new HashSet();
 
     public static boolean NO_HEAP = System.getProperty("noheap") != null;
 
     public void handleNode(Node n) {
+        if (TRACE) System.out.println("Handling node: "+n);
+        
         if (NO_HEAP) {
             addObjectAllocation(n, n);
         }
@@ -755,6 +799,7 @@ public class BDDPointerAnalysis {
         Iterator h=new LinkedList(virtualCallSites).iterator();
         Iterator i=new LinkedList(virtualCallReceivers).iterator();
         Iterator j=new LinkedList(virtualCallMethods).iterator();
+        if (TRACE) System.out.println("new points-to: "+newPointsTo.toStringWithDomains());
         for (int index=0; h.hasNext(); ++index) {
             CallSite cs = (CallSite) h.next();
             MethodSummary caller = cs.caller;
@@ -765,11 +810,12 @@ public class BDDPointerAnalysis {
                 System.out.println("Call: "+mc);
                 printSet(" receiverVars", receiverVars);
             }
-            BDD pt = (index < last_vcalls) ? newPointsTo : pointsTo;
+            BDD pt;
+            if (false || index < last_vcalls) pt = newPointsTo;
+            else pt = pointsTo;
             BDD receiverObjects;
-            if (receiverVars.satCount(V1set) == 1.0) {
-                receiverObjects = pt.restrict(receiverVars);
-                //jq.Assert(receiverObjects.equals(pt.relprod(receiverVars, V1set)));
+            if (false || receiverVars.satCount(V1set) == 1.0) {
+                receiverObjects = pt.restrict(receiverVars); // time-consuming!
             } else {
                 receiverObjects = pt.relprod(receiverVars, V1set); // time-consuming!
             }
@@ -777,7 +823,7 @@ public class BDDPointerAnalysis {
                 printSet(" receiverObjects", receiverObjects);
             }
             jq_InstanceMethod method = (jq_InstanceMethod) j.next();
-            if (receiverObjects.equals(bdd.zero())) {
+            if (receiverObjects.isZero()) {
                 continue;
             }
             int methodIndex = getMethodIndex(method);
@@ -808,8 +854,10 @@ public class BDDPointerAnalysis {
                 }
                 definite_targets.add(target);
                 if (target.getBytecode() != null) {
+                    long time = System.currentTimeMillis();
                     ControlFlowGraph cfg = CodeCache.getCode(target);
                     MethodSummary ms2 = MethodSummary.getSummary(cfg);
+                    method_summary_time += time - System.currentTimeMillis();
                     handleMethodSummary(ms2);
                     bindParameters(caller, mc, ms2);
                 } else {
@@ -821,6 +869,8 @@ public class BDDPointerAnalysis {
         }
         last_vcalls = n;
     }
+    
+    long method_summary_time = 0L;
     
     HashSet callGraphEdges = new HashSet();
     
@@ -944,6 +994,20 @@ public class BDDPointerAnalysis {
         pointsTo.orWith(dest_bdd);
         if (TRACE) {
             printSet("Points-to is now", pointsTo);
+        }
+        
+        if (!IGNORE_THREADS && site != null) {
+            jq_Reference type = (jq_Reference) site.getDeclaredType();
+            if (type instanceof jq_Class) {
+                type.prepare();
+                PrimordialClassLoader.getJavaLangThread().prepare();
+                PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/Runnable;").prepare();
+                if (type.isSubtypeOf(PrimordialClassLoader.getJavaLangThread()) ||
+                    type.isSubtypeOf(PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/Runnable;"))) {
+                    System.out.println("Thread creation site found: "+site);
+                    addThreadRun(site, (jq_Class) type);
+                }
+            }
         }
     }
 
@@ -1173,6 +1237,8 @@ public class BDDPointerAnalysis {
     int last_methodIndex;
     int last_heapobjIndex;
     
+    public static final boolean ALL_CONCRETE = true;
+
     public void calculateVTables() {
         int n1 = methodIndexMap.size();
         int n2 = heapobjIndexMap.size();
@@ -1193,7 +1259,7 @@ public class BDDPointerAnalysis {
                 r2.prepare(); m.getDeclaringClass().prepare();
                 if (!r2.isSubtypeOf(m.getDeclaringClass())) continue;
                 BDD heapobj_bdd = H1.ithVar(i2);
-                if (c instanceof ConcreteTypeNode) {
+                if (c instanceof ConcreteTypeNode || c instanceof ConcreteObjectNode || ALL_CONCRETE) {
                     jq_InstanceMethod target = r2.getVirtualMethod(m.getNameAndDesc());
                     if (target != null) {
                         int i3 = getTargetIndex(target);
@@ -1298,9 +1364,10 @@ public class BDDPointerAnalysis {
 
     }
     
+    BDD oldPointsTo;
+    
     public void solveIncremental() {
 
-        BDD oldPointsTo = bdd.zero();
         BDD newPointsTo = pointsTo.id();
 
         // start solving 
