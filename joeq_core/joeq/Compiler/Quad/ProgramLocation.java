@@ -38,13 +38,14 @@ public class ProgramLocation {
     public int hashCode() { return (q==null)?-1:q.hashCode(); }
     public boolean equals(ProgramLocation that) { return this.q == that.q; }
     public boolean equals(Object o) { if (o instanceof ProgramLocation) return equals((ProgramLocation)o); return false; }
-    public String toString() { return "quad "+((q==null)?-1:q.getID())+" "+m.getName()+"()"; }
+    public String toString() { return m.getName()+"() quad "+((q==null)?-1:q.getID()); }
 
     private byte getInvocationType() {
         if (q.getOperator() instanceof Invoke.InvokeVirtual) {
             return BytecodeVisitor.INVOKE_VIRTUAL;
         } else if (q.getOperator() instanceof Invoke.InvokeStatic) {
-            if (m instanceof jq_InstanceMethod)
+            jq_Method target = Invoke.getMethod(q).getMethod();
+            if (target instanceof jq_InstanceMethod)
                 return BytecodeVisitor.INVOKE_SPECIAL;
             else
                 return BytecodeVisitor.INVOKE_STATIC;
@@ -54,31 +55,38 @@ public class ProgramLocation {
         }
     }
 
-    public CallTargets getCallTargets() {
+    public jq_Method getTargetMethod() {
         if (!(q.getOperator() instanceof Invoke)) return null;
-        byte type = getInvocationType();
-        return CallTargets.getTargets(m.getDeclaringClass(), m, type, true);
+        return Invoke.getMethod(q).getMethod();
     }
 
-    public CallTargets getCallTargets(Node n) {
+    public CallTargets getCallTargets() {
+        if (!(q.getOperator() instanceof Invoke)) return null;
+        jq_Method target = Invoke.getMethod(q).getMethod();
+        byte type = getInvocationType();
+        return CallTargets.getTargets(target.getDeclaringClass(), target, type, true);
+    }
+
+    public CallTargets getCallTargets(jq_Method target, Node n) {
         return getCallTargets(n.getDeclaredType(), n instanceof ConcreteTypeNode);
     }
 
     public CallTargets getCallTargets(jq_Reference klass, boolean exact) {
         if (!(q.getOperator() instanceof Invoke)) return null;
+        jq_Method target = Invoke.getMethod(q).getMethod();
         byte type = getInvocationType();
-        return CallTargets.getTargets(m.getDeclaringClass(), m, type, klass, exact, true);
+        return CallTargets.getTargets(target.getDeclaringClass(), target, type, klass, exact, true);
     }
 
     public CallTargets getCallTargets(java.util.Set receiverTypes, boolean exact) {
         if (!(q.getOperator() instanceof Invoke)) return null;
+        jq_Method target = Invoke.getMethod(q).getMethod();
         byte type = getInvocationType();
-        return CallTargets.getTargets(m.getDeclaringClass(), m, type, receiverTypes, exact, true);
+        return CallTargets.getTargets(target.getDeclaringClass(), target, type, receiverTypes, exact, true);
     }
 
     public java.util.Set getCallTargets(java.util.Set nodes) {
         if (!(q.getOperator() instanceof Invoke)) return null;
-        byte type = getInvocationType();
         LinkedHashSet exact_types = new LinkedHashSet();
         LinkedHashSet notexact_types = new LinkedHashSet();
         for (Iterator i=nodes.iterator(); i.hasNext(); ) {
