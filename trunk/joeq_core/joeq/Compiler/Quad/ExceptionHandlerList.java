@@ -3,6 +3,9 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Quad;
 
+import java.util.Collection;
+import java.util.Iterator;
+
 import joeq.Class.jq_Class;
 import joeq.Util.Templates.List;
 import joeq.Util.Templates.ListIterator;
@@ -76,6 +79,32 @@ public class ExceptionHandlerList extends java.util.AbstractList implements List
                 list.add(p.getHandler()); break;
             }
             if (p.getHandler().mayCatch(exType)) list.add(p.getHandler());
+            p = p.getParent();
+        }
+        return new ListWrapper.ExceptionHandler(list);
+    }
+    
+    /** Returns the list of exception handlers in this list that MAY catch the given exception type.
+     * @return  the list of handlers that may catch the exception type
+     */
+    public List.ExceptionHandler mayCatch(Collection exTypes) {
+        java.util.List list = new java.util.LinkedList();
+        java.util.List eTypes = new java.util.LinkedList(exTypes);
+        ExceptionHandlerList p = this;
+        outer:
+        while (p != null) {
+            for (Iterator i = eTypes.iterator(); i.hasNext(); ) {
+                jq_Class exType = (jq_Class) i.next();
+                if (p.getHandler().mustCatch(exType)) {
+                    list.add(p.getHandler());
+                    i.remove();
+                    if (eTypes.isEmpty()) break outer;
+                    else continue;
+                }
+                if (p.getHandler().mayCatch(exType)) {
+                    list.add(p.getHandler());
+                }
+            }
             p = p.getParent();
         }
         return new ListWrapper.ExceptionHandler(list);

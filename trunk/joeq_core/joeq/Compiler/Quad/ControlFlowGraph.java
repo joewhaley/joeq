@@ -6,12 +6,12 @@ package joeq.Compiler.Quad;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
-import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Method;
-import joeq.Class.jq_Primitive;
-import joeq.Class.jq_Type;
 import joeq.Compiler.Quad.Operand.BasicBlockTableOperand;
 import joeq.Compiler.Quad.Operand.ParamListOperand;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
@@ -283,7 +283,7 @@ public class ControlFlowGraph implements Graph {
         return sb.toString();
     }
 
-    private ExceptionHandler copier(HashMap map, ExceptionHandler this_eh) {
+    private ExceptionHandler copier(Map map, ExceptionHandler this_eh) {
         ExceptionHandler that_eh = (ExceptionHandler)map.get(this_eh);
         if (that_eh != null) return that_eh;
         map.put(this_eh, that_eh = new ExceptionHandler(this_eh.getExceptionType()));
@@ -296,7 +296,7 @@ public class ControlFlowGraph implements Graph {
         return that_eh;
     }
 
-    private ExceptionHandlerList copier(HashMap map, ExceptionHandlerList this_ehl) {
+    private ExceptionHandlerList copier(Map map, ExceptionHandlerList this_ehl) {
         if (this_ehl == null || this_ehl.size() == 0) return null;
         ExceptionHandlerList that_ehl = (ExceptionHandlerList)map.get(this_ehl);
         if (that_ehl != null) return that_ehl;
@@ -306,7 +306,7 @@ public class ControlFlowGraph implements Graph {
         return that_ehl;
     }
 
-    private void updateOperand(HashMap map, Operand op) {
+    private void updateOperand(Map map, Operand op) {
         if (op == null) return;
         if (op instanceof TargetOperand) {
             ((TargetOperand)op).setTarget(copier(map, ((TargetOperand)op).getTarget()));
@@ -336,7 +336,7 @@ public class ControlFlowGraph implements Graph {
         }
     }
 
-    private Quad copier(HashMap map, Quad this_q) {
+    private Quad copier(Map map, Quad this_q) {
         Quad that_q = (Quad)map.get(this_q);
         if (that_q != null) return that_q;
         map.put(this_q, that_q = this_q.copy(++quad_counter));
@@ -347,7 +347,7 @@ public class ControlFlowGraph implements Graph {
         return that_q;
     }
 
-    private BasicBlock copier(HashMap map, BasicBlock this_bb) {
+    private BasicBlock copier(Map map, BasicBlock this_bb) {
         BasicBlock that_bb = (BasicBlock)map.get(this_bb);
         if (that_bb != null) return that_bb;
         that_bb = BasicBlock.createBasicBlock(++this.bb_counter,
@@ -372,27 +372,10 @@ public class ControlFlowGraph implements Graph {
         return that_bb;
     }
 
-    static void addRegistersToMap(HashMap map, RegisterFactory from,
-                                  RegisterFactory to, jq_Type type) {
-        int n = from.getLocalSize(type);
-        Assert._assert(n == to.getLocalSize(type), n+" != "+to.getLocalSize(type));
-        for (int i=0; i<n; ++i) {
-            map.put(from.getLocal(i, type), to.getLocal(i, type));
-        }
-        n = from.getStackSize(type);
-        Assert._assert(n == to.getStackSize(type));
-        for (int i=0; i<n; ++i) {
-            map.put(from.getStack(i, type), to.getStack(i, type));
-        }
-    }
-
-    static void addRegistersToMap(HashMap map, RegisterFactory from,
+    static void addRegistersToMap(Map map,
+                                  int offset,
+                                  RegisterFactory from,
                                   RegisterFactory to) {
-        addRegistersToMap(map, from, to, jq_Primitive.INT);
-        addRegistersToMap(map, from, to, jq_Primitive.FLOAT);
-        addRegistersToMap(map, from, to, jq_Primitive.LONG);
-        addRegistersToMap(map, from, to, jq_Primitive.DOUBLE);
-        addRegistersToMap(map, from, to, PrimordialClassLoader.getJavaLangObject());
     }
 
     /** Merges the given control flow graph into this control flow graph.
@@ -401,14 +384,19 @@ public class ControlFlowGraph implements Graph {
      * returned.
      */
     public ControlFlowGraph merge(ControlFlowGraph from) {
-        RegisterFactory that_rf = this.rf.merge(from.rf);
+        RegisterFactory that_rf = new RegisterFactory(this.rf.size() + from.rf.size());
         ControlFlowGraph that = new ControlFlowGraph(from.getMethod(),
                                                      from.exit().getNumberOfPredecessors(), from.exception_handlers.size(), that_rf);
-        HashMap map = new HashMap();
+        Map map = new HashMap();
         map.put(from.entry(), that.entry());
         map.put(from.exit(), that.exit());
 
-        addRegistersToMap(map, from.getRegisterFactory(), that_rf);
+        that_rf.skipNumbers(this.rf.size());
+        for (Iterator i = from.rf.iterator(); i.hasNext(); ) {
+            Register r1 = (Register) i.next();
+            Register r2 = this.rf.makePairedReg(that_rf, r1);
+            map.put(r1, r2);
+        }
 
         for (ListIterator.ExceptionHandler exs = from.getExceptionHandlers().exceptionHandlerIterator();
              exs.hasNext(); ) {
@@ -450,5 +438,35 @@ public class ControlFlowGraph implements Graph {
     public Navigator getNavigator() {
         return new ControlFlowGraphNavigator(this);
     }
-
+    
+    public boolean removeUnreachableBasicBlocks() {
+        Collection allBasicBlocks = new HashSet(reversePostOrder(entry()));
+        boolean change = false;
+        for (Iterator i = reversePostOrderIterator(); i.hasNext(); ) {
+            BasicBlock b = (BasicBlock) i.next();
+            if (b.getPredecessors().retainAll(allBasicBlocks))
+                change = true;
+        }
+        for (Iterator i = exception_handlers.iterator(); i.hasNext(); ) {
+            ExceptionHandler eh = (ExceptionHandler) i.next();
+            if (eh.getHandledBasicBlocks().retainAll(allBasicBlocks))
+                change = true;
+            if (eh.getHandledBasicBlocks().isEmpty()) {
+                i.remove();
+            }
+        }
+        for (;;) {
+            Collection allBasicBlocks2 = reversePostOrderOnReverseGraph(exit());
+            if (allBasicBlocks2.containsAll(allBasicBlocks)) {
+                return change;
+            }
+            allBasicBlocks.removeAll(allBasicBlocks2);
+            BasicBlock bb = (BasicBlock) allBasicBlocks.iterator().next();
+            System.out.println("Infinite loop discovered in "+this.getMethod()+", linking "+bb+" to exit.");
+            bb.addSuccessor(exit());
+            exit().addPredecessor(bb);
+            allBasicBlocks = reversePostOrder(entry());
+        }
+    }
+    
 }

@@ -3,6 +3,11 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Quad;
 
+import java.util.Collection;
+import java.util.Iterator;
+
+import joeq.Compiler.Quad.Operand.RegisterOperand;
+import joeq.Compiler.Quad.Operator.Move;
 import joeq.Compiler.Quad.Operator.Ret;
 import joeq.Util.Assert;
 import joeq.Util.Strings;
@@ -215,6 +220,10 @@ public class BasicBlock {
         Assert._assert(predecessors != null, "Cannot remove predecessor from entry basic block");
         predecessors.remove(i);
     }
+    public boolean removePredecessors(Collection bb) {
+        Assert._assert(predecessors != null, "Cannot remove predecessor from entry basic block");
+        return predecessors.removeAll(bb);
+    }
     public boolean removeSuccessor(BasicBlock bb) {
         Assert._assert(successors != null, "Cannot remove successor from exit basic block");
         return successors.remove(bb);
@@ -353,6 +362,18 @@ public class BasicBlock {
         return last.getOperator() == Ret.RET.INSTANCE;
     }
     
+    public void appendQuadBeforeBranchOrPEI(Quad c) {
+        java.util.ListIterator li = instructions.listIterator();
+        while (li.hasNext()) li.next();
+        while (li.hasPrevious()) {
+            Quad q = (Quad) li.previous();
+            if (q.getOperator() instanceof Operator.Branch) continue;
+            if (!q.getThrownExceptions().isEmpty()) continue;
+            break;
+        }
+        li.add(c);
+    }
+    
     /** Returns the name of this basic block.
      * @return  the name of this basic block. */
     public String toString() {
@@ -367,6 +388,28 @@ public class BasicBlock {
         return "BB"+getID();
     }
     
+    public void addAtEnd(ControlFlowGraph ir, Quad c) {
+        appendQuadBeforeBranchOrPEI(c);
+        RegisterOperand aux = null;
+        RegisterOperand lhs = Move.getDest(c);
+        java.util.ListIterator li = this.instructions.listIterator();
+        while (li.next() != c) ;
+        while (li.hasNext()) {
+            Quad i = (Quad) li.next();
+            for (Iterator os = i.getUsedRegisters().iterator(); os.hasNext(); ) {
+                Operand op = (Operand) os.next();
+                if (lhs.isSimilar(op)) {
+                    if (aux == null) {
+                        aux = ir.getRegisterFactory().makeRegOp(lhs.getRegister(), lhs.getType());
+                        Quad m = Move.create(ir.getNewQuadID(), aux.getRegister(), lhs.getRegister(), lhs.getType());
+                        int index = instructions.indexOf(c);
+                        instructions.add(index, m);
+                    }
+                    ((RegisterOperand)op).setRegister(aux.getRegister());
+                }
+            }
+        }
+    }
     /** Returns a String describing the name, predecessor, successor, exception
      * handlers, and quads of this basic block.
      * @return  a verbose string describing this basic block */    

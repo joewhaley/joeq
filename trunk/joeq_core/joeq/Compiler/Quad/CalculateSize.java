@@ -55,25 +55,13 @@ public class CalculateSize extends QuadVisitor.EmptyVisitor implements ControlFl
         c.prepare();
         rfSize += c.getInstanceSize();
         rfSize += ARRAYLIST_OVERHEAD;
-        rfSize += 4 * rf.getLocalSize(jq_Primitive.INT);
-        rfSize += ARRAYLIST_OVERHEAD;
-        rfSize += 4 * rf.getLocalSize(jq_Primitive.FLOAT);
-        rfSize += ARRAYLIST_OVERHEAD;
-        rfSize += 4 * rf.getLocalSize(jq_Primitive.LONG);
-        rfSize += ARRAYLIST_OVERHEAD;
-        rfSize += 4 * rf.getLocalSize(jq_Primitive.DOUBLE);
-        rfSize += ARRAYLIST_OVERHEAD;
-        rfSize += 4 * rf.getLocalSize(PrimordialClassLoader.getJavaLangObject());
-        rfSize += ARRAYLIST_OVERHEAD;
-        rfSize += 4 * rf.getStackSize(jq_Primitive.INT);
-        rfSize += ARRAYLIST_OVERHEAD;
-        rfSize += 4 * rf.getStackSize(jq_Primitive.FLOAT);
-        rfSize += ARRAYLIST_OVERHEAD;
-        rfSize += 4 * rf.getStackSize(jq_Primitive.LONG);
-        rfSize += ARRAYLIST_OVERHEAD;
-        rfSize += 4 * rf.getStackSize(jq_Primitive.DOUBLE);
-        rfSize += ARRAYLIST_OVERHEAD;
-        rfSize += 4 * rf.getStackSize(PrimordialClassLoader.getJavaLangObject());
+        rfSize += 4 * rf.size();
+        rfSize += HASHMAP_OVERHEAD;
+        rfSize += rf.numberOfLocalRegisters() * 24; // 24 for each Entry
+        rfSize += rf.numberOfLocalRegisters() * 100; // for Entry[] table;
+        rfSize += HASHMAP_OVERHEAD;
+        rfSize += rf.numberOfStackRegisters() * 24; // 24 for each Entry
+        rfSize += rf.numberOfStackRegisters() * 100; // for Entry[] table;
         cfg.visitBasicBlocks(this);
         System.out.println(cfg.getMethod()+" "+toString());
     }

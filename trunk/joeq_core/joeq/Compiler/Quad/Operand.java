@@ -354,7 +354,10 @@ public interface Operand {
     class ParamListOperand implements Operand {
         private Quad instruction; RegisterOperand[] params;
         public ParamListOperand(RegisterOperand[] t) { params = t; }
-        public void set(int i, RegisterOperand b) { params[i] = b; }
+        public void set(int i, RegisterOperand b) {
+            params[i] = b;
+            if (b != null) b.attachToQuad(instruction);
+        }
         public RegisterOperand get(int i) { return params[i]; }
         public int length() { return params.length; }
         public int words() {
