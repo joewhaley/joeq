@@ -40,6 +40,7 @@ public abstract class Bootstrapper implements ObjectLayout {
         boolean TrimAllTypes = false;
 
         jq.Bootstrapping = true;
+        ClassLibInterface.i.useJoeqClasslib(true);
         
         String classpath = System.getProperty("java.class.path")+
                            System.getProperty("path.separator")+
