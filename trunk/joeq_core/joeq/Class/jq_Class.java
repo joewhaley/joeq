@@ -819,7 +819,8 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                     ((major_version != 45) || (minor_version != 3)) &&
                     ((major_version != 46) || (minor_version != 0)) &&
                     ((major_version != 47) || (minor_version != 0)) &&
-                    ((major_version != 48) || (minor_version != 0))) {
+                    ((major_version != 48) || (minor_version != 0)) &&
+                    ((major_version != 49) || (minor_version != 0))) {
                     throw new UnsupportedClassVersionError("unsupported version "+(int)major_version+"."+(int)minor_version);
                 }
 
