@@ -202,7 +202,7 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
         
         for (Iterator i = ms.getSyncedVars().iterator(); i.hasNext(); ) {
             Node node = (Node) i.next();
-            out.println("Sync on: "+node);
+            if (TRACE) out.println("Sync on: "+node);
             pa.addToSync(node);
         }
         
