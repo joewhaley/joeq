@@ -13,8 +13,6 @@ import java.util.Map;
 import Bootstrap.PrimordialClassLoader;
 import ClassLib.ClassLibInterface;
 import Compil3r.BytecodeAnalysis.Bytecodes;
-import Compil3r.Quad.AndersenInterface.AndersenMethod;
-import Compil3r.Quad.AndersenInterface.AndersenType;
 import Main.jq;
 import UTF.Utf8;
 import Util.Assert;
@@ -24,7 +22,7 @@ import Util.Convert;
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
-public abstract class jq_Method extends jq_Member implements AndersenMethod {
+public abstract class jq_Method extends jq_Member {
     
     // Available after loading
     protected char max_stack;
@@ -367,7 +365,6 @@ public abstract class jq_Method extends jq_Member implements AndersenMethod {
     public jq_Type[] getParamTypes() { return param_types; }
     public int getParamWords() { return param_words; }
     public final jq_Type getReturnType() { return return_type; }
-    public final AndersenType and_getReturnType() { return (AndersenType)return_type; }
     public byte[] getCodeAttribute(Utf8 a) { chkState(STATE_LOADING2); return (byte[])codeattribMap.get(a); }
     public final byte[] getCodeAttribute(String name) { return getCodeAttribute(Utf8.get(name)); }
 

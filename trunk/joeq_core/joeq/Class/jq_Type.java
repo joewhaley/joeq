@@ -3,9 +3,12 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Clazz;
 
+import java.io.DataOutput;
+import java.io.IOException;
+import java.util.StringTokenizer;
+
 import Bootstrap.PrimordialClassLoader;
 import ClassLib.ClassLibInterface;
-import Compil3r.Quad.AndersenInterface.AndersenType;
 import Main.jq;
 import Run_Time.Debug;
 import Run_Time.Reflection;
@@ -16,7 +19,7 @@ import Util.Assert;
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
-public abstract class jq_Type implements AndersenType {
+public abstract class jq_Type {
     
     protected final Utf8 desc;
     private /*final*/ Class class_object;  // pointer to our associated java.lang.Class object
@@ -222,5 +225,14 @@ public abstract class jq_Type implements AndersenType {
     
     public String toString() { return getName(); }
     
+    public void writeDesc(DataOutput out) throws IOException {
+        out.writeBytes(getDesc().toString());
+    }
+    public static jq_Type read(StringTokenizer st) {
+        String desc = st.nextToken();
+        if (desc.equals("null")) return null;
+        jq_Type r = PrimordialClassLoader.loader.getOrCreateBSType(desc);
+        return r;
+    }    
     public static final jq_Class _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LClazz/jq_Type;");
 }
