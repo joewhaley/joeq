@@ -7,7 +7,7 @@ import java.io.DataInput;
 import java.io.IOException;
 import java.util.Map;
 
-import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.PrimordialClassLoader;
 import joeq.ClassLib.ClassLibInterface;
 import joeq.Main.jq;
 

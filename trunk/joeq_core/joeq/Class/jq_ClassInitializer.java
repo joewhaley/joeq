@@ -5,7 +5,7 @@ package joeq.Clazz;
 
 //friend jq_ClassLoader;
 
-import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.PrimordialClassLoader;
 import joeq.UTF.Utf8;
 import joeq.Util.Assert;
 

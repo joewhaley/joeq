@@ -8,7 +8,7 @@ import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Iterator;
 
-import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.PrimordialClassLoader;
 import joeq.Clazz.jq_Array;
 import joeq.Clazz.jq_Class;
 import joeq.Clazz.jq_Member;
@@ -28,107 +28,107 @@ public abstract class TraceFlags {
 
     public static int setTraceFlag(String[] args, int i) {
         if (args[i].equalsIgnoreCase("-TraceCodeAllocator")) {
-            makeTrue("Allocator.CodeAllocator", "TRACE");
-            makeTrue("Allocator.RuntimeCodeAllocator", "TRACE");
+            makeTrue("joeq.Allocator.CodeAllocator", "TRACE");
+            makeTrue("joeq.Allocator.RuntimeCodeAllocator", "TRACE");
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceAssembler")) {
-            makeTrue("Assembler.x86.x86Assembler", "TRACE");
+            makeTrue("joeq.Assembler.x86.x86Assembler", "TRACE");
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceBC2Quad")) {
-            makeTrue("Compil3r.Quad.BytecodeToQuad","ALWAYS_TRACE");
-            makeTrue("Compil3r.Quad.BytecodeToQuad.AbstractState","TRACE");
+            makeTrue("joeq.Compil3r.Quad.BytecodeToQuad","ALWAYS_TRACE");
+            makeTrue("joeq.Compil3r.Quad.BytecodeToQuad.AbstractState","TRACE");
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceLiveRef")) {
-            makeTrue("Compil3r.BytecodeAnalysis.LiveRefAnalysis","ALWAYS_TRACE");
+            makeTrue("joeq.Compil3r.BytecodeAnalysis.LiveRefAnalysis","ALWAYS_TRACE");
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceBootImage")) {
-            makeTrue("Bootstrap.BootImage","TRACE");
+            makeTrue("joeq.Bootstrap.BootImage","TRACE");
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceObjectTraverser")) {
-            makeTrue("Bootstrap.ObjectTraverser","TRACE");
+            makeTrue("joeq.Bootstrap.ObjectTraverser","TRACE");
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceClassLoader")) {
-            makeTrue("Bootstrap.PrimordialClassLoader","TRACE");
+            makeTrue("joeq.Clazz.PrimordialClassLoader","TRACE");
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceClass")) {
-            makeTrue("Clazz.jq_Class","TRACE");
-            makeTrue("Clazz.jq_Array","TRACE");
+            makeTrue("joeq.Clazz.jq_Class","TRACE");
+            makeTrue("joeq.Clazz.jq_Array","TRACE");
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceExceptions")) {
-            makeTrue("Clazz.jq_CompiledCode","TRACE");
-            makeTrue("Compil3r.Reference.x86.x86ReferenceExceptionDeliverer","TRACE");
-            makeTrue("Run_Time.ExceptionDeliverer","TRACE");
+            makeTrue("joeq.Clazz.jq_CompiledCode","TRACE");
+            makeTrue("joeq.Compil3r.Reference.x86.x86ReferenceExceptionDeliverer","TRACE");
+            makeTrue("joeq.Run_Time.ExceptionDeliverer","TRACE");
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceTrimmer")) {
-            makeTrue("Compil3r.BytecodeAnalysis.Trimmer","TRACE");
-            makeTrue("Bootstrap.BootstrapRootSet","TRACE");
+            makeTrue("joeq.Compil3r.BytecodeAnalysis.Trimmer","TRACE");
+            makeTrue("joeq.Bootstrap.BootstrapRootSet","TRACE");
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceCompiler")) {
-            makeTrue("Compil3r.Reference.x86.x86ReferenceCompiler","ALWAYS_TRACE");
+            makeTrue("joeq.Compil3r.Reference.x86.x86ReferenceCompiler","ALWAYS_TRACE");
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceCompileStubs")) {
-            makeTrue("Compil3r.Reference.x86.x86ReferenceCompiler","TRACE_STUBS");
+            makeTrue("joeq.Compil3r.Reference.x86.x86ReferenceCompiler","TRACE_STUBS");
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceLinker")) {
-            makeTrue("Compil3r.Reference.x86.x86ReferenceLinker","TRACE");
+            makeTrue("joeq.Compil3r.Reference.x86.x86ReferenceLinker","TRACE");
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceInterpreter")) {
-            makeTrue("Interpreter.BytecodeInterpreter","ALWAYS_TRACE");
+            makeTrue("joeq.Interpreter.BytecodeInterpreter","ALWAYS_TRACE");
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceQuadInterpreter")) {
-            makeTrue("Interpreter.QuadInterpreter","TRACE");
+            makeTrue("joeq.Interpreter.QuadInterpreter","TRACE");
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceStackWalker")) {
-            makeTrue("Run_Time.StackCodeWalker","TRACE");
+            makeTrue("joeq.Run_Time.StackCodeWalker","TRACE");
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceUtf8")) {
-            makeTrue("UTF.Utf8","TRACE");
+            makeTrue("joeq.UTF.Utf8","TRACE");
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceScheduler")) {
-            makeTrue("Scheduler.jq_NativeThread","TRACE");
-            makeTrue("Scheduler.jq_InterrupterThread","TRACE");
+            makeTrue("joeq.Scheduler.jq_NativeThread","TRACE");
+            makeTrue("joeq.Scheduler.jq_InterrupterThread","TRACE");
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceLocks")) {
-            makeTrue("Run_Time.Monitor","TRACE");
+            makeTrue("joeq.Run_Time.Monitor","TRACE");
             return i+1;
         }
         /* ARGH: Fix this. */
         if (args[i].equalsIgnoreCase("-TraceByMethodName")) {
-            addReflect("Compil3r.Reference.x86.x86ReferenceCompiler","TraceMethod_MethodNames", args[++i]);
+            addReflect("joeq.Compil3r.Reference.x86.x86ReferenceCompiler","TraceMethod_MethodNames", args[++i]);
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceByClassName")) {
-            addReflect("Compil3r.Reference.x86.x86ReferenceCompiler","TraceMethod_ClassNames", args[++i]);
+            addReflect("joeq.Compil3r.Reference.x86.x86ReferenceCompiler","TraceMethod_ClassNames", args[++i]);
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceBCByMethodName")) {
-            addReflect("Compil3r.Reference.x86.x86ReferenceCompiler","TraceBytecode_MethodNames", args[++i]);
+            addReflect("joeq.Compil3r.Reference.x86.x86ReferenceCompiler","TraceBytecode_MethodNames", args[++i]);
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceBCByClassName")) {
-            addReflect("Compil3r.Reference.x86.x86ReferenceCompiler","TraceBytecode_ClassNames", args[++i]);
+            addReflect("joeq.Compil3r.Reference.x86.x86ReferenceCompiler","TraceBytecode_ClassNames", args[++i]);
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-ReplaceClass")) {
-            makeTrue("Clazz.jq_Class","REPLACE_CLASS");
+            makeTrue("joeq.Clazz.jq_Class","REPLACE_CLASS");
             // collect a list of classes to replace
             String s = args[++i];
             for (;;) {
@@ -137,38 +137,38 @@ public abstract class TraceFlags {
                 int index = (index1 == -1)?index2:((index2 == -1)?index1:Math.min(index1, index2));
                 if (index != -1) {
                     String className = s.substring(0, index);
-                    Clazz.jq_Class.classToReplace.add(className);
+                    joeq.Clazz.jq_Class.classToReplace.add(className);
                     s = s.substring(index+1);
                 } else {
-                    Clazz.jq_Class.classToReplace.add(s);
+                    joeq.Clazz.jq_Class.classToReplace.add(s);
                     break;
                 }
             }
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceReplaceClass")) {
-            makeTrue("Clazz.jq_Class","TRACE_REPLACE_CLASS");
+            makeTrue("joeq.Clazz.jq_Class","TRACE_REPLACE_CLASS");
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-SetCompiler")) {
-            callMethod("Clazz.Delegates", "setDefaultCompiler", args[++i]);
+            callMethod("joeq.Clazz.Delegates", "setDefaultCompiler", args[++i]);
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-UseCompilerForClasses")) {
-            Object d = callMethod("Clazz.Delegates", "getCompiler", args[++i]);
+            Object d = callMethod("joeq.Clazz.Delegates", "getCompiler", args[++i]);
             Object c = new jq_Member.FilterByShortClassName(args[++i]);
-            callMethod("Clazz.Delegates", "registerCompiler",
-                       new Class[] { Util.Collections.FilterIterator.Filter.class, 
-                                     Compil3r.Compil3rInterface.class },
+            callMethod("joeq.Clazz.Delegates", "registerCompiler",
+                       new Class[] { joeq.Util.Collections.FilterIterator.Filter.class, 
+                                     joeq.Compil3r.Compil3rInterface.class },
                        new Object[] { c, d });
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-UseCompilerForMethods")) {
-            Object d = callMethod("Clazz.Delegates", "getCompiler", args[++i]);
+            Object d = callMethod("joeq.Clazz.Delegates", "getCompiler", args[++i]);
             Object c = new jq_Member.FilterByName(args[++i]);
-            callMethod("Clazz.Delegates", "registerCompiler",
-                       new Class[] { Util.Collections.FilterIterator.Filter.class, 
-                                     Compil3r.Compil3rInterface.class },
+            callMethod("joeq.Clazz.Delegates", "registerCompiler",
+                       new Class[] { joeq.Util.Collections.FilterIterator.Filter.class, 
+                                     joeq.Compil3r.Compil3rInterface.class },
                        new Object[] { c, d });
             return i+1;
         }

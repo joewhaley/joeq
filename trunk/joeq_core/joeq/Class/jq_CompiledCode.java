@@ -6,7 +6,7 @@ package joeq.Clazz;
 import java.util.Iterator;
 import java.util.List;
 
-import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.PrimordialClassLoader;
 import joeq.Main.jq;
 import joeq.Memory.CodeAddress;
 import joeq.Memory.StackAddress;

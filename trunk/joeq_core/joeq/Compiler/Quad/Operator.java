@@ -3,7 +3,7 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compil3r.Quad;
 
-import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.PrimordialClassLoader;
 import joeq.Clazz.jq_Array;
 import joeq.Clazz.jq_Class;
 import joeq.Clazz.jq_InstanceField;
@@ -1341,7 +1341,7 @@ public abstract class Operator {
                 case BytecodeVisitor.CMP_GE: r = s1 >= s2; break;
                 case BytecodeVisitor.CMP_LE: r = s1 <= s2; break;
                 case BytecodeVisitor.CMP_GT: r = s1 > s2; break;
-                case BytecodeVisitor.CMP_AE: r = Run_Time.MathSupport.ucmp(s1, s2); break;
+                case BytecodeVisitor.CMP_AE: r = joeq.Run_Time.MathSupport.ucmp(s1, s2); break;
                 case BytecodeVisitor.CMP_UNCOND: r = true; break;
                 default: Assert.UNREACHABLE(); r = false; break;
                 }
@@ -3833,10 +3833,10 @@ public abstract class Operator {
         _delegate = null;
         boolean nullVM = jq.nullVM;
         if (!nullVM) {
-            _delegate = attemptDelegate("Compil3r.Quad.Delegates$Op");
+            _delegate = attemptDelegate("joeq.Compil3r.Quad.Delegates$Op");
         }
         if (_delegate == null) {
-            _delegate = new Compil3r.Quad.NullDelegates.Op();
+            _delegate = new joeq.Compil3r.Quad.NullDelegates.Op();
         }
     }
 

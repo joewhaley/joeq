@@ -1,7 +1,7 @@
 // PrimordialClassLoader.java, created Mon Feb  5 23:23:20 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Bootstrap;
+package joeq.Clazz;
 
 import java.io.DataInput;
 import java.io.DataInputStream;
@@ -25,19 +25,13 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import ClassLib.ClassLibInterface;
-import Clazz.jq_Array;
-import Clazz.jq_Class;
-import Clazz.jq_ClassFileConstants;
-import Clazz.jq_Member;
-import Clazz.jq_Primitive;
-import Clazz.jq_Type;
-import Main.jq;
-import UTF.Utf8;
-import Util.Assert;
-import Util.Collections.AppendIterator;
-import Util.Collections.FilterIterator;
-import Util.Collections.UnmodifiableIterator;
+import joeq.ClassLib.ClassLibInterface;
+import joeq.Main.jq;
+import joeq.UTF.Utf8;
+import joeq.Util.Assert;
+import joeq.Util.Collections.AppendIterator;
+import joeq.Util.Collections.FilterIterator;
+import joeq.Util.Collections.UnmodifiableIterator;
 
 /**
  * PrimordialClassLoader

@@ -1,6 +1,6 @@
 package joeq.Compil3r.Analysis.IPSSA.Utils;
 
-import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.PrimordialClassLoader;
 import joeq.Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
 import java.util.StringTokenizer;
 

@@ -99,13 +99,13 @@ public abstract class DefinitionGraph {
 	}
 	
 	protected void printDot(Iterator iter, PrintStream out, final boolean direction){
-		Util.SyntheticGraphs.Graph g = new Util.SyntheticGraphs.Graph();
+		joeq.Util.SyntheticGraphs.Graph g = new joeq.Util.SyntheticGraphs.Graph();
 		
 		while(iter.hasNext()){
 			SSADefinition def = (SSADefinition)iter.next();
 		
 			(new Object(){
-				void makeDotAux(Util.SyntheticGraphs.Graph g, SSADefinition def){
+				void makeDotAux(joeq.Util.SyntheticGraphs.Graph g, SSADefinition def){
 					g.addNode(def.getID(), def.toString());
 					Iterator iter = direction ? getReached(def) : getReaching(def);
 					if(iter != null){

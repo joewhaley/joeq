@@ -7,7 +7,7 @@ import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Iterator;
 
-import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.PrimordialClassLoader;
 import joeq.Clazz.jq_Class;
 import joeq.Clazz.jq_InstanceField;
 import joeq.Clazz.jq_InstanceMethod;
@@ -58,7 +58,7 @@ public abstract class ClassDump {
             //if (c.getName().toString().equals("right"))
             {
                 out.println(c.toString());
-                Compil3r.Quad.ControlFlowGraph cfg = Compil3r.Quad.CodeCache.getCode(c);
+                joeq.Compil3r.Quad.ControlFlowGraph cfg = joeq.Compil3r.Quad.CodeCache.getCode(c);
                 System.out.println(cfg.fullDump());
             }
         }
@@ -70,7 +70,7 @@ public abstract class ClassDump {
             //if (c.getName().toString().equals("right"))
             {
                 out.println(c.toString());
-                Compil3r.Quad.ControlFlowGraph cfg = Compil3r.Quad.CodeCache.getCode(c);
+                joeq.Compil3r.Quad.ControlFlowGraph cfg = joeq.Compil3r.Quad.CodeCache.getCode(c);
                 System.out.println(cfg.fullDump());
             }
         }

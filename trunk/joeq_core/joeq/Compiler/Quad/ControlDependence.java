@@ -30,7 +30,7 @@ public class ControlDependence extends jq_MethodVisitor.EmptyVisitor {
         if (m.getBytecode() == null) return;
         System.out.println("Visiting method "+m);
         current_method = m;
-        ControlFlowGraph cfg = Compil3r.Quad.CodeCache.getCode(m);
+        ControlFlowGraph cfg = joeq.Compil3r.Quad.CodeCache.getCode(m);
         Dominators dom = new Dominators(false);
         dom.visitMethod(m);
         Dominators.DominatorNode root = dom.computeTree();

@@ -19,7 +19,7 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
-import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.PrimordialClassLoader;
 import joeq.Clazz.jq_Class;
 import joeq.Clazz.jq_Method;
 import joeq.Compil3r.Analysis.IPA.PAResults;
@@ -848,7 +848,7 @@ public class IPSSABuilder implements Runnable {
 		return result.toString();
 	}
 	private static Register getOnlyDefinedRegister(Quad quad) {
-		Util.Templates.ListIterator.RegisterOperand iter = quad.getDefinedRegisters().registerOperandIterator();
+		joeq.Util.Templates.ListIterator.RegisterOperand iter = quad.getDefinedRegisters().registerOperandIterator();
 		if(!iter.hasNext()){
 			// no definition here
 			return null;
@@ -859,7 +859,7 @@ public class IPSSABuilder implements Runnable {
 		return reg;
 	}
     private static Register getOnlyUsedRegister(Quad quad) {
-        Util.Templates.ListIterator.RegisterOperand iter = quad.getUsedRegisters().registerOperandIterator();
+        joeq.Util.Templates.ListIterator.RegisterOperand iter = quad.getUsedRegisters().registerOperandIterator();
         if(!iter.hasNext()){
             // no definition here
             return null;
@@ -1054,7 +1054,7 @@ public class IPSSABuilder implements Runnable {
         public static void main(String[] args) {
             HostedVM.initialize();
 
-            Compil3r.BytecodeAnalysis.TypeAnalysis.classesToAnalyze = new HashSet();
+            joeq.Compil3r.BytecodeAnalysis.TypeAnalysis.classesToAnalyze = new HashSet();
             Iterator i = null; String memberName = null;
             for (int x=0; x<args.length; ++x) {
                 if (args[x].equals("-file")) {

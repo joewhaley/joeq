@@ -13,7 +13,7 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
-import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.PrimordialClassLoader;
 import joeq.Compil3r.BytecodeAnalysis.Bytecodes;
 import joeq.Run_Time.Debug;
 import joeq.UTF.Utf8;
@@ -284,7 +284,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
         jq_Class otherclazz = n.getReferencedClass();
         jq_NameAndDesc nd = n.getNameAndDesc();
         if (otherclazz.isInClassLib())
-            nd = ClassLib.ClassLibInterface.convertClassLibNameAndDesc(otherclazz, nd);
+            nd = joeq.ClassLib.ClassLibInterface.convertClassLibNameAndDesc(otherclazz, nd);
         jq_StaticField f;
         if (otherclazz.isLoaded()) {
             f = otherclazz.getStaticField(nd);
@@ -318,7 +318,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
         jq_Class otherclazz = n.getReferencedClass();
         jq_NameAndDesc nd = n.getNameAndDesc();
         if (otherclazz.isInClassLib())
-            nd = ClassLib.ClassLibInterface.convertClassLibNameAndDesc(otherclazz, nd);
+            nd = joeq.ClassLib.ClassLibInterface.convertClassLibNameAndDesc(otherclazz, nd);
         jq_InstanceField f;
         if (otherclazz.isLoaded()) {
             f = otherclazz.getInstanceField(nd);
@@ -352,7 +352,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
         jq_Class otherclazz = n.getReferencedClass();
         jq_NameAndDesc nd = n.getNameAndDesc();
         if (otherclazz.isInClassLib())
-            nd = ClassLib.ClassLibInterface.convertClassLibNameAndDesc(otherclazz, nd);
+            nd = joeq.ClassLib.ClassLibInterface.convertClassLibNameAndDesc(otherclazz, nd);
         jq_StaticMethod f;
         if (otherclazz.isLoaded()) {
             f = otherclazz.getStaticMethod(nd);
@@ -387,7 +387,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
         jq_Class otherclazz = n.getReferencedClass();
         jq_NameAndDesc nd = n.getNameAndDesc();
         if (otherclazz.isInClassLib())
-            nd = ClassLib.ClassLibInterface.convertClassLibNameAndDesc(otherclazz, nd);
+            nd = joeq.ClassLib.ClassLibInterface.convertClassLibNameAndDesc(otherclazz, nd);
         jq_InstanceMethod f;
         if (otherclazz.isLoaded()) {
             f = otherclazz.getInstanceMethod(nd);

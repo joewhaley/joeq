@@ -20,7 +20,7 @@ import java.util.Set;
 import java.util.StringTokenizer;
 
 import joeq.Allocator.ObjectLayout;
-import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.PrimordialClassLoader;
 import joeq.ClassLib.ClassLibInterface;
 import joeq.Compil3r.CompilationConstants;
 import joeq.Compil3r.BytecodeAnalysis.Bytecodes;
@@ -1028,7 +1028,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                     // visit instance fields
                     for (int i=0; i<this.declared_instance_fields.length; ++i) {
                         jq_InstanceField this_m = this.declared_instance_fields[i];
-                        jq_NameAndDesc nd = ClassLib.ClassLibInterface.convertClassLibNameAndDesc(this, this_m.getNameAndDesc());
+                        jq_NameAndDesc nd = ClassLibInterface.convertClassLibNameAndDesc(this, this_m.getNameAndDesc());
                         if (this_m.getNameAndDesc() != nd) {
                             if (TRACE) Debug.writeln("Rewriting field signature from "+this_m.getNameAndDesc()+" to "+nd);
                             jq_InstanceField this_m2 = getOrCreateInstanceField(nd);
@@ -1042,7 +1042,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                     // visit static fields
                     for (int i=0; i<this.static_fields.length; ++i) {
                         jq_StaticField this_m = this.static_fields[i];
-                        jq_NameAndDesc nd = ClassLib.ClassLibInterface.convertClassLibNameAndDesc(this, this_m.getNameAndDesc());
+                        jq_NameAndDesc nd = ClassLibInterface.convertClassLibNameAndDesc(this, this_m.getNameAndDesc());
                         if (this_m.getNameAndDesc() != nd) {
                             if (TRACE) Debug.writeln("Rewriting field signature from "+this_m.getNameAndDesc()+" to "+nd);
                             jq_StaticField this_m2 = getOrCreateStaticField(nd);
@@ -1057,7 +1057,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                     LinkedHashMap newInstanceMethods = new LinkedHashMap();
                     for (int i=0; i<this.declared_instance_methods.length; ++i) {
                         jq_InstanceMethod this_m = this.declared_instance_methods[i];
-                        jq_NameAndDesc nd = ClassLib.ClassLibInterface.convertClassLibNameAndDesc(this, this_m.getNameAndDesc());
+                        jq_NameAndDesc nd = ClassLibInterface.convertClassLibNameAndDesc(this, this_m.getNameAndDesc());
                         if (this_m.getNameAndDesc() != nd) {
                             if (TRACE) Debug.writeln("Rewriting method signature from "+this_m.getNameAndDesc()+" to "+nd);
                             jq_InstanceMethod this_m2 = getOrCreateInstanceMethod(nd);
@@ -1086,7 +1086,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                     LinkedHashMap newStaticMethods = new LinkedHashMap();
                     for (int i=0; i<this.static_methods.length; ++i) {
                         jq_StaticMethod this_m = this.static_methods[i];
-                        jq_NameAndDesc nd = ClassLib.ClassLibInterface.convertClassLibNameAndDesc(this, this_m.getNameAndDesc());
+                        jq_NameAndDesc nd = ClassLibInterface.convertClassLibNameAndDesc(this, this_m.getNameAndDesc());
                         if (this_m.getNameAndDesc() != nd) {
                             if (TRACE) Debug.writeln("Rewriting method signature from "+this_m.getNameAndDesc()+" to "+nd);
                             jq_StaticMethod this_m2 = getOrCreateStaticMethod(nd);
@@ -1183,7 +1183,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                 String thisDesc = this.getDesc().toString();
                 if (thisDesc.startsWith("LREPLACE")) {
                     Utf8 oldDesc = Utf8.get("L" + thisDesc.substring( 8 , thisDesc.length() )); // remove the 'LREPLACE' in name and restore 'L'
-                    Clazz.jq_Type old = PrimordialClassLoader.getOrCreateType(class_loader , oldDesc) ;
+                    jq_Type old = PrimordialClassLoader.getOrCreateType(class_loader , oldDesc) ;
                     Assert._assert(old instanceof jq_Class);
                     if (((jq_Class)old).getState() < STATE_LOADED) {
                         // old has not been loaded yet, since it was not in the image
@@ -1243,7 +1243,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
 
                 // update OLD according to NEW
                 if (TRACE_REPLACE_CLASS)
-                    Run_Time.Debug.writeln(
+                    joeq.Run_Time.Debug.writeln(
                         Strings.lineSep+Strings.lineSep+"In REPLACE: STARTING REPLACEMENT of:\t" + old_m);
 
                 jq_NameAndDesc old_m_nd = old_m.getNameAndDesc();
@@ -1327,7 +1327,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                 // take next method
 
                 if (TRACE_REPLACE_CLASS)
-                    Run_Time.Debug.writeln(
+                    joeq.Run_Time.Debug.writeln(
                         Strings.lineSep+Strings.lineSep+"In REPLACE: STARTING REPLACEMENT of:\t" + old_m);
 
                 //info useful for new_m
@@ -1551,7 +1551,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         LinkedList newInstanceFields = new LinkedList();
         for (int i=0; i<that.declared_instance_fields.length; ++i) {
             jq_InstanceField that_f = that.declared_instance_fields[i];
-            jq_NameAndDesc nd = ClassLib.ClassLibInterface.convertClassLibNameAndDesc(that, that_f.getNameAndDesc());
+            jq_NameAndDesc nd = ClassLibInterface.convertClassLibNameAndDesc(that, that_f.getNameAndDesc());
             jq_InstanceField this_f = this.getDeclaredInstanceField(nd);
             if (this_f != null) {
                 if (TRACE) Debug.writeln("Instance field "+this_f+" already exists, skipping.");
@@ -1587,7 +1587,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         LinkedList newStaticFields = new LinkedList();
         for (int i=0; i<that.static_fields.length; ++i) {
             jq_StaticField that_f = that.static_fields[i];
-            jq_NameAndDesc nd = ClassLib.ClassLibInterface.convertClassLibNameAndDesc(that, that_f.getNameAndDesc());
+            jq_NameAndDesc nd = ClassLibInterface.convertClassLibNameAndDesc(that, that_f.getNameAndDesc());
             jq_StaticField this_f = this.getDeclaredStaticField(nd);
             if (this_f != null) {
                 if (TRACE) Debug.writeln("Static field "+this_f+" already exists, skipping.");
@@ -1630,7 +1630,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
             jq_InstanceMethod that_m = that.declared_instance_methods[i];
             jq_NameAndDesc nd = that_m.getNameAndDesc();
             //jq_NameAndDesc nd = merge_convertNameAndDesc(that_m.getNameAndDesc());
-            Assert._assert(ClassLib.ClassLibInterface.convertClassLibNameAndDesc(that, nd) == nd);
+            Assert._assert(ClassLibInterface.convertClassLibNameAndDesc(that, nd) == nd);
             jq_InstanceMethod this_m = this.getDeclaredInstanceMethod(nd);
             byte[] bc = that_m.getBytecode();
             if (bc == null) {
@@ -1745,7 +1745,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
             } else {
                 jq_NameAndDesc nd = that_m.getNameAndDesc();
                 //jq_NameAndDesc nd = merge_convertNameAndDesc(that_m.getNameAndDesc());
-                Assert._assert(ClassLib.ClassLibInterface.convertClassLibNameAndDesc(that, nd) == nd);
+                Assert._assert(ClassLibInterface.convertClassLibNameAndDesc(that, nd) == nd);
                 this_m = this.getDeclaredStaticMethod(nd);
                 byte[] bc = that_m.getBytecode();
                 if (bc == null) {
@@ -1875,10 +1875,10 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                     cpr.addString((String)o);
                 } else if (o instanceof jq_Type) {
                     if (o instanceof jq_Reference)
-                        x.setObject(o = ClassLib.ClassLibInterface.convertClassLibCPEntry((jq_Reference)o));
+                        x.setObject(o = ClassLibInterface.convertClassLibCPEntry((jq_Reference)o));
                     cpr.addType((jq_Type)o);
                 } else if (o instanceof jq_Member) {
-                    x.setObject(o = ClassLib.ClassLibInterface.convertClassLibCPEntry((jq_Member)o));
+                    x.setObject(o = ClassLibInterface.convertClassLibCPEntry((jq_Member)o));
                     cpr.addMember((jq_Member)o);
                 } else {
                     cpr.addOther(o);
@@ -2628,7 +2628,7 @@ uphere2:
         _delegate = null;
         boolean nullVM = jq.nullVM;
         if (!nullVM) {
-            _delegate = attemptDelegate("Clazz.Delegates$Klass");
+            _delegate = attemptDelegate("joeq.Clazz.Delegates$Klass");
         }
         if (_delegate == null) {
             _delegate = new NullDelegates.Klass();

@@ -14,7 +14,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.StringTokenizer;
 
-import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.PrimordialClassLoader;
 import joeq.Clazz.jq_Array;
 import joeq.Clazz.jq_Class;
 import joeq.Clazz.jq_MethodVisitor;
@@ -44,7 +44,7 @@ public abstract class Driver {
         HostedVM.initialize();
 
         try {
-            interpreterClass = Class.forName("Interpreter.QuadInterpreter", false, Driver.class.getClassLoader());
+            interpreterClass = Class.forName("joeq.Interpreter.QuadInterpreter", false, Driver.class.getClassLoader());
         } catch (ClassNotFoundException x) {
             System.err.println("Warning: interpreter class not found.");
         }
@@ -122,7 +122,7 @@ public abstract class Driver {
     }
 
     public static int processCommand(String[] commandBuffer, int index) {
-        return processCommand(commandBuffer, index, (Util.SimpleInterpreter)null);
+        return processCommand(commandBuffer, index, (SimpleInterpreter)null);
     }
 
     public static int processCommand(String[] commandBuffer, int index, SimpleInterpreter si) {
@@ -163,11 +163,11 @@ public abstract class Driver {
                 String interpreterClassName = commandBuffer[++index];
                 try {
                     Class cl = Class.forName(interpreterClassName);
-                    if (Class.forName("Interpreter.QuadInterpreter").isAssignableFrom(cl)) {
+                    if (Class.forName("joeq.Interpreter.QuadInterpreter").isAssignableFrom(cl)) {
                         interpreterClass = cl;
                         System.out.println("Interpreter class changed to " + interpreterClass);
                     } else {
-                        System.err.println("Class " + interpreterClassName + " does not subclass Interpreter.QuadInterpreter.");
+                        System.err.println("Class " + interpreterClassName + " does not subclass joeq.Interpreter.QuadInterpreter.");
                     }
                 } catch (java.lang.ClassNotFoundException x) {
                     System.err.println("Cannot find interpreter named " + interpreterClassName + ".");
@@ -195,10 +195,10 @@ public abstract class Driver {
                     if (m != null) {
                         Object[] args = new Object[m.getParamTypes().length];
                         index = parseMethodArgs(args, m.getParamTypes(), commandBuffer, index);
-                        Interpreter.QuadInterpreter s = null;
+                        joeq.Interpreter.QuadInterpreter s = null;
                         java.lang.reflect.Method im = interpreterClass.getMethod("interpretMethod", new Class[]{Class.forName("Clazz.jq_Method"), new Object[0].getClass()});
-                        s = (Interpreter.QuadInterpreter) im.invoke(null, new Object[]{m, args});
-                        //s = Interpreter.QuadInterpreter.interpretMethod(m, args);
+                        s = (joeq.Interpreter.QuadInterpreter) im.invoke(null, new Object[]{m, args});
+                        //s = joeq.Interpreter.QuadInterpreter.interpretMethod(m, args);
                         System.out.flush();
                         System.out.println("Result of interpretation: " + s);
                     } else {

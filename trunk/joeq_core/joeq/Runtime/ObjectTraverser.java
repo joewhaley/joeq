@@ -1,20 +1,21 @@
 // ObjectTraverser.java, created Mon Feb  5 23:23:20 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Bootstrap;
+package joeq.Bootstrap;
 
 import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Iterator;
 
-import ClassLib.ClassLibInterface;
-import Clazz.jq_Class;
-import Clazz.jq_InstanceField;
-import Clazz.jq_StaticField;
-import Main.jq;
-import Run_Time.Reflection;
-import Util.Assert;
+import joeq.ClassLib.ClassLibInterface;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_InstanceField;
+import joeq.Clazz.jq_StaticField;
+import joeq.Main.jq;
+import joeq.Run_Time.Reflection;
+import joeq.Util.Assert;
+import joeq.UTF.Utf8;
 
 /**
  * ObjectTraverser
@@ -59,7 +60,7 @@ public abstract class ObjectTraverser {
         if (f2 == null) {
             jq_Class klass = (jq_Class)Reflection.getJQType(c);
             for (Iterator i = ClassLibInterface.DEFAULT.getImplementationClassDescs(klass.getDesc()); i.hasNext(); ) {
-                UTF.Utf8 u = (UTF.Utf8)i.next();
+                Utf8 u = (Utf8)i.next();
                 if (TRACE) out.println("Checking mirror class "+u);
                 String s = u.toString();
                 Assert._assert(s.charAt(0) == 'L');

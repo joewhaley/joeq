@@ -5,7 +5,7 @@ package joeq.Main;
 
 import java.util.Iterator;
 
-import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.PrimordialClassLoader;
 import joeq.ClassLib.ClassLibInterface;
 import joeq.Memory.CodeAddress;
 import joeq.Memory.HeapAddress;

@@ -1,25 +1,25 @@
 // BytecodeInterpreter.java, created Fri Aug 16 16:04:04 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Interpreter;
+package joeq.Interpreter;
 
-import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Array;
-import Clazz.jq_Class;
-import Clazz.jq_InstanceField;
-import Clazz.jq_InstanceMethod;
-import Clazz.jq_Method;
-import Clazz.jq_Primitive;
-import Clazz.jq_Reference;
-import Clazz.jq_StaticField;
-import Clazz.jq_TryCatchBC;
-import Clazz.jq_Type;
-import Compil3r.BytecodeAnalysis.BytecodeVisitor;
-import Memory.Address;
-import Memory.HeapAddress;
-import Run_Time.Reflection;
-import Run_Time.Unsafe;
-import Util.Assert;
+import joeq.Clazz.PrimordialClassLoader;
+import joeq.Clazz.jq_Array;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_InstanceField;
+import joeq.Clazz.jq_InstanceMethod;
+import joeq.Clazz.jq_Method;
+import joeq.Clazz.jq_Primitive;
+import joeq.Clazz.jq_Reference;
+import joeq.Clazz.jq_StaticField;
+import joeq.Clazz.jq_TryCatchBC;
+import joeq.Clazz.jq_Type;
+import joeq.Compil3r.BytecodeAnalysis.BytecodeVisitor;
+import joeq.Memory.Address;
+import joeq.Memory.HeapAddress;
+import joeq.Run_Time.Reflection;
+import joeq.Run_Time.Unsafe;
+import joeq.Util.Assert;
 
 /*
  * @author  John Whaley <jwhaley@alum.mit.edu>

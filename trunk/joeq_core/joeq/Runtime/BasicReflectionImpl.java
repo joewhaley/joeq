@@ -1,7 +1,7 @@
 // BasicReflectionImpl.java, created Mon Dec 16 20:56:31 2002 by mcmartin
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Run_Time;
+package joeq.Run_Time;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
@@ -12,24 +12,24 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Set;
 
-import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Class;
-import Clazz.jq_ClassInitializer;
-import Clazz.jq_Field;
-import Clazz.jq_Initializer;
-import Clazz.jq_InstanceField;
-import Clazz.jq_InstanceMethod;
-import Clazz.jq_Member;
-import Clazz.jq_Method;
-import Clazz.jq_NameAndDesc;
-import Clazz.jq_Primitive;
-import Clazz.jq_Reference;
-import Clazz.jq_StaticField;
-import Clazz.jq_StaticMethod;
-import Clazz.jq_Type;
-import Memory.Address;
-import UTF.Utf8;
-import Util.Assert;
+import joeq.Clazz.PrimordialClassLoader;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_ClassInitializer;
+import joeq.Clazz.jq_Field;
+import joeq.Clazz.jq_Initializer;
+import joeq.Clazz.jq_InstanceField;
+import joeq.Clazz.jq_InstanceMethod;
+import joeq.Clazz.jq_Member;
+import joeq.Clazz.jq_Method;
+import joeq.Clazz.jq_NameAndDesc;
+import joeq.Clazz.jq_Primitive;
+import joeq.Clazz.jq_Reference;
+import joeq.Clazz.jq_StaticField;
+import joeq.Clazz.jq_StaticMethod;
+import joeq.Clazz.jq_Type;
+import joeq.Memory.Address;
+import joeq.UTF.Utf8;
+import joeq.Util.Assert;
 
 /**
  * @author  John Whaley <jwhaley@alum.mit.edu>
@@ -58,7 +58,7 @@ public class BasicReflectionImpl implements Reflection.Delegate {
         }
         String className = c.getName().replace('.','/');
         if (!className.startsWith("[")) className = "L"+className+";";
-        className = ClassLib.ClassLibInterface.convertClassLibDesc(className);
+        className = joeq.ClassLib.ClassLibInterface.convertClassLibDesc(className);
         return PrimordialClassLoader.loader.getOrCreateBSType(className);
     }
     public final Class getJDKType(jq_Type c) {
@@ -107,7 +107,7 @@ public class BasicReflectionImpl implements Reflection.Delegate {
         jq_Class c = (jq_Class)getJQType(f.getDeclaringClass());
         //if (c == null) return null;
         jq_NameAndDesc nd = new jq_NameAndDesc(Utf8.get(f.getName()), getJQType(f.getType()).getDesc());
-        nd = ClassLib.ClassLibInterface.convertClassLibNameAndDesc(c, nd);
+        nd = joeq.ClassLib.ClassLibInterface.convertClassLibNameAndDesc(c, nd);
         jq_Field m = (jq_Field)c.getDeclaredMember(nd);
         if (m == null) {
             if (!Utf8.NO_NEW) {
@@ -132,7 +132,7 @@ public class BasicReflectionImpl implements Reflection.Delegate {
         desc.append(')');
         desc.append(getJQType(f.getReturnType()).getDesc().toString());
         jq_NameAndDesc nd = new jq_NameAndDesc(Utf8.get(f.getName()), Utf8.get(desc.toString()));
-        nd = ClassLib.ClassLibInterface.convertClassLibNameAndDesc(c, nd);
+        nd = joeq.ClassLib.ClassLibInterface.convertClassLibNameAndDesc(c, nd);
         jq_Method m = (jq_Method)c.getDeclaredMember(nd);
         if (m == null) {
             if (!Utf8.NO_NEW) {
@@ -156,7 +156,7 @@ public class BasicReflectionImpl implements Reflection.Delegate {
         }
         desc.append(")V");
         jq_NameAndDesc nd = new jq_NameAndDesc(Utf8.get("<init>"), Utf8.get(desc.toString()));
-        nd = ClassLib.ClassLibInterface.convertClassLibNameAndDesc(c, nd);
+        nd = joeq.ClassLib.ClassLibInterface.convertClassLibNameAndDesc(c, nd);
         jq_Initializer m = (jq_Initializer)c.getDeclaredMember(nd);
         if (m == null) {
             if (!Utf8.NO_NEW) {

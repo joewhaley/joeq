@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.PrimordialClassLoader;
 import joeq.Clazz.jq_Array;
 import joeq.Clazz.jq_Class;
 import joeq.Clazz.jq_FakeInstanceMethod;
@@ -76,6 +76,7 @@ import joeq.Main.HostedVM;
 import joeq.Memory.Address;
 import joeq.Memory.StackAddress;
 import joeq.Run_Time.Reflection;
+import joeq.Run_Time.TypeCheck;
 import joeq.Util.Assert;
 import joeq.Util.Strings;
 import joeq.Util.Collections.CollectionTestWrapper;
@@ -336,7 +337,7 @@ public class MethodSummary {
             this.bb = bb;
             this.s = start_states[bb.getID()];
             this.s = this.s.copy();
-            for (Util.Templates.ListIterator.Quad i = bb.iterator(); i.hasNext(); ) {
+            for (joeq.Util.Templates.ListIterator.Quad i = bb.iterator(); i.hasNext(); ) {
                 Quad q2 = i.nextQuad();
                 q2.accept(this);
                 if (q2 == q) break;
@@ -374,9 +375,9 @@ public class MethodSummary {
             if (TRACE_INTRA) out.println("Building summary for "+this.method);
             
             // iterate until convergence.
-            Util.Templates.List.BasicBlock rpo_list = cfg.reversePostOrder(cfg.entry());
+            joeq.Util.Templates.List.BasicBlock rpo_list = cfg.reversePostOrder(cfg.entry());
             for (;;) {
-                Util.Templates.ListIterator.BasicBlock rpo = rpo_list.basicBlockIterator();
+                joeq.Util.Templates.ListIterator.BasicBlock rpo = rpo_list.basicBlockIterator();
                 this.change = false;
                 while (rpo.hasNext()) {
                     this.bb = rpo.nextBasicBlock();
@@ -409,7 +410,7 @@ public class MethodSummary {
                         this.s.dump(out);
                     }
                     this.bb.visitQuads(this);
-                    Util.Templates.ListIterator.BasicBlock succs = this.bb.getSuccessors().basicBlockIterator();
+                    joeq.Util.Templates.ListIterator.BasicBlock succs = this.bb.getSuccessors().basicBlockIterator();
                     while (succs.hasNext()) {
                         BasicBlock succ = succs.nextBasicBlock();
                         if (this.bb.endsInRet()) {
@@ -782,7 +783,7 @@ public class MethodSummary {
             Invoke.getMethod(obj).resolve();
             jq_Method m = Invoke.getMethod(obj).getMethod();
             ProgramLocation mc = new ProgramLocation.QuadProgramLocation(method, obj);
-            if (m == Run_Time.Arrays._multinewarray) {
+            if (m == joeq.Run_Time.Arrays._multinewarray) {
                 // special case: multi-dimensional array.
                 RegisterOperand dest = Invoke.getDest(obj);
                 if (dest != null) {
@@ -797,7 +798,7 @@ public class MethodSummary {
             this.methodCalls.add(mc);
             jq_Type[] params = m.getParamTypes();
             ParamListOperand plo = Invoke.getParamList(obj);
-            Assert._assert(m == Run_Time.Arrays._multinewarray || params.length == plo.length());
+            Assert._assert(m == joeq.Run_Time.Arrays._multinewarray || params.length == plo.length());
             for (int i=0; i<params.length; ++i) {
                 if (!params[i].isReferenceType()
                     /*|| params[i].isAddressType()*/
@@ -994,7 +995,7 @@ public class MethodSummary {
             if (obj.getOperator() == Special.GET_THREAD_BLOCK.INSTANCE) {
                 if (TRACE_INTRA) out.println("Visiting: "+obj);
                 Register dest_r = ((RegisterOperand)Special.getOp1(obj)).getRegister();
-                jq_Reference type = Scheduler.jq_Thread._class;
+                jq_Reference type = (jq_Reference) PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Scheduler/jq_Thread;");
                 Node n = ConcreteTypeNode.get(type, new QuadProgramLocation(method, obj));
                 n.setEscapes();
                 setRegister(dest_r, n);
@@ -1015,7 +1016,7 @@ public class MethodSummary {
             } else if (obj.getOperator() == Special.GET_TYPE_OF.INSTANCE) {
                 if (TRACE_INTRA) out.println("Visiting: "+obj);
                 Register dest_r = ((RegisterOperand)Special.getOp1(obj)).getRegister();
-                jq_Reference type = Clazz.jq_Reference._class;
+                jq_Reference type = jq_Reference._class;
                 UnknownTypeNode n = UnknownTypeNode.get(type);
                 setRegister(dest_r, n);
                 */
@@ -1053,22 +1054,22 @@ public class MethodSummary {
                     callToTEN.put(mc, n = ThrownExceptionNode.get(mc));
                     passedAsParameter.add(n);
                 }
-                Util.Templates.ListIterator.ExceptionHandler eh = bb.getExceptionHandlers().exceptionHandlerIterator();
+                joeq.Util.Templates.ListIterator.ExceptionHandler eh = bb.getExceptionHandlers().exceptionHandlerIterator();
                 while (eh.hasNext()) {
                     ExceptionHandler h = eh.nextExceptionHandler();
                     this.mergeWith(h);
                     this.start_states[h.getEntry().getID()].merge(nLocals, n);
-                    if (h.mustCatch(Bootstrap.PrimordialClassLoader.getJavaLangThrowable()))
+                    if (h.mustCatch(PrimordialClassLoader.getJavaLangThrowable()))
                         return;
                 }
                 this.thrown.add(n);
                 return;
             }
-            Util.Templates.ListIterator.jq_Class xs = obj.getThrownExceptions().classIterator();
+            joeq.Util.Templates.ListIterator.jq_Class xs = obj.getThrownExceptions().classIterator();
             while (xs.hasNext()) {
                 jq_Class x = xs.nextClass();
                 UnknownTypeNode n = UnknownTypeNode.get(x);
-                Util.Templates.ListIterator.ExceptionHandler eh = bb.getExceptionHandlers().exceptionHandlerIterator();
+                joeq.Util.Templates.ListIterator.ExceptionHandler eh = bb.getExceptionHandlers().exceptionHandlerIterator();
                 boolean caught = false;
                 while (eh.hasNext()) {
                     ExceptionHandler h = eh.nextExceptionHandler();
@@ -1171,7 +1172,7 @@ public class MethodSummary {
     public static class InsideEdgeNavigator implements Navigator {
 
         /* (non-Javadoc)
-         * @see Util.Graphs.Navigator#next(java.lang.Object)
+         * @see joeq.Util.Graphs.Navigator#next(java.lang.Object)
          */
         public Collection next(Object node) {
             Node n = (Node) node;
@@ -1179,7 +1180,7 @@ public class MethodSummary {
         }
 
         /* (non-Javadoc)
-         * @see Util.Graphs.Navigator#prev(java.lang.Object)
+         * @see joeq.Util.Graphs.Navigator#prev(java.lang.Object)
          */
         public Collection prev(Object node) {
             Node n = (Node) node;
@@ -1877,8 +1878,8 @@ public class MethodSummary {
             if (type != null) {
                 type.prepare();
                 m.getDeclaringClass().prepare();
-                if (Run_Time.TypeCheck.isAssignable((jq_Type)type, (jq_Type)m.getDeclaringClass()) ||
-                    Run_Time.TypeCheck.isAssignable((jq_Type)m.getDeclaringClass(), (jq_Type)type)) {
+                if (TypeCheck.isAssignable((jq_Type)type, (jq_Type)m.getDeclaringClass()) ||
+                    TypeCheck.isAssignable((jq_Type)m.getDeclaringClass(), (jq_Type)type)) {
                     jq_Reference r = (jq_Reference)m.getType();
                     result.add(UnknownTypeNode.get(r));
                 } else {
@@ -2097,12 +2098,12 @@ public class MethodSummary {
         }
         
         /* (non-Javadoc)
-         * @see Util.IO.Textualizable#addEdge(java.lang.String, Util.IO.Textualizable)
+         * @see joeq.Util.IO.Textualizable#addEdge(java.lang.String, joeq.Util.IO.Textualizable)
          */
         public void addEdge(String edge, Textualizable t) { }
 
         /* (non-Javadoc)
-         * @see Util.IO.Textualizable#writeEdges(Util.IO.Textualizer)
+         * @see joeq.Util.IO.Textualizable#writeEdges(joeq.Util.IO.Textualizer)
          */
         public void writeEdges(Textualizer t) throws IOException { }
 
@@ -2770,7 +2771,7 @@ public class MethodSummary {
         private ThrownExceptionNode(ProgramLocation m) { super(m); }
         private ThrownExceptionNode(ThrownExceptionNode that) { super(that); }
         
-        public jq_Reference getDeclaredType() { return Bootstrap.PrimordialClassLoader.getJavaLangObject(); }
+        public jq_Reference getDeclaredType() { return PrimordialClassLoader.getJavaLangObject(); }
         
         public final Node copy() { return new ThrownExceptionNode(this); }
         
@@ -5035,7 +5036,7 @@ outer:
     
     public static void main(String[] args) throws IOException {
         HostedVM.initialize();
-        ClassLib.ClassLibInterface.useJoeqClasslib(true);
+        joeq.ClassLib.ClassLibInterface.useJoeqClasslib(true);
         jq_Class c = (jq_Class) jq_Type.parseType(args[0]);
         c.load();
         String name = null, desc = null;
@@ -5110,7 +5111,7 @@ outer:
 
     private static HashSet/*jq_Method*/ identityMethods = new HashSet();
     {
-        jq_Class throwable_class = Bootstrap.PrimordialClassLoader.getJavaLangThrowable();
+        jq_Class throwable_class = PrimordialClassLoader.getJavaLangThrowable();
         identityMethods.add(throwable_class.getDeclaredMember("fillInStackTrace", "()Ljava/lang/Throwable;"));
     }
 

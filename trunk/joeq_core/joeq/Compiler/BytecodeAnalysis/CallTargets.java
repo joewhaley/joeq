@@ -10,7 +10,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.Stack;
 
-import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.PrimordialClassLoader;
 import joeq.Clazz.jq_Class;
 import joeq.Clazz.jq_InstanceMethod;
 import joeq.Clazz.jq_Method;

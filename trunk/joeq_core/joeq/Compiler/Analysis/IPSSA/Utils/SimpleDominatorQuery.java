@@ -140,7 +140,7 @@ public class SimpleDominatorQuery implements DominatorQuery {
 		BasicBlock bb = node.getBasicBlock();
 		if(bb.size() == 0) return;
 		
-		Util.Templates.ListIterator.BasicBlock successors = bb.getSuccessors().basicBlockIterator();
+		joeq.Util.Templates.ListIterator.BasicBlock successors = bb.getSuccessors().basicBlockIterator();
 		while(successors.hasNext()){
 			BasicBlock succ = successors.nextBasicBlock();
 			

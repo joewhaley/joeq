@@ -16,7 +16,7 @@ public class PrintCFG {
             c[i] = (jq_Class)Helper.load(args[i]);
         }
 
-        Compil3r.Quad.PrintCFG pass = new Compil3r.Quad.PrintCFG();
+        joeq.Compil3r.Quad.PrintCFG pass = new joeq.Compil3r.Quad.PrintCFG();
 
         for (int i = 0; i < args.length; i++) {
             Helper.runPass(c[i], pass);

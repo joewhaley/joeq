@@ -11,7 +11,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 
-import joeq.Bootstrap.PrimordialClassLoader;
+import joeq.Clazz.PrimordialClassLoader;
 import joeq.Clazz.jq_Class;
 import joeq.Clazz.jq_InstanceMethod;
 import joeq.Clazz.jq_Method;
@@ -137,7 +137,7 @@ public class FindOwnership {
                 if(b.getNumberOfPredecessors() > 0) {
                     // merge node -- merge the values at predecessors
                     List.BasicBlock l = b.getPredecessors();
-                    for(Util.Templates.ListIterator.BasicBlock i = l.basicBlockIterator(); i.hasNext();) {
+                    for(joeq.Util.Templates.ListIterator.BasicBlock i = l.basicBlockIterator(); i.hasNext();) {
                         BasicBlock pred = i.nextBasicBlock();
                         OwnershipValue v_pred = (OwnershipValue)valueAtEnd.get(pred);
                         if(v_pred != null) {
@@ -169,7 +169,7 @@ public class FindOwnership {
                 if(changed) {
                     // enlist the successors
                     List.BasicBlock l = b.getSuccessors();
-                    for(Util.Templates.ListIterator.BasicBlock i = l.basicBlockIterator(); i.hasNext();) {
+                    for(joeq.Util.Templates.ListIterator.BasicBlock i = l.basicBlockIterator(); i.hasNext();) {
                         BasicBlock succ = i.nextBasicBlock();
                         if(!worklist.contains(succ)) {
                             worklist.push(succ);
@@ -216,8 +216,8 @@ public class FindOwnership {
                     result.addValue(o.getRegister(), new OwnershipLattice(OwnershipLattice.OWNED, type));
                 }else
                 if(q.getOperator() instanceof Operator.Move){
-                    Util.Templates.ListIterator.RegisterOperand uiter = q.getUsedRegisters().registerOperandIterator();
-                    Util.Templates.ListIterator.RegisterOperand diter = q.getDefinedRegisters().registerOperandIterator();
+                    joeq.Util.Templates.ListIterator.RegisterOperand uiter = q.getUsedRegisters().registerOperandIterator();
+                    joeq.Util.Templates.ListIterator.RegisterOperand diter = q.getDefinedRegisters().registerOperandIterator();
                     
                     if(!uiter.hasNext() || !diter.hasNext()) continue;
                     Operand.RegisterOperand use = (Operand.RegisterOperand)uiter.nextOperand();
@@ -235,7 +235,7 @@ public class FindOwnership {
                 if(q.getOperator() instanceof Operator.Putfield) {
                     if(_verbose) System.out.println("Processing store: " + q);
                     
-                    Util.Templates.ListIterator.RegisterOperand uiter = q.getUsedRegisters().registerOperandIterator();
+                    joeq.Util.Templates.ListIterator.RegisterOperand uiter = q.getUsedRegisters().registerOperandIterator();
                     uiter.nextOperand();
                     Operand.RegisterOperand use = (Operand.RegisterOperand)uiter.nextOperand();
                     

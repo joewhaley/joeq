@@ -1,21 +1,21 @@
 // ClassLibInterface.java, created Fri Jan 11 17:11:52 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package ClassLib;
+package joeq.ClassLib;
 
-import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Class;
-import Clazz.jq_InstanceField;
-import Clazz.jq_InstanceMethod;
-import Clazz.jq_Member;
-import Clazz.jq_NameAndDesc;
-import Clazz.jq_Reference;
-import Clazz.jq_StaticField;
-import Clazz.jq_StaticMethod;
-import Main.jq;
-import Run_Time.Debug;
-import UTF.Utf8;
-import Util.Assert;
+import joeq.Clazz.PrimordialClassLoader;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_InstanceField;
+import joeq.Clazz.jq_InstanceMethod;
+import joeq.Clazz.jq_Member;
+import joeq.Clazz.jq_NameAndDesc;
+import joeq.Clazz.jq_Reference;
+import joeq.Clazz.jq_StaticField;
+import joeq.Clazz.jq_StaticMethod;
+import joeq.Main.jq;
+import joeq.Run_Time.Debug;
+import joeq.UTF.Utf8;
+import joeq.Util.Assert;
 
 /**
  * ClassLibInterface
@@ -28,13 +28,13 @@ public abstract class ClassLibInterface {
     public static boolean USE_JOEQ_CLASSLIB;
     public static final void useJoeqClasslib(boolean b) { USE_JOEQ_CLASSLIB = b; }
     
-    public static final ClassLib.Common.Interface DEFAULT;
+    public static final joeq.ClassLib.Common.Interface DEFAULT;
 
     /* Try the three current possibilities for the ClassLibInterface.
        This would probably be rather more general with some kind of
        iterator, but it does for now. */
     static {
-        ClassLib.Common.Interface f = null;
+        joeq.ClassLib.Common.Interface f = null;
         String classlibinterface = System.getProperty("joeq.classlibinterface");
         boolean nullVM = jq.nullVM;
 
@@ -42,7 +42,7 @@ public abstract class ClassLibInterface {
             f = attemptClassLibInterface(classlibinterface);
         }
         if (nullVM) {
-            f = new ClassLib.Common.NullInterfaceImpl();
+            f = new joeq.ClassLib.Common.NullInterfaceImpl();
         }
         if (f == null) {
             String classlibrary = System.getProperty("classlibrary");
@@ -107,19 +107,19 @@ public abstract class ClassLibInterface {
                     System.err.println("Warning: OS "+osname+" is not yet supported, trying "+classlibrary);
                 }
             }
-            f = attemptClassLibInterface("ClassLib."+classlibrary+".Interface");
+            f = attemptClassLibInterface("joeq.ClassLib."+classlibrary+".Interface");
         }
         if (f == null) {
-            f = new ClassLib.Common.NullInterfaceImpl();
+            f = new joeq.ClassLib.Common.NullInterfaceImpl();
         }
         
         DEFAULT = f;
     }
 
-    private static ClassLib.Common.Interface attemptClassLibInterface(String s) {
+    private static joeq.ClassLib.Common.Interface attemptClassLibInterface(String s) {
         try {
             Class c = Class.forName(s);
-            return (ClassLib.Common.Interface)c.newInstance();
+            return (joeq.ClassLib.Common.Interface)c.newInstance();
         } catch (java.lang.ClassNotFoundException x) {
             System.err.println("Cannot find class library interface "+s+": "+x);
             System.err.println("Please check the version of your virtual machine.");

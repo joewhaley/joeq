@@ -1,7 +1,7 @@
 // QuadInterpreter.java, created Mon Feb 11  0:00:03 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package Interpreter;
+package joeq.Interpreter;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -12,36 +12,36 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Array;
-import Clazz.jq_Class;
-import Clazz.jq_Initializer;
-import Clazz.jq_InstanceMethod;
-import Clazz.jq_Method;
-import Clazz.jq_Primitive;
-import Clazz.jq_Reference;
-import Clazz.jq_StaticMethod;
-import Clazz.jq_Type;
-import Compil3r.Quad.BasicBlock;
-import Compil3r.Quad.CodeCache;
-import Compil3r.Quad.ControlFlowGraph;
-import Compil3r.Quad.ExceptionHandler;
-import Compil3r.Quad.Quad;
-import Compil3r.Quad.RegisterFactory;
-import Compil3r.Quad.Operand.ParamListOperand;
-import Compil3r.Quad.RegisterFactory.Register;
-import Memory.Address;
-import Run_Time.Reflection;
-import Util.Assert;
-import Util.Collections.FilterIterator.Filter;
-import Util.Templates.ListIterator;
+import joeq.Clazz.PrimordialClassLoader;
+import joeq.Clazz.jq_Array;
+import joeq.Clazz.jq_Class;
+import joeq.Clazz.jq_Initializer;
+import joeq.Clazz.jq_InstanceMethod;
+import joeq.Clazz.jq_Method;
+import joeq.Clazz.jq_Primitive;
+import joeq.Clazz.jq_Reference;
+import joeq.Clazz.jq_StaticMethod;
+import joeq.Clazz.jq_Type;
+import joeq.Compil3r.Quad.BasicBlock;
+import joeq.Compil3r.Quad.CodeCache;
+import joeq.Compil3r.Quad.ControlFlowGraph;
+import joeq.Compil3r.Quad.ExceptionHandler;
+import joeq.Compil3r.Quad.Quad;
+import joeq.Compil3r.Quad.RegisterFactory;
+import joeq.Compil3r.Quad.Operand.ParamListOperand;
+import joeq.Compil3r.Quad.RegisterFactory.Register;
+import joeq.Memory.Address;
+import joeq.Run_Time.Reflection;
+import joeq.Util.Assert;
+import joeq.Util.Collections.FilterIterator.Filter;
+import joeq.Util.Templates.ListIterator;
 
 /**
  *
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
-public class QuadInterpreter extends Compil3r.Quad.QuadVisitor.EmptyVisitor {
+public class QuadInterpreter extends joeq.Compil3r.Quad.QuadVisitor.EmptyVisitor {
 
     jq_Method method;
     Map/*<Register, Object>*/ registers;
@@ -145,7 +145,7 @@ public class QuadInterpreter extends Compil3r.Quad.QuadVisitor.EmptyVisitor {
     }
     public QuadInterpreter invokeStaticReflective(jq_StaticMethod f, ParamListOperand plo) {
         QuadInterpreter s = new QuadInterpreter(f);
-        if (f == Run_Time.Arrays._multinewarray) {
+        if (f == joeq.Run_Time.Arrays._multinewarray) {
             // special case
             int dim = getReg_I(plo.get(0).getRegister());
             jq_Type t = (jq_Type)getReg_A(plo.get(1).getRegister());
@@ -192,7 +192,7 @@ public class QuadInterpreter extends Compil3r.Quad.QuadVisitor.EmptyVisitor {
         k2 = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljava/io/OutputStreamWriter;");
         m2 = k2.getOrCreateInstanceMethod("write", "([CII)V");
         bad_methods.add(m2);
-        bad_methods.add(Run_Time.Arrays._multinewarray);
+        bad_methods.add(joeq.Run_Time.Arrays._multinewarray);
         interpret_filter = new Filter() {
             public boolean isElement(Object o) {
                 jq_Method m = (jq_Method)o;
