@@ -14,6 +14,7 @@ public abstract class TraceFlags {
     public static int setTraceFlag(String[] args, int i) {
         if (args[i].equalsIgnoreCase("-TraceCodeAllocator")) {
             Allocator.CodeAllocator.TRACE = true;
+            Allocator.RuntimeCodeAllocator.TRACE = true;
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceAssembler")) {
@@ -34,6 +35,7 @@ public abstract class TraceFlags {
         }
         if (args[i].equalsIgnoreCase("-TraceClass")) {
             Clazz.jq_Class.TRACE = true;
+            Clazz.jq_Array.TRACE = true;
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceExceptions")) {
@@ -79,7 +81,7 @@ public abstract class TraceFlags {
             return i+1;
         }
         if (args[i].equalsIgnoreCase("-TraceBCByClassName")) {
-            Compil3r.Reference.x86.x86ReferenceCompiler.TraceBytecode_MethodNames.add(args[++i]);
+            Compil3r.Reference.x86.x86ReferenceCompiler.TraceBytecode_ClassNames.add(args[++i]);
             return i+1;
         }
         return i;
