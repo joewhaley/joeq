@@ -50,7 +50,9 @@ public class SimpleAllocator extends HeapAllocator {
      * GC information for the current block.
      */
     private GCBits gcBits;
-    
+
+    private FreeMemManager fmm = new FreeMemManager();
+
     /**
      * Perform initialization for this allocator.  This will be called before any other methods.
      * This allocates an initial block of memory from the OS and sets up relevant pointers.
@@ -67,7 +69,7 @@ public class SimpleAllocator extends HeapAllocator {
 
     /**
      * Allocates a new block of memory from the OS, sets the current block to
-     * point to it, makes the new block the current block, and allocates and 
+     * point to it, makes the new block the current block, and allocates and
      * installs the GC structures.
      *
      * @throws OutOfMemoryError if there is not enough memory for initialization
@@ -83,7 +85,7 @@ public class SimpleAllocator extends HeapAllocator {
         heapEnd = (HeapAddress) heapCurrent.offset(BLOCK_SIZE - 2 * HeapAddress.size());
         installGCBits();
     }
-        
+
     /**
      * Allocates and installs the GC structures for the current block.
      */
@@ -138,9 +140,17 @@ public class SimpleAllocator extends HeapAllocator {
         if (heapEnd.difference(heapCurrent) < 0) {
             // not enough space (rare path)
             jq.Assert(size < BLOCK_SIZE - 2 * HeapAddress.size());
-            allocateNewBlock();
-            addr = (HeapAddress) heapCurrent.offset(OBJ_HEADER_SIZE);
-            heapCurrent = (HeapAddress) heapCurrent.offset(size);
+            heapCurrent = (HeapAddress) heapCurrent.offset(-size);
+            // consult FreeMemManager for free mem in previous blocks
+            addr = fmm.getFreeMem(size + OBJ_HEADER_SIZE);
+            if (addr != null) {
+                addr = (HeapAddress) addr.offset(OBJ_HEADER_SIZE);
+            } else { // allocate new block and register left free mem in FMM
+                fmm.addFreeMem(new MemUnit(heapCurrent, heapEnd.difference(heapCurrent)));
+                allocateNewBlock();
+                addr = (HeapAddress) heapCurrent.offset(OBJ_HEADER_SIZE);
+                heapCurrent = (HeapAddress) heapCurrent.offset(size);
+            }
         }
         // fast path
         addr.offset(VTABLE_OFFSET).poke(HeapAddress.addressOf(vtable));
@@ -185,9 +195,9 @@ public class SimpleAllocator extends HeapAllocator {
         heapCurrent = (HeapAddress) heapCurrent.offset(size);
         if (heapEnd.difference(heapCurrent) < 0) {
             // not enough space (rare path)
+            heapCurrent = (HeapAddress) heapCurrent.offset(-size);
             if (size > LARGE_THRESHOLD) {
                 // special large-object allocation
-                heapCurrent = (HeapAddress) heapCurrent.offset(-size);
                 addr = (HeapAddress) SystemInterface.syscalloc(size);
                 if (addr.isNull())
                     outOfMemory();
@@ -198,9 +208,16 @@ public class SimpleAllocator extends HeapAllocator {
                 return addr.asObject();
             } else {
                 jq.Assert(size < BLOCK_SIZE - 2 * HeapAddress.size());
-                allocateNewBlock();
-                addr = (HeapAddress) heapCurrent.offset(ARRAY_HEADER_SIZE);
-                heapCurrent = (HeapAddress) heapCurrent.offset(size);
+                // consult FreeMemManager for free mem in previous blocks
+                addr = fmm.getFreeMem(size + OBJ_HEADER_SIZE);
+                if (addr != null) {
+                    addr = (HeapAddress) addr.offset(ARRAY_HEADER_SIZE);
+                } else { // allocate new block and register left free mem in FMM
+                    fmm.addFreeMem(new MemUnit(heapCurrent, heapEnd.difference(heapCurrent)));
+                    allocateNewBlock();
+                    addr = (HeapAddress) heapCurrent.offset(ARRAY_HEADER_SIZE);
+                    heapCurrent = (HeapAddress) heapCurrent.offset(size);
+                }
             }
         }
         // fast path
