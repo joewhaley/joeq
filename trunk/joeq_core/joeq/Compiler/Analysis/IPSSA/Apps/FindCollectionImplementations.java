@@ -7,10 +7,12 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
@@ -19,6 +21,8 @@ import Clazz.jq_Class;
 import Clazz.jq_Field;
 import Clazz.jq_Method;
 import Clazz.jq_Type;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.ReturnedNode;
 import Compil3r.Quad.CallGraph;
 import Compil3r.Quad.RootedCHACallGraph;
 import Main.HostedVM;
@@ -36,7 +40,7 @@ class ClassHierarchy {
         }
         private void addChild(ClassHieraryNode n) {
             //if(!_children.contains(n)) {
-                // adding twice shouldn't matter
+                // adding twice sh ouldn't matter
                 _children.add(n);
             //}
         }
@@ -206,6 +210,38 @@ class ClassHierarchy {
     }
 }
 
+/**
+ * Represents the fact that 
+ *  this.method() <= source1.method() + source2.method()... 
+ * */
+class ResultCorrelation {
+    //Collection/*jq_Field*/  _sources;    
+    jq_Class                _this;
+    jq_Field                _that;
+    
+    ResultCorrelation(jq_Class c){
+        this._this      = c; 
+        //this._sources   = new LinkedList();
+    }    
+    void addSource(jq_Field field) {
+        //_sources.add(field);
+        _that = field;
+    }    
+    int getSourceCount() {
+        //return _sources.size();
+        return 1;
+    }    
+    public String toString() {
+        return "<Correlation: " + _this + " ~ " + _that.getType() + ">";
+    }
+    public jq_Class getThis() {
+       return _this;
+    }
+    public jq_Field getThat() {
+       return _that;
+    }
+}
+
 public class FindCollectionImplementations {    
     private static CallGraph _cg;
     
@@ -226,6 +262,8 @@ public class FindCollectionImplementations {
     
     public static void main(String[] args) {
         HostedVM.initialize();
+        initPredefinedClasses();
+        ClassAndMethod.initializeClasses();
         
         Iterator i = null;
         for (int x=0; x<args.length; ++x) {
@@ -260,7 +298,7 @@ public class FindCollectionImplementations {
         }
 
         FindCollectionImplementations finder = new FindCollectionImplementations(i);
-        finder.run();
+        finder.run(true);
     }
     private Set _classes;
     private Set _collections;
@@ -297,32 +335,33 @@ public class FindCollectionImplementations {
         if(FILTER_LOCAL){
     	    System.out.println("Considering classes: " + _classes);
     	}
-        
-        initPredefinedClasses();
 
-        Assert._assert(_collectionClass != null);
-        Assert._assert(_iteratorClass  != null);
-        Assert._assert(_setClass  != null);
-    }
-    
-    private void initPredefinedClasses() {
         _collections    = new HashSet();
         _iterators      = new HashSet();
         _sets           = new HashSet();
         _maps           = new HashSet();
         _enumerations   = new HashSet();
+
+        // 
+        initPredefinedClasses();
         
+        Assert._assert(_collectionClass != null);
+        Assert._assert(_iteratorClass  != null);
+        Assert._assert(_setClass  != null);
+    }
+    
+    static void initPredefinedClasses() {
         _collectionClass  = (jq_Class)jq_Type.parseType(COLLECTION_SIGNATURE);
         _iteratorClass    = (jq_Class)jq_Type.parseType(ITERATOR_SIGNATURE);  
         _setClass         = (jq_Class)jq_Type.parseType(SET_SIGNATURE);
         _mapClass         = (jq_Class)jq_Type.parseType(MAP_SIGNATURE);
         _enumerationClass = (jq_Class)jq_Type.parseType(ENUMERATION_SIGNATURE);
         
-        _collectionClass.load();
-        _iteratorClass.load();
-        _setClass.load();
-        _mapClass.load();
-        _enumerationClass.load();
+        _collectionClass.prepare();
+        _iteratorClass.prepare();
+        _setClass.prepare();
+        _mapClass.prepare();
+        _enumerationClass.prepare();
     }
 
     private Set filter(Set classes, Collection roots) {
@@ -355,7 +394,7 @@ public class FindCollectionImplementations {
             
             if(
                     c.getDeclaredInterface(_collectionClass.getDesc()) != null && 
-                    c.getDeclaredInterface(_setClass.getDesc()) == null) 
+                    c.getDeclaredInterface(c.getDesc()) == null) 
             {        
                 _collections.add(c);
             }
@@ -464,7 +503,7 @@ public class FindCollectionImplementations {
 			   );
     }
     
-    protected void run() {        
+    protected void run(boolean verbose){        
         //System.out.println("Looking for subclasses of " + _collectionClass + " and " + _iteratorClass);
         
         // detect the interesting classes
@@ -473,33 +512,184 @@ public class FindCollectionImplementations {
         findMaps();
         findEnumerations();
         findIterators();                 
+        if(verbose) {
+            final String LINE = repeat("-", 100);
+            // for each of the classes, mark the variables that are reachable from them
+            System.out.println(LINE);
+            System.out.println("Collections:");
+            findReachable(_collections);
+    
+            System.out.println(LINE);
+            System.out.println("Sets:");
+            findReachable(_sets);
+            
+            System.out.println(LINE);
+            System.out.println("Maps:");
+            findReachable(_maps);
+            
+            System.out.println(LINE);
+            System.out.println("Enumerations:");
+            findReachable(_enumerations);
+            
+            System.out.println(LINE);
+            System.out.println("Iterators:");
+            findReachable(_iterators);        
+            System.out.println(LINE);
+        }
         
-        final String LINE = repeat("-", 100);
-        // for each of the classes, mark the variables that are reachable from them
-        System.out.println(LINE);
-        System.out.println("Collections:");
-        findReachable(_collections);
-
-        System.out.println(LINE);
-        System.out.println("Sets:");
-        findReachable(_sets);
-        
-        System.out.println(LINE);
-        System.out.println("Maps:");
-        findReachable(_sets);
-        
-        System.out.println(LINE);
-        System.out.println("Enumerations:");
-        findReachable(_enumerations);
-        
-        System.out.println(LINE);
-        System.out.println("Iterators:");
-        findReachable(_iterators);        
-        System.out.println(LINE);
-        
+        findCorrelations(_iterators);
         // do the statistics
-        reportStats(false);
+        reportStats(verbose);
     }
+
+    static class ClassAndMethod {
+        jq_Class _c;
+        //jq_Method _method;
+        String _methodName;
+        static Map/*<jq_Class, ClassAndMethod>*/ _data = null;
+
+        ClassAndMethod(jq_Class c, String m){
+            this._c = c;
+            this._methodName = m;    // TODO
+        }
+
+        static void initializeClasses(){
+            if(_data != null) return;
+            _data = new HashMap();
+            
+            _data.put(_iteratorClass,       new ClassAndMethod(_iteratorClass,    "next") );
+            _data.put(_collectionClass,     new ClassAndMethod(_collectionClass,  "iterator") );
+            _data.put(_enumerationClass,    new ClassAndMethod(_enumerationClass, "nextElement") );
+            _data.put(_setClass,            new ClassAndMethod(_setClass,         "iterator") );
+            _data.put(_mapClass,            new ClassAndMethod(_mapClass,         "get") );
+
+            System.out.println("Initialized information about " + _data.size() + " classes");  
+        }
+
+        public static ClassAndMethod retriveClassAndMethod(jq_Class c) {
+            return (ClassAndMethod)_data.get(c);             
+        }
+
+        public String getMethodName() {
+            return _methodName;
+        }
+    }
+
+    private void findCorrelations(Set collections) {
+        for(Iterator iter = collections.iterator(); iter.hasNext();) {
+            jq_Class c = (jq_Class)iter.next();
+            jq_Field[] fields = c.getDeclaredInstanceFields();
+            Collection eligibleFields = new LinkedList();
+            //System.out.println("Considering " + c);
+
+            for(int i = 0; i < fields.length; i++) {
+                jq_Field field = fields[i];
+                jq_Type type = field.getType();
+                if(!type.isClassType()) continue;
+                if(!isStandardClass((jq_Class)type)) continue;
+                
+                eligibleFields.add(field);
+            }
+            
+            if(eligibleFields.size() == 1) {
+                jq_Field that = (jq_Field)eligibleFields.iterator().next();
+
+                // now we need to correlate between c and that
+                
+                ResultCorrelation r = new ResultCorrelation(c);
+                r.addSource(that);
+                
+                // try to prove that the correlation holds
+                System.out.println("Considering " + r);
+
+                try {
+                    tryToProve(r);
+                }catch(ClassCastException e) {
+                    //System.out.println("Skipping " + r);
+                }catch(RuntimeException e) {
+                    //System.out.println("Skipping " + r);
+                }
+            }
+        }
+    }
+
+    private boolean isStandardClass(jq_Class c) {
+        return getStandardClass(c) != null;
+    }
+
+    /**
+        Prove the correlation between the results.
+    */
+    private void tryToProve(ResultCorrelation r) {
+        jq_Class thisClass = r.getThis();
+        jq_Class thatClass = (jq_Class)r.getThat().getType();
+
+        ClassAndMethod thisCAM = getClassAndMethod(thisClass);
+        ClassAndMethod thatCAM = getClassAndMethod(thatClass);
+        
+        jq_Method thisMethod = thisClass.getDeclaredMethod(thisCAM.getMethodName());
+        jq_Method thatMethod = thatClass.getDeclaredMethod(thatCAM.getMethodName());
+
+        if(thisMethod == null) throw new RuntimeException("Can't find the method " + thisCAM.getMethodName() + " in " + thisClass + ": " + thisClass.getMembers());
+        if(thatMethod == null) throw new RuntimeException("Can't find the method " + thatCAM.getMethodName() + " in " + thatClass + ": " + thatClass.getMembers());
+
+        System.out.println("\t" + "Comparing the result of " + thisMethod + " and " + thatMethod);
+
+        // this return node
+        Set thisNodeReturns = MethodSummary.getSummary(thisMethod).getReturned();
+        if(thisNodeReturns.size() != 1) {
+            throw new RuntimeException("There are " + thisNodeReturns.size() + " nodes for " + thisMethod);
+        }
+        ReturnedNode thisNodeReturn = (ReturnedNode)thisNodeReturns.iterator().next();        
+        System.out.println("thisNodeReturn: " + thisNodeReturns);
+
+        // that return node        
+        Set thatNodeReturns = MethodSummary.getSummary(thatMethod).getReturned();
+        System.out.println("thatNodeReturns: " + thatNodeReturns);
+        if(thatNodeReturns.size() != 1) {
+            throw new RuntimeException("There are " + thatNodeReturns.size() + " nodes for " + thatMethod);
+        }
+        //System.out.println("Set: " + thatNodeReturns);
+        ReturnedNode thatNodeReturn = (ReturnedNode)thatNodeReturns.iterator().next();
+        System.out.println("thatNodeReturn: " + thatNodeReturn);
+        
+        
+        
+    }
+
+    protected ClassAndMethod getClassAndMethod(jq_Class classType) {
+        jq_Class stdClassThat = getStandardClass(classType);
+        Assert._assert(stdClassThat != null, "Unexpected class " + classType);
+        ClassAndMethod cam = ClassAndMethod.retriveClassAndMethod(stdClassThat);
+        Assert._assert(cam != null, "Can't find a method for " + stdClassThat);
+        
+        return cam; 
+    }
+
+    private jq_Class getStandardClass(jq_Class c) {
+        Assert._assert(_setClass.isPrepared() && _collectionClass.isPrepared() && _mapClass.isPrepared());
+        c.prepare();
+        
+        if(c.implementsInterface(_setClass) || c == _setClass) {        
+            return _setClass;
+        } else {
+            if(c.implementsInterface(_collectionClass) || c == _collectionClass) { 
+                return _collectionClass;
+            }
+        }            
+        if(c.implementsInterface(_iteratorClass) || c == _iteratorClass) {
+            return _iteratorClass;
+        }else        
+        if(c.implementsInterface(_mapClass) || c == _mapClass) {
+            return _mapClass;
+        }else
+        if(c.implementsInterface(_enumerationClass) || c == _enumerationClass) {
+            return _enumerationClass;
+        }
+
+        return null;
+    }
+
     private void findReachable(Set classes) {
         for(Iterator iter = classes.iterator(); iter.hasNext();) {
             jq_Class c = (jq_Class)iter.next();
@@ -540,15 +730,13 @@ public class FindCollectionImplementations {
             if(c.implementsInterface(_collectionClass) || c == _collectionClass) { 
                 buf.append(" [Collection]");
             }
-        }
-            
+        }            
         if(c.implementsInterface(_iteratorClass) || c == _iteratorClass) {
             buf.append(" [Iterator]");
-        }
-        
+        }else        
         if(c.implementsInterface(_mapClass) || c == _mapClass) {
             buf.append(" [Map]");
-        }
+        }else
         if(c.implementsInterface(_enumerationClass) || c == _enumerationClass) {
             buf.append(" [Enumeration]");
         }
