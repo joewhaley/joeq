@@ -68,7 +68,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
     IndexMap memberMap;
     IndexMap constantMap;
     
-    int quadBits = 18, opBits = 8, regBits = 8, constantBits = 12, memberBits = 13;    
+    int quadBits = 18, opBits = 8, regBits = 8, constantBits = 12, memberBits = 14;    
 
     BDDFactory bdd;
     BDDDomain quad, opc, dest, src1, src2, constant, fallthrough, target, member;
@@ -515,7 +515,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
     
     void dumpRelations(String fileName) throws IOException {
         DataOutputStream dos = new DataOutputStream(new FileOutputStream(fileName));
-        dos.writeBytes("cfg ( id : quad , op : opc , dest : reg , src1 : reg , src2 : reg , const : constant , fallthrough : quad , target : quad , member : member )");
+        dos.writeBytes("cfg ( id : quad , op : op , dest : reg , src1 : reg , src2 : reg , const : constant , fallthrough : quad , target : quad , member : member )\n");
         dos.close();
     }
     
