@@ -3683,7 +3683,7 @@ public class PA {
             bdd.save(dumpPath+"IEfilter.bdd", IEfilter);
         bdd.save(dumpPath+"roots.bdd", getRoots());
         
-        if (THREAD_SENSITIVE) {
+        if (V1c.length > 0 && H1c.length > 0) {
             bdd.save(dumpPath+"eq.bdd", V1c[0].buildEquals(H1c[0]));
         }
         
