@@ -142,8 +142,16 @@ public class Stratify {
         
         LinkedList w = new LinkedList();
         Set stratum = new HashSet();
-        w.addAll(sccs);
-        stratum.addAll(sccs);
+        for (Iterator i = sccs.iterator(); i.hasNext(); ) {
+            SCComponent o = (SCComponent) i.next();
+            for (Iterator j = inputs.iterator(); j.hasNext(); ) {
+                if (o.contains(j.next())) {
+                    w.add(o);
+                    stratum.add(o);
+                    break;
+                }
+            }
+        }
         while (!w.isEmpty()) {
             SCComponent o = (SCComponent) w.removeFirst();
             if (TRACE) out.println("Pulling from worklist: "+o);
