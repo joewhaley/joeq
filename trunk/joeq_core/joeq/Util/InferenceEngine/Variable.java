@@ -63,4 +63,8 @@ public class Variable {
         this.fieldDomain = fieldDomain;
     }
     
+    public String toString() {
+        return name;
+    }
+    
 }

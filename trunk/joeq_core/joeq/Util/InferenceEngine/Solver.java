@@ -130,6 +130,7 @@ public abstract class Solver {
             if (!colon.equals(":")) throw new IllegalArgumentException();
             String fdName = st.nextToken();
             FieldDomain fd = getFieldDomain(fdName);
+            if (fd == null) throw new IllegalArgumentException("Unknown field domain "+fdName);
             fieldDomains.add(fd);
             String comma = st.nextToken();
             if (comma.equals(")")) break;
@@ -181,6 +182,7 @@ public abstract class Solver {
             } else {
                 var = new Variable();
             }
+            if (vars.contains(var)) throw new IllegalArgumentException("Duplicate variable "+var);
             vars.add(var);
             String sep = st.nextToken();
             if (sep.equals(")")) break;
@@ -190,6 +192,7 @@ public abstract class Solver {
         if (!in.equals("in")) throw new IllegalArgumentException();
         String relationName = st.nextToken();
         Relation r = getRelation(relationName);
+        if (r == null) throw new IllegalArgumentException("Unknown relation "+relationName);
         if (r.fieldDomains.size() != vars.size()) throw new IllegalArgumentException();
         for (int i = 0; i < r.fieldDomains.size(); ++i) {
             Variable var = (Variable) vars.get(i);

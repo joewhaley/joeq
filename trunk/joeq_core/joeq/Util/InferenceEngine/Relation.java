@@ -31,4 +31,8 @@ public abstract class Relation {
     
     public abstract void load();
     
+    public String toString() {
+        return name;
+    }
+    
 }
