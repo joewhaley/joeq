@@ -306,7 +306,11 @@ public class jq_NativeThread implements x86Constants {
         // preemption cannot occur in the scheduler loop because the
         // schedulerThread has thread switching disabled.
         Assert._assert(Unsafe.getThreadBlock() == this.schedulerThread);
-        while (num_of_daemon_threads != num_of_java_threads) {
+        for (;;) {
+            // only initial native thread can shut down the VM.
+            if (this == initial_native_thread &&
+                num_of_daemon_threads == num_of_java_threads)
+                break;
             Assert._assert(currentThread == schedulerThread);
             jq_Thread t = getNextReadyThread();
             if (t == null) {
