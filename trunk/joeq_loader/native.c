@@ -551,8 +551,10 @@ void* __stdcall allocate_stack(const int size)
     if (lpvAddr == NULL) {
         fprintf(stderr, "PANIC! Cannot allocate stack!\n");
         lpvAddr = calloc(sizeof(char), size);
-        if (lpvAddr != NULL)
+        if (lpvAddr != NULL) {
             lpvAddr = (void*)((DWORD_PTR)lpvAddr+size);
+            fprintf(stderr, "Stack allocation reverted to normal allocation (no stack overflow checking)\n");
+        }
         return lpvAddr;
     }
     if (!VirtualProtect(lpvAddr, dwPageSize, PAGE_GUARD | PAGE_READWRITE, &oldProtect)) {
