@@ -1119,7 +1119,7 @@ public class PA {
     
     private static BogusSummaryProvider bogusSummaryProvider = null;
 
-    static BogusSummaryProvider getBogusSummaryProvider() {
+    public static BogusSummaryProvider getBogusSummaryProvider() {
         if(bogusSummaryProvider == null) {
             bogusSummaryProvider = new BogusSummaryProvider();
         }
@@ -1318,7 +1318,7 @@ public class PA {
                             
                             addToCHA(T_bdd, Nmap.get(target), target);
                         }
-                        continue;
+                        //continue;
                     }else{
                         if(TRACE_REFLECTION) System.out.println("No reflective targets for a call to " + m);    
                     }                    
@@ -1914,11 +1914,12 @@ public class PA {
         t6.free();
     }
     
-    Map missingClasses  = new HashMap();
-    Map missingConst    = new HashMap();
-    Map noConstrClasses = new HashMap();
-    Map cantCastTypes   = new HashMap();
-    Map circularClasses = new HashMap();
+    Map missingClasses    = new HashMap();
+    Map missingConst      = new HashMap();
+    Map noConstrClasses   = new HashMap();
+    Map cantCastTypes     = new HashMap();
+    Map circularClasses   = new HashMap();
+    Map wellFormedClasses = new HashMap();
     BDD reflectiveCalls;
     
     /** Updates IE/IEcs with new edges obtained from resolving reflective invocations */
@@ -1989,8 +1990,16 @@ public class PA {
             
             jq_Class c = null;
             try {
-                jq_Type clazz = null;
-                if(isWellFormed(stringConst) && ( (clazz = jq_Type.parseType(stringConst)) instanceof jq_Class ) && clazz != null){
+                if(!isWellFormed(stringConst)) {
+                    if(wellFormedClasses.get(stringConst) == null){
+                        if(TRACE_REFLECTION) out.println(stringConst + " is not well-formed.");
+                            wellFormedClasses.put(stringConst, new Integer(0));
+                        }                
+
+                    continue;
+                }
+                jq_Type clazz = jq_Type.parseType(stringConst);
+                if( clazz instanceof jq_Class && clazz != null){
                     c = (jq_Class) clazz;
             
                     if(TRACE_REFLECTION) out.println("Calling class by name: " + stringConst);
@@ -1999,7 +2008,7 @@ public class PA {
                     Assert._assert(c != null);
                 }else{
                     if(cantCastTypes.get(clazz) == null){
-                        if(TRACE_REFLECTION) System.err.println("Can't cast " + clazz + " to jq_Class at " + h.toStringWithDomains(TS));
+                        if(TRACE_REFLECTION) System.err.println("Can't cast " + clazz + " to jq_Class at " + h.toStringWithDomains(TS) + " -- stringConst: " + stringConst);
                         cantCastTypes.put(clazz, new Integer(0));
                     }
                     continue;
@@ -2083,7 +2092,7 @@ public class PA {
             }
         }
         
-        if(dotCount == 0) return false;
+        //if(dotCount == 0) return false;
         
         return true;
     }
