@@ -192,6 +192,17 @@ public abstract class JoeqVM {
                 Debug.writeln("Bad scheduler.quanta, ignoring.");
             }
         }
+        
+        s = System.getProperty("scheduler.transfer");
+        if (s != null) {
+            try {
+                jq_NativeThread.TRANSFER_THRESHOLD = Float.parseFloat(s);
+                Debug.write("Scheduler transfer threshold is ");
+                System.err.println(jq_NativeThread.TRANSFER_THRESHOLD);
+            } catch (NumberFormatException x) {
+                Debug.writeln("Bad scheduler.quanta, ignoring.");
+            }
+        }
     }
     
     public static void printUsage() {
