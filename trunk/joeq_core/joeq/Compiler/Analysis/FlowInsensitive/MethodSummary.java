@@ -570,7 +570,7 @@ public class MethodSummary {
         static final boolean GLOBAL_TYPE_CONSTANTS = false;
         // use a single node for all like constants within a method.
         static final boolean MERGE_LOCAL_CONSTANTS = false;
-        Node handleConst(Const4Operand op) {
+        Node handleConst(Const4Operand op, ProgramLocation pl) {
             Node n;
             if (op instanceof AConstOperand) {
                 AConstOperand aop = (AConstOperand) op;
@@ -585,7 +585,7 @@ public class MethodSummary {
                     n = (Node) nodeCache.get(key);
                     if (n == null) {
                         if (MERGE_LOCAL_CONSTANTS) n = new ConcreteObjectNode(aop.getValue());
-                        else n = new ConcreteTypeNode(aop.getType());
+                        else n = new ConcreteTypeNode(aop.getType(), pl);
                         nodeCache.put(key, n);
                     }
                 }
@@ -610,7 +610,7 @@ public class MethodSummary {
                     heapLoad(pl, r, b, null);
                 } else {
                     // base is not a register?!
-                    Node n = handleConst((AConstOperand) o);
+                    Node n = handleConst((AConstOperand) o, pl);
                     heapLoad(pl, r, n, null);
                 }
             }
@@ -629,13 +629,13 @@ public class MethodSummary {
                     base = getRegister(base_r);
                 } else {
                     // base is not a register?!
-                    base = handleConst((AConstOperand) base_op);
+                    base = handleConst((AConstOperand) base_op, new QuadProgramLocation(method, obj));
                 }
                 if (val_op instanceof RegisterOperand) {
                     Register src_r = ((RegisterOperand)val_op).getRegister();
                     val = getRegister(src_r);
                 } else {
-                    val = handleConst((Const4Operand) val_op);
+                    val = handleConst((Const4Operand) val_op, new QuadProgramLocation(method, obj));
                 }
                 heapStore(base, val, null);
             }
@@ -650,7 +650,7 @@ public class MethodSummary {
                     Register src_r = rop.getRegister();
                     setRegister(dest_r, getRegister(src_r));
                 } else {
-                    Node n = handleConst((Const4Operand) src);
+                    Node n = handleConst((Const4Operand) src, new QuadProgramLocation(method, obj));
                     setRegister(dest_r, n);
                 }
             }
@@ -665,7 +665,7 @@ public class MethodSummary {
                 Register src_r = ((RegisterOperand)src).getRegister();
                 setRegister(dest_r, getRegister(src_r));
             } else {
-                Node n = handleConst((Const4Operand) src);
+                Node n = handleConst((Const4Operand) src, new QuadProgramLocation(method, obj));
                 setRegister(dest_r, n);
             }
         }
@@ -686,7 +686,7 @@ public class MethodSummary {
                     heapLoad(pl, r, b, f);
                 } else {
                     // base is not a register?!
-                    Node n = handleConst((Const4Operand) o);
+                    Node n = handleConst((Const4Operand) o, pl);
                     heapLoad(pl, r, n, f);
                 }
             }
@@ -782,7 +782,7 @@ public class MethodSummary {
                 Register src_r = rop.getRegister();
                 monitorOp(obj, src_r);
             } else {
-                Node n = handleConst((Const4Operand) src);
+                Node n = handleConst((Const4Operand) src, new QuadProgramLocation(method, obj));
                 monitorOp(obj, Collections.singleton(n));
             }
         }
@@ -801,7 +801,7 @@ public class MethodSummary {
                     Register src_r = rop.getRegister();
                     setRegister(dest_r, getRegister(src_r));
                 } else {
-                    Node n = handleConst((Const4Operand) src);
+                    Node n = handleConst((Const4Operand) src, new QuadProgramLocation(method, obj));
                     setRegister(dest_r, n);
                 }
             }
@@ -867,13 +867,13 @@ public class MethodSummary {
                     Register src_r = ((RegisterOperand)val_op).getRegister();
                     val = getRegister(src_r);
                 } else {
-                    val = handleConst((Const4Operand) val_op);
+                    val = handleConst((Const4Operand) val_op, new QuadProgramLocation(method, obj));
                 }
                 if (base_op instanceof RegisterOperand) {
                     Register base_r = ((RegisterOperand)base_op).getRegister();
                     base = getRegister(base_r);
                 } else {
-                    base = handleConst((Const4Operand) base_op);
+                    base = handleConst((Const4Operand) base_op, new QuadProgramLocation(method, obj));
                 }
                 heapStore(base, val, f);
             }
@@ -892,7 +892,8 @@ public class MethodSummary {
                     Register src_r = ((RegisterOperand)val).getRegister();
                     heapStore(my_global, getRegister(src_r), f);
                 } else {
-                    Node n = handleConst((Const4Operand) val);
+                    Node n = handleConst((Const4Operand) val, new QuadProgramLocation(method, obj)
+);
                     heapStore(my_global, n, f);
                 }
             }
@@ -917,7 +918,7 @@ public class MethodSummary {
                 Register src_r = ((RegisterOperand)src).getRegister();
                 addToSet(r, getRegister(src_r));
             } else {
-                Node n = handleConst((Const4Operand) src);
+                Node n = handleConst((Const4Operand) src, new QuadProgramLocation(method, obj));
                 r.add(n);
             }
         }
@@ -968,7 +969,7 @@ public class MethodSummary {
                     Register src_r = rop.getRegister();
                     setRegister(dest_r, getRegister(src_r));
                 } else {
-                    Node n = handleConst((Const4Operand) src);
+                    Node n = handleConst((Const4Operand) src, new QuadProgramLocation(method, obj));
                     setRegister(dest_r, n);
                 }
             } else if (obj.getOperator() == Unary.INT_2ADDRESS.INSTANCE) {
