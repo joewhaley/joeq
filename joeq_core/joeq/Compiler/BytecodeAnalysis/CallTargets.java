@@ -20,6 +20,8 @@ import java.util.*;
 
 public abstract class CallTargets extends AbstractSet {
 
+    public static final boolean TRACE = false;
+    
     public static CallTargets getTargets(jq_Class callingClass,
                                          jq_Method method,
                                          byte type,
@@ -27,11 +29,15 @@ public abstract class CallTargets extends AbstractSet {
                                          boolean exact,
                                          boolean loadClasses)
     {
+        //boolean TRACE = false;
+        //if (method.getName().toString().startsWith("add1")) TRACE = true;
+        
         if (type == BytecodeVisitor.INVOKE_STATIC) return getStaticTargets((jq_StaticMethod)method);
         jq_InstanceMethod imethod = (jq_InstanceMethod)method;
         if (type == BytecodeVisitor.INVOKE_SPECIAL) return getSpecialTargets(callingClass, imethod, loadClasses);
         jq.assert(type == BytecodeVisitor.INVOKE_VIRTUAL || type == BytecodeVisitor.INVOKE_INTERFACE);
 
+        if (TRACE) System.out.println("Getting call targets of "+method+" type "+type+" receiver types "+possibleReceiverTypes+" exact="+exact);
         if (!exact) {
             // temporary hack, until we rewrite the code below to take into account
             // non-exact sets.
@@ -52,46 +58,50 @@ public abstract class CallTargets extends AbstractSet {
             // fast search using vtable
             jq.assert(!imethod.getDeclaringClass().isInterface());
             int offset = imethod.getOffset() >>> 2;
+            if (TRACE) System.out.println("Fast search using vtable offset "+offset+" for method "+imethod);
+            jq.assert(offset >= 1);
             Iterator i = possibleReceiverTypes.iterator();
             while (i.hasNext()) {
                 jq_Reference rtype = (jq_Reference)i.next();
                 if (rtype.isClassType()) {
                     jq_Class rclass = (jq_Class)rtype;
-                    jq.assert(!rclass.isLoaded() || !rclass.isAbstract());
+                    //jq.assert(!rclass.isLoaded() || !rclass.isAbstract());
                     if (!rclass.isPrepared()) {
                         jq_InstanceMethod target;
                         for (;;) {
+                            if (TRACE) System.out.println("visiting "+rclass);
+                            if (loadClasses) rclass.load();
                             if (!rclass.isLoaded()) {
-                                if (!loadClasses) {
-                                    complete = false; // conservative.
-                                    continue;
-                                }
-                                rclass.load();
+                                if (TRACE) System.out.println(rclass+" isn't loaded: conservative.");
+                                complete = false; // conservative.
+                                break;
                             }
                             target = (jq_InstanceMethod)rclass.getDeclaredMember(imethod.getNameAndDesc());
-                            if (target != null) break;
+                            if (target != null) {
+                                jq.assert(imethod.getNameAndDesc().equals(target.getNameAndDesc()));
+                                if (!target.isAbstract())
+                                    c.add(target);
+                                break;
+                            }
                             rclass = rclass.getSuperclass();
                             if (rclass == null) {
                                 // method doesn't exist in this class or any of its superclasses.
-                                return NoCallTarget.INSTANCE;
+                                break;
                             }
                         }
-                        jq.assert(imethod.getNameAndDesc().equals(target.getNameAndDesc()));
-                        jq.assert(!target.isAbstract());
-                        c.add(target);
                         continue;
                     }
-                    if (offset < 1 || offset > rclass.getVirtualMethods().length)
-                        return NoCallTarget.INSTANCE;
+                    if (offset > rclass.getVirtualMethods().length)
+                        continue;
                     jq_InstanceMethod target = rclass.getVirtualMethods()[offset-1];
                     if (!imethod.getNameAndDesc().equals(target.getNameAndDesc()))
-                        return NoCallTarget.INSTANCE;
+                        continue;
                     jq.assert(!target.isAbstract());
                     c.add(target);
                 } else {
                     jq.assert(rtype.isArrayType());
                     if (imethod.getDeclaringClass() != PrimordialClassLoader.loader.getJavaLangObject())
-                        return NoCallTarget.INSTANCE;
+                        continue;
                     jq.assert(!imethod.isAbstract());
                     c.add(imethod);
                 }
@@ -105,34 +115,36 @@ public abstract class CallTargets extends AbstractSet {
                     jq_Class rclass = (jq_Class)rtype;
                     jq_InstanceMethod target;
                     for (;;) {
+                        if (TRACE) System.out.println("visiting "+rclass);
+                        if (loadClasses) rclass.load();
                         if (!rclass.isLoaded()) {
-                            if (!loadClasses) {
-                                complete = false; // conservative.
-                                continue; 
-                            }
-                            rclass.load();
+                            complete = false; // conservative.
+                            break;
                         }
                         target = (jq_InstanceMethod)rclass.getDeclaredMember(imethod.getNameAndDesc());
-                        if (target != null) break;
+                        if (target != null) {
+                            jq.assert(imethod.getNameAndDesc().equals(target.getNameAndDesc()));
+                            if (!target.isAbstract())
+                                c.add(target);
+                            break;
+                        }
                         rclass = rclass.getSuperclass();
                         if (rclass == null) {
                             // method doesn't exist in this class or any of its superclasses.
-                            return NoCallTarget.INSTANCE;
+                            break;
                         }
                     }
-                    jq.assert(imethod.getNameAndDesc().equals(target.getNameAndDesc()));
-                    jq.assert(!target.isAbstract());
-                    c.add(target);
                     continue;
                 } else {
                     jq.assert(rtype.isArrayType());
                     if (imethod.getDeclaringClass() != PrimordialClassLoader.loader.getJavaLangObject())
-                        return NoCallTarget.INSTANCE;
+                        continue;
                     jq.assert(!imethod.isAbstract());
                     c.add(imethod);
                 }
             }
         }
+        if (TRACE) System.out.println("final result: "+c+" complete: "+complete);
         return new MultipleCallTargets(c, complete);
     }
 
@@ -143,6 +155,9 @@ public abstract class CallTargets extends AbstractSet {
                                          boolean exact,
                                          boolean loadClasses)
     {
+        //boolean TRACE = false;
+        //if (method.getName().toString().startsWith("add1")) TRACE = true;
+        
         if (type == BytecodeVisitor.INVOKE_STATIC) return getStaticTargets((jq_StaticMethod)method);
         jq_InstanceMethod imethod = (jq_InstanceMethod)method;
         if (type == BytecodeVisitor.INVOKE_SPECIAL) return getSpecialTargets(callingClass, imethod, loadClasses);
@@ -156,6 +171,8 @@ public abstract class CallTargets extends AbstractSet {
         
         jq_Class rclass = (jq_Class)receiverType;
         
+        if (TRACE) System.out.println("Class "+rclass+" has "+rclass.getSubClasses().length+" subclasses");
+        
         if (loadClasses) {
             if (TypeCheck.isSuperclassOf(rclass, imethod.getDeclaringClass())) {
                 // errr... rclass is a supertype of the method's class!
@@ -164,20 +181,14 @@ public abstract class CallTargets extends AbstractSet {
         }
         
         if (exact) {
-            if (!loadClasses) {
-                if (!rclass.isLoaded()) return NoCallTarget.INSTANCE;
-            } else {
-                rclass.load();
-            }
+            if (loadClasses) rclass.load();
+            if (!rclass.isLoaded()) return NoCallTarget.INSTANCE;
             for (;;) {
                 jq_InstanceMethod target = (jq_InstanceMethod)rclass.getDeclaredMember(imethod.getNameAndDesc());
                 if (target != null) return new SingleCallTarget(target, true);
                 jq.assert(rclass != imethod.getDeclaringClass());
-                if (!loadClasses) {
-                    if (!rclass.isLoaded()) return NoCallTarget.INSTANCE;
-                } else {
-                    rclass.load();
-                }
+                if (loadClasses) rclass.load();
+                if (!rclass.isLoaded()) return NoCallTarget.INSTANCE;
                 rclass = rclass.getSuperclass();
                 if (rclass == null) {
                     // method doesn't exist in this class or any of its superclasses.
@@ -203,26 +214,25 @@ public abstract class CallTargets extends AbstractSet {
                 // fast search.
                 jq.assert(!imethod.getDeclaringClass().isInterface());
                 int offset = imethod.getOffset() >>> 2;
+                jq.assert(offset >= 1);
                 if (!rclass.isPrepared()) {
                     for (;;) {
+                        if (loadClasses) rclass.load();
                         if (!rclass.isLoaded()) {
-                            if (!loadClasses) {
-                                complete = false; // conservative.
-                                break;
-                            }
-                            rclass.load();
+                            complete = false; // conservative.
+                            break;
                         }
                         jq_Method target = (jq_Method)rclass.getDeclaredMember(imethod.getNameAndDesc());
                         if (target != null) {
-                            if (target.isStatic()) break;
-                            if (!target.isAbstract()) c.add(target);
+                            if (!target.isStatic() && !target.isAbstract())
+                                c.add(target);
                             break;
                         }
                         jq.assert(rclass != imethod.getDeclaringClass());
                         rclass = rclass.getSuperclass();
                         if (rclass == null) {
                             // method doesn't exist in this class or any of its superclasses.
-                            return NoCallTarget.INSTANCE;
+                            break;
                         }
                     }
                 }
@@ -231,23 +241,27 @@ public abstract class CallTargets extends AbstractSet {
                 subclass.push(receiverType);
                 while (!subclass.empty()) {
                     rclass = (jq_Class)subclass.pop();
+                    if (loadClasses) rclass.load();
                     if (!rclass.isLoaded()) {
-                        if (!loadClasses) {
-                            complete = false; // conservative.
-                            continue;
-                        }
-                        rclass.load();
+                        complete = false; // conservative.
+                        continue;
                     }
+                    if (TRACE) System.out.println("Class "+rclass+" has "+rclass.getSubClasses().length+" subclasses");
                     if (!rclass.isPrepared()) {
                         target = (jq_InstanceMethod)rclass.getDeclaredMember(imethod.getNameAndDesc());
+                        if (TRACE) System.out.println("Class "+rclass+" target: "+target);
                         if ((target != null) && !target.isAbstract()) c.add(target);
                     } else {
-                        if (offset < 1 || offset > rclass.getVirtualMethods().length)
-                            return NoCallTarget.INSTANCE;
+                        if (offset > rclass.getVirtualMethods().length)
+                            continue;
                         target = rclass.getVirtualMethods()[offset-1];
+                        if (TRACE) System.out.println("Class "+rclass+" target: "+target);
                         if (!imethod.getNameAndDesc().equals(target.getNameAndDesc()))
-                            return NoCallTarget.INSTANCE;
-                        if (!target.isAbstract()) c.add(target);
+                            continue;
+                        if (!target.isAbstract()) {
+                            if (TRACE) System.out.println("Target added to result: "+target);
+                            c.add(target);
+                        }
                     }
                     if (target != null) {
                         if (!target.isFinal() && !target.isPrivate()) {
@@ -255,22 +269,25 @@ public abstract class CallTargets extends AbstractSet {
                                 complete = false; // conservative.
                             }
                             jq_Class[] subclasses = rclass.getSubClasses();
-                            for (int i=0; i<subclasses.length; ++i) subclass.push(subclasses[i]);
+                            for (int i=0; i<subclasses.length; ++i) {
+                                subclass.push(subclasses[i]);
+                            }
                         }
                     } else {
                         if (!rclass.isFinal()) {
                             complete = false; // conservative.
                         }
+                        jq_Class[] subclasses = rclass.getSubClasses();
+                        for (int i=0; i<subclasses.length; ++i) subclass.push(subclasses[i]);
                     }
                 }
+                if (TRACE) System.out.println("final result: "+c+" complete: "+complete);
                 return new MultipleCallTargets(c, complete);
             }
         }
         
         if (type == BytecodeVisitor.INVOKE_INTERFACE) {
-            if (loadClasses) {
-                rclass.load();
-            }
+            if (loadClasses) rclass.load();
             if (!rclass.isLoaded() || ((jq_Class)rclass).isInterface()) {
                 // not the true receiver type, or we don't know anything about the receiver type because
                 // it isn't loaded, so we fall back to the case where we don't consider the receiver
@@ -282,11 +299,10 @@ public abstract class CallTargets extends AbstractSet {
         
         // slow search, interface or virtual call.  instance method is not prepared.
         for (;;) {
-            if (!loadClasses && !rclass.isLoaded()) {
+            if (loadClasses) rclass.load();
+            if (!rclass.isLoaded()) {
                 complete = false; // conservative.
                 break;
-            } else {
-                rclass.load();
             }
             jq_InstanceMethod target = (jq_InstanceMethod)rclass.getDeclaredMember(imethod.getNameAndDesc());
             if (target != null) {
@@ -297,23 +313,26 @@ public abstract class CallTargets extends AbstractSet {
             rclass = rclass.getSuperclass();
             if (rclass == null) {
                 // method doesn't exist in this class or any of its superclasses.
-                return NoCallTarget.INSTANCE;
+                break;
             }
         }
         Stack subclass = new Stack();
         subclass.push(receiverType);
         while (!subclass.empty()) {
             rclass = (jq_Class)subclass.pop();
+            if (loadClasses) rclass.load();
+            if (TRACE) System.out.println("Class "+rclass+" has "+rclass.getSubClasses().length+" subclasses");
             if (!rclass.isLoaded()) {
-                if (!loadClasses) {
-                    complete = false; // conservative.
-                    continue;
-                }
-                rclass.load();
+                complete = false; // conservative.
+                continue;
             }
             jq_InstanceMethod target = (jq_InstanceMethod)rclass.getDeclaredMember(imethod.getNameAndDesc());
             if (target != null) {
-                if (!target.isAbstract()) c.add(target);
+                if (TRACE) System.out.println("Class "+rclass+" target: "+target);
+                if (!target.isAbstract()) {
+                    c.add(target);
+                    if (TRACE) System.out.println("target added to result: "+target);
+                }
                 if (!target.isFinal() && !target.isPrivate()) {
                     if (!rclass.isFinal()) {
                         complete = false; // conservative.
@@ -325,8 +344,11 @@ public abstract class CallTargets extends AbstractSet {
                 if (!rclass.isFinal()) {
                     complete = false; // conservative.
                 }
+                jq_Class[] subclasses = rclass.getSubClasses();
+                for (int i=0; i<subclasses.length; ++i) subclass.push(subclasses[i]);
             }
         }
+        if (TRACE) System.out.println("final result: "+c+" complete: "+complete);
         return new MultipleCallTargets(c, complete);
     }
 
@@ -364,6 +386,20 @@ public abstract class CallTargets extends AbstractSet {
         return NO;
     }
     
+    public static void addAllSubclasses(jq_Class cl, Set s, boolean loadClasses) {
+        Stack worklist = new Stack();
+        for (;;) {
+            s.add(cl);
+            if (loadClasses) cl.load();
+            if (cl.isLoaded()) {
+                jq_Class[] subclasses = cl.getSubClasses();
+                for (int i=0; i<subclasses.length; ++i) worklist.push(subclasses[i]);
+            }
+            if (worklist.empty()) break;
+            cl = (jq_Class)worklist.pop();
+        }
+    }
+    
     public static CallTargets getTargets(jq_Class callingClass,
                                          jq_Method method,
                                          byte type,
@@ -381,81 +417,64 @@ public abstract class CallTargets extends AbstractSet {
         // find the set of equivalent interfaces
         jq_Class interf = method.getDeclaringClass();
         Set interfaces = new LinearSet(); interfaces.add(interf);
-        boolean again = false;
+        addAllSubclasses(interf, interfaces, loadClasses);
+        boolean again;
         do {
+            again = false;
             jq_Class rclass = PrimordialClassLoader.loader.getJavaLangObject();
-            Stack subclass = new Stack();
-            subclass.push(rclass);
-            while (!subclass.empty()) {
-                rclass = (jq_Class)subclass.pop();
-                if (!rclass.isLoaded()) {
-                    if (!loadClasses) {
-                        continue; // conservative.
-                    }
-                    rclass.load();
-                }
+            Stack worklist = new Stack();
+            worklist.push(rclass);
+            while (!worklist.empty()) {
+                rclass = (jq_Class)worklist.pop();
+                if (loadClasses) rclass.load();
+                if (!rclass.isLoaded()) continue;
                 if (!rclass.isInterface()) continue;
                 if (declaresInterface(rclass, interfaces, loadClasses) != NO) {
                     again = true; // must repeat to catch any interfaces that implement this one
                     // add subtree from here.
-                    Stack subclass2 = new Stack();
-                    subclass2.add(rclass);
-                    for (;;) {
-                        rclass = (jq_Class)subclass2.pop();
-                        if (!rclass.isLoaded()) {
-                            if (!loadClasses) {
-                                continue; // conservative.
-                            }
-                            rclass.load();
-                        }
-                        interfaces.add(rclass);
-                        jq_Class[] subclasses = rclass.getSubClasses();
-                        for (int i=0; i<subclasses.length; ++i) subclass2.push(subclasses[i]);
-                    }
+                    addAllSubclasses(rclass, interfaces, loadClasses);
+                } else {
+                    jq_Class[] subclasses = rclass.getSubClasses();
+                    for (int i=0; i<subclasses.length; ++i) worklist.push(subclasses[i]);
                 }
             }
         } while (again);
         
         // find the set of classes that implement these interfaces.
-        Stack subclass1 = new Stack(); // don't implement
-        Stack subclass2 = new Stack(); // do/may implement
+        Stack worklist = new Stack();     // unchecked classes
+        Stack implementers = new Stack(); // do/may implement
         jq_Class rclass = PrimordialClassLoader.loader.getJavaLangObject();
         jq.assert(rclass.isLoaded()); // java.lang.Object had better be loaded!
-        if (rclass.implementsInterface(interf)) subclass2.push(rclass);
-        else subclass1.push(rclass);
-        while (!subclass1.empty()) {
-            rclass = (jq_Class)subclass1.pop();
-            if (!rclass.isLoaded()) {
-                if (!loadClasses) {
-                    continue; // conservative.
+        if (rclass.implementsInterface(interf)) implementers.push(rclass);
+        else {
+            worklist.push(rclass);
+            while (!worklist.empty()) {
+                rclass = (jq_Class)worklist.pop();
+                if (loadClasses) rclass.load();
+                if (!rclass.isLoaded()) continue;
+                if (rclass.isInterface()) continue;
+                if (declaresInterface(rclass, interfaces, loadClasses) != NO) {
+                    implementers.push(rclass);
+                } else {
+                    jq_Class[] subclasses = rclass.getSubClasses();
+                    for (int i=0; i<subclasses.length; ++i) worklist.push(subclasses[i]);
                 }
-                rclass.load();
-            }
-            if (rclass.isInterface()) continue;
-            if (declaresInterface(rclass, interfaces, loadClasses) != NO) {
-                subclass2.push(rclass);
             }
         }
-        Set implementors = new HashSet();
         
         Set c = new HashSet(); // use a HashSet because it is going to be large
-        while (!subclass2.empty()) {
-            rclass = (jq_Class)subclass2.pop();
-            if (!rclass.isLoaded()) {
-                if (!loadClasses) {
-                    continue; // conservative.
-                }
-                rclass.load();
-            }
+        while (!implementers.empty()) {
+            rclass = (jq_Class)implementers.pop();
+            if (loadClasses) rclass.load();
+            if (!rclass.isLoaded()) continue;
             jq.assert(!rclass.isInterface());
             jq_InstanceMethod target = (jq_InstanceMethod)rclass.getDeclaredMember(imethod.getNameAndDesc());
             if (target != null) {
                 if (!target.isAbstract()) c.add(target);
-                if (!target.isFinal() && !target.isPrivate()) {
-                    jq_Class[] subclasses = rclass.getSubClasses();
-                    for (int i=0; i<subclasses.length; ++i) subclass2.push(subclasses[i]);
-                }
+                if (target.isFinal() || target.isPrivate()) continue;
             }
+            jq_Class[] subclasses = rclass.getSubClasses();
+            for (int i=0; i<subclasses.length; ++i) implementers.push(subclasses[i]);
         }
         return new MultipleCallTargets(c, false);
     }
