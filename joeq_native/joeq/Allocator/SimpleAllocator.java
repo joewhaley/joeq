@@ -30,7 +30,7 @@ public class SimpleAllocator extends HeapAllocator {
 
     public static boolean TRACE_ALLOC = false;
     public static boolean TRACE_FREELIST = true;
-    public static final boolean TRACE_GC = false;
+    public static final boolean TRACE_GC = true;
     
     /**
      * Size of blocks allocated from the OS.
@@ -159,6 +159,7 @@ public class SimpleAllocator extends HeapAllocator {
      * @param size  size in bytes
      */
     static final void setFreeSize(HeapAddress free, int size) {
+        Assert._assert(size >= HeapAddress.size()*2);
         free.offset(HeapAddress.size()).poke4(size);
         if (true) {
             int size2 = size - HeapAddress.size()*2;
@@ -263,7 +264,11 @@ public class SimpleAllocator extends HeapAllocator {
             setFreeSize(addr, size);
             HeapAddress curr_p = firstFree;
             HeapAddress prev_p = HeapAddress.getNull();
-            if (TRACE_FREELIST) Debug.writeln("Adding free block ", addr);
+            if (TRACE_FREELIST) {
+                Debug.write("Adding free block ", addr);
+                Debug.write("-", end);
+                Debug.writeln(" size ", size);
+            }
             for (;;) {
                 if (TRACE_FREELIST) Debug.writeln("Checking ", curr_p);
                 if (curr_p.isNull() || addr.difference(curr_p) < 0) {
@@ -300,16 +305,9 @@ public class SimpleAllocator extends HeapAllocator {
         
         // Allocate new block.
         heapCurrent = allocNewBlock();
-        setBlockNext(heapEnd, heapCurrent);
+        HeapAddress lastBlock = (HeapAddress) heapEnd.offset(HeapAddress.size()-BLOCK_SIZE);
+        setBlockNext(lastBlock, heapCurrent);
         heapEnd = getBlockEnd(heapCurrent);
-        
-        {
-            // Print stack trace, for debugging purposes.
-            StackAddress fp = StackAddress.getBasePointer();
-            CodeAddress ip = (CodeAddress) fp.offset(4).peek();
-            fp = (StackAddress) fp.peek();
-            StackCodeWalker.stackDump(ip, fp);
-        }
     }
 
     /**
@@ -380,6 +378,7 @@ public class SimpleAllocator extends HeapAllocator {
         if (TRACE_ALLOC || inAlloc || inGC) {
             if (inAlloc) {
                 Debug.writeln("BUG! Trying to allocate during another allocation!");
+                inAlloc = false; StackCodeWalker.stackDump(CodeAddress.getNull(), StackAddress.getBasePointer());
             }
             if (inGC) {
                 Debug.writeln("BUG! Trying to allocate during GC!");
@@ -416,7 +415,7 @@ public class SimpleAllocator extends HeapAllocator {
             heapCurrent = (HeapAddress) heapCurrent.offset(size);
             Assert._assert(heapEnd.difference(heapCurrent) >= 0);
         } else {
-            if (TRACE_ALLOC) Debug.writeln("Fast path object allocation: ", addr);
+            if (true) Debug.writeln("Fast path object allocation: ", addr);
         }
         // fast path
         addr.offset(ObjectLayout.VTABLE_OFFSET).poke(HeapAddress.addressOf(vtable));
@@ -604,7 +603,15 @@ public class SimpleAllocator extends HeapAllocator {
      */
     public Object allocateArray(int length, int size, Object vtable) throws OutOfMemoryError, NegativeArraySizeException {
         if (length < 0) throw new NegativeArraySizeException(length + " < 0");
-        if (TRACE_ALLOC) {
+        
+        if (TRACE_ALLOC || inAlloc || inGC) {
+            if (inAlloc) {
+                Debug.writeln("BUG! Trying to allocate during another allocation!");
+                inAlloc = false; StackCodeWalker.stackDump(CodeAddress.getNull(), StackAddress.getBasePointer());
+            }
+            if (inGC) {
+                Debug.writeln("BUG! Trying to allocate during GC!");
+            }
             Debug.write("Allocating array of size ", size);
             jq_Type type = (jq_Type) ((HeapAddress) HeapAddress.addressOf(vtable).peek()).asObject();
             Debug.write(" type ");
@@ -612,12 +619,7 @@ public class SimpleAllocator extends HeapAllocator {
             Debug.write(" length ", length);
             Debug.writeln(" vtable ", HeapAddress.addressOf(vtable));
         }
-        if (inGC) {
-            Debug.writeln("BUG! Trying to allocate during GC!");
-        }
-        if (inAlloc) {
-            Debug.writeln("BUG! Trying to allocate during another allocation!");
-        }
+        
         inAlloc = true;
         if (size < ObjectLayout.ARRAY_HEADER_SIZE) {
             // size overflow!
@@ -632,7 +634,9 @@ public class SimpleAllocator extends HeapAllocator {
             heapCurrent = (HeapAddress) heapCurrent.offset(-size);
             if (size > LARGE_THRESHOLD) {
                 // special large-object allocation
-                return allocLargeArray(length, size, vtable);
+                Object o = allocLargeArray(length, size, vtable);
+                inAlloc = false;
+                return o;
             } else {
                 Object o = allocArrayFromFreeList(length, size, vtable);
                 if (o != null) {
@@ -642,9 +646,11 @@ public class SimpleAllocator extends HeapAllocator {
                 // not enough space on free list, allocate another memory block.
                 allocateNewBlock();
                 addr = (HeapAddress) heapCurrent.offset(ObjectLayout.ARRAY_HEADER_SIZE);
+                heapCurrent = (HeapAddress) heapCurrent.offset(size);
+                Assert._assert(heapEnd.difference(heapCurrent) >= 0);
             }
         } else {
-            if (TRACE_ALLOC) Debug.writeln("Fast path array allocation: ", addr);
+            if (true) Debug.writeln("Fast path array allocation: ", addr);
         }
         // fast path
         addr.offset(ObjectLayout.ARRAY_LENGTH_OFFSET).poke4(length);
@@ -757,14 +763,15 @@ public class SimpleAllocator extends HeapAllocator {
                     if (TRACE_FREELIST) Debug.write(" on free list, ");
                     p = getFreeEnd(currFree);
                     if (lastWasFree) {
+                        HeapAddress nextFree = getFreeNext(currFree);
                         // Extend size of previous free area.
                         int newSize = p.difference(prevFree);
                         setFreeSize(prevFree, newSize);
-                        currFree = getFreeNext(currFree);
+                        currFree = nextFree;
                         setFreeNext(prevFree, currFree);
                         if (TRACE_FREELIST) {
                             Debug.write("prev free area extended to size ", newSize);
-                            Debug.write(", next free=", currFree);
+                            Debug.writeln(", next free=", currFree);
                         }
                     } else {
                         // Skip over known free chunk.
@@ -827,22 +834,28 @@ public class SimpleAllocator extends HeapAllocator {
                             Debug.writeln(" extended to size ", newSize);
                         }
                     } else {
-                        // Insert into free list.
-                        setFreeNext(lastEnd, currFree);
                         int newSize = next_p.difference(lastEnd);
-                        setFreeSize(lastEnd, newSize);
-                        if (TRACE_FREELIST) {
-                            Debug.write("Inserted free area ", prevFree);
-                            Debug.write(", ", lastEnd);
-                            Debug.write(", ", currFree);
-                            Debug.writeln(" size ", newSize);
-                        }
-                        if (prevFree.isNull()) {
-                            firstFree = lastEnd;
+                        if (newSize >= HeapAddress.size() * 2) {
+                            // Insert into free list.
+                            setFreeNext(lastEnd, currFree);
+                            setFreeSize(lastEnd, newSize);
+                            if (TRACE_FREELIST) {
+                                Debug.write("Inserted free area ", prevFree);
+                                Debug.write(", ", lastEnd);
+                                Debug.write(", ", currFree);
+                                Debug.writeln(" size ", newSize);
+                            }
+                            if (prevFree.isNull()) {
+                                firstFree = lastEnd;
+                            } else {
+                                setFreeNext(prevFree, lastEnd);
+                            }
+                            prevFree = lastEnd;
                         } else {
-                            setFreeNext(prevFree, lastEnd);
+                            if (TRACE_FREELIST) {
+                                Debug.writeln("Free area too small, skipping: ", newSize);
+                            }
                         }
-                        prevFree = lastEnd;
                     }
                 }
                 lastWasFree = isFree;

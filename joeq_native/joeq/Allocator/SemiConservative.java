@@ -27,23 +27,23 @@ import joeq.Scheduler.jq_ThreadQueue;
 public abstract class SemiConservative {
     
     public static void collect() {
-        if (SimpleAllocator.TRACE_GC) Debug.writeln("Starting collection.");
+        if (true) Debug.writeln("Starting collection.");
         
         jq_Thread t = Unsafe.getThreadBlock();
         t.disableThreadSwitch();
         
         jq_NativeThread.suspendAllThreads();
         
-        if (SimpleAllocator.TRACE_GC) Debug.writeln("Threads suspended.");
+        if (true) Debug.writeln("Threads suspended.");
         SimpleAllocator s = (SimpleAllocator) DefaultHeapAllocator.def();
-        if (SimpleAllocator.TRACE_GC) Debug.writeln("--> Marking roots.");
+        if (true) Debug.writeln("--> Marking roots.");
         scanRoots();
-        if (SimpleAllocator.TRACE_GC) Debug.writeln("--> Marking queue.");
+        if (true) Debug.writeln("--> Marking queue.");
         s.scanGCQueue();
-        if (SimpleAllocator.TRACE_GC) Debug.writeln("--> Sweeping.");
+        if (true) Debug.writeln("--> Sweeping.");
         s.sweep();
         
-        if (SimpleAllocator.TRACE_GC) Debug.writeln("Resuming threads.");
+        if (true) Debug.writeln("Resuming threads.");
         jq_NativeThread.resumeAllThreads();
         
         t.enableThreadSwitch();
