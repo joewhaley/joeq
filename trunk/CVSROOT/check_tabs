@@ -8,6 +8,7 @@ do
  if [ ".java" == .${arg##*.} ]
  then
   if [ -e $arg ]
+  then
    if grep -l "	" $arg
    then
     echo "Tab characters not allowed!  Use spaces or \\t instead."
