@@ -198,6 +198,7 @@ public abstract class HeapAllocator implements jq_ClassFileConstants, ObjectLayo
         }
     }
     
+    private static boolean isOutOfMemory = false;
     private static final OutOfMemoryError outofmemoryerror = new OutOfMemoryError();
 
     /** Called in an out of memory situation.
@@ -206,6 +207,10 @@ public abstract class HeapAllocator implements jq_ClassFileConstants, ObjectLayo
      */    
     public static void outOfMemory()
     throws OutOfMemoryError {
+        if (isOutOfMemory) {
+            SystemInterface.die(-1);
+        }
+        isOutOfMemory = true;
         throw outofmemoryerror;
     }
     
