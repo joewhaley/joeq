@@ -308,12 +308,6 @@ public abstract class Bootstrapper implements ObjectLayout {
         System.out.println("heap size = "+objmap.size());
         System.out.println("code size = "+bca.size());
         
-        // store entrypoint/trap handler addresses
-        SystemInterface.entry_0 = rootm.getDefaultCompiledVersion().getEntrypoint();
-        SystemInterface.trap_handler_8 = ExceptionDeliverer._trap_handler.getDefaultCompiledVersion().getEntrypoint();
-        objmap.initStaticField(SystemInterface._entry);
-        objmap.initStaticField(SystemInterface._trap_handler);
-        
         // update code min/max addresses
         // don't use initStaticField because it (re-)adds relocs
         objmap.initStaticField(CodeAllocator._lowAddress);
@@ -322,7 +316,7 @@ public abstract class Bootstrapper implements ObjectLayout {
         // dump it!
         FileOutputStream fos = new FileOutputStream(imageName);
         starttime = System.currentTimeMillis();
-        objmap.dumpCOFF(fos);
+        objmap.dumpCOFF(fos, rootm);
         long dumptime = System.currentTimeMillis() - starttime;
         System.out.println("Dump time: "+dumptime);
         
