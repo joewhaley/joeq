@@ -42,6 +42,16 @@ public class jq_ThreadQueue {
         return t;
     }
     
+    public int length() {
+        jq_Thread p = head;
+        int i = 0;
+        while (p != null) {
+            p = p.next;
+            ++i;
+        }
+        return i;
+    }
+    
     public boolean remove(jq_Thread t2) {
         jq_Thread p = head, q = null;
         while (p != t2) {
