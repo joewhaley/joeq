@@ -11,7 +11,6 @@
     </organization>
     <inceptionYear>2004</inceptionYear>
     <package>jwutil</package>
-    <logo>suif-logo.gif</logo>
     <description>A collection of useful Java classes I have collected or developed over the years.  I have found them useful for multiple projects, so I have consolidated them into a single library.</description>
     <shortDescription>Collection of useful utility classes for Java</shortDescription>
     <url>http://joeq.sourceforge.net/jwutil</url>
@@ -28,7 +27,7 @@
         <developer>
             <name>John Whaley</name>
             <id>jwhaley</id>
-            <email>jwhaley@stanford.edu</email>
+            <email>joewhaley@users.sourceforge.net</email>
             <organization>SUIF Compiler Group</organization>
             <roles>
                 <role>Project Manager</role>
