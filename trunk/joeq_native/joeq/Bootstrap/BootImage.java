@@ -155,12 +155,15 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout {
         return addr;
     }
     
+    public static boolean IGNORE_UNKNOWN_OBJECTS = false;
+    
     public int/*HeapAddress*/ getAddressOf(Object o) {
         if (o == null) return 0;
         IdentityHashCodeWrapper k = IdentityHashCodeWrapper.create(o);
         Entry e = (Entry)hash.get(k);
         if (e == null) {
 	    System.err.println("Unknown object of type: "+o.getClass()+" address: "+jq.hex(System.identityHashCode(o))+" value: "+o);
+            if (IGNORE_UNKNOWN_OBJECTS) return 0;
 	    throw new UnknownObjectException(o);
         }
         Class objType = o.getClass();
@@ -242,6 +245,7 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout {
             Entry e = (Entry)entries.get(i);
             Object o = e.getObject();
             int addr = e.getAddress();
+            if (addr == 0) continue;
             Class objType = o.getClass();
             jq_Reference jqType = (jq_Reference)Reflection.getJQType(objType);
             if (TRACE)
@@ -657,7 +661,7 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout {
 		    if (TRACE) System.out.println("Adding vtable relocs for: "+t);
 		    int[] vtable = (int[])((jq_Reference)t).getVTable();
 		    int/*HeapAddress*/ addr = getAddressOf(vtable);
-		    jq.assert(vtable[0] != 0, t.toString());
+		    //jq.assert(vtable[0] != 0, t.toString());
 		    Heap2HeapReference r1 = new Heap2HeapReference(addr, vtable[0]);
 		    list.add(r1);
 		    for (int j=1; j<vtable.length; ++j) {
@@ -1110,8 +1114,10 @@ public class BootImage extends Unsafe.Remapper implements ObjectLayout {
         final int numOfVTableRelocs = addVTableRelocs(data_relocs);
         addSystemInterfaceRelocs(exts, data_relocs);
 
-        SymbolTableEntry textsyment = new SymbolTableEntry(".text", 0, 0, SymbolTableEntry.STB_LOCAL, SymbolTableEntry.STT_SECTION, text);
-        SymbolTableEntry datasyment = new SymbolTableEntry(".data", 0, 0, SymbolTableEntry.STB_LOCAL, SymbolTableEntry.STT_SECTION, data);
+        symtab.addSymbol(new SymbolTableEntry("", 0, 0, SymbolTableEntry.STB_LOCAL, SymbolTableEntry.STT_NOTYPE, empty));
+        
+        SymbolTableEntry textsyment = new SymbolTableEntry("", 0, 0, SymbolTableEntry.STB_LOCAL, SymbolTableEntry.STT_SECTION, text);
+        SymbolTableEntry datasyment = new SymbolTableEntry("", 0, 0, SymbolTableEntry.STB_LOCAL, SymbolTableEntry.STT_SECTION, data);
         
         Iterator it = exts.iterator();
         while (it.hasNext()) {
