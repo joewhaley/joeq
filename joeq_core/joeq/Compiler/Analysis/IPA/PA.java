@@ -3554,6 +3554,15 @@ public class PA {
         }
     }
     
+    BDD getRoots() {
+        BDD b = bdd.zero();
+        for (Iterator i = cg.getRoots().iterator(); i.hasNext(); ) {
+            jq_Method m = (jq_Method) i.next();
+            b.orWith(M.ithVar(Mmap.get(m)));
+        }
+        return b;
+    }
+    
     public void dumpBDDRelations() throws IOException {
         
         // difference in compatibility
@@ -3654,6 +3663,7 @@ public class PA {
             bdd.save(dumpPath+"threadRuns.bdd", threadRuns);
         if (IEfilter != null)
             bdd.save(dumpPath+"IEfilter.bdd", IEfilter);
+        bdd.save(dumpPath+"roots.bdd", getRoots());
         
         if (THREAD_SENSITIVE) {
             bdd.save(dumpPath+"eq.bdd", V1c[0].buildEquals(H1c[0]));
