@@ -8,8 +8,13 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
+
 import joeq.Compiler.Analysis.IPA.PA;
-import jwutil.classloader.HijackingClassLoader;
+import joeq.Compiler.Quad.BasicBlockVisitor;
+import joeq.Compiler.Quad.CodeCache;
+import joeq.Compiler.Quad.ControlFlowGraphVisitor;
+import joeq.Compiler.Quad.QuadVisitor;
+import joeq.Util.HijackingClassLoader;
 
 /**
  * Generate initial relations for BDD pointer analysis.
@@ -141,7 +146,41 @@ public class GenRelations {
         
         int i;
         for (i = 0; i < args.length; ++i) {
-            if (args[i].equals("-cs")) CS = true;
+        	if (args[i].equalsIgnoreCase("addpass")) {
+                String passname = args[++i];
+                ControlFlowGraphVisitor mv = null;
+                BasicBlockVisitor bbv = null;
+                QuadVisitor qv = null;
+                Object o;
+                try {
+                    Class c = Class.forName(passname);
+                    o = c.newInstance();
+                    if (o instanceof ControlFlowGraphVisitor) {
+                        mv = (ControlFlowGraphVisitor) o;
+                    } else {
+                        if (o instanceof BasicBlockVisitor) {
+                            bbv = (BasicBlockVisitor) o;
+                        } else {
+                            if (o instanceof QuadVisitor) {
+                                qv = (QuadVisitor) o;
+                            } else {
+                                System.err.println("Unknown pass type " + c);
+                            }
+                            bbv = new QuadVisitor.AllQuadVisitor(qv, false);
+                        }
+                        mv = new BasicBlockVisitor.AllBasicBlockVisitor(bbv, false);
+                    }
+                    CodeCache.passes.add(mv);
+                } catch (java.lang.ClassNotFoundException x) {
+                    System.err.println("Cannot find pass named " + passname + ".");
+                    System.err.println("Check your classpath and make sure you compiled your pass.");
+                } catch (java.lang.InstantiationException x) {
+                    System.err.println("Cannot instantiate pass " + passname + ": " + x);
+                } catch (java.lang.IllegalAccessException x) {
+                    System.err.println("Cannot access pass " + passname + ": " + x);
+                    System.err.println("Be sure that you made your class public?");
+                }
+            } else if (args[i].equals("-cs")) CS = true;
             else if (args[i].equals("-fly")) FLY = true;
             else if (args[i].equals("-ssa")) SSA = true;
             else break;
