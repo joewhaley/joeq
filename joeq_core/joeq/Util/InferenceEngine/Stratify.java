@@ -17,6 +17,8 @@ import joeq.Util.Assert;
 import joeq.Util.Collections.GenericMultiMap;
 import joeq.Util.Collections.HashWorklist;
 import joeq.Util.Collections.MultiMap;
+import joeq.Util.Collections.FilterIterator.Filter;
+import joeq.Util.Graphs.DumpDotGraph;
 import joeq.Util.Graphs.SCCTopSortedGraph;
 import joeq.Util.Graphs.SCComponent;
 
@@ -377,4 +379,27 @@ public class Stratify {
         
     }
     
+    static boolean DUMP_DOTGRAPH = !System.getProperty("dumprulegraph", "no").equals("no");
+    
+    public void dumpDotGraph(InferenceRule.DependenceNavigator depNav, Set roots) {
+        DumpDotGraph ddg = new DumpDotGraph();
+        ddg.setNavigator(depNav);
+        ddg.setNodeLabels(new Filter() {
+            public Object map(Object o) {
+                return o.toString();
+            }
+        });
+        ddg.computeTransitiveClosure(roots);
+        
+        
+        Iterator i = firstSCCs.iterator();
+        for (int a = 1; i.hasNext(); ++a) {
+            SCComponent first = (SCComponent) i.next();
+            if (solver.NOISY) out.println("Solving stratum #"+a+"...");
+            for (;;) {
+                iterate(first, false);
+                if (!again) break;
+            }
+        }
+    }
 }

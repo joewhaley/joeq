@@ -143,7 +143,7 @@ public class DumpDotGraph {
                 Object c = containingCluster.map(o);
                 if (c == cluster || !c.equals(cluster)) continue;
             }
-            Object nodeid = (m != null) ? (Object)("n"+m.get(o)) : o;
+            Object nodeid = (m != null) ? ("n"+m.get(o)) : "\""+o+"\"";
             dos.writeBytes("  "+nodeid);
             boolean open = false;
             if (nodeLabels != null) {
@@ -220,12 +220,12 @@ public class DumpDotGraph {
         
         for (Iterator i = nodes.iterator(); i.hasNext(); ) {
             Object n1 = i.next();
-            Object node1id = (m != null) ? (Object)("n"+m.get(n1)) : n1;
+            Object node1id = (m != null) ? ("n"+m.get(n1)) : "\""+n1+"\"";
             Collection succ = navigator.next(n1);
             for (Iterator j = succ.iterator(); j.hasNext(); ) {
                 Object n2 = j.next();
                 if (!nodes.contains(n2)) continue;
-                Object node2id = (m != null) ? (Object)("n"+m.get(n2)) : n2;
+                Object node2id = (m != null) ? ("n"+m.get(n2)) : "\""+n2+"\"";
                 dos.writeBytes("  "+node1id+" -> "+node2id);
                 boolean open = false;
                 if (edgeLabels != null) {
