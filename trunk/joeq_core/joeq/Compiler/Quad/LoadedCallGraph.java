@@ -3,10 +3,11 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Quad;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
+import java.io.DataInput;
+import java.io.DataInputStream;
+import java.io.DataOutput;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -35,7 +36,7 @@ import Compil3r.Analysis.IPA.ProgramLocation.BCProgramLocation;
  */
 public class LoadedCallGraph extends CallGraph {
 
-    public static void write(CallGraph cg, PrintWriter out) throws IOException {
+    public static void write(CallGraph cg, DataOutput out) throws IOException {
         Assert._assert(cg.getAllMethods().containsAll(cg.getRoots()));
         MultiMap classesToMethods = new GenericMultiMap();
         for (Iterator i = cg.getAllMethods().iterator(); i.hasNext(); ) {
@@ -44,18 +45,18 @@ public class LoadedCallGraph extends CallGraph {
         }
         for (Iterator i = classesToMethods.keySet().iterator(); i.hasNext(); ) {
             jq_Class klass = (jq_Class) i.next();
-            out.println("CLASS "+klass.getJDKName().replace('.', '/'));
+            out.writeBytes("CLASS "+klass.getJDKName().replace('.', '/')+"\n");
             for (Iterator j = classesToMethods.getValues(klass).iterator(); j.hasNext(); ) {
                 jq_Method m = (jq_Method) j.next();
-                out.print(" METHOD "+m.getName()+" "+m.getDesc());
-                if (cg.getRoots().contains(m)) out.println(" ROOT");
-                else out.println();
+                out.writeBytes(" METHOD "+m.getName()+" "+m.getDesc());
+                if (cg.getRoots().contains(m)) out.writeBytes(" ROOT\n");
+                else out.writeByte('\n');
                 for (Iterator k = cg.getCallSites(m).iterator(); k.hasNext(); ) {
                     ProgramLocation pl = (ProgramLocation) k.next();
-                    out.println("  CALLSITE "+pl.getBytecodeIndex());
+                    out.writeBytes("  CALLSITE "+pl.getBytecodeIndex()+"\n");
                     for (Iterator l = cg.getTargetMethods(pl).iterator(); l.hasNext(); ) {
                         jq_Method target = (jq_Method) l.next();
-                        out.println("   TARGET "+target.getDeclaringClass().getJDKName().replace('.', '/')+"."+target.getName()+" "+target.getDesc());
+                        out.writeBytes("   TARGET "+target.getDeclaringClass().getJDKName().replace('.', '/')+"."+target.getName()+" "+target.getDesc()+"\n");
                     }
                 }
             }
@@ -72,11 +73,11 @@ public class LoadedCallGraph extends CallGraph {
         this.roots = new LinkedHashSet();
         this.callSites = new GenericMultiMap();
         this.edges = new GenericInvertibleMultiMap();
-        BufferedReader in = new BufferedReader(new FileReader(filename));
+        DataInput in = new DataInputStream(new FileInputStream(filename));
         read(in);
     }
     
-    protected void read(BufferedReader in) throws IOException {
+    protected void read(DataInput in) throws IOException {
         jq_Class k = null;
         jq_Method m = null;
         int bcIndex = -1;
