@@ -30,8 +30,20 @@ int main(int argc, char* argv[])
         HandlerRegistrationRecord er, *erp = &er;
         er.previous = NULL;
         er.handler = hardwareExceptionHandler;
+#if defined(_MSC_VER)
         _asm mov eax,[erp]
         _asm mov fs:[0],eax // point first word of thread control block to exception handler registration chain
+#else
+        __asm__ __volatile__ (
+            "
+            movl %0, %%eax
+            movl %%eax, %%fs:0
+            "
+            :
+	    :"r"(erp)
+            :"%eax"
+            );
+#endif
     }
 #endif
 
@@ -42,7 +54,7 @@ int main(int argc, char* argv[])
     printf("branching to entrypoint at location 0x%p\n", entry);
     fflush(stdout);
 
-#if defined(WIN32)
+#if defined(_MSC_VER)
     __asm {
         // set it up so FP = 0, so we know the stack top.
         push EBP
@@ -54,8 +66,19 @@ int main(int argc, char* argv[])
         // restore FP, so chkesp doesn't complain
         pop EBP
     }
+#elif defined(WIN32)
+    __asm__ __volatile__ (
+        "pushl %%ebp
+         xor %%ebp, %%ebp
+         call _entry@0
+         popl %%ebp
+            "
+            :
+            :
+            :"%eax","%edx","%ecx","%ebx","%edi","%esi"
+            );
 #else
-    __asm (
+    __asm__ __volatile__ (
         "pushl %%ebp
          xor %%ebp, %%ebp
          call entry
@@ -67,6 +90,6 @@ int main(int argc, char* argv[])
             );
 #endif
 
-    // unreachable.
+    // only reachable if jq.boot returns normally.
     return 0;
 }
