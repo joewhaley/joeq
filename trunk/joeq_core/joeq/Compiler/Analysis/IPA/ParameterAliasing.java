@@ -10,7 +10,9 @@ import joeq.Compiler.Analysis.IPSSA.IPSSABuilder;
 import joeq.Util.Assert;
 
 import org.sf.javabdd.BDD;
+import org.sf.javabdd.BDDDomain;
 import org.sf.javabdd.BDDFactory;
+import org.sf.javabdd.BDDPairing;
 import org.sf.javabdd.TypedBDDFactory.TypedBDD;
 
 class ParameterAliasing {
@@ -25,6 +27,8 @@ class ParameterAliasing {
         private int MAX_CONTEXT_PRINT   = 1;
         private boolean _CONSTRUCTORS   = false;
         private int _aliasedCalls       = 0;
+        
+        BDDDomain Z2 = null;
          
         public ParamAliasFinder() {
             super(null, null, null);
@@ -37,6 +41,8 @@ class ParameterAliasing {
             _CONSTRUCTORS = !System.getProperty("paf.constructors", "yes").equals("no");
             _RECURSIVE    = !System.getProperty("paf.recursive", "yes").equals("no");
             _verbose      = !System.getProperty("paf.verbose", "yes").equals("no");
+            
+            Z2 = _r.makeDomain("Z2", _r.Z.varNum());
         }
     
         protected void parseParams(String[] args) {}
@@ -143,7 +149,8 @@ class ParameterAliasing {
             TypedBDD pointsTo = (TypedBDD)context.relprod(t, (TypedBDD) _r.V1cset.and(_r.H1cset));   // H1xZ
             //System.out.println("pointsTo: " + pointsTo.toStringWithDomains());
             t.free();
-                
+            
+            /*    
             t = (TypedBDD)pointsTo.exist(_r.Z.set());
             //System.out.println(t.satCount() + ", " + pointsTo.satCount());
             int pointsToSize = (int)pointsTo.satCount(_r.H1.set().and(_r.Zset));
@@ -162,6 +169,15 @@ class ParameterAliasing {
                 //b.applyWith(result.id(), BDDFactory.diff);
             }
             t.free();
+            */
+            BDDDomain Z1 = _r.Z;
+            
+            TypedBDD pointsTo2 = (TypedBDD) pointsTo.replace(_r.bdd.makePair(Z1, Z2)); 
+            
+            BDD notEq = Z1.buildEquals(Z2).not();
+            TypedBDD pairs = (TypedBDD)pointsTo.and(pointsTo2).and(notEq);
+            
+            System.out.println("pairs: " + pairs.toStringWithDomains());
             
             return result;
         }
