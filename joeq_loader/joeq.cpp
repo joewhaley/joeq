@@ -21,12 +21,6 @@ BOOL WINAPI windows_break_handler(DWORD dwCtrlType)
 }
 #endif
 
-#if defined(linux)
-char FS_AREA[4096]; // used as storage off of the FS register.
-_syscall3( int, modify_ldt, int, func, void *, ptr, unsigned long, bytecount )
-  //int sys_modify_ldt(int func, void *ptr, unsigned long bytecount);
-#endif
-
 int main(int argc, char* argv[])
 {
 	// clear umask
@@ -49,38 +43,6 @@ int main(int argc, char* argv[])
 
 	initSemaphoreLock();
 #endif
-
-#if 0
-	{
-	  modify_ldt_ldt_s ldt_entry;
-	  printf("Setting local descriptor table to allow use of FS register...\n");
-	  ldt_entry.entry_number = 17;
-	  ldt_entry.base_addr = (long int)FS_AREA;
-	  ldt_entry.limit = sizeof(FS_AREA);
-	  ldt_entry.seg_32bit = 1;
-	  ldt_entry.contents = MODIFY_LDT_CONTENTS_DATA;
-	  ldt_entry.read_exec_only = 0;
-	  ldt_entry.limit_in_pages = 0;
-	  ldt_entry.seg_not_present = 0;
-	  ldt_entry.useable = 1;
-	  
-	  int r = modify_ldt(1, &ldt_entry, sizeof(ldt_entry));
-	  printf("Result = %d\n", r);
-
-	  printf("Setting up FS segment...");
-#define LDT_SEL(idx)  ((idx) << 3 | 1 << 2 | 3)
-	  __asm__ __volatile__(
-			       "movl %0,%%eax; movw %%ax, %%fs" : : "i" LDT_SEL(17)
-			       );
-	  printf("done.\n");
-	}
-#endif
-	Setup_LDT_Keeper();
-	int initialized = 1;
-	__asm (" movl %%fs:4, %0"
-	       :
-	       :"r"(initialized)
-	       );
 
 	printf("branching to entrypoint at location 0x%08x\n", entry);
 	fflush(stdout);
