@@ -549,11 +549,14 @@ void* __stdcall allocate_stack(const int size)
     dwFinalSize = ((size / dwPageSize) + 2) * dwPageSize;
     lpvAddr = VirtualAlloc(NULL, dwFinalSize, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
     if (lpvAddr == NULL) {
-        fprintf(stderr, "PANIC! Cannot allocate stack!");
-        return NULL;
+        fprintf(stderr, "PANIC! Cannot allocate stack!\n");
+        lpvAddr = calloc(sizeof(char), size);
+        if (lpvAddr != NULL)
+            lpvAddr = ((char*)lpvAddr) + size;
+        return lpvAddr;
     }
     if (!VirtualProtect(lpvAddr, dwPageSize, PAGE_GUARD | PAGE_READWRITE, &oldProtect)) {
-        fprintf(stderr, "PANIC! Cannot create stack guard page!");
+        fprintf(stderr, "PANIC! Cannot create stack guard page!\n");
     }
     //printf("Allocated stack of size %d starting at 0x%08x\n", size, (int)lpvAddr+dwFinalSize);
     return (void*)((DWORD_PTR)lpvAddr+dwFinalSize);
