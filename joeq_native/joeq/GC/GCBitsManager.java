@@ -9,6 +9,7 @@
 package GC;
 
 import Allocator.HeapAllocator.HeapPointer;
+import Allocator.MemUnit;
 import Memory.StackAddress;
 import Memory.HeapAddress;
 import Memory.Address;
@@ -16,34 +17,6 @@ import Memory.Address;
 import java.util.*;
 
 public class GCBitsManager {
-
-    public static class SweepUnit {
-        private HeapAddress head;
-        private int byteLength;
-
-        public SweepUnit(HeapAddress head, int byteLength) {
-            this.head = head;
-            this.byteLength = byteLength;
-        }
-
-        public SweepUnit(HeapAddress head, Address end) {
-            this(head, end.difference(head));
-        }
-
-        public HeapAddress getHead() {
-            return head;
-        }
-    }
-
-    public static class SweepUnitComparator implements Comparator {
-        public int compare(Object o1, Object o2) {
-            if(!(o1 instanceof SweepUnit && o2 instanceof SweepUnit)) {
-                throw new ClassCastException();
-            } else {
-                return (((SweepUnit) o1).getHead().difference(((SweepUnit) o2).getHead()));
-            }
-        }
-    }
 
     private static TreeMap pool = new TreeMap();
     private static HashSet units = new HashSet();
@@ -92,7 +65,7 @@ public class GCBitsManager {
     public static void diff() {
         Iterator iter = pool.values().iterator();
         while (iter.hasNext()) {
-            GCBits bits = (GCBits)iter.next();
+            GCBits bits = (GCBits) iter.next();
             units.addAll(bits.diff());
         }
     }
