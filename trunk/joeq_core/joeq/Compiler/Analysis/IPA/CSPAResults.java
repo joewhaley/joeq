@@ -1607,7 +1607,8 @@ public class CSPAResults {
         int nodeCount = 500000;
         int cacheSize = 50000;
         BDDFactory bdd = BDDFactory.init(nodeCount, cacheSize);
-        bdd.setMaxIncrease(nodeCount/4);
+        //bdd.setMaxIncrease(nodeCount/4);
+        bdd.setIncreaseFactor(2);
         return bdd;
     }
     

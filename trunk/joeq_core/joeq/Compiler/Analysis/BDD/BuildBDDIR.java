@@ -97,7 +97,8 @@ public class BuildBDDIR implements ControlFlowGraphVisitor {
         System.out.println("Using variable ordering "+varOrderDesc);
         int [] varOrder = bdd.makeVarOrdering(true, varOrderDesc);
         bdd.setVarOrder(varOrder);
-        bdd.setMaxIncrease(500000);
+        //bdd.setMaxIncrease(500000);
+        bdd.setIncreaseFactor(2);
         ENTER_SSA = true;
     }
     
