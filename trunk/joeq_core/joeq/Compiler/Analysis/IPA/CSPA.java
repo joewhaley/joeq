@@ -81,10 +81,10 @@ public class CSPA {
     /** Various trace flags. */
     public static final boolean TRACE_ALL = false;
     
-    public static final boolean TRACE_MATCHING  = false || TRACE_ALL;
+    public static final boolean TRACE_MATCHING  = true || TRACE_ALL;
     public static final boolean TRACE_TYPES     = false || TRACE_ALL;
     public static final boolean TRACE_MAPS      = false || TRACE_ALL;
-    public static final boolean TRACE_SIZES     = false || TRACE_ALL;
+    public static final boolean TRACE_SIZES     = true || TRACE_ALL;
     public static final boolean TRACE_CALLGRAPH = false || TRACE_ALL;
     public static final boolean TRACE_EDGES     = false || TRACE_ALL;
     public static final boolean TRACE_TIMES     = false || TRACE_ALL;
@@ -162,12 +162,13 @@ public class CSPA {
         if (cg == null) {
             System.out.print("Setting up initial call graph...");
             long time = System.currentTimeMillis();
+            BDDPointerAnalysis dis = null;
             if (USE_CHA) {
                 cg = new RootedCHACallGraph();
                 cg = new CachedCallGraph(cg);
                 cg.setRoots(roots);
             } else {
-                BDDPointerAnalysis dis = new BDDPointerAnalysis("java", 1000000, 100000);
+                dis = new BDDPointerAnalysis("java", 1000000, 100000);
                 cg = dis.goIncremental(roots);
                 cg = new CachedCallGraph(cg);
                 // BDD pointer analysis changes the root set by adding class initializers,
@@ -203,6 +204,10 @@ public class CSPA {
             System.out.println("done. ("+time/1000.+" seconds)");
             roots = cg.getRoots();
             LOADED_CALLGRAPH = true;
+            if (dis != null) dis.done();
+            System.gc();
+            long usedMemory = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
+            System.out.println("Used memory: "+usedMemory);
         }
         
         if (DO_INLINING) {
@@ -444,9 +449,17 @@ public class CSPA {
         }
     }
     public BDD getV1H1Context(BDD range) {
-        if (CONTEXT_SENSITIVE) {
+        if (CONTEXT_SENSITIVE_HEAP) {
             BDD r = V1c.buildEquals(H1c);
+            if (TRACE_SIZES) {
+                System.out.print("V1cH1c = ");
+                report(r, V1c.set().and(H1c.set()));
+            }
             r.andWith(range.id());
+            if (TRACE_SIZES) {
+                System.out.print("after mask = ");
+                report(r, V1c.set().and(H1c.set()));
+            }
             return r;
         } else {
             BDD r = V1c.ithVar(0);
@@ -457,7 +470,15 @@ public class CSPA {
     public BDD getV1V2Context(BDD range) {
         if (CONTEXT_SENSITIVE) {
             BDD r = V1c.buildEquals(V2c);
+            if (TRACE_SIZES) {
+                System.out.print("V1cH1c = ");
+                report(r, V1c.set().and(H1c.set()));
+            }
             r.andWith(range.id());
+            if (TRACE_SIZES) {
+                System.out.print("after mask = ");
+                report(r, V1c.set().and(H1c.set()));
+            }
             return r;
         } else {
             BDD r = V1c.ithVar(0);
@@ -1077,10 +1098,10 @@ public class CSPA {
         
         Number npaths = pn.numberOfPathsTo(ms.getMethod());
         long time = System.currentTimeMillis();
-        BDD v1ch1c, v1cv2c;
+        BDD v1ch1c = null, v1cv2c = null;
         
         BDD range = V1c.varRange(0, npaths.longValue());
-        if (USE_REPLACE_V2) {
+        if (USE_REPLACE_V2 && !bms.m_pointsTo.isZero()) {
             v1ch1c = getV1H1Context(range);
             if (H1cToV2c == null) H1cToV2c = bdd.makePair(H1c, V2c);
             v1cv2c = v1ch1c.replace(H1cToV2c);
@@ -1089,7 +1110,8 @@ public class CSPA {
             if (V2cToH1c == null) V2cToH1c = bdd.makePair(V2c, H1c);
             v1ch1c = v1cv2c.replace(V2cToH1c);
         } else {
-            v1ch1c = getV1H1Context(range);
+            if (!bms.m_pointsTo.isZero())
+                v1ch1c = getV1H1Context(range);
             v1cv2c = getV1V2Context(range);
         }
         range.free();
@@ -1100,12 +1122,15 @@ public class CSPA {
         
         time = System.currentTimeMillis();
         
-        BDD t1 = bms.m_pointsTo.id();
-        t1.andWith(v1ch1c);
-        if (TRACE_BDD) {
-            System.out.println("Adding to g_pointsTo: "+t1.toStringWithDomains());
+        BDD t1;
+        if (!bms.m_pointsTo.isZero()) {
+            t1 = bms.m_pointsTo.id();
+            t1.andWith(v1ch1c);
+            if (TRACE_BDD) {
+                System.out.println("Adding to g_pointsTo: "+t1.toStringWithDomains());
+            }
+            g_pointsTo.orWith(t1);
         }
-        g_pointsTo.orWith(t1);
 
         t1 = bms.m_loads.id();
         t1.andWith(v1cv2c.id());
@@ -1279,12 +1304,30 @@ public class CSPA {
         } else {
             if (sizeV1.compareTo(sizeV2) != -1) { // >=
                 r = V1c.buildAdd(V2c, startV2.subtract(startV1).longValue());
-                if (MASK)
+                if (TRACE_SIZES) {
+                    System.out.print("add = ");
+                    report(r, V1c.set().and(V2c.set()));
+                }
+                if (MASK) {
                     r.andWith(V1c.varRange(startV1.longValue(), endV1.longValue()));
+                    if (TRACE_SIZES) {
+                        System.out.print("after mask = ");
+                        report(r, V1c.set().and(V2c.set()));
+                    }
+                }
             } else {
                 r = V1c.buildAdd(V2c, startV2.subtract(startV1).longValue());
-                if (MASK)
+                if (TRACE_SIZES) {
+                    System.out.print("add = ");
+                    report(r, V1c.set().and(V2c.set()));
+                }
+                if (MASK) {
                     r.andWith(V2c.varRange(startV2.longValue(), endV2.longValue()));
+                    if (TRACE_SIZES) {
+                        System.out.print("after mask = ");
+                        report(r, V1c.set().and(V2c.set()));
+                    }
+                }
             }
         }
         if (TRACE_CALLGRAPH) {
