@@ -50,11 +50,12 @@ public class BDDInferenceRule extends InferenceRule {
         super(top, bottom);
         updateCount = 0;
         this.solver = solver;
-        initialize();
+        //initialize();
     }
     
     void initialize() {
         super.initialize();
+        if (solver.TRACE) solver.out.println("Initializing BDDInferenceRule "+this);
         updateCount = 0;
         this.oldRelationValues = null;
         this.variableToBDDDomain = new HashMap();

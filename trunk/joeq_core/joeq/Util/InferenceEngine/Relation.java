@@ -32,6 +32,7 @@ public abstract class Relation {
         this.fieldOptions = fieldOptions;
     }
     
+    public abstract void initialize();
     public abstract void load() throws IOException;
     public abstract void loadTuples() throws IOException;
     public abstract void save() throws IOException;
