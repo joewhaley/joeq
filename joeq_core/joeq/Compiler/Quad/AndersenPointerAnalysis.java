@@ -531,7 +531,7 @@ public class AndersenPointerAnalysis {
     public AndersenPointerAnalysis(boolean addDefaults) {
         nodeToConcreteNodes = new HashMap();
         nodeToInclusionEdges = new HashMap();
-        rootSet = new SortedArraySet(HashCodeComparator.INSTANCE);
+        rootSet = SortedArraySet.FACTORY.makeSet(HashCodeComparator.INSTANCE);
         methodSummariesToVisit = new LinkedHashSet();
         callSiteToTargets = new HashMap();
         linkedTargets = new HashSet();
@@ -895,7 +895,7 @@ public class AndersenPointerAnalysis {
             if (TRACE) out.println("Found call: "+ms+": "+mc.getQuad());
             CallTargets ct = mc.getCallTargets();
             if (TRACE) out.println("Possible targets ignoring type information: "+ct);
-            Set definite_targets = new SortedArraySet(HashCodeComparator.INSTANCE);
+            Set definite_targets = SortedArraySet.FACTORY.makeSet(HashCodeComparator.INSTANCE);
             //jq.Assert(!callSiteToTargets.containsKey(cs));
             callSiteToTargets.put(cs, definite_targets);
             if (ct.size() == 1 && ct.isComplete()) {
