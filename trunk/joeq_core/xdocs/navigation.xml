@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<project name="joeq">
+  <title>joeq virtual machine and compiler infrastructure</title>
+  <organizationLogo href="http://sourceforge.net/sflogo.php?group_id=19634&amp;type=5" />
+  <body>
+    <links>
+      <item name="SourceForge.net Project Page"
+            href="http://sourceforge.net/projects/joeq" />
+      <item name="Hosted by SourceForge" 
+            href="http://sourceforge.net" />
+    </links>
+    <menu name="Documentation">
+      <item name="About joeq" collapse="true">
+        <item name="Overview"
+              href="overview.html"/>
+        <item name="Bootstrapping"
+              href="bootstrapping.html"/>
+        <item name="Address types"
+              href="address_types.html"/>
+        <item name="Compilers"
+              href="compiler.html"/>
+        <item name="Garbage collector"
+              href="garbage_collector.html"/>
+        <item name="Scheduler"
+              href="scheduler.html"/>
+        <item name="Synchronization"
+              href="synchronization.html"/>
+        <item name="Related work"
+              href="related_work.html"/>
+      </item>
+      <item name="API (Javadoc)"
+            href="apidocs/index.html" />
+      <item name="Getting Started"
+            href="getting_started.html"/>
+      <item name="Build Instructions"
+            href="compiling.html"/>
+      <item name="Project Members"
+            href="team-list.html"/>
+      <item name="FAQ"
+            href="faq.html"/>
+    </menu>
+    <menu name="Downloads">
+      <item name="joeq source code (20030812)"
+            href="http://prdownloads.sourceforge.net/joeq/joeq_source_20030812.tar.gz"/>
+    </menu>
+    <search/>
+  </body>
+</project>
