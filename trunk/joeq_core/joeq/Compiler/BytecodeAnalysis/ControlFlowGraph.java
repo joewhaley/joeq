@@ -279,6 +279,11 @@ public class ControlFlowGraph {
             this.basic_block_start = new BitString(bcs.length+1);
             this.branch_locations = new BitString(bcs.length);
             this.basic_block_start.set(0);
+            //this.TRACE = true;
+        }
+        
+        public String toString() {
+            return "CFG1/"+method.getName();
         }
         
         public BitString getBasicBlockStart() {
