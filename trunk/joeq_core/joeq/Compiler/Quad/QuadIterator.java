@@ -57,7 +57,8 @@ public class QuadIterator implements ListIterator.Quad {
         // initialize list of basic blocks in reverse post order
         this.rpoBasicBlocks = direction ? cfg.reversePostOrderIterator() : cfg.postOrderOnReverseGraphIterator();
         // skip entry basic block
-        this.previousBasicBlock = this.rpoBasicBlocks.nextBasicBlock();
+        this.rpoBasicBlocks.nextBasicBlock();
+        this.previousBasicBlock = null;
         this.currentBasicBlock = this.rpoBasicBlocks.nextBasicBlock();
         updateNextBB();
         // initialize quad iterator
@@ -71,16 +72,21 @@ public class QuadIterator implements ListIterator.Quad {
     }
     
     /** Update the nextBasicBlock field to point to the next non-empty basic
-     * block from the reverse post order. */
+     * block from the reverse post order, or null if there are no more
+     * non-empty basic blocks. */
     protected void updateNextBB() {
         for (;;) {
+            if (!this.rpoBasicBlocks.hasNext()) {
+                this.nextBasicBlock = null;
+                break;
+            }
             this.nextBasicBlock = this.rpoBasicBlocks.nextBasicBlock();
-            if (this.nextBasicBlock.isExit()) break;
             if (this.nextBasicBlock.size() > 0) break;
         }
     }
-    /** Update the previousBasicBlock field to point to the next non-empty basic
-     * block from the reverse post order. */
+    /** Update the previousBasicBlock field to point to the previous non-empty basic
+     * block from the reverse post order, or null if there are no more previous
+     * non-empty basic blocks. */
     protected void updatePreviousBB() {
 	// the rpoBasicBlocks iterator points just past nextBasicBlock, so
 	// we need to back up to before previousBasicBlock.
@@ -89,7 +95,10 @@ public class QuadIterator implements ListIterator.Quad {
 	    if (p == this.previousBasicBlock) break;
 	}
         for (;;) {
-            if (this.previousBasicBlock.isEntry()) break;
+            if (!this.rpoBasicBlocks.hasPrevious()) {
+                this.previousBasicBlock = null;
+                break;
+            }
             this.previousBasicBlock = this.rpoBasicBlocks.previousBasicBlock();
             if (this.previousBasicBlock.size() > 0) break;
         }
@@ -104,10 +113,10 @@ public class QuadIterator implements ListIterator.Quad {
     public Quad nextQuad() {
         if (!this.quadsInCurrentBasicBlock.hasNext()) {
             // end of basic block, go to next basic block.
+            if (this.nextBasicBlock == null)
+                throw new NoSuchElementException();
             this.previousBasicBlock = this.currentBasicBlock;
             this.currentBasicBlock = this.nextBasicBlock;
-            if (this.currentBasicBlock.isExit())
-                throw new NoSuchElementException();
             this.quadsInCurrentBasicBlock = this.currentBasicBlock.iterator();
             // update nextBasicBlock
             updateNextBB();
@@ -120,7 +129,7 @@ public class QuadIterator implements ListIterator.Quad {
     /** Returns whether there is a next quad in this iteration. */
     public boolean hasNext() {
         if (this.quadsInCurrentBasicBlock.hasNext()) return true;
-        return !this.nextBasicBlock.isExit();
+        return this.nextBasicBlock != null;
     }
     
     /** Returns the first quad reachable from the start of the given basic block. */
@@ -151,6 +160,8 @@ public class QuadIterator implements ListIterator.Quad {
     public Quad previousQuad() {
         if (!this.quadsInCurrentBasicBlock.hasPrevious()) {
             // beginning of basic block, go to previous basic block.
+            if (this.previousBasicBlock == null)
+                throw new NoSuchElementException();
             this.nextBasicBlock = this.currentBasicBlock;
             this.currentBasicBlock = this.previousBasicBlock;
             this.quadsInCurrentBasicBlock = this.currentBasicBlock.iterator();
@@ -176,7 +187,7 @@ public class QuadIterator implements ListIterator.Quad {
     /** Returns whether this iteration has a previous quad. */
     public boolean hasPrevious() {
         if (this.quadsInCurrentBasicBlock.hasPrevious()) return true;
-        return !this.previousBasicBlock.isEntry();
+        return this.previousBasicBlock != null;
     }
     
     /** Adds a quad to the underlying quad list. */
