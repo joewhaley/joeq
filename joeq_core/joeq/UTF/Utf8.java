@@ -192,6 +192,11 @@ here:
         return get(data, 1, data.length);
     }
     
+    public Utf8 getClassName() {
+        Assert._assert(isDescriptor(TC_CLASS));
+        return get(data, 1, data.length-1);
+    }
+    
     public Utf8 getAsArrayDescriptor() {
         Assert._assert(isValidTypeDescriptor());
         // todo: might need to reevaluate making a new array on every query.
