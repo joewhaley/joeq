@@ -3,8 +3,9 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Quad;
 
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -1713,7 +1714,7 @@ public class MethodSummary {
          * @param ms method summary that contains this node
          * @param out print writer to output to
          */
-        public abstract void print(MethodSummary ms, PrintWriter out) throws IOException;
+        public abstract void write(MethodSummary ms, DataOutput out) throws IOException;
         
     }
     
@@ -1751,19 +1752,63 @@ public class MethodSummary {
         public String toString_long() { return Integer.toHexString(this.hashCode())+": "+toString_short()+super.toString_long(); }
         public String toString_short() { return "Concrete: "+type+" q: "+(q==null?-1:q.getID()); }
 
-        /* (non-Javadoc)
-         * @see Compil3r.Quad.MethodSummary.Node#print(java.io.PrintWriter)
-         */
-        public void print(MethodSummary ms, PrintWriter out) throws IOException {
-            out.print("Concrete ");
-            printType(out, (jq_Reference) type);
+        public void write(MethodSummary ms, DataOutput out) throws IOException {
+            out.writeBytes("Concrete ");
+            writeType(out, (jq_Reference) type);
+            out.writeByte(' ');
             jq_Method m = (jq_Method) ms.getMethod();
-            printQuad(out, m, q);
+            writeQuad(out, m, q);
         }
     }
     
-    public static void printType(PrintWriter out, jq_Reference type) throws IOException {
-        out.print(type.getDesc());
+    public static Node readNode(StringTokenizer st) throws IOException {
+        String s = st.nextToken();
+        if (s.equals("Global")) {
+            return new GlobalNode();
+        }
+        if (s.equals("Concrete")) {
+            jq_Reference r = readType(st);
+            //Quad q = readQuad(st, New.class);
+            Quad q = readQuad(st, Operator.class);
+            return new ConcreteTypeNode(r, q);
+        }
+        if (s.equals("ConcreteObject")) {
+            // TODO.
+            jq_Reference r = readType(st);
+            return new ConcreteTypeNode(r);
+        }
+        if (s.equals("Unknown")) {
+            jq_Reference r = readType(st);
+            return new UnknownTypeNode(r);
+        }
+        if (s.equals("ReturnValue")) {
+            ProgramLocation pl = readLocation(st);
+            return new ReturnValueNode(pl);
+        }
+        if (s.equals("ThrownException")) {
+            ProgramLocation pl = readLocation(st);
+            return new ThrownExceptionNode(pl);
+        }
+        if (s.equals("Param")) {
+            jq_Method m = (jq_Method) readMember(st);
+            int i = Integer.parseInt(st.nextToken());
+            jq_Reference t = (jq_Reference) m.getParamTypes()[i];
+            return new ParamNode(m, i, t);
+        }
+        if (s.equals("Field")) {
+            jq_Field m = (jq_Field) readMember(st);
+            return new FieldNode(m);
+        }
+        if (s.equals("null")) {
+            return null;
+        }
+        Assert.UNREACHABLE(s);
+        return null;
+    }
+    
+    public static void writeType(DataOutput out, jq_Reference type) throws IOException {
+        if (type == null) out.writeBytes("null");
+        else out.writeBytes(type.getDesc().toString());
     }
     
     public static jq_Reference readType(StringTokenizer st) {
@@ -1773,9 +1818,13 @@ public class MethodSummary {
         return r;
     }
     
-    public static void printMember(PrintWriter out, jq_Member m) throws IOException {
-        printType(out, m.getDeclaringClass());
-        out.print(" "+m.getName()+" "+m.getDesc());
+    public static void writeMember(DataOutput out, jq_Member m) throws IOException {
+        if (m == null) {
+            out.writeBytes("null");
+        } else {
+            writeType(out, m.getDeclaringClass());
+            out.writeBytes(" "+m.getName()+" "+m.getDesc());
+        }
     }
     
     public static jq_Member readMember(StringTokenizer st) {
@@ -1787,9 +1836,9 @@ public class MethodSummary {
         return c.getDeclaredMember(name, desc);
     }
     
-    public static void printQuad(PrintWriter out, jq_Method m, Quad q) throws IOException {
+    public static void writeQuad(DataOutput out, jq_Method m, Quad q) throws IOException {
         if (q == null) {
-            out.print("null"); 
+            out.writeBytes("null"); 
         } else {
             Map map = CodeCache.getBCMap(m);
             Integer i = (Integer) map.get(q);
@@ -1797,12 +1846,12 @@ public class MethodSummary {
                 Assert.UNREACHABLE("Error: no mapping for quad "+q);
             }
             int bcIndex = i.intValue();
-            printMember(out, m);
-            out.print(" "+bcIndex);
+            writeMember(out, m);
+            out.writeBytes(" "+bcIndex);
         }
     }
     
-    public static Quad readQuad(StringTokenizer st, Operator op) {
+    public static Quad readQuad(StringTokenizer st, Class op) {
         jq_Method m = (jq_Method) readMember(st);
         if (m == null) return null;
         int bcIndex = Integer.parseInt(st.nextToken());
@@ -1812,18 +1861,18 @@ public class MethodSummary {
             int index = ((Integer) e.getValue()).intValue();
             if (index != bcIndex) continue;
             Quad q = (Quad) e.getKey();
-            if (q.getOperator() == op) return q;
+            if (op.isInstance(q.getOperator())) return q;
         }
-        Assert.UNREACHABLE("Error: no quad of type "+op+" at bytecode index "+bcIndex);
+        //Assert.UNREACHABLE("Error: no quad of type "+op+" at bytecode index "+bcIndex);
         return null;
     }
     
-    public static void printLocation(PrintWriter out, ProgramLocation l) throws IOException {
-        printMember(out, (jq_Method) l.getMethod());
-        out.print(" "+l.getBytecodeIndex());
+    public static void writeLocation(DataOutput out, ProgramLocation l) throws IOException {
+        writeMember(out, (jq_Method) l.getMethod());
+        out.writeBytes(" "+l.getBytecodeIndex());
     }
     
-    public static ProgramLocation readLocation(StringTokenizer st, Operator op) throws IOException {
+    public static ProgramLocation readLocation(StringTokenizer st) throws IOException {
         jq_Method m = (jq_Method) readMember(st);
         int index = Integer.parseInt(st.nextToken());
         return new ProgramLocation.BCProgramLocation(m, index);
@@ -2002,12 +2051,9 @@ public class MethodSummary {
             return super.removeEdge(m, n);
         }
 
-        /* (non-Javadoc)
-         * @see Compil3r.Quad.MethodSummary.Node#print(Compil3r.Quad.MethodSummary, java.io.PrintWriter)
-         */
-        public void print(MethodSummary ms, PrintWriter out) throws IOException {
-            out.print("ConcreteObject ");
-            printType(out, (jq_Reference) getDeclaredType());
+        public void write(MethodSummary ms, DataOutput out) throws IOException {
+            out.writeBytes("ConcreteObject ");
+            writeType(out, (jq_Reference) getDeclaredType());
         }
 
     }
@@ -2098,12 +2144,9 @@ public class MethodSummary {
         public String toString_long() { return Integer.toHexString(this.hashCode())+": "+toString_short()+super.toString_long(); }
         public String toString_short() { return "Unknown: "+type; }
 
-        /* (non-Javadoc)
-         * @see Compil3r.Quad.MethodSummary.Node#print(Compil3r.Quad.MethodSummary, java.io.PrintWriter)
-         */
-        public void print(MethodSummary ms, PrintWriter out) throws IOException {
-            out.print("Unknown ");
-            printType(out, (jq_Reference) getDeclaredType());
+        public void write(MethodSummary ms, DataOutput out) throws IOException {
+            out.writeBytes("Unknown ");
+            writeType(out, (jq_Reference) getDeclaredType());
         }
     }
     
@@ -2162,11 +2205,9 @@ public class MethodSummary {
             
             //System.out.println("Edges from global: "+getEdges());
         }
-        /* (non-Javadoc)
-         * @see Compil3r.Quad.MethodSummary.Node#print(Compil3r.Quad.MethodSummary, java.io.PrintWriter)
-         */
-        public void print(MethodSummary ms, PrintWriter out) throws IOException {
-            out.print("Global");
+        
+        public void write(MethodSummary ms, DataOutput out) throws IOException {
+            out.writeBytes("Global");
         }
         
     }
@@ -2196,12 +2237,9 @@ public class MethodSummary {
         public String toString_long() { return toString_short()+super.toString_long(); }
         public String toString_short() { return Integer.toHexString(this.hashCode())+": "+"Return value of "+m; }
         
-        /* (non-Javadoc)
-         * @see Compil3r.Quad.MethodSummary.Node#print(Compil3r.Quad.MethodSummary, java.io.PrintWriter)
-         */
-        public void print(MethodSummary ms, PrintWriter out) throws IOException {
-            out.print("ReturnValue ");
-            printLocation(out, m);
+        public void write(MethodSummary ms, DataOutput out) throws IOException {
+            out.writeBytes("ReturnValue ");
+            writeLocation(out, m);
         }
     }
     
@@ -2247,9 +2285,9 @@ public class MethodSummary {
         /* (non-Javadoc)
          * @see Compil3r.Quad.MethodSummary.Node#print(Compil3r.Quad.MethodSummary, java.io.PrintWriter)
          */
-        public void print(MethodSummary ms, PrintWriter out) throws IOException {
-            out.print("ThrownException ");
-            printLocation(out, m);
+        public void write(MethodSummary ms, DataOutput out) throws IOException {
+            out.writeBytes("ThrownException ");
+            writeLocation(out, m);
         }
     }
     
@@ -2272,10 +2310,10 @@ public class MethodSummary {
         /* (non-Javadoc)
          * @see Compil3r.Quad.MethodSummary.Node#print(Compil3r.Quad.MethodSummary, java.io.PrintWriter)
          */
-        public void print(MethodSummary ms, PrintWriter out) throws IOException {
-            out.print("Param ");
-            printMember(out, (jq_Method) m);
-            out.print(" "+n);
+        public void write(MethodSummary ms, DataOutput out) throws IOException {
+            out.writeBytes("Param ");
+            writeMember(out, (jq_Method) m);
+            out.writeBytes(" "+n);
         }
     }
     
@@ -2519,9 +2557,9 @@ public class MethodSummary {
         /* (non-Javadoc)
          * @see Compil3r.Quad.MethodSummary.Node#print(Compil3r.Quad.MethodSummary, java.io.PrintWriter)
          */
-        public void print(MethodSummary ms, PrintWriter out) throws IOException {
-            out.print("Field ");
-            printMember(out, (jq_Field) f);
+        public void write(MethodSummary ms, DataOutput out) throws IOException {
+            out.writeBytes("Field ");
+            writeMember(out, (jq_Field) f);
             // TODO: predecessors 
         }
     }
