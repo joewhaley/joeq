@@ -13,6 +13,7 @@ import Clazz.jq_ClassFileConstants;
 import Clazz.jq_InstanceMethod;
 import Clazz.jq_Method;
 import Clazz.jq_Type;
+import Compil3r.BytecodeAnalysis.BytecodeVisitor;
 import Compil3r.BytecodeAnalysis.Bytecodes;
 import Compil3r.Quad.CodeCache;
 import Compil3r.Quad.ControlFlowGraph;
@@ -68,10 +69,7 @@ public abstract class ProgramLocation {
     public abstract jq_Type getReturnType();
     public abstract boolean isSingleTarget();
     public abstract boolean isInterfaceCall();
-    
-    //public abstract CallTargets getCallTargets();
-    //public abstract CallTargets getCallTargets(AndersenReference klass, boolean exact);
-    //public abstract CallTargets getCallTargets(java.util.Set receiverTypes, boolean exact);
+    public abstract byte getInvocationType();
     
     public static class QuadProgramLocation extends ProgramLocation {
         private final Quad q;
@@ -172,8 +170,7 @@ public abstract class ProgramLocation {
             return sb.toString();
         }
         
-        /*
-        private byte getInvocationType() {
+        public byte getInvocationType() {
             if (q.getOperator() instanceof Invoke.InvokeVirtual) {
                 return BytecodeVisitor.INVOKE_VIRTUAL;
             } else if (q.getOperator() instanceof Invoke.InvokeStatic) {
@@ -188,6 +185,7 @@ public abstract class ProgramLocation {
             }
         }
         
+        /*
         public CallTargets getCallTargets() {
             if (!(q.getOperator() instanceof Invoke)) return null;
             jq_Method target = Invoke.getMethod(q).getMethod();
@@ -322,6 +320,21 @@ public abstract class ProgramLocation {
             return s;
         }
         
+        public byte getInvocationType() {
+            switch (getBytecode()) {
+                case (byte) jq_ClassFileConstants.jbc_INVOKEVIRTUAL:
+                    return BytecodeVisitor.INVOKE_VIRTUAL;
+                case (byte) jq_ClassFileConstants.jbc_INVOKESPECIAL:
+                    return BytecodeVisitor.INVOKE_SPECIAL;
+                case (byte) jq_ClassFileConstants.jbc_INVOKEINTERFACE:
+                    return BytecodeVisitor.INVOKE_INTERFACE;
+                case (byte) jq_ClassFileConstants.jbc_INVOKESTATIC:
+                case (byte) jq_ClassFileConstants.jbc_MULTIANEWARRAY:
+                    return BytecodeVisitor.INVOKE_STATIC;
+                default:
+                    return -1;
+            }
+        }
         /*
         public CallTargets getCallTargets() {
             jq_Class clazz = ((jq_Method) super.m).getDeclaringClass();
