@@ -9,6 +9,7 @@ import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -27,6 +28,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.sf.javabdd.BDD;
+import org.sf.javabdd.BDDBitVector;
 import org.sf.javabdd.BDDDomain;
 import org.sf.javabdd.BDDFactory;
 import org.sf.javabdd.BDDPairing;
@@ -109,6 +111,7 @@ public class PA {
     Set rootMethods = new HashSet();
     
     CallGraph cg;
+    ObjectCreationGraph ocg;
     
     BDDFactory bdd;
     
@@ -117,7 +120,7 @@ public class PA {
     
     int V_BITS=17, I_BITS=16, H_BITS=15, Z_BITS=5, F_BITS=12, T_BITS=12, N_BITS=13, M_BITS=14;
     int VC_BITS=1, HC_BITS=1;
-    int MAX_VC_BITS = Integer.parseInt(System.getProperty("pa.maxvc", "40"));
+    int MAX_VC_BITS = Integer.parseInt(System.getProperty("pa.maxvc", "32"));
     int MAX_HC_BITS = Integer.parseInt(System.getProperty("pa.maxhc", "6"));
     
     IndexMap/*Node*/ Vmap;
@@ -169,8 +172,9 @@ public class PA {
     
     BDDPairing V1toV2, V2toV1, H1toH2, H2toH1, V1H1toV2H2, V2H2toV1H1;
     BDDPairing V1ctoV2c, V1cV2ctoV2cV1c, V1cH1ctoV2cV1c;
+    BDDPairing T2toT1, T1toT2;
     BDD V1set, V2set, H1set, H2set, T1set, T2set, Fset, Mset, Nset, Iset, Zset;
-    BDD V1V2set, V1Fset, V1FV2set, V1H1set, H1Fset, H2Fset, H1FH2set;
+    BDD V1V2set, V1Fset, V2Fset, V1FV2set, V1H1set, H1Fset, H2Fset, H1H2set, H1FH2set;
     BDD IMset, INset, IV1set, INV1set, INH1set, INT2set, T2Nset, MZset;
     BDD V1cV2cset, V1cH1cset, H1cH2cset;
     
@@ -184,6 +188,8 @@ public class PA {
     }
     
     public void initializeBDD(String bddfactory) {
+        if (CONTEXT_SENSITIVE) bddnodes *= 2;
+        
         if (bddfactory == null)
             bdd = BDDFactory.init(bddnodes, bddcache);
         else
@@ -210,6 +216,17 @@ public class PA {
         int[] ordering = bdd.makeVarOrdering(reverseLocal, varorder);
         bdd.setVarOrder(ordering);
         
+        V1ctoV2c = bdd.makePair(V1c, V2c);
+        V1cV2ctoV2cV1c = bdd.makePair();
+        V1cV2ctoV2cV1c.set(new BDDDomain[] {V1c,V2c},
+                           new BDDDomain[] {V2c,V1c});
+        if (OBJECT_SENSITIVE) {
+            V1cH1ctoV2cV1c = bdd.makePair();
+            V1cH1ctoV2cV1c.set(new BDDDomain[] {V1c,H1c},
+                               new BDDDomain[] {V2c,V1c});
+        }
+        T2toT1 = bdd.makePair(T2, T1);
+        T1toT2 = bdd.makePair(T1, T2);
         if (CONTEXT_SENSITIVE || OBJECT_SENSITIVE) {
             V1toV2 = bdd.makePair();
             V1toV2.set(new BDDDomain[] {V1,V1c},
@@ -226,19 +243,10 @@ public class PA {
             V2H2toV1H1 = bdd.makePair();
             V2H2toV1H1.set(new BDDDomain[] {V2,H2,V2c,H2c},
                            new BDDDomain[] {V1,H1,V1c,H1c});
-            V1ctoV2c = bdd.makePair(V1c, V2c);
-            V1cV2ctoV2cV1c = bdd.makePair();
-            V1cV2ctoV2cV1c.set(new BDDDomain[] {V1c,V2c},
-                               new BDDDomain[] {V2c,V1c});
             if (FILTER_HP) {
                 H1toH2 = bdd.makePair();
                 H1toH2.set(new BDDDomain[] {H1,H1c},
                            new BDDDomain[] {H2,H2c});
-            }
-            if (OBJECT_SENSITIVE) {
-                V1cH1ctoV2cV1c = bdd.makePair();
-                V1cH1ctoV2cV1c.set(new BDDDomain[] {V1c,H1c},
-                                   new BDDDomain[] {V2c,V1c});
             }
         } else {
             V1toV2 = bdd.makePair(V1, V2);
@@ -279,6 +287,7 @@ public class PA {
         V1FV2set = V1V2set.and(Fset);
         V1H1set = V1set.and(H1set);
         V1Fset = V1set.and(Fset);
+        V2Fset = V2set.and(Fset);
         IV1set = Iset.and(V1.set());
         IMset = Iset.and(Mset);
         INset = Iset.and(Nset);
@@ -287,6 +296,7 @@ public class PA {
         INT2set = INset.and(T2set);
         H1Fset = H1set.and(Fset);
         H2Fset = H2set.and(Fset);
+        H1H2set = H1set.and(H2set);
         H1FH2set = H1Fset.and(H2set);
         T2Nset = T2set.and(Nset);
         MZset = Mset.and(Zset);
@@ -1096,7 +1106,8 @@ public class PA {
         
         for (int outer = 1; ; ++outer) {
             BDD new_vP_inner = vP.apply(old1_vP, BDDFactory.diff);
-            for (int inner = 1; !new_vP_inner.isZero(); ++inner) {
+            int inner;
+            for (inner = 1; !new_vP_inner.isZero() && inner < 256; ++inner) {
                 if (TRACE_SOLVER)
                     out.print("Inner #"+inner+": new vP "+new_vP_inner.satCount(V1H1set));
                 
@@ -1147,7 +1158,7 @@ public class PA {
             old1_vP = vP.id();
             
             BDD new_hP = hP.apply(old1_hP, BDDFactory.diff);
-            if (new_hP.isZero()) break;
+            if (new_hP.isZero() && inner < 256) break;
             old1_hP = hP.id();
             
             if (TRACE_SOLVER)
@@ -1463,25 +1474,29 @@ public class PA {
         return null;
     }
     
-    public void run(CallGraph cg, Collection rootMethods) throws IOException {
-        run(null, cg, rootMethods);
-    }
-    public void run(String bddfactory, CallGraph cg, Collection rootMethods) throws IOException {
+    public void addDefaults() {
         // Add the default static variables (System in/out/err...)
         GlobalNode.GLOBAL.addDefaultStatics();
         
         // If using object-sensitive, initialize the object creation graph.
-        ObjectCreationGraph ocg = null;
+        this.ocg = null;
         if (OBJECT_SENSITIVE) {
-            ocg = new ObjectCreationGraph();
+            this.ocg = new ObjectCreationGraph();
             //ocg.handleCallGraph(cg);
-            ocg.addRoot(null);
+            this.ocg.addRoot(null);
             for (Iterator i = ConcreteObjectNode.getAll().iterator(); i.hasNext(); ) {
                 ConcreteObjectNode con = (ConcreteObjectNode) i.next();
                 if (con.getDeclaredType() == null) continue;
-                ocg.addEdge(null, (Node) null, con.getDeclaredType());
+                this.ocg.addEdge(null, (Node) null, con.getDeclaredType());
             }
         }
+    }
+    
+    public void run(CallGraph cg, Collection rootMethods) throws IOException {
+        run(null, cg, rootMethods);
+    }
+    public void run(String bddfactory, CallGraph cg, Collection rootMethods) throws IOException {
+        addDefaults();
         
         // If we have a call graph, use it for numbering and calculating domain sizes.
         if (cg != null) {
@@ -1830,13 +1845,25 @@ public class PA {
         
         // Set types for loaded BDDs.
         if (pa.A instanceof TypedBDD)
-            ((TypedBDD) pa.A).setDomains(pa.V1, pa.V1c, pa.V2, pa.V2c);
+            if (pa.CONTEXT_SENSITIVE || pa.OBJECT_SENSITIVE)
+                ((TypedBDD) pa.A).setDomains(pa.V1, pa.V1c, pa.V2, pa.V2c);
+            else
+                ((TypedBDD) pa.A).setDomains(pa.V1, pa.V2);
         if (pa.vP instanceof TypedBDD)
-            ((TypedBDD) pa.vP).setDomains(pa.V1, pa.V1c, pa.H1, pa.H1c);
+            if (pa.CONTEXT_SENSITIVE || pa.OBJECT_SENSITIVE)
+                ((TypedBDD) pa.vP).setDomains(pa.V1, pa.V1c, pa.H1, pa.H1c);
+            else
+                ((TypedBDD) pa.vP).setDomains(pa.V1, pa.H1);
         if (pa.S instanceof TypedBDD)
-            ((TypedBDD) pa.S).setDomains(pa.V1, pa.V1c, pa.F, pa.V2, pa.V2c);
+            if (pa.CONTEXT_SENSITIVE || pa.OBJECT_SENSITIVE)
+                ((TypedBDD) pa.S).setDomains(pa.V1, pa.V1c, pa.F, pa.V2, pa.V2c);
+            else
+                ((TypedBDD) pa.S).setDomains(pa.V1, pa.F, pa.V2);
         if (pa.L instanceof TypedBDD)
-            ((TypedBDD) pa.L).setDomains(pa.V1, pa.V1c, pa.F, pa.V2, pa.V2c);
+            if (pa.CONTEXT_SENSITIVE || pa.OBJECT_SENSITIVE)
+                ((TypedBDD) pa.L).setDomains(pa.V1, pa.V1c, pa.F, pa.V2, pa.V2c);
+            else
+                ((TypedBDD) pa.L).setDomains(pa.V1, pa.F, pa.V2);
         if (pa.vT instanceof TypedBDD)
             ((TypedBDD) pa.vT).setDomains(pa.V1, pa.T1);
         if (pa.hT instanceof TypedBDD)
@@ -1870,7 +1897,10 @@ public class PA {
             ((TypedBDD) pa.fC).setDomains(pa.F, pa.T2);
 
         if (pa.hP instanceof TypedBDD)
-            ((TypedBDD) pa.hP).setDomains(pa.H1, pa.H1c, pa.F, pa.H2, pa.H2c);
+            if (pa.CONTEXT_SENSITIVE || pa.OBJECT_SENSITIVE)
+                ((TypedBDD) pa.hP).setDomains(pa.H1, pa.H1c, pa.F, pa.H2, pa.H2c);
+            else
+                ((TypedBDD) pa.hP).setDomains(pa.H1, pa.F, pa.H2);
         if (pa.IE instanceof TypedBDD)
             ((TypedBDD) pa.IE).setDomains(pa.I, pa.M);
         if (pa.IEcs instanceof TypedBDD)
@@ -1899,6 +1929,8 @@ public class PA {
         out.writeBytes("M="+M_BITS+"\n");
         out.writeBytes("VC="+VC_BITS+"\n");
         out.writeBytes("HC="+HC_BITS+"\n");
+        out.writeBytes("CS="+(CONTEXT_SENSITIVE?"yes":"no")+"\n");
+        out.writeBytes("OS="+(OBJECT_SENSITIVE?"yes":"no")+"\n");
         out.writeBytes("Order="+varorder+"\n");
         out.writeBytes("Reverse="+reverseLocal+"\n");
     }
@@ -1931,6 +1963,10 @@ public class PA {
                 VC_BITS = Integer.parseInt(s2);
             } else if (s1.equals("HC")) {
                 HC_BITS = Integer.parseInt(s2);
+            } else if (s1.equals("CS")) {
+                CONTEXT_SENSITIVE = s2.equals("yes");
+            } else if (s1.equals("OS")) {
+                OBJECT_SENSITIVE = s2.equals("yes");
             } else if (s1.equals("Order")) {
                 varorder = s2;
             } else if (s1.equals("Reverse")) {
@@ -1940,7 +1976,6 @@ public class PA {
             }
         }
         if (VC_BITS > 1 || HC_BITS > 1) {
-            CONTEXT_SENSITIVE = true;
             MAX_VC_BITS = VC_BITS;
             MAX_HC_BITS = HC_BITS;
         }
@@ -2082,13 +2117,37 @@ public class PA {
     
     public final HeapPathSelector heapPathSelector = new HeapPathSelector();
     
+    static Set polyClasses;
+    static void initPolyClasses() {
+        if (polyClasses != null) return;
+        polyClasses = new HashSet();
+        File f = new File("polyclasses");
+        if (f.exists()) {
+            try {
+                DataInput in = new DataInputStream(new FileInputStream(f));
+                for (;;) {
+                    String s = in.readLine();
+                    if (s == null) break;
+                    polyClasses.add(jq_Type.parseType(s));
+                }
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    
     public class HeapPathSelector implements Selector {
 
         jq_Class collection_class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljava/util/Collection;");
         jq_Class map_class = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljava/util/Map;");
+        jq_Class throwable_class = (jq_Class) PrimordialClassLoader.getJavaLangThrowable();
         HeapPathSelector() {
+            initPolyClasses();
             collection_class.prepare();
             map_class.prepare();
+            throwable_class.prepare();
         }
         
         /* (non-Javadoc)
@@ -2115,6 +2174,10 @@ public class PA {
                     return false;
                 }
                 type.prepare();
+                if (!polyClasses.isEmpty() && !polyClasses.contains(type))
+                    return false;
+                if (type.isSubtypeOf(throwable_class))
+                    return false;
                 //if (!type.isSubtypeOf(collection_class) &&
                 //    !type.isSubtypeOf(map_class))
                 //    return false;
@@ -2369,7 +2432,77 @@ public class PA {
     }
     
     Map V1H1correspondence;
+    
     public void buildVarHeapCorrespondence(CallGraph cg) {
+        if (VerifyAssertions)
+            Assert._assert(CONTEXT_SENSITIVE);
+        BDDPairing V2cH2ctoV1cH1c = bdd.makePair();
+        V2cH2ctoV1cH1c.set(new BDDDomain[] {V2c, H2c}, new BDDDomain[] {V1c, H1c});
+        BDDPairing V2ctoV1c = bdd.makePair(V2c, V1c);
+        BDDPairing H2ctoH1c = bdd.makePair(H2c, H1c);
+        BDD V1cset = V1c.set();
+        BDD H1cset = H1c.set();
+        
+        V1H1correspondence = new HashMap();
+        for (Iterator i = cg.getAllMethods().iterator(); i.hasNext(); ) {
+            jq_Method m = (jq_Method) i.next();
+            Range r1 = vCnumbering.getRange(m);
+            Range r2 = hCnumbering.getRange(m);
+            BDD relation;
+            if (r1.equals(r2)) {
+                relation = V1c.buildAdd(H1c, BigInteger.valueOf(r1.high.longValue()).bitLength(), 0);
+                relation.andWith(V1c.varRange(r1.low.longValue(), r1.high.longValue()));
+            } else {
+                long v_val = r1.high.longValue()+1;
+                long h_val = r2.high.longValue()+1;
+                
+                if (h_val == 1L) {
+                    relation = V1c.varRange(r1.low.longValue(), r1.high.longValue());
+                    relation.andWith(H1c.ithVar(0));
+                } else {
+                    int v_bits = BigInteger.valueOf(v_val).bitLength();
+                    int h_bits = BigInteger.valueOf(h_val).bitLength();
+                    // make it faster.
+                    h_val = 1 << h_bits;
+                    
+                    int[] v = new int[v_bits];
+                    for (int j = 0; j < v_bits; ++j) {
+                        v[j] = V1c.vars()[j];
+                    }
+                    BDDBitVector v_vec = bdd.buildVector(v);
+                    BDDBitVector z = v_vec.divmod(h_val, false);
+                    
+                    //int h_bits = BigInteger.valueOf(h_val).bitLength();
+                    //int[] h = new int[h_bits];
+                    //for (int j = 0; j < h_bits; ++j) {
+                    //    h[j] = H1c.vars()[j];
+                    //}
+                    //BDDBitVector h_vec = bdd.buildVector(h);
+                    BDDBitVector h_vec = bdd.buildVector(H1c);
+                    
+                    relation = bdd.one();
+                    int n;
+                    for (n = 0; n < h_vec.size() || n < v_vec.size(); n++) {
+                        BDD a = (n < v_vec.size()) ? z.getBit(n) : bdd.zero();
+                        BDD b = (n < h_vec.size()) ? h_vec.getBit(n) : bdd.zero();
+                        relation.andWith(a.biimp(b));
+                    }
+                    for ( ; n < V1c.varNum() || n < H1c.varNum(); n++) {
+                        if (n < V1c.varNum())
+                            relation.andWith(bdd.nithVar(V1c.vars()[n]));
+                        if (n < H1c.varNum())
+                            relation.andWith(bdd.nithVar(H1c.vars()[n]));
+                    }
+                    relation.andWith(V1c.varRange(r1.low.longValue(), r1.high.longValue()));
+                    //System.out.println(v_val+" / "+h_val+" = "+relation.and(V1c.varRange(0, 100)).toStringWithDomains());
+                    v_vec.free(); h_vec.free(); z.free();
+                }
+            }
+            V1H1correspondence.put(m, relation);
+        }
+    }
+    
+    public void buildExactVarHeapCorrespondence(CallGraph cg) {
         if (VerifyAssertions)
             Assert._assert(CONTEXT_SENSITIVE);
         BDDPairing V2cH2ctoV1cH1c = bdd.makePair();
