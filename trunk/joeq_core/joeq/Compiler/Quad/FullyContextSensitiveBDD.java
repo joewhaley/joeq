@@ -68,6 +68,9 @@ public class FullyContextSensitiveBDD {
         jq_Class c = (jq_Class) jq_Type.parseType(args[0]);
         c.prepare();
         Collection roots = Arrays.asList(c.getDeclaredStaticMethods());
+        
+        System.out.print("Setting up initial call graph...");
+        long time = System.currentTimeMillis();
         CallGraph cg;
         if (USE_CHA) {
             cg = new RootedCHACallGraph();
@@ -79,9 +82,17 @@ public class FullyContextSensitiveBDD {
             cg = pa.goIncremental(roots);
             pa.done();
         }
+        time = System.currentTimeMillis() - time;
+        System.out.println("done. ("+time/1000.+" seconds)");
+        
+        System.out.print("Calculating reachable methods...");
+        time = System.currentTimeMillis();
         /* Calculate the reachable methods once to touch each method,
            so that the set of types are stable. */
         cg.calculateReachableMethods(roots);
+        time = System.currentTimeMillis() - time;
+        System.out.println("done. ("+time/1000.+" seconds)");
+        
         FullyContextSensitiveBDD dis = new FullyContextSensitiveBDD(cg, DEFAULT_NODE_COUNT, DEFAULT_CACHE_SIZE);
         
         dis.go(roots);
@@ -116,7 +127,7 @@ public class FullyContextSensitiveBDD {
     private final CallGraph cg;
     
     // the size of domains, can be changed to reflect the size of inputs
-    int domainBits[] = {18, 18, 18, 18, 13};
+    int domainBits[] = {20, 20, 20, 20, 13};
     int domainSpos[] = {0,  0,  0,  0,  0 };
     BDDDomain           V1, V2, V3, V4, FD;
 
@@ -192,7 +203,7 @@ public class FullyContextSensitiveBDD {
             boolean change = false;
             for (int i=0; i<nodes.length; ++i) {
                 jq_Method m = (jq_Method) nodes[i];
-                System.out.print(Strings.left("SCC"+scc.getId()+" node "+i+": "+m.getDeclaringClass().shortName()+"."+m.getName()+"() "+variableIndexMap.size()+" vars", 78));
+                System.out.print(Strings.left("SCC"+scc.getId()+" node "+(i+1)+"/+"+nodes.length+": "+m.getDeclaringClass().shortName()+"."+m.getName()+"() "+variableIndexMap.size()+" vars", 78));
                 if (TRACE_WORKLIST) System.out.println();
                 else System.out.print("\r");
                 if (m.getBytecode() == null) continue;
@@ -304,24 +315,37 @@ public class FullyContextSensitiveBDD {
             stores = bdd.zero();
             edges = bdd.zero();
             
+            long time = System.currentTimeMillis();
             // add edges for all local stuff.
             for (Iterator i=ms.nodeIterator(); i.hasNext(); ) {
                 Node n = (Node) i.next();
                 handleNode(n);
             }
+            time = System.currentTimeMillis() - time;
+            if (TRACE_TIMES || time > 400) System.out.println("Converting method to BDD sets: "+(time/1000.));
             
+            time = System.currentTimeMillis();
+            // match up edges for local stuff.
+            matchEdges2();
+            time = System.currentTimeMillis() - time;
+            if (TRACE_TIMES || time > 400) System.out.println("Matching local edges: "+(time/1000.));
+            
+            time = System.currentTimeMillis();
             // calculate the set of things reachable from local stuff.
             transitiveClosure(nodes);
+            time = System.currentTimeMillis() - time;
+            if (TRACE_TIMES || time > 400) System.out.println("Local transitive closure: "+(time/1000.));
             
-            // add edges for the effects of all callee methods.
-            doCallees();
         }
         
         boolean visit() {
             boolean change = false;
             
-            // propagate loads/stores.
-            if (matchEdges_incremental()) change = true;
+            // add edges for the effects of all callee methods.
+            long time = System.currentTimeMillis();
+            if (doCallees2()) change = true;
+            time = System.currentTimeMillis() - time;
+            if (TRACE_TIMES || time > 400) System.out.println("Doing callees on visit: "+(time/1000.));
             
             return change;
         }
@@ -512,7 +536,7 @@ public class FullyContextSensitiveBDD {
                     
                     time = System.currentTimeMillis();
                     // propagate loads/stores.
-                    matchEdges_incremental();
+                    matchEdges2();
                     time = System.currentTimeMillis() - time;
                     if (TRACE_TIMES || time > 400) System.out.println("Matching edges: "+(time/1000.));
                     
@@ -535,6 +559,180 @@ public class FullyContextSensitiveBDD {
                         params[j].free();
                 }
             }
+        }
+        
+        boolean doCallees2() {
+            BDD newEdges = bdd.zero();
+            BDD newLoads = bdd.zero();
+            BDD newStores = bdd.zero();
+            
+            // find all call sites.
+            for (Iterator i=ms.getCalls().iterator(); i.hasNext(); ) {
+                ProgramLocation mc = (ProgramLocation) i.next();
+                if (TRACE_CALLEE) System.out.println("Visiting call site "+mc);
+                
+                // build up an array of BDD's corresponding to each of the
+                // parameters passed into this method call.
+                BDD[] params = new BDD[mc.getNumParams()];
+                for (int j=0; j<mc.getNumParams(); j++) {
+                    jq_Type t = (jq_Type) mc.getParamType(j);
+                    if (!(t instanceof jq_Reference)) continue;
+                    PassedParameter pp = new PassedParameter(mc, j);
+                    Set s = ms.getNodesThatCall(pp);
+                    params[j] = bdd.zero();
+                    for (Iterator k=s.iterator(); k.hasNext(); ) {
+                        int m = getVariableIndex((Node) k.next());
+                        params[j].orWith(V3.ithVar(m));
+                    }
+                    if (TRACE_CALLEE) System.out.println("Params["+j+"]="+params[j].toStringWithDomains(bdd, ts));
+                }
+                
+                // find all targets of this call.
+                Collection targets = cg.getTargetMethods(mc);
+                for (Iterator j=targets.iterator(); j.hasNext(); ) {
+                    jq_Method target = (jq_Method) j.next();
+                    if (TRACE_CALLEE) System.out.print("Target "+target);
+                    if (target.getBytecode() == null) {
+                        // TODO: calls to native methods.
+                        if (TRACE_CALLEE) System.out.println("... native method!");
+                        continue;
+                    }
+                    ControlFlowGraph cfg = CodeCache.getCode(target);
+                    MethodSummary ms_callee = MethodSummary.getSummary(cfg);
+                    BDDMethodSummary callee = getBDDSummary(ms_callee);
+                    if (callee == null) {
+                        if (TRACE_CALLEE) System.out.println("... no BDD summary yet!");
+                        continue;
+                    }
+                    
+                    // renumber if there is any overlap in node numbers.
+                    BDD overlap = nodes.and(callee.nodes);
+                    BDD renumbering24 = null;
+                    BDD renumbering14 = null;
+                    BDD renumbering34 = null;
+                    if (!overlap.equals(bdd.zero())) {
+                        if (TRACE_OVERLAP) System.out.println("... non-zero overlap! "+overlap.toStringWithDomains(bdd, ts));
+                        long time = System.currentTimeMillis();
+                        BDD callee_used = callee.nodes.id();
+                        renumbering24 = bdd.zero();
+                        for (;;) {
+                            int p = callee_used.scanVar(V2);
+                            if (p < 0) break;
+                            BDD pth = V2.ithVar(p);
+                            int q;
+                            if (nodes.and(pth).equals(bdd.zero())) {
+                                q = p;
+                            } else {
+                                q = getNewVariableIndex(mc, target, p);
+                                if (TRACE_OVERLAP) System.out.println("Variable "+p+" overlaps, new variable index "+q);
+                            }
+                            BDD qth = V4.ithVar(q);
+                            qth.andWith(pth.id());
+                            renumbering24.orWith(qth);
+                            callee_used.applyWith(pth, BDDFactory.diff);
+                        }
+                        renumbering14 = renumbering24.replace(V2toV1);
+                        renumbering34 = renumbering24.replace(V2toV3);
+                        time = System.currentTimeMillis() - time;
+                        if (TRACE_TIMES || time > 400) System.out.println("Build renumbering: "+(time/1000.));
+                    } else {
+                        if (TRACE_CALLEE) System.out.println("...zero overlap!");
+                    }
+                    
+                    overlap.free();
+                    long time = System.currentTimeMillis();
+                    BDD callee_loads = renumber(callee.loads, renumbering14, V1.set(), V4toV1, renumbering24, V2.set(), V4toV2);
+                    BDD callee_stores = renumber(callee.stores, renumbering24, V2.set(), V4toV2, renumbering34, V3.set(), V4toV3);
+                    BDD callee_edges = renumber(callee.edges, renumbering14, V1.set(), V4toV1, renumbering34, V3.set(), V4toV3);
+                    /* BDD callee_nodes = renumber(callee.nodes, renumbering24, V2.set(), V4toV2); */
+                    time = System.currentTimeMillis() - time;
+                    if (TRACE_TIMES || time > 400) System.out.println("Renumbering: "+(time/1000.));
+                    
+                    if (TRACE_CALLEE) { 
+                        System.out.println("New loads: "+callee_loads.toStringWithDomains(bdd, ts));
+                        System.out.println("New stores: "+callee_stores.toStringWithDomains(bdd, ts));
+                        System.out.println("New edges: "+callee_edges.toStringWithDomains(bdd, ts));
+                    }
+                    
+                    // incorporate callee operations into caller.
+                    newLoads.orWith(callee_loads);
+                    newStores.orWith(callee_stores);
+                    newEdges.orWith(callee_edges);
+                    
+                    // add edges for parameters.
+                    for (int k=0; k<callee.ms.getNumOfParams(); ++k) {
+                        ParamNode pn = callee.ms.getParamNode(k);
+                        if (pn == null) continue;
+                        int pnIndex = getVariableIndex(pn);
+                        BDD tmp = V1.ithVar(pnIndex);
+                        BDD paramEdge = renumber(tmp, renumbering14, V1.set(), V4toV1);
+                        tmp.free();
+                        paramEdge.andWith(params[k].id());
+                        if (TRACE_CALLEE) System.out.println("Param#"+k+" edges "+paramEdge.toStringWithDomains(bdd, ts));
+                        newEdges.orWith(paramEdge);
+                    }
+                    
+                    // add edges for return value, if one exists.
+                    if (((jq_Method)callee.ms.method).getReturnType().isReferenceType() &&
+                        !callee.ms.returned.isEmpty()) {
+                        ReturnedNode rvn = (ReturnValueNode) ms.callToRVN.get(mc);
+                        if (rvn != null) {
+                            BDD retVal = bdd.zero();
+                            for (Iterator k=callee.ms.returned.iterator(); k.hasNext(); ) {
+                                int nIndex = getVariableIndex((Node) k.next());
+                                BDD tmp = V3.ithVar(nIndex);
+                                retVal.orWith(renumber(tmp, renumbering34, V3.set(), V4toV3));
+                                tmp.free();
+                            }
+                            int rIndex = getVariableIndex(rvn);
+                            retVal.andWith(V1.ithVar(rIndex));
+                            if (TRACE_CALLEE) System.out.println("Return value edges "+retVal.toStringWithDomains(bdd, ts));
+                            newEdges.orWith(retVal);
+                        }
+                    }
+                    // add edges for thrown exception, if one exists.
+                    if (!callee.ms.thrown.isEmpty()) {
+                        ReturnedNode rvn = (ThrownExceptionNode) ms.callToTEN.get(mc);
+                        if (rvn != null) {
+                            BDD retVal = bdd.zero();
+                            for (Iterator k=callee.ms.returned.iterator(); k.hasNext(); ) {
+                                int nIndex = getVariableIndex((Node) k.next());
+                                BDD tmp = V3.ithVar(nIndex);
+                                retVal.orWith(renumber(tmp, renumbering34, V3.set(), V4toV3));
+                                tmp.free();
+                            }
+                            int rIndex = getVariableIndex(rvn);
+                            retVal.andWith(V1.ithVar(rIndex));
+                            if (TRACE_CALLEE) System.out.println("Thrown exception edges "+retVal.toStringWithDomains(bdd, ts));
+                            newEdges.orWith(retVal);
+                        }
+                    }
+                    
+                    if (renumbering14 != null) {
+                        renumbering14.free();
+                        renumbering24.free();
+                        renumbering34.free();
+                    }
+                }
+                for (int j=0; j<mc.getNumParams(); ++j) {
+                    if (params[j] != null)
+                        params[j].free();
+                }
+            }
+            
+            long time = System.currentTimeMillis();
+            BDD newerEdges = matchNewLoadsAndStores(newLoads, newStores);
+            time = System.currentTimeMillis() - time;
+            if (TRACE_TIMES || time > 400) System.out.println("Matching new loads and stores: "+(time/1000.));
+            
+            newEdges.orWith(newerEdges);
+            
+            time = System.currentTimeMillis();
+            boolean b2 = matchNewEdges(newEdges);
+            time = System.currentTimeMillis() - time;
+            if (TRACE_TIMES || time > 400) System.out.println("Matching new edges: "+(time/1000.));
+            
+            return b2;
         }
         
         BDD renumber(BDD src, BDD renumbering_ac, BDD Aset, BDDPairing CtoA) {
@@ -760,6 +958,252 @@ public class FullyContextSensitiveBDD {
             V4andFDset.free();
             if (TRACE_MATCHING) System.out.println("Done matching edges.");
             return change;
+        }
+        
+        boolean matchEdges2() {
+            if (TRACE_MATCHING) System.out.println("Matching edges...");
+            
+            BDD V2set, V4set, V2andFDset;
+            V2set = V2.set();
+            V4set = V4.set();
+            V2andFDset = V2.set(); V2andFDset.andWith(FD.set());
+            
+            // Keep track of whether there was a change.
+            boolean change = false;
+            
+            // Make a copy of edges that goes V2xV4.
+            BDD edges24 = edges.replace(V1V3toV2V4);
+            for (;;) {
+                
+                // Repeat for transitive closure.
+                for (;;) {
+                    BDD edges12 = edges.replace(V3toV2);
+                    BDD edges23 = edges24.replace(V4toV3);
+                    // Transitive closure.
+                    // V1xV2 , V2xV3                        v1=v2; v2=v3;
+                    // -------------                        -------------
+                    //     V1xV3                                v1=v3;
+                    BDD newEdges = edges12.relprod(edges23, V2set);
+                    edges12.free(); edges23.free();
+                    edges.orWith(newEdges);
+                    
+                    // Check for termination.
+                    BDD newEdges24 = edges.replace(V1V3toV2V4);
+                    boolean done = edges24.equals(newEdges24);
+                    if (TRACE_MATCHING && !done) {
+                        System.out.println("New edges: "+newEdges24.apply(edges24, BDDFactory.diff).toStringWithDomains(bdd, ts));
+                    }
+                    edges24.free();
+                    edges24 = newEdges24;
+                    if (done) break;
+                    change = true;
+                }
+                
+                // Matching rules:
+                
+                // Match loads and stores.
+                // V1x(V2xFD) , V2xV4 , V3xV4 , (V3xFD)xV5   v1=v2.fd; v2=v4; v3=v4; v3.fd=v5;
+                // ---------------------------------------   --------------------------------
+                //               V1x(V4xFD)                               v1=v5;
+                BDD tmpRel1 = loads.relprod(edges24, V2set);
+                BDD tmpRel2 = tmpRel1.relprod(edges24, V4set);
+                tmpRel1.free();
+                BDD tmpRel3 = tmpRel2.relprod(stores, V2andFDset);
+                tmpRel2.free();
+                edges.orWith(tmpRel3);
+                
+                // Check if any edges were added.
+                BDD newEdges24 = edges.replace(V1V3toV2V4);
+                boolean done = edges24.equals(newEdges24);
+                if (TRACE_MATCHING && !done) {
+                    System.out.println("New edges: "+newEdges24.apply(edges24, BDDFactory.diff).toStringWithDomains(bdd, ts));
+                }
+                edges24.free();
+                edges24 = newEdges24;
+                if (done) break;
+                change = true;
+            }
+            edges24.free();
+            V2set.free();
+            V4set.free();
+            V2andFDset.free();
+            if (TRACE_MATCHING) System.out.println("Done matching edges.");
+            return change;
+        }
+        
+        BDD matchNewLoadsAndStores(BDD newLoads, BDD newStores) {
+            if (newLoads.isZero() && newStores.isZero())
+                return bdd.zero();
+            
+            if (TRACE_MATCHING) System.out.println("Matching new loads and stores...");
+            
+            // subtract out loads/stores that already exist.
+            newLoads.applyWith(loads.id(), BDDFactory.diff);
+            newStores.applyWith(stores.id(), BDDFactory.diff);
+            
+            if (newLoads.isZero() && newStores.isZero())
+                return bdd.zero();
+            
+            loads.orWith(newLoads.id());
+            stores.orWith(newStores.id());
+            
+            BDD V2set = V2.set();
+            BDD V4set = V4.set();
+            BDD V2andFDset = V2.set(); V2andFDset.andWith(FD.set());
+            
+            BDD edges24 = edges.replace(V1V3toV2V4);
+            
+            BDD newerEdges = bdd.zero();
+            
+            if (!newLoads.isZero()) {
+                if (TRACE_MATCHING) {
+                    System.out.println("New loads: "+newLoads.toStringWithDomains(bdd, ts));
+                }
+                
+                BDD tmpRel1 = newLoads.relprod(edges24, V2set);
+                BDD tmpRel2 = tmpRel1.relprod(edges24, V4set);
+                tmpRel1.free();
+                BDD tmpRel3 = tmpRel2.relprod(stores, V2andFDset);
+                tmpRel2.free();
+                newerEdges.orWith(tmpRel3);
+            }
+            if (!newStores.isZero()) {
+                if (TRACE_MATCHING) {
+                    System.out.println("New stores: "+newStores.toStringWithDomains(bdd, ts));
+                }
+                
+                BDD tmpRel1 = newStores.relprod(edges24, V2set);
+                BDD tmpRel2 = tmpRel1.relprod(edges24, V4set);
+                tmpRel1.free();
+                BDD tmpRel3 = tmpRel2.relprod(loads, V2andFDset);
+                tmpRel2.free();
+                newerEdges.orWith(tmpRel3);
+            }
+            
+            edges24.free();
+            V2set.free(); V4set.free(); V2andFDset.free();
+            
+            if (TRACE_MATCHING && !newerEdges.isZero()) {
+                System.out.println("New edges from new loads/stores: "+newerEdges.toStringWithDomains(bdd, ts));
+            }
+            return newerEdges;
+        }
+            
+        boolean matchNewEdges(BDD newEdges) {
+            if (newEdges.isZero()) {
+                newEdges.free();
+                return false;
+            }
+            
+            if (TRACE_MATCHING) System.out.println("Matching new edges...");
+            
+            // subtract out edges that already exist.
+            newEdges.applyWith(edges.id(), BDDFactory.diff);
+            
+            // make a backup of the edges, so that we can find the added edges later.
+            BDD oldEdges13 = edges.id();
+            
+            if (newEdges.isZero()) {
+                newEdges.free();
+                return false;
+            }
+            
+            BDD oldEdges12 = edges.replace(V3toV2);
+            BDD oldEdges23 = edges.replace(V1toV2);
+            
+            BDD V2set = V2.set();
+            
+            // Repeat for transitive closure.
+            for (;;) {
+                if (TRACE_MATCHING) {
+                    System.out.println("New edges: "+newEdges.toStringWithDomains(bdd));
+                }
+                
+                BDD newEdges12 = newEdges.replace(V3toV2); // 14%
+                BDD newEdges23 = newEdges.replace(V1toV2); // 11%
+                
+                // match old edges against new edges.
+                BDD newerEdges = oldEdges12.relprod(newEdges23, V2set);
+                newerEdges.orWith(newEdges12.relprod(oldEdges23, V2set));
+                
+                // add new edges to edge set.
+                edges.orWith(newEdges);
+                
+                // subtract out edges that already exist.
+                newerEdges.applyWith(edges.id(), BDDFactory.diff);
+                
+                if (newerEdges.isZero()) {
+                    newerEdges.free();
+                    break;
+                }
+                
+                // update oldEdges12 and oldEdges23 for next iteration.
+                oldEdges12.orWith(newEdges12);
+                oldEdges23.orWith(newEdges23);
+                
+                // update newEdges for next iteration.
+                newEdges = newerEdges;
+                
+            }
+            oldEdges12.free();
+            oldEdges23.free();
+            
+            // get the set of edges that we added.
+            BDD newEdges24 = edges.id();
+            newEdges24.applyWith(oldEdges13, BDDFactory.diff);
+            newEdges24.replaceWith(V1V3toV2V4); // 26%
+            BDD edges24 = edges.replace(V1V3toV2V4); // 16%
+            
+            if (TRACE_MATCHING) {
+                System.out.println("Total new edges: "+newEdges24.toStringWithDomains(bdd));
+            }
+            
+            BDD V4set = V4.set();
+            BDD V2andFDset = V2.set(); V2andFDset.andWith(FD.set());
+            
+            BDD newerEdges = bdd.zero();
+            BDD tmpRel1, tmpRel2, tmpRel3;
+            
+            // Matching rules:
+            
+            // Match loads and stores.
+            // V1x(V2xFD) , V2xV4 , V3xV4 , (V3xFD)xV5   v1=v2.fd; v2=v4; v3=v4; v3.fd=v5;
+            // ---------------------------------------   --------------------------------
+            //               V1x(V4xFD)                               v1=v5;
+            
+            // new edges that cause more loads to match.
+            tmpRel1 = loads.relprod(newEdges24, V2set);
+            tmpRel2 = tmpRel1.relprod(edges24, V4set);
+            tmpRel1.free();
+            tmpRel3 = tmpRel2.relprod(stores, V2andFDset);
+            tmpRel2.free();
+            newerEdges.orWith(tmpRel3);
+            
+            // new edges that cause more stores to match.
+            tmpRel1 = stores.relprod(newEdges24, V2set);
+            tmpRel2 = tmpRel1.relprod(edges24, V4set);
+            tmpRel1.free();
+            tmpRel3 = tmpRel2.relprod(loads, V2andFDset);
+            tmpRel2.free();
+            newerEdges.orWith(tmpRel3);
+            
+            // subtract out existing edges.
+            newerEdges.applyWith(edges.id(), BDDFactory.diff);
+
+            if (TRACE_MATCHING) {
+                System.out.println("New edges from load/store matching: "+newerEdges.toStringWithDomains(bdd));
+            }
+            
+            V2set.free();
+            V4set.free();
+            V2andFDset.free();
+            
+            if (newerEdges.isZero()) {
+                newerEdges.free();
+            } else {
+                matchNewEdges(newerEdges);
+            }
+            return true;
         }
         
         boolean matchEdges_incremental() {
@@ -1017,7 +1461,7 @@ public class FullyContextSensitiveBDD {
     void makeVarOrdering(int[] varorder) {
         
         boolean reverseLocal = System.getProperty("csbddreverse", "true").equals("true");
-        String ordering = System.getProperty("csbddordering", "FD_V4xV2xV3xV1");
+        String ordering = System.getProperty("csbddordering", "FD_V2xV4xV1xV3");
         
         int varnum = bdd.varNum();
         
