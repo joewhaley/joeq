@@ -22,7 +22,6 @@ public class Utf8 implements jq_ClassFileConstants {
 
     public static /*final*/ boolean TRACE = false;
     
-    public static final int SENTINEL = -1;
     public static final int STARTING_TABLE_SIZE = 16384;
     public static final int STARTING_HASH_SIZE = 9999;
     public static final int STARTING_CHAIN_SIZE = 4;
@@ -54,8 +53,8 @@ public class Utf8 implements jq_ClassFileConstants {
             return addToTable_helper(b, hash, chain, 0);
         }
         for (int i=0; i<chain.length; ++i) {
-            int id = chain[i];
-            if (id == SENTINEL) {
+            int id = chain[i]-1;
+            if (id == -1) { // end of chain
                 return addToTable_helper(b, hash, chain, i);
             }
             Utf8 utf8 = table[id];
@@ -85,8 +84,8 @@ public class Utf8 implements jq_ClassFileConstants {
             return addToTable_helper(b2, hash, chain, 0);
         }
         for (int i=0; i<chain.length; ++i) {
-            int id = chain[i];
-            if (id == SENTINEL) {
+            int id = chain[i]-1;
+            if (id == -1) { // end of chain
                 byte[] b2 = new byte[endIndex-startIndex];
                 System.arraycopy(b, startIndex, b2, 0, endIndex-startIndex);
                 return addToTable_helper(b2, hash, chain, i);
@@ -104,7 +103,7 @@ public class Utf8 implements jq_ClassFileConstants {
         byte[] b2 = new byte[endIndex-startIndex];
         System.arraycopy(b, startIndex, b2, 0, endIndex-startIndex);
         return addToTable_helper(b2, hash, newchain, chain.length);
-        // free chain
+        // free(chain)
         
         // todo: rehash when the table gets too full...
     }
@@ -280,7 +279,7 @@ here:
             jq.UNREACHABLE();
         }
         table[size] = new Utf8(b, hash);
-        chain[index] = size;
+        chain[index] = size+1;
         if (TRACE) System.out.println("allocated new Utf8: "+table[size]);
         return size;
     }
