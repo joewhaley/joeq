@@ -117,6 +117,7 @@ public class jq_Array extends jq_Reference implements jq_ClassFileConstants {
     new jq_Array(Utf8.get(""+(char)TC_ARRAY+(char)TC_SHORT), PrimordialClassLoader.loader, jq_Primitive.SHORT);
     public static final jq_Array BOOLEAN_ARRAY =
     new jq_Array(Utf8.get(""+(char)TC_ARRAY+(char)TC_BOOLEAN), PrimordialClassLoader.loader, jq_Primitive.BOOLEAN);
+    public static final jq_Array OBJECT_ARRAY = (jq_Array) PrimordialClassLoader.loader.getOrCreateBSType("[Ljava/lang/Object;");
     
     public static jq_Array getPrimitiveArrayType(byte atype) {
         switch(atype) {
