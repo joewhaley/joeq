@@ -130,15 +130,15 @@ public class BDDRelation extends Relation {
             while (!q.isZero()) {
                 long[] v = q.scanAllVar();
                 BDD t = solver.bdd.one();
-                for (int j = 0; j < v.length; ++j) {
-                    BDDDomain d = solver.bdd.getDomain(j);
+                for (Iterator j = domains.iterator(); j.hasNext(); ) {
+                    BDDDomain d = (BDDDomain) j.next();
                     if (!domains.contains(d)) continue;
                     if (quantifyOtherDomains(q, d).isOne()) {
                         dos.writeBytes("* ");
                         t.andWith(d.domain());
                     } else {
-                        dos.writeBytes(v[j]+" ");
-                        t.andWith(solver.bdd.getDomain(j).ithVar(v[j]));
+                        dos.writeBytes(v[d.getIndex()]+" ");
+                        t.andWith(d.ithVar(v[d.getIndex()]));
                     }
                 }
                 q.applyWith(t, BDDFactory.diff);
