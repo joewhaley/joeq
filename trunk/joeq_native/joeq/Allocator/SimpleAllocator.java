@@ -9,7 +9,7 @@
 
 package Allocator;
 
-import Clazz.jq_StaticMethod;
+import Clazz.jq_InstanceMethod;
 import Clazz.jq_Array;
 import Clazz.jq_Class;
 import Clazz.jq_Reference;
@@ -19,24 +19,48 @@ import Run_Time.Unsafe;
 import Run_Time.SystemInterface;
 import java.lang.reflect.Array;
 
-public abstract class SimpleAllocator implements ObjectLayout {
+public class SimpleAllocator extends HeapAllocator {
 
+    /** Size of blocks allocated from the OS.
+     */
     public static final int BLOCK_SIZE = 2097152;
-    public static final int LARGE_THRESHOLD = 262144;
-    private static int/*Address*/ heapFirst, heapCurrent, heapEnd;
-    private static final OutOfMemoryError outofmemoryerror = new OutOfMemoryError();
     
-    private static void outOfMemory()
+    /** Threshold for direct OS allocation.  When an array overflows the current block
+     * and is larger than this size, it is allocated directly from the OS.
+     */
+    public static final int LARGE_THRESHOLD = 262144;
+    
+    /** Pointers to the start, current, and end of the heap.
+     */
+    private int/*HeapAddress*/ heapFirst, heapCurrent, heapEnd;
+    
+    /** Perform initialization for this allocator.  This will be called before any other methods.
+     * This allocates an initial block of memory from the OS and sets up relevant pointers.
+     *
+     * @throws OutOfMemoryError if there is not enough memory for initialization
+     */
+    public final void init() 
     throws OutOfMemoryError {
-        throw outofmemoryerror;
+        if (0 == (heapCurrent = heapFirst = SystemInterface.syscalloc(BLOCK_SIZE)))
+            HeapAllocator.outOfMemory();
+        heapEnd = heapFirst + BLOCK_SIZE - 4;
     }
     
-    public static int freeMemory() {
+    /** Returns an estimate of the amount of free memory available.
+     *
+     * @return bytes of free memory
+     */
+    public final int freeMemory() {
         return heapEnd - heapCurrent;
     }
     
-    public static int totalMemory() {
-        int total = 0, ptr = heapFirst;
+    /** Returns an estimate of the total memory allocated (both used and unused).
+     *
+     * @return bytes of memory allocated
+     */
+    public final int totalMemory() {
+        int total = 0;
+        int/*HeapAddress*/ ptr = heapFirst;
         while (ptr != 0) {
             total += BLOCK_SIZE;
             ptr = Unsafe.peek(ptr+BLOCK_SIZE-4);
@@ -44,23 +68,24 @@ public abstract class SimpleAllocator implements ObjectLayout {
         return total;
     }
     
-    public static void init() 
-    throws OutOfMemoryError {
-        if (0 == (heapCurrent = heapFirst = SystemInterface.syscalloc(BLOCK_SIZE)))
-            outOfMemory();
-        heapEnd = heapFirst + BLOCK_SIZE - 4;
-    }
-    
-    public static Object allocateObject(int size, Object vtable)
+    /** Allocate an object with the default alignment.
+     * If the object cannot be allocated due to lack of memory, throws OutOfMemoryError.
+     *
+     * @param size size of object to allocate (including object header), in bytes
+     * @param vtable vtable pointer for new object
+     * @return new uninitialized object
+     * @throws OutOfMemoryError if there is insufficient memory to perform the operation
+     */
+    public final Object allocateObject(int size, Object vtable)
     throws OutOfMemoryError {
         jq.assert(size >= OBJ_HEADER_SIZE);
-        int addr = heapCurrent + OBJ_HEADER_SIZE;
+        int/*HeapAddress*/ addr = heapCurrent + OBJ_HEADER_SIZE;
         heapCurrent += size;
         if (heapCurrent > heapEnd) {
             // not enough space (rare path)
             jq.assert(size < BLOCK_SIZE-4);
             if (0 == (heapCurrent = SystemInterface.syscalloc(BLOCK_SIZE)))
-                outOfMemory();
+                HeapAllocator.outOfMemory();
             Unsafe.poke4(heapEnd, heapCurrent);
             heapEnd = heapCurrent + BLOCK_SIZE - 4;
             addr = heapCurrent + OBJ_HEADER_SIZE;
@@ -71,12 +96,39 @@ public abstract class SimpleAllocator implements ObjectLayout {
         return Unsafe.asObject(addr);
     }
     
-    public static Object allocateArray(int length, int size, Object vtable)
+    /** Allocate an object such that the first field is 8-byte aligned.
+     * If the object cannot be allocated due to lack of memory, throws OutOfMemoryError.
+     *
+     * @param size size of object to allocate (including object header), in bytes
+     * @param vtable vtable pointer for new object
+     * @return new uninitialized object
+     * @throws OutOfMemoryError if there is insufficient memory to perform the operation
+     */
+    public final Object allocateObjectAlign8(int size, Object vtable)
+    throws OutOfMemoryError {
+        int mask = (heapCurrent+OBJ_HEADER_SIZE) & 7;
+        if (mask != 0) heapCurrent += 8-mask;
+        return allocateObject(size, vtable);
+    }
+    
+    /** Allocate an array with the default alignment.
+     * If length is negative, throws NegativeArraySizeException.
+     * If the array cannot be allocated due to lack of memory, throws OutOfMemoryError.
+     *
+     * @param length length of new array
+     * @param size size of array to allocate (including array header), in bytes
+     * @param vtable vtable pointer for new array
+     * @return new array
+     * @throws NegativeArraySizeException if length is negative
+     * @throws OutOfMemoryError if there is insufficient memory to perform the operation
+     */
+    public final Object allocateArray(int length, int size, Object vtable)
     throws OutOfMemoryError, NegativeArraySizeException {
-        // TODO: alignment for long/double arrays
         if (length < 0) throw new NegativeArraySizeException(length+" < 0");
         jq.assert(size >= ARRAY_HEADER_SIZE);
-        int addr = heapCurrent + ARRAY_HEADER_SIZE;
+        int mask = size & 3;
+        if (mask != 0) size += 3-mask;
+        int/*HeapAddress*/ addr = heapCurrent + ARRAY_HEADER_SIZE;
         heapCurrent += size;
         if (heapCurrent > heapEnd) {
             // not enough space (rare path)
@@ -100,31 +152,34 @@ public abstract class SimpleAllocator implements ObjectLayout {
         Unsafe.poke4(addr+VTABLE_OFFSET, Unsafe.addressOf(vtable));
         return Unsafe.asObject(addr);
     }
-
-    public static Object clone(Object o) {
-        jq_Reference t = Unsafe.getTypeOf(o);
-        if (t.isClassType()) {
-            jq_Class k = (jq_Class)t;
-            Object p = allocateObject(k.getInstanceSize(), k.getVTable());
-            if (k.getInstanceSize()-OBJ_HEADER_SIZE > 0)
-                SystemInterface.memcpy(Unsafe.addressOf(p), Unsafe.addressOf(o), k.getInstanceSize()-OBJ_HEADER_SIZE);
-            return p;
-        } else {
-            jq.assert(t.isArrayType());
-            jq_Array k = (jq_Array)t;
-            int length = Array.getLength(o);
-            Object p = allocateArray(length, k.getInstanceSize(length), k.getVTable());
-            if (length > 0)
-                SystemInterface.memcpy(Unsafe.addressOf(p), Unsafe.addressOf(o), k.getInstanceSize(length)-ARRAY_HEADER_SIZE);
-            return p;
-        }
-    }
     
-    public static final jq_StaticMethod _allocateObject;
-    public static final jq_StaticMethod _allocateArray;
+    /** Allocate an array such that the elements are 8-byte aligned.
+     * If length is negative, throws NegativeArraySizeException.
+     * If the array cannot be allocated due to lack of memory, throws OutOfMemoryError.
+     *
+     * @param length length of new array
+     * @param size size of array to allocate (including array header), in bytes
+     * @param vtable vtable pointer for new array
+     * @return new array
+     * @throws NegativeArraySizeException if length is negative
+     * @throws OutOfMemoryError if there is insufficient memory to perform the operation
+     */
+    public final Object allocateArrayAlign8(int length, int size, Object vtable)
+    throws OutOfMemoryError, NegativeArraySizeException {
+        int mask = (heapCurrent+ARRAY_HEADER_SIZE) & 7;
+        if (mask != 0) heapCurrent += 8-mask;
+        return allocateArray(length, size, vtable);
+    }
+
+    public static final jq_InstanceMethod _allocateObject;
+    public static final jq_InstanceMethod _allocateObjectAlign8;
+    public static final jq_InstanceMethod _allocateArray;
+    public static final jq_InstanceMethod _allocateArrayAlign8;
     static {
         jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LAllocator/SimpleAllocator;");
-        _allocateObject = k.getOrCreateStaticMethod("allocateObject", "(ILjava/lang/Object;)Ljava/lang/Object;");
-        _allocateArray = k.getOrCreateStaticMethod("allocateArray", "(IILjava/lang/Object;)Ljava/lang/Object;");
+        _allocateObject = k.getOrCreateInstanceMethod("allocateObject", "(ILjava/lang/Object;)Ljava/lang/Object;");
+        _allocateObjectAlign8 = k.getOrCreateInstanceMethod("allocateObjectAlign8", "(ILjava/lang/Object;)Ljava/lang/Object;");
+        _allocateArray = k.getOrCreateInstanceMethod("allocateArray", "(IILjava/lang/Object;)Ljava/lang/Object;");
+        _allocateArrayAlign8 = k.getOrCreateInstanceMethod("allocateArrayAlign8", "(IILjava/lang/Object;)Ljava/lang/Object;");
     }
 }
