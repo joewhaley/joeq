@@ -305,7 +305,9 @@ public class BootstrapRootSet {
          */
         if (jqType.isArrayType()) {
             jq_Type elemType = ((jq_Array)jqType).getElementType();
-            if (elemType.isReferenceType()) {
+            if (elemType.isAddressType()) {
+                // no need to visit.
+            } else if (elemType.isReferenceType()) {
                 int length = java.lang.reflect.Array.getLength(o);
                 Object[] v = (Object[])o;
                 if (TRACE) out.println("Visiting "+jqType+" of "+length+" elements");
@@ -323,7 +325,9 @@ public class BootstrapRootSet {
                 if (!AddAllFields && !necessaryFields.contains(f))
                     continue;
                 jq_Type ftype = f.getType();
-                if (ftype.isReferenceType()) {
+                if (ftype.isAddressType()) {
+                    // no need to visit.
+                } else if (ftype.isReferenceType()) {
                     if (TRACE) out.println("Visiting field "+f);
                     Object o2 = Reflection.getfield_A(o, f);
                     addObjectAndSubfields(o2, objs);
@@ -352,7 +356,9 @@ public class BootstrapRootSet {
                     if (!necessaryFields.contains(f))
                         continue;
                     jq_Type ftype = f.getType();
-                    if (ftype.isReferenceType()) {
+                    if (ftype.isAddressType()) {
+                        // no need to visit.
+                    } else if (ftype.isReferenceType()) {
                         if (TRACE) out.println("Visiting field "+f+" of object of type "+clazz);
                         Object o2 = Reflection.getfield_A(o, f);
                         if (addObjectAndSubfields(o2, objs2))
@@ -375,6 +381,7 @@ public class BootstrapRootSet {
         while (i.hasNext()) {
             jq_Type t = (jq_Type)i.next();
             if (!t.isReferenceType()) continue;
+            if (t.isAddressType()) continue;
             jq_Reference r = (jq_Reference)t;
             if (!r.implementsInterface(interf)) continue;
             jq_InstanceMethod m2 = r.getVirtualMethod(i_m.getNameAndDesc());
