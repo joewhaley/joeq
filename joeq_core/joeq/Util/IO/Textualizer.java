@@ -45,6 +45,7 @@ public interface Textualizer {
         protected DataInput in;
         protected DataOutput out;
         protected StringTokenizer st;
+        protected String currentLine;
         
         public Simple(DataInput in) {
             this.in = in;
@@ -55,12 +56,12 @@ public interface Textualizer {
         }
         
         public StringTokenizer nextLine() throws IOException {
-            return st = new StringTokenizer(in.readLine());
+            return st = new StringTokenizer(currentLine = in.readLine());
         }
         
         protected void updateTokenizer() throws IOException {
             if (st == null || !st.hasMoreElements())
-                st = new StringTokenizer(in.readLine());
+                st = new StringTokenizer(currentLine = in.readLine());
         }
         
         public Textualizable readObject() throws IOException {
@@ -149,6 +150,7 @@ public interface Textualizer {
             Textualizable t = super.readObject();
             int s = map.size();
             int f = map.get(t);
+            if (f != s) System.out.println("object " + t + " is already in table, line=" + currentLine);
             Assert._assert(f == s);
             if (false) readEdges(t);
             if (deferredEdges != null) {
