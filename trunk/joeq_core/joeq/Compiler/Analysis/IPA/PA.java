@@ -2751,4 +2751,10 @@ public class PA {
             V1H1correspondence.put(callee, calleeRelation);
         }
     }
+    
+    public PAResults getResults() {
+        PAResults r = new PAResults(this);
+        r.cg = this.cg;
+        return r;
+    }
 }
