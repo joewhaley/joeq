@@ -47,6 +47,7 @@ public class AndersenPointerAnalysis {
     public static final boolean VerifyAssertions = false;
     public static boolean FULL_DUMP = false;
     
+    public static final boolean HANDLE_ESCAPE = true;
     public static final boolean USE_SOFT_REFERENCES = true;
     public static boolean FORCE_GC = false;
     public static final boolean REUSE_CACHES = true;
@@ -74,7 +75,11 @@ public class AndersenPointerAnalysis {
         }
         public static void doIt() {
             Set rootSet = INSTANCE.rootSet;
+            long time = System.currentTimeMillis();
             INSTANCE.iterate();
+            time = System.currentTimeMillis() - time;
+            System.out.println("First time: "+time);
+
             long mem1 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
             System.out.println("Used memory before gc: "+mem1);
             INSTANCE = new AndersenPointerAnalysis();
@@ -82,7 +87,7 @@ public class AndersenPointerAnalysis {
             System.gc();
             long mem2 = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
             System.out.println("Used memory after gc: "+mem2);
-            long time = System.currentTimeMillis();
+            time = System.currentTimeMillis();
             INSTANCE.iterate();
             time = System.currentTimeMillis() - time;
             
@@ -592,20 +597,22 @@ public class AndersenPointerAnalysis {
                     addEdgesFromConcreteNodes(n, f, (Node)o);
                 }
             }
-            if (n instanceof OutsideNode && n.escapes) {
-                Set s = getConcreteNodes(n);
-                if (TRACE) out.println("Escaping node "+n+" corresponds to concrete nodes "+s);
-                for (Iterator j=s.iterator(); j.hasNext(); ) {
-                    Node n2 = (Node)j.next();
-                    if (!n2.escapes) {
-                        n2.escapes = true;
-                        if ((TRACE_CHANGE && !this.change) || TRACE) {
-                            out.println("Changed! Concrete node "+n2+" escapes");
-                        }
-                        this.change = true;
-                    }
-                }
-            }
+	    if (HANDLE_ESCAPE) {
+		if (n instanceof OutsideNode && n.escapes) {
+		    Set s = getConcreteNodes(n);
+		    if (TRACE) out.println("Escaping node "+n+" corresponds to concrete nodes "+s);
+		    for (Iterator j=s.iterator(); j.hasNext(); ) {
+			Node n2 = (Node)j.next();
+			if (!n2.escapes) {
+			    n2.escapes = true;
+			    if ((TRACE_CHANGE && !this.change) || TRACE) {
+				out.println("Changed! Concrete node "+n2+" escapes");
+			    }
+			    this.change = true;
+			}
+		    }
+		}
+	    }
             for (Iterator j=n.getAccessPathEdges().iterator(); j.hasNext(); ) {
                 Map.Entry e = (Map.Entry)j.next();
                 jq_Field f = (jq_Field)e.getKey();
