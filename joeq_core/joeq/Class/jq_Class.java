@@ -378,6 +378,9 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         chkState(STATE_LOADING2);
         return const_pool;
     }
+    public final void setCP(jq_ConstantPool cp) {
+        this.const_pool = cp;
+    }
     public final Object getCP(char index) {
         chkState(STATE_LOADING2);
         return const_pool.get(index);
@@ -534,6 +537,12 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
     public final boolean isDeprecated() {
         chkState(STATE_LOADING3);
         return getAttribute("Deprecated") != null;
+    }
+    public final void removeAttribute(String s) {
+        removeAttribute(Utf8.get(s));
+    }
+    public final void removeAttribute(Utf8 u) {
+        attributes.remove(u);
     }
     public final jq_Class[] getInnerClasses() {
         chkState(STATE_LOADING3);
@@ -1773,7 +1782,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         if (TRACE) Debug.writeln("Finished merging class "+this+".");
     }
     
-    void remakeAttributes(jq_ConstantPool.ConstantPoolRebuilder cpr) {
+    public void remakeAttributes(jq_ConstantPool.ConstantPoolRebuilder cpr) {
         Utf8 sf = getSourceFile();
         if (sf != null) {
             byte[] b = new byte[2];
