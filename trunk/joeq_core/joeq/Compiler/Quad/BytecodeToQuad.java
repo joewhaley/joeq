@@ -2115,6 +2115,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
             if (val == null) return jq_Reference.jq_NullType.NULL_TYPE;
             return Reflection.getTypeOf(val);
         }
+        Assert._assert(op instanceof RegisterOperand, op.toString() + " is not a RegisterOperand");
         return ((RegisterOperand)op).getType();
     }
     static jq_Type getArrayElementTypeOf(Operand op) {
@@ -2364,6 +2365,9 @@ public class BytecodeToQuad extends BytecodeVisitor {
                 if (op1.isSimilar(op2)) {
                     // same constant value.
                     return op1;
+                }
+                if (op2 instanceof DummyOperand) {
+                    return null;
                 }
                 jq_Type type = TypeCheck.findCommonSuperclass(getTypeOf(op1), getTypeOf(op2));
                 if (type != null) {
