@@ -675,6 +675,16 @@ public class AndersenPointerAnalysis {
                 sb.append(lineSep);
             }
         }
+        sb.append("Average # of targets: "+(double)total/(double)table.size());
+        sb.append(lineSep);
+        long total_multi = total - histogram[1];
+        long cs_multi = table.size() - histogram[1] - histogram[0];
+        sb.append("# of multi-target calls: "+cs_multi);
+        sb.append(lineSep);
+        sb.append("Total targets for multi-target calls: "+total_multi);
+        sb.append(lineSep);
+        sb.append("Average # of targets for multi: "+(double)total_multi/(double)cs_multi);
+        sb.append(lineSep);
         return sb.toString();
     }
     public static String computeHistogram(Map m) {
@@ -706,6 +716,7 @@ public class AndersenPointerAnalysis {
                 sb.append(lineSep);
             }
         }
+        sb.append("Average # of targets: "+(double)total/(double)m.size());
         return sb.toString();
     }
     
@@ -776,7 +787,9 @@ public class AndersenPointerAnalysis {
     
     void doGlobals() {
         if (TRACE) out.println("Doing global variables...");
-        for (Iterator j=GlobalNode.GLOBAL.getAccessPathEdges().iterator(); j.hasNext(); ) {
+        LinkedHashSet lhs = new LinkedHashSet();
+        lhs.addAll(GlobalNode.GLOBAL.getAccessPathEdges());
+        for (Iterator j=lhs.iterator(); j.hasNext(); ) {
             Map.Entry e = (Map.Entry)j.next();
             jq_Field f = (jq_Field)e.getKey();
             Object o = e.getValue();
