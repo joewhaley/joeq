@@ -19,6 +19,17 @@ int main(int argc, char* argv[])
 	_argc = argc-1;
 	_argv = argv+1;
 
+#if defined(WIN32)
+	// install hardware exception handler.
+	// NOTE that this must be on the stack and have a lower address than any previous handler.
+	// Therefore, it must be done in main().
+	HandlerRegistrationRecord er, *erp = &er;
+	er.previous = NULL;
+	er.handler = hardwareExceptionHandler;
+	_asm mov eax,[erp]
+	_asm mov fs:[0],eax // point first word of thread control block to exception handler registration chain
+#endif
+
 	installSignalHandler();
 	initSemaphoreLock();
 
