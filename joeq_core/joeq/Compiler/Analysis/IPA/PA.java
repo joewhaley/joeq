@@ -2079,7 +2079,7 @@ public class PA {
                 MethodSummary ms = MethodSummary.getSummary(mc.getMethod());
                 Node node = ms.getRVN(mc);
                 if (node != null) {
-                    MethodSummary.ConcreteTypeNode h = ConcreteTypeNode.get((jq_Reference) type);
+                    MethodSummary.ConcreteTypeNode h = ConcreteTypeNode.get((jq_Reference) type, mc);
                     int H_i = Hmap.get(h);
                     int V_i = Vmap.get(node);
                     BDD V_arg = V1.ithVar(V_i);
@@ -2115,7 +2115,7 @@ public class PA {
             if(ch == '.'){
                 dotCount++;                
             } else {            
-                if(!Character.isLetterOrDigit(ch)){
+                if(ch != '$' && !Character.isLetterOrDigit(ch)){
                     return false;                
                 }      
             }
