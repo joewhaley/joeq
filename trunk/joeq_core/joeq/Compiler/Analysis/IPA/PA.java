@@ -1107,7 +1107,7 @@ public class PA {
             vP.orWith(t7);
             if (TRACE_SOLVER) out.println(" --> "+vP.satCount(V1H1set));
         }
-        old1_L = S.id();
+        old1_L = L.id();
         
         for (int outer = 1; ; ++outer) {
             BDD new_vP_inner = vP.apply(old1_vP, BDDFactory.diff);
