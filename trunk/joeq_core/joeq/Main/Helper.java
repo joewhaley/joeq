@@ -5,7 +5,9 @@ package joeq.Main;
 
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import joeq.Class.PrimordialClassLoader;
@@ -93,6 +95,28 @@ public class Helper {
         }
     }
 
+    public static void addJarDir(String dir) {
+        List jars = new LinkedList();
+
+        addJarDir_aux(new File(dir), jars);
+
+        for (Iterator i = jars.iterator(); i.hasNext();) {
+            PrimordialClassLoader.loader.addToClasspath(i.next().toString());
+        }
+    }
+
+    static private void addJarDir_aux(File f, List results) {
+        if (f.getPath().endsWith(".jar")) {
+            results.add(f.getPath());
+        } else if (f.list() != null) {
+            String[] contents=f.list();
+            for (int i = 0; i<contents.length; i++) {
+                addJarDir_aux(new File(f.getPath(), contents[i]), results);
+            }
+        }
+    }
+
+    
     public static void runPass(jq_Class c, jq_TypeVisitor tv) {
         c.accept(tv);
     }
