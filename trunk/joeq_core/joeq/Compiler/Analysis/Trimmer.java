@@ -161,6 +161,8 @@ public class Trimmer {
         addToWorklist(jq_NativeThread._nativeThreadEntry);
         // thread switch interrupt
         addToWorklist(jq_NativeThread._threadSwitch);
+        // ctrl-break handler
+        addToWorklist(jq_NativeThread._ctrl_break_handler);
         
         // entrypoint for interrupter thread
         c = jq_InterrupterThread._class; c.load(); c.verify(); c.prepare();
