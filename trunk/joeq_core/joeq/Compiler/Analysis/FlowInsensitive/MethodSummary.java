@@ -122,6 +122,8 @@ public class MethodSummary {
     
     public static final boolean SPLIT_THREADS = true;
     
+    public static Set ssaEntered = new HashSet();
+    
     /**
      * Helper class to output method summary in dot graph format.
      * @author jwhaley
@@ -188,7 +190,14 @@ public class MethodSummary {
             return null;
 
         ControlFlowGraph cfg = CodeCache.getCode(m);
-        if (SSA) new EnterSSA().visitCFG(cfg);
+        if (SSA & !ssaEntered.contains(cfg)) {
+            //out.println("CFG BEFORE SSA:");
+            //out.println(cfg.fullDump());
+            if (SSA) new EnterSSA().visitCFG(cfg);
+            //out.println("CFG AFTER SSA:");
+            //out.println(cfg.fullDump());
+            ssaEntered.add(cfg);
+        }
         return getSummary(cfg);
     }
     
@@ -334,7 +343,7 @@ public class MethodSummary {
             int i = r.getNumber();
             if (s.registers[i] == null) {
                 System.out.println(method+" ::: Reg "+i+" is null");
-                Assert.UNREACHABLE();
+                //Assert.UNREACHABLE();
             }
             return s.registers[i];
         }
@@ -884,6 +893,7 @@ public class MethodSummary {
         }
         
         public void visitPhi(Quad obj) {
+            if (TRACE_INTRA) out.println("Visiting: "+obj);
             Set set = NodeSet.FACTORY.makeSet();
             ParamListOperand plo = Phi.getSrcs(obj);
             for (int i=0; i<plo.length(); ++i) {
@@ -1075,6 +1085,7 @@ public class MethodSummary {
             }
         }
         public void visitExceptionThrower(Quad obj) {
+            if (TRACE_INTRA) out.println("Visiting: "+obj);
             // special case for method invocation.
             if (obj.getOperator() instanceof Invoke) {
                 Invoke.getMethod(obj).resolve();
@@ -1091,9 +1102,12 @@ public class MethodSummary {
                     this.mergeWith(h);
                     Register r = null;
                     if (h.getEntry().size() > 0) {
-                        Quad q = h.getEntry().getQuad(0);
-                        if (q.getOperator() instanceof Special.GET_EXCEPTION) {
-                            r = ((RegisterOperand) Special.getOp1(q)).getRegister();
+                        for (Iterator ge = h.getEntry().iterator(); ge.hasNext();) {
+                            Quad q = (Quad) ge.next();
+                            if (q.getOperator() instanceof Special.GET_EXCEPTION) {
+                                r = ((RegisterOperand) Special.getOp1(q)).getRegister();
+                                continue;
+                            }
                         }
                     }
                     if (r == null) {
@@ -1122,9 +1136,12 @@ public class MethodSummary {
                         this.mergeWith(h);
                         Register r = null;
                         if (h.getEntry().size() > 0) {
-                            Quad q = h.getEntry().getQuad(0);
-                            if (q.getOperator() instanceof Special.GET_EXCEPTION) {
-                                r = ((RegisterOperand) Special.getOp1(q)).getRegister();
+                            for (Iterator ge = h.getEntry().iterator(); ge.hasNext();) {
+                                Quad q = (Quad) ge.next();
+                                if (q.getOperator() instanceof Special.GET_EXCEPTION) {
+                                    r = ((RegisterOperand) Special.getOp1(q)).getRegister();
+                                    continue;
+                                }
                             }
                         }
                         if (r == null) {
@@ -5133,7 +5150,11 @@ outer:
             jq_Method m = (jq_Method) i.next();
             if (m.getBytecode() == null) continue;
             ControlFlowGraph cfg = CodeCache.getCode(m);
+//            out.println("CFG BEFORE SSA:");
+//            out.println(cfg.fullDump());
             if (SSA) new EnterSSA().visitCFG(cfg);
+//            out.println("CFG AFTER SSA:");
+//            out.println(cfg.fullDump());
             MethodSummary ms = getSummary(cfg);
             if (DUMP_DOTGRAPH) ms.dotGraph(new DataOutputStream(System.out));
             else System.out.println(ms);

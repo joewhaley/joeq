@@ -2,20 +2,6 @@
 // Copyright (C) 2003 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Analysis.IPA;
-
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-
 import java.io.BufferedReader;
 import java.io.DataInput;
 import java.io.DataInputStream;
@@ -34,7 +20,20 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
-
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.TreeSet;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
@@ -42,6 +41,7 @@ import joeq.Class.jq_FakeInstanceMethod;
 import joeq.Class.jq_Field;
 import joeq.Class.jq_InstanceField;
 import joeq.Class.jq_Method;
+import joeq.Class.jq_MethodVisitor;
 import joeq.Class.jq_NameAndDesc;
 import joeq.Class.jq_Reference;
 import joeq.Class.jq_Type;
@@ -56,10 +56,13 @@ import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.UnknownTypeNode;
 import joeq.Compiler.Quad.CachedCallGraph;
 import joeq.Compiler.Quad.CallGraph;
 import joeq.Compiler.Quad.CodeCache;
+import joeq.Compiler.Quad.ControlFlowGraph;
+import joeq.Compiler.Quad.ControlFlowGraphVisitor;
 import joeq.Compiler.Quad.LoadedCallGraph;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.Operator.Invoke;
+import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Main.HostedVM;
 import joeq.Util.Assert;
 import joeq.Util.Collections.IndexMap;
@@ -73,7 +76,8 @@ import joeq.Util.Graphs.SCComponent;
 import joeq.Util.Graphs.Traversals;
 import joeq.Util.Graphs.PathNumbering.Range;
 import joeq.Util.Graphs.SCCPathNumbering.Selector;
-
+import joeq.Util.IO.Textualizable;
+import joeq.Util.IO.Textualizer;
 import org.sf.javabdd.BDD;
 import org.sf.javabdd.BDDBitVector;
 import org.sf.javabdd.BDDDomain;
@@ -81,7 +85,6 @@ import org.sf.javabdd.BDDFactory;
 import org.sf.javabdd.BDDPairing;
 import org.sf.javabdd.TypedBDDFactory;
 import org.sf.javabdd.TypedBDDFactory.TypedBDD;
-
 /**
  * Pointer analysis using BDDs.  Includes both context-insensitive and context-sensitive
  * analyses.  This version corresponds exactly to the description in the paper.
@@ -91,7 +94,6 @@ import org.sf.javabdd.TypedBDDFactory.TypedBDD;
  * @version $Id$
  */
 public class PA {
-
     public static final boolean VerifyAssertions = false;
 
     static boolean WRITE_PARESULTS_BATCHFILE = !System.getProperty("pa.writeparesults", "yes").equals("no");
@@ -105,6 +107,7 @@ public class PA {
     PrintStream out = System.out;
     boolean DUMP_INITIAL = !System.getProperty("pa.dumpinitial", "no").equals("no");
     boolean DUMP_RESULTS = !System.getProperty("pa.dumpresults", "yes").equals("no");
+    boolean DUMP_SSA = !System.getProperty("pa.dumpssa", "no").equals("no");
     static boolean USE_JOEQ_CLASSLIBS = !System.getProperty("pa.usejoeqclasslibs", "no").equals("no");
 
     boolean INCREMENTAL1 = !System.getProperty("pa.inc1", "yes").equals("no"); // incremental points-to
@@ -196,7 +199,12 @@ public class PA {
     BDD IEfilter; // V2cxIxV1cxM, context-sensitive edge filter
     
     BDD visited; // M, visited methods
-    
+    // maps to SSA form
+    BuildBDDIR bddIRBuilder;
+    BDD vReg; // Vxreg
+    BDD iQuad; // Ixquad
+    BDD hQuad; // Hxquad
+    BDD fMember; //Fxmember
     BDD staticCalls; // V1xIxM, statically-bound calls, only used for object-sensitive and cartesian product
     
     boolean reverseLocal = System.getProperty("bddreverse", "true").equals("true");
@@ -2179,8 +2187,64 @@ public class PA {
         System.out.println("Writing call graph...");
         time = System.currentTimeMillis();
         dumpCallGraph();
-        System.out.println("Time spent writing: "+(System.currentTimeMillis()-time)/1000.);
-        
+        System.out.println("Time spent writing: "
+                + (System.currentTimeMillis() - time) / 1000.);
+        if (DUMP_SSA) {
+            jq_MethodVisitor mv = null;
+            ControlFlowGraphVisitor cfgv = null;
+            mv = new ControlFlowGraphVisitor.CodeCacheVisitor(bddIRBuilder,
+                    true);
+            //cv = new jq_MethodVisitor.DeclaredMethodVisitor(mv, methodNamesToProcess, false);
+            Collection s = new TreeSet(new Comparator() {
+                public int compare(Object o1, Object o2) {
+                    return o1.toString().compareTo(o2.toString());
+                }
+            });
+            CallGraph callgraph = new CachedCallGraph(new PACallGraph(this));
+            if (callgraph.getAllMethods() == null) {
+                System.out.println("call graph has no methods!");
+            }
+            s.addAll(callgraph.getAllMethods());
+            for (Iterator i = s.iterator(); i.hasNext();) {
+                jq_Method m = (jq_Method) i.next();
+                try {
+                    m.accept(mv);
+                } catch (LinkageError le) {
+                    System.err
+                            .println("Linkage error occurred while executing pass on "
+                                    + m + " : " + le);
+                    le.printStackTrace(System.err);
+                } catch (Exception x) {
+                    System.err
+                            .println("Runtime exception occurred while executing pass on "
+                                    + m + " : " + x);
+                    x.printStackTrace(System.err);
+                }
+            }
+            System.err.println("Completed pass! " + bddIRBuilder);
+            makeVRegbdd(callgraph);
+            makeIQuadbdd();
+            makeFMemberbdd();
+            //makeHQuadbdd();
+            BDDDomain reg = bddIRBuilder.getDestDomain();
+            BDDDomain quad = bddIRBuilder.getQuadDomain();
+            BDDDomain member = bddIRBuilder.getMemberDomain();
+            System.out.println("vReg: "
+                    + (long) vReg.satCount(V1.set().and(reg.set().and(M.set())))
+                    + " relations, " + vReg.nodeCount() + " nodes");
+            bdd.save(resultsFileName + ".vReg", vReg);
+            System.out.println("iQuad: "
+                    + (long) iQuad.satCount(I.set().and(quad.set()))
+                    + " relations, " + iQuad.nodeCount() + " nodes");
+            bdd.save(resultsFileName + ".iQuad", iQuad);
+            System.out.println("fMember: "
+                    + (long) fMember.satCount(F.set().and(member.set()))
+                    + " relations, " + fMember.nodeCount() + " nodes");
+            bdd.save(resultsFileName + ".fMember", fMember);
+            //System.out.println("hQuad: "+(long) sync.satCount(H1.set().and(quad.set()))+" relations, "+hQuad.nodeCount()+" nodes");
+            //bdd.save(resultsFileName+".hQuad", sync);
+            dumpBDDRelations();
+        }
         if (DUMP_RESULTS) {
             System.out.println("Writing results...");
             time = System.currentTimeMillis();
@@ -3379,17 +3443,32 @@ public class PA {
         DataOutputStream dos = new DataOutputStream(new FileOutputStream(dumpPath+"bddinfo"));
         for (int i = 0; i < bdd.numberOfDomains(); ++i) {
             BDDDomain d = bdd.getDomain(i);
-            if (d == V1 || d == V2) dos.writeBytes("V\n");
-            else if (d == H1 || d == H2) dos.writeBytes("H\n");
-            else if (d == T1 || d == T2) dos.writeBytes("T\n");
-            else if (d == F) dos.writeBytes("F\n");
-            else if (d == I) dos.writeBytes("I\n");
-            else if (d == Z) dos.writeBytes("Z\n");
-            else if (d == N) dos.writeBytes("N\n");
-            else if (d == M) dos.writeBytes("M\n");
-            else if (Arrays.asList(V1c).contains(d) || Arrays.asList(V2c).contains(d)) dos.writeBytes("VC\n");
-            else if (Arrays.asList(H1c).contains(d) || Arrays.asList(H2c).contains(d)) dos.writeBytes("HC\n");
-            else dos.writeBytes(d.toString()+"\n");
+            if (d == V1 || d == V2)
+                dos.writeBytes("V\n");
+            else if (d == H1 || d == H2)
+                dos.writeBytes("H\n");
+            else if (d == T1 || d == T2)
+                dos.writeBytes("T\n");
+            else if (d == F)
+                dos.writeBytes("F\n");
+            else if (d == I)
+                dos.writeBytes("I\n");
+            else if (d == Z)
+                dos.writeBytes("Z\n");
+            else if (d == N)
+                dos.writeBytes("N\n");
+            else if (d == M)
+                dos.writeBytes("M\n");
+            else if (Arrays.asList(V1c).contains(d)
+                    || Arrays.asList(V2c).contains(d))
+                dos.writeBytes("VC\n");
+            else if (Arrays.asList(H1c).contains(d)
+                    || Arrays.asList(H2c).contains(d))
+                dos.writeBytes("HC\n");
+            else if (DUMP_SSA) {
+                dos.writeBytes(bddIRBuilder.getDomainName(d)+"\n");
+            } else
+                dos.writeBytes(d.toString() + "\n");
         }
         dos.close();
         
@@ -3463,5 +3542,102 @@ public class PA {
         dos.close();
     }
     
+    class Dummy implements Textualizable {
+        public void addEdge(String edge, Textualizable t) {
+        }
+        public void write(Textualizer t) throws IOException {
+            t.writeBytes("(dummy object)");
+        }
+        public void writeEdges(Textualizer t) throws IOException {
+        }
+    }
+    
+    private void makeVRegbdd(CallGraph callgraph) {
+        vReg = bdd.zero();
+        BDDDomain reg = bddIRBuilder.getDestDomain();
+        Collection s = new TreeSet(new Comparator() {
+            public int compare(Object o1, Object o2) {
+                return o1.toString().compareTo(o2.toString());
+            }
+        });
+        s.addAll(callgraph.getAllMethods());
+        for (Iterator i = s.iterator(); i.hasNext();) {
+            BDD b = bdd.zero();
+            jq_Method m = (jq_Method) i.next();
+            if (m.getBytecode() == null)
+                continue;
+            ControlFlowGraph cfg = joeq.Compiler.Quad.CodeCache.getCode(m);
+//            System.out.println("method " + m + " has "
+//                    + cfg.getRegisterFactory().numberOfLocalRegisters()
+//                    + " registers");
+            MethodSummary ms = MethodSummary.getSummary(cfg);
+            for (Iterator j = cfg.getRegisterFactory().iterator(); j.hasNext();) {
+                Register r = (Register) j.next();
+                if (r == null) {
+                    System.out.println("register " + j + " is null");
+                    continue;
+                }
+ //               System.out.println("register is "+j);
+                Collection nodes = ms.getRegisterAtLocation(cfg.exit(), null, r);
+                if (nodes == null)
+                    continue;
+                for (Iterator ni = nodes.iterator(); ni.hasNext();) {
+                    Node n = (Node) ni.next();
+                    b.orWith(reg.ithVar(bddIRBuilder.getRegisterID(r)).and(
+                            V1.ithVar(Vmap.get(n))));
+                }
+            }
+            b.andWith(M.ithVar(Mmap.get(m)));
+            vReg.orWith(b);
+        }
+    }
+    private void makeIQuadbdd() {
+        iQuad = bdd.zero();
+        BDDDomain quad = bddIRBuilder.getQuadDomain();
+        ProgramLocation pl;
+        BDD b;
+        for (int i = 0; i < Imap.size(); ++i) {
+            pl = (ProgramLocation) Imap.get(i);
+            ProgramLocation.BCProgramLocation bcpl = (ProgramLocation.BCProgramLocation) LoadedCallGraph
+                    .mapCall(pl);
+            int quadID = bddIRBuilder.quadIdFromInvokeBCLocation(bcpl);
+            b = I.ithVar(i);
+            b.andWith(quad.ithVar(quadID));
+            iQuad.orWith(b);
+        }
+    }
+    
+    private void makeHQuadbdd() {
+        Assert.UNREACHABLE();
+        // this doesn't work--BuildBDDIR doesn't have all the allocation
+        // sites in its allocMap.
+        hQuad = bdd.zero();
+        BDDDomain quad = bddIRBuilder.getQuadDomain();
+        BDD b;
+        for (int i = 0; i < Hmap.size(); ++i) {
+            ProgramLocation pl = (ProgramLocation) Imap.get(i);
+            ProgramLocation.BCProgramLocation bcpl = (ProgramLocation.BCProgramLocation) LoadedCallGraph
+                    .mapCall(pl);
+            int quadID = bddIRBuilder.quadIdFromAllocBCLocation(bcpl);
+            b = I.ithVar(i);
+            b.andWith(quad.ithVar(quadID));
+            iQuad.orWith(b);
+        }
+    }
+    
+    private void makeFMemberbdd() {
+        fMember = bdd.zero();
+        BDDDomain member = bddIRBuilder.getMemberDomain();
+        BDD b;
+        for (int i = 0; i < Fmap.size(); ++i) {
+            Object o = Fmap.get(i);
+            if (o instanceof jq_Field) {
+                int memberID = bddIRBuilder.memberIdFromField((jq_Field)o);
+                if (memberID == 0) continue;
+                b = F.ithVar(i).and(member.ithVar(memberID));
+                fMember.orWith(b);
+            }
+        }
+    }
     
 }
