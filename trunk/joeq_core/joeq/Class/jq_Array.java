@@ -7,7 +7,6 @@
 
 package Clazz;
 
-import Allocator.DefaultHeapAllocator;
 import Allocator.ObjectLayout;
 import Bootstrap.PrimordialClassLoader;
 import Main.jq;
@@ -52,8 +51,9 @@ public class jq_Array extends jq_Reference implements jq_ClassFileConstants {
     }
 
     public final Object newInstance(int length) {
-        load(); verify(); prepare(); sf_initialize(); compile(); cls_initialize();
-        return DefaultHeapAllocator.allocateArray(length, getInstanceSize(length), vtable);
+        load(); verify(); prepare(); sf_initialize(); compile(); 
+	cls_initialize();
+	return _delegate.newInstance(this, length, vtable);
     }
     
     public final int getDimensionality() {
@@ -242,7 +242,41 @@ public class jq_Array extends jq_Reference implements jq_ClassFileConstants {
     private final jq_Type element_type;
 
     public static final jq_Class _class;
+    static interface Delegate {
+	Object newInstance(jq_Array a, int length, Object vtable);
+    }
+
+    private static Delegate _delegate;
+
     static {
         _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LClazz/jq_Array;");
+	/* Set up delegates. */
+	_delegate = null;
+	boolean nullVM = System.getProperty("joeq.nullvm") != null;
+	if (!nullVM) {
+	    _delegate = attemptDelegate("Clazz.Delegates$Array");
+	}
+	if (_delegate == null) {
+	    _delegate = attemptDelegate("Clazz.NullDelegates$Array");
+	}
+	if (_delegate == null) {
+	    System.err.println("FATAL: Cannot load Array Delegate");
+	    System.exit(-1);
+	}
+    }
+
+    private static Delegate attemptDelegate(String s) {
+	String type = "array delegate";
+        try {
+            Class c = Class.forName(s);
+            return (Delegate)c.newInstance();
+        } catch (java.lang.ClassNotFoundException x) {
+            System.err.println("Cannot find "+type+" "+s+": "+x);
+        } catch (java.lang.InstantiationException x) {
+            System.err.println("Cannot instantiate "+type+" "+s+": "+x);
+        } catch (java.lang.IllegalAccessException x) {
+            System.err.println("Cannot access "+type+" "+s+": "+x);
+        }
+	return null;
     }
 }

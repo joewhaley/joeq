@@ -374,7 +374,7 @@ public abstract class jq {
             DebugInterface.debugwriteln("Assertion Failure!");
             DebugInterface.debugwriteln(reason);
             if (jq.RunningNative) {
-                // Debug.OnlineDebugger.debuggerEntryPoint();
+                Debug.OnlineDebugger.debuggerEntryPoint();
                 //new InternalError().printStackTrace();
             }
             DebugInterface.die(-1);
@@ -388,7 +388,7 @@ public abstract class jq {
     public static void TODO(String s) {
         DebugInterface.debugwriteln("TODO: " + s);
         if (jq.RunningNative) {
-            // Debug.OnlineDebugger.debuggerEntryPoint();
+            Debug.OnlineDebugger.debuggerEntryPoint();
             //new InternalError().printStackTrace();
         }
         DebugInterface.die(-1);
@@ -397,7 +397,7 @@ public abstract class jq {
     public static void TODO() {
         DebugInterface.debugwriteln("TODO");
         if (jq.RunningNative) {
-            // Debug.OnlineDebugger.debuggerEntryPoint();
+            Debug.OnlineDebugger.debuggerEntryPoint();
             //new InternalError().printStackTrace();
         }
         DebugInterface.die(-1);
@@ -406,7 +406,7 @@ public abstract class jq {
     public static void UNREACHABLE(String s) {
         DebugInterface.debugwriteln("UNREACHABLE: " + s);
         if (jq.RunningNative) {
-            // Debug.OnlineDebugger.debuggerEntryPoint();
+            Debug.OnlineDebugger.debuggerEntryPoint();
             //new InternalError().printStackTrace();
         }
         DebugInterface.die(-1);
@@ -415,7 +415,7 @@ public abstract class jq {
     public static void UNREACHABLE() {
         DebugInterface.debugwriteln("BUG! unreachable code reached!");
         if (jq.RunningNative) {
-            // Debug.OnlineDebugger.debuggerEntryPoint();
+            Debug.OnlineDebugger.debuggerEntryPoint();
             //new InternalError().printStackTrace();
         }
         DebugInterface.die(-1);
