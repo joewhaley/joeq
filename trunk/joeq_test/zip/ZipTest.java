@@ -6,6 +6,8 @@ package zip;
 import java.io.*;
 import java.util.*;
 
+import joeq.Debugger.OnlineDebugger;
+
 /**
  * ZipTest
  * 
@@ -32,7 +34,7 @@ public class ZipTest {
                     Class.forName(name.substring(0, name.length()-6).replace('/','.'));
                 } catch (ClassFormatError x) {
                     System.out.println(name+": "+x);
-                    Debugger.OnlineDebugger.debuggerEntryPoint();
+                    OnlineDebugger.debuggerEntryPoint();
                 } catch (UnsatisfiedLinkError x) {
                     System.out.println(name+": "+x);
                 }

@@ -307,7 +307,7 @@ public class jq_NativeThread implements jq_DontAlign {
 
     public static boolean USE_INTERRUPTER_THREAD = false;
 
-    jq_InterrupterThread it;
+    public jq_InterrupterThread it;
     
     /** The entry point for new native threads.
      */
