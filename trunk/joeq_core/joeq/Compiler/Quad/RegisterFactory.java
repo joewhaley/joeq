@@ -32,16 +32,14 @@ public class RegisterFactory {
 
     /** Creates new RegisterFactory */
     public RegisterFactory(jq_Method m) {
-        int capacity = (m.getMaxLocals() + m.getMaxStack()) * 2;
-        registers = new ArrayList(capacity);
-        stackNumbering = new HashMap(m.getMaxStack());
-        localNumbering = new HashMap(m.getMaxLocals());
+        this(m.getMaxStack(), m.getMaxLocals());
     }
     
-    public RegisterFactory(int capacity) {
+    public RegisterFactory(int nStack, int nLocal) {
+        int capacity = (nStack + nLocal) * 2;
         registers = new ArrayList(capacity);
-        stackNumbering = null;
-        localNumbering = null;
+        stackNumbering = new HashMap(nStack);
+        localNumbering = new HashMap(nLocal);
     }
     
     public Register get(int i) {
@@ -133,13 +131,41 @@ public class RegisterFactory {
         }
     }
 
-    public RegisterFactory deep_copy() {
-        RegisterFactory that = new RegisterFactory(this.registers.size());
+    public void addAll(RegisterFactory that) {
+        for (Iterator i = that.registers.iterator(); i.hasNext(); ) {
+            Register r = (Register)i.next();
+            r.setNumber((short) nextNumber());
+            this.registers.add(r);
+        }
+    }
+    
+    public RegisterFactory deepCopy() {
+        RegisterFactory that = new RegisterFactory(this.stackNumbering.size(), this.localNumbering.size());
+        deepCopyInto(that);
+        return that;
+    }
+    
+    public Map deepCopyInto(RegisterFactory that) {
+        Map m = new HashMap();
         for (Iterator i = iterator(); i.hasNext(); ) {
             Register r = (Register) i.next();
-            that.registers.add(r.copy());
+            Register r2 = r.copy();
+            that.registers.add(r2);
+            m.put(r, r2);
         }
-        return that;
+        renumber(m, this.stackNumbering, that.stackNumbering);
+        renumber(m, this.localNumbering, that.localNumbering);
+        return m;
+    }
+    
+    private void renumber(Map map, Map fromNumbering, Map toNumbering) {
+        for (Iterator i = fromNumbering.entrySet().iterator(); i.hasNext(); ) {
+            Map.Entry e = (Map.Entry) i.next();
+            Pair p = (Pair) e.getKey();
+            Register r = (Register) e.getValue();
+            Register r2 = (Register) map.get(r);
+            toNumbering.put(p, r2);
+        }
     }
 
     public int numberOfStackRegisters() {
