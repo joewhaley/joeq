@@ -53,6 +53,8 @@ import Util.Templates.ListIterator;
  * This is where the main action pertaining to IPSSA construction happens. 
  * A subclass is SSABuilder, which is responsible for intraprocedural IPSSA
  * construction.
+ * 
+ * @author Vladimir Livshits
  * @see IPSSABuilder.SSABuilder
  * @version $Id$
  * */
@@ -788,7 +790,6 @@ public class IPSSABuilder implements Runnable {
                         if(!(b.getValue() instanceof SSAValue.FormalIn)) continue;
                         
                         SSALocation loc = b.getDestination().getLocation();                        
-                        Assert._assert(loc instanceof PAResults.HeapLocation, "Unexpected location " + b.getDestination().getLocation());
                     
                         // got the iota function, fill it in
                         SSAValue.FormalIn value = (SSAValue.FormalIn)b.getValue();
@@ -872,6 +873,8 @@ public class IPSSABuilder implements Runnable {
     /**
      * This class allows to specify applications to be 
      * run after IPSSA has been constructed.
+     * 
+     * @see IPSSABuilder.Application
      * */
     public static class ApplicationLaunchingPad implements Runnable {
         LinkedList _applications;
@@ -942,6 +945,11 @@ public class IPSSABuilder implements Runnable {
         }
     }
     
+    /**
+     * This is something we typically run afte the IPSSABuilder.
+     * @see IPSSABuilder
+     * @see IPSSABuilder.ApplicationLaunchingPad
+     * */
     public abstract static class Application implements Runnable {
         private String _name;
         protected IPSSABuilder _builder;
