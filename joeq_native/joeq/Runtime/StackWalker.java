@@ -21,30 +21,35 @@ public class StackWalker implements Iterator {
 
     public static /*final*/ boolean TRACE = false;
     
-    int/*Address*/ ip, fp;
+    int/*CodeAddress*/ ip;
+    int/*StackAddress*/ fp;
     
-    public int/*Address*/ getFP() { return fp; }
-    public int/*Address*/ getIP() { return ip; }
+    public int/*CodeAddress*/ getIP() { return ip; }
+    public int/*StackAddress*/ getFP() { return fp; }
     public jq_CompiledCode getCode() { return CodeAllocator.getCodeContaining(ip); }
 
-    public StackWalker(int/*Address*/ ip, int/*Address*/ fp) {
+    public StackWalker(int/*CodeAddress*/ ip, int/*StackAddress*/ fp) {
         this.ip = ip;
         this.fp = fp;
         if (TRACE) SystemInterface.debugmsg("StackWalker init: fp="+jq.hex8(fp)+" ip="+jq.hex8(ip)+" "+getCode());
     }
     
-    public boolean hasNext() {
-        int/*CodeAddress*/ addr = Unsafe.peek(fp+4);
-        if (TRACE) SystemInterface.debugmsg("StackWalker hasnext: next ip="+jq.hex8(addr)+" "+CodeAllocator.getCodeContaining(addr));
-        if (TRACE) SystemInterface.debugmsg("Min code addr="+jq.hex8(CodeAllocator.getLowAddress())+" max code addr="+jq.hex8(CodeAllocator.getHighAddress()));
-        return (addr >= CodeAllocator.getLowAddress()) &&
-               (addr < CodeAllocator.getHighAddress());
-    }
-    
-    public Object next() throws NoSuchElementException {
+    public void gotoNext() throws NoSuchElementException {
+        if (fp == 0) throw new NoSuchElementException();
         ip = Unsafe.peek(fp+4);
         fp = Unsafe.peek(fp);
         if (TRACE) SystemInterface.debugmsg("StackWalker next: fp="+jq.hex8(fp)+" ip="+jq.hex8(ip)+" "+getCode());
+    }
+    
+    public boolean hasNext() {
+        if (fp == 0) return false;
+        int/*CodeAddress*/ addr = Unsafe.peek(fp+4);
+        if (TRACE) SystemInterface.debugmsg("StackWalker hasnext: next ip="+jq.hex8(addr)+" "+CodeAllocator.getCodeContaining(addr));
+        return true;
+    }
+    
+    public Object next() throws NoSuchElementException {
+        gotoNext();
         return new CodeAllocator.InstructionPointer(ip);
     }
     
