@@ -3,6 +3,7 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Run_Time;
 
+import Compil3r.CompilationConstants;
 import junit.framework.TestCase;
 
 /**
@@ -193,11 +194,11 @@ public class TypeCheckTest extends TestCase {
     }
 
     public void testIsSuperclassOf() {
-        assertTrue(Run_Time.TypeCheck.isSuperclassOf(c_jlo, c_jls));
-        assertTrue(Run_Time.TypeCheck.isSuperclassOf(c_jlo, c_jnn));
-        assertFalse(Run_Time.TypeCheck.isSuperclassOf(c_jls, c_jlo));
-        assertFalse(Run_Time.TypeCheck.isSuperclassOf(c_jls, c_jnc));
-        assertFalse(Run_Time.TypeCheck.isSuperclassOf(c_jls, c_jnn));
+        assertTrue(Run_Time.TypeCheck.isSuperclassOf(c_jlo, c_jls, true) == CompilationConstants.YES);
+        assertTrue(Run_Time.TypeCheck.isSuperclassOf(c_jlo, c_jnn, true) == CompilationConstants.YES);
+        assertTrue(Run_Time.TypeCheck.isSuperclassOf(c_jls, c_jlo, true) == CompilationConstants.NO);
+        assertTrue(Run_Time.TypeCheck.isSuperclassOf(c_jls, c_jnc, true) == CompilationConstants.NO);
+        assertTrue(Run_Time.TypeCheck.isSuperclassOf(c_jls, c_jnn, true) == CompilationConstants.NO);
     }
 
     public void testAllTypes() {
