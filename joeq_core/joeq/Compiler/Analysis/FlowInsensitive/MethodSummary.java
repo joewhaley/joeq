@@ -279,7 +279,7 @@ public class MethodSummary {
         protected void setRegister(Register r, Object n) {
             int i = r.getNumber();
             if (r.isTemp()) i += nLocals;
-            if (n instanceof Set) n = NodeSet.FACTORY.makeSet((Set)n);
+            if (n instanceof Collection) n = NodeSet.FACTORY.makeSet((Collection)n);
             else Assert._assert(n instanceof Node);
             s.registers[i] = n;
             if (TRACE_INTRA) out.println("Setting register "+r+" to "+n);
@@ -821,10 +821,10 @@ public class MethodSummary {
                     type.isSubtypeOf(jlr)) {
                     if (la == null) la = new LoopAnalysis();
                     if (la.isInLoop(method, bb)) {
-                        System.out.println("Found thread creation in loop: "+obj);
                         Object key = obj;
                         Pair p = (Pair) nodeCache.get(key);
                         if (p == null) {
+                            System.out.println("Found thread creation in loop: "+obj);
                             p = new Pair(new ConcreteTypeNode(type, new QuadProgramLocation(method, obj)),
                                          new ConcreteTypeNode(type, new QuadProgramLocation(method, obj)));
                             nodeCache.put(key, p);
