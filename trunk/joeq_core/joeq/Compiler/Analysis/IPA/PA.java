@@ -3948,7 +3948,6 @@ public class PA {
                 Node o = (Node)Vmap.get(j);
                 dos.write(o.id+": "+o+"\n");
             }
-            Vmap.dumpStrings(dos);
         } finally {
             if (dos != null) dos.close();
         }
@@ -3956,7 +3955,11 @@ public class PA {
         dos = null;
         try {
             dos = new BufferedWriter(new FileWriter(dumpPath+"heap.map"));
-            Hmap.dumpStrings(dos);
+            //Hmap.dumpStrings(dos);
+            for (int j = 0; j < Hmap.size(); ++j) {
+                Node o = (Node) Hmap.get(j);
+                dos.write(o.id+": "+o+"\n");
+            }
         } finally {
             if (dos != null) dos.close();
         }
@@ -3986,7 +3989,11 @@ public class PA {
         dos = null;
         try {
             dos = new BufferedWriter(new FileWriter(dumpPath+"invoke.map"));
-            Imap.dumpStrings(dos);
+            //Imap.dumpStrings(dos);
+            for (int j = 0; j < Imap.size(); ++j) {
+                ProgramLocation o = (ProgramLocation)Imap.get(j);
+                dos.write(o.hashCode()+": "+o+"\n");
+            }
         } finally {
             if (dos != null) dos.close();
         }
