@@ -17,7 +17,6 @@ import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
 import Clazz.jq_Method;
 import Clazz.jq_Type;
-import Main.HostedVM;
 
 /**
  * A simple call graph implementation based on class-hierarchy analysis with
@@ -39,7 +38,7 @@ public class CHACallGraph extends CallGraph {
      * @param classes set of types from which to build the call graph
      */
     public CHACallGraph(Set/*jq_Type*/ classes) { this.classes = classes; }
-    private CHACallGraph() { this.classes = null; }
+    protected CHACallGraph() { this.classes = null; }
 
     /**
      * @see Compil3r.Quad.CallGraph#getTargetMethods(java.lang.Object, Compil3r.Quad.ProgramLocation)
@@ -89,21 +88,18 @@ public class CHACallGraph extends CallGraph {
         return result;
     }
 
-    public static void main(String[] args) {
-        HostedVM.initialize();
-        HostedVM.initialize();
-        
-        jq_Class c = (jq_Class) jq_Type.parseType(args[0]);
-        c.prepare();
-        
-        Collection roots = Arrays.asList(c.getDeclaredStaticMethods());
-        
-        Collection[] depths = INSTANCE.findDepths(roots);
-        
-        for (int i=0; i<depths.length; ++i) {
-            System.out.println(">>>>> Depth "+i);
-            System.out.println(depths[i]);
-        }
+    /* (non-Javadoc)
+     * @see Compil3r.Quad.CallGraph#getRoots()
+     */
+    protected Collection getRoots() {
+        throw new UnsupportedOperationException();
+    }
+
+    /* (non-Javadoc)
+     * @see Compil3r.Quad.CallGraph#setRoots(java.util.Collection)
+     */
+    public void setRoots(Collection roots) {
+        throw new UnsupportedOperationException();
     }
 
 }

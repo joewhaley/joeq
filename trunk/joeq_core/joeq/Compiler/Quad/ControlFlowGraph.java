@@ -107,6 +107,16 @@ public class ControlFlowGraph {
     /** Returns a maximum on the number of basic blocks in this control flow graph.
      * @return  a maximum on the number of basic blocks in this control flow graph. */
     public int getNumberOfBasicBlocks() { return bb_counter+1; }
+    
+    public int getNumberOfQuads() {
+        int total = 0;
+        ListIterator.BasicBlock i = reversePostOrderIterator();
+        while (i.hasNext()) {
+            BasicBlock bb = i.nextBasicBlock();
+            total += bb.size();
+        }
+        return total;
+    }
 
     /** Returns a new id number for a quad. */
     public int getNewQuadID() { return ++quad_counter; }

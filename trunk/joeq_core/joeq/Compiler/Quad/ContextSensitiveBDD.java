@@ -27,7 +27,7 @@ import Compil3r.Quad.MethodSummary.GlobalNode;
 import Compil3r.Quad.MethodSummary.Node;
 import Compil3r.Quad.MethodSummary.UnknownTypeNode;
 import Main.HostedVM;
-import Util.Collections.WorkSet;
+import Util.Collections.HashWorklist;
 import Util.Graphs.Navigator;
 import Util.Graphs.SCCTopSortedGraph;
 import Util.Graphs.SCComponent;
@@ -177,24 +177,25 @@ public class ContextSensitiveBDD {
     }
     
     LinkedHashMap summaries = new LinkedHashMap();
-    WorkSet worklist = new WorkSet();
+    HashWorklist worklist = new HashWorklist();
     CallGraph initial_cg;
     
     public CallGraph go(Collection roots) {
         long time = System.currentTimeMillis();
         
-        initial_cg = CHACallGraph.INSTANCE;
+        initial_cg = new RootedCHACallGraph();
+        initial_cg.setRoots(roots);
         
-        Navigator navigator = initial_cg.getNavigator(roots);
-        Set sccs = SCComponent.buildSCC(roots.toArray(), navigator);
+        Navigator navigator = initial_cg.getNavigator();
+        Set sccs = SCComponent.buildSCC(roots, navigator);
         SCCTopSortedGraph graph = SCCTopSortedGraph.topSort(sccs);
         
-        worklist.add(graph.getLast());
+        worklist.push(graph.getLast());
         
         System.out.println("Initial setup:\t\t"+(System.currentTimeMillis()-time)/1000.+" seconds.");
         
         while (!worklist.isEmpty()) {
-            SCComponent scc = (SCComponent) worklist.getFirst();
+            SCComponent scc = (SCComponent) worklist.pull();
             Object[] nodes = scc.nodes();
             boolean change = false;
             for (int i=0; i<nodes.length; ++i) {
@@ -210,7 +211,7 @@ public class ContextSensitiveBDD {
             if (change) {
                 for (int j=0; j<scc.prevLength(); ++j) {
                     SCComponent prev = scc.prev(j);
-                    worklist.add(prev);
+                    worklist.push(prev);
                 }
             }
         }

@@ -6,8 +6,8 @@
 
 package Compil3r.Quad;
 
+import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -15,7 +15,6 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 
 import Clazz.jq_Class;
 import Clazz.jq_Field;
@@ -253,10 +252,11 @@ public class AndersenPointerAnalysis {
             }
             
             System.out.println("Result of Andersen pointer analysis:");
+            CallGraph cg = INSTANCE.getCallGraph();
             if (FULL_DUMP)
-                System.out.println(dumpResults(INSTANCE.callSiteToTargets));
+                System.out.println(cg);
             System.out.println(INSTANCE.computeStats());
-            System.out.println(computeHistogram(INSTANCE.callSiteToTargets));
+            System.out.println(cg.computeHistogram("call site", "target"));
             
             if (COMPARE_RTA) {
                 calcRTA();
@@ -269,9 +269,10 @@ public class AndersenPointerAnalysis {
                     CallTargets ct = cs.m.getCallTargets();
                     cha_rta_callSiteToTargets.put(cs, ct);
                 }
+                cg = new AndersenCallGraph(cha_rta_callSiteToTargets, INSTANCE.rootSet);
                 if (FULL_DUMP)
-                    System.out.println(dumpResults(cha_rta_callSiteToTargets));
-                System.out.println(computeHistogram(cha_rta_callSiteToTargets));
+                    System.out.println(cg);
+                System.out.println(cg.computeHistogram("call site", "target"));
             }
         }
         public static void calcRTA() {
@@ -353,9 +354,10 @@ public class AndersenPointerAnalysis {
         public static void doIt_output() {
             INSTANCE.iterate();
             System.out.println("Result of Andersen pointer analysis:");
-            System.out.println(dumpResults(INSTANCE.callSiteToTargets));
+            CallGraph cg = INSTANCE.getCallGraph();
+            System.out.println(cg);
             System.out.println(INSTANCE.computeStats());
-            System.out.println(computeHistogram(INSTANCE.callSiteToTargets));
+            System.out.println(cg.computeHistogram("call site", "target"));
 
             if (COMPARE_RTA) {
                 System.out.println("Compare to CHA/RTA:");
@@ -367,8 +369,9 @@ public class AndersenPointerAnalysis {
                     CallTargets ct = cs.m.getCallTargets();
                     cha_rta_callSiteToTargets.put(cs, ct);
                 }
-                System.out.println(dumpResults(cha_rta_callSiteToTargets));
-                System.out.println(computeHistogram(cha_rta_callSiteToTargets));
+                cg = new AndersenCallGraph(cha_rta_callSiteToTargets, INSTANCE.rootSet);
+                System.out.println(cg);
+                System.out.println(cg.computeHistogram("call site", "target"));
             }
         }
     }
@@ -614,8 +617,6 @@ public class AndersenPointerAnalysis {
 
     public static AndersenPointerAnalysis INSTANCE = new AndersenPointerAnalysis(true);
     
-    public static final int HISTOGRAM_SIZE = 100;
-    
     public String computeStats() {
         StringBuffer sb = new StringBuffer();
         HashSet classes = new HashSet();
@@ -687,6 +688,7 @@ public class AndersenPointerAnalysis {
         }
         return sb.toString();
     }
+    public static final int HISTOGRAM_SIZE = 100;
     public static String computeHistogram2(Map m) {
         HashMap table = new HashMap();
         for (Iterator i=m.entrySet().iterator(); i.hasNext(); ) {
@@ -742,73 +744,6 @@ public class AndersenPointerAnalysis {
         sb.append(Strings.lineSep);
         return sb.toString();
     }
-    public static String computeHistogram(Map m) {
-        StringBuffer sb = new StringBuffer();
-        int[] histogram = new int[HISTOGRAM_SIZE];
-        long total = 0;
-        for (Iterator i=m.entrySet().iterator(); i.hasNext(); ) {
-            Map.Entry e = (Map.Entry)i.next();
-            //CallSite cs = (CallSite)e.getKey();
-            Set s = (Set)e.getValue();
-            int x = s.size();
-            if (x >= HISTOGRAM_SIZE) x = HISTOGRAM_SIZE-1;
-            histogram[x]++;
-            total += x;
-        }
-        sb.append(" Total # of call graph edges: ");
-        sb.append(total);
-        sb.append('/');
-        sb.append(total+histogram[0]);
-        sb.append(Strings.lineSep);
-        for (int i=0; i<HISTOGRAM_SIZE; ++i) {
-            if (histogram[i] > 0) {
-                if (i == HISTOGRAM_SIZE-1) sb.append(">=");
-                sb.append(i);
-                sb.append(" targets:\t");
-                sb.append(histogram[i]);
-                sb.append(" call site");
-                if (histogram[i] > 1) sb.append('s');
-                sb.append(Strings.lineSep);
-            }
-        }
-        sb.append("Average # of targets: "+(double)total/(double)m.size());
-        return sb.toString();
-    }
-    
-    public static String dumpResults(Map m) {
-        TreeSet ts = new TreeSet(
-            new Comparator() {
-                public int compare(Object o1, Object o2) {
-                    Map.Entry e1 = (Map.Entry)o1;
-                    CallSite cs1 = (CallSite)e1.getKey();
-                    Set s1 = (Set)e1.getValue();
-                    Map.Entry e2 = (Map.Entry)o2;
-                    CallSite cs2 = (CallSite)e2.getKey();
-                    Set s2 = (Set)e2.getValue();
-                    int s1s = s1.size(); int s2s = s2.size();
-                    if (s1s < s2s) return 1;
-                    else if (s1s > s2s) return -1;
-                    else return cs1.toString().compareTo(cs2.toString());
-                }
-            });
-        ts.addAll(m.entrySet());
-        StringBuffer sb = new StringBuffer();
-        for (Iterator i=ts.iterator(); i.hasNext(); ) {
-            Map.Entry e = (Map.Entry)i.next();
-            CallSite cs = (CallSite)e.getKey();
-            Set s = (Set)e.getValue();
-            sb.append(cs.toString());
-            sb.append(": {");
-            int x = s.size();
-            sb.append(x);
-            sb.append("} ");
-            sb.append(s.toString());
-            sb.append(Strings.lineSep);
-        }
-        return sb.toString();
-    }
-
-    public Map getCallGraph() { return callSiteToTargets; }
     
     int count;
     
@@ -1607,5 +1542,71 @@ public class AndersenPointerAnalysis {
             return s.toString()+"->"+next.toString();
         }
     }
+    
+    public static class AndersenCallGraph extends CallGraph {
+
+        private final Map callSiteToTargets;
+        private final Set roots;
+        private Set allMethods;
+        
+        public AndersenCallGraph(Map m, Set s) {
+            callSiteToTargets = new HashMap();
+            roots = new HashSet();
+            for (Iterator i = s.iterator(); i.hasNext(); ) {
+                MethodSummary ms = (MethodSummary) i.next();
+                roots.add(ms.getMethod());
+            }
+            for (Iterator i = m.entrySet().iterator(); i.hasNext(); ) {
+                Map.Entry e = (Map.Entry) i.next();
+                CallSite cs = (CallSite) e.getKey();
+                Set callees = (Set) e.getValue();
+                Object old = callSiteToTargets.put(cs.m, callees);
+                if (old != null) callees.addAll((Set) old);
+            }
+        }
+
+        private Set calculateAllMethods() {
+            Set allMethods = new HashSet();
+            allMethods.addAll(roots);
+            for (Iterator i = callSiteToTargets.entrySet().iterator(); i.hasNext(); ) {
+                Map.Entry e = (Map.Entry) i.next();
+                Set callees = (Set) e.getValue();
+                allMethods.addAll(callees);
+            }
+            return allMethods;
+        }
+
+        /* (non-Javadoc)
+         * @see Compil3r.Quad.CallGraph#getTargetMethods(java.lang.Object, Compil3r.Quad.ProgramLocation)
+         */
+        public Collection getTargetMethods(Object context, ProgramLocation callSite) {
+            return (Collection) callSiteToTargets.get(callSite);
+        }
+
+        /* (non-Javadoc)
+         * @see Compil3r.Quad.CallGraph#setRoots(java.util.Collection)
+         */
+        public void setRoots(Collection roots) {
+            throw new UnsupportedOperationException();
+        }
+
+        /* (non-Javadoc)
+         * @see Compil3r.Quad.CallGraph#getRoots()
+         */
+        protected Collection getRoots() {
+            return roots;
+        }
+
+        /* (non-Javadoc)
+         * @see Compil3r.Quad.CallGraph#getAllMethods()
+         */
+        public Collection getAllMethods() {
+            if (allMethods == null) allMethods = calculateAllMethods();
+            return allMethods;
+        }
+        
+    }
+    
+    public CallGraph getCallGraph() { return new AndersenCallGraph(callSiteToTargets, rootSet); }
     
 }

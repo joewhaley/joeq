@@ -622,10 +622,10 @@ uphere:
                 System.exit(0);
             }
             if (s.startsWith("histogram")) {
-                System.out.println("Cloned call graph:");
-                System.out.println(AndersenPointerAnalysis.computeHistogram(callGraph));
-                System.out.println("Original call graph:");
-                System.out.println(AndersenPointerAnalysis.computeHistogram2(callGraph));
+                //System.out.println("Cloned call graph:");
+                //System.out.println(AndersenPointerAnalysis.computeHistogram(callGraph));
+                //System.out.println("Original call graph:");
+                //System.out.println(AndersenPointerAnalysis.computeHistogram2(callGraph));
                 Map original = AndersenPointerAnalysis.buildOriginalCallGraph(callGraph);
                 System.out.println("Comparison:");
                 System.out.println(AndersenPointerAnalysis.compareWithOriginal(callGraph, original));
@@ -636,7 +636,7 @@ uphere:
                 continue;
             }
             if (s.startsWith("callgraph")) {
-                System.out.println(AndersenPointerAnalysis.dumpResults(apa.getCallGraph()));
+                System.out.println(apa.getCallGraph());
                 continue;
             }
             if (s.startsWith("addroot")) {

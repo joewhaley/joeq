@@ -35,6 +35,7 @@ import Compil3r.Quad.Operand.ParamListOperand;
 import Compil3r.Quad.Operand.RegisterOperand;
 import Compil3r.Quad.Operator.ALoad;
 import Compil3r.Quad.Operator.AStore;
+import Compil3r.Quad.Operator.Binary;
 import Compil3r.Quad.Operator.CheckCast;
 import Compil3r.Quad.Operator.Getfield;
 import Compil3r.Quad.Operator.Getstatic;
@@ -47,7 +48,9 @@ import Compil3r.Quad.Operator.Putfield;
 import Compil3r.Quad.Operator.Putstatic;
 import Compil3r.Quad.Operator.Return;
 import Compil3r.Quad.Operator.Special;
+import Compil3r.Quad.Operator.Unary;
 import Compil3r.Quad.RegisterFactory.Register;
+import Memory.Address;
 import Util.Assert;
 import Util.Strings;
 import Util.Collections.CollectionTestWrapper;
@@ -92,6 +95,9 @@ public class MethodSummary {
                 s = b.getSummary();
             } catch (RuntimeException t) {
                 System.err.println("Runtime exception when getting method summary for "+cfg.getMethod());
+                throw t;
+            } catch (Error t) {
+                System.err.println("Error when getting method summary for "+cfg.getMethod());
                 throw t;
             }
             summary_cache.put(cfg, s);
@@ -493,6 +499,28 @@ public class MethodSummary {
                 }
             }
         }
+        public void visitBinary(Quad obj) {
+            if (obj.getOperator() == Binary.ADD_P.INSTANCE) {
+                if (TRACE_INTRA) out.println("Visiting: "+obj);
+                Register dest_r = Binary.getDest(obj).getRegister();
+                Operand src = Binary.getSrc1(obj);
+                if (src instanceof RegisterOperand) {
+                    RegisterOperand rop = ((RegisterOperand)src);
+                    Register src_r = rop.getRegister();
+                    setRegister(dest_r, getRegister(src_r));
+                } else if (src instanceof AConstOperand) {
+                    jq_Reference type = ((AConstOperand)src).getType();
+                    Object key = type;
+                    ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(key);
+                    if (n == null) quadsToNodes.put(key, n = new ConcreteTypeNode(type, obj));
+                    setRegister(dest_r, n);
+                } else {
+                    jq_Reference type = ((PConstOperand)src).getType();
+                    UnknownTypeNode n = UnknownTypeNode.get(type);
+                    setRegister(dest_r, n);
+                }
+            }
+        }
         /** Visit a type cast check instruction. */
         public void visitCheckCast(Quad obj) {
             if (TRACE_INTRA) out.println("Visiting: "+obj);
@@ -763,15 +791,32 @@ public class MethodSummary {
             }
         }
         public void visitUnary(Quad obj) {
-            /*
-            if (obj.getOperator() == Unary.INT_2OBJECT.INSTANCE) {
+            if (obj.getOperator() == Unary.OBJECT_2ADDRESS.INSTANCE ||
+                obj.getOperator() == Unary.ADDRESS_2OBJECT.INSTANCE) {
                 if (TRACE_INTRA) out.println("Visiting: "+obj);
                 Register dest_r = Unary.getDest(obj).getRegister();
-                jq_Reference type = PrimordialClassLoader.getJavaLangObject();
+                Operand src = Unary.getSrc(obj);
+                if (src instanceof RegisterOperand) {
+                    RegisterOperand rop = ((RegisterOperand)src);
+                    Register src_r = rop.getRegister();
+                    setRegister(dest_r, getRegister(src_r));
+                } else if (src instanceof AConstOperand) {
+                    jq_Reference type = ((AConstOperand)src).getType();
+                    Object key = type;
+                    ConcreteTypeNode n = (ConcreteTypeNode)quadsToNodes.get(key);
+                    if (n == null) quadsToNodes.put(key, n = new ConcreteTypeNode(type, obj));
+                    setRegister(dest_r, n);
+                } else {
+                    jq_Reference type = ((PConstOperand)src).getType();
+                    UnknownTypeNode n = UnknownTypeNode.get(type);
+                    setRegister(dest_r, n);
+                }
+            } else if (obj.getOperator() == Unary.INT_2ADDRESS.INSTANCE) {
+                Register dest_r = Unary.getDest(obj).getRegister();
+                jq_Reference type = Address._class;
                 UnknownTypeNode n = UnknownTypeNode.get(type);
                 setRegister(dest_r, n);
             }
-            */
         }
         public void visitExceptionThrower(Quad obj) {
             // special case for method invocation.
