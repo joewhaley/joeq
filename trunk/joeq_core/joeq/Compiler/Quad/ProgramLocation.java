@@ -43,6 +43,8 @@ public abstract class ProgramLocation {
     public abstract int getNumParams();
     public abstract AndersenType getParamType(int i);
     
+    public abstract boolean isVirtual();
+    
 //    protected abstract byte getInvocationType();
     
     public abstract AndersenMethod getTargetMethod();
@@ -107,6 +109,12 @@ public abstract class ProgramLocation {
             return sb.toString();
         }
         
+        public boolean isVirtual() {
+            byte b = getInvocationType();
+            return b == BytecodeVisitor.INVOKE_VIRTUAL ||
+                    b == BytecodeVisitor.INVOKE_INTERFACE;
+        }
+        
         private byte getInvocationType() {
             if (q.getOperator() instanceof Invoke.InvokeVirtual) {
                 return BytecodeVisitor.INVOKE_VIRTUAL;
@@ -157,6 +165,8 @@ public abstract class ProgramLocation {
         public AndersenMethod getTargetMethod() { return targetMethod; }
         public int getNumParams() { return targetMethod.getNumParams(); }
         public AndersenType getParamType(int i) { return targetMethod.getParamType(i); }
+
+        public boolean isVirtual() { return false; } // todo.
 
         public int hashCode() { return identifier; }
         public boolean equals(SSAProgramLocation that) { return this.identifier == that.identifier; }
