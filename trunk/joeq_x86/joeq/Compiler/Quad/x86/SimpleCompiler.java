@@ -63,6 +63,7 @@ import Compil3r.Quad.Quad;
 import Compil3r.Quad.QuadIterator;
 import Compil3r.Quad.QuadVisitor;
 import Compil3r.Quad.RegisterFactory;
+import Compil3r.Quad.Operand.AConstOperand;
 import Compil3r.Quad.Operand.BasicBlockTableOperand;
 import Compil3r.Quad.Operand.Const4Operand;
 import Compil3r.Quad.Operand.Const8Operand;
@@ -475,6 +476,10 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
             if (((RegisterOperand) o).getType().getReferenceSize() == 8) {
                 asm.emit2_Reg_Mem(x86.MOV_r_m32, getPairedRegister(register), src+4, EBP);
             }
+        } else if (o instanceof AConstOperand) {
+            Object a = ((AConstOperand) o).getValue();
+            emitPushAddressOf(a);
+            asm.emitShort_Reg(x86.POP_r, register);
         } else if (o instanceof Const4Operand) {
             int v = ((Const4Operand) o).getBits();
             asm.emitShort_Reg_Imm(x86.MOV_r_i32, register, v);
@@ -1566,13 +1571,14 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
             loadOperand(Return.getSrc(obj), EAX);
             asm.emitShort_Reg(x86.PUSH_r, EAX);
             emitCallRelative(ExceptionDeliverer._athrow);
-        } else if (!(o instanceof Return.RETURN_V)) {
-            loadOperand(Return.getSrc(obj), EAX);
         }
         if (method.isSynchronized()) SYNCHEXIThelper();
         if (TraceMethods) {
             emitPushAddressOf(SystemInterface.toCString("Leaving: "+method));
             emitCallMemory(SystemInterface._debugwriteln);
+        }
+        if (!(o instanceof Return.RETURN_V)) {
+            loadOperand(Return.getSrc(obj), EAX);
         }
         // epilogue
         asm.emit1(x86.LEAVE);              // esp<-ebp, pop ebp
