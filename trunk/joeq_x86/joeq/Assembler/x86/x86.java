@@ -1718,7 +1718,7 @@ public class x86 implements x86Constants {
             s.append(jq.hex(n - length));
             s.append('\t');
             while (length > 0) {
-                int b = ((int)mc.get(n-length)) & 0xFF;
+                int b = ((int)mc.get1(n-length)) & 0xFF;
                 --length;
                 String str = Integer.toHexString(b);
                 if (b <= 0x0f) s.append('0');
