@@ -67,6 +67,36 @@ public class RegisterFactory {
         return null;
     }
     
+    public Register getNewStack(int i, jq_Type t) {
+        if (t.isReferenceType()) {
+	    while (i >= stack_A.size())
+		stack_A.add(i, new Register(i, true));
+	    return (Register)stack_A.get(i);
+	}
+        if (t.isIntLike()) {
+	    while (i >= stack_I.size())
+		stack_I.add(i, new Register(i, true));
+	    return (Register)stack_I.get(i);
+	}
+        if (t == jq_Primitive.FLOAT) {
+	    while (i >= stack_F.size())
+		stack_F.add(i, new Register(i, true));
+	    return (Register)stack_F.get(i);
+	}
+        if (t == jq_Primitive.LONG) {
+	    while (i >= stack_L.size())
+		stack_L.add(i, new Register(i, true));
+	    return (Register)stack_L.get(i);
+	}
+        if (t == jq_Primitive.DOUBLE) {
+	    while (i >= stack_D.size())
+		stack_D.add(i, new Register(i, true));
+	    return (Register)stack_D.get(i);
+	}
+        jq.UNREACHABLE();
+        return null;
+    }
+    
     public Register getLocal(int i, jq_Type t) {
         if (t.isReferenceType()) return (Register)local_A.get(i);
         if (t.isIntLike()) return (Register)local_I.get(i);
