@@ -3063,6 +3063,8 @@ public class PA {
         this.rootMethods.addAll(rootMethods);
         
         if (DUMP_SSA) {
+            String dumppath = System.getProperty("pa.dumppath");
+            if (dumppath != null) System.setProperty("bdddumpdir", dumppath);
             Object dummy = new Object();
             bddIRBuilder = new BuildBDDIR(bdd, M, Mmap, dummy);
             varorder += "_" + bddIRBuilder.getVarOrderDesc();
