@@ -31,6 +31,7 @@ public class BDDRelation extends Relation {
     BDDSolver solver;
     BDD relation;
     List/*<BDDDomain>*/ domains;
+    BDD domainSet;
     
     public BDDRelation(BDDSolver solver, String name, List fieldNames, List fieldDomains, List fieldOptions) {
         super(name, fieldNames, fieldDomains);
@@ -38,6 +39,7 @@ public class BDDRelation extends Relation {
         this.relation = solver.bdd.zero();
         this.domains = new LinkedList();
         System.out.println("Constructing BDDRelation "+name+" with "+fieldDomains.size()+" domains "+fieldNames.size()+" names.");
+        this.domainSet = solver.bdd.one();
         for (int i = 0; i < fieldDomains.size(); ++i) {
             FieldDomain fd = (FieldDomain) fieldDomains.get(i);
             Collection doms = solver.getBDDDomains(fd);
@@ -79,28 +81,35 @@ public class BDDRelation extends Relation {
             }
             if (solver.TRACE) solver.out.println("Field "+fieldNames.get(i)+" ("+fieldDomains.get(i)+") assigned to BDDDomain "+d);
             domains.add(d);
+            domainSet.andWith(d.set());
         }
     }
     
-    public void load() {
-        try {
-            load(name+".bdd");
-            if (solver.NOISY) solver.out.println("Loaded BDD from file: "+name+".bdd");
-            if (solver.TRACE) solver.out.println("Domains of loaded relation:"+activeDomains());
-        } catch (IOException x) {
-        }
-        
-        try {
-            loadTuples(name+".tuples");
-            if (solver.NOISY) solver.out.println("Loaded tuples from file: "+name+".tuples");
-            if (solver.TRACE) solver.out.println("Domains of loaded relation:"+activeDomains());
-        } catch (IOException x) {
-        }
+    public void load() throws IOException {
+        load(name+".bdd");
+        if (solver.NOISY) solver.out.println("Loaded BDD from file: "+name+".bdd");
+        if (solver.NOISY) solver.out.println("Domains of loaded relation:"+activeDomains(relation));
+    }
+    
+    public void loadTuples() throws IOException {
+        loadTuples(name+".tuples");
+        if (solver.NOISY) solver.out.println("Loaded tuples from file: "+name+".tuples");
+        if (solver.NOISY) solver.out.println("Domains of loaded relation:"+activeDomains(relation));
     }
     
     public void load(String filename) throws IOException {
         BDD r2 = solver.bdd.load(filename);
         if (r2 != null) {
+            BDD s = r2.support();
+            if (!s.equals(domainSet)) {
+                solver.out.println("Loaded BDD "+filename+" should be domains "+domains+", but found "+activeDomains(r2)+" instead");
+            }
+            BDD t = domainSet.and(s);
+            s.free();
+            if (!t.equals(domainSet)) {
+                throw new InternalError("Expected domains for loaded BDD "+filename+" to be "+domains+", but found "+activeDomains(r2)+" instead");
+            }
+            
             relation.free();
             relation = r2;
         }
@@ -193,7 +202,7 @@ public class BDDRelation extends Relation {
         System.out.println("Done writing "+lines+" lines.");
     }
     
-    public String activeDomains() {
+    public String activeDomains(BDD relation) {
         BDD s = relation.support();
         int[] a = s.scanSetDomains();
         s.free();

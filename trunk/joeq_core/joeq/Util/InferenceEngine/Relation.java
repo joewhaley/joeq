@@ -30,7 +30,8 @@ public abstract class Relation {
         this.fieldDomains = fieldDomains;
     }
     
-    public abstract void load();
+    public abstract void load() throws IOException;
+    public abstract void loadTuples() throws IOException;
     public abstract void save() throws IOException;
     public abstract void saveNegated() throws IOException;
     public abstract void saveTuples() throws IOException;

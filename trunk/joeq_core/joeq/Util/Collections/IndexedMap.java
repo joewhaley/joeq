@@ -22,5 +22,6 @@ public interface IndexedMap {
     Iterator iterator();
     int size();
     void dump(final DataOutput out) throws IOException;
+    void dumpStrings(final DataOutput out) throws IOException;
     
 }

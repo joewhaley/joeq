@@ -100,6 +100,8 @@ public class PA {
     boolean TRACE_OBJECT = !System.getProperty("pa.traceobject", "no").equals("no");
     boolean TRACE_CONTEXT = !System.getProperty("pa.tracecontext", "no").equals("no");
     PrintStream out = System.out;
+    boolean DUMP_INITIAL = !System.getProperty("pa.dumpinitial", "no").equals("no");
+    boolean DUMP_RESULTS = !System.getProperty("pa.dumpresults", "yes").equals("no");
     static boolean USE_JOEQ_CLASSLIBS = !System.getProperty("pa.usejoeqclasslibs", "no").equals("no");
 
     boolean INCREMENTAL1 = !System.getProperty("pa.inc1", "yes").equals("no"); // incremental points-to
@@ -2110,6 +2112,12 @@ public class PA {
         
         System.out.println("Time spent initializing: "+(System.currentTimeMillis()-time)/1000.);
         
+        if (DUMP_INITIAL) {
+            buildTypes();
+            dumpBDDRelations();
+            return;
+        }
+        
         // Start timing solver.
         time = System.currentTimeMillis();
         
@@ -2123,10 +2131,12 @@ public class PA {
 
         printSizes();
         
-        System.out.println("Writing results...");
-        time = System.currentTimeMillis();
-        dumpResults(resultsFileName);
-        System.out.println("Time spent writing: "+(System.currentTimeMillis()-time)/1000.);
+        if (DUMP_RESULTS) {
+            System.out.println("Writing results...");
+            time = System.currentTimeMillis();
+            dumpResults(resultsFileName);
+            System.out.println("Time spent writing: "+(System.currentTimeMillis()-time)/1000.);
+        }
     }
    
     static Collection readClassesFromFile(String fname) throws IOException {
@@ -3292,4 +3302,69 @@ public class PA {
         r.cg = this.cg;
         return r;
     }
+    
+    public void dumpBDDRelations() throws IOException {
+        String dumpPath = "";
+        bdd.save(dumpPath+"vP0.bdd", vP);
+        bdd.save(dumpPath+"L.bdd", L);
+        bdd.save(dumpPath+"S.bdd", S);
+        bdd.save(dumpPath+"vT.bdd", vT);
+        bdd.save(dumpPath+"hT.bdd", hT);
+        bdd.save(dumpPath+"aT.bdd", hT);
+        bdd.save(dumpPath+"cha.bdd", hT);
+        bdd.save(dumpPath+"actual.bdd", actual);
+        bdd.save(dumpPath+"formal.bdd", formal);
+        bdd.save(dumpPath+"mI.bdd", mI);
+        bdd.save(dumpPath+"IE0.bdd", IE);
+        
+        DataOutputStream dos = new DataOutputStream(new FileOutputStream(dumpPath+"bddinfo"));
+        for (int i = 0; i < bdd.numberOfDomains(); ++i) {
+            BDDDomain d = bdd.getDomain(i);
+            if (d == V1 || d == V2) dos.writeBytes("V\n");
+            else if (d == H1 || d == H2) dos.writeBytes("H\n");
+            else if (d == T1 || d == T2) dos.writeBytes("T\n");
+            else if (d == F) dos.writeBytes("F\n");
+            else if (d == I) dos.writeBytes("I\n");
+            else if (d == Z) dos.writeBytes("Z\n");
+            else if (d == N) dos.writeBytes("N\n");
+            else if (d == M) dos.writeBytes("M\n");
+            else dos.writeBytes(d.toString()+"\n");
+        }
+        dos.close();
+        
+        dos = new DataOutputStream(new FileOutputStream(dumpPath+"fielddomains.pa"));
+        dos.writeBytes("V "+(1L<<V_BITS)+" var.map\n");
+        dos.writeBytes("H "+(1L<<H_BITS)+" heap.map\n");
+        dos.writeBytes("T "+(1L<<T_BITS)+" type.map\n");
+        dos.writeBytes("F "+(1L<<F_BITS)+" field.map\n");
+        dos.writeBytes("I "+(1L<<I_BITS)+" invoke.map\n");
+        dos.writeBytes("Z "+(1L<<Z_BITS)+"\n");
+        dos.writeBytes("N "+(1L<<N_BITS)+" name.map\n");
+        dos.writeBytes("M "+(1L<<N_BITS)+" method.map\n");
+        dos.close();
+        
+        dos = new DataOutputStream(new FileOutputStream(dumpPath+"var.map"));
+        Vmap.dumpStrings(dos);
+        dos.close();
+        dos = new DataOutputStream(new FileOutputStream(dumpPath+"heap.map"));
+        Hmap.dumpStrings(dos);
+        dos.close();
+        dos = new DataOutputStream(new FileOutputStream(dumpPath+"type.map"));
+        Tmap.dumpStrings(dos);
+        dos.close();
+        dos = new DataOutputStream(new FileOutputStream(dumpPath+"field.map"));
+        Fmap.dumpStrings(dos);
+        dos.close();
+        dos = new DataOutputStream(new FileOutputStream(dumpPath+"invoke.map"));
+        Imap.dumpStrings(dos);
+        dos.close();
+        dos = new DataOutputStream(new FileOutputStream(dumpPath+"name.map"));
+        Nmap.dumpStrings(dos);
+        dos.close();
+        dos = new DataOutputStream(new FileOutputStream(dumpPath+"method.map"));
+        Mmap.dumpStrings(dos);
+        dos.close();
+    }
+    
+    
 }

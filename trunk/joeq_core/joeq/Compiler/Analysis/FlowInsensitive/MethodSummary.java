@@ -325,7 +325,10 @@ public class MethodSummary {
         /** Get the node or set of nodes in the given register in the current state. */
         public Object getRegister(Register r) {
             int i = r.getNumber();
-            Assert._assert(s.registers[i] != null);
+            if (s.registers[i] == null) {
+                System.out.println(method+" ::: Reg "+i+" is null");
+                Assert.UNREACHABLE();
+            }
             return s.registers[i];
         }
 
@@ -359,7 +362,9 @@ public class MethodSummary {
                     /*&& !params[i].isAddressType()*/
                     ) {
                     setLocal(j, param_nodes[i] = ParamNode.get(method, i, (jq_Reference)params[i]));
-                } else if (params[i].getReferenceSize() == 8) ++j;
+                } else if (params[i].getReferenceSize() == 8) {
+                    //++j;
+                }
             }
             this.my_global = GlobalNode.get(this.method);
             this.sync_ops = new HashMap();
