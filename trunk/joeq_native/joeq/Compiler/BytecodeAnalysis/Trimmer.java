@@ -52,7 +52,7 @@ public class Trimmer {
     
     public Trimmer(jq_Method method, Set initialClassSet, boolean addall) {
         this(initialClassSet, addall);
-        addToWorklist(method);
+        rs.addNecessaryMethod(method);
     }
     public Trimmer(Set initialClassSet, boolean addall) {
         methodWorklist = new LinkedList();
