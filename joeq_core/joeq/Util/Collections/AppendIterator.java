@@ -6,7 +6,9 @@ package joeq.Util.Collections;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-/*
+/**
+ * Constructs a new iterator that appends two given iterators.
+ * 
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
@@ -16,7 +18,12 @@ public class AppendIterator implements Iterator {
     private final Iterator iterator2;
     private boolean which;
     
-    /** Creates new AppendIterator */
+    /** 
+     * Given two iterators, creates a new AppendIterator.
+     * 
+     * @param iter1  first iterator
+     * @param iter2  second iterator
+     */
     public AppendIterator(Iterator iter1, Iterator iter2) {
         if (iter1 == null) {
             iterator1 = iter2; iterator2 = null;
@@ -26,6 +33,9 @@ public class AppendIterator implements Iterator {
         which = false;
     }
 
+    /* (non-Javadoc)
+     * @see java.util.Iterator#next()
+     */
     public Object next() {
         if (which) {
             return iterator2.next();
@@ -36,6 +46,9 @@ public class AppendIterator implements Iterator {
         } else throw new NoSuchElementException();
     }
     
+    /* (non-Javadoc)
+     * @see java.util.Iterator#hasNext()
+     */
     public boolean hasNext() {
         if (which || ((iterator2 != null) && !iterator1.hasNext())) {
             return iterator2.hasNext();
@@ -44,6 +57,9 @@ public class AppendIterator implements Iterator {
         }
     }
     
+    /* (non-Javadoc)
+     * @see java.util.Iterator#remove()
+     */
     public void remove() {
         if (!which) iterator1.remove();
         else iterator2.remove();
