@@ -23,20 +23,18 @@ import java.util.StringTokenizer;
 import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Array;
 import Clazz.jq_Class;
+import Clazz.jq_FakeInstanceMethod;
 import Clazz.jq_Field;
 import Clazz.jq_InstanceField;
 import Clazz.jq_Member;
 import Clazz.jq_Method;
-import Clazz.jq_FakeInstanceMethod;
 import Clazz.jq_Reference;
 import Clazz.jq_StaticField;
 import Clazz.jq_Type;
-import Clazz.jq_NameAndDesc;
 import Compil3r.Analysis.IPA.LoopAnalysis;
 import Compil3r.Analysis.IPA.ProgramLocation;
-import Compil3r.Analysis.IPA.ProgramLocation.QuadProgramLocation;
-import Compil3r.Analysis.IPA.ProgramLocation.BCProgramLocation;
 import Compil3r.Analysis.IPA.ProgramLocation.FakeProgramLocation;
+import Compil3r.Analysis.IPA.ProgramLocation.QuadProgramLocation;
 import Compil3r.Quad.BasicBlock;
 import Compil3r.Quad.CodeCache;
 import Compil3r.Quad.ControlFlowGraph;
@@ -84,6 +82,7 @@ import Util.Collections.HashCodeComparator;
 import Util.Collections.IdentityHashCodeWrapper;
 import Util.Collections.IndexMap;
 import Util.Collections.InstrumentedSetWrapper;
+import Util.Collections.MultiMap;
 import Util.Collections.Pair;
 import Util.Collections.SetFactory;
 import Util.Collections.SortedArraySet;
@@ -5022,5 +5021,47 @@ outer:
                          /* thrown */Collections.EMPTY_SET,
                          /* passedAsParameters */Collections.EMPTY_SET,
                          /* sync_ops */Collections.EMPTY_MAP);
+    }
+    
+    public static class OperandToNodeMap {
+
+        MultiMap operandToNode;
+        
+        public static void write(Textualizer t) throws IOException {
+            for (Iterator i = MethodSummary.summary_cache.entrySet().iterator(); i.hasNext(); ) {
+                Map.Entry e = (Map.Entry) i.next();
+                jq_Method m = (jq_Method) e.getKey();
+                if (m.getBytecode() == null) continue;
+                MethodSummary s = (MethodSummary) e.getValue();
+                ControlFlowGraph cfg = CodeCache.getCode(m);
+                m.write(t);
+                for (Iterator j = cfg.reversePostOrderIterator(); j.hasNext(); ) {
+                    BasicBlock bb = (BasicBlock) j.next();
+                    s.builder.bb = bb;
+                    State state = s.builder.start_states[bb.getID()];
+                    s.builder.s = state.copy();
+                    for (Iterator k = bb.iterator(); k.hasNext(); ) {
+                        Quad q = (Quad) k.next();
+                        t.writeBytes("quad "+q.getID()+" ");
+                        int num = 0;
+                        for (Iterator l = q.getUsedRegisters().iterator(); l.hasNext(); ) {
+                            RegisterOperand op = (RegisterOperand) l.next();
+                            t.writeBytes("op ");
+                            Register r = ((RegisterOperand) op).getRegister();
+                            Object o = s.builder.getRegister(r);
+                            Set set;
+                            if (o instanceof Set) {
+                                set = (Set) o;
+                            } else {
+                                set = Collections.singleton(o);
+                            }
+                            for (Iterator n = set.iterator(); n.hasNext(); ) {
+                                
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
