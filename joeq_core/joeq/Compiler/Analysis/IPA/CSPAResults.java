@@ -67,6 +67,7 @@ import Util.Collections.GenericMultiMap;
 import Util.Collections.IndexMap;
 import Util.Collections.InvertibleMultiMap;
 import Util.Collections.MultiMap;
+import Util.Collections.Pair;
 import Util.Collections.SortedArraySet;
 import Util.Collections.UnmodifiableIterator;
 import Util.Graphs.Navigator;
@@ -75,6 +76,7 @@ import Util.Graphs.SCCTopSortedGraph;
 import Util.Graphs.SCComponent;
 import Util.Graphs.Traversals;
 import Util.Graphs.PathNumbering.Path;
+import Util.Graphs.PathNumbering.Range;
 import Util.IO.ByteSequence;
 
 /**
@@ -121,6 +123,7 @@ public class CSPAResults {
     /** Extra BDD domain for heap object number. */
     public BDDDomain H2o;
     
+    public BDDDomain V3c, V3o;
     public BDDDomain H3c, H3o;
     
     /** Points-to BDD: V1c x V1o x H1c x H1o.
@@ -135,6 +138,14 @@ public class CSPAResults {
      * point to heap object H2.
      */
     BDD fieldPt;
+    
+    /** Accessible locations BDD: V1c x V1o x V2c x V2o.
+     * This contains the transitive call graph relation.
+     * A relation (V1c,V1o,V2c,V2o) is in the BDD if there is a path in the
+     * call graph from the method containing V1o under the context V1c to the
+     * method containing V2o under the context V2c.
+     */
+    BDD accessibleLocations;
     
     /** Points-to BDD: V1o x H1o.
      * Just cached because it is used often.
@@ -244,6 +255,81 @@ public class CSPAResults {
             TypedBDD r = new TypedBDD(result, V1c, V1o, V2c, V2o);
         }
         return !result.isZero();
+    }
+
+    void buildAccessibleLocations() {
+        BDDPairing V1ToV2 = bdd.makePair();
+        V1ToV2.set(new BDDDomain[] {V1c, V1o}, new BDDDomain[] {V2c, V2o} );
+        BDDPairing V3cToV1c = bdd.makePair(V3c, V1c);
+        BDDPairing V2cToV1c = bdd.makePair(V2c, V1c);
+        BDDPairing V2oToV1o = bdd.makePair(V2o, V1o);
+        BDD V1cset = V1c.set();
+        
+        SCCTopSortedGraph sccgraph = pn.getSCCGraph();
+        List sccroots = new LinkedList();
+        for (Iterator i = cg.getRoots().iterator(); i.hasNext(); ) {
+            SCComponent scc = pn.getSCC(i.next());
+            sccroots.add(scc);
+        }
+        Navigator nav = sccgraph.getNavigator();
+        List sccs = Traversals.postOrder(nav, sccroots);
+        Map sccToVars = new HashMap();
+        accessibleLocations = bdd.zero();
+        for (Iterator i = sccs.iterator(); i.hasNext(); ) {
+            SCComponent scc = (SCComponent) i.next();
+            if (TRACE_ACC_LOC) System.out.println("Visiting SCC"+scc.getId());
+            // build the set of local vars in domain V2o
+            BDD localVars = bdd.zero();
+            for (Iterator j = scc.nodeSet().iterator(); j.hasNext(); ) {
+                Object o = j.next();
+                if (!(o instanceof jq_Method)) continue;
+                jq_Method method = (jq_Method) o;
+                if (TRACE_ACC_LOC) System.out.println("Node "+method);
+                Collection method_nodes = methodToVariables.getValues(method);
+                for (Iterator k = method_nodes.iterator(); k.hasNext(); ) {
+                    Node n = (Node) k.next();
+                    int x = getVariableIndex(n);
+                    localVars.orWith(V2o.ithVar(x));
+                }
+            }
+            Range r1 = pn.getSCCRange(scc);
+            if (TRACE_ACC_LOC) System.out.println("Local Vars="+localVars.toStringWithDomains()+" Context Range="+r1);
+            BDD b = CSPA.buildContextMap(V1c, PathNumbering.toBigInt(r1.low), PathNumbering.toBigInt(r1.high),
+                                         V2c, PathNumbering.toBigInt(r1.low), PathNumbering.toBigInt(r1.high));
+            BDD contextVars = b.and(localVars);
+            b.free();
+            if (TRACE_ACC_LOC) System.out.println("With context="+contextVars.toStringWithDomains());
+            for (int j = 0; j < scc.nextLength(); ++j) {
+                SCComponent callee = scc.next(j);
+                Number npaths2 = pn.numberOfPathsToSCC(callee);
+                Collection edges = pn.getSCCEdges(scc, callee);
+                System.out.println("SCC"+scc.getId()+" -> SCC"+callee.getId()+": "+edges.size()+" edges");
+                BDD contextVars_callee = (BDD) sccToVars.get(callee);
+                // build a map to translate callee path numbers into caller path numbers
+                BDD contextMap = bdd.zero();
+                for (Iterator k = edges.iterator(); k.hasNext(); ) {
+                    Pair e = (Pair) k.next();
+                    Range r2 = pn.getEdge(e);
+                    if (TRACE_ACC_LOC) System.out.println("Edge="+e+" Caller range="+r1+" Callee range="+r2);
+                    BDD b2 = CSPA.buildContextMap(V1c, PathNumbering.toBigInt(r2.low), PathNumbering.toBigInt(r2.high),
+                                                  V3c, PathNumbering.toBigInt(r1.low), PathNumbering.toBigInt(r1.high));
+                    contextMap.orWith(b2);
+                }
+                if (TRACE_ACC_LOC) System.out.println("Context map="+contextMap.toStringWithDomains());
+                // relprod to translate callee path numbers into caller path numbers
+                BDD r = contextVars_callee.relprod(contextMap, V1cset);
+                contextMap.free();
+                r.replaceWith(V3cToV1c);
+                if (TRACE_ACC_LOC) System.out.println("Translated="+r.toStringWithDomains());
+                contextVars.orWith(r);
+            }
+            if (TRACE_ACC_LOC) System.out.println("Final context vars for SCC"+scc.getId()+": "+contextVars.toStringWithDomains());
+            sccToVars.put(scc, contextVars);
+            BDD al = contextVars.id();
+            al.andWith(localVars.replace(V2oToV1o));
+            if (TRACE_ACC_LOC) System.out.println("Final location map for SCC"+scc.getId()+": "+al.toStringWithDomains());
+            accessibleLocations.orWith(al);
+        }
     }
 
     Map buildTransitiveAccessedLocations() {
@@ -570,6 +656,7 @@ public class CSPAResults {
     }
 
     public static boolean TRACE_ESCAPE = false;
+    public static boolean TRACE_ACC_LOC = false;
 
     public Collection getTargetMethods(ProgramLocation callSite) {
         return cg.getTargetMethods(mapCall(callSite));
@@ -787,6 +874,8 @@ public class CSPAResults {
         buildContextInsensitive();
 
         initializeMethodMap();
+        
+        buildAccessibleLocations();
     }
 
     private void buildContextInsensitive() {
@@ -840,13 +929,17 @@ public class CSPAResults {
         bdd.setVarOrder(varorder);
         bdd.enableReorder();
         
-        long[] domains2 = new long[2];
-        domains2[0] = 1L << HEAPBITS;
-        domains2[1] = 1L << HEAPCONTEXTBITS;
+        long[] domains2 = new long[4];
+        domains2[0] = 1L << VARBITS;
+        domains2[1] = 1L << VARCONTEXTBITS;
+        domains2[2] = 1L << HEAPBITS;
+        domains2[3] = 1L << HEAPCONTEXTBITS;
         BDDDomain[] bdd_domains2 = bdd.extDomain(domains2);
         
-        H3o = bdd_domains2[0];
-        H3c = bdd_domains2[1];
+        V3o = bdd_domains2[0];
+        V3c = bdd_domains2[1];
+        H3o = bdd_domains2[2];
+        H3c = bdd_domains2[3];
     }
     
     private IndexMap readIndexMap(String name, DataInput in) throws IOException {
@@ -1552,6 +1645,9 @@ public class CSPAResults {
         if (s.equals("fieldPt")) {
             return new TypedBDD(fieldPt, H1c, H1o, FD, H2c, H2o );
         }
+        if (s.equals("al")) {
+            return new TypedBDD(accessibleLocations, V1c, V1o, V2c, V2o );
+        }
         if (s.startsWith("V1o(")) {
             int x = Integer.parseInt(s.substring(4, s.length()-1));
             return new TypedBDD(V1o.ithVar(x), V1o);
@@ -1699,25 +1795,33 @@ public class CSPAResults {
                 } else if (command.equals("contextvar")) {
                     int varNum = Integer.parseInt(st.nextToken());
                     Node n = getVariableNode (varNum);
-                    jq_Method m = n.getDefiningMethod();
-                    Number c = new BigInteger(st.nextToken(), 10);
-                    if (m == null) {
+                    if (n == null) {
                         System.out.println("No method for node "+n);
                     } else {
-                        Path trace = pn.getPath(m, c);
-                        System.out.println(m+" context "+c+":\n"+trace);
+                        jq_Method m = n.getDefiningMethod();
+                        Number c = new BigInteger(st.nextToken(), 10);
+                        if (m == null) {
+                            System.out.println("No method for node "+n);
+                        } else {
+                            Path trace = pn.getPath(m, c);
+                            System.out.println(m+" context "+c+":\n"+trace);
+                        }
                     }
                     increaseCount = false;
                 } else if (command.equals("contextheap")) {
                     int varNum = Integer.parseInt(st.nextToken());
                     Node n = (Node) getHeapNode(varNum);
-                    jq_Method m = n.getDefiningMethod();
-                    Number c = new BigInteger(st.nextToken(), 10);
-                    if (m == null) {
+                    if (n == null) {
                         System.out.println("No method for node "+n);
                     } else {
-                        Path trace = pn.getPath(m, c);
-                        System.out.println(m+" context "+c+": "+trace);
+                        jq_Method m = n.getDefiningMethod();
+                        Number c = new BigInteger(st.nextToken(), 10);
+                        if (m == null) {
+                            System.out.println("No method for node "+n);
+                        } else {
+                            Path trace = pn.getPath(m, c);
+                            System.out.println(m+" context "+c+": "+trace);
+                        }
                     }
                     increaseCount = false;
                 } else if (command.equals("aliasedparams")) {
@@ -1745,6 +1849,9 @@ public class CSPAResults {
                     increaseCount = false;
                 } else if (command.equals("escape")) {
                     escapeAnalysis();
+                    increaseCount = false;
+                } else if (command.equals("modref")) {
+                    buildAccessibleLocations();
                     increaseCount = false;
                 } else {
                     System.err.println("Unrecognized command");
