@@ -630,6 +630,10 @@ uphere:
                 System.out.println(AndersenPointerAnalysis.compareWithOriginal(callGraph, original));
                 continue;
             }
+            if (s.startsWith("stats")) {
+                System.out.println(apa.computeStats());
+                continue;
+            }
             if (s.startsWith("addroot")) {
                 m = getMethod();
                 rootSet.add(m);
@@ -876,7 +880,7 @@ uphere:
                 
                 SelectiveCloning.pa = apa;
                 time = System.currentTimeMillis();
-                SelectiveCloning.searchForCloningOpportunities4(selectedCallSites);
+                SelectiveCloning.searchForCloningOpportunities3(selectedCallSites);
                 time = System.currentTimeMillis() - time;
                 System.out.println("Time to complete: "+time);
                 MethodSummary.clearSummaryCache();
