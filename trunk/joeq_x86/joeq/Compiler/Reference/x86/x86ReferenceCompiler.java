@@ -1,7 +1,7 @@
 // x86ReferenceCompiler.java, created Mon Feb  5 23:23:21 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Compil3r.Reference.x86;
+package joeq.Compiler.Reference.x86;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -19,33 +19,33 @@ import joeq.Assembler.x86.DirectBindCall;
 import joeq.Assembler.x86.x86;
 import joeq.Assembler.x86.x86Assembler;
 import joeq.Assembler.x86.x86Constants;
-import joeq.Clazz.PrimordialClassLoader;
-import joeq.Clazz.jq_Array;
-import joeq.Clazz.jq_BytecodeMap;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_ClassFileConstants;
-import joeq.Clazz.jq_CompiledCode;
-import joeq.Clazz.jq_InstanceField;
-import joeq.Clazz.jq_InstanceMethod;
-import joeq.Clazz.jq_Method;
-import joeq.Clazz.jq_StaticField;
-import joeq.Clazz.jq_StaticMethod;
-import joeq.Clazz.jq_TryCatch;
-import joeq.Clazz.jq_TryCatchBC;
-import joeq.Clazz.jq_Type;
-import joeq.Compil3r.Compil3rInterface;
-import joeq.Compil3r.CompilationState;
-import joeq.Compil3r.BytecodeAnalysis.BytecodeVisitor;
+import joeq.Class.PrimordialClassLoader;
+import joeq.Class.jq_Array;
+import joeq.Class.jq_BytecodeMap;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_ClassFileConstants;
+import joeq.Class.jq_CompiledCode;
+import joeq.Class.jq_InstanceField;
+import joeq.Class.jq_InstanceMethod;
+import joeq.Class.jq_Method;
+import joeq.Class.jq_StaticField;
+import joeq.Class.jq_StaticMethod;
+import joeq.Class.jq_TryCatch;
+import joeq.Class.jq_TryCatchBC;
+import joeq.Class.jq_Type;
+import joeq.Compiler.CompilerInterface;
+import joeq.Compiler.CompilationState;
+import joeq.Compiler.BytecodeAnalysis.BytecodeVisitor;
 import joeq.Main.jq;
 import joeq.Memory.CodeAddress;
 import joeq.Memory.HeapAddress;
-import joeq.Run_Time.ExceptionDeliverer;
-import joeq.Run_Time.MathSupport;
-import joeq.Run_Time.Monitor;
-import joeq.Run_Time.Reflection;
-import joeq.Run_Time.SystemInterface;
-import joeq.Run_Time.TypeCheck;
-import joeq.Run_Time.Unsafe;
+import joeq.Runtime.ExceptionDeliverer;
+import joeq.Runtime.MathSupport;
+import joeq.Runtime.Monitor;
+import joeq.Runtime.Reflection;
+import joeq.Runtime.SystemInterface;
+import joeq.Runtime.TypeCheck;
+import joeq.Runtime.Unsafe;
 import joeq.UTF.Utf8;
 import joeq.Util.Assert;
 import joeq.Util.Strings;
@@ -56,7 +56,7 @@ import joeq.Util.Strings;
  */
 public class x86ReferenceCompiler extends BytecodeVisitor implements x86Constants, jq_ClassFileConstants {
 
-    public static class Factory implements Compil3rInterface {
+    public static class Factory implements CompilerInterface {
         public static final Factory INSTANCE = new Factory();
         public Factory() {}
         public jq_CompiledCode compile(jq_Method m) {
@@ -2583,7 +2583,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements x86Constant
         }
         asm.emitPUSH_i(dim);
         emitPushAddressOf(f);
-        emitCallRelative(joeq.Run_Time.Arrays._multinewarray);
+        emitCallRelative(joeq.Runtime.Arrays._multinewarray);
         // pop dim args, because the callee doesn't do it.
         asm.emit2_Reg_Mem(x86.LEA, ESP, dim<<2, ESP);
         asm.emitShort_Reg(x86.PUSH_r, EAX);
@@ -2835,7 +2835,7 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements x86Constant
     /*
     public static final jq_StaticField _call_patches;
     static {
-        jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Compil3r/Reference/x86/x86ReferenceCompiler;");
+        jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Compiler/Reference/x86/x86ReferenceCompiler;");
         _call_patches = k.getOrCreateStaticField("call_patches", "Ljava/util/Collection;");
     }
      */

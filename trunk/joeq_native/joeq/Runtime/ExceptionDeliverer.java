@@ -1,16 +1,16 @@
 // ExceptionDeliverer.java, created Mon Feb  5 23:23:21 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Run_Time;
+package joeq.Runtime;
 
 import joeq.Allocator.CodeAllocator;
-import joeq.Clazz.PrimordialClassLoader;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_CompiledCode;
-import joeq.Clazz.jq_Method;
-import joeq.Clazz.jq_Reference;
-import joeq.Clazz.jq_StaticMethod;
-import joeq.Clazz.jq_TryCatch;
+import joeq.Class.PrimordialClassLoader;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_CompiledCode;
+import joeq.Class.jq_Method;
+import joeq.Class.jq_Reference;
+import joeq.Class.jq_StaticMethod;
+import joeq.Class.jq_TryCatch;
 import joeq.Debugger.OnlineDebugger;
 import joeq.Memory.CodeAddress;
 import joeq.Memory.StackAddress;
@@ -226,7 +226,7 @@ public abstract class ExceptionDeliverer {
     public static final jq_StaticMethod _trap_handler;
     public static final jq_StaticMethod _debug_trap_handler;
     static {
-        jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Run_Time/ExceptionDeliverer;");
+        jq_Class k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Runtime/ExceptionDeliverer;");
         _athrow = k.getOrCreateStaticMethod("athrow", "(Ljava/lang/Throwable;)V");
         _trap_handler = k.getOrCreateStaticMethod("trap_handler", "(I)V");
         _debug_trap_handler = k.getOrCreateStaticMethod("debug_trap_handler", "(I)V");

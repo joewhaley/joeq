@@ -1,14 +1,14 @@
 // StackCodeWalker.java, created Thu Sep 26 22:01:42 2002 by laudney
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Run_Time;
+package joeq.Runtime;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 import joeq.Allocator.CodeAllocator;
-import joeq.Clazz.jq_CompiledCode;
-import joeq.Clazz.jq_Method;
+import joeq.Class.jq_CompiledCode;
+import joeq.Class.jq_Method;
 import joeq.Memory.CodeAddress;
 import joeq.Memory.StackAddress;
 import joeq.UTF.Utf8;

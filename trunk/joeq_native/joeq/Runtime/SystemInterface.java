@@ -1,16 +1,16 @@
 // SystemInterface.java, created Mon Feb  5 23:23:21 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Run_Time;
+package joeq.Runtime;
 
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import joeq.Clazz.PrimordialClassLoader;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_InstanceField;
-import joeq.Clazz.jq_StaticField;
+import joeq.Class.PrimordialClassLoader;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_InstanceField;
+import joeq.Class.jq_StaticField;
 import joeq.Main.jq;
 import joeq.Memory.Address;
 import joeq.Memory.CodeAddress;
@@ -268,7 +268,7 @@ public abstract class SystemInterface {
     public static final jq_InstanceField _string_offset;
     public static final jq_InstanceField _string_count;
     static {
-        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Run_Time/SystemInterface;");
+        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Runtime/SystemInterface;");
         _debugwrite = _class.getOrCreateStaticField("debugwrite_8", "Ljoeq/Memory/CodeAddress;");
         _debugwriteln = _class.getOrCreateStaticField("debugwriteln_8", "Ljoeq/Memory/CodeAddress;");
         // cannot use getJavaLangString here, as it may not yet have been initialized.

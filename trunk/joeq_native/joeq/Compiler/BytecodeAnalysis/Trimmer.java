@@ -1,7 +1,7 @@
 // Trimmer.java, created Fri Jan 11 16:49:00 2002 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Compil3r.BytecodeAnalysis;
+package joeq.Compiler.BytecodeAnalysis;
 
 import java.io.PrintStream;
 import java.util.HashSet;
@@ -13,23 +13,23 @@ import java.util.Set;
 import joeq.Allocator.DefaultHeapAllocator;
 import joeq.Allocator.HeapAllocator;
 import joeq.Bootstrap.BootstrapRootSet;
-import joeq.Clazz.jq_Array;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_FieldVisitor;
-import joeq.Clazz.jq_InstanceField;
-import joeq.Clazz.jq_InstanceMethod;
-import joeq.Clazz.jq_Method;
-import joeq.Clazz.jq_MethodVisitor;
-import joeq.Clazz.jq_StaticField;
-import joeq.Clazz.jq_Type;
-import joeq.Clazz.jq_TypeVisitor;
-import joeq.Compil3r.Reference.x86.x86ReferenceLinker;
-import joeq.Run_Time.ExceptionDeliverer;
-import joeq.Run_Time.MathSupport;
-import joeq.Run_Time.Monitor;
-import joeq.Run_Time.Reflection;
-import joeq.Run_Time.TypeCheck;
-import joeq.Run_Time.Unsafe;
+import joeq.Class.jq_Array;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_FieldVisitor;
+import joeq.Class.jq_InstanceField;
+import joeq.Class.jq_InstanceMethod;
+import joeq.Class.jq_Method;
+import joeq.Class.jq_MethodVisitor;
+import joeq.Class.jq_StaticField;
+import joeq.Class.jq_Type;
+import joeq.Class.jq_TypeVisitor;
+import joeq.Compiler.Reference.x86.x86ReferenceLinker;
+import joeq.Runtime.ExceptionDeliverer;
+import joeq.Runtime.MathSupport;
+import joeq.Runtime.Monitor;
+import joeq.Runtime.Reflection;
+import joeq.Runtime.TypeCheck;
+import joeq.Runtime.Unsafe;
 import joeq.Util.Assert;
 import joeq.Util.Strings;
 
@@ -558,7 +558,7 @@ public class Trimmer {
         }
         public void visitMULTINEWARRAY(jq_Type f, char dim) {
             super.visitMULTINEWARRAY(f, dim);
-            INVOKEhelper(INVOKE_STATIC, joeq.Run_Time.Arrays._multinewarray);
+            INVOKEhelper(INVOKE_STATIC, joeq.Runtime.Arrays._multinewarray);
             rs.addNecessaryType(f);
             for (int i=0; i<dim; ++i) {
                 if (!f.isArrayType()) {

@@ -1,17 +1,17 @@
 // x86ReferenceExceptionDeliverer.java, created Mon Feb  5 23:23:21 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Compil3r.Reference.x86;
+package joeq.Compiler.Reference.x86;
 
-import joeq.Clazz.jq_CompiledCode;
-import joeq.Clazz.jq_Method;
-import joeq.Clazz.jq_TryCatch;
+import joeq.Class.jq_CompiledCode;
+import joeq.Class.jq_Method;
+import joeq.Class.jq_TryCatch;
 import joeq.Memory.CodeAddress;
 import joeq.Memory.HeapAddress;
 import joeq.Memory.StackAddress;
-import joeq.Run_Time.ExceptionDeliverer;
-import joeq.Run_Time.SystemInterface;
-import joeq.Run_Time.Unsafe;
+import joeq.Runtime.ExceptionDeliverer;
+import joeq.Runtime.SystemInterface;
+import joeq.Runtime.Unsafe;
 import joeq.Util.Assert;
 
 /**

@@ -1,14 +1,14 @@
 // Monitor.java, created Mon Feb  5 23:23:21 2001 by joewhaley
 // Copyright (C) 2001-3 John Whaley <jwhaley@alum.mit.edu>
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
-package joeq.Run_Time;
+package joeq.Runtime;
 
 import joeq.Allocator.DefaultHeapAllocator;
 import joeq.Allocator.ObjectLayout;
-import joeq.Clazz.PrimordialClassLoader;
-import joeq.Clazz.jq_Class;
-import joeq.Clazz.jq_InstanceField;
-import joeq.Clazz.jq_StaticMethod;
+import joeq.Class.PrimordialClassLoader;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_InstanceField;
+import joeq.Class.jq_StaticMethod;
 import joeq.Memory.HeapAddress;
 import joeq.Scheduler.jq_Thread;
 import joeq.Util.Assert;
@@ -274,7 +274,7 @@ public class Monitor {
     public static final jq_StaticMethod _monitorexit;
     public static final jq_InstanceField _atomic_count;
     static {
-        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Run_Time/Monitor;");
+        _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Runtime/Monitor;");
         _monitorenter = _class.getOrCreateStaticMethod("monitorenter", "(Ljava/lang/Object;)V");
         _monitorexit = _class.getOrCreateStaticMethod("monitorexit", "(Ljava/lang/Object;)V");
         _atomic_count = _class.getOrCreateInstanceField("atomic_count", "I");
