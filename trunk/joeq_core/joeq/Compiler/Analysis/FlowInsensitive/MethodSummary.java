@@ -366,7 +366,7 @@ public class MethodSummary {
         public Object getRegister(Register r) {
             int i = r.getNumber();
             if (s.registers[i] == null) {
-                System.out.println(method+" ::: Reg "+i+" is null");
+                //System.out.println(method+" ::: Reg "+i+" is null");
                 //Assert.UNREACHABLE();
             }
             return s.registers[i];
