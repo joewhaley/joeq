@@ -157,23 +157,23 @@ public class PAResults implements PointerAnalysisResults {
         List results = new ArrayList();
         DataInput in = new DataInputStream(System.in);
         CollectionType tfinder = null;
-        Stack inputs = new Stack();     // stack of DataInputStream to support "include" command
-        boolean prompt = true;          // only prompt when interacting with Stdin, outside of include
+        Stack/*<DataInputStream>*/ inputs = new Stack();     // to support "include" command
         for (;;) {
             boolean increaseCount = true;
             int listHowMany = DEFAULT_NUM_TO_PRINT;
             
             try {
-                if (prompt)
+                if (inputs.isEmpty())          // prompt only if stdin
                     System.out.print(i+"> ");
                 String s = in.readLine();
                 if (s == null) {
                     if (inputs.isEmpty())
                         return;
                     in = (DataInput)inputs.pop();
-                    prompt = inputs.isEmpty();
                     continue;
                 }
+                if (!inputs.isEmpty())          // echo for user's benefit
+                    System.out.println(i+"> "+s);
                 StringTokenizer st = new StringTokenizer(s);
                 if (!st.hasMoreElements()) continue;
                 String command = st.nextToken();
@@ -182,7 +182,6 @@ public class PAResults implements PointerAnalysisResults {
                 } else if (command.equals("include")) {
                     inputs.push(in);
                     in = new DataInputStream(new FileInputStream(st.nextToken()));
-                    prompt = false;
                     continue;
                 } else if (command.equals("relprod")) {
                     TypedBDD bdd1 = parseBDD(results, st.nextToken());
@@ -440,18 +439,26 @@ public class PAResults implements PointerAnalysisResults {
                 } else if (command.equals("collectiontypes")) {
                     tfinder = new CollectionType(this);
                     TypedBDD r = tfinder.findCollectionTypes(st.hasMoreTokens());
-                    results.add(r);
+                    results.add(r);     // initial computation, return full storedin information
                 } else if (command.equals("getsupertypes")) {
                     TypedBDD r = tfinder.determineSupertypes(st.hasMoreTokens());
-                    results.add(r);
+                    results.add(r);     // compute compatible supertype for each collection
                 } else if (command.equals("checkmusthaves")) {
                     TypedBDD r = tfinder.checkMustHaves(st.hasMoreTokens());
-                    results.add(r);
+                    results.add(r);     // checks for "object-incompatibility"
                 } else if (command.equals("checkbadtypes")) {
                     TypedBDD r = tfinder.checkBadTypes(st.hasMoreTokens());
-                    results.add(r);
+                    results.add(r);     // checks for "type-incompatibility"
+                } else if (command.equals("aando")) {
+                    TypedBDD r = listAppleAndOranges(st.hasMoreTokens());
+                    results.add(r);     // checks for bad equals calls
+                } else if (command.equals("showargs")) {
+                    TypedBDD bdd1 = parseBDD(results, st.nextToken());
+                    TypedBDD r = showArguments(bdd1);
+                    results.add(r);     // lists points-to sets of arguments for a set of isite
                 } else if (command.equals("castprecision")) {
-                    computeCastPrecision(st.hasMoreTokens());
+                    int args = st.countTokens();
+                    computeCastPrecision(args > 0);
                     increaseCount = false;
                 } else if (command.equals("gini")) {
                     computeGini(r.vCnumbering);
@@ -473,17 +480,17 @@ public class PAResults implements PointerAnalysisResults {
                     for (int j = 0; j < cmds.length; j++)
                         j = Driver.processCommand(cmds, j);
                 }
+
+                if (increaseCount) {
+                    TypedBDD r = (TypedBDD) results.get(i-1);
+                    System.out.println(i+" -> "+toString(r, listHowMany));
+                    Assert._assert(i == results.size());
+                    ++i;
+                }
             } catch (Exception e) {
                 System.err.println("Error: "+e);
                 e.printStackTrace();
                 increaseCount = false;
-            }
-
-            if (increaseCount) {
-                TypedBDD r = (TypedBDD) results.get(i-1);
-                System.out.println(i+" -> "+toString(r, listHowMany));
-                Assert._assert(i == results.size());
-                ++i;
             }
         }
     }
@@ -535,6 +542,13 @@ public class PAResults implements PointerAnalysisResults {
         for (int i = 0; i < f.length; i++) {
             try {
                 if (f[i].getType() == BDD.class && f[i].get(r) != null)
+                    allbdds.add(f[i].getName());
+            } catch (IllegalAccessException _) { }
+        }
+        f = PAResults.class.getDeclaredFields();
+        for (int i = 0; i < f.length; i++) {
+            try {
+                if (f[i].getType() == BDD.class && f[i].get(this) != null)
                     allbdds.add(f[i].getName());
             } catch (IllegalAccessException _) { }
         }
@@ -748,6 +762,19 @@ public class PAResults implements PointerAnalysisResults {
         return null;
     }
 
+    private TypedBDD lookupBDDField(String s, Class clazz, Object r) {
+        try {
+            Field f = clazz.getDeclaredField(s);
+            if (f.getType() == BDD.class) {
+                return (TypedBDD) f.get(r);
+            }
+        } catch (NoSuchFieldException e) {
+        } catch (IllegalArgumentException e) {
+        } catch (IllegalAccessException e) {
+        }
+        return null;
+    }
+
     TypedBDD parseBDD(List a, String s) {
         int paren_index = s.indexOf('(');
         if (paren_index > 0) {
@@ -759,15 +786,12 @@ public class PAResults implements PointerAnalysisResults {
             long index = Long.parseLong(s.substring(paren_index+1, close_index));
             return (TypedBDD) dom.ithVar(index);
         }
-        try {
-            Field f = PA.class.getDeclaredField(s);
-            if (f.getType() == BDD.class) {
-                return (TypedBDD) f.get(r);
-            }
-        } catch (NoSuchFieldException e) {
-        } catch (IllegalArgumentException e) {
-        } catch (IllegalAccessException e) {
-        }
+        TypedBDD rc = lookupBDDField(s, PA.class, r);
+        if (rc != null)
+            return rc;
+        rc = lookupBDDField(s, PAResults.class, this);
+        if (rc != null)
+            return rc;
         BDDDomain d = parseDomain(s);
         if (d != null) {
             return (TypedBDD) d.domain();
@@ -1179,6 +1203,60 @@ public class PAResults implements PointerAnalysisResults {
         }
         
         return result;
+    }
+
+    /** Compute all types that override equals() */
+    public TypedBDD typesThatOverrideEquals() {
+        jq_NameAndDesc equals_nd = new jq_NameAndDesc("equals", "(Ljava/lang/Object;)Z");
+        jq_Method equals_m = PrimordialClassLoader.getJavaLangObject().getDeclaredInstanceMethod(equals_nd);
+        BDD n_bdd = r.N.ithVar(getNameIndex(equals_m));
+        BDD t1 = r.cha.restrict(n_bdd);
+        BDD t2 = t1.exist(r.Mset);
+        t1.free();
+        return (TypedBDD)t2;    // T2
+    }
+
+    // I -> V1xV1cxH1xH1cxIxZ
+    public TypedBDD showArguments(TypedBDD isites) {
+        return (TypedBDD)r.actual.and(isites).replaceWith(r.bdd.makePair(r.V2, r.V1)).and(r.vP);
+    }
+
+    /** 
+     * List all callsites where the user calls a.equals(b) on things that can't be equal
+     * because the points-to set of a and b are disjoint and a doesn't implement equals().
+     */
+    public TypedBDD listAppleAndOranges(boolean trace) {
+        jq_NameAndDesc equals_nd = new jq_NameAndDesc("equals", "(Ljava/lang/Object;)Z");
+        jq_Method equals_m = PrimordialClassLoader.getJavaLangObject().getDeclaredInstanceMethod(equals_nd);
+        BDD n_bdd = r.N.ithVar(getNameIndex(equals_m)); 
+        TypedBDD esites = (TypedBDD)r.mI.restrict(n_bdd).exist(r.Mset);         // I
+        BDD haseq = typesThatOverrideEquals();          // T2
+        Iterator it = esites.iterator();
+        TypedBDD rc = (TypedBDD)r.bdd.zero();
+        BDDPairing V2toV1 = r.bdd.makePair(r.V2, r.V1);
+        while (it.hasNext()) {
+            BDD esite = (BDD)it.next();
+            BDD a = r.actual.restrict(esite).relprod(r.Z.ithVar(0), r.Zset);     // V2
+            a.replaceWith(V2toV1);
+            BDD apt = r.vP.relprod(a, r.V1set);
+            BDD aptwt = apt.and(r.hT);                  // H1xH1cxT2
+            apt.free();
+
+            aptwt.applyWith(haseq.and(r.H1set), BDDFactory.diff);
+            apt = aptwt.exist(r.T2set);
+            aptwt.free();
+
+            BDD b = r.actual.restrict(esite).relprod(r.Z.ithVar(1), r.Zset);     // V2
+            b.replaceWith(V2toV1);
+            BDD bpt = r.vP.relprod(b, r.V1set);         // H1xH1c
+
+            if (apt.and(bpt).isZero()) {
+                rc.orWith(esite);
+            }
+            apt.free();
+            bpt.free();
+        }
+        return rc;
     }
     
     /***** STATISTICS *****/
@@ -1732,7 +1810,7 @@ public class PAResults implements PointerAnalysisResults {
         gini = gini / n / (n - 1);
 
         System.out.println("Gini-Coefficient is " + gini);
-        int PRINTMAX = 10;
+        int PRINTMAX = 20;
         System.out.print(PRINTMAX + " largest SCCs are :");
         for (int i = sccs_sizes.length - 1; i>=0 && i>sccs_sizes.length-1-PRINTMAX; --i) {
             System.out.print(" " + sccs_sizes[i]);
@@ -1741,23 +1819,34 @@ public class PAResults implements PointerAnalysisResults {
     }
 
     /**
-     * Compute imprecision.
+     * Compute imprecision as manifested by failed casts.
+     *
      * In a perfect world, code isn't buggy and every downcast succeeds.
      * In this world, every type-incompatible object that arrives in the
      * points-to set of the input to a downcast is due to imprecision in
      * the points-to analysis.
      *
      * This method looks at each cast and the predecessors nodes leading to it.
-     * It compute the vcontext-insensitive points-to sets of both.
+     * It computes the vcontext-insensitive points-to sets of both.
      * It counts and reports if a cast always or never succeeds.
-     * It reports if a cast's predecessor appear to have empty points-to sets
+     * Casts that always succeed are called "perfect" and they indicate that
+     * the results of the analysis and the assumptions of the programmer as
+     * to what type of object reach a cast match perfectly.
+     *
+     * It also reports if a cast's predecessors appear to have empty points-to sets
      * (This would be bad and could indicate an analysis bug.)
+     *
      * Those casts that aren't perfect are sorted by the z-ranking of the
      * set sizes of |compatible heap objects|:|all objects reaching predecessors|
      */
-    public void computeCastPrecision(boolean trace) {
+    BDD alwaysfail;
+    BDD perfectcasts;
+    BDD emptycasts;
+    BDD casts;
+
+    public void computeCastPrecision(boolean listimperfect) {
         // first step: find all casts
-        TypedBDD casts = (TypedBDD)r.bdd.zero();          // V1
+        casts = r.bdd.zero();          // V1
         for (int i = 0; i < r.Vmap.size(); i++) {
             Node n = (Node)r.Vmap.get(i);
             if (n instanceof CheckCastNode) {
@@ -1772,7 +1861,11 @@ public class PAResults implements PointerAnalysisResults {
         BDD preds_pt = r.vP.relprod(cast_to_pred.exist(r.V1.set()).replaceWith(V2toV1), V1cset);   // V1xH1xH1c
         BDD casts_pt = r.vP.relprod(cast_to_pred.exist(r.V2.set()), V1cset);                       // V1xH1xH1c
         ArrayList res = new ArrayList();
-        int perfect = 0, notreached = 0, alwaysfails = 0;
+
+        alwaysfail = (TypedBDD)r.bdd.zero();
+        perfectcasts = (TypedBDD)r.bdd.zero();
+        emptycasts = (TypedBDD)r.bdd.zero();
+
         // now look at each cast individually
         for (int i = 0; i < r.Vmap.size(); i++) {
             Node n = (Node)r.Vmap.get(i);
@@ -1784,45 +1877,46 @@ public class PAResults implements PointerAnalysisResults {
             preds.replaceWith(V2toV1);                  // V2 -> V1
             TypedBDD predpt = (TypedBDD)preds_pt.relprod(preds, r.V1.set()); // V1xH1xH1c x V1 -> H1xH1c
             if (castpt.equals(predpt)) {
-                if (trace)
-                    System.out.println("perfect match for: V1" + r.findInMap(r.Vmap, i));
-                perfect++;
+                perfectcasts.orWith(cast);
             } else {
                 double compatible = castpt.satCount(r.H1set);
                 double all = predpt.satCount(r.H1set);
                 if (all == 0.0) {
-                    notreached++;
-                    System.out.println("warning: points-to set of all cast predecessors is empty: V1" + r.findInMap(r.Vmap, i));
+                    emptycasts.orWith(cast);
                 } else {
-                    if (compatible == 0.0) {
-                        alwaysfails++;
-                        if (trace)
-                            System.out.println("cast appears to always fail: V1" + r.findInMap(r.Vmap, i));
-                    }
+                    if (compatible == 0.0)
+                        alwaysfail.orWith(cast);
                     res.add(new Triple(new Double(compatible), new Double(all), "V1("+i+")"+r.longForm(n)));
                 }
             }
             preds.free(); predpt.free(); castpt.free();
         }
 
-        Object[] rc = res.toArray();
-        Arrays.sort(rc, new Comparator() {
-            public int compare(Object o1, Object o2) {
-                double z1 = zHelper((Triple)o1);
-                double z2 = zHelper((Triple)o2);
-                final int direction = -1;
-                if (Double.isNaN(z1)) return direction;
-                if (Double.isNaN(z2)) return -direction;
-                return z1 < z2 ? direction : z1 > z2 ? -direction : 0;
+        if (listimperfect) {
+            Object[] rc = res.toArray();
+            Arrays.sort(rc, new Comparator() {
+                public int compare(Object o1, Object o2) {
+                    double z1 = zHelper((Triple)o1);
+                    double z2 = zHelper((Triple)o2);
+                    final int direction = -1;
+                    if (Double.isNaN(z1)) return direction;
+                    if (Double.isNaN(z2)) return -direction;
+                    return z1 < z2 ? direction : z1 > z2 ? -direction : 0;
+                }
+            });
+            for (int i = 0; i < rc.length; i++) {
+                System.out.println("#"+i+" z="+zHelper((Triple)rc[i])+" "+rc[i]);
             }
-        });
-        for (int i = 0; i < rc.length; i++) {
-            System.out.println("#"+i+" z="+zHelper((Triple)rc[i])+" "+rc[i]);
         }
-        System.out.println("#casts=" + casts.satCount(r.V1.set())); 
-        System.out.println("#perfect(casts that provably always succeed)=" + perfect);
-        System.out.println("#notreached(casts with empty predecessor points-to set)=" + notreached);
-        System.out.println("#alwaysfails(casts with empty compatible points-to sets)=" + alwaysfails);
+        double castcount = casts.isZero() ? 0.0 : casts.satCount(r.V1.set()); 
+        double perfect = perfectcasts.isZero() ? 0.0 : perfectcasts.satCount(r.V1.set()); 
+        double notreached = emptycasts.isZero() ? 0.0 : emptycasts.satCount(r.V1.set()); 
+        double alwaysfails = alwaysfail.isZero() ? 0.0 : alwaysfail.satCount(r.V1.set()); 
+        System.out.println("#casts=" + castcount);
+        System.out.println("#perfectcasts (casts that provably always succeed)=" + perfect);
+        System.out.println("#perfect-cast ratio=" + (perfect/castcount));
+        System.out.println("#emptycasts (casts with empty predecessor points-to set)=" + notreached);
+        System.out.println("#alwaysfail (casts with empty compatible points-to sets)=" + alwaysfails);
     }
 
     private static double zHelper(Triple t) {
