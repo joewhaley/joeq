@@ -141,6 +141,8 @@ public abstract class SubtypeHelper {
                 if(s.startsWith("CLASS ")){                    
                     className = s.substring("CLASS ".length(), s.indexOf(" ", "CLASS ".length() + 1));
                     subclassList = new LinkedList();
+                    // add the class itself to the list of subclasses
+                    subclassList.add(className);
                     classes2subclasses.put(className, subclassList);
                 }else{
                     int index = s.indexOf("SUBCLASS ");
