@@ -1414,6 +1414,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
     public static final Utf8 atomicAdd = Utf8.get("atomicAdd");
     public static final Utf8 atomicSub = Utf8.get("atomicSub");
     public static final Utf8 atomicCas4 = Utf8.get("atomicCas4");
+    public static final Utf8 atomicCas8 = Utf8.get("atomicCas8");
     public static final Utf8 atomicAnd = Utf8.get("atomicAnd");
     public static final Utf8 min = Utf8.get("min");
     public static final Utf8 max = Utf8.get("max");
@@ -1564,6 +1565,13 @@ public class BytecodeToQuad extends BytecodeVisitor {
             RegisterOperand res = getStackRegister(jq_Primitive.INT);
             q = Special.create(quad_cfg.getNewQuadID(), Special.ATOMICCAS4.INSTANCE, res, loc, val1, val2);
             current_state.push_I(res);
+        } else if (name == atomicCas8) {
+            Operand val2 = current_state.pop_L();
+            Operand val1 = current_state.pop_L();
+            Operand loc = current_state.pop_P();
+            RegisterOperand res = getStackRegister(jq_Primitive.LONG);
+            q = Special.create(quad_cfg.getNewQuadID(), Special.ATOMICCAS8.INSTANCE, res, loc, val1, val2);
+            current_state.push_L(res);
         } else {
             // TODO
             INVOKEhelper(oper, m, m.getReturnType(), false);

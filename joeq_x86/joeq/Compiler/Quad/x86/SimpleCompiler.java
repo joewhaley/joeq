@@ -1661,6 +1661,14 @@ public class SimpleCompiler implements x86Constants, BasicBlockVisitor, QuadVisi
             if (jq.SMP) asm.emitprefix(x86.PREFIX_LOCK);
             asm.emit3_Reg_Mem(x86.CMPXCHG_32, EBX, 0, ECX);
             storeOperand((RegisterOperand) Special.getOp1(obj), EAX);
+        } else if (o instanceof Special.ATOMICCAS8) {
+            // untested.
+            loadOperand(Special.getOp2(obj), EDI);
+            loadOperand(Special.getOp3(obj), EAX);
+            loadOperand(Special.getOp4(obj), EDI);
+            if (jq.SMP) asm.emitprefix(x86.PREFIX_LOCK);
+            asm.emit3_Reg_Mem(x86.CMPXCHG8B, EAX, 0, EDI);
+            storeOperand((RegisterOperand) Special.getOp1(obj), EAX);
         } else if (o instanceof Special.LONG_JUMP) {
             loadOperand(Special.getOp1(obj), ECX);
             loadOperand(Special.getOp3(obj), EBX);
