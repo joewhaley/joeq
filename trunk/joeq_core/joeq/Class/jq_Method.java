@@ -14,14 +14,13 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import ClassLib.ClassLibInterface;
 import Bootstrap.PrimordialClassLoader;
+import ClassLib.ClassLibInterface;
 import Compil3r.BytecodeAnalysis.Bytecodes;
-import Main.jq;
-import UTF.Utf8;
-
 import Compil3r.Quad.AndersenInterface.AndersenMethod;
 import Compil3r.Quad.AndersenInterface.AndersenType;
+import Main.jq;
+import UTF.Utf8;
 
 /*
  * @author  John Whaley

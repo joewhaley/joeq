@@ -17,7 +17,6 @@ import java.lang.reflect.Modifier;
 import java.util.Set;
 
 import Bootstrap.PrimordialClassLoader;
-import ClassLib.ClassLibInterface;
 import Clazz.jq_Class;
 import Clazz.jq_ClassInitializer;
 import Clazz.jq_Field;

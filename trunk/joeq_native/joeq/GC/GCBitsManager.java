@@ -8,13 +8,12 @@
  */
 package GC;
 
-import Allocator.HeapAllocator.HeapPointer;
-import Allocator.MemUnit;
-import Memory.StackAddress;
-import Memory.HeapAddress;
-import Memory.Address;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.TreeMap;
 
-import java.util.*;
+import Allocator.HeapAllocator.HeapPointer;
+import Memory.HeapAddress;
 
 public class GCBitsManager {
 

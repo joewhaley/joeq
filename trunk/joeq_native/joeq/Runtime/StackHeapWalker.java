@@ -8,15 +8,11 @@
  */
 package Run_Time;
 
-import Memory.HeapAddress;
-import Memory.StackAddress;
-import Memory.CodeAddress;
-
-import java.util.Iterator;
-import java.util.NoSuchElementException;
 import java.util.ArrayList;
 
 import GC.GCBitsManager;
+import Memory.HeapAddress;
+import Memory.StackAddress;
 
 public class StackHeapWalker {
 

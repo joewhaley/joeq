@@ -7,17 +7,12 @@
 
 package Assembler.x86;
 
-import java.io.IOException;
 import java.io.DataOutput;
+import java.io.IOException;
 
 import Allocator.DefaultCodeAllocator;
-import Bootstrap.PrimordialClassLoader;
-import Clazz.jq_Class;
-import Clazz.jq_InstanceField;
-import Main.jq;
 import Memory.CodeAddress;
 import Memory.HeapAddress;
-import Util.LittleEndianOutputStream;
 
 /*
  * @author  John Whaley

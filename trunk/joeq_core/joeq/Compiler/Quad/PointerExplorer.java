@@ -24,17 +24,17 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import Clazz.jq_Class;
-import Clazz.jq_Field;
 import Clazz.jq_Method;
 import Clazz.jq_Type;
+import Compil3r.Quad.AndersenInterface.AndersenField;
+import Compil3r.Quad.AndersenInterface.AndersenMethod;
 import Compil3r.Quad.MethodSummary.CallSite;
 import Compil3r.Quad.MethodSummary.PassedParameter;
 import Compil3r.Quad.SelectiveCloning.Specialization;
-import Main.jq;
 import Main.HostedVM;
+import Main.jq;
 import Util.Default;
 import Util.FilterIterator;
-import Compil3r.Quad.AndersenInterface.*;
 /**
  *
  * @author  John Whaley

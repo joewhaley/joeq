@@ -9,12 +9,11 @@ package Clazz;
 
 import Allocator.ObjectLayout;
 import Bootstrap.PrimordialClassLoader;
+import Compil3r.Quad.AndersenInterface.AndersenReference;
 import Main.jq;
 import Memory.HeapAddress;
 import Run_Time.Reflection;
 import UTF.Utf8;
-
-import Compil3r.Quad.AndersenInterface.AndersenReference;
 
 /*
  * @author  John Whaley

@@ -6,7 +6,6 @@ import Memory.HeapAddress;
 import Run_Time.HighResolutionTimer;
 import Run_Time.Unsafe;
 import Scheduler.jq_NativeThread;
-import Scheduler.jq_Thread;
 import Util.AtomicCounter;
 
 /**
@@ -153,7 +152,7 @@ public class CollectorThread extends Thread implements GCConstants {
             // collector thread dispatched
             //
             if (MEASURE_WAIT_TIMES)
-                stoppingTime = HighResolutionTimer.now() - gcBarrier.rendezvousStartTime;
+                stoppingTime = HighResolutionTimer.now() - SynchronizationBarrier.rendezvousStartTime;
 
             gcOrdinal = participantCount.increment();
 
@@ -172,7 +171,7 @@ public class CollectorThread extends Thread implements GCConstants {
             // record time it took for running collector thread to start GC
             //
             if (MEASURE_WAIT_TIMES)
-                startingTime = HighResolutionTimer.now() - gcBarrier.rendezvousStartTime;
+                startingTime = HighResolutionTimer.now() - SynchronizationBarrier.rendezvousStartTime;
 
             // MOVE THIS INTO collect
             //
@@ -222,7 +221,7 @@ public class CollectorThread extends Thread implements GCConstants {
                 // need extra barrier call to let all processors set prev rendezvouz time
                 jq_NativeThread nt = Unsafe.getThreadBlock().getNativeThread();
                 if (nt.getIndex() == 1)
-                    gcBarrier.printRendezvousTimes();
+                    SynchronizationBarrier.printRendezvousTimes();
             }
 
             // final cleanup for initial collector thread
@@ -314,7 +313,7 @@ public class CollectorThread extends Thread implements GCConstants {
 
     static void printRendezvousTime() {
         if (SHOW_RENDEZVOUS_TIMES)
-            gcBarrier.printRendezvousTimes();
+            SynchronizationBarrier.printRendezvousTimes();
     }
 
     //-----------------//

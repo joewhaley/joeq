@@ -1,7 +1,6 @@
 package Memory.Heap;
 
 import Allocator.HeapAllocator;
-import Allocator.ObjectLayout;
 import Allocator.ObjectLayoutMethods;
 import Clazz.jq_Array;
 import Main.jq;

@@ -16,7 +16,6 @@ import Clazz.jq_Method;
 import Clazz.jq_Primitive;
 import Clazz.jq_Reference;
 import Clazz.jq_StaticField;
-import Clazz.jq_StaticMethod;
 import Clazz.jq_TryCatchBC;
 import Clazz.jq_Type;
 import Compil3r.BytecodeAnalysis.BytecodeVisitor;
@@ -1194,7 +1193,7 @@ public abstract class BytecodeInterpreter {
                 if (op == INVOKE_INTERFACE) {
                     if (!t.implementsInterface(f.getDeclaringClass()))
                         throw new IncompatibleClassChangeError();
-                    if (t.isArrayType()) t = PrimordialClassLoader.loader.getJavaLangObject();
+                    if (t.isArrayType()) t = PrimordialClassLoader.getJavaLangObject();
                 } else {
                     jq.Assert(op == INVOKE_VIRTUAL);
                 }

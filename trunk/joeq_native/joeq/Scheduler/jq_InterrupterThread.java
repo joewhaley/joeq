@@ -9,10 +9,8 @@ package Scheduler;
 
 import Allocator.CodeAllocator;
 import Bootstrap.PrimordialClassLoader;
-import ClassLib.ClassLibInterface;
 import Clazz.jq_Class;
 import Clazz.jq_InstanceMethod;
-import Main.jq;
 import Memory.CodeAddress;
 import Memory.HeapAddress;
 import Memory.StackAddress;

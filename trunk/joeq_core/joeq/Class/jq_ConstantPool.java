@@ -7,10 +7,10 @@
 
 package Clazz;
 
-import java.util.Arrays;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -18,7 +18,6 @@ import java.util.Map;
 import java.util.Set;
 
 import Bootstrap.PrimordialClassLoader;
-import ClassLib.ClassLibInterface;
 import Compil3r.BytecodeAnalysis.Bytecodes;
 import Main.jq;
 import Run_Time.DebugInterface;

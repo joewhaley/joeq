@@ -6,8 +6,8 @@
  */
 
 package Compil3r.Quad;
-import java.util.LinkedList;
 import java.util.HashMap;
+import java.util.LinkedList;
 
 import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Array;
@@ -68,8 +68,6 @@ import Compil3r.Quad.Operator.ZeroCheck;
 import Compil3r.Quad.RegisterFactory.Register;
 import Main.jq;
 import Memory.Address;
-import Memory.CodeAddress;
-import Memory.HeapAddress;
 import Memory.StackAddress;
 import Run_Time.Reflection;
 import Run_Time.TypeCheck;

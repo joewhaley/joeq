@@ -14,7 +14,6 @@ import Clazz.jq_InstanceField;
 import Main.jq;
 import Memory.HeapAddress;
 import Run_Time.Reflection;
-import Run_Time.Unsafe;
 
 /*
  * @author  John Whaley

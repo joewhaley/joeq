@@ -8,8 +8,8 @@
  */
 package Allocator;
 
-import java.util.TreeSet;
 import java.util.Collection;
+import java.util.TreeSet;
 
 public class WorstAdaptionStrategy implements FreeMemStrategy {
     private TreeSet freePool;

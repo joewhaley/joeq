@@ -9,7 +9,6 @@ package ClassLib.sun13_win32.java.io;
 
 import Memory.HeapAddress;
 import Run_Time.SystemInterface;
-import Run_Time.Unsafe;
 
 /*
  * @author  John Whaley

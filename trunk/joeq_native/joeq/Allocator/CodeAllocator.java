@@ -6,10 +6,8 @@
  */
 package Allocator;
 
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -24,7 +22,6 @@ import Clazz.jq_StaticField;
 import Clazz.jq_TryCatch;
 import Memory.Address;
 import Memory.CodeAddress;
-import Memory.HeapAddress;
 import Run_Time.ExceptionDeliverer;
 
 /**

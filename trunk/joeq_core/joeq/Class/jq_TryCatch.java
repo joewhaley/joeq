@@ -8,7 +8,6 @@
 package Clazz;
 
 import Bootstrap.PrimordialClassLoader;
-import Main.jq;
 import Run_Time.DebugInterface;
 import Run_Time.TypeCheck;
 import Util.Strings;

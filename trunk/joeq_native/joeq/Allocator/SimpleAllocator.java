@@ -10,14 +10,11 @@ package Allocator;
 import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
 import Clazz.jq_InstanceMethod;
+import GC.GCBits;
 import Main.jq;
 import Memory.Address;
 import Memory.HeapAddress;
 import Run_Time.SystemInterface;
-import Run_Time.Unsafe;
-import Util.BitString;
-import GC.GCBits;
-import GC.GCBitsManager;
 
 /*
  * @author  John Whaley

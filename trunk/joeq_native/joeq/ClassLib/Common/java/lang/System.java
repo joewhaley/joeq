@@ -14,14 +14,12 @@ import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
 import Clazz.jq_CompiledCode;
 import Clazz.jq_StaticField;
-import Memory.CodeAddress;
 import Memory.StackAddress;
 import Run_Time.ArrayCopy;
 import Run_Time.HashCode;
 import Run_Time.Reflection;
 import Run_Time.StackCodeWalker;
 import Run_Time.SystemInterface;
-import Run_Time.Unsafe;
 
 /*
  * @author  John Whaley

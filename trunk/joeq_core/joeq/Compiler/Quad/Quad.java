@@ -11,7 +11,6 @@ import Clazz.jq_Class;
 import Compil3r.Quad.Operand.RegisterOperand;
 import Compil3r.Quad.Operator.Return;
 import Interpreter.QuadInterpreter;
-import Main.jq;
 import Util.Strings;
 import Util.Templates.List;
 import Util.Templates.UnmodifiableList;

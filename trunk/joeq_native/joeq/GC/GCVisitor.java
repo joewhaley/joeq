@@ -8,8 +8,8 @@
  */
 package GC;
 
-import Scheduler.jq_RegisterState;
 import Scheduler.jq_NativeThread;
+import Scheduler.jq_RegisterState;
 
 public interface GCVisitor {
     public void visit(jq_RegisterState state);

@@ -26,20 +26,19 @@ import Allocator.ObjectLayout;
 import Bootstrap.PrimordialClassLoader;
 import ClassLib.ClassLibInterface;
 import Compil3r.BytecodeAnalysis.Bytecodes;
+import Compil3r.Quad.AndersenInterface.AndersenClass;
+import Compil3r.Quad.AndersenInterface.AndersenClassInitializer;
 import Main.jq;
 import Memory.Address;
 import Memory.CodeAddress;
 import Memory.HeapAddress;
 import Memory.StackAddress;
-import Run_Time.Reflection;
 import Run_Time.DebugInterface;
+import Run_Time.Reflection;
 import Run_Time.TypeCheck;
 import UTF.UTFDataFormatError;
 import UTF.Utf8;
 import Util.Strings;
-
-import Compil3r.Quad.AndersenInterface.AndersenClass;
-import Compil3r.Quad.AndersenInterface.AndersenClassInitializer;
 
 // friend jq_ClassLoader;
 

@@ -8,8 +8,8 @@
  */
 package Allocator;
 
-import Memory.HeapAddress;
 import Memory.Address;
+import Memory.HeapAddress;
 
 public class MemUnit {
     private HeapAddress head;

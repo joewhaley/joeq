@@ -6,12 +6,11 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import Util.Strings;
-
 import Clazz.jq_InstanceField;
 import Clazz.jq_Method;
 import Clazz.jq_MethodVisitor;
 import Clazz.jq_StaticField;
+import Util.Strings;
 
 public class ModRefAnalysis extends BytecodeVisitor {
 

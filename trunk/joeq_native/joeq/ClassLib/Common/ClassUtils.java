@@ -1,8 +1,8 @@
 package ClassLib.Common;
 
-import Clazz.jq_Member;
 import Clazz.jq_Class;
 import Clazz.jq_CompiledCode;
+import Clazz.jq_Member;
 import Memory.StackAddress;
 import Run_Time.StackCodeWalker;
 import Run_Time.TypeCheck;

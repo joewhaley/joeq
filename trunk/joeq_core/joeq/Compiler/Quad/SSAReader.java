@@ -6,35 +6,37 @@
 
 package Compil3r.Quad;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.FileInputStream;
-import java.io.BufferedReader;
-import java.util.zip.GZIPInputStream;
-import java.io.IOException;
-import java.util.Set;
-import java.util.HashSet;
 import java.util.ArrayList;
-import java.util.StringTokenizer;
-import java.util.LinkedHashSet;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Collections;
-import UTF.Utf8;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.Set;
+import java.util.StringTokenizer;
+import java.util.zip.GZIPInputStream;
+
 import Clazz.jq_NameAndDesc;
-import Main.jq;
-import Main.HostedVM;
-
-import Compil3r.Quad.AndersenPointerAnalysis;
-import Compil3r.BytecodeAnalysis.BytecodeVisitor;
 import Compil3r.BytecodeAnalysis.CallTargets;
-
-import Compil3r.Quad.MethodSummary.Node;
+import Compil3r.Quad.AndersenInterface.AndersenClass;
+import Compil3r.Quad.AndersenInterface.AndersenClassInitializer;
+import Compil3r.Quad.AndersenInterface.AndersenField;
+import Compil3r.Quad.AndersenInterface.AndersenMember;
+import Compil3r.Quad.AndersenInterface.AndersenMethod;
+import Compil3r.Quad.AndersenInterface.AndersenReference;
+import Compil3r.Quad.AndersenInterface.AndersenType;
 import Compil3r.Quad.MethodSummary.ConcreteTypeNode;
-import Compil3r.Quad.MethodSummary.ParamNode;
 import Compil3r.Quad.MethodSummary.GlobalNode;
+import Compil3r.Quad.MethodSummary.Node;
+import Compil3r.Quad.MethodSummary.ParamNode;
 import Compil3r.Quad.MethodSummary.ReturnValueNode;
-import Compil3r.Quad.AndersenInterface.*;
+import Main.HostedVM;
+import UTF.Utf8;
 
 /**
  *

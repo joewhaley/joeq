@@ -29,7 +29,6 @@ import Compil3r.Quad.CodeCache;
 import Compil3r.Quad.ControlFlowGraph;
 import Compil3r.Quad.ExceptionHandler;
 import Compil3r.Quad.Quad;
-import Compil3r.Quad.QuadVisitor;
 import Compil3r.Quad.RegisterFactory;
 import Compil3r.Quad.Operand.ParamListOperand;
 import Compil3r.Quad.RegisterFactory.Register;

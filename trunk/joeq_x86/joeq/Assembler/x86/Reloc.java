@@ -7,8 +7,8 @@
 
 package Assembler.x86;
 
-import java.io.IOException;
 import java.io.DataOutput;
+import java.io.IOException;
 
 /*
  * @author  John Whaley

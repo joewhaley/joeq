@@ -288,7 +288,6 @@ public abstract class ZipFile implements ZipConstants {
 
     private long findEND() throws java.io.IOException {
         // Start searching backwards from end of file
-        this.raf = raf;
         long len = raf.length();
         if (TRACE) System.out.println(this+": findEND len="+len);
         raf.seek(len);

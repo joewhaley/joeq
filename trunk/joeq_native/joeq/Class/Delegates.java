@@ -2,19 +2,18 @@ package Clazz;
 
 import java.util.Iterator;
 
-import Allocator.DefaultHeapAllocator;
 import Allocator.CodeAllocator;
+import Allocator.DefaultHeapAllocator;
 import Assembler.x86.DirectBindCall;
 import Bootstrap.BootstrapCodeAddress;
 import Bootstrap.BootstrapHeapAddress;
+import Compil3r.Compil3rInterface;
+import Compil3r.Reference.x86.x86ReferenceCompiler;
+import Compil3r.Reference.x86.x86ReferenceLinker;
+import Main.jq;
 import Memory.CodeAddress;
 import Memory.HeapAddress;
 import Memory.StackAddress;
-import Compil3r.Reference.x86.x86ReferenceCompiler;
-import Compil3r.Reference.x86.x86ReferenceLinker;
-import ClassLib.ClassLibInterface;
-import Compil3r.Compil3rInterface;
-import Main.jq;
 import Run_Time.DebugInterface;
 import Run_Time.ExceptionDeliverer;
 

@@ -9,11 +9,10 @@ package Clazz;
 
 import Bootstrap.PrimordialClassLoader;
 import ClassLib.ClassLibInterface;
+import Compil3r.Quad.AndersenInterface.AndersenType;
 import Main.jq;
 import Run_Time.Reflection;
 import UTF.Utf8;
-
-import Compil3r.Quad.AndersenInterface.AndersenType;
 
 /*
  * @author  John Whaley

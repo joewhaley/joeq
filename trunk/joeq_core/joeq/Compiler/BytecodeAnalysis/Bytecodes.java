@@ -5601,7 +5601,7 @@ public interface Bytecodes {
         }
         
         public jq_Type getType() {
-            if (o instanceof String) return PrimordialClassLoader.loader.getJavaLangString();
+            if (o instanceof String) return PrimordialClassLoader.getJavaLangString();
             if (o instanceof Float) return jq_Primitive.FLOAT;
             if (o instanceof Integer) return jq_Primitive.INT;
             throw new RuntimeException("Unknown or invalid constant type "+o.getClass()+" at "+index);
@@ -7216,7 +7216,7 @@ public interface Bytecodes {
                 case jq_ClassFileConstants.jbc_FALOAD: case jq_ClassFileConstants.jbc_FASTORE:
                     return jq_Primitive.FLOAT;
                 case jq_ClassFileConstants.jbc_AALOAD: case jq_ClassFileConstants.jbc_AASTORE:
-                    return PrimordialClassLoader.loader.getJavaLangObject();
+                    return PrimordialClassLoader.getJavaLangObject();
                     
                     default: throw new BytecodeException("Oops: unknown case in switch" + opcode);
             }
@@ -8009,7 +8009,7 @@ public interface Bytecodes {
                 case jq_ClassFileConstants.jbc_FLOAD: case jq_ClassFileConstants.jbc_FSTORE:
                     return jq_Primitive.FLOAT;
                 case jq_ClassFileConstants.jbc_ALOAD: case jq_ClassFileConstants.jbc_ASTORE:
-                    return PrimordialClassLoader.loader.getJavaLangObject();
+                    return PrimordialClassLoader.getJavaLangObject();
 
                 default: throw new BytecodeException("Oops: unknown case in switch" + canon_tag);
             }
@@ -8040,7 +8040,7 @@ public interface Bytecodes {
                 case jq_ClassFileConstants.jbc_LRETURN: return jq_Primitive.LONG;
                 case jq_ClassFileConstants.jbc_FRETURN: return jq_Primitive.FLOAT;
                 case jq_ClassFileConstants.jbc_DRETURN: return jq_Primitive.DOUBLE;
-                case jq_ClassFileConstants.jbc_ARETURN: return PrimordialClassLoader.loader.getJavaLangObject();
+                case jq_ClassFileConstants.jbc_ARETURN: return PrimordialClassLoader.getJavaLangObject();
                 case jq_ClassFileConstants.jbc_RETURN:  return jq_Primitive.VOID;
                 
                 default: // Never reached

@@ -7,26 +7,20 @@
 
 package Allocator;
 
-import Clazz.jq_InstanceField;
-import Clazz.jq_Type;
+import java.lang.reflect.Array;
+
+import Bootstrap.PrimordialClassLoader;
+import Clazz.jq_Array;
 import Clazz.jq_Class;
 import Clazz.jq_ClassFileConstants;
-import Clazz.jq_Array;
 import Clazz.jq_Reference;
 import Clazz.jq_StaticMethod;
-import Bootstrap.PrimordialClassLoader;
-import Run_Time.Unsafe;
-import Run_Time.SystemInterface;
+import Clazz.jq_Type;
 import Main.jq;
 import Memory.Address;
-import Memory.CodeAddress;
 import Memory.HeapAddress;
-import Memory.StackAddress;
 import Memory.Heap.Heap;
-
-import java.lang.reflect.Array;
-import java.util.Set;
-import java.util.HashSet;
+import Run_Time.SystemInterface;
 
 /*
  * @author  John Whaley

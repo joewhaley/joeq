@@ -2,7 +2,7 @@ package Memory.Manager;
 
 import java.lang.reflect.Array;
 
-import Allocator.ObjectLayout;
+import Allocator.ObjectLayoutMethods;
 import Clazz.jq_Array;
 import Clazz.jq_Class;
 import Clazz.jq_Reference;
@@ -126,7 +126,7 @@ public class MarkAndSweep implements GCConstants {
             return largeHeap.allocateObject(size, tib);
         } else {
             HeapAddress objaddr = SegregatedListHeap.allocateFastPath(size);
-            return ObjectLayout.initializeObject(objaddr, tib, size);
+            return ObjectLayoutMethods.initializeObject(objaddr, tib, size);
         }
     }
 
@@ -144,7 +144,7 @@ public class MarkAndSweep implements GCConstants {
             return largeHeap.allocateArray(numElements, size, tib);
         } else {
             HeapAddress objaddr = SegregatedListHeap.allocateFastPath(size);
-            return ObjectLayout.initializeArray(
+            return ObjectLayoutMethods.initializeArray(
                 objaddr,
                 tib,
                 numElements,
@@ -309,7 +309,7 @@ public class MarkAndSweep implements GCConstants {
 
             // done with collection...except for measurement counters, diagnostic output etc
 
-            mylocal.printRendezvousTime();
+            CollectorThread.printRendezvousTime();
 
             smallHeap.postCollectionReport();
         }

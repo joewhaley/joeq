@@ -16,12 +16,11 @@ import java.util.Iterator;
 import java.util.Map;
 
 import ClassLib.ClassLibInterface;
+import Compil3r.Quad.AndersenInterface.AndersenClass;
+import Compil3r.Quad.AndersenInterface.AndersenMember;
 import Main.jq;
 import Run_Time.Reflection;
 import UTF.Utf8;
-
-import Compil3r.Quad.AndersenInterface.AndersenMember;
-import Compil3r.Quad.AndersenInterface.AndersenClass;
 
 /*
  * @author  John Whaley

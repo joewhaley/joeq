@@ -3,8 +3,8 @@ package Clazz;
 import java.util.Iterator;
 
 import Main.jq;
-import Memory.StackAddress;
 import Memory.CodeAddress;
+import Memory.StackAddress;
 
 abstract class NullDelegates {
     static class Field implements jq_Field.Delegate {

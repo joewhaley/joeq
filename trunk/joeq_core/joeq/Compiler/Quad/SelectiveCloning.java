@@ -1,10 +1,20 @@
 package Compil3r.Quad;
 
 import java.io.PrintStream;
-import java.util.*;
+import java.util.AbstractSet;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-import Clazz.jq_Field;
 import Clazz.jq_Method;
+import Compil3r.Quad.AndersenInterface.AndersenField;
+import Compil3r.Quad.AndersenInterface.AndersenMethod;
 import Compil3r.Quad.MethodSummary.CallSite;
 import Compil3r.Quad.MethodSummary.ConcreteTypeNode;
 import Compil3r.Quad.MethodSummary.FieldNode;
@@ -16,7 +26,6 @@ import Compil3r.Quad.PointerExplorer.InlineSet;
 import Main.jq;
 import Util.Default;
 import Util.LinearSet;
-import Compil3r.Quad.AndersenInterface.*;
 
 /**
  * @author John Whaley
