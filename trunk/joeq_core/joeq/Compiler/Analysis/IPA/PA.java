@@ -1986,7 +1986,10 @@ public class PA {
                       missingClasses.put(stringConst, new Integer(0));
                 }
                 continue;
-            }            
+            } catch(java.lang.ClassCircularityError e) {
+                System.err.println("Resolving reflection: circulation error " + stringConst + 
+                    " at " + h.toStringWithDomains(TS));
+            }
             jq_Method constructor = c.getClassInitializer();
             if(constructor == null){
                 System.err.println("No constructor in class " + c);
