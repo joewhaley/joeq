@@ -361,12 +361,22 @@ public abstract class jq_Method extends jq_Member {
         }
         return -1;
     }
-    public jq_LineNumberBC [] getLineNumberTable() { return line_num_table; }
+    public jq_LineNumberBC[] getLineNumberTable() { return line_num_table; }
     public jq_Type[] getParamTypes() { return param_types; }
     public int getParamWords() { return param_words; }
     public final jq_Type getReturnType() { return return_type; }
     public byte[] getCodeAttribute(Utf8 a) { chkState(STATE_LOADING2); return (byte[])codeattribMap.get(a); }
     public final byte[] getCodeAttribute(String name) { return getCodeAttribute(Utf8.get(name)); }
+
+	public jq_LineNumberBC getLineNumber(char linenum) {
+		// todo: binary search
+		jq_LineNumberBC[] ln = getLineNumberTable();
+		if (ln == null) return null;
+		for (int i=0; i<ln.length; ++i) {
+			if (ln[i].getLineNum() == linenum) return ln[i];
+		}
+		return null;
+	}
 
     public void accept(jq_MethodVisitor mv) {
         mv.visitMethod(this);
