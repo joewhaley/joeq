@@ -41,7 +41,10 @@ public abstract class jq_Type {
         return (jq_Array)ClassLib.sun13.java.lang.ClassLoader.getOrCreateType(getClassLoader(), desc.getAsArrayDescriptor());
     }
     public boolean needsDynamicLink(jq_Method method) { return false; }
-    public final Class getJavaLangClassObject() { return class_object; }
+    public final Class getJavaLangClassObject() {
+        jq.assert(!jq.Bootstrapping);
+        return class_object;
+    }
 
     public abstract boolean isLoaded();
     public abstract boolean isVerified();
