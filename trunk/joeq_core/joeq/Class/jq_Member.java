@@ -241,7 +241,7 @@ public abstract class jq_Member implements jq_ClassFileConstants {
             // completely public!
             return;
         }
-        StackWalker sw = new StackWalker(CodeAddress.min(), StackAddress.getBasePointer());
+        StackWalker sw = new StackWalker(null, StackAddress.getBasePointer());
         while (--depth >= 0) sw.gotoNext();
         jq_CompiledCode cc = sw.getCode();
         if (cc != null) {
