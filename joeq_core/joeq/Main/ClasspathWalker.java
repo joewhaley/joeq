@@ -5,8 +5,12 @@ package joeq.Main;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -22,10 +26,17 @@ import joeq.Class.jq_Type;
  * */
 public class ClasspathWalker {
     private static final boolean TRACE = true;
+    private static PrintWriter pw;
+    private static int classCount = 0;
        
-    public static void main(String[] args){
+    public static void main(String[] args) throws FileNotFoundException {
         System.out.println("Classpath: " + PrimordialClassLoader.loader.classpathToString() + "\n");
-        int classCount = 0;
+        pw = new PrintWriter(new FileOutputStream("subclasses.txt"));
+        processPackages();
+        pw.close();
+    }
+    
+    private static void processPackages() {
         for(Iterator iter = listPackages(); iter.hasNext();){
             //System.out.println("\t" + iter.next());
             String packageName = (String) iter.next();
@@ -41,31 +52,54 @@ public class ClasspathWalker {
                 try {
                     jq_Class c = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType(canonicalClassName);
                     c.load();
-                    //c.prepare();
-//                    if(c.isSubtypeOf(clazz)){                        
-//                        System.out.println("Initialized a subclass of " + clazz + ", class: " + c);
-//                        result.add(c);
-//                    }
-                    //c.getInterfaces()
+                    c.prepare();
+                    Collection interfaces = new LinkedList();
+                    Collection superclasses = new LinkedList();
+                    
+                    collectSuperclasses(c, interfaces, superclasses);
+                    pw.println("CLASS " + c.getName());
+                    pw.println("INTERFACES ");
+                    for(Iterator iter2 = interfaces.iterator(); iter2.hasNext();){                        
+                        pw.println("\t" + iter2.next().toString());
+                    }
+                    pw.println("SUPERCLASSES ");
+                    for(Iterator iter2 = superclasses.iterator(); iter2.hasNext();){
+                        pw.println("\t" + iter2.next().toString());
+                    }
+                    pw.println();
+                    
                     PrimordialClassLoader.loader.unloadBSType(c);
                     classCount++;
                    //if(TRACE) System.out.println("Processing class # " + classCount + ", " + canonicalClassName);
                 } catch (NoClassDefFoundError x) {
                     if(TRACE) System.err.println("Package " + packageName + ": Class not found (canonical name " + canonicalClassName + ").");
                 } catch (ClassFormatError cfe) {
-                    if(TRACE) System.err.println("Class format error occurred while loading class (" + canonicalClassName + "):" + cfe.getMessage());
+                    if(TRACE) System.err.println("Class format error occurred while loading class (" + canonicalClassName + "):" + cfe.toString());
                     //le.printStackTrace(System.err);
                 } catch (LinkageError le) {
-                    if(TRACE) System.err.println("Linkage error occurred while loading class (" + canonicalClassName + "):" + le.getMessage());
+                    if(TRACE) System.err.println("Linkage error occurred while loading class (" + canonicalClassName + "):" + le.toString());
                     //le.printStackTrace(System.err);
                 } catch (RuntimeException e){
                     if(TRACE) System.err.println("Security error occured: " + e.getMessage());
                 }
             }            
             System.gc();
-        }
+        }        
     }
-    
+
+    static void collectSuperclasses(jq_Class c, Collection interfaces, Collection superclasses) {
+        do {
+            superclasses.add(c);
+            if(c.getInterfaces() != null){
+                for(int i = 0; i < c.getInterfaces().length; i++){
+                    jq_Class inter = c.getInterfaces()[i];
+                    interfaces.add(inter);
+                }
+            }
+            c = c.getSuperclass();
+        } while(c != null && c != PrimordialClassLoader.JavaLangObject);
+    }
+
     static Iterator listPackages(){
         Collection result = new LinkedList();
         for(Iterator iter = PrimordialClassLoader.loader.listPackages(); iter.hasNext();){
