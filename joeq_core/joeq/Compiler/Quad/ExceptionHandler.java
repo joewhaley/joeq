@@ -3,32 +3,58 @@
  *
  * Created on January 9, 2002, 5:25 PM
  *
- * @author  Administrator
- * @version 
  */
 
 package Compil3r.Quad;
-
 import Clazz.jq_Class;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Exception handler for basic blocks.  Each exception handler handles a type of
+ * exception.  When an exception is raised at run time, a routine looks up the list
+ * of exception handlers that guard the location where the exception was raised.
+ * It checks each of the exception handlers in order.  Control flow branches to the
+ * first exception handler whose type matches the type of the raised exception.
+ * Note that the type check is a Java "assignable" type check, and therefore
+ * inheritance and interface checks may be necessary.
+ * 
+ * @see  ExceptionHandlerSet
+ * @see  Run_Time.TypeCheck
+ * @author  John Whaley
+ * @version  $Id$
+ */
+
 public class ExceptionHandler {
 
+    /** Type of exception that this exception handler catches. */
     private jq_Class exception_type;
+    /** List of handled basic blocks. */
     private List/*<BasicBlock>*/ handled_blocks;
+    /** Exception handler entry point. */
     private BasicBlock entry;
     
-    /** Creates new ExceptionHandler */
+    /** Creates new ExceptionHandler.
+     * @param ex_type  type of exception to catch.
+     * @param numOfHandledBlocks  estimated number of handled basic blocks.
+     * @param entry  exception handler entry point. */
     public ExceptionHandler(jq_Class ex_type, int numOfHandledBlocks, BasicBlock entry) {
         this.exception_type = ex_type;
         this.handled_blocks = new ArrayList(numOfHandledBlocks);
         this.entry = entry;
     }
 
+    /** Returns the type of exception that this exception handler catches.
+     * @return  the type of exception that this exception handler catches. */
     public jq_Class getExceptionType() { return exception_type; }
+    /** Returns an iteration of the handled basic blocks.
+     * @return  an iteration of the handled basic blocks. */
     public BasicBlockIterator getHandledBasicBlocks() { return new BasicBlockIterator(handled_blocks); }
+    /** Returns the entry point for this exception handler.
+     * @return  the entry point for this exception handler. */
     public BasicBlock getEntry() { return entry; }
 
+    /** Add a handled basic block to the list of handled basic blocks.
+     * @param bb  basic block to add. */
     void addHandledBasicBlock(BasicBlock bb) { handled_blocks.add(bb); }
 }

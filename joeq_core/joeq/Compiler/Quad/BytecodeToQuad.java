@@ -3,12 +3,9 @@
  *
  * Created on April 22, 2001, 11:53 AM
  *
- * @author  John Whaley
- * @version 
  */
 
 package Compil3r.Quad;
-
 import Clazz.*;
 import Compil3r.BytecodeAnalysis.BytecodeVisitor;
 import Compil3r.BytecodeAnalysis.ControlFlowGraph.InitialPass;
@@ -62,6 +59,18 @@ import Bootstrap.PrimordialClassLoader;
 import UTF.Utf8;
 import jq;
 
+/**
+ * Converts stack-based Java bytecode to Quad intermediate format.
+ * This utilizes the ControlFlowGraph in the BytecodeAnalysis package to build
+ * up a control flow graph, then iterates over the graph to generate the Quad
+ * code.
+ *
+ * @see  BytecodeVisitor
+ * @see  BytecodeAnalysis.ControlFlowGraph
+ * @author  John Whaley
+ * @version  @version $Id$
+ */
+
 public class BytecodeToQuad extends BytecodeVisitor {
     
     private ControlFlowGraph quad_cfg;
@@ -75,14 +84,20 @@ public class BytecodeToQuad extends BytecodeVisitor {
 
     public static boolean ALWAYS_TRACE = false;
 
+    /** Initializes the conversion from bytecode to quad format for the given method.
+     * @param  method the method to convert. */
     public BytecodeToQuad(jq_Method method) {
         super(method);
         TRACE = ALWAYS_TRACE;
     }
     
+    /** Returns a string with the name of the pass and the method being converted.
+     * @return  a string with the name of the pass and the method being converted. */
     public String toString() {
         return "BC2Q/"+jq.left(method.getName().toString(), 10);
     }
+    /** Perform conversion process from bytecode to quad.
+     * @return  the control flow graph of the resulting quad representation. */
     public ControlFlowGraph convert() {
         bc_cfg = Compil3r.BytecodeAnalysis.ControlFlowGraph.computeCFG(method);
         
@@ -156,6 +171,8 @@ public class BytecodeToQuad extends BytecodeVisitor {
 
     private boolean endBasicBlock;
     
+    /**
+     * @param  bc_bb  */    
     public void traverseBB(Compil3r.BytecodeAnalysis.BasicBlock bc_bb) {
         if (start_states[bc_bb.id] == null) {
             // unreachable block!
@@ -1518,6 +1535,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         return r.getNumber();
     }
     
+    /** Class used to store the abstract state of the bytecode-to-quad converter. */
     public static class AbstractState {
 
         public static boolean TRACE = false;
