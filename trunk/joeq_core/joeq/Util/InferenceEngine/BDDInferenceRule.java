@@ -207,16 +207,23 @@ public class BDDInferenceRule extends InferenceRule {
             }
         }
         
-        if (solver.TRACE) solver.out.print(" (relprod nodes: "+topBdd.nodeCount()+"x"+relationValues[0].nodeCount()+"x"+quantify.nodeCount());
-        BDD result = topBdd.relprod(relationValues[0], quantify);
-        if (solver.TRACE) solver.out.print("="+result.nodeCount()+")");
+        BDD result;
+        if (relationValues.length > 0) {
+            if (solver.TRACE) solver.out.print(" (relprod nodes: "+topBdd.nodeCount()+"x"+relationValues[0].nodeCount()+"x"+quantify.nodeCount());
+            result = topBdd.relprod(relationValues[0], quantify);
+            if (solver.TRACE) solver.out.print("="+result.nodeCount()+")");
+            relationValues[0].free();
+        } else {
+            // special case of rule with nothing on the top
+            result = solver.bdd.one();
+        }
         topBdd.free();
-        relationValues[0].free();
         quantify.free();
         
         BDDPairing pairing = null;
         for (int j = 0; j < bottom.variables.size(); ++j) {
             Variable v = (Variable) bottom.variables.get(j);
+            if (unnecessaryVariables.contains(v)) continue;            
             BDDDomain d = (BDDDomain) r.domains.get(j);
             BDDDomain d2 = (BDDDomain) variableToBDDDomain.get(v);
             Assert._assert(d2 != null);
@@ -385,6 +392,7 @@ public class BDDInferenceRule extends InferenceRule {
         BDDPairing pairing = null;
         for (int j = 0; j < bottom.variables.size(); ++j) {
             Variable v = (Variable) bottom.variables.get(j);
+            if (unnecessaryVariables.contains(v)) continue;
             BDDDomain d = (BDDDomain) r.domains.get(j);
             BDDDomain d2 = (BDDDomain) variableToBDDDomain.get(v);
             Assert._assert(d2 != null);
