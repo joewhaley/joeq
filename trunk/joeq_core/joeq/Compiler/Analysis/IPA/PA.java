@@ -1921,6 +1921,7 @@ public class PA {
     Map missingClasses  = new HashMap();
     Map missingConst    = new HashMap();
     Map noConstrClasses = new HashMap();
+    Map cantCastTypes   = new HashMap();
     BDD reflectiveCalls;
     /** Updates IE/IEcs with new edges obtained from resolving reflective invocations */
     public boolean bindReflection(){
@@ -1982,14 +1983,19 @@ public class PA {
             if(TRACE_REFLECTION && false) System.out.println("stringConst: " + stringConst);
             jq_Class c = null;
             try {
+//                if(stringConst.eq)
                 jq_Type clazz = jq_Type.parseType(stringConst);
-                if(clazz instanceof jq_Class){
+                if(clazz instanceof jq_Class && !stringConst.equals(".")){
                     c = (jq_Class) clazz;
+                    
                     c.load();
                     c.prepare();
                     Assert._assert(c != null);
                 }else{
-                    System.err.println("Can't cast " + clazz + " to jq_Class");      
+                    if(cantCastTypes.get(clazz) == null){
+                        System.err.println("Can't cast " + clazz + " to jq_Class at " + h.toStringWithDomains(TS));
+                        cantCastTypes.put(clazz, new Integer(0));
+                    }
                     continue;
                 }
             } catch(NoClassDefFoundError e) {
