@@ -39,15 +39,18 @@ public class MethodInline implements ControlFlowGraphVisitor {
     public static final java.io.PrintStream out = System.out;
 
     Oracle oracle;
+    CallGraph cg;
 
     public MethodInline(Oracle o) {
         this.oracle = o;
     }
     public MethodInline(CallGraph cg) {
         this(new InlineSmallSingleTargetCalls(cg));
+        this.cg = cg;
     }
     public MethodInline() {
         this(new InlineSmallSingleTargetCalls(CHACallGraph.INSTANCE));
+        this.cg = CHACallGraph.INSTANCE;
     }
 
     public static interface Oracle {
@@ -178,6 +181,13 @@ public class MethodInline implements ControlFlowGraphVisitor {
             InliningDecision d = (InliningDecision)li3.previous();
             if (TRACE_DECISIONS) out.println("Performing inlining "+d);
             d.inlineCall(cfg, bb, q);
+            if (cg instanceof CachedCallGraph && d instanceof NoCheckInliningDecision) {
+                CachedCallGraph ccg = (CachedCallGraph) cg;
+                jq_Method caller = cfg.getMethod();
+                ProgramLocation pl = new ProgramLocation.QuadProgramLocation(caller, q);
+                jq_Method callee = ((NoCheckInliningDecision) d).callee.getMethod();
+                ccg.inlineEdge(caller, pl, callee);
+            }
         }
     }
     
