@@ -26,12 +26,14 @@ public class BogusSummaryProvider {
     private static jq_Class realHashMap;
     private static jq_Class realVector;
     private static jq_Class realHashtable;
+    private static jq_Class realArrayList;
     
     private static jq_Class fakeString;
     private static jq_Class fakeStringBuffer;
     private static jq_Class fakeHashMap;
     private static jq_Class fakeVector;
     private static jq_Class fakeHashtable;
+    private static jq_Class fakeArrayList;
     
     public BogusSummaryProvider() {
         realString       = getClassByName("java.lang.String");
@@ -39,6 +41,7 @@ public class BogusSummaryProvider {
         realHashMap      = getClassByName("java.util.HashMap");
         realVector       = getClassByName("java.util.Vector");
         realHashtable    = getClassByName("java.util.Hashtable");
+        realArrayList    = getClassByName("java.util.ArrayList");
         Assert._assert(realString != null && realStringBuffer != null && realHashMap != null && realVector != null && realHashtable != null);
         realString.prepare(); realStringBuffer.prepare(); realHashMap.prepare(); realVector.prepare(); realHashtable.prepare();
         
@@ -47,19 +50,21 @@ public class BogusSummaryProvider {
         fakeHashMap      = getClassByName("MyMockLib.MyHashMap");
         fakeVector       = getClassByName("MyMockLib.MyVector");
         fakeHashtable    = getClassByName("MyMockLib.MyHashtable");
+        fakeArrayList    = getClassByName("MyMockLib.MyArrayList");
         Assert._assert(fakeString != null && fakeStringBuffer != null && fakeHashMap != null && fakeVector != null && fakeHashtable != null);        
         fakeString.prepare(); fakeStringBuffer.prepare(); fakeHashMap.prepare(); fakeVector.prepare(); fakeHashtable.prepare();
         
         classMap.put(realString, fakeString);
         classMap.put(realStringBuffer, fakeStringBuffer);
         if(INLINE_MAPS){
-            System.out.println("Inlining maps.");
+            System.out.println("Inlining maps, etc.");
             classMap.put(realHashMap, fakeHashMap);
+            classMap.put(realVector, fakeVector);
+            classMap.put(realHashtable, fakeHashtable);
+            classMap.put(realArrayList, fakeArrayList);
         }else{
-            System.out.println("Not inlining maps.");
-        }
-        classMap.put(realVector, fakeVector);
-        classMap.put(realHashtable, fakeHashtable);
+            System.out.println("Not inlining maps, etc.");
+        }        
     }
 
     /**
