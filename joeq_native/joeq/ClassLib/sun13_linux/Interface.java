@@ -61,12 +61,24 @@ public final class Interface extends ClassLib.ClassLibInterface {
         return ClassLib.sun13_linux.java.lang.reflect.Constructor.createNewConstructor(ClassLib.sun13_win32.java.lang.reflect.Constructor._class, f);
     }
     
+    public void initNewConstructor(java.lang.reflect.Constructor o, Clazz.jq_Initializer f) {
+        ClassLib.sun13_linux.java.lang.reflect.Constructor.initNewConstructor(o, f);
+    }
+    
     public java.lang.reflect.Field createNewField(Clazz.jq_Field f) {
         return ClassLib.sun13_linux.java.lang.reflect.Field.createNewField(ClassLib.sun13_win32.java.lang.reflect.Field._class, f);
     }
     
+    public void initNewField(java.lang.reflect.Field o, Clazz.jq_Field f) {
+        ClassLib.sun13_linux.java.lang.reflect.Field.initNewField(o, f);
+    }
+    
     public java.lang.reflect.Method createNewMethod(Clazz.jq_Method f) {
         return ClassLib.sun13_linux.java.lang.reflect.Method.createNewMethod(ClassLib.sun13_win32.java.lang.reflect.Method._class, f);
+    }
+    
+    public void initNewMethod(java.lang.reflect.Method o, Clazz.jq_Method f) {
+        ClassLib.sun13_linux.java.lang.reflect.Method.initNewMethod(o, f);
     }
     
     public Clazz.jq_Field getJQField(java.lang.reflect.Field f) {
