@@ -102,65 +102,91 @@ public class BDDSolver extends Solver {
         }
         List domains = new ArrayList(allDomains);
         PermutationGenerator g = new PermutationGenerator(domains.size());
-        int[] best = null;
+        List best = null;
         long bestTime = Long.MAX_VALUE;
         while (g.hasMore()) {
             int[] p = g.getNext();
+            List domains2 = new ArrayList(p.length);
+            for (int k = 0; k < p.length; ++k) {
+                domains2.add(domains.get(p[k]));
+            }
             long totalTime = 0L;
             for (Iterator i = orderingConstraints.entrySet().iterator(); i.hasNext(); ) {
                 Map.Entry e = (Map.Entry) i.next();
                 // Check if this ordering constraint matches p.
-                boolean match = false;
-                Iterator j = ((List) e.getKey()).iterator();
-                BDDDomain d_j = (BDDDomain) j.next();
-                for (int k = 0; k < p.length; ++k) {
-                    BDDDomain d_k = (BDDDomain) domains.get(p[k]);
-                    if (d_k == d_j) {
-                        if (j.hasNext()) {
-                            //System.out.println(d_k+" index "+k);
-                            d_j = (BDDDomain) j.next();
-                        } else {
-                            match = true;
-                            break;
-                        }
-                    }
-                }
-                if (match) {
+                List key = (List) e.getKey();
+                if (doOrdersMatch(key, domains2)) {
                     //System.out.println(e);
                     totalTime += ((Long) e.getValue()).longValue();
                     if (totalTime < 0) totalTime = Long.MAX_VALUE;
                 }
             }
-            if (false) {
-                System.out.print("Order:");
-                for (int i = 0; i < p.length; ++i) {
-                    BDDDomain d = (BDDDomain) domains.get(p[i]);
-                    System.out.print(" "+d.getName());
-                }
+            if (false || totalTime < bestTime) {
+                System.out.print("Order: "+domains2);
                 System.out.println(" Time: "+totalTime+" ms");
             }
             if (totalTime < bestTime) {
-                best = new int[p.length];
-                System.arraycopy(p, 0, best, 0, p.length);
+                best = domains2;
                 bestTime = totalTime;
             }
         }
-        System.out.print("Best order:");
-        for (int i = 0; i < best.length; ++i) {
-            BDDDomain d = (BDDDomain) domains.get(best[i]);
-            System.out.print(" "+d.getName());
-        }
+        System.out.print("Best order: "+best);
         System.out.println(" Time: "+bestTime+" ms");
     }
     
+    static final Long MAX = new Long(Long.MAX_VALUE);
+    
     void registerOrderConstraint(List doms, long time) {
-        Long t = (Long) orderingConstraints.get(doms);
-        if (t == null) orderingConstraints.put(doms, new Long(time));
-        else {
-            long newValue = t.longValue()+time;
-            if (newValue < 0L) newValue = Long.MAX_VALUE;
-            orderingConstraints.put(doms, new Long(newValue));
+        if (time == Long.MAX_VALUE) {
+            // special case, obliterate all matching orders.
+            for (Iterator i = orderingConstraints.entrySet().iterator(); i.hasNext(); ) {
+                Map.Entry e = (Map.Entry) i.next();
+                List list = (List) e.getKey();
+                if (doOrdersMatch(list, doms)) {
+                    if (!e.getValue().equals(MAX)) {
+                        System.out.println("orders match! "+list+" and "+doms);
+                    }
+                    e.setValue(MAX);
+                } else {
+                    //System.out.println("orders don't match. "+list+" and "+doms);
+                }
+            }
+            orderingConstraints.put(doms, MAX);
+        } else {
+            Long t = (Long) orderingConstraints.get(doms);
+            if (t == null) orderingConstraints.put(doms, new Long(time));
+            else {
+                time = t.longValue()+time;
+                if (time < 0L) orderingConstraints.put(doms, MAX);
+                else orderingConstraints.put(doms, new Long(time));
+            }
         }
+    }
+    
+    static boolean doOrdersMatch(List a, List b) {
+        Iterator i = a.iterator();
+        Iterator j = b.iterator();
+        if (!i.hasNext() || !j.hasNext()) return true;
+        for (;;) {
+            Object c;
+            do {
+                if (!i.hasNext()) return true;
+                c = i.next();
+            } while (!b.contains(c));
+            // c should be the next thing in b
+            for (;;) {
+                if (!j.hasNext()) return false;
+                Object d = j.next();
+                if (c == d) break;
+                if (a.contains(d)) return false;
+            }
+        }
+    }
+    
+    long getOrderConstraint(List doms) {
+        Long t = (Long) orderingConstraints.get(doms);
+        if (t == null) return 0L;
+        else return t.longValue();
     }
     
     void saveBDDDomainInfo() throws IOException {

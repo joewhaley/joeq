@@ -268,9 +268,9 @@ public abstract class Solver {
             } else if (option.equals("cacheafterrename")) {
                 BDDInferenceRule r = (BDDInferenceRule) ir;
                 r.cache_before_rename = false;
-            } else if (option.equals("testorder")) {
+            } else if (option.equals("findbestorder")) {
                 BDDInferenceRule r = (BDDInferenceRule) ir;
-                r.test_order = true;
+                r.find_best_order = true;
             } else {
                 throw new IllegalArgumentException("Unknown rule option \""+option+"\"");
             }
