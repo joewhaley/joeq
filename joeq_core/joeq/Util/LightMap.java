@@ -18,6 +18,21 @@ import java.util.Set;
  * @version $Id$
  */
 public class LightMap implements Map, Cloneable, java.io.Serializable {
+    
+    public static class Factory extends MapFactory {
+        private Factory() { }
+        public static final Factory INSTANCE = new Factory();
+        
+        /** Generates a new <code>Map</code>, using the entries of
+            <code>map</code> as a template for its initial mappings. 
+        */
+        public final Map makeMap(Map map) {
+            Map newMap = new LightMap();
+            newMap.putAll(map);
+            return newMap;
+        }
+    }
+    
     // the number of mappings in this map
     private int size = 0;
     // the root of the binary tree used to store the mapping
