@@ -12,6 +12,8 @@ import joeq.Util.Assert;
 import joeq.Util.Collections.UnmodifiableIterator;
 
 /**
+ * TODO: ummm, synchronization?!
+ *
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
@@ -292,7 +294,7 @@ here:
         }
         table[size] = new Utf8(b, hash);
         chain[index] = size+1;
-        if (TRACE) System.out.println("allocated new Utf8: "+table[size]);
+        if (TRACE) System.out.println("allocated Utf8 ["+size+"] = \""+table[size]+"\"");
         return size;
     }
     
@@ -300,6 +302,7 @@ here:
     private static void growTable_helper() {
         Utf8[] newtable = new Utf8[size<<1];
         System.arraycopy(table, 0, newtable, 0, size);
+        if (TRACE) System.out.println("Growing Utf8 table from "+table.length+" to "+newtable.length);
         table = newtable;
     }
     

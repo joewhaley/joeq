@@ -39,8 +39,8 @@ javac:	bootclasspath source_list _javac
 # _javac: Assumes prior existence of the .source_list file.
 # Useful on cygwin, because cygwin takes a long time to build the .source_list file.
 _javac:	
-#	javac -source $(CLASSFILE_VERSION) -target $(CLASSFILE_VERSION) -bootclasspath @bootclasspath -classpath $(BUILD_CLASSPATH) @.source_list
-	javac -source $(CLASSFILE_VERSION) -target $(CLASSFILE_VERSION) -bootclasspath "`cat bootclasspath`" -classpath $(BUILD_CLASSPATH) @.source_list
+#	javac -g -source $(CLASSFILE_VERSION) -target $(CLASSFILE_VERSION) -bootclasspath @bootclasspath -classpath $(BUILD_CLASSPATH) @.source_list
+	javac -g -source $(CLASSFILE_VERSION) -target $(CLASSFILE_VERSION) -bootclasspath "`cat bootclasspath`" -classpath $(BUILD_CLASSPATH) @.source_list
 
 
 ### RULES TO CLEAN
@@ -69,7 +69,7 @@ bootstrap:	joeq/Main/Bootstrapper.class
 	java -Xbootclasspath/a:$(JDK14SUPPORT_LIB) -cp $(BOOTSTRAP_CLASSPATH) -mx450M joeq.Main.Bootstrapper
 
 bootstrap-sun142-linux:	javac
-	java -cp $(BOOTSTRAP_CLASSPATH) -verbose:gc -ms320M -mx320M joeq.Main.Bootstrapper -cl ../native/joeq/ClassLib/sun142_linux/classlist.txt
+	java -cp $(BOOTSTRAP_CLASSPATH) -ms320M -mx320M joeq.Main.Bootstrapper -cl ../native/joeq/ClassLib/sun142_linux/classlist.txt -TraceUtf8
 
 bootstrap-sun14-linux:	javac
 	java -cp $(BOOTSTRAP_CLASSPATH) -ms240M -mx240M joeq.Main.Bootstrapper -cl ../native/joeq/ClassLib/sun14_linux/classlist.txt
