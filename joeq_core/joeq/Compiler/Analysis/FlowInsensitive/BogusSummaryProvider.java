@@ -9,6 +9,7 @@ package joeq.Compiler.Analysis.FlowInsensitive;
 import java.util.HashMap;
 import java.util.Iterator;
 import joeq.Class.jq_Class;
+import joeq.Class.jq_Initializer;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_Type;
 import jwutil.util.Assert;
@@ -75,7 +76,11 @@ public class BogusSummaryProvider {
             }
             
             boolean allMatch = true;
-            for(int i = 0; i < originalMethod.getParamTypes().length; i++){
+            int base = 0;
+            if(originalMethod instanceof jq_Initializer){                
+                base = 1;
+            }
+            for(int i = base; i < originalMethod.getParamTypes().length; i++){
                 if(m.getParamTypes()[i] != originalMethod.getParamTypes()[i]){
                     allMatch = false;
                     break;
