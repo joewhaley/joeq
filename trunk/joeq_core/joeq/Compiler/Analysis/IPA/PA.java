@@ -1016,7 +1016,7 @@ public class PA {
                     addClassInitializer((jq_Class) type);
                     addFinalizer((jq_Class) type);
                 }
-                if (ADD_THREADS &&
+                if (ADD_THREADS && type != jq_NullType.NULL_TYPE &&
                     (type.isSubtypeOf(PrimordialClassLoader.getJavaLangThread()) ||
                      type.isSubtypeOf(PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/Runnable;")))) {
                     addThreadRun(H_i, (jq_Class) type);
@@ -3373,7 +3373,7 @@ public class PA {
         
         String dumpPath = System.getProperty("pa.dumppath", "");
         String sep = System.getProperty("file.separator", "/");
-        if (!dumpPath.endsWith(sep))
+        if (dumpPath.length() > 0 && !dumpPath.endsWith(sep))
             dumpPath += sep;
         System.out.println("Dumping to path "+dumpPath);
         
