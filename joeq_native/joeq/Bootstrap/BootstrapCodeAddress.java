@@ -27,6 +27,8 @@ public class BootstrapCodeAddress extends CodeAddress implements BootstrapAddres
             this.bca = bca;
         }
         public int size() { return 4; }
+        public CodeAddress getNull() { return NULL; }
+        public static final BootstrapCodeAddress NULL = new BootstrapCodeAddress(0);
     }
     
     public final int value;

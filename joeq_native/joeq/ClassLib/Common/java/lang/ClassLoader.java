@@ -18,6 +18,7 @@ import Clazz.jq_Array;
 import Clazz.jq_Class;
 import Clazz.jq_ClassFileConstants;
 import Clazz.jq_CompiledCode;
+import Clazz.jq_Reference;
 import Clazz.jq_Type;
 import Main.jq;
 import Memory.CodeAddress;
@@ -139,10 +140,11 @@ public abstract class ClassLoader {
     protected final java.lang.Class findLoadedClass(java.lang.String name) {
         if (!name.startsWith("[")) name = "L"+name+";";
         Utf8 desc = Utf8.get(name.replace('.','/'));
-        jq_Type t;
-        t = this.getType(desc);
+        jq_Reference t = (jq_Reference) this.getType(desc);
         if (t == null) return null;
-        t.load();
+        // avoid recursive loading, because loading can use "Class.forName()"
+        if (t.getState() == jq_ClassFileConstants.STATE_UNLOADED)
+            t.load();
         return Reflection.getJDKType(t);
     }
     static ClassLoader getCallerClassLoader() {

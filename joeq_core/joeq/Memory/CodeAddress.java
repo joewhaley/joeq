@@ -21,10 +21,16 @@ public class CodeAddress extends Address {
     
     public abstract static class CodeAddressFactory {
         public abstract int size();
+        
+        public abstract CodeAddress getNull();
     }
     
     public static final int size() {
         return FACTORY.size();
+    }
+
+    public static final CodeAddress getNull() {
+        return FACTORY.getNull();
     }
 
     public native Address peek();

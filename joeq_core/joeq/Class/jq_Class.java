@@ -1597,6 +1597,8 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
             newInstanceMethods.put(this_m, il);
         }
         
+        Bytecodes.InstructionList rebuilt_clinit = null;
+        
         // visit all static methods.
         LinkedHashMap newStaticMethods = new LinkedHashMap();
         for (int i=0; i<that.static_methods.length; ++i) {
@@ -1614,7 +1616,6 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                 
                 // add a call to the special method in our class initializer.
                 jq_ClassInitializer clinit = getClassInitializer();
-                Bytecodes.InstructionList il2;
                 if (clinit == null) {
                     jq_NameAndDesc nd2 = new jq_NameAndDesc(Utf8.get("<clinit>"), Utf8.get("()V"));
                     clinit = (jq_ClassInitializer)getOrCreateStaticMethod(nd2);
@@ -1622,21 +1623,22 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                     clinit.load((char)(ACC_PUBLIC | ACC_STATIC), (char)0, (char)0, new byte[0],
                            new jq_TryCatchBC[0], new jq_LineNumberBC[0], new HashMap());
                     if (TRACE) SystemInterface.debugwriteln("Created class initializer "+clinit);
-                    il2 = new Bytecodes.InstructionList();
+                    rebuilt_clinit = new Bytecodes.InstructionList();
                     Bytecodes.RETURN re = new Bytecodes.RETURN();
-                    il2.append(re);
-                    il2.setPositions();
-                    newStaticMethods.put(clinit, il2);
+                    rebuilt_clinit.append(re);
+                    rebuilt_clinit.setPositions();
                 } else {
                     if (TRACE) SystemInterface.debugwriteln("Using existing class initializer "+clinit);
-                    il2 = new Bytecodes.InstructionList(clinit);
+                    rebuilt_clinit = new Bytecodes.InstructionList(clinit);
                 }
                 Bytecodes.INVOKESTATIC is = new Bytecodes.INVOKESTATIC(this_m);
-                il2.insert(is);
-                cpr.addMember(this_m);
+                rebuilt_clinit.insert(is);
+                cpr.addCode(rebuilt_clinit);
                 
                 // extract instructions of method.
                 il = new Bytecodes.InstructionList(that_m);
+                
+                newStaticMethods.put(clinit, rebuilt_clinit);
                 
                 that_m.unload(); Object b = that.members.remove(that_m.getNameAndDesc());
                 if (TRACE) SystemInterface.debugwriteln("Removed member "+that_m.getNameAndDesc()+" from member set of "+that+": "+b);

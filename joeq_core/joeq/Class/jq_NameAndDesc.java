@@ -15,12 +15,15 @@ import UTF.Utf8;
  */
 public class jq_NameAndDesc {
 
-    private Utf8 name, desc;
+    private final Utf8 name, desc;
     
     /** Creates new jq_NameAndDesc */
     public jq_NameAndDesc(Utf8 name, Utf8 desc) {
         this.name = name;
         this.desc = desc;
+    }
+    public jq_NameAndDesc(String name, String desc) {
+        this(Utf8.get(name), Utf8.get(desc));
     }
     
     public final Utf8 getName() { return name; }
