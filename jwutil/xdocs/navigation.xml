@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<project name="jwutil">
+  <title>jwutil</title>
+  <body>
+    <links>
+      <item name="SUIF Compiler Group"
+            href="http://suif.stanford.edu" />
+      <item name="Author's Homepage" 
+            href="http://www.stanford.edu/~jwhaley/" />
+    </links>
+    <item name="Acknowledgements"
+          href="ack.html"/>
+  </body>
+</project>
