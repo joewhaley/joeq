@@ -23,8 +23,8 @@ Mret (method:M0, v:V1) input
 Mthr (method:M0, v:V1) input
 Iret (invoke:I0, v:V0) input
 Ithr (invoke:I0, v:V0) input
-IE0 (invoke:I, target:M0) input
-IE (invoke:I, target:M0) output
+IE0 (invoke:I0, target:M0) input
+IE (invoke:I0, target:M0) output
 mC (method:M0, context:VC0) input
 mV (method:M0, v:V0) input
 threadRuns (vc:VC0, v:V0, hc:HC0, h:H0) input
