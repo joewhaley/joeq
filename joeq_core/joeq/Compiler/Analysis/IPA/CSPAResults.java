@@ -4,6 +4,7 @@
 package Compil3r.Analysis.IPA;
 
 import java.io.*;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -15,15 +16,20 @@ import java.util.StringTokenizer;
 
 import org.sf.javabdd.*;
 
+import Clazz.jq_Method;
 import Clazz.jq_Reference;
 import Clazz.jq_Type;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
+import Compil3r.Quad.CallGraph;
+import Compil3r.Quad.LoadedCallGraph;
 import Main.HostedVM;
 import Util.Assert;
 import Util.Strings;
 import Util.Collections.IndexMap;
 import Util.Collections.SortedArraySet;
+import Util.Graphs.PathNumbering;
+import Util.Graphs.PathNumbering.Path;
 
 /**
  * Records results for context-sensitive pointer analysis.  The results can
@@ -33,6 +39,12 @@ import Util.Collections.SortedArraySet;
  * @version $Id$
  */
 public class CSPAResults {
+
+    /** Call graph. */
+    CallGraph cg;
+
+    /** Path numbering for call graph. */
+    PathNumbering pn;
 
     /** BDD factory object, to perform BDD operations. */
     BDDFactory bdd;
@@ -56,10 +68,6 @@ public class CSPAResults {
      * A relation (V,H) is in the BDD if variable V can point to heap object H.
      */
     BDD pointsTo;
-
-    public static class SetOfContexts {
-        
-    }
 
     BDD getAliasedLocations(Node variable) {
         BDD context = V1c.set();
@@ -104,6 +112,15 @@ public class CSPAResults {
         BDD context = V1c.set();
         context.andWith(H1c.set());
         return pointsTo.exist(context);
+    }
+
+    /** Load call graph from the given file name.
+     */
+    public void loadCallGraph(String fn) throws IOException {
+        cg = new LoadedCallGraph(fn);
+        pn = new PathNumbering();
+        Number paths = pn.countPaths(cg.getRoots(), cg.getCallSiteNavigator());
+        System.out.println("Number of paths in call graph="+paths);
     }
 
     /** Load points-to results from the given file name prefix.
@@ -182,6 +199,7 @@ public class CSPAResults {
         BDDFactory bdd = BDDFactory.init(nodeCount, cacheSize);
         bdd.setMaxIncrease(nodeCount/4);
         CSPAResults r = new CSPAResults(bdd);
+        r.loadCallGraph("callgraph");
         r.load("cspa");
         r.interactive();
     }
@@ -237,8 +255,8 @@ public class CSPAResults {
     };
     
     public class TypedBDD {
-    	private static final int DEFAULT_NUM_TO_PRINT = 6;
-    	private static final int PRINT_ALL = -1;
+        private static final int DEFAULT_NUM_TO_PRINT = 6;
+        private static final int PRINT_ALL = -1;
         BDD bdd;
         Set dom;
         
@@ -345,44 +363,44 @@ public class CSPAResults {
         }
         
         public String toString() {
-        	return toString(DEFAULT_NUM_TO_PRINT);
+            return toString(DEFAULT_NUM_TO_PRINT);
         }
         
         public String toStringAll() {
             return toString(PRINT_ALL);
         }
         
-		public String toString(int numToPrint) {
-			BDD dset = getDomains();
-			double s = bdd.satCount(dset);
-			if (s == 0.) return "<empty>";
-			BDD b = bdd.id();
-			StringBuffer sb = new StringBuffer();
-			int j = 0;
-			while (!b.isZero()) {
-				if (numToPrint != PRINT_ALL && j > numToPrint - 1) {
-					sb.append("\tand "+(long)b.satCount(dset)+" others.");
-					sb.append(Strings.lineSep);
-					break;
-				}
-				int[] val = b.scanAllVar();
-				sb.append("\t(");
-				BDD temp = b.getFactory().one();
-				for (Iterator i=dom.iterator(); i.hasNext(); ) {
-					BDDDomain d = (BDDDomain) i.next();
-					int e = val[d.getIndex()];
-					sb.append(elementToString(d, e));
-					if (i.hasNext()) sb.append(' ');
-					temp.andWith(d.ithVar(e));
-				}
-				sb.append(')');
-				b.applyWith(temp, BDDFactory.diff);
-				++j;
-				sb.append(Strings.lineSep);
-			}
-			//sb.append(bdd.toStringWithDomains());
-			return sb.toString();
-		}
+        public String toString(int numToPrint) {
+            BDD dset = getDomains();
+            double s = bdd.satCount(dset);
+            if (s == 0.) return "<empty>";
+            BDD b = bdd.id();
+            StringBuffer sb = new StringBuffer();
+            int j = 0;
+            while (!b.isZero()) {
+                if (numToPrint != PRINT_ALL && j > numToPrint - 1) {
+                    sb.append("\tand "+(long)b.satCount(dset)+" others.");
+                    sb.append(Strings.lineSep);
+                    break;
+                }
+                int[] val = b.scanAllVar();
+                sb.append("\t(");
+                BDD temp = b.getFactory().one();
+                for (Iterator i=dom.iterator(); i.hasNext(); ) {
+                    BDDDomain d = (BDDDomain) i.next();
+                    int e = val[d.getIndex()];
+                    sb.append(elementToString(d, e));
+                    if (i.hasNext()) sb.append(' ');
+                    temp.andWith(d.ithVar(e));
+                }
+                sb.append(')');
+                b.applyWith(temp, BDDFactory.diff);
+                ++j;
+                sb.append(Strings.lineSep);
+            }
+            //sb.append(bdd.toStringWithDomains());
+            return sb.toString();
+        }
     }
 
     TypedBDD parseBDD(List a, String s) {
@@ -440,98 +458,122 @@ public class CSPAResults {
         List results = new ArrayList();
         DataInput in = new DataInputStream(System.in);
         for (;;) {
-			boolean increaseCount = true;
-			boolean listAll = false;
-			
-        	try {
-	            System.out.print(i+"> ");
-	            String s = in.readLine();
-	            if (s == null) return;
-	            StringTokenizer st = new StringTokenizer(s);
-	            if (!st.hasMoreElements()) continue;
-	            String command = st.nextToken();
-	            if (command.equals("relprod")) {
-	                TypedBDD bdd1 = parseBDD(results, st.nextToken());
-	                TypedBDD bdd2 = parseBDD(results, st.nextToken());
-	                TypedBDD set = parseBDDset(results, st.nextToken());
-	                TypedBDD r = bdd1.relprod(bdd2, set);
-	                results.add(r);
-	            } else if (command.equals("restrict")) {
-	                TypedBDD bdd1 = parseBDD(results, st.nextToken());
-	                TypedBDD bdd2 = parseBDD(results, st.nextToken());
-	                TypedBDD r = bdd1.restrict(bdd2);
-	                results.add(r);
-	            } else if (command.equals("exist")) {
-	                TypedBDD bdd1 = parseBDD(results, st.nextToken());
-	                TypedBDD set = parseBDDset(results, st.nextToken());
-	                TypedBDD r = bdd1.exist(set);
-	                results.add(r);
-	            } else if (command.equals("and")) {
-	                TypedBDD bdd1 = parseBDD(results, st.nextToken());
-	                TypedBDD bdd2 = parseBDD(results, st.nextToken());
-	                TypedBDD r = bdd1.and(bdd2);
-	                results.add(r);
-	            } else if (command.equals("or")) {
-	                TypedBDD bdd1 = parseBDD(results, st.nextToken());
-	                TypedBDD bdd2 = parseBDD(results, st.nextToken());
-	                TypedBDD r = bdd1.or(bdd2);
-	                results.add(r);
-	            } else if (command.equals("var")) {
-	                int z = Integer.parseInt(st.nextToken());
-	                TypedBDD r = new TypedBDD(V1o.ithVar(z), V1o);
-	                results.add(r);
-	            } else if (command.equals("heap")) {
-	                int z = Integer.parseInt(st.nextToken());
-	                TypedBDD r = new TypedBDD(H1o.ithVar(z), H1o);
-	                results.add(r);
-	            } else if (command.equals("quit") || command.equals("exit")) {
-	                break;
-	            } else if (command.equals("aliased")) {
-	                int z = Integer.parseInt(st.nextToken());
-	                Node node = (Node) variableIndexMap.get(z);
-	                TypedBDD r = new TypedBDD(getAliasedLocations(node), V1o);
-	                results.add(r);
-	            } else if (command.equals("heapType")) {
-	                jq_Reference typeRef = (jq_Reference) jq_Type.parseType(st.nextToken());
-	                if (typeRef != null) {
-	                    TypedBDD r = new TypedBDD(getAllHeapOfType(typeRef), H1o);
-	                    results.add(r);
-	                }
-	            } else if (command.equals("list")) {
-					TypedBDD r = parseBDD(results, st.nextToken());
-					results.add(r);
-					listAll = true;
+            boolean increaseCount = true;
+            boolean listAll = false;
+            
+            try {
+                System.out.print(i+"> ");
+                String s = in.readLine();
+                if (s == null) return;
+                StringTokenizer st = new StringTokenizer(s);
+                if (!st.hasMoreElements()) continue;
+                String command = st.nextToken();
+                if (command.equals("relprod")) {
+                    TypedBDD bdd1 = parseBDD(results, st.nextToken());
+                    TypedBDD bdd2 = parseBDD(results, st.nextToken());
+                    TypedBDD set = parseBDDset(results, st.nextToken());
+                    TypedBDD r = bdd1.relprod(bdd2, set);
+                    results.add(r);
+                } else if (command.equals("restrict")) {
+                    TypedBDD bdd1 = parseBDD(results, st.nextToken());
+                    TypedBDD bdd2 = parseBDD(results, st.nextToken());
+                    TypedBDD r = bdd1.restrict(bdd2);
+                    results.add(r);
+                } else if (command.equals("exist")) {
+                    TypedBDD bdd1 = parseBDD(results, st.nextToken());
+                    TypedBDD set = parseBDDset(results, st.nextToken());
+                    TypedBDD r = bdd1.exist(set);
+                    results.add(r);
+                } else if (command.equals("and")) {
+                    TypedBDD bdd1 = parseBDD(results, st.nextToken());
+                    TypedBDD bdd2 = parseBDD(results, st.nextToken());
+                    TypedBDD r = bdd1.and(bdd2);
+                    results.add(r);
+                } else if (command.equals("or")) {
+                    TypedBDD bdd1 = parseBDD(results, st.nextToken());
+                    TypedBDD bdd2 = parseBDD(results, st.nextToken());
+                    TypedBDD r = bdd1.or(bdd2);
+                    results.add(r);
+                } else if (command.equals("var")) {
+                    int z = Integer.parseInt(st.nextToken());
+                    TypedBDD r = new TypedBDD(V1o.ithVar(z), V1o);
+                    results.add(r);
+                } else if (command.equals("heap")) {
+                    int z = Integer.parseInt(st.nextToken());
+                    TypedBDD r = new TypedBDD(H1o.ithVar(z), H1o);
+                    results.add(r);
+                } else if (command.equals("quit") || command.equals("exit")) {
+                    break;
+                } else if (command.equals("aliased")) {
+                    int z = Integer.parseInt(st.nextToken());
+                    Node node = (Node) variableIndexMap.get(z);
+                    TypedBDD r = new TypedBDD(getAliasedLocations(node), V1o);
+                    results.add(r);
+                } else if (command.equals("heapType")) {
+                    jq_Reference typeRef = (jq_Reference) jq_Type.parseType(st.nextToken());
+                    if (typeRef != null) {
+                        TypedBDD r = new TypedBDD(getAllHeapOfType(typeRef), H1o);
+                        results.add(r);
+                    }
+                } else if (command.equals("list")) {
+                    TypedBDD r = parseBDD(results, st.nextToken());
+                    results.add(r);
+                    listAll = true;
                     System.out.println("Domains: " + r.getDomainNames());
-	            } else {
-	            	System.err.println("Unrecognized command");
-	            	increaseCount = false;
-	                //results.add(new TypedBDD(bdd.zero(), Collections.EMPTY_SET));
-	            }
-			} catch (IOException e) {
-				System.err.println("Error: IOException");
-				increaseCount = false;
-			} catch (NumberFormatException e) {
-				System.err.println("Parse error: NumberFormatException");
-				increaseCount = false;
-			} catch (NoSuchElementException e) {
-				System.err.println("Parse error: NoSuchElementException");
-				increaseCount = false;
-			} catch (IndexOutOfBoundsException e) {
-				System.err.println("Parse error: IndexOutOfBoundsException");
-				increaseCount = false;
-			}
+                } else if (command.equals("contextvar")) {
+                    int varNum = Integer.parseInt(st.nextToken());
+                    Node n = (Node) variableIndexMap.get(varNum);
+                    jq_Method m = n.getDefiningMethod();
+                    Number c = new BigInteger(st.nextToken(), 10);
+                    if (m == null) {
+                        System.out.println("No method for node "+n);
+                    } else {
+                        Path trace = pn.getPath(m, c);
+                        System.out.println(m+" context "+c+": "+trace);
+                    }
+                    increaseCount = false;
+                } else if (command.equals("contextheap")) {
+                    int varNum = Integer.parseInt(st.nextToken());
+                    Node n = (Node) heapobjIndexMap.get(varNum);
+                    jq_Method m = n.getDefiningMethod();
+                    Number c = new BigInteger(st.nextToken(), 10);
+                    if (m == null) {
+                        System.out.println("No method for node "+n);
+                    } else {
+                        Path trace = pn.getPath(m, c);
+                        System.out.println(m+" context "+c+": "+trace);
+                    }
+                    increaseCount = false;
+                } else {
+                    System.err.println("Unrecognized command");
+                    increaseCount = false;
+                    //results.add(new TypedBDD(bdd.zero(), Collections.EMPTY_SET));
+                }
+            } catch (IOException e) {
+                System.err.println("Error: IOException");
+                increaseCount = false;
+            } catch (NumberFormatException e) {
+                System.err.println("Parse error: NumberFormatException");
+                increaseCount = false;
+            } catch (NoSuchElementException e) {
+                System.err.println("Parse error: NoSuchElementException");
+                increaseCount = false;
+            } catch (IndexOutOfBoundsException e) {
+                System.err.println("Parse error: IndexOutOfBoundsException");
+                increaseCount = false;
+            }
 
-			if (increaseCount) {
-	            TypedBDD r = (TypedBDD) results.get(i-1);
-	            if (listAll) {
+            if (increaseCount) {
+                TypedBDD r = (TypedBDD) results.get(i-1);
+                if (listAll) {
                     System.out.println(i+" -> "+r.toStringAll());
                 } 
-	            else {
+                else {
                     System.out.println(i+" -> "+r);
                 } 
-	            Assert._assert(i == results.size());
-	            ++i;
-			}
+                Assert._assert(i == results.size());
+                ++i;
+            }
         }
     }
 
