@@ -42,6 +42,7 @@ public class BDDSolver extends Solver {
     public BDDSolver() {
         bdd = BDDFactory.init(1000000, 10000);
         fielddomainsToBDDdomains = new GenericMultiMap();
+        bdd.setMaxIncrease(500000);
     }
     
     public void initialize() {
@@ -164,4 +165,16 @@ public class BDDSolver extends Solver {
         return new BDDRelation(this, name, names, fieldDomains, fieldOptions);
     }
 
+    /* (non-Javadoc)
+     * @see joeq.Util.InferenceEngine.Solver#readRules(java.io.BufferedReader)
+     */
+    void readRules(BufferedReader in) throws IOException {
+        String varOrderString = System.getProperty("bddvarorder", null);
+        
+        if (varOrderString != null) {
+            int [] varOrder = bdd.makeVarOrdering(true, varOrderString);
+            bdd.setVarOrder(varOrder);
+        }
+        super.readRules(in);
+    }
 }
