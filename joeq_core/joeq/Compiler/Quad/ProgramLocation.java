@@ -46,8 +46,7 @@ public abstract class ProgramLocation {
     public abstract int getID();
     
     public abstract boolean isSingleTarget();
-    
-//    protected abstract byte getInvocationType();
+    public abstract boolean isInterfaceCall();
     
     public abstract AndersenMethod getTargetMethod();
     
@@ -114,6 +113,7 @@ public abstract class ProgramLocation {
         }
         
         public boolean isSingleTarget() {
+            if (isInterfaceCall()) return false;
             if (!((Invoke) q.getOperator()).isVirtual()) return true;
             jq_InstanceMethod target = (jq_InstanceMethod) Invoke.getMethod(q).getMethod();
             target.getDeclaringClass().load();
@@ -121,6 +121,10 @@ public abstract class ProgramLocation {
             target.getDeclaringClass().prepare();
             if (!target.isVirtual()) return true;
             return false;
+        }
+        
+        public boolean isInterfaceCall() {
+            return q.getOperator() instanceof Invoke.InvokeInterface;
         }
         
         private byte getInvocationType() {
@@ -177,6 +181,7 @@ public abstract class ProgramLocation {
         public AndersenType getParamType(int i) { return targetMethod.getParamType(i); }
 
         public boolean isSingleTarget() { return false; } // todo.
+        public boolean isInterfaceCall() { return false; }
 
         public int hashCode() { return identifier; }
         public boolean equals(SSAProgramLocation that) { return this.identifier == that.identifier; }
@@ -212,4 +217,5 @@ public abstract class ProgramLocation {
             return ct;
         }
     }
+
 }
