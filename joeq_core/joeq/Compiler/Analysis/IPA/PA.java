@@ -875,7 +875,7 @@ public class PA {
     
     public void visitGlobalNode(Node node) {
         if (TRACE) out.println("Visiting node "+node);
-       
+        
         if (FILTER_NULL && isNullConstant(node))
 	    return;
         
