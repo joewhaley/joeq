@@ -47,16 +47,17 @@ public class AndersenPointerAnalysis {
     public static boolean FORCE_GC = false;
     public static final boolean REUSE_CACHES = true;
     public static final boolean TRACK_CHANGES = true;
+    public static final boolean TRACK_CHANGED_FIELDS = false;
 
     public static final class Visitor implements ControlFlowGraphVisitor {
         public static boolean added_hook = false;
         public void visitCFG(ControlFlowGraph cfg) {
             INSTANCE.methodsToVisit.add(cfg);
-            INSTANCE.iterate();
             if (!added_hook) {
                 added_hook = true;
                 Runtime.getRuntime().addShutdownHook(new Thread() {
                     public void run() {
+                        INSTANCE.iterate();
                         System.out.println("Result of Andersen pointer analysis:");
                         System.out.println(INSTANCE.dumpResults());
                     }
@@ -225,6 +226,11 @@ public class AndersenPointerAnalysis {
     /** Records nodes that have been collapsed, and which predecessors have
      *  seen the collapse.  Only used if TRACK_CHANGES is true. */
     final HashMap collapsedNodes;
+
+    /** Records what fields have changed.  Only used if TRACK_CHANGED_FIELDS is true. */
+    HashSet oldChangedFields;
+    HashSet newChangedFields;
+    HashSet changedFields_Methods;
     
     /** Change flag, for iterations. */
     boolean change;
@@ -246,6 +252,10 @@ public class AndersenPointerAnalysis {
         } else {
             unpropagatedEdges = null;
             collapsedNodes = null;
+        }
+        if (TRACK_CHANGED_FIELDS) {
+            /*oldChangedFields =*/ newChangedFields = new HashSet();
+            changedFields_Methods = new HashSet();
         }
         this.initializeStatics();
     }
@@ -304,6 +314,11 @@ public class AndersenPointerAnalysis {
                 cacheIsCurrent.clear();
             else
                 nodeToConcreteNodes.clear();
+            if (TRACK_CHANGED_FIELDS) {
+                oldChangedFields = newChangedFields;
+                System.err.println(oldChangedFields.size()+" changed fields");
+                newChangedFields = new HashSet();
+            }
 	    if (FORCE_GC) System.gc();
             ++count;
         }
@@ -348,6 +363,11 @@ public class AndersenPointerAnalysis {
             for (Iterator j=n.getEdges().iterator(); j.hasNext(); ) {
                 Map.Entry e = (Map.Entry)j.next();
                 jq_Field f = (jq_Field)e.getKey();
+                if (TRACK_CHANGED_FIELDS) {
+                    if (!changedFields_Methods.contains(ms.getMethod())) {
+                        newChangedFields.add(f);
+                    }
+                }
                 Object o = e.getValue();
                 if (TRACE) out.println("Visiting edge: "+n+((f==null)?"[]":("."+f.getName()))+" = "+o);
                 // n.f = o
@@ -360,6 +380,11 @@ public class AndersenPointerAnalysis {
             for (Iterator j=n.getAccessPathEdges().iterator(); j.hasNext(); ) {
                 Map.Entry e = (Map.Entry)j.next();
                 jq_Field f = (jq_Field)e.getKey();
+                if (TRACK_CHANGED_FIELDS) {
+                    if (!changedFields_Methods.contains(ms.getMethod())) {
+                        changedFields_Methods.add(ms.getMethod());
+                    } else if (oldChangedFields != null && !oldChangedFields.contains(f) && !newChangedFields.contains(f)) continue;
+                }
                 Object o = e.getValue();
                 if (TRACE) out.println("Visiting edge: "+o+" = "+n+((f==null)?"[]":("."+f.getName())));
                 // o = n.f
@@ -597,6 +622,7 @@ public class AndersenPointerAnalysis {
                 if (TRACE_CHANGE && !this.change) {
                     out.println("Changed! New edges for concrete node "+n+"."+f+": "+to);
                 }
+                if (TRACK_CHANGED_FIELDS) newChangedFields.add(f);
                 this.change = true;
             }
         }
@@ -613,6 +639,7 @@ public class AndersenPointerAnalysis {
                 if (TRACE_CHANGE && !this.change) {
                     out.println("Changed! New edge for concrete node "+n+"."+f+": "+to);
                 }
+                if (TRACK_CHANGED_FIELDS) newChangedFields.add(f);
                 this.change = true;
             }
         }
