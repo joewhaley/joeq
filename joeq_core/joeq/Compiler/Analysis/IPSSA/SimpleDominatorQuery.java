@@ -23,22 +23,6 @@ import Compil3r.Analysis.IPA.ProgramLocation;
 import Compil3r.Analysis.IPA.ProgramLocation.QuadProgramLocation;
 
 /**
- * @author Vladimir Livshits
- *  */
-interface DominatorQuery {
-	/** The result is null for the top node of the CFG. */
-	public Quad getImmediateDominator(Quad q);
-	/** Checks if the node is the top node of the CFG. */
-	public boolean isTop(Quad q);
-	/** Fills set with the dominance frontier of q */
-	public void getDominanceFrontier(Quad q, Set/*<Quad>*/ set);
-	/** Fills set with the iterated dominance frontier of q */
-	public void getIteratedDominanceFrontier(Quad q, Set/*<Quad>*/ set);
-	/** Prints the dominator tree on Quads in dot format. */	
-	public void printDot(PrintStream out); 
-};
-
-/**
  * A pretty obvious implementation of DominatorQuery, nothing fancy here. 
  * Needs to be optimized for future use.
  * @see DominatorQuery
