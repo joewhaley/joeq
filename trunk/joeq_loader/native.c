@@ -523,6 +523,14 @@ HANDLE __stdcall init_thread(void)
     // nothing to do here.
     return get_current_thread_handle();
 }
+int __stdcall set_thread_priority(const HANDLE handle, const int level)
+{
+    return SetThreadPriority(handle, level);
+}
+int __stdcall resume_thread(const HANDLE handle)
+{
+    return ResumeThread(handle);
+}
 int __stdcall resume_thread(const HANDLE handle)
 {
     return ResumeThread(handle);
