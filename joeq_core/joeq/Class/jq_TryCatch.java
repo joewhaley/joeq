@@ -20,6 +20,7 @@ public class jq_TryCatch {
     public static final boolean DEBUG = false;
     
     // NOTE: startPC is exclusive, endPC is inclusive (opposite of jq_TryCatchBC)
+    // this is because the IP that we check against is IMMEDIATELY AFTER where the exception actually occurred.
     // these are OFFSETS.
     private int startPC, endPC, handlerPC;
     private jq_Class exType;

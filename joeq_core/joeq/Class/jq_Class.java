@@ -972,10 +972,10 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                         jq_InstanceMethod i_m = (jq_InstanceMethod)e.getKey();
                         Bytecodes.InstructionList i_l = (Bytecodes.InstructionList)e.getValue();
                         if (i_l != null) {
-                            if (TRACE) SystemInterface.debugmsg("Rebuilding bytecodes for instance method "+i_m+".");
+                            if (TRACE) SystemInterface.debugmsg("Rebuilding bytecodes for instance method "+i_m+", entry "+(j+1));
                             i_m.setCode(i_l, cpr);
                         } else {
-                            if (TRACE) SystemInterface.debugmsg("No bytecodes for instance method "+i_m+".");
+                            if (TRACE) SystemInterface.debugmsg("No bytecodes for instance method "+i_m+", entry "+(j+1));
                         }
                         //if (TRACE) SystemInterface.debugmsg("Adding instance method "+i_m+" to array.");
                         this.declared_instance_methods[++j] = i_m;
@@ -987,10 +987,10 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                         jq_StaticMethod i_m = (jq_StaticMethod)e.getKey();
                         Bytecodes.InstructionList i_l = (Bytecodes.InstructionList)e.getValue();
                         if (i_l != null) {
-                            if (TRACE) SystemInterface.debugmsg("Rebuilding bytecodes for static method "+i_m+".");
+                            if (TRACE) SystemInterface.debugmsg("Rebuilding bytecodes for static method "+i_m+", entry "+(j+1));
                             i_m.setCode(i_l, cpr);
                         } else {
-                            if (TRACE) SystemInterface.debugmsg("No bytecodes for static method "+i_m+".");
+                            if (TRACE) SystemInterface.debugmsg("No bytecodes for static method "+i_m+", entry "+(j+1));
                         }
                         //if (TRACE) SystemInterface.debugmsg("Adding static method "+i_m+" to array.");
                         this.static_methods[++j] = i_m;
@@ -1267,7 +1267,7 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
                 if (TRACE) SystemInterface.debugmsg("Using existing instance method object "+this_m+".");
             } else {
                 if (TRACE) SystemInterface.debugmsg("Creating new instance method object "+nd+".");
-                this_m = getOrCreateInstanceMethod(nd);
+                this_m = this.getOrCreateInstanceMethod(nd);
                 this.addDeclaredMember(nd, this_m);
                 that_m.unload(); Object b = that.members.remove(that_m.getNameAndDesc());
                 if (TRACE) SystemInterface.debugmsg("Removed member "+that_m.getNameAndDesc()+" from member set of "+that+": "+b);
@@ -1279,10 +1279,12 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         }
         for (int i=0; i<this.declared_instance_methods.length; ++i) {
             jq_InstanceMethod this_m = this.declared_instance_methods[i];
-            if (newInstanceMethods.containsKey(this_m)) {
+            jq_Member this_m2 = this.getDeclaredMember(this_m.getNameAndDesc());
+            if (newInstanceMethods.containsKey(this_m2)) {
                 if (TRACE) SystemInterface.debugmsg("Skipping replaced instance method object "+this_m+".");
                 continue;
             }
+            jq.assert(this_m == this_m2);
             byte[] bc = this_m.getBytecode();
             if (bc == null) {
                 if (TRACE) SystemInterface.debugmsg("Skipping native/abstract instance method object "+this_m+".");
@@ -1381,13 +1383,15 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         }
         for (int i=0; i<this.static_methods.length; ++i) {
             jq_StaticMethod this_m = this.static_methods[i];
-            if (newStaticMethods.containsKey(this_m)) {
-                if (TRACE) SystemInterface.debugmsg("Skipping replaced static method object "+this_m+".");
+            jq_Member this_m2 = this.getDeclaredMember(this_m.getNameAndDesc());
+            if (newStaticMethods.containsKey(this_m2)) {
+                //if (TRACE) SystemInterface.debugmsg("Skipping replaced static method object "+this_m+".");
                 continue;
             }
+            jq.assert(this_m == this_m2);
             byte[] bc = this_m.getBytecode();
             if (bc == null) {
-                if (TRACE) SystemInterface.debugmsg("Skipping native/abstract static method object "+this_m+".");
+                //if (TRACE) SystemInterface.debugmsg("Skipping native/abstract static method object "+this_m+".");
                 newStaticMethods.put(this_m, null);
                 continue;
             }
@@ -1684,6 +1688,7 @@ uphere2:
                     int largestDataType = declared_instance_fields[0].getSize();
                     int align = size & largestDataType-1;
                     if (align != 0) {
+                        if (TRACE) SystemInterface.debugmsg("Gap of size "+align+" has been filled.");
                         // fill in the gap with smaller fields
                         for (int i=1; i<declared_instance_fields.length; ++i) {
                             jq_InstanceField f = declared_instance_fields[i];
@@ -1695,9 +1700,14 @@ uphere2:
                                 size += fsize;
                                 align += fsize;
                             }
-                            if (align == largestDataType) break;
+                            if (align == largestDataType) {
+                                if (TRACE) SystemInterface.debugmsg("Gap of size "+align+" has been filled.");
+                                break;
+                            }
                         }
                     }
+                } else {
+                    if (TRACE) SystemInterface.debugmsg("Skipping field alignment for class "+this);
                 }
                 for (int i=0; i<declared_instance_fields.length; ++i) {
                     jq_InstanceField f = declared_instance_fields[i];
@@ -1716,8 +1726,10 @@ uphere2:
             for (int i=0; i<declared_instance_methods.length; ++i) {
                 jq_InstanceMethod m = declared_instance_methods[i];
                 jq.assert(m.getState() == STATE_LOADED);
-                if (m.isInitializer()) // initializers cannot override or be overridden
+                if (m.isInitializer()) {
+                    // initializers cannot override or be overridden
                     continue;
+                }
                 if (super_class != null) {
                     jq_InstanceMethod m2 = super_class.getVirtualMethod(m.getNameAndDesc());
                     if (m2 != null) {
@@ -1731,8 +1743,10 @@ uphere2:
                         continue;
                     }
                 }
-                if (m.isPrivate()) // private methods cannot override or be overridden
+                if (m.isPrivate()) {
+                    // private methods cannot override or be overridden
                     continue;
+                }
                 ++numOfNewVirtualMethods;
             }
             int super_virtual_methods;
@@ -1748,6 +1762,7 @@ uphere2:
                 jq_InstanceMethod m = declared_instance_methods[i];
                 if (m.isInitializer() || m.isPrivate()) {
                     // not in vtable
+                    if (TRACE) SystemInterface.debugmsg("Skipping "+m+" in virtual method table.");
                     m.prepare();
                     continue;
                 }

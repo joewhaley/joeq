@@ -303,7 +303,12 @@ public class x86ReferenceCompiler extends BytecodeVisitor implements Compil3rInt
         
         // generate code for each bytecode in order
         this.forwardTraversal();
-        
+
+	// record the end of the code as a branch target --- it may
+	// be referenced by an exception handler.
+        Integer loc = new Integer(bcs.length);
+        asm.recordBranchTarget(loc);
+
         // generate exception table
         jq_TryCatchBC[] tcs_bc = method.getExceptionTable();
         jq_TryCatch[] tcs = new jq_TryCatch[tcs_bc.length];

@@ -19,29 +19,16 @@ import jq;
 
 public abstract class Win32FileSystem {
 
-    // gets the current directory on the named drive.
-    private static String getDriveDirectory(int i) {
-        byte[] b = new byte[256];
-        int result = SystemInterface.fs_getdcwd(i, b);
-        if (result == 0) throw new InternalError();
-        jq.assert(result == Unsafe.addressOf(b));
-        String res = SystemInterface.fromCString(result);
-        // skip "C:"
-        if (res.charAt(1) == ':') return res.substring(2);
-        else return res;
-    }
-
-    public String canonicalize(String s) throws java.io.IOException {
+    public java.lang.String canonicalize(java.lang.String s) throws java.io.IOException {
         // check for and eliminate wildcards.
         if ((s.indexOf('*')>=0) || (s.indexOf('?')>=0))
             throw new java.io.IOException("wildcards not allowed in file name: "+s);
         byte[] b = new byte[256];
         int r = SystemInterface.fs_fullpath(s, b);
         if (r == 0) throw new java.io.IOException("fullpath returned error on: "+s);
-        jq.assert(r == Unsafe.addressOf(b));
-        String res = SystemInterface.fromCString(r);
+        java.lang.String res = SystemInterface.fromCString(Unsafe.addressOf(b));
         int strlen = res.length();
-        StringBuffer result = new StringBuffer(strlen);
+        java.lang.StringBuffer result = new java.lang.StringBuffer(strlen);
         int curindex = 0;
         if (res.startsWith("\\\\")) {
             // trim trailing "\" on UNC name.
@@ -62,7 +49,7 @@ public abstract class Win32FileSystem {
                 result.append(res.substring(curindex));
                 return result.toString();
             }
-            String sub = res.substring(curindex, next_idx);
+            java.lang.String sub = res.substring(curindex, next_idx);
             int b3 = SystemInterface.fs_gettruename(sub);
             if (b3 == 0) {
                 // bail out and return what we have.

@@ -32,5 +32,6 @@ public abstract class Throwable {
         java.lang.Object o = this;
         return (java.lang.Throwable)o;
     }
-    
+
+    public java.lang.Object getBacktraceObject() { return this.backtrace; }
 }

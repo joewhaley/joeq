@@ -199,7 +199,7 @@ public abstract class jq_Method extends jq_Member {
         cpr.resetIndices(il);
         Bytecodes.CodeException[] ex_table = new Bytecodes.CodeException[exception_table.length];
         for (int i=0; i<ex_table.length; ++i) {
-            ex_table[i] = new Bytecodes.CodeException(il, exception_table[i]);
+            ex_table[i] = new Bytecodes.CodeException(il, bytecode, exception_table[i]);
         }
         Bytecodes.LineNumber[] line_num = new Bytecodes.LineNumber[line_num_table.length];
         for (int i=0; i<line_num.length; ++i) {

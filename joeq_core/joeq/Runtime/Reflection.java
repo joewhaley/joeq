@@ -102,7 +102,11 @@ public abstract class Reflection {
         nd = ClassLib.ClassLibInterface.convertClassLibNameAndDesc(c, nd);
         jq_Field m = (jq_Field)c.getDeclaredMember(nd);
         if (m == null) {
-            jq.UNREACHABLE(c+"."+nd+" jdk: "+f.toString());
+            SystemInterface.debugmsg("Reference to jdk field "+f.toString()+" does not exist, creating "+c+"."+nd);
+            if (Modifier.isStatic(f.getModifiers()))
+                m = c.getOrCreateStaticField(nd);
+            else
+                m = c.getOrCreateInstanceField(nd);
         }
         return m;
     }
@@ -121,7 +125,11 @@ public abstract class Reflection {
         nd = ClassLib.ClassLibInterface.convertClassLibNameAndDesc(c, nd);
         jq_Method m = (jq_Method)c.getDeclaredMember(nd);
         if (m == null) {
-            jq.UNREACHABLE(c+"."+nd+" jdk: "+f.toString());
+            SystemInterface.debugmsg("Reference to jdk method "+f.toString()+" does not exist, creating "+c+"."+nd);
+            if (Modifier.isStatic(f.getModifiers()))
+                m = c.getOrCreateStaticMethod(nd);
+            else
+                m = c.getOrCreateInstanceMethod(nd);
         }
         return m;
     }
@@ -139,7 +147,8 @@ public abstract class Reflection {
         nd = ClassLib.ClassLibInterface.convertClassLibNameAndDesc(c, nd);
         jq_Initializer m = (jq_Initializer)c.getDeclaredMember(nd);
         if (m == null) {
-            jq.UNREACHABLE(c+"."+nd);
+            SystemInterface.debugmsg("Reference to jdk constructor "+f.toString()+" does not exist, creating "+c+"."+nd);
+            m = (jq_Initializer)c.getOrCreateInstanceMethod(nd);
         }
         return m;
     }
