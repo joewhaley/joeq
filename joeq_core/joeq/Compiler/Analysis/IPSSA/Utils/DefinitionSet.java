@@ -11,11 +11,14 @@ import Compil3r.Analysis.IPSSA.SSAIterator;
 
 /**
  * @author Vladimir Livshits
- *
- * To change the template for this generated type comment go to
- * Window>Preferences>Java>Code Generation>Code and Comments
+ * @version $Id$
+ * 
+ * Strongly typed definition set.
  */
 public class DefinitionSet extends HashSet {
+    public DefinitionSet(){
+        super();
+    }
 	public SSAIterator.DefinitionIterator getDefinitionIterator(){
 		return new SSAIterator.DefinitionIterator(iterator());
 	}
