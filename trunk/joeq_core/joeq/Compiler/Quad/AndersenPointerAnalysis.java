@@ -61,7 +61,7 @@ public class AndersenPointerAnalysis {
     public static boolean DO_TWICE = false;
     public static boolean IGNORE_CLINIT = true;
     
-    public static final boolean HANDLE_ESCAPE = true;
+    public static final boolean HANDLE_ESCAPE = false;
     public static final boolean USE_SOFT_REFERENCES = false;
     public static boolean FORCE_GC = false;
     public static final boolean REUSE_CACHES = true;
@@ -824,9 +824,9 @@ public class AndersenPointerAnalysis {
         }
     }
     
-    boolean addInclusionEdges(OutsideNode n, Set s, Quad q) {
+    boolean addInclusionEdges(OutsideNode n, LinkedHashSet s, Quad q) {
         if (VerifyAssertions) jq.Assert(n.skip == null);
-        Set s2 = (Set)nodeToInclusionEdges.get(n);
+        LinkedHashSet s2 = (LinkedHashSet)nodeToInclusionEdges.get(n);
         if (s2 == null) {
             nodeToInclusionEdges.put(n, s);
             if ((TRACE_CHANGE && !this.change) || TRACE) {
@@ -898,9 +898,10 @@ public class AndersenPointerAnalysis {
             s = on;
         }
         if (n == s) return;
-        Set s2 = (Set)nodeToInclusionEdges.get(n);
+        LinkedHashSet s2 = (LinkedHashSet)nodeToInclusionEdges.get(n);
         if (s2 == null) {
-            nodeToInclusionEdges.put(n, s2 = new LinkedHashSet()); s2.add(s);
+            s2 = new LinkedHashSet(); s2.add(s);
+            nodeToInclusionEdges.put(n, s2);
             if ((TRACE_CHANGE && !this.change) || TRACE) {
                 out.println("Changed! New set of inclusion edges for node "+n);
             }
@@ -939,14 +940,14 @@ public class AndersenPointerAnalysis {
         }
     }
     
-    Set getInclusionEdges(Node n) { return (Set)nodeToInclusionEdges.get(n); }
+    LinkedHashSet getInclusionEdges(Node n) { return (LinkedHashSet)nodeToInclusionEdges.get(n); }
     
     Set getFromCache(OutsideNode n) {
         if (USE_SOFT_REFERENCES) {
             java.lang.ref.SoftReference r = (java.lang.ref.SoftReference)nodeToConcreteNodes.get(n);
             return r != null ? (LinkedHashSet)r.get() : null;
         } else {
-            return (LinkedHashSet)nodeToConcreteNodes.get(n);
+            return (Set)nodeToConcreteNodes.get(n);
         }
     }
     
@@ -1118,7 +1119,7 @@ public class AndersenPointerAnalysis {
         if (from.visited) {
             Path p2 = p;
             if (TRACE_CYCLES) out.println("cycle detected! node="+from+" path="+p);
-            Set s = (Set)nodeToInclusionEdges.get(from);
+            LinkedHashSet s = (LinkedHashSet)nodeToInclusionEdges.get(from);
             if (VerifyAssertions) jq.Assert(s != null);
             OutsideNode last = from;
             for (;; p = p.cdr()) {
@@ -1131,11 +1132,7 @@ public class AndersenPointerAnalysis {
                 Set s2 = (Set)nodeToInclusionEdges.get(n);
                 //s2.remove(last);
                 if (TRACE) out.println("Set of inclusion edges from node "+n+": "+s2);
-                if (USE_SET_REPOSITORY) {
-                    s = ((SetRepository.SharedSet)s).copyAndAddAll(s2, false);
-                } else {
-                    s.addAll(s2);
-                }
+                s.addAll(s2);
                 nodeToInclusionEdges.put(n, s);
                 last = n;
             }
