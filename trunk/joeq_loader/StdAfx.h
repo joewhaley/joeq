@@ -22,6 +22,7 @@
 #include <tchar.h>
 #include <direct.h>
 #include <sys/stat.h>
+#include <stddef.h>
 
 #include "native.h"
 #include "handler.h"
