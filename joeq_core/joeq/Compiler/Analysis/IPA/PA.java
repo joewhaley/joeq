@@ -599,9 +599,15 @@ public class PA {
                 if (type.isClassType()) {
                     jq_Class c = (jq_Class) type;
                     c.prepare();
+                    if(!provideStubsFor.contains(c)){
+                        continue;
+                    }
+                }else{
+                    continue;
                 }
                 ConcreteTypeNode h = ConcreteTypeNode.get(type, mc);
                 addToVP(V_bdd, h);
+                V_bdd.free();
                 noTargetCalls++;
             }
             t.free();
@@ -614,20 +620,21 @@ public class PA {
         // pick up the new methods
         iterate();
         
-        // find methods still without targets
-        for(Iterator iter = Imap.iterator(); iter.hasNext();){
-            ProgramLocation mc = (ProgramLocation) iter.next();
-            int I_i = Imap.get(mc);
-            BDD I_bdd = (BDD) I.ithVar(I_i);
-            BDD t = IE.relprod(I_bdd, Iset); 
-            
-            if(t.isZero()){
-                if(TRACE_NO_DEST) {
+        if(TRACE_NO_DEST) {
+            // find methods still without targets
+            for(Iterator iter = Imap.iterator(); iter.hasNext();){
+                ProgramLocation mc = (ProgramLocation) iter.next();
+                int I_i = Imap.get(mc);
+                BDD I_bdd = (BDD) I.ithVar(I_i);
+                BDD t = IE.relprod(I_bdd, Iset); 
+                
+                if(t.isZero()){                
                     System.out.println("Still no destination for " + mc.toStringLong());
+                    
                 }
+                t.free();
+                I_bdd.free();
             }
-            t.free();
-            I_bdd.free();
         }
     }
     
@@ -2684,6 +2691,7 @@ public class PA {
     }
     public void run(String bddfactory, CallGraph cg, Collection rootMethods) throws IOException {
         addDefaults();
+        initializeStubs();
         
         // If we have a call graph, use it for numbering and calculating domain sizes.
         if (cg != null) {
@@ -2820,6 +2828,23 @@ public class PA {
         }
     }
    
+    Set provideStubsFor = new HashSet();
+    /**
+     * Initializes provideStubsFor.
+     */
+    private void initializeStubs() {
+        {
+            jq_Type c = jq_Class.parseType("java.sql.Connection");
+            c.prepare();        
+            provideStubsFor.add(c);
+        }
+        
+        {
+            jq_Type c = jq_Class.parseType("java.sql.Statement");
+            c.prepare();
+            provideStubsFor.add(c);
+        }
+    }
     static Collection readClassesFromFile(String fname) throws IOException {
         BufferedReader r = null;
         try {
