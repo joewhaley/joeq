@@ -298,6 +298,12 @@ public class PrimordialClassLoader extends ClassLoader implements jq_ClassFileCo
     public static jq_Class getJavaLangString() { return JavaLangString; }
     public static jq_Class getJavaLangSystem() { return JavaLangSystem; }
     public static jq_Class getJavaLangThrowable() { return JavaLangThrowable; }
+    public static jq_Class getJavaLangNullPointerException() { return (jq_Class)loader.getOrCreateBSType("Ljava/lang/NullPointerException;"); }
+    public static jq_Class getJavaLangArrayIndexOutOfBoundsException() { return (jq_Class)loader.getOrCreateBSType("Ljava/lang/ArrayIndexOutOfBoundsException;"); }
+    public static jq_Class getJavaLangArrayStoreException() { return (jq_Class)loader.getOrCreateBSType("Ljava/lang/ArrayStoreException;"); }
+    public static jq_Class getJavaLangNegativeArraySizeException() { return (jq_Class)loader.getOrCreateBSType("Ljava/lang/NegativeArraySizeException;"); }
+    public static jq_Class getJavaLangArithmeticException() { return (jq_Class)loader.getOrCreateBSType("Ljava/lang/ArithmeticException;"); }
+    public static jq_Class getJavaLangIllegalMonitorStateException() { return (jq_Class)loader.getOrCreateBSType("Ljava/lang/IllegalMonitorStateException;"); }
     public static jq_Class getJavaLangClassLoader() { return (jq_Class)loader.getOrCreateBSType("Ljava/lang/ClassLoader;"); }
     public static jq_Class getJavaLangReflectField() { return (jq_Class)loader.getOrCreateBSType("Ljava/lang/reflect/Field;"); }
     public static jq_Class getJavaLangReflectMethod() { return (jq_Class)loader.getOrCreateBSType("Ljava/lang/reflect/Method;"); }
