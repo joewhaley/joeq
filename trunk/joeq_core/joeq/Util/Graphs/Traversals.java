@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import Util.Assert;
 import Util.Collections.Pair;
 
 /**
@@ -20,6 +21,39 @@ import Util.Collections.Pair;
  * @version $Id$
  */
 public abstract class Traversals {
+    
+    public static void test(Navigator nav, Collection roots) {
+        HashSet visitedNodes = new HashSet();
+        for (Iterator i=roots.iterator(); i.hasNext(); ) {
+            Object o = i.next();
+            test_helper1(nav, o, visitedNodes);
+        }
+        visitedNodes.clear();
+        for (Iterator i=roots.iterator(); i.hasNext(); ) {
+            Object o = i.next();
+            test_helper2(nav, o, visitedNodes);
+        }
+    }
+    public static void test_helper1(Navigator nav, Object o, Set m) {
+        for (Iterator j=nav.next(o).iterator(); j.hasNext(); ) {
+            Object p = j.next();
+            if (!nav.prev(p).contains(o)) {
+                Assert.UNREACHABLE(o+"->"+p);
+            }
+            if (m.add(p))
+                test_helper1(nav, o, m);
+        }
+    }
+    public static void test_helper2(Navigator nav, Object o, Set m) {
+        for (Iterator j=nav.prev(o).iterator(); j.hasNext(); ) {
+            Object p = j.next();
+            if (!nav.next(p).contains(o)) {
+                Assert.UNREACHABLE(p+"<-"+o);
+            }
+            if (m.add(p))
+                test_helper2(nav, o, m);
+        }
+    }
     
     public static Set getAllEdges(Navigator nav, Collection roots) {
         HashSet visitedNodes = new HashSet();
