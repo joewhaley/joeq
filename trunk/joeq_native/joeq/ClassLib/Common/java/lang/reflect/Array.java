@@ -20,7 +20,7 @@ import Clazz.jq_Type;
 import Clazz.jq_Class;
 import Bootstrap.PrimordialClassLoader;
 
-abstract class Array {
+public abstract class Array {
 
     public static int getLength(Object array) throws IllegalArgumentException {
         if (!Unsafe.getTypeOf(array).isArrayType())throw new IllegalArgumentException(Unsafe.getTypeOf(array).toString());
