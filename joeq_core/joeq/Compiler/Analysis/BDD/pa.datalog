@@ -33,8 +33,8 @@ vP(v,h) :- vP0(v,h).
 IE(i,m) :- IE0(i,m).
 vPfilter(v,h) :- vT(v,tv), aT(tv,th), hT(h,th).
 vP(v1,h) :- A(v1,v2), vP(v2,h), vPfilter(v1,h).
-hP(h1,f,h2) :- vP(v1,h1), S(v1,f,v2), vP(v2,h2).
-vP(v2,h2) :- vP(v1,h1), L(v1,f,v2), hP(h1,f,h2), vPfilter(v2,h2). split
+hP(h1,f,h2) :- S(v1,f,v2), vP(v1,h1), vP(v2,h2).
+vP(v2,h2) :- L(v1,f,v2), vP(v1,h1), hP(h1,f,h2), vPfilter(v2,h2). split
 A(v1,v2) :- formal(m,z,v1), IE(i,m), actual(i,z,v2).
 A(v2,v1) :- Mret(m,v1), IE(i,m), Iret(i,v2).
 A(v2,v1) :- Mthr(m,v1), IE(i,m), Ithr(i,v2).
