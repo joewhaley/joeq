@@ -2191,7 +2191,9 @@ public class MethodSummary {
         jq_Reference dstType;
         final ProgramLocation q;        
 
-        public String toString_short() { return "(" + dstType.shortName() + ") @ "+q; }
+        public String toString_short() {
+            return q.getEmacsName() + " (" + dstType.shortName() + ") @ "+q;
+        }
         private CheckCastNode(jq_Reference dstType, ProgramLocation q) {
             this.dstType = dstType;
             this.q = q;
@@ -2290,7 +2292,7 @@ public class MethodSummary {
             return Integer.toHexString(this.hashCode())+": "+toString_short()+super.toString_long();
         }
         public String toString_short() {
-            return "Concrete: "+(type==null?"null":type.shortName())+" @ "+(q==null?-1:q.getID());
+            return q.getEmacsName()+" Concrete: "+(type==null?"null":type.shortName())+" @ "+(q==null?-1:q.getID());
         }
 
         public void write(Textualizer t) throws IOException {
@@ -2793,7 +2795,7 @@ public class MethodSummary {
             return Integer.toHexString(this.hashCode())+": "+toString_short()+super.toString_long();
         }
         public String toString_short() {
-            return "Return value of "+m;
+            return m.getEmacsName()+" Return value of "+m;
         }
         
         public void write(Textualizer t) throws IOException {
@@ -2855,7 +2857,7 @@ public class MethodSummary {
             return Integer.toHexString(this.hashCode())+": "+toString_short()+super.toString_long();
         }
         public String toString_short() {
-            return "Thrown exception of "+m;
+            return m.getEmacsName()+" Thrown exception of "+m;
         }
         
         /* (non-Javadoc)
@@ -3190,11 +3192,15 @@ public class MethodSummary {
         }
         public String toString_short() {
             StringBuffer sb = new StringBuffer();
-            sb.append(Integer.toHexString(this.hashCode()));
-            sb.append(": ");
+            Iterator i=locs.iterator();
+            while (i.hasNext()) {
+                ProgramLocation pl = (ProgramLocation) i.next();
+                sb.append(pl.getEmacsName());
+                sb.append(' ');
+            }
             sb.append("FieldLoad ");
             sb.append(fieldName());
-            Iterator i=locs.iterator();
+            i=locs.iterator();
             if (i.hasNext()) {
                 int id = ((ProgramLocation)i.next()).getID();
                 if (!i.hasNext()) {
