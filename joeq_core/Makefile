@@ -15,7 +15,7 @@ endif
 
 ALLDIRS := $(shell find $(MODULES) -type d | grep -v CVS)
 ALLJAVA := $(foreach d, $(ALLDIRS), $(wildcard $(d)/*.java))
-ALLPKGS := $(sort $(foreach j, $(ALLJAVA), $(patsubst %/,%,$(dir $(j)))))
+ALLPKGS := $(sort $(foreach j, $(shell echo $(ALLJAVA) | sed 's/\.\.\/[^\/]*\///g'), $(patsubst %/,%,$(dir $(j)))))
 ALLPKGNAMES := $(subst /,.,$(ALLPKGS))
 ALLCLASS := $(foreach d, $(ALLDIRS), $(wildcard $(d)/*.class))
 
@@ -67,7 +67,7 @@ commit:
 ### RULES FOR BUILDING BOOT IMAGES
 #
 bootstrap:	joeq/Main/Bootstrapper.class
-	java -Xbootclasspath/a:$(JDK14SUPPORT_LIB) -cp $(BOOTSTRAP_CLASSPATH) -mx450M joeq.Main.Bootstrapper
+	java -Xbootclasspath/a:$(JDK14SUPPORT_LIB) -cp $(BOOTSTRAP_CLASSPATH) -mx480M joeq.Main.Bootstrapper
 
 bootstrap-sun142-linux:	javac
 	java -cp $(BOOTSTRAP_CLASSPATH) -ms320M -mx320M joeq.Main.Bootstrapper -cl ../native/joeq/ClassLib/sun142_linux/classlist.txt
@@ -96,7 +96,7 @@ bootstrap-ibm13-win32:	javac
 ### RULES FOR BUILDING JAVADOC
 #
 javadoc:
-	javadoc -breakiterator -d ../joeq_project/htdocs/javadoc $(ALLPKGNAMES)
+	javadoc -classpath $(BUILD_CLASSPATH) -breakiterator -d ../joeq_project/htdocs/javadoc $(ALLPKGNAMES)
 
 
 ### MISC RULES
