@@ -69,6 +69,7 @@ import Util.Graphs.PathNumbering;
 import Util.Graphs.SCComponent;
 import Util.Graphs.Traversals;
 import Util.Graphs.PathNumbering.Range;
+import Util.Graphs.PathNumbering.Selector;
 
 /**
  * CSPA
@@ -83,15 +84,16 @@ public class CSPA {
     /** Various trace flags. */
     public static final boolean TRACE_ALL = false;
     
-    public static final boolean TRACE_MATCHING  = false || TRACE_ALL;
-    public static final boolean TRACE_TYPES     = false || TRACE_ALL;
-    public static final boolean TRACE_MAPS      = false || TRACE_ALL;
-    public static final boolean TRACE_SIZES     = false || TRACE_ALL;
-    public static final boolean TRACE_CALLGRAPH = false || TRACE_ALL;
-    public static       boolean TRACE_EDGES     = false || TRACE_ALL;
-    public static final boolean TRACE_TIMES     = false || TRACE_ALL;
-    public static final boolean TRACE_VARORDER  = false || TRACE_ALL;
-    public static       boolean TRACE_RELATIONS = false || TRACE_ALL;
+    public static final boolean TRACE_MATCHING   = false || TRACE_ALL;
+    public static final boolean TRACE_TYPES      = false || TRACE_ALL;
+    public static final boolean TRACE_MAPS       = false || TRACE_ALL;
+    public static final boolean TRACE_SIZES      = false || TRACE_ALL;
+    public static final boolean TRACE_CALLGRAPH  = false || TRACE_ALL;
+    public static       boolean TRACE_EDGES      = false || TRACE_ALL;
+    public static final boolean TRACE_TIMES      = false || TRACE_ALL;
+    public static final boolean TRACE_VARORDER   = false || TRACE_ALL;
+    public static       boolean TRACE_RELATIONS  = false || TRACE_ALL;
+    public static       boolean TRACE_CONTEXTMAP = false || TRACE_ALL;
     public static       boolean TRACE_BDD = false;
     
     public static final boolean USE_CHA     = false;
@@ -104,7 +106,7 @@ public class CSPA {
     public static boolean BREAK_RECURSION = false;
     
     public static final boolean CONTEXT_SENSITIVE = true;
-    public static final boolean CONTEXT_SENSITIVE_HEAP = false;
+    public static final boolean CONTEXT_SENSITIVE_HEAP = true;
     
     public static boolean NUKE_OLD_FILES = false; // if true, will ignore
                                                   // existing files and always create new ones.
@@ -155,8 +157,13 @@ public class CSPA {
                 cg = new LoadedCallGraph("callgraph");
                 time = System.currentTimeMillis() - time;
                 System.out.println("done. ("+time/1000.+" seconds)");
-                roots = cg.getRoots();
-                LOADED_CALLGRAPH = true;
+                if (cg.getRoots().containsAll(roots)) {
+                    roots = cg.getRoots();
+                    LOADED_CALLGRAPH = true;
+                } else {
+                    System.out.println("Call graph doesn't match named class, rebuilding...");
+                    cg = null;
+                }
             } catch (IOException x) {
                 x.printStackTrace();
             }
@@ -253,14 +260,15 @@ public class CSPA {
         
         System.out.print("Counting size of call graph...");
         time = System.currentTimeMillis();
-        PathNumbering pn = countCallGraph(cg);
+        PathNumbering pn1 = countCallGraph(cg);
+        PathNumbering pn2 = countHeapNumbering(cg);
         time = System.currentTimeMillis() - time;
         System.out.println("done. ("+time/1000.+" seconds)");
         
         if (DUMP_DOTGRAPH) {
             try {
                 DataOutputStream dos = new DataOutputStream(new FileOutputStream("callgraph.dot"));
-                pn.dotGraph(dos);
+                pn1.dotGraph(dos);
             } catch (IOException x) {
                 x.printStackTrace();
             }
@@ -269,11 +277,15 @@ public class CSPA {
         // Allocate CSPA object.
         CSPA dis = new CSPA(cg);
         dis.roots = roots;
-        dis.pn = pn;
+        dis.pn_vars = pn1;
+        dis.pn_heap = pn2;
         
         // Initialize BDD package.
         dis.initializeBDD(DEFAULT_NODE_COUNT, DEFAULT_CACHE_SIZE);
         
+        // build correspondence map between var contexts and heap contexts
+        dis.buildVarHeapCorrespondence();
+
         // Add edges for existing globals.
         dis.addGlobals();
         
@@ -295,7 +307,7 @@ public class CSPA {
         time = System.currentTimeMillis() - time;
         System.out.println("done. ("+time/1000.+" seconds)");
         
-        dis.printHistogram();
+        //dis.printHistogram();
         dis.escapeAnalysis();
         
         String dumpfilename = System.getProperty("cspa.dumpfile", "cspa");
@@ -325,10 +337,84 @@ public class CSPA {
     }
 
     private void dumpConfig(DataOutput out) throws IOException {
-        out.writeBytes(VARBITS+" "+HEAPBITS+" "+FIELDBITS+" "+CLASSBITS+" "+CONTEXTBITS+"\n");
+        out.writeBytes(VARBITS+" "+HEAPBITS+" "+FIELDBITS+" "+CLASSBITS+" "+VARCONTEXTBITS+" "+HEAPCONTEXTBITS+"\n");
         out.writeBytes(ordering+"\n");
     }
 
+    Map V1H1correspondence;
+    public void buildVarHeapCorrespondence() {
+        BDDPairing V2cH2ctoV1cH1c = bdd.makePair();
+        V2cH2ctoV1cH1c.set(new BDDDomain[] {V2c, H2c}, new BDDDomain[] {V1c, H1c});
+        V1H1correspondence = new HashMap();
+        for (Iterator i = cg.getRoots().iterator(); i.hasNext(); ) {
+            jq_Method root = (jq_Method) i.next();
+            Number n1 = pn_vars.numberOfPathsTo(root);
+            Number n2 = pn_heap.numberOfPathsTo(root);
+            if (TRACE_CONTEXTMAP)
+                System.out.println("Root: "+root+" Vars: "+n1+" Heap: "+n2);
+            BDD relation;
+            if (n1.equals(n2)) {
+                relation = myBuildEquals(V1c, H1c, n1.longValue()-1);
+            } else {
+                // just intermix them all, because we don't know the mapping.
+                relation = V1c.varRange(0, n1.longValue()-1);
+                relation.andWith(H1c.varRange(0, n2.longValue()-1));
+            }
+            if (TRACE_CONTEXTMAP)
+                System.out.println("Relation: "+relation.toStringWithDomains());
+            V1H1correspondence.put(root, relation);
+        }
+        List rpo = Traversals.reversePostOrder(cg.getMethodNavigator(), cg.getRoots());
+        for (Iterator i = rpo.iterator(); i.hasNext(); ) {
+            jq_Method callee = (jq_Method) i.next();
+            //Assert._assert(!V1H1correspondence.containsKey(callee));
+            BDD calleeRelation;
+            calleeRelation = (BDD) V1H1correspondence.get(callee);
+            if (calleeRelation == null)
+                calleeRelation = bdd.zero();
+            for (Iterator j = cg.getCallers(callee).iterator(); j.hasNext(); ) {
+                ProgramLocation cs = (ProgramLocation) j.next();
+                jq_Method caller = cs.getMethod();
+                if (TRACE_CONTEXTMAP)
+                    System.out.println("Caller: "+caller+"\nCallee: "+callee);
+                BDD callerRelation = (BDD) V1H1correspondence.get(caller);
+                if (callerRelation == null) continue;
+                Range r1_caller = pn_vars.getRange(caller);
+                Range r1_edge = pn_vars.getEdge(cs, callee);
+                Range r2_caller = pn_heap.getRange(caller);
+                Range r2_edge = pn_heap.getEdge(cs, callee);
+                if (TRACE_CONTEXTMAP) {
+                    System.out.println("V1c: "+r1_caller+" to "+r1_edge);
+                    System.out.println("H1c: "+r2_caller+" to "+r2_edge);
+                }
+                BDD cm1;
+                cm1 = buildContextMap(V1c,
+                                      PathNumbering.toBigInt(r1_caller.low),
+                                      PathNumbering.toBigInt(r1_caller.high),
+                                      V2c,
+                                      PathNumbering.toBigInt(r1_edge.low),
+                                      PathNumbering.toBigInt(r1_edge.high));
+                callerRelation = callerRelation.relprod(cm1, V1c.set());
+                cm1.free();
+                cm1 = buildContextMap(H1c,
+                                      PathNumbering.toBigInt(r2_caller.low),
+                                      PathNumbering.toBigInt(r2_caller.high),
+                                      H2c,
+                                      PathNumbering.toBigInt(r2_edge.low),
+                                      PathNumbering.toBigInt(r2_edge.high));
+                BDD tmpRel = callerRelation.relprod(cm1, H1c.set());
+                callerRelation.free();
+                tmpRel.replaceWith(V2cH2ctoV1cH1c);
+                if (TRACE_CONTEXTMAP)
+                    System.out.println("Relation: "+tmpRel.toStringWithDomains());
+                calleeRelation.orWith(tmpRel);
+            }
+            V1H1correspondence.put(callee, calleeRelation);
+            if (TRACE_CONTEXTMAP)
+                System.out.println("Relation for "+callee+":\n"+calleeRelation.toStringWithDomains());
+        }
+    }
+    
     public static interface Variable {
         void write(DataOutput out) throws IOException;
     }
@@ -468,9 +554,9 @@ public class CSPA {
             r.andWith(V2c.domain());
             b.andWith(r);
         } else {
-            BDD r = V1c.ithVar(0);
-            r.andWith(V2c.ithVar(0));
-            b.andWith(r);
+            //BDD r = V1c.ithVar(0);
+            //r.andWith(V2c.ithVar(0));
+            //b.andWith(r);
         }
     }
     public void addGlobalV1H1Context(BDD b) {
@@ -479,39 +565,50 @@ public class CSPA {
             r.andWith(H1c.domain());
             b.andWith(r);
         } else {
-            BDD r = V1c.ithVar(0);
-            r.andWith(H1c.ithVar(0));
-            b.andWith(r);
+            //BDD r = V1c.ithVar(0);
+            //r.andWith(H1c.ithVar(0));
+            //b.andWith(r);
         }
     }
-    public BDD getContext(BDDDomain d1, BDDDomain d2, long range) {
-        if (CONTEXT_SENSITIVE_HEAP) {
-            int maxBit = BigInteger.valueOf(range).bitLength();
-            int[] v1vars = d1.vars();
-            int[] h1vars = d2.vars();
-            Assert._assert(maxBit <= v1vars.length);
-            Assert._assert(maxBit <= h1vars.length);
-            BDD r = bdd.one();
-            for (int n = 0; n < maxBit; n++) {
-                BDD a = bdd.ithVar(v1vars[n]);
-                BDD b = bdd.ithVar(h1vars[n]);
-                a.applyWith(b, BDDFactory.biimp);
-                r.andWith(a);
-            }
+    public BDD myBuildEquals(BDDDomain d1, BDDDomain d2, long range) {
+        int maxBit = BigInteger.valueOf(range).bitLength();
+        int[] d1vars = d1.vars();
+        int[] d2vars = d2.vars();
+        Assert._assert(maxBit <= d1vars.length);
+        Assert._assert(maxBit <= d2vars.length);
+        BDD r = bdd.one();
+        int n;
+        for (n = 0; n < maxBit; ++n) {
+            BDD a = bdd.ithVar(d1vars[n]);
+            BDD b = bdd.ithVar(d2vars[n]);
+            a.applyWith(b, BDDFactory.biimp);
+            r.andWith(a);
+        }
+        for ( ; n < d2vars.length; ++n) {
+            r.andWith(bdd.nithVar(d1vars[n]));
+            r.andWith(bdd.nithVar(d2vars[n]));
+        }
+        r.andWith(d1.varRange(0, range));
+        return r;
+    }
+    
+    public BDD getContextMap(BDDDomain d1, BDDDomain d2, long range) {
+        if ((CONTEXT_SENSITIVE && d2 == V2c) ||
+            (CONTEXT_SENSITIVE_HEAP && d2 == H1c) ||
+            (CONTEXT_SENSITIVE_HEAP && d2 == H2c)) {
+            if (TRACE_CONTEXTMAP)
+                System.out.println("Getting context map "+domainName(d1)+" to "+domainName(d2)+": 0.."+range);
+            BDD r = myBuildEquals(d1, d2, range);
             if (TRACE_SIZES) {
-                System.out.print("D1 D2 = ");
-                report(r, d1.set().and(d2.set()));
-            }
-            r.andWith(V1c.varRange(0, range));
-            if (TRACE_SIZES) {
-                System.out.print("after mask = ");
+                System.out.print("context map size = ");
                 report(r, d1.set().and(d2.set()));
             }
             return r;
         } else {
-            BDD r = d1.varRange(0, range);
-            r.andWith(d2.ithVar(0));
-            return r;
+            //BDD r = d1.varRange(0, range);
+            //r.andWith(d2.ithVar(0));
+            //return r;
+            return bdd.one();
         }
     }
     
@@ -637,7 +734,8 @@ public class CSPA {
     public static int HEAPBITS = 15;
     public static int FIELDBITS = 14;
     public static int CLASSBITS = 14;
-    public static int CONTEXTBITS = 38;
+    public static int VARCONTEXTBITS = 38;
+    public static int HEAPCONTEXTBITS = 10;
     
     // the size of domains, can be changed to reflect the size of inputs
     int domainBits[];
@@ -672,7 +770,8 @@ public class CSPA {
     BDD cC; // T1 x T2
     BDD typeFilter; // V1 x H1
 
-    PathNumbering pn;
+    PathNumbering pn_vars;
+    PathNumbering pn_heap;
     
     static jq_NameAndDesc run_method = new jq_NameAndDesc("run", "()V");
     
@@ -693,10 +792,11 @@ public class CSPA {
         }
     }
     
+    static Set thread_runs = new HashSet();
+    
     public static PathNumbering countCallGraph(CallGraph cg) {
         Set fields = new HashSet();
         Set classes = new HashSet();
-        Set thread_runs = new HashSet();
         int vars = 0, heaps = 0, bcodes = 0, methods = 0, calls = 0;
         for (Iterator i=cg.getAllMethods().iterator(); i.hasNext(); ) {
             jq_Method m = (jq_Method) i.next();
@@ -743,12 +843,40 @@ public class CSPA {
         HEAPBITS = (int) (Math.log(heaps+256)/log2 + 1.0);
         FIELDBITS = (int) (Math.log(fields.size()+64)/log2 + 2.0);
         CLASSBITS = (int) (Math.log(classes.size()+64)/log2 + 2.0);
-        CONTEXTBITS = paths.bitLength();
-        CONTEXTBITS = Math.min(60, CONTEXTBITS);
-        System.out.println("Var bits="+VARBITS+" Heap bits="+HEAPBITS+" Class bits="+CLASSBITS+" Field bits="+FIELDBITS+" Context bits="+CONTEXTBITS);
+        VARCONTEXTBITS = paths.bitLength();
+        VARCONTEXTBITS = Math.min(60, VARCONTEXTBITS);
+        System.out.println("Var bits="+VARBITS+" Heap bits="+HEAPBITS+" Class bits="+CLASSBITS+" Field bits="+FIELDBITS+" Var context bits="+VARCONTEXTBITS);
         return pn;
     }
 
+    public static class HeapPathSelector implements Selector {
+        public static final HeapPathSelector INSTANCE = new HeapPathSelector();
+
+        /* (non-Javadoc)
+         * @see Util.Graphs.PathNumbering.Selector#isImportant(Util.Graphs.SCComponent, Util.Graphs.SCComponent)
+         */
+        public boolean isImportant(SCComponent scc1, SCComponent scc2) {
+            Set s = scc2.nodeSet();
+            Iterator i = s.iterator();
+            Object o = i.next();
+            if (i.hasNext()) return false;
+            if (o instanceof ProgramLocation) return true;
+            jq_Method m = (jq_Method) o;
+            if (!m.getReturnType().isReferenceType()) return false;
+            return true;
+        }
+    }
+
+    public static PathNumbering countHeapNumbering(CallGraph cg) {
+        PathNumbering pn = new PathNumbering(HeapPathSelector.INSTANCE);
+        Map initialCounts = new ThreadRootMap(thread_runs);
+        BigInteger paths = (BigInteger) pn.countPaths(cg.getRoots(), cg.getCallSiteNavigator(), initialCounts);
+        HEAPCONTEXTBITS = paths.bitLength();
+        HEAPCONTEXTBITS = Math.min(20, HEAPCONTEXTBITS);
+        System.out.println("Heap context bits="+HEAPCONTEXTBITS);
+        return pn;
+    }
+    
     public CSPA(CallGraph cg) {
         this.cg = cg;
     }
@@ -770,11 +898,11 @@ public class CSPA {
         fieldIndexMap = new IndexMap("Field", 1 << FIELDBITS);
         typeIndexMap = new IndexMap("Class", 1 << CLASSBITS);
 
-        domainBits = new int[] {VARBITS, CONTEXTBITS,
-                                VARBITS, CONTEXTBITS,
+        domainBits = new int[] {VARBITS, VARCONTEXTBITS,
+                                VARBITS, VARCONTEXTBITS,
                                 FIELDBITS,
-                                HEAPBITS, CONTEXTBITS,
-                                HEAPBITS, CONTEXTBITS};
+                                HEAPBITS, HEAPCONTEXTBITS,
+                                HEAPBITS, HEAPCONTEXTBITS};
         domainSpos = new int[domainBits.length];
         
         long[] domains = new long[domainBits.length];
@@ -833,10 +961,10 @@ public class CSPA {
             V2set.andWith(V2c.set());
         FDset = FD.set();
         H1set = H1o.set();
-        //if (CONTEXT_SENSITIVE)
+        //if (CONTEXT_SENSITIVE_HEAP)
             H1set.andWith(H1c.set());
         H2set = H2o.set();
-        //if (CONTEXT_SENSITIVE)
+        //if (CONTEXT_SENSITIVE_HEAP)
             H2set.andWith(H2c.set());
         T1set = T1.set();
         T2set = T2.set();
@@ -1159,34 +1287,25 @@ public class CSPA {
             System.out.println("Adding relations for "+ms.getMethod());
         Assert._assert(bms != null, ms.getMethod().toString());
         
-        long npaths = pn.numberOfPathsTo(ms.getMethod()).longValue();
+        long npaths_vars = pn_vars.numberOfPathsTo(ms.getMethod()).longValue();
+        long npaths_heap = pn_heap.numberOfPathsTo(ms.getMethod()).longValue();
         long time = System.currentTimeMillis();
         BDD v1ch1c = null, v1cv2c = null;
         
         if (TRACE_RELATIONS)
-            System.out.println("Number of paths to method: "+npaths);
-        if (USE_REPLACE_V2 && !bms.m_pointsTo.isZero()) {
-            v1ch1c = getContext(V1c, H1c, npaths);
-            if (H1cToV2c == null) H1cToV2c = bdd.makePair(H1c, V2c);
-            v1cv2c = v1ch1c.replace(H1cToV2c);
-        } else if (USE_REPLACE_H1) {
-            v1cv2c = getContext(V1c, V2c, npaths);
-            if (V2cToH1c == null) V2cToH1c = bdd.makePair(V2c, H1c);
-            v1ch1c = v1cv2c.replace(V2cToH1c);
-        } else {
-            if (!bms.m_pointsTo.isZero())
-                v1ch1c = getContext(V1c, H1c, npaths);
-            v1cv2c = getContext(V1c, V2c, npaths);
-        }
+            System.out.println("Number of paths to method: Var="+npaths_vars+" Heap="+npaths_heap);
+            
+        v1cv2c = getContextMap(V1c, V2c, npaths_vars);
         
         time = System.currentTimeMillis() - time;
         if (TRACE_TIMES || time > 500)
-            System.out.println("Building context BDD: "+(time/1000.));
+            System.out.println("Building var context BDD: "+(time/1000.));
         
         time = System.currentTimeMillis();
         
         BDD t1;
         if (!bms.m_pointsTo.isZero()) {
+            v1ch1c = (BDD) V1H1correspondence.get(ms.getMethod());
             t1 = bms.m_pointsTo.id();
             t1.andWith(v1ch1c);
             if (TRACE_BDD) {
@@ -1264,8 +1383,8 @@ public class CSPA {
         BDDMethodSummary caller_s = this.getBDDSummary(caller);
         BDDMethodSummary callee_s = this.getBDDSummary(callee);
         Pair p = new Pair(mapCall(mc), callee.getMethod());
-        Range r_edge = pn.getEdge(p);
-        Range r_caller = pn.getRange(caller.getMethod());
+        Range r_edge = pn_vars.getEdge(p);
+        Range r_caller = pn_vars.getRange(caller.getMethod());
         //if (backEdges.contains(p))
         //    System.out.println("Back edge: "+p+"="+r);
         if (TRACE_CALLGRAPH)
@@ -1273,10 +1392,12 @@ public class CSPA {
         Assert._assert(r_caller.low.intValue() == 0);
         BDD context_map;
         // for parameters: V1 in caller matches V2 in callee
-        context_map = buildVarContextMap(PathNumbering.toBigInt(r_caller.low),
-                                         PathNumbering.toBigInt(r_caller.high),
-                                         PathNumbering.toBigInt(r_edge.low),
-                                         PathNumbering.toBigInt(r_edge.high));
+        context_map = buildContextMap(V1c,
+                                      PathNumbering.toBigInt(r_caller.low),
+                                      PathNumbering.toBigInt(r_caller.high),
+                                      V2c,
+                                      PathNumbering.toBigInt(r_edge.low),
+                                      PathNumbering.toBigInt(r_edge.high));
         jq_Type[] paramTypes = mc.getParamTypes();
         for (int i=0; i<paramTypes.length; ++i) {
             if (i >= callee.getNumOfParams()) break;
@@ -1292,10 +1413,12 @@ public class CSPA {
         ThrownExceptionNode ten = caller.getTEN(mc);
         if (rvn == null && ten == null) return;
         // for returns: V1 in callee matches V2 in caller
-        context_map = buildVarContextMap(PathNumbering.toBigInt(r_edge.low),
-                                         PathNumbering.toBigInt(r_edge.high),
-                                         PathNumbering.toBigInt(r_caller.low),
-                                         PathNumbering.toBigInt(r_caller.high));
+        context_map = buildContextMap(V1c,
+                                      PathNumbering.toBigInt(r_edge.low),
+                                      PathNumbering.toBigInt(r_edge.high),
+                                      V2c,
+                                      PathNumbering.toBigInt(r_caller.low),
+                                      PathNumbering.toBigInt(r_caller.high));
         if (rvn != null) {
             Set s = callee.getReturned();
             if (TRACE_EDGES) System.out.println("Adding edges for "+rvn);
@@ -1338,57 +1461,75 @@ public class CSPA {
         System.out.println(" ("+bdd.nodeCount()+" nodes)");
     }
     
+    public static String domainName(BDDDomain d) {
+        switch (d.getIndex()) {
+            case 0: return "V1o";
+            case 1: return "V1c";
+            case 2: return "V2o";
+            case 3: return "V2c";
+            case 4: return "FD";
+            case 5: return "H1o";
+            case 6: return "H1c";
+            case 7: return "H2o";
+            case 8: return "H2c";
+            case 9: return "H3o";
+            case 10: return "H3c";
+            default: return "???";
+        }
+    }
+    
     public static final boolean MASK = true;
     
-    public BDD buildVarContextMap(BigInteger startV1, BigInteger endV1, BigInteger startV2, BigInteger endV2) {
+    public BDD buildContextMap(BDDDomain d1, BigInteger startD1, BigInteger endD1,
+                               BDDDomain d2, BigInteger startD2, BigInteger endD2) {
         if (!CONTEXT_SENSITIVE) {
             return bdd.one();
         }
         BDD r;
-        BigInteger sizeV1 = endV1.subtract(startV1);
-        BigInteger sizeV2 = endV2.subtract(startV2);
+        BigInteger sizeD1 = endD1.subtract(startD1);
+        BigInteger sizeD2 = endD2.subtract(startD2);
         if (TRACE_CALLGRAPH) {
-            System.out.println("Matching V1c("+startV1+","+endV1+") to V2c("+startV2+","+endV2+")");
+            System.out.println("Matching "+domainName(d1)+"("+startD1+","+endD1+") to "+domainName(d2)+"("+startD2+","+endD2+")");
         }
-        if (sizeV1.signum() == -1) {
+        if (sizeD1.signum() == -1) {
             if (BREAK_RECURSION) {
                 r = bdd.zero();
             } else {
-                r = V2c.varRange(startV2.longValue(), endV2.longValue());
-                r.andWith(V1c.ithVar(0));
+                r = d2.varRange(startD2.longValue(), endD2.longValue());
+                r.andWith(d1.ithVar(0));
             }
-        } else if (sizeV2.signum() == -1) {
+        } else if (sizeD2.signum() == -1) {
             if (BREAK_RECURSION) {
                 r = bdd.zero();
             } else {
-                r = V1c.varRange(startV1.longValue(), endV1.longValue());
-                r.andWith(V2c.ithVar(0));
+                r = d1.varRange(startD1.longValue(), endD1.longValue());
+                r.andWith(d2.ithVar(0));
             }
         } else {
-            if (sizeV1.compareTo(sizeV2) != -1) { // >=
-                r = V1c.buildAdd(V2c, startV2.subtract(startV1).longValue());
+            if (sizeD1.compareTo(sizeD2) != -1) { // >=
+                r = d1.buildAdd(d2, startD2.subtract(startD1).longValue());
                 if (TRACE_SIZES) {
                     System.out.print("add = ");
-                    report(r, V1c.set().and(V2c.set()));
+                    report(r, d1.set().and(d2.set()));
                 }
                 if (MASK) {
-                    r.andWith(V1c.varRange(startV1.longValue(), endV1.longValue()));
+                    r.andWith(d1.varRange(startD1.longValue(), endD1.longValue()));
                     if (TRACE_SIZES) {
                         System.out.print("after mask = ");
-                        report(r, V1c.set().and(V2c.set()));
+                        report(r, d1.set().and(d2.set()));
                     }
                 }
             } else {
-                r = V1c.buildAdd(V2c, startV2.subtract(startV1).longValue());
+                r = d1.buildAdd(d2, startD2.subtract(startD1).longValue());
                 if (TRACE_SIZES) {
                     System.out.print("add = ");
-                    report(r, V1c.set().and(V2c.set()));
+                    report(r, d1.set().and(d2.set()));
                 }
                 if (MASK) {
-                    r.andWith(V2c.varRange(startV2.longValue(), endV2.longValue()));
+                    r.andWith(d2.varRange(startD2.longValue(), endD2.longValue()));
                     if (TRACE_SIZES) {
                         System.out.print("after mask = ");
-                        report(r, V1c.set().and(V2c.set()));
+                        report(r, d1.set().and(d2.set()));
                     }
                 }
             }
@@ -1860,7 +2001,7 @@ public class CSPA {
             BDDMethodSummary bms = getOrCreateBDDSummary(m);
             if (bms == null) continue;
             BDD range;
-            SCComponent scc = (SCComponent) pn.getSCC(m);
+            SCComponent scc = (SCComponent) pn_vars.getSCC(m);
             if (scc.isLoop()) {
                 bms.vars = bdd.zero();
             } else {
@@ -1940,11 +2081,11 @@ public class CSPA {
             }
         }
         BDD escapingHeap = escapingLocations.relprod(myPointsTo, V1set);
-        System.out.println("Escaping heap: "+escapingHeap.satCount(H1o.set()));
+        System.out.println("Escaping heap: "+(long)escapingHeap.satCount(H1o.set()));
         //System.out.println("Escaping heap: "+escapingHeap.toStringWithDomains());
         BDD capturedHeap = escapingHeap.not();
         capturedHeap.andWith(H1o.varRange(0, heapobjIndexMap.size()-1));
-        System.out.println("Captured heap: "+capturedHeap.satCount(H1o.set()));
+        System.out.println("Captured heap: "+(long)capturedHeap.satCount(H1o.set()));
         
         int capturedSites = 0;
         int escapedSites = 0;
