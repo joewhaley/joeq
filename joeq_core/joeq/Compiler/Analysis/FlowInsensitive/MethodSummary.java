@@ -72,6 +72,7 @@ import Util.Assert;
 import Util.Strings;
 import Util.Collections.CollectionTestWrapper;
 import Util.Collections.FilterIterator;
+import Util.Collections.FlattenedCollection;
 import Util.Collections.HashCodeComparator;
 import Util.Collections.IdentityHashCodeWrapper;
 import Util.Collections.IndexMap;
@@ -79,6 +80,7 @@ import Util.Collections.InstrumentedSetWrapper;
 import Util.Collections.Pair;
 import Util.Collections.SetFactory;
 import Util.Collections.SortedArraySet;
+import Util.Graphs.Navigator;
 
 /**
  * MethodSummary
@@ -99,6 +101,10 @@ public class MethodSummary {
     public static final boolean USE_IDENTITY_HASHCODE = false;
     public static final boolean DETERMINISTIC = !USE_IDENTITY_HASHCODE && true;
     
+    /**
+     * Helper class to output method summary in dot graph format.
+     * @author jwhaley
+     */
     public static final class MethodSummaryBuilder implements ControlFlowGraphVisitor {
         public void visitCFG(ControlFlowGraph cfg) {
             MethodSummary s = getSummary(cfg);
@@ -112,9 +118,19 @@ public class MethodSummary {
         }
     }
     
+    /**
+     * Holds the cache of method summary graphs.
+     */
     public static HashMap summary_cache = new HashMap();
+    
+    /**
+     * Get the method summary for the given CFG.  Builds and caches it if it doesn't
+     * already exist.
+     * @param cfg
+     * @return
+     */
     public static MethodSummary getSummary(ControlFlowGraph cfg) {
-        MethodSummary s = (MethodSummary)summary_cache.get(cfg);
+        MethodSummary s = (MethodSummary) summary_cache.get(cfg);
         if (s == null) {
             if (TRACE_INTER) out.println("vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv");
             if (TRACE_INTER) out.println("Building summary for "+cfg.getMethod());
@@ -135,6 +151,10 @@ public class MethodSummary {
         }
         return s;
     }
+    
+    /**
+     * Clear the method summary graph.
+     */
     public static void clearSummaryCache() {
         summary_cache.clear();
         ConcreteTypeNode.FACTORY.clear();
@@ -142,7 +162,17 @@ public class MethodSummary {
         GlobalNode.GLOBAL = new GlobalNode();
     }
     
+    /** Cache of cloned method summaries. */
     public static HashMap clone_cache;
+    
+    /** Get the (context-sensitive) method summary for the given control flow graph
+     * when called from the given call site.  If clone_cache is null, falls back to
+     * the context-insensitive version.
+     * 
+     * @param cfg
+     * @param cs
+     * @return
+     */
     public static MethodSummary getSummary(ControlFlowGraph cfg, CallSite cs) {
         if (clone_cache != null) {
             //System.out.println("Checking cache for "+new Pair(cfg, cs));
@@ -508,8 +538,8 @@ public class MethodSummary {
                 || obj.getOperator() instanceof Operator.AStore.ASTORE_P
                 ) {
                 if (TRACE_INTRA) out.println("Visiting: "+obj);
-                Operand base = AStore.getBase(obj);
                 Operand val = AStore.getValue(obj);
+                Operand base = AStore.getBase(obj);
                 if (base instanceof RegisterOperand) {
                     Register base_r = ((RegisterOperand)base).getRegister();
                     if (val instanceof RegisterOperand) {
@@ -649,6 +679,9 @@ public class MethodSummary {
             // exceptions are handled by visitExceptionThrower.
         }
         
+        /**
+         * Holds the current state at each jsr call.
+         */
         HashMap jsr_states;
         /**
          * @see Compil3r.Quad.QuadVisitor#visitJsr(Compil3r.Quad.Quad)
@@ -927,6 +960,7 @@ public class MethodSummary {
         public String toString() { return "Param "+paramNum+" for "+m; }
     }
     
+    /** Represents a particular call site in a method. */
     public static class CallSite {
         final MethodSummary caller; final ProgramLocation m;
         public CallSite(MethodSummary caller, ProgramLocation m) {
@@ -940,6 +974,8 @@ public class MethodSummary {
         public String toString() { return (caller!=null?caller.getMethod():null)+" "+m.getID()+" "+(m.getTargetMethod()!=null?m.getTargetMethod().getName():null); }
     }
     
+    /** Represents a field edge between two nodes. */
+    /*
     public static class Edge {
         // Node source;
         Node dest;
@@ -975,6 +1011,27 @@ public class MethodSummary {
                 //source+
                 "-"+((field==null)?"[]":field.getName().toString())+"->"+dest;
         }
+    }
+    */
+    
+    public static class InsideEdgeNavigator implements Navigator {
+
+        /* (non-Javadoc)
+         * @see Util.Graphs.Navigator#next(java.lang.Object)
+         */
+        public Collection next(Object node) {
+            Node n = (Node) node;
+            return n.getEdgeTargets();
+        }
+
+        /* (non-Javadoc)
+         * @see Util.Graphs.Navigator#prev(java.lang.Object)
+         */
+        public Collection prev(Object node) {
+            Node n = (Node) node;
+            return n.getPredecessorTargets();
+        }
+        
     }
     
     public abstract static class Node implements Comparable, Variable {
@@ -1389,6 +1446,11 @@ public class MethodSummary {
             return predecessors.entrySet();
         }
         
+        public Collection getPredecessorTargets() {
+            if (predecessors == null) return Collections.EMPTY_SET;
+            return new FlattenedCollection(predecessors.values());
+        }
+        
         /** Record the given passed parameter in the set for this node.
          *  Returns true if that passed parameter didn't already exist, false otherwise. */
         public boolean recordPassedParameter(PassedParameter cm) {
@@ -1647,6 +1709,13 @@ public class MethodSummary {
             return addedEdges.keySet();
         }
         
+        /** Return the collection of target nodes that this node has inside
+         * edges with. */
+        public Collection getEdgeTargets() {
+            if (addedEdges == null) return Collections.EMPTY_SET;
+            return new FlattenedCollection(addedEdges.values());
+        }
+        
         /** Returns true if this node has any added inside edges. */
         public boolean hasEdges() {
             return addedEdges != null;
@@ -1681,6 +1750,13 @@ public class MethodSummary {
         public Set getAccessPathEdgeFields() {
             if (accessPathEdges == null) return Collections.EMPTY_SET;
             return accessPathEdges.keySet();
+        }
+        
+        /** Return the collection of target nodes that this node has inside
+         * edges with. */
+        public Collection getAccessPathEdgeTargets() {
+            if (accessPathEdges == null) return Collections.EMPTY_SET;
+            return new FlattenedCollection(accessPathEdges.values());
         }
         
         //public Quad getSourceQuad(jq_Field f, Node n) {
@@ -3490,10 +3566,16 @@ outer:
         this.nodes = nodes;
     }
 
+    /** Get the global node for this method. */
     public GlobalNode getGlobal() { return global; }
 
+    /** Get the ith parameter node. */
     public ParamNode getParamNode(int i) { return params[i]; }
+    
+    /** Get the number of parameters passed into this method. */
     public int getNumOfParams() { return params.length; }
+    
+    /** Get the set of method calls made by this method. */
     public Set getCalls() { return calls; }
 
     /** Add all nodes that are passed as the given passed parameter to the given result set. */
@@ -3511,6 +3593,7 @@ outer:
         }
     }
 
+    /** Return the set of nodes that are passed as the given parameter. */
     public Set getNodesThatCall(PassedParameter pp) {
         if (USE_PARAMETER_MAP) {
             Set s = (Set)passedParamToNodes.get(pp);
@@ -3522,6 +3605,7 @@ outer:
         return s;
     }
     
+    /** Merge the global node for this method summary with the main global node. */
     public void mergeGlobal() {
         if (global == null) return;
         // merge global nodes.
@@ -3537,7 +3621,7 @@ outer:
         
     /** Utility function to add to a multi map. */
     public static boolean addToMultiMap(HashMap mm, Object from, Object to) {
-        Set s = (Set)mm.get(from);
+        Set s = (Set) mm.get(from);
         if (s == null) {
             mm.put(from, s = NodeSet.FACTORY.makeSet());
         }
@@ -3546,7 +3630,7 @@ outer:
 
     /** Utility function to add to a multi map. */
     public static boolean addToMultiMap(HashMap mm, Object from, Set to) {
-        Set s = (Set)mm.get(from);
+        Set s = (Set) mm.get(from);
         if (s == null) {
             mm.put(from, s = NodeSet.FACTORY.makeSet());
         }
@@ -3646,41 +3730,37 @@ outer:
      */
     public void unifyAccessPaths(Set roots) {
         LinkedList worklist = new LinkedList();
-        for (Iterator i=roots.iterator(); i.hasNext(); ) {
+        for (Iterator i = roots.iterator(); i.hasNext(); ) {
             worklist.add(i.next());
         }
         while (!worklist.isEmpty()) {
-            Node n = (Node)worklist.removeFirst();
+            Node n = (Node) worklist.removeFirst();
             if (n instanceof UnknownTypeNode) continue;
             unifyAccessPathEdges(n);
-            if (n.accessPathEdges != null) {
-                for (Iterator i=n.accessPathEdges.entrySet().iterator(); i.hasNext(); ) {
-                    java.util.Map.Entry e = (java.util.Map.Entry)i.next();
-                    FieldNode n2 = (FieldNode)e.getValue();
+            for (Iterator i = n.getAccessPathEdges().iterator(); i.hasNext(); ) {
+                Map.Entry e = (Map.Entry) i.next();
+                FieldNode n2 = (FieldNode) e.getValue();
+                Assert._assert(n2 != null);
+                if (roots.contains(n2)) continue;
+                worklist.add(n2); roots.add(n2);
+            }
+            for (Iterator i=n.getEdges().iterator(); i.hasNext(); ) {
+                Map.Entry e = (Map.Entry) i.next();
+                Object o = e.getValue();
+                if (o instanceof Node) {
+                    Node n2 = (Node)o;
                     Assert._assert(n2 != null);
                     if (roots.contains(n2)) continue;
                     worklist.add(n2); roots.add(n2);
-                }
-            }
-            if (n.addedEdges != null) {
-                for (Iterator i=n.addedEdges.entrySet().iterator(); i.hasNext(); ) {
-                    java.util.Map.Entry e = (java.util.Map.Entry)i.next();
-                    Object o = e.getValue();
-                    if (o instanceof Node) {
-                        Node n2 = (Node)o;
-                        Assert._assert(n2 != null);
-                        if (roots.contains(n2)) continue;
-                        worklist.add(n2); roots.add(n2);
-                    } else {
-                        Set s = NodeSet.FACTORY.makeSet((Set)o);
-                        for (Iterator j=s.iterator(); j.hasNext(); ) {
-                            Object p = j.next();
-                            Assert._assert(p != null);
-                            if (roots.contains(p)) j.remove();
-                        }
-                        if (!s.isEmpty()) {
-                            worklist.addAll(s); roots.addAll(s);
-                        }
+                } else {
+                    Set s = NodeSet.FACTORY.makeSet((Set) o);
+                    for (Iterator j = s.iterator(); j.hasNext(); ) {
+                        Object p = j.next();
+                        Assert._assert(p != null);
+                        if (roots.contains(p)) j.remove();
+                    }
+                    if (!s.isEmpty()) {
+                        worklist.addAll(s); roots.addAll(s);
                     }
                 }
             }
@@ -3693,28 +3773,28 @@ outer:
         if (n instanceof UnknownTypeNode) return;
         if (TRACE_INTRA) out.println("Unifying access path edges from: "+n);
         if (n.accessPathEdges != null) {
-            for (Iterator i=n.accessPathEdges.entrySet().iterator(); i.hasNext(); ) {
-                java.util.Map.Entry e = (java.util.Map.Entry)i.next();
+            for (Iterator i = n.accessPathEdges.entrySet().iterator(); i.hasNext(); ) {
+                Map.Entry e = (Map.Entry)i.next();
                 jq_Field f = (jq_Field)e.getKey();
                 Object o = e.getValue();
                 Assert._assert(o != null);
                 FieldNode n2;
                 if (o instanceof FieldNode) {
-                    n2 = (FieldNode)o;
+                    n2 = (FieldNode) o;
                 } else {
-                    Set s = (Set)NodeSet.FACTORY.makeSet((Set)o);
+                    Set s = (Set) NodeSet.FACTORY.makeSet((Set) o);
                     if (s.size() == 0) {
                         i.remove();
                         continue;
                     }
                     if (s.size() == 1) {
-                        n2 = (FieldNode)s.iterator().next();
+                        n2 = (FieldNode) s.iterator().next();
                         e.setValue(n2);
                         continue;
                     }
                     if (TRACE_INTRA) out.println("Node "+n+" has duplicate access path edges on field "+f+": "+s);
                     n2 = FieldNode.unify(f, s);
-                    for (Iterator j=s.iterator(); j.hasNext(); ) {
+                    for (Iterator j = s.iterator(); j.hasNext(); ) {
                         FieldNode n3 = (FieldNode)j.next();
                         if (returned.contains(n3)) {
                             returned.remove(n3); returned.add(n2);
@@ -3948,17 +4028,8 @@ outer:
         if (n.addedEdges != null) {
             if (TRACE_INTER) out.println("Useful because of added edge: "+n);
             useful = true;
-            for (Iterator i=n.addedEdges.entrySet().iterator(); i.hasNext(); ) {
-                java.util.Map.Entry e = (java.util.Map.Entry)i.next();
-                jq_Field f = (jq_Field)e.getKey();
-                Object o = e.getValue();
-                if (o instanceof Node) {
-                    addAsUseful(visited, path, (Node)o);
-                } else {
-                    for (Iterator j=((Set)o).iterator(); j.hasNext(); ) {
-                        addAsUseful(visited, path, (Node)j.next());
-                    }
-                }
+            for (Iterator i = n.getEdgeTargets().iterator(); i.hasNext(); ) {
+                addAsUseful(visited, path, (Node) i.next());
             }
         }
         if (n.accessPathEdges != null) {
@@ -3994,24 +4065,15 @@ outer:
         if (n.predecessors != null) {
             useful = true;
             if (TRACE_INTER && !useful) out.println("Useful because target of added edge: "+n);
-            for (Iterator i=n.predecessors.entrySet().iterator(); i.hasNext(); ) {
-                java.util.Map.Entry e = (java.util.Map.Entry)i.next();
-                jq_Field f = (jq_Field)e.getKey();
-                Object o = e.getValue();
-                if (o instanceof Node) {
-                    addAsUseful(visited, path, (Node)o);
-                } else {
-                    for (Iterator j=((Set)o).iterator(); j.hasNext(); ) {
-                        addAsUseful(visited, path, (Node)j.next());
-                    }
-                }
+            for (Iterator i = n.getPredecessorTargets().iterator(); i.hasNext(); ) {
+                addAsUseful(visited, path, (Node) i.next());
             }
         }
         if (useful) {
             this.nodes.put(n, n);
             if (n instanceof FieldNode) {
                 FieldNode fn = (FieldNode)n;
-                for (Iterator i=fn.field_predecessors.iterator(); i.hasNext(); ) {
+                for (Iterator i = fn.getAccessPathPredecessors().iterator(); i.hasNext(); ) {
                     addAsUseful(visited, path, (Node)i.next());
                 }
             }
@@ -4020,6 +4082,7 @@ outer:
         path.remove(n);
         return useful;
     }
+    
     /** Utility function to add the given node to the node set as useful,
      *  and transitively for other nodes. */
     private void addAsUseful(HashSet visited, HashSet path, Node n) {
@@ -4037,24 +4100,12 @@ outer:
         }
         visited.add(n); this.nodes.put(n, n);
         if (TRACE_INTER) out.println("Useful: "+n);
-        if (n.addedEdges != null) {
-            for (Iterator i=n.addedEdges.entrySet().iterator(); i.hasNext(); ) {
-                java.util.Map.Entry e = (java.util.Map.Entry)i.next();
-//                jq_Field f = (jq_Field)e.getKey();
-                Object o = e.getValue();
-                if (o instanceof Node) {
-                    addAsUseful(visited, path, (Node)o);
-                } else {
-                    for (Iterator j=((Set)o).iterator(); j.hasNext(); ) {
-                        addAsUseful(visited, path, (Node)j.next());
-                    }
-                }
-            }
+        for (Iterator i = n.getEdgeTargets().iterator(); i.hasNext(); ) {
+            addAsUseful(visited, path, (Node) i.next());
         }
         if (n.accessPathEdges != null) {
             for (Iterator i=n.accessPathEdges.entrySet().iterator(); i.hasNext(); ) {
-                java.util.Map.Entry e = (java.util.Map.Entry)i.next();
-//                jq_Field f = (jq_Field)e.getKey();
+                Map.Entry e = (Map.Entry) i.next();
                 Object o = e.getValue();
                 if (o instanceof Node) {
                     if (!addIfUseful(visited, path, (Node)o)) {
@@ -4074,23 +4125,12 @@ outer:
                 }
             }
         }
-        if (n.predecessors != null) {
-            for (Iterator i=n.predecessors.entrySet().iterator(); i.hasNext(); ) {
-                java.util.Map.Entry e = (java.util.Map.Entry)i.next();
-//                jq_Field f = (jq_Field)e.getKey();
-                Object o = e.getValue();
-                if (o instanceof Node) {
-                    addAsUseful(visited, path, (Node)o);
-                } else {
-                    for (Iterator j=((Set)o).iterator(); j.hasNext(); ) {
-                        addAsUseful(visited, path, (Node)j.next());
-                    }
-                }
-            }
+        for (Iterator i = n.getPredecessorTargets().iterator(); i.hasNext(); ) {
+            addAsUseful(visited, path, (Node) i.next());
         }
         if (n instanceof FieldNode) {
-            FieldNode fn = (FieldNode)n;
-            for (Iterator i=fn.field_predecessors.iterator(); i.hasNext(); ) {
+            FieldNode fn = (FieldNode) n;
+            for (Iterator i = fn.getAccessPathPredecessors().iterator(); i.hasNext(); ) {
                 addAsUseful(visited, path, (Node)i.next());
             }
         }
@@ -4100,19 +4140,27 @@ outer:
     /** Returns an iteration of all nodes in this summary. */
     public Iterator nodeIterator() { return nodes.keySet().iterator(); }
 
+    /** Get the set of returned nodes. */
     public Set getReturned() {
         return returned;
     }
+    
+    /** Get the set of thrown nodes. */
     public Set getThrown() {
         return thrown;
     }
+
+    /** Get the return value node corresponding to the given method call. */
     public ReturnValueNode getRVN(ProgramLocation mc) {
         return (ReturnValueNode) callToRVN.get(mc);
     }
+    
+    /** Get the thrown exception node corresponding to the given method call. */
     public ThrownExceptionNode getTEN(ProgramLocation mc) {
         return (ThrownExceptionNode) callToTEN.get(mc);
     }
 
+    /** Verify the integrity of the method summary data structure. */
     void verify() {
         for (int i=0; i<this.params.length; ++i) {
             if (this.params[i] == null) continue;
@@ -4286,17 +4334,19 @@ outer:
         }
     }
 
+    /** Helper function for multiset contains relation. */
     static boolean multiset_contains(Map m, Object o) {
-        for (Iterator i=m.entrySet().iterator(); i.hasNext(); ) {
-            Map.Entry e = (Map.Entry)i.next();
-            Object p = e.getValue();
+        if (m == null) return false;
+        for (Iterator i = m.values().iterator(); i.hasNext(); ) {
+            Object p = i.next();
             if (p == o) return true;
-            if (p instanceof Set)
-                if (((Set)p).contains(o)) return true;
+            if (p instanceof Collection)
+                if (((Collection) p).contains(o)) return true;
         }
         return false;
     }
 
+    /** Verify that there are no references to the given node in this method summary. */
     void verifyNoReferences(Node n) {
         if (returned.contains(n))
             Assert.UNREACHABLE("ERROR: returned set contains "+n);
@@ -4308,36 +4358,30 @@ outer:
                     Assert.UNREACHABLE("ERROR: param #"+i+" "+n);
             }
         }
-        for (Iterator i=nodeIterator(); i.hasNext(); ) {
+        for (Iterator i = nodeIterator(); i.hasNext(); ) {
             Node n2 = (Node) i.next();
             if (n2 instanceof UnknownTypeNode) continue;
-            if (n2.addedEdges != null) {
-                if (n2.addedEdges.containsValue(n)) {
-                    Assert.UNREACHABLE("ERROR: "+n2+" contains an edge to "+n);
-                }
+            if (multiset_contains(n2.addedEdges, n)) {
+                Assert.UNREACHABLE("ERROR: "+n2+" contains an edge to "+n);
             }
-            if (n2.predecessors != null) {
-                if (n2.predecessors.containsValue(n)) {
-                    Assert.UNREACHABLE("ERROR: "+n2+" contains predecessor "+n);
-                }
+            if (multiset_contains(n2.predecessors, n)) {
+                Assert.UNREACHABLE("ERROR: "+n2+" contains predecessor "+n);
             }
-            if (n2.accessPathEdges != null) {
-                if (n2.accessPathEdges.containsValue(n)) {
-                    Assert.UNREACHABLE("ERROR: "+n2+" contains an edge to "+n);
-                }
+            if (multiset_contains(n2.accessPathEdges, n)) {
+                Assert.UNREACHABLE("ERROR: "+n2+" contains access path edge to "+n);
             }
             if (n2 instanceof FieldNode) {
                 FieldNode fn = (FieldNode) n2;
-                if (fn.field_predecessors != null) {
-                    if (fn.field_predecessors.contains(n)) {
-                        Assert.UNREACHABLE("ERROR: "+fn+" contains a field predecessor "+n);
-                    }
+                if (fn.field_predecessors != null &&
+                    fn.field_predecessors.contains(n)) {
+                    Assert.UNREACHABLE("ERROR: "+fn+" contains a field predecessor "+n);
                 }
             }
         }
     }
 
-    void dotGraph(DataOutput out) throws IOException {
+    /** Dumps this method summary as a dot graph. */
+    public void dotGraph(DataOutput out) throws IOException {
         out.writeBytes("digraph \""+this.method+"\" {\n");
         IndexMap m = new IndexMap("MethodCallMap");
         for (Iterator i=nodeIterator(); i.hasNext(); ) {
