@@ -278,6 +278,22 @@ public class BDDPointerAnalysis {
     }
     
     void done() {
+        aC.andWith(bdd.zero());
+        vC.andWith(bdd.zero());
+        cC.andWith(bdd.zero());
+        cTypes.andWith(bdd.zero());
+        cTypes.andWith(bdd.zero());
+        pointsTo.andWith(bdd.zero());
+        edgeSet.andWith(bdd.zero());
+        typeFilter.andWith(bdd.zero());
+        stores.andWith(bdd.zero());
+        loads.andWith(bdd.zero());
+        storePt.andWith(bdd.zero());
+        fieldPt.andWith(bdd.zero());
+        loadAss.andWith(bdd.zero());
+        loadPt.andWith(bdd.zero());
+        vtable_bdd.andWith(bdd.zero());
+        System.gc(); System.gc();
         bdd.done();
     }
 
