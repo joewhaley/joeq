@@ -18,15 +18,11 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
 import java.io.BufferedReader;
-import java.io.DataInput;
-import java.io.DataInputStream;
-import java.io.DataOutput;
-import java.io.DataOutputStream;
+import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -2403,7 +2399,7 @@ public class PA {
     static void writePAResultsBatchFile(String batchfilename) throws IOException {
         PrintWriter w = null;
         try {
-            w = new PrintWriter(new FileOutputStream(batchfilename));
+            w = new PrintWriter(new FileWriter(batchfilename));
             Properties p = System.getProperties();
             w.print(p.getProperty("java.home") + File.separatorChar + "bin" + File.separatorChar + "java");
             w.print(" -Xmx512M");
@@ -2518,9 +2514,9 @@ public class PA {
     private void dumpCallGraphAsDot(CallGraph cg, String dotFileName) throws IOException {
         PathNumbering callgraph = countCallGraph(cg, null, false);
         if (callgraph != null) {
-            DataOutputStream dos = null;
+            BufferedWriter dos = null;
             try {
-                dos = new DataOutputStream(new FileOutputStream(dotFileName));
+                dos = new BufferedWriter(new FileWriter(dotFileName));
                 callgraph.dotGraph(dos, cg.getRoots(), cg.getCallSiteNavigator());
             } finally {
                 if (dos != null) dos.close();
@@ -2532,9 +2528,9 @@ public class PA {
         //CallGraph callgraph = CallGraph.makeCallGraph(roots, new PACallTargetMap());
         CallGraph callgraph = new CachedCallGraph(new PACallGraph(this));
         //CallGraph callgraph = callGraph;
-        DataOutputStream dos = null;
+        BufferedWriter dos = null;
         try {
-            dos = new DataOutputStream(new FileOutputStream(callgraphFileName));
+            dos = new BufferedWriter(new FileWriter(callgraphFileName));
             LoadedCallGraph.write(callgraph, dos);
         } finally {
             if (dos != null) dos.close();
@@ -2612,9 +2608,9 @@ public class PA {
         System.out.println("visited: "+(long) visited.satCount(Mset)+" relations, "+visited.nodeCount()+" nodes");
         bdd.save(dumpfilename+".visited", visited);
         
-        DataOutputStream dos = null;
+        BufferedWriter dos = null;
         try {
-            dos = new DataOutputStream(new FileOutputStream(dumpfilename+".config"));
+            dos = new BufferedWriter(new FileWriter(dumpfilename+".config"));
             dumpConfig(dos);
         } finally {
             if (dos != null) dos.close();
@@ -2623,49 +2619,49 @@ public class PA {
         System.out.print("Dumping maps...");
         dos = null;
         try {
-            dos = new DataOutputStream(new FileOutputStream(dumpfilename+".Vmap"));
+            dos = new BufferedWriter(new FileWriter(dumpfilename+".Vmap"));
             Vmap.dump(dos);
         } finally {
             if (dos != null) dos.close();
         }
         dos = null;
         try {
-            dos = new DataOutputStream(new FileOutputStream(dumpfilename+".Imap"));
+            dos = new BufferedWriter(new FileWriter(dumpfilename+".Imap"));
             Imap.dump(dos);
         } finally {
             if (dos != null) dos.close();
         }
         dos = null;
         try {
-            dos = new DataOutputStream(new FileOutputStream(dumpfilename+".Hmap"));
+            dos = new BufferedWriter(new FileWriter(dumpfilename+".Hmap"));
             Hmap.dump(dos);
         } finally {
             if (dos != null) dos.close();
         }
         dos = null;
         try {
-            dos = new DataOutputStream(new FileOutputStream(dumpfilename+".Fmap"));
+            dos = new BufferedWriter(new FileWriter(dumpfilename+".Fmap"));
             Fmap.dump(dos);
         } finally {
             if (dos != null) dos.close();
         }
         dos = null;
         try {
-            dos = new DataOutputStream(new FileOutputStream(dumpfilename+".Tmap"));
+            dos = new BufferedWriter(new FileWriter(dumpfilename+".Tmap"));
             Tmap.dump(dos);
         } finally {
             if (dos != null) dos.close();
         }
         dos = null;
         try {
-            dos = new DataOutputStream(new FileOutputStream(dumpfilename+".Nmap"));
+            dos = new BufferedWriter(new FileWriter(dumpfilename+".Nmap"));
             Nmap.dump(dos);
         } finally {
             if (dos != null) dos.close();
         }
         dos = null;
         try {
-            dos = new DataOutputStream(new FileOutputStream(dumpfilename+".Mmap"));
+            dos = new BufferedWriter(new FileWriter(dumpfilename+".Mmap"));
             Mmap.dump(dos);
         } finally {
             if (dos != null) dos.close();
@@ -2675,9 +2671,9 @@ public class PA {
 
     public static PA loadResults(String bddfactory, String loaddir, String loadfilename) throws IOException {
         PA pa = new PA();
-        DataInputStream di = null;
+        BufferedReader di = null;
         try {
-            di = new DataInputStream(new FileInputStream(loaddir+loadfilename+".config"));
+            di = new BufferedReader(new FileReader(loaddir+loadfilename+".config"));
             pa.loadConfig(di);
         } finally {
             if (di != null) di.close();
@@ -2711,7 +2707,7 @@ public class PA {
                     System.out.print(name+": ");
                     di = null;
                     try {
-                        di = new DataInputStream(new FileInputStream(f));
+                        di = new BufferedReader(new FileReader(f));
                         IndexMap m = IndexMap.load(name, di);
                         System.out.print(m.size()+" entries, ");
                         field.set(pa, m);
@@ -2823,26 +2819,26 @@ public class PA {
         return pa;
     }
     
-    private void dumpConfig(DataOutput out) throws IOException {
-        out.writeBytes("V="+V_BITS+"\n");
-        out.writeBytes("I="+I_BITS+"\n");
-        out.writeBytes("H="+H_BITS+"\n");
-        out.writeBytes("Z="+Z_BITS+"\n");
-        out.writeBytes("F="+F_BITS+"\n");
-        out.writeBytes("T="+T_BITS+"\n");
-        out.writeBytes("N="+N_BITS+"\n");
-        out.writeBytes("M="+M_BITS+"\n");
-        out.writeBytes("VC="+VC_BITS+"\n");
-        out.writeBytes("HC="+HC_BITS+"\n");
-        out.writeBytes("CS="+(CONTEXT_SENSITIVE?"yes":"no")+"\n");
-        out.writeBytes("OS="+(OBJECT_SENSITIVE?"yes":"no")+"\n");
-        out.writeBytes("TS="+(THREAD_SENSITIVE?"yes":"no")+"\n");
-        out.writeBytes("CP="+(CARTESIAN_PRODUCT?"yes":"no")+"\n");
-        out.writeBytes("Order="+varorder+"\n");
-        out.writeBytes("Reverse="+reverseLocal+"\n");
+    private void dumpConfig(BufferedWriter out) throws IOException {
+        out.write("V="+V_BITS+"\n");
+        out.write("I="+I_BITS+"\n");
+        out.write("H="+H_BITS+"\n");
+        out.write("Z="+Z_BITS+"\n");
+        out.write("F="+F_BITS+"\n");
+        out.write("T="+T_BITS+"\n");
+        out.write("N="+N_BITS+"\n");
+        out.write("M="+M_BITS+"\n");
+        out.write("VC="+VC_BITS+"\n");
+        out.write("HC="+HC_BITS+"\n");
+        out.write("CS="+(CONTEXT_SENSITIVE?"yes":"no")+"\n");
+        out.write("OS="+(OBJECT_SENSITIVE?"yes":"no")+"\n");
+        out.write("TS="+(THREAD_SENSITIVE?"yes":"no")+"\n");
+        out.write("CP="+(CARTESIAN_PRODUCT?"yes":"no")+"\n");
+        out.write("Order="+varorder+"\n");
+        out.write("Reverse="+reverseLocal+"\n");
     }
     
-    private void loadConfig(DataInput in) throws IOException {
+    private void loadConfig(BufferedReader in) throws IOException {
         for (;;) {
             String s = in.readLine();
             if (s == null) break;
@@ -3008,11 +3004,11 @@ public class PA {
         System.out.println("Vars="+vars+" Heaps="+heaps+" Classes="+classes.size()+" Fields="+fields.size());
         PathNumbering pn = null;
         if (CONTEXT_SENSITIVE)
-        	if(BETTER_CONTEXT_NUMBERING){
-        		pn = new GlobalPathNumbering();
-        	} else {
-        		pn = new SCCPathNumbering(varPathSelector);	
-        	}     	
+            if(BETTER_CONTEXT_NUMBERING){
+                pn = new GlobalPathNumbering();
+            } else {
+                pn = new SCCPathNumbering(varPathSelector);
+            }
         else
             pn = null;
         if (updateBits) {
@@ -3806,37 +3802,37 @@ public class PA {
         }
         System.out.println("Dumping to path "+dumpPath);
         
-        DataOutputStream dos = null;
+        BufferedWriter dos = null;
         try {
-            dos = new DataOutputStream(new FileOutputStream(dumpPath+"bddinfo"));
+            dos = new BufferedWriter(new FileWriter(dumpPath+"bddinfo"));
             for (int i = 0; i < bdd.numberOfDomains(); ++i) {
                 BDDDomain d = bdd.getDomain(i);
                 if (d == V1 || d == V2)
-                    dos.writeBytes("V\n");
+                    dos.write("V\n");
                 else if (d == H1 || d == H2)
-                    dos.writeBytes("H\n");
+                    dos.write("H\n");
                 else if (d == T1 || d == T2)
-                    dos.writeBytes("T\n");
+                    dos.write("T\n");
                 else if (d == F)
-                    dos.writeBytes("F\n");
+                    dos.write("F\n");
                 else if (d == I)
-                    dos.writeBytes("I\n");
+                    dos.write("I\n");
                 else if (d == Z)
-                    dos.writeBytes("Z\n");
+                    dos.write("Z\n");
                 else if (d == N)
-                    dos.writeBytes("N\n");
+                    dos.write("N\n");
                 else if (d == M || d == M2)
-                    dos.writeBytes("M\n");
+                    dos.write("M\n");
                 else if (Arrays.asList(V1c).contains(d)
                         || Arrays.asList(V2c).contains(d))
-                    dos.writeBytes("VC\n");
+                    dos.write("VC\n");
                 else if (Arrays.asList(H1c).contains(d)
                         || Arrays.asList(H2c).contains(d))
-                    dos.writeBytes("HC\n");
+                    dos.write("HC\n");
                 else if (DUMP_SSA) {
-                    dos.writeBytes(bddIRBuilder.getDomainName(d)+"\n");
+                    dos.write(bddIRBuilder.getDomainName(d)+"\n");
                 } else
-                    dos.writeBytes(d.toString() + "\n");
+                    dos.write(d.toString() + "\n");
             }
         } finally {
             if (dos != null) dos.close();
@@ -3844,17 +3840,17 @@ public class PA {
         
         dos = null;
         try {
-            dos = new DataOutputStream(new FileOutputStream(dumpPath+"fielddomains.pa"));
-            dos.writeBytes("V "+(1L<<V_BITS)+" var.map\n");
-            dos.writeBytes("H "+(1L<<H_BITS)+" heap.map\n");
-            dos.writeBytes("T "+(1L<<T_BITS)+" type.map\n");
-            dos.writeBytes("F "+(1L<<F_BITS)+" field.map\n");
-            dos.writeBytes("I "+(1L<<I_BITS)+" invoke.map\n");
-            dos.writeBytes("Z "+(1L<<Z_BITS)+"\n");
-            dos.writeBytes("N "+(1L<<N_BITS)+" name.map\n");
-            dos.writeBytes("M "+(1L<<M_BITS)+" method.map\n");
-            dos.writeBytes("VC "+(1L<<VC_BITS)+"\n");
-            dos.writeBytes("HC "+(1L<<HC_BITS)+"\n");
+            dos = new BufferedWriter(new FileWriter(dumpPath+"fielddomains.pa"));
+            dos.write("V "+(1L<<V_BITS)+" var.map\n");
+            dos.write("H "+(1L<<H_BITS)+" heap.map\n");
+            dos.write("T "+(1L<<T_BITS)+" type.map\n");
+            dos.write("F "+(1L<<F_BITS)+" field.map\n");
+            dos.write("I "+(1L<<I_BITS)+" invoke.map\n");
+            dos.write("Z "+(1L<<Z_BITS)+"\n");
+            dos.write("N "+(1L<<N_BITS)+" name.map\n");
+            dos.write("M "+(1L<<M_BITS)+" method.map\n");
+            dos.write("VC "+(1L<<VC_BITS)+"\n");
+            dos.write("HC "+(1L<<HC_BITS)+"\n");
             if (bddIRBuilder != null) bddIRBuilder.dumpFieldDomains(dos);
         } finally {
             if (dos != null) dos.close();
@@ -3919,7 +3915,11 @@ public class PA {
         
         dos = null;
         try {
-            dos = new DataOutputStream(new FileOutputStream(dumpPath+"var.map"));
+            dos = new BufferedWriter(new FileWriter(dumpPath+"var.map"));
+            for (int j = 0; j < Vmap.size(); ++j) {
+                Node o = (Node)Vmap.get(j);
+                dos.write(o+"\n");
+            }
             Vmap.dumpStrings(dos);
         } finally {
             if (dos != null) dos.close();
@@ -3927,7 +3927,7 @@ public class PA {
         
         dos = null;
         try {
-            dos = new DataOutputStream(new FileOutputStream(dumpPath+"heap.map"));
+            dos = new BufferedWriter(new FileWriter(dumpPath+"heap.map"));
             Hmap.dumpStrings(dos);
         } finally {
             if (dos != null) dos.close();
@@ -3935,10 +3935,10 @@ public class PA {
         
         dos = null;
         try {
-            dos = new DataOutputStream(new FileOutputStream(dumpPath+"type.map"));
+            dos = new BufferedWriter(new FileWriter(dumpPath+"type.map"));
             for (int j = 0; j < Tmap.size(); ++j) {
                 jq_Type o = (jq_Type) Tmap.get(j);
-                dos.writeBytes(mungeTypeName2(o)+"\n");
+                dos.write(mungeTypeName2(o)+"\n");
             }
         } finally {
             if (dos != null) dos.close();
@@ -3946,10 +3946,10 @@ public class PA {
         
         dos = null;
         try {
-            dos = new DataOutputStream(new FileOutputStream(dumpPath+"field.map"));
+            dos = new BufferedWriter(new FileWriter(dumpPath+"field.map"));
             for (int j = 0; j < Fmap.size(); ++j) {
                 jq_Field o = (jq_Field) Fmap.get(j);
-                dos.writeBytes(mungeFieldName(o)+"\n");
+                dos.write(mungeFieldName(o)+"\n");
             }
         } finally {
             if (dos != null) dos.close();
@@ -3957,7 +3957,7 @@ public class PA {
         
         dos = null;
         try {
-            dos = new DataOutputStream(new FileOutputStream(dumpPath+"invoke.map"));
+            dos = new BufferedWriter(new FileWriter(dumpPath+"invoke.map"));
             Imap.dumpStrings(dos);
         } finally {
             if (dos != null) dos.close();
@@ -3965,10 +3965,10 @@ public class PA {
         
         dos = null;
         try {
-            dos = new DataOutputStream(new FileOutputStream(dumpPath+"name.map"));
+            dos = new BufferedWriter(new FileWriter(dumpPath+"name.map"));
             for (int j = 0; j < Nmap.size(); ++j) {
                 jq_Method o = (jq_Method) Nmap.get(j);
-                dos.writeBytes(mungeMethodName(o)+"\n");
+                dos.write(mungeMethodName(o)+"\n");
             }
         } finally {
             if (dos != null) dos.close();
@@ -3976,15 +3976,15 @@ public class PA {
         
         dos = null;
         try {
-            dos = new DataOutputStream(new FileOutputStream(dumpPath+"method.map"));
+            dos = new BufferedWriter(new FileWriter(dumpPath+"method.map"));
             for (int j = 0; j < Mmap.size(); ++j) {
                 Object o = Mmap.get(j);
                 if (o instanceof Dummy) {
-                    dos.writeBytes(o.toString()+"\n");
+                    dos.write(o.toString()+"\n");
                     continue;
                 }
                 jq_Method m = (jq_Method) o;
-                dos.writeBytes(mungeMethodName(m)+"\n");
+                dos.write(mungeMethodName(m)+"\n");
             }
         } finally {
             if (dos != null) dos.close();
@@ -3996,7 +3996,7 @@ public class PA {
         public void addEdge(String edge, Textualizable t) {
         }
         public void write(Textualizer t) throws IOException {
-            t.writeBytes("(dummy object)");
+            t.writeString("(dummy object)");
         }
         public void writeEdges(Textualizer t) throws IOException {
         }
