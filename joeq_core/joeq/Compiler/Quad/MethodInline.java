@@ -245,11 +245,11 @@ public class MethodInline implements ControlFlowGraphVisitor {
             }
             
             if (Invoke.getMethod(callSite).getMethod().needsDynamicLink(caller.getMethod())) {
-              if (TRACE_ORACLE || true) out.println("Skipping because call site needs dynamic link.");
+              if (TRACE_ORACLE) out.println("Skipping because call site needs dynamic link.");
               return null;
             }
             
-            if (TRACE_ORACLE || true) out.println("Oracle says to inline " + target);
+            if (TRACE_ORACLE) out.println("Oracle says to inline " + target);
             //return new NoCheckInliningDecision(target);
             return new TypeCheckInliningDecision(target);
         }
@@ -431,25 +431,23 @@ outer:
         // in the callee's control flow graph.
         BasicBlock successor_bb = caller.createBasicBlock(callee.exit().getNumberOfPredecessors() + 1, bb.getNumberOfSuccessors(), bb.size() - invokeLocation, bb.getExceptionHandlers());
         
-//        Quad fakeCallQuad = q.copy(caller.getNewQuadID());
-//        Assert._assert(Invoke.getParamList(q).length() == Invoke.getParamList(fakeCallQuad).length());
+        /* Insert a fake replacement method call */
         MethodOperand fakeOperand = getFakeMethodOperand(Invoke.getMethod(q).getMethod());
         if(fakeOperand != null){
             int len = fakeOperand.getMethod().getParamTypes().length;
             Quad fakeCallQuad = Invoke.InvokeStatic.create(
-                caller.getNewQuadID(), Invoke.INVOKESTATIC_V_DYNLINK.INSTANCE, 
+                caller.getNewQuadID(), Invoke.INVOKESTATIC_A.INSTANCE, 
                 (RegisterOperand) q.getOp1().copy(), (MethodOperand) fakeOperand.copy(), 
                 len);
             
-//            Invoke.setParam(fakeCallQuad, 0, (RegisterOperand) q.getOp1().copy());
             for(int i = 0; i < len; i++){
                 Invoke.setParam(fakeCallQuad, i, (RegisterOperand) Invoke.getParam(q, i).copy());
             }
-//            Invoke.setParamList(fakeCallQuad, (ParamListOperand) Invoke.getParamList(q).copy());
             successor_bb.appendQuad(fakeCallQuad);
-            System.out.println("Replaced a call to " + Invoke.getMethod(q) + " with a call to " + fakeOperand.getMethod());
+//            System.out.println(
+//                "Replaced a call to " + Invoke.getMethod(q) + 
+//                " with a call to " + fakeOperand.getMethod());
         }
-//        successor_bb.appendQuad(fakeCallQuad);
         
         int bb_size = bb.size();
         for (int i=invokeLocation+1; i<bb_size; ++i) {
@@ -579,26 +577,37 @@ outer:
     private static MethodOperand getFakeMethodOperand(jq_Method originalMethod) {
         if(fakeMethodOperand.get(originalMethod) == null){
             jq_Method newMethod = null;
-            jq_Class fakeString = (jq_Class)jq_Type.parseType("MyMockLib.MyString");
-            jq_Class fakeStringBuffer = (jq_Class)jq_Type.parseType("MyMockLib.MyStringBuffer");
-            fakeString.prepare(); fakeStringBuffer.prepare();
             
-            if(originalMethod.getDeclaringClass().getName().equals("java.lang.String")){
+            jq_Class fakeString       = getClassByName("MyMockLib.MyString");
+            jq_Class fakeStringBuffer = getClassByName("MyMockLib.MyStringBuffer");            
+            
+            String className = originalMethod.getDeclaringClass().getName();
+            if(className.equals("java.lang.String")){
                 newMethod = findReplacementMethod(fakeString, originalMethod);                
-                Assert._assert(newMethod != null, "Missing method " + originalMethod.getName() + " in " + fakeString);
+                Assert._assert(newMethod != null, "Missing method " + originalMethod + " in " + fakeString);
             }else
-            if(originalMethod.getDeclaringClass().getName().equals("java.lang.StringBuffer")){  
+            if(className.equals("java.lang.StringBuffer")){  
                 newMethod = findReplacementMethod(fakeStringBuffer, originalMethod); 
-                Assert._assert(newMethod != null, "Missing method " + originalMethod.getName() + " in " + fakeStringBuffer);
+                Assert._assert(newMethod != null, "Missing method " + originalMethod + " in " + fakeStringBuffer);
             }else{
                 System.err.println("Unexpected method " + originalMethod);
                 return null;
             }
             System.out.println("Replacing " + originalMethod + " with " + newMethod);
+            
+            // cache for later reuse
             fakeMethodOperand.put(originalMethod, new MethodOperand(newMethod));
         }
         
         return (MethodOperand) fakeMethodOperand.get(originalMethod);
+    }
+    
+    private static jq_Class getClassByName(String className) {
+        jq_Class theClass = (jq_Class)jq_Type.parseType(className);
+        Assert._assert(theClass != null, className + " is not available.");
+        theClass.prepare();
+        
+        return theClass;
     }
     /**
      * @param fakeString
@@ -630,7 +639,7 @@ outer:
                 continue;
             }
          
-            // done with the tests
+            // done with the tests: m is good
             return m;
         }
         
