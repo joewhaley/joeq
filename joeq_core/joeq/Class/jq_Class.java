@@ -118,6 +118,15 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         super.accept(tv);
     }
     
+    public static final boolean DETERMINISTIC = true;
+    
+    public int hashCode() {
+        if (DETERMINISTIC)
+            return desc.hashCode();
+        else
+            return System.identityHashCode(this);
+    }
+
     //// Available only after loading
     public final int getMinorVersion() { return minor_version; }
     public final int getMajorVersion() { return major_version; }
