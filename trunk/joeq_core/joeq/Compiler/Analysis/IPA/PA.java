@@ -989,10 +989,11 @@ public class PA {
             BDD context = null;
             if (CONTEXT_SENSITIVE && MAX_HC_BITS > 1) {
                 int context_i = getThreadRunIndex(m, h);
-                context_i += vCnumbering.getRange(m).low.intValue();
-                System.out.println("Thread "+h+" index "+context_i);
-                context = H1c.ithVar(context_i);
-                context.andWith(V1c.ithVar(context_i));
+                int context_j = context_i + vCnumbering.getRange(m).low.intValue();
+                System.out.println("Thread "+h+" index "+context_j);
+                //context = H1c.ithVar(context_i);
+                context = H1c.domain();
+                context.andWith(V1c.ithVar(context_j));
                 addToVP(context, p, H_i);
                 context.free();
             } else {
