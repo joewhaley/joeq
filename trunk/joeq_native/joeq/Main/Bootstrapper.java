@@ -455,16 +455,17 @@ public abstract class Bootstrapper {
         // get the JDK type of each of the classes that could be in our image, so
         // that we can trigger each of their <clinit> methods, because some
         // <clinit> methods add Utf8 references to our table.
-        it = PrimordialClassLoader.loader.getAllTypes().iterator();
-        while (it.hasNext()) {
-            jq_Type t = (jq_Type)it.next();
+        int numTypes = PrimordialClassLoader.loader.getNumTypes();
+        jq_Type[] types = PrimordialClassLoader.loader.getAllTypes();
+        for (int i = 0; i < numTypes; ++i) {
+            jq_Type t = types[i];
             Reflection.getJDKType(t);
         }
 
         // get the set of compiled methods, because it is used during bootstrapping.
         CodeAllocator.getCompiledMethods();
         
-        System.out.println("number of classes seen = "+PrimordialClassLoader.loader.getAllTypes().size());
+        System.out.println("number of classes seen = "+PrimordialClassLoader.loader.getNumTypes());
         System.out.println("number of classes in image = "+objmap.boot_types.size());
         
         // During the process of initialization, etc., Utf8 objects could

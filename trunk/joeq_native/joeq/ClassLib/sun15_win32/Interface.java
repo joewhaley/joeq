@@ -49,11 +49,11 @@ public class Interface extends joeq.ClassLib.sun142_win32.Interface {
             k = (jq_Class) PrimordialClassLoader.getJavaLangClass();
             nullInstanceFields.add(k.getOrCreateInstanceField("name", "Ljava/lang/String;"));
             
-	    // crashes on reflective access.
+            // crashes on reflective access.
             k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Lsun/reflect/UnsafeStaticFieldAccessorImpl;");
-	    nullInstanceFields.add(k.getOrCreateInstanceField("base", "Ljava/lang/Object;"));
+            nullInstanceFields.add(k.getOrCreateInstanceField("base", "Ljava/lang/Object;"));
 
-	    // leads to sun.security.rsa junk
+            // leads to sun.security.rsa junk
             k = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("Lsun/security/jca/Providers;");
             nullStaticFields.add(k.getOrCreateStaticField("threadLists", "Ljava/lang/ThreadLocal;"));
             nullStaticFields.add(k.getOrCreateStaticField("providerList", "Lsun/security/jca/ProviderList;"));

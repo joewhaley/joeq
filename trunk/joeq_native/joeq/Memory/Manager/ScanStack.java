@@ -12,6 +12,7 @@ import joeq.Class.jq_Class;
 import joeq.Class.jq_CompiledCode;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_StaticField;
+import joeq.Class.jq_Type;
 import joeq.Memory.Address;
 import joeq.Memory.CodeAddress;
 import joeq.Memory.HeapAddress;
@@ -134,8 +135,10 @@ public class ScanStack {
     } //gc_scanStack
 
     public static void processRoots() {
-        for (Iterator i=PrimordialClassLoader.loader.getAllTypes().iterator(); i.hasNext(); ) {
-            Object o = i.next();
+        jq_Type[] types = PrimordialClassLoader.loader.getAllTypes();
+        int num = PrimordialClassLoader.loader.getNumTypes();
+        for (int i = 0; i < num; ++i) {
+            Object o = types[i];
             if (o instanceof jq_Class) {
                 jq_Class c = (jq_Class) o;
                 jq_StaticField[] sfs = c.getDeclaredStaticFields();

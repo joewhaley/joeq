@@ -9,6 +9,7 @@ import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_ClassFileConstants;
+import joeq.Class.jq_Primitive;
 import joeq.Class.jq_Reference;
 import joeq.Class.jq_StaticMethod;
 import joeq.Class.jq_Type;
@@ -98,6 +99,11 @@ public abstract class HeapAllocator implements jq_ClassFileConstants {
     public abstract int totalMemory();
     
     /**
+     * Returns whether the given address falls within the boundaries of this heap.
+     */
+    public abstract boolean isInHeap(Address a);
+    
+    /**
      * Initiate a garbage collection.
      */
     public abstract void collect();
@@ -184,6 +190,67 @@ public abstract class HeapAllocator implements jq_ClassFileConstants {
         throw outofmemoryerror;
     }
     
+    public static boolean isValidAddress(Address a) {
+        return DefaultHeapAllocator.isValidAddress(a);
+    }
+    
+    public static boolean isValidObjectRef(Address a) {
+        if (!isValidAddress(a)) return false;
+        Address vt = a.offset(ObjectLayout.VTABLE_OFFSET).peek();
+        return isValidVTable(vt);
+    }
+    
+    public static boolean isValidArrayRef(Address a) {
+        if (!isValidAddress(a)) return false;
+        Address vt = a.offset(ObjectLayout.VTABLE_OFFSET).peek();
+        return isValidArrayVTable(vt);
+    }
+    
+    public static boolean isValidVTable(Address a) {
+        if (!isValidAddress(a)) return false;
+        Address vtableTypeAddr = a.offset(ObjectLayout.VTABLE_OFFSET);
+        jq_Reference r = PrimordialClassLoader.getAddressArray();
+        if (!isType(vtableTypeAddr, r)) return false;
+        return isValidType((HeapAddress) a.peek());
+    }
+    
+    public static boolean isValidArrayVTable(Address a) {
+        if (!isValidAddress(a)) return false;
+        Address vtableTypeAddr = a.offset(ObjectLayout.VTABLE_OFFSET);
+        jq_Reference r = PrimordialClassLoader.getAddressArray();
+        if (!isType(vtableTypeAddr, r)) return false;
+        return isValidArrayType((HeapAddress) a.peek());
+    }
+    
+    public static boolean isType(Address a, jq_Reference t) {
+        if (!isValidAddress(a)) return false;
+
+        Address vtable = a.offset(ObjectLayout.VTABLE_OFFSET).peek();
+        if (!isValidAddress(vtable)) return false;
+        Address type = vtable.peek();
+        Address expected = HeapAddress.addressOf(t);
+        return expected.difference(type) == 0;
+    }
+    
+    public static boolean isValidType(Address typeAddress) {
+        if (!isValidAddress(typeAddress)) return false;
+
+        // check if vtable is one of three possible values
+        Object vtable = ObjectLayoutMethods.getVTable(((HeapAddress) typeAddress).asObject());
+        boolean valid = vtable == jq_Class._class.getVTable() ||
+                        vtable == jq_Array._class.getVTable() ||
+                        vtable == jq_Primitive._class.getVTable();
+        return valid;
+    }
+    
+    public static boolean isValidArrayType(Address typeAddress) {
+        if (!isValidAddress(typeAddress)) return false;
+
+        Object vtable = ObjectLayoutMethods.getVTable(((HeapAddress) typeAddress).asObject());
+        boolean valid = vtable == jq_Array._class.getVTable();
+        return valid;
+    }
+    
     /**
      * An object of this class represents a pointer to a heap address.
      * It is a wrapped version of HeapAddress, so it can be used like
@@ -246,13 +313,6 @@ public abstract class HeapAllocator implements jq_ClassFileConstants {
          */
         public int hashCode() { return this.ip.to32BitValue(); }
         
-        /*
-        public static final jq_InstanceField _ip;
-        static {
-            jq_Class k = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljoeq/Allocator/HeapAllocator$HeapPointer;");
-            _ip = k.getOrCreateInstanceField("ip", "I");
-        }
-        */
     }
     
     public static final jq_StaticMethod _clsinitAndAllocateObject;

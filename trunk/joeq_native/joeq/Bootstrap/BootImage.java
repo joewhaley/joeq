@@ -323,6 +323,8 @@ public class BootImage implements ELFConstants {
                             addDataReloc((HeapAddress)addr.offset(f.getOffset()), val);
                     } else if (f.isStackAddressType()) {
                         // no reloc necessary.
+                    } else if (f.getType().isAddressType()) {
+                        Assert.UNREACHABLE("Field has untyped Address type: "+f);
                     } else if (ftype.isReferenceType()) {
                         Object val = Reflection.getfield_A(o, f);
                         if (val != null) {
@@ -502,7 +504,7 @@ public class BootImage implements ELFConstants {
     
     public static boolean USE_MICROSOFT_STYLE_MUNGE = true;
     
-    public static final int NUM_OF_EXTERNAL_SYMS = 7;
+    public static final int NUM_OF_EXTERNAL_SYMS = 9;
     public void dumpEXTSYMENTs(ExtendedDataOutput out, jq_StaticMethod rootm)
     throws IOException {
         // NOTE!!! If you change anything here, be SURE to change the number above!!!
@@ -559,7 +561,7 @@ public class BootImage implements ELFConstants {
         idx = alloc_string(s);
         out.writeUInt(idx);  // e_offset
         addr = jq_NativeThread._ctrl_break_handler.getDefaultCompiledVersion().getEntrypoint();
-        out.writeUInt(addr.to32BitValue());
+        out.writeUInt(addr.to32BitValue()); // e_value
         out.writeShort((short)1);
         out.writeUShort((char)DT_FCN);
         out.writeUByte(C_EXT);
@@ -570,7 +572,18 @@ public class BootImage implements ELFConstants {
         else s = "joeq_code_startaddress";
         idx = alloc_string(s);
         out.writeUInt(idx);  // e_offset
-        out.writeUInt(0);
+        out.writeUInt(0); // e_value
+        out.writeShort((short)1);
+        out.writeUShort((char)(DT_PTR | T_VOID));
+        out.writeUByte(C_EXT);
+        out.writeUByte(0);
+
+        out.writeUInt(0);    // e_zeroes
+        if (USE_MICROSOFT_STYLE_MUNGE) s = "_joeq_code_endaddress";
+        else s = "joeq_code_endaddress";
+        idx = alloc_string(s);
+        out.writeUInt(idx);  // e_offset
+        out.writeUInt(bca.size()); // e_value
         out.writeShort((short)1);
         out.writeUShort((char)(DT_PTR | T_VOID));
         out.writeUByte(C_EXT);
@@ -582,6 +595,17 @@ public class BootImage implements ELFConstants {
         idx = alloc_string(s);
         out.writeUInt(idx); // e_offset
         out.writeUInt(0); // e_value
+        out.writeShort((short)2); // e_scnum
+        out.writeUShort((char)(DT_PTR | T_VOID)); // e_type
+        out.writeUByte(C_EXT); // e_sclass
+        out.writeUByte(0); // e_numaux
+        
+        out.writeUInt(0);    // e_zeroes
+        if (USE_MICROSOFT_STYLE_MUNGE) s = "_joeq_data_endaddress";
+        else s = "joeq_data_endaddress";
+        idx = alloc_string(s);
+        out.writeUInt(idx); // e_offset
+        out.writeUInt(heapCurrent); // e_value
         out.writeShort((short)2); // e_scnum
         out.writeUShort((char)(DT_PTR | T_VOID)); // e_type
         out.writeUByte(C_EXT); // e_sclass
@@ -716,14 +740,13 @@ public class BootImage implements ELFConstants {
         out.writeUByte(0);             // e_numaux
     }
     
-    public void addSystemInterfaceRelocs_COFF(List extref, List heap2code) {
+    public void addSystemInterfaceRelocs_COFF(List extref, List dataRelocs) {
         jq_StaticField[] fs = SystemInterface._class.getDeclaredStaticFields();
         int total = 1+NUM_OF_EXTERNAL_SYMS;
         for (int i=0; i<fs.length; ++i) {
             jq_StaticField f = fs[i];
             if (f.isFinal()) continue;
-            if (f.getType() != CodeAddress._class) continue;
-            {
+            if (f.getType() == CodeAddress._class) {
                 String name = f.getName().toString();
                 int ind = name.lastIndexOf('_');
                 if (USE_MICROSOFT_STYLE_MUNGE)
@@ -734,20 +757,28 @@ public class BootImage implements ELFConstants {
                 ExternalReference r = new ExternalReference(f.getAddress(), name);
                 r.setSymbolIndex(++total);
                 extref.add(r);
-                heap2code.add(r);
+                dataRelocs.add(r);
+            } else if (f.getType() == HeapAddress._class) {
+                String name = f.getName().toString();
+                if (USE_MICROSOFT_STYLE_MUNGE)
+                    name = "_"+name;
+                if (TRACE) System.out.println("External ref="+f+", symndx="+(total+1)+" address="+f.getAddress().stringRep());
+                ExternalReference r = new ExternalReference(f.getAddress(), name);
+                r.setSymbolIndex(++total);
+                extref.add(r);
+                dataRelocs.add(r);
             }
         }
         //return total-3;
     }
 
-    public void addSystemInterfaceRelocs_ELF(List extref, List heap2code) {
+    public void addSystemInterfaceRelocs_ELF(List extref, List dataRelocs) {
         jq_StaticField[] fs = SystemInterface._class.getDeclaredStaticFields();
         int total = 1+NUM_OF_EXTERNAL_SYMS;
         for (int i=0; i<fs.length; ++i) {
             jq_StaticField f = fs[i];
             if (f.isFinal()) continue;
-            if (f.getType() != CodeAddress._class) continue;
-            {
+            if (f.getType() == CodeAddress._class) {
                 String name = f.getName().toString();
                 int ind = name.lastIndexOf('_');
                 name = name.substring(0, ind);
@@ -755,7 +786,14 @@ public class BootImage implements ELFConstants {
                 ExternalReference r = new ExternalReference(f.getAddress(), name);
                 r.setSymbolIndex(++total);
                 extref.add(r);
-                heap2code.add(r);
+                dataRelocs.add(r);
+            } else if (f.getType() == HeapAddress._class) {
+                String name = f.getName().toString();
+                if (TRACE) System.out.println("External ref="+f+", symndx="+(total+1)+" address="+f.getAddress().stringRep());
+                ExternalReference r = new ExternalReference(f.getAddress(), name);
+                r.setSymbolIndex(++total);
+                extref.add(r);
+                dataRelocs.add(r);
             }
         }
     }
@@ -934,11 +972,12 @@ public class BootImage implements ELFConstants {
     }
 
     private jq_StaticField searchStaticVariables(Object p) {
-        Iterator i = PrimordialClassLoader.loader.getAllTypes().iterator();
-        while (i.hasNext()) {
-            Object o = i.next();
+        int num = PrimordialClassLoader.loader.getNumTypes();
+        jq_Type[] types = PrimordialClassLoader.loader.getAllTypes();
+        for (int i = 0; i < num; ++i) {
+            Object o = types[i];
             if (!(o instanceof jq_Class)) continue;
-            jq_Class k = (jq_Class)o;
+            jq_Class k = (jq_Class) o;
             if (!k.isLoaded()) continue;
             jq_StaticField[] fs = k.getDeclaredStaticFields();
             for (int j=0; j<fs.length; ++j) {

@@ -3,15 +3,16 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Allocator;
 
-import java.util.Collection;
-import java.util.Iterator;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_StaticField;
+import joeq.Class.jq_Type;
 import joeq.Memory.Address;
 import joeq.Memory.CodeAddress;
 import joeq.Memory.HeapAddress;
 import joeq.Memory.StackAddress;
+import joeq.Runtime.Debug;
+import joeq.Runtime.Unsafe;
 import joeq.Scheduler.jq_NativeThread;
 import joeq.Scheduler.jq_RegisterState;
 import joeq.Scheduler.jq_Thread;
@@ -25,6 +26,33 @@ import joeq.Scheduler.jq_ThreadQueue;
  */
 public abstract class SemiConservative {
     
+    public static void collect() {
+        if (SimpleAllocator.TRACE) Debug.writeln("Starting collection.");
+        
+        jq_Thread t = Unsafe.getThreadBlock();
+        t.disableThreadSwitch();
+        
+        jq_NativeThread.suspendAllThreads();
+        
+        if (SimpleAllocator.TRACE) Debug.writeln("Threads suspended.");
+        SimpleAllocator s = (SimpleAllocator) DefaultHeapAllocator.def();
+        if (SimpleAllocator.TRACE) Debug.writeln("--> Marking roots.");
+        scanRoots(true);
+        if (SimpleAllocator.TRACE) Debug.writeln("--> Marking queue.");
+        s.scanGCQueue(true);
+        if (SimpleAllocator.TRACE) Debug.writeln("--> Sweeping.");
+        s.sweep();
+        if (SimpleAllocator.TRACE) Debug.writeln("--> Unmarking roots.");
+        scanRoots(false);
+        if (SimpleAllocator.TRACE) Debug.writeln("--> Unmarking queue.");
+        s.scanGCQueue(false);
+        
+        if (SimpleAllocator.TRACE) Debug.writeln("Resuming threads.");
+        jq_NativeThread.resumeAllThreads();
+        
+        t.enableThreadSwitch();
+    }
+    
     public static void scanRoots(boolean b) {
         scanStatics(b);
         scanAllThreads(b);
@@ -35,9 +63,10 @@ public abstract class SemiConservative {
      */
     public static void scanStatics(boolean b) {
         // todo: other classloaders?
-        Collection/*<jq_Type>*/ types = PrimordialClassLoader.loader.getAllTypes();
-        for (Iterator i = types.iterator(); i.hasNext(); ) {
-            Object o = i.next();
+        jq_Type[] types = PrimordialClassLoader.loader.getAllTypes();
+        int num = PrimordialClassLoader.loader.getNumTypes();
+        for (int i = 0; i < num; ++i) {
+            Object o = types[i];
             if (o instanceof jq_Class) {
                 jq_Class c = (jq_Class) o;
                 jq_StaticField[] sfs = c.getDeclaredStaticFields();
@@ -53,11 +82,17 @@ public abstract class SemiConservative {
     }
     
     public static void scanAllThreads(boolean b) {
-        for (int i = 0; i < jq_NativeThread.native_threads.length; ++i) {
-            jq_NativeThread nt = jq_NativeThread.native_threads[i];
+        if (jq_NativeThread.allNativeThreadsInitialized()) {
+            for (int i = 0; i < jq_NativeThread.native_threads.length; ++i) {
+                jq_NativeThread nt = jq_NativeThread.native_threads[i];
+                scanQueuedThreads(nt, b);
+                //addObject(nt, b);
+            }
+        } else {
+            jq_NativeThread nt = Unsafe.getThreadBlock().getNativeThread();
             scanQueuedThreads(nt, b);
-            //addObject(nt, b);
         }
+        scanCurrentThreadStack(3, b);
     }
     
     public static void scanQueuedThreads(jq_NativeThread nt, boolean b) {
@@ -74,6 +109,23 @@ public abstract class SemiConservative {
             scanThreadStack(t, b);
             //addObject(t);
             t = t.getNext();
+        }
+    }
+    
+    public static void scanCurrentThreadStack(int skip, boolean b) {
+        StackAddress fp = StackAddress.getBasePointer();
+        StackAddress sp = StackAddress.getStackPointer();
+        CodeAddress ip = (CodeAddress) fp.offset(HeapAddress.size()).peek();
+        while (!fp.isNull()) {
+            if (--skip < 0) {
+                while (fp.difference(sp) > 0) {
+                    addConservativeAddress(sp.peek(), b);
+                    sp = (StackAddress) sp.offset(HeapAddress.size());
+                }
+            }
+            ip = (CodeAddress) fp.offset(HeapAddress.size()).peek();
+            sp = fp;
+            fp = (StackAddress) fp.peek();
         }
     }
     

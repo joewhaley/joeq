@@ -638,8 +638,9 @@ public class PAResults implements PointerAnalysisResults {
     public jq_Class parseClassName(String className) {
         jq_Class c = (jq_Class) jq_Type.parseType(className);
         if (c != null) return c;
-        for (Iterator i = PrimordialClassLoader.loader.getAllTypes().iterator(); i.hasNext(); ) {
-            jq_Type t = (jq_Type) i.next();
+        jq_Type[] types = PrimordialClassLoader.loader.getAllTypes();
+        for (int i = 0; i < PrimordialClassLoader.loader.getNumTypes(); ++i) {
+            jq_Type t = types[i];
             if (t instanceof jq_Class) {
                 c = (jq_Class) t; 
                 if (c.getJDKName().endsWith(className))

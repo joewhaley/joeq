@@ -10,6 +10,7 @@ import joeq.Allocator.DefaultHeapAllocator;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_StaticField;
+import joeq.Class.jq_Type;
 import joeq.Memory.HeapAddress;
 import joeq.Runtime.Debug;
 
@@ -24,9 +25,10 @@ public class ScanStatics {
      */
     public static void scanStatics() {
         // todo: other classloaders?
-        Collection/*<jq_Type>*/ types = PrimordialClassLoader.loader.getAllTypes();
-        for (Iterator i = types.iterator(); i.hasNext(); ) {
-            Object o = i.next();
+        jq_Type[] types = PrimordialClassLoader.loader.getAllTypes();
+        int num = PrimordialClassLoader.loader.getNumTypes();
+        for (int i = 0; i < num; ++i) {
+            Object o = types[i];
             if (o instanceof jq_Class) {
                 jq_Class c = (jq_Class) o;
                 jq_StaticField[] sfs = c.getDeclaredStaticFields();
@@ -44,9 +46,10 @@ public class ScanStatics {
     static boolean validateRefs() {
         boolean result = true;
         // todo: other classloaders?
-        Collection/*<jq_Type>*/ types = PrimordialClassLoader.loader.getAllTypes();
-        for (Iterator i=types.iterator(); i.hasNext(); ) {
-            Object o = i.next();
+        jq_Type[] types = PrimordialClassLoader.loader.getAllTypes();
+        int num = PrimordialClassLoader.loader.getNumTypes();
+        for (int i = 0; i < num; ++i) {
+            Object o = types[i];
             if (o instanceof jq_Class) {
                 jq_Class c = (jq_Class) o;
                 jq_StaticField[] sfs = c.getStaticFields();
@@ -73,9 +76,10 @@ public class ScanStatics {
     static boolean validateRefs(int depth) {
         boolean result = true;
         // todo: other classloaders?
-        Collection/*<jq_Type>*/ types = PrimordialClassLoader.loader.getAllTypes();
-        for (Iterator i=types.iterator(); i.hasNext(); ) {
-            Object o = i.next();
+        jq_Type[] types = PrimordialClassLoader.loader.getAllTypes();
+        int num = PrimordialClassLoader.loader.getNumTypes();
+        for (int i = 0; i < num; ++i) {
+            Object o = types[i];
             if (o instanceof jq_Class) {
                 jq_Class c = (jq_Class) o;
                 jq_StaticField[] sfs = c.getStaticFields();
@@ -101,9 +105,10 @@ public class ScanStatics {
 
     static void dumpRefs(int start, int count) {
         // todo: other classloaders?
-        Collection/*<jq_Type>*/ types = PrimordialClassLoader.loader.getAllTypes();
-        for (Iterator i=types.iterator(); i.hasNext(); ) {
-            Object o = i.next();
+        jq_Type[] types = PrimordialClassLoader.loader.getAllTypes();
+        int num = PrimordialClassLoader.loader.getNumTypes();
+        for (int i = 0; i < num; ++i) {
+            Object o = types[i];
             if (o instanceof jq_Class) {
                 jq_Class c = (jq_Class) o;
                 jq_StaticField[] sfs = c.getStaticFields();

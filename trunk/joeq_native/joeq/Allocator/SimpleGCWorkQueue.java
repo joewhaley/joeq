@@ -3,7 +3,6 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Allocator;
 
-import joeq.Memory.Address;
 import joeq.Memory.HeapAddress;
 import joeq.Runtime.SystemInterface;
 import joeq.Util.Assert;
@@ -18,8 +17,8 @@ public class SimpleGCWorkQueue {
     
     public static int WORKQUEUE_SIZE = 65536;
     
-    Address queueStart, queueEnd;
-    Address blockStart, blockEnd;
+    HeapAddress queueStart, queueEnd;
+    HeapAddress blockStart, blockEnd;
     
     /**
      * 
@@ -37,7 +36,7 @@ public class SimpleGCWorkQueue {
     
     public void growQueue(int newSize) {
         // todo: use realloc here.
-        Address new_queue = SystemInterface.syscalloc(newSize);
+        HeapAddress new_queue = (HeapAddress) SystemInterface.syscalloc(newSize);
         if (new_queue.isNull())
             HeapAllocator.outOfMemory();
         int size = queueEnd.difference(queueStart);
@@ -53,8 +52,8 @@ public class SimpleGCWorkQueue {
         }
         SystemInterface.sysfree(blockStart);
         queueStart = blockStart = new_queue;
-        blockEnd = blockStart.offset(newSize);
-        queueEnd = queueStart.offset(size);
+        blockEnd = (HeapAddress) blockStart.offset(newSize);
+        queueEnd = (HeapAddress) queueStart.offset(size);
     }
     
     public int size() {
@@ -97,7 +96,7 @@ public class SimpleGCWorkQueue {
             growQueue(size);
         }
         queueEnd.poke(a);
-        queueEnd = queueEnd.offset(HeapAddress.size());
+        queueEnd = (HeapAddress) queueEnd.offset(HeapAddress.size());
         if (queueEnd.difference(blockEnd) == 0) {
             queueEnd = blockStart;
         }
@@ -108,7 +107,7 @@ public class SimpleGCWorkQueue {
     public Object pull() {
         if (queueEnd.difference(queueStart) == 0) return null;
         HeapAddress a = (HeapAddress) queueStart.peek();
-        queueStart = queueStart.offset(HeapAddress.size());
+        queueStart = (HeapAddress) queueStart.offset(HeapAddress.size());
         if (queueStart.difference(blockEnd) == 0) {
             queueStart = blockStart;
         }

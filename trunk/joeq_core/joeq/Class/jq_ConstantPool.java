@@ -597,7 +597,6 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
                 Object o = e.getKey();
                 char index = ((Character)e.getValue()).charValue();
                 ++j; Assert._assert(index == j, (int)index + "!=" + (int)j);
-                //System.out.println("CP Entry "+j+": "+o);
                 newcp.constant_pool[j] = o;
                 if (o instanceof Utf8) {
                     newcp.constant_pool_tags[j] = CONSTANT_Utf8;
@@ -626,7 +625,7 @@ public class jq_ConstantPool implements jq_ClassFileConstants {
                 } else if (o instanceof jq_StaticField) {
                     newcp.constant_pool_tags[j] = CONSTANT_ResolvedSFieldRef;
                 } else {
-                    Assert.UNREACHABLE(o.toString());
+                    Assert.UNREACHABLE("CP Entry "+j+": "+o);
                 }
             }
             return newcp;

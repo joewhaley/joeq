@@ -17,8 +17,8 @@
 
 #include <windows.h>
 #include <io.h>
-//#if !defined(__CYGWIN32__)	// cygwin doesn't have this file
-#include <direct.h>		// _getdcwd, _getdrive, _mkdir
+//#if !defined(__CYGWIN32__)    // cygwin doesn't have this file
+#include <direct.h>     // _getdcwd, _getdrive, _mkdir
 //#endif
 
 
@@ -85,15 +85,15 @@
 #include "handler.h"
 
 typedef struct _Thread {
-	CONTEXT* registers;
-	int thread_switch_enabled;
-        struct _NativeThread* native_thread;
+    CONTEXT* registers;
+    int thread_switch_enabled;
+    struct _NativeThread* native_thread;
 } Thread;
 
 typedef struct _NativeThread {
-	int thread_handle;
-	Thread* currentThread;
-        int pid;
+    int thread_handle;
+    Thread* currentThread;
+    int pid;
 } NativeThread;
 
 void __stdcall trap_handler(int);
