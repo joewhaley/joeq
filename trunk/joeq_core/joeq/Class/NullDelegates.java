@@ -23,6 +23,9 @@ abstract class NullDelegates {
     static class CompiledCode implements jq_CompiledCode.Delegate {
 	public final void patchDirectBindCalls (Iterator i) { }
 	public final void patchDirectBindCalls (Iterator i, jq_Method m, jq_CompiledCode cc) { }
+	public final Iterator getCompiledMethods () { 
+	    return new java.util.LinkedList().iterator();
+	}
     }
 
     static class Klass implements jq_Class.Delegate {
