@@ -1,5 +1,3 @@
 .source_list
 bootclasspath
-callgraph
-callgraph.dot
-pa.*
+*.class
