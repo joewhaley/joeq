@@ -127,6 +127,7 @@ Ljava/lang/reflect/Array;
 Ljava/lang/reflect/Constructor;
 Ljava/lang/reflect/InvocationTargetException;
 Ljava/lang/reflect/Method;
+Ljava/lang/reflect/Modifier;
 Ljava/lang/reflect/Field;
 Ljava/lang/reflect/ReflectPermission;
 Ljava/lang/SecurityManager;
