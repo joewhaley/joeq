@@ -3,11 +3,13 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Runtime;
 
+import jwutil.util.Assert;
+
 /**
  * @author  Michael Martin <mcmartin@stanford.edu>
  * @version $Id$
  */
-public class DebugImpl implements Debug.Delegate {
+public class DebugImpl implements Debug.Delegate, Assert.DebugDelegate {
 
     public void write(byte[] msg, int size) {
         SystemInterface.debugwrite(msg, size);
