@@ -101,12 +101,12 @@ public class GenRelations {
             e2.printStackTrace();
             return null;
         } catch (InvocationTargetException e2) {
-            if (e2.getCause() instanceof RuntimeException)
-                throw (RuntimeException) e2.getCause();
-            if (e2.getCause() instanceof Error)
-                throw (Error) e2.getCause();
+            if (e2.getTargetException() instanceof RuntimeException)
+                throw (RuntimeException) e2.getTargetException();
+            if (e2.getTargetException() instanceof Error)
+                throw (Error) e2.getTargetException();
             System.err.println("Unexpected exception thrown!");
-            e2.getCause().printStackTrace();
+            e2.getTargetException().printStackTrace();
             return null;
         }
         return result;
