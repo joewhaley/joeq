@@ -67,7 +67,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
     IndexMap regMap;
     IndexMap memberMap;
     
-    int quadBits = 14, opBits = 8, regBits = 13, constantBits = 32, memberBits = 11;    
+    int quadBits = 18, opBits = 8, regBits = 16, constantBits = 32, memberBits = 13;    
 
     BDDFactory bdd;
     BDDDomain quad, opc, dest, src1, src2, constant, fallthrough, target, member;
@@ -90,6 +90,8 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         target = makeDomain("target", quadBits);
         member = makeDomain("member", memberBits);
         allQuads = bdd.zero();
+        int [] varOrder = bdd.makeVarOrdering(true, "constant_quadxtargetxfallthrough_destxsrc1xsrc2_member_opc");
+        bdd.setVarOrder(varOrder);
     }
     
     void handleTarget(TargetOperand top) {
@@ -416,11 +418,24 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
             //printQuad(currentQuad);
             allQuads.orWith(currentQuad);
         }
+        
+        System.out.println("Method: " + cfg.getMethod() + ", node count: " + allQuads.nodeCount());
+    }
+    
+    public String toString() {
+        System.out.println("BuildBDDIR, node count: " + allQuads.nodeCount());
+        
+        System.out.println("opMap size: " + opMap.size());
+        System.out.println("quadMap size: " + quadMap.size());
+        System.out.println("regMap size: " + regMap.size());
+        System.out.println("memberMap size: " + memberMap.size());
+        
         try {
             //print();
             dump();
         } catch (IOException x) {
         }
+        return ("BuildBDDIR, node count: " + allQuads.nodeCount());
     }
     
     void handleQuad(Quad q) {
@@ -460,7 +475,7 @@ public class BuildBDDIR extends QuadVisitor.EmptyVisitor implements ControlFlowG
         currentQuad.andWith(dest.ithVar(destID));
         currentQuad.andWith(src1.ithVar(src1ID));
         currentQuad.andWith(src2.ithVar(src2ID));
-        currentQuad.andWith(constant.ithVar(constantID));
+        currentQuad.andWith(constant.ithVar(((long)constantID) & 0xFFFFFFFFL));
         //currentQuad.andWith(fallthrough.ithVar(fallthroughID));
         currentQuad.andWith(target.ithVar(targetID));
         currentQuad.andWith(member.ithVar(memberID));
