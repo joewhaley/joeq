@@ -3,7 +3,7 @@
  *
  * Created on January 9, 2002, 9:17 AM
  *
- * @author  Administrator
+ * @author  John Whaley
  * @version 
  */
 
@@ -56,6 +56,7 @@ public abstract class Driver {
 
     static List classesToProcess = new LinkedList();
     static boolean trace_bb = false;
+    static boolean trace_cfg = false;
     static boolean trace_method = false;
     static boolean trace_type = false;
     
@@ -68,6 +69,8 @@ public abstract class Driver {
                 String which = commandBuffer[++index];
                 if (which.equalsIgnoreCase("bb")) {
                     trace_bb = true;
+                } else if (which.equalsIgnoreCase("cfg")) {
+                    trace_cfg = true;
                 } else if (which.equalsIgnoreCase("method")) {
                     trace_method = true;
                 } else if (which.equalsIgnoreCase("type")) {
@@ -109,9 +112,21 @@ public abstract class Driver {
                 try {
                     jq_Class c = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType(className);
                     c.load(); c.verify(); c.prepare(); c.sf_initialize(); c.cls_initialize();
-                    jq_Method m = c.getStaticMethod(new jq_NameAndDesc(Utf8.get(methodName), Utf8.get("()V")));
+                    jq_StaticMethod m = null;
+                    Utf8 rootm_name = Utf8.get(methodName);
+                    for(Iterator it = java.util.Arrays.asList(c.getDeclaredStaticMethods()).iterator();
+                        it.hasNext(); ) {
+                        jq_StaticMethod sm = (jq_StaticMethod)it.next();
+                        if (sm.getName() == rootm_name) {
+                            m = sm;
+                            break;
+                        }
+                    }
                     if (m != null) {
-                        Interpreter.QuadInterpreter.State s = Interpreter.QuadInterpreter.State.interpretMethod(m, null);
+                        Object[] args = new Object[m.getParamTypes().length];
+                        index = parseMethodArgs(args, m.getParamTypes(), commandBuffer, index);
+                        Interpreter.QuadInterpreter.State s = Interpreter.QuadInterpreter.State.interpretMethod(m, args);
+                        System.out.flush();
                         System.out.println("Result of interpretation: "+s);
                     } else {
                         System.err.println("Class "+fullName.substring(0, b-1)+" doesn't contain a void static no-argument method with name "+methodName);
@@ -184,9 +199,9 @@ public abstract class Driver {
                                     }
                                     bbv = new QuadVisitor.AllQuadVisitor(qv, trace_bb);
                                 }
-                                cfgv = new BasicBlockVisitor.AllBasicBlockVisitor(bbv, trace_method);
+                                cfgv = new BasicBlockVisitor.AllBasicBlockVisitor(bbv, trace_cfg);
                             }
-                            mv = new ControlFlowGraphVisitor.CodeCacheVisitor(cfgv, false);
+                            mv = new ControlFlowGraphVisitor.CodeCacheVisitor(cfgv, trace_method);
                         }
                         cv = new jq_MethodVisitor.DeclaredMethodVisitor(mv, trace_type);
                     }
@@ -233,4 +248,89 @@ public abstract class Driver {
         return desc;
     }
     
+    public static int parseMethodArgs(Object[] args, jq_Type[] paramTypes, String[] s_args, int j) {
+        try {
+            for (int i=0, m=0; i<paramTypes.length; ++i, ++m) {
+                if (paramTypes[i] == PrimordialClassLoader.loader.getJavaLangString())
+                    args[m] = s_args[++j];
+                else if (paramTypes[i] == jq_Primitive.BOOLEAN)
+                    args[m] = Boolean.valueOf(s_args[++j]);
+                else if (paramTypes[i] == jq_Primitive.BYTE)
+                    args[m] = Byte.valueOf(s_args[++j]);
+                else if (paramTypes[i] == jq_Primitive.SHORT)
+                    args[m] = Short.valueOf(s_args[++j]);
+                else if (paramTypes[i] == jq_Primitive.CHAR)
+                    args[m] = new Character(s_args[++j].charAt(0));
+                else if (paramTypes[i] == jq_Primitive.INT)
+                    args[m] = Integer.valueOf(s_args[++j]);
+                else if (paramTypes[i] == jq_Primitive.LONG) {
+                    args[m] = Long.valueOf(s_args[++j]);
+                    //if (argsSize != paramTypes.length) ++m;
+                } else if (paramTypes[i] == jq_Primitive.FLOAT)
+                    args[m] = Float.valueOf(s_args[++j]);
+                else if (paramTypes[i] == jq_Primitive.DOUBLE) {
+                    args[m] = Double.valueOf(s_args[++j]);
+                    //if (argsSize != paramTypes.length) ++m;
+                } else if (paramTypes[i].isArrayType()) {
+                    if (!s_args[++j].equals("{")) 
+                        jq.UNREACHABLE("array parameter doesn't start with {");
+                    int count=0;
+                    while (!s_args[++j].equals("}")) ++count;
+                    jq_Type elementType = ((jq_Array)paramTypes[i]).getElementType();
+                    if (elementType == PrimordialClassLoader.loader.getJavaLangString()) {
+                        String[] array = new String[count];
+                        for (int k=0; k<count; ++k)
+                            array[k] = s_args[j-count+k];
+                        args[m] = array;
+                    } else if (elementType == jq_Primitive.BOOLEAN) {
+                        boolean[] array = new boolean[count];
+                        for (int k=0; k<count; ++k)
+                            array[k] = Boolean.valueOf(s_args[j-count+k]).booleanValue();
+                        args[m] = array;
+                    } else if (elementType == jq_Primitive.BYTE) {
+                        byte[] array = new byte[count];
+                        for (int k=0; k<count; ++k)
+                            array[k] = Byte.parseByte(s_args[j-count+k]);
+                        args[m] = array;
+                    } else if (elementType == jq_Primitive.SHORT) {
+                        short[] array = new short[count];
+                        for (int k=0; k<count; ++k)
+                            array[k] = Short.parseShort(s_args[j-count+k]);
+                        args[m] = array;
+                    } else if (elementType == jq_Primitive.CHAR) {
+                        char[] array = new char[count];
+                        for (int k=0; k<count; ++k)
+                            array[k] = s_args[j-count+k].charAt(0);
+                        args[m] = array;
+                    } else if (elementType == jq_Primitive.INT) {
+                        int[] array = new int[count];
+                        for (int k=0; k<count; ++k)
+                            array[k] = Integer.parseInt(s_args[j-count+k]);
+                        args[m] = array;
+                    } else if (elementType == jq_Primitive.LONG) {
+                        long[] array = new long[count];
+                        for (int k=0; k<count; ++k)
+                            array[k] = Long.parseLong(s_args[j-count+k]);
+                        args[m] = array;
+                    } else if (elementType == jq_Primitive.FLOAT) {
+                        float[] array = new float[count];
+                        for (int k=0; k<count; ++k)
+                            array[k] = Float.parseFloat(s_args[j-count+k]);
+                        args[m] = array;
+                    } else if (elementType == jq_Primitive.DOUBLE) {
+                        double[] array = new double[count];
+                        for (int k=0; k<count; ++k)
+                            array[k] = Double.parseDouble(s_args[j-count+k]);
+                        args[m] = array;
+                    } else
+                        jq.UNREACHABLE("Parsing an argument of type "+paramTypes[i]+" is not implemented");
+                } else
+                    jq.UNREACHABLE("Parsing an argument of type "+paramTypes[i]+" is not implemented");
+            }
+        } catch (ArrayIndexOutOfBoundsException x) {
+            x.printStackTrace();
+            jq.UNREACHABLE("not enough method arguments");
+        }
+        return j;
+    }
 }
