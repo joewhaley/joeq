@@ -108,7 +108,7 @@ public class CSPA {
     public static boolean BREAK_RECURSION = false;
     
     public static final boolean CONTEXT_SENSITIVE = true;
-    public static final boolean CONTEXT_SENSITIVE_HEAP = true;
+    public static final boolean CONTEXT_SENSITIVE_HEAP = false;
     
     public static boolean NUKE_OLD_FILES = false; // if true, will ignore
                                                   // existing files and always create new ones.
@@ -286,7 +286,8 @@ public class CSPA {
         dis.initializeBDD(DEFAULT_NODE_COUNT, DEFAULT_CACHE_SIZE);
         
         // build correspondence map between var contexts and heap contexts
-        dis.buildVarHeapCorrespondence();
+        if (CONTEXT_SENSITIVE_HEAP)
+            dis.buildVarHeapCorrespondence();
 
         // Add edges for existing globals.
         dis.addGlobals();
@@ -1088,6 +1089,10 @@ public class CSPA {
             else if (s.equals("H1c")) d = bdd.getDomain(6);
             else if (s.equals("H2o")) d = bdd.getDomain(7);
             else if (s.equals("H2c")) d = bdd.getDomain(8);
+            else if (s.equals("V3o")) d = bdd.getDomain(9);
+            else if (s.equals("V3c")) d = bdd.getDomain(10);
+            else if (s.equals("H3o")) d = bdd.getDomain(11);
+            else if (s.equals("H3c")) d = bdd.getDomain(12);
             else {
                 Assert.UNREACHABLE("bad domain: "+s);
                 return null;
@@ -1368,7 +1373,12 @@ public class CSPA {
         
         time = System.currentTimeMillis();
         
-        v1ch1c = (BDD) V1H1correspondence.get(ms.getMethod());
+        if (CONTEXT_SENSITIVE_HEAP) {
+            v1ch1c = (BDD) V1H1correspondence.get(ms.getMethod());
+        } else {
+            v1ch1c = V1c.varRange(0, npaths_vars-1);
+            v1ch1c.andWith(H1c.ithVar(0));
+        }
         BDD t1;
         if (!bms.m_pointsTo.isZero()) {
             t1 = bms.m_pointsTo.id();

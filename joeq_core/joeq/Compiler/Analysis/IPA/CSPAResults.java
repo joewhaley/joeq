@@ -348,8 +348,62 @@ public class CSPAResults {
         }
         time = System.currentTimeMillis() - time;
         System.out.println("done. ("+time/1000.+" seconds, "+accessibleLocations.nodeCount()+" nodes)");
+        for (Iterator i = sccToVars.values().iterator(); i.hasNext(); ) {
+            BDD b = (BDD) i.next();
+            b.free();
+        }
     }
 
+    public int countMod() {
+        int mod = 0, exception = 0, total = 0;
+        for (Iterator i = methodToVariables.keySet().iterator(); i.hasNext(); ) {
+            int n_mods = 0;
+            jq_Method m = (jq_Method) i.next();
+            if (m != null) {
+                System.out.print("Method "+m.getName()+"(): ");
+            } else {
+                System.out.print("Method null: ");
+            }
+            Collection c = methodToVariables.getValues(m);
+            boolean only_exception = true;
+            if (c.isEmpty()) {
+            } else {
+                Node n = (Node) c.iterator().next();
+                int k = getVariableIndex(n);
+                TypedBDD res = findMod(new TypedBDD(V1o.ithVar(k), V1o));
+                n_mods = (int) res.satCount();
+                
+                BDD f = res.bdd.exist(H1c.set().and(H1o.set()));
+                TypedBDD f2 = new TypedBDD(f, FD);
+                for (Iterator j = f2.iterator(); j.hasNext(); ) {
+                    int z = ((Integer) j.next()).intValue();
+                    jq_Field field = getField(z);
+                    if (field == null) {
+                        only_exception = false;
+                    } else {
+                        jq_Class cl = field.getDeclaringClass();
+                        cl.prepare(); PrimordialClassLoader.getJavaLangThrowable().prepare();
+                        if (!cl.isSubtypeOf(PrimordialClassLoader.getJavaLangThrowable())) {
+                            only_exception = false;
+                        }
+                    }
+                }
+                if (only_exception && n_mods != 0)
+                    System.out.print(" (only exceptions) ");
+            }
+            System.out.println(n_mods+" mods");
+            if (n_mods != 0) {
+                ++mod;
+                if (only_exception) ++exception;
+            }
+            ++total;
+        }
+        System.out.println("Mod: "+mod);
+        System.out.println("Exception: "+exception);
+        System.out.println("Total: "+total);
+        return mod;
+    }
+    
     public TypedBDD findMod(TypedBDD bdd1) {
         BDD V1set = V1c.set(); V1set.andWith(V1o.set());
         BDDPairing V2ToV1 = bdd.makePair();
@@ -900,8 +954,12 @@ public class CSPAResults {
         this.stores = bdd.load(fn+".stores");
         System.out.print(", stores "+this.stores.nodeCount()+" nodes");
         this.loads = bdd.load(fn+".loads");
-        System.out.print(", loads "+this.stores.nodeCount()+" nodes");
+        System.out.print(", loads "+this.loads.nodeCount()+" nodes");
         System.out.println(", done.");
+        
+        System.out.print("Adding extra domains and reordering...");
+        this.addExtraDomains();
+        System.out.println("done.");
         
         this.returned = new HashSet();
         this.thrown = new HashSet();
@@ -925,7 +983,7 @@ public class CSPAResults {
 
         initializeMethodMap();
         
-        buildAccessibleLocations();
+        //buildAccessibleLocations();
     }
 
     private void buildContextInsensitive() {
@@ -935,15 +993,17 @@ public class CSPAResults {
         context.free();
     }
 
+    int VARBITS, HEAPBITS, FIELDBITS, CLASSBITS, VARCONTEXTBITS, HEAPCONTEXTBITS;
+
     private void readConfig(DataInput in) throws IOException {
         String s = in.readLine();
         StringTokenizer st = new StringTokenizer(s);
-        int VARBITS = Integer.parseInt(st.nextToken());
-        int HEAPBITS = Integer.parseInt(st.nextToken());
-        int FIELDBITS = Integer.parseInt(st.nextToken());
-        int CLASSBITS = Integer.parseInt(st.nextToken());
-        int VARCONTEXTBITS = Integer.parseInt(st.nextToken());
-        int HEAPCONTEXTBITS = Integer.parseInt(st.nextToken());
+        VARBITS = Integer.parseInt(st.nextToken());
+        HEAPBITS = Integer.parseInt(st.nextToken());
+        FIELDBITS = Integer.parseInt(st.nextToken());
+        CLASSBITS = Integer.parseInt(st.nextToken());
+        VARCONTEXTBITS = Integer.parseInt(st.nextToken());
+        HEAPCONTEXTBITS = Integer.parseInt(st.nextToken());
         int[] domainBits;
         int[] domainSpos;
         BDDDomain[] bdd_domains;
@@ -978,18 +1038,38 @@ public class CSPAResults {
                                               reverseLocal, ordering);
         bdd.setVarOrder(varorder);
         bdd.enableReorder();
-        
+    }
+    
+    private void addExtraDomains() throws IOException {
         long[] domains2 = new long[4];
-        domains2[0] = 1L << VARBITS;
-        domains2[1] = 1L << VARCONTEXTBITS;
-        domains2[2] = 1L << HEAPBITS;
-        domains2[3] = 1L << HEAPCONTEXTBITS;
+        domains2[0] = 1 << VARBITS;
+        domains2[1] = 1 << VARCONTEXTBITS;
+        domains2[2] = 1 << HEAPBITS;
+        domains2[3] = 1 << HEAPCONTEXTBITS;
         BDDDomain[] bdd_domains2 = bdd.extDomain(domains2);
+        
+        int[] domainBits;
+        int[] domainSpos;
+        domainBits = new int[] {VARBITS, VARCONTEXTBITS,
+                                VARBITS, VARCONTEXTBITS,
+                                FIELDBITS,
+                                HEAPBITS, HEAPCONTEXTBITS,
+                                HEAPBITS, HEAPCONTEXTBITS,
+                                VARBITS, VARCONTEXTBITS,
+                                HEAPBITS, HEAPCONTEXTBITS};
+        domainSpos = new int[domainBits.length];
         
         V3o = bdd_domains2[0];
         V3c = bdd_domains2[1];
         H3o = bdd_domains2[2];
         H3c = bdd_domains2[3];
+        
+        boolean reverseLocal = System.getProperty("bddreverse", "true").equals("true");
+        String ordering = System.getProperty("bddordering", "FD_V3oxV2oxV1o_V3cxV2cxV1c_H3c_H3o_H2c_H2o_H1c_H1o");
+        int[] varorder = CSPA.makeVarOrdering(bdd, domainBits, domainSpos,
+                                              reverseLocal, ordering);
+        bdd.setVarOrder(varorder);
+        bdd.enableReorder();
     }
     
     private IndexMap readIndexMap(String name, DataInput in) throws IOException {
@@ -1898,10 +1978,16 @@ public class CSPAResults {
                     escapeAnalysis();
                     increaseCount = false;
                 } else if (command.equals("mod")) {
+                    if (accessibleLocations == null) buildAccessibleLocations();
                     TypedBDD bdd1 = parseBDD(results, st.nextToken());
                     TypedBDD bdd = findMod(bdd1);
                     results.add(bdd);
+                } else if (command.equals("countmod")) {
+                    if (accessibleLocations == null) buildAccessibleLocations();
+                    countMod();
+                    increaseCount = false;
                 } else if (command.equals("ref")) {
+                    if (accessibleLocations == null) buildAccessibleLocations();
                     TypedBDD bdd1 = parseBDD(results, st.nextToken());
                     TypedBDD bdd = findRef(bdd1);
                     results.add(bdd);

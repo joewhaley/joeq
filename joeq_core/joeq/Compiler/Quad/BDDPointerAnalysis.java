@@ -1517,8 +1517,9 @@ public class BDDPointerAnalysis {
 
     private void dumpConfig(DataOutput out) throws IOException {
         int CLASSBITS = 1;
-        int CONTEXTBITS = 1;
-        out.writeBytes(VARBITS+" "+HEAPBITS+" "+FIELDBITS+" "+CLASSBITS+" "+CONTEXTBITS+"\n");
+        int VARCONTEXTBITS = 1;
+        int HEAPCONTEXTBITS = 1;
+        out.writeBytes(VARBITS+" "+HEAPBITS+" "+FIELDBITS+" "+CLASSBITS+" "+VARCONTEXTBITS+" "+HEAPCONTEXTBITS+"\n");
         String ordering = "FD_H2cxH2o_V2cxV1cxV2oxV1o_H1cxH1o";
         out.writeBytes(ordering+"\n");
     }
