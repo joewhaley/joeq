@@ -69,6 +69,25 @@ public abstract class Driver {
     static boolean trace_type = false;
     
     static Class interpreterClass;
+
+    private static void addClassesInPackage(String pkgName, boolean recursive) {
+	String canonicalPackageName = pkgName.replace('.','/');
+	if (!canonicalPackageName.endsWith("/")) canonicalPackageName += '/';
+	Iterator i = PrimordialClassLoader.loader.listPackage(canonicalPackageName, recursive);
+	if (!i.hasNext()) {
+	    System.err.println("Package "+canonicalPackageName+" not found.");
+	}
+	while (i.hasNext()) {
+	    String canonicalClassName = canonicalizeClassName((String)i.next());
+	    try {
+		jq_Class c = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType(canonicalClassName);
+		c.load();
+		classesToProcess.add(c);
+	    } catch (NoClassDefFoundError x) {
+		System.err.println("Package "+pkgName+": Class not found (canonical name "+canonicalClassName+").");
+	    }
+	}
+    }
     
     public static int processCommand(String[] commandBuffer, int index) {
         try {
@@ -101,22 +120,9 @@ public abstract class Driver {
                     System.err.println("Class "+commandBuffer[index]+" (canonical name "+canonicalClassName+") not found.");
                 }
             } else if (commandBuffer[index].equalsIgnoreCase("package")) {
-                String canonicalPackageName = commandBuffer[++index].replace('.','/');
-                if (!canonicalPackageName.endsWith("/")) canonicalPackageName += '/';
-                Iterator i = PrimordialClassLoader.loader.listPackage(canonicalPackageName);
-                if (!i.hasNext()) {
-                    System.err.println("Package "+canonicalPackageName+" not found.");
-                }
-                while (i.hasNext()) {
-                    String canonicalClassName = canonicalizeClassName((String)i.next());
-                    try {
-                        jq_Class c = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType(canonicalClassName);
-                        c.load();
-                        classesToProcess.add(c);
-                    } catch (NoClassDefFoundError x) {
-                        System.err.println("Class "+commandBuffer[index]+" (canonical name "+canonicalClassName+") not found.");
-                    }
-                }
+		addClassesInPackage(commandBuffer[++index], /*recursive=*/false);
+            } else if (commandBuffer[index].equalsIgnoreCase("packages")) {
+		addClassesInPackage(commandBuffer[++index], /*recursive=*/true);
             } else if (commandBuffer[index].equalsIgnoreCase("setinterpreter")) {
                 String interpreterClassName = commandBuffer[++index];
                 try {
