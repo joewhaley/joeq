@@ -1,6 +1,9 @@
 
 #include "StdAfx.h"
 
+int trace_exceptions = 0;
+int trap_on_exceptions = 0;
+
 #if defined(WIN32)
 
 EXCEPTION_DISPOSITION hardwareExceptionHandler(EXCEPTION_RECORD *exceptionRecord,
@@ -34,12 +37,20 @@ EXCEPTION_DISPOSITION hardwareExceptionHandler(EXCEPTION_RECORD *exceptionRecord
 
     // push arguments
     esp = (DWORD*)contextRecord->Esp;
+    if (trace_exceptions) {
+        printf("Hardware exception occurred at eip=0x%p, code=%d, java_code=%d\n", eip, ex_code, java_ex_code);
+    }
+    
     *--esp = (DWORD)java_ex_code;
     *--esp = (DWORD)eip;
     contextRecord->Esp = (DWORD)esp;
-
-    // resume execution at java trap handler
-    contextRecord->Eip = (DWORD)trap_handler;
+    if (trap_on_exceptions) {
+        // resume execution at internal debugger
+        contextRecord->Eip = (DWORD)debug_trap_handler;
+    } else {
+        // resume execution at java trap handler
+        contextRecord->Eip = (DWORD)trap_handler;
+    }
     return ExceptionContinueExecution;
 }
 
@@ -52,7 +63,7 @@ BOOL WINAPI windows_break_handler(DWORD dwCtrlType)
     return 0;
 }
 
-void installSignalHandler()
+void installSignalHandler(void)
 {
     // exception handler is done in main()
 
@@ -98,8 +109,13 @@ void hardwareExceptionHandler(int signo, siginfo_t *si, void *context)
     *--esp = (int)eip;
     sc->esp = (int)esp;
 
-    // resume execution at java trap handler
-    sc->eip = (int)trap_handler;
+    if (trap_on_exceptions) {
+        // resume execution at internal debugger
+        sc->eip = (int)debug_trap_handler;
+    } else {
+        // resume execution at java trap handler
+        sc->eip = (int)trap_handler;
+    }
     return;
 }
 

@@ -95,6 +95,7 @@ typedef struct _NativeThread {
         int pid;
 } NativeThread;
 
-void __stdcall trap_handler(void*, int);
+void __stdcall trap_handler(int);
+void __stdcall debug_trap_handler(int);
 void __stdcall ctrl_break_handler();
 void __stdcall threadSwitch(void*);
