@@ -29,7 +29,7 @@ public class GenerateWebRoots {
     private static PrintStream out = System.out;
 
     public static void main(String[] args) throws FileNotFoundException {
-        String inputFile  = "web.xml";
+        String inputFile  = null;
         String outputFile = null; //"InvokeServlets.java";
         
         for(int i = 0; i < args.length; i++){
