@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 import Bootstrap.PrimordialClassLoader;
 import Clazz.jq_Class;
@@ -156,13 +157,17 @@ class ClassHierarchy {
     }
     
     public void printHierarchy() {
-        if(_nodes.size() == 0) return;
+        if(size() <= 0) return;
         Assert._assert(_root != null);
         
-        System.out.println("Printing a hierarchy of size " + _nodes.size() + " rooted at " + _root);
+        System.out.println("Printing a hierarchy of size " + size() + " rooted at " + _root);
         printHierarchyAux(_root, "");
     }
     
+    private int size() {
+        return _nodes.size() - 1;
+    }
+
     private void printHierarchyAux(ClassHieraryNode node, String string) {        
         System.out.print(string + node.toLongString());
         System.out.println(node.getChildCount() == 0 ? "" : (" " + node.getChildCount()));
@@ -238,9 +243,11 @@ public class FindCollectionImplementations {
     
     public FindCollectionImplementations(Iterator i) {
         Collection roots = new LinkedList();
+        Collection root_classes = new LinkedList();
         while(i.hasNext()) {
             jq_Class c = (jq_Class) jq_Type.parseType((String)i.next());
             c.load();
+            root_classes.add(c);
 
             roots.addAll(Arrays.asList(c.getDeclaredStaticMethods()));
         }
@@ -256,7 +263,7 @@ public class FindCollectionImplementations {
         
         time = System.currentTimeMillis() - time;
         System.out.println("done. ("+(time/1000.)+" seconds)");
-        _classes = getClasses(_cg.getAllMethods());
+        _classes = filter(getClasses(_cg.getAllMethods()), root_classes);
         
         System.out.println("Considering classes: " + _classes);
         
@@ -272,6 +279,30 @@ public class FindCollectionImplementations {
         Assert._assert(_iteratorClass  != null);
     }
     
+    private Set filter(Set classes, Collection roots) {
+        Set prefixes = new HashSet();
+        for(Iterator iter = roots.iterator(); iter.hasNext();) {
+            jq_Class root  = (jq_Class)iter.next();
+            StringTokenizer t = new StringTokenizer(root.getJDKDesc(), ".");
+            String prefix = t.nextToken();
+            prefixes.add(prefix);
+        }
+        System.out.println("Recognized prefixes: " + prefixes);
+        
+        Set result = new HashSet();
+        for(Iterator iter = classes.iterator(); iter.hasNext();) {
+            jq_Class c          = (jq_Class)iter.next();
+            StringTokenizer t   = new StringTokenizer(c.getJDKDesc(), ".");
+            String prefix       = t.nextToken();
+            
+            if(prefixes.contains(prefix)) {
+                result.add(c);
+            }
+        }
+        
+        return result;
+    }
+
     private void findCollections() {      
         for(Iterator iter = _classes.iterator(); iter.hasNext(); ) {
             jq_Class c = (jq_Class)iter.next();
