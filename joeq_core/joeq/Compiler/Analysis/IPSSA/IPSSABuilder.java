@@ -255,16 +255,16 @@ public class IPSSABuilder implements ControlFlowGraphVisitor {
 			}
 			
 			private void processStore(Quad quad) {
-				Set set = _ptr.pointsTo(new QuadProgramLocation(_method, quad));
+				//Set set = _ptr.pointsTo(new QuadProgramLocation(_method, quad));
 				// We need to create SSABindings for evere location in the set
-				for(Iterator iter = set.iterator(); iter.hasNext();){
-					SSALocation loc = (SSALocation)iter.next();
-					
-					/*int count = */
-					addBinding(quad, loc, null, null);
-				} 
-				
-				print(quad);
+				//for(Iterator iter = set.iterator(); iter.hasNext();){
+				//	SSALocation loc = (SSALocation)iter.next();
+				//	
+				//	/*int count = */
+				//	addBinding(quad, loc, null, null);
+				//} 
+				//
+				//print(quad);
 			}
 			/** A put instance field instruction. */
 			public void visitPutfield(Quad obj) {
