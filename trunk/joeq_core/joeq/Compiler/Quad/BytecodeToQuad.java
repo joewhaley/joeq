@@ -19,6 +19,7 @@ import Clazz.jq_StaticField;
 import Clazz.jq_StaticMethod;
 import Clazz.jq_TryCatchBC;
 import Clazz.jq_Type;
+import Compil3r.CompilationState;
 import Compil3r.BytecodeAnalysis.BytecodeVisitor;
 import Compil3r.Quad.Operand.AConstOperand;
 import Compil3r.Quad.Operand.ConditionOperand;
@@ -69,7 +70,6 @@ import Memory.Address;
 import Memory.HeapAddress;
 import Memory.StackAddress;
 import Run_Time.Reflection;
-import Run_Time.TypeCheck;
 import UTF.Utf8;
 import Util.Assert;
 import Util.Strings;
@@ -106,7 +106,13 @@ public class BytecodeToQuad extends BytecodeVisitor {
     /** Initializes the conversion from bytecode to quad format for the given method.
      * @param  method the method to convert. */
     public BytecodeToQuad(jq_Method method) {
-        super(method);
+        this(CompilationState.DEFAULT, method);
+    }
+    
+    /** Initializes the conversion from bytecode to quad format for the given method.
+     * @param  method the method to convert. */
+    public BytecodeToQuad(CompilationState state, jq_Method method) {
+        super(state, method);
         TRACE = ALWAYS_TRACE;
     }
     
@@ -174,8 +180,8 @@ public class BytecodeToQuad extends BytecodeVisitor {
         }
 
         // initialize start state
-        this.start_states[2] = AbstractState.allocateInitialState(rf, method);
-        this.current_state = AbstractState.allocateEmptyState(method);
+        this.start_states[2] = allocateInitialState();
+        this.current_state = allocateEmptyState();
         
         regenerate = new LinkedList();
         visited = new boolean[quad_bbs.length];
@@ -285,7 +291,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
     private void saveStackIntoRegisters() {
         for (int i=0; i<current_state.getStackSize(); ++i) {
             Operand op = current_state.peekStack(i);
-            if (op instanceof AbstractState.DummyOperand) continue;
+            if (op instanceof DummyOperand) continue;
             if (op instanceof RegisterOperand) {
                 RegisterOperand rop = (RegisterOperand)op;
                 Register r = rf.getStack(current_state.getStackSize()-i-1, rop.getType());
@@ -649,7 +655,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         Quad q1 = Move.create(quad_cfg.getNewQuadID(), Move.getMoveOp(type1), t1, op1);
         appendQuad(q1);
         RegisterOperand t2 = null; jq_Type type2 = null;
-        if (op2 != AbstractState.DummyOperand.DUMMY) {
+        if (op2 != DummyOperand.DUMMY) {
             type2 = getTypeOf(op2);
             t2 = new RegisterOperand(rf.getNewStack(d+2, type2), type2);
             Quad q2 = Move.create(quad_cfg.getNewQuadID(), Move.getMoveOp(type2), t2, op2);
@@ -664,7 +670,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         appendQuad(q4);
         current_state.push(t4.copy(), type1);
         current_state.push(t3.copy(), type3);
-        if (op2 != AbstractState.DummyOperand.DUMMY)
+        if (op2 != DummyOperand.DUMMY)
             current_state.push(t2.copy(), type2);
         current_state.push(t1.copy(), type1);
     }
@@ -674,7 +680,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         Operand op2 = current_state.pop();
         int d = current_state.getStackSize();
         RegisterOperand t1 = null; jq_Type type1 = null;
-        if (op1 != AbstractState.DummyOperand.DUMMY) {
+        if (op1 != DummyOperand.DUMMY) {
             type1 = getTypeOf(op1);
             t1 = new RegisterOperand(rf.getNewStack(d+3, type1), type1);
             Quad q1 = Move.create(quad_cfg.getNewQuadID(), Move.getMoveOp(type1), t1, op1);
@@ -685,10 +691,10 @@ public class BytecodeToQuad extends BytecodeVisitor {
         Quad q2 = Move.create(quad_cfg.getNewQuadID(), Move.getMoveOp(type2), t2, op2);
         appendQuad(q2);
         current_state.push(t2.copy(), type2);
-        if (op1 != AbstractState.DummyOperand.DUMMY)
+        if (op1 != DummyOperand.DUMMY)
             current_state.push(t1.copy(), type1);
         current_state.push(op2.copy(), type2);
-        if (op1 != AbstractState.DummyOperand.DUMMY)
+        if (op1 != DummyOperand.DUMMY)
             current_state.push(op1.copy(), type1);
     }
     public void visitDUP2_x1() {
@@ -1164,7 +1170,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
             operator = Return.RETURN_P.INSTANCE;
             Assert._assert(t.isAddressType() ||
                       t == jq_Reference.jq_NullType.NULL_TYPE ||
-                      t.isSubtypeOf(Address._class), t.toString());
+                      state.isSubtype(t, Address._class) != NO, t.toString());
         } else {
             operator = t.isAddressType()?(Return)Return.RETURN_P.INSTANCE:Return.RETURN_A.INSTANCE;
         }
@@ -1180,8 +1186,8 @@ public class BytecodeToQuad extends BytecodeVisitor {
         current_state.clearStack();
     }
     private void GETSTATIChelper(jq_StaticField f, Getstatic oper1, Getstatic oper2) {
-        boolean dynlink = f.needsDynamicLink(method);
-        if (!dynlink) try { f = resolve(f); } catch (Error e) { }
+        f = tryResolve(f);
+        boolean dynlink = state.needsDynamicLink(method, f);
         Getstatic operator = dynlink?oper1:oper2;
         jq_Type t = f.getType();
         RegisterOperand op0 = getStackRegister(t);
@@ -1228,8 +1234,8 @@ public class BytecodeToQuad extends BytecodeVisitor {
         GETSTATIChelper(f, Getstatic.GETSTATIC_S_DYNLINK.INSTANCE, Getstatic.GETSTATIC_S.INSTANCE);
     }
     private void PUTSTATIChelper(jq_StaticField f, Putstatic oper1, Putstatic oper2) {
-        boolean dynlink = f.needsDynamicLink(method);
-        if (!dynlink) try { f = resolve(f); } catch (Error e) { }
+        f = tryResolve(f);
+        boolean dynlink = state.needsDynamicLink(method, f);
         Putstatic operator = dynlink?oper1:oper2;
         jq_Type t = f.getType();
         Operand op0 = current_state.pop(t);
@@ -1275,8 +1281,8 @@ public class BytecodeToQuad extends BytecodeVisitor {
         PUTSTATIChelper(f, Putstatic.PUTSTATIC_S_DYNLINK.INSTANCE, Putstatic.PUTSTATIC_S.INSTANCE);
     }
     private void GETFIELDhelper(jq_InstanceField f, Getfield oper1, Getfield oper2) {
-        boolean dynlink = f.needsDynamicLink(method);
-        if (!dynlink) try { f = resolve(f); } catch (Error e) { }
+        f = tryResolve(f);
+        boolean dynlink = state.needsDynamicLink(method, f);
         Operand op1 = current_state.pop_A();
         clearCurrentGuard();
         if (performNullCheck(op1)) {
@@ -1329,8 +1335,8 @@ public class BytecodeToQuad extends BytecodeVisitor {
         GETFIELDhelper(f, Getfield.GETFIELD_Z_DYNLINK.INSTANCE, Getfield.GETFIELD_Z.INSTANCE);
     }
     private void PUTFIELDhelper(jq_InstanceField f, Putfield oper1, Putfield oper2) {
-        boolean dynlink = f.needsDynamicLink(method);
-        if (!dynlink) try { f = resolve(f); } catch (Error e) { }
+        f = tryResolve(f);
+        boolean dynlink = state.needsDynamicLink(method, f);
         Operand op0 = current_state.pop(f.getType());
         Operand op1 = current_state.pop_A();
         clearCurrentGuard();
@@ -1616,33 +1622,33 @@ public class BytecodeToQuad extends BytecodeVisitor {
             ADDRESShelper(f, f.isStatic()?(Invoke)Invoke.INVOKESTATIC_I.INSTANCE:Invoke.INVOKEVIRTUAL_I.INSTANCE);
             return;
         }
+        f = (jq_Method) tryResolve(f);
+        boolean dynlink = state.needsDynamicLink(method, f);
         Invoke oper;
         boolean instance_call;
         switch (op) {
             case INVOKE_VIRTUAL:
                 instance_call = true;
-                if (f.needsDynamicLink(method))
+                if (dynlink)
                     oper = Invoke.INVOKEVIRTUAL_I_DYNLINK.INSTANCE;
                 else {
                     oper = Invoke.INVOKEVIRTUAL_I.INSTANCE;
-                    try { f = (jq_InstanceMethod)resolve(f); } catch (Error e) { }
                 }
                 //f.getDeclaringClass().load();
                 //jq.Assert(!f.getDeclaringClass().isInterface());
                 break;
             case INVOKE_STATIC:
                 instance_call = false;
-                if (f.needsDynamicLink(method))
+                if (dynlink)
                     oper = Invoke.INVOKESTATIC_I_DYNLINK.INSTANCE;
                 else {
                     oper = Invoke.INVOKESTATIC_I.INSTANCE;
-                    try { f = (jq_StaticMethod)resolve(f); } catch (Error e) { }
                 }
                 break;
             case INVOKE_SPECIAL:
                 instance_call = true;
                 Assert._assert(f instanceof jq_InstanceMethod);
-                if (f.needsDynamicLink(method))
+                if (dynlink)
                     oper = Invoke.INVOKESPECIAL_I_DYNLINK.INSTANCE;
                 else {
                     f = jq_Class.getInvokespecialTarget(clazz, (jq_InstanceMethod)f);
@@ -1668,31 +1674,31 @@ public class BytecodeToQuad extends BytecodeVisitor {
             ADDRESShelper(f, f.isStatic()?(Invoke)Invoke.INVOKESTATIC_L.INSTANCE:Invoke.INVOKEVIRTUAL_L.INSTANCE);
             return;
         }
+        f = (jq_Method) tryResolve(f);
+        boolean dynlink = state.needsDynamicLink(method, f);
         Invoke oper;
         boolean instance_call;
         switch (op) {
             case INVOKE_VIRTUAL:
                 instance_call = true;
-                if (f.needsDynamicLink(method))
+                if (dynlink)
                     oper = Invoke.INVOKEVIRTUAL_L_DYNLINK.INSTANCE;
                 else {
                     oper = Invoke.INVOKEVIRTUAL_L.INSTANCE;
-                    try { f = (jq_InstanceMethod)resolve(f); } catch (Error e) { }
                 }
                 break;
             case INVOKE_STATIC:
                 instance_call = false;
-                if (f.needsDynamicLink(method))
+                if (dynlink)
                     oper = Invoke.INVOKESTATIC_L_DYNLINK.INSTANCE;
                 else {
                     oper = Invoke.INVOKESTATIC_L.INSTANCE;
-                    try { f = (jq_StaticMethod)resolve(f); } catch (Error e) { }
                 }
                 break;
             case INVOKE_SPECIAL:
                 instance_call = true;
                 Assert._assert(f instanceof jq_InstanceMethod);
-                if (f.needsDynamicLink(method))
+                if (dynlink)
                     oper = Invoke.INVOKESPECIAL_L_DYNLINK.INSTANCE;
                 else {
                     f = jq_Class.getInvokespecialTarget(clazz, (jq_InstanceMethod)f);
@@ -1718,31 +1724,31 @@ public class BytecodeToQuad extends BytecodeVisitor {
             ADDRESShelper(f, f.isStatic()?(Invoke)Invoke.INVOKESTATIC_F.INSTANCE:Invoke.INVOKEVIRTUAL_F.INSTANCE);
             return;
         }
+        f = (jq_Method) tryResolve(f);
+        boolean dynlink = state.needsDynamicLink(method, f);
         Invoke oper;
         boolean instance_call;
         switch (op) {
             case INVOKE_VIRTUAL:
                 instance_call = true;
-                if (f.needsDynamicLink(method))
+                if (dynlink)
                     oper = Invoke.INVOKEVIRTUAL_F_DYNLINK.INSTANCE;
                 else {
                     oper = Invoke.INVOKEVIRTUAL_F.INSTANCE;
-                    try { f = (jq_InstanceMethod)resolve(f); } catch (Error e) { }
                 }
                 break;
             case INVOKE_STATIC:
                 instance_call = false;
-                if (f.needsDynamicLink(method))
+                if (dynlink)
                     oper = Invoke.INVOKESTATIC_F_DYNLINK.INSTANCE;
                 else {
                     oper = Invoke.INVOKESTATIC_F.INSTANCE;
-                    try { f = (jq_StaticMethod)resolve(f); } catch (Error e) { }
                 }
                 break;
             case INVOKE_SPECIAL:
                 instance_call = true;
                 Assert._assert(f instanceof jq_InstanceMethod);
-                if (f.needsDynamicLink(method))
+                if (dynlink)
                     oper = Invoke.INVOKESPECIAL_F_DYNLINK.INSTANCE;
                 else {
                     f = jq_Class.getInvokespecialTarget(clazz, (jq_InstanceMethod)f);
@@ -1768,31 +1774,31 @@ public class BytecodeToQuad extends BytecodeVisitor {
             ADDRESShelper(f, f.isStatic()?(Invoke)Invoke.INVOKESTATIC_D.INSTANCE:Invoke.INVOKEVIRTUAL_D.INSTANCE);
             return;
         }
+        f = (jq_Method) tryResolve(f);
+        boolean dynlink = state.needsDynamicLink(method, f);
         Invoke oper;
         boolean instance_call;
         switch (op) {
             case INVOKE_VIRTUAL:
                 instance_call = true;
-                if (f.needsDynamicLink(method))
+                if (dynlink)
                     oper = Invoke.INVOKEVIRTUAL_D_DYNLINK.INSTANCE;
                 else {
                     oper = Invoke.INVOKEVIRTUAL_D.INSTANCE;
-                    try { f = (jq_InstanceMethod)resolve(f); } catch (Error e) { }
                 }
                 break;
             case INVOKE_STATIC:
                 instance_call = false;
-                if (f.needsDynamicLink(method))
+                if (dynlink)
                     oper = Invoke.INVOKESTATIC_D_DYNLINK.INSTANCE;
                 else {
                     oper = Invoke.INVOKESTATIC_D.INSTANCE;
-                    try { f = (jq_StaticMethod)resolve(f); } catch (Error e) { }
                 }
                 break;
             case INVOKE_SPECIAL:
                 instance_call = true;
                 Assert._assert(f instanceof jq_InstanceMethod);
-                if (f.needsDynamicLink(method))
+                if (dynlink)
                     oper = Invoke.INVOKESPECIAL_D_DYNLINK.INSTANCE;
                 else {
                     f = jq_Class.getInvokespecialTarget(clazz, (jq_InstanceMethod)f);
@@ -1824,31 +1830,31 @@ public class BytecodeToQuad extends BytecodeVisitor {
             ADDRESShelper(f, oper);
             return;
         }
+        f = (jq_Method) tryResolve(f);
+        boolean dynlink = state.needsDynamicLink(method, f);
         Invoke oper;
         boolean instance_call;
         switch (op) {
             case INVOKE_VIRTUAL:
                 instance_call = true;
-                if (f.needsDynamicLink(method))
+                if (dynlink)
                     oper = f.getReturnType().isAddressType()?(Invoke)Invoke.INVOKEVIRTUAL_P_DYNLINK.INSTANCE:Invoke.INVOKEVIRTUAL_A_DYNLINK.INSTANCE;
                 else {
                     oper = f.getReturnType().isAddressType()?(Invoke)Invoke.INVOKEVIRTUAL_P.INSTANCE:Invoke.INVOKEVIRTUAL_A.INSTANCE;
-                    try { f = (jq_InstanceMethod)resolve(f); } catch (Error e) { }
                 }
                 break;
             case INVOKE_STATIC:
                 instance_call = false;
-                if (f.needsDynamicLink(method))
+                if (dynlink)
                     oper = f.getReturnType().isAddressType()?(Invoke)Invoke.INVOKESTATIC_P_DYNLINK.INSTANCE:Invoke.INVOKESTATIC_A_DYNLINK.INSTANCE;
                 else {
                     oper = f.getReturnType().isAddressType()?(Invoke)Invoke.INVOKESTATIC_P.INSTANCE:Invoke.INVOKESTATIC_A.INSTANCE;
-                    try { f = (jq_StaticMethod)resolve(f); } catch (Error e) { }
                 }
                 break;
             case INVOKE_SPECIAL:
                 instance_call = true;
                 Assert._assert(f instanceof jq_InstanceMethod);
-                if (f.needsDynamicLink(method))
+                if (dynlink)
                     oper = f.getReturnType().isAddressType()?(Invoke)Invoke.INVOKESPECIAL_P_DYNLINK.INSTANCE:Invoke.INVOKESPECIAL_A_DYNLINK.INSTANCE;
                 else {
                     f = jq_Class.getInvokespecialTarget(clazz, (jq_InstanceMethod)f);
@@ -1874,31 +1880,31 @@ public class BytecodeToQuad extends BytecodeVisitor {
             ADDRESShelper(f, f.isStatic()?(Invoke)Invoke.INVOKESTATIC_V.INSTANCE:Invoke.INVOKEVIRTUAL_V.INSTANCE);
             return;
         }
+        f = (jq_Method) tryResolve(f);
+        boolean dynlink = state.needsDynamicLink(method, f);
         Invoke oper;
         boolean instance_call;
         switch (op) {
             case INVOKE_VIRTUAL:
                 instance_call = true;
-                if (f.needsDynamicLink(method))
+                if (dynlink)
                     oper = Invoke.INVOKEVIRTUAL_V_DYNLINK.INSTANCE;
                 else {
                     oper = Invoke.INVOKEVIRTUAL_V.INSTANCE;
-                    try { f = (jq_InstanceMethod)resolve(f); } catch (Error e) { }
                 }
                 break;
             case INVOKE_STATIC:
                 instance_call = false;
-                if (f.needsDynamicLink(method))
+                if (dynlink)
                     oper = Invoke.INVOKESTATIC_V_DYNLINK.INSTANCE;
                 else {
                     oper = Invoke.INVOKESTATIC_V.INSTANCE;
-                    try { f = (jq_StaticMethod)resolve(f); } catch (Error e) { }
                 }
                 break;
             case INVOKE_SPECIAL:
                 instance_call = true;
                 Assert._assert(f instanceof jq_InstanceMethod);
-                if (f.needsDynamicLink(method))
+                if (dynlink)
                     oper = Invoke.INVOKESPECIAL_V_DYNLINK.INSTANCE;
                 else {
                     f = jq_Class.getInvokespecialTarget(clazz, (jq_InstanceMethod)f);
@@ -2081,7 +2087,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
             Assert.UNREACHABLE("Storing address value into non-address array! Array: "+ref+" Type: "+type);
         }
         if (ref.isExactType()) {
-            if (TypeCheck.isAssignable_noload(type, arrayElemType) == TypeCheck.YES)
+            if (state.isSubtype(type, arrayElemType) == YES)
                 return false;
         }
         jq_Type arrayElemType2 = arrayElemType;
@@ -2280,45 +2286,43 @@ public class BytecodeToQuad extends BytecodeVisitor {
         return r.getNumber();
     }
     
+    static class DummyOperand implements Operand {
+        private DummyOperand() {}
+        static final DummyOperand DUMMY = new DummyOperand();
+        public Quad getQuad() { Assert.UNREACHABLE(); return null; }
+        public void attachToQuad(Quad q) { Assert.UNREACHABLE(); }
+        public Operand copy() { return DUMMY; }
+        public boolean isSimilar(Operand that) { return that == DUMMY; }
+        public String toString() { return "<dummy>"; }
+    }
+    
+    AbstractState allocateEmptyState() {
+        // +1 because SWAP requires a temporary location.
+        AbstractState s = new AbstractState(method.getMaxStack()+1, method.getMaxLocals());
+        return s;
+    }
+    
+    AbstractState allocateInitialState() {
+        // +1 because SWAP requires a temporary location.
+        AbstractState s = new AbstractState(method.getMaxStack()+1, method.getMaxLocals());
+        jq_Type[] paramTypes = method.getParamTypes();
+        for (int i=0, j=-1; i<paramTypes.length; ++i) {
+            jq_Type paramType = paramTypes[i];
+            ++j;
+            s.locals[j] = new RegisterOperand(rf.getLocal(j, paramType), paramType);
+            if (paramType.getReferenceSize() == 8) {
+                s.locals[++j] = DummyOperand.DUMMY;
+            }
+        }
+        return s;
+    }
+    
     /** Class used to store the abstract state of the bytecode-to-quad converter. */
-    public static class AbstractState {
+    public class AbstractState {
 
-        public static boolean TRACE = false;
-        
         private int stackptr;
         private Operand[] stack;
         private Operand[] locals;
-        
-        static class DummyOperand implements Operand {
-            private DummyOperand() {}
-            static final DummyOperand DUMMY = new DummyOperand();
-            public Quad getQuad() { Assert.UNREACHABLE(); return null; }
-            public void attachToQuad(Quad q) { Assert.UNREACHABLE(); }
-            public Operand copy() { return DUMMY; }
-            public boolean isSimilar(Operand that) { return that == DUMMY; }
-            public String toString() { return "<dummy>"; }
-        }
-        
-        static AbstractState allocateEmptyState(jq_Method m) {
-            // +1 because SWAP requires a temporary location.
-            AbstractState s = new AbstractState(m.getMaxStack()+1, m.getMaxLocals());
-            return s;
-        }
-        
-        static AbstractState allocateInitialState(RegisterFactory rf, jq_Method m) {
-            // +1 because SWAP requires a temporary location.
-            AbstractState s = new AbstractState(m.getMaxStack()+1, m.getMaxLocals());
-            jq_Type[] paramTypes = m.getParamTypes();
-            for (int i=0, j=-1; i<paramTypes.length; ++i) {
-                jq_Type paramType = paramTypes[i];
-                ++j;
-                s.locals[j] = new RegisterOperand(rf.getLocal(j, paramType), paramType);
-                if (paramType.getReferenceSize() == 8) {
-                    s.locals[++j] = DummyOperand.DUMMY;
-                }
-            }
-            return s;
-        }
         
         private AbstractState(int nstack, int nlocals) {
             this.stack = new Operand[nstack]; this.locals = new Operand[nlocals];
@@ -2392,12 +2396,12 @@ public class BytecodeToQuad extends BytecodeVisitor {
             Assert._assert(this.locals.length == that.locals.length);
             boolean change = false;
             for (int i=0; i<this.stackptr; ++i) {
-                Operand o = meet(this.stack[i], that.stack[i], true, i, rf);
+                Operand o = meet(this.stack[i], that.stack[i], true, i);
                 if (o != this.stack[i] && (o == null || !o.isSimilar(this.stack[i]))) change = true;
                 this.stack[i] = o;
             }
             for (int i=0; i<this.locals.length; ++i) {
-                Operand o = meet(this.locals[i], that.locals[i], false, i, rf);
+                Operand o = meet(this.locals[i], that.locals[i], false, i);
                 if (o != this.locals[i] && (o == null || !o.isSimilar(this.locals[i]))) change = true;
                 this.locals[i] = o;
             }
@@ -2410,18 +2414,18 @@ public class BytecodeToQuad extends BytecodeVisitor {
             Assert._assert(this.stackptr == 1);
             boolean change = false;
             RegisterOperand ex = new RegisterOperand(rf.getStack(0, exType), exType);
-            Operand o = meet(this.stack[0], ex, true, 0, rf);
+            Operand o = meet(this.stack[0], ex, true, 0);
             if (o != this.stack[0] && (o == null || !o.isSimilar(this.stack[0]))) change = true;
             this.stack[0] = o;
             for (int i=0; i<this.locals.length; ++i) {
-                 o = meet(this.locals[i], that.locals[i], false, i, rf);
+                 o = meet(this.locals[i], that.locals[i], false, i);
                  if (o != this.locals[i] && (o == null || !o.isSimilar(this.locals[i]))) change = true;
                  this.locals[i] = o;
             }
             return change;
         }
 
-        static Operand meet(Operand op1, Operand op2, boolean stack, int index, RegisterFactory rf) {
+        Operand meet(Operand op1, Operand op2, boolean stack, int index) {
             if (TRACE) System.out.println("Meeting "+op1+" with "+op2+", "+(stack?"S":"L")+index);
             if (op1 == op2) {
                 // same operand, or both null.
@@ -2439,7 +2443,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
                 if (op2 instanceof DummyOperand) {
                     return null;
                 }
-                jq_Type type = TypeCheck.findCommonSuperclass(getTypeOf(op1), getTypeOf(op2));
+                jq_Type type = state.findCommonSuperclass(getTypeOf(op1), getTypeOf(op2));
                 if (type != null) {
                     // different constants of the same type
                     RegisterOperand res = new RegisterOperand(stack?rf.getStack(index, type):rf.getLocal(index, type), type);
@@ -2485,7 +2489,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
                         res.meetFlags(rop2.getFlags());
                         return res;
                     }
-                    if (TypeCheck.isAssignable_noload(t2, t1) == TypeCheck.YES) {
+                    if (state.isSubtype(t2, t1) == YES) {
                         // t2 is a subtype of t1.
                         if (!rop1.isExactType() && rop1.hasMoreConservativeFlags(rop2)) {
                             // flags and exact type matches.
@@ -2511,7 +2515,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
                         res.clearExactType();
                         return res;
                     }
-                    if ((t2 = TypeCheck.findCommonSuperclass(t1, t2)) != null) {
+                    if ((t2 = state.findCommonSuperclass(t1, t2)) != null) {
                         // common superclass
                         RegisterOperand res = new RegisterOperand(stack?rf.getStack(index, t2):rf.getLocal(index, t2), t2);
                         if (rop1.scratchObject != null) {
@@ -2541,7 +2545,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
                     res.setFlags(rop1.getFlags());
                     return res;
                 }
-                if (TypeCheck.isAssignable_noload(t2, t1) == TypeCheck.YES) {
+                if (state.isSubtype(t2, t1) == YES) {
                     // compatible type.
                     if (!rop1.isExactType()) {
                         if ((rop1.scratchObject == null) || (t2 != jq_Reference.jq_NullType.NULL_TYPE)) {
@@ -2562,7 +2566,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
                     res.clearExactType();
                     return res;
                 }
-                if ((t2 = TypeCheck.findCommonSuperclass(t1, t2)) != null) {
+                if ((t2 = state.findCommonSuperclass(t1, t2)) != null) {
                     // common superclass
                     RegisterOperand res = new RegisterOperand(stack?rf.getStack(index, t2):rf.getLocal(index, t2), t2);
                     if (t2 != jq_Reference.jq_NullType.NULL_TYPE) {
@@ -2593,7 +2597,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         void push_A(Operand op) { Assert._assert(getTypeOf(op).isReferenceType() && !getTypeOf(op).isAddressType()); push(op); }
         void push_P(Operand op) { Assert._assert(getTypeOf(op).isAddressType()); push(op); }
         void push(Operand op, jq_Type t) {
-            Assert._assert(TypeCheck.isAssignable_noload(getTypeOf(op), t) == TypeCheck.YES);
+            Assert._assert(state.isSubtype(getTypeOf(op), t) == YES);
             push(op); if (t.getReferenceSize() == 8) pushDummy();
         }
         void pushDummy() { push(DummyOperand.DUMMY); }
@@ -2613,7 +2617,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
                 op = new PConstOperand(null);
             }
             Assert._assert(getTypeOf(op).isAddressType() ||
-                      getTypeOf(op).isSubtypeOf(Address._class));
+                      state.isSubtype(getTypeOf(op), Address._class) != NO);
             return op;
         }
         void popDummy() { Operand op = pop(); Assert._assert(op == DummyOperand.DUMMY); }
@@ -2627,9 +2631,9 @@ public class BytecodeToQuad extends BytecodeVisitor {
                 jq_Type t2 = getTypeOf(op);
                 Assert._assert(t2 == jq_Reference.jq_NullType.NULL_TYPE ||
                           t2.isAddressType() ||
-                          t2.isSubtypeOf(Address._class));
+                          state.isSubtype(t2, Address._class) != NO);
             }
-            //jq.Assert(TypeCheck.isAssignable_noload(getTypeOf(op), t) != TypeCheck.NO);
+            //jq.Assert(state.isSubtype(getTypeOf(op), t) != NO);
             return op;
         }
         Operand pop() {
@@ -2731,7 +2735,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
     static {
         /* Set up delegates. */
         _unsafe = null;
-        boolean nullVM = jq.nullVM || System.getProperty("joeq.nullvm") != null;
+        boolean nullVM = jq.nullVM;
         if (!nullVM) {
             _unsafe = attemptDelegate("Compil3r.Quad.B2QUnsafeHandler");
         }

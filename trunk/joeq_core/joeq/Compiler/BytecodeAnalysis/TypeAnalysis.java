@@ -422,7 +422,7 @@ public class TypeAnalysis {
                 jq_Type t2 = pl.getType();
                 if (t == null) t = t2;
                 if (t2 == null) continue;
-                t = TypeCheck.findCommonSuperclass(t, t2);
+                t = TypeCheck.findCommonSuperclass(t, t2, true);
             }
             return t;
         }

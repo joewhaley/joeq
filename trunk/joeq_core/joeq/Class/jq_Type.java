@@ -200,9 +200,11 @@ public abstract class jq_Type {
         return false;
     }
     
+    /*
     public boolean isBootType() {
         return jq.boot_types.contains(this);
     }
+    */
 
     public abstract boolean isLoaded();
     public abstract boolean isVerified();

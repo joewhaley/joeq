@@ -13,6 +13,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import Allocator.CodeAllocator;
 import Allocator.ObjectLayout;
@@ -40,7 +41,6 @@ import Linker.ELF.ELFOutput;
 import Linker.ELF.RelocEntry;
 import Linker.ELF.Section;
 import Linker.ELF.SymbolTableEntry;
-import Main.jq;
 import Memory.Address;
 import Memory.CodeAddress;
 import Memory.HeapAddress;
@@ -74,6 +74,8 @@ public class BootImage implements ELFConstants {
 
     private BootstrapCodeAllocator bca;
     private List data_relocs;
+    
+    public Set boot_types;
     
     public BootImage(BootstrapCodeAllocator bca, int initialCapacity, float loadFactor) {
         hash = new HashMap(initialCapacity, loadFactor);
@@ -138,7 +140,7 @@ public class BootImage implements ELFConstants {
         Assert._assert(alloc_enabled);
         Class objType = o.getClass();
         jq_Reference type = (jq_Reference)Reflection.getJQType(objType);
-        if (!jq.boot_types.contains(type)) {
+        if (!boot_types.contains(type)) {
             System.err.println("--> class "+type+" is not in the set of boot types!");
             //new Exception().printStackTrace();
             return HeapAddress.getNull();
@@ -748,7 +750,7 @@ public class BootImage implements ELFConstants {
     
     public int addVTableRelocs(List list) {
         int total = 0;
-        Iterator i = jq.boot_types.iterator();
+        Iterator i = boot_types.iterator();
         while (i.hasNext()) {
             jq_Type t = (jq_Type)i.next();
             if (t.isReferenceType()) {

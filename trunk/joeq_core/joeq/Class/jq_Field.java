@@ -71,7 +71,7 @@ public abstract class jq_Field extends jq_Member {
     static {
         /* Set up delegates. */
         _delegate = null;
-        boolean nullVM = jq.nullVM || System.getProperty("joeq.nullvm") != null;
+        boolean nullVM = jq.nullVM;
         if (!nullVM) {
             _delegate = attemptDelegate("Clazz.Delegates$Field");
         }

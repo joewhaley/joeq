@@ -3,7 +3,9 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.BytecodeAnalysis;
 
+import java.util.HashMap;
 import java.util.ListIterator;
+import java.util.Map;
 
 import Clazz.jq_Method;
 import Clazz.jq_TryCatchBC;
@@ -11,7 +13,10 @@ import Util.Assert;
 import Util.BitString;
 import Util.BitString.BitStringIterator;
 
-/*
+/**
+ * Control flow graph for a bytecode stream.  The data structure is immutable
+ * and corresponds exactly to the underlying bytecodes.
+ * 
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
@@ -19,9 +24,15 @@ public class ControlFlowGraph {
 
     public static final boolean TRACE = false;
     
+    /** Array of basic blocks, ordered by their appearance in the bytecode. */
     private final BasicBlock[] basic_blocks;
+    /** Array of exception handler entrypoints, ordered by their appearance
+     * in the bytecode. */
     private final BasicBlock[] handler_entries;
-    private java.util.Map/*<BasicBlock, JSRInfo>*/ jsr_info;
+    /** Map from basic blocks to their JSR info.
+     * There is JSR info associated with the entry and exit blocks of each
+     * JSR subroutine. */
+    private Map/*<BasicBlock, JSRInfo>*/ jsr_info;
     
     /** Creates new ControlFlowGraph */
     private ControlFlowGraph(int n_bb, int n_handlers) {
@@ -29,21 +40,39 @@ public class ControlFlowGraph {
         handler_entries = new BasicBlock[n_handlers];
     }
 
+    /** Returns the entry basic block. */
     public BasicBlock getEntry() { return basic_blocks[0]; }
+    /** Returns the exit basic block. */
     public BasicBlock getExit() { return basic_blocks[1]; }
+    /** Returns the number of basic blocks. */
     public int getNumberOfBasicBlocks() { return basic_blocks.length; }
+    /** Returns the basic block with the given number. */
     public BasicBlock getBasicBlock(int index) { return basic_blocks[index]; }
 
+    /** Add info about a JSR subroutine.  The JSR subroutine has the given
+     * entry and exit blocks and modifies the given locals.  This info is
+     * associated with the entry and exit blocks.
+     * 
+     * @param entry
+     * @param exit
+     * @param locals
+     */
     public void addJSRInfo(BasicBlock entry, BasicBlock exit, boolean[] locals) {
-        if (jsr_info == null) jsr_info = new java.util.HashMap();
+        if (jsr_info == null) jsr_info = new HashMap();
         JSRInfo nfo = new JSRInfo(entry, exit, locals);
         jsr_info.put(entry, nfo);
         jsr_info.put(exit, nfo);
     }
+    
+    /** Returns the JSR info about the JSR subroutine with the given entry/exit
+     * block, or null if there are none.
+     */
     public JSRInfo getJSRInfo(BasicBlock b) {
         return jsr_info != null ? (JSRInfo)jsr_info.get(b) : null;
     }
     
+    /** Returns the basic block that contains the given bytecode index.
+     */
     public BasicBlock getBasicBlockByBytecodeIndex(int index) {
         // binary search
         int lo, hi, mid;
@@ -63,10 +92,15 @@ public class ControlFlowGraph {
         return bb;
     }
     
+    /** Returns the basic blocks in reverse post-order.
+     */
     public RPOBasicBlockIterator reversePostOrderIterator() {
         return new RPOBasicBlockIterator(basic_blocks, basic_blocks[0]);
     }
     
+    /** Returns the basic blocks in reverse post-order starting from the given
+     * block.
+     */
     public RPOBasicBlockIterator reversePostOrderIterator(BasicBlock start_bb) {
         return new RPOBasicBlockIterator(basic_blocks, start_bb);
     }
@@ -132,6 +166,7 @@ public class ControlFlowGraph {
         }
     }
     
+    /** Compute and return the control flow graph for the given method. */
     public static ControlFlowGraph computeCFG(jq_Method method) {
         // get basic block boundaries and branch locations
         InitialPass pass = new InitialPass(method);
@@ -264,6 +299,7 @@ public class ControlFlowGraph {
         return cfg;
     }
 
+    /** Visitor to perform the initial pass over the bytecode. */
     public static class InitialPass extends BytecodeVisitor {
         
         private BitString basic_block_start;
@@ -379,6 +415,7 @@ public class ControlFlowGraph {
         }
     }
 
+    /** Visitor to link up each of the branches in the code. */
     static class BranchVisitor extends BytecodeVisitor {
         
         private final ControlFlowGraph cfg;

@@ -16,6 +16,8 @@ import Clazz.jq_Primitive;
 import Clazz.jq_StaticField;
 import Clazz.jq_StaticMethod;
 import Clazz.jq_Type;
+import Compil3r.CompilationConstants;
+import Compil3r.CompilationState;
 import Util.Assert;
 import Util.Strings;
 
@@ -23,8 +25,9 @@ import Util.Strings;
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
-public class BytecodeVisitor implements jq_ClassFileConstants {
+public class BytecodeVisitor implements jq_ClassFileConstants, CompilationConstants {
 
+    protected final CompilationState state;
     protected final jq_Class clazz;
     protected final jq_Method method;
     protected final byte[] bcs;
@@ -34,6 +37,12 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
     
     /** Creates new BytecodeVisitor */
     public BytecodeVisitor(jq_Method method) {
+        this(CompilationState.DEFAULT, method);
+    }
+    
+    /** Creates new BytecodeVisitor */
+    public BytecodeVisitor(CompilationState state, jq_Method method) {
+        this.state = state;
         this.clazz = method.getDeclaringClass();
         this.method = method;
         this.bcs = method.getBytecode();
@@ -48,9 +57,9 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
         }
     }
     
-    public jq_StaticField resolve(jq_StaticField m) {
+    public jq_StaticField tryResolve(jq_StaticField m) {
         try {
-            jq_StaticField m2 = m.resolve1();
+            jq_StaticField m2 = (jq_StaticField) state.tryResolve(m);
             if (m != m2) updateMemberReference(m2, CONSTANT_ResolvedSFieldRef);
             return m2;
         } catch (Error e) {
@@ -59,9 +68,9 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
         }
     }
     
-    public jq_InstanceField resolve(jq_InstanceField m) {
+    public jq_InstanceField tryResolve(jq_InstanceField m) {
         try {
-            jq_InstanceField m2 = m.resolve1();
+            jq_InstanceField m2 = (jq_InstanceField) state.tryResolve(m);
             if (m != m2) updateMemberReference(m2, CONSTANT_ResolvedIFieldRef);
             return m2;
         } catch (Error e) {
@@ -70,9 +79,9 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
         }
     }
     
-    public jq_StaticMethod resolve(jq_StaticMethod m) {
+    public jq_StaticMethod tryResolve(jq_StaticMethod m) {
         try {
-            jq_StaticMethod m2 = m.resolve1();
+            jq_StaticMethod m2 = (jq_StaticMethod) state.tryResolve(m);
             if (m != m2) updateMemberReference(m2, CONSTANT_ResolvedSMethodRef);
             return m2;
         } catch (Error e) {
@@ -81,9 +90,9 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
         }
     }
     
-    public jq_InstanceMethod resolve(jq_InstanceMethod m) {
+    public jq_InstanceMethod tryResolve(jq_InstanceMethod m) {
         try {
-            jq_InstanceMethod m2 = m.resolve1();
+            jq_InstanceMethod m2 = (jq_InstanceMethod) state.tryResolve(m);
             if (m != m2) updateMemberReference(m2, CONSTANT_ResolvedIMethodRef);
             return m2;
         } catch (Error e) {
@@ -92,9 +101,9 @@ public class BytecodeVisitor implements jq_ClassFileConstants {
         }
     }
     
-    public jq_Member resolve(jq_Member m) {
+    public jq_Member tryResolve(jq_Member m) {
         try {
-            jq_Member m2 = m.resolve();
+            jq_Member m2 = state.tryResolve(m);
             if (m != m2) {
                 byte tag = 0;
                 if (m instanceof jq_InstanceField)

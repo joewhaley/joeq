@@ -3,6 +3,11 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Quad;
 
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
 import Clazz.jq_Method;
 
 /**
@@ -14,17 +19,17 @@ public class CodeCache {
 
     public static final CodeCache cache = new CodeCache();
 
-    protected java.util.HashMap map = new java.util.HashMap();
-    protected java.util.HashMap bcmap = new java.util.HashMap();
+    protected Map map = new HashMap();
+    protected Map bcmap = new HashMap();
 
-    public static java.util.List/*<ControlFlowGraphVisitor>*/ passes = new java.util.LinkedList();
+    public static List/*<ControlFlowGraphVisitor>*/ passes = new LinkedList();
     
     
     /** Creates new CodeCache */
     public CodeCache() { }
 
     public static ControlFlowGraph getCode(jq_Method m) { return cache._get(m); }
-    public static java.util.Map getBCMap(jq_Method m) { return cache._getmap(m); }
+    public static Map getBCMap(jq_Method m) { return cache._getmap(m); }
     public static void free(ControlFlowGraph cfg) {
         if (getCode(cfg.getMethod()) == cfg)
             cache._delete(cfg.getMethod());
@@ -52,7 +57,7 @@ public class CodeCache {
     }
 
     protected java.util.Map _getmap(jq_Method m) {
-        java.util.Map result = (java.util.Map)bcmap.get(m);
+        Map result = (Map) bcmap.get(m);
         if (result == null) {
             if (TRACE) System.out.println("Generating quads for "+m);
             BytecodeToQuad b2q = new BytecodeToQuad(m);

@@ -35,7 +35,9 @@ import Clazz.jq_Reference;
 import Clazz.jq_StaticField;
 import Clazz.jq_StaticMethod;
 import Clazz.jq_Type;
+import Compil3r.CompilationState;
 import Compil3r.BytecodeAnalysis.Trimmer;
+import Compil3r.CompilationState.BootstrapCompilation;
 import Compil3r.Reference.x86.x86ReferenceCompiler;
 import Memory.CodeAddress;
 import Memory.HeapAddress;
@@ -329,7 +331,9 @@ public abstract class Bootstrapper {
         System.out.println("Load time: "+loadtime/1000f+"s");
         
         // initialize the set of boot types
-        jq.boot_types = classset;
+        objmap.boot_types = classset;
+        BootstrapCompilation comp = (BootstrapCompilation) CompilationState.DEFAULT;
+        comp.setBootTypes(classset);
         
         if (false) {
             ArrayList class_list = new ArrayList(classset);
@@ -446,7 +450,7 @@ public abstract class Bootstrapper {
         CodeAllocator.getCompiledMethods();
         
         System.out.println("number of classes seen = "+PrimordialClassLoader.loader.getAllTypes().size());
-        System.out.println("number of classes in image = "+jq.boot_types.size());
+        System.out.println("number of classes in image = "+objmap.boot_types.size());
         
         // we shouldn't encounter any new Utf8 from this point
         Utf8.NO_NEW = true;

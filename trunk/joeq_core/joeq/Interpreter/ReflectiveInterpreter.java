@@ -49,33 +49,33 @@ public class ReflectiveInterpreter extends BytecodeInterpreter {
         for (int i=param_jq.length-1; i>=offset; --i) {
             Class pc = param_jdk[i-offset] = Reflection.getJDKType(param_jq[i]);
             if (pc.isPrimitive()) {
-                if (pc == Integer.TYPE) param[i-offset] = new Integer(state.pop_I());
-                else if (pc == Long.TYPE) param[i-offset] = new Long(state.pop_L());
-                else if (pc == Float.TYPE) param[i-offset] = new Float(state.pop_F());
-                else if (pc == Double.TYPE) param[i-offset] = new Double(state.pop_D());
-                else if (pc == Byte.TYPE) param[i-offset] = new Byte((byte)state.pop_I());
-                else if (pc == Short.TYPE) param[i-offset] = new Short((short)state.pop_I());
-                else if (pc == Character.TYPE) param[i-offset] = new Character((char)state.pop_I());
-                else if (pc == Boolean.TYPE) param[i-offset] = new Boolean(state.pop_I()!=0);
+                if (pc == Integer.TYPE) param[i-offset] = new Integer(istate.pop_I());
+                else if (pc == Long.TYPE) param[i-offset] = new Long(istate.pop_L());
+                else if (pc == Float.TYPE) param[i-offset] = new Float(istate.pop_F());
+                else if (pc == Double.TYPE) param[i-offset] = new Double(istate.pop_D());
+                else if (pc == Byte.TYPE) param[i-offset] = new Byte((byte)istate.pop_I());
+                else if (pc == Short.TYPE) param[i-offset] = new Short((short)istate.pop_I());
+                else if (pc == Character.TYPE) param[i-offset] = new Character((char)istate.pop_I());
+                else if (pc == Boolean.TYPE) param[i-offset] = new Boolean(istate.pop_I()!=0);
                 else Assert.UNREACHABLE(pc.toString());
             } else {
-                param[i-offset] = state.pop_A();
+                param[i-offset] = istate.pop_A();
             }
         }
         try {
             if (m instanceof jq_Initializer) {
                 Constructor co = c.getDeclaredConstructor(param_jdk);
                 co.setAccessible(true);
-                UninitializedType u = (UninitializedType)state.pop_A();
+                UninitializedType u = (UninitializedType)istate.pop_A();
                 Assert._assert(u.k == m.getDeclaringClass());
                 Object inited = co.newInstance(param);
-                ((ReflectiveState)state).replaceUninitializedReferences(inited, u);
+                ((ReflectiveState)istate).replaceUninitializedReferences(inited, u);
                 return null;
             }
             Method mr = c.getDeclaredMethod(m.getName().toString(), param_jdk);
             mr.setAccessible(true);
             Object thisptr;
-            if (!m.isStatic()) thisptr = state.pop_A();
+            if (!m.isStatic()) thisptr = istate.pop_A();
             else thisptr = null;
             return mr.invoke(thisptr, param);
         } catch (NoSuchMethodException x) {
@@ -109,20 +109,20 @@ public class ReflectiveInterpreter extends BytecodeInterpreter {
                 return this.invokeMethod(m, callee);
             } catch (MonitorExit x) {
                 Assert._assert(m.isSynchronized());
-                Assert._assert(state != callee);
+                Assert._assert(istate != callee);
                 return callee.getReturnVal_A();
             }
         }
     }
     public Object invokeUnsafeMethod(jq_Method f) throws Throwable {
         if (f == Unsafe._floatToIntBits) {
-            return new Integer(Float.floatToRawIntBits(state.pop_F()));
+            return new Integer(Float.floatToRawIntBits(istate.pop_F()));
         } else if (f == Unsafe._intBitsToFloat) {
-            return new Float(Float.intBitsToFloat(state.pop_I()));
+            return new Float(Float.intBitsToFloat(istate.pop_I()));
         } else if (f == Unsafe._doubleToLongBits) {
-            return new Long(Double.doubleToRawLongBits(state.pop_D()));
+            return new Long(Double.doubleToRawLongBits(istate.pop_D()));
         } else if (f == Unsafe._longBitsToDouble) {
-            return new Double(Double.longBitsToDouble(state.pop_L()));
+            return new Double(Double.longBitsToDouble(istate.pop_L()));
         } else {
             return invokeReflective(f);
         }

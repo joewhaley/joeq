@@ -202,7 +202,7 @@ public class jq_CompiledCode implements Comparable {
         _entrypoint = k.getOrCreateInstanceField("entrypoint", "LMemory/CodeAddress;");
         /* Set up delegates. */
         _delegate = null;
-        boolean nullVM = jq.nullVM || System.getProperty("joeq.nullvm") != null;
+        boolean nullVM = jq.nullVM;
         if (!nullVM) {
             _delegate = attemptDelegate("Clazz.Delegates$CompiledCode");
         }

@@ -346,7 +346,7 @@ public class jq_Array extends jq_Reference implements jq_ClassFileConstants {
         _class = (jq_Class)PrimordialClassLoader.loader.getOrCreateBSType("LClazz/jq_Array;");
         /* Set up delegates. */
         _delegate = null;
-        boolean nullVM = jq.nullVM || System.getProperty("joeq.nullvm") != null;
+        boolean nullVM = jq.nullVM;
         if (!nullVM) {
             _delegate = attemptDelegate("Clazz.Delegates$Array");
         }

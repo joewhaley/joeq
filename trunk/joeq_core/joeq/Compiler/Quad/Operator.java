@@ -3799,7 +3799,7 @@ public abstract class Operator {
     static {
         /* Set up delegates. */
         _delegate = null;
-        boolean nullVM = jq.nullVM || System.getProperty("joeq.nullvm") != null;
+        boolean nullVM = jq.nullVM;
         if (!nullVM) {
             _delegate = attemptDelegate("Compil3r.Quad.Delegates$Op");
         }

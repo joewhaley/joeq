@@ -21,6 +21,7 @@ import java.util.Set;
 import Allocator.ObjectLayout;
 import Bootstrap.PrimordialClassLoader;
 import ClassLib.ClassLibInterface;
+import Compil3r.CompilationConstants;
 import Compil3r.BytecodeAnalysis.Bytecodes;
 import Main.jq;
 import Memory.Address;
@@ -42,7 +43,7 @@ import Util.Strings;
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
-public final class jq_Class extends jq_Reference implements jq_ClassFileConstants {
+public final class jq_Class extends jq_Reference implements jq_ClassFileConstants, CompilationConstants {
     
     public static /*final*/ boolean TRACE = false;
     public static /*final*/ boolean WARN_STALE_CLASS_FILES = false;
@@ -89,11 +90,6 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
     }
     public final String getJDKDesc() {
         return desc.toString().replace('/','.');
-    }
-    public final boolean needsDynamicLink(jq_Method method) {
-        if (method.getDeclaringClass() == this) return false;
-        if (!jq.RunningNative && isBootType()) return false;
-        return !isClsInitialized();
     }
     public jq_Member getDeclaredMember(jq_NameAndDesc nd) {
         return (jq_Member)members.get(nd);
@@ -2454,7 +2450,7 @@ uphere2:
             return method;
         if (method.isInitializer())
             return method;
-        if (!TypeCheck.isSuperclassOf(method.getDeclaringClass(), clazz))
+        if (TypeCheck.isSuperclassOf(method.getDeclaringClass(), clazz, true) != YES)
             return method;
         jq_NameAndDesc nd = method.getNameAndDesc();
         for (;;) {
@@ -2594,7 +2590,7 @@ uphere2:
     static {
         /* Set up delegates. */
         _delegate = null;
-        boolean nullVM = jq.nullVM || System.getProperty("joeq.nullvm") != null;
+        boolean nullVM = jq.nullVM;
         if (!nullVM) {
             _delegate = attemptDelegate("Clazz.Delegates$Klass");
         }

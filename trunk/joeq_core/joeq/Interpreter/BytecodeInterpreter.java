@@ -30,11 +30,11 @@ public abstract class BytecodeInterpreter {
     public static /*final*/ boolean ALWAYS_TRACE = System.getProperty("interpreter.trace") != null;
     
     /** Creates new Interpreter */
-    public BytecodeInterpreter(VMInterface vm, State state) {
-        this.vm = vm; this.state = state;
+    public BytecodeInterpreter(VMInterface vm, State istate) {
+        this.vm = vm; this.istate = istate;
     }
 
-    // create an Interpreter.State and call invokeMethod(m, state)
+    // create an Interpreter.State and call invokeMethod(m, istate)
     public abstract Object invokeMethod(jq_Method m) throws Throwable;
     public abstract Object invokeUnsafeMethod(jq_Method m) throws Throwable;
     
@@ -50,16 +50,16 @@ public abstract class BytecodeInterpreter {
             jq_Type t = paramTypes[i];
             if (t.isPrimitiveType()) {
                 if (t == jq_Primitive.LONG) {
-                    params[i] = new Long(state.pop_L());
+                    params[i] = new Long(istate.pop_L());
                 } else if (t == jq_Primitive.FLOAT) {
-                    params[i] = new Float(state.pop_F());
+                    params[i] = new Float(istate.pop_F());
                 } else if (t == jq_Primitive.DOUBLE) {
-                    params[i] = new Double(state.pop_D());
+                    params[i] = new Double(istate.pop_D());
                 } else {
-                    params[i] = new Integer(state.pop_I());
+                    params[i] = new Integer(istate.pop_I());
                 }
             } else {
-                params[i] = state.pop_A();
+                params[i] = istate.pop_A();
             }
             //System.out.println("Param "+i+": "+params[i]);
         }
@@ -117,22 +117,22 @@ public abstract class BytecodeInterpreter {
             else
                 return new Integer((int)(result));
         } else {
-            State oldState = this.state;
-            this.state = callee;
+            State oldState = this.istate;
+            this.istate = callee;
             MethodInterpreter mi = new MethodInterpreter(m);
             Object synchobj = null;
             try {
                 if (m.isSynchronized()) {
                     if (!m.isStatic()) {
                         if (mi.getTraceFlag()) mi.getTraceOut().println("synchronized instance method, locking 'this' object");
-                        vm.monitorenter(synchobj = state.getLocal_A(0), mi);
+                        vm.monitorenter(synchobj = istate.getLocal_A(0), mi);
                     } else {
                         if (mi.getTraceFlag()) mi.getTraceOut().println("synchronized static method, locking class object");
                         vm.monitorenter(synchobj = Reflection.getJDKType(m.getDeclaringClass()), mi);
                     }
                 }
                 mi.forwardTraversal();
-                this.state = oldState;
+                this.istate = oldState;
                 if (m.isSynchronized()) {
                     if (mi.getTraceFlag()) mi.getTraceOut().println("exiting synchronized method, unlocking object");
                     vm.monitorexit(synchobj);
@@ -156,7 +156,7 @@ public abstract class BytecodeInterpreter {
                     mi.getTraceOut().println("Return value: "+retval);
                 return retval;
             } catch (WrappedException ix) {
-                this.state = oldState;
+                this.istate = oldState;
                 if (m.isSynchronized()) {
                     if (mi.getTraceFlag()) mi.getTraceOut().println("exiting synchronized method, unlocking object");
                     vm.monitorexit(synchobj);
@@ -172,20 +172,20 @@ public abstract class BytecodeInterpreter {
             jq_Type t = paramTypes[i];
             if (t.isPrimitiveType()) {
                 if (t == jq_Primitive.LONG) {
-                    long v = state.pop_L();
+                    long v = istate.pop_L();
                     argVals[  j] = (int)v;       // lo
                     argVals[--j] = (int)(v>>32); // hi
                 } else if (t == jq_Primitive.FLOAT) {
-                    argVals[j] = Float.floatToRawIntBits(state.pop_F());
+                    argVals[j] = Float.floatToRawIntBits(istate.pop_F());
                 } else if (t == jq_Primitive.DOUBLE) {
-                    long v = Double.doubleToRawLongBits(state.pop_D());
+                    long v = Double.doubleToRawLongBits(istate.pop_D());
                     argVals[  j] = (int)v;       // lo
                     argVals[--j] = (int)(v>>32); // hi
                 } else {
-                    argVals[j] = state.pop_I();
+                    argVals[j] = istate.pop_I();
                 }
             } else {
-                argVals[j] = Unsafe.addressOf(state.pop_A());
+                argVals[j] = Unsafe.addressOf(istate.pop_A());
             }
         }
         jq.Assert(j==0);
@@ -197,7 +197,7 @@ public abstract class BytecodeInterpreter {
         else interpret(m, callee);
         */
     
-    protected State state;
+    protected State istate;
     protected final VMInterface vm;
 
     public abstract static class State {
@@ -330,7 +330,7 @@ public abstract class BytecodeInterpreter {
             jq_TryCatchBC[] tc = method.getExceptionTable();
             for (int i=0; i<tc.length; ++i) {
                 if (tc[i].catches(i_start, t)) {
-                    state.popAll(); state.push_A(x);
+                    istate.popAll(); istate.push_A(x);
                     branchTo(tc[i].getHandlerPC());
                     if (this.TRACE) this.out.println(this+": Branching to exception handler "+tc[i]);
                     return;
@@ -349,157 +349,157 @@ public abstract class BytecodeInterpreter {
         }
         public void visitACONST(Object s) {
             super.visitACONST(s);
-            state.push_A(s);
+            istate.push_A(s);
         }
         public void visitICONST(int c) {
             super.visitICONST(c);
-            state.push_I(c);
+            istate.push_I(c);
         }
         public void visitLCONST(long c) {
             super.visitLCONST(c);
-            state.push_L(c);
+            istate.push_L(c);
         }
         public void visitFCONST(float c) {
             super.visitFCONST(c);
-            state.push_F(c);
+            istate.push_F(c);
         }
         public void visitDCONST(double c) {
             super.visitDCONST(c);
-            state.push_D(c);
+            istate.push_D(c);
         }
         public void visitILOAD(int i) {
             super.visitILOAD(i);
-            state.push_I(state.getLocal_I(i));
+            istate.push_I(istate.getLocal_I(i));
         }
         public void visitLLOAD(int i) {
             super.visitLLOAD(i);
-            state.push_L(state.getLocal_L(i));
+            istate.push_L(istate.getLocal_L(i));
         }
         public void visitFLOAD(int i) {
             super.visitFLOAD(i);
-            state.push_F(state.getLocal_F(i));
+            istate.push_F(istate.getLocal_F(i));
         }
         public void visitDLOAD(int i) {
             super.visitDLOAD(i);
-            state.push_D(state.getLocal_D(i));
+            istate.push_D(istate.getLocal_D(i));
         }
         public void visitALOAD(int i) {
             super.visitALOAD(i);
-            state.push_A(state.getLocal_A(i));
+            istate.push_A(istate.getLocal_A(i));
         }
         public void visitISTORE(int i) {
             super.visitISTORE(i);
-            state.setLocal_I(i, state.pop_I());
+            istate.setLocal_I(i, istate.pop_I());
         }
         public void visitLSTORE(int i) {
             super.visitLSTORE(i);
-            state.setLocal_L(i, state.pop_L());
+            istate.setLocal_L(i, istate.pop_L());
         }
         public void visitFSTORE(int i) {
             super.visitFSTORE(i);
-            state.setLocal_F(i, state.pop_F());
+            istate.setLocal_F(i, istate.pop_F());
         }
         public void visitDSTORE(int i) {
             super.visitDSTORE(i);
-            state.setLocal_D(i, state.pop_D());
+            istate.setLocal_D(i, istate.pop_D());
         }
         public void visitASTORE(int i) {
             super.visitASTORE(i);
-            state.setLocal_A(i, state.pop_A());
+            istate.setLocal_A(i, istate.pop_A());
         }
         public void visitIALOAD() {
             super.visitIALOAD();
-            int index = state.pop_I();
-            int[] array = (int[])state.pop_A();
-            state.push_I(array[index]);
+            int index = istate.pop_I();
+            int[] array = (int[])istate.pop_A();
+            istate.push_I(array[index]);
         }
         public void visitLALOAD() {
             super.visitLALOAD();
-            int index = state.pop_I();
-            long[] array = (long[])state.pop_A();
-            state.push_L(array[index]);
+            int index = istate.pop_I();
+            long[] array = (long[])istate.pop_A();
+            istate.push_L(array[index]);
         }
         public void visitFALOAD() {
             super.visitFALOAD();
-            int index = state.pop_I();
-            float[] array = (float[])state.pop_A();
-            state.push_F(array[index]);
+            int index = istate.pop_I();
+            float[] array = (float[])istate.pop_A();
+            istate.push_F(array[index]);
         }
         public void visitDALOAD() {
             super.visitDALOAD();
-            int index = state.pop_I();
-            double[] array = (double[])state.pop_A();
-            state.push_D(array[index]);
+            int index = istate.pop_I();
+            double[] array = (double[])istate.pop_A();
+            istate.push_D(array[index]);
         }
         public void visitAALOAD() {
             super.visitAALOAD();
-            int index = state.pop_I();
-            Object[] array = (Object[])state.pop_A();
-            state.push_A(array[index]);
+            int index = istate.pop_I();
+            Object[] array = (Object[])istate.pop_A();
+            istate.push_A(array[index]);
         }
         public void visitBALOAD() {
             super.visitBALOAD();
-            int index = state.pop_I();
-            Object array = (Object)state.pop_A();
+            int index = istate.pop_I();
+            Object array = (Object)istate.pop_A();
             int val;
             try {
                 if (array.getClass() == Class.forName("[Z")) val = ((boolean[])array)[index]?1:0;
                 else val = ((byte[])array)[index];
             } catch (ClassNotFoundException x) { Assert.UNREACHABLE(); return; }
-            state.push_I(val);
+            istate.push_I(val);
         }
         public void visitCALOAD() {
             super.visitCALOAD();
-            int index = state.pop_I();
-            char[] array = (char[])state.pop_A();
-            state.push_I(array[index]);
+            int index = istate.pop_I();
+            char[] array = (char[])istate.pop_A();
+            istate.push_I(array[index]);
         }
         public void visitSALOAD() {
             super.visitSALOAD();
-            int index = state.pop_I();
-            short[] array = (short[])state.pop_A();
-            state.push_I(array[index]);
+            int index = istate.pop_I();
+            short[] array = (short[])istate.pop_A();
+            istate.push_I(array[index]);
         }
         public void visitIASTORE() {
             super.visitIASTORE();
-            int val = state.pop_I();
-            int index = state.pop_I();
-            int[] array = (int[])state.pop_A();
+            int val = istate.pop_I();
+            int index = istate.pop_I();
+            int[] array = (int[])istate.pop_A();
             array[index] = val;
         }
         public void visitLASTORE() {
             super.visitLASTORE();
-            long val = state.pop_L();
-            int index = state.pop_I();
-            long[] array = (long[])state.pop_A();
+            long val = istate.pop_L();
+            int index = istate.pop_I();
+            long[] array = (long[])istate.pop_A();
             array[index] = val;
         }
         public void visitFASTORE() {
             super.visitFASTORE();
-            float val = state.pop_F();
-            int index = state.pop_I();
-            float[] array = (float[])state.pop_A();
+            float val = istate.pop_F();
+            int index = istate.pop_I();
+            float[] array = (float[])istate.pop_A();
             array[index] = val;
         }
         public void visitDASTORE() {
             super.visitDASTORE();
-            double val = state.pop_D();
-            int index = state.pop_I();
-            double[] array = (double[])state.pop_A();
+            double val = istate.pop_D();
+            int index = istate.pop_I();
+            double[] array = (double[])istate.pop_A();
             array[index] = val;
         }
         public void visitAASTORE() {
             super.visitAASTORE();
-            Object val = state.pop_A();
-            int index = state.pop_I();
-            Object[] array = (Object[])state.pop_A();
+            Object val = istate.pop_A();
+            int index = istate.pop_I();
+            Object[] array = (Object[])istate.pop_A();
             array[index] = val;
         }
         public void visitBASTORE() {
             super.visitBASTORE();
-            int val = state.pop_I();
-            int index = state.pop_I();
-            Object array = (Object)state.pop_A();
+            int val = istate.pop_I();
+            int index = istate.pop_I();
+            Object array = (Object)istate.pop_A();
             try {
                 if (array.getClass() == Class.forName("[Z")) ((boolean[])array)[index] = val!=0;
                 else ((byte[])array)[index] = (byte)val;
@@ -507,119 +507,119 @@ public abstract class BytecodeInterpreter {
         }
         public void visitCASTORE() {
             super.visitCASTORE();
-            int val = state.pop_I();
-            int index = state.pop_I();
-            char[] array = (char[])state.pop_A();
+            int val = istate.pop_I();
+            int index = istate.pop_I();
+            char[] array = (char[])istate.pop_A();
             array[index] = (char)val;
         }
         public void visitSASTORE() {
             super.visitSASTORE();
-            int val = state.pop_I();
-            int index = state.pop_I();
-            short[] array = (short[])state.pop_A();
+            int val = istate.pop_I();
+            int index = istate.pop_I();
+            short[] array = (short[])istate.pop_A();
             array[index] = (short)val;
         }
         public void visitPOP() {
             super.visitPOP();
-            state.pop();
+            istate.pop();
         }
         public void visitPOP2() {
             super.visitPOP2();
-            state.pop();
-            state.pop();
+            istate.pop();
+            istate.pop();
         }
         public void visitDUP() {
             super.visitDUP();
-            Object o = state.pop();
-            state.push(o);
-            state.push(o);
+            Object o = istate.pop();
+            istate.push(o);
+            istate.push(o);
         }
         public void visitDUP_x1() {
             super.visitDUP_x1();
-            Object o1 = state.pop();
-            Object o2 = state.pop();
-            state.push(o1);
-            state.push(o2);
-            state.push(o1);
+            Object o1 = istate.pop();
+            Object o2 = istate.pop();
+            istate.push(o1);
+            istate.push(o2);
+            istate.push(o1);
         }
         public void visitDUP_x2() {
             super.visitDUP_x2();
-            Object o1 = state.pop();
-            Object o2 = state.pop();
-            Object o3 = state.pop();
-            state.push(o1);
-            state.push(o3);
-            state.push(o2);
-            state.push(o1);
+            Object o1 = istate.pop();
+            Object o2 = istate.pop();
+            Object o3 = istate.pop();
+            istate.push(o1);
+            istate.push(o3);
+            istate.push(o2);
+            istate.push(o1);
         }
         public void visitDUP2() {
             super.visitDUP2();
-            Object o1 = state.pop();
-            Object o2 = state.pop();
-            state.push(o2);
-            state.push(o1);
-            state.push(o2);
-            state.push(o1);
+            Object o1 = istate.pop();
+            Object o2 = istate.pop();
+            istate.push(o2);
+            istate.push(o1);
+            istate.push(o2);
+            istate.push(o1);
         }
         public void visitDUP2_x1() {
             super.visitDUP2_x1();
-            Object o1 = state.pop();
-            Object o2 = state.pop();
-            Object o3 = state.pop();
-            state.push(o2);
-            state.push(o1);
-            state.push(o3);
-            state.push(o2);
-            state.push(o1);
+            Object o1 = istate.pop();
+            Object o2 = istate.pop();
+            Object o3 = istate.pop();
+            istate.push(o2);
+            istate.push(o1);
+            istate.push(o3);
+            istate.push(o2);
+            istate.push(o1);
         }
         public void visitDUP2_x2() {
             super.visitDUP2_x2();
-            Object o1 = state.pop();
-            Object o2 = state.pop();
-            Object o3 = state.pop();
-            Object o4 = state.pop();
-            state.push(o2);
-            state.push(o1);
-            state.push(o4);
-            state.push(o3);
-            state.push(o2);
-            state.push(o1);
+            Object o1 = istate.pop();
+            Object o2 = istate.pop();
+            Object o3 = istate.pop();
+            Object o4 = istate.pop();
+            istate.push(o2);
+            istate.push(o1);
+            istate.push(o4);
+            istate.push(o3);
+            istate.push(o2);
+            istate.push(o1);
         }
         public void visitSWAP() {
             super.visitSWAP();
-            Object o1 = state.pop();
-            Object o2 = state.pop();
-            state.push(o1);
-            state.push(o2);
+            Object o1 = istate.pop();
+            Object o2 = istate.pop();
+            istate.push(o1);
+            istate.push(o2);
         }
         public void visitIBINOP(byte op) {
             super.visitIBINOP(op);
-            int v1 = state.pop_I();
-            int v2 = state.pop_I();
+            int v1 = istate.pop_I();
+            int v2 = istate.pop_I();
             switch(op) {
                 case BINOP_ADD:
-                    state.push_I(v2+v1);
+                    istate.push_I(v2+v1);
                     break;
                 case BINOP_SUB:
-                    state.push_I(v2-v1);
+                    istate.push_I(v2-v1);
                     break;
                 case BINOP_MUL:
-                    state.push_I(v2*v1);
+                    istate.push_I(v2*v1);
                     break;
                 case BINOP_DIV:
-                    state.push_I(v2/v1);
+                    istate.push_I(v2/v1);
                     break;
                 case BINOP_REM:
-                    state.push_I(v2%v1);
+                    istate.push_I(v2%v1);
                     break;
                 case BINOP_AND:
-                    state.push_I(v2&v1);
+                    istate.push_I(v2&v1);
                     break;
                 case BINOP_OR:
-                    state.push_I(v2|v1);
+                    istate.push_I(v2|v1);
                     break;
                 case BINOP_XOR:
-                    state.push_I(v2^v1);
+                    istate.push_I(v2^v1);
                     break;
                 default:
                     Assert.UNREACHABLE();
@@ -627,32 +627,32 @@ public abstract class BytecodeInterpreter {
         }
         public void visitLBINOP(byte op) {
             super.visitLBINOP(op);
-            long v1 = state.pop_L();
-            long v2 = state.pop_L();
+            long v1 = istate.pop_L();
+            long v2 = istate.pop_L();
             switch(op) {
                 case BINOP_ADD:
-                    state.push_L(v2+v1);
+                    istate.push_L(v2+v1);
                     break;
                 case BINOP_SUB:
-                    state.push_L(v2-v1);
+                    istate.push_L(v2-v1);
                     break;
                 case BINOP_MUL:
-                    state.push_L(v2*v1);
+                    istate.push_L(v2*v1);
                     break;
                 case BINOP_DIV:
-                    state.push_L(v2/v1);
+                    istate.push_L(v2/v1);
                     break;
                 case BINOP_REM:
-                    state.push_L(v2%v1);
+                    istate.push_L(v2%v1);
                     break;
                 case BINOP_AND:
-                    state.push_L(v2&v1);
+                    istate.push_L(v2&v1);
                     break;
                 case BINOP_OR:
-                    state.push_L(v2|v1);
+                    istate.push_L(v2|v1);
                     break;
                 case BINOP_XOR:
-                    state.push_L(v2^v1);
+                    istate.push_L(v2^v1);
                     break;
                 default:
                     Assert.UNREACHABLE();
@@ -660,23 +660,23 @@ public abstract class BytecodeInterpreter {
         }
         public void visitFBINOP(byte op) {
             super.visitFBINOP(op);
-            float v1 = state.pop_F();
-            float v2 = state.pop_F();
+            float v1 = istate.pop_F();
+            float v2 = istate.pop_F();
             switch(op) {
                 case BINOP_ADD:
-                    state.push_F(v2+v1);
+                    istate.push_F(v2+v1);
                     break;
                 case BINOP_SUB:
-                    state.push_F(v2-v1);
+                    istate.push_F(v2-v1);
                     break;
                 case BINOP_MUL:
-                    state.push_F(v2*v1);
+                    istate.push_F(v2*v1);
                     break;
                 case BINOP_DIV:
-                    state.push_F(v2/v1);
+                    istate.push_F(v2/v1);
                     break;
                 case BINOP_REM:
-                    state.push_F(v2%v1);
+                    istate.push_F(v2%v1);
                     break;
                 default:
                     Assert.UNREACHABLE();
@@ -684,23 +684,23 @@ public abstract class BytecodeInterpreter {
         }
         public void visitDBINOP(byte op) {
             super.visitDBINOP(op);
-            double v1 = state.pop_D();
-            double v2 = state.pop_D();
+            double v1 = istate.pop_D();
+            double v2 = istate.pop_D();
             switch(op) {
                 case BINOP_ADD:
-                    state.push_D(v2+v1);
+                    istate.push_D(v2+v1);
                     break;
                 case BINOP_SUB:
-                    state.push_D(v2-v1);
+                    istate.push_D(v2-v1);
                     break;
                 case BINOP_MUL:
-                    state.push_D(v2*v1);
+                    istate.push_D(v2*v1);
                     break;
                 case BINOP_DIV:
-                    state.push_D(v2/v1);
+                    istate.push_D(v2/v1);
                     break;
                 case BINOP_REM:
-                    state.push_D(v2%v1);
+                    istate.push_D(v2%v1);
                     break;
                 default:
                     Assert.UNREACHABLE();
@@ -709,36 +709,36 @@ public abstract class BytecodeInterpreter {
         public void visitIUNOP(byte op) {
             super.visitIUNOP(op);
             Assert._assert(op == UNOP_NEG);
-            state.push_I(-state.pop_I());
+            istate.push_I(-istate.pop_I());
         }
         public void visitLUNOP(byte op) {
             super.visitLUNOP(op);
             Assert._assert(op == UNOP_NEG);
-            state.push_L(-state.pop_L());
+            istate.push_L(-istate.pop_L());
         }
         public void visitFUNOP(byte op) {
             super.visitFUNOP(op);
             Assert._assert(op == UNOP_NEG);
-            state.push_F(-state.pop_F());
+            istate.push_F(-istate.pop_F());
         }
         public void visitDUNOP(byte op) {
             super.visitDUNOP(op);
             Assert._assert(op == UNOP_NEG);
-            state.push_D(-state.pop_D());
+            istate.push_D(-istate.pop_D());
         }
         public void visitISHIFT(byte op) {
             super.visitISHIFT(op);
-            int v1 = state.pop_I();
-            int v2 = state.pop_I();
+            int v1 = istate.pop_I();
+            int v2 = istate.pop_I();
             switch(op) {
                 case SHIFT_LEFT:
-                    state.push_I(v2 << v1);
+                    istate.push_I(v2 << v1);
                     break;
                 case SHIFT_RIGHT:
-                    state.push_I(v2 >> v1);
+                    istate.push_I(v2 >> v1);
                     break;
                 case SHIFT_URIGHT:
-                    state.push_I(v2 >>> v1);
+                    istate.push_I(v2 >>> v1);
                     break;
                 default:
                     Assert.UNREACHABLE();
@@ -746,17 +746,17 @@ public abstract class BytecodeInterpreter {
         }
         public void visitLSHIFT(byte op) {
             super.visitLSHIFT(op);
-            int v1 = state.pop_I();
-            long v2 = state.pop_L();
+            int v1 = istate.pop_I();
+            long v2 = istate.pop_L();
             switch(op) {
                 case SHIFT_LEFT:
-                    state.push_L(v2 << v1);
+                    istate.push_L(v2 << v1);
                     break;
                 case SHIFT_RIGHT:
-                    state.push_L(v2 >> v1);
+                    istate.push_L(v2 >> v1);
                     break;
                 case SHIFT_URIGHT:
-                    state.push_L(v2 >>> v1);
+                    istate.push_L(v2 >>> v1);
                     break;
                 default:
                     Assert.UNREACHABLE();
@@ -764,99 +764,99 @@ public abstract class BytecodeInterpreter {
         }
         public void visitIINC(int i, int v) {
             super.visitIINC(i, v);
-            state.setLocal_I(i, state.getLocal_I(i)+v);
+            istate.setLocal_I(i, istate.getLocal_I(i)+v);
         }
         public void visitI2L() {
             super.visitI2L();
-            state.push_L((long)state.pop_I());
+            istate.push_L((long)istate.pop_I());
         }
         public void visitI2F() {
             super.visitI2F();
-            state.push_F((float)state.pop_I());
+            istate.push_F((float)istate.pop_I());
         }
         public void visitI2D() {
             super.visitI2D();
-            state.push_D((double)state.pop_I());
+            istate.push_D((double)istate.pop_I());
         }
         public void visitL2I() {
             super.visitL2I();
-            state.push_I((int)state.pop_L());
+            istate.push_I((int)istate.pop_L());
         }
         public void visitL2F() {
             super.visitL2F();
-            state.push_F((float)state.pop_L());
+            istate.push_F((float)istate.pop_L());
         }
         public void visitL2D() {
             super.visitL2D();
-            state.push_D((double)state.pop_L());
+            istate.push_D((double)istate.pop_L());
         }
         public void visitF2I() {
             super.visitF2I();
-            state.push_I((int)state.pop_F());
+            istate.push_I((int)istate.pop_F());
         }
         public void visitF2L() {
             super.visitF2L();
-            state.push_L((long)state.pop_F());
+            istate.push_L((long)istate.pop_F());
         }
         public void visitF2D() {
             super.visitF2D();
-            state.push_D((double)state.pop_F());
+            istate.push_D((double)istate.pop_F());
         }
         public void visitD2I() {
             super.visitD2I();
-            state.push_I((int)state.pop_D());
+            istate.push_I((int)istate.pop_D());
         }
         public void visitD2L() {
             super.visitD2L();
-            state.push_L((long)state.pop_D());
+            istate.push_L((long)istate.pop_D());
         }
         public void visitD2F() {
             super.visitD2F();
-            state.push_F((float)state.pop_D());
+            istate.push_F((float)istate.pop_D());
         }
         public void visitI2B() {
             super.visitI2B();
-            state.push_I((byte)state.pop_I());
+            istate.push_I((byte)istate.pop_I());
         }
         public void visitI2C() {
             super.visitI2C();
-            state.push_I((char)state.pop_I());
+            istate.push_I((char)istate.pop_I());
         }
         public void visitI2S() {
             super.visitI2S();
-            state.push_I((short)state.pop_I());
+            istate.push_I((short)istate.pop_I());
         }
         public void visitLCMP2() {
             super.visitLCMP2();
-            long v1 = state.pop_L();
-            long v2 = state.pop_L();
-            state.push_I((v2>v1)?1:((v2==v1)?0:-1));
+            long v1 = istate.pop_L();
+            long v2 = istate.pop_L();
+            istate.push_I((v2>v1)?1:((v2==v1)?0:-1));
         }
         public void visitFCMP2(byte op) {
             super.visitFCMP2(op);
-            float v1 = state.pop_F();
-            float v2 = state.pop_F();
+            float v1 = istate.pop_F();
+            float v2 = istate.pop_F();
             int val;
             if (op == CMP_L)
                 val = ((v2>v1)?1:((v2==v1)?0:-1));
             else
                 val = ((v2<v1)?-1:((v2==v1)?0:1));
-            state.push_I(val);
+            istate.push_I(val);
         }
         public void visitDCMP2(byte op) {
             super.visitDCMP2(op);
-            double v1 = state.pop_D();
-            double v2 = state.pop_D();
+            double v1 = istate.pop_D();
+            double v2 = istate.pop_D();
             int val;
             if (op == CMP_L)
                 val = ((v2>v1)?1:((v2==v1)?0:-1));
             else
                 val = ((v2<v1)?-1:((v2==v1)?0:1));
-            state.push_I(val);
+            istate.push_I(val);
         }
         public void visitIF(byte op, int target) {
             super.visitIF(op, target);
-            int v = state.pop_I();
+            int v = istate.pop_I();
             switch(op) {
                 case CMP_EQ: if (v==0) branchTo(target); break;
                 case CMP_NE: if (v!=0) branchTo(target); break;
@@ -869,7 +869,7 @@ public abstract class BytecodeInterpreter {
         }
         public void visitIFREF(byte op, int target) {
             super.visitIFREF(op, target);
-            Object v = state.pop_A();
+            Object v = istate.pop_A();
             switch(op) {
                 case CMP_EQ: if (v==null) branchTo(target); break;
                 case CMP_NE: if (v!=null) branchTo(target); break;
@@ -878,8 +878,8 @@ public abstract class BytecodeInterpreter {
         }
         public void visitIFCMP(byte op, int target) {
             super.visitIFCMP(op, target);
-            int v1 = state.pop_I();
-            int v2 = state.pop_I();
+            int v1 = istate.pop_I();
+            int v2 = istate.pop_I();
             switch(op) {
                 case CMP_EQ: if (v2==v1) branchTo(target); break;
                 case CMP_NE: if (v2!=v1) branchTo(target); break;
@@ -892,8 +892,8 @@ public abstract class BytecodeInterpreter {
         }
         public void visitIFREFCMP(byte op, int target) {
             super.visitIFREFCMP(op, target);
-            Object v1 = state.pop_A();
-            Object v2 = state.pop_A();
+            Object v1 = istate.pop_A();
+            Object v2 = istate.pop_A();
             switch(op) {
                 case CMP_EQ: if (v2==v1) branchTo(target); break;
                 case CMP_NE: if (v2!=v1) branchTo(target); break;
@@ -906,22 +906,22 @@ public abstract class BytecodeInterpreter {
         }
         public void visitJSR(int target) {
             super.visitJSR(target);
-            state.push_I(i_end+1);
+            istate.push_I(i_end+1);
             branchTo(target);
         }
         public void visitRET(int i) {
             super.visitRET(i);
-            branchTo(state.getLocal_I(i));
+            branchTo(istate.getLocal_I(i));
         }
         public void visitTABLESWITCH(int default_target, int low, int high, int[] targets) {
             super.visitTABLESWITCH(default_target, low, high, targets);
-            int v = state.pop_I();
+            int v = istate.pop_I();
             if ((v < low) || (v > high)) branchTo(default_target);
             else branchTo(targets[v-low]);
         }
         public void visitLOOKUPSWITCH(int default_target, int[] values, int[] targets) {
             super.visitLOOKUPSWITCH(default_target, values, targets);
-            int v = state.pop_I();
+            int v = istate.pop_I();
             for (int i=0; i<values.length; ++i) {
                 if (v == values[i]) {
                     branchTo(targets[i]);
@@ -932,243 +932,243 @@ public abstract class BytecodeInterpreter {
         }
         public void visitIRETURN() {
             super.visitIRETURN();
-            state.return_I(state.pop_I());
+            istate.return_I(istate.pop_I());
             i_end = bcs.length;
         }
         public void visitLRETURN() {
             super.visitLRETURN();
-            state.return_L(state.pop_L());
+            istate.return_L(istate.pop_L());
             i_end = bcs.length;
         }
         public void visitFRETURN() {
             super.visitFRETURN();
-            state.return_F(state.pop_F());
+            istate.return_F(istate.pop_F());
             i_end = bcs.length;
         }
         public void visitDRETURN() {
             super.visitDRETURN();
-            state.return_D(state.pop_D());
+            istate.return_D(istate.pop_D());
             i_end = bcs.length;
         }
         public void visitARETURN() {
             super.visitARETURN();
-            state.return_A(state.pop_A());
+            istate.return_A(istate.pop_A());
             i_end = bcs.length;
         }
         public void visitVRETURN() {
             super.visitVRETURN();
-            state.return_V();
+            istate.return_V();
             i_end = bcs.length;
         }
         public void visitIGETSTATIC(jq_StaticField f) {
             super.visitIGETSTATIC(f);
-            f = resolve(f);
+            f = tryResolve(f);
             f.getDeclaringClass().cls_initialize();
-            state.push_I(Reflection.getstatic_I(f));
+            istate.push_I(Reflection.getstatic_I(f));
         }
         public void visitLGETSTATIC(jq_StaticField f) {
             super.visitLGETSTATIC(f);
-            f = resolve(f);
+            f = tryResolve(f);
             f.getDeclaringClass().cls_initialize();
-            state.push_L(Reflection.getstatic_L(f));
+            istate.push_L(Reflection.getstatic_L(f));
         }
         public void visitFGETSTATIC(jq_StaticField f) {
             super.visitFGETSTATIC(f);
-            f = resolve(f);
+            f = tryResolve(f);
             f.getDeclaringClass().cls_initialize();
-            state.push_F(Reflection.getstatic_F(f));
+            istate.push_F(Reflection.getstatic_F(f));
         }
         public void visitDGETSTATIC(jq_StaticField f) {
             super.visitDGETSTATIC(f);
-            f = resolve(f);
+            f = tryResolve(f);
             f.getDeclaringClass().cls_initialize();
-            state.push_D(Reflection.getstatic_D(f));
+            istate.push_D(Reflection.getstatic_D(f));
         }
         public void visitAGETSTATIC(jq_StaticField f) {
             super.visitAGETSTATIC(f);
-            f = resolve(f);
+            f = tryResolve(f);
             f.getDeclaringClass().cls_initialize();
-            state.push_A(Reflection.getstatic_A(f));
+            istate.push_A(Reflection.getstatic_A(f));
         }
         public void visitZGETSTATIC(jq_StaticField f) {
             super.visitZGETSTATIC(f);
-            f = resolve(f);
+            f = tryResolve(f);
             f.getDeclaringClass().cls_initialize();
-            state.push_I(Reflection.getstatic_Z(f)?1:0);
+            istate.push_I(Reflection.getstatic_Z(f)?1:0);
         }
         public void visitBGETSTATIC(jq_StaticField f) {
             super.visitBGETSTATIC(f);
-            f = resolve(f);
+            f = tryResolve(f);
             f.getDeclaringClass().cls_initialize();
-            state.push_I(Reflection.getstatic_B(f));
+            istate.push_I(Reflection.getstatic_B(f));
         }
         public void visitCGETSTATIC(jq_StaticField f) {
             super.visitCGETSTATIC(f);
-            f = resolve(f);
+            f = tryResolve(f);
             f.getDeclaringClass().cls_initialize();
-            state.push_I(Reflection.getstatic_C(f));
+            istate.push_I(Reflection.getstatic_C(f));
         }
         public void visitSGETSTATIC(jq_StaticField f) {
             super.visitSGETSTATIC(f);
-            f = resolve(f);
+            f = tryResolve(f);
             f.getDeclaringClass().cls_initialize();
-            state.push_I(Reflection.getstatic_S(f));
+            istate.push_I(Reflection.getstatic_S(f));
         }
         public void visitIPUTSTATIC(jq_StaticField f) {
             super.visitIPUTSTATIC(f);
-            f = resolve(f);
+            f = tryResolve(f);
             f.getDeclaringClass().cls_initialize();
-            Reflection.putstatic_I(f, state.pop_I());
+            Reflection.putstatic_I(f, istate.pop_I());
         }
         public void visitLPUTSTATIC(jq_StaticField f) {
             super.visitLPUTSTATIC(f);
-            f = resolve(f);
+            f = tryResolve(f);
             f.getDeclaringClass().cls_initialize();
-            Reflection.putstatic_L(f, state.pop_L());
+            Reflection.putstatic_L(f, istate.pop_L());
         }
         public void visitFPUTSTATIC(jq_StaticField f) {
             super.visitFPUTSTATIC(f);
-            f = resolve(f);
+            f = tryResolve(f);
             f.getDeclaringClass().cls_initialize();
-            Reflection.putstatic_F(f, state.pop_F());
+            Reflection.putstatic_F(f, istate.pop_F());
         }
         public void visitDPUTSTATIC(jq_StaticField f) {
             super.visitDPUTSTATIC(f);
-            f = resolve(f);
+            f = tryResolve(f);
             f.getDeclaringClass().cls_initialize();
-            Reflection.putstatic_D(f, state.pop_D());
+            Reflection.putstatic_D(f, istate.pop_D());
         }
         public void visitAPUTSTATIC(jq_StaticField f) {
             super.visitAPUTSTATIC(f);
-            f = resolve(f);
+            f = tryResolve(f);
             f.getDeclaringClass().cls_initialize();
-            Reflection.putstatic_A(f, state.pop_A());
+            Reflection.putstatic_A(f, istate.pop_A());
         }
         public void visitZPUTSTATIC(jq_StaticField f) {
             super.visitZPUTSTATIC(f);
-            f = resolve(f);
+            f = tryResolve(f);
             f.getDeclaringClass().cls_initialize();
-            Reflection.putstatic_Z(f, state.pop_I()!=0);
+            Reflection.putstatic_Z(f, istate.pop_I()!=0);
         }
         public void visitBPUTSTATIC(jq_StaticField f) {
             super.visitBPUTSTATIC(f);
-            f = resolve(f);
+            f = tryResolve(f);
             f.getDeclaringClass().cls_initialize();
-            Reflection.putstatic_B(f, (byte)state.pop_I());
+            Reflection.putstatic_B(f, (byte)istate.pop_I());
         }
         public void visitCPUTSTATIC(jq_StaticField f) {
             super.visitCPUTSTATIC(f);
-            f = resolve(f);
+            f = tryResolve(f);
             f.getDeclaringClass().cls_initialize();
-            Reflection.putstatic_C(f, (char)state.pop_I());
+            Reflection.putstatic_C(f, (char)istate.pop_I());
         }
         public void visitSPUTSTATIC(jq_StaticField f) {
             super.visitSPUTSTATIC(f);
-            f = resolve(f);
+            f = tryResolve(f);
             f.getDeclaringClass().cls_initialize();
-            Reflection.putstatic_S(f, (short)state.pop_I());
+            Reflection.putstatic_S(f, (short)istate.pop_I());
         }
         public void visitIGETFIELD(jq_InstanceField f) {
             super.visitIGETFIELD(f);
-            f = resolve(f);
-            state.push_I(Reflection.getfield_I(state.pop_A(), f));
+            f = tryResolve(f);
+            istate.push_I(Reflection.getfield_I(istate.pop_A(), f));
         }
         public void visitLGETFIELD(jq_InstanceField f) {
             super.visitLGETFIELD(f);
-            f = resolve(f);
-            state.push_L(Reflection.getfield_L(state.pop_A(), f));
+            f = tryResolve(f);
+            istate.push_L(Reflection.getfield_L(istate.pop_A(), f));
         }
         public void visitFGETFIELD(jq_InstanceField f) {
             super.visitFGETFIELD(f);
-            f = resolve(f);
-            state.push_F(Reflection.getfield_F(state.pop_A(), f));
+            f = tryResolve(f);
+            istate.push_F(Reflection.getfield_F(istate.pop_A(), f));
         }
         public void visitDGETFIELD(jq_InstanceField f) {
             super.visitDGETFIELD(f);
-            f = resolve(f);
-            state.push_D(Reflection.getfield_D(state.pop_A(), f));
+            f = tryResolve(f);
+            istate.push_D(Reflection.getfield_D(istate.pop_A(), f));
         }
         public void visitAGETFIELD(jq_InstanceField f) {
             super.visitAGETFIELD(f);
-            f = resolve(f);
-            state.push_A(Reflection.getfield_A(state.pop_A(), f));
+            f = tryResolve(f);
+            istate.push_A(Reflection.getfield_A(istate.pop_A(), f));
         }
         public void visitBGETFIELD(jq_InstanceField f) {
             super.visitBGETFIELD(f);
-            f = resolve(f);
-            state.push_I(Reflection.getfield_B(state.pop_A(), f));
+            f = tryResolve(f);
+            istate.push_I(Reflection.getfield_B(istate.pop_A(), f));
         }
         public void visitCGETFIELD(jq_InstanceField f) {
             super.visitCGETFIELD(f);
-            f = resolve(f);
-            state.push_I(Reflection.getfield_C(state.pop_A(), f));
+            f = tryResolve(f);
+            istate.push_I(Reflection.getfield_C(istate.pop_A(), f));
         }
         public void visitSGETFIELD(jq_InstanceField f) {
             super.visitSGETFIELD(f);
-            f = resolve(f);
-            state.push_I(Reflection.getfield_S(state.pop_A(), f));
+            f = tryResolve(f);
+            istate.push_I(Reflection.getfield_S(istate.pop_A(), f));
         }
         public void visitZGETFIELD(jq_InstanceField f) {
             super.visitZGETFIELD(f);
-            f = resolve(f);
-            state.push_I(Reflection.getfield_Z(state.pop_A(), f)?1:0);
+            f = tryResolve(f);
+            istate.push_I(Reflection.getfield_Z(istate.pop_A(), f)?1:0);
         }
         public void visitIPUTFIELD(jq_InstanceField f) {
             super.visitIPUTFIELD(f);
-            f = resolve(f);
-            int v = state.pop_I();
-            Reflection.putfield_I(state.pop_A(), f, v);
+            f = tryResolve(f);
+            int v = istate.pop_I();
+            Reflection.putfield_I(istate.pop_A(), f, v);
         }
         public void visitLPUTFIELD(jq_InstanceField f) {
             super.visitLPUTFIELD(f);
-            f = resolve(f);
-            long v = state.pop_L();
-            Reflection.putfield_L(state.pop_A(), f, v);
+            f = tryResolve(f);
+            long v = istate.pop_L();
+            Reflection.putfield_L(istate.pop_A(), f, v);
         }
         public void visitFPUTFIELD(jq_InstanceField f) {
             super.visitFPUTFIELD(f);
-            f = resolve(f);
-            float v = state.pop_F();
-            Reflection.putfield_F(state.pop_A(), f, v);
+            f = tryResolve(f);
+            float v = istate.pop_F();
+            Reflection.putfield_F(istate.pop_A(), f, v);
         }
         public void visitDPUTFIELD(jq_InstanceField f) {
             super.visitDPUTFIELD(f);
-            f = resolve(f);
-            double v = state.pop_D();
-            Reflection.putfield_D(state.pop_A(), f, v);
+            f = tryResolve(f);
+            double v = istate.pop_D();
+            Reflection.putfield_D(istate.pop_A(), f, v);
         }
         public void visitAPUTFIELD(jq_InstanceField f) {
             super.visitAPUTFIELD(f);
-            f = resolve(f);
-            Object v = state.pop_A();
-            Reflection.putfield_A(state.pop_A(), f, v);
+            f = tryResolve(f);
+            Object v = istate.pop_A();
+            Reflection.putfield_A(istate.pop_A(), f, v);
         }
         public void visitBPUTFIELD(jq_InstanceField f) {
             super.visitBPUTFIELD(f);
-            f = resolve(f);
-            byte v = (byte)state.pop_I();
-            Reflection.putfield_B(state.pop_A(), f, v);
+            f = tryResolve(f);
+            byte v = (byte)istate.pop_I();
+            Reflection.putfield_B(istate.pop_A(), f, v);
         }
         public void visitCPUTFIELD(jq_InstanceField f) {
             super.visitCPUTFIELD(f);
-            f = resolve(f);
-            char v = (char)state.pop_I();
-            Reflection.putfield_C(state.pop_A(), f, v);
+            f = tryResolve(f);
+            char v = (char)istate.pop_I();
+            Reflection.putfield_C(istate.pop_A(), f, v);
         }
         public void visitSPUTFIELD(jq_InstanceField f) {
             super.visitSPUTFIELD(f);
-            f = resolve(f);
-            short v = (short)state.pop_I();
-            Reflection.putfield_S(state.pop_A(), f, v);
+            f = tryResolve(f);
+            short v = (short)istate.pop_I();
+            Reflection.putfield_S(istate.pop_A(), f, v);
         }
         public void visitZPUTFIELD(jq_InstanceField f) {
             super.visitZPUTFIELD(f);
-            f = resolve(f);
-            boolean v = state.pop_I()!=0;
-            Reflection.putfield_Z(state.pop_A(), f, v);
+            f = tryResolve(f);
+            boolean v = istate.pop_I()!=0;
+            Reflection.putfield_Z(istate.pop_A(), f, v);
         }
         protected Object INVOKEhelper(byte op, jq_Method f) {
-            f = (jq_Method)resolve(f);
+            f = (jq_Method) tryResolve(f);
             jq_Class k = f.getDeclaringClass();
             k.cls_initialize();
             if (k == Unsafe._class || k.isAddressType()) {
@@ -1183,7 +1183,7 @@ public abstract class BytecodeInterpreter {
             if (op == INVOKE_SPECIAL) {
                 f = jq_Class.getInvokespecialTarget(clazz, (jq_InstanceMethod)f);
             } else if (op != INVOKE_STATIC) {
-                Object o = state.peek_A(f.getParamWords()-1);
+                Object o = istate.peek_A(f.getParamWords()-1);
                 jq_Reference t = jq_Reference.getTypeOf(o);
                 t.cls_initialize();
                 if (op == INVOKE_INTERFACE) {
@@ -1212,23 +1212,23 @@ public abstract class BytecodeInterpreter {
         }
         public void visitIINVOKE(byte op, jq_Method f) {
             super.visitIINVOKE(op, f);
-            state.push_I(((Integer)INVOKEhelper(op, f)).intValue());
+            istate.push_I(((Integer)INVOKEhelper(op, f)).intValue());
         }
         public void visitLINVOKE(byte op, jq_Method f) {
             super.visitLINVOKE(op, f);
-            state.push_L(((Long)INVOKEhelper(op, f)).longValue());
+            istate.push_L(((Long)INVOKEhelper(op, f)).longValue());
         }
         public void visitFINVOKE(byte op, jq_Method f) {
             super.visitFINVOKE(op, f);
-            state.push_F(((Float)INVOKEhelper(op, f)).floatValue());
+            istate.push_F(((Float)INVOKEhelper(op, f)).floatValue());
         }
         public void visitDINVOKE(byte op, jq_Method f) {
             super.visitDINVOKE(op, f);
-            state.push_D(((Double)INVOKEhelper(op, f)).doubleValue());
+            istate.push_D(((Double)INVOKEhelper(op, f)).doubleValue());
         }
         public void visitAINVOKE(byte op, jq_Method f) {
             super.visitAINVOKE(op, f);
-            state.push_A(INVOKEhelper(op, f));
+            istate.push_A(INVOKEhelper(op, f));
         }
         public void visitVINVOKE(byte op, jq_Method f) {
             super.visitVINVOKE(op, f);
@@ -1236,31 +1236,31 @@ public abstract class BytecodeInterpreter {
         }
         public void visitNEW(jq_Type f) {
             super.visitNEW(f);
-            state.push_A(vm.new_obj(f));
+            istate.push_A(vm.new_obj(f));
         }
         public void visitNEWARRAY(jq_Array f) {
             super.visitNEWARRAY(f);
-            state.push_A(vm.new_array(f, state.pop_I()));
+            istate.push_A(vm.new_array(f, istate.pop_I()));
         }
         public void visitCHECKCAST(jq_Type f) {
             super.visitCHECKCAST(f);
-            state.push_A(vm.checkcast(state.pop_A(), f));
+            istate.push_A(vm.checkcast(istate.pop_A(), f));
         }
         public void visitINSTANCEOF(jq_Type f) {
             super.visitINSTANCEOF(f);
-            state.push_I(vm.instance_of(state.pop_A(), f)?1:0);
+            istate.push_I(vm.instance_of(istate.pop_A(), f)?1:0);
         }
         public void visitARRAYLENGTH() {
             super.visitARRAYLENGTH();
-            state.push_I(vm.arraylength(state.pop_A()));
+            istate.push_I(vm.arraylength(istate.pop_A()));
         }
         public void visitATHROW() {
             super.visitATHROW();
-            throw new WrappedException((Throwable)state.pop_A());
+            throw new WrappedException((Throwable)istate.pop_A());
         }
         public void visitMONITOR(byte op) {
             super.visitMONITOR(op);
-            Object v = state.pop_A();
+            Object v = istate.pop_A();
             if (op == MONITOR_ENTER) vm.monitorenter(v, this);
             else vm.monitorexit(v);
         }
@@ -1268,8 +1268,8 @@ public abstract class BytecodeInterpreter {
             super.visitMULTINEWARRAY(f, dim);
             int[] dims = new int[dim];
             //for (int i=0; i<dim; ++i) f = ((jq_Array)f).getElementType();
-            for (int i=0; i<dim; ++i) dims[dim-i-1] = state.pop_I();
-            state.push_A(vm.multinewarray(dims, f));
+            for (int i=0; i<dim; ++i) dims[dim-i-1] = istate.pop_I();
+            istate.push_A(vm.multinewarray(dims, f));
         }
     }
     

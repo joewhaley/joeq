@@ -416,7 +416,7 @@ public abstract class jq_Method extends jq_Member {
         _compile = _class.getOrCreateInstanceMethod("compile", "()LClazz/jq_CompiledCode;");
         /* Set up delegates. */
         _delegate = null;
-        boolean nullVM = jq.nullVM || System.getProperty("joeq.nullvm") != null;
+        boolean nullVM = jq.nullVM;
         if (!nullVM) {
             _delegate = attemptDelegate("Clazz.Delegates$Method");
         }

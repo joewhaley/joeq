@@ -16,6 +16,8 @@ import Clazz.jq_InstanceMethod;
 import Clazz.jq_Method;
 import Clazz.jq_Reference;
 import Clazz.jq_StaticMethod;
+import Compil3r.CompilationConstants;
+import Compil3r.CompilationState;
 import Run_Time.TypeCheck;
 import Util.Assert;
 import Util.Collections.HashCodeComparator;
@@ -25,7 +27,7 @@ import Util.Collections.SortedArraySet;
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version $Id$
  */
-public abstract class CallTargets extends AbstractSet {
+public abstract class CallTargets extends AbstractSet implements CompilationConstants {
 
     public static final boolean TRACE = false;
     public static final boolean VerifyAssertions = false;
@@ -197,11 +199,9 @@ public abstract class CallTargets extends AbstractSet {
         
         if (TRACE) System.out.println("Class "+rclass+" has "+rclass.getSubClasses().length+" subclasses");
         
-        if (loadClasses) {
-            if (TypeCheck.isSuperclassOf(rclass, imethod.getDeclaringClass())) {
-                // errr... rclass is a supertype of the method's class!
-                receiverType = rclass = imethod.getDeclaringClass();
-            }
+        if (TypeCheck.isSuperclassOf(rclass, imethod.getDeclaringClass(), loadClasses) == YES) {
+            // errr... rclass is a supertype of the method's class!
+            receiverType = rclass = imethod.getDeclaringClass();
         }
         
         if (exact) {
@@ -397,41 +397,6 @@ public abstract class CallTargets extends AbstractSet {
         return new MultipleCallTargets(c, complete);
     }
 
-    static final byte YES = 1;
-    static final byte MAYBE = 2;
-    static final byte NO = 3;
-    
-    static byte implementsInterface_noload(jq_Class klass, jq_Class inter) {
-        byte res = NO; jq_Class k = klass;
-        if (!klass.isLoaded()) return MAYBE;
-        do {
-            if (k.getDeclaredInterface(inter.getDesc()) == inter) return YES;
-            k = k.getSuperclass();
-            if (!k.isLoaded()) {
-                res = MAYBE; break;
-            }
-        } while (k != null);
-        jq_Class[] interfaces = klass.getDeclaredInterfaces();
-        for (int i=0; i<interfaces.length; ++i) {
-            jq_Class k2 = interfaces[i];
-            byte res2 = implementsInterface_noload(k2, inter);
-            if (res2 == YES) return YES;
-            if (res2 == MAYBE) res = MAYBE;
-        }
-        return res;
-    }
-    
-    static byte declaresInterface(jq_Class klass, Set interfaces, boolean loadClasses) {
-        if (VerifyAssertions)
-            Assert._assert(klass.isLoaded());
-        jq_Class[] klass_interfaces = klass.getDeclaredInterfaces();
-        for (int i=0; i<klass_interfaces.length; ++i) {
-            if (!loadClasses && !klass_interfaces[i].isLoaded()) return MAYBE;
-            if (interfaces.contains(klass_interfaces[i])) return YES;
-        }
-        return NO;
-    }
-    
     public static void addAllSubclasses(jq_Class cl, Set s, boolean loadClasses) {
         Stack worklist = new Stack();
         for (;;) {
@@ -478,7 +443,7 @@ public abstract class CallTargets extends AbstractSet {
                 if (loadClasses) rclass.load();
                 if (!rclass.isLoaded()) continue;
                 if (!rclass.isInterface()) continue;
-                if (declaresInterface(rclass, interfaces, loadClasses) != NO) {
+                if (CompilationState.DEFAULT.declaresInterface(rclass, interfaces) != NO) {
                     again = true; // must repeat to catch any interfaces that implement this one
                     // add subtree from here.
                     addAllSubclasses(rclass, interfaces, loadClasses);
@@ -503,7 +468,7 @@ public abstract class CallTargets extends AbstractSet {
                 if (loadClasses) rclass.load();
                 if (!rclass.isLoaded()) continue;
                 if (rclass.isInterface()) continue;
-                if (declaresInterface(rclass, interfaces, loadClasses) != NO) {
+                if (CompilationState.DEFAULT.declaresInterface(rclass, interfaces) != NO) {
                     implementers.push(rclass);
                 } else {
                     jq_Class[] subclasses = rclass.getSubClasses();

@@ -3,6 +3,7 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Run_Time;
 
+import Main.jq;
 import Memory.Address;
 import UTF.Utf8;
 import Util.Assert;
@@ -160,7 +161,7 @@ public abstract class Debug {
     static {
         /* Set up delegates. */
         _delegate = null;
-        boolean nullVM = Main.jq.nullVM || System.getProperty("joeq.nullvm") != null;
+        boolean nullVM = jq.nullVM;
         if (!nullVM) {
             _delegate = attemptDelegate("Run_Time.DebugImpl");
         }

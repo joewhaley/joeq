@@ -36,7 +36,7 @@ public abstract class ClassLibInterface {
     static {
         ClassLib.Common.Interface f = null;
         String classlibinterface = System.getProperty("joeq.classlibinterface");
-        boolean nullVM = jq.nullVM || System.getProperty("joeq.nullvm") != null;
+        boolean nullVM = jq.nullVM;
 
         if (classlibinterface != null) {
             f = attemptClassLibInterface(classlibinterface);
