@@ -3,7 +3,10 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Quad.IPA;
 
+import java.io.DataOutput;
+import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,6 +16,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -102,7 +106,7 @@ public class CSPA {
     public static final boolean CONTEXT_SENSITIVE = true;
     public static final boolean CONTEXT_SENSITIVE_HEAP = true;
     
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         // We use bytecode maps.
         CodeCache.AlwaysMap = true;
         HostedVM.initialize();
@@ -256,7 +260,85 @@ public class CSPA {
         dis.printHistogram();
         dis.escapeAnalysis();
         
-        String dumpfilename = System.getProperty("cspa.dumpfile");
+        String dumpfilename = System.getProperty("cspa.dumpfile", "cspa");
+        dis.dumpResults(dumpfilename);
+    }
+    
+    /**
+     * @param dumpfilename
+     */
+    void dumpResults(String dumpfilename) throws IOException {
+        bdd.save(dumpfilename+".bdd", g_pointsTo);
+        
+        DataOutputStream dos;
+        dos = new DataOutputStream(new FileOutputStream(dumpfilename+".config"));
+        dumpConfig(dos);
+        dos.close();
+        dos = new DataOutputStream(new FileOutputStream(dumpfilename+".vars"));
+        dumpVarIndexMap(dos);
+        dos.close();
+        dos = new DataOutputStream(new FileOutputStream(dumpfilename+".heap"));
+        dumpHeapIndexMap(dos);
+        dos.close();
+    }
+
+    private void dumpConfig(DataOutput out) throws IOException {
+        out.writeBytes(VARBITS+" "+HEAPBITS+" "+FIELDBITS+" "+CLASSBITS+" "+CONTEXTBITS+"\n");
+        String ordering = System.getProperty("bddordering", "FD_H2cxH2o_V2cxV1cxV2oxV1o_H1cxH1o");
+        out.writeBytes(ordering+"\n");
+    }
+
+    private void dumpVarIndexMap(DataOutput out) throws IOException {
+        int n = variableIndexMap.size();
+        out.writeBytes(n+"\n");
+        int j;
+        for (j=0; j<=globalVarHighIndex; ++j) {
+            Node node = (Node) variableIndexMap.get(j);
+            node.write(null, out);
+            out.writeByte('\n');
+        }
+        for (Iterator i=bddSummaryList.iterator(); i.hasNext(); ) {
+            BDDMethodSummary s = (BDDMethodSummary) i.next();
+            Assert._assert(s.lowVarIndex == j);
+            for ( ; j<=s.highVarIndex; ++j) {
+                Node node = (Node) variableIndexMap.get(j);
+                node.write(s.ms, out);
+                out.writeByte('\n');
+            }
+        }
+        while (j < variableIndexMap.size()) {
+            UnknownTypeNode node = (UnknownTypeNode) variableIndexMap.get(j);
+            node.write(null, out);
+            out.writeByte('\n');
+            ++j;
+        }
+    }
+
+    private void dumpHeapIndexMap(DataOutput out) throws IOException {
+        int n = heapobjIndexMap.size();
+        out.writeBytes(n+"\n");
+        int j;
+        for (j=0; j<=globalHeapHighIndex; ++j) {
+            ConcreteObjectNode node = (ConcreteObjectNode) heapobjIndexMap.get(j);
+            if (node == null) out.writeBytes("null");
+            else node.write(null, out);
+            out.writeByte('\n');
+        }
+        for (Iterator i=bddSummaryList.iterator(); i.hasNext(); ) {
+            BDDMethodSummary s = (BDDMethodSummary) i.next();
+            Assert._assert(s.lowHeapIndex == j);
+            for ( ; j<=s.highHeapIndex; ++j) {
+                Node node = (Node) heapobjIndexMap.get(j);
+                node.write(s.ms, out);
+                out.writeByte('\n');
+            }
+        }
+        while (j < heapobjIndexMap.size()) {
+            UnknownTypeNode node = (UnknownTypeNode) heapobjIndexMap.get(j);
+            node.write(null, out);
+            out.writeByte('\n');
+            ++j;
+        }
     }
     
     void printHistogram() {
@@ -280,7 +362,12 @@ public class CSPA {
         }
     }
     
+    int globalVarLowIndex, globalVarHighIndex;
+    int globalHeapLowIndex, globalHeapHighIndex;
+    
     public void addGlobals() {
+        Assert._assert(variableIndexMap.size() == 0);
+        globalVarLowIndex = 0; globalHeapLowIndex = 0;
         GlobalNode.GLOBAL.addDefaultStatics();
         addGlobalObjectAllocation(GlobalNode.GLOBAL, null);
         addAllocType(null, PrimordialClassLoader.getJavaLangObject());
@@ -289,6 +376,8 @@ public class CSPA {
         for (Iterator i=ConcreteObjectNode.getAll().iterator(); i.hasNext(); ) {
             handleGlobalNode((ConcreteObjectNode) i.next());
         }
+        globalVarHighIndex = variableIndexMap.size() - 1;
+        globalHeapHighIndex = heapobjIndexMap.size() - 1;
     }
     
     public void addGlobalV1Context(BDD b) {
@@ -459,7 +548,7 @@ public class CSPA {
     // the size of domains, can be changed to reflect the size of inputs
     int domainBits[];
     // to be computed in sysInit function
-    int domainSpos[] = {0,  0,  0,  0,  0,  0,  0,  0,  0}; 
+    int domainSpos[]; 
     
     // V1 V2 are domains for variables 
     // H1 H2 are domains for heap objects
@@ -469,7 +558,7 @@ public class CSPA {
     BDDDomain FD;
     // T1 and T2 are used to compute typeFilter
     // T1 = V2, and T2 = V1
-    BDDDomain T1, T2, T3, T4; 
+    BDDDomain T1, T2; 
     BDDDomain[] bdd_domains;
 
     // domain pairs for bdd_replace
@@ -554,6 +643,7 @@ public class CSPA {
                                 FIELDBITS,
                                 HEAPBITS, CONTEXTBITS,
                                 HEAPBITS, CONTEXTBITS};
+        domainSpos = new int[domainBits.length];
         
         long[] domains = new long[domainBits.length];
         for (int i=0; i<domainBits.length; ++i) {
@@ -571,8 +661,6 @@ public class CSPA {
         H2c = bdd_domains[8];
         T1 = V2o;
         T2 = V1o;
-        T3 = H2o;
-        T4 = V2o;
         for (int i=0; i<domainBits.length; ++i) {
             Assert._assert(bdd_domains[i].varNum() == domainBits[i]);
         }
@@ -580,7 +668,7 @@ public class CSPA {
         boolean reverseLocal = System.getProperty("bddreverse", "true").equals("true");
         String ordering = System.getProperty("bddordering", "FD_H2cxH2o_V2cxV1cxV2oxV1o_H1cxH1o");
         
-        int[] varorder = makeVarOrdering(reverseLocal, ordering);
+        int[] varorder = makeVarOrdering(bdd, domainBits, domainSpos, reverseLocal, ordering);
         if (TRACE_VARORDER) {
             for (int i=0; i<varorder.length; ++i) {
                 if (i != 0) 
@@ -637,7 +725,8 @@ public class CSPA {
         g_edgeSet = bdd.zero();
     }
 
-    int[] makeVarOrdering(boolean reverseLocal, String ordering) {
+    static int[] makeVarOrdering(BDDFactory bdd, int[] domainBits, int[] domainSpos,
+                                 boolean reverseLocal, String ordering) {
         
         int varnum = bdd.varNum();
         
@@ -668,15 +757,15 @@ public class CSPA {
         for (int i=0; ; ++i) {
             String s = st.nextToken();
             BDDDomain d;
-            if (s.equals("V1o")) d = V1o;
-            else if (s.equals("V1c")) d = V1c;
-            else if (s.equals("V2o")) d = V2o;
-            else if (s.equals("V2c")) d = V2c;
-            else if (s.equals("FD")) d = FD;
-            else if (s.equals("H1o")) d = H1o;
-            else if (s.equals("H1c")) d = H1c;
-            else if (s.equals("H2o")) d = H2o;
-            else if (s.equals("H2c")) d = H2c;
+            if (s.equals("V1o")) d = bdd.getDomain(0);
+            else if (s.equals("V1c")) d = bdd.getDomain(1);
+            else if (s.equals("V2o")) d = bdd.getDomain(2);
+            else if (s.equals("V2c")) d = bdd.getDomain(3);
+            else if (s.equals("FD")) d = bdd.getDomain(4);
+            else if (s.equals("H1o")) d = bdd.getDomain(5);
+            else if (s.equals("H1c")) d = bdd.getDomain(6);
+            else if (s.equals("H2o")) d = bdd.getDomain(7);
+            else if (s.equals("H2c")) d = bdd.getDomain(8);
             else {
                 Assert.UNREACHABLE("bad domain: "+s);
                 return null;
@@ -689,12 +778,13 @@ public class CSPA {
                     continue;
                 }
             }
-            bitIndex = fillInVarIndices(doms, i-numberOfDomains, numberOfDomains+1,
+            bitIndex = fillInVarIndices(domainBits, domainSpos,
+                                        doms, i-numberOfDomains, numberOfDomains+1,
                                         localOrders, bitIndex, varorder);
             if (!st.hasMoreTokens()) {
-                Collection not_done = new ArrayList(Arrays.asList(bdd_domains));
-                not_done.removeAll(Arrays.asList(doms));
-                Assert._assert(not_done.isEmpty(), not_done.toString());
+                //Collection not_done = new ArrayList(Arrays.asList(bdd_domains));
+                //not_done.removeAll(Arrays.asList(doms));
+                //Assert._assert(not_done.isEmpty(), not_done.toString());
                 break;
             }
             if (s.equals("_")) {
@@ -716,7 +806,8 @@ public class CSPA {
         return varorder;
     }
     
-    int fillInVarIndices(BDDDomain[] doms, int domainIndex, int numDomains,
+    static int fillInVarIndices(int[] domainBits, int[] domainSpos,
+                         BDDDomain[] doms, int domainIndex, int numDomains,
                          int[][] localOrders, int bitIndex, int[] varorder) {
         int maxBits = 0;
         for (int i=0; i<numDomains; ++i) {
@@ -736,7 +827,7 @@ public class CSPA {
         return bitIndex;
     }
     
-    void getVariableMap(int[] map, BDDDomain[] doms) {
+    static void getVariableMap(int[] map, BDDDomain[] doms) {
         int idx = 0;
         for (int var = 0; var < doms.length; var++) {
             int[] vars = doms[var].vars();
@@ -747,7 +838,7 @@ public class CSPA {
     }
     
     /* remap according to a map */
-    void remapping(int[] varorder, int[] maps) {
+    static void remapping(int[] varorder, int[] maps) {
         int[] varorder2 = new int[varorder.length];
         for (int i = 0; i < varorder.length; i++) {
             varorder2[i] = maps[varorder[i]];
@@ -879,11 +970,13 @@ public class CSPA {
         BDDMethodSummary bms = getBDDSummary(ms);
         if (bms == null) {
             bddSummaries.put(ms, bms = new BDDMethodSummary(ms));
+            bddSummaryList.add(bms);
         }
         return bms;
     }
     
     Map bddSummaries = new HashMap();
+    List bddSummaryList = new LinkedList();
     BDDMethodSummary getBDDSummary(MethodSummary ms) {
         BDDMethodSummary result = (BDDMethodSummary) bddSummaries.get(ms);
         return result;
@@ -1727,6 +1820,7 @@ public class CSPA {
         /** BDD representing all of the variables in this method and its callees.  For escape analysis. */
         BDD vars; // V1c
         int lowVarIndex, highVarIndex;
+        int lowHeapIndex, highHeapIndex;
         
         BDD m_pointsTo;     // V1 x H1
         BDD m_stores;       // V1 x (V2 x FD) 
@@ -1735,9 +1829,11 @@ public class CSPA {
         BDDMethodSummary(MethodSummary ms) {
             this.ms = ms;
             lowVarIndex = variableIndexMap.size();
+            lowHeapIndex = heapobjIndexMap.size();
             reset();
             computeInitial();
             highVarIndex = variableIndexMap.size() - 1;
+            highHeapIndex = heapobjIndexMap.size() - 1;
         }
         
         void reset() {
