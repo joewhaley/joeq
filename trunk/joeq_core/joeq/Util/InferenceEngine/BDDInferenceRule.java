@@ -39,7 +39,7 @@ public class BDDInferenceRule extends InferenceRule {
     Map variableToBDDDomain;
     BDDPairing[] renames;
     BDDPairing bottomRename;
-    boolean incrementalize = true;
+    boolean incrementalize = !System.getProperty("incremental", "yes").equals("no");
     boolean cache_before_rename = true;
     BDD[] canQuantifyAfter;
     int updateCount;
