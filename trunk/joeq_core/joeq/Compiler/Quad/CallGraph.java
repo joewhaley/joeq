@@ -7,13 +7,18 @@ package Compil3r.Quad;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
+import java.util.Map;
+import java.util.Set;
 
 import Clazz.jq_Method;
 import Compil3r.Quad.Operator.Invoke;
 import Util.Assert;
+import Util.Graphs.Navigator;
 
 /**
  * Abstract representation of a call graph.
@@ -67,6 +72,39 @@ public abstract class CallGraph {
         return result;
     }
     
+    public Collection getCallees(jq_Method caller) {
+        LinkedHashSet result = new LinkedHashSet();
+        for (Iterator i=getCallSites(caller).iterator(); i.hasNext(); ) {
+            ProgramLocation p = (ProgramLocation) i.next();
+            result.addAll(getTargetMethods(p));
+        }
+        return result;
+    }
+    
+    public Map calculateBackEdges(Collection roots) {
+        Map backEdges = new HashMap();
+        LinkedList worklist = new LinkedList();
+        for (Iterator i=roots.iterator(); i.hasNext(); ) {
+            jq_Method m = (jq_Method) i.next();
+            backEdges.put(m, new HashSet());
+            worklist.add(m);
+        }
+        while (!worklist.isEmpty()) {
+            jq_Method caller = (jq_Method) worklist.removeFirst();
+            Collection callees = this.getCallees(caller);
+            for (Iterator i=callees.iterator(); i.hasNext(); ) {
+                jq_Method callee = (jq_Method) i.next();
+                Set s = (Set) backEdges.get(callee);
+                if (s == null) {
+                    backEdges.put(callee, s = new HashSet());
+                    worklist.add(callee);
+                }
+                s.add(caller);
+            }
+        }
+        return backEdges;
+    }
+    
     public Collection[] findDepths(Collection/*jq_Method*/ roots) {
         HashSet visited = new HashSet();
         LinkedList result = new LinkedList();
@@ -95,6 +133,40 @@ public abstract class CallGraph {
         }
         
         return (Collection[]) result.toArray(new Collection[result.size()]);
+    }
+    
+    public Navigator getNavigator(Collection roots) {
+        return new CGNavigator(roots);
+    }
+    
+    public class CGNavigator implements Navigator {
+
+        protected final Map backEdges;
+
+        public CGNavigator(Collection roots) {
+            this(calculateBackEdges(roots));
+        }
+        
+        public CGNavigator(Map backEdges) {
+            this.backEdges = backEdges;
+        }
+
+        /**
+         * @see Util.Graphs.Navigator#next(java.lang.Object)
+         */
+        public Object[] next(Object node) {
+            jq_Method m = (jq_Method) node;
+            return getCallees(m).toArray();
+        }
+
+        /**
+         * @see Util.Graphs.Navigator#prev(java.lang.Object)
+         */
+        public Object[] prev(Object node) {
+            Set s = (Set) backEdges.get(node);
+            return s.toArray();
+        }
+        
     }
     
     /*
