@@ -49,8 +49,8 @@ public abstract class Bootstrapper implements ObjectLayout {
 	    x86ReferenceCompiler.THREAD_BLOCK_OFFSET = 0x14;
 	} else {
 	    DUMP_COFF = false;
-	    x86ReferenceCompiler.THREAD_BLOCK_PREFIX = Assembler.x86.x86.PREFIX_GS;
-	    x86ReferenceCompiler.THREAD_BLOCK_OFFSET = 0x4;
+	    //x86ReferenceCompiler.THREAD_BLOCK_PREFIX = Assembler.x86.x86.PREFIX_GS;
+	    //x86ReferenceCompiler.THREAD_BLOCK_OFFSET = 0x4;
 	}
 
         String classpath = System.getProperty("java.class.path")+

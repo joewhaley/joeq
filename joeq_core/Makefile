@@ -24,7 +24,7 @@ commit:
 	( export CVS_RSH=ssh ; cvs commit )
 
 bootstrap:
-	java -mx200M Main.Bootstrapper
+	java -mx250M Main.Bootstrapper
 
 bootclasspath:	GetBootClassPath.class
 	java GetBootClassPath > bootclasspath

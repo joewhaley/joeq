@@ -56,16 +56,16 @@ public abstract class System {
         props.setProperty("java.class.version", "47.0");
         
         // TODO: read these properties from environment.
-        props.setProperty("java.home", "G:\\jdk1.3\\jre");
-        props.setProperty("os.name", "Windows 2000");
+        props.setProperty("java.home", "/opt/IBMJava2-13/jre");
+        props.setProperty("os.name", "Linux");
         props.setProperty("os.arch", "x86");
-        props.setProperty("os.version", "5.0");
-        props.setProperty("file.separator", "\\");
-        props.setProperty("path.separator", ";");
-        props.setProperty("line.separator", "\r\n");
+        props.setProperty("os.version", "2.4.9-31smp");
+        props.setProperty("file.separator", "/");
+        props.setProperty("path.separator", ":");
+        props.setProperty("line.separator", "\n");
         props.setProperty("user.name", "jwhaley");
-        props.setProperty("user.home", "G:\\Documents and Settings\\John Whaley");
-        props.setProperty("user.dir", "G:\\joeq");
+        props.setProperty("user.home", "/u/jwhaley");
+        props.setProperty("user.dir", "/u/jwhaley/joeq");
         props.setProperty("java.class.path", PrimordialClassLoader.loader.classpathToString());
         return props;
     }

@@ -64,7 +64,7 @@ public class Monitor implements ObjectLayout {
                 Unsafe.poke4(Unsafe.addressOf(k)+STATUS_WORD_OFFSET, newlockword);
             } else {
                 // thin lock owned by another thread.
-                if (TRACE) SystemInterface.debugmsg("Lock contention ("+t+"), inflating...");
+                if (TRACE) SystemInterface.debugmsg(t+" tid "+jq.hex(tid)+": Lock contention with tid "+jq.hex(oldlockword & THREAD_ID_MASK)+", inflating...");
                 entrycount = 1;
                 Monitor m = allocateInflatedLock();
                 m.monitor_owner = t;
@@ -143,7 +143,8 @@ public class Monitor implements ObjectLayout {
                 return;
             }
             int status_flags = oldlockword & STATUS_FLAGS_MASK;
-            if ((Unsafe.addressOf(m) & STATUS_FLAGS_MASK) != 0) {
+            if ((Unsafe.addressOf(m) & STATUS_FLAGS_MASK) != 0 ||
+		(Unsafe.addressOf(m) & LOCK_EXPANDED) != 0) {
                 jq.UNREACHABLE("Monitor object has address "+jq.hex8(Unsafe.addressOf(m)));
             }
             int newlockword = Unsafe.addressOf(m) | LOCK_EXPANDED | status_flags;
@@ -152,7 +153,9 @@ public class Monitor implements ObjectLayout {
                 // successfully obtained inflated lock.
                 if (TRACE) SystemInterface.debugmsg("Obtained inflated lock! new lockword="+jq.hex8(newlockword));
                 return;
-            }
+            } else {
+                if (TRACE) SystemInterface.debugmsg("Failed to obtain inflated lock, lockword was "+jq.hex8(oldlockword));
+	    }
             // another thread has a thin lock on this object.  yield to scheduler.
             Thread.yield();
         }
@@ -180,9 +183,11 @@ public class Monitor implements ObjectLayout {
             if (TRACE) SystemInterface.debugmsg("We ("+t+") finished waiting on "+this);
         } else {
             if (TRACE) SystemInterface.debugmsg(this+" is unlocked, we ("+t+") obtain it.");
+	    jq.assert(this.atomic_count == 0);
         }
         jq.assert(this.monitor_owner == null);
         jq.assert(this.entry_count == 0);
+	jq.assert(this.atomic_count >= 0);
         if (TRACE) SystemInterface.debugmsg("We ("+t+") obtained lock "+this);
         this.monitor_owner = t;
         this.entry_count = 1;
@@ -204,10 +209,10 @@ public class Monitor implements ObjectLayout {
             return;
         }
         this.monitor_owner = null;
-        Unsafe.atomicSub(Unsafe.addressOf(this)+_atomic_count.getOffset(), 1);
-        if (this.atomic_count >= 0) {
+	Unsafe.atomicSub(Unsafe.addressOf(this)+_atomic_count.getOffset(), 1);
+        if (Unsafe.isGE()) {
             // threads are waiting on us, release the semaphore.
-            if (TRACE) SystemInterface.debugmsg(this.atomic_count+" threads are waiting on released lock "+this+", releasing semaphore.");
+            if (TRACE) SystemInterface.debugmsg((this.atomic_count+1)+" threads are waiting on released lock "+this+", releasing semaphore.");
             this.releaseSemaphore();
         } else {
             if (TRACE) SystemInterface.debugmsg("No threads are waiting on released lock "+this+".");
