@@ -7,6 +7,7 @@
 package Bootstrap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -36,7 +37,6 @@ import Run_Time.Reflection;
 import Run_Time.SystemInterface;
 import Run_Time.Unsafe;
 import Util.IdentityHashCodeWrapper;
-import Util.LinkedHashSet;
 
 /**
  *
@@ -310,7 +310,7 @@ public class BootstrapRootSet {
                 Object[] v = (Object[])o;
                 if (TRACE) out.println("Visiting "+jqType+" of "+length+" elements");
                 for (int k=0; k<length; ++k) {
-                    Object o2 = Reflection.obj_trav.mapValue(v[k]);
+                    Object o2 = Reflection.arrayload_A(v, k);
                     addObjectAndSubfields(o2, objs);
                 }
             }
