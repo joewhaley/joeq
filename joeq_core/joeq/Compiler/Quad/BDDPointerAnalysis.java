@@ -426,8 +426,6 @@ public class BDDPointerAnalysis {
         
         time = System.currentTimeMillis() - time;
 
-        this.dumpResults();
-
         System.out.println("Total time: "+time/1000.+" seconds.");
     }
 
