@@ -1,0 +1,129 @@
+/*
+ * Thread.java
+ *
+ * Created on January 29, 2001, 10:21 AM
+ *
+ * @author  John Whaley
+ * @version 
+ */
+
+package ClassLib.Common.java.lang;
+
+import Clazz.jq_InstanceField;
+import Clazz.jq_InstanceMethod;
+import Clazz.jq_StaticMethod;
+import Clazz.jq_Class;
+import Bootstrap.PrimordialClassLoader;
+import Run_Time.Unsafe;
+import Run_Time.Reflection;
+import Scheduler.jq_Thread;
+import jq;
+
+public abstract class Thread {
+
+    // additional fields
+    public final jq_Thread jq_thread;
+    
+    private Thread(jq_Thread t) {
+        this.jq_thread = t;
+    }
+    
+    private static synchronized native int nextThreadNum();
+    private native void init(java.lang.ThreadGroup g, java.lang.Runnable target, java.lang.String name);
+    
+    // overridden constructors
+    public Thread() {
+        java.lang.Object o = this;
+        jq_Thread t = new jq_Thread((java.lang.Thread)o);
+        this.jq_thread = t;
+        int n = nextThreadNum();
+        this.init(null, null, "Thread-"+n);
+        t.init();
+    }
+    public Thread(java.lang.Runnable target) {
+        java.lang.Object o = this;
+        jq_Thread t = new jq_Thread((java.lang.Thread)o);
+        this.jq_thread = t;
+        int n = nextThreadNum();
+        this.init(null, target, "Thread-"+n);
+        t.init();
+    }
+    public Thread(java.lang.ThreadGroup group, java.lang.Runnable target) {
+        java.lang.Object o = this;
+        jq_Thread t = new jq_Thread((java.lang.Thread)o);
+        this.jq_thread = t;
+        int n = nextThreadNum();
+        this.init(group, target, "Thread-"+n);
+        t.init();
+    }
+    public Thread(java.lang.String name) {
+        java.lang.Object o = this;
+        jq_Thread t = new jq_Thread((java.lang.Thread)o);
+        this.jq_thread = t;
+        this.init(null, null, name);
+        t.init();
+    }
+    public Thread(java.lang.ThreadGroup group, java.lang.String name) {
+        java.lang.Object o = this;
+        jq_Thread t = new jq_Thread((java.lang.Thread)o);
+        this.jq_thread = t;
+        this.init(group, null, name);
+        t.init();
+    }
+    public Thread(java.lang.Runnable target, java.lang.String name) {
+        java.lang.Object o = this;
+        jq_Thread t = new jq_Thread((java.lang.Thread)o);
+        this.jq_thread = t;
+        this.init(null, target, name);
+        t.init();
+    }
+    public Thread(java.lang.ThreadGroup group, java.lang.Runnable target, java.lang.String name) {
+        java.lang.Object o = this;
+        jq_Thread t = new jq_Thread((java.lang.Thread)o);
+        this.jq_thread = t;
+        this.init(group, target, name);
+        t.init();
+    }
+    
+    // native method implementations
+    private static void registerNatives() {}
+    public static java.lang.Thread currentThread() { return Unsafe.getThreadBlock().getJavaLangThreadObject(); }
+    public static void yield() { Unsafe.getThreadBlock().yield(); }
+    public static void sleep(long millis) throws InterruptedException { Unsafe.getThreadBlock().sleep(millis); }
+    public /*synchronized*/ void start() {
+        jq_Thread jq_thread = this.jq_thread;
+        jq_thread.start();
+    }
+    private boolean isInterrupted(boolean ClearInterrupted) {
+        jq_Thread jq_thread = this.jq_thread;
+        return jq_thread.isInterrupted(ClearInterrupted);
+    }
+    public final boolean isAlive() {
+        jq_Thread jq_thread = this.jq_thread;
+        return jq_thread.isAlive();
+    }
+    public int countStackFrames() {
+        jq_Thread jq_thread = this.jq_thread;
+        return jq_thread.countStackFrames();
+    }
+    private void setPriority0(int newPriority) {
+        jq_Thread jq_thread = this.jq_thread;
+        jq_thread.setPriority(newPriority);
+    }
+    private void stop0(java.lang.Object o) {
+        jq_Thread jq_thread = this.jq_thread;
+        jq_thread.stop(o);
+    }
+    private void suspend0() {
+        jq_Thread jq_thread = this.jq_thread;
+        jq_thread.suspend();
+    }
+    private void resume0() {
+        jq_Thread jq_thread = this.jq_thread;
+        jq_thread.resume();
+    }
+    private void interrupt0() {
+        jq_Thread jq_thread = this.jq_thread;
+        jq_thread.interrupt();
+    }
+}
