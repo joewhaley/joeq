@@ -168,7 +168,8 @@ ldt_fs_t* Setup_LDT_Keeper(void)
         free(ldt_fs);
 	return NULL;
     }
-    printf("Thread %x: installing fs segment at 0x%08x\n", pthread_self(), ldt_fs->fs_seg);
+    //ldt_fs->fs_seg = calloc(getpagesize(), 1);
+    printf("Thread %d: installing fs segment at 0x%08x\n", pthread_self(), ldt_fs->fs_seg);
     *(void**)((char*)ldt_fs->fs_seg+0x18) = ldt_fs->fs_seg;
     array.base_addr=(int)ldt_fs->fs_seg;
     array.entry_number=TEB_SEL_IDX;
