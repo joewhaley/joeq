@@ -44,18 +44,19 @@ public class GlobalPathNumbering extends PathNumbering {
             Object o = rpo.next();
             BigInteger val = (BigInteger) nodeNumbering.get(o);
             if (val == null) val = BigInteger.ZERO;
-            Collection next = navigator.next(o);
-            for (Iterator i = next.iterator(); i.hasNext(); ) {
+            Collection prev = navigator.prev(o);
+            for (Iterator i = prev.iterator(); i.hasNext(); ) {
                 Object p = i.next();
                 BigInteger val2 = (BigInteger) nodeNumbering.get(p);
                 if (val2 == null) val2 = BigInteger.ZERO;
                 BigInteger val3 = val.add(val2);
-                nodeNumbering.put(p, val3);
                 Object edge = new Pair(o, p);
-                Range range = new Range(val2, val3.subtract(BigInteger.ONE));
+                Range range = new Range(val, val3.subtract(BigInteger.ONE));
                 edgeNumbering.put(edge, range);
-                if (val3.compareTo(max) > 0) max = val3;
+                val = val3;
             }
+            nodeNumbering.put(o, val);
+            if (val.compareTo(max) > 0) max = val;
         }
         return max;
     }
