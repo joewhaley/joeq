@@ -12,8 +12,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -35,6 +37,7 @@ import Compil3r.Analysis.FlowInsensitive.MethodSummary.ConcreteTypeNode;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.FieldNode;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.Node;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.ParamNode;
+import Compil3r.Analysis.FlowInsensitive.MethodSummary.PassedParameter;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.ReturnValueNode;
 import Compil3r.Analysis.FlowInsensitive.MethodSummary.ThrownExceptionNode;
 import Compil3r.Analysis.IPA.CSPA.ThreadRootMap;
@@ -43,9 +46,11 @@ import Compil3r.Analysis.IPA.ProgramLocation.QuadProgramLocation;
 import Compil3r.BytecodeAnalysis.Bytecodes;
 import Compil3r.Quad.CallGraph;
 import Compil3r.Quad.CodeCache;
+import Compil3r.Quad.ControlFlowGraph;
 import Compil3r.Quad.LoadedCallGraph;
 import Compil3r.Quad.Operator;
 import Compil3r.Quad.Quad;
+import Compil3r.Quad.QuadIterator;
 import Main.HostedVM;
 import Util.Assert;
 import Util.Strings;
@@ -55,6 +60,8 @@ import Util.Collections.MultiMap;
 import Util.Collections.SortedArraySet;
 import Util.Collections.UnmodifiableIterator;
 import Util.Graphs.PathNumbering;
+import Util.Graphs.SCComponent;
+import Util.Graphs.Traversals;
 import Util.Graphs.PathNumbering.Path;
 import Util.IO.ByteSequence;
 
@@ -96,20 +103,17 @@ public class CSPAResults {
      */
     BDD pointsTo;
 
+    /** Points-to BDD: V1o x H1o.
+     * Just cached because it is used often.
+     */
+    BDD ci_pointsTo;
+
     public TypedBDD getPointsToSet(int var) {
-        BDD context = V1c.set();
-        context.andWith(H1c.set());
-        BDD ci_pointsTo = pointsTo.exist(context);
         BDD result = ci_pointsTo.restrict(V1o.ithVar(var));
-        ci_pointsTo.free();
         return new TypedBDD(result, H1o);
     }
 
     public TypedBDD getAliasedLocations(int var) {
-        BDD context = V1c.set();
-        context.andWith(H1c.set());
-        BDD ci_pointsTo = pointsTo.exist(context);
-        context.free();
         BDD a = V1o.ithVar(var);
         BDD heapObjs = ci_pointsTo.restrict(a);
         a.free();
@@ -118,12 +122,24 @@ public class CSPAResults {
         return result;
     }
     
+    public TypedBDD getAliased(int v1, int v2) {
+        BDD a = V1o.ithVar(v1);
+        BDD heapObjs1 = ci_pointsTo.restrict(a);
+        a.free();
+        BDD b = V1o.ithVar(v2);
+        BDD heapObjs2 = ci_pointsTo.restrict(b);
+        b.free();
+        heapObjs1.andWith(heapObjs2);
+        TypedBDD result = new TypedBDD(heapObjs1, H1o);
+        return result;
+    }
+    
     public TypedBDD getAllHeapOfType(jq_Reference type) {
         int j=0;
         BDD result = bdd.zero();
         for (Iterator i=heapobjIndexMap.iterator(); i.hasNext(); ++j) {
             Node n = (Node) i.next();
-            Assert._assert(this.heapobjIndexMap.get(n) == j);
+            Assert._assert(getHeapIndex(n) == j);
             if (n != null && n.getDeclaredType() == type)
                 result.orWith(H1o.ithVar(j));
         }
@@ -144,9 +160,7 @@ public class CSPAResults {
      * returned BDD is: V1o x H1o.
      */
     public TypedBDD getContextInsensitivePointsTo() {
-        BDD context = V1c.set();
-        context.andWith(H1c.set());
-        return new TypedBDD(pointsTo.exist(context), V1o, H1o);
+        return new TypedBDD(ci_pointsTo.id(), V1o, H1o);
     }
 
     /** Load call graph from the given file name.
@@ -157,6 +171,212 @@ public class CSPAResults {
         Map thread_map = new ThreadRootMap(findThreadRuns(cg));
         Number paths = pn.countPaths(cg.getRoots(), cg.getCallSiteNavigator(), thread_map);
         System.out.println("Number of paths in call graph="+paths);
+    }
+
+    public boolean findAliasedParameters(jq_Method m) {
+        Collection s = methodToVariables.getValues(m);
+        Collection paramNodes = new LinkedList();
+        for (Iterator j = s.iterator(); j.hasNext(); ) {
+            Object o = j.next();
+            if (o instanceof ParamNode || o instanceof FieldNode)
+            //if (!(o instanceof ThrownExceptionNode) && !(o instanceof GlobalNode))
+                paramNodes.add(o);
+        }
+        boolean hasAliased = false;
+        int n = 1;
+        for (Iterator j = paramNodes.iterator(); j.hasNext(); ) {
+            Node p1 = (Node) j.next();
+            int v1 = getVariableIndex(p1);
+            Iterator k = paramNodes.iterator();
+            for (int a = 0; a < n; ++a) k.next();
+            while (k.hasNext()) {
+                Node p2 = (Node) k.next();
+                Assert._assert(p1 != p2);
+                int v2 = getVariableIndex(p2);
+                TypedBDD result = getAliased(v1, v2);
+                for (Iterator l = result.iterator(); l.hasNext(); ) {
+                    int h = ((Integer)l.next()).intValue();
+                    BDD relation = V1o.ithVar(v1);
+                    relation.orWith(V1o.ithVar(v2));
+                    relation.andWith(H1o.ithVar(h));
+                    BDD c_result = pointsTo.relprod(relation, V1o.set().and(H1o.set()));
+                    relation.free();
+                    if (!c_result.isZero()) {
+                        //System.out.println("Aliased: "+m+" "+p1+" "+p2+":");
+                        //System.out.println(result);
+                        //System.out.println("Under contexts: "+c_result.toStringWithDomains());
+                        hasAliased = true;
+                    }
+                    c_result.free();
+                }
+                result.free();
+            }
+            ++n;
+        }
+        return hasAliased;
+    }
+    
+    public void findAliasedParameters() {
+        int noAlias = 0, hasAlias = 0;
+        for (Iterator i = methodToVariables.keySet().iterator(); i.hasNext(); ) {
+            jq_Method m = (jq_Method) i.next();
+            boolean hasAliased = findAliasedParameters(m);
+            if (hasAliased) hasAlias++;
+            else noAlias++;
+        }
+        System.out.println("No aliased parameters: "+noAlias);
+        System.out.println("Has aliased parameters: "+hasAlias);
+    }
+
+    public static boolean TRACE_ESCAPE = false;
+
+    public Collection getTargetMethods(ProgramLocation callSite) {
+        return cg.getTargetMethods(mapCall(callSite));
+    }
+    
+    public void escapeAnalysis() {
+        
+        BDD escapingLocations = bdd.zero();
+        
+        List order = Traversals.postOrder(cg.getNavigator(), cg.getRoots());
+        Map methodToVarBDD = new HashMap();
+        for (Iterator i = order.iterator(); i.hasNext(); ) {
+            jq_Method m = (jq_Method) i.next();
+            if (m.getBytecode() == null) continue;
+            BDD m_vars;
+            SCComponent scc = (SCComponent) pn.getSCC(m);
+            if (scc.isLoop()) {
+                m_vars = bdd.zero();
+            } else {
+                Collection m_nodes = methodToVariables.getValues(m);
+                m_vars = bdd.zero();
+                for (Iterator j = cg.getCallees(m).iterator(); j.hasNext(); ) {
+                    jq_Method callee = (jq_Method) j.next();
+                    BDD m_vars2 = (BDD) methodToVarBDD.get(callee);
+                    if (m_vars2 == null) continue;
+                    m_vars.orWith(m_vars2.id());
+                }
+            }
+            methodToVarBDD.put(m, m_vars);
+            Collection m_nodes = methodToVariables.getValues(m);
+            HashMap concreteNodes = new HashMap();
+            for (Iterator j = m_nodes.iterator(); j.hasNext(); ) {
+                Node o = (Node) j.next();
+                if (o instanceof ConcreteTypeNode) {
+                    ConcreteTypeNode ctn = (ConcreteTypeNode) o;
+                    ProgramLocation pl = ctn.getLocation();
+                    pl = mapCall(pl);
+                    concreteNodes.put(pl, ctn);
+                }
+                boolean bad = false;
+                if (o.getEscapes()) {
+                    if (TRACE_ESCAPE) System.out.println(o+" escapes, bad");
+                    bad = true;
+                //} else if (cg.getRoots().contains(m) && ms.getThrown().contains(o)) {
+                //    if (TRACE_ESCAPE) System.out.println(o+" is thrown from root set, bad");
+                //    bad = true;
+                } else {
+                    Set passedParams = o.getPassedParameters();
+                    if (passedParams != null) {
+                        outer:
+                        for (Iterator k = passedParams.iterator(); k.hasNext(); ) {
+                            PassedParameter pp = (PassedParameter) k.next();
+                            ProgramLocation mc = pp.getCall();
+                            for (Iterator a = getTargetMethods(mc).iterator(); a.hasNext(); ) {
+                                jq_Method m2 = (jq_Method) a.next();
+                                if (m2.getBytecode() == null) {
+                                    if (TRACE_ESCAPE) System.out.println(o+" is passed into a native method, bad");
+                                    bad = true;
+                                    break outer;
+                                }
+                            }
+                        }
+                    }
+                }
+                if (!bad) {
+                    int v_i = getVariableIndex(o);
+                    m_vars.orWith(V1o.ithVar(v_i));
+                    //if (TRACE_ESCAPE) System.out.println("Var "+v_i+" is good: "+m_vars.toStringWithDomains());
+                }
+            }
+            if (TRACE_ESCAPE) System.out.println("Non-escaping locations for "+m+" = "+m_vars.toStringWithDomains());
+            ControlFlowGraph cfg = CodeCache.getCode(m);
+            boolean trivial = false;
+            for (QuadIterator j = new QuadIterator(cfg); j.hasNext(); ) {
+                Quad q = j.nextQuad();
+                if (q.getOperator() instanceof Operator.New ||
+                    q.getOperator() instanceof Operator.NewArray) {
+                    ProgramLocation pl = new QuadProgramLocation(m, q);
+                    pl = mapCall(pl);
+                    ConcreteTypeNode ctn = (ConcreteTypeNode) concreteNodes.get(pl);
+                    if (ctn == null) {
+                        //trivial = true;
+                        trivial = q.getOperator() instanceof Operator.New;
+                        System.out.println(cfg.getMethod()+": "+q+" trivially doesn't escape.");
+                    } else {
+                        int v_i = getVariableIndex(ctn);
+                        BDD h = ci_pointsTo.restrict(V1o.ithVar(v_i));
+                        Assert._assert(h.satCount(H1o.set()) == 1.0);
+                        if (TRACE_ESCAPE) {
+                            System.out.println("Heap location: "+h.toStringWithDomains()+" = "+ctn);
+                            System.out.println("Pointed to by: "+ci_pointsTo.restrict(h).toStringWithDomains());
+                        }
+                        h.andWith(m_vars.not());
+                        escapingLocations.orWith(h);
+                    }
+                }
+            }
+            if (trivial) {
+                System.out.println(cfg.fullDump());
+            }
+        }
+        for (Iterator i = methodToVarBDD.values().iterator(); i.hasNext(); ) {
+            BDD b = (BDD) i.next();
+            b.free();
+        }
+
+        BDD escapingHeap = escapingLocations.relprod(ci_pointsTo, V1o.set());
+        escapingLocations.free();
+        System.out.println("Escaping heap: "+escapingHeap.satCount(H1o.set()));
+        //System.out.println("Escaping heap: "+escapingHeap.toStringWithDomains());
+        BDD capturedHeap = escapingHeap.not();
+        capturedHeap.andWith(H1o.varRange(0, heapobjIndexMap.size()-1));
+        System.out.println("Captured heap: "+capturedHeap.satCount(H1o.set()));
+        
+        int capturedSites = 0;
+        int escapedSites = 0;
+        long capturedSize = 0L;
+        long escapedSize = 0L;
+        
+        for (Iterator i=heapobjIndexMap.iterator(); i.hasNext(); ) {
+            Node n = (Node) i.next();
+            int ndex = getHeapIndex(n);
+            if (n instanceof ConcreteTypeNode) {
+                ConcreteTypeNode ctn = (ConcreteTypeNode) n;
+                jq_Reference t = (jq_Reference) ctn.getDeclaredType();
+                if (t == null) continue;
+                int size = 0;
+                t.prepare();
+                if (t instanceof jq_Class)
+                    size = ((jq_Class) t).getInstanceSize();
+                else
+                    continue;
+                BDD bdd = capturedHeap.and(H1o.ithVar(ndex));
+                if (capturedHeap.and(H1o.ithVar(ndex)).isZero()) {
+                    // not captured.
+                    if (TRACE_ESCAPE) System.out.println("Escaped: "+n);
+                    escapedSites ++;
+                    escapedSize += size;
+                } else {
+                    // captured.
+                    if (TRACE_ESCAPE) System.out.println("Captured: "+n);
+                    capturedSites ++;
+                    capturedSize += size;
+                }
+            }
+        }
+        System.out.println("Captured sites = "+capturedSites+", "+capturedSize+" bytes.");
+        System.out.println("Escaped sites = "+escapedSites+", "+escapedSize+" bytes.");
     }
 
     public static Set findThreadRuns(CallGraph cg) {
@@ -199,8 +419,17 @@ public class CSPAResults {
         di = new DataInputStream(new FileInputStream(fn+".heap"));
         heapobjIndexMap = readIndexMap("Heap", di);
         di.close();
-        
+
+        buildContextInsensitive();
+
         initializeMethodMap();
+    }
+
+    private void buildContextInsensitive() {
+        BDD context = V1c.set();
+        context.andWith(H1c.set());
+        this.ci_pointsTo = pointsTo.exist(context);
+        context.free();
     }
 
     private void readConfig(DataInput in) throws IOException {
@@ -226,6 +455,9 @@ public class CSPAResults {
             domains[i] = (1L << domainBits[i]);
         }
         bdd_domains = bdd.extDomain(domains);
+        for (int i=0; i<domainBits.length; ++i) {
+            Assert._assert(bdd_domains[i].varNum() == domainBits[i], "Domain "+i+" bits "+bdd_domains[i].varNum());
+        }
         V1o = bdd_domains[0];
         V1c = bdd_domains[1];
         H1o = bdd_domains[5];
@@ -253,7 +485,7 @@ public class CSPAResults {
         }
         return m;
     }
-
+    
     public static void main(String[] args) throws IOException {
         CSPAResults r = runAnalysis(args, null);
         r.interactive();
@@ -281,7 +513,7 @@ public class CSPAResults {
         bdd.setMaxIncrease(nodeCount/4);
         CSPAResults r = new CSPAResults(bdd);
         r.loadCallGraph(prefix+"callgraph");
-        r.load(prefix+"cspa");
+        r.load(prefix+System.getProperty("bddresults", "cspa"));
         return r;
     }
 
@@ -300,10 +532,10 @@ public class CSPAResults {
         Node n = null;
         if (d == V1o) {
             sb.append("V1o("+i+"): ");
-            n = (Node) variableIndexMap.get(i);
+            n = (Node) getVariableNode(i);
         } else if (d == H1o) {
             sb.append("H1o("+i+"): ");
-            n = (Node) heapobjIndexMap.get(i);
+            n = (Node) getHeapNode(i);
         }
         if (n != null) {
             sb.append(n.toString_short());
@@ -440,7 +672,7 @@ public class CSPAResults {
     }
     
     public static ProgramLocation mapCall(ProgramLocation callSite) {
-        if (callSite instanceof ProgramLocation.QuadProgramLocation) {
+        if (USE_BC_LOCATION && callSite instanceof ProgramLocation.QuadProgramLocation) {
             jq_Method m = (jq_Method) callSite.getMethod();
             Map map = CodeCache.getBCMap(m);
             Quad q = ((ProgramLocation.QuadProgramLocation) callSite).getQuad();
@@ -468,7 +700,7 @@ public class CSPAResults {
                 Assert._assert(pl2.getMethod() == pl.getMethod());
                 Assert._assert(pl.getClass() == pl2.getClass());
                 if (pl2 != null && pl.equals(pl2)) {
-                    return variableIndexMap.get(o);
+                    return getVariableIndex(o);
                 }
             }
         }
@@ -485,7 +717,7 @@ public class CSPAResults {
                 Assert._assert(pl2.getMethod() == pl.getMethod());
                 Assert._assert(pl.getClass() == pl2.getClass());
                 if (pl2 != null && pl.equals(pl2)) {
-                    return variableIndexMap.get(o);
+                    return getVariableIndex(o);
                 }
             }
         }
@@ -515,7 +747,7 @@ public class CSPAResults {
             if (o instanceof FieldNode) {
                 FieldNode ctn = (FieldNode) o;
                 if (ctn.getLocations().contains(pl))
-                    return variableIndexMap.get(o);
+                    return getVariableIndex(o);
             }
         }
         return -1;
@@ -531,7 +763,7 @@ public class CSPAResults {
                 Assert._assert(pl2.getMethod() == pl.getMethod());
                 Assert._assert(pl.getClass() == pl2.getClass());
                 if (pl2 != null && pl.equals(pl2)) {
-                    return variableIndexMap.get(o);
+                    return getVariableIndex(o);
                 }
             }
         }
@@ -548,7 +780,7 @@ public class CSPAResults {
                 Assert._assert(pl2.getMethod() == pl.getMethod());
                 Assert._assert(pl.getClass() == pl2.getClass());
                 if (pl2 != null && pl.equals(pl2)) {
-                    return heapobjIndexMap.get(o);
+                    return getHeapIndex(o);
                 }
             }
         }
@@ -560,8 +792,27 @@ public class CSPAResults {
         return n;
     }
     
-    public ProgramLocation getHeapProgramLocation(int v) {
+    public int getVariableIndex(Node n) {
+        int size = variableIndexMap.size();
+        int v = variableIndexMap.get(n);
+        Assert._assert(size == variableIndexMap.size());
+        return v;
+    }
+
+    public Node getHeapNode(int v) {
         Node n = (Node) heapobjIndexMap.get(v);
+        return n;
+    }
+    
+    public int getHeapIndex(Node n) {
+        int size = heapobjIndexMap.size();
+        int v = heapobjIndexMap.get(n);
+        Assert._assert(size == heapobjIndexMap.size());
+        return v;
+    }
+
+    public ProgramLocation getHeapProgramLocation(int v) {
+        Node n = (Node) getHeapNode(v);
         if (n instanceof ConcreteTypeNode)
             return ((ConcreteTypeNode) n).getLocation();
         return null;
@@ -586,7 +837,7 @@ public class CSPAResults {
             if (o instanceof ParamNode) {
                 ParamNode pn = (ParamNode) o;
                 if (pn.getMethod() == m && k == pn.getIndex())
-                    return variableIndexMap.get(o);
+                    return getVariableIndex(pn);
             }
         }
         return -1;
@@ -682,6 +933,10 @@ public class CSPAResults {
             return new TypedBDD(bdd.or(bdd1.bdd), newDom);
         }
         
+        public boolean isZero() {
+            return bdd.isZero();
+        }
+        
         public String getDomainNames() {
             return domainNames(dom);
         }
@@ -762,6 +1017,10 @@ public class CSPAResults {
                     return new Integer(nextInt());
                 }
             };
+        }
+
+        public void free() {
+            bdd.free(); bdd = null;
         }
     }
 
@@ -883,7 +1142,7 @@ public class CSPAResults {
                     System.out.println("Domains: " + r.getDomainNames());
                 } else if (command.equals("contextvar")) {
                     int varNum = Integer.parseInt(st.nextToken());
-                    Node n = (Node) variableIndexMap.get(varNum);
+                    Node n = getVariableNode (varNum);
                     jq_Method m = n.getDefiningMethod();
                     Number c = new BigInteger(st.nextToken(), 10);
                     if (m == null) {
@@ -895,7 +1154,7 @@ public class CSPAResults {
                     increaseCount = false;
                 } else if (command.equals("contextheap")) {
                     int varNum = Integer.parseInt(st.nextToken());
-                    Node n = (Node) heapobjIndexMap.get(varNum);
+                    Node n = (Node) getHeapNode(varNum);
                     jq_Method m = n.getDefiningMethod();
                     Number c = new BigInteger(st.nextToken(), 10);
                     if (m == null) {
@@ -904,6 +1163,12 @@ public class CSPAResults {
                         Path trace = pn.getPath(m, c);
                         System.out.println(m+" context "+c+": "+trace);
                     }
+                    increaseCount = false;
+                } else if (command.equals("aliasedparams")) {
+                    findAliasedParameters();
+                    increaseCount = false;
+                } else if (command.equals("escape")) {
+                    escapeAnalysis();
                     increaseCount = false;
                 } else {
                     System.err.println("Unrecognized command");
