@@ -2236,7 +2236,7 @@ public class PA {
                 new jq_NameAndDesc(
                     Utf8.get("<init>"), 
                     Utf8.get("()V")));
-            Assert._assert(constructor != null, "No default constructor in class " + c);
+            //Assert._assert(constructor != null, "No default constructor in class " + c);
             if(constructor == null){
                 if(noConstrClasses.get(c) == null){
                     if(TRACE_REFLECTION) System.err.println("No constructor in class " + c);
@@ -2371,7 +2371,7 @@ public class PA {
                     new jq_NameAndDesc(
                         Utf8.get("<init>"), 
                         Utf8.get("()V")));
-                Assert._assert(constructor != null, "No default constructor in class " + c);
+                //Assert._assert(constructor != null, "No default constructor in class " + c);
                 if(constructor == null){
                     if(noConstrClasses.get(c) == null){
                         if(TRACE_REFLECTION) System.err.println("No constructor in class " + c);
