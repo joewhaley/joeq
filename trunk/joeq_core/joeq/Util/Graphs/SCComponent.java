@@ -209,6 +209,10 @@ public final class SCComponent implements Comparable, Serializable {
 		    Object node2 = j.next();
 		    SCComponentInt compi2 = 
 			(SCComponentInt) node2scc.get(node2);
+                    if (compi2 == null) {
+                        System.out.println("Error! "+node+" has unknown successor "+node2);
+                        continue;
+                    }
 		    
 		    if(compi2 == compi) compi.loop = true; 
 		    else {
