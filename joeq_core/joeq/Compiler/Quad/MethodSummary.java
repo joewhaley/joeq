@@ -3,6 +3,7 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package Compil3r.Quad;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -21,6 +22,7 @@ import Clazz.jq_Field;
 import Clazz.jq_InstanceField;
 import Clazz.jq_Method;
 import Clazz.jq_Reference;
+import Clazz.jq_StaticField;
 import Clazz.jq_Type;
 import Compil3r.Quad.AndersenInterface.AndersenField;
 import Compil3r.Quad.AndersenInterface.AndersenMethod;
@@ -48,6 +50,7 @@ import Compil3r.Quad.Operator.Special;
 import Compil3r.Quad.Operator.Unary;
 import Compil3r.Quad.RegisterFactory.Register;
 import Memory.Address;
+import Run_Time.Reflection;
 import Util.Assert;
 import Util.Strings;
 import Util.Collections.CollectionTestWrapper;
@@ -1716,6 +1719,181 @@ public class MethodSummary {
         public String toString_short() { return "Concrete: "+type+" q: "+(q==null?-1:q.getID()); }
     }
     
+    /** A ConcreteObjectNode refers to an object that we discovered through reflection.
+     * It includes a reference to the actual object instance.
+     */
+    public static final class ConcreteObjectNode extends Node {
+        final Object object;
+        
+        public static Collection getAll() {
+            return FACTORY.values();
+        }
+        
+        public static final boolean ADD_EDGES = true;
+        static final HashMap FACTORY = new HashMap();
+        public static ConcreteObjectNode get(Object o) {
+            ConcreteObjectNode n = (ConcreteObjectNode) FACTORY.get(o);
+            if (n == null) {
+                FACTORY.put(o, n = new ConcreteObjectNode(o));
+            } else {
+                return n;
+            }
+            if (o != null) {
+                if (ADD_EDGES) {
+                    // add edges.
+                    jq_Reference type = jq_Reference.getTypeOf(o);
+                    if (type.isClassType()) {
+                        jq_Class c = (jq_Class) type;
+                        c.prepare();
+                        jq_InstanceField[] ifs = c.getInstanceFields();
+                        for (int i=0; i<ifs.length; ++i) {
+                            if (ifs[i].getType().isPrimitiveType()) continue;
+                            Object p = Reflection.getfield_A(o, ifs[i]);
+                            n.addEdge(ifs[i], get(p), null);
+                        }
+                    } else {
+                        Assert._assert(type.isArrayType());
+                        jq_Array a = (jq_Array) type;
+                        if (a.getElementType().isReferenceType()) {
+                            Object[] oa = (Object[]) o;
+                            for (int i=0; i<oa.length; ++i) {
+                                n.addEdge(null, get(oa[i]), null);
+                            }
+                        }
+                    }
+                }
+            }
+            return n;
+        }
+        
+        public final Node copy() { return new ConcreteObjectNode(this); }
+        
+        public ConcreteObjectNode(Object o) { this.object = o; }
+
+        private ConcreteObjectNode(ConcreteObjectNode that) {
+            super(that);
+            this.object = that.object;
+        }
+        
+        public AndersenReference getDeclaredType() {
+            if (object == null) return null;
+            return jq_Reference.getTypeOf(object);
+        }
+        
+        public String toString_long() { return Strings.hex(this)+": "+toString_short()+super.toString_long(); }
+        public String toString_short() { return "Object "+Strings.hex(object); }
+        
+        /* (non-Javadoc)
+         * @see Compil3r.Quad.MethodSummary.Node#getEdgeFields()
+         */
+        public Set getEdgeFields() {
+            if (ADD_EDGES)
+                return super.getEdgeFields();
+            if (object == null) return Collections.EMPTY_SET;
+            jq_Reference type = jq_Reference.getTypeOf(object);
+            HashSet ll = new HashSet();
+            if (type.isClassType()) {
+                jq_Class c = (jq_Class) type;
+                c.prepare();
+                jq_InstanceField[] ifs = c.getInstanceFields();
+                for (int i=0; i<ifs.length; ++i) {
+                    if (ifs[i].getType().isPrimitiveType()) continue;
+                    ll.add(ifs[i]);
+                }
+            } else {
+                Assert._assert(type.isArrayType());
+                jq_Array a = (jq_Array) type;
+                if (a.getElementType().isReferenceType()) {
+                    ll.add(null);
+                }
+            }
+            ll.addAll(super.getEdgeFields());
+            return ll;
+        }
+
+        /* (non-Javadoc)
+         * @see Compil3r.Quad.MethodSummary.Node#getEdges()
+         */
+        public Set getEdges() {
+            if (ADD_EDGES)
+                return super.getEdges();
+            if (object == null) return Collections.EMPTY_SET;
+            jq_Reference type = jq_Reference.getTypeOf(object);
+            HashMap ll = new HashMap();
+            if (type.isClassType()) {
+                jq_Class c = (jq_Class) type;
+                c.prepare();
+                jq_InstanceField[] ifs = c.getInstanceFields();
+                for (int i=0; i<ifs.length; ++i) {
+                    if (ifs[i].getType().isPrimitiveType()) continue;
+                    ll.put(ifs[i], get(Reflection.getfield_A(object, ifs[i])));
+                }
+            } else {
+                Assert._assert(type.isArrayType());
+                jq_Array a = (jq_Array) type;
+                if (a.getElementType().isReferenceType()) {
+                    Object[] oa = (Object[]) object;
+                    for (int i=0; i<oa.length; ++i) {
+                        ll.put(null, get(oa[i]));
+                    }
+                }
+            }
+            if (addedEdges != null)
+                ll.putAll(addedEdges);
+            return ll.entrySet();
+        }
+
+        /* (non-Javadoc)
+         * @see Compil3r.Quad.MethodSummary.Node#hasEdge(Compil3r.Quad.AndersenInterface.AndersenField, Compil3r.Quad.MethodSummary.Node)
+         */
+        public boolean hasEdge(AndersenField m, Node n) {
+            if (ADD_EDGES)
+                return super.hasEdge(m, n);
+            if (object == null)
+                return false;
+            if (!(n instanceof ConcreteObjectNode))
+                return super.hasEdge(m, n);
+            Object other = ((ConcreteObjectNode) n).object;
+            jq_Reference type = jq_Reference.getTypeOf(object);
+            if (type.isClassType()) {
+                jq_Class c = (jq_Class) type;
+                c.prepare();
+                jq_InstanceField[] ifs = c.getInstanceFields();
+                if (!Arrays.asList(ifs).contains(m)) return false;
+                Object p = Reflection.getfield_A(object, (jq_InstanceField) m);
+                if (p == other) return true;
+            } else {
+                Assert._assert(type.isArrayType());
+                if (m != null) return false;
+                jq_Array a = (jq_Array) type;
+                if (!a.getElementType().isReferenceType()) return false;
+                Object[] oa = (Object[]) object;
+                for (int i=0; i<oa.length; ++i) {
+                    if (other == oa[i]) return true;
+                }
+            }
+            return super.hasEdge(m, n);
+        }
+
+        /* (non-Javadoc)
+         * @see Compil3r.Quad.MethodSummary.Node#hasEdges()
+         */
+        public boolean hasEdges() {
+            if (ADD_EDGES)
+                return super.hasEdges();
+            return object != null;
+        }
+
+        /* (non-Javadoc)
+         * @see Compil3r.Quad.MethodSummary.Node#removeEdge(Compil3r.Quad.AndersenInterface.AndersenField, Compil3r.Quad.MethodSummary.Node)
+         */
+        public boolean removeEdge(AndersenField m, Node n) {
+            Assert._assert(!(n instanceof ConcreteObjectNode));
+            return super.removeEdge(m, n);
+        }
+
+    }
+    
     /** A UnknownTypeNode refers to an object with an unknown type.  All that is
      *  known is that the object is the same or a subtype of some given type.
      *  Nodes with the same "type" are considered to be equal.
@@ -1835,6 +2013,30 @@ public class MethodSummary {
         public String toString_long() { return Strings.hex(this)+": "+toString_short()+super.toString_long(); }
         public String toString_short() { return "global@"+Integer.toHexString(System.identityHashCode(this)); }
         public static GlobalNode GLOBAL = new GlobalNode();
+        
+        public void addDefaultStatics() {
+            jq_Class c;
+            jq_StaticField f;
+            Node n;
+            
+            c = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType("Ljava/lang/System;");
+            c.load();
+            f = (jq_StaticField) c.getDeclaredMember("in", "Ljava/io/InputStream;");
+            Assert._assert(f != null);
+            n = ConcreteObjectNode.get(System.in);
+            addEdge(f, n, null);
+            f = (jq_StaticField) c.getDeclaredMember("out", "Ljava/io/PrintStream;");
+            Assert._assert(f != null);
+            n = ConcreteObjectNode.get(System.out);
+            addEdge(f, n, null);
+            f = (jq_StaticField) c.getDeclaredMember("err", "Ljava/io/PrintStream;");
+            Assert._assert(f != null);
+            n = ConcreteObjectNode.get(System.err);
+            addEdge(f, n, null);
+            
+            //System.out.println("Edges from global: "+getEdges());
+        }
+        
     }
     
     /** A ReturnedNode represents a return value or thrown exception from a method call. */
