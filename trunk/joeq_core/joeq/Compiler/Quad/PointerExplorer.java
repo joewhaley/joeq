@@ -28,6 +28,34 @@ public class PointerExplorer {
 
     public static final BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
     
+    public static jq_Method getMethod(Set/*<jq_Method>*/ set) throws IOException {
+        int which, count = 0;
+        for (Iterator i=set.iterator(); i.hasNext(); ) {
+            jq_Method m = (jq_Method)i.next();
+            System.out.println((++count)+": "+m);
+        }
+        for (;;) {
+            System.out.print("Which method? ");
+            String s = in.readLine();
+            try {
+                which = Integer.parseInt(s);
+                if ((which >= 1) && (which <= count))
+                    break;
+                System.out.println("Out of range: "+which);
+            } catch (NumberFormatException x) {
+                System.out.println("Not a number: "+s);
+            }
+        }
+        for (Iterator i=set.iterator(); ; ) {
+            jq_Method m = (jq_Method)i.next();
+            if ((++count) == which) return m;
+        }
+    }
+    
+    public static jq_Method getMethod() throws IOException {
+        return getMethod((String[])null);
+    }
+        
     public static jq_Method getMethod(String[] args) throws IOException {
         String mainClassName;
         if (args != null && args.length > 0) {
@@ -166,26 +194,38 @@ uphere2:
         }
     }
     
-    static void printAllInclusionEdges(HashSet visited, MethodSummary.Node pnode, MethodSummary.Node node, String indent, boolean all) throws IOException {
-        if (visited.contains(node)) {
-            System.out.println(indent+"Duplicate found, skipping.");
-            return;
-        }
-        visited.add(node);
+    static void printAllInclusionEdges(HashSet visited, MethodSummary.Node pnode, MethodSummary.Node node, String indent, boolean all, jq_Field f) throws IOException {
         System.out.print(indent+"Node: "+node);
         if (pnode != null) {
             Quad q = (Quad)apa.edgesToQuads.get(Default.pair(pnode, node));
             if (q != null)
-                System.out.println(" from instruction "+q);
-            else
-                System.out.println("");
-        } else
-            System.out.println("");
+                System.out.print(" from instruction "+q);
+        }
+        if (visited.contains(node)) {
+            System.out.println(" <duplicate>, skipping.");
+            return;
+        }
+        visited.add(node);
+        System.out.println();
         if (node instanceof MethodSummary.OutsideNode) {
             MethodSummary.OutsideNode onode = (MethodSummary.OutsideNode)node;
             while (onode.skip != null) {
                 System.out.println(indent+onode+" equivalent to "+onode.skip);
                 onode = onode.skip;
+            }
+            if (node instanceof MethodSummary.FieldNode) {
+                MethodSummary.FieldNode fnode = (MethodSummary.FieldNode)onode;
+                jq_Field field = fnode.f;
+                Set inEdges = fnode.getAccessPathPredecessors();
+                System.out.println(indent+"Parent nodes: "+inEdges);
+                System.out.print(indent+"Type 'u' to go up to parent nodes: ");
+                String s = in.readLine();
+                if (s.equalsIgnoreCase("u")) {
+                    for (Iterator it3 = inEdges.iterator(); it3.hasNext(); ) {
+                        MethodSummary.Node node4 = (MethodSummary.Node)it3.next();
+                        printAllInclusionEdges(visited, null, node4, indent+"<", all, field);
+                    }
+                }
             }
             Set outEdges = (Set)apa.nodeToInclusionEdges.get(onode);
             if (outEdges != null) {
@@ -199,8 +239,21 @@ uphere2:
                 if (yes) {
                     for (Iterator it3 = outEdges.iterator(); it3.hasNext(); ) {
                         MethodSummary.Node node2 = (MethodSummary.Node)it3.next();
-                        printAllInclusionEdges(visited, onode, node2, indent+" ", all);
+                        printAllInclusionEdges(visited, onode, node2, indent+" ", all, null);
                     }
+                }
+            }
+        } else {
+            Set s = node.getNonEscapingEdges(f);
+            if (s.size() > 0) {
+                boolean yes = all;
+                System.out.println(indent+s.size()+" write edges match field "+((f==null)?"[]":f.getName().toString()));
+                for (Iterator i=s.iterator(); i.hasNext(); ) {
+                    MethodSummary.Node node2 = (MethodSummary.Node)i.next();
+                    Quad quad = node.getSourceQuad(f, node2);
+                    if (quad != null)
+                        System.out.println(indent+"From instruction: "+quad);
+                    printAllInclusionEdges(visited, null, node2, indent+">", all, null);
                 }
             }
         }
@@ -265,7 +318,7 @@ uphere2:
                 continue;
             }
             if (s.startsWith("addroot")) {
-                m = getMethod(null);
+                m = getMethod();
                 rootSet.add(m);
                 //cfg = CodeCache.getCode(m);
                 //apa.addToRootSet(cfg);
@@ -325,8 +378,22 @@ uphere2:
                 sorted = sortByNumberOfTargets(callGraph);
                 continue;
             }
+            if (s.startsWith("source")) {
+                final jq_Method m2 = getMethod();
+                FilterIterator.Filter f = new FilterIterator.Filter() {
+                        public boolean isElement(Object o) {
+                            Map.Entry e = (Map.Entry)o;
+                            CallSite cs = (CallSite)e.getKey();
+                            return (cs.caller.method == m2);
+                        }
+                };
+                FilterIterator it1 = new FilterIterator(sorted.iterator(), f);
+                FilterIterator it2 = new FilterIterator(sorted.iterator(), f);
+                selectCallSites("caller="+m, it1, it2);
+                continue;
+            }
             if (s.startsWith("targets")) {
-                m = getMethod(null);
+                m = getMethod();
                 int total = 0;
                 for (Iterator it = callGraph.entrySet().iterator(); it.hasNext(); ) {
                     Map.Entry e = (Map.Entry)it.next();
@@ -349,7 +416,7 @@ uphere2:
                     ms.getNodesThatCall(pp, set);
                     for (Iterator it2 = set.iterator(); it2.hasNext(); ) {
                         MethodSummary.Node node = (MethodSummary.Node)it2.next();
-                        printAllInclusionEdges(new HashSet(), null, node, "", false);
+                        printAllInclusionEdges(new HashSet(), null, node, "", false, null);
                     }
                 }
                 continue;
@@ -363,7 +430,7 @@ uphere2:
                 continue;
             }
             if (s.startsWith("summary")) {
-                m = getMethod(null);
+                m = getMethod();
                 MethodSummary ms = MethodSummary.getSummary(CodeCache.getCode(m));
                 System.out.println(ms);
                 continue;
