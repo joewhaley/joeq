@@ -45,6 +45,7 @@ public class GlobalPathNumbering extends PathNumbering {
             if (initialMap != null)
                 total = toBigInt((Number) initialMap.get(o));
             nodeNumbering.put(o, total);
+            Assert._assert(!total.equals(BigInteger.ZERO), o.toString());
         }
         BigInteger max = BigInteger.ZERO;
         Iterator rpo = Traversals.reversePostOrder(navigator, roots).iterator();
@@ -78,6 +79,7 @@ public class GlobalPathNumbering extends PathNumbering {
                 }
                 val = val3;
             }
+            Assert._assert(!val.equals(BigInteger.ZERO), o.toString());
             nodeNumbering.put(o, val);
             if (val.compareTo(max) > 0) max = val;
         }
