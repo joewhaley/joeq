@@ -10,13 +10,14 @@ LBootstrap/PrimordialClassLoader$PathElement;
 LBootstrap/PrimordialClassLoader$ZipFileElement;
 LClassLib/*
 LClassLib/Common/Interface;
-LClassLib/sun14_win32/Interface;
+LClassLib/sun14_linux/Interface;
 LClazz/*
 LCompil3r/BytecodeAnalysis/Bytecodes$EmptyVisitor;
 [LCompil3r/BytecodeAnalysis/Bytecodes$CodeException;
 [LCompil3r/BytecodeAnalysis/Bytecodes$LineNumber;
 LCompil3r/Quad/BytecodeToQuad$jq_ReturnAddressType;
 LCompil3r/Reference/x86/*
+LGC/*
 LMain/jq;
 LMain/TraceFlags;
 LMemory/*
@@ -245,6 +246,8 @@ Lsun/io/Converters;
 Lsun/net/www/protocol/file/Handler;
 Lsun/nio/cs/HistoricallyNamedCharset;
 Lsun/nio/cs/ISO_8859_1;
+Lsun/nio/cs/ISO_8859_15;
+Lsun/nio/cs/ISO_8859_15$Encoder;
 Lsun/nio/cs/ISO_8859_1$Decoder;
 Lsun/nio/cs/MS1252;
 Lsun/nio/cs/MS1252$Encoder;

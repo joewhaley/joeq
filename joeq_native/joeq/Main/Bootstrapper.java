@@ -474,7 +474,7 @@ public abstract class Bootstrapper implements ObjectLayout {
         // all done with traversal, no more objects can be added to the image.
         objmap.disableAllocations();
         
-        out.println("Scanned: "+objmap.numOfEntries()+" objects, memory used: "+(Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory())+"                    ");
+        System.out.println("Scanned: "+objmap.numOfEntries()+" objects, memory used: "+(Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory())+"                    ");
         System.out.println("Image heap size = "+objmap.size());
         System.out.println("Image code size = "+bca.size());
         
