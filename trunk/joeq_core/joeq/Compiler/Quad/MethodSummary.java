@@ -1735,6 +1735,10 @@ public class MethodSummary {
             return n;
         }
         
+        public static Collection getAll() {
+            return FACTORY.values();
+        }
+        
         final AndersenReference type;
         
         private UnknownTypeNode(AndersenReference type) {
