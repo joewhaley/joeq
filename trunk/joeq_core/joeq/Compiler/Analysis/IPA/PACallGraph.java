@@ -34,6 +34,8 @@ public class PACallGraph extends CallGraph {
     final BDD visited;
     final BDD IE;
     final IndexMap Mmap, Imap;
+
+    private PA pa;
     
     public PACallGraph(PA pa) {
         this.bdd = pa.bdd;
@@ -45,6 +47,7 @@ public class PACallGraph extends CallGraph {
         this.IE = pa.IE;
         this.Mmap = pa.Mmap;
         this.Imap = pa.Imap;
+        this.pa = pa;
     }
     
     /* (non-Javadoc)
@@ -69,7 +72,8 @@ public class PACallGraph extends CallGraph {
         int I_i = Imap.get(callSite);
         BDD I_bdd = I.ithVar(I_i);
         BDD b = IE.restrict(I_bdd);
-        if (TRACE) System.out.println("Target methods of "+callSite+" = "+b.toStringWithDomains());
+        if (TRACE) 
+            System.out.println("Target methods of "+callSite+" = "+b.toStringWithDomains(pa.TS));
         I_bdd.free();
         return new BDDSet(b, M, Mmap);
     }

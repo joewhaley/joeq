@@ -28,6 +28,10 @@ import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.Node;
 import joeq.Compiler.Analysis.FlowInsensitive.MethodSummary.UnknownTypeNode;
 import joeq.Compiler.Quad.CodeCache;
 import joeq.Compiler.Quad.LoadedCallGraph;
+import joeq.Compiler.Quad.Operand;
+import joeq.Compiler.Quad.Quad;
+import joeq.Compiler.Quad.Operand.MethodOperand;
+import joeq.Compiler.Quad.Operand.ParamListOperand;
 import joeq.Main.HostedVM;
 import jwutil.collections.Pair;
 import jwutil.util.Assert;
@@ -232,14 +236,35 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
 
             jq_Method replacement = null;            
             if(pa.USE_BOGUS_SUMMARIES) {
-                replacement = PA.getBogusSummaryProvider().getReplacementMethod(target);
+                replacement = PA.getBogusSummaryProvider().getReplacementMethod(target, new Integer(0));
                 if(replacement != null) {
                     if(pa.TRACE_BOGUS){
                         System.out.println("Replacing a call to " + target + 
                                         " with a call to "+ replacement);
                     }
-                    
+                    jq_Method oldTarget = target;
                     target = replacement;
+                    if(!PA.getBogusSummaryProvider().hasStaticReplacement(replacement)){
+                        if(mc instanceof ProgramLocation.QuadProgramLocation){
+                            Quad q = ( (ProgramLocation.QuadProgramLocation) mc).getQuad();
+                            int base = 0;
+                            if(oldTarget instanceof jq_Initializer){
+                                base = 0;                                
+                            }else{
+                                base = 1;
+                            }
+                            Operand.MethodOperand methodOp = (MethodOperand) q.getAllOperands().getOperand(base);
+                            Assert._assert(methodOp.getMethod() == oldTarget);
+                            methodOp.setMethod(replacement);
+                            
+                            if(!replacement.isStatic()){
+                                Operand.ParamListOperand listOp = (ParamListOperand) q.getAllOperands().getOperand(base+1);
+                                if(listOp.get(0).getType() != oldTarget.getDeclaringClass()){
+                                    listOp.get(0).setType(replacement.getDeclaringClass());
+                                }
+                            }
+                        }
+                    }
                 }
             }            
             if (target.isStatic())
@@ -247,7 +272,7 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
 
             
             Set thisptr;
-            if(replacement != null) {                
+            if(replacement != null && PA.getBogusSummaryProvider().hasStaticReplacement(replacement)) {                
                 thisptr = Collections.singleton(GlobalNode.GLOBAL);
                 pa.addToActual(I_bdd, 0, thisptr);
                 //pa.addToActual(I_bdd, 1, ms.getNodesThatCall(mc, 0));
@@ -268,7 +293,7 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
             if(pa.USE_REFLECTION_PROVIDER && ReflectionInformationProvider.isNewInstance(target)){                
                 targets = pa.getReflectionProvider().getNewInstanceTargets(m);
                 if(targets != null){
-                    if(pa.TRACE_REFLECTION)  {
+                    if(PA.TRACE_REFLECTION)  {
                         System.out.println("Replacing a call to " + target + " with " + targets); 
                     }
                 
@@ -290,7 +315,7 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
                             }
                         }
                         
-                        if(pa.TRACE_REFLECTION) {
+                        if(PA.TRACE_REFLECTION) {
                             System.out.println("Adding a refective call to " + newTarget);
                         }
                         pa.addToMI(M_bdd, I_bdd, newTarget);
@@ -299,7 +324,9 @@ public class PAMethodSummary extends jq_MethodVisitor.EmptyVisitor {
                 }            
             }
             
-            if (mc.isSingleTarget()) {                
+            if ( mc.isSingleTarget() ||
+                (replacement != null && !PA.getBogusSummaryProvider().hasStaticReplacement(replacement)) ) 
+            {            
                 if (target != pa.javaLangObject_clone) {
                     // statically-bound, single target call
                     addSingleTargetCall(thisptr, mc, I_bdd, target);
