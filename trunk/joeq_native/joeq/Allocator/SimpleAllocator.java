@@ -112,8 +112,7 @@ public class SimpleAllocator extends HeapAllocator {
      */
     public final Object allocateObjectAlign8(int size, Object vtable)
     throws OutOfMemoryError {
-        int mask = (heapCurrent+OBJ_HEADER_SIZE) & 7;
-        if (mask != 0) heapCurrent += 8-mask;
+        heapCurrent = ((heapCurrent+OBJ_HEADER_SIZE+7)&~7)-OBJ_HEADER_SIZE;
         return allocateObject(size, vtable);
     }
     
@@ -139,7 +138,8 @@ public class SimpleAllocator extends HeapAllocator {
             // not enough space (rare path)
             if (size > LARGE_THRESHOLD) {
                 // special large-object allocation
-                if (0 == (addr = SystemInterface.syscalloc(BLOCK_SIZE)))
+                heapCurrent -= size;
+                if (0 == (addr = SystemInterface.syscalloc(size)))
                     outOfMemory();
                 addr += ARRAY_HEADER_SIZE;
             } else {
