@@ -32,6 +32,7 @@ public class BDDInferenceRule extends InferenceRule {
     Map variableToBDDDomain;
     boolean incrementalize = true;
     int updateCount;
+    long totalTime;
     
     public BDDInferenceRule(BDDSolver solver, List/* <RuleTerm> */ top, RuleTerm bottom) {
         super(top, bottom);
@@ -99,6 +100,8 @@ public class BDDInferenceRule extends InferenceRule {
         //if (solver.TRACE)
             solver.out.println("Applying inference rule "+this+" (update "+updateCount+")");
         
+        long time = System.currentTimeMillis();
+        
         BDD[] relationValues = new BDD[top.size()];
         
         // Quantify out unnecessary fields in input relations.
@@ -128,6 +131,7 @@ public class BDDInferenceRule extends InferenceRule {
                 for (int j = 0; j <= i; ++j) {
                     relationValues[j].free();
                 }
+                totalTime += System.currentTimeMillis() - time;
                 return false;
             }
         }
@@ -198,6 +202,7 @@ public class BDDInferenceRule extends InferenceRule {
                     relationValues[i].free();
                 }
                 relationValues[0].free();
+                totalTime += System.currentTimeMillis() - time;
                 return false;
             }
         }
@@ -243,6 +248,7 @@ public class BDDInferenceRule extends InferenceRule {
         boolean changed = !oldRelation.equals(r.relation);
         oldRelation.free();
         if (solver.TRACE) solver.out.println("Relation changed: "+changed);
+        totalTime += System.currentTimeMillis() - time;
         return changed;
     }
     
@@ -250,6 +256,8 @@ public class BDDInferenceRule extends InferenceRule {
     public boolean updateIncremental() {
         //if (solver.TRACE)
         solver.out.println("Applying inference rule "+this+" (incremental)"+" (update "+updateCount+")");
+        
+        long time = System.currentTimeMillis();
         
         BDD[] allRelationValues = new BDD[top.size()];
         BDD[] newRelationValues = new BDD[top.size()];
@@ -280,6 +288,7 @@ public class BDDInferenceRule extends InferenceRule {
                 if (solver.TRACE) solver.out.println("Relation "+r+" is now empty!  Stopping early.");
                 for (int j = 0; j <= i; ++j)
                     allRelationValues[i].free();
+                totalTime += System.currentTimeMillis() - time;
                 return false;
             }
         }
@@ -407,9 +416,16 @@ public class BDDInferenceRule extends InferenceRule {
         oldRelation.free();
         oldRelationValues = allRelationValues;
         if (solver.TRACE) solver.out.println("Relation changed: "+changed);
+        totalTime += System.currentTimeMillis() - time;
         return changed;
     }
 
+    public void reportStats() {
+        System.out.println("Rule "+this);
+        System.out.println("   Updates: "+updateCount);
+        System.out.println("   Time: "+totalTime+" ms");
+    }
+    
     /**
      * @param bdd
      * @return

@@ -17,17 +17,19 @@ public abstract class Relation {
     String name;
     List/*<String>*/ fieldNames;
     List/*<FieldDomain>*/ fieldDomains;
+    List/*<String>*/ fieldOptions;
     
     /**
      * @param name
      * @param fieldNames
      * @param fieldDomains
      */
-    public Relation(String name, List fieldNames, List fieldDomains) {
+    public Relation(String name, List fieldNames, List fieldDomains, List fieldOptions) {
         super();
         this.name = name;
         this.fieldNames = fieldNames;
         this.fieldDomains = fieldDomains;
+        this.fieldOptions = fieldOptions;
     }
     
     public abstract void load() throws IOException;
