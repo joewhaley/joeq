@@ -351,6 +351,8 @@ public abstract class jq_Method extends jq_Member {
         return exception_table;
     }
     public jq_LocalVarTableEntry getLocalVarTableEntry(int bci, int index) {
+	if (localvar_table == null)
+	    return null;
 	int inspoint = Arrays.binarySearch(localvar_table, new jq_LocalVarTableEntry((char)bci, (char)index));
 	if (inspoint >= 0)
 	    return localvar_table[inspoint];
