@@ -38,7 +38,8 @@ public class Monitor implements ObjectLayout {
             if (TRACE) SystemInterface.debugmsg("Getting fat lock entry count: "+m.entry_count);
             return m.entry_count;
         }
-        int c = (lockword & LOCK_COUNT_MASK) >> LOCK_COUNT_SHIFT;
+        int c = ((lockword & LOCK_COUNT_MASK) >> LOCK_COUNT_SHIFT);
+        if ((lockword & THREAD_ID_MASK) != 0) ++c;
         if (TRACE) SystemInterface.debugmsg("Getting thin lock entry count, lockword="+jq.hex8(lockword)+", count="+c);
         return c;
     }
