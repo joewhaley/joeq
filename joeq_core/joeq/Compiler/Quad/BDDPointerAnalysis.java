@@ -17,7 +17,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.StringTokenizer;
 
 import org.sf.javabdd.BDD;
 import org.sf.javabdd.BDDDomain;
@@ -95,16 +94,16 @@ public class BDDPointerAnalysis {
      */
     private BDDFactory bdd;
 
-    public int VARBITS = 18;
-    public int FIELDBITS = 13;
-    public int HEAPBITS = 14;
-    
-    // the size of domains, can be changed to reflect the size of inputs
-    int domainBits[] = {VARBITS, 1, VARBITS, 1,
-                        FIELDBITS,
-                        HEAPBITS, 1, HEAPBITS, 1};
-    // to be computed in sysInit function
-    int domainSpos[] = new int[domainBits.length]; 
+    public int V_BITS = 18;
+    public int F_BITS = 13;
+    public int H_BITS = 14;
+    public int T_BITS = 1;
+    public int I_BITS = 1;
+    public int Z_BITS = 1;
+    public int N_BITS = 1;
+    public int M_BITS = 1;
+    public int VC_BITS = 1;
+    public int HC_BITS = 1;
     
     // V1 V2 are domains for variables 
     // H1 H2 are domains for heap objects
@@ -148,6 +147,18 @@ public class BDDPointerAnalysis {
         this(System.getProperty("bdd", "buddy"), DEFAULT_NODE_COUNT, DEFAULT_CACHE_SIZE);
     }
     
+    BDDDomain makeDomain(String name, int bits) {
+        BDDDomain d = bdd.extDomain(new long[] { 1L << bits })[0];
+        d.setName(name);
+        return d;
+    }
+    IndexMap makeMap(String name, int bits) {
+        return new IndexMap(name, 1 << bits);
+    }
+    
+    String varorder = System.getProperty("bddordering", "N_F_Z_I_M_T1_V2xV1_V2cxV1c_H2c_H2_T2_H1c_H1");
+    boolean reverseLocal = System.getProperty("bddreverse", "true").equals("true");
+    
     public BDDPointerAnalysis(String bddpackage, int nodeCount, int cacheSize) {
         bdd = org.sf.javabdd.BDDFactory.init(bddpackage, nodeCount, cacheSize);
         
@@ -155,37 +166,36 @@ public class BDDPointerAnalysis {
         bdd.setMaxIncrease(Math.min(2500000, nodeCount / 4));
         bdd.setMinFreeNodes(10);
         
-        int[] domains = new int[domainBits.length];
-        for (int i=0; i<domainBits.length; ++i) {
-            domains[i] = (1 << domainBits[i]);
-        }
-        BDDDomain[] bdd_domains = bdd.extDomain(domains);
-        for (int i=0; i<domainBits.length; ++i) {
-            Assert._assert(bdd_domains[i].varNum() == domainBits[i], "Domain "+i+" bits "+bdd_domains[i].varNum());
-        }
-        V1 = bdd_domains[0]; V1.setName("V1");
-        V1c = bdd_domains[1]; V1c.setName("V1c");
-        V2 = bdd_domains[2]; V2.setName("V2");
-        V2c = bdd_domains[3]; V2c.setName("V2c");
-        FD = bdd_domains[4]; FD.setName("FD");
-        H1 = bdd_domains[5]; H1.setName("H1");
-        H1c = bdd_domains[6]; H1c.setName("H1c");
-        H2 = bdd_domains[7]; H2.setName("H2");
-        H2c = bdd_domains[8]; H2c.setName("H2c");
+        V1 = makeDomain("V1", V_BITS);
+        V2 = makeDomain("V2", V_BITS);
+        makeDomain("I", I_BITS);
+        H1 = makeDomain("H1", H_BITS);
+        H2 = makeDomain("H2", H_BITS);
+        makeDomain("Z", Z_BITS);
+        FD = makeDomain("F", F_BITS);
+        makeDomain("T1", T_BITS);
+        makeDomain("T2", T_BITS);
+        makeDomain("N", N_BITS);
+        makeDomain("M", M_BITS);
+        
+        V1c = makeDomain("V1c", VC_BITS);
+        V2c = makeDomain("V2c", VC_BITS);
+        H1c = makeDomain("H1c", HC_BITS);
+        H2c = makeDomain("H2c", HC_BITS);
+        
+        // IxH1xN x H1xT2
+        int[] ordering = bdd.makeVarOrdering(reverseLocal, varorder);
+        bdd.setVarOrder(ordering);
+        
+        Vmap = makeMap("Vars", V_BITS);
+        Hmap = makeMap("Heaps", H_BITS);
+        Fmap = makeMap("Fields", F_BITS);
+        Tmap = makeMap("Types", T_BITS);
+        
         T1 = V2;
         T2 = V1;
         T3 = H2;
         T4 = V2;
-        
-        int varnum = bdd.varNum();
-        int[] varorder = new int[varnum];
-        makeVarOrdering(varorder);
-        for (int i=0; i<varorder.length; ++i) {
-            //System.out.println("varorder["+i+"]="+varorder[i]);
-        }
-        if (true)
-            bdd.setVarOrder(varorder);
-        bdd.enableReorder();
         
         V1ToV2 = bdd.makePair(V1, V2);
         V2ToV1 = bdd.makePair(V2, V1);
@@ -206,119 +216,6 @@ public class BDDPointerAnalysis {
         reset();
     }
 
-    int[][] localOrders;
-
-    void makeVarOrdering(int[] varorder) {
-        
-        boolean reverseLocal = System.getProperty("bddreverse", "true").equals("true");
-        String ordering = System.getProperty("bddordering", "FD_H2_V2xV1_H1");
-        
-        int varnum = bdd.varNum();
-        
-        localOrders = new int[domainBits.length][];
-        localOrders[0] = new int[domainBits[0]];
-        localOrders[1] = new int[domainBits[1]];
-        localOrders[2] = localOrders[0];
-        localOrders[3] = localOrders[1];
-        localOrders[4] = new int[domainBits[4]];
-        localOrders[5] = new int[domainBits[5]];
-        localOrders[6] = new int[domainBits[1]];
-        localOrders[7] = localOrders[5];
-        localOrders[8] = localOrders[6];
-        
-        for (int i=0, pos=0; i<domainBits.length; ++i) {
-            domainSpos[i] = pos;
-            pos += domainBits[i];
-            for (int j=0; j<domainBits[i]; ++j) {
-                if (reverseLocal) {
-                    localOrders[i][j] = domainBits[i] - j - 1;
-                } else {
-                    localOrders[i][j] = j;
-                }
-            }
-        }
-        
-        BDDDomain[] doms = new BDDDomain[domainBits.length];
-        
-        System.out.println("Ordering: "+ordering);
-        StringTokenizer st = new StringTokenizer(ordering, "x_", true);
-        int a = 0, idx = 0;
-        for (;;) {
-            String s = st.nextToken();
-            BDDDomain d;
-            if (s.equals("V1")) d = V1;
-            else if (s.equals("V2")) d = V2;
-            else if (s.equals("FD")) d = FD;
-            else if (s.equals("H1")) d = H1;
-            else if (s.equals("H2")) d = H2;
-            else {
-                Assert.UNREACHABLE("bad domain: "+s);
-                return;
-            }
-            doms[a] = d;
-            if (!st.hasMoreTokens()) {
-                idx = fillInVarIndices(idx, varorder, a+1, doms);
-                break;
-            }
-            s = st.nextToken();
-            if (s.equals("_")) {
-                idx = fillInVarIndices(idx, varorder, a+1, doms);
-                a = 0;
-            } else if (s.equals("x")) {
-                a++;
-            } else {
-                Assert.UNREACHABLE("bad token: "+s);
-                return;
-            }
-        }
-        
-        // according to the documentation of buddy, the default ordering is x1, y1, z1, x2, y2, z2, .....
-        // V1[0] -> default variable number
-        int[] outside2inside = new int[varnum];
-        for (int i=0; i<doms.length; ++i)
-            doms[i] = bdd.getDomain(i);
-        getVariableMap(outside2inside, doms, domainBits.length);
-        
-        remapping(varorder, outside2inside);
-    }
-    
-    int fillInVarIndices(int start, int[] varorder, int numdoms, BDDDomain[] doms) {
-        int totalvars = 0;
-        int[] bits = new int[numdoms];
-        for (int i = 0; i < numdoms; i++) {
-            totalvars += domainBits[doms[i].getIndex()];
-            bits[i] = 0;
-        }
-
-        for (int i = start, n = start + totalvars, j = 0; i < n; i++) {
-            int dji = doms[j].getIndex();
-            while (bits[j] >= domainBits[dji]) {
-                j = (j + 1) % numdoms;
-            }
-            varorder[i] = domainSpos[dji] + localOrders[dji][bits[j]++];
-            j = (j + 1) % numdoms;
-        }
-
-        return start + totalvars;
-    }
-
-    void getVariableMap(int[] map, BDDDomain[] doms, int domnum) {
-        int idx = 0;
-        for (int var = 0; var < domnum; var++) {
-            int[] vars = doms[var].vars();
-            for (int i = 0; i < vars.length; i++) {
-                map[idx++] = vars[i];
-            }
-        }
-    }
-    
-    /* remap according to a map */
-    void remapping(int[] varorder, int[] maps) {
-        for (int i = 0; i < varorder.length; i++) {
-            varorder[i] = maps[varorder[i]];
-        }
-    }
-    
     void reset() {
         // initialize relations to zero.
         pointsTo = bdd.zero();
@@ -356,7 +253,7 @@ public class BDDPointerAnalysis {
     }
 
     public static boolean INCREMENTAL_POINTSTO = true;
-    public static boolean INCREMENTAL_ITERATION = true;
+    public static boolean INCREMENTAL_ITERATION = false;
     public static boolean FORCE_GC = false;
 
     public static void main(String[] args) throws IOException {
@@ -384,10 +281,10 @@ public class BDDPointerAnalysis {
         
         RootedCHACallGraph.test(cg);
         
-        System.out.println("Variables: "+dis.variableIndexMap.size());
-        System.out.println("Heap objects: "+dis.heapobjIndexMap.size());
-        System.out.println("Fields: "+dis.fieldIndexMap.size());
-        System.out.println("Types: "+dis.typeIndexMap.size());
+        System.out.println("Variables: "+dis.Vmap.size());
+        System.out.println("Heap objects: "+dis.Hmap.size());
+        System.out.println("Fields: "+dis.Fmap.size());
+        System.out.println("Types: "+dis.Tmap.size());
         System.out.println("Virtual Method Names: "+dis.methodIndexMap.size());
         System.out.println("Virtual Method Targets: "+dis.targetIndexMap.size());
 
@@ -519,8 +416,9 @@ public class BDDPointerAnalysis {
                 this.handleMethodSummary(ms);
             }
         }
-        System.out.println("Initial setup:\t\t"+(System.currentTimeMillis()-time)/1000.+" seconds.");
         boolean first = true;
+        
+        System.out.println("Initial setup:\t\t"+(System.currentTimeMillis()-time)/1000.+" seconds.");
         int iteration = 1;
         oldPointsTo = this.bdd.zero();
         do {
@@ -597,9 +495,9 @@ public class BDDPointerAnalysis {
     boolean change;
 
     IndexMap getIndexMap(BDDDomain d) {
-        if (d == V1 || d == V2) return variableIndexMap;
-        if (d == FD) return fieldIndexMap;
-        if (d == H1 || d == H2) return heapobjIndexMap;
+        if (d == V1 || d == V2) return Vmap;
+        if (d == FD) return Fmap;
+        if (d == H1 || d == H2) return Hmap;
         return null;
     }
 
@@ -623,8 +521,8 @@ public class BDDPointerAnalysis {
         //BDD varTypes = pointsTo.relprod(cTypes, H1.set());
         //printSet("Var types", varTypes, "V1xT1");
         if (TRACE) {
-            for (int i=0, n=variableIndexMap.size(); i<n; ++i) {
-                Node node = (Node) variableIndexMap.get(i);
+            for (int i=0, n=Vmap.size(); i<n; ++i) {
+                Node node = (Node) Vmap.get(i);
                 System.out.print(i+": "+node.toString());
                 BDD var = V1.ithVar(i);
                 BDD p = pointsTo.restrict(var);
@@ -634,14 +532,14 @@ public class BDDPointerAnalysis {
     }
 
     public Set getPointsTo(Node n) {
-        int i = variableIndexMap.get(n);
+        int i = Vmap.get(n);
         BDD var = V1.ithVar(i);
         BDD p = pointsTo.restrict(var);
         HashSet set = new HashSet();
         for (;;) {
             int a = p.scanVar(H1);
             if (a < 0) break;
-            set.add(heapobjIndexMap.get(a));
+            set.add(Hmap.get(a));
             p.applyWith(H1.ithVar(a), BDDFactory.diff);
         }
         p.free();
@@ -969,24 +867,24 @@ public class BDDPointerAnalysis {
         }
     }
         
-    IndexMap/* Node->index */ variableIndexMap = new IndexMap("Variable");
-    IndexMap/* Node->index */ heapobjIndexMap = new IndexMap("HeapObj");
-    IndexMap/* jq_Field->index */ fieldIndexMap = new IndexMap("Field");
-    IndexMap/* jq_Reference->index */ typeIndexMap = new IndexMap("Class");
+    IndexMap/* Node->index */ Vmap = new IndexMap("Variable");
+    IndexMap/* Node->index */ Hmap = new IndexMap("HeapObj");
+    IndexMap/* jq_Field->index */ Fmap = new IndexMap("Field");
+    IndexMap/* jq_Reference->index */ Tmap = new IndexMap("Class");
     IndexMap/* jq_InstanceMethod->index */ methodIndexMap = new IndexMap("MethodCall");
     IndexMap/* jq_InstanceMethod->index */ targetIndexMap = new IndexMap("MethodTarget");
 
     int getVariableIndex(Node dest) {
-        return variableIndexMap.get(dest);
+        return Vmap.get(dest);
     }
     int getHeapobjIndex(Node site) {
-        return heapobjIndexMap.get(site);
+        return Hmap.get(site);
     }
     int getFieldIndex(jq_Field f) {
-        return fieldIndexMap.get(f);
+        return Fmap.get(f);
     }
     int getTypeIndex(jq_Reference f) {
-        return typeIndexMap.get(f);
+        return Tmap.get(f);
     }
     int getMethodIndex(jq_InstanceMethod f) {
         return methodIndexMap.get(f);
@@ -995,16 +893,16 @@ public class BDDPointerAnalysis {
         return targetIndexMap.get(f);
     }
     Node getVariable(int index) {
-        return (Node) variableIndexMap.get(index);
+        return (Node) Vmap.get(index);
     }
     Node getHeapobj(int index) {
-        return (Node) heapobjIndexMap.get(index);
+        return (Node) Hmap.get(index);
     }
     jq_Field getField(int index) {
-        return (jq_Field) fieldIndexMap.get(index);
+        return (jq_Field) Fmap.get(index);
     }
     jq_Reference getType(int index) {
-        return (jq_Reference) typeIndexMap.get(index);
+        return (jq_Reference) Tmap.get(index);
     }
     jq_InstanceMethod getMethod(int index) {
         return (jq_InstanceMethod) methodIndexMap.get(index);
@@ -1159,7 +1057,7 @@ public class BDDPointerAnalysis {
     
     public void addClassType(jq_Reference type) {
         if (type == null) return;
-        if (typeIndexMap.contains(type)) return;
+        if (Tmap.contains(type)) return;
         if (type instanceof jq_Class) {
             jq_Class k = (jq_Class) type;
             k.prepare();
@@ -1210,10 +1108,10 @@ public class BDDPointerAnalysis {
     int last_typeIndex;
     
     void calculateTypeHierarchy() {
-        int n1=typeIndexMap.size();
+        int n1=Tmap.size();
         if (TRACE) System.out.println(n1-last_typeIndex + " new types");
         for (int i1=0; i1<n1; ++i1) {
-            jq_Type t1 = (jq_Type) typeIndexMap.get(i1);
+            jq_Type t1 = (jq_Type) Tmap.get(i1);
             if (t1 == null) {
                 BDD type1_bdd = T1.ithVar(i1);
                 BDD type2_bdd = T2.domain();
@@ -1224,7 +1122,7 @@ public class BDDPointerAnalysis {
             t1.prepare();
             int i2 = (i1 < last_typeIndex) ? last_typeIndex : 0;
             for ( ; i2<n1; ++i2) {
-                jq_Type t2 = (jq_Type) typeIndexMap.get(i2);
+                jq_Type t2 = (jq_Type) Tmap.get(i2);
                 if (t2 == null) {
                     BDD type1_bdd = T1.domain();
                     BDD type2_bdd = T2.ithVar(i2);
@@ -1271,7 +1169,7 @@ public class BDDPointerAnalysis {
 
     public void calculateVTables() {
         int n1 = methodIndexMap.size();
-        int n2 = heapobjIndexMap.size();
+        int n2 = Hmap.size();
         if (TRACE) {
             System.out.println(n1-last_methodIndex + " new distinct virtual methods, total="+n1);
             System.out.println(n2-last_heapobjIndex + " new heap objects, total="+n2);
@@ -1281,7 +1179,7 @@ public class BDDPointerAnalysis {
             BDD method_bdd = T3.ithVar(i1);
             int i2 = (i1 < last_methodIndex) ? last_heapobjIndex : 0;
             for ( ; i2<n2; ++i2) {
-                Node c = (Node) heapobjIndexMap.get(i2);
+                Node c = (Node) Hmap.get(i2);
                 if (c == null) continue;
                 if (c instanceof GlobalNode) continue;
                 jq_Reference r2 = (jq_Reference) c.getDeclaredType();
@@ -1487,83 +1385,88 @@ public class BDDPointerAnalysis {
      * @param dumpfilename
      */
     void dumpResults(String dumpfilename) throws IOException {
-        System.out.println("pointsTo = "+(long)pointsTo.satCount(V1andH1set)+" relations, "+pointsTo.nodeCount()+" nodes");
         
         BDD cs_pointsTo = pointsTo.and(V1c.ithVar(0));
         cs_pointsTo.andWith(H1c.ithVar(0));
-        System.out.println("pointsTo = "+(long)cs_pointsTo.satCount(V1andH1set)+" relations, "+cs_pointsTo.nodeCount()+" nodes");
-        bdd.save(dumpfilename+".bdd", cs_pointsTo);
+        System.out.println("vP = "+(long)cs_pointsTo.satCount(V1andH1set)+" relations, "+cs_pointsTo.nodeCount()+" nodes");
+        bdd.save(dumpfilename+".vP", cs_pointsTo);
         
         BDD cs_fieldPt = fieldPt.and(H1c.ithVar(0));
         cs_fieldPt.andWith(H2c.ithVar(0));
-        System.out.println("fieldPt = "+(long)cs_fieldPt.satCount(H1andFDset.and(H2.set()))+" relations, "+cs_fieldPt.nodeCount()+" nodes");
-        bdd.save(dumpfilename+".bdd2", cs_fieldPt);
+        System.out.println("hP = "+(long)cs_fieldPt.satCount(H1andFDset.and(H2.set()))+" relations, "+cs_fieldPt.nodeCount()+" nodes");
+        bdd.save(dumpfilename+".hP", cs_fieldPt);
         
         BDD cs_stores = stores.and(V1c.ithVar(0));
         cs_stores.andWith(V2c.ithVar(0));
-        System.out.println("stores = "+(long)cs_stores.satCount(V1andV2andFDset)+" relations, "+cs_stores.nodeCount()+" nodes");
-        bdd.save(dumpfilename+".stores", cs_stores);
+        System.out.println("S = "+(long)cs_stores.satCount(V1andV2andFDset)+" relations, "+cs_stores.nodeCount()+" nodes");
+        bdd.save(dumpfilename+".S", cs_stores);
         
         BDD cs_loads = loads.and(V1c.ithVar(0));
         cs_loads.andWith(V2c.ithVar(0));
-        System.out.println("loads = "+(long)cs_loads.satCount(V1andV2andFDset)+" relations, "+cs_loads.nodeCount()+" nodes");
-        bdd.save(dumpfilename+".loads", cs_loads);
+        System.out.println("L = "+(long)cs_loads.satCount(V1andV2andFDset)+" relations, "+cs_loads.nodeCount()+" nodes");
+        bdd.save(dumpfilename+".L", cs_loads);
         
         DataOutputStream dos;
         dos = new DataOutputStream(new FileOutputStream(dumpfilename+".config"));
         dumpConfig(dos);
         dos.close();
-        dos = new DataOutputStream(new FileOutputStream(dumpfilename+".vars"));
+        dos = new DataOutputStream(new FileOutputStream(dumpfilename+".Vmap"));
         dumpVarIndexMap(dos);
         dos.close();
-        dos = new DataOutputStream(new FileOutputStream(dumpfilename+".heap"));
+        dos = new DataOutputStream(new FileOutputStream(dumpfilename+".Hmap"));
         dumpHeapIndexMap(dos);
         dos.close();
-        dos = new DataOutputStream(new FileOutputStream(dumpfilename+".fields"));
+        dos = new DataOutputStream(new FileOutputStream(dumpfilename+".Fmap"));
         dumpFieldIndexMap(dos);
         dos.close();
     }
 
     private void dumpConfig(DataOutput out) throws IOException {
-        int CLASSBITS = 1;
-        int VARCONTEXTBITS = 1;
-        int HEAPCONTEXTBITS = 1;
-        out.writeBytes(VARBITS+" "+HEAPBITS+" "+FIELDBITS+" "+CLASSBITS+" "+VARCONTEXTBITS+" "+HEAPCONTEXTBITS+"\n");
-        String ordering = "FD_H2cxH2o_V2cxV1cxV2oxV1o_H1cxH1o";
-        out.writeBytes(ordering+"\n");
+        out.writeBytes("V="+V_BITS+"\n");
+        out.writeBytes("I="+I_BITS+"\n");
+        out.writeBytes("H="+H_BITS+"\n");
+        out.writeBytes("Z="+Z_BITS+"\n");
+        out.writeBytes("F="+F_BITS+"\n");
+        out.writeBytes("T="+T_BITS+"\n");
+        out.writeBytes("N="+N_BITS+"\n");
+        out.writeBytes("M="+M_BITS+"\n");
+        out.writeBytes("VC="+VC_BITS+"\n");
+        out.writeBytes("HC="+HC_BITS+"\n");
+        out.writeBytes("Order="+varorder+"\n");
+        out.writeBytes("Reverse="+reverseLocal+"\n");
     }
     
     private void dumpVarIndexMap(DataOutput out) throws IOException {
-        int n = variableIndexMap.size();
+        int n = Vmap.size();
         out.writeBytes(n+"\n");
         int j = 0;
-        while (j < variableIndexMap.size()) {
+        while (j < Vmap.size()) {
             Node node = getVariable(j);
-            node.write(variableIndexMap, out);
+            node.write(Vmap, out);
             out.writeByte('\n');
             ++j;
         }
     }
 
     private void dumpHeapIndexMap(DataOutput out) throws IOException {
-        int n = heapobjIndexMap.size();
+        int n = Hmap.size();
         out.writeBytes(n+"\n");
         int j = 0;
-        while (j < heapobjIndexMap.size()) {
+        while (j < Hmap.size()) {
             // UnknownTypeNode
             Node node = getHeapobj(j);
             if (node == null) out.writeBytes("null");
-            else node.write(heapobjIndexMap, out);
+            else node.write(Hmap, out);
             out.writeByte('\n');
             ++j;
         }
     }
     
     private void dumpFieldIndexMap(DataOutput out) throws IOException {
-        int n = fieldIndexMap.size();
+        int n = Fmap.size();
         out.writeBytes(n+"\n");
         int j = 0;
-        while (j < fieldIndexMap.size()) {
+        while (j < Fmap.size()) {
             jq_Field f = this.getField(j);
             if (f == null) out.writeBytes("null");
             else f.writeDesc(out);
