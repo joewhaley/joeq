@@ -14,7 +14,6 @@ import java.lang.reflect.Member;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 import ClassLib.ClassLibInterface;
 import Compil3r.Quad.AndersenInterface.AndersenClass;
@@ -240,21 +239,29 @@ public abstract class jq_Member implements jq_ClassFileConstants, AndersenMember
     public abstract boolean isStatic();
     
     public static class FilterByName extends FilterIterator.Filter {
-        private Pattern p;
-        public FilterByName(Pattern p) { this.p = p; }
-        public FilterByName(String s) { this(Pattern.compile(s)); }
+        private java.util.regex.Pattern p;
+        public FilterByName(java.util.regex.Pattern p) { this.p = p; }
+        public FilterByName(String s) { this(java.util.regex.Pattern.compile(s)); }
         public boolean isElement(Object o) {
             jq_Member m = (jq_Member) o;
-            return p.matcher(m.getName().toString()).matches();
+            Object o = m.getName().toString();
+            CharSequence cs;
+            if (o instanceof CharSequence) cs = (CharSequence) o;
+            else cs = new CharSequenceWrapper((String) o);
+            return p.matcher(cs).matches();
         }
     }
     public static class FilterByShortClassName extends FilterIterator.Filter {
-        private Pattern p;
-        public FilterByShortClassName(Pattern p) { this.p = p; }
-        public FilterByShortClassName(String s) { this(Pattern.compile(s)); }
+        private java.util.regex.Pattern p;
+        public FilterByShortClassName(java.util.regex.Pattern p) { this.p = p; }
+        public FilterByShortClassName(String s) { this(java.util.regex.Pattern.compile(s)); }
         public boolean isElement(Object o) {
             jq_Member m = (jq_Member) o;
-            return p.matcher(m.getDeclaringClass().shortName()).matches();
+            Object o = m.getDeclaringClass().shortName();
+            CharSequence cs;
+            if (o instanceof CharSequence) cs = (CharSequence) o;
+            else cs = new CharSequenceWrapper((String) o);
+            return p.matcher(cs).matches();
         }
     }
     
