@@ -159,7 +159,6 @@ public class PA {
     boolean USE_REFLECTION_PROVIDER = !System.getProperty("pa.usereflectionprovider", "no").equals("no");
     boolean RESOLVE_REFLECTION = !System.getProperty("pa.resolvereflection", "no").equals("no");
     boolean USE_CASTS_FOR_REFLECTION = !System.getProperty("pa.usecastsforreflection", "no").equals("no");
-    boolean USE_KNOWN_SUBTYPES_FOR_REFLECTION = !System.getProperty("pa.useknonwsubtypesforreflection", "no").equals("no");
     boolean RESOLVE_FORNAME = !System.getProperty("pa.resolveforname", "no").equals("no");
     boolean TRACE_BOGUS = !System.getProperty("pa.tracebogus", "no").equals("no");
     boolean FIX_NO_DEST = !System.getProperty("pa.fixnodest", "no").equals("no");
