@@ -726,7 +726,12 @@ public final class jq_Class extends jq_Reference implements jq_ClassFileConstant
         try {
             in = ((PrimordialClassLoader)class_loader).getClassFileStream(desc);
             if (in == null) throw new NoClassDefFoundError(className(desc));
-            load(in);
+            try {
+                load(in);
+            } catch (NoClassDefFoundError x) {
+                x.printStackTrace();
+                Assert.UNREACHABLE("Class not found error while attempting to load class!");
+            }
             in.close();
         } catch (IOException x) {
             x.printStackTrace(); // for debugging

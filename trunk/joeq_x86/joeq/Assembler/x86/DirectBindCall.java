@@ -7,6 +7,9 @@
 
 package Assembler.x86;
 
+import java.io.DataOutput;
+import java.io.IOException;
+
 import Allocator.DefaultCodeAllocator;
 import Clazz.jq_CompiledCode;
 import Clazz.jq_Method;
@@ -17,7 +20,7 @@ import Util.Assert;
  * @author  John Whaley
  * @version $Id$
  */
-public class DirectBindCall {
+public class DirectBindCall extends Reloc {
 
     private CodeAddress source;
     private jq_Method target;
@@ -27,12 +30,11 @@ public class DirectBindCall {
     }
     
     public void patch() {
-        jq_CompiledCode cc = target.getDefaultCompiledVersion();
-        Assert._assert(cc != null);
-        DefaultCodeAllocator.patchRelativeOffset(source, cc.getEntrypoint());
+        patchTo(target.getDefaultCompiledVersion());
     }
     
     public void patchTo(jq_CompiledCode cc) {
+        Assert._assert(cc != null);
         DefaultCodeAllocator.patchRelativeOffset(source, cc.getEntrypoint());
     }
     
@@ -41,6 +43,12 @@ public class DirectBindCall {
 
     public String toString() {
         return "from code:"+source.stringRep()+" to method:"+target;
+    }
+
+    public void dumpCOFF(DataOutput out) throws IOException {
+        out.writeInt(source.to32BitValue());       // r_vaddr
+        out.writeInt(0);                           // r_symndx
+        out.writeChar(Reloc.RELOC_ADDR32);         // r_type
     }
     
 }

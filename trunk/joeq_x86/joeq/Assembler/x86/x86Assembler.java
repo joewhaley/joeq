@@ -81,6 +81,7 @@ public class x86Assembler implements x86Constants {
     }
     public int getCurrentOffset() { return mc.getCurrentOffset(); }
     public CodeAddress getCurrentAddress() { return mc.getCurrentAddress(); }
+    public CodeAddress getStartAddress() { return mc.getStartAddress(); }
     public void patch1(int offset, byte value) { mc.put1(offset, value); }
     public void patch4_endian(int offset, int value) { mc.put4_endian(offset, value); }
 
@@ -114,6 +115,10 @@ public class x86Assembler implements x86Constants {
     public void recordForwardBranch(int patchsize, Object target) {
         if (TRACE) System.out.println("recording forward branch from "+Strings.hex(ip)+" (size "+patchsize+") to "+target);
         branches_to_patch.add(target, new PatchInfo(ip, patchsize));
+    }
+    public void recordAbsoluteReference(int patchsize, Object target) {
+        if (TRACE) System.out.println("recording absolute reference from "+Strings.hex(ip)+" (size "+patchsize+") to "+target);
+        branches_to_patch.add(target, new AbsPatchInfo(ip, patchsize));
     }
     public void resolveForwardBranches(Object target) {
         PatchInfo p;

@@ -42,6 +42,8 @@ public class ExternalReference extends Reloc {
     public int getSymbolIndex() { return symbol_ndx; }
     public String getName() { return external_name; }
     
+    public void patch() { Assert.UNREACHABLE(); }
+    
     public String toString() {
         return "from heap:"+heap_from.stringRep()+" to external:"+external_name+" (symndx "+symbol_ndx+")";
     }
