@@ -13,7 +13,7 @@
     <package>jwutil</package>
     <description>A collection of useful Java classes I have collected or developed over the years.  I have found them useful for multiple projects, so I have consolidated them into a single library.</description>
     <shortDescription>Collection of useful utility classes for Java</shortDescription>
-    <url>http://joeq.sourceforge.net/jwutil</url>
+    <url>http://joeq.sourceforge.net/jwutil/</url>
     <issueTrackingUrl>http://sourceforge.net/tracker/?group_id=19634</issueTrackingUrl>
     <siteAddress>joeq.sourceforge.net</siteAddress>
     <siteDirectory>/home/groups/j/jo/joeq/htdocs/jwutil</siteDirectory>
