@@ -76,7 +76,7 @@ public abstract class Driver {
         }
     }
 
-    static List classesToProcess = new LinkedList();
+    public static List classesToProcess = new LinkedList();
     static HashSet methodNamesToProcess;
     static boolean trace_bb = false;
     static boolean trace_cfg = false;
@@ -94,8 +94,14 @@ public abstract class Driver {
         if (!i.hasNext()) {
             System.err.println("Package " + canonicalPackageName + " not found.");
         }
+        // Because listPackage() may return entries twice, we record loaded
+        // entries in 'loaded' and skip dups
+        HashSet loaded = new HashSet();
         while (i.hasNext()) {
             String canonicalClassName = canonicalizeClassName((String) i.next());
+            if (loaded.contains(canonicalClassName))
+                continue;
+            loaded.add(canonicalClassName);
             try {
                 jq_Class c = (jq_Class) PrimordialClassLoader.loader.getOrCreateBSType(canonicalClassName);
                 c.load();
@@ -289,6 +295,7 @@ public abstract class Driver {
                 QuadVisitor qv = null;
                 Object o;
                 try {
+                    passname = passname.replace('/', '.');
                     Class c = Class.forName(passname);
                     o = c.newInstance();
                     if (o instanceof jq_TypeVisitor) {
@@ -343,7 +350,7 @@ public abstract class Driver {
                         x.printStackTrace(System.err);
                     }
                 }
-                System.out.println("Completed pass! " + o);
+                System.err.println("Completed pass! " + o);
             } else if (commandBuffer[index].equalsIgnoreCase("run")) {
                 String toRun = commandBuffer[++index];
                 Runnable runnable = null;
