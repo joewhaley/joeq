@@ -68,6 +68,7 @@ import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Main.HostedVM;
+import joeq.UTF.Utf8;
 import jwutil.collections.IndexMap;
 import jwutil.collections.IndexedMap;
 import jwutil.collections.Pair;
@@ -1316,7 +1317,7 @@ public class PA {
                             if(TRACE_REFLECTION) System.out.println(
                                 "Adding a call to " + target + " instead of "+ m);
                             
-                            addToCHA(T_bdd, Nmap.get(target), target);
+                            addToCHA(T_bdd, Nmap.get(target), target);                            
                         }
                         //continue;
                     }else{
@@ -1941,8 +1942,7 @@ public class PA {
         t1.free();
         BDD t31 = t3.replace(ItoI2);
         if(TRACE_REFLECTION && TRACE) out.println("t31: " + t31.toStringWithDomains(TS));
-        
-        
+                
         BDD t4;
         if (CS_CALLGRAPH) {
             // We keep track of where a call goes under different contexts.
@@ -2030,7 +2030,11 @@ public class PA {
             }
             Assert._assert(c != null);            
             
-            jq_Method constructor = c.getClassInitializer();
+            jq_Method constructor = (jq_Method) c.getDeclaredMember(
+                new jq_NameAndDesc(
+                    Utf8.get("<init>"), 
+                    Utf8.get("()V")));
+            Assert._assert(constructor != null);
             if(constructor == null){
                 if(noConstrClasses.get(c) == null){
                     if(TRACE_REFLECTION) System.err.println("No constructor in class " + c);
@@ -2038,7 +2042,9 @@ public class PA {
                 }
                 continue;
             }
-            constructorIE.orWith(M.ithVar(Mmap.get(constructor)).and(h));
+            // add the relation to IE
+            BDD constructorCall = M.ithVar(Mmap.get(constructor)).and(h);
+            constructorIE.orWith(constructorCall);                       
         }
         
         BDD old_reflectiveCalls  = reflectiveCalls.id();
@@ -2059,6 +2065,29 @@ public class PA {
                     " of size " + new_reflectiveCalls.satCount(Iset.and(H1set)));
             }
             
+            // add the new points-to for reflective calls
+            for(Iterator iter = new_reflectiveCalls.iterator(Iset.and(Mset)); iter.hasNext();){
+                BDD i_bdd = (BDD) iter.next();
+                int I_i = i_bdd.scanVar(I).intValue();
+                ProgramLocation mc = (ProgramLocation) Imap.get(I_i);
+                int M_i = new_reflectiveCalls.relprod(i_bdd, Iset).scanVar(M).intValue();
+                jq_Method target = (jq_Method) Mmap.get(M_i);
+                jq_Initializer constructor = (jq_Initializer) target;
+                
+                jq_Type type = constructor.getDeclaringClass();
+            
+                MethodSummary ms = MethodSummary.getSummary(mc.getMethod());
+                Node node = ms.getRVN(mc);
+                if (node != null) {
+                    MethodSummary.ConcreteTypeNode h = ConcreteTypeNode.get((jq_Reference) type);
+                    int H_i = Hmap.get(h);
+                    int V_i = Vmap.get(node);
+                    BDD V_arg = V1.ithVar(V_i);
+                    
+                    addToVP(V_arg, h);
+                }
+            }
+            
             if (CS_CALLGRAPH){ 
                 IE.orWith(new_reflectiveCalls.exist(V1cset));
             } else { 
@@ -2068,7 +2097,7 @@ public class PA {
                 }
             }
             if(TRACE_REFLECTION) out.println("Call graph edges after: "+IE.satCount(IMset));
-        
+            
             return true;
         } else {
             return false;
