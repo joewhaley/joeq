@@ -1091,7 +1091,7 @@ public class PA {
     }
 
     public boolean isNullConstant(Node node) {
-        if (node instanceof ConcreteTypeNode || node instanceof ConcreteObjectNode || node instanceof GlobalNode) {
+        if (node instanceof ConcreteTypeNode || node instanceof ConcreteObjectNode) {
             jq_Reference type = node.getDeclaredType();
             if (type == null || type == jq_NullType.NULL_TYPE) {
                 if (TRACE) out.println("Skipping null constant");
