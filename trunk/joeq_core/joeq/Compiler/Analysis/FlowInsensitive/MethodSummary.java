@@ -57,6 +57,7 @@ import Compil3r.Quad.Operator.Getfield;
 import Compil3r.Quad.Operator.Getstatic;
 import Compil3r.Quad.Operator.Invoke;
 import Compil3r.Quad.Operator.Jsr;
+import Compil3r.Quad.Operator.Monitor;
 import Compil3r.Quad.Operator.Move;
 import Compil3r.Quad.Operator.New;
 import Compil3r.Quad.Operator.NewArray;
@@ -78,6 +79,7 @@ import Util.Collections.IdentityHashCodeWrapper;
 import Util.Collections.IndexMap;
 import Util.Collections.IndexedMap;
 import Util.Collections.InstrumentedSetWrapper;
+import Util.Collections.MultiMap;
 import Util.Collections.Pair;
 import Util.Collections.SetFactory;
 import Util.Collections.SortedArraySet;
@@ -216,6 +218,11 @@ public class MethodSummary {
         /** Change bit for worklist iteration. */
         protected boolean change;
         
+        boolean include_sync_ops = true;
+        
+        /** Map from sync ops to their nodes. */
+        protected final Map sync_ops;
+        
         /** Factory for nodes. */
         protected final HashMap quadsToNodes;
         
@@ -235,6 +242,7 @@ public class MethodSummary {
             this.bb = that.bb;
             this.s = that.s;
             this.change = that.change;
+            this.sync_ops = that.sync_ops;
             this.quadsToNodes = that.quadsToNodes;
         }
         
@@ -302,6 +310,7 @@ public class MethodSummary {
                 } else if (params[i].getReferenceSize() == 8) ++j;
             }
             this.my_global = new GlobalNode(this.method);
+            this.sync_ops = new HashMap();
             this.returned = NodeSet.FACTORY.makeSet(); this.thrown = NodeSet.FACTORY.makeSet();
             
             if (TRACE_INTRA) out.println("Building summary for "+this.method);
@@ -526,6 +535,23 @@ public class MethodSummary {
             }
         }
 
+        protected void monitorOp(Quad q, Register r) {
+            Object src = getRegister(r);
+            if (src instanceof Node) {
+                monitorOp(q, Collections.singleton(src));
+            } else {
+                monitorOp(q, (Set) src);
+            }
+        }
+        
+        protected void monitorOp(Quad q, Set s) {
+            Set old = (Set) sync_ops.get(q);
+            if (old != null) {
+                Assert._assert(s.containsAll(old));
+            }
+            sync_ops.put(q, s);
+        }
+        
         /** Record that the nodes in the given register were passed to the given
          *  method call as the given parameter. */
         void passParameter(Register r, ProgramLocation m, int p) {
@@ -738,6 +764,25 @@ public class MethodSummary {
             if (jsr_states == null) jsr_states = new HashMap();
             BasicBlock succ = Jsr.getSuccessor(obj).getTarget();
             jsr_states.put(succ, this.s);
+        }
+        
+        /** Visit a register move instruction. */
+        public void visitMonitor(Quad obj) {
+            if (!include_sync_ops) return;
+            if (TRACE_INTRA) out.println("Visiting: "+obj);
+            Operand src = Monitor.getSrc(obj);
+            if (src instanceof RegisterOperand) {
+                RegisterOperand rop = ((RegisterOperand)src);
+                Register src_r = rop.getRegister();
+                monitorOp(obj, src_r);
+            } else {
+                Object value = ((AConstOperand)src).getValue();
+                Object key = value;
+                ConcreteObjectNode n = (ConcreteObjectNode) quadsToNodes.get(key);
+                if (n == null)
+                    quadsToNodes.put(key, n = new ConcreteObjectNode(value));
+                monitorOp(obj, Collections.singleton(n));
+            }
         }
         
         /** Visit a register move instruction. */
