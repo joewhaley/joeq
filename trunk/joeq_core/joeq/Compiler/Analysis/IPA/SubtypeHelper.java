@@ -177,16 +177,21 @@ public abstract class SubtypeHelper {
             for(Iterator iter = subtypeNames.iterator(); iter.hasNext();){
                 String subtypeName = (String) iter.next();                
                 String canonicalName = canonicalizeClassName(subtypeName.trim());
-                jq_Class subtypeClass = (jq_Class) jq_Class.parseType(canonicalName);
                 
-                if(!subtypeClass.isPrepared()){
-//                    if(TRACE){
-//                        System.out.println("Preparing class " + subtypeClass + " by name " + canonicalName);
-//                    }
-                    subtypeClass.prepare();
+                try {
+                    jq_Class subtypeClass = (jq_Class) jq_Class.parseType(canonicalName);
+                    
+                    if(!subtypeClass.isPrepared()){
+    //                    if(TRACE){
+    //                        System.out.println("Preparing class " + subtypeClass + " by name " + canonicalName);
+    //                    }
+                        subtypeClass.prepare();
+                    }
+                    result.add(subtypeClass);
+                } catch (java.lang.NoClassDefFoundError e){
+                    if(TRACE) System.err.println("Can't load " + subtypeName + ": " + e);
+                    continue;
                 }
-                
-                result.add(subtypeClass);
             }
             Assert._assert(result.size() == subtypeNames.size());
             
