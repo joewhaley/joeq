@@ -689,12 +689,12 @@ static inline int get_debug_reg( int pid, int num, DWORD *data )
     return 0;
 }
 
-extern "C" void __stdcall get_thread_context(const int pid, CONTEXT* context)
+extern "C" int __stdcall get_thread_context(const int pid, CONTEXT* context)
 {
   //printf("Getting thread context for pid %d.\n", pid);
   if (ptrace(PTRACE_ATTACH, pid, 0, 0) == -1) {
     printf("Attempt to attach to pid %d failed! %s errno %d\n", pid, strerror(errno), errno);
-    return;
+    return 0;
   }
   int status;
   waitpid(pid, &status, WUNTRACED);
@@ -702,6 +702,7 @@ extern "C" void __stdcall get_thread_context(const int pid, CONTEXT* context)
     //printf("Child is stopped, signal=%d.\n", WSTOPSIG(status));
   }
 
+  int result = 0;
   int flags = context->ContextFlags;
   if (flags & CONTEXT_FULL) {
     struct kernel_user_regs_struct regs;
@@ -743,6 +744,7 @@ extern "C" void __stdcall get_thread_context(const int pid, CONTEXT* context)
     if (ptrace( PTRACE_GETFPREGS, pid, 0, &context->FloatSave ) == -1) goto error;
     context->FloatSave.Cr0NpxState = 0;  /* FIXME */
   }
+  result = 1;
   goto cleanup;
  error:
   // TODO: error condition
@@ -751,17 +753,17 @@ extern "C" void __stdcall get_thread_context(const int pid, CONTEXT* context)
  cleanup:
   if (ptrace(PTRACE_DETACH, pid, 0, SIGSTOP) == -1) {
     printf("Attempt to detach from pid %d failed! %s errno %d\n", pid, strerror(errno), errno);
-    return;
+    return 0;
   }
-  return;
+  return result;
 }
 
-extern "C" void __stdcall set_thread_context(int pid, CONTEXT* context)
+extern "C" int __stdcall set_thread_context(int pid, CONTEXT* context)
 {
   //printf("Setting thread context for pid %d, ip=0x%08x, sp=0x%08x\n", pid, context->Eip, context->Esp);
   if (ptrace(PTRACE_ATTACH, pid, 0, 0) == -1) {
     printf("Attempt to attach to pid %d failed! %s errno %d\n", pid, strerror(errno), errno);
-    return;
+    return 0;
   }
   int status;
   waitpid(pid, &status, WUNTRACED);
@@ -769,6 +771,7 @@ extern "C" void __stdcall set_thread_context(int pid, CONTEXT* context)
     //printf("Child is stopped, signal=%d.\n", WSTOPSIG(status));
   }
 
+  int result = 0;
   int flags = context->ContextFlags;
   if (flags & CONTEXT_FULL) {
     struct kernel_user_regs_struct regs;
@@ -813,6 +816,7 @@ extern "C" void __stdcall set_thread_context(int pid, CONTEXT* context)
     /* correct structure (the same as fsave/frstor) */
     if (ptrace( PTRACE_SETFPREGS, pid, 0, &context->FloatSave ) == -1) goto error;
   }
+  result = 1;
   goto cleanup;
  error:
   // TODO: error condition
@@ -821,9 +825,9 @@ extern "C" void __stdcall set_thread_context(int pid, CONTEXT* context)
  cleanup:
   if (ptrace(PTRACE_DETACH, pid, 0, SIGSTOP) == -1) {
     printf("Attempt to detach from pid %d failed! %s errno %d\n", pid, strerror(errno), errno);
-    return;
+    return 0;
   }
-  return;
+  return result;
 }
 
 extern "C" int __stdcall get_current_thread_handle(void)
